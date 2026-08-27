@@ -36,6 +36,11 @@ await rm(site, { recursive: true, force: true })
 await mkdir(path.join(site, 'vendor', 'portolani'), { recursive: true })
 await writeFile(path.join(site, 'coast-full.json'), emit(portolano))
 await cp(path.join(root, 'demo'), site, { recursive: true })
+// Favicon and share-preview image: the same render the README already uses.
+await cp(
+  path.join(root, 'docs', 'the-world-in-8kb.svg'),
+  path.join(site, 'the-world-in-8kb.svg')
+)
 for (const file of ['simplify.js', 'codec.js']) {
   await cp(path.join(root, 'lib', file), path.join(site, 'vendor', 'portolani', file))
 }

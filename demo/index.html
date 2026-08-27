@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The whole world in 8 KB — portolani</title>
 <meta name="description" content="Every coastline on Earth in eight kilobytes. Move the slider and watch it happen.">
+<link rel="icon" type="image/svg+xml" href="./the-world-in-8kb.svg">
+<meta property="og:title" content="The whole world in 8 KB">
+<meta property="og:description" content="Every coastline on Earth in eight kilobytes. Move the slider and watch it happen.">
+<meta property="og:url" content="https://mark-brannan.github.io/portolani/">
+<meta property="og:image" content="https://mark-brannan.github.io/portolani/the-world-in-8kb.svg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://mark-brannan.github.io/portolani/the-world-in-8kb.svg">
 <style>
   :root {
     color-scheme: light dark;
@@ -42,6 +49,10 @@
   .ship {
     position: absolute;
     top: 0;
+    /* A range thumb's centre travels width - thumb-width, not the full
+       track, so a plain percentage overshoots toward the edges. 1rem here
+       is the thumb width browsers agree on closely enough to land on it. */
+    left: calc(var(--p) * (100% - 1rem) + 0.5rem);
     transform: translateX(-50%);
     font-size: 0.8rem;
     color: var(--mark);
@@ -75,18 +86,18 @@
     cost to ship. Drag the slider.
   </p>
 
-  <canvas id="map"></canvas>
+  <canvas id="map" role="img" aria-label="World coastline map, redrawn live at the selected detail level"></canvas>
 
   <div class="slider">
     <button class="ship" id="ship" type="button">the build we ship — 8&nbsp;KB</button>
-    <input type="range" id="detail" min="0" max="1000" value="0" aria-label="coastline detail">
+    <input type="range" id="detail" min="0" max="200" value="0" aria-label="coastline detail">
     <div class="ends"><span>cartoon</span><span>every point</span></div>
   </div>
 
   <div class="counters">
-    <div><output id="points">—</output><label>points</label></div>
-    <div class="as-shipped"><output id="bytes">—</output><label>as a portolano</label></div>
-    <div><output id="geojson">—</output><label>as plain GeoJSON</label></div>
+    <div><output id="points">—</output><label for="points">points</label></div>
+    <div class="as-shipped"><output id="bytes">—</output><label for="bytes">as a portolano</label></div>
+    <div><output id="geojson">—</output><label for="geojson">as plain GeoJSON</label></div>
   </div>
 
   <p class="foot">
@@ -95,6 +106,8 @@
     <a href="https://github.com/mark-brannan/coast-wright">coast-wright</a>,
     from <a href="https://www.naturalearthdata.com/">Natural Earth</a> data.
     The byte counter is the size of the real file those settings would write.
+    At the marked stop that's 5.7&nbsp;KB gzipped, against 11.5&nbsp;KB for
+    the GeoJSON — the wire is a smaller win than the file, and still a win.
   </p>
 </main>
 <script type="module" src="./demo.js"></script>
