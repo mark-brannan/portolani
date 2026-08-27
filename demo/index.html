@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The whole world in 8 KB — portolani</title>
+<meta name="description" content="Every coastline on Earth in eight kilobytes. Move the slider and watch it happen.">
+<link rel="icon" type="image/svg+xml" href="./the-world-in-8kb.svg">
+<meta property="og:title" content="The whole world in 8 KB">
+<meta property="og:description" content="Every coastline on Earth in eight kilobytes. Move the slider and watch it happen.">
+<meta property="og:url" content="https://mark-brannan.github.io/portolani/">
+<meta property="og:image" content="https://mark-brannan.github.io/portolani/the-world-in-8kb.svg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://mark-brannan.github.io/portolani/the-world-in-8kb.svg">
+<style>
+  :root {
+    color-scheme: light dark;
+    --ink: #1c2733;
+    --faint: #5c6b7a;
+    --line: #2f6db4;
+    --mark: #b4622f;
+    --edge: #d3dae2;
+    --bg: #fdfdfc;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #dde5ec;
+      --faint: #8fa0b0;
+      --line: #6aa5e0;
+      --mark: #e0a06a;
+      --edge: #37424e;
+      --bg: #14181d;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.5 system-ui, sans-serif;
+  }
+  main { max-width: 44rem; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+  h1 { font-size: 1.7rem; margin: 0 0 0.25rem; }
+  .lede { margin: 0 0 1.25rem; color: var(--faint); }
+  canvas { width: 100%; aspect-ratio: 2 / 1; display: block; }
+
+  .slider { position: relative; margin: 1.5rem 0 0.25rem; padding-top: 1.6rem; }
+  input[type='range'] { width: 100%; margin: 0; accent-color: var(--line); }
+  .ship {
+    position: absolute;
+    top: 0;
+    /* A range thumb's centre travels width - thumb-width, not the full
+       track, so a plain percentage overshoots toward the edges. 1rem here
+       is the thumb width browsers agree on closely enough to land on it. */
+    left: calc(var(--p) * (100% - 1rem) + 0.5rem);
+    transform: translateX(-50%);
+    font-size: 0.8rem;
+    color: var(--mark);
+    white-space: nowrap;
+    text-align: center;
+    line-height: 1.1;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: inherit;
+  }
+  .ship::after { content: '▼'; display: block; font-size: 0.7rem; }
+  .ends { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--faint); }
+
+  .counters { display: flex; gap: 0.75rem; margin-top: 1.25rem; text-align: center; }
+  .counters > div { flex: 1; border: 1px solid var(--edge); border-radius: 0.5rem; padding: 0.6rem 0.25rem; }
+  .counters output { display: block; font-size: 1.3rem; font-variant-numeric: tabular-nums; }
+  .counters .as-shipped output { color: var(--mark); }
+  .counters label { font-size: 0.78rem; color: var(--faint); }
+
+  .foot { margin-top: 1.5rem; font-size: 0.9rem; color: var(--faint); }
+  a { color: var(--line); }
+</style>
+</head>
+<body>
+<main>
+  <h1>The whole world in 8&nbsp;KB</h1>
+  <p class="lede">
+    Every coastline on Earth, redrawn live from the bytes it would actually
+    cost to ship. Drag the slider.
+  </p>
+
+  <canvas id="map" role="img" aria-label="World coastline map, redrawn live at the selected detail level"></canvas>
+
+  <div class="slider">
+    <button class="ship" id="ship" type="button">the build we ship — 8&nbsp;KB</button>
+    <input type="range" id="detail" min="0" max="200" value="0" aria-label="coastline detail">
+    <div class="ends"><span>continent corners</span><span>every point in the original</span></div>
+  </div>
+
+  <div class="counters">
+    <div><output id="points">—</output><label for="points">points</label></div>
+    <div class="as-shipped"><output id="bytes">—</output><label for="bytes">as a portolano</label></div>
+    <div><output id="geojson">—</output><label for="geojson">as plain GeoJSON</label></div>
+  </div>
+
+  <p class="foot">
+    Simplified and delta-encoded in your browser by
+    <a href="https://github.com/mark-brannan/portolani">portolani</a>, drawn by
+    <a href="https://github.com/mark-brannan/coast-wright">coast-wright</a>,
+    from <a href="https://www.naturalearthdata.com/">Natural Earth</a> data.
+    The byte counter is the size of the real file those settings would write.
+    At the marked stop that's 5.7&nbsp;KB gzipped, against 11.5&nbsp;KB for
+    the GeoJSON — the wire is a smaller win than the file, and still a win.
+  </p>
+</main>
+<script type="module" src="./demo.js"></script>
+</body>
+</html>

@@ -3,17 +3,23 @@
   "version": "0.1.0",
   "description": "Generate portolani: simplified, delta-encoded coastline and land geometry from Natural Earth, with the provenance to reproduce it",
   "type": "module",
-  "bin": { "portolani": "bin/portolani.mjs" },
+  "bin": {
+    "portolani": "bin/portolani.mjs"
+  },
   "main": "lib/index.js",
   "exports": {
     ".": "./lib/index.js",
     "./codec": "./lib/codec.js",
+    "./simplify": "./lib/simplify.js",
     "./package.json": "./package.json"
   },
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "build:demo": "node scripts/build-demo.mjs"
   },
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "keywords": [
     "coastline",
     "geojson",
@@ -28,8 +34,21 @@
   ],
   "license": "MIT",
   "author": "Mark Brannan",
-  "repository": { "type": "git", "url": "git+https://github.com/mark-brannan/portolani.git" },
-  "bugs": { "url": "https://github.com/mark-brannan/portolani/issues" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mark-brannan/portolani.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mark-brannan/portolani/issues"
+  },
   "homepage": "https://github.com/mark-brannan/portolani#readme",
-  "files": ["bin", "lib", "docs", "LICENSE"]
+  "files": [
+    "bin",
+    "lib",
+    "docs",
+    "LICENSE"
+  ],
+  "devDependencies": {
+    "coast-wright": "0.0.1-alpha.0"
+  }
 }
