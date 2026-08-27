@@ -1,17 +1,24 @@
 # portolani
 
-Generate **portolani**: simplified, delta-encoded coastline and land geometry,
-small enough to ship inside a web page, with the provenance to reproduce them
-exactly.
+**The whole world's coastline in 8 KB.**
+[Move the slider and watch it happen.][demo]
+
+[![Every coastline on Earth, drawn from 8 KB of data](docs/the-world-in-8kb.svg)][demo]
+
+That map is 128 lines and 2 709 points — smaller than most website logos,
+small enough to store on a microcontroller with room to spare. The [demo][demo]
+redraws it in your browser at whatever detail level you drag to, with live
+byte counters, so you can see for yourself that nothing worth having was
+thrown away. This package is the tool that makes the data:
 
 ```shell
 npx portolani --source ne_110m_coastline --out coastline.json
 ```
 
-That is the whole world's coastline in **8 KB** — 128 lines, 2709 points,
-finer than any grid a weather overlay draws on top of it. No install, no
-dependencies, no API key. Run it again next year against the same Natural
-Earth release and you get the same bytes.
+Generate **portolani**: simplified, delta-encoded coastline and land geometry,
+small enough to ship inside a web page, with the provenance to reproduce them
+exactly. No install, no dependencies, no API key. Run it again next year
+against the same Natural Earth release and you get the same bytes.
 
 ## Why this exists
 
@@ -187,6 +194,7 @@ If you point `--source` at something else, its licence is yours to honour;
 
 The generator itself is MIT.
 
+[demo]: https://mark-brannan.github.io/portolani/
 [ne]: https://www.naturalearthdata.com/
 [nev]: https://github.com/nvkelso/natural-earth-vector
 [cw]: https://github.com/mark-brannan/coast-wright
