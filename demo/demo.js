@@ -7,10 +7,14 @@ import { simplify } from './vendor/portolani/simplify.js'
 import { quantize, encodeRing } from './vendor/portolani/codec.js'
 import { rings, limn } from './vendor/coast-wright/index.js'
 
-// Slider position s in [0, 1] maps to tolerance 2 -> 0.002 degrees on a log
-// scale, with the last notch snapping to 0 (keep every point). Below the
-// precision grid RDP is a no-op anyway, so nothing is hidden by the snap.
-const TOL_MAX = 2
+// Slider position s in [0, 1] maps to tolerance 160 -> 0.002 degrees on a log
+// scale, with the last notch snapping to 0 (keep every point). 160 is the
+// floor RDP itself imposes: it keeps only each shape's two endpoints past
+// that, so every tolerance beyond it renders identically (~26 points, mostly
+// straight lines between continent corners) -- there's no lower point count
+// to show. Below the precision grid RDP is a no-op anyway, so nothing is
+// hidden by the snap.
+const TOL_MAX = 160
 const TOL_MIN = 0.002
 const K = Math.log(TOL_MAX / TOL_MIN)
 const toleranceFor = (s) => (s >= 1 ? 0 : TOL_MAX * Math.exp(-s * K))
@@ -18,7 +22,7 @@ const toleranceFor = (s) => (s >= 1 ? 0 : TOL_MAX * Math.exp(-s * K))
 // Precision one step finer than tolerance -- the pairing the README
 // recommends and the shipped builds use. 110m source never earns more
 // than three decimals. Floored at 1: a 0 here quantises to whole degrees,
-// and the cartoon end's sawtooth triangles are that grid, not a bug worth
+// and the low end's sawtooth triangles are that grid, not a bug worth
 // keeping -- flooring loses no simplification, only the artefact.
 const precisionFor = (t) => (t === 0 || t < 0.045 ? 3 : t < 0.18 ? 2 : 1)
 
@@ -56,7 +60,7 @@ const source = rings(full)
 // Rebuilds the document portolani would emit at these knobs, from the
 // full-detail rings. Mirrors buildLines in lib/portolano.js: lines are
 // simplified open, and a ring quantised down to fewer than two points is
-// dropped, which is how the cartoon end loses its smallest islands.
+// dropped, which is how the low end loses its smallest islands.
 function build(tolerance, precision) {
   const shapes = []
   for (const chain of source) {
