@@ -158,8 +158,9 @@ const rings = portolano.geometry.map((ring) =>
 
 `portolani/codec` is the reference implementation of §3, exported so that the
 generator can be checked against the same code a consumer runs. For drawing —
-seam handling, projections — use [`coast-wright`][cw]; for geometry somebody
-already generated, [`coastlines`][cl].
+seam handling, projections — use [`coast-wright`][cw], whose
+[own demo][cwdemo] draws one portolano through fourteen projections; for
+geometry somebody already generated, [`coastlines`][cl].
 
 ## Programmatic use
 
@@ -198,4 +199,5 @@ The generator itself is MIT.
 [ne]: https://www.naturalearthdata.com/
 [nev]: https://github.com/nvkelso/natural-earth-vector
 [cw]: https://github.com/mark-brannan/coast-wright
+[cwdemo]: https://mark-brannan.github.io/coast-wright/
 [cl]: https://github.com/mark-brannan/coastlines
