@@ -36,3 +36,22 @@ jobs:
         with: { node-version: '22' }
       - run: npm ci
       - run: npm run build:demo
+
+  # The single required status check. Everything else fans in here, so the
+  # ruleset requires one context and adding or renaming a matrix leg does not
+  # silently change what is required. `always()` is what lets it evaluate when
+  # a dependency was skipped rather than being skipped itself -- a required
+  # context that inherits a skip never reports, and blocks the pull request
+  # forever. No `name:` here, deliberately: the reported context is the job id.
+  ci-gate:
+    needs: [test, build-demo]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "test: ${{ needs.test.result }}"
+          echo "build-demo: ${{ needs.build-demo.result }}"
+          if [ "${{ needs.test.result }}" != "success" ] || \
+             [ "${{ needs.build-demo.result }}" != "success" ]; then
+            exit 1
+          fi
