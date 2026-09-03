@@ -36,3 +36,20 @@ jobs:
         with: { node-version: '22' }
       - run: npm ci
       - run: npm run build:demo
+
+  # The single required status check, shared across repositories: the
+  # `gate` job of mark-brannan/.github's reusable ci-gate workflow, which fails
+  # unless every result in `needs` is green. The reported context is
+  # "ci-gate / gate" -- GitHub names a reusable workflow's checks
+  # "<caller job> / <called job>" -- and that is what the ruleset requires, so
+  # this job's id is part of the contract. `always()` is what lets the gate
+  # evaluate when a dependency failed or was skipped, so it reports an explicit
+  # pass or fail of its own rather than inheriting the skip.
+  ci-gate:
+    needs: [test, build-demo]
+    if: always()
+    # It reads nothing and writes nothing; the results go in as an input.
+    permissions: {}
+    uses: mark-brannan/.github/.github/workflows/ci-gate.yml@main
+    with:
+      results: ${{ toJSON(needs) }}
