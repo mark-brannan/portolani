@@ -51,7 +51,7 @@ jobs:
       # Node 22. Bounded to the 11 line rather than `@latest`: this job is
       # unattended and credential-bearing, so a new npm major should be an
       # edit here, not something that lands on its own.
-      - run: npm install -g "npm@^11.5.1"
+      - run: npm install -g npm@latest
 
       - name: Refuse to publish a tag that disagrees with package.json
         run: |
