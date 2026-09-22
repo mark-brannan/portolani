@@ -36,6 +36,11 @@ jobs:
     if: github.ref_type == 'tag'
     steps:
       - uses: actions/checkout@v7
+        # Nothing here needs to write to the repository, and the checkout's
+        # token should not outlive the step -- this job runs a test runner
+        # and npm itself, and an ambient credential in git config is exactly
+        # what they should not be able to reach.
+        with: { persist-credentials: false }
 
       - uses: actions/setup-node@v7
         with:
@@ -43,8 +48,10 @@ jobs:
           registry-url: https://registry.npmjs.org
 
       # Trusted publishing requires npm >= 11.5.1, newer than what ships with
-      # Node 22.
-      - run: npm install -g npm@latest
+      # Node 22. Bounded to the 11 line rather than `@latest`: this job is
+      # unattended and credential-bearing, so a new npm major should be an
+      # edit here, not something that lands on its own.
+      - run: npm install -g "npm@^11.5.1"
 
       - name: Refuse to publish a tag that disagrees with package.json
         run: |
