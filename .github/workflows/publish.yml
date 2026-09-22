@@ -48,9 +48,7 @@ jobs:
           registry-url: https://registry.npmjs.org
 
       # Trusted publishing requires npm >= 11.5.1, newer than what ships with
-      # Node 22. Bounded to the 11 line rather than `@latest`: this job is
-      # unattended and credential-bearing, so a new npm major should be an
-      # edit here, not something that lands on its own.
+      # Node 22.
       - run: npm install -g npm@latest
 
       - name: Refuse to publish a tag that disagrees with package.json
