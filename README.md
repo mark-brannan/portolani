@@ -180,7 +180,7 @@ What it shows:
 
 - **The 8 KB headline holds:** 8 151 bytes of coastline, 8 445 of land.
 - **So does the 55 KB TopoJSON:** `world-atlas`'s 110m land file, 55 207 bytes.
-- **Most of that gap is simplification:** unsimplified, a portolano is 8% smaller gzipped.
+- **Gzipped, the gap is simplification:** unsimplified, a portolano is 8% smaller than the TopoJSON.
 - **The default draws about half the points:** up to ¼° of error, six smallest shapes dropped.
 - **No row is slow:** each parses and draws in about a millisecond or less.
 - **So the case rests elsewhere:** no tile server, a short decoder, [provenance](docs/portolano-format.md#4-provenance).

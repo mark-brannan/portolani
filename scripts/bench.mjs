@@ -15,7 +15,7 @@
 //     context that counts calls and rasterises nothing. There is no browser
 //     here, so "first canvas draw" is the last JavaScript step before one:
 //     parse, decode to [lon, lat], project, and issue the path calls.
-//     Machine-dependent and noisy by a third or more; compare rows with each
+//     Machine-dependent and noisy by half or more; compare rows with each
 //     other, not with other machines or other runs.
 //   - Every row is drawn by the same projection and path code. Only the
 //     decode step differs, which is the thing being measured.
@@ -172,7 +172,7 @@ function table(rows) {
     '| --- | ---: | ---: | ---: | ---: |',
   ]
   for (const r of rows) {
-    // One decimal: run-to-run noise on a shared machine is a third or more.
+    // One decimal: run-to-run noise on a shared machine is half or more.
     const time = r.ms < 0.05 ? '<0.1' : r.ms.toFixed(1)
     lines.push(`| ${r.label} | ${group(r.bytes)} | ${group(r.gzipped)} | ${group(r.points)} | ${time} ms |`)
   }
