@@ -5,26 +5,30 @@ name: Release
 # request; merging THAT pull request is the release. See
 # mark-brannan/.github/.github/workflows/release-please.yml for the full
 # rationale (batching, squash-merge requirement, tag format, version
-# policy).
+# policy). The shared workflow also carries the `release-main` concurrency
+# group (cancel-in-progress: false) at job level, so two rapid pushes to
+# main queue rather than race; this caller needs no concurrency block of
+# its own.
 #
-# This repo has no publish.yml -- nothing to dispatch on release -- so the
-# caller opts out with `publish: false`.
+# This repo has a publish.yml, so the shared workflow's default
+# `publish: true` applies: on a release it dispatches publish.yml and
+# waits for it to succeed.
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
+# Every caller grants all three: the shared workflow's job asks for exactly
+# these and job-level permissions cannot be conditional.
 permissions:
-  contents: write
-  pull-requests: write
-  actions: write
+  contents: write # create the tag and the GitHub Release
+  pull-requests: write # open and update the release pull request
+  actions: write # dispatch publish.yml on a release
 
 jobs:
   release:
     uses: mark-brannan/.github/.github/workflows/release-please.yml@main
-    with:
-      publish: false
     secrets:
       RELEASE_PLEASE_APP_CLIENT_ID: ${{ secrets.RELEASE_PLEASE_APP_CLIENT_ID }}
       RELEASE_PLEASE_APP_PRIVATE_KEY: ${{ secrets.RELEASE_PLEASE_APP_PRIVATE_KEY }}
