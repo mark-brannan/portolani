@@ -141,14 +141,11 @@ fetching 10 MB of source.
 
 ## Measured against the usual answers
 
-`npm run bench` ([`scripts/bench.mjs`](scripts/bench.mjs)) takes one Natural
-Earth v5.1.2 110m layer and measures it as GeoJSON, as TopoJSON and as a
-portolano, then prints these tables. It needs the network once, for the pinned
-source, and `npm ci` for the TopoJSON tools — `world-atlas`, `topojson-server`
-and `topojson-client`, pinned dev dependencies. The package still has no
-runtime dependencies. `world-atlas` publishes land but no coastline, so the
-coastline's TopoJSON is made from the same GeoJSON by `topojson-server` at
-`world-atlas`'s own quantisation.
+`npm run bench` ([`scripts/bench.mjs`](scripts/bench.mjs)) measures one Natural
+Earth v5.1.2 110m layer as GeoJSON, as TopoJSON and as a portolano. It needs the
+network once and `npm ci` for three pinned dev dependencies; the package keeps
+no runtime dependencies. `world-atlas` publishes no coastline, so that TopoJSON
+is made by `topojson-server` at `world-atlas`'s own quantisation.
 
 **Land**, `ne_110m_land`:
 
@@ -170,36 +167,23 @@ coastline's TopoJSON is made from the same GeoJSON by `topojson-server` at
 | portolano, defaults (`-t 0.25 -p 1`) | 8 151 | 5 718 | 2 709 | 0.1 ms |
 | portolano, nothing simplified (`-t 0 -p 3 -m 0`) | 26 511 | 19 053 | 5 128 | 0.2 ms |
 
-What a page also has to ship to read each: nothing for GeoJSON; `topojson-client`
-for TopoJSON, 7 169 bytes minified, 2 605 gzipped; for a portolano, the
-decoder in [§3 of the spec](docs/portolano-format.md), which `lib/codec.js`
-implements in 3 053 bytes unminified, encoder and comments included.
+The decoder a page also ships: none for GeoJSON; `topojson-client` for
+TopoJSON, 2 605 bytes gzipped; for a portolano, [§3 of the
+spec](docs/portolano-format.md), which `lib/codec.js` implements in 1 237 bytes
+gzipped, encoder and comments included.
 
-Bytes are exact. **Parse + draw** is not a canvas timing, because a benchmark
-script has no browser: it is the median of 200 warm runs in Node, from the text
-in hand to the last path call on a stub 2D context that counts them. That
-covers parsing, decoding, projecting and issuing the calls, and leaves out
-rasterising, which is where a real canvas spends its time and which scales with
-the points drawn. The numbers wander by a third between runs and machines;
-read the rows against each other.
+**Parse + draw** runs in Node, not a browser: the median of 200 warm runs from
+the text in hand to the last path call on a stub 2D context that rasterises
+nothing. It wanders by half between runs; compare rows, not machines.
 
-Read honestly:
+What it shows:
 
-- **The 8 KB headline is true:** 8 151 bytes for the coastline, 8 445 for land.
-  So is the 55 KB TopoJSON, which is `world-atlas`'s 110m land file at 55 207.
-- **Much of that gap is simplification, not format.** With nothing simplified a
-  portolano is half the size of the TopoJSON raw (26.7 KB against 55.2 KB) and
-  within 8% of it gzipped (19.1 KB against 20.7 KB). The default gets to 8 KB
-  by drawing about half the points, accepting up to a quarter degree of error
-  (about 28 km of latitude) and dropping the six smallest shapes. That is the
-  right trade for a map you look at from far away, and a trade nonetheless.
-- **For a typical web page the byte difference is not a felt one.** Every row
-  parses and draws in about a millisecond or less, and a page that ships one
-  coastline will not notice 50 KB of gzipped GeoJSON next to 6 KB.
-- **The reasons to reach for this are elsewhere:** no tile server, no decoder
-  library to ship and keep, and [provenance](docs/portolano-format.md#4-provenance)
-  — the source digest and every knob stamped into the file, so anyone can
-  re-run it and diff.
+- **The 8 KB headline holds:** 8 151 bytes of coastline, 8 445 of land.
+- **So does the 55 KB TopoJSON:** `world-atlas`'s 110m land file, 55 207 bytes.
+- **Most of that gap is simplification:** unsimplified, a portolano is 8% smaller gzipped.
+- **The default draws about half the points:** up to ¼° of error, six smallest shapes dropped.
+- **No row is slow:** each parses and draws in about a millisecond or less.
+- **So the case rests elsewhere:** no tile server, a short decoder, [provenance](docs/portolano-format.md#4-provenance).
 
 ## Reading a portolano
 
