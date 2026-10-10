@@ -24,8 +24,10 @@ against the same Natural Earth release and you get the same bytes.
 
 Every project that draws a map without a tile server re-solves the same
 problem: get a coastline, make it small enough to ship, decode it in the
-browser. The usual answers are a 55 KB TopoJSON plus a decoder library, or a
-half-hour with `ogr2ogr` and a script nobody else can re-run.
+browser. The usual answers are a TopoJSON plus a decoder library
+(`world-atlas`'s 110m land file is 55 KB, or 21 KB gzipped;
+[measured below](#measured-against-the-usual-answers)), or a half-hour with
+`ogr2ogr` and a script nobody else can re-run.
 
 This is that script, published. The output — **a portolano** — is a plain
 JSON document with a written [format spec](docs/portolano-format.md), so the
@@ -136,6 +138,52 @@ block (about 800 bytes of it):
 
 The finest of those takes about two and a half seconds, most of it spent
 fetching 10 MB of source.
+
+## Measured against the usual answers
+
+`npm run bench` ([`scripts/bench.mjs`](scripts/bench.mjs)) measures one Natural
+Earth v5.1.2 110m layer as GeoJSON, as TopoJSON and as a portolano. It needs the
+network once and `npm ci` for three pinned dev dependencies; the package keeps
+no runtime dependencies. `world-atlas` publishes no coastline, so that TopoJSON
+is made by `topojson-server` at `world-atlas`'s own quantisation.
+
+**Land**, `ne_110m_land`:
+
+| Format | Bytes | Gzipped | Points drawn | Parse + draw |
+| --- | ---: | ---: | ---: | ---: |
+| GeoJSON, Natural Earth as published | 138 160 | 51 269 | 5 143 | 0.8 ms |
+| GeoJSON, geometry only | 125 937 | 49 188 | 5 143 | 0.7 ms |
+| TopoJSON, `world-atlas` `land-110m.json` as published | 55 207 | 20 707 | 5 123 | 0.5 ms |
+| portolano, defaults (`-t 0.25 -p 1`) | 8 445 | 5 796 | 2 764 | 0.1 ms |
+| portolano, nothing simplified (`-t 0 -p 3 -m 0`) | 26 722 | 19 072 | 5 132 | 0.2 ms |
+
+**Coastline**, `ne_110m_coastline`:
+
+| Format | Bytes | Gzipped | Points drawn | Parse + draw |
+| --- | ---: | ---: | ---: | ---: |
+| GeoJSON, Natural Earth as published | 139 907 | 52 736 | 5 128 | 0.7 ms |
+| GeoJSON, geometry only | 126 264 | 50 530 | 5 128 | 0.7 ms |
+| TopoJSON, `geo2topo` of the same geometry | 58 926 | 21 154 | 5 128 | 0.5 ms |
+| portolano, defaults (`-t 0.25 -p 1`) | 8 151 | 5 718 | 2 709 | 0.1 ms |
+| portolano, nothing simplified (`-t 0 -p 3 -m 0`) | 26 511 | 19 053 | 5 128 | 0.2 ms |
+
+The decoder a page also ships: none for GeoJSON; `topojson-client` for
+TopoJSON, 2 605 bytes gzipped; for a portolano, [§3 of the
+spec](docs/portolano-format.md), which `lib/codec.js` implements in 1 237 bytes
+gzipped, encoder and comments included.
+
+**Parse + draw** runs in Node, not a browser: the median of 200 warm runs from
+the text in hand to the last path call on a stub 2D context that rasterises
+nothing. It wanders by half between runs; compare rows, not machines.
+
+What it shows:
+
+- **The 8 KB headline holds:** 8 151 bytes of coastline, 8 445 of land.
+- **So does the 55 KB TopoJSON:** `world-atlas`'s 110m land file, 55 207 bytes.
+- **Gzipped, the gap is simplification:** unsimplified, a portolano is 8% smaller than the TopoJSON.
+- **The default draws about half the points:** up to ¼° of error, six smallest shapes dropped.
+- **No row is slow:** each parses and draws in about a millisecond or less.
+- **So the case rests elsewhere:** no tile server, a short decoder, [provenance](docs/portolano-format.md#4-provenance).
 
 ## Reading a portolano
 
