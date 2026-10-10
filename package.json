@@ -15,7 +15,8 @@
   },
   "scripts": {
     "test": "node --test",
-    "build:demo": "node scripts/build-demo.mjs"
+    "build:demo": "node scripts/build-demo.mjs",
+    "bench": "node scripts/bench.mjs"
   },
   "engines": {
     "node": ">=20"
@@ -49,6 +50,9 @@
     "LICENSE"
   ],
   "devDependencies": {
-    "coast-wright": "0.0.1-alpha.0"
+    "coast-wright": "0.0.1-alpha.0",
+    "topojson-client": "3.1.0",
+    "topojson-server": "3.0.1",
+    "world-atlas": "2.0.2"
   }
 }

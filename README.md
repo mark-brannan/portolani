@@ -24,8 +24,10 @@ against the same Natural Earth release and you get the same bytes.
 
 Every project that draws a map without a tile server re-solves the same
 problem: get a coastline, make it small enough to ship, decode it in the
-browser. The usual answers are a 55 KB TopoJSON plus a decoder library, or a
-half-hour with `ogr2ogr` and a script nobody else can re-run.
+browser. The usual answers are a TopoJSON plus a decoder library
+(`world-atlas`'s 110m land file is 55 KB, or 21 KB gzipped;
+[measured below](#measured-against-the-usual-answers)), or a half-hour with
+`ogr2ogr` and a script nobody else can re-run.
 
 This is that script, published. The output — **a portolano** — is a plain
 JSON document with a written [format spec](docs/portolano-format.md), so the
@@ -136,6 +138,68 @@ block (about 800 bytes of it):
 
 The finest of those takes about two and a half seconds, most of it spent
 fetching 10 MB of source.
+
+## Measured against the usual answers
+
+`npm run bench` ([`scripts/bench.mjs`](scripts/bench.mjs)) takes one Natural
+Earth v5.1.2 110m layer and measures it as GeoJSON, as TopoJSON and as a
+portolano, then prints these tables. It needs the network once, for the pinned
+source, and `npm ci` for the TopoJSON tools — `world-atlas`, `topojson-server`
+and `topojson-client`, pinned dev dependencies. The package still has no
+runtime dependencies. `world-atlas` publishes land but no coastline, so the
+coastline's TopoJSON is made from the same GeoJSON by `topojson-server` at
+`world-atlas`'s own quantisation.
+
+**Land**, `ne_110m_land`:
+
+| Format | Bytes | Gzipped | Points drawn | Parse + draw |
+| --- | ---: | ---: | ---: | ---: |
+| GeoJSON, Natural Earth as published | 138 160 | 51 269 | 5 143 | 0.8 ms |
+| GeoJSON, geometry only | 125 937 | 49 188 | 5 143 | 0.7 ms |
+| TopoJSON, `world-atlas` `land-110m.json` as published | 55 207 | 20 707 | 5 123 | 0.5 ms |
+| portolano, defaults (`-t 0.25 -p 1`) | 8 445 | 5 796 | 2 764 | 0.1 ms |
+| portolano, nothing simplified (`-t 0 -p 3 -m 0`) | 26 722 | 19 072 | 5 132 | 0.2 ms |
+
+**Coastline**, `ne_110m_coastline`:
+
+| Format | Bytes | Gzipped | Points drawn | Parse + draw |
+| --- | ---: | ---: | ---: | ---: |
+| GeoJSON, Natural Earth as published | 139 907 | 52 736 | 5 128 | 0.7 ms |
+| GeoJSON, geometry only | 126 264 | 50 530 | 5 128 | 0.7 ms |
+| TopoJSON, `geo2topo` of the same geometry | 58 926 | 21 154 | 5 128 | 0.5 ms |
+| portolano, defaults (`-t 0.25 -p 1`) | 8 151 | 5 718 | 2 709 | 0.1 ms |
+| portolano, nothing simplified (`-t 0 -p 3 -m 0`) | 26 511 | 19 053 | 5 128 | 0.2 ms |
+
+What a page also has to ship to read each: nothing for GeoJSON; `topojson-client`
+for TopoJSON, 7 169 bytes minified, 2 605 gzipped; for a portolano, the
+decoder in [§3 of the spec](docs/portolano-format.md), which `lib/codec.js`
+implements in 3 053 bytes unminified, encoder and comments included.
+
+Bytes are exact. **Parse + draw** is not a canvas timing, because a benchmark
+script has no browser: it is the median of 200 warm runs in Node, from the text
+in hand to the last path call on a stub 2D context that counts them. That
+covers parsing, decoding, projecting and issuing the calls, and leaves out
+rasterising, which is where a real canvas spends its time and which scales with
+the points drawn. The numbers wander by a third between runs and machines;
+read the rows against each other.
+
+Read honestly:
+
+- **The 8 KB headline is true:** 8 151 bytes for the coastline, 8 445 for land.
+  So is the 55 KB TopoJSON, which is `world-atlas`'s 110m land file at 55 207.
+- **Much of that gap is simplification, not format.** With nothing simplified a
+  portolano is half the size of the TopoJSON raw (26.7 KB against 55.2 KB) and
+  within 8% of it gzipped (19.1 KB against 20.7 KB). The default gets to 8 KB
+  by drawing about half the points, accepting up to a quarter degree of error
+  (about 28 km of latitude) and dropping the six smallest shapes. That is the
+  right trade for a map you look at from far away, and a trade nonetheless.
+- **For a typical web page the byte difference is not a felt one.** Every row
+  parses and draws in about a millisecond or less, and a page that ships one
+  coastline will not notice 50 KB of gzipped GeoJSON next to 6 KB.
+- **The reasons to reach for this are elsewhere:** no tile server, no decoder
+  library to ship and keep, and [provenance](docs/portolano-format.md#4-provenance)
+  — the source digest and every knob stamped into the file, so anyone can
+  re-run it and diff.
 
 ## Reading a portolano
 
