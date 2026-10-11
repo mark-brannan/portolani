@@ -1,5 +1,7 @@
 # portolani
 
+> Direction: this repository is becoming an antique-chart base map. See [#25](https://github.com/mark-brannan/portolani/issues/25) and [#26](https://github.com/mark-brannan/portolani/issues/26). The tool described below stays; the mockup renderer and pack scripts are in `scripts/` and `packs/`.
+
 **The whole world's coastline in 8 KB.**
 [Move the slider and watch it happen.][demo]
 
