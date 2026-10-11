@@ -18,7 +18,8 @@
     "build:demo": "node scripts/build-demo.mjs",
     "bench": "node scripts/bench.mjs",
     "packs": "node scripts/build-packs.mjs",
-    "render": "node scripts/render.mjs"
+    "render": "node scripts/render.mjs",
+    "build:preview": "node scripts/build-preview.mjs"
   },
   "engines": {
     "node": ">=20"
