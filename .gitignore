@@ -1,4 +1,5 @@
 node_modules/
+downloads/
+out/
 *.tgz
 .DS_Store
-_site/

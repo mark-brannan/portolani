@@ -1,0 +1,96 @@
+{
+  "name": "carta-marina",
+  "title": "Carta Marina, Olaus Magnus, 1539",
+  "licence": "Public domain (PD-Art); scan: James Ford Bell Library via Wikimedia Commons",
+  "ink": "#3b2a1a",
+  "sprites": [
+    {
+      "id": "serpent-a",
+      "kind": "monster",
+      "file": "serpent-a.png",
+      "anchor": [0.5, 0.75],
+      "sizePx": 200,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Carta_Marina.jpeg",
+        "page": "https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg",
+        "crop": [1701, 889, 2062, 1189]
+      },
+      "minClearancePx": 160,
+      "weight": 3
+    },
+    {
+      "id": "whale-b",
+      "kind": "monster",
+      "file": "whale-b.png",
+      "anchor": [0.5, 0.75],
+      "sizePx": 190,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Carta_Marina.jpeg",
+        "page": "https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg",
+        "crop": [2045, 359, 2349, 521]
+      },
+      "minClearancePx": 150,
+      "weight": 2
+    },
+    {
+      "id": "pistrix-c",
+      "kind": "monster",
+      "file": "pistrix-c.png",
+      "anchor": [0.5, 0.75],
+      "sizePx": 150,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Carta_Marina.jpeg",
+        "page": "https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg",
+        "crop": [375, 1263, 545, 1430]
+      },
+      "minClearancePx": 130,
+      "weight": 2
+    },
+    {
+      "id": "cete-e",
+      "kind": "monster",
+      "file": "cete-e.png",
+      "anchor": [0.5, 0.75],
+      "sizePx": 180,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Carta_Marina.jpeg",
+        "page": "https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg",
+        "crop": [1803, 574, 2044, 731]
+      },
+      "minClearancePx": 140,
+      "weight": 1
+    },
+    {
+      "id": "ship-a",
+      "kind": "ship",
+      "file": "ship-a.png",
+      "anchor": [0.5, 0.75],
+      "sizePx": 80,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Carta_Marina.jpeg",
+        "page": "https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg",
+        "crop": [1200, 802, 1311, 966]
+      },
+      "heading": "right"
+    },
+    {
+      "id": "ship-b",
+      "kind": "ship",
+      "file": "ship-b.png",
+      "anchor": [0.5, 0.75],
+      "sizePx": 64,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Carta_Marina.jpeg",
+        "page": "https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg",
+        "crop": [2089, 715, 2209, 799]
+      },
+      "heading": "right"
+    }
+  ]
+}

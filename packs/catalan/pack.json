@@ -1,0 +1,48 @@
+{
+  "name": "catalan",
+  "title": "Portolan roses and cartouche: Jorge de Aguiar 1492, Catalan Atlas 1375, Frederik de Wit",
+  "licence": "Public domain; scans via Wikimedia Commons (Beinecke Library, Yale; BnF Gallica btv1b55002481n; Royal Museums Greenwich)",
+  "ink": "#3b2a1a",
+  "sprites": [
+    {
+      "id": "rose-aguiar",
+      "kind": "rose",
+      "file": "rose-aguiar.png",
+      "anchor": [0.5, 0.5],
+      "sizePx": 300,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/8/8f/Jorge_Aguiar_Wind_rose.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_Wind_rose.jpg",
+        "crop": [57, 82, 658, 683]
+      }
+    },
+    {
+      "id": "rose-catalan",
+      "kind": "rose",
+      "file": "rose-catalan.png",
+      "anchor": [0.5, 0.5],
+      "sizePx": 110,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/d/d2/Compass_rose_from_Catalan_Atlas_%281375%29.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:Compass_rose_from_Catalan_Atlas_(1375).jpg",
+        "crop": [126, 191, 433, 500]
+      }
+    },
+    {
+      "id": "cartouche-dewit",
+      "kind": "cartouche",
+      "file": "cartouche-dewit.png",
+      "anchor": [0.5, 0.5],
+      "sizePx": 340,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/6/68/Angel_cartouche_on_a_Mediterranean_map_by_de_Wit.tiff",
+        "page": "https://commons.wikimedia.org/wiki/File:Angel_cartouche_on_a_Mediterranean_map_by_de_Wit.tiff",
+        "crop": [197, 251, 1228, 1035]
+      },
+      "panel": [0.034, 0.665, 0.953, 0.994]
+    }
+  ]
+}
