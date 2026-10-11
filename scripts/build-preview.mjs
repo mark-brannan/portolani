@@ -2,7 +2,8 @@
 // Adds the browser preview to _site/preview/ (run after build:demo, which clears _site):
 // the page, the shared scene module, the sprite packs, and the Natural Earth GeoJSON and font
 // the page fetches, vendored so nothing loads from a CDN. Sources come from downloads/ and are
-// fetched from the pinned URLs in ASSETS.md when missing, then checked against their sha256.
+// fetched from the pinned URLs when missing, then checked against their sha256. The URLs and
+// hashes below duplicate the ASSETS.md table: re-pin both together.
 
 import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -19,6 +20,7 @@ const SOURCES = [
   [`${NE}/ne_50m_land.geojson`, 'ne_50m_land.geojson', 'e874b27a51d146452be360cafb3cc50c86001074a67d534113e6534682f9826b', 'geo'],
   [`${NE}/ne_50m_populated_places_simple.geojson`, 'ne_50m_populated_places_simple.geojson', '8e70756b39fae9bcdc1e332bfc510c024c5edd3a13203ffd20092ee37b61d978', 'geo'],
   ['https://raw.githubusercontent.com/google/fonts/main/ofl/imfellenglish/IMFeENrm28P.ttf', 'IMFeENrm28P.ttf', 'fe9705bbde51af802719246d4608d08d37bde956ab99d9a590da996a5221a24c', 'font'],
+  ['https://raw.githubusercontent.com/google/fonts/main/ofl/imfellenglish/OFL.txt', 'OFL-IMFellEnglish.txt', '2a3ca501fc4d5efcad9798531e3e06962b1e20c60e464f6cbd6c17630112c773', 'font'],
 ];
 
 await mkdir(path.join(root, 'downloads'), { recursive: true });
