@@ -1,0 +1,76 @@
+name: Feature request
+description: Suggest a source, an option, or an output format
+labels: ['enhancement']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Two things to know first. The output format is
+        [specified](https://github.com/mark-brannan/portolani/blob/main/docs/portolano-format.md)
+        independently of this tool, so anything that lands in a file is a
+        change to a contract other languages read. And ready-made output is
+        published as [coastlines](https://github.com/mark-brannan/coastlines) —
+        if you want a profile that does not exist yet rather than a new
+        capability, that is the repository to ask in.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to draw, or ship?
+      description: >
+        Describe it from the display's point of view rather than as an
+        implementation. What is on screen, how big is it, and what is the byte
+        budget?
+      placeholder: >
+        A tide-station overview for one estuary, in a page that has to stay
+        under 30 KB total. The 50 m world file is mostly coastline I will never
+        show.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of change is it
+      options:
+        - A new source layer or dataset
+        - A new option, or a change to an existing knob
+        - A new output format
+        - Something about provenance or reproducibility
+        - A change to the portolano format itself
+        - Something else
+    validations:
+      required: true
+
+  - type: input
+    id: source
+    attributes:
+      label: Source, if this needs data the tool cannot reach today
+      description: >
+        A URL, and its licence. Natural Earth is public domain, which is why it
+        can be a named layer; anything else has to be at least as free to
+        redistribute.
+      placeholder: 'https://... (licence: ...)'
+    validations:
+      required: false
+
+  - type: textarea
+    id: format
+    attributes:
+      label: If this changes what lands in a file, which clause of the spec?
+      description: >
+        New optional members of `provenance` or `counts` are free. Touching
+        `geometry`, `encoding`, `kind` semantics or the digest definition takes
+        a new `format` value. Leave blank if the emitted bytes are unchanged.
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What do you do about it today?
+      description: >
+        Post-processing the output, a different tool, half an hour with
+        `ogr2ogr` — knowing the workaround usually shapes the design.
+    validations:
+      required: false

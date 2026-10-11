@@ -1,0 +1,17 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/mark-brannan/portolani/security/advisories/new
+    about: Report privately, not as a public issue. See SECURITY.md.
+  - name: The picture is wrong, not the JSON
+    url: https://github.com/mark-brannan/coast-wright/issues
+    about: coast-wright does the drawing — seams, projections, and anything that only goes wrong on screen belong there.
+  - name: You want ready-made geometry, not a generator
+    url: https://github.com/mark-brannan/coastlines/issues
+    about: coastlines publishes the common profiles as a package. Ask there for a profile that does not exist yet.
+  - name: The portolano format itself
+    url: https://github.com/mark-brannan/portolani/blob/main/docs/portolano-format.md
+    about: The output format is specified independently of this tool, including its change policy. Read it before proposing a change to what lands in a file.
+  - name: Natural Earth data
+    url: https://github.com/nvkelso/natural-earth-vector/issues
+    about: This tool records a digest of what Natural Earth publishes; it does not vouch for the cartography. Missing or misplaced real-world geometry belongs upstream.

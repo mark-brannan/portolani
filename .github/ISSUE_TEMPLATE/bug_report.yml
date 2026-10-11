@@ -1,0 +1,114 @@
+name: Bug report
+description: The generator produced something wrong, or failed
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This tool is deterministic, so **the exact command line usually
+        reproduces the problem outright**. That is the most valuable field
+        below.
+
+        Security problems go through a
+        [private advisory](https://github.com/mark-brannan/portolani/security/advisories/new)
+        instead — please don't file them here.
+
+        Geometry that looks wrong in a *browser* may belong to
+        [coast-wright](https://github.com/mark-brannan/coast-wright/issues),
+        which does the drawing. If the JSON this tool wrote is correct and the
+        picture is not, that is the place.
+
+  - type: textarea
+    id: command
+    attributes:
+      label: The exact command
+      description: Every knob, including the ones you left at their defaults if you know them.
+      render: shell
+      placeholder: 'npx portolani --source ne_50m_coastline --tolerance 0.1 --precision 2 --out coastline.json'
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened, and what you expected
+      description: >
+        What is wrong with the output, or how it failed. If a shape is missing
+        or mangled, name it and roughly where it is.
+      placeholder: >
+        The Bering Strait comes out as a single line straight across the map at
+        this tolerance. At 0.25 it is fine.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part
+      multiple: true
+      options:
+        - Simplification (--tolerance, --precision)
+        - Island filtering (--min-extent)
+        - Clipping (--bbox) and the antimeridian
+        - Fetching a source, or a Natural Earth ref
+        - Provenance, the digest, or reproducibility
+        - Output format (json / esm / cjs), or --out
+        - Fixtures (--fixtures)
+        - The CLI itself — arguments, messages, exit codes
+        - Something else / not sure
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: portolani version
+      description: >
+        `provenance.generator.version` inside a file it wrote is the surest
+        answer. `npm ls portolani` also works.
+      placeholder: '0.1.0'
+    validations:
+      required: true
+
+  - type: input
+    id: node
+    attributes:
+      label: Node version and platform
+      description: '`node --version`, and which OS.'
+      placeholder: 'v22.11.0, macOS arm64'
+    validations:
+      required: true
+
+  - type: textarea
+    id: provenance
+    attributes:
+      label: The output's provenance block
+      description: >
+        Paste `provenance` from the file it produced, if it produced one. It
+        records the source digest and every knob value, which pins down the run
+        exactly.
+      render: json
+    validations:
+      required: false
+
+  - type: textarea
+    id: output
+    attributes:
+      label: Error output
+      description: The stack trace or error text, if it failed rather than wrote something wrong.
+      render: text
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: reproducible
+    attributes:
+      label: Determinism
+      description: >
+        The same inputs are meant to produce the same bytes on any machine. If
+        they did not, say so — that is a more serious bug than a wrong shape.
+      options:
+        - label: Running it twice produced identical output
+          required: false
+        - label: Someone else's machine produced different bytes from the same command
+          required: false
