@@ -38,7 +38,7 @@ runs, including a microcontroller with no JavaScript anywhere near it.
 
 The reason it is a package rather than a private script is
 [reproducibility](docs/portolano-format.md#4-provenance). Simplification is
-lossy and has knobs. A private script means *trust me*; a published tool with
+lossy and has knobs. A private script means _trust me_; a published tool with
 the knob values stamped into every file it writes means anyone can re-run it
 and diff.
 
@@ -59,19 +59,19 @@ Node 20 or newer. Zero runtime dependencies, by policy.
 portolani --source <layer|url|file> [options]
 ```
 
-| Option | | Default | |
-| --- | --- | --- | --- |
-| `--source` | `-s` | *required* | A named Natural Earth layer, an `https` URL to a GeoJSON document, or a local file path. `--sources` lists the names. |
-| `--ref` | | `v5.1.2` | Which Natural Earth release named layers come from. |
-| `--kind` | `-k` | from the layer | `lines` or `polygons`. |
-| `--tolerance` | `-t` | `0.25` | Douglas–Peucker tolerance, in degrees. `0` keeps every point. |
-| `--precision` | `-p` | `1` | Decimal places kept per coordinate. |
-| `--min-extent` | `-m` | `1` | Drop shapes whose bounding box is smaller than this on both sides. `0` keeps every island. |
-| `--bbox` | `-b` | none | `west,south,east,north`. West may exceed east to wrap the antimeridian. |
-| `--format` | `-f` | `json` | `json`, `esm`, or `cjs`. |
-| `--out` | `-o` | stdout | Where to write. |
-| `--fixtures` | | none | Also write decoder self-check vectors. |
-| `--pretty` | | off | Indent the JSON. |
+| Option         |      | Default        |                                                                                                                       |
+| -------------- | ---- | -------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `--source`     | `-s` | _required_     | A named Natural Earth layer, an `https` URL to a GeoJSON document, or a local file path. `--sources` lists the names. |
+| `--ref`        |      | `v5.1.2`       | Which Natural Earth release named layers come from.                                                                   |
+| `--kind`       | `-k` | from the layer | `lines` or `polygons`.                                                                                                |
+| `--tolerance`  | `-t` | `0.25`         | Douglas–Peucker tolerance, in degrees. `0` keeps every point.                                                         |
+| `--precision`  | `-p` | `1`            | Decimal places kept per coordinate.                                                                                   |
+| `--min-extent` | `-m` | `1`            | Drop shapes whose bounding box is smaller than this on both sides. `0` keeps every island.                            |
+| `--bbox`       | `-b` | none           | `west,south,east,north`. West may exceed east to wrap the antimeridian.                                               |
+| `--format`     | `-f` | `json`         | `json`, `esm`, or `cjs`.                                                                                              |
+| `--out`        | `-o` | stdout         | Where to write.                                                                                                       |
+| `--fixtures`   |      | none           | Also write decoder self-check vectors.                                                                                |
+| `--pretty`     |      | off            | Indent the JSON.                                                                                                      |
 
 ### The two knobs that matter
 
@@ -81,14 +81,14 @@ independent and it is easy to waste one on the other: storing three decimals
 of a line simplified to a quarter degree records rounding noise very
 precisely.
 
-Match them. A useful rule is *precision one step finer than tolerance*:
+Match them. A useful rule is _precision one step finer than tolerance_:
 
-| Tolerance | Precision | Good for |
-| --- | --- | --- |
-| `0.25` | `1` | Annotating a coarse data grid — space weather, a global model, anything with cells wider than a degree. |
-| `0.1` | `2` | A world map the reader looks at rather than through. |
-| `0.02` | `3` | Regional. Recognisable at a few hundred miles across. |
-| `0.005` | `4` | Coastal pilotage scale. Use `--bbox`; the whole world at this fidelity is megabytes. |
+| Tolerance | Precision | Good for                                                                                                |
+| --------- | --------- | ------------------------------------------------------------------------------------------------------- |
+| `0.25`    | `1`       | Annotating a coarse data grid — space weather, a global model, anything with cells wider than a degree. |
+| `0.1`     | `2`       | A world map the reader looks at rather than through.                                                    |
+| `0.02`    | `3`       | Regional. Recognisable at a few hundred miles across.                                                   |
+| `0.005`   | `4`       | Coastal pilotage scale. Use `--bbox`; the whole world at this fidelity is megabytes.                    |
 
 **`--min-extent`** decides how much of the world's island count you are
 willing to pay for. At the default `1` you get continents and large islands.
@@ -131,12 +131,12 @@ There is no way to go the other direction; a line layer has no interior.
 Natural Earth v5.1.2, on this machine, JSON on disk including the provenance
 block (about 800 bytes of it):
 
-| Command | Shapes | Points | Bytes |
-| --- | --- | --- | --- |
-| `-s ne_110m_coastline` | 128 | 2 709 | 8 151 |
-| `-s ne_110m_land` | 121 | 2 764 | 8 445 |
-| `-s ne_50m_coastline -t 0.1 -p 2` | 268 | 9 917 | 36 222 |
-| `-s ne_10m_coastline -t 0.02 -p 3 -m 0.1` | 2 724 | 88 069 | 350 919 |
+| Command                                   | Shapes | Points | Bytes   |
+| ----------------------------------------- | ------ | ------ | ------- |
+| `-s ne_110m_coastline`                    | 128    | 2 709  | 8 151   |
+| `-s ne_110m_land`                         | 121    | 2 764  | 8 445   |
+| `-s ne_50m_coastline -t 0.1 -p 2`         | 268    | 9 917  | 36 222  |
+| `-s ne_10m_coastline -t 0.02 -p 3 -m 0.1` | 2 724  | 88 069 | 350 919 |
 
 The finest of those takes about two and a half seconds, most of it spent
 fetching 10 MB of source.
@@ -151,23 +151,23 @@ is made by `topojson-server` at `world-atlas`'s own quantisation.
 
 **Land**, `ne_110m_land`:
 
-| Format | Bytes | Gzipped | Points drawn | Parse + draw |
-| --- | ---: | ---: | ---: | ---: |
-| GeoJSON, Natural Earth as published | 138 160 | 51 269 | 5 143 | 0.8 ms |
-| GeoJSON, geometry only | 125 937 | 49 188 | 5 143 | 0.7 ms |
-| TopoJSON, `world-atlas` `land-110m.json` as published | 55 207 | 20 707 | 5 123 | 0.5 ms |
-| portolano, defaults (`-t 0.25 -p 1`) | 8 445 | 5 796 | 2 764 | 0.1 ms |
-| portolano, nothing simplified (`-t 0 -p 3 -m 0`) | 26 722 | 19 072 | 5 132 | 0.2 ms |
+| Format                                                |   Bytes | Gzipped | Points drawn | Parse + draw |
+| ----------------------------------------------------- | ------: | ------: | -----------: | -----------: |
+| GeoJSON, Natural Earth as published                   | 138 160 |  51 269 |        5 143 |       0.8 ms |
+| GeoJSON, geometry only                                | 125 937 |  49 188 |        5 143 |       0.7 ms |
+| TopoJSON, `world-atlas` `land-110m.json` as published |  55 207 |  20 707 |        5 123 |       0.5 ms |
+| portolano, defaults (`-t 0.25 -p 1`)                  |   8 445 |   5 796 |        2 764 |       0.1 ms |
+| portolano, nothing simplified (`-t 0 -p 3 -m 0`)      |  26 722 |  19 072 |        5 132 |       0.2 ms |
 
 **Coastline**, `ne_110m_coastline`:
 
-| Format | Bytes | Gzipped | Points drawn | Parse + draw |
-| --- | ---: | ---: | ---: | ---: |
-| GeoJSON, Natural Earth as published | 139 907 | 52 736 | 5 128 | 0.7 ms |
-| GeoJSON, geometry only | 126 264 | 50 530 | 5 128 | 0.7 ms |
-| TopoJSON, `geo2topo` of the same geometry | 58 926 | 21 154 | 5 128 | 0.5 ms |
-| portolano, defaults (`-t 0.25 -p 1`) | 8 151 | 5 718 | 2 709 | 0.1 ms |
-| portolano, nothing simplified (`-t 0 -p 3 -m 0`) | 26 511 | 19 053 | 5 128 | 0.2 ms |
+| Format                                           |   Bytes | Gzipped | Points drawn | Parse + draw |
+| ------------------------------------------------ | ------: | ------: | -----------: | -----------: |
+| GeoJSON, Natural Earth as published              | 139 907 |  52 736 |        5 128 |       0.7 ms |
+| GeoJSON, geometry only                           | 126 264 |  50 530 |        5 128 |       0.7 ms |
+| TopoJSON, `geo2topo` of the same geometry        |  58 926 |  21 154 |        5 128 |       0.5 ms |
+| portolano, defaults (`-t 0.25 -p 1`)             |   8 151 |   5 718 |        2 709 |       0.1 ms |
+| portolano, nothing simplified (`-t 0 -p 3 -m 0`) |  26 511 |  19 053 |        5 128 |       0.2 ms |
 
 The decoder a page also ships: none for GeoJSON; `topojson-client` for
 TopoJSON, 2 605 bytes gzipped; for a portolano, [§3 of the
@@ -198,12 +198,12 @@ Google's polyline format stores, and forgetting that the encoding alphabet
 contains a backslash that JSON escapes.
 
 ```js
-import { decodeRingDegrees } from 'portolani/codec'
+import { decodeRingDegrees } from 'portolani/codec';
 
-const portolano = await (await fetch('coastline.json')).json()
+const portolano = await (await fetch('coastline.json')).json();
 const rings = portolano.geometry.map((ring) =>
-  decodeRingDegrees(ring, portolano.encoding.precision)
-)
+  decodeRingDegrees(ring, portolano.encoding.precision),
+);
 ```
 
 `portolani/codec` is the reference implementation of §3, exported so that the
@@ -215,16 +215,16 @@ geometry somebody already generated, [`coastlines`][cl].
 ## Programmatic use
 
 ```js
-import { resolveSource, loadSource, buildPortolano, emit } from 'portolani'
+import { resolveSource, loadSource, buildPortolano, emit } from 'portolani';
 
-const source = resolveSource('ne_110m_coastline')
-const { geojson, sha256, bytes } = await loadSource(source)
+const source = resolveSource('ne_110m_coastline');
+const { geojson, sha256, bytes } = await loadSource(source);
 const portolano = buildPortolano({
   geojson,
   source: { ...source, sha256, bytes },
   options: { kind: 'lines', tolerance: 0.25, precision: 1, minExtent: 1 },
   generator: { name: 'my-build', version: '1.0.0' },
-})
+});
 ```
 
 `buildPortolano` is pure: no network, no clock. It is the shape a package

@@ -24,7 +24,7 @@ drawing belongs there, not here.
 
 ## Reproducibility is the point
 
-A private script means *trust me*. A published tool that stamps its knob values
+A private script means _trust me_. A published tool that stamps its knob values
 and the source digest into every file it writes means anyone can re-run it and
 diff. So:
 

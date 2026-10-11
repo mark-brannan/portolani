@@ -7,10 +7,10 @@ than it does for a library.** You run portolani, you keep the file, and the file
 does not depend on the tool afterwards. Nothing you shipped stops working
 because a newer version exists.
 
-| Version | Supported |
-| ------- | --------- |
-| latest `0.x` on [npm](https://www.npmjs.com/package/portolani) | yes |
-| anything older | no — but see below |
+| Version                                                        | Supported          |
+| -------------------------------------------------------------- | ------------------ |
+| latest `0.x` on [npm](https://www.npmjs.com/package/portolani) | yes                |
+| anything older                                                 | no — but see below |
 
 Only the latest version gets fixes; there are no maintenance branches. What
 makes that tolerable is that upgrading is not urgent by default:
@@ -25,7 +25,7 @@ makes that tolerable is that upgrading is not urgent by default:
   `format` field, under the spec's
   [change policy](docs/portolano-format.md#8-changes).
 
-Where the version *does* matter is `npx portolani`, which always fetches the
+Where the version _does_ matter is `npx portolani`, which always fetches the
 latest, and a `devDependency` pinned in a build that regenerates an asset.
 Those run current code against a network source, so keep them current.
 

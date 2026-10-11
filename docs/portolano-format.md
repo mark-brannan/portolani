@@ -30,16 +30,16 @@ implement what is written here; none of them owns it.
 }
 ```
 
-| Member       | Type            | Required | Meaning |
-| ------------ | --------------- | -------- | ------- |
-| `format`     | string          | yes      | Exactly `"portolano/1"` for this version. A reader that does not recognise the value must refuse the document rather than guess. |
-| `kind`       | string          | yes      | `"lines"` or `"polygons"`. Determines the shape of `geometry` (§2). |
-| `encoding`   | object          | yes      | How to turn `geometry` back into degrees (§3). |
-| `bounds`     | array \| null   | yes      | `[west, south, east, north]` in degrees, of the geometry actually present. `null` only when `geometry` is empty. |
-| `counts`     | object          | yes      | `shapes`, `rings`, `points` — see §2. Redundant with the geometry, on purpose: it is what a decoder checks itself against. |
-| `digest`     | string          | yes      | `"sha256:"` + lowercase hex, over `geometry` alone (§5). |
-| `provenance` | object          | yes      | Where the geometry came from and what was done to it (§4). |
-| `geometry`   | array           | yes      | The shapes (§2). |
+| Member       | Type          | Required | Meaning                                                                                                                          |
+| ------------ | ------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `format`     | string        | yes      | Exactly `"portolano/1"` for this version. A reader that does not recognise the value must refuse the document rather than guess. |
+| `kind`       | string        | yes      | `"lines"` or `"polygons"`. Determines the shape of `geometry` (§2).                                                              |
+| `encoding`   | object        | yes      | How to turn `geometry` back into degrees (§3).                                                                                   |
+| `bounds`     | array \| null | yes      | `[west, south, east, north]` in degrees, of the geometry actually present. `null` only when `geometry` is empty.                 |
+| `counts`     | object        | yes      | `shapes`, `rings`, `points` — see §2. Redundant with the geometry, on purpose: it is what a decoder checks itself against.       |
+| `digest`     | string        | yes      | `"sha256:"` + lowercase hex, over `geometry` alone (§5).                                                                         |
+| `provenance` | object        | yes      | Where the geometry came from and what was done to it (§4).                                                                       |
+| `geometry`   | array         | yes      | The shapes (§2).                                                                                                                 |
 
 Unknown members may be present. A reader must ignore members it does not
 recognise rather than reject the document — that is how version 1 grows
@@ -115,10 +115,10 @@ Two consequences a renderer must handle and a portolano will not do for it:
 
 `encoding` describes how a string becomes coordinates.
 
-| Member      | Value |
-| ----------- | ----- |
-| `type`      | `"polyline"` — the only value in version 1. |
-| `precision` | Non-negative integer. The number of decimal places kept. Divide the decoded fixed-point integers by `10 ** precision`. |
+| Member      | Value                                                                                                                           |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `type`      | `"polyline"` — the only value in version 1.                                                                                     |
+| `precision` | Non-negative integer. The number of decimal places kept. Divide the decoded fixed-point integers by `10 ** precision`.          |
 | `order`     | `"lon,lat"` — the only value in version 1. Present so a decoder can assert on it rather than trust a spec it may not have read. |
 
 The algorithm is Google's [encoded polyline algorithm][gpoly], applied to
@@ -220,7 +220,7 @@ It covers `geometry` and nothing else, so that adding a field to the metadata
 does not invalidate a stamp recorded downstream. What it asserts is "these are
 the same shapes" — the knobs that produced them are `provenance`'s job.
 
-Note that the digest is over the *encoded* strings. Two decoders can agree on
+Note that the digest is over the _encoded_ strings. Two decoders can agree on
 the digest and still disagree about what the coordinates mean; that is what
 §6 is for.
 
@@ -251,7 +251,11 @@ for cross-language self-verification:
       "digest": "sha256:…",
       "counts": { "shapes": 128, "rings": 128, "points": 2709 },
       "bounds": [-180, -85.6, 180, 83.5],
-      "firstPoints": [[-163.7, -78.6], [-163.1, -78.2], [-161.2, -78.4]]
+      "firstPoints": [
+        [-163.7, -78.6],
+        [-163.1, -78.2],
+        [-161.2, -78.4]
+      ]
     }
   ]
 }

@@ -18,7 +18,9 @@ const env = {
   createCanvas,
   readJSON: async (p) => JSON.parse(readFileSync(resolve(p), 'utf8')),
   loadImage: (p) => loadImage(resolve(p)),
-  loadFont: async (family) => { GlobalFonts.registerFromPath(join(DL, 'IMFeENrm28P.ttf'), family); },
+  loadFont: async (family) => {
+    GlobalFonts.registerFromPath(join(DL, 'IMFeENrm28P.ttf'), family);
+  },
 };
 
 const t0 = performance.now();
@@ -29,13 +31,15 @@ function render(file, view) {
   const canvas = createCanvas(W, H);
   drawScene(canvas.getContext('2d'), scene, data, bg, view);
   const tDraw = performance.now();
-  mkdirSync(join(ROOT, 'out'), { recursive: true }); writeFileSync(join(ROOT, 'out', file), canvas.toBuffer('image/png'));
+  mkdirSync(join(ROOT, 'out'), { recursive: true });
+  writeFileSync(join(ROOT, 'out', file), canvas.toBuffer('image/png'));
   return { draw: tDraw - t, encode: performance.now() - tDraw };
 }
 
 const full = render('mockup.png', { scale: 1, x: 0, y: 0 });
 const [gx, gy] = proj.project(DETAIL.lon, DETAIL.lat);
-const vw = W / DETAIL.scale, vh = H / DETAIL.scale;
+const vw = W / DETAIL.scale,
+  vh = H / DETAIL.scale;
 const detailView = {
   scale: DETAIL.scale,
   x: Math.max(0, Math.min(W - vw, gx - vw / 2)),
@@ -44,5 +48,9 @@ const detailView = {
 const detail = render('mockup-detail.png', detailView);
 
 const ms = (v) => `${v.toFixed(0)} ms`;
-console.log(`zoom ~${proj.zoom.toFixed(2)} (512 px tiles); land polys ${data.land.length}, coast lines ${data.coast.length}, towns ${scene.towns.length}, names ${scene.names.length}, roses ${scene.roseDraws.length}, monsters ${scene.monsters.map((m) => m.sprite.id).join(' ')}, ships ${scene.ships.map((s) => s.sprite.id).join(' ')}`);
-console.log(`load ${ms(timing.load)}; placement + parchment ${ms(timing.place)}; mockup draw ${ms(full.draw)} + encode ${ms(full.encode)}; detail draw ${ms(detail.draw)} + encode ${ms(detail.encode)}; total ${ms(performance.now() - t0)}`);
+console.log(
+  `zoom ~${proj.zoom.toFixed(2)} (512 px tiles); land polys ${data.land.length}, coast lines ${data.coast.length}, towns ${scene.towns.length}, names ${scene.names.length}, roses ${scene.roseDraws.length}, monsters ${scene.monsters.map((m) => m.sprite.id).join(' ')}, ships ${scene.ships.map((s) => s.sprite.id).join(' ')}`,
+);
+console.log(
+  `load ${ms(timing.load)}; placement + parchment ${ms(timing.place)}; mockup draw ${ms(full.draw)} + encode ${ms(full.encode)}; detail draw ${ms(detail.draw)} + encode ${ms(detail.encode)}; total ${ms(performance.now() - t0)}`,
+);

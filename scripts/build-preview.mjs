@@ -16,11 +16,36 @@ const out = path.join(root, '_site', 'preview');
 const NE = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson';
 
 const SOURCES = [
-  [`${NE}/ne_50m_coastline.geojson`, 'ne_50m_coastline.geojson', '271f1c4c1908312bac6b29d158ea1356544beafc129f260005300913aa5ea283', 'geo'],
-  [`${NE}/ne_50m_land.geojson`, 'ne_50m_land.geojson', 'e874b27a51d146452be360cafb3cc50c86001074a67d534113e6534682f9826b', 'geo'],
-  [`${NE}/ne_50m_populated_places_simple.geojson`, 'ne_50m_populated_places_simple.geojson', '8e70756b39fae9bcdc1e332bfc510c024c5edd3a13203ffd20092ee37b61d978', 'geo'],
-  ['https://raw.githubusercontent.com/google/fonts/main/ofl/imfellenglish/IMFeENrm28P.ttf', 'IMFeENrm28P.ttf', 'fe9705bbde51af802719246d4608d08d37bde956ab99d9a590da996a5221a24c', 'font'],
-  ['https://raw.githubusercontent.com/google/fonts/main/ofl/imfellenglish/OFL.txt', 'OFL-IMFellEnglish.txt', '2a3ca501fc4d5efcad9798531e3e06962b1e20c60e464f6cbd6c17630112c773', 'font'],
+  [
+    `${NE}/ne_50m_coastline.geojson`,
+    'ne_50m_coastline.geojson',
+    '271f1c4c1908312bac6b29d158ea1356544beafc129f260005300913aa5ea283',
+    'geo',
+  ],
+  [
+    `${NE}/ne_50m_land.geojson`,
+    'ne_50m_land.geojson',
+    'e874b27a51d146452be360cafb3cc50c86001074a67d534113e6534682f9826b',
+    'geo',
+  ],
+  [
+    `${NE}/ne_50m_populated_places_simple.geojson`,
+    'ne_50m_populated_places_simple.geojson',
+    '8e70756b39fae9bcdc1e332bfc510c024c5edd3a13203ffd20092ee37b61d978',
+    'geo',
+  ],
+  [
+    'https://raw.githubusercontent.com/google/fonts/main/ofl/imfellenglish/IMFeENrm28P.ttf',
+    'IMFeENrm28P.ttf',
+    'fe9705bbde51af802719246d4608d08d37bde956ab99d9a590da996a5221a24c',
+    'font',
+  ],
+  [
+    'https://raw.githubusercontent.com/google/fonts/main/ofl/imfellenglish/OFL.txt',
+    'OFL-IMFellEnglish.txt',
+    '2a3ca501fc4d5efcad9798531e3e06962b1e20c60e464f6cbd6c17630112c773',
+    'font',
+  ],
 ];
 
 await mkdir(path.join(root, 'downloads'), { recursive: true });
@@ -31,7 +56,9 @@ for (const [url, name, sha, dir] of SOURCES) {
     if (!res.ok) throw new Error(`${url}: ${res.status}`);
     await writeFile(file, Buffer.from(await res.arrayBuffer()));
   }
-  const got = createHash('sha256').update(await readFile(file)).digest('hex');
+  const got = createHash('sha256')
+    .update(await readFile(file))
+    .digest('hex');
   if (got !== sha) throw new Error(`${name}: sha256 ${got} does not match ASSETS.md (${sha})`);
   await mkdir(path.join(out, dir), { recursive: true });
   await cp(file, path.join(out, dir, name));
