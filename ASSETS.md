@@ -1,6 +1,6 @@
-# Sources
+# Assets
 
-Downloaded 2026-10-10 into `downloads/` (not committed; this file becomes `ASSETS.md` in the pack pipeline). Crop boxes per sprite are in each `packs/*/pack.json`.
+Downloaded 2026-10-10 into `downloads/` (not committed). Crop boxes per sprite are in each `packs/*/pack.json`.
 
 | File | URL | sha256 | Rights |
 |---|---|---|---|
@@ -15,4 +15,4 @@ Downloaded 2026-10-10 into `downloads/` (not committed; this file becomes `ASSET
 
 Commons SHA-1 for `Carta_Marina.jpeg` (from the API, matches the download): `3faca355f1e764d19d69b75901a415cce98c49d6`.
 
-Looked at, not used: Library of Congress item 2021668747 (Agnese atlas, IIIF, 3,328 px sheets): its roses looked about 100 px across at full size (estimated from 12.5% thumbnails), too small to crop.
+Not used: Library of Congress item 2021668747 (Agnese atlas); its roses are about 100 px across at full size, too small to crop.

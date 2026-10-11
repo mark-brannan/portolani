@@ -2,7 +2,7 @@
 // antique portolan, plus a 2x detail of the same scene. Not product code; the structure mirrors
 // the design (buildScene = placement, drawScene = drawTile's draw order) so a build can start here.
 //
-// Usage: node render.mjs   -> mockup.png, mockup-detail.png
+// Usage: npm run render   -> out/mockup.png, out/mockup-detail.png
 
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
