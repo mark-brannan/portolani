@@ -19,7 +19,9 @@
     "bench": "node scripts/bench.mjs",
     "packs": "node scripts/build-packs.mjs",
     "render": "node scripts/render.mjs",
-    "build:preview": "node scripts/build-preview.mjs"
+    "build:preview": "node scripts/build-preview.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "engines": {
     "node": ">=20"
@@ -53,10 +55,11 @@
     "LICENSE"
   ],
   "devDependencies": {
+    "@napi-rs/canvas": "^1.0.11",
     "coast-wright": "0.0.1-alpha.0",
+    "prettier": "3.6.2",
     "topojson-client": "3.1.0",
     "topojson-server": "3.0.1",
-    "world-atlas": "2.0.2",
-    "@napi-rs/canvas": "^1.0.11"
+    "world-atlas": "2.0.2"
   }
 }
