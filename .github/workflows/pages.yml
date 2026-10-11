@@ -20,6 +20,8 @@ jobs:
       # Fetches the pinned Natural Earth release once and fails if the
       # assembled site exceeds the 100 KB budget the page itself claims.
       - run: npm run build:demo
+      # Adds _site/preview/: the browser-rendered mockup, with its data vendored.
+      - run: npm run build:preview
       - uses: actions/upload-pages-artifact@v5
         with: { path: _site }
   deploy:
