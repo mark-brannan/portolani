@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(~/.claude/bin/pickup-list)",
+      "Bash(~/.claude/bin/pickup-list *)",
+      "Bash(~/.claude/bin/pr-blockers *)"
+    ]
+  }
+}
