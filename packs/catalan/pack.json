@@ -2,6 +2,7 @@
   "name": "catalan",
   "title": "Portolan roses and cartouche: Jorge de Aguiar 1492, Catalan Atlas 1375, Frederik de Wit",
   "licence": "Public domain; scans via Wikimedia Commons (Beinecke Library, Yale; BnF Gallica btv1b55002481n; Royal Museums Greenwich)",
+  "colour": "source",
   "ink": "#3b2a1a",
   "sprites": [
     {

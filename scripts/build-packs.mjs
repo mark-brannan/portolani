@@ -1,11 +1,13 @@
-// Pack build: crop public-domain scans into ink-mask sprites and write each pack's pack.json.
+// Pack build: crop public-domain scans into sprites and write each pack's pack.json.
 // Usage: node scripts/build-packs.mjs   (needs ImageMagick 7 `magick` on PATH; network for the first run)
 //
 // scripts/sources.json is the sources manifest: every file, URL, sha256 and rights line. Scans are
 // downloaded into downloads/ when missing, checked against it, and ASSETS.md is written from it.
 //
-// A sprite PNG is black RGB with alpha = ink coverage. The renderer fills it with the pack ink
-// and composites with `multiply`, so one ink setting retints the whole pack.
+// A sprite PNG keeps the scan's own colour, with alpha = ink coverage. The RGB is the scan divided
+// by its paper tone, so the renderer can composite with `multiply` and the source reds, greens and
+// gilt land on our parchment as they sat on theirs. A pack with `colour: 'ink'` is written as
+// black RGB instead, and the renderer fills it with the pack ink, so one ink setting retints it.
 //
 // Keying: crop -> darkness channel (luminance, or min(R,G,B) so gilt and colour wash count as ink)
 // -> levels -> masks (saturation silhouette for figures on hatched sea, circle for roses,
@@ -81,7 +83,7 @@ function magick(...args) {
   return execFileSync('magick', args.flat(), { encoding: 'utf8' }).trim();
 }
 
-function buildSprite(sprite, outDir, tmp) {
+function buildSprite(sprite, colour, outDir, tmp) {
   const scan = SOURCES[sprite.scan];
   const [x0, y0, x1, y1] = sprite.crop;
   const w = x1 - x0, h = y1 - y0;
@@ -139,7 +141,16 @@ function buildSprite(sprite, outDir, tmp) {
   const m = /^(\d+)x(\d+)\+(\d+)\+(\d+)$/.exec(trim);
   const [tw, th, tx, ty] = m.slice(1).map(Number);
   const file = `${sprite.id}.png`;
-  magick('-size', `${w}x${h}`, 'xc:black', alpha, '-alpha', 'off', '-compose', 'CopyOpacity', '-composite',
+  // Source colour: divide out the paper (the mean of the crop where there is no ink), so the
+  // scan's paper reads as white under `multiply` and only the inks and washes carry tone.
+  let rgb = ['-size', `${w}x${h}`, 'xc:black'];
+  if (colour === 'source') {
+    const paper = magick(t('crop'), '(', alpha, '-negate', '-threshold', '96%', ')', '-alpha', 'off',
+      '-compose', 'CopyOpacity', '-composite', '-scale', '1x1!', '-alpha', 'off', '-format', '%[pixel:p{0,0}]', 'info:');
+    magick(t('crop'), '(', '-size', `${w}x${h}`, `xc:${paper}`, ')', '-compose', 'DivideDst', '-composite', t('rgb'));
+    rgb = [t('rgb')];
+  }
+  magick(rgb, alpha, '-alpha', 'off', '-compose', 'CopyOpacity', '-composite',
     '-crop', `${tw}x${th}+${tx}+${ty}`, '+repage', '-strip', join(outDir, file));
 
   const entry = {
@@ -183,8 +194,9 @@ try {
   for (const pack of PACKS) {
     const outDir = join(ROOT, 'packs', pack.name);
     mkdirSync(outDir, { recursive: true });
-    const sprites = pack.sprites.map((s) => buildSprite(s, outDir, tmp));
-    const manifest = { name: pack.name, title: pack.title, licence: pack.licence, ink: pack.ink, sprites };
+    const colour = pack.colour ?? 'source';
+    const sprites = pack.sprites.map((s) => buildSprite(s, colour, outDir, tmp));
+    const manifest = { name: pack.name, title: pack.title, licence: pack.licence, colour, ink: pack.ink, sprites };
     // keep short numeric arrays (anchor, crop, panel) on one line
     const json = JSON.stringify(manifest, null, 2).replace(/\[\s+([-\d.,\s]+?)\s+\]/g, (_, xs) => `[${xs.split(/,\s*/).join(', ')}]`);
     writeFileSync(join(outDir, 'pack.json'), json + '\n');
