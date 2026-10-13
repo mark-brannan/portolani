@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Adds the browser preview to _site/preview/ (run after build:demo, which clears _site):
+// Assembles the browser preview into _site/, the Pages root:
 // the page, the shared scene module, the sprite packs, and the Natural Earth GeoJSON and font
 // the page fetches, vendored so nothing loads from a CDN. Sources come from downloads/ and are
 // fetched from the pinned URLs when missing, then checked against their sha256. The URLs and
@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
-const out = path.join(root, '_site', 'preview');
+const out = path.join(root, '_site');
 const NE = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson';
 
 const SOURCES = [
