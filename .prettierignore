@@ -1,0 +1,11 @@
+dist
+node_modules
+coverage
+package-lock.json
+CHANGELOG.md
+.release-please-manifest.json
+screenshots
+tsconfig.tsbuildinfo
+_site
+# CI workflows are not reformatted by this tool
+.github
