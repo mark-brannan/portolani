@@ -454,7 +454,7 @@ function bbox(pts) {
   return b;
 }
 
-// Land and coast with bounding boxes; coast split into short runs so a tile walks only its own.
+// Land and coast with bounding boxes; coast split into short runs so a view walks only its own.
 const COAST_RUN = 64;
 const indexes = new WeakMap();
 function indexOf(data) {
@@ -472,7 +472,7 @@ function indexOf(data) {
 }
 
 // Sutherland-Hodgman against the view rect. Each ring is clipped alone, which keeps even-odd
-// fill right inside the rect; the seams it adds lie on the padded edge, outside the tile.
+// fill right inside the rect; the seams it adds lie on the padded edge, outside the view.
 function clipRing(ring, r) {
   let out = ring;
   for (const [inside, cut] of [
@@ -555,7 +555,7 @@ function drawTower(g, t) {
 function drawScene(g, scene, data, bg, view) {
   g.save();
   g.setTransform(view.scale, 0, 0, view.scale, -view.x * view.scale, -view.y * view.scale);
-  // Only what meets the view is traced or drawn; a tile skips the rest of the scene.
+  // Only what meets the view is traced or drawn; a view skips the rest of the scene.
   const r = viewRect(g, view), idx = indexOf(data);
   const land = landIn(idx, r);
   const coast = idx.coast.filter((c) => meets(r, c.box)).map((c) => c.run);
@@ -690,4 +690,4 @@ export async function createScene(environment, opts = {}) {
   return { scene, data, bg, proj, timing: { load: tLoad - t0, place: performance.now() - tLoad } };
 }
 
-export { drawScene, W, H, DETAIL, FRAME, MARGIN };
+export { drawScene, W, H, DETAIL, FRAME, MARGIN, COAST_RUN };

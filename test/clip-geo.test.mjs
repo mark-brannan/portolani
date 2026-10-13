@@ -28,3 +28,10 @@ test('points outside the box are dropped', () => {
   const geo = { type: 'FeatureCollection', features: [[1, 1], [11, 1]].map((c) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: c } })) };
   assert.deepEqual(clipToBox(geo, box).features.map((f) => f.geometry.coordinates), [[1, 1]]);
 });
+
+test('with run, lines are cut on run boundaries counted from the first point', () => {
+  const line = [[20, 5], [21, 5], [22, 5], [23, 5], [5, 5], [6, 5], [24, 5], [25, 5], [26, 5], [27, 5]];
+  const [f] = clipToBox(fc({ type: 'LineString', coordinates: line }), box, { run: 2 }).features;
+  // runs are points 0-3, 2-5, 4-7, 6-9; the middle two touch the box
+  assert.deepEqual(f.geometry.coordinates, [line.slice(2, 8)]);
+});

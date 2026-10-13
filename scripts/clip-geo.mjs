@@ -1,6 +1,7 @@
 // Cuts GeoJSON to a lon/lat box {x0, x1, y0, y1}: points filtered, polygon rings clipped, lines
-// split into the runs that touch the box.
-export function clipToBox(geo, box) {
+// split into the runs that touch the box. With `run`, lines are cut on the same run boundaries
+// a reader that splits each line every `run` points uses, so its runs come out unchanged.
+export function clipToBox(geo, box, { run } = {}) {
   const inside = ([x, y]) => x >= box.x0 && x <= box.x1 && y >= box.y0 && y <= box.y1;
   const features = [];
   for (const f of geo.features) {
@@ -13,7 +14,7 @@ export function clipToBox(geo, box) {
       if (polys.length) features.push({ ...f, geometry: { type: 'MultiPolygon', coordinates: polys } });
       continue;
     }
-    const lines = (g.type === 'LineString' ? [g.coordinates] : g.coordinates).flatMap((l) => clipLine(l, inside));
+    const lines = (g.type === 'LineString' ? [g.coordinates] : g.coordinates).flatMap((l) => (run ? clipRuns(l, inside, run) : clipLine(l, inside)));
     if (lines.length) features.push({ ...f, geometry: { type: 'MultiLineString', coordinates: lines } });
   }
   return { ...geo, features };
@@ -54,4 +55,18 @@ function clipLine(line, inside) {
     } else if (run) { run.push(p); run = null; }
   });
   return runs.filter((r) => r.length >= 2);
+}
+
+// Whole runs of `run` segments, counted from the line's first point, each with the one segment
+// it shares with the next; consecutive runs that touch the box come out as one line.
+function clipRuns(line, inside, run) {
+  const out = [];
+  let from = -1;
+  for (let i = 0; i < line.length - 1; i += run) {
+    const end = Math.min(line.length - 1, i + run + 1);
+    if (line.slice(i, end + 1).some(inside)) { if (from < 0) from = i; continue; }
+    if (from >= 0) { out.push(line.slice(from, i + 2)); from = -1; }
+  }
+  if (from >= 0) out.push(line.slice(from));
+  return out;
 }

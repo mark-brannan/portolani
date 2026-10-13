@@ -11,7 +11,7 @@ import { existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { FRAME, MARGIN } from './scene.mjs';
+import { FRAME, MARGIN, COAST_RUN } from './scene.mjs';
 import { clipToBox } from './clip-geo.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
@@ -40,7 +40,7 @@ for (const [url, name, sha, dir] of SOURCES) {
   const got = createHash('sha256').update(await readFile(file)).digest('hex');
   if (got !== sha) throw new Error(`${name}: sha256 ${got} does not match ASSETS.md (${sha})`);
   await mkdir(path.join(out, dir), { recursive: true });
-  if (dir === 'geo') await writeFile(path.join(out, dir, name), JSON.stringify(clipToBox(JSON.parse(await readFile(file, 'utf8')), BOX)));
+  if (dir === 'geo') await writeFile(path.join(out, dir, name), JSON.stringify(clipToBox(JSON.parse(await readFile(file, 'utf8')), BOX, { run: COAST_RUN })));
   else await cp(file, path.join(out, dir, name));
 }
 await cp(path.join(root, 'public'), out, { recursive: true });
