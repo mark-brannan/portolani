@@ -8,7 +8,7 @@
 // and composites with `multiply`, so one ink setting retints the whole pack.
 //
 // Keying: crop -> darkness channel (luminance, or min(R,G,B) so gilt and colour wash count as ink)
-// -> levels -> threshold + feather -> optional fill (lettering inside dark fields) -> masks (saturation silhouette for figures on hatched sea, circle for roses,
+// -> levels -> masks (saturation silhouette for figures on hatched sea, circle for roses,
 // rectangles erased for lettering) -> trim.
 
 import { execFileSync } from 'node:child_process';
@@ -30,15 +30,18 @@ async function fetchSource(src) {
   if (!existsSync(src.path)) {
     const res = await fetch(src.url, { headers: { 'user-agent': 'portolani-build/0.1 (https://github.com/mark-brannan/portolani)' } });
     if (!res.ok) throw new Error(`${src.url}: ${res.status}`);
-    writeFileSync(src.path, Buffer.from(await res.arrayBuffer()));
+    const bytes = Buffer.from(await res.arrayBuffer());
+    checkSha(src, bytes); // a bad fetch never reaches disk, so the next run retries it
+    writeFileSync(src.path, bytes);
+    return;
   }
-  const got = createHash('sha256').update(readFileSync(src.path)).digest('hex');
-  if (got !== src.sha256) throw new Error(`${src.file}: sha256 ${got} does not match the manifest (${src.sha256})`);
+  checkSha(src, readFileSync(src.path));
 }
 
-// Key: ink = darkness after levels; alpha = ink above `threshold`, then softened by `feather` px.
-// A hard cut with a short feather leaves no grey fringe of parchment-tinted ink around the line work.
-const KEY = { threshold: 50, feather: 0.6 };
+function checkSha(src, bytes) {
+  const got = createHash('sha256').update(bytes).digest('hex');
+  if (got !== src.sha256) throw new Error(`${src.file}: sha256 ${got} does not match the manifest (${src.sha256})`);
+}
 
 // Figures on the Carta Marina sit on hatched sea, so they take a saturation silhouette.
 const SEA_FIGURE_LEVEL = [26, 56]; // woodcut line only; colour fills and sea hatching mostly drop out
@@ -65,12 +68,8 @@ const PACKS = [
     licence: 'Public domain; scans via Wikimedia Commons (Beinecke Library, Yale; BnF Gallica btv1b55002481n; Royal Museums Greenwich)',
     ink: '#3b2a1a',
     sprites: [
-      { id: 'rose-aguiar', kind: 'rose', scan: 'aguiar', crop: [55, 80, 665, 690], sizePx: 300, dark: 'min', level: [12, 78], circle: [300, 300, 300],
-        // wind names: those on dark petals are filled in, the inner-ring letters are cleared
-        fill: [[340, 108, 402, 160], [178, 195, 235, 235], [490, 190, 552, 232], [110, 358, 172, 390], [548, 370, 612, 402], [168, 495, 215, 545], [335, 590, 372, 640], [500, 505, 555, 552]],
-        erase: [[259, 274, 286, 301], [444, 272, 471, 298], [220, 364, 243, 390], [468, 364, 500, 388], [444, 444, 466, 470], [272, 454, 296, 478], [342, 494, 366, 520]] },
-      { id: 'rose-catalan', kind: 'rose', scan: 'catalan', crop: [120, 185, 440, 505], sizePx: 110, dark: 'min', level: [10, 70], circle: [160, 160, 152],
-        erase: [[236, 188, 316, 222], [124, 266, 150, 294], [392, 306, 424, 360]] },
+      { id: 'rose-aguiar', kind: 'rose', scan: 'aguiar', crop: [55, 80, 665, 690], sizePx: 300, dark: 'min', level: [12, 78], circle: [300, 300, 300] },
+      { id: 'rose-catalan', kind: 'rose', scan: 'catalan', crop: [120, 185, 440, 505], sizePx: 110, dark: 'min', level: [10, 70], circle: [160, 160, 152] },
       { id: 'cartouche-dewit', kind: 'cartouche', scan: 'dewit', crop: [196, 250, 1229, 1039], sizePx: 340, dark: 'min', level: [12, 66],
         // panel lettering and scale bars cleared so the renderer can letter the panel; SYRIA and coast cleared
         erase: [[232, 772, 1180, 1039], [196, 250, 300, 690]], panel: [232, 772, 1180, 1030] },
@@ -95,18 +94,8 @@ function buildSprite(sprite, outDir, tmp) {
     ? [t('crop'), '-separate', '-evaluate-sequence', 'min']
     : [t('crop'), '-colorspace', 'gray'];
   const [lo, hi] = sprite.level ?? [18, 64];
-  const key = { ...KEY, ...sprite.key };
-  magick(dark, '-level', `${lo}%,${hi}%`, '-negate', '-threshold', `${key.threshold}%`, '-blur', `0x${key.feather}`, t('ink'));
-
-  // fill: boxes where lettering sits inside a dark field (wind names on petals); close the glyph holes
-  if (sprite.fill) {
-    const draws = sprite.fill.flatMap(([fx0, fy0, fx1, fy1]) =>
-      ['-draw', `rectangle ${fx0 - x0},${fy0 - y0} ${fx1 - x0},${fy1 - y0}`]);
-    magick('-size', `${w}x${h}`, 'xc:black', '-fill', 'white', draws, t('fillbox'));
-    magick(t('ink'), '-morphology', 'Close', 'Disk:4', t('closed'));
-    magick(t('closed'), t('fillbox'), '-compose', 'multiply', '-composite', t('closedbox'));
-    magick(t('ink'), t('closedbox'), '-compose', 'lighten', '-composite', t('ink'));
-  }
+  // Keep the tone: alpha is continuous ink coverage, so shading, hatching and washes survive.
+  magick(dark, '-level', `${lo}%,${hi}%`, '-negate', t('ink'));
 
   const masks = [];
   if (sprite.silhouette) {

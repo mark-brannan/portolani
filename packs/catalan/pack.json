@@ -14,7 +14,7 @@
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/8/8f/Jorge_Aguiar_Wind_rose.jpg",
         "page": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_Wind_rose.jpg",
-        "crop": [59, 81, 658, 683]
+        "crop": [57, 82, 658, 683]
       }
     },
     {
@@ -27,7 +27,7 @@
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/d/d2/Compass_rose_from_Catalan_Atlas_%281375%29.jpg",
         "page": "https://commons.wikimedia.org/wiki/File:Compass_rose_from_Catalan_Atlas_(1375).jpg",
-        "crop": [127, 198, 433, 498]
+        "crop": [126, 191, 433, 500]
       }
     },
     {
@@ -40,9 +40,9 @@
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/6/68/Angel_cartouche_on_a_Mediterranean_map_by_de_Wit.tiff",
         "page": "https://commons.wikimedia.org/wiki/File:Angel_cartouche_on_a_Mediterranean_map_by_de_Wit.tiff",
-        "crop": [197, 251, 1228, 1034]
+        "crop": [197, 251, 1228, 1035]
       },
-      "panel": [0.034, 0.665, 0.953, 0.995]
+      "panel": [0.034, 0.665, 0.953, 0.994]
     }
   ]
 }
