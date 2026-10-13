@@ -1,15 +1,19 @@
 // Pack build: crop public-domain scans into ink-mask sprites and write each pack's pack.json.
-// Usage: node scripts/build-packs.mjs   (needs ImageMagick 7 `magick` on PATH and the scans in downloads/)
+// Usage: node scripts/build-packs.mjs   (needs ImageMagick 7 `magick` on PATH; network for the first run)
+//
+// scripts/sources.json is the sources manifest: every file, URL, sha256 and rights line. Scans are
+// downloaded into downloads/ when missing, checked against it, and ASSETS.md is written from it.
 //
 // A sprite PNG is black RGB with alpha = ink coverage. The renderer fills it with the pack ink
 // and composites with `multiply`, so one ink setting retints the whole pack.
 //
 // Keying: crop -> darkness channel (luminance, or min(R,G,B) so gilt and colour wash count as ink)
-// -> levels -> optional masks (saturation silhouette for figures on hatched sea, circle for roses,
+// -> levels -> masks (saturation silhouette for figures on hatched sea, circle for roses,
 // rectangles erased for lettering) -> trim.
 
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, writeFileSync, mkdtempSync, rmSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync, existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
@@ -17,28 +21,27 @@ import { tmpdir } from 'node:os';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DL = join(ROOT, 'downloads');
 
-const SCANS = {
-  cartaMarina: {
-    file: join(DL, 'Carta_Marina.jpeg'),
-    url: 'https://upload.wikimedia.org/wikipedia/commons/e/ea/Carta_Marina.jpeg',
-    page: 'https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg',
-  },
-  aguiar: {
-    file: join(DL, 'roses', 'Jorge_Aguiar_Wind_rose.jpg'),
-    url: 'https://upload.wikimedia.org/wikipedia/commons/8/8f/Jorge_Aguiar_Wind_rose.jpg',
-    page: 'https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_Wind_rose.jpg',
-  },
-  catalan: {
-    file: join(DL, 'roses', 'Compass_rose_from_Catalan_Atlas_%281375%29.jpg'),
-    url: 'https://upload.wikimedia.org/wikipedia/commons/d/d2/Compass_rose_from_Catalan_Atlas_%281375%29.jpg',
-    page: 'https://commons.wikimedia.org/wiki/File:Compass_rose_from_Catalan_Atlas_(1375).jpg',
-  },
-  deWit: {
-    file: join(DL, 'roses', 'Angel_cartouche_on_a_Mediterranean_map_by_de_Wit.tiff'),
-    url: 'https://upload.wikimedia.org/wikipedia/commons/6/68/Angel_cartouche_on_a_Mediterranean_map_by_de_Wit.tiff',
-    page: 'https://commons.wikimedia.org/wiki/File:Angel_cartouche_on_a_Mediterranean_map_by_de_Wit.tiff',
-  },
-};
+const MANIFEST = JSON.parse(readFileSync(join(ROOT, 'scripts', 'sources.json'), 'utf8'));
+const SOURCES = Object.fromEntries(MANIFEST.sources.map((s) => [s.id, { ...s, path: join(DL, s.file) }]));
+
+// Download any scan that is missing, then refuse bytes that do not match the pinned sha256.
+async function fetchSource(src) {
+  mkdirSync(DL, { recursive: true });
+  if (!existsSync(src.path)) {
+    const res = await fetch(src.url, { headers: { 'user-agent': 'portolani-build/0.1 (https://github.com/mark-brannan/portolani)' } });
+    if (!res.ok) throw new Error(`${src.url}: ${res.status}`);
+    const bytes = Buffer.from(await res.arrayBuffer());
+    checkSha(src, bytes); // a bad fetch never reaches disk, so the next run retries it
+    writeFileSync(src.path, bytes);
+    return;
+  }
+  checkSha(src, readFileSync(src.path));
+}
+
+function checkSha(src, bytes) {
+  const got = createHash('sha256').update(bytes).digest('hex');
+  if (got !== src.sha256) throw new Error(`${src.file}: sha256 ${got} does not match the manifest (${src.sha256})`);
+}
 
 // Figures on the Carta Marina sit on hatched sea, so they take a saturation silhouette.
 const SEA_FIGURE_LEVEL = [26, 56]; // woodcut line only; colour fills and sea hatching mostly drop out
@@ -51,12 +54,12 @@ const PACKS = [
     licence: 'Public domain (PD-Art); scan: James Ford Bell Library via Wikimedia Commons',
     ink: '#3b2a1a',
     sprites: [
-      { id: 'serpent-a', kind: 'monster', scan: 'cartaMarina', crop: [1698, 880, 2065, 1190], sizePx: 200, minClearancePx: 160, weight: 3, level: SEA_FIGURE_LEVEL, silhouette: SEA_FIGURE, erase: [[1975, 935, 2065, 1102], [1715, 1112, 1800, 1145]] },
-      { id: 'whale-b', kind: 'monster', scan: 'cartaMarina', crop: [2040, 358, 2350, 532], sizePx: 190, minClearancePx: 150, weight: 2, level: SEA_FIGURE_LEVEL, silhouette: SEA_FIGURE },
-      { id: 'pistrix-c', kind: 'monster', scan: 'cartaMarina', crop: [374, 1236, 566, 1432], sizePx: 150, minClearancePx: 130, weight: 2, level: SEA_FIGURE_LEVEL, silhouette: SEA_FIGURE },
-      { id: 'cete-e', kind: 'monster', scan: 'cartaMarina', crop: [1788, 572, 2046, 732], sizePx: 180, minClearancePx: 140, weight: 1, level: SEA_FIGURE_LEVEL, silhouette: SEA_FIGURE },
-      { id: 'ship-a', kind: 'ship', scan: 'cartaMarina', crop: [1160, 800, 1312, 1000], sizePx: 80, heading: 'right', level: SEA_FIGURE_LEVEL, silhouette: { ...SEA_FIGURE, dilate: 6, close: 9 }, erase: [[1215, 975, 1275, 1000]] },
-      { id: 'ship-b', kind: 'ship', scan: 'cartaMarina', crop: [2085, 708, 2212, 802], sizePx: 64, heading: 'right', level: SEA_FIGURE_LEVEL, silhouette: { ...SEA_FIGURE, dilate: 6, minArea: 300 } },
+      { id: 'serpent-a', kind: 'monster', scan: 'carta-marina', crop: [1698, 880, 2065, 1190], sizePx: 200, minClearancePx: 160, weight: 3, level: SEA_FIGURE_LEVEL, silhouette: SEA_FIGURE, erase: [[1975, 935, 2065, 1102], [1715, 1112, 1800, 1145]] },
+      { id: 'whale-b', kind: 'monster', scan: 'carta-marina', crop: [2040, 358, 2350, 532], sizePx: 190, minClearancePx: 150, weight: 2, level: SEA_FIGURE_LEVEL, silhouette: SEA_FIGURE },
+      { id: 'pistrix-c', kind: 'monster', scan: 'carta-marina', crop: [374, 1236, 566, 1432], sizePx: 150, minClearancePx: 130, weight: 2, level: SEA_FIGURE_LEVEL, silhouette: SEA_FIGURE },
+      { id: 'cete-e', kind: 'monster', scan: 'carta-marina', crop: [1788, 572, 2046, 732], sizePx: 180, minClearancePx: 140, weight: 1, level: SEA_FIGURE_LEVEL, silhouette: SEA_FIGURE },
+      { id: 'ship-a', kind: 'ship', scan: 'carta-marina', crop: [1160, 800, 1312, 1000], sizePx: 80, heading: 'right', level: SEA_FIGURE_LEVEL, silhouette: { ...SEA_FIGURE, dilate: 6, close: 9 }, erase: [[1215, 975, 1275, 1000]] },
+      { id: 'ship-b', kind: 'ship', scan: 'carta-marina', crop: [2085, 708, 2212, 802], sizePx: 64, heading: 'right', level: SEA_FIGURE_LEVEL, silhouette: { ...SEA_FIGURE, dilate: 6, minArea: 300 } },
     ],
   },
   {
@@ -65,9 +68,9 @@ const PACKS = [
     licence: 'Public domain; scans via Wikimedia Commons (Beinecke Library, Yale; BnF Gallica btv1b55002481n; Royal Museums Greenwich)',
     ink: '#3b2a1a',
     sprites: [
-      { id: 'rose-aguiar', kind: 'rose', scan: 'aguiar', crop: [55, 80, 665, 690], sizePx: 300, key: 'min', level: [12, 78], circle: [300, 300, 300] },
-      { id: 'rose-catalan', kind: 'rose', scan: 'catalan', crop: [120, 185, 440, 505], sizePx: 110, key: 'min', level: [10, 70], circle: [160, 160, 152] },
-      { id: 'cartouche-dewit', kind: 'cartouche', scan: 'deWit', crop: [196, 250, 1229, 1039], sizePx: 340, key: 'min', level: [12, 66],
+      { id: 'rose-aguiar', kind: 'rose', scan: 'aguiar', crop: [55, 80, 665, 690], sizePx: 300, dark: 'min', level: [12, 78], circle: [300, 300, 300] },
+      { id: 'rose-catalan', kind: 'rose', scan: 'catalan', crop: [120, 185, 440, 505], sizePx: 110, dark: 'min', level: [10, 70], circle: [160, 160, 152] },
+      { id: 'cartouche-dewit', kind: 'cartouche', scan: 'dewit', crop: [196, 250, 1229, 1039], sizePx: 340, dark: 'min', level: [12, 66],
         // panel lettering and scale bars cleared so the renderer can letter the panel; SYRIA and coast cleared
         erase: [[232, 772, 1180, 1039], [196, 250, 300, 690]], panel: [232, 772, 1180, 1030] },
     ],
@@ -79,18 +82,19 @@ function magick(...args) {
 }
 
 function buildSprite(sprite, outDir, tmp) {
-  const scan = SCANS[sprite.scan];
+  const scan = SOURCES[sprite.scan];
   const [x0, y0, x1, y1] = sprite.crop;
   const w = x1 - x0, h = y1 - y0;
   const t = (n) => join(tmp, `${sprite.id}.${n}.png`);
 
-  magick(`${scan.file}[0]`, '-crop', `${w}x${h}+${x0}+${y0}`, '+repage', '-alpha', 'off', t('crop'));
+  magick(`${scan.path}[0]`, '-crop', `${w}x${h}+${x0}+${y0}`, '+repage', '-alpha', 'off', t('crop'));
 
   // Ink = darkness. 'lum' for line work; 'min' (min of R,G,B) so gilt and colour count as ink too.
-  const dark = sprite.key === 'min'
+  const dark = sprite.dark === 'min'
     ? [t('crop'), '-separate', '-evaluate-sequence', 'min']
     : [t('crop'), '-colorspace', 'gray'];
   const [lo, hi] = sprite.level ?? [18, 64];
+  // Keep the tone: alpha is continuous ink coverage, so shading, hatching and washes survive.
   magick(dark, '-level', `${lo}%,${hi}%`, '-negate', t('ink'));
 
   const masks = [];
@@ -156,8 +160,26 @@ function buildSprite(sprite, outDir, tmp) {
   return entry;
 }
 
+const ASSETS_HEAD = `# Assets
+
+Generated by \`npm run packs\` from \`scripts/sources.json\`; edit the manifest, not this file. Downloaded into \`downloads/\` (not committed) and checked against the sha256 below. Crop boxes per sprite are in each \`packs/*/pack.json\`.
+
+| File | URL | sha256 | Rights |
+|---|---|---|---|
+`;
+
+function writeAssets() {
+  const rows = MANIFEST.sources.map((s) => {
+    const file = `\`${s.file}\`${s.note ? ` ${s.note}` : ''}`;
+    return `| ${file} | ${s.url}${s.page ? ` — page ${s.page}` : ''} | \`${s.sha256}\` | ${s.rights} |`;
+  });
+  writeFileSync(join(ROOT, 'ASSETS.md'), `${ASSETS_HEAD}${rows.join('\n')}\n\n${MANIFEST.footer.join('\n\n')}\n`);
+}
+
 const tmp = mkdtempSync(join(tmpdir(), 'packs-'));
 try {
+  const used = new Set(PACKS.flatMap((p) => p.sprites.map((s) => s.scan)));
+  for (const id of used) await fetchSource(SOURCES[id]);
   for (const pack of PACKS) {
     const outDir = join(ROOT, 'packs', pack.name);
     mkdirSync(outDir, { recursive: true });
@@ -168,6 +190,7 @@ try {
     writeFileSync(join(outDir, 'pack.json'), json + '\n');
     console.log(`${pack.name}: ${sprites.map((s) => s.id).join(', ')}`);
   }
+  writeAssets();
 } finally {
   rmSync(tmp, { recursive: true, force: true });
 }
