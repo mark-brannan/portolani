@@ -105,15 +105,17 @@ async function loadData(proj) {
     lon > FRAME.lonMin - margin && lon < FRAME.lonMax + margin && lat > FRAME.latMin - margin && lat < FRAME.latMax + margin);
   const projectLine = (line) => line.map(([lon, lat]) => proj.project(lon, lat));
 
+  const [landGeo, coastGeo, placesGeo] = await Promise.all(
+    ['ne_50m_land', 'ne_50m_coastline', 'ne_50m_populated_places_simple'].map(loadGeo));
   const land = []; // polygons: array of rings in px
-  for (const f of await loadGeo('ne_50m_land')) {
+  for (const f of landGeo) {
     for (const poly of ringsOf(f.geometry)) if (poly.some(near)) land.push(poly.map(projectLine));
   }
   const coast = []; // polylines in px
-  for (const f of await loadGeo('ne_50m_coastline')) {
+  for (const f of coastGeo) {
     for (const [line] of ringsOf(f.geometry)) if (near(line)) coast.push(projectLine(line));
   }
-  const places = (await loadGeo('ne_50m_populated_places_simple'))
+  const places = placesGeo
     .map((f) => ({ ...f.properties, lon: f.geometry.coordinates[0], lat: f.geometry.coordinates[1] }))
     .filter((p) => p.scalerank <= 4 && p.lon > FRAME.lonMin - margin && p.lon < FRAME.lonMax + margin &&
       p.lat > FRAME.latMin - margin && p.lat < FRAME.latMax + margin)
@@ -674,10 +676,10 @@ export async function createScene(environment, opts = {}) {
   TUNE.townGap = 48 / density;
 
   const t0 = performance.now();
-  await env.loadFont(STYLE.font);
   const proj = makeProjection(FRAME, W, H);
-  const data = await loadData(proj);
-  const packs = { cartaMarina: await loadPack('carta-marina'), catalan: await loadPack('catalan') };
+  const [, data, cartaMarina, catalan] = await Promise.all(
+    [env.loadFont(STYLE.font), loadData(proj), loadPack('carta-marina'), loadPack('catalan')]);
+  const packs = { cartaMarina, catalan };
   const tLoad = performance.now();
 
   const measureCtx = createCanvas(10, 10).getContext('2d');
