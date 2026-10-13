@@ -331,7 +331,7 @@ function buildScene(data, packs, measure) {
     const box = obb(ox + Math.cos(angle) * width / 2, oy + Math.sin(angle) * width / 2, angle, width / 2 + 2, fontPx * 0.45);
     if (!obbInside(box) || boxes.some((b) => b !== icon && obbOverlap(b, box))) continue; // dropped on overlap
     boxes.push(box);
-    names.push({ text: p.name, x: ox, y: oy, angle, fontPx, red: p.rank <= 2 });
+    names.push({ text: p.name, x: ox, y: oy, angle, fontPx, width, red: p.rank <= 2 });
   }
   for (const b of boxes.slice(1 + roseDraws.length)) occupied.push({ x: b.cx, y: b.cy, r: Math.max(b.hw, b.hh) * 0.6 });
 
@@ -435,6 +435,81 @@ function parchment(seed) {
   return c;
 }
 
+// ---------------------------------------------------------------- culling
+
+// The scene-px rectangle a view paints, padded so strokes and antialiasing at the edge survive.
+function viewRect(g, view, pad = 16) {
+  const s = view.scale;
+  return { x0: view.x - pad, y0: view.y - pad, x1: view.x + g.canvas.width / s + pad, y1: view.y + g.canvas.height / s + pad };
+}
+const disc = (r, x, y, rad) => x + rad > r.x0 && x - rad < r.x1 && y + rad > r.y0 && y - rad < r.y1;
+const meets = (r, b) => b.x1 > r.x0 && b.x0 < r.x1 && b.y1 > r.y0 && b.y0 < r.y1;
+
+function bbox(pts) {
+  const b = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
+  for (const [x, y] of pts) { if (x < b.x0) b.x0 = x; if (x > b.x1) b.x1 = x; if (y < b.y0) b.y0 = y; if (y > b.y1) b.y1 = y; }
+  return b;
+}
+
+// Land and coast with bounding boxes; coast split into short runs so a tile walks only its own.
+const COAST_RUN = 64;
+const indexes = new WeakMap();
+function indexOf(data) {
+  let ix = indexes.get(data);
+  if (ix) return ix;
+  const land = data.land.map((poly) => ({ poly, box: bbox(poly[0]) }));
+  const coast = [];
+  for (const line of data.coast) for (let i = 0; i < line.length - 1; i += COAST_RUN) {
+    const run = line.slice(i, i + COAST_RUN + 2); // one shared segment keeps every join
+    coast.push({ run, box: bbox(run) });
+  }
+  ix = { land, coast };
+  indexes.set(data, ix);
+  return ix;
+}
+
+// Sutherland-Hodgman against the view rect. Each ring is clipped alone, which keeps even-odd
+// fill right inside the rect; the seams it adds lie on the padded edge, outside the tile.
+function clipRing(ring, r) {
+  let out = ring;
+  for (const [inside, cut] of [
+    [([x]) => x >= r.x0, (a, b) => [r.x0, a[1] + (b[1] - a[1]) * (r.x0 - a[0]) / (b[0] - a[0])]],
+    [([x]) => x <= r.x1, (a, b) => [r.x1, a[1] + (b[1] - a[1]) * (r.x1 - a[0]) / (b[0] - a[0])]],
+    [([, y]) => y >= r.y0, (a, b) => [a[0] + (b[0] - a[0]) * (r.y0 - a[1]) / (b[1] - a[1]), r.y0]],
+    [([, y]) => y <= r.y1, (a, b) => [a[0] + (b[0] - a[0]) * (r.y1 - a[1]) / (b[1] - a[1]), r.y1]],
+  ]) {
+    const src = out; out = [];
+    for (let i = 0; i < src.length; i++) {
+      const a = src[(i + src.length - 1) % src.length], b = src[i];
+      if (inside(b)) { if (!inside(a)) out.push(cut(a, b)); out.push(b); } else if (inside(a)) out.push(cut(a, b));
+    }
+    if (!out.length) break;
+  }
+  return out;
+}
+
+function landIn(ix, r) {
+  const polys = [];
+  for (const { poly, box } of ix.land) {
+    if (!meets(r, box)) continue;
+    const rings = poly.map((ring) => clipRing(ring, r)).filter((ring) => ring.length > 2);
+    if (rings.length) polys.push(rings);
+  }
+  return polys;
+}
+
+// Liang-Barsky: the part of segment a->b inside r, or null.
+function clipSegment(ax, ay, bx, by, r) {
+  let t0 = 0, t1 = 1;
+  const dx = bx - ax, dy = by - ay;
+  for (const [p, q] of [[-dx, ax - r.x0], [dx, r.x1 - ax], [-dy, ay - r.y0], [dy, r.y1 - ay]]) {
+    if (p === 0) { if (q < 0) return null; continue; }
+    const t = q / p;
+    if (p < 0) { if (t > t1) return null; if (t > t0) t0 = t; } else { if (t < t0) return null; if (t < t1) t1 = t; }
+  }
+  return [ax + t0 * dx, ay + t0 * dy, ax + t1 * dx, ay + t1 * dy];
+}
+
 function strokeLines(g, lines) {
   g.beginPath();
   for (const line of lines) line.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
@@ -477,22 +552,31 @@ function drawTower(g, t) {
 function drawScene(g, scene, data, bg, view) {
   g.save();
   g.setTransform(view.scale, 0, 0, view.scale, -view.x * view.scale, -view.y * view.scale);
+  // Only what meets the view is traced or drawn; a tile skips the rest of the scene.
+  const r = viewRect(g, view), idx = indexOf(data);
+  const land = landIn(idx, r);
+  const coast = idx.coast.filter((c) => meets(r, c.box)).map((c) => c.run);
+  const bgPart = (x0, y0, x1, y1) => {
+    x0 = Math.max(0, Math.floor(x0)); y0 = Math.max(0, Math.floor(y0));
+    x1 = Math.min(W, Math.ceil(x1)); y1 = Math.min(H, Math.ceil(y1));
+    if (x1 > x0 && y1 > y0) g.drawImage(bg, x0, y0, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0);
+  };
 
   // 1. parchment
-  g.drawImage(bg, 0, 0);
+  bgPart(r.x0, r.y0, r.x1, r.y1);
 
   // 2. land: flat tint, then a landward wash along the coast
   g.fillStyle = STYLE.land;
-  tracePolys(g, data.land);
+  tracePolys(g, land);
   g.fill('evenodd');
   g.save();
-  tracePolys(g, data.land);
+  tracePolys(g, land);
   g.clip('evenodd');
   g.lineJoin = 'round'; g.lineCap = 'round';
   for (const [wd, a] of [[STYLE.washWidth * 2, 0.3], [STYLE.washWidth * 1.3, 0.3], [STYLE.washWidth * 0.7, 0.35]]) {
     g.strokeStyle = hexA(STYLE.gilt, a);
     g.lineWidth = wd;
-    strokeLines(g, data.coast);
+    strokeLines(g, coast);
   }
   g.restore();
 
@@ -506,11 +590,12 @@ function drawScene(g, scene, data, bg, view) {
     g.strokeStyle = ink;
     g.beginPath();
     for (const n of [scene.centre, ...scene.nodes]) {
-      for (let r = 0; r < RHUMB_RAYS; r++) {
-        const kind = r % 4 === 0 ? 0 : r % 2 === 1 ? 1 : 2; // wind, quarter (red), half (green)
+      for (let k = 0; k < RHUMB_RAYS; k++) {
+        const kind = k % 4 === 0 ? 0 : k % 2 === 1 ? 1 : 2; // wind, quarter (red), half (green)
         if (kind !== ix) continue;
-        const a = (r * 2 * Math.PI) / RHUMB_RAYS;
-        g.moveTo(n.x, n.y); g.lineTo(n.x + L * Math.cos(a), n.y + L * Math.sin(a));
+        const a = (k * 2 * Math.PI) / RHUMB_RAYS;
+        const seg = clipSegment(n.x, n.y, n.x + L * Math.cos(a), n.y + L * Math.sin(a), r);
+        if (seg) { g.moveTo(seg[0], seg[1]); g.lineTo(seg[2], seg[3]); }
       }
     }
     g.stroke();
@@ -522,19 +607,21 @@ function drawScene(g, scene, data, bg, view) {
   g.strokeStyle = STYLE.ink;
   g.lineWidth = STYLE.coastWidth;
   g.lineJoin = 'round';
-  strokeLines(g, data.coast);
+  strokeLines(g, coast);
   g.restore();
 
   // 5. roses
-  for (const r of scene.roseDraws) drawSprite(g, r.sprite, r.x, r.y, r.size, { anchor: [0.5, 0.5] });
+  const spriteIn = (s, x, y, size) => disc(r, x, y, Math.hypot(size, (size * s.img.height) / s.img.width));
+  for (const d of scene.roseDraws) if (spriteIn(d.sprite, d.x, d.y, d.size)) drawSprite(g, d.sprite, d.x, d.y, d.size, { anchor: [0.5, 0.5] });
 
   // 6. towns
-  for (const t of scene.towns) drawTower(g, t);
+  for (const t of scene.towns) if (disc(r, t.x, t.y - 8 * t.size, 12 * t.size)) drawTower(g, t);
 
   // 7. names
   g.save();
   g.textBaseline = 'middle';
   for (const n of scene.names) {
+    if (!disc(r, n.x, n.y, n.width + n.fontPx)) continue;
     g.save();
     g.translate(n.x, n.y);
     g.rotate(n.angle);
@@ -546,16 +633,17 @@ function drawScene(g, scene, data, bg, view) {
   g.restore();
 
   // 8. monsters, 9. ships
-  for (const m of scene.monsters) drawSprite(g, m.sprite, m.x, m.y, m.size, { flip: m.flip, anchor: [0.5, 0.5] });
-  for (const s of scene.ships) drawSprite(g, s.sprite, s.x, s.y, s.size, { flip: s.flip, rot: s.flip ? -s.tilt : s.tilt, anchor: [0.5, 0.6] });
+  for (const m of scene.monsters) if (spriteIn(m.sprite, m.x, m.y, m.size)) drawSprite(g, m.sprite, m.x, m.y, m.size, { flip: m.flip, anchor: [0.5, 0.5] });
+  for (const s of scene.ships) if (spriteIn(s.sprite, s.x, s.y, s.size)) drawSprite(g, s.sprite, s.x, s.y, s.size, { flip: s.flip, rot: s.flip ? -s.tilt : s.tilt, anchor: [0.5, 0.6] });
 
   // 10. cartouche, lettered in its cleared panel
   const c = scene.cartouche;
+  if (!meets(r, { x0: c.x, y0: c.y, x1: c.x + c.w, y1: c.y + c.h })) { g.restore(); return; }
   const [px0, py0, px1, py1] = c.sprite.panel;
   const pw = (px1 - px0) * c.w, ph = (py1 - py0) * c.h;
   g.save();
   g.beginPath(); g.rect(c.x + px0 * c.w, c.y + py0 * c.h, pw, ph); g.clip();
-  g.drawImage(bg, 0, 0);
+  bgPart(c.x + px0 * c.w, c.y + py0 * c.h, c.x + px1 * c.w, c.y + py1 * c.h);
   g.restore();
   drawSprite(g, c.sprite, c.x, c.y, c.w, { anchor: [0, 0] });
   g.save();
