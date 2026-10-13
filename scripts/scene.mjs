@@ -25,6 +25,7 @@ const STYLE = {
 
 const W = 1600, H = 1000;
 const FRAME = { lonMin: -6, lonMax: 20, latMin: 34, latMax: 46 };
+const MARGIN = 2; // degrees beyond FRAME whose features the scene keeps
 const DETAIL = { lon: 8.93, lat: 44.41, scale: 2 }; // Genoa; window clamped to the scene
 
 // Per-run tuning; `density` scales how much ornament is placed (1 = the committed mockup).
@@ -100,7 +101,7 @@ function ringsOf(geom) {
 }
 
 async function loadData(proj) {
-  const margin = 2; // degrees
+  const margin = MARGIN;
   const near = (coords) => coords.some(([lon, lat]) =>
     lon > FRAME.lonMin - margin && lon < FRAME.lonMax + margin && lat > FRAME.latMin - margin && lat < FRAME.latMax + margin);
   const projectLine = (line) => line.map(([lon, lat]) => proj.project(lon, lat));
@@ -689,4 +690,4 @@ export async function createScene(environment, opts = {}) {
   return { scene, data, bg, proj, timing: { load: tLoad - t0, place: performance.now() - tLoad } };
 }
 
-export { drawScene, W, H, DETAIL, FRAME };
+export { drawScene, W, H, DETAIL, FRAME, MARGIN };
