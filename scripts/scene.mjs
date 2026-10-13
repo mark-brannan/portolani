@@ -689,4 +689,4 @@ export async function createScene(environment, opts = {}) {
   return { scene, data, bg, proj, timing: { load: tLoad - t0, place: performance.now() - tLoad } };
 }
 
-export { drawScene, W, H, DETAIL };
+export { drawScene, W, H, DETAIL, FRAME };
