@@ -4,7 +4,8 @@
 // `geo/<id>.geojson`, a coastlines data id, `geo/<band>/<cell>.json`, a detail cell cut by
 // scripts/build-preview.mjs (close views only), and `packs/<pack>/<file>`. Land, wash, coast and
 // lattice are drawn in lon/lat through coast-wright, so any view or projection draws the same way.
-// A view is a Web Mercator centre and zoom, { lon, lat, zoom }, on a W x H canvas.
+// A view is a centre, zoom and projection, { lon, lat, zoom, projection }, on a W x H canvas; the
+// projection is one of PROJECTIONS, Mercator when left out.
 
 import { fill, trace, limn, rhumb, place, letter, geojsonPolygons, geojsonRings } from 'coast-wright';
 
@@ -75,18 +76,35 @@ const mercLat = (y) => (2 * Math.atan(Math.exp(y)) - Math.PI / 2) / RAD;
 const wrapLon = (lon) => ((((lon + 180) % 360) + 360) % 360) - 180;
 // Offset from the centre within +-180 as coast-wright's seam guard takes it: +180 stays on the right.
 const fromCentre = (d) => (d > 180 ? d - 360 : d < -180 ? d + 360 : d);
-const kOf = (zoom) => (512 * 2 ** zoom) / (2 * Math.PI); // px per Mercator radian
+const kOf = (zoom) => (512 * 2 ** zoom) / (2 * Math.PI); // px per radian of longitude
 
-// Web Mercator centred on the view; longitudes are measured from its centre, so any seam is behind it.
+// Cylindrical projections: x is longitude, the same in each, and y is f(lat) in radians of
+// longitude, with inv its inverse and max the y of the map's top edge. Rhumb lines are straight
+// only on Mercator, which is why he drew it; on the others they bow toward the poles.
+const PROJECTIONS = {
+  mercator: { f: mercY, inv: mercLat, max: Math.PI }, // Web Mercator's square, to 85.05 degrees
+  'plate-carree': { f: (lat) => lat * RAD, inv: (y) => y / RAD, max: Math.PI / 2 },
+  miller: {
+    f: (lat) => 1.25 * Math.log(Math.tan(Math.PI / 4 + 0.4 * lat * RAD)),
+    inv: (y) => (2.5 * Math.atan(Math.exp(0.8 * y)) - 0.625 * Math.PI) / RAD,
+    max: 1.25 * Math.log(Math.tan(0.45 * Math.PI)),
+  },
+  // Gall-Peters: equal-area, true scale at 45 degrees; here scaled so x matches the others
+  'equal-area': { f: (lat) => 2 * Math.sin(lat * RAD), inv: (y) => Math.asin(y / 2) / RAD, max: 2 },
+};
+const projectionOf = (view) => PROJECTIONS[Object.hasOwn(PROJECTIONS, view.projection) ? view.projection : 'mercator'];
+
+// The view's projection centred on it; longitudes are measured from its centre, so any seam is behind it.
 function makeProjection(view, w = W, h = H) {
-  const k = kOf(view.zoom), lonCenter = view.lon, y0 = mercY(view.lat);
+  const P = projectionOf(view), k = kOf(view.zoom), lonCenter = view.lon, y0 = P.f(view.lat);
   // x(lon, lat) and y(lat, lon), as coast-wright calls them
   const x = (lon) => w / 2 + fromCentre(lon - lonCenter) * RAD * k;
-  const y = (lat) => h / 2 - (mercY(lat) - y0) * k;
+  const y = (lat) => h / 2 - (P.f(lat) - y0) * k;
   return {
     k, zoom: view.zoom, lonCenter, x, y,
     project: (lon, lat) => [x(lon), y(lat)],
-    invert: (px, py) => [lonCenter + (px - w / 2) / k / RAD, mercLat(y0 - (py - h / 2) / k)],
+    // a point past the map's top or bottom edge inverts to the edge's latitude
+    invert: (px, py) => [lonCenter + (px - w / 2) / k / RAD, P.inv(Math.max(-P.max, Math.min(P.max, y0 - (py - h / 2) / k)))],
   };
 }
 
@@ -98,26 +116,28 @@ function viewOfFrame(frame) {
 }
 const DEFAULT_VIEW = viewOfFrame(FRAME);
 
-// Zoom within ZOOM, longitude wrapped, and the centre kept far enough from the poles that the
-// canvas stays inside the Mercator square.
-function clampView({ lon, lat, zoom }) {
+// Zoom within ZOOM, longitude wrapped, projection one of PROJECTIONS, and the centre kept far
+// enough from the poles that the canvas stays on the map, or centred on the equator once the
+// whole map is shorter than the canvas.
+function clampView({ lon, lat, zoom, projection }) {
   zoom = Math.min(ZOOM.max, Math.max(ZOOM.min, zoom));
-  const room = Math.max(0, Math.PI - H / 2 / kOf(zoom));
-  return { lon: wrapLon(lon), lat: mercLat(Math.max(-room, Math.min(room, mercY(lat)))), zoom };
+  projection = Object.hasOwn(PROJECTIONS, projection) ? projection : 'mercator';
+  const P = PROJECTIONS[projection], room = Math.max(0, P.max - H / 2 / kOf(zoom));
+  return { lon: wrapLon(lon), lat: P.inv(Math.max(-room, Math.min(room, P.f(lat)))), zoom, projection };
 }
 
 // The view moved so the map follows a drag of (dx, dy) canvas px.
 function panView(view, dx, dy) {
-  const k = kOf(view.zoom);
-  return clampView({ lon: view.lon - dx / k / RAD, lat: mercLat(mercY(view.lat) + dy / k), zoom: view.zoom });
+  const P = projectionOf(view), k = kOf(view.zoom);
+  return clampView({ ...view, lon: view.lon - dx / k / RAD, lat: P.inv(P.f(view.lat) + dy / k) });
 }
 
 // The view zoomed by `factor` about canvas point (px, py), which keeps its place on the map.
 function zoomView(view, factor, px, py) {
-  const k = kOf(view.zoom), ox = px - W / 2, oy = py - H / 2;
+  const P = projectionOf(view), k = kOf(view.zoom), ox = px - W / 2, oy = py - H / 2;
   const zoom = Math.min(ZOOM.max, Math.max(ZOOM.min, view.zoom + Math.log2(factor))), k2 = kOf(zoom);
   const lon = view.lon + (ox / k - ox / k2) / RAD;
-  return clampView({ lon, lat: mercLat(mercY(view.lat) - oy / k + oy / k2), zoom });
+  return clampView({ ...view, lon, lat: P.inv(P.f(view.lat) - oy / k + oy / k2), zoom });
 }
 
 // The lon/lat frame a projection paints, widened by `margin` degrees.
@@ -850,9 +870,10 @@ const EARTH_R = 6371008.8, NM = 1852; // metres
 const NM_STEPS = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000];
 const SCALE_MIN_ZOOM = 3; // below this the Mercator scale varies too much across the view to quote one
 
-// A period ladder, true at the latitude of the view's centre, drawn in screen pixels. The styles
-// follow the scales on four charts: SCALE_STYLES.chevron the Genoese chart c.1320-50, ribbon Martines
-// 1584, beads Prunes 1559, ruled Beccari 1403, and chequer a plain red and green ladder.
+// A period ladder, true east-west at the latitude of the view's centre (in any of PROJECTIONS),
+// drawn in screen pixels. The styles follow the scales on four charts: SCALE_STYLES.chevron the
+// Genoese chart c.1320-50, ribbon Martines 1584, beads Prunes 1559, ruled Beccari 1403, and
+// chequer a plain red and green ladder.
 const SCALE_BAR_H = 36;
 const ring = (g, x, y, r, c) => { g.beginPath(); g.arc(x, y, r, 0, 2 * Math.PI); g.strokeStyle = c; g.stroke(); };
 const rule = (g, x0, y0, x1, y1, c, w) => { g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.strokeStyle = c; g.lineWidth = w; g.stroke(); };
@@ -1121,4 +1142,5 @@ const parchments = new Map(); // by tone; the same seed paints the same sheet
 export const RENDERINGS = ['vivid', 'scanned', 'plain'];
 export const REGION_LANGS = ['off', 'latin', 'english'];
 export const KINDS = ['rose', 'ship', 'monster', 'cartouche'];
+export const PROJECTION_NAMES = Object.keys(PROJECTIONS);
 export { SCALE_NAMES, listStyles, chooseSprites, drawScene, drawGround, covers, panView, zoomView, clampView, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };

@@ -25,6 +25,7 @@ const VIEWS = {
   'world-z2': { lon: 10, lat: 30, zoom: 2 },
   'region-z5': { lon: 8.93, lat: 44.41, zoom: 5 },
   'close-z9': { lon: 8.93, lat: 44.41, zoom: 9 },
+  'world-z2-plate-carree': { lon: 10, lat: 30, zoom: 2, projection: 'plate-carree' }, // rhumb lines bow
 };
 // settings a golden draws with beyond the defaults; region-z5 is the README's picture, lettered PORTOLANI
 const OPTS = { 'region-z5': { autoTitle: false } };
