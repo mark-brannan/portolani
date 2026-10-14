@@ -18,3 +18,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t064024z
 - Sea and country names win an overlap over town names, so a few capitals drop where a country name sits (London at z5, Washington at z4). Undo: list towns before country names in buildScene's lettering list and regenerate the goldens ([#50](https://github.com/mark-brannan/portolani/pull/50))
+
+### 20261014t071006z
+- Small rose nodes take every rose but the biggest, in pack order Undo: revert six lines in buildScene ([#52](https://github.com/mark-brannan/portolani/pull/52))
