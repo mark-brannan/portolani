@@ -175,6 +175,16 @@ test('town families mix, the plain tower among the smallest towns only', async (
   assert.equal((await createScene(env, { view: LIGURIA, sprites: ['vivid/serpent-a'] })).scene.towns.length, 0, 'no town family, no towns');
 });
 
+test('the towers drawn in code: each town keeps one, from those chosen, across zooms', async () => {
+  const all = ['tower', 'tower-round', 'tower-gate', 'tower-spire', 'tower-dome'];
+  const towns = (await createScene(env, { view: LIGURIA, sprites: all.map((id) => `plain/${id}`) })).scene.towns.filter((t) => !t.city);
+  assert.ok(new Set(towns.map((t) => t.tower)).size >= 3, `${towns.map((t) => t.tower)}: the towers do not vary`);
+  const closer = (await createScene(env, { view: { ...LIGURIA, zoom: 6 }, sprites: all.map((id) => `plain/${id}`) })).scene.towns;
+  for (const t of closer) { const was = towns.find((u) => u.name === t.name); if (was && !t.city) assert.equal(t.tower, was.tower, t.name); }
+  const two = (await createScene(env, { view: LIGURIA, sprites: ['plain/tower-gate', 'plain/tower-dome'] })).scene.towns.filter((t) => !t.city);
+  assert.ok(two.length > 4 && two.every((t) => ['tower-gate', 'tower-dome'].includes(t.tower)));
+});
+
 test('townSize: by metro area or population a great city stands bigger than a small town; by rank, as before', async () => {
   for (const townSize of [undefined, 'area', 'population']) {
     const { scene } = await createScene(env, { view: NILE, townSize });

@@ -9,7 +9,7 @@
 
 import { fill, trace, limn, rhumb, place, letter, geojsonPolygons, geojsonRings } from 'coast-wright';
 import { islandInfo, ISLAND_KM2 } from './island.mjs';
-import { cityPlan, drawCity, pxRings, insideRings } from './city.mjs';
+import { cityPlan, drawCity, drawHouses, pxRings, insideRings } from './city.mjs';
 import { urbanKey } from './urban.mjs';
 import { RIVERS, LAKES, RIVER_STYLES, LAKE_STYLES, waterOf, shown } from './water.mjs';
 
@@ -373,15 +373,65 @@ function chooseSprites(manifests, { rendering = 'vivid', rose = 'aguiar', monste
     towns: town === 'tower' ? [] : pick('town', town),
     mountains: pick('mountain', 'catalan'),
     tower: town === 'tower' || !pick('town', town).length,
+    towers: ['tower'],
   };
 }
+
+const TOWER_H = 16.5; // a tower's own height, in its drawing units, foot at y = 0
+
+// The towers drawn in code, for the smallest towns: each a list of layers in SVG path data (absolute
+// M L H V Q Z only), painted in order, `p` filled with parchment, `r` with the wind red, `k` with
+// ink, `s` stroked only; every layer but `k` is stroked in ink. `w` is the half-width, for the icon's
+// box. The same layers draw the page's picker glyphs (towerGlyph). The pennant (`f`) is red for a
+// chief town, ink otherwise.
+const TOWERS = [
+  // square, three merlons, an arched door, a pennant
+  { id: 'tower', w: 5, layers: [
+    ['p', 'M-4 0V-9H-5V-12H-3V-10.5H-1V-12H1V-10.5H3V-12H5V-9H4V0Z'],
+    ['s', 'M-1.5 0V-3Q-1.5 -4.5 0 -4.5Q1.5 -4.5 1.5 -3V0M0 -12V-16.5'],
+    ['f', 'M0 -16.5L4.5 -15.2L0 -14Z'],
+  ] },
+  // a round drum under a hat band and a red cone, a slit window
+  { id: 'tower-round', w: 4.4, layers: [
+    ['p', 'M-3.5 0.4Q0 1.3 3.5 0.4V-9.4H-3.5Z'],
+    ['p', 'M-4.2 -9.4H4.2V-10.6H-4.2Z'],
+    ['r', 'M-4.2 -10.6L0 -16.5L4.2 -10.6Z'],
+    ['s', 'M-1.2 0.7V-1.6Q-1.2 -2.8 0 -2.8Q1.2 -2.8 1.2 -1.6V0.7M0 -5V-7.2'],
+  ] },
+  // a gate between two towers under red cones, a pennant on the left
+  { id: 'tower-gate', w: 8, layers: [
+    ['p', 'M-4 0V-6.6H-2.9V-5.6H-1.6V-6.6H-0.5V-5.6H0.5V-6.6H1.6V-5.6H2.9V-6.6H4V0Z'],
+    ['k', 'M-2 0V-2.6Q-2 -4.4 0 -4.4Q2 -4.4 2 -2.6V0Z'],
+    ['p', 'M-8 0V-10H-4V0Z'], ['p', 'M4 0V-10H8V0Z'],
+    ['r', 'M-8.6 -10L-6 -14.4L-3.4 -10Z'], ['r', 'M3.4 -10L6 -14.4L8.6 -10Z'],
+    ['s', 'M-6 -5V-7M6 -5V-7M-6 -14.4V-16.5'],
+    ['f', 'M-6 -16.5L-2.6 -15.5L-6 -14.6Z'],
+  ] },
+  // a church: the nave under a red roof, a belfry and its needle spire
+  { id: 'tower-spire', w: 6.8, layers: [
+    ['p', 'M-6.4 0V-6H1V0Z'],
+    ['r', 'M-6.8 -6L-5.2 -8.8H1V-6Z'],
+    ['p', 'M1 0V-10.2H5.2V0Z'],
+    ['r', 'M0.6 -10.2L3.1 -16.5L5.6 -10.2Z'],
+    ['s', 'M-4.6 -1.2V-3.6M-2.4 -1.2V-3.6M2.3 -6.2V-7.8Q3.1 -8.8 3.9 -7.8V-6.2M2.4 0V-2Q3.1 -3 3.8 -2V0'],
+  ] },
+  // a square keep, a drum and a red dome under a finial, Levantine
+  { id: 'tower-dome', w: 4.8, layers: [
+    ['p', 'M-4.4 0V-8H4.4V0Z'],
+    ['p', 'M-4.8 -8H4.8V-8.9H-4.8Z'],
+    ['p', 'M-3 -8.9V-10.4H3V-8.9Z'],
+    ['r', 'M-3.5 -10.4Q-3.5 -14.6 0 -15.2Q3.5 -14.6 3.5 -10.4Z'],
+    ['s', 'M0 -15.2V-16.5M-1.3 0V-2.4Q-1.3 -3.6 0 -3.6Q1.3 -3.6 1.3 -2.4V0M-2.6 -5V-6.4M2.6 -5V-6.4'],
+  ] },
+];
+const TOWER_BY_ID = new Map(TOWERS.map((t) => [t.id, t]));
 
 // Sprites by key, `<pack>/<id>`, since ids repeat across packs (scanned/serpent-a, vivid/serpent-a).
 // The shapes drawn in code are the pseudo-pack `plain`: its rose set, its cartouche frame, the tower.
 const PLAIN_SPRITES = [
   { id: 'rose', kind: 'rose', style: 'plain' },
   { id: 'cartouche', kind: 'cartouche', style: 'plain' },
-  { id: 'tower', kind: 'town', style: 'tower' },
+  ...TOWERS.map((t) => ({ id: t.id, kind: 'town', style: 'tower' })),
 ].map((s) => ({ ...s, key: `plain/${s.id}`, pack: 'plain', file: null }));
 const spriteList = (manifests) => [
   ...PACK_NAMES.flatMap((pack) => manifests[pack].sprites.map((s) => ({ ...s, key: `${pack}/${s.id}`, pack, colour: manifests[pack].colour ?? 'source' }))),
@@ -410,7 +460,8 @@ function defaultSprites(list) {
   return keys.filter((k) => list.find((s) => s.key === k).kind !== 'cartouche' || k === cartouche); // one cartouche
 }
 
-// What a selection of keys draws, in chooseSprites's shape plus `tower`; unknown keys are ignored.
+// What a selection of keys draws, in chooseSprites's shape; unknown keys are ignored. `towers` are
+// the ids of the towers drawn in code it takes, `tower` whether it takes any.
 // The first selected cartouche is the one; plain/rose and plain/cartouche are the PLAIN shapes.
 function selectSprites(manifests, keys) {
   const want = new Set(keys), chosen = spriteList(manifests).filter((s) => want.has(s.key));
@@ -419,7 +470,8 @@ function selectSprites(manifests, keys) {
     roses: of('rose'),
     cartouche: chosen.find((s) => s.kind === 'cartouche' && s.pack !== 'plain') ?? (want.has('plain/cartouche') ? PLAIN.find((s) => s.kind === 'cartouche') : null),
     monsters: of('monster'), ships: of('ship'), towns: of('town'), mountains: of('mountain'),
-    tower: want.has('plain/tower'),
+    tower: TOWERS.some((t) => want.has(`plain/${t.id}`)),
+    towers: TOWERS.filter((t) => want.has(`plain/${t.id}`)).map((t) => t.id),
   };
 }
 
@@ -659,8 +711,9 @@ function townScale(p, by = 'area') {
 }
 
 // A town with an urban footprint whose projected extent (the square root of its area) reaches
-// CITY_PX is drawn as a city plan over it (city.mjs) rather than as an icon.
-const CITY_PX = 120;
+// CITY_PX is drawn as a city plan over it (city.mjs) rather than as an icon; Seattle's icon stands
+// through z9.
+const CITY_PX = 400;
 // Closing in, a town's icon stands at least ICON_GROW of its ground (footprint) tall, so it grows with
 // the land under it rather than shrinking against it, up to ICON_MAX px; a town with an urban
 // footprint is then about CITY_PX * ICON_GROW tall as its city plan takes over.
@@ -696,6 +749,33 @@ function footprint(p, proj) {
   const rings = p.urban.map((ring) => ring.map(([lon, lat]) => proj.project(lon, lat)));
   return { rings, extent: Math.sqrt(rings.reduce((a, r) => a + ringArea(r), 0)) };
 }
+// Where a town's icon of height `th` (anchored at its foot) stands: its place where the icon's box is
+// on land, else the nearest point within reach whose box is most on land, inside the town's own
+// footprint where it has one, so a waterfront city stands over its built-up ground rather than on
+// its shore.
+function standOf(p, th, w, field, rings) {
+  const [x0, y0] = p.xy, rs = rings && pxRings(rings);
+  const dry = (x, y) => {
+    let n = 0;
+    for (let j = 0; j < 4; j++) for (let i = 0; i < 4; i++) if (field.isLand(x + w * ((i + 0.5) / 4 - 0.5) * 2, y - th * (j + 0.5) / 4)) n++;
+    return n / 16;
+  };
+  let best = dry(x0, y0), at = [x0, y0];
+  if (best >= 0.9) return at;
+  const reach = th * 1.2, step = th / 8;
+  const tries = [];
+  for (let dy = -reach; dy <= reach; dy += step) for (let dx = -reach; dx <= reach; dx += step) if (Math.hypot(dx, dy) <= reach) tries.push([dx, dy]);
+  tries.sort((a, b) => Math.hypot(...a) - Math.hypot(...b));
+  for (const [dx, dy] of tries) {
+    const x = x0 + dx, y = y0 + dy;
+    if (x < 8 || y < 8 || x > W - 8 || y > H - 8 || (rs && !insideRings(rs, x, y - th * 0.15))) continue;
+    const v = dry(x, y);
+    if (v > best + 0.05) { best = v; at = [x, y]; }
+    if (best >= 0.9) break;
+  }
+  return at;
+}
+
 function cityOf(p, proj, landPolys) {
   if (!p.urban) return null;
   const { rings, extent } = footprint(p, proj);
@@ -836,7 +916,8 @@ function buildScene(data, sprites, ctx, world = {}) {
   const worldNames = placeWorldNames(data, ctx, boxes, { continents: world.continents ?? false, regions: world.regions ?? 'off' });
   const special = new Map((sprites.towns ?? []).flatMap((s) => (s.only ?? []).map((name) => [name, s])));
   const families = [...(sprites.towns ?? []).filter((s) => !s.only).reduce((m, s) => m.set(`${s.pack}/${s.style}`, [...(m.get(`${s.pack}/${s.style}`) ?? []), s]), new Map()).values()];
-  if (sprites.tower ?? !families.length) families.push(null); // null: the tower drawn in code
+  if (sprites.tower ?? !families.length) families.push(null); // null: the towers drawn in code
+  const towerIds = sprites.towers?.length ? sprites.towers : ['tower'];
   const towns = [];
   const sorted = families.length || special.size ? [...data.places].sort((a, b) => a.rank - b.rank || b.pop - a.pop) : [];
   // cities first: they are ground, drawn under the ornaments, and their boxes make the icons and names give way
@@ -851,22 +932,23 @@ function buildScene(data, sprites, ctx, world = {}) {
     cities.add(p);
   }
   for (const p of sorted) {
-    const [x, y] = p.xy;
-    if (cities.has(p) || x < 8 || y < 8 || x > W - 8 || y > H - 8) continue;
-    if (towns.some((t) => !t.city && Math.hypot(t.x - x, t.y - y) < TUNE.townGap)) continue;
+    const [px, py] = p.xy;
+    if (cities.has(p) || px < 8 || py < 8 || px > W - 8 || py > H - 8) continue;
+    if (towns.some((t) => !t.city && Math.hypot(t.x - px, t.y - py) < TUNE.townGap)) continue;
     if (!families.length && !special.has(p.name)) continue; // only the named towns' own drawings chosen
     const fit = townGrandeur(p) < SMALL_TOWN || families.every((f) => !f) ? families : families.filter(Boolean);
     // the town's own drawing, whatever the view: its family and variant follow from its name, so a
     // zoom or a pan never redraws it as another (townVariant)
     const pick = seedOf(p.name) >>> 0, family = fit[pick % fit.length], size = townScale(p, world.townSize);
-    const sprite = special.get(p.name) ?? (family && townVariant(family, p, pick >>> 8));
-    const base = (sprite ? townHeight(sprite) : TOWER_H) * size;
-    const th = Math.max(base, Math.min(ICON_MAX, ICON_GROW * footprint(p, data.proj).extent));
+    const sprite = special.get(p.name) ?? (family && townVariant(family, p, pick >>> 8)), tower = !sprite && TOWER_BY_ID.get(towerIds[(pick >>> 8) % towerIds.length]);
+    const base = (sprite ? townHeight(sprite) : TOWER_H) * size, ground = footprint(p, data.proj);
+    const th = Math.max(base, Math.min(ICON_MAX, ICON_GROW * ground.extent));
+    const [x, y] = standOf(p, th, sprite ? ((th / 2) * sprite.img.width) / sprite.img.height : (th * tower.w) / TOWER_H, field, ground.rings);
     const icon = sprite
       ? obb(x, y - th / 2, 0, ((th / 2) * sprite.img.width) / sprite.img.height, th / 2)
-      : obb(x, y - th / 2, 0, th * 0.3, th / 2); // tower body and pennant
+      : obb(x, y - th / 2, 0, (th * tower.w) / TOWER_H, th / 2); // the tower, its widest part
     if (boxes.some((b) => obbOverlap(b, icon))) continue;
-    towns.push({ x, y, size, h: th, family, red: p.rank <= 2, name: p.name, rank: p.rank, labelY: y - th - 6, ...(sprite && { sprite }) });
+    towns.push({ x, y, size, h: th, family, red: p.rank <= 2, name: p.name, rank: p.rank, labelY: y - th - 6, ...(sprite ? { sprite } : { tower: tower.id }) });
     boxes.push(icon);
   }
 
@@ -1029,6 +1111,39 @@ function coastRuns(line) {
   return runs;
 }
 
+// The houses standing in the washes `ws` (a footprint and its ramp in), within the scene-px
+// rectangle `r`: one to a cell of a HOUSE_GAP lattice anchored at 0N 0E, so it is fixed to the
+// map, set off in its cell by its own hash; standing on land, wholly in a footprint and off every
+// city plan.
+// x, y, width and seed per house, as drawHouses takes them; a house is as solid as its wash is in.
+const HOUSE_GAP = 9;
+const housesMemo = new WeakMap();
+function housesIn(ws, data, field, plans, r) {
+  const [ax, ay] = data.proj.project(0, 0), G = HOUSE_GAP, out = [], seen = new Set();
+  const memo = housesMemo.get(data) ?? new Map();
+  housesMemo.set(data, memo);
+  for (const { u, ramp } of ws) {
+    if (ramp < 0.35) continue;
+    let rs = memo.get(u.poly);
+    if (!rs) memo.set(u.poly, rs = pxRings(u.poly.map((ring) => ring.map(([lon, lat]) => data.proj.project(lon, lat)))));
+    const x0 = Math.max(u.box.x0, r.x0 - G), x1 = Math.min(u.box.x1, r.x1 + G), y0 = Math.max(u.box.y0, r.y0 - G), y1 = Math.min(u.box.y1, r.y1 + G);
+    for (let j = Math.floor((y0 - ay) / G); j <= Math.ceil((y1 - ay) / G); j++) for (let i = Math.floor((x0 - ax) / G); i <= Math.ceil((x1 - ax) / G); i++) {
+      const key = `${i},${j}`;
+      if (seen.has(key)) continue;
+      const h = seedOf(key) >>> 0, f = (k) => ((h >>> k) & 1023) / 1024;
+      const x = ax + (i + 0.15 + 0.7 * f(0)) * G, y = ay + (j + 0.25 + 0.6 * f(10)) * G;
+      // the house's box, a stroke and a wobble wide, by its corners and the middles of its sides
+      const w = G * (0.5 + 0.2 * f(5)), bx0 = x - w * 0.65 - 1.5, bx1 = x + w * 1.3 + 1.5, by0 = y - w * 1.45 - 1.5, by1 = y + 1.5;
+      const rim = [[bx0, by1], [x, by1], [bx1, by1], [bx1, y - w], [bx1, by0], [x, by0], [bx0, by0], [bx0, y - w]];
+      if (f(20) > 0.45 + 0.5 * ramp || !field?.isLand(x, y) || !rim.every(([cx, cy]) => insideRings(rs, cx, cy))) continue;
+      if (plans.some((t) => insideRings(t.city.px ??= pxRings(t.city.rings), x, y))) continue;
+      seen.add(key);
+      out.push(x, y, w, f(15));
+    }
+  }
+  return out;
+}
+
 // Land and coast runs with px bounding boxes.
 const indexes = new WeakMap();
 function indexOf(data) {
@@ -1123,28 +1238,47 @@ function drawSprite(g, s, x, y, size, { flip = false, rot = 0, anchor = s.anchor
 
 const TOWN_H = 30; // px a town sprite stands at size 1, flag to foot, before normalized() sets it from the ink
 const townHeight = (s) => s.heightPx ?? TOWN_H;
-const TOWER_H = 16.5; // the tower's own height, in its drawing units
+// Path data onto a canvas path, for the commands TOWERS use.
+function tracePath(g, d) {
+  const tok = d.match(/[MLHVQZ]|-?[\d.]+/g);
+  let i = 0, x = 0, y = 0, cmd = '';
+  const num = () => +tok[i++];
+  g.beginPath();
+  while (i < tok.length) {
+    if (/[MLHVQZ]/.test(tok[i])) cmd = tok[i++];
+    if (cmd === 'M') { x = num(); y = num(); g.moveTo(x, y); cmd = 'L'; }
+    else if (cmd === 'L') { x = num(); y = num(); g.lineTo(x, y); }
+    else if (cmd === 'H') { x = num(); g.lineTo(x, y); }
+    else if (cmd === 'V') { y = num(); g.lineTo(x, y); }
+    else if (cmd === 'Q') { const cx = num(), cy = num(); x = num(); y = num(); g.quadraticCurveTo(cx, cy, x, y); }
+    else if (cmd === 'Z') g.closePath();
+  }
+}
 
 function drawTower(g, t) {
-  const s = t.h / TOWER_H;
+  const s = t.h / TOWER_H, shape = TOWER_BY_ID.get(t.tower) ?? TOWERS[0];
+  const fills = { p: hexA(STYLE.parchment, 0.9), r: STYLE.windRed, k: STYLE.ink, f: t.red ? STYLE.windRed : STYLE.ink };
   g.save();
   g.translate(t.x, t.y);
   g.scale(s, s);
-  g.lineWidth = 1.1;
+  g.lineWidth = 1.1; g.lineJoin = 'round';
   g.strokeStyle = STYLE.ink;
-  g.fillStyle = hexA(STYLE.parchment, 0.9);
-  // body with three merlons, an arched door, a pennant
-  g.beginPath();
-  g.moveTo(-4, 0); g.lineTo(-4, -9); g.lineTo(-5, -9); g.lineTo(-5, -12);
-  g.lineTo(-3, -12); g.lineTo(-3, -10.5); g.lineTo(-1, -10.5); g.lineTo(-1, -12);
-  g.lineTo(1, -12); g.lineTo(1, -10.5); g.lineTo(3, -10.5); g.lineTo(3, -12);
-  g.lineTo(5, -12); g.lineTo(5, -9); g.lineTo(4, -9); g.lineTo(4, 0); g.closePath();
-  g.fill(); g.stroke();
-  g.beginPath(); g.moveTo(-1.5, 0); g.lineTo(-1.5, -3); g.arc(0, -3, 1.5, Math.PI, 0); g.lineTo(1.5, 0); g.stroke();
-  g.beginPath(); g.moveTo(0, -12); g.lineTo(0, -16.5); g.stroke();
-  g.fillStyle = t.red ? STYLE.windRed : STYLE.ink;
-  g.beginPath(); g.moveTo(0, -16.5); g.lineTo(4.5, -15.2); g.lineTo(0, -14); g.closePath(); g.fill();
+  for (const [kind, d] of shape.layers) {
+    tracePath(g, d);
+    if (kind !== 's') { g.fillStyle = fills[kind]; g.fill(); }
+    if (kind !== 'k' && kind !== 'f') g.stroke();
+  }
   g.restore();
+}
+
+// A tower as an SVG glyph for a page's picker, the parchment and red as the default chart's.
+function towerGlyph(id) {
+  const shape = TOWER_BY_ID.get(id);
+  if (!shape) return '';
+  const fill = { p: '#e9d8b4', r: '#8c2f1e', k: 'currentColor', f: '#8c2f1e', s: 'none' };
+  const paths = shape.layers.map(([kind, d]) => `<path d="${d}" fill="${fill[kind]}"${kind === 'k' || kind === 'f' ? '' : ' stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"'}/>`);
+  const w = Math.max(...TOWERS.map((t) => t.w)) + 1;
+  return `<svg viewBox="${-w} -17.5 ${2 * w} 19">${paths.join('')}</svg>`;
 }
 
 // Dots a few px seaward of the coast, a stand-in for shoals until there is data for them. Both
@@ -1423,19 +1557,32 @@ function drawScene(g, scene, data, bg, view) {
   paintCoast(g, data, coast);
 
   // 4.5 town footprints: a city's built-up area, washed terracotta and edged in ink once its long
-  // side passes URBAN_PX on screen, the wash coming in over the next doubling of zoom; on land
-  // only, as the footprint is coarser than the coast and would otherwise spill over the water; none
-  // under a city plan, which is its own ground
-  const planned = new Set(scene.towns.filter((t) => t.city).map((t) => t.city.poly));
-  const washes = idx.urban.map((u) => ({ u, a: Math.min(1, (Math.max(u.box.x1 - u.box.x0, u.box.y1 - u.box.y0) * view.scale / URBAN_PX - 1)) * 0.45 }))
-    .filter(({ u, a }) => a > 0 && meets(r, u.box) && !planned.has(u.poly));
+  // side passes URBAN_PX on screen, the wash coming in over the next half doubling of zoom; on land
+  // only, as the footprint is coarser than the coast and would otherwise spill over the water.
+  // Under a city plan the wash is light and its edge kept, so the built-up ground still reads as
+  // one; elsewhere it is fuller and little houses stand in it, HOUSE_GAP apart on a lattice fixed
+  // to the map, so a pan keeps them where they were.
+  const plans = scene.towns.filter((t) => t.city), planned = new Set(plans.map((t) => t.city.poly));
+  const under = (u) => planned.has(u.poly) || plans.some((t) => u.box.x0 < t.city.box.x1 && u.box.x1 > t.city.box.x0 && u.box.y0 < t.city.box.y1 && u.box.y1 > t.city.box.y0);
+  const washes = idx.urban.map((u) => {
+    const ramp = Math.min(1, 2 * (Math.max(u.box.x1 - u.box.x0, u.box.y1 - u.box.y0) * view.scale / URBAN_PX - 1)), plan = under(u);
+    return { u, ramp, plan, a: ramp * (plan ? 0.3 : 0.62) };
+  }).filter(({ u, a }) => a > 0 && meets(r, u.box));
   if (washes.length) {
     g.save(); g.beginPath(); traceLand(g, data, land); g.clip('evenodd');
     for (const { u, a } of washes) {
       fill(g, [u.poly], data.proj.x, data.proj.y, { color: STYLE.terracotta, alpha: a, lonCenter: data.proj.lonCenter });
       g.save(); g.beginPath(); trace(g, [u.poly], data.proj.x, data.proj.y, { lonCenter: data.proj.lonCenter });
-      g.globalAlpha = a * 1.5; g.strokeStyle = STYLE.ink; g.lineWidth = 0.8 / view.scale; g.stroke(); g.restore();
+      g.globalAlpha = Math.min(1, a * 1.5); g.strokeStyle = STYLE.ink; g.lineWidth = 0.8 / view.scale; g.stroke(); g.restore();
     }
+    // clear of the town icons, which stand over them
+    const icons = scene.towns.filter((t) => !t.city).map((t) => {
+      const hw = (t.sprite ? (t.h * t.sprite.img.width) / t.sprite.img.height : t.h * 0.6) / 2 + 4;
+      return { x0: t.x - hw, x1: t.x + hw, y0: t.y - t.h - 4, y1: t.y + 6 };
+    });
+    const pts = housesIn(washes.filter((w) => !w.plan), data, scene.field, plans, r), clear = [];
+    for (let i = 0; i < pts.length; i += 4) if (!icons.some((b) => pts[i] > b.x0 && pts[i] < b.x1 && pts[i + 1] > b.y0 && pts[i + 1] < b.y1)) clear.push(pts[i], pts[i + 1], pts[i + 2], pts[i + 3]);
+    drawHouses(g, clear, { ink: STYLE.ink });
     g.restore();
   }
 
@@ -1556,7 +1703,7 @@ export async function createScene(environment, opts = {}) {
     ]);
     return {
       roses: roses.length ? roses : PLAIN.filter((s) => s.kind === 'rose'), cartouche: cartouche || PLAIN.find((s) => s.kind === 'cartouche'),
-      monsters, ships, towns, tower: chosen.tower, mountains, scaleSprite: scaleSprite || null,
+      monsters, ships, towns, tower: chosen.tower, towers: chosen.towers, mountains, scaleSprite: scaleSprite || null,
     };
   });
   const [, coarse, chosen] = await Promise.all([env.loadFont(STYLE.font), loadWorld(), sprites]);
@@ -1582,4 +1729,4 @@ export const DEFAULT_KINDS = KINDS;
 export const PROJECTION_NAMES = Object.keys(PROJECTIONS);
 export const TOWN_SIZES = ['area', 'population', 'rank'];
 export { RIVER_STYLES, LAKE_STYLES };
-export { SCALE_NAMES, readManifests, listStyles, listSprites, defaultSprites, selectSprites, chooseSprites, drawScene, drawGround, covers, panView, zoomView, clampView, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };
+export { towerGlyph, SCALE_NAMES, readManifests, listStyles, listSprites, defaultSprites, selectSprites, chooseSprites, drawScene, drawGround, covers, panView, zoomView, clampView, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };

@@ -59,8 +59,9 @@ test('listSprites keys every sprite by pack, ids that repeat across packs apart,
   assert.equal(new Set(keys).size, keys.length, 'a key repeats');
   for (const s of list) assert.equal(s.key, `${s.pack}/${s.id}`);
   for (const k of ['vivid/serpent-a', 'scanned/serpent-a', 'plain/rose', 'plain/cartouche', 'plain/tower']) assert.ok(keys.includes(k), k);
-  assert.equal(list.length, manifests.vivid.sprites.length + manifests.scanned.sprites.length + 3);
-  assert.deepEqual(list.filter((s) => s.pack === 'plain').map((s) => [s.kind, s.file]), [['rose', null], ['cartouche', null], ['town', null]]);
+  assert.equal(list.length, manifests.vivid.sprites.length + manifests.scanned.sprites.length + 7);
+  assert.deepEqual(list.filter((s) => s.pack === 'plain').map((s) => [s.id, s.kind, s.file]), [['rose', 'rose', null], ['cartouche', 'cartouche', null],
+    ...['tower', 'tower-round', 'tower-gate', 'tower-spire', 'tower-dome'].map((id) => [id, 'town', null])]);
 });
 
 test('defaultSprites: Carta Marina and Paré scans plus heraldic drawn monsters, every ship, town and mountain, one cartouche', async () => {
@@ -88,10 +89,11 @@ test('selectSprites draws the keys it is given, from either pack, and ignores ke
   assert.deepEqual(chosen.monsters.map((s) => s.key), ['vivid/serpent-a', 'scanned/serpent-a']);
   assert.deepEqual(chosen.monsters.map((s) => s.file), ['carta-marina-serpent-a.svg', 'serpent-a.png']);
   assert.deepEqual(chosen.towns.map((s) => s.key), ['vivid/town-martines-port']);
-  assert.equal(chosen.tower, true);
+  assert.deepEqual([chosen.tower, chosen.towers], [true, ['tower']]);
+  assert.deepEqual(selectSprites(manifests, ['plain/tower-gate', 'plain/tower-dome']).towers, ['tower-gate', 'tower-dome']);
   assert.ok(chosen.roses.length === 2 && chosen.roses.every((s) => s.plain), 'plain/rose is the rose set drawn in code');
   assert.deepEqual([chosen.ships, chosen.mountains, chosen.cartouche], [[], [], null]);
   assert.equal(selectSprites(manifests, ['plain/cartouche']).cartouche.plain, true);
   assert.equal(selectSprites(manifests, ['vivid/cartouche-frame', 'scanned/cartouche-dewit']).cartouche.key, 'vivid/cartouche-frame');
-  assert.equal(selectSprites(manifests, []).tower, false);
+  assert.deepEqual([selectSprites(manifests, []).tower, selectSprites(manifests, []).towers], [false, []]);
 });
