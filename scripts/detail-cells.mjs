@@ -94,6 +94,15 @@ export function cutCells({ land, coast }, size = 5, digits = 5) {
 // outline wherever the view is cut; its index in the source file is its GeoJSON `id`, by which
 // the scene keeps one copy of a feature fetched from several cells. Properties are cut to `keep`.
 // Returns Map(key -> { rivers, lakes }), each a FeatureCollection.
+// The Natural Earth 10m water downloads, the world file first and then the regional supplements,
+// which hold what the world file leaves out (Lake Washington, Como, the Snohomish) and repeat none of
+// it. joinWater makes one collection of several, in this order, so cutWater's ids stay unique.
+export const WATER_FILES = {
+  rivers: ['ne_10m_rivers_lake_centerlines.geojson', 'ne_10m_rivers_north_america.geojson', 'ne_10m_rivers_europe.geojson'],
+  lakes: ['ne_10m_lakes.geojson', 'ne_10m_lakes_north_america.geojson', 'ne_10m_lakes_europe.geojson'],
+};
+export const joinWater = (geos) => ({ type: 'FeatureCollection', features: geos.flatMap((g) => g?.features ?? []) });
+
 export function cutWater(riversGeo, lakesGeo, { keep = { rivers: ['name', 'featurecla', 'min_zoom'], lakes: ['name', 'min_zoom'] }, size = 5, digits = 5 } = {}) {
   const f = 10 ** digits, round = (c) => (typeof c[0] === 'number' ? [Math.round(c[0] * f) / f, Math.round(c[1] * f) / f] : c.map(round));
   const cells = new Map(), cell = (k) => cells.get(k) ?? cells.set(k, { rivers: [], lakes: [] }).get(k);
