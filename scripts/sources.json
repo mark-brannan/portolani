@@ -285,12 +285,22 @@
       "sha256": "b899bc6f3538f07c1917974242000e86817c9533393978921d02abd2031875ac",
       "rights": "CC0 (original public domain)",
       "note": "(carrack, johnny_automatic)"
+    },
+    {
+      "id": "debry-virginia",
+      "file": "debry-arrival-englishmen-virginia.jpg",
+      "url": "https://images.pdimagearchive.org/collections/briefe-and-true-report-de-bry-engravings/477644612.jpg",
+      "page": "https://pdimagearchive.org/images/3b6b815a-daac-402a-accd-de396e1ba3a5/",
+      "sha256": "3753466754120fb52f2df38fadf35b416f00e6f3c5dbf68120e1119734ca98c1",
+      "rights": "Public domain (Harvard via PD Image Archive)",
+      "note": "(de Bry after White, 1590; 2,304 × 1,672)"
     }
   ],
   "footer": [
     "Commons SHA-1 for `Carta_Marina.jpeg` (from the API, matches the download): `3faca355f1e764d19d69b75901a415cce98c49d6`.",
     "Not used: Library of Congress item 2021668747 (Agnese atlas); its roses are about 100 px across at full size, too small to crop.",
     "Not used: Visconte Maggiolo 1541 (Staatsbibliothek zu Berlin, `Maggiolo_-_Portolankarte_-_1541.png`, 1,312 × 860); its roses are about 80 px, its ships about 70 px and its tents and whale under 200 px, with rhumb lines across them.",
-    "Not used: Gabriel de Vallseca 1439 (`Gabriel_Vallseca._Museo_Marítimo,_Barcelona.1439.jpg`); 1,600 × 1,038 is the largest scan of the chart itself on Commons. The 9,144 × 6,610 `btv1b8459305b` is a reduced facsimile, not the chart."
+    "Not used: Gabriel de Vallseca 1439 (`Gabriel_Vallseca._Museo_Marítimo,_Barcelona.1439.jpg`); 1,600 × 1,038 is the largest scan of the chart itself on Commons. The 9,144 × 6,610 `btv1b8459305b` is a reduced facsimile, not the chart.",
+    "Not yet cropped: `debry-arrival-englishmen-virginia.jpg` is hand-coloured, so a colour-source pack, not an ink one."
   ]
 }
