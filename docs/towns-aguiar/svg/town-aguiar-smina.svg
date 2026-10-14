@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 116" width="560" height="464">
+<!-- Round walled town on a mound from Jorge de Aguiar's 1492 chart: curtain wall with merlons, big red-roofed hall, tall leaning square tower, domed towers. Traced from the crop at docs/towns-aguiar/town-aguiar-smina.raw.png (pixel = user unit). -->
+<g stroke="#2a1d12" stroke-width="1.2" stroke-linejoin="round" stroke-linecap="round">
+<!-- mound -->
+<path d="M28 56C14 54 6 64 10 74S26 88 50 92 100 95 115 86 122 66 108 60Z" fill="#c9a67a" opacity=".6" stroke="none"/>
+<path d="M28 56C14 54 6 64 10 74S26 88 50 92 100 95 115 86 122 66 108 60Z" fill="none" stroke-width="1.8"/>
+<ellipse cx="17" cy="66" rx="8" ry="10" fill="#c8432b" opacity=".3" stroke="none"/>
+<path d="M40 83h3M67 88h3M99 86h3" stroke-width="2"/>
+<!-- back towers -->
+<rect x="41" y="21" width="12" height="26" fill="#fff"/>
+<path d="M41 21Q47 9 53 21Z" fill="#c8432b"/>
+<rect x="44" y="26" width="2.5" height="3" fill="#2a1d12" stroke="none"/>
+<rect x="55" y="24" width="13" height="20" fill="#fff"/>
+<path d="M67 27Q73 15 79 27Z" fill="#c8432b"/>
+<path d="M55 24Q62 11 70 24Z" fill="#c8432b"/>
+<rect x="66" y="30" width="16" height="14" fill="#fff"/>
+<rect x="70" y="31" width="12" height="13" fill="#3f5fa8" opacity=".3" stroke="none"/>
+<!-- tall leaning tower -->
+<path d="M85 10L101 11 92 70 77 68Z" fill="#fff"/>
+<rect x="88" y="23" width="2.5" height="3" fill="#2a1d12" stroke="none"/>
+<rect x="86" y="35" width="2.5" height="3" fill="#2a1d12" stroke="none"/>
+<!-- curtain wall band -->
+<path d="M30 52L108 58C116 62 118 66 112 70 100 76 80 80 60 78 44 76 30 70 28 60Z" fill="#fff"/>
+<rect x="30" y="56" width="6" height="14" fill="#3f5fa8" opacity=".3" stroke="none"/>
+<rect x="82" y="58" width="10" height="14" fill="#3f5fa8" opacity=".3" stroke="none"/>
+<rect x="41" y="59" width="3" height="3" fill="#2a1d12" stroke="none"/>
+<rect x="57" y="62" width="3" height="3" fill="#2a1d12" stroke="none"/>
+<rect x="71" y="61" width="3" height="3" fill="#2a1d12" stroke="none"/>
+<rect x="77" y="65" width="3" height="3" fill="#2a1d12" stroke="none"/>
+<!-- merlon shadows hanging from wall base -->
+<path d="M41 70l1.5 4 1.5-4zM51 74l1.5 4 1.5-4zM62 77l1.5 4 1.5-4zM73 78l1.5 4 1.5-4zM84 77l1.5 4 1.5-4z" fill="#2a1d12" stroke="none"/>
+<!-- big red hall roof -->
+<path d="M32 56L38 42 52 37 72 38 85 44 92 52 90 58 34 60Z" fill="#c8432b"/>
+<!-- right hall -->
+<rect x="92" y="58" width="18" height="14" fill="#fff"/>
+<rect x="92" y="59" width="7" height="12" fill="#3f5fa8" opacity=".3" stroke="none"/>
+<path d="M91 60L92 52 98 46 108 46 113 54 112 60Z" fill="#c8432b"/>
+<!-- left round tower -->
+<rect x="15" y="39" width="16" height="23" fill="#fff"/>
+<rect x="15" y="40" width="6" height="21" fill="#3f5fa8" opacity=".3" stroke="none"/>
+<path d="M16 39Q23 28 31 39Z" fill="#c8432b"/>
+<rect x="24" y="49" width="2.5" height="3" fill="#2a1d12" stroke="none"/>
+</g>
+</svg>

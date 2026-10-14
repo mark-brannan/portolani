@@ -169,7 +169,8 @@ function buildSprite(sprite, colour, outDir, tmp) {
   magick(`${scan.path}[0]`, '-crop', `${w}x${h}+${x0}+${y0}`, '+repage', '-alpha', 'off', bolden, t('crop'));
   // deskew about the crop's centre; the corners fill from the edge pixels and fade out at the edge below
   if (sprite.rotate) magick(t('crop'), '-virtual-pixel', 'Edge', '-distort', 'SRT', String(sprite.rotate), t('crop'));
-  if (keep && sprite.id.startsWith(keepPrefix)) magick(t('crop'), '-strip', join(keep, `${sprite.id}.raw.png`));
+  // kept images carry no date chunks, so a rebuild with the same inputs is byte-identical
+  if (keep && sprite.id.startsWith(keepPrefix)) magick(t('crop'), '-strip', '-define', 'png:exclude-chunk=all', join(keep, `${sprite.id}.raw.png`));
 
   // Lettering on the scan (wind names on a rose) is closed away from the colour image before keying:
   // a grayscale closing removes dark strokes thinner than the disk and keeps the petal wash beneath.
@@ -259,7 +260,7 @@ function buildSprite(sprite, colour, outDir, tmp) {
     '-crop', `${tw}x${th}+${tx}+${ty}`, '+repage', shrink, '-strip', join(outDir, file));
 
   if (keep && sprite.id.startsWith(keepPrefix)) {
-    magick(join(outDir, file), '-background', PARCHMENT, '-flatten', '-strip', join(keep, `${sprite.id}.cut.png`));
+    magick(join(outDir, file), '-background', PARCHMENT, '-flatten', '-strip', '-define', 'png:exclude-chunk=all', join(keep, `${sprite.id}.cut.png`));
   }
 
   const entry = {
