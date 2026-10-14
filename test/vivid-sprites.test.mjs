@@ -147,11 +147,13 @@ test('town families mix, the plain tower among the smallest towns only', async (
   assert.equal((await createScene(env, { view: LIGURIA, sprites: ['vivid/serpent-a'] })).scene.towns.length, 0, 'no town family, no towns');
 });
 
-test('townSize: by population a great city stands bigger than a small town; by rank, as before', async () => {
-  const { scene } = await createScene(env, { view: NILE });
-  const by = Object.fromEntries(scene.towns.map((t) => [t.name, t]));
-  assert.ok(by.Cairo && by.Suez, scene.towns.map((t) => t.name).join());
-  assert.ok(by.Cairo.size > 1.3 && by.Cairo.size > by.Suez.size * 1.4, `Cairo ${by.Cairo.size}, Suez ${by.Suez.size}`);
+test('townSize: by metro area or population a great city stands bigger than a small town; by rank, as before', async () => {
+  for (const townSize of [undefined, 'area', 'population']) {
+    const { scene } = await createScene(env, { view: NILE, townSize });
+    const by = Object.fromEntries(scene.towns.map((t) => [t.name, t]));
+    assert.ok(by.Cairo && by.Suez, scene.towns.map((t) => t.name).join());
+    assert.ok(by.Cairo.size > 1.3 && by.Cairo.size > by.Suez.size * 1.4, `${townSize}: Cairo ${by.Cairo.size}, Suez ${by.Suez.size}`);
+  }
   const rank = (await createScene(env, { view: NILE, townSize: 'rank' })).scene.towns;
   for (const t of rank) assert.equal(t.size, t.rank <= 2 ? 1.25 : 1, t.name);
   const legacy = (await createScene(env, { view: NILE, town: 'tower' })).scene.towns;
@@ -178,6 +180,13 @@ test('sprites stand by their ink: one footprint per kind, and the grander town d
   const aguiar = placed.filter((t) => t.sprite.pack === 'scanned').sort((a, b) => b.size - a.size);
   assert.ok(aguiar.length >= 3, aguiar.map((t) => t.name).join());
   assert.ok(aguiar[0].sprite.grandeur >= aguiar.at(-1).sprite.grandeur, aguiar.map((t) => `${t.name}:${t.sprite.id}`).join());
+});
+
+test('a bigger metro stands bigger: Seattle over Portland', async () => {
+  const { scene } = await createScene(env, { view: { lon: -122.5, lat: 46.5, zoom: 7 } });
+  const by = Object.fromEntries(scene.towns.map((t) => [t.name, t]));
+  assert.ok(by.Seattle && by.Portland, scene.towns.map((t) => t.name).join());
+  assert.ok(by.Seattle.size > by.Portland.size, `Seattle ${by.Seattle.size}, Portland ${by.Portland.size}`);
 });
 
 test('the monster and ship cast is the same for one view, and a big selection shows more of itself across views', async () => {

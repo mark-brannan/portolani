@@ -197,7 +197,7 @@ function showStyle() {
   $('land').value = style.land; $('redSea').checked = style.redSea;
   $('continents').checked = style.continents; $('regions').value = style.regions;
   $('titleMode').value = style.autoTitle ? 'auto' : 'custom'; $('title').value = style.title; $('title').disabled = style.autoTitle;
-  $('townSize').checked = style.townSize === 'population';
+  $('townSize').checked = style.townSize !== 'rank';
   for (const b of document.querySelectorAll('#drawer .thumb')) b.setAttribute('aria-pressed', b === none ? !CARTOUCHES.some((k) => selection.has(k)) : selection.has(b.dataset.key));
   for (const { box, count, keys } of familyBoxes) {
     const on = keys.filter((k) => selection.has(k)).length;
@@ -212,7 +212,8 @@ function readControls() {
     land: $('land').value, redSea: $('redSea').checked,
     continents: $('continents').checked, regions: $('regions').value,
     title: $('title').value, autoTitle: $('titleMode').value === 'auto',
-    townSize: $('townSize').checked ? 'population' : 'rank',
+    // checked, by metro area; a link's townsize=population is kept until the box is touched
+    townSize: $('townSize').checked ? (style.townSize === 'rank' ? 'area' : style.townSize) : 'rank',
   };
   view = clampView({ ...view, projection: $('projection').value });
   changed();

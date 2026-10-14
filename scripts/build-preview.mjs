@@ -9,7 +9,8 @@
 // coast, for close views, ship cut into 5-degree cells (geo/10m/<xi>_<yi>.json, listed in
 // geo/10m/index.json), and GSHHG "h" land into 1-degree cells (geo/h/), when the installed
 // coastlines carries it, so a close view fetches only the cells around it. The names the chart
-// letters ship as geo/names-50m.json (scripts/names.mjs).
+// letters ship as geo/names-50m.json (scripts/names.mjs), and the urban footprints of its towns, the
+// Natural Earth 10m urban areas joined to the places, as geo/urban-10m.json (scripts/urban.mjs).
 
 import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -20,6 +21,7 @@ import * as coastlines from 'coastlines';
 import { geojsonPolygons, geojsonRings } from 'coast-wright';
 import { cutCells } from './detail-cells.mjs';
 import { seaNames, coastNames, joinNames, redSea } from './names.mjs';
+import { joinUrban } from './urban.mjs';
 const { find, localUrl } = coastlines;
 
 const root = fileURLToPath(new URL('..', import.meta.url));
@@ -28,7 +30,7 @@ const GEO = ['ne-land-50m', 'ne-coastline-50m', 'ne-populated-places-50m'];
 const GEO_10M = ['ne-land-10m', 'ne-coastline-10m', 'ne-minor-islands-10m'];
 const CELL_DEG = 5; // must match scene.mjs BANDS
 
-const KEEP = { 'ne-populated-places-50m': ['NAME', 'SCALERANK', 'POP_MAX'] };
+const KEEP = { 'ne-populated-places-50m': ['NAME', 'SCALERANK', 'POP_MAX', 'MAX_AREAKM'] };
 const slim = (geo, keys) => ({
   ...geo,
   features: geo.features.map((f) => ({ ...f, properties: Object.fromEntries(keys.map((k) => [k, f.properties[k]])) })),
@@ -40,6 +42,8 @@ const SOURCES = [
   ['https://raw.githubusercontent.com/google/fonts/main/ofl/imfellenglish/OFL.txt', 'OFL-IMFellEnglish.txt', '2a3ca501fc4d5efcad9798531e3e06962b1e20c60e464f6cbd6c17630112c773', 'font'],
   // read into geo/names-50m.json below, not shipped as is
   ['https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_geography_marine_polys.geojson', 'ne_50m_geography_marine_polys.geojson', '6fe58083e0cc5c7fad9e396970e28a8580bbd8770cfa4d1d7b5a34423e912f97', null],
+  // read into geo/urban-10m.json below; too big for coastlines, it moves to a coastlines-10m once that exists
+  ['https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_urban_areas.geojson', 'ne_10m_urban_areas.geojson', '5136ffd816a9b28c0f295e6797b4c03eaa421be80d78b90f542db4a932dd4497', null],
 ];
 
 await mkdir(path.join(root, 'downloads'), { recursive: true });
@@ -63,8 +67,10 @@ async function readGeo(id) {
   return bytes;
 }
 await mkdir(path.join(out, 'geo', '10m'), { recursive: true });
+let placesGeo;
 for (const id of GEO) {
   const bytes = await readGeo(id);
+  if (id === 'ne-populated-places-50m') placesGeo = JSON.parse(bytes);
   await writeFile(path.join(out, 'geo', `${id}.geojson`), id in KEEP ? JSON.stringify(slim(JSON.parse(bytes), KEEP[id])) : bytes);
 }
 // Names the chart letters: seas from the download, countries along their 50m coast.
@@ -79,6 +85,9 @@ const red = redSea(marine);
 if (JSON.stringify(JSON.parse(await readFile(path.join(root, 'test', 'fixtures', 'red-sea-50m.json'), 'utf8'))) !== JSON.stringify(red)) throw new Error('test/fixtures/red-sea-50m.json is stale: write redSea() of the marine download to it');
 await writeFile(path.join(out, 'geo', 'red-sea-50m.json'), JSON.stringify(red));
 await writeFile(path.join(out, 'geo', 'names-50m.json'), JSON.stringify(joinNames(seas, coastNames(countries, coast50))));
+const urban = JSON.stringify(joinUrban(placesGeo, JSON.parse(await readFile(path.join(root, 'downloads', 'ne_10m_urban_areas.geojson'), 'utf8'))));
+await writeFile(path.join(out, 'geo', 'urban-10m.json'), urban);
+console.log(`urban footprints: ${(urban.length / 1e6).toFixed(2)} MB`);
 // A band of detail cells: geo/<dir>/<xi>_<yi>.json and geo/<dir>/index.json.
 async function writeBand(dir, cellDeg, geometry) {
   const cells = cutCells(geometry, cellDeg);
@@ -103,6 +112,6 @@ if (find(H_ID) && coastlines.shapefilePolygons) {
 await cp(path.join(root, 'node_modules', 'coast-wright', 'lib'), path.join(out, 'coast-wright'), { recursive: true });
 await cp(path.join(root, 'public'), out, { recursive: true });
 await cp(path.join(root, 'scripts', 'scene.mjs'), path.join(out, 'scene.mjs'));
-await cp(path.join(root, 'scripts', 'island.mjs'), path.join(out, 'island.mjs'));
+for (const f of ['island.mjs', 'city.mjs', 'urban.mjs']) await cp(path.join(root, 'scripts', f), path.join(out, f));
 await cp(path.join(root, 'packs'), path.join(out, 'packs'), { recursive: true });
 console.log(`preview assembled in ${path.relative(root, out)}/`);
