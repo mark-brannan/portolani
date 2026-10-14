@@ -59,17 +59,19 @@ test('listSprites keys every sprite by pack, ids that repeat across packs apart,
   assert.equal(new Set(keys).size, keys.length, 'a key repeats');
   for (const s of list) assert.equal(s.key, `${s.pack}/${s.id}`);
   for (const k of ['vivid/serpent-a', 'scanned/serpent-a', 'plain/rose', 'plain/cartouche', 'plain/tower']) assert.ok(keys.includes(k), k);
-  assert.equal(list.length, manifests.vivid.sprites.length + manifests.scanned.sprites.length + 7);
-  assert.deepEqual(list.filter((s) => s.pack === 'plain').map((s) => [s.id, s.kind, s.file]), [['rose', 'rose', null], ['cartouche', 'cartouche', null],
-    ...['tower', 'tower-round', 'tower-gate', 'tower-spire', 'tower-dome'].map((id) => [id, 'town', null])]);
+  assert.equal(list.length, manifests.vivid.sprites.length + manifests.scanned.sprites.length + 12);
+  assert.deepEqual(list.filter((s) => s.pack === 'plain').map((s) => [s.id, s.kind, s.style, s.file]), [['rose', 'rose', 'plain', null], ['cartouche', 'cartouche', 'plain', null],
+    ...['tower', 'tower-round', 'tower-gate', 'tower-spire', 'tower-dome'].map((id) => [id, 'town', 'tower', null]),
+    ...['house', 'church', 'castle', 'round-tower', 'tent'].map((id) => [id, 'town', 'carta-marina', null])]);
 });
 
-test('defaultSprites: Carta Marina and Paré scans plus heraldic drawn monsters, every ship, town and mountain, one cartouche', async () => {
+test('defaultSprites: Carta Marina and Paré scans plus heraldic drawn monsters, every ship, town (but the Carta Marina buildings) and mountain, one cartouche', async () => {
   const list = await listSprites(env), picked = new Set(defaultSprites(list)), on = list.filter((s) => picked.has(s.key));
   const wanted = (s) => s.kind === 'monster' && ((s.pack === 'scanned' && ['carta-marina', 'pare'].includes(s.style)) || (s.pack === 'vivid' && s.style === 'heraldic'));
   assert.deepEqual(on.filter((s) => s.kind === 'monster').map((s) => s.key), list.filter(wanted).map((s) => s.key));
   assert.ok(on.some((s) => s.style === 'pare') && on.some((s) => s.style === 'heraldic') && on.some((s) => s.style === 'carta-marina'));
-  for (const kind of ['ship', 'town', 'mountain']) assert.deepEqual(on.filter((s) => s.kind === kind).map((s) => s.key), list.filter((s) => s.kind === kind).map((s) => s.key), kind);
+  const offered = (s) => s.pack === 'plain' && s.style === 'carta-marina'; // the Carta Marina buildings: offered, not drawn unasked
+  for (const kind of ['ship', 'town', 'mountain']) assert.deepEqual(on.filter((s) => s.kind === kind).map((s) => s.key), list.filter((s) => s.kind === kind && !offered(s)).map((s) => s.key), kind);
   assert.ok(new Set(on.filter((s) => s.kind === 'ship').map((s) => s.pack)).size === 2, 'ships of both packs');
   assert.deepEqual(on.filter((s) => s.kind === 'cartouche').map((s) => s.key), ['vivid/cartouche-frame']);
   assert.ok(on.filter((s) => s.kind === 'rose').every((s) => s.pack === 'vivid' && s.style === 'aguiar'));

@@ -1,0 +1,89 @@
+// The Carta Marina's buildings drawn in code (scripts/buildings.mjs): each draws, in ink, parchment
+// and red; the picker has a glyph for each; and the lesser places stand as a church or a house, lettered,
+// from DETAIL_ZOOM in. Offline: reads only the repo, node_modules and committed fixtures.
+
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import { join, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { loadImage, createCanvas, GlobalFonts } from '@napi-rs/canvas'
+import { BUILDINGS, LESSER_PX, lesserBuilding } from '../scripts/buildings.mjs'
+import { createScene, towerGlyph, DETAIL_ZOOM } from '../scripts/scene.mjs'
+import { coastNames, joinNames } from '../scripts/names.mjs'
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
+const GEO = dirname(fileURLToPath(import.meta.resolve('coastlines/data/ne-land-50m')))
+const read = (file) => JSON.parse(readFileSync(file, 'utf8'))
+let made
+const names = () => made ??= joinNames(read(join(ROOT, 'test', 'fixtures', 'sea-names-50m.json')),
+  coastNames(read(join(GEO, 'ne-admin-0-countries-50m.geojson')), read(join(GEO, 'ne-coastline-50m.geojson'))))
+const resolve = (p) => (p.startsWith('geo/') ? join(GEO, p.slice(4)) : join(ROOT, p))
+const env = {
+  createCanvas,
+  readJSON: async (p) => (p === 'geo/names-50m.json' ? names() : read(resolve(p))),
+  loadImage: (p) => loadImage(resolve(p)),
+  loadFont: async (family) => { GlobalFonts.registerFromPath(join(ROOT, 'test', 'fixtures', 'IMFeENrm28P.ttf'), family) },
+}
+const IDS = ['house', 'church', 'castle', 'round-tower', 'tent']
+
+test('the Carta Marina buildings: five, in the towers\' path data, within the towers\' box', () => {
+  assert.deepEqual(BUILDINGS.map((b) => b.id), IDS)
+  for (const b of BUILDINGS) {
+    assert.equal(b.style, 'carta-marina', b.id)
+    assert.ok(b.w > 0 && b.w <= 8, `${b.id}: half-width ${b.w}`) // the picker's box stays the towers'
+    for (const [kind, d] of b.layers) {
+      assert.ok('prks'.includes(kind), `${b.id}: layer ${kind}`)
+      assert.match(d, /^M[-\d. MLHVQZ]*$/, `${b.id}: only M L H V Q Z`)
+      const ys = [...d.matchAll(/[MLQ]\s*-?[\d.]+\s+(-?[\d.]+)|V\s*(-?[\d.]+)/g)].map((m) => +(m[1] ?? m[2]))
+      assert.ok(ys.every((y) => y >= -16.5 && y <= 1), `${b.id}: ${ys} leaves the 16.5-unit box`)
+    }
+  }
+})
+
+test('towerGlyph draws each building as SVG, in ink, parchment and, but the tent, red', async () => {
+  for (const id of IDS) {
+    const svg = towerGlyph(id)
+    assert.match(svg, /^<svg viewBox="-9 -17.5 18 19">(<path [^>]+\/>)+<\/svg>$/, id)
+    const img = await loadImage(Buffer.from(svg.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" width="72" height="76" ').replaceAll('currentColor', '#3b2a1a')))
+    const c = createCanvas(72, 76), g = c.getContext('2d')
+    g.drawImage(img, 0, 0)
+    const px = g.getImageData(0, 0, 72, 76).data
+    let ink = 0, red = 0, parchment = 0
+    for (let i = 0; i < px.length; i += 4) {
+      if (px[i + 3] < 200) continue
+      const [r, gr, b] = [px[i], px[i + 1], px[i + 2]]
+      if (r < 90 && gr < 70) ink++
+      else if (r > 120 && gr < 70 && b < 50) red++
+      else if (r > 200 && gr > 190) parchment++
+    }
+    assert.ok(ink > 40 && parchment > 40, `${id}: ink ${ink}, parchment ${parchment}`)
+    if (id !== 'tent') assert.ok(red > 20, `${id}: red ${red}`)
+  }
+  // the towers' glyphs keep their box
+  for (const id of ['tower', 'tower-round', 'tower-gate', 'tower-spire', 'tower-dome']) assert.match(towerGlyph(id), /^<svg viewBox="-9 -17\.5 18 19">/, id)
+})
+
+test('a lesser place is a church or a house, the bigger likelier a church, never a castle', () => {
+  const seeds = Array.from({ length: 400 }, (_, i) => Math.imul(i + 1, 2654435761))
+  const churches = (rank) => seeds.filter((s) => lesserBuilding(rank, s) === 'church').length
+  for (let rank = 5; rank <= 8; rank++) assert.ok(seeds.every((s) => ['church', 'house'].includes(lesserBuilding(rank, s))), `rank ${rank}`)
+  assert.ok(churches(5) > churches(6) && churches(6) > churches(7) && churches(7) >= churches(8), [5, 6, 7, 8].map(churches).join(' '))
+})
+
+test('lesser places stand at zoom 10, lettered, a fixed height, and not at zoom 5', async () => {
+  const LIGURIA = { lon: 8.7, lat: 44.3 }
+  const close = (await createScene(env, { view: { ...LIGURIA, zoom: 10 } })).scene
+  assert.ok(DETAIL_ZOOM <= 10)
+  assert.ok(close.lesser.length > 0, 'no lesser place at zoom 10')
+  for (const t of close.lesser) {
+    assert.ok(['church', 'house'].includes(t.tower), `${t.name}: ${t.tower}`)
+    assert.equal(t.h, LESSER_PX, t.name)
+    assert.ok(t.rank > 4 && t.rank <= 8, `${t.name}: rank ${t.rank}`)
+    assert.ok(close.names.some((n) => n.text === t.name), `${t.name}: not lettered`)
+    assert.ok(!close.towns.some((u) => u.name === t.name), `${t.name}: also a town`)
+  }
+  assert.ok(close.lesser.some((t) => t.name === 'Genoa'))
+  const far = (await createScene(env, { view: { ...LIGURIA, zoom: 5 } })).scene
+  assert.deepEqual(far.lesser, [])
+})
