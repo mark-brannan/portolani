@@ -87,3 +87,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t195015z
 - a close view whose 10m cells hold no water draws none there rather than falling back to 50m Undo: fall back to 50m when both 10m lists are empty ([#92](https://github.com/mark-brannan/portolani/pull/92))
+
+### 20261014t195019z
+- scene.mjs exports keptWater(data) so a test can count what a view keeps Undo: inline keptWater back into paintWater ([#92](https://github.com/mark-brannan/portolani/pull/92))
