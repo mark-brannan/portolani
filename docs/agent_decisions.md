@@ -27,3 +27,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t071918z
 - Scale bar default style is chequer; style panel and scale= choose among five Undo: change DEFAULTS.scale and the scene default ([#53](https://github.com/mark-brannan/portolani/pull/53))
+
+### 20261014t071924z
+- Goldens render with the scale bar off, so they do not move with scale styling Undo: drop scale:'off' in test/golden.test.mjs, npm run golden ([#53](https://github.com/mark-brannan/portolani/pull/53))
