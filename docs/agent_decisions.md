@@ -84,3 +84,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t195011z
 - 10m water swaps in at zoom > 9, the land band's edge Undo: use >= in the createScene water line ([#92](https://github.com/mark-brannan/portolani/pull/92))
+
+### 20261014t195015z
+- a close view whose 10m cells hold no water draws none there rather than falling back to 50m Undo: fall back to 50m when both 10m lists are empty ([#92](https://github.com/mark-brannan/portolani/pull/92))
