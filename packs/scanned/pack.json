@@ -182,7 +182,8 @@
         "url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Jorge_Aguiar_1492_MR.jpg",
         "page": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg",
         "crop": [2306, 2351, 2447, 2464]
-      }
+      },
+      "heightPx": 48
     },
     {
       "id": "scale-genoese",

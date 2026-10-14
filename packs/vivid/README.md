@@ -17,20 +17,11 @@ Each rose style is a pair: a centre rose (300 px) and a small rose for the ring 
 
 ## Heraldic sea monsters and ships
 
-The `heraldic` style (the page's "Monsters and ships") is nine existing public-domain and CC0 SVGs: dark ink on
-white, light fills made white so the paper shows through `multiply`, nothing else changed but the crop. Each file's
-opening comment names the original, its author and its page.
+The `heraldic` style (the page's "Monsters and ships"): sea monsters after Bara's 1579 heraldic woodcuts, and
+engraved ships; existing public-domain and CC0 SVGs, recoloured to the pack ink. Each file's opening comment names its
+source and licence.
 
-| Sprite | Shows | Source and author | Licence |
-| --- | --- | --- | --- |
-| `sea-dragon` | dragon's body, fish's tail | Commons `Coa_Illustration_Elements_Animal_Sea_Dragon`, after Hierosme de Bara 1579 | public domain |
-| `sea-lion` | lion's front, fish's tail | Commons `Coa_Illustration_Elements_Animal_Sea_Lion_Embowed`, after Bara 1579 | public domain |
-| `dolphin` | heraldic dolphin, scaled | Commons `Coa_Illustration_Elements_Animal_Dolphin_Haurient_1`, after Bara 1579 | public domain |
-| `merman` | man's body, fish's tail | Commons `Coa_Illustration_Elements_Merman_or_Triton`, after Bara 1579 | public domain |
-| `walrus` | tusked beast, fish's tail | Commons `Coa_Illustration_Elements_Animal_Walrus_Naiant`, after Conrad Gessner | public domain |
-| `hippocampus` | horse's front, fish's tail | Commons `Heraldry_Fish_205`, Mrmw | CC0 |
-| `galleon` | three-master under sail | Openclipart 22696, papapishu, after a Pearson Scott Foresman illustration | CC0 (original public domain) |
-| `caravel` | lateen caravel, cross on the sail | Openclipart 23328, papapishu, after a Pearson Scott Foresman illustration | CC0 (original public domain) |
-| `carrack` | Genoese carrack, 16th century | Openclipart 7988, johnny_automatic, after Dorling, All About Ships 1912 | CC0 (original public domain) |
+## Town height
 
-All three ships head right.
+A town sprite stands 30 px tall at size 1, foot to top, unless its entry sets `heightPx`; a busier drawing such as
+the Aguiar walled town stands taller so it reads. The scanned pack's entries take the same field.

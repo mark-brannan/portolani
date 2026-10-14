@@ -1,9 +1,12 @@
 // Browser host for the shared scene code (scene.mjs): same scene as `npm run render`, drawn live.
 // Drag to pan, wheel or pinch to zoom; while the map moves only land and coast are drawn, and the
-// ornaments are placed again when it stops. The view and the style are kept in the URL hash, e.g.
-// #map=zoom/lat/lon&projection=miller&rendering=scanned&rose=aguiar&monster=carta-marina&town=aguiar&kinds=rose,ship&names=0&rhumb=0&scale=chevron&continents=1&regions=latin&land=green&redsea=1&autotitle=0&title=Mare+Nostrum&ink=5a1a1a&parchment=eee&density=1.5;
-// a setting left at its default is left out. The older `pack=` key is read as a rendering, so old links still work.
-import { createScene, REGION_LANGS, drawScene, drawGround, panView, zoomView, clampView, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, listStyles, PROJECTION_NAMES, SCALE_NAMES, W, H } from './scene.mjs';
+// ornaments are placed again when it stops. The settings live in a drawer behind the rose button, so
+// the map has the window. The view and the style are kept in the URL hash, e.g.
+// #map=zoom/lat/lon&projection=miller&sprites=s:serpent-a,v:kraken,v:rose-aguiar,p:tower&townsize=rank&names=0&rhumb=0&scale=chevron&continents=1&regions=latin&land=green&redsea=1&autotitle=0&title=Mare+Nostrum&ink=5a1a1a&parchment=eee&density=1.5;
+// a setting left at its default is left out, `sprites` too (keys with the pack shortened, v: s: p:).
+// Older links naming a `rendering` (or `pack`), `rose`, `monster`, `town` and `kinds` open as the
+// selection those chose, and are written back in the new form.
+import { createScene, REGION_LANGS, drawScene, drawGround, panView, zoomView, clampView, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, W, H } from './scene.mjs';
 
 const memo = new Map();
 // a failed load is forgotten, so the next stop tries it again
@@ -30,13 +33,28 @@ const env = {
 const $ = (id) => document.getElementById(id);
 const canvas = $('map'), ctx = canvas.getContext('2d');
 
-const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, rendering: 'vivid', rose: 'aguiar', monster: 'carta-marina', town: 'tower', kinds: DEFAULT_KINDS, names: true, rhumb: true, scale: 'genoese', continents: false, regions: 'off', title: 'PORTOLANI', autoTitle: true, land: 'islands', redSea: false };
-// the styles the packs offer fill their selects; only the manifests are read
-const STYLES = await listStyles(env);
-for (const k of ['rose', 'monster', 'town']) {
-  for (const v of STYLES[k]) $(k).append(new Option(v === 'tower' ? 'Tower (drawn in code)' : v, v));
-}
+const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continents: false, regions: 'off', title: 'PORTOLANI', autoTitle: true, land: 'islands', redSea: false, townSize: TOWN_SIZES[0] };
+
+// ---------------------------------------------------------------- the sprites on offer
+
+// Every sprite of a kind the scene places, from the manifests alone: a sprite added to a pack shows up here.
+const MANIFESTS = await readManifests(env);
+const SPRITES = (await listSprites(env)).filter((s) => KINDS.includes(s.kind) || s.kind === 'town');
+const BY_KEY = new Map(SPRITES.map((s) => [s.key, s]));
+// the scene's default selection, less the kinds DEFAULT_KINDS hides (mountains), which wait to be asked for
+const DEFAULT_SELECTION = defaultSprites(SPRITES).filter((k) => BY_KEY.get(k).kind === 'town' || DEFAULT_KINDS.includes(BY_KEY.get(k).kind));
+const sameSet = (a, b) => a.size === b.size && [...a].every((k) => b.has(k));
+
+// keys in the hash: the pack shortened (v:rose-aguiar); a pack with no short name is written whole
+const SHORT = { vivid: 'v', scanned: 's', plain: 'p' };
+const LONG = Object.fromEntries(Object.entries(SHORT).map(([k, v]) => [v, k]));
+const encodeKey = (key) => { const [pack, id] = key.split('/'); return `${SHORT[pack] ?? pack}:${id}`; };
+const decodeKey = (t) => { const i = t.indexOf(':'); return `${LONG[t.slice(0, i)] ?? t.slice(0, i)}/${t.slice(i + 1)}`; };
+
+// ---------------------------------------------------------------- the hash
+
 const LEGACY_PACK = { all: 'vivid', vivid: 'vivid', catalan: 'scanned', 'carta-marina': 'scanned', plain: 'plain' };
+const LEGACY_KEYS = ['rendering', 'pack', 'rose', 'monster', 'town', 'kinds'];
 const hashParams = () => new URLSearchParams(location.hash.slice(1));
 
 function viewFromHash() {
@@ -52,9 +70,6 @@ function styleFromHash() {
     ink: hex(q.get('ink'), DEFAULTS.ink),
     parchment: hex(q.get('parchment'), DEFAULTS.parchment),
     density: density >= 0 && density <= 2 ? density : DEFAULTS.density,
-    rendering: RENDERINGS.includes(q.get('rendering')) ? q.get('rendering') : LEGACY_PACK[q.get('pack')] ?? DEFAULTS.rendering,
-    ...Object.fromEntries(['rose', 'monster', 'town'].map((k) => [k, STYLES[k].includes(q.get(k)) ? q.get(k) : DEFAULTS[k]])),
-    kinds: q.has('kinds') ? KINDS.filter((k) => q.get('kinds').split(',').includes(k)) : DEFAULTS.kinds,
     names: q.get('names') !== '0',
     rhumb: q.get('rhumb') !== '0',
     continents: q.get('continents') === '1',
@@ -65,14 +80,28 @@ function styleFromHash() {
     land: LANDS.includes(q.get('land')) ? q.get('land') : DEFAULTS.land,
     redSea: q.get('redsea') === '1',
     scale: q.get('scale') === 'off' || SCALE_NAMES.includes(q.get('scale')) ? q.get('scale') : DEFAULTS.scale,
+    townSize: TOWN_SIZES.includes(q.get('townsize')) ? q.get('townsize') : DEFAULTS.townSize,
   };
+}
+// The selection a hash names; an older link's rendering, styles and kinds become the selection they drew.
+function selectionFromHash() {
+  const q = hashParams();
+  if (q.has('sprites')) return new Set(q.get('sprites').split(',').filter(Boolean).map(decodeKey).filter((k) => BY_KEY.has(k)));
+  if (!LEGACY_KEYS.some((k) => q.has(k))) return new Set(DEFAULT_SELECTION);
+  const rendering = RENDERINGS.includes(q.get('rendering')) ? q.get('rendering') : LEGACY_PACK[q.get('pack')] ?? 'vivid';
+  const chosen = chooseSprites(MANIFESTS, { rendering, rose: q.get('rose') || undefined, monster: q.get('monster') || undefined, town: q.get('town') || undefined });
+  const kinds = q.has('kinds') ? q.get('kinds').split(',') : DEFAULT_KINDS;
+  const keys = [...chosen.roses, chosen.cartouche, ...chosen.monsters, ...chosen.ships, ...chosen.mountains].filter(Boolean).map((s) => `${s.pack}/${s.id}`)
+    .concat(chosen.roses.length ? [] : ['plain/rose'], chosen.cartouche ? [] : ['plain/cartouche'])
+    .filter((k) => kinds.includes(BY_KEY.get(k)?.kind));
+  return new Set([...keys, ...chosen.towns.map((s) => `${s.pack}/${s.id}`), ...(chosen.tower ? ['plain/tower'] : [])].filter((k) => BY_KEY.has(k)));
 }
 function writeHash() {
   const q = new URLSearchParams(), v = view, st = style;
   q.set('map', `${v.zoom.toFixed(2)}/${v.lat.toFixed(3)}/${v.lon.toFixed(3)}`);
   if (v.projection !== PROJECTION_NAMES[0]) q.set('projection', v.projection);
-  for (const k of ['rendering', 'rose', 'monster', 'town']) if (st[k] !== DEFAULTS[k]) q.set(k, st[k]);
-  if (st.kinds.join() !== DEFAULT_KINDS.join()) q.set('kinds', st.kinds.join());
+  if (!sameSet(selection, new Set(DEFAULT_SELECTION))) q.set('sprites', SPRITES.filter((s) => selection.has(s.key)).map((s) => encodeKey(s.key)).join(','));
+  if (st.townSize !== DEFAULTS.townSize) q.set('townsize', st.townSize);
   if (!st.names) q.set('names', '0');
   if (!st.rhumb) q.set('rhumb', '0');
   if (st.continents) q.set('continents', '1');
@@ -86,34 +115,109 @@ function writeHash() {
   if (st.density !== DEFAULTS.density) q.set('density', st.density);
   if (st.ink !== DEFAULTS.ink) q.set('ink', st.ink.slice(1));
   if (st.parchment !== DEFAULTS.parchment) q.set('parchment', st.parchment.slice(1));
-  history.replaceState(null, '', `#${q.toString().replaceAll('%2C', ',').replaceAll('%2F', '/')}`);
+  history.replaceState(null, '', `#${q.toString().replaceAll('%2C', ',').replaceAll('%2F', '/').replaceAll('%3A', ':')}`);
 }
 
-// the controls show the style; the plain rendering has no ships or monsters to switch
+// ---------------------------------------------------------------- the pickers
+
+// A family is a style drawn one way: "Carta Marina · scan" beside "Carta Marina · drawn".
+const HOW = { scanned: 'scan', vivid: 'drawn', plain: 'drawn in code' };
+const PACK_ORDER = ['scanned', 'vivid', 'plain'];
+const titleCase = (s) => s.split('-').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ');
+function familiesOf(kind) {
+  const sprites = SPRITES.filter((s) => s.kind === kind), styles = [...new Set(sprites.map((s) => s.style))];
+  const out = new Map();
+  for (const s of sprites) {
+    const id = `${s.style}|${s.pack}`;
+    if (!out.has(id)) out.set(id, { label: `${titleCase(s.style)} · ${HOW[s.pack] ?? s.pack}`, rank: styles.indexOf(s.style) * 10 + PACK_ORDER.indexOf(s.pack), sprites: [] });
+    out.get(id).sprites.push(s);
+  }
+  return [...out.values()].sort((a, b) => a.rank - b.rank);
+}
+
+// Glyphs for the shapes drawn in code, which have no picture to show.
+const rosePath = () => {
+  const pts = [];
+  for (let i = 0; i < 32; i++) { const r = i % 2 ? 4 : i % 4 ? 11 : 19, a = (i * Math.PI) / 16 - Math.PI / 2; pts.push(`${(r * Math.cos(a)).toFixed(1)} ${(r * Math.sin(a)).toFixed(1)}`); }
+  return `M${pts.join('L')}Z`;
+};
+const GLYPHS = {
+  rose: `<svg viewBox="-22 -22 44 44"><circle r="20" fill="none" stroke="currentColor"/><path d="${rosePath()}" fill="currentColor"/></svg>`,
+  cartouche: '<svg viewBox="0 0 64 44"><rect x="6" y="10" width="52" height="24" fill="none" stroke="currentColor" stroke-width="2"/><rect x="2" y="6" width="60" height="32" fill="none" stroke="currentColor" stroke-width="0.8"/><path d="M18 22h28" stroke="currentColor" stroke-width="3" stroke-dasharray="4 2"/></svg>',
+  tower: '<svg viewBox="-8 -18 16 19"><path d="M-4 0v-9h-1v-3h2v1.5h2V-12h2v1.5h2V-12h2v3h-1V0Z" fill="#e9d8b4" stroke="currentColor" stroke-width="1.1"/><path d="M-1.5 0v-3a1.5 1.5 0 0 1 3 0V0M0-12v-4.5" fill="none" stroke="currentColor" stroke-width="1"/><path d="M0-16.5 4.5-15.2 0-14Z" fill="#8c2f1e"/></svg>',
+};
+
+function thumb(s, label) {
+  const b = document.createElement('button');
+  Object.assign(b, { type: 'button', className: 'thumb', title: s.id });
+  b.dataset.key = s.key;
+  b.setAttribute('aria-label', `${s.id}, ${label}`);
+  if (s.file) b.append(Object.assign(new Image(), { src: `packs/${s.pack}/${s.file}`, alt: '', decoding: 'async' }));
+  else b.innerHTML = GLYPHS[s.id] ?? '';
+  return b;
+}
+
+// Each family: a checkbox for the whole family (indeterminate when part of it is on) over its sprites, each its own toggle.
+const familyBoxes = [];
+for (const kind of ['monster', 'ship', 'rose', 'town', 'mountain']) {
+  for (const fam of familiesOf(kind)) {
+    const row = document.createElement('div'), head = document.createElement('label'), box = document.createElement('input'), count = document.createElement('span'), thumbs = document.createElement('div');
+    row.className = 'family'; head.className = 'fam'; count.className = 'count'; thumbs.className = 'thumbs';
+    box.type = 'checkbox';
+    head.append(box, fam.label, count);
+    thumbs.append(...fam.sprites.map((s) => thumb(s, fam.label)));
+    row.append(head, thumbs);
+    $(`pick-${kind}`).append(row);
+    const keys = fam.sprites.map((s) => s.key);
+    familyBoxes.push({ box, count, keys });
+    box.addEventListener('change', () => { const all = keys.every((k) => selection.has(k)); for (const k of keys) all ? selection.delete(k) : selection.add(k); changed(); });
+  }
+}
+// The cartouche is one of its pictures, or none.
+const none = Object.assign(document.createElement('button'), { type: 'button', className: 'thumb none', textContent: 'None' });
+$('pick-cartouche').append(...familiesOf('cartouche').flatMap((f) => f.sprites.map((s) => thumb(s, f.label))), none);
+const CARTOUCHES = SPRITES.filter((s) => s.kind === 'cartouche').map((s) => s.key);
+$('drawer').addEventListener('click', (e) => {
+  const b = e.target.closest('.thumb');
+  if (!b) return;
+  const key = b.dataset.key;
+  if (b === none || CARTOUCHES.includes(key)) { for (const k of CARTOUCHES) selection.delete(k); if (key) selection.add(key); }
+  else if (selection.has(key)) selection.delete(key); else selection.add(key);
+  changed();
+});
+
+// ---------------------------------------------------------------- the controls
+
+// the controls show the style and the selection
 function showStyle() {
   $('projection').value = view.projection;
   $('ink').value = style.ink; $('parchment').value = style.parchment;
   $('density').value = style.density; $('densityOut').textContent = style.density;
-  for (const k of ['rendering', 'rose', 'monster', 'town']) $(k).value = style[k];
   $('names').checked = style.names; $('rhumb').checked = style.rhumb; $('scale').value = style.scale;
   $('land').value = style.land; $('redSea').checked = style.redSea;
   $('continents').checked = style.continents; $('regions').value = style.regions;
   $('titleMode').value = style.autoTitle ? 'auto' : 'custom'; $('title').value = style.title; $('title').disabled = style.autoTitle;
-  for (const k of KINDS) {
-    const box = $(`kind-${k}`);
-    box.checked = style.kinds.includes(k);
-    box.disabled = (k === 'ship' || k === 'monster') && style.rendering === 'plain';
+  $('townSize').checked = style.townSize === 'population';
+  for (const b of document.querySelectorAll('#drawer .thumb')) b.setAttribute('aria-pressed', b === none ? !CARTOUCHES.some((k) => selection.has(k)) : selection.has(b.dataset.key));
+  for (const { box, count, keys } of familyBoxes) {
+    const on = keys.filter((k) => selection.has(k)).length;
+    box.checked = on === keys.length; box.indeterminate = on > 0 && on < keys.length;
+    count.textContent = `${on} of ${keys.length}`;
   }
 }
 function readControls() {
   style = {
     ink: $('ink').value, parchment: $('parchment').value, density: Number($('density').value),
-    rendering: $('rendering').value, rose: $('rose').value, monster: $('monster').value, town: $('town').value, kinds: KINDS.filter((k) => $(`kind-${k}`).checked), names: $('names').checked, rhumb: $('rhumb').checked, scale: $('scale').value,
+    names: $('names').checked, rhumb: $('rhumb').checked, scale: $('scale').value,
     land: $('land').value, redSea: $('redSea').checked,
     continents: $('continents').checked, regions: $('regions').value,
     title: $('title').value, autoTitle: $('titleMode').value === 'auto',
+    townSize: $('townSize').checked ? 'population' : 'rank',
   };
   view = clampView({ ...view, projection: $('projection').value });
+  changed();
+}
+function changed() {
   showStyle();
   writeHash();
   render();
@@ -121,7 +225,9 @@ function readControls() {
 
 let view = viewFromHash();
 let style = styleFromHash();
+let selection = selectionFromHash();
 showStyle();
+if (LEGACY_KEYS.some((k) => hashParams().has(k))) writeHash(); // an older link, rewritten in the new form
 let ground = null; // { world, coarse, bg } from the last placement, all a moving frame needs
 let placed = null; // the view the canvas shows with its ornaments
 let run = 0;
@@ -130,8 +236,10 @@ async function render() {
   const me = ++run;
   try {
     const t0 = performance.now();
+    // a kind is drawn while any of its sprites is selected
+    const kinds = KINDS.filter((k) => SPRITES.some((s) => s.kind === k && selection.has(s.key)));
     const { scene, data, bg, world, coarse, timing } = await createScene(env, {
-      ...style, view,
+      ...style, sprites: [...selection], kinds, view,
     });
     if (me !== run) return; // a newer change or a move superseded this one
     ground = { world, coarse, bg };
@@ -146,6 +254,22 @@ async function render() {
     throw e;
   }
 }
+
+// ---------------------------------------------------------------- the drawer
+
+// Shut by default; Esc, the close button or a touch on the map shuts it, and focus goes back to the rose button.
+const drawer = $('drawer'), opener = $('open');
+const isOpen = () => drawer.classList.contains('open');
+function setDrawer(open) {
+  if (open === isOpen()) return;
+  drawer.classList.toggle('open', open);
+  opener.setAttribute('aria-expanded', String(open));
+  (open ? $('close') : opener).focus({ preventScroll: true });
+}
+opener.addEventListener('click', () => setDrawer(!isOpen()));
+$('close').addEventListener('click', () => setDrawer(false));
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && isOpen()) setDrawer(false); });
+canvas.addEventListener('pointerdown', () => setDrawer(false));
 
 // ---------------------------------------------------------------- moving
 
@@ -214,6 +338,6 @@ canvas.addEventListener('wheel', (e) => {
   stopped(300);
 }, { passive: false });
 
-for (const id of ['projection', 'ink', 'parchment', 'density', 'rendering', 'rose', 'monster', 'town', 'names', 'rhumb', 'scale', 'land', 'redSea', 'continents', 'regions', 'titleMode', 'title', ...KINDS.map((k) => `kind-${k}`)]) $(id).addEventListener('input', readControls);
-addEventListener('hashchange', () => { view = viewFromHash(); style = styleFromHash(); showStyle(); render(); });
+for (const id of ['projection', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'land', 'redSea', 'continents', 'regions', 'titleMode', 'title', 'townSize']) $(id).addEventListener('input', readControls);
+addEventListener('hashchange', () => { view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); render(); });
 render();

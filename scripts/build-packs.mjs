@@ -81,7 +81,7 @@ const PACKS = [
       { id: 'palms-aguiar', kind: 'tree', style: 'aguiar', scan: 'aguiar-chart', crop: [2530, 2962, 2732, 3248], sizePx: 70, level: [30, 62],
         erase: [[2695, 2962, 2732, 2995], [2680, 3170, 2732, 3248]] },
       // a walled town in its lake; the rivers leaving the lake erased
-      { id: 'town-aguiar', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', crop: [2300, 2350, 2450, 2465], sizePx: 60, dark: 'min', level: [10, 70],
+      { id: 'town-aguiar', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', crop: [2300, 2350, 2450, 2465], sizePx: 60, heightPx: 48, dark: 'min', level: [10, 70],
         erase: [[2350, 2340, 2365, 2354], [2300, 2440, 2322, 2470], [2435, 2415, 2460, 2470], [2345, 2460, 2365, 2470], [2405, 2458, 2425, 2470]] },
       { id: 'scale-genoese', kind: 'scale', style: 'genoese', scan: 'genoese', crop: [3708, 3815, 4400, 3940], sizePx: 260, dark: 'min', level: [8, 50] },
     ],
@@ -181,6 +181,7 @@ function buildSprite(sprite, colour, outDir, tmp) {
   if (sprite.minClearancePx) entry.minClearancePx = sprite.minClearancePx;
   if (sprite.weight) entry.weight = sprite.weight;
   if (sprite.heading) entry.heading = sprite.heading;
+  if (sprite.heightPx) entry.heightPx = sprite.heightPx;
   if (sprite.panel) {
     const [px0, py0, px1, py1] = sprite.panel;
     // panel in sprite-local fractions, for lettering

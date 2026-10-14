@@ -43,6 +43,7 @@
       "file": "town-aguiar.svg",
       "anchor": [0.5, 0.5],
       "sizePx": 60,
+      "heightPx": 48,
       "bands": [0, 1],
       "after": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg"
     },
@@ -473,7 +474,7 @@
       "after": "https://openclipart.org/detail/22696"
     },
     {
-      "id": "caravel",
+      "id": "caravel-heraldic",
       "kind": "ship",
       "style": "heraldic",
       "file": "heraldic-caravel.svg",

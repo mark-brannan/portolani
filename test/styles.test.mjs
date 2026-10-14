@@ -1,12 +1,13 @@
 // The style settings read from the pack manifests: which styles a page offers, that every sprite
-// names its style, and that a kind and style the chosen rendering lacks is drawn the other way.
+// names its style, and that a kind and style the chosen rendering lacks is drawn the other way;
+// the sprite list a page offers, the default selection's rule, and what a selection draws.
 // Offline: it reads only packs/*/pack.json.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { listStyles, chooseSprites, RENDERINGS } from '../scripts/scene.mjs';
+import { listStyles, chooseSprites, listSprites, defaultSprites, selectSprites, RENDERINGS } from '../scripts/scene.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const env = { readJSON: async (p) => JSON.parse(readFileSync(join(ROOT, p), 'utf8')) };
@@ -50,4 +51,48 @@ test('a kind the rendering lacks is drawn from the other pack; plain draws no pi
   // an unknown style falls back to the default family
   assert.deepEqual(chooseSprites(manifests, { monster: 'nonesuch' }).monsters.map((s) => s.id),
     chooseSprites(manifests, {}).monsters.map((s) => s.id));
+});
+
+test('listSprites keys every sprite by pack, ids that repeat across packs apart, and the shapes drawn in code', async () => {
+  const list = await listSprites(env), keys = list.map((s) => s.key);
+  assert.equal(new Set(keys).size, keys.length, 'a key repeats');
+  for (const s of list) assert.equal(s.key, `${s.pack}/${s.id}`);
+  for (const k of ['vivid/serpent-a', 'scanned/serpent-a', 'plain/rose', 'plain/cartouche', 'plain/tower']) assert.ok(keys.includes(k), k);
+  assert.equal(list.length, manifests.vivid.sprites.length + manifests.scanned.sprites.length + 3);
+  assert.deepEqual(list.filter((s) => s.pack === 'plain').map((s) => [s.kind, s.file]), [['rose', null], ['cartouche', null], ['town', null]]);
+});
+
+test('defaultSprites: scanned Carta Marina monsters, no drawn monsters, every ship, the tower, one cartouche', async () => {
+  const list = await listSprites(env), picked = new Set(defaultSprites(list)), on = list.filter((s) => picked.has(s.key));
+  const monsters = list.filter((s) => s.kind === 'monster');
+  assert.deepEqual(on.filter((s) => s.kind === 'monster').map((s) => s.key),
+    monsters.filter((s) => s.pack === 'scanned' && s.style === 'carta-marina').map((s) => s.key));
+  assert.ok(on.some((s) => s.kind === 'monster') && !on.some((s) => s.kind === 'monster' && s.pack === 'vivid'));
+  assert.deepEqual(on.filter((s) => s.kind === 'ship').map((s) => s.key), list.filter((s) => s.kind === 'ship').map((s) => s.key));
+  assert.ok(new Set(on.filter((s) => s.kind === 'ship').map((s) => s.pack)).size === 2, 'ships of both packs');
+  assert.deepEqual(on.filter((s) => s.kind === 'town').map((s) => s.key), ['plain/tower']);
+  assert.deepEqual(on.filter((s) => s.kind === 'cartouche').map((s) => s.key), ['vivid/cartouche-frame']);
+  assert.ok(on.filter((s) => s.kind === 'rose').every((s) => s.pack === 'vivid' && s.style === 'aguiar'));
+});
+
+test('defaultSprites follows its rule, so a sprite added to a pack joins or stays out by family', async () => {
+  const list = await listSprites(env);
+  const add = (pack, kind, style) => ({ id: `new-${kind}`, kind, style, pack, key: `${pack}/new-${kind}`, file: 'x.png' });
+  const more = [...list, add('scanned', 'monster', 'carta-marina'), add('vivid', 'monster', 'carta-marina'), add('scanned', 'ship', 'bestiary')];
+  const picked = defaultSprites(more);
+  assert.ok(picked.includes('scanned/new-monster') && picked.includes('scanned/new-ship'));
+  assert.ok(!picked.includes('vivid/new-monster'));
+});
+
+test('selectSprites draws the keys it is given, from either pack, and ignores keys it does not know', () => {
+  const chosen = selectSprites(manifests, ['scanned/serpent-a', 'vivid/serpent-a', 'vivid/town-martines-port', 'plain/rose', 'plain/tower', 'nowhere/x', 'vivid/nonesuch']);
+  assert.deepEqual(chosen.monsters.map((s) => s.key), ['vivid/serpent-a', 'scanned/serpent-a']);
+  assert.deepEqual(chosen.monsters.map((s) => s.file), ['carta-marina-serpent-a.svg', 'serpent-a.png']);
+  assert.deepEqual(chosen.towns.map((s) => s.key), ['vivid/town-martines-port']);
+  assert.equal(chosen.tower, true);
+  assert.ok(chosen.roses.length === 2 && chosen.roses.every((s) => s.plain), 'plain/rose is the rose set drawn in code');
+  assert.deepEqual([chosen.ships, chosen.mountains, chosen.cartouche], [[], [], null]);
+  assert.equal(selectSprites(manifests, ['plain/cartouche']).cartouche.plain, true);
+  assert.equal(selectSprites(manifests, ['vivid/cartouche-frame', 'scanned/cartouche-dewit']).cartouche.key, 'vivid/cartouche-frame');
+  assert.equal(selectSprites(manifests, []).tower, false);
 });
