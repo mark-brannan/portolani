@@ -751,6 +751,13 @@ const CITY_PX = 400;
 // footprint is then about CITY_PX * ICON_GROW tall as its city plan takes over.
 const ICON_GROW = 0.75, ICON_MAX = 96;
 const ringArea = (r) => { let a = 0; for (let i = 0, j = r.length - 1; i < r.length; j = i++) a += (r[j][0] + r[i][0]) * (r[j][1] - r[i][1]); return Math.abs(a / 2); };
+// FNV-1a leaves its low bits poor (bit 0 is just the parity of the letters), so towns pick by a
+// murmur3-finalised hash: every bit of the name reaches every bit of the pick.
+const townPick = (text) => {
+  let h = seedOf(text);
+  h = Math.imul(h ^ (h >>> 16), 0x85ebca6b); h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+  return (h ^ (h >>> 16)) >>> 0;
+};
 const seedOf = (text) => { let h = 2166136261; for (const ch of text) h = Math.imul(h ^ ch.codePointAt(0), 16777619); return h | 0; };
 // Sutherland-Hodgman: a ring cut to a lon/lat box, so a clip traces only the coast near a city.
 function cutRing(ring, b) {
@@ -911,8 +918,12 @@ function buildScene(data, sprites, ctx, world = {}) {
   const field = clearanceField(data);
   // a rose set: the biggest is the centre rose, the rest the ring's; a set of one serves both, small at 110 px
   const roses = sprites.roses;
-  const bigRose = roses.reduce((a, b) => (b.sizePx > a.sizePx ? b : a));
-  const rest = roses.filter((s) => s !== bigRose), small = rest.filter((s) => s.sizePx < bigRose.sizePx);
+  // the view's seed picks the centre rose from the whole set, so a selection shows each of its roses
+  // across the map; drawn at the biggest size in the set, the rest ring it
+  const bigSizePx = Math.max(...roses.map((s) => s.sizePx));
+  const picked = castOrder(roses, world.seed, () => 1)[0];
+  const bigRose = { ...picked, sizePx: bigSizePx };
+  const rest = roses.filter((s) => s !== picked), small = rest.filter((s) => s.sizePx < bigSizePx);
   // taken in set order, one per node; mixed sets ring the smaller roses, a set of big ones rings them at 110 px
   const smallRoses = small.length ? small : rest.length ? rest.map((s) => ({ ...s, sizePx: 110 })) : [{ ...bigRose, sizePx: 110 }];
   const smallSize = Math.max(...smallRoses.map((s) => s.sizePx));
@@ -998,7 +1009,7 @@ function buildScene(data, sprites, ctx, world = {}) {
     const fit = townGrandeur(p) < SMALL_TOWN || families.every((f) => !f) ? families : families.filter(Boolean);
     // the town's own drawing, whatever the view: its family and variant follow from its name, so a
     // zoom or a pan never redraws it as another (townVariant)
-    const pick = seedOf(p.name) >>> 0, family = fit[pick % fit.length], size = townScale(p, world.townSize);
+    const pick = townPick(p.name), family = fit[pick % fit.length], size = townScale(p, world.townSize);
     const sprite = special.get(p.name) ?? (family && townVariant(family, p, pick >>> 8)), tower = !sprite && TOWER_BY_ID.get(towerIds[(pick >>> 8) % towerIds.length]);
     const base = (sprite ? townHeight(sprite) : TOWER_H) * size, ground = footprint(p, data.proj);
     const th = Math.max(base, Math.min(ICON_MAX, ICON_GROW * ground.extent));
