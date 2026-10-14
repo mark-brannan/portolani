@@ -51,11 +51,12 @@ for (const [name, view] of Object.entries(VIEWS)) {
   test(`golden image: ${name}`, async () => {
     const canvas = await renderView(view);
     const file = join(GOLDEN, `${name}.png`);
-    if (UPDATE || !existsSync(file)) {
+    if (UPDATE) {
       mkdirSync(GOLDEN, { recursive: true });
       writeFileSync(file, canvas.toBuffer('image/png'));
       return;
     }
+    assert.ok(existsSync(file), `${name}: no golden image; run npm run golden and commit test/golden/${name}.png`);
     const want = createCanvas(SW, SH);
     want.getContext('2d').drawImage(await loadImage(file), 0, 0);
     const a = pixels(canvas), b = pixels(want);
