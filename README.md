@@ -61,10 +61,10 @@ The pan-frame times at z5 and above sit at two animation frames (33 ms at 60 Hz)
 
 ## Reading a portolan chart
 
-Rhumb lines run from each wind rose: black for the eight winds, green for the half-winds, red for the quarter-winds.
-A course is the line parallel to the track, followed back to a rose to read the wind's name.
-Ports are lettered inland, at right angles to the coast; important ones in red, lesser ones in black.
-More: [Trinity College Library](https://trinitycollegelibrarycambridge.wordpress.com/2015/08/14/portolan-chart-of-the-mediterranean/) and [Cartography Unchained](https://www.cartographyunchained.com/chug1/).
+- Rhumb lines run from each wind rose: black for the eight winds, green for the half-winds, red for the quarter-winds.
+- A course is the line parallel to the track, followed back to a rose to read the wind's name.
+- Ports are lettered inland, at right angles to the coast; important ones in red, lesser ones in black.
+- More: [Trinity College Library](https://trinitycollegelibrarycambridge.wordpress.com/2015/08/14/portolan-chart-of-the-mediterranean/) and [Cartography Unchained](https://www.cartographyunchained.com/chug1/).
 
 ## Licence
 
