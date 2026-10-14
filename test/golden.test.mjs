@@ -104,13 +104,13 @@ const differs = (a, b) => { const p = pixels(a), q = pixels(b); for (let i = 0; 
 
 // Continent and region lettering is off by default (the goldens hold it off); each setting draws
 // its names in the zooms it belongs to and nowhere else.
-test('world lettering: continents at z2, regions at z5, nothing by default', async () => {
+test('world lettering: continents below z5, regions below z7, nothing by default', async () => {
   const count = async (view, opts) => (await createScene(env, { view, ...opts })).scene.worldNames.length;
   assert.equal(await count(VIEWS['world-z2']), 0);
   assert.equal(await count(VIEWS['region-z5']), 0);
   assert.ok(await count(VIEWS['world-z2'], { continents: true }) > 0, 'no continents at z2');
   assert.equal(await count(VIEWS['region-z5'], { continents: true }), 0);
-  assert.equal(await count(VIEWS['world-z2'], { regions: 'latin' }), 0);
+  assert.ok(await count(VIEWS['world-z2'], { regions: 'latin' }) > 0, 'no regions at z2');
   assert.ok(await count(VIEWS['region-z5'], { regions: 'latin' }) > 0, 'no regions at z5');
   assert.ok(await count(VIEWS['region-z5'], { regions: 'english' }) > 0, 'no regions at z5');
   // drawn on their own setting, with the other names off
