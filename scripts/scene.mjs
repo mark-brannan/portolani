@@ -192,14 +192,34 @@ async function loadDetail(coarse, view) {
           lines,
           runs: lines.flatMap(({ line }) => coastRuns(line).map((run) => ({ run, box: bbox(run) }))),
         };
-      }));
+      }).catch((e) => { cells.delete(k); throw e; })); // a failed fetch is tried again at the next stop
     }
     return cells.get(k);
   }));
   return {
     land: parts.flatMap((p) => p.land), lines: parts.flatMap((p) => p.lines), runs: parts.flatMap((p) => p.runs),
-    places: coarse.places, detail: true,
+    places: coarse.places, detail: f, // the lon/lat frame the loaded cells cover
   };
+}
+
+// Whether a moving view can be drawn from `world`: 50m always; 10m cells only while the view is
+// closer than DETAIL_ZOOM and inside the frame they were loaded for, so a long drag shows the 50m
+// coast rather than an empty sea.
+function covers(world, view) {
+  if (!world.detail) return true;
+  if (view.zoom <= DETAIL_ZOOM) return false;
+  const d = world.detail, f = frameOf(makeProjection(view), 0);
+  return f.latMin >= d.latMin && f.latMax <= d.latMax && SHIFTS.some((s) => f.lonMin + s >= d.lonMin && f.lonMax + s <= d.lonMax);
+}
+
+// Even-odd point in ring, [lon, lat].
+function insideRing(ring, lon, lat) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i], [xj, yj] = ring[j];
+    if ((yi > lat) !== (yj > lat) && lon < xj + ((lat - yj) * (xi - xj)) / (yi - yj)) inside = !inside;
+  }
+  return inside;
 }
 
 // What a view keeps of the world: the shapes with a point within MARGIN degrees of its frame.
@@ -207,7 +227,9 @@ function viewData(world, view) {
   const proj = makeProjection(view);
   const f = frameOf(proj, MARGIN);
   const near = ([lon, lat]) => nearLL(f, lon, lat);
-  const land = world.land.filter((l) => meetsLL(f, l.box) && l.poly.some((ring) => ring.some(near))).map((l) => l.poly);
+  // or that holds the view's centre, so a view far inland keeps the land it sits on
+  const centre = (l) => SHIFTS.some((s) => insideRing(l.poly[0], view.lon + s, view.lat));
+  const land = world.land.filter((l) => meetsLL(f, l.box) && (l.poly.some((ring) => ring.some(near)) || centre(l))).map((l) => l.poly);
   const coastLL = world.lines.filter((l) => meetsLL(f, l.box) && l.line.some(near)).map((l) => l.line); // [lon, lat] lines
   // px, for placement; a line is broken where it jumps the seam behind the view
   const coast = coastLL.flatMap((line) => {
@@ -760,4 +782,4 @@ export async function createScene(environment, opts = {}) {
 }
 const parchments = new Map(); // by tone; the same seed paints the same sheet
 
-export { drawScene, drawGround, panView, zoomView, clampView, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };
+export { drawScene, drawGround, covers, panView, zoomView, clampView, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };

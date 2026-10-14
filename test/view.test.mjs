@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { panView, zoomView, clampView, DEFAULT_VIEW, ZOOM, W, H } from '../scripts/scene.mjs';
+import { panView, zoomView, clampView, covers, DEFAULT_VIEW, ZOOM, W, H } from '../scripts/scene.mjs';
 
 const close = (a, b, eps = 1e-9) => assert.ok(Math.abs(a - b) < eps, `${a} vs ${b}`);
 
@@ -32,4 +32,12 @@ test('panning past the antimeridian wraps the longitude', () => {
 test('the centre stays far enough from the poles to keep the canvas on the map', () => {
   const v = clampView({ lon: 0, lat: 89, zoom: ZOOM.min });
   assert.ok(v.lat < 85.06 && v.lat > 0);
+});
+
+test('a moving view draws from 10m cells only while close and inside the frame they cover', () => {
+  const coarse = { land: [] }, cells = { land: [], detail: { lonMin: 6, lonMax: 12, latMin: 42, latMax: 47 } };
+  assert.ok(covers(coarse, { zoom: 11, lat: 44.4, lon: 8.9 }));
+  assert.ok(covers(cells, { zoom: 11, lat: 44.4, lon: 8.9 }));
+  assert.ok(!covers(cells, { zoom: 9, lat: 44.4, lon: 8.9 })); // out to 50m
+  assert.ok(!covers(cells, { zoom: 11, lat: 44.4, lon: 15 })); // dragged past the loaded cells
 });
