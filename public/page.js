@@ -34,6 +34,7 @@ const writeHash = (v) => history.replaceState(null, '', `#map=${v.zoom.toFixed(2
 
 let view = viewFromHash();
 let ground = null; // { world, bg } from the last placement, all a moving frame needs
+let placed = null; // the view the canvas shows with its ornaments
 let run = 0;
 
 async function render() {
@@ -46,6 +47,7 @@ async function render() {
     });
     if (me !== run) return; // a newer change or a move superseded this one
     ground = { world, bg };
+    placed = view;
     const t1 = performance.now();
     ctx.clearRect(0, 0, W, H);
     drawScene(ctx, scene, data, bg, { scale: 1, x: 0, y: 0 });
@@ -61,6 +63,7 @@ async function render() {
 
 let frame = 0, settle = 0;
 function moved(next) {
+  if (next.zoom === view.zoom && next.lon === view.lon && next.lat === view.lat) return; // e.g. wheel at a zoom bound
   view = next;
   run++; // a placement still in flight is for a view already left
   clearTimeout(settle);
@@ -74,7 +77,7 @@ function moved(next) {
 }
 function stopped(delay = 0) {
   clearTimeout(settle);
-  settle = setTimeout(() => { writeHash(view); render(); }, delay);
+  settle = setTimeout(() => { if (view !== placed) { writeHash(view); render(); } }, delay); // a click moves nothing
 }
 
 // client px to canvas px, the units the view moves in
