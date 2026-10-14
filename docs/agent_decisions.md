@@ -48,3 +48,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t095714z
 - Vivid heraldic family: style name 'heraldic'; monsters 140-180 px, ships 64-88 px; all ships heading right. Undo: Rename the style in pack.json and the file prefix, or edit sizePx. ([#70](https://github.com/mark-brannan/portolani/pull/70))
+
+### 20261014t095718z
+- Dropped sea serpent 351371 (framed 651 KB woodcut), the lymphad (no truthful heading) and Heraldry_Fish_203 (duplicate sea-lion); merman shading greys kept as warm tones; coordinates rounded to 0.5 on three heavy files. Undo: Add the dropped files back from the sources named in the PR. ([#70](https://github.com/mark-brannan/portolani/pull/70))
