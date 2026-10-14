@@ -25,6 +25,7 @@ const STYLE = {
 
 const W = 1600, H = 1000;
 const FRAME = { lonMin: -6, lonMax: 20, latMin: 34, latMax: 46 };
+const MARGIN = 2; // degrees beyond FRAME whose features the scene keeps
 const DETAIL = { lon: 8.93, lat: 44.41, scale: 2 }; // Genoa; window clamped to the scene
 
 // Per-run tuning; `density` scales how much ornament is placed (1 = the committed mockup).
@@ -100,20 +101,22 @@ function ringsOf(geom) {
 }
 
 async function loadData(proj) {
-  const margin = 2; // degrees
+  const margin = MARGIN;
   const near = (coords) => coords.some(([lon, lat]) =>
     lon > FRAME.lonMin - margin && lon < FRAME.lonMax + margin && lat > FRAME.latMin - margin && lat < FRAME.latMax + margin);
   const projectLine = (line) => line.map(([lon, lat]) => proj.project(lon, lat));
 
+  const [landGeo, coastGeo, placesGeo] = await Promise.all(
+    ['ne_50m_land', 'ne_50m_coastline', 'ne_50m_populated_places_simple'].map(loadGeo));
   const land = []; // polygons: array of rings in px
-  for (const f of await loadGeo('ne_50m_land')) {
+  for (const f of landGeo) {
     for (const poly of ringsOf(f.geometry)) if (poly.some(near)) land.push(poly.map(projectLine));
   }
   const coast = []; // polylines in px
-  for (const f of await loadGeo('ne_50m_coastline')) {
+  for (const f of coastGeo) {
     for (const [line] of ringsOf(f.geometry)) if (near(line)) coast.push(projectLine(line));
   }
-  const places = (await loadGeo('ne_50m_populated_places_simple'))
+  const places = placesGeo
     .map((f) => ({ ...f.properties, lon: f.geometry.coordinates[0], lat: f.geometry.coordinates[1] }))
     .filter((p) => p.scalerank <= 4 && p.lon > FRAME.lonMin - margin && p.lon < FRAME.lonMax + margin &&
       p.lat > FRAME.latMin - margin && p.lat < FRAME.latMax + margin)
@@ -451,7 +454,7 @@ function bbox(pts) {
   return b;
 }
 
-// Land and coast with bounding boxes; coast split into short runs so a tile walks only its own.
+// Land and coast with bounding boxes; coast split into short runs so a view walks only its own.
 const COAST_RUN = 64;
 const indexes = new WeakMap();
 function indexOf(data) {
@@ -469,7 +472,7 @@ function indexOf(data) {
 }
 
 // Sutherland-Hodgman against the view rect. Each ring is clipped alone, which keeps even-odd
-// fill right inside the rect; the seams it adds lie on the padded edge, outside the tile.
+// fill right inside the rect; the seams it adds lie on the padded edge, outside the view.
 function clipRing(ring, r) {
   let out = ring;
   for (const [inside, cut] of [
@@ -552,7 +555,7 @@ function drawTower(g, t) {
 function drawScene(g, scene, data, bg, view) {
   g.save();
   g.setTransform(view.scale, 0, 0, view.scale, -view.x * view.scale, -view.y * view.scale);
-  // Only what meets the view is traced or drawn; a tile skips the rest of the scene.
+  // Only what meets the view is traced or drawn; a view skips the rest of the scene.
   const r = viewRect(g, view), idx = indexOf(data);
   const land = landIn(idx, r);
   const coast = idx.coast.filter((c) => meets(r, c.box)).map((c) => c.run);
@@ -674,10 +677,10 @@ export async function createScene(environment, opts = {}) {
   TUNE.townGap = 48 / density;
 
   const t0 = performance.now();
-  await env.loadFont(STYLE.font);
   const proj = makeProjection(FRAME, W, H);
-  const data = await loadData(proj);
-  const packs = { cartaMarina: await loadPack('carta-marina'), catalan: await loadPack('catalan') };
+  const [, data, cartaMarina, catalan] = await Promise.all(
+    [env.loadFont(STYLE.font), loadData(proj), loadPack('carta-marina'), loadPack('catalan')]);
+  const packs = { cartaMarina, catalan };
   const tLoad = performance.now();
 
   const measureCtx = createCanvas(10, 10).getContext('2d');
@@ -687,4 +690,4 @@ export async function createScene(environment, opts = {}) {
   return { scene, data, bg, proj, timing: { load: tLoad - t0, place: performance.now() - tLoad } };
 }
 
-export { drawScene, W, H, DETAIL };
+export { drawScene, W, H, DETAIL, FRAME, MARGIN, COAST_RUN };
