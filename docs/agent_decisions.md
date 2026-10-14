@@ -42,3 +42,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t085955z
 - Equal-area projection is Gall-Peters, scaled to share x Undo: edit scripts/scene.mjs PROJECTIONS / page.js ([#63](https://github.com/mark-brannan/portolani/pull/63))
+
+### 20261014t085959z
+- First projection set: Mercator, plate carree, Miller, equal-area Undo: edit scripts/scene.mjs PROJECTIONS / page.js ([#63](https://github.com/mark-brannan/portolani/pull/63))
