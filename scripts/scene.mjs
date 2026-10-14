@@ -708,7 +708,7 @@ function cityOf(p, proj, landPolys) {
   const landPx = pxRings(land.map(([ring]) => ring.map(([lon, lat]) => proj.project(lon, lat))));
   const onLand = (x, y) => insideRings(landPx, x, y);
   const plan = cityPlan({ rings, x: p.xy[0], y: p.xy[1], extent, zoom: proj.zoom, kmPx, rnd: mulberry32(seedOf(p.name)), w: W, h: H, onLand });
-  return { rings, box: b, plan, land, extent, lagoon: plan.lagoon };
+  return { rings, poly: p.urban, box: b, plan, land, extent, lagoon: plan.lagoon };
 }
 
 // The order a view tries its monsters or ships in: a weighted shuffle (Efraimidis-Spirakis, key
@@ -1398,9 +1398,11 @@ function drawScene(g, scene, data, bg, view) {
 
   // 4.5 town footprints: a city's built-up area, washed terracotta and edged in ink once its long
   // side passes URBAN_PX on screen, the wash coming in over the next doubling of zoom; on land
-  // only, as the footprint is coarser than the coast and would otherwise spill over the water
+  // only, as the footprint is coarser than the coast and would otherwise spill over the water; none
+  // under a city plan, which is its own ground
+  const planned = new Set(scene.towns.filter((t) => t.city).map((t) => t.city.poly));
   const washes = idx.urban.map((u) => ({ u, a: Math.min(1, (Math.max(u.box.x1 - u.box.x0, u.box.y1 - u.box.y0) * view.scale / URBAN_PX - 1)) * 0.45 }))
-    .filter(({ u, a }) => a > 0 && meets(r, u.box));
+    .filter(({ u, a }) => a > 0 && meets(r, u.box) && !planned.has(u.poly));
   if (washes.length) {
     g.save(); g.beginPath(); traceLand(g, data, land); g.clip('evenodd');
     for (const { u, a } of washes) {
