@@ -23,7 +23,23 @@
       "url": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_rivers_lake_centerlines.geojson",
       "sha256": "bb854a900ecbd3b408df46d5e16e3e0f974ba55993f9d8b5c26e855273c0905a",
       "rights": "Natural Earth, public domain",
-      "note": "(7,307,743 bytes; the rivers past z9, cut into 5-degree cells)"
+      "note": "(7,307,743 bytes; the rivers past z7, cut into 5-degree cells)"
+    },
+    {
+      "id": "ne_10m_rivers_north_america",
+      "file": "ne_10m_rivers_north_america.geojson",
+      "url": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_rivers_north_america.geojson",
+      "sha256": "dcd2348655a5f3d0ea7be35024073ab24f09115d2e4efb77e7bc0a33567db682",
+      "rights": "Natural Earth, public domain",
+      "note": "(8,734,704 bytes; North America rivers the world file leaves out, cut with it)"
+    },
+    {
+      "id": "ne_10m_rivers_europe",
+      "file": "ne_10m_rivers_europe.geojson",
+      "url": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_rivers_europe.geojson",
+      "sha256": "90712202ac46985812e90840df9acd5101599a9c649868d5bc55ee96c2fedd4c",
+      "rights": "Natural Earth, public domain",
+      "note": "(2,534,505 bytes; Europe rivers the world file leaves out, cut with it)"
     },
     {
       "id": "ne_10m_lakes",
@@ -31,7 +47,23 @@
       "url": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_lakes.geojson",
       "sha256": "2d036f53dedec578001c5c30c2959ee7d4eebc1306900fa4367c49929ec8f2d9",
       "rights": "Natural Earth, public domain",
-      "note": "(5,043,554 bytes; the lakes past z9, cut into 5-degree cells)"
+      "note": "(5,043,554 bytes; the lakes past z7, cut into 5-degree cells)"
+    },
+    {
+      "id": "ne_10m_lakes_north_america",
+      "file": "ne_10m_lakes_north_america.geojson",
+      "url": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_lakes_north_america.geojson",
+      "sha256": "76f49d4b698f3529e690136a989713bcd3c028ade150346f4b358de9815cfc43",
+      "rights": "Natural Earth, public domain",
+      "note": "(1,810,283 bytes; North America lakes the world file leaves out (Lake Washington), cut with it)"
+    },
+    {
+      "id": "ne_10m_lakes_europe",
+      "file": "ne_10m_lakes_europe.geojson",
+      "url": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_lakes_europe.geojson",
+      "sha256": "b4dd9e7a5edd0d07b54768b5404d1ebe77f80b9d579c85fff65f90cf50369769",
+      "rights": "Natural Earth, public domain",
+      "note": "(1,008,063 bytes; Europe lakes the world file leaves out (Como), cut with it)"
     },
     {
       "id": "gshhg-shp",
@@ -39,7 +71,7 @@
       "url": "https://www.soest.hawaii.edu/pwessel/gshhg/gshhg-shp-2.3.7.zip",
       "sha256": "8dbbe7e071e77e9e75f2d639239099ebca8d5c16d6a07df8169729d49f15cf41",
       "rights": "Wessel and Smith, LGPL-3.0-or-later",
-      "note": "(149,157,845 bytes; GSHHG 2.3.7 \"f\" land, `GSHHS_shp/f/GSHHS_f_L1.shp`, cut into the close-view cells past z12)"
+      "note": "(149,157,845 bytes; GSHHG 2.3.7 \"f\" land, `GSHHS_shp/f/GSHHS_f_L1.shp`, cut into the close-view cells past z12; its \"h\" and \"f\" lakes, `GSHHS_shp/{h,f}/GSHHS_{h,f}_L2.shp` with the L3 islands as holes, cut into lake cells past z10)"
     },
     {
       "id": "im-fell-english",

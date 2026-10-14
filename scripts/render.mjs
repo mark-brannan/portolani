@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { createScene, drawScene, W, H, DETAIL } from './scene.mjs';
 import { seaNames, coastNames, joinNames, redSea } from './names.mjs';
 import { joinUrban } from './urban.mjs';
-import { cutWater } from './detail-cells.mjs';
+import { cutWater, joinWater, WATER_FILES } from './detail-cells.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DL = join(ROOT, 'downloads');
@@ -19,17 +19,19 @@ const GEO = dirname(fileURLToPath(import.meta.resolve('coastlines/data/ne-land-5
 // Logical paths: geo/<id>.geojson is a coastlines data file, packs/... in the repo; the names are
 // made here from the marine download and the coastlines countries, the urban footprints from the
 // urban areas download (npm run build:preview fetches it), the towns drawn as icons without it;
-// the 10m water cells (geo/water-10m/) are cut here from the rivers and lakes downloads, the 50m
-// water drawn at every zoom without them.
+// the 10m water cells (geo/water-10m/) are cut here from the rivers and lakes downloads and their
+// regional supplements, the 50m water drawn at every zoom without them.
 const resolve = (p) => (p.startsWith('geo/') ? join(GEO, p.slice(4)) : join(ROOT, p));
 const read = (file) => JSON.parse(readFileSync(file, 'utf8'));
 let made, urban;
 const URBAN = join(DL, 'ne_10m_urban_areas.geojson');
 const footprints = () => urban ??= existsSync(URBAN) ? joinUrban(read(join(GEO, 'ne-populated-places-50m.geojson')), read(URBAN))
   : (console.warn(`${URBAN} is missing; towns are drawn as icons`), Promise.reject(new Error('no urban areas')));
-const RIVERS_10M = join(DL, 'ne_10m_rivers_lake_centerlines.geojson'), LAKES_10M = join(DL, 'ne_10m_lakes.geojson');
+// the world files are needed; a missing regional supplement is left out with a warning
+const [RIVERS_10M, LAKES_10M] = [WATER_FILES.rivers[0], WATER_FILES.lakes[0]].map((f) => join(DL, f));
+const waterFiles = (fs) => joinWater(fs.map((f) => (existsSync(join(DL, f)) ? read(join(DL, f)) : (console.warn(`${join(DL, f)} is missing; its rivers or lakes are left out`), null))));
 let water10m;
-const waterCells = () => water10m ??= existsSync(RIVERS_10M) && existsSync(LAKES_10M) ? cutWater(read(RIVERS_10M), read(LAKES_10M))
+const waterCells = () => water10m ??= existsSync(RIVERS_10M) && existsSync(LAKES_10M) ? cutWater(waterFiles(WATER_FILES.rivers), waterFiles(WATER_FILES.lakes))
   : (console.warn(`${RIVERS_10M} or ${LAKES_10M} is missing; rivers and lakes are drawn from 50m`), null);
 const water = (p) => {
   const cells = waterCells(), k = p.slice('geo/water-10m/'.length, -'.json'.length);

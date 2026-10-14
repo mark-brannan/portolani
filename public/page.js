@@ -228,7 +228,7 @@ $('drawer').addEventListener('click', (e) => {
 // One of a few, as chips rather than a dropdown: each `.chips` element reads and writes its choice as `.value`
 // and fires `input` when one is chosen, as the select it replaces did.
 const CHOICES = {
-  projection: [['mercator', 'Mercator', 'rhumb lines straight'], ['plate-carree', 'Plate carrée', 'equal degrees'], ['miller', 'Miller', 'poles tamed'], ['equal-area', 'Equal-area', 'Gall–Peters']],
+  projection: [['mercator', 'Mercator', 'rhumb lines straight'], ['plate-carree', 'Plate carrée', 'equal degrees'], ['miller', 'Miller', 'poles tamed'], ['equal-area', 'Equal-area', 'Gall–Peters'], ['orthographic', 'Globe', 'orthographic'], ['azimuthal-equidistant', 'Azimuthal equidistant', 'true from the centre'], ['stereographic', 'Stereographic', 'the polar chart']],
   regions: [['off', 'Off'], ['latin', 'Latin', 'Hispania'], ['english', 'English', 'Iberia']],
   titleMode: [['auto', 'Automatic', 'what the view shows'], ['custom', 'Custom']],
   land: [['islands', 'Coloured islands', 'Beccari, 1403', '#6b8a4a'], ['gilt', 'Gilt wash', '', '#b58a3c'], ['green', 'Green wash', 'Oliva, c.1590', '#6b8a4a'], ['ochre', 'Ochre with shoals', 'Benincasa, 1466', '#c47f2c']],
