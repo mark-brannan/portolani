@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { panView, zoomView, clampView, covers, DEFAULT_VIEW, ZOOM, W, H } from '../scripts/scene.mjs';
+import { panView, zoomView, clampView, covers, DEFAULT_VIEW, ZOOM, PROJECTION_NAMES, W, H } from '../scripts/scene.mjs';
 
 const close = (a, b, eps = 1e-9) => assert.ok(Math.abs(a - b) < eps, `${a} vs ${b}`);
 
@@ -44,4 +44,23 @@ test('a moving view draws from a band\'s cells only while it still picks that ba
   const fine = { ...cells, detail: { ...cells.detail, band: 'h' } };
   assert.ok(covers(fine, { zoom: 12.5, lat: 44.4, lon: 8.9 }));
   assert.ok(!covers(fine, { zoom: 11, lat: 44.4, lon: 8.9 })); // back out to 10m
+});
+
+test('in every projection a drag, a zoom and their reverses return to the same view', () => {
+  for (const projection of PROJECTION_NAMES) {
+    const v0 = clampView({ lon: 12, lat: 41, zoom: 5, projection });
+    assert.equal(v0.projection, projection);
+    const v = zoomView(panView(zoomView(panView(v0, 300, -120), 4, 200, 700), 0, 0), 1 / 4, 200, 700);
+    const back = panView(v, -300, 120);
+    close(back.lon, v0.lon, 1e-6); close(back.lat, v0.lat, 1e-6); close(back.zoom, v0.zoom);
+    assert.equal(back.projection, projection);
+  }
+});
+
+test('an unknown projection is Mercator, and a whole map shorter than the canvas sits on the equator', () => {
+  assert.equal(clampView({ lon: 0, lat: 0, zoom: 4, projection: 'nonsense' }).projection, 'mercator');
+  assert.equal(clampView({ lon: 0, lat: 0, zoom: 4 }).projection, 'mercator');
+  for (const projection of PROJECTION_NAMES.filter((p) => p !== 'mercator')) {
+    assert.equal(clampView({ lon: 0, lat: 60, zoom: ZOOM.min, projection }).lat, 0, projection);
+  }
 });

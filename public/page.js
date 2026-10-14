@@ -1,9 +1,9 @@
 // Browser host for the shared scene code (scene.mjs): same scene as `npm run render`, drawn live.
 // Drag to pan, wheel or pinch to zoom; while the map moves only land and coast are drawn, and the
 // ornaments are placed again when it stops. The view and the style are kept in the URL hash, e.g.
-// #map=zoom/lat/lon&pack=plain&kinds=rose,ship&names=0&rhumb=0&scale=chevron&continents=1&regions=latin&autotitle=1&title=Mare+Nostrum&ink=5a1a1a&parchment=eee&density=1.5;
+// #map=zoom/lat/lon&projection=miller&pack=plain&kinds=rose,ship&names=0&rhumb=0&scale=chevron&continents=1&regions=latin&autotitle=1&title=Mare+Nostrum&ink=5a1a1a&parchment=eee&density=1.5;
 // a setting left at its default is left out.
-import { createScene, REGION_LANGS, drawScene, drawGround, panView, zoomView, clampView, covers, DEFAULT_VIEW, PACKS, KINDS, SCALE_NAMES, W, H } from './scene.mjs';
+import { createScene, REGION_LANGS, drawScene, drawGround, panView, zoomView, clampView, covers, DEFAULT_VIEW, PACKS, KINDS, PROJECTION_NAMES, SCALE_NAMES, W, H } from './scene.mjs';
 
 const memo = new Map();
 // a failed load is forgotten, so the next stop tries it again
@@ -34,10 +34,10 @@ const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, pack: 'all'
 const hashParams = () => new URLSearchParams(location.hash.slice(1));
 
 function viewFromHash() {
-  const m = /^(-?[\d.]+)\/(-?[\d.]+)\/(-?[\d.]+)$/.exec(hashParams().get('map') ?? '');
-  if (!m) return DEFAULT_VIEW;
-  const v = { zoom: Number(m[1]), lat: Number(m[2]), lon: Number(m[3]) };
-  return Object.values(v).every(Number.isFinite) ? clampView(v) : DEFAULT_VIEW; // e.g. #map=1.2.3/40/5
+  const q = hashParams(), m = /^(-?[\d.]+)\/(-?[\d.]+)\/(-?[\d.]+)$/.exec(q.get('map') ?? '');
+  const v = m && { zoom: Number(m[1]), lat: Number(m[2]), lon: Number(m[3]) };
+  const at = v && Object.values(v).every(Number.isFinite) ? v : DEFAULT_VIEW; // e.g. #map=1.2.3/40/5
+  return clampView({ ...at, projection: q.get('projection') });
 }
 const hex = (v, fallback) => (/^[0-9a-f]{3}$|^[0-9a-f]{6}$/i.test(v ?? '') ? `#${v.length === 3 ? [...v].map((c) => c + c).join('') : v}`.toLowerCase() : fallback);
 function styleFromHash() {
@@ -60,6 +60,7 @@ function styleFromHash() {
 function writeHash() {
   const q = new URLSearchParams(), v = view, st = style;
   q.set('map', `${v.zoom.toFixed(2)}/${v.lat.toFixed(3)}/${v.lon.toFixed(3)}`);
+  if (v.projection !== PROJECTION_NAMES[0]) q.set('projection', v.projection);
   if (st.pack !== DEFAULTS.pack) q.set('pack', st.pack);
   if (st.kinds.join() !== KINDS.join()) q.set('kinds', st.kinds.join());
   if (!st.names) q.set('names', '0');
@@ -77,6 +78,7 @@ function writeHash() {
 
 // the controls show the style; a plain pack has no ships or monsters to switch
 function showStyle() {
+  $('projection').value = view.projection;
   $('ink').value = style.ink; $('parchment').value = style.parchment;
   $('density').value = style.density; $('densityOut').textContent = style.density;
   $('pack').value = style.pack; $('names').checked = style.names; $('rhumb').checked = style.rhumb; $('scale').value = style.scale;
@@ -95,6 +97,7 @@ function readControls() {
     continents: $('continents').checked, regions: $('regions').value,
     title: $('title').value, autoTitle: $('titleMode').value === 'auto',
   };
+  view = clampView({ ...view, projection: $('projection').value });
   showStyle();
   writeHash();
   render();
@@ -195,6 +198,6 @@ canvas.addEventListener('wheel', (e) => {
   stopped(300);
 }, { passive: false });
 
-for (const id of ['ink', 'parchment', 'density', 'pack', 'names', 'rhumb', 'scale', 'continents', 'regions', 'titleMode', 'title', ...KINDS.map((k) => `kind-${k}`)]) $(id).addEventListener('input', readControls);
+for (const id of ['projection', 'ink', 'parchment', 'density', 'pack', 'names', 'rhumb', 'scale', 'continents', 'regions', 'titleMode', 'title', ...KINDS.map((k) => `kind-${k}`)]) $(id).addEventListener('input', readControls);
 addEventListener('hashchange', () => { view = viewFromHash(); style = styleFromHash(); showStyle(); render(); });
 render();
