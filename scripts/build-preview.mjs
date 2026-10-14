@@ -117,14 +117,17 @@ if (find(H_ID) && coastlines.shapefilePolygons) {
 // GSHHG "f", the full resolution, the same way, from the zip coastlines pins for "h". Its zip reader
 // is not a package export, so it is loaded by file next to coastlines' entry point.
 const F_MEMBER = 'GSHHS_shp/f/GSHHS_f_L1.shp', F_CELL_DEG = 0.5; // must match scene.mjs
+const { zipMember } = await import(new URL('zip.js', import.meta.resolve('coastlines')));
+const gshhg = await readFile(path.join(root, 'downloads', 'gshhg-shp-2.3.7.zip'));
 if (coastlines.shapefilePolygons) {
-  const { zipMember } = await import(new URL('zip.js', import.meta.resolve('coastlines')));
-  const landF = coastlines.shapefilePolygons(zipMember(await readFile(path.join(root, 'downloads', 'gshhg-shp-2.3.7.zip')), F_MEMBER));
+  const landF = coastlines.shapefilePolygons(zipMember(gshhg, F_MEMBER));
   const n = await writeBand('f', F_CELL_DEG, { land: landF, coast: landF.flat() });
   console.log(`GSHHG f: ${landF.length} polygons into ${n} cells of ${F_CELL_DEG} degree`);
+} else console.warn('this coastlines has no shapefilePolygons; the f band is skipped');
+// LGPL: the GSHHG notice and licence travel with the cells cut from it, read from the pinned zip
+for (const [id, member] of [['gshhg-licence', 'LICENSE.TXT'], ['gshhg-copying-lesser', 'COPYING.LESSERv3']]) {
+  await writeFile(path.join(out, 'geo', `${id}.txt`), zipMember(gshhg, member));
 }
-// LGPL: the GSHHG notice and licence travel with the cells cut from it
-for (const id of ['gshhg-licence', 'gshhg-copying-lesser']) if (find(id)) await writeFile(path.join(out, 'geo', `${id}.txt`), await readGeo(id));
 await cp(path.join(root, 'node_modules', 'coast-wright', 'lib'), path.join(out, 'coast-wright'), { recursive: true });
 await cp(path.join(root, 'public'), out, { recursive: true });
 await cp(path.join(root, 'scripts', 'scene.mjs'), path.join(out, 'scene.mjs'));
