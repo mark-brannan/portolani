@@ -105,3 +105,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t195338z
 - Lesser places placed last, dropped whole when the building or its name does not fit Undo: keep the building without its name in placeLesser ([#94](https://github.com/mark-brannan/portolani/pull/94))
+
+### 20261014t195342z
+- Church odds by rank 5-8: 3/4, 1/2, 1/4, 0 Undo: lesserBuilding in buildings.mjs ([#94](https://github.com/mark-brannan/portolani/pull/94))
