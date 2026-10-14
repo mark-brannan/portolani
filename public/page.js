@@ -75,7 +75,7 @@ function writeHash() {
   if (!st.rhumb) q.set('rhumb', '0');
   if (st.continents) q.set('continents', '1');
   if (st.regions !== DEFAULTS.regions) q.set('regions', st.regions);
-  // a title without autotitle reads as custom (readHash), so a typed title carries the mode with it
+  // a title without autotitle reads as custom (styleFromHash), so a typed title carries the mode with it
   if (st.autoTitle !== DEFAULTS.autoTitle || st.title !== DEFAULTS.title) q.set('autotitle', st.autoTitle ? '1' : '0');
   if (st.title !== DEFAULTS.title) q.set('title', st.title);
   if (st.scale !== DEFAULTS.scale) q.set('scale', st.scale);
