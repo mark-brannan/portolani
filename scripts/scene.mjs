@@ -9,7 +9,7 @@
 
 import { fill, trace, limn, rhumb, place, letter, geojsonPolygons, geojsonRings } from 'coast-wright';
 import { islandInfo, ISLAND_KM2 } from './island.mjs';
-import { cityPlan, drawCity } from './city.mjs';
+import { cityPlan, drawCity, pxRings, insideRings } from './city.mjs';
 import { urbanKey } from './urban.mjs';
 
 let env;
@@ -670,7 +670,6 @@ function cityOf(p, proj, landPolys) {
   const b = bbox(rings.flat());
   if (b.x1 < 0 || b.y1 < 0 || b.x0 > W || b.y0 > H) return null;
   const kmPx = (proj.k * 1000) / (EARTH_R * Math.cos(p.lat * RAD));
-  const plan = cityPlan({ rings, x: p.xy[0], y: p.xy[1], extent, zoom: proj.zoom, kmPx, rnd: mulberry32(seedOf(p.name)), w: W, h: H });
   // the land about it, each ring cut to the footprint's box (a little wider) on its nearest copy
   const u = p.ubox, lb = { x0: u.x0 - 0.02, y0: u.y0 - 0.02, x1: u.x1 + 0.02, y1: u.y1 + 0.02 };
   const land = [];
@@ -682,7 +681,11 @@ function cityOf(p, proj, landPolys) {
       if (cut) land.push([cut]);
     }
   }
-  return { rings, box: b, plan, land, extent };
+  // the same land in px, even-odd, so the plan keeps its walled core on dry ground
+  const landPx = pxRings(land.map(([ring]) => ring.map(([lon, lat]) => proj.project(lon, lat))));
+  const onLand = (x, y) => insideRings(landPx, x, y);
+  const plan = cityPlan({ rings, x: p.xy[0], y: p.xy[1], extent, zoom: proj.zoom, kmPx, rnd: mulberry32(seedOf(p.name)), w: W, h: H, onLand });
+  return { rings, box: b, plan, land, extent, lagoon: plan.lagoon };
 }
 
 // The order a view tries its monsters or ships in: a weighted shuffle (Efraimidis-Spirakis, key
@@ -828,12 +831,19 @@ function buildScene(data, sprites, ctx, world = {}) {
     boxes.push(icon);
   }
 
-  // Names, lettered by coast-wright: seas, then countries along their coasts, then towns above
-  // their towers; a country once, on its longest stretch that fits. Earlier names win an overlap;
-  // a name that meets an ornament or leaves the canvas is dropped.
+  // Names, lettered by coast-wright: seas, then the metros (a town of size 1 or more, or a city),
+  // then countries along their coasts, then the other towns above their towers; a country once, on
+  // its longest stretch that fits. Earlier names win an overlap, so a country, which has other
+  // stretches to go to, gives way to a metro, which has nowhere else; a name that meets an
+  // ornament or leaves the canvas is dropped.
+  const named = (n) => ({ ...n, size: n.kind === 'sea' ? (n.rank <= 1 ? 22 : n.rank <= 3 ? 18 : 15) : n.rank <= 2 ? 17 : 14 });
+  const townName = (t) => ({ text: t.name, at: data.proj.invert(t.x, t.labelY), size: t.rank <= 1 ? 17 : t.rank <= 2 ? 15 : 13, red: t.red, own: t.box, plate: !!t.city });
+  const metro = (t) => t.city || t.size >= 1;
   const lettering = [
-    ...data.names.map((n) => ({ ...n, size: n.kind === 'sea' ? (n.rank <= 1 ? 22 : n.rank <= 3 ? 18 : 15) : n.rank <= 2 ? 17 : 14 })),
-    ...towns.map((t) => ({ text: t.name, at: data.proj.invert(t.x, t.labelY), size: t.rank <= 1 ? 17 : t.rank <= 2 ? 15 : 13, red: t.red, own: t.box, plate: !!t.city })),
+    ...data.names.filter((n) => n.kind === 'sea').map(named),
+    ...towns.filter(metro).map(townName),
+    ...data.names.filter((n) => n.kind !== 'sea').map(named),
+    ...towns.filter((t) => !metro(t)).map(townName),
   ];
   const opts = letterOptions(data);
   const names = [];
@@ -1340,7 +1350,8 @@ function drawScene(g, scene, data, bg, view) {
     limn(g, lines, data.proj.x, data.proj.y, { color: ink, alpha: STYLE.rhumbAlpha, width: STYLE.rhumbWidth, oneStroke: true, lonCenter: data.proj.lonCenter });
   }
 
-  // 3.5 cities, over their urban footprint and on land only, under the coast and the ornaments
+  // 3.5 cities, over their urban footprint and on land only (a lagoon city over its water too),
+  // under the coast and the ornaments
   for (const t of scene.towns) {
     if (!t.city || !meets(r, t.city.box)) continue;
     drawCity(g, t.city.plan, r, {
@@ -1349,6 +1360,7 @@ function drawScene(g, scene, data, bg, view) {
         cg.beginPath();
         for (const ring of t.city.rings) ring.forEach(([x, y], i) => (i ? cg.lineTo(x, y) : cg.moveTo(x, y)));
         cg.clip('evenodd');
+        if (t.city.lagoon) return; // a lagoon city stands over its water
         cg.beginPath();
         traceLand(cg, data, t.city.land);
         cg.clip('evenodd');

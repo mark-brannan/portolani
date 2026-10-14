@@ -8,8 +8,15 @@
 const ROOF = '#b5533c', SHADE = '#8c3b2b', FRONT = '#e8dcc0', GARDEN = '#6f7d4a', STONE = '#d6c29a', MOAT = '#7f9488';
 const LOT_CAP = 20000; // lots a plan holds at most; the blocks grow to keep under it
 
+// Px rings with their boxes, as insideRings takes them.
+export const pxRings = (rings) => rings.map((ring) => {
+  const b = [Infinity, Infinity, -Infinity, -Infinity];
+  for (const [x, y] of ring) { if (x < b[0]) b[0] = x; if (y < b[1]) b[1] = y; if (x > b[2]) b[2] = x; if (y > b[3]) b[3] = y; }
+  return { ring, b };
+});
+
 // Even-odd point in a set of px rings, each with its box.
-function insideRings(rs, x, y) {
+export function insideRings(rs, x, y) {
   let inside = false;
   for (const { ring, b } of rs) {
     if (x < b[0] || x > b[2] || y < b[1] || y > b[3]) continue;
@@ -21,34 +28,60 @@ function insideRings(rs, x, y) {
   return inside;
 }
 
-// The plan of a city whose urban rings (px) are `rings` and whose centre is (x, y): `extent` is the
+// The plan of a city whose urban rings (px) are `rings` and whose place is (x, y): `extent` is the
 // square root of its area, px; `kmPx` px per km; `rnd` a seeded random source; `w` x `h` the canvas,
-// the only part laid out (and a margin).
-export function cityPlan({ rings, x: cx, y: cy, extent: E, zoom, kmPx, rnd, w, h }) {
-  const rs = rings.map((ring) => {
-    const b = [Infinity, Infinity, -Infinity, -Infinity];
-    for (const [x, y] of ring) { if (x < b[0]) b[0] = x; if (y < b[1]) b[1] = y; if (x > b[2]) b[2] = x; if (y > b[3]) b[3] = y; }
-    return { ring, b };
-  });
+// the only part laid out (and a margin); `onLand(x, y)` whether a px point is dry ground. The city
+// is built where its footprint is on land. One whose footprint is mostly water (Venice in its
+// lagoon) is a lagoon city: built over the water, and unwalled. The walled core is set near the
+// place but on dry ground; where no ring of ground round it holds a wall, the city is unwalled.
+export function cityPlan({ rings, x: px, y: py, extent: E, zoom, kmPx, rnd, w, h, onLand = () => true }) {
+  const rs = pxRings(rings);
   const inside = (x, y) => insideRings(rs, x, y);
   const M = 48, fx0 = -M, fy0 = -M, fx1 = w + M, fy1 = h + M;
   const inFrame = (x, y) => x > fx0 && x < fx1 && y > fy0 && y < fy1;
+  const sx0 = Math.max(fx0, Math.min(...rs.map((r) => r.b[0]))), sy0 = Math.max(fy0, Math.min(...rs.map((r) => r.b[1])));
+  const sx1 = Math.min(fx1, Math.max(...rs.map((r) => r.b[2]))), sy1 = Math.min(fy1, Math.max(...rs.map((r) => r.b[3])));
+  // the ground: how much of the footprint in frame is on land decides a lagoon city
+  let inF = 0, onL = 0;
+  const st = Math.max(6, (Math.max(sx1 - sx0, sy1 - sy0)) / 40);
+  for (let y = sy0 + st / 2; y < sy1; y += st) for (let x = sx0 + st / 2; x < sx1; x += st) if (inside(x, y)) { inF++; if (onLand(x, y)) onL++; }
+  const lagoon = inF > 0 && onL / inF < 0.5;
+  const ground = lagoon ? inside : (x, y) => inside(x, y) && onLand(x, y);
   // blocks grow gently with zoom, shrink so a small city still holds a few streets, and grow again
   // when the lots would pass LOT_CAP
   let s = Math.min(22, Math.max(10, 10 + 3 * (zoom - 9)), Math.max(6, E / 16));
   let area = 0;
-  for (let y = fy0 + 12; y < fy1; y += 24) for (let x = fx0 + 12; x < fx1; x += 24) if (inside(x, y)) area += 576;
+  for (let y = fy0 + 12; y < fy1; y += 24) for (let x = fx0 + 12; x < fx1; x += 24) if (ground(x, y)) area += 576;
   const lots0 = (area / (1.3 * s) ** 2) * 5;
   if (lots0 > LOT_CAP) s *= Math.sqrt(lots0 / LOT_CAP);
 
-  // the wall: an irregular ring about the centre, polar so a point's side of it is one comparison
-  const R = Math.max(3 * s, Math.min(0.4 * E, Math.max(9 * s, 5 * kmPx)));
+  // the wall: an irregular ring about the centre, polar so a point's side of it is one comparison.
+  // The centre is the place itself when a wall round it stands on the ground, else the point near
+  // it (a grid a wall's radius each way) whose wall stands best, nearest first among equals; a wall
+  // that stands nowhere at full size is tried smaller, down to a third, before the city goes unwalled.
+  const R0 = Math.max(3 * s, Math.min(0.4 * E, Math.max(9 * s, 5 * kmPx)));
+  let R = R0, cx = px, cy = py, best = 0;
+  const standing = (x, y) => {
+    let n = 0;
+    for (const k of [0.55, 0.95]) for (let i = 0; i < 12; i++) { const a = (i / 12) * 2 * Math.PI; if (ground(x + k * R * Math.cos(a), y + k * R * Math.sin(a))) n++; }
+    return n / 24;
+  };
+  const offsets = [...Array(25)].map((_, i) => [((i % 5) - 2) * 0.5, (Math.floor(i / 5) - 2) * 0.5]).sort((a, b) => Math.hypot(...a) - Math.hypot(...b));
+  for (const k of lagoon ? [] : [1, 0.75, 0.55, 0.4]) {
+    R = Math.max(3 * s, k * R0); cx = px; cy = py; best = standing(px, py);
+    if (best < 0.9) for (const [dx, dy] of offsets) {
+      const x = px + dx * R, y = py + dy * R;
+      if ((dx || dy) && inFrame(x, y)) { const v = standing(x, y); if (v > best + 1e-9) { best = v; cx = x; cy = y; } }
+    }
+    if (best >= 0.75 || R <= 3 * s) break;
+  }
+  const walled = !lagoon && best >= 0.75;
   const nv = 12 + Math.floor(rnd() * 5), rv = Array.from({ length: nv }, () => R * (0.82 + 0.3 * rnd()));
-  const wallR = (a) => {
+  const wallR = walled ? (a) => {
     const t = ((((a / (2 * Math.PI)) % 1) + 1) % 1) * nv, i = Math.floor(t), f = t - i;
     return rv[i % nv] * (1 - f) + rv[(i + 1) % nv] * f;
-  };
-  const wt = Math.max(4, 0.42 * s); // wall thickness
+  } : () => 0;
+  const wt = walled ? Math.max(4, 0.42 * s) : 0; // wall thickness
   const ng = 3 + Math.floor(rnd() * 3), g0 = rnd() * 2 * Math.PI;
   const gates = Array.from({ length: ng }, (_, i) => g0 + ((i + 0.5 * (rnd() - 0.5)) * 2 * Math.PI) / ng);
   const polar = (x, y) => [Math.hypot(x - cx, y - cy), Math.atan2(y - cy, x - cx)];
@@ -64,8 +97,6 @@ export function cityPlan({ rings, x: cx, y: cy, extent: E, zoom, kmPx, rnd, w, h
   // districts: the walled core about the centre, and seeds on a jittered grid beyond, each its own angle
   const a0 = rnd() * Math.PI, D = 8 * s;
   const seeds = [];
-  const sx0 = Math.max(fx0, Math.min(...rs.map((r) => r.b[0]))), sy0 = Math.max(fy0, Math.min(...rs.map((r) => r.b[1])));
-  const sx1 = Math.min(fx1, Math.max(...rs.map((r) => r.b[2]))), sy1 = Math.min(fy1, Math.max(...rs.map((r) => r.b[3])));
   const cols = Math.ceil((sx1 - sx0) / D) + 1;
   const hash = new Map();
   for (let j = 0; sy0 + j * D <= sy1 + D; j++) for (let i = 0; i < cols + 1; i++) {
@@ -93,7 +124,7 @@ export function cityPlan({ rings, x: cx, y: cy, extent: E, zoom, kmPx, rnd, w, h
     const P = (u, v) => [ox + u * c - v * sn, oy + u * sn + v * c];
     const corners = [P(u0, v0), P(u1, v0), P(u1, v1), P(u0, v1)];
     const [bx, by] = P((u0 + u1) / 2, (v0 + v1) / 2);
-    if (!inFrame(bx, by) || !inside(bx, by)) return;
+    if (!inFrame(bx, by) || !ground(bx, by)) return;
     const [d, ang] = polar(bx, by);
     if (core) {
       if (corners.some(([x, y]) => { const [dd, aa] = polar(x, y); return dd > wallR(aa) - wt * 1.2; })) return;
@@ -104,13 +135,15 @@ export function cityPlan({ rings, x: cx, y: cy, extent: E, zoom, kmPx, rnd, w, h
       if (roadOut(bx, by) < 0.75 * s) return;
     }
     const t = core ? 0 : Math.max(0, (d - wallR(ang)) / fall), near = core ? 0 : roadOut(bx, by);
-    let p = core ? 0.97 : 0.95 * Math.exp(-0.4 * t);
+    // inside the wall the lots stand close, with gardens in the outer ring (Braun and Hogenberg's
+    // towns keep their orchards against the wall); outside they thin with distance from it
+    let p = core ? (d > 0.7 * wallR(ang) ? 0.8 : 0.97) : 0.95 * Math.exp(-0.4 * t);
     if (near < 3 * s) p = Math.max(p, 0.97 * Math.exp(-0.2 * t)); // ribbon suburbs along the roads
     const roll = rnd();
     const L = (u, v) => P(u, v);
     if (roll >= p) {
       // not built: a garden, a ploughed field or open ground
-      const q = (roll - p) / (1 - p);
+      const q = core ? 0 : (roll - p) / (1 - p); // in the core a garden, never a field
       if (q < 0.5) {
         if (rnd() < 0.55) for (let v = v0 + 2; v < v1 - 1; v += 3.6) for (let u = u0 + 2; u < u1 - 1; u += 3.6) trees.push(...L(u, v));
         else {
@@ -188,7 +221,7 @@ export function cityPlan({ rings, x: cx, y: cy, extent: E, zoom, kmPx, rnd, w, h
     const c = Math.cos(a), sn = Math.sin(a);
     return [[u0, v0], [u1, v0], [u1, v1], [u0, v1]].every(([u, v]) => nearest(ox + u * c - v * sn, oy + u * sn + v * c) === sd);
   };
-  grid(cx, cy, a0, R * 1.2, true, null);
+  if (walled) grid(cx, cy, a0, R * 1.2, true, null);
   for (const sd of seeds) {
     if (sd.x < fx0 - D || sd.x > fx1 + D || sd.y < fy0 - D || sd.y > fy1 + D) continue;
     grid(sd.x, sd.y, sd.a, D * 1.2, false, sd);
@@ -200,7 +233,7 @@ export function cityPlan({ rings, x: cx, y: cy, extent: E, zoom, kmPx, rnd, w, h
   const n = Math.max(48, Math.ceil((2 * Math.PI * R) / 2));
   const runs = [];
   let run = null;
-  for (let k = 0; k <= n; k++) {
+  for (let k = 0; walled && k <= n; k++) {
     const a = (k / n) * 2 * Math.PI;
     if (atGate(a)) { run = null; continue; }
     if (!run) runs.push(run = []);
@@ -212,7 +245,7 @@ export function cityPlan({ rings, x: cx, y: cy, extent: E, zoom, kmPx, rnd, w, h
   const ticks = [];
   for (const rn of runs) for (let k = 0; k < rn.length; k += 2) ticks.push(...at(rn[k], -wt / 2), ...at(rn[k], wt / 2));
   const towers = [];
-  for (const g of gates) for (const sg of [-1, 1]) towers.push(...at(g + sg * gap, 0), wt * 0.95);
+  for (const g of walled ? gates : []) for (const sg of [-1, 1]) towers.push(...at(g + sg * gap, 0), wt * 0.95);
   const step = s * (6 + 4 * rnd());
   for (const rn of runs) {
     let acc = step / 2;
@@ -222,12 +255,12 @@ export function cityPlan({ rings, x: cx, y: cy, extent: E, zoom, kmPx, rnd, w, h
       if (acc >= step && k < rn.length - 3) { acc = 0; towers.push(x1, y1, wt * 0.8); }
     }
   }
-  const core = Array.from({ length: n + 1 }, (_, k) => at((k / n) * 2 * Math.PI, -wt / 2)).flat();
-  const moat = Array.from({ length: n + 1 }, (_, k) => at((k / n) * 2 * Math.PI, wt * 1.9)).flat();
+  const core = walled ? Array.from({ length: n + 1 }, (_, k) => at((k / n) * 2 * Math.PI, -wt / 2)).flat() : [];
+  const moat = walled ? Array.from({ length: n + 1 }, (_, k) => at((k / n) * 2 * Math.PI, wt * 1.9)).flat() : [];
   // the cathedral on the plaza
   churches.unshift({ x: cx, y: cy + 0.6 * s, w: Math.max(18, 2 * s), kind: rnd() < 0.4 ? 'dome' : 'cathedral', seed: rnd() });
   return {
-    s, wt, lots: Float32Array.from(lots), trees: Float32Array.from(trees), hatch: Float32Array.from(hatch), field: Float32Array.from(field),
+    s, wt, walled, lagoon, lots: Float32Array.from(lots), trees: Float32Array.from(trees), hatch: Float32Array.from(hatch), field: Float32Array.from(field),
     wall, core: Float32Array.from(core), ticks: Float32Array.from(ticks), towers: Float32Array.from(towers), moat: Float32Array.from(moat), churches,
     box: [Math.max(fx0, Math.min(...rs.map((r) => r.b[0]))), Math.max(fy0, Math.min(...rs.map((r) => r.b[1]))), Math.min(fx1, Math.max(...rs.map((r) => r.b[2]))), Math.min(fy1, Math.max(...rs.map((r) => r.b[3])))],
   };
@@ -301,8 +334,10 @@ export function drawCity(g, plan, r, { ink, parchment, clip }) {
   for (let i = 0; i < plan.trees.length; i += 2) if (near(plan.trees[i], plan.trees[i + 1])) { g.moveTo(plan.trees[i], plan.trees[i + 1]); g.lineTo(plan.trees[i] + 0.01, plan.trees[i + 1]); }
   g.strokeStyle = GARDEN; g.lineWidth = 2.6; g.stroke();
   // inside the wall a roof-red wash under the lots, so even a far city reads as one roofed mass
-  g.beginPath(); poly(g, plan.core, true); g.fillStyle = 'rgba(181,83,60,0.22)'; g.fill();
-  g.beginPath(); poly(g, plan.moat, true); g.strokeStyle = 'rgba(127,148,136,0.45)'; g.lineWidth = plan.wt * 1.4; g.stroke();
+  if (plan.walled) {
+    g.beginPath(); poly(g, plan.core, true); g.fillStyle = 'rgba(181,83,60,0.22)'; g.fill();
+    g.beginPath(); poly(g, plan.moat, true); g.strokeStyle = 'rgba(127,148,136,0.45)'; g.lineWidth = plan.wt * 1.4; g.stroke();
+  }
   // the lots: one fill per colour, then one ink stroke for every outline and one for the ridges
   const L = plan.lots, seen = [];
   for (let i = 0; i < L.length; i += LOT) if (near(L[i], L[i + 1])) seen.push(i);
