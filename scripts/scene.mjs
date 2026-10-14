@@ -668,10 +668,16 @@ function cutRing(ring, b) {
   return pts;
 }
 // A town's ground on screen, as the side of a square of its area in px: its urban footprint where
-// it has one (the measure CITY_PX reads), else its metro area (MAX_AREAKM); 0 with neither.
+// it has one (the measure CITY_PX reads), else its metro area (MAX_AREAKM); 0 with neither. The
+// metro area is km2, so it takes the px per km east-west (kmPxAt) and north-south (the projection's
+// own y against latitude, which equals the east-west scale only where the projection is conformal).
 const kmPxAt = (proj, lat) => (proj.k * 1000) / (EARTH_R * Math.cos(lat * RAD));
 function footprint(p, proj) {
-  if (!p.urban) return { extent: p.area > 0 ? Math.sqrt(p.area) * kmPxAt(proj, p.lat) : 0 };
+  if (!p.urban) {
+    if (!(p.area > 0)) return { extent: 0 };
+    const d = 1e-4, ns = (proj.project(p.lon, p.lat - d)[1] - proj.project(p.lon, p.lat + d)[1]) / (2 * d * RAD) * 1000 / EARTH_R;
+    return { extent: Math.sqrt(p.area * kmPxAt(proj, p.lat) * Math.abs(ns)) };
+  }
   const rings = p.urban.map((ring) => ring.map(([lon, lat]) => proj.project(lon, lat)));
   return { rings, extent: Math.sqrt(rings.reduce((a, r) => a + ringArea(r), 0)) };
 }

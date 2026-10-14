@@ -134,6 +134,17 @@ test('a town keeps its drawing and its icon is floored at ICON_GROW of its metro
   assert.ok(seen.every((s) => s.h >= s.floor - 1e-6), JSON.stringify(seen))
 })
 
+test('the metro-area floor takes the north-south scale from the projection, so plate-carree does not overstate it', async () => {
+  const lon = -123.37, lat = 48.43, zoom = 9
+  const at = async (projection) => {
+    const { scene, data } = await createScene(areaEnv, { view: { lon, lat, zoom, projection }, scale: 'off' })
+    return { h: scene.towns.find((x) => x.name === 'Victoria').h, lat: data.places.find((x) => x.name === 'Victoria').lat }
+  }
+  const merc = await at('mercator'), plate = await at('plate-carree')
+  // plate-carree's north-south scale is cos(lat) of its east-west one; Mercator's are equal
+  assert.ok(Math.abs(plate.h - merc.h * Math.sqrt(Math.cos(merc.lat * Math.PI / 180))) < 1e-6, `mercator ${merc.h}, plate-carree ${plate.h}`)
+})
+
 test('a town with an urban footprint keeps its drawing and its icon grows until the city plan takes over', { skip: !existsSync(URBAN) && 'no urban areas download' }, async () => {
   await iconRun(env, 'Victoria', -123.37, 48.43, [7, 7.5, 8, 8.5, 9])
   await iconRun(env, 'Seattle', -122.33, 47.6, [5, 6, 7])
