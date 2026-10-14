@@ -60,3 +60,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t122232z
 - City plans: a church on every 30th built block (was 20) now churches draw 2x Undo: the modulus in block() in scripts/city.mjs ([#85](https://github.com/mark-brannan/portolani/pull/85))
+
+### 20261014t122234z
+- City plans: gate-to-plaza streets drawn over the roofs, not cut out of the blocks Undo: revert PR 85 ([#85](https://github.com/mark-brannan/portolani/pull/85))
