@@ -36,3 +36,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t083600z
 - Cartouche corner order: fewest coast crossings first, then least land (open sea, then empty land, then any coast) Undo: change the comparator on corners in scripts/scene.mjs buildScene ([#62](https://github.com/mark-brannan/portolani/pull/62))
+
+### 20261014t085951z
+- Projection lives on the view, not the style Undo: edit scripts/scene.mjs PROJECTIONS / page.js ([#63](https://github.com/mark-brannan/portolani/pull/63))
