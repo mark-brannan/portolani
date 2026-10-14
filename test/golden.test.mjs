@@ -115,3 +115,15 @@ test('scale bar: every style draws at z5 and is hidden at z2', async () => {
     assert.ok(!differs(await renderView(VIEWS['world-z2'], name), far), `${name}: bar drawn at z2`);
   }
 });
+
+// The cartouche says PORTOLANI unless told otherwise; automatic, it names what the view is about,
+// at the zoom that name belongs to.
+test('cartouche title: custom by default, automatic from the view', async () => {
+  const title = async (view, opts) => (await createScene(env, { view, ...opts })).scene.cartouche.title;
+  assert.equal(await title(VIEWS['region-z5']), 'PORTOLANI');
+  assert.equal(await title(VIEWS['region-z5'], { title: 'Mare Nostrum' }), 'Mare Nostrum');
+  assert.equal(await title(VIEWS['world-z2'], { autoTitle: true }), 'AFRICA');
+  assert.equal(await title({ lon: -4, lat: 45.5, zoom: 5.5 }, { autoTitle: true }), 'BAY OF BISCAY');
+  assert.equal(await title({ lon: -9.14, lat: 38.7, zoom: 8 }, { autoTitle: true }), 'LISBON');
+  assert.equal(await title(VIEWS['region-z5'], { autoTitle: true, regions: 'english' }), 'ITALY');
+});
