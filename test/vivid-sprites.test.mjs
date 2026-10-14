@@ -1,7 +1,8 @@
 // The vivid pack is drawn as SVG and rasterised in Node by @napi-rs/canvas (resvg): every SVG in
 // packs/vivid/ must load to a non-empty image, and every sprite the manifest names must exist and
 // put ink on the canvas at its sizePx (a file leaning on a font, a filter or an external reference
-// loads but draws nothing); the Martines town vignettes are what scripts/gen-towns.mjs writes, and the
+// loads but draws nothing); the Martines and Aguiar town drawings are what scripts/gen-towns.mjs and
+// scripts/gen-towns-aguiar.mjs write, a town drawing kept for named towns is drawn for those alone, and the
 // town sprites and mountains are placed as scene.mjs says. Offline: reads only the repo, node_modules
 // and committed fixtures.
 
@@ -12,6 +13,7 @@ import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { loadImage, createCanvas, GlobalFonts } from '@napi-rs/canvas'
 import { townSVG, VARIANTS, fileOf } from '../scripts/gen-towns.mjs'
+import * as aguiar from '../scripts/gen-towns-aguiar.mjs'
 import { createScene, listSprites, defaultSprites, KINDS, DEFAULT_KINDS, W, H } from '../scripts/scene.mjs'
 import { coastNames, joinNames } from '../scripts/names.mjs'
 
@@ -67,7 +69,7 @@ const PACK = join(ROOT, 'packs', 'vivid');
 const manifest = pack;
 
 test('the town and mountain sprites carry a style, an `after` page and a size', () => {
-  for (const s of manifest.sprites.filter((s) => s.kind === 'mountain' || s.id.startsWith('town-martines-'))) {
+  for (const s of manifest.sprites.filter((s) => s.kind === 'mountain' || s.kind === 'town')) {
     assert.ok(s.style && s.after?.startsWith('https://') && s.sizePx > 0, `${s.id}: style, after or sizePx missing`);
   }
 });
@@ -77,6 +79,18 @@ test('the Martines vignettes are what gen-towns.mjs writes', () => {
     assert.equal(readFileSync(fileOf(name), 'utf8'), townSVG(name, p), `town-martines-${name}.svg differs; run node scripts/gen-towns.mjs`);
     assert.ok(manifest.sprites.some((s) => s.file === `town-martines-${name}.svg`), `${name}: not in pack.json`);
   }
+});
+
+test('the Aguiar drawings are what gen-towns-aguiar.mjs writes, and pack.json names their towns as it does', () => {
+  for (const [name, p] of Object.entries(aguiar.VARIANTS)) {
+    assert.equal(readFileSync(aguiar.fileOf(name), 'utf8'), aguiar.townSVG(name, p), `town-aguiar-${name}.svg differs; run node scripts/gen-towns-aguiar.mjs`);
+    const s = manifest.sprites.find((s) => s.file === `town-aguiar-${name}.svg`);
+    assert.ok(s, `${name}: not in pack.json`);
+    assert.deepEqual(s.only, p.only, `${name}: pack.json's only`);
+  }
+  // another seed draws another town of the same kind
+  const { walled } = aguiar.VARIANTS;
+  assert.notEqual(aguiar.townSVG('walled', walled), aguiar.townSVG('walled', { ...walled, seed: walled.seed + 1 }));
 });
 
 const GEO = dirname(fileURLToPath(import.meta.resolve('coastlines/data/ne-land-50m')));
@@ -112,6 +126,20 @@ test('towns are drawn towers when only the tower is chosen and Martines vignette
   assert.ok(scene.towns.every((t) => t.sprite?.style === 'martines'), 'a town left without a vignette');
   const port = (await createScene(env, { view: LIGURIA, town: 'martines' })).scene.towns.find((t) => t.name === 'Rome');
   assert.equal(port.sprite.id, 'town-martines-port');
+});
+
+test('Venice draws its halo of rays and Hong Kong its lake; no other town draws either', async () => {
+  const sprites = manifest.sprites.filter((s) => s.style === 'aguiar' && s.kind === 'town').map((s) => `vivid/${s.id}`);
+  const of = async (view, name) => {
+    const { scene } = await createScene(env, { view, sprites });
+    const by = Object.fromEntries(scene.towns.map((t) => [t.name, t.sprite?.id]));
+    assert.ok(scene.towns.length > 1, scene.towns.map((t) => t.name).join());
+    for (const t of scene.towns) if (t.name !== name) assert.ok(t.sprite && !t.sprite.only, `${t.name} draws ${t.sprite?.id}`);
+    return by[name];
+  };
+  assert.equal(await of({ lon: 12.3, lat: 45.4, zoom: 7 }, 'Venice'), 'town-aguiar-venice');
+  assert.equal(await of({ lon: 114.2, lat: 22.3, zoom: 7 }, 'Hong Kong'), 'town-aguiar-moat');
+  await of(LIGURIA, 'Venice');
 });
 
 test('mountains: on by default, off when the kind is left out; inland, apart and clear of names', async () => {

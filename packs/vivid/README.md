@@ -25,6 +25,8 @@ source and licence.
 
 Towns, monsters and ships are sized by their ink, not by their files: the scene measures each drawing's inked box and
 draws every town at one footprint for its population, and every monster or ship at its kind's footprint, so drawings
-cut from different charts at different margins stand together. A town entry's `heightPx` says how grand the drawing
-is against its family-mates (the scanned pack's entries take the same field): the grander drawings go to the more
-populous towns. A monster's or ship's `sizePx` is the width a preview draws it at.
+cut from different charts at different margins stand together. A town entry's `heightPx` says how grand the drawing is
+against its family-mates (the scanned pack's entries take the same field): the grander drawings go to the more
+populous towns. A monster's or ship's `sizePx` is the width a preview draws it at. A town entry with `only` (a list of
+town names, as Natural Earth spells them) is drawn for those towns alone and never from its family's pool: Venice's
+halo of rays, Hong Kong's lake.
