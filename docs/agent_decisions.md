@@ -81,3 +81,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t195008z
 - 10m rivers and lakes ship in 5-degree cells, whole features duplicated per cell and deduped by id Undo: load the two 10m files whole once in loadWater10m ([#92](https://github.com/mark-brannan/portolani/pull/92))
+
+### 20261014t195011z
+- 10m water swaps in at zoom > 9, the land band's edge Undo: use >= in the createScene water line ([#92](https://github.com/mark-brannan/portolani/pull/92))
