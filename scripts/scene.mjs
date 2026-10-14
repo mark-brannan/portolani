@@ -72,13 +72,27 @@ export const LANDS = ['islands', 'gilt', 'green', 'ochre'];
 const LAND_WASH = { gilt: STYLE.gilt, green: STYLE.green, ochre: STYLE.ochre, islands: STYLE.ochre };
 const SHOAL_OFFSET = 4, SHOAL_GAP = 6; // px seaward of the coast, and between dots
 let redSeaPolys = null; // the Red Sea to tint, or null
-// Rivers and lakes (water.mjs), from the 50m files at every zoom, loaded once the first style that
-// draws them is chosen; a lake or river is drawn where its box meets the view widened by WATER_PX.
+// Rivers and lakes (water.mjs), from the 50m files, loaded once the first style that draws them is
+// chosen, and past DETAIL_ZOOM from Natural Earth 10m cut into WATER_10M's cells (cutWater), the
+// cells around the view; a site without them keeps the 50m. A lake or river is drawn where its box
+// meets the view widened by WATER_PX.
 let water = null, waterLoad = null;
+const WATER_10M = { dir: 'water-10m', cell: 5, margin: 2 }; // must match scripts/build-preview.mjs
 const WATER_PX = 64; // a lozenge and its tributaries reach past the lake they stand for
 const loadWater = () => (waterLoad ??= Promise.all(['ne-rivers-lake-centerlines-50m', 'ne-lakes-50m'].map(loadGeo))
   .then(([r, l]) => waterOf(r, l)).catch((e) => { waterLoad = null; throw e; })); // a failed fetch is tried again
 const DETAIL_ZOOM = BANDS[0].zoom;
+const waterCells = new Map(); // 'water-10m/<xi>_<yi>' -> waterOf of the cell
+async function loadWater10m(view) {
+  const known = await loadBandIndex(WATER_10M);
+  if (!known) return null;
+  const parts = await Promise.all(cellsAround(WATER_10M, view, known).map((k) => {
+    if (!waterCells.has(k)) waterCells.set(k, env.readJSON(`geo/${k}.json`).then((c) => waterOf(c.rivers, c.lakes)).catch((e) => { waterCells.delete(k); throw e; }));
+    return waterCells.get(k);
+  }));
+  const once = (list) => [...new Map(list.map((w) => [w.id, w])).values()]; // a feature reaching several cells is in each
+  return { rivers: once(parts.flatMap((p) => p.rivers)), lakes: once(parts.flatMap((p) => p.lakes)) };
+}
 
 // Per-run tuning; `density` scales how much ornament is placed (1 = the committed mockup).
 const TUNE = { monsterMax: 4, shipMax: 2, townGap: 48, mountainMax: 3 };
@@ -266,11 +280,9 @@ async function loadBandIndex(band) {
 // fetched and boxed once, with the 50m places.
 const cells = new Map();
 const cellKey = (xi, yi) => `${xi}_${yi}`;
-async function loadDetail(coarse, view) {
-  for (const b of BANDS) if (view.zoom > b.zoom) await loadBandIndex(b);
-  const band = bandFor(view.zoom);
-  if (!band) return coarse;
-  const known = bandIndex.get(band.dir);
+// The band's cells, '<dir>/<xi>_<yi>', that meet the view's frame widened by its margin and that the
+// band's index (`known`) lists.
+function cellsAround(band, view, known) {
   const f = frameOf(makeProjection(view), band.margin), deg = band.cell, n = 360 / deg;
   const keys = new Set();
   for (let xi = Math.floor(f.lonMin / deg); xi <= Math.floor(f.lonMax / deg); xi++) {
@@ -279,7 +291,14 @@ async function loadDetail(coarse, view) {
       if (known.has(cellKey(wx, yi))) keys.add(`${band.dir}/${cellKey(wx, yi)}`);
     }
   }
-  const parts = await Promise.all([...keys].map((k) => {
+  return [...keys];
+}
+async function loadDetail(coarse, view) {
+  for (const b of BANDS) if (view.zoom > b.zoom) await loadBandIndex(b);
+  const band = bandFor(view.zoom);
+  if (!band) return coarse;
+  const f = frameOf(makeProjection(view), band.margin);
+  const parts = await Promise.all(cellsAround(band, view, bandIndex.get(band.dir)).map((k) => {
     if (!cells.has(k)) {
       cells.set(k, env.readJSON(`geo/${k}.json`).then((c) => {
         const lines = c.coast.map((line) => ({ line, box: bbox(line) }));
@@ -1398,11 +1417,17 @@ function paintLand(g, data, land, coast, relief) {
 function paintWater(g, data) {
   const river = RIVERS[STYLE.rivers], lake = LAKES[STYLE.lakes];
   if (!(river || lake) || !water) return;
-  const f = frameOf(data.proj, WATER_PX / data.proj.k / RAD), zoom = data.proj.zoom;
   const paint = { proj: data.proj, palette: { ink: STYLE.ink, pigments: [STYLE.red, STYLE.rose, STYLE.green], seedOf } };
+  const kept = keptWater(data);
+  if (river) river(g, paint, kept.rivers.filter((r) => !(lake && r.inLake)));
+  if (lake) lake(g, paint, kept.lakes);
+}
+// The rivers and lakes a view draws: those worth showing at its zoom whose box meets it.
+export function keptWater(data) {
+  if (!water) return { rivers: [], lakes: [] };
+  const f = frameOf(data.proj, WATER_PX / data.proj.k / RAD), zoom = data.proj.zoom;
   const kept = (list) => list.filter((w) => shown(w, zoom) && meetsLL(f, w.box));
-  if (river) river(g, paint, kept(water.rivers).filter((r) => !(lake && r.inLake)));
-  if (lake) lake(g, paint, kept(water.lakes));
+  return { rivers: kept(water.rivers), lakes: kept(water.lakes) };
 }
 // Hills and mountains (relief.mjs) for a view's land, and drawn over the water in the chosen style.
 const reliefFor = (proj, land) => reliefOf({ proj, land, createCanvas, w: W, h: H });
@@ -1768,7 +1793,7 @@ export async function createScene(environment, opts = {}) {
   const [, coarse, chosen] = await Promise.all([env.loadFont(STYLE.font), loadWorld(), sprites]);
   const { scaleSprite, ...placed } = chosen;
   redSeaPolys = redSea ? geojsonPolygons(await env.readJSON('geo/red-sea-50m.json')) : null;
-  if (STYLE.rivers !== 'off' || STYLE.lakes !== 'off') water = await loadWater();
+  if (STYLE.rivers !== 'off' || STYLE.lakes !== 'off') water = (view.zoom > DETAIL_ZOOM && await loadWater10m(view)) || await loadWater();
   const world = view.zoom > DETAIL_ZOOM ? await loadDetail(coarse, view) : coarse;
   const tLoad = performance.now();
 

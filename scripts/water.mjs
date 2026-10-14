@@ -15,11 +15,13 @@ const LOZENGE_PX = 120; // a lake whose footprint is shorter than this is drawn 
 const LAKE_MIN_PX = 8; // and one shorter than this is too small to draw as one at this zoom
 
 // Whether a river or lake is worth drawing at a zoom: Natural Earth's own min_zoom, counted in
-// 256 px tiles, one zoom behind the scene's 512 px ones. The greatest show from far out, every one
-// from zoom 4, so a world view is not a hairball.
+// 256 px tiles, one zoom behind the scene's 512 px ones. The greatest show from far out, every 50m
+// one from zoom 4, so a world view is not a hairball; the 10m ones, drawn only past DETAIL_ZOOM, all
+// carry a min_zoom of 7.2 or less, so a close view draws every one, the view's few cells' worth.
 export const shown = (feature, zoom) => feature.minZoom <= zoom + 1;
 
-// Rivers and lakes from Natural Earth GeoJSON, each with its lon/lat box for the view to cut by.
+// Rivers and lakes from Natural Earth GeoJSON, each with its lon/lat box for the view to cut by and
+// the feature's `id`, by which a feature fetched from several 10m cells is kept once (cutWater).
 export function waterOf(riversGeo, lakesGeo) {
   const box = (pts) => {
     const b = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
@@ -31,11 +33,11 @@ export function waterOf(riversGeo, lakesGeo) {
   const rivers = (riversGeo?.features ?? []).map((f) => {
     const rings = geojsonRings(f.geometry);
     // a lake's centreline is the water a lake drawn over it stands for
-    return { rings, box: box(rings.flat()), minZoom: f.properties.min_zoom, inLake: f.properties.featurecla === 'Lake Centerline', key: keyOf(f.properties, rings[0]) };
+    return { id: f.id, rings, box: box(rings.flat()), minZoom: f.properties.min_zoom, inLake: f.properties.featurecla === 'Lake Centerline', key: keyOf(f.properties, rings[0]) };
   });
   const lakes = (lakesGeo?.features ?? []).map((f) => {
     const polys = geojsonPolygons(f.geometry);
-    return { polys, box: box(polys.flatMap((p) => p[0])), minZoom: f.properties.min_zoom, key: keyOf(f.properties, polys[0][0]) };
+    return { id: f.id, polys, box: box(polys.flatMap((p) => p[0])), minZoom: f.properties.min_zoom, key: keyOf(f.properties, polys[0][0]) };
   });
   return { rivers, lakes };
 }
