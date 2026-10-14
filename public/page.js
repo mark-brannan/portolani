@@ -30,7 +30,7 @@ const env = {
 const $ = (id) => document.getElementById(id);
 const canvas = $('map'), ctx = canvas.getContext('2d');
 
-const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, pack: 'all', kinds: KINDS, names: true, rhumb: true, scale: 'chequer', continents: false, regions: 'off' };
+const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, pack: 'all', kinds: KINDS, names: true, rhumb: true, scale: 'genoese', continents: false, regions: 'off' };
 const hashParams = () => new URLSearchParams(location.hash.slice(1));
 
 function viewFromHash() {
@@ -80,7 +80,7 @@ function showStyle() {
   for (const k of KINDS) {
     const box = $(`kind-${k}`);
     box.checked = style.kinds.includes(k);
-    box.disabled = (k === 'ship' || k === 'monster') && (style.pack === 'plain' || style.pack === 'catalan');
+    box.disabled = (k === 'ship' || k === 'monster') && ['plain', 'vivid', 'catalan'].includes(style.pack);
   }
 }
 function readControls() {
