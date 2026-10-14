@@ -6,7 +6,7 @@
 // a setting left at its default is left out, `sprites` too (keys with the pack shortened, v: s: p:).
 // Older links naming a `rendering` (or `pack`), `rose`, `monster`, `town` and `kinds` open as the
 // selection those chose, and are written back in the new form.
-import { createScene, REGION_LANGS, drawScene, drawGround, panView, zoomView, clampView, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, W, H } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, panView, zoomView, clampView, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, W, H } from './scene.mjs';
 
 const memo = new Map();
 // a failed load is forgotten, so the next stop tries it again
@@ -144,7 +144,6 @@ const rosePath = () => {
 const GLYPHS = {
   rose: `<svg viewBox="-22 -22 44 44"><circle r="20" fill="none" stroke="currentColor"/><path d="${rosePath()}" fill="currentColor"/></svg>`,
   cartouche: '<svg viewBox="0 0 64 44"><rect x="6" y="10" width="52" height="24" fill="none" stroke="currentColor" stroke-width="2"/><rect x="2" y="6" width="60" height="32" fill="none" stroke="currentColor" stroke-width="0.8"/><path d="M18 22h28" stroke="currentColor" stroke-width="3" stroke-dasharray="4 2"/></svg>',
-  tower: '<svg viewBox="-8 -18 16 19"><path d="M-4 0v-9h-1v-3h2v1.5h2V-12h2v1.5h2V-12h2v3h-1V0Z" fill="#e9d8b4" stroke="currentColor" stroke-width="1.1"/><path d="M-1.5 0v-3a1.5 1.5 0 0 1 3 0V0M0-12v-4.5" fill="none" stroke="currentColor" stroke-width="1"/><path d="M0-16.5 4.5-15.2 0-14Z" fill="#8c2f1e"/></svg>',
 };
 
 function thumb(s, label) {
@@ -153,7 +152,7 @@ function thumb(s, label) {
   b.dataset.key = s.key;
   b.setAttribute('aria-label', `${s.id}, ${label}`);
   if (s.file) b.append(Object.assign(new Image(), { src: `packs/${s.pack}/${s.file}`, alt: '', decoding: 'async' }));
-  else b.innerHTML = GLYPHS[s.id] ?? '';
+  else b.innerHTML = GLYPHS[s.id] ?? towerGlyph(s.id); // the towers draw their own
   return b;
 }
 
