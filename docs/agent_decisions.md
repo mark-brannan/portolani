@@ -111,3 +111,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t195700z
 - Relief: a second style, engraved (ink only), beside marina Undo: drop its RELIEF entry and menu option ([#95](https://github.com/mark-brannan/portolani/pull/95))
+
+### 20261014t195711z
+- Relief starts at zoom 2 (the mountain sprites started at 3) Undo: RELIEF_ZOOM = 3 ([#95](https://github.com/mark-brannan/portolani/pull/95))
