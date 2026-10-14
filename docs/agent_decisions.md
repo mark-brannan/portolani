@@ -123,3 +123,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t195725z
 - Relief drawn over rivers and lakes, under coast ink and rhumb lines Undo: call paintRelief before paintWater ([#95](https://github.com/mark-brannan/portolani/pull/95))
+
+### 20261014t195729z
+- Relief sizes by zoom: peaks 30/26/20 px, hills 11 px, range cells 260/260/320 px, hill cells 120 px Undo: edit BANDS in scripts/relief.mjs ([#95](https://github.com/mark-brannan/portolani/pull/95))
