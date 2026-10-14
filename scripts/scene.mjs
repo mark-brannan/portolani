@@ -11,6 +11,7 @@ import { fill, trace, limn, rhumb, place, letter, geojsonPolygons, geojsonRings 
 import { islandInfo, ISLAND_KM2 } from './island.mjs';
 import { cityPlan, drawCity, drawHouses, pxRings, insideRings } from './city.mjs';
 import { urbanKey } from './urban.mjs';
+import { RIVERS, LAKES, RIVER_STYLES, LAKE_STYLES, waterOf, shown } from './water.mjs';
 
 let env;
 const createCanvas = (w, h) => env.createCanvas(w, h);
@@ -31,12 +32,15 @@ const STYLE = {
   greenEdge: '#3f5a2e',
   ochre: '#c47f2c',
   gold: '#c9a13b',
+  rose: '#c98a7f', // with red and green, the lakes drawn as lozenges (water.mjs)
   terracotta: '#b8613f', // town footprints
   coastWidth: 1.5,
   washWidth: 5,
   rhumbAlpha: 0.3,
   rhumbWidth: 0.75,
   landMode: 'islands', // one of LANDS, set by createScene
+  rivers: 'off', // one of RIVER_STYLES, set by createScene
+  lakes: 'off', // one of LAKE_STYLES, set by createScene
   font: 'IM Fell English',
   fonts: ['IM Fell English', 'Georgia', 'serif'], // the stack names are lettered in; the first is loaded
 };
@@ -65,6 +69,12 @@ export const LANDS = ['islands', 'gilt', 'green', 'ochre'];
 const LAND_WASH = { gilt: STYLE.gilt, green: STYLE.green, ochre: STYLE.ochre, islands: STYLE.ochre };
 const SHOAL_OFFSET = 4, SHOAL_GAP = 6; // px seaward of the coast, and between dots
 let redSeaPolys = null; // the Red Sea to tint, or null
+// Rivers and lakes (water.mjs), from the 50m files at every zoom, loaded once the first style that
+// draws them is chosen; a lake or river is drawn where its box meets the view widened by WATER_PX.
+let water = null, waterLoad = null;
+const WATER_PX = 64; // a lozenge and its tributaries reach past the lake they stand for
+const loadWater = () => (waterLoad ??= Promise.all(['ne-rivers-lake-centerlines-50m', 'ne-lakes-50m'].map(loadGeo))
+  .then(([r, l]) => waterOf(r, l)).catch((e) => { waterLoad = null; throw e; })); // a failed fetch is tried again
 const DETAIL_ZOOM = BANDS[0].zoom;
 
 // Per-run tuning; `density` scales how much ornament is placed (1 = the committed mockup).
@@ -736,7 +746,7 @@ function cityOf(p, proj, landPolys) {
   const landPx = pxRings(land.map(([ring]) => ring.map(([lon, lat]) => proj.project(lon, lat))));
   const onLand = (x, y) => insideRings(landPx, x, y);
   const plan = cityPlan({ rings, x: p.xy[0], y: p.xy[1], extent, zoom: proj.zoom, kmPx, rnd: mulberry32(seedOf(p.name)), w: W, h: H, onLand });
-  return { rings, box: b, plan, land, extent, lagoon: plan.lagoon };
+  return { rings, poly: p.urban, box: b, plan, land, extent, lagoon: plan.lagoon };
 }
 
 // The order a view tries its monsters or ships in: a weighted shuffle (Efraimidis-Spirakis, key
@@ -1256,6 +1266,18 @@ function paintLand(g, data, land, coast) {
       if (isles.length) fill(g, isles, x, y, { color: pigment, alpha: 0.92, lonCenter });
     }
   }
+  paintWater(g, data);
+}
+
+// Rivers, then lakes over them, each in its chosen style, on the land and under the coast's ink.
+function paintWater(g, data) {
+  const river = RIVERS[STYLE.rivers], lake = LAKES[STYLE.lakes];
+  if (!(river || lake) || !water) return;
+  const f = frameOf(data.proj, WATER_PX / data.proj.k / RAD), zoom = data.proj.zoom;
+  const paint = { proj: data.proj, palette: { ink: STYLE.ink, pigments: [STYLE.red, STYLE.rose, STYLE.green], seedOf } };
+  const kept = (list) => list.filter((w) => shown(w, zoom) && meetsLL(f, w.box));
+  if (river) river(g, paint, kept(water.rivers).filter((r) => !(lake && r.inLake)));
+  if (lake) lake(g, paint, kept(water.lakes));
 }
 const paintCoast = (g, data, coast) =>
   limn(g, coast, data.proj.x, data.proj.y, { color: STYLE.ink, alpha: 1, width: STYLE.coastWidth, oneStroke: true, lonCenter: data.proj.lonCenter });
@@ -1461,13 +1483,14 @@ function drawScene(g, scene, data, bg, view) {
   // 4.5 town footprints: a city's built-up area, washed terracotta and edged in ink once its long
   // side passes URBAN_PX on screen, the wash coming in over the next half doubling of zoom; on land
   // only, as the footprint is coarser than the coast and would otherwise spill over the water.
-  // Where no city plan stands on it, the wash is fuller and little houses stand in it, HOUSE_GAP
-  // apart on a lattice fixed to the map, so a pan keeps them where they were.
-  const plans = scene.towns.filter((t) => t.city);
-  const under = (b) => plans.some((t) => b.x0 < t.city.box.x1 && b.x1 > t.city.box.x0 && b.y0 < t.city.box.y1 && b.y1 > t.city.box.y0);
+  // Under a city plan the wash is light and its edge kept, so the built-up ground still reads as
+  // one; elsewhere it is fuller and little houses stand in it, HOUSE_GAP apart on a lattice fixed
+  // to the map, so a pan keeps them where they were.
+  const plans = scene.towns.filter((t) => t.city), planned = new Set(plans.map((t) => t.city.poly));
+  const under = (u) => planned.has(u.poly) || plans.some((t) => u.box.x0 < t.city.box.x1 && u.box.x1 > t.city.box.x0 && u.box.y0 < t.city.box.y1 && u.box.y1 > t.city.box.y0);
   const washes = idx.urban.map((u) => {
-    const ramp = Math.min(1, 2 * (Math.max(u.box.x1 - u.box.x0, u.box.y1 - u.box.y0) * view.scale / URBAN_PX - 1)), plan = under(u.box);
-    return { u, ramp, plan, a: ramp * (plan ? 0.4 : 0.62) };
+    const ramp = Math.min(1, 2 * (Math.max(u.box.x1 - u.box.x0, u.box.y1 - u.box.y0) * view.scale / URBAN_PX - 1)), plan = under(u);
+    return { u, ramp, plan, a: ramp * (plan ? 0.3 : 0.62) };
   }).filter(({ u, a }) => a > 0 && meets(r, u.box));
   if (washes.length) {
     g.save(); g.beginPath(); traceLand(g, data, land); g.clip('evenodd');
@@ -1566,13 +1589,14 @@ function drawScene(g, scene, data, bg, view) {
 // `kinds` (the ornament kinds drawn, of KINDS), `names` and `rhumb` (booleans), `scale` (a SCALE_NAMES entry, or 'off'),
 // `continents` (boolean) and `regions` ('off', 'latin' or 'english'); the continents follow the regions' language, Latin when those are off.
 // `land`: a LANDS entry, the land treatment ('islands' by default); `redSea` (boolean) tints the Red Sea red.
+// `rivers` and `lakes`: a RIVER_STYLES and a LAKE_STYLES entry (water.mjs), each 'off' by default.
 // `autoTitle` (boolean, on by default) letters the cartouche with the name the view is about (viewTitle), in capitals;
 // `title` is its lettering when that is off, or when the view has no name in it.
 // `kinds` defaults to DEFAULT_KINDS, every kind. A kind left out is still
 // placed when the lattice needs it (a rose, the cartouche's corner), only not drawn.
 export async function createScene(environment, opts = {}) {
   env = environment;
-  const { ink = '#3b2a1a', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', title = 'PORTOLANI', autoTitle = true, land: landMode = 'islands', redSea = false } = opts;
+  const { ink = '#3b2a1a', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', title = 'PORTOLANI', autoTitle = true, land: landMode = 'islands', redSea = false, rivers = 'off', lakes = 'off' } = opts;
   const legacy = ['rendering', 'rose', 'monster', 'town'].some((k) => opts[k] !== undefined);
   const townBy = townSize ?? (legacy ? 'rank' : 'area');
   const show = { kinds: new Set(opts.kinds ?? DEFAULT_KINDS), names, rhumb: rhumbOn, scale };
@@ -1580,6 +1604,8 @@ export async function createScene(environment, opts = {}) {
   STYLE.ink = ink;
   STYLE.parchment = tone;
   STYLE.landMode = LANDS.includes(landMode) ? landMode : 'islands';
+  STYLE.rivers = RIVER_STYLES.includes(rivers) ? rivers : 'off';
+  STYLE.lakes = LAKE_STYLES.includes(lakes) ? lakes : 'off';
   TUNE.monsterMax = Math.round(4 * density);
   TUNE.shipMax = Math.round(2 * density);
   TUNE.townGap = 48 / density;
@@ -1607,6 +1633,7 @@ export async function createScene(environment, opts = {}) {
   const [, coarse, chosen] = await Promise.all([env.loadFont(STYLE.font), loadWorld(), sprites]);
   const { scaleSprite, ...placed } = chosen;
   redSeaPolys = redSea ? geojsonPolygons(await env.readJSON('geo/red-sea-50m.json')) : null;
+  if (STYLE.rivers !== 'off' || STYLE.lakes !== 'off') water = await loadWater();
   const world = view.zoom > DETAIL_ZOOM ? await loadDetail(coarse, view) : coarse;
   const tLoad = performance.now();
 
@@ -1625,4 +1652,5 @@ export const KINDS = ['rose', 'ship', 'monster', 'cartouche', 'mountain'];
 export const DEFAULT_KINDS = KINDS;
 export const PROJECTION_NAMES = Object.keys(PROJECTIONS);
 export const TOWN_SIZES = ['area', 'population', 'rank'];
+export { RIVER_STYLES, LAKE_STYLES };
 export { SCALE_NAMES, readManifests, listStyles, listSprites, defaultSprites, selectSprites, chooseSprites, drawScene, drawGround, covers, panView, zoomView, clampView, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };

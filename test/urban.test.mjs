@@ -66,6 +66,21 @@ test('cityPlan: the same seed lays out the same city; lots stay inside the footp
   assert.ok(huge.lots.length / 30 <= 20000 * 1.2, `${huge.lots.length / 30} lots`)
 })
 
+test('cityPlan: a great city on land is a bastioned fort with a moat; one mostly over water is a lagoon city, unwalled', () => {
+  const ring = Array.from({ length: 24 }, (_, i) => [400 + 380 * Math.cos(i / 24 * 2 * Math.PI), 300 + 380 * Math.sin(i / 24 * 2 * Math.PI)])
+  const seeded = (seed) => () => (seed = (seed * 16807) % 2147483647) / 2147483647
+  const plan = (onLand) => cityPlan({ rings: [ring], x: 400, y: 300, extent: 670, zoom: 10, kmPx: 12, rnd: seeded(7), w: 800, h: 600, onLand })
+  const fort = plan(() => true) // 670 px at 12 px/km: a 56 km footprint, past FORT_KM
+  assert.ok(fort.walled && fort.bastioned && !fort.lagoon)
+  assert.ok(fort.moat.length > 0 && fort.bastions.star.length > 0)
+  assert.ok(fort.lots.length / 30 > 200 && fort.lots.length / 30 <= 20000 * 1.2, `${fort.lots.length / 30} lots`)
+  const lagoon = plan((x, y) => x < 100) // the footprint mostly over water
+  assert.ok(lagoon.lagoon && !lagoon.walled && !lagoon.bastioned)
+  assert.equal(lagoon.roads.length, 0)
+  assert.equal(lagoon.moat.length, 0)
+  assert.ok(lagoon.lots.length / 30 > 200, `${lagoon.lots.length / 30} lots`)
+})
+
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const URBAN = join(ROOT, 'downloads', 'ne_10m_urban_areas.geojson')
 const GEO = dirname(fileURLToPath(import.meta.resolve('coastlines/data/ne-land-50m')))
