@@ -202,6 +202,7 @@ function keepOutOf(scene) {
     if (t.city) obb(t.box);
     else { const hw = t.h * 0.6; box(t.x - hw, t.y - t.h - 2, t.x + hw, t.y + 3); }
   }
+  for (const t of scene.lesser ?? []) { const hw = t.h * 0.6; box(t.x - hw, t.y - t.h - 2, t.x + hw, t.y + 3); } // their names are in scene.names
   for (const n of scene.names ?? []) obb(n.box);
   for (const w of scene.worldNames ?? []) disc(w.x, w.y, w.r);
   return out;
