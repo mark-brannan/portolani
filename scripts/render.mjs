@@ -25,7 +25,7 @@ const env = {
   createCanvas,
   readJSON: async (p) => (p === 'geo/names-50m.json' ? names() : read(resolve(p))),
   loadImage: (p) => loadImage(resolve(p)),
-  loadFont: async (family) => { GlobalFonts.registerFromPath(join(DL, 'IMFeENrm28P.ttf'), family); },
+  loadFont: async (family) => { GlobalFonts.registerFromPath(join(DL, 'IMFeENrm28P.ttf'), family); GlobalFonts.registerFromPath(join(DL, 'IMFeENit28P.ttf'), family); },
 };
 
 const t0 = performance.now();

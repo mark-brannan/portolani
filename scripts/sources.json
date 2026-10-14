@@ -18,6 +18,14 @@
       "note": "(IM Fell English)"
     },
     {
+      "id": "im-fell-english-italic",
+      "file": "IMFeENit28P.ttf",
+      "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/imfellenglish/IMFeENit28P.ttf",
+      "sha256": "47cd75dce54b1f2e0831359d22d5e688f519d68ae45706b664fd310fd0e3ccf7",
+      "rights": "SIL OFL 1.1",
+      "note": "(IM Fell English Italic, for region names)"
+    },
+    {
       "id": "ofl-imfellenglish",
       "file": "OFL-IMFellEnglish.txt",
       "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/imfellenglish/OFL.txt",
