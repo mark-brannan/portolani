@@ -202,9 +202,10 @@ const worlds = new WeakMap();
 async function loadWorld() {
   // the urban footprints (scripts/urban.mjs) are optional: a site without them draws every town as an icon;
   // so are the 50m urban areas, which wash a town's built-up ground before it grows into a city plan
+  const missing = (e) => { if (!/404|ENOENT|no urban/.test(String(e?.code ?? e?.message ?? e))) throw e; return null; };
   const [landGeo, coastGeo, placesGeo, namesGeo, urban, urbanGeo] = await Promise.all(
     [...['ne-land-50m', 'ne-coastline-50m', 'ne-populated-places-50m'].map(loadGeo), env.readJSON('geo/names-50m.json'),
-      env.readJSON('geo/urban-10m.json').catch(() => null), loadGeo('ne-urban-areas-50m').catch(() => null)]);
+      env.readJSON('geo/urban-10m.json').catch(missing), loadGeo('ne-urban-areas-50m').catch(missing)]);
   let world = worlds.get(landGeo);
   if (world) return world;
   const land = geojsonPolygons(landGeo).map((poly) => ({ poly: Object.assign(poly, { isl: islandInfo(poly) }), box: bbox(poly[0]) }));
@@ -1377,7 +1378,8 @@ function drawScene(g, scene, data, bg, view) {
     const a = Math.min(1, (Math.max(u.box.x1 - u.box.x0, u.box.y1 - u.box.y0) * view.scale / URBAN_PX - 1)) * 0.45;
     if (a <= 0 || !meets(r, u.box)) continue;
     fill(g, [u.poly], data.proj.x, data.proj.y, { color: STYLE.terracotta, alpha: a, lonCenter: data.proj.lonCenter });
-    g.save(); g.globalAlpha = a * 1.5; g.strokeStyle = STYLE.ink; g.lineWidth = 0.8 / view.scale; g.stroke(); g.restore();
+    g.save(); g.beginPath(); trace(g, [u.poly], data.proj.x, data.proj.y, { lonCenter: data.proj.lonCenter });
+    g.globalAlpha = a * 1.5; g.strokeStyle = STYLE.ink; g.lineWidth = 0.8 / view.scale; g.stroke(); g.restore();
   }
 
   // 5. roses
