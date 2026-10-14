@@ -8,6 +8,7 @@
     {
       "id": "rose-aguiar",
       "kind": "rose",
+      "style": "aguiar",
       "file": "rose-aguiar.svg",
       "anchor": [0.5, 0.5],
       "sizePx": 300,
@@ -17,6 +18,7 @@
     {
       "id": "rose-catalan",
       "kind": "rose",
+      "style": "aguiar",
       "file": "rose-catalan.svg",
       "anchor": [0.5, 0.5],
       "sizePx": 110,
@@ -26,6 +28,7 @@
     {
       "id": "cartouche-frame",
       "kind": "cartouche",
+      "style": "dewit",
       "file": "cartouche-frame.svg",
       "anchor": [0.5, 0.5],
       "sizePx": 340,
@@ -36,6 +39,7 @@
     {
       "id": "town-aguiar",
       "kind": "town",
+      "style": "aguiar",
       "file": "town-aguiar.svg",
       "anchor": [0.5, 0.5],
       "sizePx": 60,
@@ -45,6 +49,7 @@
     {
       "id": "palms-aguiar",
       "kind": "tree",
+      "style": "aguiar",
       "file": "palms-aguiar.svg",
       "anchor": [0.5, 0.5],
       "sizePx": 70,
@@ -54,6 +59,7 @@
     {
       "id": "scale-genoese",
       "kind": "scale",
+      "style": "genoese",
       "file": "scale-genoese.svg",
       "anchor": [0.5, 0.5],
       "sizePx": 260,
