@@ -8,7 +8,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
-import { createScene, drawScene, W, H } from '../scripts/scene.mjs';
+import { createScene, drawScene, SCALE_NAMES, W, H } from '../scripts/scene.mjs';
 import { coastNames, joinNames } from '../scripts/names.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -40,8 +40,8 @@ const env = {
   loadFont: async (family) => { GlobalFonts.registerFromPath(join(ROOT, 'test', 'fixtures', 'IMFeENrm28P.ttf'), family); },
 };
 
-async function renderView(view) {
-  const { scene, data, bg } = await createScene(env, { view, scale: 'off' });
+async function renderView(view, scale = 'off') {
+  const { scene, data, bg } = await createScene(env, { view, scale });
   const full = createCanvas(W, H);
   drawScene(full.getContext('2d'), scene, data, bg, { scale: 1, x: 0, y: 0 });
   const small = createCanvas(SW, SH);
@@ -84,3 +84,16 @@ for (const [name, view] of Object.entries(VIEWS)) {
     assert.ok(share <= SHARE, `${name}: ${(share * 100).toFixed(2)}% of pixels differ (limit ${SHARE * 100}%); diff in out/golden-diff/${name}.png`);
   });
 }
+
+// The goldens render with the bar off, so draw each style here: it must paint something at z5 and
+// nothing at z2 (below SCALE_MIN_ZOOM).
+const differs = (a, b) => { const p = pixels(a), q = pixels(b); for (let i = 0; i < p.length; i++) if (p[i] !== q[i]) return true; return false; };
+
+test('scale bar: every style draws at z5 and is hidden at z2', async () => {
+  const near = await renderView(VIEWS['region-z5']);
+  const far = await renderView(VIEWS['world-z2']);
+  for (const name of SCALE_NAMES) {
+    assert.ok(differs(await renderView(VIEWS['region-z5'], name), near), `${name}: bar not drawn at z5`);
+    assert.ok(!differs(await renderView(VIEWS['world-z2'], name), far), `${name}: bar drawn at z2`);
+  }
+});
