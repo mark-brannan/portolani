@@ -262,14 +262,25 @@ function zoomView(view, factor, px, py) {
   }
   const proj = makeProjection(view), at = proj.invert(px, py);
   if (Math.hypot(ox, oy) / k >= P.r(P.cap)) return clampView({ ...view, zoom }); // off the map: about the centre
-  // the centre that puts `at` back under (px, py): a guess along the way to it, then corrected
-  let c = destination([view.lon, view.lat], Math.atan2(ox, -oy), P.inv(Math.hypot(ox, oy) / k) - P.inv(Math.min(P.r(P.cap), Math.hypot(ox, oy) / k2)));
-  for (let i = 0; i < 40; i++) {
-    const [qx, qy] = makeProjection({ ...view, lon: c[0], lat: c[1], zoom }).project(...at);
-    const ex = qx - px, ey = qy - py;
-    if (Math.hypot(ex, ey) < 1e-9) break;
-    c = [c[0] + ex / k2 / Math.max(1e-6, Math.cos(c[1] * RAD)) / RAD, Math.max(-POLE, Math.min(POLE, c[1] - ey / k2 / RAD))];
+  // the centre that puts `at` back under (px, py): `at` lies c2 from it on the pointer's screen angle, a
+  // spherical triangle with the pole solved for the centre's latitude (two roots; the one that lands
+  // `at` nearest the pointer wins) and then its longitude
+  const ang = Math.atan2(ox, -oy), rho2 = Math.hypot(ox, oy) / k2;
+  if (rho2 >= P.r(P.cap)) return clampView({ ...view, zoom });
+  const c2 = P.inv(rho2), sc2 = Math.sin(c2), cc2 = Math.cos(c2);
+  const R = Math.hypot(cc2, sc2 * Math.cos(ang)), delta = Math.atan2(sc2 * Math.cos(ang), cc2);
+  const sArg = Math.max(-1, Math.min(1, Math.sin(at[1] * RAD) / R));
+  let c = [view.lon, view.lat], best = Infinity;
+  for (const phi of [Math.asin(sArg) - delta, Math.PI - Math.asin(sArg) - delta]) {
+    const lat = wrapAngle(phi);
+    if (Math.abs(lat) > Math.PI / 2) continue; // a latitude past a pole is the other root
+    const dl = Math.atan2(Math.sin(ang) * sc2 * Math.cos(lat), cc2 - Math.sin(lat) * Math.sin(at[1] * RAD));
+    const cand = [at[0] - dl / RAD, lat / RAD];
+    const [qx, qy] = makeProjection({ ...view, lon: cand[0], lat: cand[1], zoom }).project(...at);
+    const e = Math.hypot(qx - px, qy - py);
+    if (e < best) { best = e; c = cand; }
   }
+  if (best > 1) return clampView({ ...view, zoom }); // no north-up centre keeps it there (it wants a pole): about the centre
   return clampView({ ...view, lon: c[0], lat: c[1], zoom });
 }
 

@@ -61,6 +61,18 @@ test('in every projection a drag, a zoom and their reverses return to the same v
   }
 });
 
+test('a zoom on an azimuthal view keeps the point under the pointer where a north-up centre can', () => {
+  for (const projection of ['orthographic', 'azimuthal-equidistant', 'stereographic']) {
+    for (const lat of [30, 80]) {
+      const v = clampView({ lon: 10, lat, zoom: 2, projection });
+      for (const [px, py] of [[1000, 300], [700, 650], [W / 2 + 50, H / 2 - 20]]) {
+        const at = viewProjection(v).invert(px, py), [qx, qy] = viewProjection(zoomView(v, 1.7, px, py)).project(...at);
+        close(qx, px, 1e-6); close(qy, py, 1e-6);
+      }
+    }
+  }
+});
+
 test('an unknown projection is Mercator, and a whole map shorter than the canvas sits on the equator', () => {
   assert.equal(clampView({ lon: 0, lat: 0, zoom: 4, projection: 'nonsense' }).projection, 'mercator');
   for (const name of ['constructor', 'toString', '__proto__']) assert.equal(clampView({ lon: 0, lat: 0, zoom: 4, projection: name }).projection, 'mercator', name);
