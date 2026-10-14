@@ -4,7 +4,11 @@
 import { createScene, drawScene, drawGround, panView, zoomView, clampView, covers, DEFAULT_VIEW, W, H } from './scene.mjs';
 
 const memo = new Map();
-const once = (key, make) => { if (!memo.has(key)) memo.set(key, make()); return memo.get(key); };
+// a failed load is forgotten, so the next stop tries it again
+const once = (key, make) => {
+  if (!memo.has(key)) memo.set(key, make().catch((e) => { memo.delete(key); throw e; }));
+  return memo.get(key);
+};
 
 const env = {
   createCanvas: (w, h) => Object.assign(document.createElement('canvas'), { width: w, height: h }),
