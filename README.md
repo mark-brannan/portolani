@@ -55,9 +55,16 @@ The pan-frame times at z5 and above sit at two animation frames (33 ms at 60 Hz)
 | What | Bytes | Fetched at |
 | --- | ---: | --- |
 | 50m land, coast and places (`geo/*.geojson`) | 3,523,998 | every view |
-| Sprite packs (`packs/`: Carta Marina 625,716; Catalan 2,244,573) | 2,870,289 | every view, ornaments on or off |
+| Sprite packs (`packs/`: Carta Marina 573,062; Catalan 2,431,052) | 3,004,114 | every view, ornaments on or off |
 | 10m cells around the view (`geo/10m/`) | about 125 KB | z10 and z11 at this spot; whole set is 18,786,827 |
 | Font (`font/IMFeENrm28P.ttf`) | 194,992 | every view |
+
+## Reading a portolan chart
+
+- Rhumb lines run from each wind rose: black for the eight winds, green for the half-winds, red for the quarter-winds.
+- A course is the line parallel to the track, followed back to a rose to read the wind's name.
+- Ports are lettered inland, at right angles to the coast; important ones in red, lesser ones in black.
+- More: [Trinity College Library](https://trinitycollegelibrarycambridge.wordpress.com/2015/08/14/portolan-chart-of-the-mediterranean/) and [Cartography Unchained](https://www.cartographyunchained.com/chug1/).
 
 ## Licence
 
