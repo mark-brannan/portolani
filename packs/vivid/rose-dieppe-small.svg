@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-160 -160 320 320" width="320" height="320">
+  <!-- After the roses of the anonymous Dieppe portolan atlas of 1547 (Huntington Library HM 29; Commons:
+       Europe and northern Africa. HM 29). Drawn, not traced, simplified for 110 px: lapis cardinals, verdigris
+       intercardinals and cream petals on a vermilion ground, a large gilt boss, beads at the east and a gilt
+       fleur-de-lis outside the ring at the north. The original is south-up; this is drawn north-up. -->
+  <defs>
+    <path id="cL" d="M0,-126 L-14,-45.9 L0,-0 Z"/>
+    <path id="cR" d="M0,-126 L14,-45.9 L0,-0 Z"/>
+    <path id="dL" d="M0,-108 L-11.2,-48.7 L0,-0 Z"/>
+    <path id="dR" d="M0,-108 L11.2,-48.7 L0,-0 Z"/>
+    
+    <!-- cream petal on the red ground -->
+    <path id="petal" d="M0,-108 Q9,-84 0,-56 Q-9,-84 0,-108 Z"/>
+    <g id="cL"><use xlink:href="#cL" fill="#5b80c2"/><use xlink:href="#cR" fill="#1f3a72"/></g>
+    <g id="dGr"><use xlink:href="#dL" fill="#5fa868"/><use xlink:href="#dR" fill="#2f6b3a"/></g>
+  </defs>
+  <g stroke="#2a1d12" stroke-width="2" stroke-linejoin="round">
+    <g transform="scale(0.88)">
+    <!-- double ring round a vermilion ground -->
+    <circle r="122" fill="none" stroke-width="2.6"/>
+    <circle r="118" fill="#ffffff" stroke-width="2.6"/>
+    <circle r="112" fill="#cc4a2c" stroke-width="1.6"/>
+    <g fill="#efd9a8" stroke-width="1.6">
+    <use xlink:href="#petal" transform="rotate(22.5)"/><use xlink:href="#petal" transform="rotate(67.5)"/><use xlink:href="#petal" transform="rotate(112.5)"/><use xlink:href="#petal" transform="rotate(157.5)"/>
+    <use xlink:href="#petal" transform="rotate(202.5)"/><use xlink:href="#petal" transform="rotate(247.5)"/><use xlink:href="#petal" transform="rotate(292.5)"/><use xlink:href="#petal" transform="rotate(337.5)"/>
+    </g>
+    
+    <!-- intercardinals verdigris, cardinals lapis with white lights -->
+    <use xlink:href="#dGr" transform="rotate(45)"/><use xlink:href="#dGr" transform="rotate(135)"/><use xlink:href="#dGr" transform="rotate(225)"/><use xlink:href="#dGr" transform="rotate(315)"/>
+    <use xlink:href="#cL"/><use xlink:href="#cL" transform="rotate(90)"/><use xlink:href="#cL" transform="rotate(180)"/><use xlink:href="#cL" transform="rotate(270)"/>
+    <g fill="#ffffff" stroke="none"><circle cx="-4.6" cy="-87.9" r="5"/><circle cx="87.9" cy="-4.6" r="5"/><circle cx="4.6" cy="87.9" r="5"/><circle cx="-87.9" cy="4.6" r="5"/></g>
+    <!-- large gilt boss in a white beaded ring -->
+    <circle r="58" fill="#ffffff" stroke-width="2.4"/>
+    
+    <circle r="50" fill="#c9a13b" stroke-width="2"/>
+    <path stroke="#b08a32" stroke-width="2" d="M0,-8L0,-44M3.1,-7.4L16.8,-40.7M5.7,-5.7L31.1,-31.1M7.4,-3.1L40.7,-16.8M8,0L44,0M7.4,3.1L40.7,16.8M5.7,5.7L31.1,31.1M3.1,7.4L16.8,40.7M0,8L0,44M-3.1,7.4L-16.8,40.7M-5.7,5.7L-31.1,31.1M-7.4,3.1L-40.7,16.8M-8,0L-44,0M-7.4,-3.1L-40.7,-16.8M-5.7,-5.7L-31.1,-31.1M-3.1,-7.4L-16.8,-40.7"/>
+    <circle r="7" fill="#b08a32" stroke="none"/>
+    </g>
+    <!-- east: a string of beads off the ring -->
+    <g fill="#c9a13b" stroke-width="2.4">
+    <path d="M107.4,0 H158" fill="none"/>
+    <circle cx="126" r="8"/><circle cx="146" r="7"/>
+    </g>
+    <!-- north: a gilt fleur-de-lis outside the ring -->
+    <g transform="translate(0,-105.4) scale(0.62)" fill="#c9a13b" stroke-width="3.6">
+    <path d="M0,-80 C8,-68 13,-54 7,-38 L-7,-38 C-13,-54 -8,-68 0,-80 Z M6,-30 C10,-50 26,-62 34,-52 C40,-44 34,-32 26,-34 C31,-38 30,-46 24,-46 C16,-46 12,-34 12,-26 Z M-6,-30 C-10,-50 -26,-62 -34,-52 C-40,-44 -34,-32 -26,-34 C-31,-38 -30,-46 -24,-46 C-16,-46 -12,-34 -12,-26 Z M-7,-38 L7,-38 L12,-26 L-12,-26 Z M-6,-18 L6,-18 L3,-4 L0,0 L-3,-4 Z M5,-18 C14,-16 20,-10 16,-2 C14,-8 10,-12 4,-12 Z M-5,-18 C-14,-16 -20,-10 -16,-2 C-14,-8 -10,-12 -4,-12 Z"/>
+    </g>
+  </g>
+</svg>
