@@ -1,10 +1,11 @@
 #!/usr/bin/env node
-// Times the built preview (_site/, `npm run build:preview`) in headless Chromium at tablet size,
-// 1024x768: a full redraw (placement, parchment and draw) and a pan frame (land and coast only),
+// Times the built preview (_site/, `npm run build:preview`) in headless Chromium: a full redraw (placement, parchment and draw) and a pan frame (land and coast only),
 // at each zoom given, over a coastal spot. Needs playwright-core and its Chromium, which the repo
 // does not depend on: `npm i --prefix /some/dir playwright-core && npx --prefix /some/dir
 // playwright-core install chromium-headless-shell`, then
-//   PLAYWRIGHT=/some/dir/node_modules/playwright-core/index.mjs node scripts/measure-preview.mjs [lat lon [zooms]]
+//   PLAYWRIGHT=/some/dir/node_modules/playwright-core/index.mjs node scripts/measure-preview.mjs [lat lon [zooms]] [flags]
+// Flags: --ornaments=on|off|both (default both; off sets the density slider to 0 before the page
+// draws) and --sizes=1440x900,1024x768 (default both: laptop and tablet).
 // Times are what the page reports (performance.now around the work), so they leave out the
 // browser's compositing after the call returns.
 
@@ -15,8 +16,12 @@ import path from 'node:path';
 
 const { chromium } = await import(process.env.PLAYWRIGHT ?? 'playwright-core');
 const site = fileURLToPath(new URL('../_site/', import.meta.url));
-const [lat = 44.41, lon = 8.93] = process.argv.slice(2, 4).map(Number);
-const zooms = (process.argv[4] ?? '9,10,11').split(',').map(Number);
+const flags = Object.fromEntries(process.argv.slice(2).filter((a) => a.startsWith('--')).map((a) => a.slice(2).split('=')));
+const args = process.argv.slice(2).filter((a) => !a.startsWith('--'));
+const [lat = 44.41, lon = 8.93] = args.slice(0, 2).map(Number);
+const zooms = (args[2] ?? '9,10,11').split(',').map(Number);
+const sizes = (flags.sizes ?? '1440x900,1024x768').split(',').map((s) => s.split('x').map(Number));
+const modes = (flags.ornaments ?? 'both') === 'both' ? ['on', 'off'] : [flags.ornaments];
 const REDRAWS = 5, DRAGS = 3, MOVES = 20;
 
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json', '.geojson': 'application/json', '.png': 'image/png', '.webp': 'image/webp', '.ttf': 'font/ttf' };
@@ -38,19 +43,22 @@ const num = (re, s) => Number(re.exec(s)?.[1]);
 
 const browser = await chromium.launch();
 const rows = [];
-for (const zoom of zooms) {
-  const page = await browser.newPage({ viewport: { width: 1024, height: 768 } });
+for (const [width, height] of sizes) for (const mode of modes) for (const zoom of zooms) {
+  const page = await browser.newPage({ viewport: { width, height } });
   fetched.clear();
-  await page.addInitScript(() => {
+  await page.addInitScript((off) => {
+    if (off) new MutationObserver((_, o) => { const d = document.getElementById('density'); if (d) { d.value = 0; o.disconnect(); } }).observe(document, { childList: true, subtree: true });
     window.statuses = [];
     addEventListener('DOMContentLoaded', () => new MutationObserver(() => window.statuses.push(document.getElementById('status').textContent))
       .observe(document.getElementById('status'), { childList: true, characterData: true, subtree: true }));
-  });
+  }, mode === 'off');
   const done = async (n) => { await page.waitForFunction((k) => window.statuses.filter((s) => s.includes('total')).length >= k, n, { timeout: 60000 }); };
   await page.goto(`${base}#map=${zoom}/${lat}/${lon}`);
   await done(1);
   const firstText = (await page.evaluate(() => window.statuses)).find((s) => s.includes('total'));
-  const bytes = [...fetched].filter(([u]) => u.includes('/geo/10m/')).reduce((s, [, b]) => s + b, 0);
+  const sum = (re) => [...fetched].filter(([u]) => re.test(u)).reduce((t, [, b]) => t + b, 0);
+  const bytes = { geo50: sum(/\/geo\/[^/]+\.geojson/), geo10: sum(/\/geo\/10m\//), packs: sum(/\/packs\//) };
+  if (mode === 'off' && (await page.inputValue('#density')) !== '0') throw new Error('density not 0: ornaments are on');
   for (let i = 0; i < REDRAWS; i++) {
     await page.evaluate(() => document.getElementById('density').dispatchEvent(new Event('input')));
     await done(2 + i);
@@ -81,14 +89,15 @@ for (const zoom of zooms) {
     await done(++placed); // let it place again before the next drag
   }
   const frames = (await page.evaluate(() => window.statuses)).map((s) => num(/frame (\d+) ms/, s)).filter(Number.isFinite);
-  rows.push({ zoom, spans, first: num(/total (\d+)/, firstText), load: num(/load (\d+)/, firstText), redraws, frames, bytes });
+  rows.push({ size: `${width}x${height}`, mode, zoom, spans, first: num(/total (\d+)/, firstText), load: num(/load (\d+)/, firstText), redraws, frames, bytes });
   await page.close();
 }
 await browser.close();
 server.close();
 
-console.log(`| Zoom | First draw, ms (of it, data load) | Redraw, ms: median / worst (${REDRAWS} runs) | Pan frame drawn, ms: median / worst | Pan frame painted, ms: median / worst (n) | 10m cells fetched |`);
-console.log('| ---: | ---: | ---: | ---: | ---: | ---: |');
+const kb = (b) => (b ? `${(b / 1024).toFixed(0)}` : '–');
+console.log(`| Size | Ornaments | Zoom | First draw, ms (of it, data load) | Redraw, ms: median / worst (${REDRAWS} runs) | Pan frame drawn, ms: median / worst | Pan frame painted, ms: median / worst (n) | 50m geo, KB | 10m cells, KB | Packs, KB |`);
+console.log('| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |');
 for (const r of rows) {
-  console.log(`| z${r.zoom} | ${r.first} (${r.load}) | ${stat(r.redraws)} | ${stat(r.frames)} | ${stat(r.spans)} (${r.spans.length}) | ${r.bytes ? `${(r.bytes / 1024).toFixed(0)} KB` : '–'} |`);
+  console.log(`| ${r.size} | ${r.mode} | z${r.zoom} | ${r.first} (${r.load}) | ${stat(r.redraws)} | ${stat(r.frames)} | ${stat(r.spans)} (${r.spans.length}) | ${kb(r.bytes.geo50)} | ${kb(r.bytes.geo10)} | ${kb(r.bytes.packs)} |`);
 }
