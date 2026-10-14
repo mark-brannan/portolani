@@ -171,17 +171,137 @@
       }
     },
     {
-      "id": "town-aguiar",
+      "id": "town-aguiar-venice",
       "kind": "town",
       "style": "aguiar",
-      "file": "town-aguiar.png",
+      "file": "town-aguiar-venice.png",
       "anchor": [0.5, 0.5],
-      "sizePx": 60,
+      "sizePx": 84,
       "bands": [0, 1],
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Jorge_Aguiar_1492_MR.jpg",
         "page": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg",
-        "crop": [2306, 2351, 2447, 2464]
+        "crop": [2931, 731, 3158, 887]
+      },
+      "heightPx": 84
+    },
+    {
+      "id": "town-aguiar-genoa",
+      "kind": "town",
+      "style": "aguiar",
+      "file": "town-aguiar-genoa.png",
+      "anchor": [0.5, 0.5],
+      "sizePx": 80,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Jorge_Aguiar_1492_MR.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg",
+        "crop": [2764, 883, 2937, 1007]
+      },
+      "heightPx": 80
+    },
+    {
+      "id": "town-aguiar-lisbon",
+      "kind": "town",
+      "style": "aguiar",
+      "file": "town-aguiar-lisbon.png",
+      "anchor": [0.5, 0.5],
+      "sizePx": 72,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Jorge_Aguiar_1492_MR.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg",
+        "crop": [1839, 1473, 1957, 1572]
+      },
+      "heightPx": 72
+    },
+    {
+      "id": "town-aguiar-lake",
+      "kind": "town",
+      "style": "aguiar",
+      "file": "town-aguiar-lake.png",
+      "anchor": [0.5, 0.5],
+      "sizePx": 72,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Jorge_Aguiar_1492_MR.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg",
+        "crop": [2327, 2373, 2429, 2451]
+      },
+      "heightPx": 72
+    },
+    {
+      "id": "town-aguiar-lake-moat",
+      "kind": "town",
+      "style": "aguiar",
+      "file": "town-aguiar-lake-moat.png",
+      "anchor": [0.5, 0.5],
+      "sizePx": 84,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Jorge_Aguiar_1492_MR.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg",
+        "crop": [2303, 2359, 2447, 2485]
+      },
+      "heightPx": 84
+    },
+    {
+      "id": "town-aguiar-smina",
+      "kind": "town",
+      "style": "aguiar",
+      "file": "town-aguiar-smina.png",
+      "anchor": [0.5, 0.5],
+      "sizePx": 72,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Jorge_Aguiar_1492_MR.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg",
+        "crop": [2934, 3087, 3065, 3197]
+      },
+      "heightPx": 72
+    },
+    {
+      "id": "town-aguiar-jerusalem",
+      "kind": "town",
+      "style": "aguiar",
+      "file": "town-aguiar-jerusalem.png",
+      "anchor": [0.5, 0.5],
+      "sizePx": 72,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Jorge_Aguiar_1492_MR.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg",
+        "crop": [4714, 1626, 4811, 1707]
+      },
+      "heightPx": 72
+    },
+    {
+      "id": "town-aguiar-ceuta",
+      "kind": "town",
+      "style": "aguiar",
+      "file": "town-aguiar-ceuta.png",
+      "anchor": [0.5, 0.5],
+      "sizePx": 56,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Jorge_Aguiar_1492_MR.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg",
+        "crop": [2019, 1912, 2081, 1998]
+      },
+      "heightPx": 56
+    },
+    {
+      "id": "town-aguiar-avignon",
+      "kind": "town",
+      "style": "aguiar",
+      "file": "town-aguiar-avignon.png",
+      "anchor": [0.5, 0.5],
+      "sizePx": 48,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Jorge_Aguiar_1492_MR.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg",
+        "crop": [2354, 1028, 2444, 1085]
       },
       "heightPx": 48
     },
