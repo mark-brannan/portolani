@@ -42,8 +42,7 @@ renderer stands a town at its `sizePx` in px, flag to foot, times 1.25 for a chi
 
 ## SVG traces: state after the first pass
 
-Traced by three subagents, each at least two look-and-fix rounds against its overlay. Good on the
-scan: venice, lake, smina, ceuta, jerusalem. Rough first passes: genoa (towers as boxes, the mole
+Good on the scan: venice, lake, smina, ceuta, jerusalem. Rough first passes: genoa (towers as boxes, the mole
 right) and lisbon (buildings float on the hill). Avignon traces the crop as it is, which still
 leans about 19 degrees: the sprite's `rotate: -14` is not enough, so the raster and the trace both
-want a second deskew. None of these is wired into a pack yet.
+want a second deskew. Lake-moat is not traced. None of these is wired into a pack yet.
