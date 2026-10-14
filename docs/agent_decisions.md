@@ -30,3 +30,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t071924z
 - Goldens render with the scale bar off, so they do not move with scale styling Undo: drop scale:'off' in test/golden.test.mjs, npm run golden ([#53](https://github.com/mark-brannan/portolani/pull/53))
+
+### 20261014t082135z
+- Cartouche corner order: open sea, then empty land, then any coast; land only breaks ties (coast*1000 + land) Undo: change the weights in the corner score in scripts/scene.mjs ([#62](https://github.com/mark-brannan/portolani/pull/62))
