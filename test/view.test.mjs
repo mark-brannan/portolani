@@ -44,6 +44,10 @@ test('a moving view draws from a band\'s cells only while it still picks that ba
   const fine = { ...cells, detail: { ...cells.detail, band: 'h' } };
   assert.ok(covers(fine, { zoom: 10.5, lat: 44.4, lon: 8.9 }));
   assert.ok(!covers(fine, { zoom: 9.5, lat: 44.4, lon: 8.9 })); // back out to 10m
+  assert.ok(!covers(fine, { zoom: 12.5, lat: 44.4, lon: 8.9 })); // into the "f" band
+  const full = { ...cells, detail: { ...cells.detail, band: 'f' } };
+  assert.ok(covers(full, { zoom: 14.5, lat: 44.4, lon: 8.9 }));
+  assert.ok(!covers(full, { zoom: 11.5, lat: 44.4, lon: 8.9 })); // back out to "h"
 });
 
 test('in every projection a drag, a zoom and their reverses return to the same view', () => {

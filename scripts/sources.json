@@ -18,6 +18,14 @@
       "note": "(27,943,663 bytes; the towns' urban footprints, drawn as city plans)"
     },
     {
+      "id": "gshhg-shp",
+      "file": "gshhg-shp-2.3.7.zip",
+      "url": "https://www.soest.hawaii.edu/pwessel/gshhg/gshhg-shp-2.3.7.zip",
+      "sha256": "8dbbe7e071e77e9e75f2d639239099ebca8d5c16d6a07df8169729d49f15cf41",
+      "rights": "Wessel and Smith, LGPL-3.0-or-later",
+      "note": "(149,157,845 bytes; GSHHG 2.3.7 \"f\" land, `GSHHS_shp/f/GSHHS_f_L1.shp`, cut into the close-view cells past z12)"
+    },
+    {
       "id": "im-fell-english",
       "file": "IMFeENrm28P.ttf",
       "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/imfellenglish/IMFeENrm28P.ttf",

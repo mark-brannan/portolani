@@ -7,8 +7,9 @@
 // the ASSETS.md table: re-pin both together. The 50m GeoJSON ships whole, since the map can be
 // moved anywhere in the world; places keep only the properties the scene reads. The 10m land and
 // coast, for close views, ship cut into 5-degree cells (geo/10m/<xi>_<yi>.json, listed in
-// geo/10m/index.json), and GSHHG "h" land into 1-degree cells (geo/h/), when the installed
-// coastlines carries it, so a close view fetches only the cells around it. The names the chart
+// geo/10m/index.json), GSHHG "h" land into 1-degree cells (geo/h/), when the installed
+// coastlines carries it, and GSHHG "f" land into half-degree cells (geo/f/), read from the GSHHG
+// zip in downloads/, so a close view fetches only the cells around it. The names the chart
 // letters ship as geo/names-50m.json (scripts/names.mjs), and the urban footprints of its towns, the
 // Natural Earth 10m urban areas joined to the places, as geo/urban-10m.json (scripts/urban.mjs).
 
@@ -44,6 +45,8 @@ const SOURCES = [
   ['https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_geography_marine_polys.geojson', 'ne_50m_geography_marine_polys.geojson', '6fe58083e0cc5c7fad9e396970e28a8580bbd8770cfa4d1d7b5a34423e912f97', null],
   // read into geo/urban-10m.json below; too big for coastlines, it moves to a coastlines-10m once that exists
   ['https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_urban_areas.geojson', 'ne_10m_urban_areas.geojson', '5136ffd816a9b28c0f295e6797b4c03eaa421be80d78b90f542db4a932dd4497', null],
+  // GSHHG "f" land is read from the zip below; at 65 MB it is too big for the coastlines package
+  ['https://www.soest.hawaii.edu/pwessel/gshhg/gshhg-shp-2.3.7.zip', 'gshhg-shp-2.3.7.zip', '8dbbe7e071e77e9e75f2d639239099ebca8d5c16d6a07df8169729d49f15cf41', null],
 ];
 
 await mkdir(path.join(root, 'downloads'), { recursive: true });
@@ -92,7 +95,9 @@ console.log(`urban footprints: ${(urban.length / 1e6).toFixed(2)} MB`);
 async function writeBand(dir, cellDeg, geometry) {
   const cells = cutCells(geometry, cellDeg);
   await mkdir(path.join(out, 'geo', dir), { recursive: true });
-  await Promise.all([...cells].map(([k, c]) => writeFile(path.join(out, 'geo', dir, `${k}.json`), JSON.stringify(c))));
+  // in batches: "f" has some 70,000 cells, past a CI runner's open-file limit if written at once
+  const all = [...cells];
+  for (let i = 0; i < all.length; i += 512) await Promise.all(all.slice(i, i + 512).map(([k, c]) => writeFile(path.join(out, 'geo', dir, `${k}.json`), JSON.stringify(c))));
   await writeFile(path.join(out, 'geo', dir, 'index.json'), JSON.stringify({ cell: cellDeg, cells: [...cells.keys()] }));
   return cells.size;
 }
@@ -109,6 +114,20 @@ if (find(H_ID) && coastlines.shapefilePolygons) {
   const n = await writeBand('h', H_CELL_DEG, { land: landH, coast: landH.flat() });
   console.log(`GSHHG h: ${landH.length} polygons into ${n} cells of ${H_CELL_DEG} degree`);
 } else console.warn(`${H_ID} is not in this coastlines (${coastlines.manifest.sources?.gshhg ? 'entry' : 'source'} missing); the h band is skipped`);
+// GSHHG "f", the full resolution, the same way, from the zip coastlines pins for "h". Its zip reader
+// is not a package export, so it is loaded by file next to coastlines' entry point.
+const F_MEMBER = 'GSHHS_shp/f/GSHHS_f_L1.shp', F_CELL_DEG = 0.5; // must match scene.mjs
+const { zipMember } = await import(new URL('zip.js', import.meta.resolve('coastlines')));
+const gshhg = await readFile(path.join(root, 'downloads', 'gshhg-shp-2.3.7.zip'));
+if (coastlines.shapefilePolygons) {
+  const landF = coastlines.shapefilePolygons(zipMember(gshhg, F_MEMBER));
+  const n = await writeBand('f', F_CELL_DEG, { land: landF, coast: landF.flat() });
+  console.log(`GSHHG f: ${landF.length} polygons into ${n} cells of ${F_CELL_DEG} degree`);
+} else console.warn('this coastlines has no shapefilePolygons; the f band is skipped');
+// LGPL: the GSHHG notice and licence travel with the cells cut from it, read from the pinned zip
+for (const [id, member] of [['gshhg-licence', 'LICENSE.TXT'], ['gshhg-copying-lesser', 'COPYING.LESSERv3']]) {
+  await writeFile(path.join(out, 'geo', `${id}.txt`), zipMember(gshhg, member));
+}
 await cp(path.join(root, 'node_modules', 'coast-wright', 'lib'), path.join(out, 'coast-wright'), { recursive: true });
 await cp(path.join(root, 'public'), out, { recursive: true });
 await cp(path.join(root, 'scripts', 'scene.mjs'), path.join(out, 'scene.mjs'));

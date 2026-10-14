@@ -17,6 +17,12 @@ jobs:
       - uses: actions/setup-node@v7
         with: { node-version: '22' }
       - run: npm ci
+      # The pinned downloads, the 149 MB GSHHG zip among them; build:preview checks each sha256
+      # keyed on the sha256 pins alone, so an edit elsewhere in the script keeps the cache
+      - id: pins
+        run: echo "hash=$(grep -oE '[0-9a-f]{64}' scripts/build-preview.mjs | sha256sum | cut -c1-16)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v6
+        with: { path: downloads, key: "downloads-${{ steps.pins.outputs.hash }}" }
       # Assembles _site/: the browser-rendered mockup, with its data vendored.
       - run: npm run build:preview
       - uses: actions/upload-pages-artifact@v5
