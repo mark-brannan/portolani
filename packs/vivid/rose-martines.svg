@@ -3,7 +3,8 @@
        (Trinity College Cambridge R.4.50, https://trinitycollegelibrarycambridge.wordpress.com/2015/08/14/portolan-chart-of-the-mediterranean/)
        and the atlas of 1591 (Commons, Compass Rose Cropped from Martines Atlas 1591). Drawn, not traced:
        16 points (cardinals black, intercardinals vermilion, half-winds grey) with white dots cut along them,
-       a disc lettered with the winds in red and black, a cross at east, a rim of maroon tiles, and a black
+       a disc lettered with the winds in red and black (G S O L P M: Greco, Scirocco, Ostro, Libeccio,
+       Ponente, Maestro), a cross at east, a rim of maroon tiles, and a black
        fleur-de-lis with a green bar for the north. White ground for the renderer's `multiply`. -->
   <defs>
     <!-- cardinal: tip r 150, sides r 58 at 16 deg; north is shortened under the fleur -->
