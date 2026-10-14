@@ -6,7 +6,8 @@
 // against its sha256; the URLs and hashes below duplicate the ASSETS.md table: re-pin both
 // together. The 50m GeoJSON ships whole, since the map can be moved anywhere in the world; places
 // keep only the properties the scene reads. The 10m land and coast, for close views, ship cut into
-// 5-degree cells (geo/10m/<xi>_<yi>.json, listed in geo/10m/index.json), so a close view fetches
+// 5-degree cells (geo/10m/<xi>_<yi>.json, listed in geo/10m/index.json), and GSHHG "h" land into
+// 1-degree cells (geo/h/), when the installed coastlines carries it, so a close view fetches
 // only the cells around it.
 
 import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -14,15 +15,16 @@ import { existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { find, localUrl } from 'coastlines';
+import * as coastlines from 'coastlines';
 import { geojsonPolygons, geojsonRings } from 'coast-wright';
 import { cutCells } from './detail-cells.mjs';
+const { find, localUrl } = coastlines;
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const out = path.join(root, '_site');
 const GEO = ['ne-land-50m', 'ne-coastline-50m', 'ne-populated-places-50m'];
 const GEO_10M = ['ne-land-10m', 'ne-coastline-10m', 'ne-minor-islands-10m'];
-const CELL_DEG = 5; // must match scene.mjs
+const CELL_DEG = 5; // must match scene.mjs BANDS
 
 const KEEP = { 'ne-populated-places-50m': ['NAME', 'SCALERANK', 'POP_MAX'] };
 const slim = (geo, keys) => ({
@@ -59,12 +61,27 @@ for (const id of GEO) {
   const bytes = await readGeo(id);
   await writeFile(path.join(out, 'geo', `${id}.geojson`), id in KEEP ? JSON.stringify(slim(JSON.parse(bytes), KEEP[id])) : bytes);
 }
+// A band of detail cells: geo/<dir>/<xi>_<yi>.json and geo/<dir>/index.json.
+async function writeBand(dir, cellDeg, geometry) {
+  const cells = cutCells(geometry, cellDeg);
+  await mkdir(path.join(out, 'geo', dir), { recursive: true });
+  await Promise.all([...cells].map(([k, c]) => writeFile(path.join(out, 'geo', dir, `${k}.json`), JSON.stringify(c))));
+  await writeFile(path.join(out, 'geo', dir, 'index.json'), JSON.stringify({ cell: cellDeg, cells: [...cells.keys()] }));
+  return cells.size;
+}
 // 10m coast is the coastline file plus the minor islands' outlines, which 10m land fills but the
 // coastline file mostly leaves out.
 const [land10, coast10, minor10] = await Promise.all(GEO_10M.map(async (id) => JSON.parse(await readGeo(id))));
-const cells = cutCells({ land: geojsonPolygons(land10), coast: [...geojsonRings(coast10), ...geojsonPolygons(minor10).map((p) => p[0])] }, CELL_DEG);
-await Promise.all([...cells].map(([k, c]) => writeFile(path.join(out, 'geo', '10m', `${k}.json`), JSON.stringify(c))));
-await writeFile(path.join(out, 'geo', '10m', 'index.json'), JSON.stringify({ cell: CELL_DEG, cells: [...cells.keys()] }));
+await writeBand('10m', CELL_DEG, { land: geojsonPolygons(land10), coast: [...geojsonRings(coast10), ...geojsonPolygons(minor10).map((p) => p[0])] });
+// GSHHG "h" ships polygons only, as a shapefile: the coast is every ring's outline, split at cell
+// edges by cutCells. A coastlines without the entry (before 0.0.4) builds a site without the band,
+// and the scene then stays on 10m cells past z12.
+const H_ID = 'gshhg-land-h', H_CELL_DEG = 1; // must match scene.mjs
+if (find(H_ID) && coastlines.shapefilePolygons) {
+  const landH = coastlines.shapefilePolygons(await readGeo(H_ID));
+  const n = await writeBand('h', H_CELL_DEG, { land: landH, coast: landH.flat() });
+  console.log(`GSHHG h: ${landH.length} polygons into ${n} cells of ${H_CELL_DEG} degree`);
+} else console.warn(`${H_ID} is not in this coastlines (${coastlines.manifest.sources?.gshhg ? 'entry' : 'source'} missing); the h band is skipped`);
 await cp(path.join(root, 'node_modules', 'coast-wright', 'lib'), path.join(out, 'coast-wright'), { recursive: true });
 await cp(path.join(root, 'public'), out, { recursive: true });
 await cp(path.join(root, 'scripts', 'scene.mjs'), path.join(out, 'scene.mjs'));
