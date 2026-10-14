@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-160 -160 320 320" width="320" height="320">
+  <!-- After the small roses of Salvator Oliva's portolan atlas, Marseille 1619 (Huntington HM 2515).
+       Drawn, not traced, and simplified to read at 110 px: gilt cardinals, blue intercardinals, green
+       half-winds, a red-and-blue circle, eight gilt roundels and a blue fleur-de-lis for the north. -->
+  <defs>
+    <path id="cL" d="M0,-152 L-11.8,-60.9 L0,-0 Z"/>
+    <path id="cR" d="M0,-152 L11.8,-60.9 L0,-0 Z"/>
+    <path id="hL" d="M0,-136 L-8.9,-63.4 L0,-0 Z"/>
+    <path id="hR" d="M0,-136 L8.9,-63.4 L0,-0 Z"/>
+    <path id="dL" d="M0,-128 L-10,-63.2 L0,-0 Z"/>
+    <path id="dR" d="M0,-128 L10,-63.2 L0,-0 Z"/>
+    <g id="roundel"><circle cy="-50" r="9" fill="#dcb85a" stroke-width="2.2"/><circle cy="-50" r="2.4" fill="#2a1d12" stroke="none"/></g>
+    <g id="cG"><use xlink:href="#cL" fill="#e9cf7f"/><use xlink:href="#cR" fill="#b08a32"/></g>
+    <g id="hGr"><use xlink:href="#hL" fill="#a9c48e"/><use xlink:href="#hR" fill="#5d8a3a"/></g>
+    <g id="dL"><use xlink:href="#dL" fill="#a9bede"/><use xlink:href="#dR" fill="#3d62a8"/></g>
+  </defs>
+  <g stroke="#2a1d12" stroke-width="2" stroke-linejoin="round">
+    <g fill="none" stroke-width="8">
+    <path stroke="#d8432a" d="M-10.2,-145.6 A146,146 0 0 1 145.2,-15.3"/><path stroke="#5f7cae" d="M145.2,-15.3 A146,146 0 0 1 0,146"/><path stroke="#d8432a" d="M0,146 A146,146 0 0 1 -144.6,20.3"/><path stroke="#5f7cae" d="M-144.6,20.3 A146,146 0 0 1 -10.2,-145.6"/>
+    </g>
+    <use xlink:href="#hGr" transform="rotate(22.5)"/><use xlink:href="#hGr" transform="rotate(67.5)"/><use xlink:href="#hGr" transform="rotate(112.5)"/><use xlink:href="#hGr" transform="rotate(157.5)"/>
+    <use xlink:href="#hGr" transform="rotate(202.5)"/><use xlink:href="#hGr" transform="rotate(247.5)"/><use xlink:href="#hGr" transform="rotate(292.5)"/><use xlink:href="#hGr" transform="rotate(337.5)"/>
+    <use xlink:href="#dL" transform="rotate(45)"/><use xlink:href="#dL" transform="rotate(135)"/><use xlink:href="#dL" transform="rotate(225)"/><use xlink:href="#dL" transform="rotate(315)"/>
+    <use xlink:href="#cG" transform="rotate(90)"/><use xlink:href="#cG" transform="rotate(180)"/><use xlink:href="#cG" transform="rotate(270)"/>
+    <circle r="66" fill="#ffffff" stroke-width="2.4"/>
+    <use xlink:href="#roundel" transform="rotate(22.5)"/><use xlink:href="#roundel" transform="rotate(67.5)"/><use xlink:href="#roundel" transform="rotate(112.5)"/><use xlink:href="#roundel" transform="rotate(157.5)"/>
+    <use xlink:href="#roundel" transform="rotate(202.5)"/><use xlink:href="#roundel" transform="rotate(247.5)"/><use xlink:href="#roundel" transform="rotate(292.5)"/><use xlink:href="#roundel" transform="rotate(337.5)"/>
+    <path stroke-width="1.6" stroke="#d8432a" d="M0,-30V30M-30,0H30M-21,-21L21,21M21,-21L-21,21"/>
+    <circle r="30" fill="none" stroke-width="2"/>
+    <g fill="#3d62a8" stroke="#1f3a72" stroke-width="2">
+    <path d="M-5,-64 L0,-74 L5,-64 L4,-88 L0,-96 L-4,-88 Z"/>
+    <g transform="translate(0,-90) scale(0.82)"><path d="M0,-80 C8,-68 13,-54 7,-38 L-7,-38 C-13,-54 -8,-68 0,-80 Z M6,-30 C10,-50 26,-62 34,-52 C40,-44 34,-32 26,-34 C31,-38 30,-46 24,-46 C16,-46 12,-34 12,-26 Z M-6,-30 C-10,-50 -26,-62 -34,-52 C-40,-44 -34,-32 -26,-34 C-31,-38 -30,-46 -24,-46 C-16,-46 -12,-34 -12,-26 Z M-7,-38 L7,-38 L12,-26 L-12,-26 Z M-6,-18 L6,-18 L3,-4 L0,0 L-3,-4 Z M5,-18 C14,-16 20,-10 16,-2 C14,-8 10,-12 4,-12 Z M-5,-18 C-14,-16 -20,-10 -16,-2 C-14,-8 -10,-12 -4,-12 Z"/></g>
+    </g>
+  </g>
+</svg>

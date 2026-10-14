@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-160 -160 320 320" width="320" height="320">
+  <!-- After the large wind roses of Joan Martines, Messina: the portolan chart of 1584
+       (Trinity College Cambridge R.4.50, https://trinitycollegelibrarycambridge.wordpress.com/2015/08/14/portolan-chart-of-the-mediterranean/)
+       and the atlas of 1591 (Commons, Compass Rose Cropped from Martines Atlas 1591). Drawn, not traced:
+       16 points (cardinals black, intercardinals vermilion, half-winds grey) with white dots cut along them,
+       a disc lettered with the winds in red and black (G S O L P M: Greco, Scirocco, Ostro, Libeccio,
+       Ponente, Maestro), a cross at east, a rim of maroon tiles, and a black
+       fleur-de-lis with a green bar for the north. White ground for the renderer's `multiply`. -->
+  <defs>
+    <!-- cardinal: tip r 150, sides r 58 at 16 deg; north is shortened under the fleur -->
+    <path id="cL" d="M0,-150 L-16,-55.8 L0,-0 Z"/>
+    <path id="cR" d="M0,-150 L16,-55.8 L0,-0 Z"/>
+    <path id="nL" d="M0,-102 L-16,-55.8 L0,-0 Z"/>
+    <path id="nR" d="M0,-102 L16,-55.8 L0,-0 Z"/>
+    <!-- intercardinal: tip r 138, sides r 58 at 14 deg -->
+    <path id="dL" d="M0,-138 L-14,-56.3 L0,-0 Z"/>
+    <path id="dR" d="M0,-138 L14,-56.3 L0,-0 Z"/>
+    <!-- half-wind: tip r 114, sides r 64 at 8 deg -->
+    <path id="hL" d="M0,-114 L-8.9,-63.4 L0,-0 Z"/>
+    <path id="hR" d="M0,-114 L8.9,-63.4 L0,-0 Z"/>
+    <!-- rim tile: a maroon triangle hung from the outer ring, with a white hole -->
+    <path id="tile" d="M-17.5,-151 L0,-122 L17.5,-151 A152,152 0 0 0 -17.5,-151 Z"/>
+    <g id="dots"><circle cx="-9" cy="-72" r="4.2"/><circle cx="9" cy="-72" r="4.2"/></g>
+    <g id="cK"><use xlink:href="#cL" fill="#3a2a1c"/><use xlink:href="#cR" fill="#120c07"/></g>
+    <g id="dV"><use xlink:href="#dL" fill="#d8432a"/><use xlink:href="#dR" fill="#a92a17"/></g>
+    <g id="hG"><use xlink:href="#hL" fill="#b4b4b0"/><use xlink:href="#hR" fill="#6d6d6a"/></g>
+  </defs>
+  <g stroke="#2a1d12" stroke-width="1.1" stroke-linejoin="round">
+    <g fill="none" stroke-width="1.4"><circle r="152"/><circle r="146" stroke-width="0.8"/></g>
+    <!-- 16 maroon tiles in the rim, between the points -->
+    <g fill="#8a2333">
+    <use xlink:href="#tile" transform="rotate(11.25)"/><use xlink:href="#tile" transform="rotate(33.75)"/><use xlink:href="#tile" transform="rotate(56.25)"/><use xlink:href="#tile" transform="rotate(78.75)"/>
+    <use xlink:href="#tile" transform="rotate(101.25)"/><use xlink:href="#tile" transform="rotate(123.75)"/><use xlink:href="#tile" transform="rotate(146.25)"/><use xlink:href="#tile" transform="rotate(168.75)"/>
+    <use xlink:href="#tile" transform="rotate(191.25)"/><use xlink:href="#tile" transform="rotate(213.75)"/><use xlink:href="#tile" transform="rotate(236.25)"/><use xlink:href="#tile" transform="rotate(258.75)"/>
+    <use xlink:href="#tile" transform="rotate(281.25)"/><use xlink:href="#tile" transform="rotate(303.75)"/><use xlink:href="#tile" transform="rotate(326.25)"/><use xlink:href="#tile" transform="rotate(348.75)"/>
+    </g>
+    <g fill="#ffffff" stroke-width="0.9"><circle cx="27.1" cy="-136.3" r="3.6"/><circle cx="77.2" cy="-115.6" r="3.6"/><circle cx="115.6" cy="-77.2" r="3.6"/><circle cx="136.3" cy="-27.1" r="3.6"/><circle cx="136.3" cy="27.1" r="3.6"/><circle cx="115.6" cy="77.2" r="3.6"/><circle cx="77.2" cy="115.6" r="3.6"/><circle cx="27.1" cy="136.3" r="3.6"/><circle cx="-27.1" cy="136.3" r="3.6"/><circle cx="-77.2" cy="115.6" r="3.6"/><circle cx="-115.6" cy="77.2" r="3.6"/><circle cx="-136.3" cy="27.1" r="3.6"/><circle cx="-136.3" cy="-27.1" r="3.6"/><circle cx="-115.6" cy="-77.2" r="3.6"/><circle cx="-77.2" cy="-115.6" r="3.6"/><circle cx="-27.1" cy="-136.3" r="3.6"/></g>
+    <!-- 8 grey half-winds, 4 red intercardinals, 4 black cardinals (north short, under the fleur) -->
+    <use xlink:href="#hG" transform="rotate(22.5)"/><use xlink:href="#hG" transform="rotate(67.5)"/><use xlink:href="#hG" transform="rotate(112.5)"/><use xlink:href="#hG" transform="rotate(157.5)"/>
+    <use xlink:href="#hG" transform="rotate(202.5)"/><use xlink:href="#hG" transform="rotate(247.5)"/><use xlink:href="#hG" transform="rotate(292.5)"/><use xlink:href="#hG" transform="rotate(337.5)"/>
+    <use xlink:href="#dV" transform="rotate(45)"/><use xlink:href="#dV" transform="rotate(135)"/><use xlink:href="#dV" transform="rotate(225)"/><use xlink:href="#dV" transform="rotate(315)"/>
+    <use xlink:href="#cK" transform="rotate(90)"/><use xlink:href="#cK" transform="rotate(180)"/><use xlink:href="#cK" transform="rotate(270)"/>
+    <use xlink:href="#nL" fill="#3a2a1c"/><use xlink:href="#nR" fill="#120c07"/>
+    <!-- white dots cut along the points -->
+    <g fill="#ffffff" stroke="none">
+    <use xlink:href="#dots"/><use xlink:href="#dots" transform="rotate(45)"/><use xlink:href="#dots" transform="rotate(90)"/><use xlink:href="#dots" transform="rotate(135)"/>
+    <use xlink:href="#dots" transform="rotate(180)"/><use xlink:href="#dots" transform="rotate(225)"/><use xlink:href="#dots" transform="rotate(270)"/><use xlink:href="#dots" transform="rotate(315)"/>
+    <circle cx="104" cy="0" r="4.2"/><circle cx="0" cy="104" r="4.2"/><circle cx="-104" cy="0" r="4.2"/>
+    <circle cx="70.7" cy="-70.7" r="3.6"/><circle cx="70.7" cy="70.7" r="3.6"/><circle cx="-70.7" cy="70.7" r="3.6"/><circle cx="-70.7" cy="-70.7" r="3.6"/>
+    </g>
+    <!-- lettered disc: double ring, red and black wind letters, hub of rhumbs -->
+    <circle r="56" fill="#ffffff" stroke-width="1.6"/><circle r="51" fill="none"/>
+    <circle r="30" fill="none"/><circle r="26" fill="none" stroke-width="1.6"/>
+    <g stroke-width="0.8">
+    <path stroke="#d8432a" d="M9.6,-23.1L-9.6,23.1M23.1,-9.6L-23.1,9.6M23.1,9.6L-23.1,-9.6M9.6,23.1L-9.6,-23.1"/>
+    <path stroke="#4f9a5a" d="M0,-25L0,25M17.7,-17.7L-17.7,17.7M25,0L-25,0M17.7,17.7L-17.7,-17.7"/>
+    <path stroke="#d8432a" d="M9.6,-23.1L-9.6,23.1M23.1,-9.6L-23.1,9.6M23.1,9.6L-23.1,-9.6M9.6,23.1L-9.6,-23.1"/>
+    </g>
+    <g fill="none" stroke-width="2.6" stroke-linecap="round">
+    <path d="M5,-5 C2,-8 -6,-8 -6,0 C-6,7 3,8 6,3 L6,1 L1,1" transform="translate(29,-29)" stroke="#d8432a"/>
+    <path d="M5,-5 C2,-8 -5,-7 -4,-2 C-3,1 5,0 5,4 C5,8 -2,9 -5,5" transform="translate(29,29)" stroke="#d8432a"/>
+    <path d="M0,-7 C8,-7 8,7 0,7 C-8,7 -8,-7 0,-7 Z" transform="translate(0,41)" stroke="#2a1d12"/>
+    <path d="M-5,-7 H0 M-3,-7 V6 H5 V3" transform="translate(-29,29)" stroke="#d8432a"/>
+    <path d="M-6,7 H-1 M-4,7 V-7 H1 C7,-7 7,1 1,1 H-4" transform="translate(-41,0)" stroke="#2a1d12"/>
+    <path d="M-7,6 V-6 L0,2 L7,-6 V6" transform="translate(-29,-29)" stroke="#d8432a"/>
+    </g>
+    <!-- a cross for the east (levante) -->
+    <path transform="translate(41,0)" fill="#2a1d12" stroke="none" d="M-2.6,-9 H2.6 L1.4,-1.4 L9,-2.6 V2.6 L1.4,1.4 L2.6,9 H-2.6 L-1.4,1.4 L-9,2.6 V-2.6 L-1.4,-1.4 Z"/>
+    <circle r="2.4" fill="#d8432a"/>
+    <!-- fleur-de-lis for the north, black with a green bar -->
+    <g transform="translate(0,-100) scale(0.72)">
+    <path fill="#2a1d12" stroke="none" d="M0,-80 C8,-68 13,-54 7,-38 L-7,-38 C-13,-54 -8,-68 0,-80 Z M6,-30 C10,-50 26,-62 34,-52 C40,-44 34,-32 26,-34 C31,-38 30,-46 24,-46 C16,-46 12,-34 12,-26 Z M-6,-30 C-10,-50 -26,-62 -34,-52 C-40,-44 -34,-32 -26,-34 C-31,-38 -30,-46 -24,-46 C-16,-46 -12,-34 -12,-26 Z M-7,-38 L7,-38 L12,-26 L-12,-26 Z M-6,-18 L6,-18 L3,-4 L0,0 L-3,-4 Z M5,-18 C14,-16 20,-10 16,-2 C14,-8 10,-12 4,-12 Z M-5,-18 C-14,-16 -20,-10 -16,-2 C-14,-8 -10,-12 -4,-12 Z"/>
+    <path fill="#4f9a5a" d="M-16,-26 H16 V-18 H-16 Z" stroke-width="1.4"/>
+    </g>
+  </g>
+</svg>

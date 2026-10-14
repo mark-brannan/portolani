@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-160 -160 320 320" width="320" height="320">
+  <!-- After the small 32-point roses of Joan Martines's portolan chart, Messina 1584
+       (Trinity College Cambridge R.4.50, https://trinitycollegelibrarycambridge.wordpress.com/2015/08/14/portolan-chart-of-the-mediterranean/).
+       Drawn, not traced: grey winds, vermilion half-winds, pale quarter-winds, a double ring with a cream
+       band and a black arrowhead for the north. Thick enough to read at 110 px. White ground for `multiply`. -->
+  <defs>
+    <!-- wind: tip r 150, sides r 52 at 10 deg; half-wind tip r 124; quarter tip r 104 -->
+    <path id="wL" d="M0,-150 L-9,-51.2 L0,-0 Z"/>
+    <path id="wR" d="M0,-150 L9,-51.2 L0,-0 Z"/>
+    <path id="hL" d="M0,-124 L-7.3,-55.5 L0,-0 Z"/>
+    <path id="hR" d="M0,-124 L7.3,-55.5 L0,-0 Z"/>
+    <path id="qL" d="M0,-104 L-5.4,-61.8 L0,-0 Z"/>
+    <path id="qR" d="M0,-104 L5.4,-61.8 L0,-0 Z"/>
+    <g id="wG"><use xlink:href="#wL" fill="#b4b4b0"/><use xlink:href="#wR" fill="#6d6d6a"/></g>
+    <g id="hV"><use xlink:href="#hL" fill="#d8432a"/><use xlink:href="#hR" fill="#a92a17"/></g>
+    <g id="qP"><use xlink:href="#qL" fill="#f0a48e"/><use xlink:href="#qR" fill="#d07058"/></g>
+  </defs>
+  <g stroke="#2a1d12" stroke-width="2" stroke-linejoin="round">
+    <!-- 32 spikes: quarter-winds pale red, half-winds vermilion, winds grey; north black and longer -->
+    <use xlink:href="#qP" transform="rotate(11.25)"/><use xlink:href="#qP" transform="rotate(33.75)"/><use xlink:href="#qP" transform="rotate(56.25)"/><use xlink:href="#qP" transform="rotate(78.75)"/>
+    <use xlink:href="#qP" transform="rotate(101.25)"/><use xlink:href="#qP" transform="rotate(123.75)"/><use xlink:href="#qP" transform="rotate(146.25)"/><use xlink:href="#qP" transform="rotate(168.75)"/>
+    <use xlink:href="#qP" transform="rotate(191.25)"/><use xlink:href="#qP" transform="rotate(213.75)"/><use xlink:href="#qP" transform="rotate(236.25)"/><use xlink:href="#qP" transform="rotate(258.75)"/>
+    <use xlink:href="#qP" transform="rotate(281.25)"/><use xlink:href="#qP" transform="rotate(303.75)"/><use xlink:href="#qP" transform="rotate(326.25)"/><use xlink:href="#qP" transform="rotate(348.75)"/>
+    <use xlink:href="#hV" transform="rotate(22.5)"/><use xlink:href="#hV" transform="rotate(67.5)"/><use xlink:href="#hV" transform="rotate(112.5)"/><use xlink:href="#hV" transform="rotate(157.5)"/>
+    <use xlink:href="#hV" transform="rotate(202.5)"/><use xlink:href="#hV" transform="rotate(247.5)"/><use xlink:href="#hV" transform="rotate(292.5)"/><use xlink:href="#hV" transform="rotate(337.5)"/>
+    <use xlink:href="#wG" transform="rotate(45)"/><use xlink:href="#wG" transform="rotate(90)"/><use xlink:href="#wG" transform="rotate(135)"/><use xlink:href="#wG" transform="rotate(180)"/>
+    <use xlink:href="#wG" transform="rotate(225)"/><use xlink:href="#wG" transform="rotate(270)"/><use xlink:href="#wG" transform="rotate(315)"/>
+    <g transform="scale(1,1.05)"><use xlink:href="#wL" fill="#3a2a1c"/><use xlink:href="#wR" fill="#120c07"/></g>
+    <!-- double ring with a cream band -->
+    <circle r="72" fill="#efe0b6" stroke-width="2.4"/><circle r="60" fill="#ffffff" stroke-width="2.4"/>
+    <path stroke-width="1.4" stroke="#d8432a" d="M22.2,-53.6L-22.2,53.6M53.6,-22.2L-53.6,22.2M53.6,22.2L-53.6,-22.2M22.2,53.6L-22.2,-53.6"/>
+    <path stroke-width="1.4" d="M0,-58V58M-58,0H58M-41,-41L41,41M41,-41L-41,41"/>
+    <!-- black arrowhead at the centre, pointing north -->
+    <path fill="#2a1d12" stroke-width="2" d="M0,-50 L17,14 L0,4 L-17,14 Z"/>
+  </g>
+</svg>

@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-160 -160 320 320" width="320" height="320">
+  <!-- After the roses of Guillaume Brouscon's nautical almanac, Le Conquet 1543 (Huntington Library HM 46;
+       Commons: Center compass rose in 1543 France, from Guillaume Brouscon). Drawn, not traced, and simplified
+       to read at 110 px: eight points (cardinals black and blue, intercardinals vermilion), a rim of 16 gilt
+       tongues with green wedges, and a gilt boss with red tracery. -->
+  <defs>
+    <!-- rim tile: a gilt tongue with a red sprig; every other gap filled with a green wedge -->
+    <path id="tongue" d="M-18.3,-110.5 L-23.3,-136 Q0,-156 23.3,-136 L18.3,-110.5 Z"/>
+    <path id="green" d="M16.3,-149.1 A150,150 0 0 1 42,-144 L24.2,-121.6 Z"/>
+    <g id="mark"><path d="M0,-134V-120" stroke="#d8432a" stroke-width="3.6" stroke-linecap="round"/></g>
+    
+    <!-- cardinal: tip r 152, sides r 46; intercardinal tip r 112 -->
+    <path id="cL" d="M0,-152 L-11.9,-44.4 L0,-0 Z"/>
+    <path id="cR" d="M0,-152 L11.9,-44.4 L0,-0 Z"/>
+    <path id="dL" d="M0,-112 L-11.9,-44.4 L0,-0 Z"/>
+    <path id="dR" d="M0,-112 L11.9,-44.4 L0,-0 Z"/>
+    <g id="cKL"><use xlink:href="#cL" fill="#1d1610"/><use xlink:href="#cR" fill="#2f5aa6"/></g>
+    <g id="dV"><use xlink:href="#dL" fill="#e0612e"/><use xlink:href="#dR" fill="#a92a17"/></g>
+  </defs>
+  <g stroke="#2a1d12" stroke-width="2.2" stroke-linejoin="round">
+    <!-- outer rings -->
+    <g fill="none"><circle r="155" stroke-width="2.6"/></g>
+    <!-- the rim: vermilion ground, 16 gilt tongues, green wedges in every other gap -->
+    <path fill="#d8432a" stroke-width="2.2" fill-rule="evenodd" d="M0,-150A150,150 0 1 1 0,150A150,150 0 1 1 0,-150ZM0,-112A112,112 0 1 0 0,112A112,112 0 1 0 0,-112Z"/>
+    <g fill="#4f9a5a" stroke-width="1.4">
+    <use xlink:href="#green"/><use xlink:href="#green" transform="rotate(45)"/><use xlink:href="#green" transform="rotate(90)"/><use xlink:href="#green" transform="rotate(135)"/>
+    <use xlink:href="#green" transform="rotate(180)"/><use xlink:href="#green" transform="rotate(225)"/><use xlink:href="#green" transform="rotate(270)"/><use xlink:href="#green" transform="rotate(315)"/>
+    </g>
+    <g fill="#dcb85a" stroke-width="1.6">
+    <use xlink:href="#tongue"/><use xlink:href="#tongue" transform="rotate(22.5)"/><use xlink:href="#tongue" transform="rotate(45)"/><use xlink:href="#tongue" transform="rotate(67.5)"/>
+    <use xlink:href="#tongue" transform="rotate(90)"/><use xlink:href="#tongue" transform="rotate(112.5)"/><use xlink:href="#tongue" transform="rotate(135)"/><use xlink:href="#tongue" transform="rotate(157.5)"/>
+    <use xlink:href="#tongue" transform="rotate(180)"/><use xlink:href="#tongue" transform="rotate(202.5)"/><use xlink:href="#tongue" transform="rotate(225)"/><use xlink:href="#tongue" transform="rotate(247.5)"/>
+    <use xlink:href="#tongue" transform="rotate(270)"/><use xlink:href="#tongue" transform="rotate(292.5)"/><use xlink:href="#tongue" transform="rotate(315)"/><use xlink:href="#tongue" transform="rotate(337.5)"/>
+    </g>
+    <use xlink:href="#mark"/><use xlink:href="#mark" transform="rotate(22.5)"/><use xlink:href="#mark" transform="rotate(45)"/><use xlink:href="#mark" transform="rotate(67.5)"/>
+    <use xlink:href="#mark" transform="rotate(90)"/><use xlink:href="#mark" transform="rotate(112.5)"/><use xlink:href="#mark" transform="rotate(135)"/><use xlink:href="#mark" transform="rotate(157.5)"/>
+    <use xlink:href="#mark" transform="rotate(180)"/><use xlink:href="#mark" transform="rotate(202.5)"/><use xlink:href="#mark" transform="rotate(225)"/><use xlink:href="#mark" transform="rotate(247.5)"/>
+    <use xlink:href="#mark" transform="rotate(270)"/><use xlink:href="#mark" transform="rotate(292.5)"/><use xlink:href="#mark" transform="rotate(315)"/><use xlink:href="#mark" transform="rotate(337.5)"/>
+    <circle r="112" fill="#ffffff" stroke-width="2.2"/>
+    <!-- slate between the points -->
+    <circle r="112" fill="#6b717a" stroke-width="2.2"/>
+    <!-- 8 points: intercardinals vermilion, cardinals split black and blue -->
+    <use xlink:href="#dV" transform="rotate(45)"/><use xlink:href="#dV" transform="rotate(135)"/><use xlink:href="#dV" transform="rotate(225)"/><use xlink:href="#dV" transform="rotate(315)"/>
+    <use xlink:href="#cKL"/><use xlink:href="#cKL" transform="rotate(90)"/><use xlink:href="#cKL" transform="rotate(180)"/><use xlink:href="#cKL" transform="rotate(270)"/>
+    <!-- centre: ringed gilt boss with an eight-lobed red tracery -->
+    <circle r="52" fill="#ffffff" stroke-width="2.4"/>
+    <circle r="46" fill="#dcb85a" stroke-width="1.6"/>
+    <g fill="none" stroke="#d8432a" stroke-width="3.4"><circle cx="10.7" cy="-25.9" r="12"/><circle cx="25.9" cy="-10.7" r="12"/><circle cx="25.9" cy="10.7" r="12"/><circle cx="10.7" cy="25.9" r="12"/><circle cx="-10.7" cy="25.9" r="12"/><circle cx="-25.9" cy="10.7" r="12"/><circle cx="-25.9" cy="-10.7" r="12"/><circle cx="-10.7" cy="-25.9" r="12"/><circle r="14"/></g>
+    
+    <circle r="4" fill="#2a1d12" stroke="none"/>
+  </g>
+</svg>

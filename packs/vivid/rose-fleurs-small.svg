@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-160 -160 320 320" width="320" height="320">
+  <!-- After the upper right rose of Guillaume Brouscon's almanac, Le Conquet 1543 (Huntington Library HM 46;
+       Commons: Upper right compass rose in 1543 France, from Guillaume Brouscon). Drawn, not traced, and
+       simplified for 110 px: eight gilt fleurs-de-lis on white lobes round a gilt boss. Every wind wears a fleur;
+       none marks the north. -->
+  <defs>
+    <path id="spear" d="M0,-150 L20,-108 L0,-80 L-20,-108 Z"/>
+    <path id="petals" d="M5,-78 C10,-94 30,-106 38,-94 C44,-84 36,-72 28,-76 C32,-82 30,-90 22,-88 C16,-86 12,-78 10,-72 Z M-5,-78 C-10,-94 -30,-106 -38,-94 C-44,-84 -36,-72 -28,-76 C-32,-82 -30,-90 -22,-88 C-16,-86 -12,-78 -10,-72 Z"/>
+    <path id="collar" d="M-14,-80 H14 V-72 H-14 Z M-6,-72 H6 L3,-58 H-3 Z"/>
+    <g id="fleur"><use xlink:href="#petals" fill="#d4ad4c"/><use xlink:href="#spear" fill="#d4ad4c"/><use xlink:href="#collar" fill="#a8822e"/>
+    <path d="M0,-150V-80" stroke="#a8822e" stroke-width="3" fill="none"/>
+    </g>
+    <!-- white lobe between two fleurs, rounded outward -->
+    <path id="lobe" d="M10.9,-59 Q-3.2,-122 52.8,-127.5 Q88.5,-84 34,-49.4 Z"/>
+  </defs>
+  <g stroke="#2a1d12" stroke-width="1" stroke-linejoin="round">
+    <!-- double rings and an ochre band behind the lobes -->
+    <g fill="none" stroke="#5a3e1a"><circle r="155" stroke-width="3"/><circle r="146" stroke-width="2"/></g>
+    <circle r="140" fill="#c9a46a" stroke="#5a3e1a" stroke-width="1.6"/>
+    <g fill="#ffffff" stroke="#5a3e1a" stroke-width="2">
+    <use xlink:href="#lobe"/><use xlink:href="#lobe" transform="rotate(45)"/><use xlink:href="#lobe" transform="rotate(90)"/><use xlink:href="#lobe" transform="rotate(135)"/>
+    <use xlink:href="#lobe" transform="rotate(180)"/><use xlink:href="#lobe" transform="rotate(225)"/><use xlink:href="#lobe" transform="rotate(270)"/><use xlink:href="#lobe" transform="rotate(315)"/>
+    </g>
+    
+    <!-- eight gilt fleurs-de-lis, one on each wind, outlined in umber -->
+    <g stroke="#5a3e1a" stroke-width="2.2">
+    <use xlink:href="#fleur"/><use xlink:href="#fleur" transform="rotate(45)"/><use xlink:href="#fleur" transform="rotate(90)"/><use xlink:href="#fleur" transform="rotate(135)"/>
+    <use xlink:href="#fleur" transform="rotate(180)"/><use xlink:href="#fleur" transform="rotate(225)"/><use xlink:href="#fleur" transform="rotate(270)"/><use xlink:href="#fleur" transform="rotate(315)"/>
+    </g>
+    <!-- vermilion touches between the collars -->
+    <g fill="#d8432a" stroke="none"><circle cx="25.3" cy="-61" r="4"/><circle cx="61" cy="-25.3" r="4"/><circle cx="61" cy="25.3" r="4"/><circle cx="25.3" cy="61" r="4"/><circle cx="-25.3" cy="61" r="4"/><circle cx="-61" cy="25.3" r="4"/><circle cx="-61" cy="-25.3" r="4"/><circle cx="-25.3" cy="-61" r="4"/></g>
+    <!-- centre: ringed gilt disc in eight lobes, dotted -->
+    <circle r="60" fill="#ffffff" stroke="#5a3e1a" stroke-width="2.4"/>
+    <path fill="#d4ad4c" stroke="#5a3e1a" stroke-width="2" d="M-15.3,-37 Q0,-56 15.3,-37 L15.3,-37 Q39.6,-39.6 37,-15.3 L37,-15.3 Q56,0 37,15.3 L37,15.3 Q39.6,39.6 15.3,37 L15.3,37 Q0,56 -15.3,37 L-15.3,37 Q-39.6,39.6 -37,15.3 L-37,15.3 Q-56,0 -37,-15.3 L-37,-15.3 Q-39.6,-39.6 -15.3,-37 Z"/>
+    <circle r="10" fill="#a8822e" stroke="#5a3e1a" stroke-width="2"/>
+  </g>
+</svg>

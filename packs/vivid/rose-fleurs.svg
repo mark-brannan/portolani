@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-160 -160 320 320" width="320" height="320">
+  <!-- After the upper right rose of Guillaume Brouscon's almanac, Le Conquet 1543 (Huntington Library HM 46;
+       Commons: Upper right compass rose in 1543 France, from Guillaume Brouscon). Drawn, not traced: all in
+       gilt and umber, eight fleurs-de-lis on the winds, white lobes between them on an ochre band, four rings,
+       and an eight-lobed dotted boss. Every wind wears a fleur; none marks the north. White ground for `multiply`. -->
+  <defs>
+    <path id="spear" d="M0,-144 L15,-112 L0,-78 L-15,-112 Z"/>
+    <path id="petals" d="M5,-76 C10,-92 30,-104 38,-92 C44,-82 36,-70 28,-74 C32,-80 30,-88 22,-86 C16,-84 12,-76 10,-70 Z M-5,-76 C-10,-92 -30,-104 -38,-92 C-44,-82 -36,-70 -28,-74 C-32,-80 -30,-88 -22,-86 C-16,-84 -12,-76 -10,-70 Z"/>
+    <path id="collar" d="M-14,-78 H14 V-70 H-14 Z M-6,-70 H6 L3,-58 H-3 Z"/>
+    <g id="fleur"><use xlink:href="#petals" fill="#d4ad4c"/><use xlink:href="#spear" fill="#d4ad4c"/><use xlink:href="#collar" fill="#a8822e"/>
+    <path d="M0,-144V-78" stroke="#a8822e" stroke-width="1.4" fill="none"/>
+    <g fill="#5a3e1a" stroke="none"><circle cx="-6" cy="-116" r="2.2"/><circle cx="6" cy="-116" r="2.2"/><circle cx="-5" cy="-100" r="2"/><circle cx="5" cy="-100" r="2"/><circle cy="-130" r="2"/></g></g>
+    <!-- white lobe between two fleurs, rounded outward -->
+    <path id="lobe" d="M10.9,-59 Q-3.2,-122 52.8,-127.5 Q88.5,-84 34,-49.4 Z"/>
+  </defs>
+  <g stroke="#2a1d12" stroke-width="1" stroke-linejoin="round">
+    <!-- four rings and an ochre band behind the lobes -->
+    <g fill="none" stroke="#5a3e1a"><circle r="156" stroke-width="0.9"/><circle r="153" stroke-width="0.9"/><circle r="149.5" stroke-width="1.6"/><circle r="146" stroke-width="0.9"/></g>
+    <circle r="142" fill="#c9a46a" stroke="#5a3e1a" stroke-width="0.9"/>
+    <g fill="#ffffff" stroke="#5a3e1a" stroke-width="1.1">
+    <use xlink:href="#lobe"/><use xlink:href="#lobe" transform="rotate(45)"/><use xlink:href="#lobe" transform="rotate(90)"/><use xlink:href="#lobe" transform="rotate(135)"/>
+    <use xlink:href="#lobe" transform="rotate(180)"/><use xlink:href="#lobe" transform="rotate(225)"/><use xlink:href="#lobe" transform="rotate(270)"/><use xlink:href="#lobe" transform="rotate(315)"/>
+    </g>
+    <g fill="#ffffff" stroke="#5a3e1a" stroke-width="0.8"><circle cx="26.1" cy="-131.4" r="3"/><circle cx="74.4" cy="-111.4" r="3"/><circle cx="111.4" cy="-74.4" r="3"/><circle cx="131.4" cy="-26.1" r="3"/><circle cx="131.4" cy="26.1" r="3"/><circle cx="111.4" cy="74.4" r="3"/><circle cx="74.4" cy="111.4" r="3"/><circle cx="26.1" cy="131.4" r="3"/><circle cx="-26.1" cy="131.4" r="3"/><circle cx="-74.4" cy="111.4" r="3"/><circle cx="-111.4" cy="74.4" r="3"/><circle cx="-131.4" cy="26.1" r="3"/><circle cx="-131.4" cy="-26.1" r="3"/><circle cx="-111.4" cy="-74.4" r="3"/><circle cx="-74.4" cy="-111.4" r="3"/><circle cx="-26.1" cy="-131.4" r="3"/></g>
+    <!-- eight gilt fleurs-de-lis, one on each wind, outlined in umber -->
+    <g stroke="#5a3e1a" stroke-width="1.3">
+    <use xlink:href="#fleur"/><use xlink:href="#fleur" transform="rotate(45)"/><use xlink:href="#fleur" transform="rotate(90)"/><use xlink:href="#fleur" transform="rotate(135)"/>
+    <use xlink:href="#fleur" transform="rotate(180)"/><use xlink:href="#fleur" transform="rotate(225)"/><use xlink:href="#fleur" transform="rotate(270)"/><use xlink:href="#fleur" transform="rotate(315)"/>
+    </g>
+    <!-- vermilion touches between the collars -->
+    <g fill="#d8432a" stroke="none"><circle cx="25.3" cy="-61" r="2.6"/><circle cx="61" cy="-25.3" r="2.6"/><circle cx="61" cy="25.3" r="2.6"/><circle cx="25.3" cy="61" r="2.6"/><circle cx="-25.3" cy="61" r="2.6"/><circle cx="-61" cy="25.3" r="2.6"/><circle cx="-61" cy="-25.3" r="2.6"/><circle cx="-25.3" cy="-61" r="2.6"/></g>
+    <!-- centre: ringed gilt disc in eight lobes, dotted -->
+    <circle r="60" fill="#ffffff" stroke="#5a3e1a" stroke-width="1.3"/><circle r="56" fill="none" stroke="#5a3e1a" stroke-width="0.8"/>
+    <path fill="#d4ad4c" stroke="#5a3e1a" stroke-width="1.2" d="M-15.3,-37 Q0,-56 15.3,-37 L15.3,-37 Q39.6,-39.6 37,-15.3 L37,-15.3 Q56,0 37,15.3 L37,15.3 Q39.6,39.6 15.3,37 L15.3,37 Q0,56 -15.3,37 L-15.3,37 Q-39.6,39.6 -37,15.3 L-37,15.3 Q-56,0 -37,-15.3 L-37,-15.3 Q-39.6,-39.6 -15.3,-37 Z"/>
+    <g fill="#5a3e1a" stroke="none"><circle cx="-2.8" cy="-31.9" r="1.6"/><circle cx="2.8" cy="-31.9" r="1.6"/><circle cx="0" cy="-26" r="1.6"/><circle cx="20.6" cy="-24.5" r="1.6"/><circle cx="24.5" cy="-20.6" r="1.6"/><circle cx="18.4" cy="-18.4" r="1.6"/><circle cx="31.9" cy="-2.8" r="1.6"/><circle cx="31.9" cy="2.8" r="1.6"/><circle cx="26" cy="0" r="1.6"/><circle cx="24.5" cy="20.6" r="1.6"/><circle cx="20.6" cy="24.5" r="1.6"/><circle cx="18.4" cy="18.4" r="1.6"/><circle cx="2.8" cy="31.9" r="1.6"/><circle cx="-2.8" cy="31.9" r="1.6"/><circle cx="0" cy="26" r="1.6"/><circle cx="-20.6" cy="24.5" r="1.6"/><circle cx="-24.5" cy="20.6" r="1.6"/><circle cx="-18.4" cy="18.4" r="1.6"/><circle cx="-31.9" cy="2.8" r="1.6"/><circle cx="-31.9" cy="-2.8" r="1.6"/><circle cx="-26" cy="0" r="1.6"/><circle cx="-24.5" cy="-20.6" r="1.6"/><circle cx="-20.6" cy="-24.5" r="1.6"/><circle cx="-18.4" cy="-18.4" r="1.6"/></g>
+    <path stroke="#a8822e" stroke-width="0.8" d="M0,-36L0,36M13.8,-33.3L-13.8,33.3M25.5,-25.5L-25.5,25.5M33.3,-13.8L-33.3,13.8M36,0L-36,0M33.3,13.8L-33.3,-13.8M25.5,25.5L-25.5,-25.5M13.8,33.3L-13.8,-33.3"/>
+  </g>
+</svg>

@@ -1,0 +1,16 @@
+# vivid
+
+Ornaments drawn as SVG for portolani, after public-domain originals: drawn, not traced. Each sprite's
+`after` in `pack.json` names the page it is after; each file's opening comment says what it shows.
+Paper shows through white, since the renderer lays sprites on the parchment with `multiply`.
+
+## How to read a rose
+
+Each rose style is a pair: a centre rose (300 px) and a small rose for the ring (110 px), drawn to match.
+
+- **aguiar**: four lapis cardinals; east a black cross; the small rose's north a gilt pole star.
+- **martines**: north a black fleur-de-lis on a green bar; east a black cross in the lettered disc.
+- **oliva**: north a blue fleur-de-lis; east has no mark.
+- **brouscon**: black-and-blue cardinals; no mark for north or east.
+- **fleurs**: every wind wears a gilt fleur; read north by place.
+- **dieppe**: north a gilt fleur-de-lis outside the ring; east a string of beads.

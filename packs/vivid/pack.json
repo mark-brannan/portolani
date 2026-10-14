@@ -1,7 +1,7 @@
 {
   "name": "vivid",
-  "title": "Portolan roses, scale, cartouche, town, palms, sea monsters and ships, redrawn as vectors after Jorge de Aguiar 1492, the Catalan Atlas 1375, Genoese charts, Frederik de Wit, Olaus Magnus's Carta Marina 1539, Sebastian Münster's Cosmographia, Conrad Gesner's Historia animalium 1558 and Abraham Ortelius 1589-90",
-  "licence": "MIT; drawn for portolani after public-domain originals (Aguiar, the Catalan Atlas, Genoese charts, de Wit, Olaus Magnus, Münster, Gesner, Ortelius, and a British Museum print of Candia)",
+  "title": "Portolan roses, scale, cartouche, town, palms, sea monsters and ships, redrawn as vectors after Jorge de Aguiar 1492, the Catalan Atlas 1375, Joan Martines 1584 and 1591, Guillaume Brouscon 1543, the Dieppe atlas 1547, Salvator Oliva 1619, Genoese charts, Frederik de Wit, Olaus Magnus's Carta Marina 1539, Sebastian Münster's Cosmographia, Conrad Gesner's Historia animalium 1558 and Abraham Ortelius 1589-90",
+  "licence": "MIT; drawn for portolani after public-domain originals (Aguiar, the Catalan Atlas, Martines, Brouscon, the Dieppe atlas, Oliva, Genoese charts, de Wit, Olaus Magnus, Münster, Gesner, Ortelius, and a British Museum print of Candia)",
   "colour": "source",
   "ink": "#2a1d12",
   "sprites": [
@@ -218,6 +218,106 @@
       "bands": [0, 1],
       "heading": "right",
       "after": "https://commons.wikimedia.org/wiki/File:Ortelius_-_Maris_Pacifici_1589.jpg"
+    },
+    {
+      "id": "rose-martines",
+      "kind": "rose",
+      "style": "martines",
+      "file": "rose-martines.svg",
+      "anchor": [0.5, 0.5],
+      "sizePx": 300,
+      "bands": [0, 1],
+      "after": "https://commons.wikimedia.org/wiki/File:Compass_Rose_Cropped_from_Martines_Atlas_1591_(03_of_14).jpg"
+    },
+    {
+      "id": "rose-martines-small",
+      "kind": "rose",
+      "style": "martines",
+      "file": "rose-martines-small.svg",
+      "anchor": [0.5, 0.5],
+      "sizePx": 110,
+      "bands": [0, 1],
+      "after": "https://trinitycollegelibrarycambridge.wordpress.com/2015/08/14/portolan-chart-of-the-mediterranean/"
+    },
+    {
+      "id": "rose-oliva",
+      "kind": "rose",
+      "style": "oliva",
+      "file": "rose-oliva.svg",
+      "anchor": [0.5, 0.5],
+      "sizePx": 300,
+      "bands": [0, 1],
+      "after": "https://commons.wikimedia.org/wiki/File:Salvator_Oliva._Mediterranean._HM_2515._PORTOLAN_ATLAS._Marseilles,_1619.jpg"
+    },
+    {
+      "id": "rose-oliva-small",
+      "kind": "rose",
+      "style": "oliva",
+      "file": "rose-oliva-small.svg",
+      "anchor": [0.5, 0.5],
+      "sizePx": 110,
+      "bands": [0, 1],
+      "after": "https://commons.wikimedia.org/wiki/File:Salvator_Oliva._Mediterranean._HM_2515._PORTOLAN_ATLAS._Marseilles,_1619.jpg"
+    },
+    {
+      "id": "rose-brouscon",
+      "kind": "rose",
+      "style": "brouscon",
+      "file": "rose-brouscon.svg",
+      "anchor": [0.5, 0.5],
+      "sizePx": 300,
+      "bands": [0, 1],
+      "after": "https://commons.wikimedia.org/wiki/File:Center_compass_rose_in_1543_France,_from-_Guillaume_Brouscon._World_chart,_which_includes_America_and_a_large_Terra_Java_(Australia)._HM_46._PORTOLAN_ATLAS_and_NAUTICAL_ALMANAC._France,_1543_(cropped).jpg"
+    },
+    {
+      "id": "rose-brouscon-small",
+      "kind": "rose",
+      "style": "brouscon",
+      "file": "rose-brouscon-small.svg",
+      "anchor": [0.5, 0.5],
+      "sizePx": 110,
+      "bands": [0, 1],
+      "after": "https://commons.wikimedia.org/wiki/File:Center_compass_rose_in_1543_France,_from-_Guillaume_Brouscon._World_chart,_which_includes_America_and_a_large_Terra_Java_(Australia)._HM_46._PORTOLAN_ATLAS_and_NAUTICAL_ALMANAC._France,_1543_(cropped).jpg"
+    },
+    {
+      "id": "rose-fleurs",
+      "kind": "rose",
+      "style": "fleurs",
+      "file": "rose-fleurs.svg",
+      "anchor": [0.5, 0.5],
+      "sizePx": 300,
+      "bands": [0, 1],
+      "after": "https://commons.wikimedia.org/wiki/File:Upper_right_compass_rose_in_1543_France,_from-_Guillaume_Brouscon._World_chart,_which_includes_America_and_a_large_Terra_Java_(Australia)._HM_46._PORTOLAN_ATLAS_and_NAUTICAL_ALMANAC._France,_1543_(cropped).jpg"
+    },
+    {
+      "id": "rose-fleurs-small",
+      "kind": "rose",
+      "style": "fleurs",
+      "file": "rose-fleurs-small.svg",
+      "anchor": [0.5, 0.5],
+      "sizePx": 110,
+      "bands": [0, 1],
+      "after": "https://commons.wikimedia.org/wiki/File:Upper_right_compass_rose_in_1543_France,_from-_Guillaume_Brouscon._World_chart,_which_includes_America_and_a_large_Terra_Java_(Australia)._HM_46._PORTOLAN_ATLAS_and_NAUTICAL_ALMANAC._France,_1543_(cropped).jpg"
+    },
+    {
+      "id": "rose-dieppe",
+      "kind": "rose",
+      "style": "dieppe",
+      "file": "rose-dieppe.svg",
+      "anchor": [0.5, 0.5],
+      "sizePx": 300,
+      "bands": [0, 1],
+      "after": "https://commons.wikimedia.org/wiki/File:Europe_and_northern_Africa._HM_29._PORTOLAN_ATLAS,_anonymous_(Dieppe,_1547).jpg"
+    },
+    {
+      "id": "rose-dieppe-small",
+      "kind": "rose",
+      "style": "dieppe",
+      "file": "rose-dieppe-small.svg",
+      "anchor": [0.5, 0.5],
+      "sizePx": 110,
+      "bands": [0, 1],
+      "after": "https://commons.wikimedia.org/wiki/File:Europe_and_northern_Africa._HM_29._PORTOLAN_ATLAS,_anonymous_(Dieppe,_1547).jpg"
     }
   ]
 }

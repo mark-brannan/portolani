@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-160 -160 320 320" width="320" height="320">
+  <!-- After the centre rose of Guillaume Brouscon's nautical almanac, Le Conquet 1543 (Huntington Library HM 46;
+       Commons: Center compass rose in 1543 France, from Guillaume Brouscon). Drawn, not traced: eight points
+       (cardinals split black and blue, intercardinals vermilion), slate lobes notched with white knobs between
+       them, a rim of 32 gilt tongues with red sprigs and green wedges, and a gilt boss with eight-lobed red
+       tracery. North is the black-and-blue point alone, as on the original. White ground for `multiply`. -->
+  <defs>
+    <!-- rim tile: a gilt tongue with a red sprig; every other gap filled with a green wedge -->
+    <path id="tongue" d="M-10.3,-120.6 L-12.1,-133.4 Q0,-149 12.1,-133.4 L10.3,-120.6 Z"/>
+    <path id="green" d="M7.2,-145.8 A146,146 0 0 1 21.4,-144.4 L12.6,-128.4 Z"/>
+    <g id="mark"><g fill="#d8432a" stroke="none"><circle cy="-138" r="2.2"/><circle cx="-3.4" cy="-132" r="2"/><circle cx="3.4" cy="-132" r="2"/></g><path d="M0,-135V-124" stroke="#d8432a" stroke-width="1.4"/></g>
+    <!-- slate lobe between two points, notched with white knobs -->
+    <path id="lobe" d="M7.3,-59.6 L16.9,-106.7 Q30.5,-114 42.1,-101.6 Q59,-102.2 63.5,-87.4 L36.9,-47.3 Q20.7,-49.9 7.3,-59.6 Z"/>
+    <g id="knobs" fill="#ffffff"><circle cx="10.8" cy="-61.1" r="4"/><circle cx="35.6" cy="-50.8" r="4"/></g>
+    <g id="lobeDots" fill="#d8432a" stroke="none"><circle cx="26" cy="-79.9" r="2"/><circle cx="38.1" cy="-74.8" r="2"/><circle cx="36.7" cy="-88.7" r="2"/></g>
+    <!-- cardinal: tip r 152, sides r 54; intercardinal tip r 121 -->
+    <path id="cL" d="M0,-152 L-12.1,-52.6 L0,-0 Z"/>
+    <path id="cR" d="M0,-152 L12.1,-52.6 L0,-0 Z"/>
+    <path id="dL" d="M0,-121 L-12.1,-52.6 L0,-0 Z"/>
+    <path id="dR" d="M0,-121 L12.1,-52.6 L0,-0 Z"/>
+    <g id="cKL"><use xlink:href="#cL" fill="#1d1610"/><use xlink:href="#cR" fill="#2f5aa6"/></g>
+    <g id="dV"><use xlink:href="#dL" fill="#e0612e"/><use xlink:href="#dR" fill="#a92a17"/></g>
+  </defs>
+  <g stroke="#2a1d12" stroke-width="1.1" stroke-linejoin="round">
+    <!-- outer rings -->
+    <g fill="none"><circle r="156" stroke-width="0.8"/><circle r="152.5" stroke-width="0.8"/><circle r="149" stroke-width="1.4"/></g>
+    <!-- the rim: vermilion ground, 32 gilt tongues, green wedges in every other gap -->
+    <path fill="#d8432a" stroke-width="1.1" fill-rule="evenodd" d="M0,-146A146,146 0 1 1 0,146A146,146 0 1 1 0,-146ZM0,-121A121,121 0 1 0 0,121A121,121 0 1 0 0,-121Z"/>
+    <g fill="#4f9a5a" stroke-width="0.8">
+    <use xlink:href="#green"/><use xlink:href="#green" transform="rotate(22.5)"/><use xlink:href="#green" transform="rotate(45)"/><use xlink:href="#green" transform="rotate(67.5)"/>
+    <use xlink:href="#green" transform="rotate(90)"/><use xlink:href="#green" transform="rotate(112.5)"/><use xlink:href="#green" transform="rotate(135)"/><use xlink:href="#green" transform="rotate(157.5)"/>
+    <use xlink:href="#green" transform="rotate(180)"/><use xlink:href="#green" transform="rotate(202.5)"/><use xlink:href="#green" transform="rotate(225)"/><use xlink:href="#green" transform="rotate(247.5)"/>
+    <use xlink:href="#green" transform="rotate(270)"/><use xlink:href="#green" transform="rotate(292.5)"/><use xlink:href="#green" transform="rotate(315)"/><use xlink:href="#green" transform="rotate(337.5)"/>
+    </g>
+    <g fill="#dcb85a" stroke-width="0.9">
+    <use xlink:href="#tongue"/><use xlink:href="#tongue" transform="rotate(11.25)"/><use xlink:href="#tongue" transform="rotate(22.5)"/><use xlink:href="#tongue" transform="rotate(33.75)"/>
+    <use xlink:href="#tongue" transform="rotate(45)"/><use xlink:href="#tongue" transform="rotate(56.25)"/><use xlink:href="#tongue" transform="rotate(67.5)"/><use xlink:href="#tongue" transform="rotate(78.75)"/>
+    <use xlink:href="#tongue" transform="rotate(90)"/><use xlink:href="#tongue" transform="rotate(101.25)"/><use xlink:href="#tongue" transform="rotate(112.5)"/><use xlink:href="#tongue" transform="rotate(123.75)"/>
+    <use xlink:href="#tongue" transform="rotate(135)"/><use xlink:href="#tongue" transform="rotate(146.25)"/><use xlink:href="#tongue" transform="rotate(157.5)"/><use xlink:href="#tongue" transform="rotate(168.75)"/>
+    <use xlink:href="#tongue" transform="rotate(180)"/><use xlink:href="#tongue" transform="rotate(191.25)"/><use xlink:href="#tongue" transform="rotate(202.5)"/><use xlink:href="#tongue" transform="rotate(213.75)"/>
+    <use xlink:href="#tongue" transform="rotate(225)"/><use xlink:href="#tongue" transform="rotate(236.25)"/><use xlink:href="#tongue" transform="rotate(247.5)"/><use xlink:href="#tongue" transform="rotate(258.75)"/>
+    <use xlink:href="#tongue" transform="rotate(270)"/><use xlink:href="#tongue" transform="rotate(281.25)"/><use xlink:href="#tongue" transform="rotate(292.5)"/><use xlink:href="#tongue" transform="rotate(303.75)"/>
+    <use xlink:href="#tongue" transform="rotate(315)"/><use xlink:href="#tongue" transform="rotate(326.25)"/><use xlink:href="#tongue" transform="rotate(337.5)"/><use xlink:href="#tongue" transform="rotate(348.75)"/>
+    </g>
+    <use xlink:href="#mark"/><use xlink:href="#mark" transform="rotate(11.25)"/><use xlink:href="#mark" transform="rotate(22.5)"/><use xlink:href="#mark" transform="rotate(33.75)"/>
+    <use xlink:href="#mark" transform="rotate(45)"/><use xlink:href="#mark" transform="rotate(56.25)"/><use xlink:href="#mark" transform="rotate(67.5)"/><use xlink:href="#mark" transform="rotate(78.75)"/>
+    <use xlink:href="#mark" transform="rotate(90)"/><use xlink:href="#mark" transform="rotate(101.25)"/><use xlink:href="#mark" transform="rotate(112.5)"/><use xlink:href="#mark" transform="rotate(123.75)"/>
+    <use xlink:href="#mark" transform="rotate(135)"/><use xlink:href="#mark" transform="rotate(146.25)"/><use xlink:href="#mark" transform="rotate(157.5)"/><use xlink:href="#mark" transform="rotate(168.75)"/>
+    <use xlink:href="#mark" transform="rotate(180)"/><use xlink:href="#mark" transform="rotate(191.25)"/><use xlink:href="#mark" transform="rotate(202.5)"/><use xlink:href="#mark" transform="rotate(213.75)"/>
+    <use xlink:href="#mark" transform="rotate(225)"/><use xlink:href="#mark" transform="rotate(236.25)"/><use xlink:href="#mark" transform="rotate(247.5)"/><use xlink:href="#mark" transform="rotate(258.75)"/>
+    <use xlink:href="#mark" transform="rotate(270)"/><use xlink:href="#mark" transform="rotate(281.25)"/><use xlink:href="#mark" transform="rotate(292.5)"/><use xlink:href="#mark" transform="rotate(303.75)"/>
+    <use xlink:href="#mark" transform="rotate(315)"/><use xlink:href="#mark" transform="rotate(326.25)"/><use xlink:href="#mark" transform="rotate(337.5)"/><use xlink:href="#mark" transform="rotate(348.75)"/>
+    <circle r="121" fill="#ffffff" stroke-width="1.1"/><circle r="117" fill="none" stroke-width="0.8"/>
+    <!-- slate between the points -->
+    <g fill="#5f6670" stroke-width="1.1">
+    <use xlink:href="#lobe"/><use xlink:href="#lobe" transform="rotate(45)"/><use xlink:href="#lobe" transform="rotate(90)"/><use xlink:href="#lobe" transform="rotate(135)"/>
+    <use xlink:href="#lobe" transform="rotate(180)"/><use xlink:href="#lobe" transform="rotate(225)"/><use xlink:href="#lobe" transform="rotate(270)"/><use xlink:href="#lobe" transform="rotate(315)"/>
+    </g>
+    <g stroke-width="0.9">
+    <use xlink:href="#knobs"/><use xlink:href="#knobs" transform="rotate(45)"/><use xlink:href="#knobs" transform="rotate(90)"/><use xlink:href="#knobs" transform="rotate(135)"/>
+    <use xlink:href="#knobs" transform="rotate(180)"/><use xlink:href="#knobs" transform="rotate(225)"/><use xlink:href="#knobs" transform="rotate(270)"/><use xlink:href="#knobs" transform="rotate(315)"/>
+    </g>
+    <g>
+    <use xlink:href="#lobeDots"/><use xlink:href="#lobeDots" transform="rotate(45)"/><use xlink:href="#lobeDots" transform="rotate(90)"/><use xlink:href="#lobeDots" transform="rotate(135)"/>
+    <use xlink:href="#lobeDots" transform="rotate(180)"/><use xlink:href="#lobeDots" transform="rotate(225)"/><use xlink:href="#lobeDots" transform="rotate(270)"/><use xlink:href="#lobeDots" transform="rotate(315)"/>
+    </g>
+    <!-- 8 points: intercardinals vermilion, cardinals split black and blue -->
+    <use xlink:href="#dV" transform="rotate(45)"/><use xlink:href="#dV" transform="rotate(135)"/><use xlink:href="#dV" transform="rotate(225)"/><use xlink:href="#dV" transform="rotate(315)"/>
+    <use xlink:href="#cKL"/><use xlink:href="#cKL" transform="rotate(90)"/><use xlink:href="#cKL" transform="rotate(180)"/><use xlink:href="#cKL" transform="rotate(270)"/>
+    <!-- centre: ringed gilt boss with an eight-lobed red tracery -->
+    <circle r="58" fill="#ffffff" stroke-width="1.4"/><circle r="54" fill="none" stroke-width="0.8"/>
+    <circle r="49" fill="#dcb85a" stroke-width="1"/>
+    <g fill="none" stroke="#d8432a" stroke-width="2"><circle cx="11.9" cy="-28.6" r="12.5"/><circle cx="28.6" cy="-11.9" r="12.5"/><circle cx="28.6" cy="11.9" r="12.5"/><circle cx="11.9" cy="28.6" r="12.5"/><circle cx="-11.9" cy="28.6" r="12.5"/><circle cx="-28.6" cy="11.9" r="12.5"/><circle cx="-28.6" cy="-11.9" r="12.5"/><circle cx="-11.9" cy="-28.6" r="12.5"/><circle r="16"/></g>
+    <g fill="#d8432a" stroke="none"><circle cx="14.5" cy="-35.1" r="1.8"/><circle cx="35.1" cy="-14.5" r="1.8"/><circle cx="35.1" cy="14.5" r="1.8"/><circle cx="14.5" cy="35.1" r="1.8"/><circle cx="-14.5" cy="35.1" r="1.8"/><circle cx="-35.1" cy="14.5" r="1.8"/><circle cx="-35.1" cy="-14.5" r="1.8"/><circle cx="-14.5" cy="-35.1" r="1.8"/></g>
+    <circle r="2.6" fill="#2a1d12" stroke="none"/>
+  </g>
+</svg>

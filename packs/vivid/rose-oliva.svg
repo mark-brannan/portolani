@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-160 -160 320 320" width="320" height="320">
+  <!-- After the great roses of Salvator Oliva's portolan atlas, Marseille 1619 (Huntington Library HM 2515,
+       Commons: Salvator Oliva. Mediterranean. HM 2515). Drawn, not traced: 32 open points (gilt cardinals
+       with ink dots, green half-winds, blue intercardinals, red quarter-winds), each with a pale and a deep
+       half, a ring of 12 gilt roundels round the hub, a red-and-blue outer circle and a blue fleur-de-lis
+       for the north. White ground for the renderer's `multiply`. -->
+  <defs>
+    <!-- outer points, all from the inner ring r 78: cardinal tip 150, half-wind 142, intercardinal 136, quarter 126 -->
+    <path id="cL" d="M0,-150 L-9.3,-75.4 L0,-0 Z"/>
+    <path id="cR" d="M0,-150 L9.3,-75.4 L0,-0 Z"/>
+    <path id="hL" d="M0,-142 L-9.3,-75.4 L0,-0 Z"/>
+    <path id="hR" d="M0,-142 L9.3,-75.4 L0,-0 Z"/>
+    <path id="dL" d="M0,-136 L-9.3,-75.4 L0,-0 Z"/>
+    <path id="dR" d="M0,-136 L9.3,-75.4 L0,-0 Z"/>
+    <path id="qL" d="M0,-126 L-4.9,-77.8 L0,-0 Z"/>
+    <path id="qR" d="M0,-126 L4.9,-77.8 L0,-0 Z"/>
+    <!-- inner star: cardinal tip 76, diagonal tip 50 -->
+    <path id="icL" d="M0,-76 L-7.5,-20.7 L0,-0 Z"/>
+    <path id="icR" d="M0,-76 L7.5,-20.7 L0,-0 Z"/>
+    <path id="idL" d="M0,-50 L-6.8,-20.9 L0,-0 Z"/>
+    <path id="idR" d="M0,-50 L6.8,-20.9 L0,-0 Z"/>
+    <g id="roundel"><circle cy="-64" r="7.5" fill="#dcb85a" stroke-width="1.6"/><circle cy="-64" r="3.6" fill="none" stroke-width="0.9"/><circle cy="-64" r="1.1" fill="#2a1d12" stroke="none"/></g>
+    <g id="cG"><use xlink:href="#cL" fill="#e9cf7f"/><use xlink:href="#cR" fill="#b08a32"/></g>
+    <g id="hGr"><use xlink:href="#hL" fill="#a9c48e"/><use xlink:href="#hR" fill="#5d8a3a"/></g>
+    <g id="dL"><use xlink:href="#dL" fill="#a9bede"/><use xlink:href="#dR" fill="#3d62a8"/></g>
+    <g id="qV"><use xlink:href="#qL" fill="#f0a48e"/><use xlink:href="#qR" fill="#d8432a"/></g>
+    <g id="icL"><use xlink:href="#icL" fill="#a9bede"/><use xlink:href="#icR" fill="#3d62a8"/></g>
+    <g id="idV"><use xlink:href="#idL" fill="#f0a48e"/><use xlink:href="#idR" fill="#d8432a"/></g>
+  </defs>
+  <g stroke="#2a1d12" stroke-width="1.1" stroke-linejoin="round">
+    <!-- outer circle, red and blue by turns, as the painter laid it -->
+    <g fill="none" stroke-width="4.4" stroke-linecap="butt">
+    <path stroke="#d8432a" d="M-10.4,-148.6 A149,149 0 0 1 143.2,-41.1"/><path stroke="#7d93b8" d="M143.2,-41.1 A149,149 0 0 1 10.4,148.6"/><path stroke="#d8432a" d="M10.4,148.6 A149,149 0 0 1 -138.2,55.8"/><path stroke="#7d93b8" d="M-138.2,55.8 A149,149 0 0 1 -10.4,-148.6"/>
+    </g>
+    <circle r="151.6" fill="none" stroke-width="0.6"/><circle r="146.4" fill="none" stroke-width="0.6"/>
+    <!-- 32 outer points: quarter-winds red, intercardinals blue, half-winds green, cardinals gilt -->
+    <use xlink:href="#qV" transform="rotate(11.25)"/><use xlink:href="#qV" transform="rotate(33.75)"/><use xlink:href="#qV" transform="rotate(56.25)"/><use xlink:href="#qV" transform="rotate(78.75)"/>
+    <use xlink:href="#qV" transform="rotate(101.25)"/><use xlink:href="#qV" transform="rotate(123.75)"/><use xlink:href="#qV" transform="rotate(146.25)"/><use xlink:href="#qV" transform="rotate(168.75)"/>
+    <use xlink:href="#qV" transform="rotate(191.25)"/><use xlink:href="#qV" transform="rotate(213.75)"/><use xlink:href="#qV" transform="rotate(236.25)"/><use xlink:href="#qV" transform="rotate(258.75)"/>
+    <use xlink:href="#qV" transform="rotate(281.25)"/><use xlink:href="#qV" transform="rotate(303.75)"/><use xlink:href="#qV" transform="rotate(326.25)"/><use xlink:href="#qV" transform="rotate(348.75)"/>
+    <use xlink:href="#dL" transform="rotate(45)"/><use xlink:href="#dL" transform="rotate(135)"/><use xlink:href="#dL" transform="rotate(225)"/><use xlink:href="#dL" transform="rotate(315)"/>
+    <use xlink:href="#hGr" transform="rotate(22.5)"/><use xlink:href="#hGr" transform="rotate(67.5)"/><use xlink:href="#hGr" transform="rotate(112.5)"/><use xlink:href="#hGr" transform="rotate(157.5)"/>
+    <use xlink:href="#hGr" transform="rotate(202.5)"/><use xlink:href="#hGr" transform="rotate(247.5)"/><use xlink:href="#hGr" transform="rotate(292.5)"/><use xlink:href="#hGr" transform="rotate(337.5)"/>
+    <use xlink:href="#cG" transform="rotate(90)"/><use xlink:href="#cG" transform="rotate(180)"/><use xlink:href="#cG" transform="rotate(270)"/>
+    <!-- ink dots down the gilt cardinals -->
+    <g fill="#2a1d12" stroke="none">
+    <circle cx="98" cy="0" r="1.5"/><circle cx="105" cy="0" r="1.5"/><circle cx="112" cy="0" r="1.5"/><circle cx="119" cy="0" r="1.5"/><circle cx="126" cy="0" r="1.5"/><circle cx="133" cy="0" r="1.5"/>
+    <circle cx="0" cy="98" r="1.5"/><circle cx="0" cy="105" r="1.5"/><circle cx="0" cy="112" r="1.5"/><circle cx="0" cy="119" r="1.5"/><circle cx="0" cy="126" r="1.5"/><circle cx="0" cy="133" r="1.5"/>
+    <circle cx="-98" cy="0" r="1.5"/><circle cx="-105" cy="0" r="1.5"/><circle cx="-112" cy="0" r="1.5"/><circle cx="-119" cy="0" r="1.5"/><circle cx="-126" cy="0" r="1.5"/><circle cx="-133" cy="0" r="1.5"/>
+    </g>
+    <!-- inner disc: ring, 12 gilt roundels, a small star, the hub -->
+    <circle r="78" fill="#ffffff" stroke-width="1.2"/><circle r="74" fill="none" stroke-width="0.7"/>
+    <use xlink:href="#idV" transform="rotate(45)"/><use xlink:href="#idV" transform="rotate(135)"/><use xlink:href="#idV" transform="rotate(225)"/><use xlink:href="#idV" transform="rotate(315)"/>
+    <use xlink:href="#icL"/><use xlink:href="#icL" transform="rotate(90)"/><use xlink:href="#icL" transform="rotate(180)"/><use xlink:href="#icL" transform="rotate(270)"/>
+    <use xlink:href="#roundel" transform="rotate(15)"/><use xlink:href="#roundel" transform="rotate(45)"/><use xlink:href="#roundel" transform="rotate(75)"/><use xlink:href="#roundel" transform="rotate(105)"/>
+    <use xlink:href="#roundel" transform="rotate(135)"/><use xlink:href="#roundel" transform="rotate(165)"/><use xlink:href="#roundel" transform="rotate(195)"/><use xlink:href="#roundel" transform="rotate(225)"/>
+    <use xlink:href="#roundel" transform="rotate(255)"/><use xlink:href="#roundel" transform="rotate(285)"/><use xlink:href="#roundel" transform="rotate(315)"/><use xlink:href="#roundel" transform="rotate(345)"/>
+    <circle r="28" fill="#ffffff"/><circle r="24" fill="none" stroke-width="0.7"/>
+    <path stroke-width="0.7" stroke="#d8432a" d="M0,-23L0,23M8.8,-21.2L-8.8,21.2M16.3,-16.3L-16.3,16.3M21.2,-8.8L-21.2,8.8M23,0L-23,0M21.2,8.8L-21.2,-8.8M16.3,16.3L-16.3,-16.3M8.8,21.2L-8.8,-21.2"/>
+    <!-- blue fleur-de-lis for the north, on a stem down to the ring, with a lozenge -->
+    <g fill="#3d62a8" stroke="#1f3a72" stroke-width="1">
+    <path d="M-3,-84 L0,-92 L3,-84 L2.4,-100 L6,-106 L0,-112 L-6,-106 L-2.4,-100 Z"/>
+    <g transform="translate(0,-110) scale(0.62)"><path d="M0,-80 C8,-68 13,-54 7,-38 L-7,-38 C-13,-54 -8,-68 0,-80 Z M6,-30 C10,-50 26,-62 34,-52 C40,-44 34,-32 26,-34 C31,-38 30,-46 24,-46 C16,-46 12,-34 12,-26 Z M-6,-30 C-10,-50 -26,-62 -34,-52 C-40,-44 -34,-32 -26,-34 C-31,-38 -30,-46 -24,-46 C-16,-46 -12,-34 -12,-26 Z M-7,-38 L7,-38 L12,-26 L-12,-26 Z M-6,-18 L6,-18 L3,-4 L0,0 L-3,-4 Z M5,-18 C14,-16 20,-10 16,-2 C14,-8 10,-12 4,-12 Z M-5,-18 C-14,-16 -20,-10 -16,-2 C-14,-8 -10,-12 -4,-12 Z"/><path d="M-16,-26 H16 V-18 H-16 Z" fill="#ffffff"/></g>
+    </g>
+  </g>
+</svg>
