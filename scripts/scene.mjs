@@ -53,8 +53,9 @@ const DETAIL = { lon: 8.93, lat: 44.41, scale: 2 }; // Genoa; window clamped to 
 const BANDS = [
   { dir: '10m', zoom: 9, cell: 5, margin: 2 }, // Natural Earth 10m, holds to about z12 but has no narrow channels
   { dir: 'h', zoom: 10, cell: 1, margin: 0.5 }, // GSHHG 2.3.7 "h" land, holds to about z13; draws Seattle's ship canal
+  { dir: 'f', zoom: 12, cell: 0.5, margin: 0.25 }, // GSHHG 2.3.7 "f" land, the full resolution; the canal's real shape
 ];
-const ZOOM = { min: 1, max: 13 };
+const ZOOM = { min: 1, max: 15 };
 const URBAN_PX = 56; // screen px a built-up area's long side reaches before it is drawn
 
 // Land treatments after the period charts: 'gilt' (today's wash), 'green' (Oliva, c.1590), 'ochre'
