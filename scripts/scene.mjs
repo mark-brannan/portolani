@@ -808,7 +808,10 @@ function clearanceField(data) {
   const px = g.getImageData(0, 0, cols, rows).data;
 
   const d = chamfer(cols, rows, (i) => px[i * 4 + 3] > 40);
-  const inland = chamfer(cols, rows, (i) => px[i * 4 + 3] <= 40); // px from each land cell to the sea
+  // px from each land cell to the sea; past an azimuthal rim, which counts as land above so nothing
+  // stands at sea there, is no ground to stand on either, so it counts as sea here
+  const rim = data.proj.rim, beyond = (i) => rim && Math.hypot(((i % cols) + 0.5) * CELL - W / 2, (Math.floor(i / cols) + 0.5) * CELL - H / 2) > rim;
+  const inland = chamfer(cols, rows, (i) => px[i * 4 + 3] <= 40 || beyond(i));
 
   const cellAt = (x, y) => Math.min(cols - 1, Math.max(0, Math.floor(y / CELL))) * cols + Math.min(cols - 1, Math.max(0, Math.floor(x / CELL)));
   const at = (x, y) => d[cellAt(x, y)];
