@@ -103,3 +103,20 @@ test('a city close in is drawn as a plan over its footprint, on land only, its n
   assert.ok(changed > 2000, `${changed} px changed`)
   assert.ok(wet / changed < 0.01, `${wet} of ${changed} changed px are at sea`)
 })
+
+test('a town keeps its drawing across zooms and its icon never shrinks until the city plan takes over', { skip: !existsSync(URBAN) && 'no urban areas download' }, async () => {
+  for (const [name, lon, lat, zooms] of [['Victoria', -123.37, 48.43, [7, 7.5, 8, 8.5, 9]], ['Seattle', -122.33, 47.6, [5, 6, 7]]]) {
+    const seen = []
+    for (const zoom of zooms) {
+      const { scene } = await createScene(env, { view: { lon, lat, zoom }, scale: 'off' })
+      const t = scene.towns.find((x) => x.name === name)
+      if (t?.city) break // the plan has taken over; it is not an icon
+      assert.ok(t?.sprite, `${name} has no drawing at z${zoom}`)
+      seen.push({ zoom, drawing: `${t.family?.[0]?.pack ?? ''}|${t.sprite.pack}|${t.sprite.style}|${t.sprite.img.width}x${t.sprite.img.height}`, h: t.h })
+    }
+    assert.ok(seen.length >= 2, `${name}: fewer than two icon zooms`)
+    assert.equal(new Set(seen.map((s) => s.drawing)).size, 1, `${name} changes drawing: ${JSON.stringify(seen)}`)
+    for (let i = 1; i < seen.length; i++) assert.ok(seen[i].h >= seen[i - 1].h, `${name} shrinks z${seen[i - 1].zoom} -> z${seen[i].zoom}: ${seen[i - 1].h} -> ${seen[i].h}`)
+    assert.ok(seen.at(-1).h > seen[0].h, `${name} does not grow: ${JSON.stringify(seen)}`)
+  }
+})
