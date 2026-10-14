@@ -1,5 +1,10 @@
 // Pack build: crop public-domain scans into sprites and write each pack's pack.json.
-// Usage: node scripts/build-packs.mjs   (needs ImageMagick 7 `magick` on PATH; network for the first run)
+// Usage: node scripts/build-packs.mjs [--keep <dir> [idPrefix]]
+//   (needs ImageMagick 7 `magick` on PATH; network for the first run)
+// `--keep` also writes each sprite's working images into <dir>, for sprites whose id starts with
+// idPrefix (all when omitted): `<id>.raw.png`, the crop as cut and deskewed from the scan with no
+// background removal, and `<id>.cut.png`, the finished sprite laid on parchment at 1:1. They are the
+// before and after of the keying, kept so a crop can be judged and refined later (docs/towns-aguiar).
 //
 // scripts/sources.json is the sources manifest: every file, URL, sha256 and rights line. Scans are
 // downloaded into downloads/ when missing, checked against it, and ASSETS.md is written from it.
@@ -49,7 +54,13 @@ function checkSha(src, bytes) {
 const SEA_FIGURE_LEVEL = [26, 56]; // woodcut line only; colour fills and sea hatching mostly drop out
 const SEA_FIGURE = { sat: 24, close: 7, open: 5, dilate: 4, feather: 2, minArea: 900 };
 
-const CLEAN_DISK = 5; // px radius of the closing that removes scanned lettering
+const PARCHMENT = '#e9d8b4'; // the renderer's default paper, for the kept `.cut.png`
+const argv = process.argv.slice(2), keepAt = argv.indexOf('--keep');
+const keep = keepAt >= 0 ? join(ROOT, argv[keepAt + 1]) : null, keepPrefix = (keepAt >= 0 && argv[keepAt + 2]) || '';
+if (keep) mkdirSync(keep, { recursive: true });
+
+const CLEAN_DISK = 5;
+const TOWN_LEVEL = [30, 80]; // darkness levels for the Aguiar towns: the thin brown ink is pushed to full alpha so it reads at map size
 
 // One pack of scanned sprites; each sprite's `style` names the design family it belongs to, which
 // the renderer offers as a setting (a rose set, a monster family, a town drawing).
@@ -80,9 +91,36 @@ const PACKS = [
       // the palms are less saturated than the paper, so darkness alone keys them and the faint rhumb lines drop out
       { id: 'palms-aguiar', kind: 'tree', style: 'aguiar', scan: 'aguiar-chart', crop: [2530, 2962, 2732, 3248], sizePx: 70, level: [30, 62],
         erase: [[2695, 2962, 2732, 2995], [2680, 3170, 2732, 3248]] },
-      // a walled town in its lake; the rivers leaving the lake erased
-      { id: 'town-aguiar', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', crop: [2300, 2350, 2450, 2465], sizePx: 60, heightPx: 48, dark: 'min', level: [10, 70],
-        erase: [[2350, 2340, 2365, 2354], [2300, 2440, 2322, 2470], [2435, 2415, 2460, 2470], [2345, 2460, 2365, 2470], [2405, 2458, 2425, 2470]] },
+      // Towns: every town drawing on the chart, one sprite each, taken in turn by the renderer. `rotate`
+      // deskews a drawing that leans on the vellum (degrees clockwise), and sizePx is the height a town
+      // stands at, flag to foot. Lettering, rivers and rhumb lines beside each are erased. The level is
+      // tighter than the roses' so the thin brown ink reads at map size.
+      // Venice in its lagoon halo; the name and flagpole above and the coast names beside erased
+      { id: 'town-aguiar-venice', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', crop: [2930, 728, 3160, 888], sizePx: 84, dark: 'min', level: TOWN_LEVEL,
+        erase: [[3060, 728, 3160, 756], [3036, 728, 3052, 772], [3098, 786, 3160, 888], [3000, 856, 3160, 888]] },
+      // Genoa under its mountain: towers, a domed gate and the blue harbour mole
+      { id: 'town-aguiar-genoa', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', crop: [2762, 882, 2940, 1018], sizePx: 80, dark: 'min', level: TOWN_LEVEL,
+        erase: [[2762, 882, 2802, 935], [2762, 1002, 2940, 1018], [2905, 975, 2940, 1018]] },
+      // Lisbon on the Tagus: red roofs behind a wall on a green hill, the river below
+      { id: 'town-aguiar-lisbon', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', crop: [1822, 1472, 1958, 1578], sizePx: 72, dark: 'min', level: TOWN_LEVEL, rotate: -4,
+        erase: [[1822, 1472, 1890, 1494], [1822, 1494, 1844, 1578], [1870, 1556, 1958, 1578], [1822, 1566, 1870, 1578]] },
+      // the walled town in its lake, the lake cut away (the old town-aguiar crop kept it)
+      { id: 'town-aguiar-lake', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', crop: [2326, 2372, 2430, 2452], sizePx: 72, dark: 'min', level: TOWN_LEVEL },
+      // the same town with its lake, the rivers leaving it erased
+      { id: 'town-aguiar-lake-moat', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', crop: [2300, 2358, 2448, 2486], sizePx: 84, dark: 'min', level: TOWN_LEVEL,
+        erase: [[2350, 2340, 2368, 2366], [2300, 2455, 2322, 2486], [2435, 2425, 2448, 2486], [2345, 2470, 2365, 2486], [2405, 2466, 2425, 2486]] },
+      // Smina on the Niger: a round walled town on a mound, leaning on the vellum; the river erased
+      { id: 'town-aguiar-smina', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', crop: [2932, 3086, 3072, 3202], sizePx: 72, dark: 'min', level: TOWN_LEVEL, rotate: 6,
+        erase: [[2932, 3086, 2962, 3112], [3040, 3086, 3072, 3142], [3062, 3142, 3072, 3202], [2932, 3188, 3072, 3202], [2932, 3150, 2958, 3202]] },
+      // Jerusalem, in ink only and drawn lightly, so its level is pushed harder still: a keep and a domed church inside a wall
+      { id: 'town-aguiar-jerusalem', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', crop: [4708, 1612, 4815, 1714], sizePx: 72, level: [45, 85],
+        erase: [[4708, 1612, 4815, 1630], [4762, 1612, 4815, 1650], [4708, 1630, 4738, 1700], [4708, 1702, 4815, 1714], [4800, 1612, 4815, 1660]] },
+      // a red gate tower on the Moroccan coast (Ceuta), the coast names round it erased
+      { id: 'town-aguiar-ceuta', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', crop: [2010, 1908, 2092, 2012], sizePx: 56, dark: 'min', level: TOWN_LEVEL, rotate: 8,
+        erase: [[2010, 1908, 2024, 2012], [2072, 1908, 2092, 2012], [2010, 1908, 2092, 1916], [2010, 1992, 2092, 2012]] },
+      // Avignon: the long red palace with its flag, drawn askew on the chart
+      { id: 'town-aguiar-avignon', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', crop: [2342, 1026, 2452, 1086], sizePx: 48, dark: 'min', level: TOWN_LEVEL, rotate: -14,
+        erase: [[2342, 1026, 2452, 1034], [2342, 1080, 2452, 1086]] },
       { id: 'scale-genoese', kind: 'scale', style: 'genoese', scan: 'genoese', crop: [3708, 3815, 4400, 3940], sizePx: 260, dark: 'min', level: [8, 50] },
     ],
   },
@@ -99,6 +137,9 @@ function buildSprite(sprite, colour, outDir, tmp) {
   const t = (n) => join(tmp, `${sprite.id}.${n}.png`);
 
   magick(`${scan.path}[0]`, '-crop', `${w}x${h}+${x0}+${y0}`, '+repage', '-alpha', 'off', t('crop'));
+  // deskew about the crop's centre; the corners fill from the edge pixels and fade out at the edge below
+  if (sprite.rotate) magick(t('crop'), '-virtual-pixel', 'Edge', '-distort', 'SRT', String(sprite.rotate), t('crop'));
+  if (keep && sprite.id.startsWith(keepPrefix)) magick(t('crop'), '-strip', join(keep, `${sprite.id}.raw.png`));
 
   // Lettering on the scan (wind names on a rose) is closed away from the colour image before keying:
   // a grayscale closing removes dark strokes thinner than the disk and keeps the petal wash beneath.
@@ -140,7 +181,9 @@ function buildSprite(sprite, colour, outDir, tmp) {
   if (sprite.erase) {
     const draws = sprite.erase.flatMap(([ex0, ey0, ex1, ey1]) =>
       ['-draw', `rectangle ${ex0 - x0},${ey0 - y0} ${ex1 - x0},${ey1 - y0}`]);
-    magick('-size', `${w}x${h}`, 'xc:white', '-fill', 'black', draws, '-blur', '0x3', t('erase'));
+    // erase boxes are in scan coordinates, so the mask turns with the crop
+    const turn = sprite.rotate ? ['-virtual-pixel', 'Edge', '-distort', 'SRT', String(sprite.rotate)] : [];
+    magick('-size', `${w}x${h}`, 'xc:white', '-fill', 'black', draws, turn, '-blur', '0x3', t('erase'));
     masks.push(t('erase'));
   }
 
@@ -172,6 +215,10 @@ function buildSprite(sprite, colour, outDir, tmp) {
   magick(rgb, alpha, '-alpha', 'off', '-compose', 'CopyOpacity', '-composite',
     '-crop', `${tw}x${th}+${tx}+${ty}`, '+repage', '-strip', join(outDir, file));
 
+  if (keep && sprite.id.startsWith(keepPrefix)) {
+    magick(join(outDir, file), '-background', PARCHMENT, '-flatten', '-strip', join(keep, `${sprite.id}.cut.png`));
+  }
+
   const entry = {
     id: sprite.id, kind: sprite.kind, style: sprite.style, file,
     anchor: [0.5, sprite.kind === 'monster' || sprite.kind === 'ship' ? 0.75 : 0.5],
@@ -182,6 +229,7 @@ function buildSprite(sprite, colour, outDir, tmp) {
   if (sprite.weight) entry.weight = sprite.weight;
   if (sprite.heading) entry.heading = sprite.heading;
   if (sprite.heightPx) entry.heightPx = sprite.heightPx;
+  else if (sprite.kind === 'town') entry.heightPx = sprite.sizePx; // a town stands at sizePx, flag to foot
   if (sprite.panel) {
     const [px0, py0, px1, py1] = sprite.panel;
     // panel in sprite-local fractions, for lettering
