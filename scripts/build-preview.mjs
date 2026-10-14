@@ -133,6 +133,6 @@ for (const [id, member] of [['gshhg-licence', 'LICENSE.TXT'], ['gshhg-copying-le
 await cp(path.join(root, 'node_modules', 'coast-wright', 'lib'), path.join(out, 'coast-wright'), { recursive: true });
 await cp(path.join(root, 'public'), out, { recursive: true });
 await cp(path.join(root, 'scripts', 'scene.mjs'), path.join(out, 'scene.mjs'));
-for (const f of ['island.mjs', 'city.mjs', 'urban.mjs', 'water.mjs']) await cp(path.join(root, 'scripts', f), path.join(out, f));
+for (const f of ['island.mjs', 'city.mjs', 'urban.mjs', 'water.mjs', 'trees.mjs']) await cp(path.join(root, 'scripts', f), path.join(out, f));
 await cp(path.join(root, 'packs'), path.join(out, 'packs'), { recursive: true });
 console.log(`preview assembled in ${path.relative(root, out)}/`);

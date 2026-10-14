@@ -8,7 +8,8 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
-import { createScene, drawScene, SCALE_NAMES, RIVER_STYLES, LAKE_STYLES, W, H } from '../scripts/scene.mjs';
+import { createScene, drawScene, SCALE_NAMES, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, W, H } from '../scripts/scene.mjs';
+import { plantTrees } from '../scripts/trees.mjs';
 import { coastNames, joinNames } from '../scripts/names.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -159,4 +160,37 @@ test('rivers and lakes: every style draws, and off draws none', async () => {
   for (const rivers of RIVER_STYLES.slice(1)) assert.ok(differs(await renderView(danube, 'off', { rivers }), off), `rivers ${rivers}: nothing drawn`);
   for (const lakes of LAKE_STYLES.slice(1)) assert.ok(differs(await renderView(danube, 'off', { lakes }), off), `lakes ${lakes}: nothing drawn`);
   await renderView(danube, 'off', { rivers: 'aguiar', lakes: 'marina' }); // the two combine
+});
+
+// Trees are off by default (the goldens hold them off); every style draws over central Sweden, and
+// off draws none.
+test('trees: every style draws, and off draws none', async () => {
+  const svecia = { lon: 15.5, lat: 59.5, zoom: 7 };
+  const off = await renderView(svecia, 'off', { trees: 'off' });
+  assert.ok(!differs(await renderView(svecia), off), 'trees drawn by default');
+  assert.deepEqual(TREE_STYLES, ['off', 'marina', 'ink']);
+  for (const trees of TREE_STYLES.slice(1)) assert.ok(differs(await renderView(svecia, 'off', { trees }), off), `trees ${trees}: nothing drawn`);
+  const { data } = await createScene(env, { view: svecia, scale: 'off', trees: 'marina' });
+  assert.ok(data.trees.length > 0, 'no stands planted');
+  assert.equal((await createScene(env, { view: svecia, scale: 'off' })).data.trees.length, 0, 'stands planted with trees off');
+});
+
+// A stand is fixed to the map: a pan meets the same stands where the two views overlap, each the
+// same trees at the same size in px; a zoom in meets more.
+test('trees: a pan keeps the forest, a zoom in thickens it', () => {
+  const projAt = (lon, zoom) => {
+    const k = (512 * 2 ** zoom) / (2 * Math.PI), RAD = Math.PI / 180, merc = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * RAD) / 2));
+    const y0 = merc(50);
+    return { zoom, x: (l) => W / 2 + (l - lon) * RAD * k, y: (lat) => H / 2 - (merc(lat) - y0) * k,
+      invert: (px, py) => [lon + (px - W / 2) / k / RAD, (2 * Math.atan(Math.exp(y0 - (py - H / 2) / k)) - Math.PI / 2) / RAD] };
+  };
+  const plant = (lon, zoom) => plantTrees({ proj: projAt(lon, zoom), isLand: () => true, w: W, h: H });
+  const key = (s) => `${s.lon.toFixed(6)},${s.lat.toFixed(6)}:${s.trees.map((t) => `${t.shape}${t.dx.toFixed(2)}`).join()}`;
+  const a = plant(10, 7), b = plant(10.5, 7); // half a degree east, about 360 px at zoom 7
+  const shared = (list) => list.filter((s) => s.lon > 9.5 && s.lon < 11).map(key).sort();
+  assert.ok(shared(a).length > 5, 'too few stands to compare');
+  assert.deepEqual(shared(a), shared(b));
+  const count = (zoom) => plant(10, zoom).reduce((n, s) => n + s.trees.length, 0);
+  assert.ok(count(3) < count(6) && count(6) < count(9), 'trees do not thicken with zoom');
+  assert.equal(count(1), 0, 'trees at zoom 1');
 });
