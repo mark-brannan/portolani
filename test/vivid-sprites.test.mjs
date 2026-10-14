@@ -12,7 +12,7 @@ import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { loadImage, createCanvas, GlobalFonts } from '@napi-rs/canvas'
 import { townSVG, VARIANTS, fileOf } from '../scripts/gen-towns.mjs'
-import { createScene, KINDS, DEFAULT_KINDS, W, H } from '../scripts/scene.mjs'
+import { createScene, listSprites, defaultSprites, KINDS, DEFAULT_KINDS, W, H } from '../scripts/scene.mjs'
 import { coastNames, joinNames } from '../scripts/names.mjs'
 
 const VIVID = fileURLToPath(new URL('../packs/vivid/', import.meta.url))
@@ -133,4 +133,33 @@ test('mountains: off by default; on, inland, apart and clear of names', async ()
     assert.ok(m.x > 0 && m.x < W && m.y > 0 && m.y < H);
   }
   assert.ok(data.proj.zoom >= 3);
+});
+
+test('town families mix: each placed town takes the next family in turn', async () => {
+  const sprites = [...manifest.sprites.filter((s) => s.style === 'martines' && s.kind === 'town').map((s) => `vivid/${s.id}`), 'plain/tower'];
+  const { scene } = await createScene(env, { view: LIGURIA, sprites });
+  assert.ok(scene.towns.length > 4);
+  scene.towns.forEach((t, i) => assert.equal(t.sprite?.style ?? 'tower', i % 2 ? 'tower' : 'martines', `${t.name}, town ${i}`));
+  assert.equal((await createScene(env, { view: LIGURIA, sprites: ['vivid/serpent-a'] })).scene.towns.length, 0, 'no town family, no towns');
+});
+
+test('townSize: by population a great city stands bigger than a small town; by rank, as before', async () => {
+  const { scene } = await createScene(env, { view: NILE });
+  const by = Object.fromEntries(scene.towns.map((t) => [t.name, t]));
+  assert.ok(by.Cairo && by.Suez, scene.towns.map((t) => t.name).join());
+  assert.ok(by.Cairo.size > 1.3 && by.Cairo.size > by.Suez.size * 1.4, `Cairo ${by.Cairo.size}, Suez ${by.Suez.size}`);
+  const rank = (await createScene(env, { view: NILE, townSize: 'rank' })).scene.towns;
+  for (const t of rank) assert.equal(t.size, t.rank <= 2 ? 1.25 : 1, t.name);
+});
+
+test('the monster and ship cast is the same for one view, and a big selection shows more of itself across views', async () => {
+  const list = await listSprites(env);
+  const sprites = [...defaultSprites(list), ...list.filter((s) => s.kind === 'monster').map((s) => s.key)];
+  const cast = async (view) => { const { scene } = await createScene(env, { view, sprites, scale: 'off' }); return [...scene.monsters, ...scene.ships].map((m) => `${m.sprite.key}@${Math.round(m.x)},${Math.round(m.y)}`); };
+  assert.deepEqual(await cast(LIGURIA), await cast(LIGURIA));
+  const seen = new Set();
+  for (const view of [LIGURIA, { lon: -30, lat: 40, zoom: 5 }, { lon: -150, lat: 20, zoom: 5 }, { lon: 70, lat: -20, zoom: 5 }]) {
+    for (const m of (await createScene(env, { view, sprites, scale: 'off' })).scene.monsters) seen.add(m.sprite.key);
+  }
+  assert.ok(seen.size > 4, `only ${[...seen]} across four views`);
 });

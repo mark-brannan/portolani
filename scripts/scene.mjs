@@ -328,6 +328,54 @@ function chooseSprites(manifests, { rendering = 'vivid', rose = 'aguiar', monste
     ships: pick('ship', monster, 'carta-marina'),
     towns: town === 'tower' ? [] : pick('town', town),
     mountains: pick('mountain', 'catalan'),
+    tower: town === 'tower' || !pick('town', town).length,
+  };
+}
+
+// Sprites by key, `<pack>/<id>`, since ids repeat across packs (scanned/serpent-a, vivid/serpent-a).
+// The shapes drawn in code are the pseudo-pack `plain`: its rose set, its cartouche frame, the tower.
+const PLAIN_SPRITES = [
+  { id: 'rose', kind: 'rose', style: 'plain' },
+  { id: 'cartouche', kind: 'cartouche', style: 'plain' },
+  { id: 'tower', kind: 'town', style: 'tower' },
+].map((s) => ({ ...s, key: `plain/${s.id}`, pack: 'plain', file: null }));
+const spriteList = (manifests) => [
+  ...PACK_NAMES.flatMap((pack) => manifests[pack].sprites.map((s) => ({ ...s, key: `${pack}/${s.id}`, pack, colour: manifests[pack].colour ?? 'source' }))),
+  ...PLAIN_SPRITES,
+];
+
+// Every sprite a page can offer, each { key, pack, id, kind, style, file, ... }: only the manifests are read.
+async function listSprites(environment) {
+  return spriteList(await readManifests(environment));
+}
+
+// The selection a scene draws when given none, by rule so sprites added to a pack join their family:
+// the vivid Aguiar roses and cartouche, the scanned Carta Marina monsters, every ship, the tower,
+// and every mountain (which DEFAULT_KINDS still hides).
+const DEFAULT_RULES = [
+  (s) => s.pack === 'vivid' && s.kind === 'rose' && s.style === 'aguiar',
+  (s) => s.pack === 'vivid' && s.kind === 'cartouche',
+  (s) => s.pack === 'scanned' && s.kind === 'monster' && s.style === 'carta-marina',
+  (s) => s.kind === 'ship',
+  (s) => s.key === 'plain/tower',
+  (s) => s.kind === 'mountain',
+];
+function defaultSprites(list) {
+  const keys = list.filter((s) => DEFAULT_RULES.some((rule) => rule(s))).map((s) => s.key);
+  const cartouche = keys.find((k) => list.find((s) => s.key === k).kind === 'cartouche');
+  return keys.filter((k) => list.find((s) => s.key === k).kind !== 'cartouche' || k === cartouche); // one cartouche
+}
+
+// What a selection of keys draws, in chooseSprites's shape plus `tower`; unknown keys are ignored.
+// The first selected cartouche is the one; plain/rose and plain/cartouche are the PLAIN shapes.
+function selectSprites(manifests, keys) {
+  const want = new Set(keys), chosen = spriteList(manifests).filter((s) => want.has(s.key));
+  const of = (kind) => chosen.filter((s) => s.kind === kind).flatMap((s) => (s.pack !== 'plain' ? [s] : kind === 'rose' ? PLAIN.filter((p) => p.kind === 'rose') : []));
+  return {
+    roses: of('rose'),
+    cartouche: chosen.find((s) => s.kind === 'cartouche' && s.pack !== 'plain') ?? (want.has('plain/cartouche') ? PLAIN.find((s) => s.kind === 'cartouche') : null),
+    monsters: of('monster'), ships: of('ship'), towns: of('town'), mountains: of('mountain'),
+    tower: want.has('plain/tower'),
   };
 }
 
@@ -341,6 +389,7 @@ async function listStyles(environment) {
 // A chosen sprite with its picture: a source-colour pack is drawn as scanned; an ink pack is filled
 // with the ink of the day.
 async function withImage(s) {
+  if (s.plain) return s; // drawn in code: no picture
   const img = await env.loadImage(`packs/${s.pack}/${s.file}`);
   return { ...s, img, tinted: s.colour === 'source' ? img : tint(img, STYLE.ink) };
 }
@@ -515,6 +564,28 @@ function townVariant(family, p, i) {
   return family.find((s) => s.id.endsWith(`-${want}`)) ?? family[i % family.length];
 }
 
+// How big a town stands. `population` (the default) on a log scale of Natural Earth's POP_MAX, so a
+// megacity reads at a glance over a market town; `rank` the chief towns (scalerank 2 or less) a
+// quarter bigger. The red lettering of the chief towns follows the rank either way.
+function townScale(p, by = 'population') {
+  if (by === 'rank') return p.rank <= 2 ? 1.25 : 1;
+  return Math.min(1.8, Math.max(0.75, 1 + 0.4 * Math.log10(Math.max(1, p.pop) / 1e6))); // a million stands at 1
+}
+
+// The order a view tries its monsters or ships in: a weighted shuffle (Efraimidis-Spirakis, key
+// u^(1/weight)), seeded by the view's bucket (castSeed), so a big selection shows all of itself
+// across the map while one view always draws the same scene.
+function castOrder(sprites, seed, weight = (s) => s.weight ?? 1) {
+  const rnd = mulberry32(seed);
+  return sprites.map((s) => ({ s, k: rnd() ** (1 / weight(s)) })).sort((a, b) => b.k - a.k).map((e) => e.s);
+}
+// A coarse bucket of the view: the whole zoom and the centre floored to about one view's width of
+// degrees. A short pan keeps the cast; a long move or a zoom meets new ones.
+function castSeed(view) {
+  const z = Math.round(view.zoom), span = (360 * W) / (512 * 2 ** z);
+  return (Math.imul(z + 1, 73856093) ^ Math.imul(Math.floor(view.lon / span), 19349663) ^ Math.imul(Math.floor(view.lat / span), 83492791)) | 0;
+}
+
 // Mountains: inland, on land at least half a sprite's width (and a margin) from the coast, deepest
 // first, MOUNTAIN_GAP apart, clear of every name, town, rose and the cartouche, and of the scale bar;
 // only from MOUNTAIN_ZOOM in, where land is big enough to hold a range. Each takes the widest sprite
@@ -551,8 +622,9 @@ function buildScene(data, sprites, ctx, world = {}) {
   // a rose set: the biggest is the centre rose, the rest the ring's; a set of one serves both, small at 110 px
   const roses = sprites.roses;
   const bigRose = roses.reduce((a, b) => (b.sizePx > a.sizePx ? b : a));
-  const rest = roses.filter((s) => s !== bigRose);
-  const smallRoses = rest.length ? rest : [{ ...bigRose, sizePx: 110 }]; // taken in set order, one per node
+  const rest = roses.filter((s) => s !== bigRose), small = rest.filter((s) => s.sizePx < bigRose.sizePx);
+  // taken in set order, one per node; mixed sets ring the smaller roses, a set of big ones rings them at 110 px
+  const smallRoses = small.length ? small : rest.length ? rest.map((s) => ({ ...s, sizePx: 110 })) : [{ ...bigRose, sizePx: 110 }];
   const smallSize = Math.max(...smallRoses.map((s) => s.sizePx));
   const cartoucheSprite = sprites.cartouche;
   const occupied = []; // discs {x, y, r} that later ornaments keep clear of
@@ -603,21 +675,26 @@ function buildScene(data, sprites, ctx, world = {}) {
     occupied.push({ x: n.x, y: n.y, r: sprite.sizePx / 2 + 10 });
   }
 
-  // Towns, lower scalerank first, >= TUNE.townGap apart.
+  // Towns, lower scalerank first, >= TUNE.townGap apart. The selected town sprites fall into families
+  // by pack and style, and the tower is one when chosen; the i-th town placed takes family i mod n.
   const boxes = [obb(cartouche.x + cw / 2, cartouche.y + ch / 2, 0, cw / 2, ch / 2)];
   for (const r of roseDraws) boxes.push(obb(r.x, r.y, 0, r.size * 0.42, r.size * 0.42));
   const worldNames = placeWorldNames(data, ctx, boxes, { continents: world.continents ?? false, regions: world.regions ?? 'off' });
+  const families = [...(sprites.towns ?? []).reduce((m, s) => m.set(`${s.pack}/${s.style}`, [...(m.get(`${s.pack}/${s.style}`) ?? []), s]), new Map()).values()];
+  if (sprites.tower ?? !families.length) families.push(null); // null: the tower drawn in code
   const towns = [];
-  const sorted = [...data.places].sort((a, b) => a.rank - b.rank || b.pop - a.pop);
+  const sorted = families.length ? [...data.places].sort((a, b) => a.rank - b.rank || b.pop - a.pop) : [];
   for (const p of sorted) {
     const [x, y] = p.xy;
     if (x < 8 || y < 8 || x > W - 8 || y > H - 8) continue;
     if (towns.some((t) => Math.hypot(t.x - x, t.y - y) < TUNE.townGap)) continue;
-    const size = p.rank <= 2 ? 1.25 : 1;
+    const size = townScale(p, world.townSize);
     // a town sprite stands where the tower would, its variant chosen for the town (townVariant)
-    const sprite = townVariant(sprites.towns, p, towns.length);
+    const n = families.length, family = families[towns.length % n];
+    const sprite = family && townVariant(family, p, Math.floor(towns.length / n));
+    const th = sprite ? townHeight(sprite) * size : 0;
     const icon = sprite
-      ? obb(x, y - (TOWN_H / 2) * size, 0, ((TOWN_H / 2) * size * sprite.img.width) / sprite.img.height, (TOWN_H / 2) * size)
+      ? obb(x, y - th / 2, 0, ((th / 2) * sprite.img.width) / sprite.img.height, th / 2)
       : obb(x, y - 8 * size, 0, 5 * size, 8.5 * size); // tower body and pennant
     if (boxes.some((b) => obbOverlap(b, icon))) continue;
     towns.push({ x, y, size, red: p.rank <= 2, name: p.name, rank: p.rank, ...(sprite && { sprite }) });
@@ -629,7 +706,7 @@ function buildScene(data, sprites, ctx, world = {}) {
   // a name that meets an ornament or leaves the canvas is dropped.
   const lettering = [
     ...data.names.map((n) => ({ ...n, size: n.kind === 'sea' ? (n.rank <= 1 ? 22 : n.rank <= 3 ? 18 : 15) : n.rank <= 2 ? 17 : 14 })),
-    ...towns.map((t) => ({ text: t.name, at: data.proj.invert(t.x, t.y - (t.sprite ? TOWN_H * t.size + 6 : 17 * t.size)), size: t.rank <= 1 ? 17 : t.rank <= 2 ? 15 : 13, red: t.red })),
+    ...towns.map((t) => ({ text: t.name, at: data.proj.invert(t.x, t.y - (t.sprite ? townHeight(t.sprite) * t.size + 6 : 17 * t.size)), size: t.rank <= 1 ? 17 : t.rank <= 2 ? 15 : 13, red: t.red })),
   ];
   const opts = letterOptions(data);
   const names = [];
@@ -647,8 +724,9 @@ function buildScene(data, sprites, ctx, world = {}) {
   for (const b of boxes.slice(1 + roseDraws.length)) occupied.push({ x: b.cx, y: b.cy, r: Math.max(b.hw, b.hh) * 0.6 });
   const mountains = placeMountains(data, field, boxes, sprites.mountains ?? [], world.scaleBar);
 
-  // Monsters: farthest-first on the open-water field, >= MONSTER_GAP apart, heaviest sprite first.
-  const monsterSprites = [...sprites.monsters].sort((a, b) => b.weight - a.weight);
+  // Monsters: farthest-first on the open-water field, >= MONSTER_GAP apart, in the view's cast order
+  // (heavier sprites tend to come first).
+  const monsterSprites = castOrder(sprites.monsters, world.seed ?? 0);
   const monsters = [];
   for (const sprite of monsterSprites) {
     if (monsters.length >= TUNE.monsterMax) break;
@@ -668,8 +746,8 @@ function buildScene(data, sprites, ctx, world = {}) {
     }
   }
 
-  // Ships: coastal water, spread out, heading along the nearest coast.
-  const shipSprites = sprites.ships;
+  // Ships: coastal water, spread out, heading along the nearest coast; in the view's cast order, all alike.
+  const shipSprites = castOrder(sprites.ships, (world.seed ?? 0) ^ 0x5eed, () => 1);
   const ships = [];
   for (const sprite of shipSprites) {
     if (ships.length >= TUNE.shipMax) break;
@@ -812,7 +890,7 @@ const PLAIN = [
   { id: 'rose-plain-large', kind: 'rose', sizePx: 300 },
   { id: 'rose-plain-small', kind: 'rose', sizePx: 110 },
   { id: 'cartouche-plain', kind: 'cartouche', sizePx: 340, panel: [0.034, 0.665, 0.953, 0.994] },
-].map((s) => ({ ...s, plain: true, anchor: [0.5, 0.5], img: { width: 1031, height: 784 }, weight: 1 }));
+].map((s) => ({ ...s, pack: 'plain', key: `plain/${s.kind}`, plain: true, anchor: [0.5, 0.5], img: { width: 1031, height: 784 }, weight: 1 }));
 
 function drawPlainRose(g, x, y, size) {
   const R = size / 2, w = Math.max(1, size / 150);
@@ -865,6 +943,7 @@ function drawSprite(g, s, x, y, size, { flip = false, rot = 0, anchor = s.anchor
 }
 
 const TOWN_H = 30; // px a town sprite stands at size 1, flag to foot; a vignette is a speck at the tower's 17
+const townHeight = (s) => s.heightPx ?? TOWN_H; // a manifest's `heightPx` stands a busier drawing taller
 
 function drawTower(g, t) {
   const s = t.size;
@@ -1093,7 +1172,7 @@ function drawScene(g, scene, data, bg, view) {
   // 6. towns
   for (const t of scene.towns) {
     if (!t.sprite) { if (disc(r, t.x, t.y - 8 * t.size, 12 * t.size)) drawTower(g, t); continue; }
-    const h = TOWN_H * t.size, w = (h * t.sprite.img.width) / t.sprite.img.height;
+    const h = townHeight(t.sprite) * t.size, w = (h * t.sprite.img.width) / t.sprite.img.height;
     if (disc(r, t.x, t.y - h / 2, Math.hypot(w, h) / 2)) drawSprite(g, t.sprite, t.x, t.y, w, { anchor: [0.5, 1] });
   }
 
@@ -1145,15 +1224,22 @@ function drawScene(g, scene, data, bg, view) {
 // ---------------------------------------------------------------- setup
 
 // Load data and packs, place the ornaments, paint the parchment. `opts`: ink and parchment
-// colours (hex), density and view; defaults reproduce the committed mockup. Also `rendering` (one of
-// RENDERINGS), the `rose`, `monster` and `town` styles (listStyles; town 'tower' is drawn in code), `kinds` (the ornament kinds drawn, of KINDS), `names` and `rhumb` (booleans), `scale` (a SCALE_NAMES entry, or 'off'),
+// colours (hex), density and view; defaults reproduce the committed mockup. `sprites` is the
+// selection drawn, a list of keys (listSprites; defaultSprites when left out), and may mix packs,
+// families and the shapes drawn in code; the town families it holds take turns among the towns,
+// sized by `townSize`, 'population' (the default) or 'rank'. The older `rendering` (one of
+// RENDERINGS) with the `rose`, `monster` and `town` styles (listStyles; town 'tower' is drawn in code)
+// still choose a selection when `sprites` is left out, so old links and callers draw as they did.
+// `kinds` (the ornament kinds drawn, of KINDS), `names` and `rhumb` (booleans), `scale` (a SCALE_NAMES entry, or 'off'),
 // `continents` (boolean) and `regions` ('off', 'latin' or 'english'); the continents follow the regions' language, Latin when those are off.
 // `autoTitle` (boolean, on by default) letters the cartouche with the name the view is about (viewTitle), in capitals;
 // `title` is its lettering when that is off, or when the view has no name in it.
-// `kinds` defaults to DEFAULT_KINDS: mountains are drawn only when asked for.
+// `kinds` defaults to DEFAULT_KINDS: mountains are drawn only when asked for. A kind left out is still
+// placed when the lattice needs it (a rose, the cartouche's corner), only not drawn.
 export async function createScene(environment, opts = {}) {
   env = environment;
-  const { ink = '#3b2a1a', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', title = 'PORTOLANI', autoTitle = true } = opts;
+  const { ink = '#3b2a1a', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize = 'population', names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', title = 'PORTOLANI', autoTitle = true } = opts;
+  const legacy = ['rendering', 'rose', 'monster', 'town'].some((k) => opts[k] !== undefined);
   const show = { kinds: new Set(opts.kinds ?? DEFAULT_KINDS), names, rhumb: rhumbOn, scale };
   const view = clampView(opts.view ?? DEFAULT_VIEW);
   STYLE.ink = ink;
@@ -1165,10 +1251,12 @@ export async function createScene(environment, opts = {}) {
 
   const t0 = performance.now();
   // only the sprites the settings choose are fetched, whichever kinds are shown, never a whole pack;
-  // `plain` stands in for roses and cartouche with shapes drawn in code. A picture scale bar comes
-  // from the vivid pack whatever the rendering.
+  // PLAIN stands in for roses and cartouche with shapes drawn in code. A picture scale bar comes
+  // from the vivid pack whatever the selection.
   const sprites = readManifests().then(async (manifests) => {
-    const chosen = chooseSprites(manifests, { rendering, rose, monster, town });
+    const chosen = opts.sprites ? selectSprites(manifests, opts.sprites)
+      : legacy ? chooseSprites(manifests, { rendering, rose, monster, town })
+      : selectSprites(manifests, defaultSprites(spriteList(manifests)));
     const all = (list) => Promise.all(list.map(withImage));
     const picture = scale in SCALE_PICTURES && manifests.vivid.sprites.find((s) => s.id === SCALE_PICTURES[scale]);
     const [roses, monsters, ships, towns, mountains, cartouche, scaleSprite] = await Promise.all([
@@ -1177,7 +1265,7 @@ export async function createScene(environment, opts = {}) {
     ]);
     return {
       roses: roses.length ? roses : PLAIN.filter((s) => s.kind === 'rose'), cartouche: cartouche || PLAIN.find((s) => s.kind === 'cartouche'),
-      monsters, ships, towns, mountains, scaleSprite: scaleSprite || null,
+      monsters, ships, towns, tower: chosen.tower, mountains, scaleSprite: scaleSprite || null,
     };
   });
   const [, coarse, chosen] = await Promise.all([env.loadFont(STYLE.font), loadWorld(), sprites]);
@@ -1187,7 +1275,7 @@ export async function createScene(environment, opts = {}) {
 
   const data = viewData(world, view);
   const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, title, autoTitle,
-    scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM }), show, scaleSprite };
+    scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM, townSize, seed: castSeed(view) }), show, scaleSprite };
   if (!parchments.has(tone)) parchments.set(tone, parchment(1539));
   const bg = parchments.get(tone);
   return { scene, data, bg, proj: data.proj, world, coarse, view, timing: { load: tLoad - t0, place: performance.now() - tLoad } };
@@ -1199,4 +1287,5 @@ export const REGION_LANGS = ['off', 'latin', 'english'];
 export const KINDS = ['rose', 'ship', 'monster', 'cartouche', 'mountain'];
 export const DEFAULT_KINDS = KINDS.filter((k) => k !== 'mountain'); // mountains are drawn only when asked for
 export const PROJECTION_NAMES = Object.keys(PROJECTIONS);
-export { SCALE_NAMES, listStyles, chooseSprites, drawScene, drawGround, covers, panView, zoomView, clampView, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };
+export const TOWN_SIZES = ['population', 'rank'];
+export { SCALE_NAMES, readManifests, listStyles, listSprites, defaultSprites, selectSprites, chooseSprites, drawScene, drawGround, covers, panView, zoomView, clampView, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };

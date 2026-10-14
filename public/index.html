@@ -5,75 +5,194 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Portolani preview</title>
 <style>
-  :root { --bg: #f4efe4; --fg: #3b2a1a; --muted: #7a6a58; --line: #d8cdb6; }
-  @media (prefers-color-scheme: dark) { :root { --bg: #1d1913; --fg: #e9d8b4; --muted: #a39679; --line: #3a3225; } }
-  body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.4 system-ui, sans-serif; }
-  main { max-width: 1640px; margin: 0 auto; padding: 16px; }
-  h1 { font-size: 18px; margin: 0 0 12px; font-weight: 600; }
-  .controls { display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: center; margin-bottom: 12px; }
+  :root {
+    --bg: #f4efe4; --fg: #3b2a1a; --muted: #7a6a58; --line: #d8cdb6;
+    --panel: #efe3c6; --rule: #b89a68; --accent: #8c2f1e; --sheet: #e9d8b4; --sheet-ink: #3b2a1a;
+    --serif: 'IM Fell English', Georgia, serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #1d1913; --fg: #e9d8b4; --muted: #a39679; --line: #3a3225; --panel: #241e16; --rule: #6b5634; --accent: #d0806a; --sheet: #d4c199; }
+  }
+  html, body { height: 100%; }
+  body { margin: 0; overflow: hidden; background: var(--bg); color: var(--fg); font: 14px/1.4 system-ui, sans-serif; }
+
+  /* the map fills the window, its 1600 x 1000 canvas scaled to fit and centred */
+  #map {
+    position: fixed; inset: 0; margin: auto; display: block;
+    width: min(100vw, 160vh); height: min(100vh, 62.5vw);
+    width: min(100vw, 160dvh); height: min(100dvh, 62.5vw);
+    touch-action: none; cursor: grab;
+  }
+  #map:active { cursor: grabbing; }
+  #status {
+    position: fixed; right: 10px; bottom: 6px; margin: 0; max-width: calc(100vw - 20px);
+    font-size: 11px; color: var(--muted); opacity: 0.75; pointer-events: none;
+    text-shadow: 0 0 3px var(--bg), 0 0 3px var(--bg);
+  }
+
+  #open {
+    position: fixed; top: 12px; left: 12px; z-index: 1; width: 44px; height: 44px; padding: 0;
+    display: grid; place-items: center; border-radius: 50%; cursor: pointer;
+    background: var(--panel); color: var(--fg); border: 1px solid var(--rule);
+    box-shadow: 0 1px 6px rgb(0 0 0 / 0.25);
+  }
+  #open svg { width: 30px; height: 30px; }
+
+  /* the drawer: slides in from the left over the map, hidden (and out of the tab order) when shut */
+  #drawer {
+    position: fixed; inset: 0 auto 0 0; z-index: 2; box-sizing: border-box;
+    width: min(340px, 100vw); overflow-y: auto; overscroll-behavior: contain;
+    padding: 14px 16px 28px; background: var(--panel);
+    border-right: 1px solid var(--rule); outline: 1px solid var(--rule); outline-offset: -5px;
+    box-shadow: 4px 0 24px rgb(0 0 0 / 0.3);
+    transform: translateX(-102%); visibility: hidden;
+    transition: transform 0.25s ease, visibility 0s linear 0.25s;
+  }
+  #drawer.open { transform: none; visibility: visible; transition: transform 0.25s ease; }
+  @media (prefers-reduced-motion: reduce) { #drawer, #drawer.open { transition: none; } }
+  @media (max-width: 480px) { #drawer { width: 100vw; border-right: none; } }
+
+  header { display: flex; align-items: start; justify-content: space-between; gap: 8px; }
+  h1 { font: 28px/1.1 var(--serif); margin: 4px 0 2px; letter-spacing: 0.06em; }
+  header p { margin: 0; color: var(--muted); font-size: 12px; }
+  #close { flex: none; width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--rule); background: none; color: var(--fg); font-size: 16px; cursor: pointer; }
+
+  section { margin-top: 18px; }
+  h2 {
+    font: 19px/1.2 var(--serif); color: var(--accent); letter-spacing: 0.08em; font-variant: small-caps;
+    margin: 0 0 8px; padding-bottom: 3px; border-bottom: 3px double var(--rule); scroll-margin-top: 12px;
+  }
+  h3 { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin: 12px 0 4px; }
+
+  .family { padding: 6px 0 8px; border-bottom: 1px solid var(--line); }
+  .family:last-child { border-bottom: none; }
+  .fam { display: flex; align-items: center; gap: 8px; font-family: var(--serif); font-size: 15px; }
+  .fam .count { margin-left: auto; font: 11px system-ui, sans-serif; color: var(--muted); }
+  .thumbs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .thumb {
+    height: 52px; min-width: 44px; max-width: 96px; padding: 3px; display: grid; place-items: center;
+    background: var(--sheet); color: var(--sheet-ink); border: 1px solid var(--rule); border-radius: 3px; cursor: pointer;
+  }
+  .thumb img, .thumb svg { height: 44px; max-width: 88px; object-fit: contain; display: block; }
+  .thumb[aria-pressed=false] { border-style: dashed; border-color: var(--line); }
+  .thumb[aria-pressed=false] > * { filter: grayscale(1); opacity: 0.3; }
+  .thumb[aria-pressed=true] { box-shadow: inset 0 0 0 1px var(--accent); border-color: var(--accent); }
+  .thumb.none { font: 13px var(--serif); padding: 0 10px; }
+
   label { display: flex; align-items: center; gap: 8px; }
-  input[type=color] { width: 40px; height: 28px; padding: 0; border: 1px solid var(--line); background: none; }
-  fieldset { display: flex; flex-wrap: wrap; gap: 4px 16px; border: 1px solid var(--line); padding: 2px 10px 4px; margin: 0; }
-  legend { font-size: 12px; color: var(--muted); padding: 0 4px; }
-  canvas { display: block; width: 100%; height: auto; border: 1px solid var(--line); touch-action: none; cursor: grab; }
-  canvas:active { cursor: grabbing; }
-  #status, footer { color: var(--muted); font-size: 13px; margin-top: 8px; }
+  .rows { display: grid; gap: 8px; }
+  .rows label { justify-content: space-between; }
+  .rows label.check { justify-content: start; }
+  select, input[type=text] { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--rule); border-radius: 3px; padding: 3px 4px; max-width: 190px; }
+  input[type=color] { width: 40px; height: 28px; padding: 0; border: 1px solid var(--rule); background: none; }
+  input[type=checkbox], input[type=range] { accent-color: var(--accent); }
+  .title { display: flex; gap: 6px; }
+  .title input { flex: 1; min-width: 0; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .about p { color: var(--muted); font-size: 12px; margin: 0; }
 </style>
 </head>
 <body>
-<main>
-  <h1>Portolani: drag to pan, wheel or pinch to zoom</h1>
-  <div class="controls">
-    <label>Ink <input id="ink" type="color" value="#3b2a1a"></label>
-    <label>Parchment <input id="parchment" type="color" value="#e9d8b4"></label>
-    <label>Density <input id="density" type="range" min="0" max="2" step="0.25" value="1"> <output id="densityOut">1</output></label>
-    <label>Projection <select id="projection">
-      <option value="mercator">Mercator (rhumb lines straight)</option>
-      <option value="plate-carree">Plate carrée (equal degrees)</option>
-      <option value="miller">Miller (poles tamed)</option>
-      <option value="equal-area">Equal-area (Gall–Peters)</option>
-    </select></label>
-    <label>Rendering <select id="rendering">
-      <option value="vivid">Vivid (drawn as vectors)</option>
-      <option value="scanned">Scanned (crops of the scans)</option>
-      <option value="plain">Plain (drawn in code, no images)</option>
-    </select></label>
-    <label>Roses <select id="rose"></select></label>
-    <label>Monsters and ships <select id="monster"></select></label>
-    <label>Towns <select id="town"></select></label>
-    <fieldset><legend>Ornaments</legend>
-      <label><input type="checkbox" id="kind-rose"> Roses</label>
-      <label><input type="checkbox" id="kind-ship"> Ships</label>
-      <label><input type="checkbox" id="kind-monster"> Monsters</label>
-      <label><input type="checkbox" id="kind-cartouche"> Cartouche</label>
-      <label><input type="checkbox" id="kind-mountain"> Mountains</label>
-    </fieldset>
-    <label><input type="checkbox" id="names"> Names</label>
-    <label><input type="checkbox" id="rhumb"> Rhumb lines</label>
-    <label><input type="checkbox" id="continents"> Continents (zoom 3 and out)</label>
-    <label>Regions (zoom 4 and 5) <select id="regions">
-      <option value="off">Off</option>
-      <option value="latin">Latin (Hispania)</option>
-      <option value="english">English (Iberia)</option>
-    </select></label>
-    <label>Title <select id="titleMode">
-      <option value="auto">Automatic (what the view shows)</option>
-      <option value="custom">Custom</option>
-    </select> <input id="title" type="text" value="PORTOLANI" disabled maxlength="40" size="14" aria-label="Title text"></label>
-    <label>Scale bar <select id="scale">
-      <option value="off">Off</option>
-      <option value="genoese">Genoese (vivid, drawn as vectors)</option>
-      <option value="chequer">Chequer</option>
-      <option value="chevron">Chevron ladder (Genoese)</option>
-      <option value="ribbon">Ribbon (Martines)</option>
-      <option value="beads">Beads (Prunes)</option>
-      <option value="ruled">Ruled (Beccari)</option>
-    </select></label>
-  </div>
-  <canvas id="map" width="1600" height="1000"></canvas>
-  <div id="status">Loading…</div>
-  <footer>Ornaments drawn as vectors after, or cropped from, public-domain scans via Wikimedia Commons: Olaus Magnus, Carta Marina (1539); Jorge de Aguiar, wind rose and chart (1492, Beinecke Library, Yale); Cresques Abraham, Catalan Atlas (1375, BnF Gallica); a Genoese chart (c. 1320-1350, Library of Congress); Frederik de Wit, cartouche (Royal Museums Greenwich). Coasts and places: Natural Earth. Lettering: IM Fell English (SIL OFL).</footer>
-</main>
+<canvas id="map" width="1600" height="1000" aria-label="Chart: drag to pan, wheel or pinch to zoom"></canvas>
+<p id="status" role="status">Loading…</p>
+
+<button id="open" type="button" aria-label="Settings" aria-controls="drawer" aria-expanded="false">
+  <svg viewBox="-16 -16 32 32" aria-hidden="true">
+    <circle r="13" fill="none" stroke="currentColor" stroke-width="1"/>
+    <path d="M0-14 2.4-2.4 14 0 2.4 2.4 0 14-2.4 2.4-14 0-2.4-2.4Z" fill="currentColor"/>
+    <path d="M7-7 1.5 0 7 7 0 1.5-7 7-1.5 0-7-7 0-1.5Z" fill="#8c2f1e" opacity="0.85"/>
+    <circle r="1.6" fill="none" stroke="currentColor" stroke-width="0.8"/>
+  </svg>
+</button>
+
+<aside id="drawer" role="dialog" aria-label="Settings" aria-modal="false">
+  <header>
+    <div>
+      <h1>Portolani</h1>
+      <p>Drag to pan, wheel or pinch to zoom.</p>
+    </div>
+    <button id="close" type="button" aria-label="Close settings">✕</button>
+  </header>
+
+  <section aria-labelledby="h-sea">
+    <h2 id="h-sea">Sea</h2>
+    <h3>Monsters</h3>
+    <div id="pick-monster"></div>
+    <h3>Ships</h3>
+    <div id="pick-ship"></div>
+  </section>
+
+  <section aria-labelledby="h-roses">
+    <h2 id="h-roses">Roses</h2>
+    <div id="pick-rose"></div>
+  </section>
+
+  <section aria-labelledby="h-towns">
+    <h2 id="h-towns">Towns</h2>
+    <div class="rows"><label class="check"><input type="checkbox" id="townSize"> Size by population</label></div>
+    <div id="pick-town"></div>
+  </section>
+
+  <section aria-labelledby="h-land">
+    <h2 id="h-land">Land</h2>
+    <h3>Mountains</h3>
+    <div id="pick-mountain"></div>
+  </section>
+
+  <section aria-labelledby="h-cartouche">
+    <h2 id="h-cartouche">Cartouche</h2>
+    <div id="pick-cartouche" class="thumbs" role="group" aria-label="Cartouche, one of"></div>
+  </section>
+
+  <section aria-labelledby="h-map">
+    <h2 id="h-map">Map</h2>
+    <div class="rows">
+      <label>Projection <select id="projection">
+        <option value="mercator">Mercator (rhumb lines straight)</option>
+        <option value="plate-carree">Plate carrée (equal degrees)</option>
+        <option value="miller">Miller (poles tamed)</option>
+        <option value="equal-area">Equal-area (Gall–Peters)</option>
+      </select></label>
+      <label class="check"><input type="checkbox" id="names"> Names</label>
+      <label class="check"><input type="checkbox" id="rhumb"> Rhumb lines</label>
+      <label class="check"><input type="checkbox" id="continents"> Continents (zoom 3 and out)</label>
+      <label>Regions (zoom 4, 5) <select id="regions">
+        <option value="off">Off</option>
+        <option value="latin">Latin (Hispania)</option>
+        <option value="english">English (Iberia)</option>
+      </select></label>
+      <label>Title <select id="titleMode">
+        <option value="auto">Automatic (what the view shows)</option>
+        <option value="custom">Custom</option>
+      </select></label>
+      <div class="title"><input id="title" type="text" value="PORTOLANI" disabled maxlength="40" aria-label="Title text"></div>
+      <label>Scale bar <select id="scale">
+        <option value="off">Off</option>
+        <option value="genoese">Genoese (drawn as vectors)</option>
+        <option value="chequer">Chequer</option>
+        <option value="chevron">Chevron ladder (Genoese)</option>
+        <option value="ribbon">Ribbon (Martines)</option>
+        <option value="beads">Beads (Prunes)</option>
+        <option value="ruled">Ruled (Beccari)</option>
+      </select></label>
+      <label>Density <span><input id="density" type="range" min="0" max="2" step="0.25" value="1"> <output id="densityOut">1</output></span></label>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-colours">
+    <h2 id="h-colours">Colours</h2>
+    <div class="rows">
+      <label>Ink <input id="ink" type="color" value="#3b2a1a"></label>
+      <label>Parchment <input id="parchment" type="color" value="#e9d8b4"></label>
+    </div>
+  </section>
+
+  <section class="about" aria-labelledby="h-about">
+    <h2 id="h-about">About</h2>
+    <p>Ornaments drawn as vectors after, or cropped from, public-domain scans via Wikimedia Commons: Olaus Magnus, Carta Marina (1539); Jorge de Aguiar, wind rose and chart (1492, Beinecke Library, Yale); Cresques Abraham, Catalan Atlas (1375, BnF Gallica); a Genoese chart (c. 1320-1350, Library of Congress); Frederik de Wit, cartouche (Royal Museums Greenwich). Coasts and places: Natural Earth. Lettering: IM Fell English (SIL OFL).</p>
+  </section>
+</aside>
 <script type="importmap">{ "imports": { "coast-wright": "./coast-wright/index.js" } }</script>
 <script type="module" src="page.js"></script>
 </body>
