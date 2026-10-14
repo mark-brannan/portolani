@@ -547,9 +547,9 @@ function viewData(world, view) {
   return { proj, land, coastLL, coast, places, lesser, names, urban };
 }
 
-// Two packs draw the same designs two ways: `vivid` as vectors, `scanned` as crops of the scans. A
+// Two packs draw the same designs two ways: `vivid` as vectors, `scanned` as crops of the scans; `debry` is one hand-coloured plate's own ships, monster and villages. A
 // sprite's `style` names its design family; a scene picks a rendering, then a style for each kind.
-const PACK_NAMES = ['vivid', 'scanned'];
+const PACK_NAMES = ['vivid', 'scanned', 'debry'];
 async function readManifests(environment = env) {
   const ms = await Promise.all(PACK_NAMES.map((n) => environment.readJSON(`packs/${n}/pack.json`)));
   return Object.fromEntries(PACK_NAMES.map((n, i) => [n, ms[i]]));
@@ -661,7 +661,7 @@ async function listSprites(environment) {
 const DEFAULT_RULES = [
   (s) => s.pack === 'vivid' && s.kind === 'rose' && s.style === 'aguiar',
   (s) => s.pack === 'vivid' && s.kind === 'cartouche',
-  (s) => s.kind === 'monster' && ((s.pack === 'scanned' && (s.style === 'carta-marina' || s.style === 'pare')) || (s.pack === 'vivid' && s.style === 'heraldic')),
+  (s) => s.kind === 'monster' && (((s.pack === 'scanned' && (s.style === 'carta-marina' || s.style === 'pare')) || s.pack === 'debry') || (s.pack === 'vivid' && s.style === 'heraldic')),
   (s) => s.kind === 'ship',
   (s) => s.kind === 'town' && !(s.pack === 'plain' && s.style === 'carta-marina'), // the Carta Marina's buildings are offered, not drawn unasked
   (s) => s.kind === 'mountain',

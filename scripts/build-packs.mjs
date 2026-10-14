@@ -1,10 +1,15 @@
 // Pack build: crop public-domain scans into sprites and write each pack's pack.json.
-// Usage: node scripts/build-packs.mjs [--keep <dir> [idPrefix]]
+// Usage: node scripts/build-packs.mjs [--only <packName>] [--keep <dir> [idPrefix]]
 //   (needs ImageMagick 7 `magick` on PATH; network for the first run)
+// `--only` builds just that pack and downloads just its scans; the other packs and ASSETS.md are
+// left untouched.
 // `--keep` also writes each sprite's working images into <dir>, for sprites whose id starts with
 // idPrefix (all when omitted): `<id>.raw.png`, the crop as cut and deskewed from the scan with no
-// background removal, and `<id>.cut.png`, the finished sprite laid on parchment at 1:1. They are the
-// before and after of the keying, kept so a crop can be judged and refined later (docs/towns-aguiar).
+// background removal; `<id>.key.png`, the key between them, white where the sprite is opaque and
+// black where it is not, after the levels, silhouette and masks and before the scan's colour is
+// put back; and `<id>.cut.png`, the finished sprite laid on parchment at 1:1. They are the before,
+// the middle and the after of the keying, kept so a crop can be judged and refined later
+// (docs/towns-aguiar, docs/debry-virginia).
 //
 // scripts/sources.json is the sources manifest: every file, URL, sha256 and rights line. Scans are
 // downloaded into downloads/ when missing, checked against it, and ASSETS.md is written from it.
@@ -58,8 +63,10 @@ const SEA_FIGURE_LEVEL = [26, 56]; // woodcut line only; colour fills and sea ha
 const SEA_FIGURE = { sat: 24, close: 7, open: 5, dilate: 4, feather: 2, minArea: 900 };
 
 const PARCHMENT = '#e9d8b4'; // the renderer's default paper, for the kept `.cut.png`
-const argv = process.argv.slice(2), keepAt = argv.indexOf('--keep');
-const keep = keepAt >= 0 ? join(ROOT, argv[keepAt + 1]) : null, keepPrefix = (keepAt >= 0 && argv[keepAt + 2]) || '';
+const argv = process.argv.slice(2), keepAt = argv.indexOf('--keep'), onlyAt = argv.indexOf('--only');
+const keep = keepAt >= 0 ? join(ROOT, argv[keepAt + 1]) : null;
+const keepPrefix = keepAt >= 0 && argv[keepAt + 2] && !argv[keepAt + 2].startsWith('--') ? argv[keepAt + 2] : '';
+const only = onlyAt >= 0 ? argv[onlyAt + 1] : null;
 if (keep) mkdirSync(keep, { recursive: true });
 
 const CLEAN_DISK = 5; // px radius of the closing that removes scanned lettering
@@ -69,6 +76,10 @@ const TOWN_LEVEL = [30, 80]; // darkness levels for the Aguiar towns: the thin b
 // the faint lettering that shows through from the reverse; sizes are for ~600 dpi scans.
 const PAPER_LEVEL = [20, 50];
 const PAPER_FIGURE = { ink: 50, close: 14, open: 1, dilate: 8, feather: 4, minArea: 40000 };
+const DEBRY_LEVEL = [30, 72]; // de Bry's hand-coloured engraving: brown ink and colour wash count, the cream paper does not
+const TREE_LEVEL = [45, 75]; // the red channel: teal and green foliage dark, yellow land and cream paper light
+const TREE_FIGURE = { ink: 50, close: 8, open: 3, dilate: 3, feather: 2, minArea: 2000 };
+const VILLAGE_LEVEL = [25, 58]; // min(R,G,B): the straw huts count as ink, the yellow land and cream paper mostly do not
 const MASK_FEATHER = 6; // px blur on a polygon mask's edge, in scan pixels (`maskFeather` widens it)
 const MAX_SCALE = 3; // a sprite is stored at most this many px wide per CSS px it is drawn (sizePx)
 
@@ -152,6 +163,37 @@ const PACKS = [
         erase: [[1380, 140, 1540, 240]] }, // the WA monogram
     ],
   },
+  {
+    // de Bry after John White, The arrival of the Englishmen in Virginia (1590): a hand-coloured engraving,
+    // so the pack keeps the scan's colour (the default). Ships, the sea monster, trees and palisaded villages.
+    name: 'debry',
+    title: 'Sprites cropped from Theodor de Bry after John White, The arrival of the Englishmen in Virginia, Briefe and True Report, 1590 (hand-coloured)',
+    licence: 'Public domain; Harvard University via the Public Domain Image Archive (Public Domain Worldwide, no additional rights)',
+    ink: '#3b2a1a',
+    sprites: [
+      // the two three-masted ships, hand-coloured, both bows to the left; the sea is hatched in the same ink as the rigging, so a polygon drawn round each
+      { id: 'debry-ship-a', kind: 'ship', style: 'debry', scan: 'debry-virginia', crop: [1180, 1050, 1620, 1520], sizePx: 84, heading: 'left', level: DEBRY_LEVEL,
+        mask: [[1208, 1130], [1330, 1105], [1415, 1058], [1430, 1058], [1480, 1100], [1542, 1098], [1552, 1150], [1548, 1240], [1592, 1295], [1580, 1312], [1555, 1340], [1558, 1505], [1510, 1512], [1420, 1512], [1320, 1485], [1275, 1460], [1228, 1475], [1268, 1445], [1280, 1390], [1248, 1265], [1212, 1170]] },
+      { id: 'debry-ship-b', kind: 'ship', style: 'debry', scan: 'debry-virginia', crop: [1860, 1000, 2180, 1400], sizePx: 72, heading: 'left', level: DEBRY_LEVEL,
+        mask: [[1896, 1178], [1918, 1112], [1972, 1096], [1980, 1050], [2010, 1040], [2038, 1008], [2050, 1012], [2105, 1070], [2135, 1080], [2145, 1150], [2160, 1185], [2178, 1190], [2160, 1215], [2152, 1250], [2152, 1325], [2128, 1342], [2050, 1338], [1970, 1305], [1935, 1300], [1890, 1338], [1912, 1300], [1920, 1240], [1900, 1190]] },
+      // the sea monster at the foot of the plate, with the swell it rises from
+      { id: 'debry-monster', kind: 'monster', style: 'debry', scan: 'debry-virginia', crop: [500, 1250, 980, 1550], sizePx: 190, minClearancePx: 150, weight: 2, level: DEBRY_LEVEL,
+        mask: [[528, 1355], [552, 1270], [590, 1275], [628, 1292], [628, 1350], [622, 1420], [650, 1435], [685, 1428], [700, 1410], [715, 1390], [745, 1368], [790, 1352], [830, 1350], [892, 1358], [892, 1420], [920, 1450], [915, 1485], [850, 1505], [790, 1510], [750, 1500], [730, 1490], [680, 1465], [620, 1455], [570, 1472], [550, 1465], [560, 1400]] },
+      // a dugout canoe with two paddlers, on water hatched in its own ink: a polygon drawn round it
+      { id: 'debry-canoe', kind: 'ship', style: 'debry', scan: 'debry-virginia', crop: [175, 690, 310, 775], sizePx: 34, heading: 'left', level: DEBRY_LEVEL, mask: [[190, 748], [200, 727], [213, 721], [220, 712], [222, 703], [233, 707], [237, 718], [270, 717], [285, 707], [295, 720], [289, 737], [280, 747], [252, 758], [227, 763], [205, 762]], maskFeather: 3 },
+      // trees: the foliage is a teal or green wash on yellow land hatched in brown, so the red channel keys it and a silhouette of the wash drops the hatching round it
+      { id: 'debry-tree-poplar', kind: 'tree', style: 'debry', scan: 'debry-virginia', crop: [70, 125, 185, 305], sizePx: 36, dark: 'red', level: TREE_LEVEL, silhouette: TREE_FIGURE },
+      { id: 'debry-tree-poplars', kind: 'tree', style: 'debry', scan: 'debry-virginia', crop: [100, 340, 240, 490], sizePx: 44, dark: 'red', level: TREE_LEVEL, silhouette: TREE_FIGURE },
+      { id: 'debry-tree-broadleaf', kind: 'tree', style: 'debry', scan: 'debry-virginia', crop: [275, 205, 465, 360], sizePx: 56, dark: 'red', level: TREE_LEVEL, silhouette: TREE_FIGURE },
+      { id: 'debry-tree-grove', kind: 'tree', style: 'debry', scan: 'debry-virginia', crop: [1390, 415, 1575, 580], sizePx: 54, dark: 'red', level: TREE_LEVEL, silhouette: TREE_FIGURE },
+      { id: 'debry-tree-conifer', kind: 'tree', style: 'debry', scan: 'debry-virginia', crop: [1590, 450, 1675, 565], sizePx: 26, dark: 'red', level: TREE_LEVEL, silhouette: TREE_FIGURE, erase: [[1648, 450, 1675, 520]] },
+      { id: 'debry-tree-palm', kind: 'tree', style: 'debry', scan: 'debry-virginia', crop: [2015, 415, 2095, 580], sizePx: 24, dark: 'red', level: TREE_LEVEL, silhouette: TREE_FIGURE },
+      // palisaded Algonquian villages: dark ink on pale land, an ellipse round each ring drops the hatching beyond it
+      { id: 'debry-village-dasamonguepeuc', kind: 'town', style: 'debry', scan: 'debry-virginia', crop: [595, 290, 715, 375], sizePx: 44, dark: 'min', level: VILLAGE_LEVEL, ellipse: [62, 43, 50, 32] },
+      { id: 'debry-village-pasquenoke', kind: 'town', style: 'debry', scan: 'debry-virginia', crop: [1300, 160, 1415, 235], sizePx: 44, dark: 'min', level: VILLAGE_LEVEL, ellipse: [57, 38, 48, 30] },
+      { id: 'debry-village-roanoac', kind: 'town', style: 'debry', scan: 'debry-virginia', crop: [760, 620, 900, 710], sizePx: 48, dark: 'min', level: VILLAGE_LEVEL, ellipse: [70, 43, 62, 38] },
+    ],
+  },
 ];
 
 function magick(...args) {
@@ -183,8 +225,11 @@ function buildSprite(sprite, colour, outDir, tmp) {
   }
 
   // Ink = darkness. 'lum' for line work; 'min' (min of R,G,B) so gilt and colour count as ink too.
+  // 'red' is the red channel alone: teal and green washes on a yellow ground read as dark, paper and
+  // the yellow wash as light, which keys the green foliage of a hand-coloured engraving.
   const dark = sprite.dark === 'min'
     ? [t('crop'), '-separate', '-evaluate-sequence', 'min']
+    : sprite.dark === 'red' ? [t('crop'), '-channel', 'R', '-separate', '+channel']
     : [t('crop'), '-colorspace', 'gray'];
   // a grainy scan's paper speckles are taken out with a median before the levels catch them
   const denoise = sprite.denoise ? ['-statistic', 'Median', `${sprite.denoise}x${sprite.denoise}`] : [];
@@ -213,6 +258,12 @@ function buildSprite(sprite, colour, outDir, tmp) {
     magick('-size', `${w}x${h}`, 'xc:black', '-fill', 'white', '-draw', `polygon ${pts}`, '-blur', `0x${sprite.maskFeather ?? MASK_FEATHER}`, t('mask'));
     masks.push(t('mask'));
   }
+  if (sprite.ellipse) {
+    // [cx, cy, rx, ry] in crop pixels: a village's palisade ring, say, with the land round it dropped
+    const [ex, ey, rx, ry] = sprite.ellipse;
+    magick('-size', `${w}x${h}`, 'xc:black', '-fill', 'white', '-draw', `ellipse ${ex},${ey} ${rx},${ry} 0,360`, '-blur', '0x2', t('ellipse'));
+    masks.push(t('ellipse'));
+  }
   if (sprite.circle) {
     const [cx, cy, r] = sprite.circle;
     magick('-size', `${w}x${h}`, 'xc:black', '-fill', 'white', '-draw', `circle ${cx},${cy} ${cx + r},${cy}`, '-blur', '0x2', t('circle'));
@@ -237,6 +288,8 @@ function buildSprite(sprite, colour, outDir, tmp) {
     magick(alpha, m, '-compose', 'multiply', '-composite', t('alpha'));
     alpha = t('alpha');
   }
+
+  if (keep && sprite.id.startsWith(keepPrefix)) magick(alpha, '-strip', '-define', 'png:exclude-chunk=all', join(keep, `${sprite.id}.key.png`));
 
   // Trim box on the alpha, recorded so the manifest crop is the final sprite's footprint in the scan.
   const trim = magick(alpha, '-fuzz', '3%', '-format', '%@', 'info:');
@@ -301,9 +354,11 @@ function writeAssets() {
 
 const tmp = mkdtempSync(join(tmpdir(), 'packs-'));
 try {
-  const used = new Set(PACKS.flatMap((p) => p.sprites.map((s) => s.scan)));
+  const packs = only ? PACKS.filter((p) => p.name === only) : PACKS;
+  if (!packs.length) throw new Error(`--only ${only}: no such pack (${PACKS.map((p) => p.name).join(', ')})`);
+  const used = new Set(packs.flatMap((p) => p.sprites.map((s) => s.scan)));
   for (const id of used) await fetchSource(SOURCES[id]);
-  for (const pack of PACKS) {
+  for (const pack of packs) {
     const outDir = join(ROOT, 'packs', pack.name);
     mkdirSync(outDir, { recursive: true });
     const colour = pack.colour ?? 'source';
@@ -314,7 +369,7 @@ try {
     writeFileSync(join(outDir, 'pack.json'), json + '\n');
     console.log(`${pack.name}: ${sprites.map((s) => s.id).join(', ')}`);
   }
-  writeAssets();
+  if (!only) writeAssets();
 } finally {
   rmSync(tmp, { recursive: true, force: true });
 }

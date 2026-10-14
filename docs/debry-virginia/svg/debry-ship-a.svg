@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 470" width="440" height="470">
+  <!-- debry-ship-a traced over docs/debry-virginia/debry-ship-a.raw.png: viewBox = the crop's pixel size -->
+  <defs>
+    <pattern id="ratlines" width="8" height="7" patternUnits="userSpaceOnUse"><path d="M0 3.5H8" stroke="#3b2a1a" stroke-width="0.7"/></pattern>
+    <clipPath id="fore-shrouds"><path d="M152 168L140 345L205 350L190 168Z"/></clipPath>
+    <clipPath id="main-shrouds"><path d="M232 150L205 360L290 345L268 150Z"/></clipPath>
+  </defs>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- rigging: stays, backstays and the hanging lines from the yard ends -->
+    <g stroke="#3b2a1a" stroke-width="0.9">
+      <path d="M243 12L171 60M243 12L225 62L200 130M243 12L290 70L330 140M243 12L324 147"/>
+      <path d="M171 60L37 90M37 90Q50 170 100 255M171 60L150 168M171 60L195 168"/>
+      <path d="M355 52Q350 160 345 295M324 147L367 160M324 147L345 300"/>
+      <path d="M232 150L120 300M268 150L300 300M243 12L228 150M243 12L270 150"/>
+    </g>
+    <!-- ratlines between the shrouds -->
+    <rect x="130" y="160" width="90" height="200" fill="url(#ratlines)" clip-path="url(#fore-shrouds)"/>
+    <rect x="200" y="140" width="100" height="230" fill="url(#ratlines)" clip-path="url(#main-shrouds)"/>
+    <g stroke="#3b2a1a" stroke-width="0.9">
+      <path d="M152 168L140 345M190 168L205 340M232 150L205 360M268 150L290 345"/>
+    </g>
+    <!-- masts and yards -->
+    <g stroke="#6b3f1f" stroke-width="5">
+      <path d="M243 12L250 365"/><path d="M171 60L173 372"/><path d="M324 147L325 312"/>
+    </g>
+    <g stroke="#6b3f1f" stroke-width="6">
+      <path d="M200 132L305 107"/><path d="M115 149L225 131"/>
+      <path d="M37 90L290 280" stroke-width="7"/>
+      <path d="M355 52L155 305" stroke-width="7"/>
+      <path d="M367 160L290 330" stroke-width="5"/>
+      <path d="M65 215L130 340" stroke-width="7"/>
+      <path d="M410 245L345 300" stroke-width="7"/>
+    </g>
+    <path d="M95 305Q86 298 93 313" stroke="#6b3f1f" stroke-width="3"/>
+  </g>
+  <!-- tops -->
+  <path d="M152 156H190L186 169H156Z" fill="#d9b45a" stroke="#3b2a1a" stroke-width="1"/>
+  <path d="M229 135H270L266 151H233Z" fill="#d9b45a" stroke="#3b2a1a" stroke-width="1"/>
+  <!-- hull: the cream strake with its gun ports, the brown works above, the dark stern lantern -->
+  <path d="M115 352L330 352L346 385Q330 425 290 440Q240 455 200 448Q140 435 118 398Z" fill="#e6dcc4" stroke="#3b2a1a" stroke-width="1.5"/>
+  <path d="M115 345Q200 372 250 358L345 330L346 300L376 305L370 345L330 358L250 390L190 392L130 378Z" fill="#8a5a2e" stroke="#3b2a1a" stroke-width="1.5"/>
+  <path d="M130 372L168 345L200 392L250 392L330 358" fill="none" stroke="#d9b45a" stroke-width="3"/>
+  <g fill="#3b2a1a"><rect x="140" y="395" width="12" height="7"/><rect x="178" y="403" width="12" height="7"/><rect x="208" y="410" width="12" height="7"/><rect x="238" y="414" width="12" height="7"/><rect x="268" y="410" width="12" height="7"/></g>
+  <path d="M305 385Q322 372 345 378Q372 392 374 420Q370 448 345 452Q315 452 306 425Z" fill="#3a2a20" stroke="#1d140d" stroke-width="1.5"/>
+  <path d="M120 420L45 432" stroke="#3b2a1a" stroke-width="1.2" fill="none"/>
+</svg>
