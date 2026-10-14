@@ -9,6 +9,7 @@
 import { fill, limn, runs, pen, simplify, meander, footprint, lozenge, hatch, geojsonRings, geojsonPolygons } from 'coast-wright';
 
 const RIVER_INK = '#26355a'; // blue-black, as the Aguiar rivers are drawn
+const RIVER_BLUE = '#2f5f8f', RIVER_DARK_BLUE = '#14284f'; // the plain line's blue; the Carta Marina pair's dark blue
 const LAKE_BLUE = '#7fa3b8', HATCH_BLUE = '#2e5a7a', LAKE_GREY = '#8fa3a8';
 const LOZENGE_PX = 120; // a lake whose footprint is shorter than this is drawn as a lozenge (Aguiar)
 const LAKE_MIN_PX = 8; // and one shorter than this is too small to draw as one at this zoom
@@ -70,10 +71,10 @@ export const RIVERS = {
   // Aguiar, 1492: one blue-black line wiggling the whole way, the bends of the data simplified away first
   aguiar: (g, data, features) => stroke(g, pixelRuns(data, features, 8).map(({ run, phase }) =>
     meander(run, { amplitude: 3, wavelength: 26, phase })), RIVER_INK, 2.4),
-  // Carta Marina, 1539: two thin parallel lines in the chart's ink, the river between them
+  // Carta Marina, 1539: two thin parallel lines in dark blue, the river between them
   marina: (g, data, features) => stroke(g, pixelRuns(data, features, 2).flatMap(({ run }) =>
-    [offset(run, 1.25), offset(run, -1.25)]), data.palette.ink, 0.9),
-  plain: (g, data, features) => stroke(g, pixelRuns(data, features, 1).map(({ run }) => run), RIVER_INK, 1.4),
+    [offset(run, 1.25), offset(run, -1.25)]), RIVER_DARK_BLUE, 0.9),
+  plain: (g, data, features) => stroke(g, pixelRuns(data, features, 1).map(({ run }) => run), RIVER_BLUE, 1.4),
 };
 
 // True shapes, washed, hatched if asked, and edged.

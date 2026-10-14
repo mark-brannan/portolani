@@ -33,7 +33,7 @@ const env = {
 const $ = (id) => document.getElementById(id);
 const canvas = $('map'), ctx = canvas.getContext('2d');
 
-const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continents: false, regions: 'off', title: 'PORTOLANI', autoTitle: true, land: 'islands', rivers: 'off', lakes: 'off', redSea: false, townSize: TOWN_SIZES[0] };
+const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continents: true, regions: 'latin', title: 'PORTOLANI', autoTitle: true, land: 'ochre', rivers: 'plain', lakes: 'marina', redSea: false, townSize: TOWN_SIZES[0] };
 
 // ---------------------------------------------------------------- the sprites on offer
 
@@ -72,7 +72,7 @@ function styleFromHash() {
     density: density >= 0 && density <= 2 ? density : DEFAULTS.density,
     names: q.get('names') !== '0',
     rhumb: q.get('rhumb') !== '0',
-    continents: q.get('continents') === '1',
+    continents: q.has('continents') ? q.get('continents') === '1' : DEFAULTS.continents,
     regions: REGION_LANGS.includes(q.get('regions')) ? q.get('regions') : DEFAULTS.regions,
     title: q.get('title') ?? DEFAULTS.title,
     // a link from before automatic was the default, with a title and no autotitle, keeps its title
@@ -106,7 +106,7 @@ function writeHash() {
   if (st.townSize !== DEFAULTS.townSize) q.set('townsize', st.townSize);
   if (!st.names) q.set('names', '0');
   if (!st.rhumb) q.set('rhumb', '0');
-  if (st.continents) q.set('continents', '1');
+  if (st.continents !== DEFAULTS.continents) q.set('continents', st.continents ? '1' : '0');
   if (st.regions !== DEFAULTS.regions) q.set('regions', st.regions);
   // a title without autotitle reads as custom (styleFromHash), so a typed title carries the mode with it
   if (st.autoTitle !== DEFAULTS.autoTitle || st.title !== DEFAULTS.title) q.set('autotitle', st.autoTitle ? '1' : '0');
