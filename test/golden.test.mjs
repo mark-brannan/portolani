@@ -41,7 +41,7 @@ const env = {
 };
 
 async function renderView(view) {
-  const { scene, data, bg } = await createScene(env, { view });
+  const { scene, data, bg } = await createScene(env, { view, scale: 'off' });
   const full = createCanvas(W, H);
   drawScene(full.getContext('2d'), scene, data, bg, { scale: 1, x: 0, y: 0 });
   const small = createCanvas(SW, SH);
