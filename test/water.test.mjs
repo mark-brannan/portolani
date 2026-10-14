@@ -77,11 +77,12 @@ test('past z7 a view over Seattle keeps Lake Washington, which 50m lacks', { ski
   assert.ok(!b.includes('Lake Washington'), `50m lakes: ${b.join(', ')}`);
 });
 
-// Kunming at z10.5: Dian Chi is in no Natural Earth file, only in GSHHG's lakes; over Seattle the
-// GSHHG Lake Washington stands in for Natural Earth's, which is dropped so the lake is drawn once
+// Kunming at z10.5: Dian Chi is in no Natural Earth file, only in GSHHG's lakes. Over Otsu, GSHHG's
+// Biwa stands in for Natural Earth's, which is dropped so the lake is drawn once. By Sudbury, Lake
+// Panache lies inside GSHHG Superior's box but not its water, so it stays.
 const KUNMING = { lon: 102.7, lat: 24.9, zoom: 10.5 }, DIAN_CHI = [102.69, 24.85];
-const OTSU = { lon: 135.9, lat: 35.05, zoom: 10.5 };
-test('past z10 GSHHG lakes draw what Natural Earth lacks, Dian Chi at Kunming, and a lake once', { skip: !HAVE_GSHHG && 'no 10m water or GSHHG downloads' }, async () => {
+const OTSU = { lon: 135.9, lat: 35.05, zoom: 10.5 }, SUDBURY = { lon: -81.4, lat: 46.2, zoom: 10.5 };
+test('past z10 GSHHG lakes draw what Natural Earth lacks, Dian Chi at Kunming, and a lake once but every lake', { skip: !HAVE_GSHHG && 'no 10m water or GSHHG downloads' }, async () => {
   const holds = (l, [lon, lat]) => l.box.x0 <= lon && lon <= l.box.x1 && l.box.y0 <= lat && lat <= l.box.y1;
   const kept = async (tag, env, view) => { const m = await scene(tag); return m.keptWater((await m.createScene(env, { ...OPTS, view })).data).lakes; };
   const ne = await kept('kunming-10m', with10m, KUNMING), both = await kept('kunming-gshhg', withLakes, KUNMING);
@@ -89,6 +90,8 @@ test('past z10 GSHHG lakes draw what Natural Earth lacks, Dian Chi at Kunming, a
   assert.ok(both.some((l) => l.key.startsWith('gshhg-') && holds(l, DIAN_CHI)), `lakes: ${both.map((l) => l.key).join(', ')}`);
   const otsu = (await kept('otsu-gshhg', withLakes, OTSU)).map((l) => l.key);
   assert.ok(!otsu.includes('Biwa Ko') && otsu.some((k) => k.startsWith('gshhg-')), `Otsu lakes: ${otsu.join(', ')}`);
+  const sudbury = (await kept('sudbury-gshhg', withLakes, SUDBURY)).map((l) => l.key);
+  assert.ok(sudbury.includes('Lake Panache'), `Sudbury lakes: ${sudbury.join(', ')}`);
 });
 
 test('without the 10m files a close view still draws its 50m rivers and lakes', async () => {

@@ -102,9 +102,9 @@ async function loadWater10m(view) {
 }
 
 // GSHHG lakes past the h band's zoom, at the h or f resolution as the land is: the lakes no Natural
-// Earth file has (Dian Chi at Kunming, Lake Union's neighbours), cut as land is so a piece fills its
-// cell and only the shore is inked. A view adds them to its water and drops each Natural Earth lake
-// whose box lies inside one's, so a lake is not drawn twice. Must match scripts/build-preview.mjs.
+// Earth file has (Dian Chi at Kunming, Lago Mascardi at Bariloche), cut as land is so a piece fills
+// its cell and only the shore is inked. A view adds them to its water and drops each Natural Earth
+// lake that is one of them (sameLake), so a lake is not drawn twice. Must match scripts/build-preview.mjs.
 const LAKE_BANDS = [
   { dir: 'h-lakes', zoom: BANDS[1].zoom, cell: BANDS[1].cell, margin: BANDS[1].margin },
   { dir: 'f-lakes', zoom: BANDS[2].zoom, cell: BANDS[2].cell, margin: BANDS[2].margin },
@@ -132,11 +132,32 @@ async function loadLakes(view) {
   }
   return [...joined.values()].filter((l) => l.box);
 }
-// inside within LAKE_SLACK degrees, about Natural Earth 10m's vertex spacing: its Biwa reaches 0.004
-// past GSHHG's
+// A Natural Earth lake is the same lake as a GSHHG one, and dropped, when its box lies inside the
+// GSHHG lake's within LAKE_SLACK degrees (about Natural Earth 10m's vertex spacing: its Biwa reaches
+// 0.004 past GSHHG's) and a point of it, a ring's centroid or a vertex, lies in the GSHHG water. The
+// box alone would drop every lake inside Superior's or the Caspian's box: 151 worldwide, Lake Panache
+// by Sudbury among them.
 const LAKE_SLACK = 0.02;
 const inside = (a, b) => a.x0 >= b.x0 - LAKE_SLACK && a.x1 <= b.x1 + LAKE_SLACK && a.y0 >= b.y0 - LAKE_SLACK && a.y1 <= b.y1 + LAKE_SLACK;
-const withLakes = (w, lakes) => (lakes.length ? { ...w, lakes: [...w.lakes.filter((l) => !lakes.some((g) => inside(l.box, g.box))), ...lakes] } : w);
+const inRing = ([px, py], ring) => {
+  let c = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i], [xj, yj] = ring[j];
+    if ((yi > py) !== (yj > py) && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) c = !c;
+  }
+  return c;
+};
+const inWater = (p, polys) => polys.some((poly) => inRing(p, poly[0]) && !poly.slice(1).some((hole) => inRing(p, hole)));
+const centroid = (ring) => {
+  let a = 0, x = 0, y = 0;
+  for (let i = 0; i < ring.length - 1; i++) {
+    const [x0, y0] = ring[i], [x1, y1] = ring[i + 1], w = x0 * y1 - x1 * y0;
+    a += w; x += (x0 + x1) * w; y += (y0 + y1) * w;
+  }
+  return a ? [x / (3 * a), y / (3 * a)] : ring[0];
+};
+const sameLake = (l, g) => inside(l.box, g.box) && l.polys.some((poly) => inWater(centroid(poly[0]), g.polys) || poly[0].some((p, i) => i % 4 === 0 && inWater(p, g.polys)));
+const withLakes = (w, lakes) => (lakes.length ? { ...w, lakes: [...w.lakes.filter((l) => !lakes.some((g) => sameLake(l, g))), ...lakes] } : w);
 
 // Per-run tuning; `density` scales how much ornament is placed (1 = the committed mockup).
 const TUNE = { monsterMax: 4, shipMax: 2, townGap: 48, mountainMax: 3 };
