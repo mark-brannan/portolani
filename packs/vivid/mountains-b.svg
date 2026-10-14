@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-46 -32 92 38" width="276" height="114">
+  <!-- After the mountain ranges of Jorge de Aguiar's chart, 1492 (Beinecke Library, Yale), and the
+       Catalan Atlas, 1375: craggy ochre humps, lit on the left and shaded on the right, cut by ink
+       fissures, on a wash of grass, with a few dark trees. Drawn, not traced; transparent ground,
+       for the renderer's `multiply`. https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg -->
+  <path d="M-44,1 Q-22,-4 0,-3.5 Q22,-3 44,0.5 Q17.6,5 0,4.5 Q-22,5 -44,1 Z" fill="#7fa35a" fill-opacity="0.75" stroke="none"/>
+  <path d="M-36,0 Q-30.4,-7.4 -28.6,-16.4 Q-24.2,-20.6 -21.8,-26.1 Q-17.8,-25.6 -15.1,-28.6 Q-12.2,-25.6 -7.9,-25.8 Q-5.7,-21.1 -1.5,-18.1 Q0.5,-10.9 5.3,-5.2 Q7.4,-1 12,0 Z" fill="#c89a68" stroke="none"/>
+  <path d="M-36,0 L-28.6,-16.4 L-21.8,-26.1 L-15.1,-28.6 Q-15.4,-15 -10.6,0 Z" fill="#dcb886" fill-opacity="0.7" stroke="none"/>
+  <path d="M-15.1,-28.6 L-7.9,-25.8 L-1.5,-18.1 L5.3,-5.2 L12,0 L-10.6,0 Q-15.4,-15 -15.1,-28.6 Z" fill="#8d5e36" fill-opacity="0.6" stroke="none"/>
+  <path d="M-15.1,-28.6 Q-15.4,-15 -10.6,0 M-24.2,-15.4 q-0.1,6 0.7,10.5 M-17.2,-21.1 q0.5,6 -0.3,10.5 M-10.3,-22.1 q1.1,6 -0.6,10.5 M-3.3,-14.4 q0,6 -0.9,10.5" fill="none" stroke="#2a1d12" stroke-width="0.6" stroke-linecap="round" stroke-opacity="0.8"/>
+  <path d="M-36,0 Q-30.4,-7.4 -28.6,-16.4 Q-24.2,-20.6 -21.8,-26.1 Q-17.8,-25.6 -15.1,-28.6 Q-12.2,-25.6 -7.9,-25.8 Q-5.7,-21.1 -1.5,-18.1 Q0.5,-10.9 5.3,-5.2 Q7.4,-1 12,0" fill="none" stroke="#2a1d12" stroke-width="0.9" stroke-linejoin="round"/>
+  <path d="M-2,0 Q2.3,-3.5 5,-8.4 Q9.1,-11.8 10.7,-16.9 Q14.9,-18.2 17.7,-21.6 Q20.6,-19.2 24.4,-19.8 Q26.8,-14.4 32,-11.6 Q33.6,-5.1 38,0 Z" fill="#c89a68" stroke="none"/>
+  <path d="M-2,0 L5,-8.4 L10.7,-16.9 L17.7,-21.6 Q19,-11 23,0 Z" fill="#dcb886" fill-opacity="0.7" stroke="none"/>
+  <path d="M17.7,-21.6 L24.4,-19.8 L32,-11.6 L38,0 L23,0 Q19,-11 17.7,-21.6 Z" fill="#8d5e36" fill-opacity="0.6" stroke="none"/>
+  <path d="M17.7,-21.6 Q19,-11 23,0 M9.1,-8 q0.1,4.4 0.3,7.7 M16.2,-13.8 q-1,4.4 0.9,7.7 M23.3,-13.2 q0.4,4.4 0.1,7.7" fill="none" stroke="#2a1d12" stroke-width="0.6" stroke-linecap="round" stroke-opacity="0.8"/>
+  <path d="M-2,0 Q2.3,-3.5 5,-8.4 Q9.1,-11.8 10.7,-16.9 Q14.9,-18.2 17.7,-21.6 Q20.6,-19.2 24.4,-19.8 Q26.8,-14.4 32,-11.6 Q33.6,-5.1 38,0" fill="none" stroke="#2a1d12" stroke-width="0.9" stroke-linejoin="round"/>
+  <path d="M-38,1 L-38,-7.8" stroke="#2a1d12" stroke-width="0.7" fill="none"/>
+  <ellipse cx="-38" cy="-9.1" rx="2.2" ry="3.9" fill="#3f7a4a" stroke="#2a1d12" stroke-width="0.5"/>
+  <path d="M39,1 L39,-6.6" stroke="#2a1d12" stroke-width="0.7" fill="none"/>
+  <ellipse cx="39" cy="-7.7" rx="1.9" ry="3.3" fill="#3f7a4a" stroke="#2a1d12" stroke-width="0.5"/>
+</svg>

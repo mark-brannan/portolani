@@ -318,6 +318,76 @@
       "sizePx": 110,
       "bands": [0, 1],
       "after": "https://commons.wikimedia.org/wiki/File:Europe_and_northern_Africa._HM_29._PORTOLAN_ATLAS,_anonymous_(Dieppe,_1547).jpg"
+    },
+    {
+      "id": "town-martines-port",
+      "style": "martines",
+      "kind": "town",
+      "file": "town-martines-port.svg",
+      "anchor": [0.5, 1],
+      "sizePx": 60,
+      "bands": [0, 1],
+      "after": "https://trinitycollegelibrarycambridge.wordpress.com/2015/08/14/portolan-chart-of-the-mediterranean/"
+    },
+    {
+      "id": "town-martines-levant",
+      "style": "martines",
+      "kind": "town",
+      "file": "town-martines-levant.svg",
+      "anchor": [0.5, 1],
+      "sizePx": 60,
+      "bands": [0, 1],
+      "after": "https://trinitycollegelibrarycambridge.wordpress.com/2015/08/14/portolan-chart-of-the-mediterranean/"
+    },
+    {
+      "id": "town-martines-small",
+      "style": "martines",
+      "kind": "town",
+      "file": "town-martines-small.svg",
+      "anchor": [0.5, 1],
+      "sizePx": 60,
+      "bands": [0, 1],
+      "after": "https://trinitycollegelibrarycambridge.wordpress.com/2015/08/14/portolan-chart-of-the-mediterranean/"
+    },
+    {
+      "id": "town-martines-fort",
+      "style": "martines",
+      "kind": "town",
+      "file": "town-martines-fort.svg",
+      "anchor": [0.5, 1],
+      "sizePx": 60,
+      "bands": [0, 1],
+      "after": "https://trinitycollegelibrarycambridge.wordpress.com/2015/08/14/portolan-chart-of-the-mediterranean/"
+    },
+    {
+      "id": "mountains-a",
+      "style": "catalan",
+      "kind": "mountain",
+      "file": "mountains-a.svg",
+      "anchor": [0.5, 0.5],
+      "sizePx": 140,
+      "bands": [0, 1],
+      "after": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg"
+    },
+    {
+      "id": "mountains-b",
+      "style": "catalan",
+      "kind": "mountain",
+      "file": "mountains-b.svg",
+      "anchor": [0.5, 0.5],
+      "sizePx": 80,
+      "bands": [0, 1],
+      "after": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg"
+    },
+    {
+      "id": "mountains-c",
+      "style": "catalan",
+      "kind": "mountain",
+      "file": "mountains-c.svg",
+      "anchor": [0.5, 0.5],
+      "sizePx": 50,
+      "bands": [0, 1],
+      "after": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg"
     }
   ]
 }
