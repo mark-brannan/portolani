@@ -13,6 +13,7 @@ import { cityPlan, drawCity, drawHouses, pxRings, insideRings } from './city.mjs
 import { urbanKey } from './urban.mjs';
 import { RIVERS, LAKES, RIVER_STYLES, LAKE_STYLES, waterOf, shown } from './water.mjs';
 import { TREES, TREE_STYLES, plantTrees } from './trees.mjs';
+import { BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from './buildings.mjs';
 
 let env;
 const createCanvas = (w, h) => env.createCanvas(w, h);
@@ -231,6 +232,9 @@ async function loadWorld() {
       const rings = urban?.[urbanKey(p.NAME, lon, lat)];
       return { name: p.NAME, rank: p.SCALERANK, pop: p.POP_MAX, area: p.MAX_AREAKM, lon, lat, ...(rings && { urban: rings, ubox: bbox(rings.flat()) }) };
     });
+  // the lesser places, drawn close in as buildings (buildings.mjs)
+  const lesser = placesGeo.features.filter((f) => f.properties.SCALERANK > 4 && f.properties.SCALERANK <= LESSER_RANK)
+    .map(({ properties: p, geometry: { coordinates: [lon, lat] } }) => ({ name: p.NAME, rank: p.SCALERANK, pop: p.POP_MAX, lon, lat }));
   // seas at a point, countries along each stretch of their coast (scripts/names.mjs)
   const names = namesGeo.features.map(({ properties: p, geometry: g }) => {
     const pts = g.type === 'Point' ? [g.coordinates] : g.coordinates;
@@ -241,7 +245,7 @@ async function loadWorld() {
   const footprints = places.filter((p) => p.urban).map((p) => ({ poly: p.urban, box: p.ubox }));
   const urbanAreas = [...footprints, ...(urbanGeo ? geojsonPolygons(urbanGeo).map((poly) => ({ poly, box: bbox(poly[0]) }))
     .filter((u) => !footprints.some((t) => meets(t.box, u.box))) : [])];
-  world = { land, lines, runs, places, names, urban: urbanAreas };
+  world = { land, lines, runs, places, lesser, names, urban: urbanAreas };
   worlds.set(landGeo, world);
   return world;
 }
@@ -290,7 +294,7 @@ async function loadDetail(coarse, view) {
   }));
   return {
     land: parts.flatMap((p) => p.land), lines: parts.flatMap((p) => p.lines), runs: parts.flatMap((p) => p.runs),
-    places: coarse.places, names: coarse.names, urban: coarse.urban, detail: { ...f, band: band.dir }, // the lon/lat frame the loaded cells cover, and whose
+    places: coarse.places, lesser: coarse.lesser, names: coarse.names, urban: coarse.urban, detail: { ...f, band: band.dir }, // the lon/lat frame the loaded cells cover, and whose
   };
 }
 
@@ -333,11 +337,12 @@ function viewData(world, view) {
     return out.filter((l) => l.length > 1);
   });
   const places = world.places.filter((p) => nearLL(f, p.lon, p.lat)).map((p) => ({ ...p, xy: proj.project(p.lon, p.lat) }));
+  const lesser = view.zoom < DETAIL_ZOOM ? [] : world.lesser.filter((p) => nearLL(f, p.lon, p.lat)).map((p) => ({ ...p, xy: proj.project(p.lon, p.lat) }));
   // names worth showing at this zoom (Natural Earth's min_label), most important first
   const names = world.names.filter((n) => n.min <= view.zoom + 1 && meetsLL(f, n.box))
     .sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'sea' ? -1 : 1) || a.rank - b.rank);
   const urban = world.urban.filter((u) => meetsLL(f, u.box)).map((u) => u.poly);
-  return { proj, land, coastLL, coast, places, names, urban };
+  return { proj, land, coastLL, coast, places, lesser, names, urban };
 }
 
 // Two packs draw the same designs two ways: `vivid` as vectors, `scanned` as crops of the scans. A
@@ -426,6 +431,7 @@ const TOWERS = [
     ['r', 'M-3.5 -10.4Q-3.5 -14.6 0 -15.2Q3.5 -14.6 3.5 -10.4Z'],
     ['s', 'M0 -15.2V-16.5M-1.3 0V-2.4Q-1.3 -3.6 0 -3.6Q1.3 -3.6 1.3 -2.4V0M-2.6 -5V-6.4M2.6 -5V-6.4'],
   ] },
+  ...BUILDINGS, // the Carta Marina's house, church, castle, round tower and tent (buildings.mjs)
 ];
 const TOWER_BY_ID = new Map(TOWERS.map((t) => [t.id, t]));
 
@@ -434,7 +440,7 @@ const TOWER_BY_ID = new Map(TOWERS.map((t) => [t.id, t]));
 const PLAIN_SPRITES = [
   { id: 'rose', kind: 'rose', style: 'plain' },
   { id: 'cartouche', kind: 'cartouche', style: 'plain' },
-  ...TOWERS.map((t) => ({ id: t.id, kind: 'town', style: 'tower' })),
+  ...TOWERS.map((t) => ({ id: t.id, kind: 'town', style: t.style ?? 'tower' })),
 ].map((s) => ({ ...s, key: `plain/${s.id}`, pack: 'plain', file: null }));
 const spriteList = (manifests) => [
   ...PACK_NAMES.flatMap((pack) => manifests[pack].sprites.map((s) => ({ ...s, key: `${pack}/${s.id}`, pack, colour: manifests[pack].colour ?? 'source' }))),
@@ -448,13 +454,14 @@ async function listSprites(environment) {
 
 // The selection a scene draws when given none, by rule so sprites added to a pack join their family:
 // the vivid Aguiar roses and cartouche, the monsters of the scanned Carta Marina and Paré families and
-// the drawn heraldic one, every ship, every town (the tower included) and every mountain.
+// the drawn heraldic one, every ship, every town (the towers included; the Carta Marina's buildings are
+// offered, not drawn unasked) and every mountain.
 const DEFAULT_RULES = [
   (s) => s.pack === 'vivid' && s.kind === 'rose' && s.style === 'aguiar',
   (s) => s.pack === 'vivid' && s.kind === 'cartouche',
   (s) => s.kind === 'monster' && ((s.pack === 'scanned' && (s.style === 'carta-marina' || s.style === 'pare')) || (s.pack === 'vivid' && s.style === 'heraldic')),
   (s) => s.kind === 'ship',
-  (s) => s.kind === 'town',
+  (s) => s.kind === 'town' && !(s.pack === 'plain' && s.style === 'carta-marina'), // the Carta Marina's buildings are offered, not drawn unasked
   (s) => s.kind === 'mountain',
 ];
 function defaultSprites(list) {
@@ -616,7 +623,7 @@ const letterOptions = (data) => ({
 });
 
 // World-view lettering, hand-set: [Latin, English, lon, lat]. Zoom levels are whole: continents are
-// spaced capitals below zoom 5, regions italic below zoom 7.
+// spaced capitals below zoom 5.5, regions italic below zoom 7.
 const CONTINENTS = [
   ['EVROPA', 'EUROPE', 14, 50], ['AFRICA', 'AFRICA', 20, 7], ['ASIA', 'ASIA', 90, 48],
   ['AMERICA SEPTENTRIONALIS', 'NORTH AMERICA', -100, 45], ['AMERICA MERIDIONALIS', 'SOUTH AMERICA', -60, -12],
@@ -628,7 +635,7 @@ const REGIONS = [
   ['Syria', 'Syria', 38, 35], ['Egiptus', 'Egypt', 29.5, 27], ['Libya', 'Libya', 17, 29],
   ['Barbaria', 'Maghreb', 4, 31], ['Arabia', 'Arabia', 44, 24], ['Thracia', 'Thrace', 26, 42.3],
 ];
-const CONTINENT_ZOOM_END = 5, REGION_ZOOM_END = 7; // continents: zoom < CONTINENT_ZOOM_END; regions: zoom < REGION_ZOOM_END (they meet a continent's box and make way)
+const CONTINENT_ZOOM_END = 5.5, REGION_ZOOM_END = 7; // continents: zoom < CONTINENT_ZOOM_END, regions overlap them to there; regions: zoom < REGION_ZOOM_END (they meet a continent's box and make way)
 
 // The continent and region names to letter, each with the box it reserves: measured with the font and
 // spacing they are drawn in, so later names and towns make way. A name off the canvas or meeting an
@@ -642,10 +649,13 @@ function placeWorldNames(data, ctx, boxes, { continents, regions }) {
     ctx.letterSpacing = `${spacing}px`;
     const w = ctx.measureText(text).width;
     ctx.letterSpacing = '0px'; // left set, every later name would measure too wide
-    const box = obb(x, y, 0, w / 2, size * 0.5);
-    if (!obbInside(box) || boxes.some((b) => obbOverlap(b, box))) return;
+    // a name whose anchor is in frame but whose letters run past the edge slides in; one whose anchor is out stays out
+    const hw = w / 2, hh = size * 0.5, m = 4;
+    if (x < m || x > W - m || y < m || y > H - m || 2 * hw > W - 2 * m) return;
+    const box = obb(Math.min(W - m - hw, Math.max(m + hw, x)), Math.min(H - m - hh, Math.max(m + hh, y)), 0, hw, hh);
+    if (boxes.some((b) => obbOverlap(b, box))) return;
     boxes.push(box);
-    out.push({ text, x, y, size, spacing, italic, r: Math.max(box.hw, box.hh), box });
+    out.push({ text, x: box.cx, y: box.cy, size, spacing, italic, r: Math.max(box.hw, box.hh), box });
   };
   if (continents && z < CONTINENT_ZOOM_END) {
     for (const c of CONTINENTS) { const text = c[continents === 'latin' ? 0 : 1], size = text.length > 12 ? 22 : 30; put(text, c[2], c[3], size, size * 0.6, false); }
@@ -850,6 +860,33 @@ function placeMountains(data, field, boxes, sprites, scaleBar) {
   return out;
 }
 
+// A name coast-wright placed, as an oriented box from its corners.
+const placedBox = ({ box: [c0, c1, c2] }) => obb((c0[0] + c2[0]) / 2, (c0[1] + c2[1]) / 2, Math.atan2(c1[1] - c0[1], c1[0] - c0[0]),
+  Math.hypot(c1[0] - c0[0], c1[1] - c0[1]) / 2, Math.hypot(c2[0] - c1[0], c2[1] - c1[1]) / 2);
+
+// The lesser places (buildings.mjs), after every other name: each a church or a house LESSER_PX tall
+// whatever the zoom, standing on its land (standOf, on the clearance field), its name small above it;
+// kept only where the building and its name both clear the towns, names and ornaments placed before.
+function placeLesser(data, field, boxes, ctx, towns, names) {
+  const out = [], opts = letterOptions(data), s = LESSER_PX / TOWER_H;
+  for (const p of [...data.lesser].sort((a, b) => a.rank - b.rank || b.pop - a.pop)) {
+    const [px, py] = p.xy;
+    if (px < 8 || py < 8 || px > W - 8 || py > H - 8 || towns.some((t) => Math.hypot(t.x - px, t.y - py) < TUNE.townGap / 2)) continue;
+    const shape = TOWER_BY_ID.get(lesserBuilding(p.rank, seedOf(p.name))), top = (shape.top ?? TOWER_H) * s, hw = shape.w * s;
+    const [x, y] = standOf(p, top, hw, field);
+    const icon = obb(x, y - top / 2, 0, hw, top / 2);
+    if (!obbInside(icon) || boxes.some((b) => obbOverlap(b, icon))) continue;
+    const n = { text: p.name, at: data.proj.invert(x, y - top - 5), size: LESSER_LETTER };
+    const [q] = place(ctx, [n], data.proj.x, data.proj.y, opts);
+    const box = q && placedBox(q);
+    if (!box || !obbInside(box) || boxes.some((b) => obbOverlap(b, box))) continue;
+    boxes.push(icon, box);
+    names.push({ ...n, x: box.cx, y: box.cy, r: Math.max(box.hw, box.hh), box });
+    out.push({ x, y, h: LESSER_PX, tower: shape.id, name: p.name, rank: p.rank, label: box });
+  }
+  return out;
+}
+
 // `sprites`: what chooseSprites chose, with pictures.
 function buildScene(data, sprites, ctx, world = {}) {
   const field = clearanceField(data);
@@ -912,14 +949,17 @@ function buildScene(data, sprites, ctx, world = {}) {
   // Towns, lower scalerank first, >= TUNE.townGap apart. The selected town sprites fall into families
   // by pack and style, and the tower is one when chosen; each town keeps one family, picked by its
   // name, save that the tower, plain at its first size, stands only for the smallest towns (SMALL_TOWN).
+  // A sprite whose manifest names towns (`only`: Venice's halo of rays) is kept out of its family's
+  // pool and drawn for those towns alone.
   const boxes = [obb(cartouche.x + cw / 2, cartouche.y + ch / 2, 0, cw / 2, ch / 2)];
   for (const r of roseDraws) boxes.push(obb(r.x, r.y, 0, r.size * 0.42, r.size * 0.42));
   const worldNames = placeWorldNames(data, ctx, boxes, { continents: world.continents ?? false, regions: world.regions ?? 'off' });
-  const families = [...(sprites.towns ?? []).reduce((m, s) => m.set(`${s.pack}/${s.style}`, [...(m.get(`${s.pack}/${s.style}`) ?? []), s]), new Map()).values()];
+  const special = new Map((sprites.towns ?? []).flatMap((s) => (s.only ?? []).map((name) => [name, s])));
+  const families = [...(sprites.towns ?? []).filter((s) => !s.only).reduce((m, s) => m.set(`${s.pack}/${s.style}`, [...(m.get(`${s.pack}/${s.style}`) ?? []), s]), new Map()).values()];
   if (sprites.tower ?? !families.length) families.push(null); // null: the towers drawn in code
   const towerIds = sprites.towers?.length ? sprites.towers : ['tower'];
   const towns = [];
-  const sorted = families.length ? [...data.places].sort((a, b) => a.rank - b.rank || b.pop - a.pop) : [];
+  const sorted = families.length || special.size ? [...data.places].sort((a, b) => a.rank - b.rank || b.pop - a.pop) : [];
   // cities first: they are ground, drawn under the ornaments, and their boxes make the icons and names give way
   const cities = new Set(), cityBoxes = new Set();
   for (const p of sorted) {
@@ -935,11 +975,12 @@ function buildScene(data, sprites, ctx, world = {}) {
     const [px, py] = p.xy;
     if (cities.has(p) || px < 8 || py < 8 || px > W - 8 || py > H - 8) continue;
     if (towns.some((t) => !t.city && Math.hypot(t.x - px, t.y - py) < TUNE.townGap)) continue;
+    if (!families.length && !special.has(p.name)) continue; // only the named towns' own drawings chosen
     const fit = townGrandeur(p) < SMALL_TOWN || families.every((f) => !f) ? families : families.filter(Boolean);
     // the town's own drawing, whatever the view: its family and variant follow from its name, so a
     // zoom or a pan never redraws it as another (townVariant)
     const pick = seedOf(p.name) >>> 0, family = fit[pick % fit.length], size = townScale(p, world.townSize);
-    const sprite = family && townVariant(family, p, pick >>> 8), tower = !sprite && TOWER_BY_ID.get(towerIds[(pick >>> 8) % towerIds.length]);
+    const sprite = special.get(p.name) ?? (family && townVariant(family, p, pick >>> 8)), tower = !sprite && TOWER_BY_ID.get(towerIds[(pick >>> 8) % towerIds.length]);
     const base = (sprite ? townHeight(sprite) : TOWER_H) * size, ground = footprint(p, data.proj);
     const th = Math.max(base, Math.min(ICON_MAX, ICON_GROW * ground.extent));
     const [x, y] = standOf(p, th, sprite ? ((th / 2) * sprite.img.width) / sprite.img.height : (th * tower.w) / TOWER_H, field, ground.rings);
@@ -971,14 +1012,13 @@ function buildScene(data, sprites, ctx, world = {}) {
     if (n.kind === 'coast' && names.some((m) => m.kind === 'coast' && m.text === n.text)) continue; // once a view
     const [p] = place(ctx, [n], data.proj.x, data.proj.y, opts);
     if (!p) continue;
-    const [c0, c1, c2] = p.box; // coast-wright's corners, as an oriented box
-    const box = obb((c0[0] + c2[0]) / 2, (c0[1] + c2[1]) / 2, Math.atan2(c1[1] - c0[1], c1[0] - c0[0]),
-      Math.hypot(c1[0] - c0[0], c1[1] - c0[1]) / 2, Math.hypot(c2[0] - c1[0], c2[1] - c1[1]) / 2);
+    const box = placedBox(p); // coast-wright's corners, as an oriented box
     // a city's name sits on its own plan; seas and coasts are lettered over any city's water
     if (!obbInside(box) || boxes.some((b) => b !== n.own && !(n.kind && cityBoxes.has(b)) && obbOverlap(b, box))) continue;
     boxes.push(box);
     names.push({ ...n, x: box.cx, y: box.cy, r: Math.max(box.hw, box.hh), box });
   }
+  const lesser = families.length ? placeLesser(data, field, boxes, ctx, towns, names) : [];
   for (const b of boxes.slice(1 + roseDraws.length).filter((b) => !cityBoxes.has(b))) occupied.push({ x: b.cx, y: b.cy, r: Math.max(b.hw, b.hh) * 0.6 });
   const mountains = placeMountains(data, field, boxes, sprites.mountains ?? [], world.scaleBar);
 
@@ -1028,7 +1068,7 @@ function buildScene(data, sprites, ctx, world = {}) {
 
   // automatic, the typed title stands in where the view has no name in it
   const title = (world.autoTitle && viewTitle(data, towns.filter((t) => names.some((n) => n.text === t.name)), world.regions === 'english' ? 1 : 0).toUpperCase()) || world.title || 'PORTOLANI';
-  return { field, centre, nodes, roseDraws, towns, names, worldNames, monsters, ships, mountains, cartouche: { ...cartouche, sprite: cartoucheSprite, title } };
+  return { field, centre, nodes, roseDraws, towns, lesser, names, worldNames, monsters, ships, mountains, cartouche: { ...cartouche, sprite: cartoucheSprite, title } };
 }
 
 // ---------------------------------------------------------------- drawing
@@ -1576,10 +1616,10 @@ function drawScene(g, scene, data, bg, view) {
       g.globalAlpha = Math.min(1, a * 1.5); g.strokeStyle = STYLE.ink; g.lineWidth = 0.8 / view.scale; g.stroke(); g.restore();
     }
     // clear of the town icons, which stand over them
-    const icons = scene.towns.filter((t) => !t.city).map((t) => {
+    const icons = [...scene.towns.filter((t) => !t.city), ...(scene.lesser ?? [])].map((t) => {
       const hw = (t.sprite ? (t.h * t.sprite.img.width) / t.sprite.img.height : t.h * 0.6) / 2 + 4;
       return { x0: t.x - hw, x1: t.x + hw, y0: t.y - t.h - 4, y1: t.y + 6 };
-    });
+    }).concat((scene.lesser ?? []).map(({ label: b }) => ({ x0: b.cx - b.hw - 3, x1: b.cx + b.hw + 3, y0: b.cy - b.hh - 3, y1: b.cy + b.hh + 3 }))); // and a lesser place's name
     const pts = housesIn(washes.filter((w) => !w.plan), data, scene.field, plans, r), clear = [];
     for (let i = 0; i < pts.length; i += 4) if (!icons.some((b) => pts[i] > b.x0 && pts[i] < b.x1 && pts[i + 1] > b.y0 && pts[i + 1] < b.y1)) clear.push(pts[i], pts[i + 1], pts[i + 2], pts[i + 3]);
     drawHouses(g, clear, { ink: STYLE.ink });
@@ -1600,6 +1640,7 @@ function drawScene(g, scene, data, bg, view) {
     const h = t.h, w = (h * t.sprite.img.width) / t.sprite.img.height;
     if (disc(r, t.x, t.y - h / 2, Math.hypot(w, h) / 2)) drawSprite(g, t.sprite, t.x, t.y, w, { anchor: [0.5, 1] });
   }
+  for (const t of scene.lesser ?? []) if (disc(r, t.x, t.y - t.h / 2, t.h * 0.75)) drawTower(g, t);
 
   // 7. names, in ink, the chief towns in red; the continents and regions first, under them. Those
   // have their own settings, so they are drawn whether or not the other names are.
