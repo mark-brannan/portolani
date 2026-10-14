@@ -17,8 +17,8 @@ const PAD = 384; // px of land read beyond the view, so a range's distance from 
 const SEED_PAD = 140; // px beyond the view where a range may still be seeded and reach into it
 const DEEP = 120; // px from the sea past which land counts as equally deep
 const NOISE_DEG = 7; // the mountainous country's grain, degrees
-// The noise's seed: the one, of the first 5,000, under which the Alps, Pyrenees, Scandes, Carpathians,
-// Caucasus, Apennines, Highlands, Rockies, Himalaya and Andes all fall on mountainous ground.
+// The noise's seed: chosen so the Alps, Pyrenees, Scandes, Carpathians, Caucasus, Apennines,
+// Highlands, Rockies, Himalaya and Andes all fall on mountainous ground.
 const NOISE_SALT = 3781;
 const HILL_ZOOM = 9;
 // From each zoom: the range cell (px), a peak's height (px) and the share of the land that is mountainous.
