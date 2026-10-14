@@ -132,3 +132,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t202907z
 - GSHHG river-lakes (negative area) drawn as lakes Undo: filter area < 0 in gshhgLakes ([#97](https://github.com/mark-brannan/portolani/pull/97))
+
+### 20261014t202910z
+- NE lake inside a GSHHG lake's box with 0.02 degree slack Undo: LAKE_SLACK = 0 ([#97](https://github.com/mark-brannan/portolani/pull/97))
