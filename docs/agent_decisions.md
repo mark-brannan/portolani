@@ -72,3 +72,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t194841z
 - A second tree style, ink, beside marina Undo: drop its key from TREES and its option in index.html ([#91](https://github.com/mark-brannan/portolani/pull/91))
+
+### 20261014t194845z
+- A drag shows the last scene's trees, none on newly revealed ground until the map stops Undo: plant in drawGround ([#91](https://github.com/mark-brannan/portolani/pull/91))
