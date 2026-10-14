@@ -11,9 +11,10 @@ import { createScene, drawScene, W, H, DETAIL } from './scene.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DL = join(ROOT, 'downloads');
+const GEO = dirname(fileURLToPath(import.meta.resolve('coastlines/data/ne-land-50m')));
 
-// Logical paths: geo/<name>.geojson lives in downloads/, packs/... in the repo.
-const resolve = (p) => (p.startsWith('geo/') ? join(DL, p.slice(4)) : join(ROOT, p));
+// Logical paths: geo/<id>.geojson is a coastlines data file, packs/... in the repo.
+const resolve = (p) => (p.startsWith('geo/') ? join(GEO, p.slice(4)) : join(ROOT, p));
 const env = {
   createCanvas,
   readJSON: async (p) => JSON.parse(readFileSync(resolve(p), 'utf8')),
