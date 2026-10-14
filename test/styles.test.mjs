@@ -63,26 +63,24 @@ test('listSprites keys every sprite by pack, ids that repeat across packs apart,
   assert.deepEqual(list.filter((s) => s.pack === 'plain').map((s) => [s.kind, s.file]), [['rose', null], ['cartouche', null], ['town', null]]);
 });
 
-test('defaultSprites: scanned Carta Marina monsters, no drawn monsters, every ship, the tower, one cartouche', async () => {
+test('defaultSprites: Carta Marina and Paré scans plus heraldic drawn monsters, every ship, town and mountain, one cartouche', async () => {
   const list = await listSprites(env), picked = new Set(defaultSprites(list)), on = list.filter((s) => picked.has(s.key));
-  const monsters = list.filter((s) => s.kind === 'monster');
-  assert.deepEqual(on.filter((s) => s.kind === 'monster').map((s) => s.key),
-    monsters.filter((s) => s.pack === 'scanned' && s.style === 'carta-marina').map((s) => s.key));
-  assert.ok(on.some((s) => s.kind === 'monster') && !on.some((s) => s.kind === 'monster' && s.pack === 'vivid'));
-  assert.deepEqual(on.filter((s) => s.kind === 'ship').map((s) => s.key), list.filter((s) => s.kind === 'ship').map((s) => s.key));
+  const wanted = (s) => s.kind === 'monster' && ((s.pack === 'scanned' && ['carta-marina', 'pare'].includes(s.style)) || (s.pack === 'vivid' && s.style === 'heraldic'));
+  assert.deepEqual(on.filter((s) => s.kind === 'monster').map((s) => s.key), list.filter(wanted).map((s) => s.key));
+  assert.ok(on.some((s) => s.style === 'pare') && on.some((s) => s.style === 'heraldic') && on.some((s) => s.style === 'carta-marina'));
+  for (const kind of ['ship', 'town', 'mountain']) assert.deepEqual(on.filter((s) => s.kind === kind).map((s) => s.key), list.filter((s) => s.kind === kind).map((s) => s.key), kind);
   assert.ok(new Set(on.filter((s) => s.kind === 'ship').map((s) => s.pack)).size === 2, 'ships of both packs');
-  assert.deepEqual(on.filter((s) => s.kind === 'town').map((s) => s.key), ['plain/tower']);
   assert.deepEqual(on.filter((s) => s.kind === 'cartouche').map((s) => s.key), ['vivid/cartouche-frame']);
   assert.ok(on.filter((s) => s.kind === 'rose').every((s) => s.pack === 'vivid' && s.style === 'aguiar'));
 });
 
 test('defaultSprites follows its rule, so a sprite added to a pack joins or stays out by family', async () => {
   const list = await listSprites(env);
-  const add = (pack, kind, style) => ({ id: `new-${kind}`, kind, style, pack, key: `${pack}/new-${kind}`, file: 'x.png' });
-  const more = [...list, add('scanned', 'monster', 'carta-marina'), add('vivid', 'monster', 'carta-marina'), add('scanned', 'ship', 'bestiary')];
+  const add = (pack, kind, style) => ({ id: `new-${pack}-${kind}-${style}`, kind, style, pack, key: `${pack}/new-${pack}-${kind}-${style}`, file: 'x.png' });
+  const more = [...list, add('scanned', 'monster', 'carta-marina'), add('vivid', 'monster', 'carta-marina'), add('vivid', 'monster', 'heraldic'), add('scanned', 'ship', 'bestiary'), add('vivid', 'town', 'new')];
   const picked = defaultSprites(more);
-  assert.ok(picked.includes('scanned/new-monster') && picked.includes('scanned/new-ship'));
-  assert.ok(!picked.includes('vivid/new-monster'));
+  assert.ok(['scanned/new-scanned-monster-carta-marina', 'vivid/new-vivid-monster-heraldic', 'scanned/new-scanned-ship-bestiary', 'vivid/new-vivid-town-new'].every((k) => picked.includes(k)));
+  assert.ok(!picked.includes('vivid/new-vivid-monster-carta-marina'));
 });
 
 test('selectSprites draws the keys it is given, from either pack, and ignores keys it does not know', () => {

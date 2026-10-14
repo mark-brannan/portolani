@@ -367,14 +367,14 @@ async function listSprites(environment) {
 }
 
 // The selection a scene draws when given none, by rule so sprites added to a pack join their family:
-// the vivid Aguiar roses and cartouche, the scanned Carta Marina monsters, every ship, the tower,
-// and every mountain (which DEFAULT_KINDS still hides).
+// the vivid Aguiar roses and cartouche, the monsters of the scanned Carta Marina and Paré families and
+// the drawn heraldic one, every ship, every town (the tower included) and every mountain.
 const DEFAULT_RULES = [
   (s) => s.pack === 'vivid' && s.kind === 'rose' && s.style === 'aguiar',
   (s) => s.pack === 'vivid' && s.kind === 'cartouche',
-  (s) => s.pack === 'scanned' && s.kind === 'monster' && s.style === 'carta-marina',
+  (s) => s.kind === 'monster' && ((s.pack === 'scanned' && (s.style === 'carta-marina' || s.style === 'pare')) || (s.pack === 'vivid' && s.style === 'heraldic')),
   (s) => s.kind === 'ship',
-  (s) => s.key === 'plain/tower',
+  (s) => s.kind === 'town',
   (s) => s.kind === 'mountain',
 ];
 function defaultSprites(list) {
@@ -1306,7 +1306,7 @@ function drawScene(g, scene, data, bg, view) {
 // `land`: a LANDS entry, the land treatment ('islands' by default); `redSea` (boolean) tints the Red Sea red.
 // `autoTitle` (boolean, on by default) letters the cartouche with the name the view is about (viewTitle), in capitals;
 // `title` is its lettering when that is off, or when the view has no name in it.
-// `kinds` defaults to DEFAULT_KINDS: mountains are drawn only when asked for. A kind left out is still
+// `kinds` defaults to DEFAULT_KINDS, every kind. A kind left out is still
 // placed when the lattice needs it (a rose, the cartouche's corner), only not drawn.
 export async function createScene(environment, opts = {}) {
   env = environment;
@@ -1360,7 +1360,7 @@ const parchments = new Map(); // by tone; the same seed paints the same sheet
 export const RENDERINGS = ['vivid', 'scanned', 'plain'];
 export const REGION_LANGS = ['off', 'latin', 'english'];
 export const KINDS = ['rose', 'ship', 'monster', 'cartouche', 'mountain'];
-export const DEFAULT_KINDS = KINDS.filter((k) => k !== 'mountain'); // mountains are drawn only when asked for
+export const DEFAULT_KINDS = KINDS;
 export const PROJECTION_NAMES = Object.keys(PROJECTIONS);
 export const TOWN_SIZES = ['population', 'rank'];
 export { SCALE_NAMES, readManifests, listStyles, listSprites, defaultSprites, selectSprites, chooseSprites, drawScene, drawGround, covers, panView, zoomView, clampView, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };

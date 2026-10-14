@@ -103,8 +103,8 @@ function overlap(a, b) {
 const NILE = { lon: 31.6, lat: 31.0, zoom: 7 };
 const LIGURIA = { lon: 8.93, lat: 44.41, zoom: 5 };
 
-test('towns are drawn towers by default and Martines vignettes when asked', async () => {
-  const plain = (await createScene(env, { view: NILE })).scene;
+test('towns are drawn towers when only the tower is chosen and Martines vignettes when asked', async () => {
+  const plain = (await createScene(env, { view: NILE, sprites: ['plain/tower'] })).scene;
   assert.ok(plain.towns.length > 0 && plain.towns.every((t) => !t.sprite));
   const { scene } = await createScene(env, { view: NILE, town: 'martines' });
   const by = Object.fromEntries(scene.towns.map((t) => [t.name, t.sprite?.id]));
@@ -114,9 +114,9 @@ test('towns are drawn towers by default and Martines vignettes when asked', asyn
   assert.equal(port.sprite.id, 'town-martines-port');
 });
 
-test('mountains: off by default; on, inland, apart and clear of names', async () => {
-  assert.ok(!DEFAULT_KINDS.includes('mountain') && KINDS.includes('mountain'));
-  assert.equal((await createScene(env, { view: LIGURIA })).scene.mountains.length, 0);
+test('mountains: on by default, off when the kind is left out; inland, apart and clear of names', async () => {
+  assert.ok(DEFAULT_KINDS.includes('mountain'));
+  assert.equal((await createScene(env, { view: LIGURIA, kinds: KINDS.filter((k) => k !== 'mountain') })).scene.mountains.length, 0);
   assert.equal((await createScene(env, { view: { lon: 10, lat: 30, zoom: 2 }, kinds: KINDS })).scene.mountains.length, 0, 'mountains at z2');
   // zoom 4 with the regions lettered: a range placed without regard to names lands on Budapest, Kyiv and Munich here
   const { scene, data } = await createScene(env, { view: { ...LIGURIA, zoom: 4 }, kinds: KINDS, regions: 'latin' });
