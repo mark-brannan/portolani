@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 136 106" width="544" height="424">
+<!-- Lisbon on Jorge de Aguiar's 1492 chart: a town on a green hill, white walls and square towers,
+     red roofs, more towers over the crest, the Tagus as a dark band along the foot.
+     Traced from the crop at docs/towns-aguiar/town-aguiar-lisbon.raw.png (1 unit = 1 crop pixel). -->
+<g stroke="#2a1d12" stroke-width="1.2" stroke-linejoin="round" stroke-linecap="round">
+ <!-- green hill -->
+ <path d="M18 62 L22 48 L34 40 L48 30 L60 22 L78 18 L96 17 L110 20 L119 28 L118 44 L110 54 L96 60 L84 72 L60 86 L40 96 L28 98 L20 92 Z" fill="#5f8f4a" stroke="none"/>
+ <!-- river -->
+ <path d="M33 106 L40 104 L50 97 L60 91 L70 86 L80 82 L90 78 L100 73 L110 69 L120 65 L130 60 L136 58 L136 68 L130 70 L120 74 L110 79 L100 83 L90 87 L80 92 L70 97 L60 101 L50 106 Z" fill="#3f5fa8" stroke="none"/>
+ <!-- towers over the crest -->
+ <g fill="#fff">
+  <rect x="46" y="2" width="10" height="18"/><rect x="58" y="0" width="8" height="18"/>
+  <rect x="74" y="11" width="9" height="10"/><rect x="84" y="3" width="10" height="16"/>
+  <rect x="100" y="8" width="12" height="12"/><rect x="110" y="5" width="9" height="15"/>
+  <rect x="117" y="20" width="10" height="26"/><rect x="127" y="25" width="9" height="35"/>
+ </g>
+ <g fill="#c8432b">
+  <path d="M73 12 Q78 1 84 12 Z"/><path d="M91 5 L93 0 L100 0 L101 5 Z"/>
+ </g>
+ <!-- middle terrace: red roofs over white walls -->
+ <g fill="#fff">
+  <rect x="72" y="42" width="18" height="10"/><rect x="90" y="44" width="20" height="12"/>
+  <rect x="110" y="42" width="14" height="18"/>
+  <rect x="60" y="49" width="12" height="12"/>
+ </g>
+ <g fill="#c8432b">
+  <path d="M72 42 Q80 30 90 42 Z"/><path d="M89 44 Q99 32 109 44 Z"/>
+  <path d="M100 44 Q106 34 112 44 Z"/><path d="M59 50 Q65 39 71 50 Z"/>
+ </g>
+ <!-- big sloping red roof with wall under it -->
+ <path d="M70 70 L70 64 L66 54 L87 47 L89 60 Z" fill="#fff"/>
+ <path d="M66 54 L87 47 L89 60 L70 66 Z" fill="#c8432b"/>
+ <!-- lower town: towers and walls -->
+ <g fill="#fff">
+  <rect x="20" y="62" width="12" height="28"/><rect x="24" y="82" width="12" height="18"/>
+  <rect x="32" y="60" width="8" height="36"/><rect x="40" y="60" width="12" height="26"/>
+  <rect x="50" y="55" width="12" height="30"/><rect x="60" y="62" width="12" height="18"/>
+  <rect x="72" y="68" width="20" height="14"/><rect x="92" y="60" width="18" height="14"/>
+ </g>
+ <path d="M35 60 Q41 49 48 60 Z" fill="#c8432b"/>
+ <!-- windows -->
+ <g fill="#2a1d12" stroke="none">
+  <rect x="43" y="70" width="2" height="4"/><rect x="47" y="70" width="2" height="4"/>
+  <rect x="62" y="72" width="2" height="4"/><rect x="65" y="72" width="2" height="4"/>
+  <rect x="103" y="48" width="2" height="3"/><rect x="107" y="48" width="2" height="3"/>
+  <rect x="121" y="30" width="2" height="3"/><rect x="77" y="74" width="2" height="3"/>
+  <rect x="82" y="74" width="2" height="3"/>
+ </g>
+</g>
+</svg>

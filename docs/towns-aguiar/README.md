@@ -39,3 +39,11 @@ The SVGs are not in a pack yet; the vivid pack's `town-aguiar.svg` is a free dra
 Keying: darkness = min(R, G, B) so the red and lapis washes count as ink, levelled 30 to 80 percent
 (the roses use 12 to 78) so the thin brown line work reaches full alpha and reads at map size. The
 renderer stands a town at its `sizePx` in px, flag to foot, times 1.25 for a chief town.
+
+## SVG traces: state after the first pass
+
+Traced by three subagents, each at least two look-and-fix rounds against its overlay. Good on the
+scan: venice, lake, smina, ceuta, jerusalem. Rough first passes: genoa (towers as boxes, the mole
+right) and lisbon (buildings float on the hill). Avignon traces the crop as it is, which still
+leans about 19 degrees: the sprite's `rotate: -14` is not enough, so the raster and the trace both
+want a second deskew. None of these is wired into a pack yet.

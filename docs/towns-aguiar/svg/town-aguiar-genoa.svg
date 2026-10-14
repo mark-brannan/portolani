@@ -1,0 +1,40 @@
+<!-- Genoa from Jorge de Aguiar's 1492 portolan chart: a crowd of tall white towers and red roofs along a curtain wall,
+     with a big blue semicircular harbour mole in front like a bridge arch.
+     Traced from the crop at docs/towns-aguiar/town-aguiar-genoa.raw.png (pixel coordinates = user units). -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 178 136" width="712" height="544">
+ <g stroke="#2a1d12" stroke-width="1.2" stroke-linejoin="round" stroke-linecap="round" fill="#ffffff">
+  <!-- thin masts and shafts at the back -->
+  <path d="M34,32V56"/><rect x="42" y="42" width="6" height="30"/><path d="M54,42V50"/><rect x="51" y="50" width="7" height="24"/>
+  <rect x="55" y="8" width="8" height="4"/><rect x="57" y="12" width="6" height="31"/>
+  <rect x="71" y="2" width="6" height="30"/><path d="M70,14H78"/>
+  <rect x="88" y="10" width="5" height="19"/><rect x="96" y="15" width="9" height="4"/><rect x="97" y="19" width="7" height="12"/>
+  <rect x="115" y="2" width="6" height="36"/><path d="M114,5H122M114,22H122"/><rect x="124" y="2" width="4" height="19"/>
+  <!-- tower 1: the lighthouse tower at the left end of the mole -->
+  <rect x="29" y="55" width="10" height="5"/><rect x="29" y="60" width="10" height="13"/>
+  <rect x="26" y="73" width="16" height="6" rx="2"/><rect x="28" y="79" width="12" height="33"/><path d="M34,82V110"/>
+  <rect x="24" y="110" width="20" height="8"/><rect x="21" y="118" width="26" height="7"/>
+  <!-- tower 3: thin shaft on a red-roofed house -->
+  <path d="M54,50L57,42L64,42L67,50Z" fill="#c8432b"/><rect x="55" y="50" width="12" height="20"/>
+  <!-- the palazzo and the red-roofed house beside it -->
+  <path d="M80,40L82,28L97,30L99,40Z" fill="#c8432b"/><rect x="84" y="40" width="24" height="26"/><path d="M100,40V66"/>
+  <rect x="70" y="30" width="14" height="34"/><path d="M72,60H84"/>
+  <g fill="#2a1d12" stroke="none"><rect x="77" y="36" width="2" height="3"/><rect x="74" y="46" width="2" height="3"/><rect x="79" y="46" width="2" height="3"/></g>
+  <!-- the right group: big hipped roof, stacked roofs, a white tower, the corner tower -->
+  <path d="M108,50L113,40L119,38L130,40L136,50Z" fill="#c8432b"/><rect x="108" y="50" width="28" height="5"/>
+  <path d="M105,60L108,54L126,54L128,60Z" fill="#c8432b"/><rect x="110" y="60" width="20" height="40"/><path d="M121,72V100"/>
+  <path d="M114,70L117,63L126,63L129,70Z" fill="#c8432b"/>
+  <g fill="#2a1d12" stroke="none"><rect x="117" y="82" width="2" height="3"/><rect x="122" y="82" width="2" height="3"/></g>
+  <rect x="129" y="50" width="10" height="50"/>
+  <path d="M134,88L137,81L144,81L147,88Z" fill="#c8432b"/><rect x="135" y="88" width="13" height="10"/>
+  <path d="M130,103L132,97L145,97L147,103Z" fill="#c8432b"/><rect x="131" y="103" width="17" height="14"/>
+  <path d="M107,110L109,104L128,104L130,110Z" fill="#c8432b"/><rect x="108" y="110" width="22" height="10"/>
+  <!-- the quay buildings under the mole -->
+  <rect x="94" y="80" width="12" height="38"/><path d="M94,100H106"/>
+  <rect x="68" y="100" width="28" height="8"/><path d="M76,100V108M84,100V108"/><rect x="75" y="108" width="20" height="9"/>
+ </g>
+ <!-- the harbour mole: a lapis arch, inked on its outer edge -->
+ <path d="M40,84C44,75 55,69 70,68C82,67 93,69 101,73C111,78 119,88 123,104L117,104C114,94 109,84 103,80C96,77 90,77 85,79C78,82 66,85 58,86C50,88 43,90 39,93Z" fill="#3f5fa8" opacity=".88"/>
+ <path d="M48,90C56,88 68,85 80,82C88,80 95,80 101,80C108,83 113,92 116,104L112,104C110,94 106,86 100,84C94,84 86,86 78,88C70,90 60,92 50,93Z" fill="#7f93c8" opacity=".45"/>
+ <path d="M40,84C44,75 55,69 70,68C82,67 93,69 101,73C111,78 119,88 123,104" fill="none" stroke="#2a1d12" stroke-width="1.4" stroke-linecap="round"/>
+ <path d="M84,68C92,69 101,73 106,77C114,83 120,93 123,104" fill="none" stroke="#2a1d12" stroke-width="2.2" stroke-linecap="round"/>
+</svg>
