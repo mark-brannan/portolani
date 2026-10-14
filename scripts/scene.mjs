@@ -253,10 +253,10 @@ function viewData(world, view) {
   return { proj, land, coastLL, coast, places, names };
 }
 
-async function loadPack(name) {
+async function loadPack(name, kinds = KINDS) {
   const manifest = await env.readJSON(`packs/${name}/pack.json`);
-  // kinds the renderer does not place yet (town, tree, scale) are left unfetched
-  const sprites = await Promise.all(manifest.sprites.filter((s) => KINDS.includes(s.kind)).map(async (s) => {
+  // kinds the renderer does not place yet (town, tree) are left unfetched
+  const sprites = await Promise.all(manifest.sprites.filter((s) => kinds.includes(s.kind)).map(async (s) => {
     const img = await env.loadImage(`packs/${name}/${s.file}`);
     // a source-colour pack is drawn as scanned; an ink pack is filled with the ink of the day
     return { ...s, img, tinted: (manifest.colour ?? 'source') === 'source' ? img : tint(img, STYLE.ink) };
@@ -352,11 +352,11 @@ const letterOptions = (data) => ({
 
 function buildScene(data, packs, ctx) {
   const field = clearanceField(data);
-  const roses = packs.catalan.sprites.filter((s) => s.kind === 'rose');
+  const roses = packs.ornaments.sprites.filter((s) => s.kind === 'rose');
   const bigRose = roses.reduce((a, b) => (b.sizePx > a.sizePx ? b : a));
   const smallRoses = roses.filter((s) => s !== bigRose); // taken in pack order, one per node
   const smallSize = Math.max(...smallRoses.map((s) => s.sizePx));
-  const cartoucheSprite = packs.catalan.sprites.find((s) => s.kind === 'cartouche');
+  const cartoucheSprite = packs.ornaments.sprites.find((s) => s.kind === 'cartouche');
   const occupied = []; // discs {x, y, r} that later ornaments keep clear of
   const edge = (x, y) => Math.min(x, y, W - x, H - y);
   const free = (x, y) => Math.min(field.at(x, y), edge(x, y), ...occupied.map((o) => Math.hypot(x - o.x, y - o.y) - o.r));
@@ -796,30 +796,44 @@ const SCALE_STYLES = {
     for (let i = 0; i < n; i++) for (let d = 1; d < 4; d++) { g.beginPath(); g.arc(x0 + i * seg + (seg * d) / 4, ym, 0.8, 0, 2 * Math.PI); g.fillStyle = STYLE.ink; g.fill(); }
   },
 };
+// a picture from a pack, its divisions fixed: the pack's `bar` is the run of the divisions across the
+// picture, as fractions of its width; it is scaled whole, so its height follows its length
+SCALE_STYLES.genoese = (g, x0, y0, n, seg, sprite) => {
+  const [b0, b1] = sprite.bar, w = (n * seg) / (b1 - b0), h = (w * sprite.img.height) / sprite.img.width;
+  g.save(); g.globalCompositeOperation = 'multiply';
+  g.drawImage(sprite.tinted, x0 - b0 * w, y0 + SCALE_BAR_H - h, w, h);
+  g.restore();
+};
+SCALE_STYLES.genoese.height = (n, seg, sprite) => ((n * seg) / (sprite.bar[1] - sprite.bar[0])) * sprite.img.height / sprite.img.width;
+const SCALE_PICTURES = { genoese: 'scale-genoese' }; // style -> sprite id in the vivid pack
 const SCALE_NAMES = Object.keys(SCALE_STYLES);
 
-function drawScaleBar(g, data, bg, view, w, h, style = 'chequer') {
+function drawScaleBar(g, data, bg, view, w, h, style = 'genoese', sprite = null) {
   const proj = data.proj;
-  if (!(style in SCALE_STYLES) || proj.zoom < SCALE_MIN_ZOOM) return;
+  if (!(style in SCALE_STYLES) || proj.zoom < SCALE_MIN_ZOOM || (style in SCALE_PICTURES && !sprite)) return;
   const lat = proj.invert(view.x + w / 2 / view.scale, view.y + h / 2 / view.scale)[1];
   const pxPerNm = ((proj.k * NM) / (EARTH_R * Math.cos(lat * RAD))) * view.scale;
   const target = Math.min(w * 0.25, 360); // longest bar, px
-  const step = [...NM_STEPS].reverse().find((n) => n * pxPerNm * 4 <= target) ?? NM_STEPS[0];
-  const seg = step * pxPerNm, n = Math.max(4, Math.min(8, 2 * Math.floor(target / seg / 2)));
-  const x0 = 48, y0 = h - 36 - SCALE_BAR_H;
+  const fixed = sprite?.divisions;
+  const step = [...NM_STEPS].reverse().find((n) => n * pxPerNm * (fixed ?? 4) <= target) ?? NM_STEPS[0];
+  const seg = step * pxPerNm, n = fixed ?? Math.max(4, Math.min(8, 2 * Math.floor(target / seg / 2)));
+  const every = n % 2 ? 1 : 2; // which divisions are numbered
+  // a picture taller than the ladder grows upward from the same foot
+  const barH = Math.max(SCALE_BAR_H, SCALE_STYLES[style].height?.(n, seg, sprite) ?? 0);
+  const x0 = 48, y0 = h - 36 - SCALE_BAR_H, top = y0 + SCALE_BAR_H - barH;
   g.save();
   g.setTransform(1, 0, 0, 1, 0, 0);
   g.font = `22px "${STYLE.font}"`;
   // the chart is blank where a scale sits: the parchment is repainted over the map beneath it
-  const pad = 14, px = x0 - pad - 20, py = y0 - 22 - 5 - pad;
-  const pw = n * seg + 24 + g.measureText('nautical miles').width + 2 * pad + 20, ph = SCALE_BAR_H + 22 + 5 + 2 * pad;
+  const pad = 14, px = x0 - pad - 20, py = top - 22 - 5 - pad;
+  const pw = n * seg + 24 + g.measureText('nautical miles').width + 2 * pad + 20, ph = barH + 22 + 5 + 2 * pad;
   const sx = Math.max(0, view.x + px / view.scale), sy = Math.max(0, view.y + py / view.scale);
   g.drawImage(bg, sx, sy, Math.min(W - sx, pw / view.scale), Math.min(H - sy, ph / view.scale), px, py, pw, ph);
   g.strokeStyle = hexA(STYLE.windRed, 0.7); g.lineWidth = 1; g.strokeRect(px + 0.5, py + 0.5, pw - 1, ph - 1);
   g.strokeRect(px + 3.5, py + 3.5, pw - 7, ph - 7);
-  SCALE_STYLES[style](g, x0, y0, n, seg);
+  SCALE_STYLES[style](g, x0, y0, n, seg, sprite);
   g.fillStyle = STYLE.ink; g.textAlign = 'center'; g.textBaseline = 'bottom';
-  for (let i = 0; i <= n; i += 2) g.fillText(String(i * step), x0 + i * seg, y0 - 5);
+  for (let i = 0; i <= n; i += every) g.fillText(String(i * step), x0 + i * seg, top - 5);
   g.textAlign = 'left'; g.fillText('nautical miles', x0 + n * seg + 24, y0 + SCALE_BAR_H);
   g.restore();
 }
@@ -874,7 +888,7 @@ function drawScene(g, scene, data, bg, view) {
 
   // 10. cartouche, lettered in its cleared panel
   const c = scene.cartouche;
-  if (!show.kinds.has('cartouche') || !meets(r, { x0: c.x, y0: c.y, x1: c.x + c.w, y1: c.y + c.h })) { g.restore(); drawScaleBar(g, data, bg, view, W, H, show.scale); return; }
+  if (!show.kinds.has('cartouche') || !meets(r, { x0: c.x, y0: c.y, x1: c.x + c.w, y1: c.y + c.h })) { g.restore(); drawScaleBar(g, data, bg, view, W, H, show.scale, scene.scaleSprite); return; }
   const [px0, py0, px1, py1] = c.sprite.panel;
   const pw = (px1 - px0) * c.w, ph = (py1 - py0) * c.h;
   g.save();
@@ -894,7 +908,7 @@ function drawScene(g, scene, data, bg, view) {
   g.restore();
 
   g.restore();
-  drawScaleBar(g, data, bg, view, W, H, show.scale);
+  drawScaleBar(g, data, bg, view, W, H, show.scale, scene.scaleSprite);
 }
 
 // ---------------------------------------------------------------- setup
@@ -904,7 +918,7 @@ function drawScene(g, scene, data, bg, view) {
 // PACKS), `kinds` (the ornament kinds drawn, of KINDS), `names` and `rhumb` (booleans), `scale` (a SCALE_NAMES entry, or 'off').
 export async function createScene(environment, opts = {}) {
   env = environment;
-  const { ink = '#3b2a1a', parchment: tone = '#e9d8b4', density = 1, pack = 'all', names = true, rhumb: rhumbOn = true, scale = 'chequer' } = opts;
+  const { ink = '#3b2a1a', parchment: tone = '#e9d8b4', density = 1, pack = 'all', names = true, rhumb: rhumbOn = true, scale = 'genoese' } = opts;
   const show = { kinds: new Set(opts.kinds ?? KINDS), names, rhumb: rhumbOn, scale };
   const view = clampView(opts.view ?? DEFAULT_VIEW);
   STYLE.ink = ink;
@@ -914,25 +928,28 @@ export async function createScene(environment, opts = {}) {
   TUNE.townGap = 48 / density;
 
   const t0 = performance.now();
-  // a pack not chosen is not fetched: carta-marina draws monsters and ships, catalan roses and the
-  // cartouche, and `plain` stands in for the catalan kinds with shapes drawn in code
-  const [, coarse, cartaMarina, catalan] = await Promise.all([
+  // a pack not chosen is not fetched: carta-marina draws monsters and ships; vivid (the default) or
+  // catalan the roses and the cartouche, and `plain` stands in for them with shapes drawn in code.
+  // A picture scale bar comes from the vivid pack whatever the pack.
+  const roses = { all: 'vivid', vivid: 'vivid', catalan: 'catalan' }[pack];
+  const [, coarse, cartaMarina, ornaments, scaleSprite] = await Promise.all([
     env.loadFont(STYLE.font), loadWorld(),
     pack === 'all' || pack === 'carta-marina' ? loadPack('carta-marina') : { sprites: [] },
-    pack === 'all' || pack === 'catalan' ? loadPack('catalan') : { sprites: PLAIN },
+    roses ? loadPack(roses) : { sprites: PLAIN },
+    scale in SCALE_PICTURES ? loadPack('vivid', ['scale']).then((p) => p.sprites.find((s) => s.id === SCALE_PICTURES[scale])) : null,
   ]);
   const world = view.zoom > DETAIL_ZOOM ? await loadDetail(coarse, view) : coarse;
-  const packs = { cartaMarina, catalan };
+  const packs = { cartaMarina, ornaments };
   const tLoad = performance.now();
 
   const data = viewData(world, view);
-  const scene = { ...buildScene(data, packs, createCanvas(10, 10).getContext('2d')), show };
+  const scene = { ...buildScene(data, packs, createCanvas(10, 10).getContext('2d')), show, scaleSprite };
   if (!parchments.has(tone)) parchments.set(tone, parchment(1539));
   const bg = parchments.get(tone);
   return { scene, data, bg, proj: data.proj, world, coarse, view, timing: { load: tLoad - t0, place: performance.now() - tLoad } };
 }
 const parchments = new Map(); // by tone; the same seed paints the same sheet
 
-export const PACKS = ['all', 'carta-marina', 'catalan', 'plain'];
+export const PACKS = ['all', 'carta-marina', 'vivid', 'catalan', 'plain'];
 export const KINDS = ['rose', 'ship', 'monster', 'cartouche'];
 export { SCALE_NAMES, drawScene, drawGround, covers, panView, zoomView, clampView, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };

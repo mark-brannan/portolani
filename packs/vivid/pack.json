@@ -1,6 +1,6 @@
 {
   "name": "vivid",
-  "title": "Portolan roses and scale, redrawn as vectors after Jorge de Aguiar 1492, the Catalan Atlas 1375 and Genoese charts",
+  "title": "Portolan roses, scale, cartouche, town and palms, redrawn as vectors after Jorge de Aguiar 1492, the Catalan Atlas 1375, Genoese charts and Frederik de Wit",
   "licence": "MIT; drawn for portolani after public-domain originals",
   "colour": "source",
   "ink": "#2a1d12",
@@ -24,12 +24,42 @@
       "after": "https://commons.wikimedia.org/wiki/File:Compass_rose_from_Catalan_Atlas_(1375).jpg"
     },
     {
+      "id": "cartouche-frame",
+      "kind": "cartouche",
+      "file": "cartouche-frame.svg",
+      "anchor": [0.5, 0.5],
+      "sizePx": 340,
+      "bands": [0, 1],
+      "panel": [0.0588, 0.4211, 0.9412, 0.9105],
+      "after": "https://commons.wikimedia.org/wiki/File:Angel_cartouche_on_a_Mediterranean_map_by_de_Wit.tiff"
+    },
+    {
+      "id": "town-aguiar",
+      "kind": "town",
+      "file": "town-aguiar.svg",
+      "anchor": [0.5, 0.5],
+      "sizePx": 60,
+      "bands": [0, 1],
+      "after": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg"
+    },
+    {
+      "id": "palms-aguiar",
+      "kind": "tree",
+      "file": "palms-aguiar.svg",
+      "anchor": [0.5, 0.5],
+      "sizePx": 70,
+      "bands": [0, 1],
+      "after": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg"
+    },
+    {
       "id": "scale-genoese",
       "kind": "scale",
       "file": "scale-genoese.svg",
       "anchor": [0.5, 0.5],
       "sizePx": 260,
-      "bands": [0, 1]
+      "bands": [0, 1],
+      "bar": [0.0214, 0.9786],
+      "divisions": 5
     }
   ]
 }
