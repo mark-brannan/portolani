@@ -1,7 +1,9 @@
 // Browser host for the shared scene code (scene.mjs): same scene as `npm run render`, drawn live.
 // Drag to pan, wheel or pinch to zoom; while the map moves only land and coast are drawn, and the
-// ornaments are placed again when it stops. The view is kept in the URL as #map=zoom/lat/lon.
-import { createScene, drawScene, drawGround, panView, zoomView, clampView, covers, DEFAULT_VIEW, W, H } from './scene.mjs';
+// ornaments are placed again when it stops. The view and the style are kept in the URL hash, e.g.
+// #map=zoom/lat/lon&pack=plain&kinds=rose,ship&names=0&rhumb=0&ink=5a1a1a&parchment=eee&density=1.5;
+// a setting left at its default is left out.
+import { createScene, drawScene, drawGround, panView, zoomView, clampView, covers, DEFAULT_VIEW, PACKS, KINDS, W, H } from './scene.mjs';
 
 const memo = new Map();
 // a failed load is forgotten, so the next stop tries it again
@@ -28,26 +30,75 @@ const env = {
 const $ = (id) => document.getElementById(id);
 const canvas = $('map'), ctx = canvas.getContext('2d');
 
+const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, pack: 'all', kinds: KINDS, names: true, rhumb: true };
+const hashParams = () => new URLSearchParams(location.hash.slice(1));
+
 function viewFromHash() {
-  const m = /^#map=(-?[\d.]+)\/(-?[\d.]+)\/(-?[\d.]+)$/.exec(location.hash);
+  const m = /^(-?[\d.]+)\/(-?[\d.]+)\/(-?[\d.]+)$/.exec(hashParams().get('map') ?? '');
   if (!m) return DEFAULT_VIEW;
   const v = { zoom: Number(m[1]), lat: Number(m[2]), lon: Number(m[3]) };
   return Object.values(v).every(Number.isFinite) ? clampView(v) : DEFAULT_VIEW; // e.g. #map=1.2.3/40/5
 }
-const writeHash = (v) => history.replaceState(null, '', `#map=${v.zoom.toFixed(2)}/${v.lat.toFixed(3)}/${v.lon.toFixed(3)}`);
+const hex = (v, fallback) => (/^[0-9a-f]{3}$|^[0-9a-f]{6}$/i.test(v ?? '') ? `#${v.length === 3 ? [...v].map((c) => c + c).join('') : v}`.toLowerCase() : fallback);
+function styleFromHash() {
+  const q = hashParams(), density = Number(q.get('density') ?? DEFAULTS.density);
+  return {
+    ink: hex(q.get('ink'), DEFAULTS.ink),
+    parchment: hex(q.get('parchment'), DEFAULTS.parchment),
+    density: density >= 0 && density <= 2 ? density : DEFAULTS.density,
+    pack: PACKS.includes(q.get('pack')) ? q.get('pack') : DEFAULTS.pack,
+    kinds: q.has('kinds') ? KINDS.filter((k) => q.get('kinds').split(',').includes(k)) : DEFAULTS.kinds,
+    names: q.get('names') !== '0',
+    rhumb: q.get('rhumb') !== '0',
+  };
+}
+function writeHash() {
+  const q = new URLSearchParams(), v = view, st = style;
+  q.set('map', `${v.zoom.toFixed(2)}/${v.lat.toFixed(3)}/${v.lon.toFixed(3)}`);
+  if (st.pack !== DEFAULTS.pack) q.set('pack', st.pack);
+  if (st.kinds.join() !== KINDS.join()) q.set('kinds', st.kinds.join());
+  if (!st.names) q.set('names', '0');
+  if (!st.rhumb) q.set('rhumb', '0');
+  if (st.density !== DEFAULTS.density) q.set('density', st.density);
+  if (st.ink !== DEFAULTS.ink) q.set('ink', st.ink.slice(1));
+  if (st.parchment !== DEFAULTS.parchment) q.set('parchment', st.parchment.slice(1));
+  history.replaceState(null, '', `#${q.toString().replaceAll('%2C', ',').replaceAll('%2F', '/')}`);
+}
+
+// the controls show the style; a plain pack has no ships or monsters to switch
+function showStyle() {
+  $('ink').value = style.ink; $('parchment').value = style.parchment;
+  $('density').value = style.density; $('densityOut').textContent = style.density;
+  $('pack').value = style.pack; $('names').checked = style.names; $('rhumb').checked = style.rhumb;
+  for (const k of KINDS) {
+    const box = $(`kind-${k}`);
+    box.checked = style.kinds.includes(k);
+    box.disabled = (k === 'ship' || k === 'monster') && (style.pack === 'plain' || style.pack === 'catalan');
+  }
+}
+function readControls() {
+  style = {
+    ink: $('ink').value, parchment: $('parchment').value, density: Number($('density').value),
+    pack: $('pack').value, kinds: KINDS.filter((k) => $(`kind-${k}`).checked), names: $('names').checked, rhumb: $('rhumb').checked,
+  };
+  showStyle();
+  writeHash();
+  render();
+}
 
 let view = viewFromHash();
+let style = styleFromHash();
+showStyle();
 let ground = null; // { world, coarse, bg } from the last placement, all a moving frame needs
 let placed = null; // the view the canvas shows with its ornaments
 let run = 0;
 
 async function render() {
   const me = ++run;
-  $('densityOut').textContent = $('density').value;
   try {
     const t0 = performance.now();
     const { scene, data, bg, world, coarse, timing } = await createScene(env, {
-      ink: $('ink').value, parchment: $('parchment').value, density: Number($('density').value), view,
+      ...style, view,
     });
     if (me !== run) return; // a newer change or a move superseded this one
     ground = { world, coarse, bg };
@@ -82,7 +133,7 @@ function moved(next) {
 }
 function stopped(delay = 0) {
   clearTimeout(settle);
-  settle = setTimeout(() => { if (view !== placed) { writeHash(view); render(); } }, delay); // a click moves nothing
+  settle = setTimeout(() => { if (view !== placed) { writeHash(); render(); } }, delay); // a click moves nothing
 }
 
 // client px to canvas px, the units the view moves in
@@ -130,6 +181,6 @@ canvas.addEventListener('wheel', (e) => {
   stopped(300);
 }, { passive: false });
 
-for (const id of ['ink', 'parchment', 'density']) $(id).addEventListener('input', render);
-addEventListener('hashchange', () => { view = viewFromHash(); render(); });
+for (const id of ['ink', 'parchment', 'density', 'pack', 'names', 'rhumb', ...KINDS.map((k) => `kind-${k}`)]) $(id).addEventListener('input', readControls);
+addEventListener('hashchange', () => { view = viewFromHash(); style = styleFromHash(); showStyle(); render(); });
 render();
