@@ -592,7 +592,9 @@ function townScale(p, by = 'population') {
 // The order a view tries its monsters or ships in: a weighted shuffle (Efraimidis-Spirakis, key
 // u^(1/weight)), seeded by the view's bucket (castSeed), so a big selection shows all of itself
 // across the map while one view always draws the same scene.
+// A null seed (an older caller) keeps the plain order: heaviest first, as listed among equals.
 function castOrder(sprites, seed, weight = (s) => s.weight ?? 1) {
+  if (seed == null) return [...sprites].sort((a, b) => weight(b) - weight(a));
   const rnd = mulberry32(seed);
   return sprites.map((s) => ({ s, k: rnd() ** (1 / weight(s)) })).sort((a, b) => b.k - a.k).map((e) => e.s);
 }
@@ -743,7 +745,7 @@ function buildScene(data, sprites, ctx, world = {}) {
 
   // Monsters: farthest-first on the open-water field, >= MONSTER_GAP apart, in the view's cast order
   // (heavier sprites tend to come first).
-  const monsterSprites = castOrder(sprites.monsters, world.seed ?? 0);
+  const monsterSprites = castOrder(sprites.monsters, world.seed);
   const monsters = [];
   for (const sprite of monsterSprites) {
     if (monsters.length >= TUNE.monsterMax) break;
@@ -764,7 +766,7 @@ function buildScene(data, sprites, ctx, world = {}) {
   }
 
   // Ships: coastal water, spread out, heading along the nearest coast; in the view's cast order, all alike.
-  const shipSprites = castOrder(sprites.ships, (world.seed ?? 0) ^ 0x5eed, () => 1);
+  const shipSprites = castOrder(sprites.ships, world.seed == null ? null : world.seed ^ 0x5eed, () => 1);
   const ships = [];
   for (const sprite of shipSprites) {
     if (ships.length >= TUNE.shipMax) break;
@@ -1296,7 +1298,8 @@ function drawScene(g, scene, data, bg, view) {
 // families and the shapes drawn in code; the town families it holds take turns among the towns,
 // sized by `townSize`, 'population' (the default) or 'rank'. The older `rendering` (one of
 // RENDERINGS) with the `rose`, `monster` and `town` styles (listStyles; town 'tower' is drawn in code)
-// still choose a selection when `sprites` is left out, so old links and callers draw as they did.
+// still choose a selection when `sprites` is left out; such a caller keeps rank sizing by default and the
+// unshuffled monster and ship order, so old links and callers draw as they did.
 // `kinds` (the ornament kinds drawn, of KINDS), `names` and `rhumb` (booleans), `scale` (a SCALE_NAMES entry, or 'off'),
 // `continents` (boolean) and `regions` ('off', 'latin' or 'english'); the continents follow the regions' language, Latin when those are off.
 // `land`: a LANDS entry, the land treatment ('islands' by default); `redSea` (boolean) tints the Red Sea red.
@@ -1306,8 +1309,9 @@ function drawScene(g, scene, data, bg, view) {
 // placed when the lattice needs it (a rose, the cartouche's corner), only not drawn.
 export async function createScene(environment, opts = {}) {
   env = environment;
-  const { ink = '#3b2a1a', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize = 'population', names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', title = 'PORTOLANI', autoTitle = true, land: landMode = 'islands', redSea = false } = opts;
+  const { ink = '#3b2a1a', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', title = 'PORTOLANI', autoTitle = true, land: landMode = 'islands', redSea = false } = opts;
   const legacy = ['rendering', 'rose', 'monster', 'town'].some((k) => opts[k] !== undefined);
+  const townBy = townSize ?? (legacy ? 'rank' : 'population');
   const show = { kinds: new Set(opts.kinds ?? DEFAULT_KINDS), names, rhumb: rhumbOn, scale };
   const view = clampView(opts.view ?? DEFAULT_VIEW);
   STYLE.ink = ink;
@@ -1345,7 +1349,7 @@ export async function createScene(environment, opts = {}) {
 
   const data = viewData(world, view);
   const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, title, autoTitle,
-    scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM, townSize, seed: castSeed(view) }), show, scaleSprite };
+    scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM, townSize: townBy, seed: legacy ? null : castSeed(view) }), show, scaleSprite };
   if (!parchments.has(tone)) parchments.set(tone, parchment(1539));
   const bg = parchments.get(tone);
   return { scene, data, bg, proj: data.proj, world, coarse, view, timing: { load: tLoad - t0, place: performance.now() - tLoad } };

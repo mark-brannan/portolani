@@ -150,6 +150,8 @@ test('townSize: by population a great city stands bigger than a small town; by r
   assert.ok(by.Cairo.size > 1.3 && by.Cairo.size > by.Suez.size * 1.4, `Cairo ${by.Cairo.size}, Suez ${by.Suez.size}`);
   const rank = (await createScene(env, { view: NILE, townSize: 'rank' })).scene.towns;
   for (const t of rank) assert.equal(t.size, t.rank <= 2 ? 1.25 : 1, t.name);
+  const legacy = (await createScene(env, { view: NILE, town: 'tower' })).scene.towns;
+  for (const t of legacy) assert.equal(t.size, t.rank <= 2 ? 1.25 : 1, `older caller, ${t.name}`);
 });
 
 test('the monster and ship cast is the same for one view, and a big selection shows more of itself across views', async () => {
