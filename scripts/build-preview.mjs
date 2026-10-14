@@ -95,7 +95,9 @@ console.log(`urban footprints: ${(urban.length / 1e6).toFixed(2)} MB`);
 async function writeBand(dir, cellDeg, geometry) {
   const cells = cutCells(geometry, cellDeg);
   await mkdir(path.join(out, 'geo', dir), { recursive: true });
-  await Promise.all([...cells].map(([k, c]) => writeFile(path.join(out, 'geo', dir, `${k}.json`), JSON.stringify(c))));
+  // in batches: "f" has some 70,000 cells, past a CI runner's open-file limit if written at once
+  const all = [...cells];
+  for (let i = 0; i < all.length; i += 512) await Promise.all(all.slice(i, i + 512).map(([k, c]) => writeFile(path.join(out, 'geo', dir, `${k}.json`), JSON.stringify(c))));
   await writeFile(path.join(out, 'geo', dir, 'index.json'), JSON.stringify({ cell: cellDeg, cells: [...cells.keys()] }));
   return cells.size;
 }
