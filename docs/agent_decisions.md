@@ -45,3 +45,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t085959z
 - First projection set: Mercator, plate carree, Miller, equal-area Undo: edit scripts/scene.mjs PROJECTIONS / page.js ([#63](https://github.com/mark-brannan/portolani/pull/63))
+
+### 20261014t095714z
+- Vivid heraldic family: style name 'heraldic'; monsters 140-180 px, ships 64-88 px; all ships heading right. Undo: Rename the style in pack.json and the file prefix, or edit sizePx. ([#70](https://github.com/mark-brannan/portolani/pull/70))
