@@ -613,7 +613,7 @@ const letterOptions = (data) => ({
 });
 
 // World-view lettering, hand-set: [Latin, English, lon, lat]. Zoom levels are whole: continents are
-// spaced capitals at level 3 and out (zoom < REGION_ZOOM), regions italic at levels 4 and 5.
+// spaced capitals below zoom 5, regions italic below zoom 7.
 const CONTINENTS = [
   ['EVROPA', 'EUROPE', 14, 50], ['AFRICA', 'AFRICA', 20, 7], ['ASIA', 'ASIA', 90, 48],
   ['AMERICA SEPTENTRIONALIS', 'NORTH AMERICA', -100, 45], ['AMERICA MERIDIONALIS', 'SOUTH AMERICA', -60, -12],
@@ -625,7 +625,7 @@ const REGIONS = [
   ['Syria', 'Syria', 38, 35], ['Egiptus', 'Egypt', 29.5, 27], ['Libya', 'Libya', 17, 29],
   ['Barbaria', 'Maghreb', 4, 31], ['Arabia', 'Arabia', 44, 24], ['Thracia', 'Thrace', 26, 42.3],
 ];
-const REGION_ZOOM = 4, REGION_ZOOM_END = 6; // regions: REGION_ZOOM <= zoom < REGION_ZOOM_END, which holds the default view
+const CONTINENT_ZOOM_END = 5, REGION_ZOOM_END = 7; // continents: zoom < CONTINENT_ZOOM_END; regions: zoom < REGION_ZOOM_END (they meet a continent's box and make way)
 
 // The continent and region names to letter, each with the box it reserves: measured with the font and
 // spacing they are drawn in, so later names and towns make way. A name off the canvas or meeting an
@@ -644,10 +644,10 @@ function placeWorldNames(data, ctx, boxes, { continents, regions }) {
     boxes.push(box);
     out.push({ text, x, y, size, spacing, italic, r: Math.max(box.hw, box.hh), box });
   };
-  if (continents && z < REGION_ZOOM) {
+  if (continents && z < CONTINENT_ZOOM_END) {
     for (const c of CONTINENTS) { const text = c[continents === 'latin' ? 0 : 1], size = text.length > 12 ? 22 : 30; put(text, c[2], c[3], size, size * 0.6, false); }
   }
-  if (regions !== 'off' && z >= REGION_ZOOM && z < REGION_ZOOM_END) {
+  if (regions !== 'off' && z < REGION_ZOOM_END) {
     for (const r of REGIONS) put(r[lang], r[2], r[3], 22, 1, true);
   }
   return out;
