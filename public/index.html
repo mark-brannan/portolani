@@ -27,13 +27,14 @@
     <label>Ink <input id="ink" type="color" value="#3b2a1a"></label>
     <label>Parchment <input id="parchment" type="color" value="#e9d8b4"></label>
     <label>Density <input id="density" type="range" min="0" max="2" step="0.25" value="1"> <output id="densityOut">1</output></label>
-    <label>Pack <select id="pack">
-      <option value="all">All packs (Carta Marina and vivid)</option>
-      <option value="carta-marina">Carta Marina (monsters, ships)</option>
-      <option value="vivid">Vivid (roses, cartouche, drawn as vectors)</option>
-      <option value="catalan">Catalan (roses, cartouche, scanned)</option>
+    <label>Rendering <select id="rendering">
+      <option value="vivid">Vivid (drawn as vectors)</option>
+      <option value="scanned">Scanned (crops of the scans)</option>
       <option value="plain">Plain (drawn in code, no images)</option>
     </select></label>
+    <label>Roses <select id="rose"></select></label>
+    <label>Monsters and ships <select id="monster"></select></label>
+    <label>Towns <select id="town"></select></label>
     <fieldset><legend>Ornaments</legend>
       <label><input type="checkbox" id="kind-rose"> Roses</label>
       <label><input type="checkbox" id="kind-ship"> Ships</label>
@@ -64,7 +65,7 @@
   </div>
   <canvas id="map" width="1600" height="1000"></canvas>
   <div id="status">Loading…</div>
-  <footer>Sprites cropped from public-domain scans via Wikimedia Commons: Olaus Magnus, Carta Marina (1539); Jorge de Aguiar, wind rose (1492, Beinecke Library, Yale); Cresques Abraham, Catalan Atlas (1375, BnF Gallica); Frederik de Wit, cartouche (Royal Museums Greenwich). Coasts and places: Natural Earth. Lettering: IM Fell English (SIL OFL).</footer>
+  <footer>Ornaments drawn as vectors after, or cropped from, public-domain scans via Wikimedia Commons: Olaus Magnus, Carta Marina (1539); Jorge de Aguiar, wind rose and chart (1492, Beinecke Library, Yale); Cresques Abraham, Catalan Atlas (1375, BnF Gallica); a Genoese chart (c. 1320-1350, Library of Congress); Frederik de Wit, cartouche (Royal Museums Greenwich). Coasts and places: Natural Earth. Lettering: IM Fell English (SIL OFL).</footer>
 </main>
 <script type="importmap">{ "imports": { "coast-wright": "./coast-wright/index.js" } }</script>
 <script type="module" src="page.js"></script>
