@@ -51,3 +51,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t095718z
 - Dropped sea serpent 351371 (framed 651 KB woodcut), the lymphad (no truthful heading) and Heraldry_Fish_203 (duplicate sea-lion); merman shading greys kept as warm tones; coordinates rounded to 0.5 on three heavy files. Undo: Add the dropped files back from the sources named in the PR. ([#70](https://github.com/mark-brannan/portolani/pull/70))
+
+### 20261014t121719z
+- GSHHG "f" read from the pinned GSHHG zip in portolani build-preview, not a coastlines package (a package would be ~66 MB packed, past the 30 MB line) Undo: read f from a package later; the cell cutter is unchanged ([#84](https://github.com/mark-brannan/portolani/pull/84))
