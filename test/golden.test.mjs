@@ -9,6 +9,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import { createScene, drawScene, W, H } from '../scripts/scene.mjs';
+import { coastNames, joinNames } from '../scripts/names.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const GOLDEN = join(ROOT, 'test', 'golden');
@@ -27,9 +28,14 @@ const VIEWS = {
 };
 
 const resolve = (p) => (p.startsWith('geo/') ? join(GEO, p.slice(4)) : join(ROOT, p));
+const read = (file) => JSON.parse(readFileSync(file, 'utf8'));
+// seas from the committed fixture (seaNames of the marine download), countries from coastlines
+let made;
+const names = () => made ??= joinNames(read(join(ROOT, 'test', 'fixtures', 'sea-names-50m.json')),
+  coastNames(read(join(GEO, 'ne-admin-0-countries-50m.geojson')), read(join(GEO, 'ne-coastline-50m.geojson'))));
 const env = {
   createCanvas,
-  readJSON: async (p) => JSON.parse(readFileSync(resolve(p), 'utf8')),
+  readJSON: async (p) => (p === 'geo/names-50m.json' ? names() : read(resolve(p))),
   loadImage: (p) => loadImage(resolve(p)),
   loadFont: async (family) => { GlobalFonts.registerFromPath(join(ROOT, 'test', 'fixtures', 'IMFeENrm28P.ttf'), family); },
 };

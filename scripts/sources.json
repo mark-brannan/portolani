@@ -2,6 +2,14 @@
   "downloaded": "2026-10-10",
   "sources": [
     {
+      "id": "ne_50m_geography_marine_polys",
+      "file": "ne_50m_geography_marine_polys.geojson",
+      "url": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_geography_marine_polys.geojson",
+      "sha256": "6fe58083e0cc5c7fad9e396970e28a8580bbd8770cfa4d1d7b5a34423e912f97",
+      "rights": "Natural Earth, public domain",
+      "note": "(sea, gulf and bay names)"
+    },
+    {
       "id": "im-fell-english",
       "file": "IMFeENrm28P.ttf",
       "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/imfellenglish/IMFeENrm28P.ttf",

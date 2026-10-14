@@ -6,7 +6,7 @@
 // lattice are drawn in lon/lat through coast-wright, so any view or projection draws the same way.
 // A view is a Web Mercator centre and zoom, { lon, lat, zoom }, on a W x H canvas.
 
-import { fill, trace, limn, rhumb, geojsonPolygons, geojsonRings } from 'coast-wright';
+import { fill, trace, limn, rhumb, place, letter, geojsonPolygons, geojsonRings } from 'coast-wright';
 
 let env;
 const createCanvas = (w, h) => env.createCanvas(w, h);
@@ -26,6 +26,7 @@ const STYLE = {
   rhumbAlpha: 0.3,
   rhumbWidth: 0.75,
   font: 'IM Fell English',
+  fonts: ['IM Fell English', 'Georgia', 'serif'], // the stack names are lettered in; the first is loaded
 };
 
 const W = 1600, H = 1000;
@@ -43,7 +44,6 @@ const TUNE = { monsterMax: 4, shipMax: 2, townGap: 48 };
 
 const CELL = 16;             // clearance field cell, px
 const MONSTER_GAP = 220;     // min centre spacing between monsters, px
-const NAME_COAST_PX = 60;    // names go horizontal beyond this distance from the coast
 const RHUMB_NODES = 16;
 const RHUMB_RAYS = 32;
 
@@ -154,8 +154,8 @@ const loadGeo = (id) => env.readJSON(`geo/${id}.geojson`);
 // split into short runs, which is what a frame drawn while dragging walks.
 const worlds = new WeakMap();
 async function loadWorld() {
-  const [landGeo, coastGeo, placesGeo] = await Promise.all(
-    ['ne-land-50m', 'ne-coastline-50m', 'ne-populated-places-50m'].map(loadGeo));
+  const [landGeo, coastGeo, placesGeo, namesGeo] = await Promise.all(
+    [...['ne-land-50m', 'ne-coastline-50m', 'ne-populated-places-50m'].map(loadGeo), env.readJSON('geo/names-50m.json')]);
   let world = worlds.get(landGeo);
   if (world) return world;
   const land = geojsonPolygons(landGeo).map((poly) => ({ poly, box: bbox(poly[0]) }));
@@ -164,7 +164,12 @@ async function loadWorld() {
   const places = placesGeo.features
     .filter((f) => f.properties.SCALERANK <= 4)
     .map((f) => ({ name: f.properties.NAME, rank: f.properties.SCALERANK, pop: f.properties.POP_MAX, lon: f.geometry.coordinates[0], lat: f.geometry.coordinates[1] }));
-  world = { land, lines, runs, places };
+  // seas at a point, countries along each stretch of their coast (scripts/names.mjs)
+  const names = namesGeo.features.map(({ properties: p, geometry: g }) => {
+    const pts = g.type === 'Point' ? [g.coordinates] : g.coordinates;
+    return { text: p.name, at: g.coordinates, land: p.land, kind: p.kind, rank: p.rank, min: p.min, box: bbox(pts) };
+  });
+  world = { land, lines, runs, places, names };
   worlds.set(landGeo, world);
   return world;
 }
@@ -198,7 +203,7 @@ async function loadDetail(coarse, view) {
   }));
   return {
     land: parts.flatMap((p) => p.land), lines: parts.flatMap((p) => p.lines), runs: parts.flatMap((p) => p.runs),
-    places: coarse.places, detail: f, // the lon/lat frame the loaded cells cover
+    places: coarse.places, names: coarse.names, detail: f, // the lon/lat frame the loaded cells cover
   };
 }
 
@@ -242,7 +247,10 @@ function viewData(world, view) {
   });
   const places = world.places.filter((p) => nearLL(f, p.lon, p.lat))
     .map((p) => ({ name: p.name, rank: p.rank, pop: p.pop, xy: proj.project(p.lon, p.lat) }));
-  return { proj, land, coastLL, coast, places };
+  // names worth showing at this zoom (Natural Earth's min_label), most important first
+  const names = world.names.filter((n) => n.min <= view.zoom + 1 && meetsLL(f, n.box))
+    .sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'sea' ? -1 : 1) || a.rank - b.rank);
+  return { proj, land, coastLL, coast, places, names };
 }
 
 async function loadPack(name) {
@@ -334,7 +342,14 @@ function clearanceField(data) {
 
 // ---------------------------------------------------------------- placement
 
-function buildScene(data, packs, measure) {
+// How names are lettered, the same when placed and when drawn so both lay them out alike: a
+// coast is lettered along its stretch inside the canvas.
+const letterOptions = (data) => ({
+  fonts: STYLE.fonts, lonCenter: data.proj.lonCenter,
+  visible: (lon, lat) => { const x = data.proj.x(lon), y = data.proj.y(lat); return x >= 0 && x <= W && y >= 0 && y <= H; },
+});
+
+function buildScene(data, packs, ctx) {
   const field = clearanceField(data);
   const roses = packs.catalan.sprites.filter((s) => s.kind === 'rose');
   const bigRose = roses.reduce((a, b) => (b.sizePx > a.sizePx ? b : a));
@@ -382,46 +397,10 @@ function buildScene(data, packs, measure) {
     occupied.push({ x: n.x, y: n.y, r: smallRose.sizePx / 2 + 10 });
   }
 
-  // Towns, lower scalerank first, >= TUNE.townGap apart; names perpendicular to the nearest coast.
-  const nearestCoast = ([px, py]) => {
-    let best = { d: Infinity };
-    for (const line of data.coast) for (let i = 1; i < line.length; i++) {
-      const [ax, ay] = line[i - 1], [bx, by] = line[i];
-      if (Math.min(ax, bx) > px + NAME_COAST_PX * 2 || Math.max(ax, bx) < px - NAME_COAST_PX * 2) continue;
-      const vx = bx - ax, vy = by - ay, l2 = vx * vx + vy * vy || 1;
-      const t = Math.max(0, Math.min(1, ((px - ax) * vx + (py - ay) * vy) / l2));
-      const qx = ax + t * vx, qy = ay + t * vy, d = Math.hypot(px - qx, py - qy);
-      if (d < best.d) best = { d, qx, qy, line, i };
-    }
-    return best;
-  };
-  // Landward unit normal of the coast at its nearest point, from a chord ~CHORD px each way
-  // so one jagged 50m segment does not swing the name.
-  const CHORD = 14;
-  const landwardNormal = (c, x, y) => {
-    const walk = (dir) => {
-      let i = dir > 0 ? c.i : c.i - 1, [px, py] = [c.qx, c.qy], run = 0;
-      while (i >= 0 && i < c.line.length && run < CHORD) {
-        const [nx, ny] = c.line[i];
-        run += Math.hypot(nx - px, ny - py); [px, py] = [nx, ny]; i += dir;
-      }
-      return [px, py];
-    };
-    const [ax, ay] = walk(-1), [bx, by] = walk(1);
-    let nx = -(by - ay), ny = bx - ax;
-    const l = Math.hypot(nx, ny) || 1;
-    nx /= l; ny /= l;
-    const landAhead = (k) => field.isLand(c.qx + nx * k, c.qy + ny * k) && !field.isLand(c.qx - nx * k, c.qy - ny * k);
-    if (!landAhead(6) && !landAhead(10)) {
-      const flipped = field.isLand(c.qx - nx * 6, c.qy - ny * 6) || (x - c.qx) * nx + (y - c.qy) * ny < 0;
-      if (flipped) { nx = -nx; ny = -ny; }
-    }
-    return [nx, ny];
-  };
-
+  // Towns, lower scalerank first, >= TUNE.townGap apart.
   const boxes = [obb(cartouche.x + cw / 2, cartouche.y + ch / 2, 0, cw / 2, ch / 2)];
   for (const r of roseDraws) boxes.push(obb(r.x, r.y, 0, r.size * 0.42, r.size * 0.42));
-  const towns = [], names = [];
+  const towns = [];
   const sorted = [...data.places].sort((a, b) => a.rank - b.rank || b.pop - a.pop);
   for (const p of sorted) {
     const [x, y] = p.xy;
@@ -430,27 +409,29 @@ function buildScene(data, packs, measure) {
     const size = p.rank <= 2 ? 1.25 : 1;
     const icon = obb(x, y - 8 * size, 0, 5 * size, 8.5 * size); // tower body and pennant
     if (boxes.some((b) => obbOverlap(b, icon))) continue;
-    towns.push({ x, y, size, red: p.rank <= 2 });
+    towns.push({ x, y, size, red: p.rank <= 2, name: p.name, rank: p.rank });
     boxes.push(icon);
+  }
 
-    const fontPx = p.rank <= 1 ? 17 : p.rank <= 2 ? 15 : 13;
-    const width = measure(p.name, fontPx);
-    const c = nearestCoast(p.xy);
-    let angle, ox, oy;
-    if (c.d <= NAME_COAST_PX) {
-      // baseline on the coast normal, running inland from the town
-      const [nx, ny] = landwardNormal(c, x, y);
-      angle = Math.atan2(ny, nx);
-      // start just past the tower, where the normal leaves its box
-      const exit = Math.min(icon.hw / (Math.abs(nx) || 1e-6), icon.hh / (Math.abs(ny) || 1e-6)) + 5;
-      ox = icon.cx + nx * exit; oy = icon.cy + ny * exit;
-    } else {
-      angle = 0; ox = x + icon.hw + 4; oy = icon.cy + 2;
-    }
-    const box = obb(ox + Math.cos(angle) * width / 2, oy + Math.sin(angle) * width / 2, angle, width / 2 + 2, fontPx * 0.45);
-    if (!obbInside(box) || boxes.some((b) => b !== icon && obbOverlap(b, box))) continue; // dropped on overlap
+  // Names, lettered by coast-wright: seas, then countries along their coasts, then towns above
+  // their towers; a country once, on its longest stretch that fits. Earlier names win an overlap;
+  // a name that meets an ornament or leaves the canvas is dropped.
+  const lettering = [
+    ...data.names.map((n) => ({ ...n, size: n.kind === 'sea' ? (n.rank <= 1 ? 22 : n.rank <= 3 ? 18 : 15) : n.rank <= 2 ? 17 : 14 })),
+    ...towns.map((t) => ({ text: t.name, at: data.proj.invert(t.x, t.y - 17 * t.size), size: t.rank <= 1 ? 17 : t.rank <= 2 ? 15 : 13, red: t.red })),
+  ];
+  const opts = letterOptions(data);
+  const names = [];
+  for (const n of lettering) {
+    if (n.kind === 'coast' && names.some((m) => m.kind === 'coast' && m.text === n.text)) continue; // once a view
+    const [p] = place(ctx, [n], data.proj.x, data.proj.y, opts);
+    if (!p) continue;
+    const [c0, c1, c2] = p.box; // coast-wright's corners, as an oriented box
+    const box = obb((c0[0] + c2[0]) / 2, (c0[1] + c2[1]) / 2, Math.atan2(c1[1] - c0[1], c1[0] - c0[0]),
+      Math.hypot(c1[0] - c0[0], c1[1] - c0[1]) / 2, Math.hypot(c2[0] - c1[0], c2[1] - c1[1]) / 2);
+    if (!obbInside(box) || boxes.some((b) => obbOverlap(b, box))) continue;
     boxes.push(box);
-    names.push({ text: p.name, x: ox, y: oy, angle, fontPx, width, red: p.rank <= 2 });
+    names.push({ ...n, x: box.cx, y: box.cy, r: Math.max(box.hw, box.hh) });
   }
   for (const b of boxes.slice(1 + roseDraws.length)) occupied.push({ x: b.cx, y: b.cy, r: Math.max(b.hw, b.hh) * 0.6 });
 
@@ -755,20 +736,11 @@ function drawScene(g, scene, data, bg, view) {
   // 6. towns
   for (const t of scene.towns) if (disc(r, t.x, t.y - 8 * t.size, 12 * t.size)) drawTower(g, t);
 
-  // 7. names
-  g.save();
-  g.textBaseline = 'middle';
-  for (const n of show.names ? scene.names : []) {
-    if (!disc(r, n.x, n.y, n.width + n.fontPx)) continue;
-    g.save();
-    g.translate(n.x, n.y);
-    g.rotate(n.angle);
-    g.font = `${n.fontPx}px "${STYLE.font}"`;
-    g.fillStyle = n.red ? STYLE.windRed : STYLE.ink;
-    g.fillText(n.text, 0, 0);
-    g.restore();
-  }
-  g.restore();
+  // 7. names, in ink, the chief towns in red
+  const shown = show.names ? scene.names.filter((n) => disc(r, n.x, n.y, n.r)) : [];
+  const opts = letterOptions(data);
+  letter(g, shown.filter((n) => !n.red), data.proj.x, data.proj.y, { ...opts, color: STYLE.ink });
+  letter(g, shown.filter((n) => n.red), data.proj.x, data.proj.y, { ...opts, color: STYLE.windRed });
 
   // 8. monsters, 9. ships
   for (const m of show.kinds.has('monster') ? scene.monsters : []) if (spriteIn(m.sprite, m.x, m.y, m.size)) drawSprite(g, m.sprite, m.x, m.y, m.size, { flip: m.flip, anchor: [0.5, 0.5] });
@@ -827,9 +799,7 @@ export async function createScene(environment, opts = {}) {
   const tLoad = performance.now();
 
   const data = viewData(world, view);
-  const measureCtx = createCanvas(10, 10).getContext('2d');
-  const measure = (text, px) => { measureCtx.font = `${px}px "${STYLE.font}"`; return measureCtx.measureText(text).width; };
-  const scene = { ...buildScene(data, packs, measure), show };
+  const scene = { ...buildScene(data, packs, createCanvas(10, 10).getContext('2d')), show };
   if (!parchments.has(tone)) parchments.set(tone, parchment(1539));
   const bg = parchments.get(tone);
   return { scene, data, bg, proj: data.proj, world, coarse, view, timing: { load: tLoad - t0, place: performance.now() - tLoad } };
