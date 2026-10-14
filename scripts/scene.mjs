@@ -9,7 +9,7 @@
 
 import { fill, trace, limn, rhumb, place, letter, geojsonPolygons, geojsonRings } from 'coast-wright';
 import { islandInfo, ISLAND_KM2 } from './island.mjs';
-import { cityPlan, drawCity, pxRings, insideRings } from './city.mjs';
+import { cityPlan, drawCity, drawHouses, pxRings, insideRings } from './city.mjs';
 import { urbanKey } from './urban.mjs';
 import { RIVERS, LAKES, RIVER_STYLES, LAKE_STYLES, waterOf, shown } from './water.mjs';
 
@@ -659,8 +659,9 @@ function townScale(p, by = 'area') {
 }
 
 // A town with an urban footprint whose projected extent (the square root of its area) reaches
-// CITY_PX is drawn as a city plan over it (city.mjs) rather than as an icon.
-const CITY_PX = 120;
+// CITY_PX is drawn as a city plan over it (city.mjs) rather than as an icon; Seattle's icon stands
+// through z9.
+const CITY_PX = 400;
 // Closing in, a town's icon stands at least ICON_GROW of its ground (footprint) tall, so it grows with
 // the land under it rather than shrinking against it, up to ICON_MAX px; a town with an urban
 // footprint is then about CITY_PX * ICON_GROW tall as its city plan takes over.
@@ -696,6 +697,33 @@ function footprint(p, proj) {
   const rings = p.urban.map((ring) => ring.map(([lon, lat]) => proj.project(lon, lat)));
   return { rings, extent: Math.sqrt(rings.reduce((a, r) => a + ringArea(r), 0)) };
 }
+// Where a town's icon of height `th` (anchored at its foot) stands: its place where the icon's box is
+// on land, else the nearest point within reach whose box is most on land, inside the town's own
+// footprint where it has one, so a waterfront city stands over its built-up ground rather than on
+// its shore.
+function standOf(p, th, w, field, rings) {
+  const [x0, y0] = p.xy, rs = rings && pxRings(rings);
+  const dry = (x, y) => {
+    let n = 0;
+    for (let j = 0; j < 4; j++) for (let i = 0; i < 4; i++) if (field.isLand(x + w * ((i + 0.5) / 4 - 0.5) * 2, y - th * (j + 0.5) / 4)) n++;
+    return n / 16;
+  };
+  let best = dry(x0, y0), at = [x0, y0];
+  if (best >= 0.9) return at;
+  const reach = th * 1.2, step = th / 8;
+  const tries = [];
+  for (let dy = -reach; dy <= reach; dy += step) for (let dx = -reach; dx <= reach; dx += step) if (Math.hypot(dx, dy) <= reach) tries.push([dx, dy]);
+  tries.sort((a, b) => Math.hypot(...a) - Math.hypot(...b));
+  for (const [dx, dy] of tries) {
+    const x = x0 + dx, y = y0 + dy;
+    if (x < 8 || y < 8 || x > W - 8 || y > H - 8 || (rs && !insideRings(rs, x, y - th * 0.15))) continue;
+    const v = dry(x, y);
+    if (v > best + 0.05) { best = v; at = [x, y]; }
+    if (best >= 0.9) break;
+  }
+  return at;
+}
+
 function cityOf(p, proj, landPolys) {
   if (!p.urban) return null;
   const { rings, extent } = footprint(p, proj);
@@ -848,16 +876,17 @@ function buildScene(data, sprites, ctx, world = {}) {
     cities.add(p);
   }
   for (const p of sorted) {
-    const [x, y] = p.xy;
-    if (cities.has(p) || x < 8 || y < 8 || x > W - 8 || y > H - 8) continue;
-    if (towns.some((t) => !t.city && Math.hypot(t.x - x, t.y - y) < TUNE.townGap)) continue;
+    const [px, py] = p.xy;
+    if (cities.has(p) || px < 8 || py < 8 || px > W - 8 || py > H - 8) continue;
+    if (towns.some((t) => !t.city && Math.hypot(t.x - px, t.y - py) < TUNE.townGap)) continue;
     const fit = townGrandeur(p) < SMALL_TOWN || families.every((f) => !f) ? families : families.filter(Boolean);
     // the town's own drawing, whatever the view: its family and variant follow from its name, so a
     // zoom or a pan never redraws it as another (townVariant)
     const pick = seedOf(p.name) >>> 0, family = fit[pick % fit.length], size = townScale(p, world.townSize);
     const sprite = family && townVariant(family, p, pick >>> 8);
-    const base = (sprite ? townHeight(sprite) : TOWER_H) * size;
-    const th = Math.max(base, Math.min(ICON_MAX, ICON_GROW * footprint(p, data.proj).extent));
+    const base = (sprite ? townHeight(sprite) : TOWER_H) * size, ground = footprint(p, data.proj);
+    const th = Math.max(base, Math.min(ICON_MAX, ICON_GROW * ground.extent));
+    const [x, y] = standOf(p, th, sprite ? ((th / 2) * sprite.img.width) / sprite.img.height : th * 0.3, field, ground.rings);
     const icon = sprite
       ? obb(x, y - th / 2, 0, ((th / 2) * sprite.img.width) / sprite.img.height, th / 2)
       : obb(x, y - th / 2, 0, th * 0.3, th / 2); // tower body and pennant
@@ -1023,6 +1052,39 @@ function coastRuns(line) {
   const runs = [];
   for (let i = 0; i < line.length - 1; i += COAST_RUN) runs.push(line.slice(i, i + COAST_RUN + 2)); // one shared segment keeps every join
   return runs;
+}
+
+// The houses standing in the washes `ws` (a footprint and its ramp in), within the scene-px
+// rectangle `r`: one to a cell of a HOUSE_GAP lattice anchored at 0N 0E, so it is fixed to the
+// map, set off in its cell by its own hash; standing on land, wholly in a footprint and off every
+// city plan.
+// x, y, width and seed per house, as drawHouses takes them; a house is as solid as its wash is in.
+const HOUSE_GAP = 9;
+const housesMemo = new WeakMap();
+function housesIn(ws, data, field, plans, r) {
+  const [ax, ay] = data.proj.project(0, 0), G = HOUSE_GAP, out = [], seen = new Set();
+  const memo = housesMemo.get(data) ?? new Map();
+  housesMemo.set(data, memo);
+  for (const { u, ramp } of ws) {
+    if (ramp < 0.35) continue;
+    let rs = memo.get(u.poly);
+    if (!rs) memo.set(u.poly, rs = pxRings(u.poly.map((ring) => ring.map(([lon, lat]) => data.proj.project(lon, lat)))));
+    const x0 = Math.max(u.box.x0, r.x0 - G), x1 = Math.min(u.box.x1, r.x1 + G), y0 = Math.max(u.box.y0, r.y0 - G), y1 = Math.min(u.box.y1, r.y1 + G);
+    for (let j = Math.floor((y0 - ay) / G); j <= Math.ceil((y1 - ay) / G); j++) for (let i = Math.floor((x0 - ax) / G); i <= Math.ceil((x1 - ax) / G); i++) {
+      const key = `${i},${j}`;
+      if (seen.has(key)) continue;
+      const h = seedOf(key) >>> 0, f = (k) => ((h >>> k) & 1023) / 1024;
+      const x = ax + (i + 0.15 + 0.7 * f(0)) * G, y = ay + (j + 0.25 + 0.6 * f(10)) * G;
+      // the house's box, a stroke and a wobble wide, by its corners and the middles of its sides
+      const w = G * (0.5 + 0.2 * f(5)), bx0 = x - w * 0.65 - 1.5, bx1 = x + w * 1.3 + 1.5, by0 = y - w * 1.45 - 1.5, by1 = y + 1.5;
+      const rim = [[bx0, by1], [x, by1], [bx1, by1], [bx1, y - w], [bx1, by0], [x, by0], [bx0, by0], [bx0, y - w]];
+      if (f(20) > 0.45 + 0.5 * ramp || !field?.isLand(x, y) || !rim.every(([cx, cy]) => insideRings(rs, cx, cy))) continue;
+      if (plans.some((t) => insideRings(t.city.px ??= pxRings(t.city.rings), x, y))) continue;
+      seen.add(key);
+      out.push(x, y, w, f(15));
+    }
+  }
+  return out;
 }
 
 // Land and coast runs with px bounding boxes.
@@ -1419,19 +1481,32 @@ function drawScene(g, scene, data, bg, view) {
   paintCoast(g, data, coast);
 
   // 4.5 town footprints: a city's built-up area, washed terracotta and edged in ink once its long
-  // side passes URBAN_PX on screen, the wash coming in over the next doubling of zoom; on land
-  // only, as the footprint is coarser than the coast and would otherwise spill over the water; none
-  // under a city plan, which is its own ground
-  const planned = new Set(scene.towns.filter((t) => t.city).map((t) => t.city.poly));
-  const washes = idx.urban.map((u) => ({ u, a: Math.min(1, (Math.max(u.box.x1 - u.box.x0, u.box.y1 - u.box.y0) * view.scale / URBAN_PX - 1)) * 0.45 }))
-    .filter(({ u, a }) => a > 0 && meets(r, u.box) && !planned.has(u.poly));
+  // side passes URBAN_PX on screen, the wash coming in over the next half doubling of zoom; on land
+  // only, as the footprint is coarser than the coast and would otherwise spill over the water.
+  // Under a city plan the wash is light and its edge kept, so the built-up ground still reads as
+  // one; elsewhere it is fuller and little houses stand in it, HOUSE_GAP apart on a lattice fixed
+  // to the map, so a pan keeps them where they were.
+  const plans = scene.towns.filter((t) => t.city), planned = new Set(plans.map((t) => t.city.poly));
+  const under = (u) => planned.has(u.poly) || plans.some((t) => u.box.x0 < t.city.box.x1 && u.box.x1 > t.city.box.x0 && u.box.y0 < t.city.box.y1 && u.box.y1 > t.city.box.y0);
+  const washes = idx.urban.map((u) => {
+    const ramp = Math.min(1, 2 * (Math.max(u.box.x1 - u.box.x0, u.box.y1 - u.box.y0) * view.scale / URBAN_PX - 1)), plan = under(u);
+    return { u, ramp, plan, a: ramp * (plan ? 0.3 : 0.62) };
+  }).filter(({ u, a }) => a > 0 && meets(r, u.box));
   if (washes.length) {
     g.save(); g.beginPath(); traceLand(g, data, land); g.clip('evenodd');
     for (const { u, a } of washes) {
       fill(g, [u.poly], data.proj.x, data.proj.y, { color: STYLE.terracotta, alpha: a, lonCenter: data.proj.lonCenter });
       g.save(); g.beginPath(); trace(g, [u.poly], data.proj.x, data.proj.y, { lonCenter: data.proj.lonCenter });
-      g.globalAlpha = a * 1.5; g.strokeStyle = STYLE.ink; g.lineWidth = 0.8 / view.scale; g.stroke(); g.restore();
+      g.globalAlpha = Math.min(1, a * 1.5); g.strokeStyle = STYLE.ink; g.lineWidth = 0.8 / view.scale; g.stroke(); g.restore();
     }
+    // clear of the town icons, which stand over them
+    const icons = scene.towns.filter((t) => !t.city).map((t) => {
+      const hw = (t.sprite ? (t.h * t.sprite.img.width) / t.sprite.img.height : t.h * 0.6) / 2 + 4;
+      return { x0: t.x - hw, x1: t.x + hw, y0: t.y - t.h - 4, y1: t.y + 6 };
+    });
+    const pts = housesIn(washes.filter((w) => !w.plan), data, scene.field, plans, r), clear = [];
+    for (let i = 0; i < pts.length; i += 4) if (!icons.some((b) => pts[i] > b.x0 && pts[i] < b.x1 && pts[i + 1] > b.y0 && pts[i + 1] < b.y1)) clear.push(pts[i], pts[i + 1], pts[i + 2], pts[i + 3]);
+    drawHouses(g, clear, { ink: STYLE.ink });
     g.restore();
   }
 

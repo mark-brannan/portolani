@@ -236,8 +236,8 @@ export function cityPlan({ rings, x: px, y: py, extent: E, zoom, kmPx, rnd, w, h
     // inside the wall the blocks stand close, with gardens toward it (Braun and Hogenberg's towns keep
     // their orchards against the wall); outside they thin with distance from it, but for ribbon
     // suburbs along the roads, into fields
-    let p = lagoon ? 0.97 : core ? 0.99 - 0.25 * k ** 3 : walled ? 0.8 * Math.exp(-1.6 * k) : 0.97 * Math.exp(-1.2 * k);
-    if (near < 3 * s) p = Math.max(p, 0.95 * Math.exp(-0.3 * k));
+    let p = lagoon ? 0.97 : core ? 0.99 - 0.25 * k ** 3 : walled ? 0.9 * Math.exp(-0.9 * k) : 0.97 * Math.exp(-0.6 * k);
+    if (near < 3 * s) p = Math.max(p, 0.97 * Math.exp(-0.15 * k));
     const roll = rnd();
     if (roll >= p) {
       if (lagoon && !core) return; // open water
@@ -262,7 +262,7 @@ export function cityPlan({ rings, x: px, y: py, extent: E, zoom, kmPx, rnd, w, h
     }
     // the houses: rows round the block's edge about a yard, or a block too small for one built
     // solid, back to back along its long side; at the centre the blocks are built solid
-    const keep = core ? 1 : Math.max(0.55, 1 - 0.35 * k);
+    const keep = core ? 1 : Math.max(0.75, 1 - 0.2 * k);
     const du = u1 - u0, dv = v1 - v0;
     if (Math.min(du, dv) > 2.6 * dr && rnd() < (core ? 0.15 + 0.75 * k : 0.7)) {
       row(P, u0, v0, u1, v0 + dr, keep); row(P, u0, v1 - dr, u1, v1, keep);
@@ -441,17 +441,33 @@ export function drawCity(g, plan, r, { ink, parchment, clip }) {
   g.beginPath(); for (const p of plan.roads) poly(g, p, false);
   g.strokeStyle = 'rgba(59,42,26,0.55)'; g.lineWidth = plan.roadW + 1.4; g.stroke();
   g.strokeStyle = STREET; g.lineWidth = plan.roadW; g.stroke();
-  // the roofs: one fill per colour, then one ink stroke for every outline, one for the ridges and
-  // one for the party walls
-  const L = plan.lots, seen = [];
-  for (let i = 0; i < L.length; i += LOT) if (near(L[i], L[i + 1])) seen.push(i);
-  const fillAll = (off, colour) => { g.beginPath(); for (const i of seen) quad(g, L, i + off); g.fillStyle = colour; g.fill(); };
-  fillAll(2, ROOF);
-  fillAll(10, SHADE);
-  fillAll(18, FRONT);
-  g.beginPath(); for (const i of seen) quad(g, L, i + 2); g.strokeStyle = ink; g.lineWidth = 0.7; g.stroke();
-  g.beginPath(); for (const i of seen) { g.moveTo(L[i + 26], L[i + 27]); g.lineTo(L[i + 28], L[i + 29]); } g.lineWidth = 0.4; g.stroke();
-  lines(plan.parts, ink, 0.4);
+  // the roofs, standing: each raised a storey over its ground, its front wall hung below the edge
+  // facing the viewer, as the bird's-eye plans draw them. Back rows first, a band at a time, so a
+  // nearer house hides the one behind it; within a band one fill per colour, then one ink stroke
+  // for the outlines, one for the ridges and one for the party walls.
+  const L = plan.lots, up = Math.max(2.5, plan.s * 0.38), bands = new Map(), band = Math.max(4, plan.s * 0.5);
+  for (let i = 0; i < L.length; i += LOT) if (near(L[i], L[i + 1], pad + up)) {
+    const k = Math.floor(L[i + 1] / band);
+    if (!bands.has(k)) bands.set(k, []);
+    bands.get(k).push(i);
+  }
+  const P = plan.parts, partBands = new Map();
+  for (let i = 0; i < P.length; i += 4) if (near(P[i], P[i + 1], pad + up)) {
+    const k = Math.floor(Math.max(P[i + 1], P[i + 3]) / band);
+    if (!partBands.has(k)) partBands.set(k, []);
+    partBands.get(k).push(i);
+  }
+  const raised = (o) => { g.moveTo(L[o], L[o + 1] - up); for (let k = 1; k < 4; k++) g.lineTo(L[o + 2 * k], L[o + 2 * k + 1] - up); g.closePath(); };
+  const wallOf = (i) => { const o = i + 18; g.moveTo(L[o], L[o + 1]); g.lineTo(L[o + 2], L[o + 3]); g.lineTo(L[o + 2], L[o + 3] - up); g.lineTo(L[o], L[o + 1] - up); g.closePath(); };
+  for (const k of [...new Set([...bands.keys(), ...partBands.keys()])].sort((a, b) => a - b)) {
+    const seen = bands.get(k) ?? [];
+    g.beginPath(); for (const i of seen) wallOf(i); g.fillStyle = FRONT; g.fill(); g.strokeStyle = ink; g.lineWidth = 0.55; g.stroke();
+    g.beginPath(); for (const i of seen) raised(i + 2); g.fillStyle = ROOF; g.fill();
+    g.beginPath(); for (const i of seen) raised(i + 10); g.fillStyle = SHADE; g.fill();
+    g.beginPath(); for (const i of seen) raised(i + 2); g.strokeStyle = ink; g.lineWidth = 0.7; g.stroke();
+    g.beginPath(); for (const i of seen) { g.moveTo(L[i + 26], L[i + 27] - up); g.lineTo(L[i + 28], L[i + 29] - up); } g.lineWidth = 0.4; g.stroke();
+    g.beginPath(); for (const i of partBands.get(k) ?? []) { g.moveTo(P[i], P[i + 1] - up); g.lineTo(P[i + 2], P[i + 3] - up); } g.stroke();
+  }
   // the streets in from the gates to the plaza, over the roofs
   g.beginPath(); for (const p of plan.streets) poly(g, p, false);
   g.strokeStyle = 'rgba(59,42,26,0.55)'; g.lineWidth = plan.roadW + 1.4; g.stroke();
@@ -475,5 +491,29 @@ export function drawCity(g, plan, r, { ink, parchment, clip }) {
   g.fillStyle = ROOF; g.fill();
   g.lineCap = 'round';
   for (const c of plan.churches) if (near(c.x, c.y - c.w, c.w * 2)) church(g, c, ink, parchment);
+  g.restore();
+}
+
+// Little houses standing in the wash of a built-up area too far off for its plan, after the Carta
+// Marina's towns: a gabled front, its roof running back up and to the right, a side wall in shade.
+// `pts` holds x, y (the foot of the front), width and a seed in [0, 1) per house; drawn back to
+// front, each a little askew, as a hand would.
+export function drawHouses(g, pts, { ink, alpha = 1 }) {
+  const order = [];
+  for (let i = 0; i < pts.length; i += 4) order.push(i);
+  order.sort((a, b) => pts[a + 1] - pts[b + 1]);
+  g.save(); g.globalAlpha = alpha; g.lineJoin = 'round';
+  for (const i of order) {
+    const x = pts[i], y = pts[i + 1], w = pts[i + 2], sd = pts[i + 3];
+    const wob = (k) => (((sd * 9301 * (k + 1)) % 1) - 0.5) * 0.14 * w;
+    const hw = w * (0.4 + 0.2 * ((sd * 7) % 1)), rise = w * 0.45, ox = w * 0.65, oy = -w * 0.38;
+    const A = [x - w / 2 + wob(1), y], B = [x + w / 2 + wob(2), y], C = [B[0] + wob(3), y - hw], D = [A[0] + wob(4), y - hw], P = [x + wob(5), y - hw - rise];
+    const path = (pp) => { g.beginPath(); pp.forEach(([px, py], k) => (k ? g.lineTo(px, py) : g.moveTo(px, py))); g.closePath(); };
+    const shift = ([px, py]) => [px + ox, py + oy];
+    path([B, shift(B), shift(C), C]); g.fillStyle = '#c4ad86'; g.fill(); g.strokeStyle = ink; g.lineWidth = 0.5; g.stroke();
+    path([P, C, shift(C), shift(P)]); g.fillStyle = ROOF; g.fill(); g.stroke();
+    path([A, B, C, P, D]); g.fillStyle = '#dcc9a0'; g.fill(); g.stroke();
+    if (w > 5) { g.beginPath(); g.rect(x - w * 0.1, y - hw * 0.55, w * 0.2, hw * 0.55); g.fillStyle = ink; g.fill(); } // a door
+  }
   g.restore();
 }
