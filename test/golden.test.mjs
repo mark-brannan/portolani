@@ -27,6 +27,8 @@ const VIEWS = {
   'close-z9': { lon: 8.93, lat: 44.41, zoom: 9 },
   'world-z2-plate-carree': { lon: 10, lat: 30, zoom: 2, projection: 'plate-carree' }, // rhumb lines bow
 };
+// settings a golden draws with beyond the defaults; region-z5 is the README's picture, lettered PORTOLANI
+const OPTS = { 'region-z5': { autoTitle: false } };
 
 const resolve = (p) => (p.startsWith('geo/') ? join(GEO, p.slice(4)) : join(ROOT, p));
 const read = (file) => JSON.parse(readFileSync(file, 'utf8'));
@@ -41,8 +43,8 @@ const env = {
   loadFont: async (family) => { GlobalFonts.registerFromPath(join(ROOT, 'test', 'fixtures', 'IMFeENrm28P.ttf'), family); },
 };
 
-async function renderView(view, scale = 'off') {
-  const { scene, data, bg } = await createScene(env, { view, scale });
+async function renderView(view, scale = 'off', opts = {}) {
+  const { scene, data, bg } = await createScene(env, { view, scale, ...opts });
   const full = createCanvas(W, H);
   drawScene(full.getContext('2d'), scene, data, bg, { scale: 1, x: 0, y: 0 });
   const small = createCanvas(SW, SH);
@@ -56,7 +58,7 @@ const pixels = (canvas) => canvas.getContext('2d').getImageData(0, 0, SW, SH).da
 
 for (const [name, view] of Object.entries(VIEWS)) {
   test(`golden image: ${name}`, async () => {
-    const canvas = await renderView(view);
+    const canvas = await renderView(view, 'off', OPTS[name]);
     const file = join(GOLDEN, `${name}.png`);
     if (UPDATE) {
       mkdirSync(GOLDEN, { recursive: true });
@@ -117,12 +119,13 @@ test('scale bar: every style draws at z5 and is hidden at z2', async () => {
   }
 });
 
-// The cartouche says PORTOLANI unless told otherwise; automatic, it names what the view is about,
-// at the zoom that name belongs to.
-test('cartouche title: custom by default, automatic from the view', async () => {
+// By default the cartouche names what the view is about, at the zoom that name belongs to; custom,
+// it says its typed title, PORTOLANI unless told otherwise.
+test('cartouche title: automatic from the view by default, or custom', async () => {
   const title = async (view, opts) => (await createScene(env, { view, ...opts })).scene.cartouche.title;
-  assert.equal(await title(VIEWS['region-z5']), 'PORTOLANI');
-  assert.equal(await title(VIEWS['region-z5'], { title: 'Mare Nostrum' }), 'Mare Nostrum');
+  assert.equal(await title(VIEWS['world-z2']), 'AFRICA');
+  assert.equal(await title(VIEWS['region-z5'], { autoTitle: false }), 'PORTOLANI');
+  assert.equal(await title(VIEWS['region-z5'], { autoTitle: false, title: 'Mare Nostrum' }), 'Mare Nostrum');
   assert.equal(await title(VIEWS['world-z2'], { autoTitle: true }), 'AFRICA');
   assert.equal(await title({ lon: -4, lat: 45.5, zoom: 5.5 }, { autoTitle: true }), 'BAY OF BISCAY');
   assert.equal(await title({ lon: -9.14, lat: 38.7, zoom: 8 }, { autoTitle: true }), 'LISBON');

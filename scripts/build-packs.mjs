@@ -51,45 +51,39 @@ const SEA_FIGURE = { sat: 24, close: 7, open: 5, dilate: 4, feather: 2, minArea:
 
 const CLEAN_DISK = 5; // px radius of the closing that removes scanned lettering
 
+// One pack of scanned sprites; each sprite's `style` names the design family it belongs to, which
+// the renderer offers as a setting (a rose set, a monster family, a town drawing).
 const PACKS = [
   {
-    name: 'carta-marina',
-    title: 'Carta Marina, Olaus Magnus, 1539',
-    licence: 'Public domain (PD-Art); scan: James Ford Bell Library via Wikimedia Commons',
+    name: 'scanned',
+    title: 'Sprites cropped from public-domain scans: Olaus Magnus, Carta Marina 1539; Jorge de Aguiar 1492; Catalan Atlas 1375; Genoese chart c. 1320-1350; Frederik de Wit',
+    licence: 'Public domain (PD-Art); scans via Wikimedia Commons (James Ford Bell Library; Beinecke Library, Yale; BnF Gallica btv1b55002481n; Library of Congress 2003630429; Royal Museums Greenwich)',
     ink: '#3b2a1a',
     sprites: [
-      { id: 'serpent-a', kind: 'monster', scan: 'carta-marina', crop: [1698, 880, 2065, 1190], sizePx: 200, minClearancePx: 160, weight: 3, level: SEA_FIGURE_LEVEL, silhouette: SEA_FIGURE, erase: [[1975, 935, 2065, 1102], [1715, 1112, 1800, 1145]] },
-      { id: 'whale-b', kind: 'monster', scan: 'carta-marina', crop: [2040, 358, 2350, 532], sizePx: 190, minClearancePx: 150, weight: 2, level: SEA_FIGURE_LEVEL, silhouette: SEA_FIGURE },
-      { id: 'pistrix-c', kind: 'monster', scan: 'carta-marina', crop: [374, 1236, 566, 1432], sizePx: 150, minClearancePx: 130, weight: 2, level: SEA_FIGURE_LEVEL, silhouette: SEA_FIGURE },
-      { id: 'cete-e', kind: 'monster', scan: 'carta-marina', crop: [1788, 572, 2046, 732], sizePx: 180, minClearancePx: 140, weight: 1, level: SEA_FIGURE_LEVEL, silhouette: SEA_FIGURE },
-      { id: 'ship-a', kind: 'ship', scan: 'carta-marina', crop: [1160, 800, 1312, 1000], sizePx: 80, heading: 'right', level: SEA_FIGURE_LEVEL, silhouette: { ...SEA_FIGURE, dilate: 3, close: 9 }, erase: [[1215, 975, 1275, 1000]] },
-      { id: 'ship-b', kind: 'ship', scan: 'carta-marina', crop: [2085, 708, 2212, 802], sizePx: 64, heading: 'right', level: SEA_FIGURE_LEVEL, silhouette: { ...SEA_FIGURE, dilate: 3, minArea: 300 } },
-    ],
-  },
-  {
-    name: 'catalan',
-    title: 'Portolan roses, vignettes, scale bar and cartouche: Jorge de Aguiar 1492, Catalan Atlas 1375, Genoese chart c. 1320-1350, Frederik de Wit',
-    licence: 'Public domain; scans via Wikimedia Commons (Beinecke Library, Yale; BnF Gallica btv1b55002481n; Library of Congress 2003630429; Royal Museums Greenwich)',
-    ink: '#3b2a1a',
-    sprites: [
-      { id: 'rose-aguiar', kind: 'rose', scan: 'aguiar', crop: [55, 80, 665, 690], sizePx: 300, dark: 'min', level: [12, 78], circle: [300, 300, 300],
+      { id: 'serpent-a', kind: 'monster', style: 'carta-marina', scan: 'carta-marina', crop: [1698, 880, 2065, 1190], sizePx: 200, minClearancePx: 160, weight: 3, level: SEA_FIGURE_LEVEL, silhouette: SEA_FIGURE, erase: [[1975, 935, 2065, 1102], [1715, 1112, 1800, 1145]] },
+      { id: 'whale-b', kind: 'monster', style: 'carta-marina', scan: 'carta-marina', crop: [2040, 358, 2350, 532], sizePx: 190, minClearancePx: 150, weight: 2, level: SEA_FIGURE_LEVEL, silhouette: SEA_FIGURE },
+      { id: 'pistrix-c', kind: 'monster', style: 'carta-marina', scan: 'carta-marina', crop: [374, 1236, 566, 1432], sizePx: 150, minClearancePx: 130, weight: 2, level: SEA_FIGURE_LEVEL, silhouette: SEA_FIGURE },
+      { id: 'cete-e', kind: 'monster', style: 'carta-marina', scan: 'carta-marina', crop: [1788, 572, 2046, 732], sizePx: 180, minClearancePx: 140, weight: 1, level: SEA_FIGURE_LEVEL, silhouette: SEA_FIGURE },
+      { id: 'ship-a', kind: 'ship', style: 'carta-marina', scan: 'carta-marina', crop: [1160, 800, 1312, 1000], sizePx: 80, heading: 'right', level: SEA_FIGURE_LEVEL, silhouette: { ...SEA_FIGURE, dilate: 3, close: 9 }, erase: [[1215, 975, 1275, 1000]] },
+      { id: 'ship-b', kind: 'ship', style: 'carta-marina', scan: 'carta-marina', crop: [2085, 708, 2212, 802], sizePx: 64, heading: 'right', level: SEA_FIGURE_LEVEL, silhouette: { ...SEA_FIGURE, dilate: 3, minArea: 300 } },
+      { id: 'rose-aguiar', kind: 'rose', style: 'aguiar', scan: 'aguiar', crop: [55, 80, 665, 690], sizePx: 300, dark: 'min', level: [12, 78], circle: [300, 300, 300],
         // the scan's own wind names (norte, oeste, leste, sull and the petal inscriptions)
         clean: [[355, 122, 377, 180], [175, 187, 235, 237], [495, 200, 552, 257], [115, 365, 165, 387], [555, 374, 609, 394], [162, 512, 197, 587], [340, 577, 364, 630], [489, 500, 535, 544], [112, 182, 147, 217]] },
-      { id: 'rose-catalan', kind: 'rose', scan: 'catalan', crop: [120, 185, 440, 505], sizePx: 110, dark: 'min', level: [10, 70], circle: [160, 160, 152] },
+      { id: 'rose-catalan', kind: 'rose', style: 'aguiar', scan: 'catalan', crop: [120, 185, 440, 505], sizePx: 110, dark: 'min', level: [10, 70], circle: [160, 160, 152] },
       // a smaller rose from the whole Aguiar chart, its wind names closed away
-      { id: 'rose-aguiar-b', kind: 'rose', scan: 'aguiar-chart', crop: [4178, 2464, 4482, 2768], sizePx: 110, dark: 'min', level: [12, 78], circle: [152, 152, 148],
+      { id: 'rose-aguiar-b', kind: 'rose', style: 'aguiar', scan: 'aguiar-chart', crop: [4178, 2464, 4482, 2768], sizePx: 110, dark: 'min', level: [12, 78], circle: [152, 152, 148],
         clean: [[4225, 2605, 4258, 2633], [4411, 2608, 4443, 2630], [4325, 2505, 4341, 2538], [4323, 2693, 4341, 2728], [4236, 2513, 4290, 2566], [4385, 2528, 4425, 2572], [4238, 2664, 4282, 2708], [4386, 2668, 4421, 2700]] },
-      { id: 'cartouche-dewit', kind: 'cartouche', scan: 'dewit', crop: [196, 250, 1229, 1039], sizePx: 340, dark: 'min', level: [12, 66],
+      { id: 'cartouche-dewit', kind: 'cartouche', style: 'dewit', scan: 'dewit', crop: [196, 250, 1229, 1039], sizePx: 340, dark: 'min', level: [12, 66],
         // panel lettering and scale bars cleared so the renderer can letter the panel; SYRIA and coast cleared
         erase: [[232, 772, 1180, 1039], [196, 250, 300, 690]], panel: [232, 772, 1180, 1030] },
-      // land vignettes and a scale bar: kinds the renderer does not place yet
+      // land vignettes and a scale bar: the palms are not placed yet, the town is a town style, the scale bar the vivid one's source
       // the palms are less saturated than the paper, so darkness alone keys them and the faint rhumb lines drop out
-      { id: 'palms-aguiar', kind: 'tree', scan: 'aguiar-chart', crop: [2530, 2962, 2732, 3248], sizePx: 70, level: [30, 62],
+      { id: 'palms-aguiar', kind: 'tree', style: 'aguiar', scan: 'aguiar-chart', crop: [2530, 2962, 2732, 3248], sizePx: 70, level: [30, 62],
         erase: [[2695, 2962, 2732, 2995], [2680, 3170, 2732, 3248]] },
       // a walled town in its lake; the rivers leaving the lake erased
-      { id: 'town-aguiar', kind: 'town', scan: 'aguiar-chart', crop: [2300, 2350, 2450, 2465], sizePx: 60, dark: 'min', level: [10, 70],
+      { id: 'town-aguiar', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', crop: [2300, 2350, 2450, 2465], sizePx: 60, dark: 'min', level: [10, 70],
         erase: [[2350, 2340, 2365, 2354], [2300, 2440, 2322, 2470], [2435, 2415, 2460, 2470], [2345, 2460, 2365, 2470], [2405, 2458, 2425, 2470]] },
-      { id: 'scale-genoese', kind: 'scale', scan: 'genoese', crop: [3708, 3815, 4400, 3940], sizePx: 260, dark: 'min', level: [8, 50] },
+      { id: 'scale-genoese', kind: 'scale', style: 'genoese', scan: 'genoese', crop: [3708, 3815, 4400, 3940], sizePx: 260, dark: 'min', level: [8, 50] },
     ],
   },
 ];
@@ -179,7 +173,7 @@ function buildSprite(sprite, colour, outDir, tmp) {
     '-crop', `${tw}x${th}+${tx}+${ty}`, '+repage', '-strip', join(outDir, file));
 
   const entry = {
-    id: sprite.id, kind: sprite.kind, file,
+    id: sprite.id, kind: sprite.kind, style: sprite.style, file,
     anchor: [0.5, sprite.kind === 'monster' || sprite.kind === 'ship' ? 0.75 : 0.5],
     sizePx: sprite.sizePx, bands: [0, 1],
     source: { url: scan.url, page: scan.page, crop: [x0 + tx, y0 + ty, x0 + tx + tw, y0 + ty + th] },

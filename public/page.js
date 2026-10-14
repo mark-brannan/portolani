@@ -1,9 +1,9 @@
 // Browser host for the shared scene code (scene.mjs): same scene as `npm run render`, drawn live.
 // Drag to pan, wheel or pinch to zoom; while the map moves only land and coast are drawn, and the
 // ornaments are placed again when it stops. The view and the style are kept in the URL hash, e.g.
-// #map=zoom/lat/lon&projection=miller&pack=plain&kinds=rose,ship&names=0&rhumb=0&scale=chevron&continents=1&regions=latin&autotitle=1&title=Mare+Nostrum&ink=5a1a1a&parchment=eee&density=1.5;
-// a setting left at its default is left out.
-import { createScene, REGION_LANGS, drawScene, drawGround, panView, zoomView, clampView, covers, DEFAULT_VIEW, PACKS, KINDS, PROJECTION_NAMES, SCALE_NAMES, W, H } from './scene.mjs';
+// #map=zoom/lat/lon&projection=miller&rendering=scanned&rose=aguiar&monster=carta-marina&town=aguiar&kinds=rose,ship&names=0&rhumb=0&scale=chevron&continents=1&regions=latin&autotitle=0&title=Mare+Nostrum&ink=5a1a1a&parchment=eee&density=1.5;
+// a setting left at its default is left out. The older `pack=` key is read as a rendering, so old links still work.
+import { createScene, REGION_LANGS, drawScene, drawGround, panView, zoomView, clampView, covers, DEFAULT_VIEW, RENDERINGS, KINDS, listStyles, PROJECTION_NAMES, SCALE_NAMES, W, H } from './scene.mjs';
 
 const memo = new Map();
 // a failed load is forgotten, so the next stop tries it again
@@ -30,7 +30,13 @@ const env = {
 const $ = (id) => document.getElementById(id);
 const canvas = $('map'), ctx = canvas.getContext('2d');
 
-const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, pack: 'all', kinds: KINDS, names: true, rhumb: true, scale: 'genoese', continents: false, regions: 'off', title: 'PORTOLANI', autoTitle: false };
+const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, rendering: 'vivid', rose: 'aguiar', monster: 'carta-marina', town: 'tower', kinds: KINDS, names: true, rhumb: true, scale: 'genoese', continents: false, regions: 'off', title: 'PORTOLANI', autoTitle: true };
+// the styles the packs offer fill their selects; only the manifests are read
+const STYLES = await listStyles(env);
+for (const k of ['rose', 'monster', 'town']) {
+  for (const v of STYLES[k]) $(k).append(new Option(v === 'tower' ? 'Tower (drawn in code)' : v, v));
+}
+const LEGACY_PACK = { all: 'vivid', vivid: 'vivid', catalan: 'scanned', 'carta-marina': 'scanned', plain: 'plain' };
 const hashParams = () => new URLSearchParams(location.hash.slice(1));
 
 function viewFromHash() {
@@ -46,14 +52,16 @@ function styleFromHash() {
     ink: hex(q.get('ink'), DEFAULTS.ink),
     parchment: hex(q.get('parchment'), DEFAULTS.parchment),
     density: density >= 0 && density <= 2 ? density : DEFAULTS.density,
-    pack: PACKS.includes(q.get('pack')) ? q.get('pack') : DEFAULTS.pack,
+    rendering: RENDERINGS.includes(q.get('rendering')) ? q.get('rendering') : LEGACY_PACK[q.get('pack')] ?? DEFAULTS.rendering,
+    ...Object.fromEntries(['rose', 'monster', 'town'].map((k) => [k, STYLES[k].includes(q.get(k)) ? q.get(k) : DEFAULTS[k]])),
     kinds: q.has('kinds') ? KINDS.filter((k) => q.get('kinds').split(',').includes(k)) : DEFAULTS.kinds,
     names: q.get('names') !== '0',
     rhumb: q.get('rhumb') !== '0',
     continents: q.get('continents') === '1',
     regions: REGION_LANGS.includes(q.get('regions')) ? q.get('regions') : DEFAULTS.regions,
     title: q.get('title') ?? DEFAULTS.title,
-    autoTitle: q.get('autotitle') === '1',
+    // a link from before automatic was the default, with a title and no autotitle, keeps its title
+    autoTitle: q.has('autotitle') ? q.get('autotitle') === '1' : !q.has('title') && DEFAULTS.autoTitle,
     scale: q.get('scale') === 'off' || SCALE_NAMES.includes(q.get('scale')) ? q.get('scale') : DEFAULTS.scale,
   };
 }
@@ -61,13 +69,14 @@ function writeHash() {
   const q = new URLSearchParams(), v = view, st = style;
   q.set('map', `${v.zoom.toFixed(2)}/${v.lat.toFixed(3)}/${v.lon.toFixed(3)}`);
   if (v.projection !== PROJECTION_NAMES[0]) q.set('projection', v.projection);
-  if (st.pack !== DEFAULTS.pack) q.set('pack', st.pack);
+  for (const k of ['rendering', 'rose', 'monster', 'town']) if (st[k] !== DEFAULTS[k]) q.set(k, st[k]);
   if (st.kinds.join() !== KINDS.join()) q.set('kinds', st.kinds.join());
   if (!st.names) q.set('names', '0');
   if (!st.rhumb) q.set('rhumb', '0');
   if (st.continents) q.set('continents', '1');
   if (st.regions !== DEFAULTS.regions) q.set('regions', st.regions);
-  if (st.autoTitle) q.set('autotitle', '1');
+  // a title without autotitle reads as custom (styleFromHash), so a typed title carries the mode with it
+  if (st.autoTitle !== DEFAULTS.autoTitle || st.title !== DEFAULTS.title) q.set('autotitle', st.autoTitle ? '1' : '0');
   if (st.title !== DEFAULTS.title) q.set('title', st.title);
   if (st.scale !== DEFAULTS.scale) q.set('scale', st.scale);
   if (st.density !== DEFAULTS.density) q.set('density', st.density);
@@ -76,24 +85,25 @@ function writeHash() {
   history.replaceState(null, '', `#${q.toString().replaceAll('%2C', ',').replaceAll('%2F', '/')}`);
 }
 
-// the controls show the style; a plain pack has no ships or monsters to switch
+// the controls show the style; the plain rendering has no ships or monsters to switch
 function showStyle() {
   $('projection').value = view.projection;
   $('ink').value = style.ink; $('parchment').value = style.parchment;
   $('density').value = style.density; $('densityOut').textContent = style.density;
-  $('pack').value = style.pack; $('names').checked = style.names; $('rhumb').checked = style.rhumb; $('scale').value = style.scale;
+  for (const k of ['rendering', 'rose', 'monster', 'town']) $(k).value = style[k];
+  $('names').checked = style.names; $('rhumb').checked = style.rhumb; $('scale').value = style.scale;
   $('continents').checked = style.continents; $('regions').value = style.regions;
   $('titleMode').value = style.autoTitle ? 'auto' : 'custom'; $('title').value = style.title; $('title').disabled = style.autoTitle;
   for (const k of KINDS) {
     const box = $(`kind-${k}`);
     box.checked = style.kinds.includes(k);
-    box.disabled = (k === 'ship' || k === 'monster') && ['plain', 'vivid', 'catalan'].includes(style.pack);
+    box.disabled = (k === 'ship' || k === 'monster') && style.rendering === 'plain';
   }
 }
 function readControls() {
   style = {
     ink: $('ink').value, parchment: $('parchment').value, density: Number($('density').value),
-    pack: $('pack').value, kinds: KINDS.filter((k) => $(`kind-${k}`).checked), names: $('names').checked, rhumb: $('rhumb').checked, scale: $('scale').value,
+    rendering: $('rendering').value, rose: $('rose').value, monster: $('monster').value, town: $('town').value, kinds: KINDS.filter((k) => $(`kind-${k}`).checked), names: $('names').checked, rhumb: $('rhumb').checked, scale: $('scale').value,
     continents: $('continents').checked, regions: $('regions').value,
     title: $('title').value, autoTitle: $('titleMode').value === 'auto',
   };
@@ -198,6 +208,6 @@ canvas.addEventListener('wheel', (e) => {
   stopped(300);
 }, { passive: false });
 
-for (const id of ['projection', 'ink', 'parchment', 'density', 'pack', 'names', 'rhumb', 'scale', 'continents', 'regions', 'titleMode', 'title', ...KINDS.map((k) => `kind-${k}`)]) $(id).addEventListener('input', readControls);
+for (const id of ['projection', 'ink', 'parchment', 'density', 'rendering', 'rose', 'monster', 'town', 'names', 'rhumb', 'scale', 'continents', 'regions', 'titleMode', 'title', ...KINDS.map((k) => `kind-${k}`)]) $(id).addEventListener('input', readControls);
 addEventListener('hashchange', () => { view = viewFromHash(); style = styleFromHash(); showStyle(); render(); });
 render();
