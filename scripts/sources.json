@@ -52,10 +52,30 @@
       "sha256": "2558b0b5f3f97fa5a9d878ec37abc6fea008ee8b0e28983f2dd8518e41d0ce5d",
       "rights": "Public domain; Frederik de Wit, Royal Museums Greenwich",
       "note": "(1,229 × 1,039)"
+    },
+    {
+      "id": "aguiar-chart",
+      "file": "Jorge_Aguiar_1492_MR.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Jorge_Aguiar_1492_MR.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg",
+      "sha256": "a94f6d238eb017f0be1158db4c4f54b869e46f7d6d6c5bb21d655d4ab25c2c15",
+      "rights": "Public domain; Jorge de Aguiar 1492, Beinecke Library, Yale",
+      "note": "(5,016 × 3,878)"
+    },
+    {
+      "id": "genoese",
+      "file": "Mediterranean_chart_fourteenth_century2.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/5/5c/Mediterranean_chart_fourteenth_century2.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Mediterranean_chart_fourteenth_century2.jpg",
+      "sha256": "4938275405b38d501c1d192ad86f92761c9e6f5000827ff4f2f77e1b84924b47",
+      "rights": "Public domain; anonymous, probably Genoese, c. 1320–1350, Library of Congress item 2003630429",
+      "note": "(5,486 × 4,009)"
     }
   ],
   "footer": [
     "Commons SHA-1 for `Carta_Marina.jpeg` (from the API, matches the download): `3faca355f1e764d19d69b75901a415cce98c49d6`.",
-    "Not used: Library of Congress item 2021668747 (Agnese atlas); its roses are about 100 px across at full size, too small to crop."
+    "Not used: Library of Congress item 2021668747 (Agnese atlas); its roses are about 100 px across at full size, too small to crop.",
+    "Not used: Visconte Maggiolo 1541 (Staatsbibliothek zu Berlin, `Maggiolo_-_Portolankarte_-_1541.png`, 1,312 × 860); its roses are about 80 px, its ships about 70 px and its tents and whale under 200 px, with rhumb lines across them.",
+    "Not used: Gabriel de Vallseca 1439 (`Gabriel_Vallseca._Museo_Marítimo,_Barcelona.1439.jpg`); 1,600 × 1,038 is the largest scan of the chart itself on Commons. The 9,144 × 6,610 `btv1b8459305b` is a reduced facsimile, not the chart."
   ]
 }

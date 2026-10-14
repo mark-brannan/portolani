@@ -76,9 +76,27 @@ const PACKS = [
         // the scan's own wind names (norte, oeste, leste, sull and the petal inscriptions)
         clean: [[355, 122, 377, 180], [175, 187, 235, 237], [495, 200, 552, 257], [115, 365, 165, 387], [555, 374, 609, 394], [162, 512, 197, 587], [340, 577, 364, 630], [489, 500, 535, 544], [112, 182, 147, 217]] },
       { id: 'rose-catalan', kind: 'rose', scan: 'catalan', crop: [120, 185, 440, 505], sizePx: 110, dark: 'min', level: [10, 70], circle: [160, 160, 152] },
+      // three smaller roses from the whole Aguiar chart, wind names and initials closed away
+      { id: 'rose-aguiar-b', kind: 'rose', scan: 'aguiar-chart', crop: [4178, 2464, 4482, 2768], sizePx: 110, dark: 'min', level: [12, 78], circle: [152, 152, 148],
+        clean: [[4225, 2605, 4258, 2633], [4411, 2608, 4443, 2630], [4325, 2505, 4341, 2538], [4323, 2693, 4341, 2728], [4238, 2515, 4281, 2552], [4391, 2530, 4418, 2562], [4246, 2668, 4278, 2702], [4386, 2668, 4421, 2700]] },
+      { id: 'rose-aguiar-c', kind: 'rose', scan: 'aguiar-chart', crop: [3243, 3416, 3527, 3700], sizePx: 110, dark: 'min', level: [12, 78], circle: [142, 142, 138],
+        clean: [[3311, 3483, 3332, 3504], [3431, 3485, 3452, 3506], [3291, 3548, 3315, 3572], [3451, 3545, 3477, 3569], [3313, 3610, 3335, 3634], [3431, 3598, 3452, 3624], [3373, 3628, 3397, 3654]] },
+      { id: 'rose-aguiar-d', kind: 'rose', scan: 'aguiar-chart', crop: [1364, 631, 1524, 791], sizePx: 110, dark: 'min', level: [12, 78], circle: [80, 80, 76] },
       { id: 'cartouche-dewit', kind: 'cartouche', scan: 'dewit', crop: [196, 250, 1229, 1039], sizePx: 340, dark: 'min', level: [12, 66],
         // panel lettering and scale bars cleared so the renderer can letter the panel; SYRIA and coast cleared
         erase: [[232, 772, 1180, 1039], [196, 250, 300, 690]], panel: [232, 772, 1180, 1030] },
+    ],
+  },
+  {
+    // not placed by the renderer yet: land vignettes and a scale bar, kinds it does not draw
+    name: 'vignettes',
+    title: 'Land vignettes and scale bar: Jorge de Aguiar 1492, Genoese chart c. 1320-1350',
+    licence: 'Public domain; scans via Wikimedia Commons (Beinecke Library, Yale; Library of Congress 2003630429)',
+    ink: '#3b2a1a',
+    sprites: [
+      { id: 'palms-aguiar', kind: 'tree', scan: 'aguiar-chart', crop: [2530, 2962, 2732, 3248], sizePx: 70, dark: 'min', level: [10, 70], silhouette: { sat: 14, close: 7, open: 4, dilate: 3, feather: 2, minArea: 900 } },
+      { id: 'town-aguiar', kind: 'town', scan: 'aguiar-chart', crop: [2300, 2350, 2450, 2464], sizePx: 60, dark: 'min', level: [10, 70] },
+      { id: 'scale-genoese', kind: 'scale', scan: 'genoese', crop: [3708, 3815, 4400, 3940], sizePx: 260, dark: 'min', level: [8, 50] },
     ],
   },
 ];
