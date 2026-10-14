@@ -616,7 +616,7 @@ function viewTitle(data, towns, lang) {
 // `-small` (Martines) draws a chief town (scalerank 2 or less) as a Levantine city east of 20E and
 // south of 38N and as a port elsewhere, a scalerank 3 town as a fort and a lesser one small. Any
 // other family is cut by grandeur into thirds, the grandest drawings for the most populous towns
-// (townGrandeur), and a third's sprites are taken in turn, the `i`th town of that third the `i`th.
+// (townGrandeur), and the town's own number `i` picks among a third's sprites.
 function townVariant(family, p, i) {
   if (!family.length) return null;
   const want = p.rank > 3 ? 'small' : p.rank > 2 ? 'fort' : p.lon > 20 && p.lat < 38 ? 'levant' : 'port';
@@ -646,6 +646,10 @@ function townScale(p, by = 'area') {
 // A town with an urban footprint whose projected extent (the square root of its area) reaches
 // CITY_PX is drawn as a city plan over it (city.mjs) rather than as an icon.
 const CITY_PX = 120;
+// Closing in, a town's icon stands at least ICON_GROW of its ground (footprint) tall, so it grows with
+// the land under it rather than shrinking against it, up to ICON_MAX px; a town with an urban
+// footprint is then about CITY_PX * ICON_GROW tall as its city plan takes over.
+const ICON_GROW = 0.75, ICON_MAX = 96;
 const ringArea = (r) => { let a = 0; for (let i = 0, j = r.length - 1; i < r.length; j = i++) a += (r[j][0] + r[i][0]) * (r[j][1] - r[i][1]); return Math.abs(a / 2); };
 const seedOf = (text) => { let h = 2166136261; for (const ch of text) h = Math.imul(h ^ ch.codePointAt(0), 16777619); return h | 0; };
 // Sutherland-Hodgman: a ring cut to a lon/lat box, so a clip traces only the coast near a city.
@@ -663,14 +667,21 @@ function cutRing(ring, b) {
   }
   return pts;
 }
+// A town's ground on screen, as the side of a square of its area in px: its urban footprint where
+// it has one (the measure CITY_PX reads), else its metro area (MAX_AREAKM); 0 with neither.
+const kmPxAt = (proj, lat) => (proj.k * 1000) / (EARTH_R * Math.cos(lat * RAD));
+function footprint(p, proj) {
+  if (!p.urban) return { extent: p.area > 0 ? Math.sqrt(p.area) * kmPxAt(proj, p.lat) : 0 };
+  const rings = p.urban.map((ring) => ring.map(([lon, lat]) => proj.project(lon, lat)));
+  return { rings, extent: Math.sqrt(rings.reduce((a, r) => a + ringArea(r), 0)) };
+}
 function cityOf(p, proj, landPolys) {
   if (!p.urban) return null;
-  const rings = p.urban.map((ring) => ring.map(([lon, lat]) => proj.project(lon, lat)));
-  const extent = Math.sqrt(rings.reduce((a, r) => a + ringArea(r), 0));
+  const { rings, extent } = footprint(p, proj);
   if (extent < CITY_PX) return null;
   const b = bbox(rings.flat());
   if (b.x1 < 0 || b.y1 < 0 || b.x0 > W || b.y0 > H) return null;
-  const kmPx = (proj.k * 1000) / (EARTH_R * Math.cos(p.lat * RAD));
+  const kmPx = kmPxAt(proj, p.lat);
   // the land about it, each ring cut to the footprint's box (a little wider) on its nearest copy
   const u = p.ubox, lb = { x0: u.x0 - 0.02, y0: u.y0 - 0.02, x1: u.x1 + 0.02, y1: u.y1 + 0.02 };
   const land = [];
@@ -795,8 +806,8 @@ function buildScene(data, sprites, ctx, world = {}) {
   }
 
   // Towns, lower scalerank first, >= TUNE.townGap apart. The selected town sprites fall into families
-  // by pack and style, and the tower is one when chosen; the i-th town placed takes family i mod n,
-  // save that the tower, plain at its first size, stands only for the smallest towns (SMALL_TOWN).
+  // by pack and style, and the tower is one when chosen; each town keeps one family, picked by its
+  // name, save that the tower, plain at its first size, stands only for the smallest towns (SMALL_TOWN).
   const boxes = [obb(cartouche.x + cw / 2, cartouche.y + ch / 2, 0, cw / 2, ch / 2)];
   for (const r of roseDraws) boxes.push(obb(r.x, r.y, 0, r.size * 0.42, r.size * 0.42));
   const worldNames = placeWorldNames(data, ctx, boxes, { continents: world.continents ?? false, regions: world.regions ?? 'off' });
@@ -820,10 +831,12 @@ function buildScene(data, sprites, ctx, world = {}) {
     if (cities.has(p) || x < 8 || y < 8 || x > W - 8 || y > H - 8) continue;
     if (towns.some((t) => !t.city && Math.hypot(t.x - x, t.y - y) < TUNE.townGap)) continue;
     const fit = townGrandeur(p) < SMALL_TOWN || families.every((f) => !f) ? families : families.filter(Boolean);
-    const family = fit[towns.length % fit.length], size = townScale(p, world.townSize);
-    // a town sprite stands where the tower would, its variant chosen for the town (townVariant)
-    const sprite = family && townVariant(family, p, towns.filter((t) => t.family === family).length);
-    const th = (sprite ? townHeight(sprite) : TOWER_H) * size;
+    // the town's own drawing, whatever the view: its family and variant follow from its name, so a
+    // zoom or a pan never redraws it as another (townVariant)
+    const pick = seedOf(p.name) >>> 0, family = fit[pick % fit.length], size = townScale(p, world.townSize);
+    const sprite = family && townVariant(family, p, pick >>> 8);
+    const base = (sprite ? townHeight(sprite) : TOWER_H) * size;
+    const th = Math.max(base, Math.min(ICON_MAX, ICON_GROW * footprint(p, data.proj).extent));
     const icon = sprite
       ? obb(x, y - th / 2, 0, ((th / 2) * sprite.img.width) / sprite.img.height, th / 2)
       : obb(x, y - th / 2, 0, th * 0.3, th / 2); // tower body and pennant
