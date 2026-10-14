@@ -92,7 +92,7 @@ const PROJECTIONS = {
   // Gall-Peters: equal-area, true scale at 45 degrees; here scaled so x matches the others
   'equal-area': { f: (lat) => 2 * Math.sin(lat * RAD), inv: (y) => Math.asin(y / 2) / RAD, max: 2 },
 };
-const projectionOf = (view) => PROJECTIONS[view.projection] ?? PROJECTIONS.mercator;
+const projectionOf = (view) => PROJECTIONS[Object.hasOwn(PROJECTIONS, view.projection) ? view.projection : 'mercator'];
 
 // The view's projection centred on it; longitudes are measured from its centre, so any seam is behind it.
 function makeProjection(view, w = W, h = H) {
@@ -121,7 +121,7 @@ const DEFAULT_VIEW = viewOfFrame(FRAME);
 // whole map is shorter than the canvas.
 function clampView({ lon, lat, zoom, projection }) {
   zoom = Math.min(ZOOM.max, Math.max(ZOOM.min, zoom));
-  projection = projection in PROJECTIONS ? projection : 'mercator';
+  projection = Object.hasOwn(PROJECTIONS, projection) ? projection : 'mercator';
   const P = PROJECTIONS[projection], room = Math.max(0, P.max - H / 2 / kOf(zoom));
   return { lon: wrapLon(lon), lat: P.inv(Math.max(-room, Math.min(room, P.f(lat)))), zoom, projection };
 }

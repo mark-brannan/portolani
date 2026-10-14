@@ -59,6 +59,7 @@ test('in every projection a drag, a zoom and their reverses return to the same v
 
 test('an unknown projection is Mercator, and a whole map shorter than the canvas sits on the equator', () => {
   assert.equal(clampView({ lon: 0, lat: 0, zoom: 4, projection: 'nonsense' }).projection, 'mercator');
+  for (const name of ['constructor', 'toString', '__proto__']) assert.equal(clampView({ lon: 0, lat: 0, zoom: 4, projection: name }).projection, 'mercator', name);
   assert.equal(clampView({ lon: 0, lat: 0, zoom: 4 }).projection, 'mercator');
   for (const projection of PROJECTION_NAMES.filter((p) => p !== 'mercator')) {
     assert.equal(clampView({ lon: 0, lat: 60, zoom: ZOOM.min, projection }).lat, 0, projection);
