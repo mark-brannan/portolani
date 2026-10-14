@@ -15,7 +15,7 @@
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Carta_Marina.jpeg",
         "page": "https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg",
-        "crop": [1701, 889, 2062, 1189]
+        "crop": [1705, 896, 2060, 1189]
       },
       "minClearancePx": 160,
       "weight": 3
@@ -30,7 +30,7 @@
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Carta_Marina.jpeg",
         "page": "https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg",
-        "crop": [2045, 359, 2349, 521]
+        "crop": [2052, 360, 2349, 513]
       },
       "minClearancePx": 150,
       "weight": 2
@@ -45,7 +45,7 @@
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Carta_Marina.jpeg",
         "page": "https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg",
-        "crop": [375, 1263, 545, 1430]
+        "crop": [375, 1272, 536, 1429]
       },
       "minClearancePx": 130,
       "weight": 2
@@ -60,7 +60,7 @@
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Carta_Marina.jpeg",
         "page": "https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg",
-        "crop": [1803, 574, 2044, 731]
+        "crop": [1811, 577, 2042, 731]
       },
       "minClearancePx": 140,
       "weight": 1
@@ -75,7 +75,7 @@
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Carta_Marina.jpeg",
         "page": "https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg",
-        "crop": [1200, 802, 1311, 966]
+        "crop": [1208, 803, 1311, 960]
       },
       "heading": "right"
     },
@@ -89,7 +89,7 @@
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Carta_Marina.jpeg",
         "page": "https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg",
-        "crop": [2089, 715, 2209, 799]
+        "crop": [2093, 718, 2207, 799]
       },
       "heading": "right"
     }
