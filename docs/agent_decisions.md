@@ -63,3 +63,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t122234z
 - City plans: gate-to-plaza streets drawn over the roofs, not cut out of the blocks Undo: revert PR 85 ([#85](https://github.com/mark-brannan/portolani/pull/85))
+
+### 20261014t194833z
+- Trees grow on any land between 72 S and 72 N, deserts included (no land-cover data) Undo: add a mask to plantTrees ([#91](https://github.com/mark-brannan/portolani/pull/91))
