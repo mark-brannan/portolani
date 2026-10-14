@@ -1,7 +1,7 @@
 // Browser host for the shared scene code (scene.mjs): same scene as `npm run render`, drawn live.
 // Drag to pan, wheel or pinch to zoom; while the map moves only land and coast are drawn, and the
 // ornaments are placed again when it stops. The view and the style are kept in the URL hash, e.g.
-// #map=zoom/lat/lon&pack=plain&kinds=rose,ship&names=0&rhumb=0&scale=chevron&continents=1&regions=latin&ink=5a1a1a&parchment=eee&density=1.5;
+// #map=zoom/lat/lon&pack=plain&kinds=rose,ship&names=0&rhumb=0&scale=chevron&continents=1&regions=latin&autotitle=1&title=Mare+Nostrum&ink=5a1a1a&parchment=eee&density=1.5;
 // a setting left at its default is left out.
 import { createScene, REGION_LANGS, drawScene, drawGround, panView, zoomView, clampView, covers, DEFAULT_VIEW, PACKS, KINDS, SCALE_NAMES, W, H } from './scene.mjs';
 
@@ -30,7 +30,7 @@ const env = {
 const $ = (id) => document.getElementById(id);
 const canvas = $('map'), ctx = canvas.getContext('2d');
 
-const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, pack: 'all', kinds: KINDS, names: true, rhumb: true, scale: 'genoese', continents: false, regions: 'off' };
+const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, pack: 'all', kinds: KINDS, names: true, rhumb: true, scale: 'genoese', continents: false, regions: 'off', title: 'PORTOLANI', autoTitle: false };
 const hashParams = () => new URLSearchParams(location.hash.slice(1));
 
 function viewFromHash() {
@@ -52,6 +52,8 @@ function styleFromHash() {
     rhumb: q.get('rhumb') !== '0',
     continents: q.get('continents') === '1',
     regions: REGION_LANGS.includes(q.get('regions')) ? q.get('regions') : DEFAULTS.regions,
+    title: q.get('title') ?? DEFAULTS.title,
+    autoTitle: q.get('autotitle') === '1',
     scale: q.get('scale') === 'off' || SCALE_NAMES.includes(q.get('scale')) ? q.get('scale') : DEFAULTS.scale,
   };
 }
@@ -64,6 +66,8 @@ function writeHash() {
   if (!st.rhumb) q.set('rhumb', '0');
   if (st.continents) q.set('continents', '1');
   if (st.regions !== DEFAULTS.regions) q.set('regions', st.regions);
+  if (st.autoTitle) q.set('autotitle', '1');
+  if (st.title !== DEFAULTS.title) q.set('title', st.title);
   if (st.scale !== DEFAULTS.scale) q.set('scale', st.scale);
   if (st.density !== DEFAULTS.density) q.set('density', st.density);
   if (st.ink !== DEFAULTS.ink) q.set('ink', st.ink.slice(1));
@@ -77,6 +81,7 @@ function showStyle() {
   $('density').value = style.density; $('densityOut').textContent = style.density;
   $('pack').value = style.pack; $('names').checked = style.names; $('rhumb').checked = style.rhumb; $('scale').value = style.scale;
   $('continents').checked = style.continents; $('regions').value = style.regions;
+  $('titleMode').value = style.autoTitle ? 'auto' : 'custom'; $('title').value = style.title; $('title').disabled = style.autoTitle;
   for (const k of KINDS) {
     const box = $(`kind-${k}`);
     box.checked = style.kinds.includes(k);
@@ -88,6 +93,7 @@ function readControls() {
     ink: $('ink').value, parchment: $('parchment').value, density: Number($('density').value),
     pack: $('pack').value, kinds: KINDS.filter((k) => $(`kind-${k}`).checked), names: $('names').checked, rhumb: $('rhumb').checked, scale: $('scale').value,
     continents: $('continents').checked, regions: $('regions').value,
+    title: $('title').value, autoTitle: $('titleMode').value === 'auto',
   };
   showStyle();
   writeHash();
@@ -189,6 +195,6 @@ canvas.addEventListener('wheel', (e) => {
   stopped(300);
 }, { passive: false });
 
-for (const id of ['ink', 'parchment', 'density', 'pack', 'names', 'rhumb', 'scale', 'continents', 'regions', ...KINDS.map((k) => `kind-${k}`)]) $(id).addEventListener('input', readControls);
+for (const id of ['ink', 'parchment', 'density', 'pack', 'names', 'rhumb', 'scale', 'continents', 'regions', 'titleMode', 'title', ...KINDS.map((k) => `kind-${k}`)]) $(id).addEventListener('input', readControls);
 addEventListener('hashchange', () => { view = viewFromHash(); style = styleFromHash(); showStyle(); render(); });
 render();
