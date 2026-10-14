@@ -12,3 +12,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t011858z
 - Deleted clip-geo.mjs and its test, unused once data ships whole Undo: revert ([#42](https://github.com/mark-brannan/portolani/pull/42))
+
+### 20261014t011912z
+- Rhumb lattice hidden while dragging along with ornaments; rays capped at half the world Undo: draw it in drawGround; lift the cap ([#42](https://github.com/mark-brannan/portolani/pull/42))
