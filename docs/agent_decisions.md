@@ -135,3 +135,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t202910z
 - NE lake inside a GSHHG lake's box with 0.02 degree slack Undo: LAKE_SLACK = 0 ([#97](https://github.com/mark-brannan/portolani/pull/97))
+
+### 20261014t202914z
+- GSHHG level-4 ponds left out Undo: add L4 as L3 holes are added ([#97](https://github.com/mark-brannan/portolani/pull/97))
