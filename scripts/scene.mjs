@@ -458,9 +458,9 @@ function buildScene(data, packs, ctx, world = {}) {
       land += l;
       coast += l !== field.isLand(xx + 8, yy) || l !== field.isLand(xx, yy + 8);
     }
-    return { x, y, w: cw, h: ch, cost: coast * 1000 + land };
+    return { x, y, w: cw, h: ch, coast, land };
   });
-  const cartouche = corners.sort((a, b) => a.cost - b.cost)[0];
+  const cartouche = corners.sort((a, b) => a.coast - b.coast || a.land - b.land)[0];
   occupied.push({ x: cartouche.x + cw / 2, y: cartouche.y + ch / 2, r: Math.hypot(cw, ch) / 2 });
 
   // Lattice centre: the clearest open-sea cell in the middle of the frame; the big rose sits on it.
