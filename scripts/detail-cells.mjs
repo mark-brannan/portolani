@@ -87,3 +87,41 @@ export function cutCells({ land, coast }, size = 5, digits = 5) {
   for (const c of cells.values()) c.coast = c.coast.map(tidy).filter((l) => l.length > 1);
   return cells;
 }
+
+// Natural Earth rivers and lakes into the same square cells, for scripts/water.mjs past DETAIL_ZOOM.
+// A feature goes whole into every cell it reaches (a river, each cell its segments' midpoints and
+// vertices fall in; a lake, each cell its box meets), so a river keeps one wiggle and a lake one
+// outline wherever the view is cut; its index in the source file is its GeoJSON `id`, by which
+// the scene keeps one copy of a feature fetched from several cells. Properties are cut to `keep`.
+// Returns Map(key -> { rivers, lakes }), each a FeatureCollection.
+export function cutWater(riversGeo, lakesGeo, { keep = { rivers: ['name', 'featurecla', 'min_zoom'], lakes: ['name', 'min_zoom'] }, size = 5, digits = 5 } = {}) {
+  const f = 10 ** digits, round = (c) => (typeof c[0] === 'number' ? [Math.round(c[0] * f) / f, Math.round(c[1] * f) / f] : c.map(round));
+  const cells = new Map(), cell = (k) => cells.get(k) ?? cells.set(k, { rivers: [], lakes: [] }).get(k);
+  // 180 east and 90 north fall in the last cell, not one past it
+  const xiOf = (lon) => Math.min(180 / size - 1, Math.floor(lon / size)), yiOf = (lat) => Math.min(90 / size - 1, Math.floor(lat / size));
+  const at = (lon, lat) => key(xiOf(lon), yiOf(lat));
+  const lines = (g) => (g.type === 'LineString' ? [g.coordinates] : g.type === 'MultiLineString' ? g.coordinates
+    : g.type === 'Polygon' ? g.coordinates : g.type === 'MultiPolygon' ? g.coordinates.flat() : []);
+  const reach = {
+    rivers: (g) => {
+      const ks = new Set();
+      for (const l of lines(g)) l.forEach((p, i) => { ks.add(at(p[0], p[1])); if (i) ks.add(at((p[0] + l[i - 1][0]) / 2, (p[1] + l[i - 1][1]) / 2)); });
+      return ks;
+    },
+    lakes: (g) => {
+      const [x0, y0, x1, y1] = ringBox(lines(g).flat()), ks = new Set();
+      for (let xi = xiOf(x0); xi <= xiOf(x1); xi++) for (let yi = yiOf(y0); yi <= yiOf(y1); yi++) ks.add(key(xi, yi));
+      return ks;
+    },
+  };
+  for (const [kind, geo] of [['rivers', riversGeo], ['lakes', lakesGeo]]) {
+    (geo?.features ?? []).forEach((ft, id) => {
+      if (!ft.geometry) return;
+      const slim = { type: 'Feature', id, properties: Object.fromEntries(keep[kind].map((k) => [k, ft.properties[k]])),
+        geometry: { type: ft.geometry.type, coordinates: round(ft.geometry.coordinates) } };
+      for (const k of reach[kind](ft.geometry)) cell(k)[kind].push(slim);
+    });
+  }
+  for (const [k, c] of cells) cells.set(k, { rivers: { type: 'FeatureCollection', features: c.rivers }, lakes: { type: 'FeatureCollection', features: c.lakes } });
+  return cells;
+}

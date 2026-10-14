@@ -18,6 +18,22 @@
       "note": "(27,943,663 bytes; the towns' urban footprints, drawn as city plans)"
     },
     {
+      "id": "ne_10m_rivers_lake_centerlines",
+      "file": "ne_10m_rivers_lake_centerlines.geojson",
+      "url": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_rivers_lake_centerlines.geojson",
+      "sha256": "bb854a900ecbd3b408df46d5e16e3e0f974ba55993f9d8b5c26e855273c0905a",
+      "rights": "Natural Earth, public domain",
+      "note": "(7,307,743 bytes; the rivers past z9, cut into 5-degree cells)"
+    },
+    {
+      "id": "ne_10m_lakes",
+      "file": "ne_10m_lakes.geojson",
+      "url": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_lakes.geojson",
+      "sha256": "2d036f53dedec578001c5c30c2959ee7d4eebc1306900fa4367c49929ec8f2d9",
+      "rights": "Natural Earth, public domain",
+      "note": "(5,043,554 bytes; the lakes past z9, cut into 5-degree cells)"
+    },
+    {
       "id": "gshhg-shp",
       "file": "gshhg-shp-2.3.7.zip",
       "url": "https://www.soest.hawaii.edu/pwessel/gshhg/gshhg-shp-2.3.7.zip",

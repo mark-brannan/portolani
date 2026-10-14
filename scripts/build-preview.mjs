@@ -11,7 +11,9 @@
 // coastlines carries it, and GSHHG "f" land into half-degree cells (geo/f/), read from the GSHHG
 // zip in downloads/, so a close view fetches only the cells around it. The names the chart
 // letters ship as geo/names-50m.json (scripts/names.mjs), and the urban footprints of its towns, the
-// Natural Earth 10m urban areas joined to the places, as geo/urban-10m.json (scripts/urban.mjs).
+// Natural Earth 10m urban areas joined to the places, as geo/urban-10m.json (scripts/urban.mjs). The
+// Natural Earth 10m rivers and lakes, drawn past z9 (scripts/water.mjs), ship whole-feature in
+// 5-degree cells (geo/water-10m/, cutWater).
 
 import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -20,7 +22,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import * as coastlines from 'coastlines';
 import { geojsonPolygons, geojsonRings } from 'coast-wright';
-import { cutCells } from './detail-cells.mjs';
+import { cutCells, cutWater } from './detail-cells.mjs';
 import { seaNames, coastNames, joinNames, redSea } from './names.mjs';
 import { joinUrban } from './urban.mjs';
 const { find, localUrl } = coastlines;
@@ -47,6 +49,9 @@ const SOURCES = [
   ['https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_geography_marine_polys.geojson', 'ne_50m_geography_marine_polys.geojson', '6fe58083e0cc5c7fad9e396970e28a8580bbd8770cfa4d1d7b5a34423e912f97', null],
   // read into geo/urban-10m.json below; too big for coastlines, it moves to a coastlines-10m once that exists
   ['https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_urban_areas.geojson', 'ne_10m_urban_areas.geojson', '5136ffd816a9b28c0f295e6797b4c03eaa421be80d78b90f542db4a932dd4497', null],
+  // cut into geo/water-10m/ below; together 12 MB, too much to fetch whole for one close view
+  ['https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_rivers_lake_centerlines.geojson', 'ne_10m_rivers_lake_centerlines.geojson', 'bb854a900ecbd3b408df46d5e16e3e0f974ba55993f9d8b5c26e855273c0905a', null],
+  ['https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_lakes.geojson', 'ne_10m_lakes.geojson', '2d036f53dedec578001c5c30c2959ee7d4eebc1306900fa4367c49929ec8f2d9', null],
   // GSHHG "f" land is read from the zip below; at 65 MB it is too big for the coastlines package
   ['https://www.soest.hawaii.edu/pwessel/gshhg/gshhg-shp-2.3.7.zip', 'gshhg-shp-2.3.7.zip', '8dbbe7e071e77e9e75f2d639239099ebca8d5c16d6a07df8169729d49f15cf41', null],
 ];
@@ -103,6 +108,15 @@ async function writeBand(dir, cellDeg, geometry) {
   await writeFile(path.join(out, 'geo', dir, 'index.json'), JSON.stringify({ cell: cellDeg, cells: [...cells.keys()] }));
   return cells.size;
 }
+// 10m rivers and lakes, whole features in the cells they reach; WATER_CELL_DEG must match scene.mjs WATER_10M
+const WATER_CELL_DEG = 5;
+const [rivers10, lakes10] = await Promise.all(['ne_10m_rivers_lake_centerlines.geojson', 'ne_10m_lakes.geojson'].map(async (f) => JSON.parse(await readFile(path.join(root, 'downloads', f), 'utf8'))));
+const waterCells = cutWater(rivers10, lakes10, { size: WATER_CELL_DEG });
+await mkdir(path.join(out, 'geo', 'water-10m'), { recursive: true });
+let waterBytes = 0;
+for (const [k, c] of waterCells) { const json = JSON.stringify(c); waterBytes += json.length; await writeFile(path.join(out, 'geo', 'water-10m', `${k}.json`), json); }
+await writeFile(path.join(out, 'geo', 'water-10m', 'index.json'), JSON.stringify({ cell: WATER_CELL_DEG, cells: [...waterCells.keys()] }));
+console.log(`10m water: ${waterCells.size} cells of ${WATER_CELL_DEG} degree, ${(waterBytes / 1e6).toFixed(2)} MB`);
 // 10m coast is the coastline file plus the minor islands' outlines, which 10m land fills but the
 // coastline file mostly leaves out.
 const [land10, coast10, minor10] = await Promise.all(GEO_10M.map(async (id) => JSON.parse(await readGeo(id))));
