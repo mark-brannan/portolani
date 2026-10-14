@@ -23,8 +23,8 @@ page turn, from one sheet of an atlas to the sheet below it.
 ## The historical construction
 
 A portolan chart was not drawn coast first. The chartmaker began with a circle, usually not inked,
-whose centre was pricked into the vellum: the hole is still visible from the back of surviving
-charts. The circle was divided into sixteen equal parts. From the centre and from each of the
+whose centre was pricked into the vellum; Campbell reports the hole still visible from the back of
+surviving charts. The circle was divided into sixteen equal parts. From the centre and from each of the
 sixteen nodes ran the lines of the winds, eight principal winds in black (or gold), the eight
 half-winds in green and the sixteen quarter-winds in red, thirty-two directions in all. Only after
 that network was laid down were the coastlines copied in over it, from a pattern chart. Tony
@@ -79,13 +79,14 @@ coast. Zoom inside the band, and everything grows with the coast, scaled by its 
 
 This stays inside the ruling of 2026-10-14 in [decisions.md](../decisions.md): geometry is vector
 at every zoom and drawn through coast-wright; a sheet is a placement region, not a tile, and no
-ornament layer is ever rasterised and translated. Ornaments are sprites and strokes drawn each
-frame, as they are now.
+ornament layer is ever rasterised and translated, which goes further than the ruling asks.
+Ornaments are sprites and strokes drawn afresh at every render, as they are now; what changes is
+that they are also drawn on the moving frames, which today draw the ground alone.
 
 ### Lines
 
 The rhumb lines are already drawn this way: each ray is a rhumb line in longitude and latitude from
-its node, projected each frame, so on a plate carrée page they bow and on a globe they curve. The
+its node, projected at every render, so on a plate carrée page they bow and on a globe they curve. The
 design keeps that and adds one rule: a sheet's lines reach to the edge of the sheet's extent plus a
 margin of about half a sheet, not to the edge of the window. Two adjacent sheets both cast lines
 into a view that straddles them, as two adjacent charts in a real atlas would; the margin is what
@@ -96,9 +97,10 @@ to decide here.
 
 Portolani's page is 1600 px wide, so at zoom *z* the window spans 1125 / 2^*z* degrees of
 longitude at the equator. NOAA's reschemed ENC cells (next section) have heights of 19.2°, 4.8°,
-1.2°, 0.3°, 0.075° and 0.0375°, each a quarter of the one before. Those heights fall within a few
-percent of one window width at zooms 6, 8, 10, 12, 14 and 16. That is a happy accident, and the
-design takes it:
+1.2°, 0.3°, 0.075° and 0.0375°, each a quarter of the one before, the last a half. The first five
+fall within 10% of one window width at zooms 6, 8, 10, 12 and 14 (the window is about 9% narrower
+than the cell at each). That is a happy accident, and the design takes it. The chart stops at zoom
+15, so the 0.0375° cell has no zoom to match until the chart goes further:
 
 | band | zooms | sheet height | modelled on |
 |---|---|---|---|
@@ -110,7 +112,7 @@ design takes it:
 | harbour | 14 to 15 | 0.075° | ENC band 5, Harbor, 1:22,000 and 1:12,000 |
 
 A band is two zoom steps, so inside a band the map scales by up to 4x and a sheet is between one
-window and a quarter of a window wide. Sixteen sheets of a band nest inside one sheet of the band
+and four windows wide. The harbour band is one step because the chart's zoom ends at 15. Sixteen sheets of a band nest inside one sheet of the band
 above, exactly as NOAA's cells do. The world band is the exception: there the earth is one page,
 curated sheet by curated sheet, because at those zooms a grid cell would be most of a hemisphere
 and the famous charts are the better model.
@@ -119,9 +121,9 @@ and the famous charts are the better model.
 
 Where a real chart covers a region, the sheet is modelled on that chart: its extent is the chart's,
 its circle sits where the chart's did, and the drawer can say so. The list is additive; the grid
-below covers everything the list does not. Every entry here is a proposal for Solace to edit. The
-`centre` column is my placement from each chart's extent and is marked as a guess until it has
-been set against a scan of the chart; the holding and date columns were checked this session
+below covers everything the list does not. Every entry here is a proposal, open to edit. The
+`centre` column is a placement from each chart's extent and is marked as a guess until it has
+been set against a scan of the chart; the holding and date columns were checked on 2026-10-14
 against the sources at the end.
 
 The charts:
@@ -169,8 +171,8 @@ a place people look at closely, and that is where a curated sheet, or at least a
 is worth the effort. But the limits themselves are a poor grid, and NOAA replaced them. The
 reschemed layout has six usage bands with two standard scales each, twelve scales in place of more
 than a hundred, and rectangular cells on lines of longitude and latitude, each band's cell a
-quarter the height of the band above, so sixteen cells nest in one. Above 49° 12' N a cell is
-twice as wide as it is high, above 69° 12' N four times, so a cell on the ground does not become a
+quarter the height of the band above (the last a half), so sixteen cells nest in one. From band 3
+down, above 49° 12' N a cell is twice as wide as it is high, above 69° 12' N four times, so a cell on the ground does not become a
 sliver as the meridians converge.
 
 The chart's grid takes all of that: the ladder of heights in the band table, the nesting, the
@@ -203,8 +205,8 @@ tuned by eye and recorded in the pack or the style, not here.
 
 The cartouche and the scale bar are not on the map. They are on the window: the cartouche in the
 corner that crosses the least coast, as now, and the scale bar at the bottom left, redrawn each
-frame for the current scale. They do not slide. Ruled by Solace on 2026-10-14 in the design
-session that preceded this doc.
+frame for the current scale. They do not slide. That is a ruling; its line is in
+[decisions.md](../decisions.md).
 
 ### The drawer
 
@@ -230,7 +232,7 @@ wait on it.
 - **Projection.** The circle is drawn through the projection, so it is round only on the
   cylindrical pages. On the orthographic globe and the azimuthal views it is an ellipse or an egg,
   and that is consistent with how the lines already bow. A sheet whose centre is beyond the globe's
-  horizon is simply not drawn.
+  horizon keeps its placement; its ornaments fall behind the globe and are not drawn.
 - **Poles and the date line.** Sheets are longitude and latitude rectangles, so a sheet never
   crosses the date line; it ends at 180° and the next begins. There is no sheet above the last
   widened row near the poles, so the polar caps carry no roses. Today's chart stops a hair short
@@ -239,7 +241,7 @@ wait on it.
   Drawing the curated circles with that tilt would be more faithful and would confuse the modern
   reader who expects north up. Left open; the sheet record has room for an `orientation` field.
 - **Cost per frame.** Projecting every anchor each frame replaces today's ground-only frame with
-  one that also draws the ornaments. The measurement that settles it, from the design session: a
+  one that also draws the ornaments. The mechanism stays open until it is measured; the measurement that settles it: a
   scratch page driving sixty 4 px pans and sixty 1.02x zooms at zooms 5, 9 and 12 over Genoa,
   recording median and p90 frame time for today's frame and for the projected ornaments. A median
   under about 50 ms at zoom 5 holds the design; above it, the ornaments are drawn every other
@@ -257,13 +259,14 @@ wait on it.
 
 ## Sources
 
-Checked this session, 2026-10-14. Page references are to the printed chapter where given.
+Consulted 2026-10-14. Where an entry was read through a secondary source, it says so. Page
+references are to the printed chapter where given.
 
 - Tony Campbell, "Portolan Charts from the Late Thirteenth Century to 1500", in *The History of
   Cartography*, vol. 1 (Chicago, 1987), ch. 19, pp. 390–91 on the network being drawn first:
   <https://press.uchicago.edu/books/HOC/HOC_V1/HOC_VOLUME1_chapter19.pdf>. The chapter is a large
-  PDF; this session read Campbell's conclusion as quoted by the James Ford Bell Library's portolan
-  pages, below, and did not reread the chapter itself.
+  PDF; Campbell's conclusion, and the older view of Stevenson (1911) that it overturned, were read as
+  the James Ford Bell Library's portolan pages (below) report them; the chapter itself was not reread.
 - Tony Campbell, *The Carte Pisane* essay and updates (c.1290, revised to c.1270 in 2021), and the
   Pujades debate: <https://www.maphistory.info/CartePisaneTEXT.html>,
   <https://www.maphistory.info/CartePisaneConclusions.html>.
@@ -273,9 +276,10 @@ Checked this session, 2026-10-14. Page references are to the printed chapter whe
   charts", *e-Perimetron* 3:4 (2008), 191–203; *From the Portolan Chart of the Mediterranean to the
   Latitude Chart of the Atlantic* (PhD, Lisbon, 2010); "The Planisphere of Juan de la Cosa (1500)",
   *Terrae Incognitae* (2017).
-- James Ford Bell Library, University of Minnesota, *Portolan charts*: the hidden circle and the
-  hole at its centre, <https://apps.lib.umn.edu/bell/map/PORTO/CAN/circle.html>; rhumbs first or
-  last, <https://apps.lib.umn.edu/bell/map/PORTO/MYS/mainp4.html>.
+- James Ford Bell Library, University of Minnesota, *Portolan charts*: the two rhumb circles of the
+  1489 Canepa chart, <https://apps.lib.umn.edu/bell/map/PORTO/CAN/circle.html>; rhumbs first or
+  last, with Campbell 1987 pp. 390–91 and Stevenson 1911,
+  <https://apps.lib.umn.edu/bell/map/PORTO/MYS/mainp4.html>.
 - Wikipedia, "Rhumbline network" (sixteen nodes, line colours, Pujades on Vesconte's order):
   <https://en.wikipedia.org/wiki/Rhumbline_network>; "Carta Pisana"; "Portolan chart" (the Catalan
   Atlas's rose, Campbell's "Catalan innovation"); "Map of Juan de la Cosa".
@@ -294,5 +298,7 @@ Checked this session, 2026-10-14. Page references are to the printed chapter whe
 - NOAA, *Sunset Plan for Raster Nautical Charts* (2019): traditional paper charts ended by January
   2025: <https://nauticalcharts.noaa.gov/publications/docs/raster-sunset.pdf>.
 
-Not verified this session, and so not claimed above: that the Carte Pisane carries a grid of small
-squares beside its circles, and the geometry of the Juan de la Cosa chart's rhumb network.
+Unverified, and so not claimed above: that the Carte Pisane carries a grid of small squares beside
+its circles, and the geometry of the Juan de la Cosa chart's rhumb network. Stated above on
+Campbell's authority without rereading him: that the pricked centre is still visible from the back of
+surviving charts.
