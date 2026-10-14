@@ -9,3 +9,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t011838z
 - Preview places ship whole-world with only NAME, SCALERANK, POP_MAX Undo: drop KEEP in build-preview.mjs ([#42](https://github.com/mark-brannan/portolani/pull/42))
+
+### 20261014t011858z
+- Deleted clip-geo.mjs and its test, unused once data ships whole Undo: revert ([#42](https://github.com/mark-brannan/portolani/pull/42))
