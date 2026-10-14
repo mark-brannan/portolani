@@ -21,3 +21,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t071006z
 - Small rose nodes take every rose but the biggest, in pack order Undo: revert six lines in buildScene ([#52](https://github.com/mark-brannan/portolani/pull/52))
+
+### 20261014t071131z
+- loadPack skips sprite kinds the renderer does not place, so unplaced vignettes cost no bytes Undo: drop the filter in loadPack ([#52](https://github.com/mark-brannan/portolani/pull/52))
