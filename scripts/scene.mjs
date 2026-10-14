@@ -9,6 +9,8 @@
 
 import { fill, trace, limn, rhumb, place, letter, geojsonPolygons, geojsonRings } from 'coast-wright';
 import { islandInfo, ISLAND_KM2 } from './island.mjs';
+import { cityPlan, drawCity, pxRings, insideRings } from './city.mjs';
+import { urbanKey } from './urban.mjs';
 
 let env;
 const createCanvas = (w, h) => env.createCanvas(w, h);
@@ -198,12 +200,12 @@ const loadGeo = (id) => env.readJSON(`geo/${id}.geojson`);
 // split into short runs, which is what a frame drawn while dragging walks.
 const worlds = new WeakMap();
 async function loadWorld() {
-  const [landGeo, coastGeo, placesGeo, namesGeo, urbanGeo] = await Promise.all(
+  // the urban footprints (scripts/urban.mjs) are optional: a site without them draws every town as an icon;
+  // so are the 50m urban areas, which wash a town's built-up ground before it grows into a city plan
+  const missing = (e) => { if (!/404|ENOENT|no urban/.test(String(e?.code ?? e?.message ?? e))) throw e; return null; };
+  const [landGeo, coastGeo, placesGeo, namesGeo, urban, urbanGeo] = await Promise.all(
     [...['ne-land-50m', 'ne-coastline-50m', 'ne-populated-places-50m'].map(loadGeo), env.readJSON('geo/names-50m.json'),
-      loadGeo('ne-urban-areas-50m').catch((e) => { // a site without the urban areas draws no town footprints
-        if (!/404|ENOENT/.test(String(e?.code ?? e?.message ?? e))) throw e;
-        return null;
-      })]);
+      env.readJSON('geo/urban-10m.json').catch(missing), loadGeo('ne-urban-areas-50m').catch(missing)]);
   let world = worlds.get(landGeo);
   if (world) return world;
   const land = geojsonPolygons(landGeo).map((poly) => ({ poly: Object.assign(poly, { isl: islandInfo(poly) }), box: bbox(poly[0]) }));
@@ -211,14 +213,17 @@ async function loadWorld() {
   const runs = lines.flatMap(({ line }) => coastRuns(line).map((run) => ({ run, box: bbox(run) })));
   const places = placesGeo.features
     .filter((f) => f.properties.SCALERANK <= 4)
-    .map((f) => ({ name: f.properties.NAME, rank: f.properties.SCALERANK, pop: f.properties.POP_MAX, lon: f.geometry.coordinates[0], lat: f.geometry.coordinates[1] }));
+    .map(({ properties: p, geometry: { coordinates: [lon, lat] } }) => {
+      const rings = urban?.[urbanKey(p.NAME, lon, lat)];
+      return { name: p.NAME, rank: p.SCALERANK, pop: p.POP_MAX, area: p.MAX_AREAKM, lon, lat, ...(rings && { urban: rings, ubox: bbox(rings.flat()) }) };
+    });
   // seas at a point, countries along each stretch of their coast (scripts/names.mjs)
   const names = namesGeo.features.map(({ properties: p, geometry: g }) => {
     const pts = g.type === 'Point' ? [g.coordinates] : g.coordinates;
     return { text: p.name, at: g.coordinates, land: p.land, kind: p.kind, rank: p.rank, min: p.min, box: bbox(pts) };
   });
-  const urban = urbanGeo ? geojsonPolygons(urbanGeo).map((poly) => ({ poly, box: bbox(poly[0]) })) : [];
-  world = { land, lines, runs, places, names, urban };
+  const urbanAreas = urbanGeo ? geojsonPolygons(urbanGeo).map((poly) => ({ poly, box: bbox(poly[0]) })) : [];
+  world = { land, lines, runs, places, names, urban: urbanAreas };
   worlds.set(landGeo, world);
   return world;
 }
@@ -309,8 +314,7 @@ function viewData(world, view) {
     }
     return out.filter((l) => l.length > 1);
   });
-  const places = world.places.filter((p) => nearLL(f, p.lon, p.lat))
-    .map((p) => ({ name: p.name, rank: p.rank, pop: p.pop, lon: p.lon, lat: p.lat, xy: proj.project(p.lon, p.lat) }));
+  const places = world.places.filter((p) => nearLL(f, p.lon, p.lat)).map((p) => ({ ...p, xy: proj.project(p.lon, p.lat) }));
   // names worth showing at this zoom (Natural Earth's min_label), most important first
   const names = world.names.filter((n) => n.min <= view.zoom + 1 && meetsLL(f, n.box))
     .sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'sea' ? -1 : 1) || a.rank - b.rank);
@@ -629,12 +633,60 @@ function townVariant(family, p, i) {
 const SMALL_TOWN = 0.15; // grandeur under about 700,000 people
 const townGrandeur = (p) => (townScale(p, 'population') - 0.75) / (1.8 - 0.75);
 
-// How big a town stands. `population` (the default) on a log scale of Natural Earth's POP_MAX, so a
-// megacity reads at a glance over a market town; `rank` the chief towns (scalerank 2 or less) a
-// quarter bigger. The red lettering of the chief towns follows the rank either way.
-function townScale(p, by = 'population') {
+// How big a town stands. `area` (the default) on a log scale of Natural Earth's MAX_AREAKM, the
+// LandScan footprint of its metropolitan area, so a sprawling metro stands over a dense small city;
+// `population` on a log scale of POP_MAX, the fallback where a place has no area; `rank` the chief
+// towns (scalerank 2 or less) a quarter bigger. The red lettering of the chief towns follows the rank.
+function townScale(p, by = 'area') {
   if (by === 'rank') return p.rank <= 2 ? 1.25 : 1;
+  if (by === 'area' && p.area > 0) return Math.min(1.8, Math.max(0.7, 1 + 0.5 * Math.log10(p.area / 500))); // 500 km2 stands at 1
   return Math.min(1.8, Math.max(0.75, 1 + 0.4 * Math.log10(Math.max(1, p.pop) / 1e6))); // a million stands at 1
+}
+
+// A town with an urban footprint whose projected extent (the square root of its area) reaches
+// CITY_PX is drawn as a city plan over it (city.mjs) rather than as an icon.
+const CITY_PX = 120;
+const ringArea = (r) => { let a = 0; for (let i = 0, j = r.length - 1; i < r.length; j = i++) a += (r[j][0] + r[i][0]) * (r[j][1] - r[i][1]); return Math.abs(a / 2); };
+const seedOf = (text) => { let h = 2166136261; for (const ch of text) h = Math.imul(h ^ ch.codePointAt(0), 16777619); return h | 0; };
+// Sutherland-Hodgman: a ring cut to a lon/lat box, so a clip traces only the coast near a city.
+function cutRing(ring, b) {
+  let pts = ring;
+  for (const [axis, v, keep] of [[0, b.x0, 1], [0, b.x1, -1], [1, b.y0, 1], [1, b.y1, -1]]) {
+    const out = [], inside = (q) => (keep > 0 ? q[axis] >= v : q[axis] <= v);
+    for (let i = 0; i < pts.length; i++) {
+      const a = pts[i], c = pts[(i + 1) % pts.length], ia = inside(a), ic = inside(c);
+      if (ia) out.push(a);
+      if (ia !== ic) { const t = (v - a[axis]) / (c[axis] - a[axis]), q = [a[0] + t * (c[0] - a[0]), a[1] + t * (c[1] - a[1])]; q[axis] = v; out.push(q); }
+    }
+    if (out.length < 3) return null;
+    pts = out;
+  }
+  return pts;
+}
+function cityOf(p, proj, landPolys) {
+  if (!p.urban) return null;
+  const rings = p.urban.map((ring) => ring.map(([lon, lat]) => proj.project(lon, lat)));
+  const extent = Math.sqrt(rings.reduce((a, r) => a + ringArea(r), 0));
+  if (extent < CITY_PX) return null;
+  const b = bbox(rings.flat());
+  if (b.x1 < 0 || b.y1 < 0 || b.x0 > W || b.y0 > H) return null;
+  const kmPx = (proj.k * 1000) / (EARTH_R * Math.cos(p.lat * RAD));
+  // the land about it, each ring cut to the footprint's box (a little wider) on its nearest copy
+  const u = p.ubox, lb = { x0: u.x0 - 0.02, y0: u.y0 - 0.02, x1: u.x1 + 0.02, y1: u.y1 + 0.02 };
+  const land = [];
+  for (const poly of landPolys) for (const ring of poly) {
+    const rb = bbox(ring);
+    for (const sh of SHIFTS) {
+      if (rb.x1 + sh < lb.x0 || rb.x0 + sh > lb.x1 || rb.y1 < lb.y0 || rb.y0 > lb.y1) continue;
+      const cut = cutRing(sh ? ring.map(([x, y]) => [x + sh, y]) : ring, lb);
+      if (cut) land.push([cut]);
+    }
+  }
+  // the same land in px, even-odd, so the plan keeps its walled core on dry ground
+  const landPx = pxRings(land.map(([ring]) => ring.map(([lon, lat]) => proj.project(lon, lat))));
+  const onLand = (x, y) => insideRings(landPx, x, y);
+  const plan = cityPlan({ rings, x: p.xy[0], y: p.xy[1], extent, zoom: proj.zoom, kmPx, rnd: mulberry32(seedOf(p.name)), w: W, h: H, onLand });
+  return { rings, box: b, plan, land, extent, lagoon: plan.lagoon };
 }
 
 // The order a view tries its monsters or ships in: a weighted shuffle (Efraimidis-Spirakis, key
@@ -752,29 +804,47 @@ function buildScene(data, sprites, ctx, world = {}) {
   if (sprites.tower ?? !families.length) families.push(null); // null: the tower drawn in code
   const towns = [];
   const sorted = families.length ? [...data.places].sort((a, b) => a.rank - b.rank || b.pop - a.pop) : [];
+  // cities first: they are ground, drawn under the ornaments, and their boxes make the icons and names give way
+  const cities = new Set(), cityBoxes = new Set();
+  for (const p of sorted) {
+    const c = cityOf(p, data.proj, data.land);
+    if (!c) continue;
+    const { x0, y0, x1, y1 } = { x0: Math.max(0, c.box.x0), y0: Math.max(0, c.box.y0), x1: Math.min(W, c.box.x1), y1: Math.min(H, c.box.y1) };
+    const box = obb((x0 + x1) / 2, (y0 + y1) / 2, 0, (x1 - x0) / 2, (y1 - y0) / 2);
+    towns.push({ x: p.xy[0], y: p.xy[1], size: townScale(p, world.townSize), red: p.rank <= 2, name: p.name, rank: p.rank, labelY: Math.max(40, c.box.y0 - 4), city: c, box });
+    boxes.push(box); cityBoxes.add(box);
+    cities.add(p);
+  }
   for (const p of sorted) {
     const [x, y] = p.xy;
-    if (x < 8 || y < 8 || x > W - 8 || y > H - 8) continue;
-    if (towns.some((t) => Math.hypot(t.x - x, t.y - y) < TUNE.townGap)) continue;
+    if (cities.has(p) || x < 8 || y < 8 || x > W - 8 || y > H - 8) continue;
+    if (towns.some((t) => !t.city && Math.hypot(t.x - x, t.y - y) < TUNE.townGap)) continue;
     const fit = townGrandeur(p) < SMALL_TOWN || families.every((f) => !f) ? families : families.filter(Boolean);
     const family = fit[towns.length % fit.length], size = townScale(p, world.townSize);
     // a town sprite stands where the tower would, its variant chosen for the town (townVariant)
     const sprite = family && townVariant(family, p, towns.filter((t) => t.family === family).length);
-    const th = sprite ? townHeight(sprite) * size : 0;
+    const th = (sprite ? townHeight(sprite) : TOWER_H) * size;
     const icon = sprite
       ? obb(x, y - th / 2, 0, ((th / 2) * sprite.img.width) / sprite.img.height, th / 2)
-      : obb(x, y - 8 * size, 0, 5 * size, 8.5 * size); // tower body and pennant
+      : obb(x, y - th / 2, 0, th * 0.3, th / 2); // tower body and pennant
     if (boxes.some((b) => obbOverlap(b, icon))) continue;
-    towns.push({ x, y, size, family, red: p.rank <= 2, name: p.name, rank: p.rank, ...(sprite && { sprite }) });
+    towns.push({ x, y, size, h: th, family, red: p.rank <= 2, name: p.name, rank: p.rank, labelY: y - th - 6, ...(sprite && { sprite }) });
     boxes.push(icon);
   }
 
-  // Names, lettered by coast-wright: seas, then countries along their coasts, then towns above
-  // their towers; a country once, on its longest stretch that fits. Earlier names win an overlap;
-  // a name that meets an ornament or leaves the canvas is dropped.
+  // Names, lettered by coast-wright: seas, then the metros (a town of size 1 or more, or a city),
+  // then countries along their coasts, then the other towns above their towers; a country once, on
+  // its longest stretch that fits. Earlier names win an overlap, so a country, which has other
+  // stretches to go to, gives way to a metro, which has nowhere else; a name that meets an
+  // ornament or leaves the canvas is dropped.
+  const named = (n) => ({ ...n, size: n.kind === 'sea' ? (n.rank <= 1 ? 22 : n.rank <= 3 ? 18 : 15) : n.rank <= 2 ? 17 : 14 });
+  const townName = (t) => ({ text: t.name, at: data.proj.invert(t.x, t.labelY), size: t.rank <= 1 ? 17 : t.rank <= 2 ? 15 : 13, red: t.red, own: t.box, plate: !!t.city });
+  const metro = (t) => t.city || t.size >= 1;
   const lettering = [
-    ...data.names.map((n) => ({ ...n, size: n.kind === 'sea' ? (n.rank <= 1 ? 22 : n.rank <= 3 ? 18 : 15) : n.rank <= 2 ? 17 : 14 })),
-    ...towns.map((t) => ({ text: t.name, at: data.proj.invert(t.x, t.y - (t.sprite ? townHeight(t.sprite) * t.size + 6 : 17 * t.size)), size: t.rank <= 1 ? 17 : t.rank <= 2 ? 15 : 13, red: t.red })),
+    ...data.names.filter((n) => n.kind === 'sea').map(named),
+    ...towns.filter(metro).map(townName),
+    ...data.names.filter((n) => n.kind !== 'sea').map(named),
+    ...towns.filter((t) => !metro(t)).map(townName),
   ];
   const opts = letterOptions(data);
   const names = [];
@@ -785,11 +855,12 @@ function buildScene(data, sprites, ctx, world = {}) {
     const [c0, c1, c2] = p.box; // coast-wright's corners, as an oriented box
     const box = obb((c0[0] + c2[0]) / 2, (c0[1] + c2[1]) / 2, Math.atan2(c1[1] - c0[1], c1[0] - c0[0]),
       Math.hypot(c1[0] - c0[0], c1[1] - c0[1]) / 2, Math.hypot(c2[0] - c1[0], c2[1] - c1[1]) / 2);
-    if (!obbInside(box) || boxes.some((b) => obbOverlap(b, box))) continue;
+    // a city's name sits on its own plan; seas and coasts are lettered over any city's water
+    if (!obbInside(box) || boxes.some((b) => b !== n.own && !(n.kind && cityBoxes.has(b)) && obbOverlap(b, box))) continue;
     boxes.push(box);
     names.push({ ...n, x: box.cx, y: box.cy, r: Math.max(box.hw, box.hh), box });
   }
-  for (const b of boxes.slice(1 + roseDraws.length)) occupied.push({ x: b.cx, y: b.cy, r: Math.max(b.hw, b.hh) * 0.6 });
+  for (const b of boxes.slice(1 + roseDraws.length).filter((b) => !cityBoxes.has(b))) occupied.push({ x: b.cx, y: b.cy, r: Math.max(b.hw, b.hh) * 0.6 });
   const mountains = placeMountains(data, field, boxes, sprites.mountains ?? [], world.scaleBar);
 
   // Monsters: farthest-first on the open-water field, >= MONSTER_GAP apart, in the view's cast order
@@ -1014,9 +1085,10 @@ function drawSprite(g, s, x, y, size, { flip = false, rot = 0, anchor = s.anchor
 
 const TOWN_H = 30; // px a town sprite stands at size 1, flag to foot, before normalized() sets it from the ink
 const townHeight = (s) => s.heightPx ?? TOWN_H;
+const TOWER_H = 16.5; // the tower's own height, in its drawing units
 
 function drawTower(g, t) {
-  const s = t.size;
+  const s = t.h / TOWER_H;
   g.save();
   g.translate(t.x, t.y);
   g.scale(s, s);
@@ -1279,6 +1351,24 @@ function drawScene(g, scene, data, bg, view) {
     limn(g, lines, data.proj.x, data.proj.y, { color: ink, alpha: STYLE.rhumbAlpha, width: STYLE.rhumbWidth, oneStroke: true, lonCenter: data.proj.lonCenter });
   }
 
+  // 3.5 cities, over their urban footprint and on land only (a lagoon city over its water too),
+  // under the coast and the ornaments
+  for (const t of scene.towns) {
+    if (!t.city || !meets(r, t.city.box)) continue;
+    drawCity(g, t.city.plan, r, {
+      ink: STYLE.ink, parchment: STYLE.parchment,
+      clip: (cg) => {
+        cg.beginPath();
+        for (const ring of t.city.rings) ring.forEach(([x, y], i) => (i ? cg.lineTo(x, y) : cg.moveTo(x, y)));
+        cg.clip('evenodd');
+        if (t.city.lagoon) return; // a lagoon city stands over its water
+        cg.beginPath();
+        traceLand(cg, data, t.city.land);
+        cg.clip('evenodd');
+      },
+    });
+  }
+
   // 4. coast
   paintCoast(g, data, coast);
 
@@ -1301,8 +1391,9 @@ function drawScene(g, scene, data, bg, view) {
 
   // 6. towns
   for (const t of scene.towns) {
-    if (!t.sprite) { if (disc(r, t.x, t.y - 8 * t.size, 12 * t.size)) drawTower(g, t); continue; }
-    const h = townHeight(t.sprite) * t.size, w = (h * t.sprite.img.width) / t.sprite.img.height;
+    if (t.city) continue;
+    if (!t.sprite) { if (disc(r, t.x, t.y - t.h / 2, t.h * 0.75)) drawTower(g, t); continue; }
+    const h = t.h, w = (h * t.sprite.img.width) / t.sprite.img.height;
     if (disc(r, t.x, t.y - h / 2, Math.hypot(w, h) / 2)) drawSprite(g, t.sprite, t.x, t.y, w, { anchor: [0.5, 1] });
   }
 
@@ -1318,6 +1409,12 @@ function drawScene(g, scene, data, bg, view) {
   }
   g.restore();
   const shown = show.names ? scene.names.filter((n) => disc(r, n.x, n.y, n.r)) : [];
+  // a city's name on a parchment plate, so it reads over the roofs
+  for (const n of shown.filter((n) => n.plate)) {
+    const { cx, cy, hw, hh } = n.box;
+    g.fillStyle = hexA(STYLE.parchment, 0.92); g.fillRect(cx - hw - 4, cy - hh - 1, 2 * hw + 8, 2 * hh + 2);
+    g.strokeStyle = hexA(STYLE.windRed, 0.7); g.lineWidth = 0.75; g.strokeRect(cx - hw - 4, cy - hh - 1, 2 * hw + 8, 2 * hh + 2);
+  }
   const opts = letterOptions(data);
   letter(g, shown.filter((n) => !n.red), data.proj.x, data.proj.y, { ...opts, color: STYLE.ink });
   letter(g, shown.filter((n) => n.red), data.proj.x, data.proj.y, { ...opts, color: STYLE.windRed });
@@ -1357,7 +1454,7 @@ function drawScene(g, scene, data, bg, view) {
 // colours (hex), density and view; defaults reproduce the committed mockup. `sprites` is the
 // selection drawn, a list of keys (listSprites; defaultSprites when left out), and may mix packs,
 // families and the shapes drawn in code; the town families it holds take turns among the towns,
-// sized by `townSize`, 'population' (the default) or 'rank'. The older `rendering` (one of
+// sized by `townSize`, 'area' (the default), 'population' or 'rank' (TOWN_SIZES). The older `rendering` (one of
 // RENDERINGS) with the `rose`, `monster` and `town` styles (listStyles; town 'tower' is drawn in code)
 // still choose a selection when `sprites` is left out; such a caller keeps rank sizing by default and the
 // unshuffled monster and ship order, so old links and callers draw as they did.
@@ -1372,7 +1469,7 @@ export async function createScene(environment, opts = {}) {
   env = environment;
   const { ink = '#3b2a1a', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', title = 'PORTOLANI', autoTitle = true, land: landMode = 'islands', redSea = false } = opts;
   const legacy = ['rendering', 'rose', 'monster', 'town'].some((k) => opts[k] !== undefined);
-  const townBy = townSize ?? (legacy ? 'rank' : 'population');
+  const townBy = townSize ?? (legacy ? 'rank' : 'area');
   const show = { kinds: new Set(opts.kinds ?? DEFAULT_KINDS), names, rhumb: rhumbOn, scale };
   const view = clampView(opts.view ?? DEFAULT_VIEW);
   STYLE.ink = ink;
@@ -1422,5 +1519,5 @@ export const REGION_LANGS = ['off', 'latin', 'english'];
 export const KINDS = ['rose', 'ship', 'monster', 'cartouche', 'mountain'];
 export const DEFAULT_KINDS = KINDS;
 export const PROJECTION_NAMES = Object.keys(PROJECTIONS);
-export const TOWN_SIZES = ['population', 'rank'];
+export const TOWN_SIZES = ['area', 'population', 'rank'];
 export { SCALE_NAMES, readManifests, listStyles, listSprites, defaultSprites, selectSprites, chooseSprites, drawScene, drawGround, covers, panView, zoomView, clampView, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };

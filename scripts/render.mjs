@@ -4,26 +4,31 @@
 // Usage: npm run render   -> out/mockup.png, out/mockup-detail.png
 
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createScene, drawScene, W, H, DETAIL } from './scene.mjs';
 import { seaNames, coastNames, joinNames, redSea } from './names.mjs';
+import { joinUrban } from './urban.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DL = join(ROOT, 'downloads');
 const GEO = dirname(fileURLToPath(import.meta.resolve('coastlines/data/ne-land-50m')));
 
 // Logical paths: geo/<id>.geojson is a coastlines data file, packs/... in the repo; the names are
-// made here from the marine download and the coastlines countries.
+// made here from the marine download and the coastlines countries, the urban footprints from the
+// urban areas download (npm run build:preview fetches it), the towns drawn as icons without it.
 const resolve = (p) => (p.startsWith('geo/') ? join(GEO, p.slice(4)) : join(ROOT, p));
 const read = (file) => JSON.parse(readFileSync(file, 'utf8'));
-let made;
+let made, urban;
+const URBAN = join(DL, 'ne_10m_urban_areas.geojson');
+const footprints = () => urban ??= existsSync(URBAN) ? joinUrban(read(join(GEO, 'ne-populated-places-50m.geojson')), read(URBAN))
+  : (console.warn(`${URBAN} is missing; towns are drawn as icons`), Promise.reject(new Error('no urban areas')));
 const names = () => made ??= joinNames(seaNames(read(join(DL, 'ne_50m_geography_marine_polys.geojson'))),
   coastNames(read(join(GEO, 'ne-admin-0-countries-50m.geojson')), read(join(GEO, 'ne-coastline-50m.geojson'))));
 const env = {
   createCanvas,
-  readJSON: async (p) => (p === 'geo/names-50m.json' ? names() : p === 'geo/red-sea-50m.json' ? redSea(read(join(DL, 'ne_50m_geography_marine_polys.geojson'))) : read(resolve(p))),
+  readJSON: async (p) => (p === 'geo/names-50m.json' ? names() : p === 'geo/urban-10m.json' ? footprints() : p === 'geo/red-sea-50m.json' ? redSea(read(join(DL, 'ne_50m_geography_marine_polys.geojson'))) : read(resolve(p))),
   loadImage: (p) => loadImage(resolve(p)),
   loadFont: async (family) => { GlobalFonts.registerFromPath(join(DL, 'IMFeENrm28P.ttf'), family); GlobalFonts.registerFromPath(join(DL, 'IMFeENit28P.ttf'), family); },
 };
