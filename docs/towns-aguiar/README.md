@@ -19,9 +19,8 @@ Regenerate everything here with:
 | `svg/town-aguiar-<id>.svg` | an SVG traced over the raw crop (viewBox = the crop's pixel size), simple geometry matched to the drawn shapes |
 | `svg/town-aguiar-<id>.overlay.png` | raw crop · the SVG on parchment · the SVG at half opacity over the raw crop, to see where the trace drifts |
 | `before-after-z5.png` | the region view at zoom 5 with the old single crop (left) and these sprites (right) |
-
-| `drawn-vs-scan.png` | each drawn variant (below) beside the crop it follows, large and at map size, 40 and 56 px tall |
-| `seeds.png` | twelve seeds of the drawn walled town |
+| `drawn-vs-scan.png` | each drawn kind (below) beside the crop it follows, large and at map size, 40 and 56 px tall |
+| `seeds.png` | the three committed seeds of each general kind, a row each |
 
 The traced SVGs are not in a pack; the vivid pack draws these towns with the generator below.
 
@@ -52,33 +51,25 @@ want a second deskew. Lake-moat is not traced. None of these is wired into a pac
 
 ## Drawn variants: scripts/gen-towns-aguiar.mjs
 
-The vivid pack's `town-aguiar-*.svg` are drawn by a generator in Aguiar's idiom, not traced:
+The vivid pack's `town-aguiar-*.svg` are drawn by a generator in Aguiar's idiom, not traced; how it
+lays a town out is in the script's header. Regenerate the files and these sheets with:
 
     node scripts/gen-towns-aguiar.mjs --sheets
 
-A town is laid out as the painter laid it: rows of oblique boxes, the back rows higher and drawn
-first, so a front building hides part of the one behind it. Each box has a cream front face and a
-blue-grey side face turned away from the middle of the town, paired slit windows, and madder
-hatching down the wall; its roof is hipped, gabled, a rounded cushion, a pyramid, a needle spire or
-a crenellated flat. Every corner and edge moves by a seeded jitter for the hand line. The town
-stands on a boat-shaped wall seen from above (its rim dipping to the middle, ticks under the rim, a
-dark gate at one end), on a green hill behind a wall, or on the ground. A variant is a plan and a
-few parameters; the seed draws the rest, so the files are the same on every run and another seed
-draws another town of the same kind (`seeds.png`).
+| kind | after |
+|---|---|
+| walled | the walled town in the Saharan lake |
+| hall | Smina: a great red-roofed hall, round towers at the ends |
+| towers | Genoa without its mole: slender towers and spires |
+| hill | Lisbon: buildings stepping up a green hill |
+| church | Jerusalem: church, belfry, domed corner towers, the lightest washes |
+| gate | the red gate tower at Ceuta |
+| venice | Venice in its halo of rays |
+| moat | the walled town in its lake, the rivers leaving it |
 
-| variant | after | heightPx |
-|---|---|---|
-| walled | the walled town in the Saharan lake | 72 |
-| hall | Smina: a great red-roofed hall, round towers at the ends | 70 |
-| towers | Genoa without its mole: slender towers and spires | 84 |
-| hill | Lisbon: buildings stepping up a green hill | 80 |
-| church | Jerusalem: church, belfry, domed corner towers, the lightest washes | 60 |
-| gate | the red gate tower at Ceuta | 44 |
-| venice | Venice in its halo of rays | 84 |
-| moat | the walled town in its lake, the rivers leaving it | 84 |
-
-The halo of rays and the lake with its rivers belong to one place each. Their pack entries carry
-`only`, the town names they are drawn for (Venice; Hong Kong), and the scene keeps them out of the
-family's pool: those towns draw them whenever the Aguiar family is chosen, and no other town does.
-The scene ranks the other six by the ink their `heightPx` gives them: hill and walled for the
-greatest cities, towers and hall next, church and gate for the smallest towns.
+Each general kind is committed at three seeds (`walled`, `walled-2`, `walled-3`; `seeds.png`), so
+towns of one kind differ across a map. The halo of rays and the lake with its rivers belong to one
+place each. Their pack entries carry `only`, the town names they are drawn for (Venice; Mexico City,
+the walled city in its lake), and the scene keeps them out of the family's pool: those towns draw
+them whenever the Aguiar family is chosen, and no other town does. The scene ranks the other kinds
+by `heightPx` in `packs/vivid/pack.json`: the grandest drawings go to the greatest cities.

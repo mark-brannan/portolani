@@ -48,10 +48,54 @@
       "after": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg"
     },
     {
+      "id": "town-aguiar-walled-2",
+      "kind": "town",
+      "style": "aguiar",
+      "file": "town-aguiar-walled-2.svg",
+      "anchor": [0.5, 1],
+      "sizePx": 60,
+      "heightPx": 72,
+      "bands": [0, 1],
+      "after": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg"
+    },
+    {
+      "id": "town-aguiar-walled-3",
+      "kind": "town",
+      "style": "aguiar",
+      "file": "town-aguiar-walled-3.svg",
+      "anchor": [0.5, 1],
+      "sizePx": 60,
+      "heightPx": 72,
+      "bands": [0, 1],
+      "after": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg"
+    },
+    {
       "id": "town-aguiar-hall",
       "kind": "town",
       "style": "aguiar",
       "file": "town-aguiar-hall.svg",
+      "anchor": [0.5, 1],
+      "sizePx": 60,
+      "heightPx": 70,
+      "bands": [0, 1],
+      "after": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg"
+    },
+    {
+      "id": "town-aguiar-hall-2",
+      "kind": "town",
+      "style": "aguiar",
+      "file": "town-aguiar-hall-2.svg",
+      "anchor": [0.5, 1],
+      "sizePx": 60,
+      "heightPx": 70,
+      "bands": [0, 1],
+      "after": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg"
+    },
+    {
+      "id": "town-aguiar-hall-3",
+      "kind": "town",
+      "style": "aguiar",
+      "file": "town-aguiar-hall-3.svg",
       "anchor": [0.5, 1],
       "sizePx": 60,
       "heightPx": 70,
@@ -70,10 +114,54 @@
       "after": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg"
     },
     {
+      "id": "town-aguiar-towers-2",
+      "kind": "town",
+      "style": "aguiar",
+      "file": "town-aguiar-towers-2.svg",
+      "anchor": [0.5, 1],
+      "sizePx": 60,
+      "heightPx": 84,
+      "bands": [0, 1],
+      "after": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg"
+    },
+    {
+      "id": "town-aguiar-towers-3",
+      "kind": "town",
+      "style": "aguiar",
+      "file": "town-aguiar-towers-3.svg",
+      "anchor": [0.5, 1],
+      "sizePx": 60,
+      "heightPx": 84,
+      "bands": [0, 1],
+      "after": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg"
+    },
+    {
       "id": "town-aguiar-hill",
       "kind": "town",
       "style": "aguiar",
       "file": "town-aguiar-hill.svg",
+      "anchor": [0.5, 1],
+      "sizePx": 60,
+      "heightPx": 80,
+      "bands": [0, 1],
+      "after": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg"
+    },
+    {
+      "id": "town-aguiar-hill-2",
+      "kind": "town",
+      "style": "aguiar",
+      "file": "town-aguiar-hill-2.svg",
+      "anchor": [0.5, 1],
+      "sizePx": 60,
+      "heightPx": 80,
+      "bands": [0, 1],
+      "after": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg"
+    },
+    {
+      "id": "town-aguiar-hill-3",
+      "kind": "town",
+      "style": "aguiar",
+      "file": "town-aguiar-hill-3.svg",
       "anchor": [0.5, 1],
       "sizePx": 60,
       "heightPx": 80,
@@ -92,10 +180,54 @@
       "after": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg"
     },
     {
+      "id": "town-aguiar-church-2",
+      "kind": "town",
+      "style": "aguiar",
+      "file": "town-aguiar-church-2.svg",
+      "anchor": [0.5, 1],
+      "sizePx": 60,
+      "heightPx": 60,
+      "bands": [0, 1],
+      "after": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg"
+    },
+    {
+      "id": "town-aguiar-church-3",
+      "kind": "town",
+      "style": "aguiar",
+      "file": "town-aguiar-church-3.svg",
+      "anchor": [0.5, 1],
+      "sizePx": 60,
+      "heightPx": 60,
+      "bands": [0, 1],
+      "after": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg"
+    },
+    {
       "id": "town-aguiar-gate",
       "kind": "town",
       "style": "aguiar",
       "file": "town-aguiar-gate.svg",
+      "anchor": [0.5, 1],
+      "sizePx": 60,
+      "heightPx": 44,
+      "bands": [0, 1],
+      "after": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg"
+    },
+    {
+      "id": "town-aguiar-gate-2",
+      "kind": "town",
+      "style": "aguiar",
+      "file": "town-aguiar-gate-2.svg",
+      "anchor": [0.5, 1],
+      "sizePx": 60,
+      "heightPx": 44,
+      "bands": [0, 1],
+      "after": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg"
+    },
+    {
+      "id": "town-aguiar-gate-3",
+      "kind": "town",
+      "style": "aguiar",
+      "file": "town-aguiar-gate-3.svg",
       "anchor": [0.5, 1],
       "sizePx": 60,
       "heightPx": 44,
@@ -122,7 +254,7 @@
       "anchor": [0.5, 1],
       "sizePx": 60,
       "heightPx": 84,
-      "only": ["Hong Kong"],
+      "only": ["Mexico City"],
       "bands": [0, 1],
       "after": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg"
     },

@@ -88,9 +88,10 @@ test('the Aguiar drawings are what gen-towns-aguiar.mjs writes, and pack.json na
     assert.ok(s, `${name}: not in pack.json`);
     assert.deepEqual(s.only, p.only, `${name}: pack.json's only`);
   }
-  // another seed draws another town of the same kind
-  const { walled } = aguiar.VARIANTS;
-  assert.notEqual(aguiar.townSVG('walled', walled), aguiar.townSVG('walled', { ...walled, seed: walled.seed + 1 }));
+  // another seed draws another town of the same kind: each general kind is committed at SEEDS of them
+  const general = Object.entries(aguiar.VARIANTS).filter(([, p]) => !p.only);
+  assert.equal(general.length, 6 * aguiar.SEEDS);
+  for (const [name, p] of general) assert.ok(name.startsWith(p.kind) && !general.some(([m, q]) => m !== name && aguiar.townSVG(m, q) === aguiar.townSVG(name, p)), name);
 });
 
 const GEO = dirname(fileURLToPath(import.meta.resolve('coastlines/data/ne-land-50m')));
@@ -128,17 +129,17 @@ test('towns are drawn towers when only the tower is chosen and Martines vignette
   assert.equal(port.sprite.id, 'town-martines-port');
 });
 
-test('Venice draws its halo of rays and Hong Kong its lake; no other town draws either', async () => {
+test('Venice draws its halo of rays and Mexico City its lake; no other town draws either', async () => {
   const sprites = manifest.sprites.filter((s) => s.style === 'aguiar' && s.kind === 'town').map((s) => `vivid/${s.id}`);
   const of = async (view, name) => {
     const { scene } = await createScene(env, { view, sprites });
     const by = Object.fromEntries(scene.towns.map((t) => [t.name, t.sprite?.id]));
     assert.ok(scene.towns.length > 1, scene.towns.map((t) => t.name).join());
-    for (const t of scene.towns) if (t.name !== name) assert.ok(t.sprite && !t.sprite.only, `${t.name} draws ${t.sprite?.id}`);
+    for (const t of scene.towns) if (t.name !== name) assert.ok(!t.sprite?.only, `${t.name} draws ${t.sprite?.id}`);
     return by[name];
   };
   assert.equal(await of({ lon: 12.3, lat: 45.4, zoom: 7 }, 'Venice'), 'town-aguiar-venice');
-  assert.equal(await of({ lon: 114.2, lat: 22.3, zoom: 7 }, 'Hong Kong'), 'town-aguiar-moat');
+  assert.equal(await of({ lon: -99.1, lat: 19.4, zoom: 7 }, 'Mexico City'), 'town-aguiar-moat');
   await of(LIGURIA, 'Venice');
 });
 

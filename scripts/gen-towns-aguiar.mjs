@@ -15,6 +15,11 @@
 // The halo of rays (Venice) and the lake with its rivers (the "jellyfish" around the walled town in
 // the Saharan lake) belong to one place each: their variants carry `only`, the town names they are
 // drawn for, and pack.json carries the same field so the scene keeps them for those towns alone.
+// The rays go to the city they were drawn for. The lake town is nowhere on today's map, so the lake
+// goes to Mexico City: Tenochtitlan was the walled city in its lake, causeways leaving it, and the
+// European prints of Aguiar's generation drew it in just this idiom.
+//
+// Each general kind is committed at three seeds, so the towns of one kind differ across a map.
 
 import { writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
@@ -31,7 +36,7 @@ const HILL = '#97b073', HILL_DARK = '#56753d', LAPIS = '#2f5891', RAYS = ['#3f6e
 // the ground), 'hill' (buildings stepping up a green hill behind a wall), 'church', 'gate' (a lone
 // gate tower) or 'venice'; width: across the town, in scan px; rows: rows of buildings behind the
 // wall; roofs: the odds of each roof; halo: 'rays' or 'moat', for the special towns only.
-export const VARIANTS = {
+const KINDS = {
   walled: { after: 'the walled town in the Saharan lake', seed: 3, plan: 'boat', width: 80, rows: 2, keep: true, gate: true, roofs: { hip: 4, gable: 1, flat: 1 } },
   hall: { after: 'Smina on the Niger', seed: 7, plan: 'hall', width: 84, rows: 1, roofs: { cushion: 3, hip: 1 } },
   towers: { after: 'Genoa, without its mole', seed: 11, plan: 'towers', width: 72, towers: 7, roofs: { hip: 3, cushion: 1 } },
@@ -39,8 +44,10 @@ export const VARIANTS = {
   church: { after: 'Jerusalem', seed: 19, plan: 'church', width: 66, light: true },
   gate: { after: 'the gate tower at Ceuta', seed: 23, plan: 'gate', width: 34 },
   venice: { after: 'Venice in its halo of rays', seed: 29, plan: 'venice', width: 84, halo: 'rays', only: ['Venice'], roofs: { hip: 3, gable: 1 } },
-  moat: { after: 'the walled town in its lake, the rivers leaving it', seed: 31, plan: 'boat', width: 68, rows: 2, keep: true, gate: true, halo: 'moat', only: ['Hong Kong'], roofs: { hip: 4, gable: 1 } },
+  moat: { after: 'the walled town in its lake, the rivers leaving it', seed: 31, plan: 'boat', width: 68, rows: 2, keep: true, gate: true, halo: 'moat', only: ['Mexico City'], roofs: { hip: 4, gable: 1 } },
 };
+export const SEEDS = 3; // drawings of each general kind: `walled`, `walled-2`, `walled-3`
+export const VARIANTS = Object.fromEntries(Object.entries(KINDS).flatMap(([k, p]) => (p.only ? [[k, p]] : Array.from({ length: SEEDS }, (_, i) => [i ? `${k}-${i + 1}` : k, { ...p, kind: k, seed: p.seed + i * 101 }]))));
 
 function mulberry32(seed) {
   return () => {
@@ -401,16 +408,16 @@ export function townSVG(name, p) {
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 export const fileOf = (name) => join(ROOT, 'packs', 'vivid', `town-aguiar-${name}.svg`);
 
-// `--sheets` also draws the record in docs/towns-aguiar/: drawn-vs-scan.png (each variant beside the
-// crop it follows, large and at map size, 40 and 56 px tall, on parchment) and seeds.png (twelve
-// seeds of the walled town).
+// `--sheets` also draws the record in docs/towns-aguiar/: drawn-vs-scan.png (each kind beside the
+// crop it follows, large and at map size, 40 and 56 px tall, on parchment) and seeds.png (the
+// committed seeds of each general kind, a row each).
 const SCAN = { walled: 'lake', hall: 'smina', towers: 'genoa', hill: 'lisbon', church: 'jerusalem', gate: 'ceuta', venice: 'venice', moat: 'lake-moat' };
 async function sheets() {
   const { createCanvas, loadImage } = await import('@napi-rs/canvas');
   const DOCS = join(ROOT, 'docs', 'towns-aguiar'), PARCH = '#efe3c4';
   const svgImage = (svg) => loadImage(Buffer.from(svg));
   const within = (img, w, h) => { const k = Math.min(w / img.width, h / img.height); return [img.width * k, img.height * k]; };
-  const names = Object.keys(VARIANTS), rh = 230;
+  const names = Object.keys(KINDS), rh = 230;
   let c = createCanvas(1000, rh * names.length), g = c.getContext('2d');
   g.fillStyle = PARCH; g.fillRect(0, 0, c.width, c.height);
   for (const [i, name] of names.entries()) {
@@ -424,12 +431,12 @@ async function sheets() {
     g.globalCompositeOperation = 'source-over'; g.fillStyle = INK; g.font = '16px serif'; g.fillText(name, 820, y + 190);
   }
   writeFileSync(join(DOCS, 'drawn-vs-scan.png'), c.toBuffer('image/png'));
-  const cols = 4, cw = 300, ch = 260;
-  c = createCanvas(cols * cw, 3 * ch); g = c.getContext('2d');
+  const general = Object.entries(VARIANTS).filter(([, p]) => !p.only), cols = SEEDS, cw = 300, ch = 260;
+  c = createCanvas(cols * cw, (general.length / cols) * ch); g = c.getContext('2d');
   g.fillStyle = PARCH; g.fillRect(0, 0, c.width, c.height);
   g.globalCompositeOperation = 'multiply';
-  for (let i = 0; i < 12; i++) {
-    const img = await svgImage(townSVG('walled', { ...VARIANTS.walled, seed: VARIANTS.walled.seed + i * 101 }));
+  for (const [i, [name, p]] of general.entries()) {
+    const img = await svgImage(townSVG(name, p));
     const [w, h] = within(img, cw - 20, 200), cx = (i % cols) * cw, cy = Math.floor(i / cols) * ch;
     g.drawImage(img, cx + (cw - w) / 2, cy + (ch - h) / 2, w, h);
     g.drawImage(img, cx + cw - 6 - (img.width * 40) / img.height, cy + 6, (img.width * 40) / img.height, 40);

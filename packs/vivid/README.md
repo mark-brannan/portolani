@@ -29,4 +29,4 @@ cut from different charts at different margins stand together. A town entry's `h
 against its family-mates (the scanned pack's entries take the same field): the grander drawings go to the more
 populous towns. A monster's or ship's `sizePx` is the width a preview draws it at. A town entry with `only` (a list of
 town names, as Natural Earth spells them) is drawn for those towns alone and never from its family's pool: Venice's
-halo of rays, Hong Kong's lake.
+halo of rays, Mexico City's lake.
