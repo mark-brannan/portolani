@@ -14,3 +14,8 @@ Each rose style is a pair: a centre rose (300 px) and a small rose for the ring 
 - **brouscon**: black-and-blue cardinals; no mark for north or east.
 - **fleurs**: every wind wears a gilt fleur; read north by place.
 - **dieppe**: north a gilt fleur-de-lis outside the ring; east a string of beads.
+
+## Town height
+
+A town sprite stands 30 px tall at size 1, foot to top, unless its entry sets `heightPx`; a busier drawing such as
+the Aguiar walled town stands taller so it reads. The scanned pack's entries take the same field.
