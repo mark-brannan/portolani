@@ -114,7 +114,7 @@ test('towns are drawn towers when only the tower is chosen and Martines vignette
   assert.equal(port.sprite.id, 'town-martines-port');
 });
 
-test('mountains: on by default, off when the kind is left out; inland, inland, apart and clear of names', async () => {
+test('mountains: on by default, off when the kind is left out; inland, apart and clear of names', async () => {
   assert.ok(DEFAULT_KINDS.includes('mountain'));
   assert.equal((await createScene(env, { view: LIGURIA, kinds: KINDS.filter((k) => k !== 'mountain') })).scene.mountains.length, 0);
   assert.equal((await createScene(env, { view: { lon: 10, lat: 30, zoom: 2 }, kinds: KINDS })).scene.mountains.length, 0, 'mountains at z2');
