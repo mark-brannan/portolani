@@ -1,5 +1,6 @@
 // build-preview.mjs repeats the URLs and sha256 values of ASSETS.md; re-pinning one without the other
-// would verify the wrong bytes. Offline: it reads both files and compares.
+// would verify the wrong bytes. Offline: it reads both files and compares. Also: every scanned sprite's
+// source carries a rights line.
 
 import test from 'node:test'
 import assert from 'node:assert/strict'
@@ -13,4 +14,14 @@ test('every source build-preview.mjs pins appears in ASSETS.md with the same sha
   const pinned = [...script.matchAll(/'([0-9a-f]{64})'/g)].map((m) => m[1])
   assert.ok(pinned.length >= 2, 'expected the font and licence pins')
   for (const sha of pinned) assert.ok(assets.includes(sha), `${sha} missing from ASSETS.md`)
+})
+
+test('every scanned sprite comes from a source with a rights line; CC BY sources carry their attribution', async () => {
+  const { sources } = JSON.parse(await read('scripts/sources.json'))
+  const { sprites } = JSON.parse(await read('packs/scanned/pack.json'))
+  for (const s of sprites) {
+    const src = sources.find((x) => x.url === s.source.url)
+    assert.ok(src?.rights, `${s.id}: no source with a rights line for ${s.source.url}`)
+    if (/CC BY/.test(src.rights)) assert.match(src.rights, /Attribution: /, `${s.id}: CC BY source without its attribution`)
+  }
 })

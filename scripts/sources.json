@@ -86,6 +86,60 @@
       "sha256": "4938275405b38d501c1d192ad86f92761c9e6f5000827ff4f2f77e1b84924b47",
       "rights": "Public domain; anonymous, probably Genoese, c. 1320–1350, Library of Congress item 2003630429",
       "note": "(5,486 × 4,009)"
+    },
+    {
+      "id": "pare-3059",
+      "file": "Woodcut_of_marine_animals_Wellcome_L0033059.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/8/8b/Woodcut_of_marine_animals_Wellcome_L0033059.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Woodcut_of_marine_animals_Wellcome_L0033059.jpg",
+      "sha256": "c5a30d3ce3411a2cca7770117cb3f61a01630008f412d5ba0514bf56b589de43",
+      "rights": "CC BY 4.0; Ambroise Paré, Des monstres, woodcut, Wellcome Collection L0033059. Attribution: \"Wellcome Collection, CC BY 4.0\"",
+      "note": "(3,555 × 5,214; sea bishop, bear-headed monster)"
+    },
+    {
+      "id": "pare-3060",
+      "file": "Woodcut_marine_monsters_Wellcome_L0033060.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/c/c8/Woodcut_marine_monsters_Wellcome_L0033060.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Woodcut_marine_monsters_Wellcome_L0033060.jpg",
+      "sha256": "59781c99ff4dda79d26e2a71fc2beebcbe21f893bd6b85cadda29b54f82f822f",
+      "rights": "CC BY 4.0; Ambroise Paré, Des monstres, woodcut, Wellcome Collection L0033060. Attribution: \"Wellcome Collection, CC BY 4.0\"",
+      "note": "(3,530 × 5,072; scaled sea lion, horned sea-man)"
+    },
+    {
+      "id": "pare-3267",
+      "file": "Woodcut_of_marine_mosters_Wellcome_L0033267.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/6/66/Woodcut_of_marine_mosters_Wellcome_L0033267.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Woodcut_of_marine_mosters_Wellcome_L0033267.jpg",
+      "sha256": "92ee712d56dae2bf5c2d2ec087b7f940b94daecf9fce04fb5e810bf4884459d2",
+      "rights": "CC BY 4.0; Ambroise Paré, Des monstres, woodcut, Wellcome Collection L0033267. Attribution: \"Wellcome Collection, CC BY 4.0\"",
+      "note": "(3,524 × 5,068; sea calf, sea boar)"
+    },
+    {
+      "id": "pare-3289",
+      "file": "Woodcut_of_marine_mosters_Wellcome_L0033289.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/8/88/Woodcut_of_marine_mosters_Wellcome_L0033289.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Woodcut_of_marine_mosters_Wellcome_L0033289.jpg",
+      "sha256": "2b15e949e99916125b1b94b7437ea810173b6b45211d9fc5e29d2a0c59370326",
+      "rights": "CC BY 4.0; Ambroise Paré, Des monstres, woodcut, Wellcome Collection L0033289. Attribution: \"Wellcome Collection, CC BY 4.0\"",
+      "note": "(3,494 × 5,222; Truie marine, sea elephant)"
+    },
+    {
+      "id": "master-w-ship",
+      "file": "aic-27881.jpg",
+      "url": "https://www.artic.edu/iiif/2/a4615587-d61f-20f6-541c-7ee4a9be6cb6/full/2139,/0/default.jpg",
+      "page": "https://www.artic.edu/artworks/27881",
+      "sha256": "b1ce02ae455028f18bbb463e64bb73efedbfc03a20cc8b290548b308695adb5f",
+      "rights": "Public domain (CC0); Master W with the Key, Ship with Sails Furled and Arrow Pointing to the Right, 1475/85, engraving, Art Institute of Chicago 27881",
+      "note": "(2,139 × 3,000; IIIF rendered by the server at a fixed width, so a re-encode on their side would need a re-pin)"
+    },
+    {
+      "id": "master-w-buss",
+      "file": "rijksmuseum-RP-P-2014-30.jpg",
+      "url": "https://iiif.micr.io/qEOmq/full/max/0/default.jpg",
+      "page": "https://www.rijksmuseum.nl/en/collection/RP-P-2014-30",
+      "sha256": "ce279f5671218246a8b633fcbae5a58df19860be1f350f37e3dc252ecb26c089",
+      "rights": "Public Domain Mark 1.0; Master W with the Key, Herring Buss, c. 1490, engraving, Rijksmuseum RP-P-2014-30",
+      "note": "(1,830 × 2,230; IIIF rendered by the server, so a re-encode on their side would need a re-pin)"
     }
   ],
   "footer": [

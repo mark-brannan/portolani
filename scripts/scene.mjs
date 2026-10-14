@@ -699,8 +699,9 @@ function buildScene(data, sprites, ctx, world = {}) {
     if (!cand) continue;
     const [gx, gy] = field.grad(cand.x, cand.y);
     let tx = -gy, ty = gx;
-    const flip = tx < 0;
-    if (flip) { tx = -tx; ty = -ty; }
+    const back = tx < 0;
+    if (back) { tx = -tx; ty = -ty; }
+    const flip = back !== (sprite.heading === 'left'); // a sprite drawn bow-left is mirrored to sail right
     const tilt = Math.max(-0.26, Math.min(0.26, Math.atan2(ty, tx)));
     ships.push({ sprite, x: cand.x, y: cand.y, size: sprite.sizePx, flip, tilt });
     occupied.push({ x: cand.x, y: cand.y, r: sprite.sizePx * 0.6 + 120 });
