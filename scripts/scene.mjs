@@ -164,7 +164,8 @@ const sameLake = (l, g) => inside(l.box, g.box) && l.polys.some((poly) => inWate
 const withLakes = (w, lakes) => (lakes.length ? { ...w, lakes: [...w.lakes.filter((l) => !lakes.some((g) => sameLake(l, g))), ...lakes] } : w);
 
 // Per-run tuning; `density` scales how much ornament is placed (1 = the committed mockup).
-const TUNE = { monsterMax: 4, shipMax: 2, townGap: 48 };
+// `hillShare`: the share of the hill sprites that fit which stand, all of them from density 1.
+const TUNE = { monsterMax: 4, shipMax: 2, townGap: 48, hillShare: 1 };
 
 const CELL = 16;             // clearance field cell, px
 const MONSTER_GAP = 220;     // min centre spacing between monsters, px
@@ -1077,10 +1078,11 @@ function castSeed(view) {
 // wide, so smaller than a mountain, starting one further along the set each time so a cluster mixes
 // them; only where the box clears `blocked` (names, towns, roses, the cartouche, the scale bar,
 // built-up land) and the sprites already stood, and the land round it holds (half its width and a
-// margin from the sea and the frame's edge).
+// margin from the sea and the frame's edge). Under density 1 only TUNE.hillShare of them stand, the
+// first in the humps' seeded order, so the clusters thin out whole; none at density 0.
 const HILL_MARGIN = 16, HILL_SIZE = 4.5;
 function placeHillSprites(humps, sprites, blocked, field) {
-  if (!sprites.length) return [];
+  if (!sprites.length || TUNE.hillShare <= 0) return [];
   const out = [];
   humps.forEach((hump, n) => {
     const cap = hump.h * HILL_SIZE;
@@ -1092,7 +1094,7 @@ function placeHillSprites(humps, sprites, blocked, field) {
       break;
     }
   });
-  return out.map(({ box, ...m }) => m);
+  return out.slice(0, Math.round(out.length * TUNE.hillShare)).map(({ box, ...m }) => m);
 }
 
 // A name coast-wright placed, as an oriented box from its corners.
@@ -2029,6 +2031,7 @@ export async function createScene(environment, opts = {}) {
   TUNE.monsterMax = Math.round(4 * density);
   TUNE.shipMax = Math.round(2 * density);
   TUNE.townGap = 48 / density;
+  TUNE.hillShare = Math.min(1, density);
 
   const t0 = performance.now();
   // only the sprites the settings choose are fetched, whichever kinds are shown, never a whole pack;
