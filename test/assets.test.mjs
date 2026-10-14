@@ -11,6 +11,6 @@ test('every source build-preview.mjs pins appears in ASSETS.md with the same sha
   const script = await read('scripts/build-preview.mjs')
   const assets = await read('ASSETS.md')
   const pinned = [...script.matchAll(/'([0-9a-f]{64})'/g)].map((m) => m[1])
-  assert.ok(pinned.length >= 5, 'expected the geojson, font and licence pins')
+  assert.ok(pinned.length >= 2, 'expected the font and licence pins')
   for (const sha of pinned) assert.ok(assets.includes(sha), `${sha} missing from ASSETS.md`)
 })

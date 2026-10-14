@@ -1,7 +1,10 @@
 // Portolani mockup scene: placement (buildScene) and draw order (drawScene), independent of where
 // it runs. A host (scripts/render.mjs in Node, public/page.js in a browser) supplies an
 // environment: createCanvas(w, h), readJSON(path), loadImage(path), loadFont(). Paths are logical:
-// `geo/<name>.geojson` and `packs/<pack>/<file>`.
+// `geo/<id>.geojson`, a coastlines data id, and `packs/<pack>/<file>`. Land, wash, coast and
+// lattice are drawn in lon/lat through coast-wright, so any view or projection draws the same way.
+
+import { fill, trace, limn, rhumb, geojsonPolygons, geojsonRings } from 'coast-wright';
 
 let env;
 const createCanvas = (w, h) => env.createCanvas(w, h);
@@ -59,11 +62,17 @@ const mercY = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360));
 function makeProjection(frame, w, h) {
   const lon0 = ((frame.lonMin + frame.lonMax) / 2) * Math.PI / 180;
   const y0 = (mercY(frame.latMin) + mercY(frame.latMax)) / 2;
+  const lonCenter = (frame.lonMin + frame.lonMax) / 2;
   const k = Math.max(w / ((frame.lonMax - frame.lonMin) * Math.PI / 180), h / (mercY(frame.latMax) - mercY(frame.latMin)));
+  // x(lon, lat) and y(lat, lon), as coast-wright calls them
+  const x = (lon) => w / 2 + (lon * Math.PI / 180 - lon0) * k;
+  const y = (lat) => h / 2 - (mercY(lat) - y0) * k;
   return {
     k,
     zoom: Math.log2((k * 2 * Math.PI) / 512),
-    project: (lon, lat) => [w / 2 + (lon * Math.PI / 180 - lon0) * k, h / 2 - (mercY(lat) - y0) * k],
+    lonCenter, x, y,
+    project: (lon, lat) => [x(lon), y(lat)],
+    invert: (px, py) => [lonCenter + ((px - w / 2) / k) * 180 / Math.PI, (2 * Math.atan(Math.exp(y0 - (py - h / 2) / k)) - Math.PI / 2) * 180 / Math.PI],
   };
 }
 
@@ -88,17 +97,7 @@ const obbInside = (o, m = 4) => {
 
 // ---------------------------------------------------------------- data
 
-async function loadGeo(name) {
-  return (await env.readJSON(`geo/${name}.geojson`)).features;
-}
-
-function ringsOf(geom) {
-  if (geom.type === 'Polygon') return [geom.coordinates];
-  if (geom.type === 'MultiPolygon') return geom.coordinates;
-  if (geom.type === 'LineString') return [[geom.coordinates]];
-  if (geom.type === 'MultiLineString') return geom.coordinates.map((l) => [l]);
-  return [];
-}
+const loadGeo = (id) => env.readJSON(`geo/${id}.geojson`);
 
 async function loadData(proj) {
   const margin = MARGIN;
@@ -107,21 +106,16 @@ async function loadData(proj) {
   const projectLine = (line) => line.map(([lon, lat]) => proj.project(lon, lat));
 
   const [landGeo, coastGeo, placesGeo] = await Promise.all(
-    ['ne_50m_land', 'ne_50m_coastline', 'ne_50m_populated_places_simple'].map(loadGeo));
-  const land = []; // polygons: array of rings in px
-  for (const f of landGeo) {
-    for (const poly of ringsOf(f.geometry)) if (poly.some(near)) land.push(poly.map(projectLine));
-  }
-  const coast = []; // polylines in px
-  for (const f of coastGeo) {
-    for (const [line] of ringsOf(f.geometry)) if (near(line)) coast.push(projectLine(line));
-  }
-  const places = placesGeo
+    ['ne-land-50m', 'ne-coastline-50m', 'ne-populated-places-50m'].map(loadGeo));
+  const land = geojsonPolygons(landGeo).filter((poly) => poly.some(near)); // [lon, lat] polygons
+  const coastLL = geojsonRings(coastGeo).filter(near); // [lon, lat] lines
+  const coast = coastLL.map(projectLine); // px, for placement
+  const places = placesGeo.features
     .map((f) => ({ ...f.properties, lon: f.geometry.coordinates[0], lat: f.geometry.coordinates[1] }))
-    .filter((p) => p.scalerank <= 4 && p.lon > FRAME.lonMin - margin && p.lon < FRAME.lonMax + margin &&
+    .filter((p) => p.SCALERANK <= 4 && p.lon > FRAME.lonMin - margin && p.lon < FRAME.lonMax + margin &&
       p.lat > FRAME.latMin - margin && p.lat < FRAME.latMax + margin)
-    .map((p) => ({ name: p.name, rank: p.scalerank, pop: p.pop_max, xy: proj.project(p.lon, p.lat) }));
-  return { land, coast, places };
+    .map((p) => ({ name: p.NAME, rank: p.SCALERANK, pop: p.POP_MAX, xy: proj.project(p.lon, p.lat) }));
+  return { proj, land, coastLL, coast, places };
 }
 
 async function loadPack(name) {
@@ -147,13 +141,7 @@ function tint(img, ink) {
 
 // ---------------------------------------------------------------- clearance field
 
-function tracePolys(g, polys) {
-  g.beginPath();
-  for (const poly of polys) for (const ring of poly) {
-    ring.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
-    g.closePath();
-  }
-}
+const traceLand = (g, data, polys = data.land) => trace(g, polys, data.proj.x, data.proj.y, { lonCenter: data.proj.lonCenter });
 
 // Land rasterised at CELL px; chamfer distance (1, sqrt2) from every sea cell to land, in px.
 function clearanceField(data) {
@@ -162,7 +150,7 @@ function clearanceField(data) {
   const g = c.getContext('2d');
   g.scale(1 / CELL, 1 / CELL);
   g.fillStyle = '#000';
-  tracePolys(g, data.land);
+  traceLand(g, data);
   g.fill('evenodd');
   g.strokeStyle = '#000';
   g.lineWidth = CELL; // keeps islands smaller than a cell
@@ -198,7 +186,7 @@ function clearanceField(data) {
   const FINE = 4, fc = Math.ceil(W / FINE), fr = Math.ceil(H / FINE);
   const f = createCanvas(fc, fr), fg = f.getContext('2d');
   fg.scale(1 / FINE, 1 / FINE);
-  tracePolys(fg, data.land);
+  traceLand(fg, data);
   fg.fill('evenodd');
   const fpx = fg.getImageData(0, 0, fc, fr).data;
   const isLand = (x, y) => {
@@ -455,69 +443,42 @@ function bbox(pts) {
   return b;
 }
 
-// Land and coast with bounding boxes; coast split into short runs so a view walks only its own.
+// Land and coast with px bounding boxes; coast split into short runs so a view walks only its own.
 const COAST_RUN = 64;
 const indexes = new WeakMap();
 function indexOf(data) {
   let ix = indexes.get(data);
   if (ix) return ix;
-  const land = data.land.map((poly) => ({ poly, box: bbox(poly[0]) }));
+  const px = (ring) => ring.map(([lon, lat]) => data.proj.project(lon, lat));
+  const land = data.land.map((poly) => ({ poly, box: bbox(px(poly[0])) }));
   const coast = [];
-  for (const line of data.coast) for (let i = 0; i < line.length - 1; i += COAST_RUN) {
+  for (const line of data.coastLL) for (let i = 0; i < line.length - 1; i += COAST_RUN) {
     const run = line.slice(i, i + COAST_RUN + 2); // one shared segment keeps every join
-    coast.push({ run, box: bbox(run) });
+    coast.push({ run, box: bbox(px(run)) });
   }
   ix = { land, coast };
   indexes.set(data, ix);
   return ix;
 }
 
-// Sutherland-Hodgman against the view rect. Each ring is clipped alone, which keeps even-odd
-// fill right inside the rect; the seams it adds lie on the padded edge, outside the view.
-function clipRing(ring, r) {
-  let out = ring;
-  for (const [inside, cut] of [
-    [([x]) => x >= r.x0, (a, b) => [r.x0, a[1] + (b[1] - a[1]) * (r.x0 - a[0]) / (b[0] - a[0])]],
-    [([x]) => x <= r.x1, (a, b) => [r.x1, a[1] + (b[1] - a[1]) * (r.x1 - a[0]) / (b[0] - a[0])]],
-    [([, y]) => y >= r.y0, (a, b) => [a[0] + (b[0] - a[0]) * (r.y0 - a[1]) / (b[1] - a[1]), r.y0]],
-    [([, y]) => y <= r.y1, (a, b) => [a[0] + (b[0] - a[0]) * (r.y1 - a[1]) / (b[1] - a[1]), r.y1]],
-  ]) {
-    const src = out; out = [];
-    for (let i = 0; i < src.length; i++) {
-      const a = src[(i + src.length - 1) % src.length], b = src[i];
-      if (inside(b)) { if (!inside(a)) out.push(cut(a, b)); out.push(b); } else if (inside(a)) out.push(cut(a, b));
+// Each node's rays as rhumb lines in [lon, lat], with px boxes for culling; reaching past the
+// scene's far corner from any node.
+const lattices = new WeakMap();
+function latticeOf(scene, data) {
+  let rays = lattices.get(scene);
+  if (rays) return rays;
+  rays = [];
+  const reach = (Math.hypot(W, H) * 1.5 / data.proj.k) * 180 / Math.PI; // Mercator radians at the equator, in degrees
+  for (const n of [scene.centre, ...scene.nodes]) {
+    const [lon, lat] = data.proj.invert(n.x, n.y);
+    for (let k = 0; k < RHUMB_RAYS; k++) {
+      const kind = k % 4 === 0 ? 0 : k % 2 === 1 ? 1 : 2; // wind, quarter (red), half (green)
+      const line = rhumb([lon, lat], 90 + (k * 360) / RHUMB_RAYS, reach * Math.cos(lat * Math.PI / 180));
+      rays.push({ kind, line, box: bbox(line.map(([a, b]) => data.proj.project(a, b))) });
     }
-    if (!out.length) break;
   }
-  return out;
-}
-
-function landIn(ix, r) {
-  const polys = [];
-  for (const { poly, box } of ix.land) {
-    if (!meets(r, box)) continue;
-    const rings = poly.map((ring) => clipRing(ring, r)).filter((ring) => ring.length > 2);
-    if (rings.length) polys.push(rings);
-  }
-  return polys;
-}
-
-// Liang-Barsky: the part of segment a->b inside r, or null.
-function clipSegment(ax, ay, bx, by, r) {
-  let t0 = 0, t1 = 1;
-  const dx = bx - ax, dy = by - ay;
-  for (const [p, q] of [[-dx, ax - r.x0], [dx, r.x1 - ax], [-dy, ay - r.y0], [dy, r.y1 - ay]]) {
-    if (p === 0) { if (q < 0) return null; continue; }
-    const t = q / p;
-    if (p < 0) { if (t > t1) return null; if (t > t0) t0 = t; } else { if (t < t0) return null; if (t < t1) t1 = t; }
-  }
-  return [ax + t0 * dx, ay + t0 * dy, ax + t1 * dx, ay + t1 * dy];
-}
-
-function strokeLines(g, lines) {
-  g.beginPath();
-  for (const line of lines) line.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
-  g.stroke();
+  lattices.set(scene, rays);
+  return rays;
 }
 
 function drawSprite(g, s, x, y, size, { flip = false, rot = 0, anchor = s.anchor } = {}) {
@@ -558,8 +519,9 @@ function drawScene(g, scene, data, bg, view) {
   g.setTransform(view.scale, 0, 0, view.scale, -view.x * view.scale, -view.y * view.scale);
   // Only what meets the view is traced or drawn; a view skips the rest of the scene.
   const r = viewRect(g, view), idx = indexOf(data);
-  const land = landIn(idx, r);
+  const land = idx.land.filter((l) => meets(r, l.box)).map((l) => l.poly);
   const coast = idx.coast.filter((c) => meets(r, c.box)).map((c) => c.run);
+  const { x, y, lonCenter } = data.proj;
   const bgPart = (x0, y0, x1, y1) => {
     x0 = Math.max(0, Math.floor(x0)); y0 = Math.max(0, Math.floor(y0));
     x1 = Math.min(W, Math.ceil(x1)); y1 = Math.min(H, Math.ceil(y1));
@@ -570,49 +532,25 @@ function drawScene(g, scene, data, bg, view) {
   bgPart(r.x0, r.y0, r.x1, r.y1);
 
   // 2. land: flat tint, then a landward wash along the coast
-  g.fillStyle = STYLE.land;
-  tracePolys(g, land);
-  g.fill('evenodd');
+  fill(g, land, x, y, { color: STYLE.land, lonCenter });
   g.save();
-  tracePolys(g, land);
+  traceLand(g, data, land);
   g.clip('evenodd');
-  g.lineJoin = 'round'; g.lineCap = 'round';
   for (const [wd, a] of [[STYLE.washWidth * 2, 0.3], [STYLE.washWidth * 1.3, 0.3], [STYLE.washWidth * 0.7, 0.35]]) {
-    g.strokeStyle = hexA(STYLE.gilt, a);
-    g.lineWidth = wd;
-    strokeLines(g, coast);
+    limn(g, coast, x, y, { color: hexA(STYLE.gilt, a), alpha: 1, width: wd, cap: 'round', oneStroke: true, lonCenter });
   }
   g.restore();
 
-  // 3. rhumb lattice: 16 nodes on a circle plus the centre, 32 rays each, in three inks
+  // 3. rhumb lattice: 16 nodes on a circle plus the centre, 32 rhumb lines each, in three inks
+  const rays = latticeOf(scene, data);
   const inks = [STYLE.ink, STYLE.windRed, STYLE.windGreen]; // by kind: wind, quarter-wind, half-wind
-  g.save();
-  g.lineWidth = STYLE.rhumbWidth;
-  g.globalAlpha = STYLE.rhumbAlpha;
-  const L = Math.hypot(W, H) * 1.5;
-  for (const [ix, ink] of inks.entries()) {
-    g.strokeStyle = ink;
-    g.beginPath();
-    for (const n of [scene.centre, ...scene.nodes]) {
-      for (let k = 0; k < RHUMB_RAYS; k++) {
-        const kind = k % 4 === 0 ? 0 : k % 2 === 1 ? 1 : 2; // wind, quarter (red), half (green)
-        if (kind !== ix) continue;
-        const a = (k * 2 * Math.PI) / RHUMB_RAYS;
-        const seg = clipSegment(n.x, n.y, n.x + L * Math.cos(a), n.y + L * Math.sin(a), r);
-        if (seg) { g.moveTo(seg[0], seg[1]); g.lineTo(seg[2], seg[3]); }
-      }
-    }
-    g.stroke();
+  for (const [kind, ink] of inks.entries()) {
+    const lines = rays.filter((ray) => ray.kind === kind && meets(r, ray.box)).map((ray) => ray.line);
+    limn(g, lines, x, y, { color: ink, alpha: STYLE.rhumbAlpha, width: STYLE.rhumbWidth, oneStroke: true, lonCenter });
   }
-  g.restore();
 
   // 4. coast
-  g.save();
-  g.strokeStyle = STYLE.ink;
-  g.lineWidth = STYLE.coastWidth;
-  g.lineJoin = 'round';
-  strokeLines(g, coast);
-  g.restore();
+  limn(g, coast, x, y, { color: STYLE.ink, alpha: 1, width: STYLE.coastWidth, oneStroke: true, lonCenter });
 
   // 5. roses
   const spriteIn = (s, x, y, size) => disc(r, x, y, Math.hypot(size, (size * s.img.height) / s.img.width));
