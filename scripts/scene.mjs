@@ -391,6 +391,32 @@ function placeWorldNames(data, ctx, boxes, { continents, regions }) {
   return out;
 }
 
+// The name a view is about, for an automatic cartouche title. Of the seas, countries, towns and
+// hand-set continents and regions the scene letters (a town only where its name is lettered), the
+// highest score wins. Each kind of name is the subject at a zoom (a sea or a country from Natural
+// Earth's min_label, a town from its scalerank), and scores less the farther the view is from it.
+// A point scores more the nearer the frame's centre; a country by how much of its coast is in frame.
+// `lang` 0 Latin, 1 English, for the hand-set names.
+function viewTitle(data, towns, lang) {
+  const z = data.proj.zoom, half = Math.hypot(W, H) / 2;
+  const fit = (s) => Math.exp(-(((z - s) / 1.6) ** 2));
+  const central = ([x, y]) => (x < 0 || y < 0 || x > W || y > H ? 0 : 1 - Math.hypot(x - W / 2, y - H / 2) / half);
+  const at = (lon, lat) => central(data.proj.project(lon, lat));
+  const scored = [
+    ...CONTINENTS.map((c) => ({ text: c[lang], score: at(c[2], c[3]) * fit(2) })),
+    ...REGIONS.map((r) => ({ text: r[lang], score: at(r[2], r[3]) * fit(4.6) })),
+    ...towns.map((t) => ({ text: t.name, score: central([t.x, t.y]) * fit(7 + t.rank) })),
+    ...data.names.map((n) => {
+      if (n.kind === 'sea') return { text: n.text, score: at(...n.at) * fit(n.min + 1.5) };
+      // the stretch's points are 0.1 degrees apart: its length in the frame, against the frame's width
+      const pts = n.at.map(([lon, lat]) => at(lon, lat)), inFrame = pts.filter((v) => v > 0);
+      const share = Math.min(1, (inFrame.length * 0.1 * RAD * data.proj.k) / W);
+      return { text: n.text, score: share * (inFrame.reduce((s, v) => s + v, 0) / (inFrame.length || 1)) * fit(n.min + 2) };
+    }),
+  ];
+  return scored.reduce((a, b) => (b.score > a.score ? b : a), { text: '', score: 0 }).text;
+}
+
 function buildScene(data, packs, ctx, world = {}) {
   const field = clearanceField(data);
   const roses = packs.ornaments.sprites.filter((s) => s.kind === 'rose');
@@ -402,9 +428,9 @@ function buildScene(data, packs, ctx, world = {}) {
   const edge = (x, y) => Math.min(x, y, W - x, H - y);
   const free = (x, y) => Math.min(field.at(x, y), edge(x, y), ...occupied.map((o) => Math.hypot(x - o.x, y - o.y) - o.r));
 
-  // Cartouche: the corner whose rectangle covers the least land.
+  // Cartouche: the corner whose rectangle covers the least land, leaving the scale bar's corner (bottom left) to it.
   const cw = cartoucheSprite.sizePx, ch = cw * cartoucheSprite.img.height / cartoucheSprite.img.width, m = 22;
-  const corners = [[m, m], [W - m - cw, m], [m, H - m - ch], [W - m - cw, H - m - ch]].map(([x, y]) => {
+  const corners = [[m, m], [W - m - cw, m], [m, H - m - ch], [W - m - cw, H - m - ch]].filter((_, i) => i !== 2 || !world.scaleBar).map(([x, y]) => {
     let land = 0;
     for (let yy = y; yy < y + ch; yy += 8) for (let xx = x; xx < x + cw; xx += 8) land += field.isLand(xx, yy);
     return { x, y, w: cw, h: ch, land };
@@ -522,7 +548,9 @@ function buildScene(data, packs, ctx, world = {}) {
     occupied.push({ x: cand.x, y: cand.y, r: sprite.sizePx * 0.6 + 120 });
   }
 
-  return { field, centre, nodes, roseDraws, towns, names, worldNames, monsters, ships, cartouche: { ...cartouche, sprite: cartoucheSprite } };
+  // automatic, the typed title stands in where the view has no name in it
+  const title = (world.autoTitle && viewTitle(data, towns.filter((t) => names.some((n) => n.text === t.name)), world.regions === 'english' ? 1 : 0).toUpperCase()) || world.title || 'PORTOLANI';
+  return { field, centre, nodes, roseDraws, towns, names, worldNames, monsters, ships, cartouche: { ...cartouche, sprite: cartoucheSprite, title } };
 }
 
 // ---------------------------------------------------------------- drawing
@@ -955,8 +983,8 @@ function drawScene(g, scene, data, bg, view) {
   let fpx = ph * 0.62;
   g.font = `${fpx}px "${STYLE.font}"`;
   g.letterSpacing = `${fpx * 0.12}px`;
-  while (g.measureText('PORTOLANI').width > pw * 0.86) { fpx -= 1; g.font = `${fpx}px "${STYLE.font}"`; g.letterSpacing = `${fpx * 0.12}px`; }
-  g.fillText('PORTOLANI', c.x + (px0 * c.w) + pw / 2 + fpx * 0.06, c.y + py0 * c.h + ph * 0.54);
+  while (fpx > 6 && g.measureText(c.title).width > pw * 0.86) { fpx -= 1; g.font = `${fpx}px "${STYLE.font}"`; g.letterSpacing = `${fpx * 0.12}px`; }
+  g.fillText(c.title, c.x + (px0 * c.w) + pw / 2 + fpx * 0.06, c.y + py0 * c.h + ph * 0.54);
   g.restore();
 
   g.restore();
@@ -969,9 +997,10 @@ function drawScene(g, scene, data, bg, view) {
 // colours (hex), density and view; defaults reproduce the committed mockup. Also `pack` (one of
 // PACKS), `kinds` (the ornament kinds drawn, of KINDS), `names` and `rhumb` (booleans), `scale` (a SCALE_NAMES entry, or 'off'),
 // `continents` (boolean) and `regions` ('off', 'latin' or 'english'); the continents follow the regions' language, Latin when those are off.
+// `title`: the cartouche's lettering; `autoTitle` (boolean) letters it instead with the name the view is about (viewTitle), in capitals.
 export async function createScene(environment, opts = {}) {
   env = environment;
-  const { ink = '#3b2a1a', parchment: tone = '#e9d8b4', density = 1, pack = 'all', names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off' } = opts;
+  const { ink = '#3b2a1a', parchment: tone = '#e9d8b4', density = 1, pack = 'all', names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', title = 'PORTOLANI', autoTitle = false } = opts;
   const show = { kinds: new Set(opts.kinds ?? KINDS), names, rhumb: rhumbOn, scale };
   const view = clampView(opts.view ?? DEFAULT_VIEW);
   STYLE.ink = ink;
@@ -996,7 +1025,8 @@ export async function createScene(environment, opts = {}) {
   const tLoad = performance.now();
 
   const data = viewData(world, view);
-  const scene = { ...buildScene(data, packs, createCanvas(10, 10).getContext('2d'), { continents: continents && (regions === 'english' ? 'english' : 'latin'), regions }), show, scaleSprite };
+  const scene = { ...buildScene(data, packs, createCanvas(10, 10).getContext('2d'), { continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, title, autoTitle,
+    scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM }), show, scaleSprite };
   if (!parchments.has(tone)) parchments.set(tone, parchment(1539));
   const bg = parchments.get(tone);
   return { scene, data, bg, proj: data.proj, world, coarse, view, timing: { load: tLoad - t0, place: performance.now() - tLoad } };
