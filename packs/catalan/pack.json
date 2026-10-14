@@ -32,6 +32,19 @@
       }
     },
     {
+      "id": "rose-aguiar-b",
+      "kind": "rose",
+      "file": "rose-aguiar-b.png",
+      "anchor": [0.5, 0.5],
+      "sizePx": 110,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Jorge_Aguiar_1492_MR.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg",
+        "crop": [4181, 2467, 4479, 2765]
+      }
+    },
+    {
       "id": "cartouche-dewit",
       "kind": "cartouche",
       "file": "cartouche-dewit.png",

@@ -338,7 +338,8 @@ function buildScene(data, packs, measure) {
   const field = clearanceField(data);
   const roses = packs.catalan.sprites.filter((s) => s.kind === 'rose');
   const bigRose = roses.reduce((a, b) => (b.sizePx > a.sizePx ? b : a));
-  const smallRose = roses.reduce((a, b) => (b.sizePx < a.sizePx ? b : a));
+  const smallRoses = roses.filter((s) => s !== bigRose); // taken in pack order, one per node
+  const smallSize = Math.max(...smallRoses.map((s) => s.sizePx));
   const cartoucheSprite = packs.catalan.sprites.find((s) => s.kind === 'cartouche');
   const occupied = []; // discs {x, y, r} that later ornaments keep clear of
   const edge = (x, y) => Math.min(x, y, W - x, H - y);
@@ -366,20 +367,21 @@ function buildScene(data, packs, measure) {
     const a = (i * 2 * Math.PI) / RHUMB_NODES;
     return { x: centre.x + R * Math.cos(a), y: centre.y + R * Math.sin(a) };
   });
-  const roseRoom = smallRose.sizePx / 2 + 6;
+  const roseRoom = smallSize / 2 + 6;
   let nodes = [], bestCount = -1;
   for (let R = Math.round(H * 0.36); R <= H * 0.62; R += 8) {
     const n = ring(R), count = n.filter((p) => free(p.x, p.y) >= roseRoom).length;
     if (count >= bestCount) { bestCount = count; nodes = n; }
   }
 
-  // Small roses: the clearest lattice nodes that hold the sprite.
+  // Small roses: the clearest lattice nodes that hold the sprite, each rose of the pack in turn.
   const nodeRank = nodes.map((n) => ({ ...n, c: free(n.x, n.y) })).filter((n) => n.c >= roseRoom).sort((a, b) => b.c - a.c);
   for (const n of nodeRank) {
     if (roseDraws.length >= 4) break;
-    if (free(n.x, n.y) < roseRoom || field.footprintBlocked(n.x, n.y, smallRose.sizePx, smallRose.sizePx)) continue;
-    roseDraws.push({ sprite: smallRose, x: n.x, y: n.y, size: smallRose.sizePx });
-    occupied.push({ x: n.x, y: n.y, r: smallRose.sizePx / 2 + 10 });
+    const sprite = smallRoses[(roseDraws.length - 1) % smallRoses.length];
+    if (free(n.x, n.y) < roseRoom || field.footprintBlocked(n.x, n.y, sprite.sizePx, sprite.sizePx)) continue;
+    roseDraws.push({ sprite, x: n.x, y: n.y, size: sprite.sizePx });
+    occupied.push({ x: n.x, y: n.y, r: sprite.sizePx / 2 + 10 });
   }
 
   // Towns, lower scalerank first, >= TUNE.townGap apart; names perpendicular to the nearest coast.

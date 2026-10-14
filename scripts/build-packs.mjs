@@ -76,9 +76,28 @@ const PACKS = [
         // the scan's own wind names (norte, oeste, leste, sull and the petal inscriptions)
         clean: [[355, 122, 377, 180], [175, 187, 235, 237], [495, 200, 552, 257], [115, 365, 165, 387], [555, 374, 609, 394], [162, 512, 197, 587], [340, 577, 364, 630], [489, 500, 535, 544], [112, 182, 147, 217]] },
       { id: 'rose-catalan', kind: 'rose', scan: 'catalan', crop: [120, 185, 440, 505], sizePx: 110, dark: 'min', level: [10, 70], circle: [160, 160, 152] },
+      // a smaller rose from the whole Aguiar chart, its wind names closed away
+      { id: 'rose-aguiar-b', kind: 'rose', scan: 'aguiar-chart', crop: [4178, 2464, 4482, 2768], sizePx: 110, dark: 'min', level: [12, 78], circle: [152, 152, 148],
+        clean: [[4225, 2605, 4258, 2633], [4411, 2608, 4443, 2630], [4325, 2505, 4341, 2538], [4323, 2693, 4341, 2728], [4236, 2513, 4290, 2566], [4385, 2528, 4425, 2572], [4238, 2664, 4282, 2708], [4386, 2668, 4421, 2700]] },
       { id: 'cartouche-dewit', kind: 'cartouche', scan: 'dewit', crop: [196, 250, 1229, 1039], sizePx: 340, dark: 'min', level: [12, 66],
         // panel lettering and scale bars cleared so the renderer can letter the panel; SYRIA and coast cleared
         erase: [[232, 772, 1180, 1039], [196, 250, 300, 690]], panel: [232, 772, 1180, 1030] },
+    ],
+  },
+  {
+    // not placed by the renderer yet: land vignettes and a scale bar, kinds it does not draw
+    name: 'vignettes',
+    title: 'Land vignettes and scale bar: Jorge de Aguiar 1492, Genoese chart c. 1320-1350',
+    licence: 'Public domain; scans via Wikimedia Commons (Beinecke Library, Yale; Library of Congress 2003630429)',
+    ink: '#3b2a1a',
+    sprites: [
+      // the palms are less saturated than the paper, so darkness alone keys them and the faint rhumb lines drop out
+      { id: 'palms-aguiar', kind: 'tree', scan: 'aguiar-chart', crop: [2530, 2962, 2732, 3248], sizePx: 70, level: [30, 62],
+        erase: [[2695, 2962, 2732, 2995], [2680, 3170, 2732, 3248]] },
+      // a walled town in its lake; the rivers leaving the lake erased
+      { id: 'town-aguiar', kind: 'town', scan: 'aguiar-chart', crop: [2300, 2350, 2450, 2465], sizePx: 60, dark: 'min', level: [10, 70],
+        erase: [[2350, 2340, 2365, 2354], [2300, 2440, 2322, 2470], [2435, 2415, 2460, 2470], [2345, 2460, 2365, 2470], [2405, 2458, 2425, 2470]] },
+      { id: 'scale-genoese', kind: 'scale', scan: 'genoese', crop: [3708, 3815, 4400, 3940], sizePx: 260, dark: 'min', level: [8, 50] },
     ],
   },
 ];
