@@ -29,6 +29,8 @@ const VIEWS = {
 };
 // settings a golden draws with beyond the defaults; region-z5 is the README's picture, lettered PORTOLANI
 const OPTS = { 'region-z5': { autoTitle: false } };
+// and its full-size render is kept for the README, so `npm run golden` refreshes both together
+const README_IMAGE = join(ROOT, 'docs', 'readme.jpg');
 
 const resolve = (p) => (p.startsWith('geo/') ? join(GEO, p.slice(4)) : join(ROOT, p));
 const read = (file) => JSON.parse(readFileSync(file, 'utf8'));
@@ -43,25 +45,33 @@ const env = {
   loadFont: async (family) => { GlobalFonts.registerFromPath(join(ROOT, 'test', 'fixtures', 'IMFeENrm28P.ttf'), family); },
 };
 
-async function renderView(view, scale = 'off', opts = {}) {
+async function renderFull(view, scale = 'off', opts = {}) {
   const { scene, data, bg } = await createScene(env, { view, scale, ...opts });
   const full = createCanvas(W, H);
   drawScene(full.getContext('2d'), scene, data, bg, { scale: 1, x: 0, y: 0 });
+  return full;
+}
+
+const shrink = (full) => {
   const small = createCanvas(SW, SH);
   const g = small.getContext('2d');
   g.imageSmoothingQuality = 'high';
   g.drawImage(full, 0, 0, SW, SH);
   return small;
-}
+};
+
+const renderView = async (...args) => shrink(await renderFull(...args));
 
 const pixels = (canvas) => canvas.getContext('2d').getImageData(0, 0, SW, SH).data;
 
 for (const [name, view] of Object.entries(VIEWS)) {
   test(`golden image: ${name}`, async () => {
-    const canvas = await renderView(view, 'off', OPTS[name]);
+    const full = await renderFull(view, 'off', OPTS[name]);
+    const canvas = shrink(full);
     const file = join(GOLDEN, `${name}.png`);
     if (UPDATE) {
       mkdirSync(GOLDEN, { recursive: true });
+      if (name === 'region-z5') writeFileSync(README_IMAGE, full.toBuffer('image/jpeg', 90));
       writeFileSync(file, canvas.toBuffer('image/png'));
       return;
     }
