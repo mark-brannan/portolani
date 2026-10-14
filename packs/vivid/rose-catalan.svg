@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-160 -160 320 320" width="320" height="320">
+  <!-- After the wind rose of the Catalan Atlas, 1375 (BnF). Drawn, not traced: an 8-point
+       star (diagonals gilt, east-west vermilion, north-south lapis), a ticked ring in the
+       three rhumb inks, the pole star at north. White ground for the renderer's `multiply`. -->
+  <defs>
+    <!-- a point: tip r 150, waist r 30 at +-45 deg -->
+    <path id="L" d="M0,-150 L-21.2,-21.2 L0,0 Z"/>
+    <path id="R" d="M0,-150 L21.2,-21.2 L0,0 Z"/>
+    <path id="tick" d="M0,-86V-74"/>
+  </defs>
+  <g stroke="#2a1d12" stroke-width="1.1" stroke-linejoin="round">
+    <!-- ring, with 32 ticks: winds ink, half-winds verdigris, quarter-winds vermilion -->
+    <g fill="none">
+      <circle r="88"/><circle r="72"/>
+      <g stroke-width="1.6">
+        <g stroke="#2a1d12"><use xlink:href="#tick"/><use xlink:href="#tick" transform="rotate(45)"/><use xlink:href="#tick" transform="rotate(90)"/><use xlink:href="#tick" transform="rotate(135)"/><use xlink:href="#tick" transform="rotate(180)"/><use xlink:href="#tick" transform="rotate(225)"/><use xlink:href="#tick" transform="rotate(270)"/><use xlink:href="#tick" transform="rotate(315)"/></g>
+        <g stroke="#3f8a4a"><use xlink:href="#tick" transform="rotate(22.5)"/><use xlink:href="#tick" transform="rotate(67.5)"/><use xlink:href="#tick" transform="rotate(112.5)"/><use xlink:href="#tick" transform="rotate(157.5)"/><use xlink:href="#tick" transform="rotate(202.5)"/><use xlink:href="#tick" transform="rotate(247.5)"/><use xlink:href="#tick" transform="rotate(292.5)"/><use xlink:href="#tick" transform="rotate(337.5)"/></g>
+        <g stroke="#d8432a"><use xlink:href="#tick" transform="rotate(11.25)"/><use xlink:href="#tick" transform="rotate(33.75)"/><use xlink:href="#tick" transform="rotate(56.25)"/><use xlink:href="#tick" transform="rotate(78.75)"/><use xlink:href="#tick" transform="rotate(101.25)"/><use xlink:href="#tick" transform="rotate(123.75)"/><use xlink:href="#tick" transform="rotate(146.25)"/><use xlink:href="#tick" transform="rotate(168.75)"/><use xlink:href="#tick" transform="rotate(191.25)"/><use xlink:href="#tick" transform="rotate(213.75)"/><use xlink:href="#tick" transform="rotate(236.25)"/><use xlink:href="#tick" transform="rotate(258.75)"/><use xlink:href="#tick" transform="rotate(281.25)"/><use xlink:href="#tick" transform="rotate(303.75)"/><use xlink:href="#tick" transform="rotate(326.25)"/><use xlink:href="#tick" transform="rotate(348.75)"/></g>
+      </g>
+    </g>
+    <!-- diagonals, gilt -->
+    <g transform="rotate(45)"><use xlink:href="#L" fill="#e2bf55"/><use xlink:href="#R" fill="#b08a2a"/></g>
+    <g transform="rotate(135)"><use xlink:href="#L" fill="#e2bf55"/><use xlink:href="#R" fill="#b08a2a"/></g>
+    <g transform="rotate(225)"><use xlink:href="#L" fill="#e2bf55"/><use xlink:href="#R" fill="#b08a2a"/></g>
+    <g transform="rotate(315)"><use xlink:href="#L" fill="#e2bf55"/><use xlink:href="#R" fill="#b08a2a"/></g>
+    <!-- east and west, vermilion -->
+    <g transform="rotate(90) scale(1,0.86)"><use xlink:href="#L" fill="#e0612e"/><use xlink:href="#R" fill="#b0401a"/></g>
+    <g transform="rotate(270) scale(1,0.86)"><use xlink:href="#L" fill="#e0612e"/><use xlink:href="#R" fill="#b0401a"/></g>
+    <!-- north and south, lapis -->
+    <g transform="scale(0.8,0.86)"><use xlink:href="#L" fill="#5a62b8"/><use xlink:href="#R" fill="#36408a"/></g>
+    <g transform="rotate(180) scale(0.8,1)"><use xlink:href="#L" fill="#5a62b8"/><use xlink:href="#R" fill="#36408a"/></g>
+    <!-- white dot ornament down the lapis points, as on the original -->
+    <g fill="#ffffff" stroke="none">
+      <circle cx="0" cy="-60" r="2.4"/><circle cx="0" cy="-88" r="2"/><circle cx="0" cy="60" r="2.4"/><circle cx="0" cy="96" r="2"/>
+    </g>
+    <!-- pole star, gilt, at north -->
+    <g transform="translate(0,-142)">
+      <circle r="9" fill="#e2bf55"/>
+      <path d="M0,-15V-9M0,9V15M-15,0H-9M9,0H15M-10.6,-10.6L-6.4,-6.4M10.6,10.6L6.4,6.4M10.6,-10.6L6.4,-6.4M-10.6,10.6L-6.4,6.4" stroke="#b08a2a" stroke-width="2.2" stroke-linecap="round"/>
+    </g>
+    <circle r="4" fill="#2a1d12"/>
+  </g>
+</svg>
