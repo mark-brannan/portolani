@@ -10,13 +10,24 @@
       "kind": "monster",
       "style": "carta-marina",
       "file": "serpent-a.png",
-      "anchor": [0.5, 0.75],
+      "anchor": [
+        0.5,
+        0.75
+      ],
       "sizePx": 200,
-      "bands": [0, 1],
+      "bands": [
+        0,
+        1
+      ],
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Carta_Marina.jpeg",
         "page": "https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg",
-        "crop": [1705, 896, 2060, 1189]
+        "crop": [
+          1705,
+          896,
+          2060,
+          1189
+        ]
       },
       "minClearancePx": 160,
       "weight": 3
@@ -26,13 +37,24 @@
       "kind": "monster",
       "style": "carta-marina",
       "file": "whale-b.png",
-      "anchor": [0.5, 0.75],
+      "anchor": [
+        0.5,
+        0.75
+      ],
       "sizePx": 190,
-      "bands": [0, 1],
+      "bands": [
+        0,
+        1
+      ],
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Carta_Marina.jpeg",
         "page": "https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg",
-        "crop": [2052, 360, 2349, 513]
+        "crop": [
+          2052,
+          360,
+          2349,
+          513
+        ]
       },
       "minClearancePx": 150,
       "weight": 2
@@ -42,13 +64,24 @@
       "kind": "monster",
       "style": "carta-marina",
       "file": "pistrix-c.png",
-      "anchor": [0.5, 0.75],
+      "anchor": [
+        0.5,
+        0.75
+      ],
       "sizePx": 150,
-      "bands": [0, 1],
+      "bands": [
+        0,
+        1
+      ],
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Carta_Marina.jpeg",
         "page": "https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg",
-        "crop": [375, 1272, 536, 1429]
+        "crop": [
+          375,
+          1272,
+          536,
+          1429
+        ]
       },
       "minClearancePx": 130,
       "weight": 2
@@ -58,13 +91,24 @@
       "kind": "monster",
       "style": "carta-marina",
       "file": "cete-e.png",
-      "anchor": [0.5, 0.75],
+      "anchor": [
+        0.5,
+        0.75
+      ],
       "sizePx": 180,
-      "bands": [0, 1],
+      "bands": [
+        0,
+        1
+      ],
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Carta_Marina.jpeg",
         "page": "https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg",
-        "crop": [1811, 577, 2042, 731]
+        "crop": [
+          1811,
+          577,
+          2042,
+          731
+        ]
       },
       "minClearancePx": 140,
       "weight": 1
@@ -74,13 +118,24 @@
       "kind": "ship",
       "style": "carta-marina",
       "file": "ship-a.png",
-      "anchor": [0.5, 0.75],
+      "anchor": [
+        0.5,
+        0.75
+      ],
       "sizePx": 80,
-      "bands": [0, 1],
+      "bands": [
+        0,
+        1
+      ],
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Carta_Marina.jpeg",
         "page": "https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg",
-        "crop": [1208, 803, 1311, 960]
+        "crop": [
+          1208,
+          803,
+          1311,
+          960
+        ]
       },
       "heading": "right"
     },
@@ -89,13 +144,24 @@
       "kind": "ship",
       "style": "carta-marina",
       "file": "ship-b.png",
-      "anchor": [0.5, 0.75],
+      "anchor": [
+        0.5,
+        0.75
+      ],
       "sizePx": 64,
-      "bands": [0, 1],
+      "bands": [
+        0,
+        1
+      ],
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Carta_Marina.jpeg",
         "page": "https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg",
-        "crop": [2093, 718, 2207, 799]
+        "crop": [
+          2093,
+          718,
+          2207,
+          799
+        ]
       },
       "heading": "right"
     },
@@ -104,13 +170,24 @@
       "kind": "rose",
       "style": "aguiar",
       "file": "rose-aguiar.png",
-      "anchor": [0.5, 0.5],
+      "anchor": [
+        0.5,
+        0.5
+      ],
       "sizePx": 300,
-      "bands": [0, 1],
+      "bands": [
+        0,
+        1
+      ],
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/8/8f/Jorge_Aguiar_Wind_rose.jpg",
         "page": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_Wind_rose.jpg",
-        "crop": [57, 82, 658, 683]
+        "crop": [
+          57,
+          82,
+          658,
+          683
+        ]
       }
     },
     {
@@ -118,13 +195,24 @@
       "kind": "rose",
       "style": "aguiar",
       "file": "rose-catalan.png",
-      "anchor": [0.5, 0.5],
+      "anchor": [
+        0.5,
+        0.5
+      ],
       "sizePx": 110,
-      "bands": [0, 1],
+      "bands": [
+        0,
+        1
+      ],
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/d/d2/Compass_rose_from_Catalan_Atlas_%281375%29.jpg",
         "page": "https://commons.wikimedia.org/wiki/File:Compass_rose_from_Catalan_Atlas_(1375).jpg",
-        "crop": [126, 191, 433, 500]
+        "crop": [
+          126,
+          191,
+          433,
+          500
+        ]
       }
     },
     {
@@ -132,13 +220,24 @@
       "kind": "rose",
       "style": "aguiar",
       "file": "rose-aguiar-b.png",
-      "anchor": [0.5, 0.5],
+      "anchor": [
+        0.5,
+        0.5
+      ],
       "sizePx": 110,
-      "bands": [0, 1],
+      "bands": [
+        0,
+        1
+      ],
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Jorge_Aguiar_1492_MR.jpg",
         "page": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg",
-        "crop": [4181, 2467, 4479, 2765]
+        "crop": [
+          4181,
+          2467,
+          4479,
+          2765
+        ]
       }
     },
     {
@@ -146,28 +245,55 @@
       "kind": "cartouche",
       "style": "dewit",
       "file": "cartouche-dewit.png",
-      "anchor": [0.5, 0.5],
+      "anchor": [
+        0.5,
+        0.5
+      ],
       "sizePx": 340,
-      "bands": [0, 1],
+      "bands": [
+        0,
+        1
+      ],
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/6/68/Angel_cartouche_on_a_Mediterranean_map_by_de_Wit.tiff",
         "page": "https://commons.wikimedia.org/wiki/File:Angel_cartouche_on_a_Mediterranean_map_by_de_Wit.tiff",
-        "crop": [197, 251, 1228, 1035]
+        "crop": [
+          197,
+          251,
+          1228,
+          1035
+        ]
       },
-      "panel": [0.034, 0.665, 0.953, 0.994]
+      "panel": [
+        0.034,
+        0.665,
+        0.953,
+        0.994
+      ]
     },
     {
       "id": "palms-aguiar",
       "kind": "tree",
       "style": "aguiar",
       "file": "palms-aguiar.png",
-      "anchor": [0.5, 0.5],
+      "anchor": [
+        0.5,
+        0.5
+      ],
       "sizePx": 70,
-      "bands": [0, 1],
+      "bands": [
+        0,
+        1
+      ],
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Jorge_Aguiar_1492_MR.jpg",
         "page": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg",
-        "crop": [2538, 2963, 2718, 3247]
+        "crop": [
+          2538,
+          2963,
+          2718,
+          3247
+        ]
       }
     },
     {
@@ -175,139 +301,258 @@
       "kind": "town",
       "style": "aguiar",
       "file": "town-aguiar-venice.png",
-      "anchor": [0.5, 0.5],
+      "anchor": [
+        0.5,
+        0.5
+      ],
       "sizePx": 84,
-      "bands": [0, 1],
+      "bands": [
+        0,
+        1
+      ],
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Jorge_Aguiar_1492_MR.jpg",
         "page": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg",
-        "crop": [2931, 731, 3158, 887]
-      }
+        "crop": [
+          2931,
+          731,
+          3158,
+          887
+        ]
+      },
+      "heightPx": 84
     },
     {
       "id": "town-aguiar-genoa",
       "kind": "town",
       "style": "aguiar",
       "file": "town-aguiar-genoa.png",
-      "anchor": [0.5, 0.5],
+      "anchor": [
+        0.5,
+        0.5
+      ],
       "sizePx": 80,
-      "bands": [0, 1],
+      "bands": [
+        0,
+        1
+      ],
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Jorge_Aguiar_1492_MR.jpg",
         "page": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg",
-        "crop": [2764, 883, 2937, 1007]
-      }
+        "crop": [
+          2764,
+          883,
+          2937,
+          1007
+        ]
+      },
+      "heightPx": 80
     },
     {
       "id": "town-aguiar-lisbon",
       "kind": "town",
       "style": "aguiar",
       "file": "town-aguiar-lisbon.png",
-      "anchor": [0.5, 0.5],
+      "anchor": [
+        0.5,
+        0.5
+      ],
       "sizePx": 72,
-      "bands": [0, 1],
+      "bands": [
+        0,
+        1
+      ],
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Jorge_Aguiar_1492_MR.jpg",
         "page": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg",
-        "crop": [1839, 1473, 1957, 1572]
-      }
+        "crop": [
+          1839,
+          1473,
+          1957,
+          1572
+        ]
+      },
+      "heightPx": 72
     },
     {
       "id": "town-aguiar-lake",
       "kind": "town",
       "style": "aguiar",
       "file": "town-aguiar-lake.png",
-      "anchor": [0.5, 0.5],
+      "anchor": [
+        0.5,
+        0.5
+      ],
       "sizePx": 72,
-      "bands": [0, 1],
+      "bands": [
+        0,
+        1
+      ],
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Jorge_Aguiar_1492_MR.jpg",
         "page": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg",
-        "crop": [2327, 2373, 2429, 2451]
-      }
+        "crop": [
+          2327,
+          2373,
+          2429,
+          2451
+        ]
+      },
+      "heightPx": 72
     },
     {
       "id": "town-aguiar-lake-moat",
       "kind": "town",
       "style": "aguiar",
       "file": "town-aguiar-lake-moat.png",
-      "anchor": [0.5, 0.5],
+      "anchor": [
+        0.5,
+        0.5
+      ],
       "sizePx": 84,
-      "bands": [0, 1],
+      "bands": [
+        0,
+        1
+      ],
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Jorge_Aguiar_1492_MR.jpg",
         "page": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg",
-        "crop": [2303, 2359, 2447, 2485]
-      }
+        "crop": [
+          2303,
+          2359,
+          2447,
+          2485
+        ]
+      },
+      "heightPx": 84
     },
     {
       "id": "town-aguiar-smina",
       "kind": "town",
       "style": "aguiar",
       "file": "town-aguiar-smina.png",
-      "anchor": [0.5, 0.5],
+      "anchor": [
+        0.5,
+        0.5
+      ],
       "sizePx": 72,
-      "bands": [0, 1],
+      "bands": [
+        0,
+        1
+      ],
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Jorge_Aguiar_1492_MR.jpg",
         "page": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg",
-        "crop": [2934, 3087, 3065, 3197]
-      }
+        "crop": [
+          2934,
+          3087,
+          3065,
+          3197
+        ]
+      },
+      "heightPx": 72
     },
     {
       "id": "town-aguiar-jerusalem",
       "kind": "town",
       "style": "aguiar",
       "file": "town-aguiar-jerusalem.png",
-      "anchor": [0.5, 0.5],
+      "anchor": [
+        0.5,
+        0.5
+      ],
       "sizePx": 72,
-      "bands": [0, 1],
+      "bands": [
+        0,
+        1
+      ],
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Jorge_Aguiar_1492_MR.jpg",
         "page": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg",
-        "crop": [4714, 1626, 4811, 1707]
-      }
+        "crop": [
+          4714,
+          1626,
+          4811,
+          1707
+        ]
+      },
+      "heightPx": 72
     },
     {
       "id": "town-aguiar-ceuta",
       "kind": "town",
       "style": "aguiar",
       "file": "town-aguiar-ceuta.png",
-      "anchor": [0.5, 0.5],
+      "anchor": [
+        0.5,
+        0.5
+      ],
       "sizePx": 56,
-      "bands": [0, 1],
+      "bands": [
+        0,
+        1
+      ],
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Jorge_Aguiar_1492_MR.jpg",
         "page": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg",
-        "crop": [2019, 1912, 2081, 1998]
-      }
+        "crop": [
+          2019,
+          1912,
+          2081,
+          1998
+        ]
+      },
+      "heightPx": 56
     },
     {
       "id": "town-aguiar-avignon",
       "kind": "town",
       "style": "aguiar",
       "file": "town-aguiar-avignon.png",
-      "anchor": [0.5, 0.5],
+      "anchor": [
+        0.5,
+        0.5
+      ],
       "sizePx": 48,
-      "bands": [0, 1],
+      "bands": [
+        0,
+        1
+      ],
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Jorge_Aguiar_1492_MR.jpg",
         "page": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg",
-        "crop": [2354, 1028, 2444, 1085]
-      }
+        "crop": [
+          2354,
+          1028,
+          2444,
+          1085
+        ]
+      },
+      "heightPx": 48
     },
     {
       "id": "scale-genoese",
       "kind": "scale",
       "style": "genoese",
       "file": "scale-genoese.png",
-      "anchor": [0.5, 0.5],
+      "anchor": [
+        0.5,
+        0.5
+      ],
       "sizePx": 260,
-      "bands": [0, 1],
+      "bands": [
+        0,
+        1
+      ],
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/5/5c/Mediterranean_chart_fourteenth_century2.jpg",
         "page": "https://commons.wikimedia.org/wiki/File:Mediterranean_chart_fourteenth_century2.jpg",
-        "crop": [3709, 3816, 4399, 3939]
+        "crop": [
+          3709,
+          3816,
+          4399,
+          3939
+        ]
       }
     }
   ]

@@ -228,6 +228,8 @@ function buildSprite(sprite, colour, outDir, tmp) {
   if (sprite.minClearancePx) entry.minClearancePx = sprite.minClearancePx;
   if (sprite.weight) entry.weight = sprite.weight;
   if (sprite.heading) entry.heading = sprite.heading;
+  if (sprite.heightPx) entry.heightPx = sprite.heightPx;
+  else if (sprite.kind === 'town') entry.heightPx = sprite.sizePx; // a town stands at sizePx, flag to foot
   if (sprite.panel) {
     const [px0, py0, px1, py1] = sprite.panel;
     // panel in sprite-local fractions, for lettering
