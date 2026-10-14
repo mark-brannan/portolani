@@ -112,7 +112,8 @@ than the cell at each). That is a happy accident, and the design takes it. The c
 | harbour | 14 to 15 | 0.075° | ENC band 5, Harbor, 1:22,000 and 1:12,000 |
 
 A band is two zoom steps, so inside a band the map scales by up to 4x and a sheet is between one
-and four windows wide. The harbour band is one step because the chart's zoom ends at 15. Sixteen sheets of a band nest inside one sheet of the band
+and four windows wide; the harbour band is one step, one to two windows, because the chart's zoom
+ends at 15. Sixteen sheets of a band nest inside one sheet of the band
 above, exactly as NOAA's cells do. The world band is the exception: there the earth is one page,
 curated sheet by curated sheet, because at those zooms a grid cell would be most of a hemisphere
 and the famous charts are the better model.
@@ -123,8 +124,7 @@ Where a real chart covers a region, the sheet is modelled on that chart: its ext
 its circle sits where the chart's did, and the drawer can say so. The list is additive; the grid
 below covers everything the list does not. Every entry here is a proposal, open to edit. The
 `centre` column is a placement from each chart's extent and is marked as a guess until it has
-been set against a scan of the chart; the holding and date columns were checked on 2026-10-14
-against the sources at the end.
+been set against a scan of the chart; the holding and date columns follow the sources at the end.
 
 The charts:
 
@@ -165,15 +165,15 @@ them.
 Everywhere no curated sheet reaches, the atlas is a grid modelled on NOAA's reschemed electronic
 charts. NOAA's traditional paper charts (ended in January 2025) had irregular, overlapping limits
 set by hand: sailing charts at 1:600,000 and smaller, general charts from 1:150,000 to 1:600,000,
-coast charts from 1:50,000 to 1:150,000, harbor charts larger than 1:50,000. Those limits are
-worth reading for what they say about attention: a harbour that earned its own large-scale chart is
-a place people look at closely, and that is where a curated sheet, or at least a hand-set centre,
-is worth the effort. But the limits themselves are a poor grid, and NOAA replaced them. The
-reschemed layout has six usage bands with two standard scales each, twelve scales in place of more
-than a hundred, and rectangular cells on lines of longitude and latitude, each band's cell a
-quarter the height of the band above (the last a half), so sixteen cells nest in one. From band 3
-down, above 49° 12' N a cell is twice as wide as it is high, above 69° 12' N four times, so a cell on the ground does not become a
-sliver as the meridians converge.
+coast charts from 1:50,000 to 1:150,000, harbor charts larger than 1:50,000. Those limits are worth
+reading for what they say about attention: a harbour that earned its own large-scale chart is a
+place people look at closely, and that is where a curated sheet, or at least a hand-set centre, is
+worth the effort. But the limits themselves are a poor grid, and NOAA replaced them. The reschemed
+layout has six usage bands with two standard scales each, twelve scales in place of more than a
+hundred, and rectangular cells on lines of longitude and latitude, each band's cell a quarter the
+height of the band above (the last a half), so sixteen cells nest in one. From band 3 down, above
+49° 12' N a cell is twice as wide as it is high, above 69° 12' N four times, so a cell on the ground
+does not become a sliver as the meridians converge.
 
 The chart's grid takes all of that: the ladder of heights in the band table, the nesting, the
 widening at the same two latitudes applied north and south, and cell edges on whole multiples of
@@ -241,16 +241,16 @@ wait on it.
   Drawing the curated circles with that tilt would be more faithful and would confuse the modern
   reader who expects north up. Left open; the sheet record has room for an `orientation` field.
 - **Cost per frame.** Projecting every anchor each frame replaces today's ground-only frame with
-  one that also draws the ornaments. The mechanism stays open until it is measured; the measurement that settles it: a
-  scratch page driving sixty 4 px pans and sixty 1.02x zooms at zooms 5, 9 and 12 over Genoa,
-  recording median and p90 frame time for today's frame and for the projected ornaments. A median
-  under about 50 ms at zoom 5 holds the design; above it, the ornaments are drawn every other
-  frame during a move, which is still no flicker.
+  one that also draws the ornaments. The mechanism stays open until it is measured; the measurement
+  that settles it: a scratch page driving sixty 4 px pans and sixty 1.02x zooms at zooms 5, 9 and 12
+  over Genoa, recording median and p90 frame time for today's frame and for the projected ornaments.
+  A median under about 50 ms at zoom 5 holds the design; above it, the ornaments are drawn every
+  other frame during a move, which is still no flicker.
 
 ## Not decided here
 
 - The exact centres and extents of the curated sheets: a scan of each chart, the circle's centre
-  read off it, and the position transferred to the modern earth. One session per chart, with the
+  read off it, and the position transferred to the modern earth. One chart at a time, with the
   crop kept in this folder as the town and Carta Marina folders keep theirs.
 - Whether a child sheet's circle should sit on a node of its parent's, so zooming in descends into
   the same geometry. Sixteen nodes on a ring do not tile a plane, so it would be approximate; nice
