@@ -93,7 +93,7 @@ const [land10, coast10, minor10] = await Promise.all(GEO_10M.map(async (id) => J
 await writeBand('10m', CELL_DEG, { land: geojsonPolygons(land10), coast: [...geojsonRings(coast10), ...geojsonPolygons(minor10).map((p) => p[0])] });
 // GSHHG "h" ships polygons only, as a shapefile: the coast is every ring's outline, split at cell
 // edges by cutCells. A coastlines without the entry (before 0.0.4) builds a site without the band,
-// and the scene then stays on 10m cells past z12.
+// and the scene then stays on 10m cells past z10.
 const H_ID = 'gshhg-land-h', H_CELL_DEG = 1; // must match scene.mjs
 if (find(H_ID) && coastlines.shapefilePolygons) {
   const landH = coastlines.shapefilePolygons(await readGeo(H_ID));

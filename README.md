@@ -57,8 +57,8 @@ The pan-frame times at z5 and above sit at two animation frames (33 ms at 60 Hz)
 | 50m land, coast and places (`geo/*.geojson`) | 3,523,998 | every view |
 | Scanned sprites (`packs/scanned/`, default settings; whole pack 3,344,546) | 576,745 | every view, ornaments on or off |
 | Vivid sprites (`packs/vivid/`, default settings; whole pack 28,398) | 21,816 | every view, ornaments on or off |
-| 10m cells around the view (`geo/10m/`) | about 125 KB | z10 to z12 at this spot; whole set is 18,786,827 |
-| GSHHG "h" cells around the view (`geo/h/`, 1° cells) | 15 KB at Genoa, 570 KB at Bergen (four cells each) | past z12; whole set is 19,273 cells, 132 MB; built only when the installed `coastlines` carries `gshhg-land-h` |
+| 10m cells around the view (`geo/10m/`) | about 125 KB | z9 to z10 at this spot; whole set is 18,786,827 |
+| GSHHG "h" cells around the view (`geo/h/`, 1° cells) | 15 KB at Genoa, 570 KB at Bergen (four cells each) | past z10; whole set is 19,273 cells, 132 MB; built only when the installed `coastlines` carries `gshhg-land-h` |
 | Font (`font/IMFeENrm28P.ttf`) | 194,992 | every view |
 
 ## Reading a portolan chart
@@ -70,4 +70,4 @@ The pan-frame times at z5 and above sit at two animation frames (33 ms at 60 Hz)
 
 ## Licence
 
-MIT for the code. Natural Earth is public domain. GSHHG (the "h" shoreline past z12) is by Wessel and Smith, LGPL-3.0-or-later, shipped unchanged through `coastlines` with its copyright and permission notice. The scans are public domain, credited to their holding institutions in [ASSETS.md](ASSETS.md). IM Fell English is under the SIL OFL 1.1, shipped with its licence text.
+MIT for the code. Natural Earth is public domain. GSHHG (the "h" shoreline past z10) is by Wessel and Smith, LGPL-3.0-or-later, shipped unchanged through `coastlines` with its copyright and permission notice. The scans are public domain, credited to their holding institutions in [ASSETS.md](ASSETS.md). IM Fell English is under the SIL OFL 1.1, shipped with its licence text.

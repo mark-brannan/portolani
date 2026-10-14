@@ -49,8 +49,8 @@ const DETAIL = { lon: 8.93, lat: 44.41, scale: 2 }; // Genoa; window clamped to 
 // whose index the site lacks is skipped and the one below it drawn instead. Measured vertex
 // spacing (median, m): 50m 7,650; NE 10m 1,574; GSHHG h 707. Must match scripts/build-preview.mjs.
 const BANDS = [
-  { dir: '10m', zoom: 9, cell: 5, margin: 2 }, // Natural Earth 10m, holds to about z12
-  { dir: 'h', zoom: 12, cell: 1, margin: 0.5 }, // GSHHG 2.3.7 "h" land, holds to about z13
+  { dir: '10m', zoom: 9, cell: 5, margin: 2 }, // Natural Earth 10m, holds to about z12 but has no narrow channels
+  { dir: 'h', zoom: 10, cell: 1, margin: 0.5 }, // GSHHG 2.3.7 "h" land, holds to about z13; draws Seattle's ship canal
 ];
 const ZOOM = { min: 1, max: 13 };
 const URBAN_PX = 56; // screen px a built-up area's long side reaches before it is drawn
