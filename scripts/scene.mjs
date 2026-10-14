@@ -31,8 +31,8 @@ const W = 1600, H = 1000;
 const FRAME = { lonMin: -6, lonMax: 20, latMin: 34, latMax: 46 };
 const MARGIN = 2; // degrees beyond FRAME whose features the scene keeps
 const DETAIL = { lon: 8.93, lat: 44.41, scale: 2 }; // Genoa; window clamped to the scene
-// The world spans the canvas at the far end; 50m data holds to about z9 at the near end.
-const ZOOM = { min: Math.log2(W / 512), max: 9 };
+// Whole world at the far end; 50m data holds to about z9 at the near end.
+const ZOOM = { min: 1, max: 9 };
 
 // Per-run tuning; `density` scales how much ornament is placed (1 = the committed mockup).
 const TUNE = { monsterMax: 4, shipMax: 2, townGap: 48 };
@@ -63,13 +63,15 @@ const RAD = Math.PI / 180;
 const mercY = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360));
 const mercLat = (y) => (2 * Math.atan(Math.exp(y)) - Math.PI / 2) / RAD;
 const wrapLon = (lon) => ((((lon + 180) % 360) + 360) % 360) - 180;
+// Offset from the centre within +-180 as coast-wright's seam guard takes it: +180 stays on the right.
+const fromCentre = (d) => (d > 180 ? d - 360 : d < -180 ? d + 360 : d);
 const kOf = (zoom) => (512 * 2 ** zoom) / (2 * Math.PI); // px per Mercator radian
 
 // Web Mercator centred on the view; longitudes are measured from its centre, so any seam is behind it.
 function makeProjection(view, w = W, h = H) {
   const k = kOf(view.zoom), lonCenter = view.lon, y0 = mercY(view.lat);
   // x(lon, lat) and y(lat, lon), as coast-wright calls them
-  const x = (lon) => w / 2 + wrapLon(lon - lonCenter) * RAD * k;
+  const x = (lon) => w / 2 + fromCentre(lon - lonCenter) * RAD * k;
   const y = (lat) => h / 2 - (mercY(lat) - y0) * k;
   return {
     k, zoom: view.zoom, lonCenter, x, y,
@@ -537,7 +539,8 @@ function latticeOf(scene, data) {
   let rays = lattices.get(scene);
   if (rays) return rays;
   rays = [];
-  const reach = (Math.hypot(W, H) * 1.5 / data.proj.k) * 180 / Math.PI; // Mercator radians at the equator, in degrees
+  // Mercator radians at the equator, in degrees; never past half the world, where a ray would lap itself
+  const reach = Math.min(180, (Math.hypot(W, H) * 1.5 / data.proj.k) * 180 / Math.PI);
   for (const n of [scene.centre, ...scene.nodes]) {
     const [lon, lat] = data.proj.invert(n.x, n.y);
     for (let k = 0; k < RHUMB_RAYS; k++) {
