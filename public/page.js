@@ -26,7 +26,9 @@ const canvas = $('map'), ctx = canvas.getContext('2d');
 
 function viewFromHash() {
   const m = /^#map=(-?[\d.]+)\/(-?[\d.]+)\/(-?[\d.]+)$/.exec(location.hash);
-  return m ? clampView({ zoom: Number(m[1]), lat: Number(m[2]), lon: Number(m[3]) }) : DEFAULT_VIEW;
+  if (!m) return DEFAULT_VIEW;
+  const v = { zoom: Number(m[1]), lat: Number(m[2]), lon: Number(m[3]) };
+  return Object.values(v).every(Number.isFinite) ? clampView(v) : DEFAULT_VIEW; // e.g. #map=1.2.3/40/5
 }
 const writeHash = (v) => history.replaceState(null, '', `#map=${v.zoom.toFixed(2)}/${v.lat.toFixed(3)}/${v.lon.toFixed(3)}`);
 
