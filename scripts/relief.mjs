@@ -9,10 +9,11 @@
 // regions stay mountainous as the view zooms. The distance field is laid on the map's own pixel
 // grid and every seed comes from its cell, so a pan does not reshuffle the land.
 //
-// The styles on offer are drawn together: each range, and each cluster of hills, takes one of the
-// selected styles by its seed, so a view mixes them and the same view mixes them the same way. A
-// range given to CATALAN is not drawn here; it comes back as its spine, for the scene to stand the
-// Catalan Atlas's mountain sprites along.
+// Mountains are the ranges, drawn in the style selected (RELIEF_STYLES; several mix per range by
+// seed). Hills are the clusters between them, which come back as humps for the scene to stand the
+// Catalan Atlas's sprites on (the humps themselves are only what a drag draws meanwhile). A hill sits
+// on the foothill ground of the same noise as the ranges, inland and lower than a range, which
+// stands in for elevation, the data holding none.
 
 import { hatch, pen } from 'coast-wright';
 
@@ -29,11 +30,10 @@ const HILL_ZOOM = 9;
 // From each zoom: the range cell (px), a peak's height (px) and the share of the land that is mountainous.
 const BANDS = [
   { zoom: 0, cell: 260, peak: 30, share: 0.5 },
-  { zoom: 5, cell: 260, peak: 26, share: 0.5 },
+  { zoom: 5, cell: 260, peak: 26, share: 0.5, hillCell: 140, hill: 9 },
   { zoom: HILL_ZOOM, cell: 320, peak: 20, share: 0.5, hillCell: 120, hill: 11 },
 ];
 export const RELIEF_ZOOM = 2; // from here the land is big enough to hold a range
-export const CATALAN = 'catalan'; // the style of the mountain sprites, which the scene draws along a range's spine
 
 // ---------------------------------------------------------------- seeds
 
@@ -171,19 +171,18 @@ function peakOf(x, y, w, h, rnd) {
   return { x, y, w, h, lean: (rnd() - 0.5) * 0.25, jag: [rnd(), rnd(), rnd(), rnd(), rnd(), rnd()] };
 }
 
-// What a view holds: { peaks, humps, ranges }, each peak and hump { x, y, w, h, style, ... } in
-// screen px, its base at (x, y), its `style` one of `view.styles`; `ranges` are the spines
-// ({ key, spine: [[x, y], ...], height, peaks }) of the ranges given to CATALAN, `peaks` what a drag
-// draws in their place until the sprites are stood again. `view` is { proj, land,
-// createCanvas, w, h, styles }: the projection, the land in lon/lat, a canvas maker, the canvas
-// size and the styles drawn (RELIEF_STYLES, and CATALAN; marina when left out).
+// What a view holds: { peaks, humps }, each { x, y, w, h, style, ... } in screen px, its base at
+// (x, y); a peak's `style` is one of `view.styles`, a hump (a hill, only when `view.hills`) is
+// 'marina'. `view` is { proj, land, createCanvas, w, h, styles, hills }: the projection, the land in
+// lon/lat, a canvas maker, the canvas size, the styles the mountains are drawn in (RELIEF_STYLES; none
+// draws no mountain) and whether hills are wanted.
 export function reliefOf(view) {
   const { proj, w, h } = view, band = bandOf(proj.zoom);
-  const styles = view.styles?.length ? view.styles : ['marina'], drawn = styles.filter((s) => s !== CATALAN);
+  const styles = view.styles ?? [];
   const styleOf = (key, of) => of[Math.floor(key * 1e9) % of.length];
-  if (proj.zoom < RELIEF_ZOOM || !view.land.length) return { peaks: [], humps: [], ranges: [] };
+  if (proj.zoom < RELIEF_ZOOM || !view.land.length || !(styles.length || view.hills)) return { peaks: [], humps: [] };
   const depth = depthField(view), P = band.peak, min = P * 0.9;
-  const peaks = [], ranges = [], spines = [];
+  const peaks = [], spines = [];
   const near = (x, y, r) => spines.some((s) => s.some(([sx, sy]) => Math.hypot(sx - x, sy - y) < r));
   for (const c of cellsOf(proj, w, h, band.cell, SEED_PAD, 1)) {
     if (noise(c.lon, c.lat) < 1 - band.share) continue;
@@ -195,7 +194,7 @@ export function reliefOf(view) {
     const kept = spine.filter(([x, y]) => !near(x, y, P * 2.2));
     if (kept.length < 2) continue;
     spines.push(kept);
-    const style = styleOf(c.key, styles), mine = [];
+    const style = styles.length && styleOf(c.key, styles), mine = [];
     // tallest midway, lower toward the ends
     kept.forEach(([x, y], i) => {
       const t = kept.length > 1 ? i / (kept.length - 1) : 0.5, swell = 0.6 + 0.4 * Math.sin(Math.PI * t);
@@ -212,11 +211,10 @@ export function reliefOf(view) {
         mine.push(peakOf(x + (c.rnd() - 0.5) * P * 1.2, y + ph * 0.35, fh * 1.7, fh, c.rnd));
       }
     });
-    if (style === CATALAN) ranges.push({ key: c.key, spine: kept, height: P, peaks: mine.map((p) => ({ ...p, style: 'marina' })) });
-    else peaks.push(...mine.map((p) => ({ ...p, style })));
+    if (style) peaks.push(...mine.map((p) => ({ ...p, style })));
   }
   const humps = [];
-  if (band.hillCell && drawn.length) {
+  if (band.hillCell && view.hills) {
     const H = band.hill;
     for (const c of cellsOf(proj, w, h, band.hillCell, SEED_PAD / 2, 2)) {
       if (noise(c.lon, c.lat) < 0.8 - band.share) continue;
@@ -226,15 +224,15 @@ export function reliefOf(view) {
       const n = [1, 2, 2, 3, 3][Math.floor(c.rnd() * 5)];
       for (let i = 0; i < n; i++) {
         const hh = H * (i === Math.floor(n / 2) ? 1 : 0.75) * (0.85 + 0.3 * c.rnd()), hx = x + (i - (n - 1) / 2) * H * 1.6;
-        if (depth(hx, y) >= H) humps.push({ x: hx, y: y + (c.rnd() - 0.5) * H * 0.3, w: hh * 2.2, h: hh, lean: (c.rnd() - 0.5) * 0.2, style: styleOf(c.key, drawn) });
+        if (depth(hx, y) >= H) humps.push({ x: hx, y: y + (c.rnd() - 0.5) * H * 0.3, w: hh * 2.2, h: hh, lean: (c.rnd() - 0.5) * 0.2, style: 'marina' });
       }
     }
   }
-  return { peaks, humps, ranges };
+  return { peaks, humps };
 }
 
 // The peaks and humps whose box (x0, y0, x1, y1) is not `blocked`: kept clear of names, towns and
-// the other ornaments. The ranges are the scene's to place, sprite by sprite.
+// the other ornaments.
 export const clearOf = (relief, blocked) => {
   const free = (p) => !blocked(p.x - p.w / 2, p.y - p.h, p.x + p.w / 2, p.y);
   return { ...relief, peaks: relief.peaks.filter(free), humps: relief.humps.filter(free) };

@@ -12,7 +12,7 @@ import { islandInfo, ISLAND_KM2 } from './island.mjs';
 import { cityPlan, drawCity, drawHouses, pxRings, insideRings } from './city.mjs';
 import { urbanKey } from './urban.mjs';
 import { RIVERS, LAKES, RIVER_STYLES, LAKE_STYLES, waterOf, shown } from './water.mjs';
-import { RELIEF_STYLES, CATALAN, reliefOf, clearOf, drawRelief } from './relief.mjs';
+import { RELIEF_STYLES, reliefOf, clearOf, drawRelief } from './relief.mjs';
 import { TREES, TREE_STYLES, plantTrees } from './trees.mjs';
 import { BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from './buildings.mjs';
 
@@ -45,7 +45,9 @@ const STYLE = {
   rivers: 'off', // one of RIVER_STYLES, set by createScene
   lakes: 'off', // one of LAKE_STYLES, set by createScene
   relief: [], // the drawn styles of RELIEF_STYLES, mixed per range, set by createScene
-  mountainSprites: false, // the Catalan mountain sprites are selected, set by createScene
+  mountainSprites: false, // the Catalan sprites are selected, and stand on the hills; set by createScene
+  islands: false, // the small islands washed in the three pigments, set by createScene
+  scaleBorder: 'bordered', // one of SCALE_BORDERS, set by createScene
   trees: 'off', // one of TREE_STYLES, set by createScene
   font: 'IM Fell English',
   fonts: ['IM Fell English', 'Georgia', 'serif'], // the stack names are lettered in; the first is loaded
@@ -71,10 +73,11 @@ const URBAN_PX = 56; // screen px a built-up area's long side reaches before it 
 // Land treatments after the period charts: 'gilt' (today's wash), 'green' (Oliva, c.1590), 'ochre'
 // with a dotted shoal line off the coast (Benincasa, 1466) and 'islands' (Beccari, 1403): an ochre
 // coast wash and every island under ISLAND_KM2 filled red, green or gold, each keeping its colour.
-export const LANDS = ['islands', 'gilt', 'green', 'ochre'];
+export const LANDS = ['off', 'islands', 'gilt', 'green', 'ochre'];
+export const SCALE_BORDERS = ['bordered', 'blank', 'transparent'];
 const LAND_WASH = { gilt: STYLE.gilt, green: STYLE.green, ochre: STYLE.ochre, islands: STYLE.ochre };
 const SHOAL_OFFSET = 4, SHOAL_GAP = 6; // px seaward of the coast, and between dots
-let redSeaPolys = null; // the Red Sea to tint, or null
+let tintPolys = null; // the seas to tint, or null
 // Rivers and lakes (water.mjs), from the 50m files, loaded once the first style that draws them is
 // chosen, and past WATER_ZOOM from Natural Earth 10m with its regional supplements, cut into
 // WATER_10M's cells (cutWater), the cells around the view; a site without them keeps the 50m. A
@@ -854,7 +857,7 @@ const CONTINENT_ZOOM_END = 5.5, REGION_ZOOM_END = 7; // continents: zoom < CONTI
 // The continent and region names to letter, each with the box it reserves: measured with the font and
 // spacing they are drawn in, so later names and towns make way. A name off the canvas or meeting an
 // earlier box is dropped. `continents` is 'latin', 'english' or false; `regions` 'latin', 'english' or 'off'.
-function placeWorldNames(data, ctx, boxes, { continents, regions }) {
+function placeWorldNames(data, ctx, boxes, { continents, regions, continentsEnd = CONTINENT_ZOOM_END, regionsEnd = REGION_ZOOM_END }) {
   const z = data.proj.zoom, out = [];
   const lang = regions === 'latin' ? 0 : 1;
   const put = (text, lon, lat, size, spacing, italic) => {
@@ -872,10 +875,10 @@ function placeWorldNames(data, ctx, boxes, { continents, regions }) {
     boxes.push(box);
     out.push({ text, x: box.cx, y: box.cy, size, spacing, italic, r: Math.max(box.hw, box.hh), box });
   };
-  if (continents && z < CONTINENT_ZOOM_END) {
+  if (continents && z < continentsEnd) {
     for (const c of CONTINENTS) { const text = c[continents === 'latin' ? 0 : 1], size = text.length > 12 ? 22 : 30; put(text, c[2], c[3], size, size * 0.6, false); }
   }
-  if (regions !== 'off' && z < REGION_ZOOM_END) {
+  if (regions !== 'off' && z < regionsEnd) {
     for (const r of REGIONS) put(r[lang], r[2], r[3], 22, 1, true);
   }
   return out;
@@ -1055,33 +1058,25 @@ function castSeed(view) {
   return (Math.imul(z + 1, 73856093) ^ Math.imul(Math.floor(view.lon / span), 19349663) ^ Math.imul(Math.floor(view.lat / span), 83492791)) | 0;
 }
 
-// The Catalan mountain sprites (one family so far), stood along the spine of each range relief.mjs
-// gave them: one to three a range, each the widest size its height allows and the land round it holds
-// (half its width and a margin from the sea and the frame's edge), starting one further along the set each time so a range
-// mixes them, set apart along the ridge, only where the box clears `blocked` (names, towns, roses, the
-// cartouche, the scale bar, built-up land) and the sprites already stood; from MOUNTAIN_ZOOM in, where
-// land is big enough to hold a range.
-const MOUNTAIN_ZOOM = 3, MOUNTAIN_MARGIN = 16;
-function placeRangeSprites(ranges, sprites, blocked, field, zoom) {
-  if (!sprites.length || zoom < MOUNTAIN_ZOOM) return [];
-  const bySize = [...sprites].sort((a, b) => b.sizePx - a.sizePx), out = [];
-  for (const r of ranges) {
-    const fit = bySize.filter((sp) => sp.sizePx <= Math.max(bySize.at(-1).sizePx, r.height * 5));
-    let along = 0, due = 0, n = 0;
-    r.spine.forEach(([x, y], i) => {
-      if (i) along += Math.hypot(x - r.spine[i - 1][0], y - r.spine[i - 1][1]);
-      if (n >= 3 || along < due || x <= 0 || x >= W || y <= 0 || y >= H) return;
-      for (let k = 0; k < fit.length; k++) {
-        const sprite = fit[(Math.floor(r.key * 1e9) + n + k) % fit.length], w = sprite.sizePx, h = (w * sprite.img.height) / sprite.img.width;
-        const box = { x0: x - w / 2, y0: y - h / 2, x1: x + w / 2, y1: y + h / 2 };
-        if (Math.min(field.depth(x, y), x, y, W - x, H - y) < w / 2 + MOUNTAIN_MARGIN || blocked(box.x0, box.y0, box.x1, box.y1) || out.some((o) => meets(box, o.box))) continue;
-        out.push({ sprite, x, y, size: w, box });
-        due = along + w * 0.8;
-        n++;
-        break;
-      }
-    });
-  }
+// The Catalan sprites, stood on the hills relief.mjs found: each at most a few of the hump's heights
+// wide, so smaller than a mountain, starting one further along the set each time so a cluster mixes
+// them; only where the box clears `blocked` (names, towns, roses, the cartouche, the scale bar,
+// built-up land) and the sprites already stood, and the land round it holds (half its width and a
+// margin from the sea and the frame's edge).
+const HILL_MARGIN = 16, HILL_SIZE = 4.5;
+function placeHillSprites(humps, sprites, blocked, field) {
+  if (!sprites.length) return [];
+  const out = [];
+  humps.forEach((hump, n) => {
+    const cap = hump.h * HILL_SIZE;
+    for (let k = 0; k < sprites.length; k++) {
+      const sprite = sprites[(n + k) % sprites.length], w = Math.min(sprite.sizePx, cap), h = (w * sprite.img.height) / sprite.img.width, x = hump.x, y = hump.y - h / 2;
+      const box = { x0: x - w / 2, y0: y - h / 2, x1: x + w / 2, y1: y + h / 2 };
+      if (x < w / 2 + HILL_MARGIN || y < h / 2 + HILL_MARGIN || x > W - w / 2 - HILL_MARGIN || y > H - h / 2 - HILL_MARGIN || field.depth(x, y) < w / 2 + HILL_MARGIN || [[-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5], [0.5, 0.5]].some(([dx, dy]) => !field.isLand(x + dx * w, y + dy * h)) || blocked(box.x0, box.y0, box.x1, box.y1) || out.some((o) => meets(box, o.box))) continue;
+      out.push({ sprite, x, y, size: w, box });
+      break;
+    }
+  });
   return out.map(({ box, ...m }) => m);
 }
 
@@ -1197,7 +1192,7 @@ function buildScene(data, sprites, ctx, world = {}) {
   // pool and drawn for those towns alone.
   const boxes = [obb(cartouche.x + cw / 2, cartouche.y + ch / 2, 0, cw / 2, ch / 2)];
   for (const r of roseDraws) boxes.push(obb(r.x, r.y, 0, r.size * 0.42, r.size * 0.42));
-  const worldNames = placeWorldNames(data, ctx, boxes, { continents: world.continents ?? false, regions: world.regions ?? 'off' });
+  const worldNames = placeWorldNames(data, ctx, boxes, { continents: world.continents ?? false, regions: world.regions ?? 'off', continentsEnd: world.continentsEnd, regionsEnd: world.regionsEnd });
   const special = new Map((sprites.towns ?? []).flatMap((s) => (s.only ?? []).map((name) => [name, s])));
   const families = [...(sprites.towns ?? []).filter((s) => !s.only).reduce((m, s) => m.set(`${s.pack}/${s.style}`, [...(m.get(`${s.pack}/${s.style}`) ?? []), s]), new Map()).values()];
   if (sprites.tower ?? !families.length) families.push(null); // null: the towers drawn in code
@@ -1264,18 +1259,17 @@ function buildScene(data, sprites, ctx, world = {}) {
   }
   const lesser = families.length ? placeLesser(data, field, boxes, ctx, towns, names) : [];
   for (const b of boxes.slice(1 + roseDraws.length).filter((b) => !cityBoxes.has(b))) occupied.push({ x: b.cx, y: b.cy, r: Math.max(b.hw, b.hh) * 0.6 });
-  // hills and mountains (relief.mjs), seeded once: each range and cluster of hills takes one of the
-  // selected styles, the Catalan sprites standing along the ranges that took theirs; all clear of
-  // what is placed so far and of the built-up areas washed on the land
+  // hills and mountains (relief.mjs), seeded once: each range takes one of the mountain styles selected
+  // and the Catalan sprites stand on the hills; all clear of what is placed so far and of the built-up
+  // areas washed on the land
   const bar = world.scaleBar ? SCALE_BAR_BOX : null;
-  const reliefStyles = reliefStylesNow();
-  const urban = reliefStyles.length ? indexOf(data).urban.filter((u) => Math.max(u.box.x1 - u.box.x0, u.box.y1 - u.box.y0) * 2 >= URBAN_PX) : [];
+  const urban = reliefWanted() ? indexOf(data).urban.filter((u) => Math.max(u.box.x1 - u.box.x0, u.box.y1 - u.box.y0) * 2 >= URBAN_PX) : [];
   const blocked = (x0, y0, x1, y1) => {
     const b = obb((x0 + x1) / 2, (y0 + y1) / 2, 0, (x1 - x0) / 2, (y1 - y0) / 2);
     return boxes.some((o) => obbOverlap(o, b)) || (bar && obbOverlap(bar, b)) || urban.some((u) => meets({ x0, y0, x1, y1 }, u.box));
   };
-  const relief = reliefStyles.length ? clearOf(reliefFor(data.proj, data.land), blocked) : null;
-  const mountains = relief ? placeRangeSprites(relief.ranges, sprites.mountains ?? [], blocked, field, data.proj.zoom) : [];
+  const relief = reliefWanted() ? clearOf(reliefFor(data.proj, data.land), blocked) : null;
+  const mountains = relief ? placeHillSprites(relief.humps, sprites.mountains ?? [], blocked, field) : [];
 
   // Monsters: farthest-first on the open-water field, >= MONSTER_GAP apart, in the view's cast order
   // (heavier sprites tend to come first).
@@ -1613,8 +1607,8 @@ function paintShoals(g, data, coast) {
 function paintLand(g, data, land, coast, relief) {
   const { x, y, seam } = data.proj;
   const mode = STYLE.landMode;
-  if (redSeaPolys) {
-    trace(g, redSeaPolys, x, y, { ...seam });
+  if (tintPolys) {
+    trace(g, tintPolys, x, y, { ...seam });
     g.save(); g.fillStyle = hexA(STYLE.red, 0.5); g.fill('evenodd');
     // a hair beyond the polygon, which is generalised and stops short of the shore
     g.lineJoin = 'round'; g.lineWidth = 3; g.strokeStyle = hexA(STYLE.red, 0.5); g.stroke(); g.restore();
@@ -1625,12 +1619,12 @@ function paintLand(g, data, land, coast, relief) {
   traceLand(g, data, land);
   g.clip('evenodd');
   const wash = LAND_WASH[mode];
-  for (const [wd, a] of [[STYLE.washWidth * 2, 0.3], [STYLE.washWidth * 1.3, 0.3], [STYLE.washWidth * 0.7, 0.35]]) {
+  for (const [wd, a] of wash ? [[STYLE.washWidth * 2, 0.3], [STYLE.washWidth * 1.3, 0.3], [STYLE.washWidth * 0.7, 0.35]] : []) {
     limn(g, coast, x, y, { color: hexA(wash, a), alpha: 1, width: wd, cap: 'round', oneStroke: true, ...seam });
   }
   if (mode === 'green') limn(g, coast, x, y, { color: STYLE.greenEdge, alpha: 0.8, width: 3.5, cap: 'round', oneStroke: true, ...seam });
   g.restore();
-  if (mode === 'islands') {
+  if (STYLE.islands) {
     const pigments = [STYLE.red, STYLE.green, STYLE.gold];
     for (const [hue, pigment] of pigments.entries()) {
       const isles = land.filter((p) => p.isl.km2 < ISLAND_KM2 && p.isl.hue === hue);
@@ -1659,10 +1653,10 @@ export function keptWater(data) {
   return { rivers: kept(water.rivers), lakes: kept(water.lakes) };
 }
 // Hills and mountains (relief.mjs) for a view's land, and drawn over the water in the chosen style.
-// The styles in play: the drawn ones chosen, and the Catalan sprites when selected. A drag, which has no
-// sprites, draws the ranges given to them as peaks, until the next placement stands the sprites.
-const reliefStylesNow = () => [...STYLE.relief, ...(STYLE.mountainSprites ? [CATALAN] : [])];
-const reliefFor = (proj, land) => reliefOf({ proj, land, createCanvas, w: W, h: H, styles: reliefStylesNow() });
+// Mountains in the style chosen, hills where the Catalan sprites are selected. A drag, which has no
+// sprites, draws the hills as washed humps, until the next placement stands the sprites.
+const reliefWanted = () => STYLE.relief.length > 0 || STYLE.mountainSprites;
+const reliefFor = (proj, land) => reliefOf({ proj, land, createCanvas, w: W, h: H, styles: STYLE.relief, hills: STYLE.mountainSprites });
 function paintRelief(g, data, relief) {
   if (relief) drawRelief(g, { proj: data.proj, palette: { ink: STYLE.ink, land: STYLE.land } }, relief);
 }
@@ -1676,8 +1670,8 @@ function drawGround(g, world, view, bg) {
   const land = world.land.filter((l) => meetsLL(f, l.box)).map((l) => l.poly);
   const coast = world.runs.filter((c) => meetsLL(f, c.box)).map((c) => c.run);
   g.drawImage(bg, 0, 0);
-  const relief = reliefStylesNow().length && reliefFor(proj, world.land.filter((l) => meetsLL(frameOf(proj, MARGIN), l.box)).map((l) => l.poly));
-  paintLand(g, data, land, coast, relief && { ...relief, peaks: [...relief.peaks, ...relief.ranges.flatMap((r) => r.peaks)] });
+  const relief = reliefWanted() && reliefFor(proj, world.land.filter((l) => meetsLL(frameOf(proj, MARGIN), l.box)).map((l) => l.poly));
+  paintLand(g, data, land, coast, relief);
   paintCoast(g, data, coast);
 }
 
@@ -1809,9 +1803,12 @@ function drawScaleBar(g, data, bg, view, w, h, style = 'genoese', sprite = null)
   const pad = 14, px = x0 - pad - 20, py = top - 22 - 5 - pad;
   const pw = n * seg + 24 + g.measureText('nautical miles').width + 2 * pad + 20, ph = barH + 22 + 5 + 2 * pad;
   const sx = Math.max(0, view.x + px / view.scale), sy = Math.max(0, view.y + py / view.scale);
-  g.drawImage(bg, sx, sy, Math.min(W - sx, pw / view.scale), Math.min(H - sy, ph / view.scale), px, py, pw, ph);
-  g.strokeStyle = hexA(STYLE.windRed, 0.7); g.lineWidth = 1; g.strokeRect(px + 0.5, py + 0.5, pw - 1, ph - 1);
-  g.strokeRect(px + 3.5, py + 3.5, pw - 7, ph - 7);
+  const border = STYLE.scaleBorder; // blank: the parchment alone; transparent: the map shows through; bordered: parchment and a double rule
+  if (border !== 'transparent') g.drawImage(bg, sx, sy, Math.min(W - sx, pw / view.scale), Math.min(H - sy, ph / view.scale), px, py, pw, ph);
+  if (border === 'bordered') {
+    g.strokeStyle = hexA(STYLE.windRed, 0.7); g.lineWidth = 1; g.strokeRect(px + 0.5, py + 0.5, pw - 1, ph - 1);
+    g.strokeRect(px + 3.5, py + 3.5, pw - 7, ph - 7);
+  }
   SCALE_STYLES[style](g, x0, y0, n, seg, sprite);
   g.fillStyle = STYLE.ink; g.textAlign = 'center'; g.textBaseline = 'bottom';
   for (let i = 0; i <= n; i += every) g.fillText(String(+(i * step).toFixed(2)), x0 + i * seg, top - 5);
@@ -1836,7 +1833,7 @@ function drawScene(g, scene, data, bg, view) {
   bgPart(r.x0, r.y0, r.x1, r.y1);
 
   // 2. land
-  paintLand(g, data, land, coast, scene.relief);
+  paintLand(g, data, land, coast, scene.relief && { ...scene.relief, humps: [] });
 
   // 3. rhumb lattice: 16 nodes on a circle plus the centre, 32 rhumb lines each, in three inks
   const rays = latticeOf(scene, data);
@@ -1984,7 +1981,7 @@ function drawScene(g, scene, data, bg, view) {
 // unshuffled monster and ship order, so old links and callers draw as they did.
 // `kinds` (the ornament kinds drawn, of KINDS), `names` and `rhumb` (booleans), `scale` (a SCALE_NAMES entry, or 'off'),
 // `continents` (boolean) and `regions` ('off', 'latin' or 'english'); the continents follow the regions' language, Latin when those are off.
-// `land`: a LANDS entry, the land treatment ('islands' by default); `redSea` (boolean) tints the Red Sea red.
+// `land`: a LANDS entry, the land treatment ('islands' by default); `seaTint` (boolean) tints the Red Sea, the Persian Gulf and the Black and Caspian Seas red.
 // `rivers` and `lakes`: a RIVER_STYLES and a LAKE_STYLES entry (water.mjs), each 'off' by default; `trees` a TREE_STYLES entry (trees.mjs), 'off' too.
 // `relief`: a RELIEF_STYLES entry or a list of them (relief.mjs), none by default; with several each range takes one, by its seed.
 // The mountain sprites in the selection join them: one more style, stood along the ranges that take it.
@@ -1994,7 +1991,7 @@ function drawScene(g, scene, data, bg, view) {
 // placed when the lattice needs it (a rose, the cartouche's corner), only not drawn.
 export async function createScene(environment, opts = {}) {
   env = environment;
-  const { ink = '#3b2a1a', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', title = 'PORTOLANI', autoTitle = true, land: landMode = 'islands', redSea = false, rivers = 'off', lakes = 'off', relief = [], trees = 'off' } = opts;
+  const { ink = '#3b2a1a', continentsZoom, regionsZoom, scaleBorder = 'bordered', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', title = 'PORTOLANI', autoTitle = true, land: landMode = 'islands', islands, seaTint = false, rivers = 'off', lakes = 'off', relief = [], trees = 'off' } = opts;
   const legacy = ['rendering', 'rose', 'monster', 'town'].some((k) => opts[k] !== undefined);
   const townBy = townSize ?? (legacy ? 'rank' : 'area');
   const show = { kinds: new Set(opts.kinds ?? DEFAULT_KINDS), names, rhumb: rhumbOn, scale };
@@ -2002,6 +1999,8 @@ export async function createScene(environment, opts = {}) {
   STYLE.ink = ink;
   STYLE.parchment = tone;
   STYLE.landMode = LANDS.includes(landMode) ? landMode : 'islands';
+  STYLE.islands = islands ?? STYLE.landMode === 'islands'; // the islands are their own choice; left out, 'islands' as the land treatment still means them
+  STYLE.scaleBorder = SCALE_BORDERS.includes(scaleBorder) ? scaleBorder : 'bordered';
   STYLE.rivers = RIVER_STYLES.includes(rivers) ? rivers : 'off';
   STYLE.lakes = LAKE_STYLES.includes(lakes) ? lakes : 'off';
   STYLE.relief = [relief].flat().filter((r) => r !== 'off' && RELIEF_STYLES.includes(r));
@@ -2032,7 +2031,7 @@ export async function createScene(environment, opts = {}) {
   const [, coarse, chosen] = await Promise.all([env.loadFont(STYLE.font), loadWorld(), sprites]);
   const { scaleSprite, ...placed } = chosen;
   STYLE.mountainSprites = placed.mountains.length > 0;
-  redSeaPolys = redSea ? geojsonPolygons(await env.readJSON('geo/red-sea-50m.json')) : null;
+  tintPolys = seaTint ? geojsonPolygons(await env.readJSON('geo/seas-50m.json')) : null;
   if (STYLE.rivers !== 'off' || STYLE.lakes !== 'off') water = (view.zoom > WATER_ZOOM && await loadWater10m(view)) || await loadWater();
   if (STYLE.lakes !== 'off') water = withLakes(water, await loadLakes(view));
   const world = view.zoom > DETAIL_ZOOM ? await loadDetail(coarse, view) : coarse;
@@ -2040,12 +2039,15 @@ export async function createScene(environment, opts = {}) {
 
   const data = viewData(world, view);
   const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, title, autoTitle,
+    continentsEnd: zoomEnd(continentsZoom, CONTINENT_ZOOM_END), regionsEnd: zoomEnd(regionsZoom, REGION_ZOOM_END),
     scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM, townSize: townBy, seed: legacy ? null : castSeed(view) }), show, scaleSprite };
   data.trees = planted = TREES[STYLE.trees] ? plantTrees({ proj: data.proj, isLand: scene.field.isLand, scene, lakes: STYLE.lakes !== 'off' && water ? water.lakes : [], w: W, h: H }) : [];
   if (!parchments.has(tone)) parchments.set(tone, parchment(1539));
   const bg = parchments.get(tone);
   return { scene, data, bg, proj: data.proj, world, coarse, view, timing: { load: tLoad - t0, place: performance.now() - tLoad } };
 }
+// A zoom slider's value as the zoom a name stops at: unset keeps `dflt`, 0 or less is off, the top is always, N draws at zoom N and out
+const zoomEnd = (n, dflt) => (n == null ? dflt : n <= 0 ? -Infinity : n >= ZOOM.max ? Infinity : n + 0.5);
 const parchments = new Map(); // by tone; the same seed paints the same sheet
 
 export const RENDERINGS = ['vivid', 'scanned', 'plain'];
@@ -2056,4 +2058,5 @@ export const PROJECTION_NAMES = Object.keys(PROJECTIONS);
 export const viewProjection = (view) => makeProjection(clampView(view)); // for tests
 export const TOWN_SIZES = ['area', 'population', 'rank'];
 export { RIVER_STYLES, LAKE_STYLES, TREE_STYLES, RELIEF_STYLES };
+export const MAX_ZOOM = ZOOM.max;
 export { towerGlyph, SCALE_NAMES, readManifests, listStyles, listSprites, defaultSprites, selectSprites, chooseSprites, drawScene, drawGround, covers, panView, zoomView, clampView, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };

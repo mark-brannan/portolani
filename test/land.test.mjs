@@ -41,7 +41,7 @@ test('an island keeps its colour from cell to cell, whatever piece of it a cell 
 });
 
 test('the Red Sea tint reaches the Gulf of Suez and the Gulf of Aqaba', () => {
-  const fixture = JSON.parse(readFileSync(join(ROOT, 'test', 'fixtures', 'red-sea-50m.json'), 'utf8'));
+  const fixture = JSON.parse(readFileSync(join(ROOT, 'test', 'fixtures', 'seas-50m.json'), 'utf8'));
   const sea = geojsonPolygons(fixture);
   for (const [lon, lat] of [[38, 20], [32.6, 29.7], [34.95, 29.2]]) assert.ok(sea.some((p) => inside(p[0], lon, lat)), `${lon}, ${lat}`);
 });

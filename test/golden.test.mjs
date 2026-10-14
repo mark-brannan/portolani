@@ -42,7 +42,7 @@ const names = () => made ??= joinNames(read(join(ROOT, 'test', 'fixtures', 'sea-
   coastNames(read(join(GEO, 'ne-admin-0-countries-50m.geojson')), read(join(GEO, 'ne-coastline-50m.geojson'))));
 const env = {
   createCanvas,
-  readJSON: async (p) => (p === 'geo/names-50m.json' ? names() : p === 'geo/red-sea-50m.json' ? read(join(ROOT, 'test', 'fixtures', 'red-sea-50m.json')) : read(resolve(p))),
+  readJSON: async (p) => (p === 'geo/names-50m.json' ? names() : p === 'geo/seas-50m.json' ? read(join(ROOT, 'test', 'fixtures', 'seas-50m.json')) : read(resolve(p))),
   loadImage: (p) => loadImage(resolve(p)),
   loadFont: async (family) => { GlobalFonts.registerFromPath(join(ROOT, 'test', 'fixtures', 'IMFeENrm28P.ttf'), family); },
 };
@@ -169,13 +169,12 @@ test('rivers and lakes: every style draws, and off draws none', async () => {
   await renderView(danube, 'off', { rivers: 'aguiar', lakes: 'marina' }); // the two combine
 });
 
-// The goldens hold the drawn styles off (the Catalan mountain sprites are in the default selection, so the
-// ranges are seeded for them); over the Alps every drawn style draws, and a range given to them is not
-// also drawn as peaks.
+// The goldens hold the drawn styles off (the Catalan sprites are in the default selection, so the hills
+// are seeded for them); over the Alps every drawn style draws, and the sprites stand on the hills, not the ranges.
 test('hills and mountains: every drawn style draws, the styles mix per range, and none draws no peak', async () => {
   const alps = { lon: 9, lat: 46.5, zoom: 7 };
   const off = await renderView(alps, 'off', { relief: [] });
-  assert.ok(!differs(await renderView(alps), off), 'drawn relief by default');
+  assert.ok(!differs(await renderView(alps), off), 'no mountain is drawn by default in the scene');
   assert.deepEqual(RELIEF_STYLES, ['off', 'marina', 'engraved']);
   for (const relief of RELIEF_STYLES.slice(1)) {
     const { scene } = await createScene(env, { view: alps, scale: 'off', relief });
@@ -187,7 +186,7 @@ test('hills and mountains: every drawn style draws, the styles mix per range, an
   assert.deepEqual([...new Set(mixed.relief.peaks.map((p) => p.style))].sort(), ['engraved', 'marina'], 'one view, both styles');
   const sprites = (await createScene(env, { view: alps, scale: 'off', relief: [] })).scene;
   assert.equal(sprites.relief.peaks.length, 0, 'no drawn style: no peak');
-  assert.ok(sprites.relief.ranges.length > 0 && sprites.mountains.length > 0, 'the sprites take every range');
+  assert.ok(sprites.relief.humps.length > 0 && sprites.mountains.length > 0, 'the sprites stand on the hills');
   assert.equal((await createScene(env, { view: alps, scale: 'off', relief: [], kinds: ['rose', 'cartouche'] })).scene.relief, null, 'nothing selected: nothing seeded');
 });
 

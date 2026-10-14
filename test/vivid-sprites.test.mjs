@@ -143,15 +143,16 @@ test('Venice draws its halo of rays and Mexico City its lake; no other town draw
   await of(LIGURIA, 'Venice');
 });
 
-test('mountains: on by default, off when the kind is left out; stood along relief ranges, inland, clear of names', async () => {
+test('mountains: on by default, off when the kind is left out; stood on the hills, inland, smaller than a mountain, clear of names', async () => {
   assert.ok(DEFAULT_KINDS.includes('mountain'));
   assert.equal((await createScene(env, { view: LIGURIA, kinds: KINDS.filter((k) => k !== 'mountain') })).scene.mountains.length, 0);
   assert.equal((await createScene(env, { view: { lon: 10, lat: 30, zoom: 2 }, kinds: KINDS })).scene.mountains.length, 0, 'mountains at z2');
   // zoom 4 with the regions lettered: a range placed without regard to names lands on Budapest, Kyiv and Munich here
-  const { scene, data } = await createScene(env, { view: { ...LIGURIA, zoom: 4 }, kinds: KINDS, regions: 'latin' });
+  const { scene, data } = await createScene(env, { view: { ...LIGURIA, zoom: 5 }, kinds: KINDS, regions: 'latin' });
   const ms = scene.mountains;
   assert.ok(ms.length > 0, 'no mountains placed');
-  assert.ok(ms.length <= 3 * scene.relief.ranges.length, `${ms.length} mountains on ${scene.relief.ranges.length} ranges`);
+  assert.ok(ms.length <= scene.relief.humps.length, `${ms.length} hill sprites on ${scene.relief.humps.length} humps`);
+  assert.ok(ms.every((m) => m.size <= 4.5 * 11), 'a hill sprite stays small');
   for (const m of ms) {
     const h = (m.size * m.sprite.img.height) / m.sprite.img.width;
     for (const [dx, dy] of [[-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5], [0.5, 0.5], [0, 0]]) {
@@ -162,11 +163,10 @@ test('mountains: on by default, off when the kind is left out; stood along relie
     for (const o of ms) if (o !== m) assert.ok(Math.abs(o.x - m.x) >= (o.size + m.size) / 2 || Math.abs(o.y - m.y) >= Math.max(h, (o.size * o.sprite.img.height) / o.sprite.img.width) / 2, 'sprites overlap');
     assert.ok(m.x > 0 && m.x < W && m.y > 0 && m.y < H);
   }
-  assert.ok(data.proj.zoom >= 3);
-  // the same view, with the drawn styles chosen too: ranges are shared out among them, so fewer sprites
-  const both = await createScene(env, { view: { ...LIGURIA, zoom: 4 }, kinds: KINDS, regions: 'latin', relief: ['marina', 'engraved'] });
-  assert.ok(both.scene.relief.peaks.length > 0 && both.scene.relief.ranges.length > 0, 'a range stays for the sprites');
-  assert.ok(both.scene.mountains.length <= ms.length);
+  assert.ok(data.proj.zoom >= 5);
+  // the same view, with a mountain style chosen too: the ranges draw, the hills keep their sprites
+  const both = await createScene(env, { view: { ...LIGURIA, zoom: 5 }, kinds: KINDS, regions: 'latin', relief: ['marina'] });
+  assert.ok(both.scene.relief.peaks.length > 0, 'a range is drawn');
 });
 
 test('town families mix, the plain tower among the smallest towns only', async () => {

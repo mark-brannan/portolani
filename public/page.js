@@ -2,12 +2,13 @@
 // Drag to pan, wheel or pinch to zoom; while the map moves only land and coast are drawn, and the
 // ornaments are placed again when it stops. The settings live in a drawer behind the rose button, so
 // the map has the window. The view and the style are kept in the URL hash, e.g.
-// #map=zoom/lat/lon&projection=miller&sprites=s:serpent-a,v:kraken,v:rose-aguiar,p:tower&townsize=rank&names=0&rhumb=0&scale=chevron&continents=1&regions=latin&land=green&rivers=aguiar&lakes=marina&relief=marina,engraved&trees=ink&redsea=1&autotitle=0&title=Mare+Nostrum&ink=5a1a1a&parchment=eee&density=1.5;
-// a setting left at its default is left out, `sprites` too (keys with the pack shortened, v: s: p:); `relief` lists the drawn
-// styles of hills and mountains (the Catalan sprites are in `sprites`), or is `off`.
+// #map=zoom/lat/lon&projection=miller&sprites=s:serpent-a,v:kraken,v:rose-aguiar,p:tower&townsize=rank&names=0&rhumb=0&scale=chevron&scaleborder=blank&continents=5&regions=latin&regionszoom=7&land=green&islands=1&rivers=aguiar&lakes=marina&mountains=ink&trees=ink&seas=1&autotitle=0&title=Mare+Nostrum&ink=5a1a1a&parchment=eee&density=1.5;
+// a setting left at its default is left out, `sprites` too (keys with the pack shortened, v: s: p:); `mountains` is `ink`
+// or `off` (colour is the default); the hills are the Catalan sprites in `sprites`. `continents` and `regionszoom` are the zoom
+// they are drawn down from (0 off, the top always).
 // Older links naming a `rendering` (or `pack`), `rose`, `monster`, `town` and `kinds` open as the
 // selection those chose, and are written back in the new form.
-import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, panView, zoomView, clampView, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, RELIEF_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, W, H } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, panView, zoomView, clampView, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, W, H } from './scene.mjs';
 
 const memo = new Map();
 // a failed load is forgotten, so the next stop tries it again
@@ -34,7 +35,7 @@ const env = {
 const $ = (id) => document.getElementById(id);
 const canvas = $('map'), ctx = canvas.getContext('2d');
 
-const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continents: true, regions: 'latin', title: 'PORTOLANI', autoTitle: true, land: 'ochre', rivers: 'plain', lakes: 'marina', relief: ['marina', 'engraved'], trees: 'marina', redSea: false, townSize: TOWN_SIZES[0] };
+const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: 5, regions: 'latin', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0] };
 
 // ---------------------------------------------------------------- the sprites on offer
 
@@ -64,6 +65,7 @@ function viewFromHash() {
   const at = v && Object.values(v).every(Number.isFinite) ? v : DEFAULT_VIEW; // e.g. #map=1.2.3/40/5
   return clampView({ ...at, projection: q.get('projection') });
 }
+const zoomOf = (v, dflt) => (v === '1' ? dflt : Number.isFinite(Number(v)) ? Math.max(0, Math.min(MAX_ZOOM, Math.round(Number(v)))) : dflt); // '1' is an older link's checked box
 const hex = (v, fallback) => (/^[0-9a-f]{3}$|^[0-9a-f]{6}$/i.test(v ?? '') ? `#${v.length === 3 ? [...v].map((c) => c + c).join('') : v}`.toLowerCase() : fallback);
 function styleFromHash() {
   const q = hashParams(), density = Number(q.get('density') ?? DEFAULTS.density);
@@ -73,17 +75,23 @@ function styleFromHash() {
     density: density >= 0 && density <= 2 ? density : DEFAULTS.density,
     names: q.get('names') !== '0',
     rhumb: q.get('rhumb') !== '0',
-    continents: q.has('continents') ? q.get('continents') === '1' : DEFAULTS.continents,
-    regions: REGION_LANGS.includes(q.get('regions')) ? q.get('regions') : DEFAULTS.regions,
+    // older links: continents=1 / 0, and regions=off
+    continentsZoom: q.has('continents') ? zoomOf(q.get('continents'), DEFAULTS.continentsZoom) : DEFAULTS.continentsZoom,
+    regions: ['latin', 'english'].includes(q.get('regions')) ? q.get('regions') : DEFAULTS.regions,
+    regionsZoom: q.get('regions') === 'off' ? 0 : q.has('regionszoom') ? zoomOf(q.get('regionszoom'), DEFAULTS.regionsZoom) : DEFAULTS.regionsZoom,
     title: q.get('title') ?? DEFAULTS.title,
     // a link from before automatic was the default, with a title and no autotitle, keeps its title
     autoTitle: q.has('autotitle') ? q.get('autotitle') === '1' : !q.has('title') && DEFAULTS.autoTitle,
-    land: LANDS.includes(q.get('land')) ? q.get('land') : DEFAULTS.land,
+    land: LANDS.includes(q.get('land')) && q.get('land') !== 'islands' ? q.get('land') : DEFAULTS.land,
+    islands: q.has('islands') ? q.get('islands') === '1' : q.get('land') === 'islands', // older: land=islands was the coloured islands
     rivers: RIVER_STYLES.includes(q.get('rivers')) ? q.get('rivers') : DEFAULTS.rivers,
     lakes: LAKE_STYLES.includes(q.get('lakes')) ? q.get('lakes') : DEFAULTS.lakes,
-    relief: q.has('relief') ? q.get('relief').split(',').filter((r) => r !== 'off' && RELIEF_STYLES.includes(r)) : DEFAULTS.relief,
+    // older links named the drawn styles in `relief`: colour wins where it is listed
+    mountains: ['off', 'ink'].includes(q.get('mountains')) ? q.get('mountains')
+      : q.has('relief') ? (q.get('relief').split(',').includes('marina') ? 'colour' : q.get('relief').includes('engraved') ? 'ink' : 'off') : DEFAULTS.mountains,
     trees: TREE_STYLES.includes(q.get('trees')) ? q.get('trees') : DEFAULTS.trees,
-    redSea: q.get('redsea') === '1',
+    seaTint: q.get('seas') === '1' || q.get('redsea') === '1',
+    scaleBorder: SCALE_BORDERS.includes(q.get('scaleborder')) ? q.get('scaleborder') : DEFAULTS.scaleBorder,
     scale: q.get('scale') === 'off' || SCALE_NAMES.includes(q.get('scale')) ? q.get('scale') : DEFAULTS.scale,
     townSize: TOWN_SIZES.includes(q.get('townsize')) ? q.get('townsize') : DEFAULTS.townSize,
   };
@@ -109,17 +117,20 @@ function writeHash() {
   if (st.townSize !== DEFAULTS.townSize) q.set('townsize', st.townSize);
   if (!st.names) q.set('names', '0');
   if (!st.rhumb) q.set('rhumb', '0');
-  if (st.continents !== DEFAULTS.continents) q.set('continents', st.continents ? '1' : '0');
+  if (st.continentsZoom !== DEFAULTS.continentsZoom) q.set('continents', st.continentsZoom);
   if (st.regions !== DEFAULTS.regions) q.set('regions', st.regions);
+  if (st.regionsZoom !== DEFAULTS.regionsZoom) q.set('regionszoom', st.regionsZoom);
   // a title without autotitle reads as custom (styleFromHash), so a typed title carries the mode with it
   if (st.autoTitle !== DEFAULTS.autoTitle || st.title !== DEFAULTS.title) q.set('autotitle', st.autoTitle ? '1' : '0');
   if (st.title !== DEFAULTS.title) q.set('title', st.title);
   if (st.land !== DEFAULTS.land) q.set('land', st.land);
+  if (st.islands !== DEFAULTS.islands) q.set('islands', st.islands ? '1' : '0');
   if (st.rivers !== DEFAULTS.rivers) q.set('rivers', st.rivers);
   if (st.lakes !== DEFAULTS.lakes) q.set('lakes', st.lakes);
-  if (st.relief.join() !== DEFAULTS.relief.join()) q.set('relief', st.relief.join() || 'off');
+  if (st.mountains !== DEFAULTS.mountains) q.set('mountains', st.mountains);
   if (st.trees !== DEFAULTS.trees) q.set('trees', st.trees);
-  if (st.redSea) q.set('redsea', '1');
+  if (st.seaTint) q.set('seas', '1');
+  if (st.scaleBorder !== DEFAULTS.scaleBorder) q.set('scaleborder', st.scaleBorder);
   if (st.scale !== DEFAULTS.scale) q.set('scale', st.scale);
   if (st.density !== DEFAULTS.density) q.set('density', st.density);
   if (st.ink !== DEFAULTS.ink) q.set('ink', st.ink.slice(1));
@@ -165,37 +176,9 @@ function thumb(s, label) {
   return b;
 }
 
-// Hills and mountains are one feature in three styles, each a checkbox: the two drawn in code here, and the
-// Catalan sprites, which join below as a family. Every range takes one of the styles selected, by its seed.
-const RELIEF_LOOKS = {
-  marina: ['Carta Marina · drawn in code', '<svg viewBox="0 0 64 44"><path d="M4 38 17 12 24 22 36 5 60 38Z" fill="#d2965a" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M36 5 47 38 60 38ZM17 12 25 38 31 38 24 22Z" fill="rgba(150,70,32,.7)"/></svg>'],
-  engraved: ['Engraved · ink only', '<svg viewBox="0 0 64 44"><path d="M4 38 17 12 24 22 36 5 60 38Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M36 5 47 38M39 12 52 38M42 20 56 38M17 12 25 38M20 20 28 38" stroke="currentColor" stroke-width=".8"/></svg>'],
-};
-const reliefBoxes = new Map();
-for (const name of RELIEF_STYLES.slice(1)) {
-  const [label, glyph] = RELIEF_LOOKS[name], row = document.createElement('div'), head = document.createElement('label'), box = document.createElement('input'), thumbs = document.createElement('div');
-  row.className = 'family'; head.className = 'fam'; thumbs.className = 'thumbs';
-  box.type = 'checkbox';
-  head.append(box, label);
-  const b = Object.assign(document.createElement('button'), { type: 'button', className: 'thumb', title: name, innerHTML: glyph });
-  b.dataset.relief = name;
-  b.setAttribute('aria-label', label);
-  thumbs.append(b);
-  row.append(head, thumbs);
-  $('pick-relief').append(row);
-  reliefBoxes.set(name, { box, b });
-  box.addEventListener('change', () => toggleRelief(name));
-}
-const toggleRelief = (name) => {
-  const on = new Set(style.relief);
-  on.has(name) ? on.delete(name) : on.add(name);
-  style = { ...style, relief: RELIEF_STYLES.slice(1).filter((r) => on.has(r)) };
-  changed();
-};
-
 // Each family: a checkbox for the whole family (indeterminate when part of it is on) over its sprites, each its own toggle.
 const familyBoxes = [];
-for (const kind of ['monster', 'ship', 'rose', 'town', 'mountain']) { // mountain last: the Catalan family follows the drawn styles
+for (const kind of ['monster', 'ship', 'rose', 'town', 'mountain']) { // the mountain kind is the Catalan sprites, which stand on the hills
   for (const fam of familiesOf(kind)) {
     const row = document.createElement('div'), head = document.createElement('label'), box = document.createElement('input'), count = document.createElement('span'), thumbs = document.createElement('div');
     row.className = 'family'; head.className = 'fam'; count.className = 'count'; thumbs.className = 'thumbs';
@@ -216,7 +199,6 @@ const CARTOUCHES = SPRITES.filter((s) => s.kind === 'cartouche').map((s) => s.ke
 $('drawer').addEventListener('click', (e) => {
   const b = e.target.closest('.thumb');
   if (!b) return;
-  if (b.dataset.relief) return toggleRelief(b.dataset.relief);
   const key = b.dataset.key;
   if (b === none || CARTOUCHES.includes(key)) { for (const k of CARTOUCHES) selection.delete(k); if (key) selection.add(key); }
   else if (selection.has(key)) selection.delete(key); else selection.add(key);
@@ -227,15 +209,64 @@ $('drawer').addEventListener('click', (e) => {
 
 // One of a few, as chips rather than a dropdown: each `.chips` element reads and writes its choice as `.value`
 // and fires `input` when one is chosen, as the select it replaces did.
+// Each option may carry a sample of what it does: a colour (a dot) or an inline picture (an SVG string).
+const svg = (body, wide) => `<svg viewBox="0 0 28 18"${wide ? ' class="wide"' : ''} aria-hidden="true">${body}</svg>`;
+const stroke = (c, w = 1.5) => `fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"`;
+const lineOf = (c, w = 3) => svg(`<path d="M2 9h24" ${stroke(c, w)}/>`);
+const GRID = (rows) => rows.map((y) => `<path d="M2 ${y}h24" ${stroke('currentColor', 0.6)}/>`).join('') + [8, 14, 20].map((x) => `<path d="M${x} 2v14" ${stroke('currentColor', 0.6)}/>`).join('');
+const ROUND = (extra = '') => `<circle cx="14" cy="9" r="7.5" ${stroke('currentColor', 1)}/><path d="M14 1.5v15M6.5 9h15${extra}" ${stroke('currentColor', 0.6)}/>`;
+const PROJECTION_GLYPHS = {
+  mercator: svg(`<rect x="2" y="2" width="24" height="14" ${stroke('currentColor', 1)}/>${GRID([4, 7, 11, 14])}`),
+  'plate-carree': svg(`<rect x="2" y="2" width="24" height="14" ${stroke('currentColor', 1)}/>${GRID([6, 9, 12])}`),
+  miller: svg(`<rect x="2" y="2" width="24" height="14" ${stroke('currentColor', 1)}/>${GRID([5, 9, 13])}`),
+  'equal-area': svg(`<rect x="2" y="4" width="24" height="10" ${stroke('currentColor', 1)}/>${GRID([7, 9, 11]).replaceAll('M8 2v14', 'M8 4v10').replaceAll('M14 2v14', 'M14 4v10').replaceAll('M20 2v14', 'M20 4v10')}`),
+  orthographic: svg(ROUND('') + `<path d="M8 3.5Q5 9 8 14.5M20 3.5Q23 9 20 14.5" ${stroke('currentColor', 0.6)}/>`),
+  'azimuthal-equidistant': svg(ROUND('') + `<circle cx="14" cy="9" r="3.7" ${stroke('currentColor', 0.6)}/>`),
+  stereographic: svg(ROUND('') + `<circle cx="14" cy="9" r="2.5" ${stroke('currentColor', 0.6)}/><circle cx="14" cy="9" r="5.2" ${stroke('currentColor', 0.6)}/>`),
+};
+const MOUNTAIN_GLYPHS = {
+  off: svg(`<path d="M3 15h22" ${stroke('currentColor', 0.8)}/>`),
+  ink: svg(`<path d="M3 15 10 4l3 5 4-7 8 13Z" ${stroke('currentColor', 1)}/><path d="M17 2l-3 13M19 6l-2 9M10 4 8 15M12 9l-2 6" ${stroke('currentColor', 0.6)}/>`),
+  colour: svg('<path d="M3 15 10 4l3 5 4-7 8 13Z" fill="#d2965a" stroke="currentColor" stroke-width="1" stroke-linejoin="round"/><path d="M17 2l3 13h5ZM10 4l2 11h-3Z" fill="rgba(150,70,32,.7)"/>'),
+};
+const HILL_GLYPH = svg('<path d="M3 15c3-9 8-9 11 0M12 15c3-7 7-7 10 0" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"/><path d="M6 11l1 2M9 11l1 2M16 11l1 2M19 11l1 2" stroke="currentColor" stroke-width=".6"/>');
+const WIGGLE = (c) => svg(`<path d="M2 9q3-6 6 0t6 0 6 0 6 0" ${stroke(c, 1.2)}/>`);
+const RIVER_GLYPHS = { aguiar: WIGGLE('#3b2a1a'), marina: svg(`<path d="M2 7h24M2 11h24" ${stroke('#3b2a1a', 1)}/>`), plain: lineOf('#4a7fa0', 2) };
+const LAKE_GLYPHS = {
+  aguiar: svg('<path d="M14 3l5 6-5 6-5-6Z" fill="#a8432e" stroke="#3b2a1a" stroke-width=".8"/>'),
+  marina: svg(`<ellipse cx="14" cy="9" rx="9" ry="5" ${stroke('#3b2a1a', 1)}/><path d="M7 7l5 4M10 5l7 6M15 5l5 4" ${stroke('#3b2a1a', 0.6)}/>`),
+  plain: svg('<ellipse cx="14" cy="9" rx="9" ry="5" fill="#8fb4c8" stroke="#4a7fa0" stroke-width="1"/>'),
+};
+const ISLANDS_GLYPH = svg('<circle cx="6" cy="9" r="3.5" fill="#a8432e"/><circle cx="14" cy="6" r="3" fill="#6b8a4a"/><circle cx="21" cy="11" r="3.5" fill="#c9a13b"/>');
+const SEAS_GLYPH = svg('<rect x="2" y="3" width="24" height="12" rx="3" fill="#a8432e" fill-opacity=".5" stroke="#a8432e" stroke-width="1"/>');
+const SCALE_GLYPHS = {
+  genoese: svg(`<path d="M2 6h24M2 12h24" ${stroke('#8c2f1e', 1)}/><path d="M2 5v8M8 5v8M14 5v8M20 5v8M26 5v8" ${stroke('#8c2f1e', 1)}/>`),
+  chequer: svg('<rect x="2" y="5" width="6" height="4" fill="#8c2f1e"/><rect x="14" y="5" width="6" height="4" fill="#8c2f1e"/><rect x="8" y="9" width="6" height="4" fill="#4f6b3a"/><rect x="20" y="9" width="6" height="4" fill="#4f6b3a"/>'),
+  chevron: svg(`<path d="M2 9l3-4 3 8 3-8 3 8 3-8 3 8 3-8 3 4" ${stroke('#8c2f1e', 1)}/>`),
+  ribbon: svg(`<rect x="2" y="5" width="24" height="8" fill="#e9d8b4" stroke="#8c2f1e" stroke-width="1.2"/><path d="M8 5v8M14 5v8M20 5v8" ${stroke('#8c2f1e', 0.8)}/>`),
+  beads: svg(`<path d="M2 5h24M2 13h24" ${stroke('#8c2f1e', 0.8)}/><circle cx="6" cy="9" r="2.4" ${stroke('#8c2f1e', 0.9)}/><circle cx="14" cy="9" r="2.4" ${stroke('#8c2f1e', 0.9)}/><circle cx="22" cy="9" r="2.4" ${stroke('#8c2f1e', 0.9)}/>`),
+  ruled: svg(`<path d="M2 4h24M2 14h24" ${stroke('#8c2f1e', 0.8)}/><path d="M3 3v12M14 3v12M25 3v12" ${stroke('#8c2f1e', 0.8)}/><circle cx="14" cy="9" r="2" fill="#e9d8b4" stroke="#8c2f1e" stroke-width=".8"/>`),
+};
+const MAP_LINES = '<path d="M0 4q8-3 14 2t14-1M0 13q9 3 15-1t13 2" fill="none" stroke="currentColor" stroke-width=".7" opacity=".6"/>';
+const BORDER_GLYPHS = {
+  bordered: svg(`<rect width="28" height="18" fill="none"/>${MAP_LINES}<rect x="4" y="4" width="20" height="10" fill="#e9d8b4" stroke="#8c2f1e" stroke-width="1"/><rect x="6" y="6" width="16" height="6" fill="none" stroke="#8c2f1e" stroke-width=".6"/>`),
+  blank: svg(`${MAP_LINES}<rect x="4" y="4" width="20" height="10" fill="#e9d8b4"/><path d="M7 9h14" ${stroke('#8c2f1e', 1.2)}/>`),
+  transparent: svg(`${MAP_LINES}<path d="M7 9h14" ${stroke('#8c2f1e', 1.2)}/>`),
+};
 const CHOICES = {
-  projection: [['mercator', 'Mercator', 'rhumb lines straight'], ['plate-carree', 'Plate carrée', 'equal degrees'], ['miller', 'Miller', 'poles tamed'], ['equal-area', 'Equal-area', 'Gall–Peters'], ['orthographic', 'Globe', 'orthographic'], ['azimuthal-equidistant', 'Azimuthal equidistant', 'true from the centre'], ['stereographic', 'Stereographic', 'the polar chart']],
-  regions: [['off', 'Off'], ['latin', 'Latin', 'Hispania'], ['english', 'English', 'Iberia']],
+  projection: [['mercator', 'Mercator', 'rhumb lines straight'], ['plate-carree', 'Plate carrée', 'equal degrees'], ['miller', 'Miller', 'poles tamed'], ['equal-area', 'Equal-area', 'Gall–Peters'], ['orthographic', 'Globe', 'orthographic'], ['azimuthal-equidistant', 'Azimuthal equidistant', 'true from the centre'], ['stereographic', 'Stereographic', 'the polar chart']].map((o) => [...o, PROJECTION_GLYPHS[o[0]]]),
+  regions: [['latin', 'Latin', 'Hispania'], ['english', 'English', 'Iberia']],
   titleMode: [['auto', 'Automatic', 'what the view shows'], ['custom', 'Custom']],
-  land: [['islands', 'Coloured islands', 'Beccari, 1403', '#6b8a4a'], ['gilt', 'Gilt wash', '', '#b58a3c'], ['green', 'Green wash', 'Oliva, c.1590', '#6b8a4a'], ['ochre', 'Ochre with shoals', 'Benincasa, 1466', '#c47f2c']],
-  rivers: [['off', 'Off'], ['aguiar', 'Wiggled ink', 'Aguiar, 1492'], ['marina', 'Double line', 'Carta Marina, 1539'], ['plain', 'Plain blue line']],
-  lakes: [['off', 'Off'], ['aguiar', 'Lozenges', 'Aguiar, 1492'], ['marina', 'True shapes, hatched', 'Carta Marina, 1539'], ['plain', 'True shapes, blue wash']],
+  mountains: [['off', 'Off', '', MOUNTAIN_GLYPHS.off], ['ink', 'Ink', 'black and white hatching, as Engraved', MOUNTAIN_GLYPHS.ink], ['colour', 'Colour', 'ochre wash, as the Carta Marina', MOUNTAIN_GLYPHS.colour]],
+  hills: [['off', 'Off', '', MOUNTAIN_GLYPHS.off], ['catalan', 'Catalan drawings', 'Catalan Atlas, 1375', HILL_GLYPH]],
+  land: [['off', 'Off'], ['gilt', 'Gilt wash', '', lineOf('#b58a3c', 4)], ['green', 'Green wash', 'Oliva, c.1590', lineOf('#6b8a4a', 4)], ['ochre', 'Ochre with shoals', 'Benincasa, 1466', lineOf('#c47f2c', 4)]],
+  islands: [['off', 'Plain islands'], ['on', 'Coloured islands', 'Beccari, 1403', ISLANDS_GLYPH]],
+  seaTint: [['off', 'Plain seas'], ['on', 'Coloured seas', 'Red, Black and Caspian Seas, the Persian Gulf', SEAS_GLYPH]],
+  rivers: [['off', 'Off'], ['aguiar', 'Wiggled ink', 'Aguiar, 1492', RIVER_GLYPHS.aguiar], ['marina', 'Double line', 'Carta Marina, 1539', RIVER_GLYPHS.marina], ['plain', 'Plain blue line', '', RIVER_GLYPHS.plain]],
+  lakes: [['off', 'Off'], ['aguiar', 'Lozenges', 'Aguiar, 1492', LAKE_GLYPHS.aguiar], ['marina', 'True shapes, hatched', 'Carta Marina, 1539', LAKE_GLYPHS.marina], ['plain', 'True shapes, blue wash', '', LAKE_GLYPHS.plain]],
   trees: [['off', 'Off'], ['marina', 'Green crowns', 'Carta Marina, 1539', '#6b8a4a'], ['ink', 'Ink only']],
-  scale: [['off', 'Off'], ['genoese', 'Genoese', 'drawn as vectors'], ['chequer', 'Chequer'], ['chevron', 'Chevron ladder', 'Genoese'], ['ribbon', 'Ribbon', 'Martines'], ['beads', 'Beads', 'Prunes'], ['ruled', 'Ruled', 'Beccari']],
+  scale: [['off', 'Off'], ['genoese', 'Genoese', 'drawn as vectors'], ['chequer', 'Chequer'], ['chevron', 'Chevron ladder', 'Genoese'], ['ribbon', 'Ribbon', 'Martines'], ['beads', 'Beads', 'Prunes'], ['ruled', 'Ruled', 'Beccari']].map((o) => [...o, SCALE_GLYPHS[o[0]]]),
+  scaleBorder: [['bordered', 'Bordered', 'parchment and a double rule'], ['blank', 'Blank', 'parchment, no rule'], ['transparent', 'Transparent', 'drawn over the map']].map((o) => [...o, BORDER_GLYPHS[o[0]]]),
 };
 for (const [id, options] of Object.entries(CHOICES)) {
   const el = $(id);
@@ -243,7 +274,8 @@ for (const [id, options] of Object.entries(CHOICES)) {
     const b = Object.assign(document.createElement('button'), { type: 'button', className: 'chip', title: note ? `${label} (${note})` : label });
     b.dataset.value = value;
     b.setAttribute('role', 'radio');
-    if (dot) b.append(Object.assign(document.createElement('i'), { style: `background:${dot}` }));
+    if (dot?.startsWith('<')) b.insertAdjacentHTML('beforeend', dot);
+    else if (dot) b.append(Object.assign(document.createElement('i'), { style: `background:${dot}` }));
     b.append(label);
     el.append(b);
   }
@@ -260,17 +292,22 @@ for (const [id, options] of Object.entries(CHOICES)) {
 // ---------------------------------------------------------------- the controls
 
 // the controls show the style and the selection
+const CATALAN_KEYS = SPRITES.filter((s) => s.kind === 'mountain').map((s) => s.key);
+const zoomLabel = (n) => (n <= 0 ? 'off' : n >= MAX_ZOOM ? 'always' : `zoom ${n} and out`);
 function showStyle() {
   $('projection').value = view.projection;
   $('ink').value = style.ink; $('parchment').value = style.parchment;
   $('density').value = style.density; $('densityOut').textContent = style.density;
-  $('names').checked = style.names; $('rhumb').checked = style.rhumb; $('scale').value = style.scale;
-  $('land').value = style.land; $('rivers').value = style.rivers; $('lakes').value = style.lakes; $('trees').value = style.trees; $('redSea').checked = style.redSea;
-  $('continents').checked = style.continents; $('regions').value = style.regions;
-  $('titleMode').value = style.autoTitle ? 'auto' : 'custom'; $('title').value = style.title; $('title').disabled = style.autoTitle;
+  $('names').checked = style.names; $('rhumb').checked = style.rhumb; $('scale').value = style.scale; $('scaleBorder').value = style.scaleBorder;
+  $('land').value = style.land; $('islands').value = style.islands ? 'on' : 'off'; $('seaTint').value = style.seaTint ? 'on' : 'off';
+  $('rivers').value = style.rivers; $('lakes').value = style.lakes; $('trees').value = style.trees;
+  $('mountains').value = style.mountains; $('hills').value = CATALAN_KEYS.some((k) => selection.has(k)) ? 'catalan' : 'off';
+  $('continentsZoom').value = style.continentsZoom; $('continentsOut').textContent = zoomLabel(style.continentsZoom);
+  $('regions').value = style.regions; $('regionsZoom').value = style.regionsZoom; $('regionsOut').textContent = zoomLabel(style.regionsZoom);
+  $('titleMode').value = style.autoTitle ? 'auto' : 'custom'; $('title').disabled = style.autoTitle;
+  if (!style.autoTitle) $('title').value = style.title; // automatic shows the view's own name, once placed (render)
   $('townSize').checked = style.townSize !== 'rank';
-  for (const [name, { box, b }] of reliefBoxes) { box.checked = style.relief.includes(name); b.setAttribute('aria-pressed', box.checked); }
-  for (const b of document.querySelectorAll('#drawer .thumb:not([data-relief])')) b.setAttribute('aria-pressed', b === none ? !CARTOUCHES.some((k) => selection.has(k)) : selection.has(b.dataset.key));
+  for (const b of document.querySelectorAll('#drawer .thumb')) b.setAttribute('aria-pressed', b === none ? !CARTOUCHES.some((k) => selection.has(k)) : selection.has(b.dataset.key));
   for (const { box, count, keys } of familyBoxes) {
     const on = keys.filter((k) => selection.has(k)).length;
     box.checked = on === keys.length; box.indeterminate = on > 0 && on < keys.length;
@@ -280,13 +317,18 @@ function showStyle() {
 function readControls() {
   style = {
     ink: $('ink').value, parchment: $('parchment').value, density: Number($('density').value),
-    names: $('names').checked, rhumb: $('rhumb').checked, scale: $('scale').value,
-    land: $('land').value, rivers: $('rivers').value, lakes: $('lakes').value, relief: style.relief, trees: $('trees').value, redSea: $('redSea').checked,
-    continents: $('continents').checked, regions: $('regions').value,
-    title: $('title').value, autoTitle: $('titleMode').value === 'auto',
+    names: $('names').checked, rhumb: $('rhumb').checked, scale: $('scale').value, scaleBorder: $('scaleBorder').value,
+    land: $('land').value, islands: $('islands').value === 'on', seaTint: $('seaTint').value === 'on',
+    rivers: $('rivers').value, lakes: $('lakes').value, mountains: $('mountains').value, trees: $('trees').value,
+    continentsZoom: Number($('continentsZoom').value), regions: $('regions').value, regionsZoom: Number($('regionsZoom').value),
+    // automatic shows the view's name in the box, which is not the typed title
+    title: $('titleMode').value === 'auto' || style.autoTitle ? style.title : $('title').value, // switching to custom starts from the typed title, not the name shown autoTitle: $('titleMode').value === 'auto',
     // checked, by metro area; a link's townsize=population is kept until the box is touched
     townSize: $('townSize').checked ? (style.townSize === 'rank' ? 'area' : style.townSize) : 'rank',
   };
+  // hills are the Catalan sprites: the chip selects all of them or none
+  const hills = $('hills').value === 'catalan';
+  if (hills !== CATALAN_KEYS.some((k) => selection.has(k))) for (const k of CATALAN_KEYS) hills ? selection.add(k) : selection.delete(k);
   view = clampView({ ...view, projection: $('projection').value });
   changed();
 }
@@ -312,10 +354,14 @@ async function render() {
     // a kind is drawn while any of its sprites is selected
     const kinds = KINDS.filter((k) => SPRITES.some((s) => s.kind === k && selection.has(s.key)));
     const { scene, data, bg, world, coarse, timing } = await createScene(env, {
-      ...style, sprites: [...selection], kinds, view,
+      ...style, relief: style.mountains === 'colour' ? ['marina'] : style.mountains === 'ink' ? ['engraved'] : [],
+      continents: style.continentsZoom > 0, continentsZoom: style.continentsZoom,
+      regions: style.regionsZoom > 0 ? style.regions : 'off', regionsZoom: style.regionsZoom,
+      sprites: [...selection], kinds, view,
     });
     if (me !== run) return; // a newer change or a move superseded this one
     ground = { world, coarse, bg };
+    if (style.autoTitle) $('title').value = scene.cartouche.title; // the box shows what the cartouche letters, and cannot be edited
     placed = view;
     const t1 = performance.now();
     ctx.clearRect(0, 0, W, H);
@@ -411,6 +457,6 @@ canvas.addEventListener('wheel', (e) => {
   stopped(300);
 }, { passive: false });
 
-for (const id of ['projection', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'land', 'rivers', 'lakes', 'trees', 'redSea', 'continents', 'regions', 'titleMode', 'title', 'townSize']) $(id).addEventListener('input', readControls);
+for (const id of ['projection', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'scaleBorder', 'land', 'islands', 'seaTint', 'rivers', 'lakes', 'trees', 'mountains', 'hills', 'continentsZoom', 'regions', 'regionsZoom', 'titleMode', 'title', 'townSize']) $(id).addEventListener('input', readControls);
 addEventListener('hashchange', () => { view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); render(); });
 render();
