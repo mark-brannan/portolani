@@ -8,7 +8,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
-import { createScene, drawScene, SCALE_NAMES, W, H } from '../scripts/scene.mjs';
+import { createScene, drawScene, SCALE_NAMES, RIVER_STYLES, LAKE_STYLES, W, H } from '../scripts/scene.mjs';
 import { coastNames, joinNames } from '../scripts/names.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -146,4 +146,17 @@ test('cartouche takes empty land over a coast', async () => {
   const view = { lon: -122.747, lat: 47.642, zoom: 7 }; // Puget Sound: bare land to the north-east
   const { scene } = await createScene(env, { view, scale: 'chequer' });
   assert.ok(scene.cartouche.x > W / 2 && scene.cartouche.y < H / 2, 'cartouche not in the empty top-right corner');
+});
+
+// Rivers and lakes are off by default (the goldens hold them off); every style draws, and over the
+// Danube and Lake Balaton each one other than off puts ink on the chart.
+test('rivers and lakes: every style draws, and off draws none', async () => {
+  const danube = { lon: 19, lat: 46, zoom: 5 };
+  const off = await renderView(danube, 'off', { rivers: 'off', lakes: 'off' });
+  assert.ok(!differs(await renderView(danube), off), 'water drawn by default');
+  assert.deepEqual(RIVER_STYLES, ['off', 'aguiar', 'marina', 'plain']);
+  assert.deepEqual(LAKE_STYLES, ['off', 'aguiar', 'marina', 'plain']);
+  for (const rivers of RIVER_STYLES.slice(1)) assert.ok(differs(await renderView(danube, 'off', { rivers }), off), `rivers ${rivers}: nothing drawn`);
+  for (const lakes of LAKE_STYLES.slice(1)) assert.ok(differs(await renderView(danube, 'off', { lakes }), off), `lakes ${lakes}: nothing drawn`);
+  await renderView(danube, 'off', { rivers: 'aguiar', lakes: 'marina' }); // the two combine
 });
