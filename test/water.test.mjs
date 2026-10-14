@@ -43,7 +43,7 @@ const OPTS = { view: VIEW, scale: 'off', kinds: [], names: false, rhumb: false, 
 const scene = (tag) => import(`../scripts/scene.mjs?${tag}`);
 const counts = (m, data) => { const k = m.keptWater(data); return { rivers: k.rivers.length, lakes: k.lakes.length }; };
 
-test('past z9 the 10m files keep more rivers and lakes than 50m alone', { skip: !HAVE_10M && 'no 10m rivers and lakes downloads' }, async () => {
+test('past z7 the 10m files keep more rivers and lakes than 50m alone', { skip: !HAVE_10M && 'no 10m rivers and lakes downloads' }, async () => {
   const fine = await scene('10m'), coarse = await scene('50m');
   const a = counts(fine, (await fine.createScene(with10m, OPTS)).data);
   const b = counts(coarse, (await coarse.createScene(base, OPTS)).data);
