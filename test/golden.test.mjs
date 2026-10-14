@@ -104,12 +104,18 @@ const differs = (a, b) => { const p = pixels(a), q = pixels(b); for (let i = 0; 
 
 // Continent and region lettering is off by default (the goldens hold it off); each setting draws
 // its names in the zooms it belongs to and nowhere else.
-test('world lettering: continents below z5, regions below z7, nothing by default', async () => {
+test('world lettering: continents below z5.5, regions below z7, nothing by default', async () => {
   const count = async (view, opts) => (await createScene(env, { view, ...opts })).scene.worldNames.length;
   assert.equal(await count(VIEWS['world-z2']), 0);
   assert.equal(await count(VIEWS['region-z5']), 0);
   assert.ok(await count(VIEWS['world-z2'], { continents: true }) > 0, 'no continents at z2');
-  assert.equal(await count(VIEWS['region-z5'], { continents: true }), 0);
+  assert.equal(await count({ lon: 8.93, lat: 44.41, zoom: 5.5 }, { continents: true }), 0);
+  // continents and regions show together through the fractional zooms between
+  for (const zoom of [4.5, 4.81, 5, 5.4]) {
+    const names = (await createScene(env, { view: { lon: 14, lat: 46, zoom }, continents: true, regions: 'latin' })).scene.worldNames;
+    assert.ok(names.some((n) => !n.italic), `no continent at z${zoom}`);
+    assert.ok(names.some((n) => n.italic), `no region at z${zoom}`);
+  }
   assert.ok(await count(VIEWS['world-z2'], { regions: 'latin' }) > 0, 'no regions at z2');
   assert.ok(await count(VIEWS['region-z5'], { regions: 'latin' }) > 0, 'no regions at z5');
   assert.ok(await count(VIEWS['region-z5'], { regions: 'english' }) > 0, 'no regions at z5');
