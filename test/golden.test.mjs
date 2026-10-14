@@ -8,7 +8,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
-import { createScene, drawScene, SCALE_NAMES, RIVER_STYLES, LAKE_STYLES, W, H } from '../scripts/scene.mjs';
+import { createScene, drawScene, SCALE_NAMES, RIVER_STYLES, LAKE_STYLES, RELIEF_STYLES, W, H } from '../scripts/scene.mjs';
 import { coastNames, joinNames } from '../scripts/names.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -159,4 +159,21 @@ test('rivers and lakes: every style draws, and off draws none', async () => {
   for (const rivers of RIVER_STYLES.slice(1)) assert.ok(differs(await renderView(danube, 'off', { rivers }), off), `rivers ${rivers}: nothing drawn`);
   for (const lakes of LAKE_STYLES.slice(1)) assert.ok(differs(await renderView(danube, 'off', { lakes }), off), `lakes ${lakes}: nothing drawn`);
   await renderView(danube, 'off', { rivers: 'aguiar', lakes: 'marina' }); // the two combine
+});
+
+// Hills and mountains are off by default (the goldens hold them off, with the mountain sprites); over
+// the Alps every style draws, and draws in place of the sprites, which are not placed beside it.
+test('hills and mountains: every style draws, and off draws none', async () => {
+  const alps = { lon: 9, lat: 46.5, zoom: 7 };
+  const off = await renderView(alps, 'off', { relief: 'off' });
+  assert.ok(!differs(await renderView(alps), off), 'relief drawn by default');
+  assert.deepEqual(RELIEF_STYLES, ['off', 'marina', 'engraved']);
+  for (const relief of RELIEF_STYLES.slice(1)) {
+    const { scene } = await createScene(env, { view: alps, scale: 'off', relief });
+    assert.ok(scene.relief.peaks.length > 0, `relief ${relief}: no peaks placed`);
+    assert.equal(scene.mountains.length, 0, `relief ${relief}: mountain sprites placed beside it`);
+    assert.ok(differs(await renderView(alps, 'off', { relief }), off), `relief ${relief}: nothing drawn`);
+  }
+  const { scene } = await createScene(env, { view: alps, scale: 'off' });
+  assert.equal(scene.relief, null, 'off places none');
 });

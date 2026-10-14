@@ -12,6 +12,7 @@ import { islandInfo, ISLAND_KM2 } from './island.mjs';
 import { cityPlan, drawCity, drawHouses, pxRings, insideRings } from './city.mjs';
 import { urbanKey } from './urban.mjs';
 import { RIVERS, LAKES, RIVER_STYLES, LAKE_STYLES, waterOf, shown } from './water.mjs';
+import { RELIEF, RELIEF_STYLES, reliefOf, clearOf } from './relief.mjs';
 
 let env;
 const createCanvas = (w, h) => env.createCanvas(w, h);
@@ -41,6 +42,7 @@ const STYLE = {
   landMode: 'islands', // one of LANDS, set by createScene
   rivers: 'off', // one of RIVER_STYLES, set by createScene
   lakes: 'off', // one of LAKE_STYLES, set by createScene
+  relief: 'off', // one of RELIEF_STYLES, set by createScene
   font: 'IM Fell English',
   fonts: ['IM Fell English', 'Georgia', 'serif'], // the stack names are lettered in; the first is loaded
 };
@@ -981,7 +983,15 @@ function buildScene(data, sprites, ctx, world = {}) {
     names.push({ ...n, x: box.cx, y: box.cy, r: Math.max(box.hw, box.hh), box });
   }
   for (const b of boxes.slice(1 + roseDraws.length).filter((b) => !cityBoxes.has(b))) occupied.push({ x: b.cx, y: b.cy, r: Math.max(b.hw, b.hh) * 0.6 });
-  const mountains = placeMountains(data, field, boxes, sprites.mountains ?? [], world.scaleBar);
+  // drawn hills and mountains stand in for the mountain sprites, clear of what is placed so far
+  // and of the built-up areas washed on the land
+  const bar = world.scaleBar ? obb(300, H - 90, 0, 270, 70) : null;
+  const urban = RELIEF[STYLE.relief] ? indexOf(data).urban.filter((u) => Math.max(u.box.x1 - u.box.x0, u.box.y1 - u.box.y0) * 2 >= URBAN_PX) : [];
+  const relief = RELIEF[STYLE.relief] ? clearOf(reliefFor(data.proj, data.land), (x0, y0, x1, y1) => {
+    const b = obb((x0 + x1) / 2, (y0 + y1) / 2, 0, (x1 - x0) / 2, (y1 - y0) / 2);
+    return boxes.some((o) => obbOverlap(o, b)) || (bar && obbOverlap(bar, b)) || urban.some((u) => meets({ x0, y0, x1, y1 }, u.box));
+  }) : null;
+  const mountains = relief ? [] : placeMountains(data, field, boxes, sprites.mountains ?? [], world.scaleBar);
 
   // Monsters: farthest-first on the open-water field, >= MONSTER_GAP apart, in the view's cast order
   // (heavier sprites tend to come first).
@@ -1029,7 +1039,7 @@ function buildScene(data, sprites, ctx, world = {}) {
 
   // automatic, the typed title stands in where the view has no name in it
   const title = (world.autoTitle && viewTitle(data, towns.filter((t) => names.some((n) => n.text === t.name)), world.regions === 'english' ? 1 : 0).toUpperCase()) || world.title || 'PORTOLANI';
-  return { field, centre, nodes, roseDraws, towns, names, worldNames, monsters, ships, mountains, cartouche: { ...cartouche, sprite: cartoucheSprite, title } };
+  return { field, centre, nodes, roseDraws, towns, names, worldNames, monsters, ships, mountains, relief, cartouche: { ...cartouche, sprite: cartoucheSprite, title } };
 }
 
 // ---------------------------------------------------------------- drawing
@@ -1315,7 +1325,7 @@ function paintShoals(g, data, coast) {
 
 // The treatment of the land, after the parchment: the Red Sea tint and shoals (both under the land,
 // which hides what falls on shore), a flat tint, a landward wash along the coast, and the islands.
-function paintLand(g, data, land, coast) {
+function paintLand(g, data, land, coast, relief) {
   const { x, y, lonCenter } = data.proj;
   const mode = STYLE.landMode;
   if (redSeaPolys) {
@@ -1343,6 +1353,7 @@ function paintLand(g, data, land, coast) {
     }
   }
   paintWater(g, data);
+  paintRelief(g, data, relief);
 }
 
 // Rivers, then lakes over them, each in its chosen style, on the land and under the coast's ink.
@@ -1355,6 +1366,12 @@ function paintWater(g, data) {
   if (river) river(g, paint, kept(water.rivers).filter((r) => !(lake && r.inLake)));
   if (lake) lake(g, paint, kept(water.lakes));
 }
+// Hills and mountains (relief.mjs) for a view's land, and drawn over the water in the chosen style.
+const reliefFor = (proj, land) => reliefOf({ proj, land, createCanvas, w: W, h: H });
+function paintRelief(g, data, relief) {
+  const draw = RELIEF[STYLE.relief];
+  if (draw && relief) draw(g, { proj: data.proj, palette: { ink: STYLE.ink, land: STYLE.land } }, relief);
+}
 const paintCoast = (g, data, coast) =>
   limn(g, coast, data.proj.x, data.proj.y, { color: STYLE.ink, alpha: 1, width: STYLE.coastWidth, oneStroke: true, lonCenter: data.proj.lonCenter });
 
@@ -1365,7 +1382,8 @@ function drawGround(g, world, view, bg) {
   const land = world.land.filter((l) => meetsLL(f, l.box)).map((l) => l.poly);
   const coast = world.runs.filter((c) => meetsLL(f, c.box)).map((c) => c.run);
   g.drawImage(bg, 0, 0);
-  paintLand(g, data, land, coast);
+  const relief = RELIEF[STYLE.relief] && reliefFor(proj, world.land.filter((l) => meetsLL(frameOf(proj, MARGIN), l.box)).map((l) => l.poly));
+  paintLand(g, data, land, coast, relief);
   paintCoast(g, data, coast);
 }
 
@@ -1524,7 +1542,7 @@ function drawScene(g, scene, data, bg, view) {
   bgPart(r.x0, r.y0, r.x1, r.y1);
 
   // 2. land
-  paintLand(g, data, land, coast);
+  paintLand(g, data, land, coast, scene.relief);
 
   // 3. rhumb lattice: 16 nodes on a circle plus the centre, 32 rhumb lines each, in three inks
   const rays = latticeOf(scene, data);
@@ -1666,13 +1684,14 @@ function drawScene(g, scene, data, bg, view) {
 // `continents` (boolean) and `regions` ('off', 'latin' or 'english'); the continents follow the regions' language, Latin when those are off.
 // `land`: a LANDS entry, the land treatment ('islands' by default); `redSea` (boolean) tints the Red Sea red.
 // `rivers` and `lakes`: a RIVER_STYLES and a LAKE_STYLES entry (water.mjs), each 'off' by default.
+// `relief`: a RELIEF_STYLES entry (relief.mjs), 'off' by default; drawn, it takes the mountain sprites' place.
 // `autoTitle` (boolean, on by default) letters the cartouche with the name the view is about (viewTitle), in capitals;
 // `title` is its lettering when that is off, or when the view has no name in it.
 // `kinds` defaults to DEFAULT_KINDS, every kind. A kind left out is still
 // placed when the lattice needs it (a rose, the cartouche's corner), only not drawn.
 export async function createScene(environment, opts = {}) {
   env = environment;
-  const { ink = '#3b2a1a', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', title = 'PORTOLANI', autoTitle = true, land: landMode = 'islands', redSea = false, rivers = 'off', lakes = 'off' } = opts;
+  const { ink = '#3b2a1a', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', title = 'PORTOLANI', autoTitle = true, land: landMode = 'islands', redSea = false, rivers = 'off', lakes = 'off', relief = 'off' } = opts;
   const legacy = ['rendering', 'rose', 'monster', 'town'].some((k) => opts[k] !== undefined);
   const townBy = townSize ?? (legacy ? 'rank' : 'area');
   const show = { kinds: new Set(opts.kinds ?? DEFAULT_KINDS), names, rhumb: rhumbOn, scale };
@@ -1682,6 +1701,7 @@ export async function createScene(environment, opts = {}) {
   STYLE.landMode = LANDS.includes(landMode) ? landMode : 'islands';
   STYLE.rivers = RIVER_STYLES.includes(rivers) ? rivers : 'off';
   STYLE.lakes = LAKE_STYLES.includes(lakes) ? lakes : 'off';
+  STYLE.relief = RELIEF_STYLES.includes(relief) ? relief : 'off';
   TUNE.monsterMax = Math.round(4 * density);
   TUNE.shipMax = Math.round(2 * density);
   TUNE.townGap = 48 / density;
@@ -1728,5 +1748,5 @@ export const KINDS = ['rose', 'ship', 'monster', 'cartouche', 'mountain'];
 export const DEFAULT_KINDS = KINDS;
 export const PROJECTION_NAMES = Object.keys(PROJECTIONS);
 export const TOWN_SIZES = ['area', 'population', 'rank'];
-export { RIVER_STYLES, LAKE_STYLES };
+export { RIVER_STYLES, LAKE_STYLES, RELIEF_STYLES };
 export { towerGlyph, SCALE_NAMES, readManifests, listStyles, listSprites, defaultSprites, selectSprites, chooseSprites, drawScene, drawGround, covers, panView, zoomView, clampView, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };

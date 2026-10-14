@@ -2,11 +2,11 @@
 // Drag to pan, wheel or pinch to zoom; while the map moves only land and coast are drawn, and the
 // ornaments are placed again when it stops. The settings live in a drawer behind the rose button, so
 // the map has the window. The view and the style are kept in the URL hash, e.g.
-// #map=zoom/lat/lon&projection=miller&sprites=s:serpent-a,v:kraken,v:rose-aguiar,p:tower&townsize=rank&names=0&rhumb=0&scale=chevron&continents=1&regions=latin&land=green&rivers=aguiar&lakes=marina&redsea=1&autotitle=0&title=Mare+Nostrum&ink=5a1a1a&parchment=eee&density=1.5;
+// #map=zoom/lat/lon&projection=miller&sprites=s:serpent-a,v:kraken,v:rose-aguiar,p:tower&townsize=rank&names=0&rhumb=0&scale=chevron&continents=1&regions=latin&land=green&rivers=aguiar&lakes=marina&relief=marina&redsea=1&autotitle=0&title=Mare+Nostrum&ink=5a1a1a&parchment=eee&density=1.5;
 // a setting left at its default is left out, `sprites` too (keys with the pack shortened, v: s: p:).
 // Older links naming a `rendering` (or `pack`), `rose`, `monster`, `town` and `kinds` open as the
 // selection those chose, and are written back in the new form.
-import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, panView, zoomView, clampView, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, RIVER_STYLES, LAKE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, W, H } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, panView, zoomView, clampView, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, RIVER_STYLES, LAKE_STYLES, RELIEF_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, W, H } from './scene.mjs';
 
 const memo = new Map();
 // a failed load is forgotten, so the next stop tries it again
@@ -33,7 +33,7 @@ const env = {
 const $ = (id) => document.getElementById(id);
 const canvas = $('map'), ctx = canvas.getContext('2d');
 
-const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continents: true, regions: 'latin', title: 'PORTOLANI', autoTitle: true, land: 'ochre', rivers: 'plain', lakes: 'marina', redSea: false, townSize: TOWN_SIZES[0] };
+const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continents: true, regions: 'latin', title: 'PORTOLANI', autoTitle: true, land: 'ochre', rivers: 'plain', lakes: 'marina', relief: 'off', redSea: false, townSize: TOWN_SIZES[0] };
 
 // ---------------------------------------------------------------- the sprites on offer
 
@@ -80,6 +80,7 @@ function styleFromHash() {
     land: LANDS.includes(q.get('land')) ? q.get('land') : DEFAULTS.land,
     rivers: RIVER_STYLES.includes(q.get('rivers')) ? q.get('rivers') : DEFAULTS.rivers,
     lakes: LAKE_STYLES.includes(q.get('lakes')) ? q.get('lakes') : DEFAULTS.lakes,
+    relief: RELIEF_STYLES.includes(q.get('relief')) ? q.get('relief') : DEFAULTS.relief,
     redSea: q.get('redsea') === '1',
     scale: q.get('scale') === 'off' || SCALE_NAMES.includes(q.get('scale')) ? q.get('scale') : DEFAULTS.scale,
     townSize: TOWN_SIZES.includes(q.get('townsize')) ? q.get('townsize') : DEFAULTS.townSize,
@@ -114,6 +115,7 @@ function writeHash() {
   if (st.land !== DEFAULTS.land) q.set('land', st.land);
   if (st.rivers !== DEFAULTS.rivers) q.set('rivers', st.rivers);
   if (st.lakes !== DEFAULTS.lakes) q.set('lakes', st.lakes);
+  if (st.relief !== DEFAULTS.relief) q.set('relief', st.relief);
   if (st.redSea) q.set('redsea', '1');
   if (st.scale !== DEFAULTS.scale) q.set('scale', st.scale);
   if (st.density !== DEFAULTS.density) q.set('density', st.density);
@@ -197,7 +199,7 @@ function showStyle() {
   $('ink').value = style.ink; $('parchment').value = style.parchment;
   $('density').value = style.density; $('densityOut').textContent = style.density;
   $('names').checked = style.names; $('rhumb').checked = style.rhumb; $('scale').value = style.scale;
-  $('land').value = style.land; $('rivers').value = style.rivers; $('lakes').value = style.lakes; $('redSea').checked = style.redSea;
+  $('land').value = style.land; $('rivers').value = style.rivers; $('lakes').value = style.lakes; $('relief').value = style.relief; $('redSea').checked = style.redSea;
   $('continents').checked = style.continents; $('regions').value = style.regions;
   $('titleMode').value = style.autoTitle ? 'auto' : 'custom'; $('title').value = style.title; $('title').disabled = style.autoTitle;
   $('townSize').checked = style.townSize !== 'rank';
@@ -212,7 +214,7 @@ function readControls() {
   style = {
     ink: $('ink').value, parchment: $('parchment').value, density: Number($('density').value),
     names: $('names').checked, rhumb: $('rhumb').checked, scale: $('scale').value,
-    land: $('land').value, rivers: $('rivers').value, lakes: $('lakes').value, redSea: $('redSea').checked,
+    land: $('land').value, rivers: $('rivers').value, lakes: $('lakes').value, relief: $('relief').value, redSea: $('redSea').checked,
     continents: $('continents').checked, regions: $('regions').value,
     title: $('title').value, autoTitle: $('titleMode').value === 'auto',
     // checked, by metro area; a link's townsize=population is kept until the box is touched
@@ -342,6 +344,6 @@ canvas.addEventListener('wheel', (e) => {
   stopped(300);
 }, { passive: false });
 
-for (const id of ['projection', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'land', 'rivers', 'lakes', 'redSea', 'continents', 'regions', 'titleMode', 'title', 'townSize']) $(id).addEventListener('input', readControls);
+for (const id of ['projection', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'land', 'rivers', 'lakes', 'relief', 'redSea', 'continents', 'regions', 'titleMode', 'title', 'townSize']) $(id).addEventListener('input', readControls);
 addEventListener('hashchange', () => { view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); render(); });
 render();
