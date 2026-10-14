@@ -34,8 +34,11 @@ jobs:
       - uses: actions/setup-node@v7
         with: { node-version: '22' }
       - run: npm ci
+      # keyed on the sha256 pins alone, so an edit elsewhere in the script keeps the cache
+      - id: pins
+        run: echo "hash=$(grep -oE '[0-9a-f]{64}' scripts/build-preview.mjs | sha256sum | cut -c1-16)" >> "$GITHUB_OUTPUT"
       - uses: actions/cache@v6
-        with: { path: downloads, key: "downloads-${{ hashFiles('scripts/build-preview.mjs') }}" }
+        with: { path: downloads, key: "downloads-${{ steps.pins.outputs.hash }}" }
       - run: npm run build:preview
 
   # Refuses to call an empty PR green: a branch whose tree equals its base at
