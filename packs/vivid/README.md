@@ -21,7 +21,10 @@ The `heraldic` style (the page's "Monsters and ships"): sea monsters after Bara'
 engraved ships; existing public-domain and CC0 SVGs, recoloured to the pack ink. Each file's opening comment names its
 source and licence.
 
-## Town height
+## Sprite sizes
 
-A town sprite stands 30 px tall at size 1, foot to top, unless its entry sets `heightPx`; a busier drawing such as
-the Aguiar walled town stands taller so it reads. The scanned pack's entries take the same field.
+Towns, monsters and ships are sized by their ink, not by their files: the scene measures each drawing's inked box and
+draws every town at one footprint for its population, and every monster or ship at its kind's footprint, so drawings
+cut from different charts at different margins stand together. A town entry's `heightPx` says how grand the drawing
+is against its family-mates (the scanned pack's entries take the same field): the grander drawings go to the more
+populous towns. A monster's or ship's `sizePx` is the width a preview draws it at.

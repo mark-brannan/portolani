@@ -408,8 +408,37 @@ async function listStyles(environment) {
 async function withImage(s) {
   if (s.plain) return s; // drawn in code: no picture
   const img = await env.loadImage(`packs/${s.pack}/${s.file}`);
-  return { ...s, img, tinted: s.colour === 'source' ? img : tint(img, STYLE.ink) };
+  return normalized({ ...s, img, tinted: s.colour === 'source' ? img : tint(img, STYLE.ink) });
 }
+
+// Sizes within a kind are set by the ink, not by the file or the manifest, so drawings cut from
+// different charts with different margins and detail stand together. A sprite's footprint is the
+// geometric mean of its inked box's sides; a monster or ship is drawn so its footprint is its kind's
+// (FOOTPRINT), its long side at most LONG_SIDE of that; a town stands so its footprint at size 1 is
+// FOOTPRINT.town, and keeps `grandeur`, the footprint its manifest's `heightPx` gave it, to rank it
+// against its family-mates (townVariant).
+const FOOTPRINT = { monster: 140, ship: 76, town: 40 };
+const LONG_SIDE = 1.5;
+function normalized(s) {
+  const target = FOOTPRINT[s.kind];
+  if (!target) return s;
+  const [iw, ih] = inkBox(s.tinted), f = Math.sqrt(iw * ih), { width: W0, height: H0 } = s.img;
+  if (s.kind === 'town') return { ...s, heightPx: (target * H0) / f, grandeur: ((s.heightPx ?? TOWN_H) * f) / H0 };
+  return { ...s, sizePx: Math.min((target * W0) / f, (LONG_SIDE * target * W0) / Math.max(iw, ih)) };
+}
+
+// The inked box of a picture, its sides in the picture's own px: where it darkens the sheet by
+// more than 0.3 (alpha times darkness), so a scan's pale wash does not count; drawn at most 256 px a side.
+function inkBox(img) {
+  const k = Math.min(1, 256 / Math.max(img.width, img.height)), w = Math.max(1, Math.round(img.width * k)), h = Math.max(1, Math.round(img.height * k));
+  const g = createCanvas(w, h).getContext('2d');
+  g.drawImage(img, 0, 0, w, h);
+  const a = g.getImageData(0, 0, w, h).data;
+  let x0 = w, y0 = h, x1 = -1, y1 = -1;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (dark(a, (y * w + x) * 4) > 0.3) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  return x1 < 0 ? [img.width, img.height] : [(x1 - x0 + 1) / k, (y1 - y0 + 1) / k];
+}
+const dark = (a, i) => (a[i + 3] / 255) * (1 - (0.3 * a[i] + 0.59 * a[i + 1] + 0.11 * a[i + 2]) / 255);
 
 // An ink mask filled with the pack ink, alpha kept: ready to composite with `multiply`.
 function tint(img, ink) {
@@ -573,13 +602,24 @@ function viewTitle(data, towns, lang) {
 
 // The sprite a town draws from its family. A family of variants named `-port`, `-levant`, `-fort` and
 // `-small` (Martines) draws a chief town (scalerank 2 or less) as a Levantine city east of 20E and
-// south of 38N and as a port elsewhere, a scalerank 3 town as a fort and a lesser one small; any
-// other family's sprites are taken in turn, the `i`th town the `i`th.
+// south of 38N and as a port elsewhere, a scalerank 3 town as a fort and a lesser one small. Any
+// other family is cut by grandeur into thirds, the grandest drawings for the most populous towns
+// (townGrandeur), and a third's sprites are taken in turn, the `i`th town of that third the `i`th.
 function townVariant(family, p, i) {
   if (!family.length) return null;
   const want = p.rank > 3 ? 'small' : p.rank > 2 ? 'fort' : p.lon > 20 && p.lat < 38 ? 'levant' : 'port';
-  return family.find((s) => s.id.endsWith(`-${want}`)) ?? family[i % family.length];
+  const named = family.find((s) => s.id.endsWith(`-${want}`));
+  if (named) return named;
+  const ranked = [...family].sort((a, b) => (b.grandeur ?? 0) - (a.grandeur ?? 0)), n = ranked.length;
+  const g = townGrandeur(p), t = g >= 0.4 ? 0 : g >= SMALL_TOWN ? 1 : 2; // 0 the grandest third: about 3 million and over
+  const third = ranked.slice(Math.floor((t * n) / 3), Math.max(Math.floor((t * n) / 3) + 1, Math.floor(((t + 1) * n) / 3)));
+  return third[i % third.length];
 }
+
+// Where a town falls between a market town (0) and a megacity (1), from its population: the span
+// townScale draws by population, whichever way the scene sizes its towns.
+const SMALL_TOWN = 0.15; // grandeur under about 700,000 people
+const townGrandeur = (p) => (townScale(p, 'population') - 0.75) / (1.8 - 0.75);
 
 // How big a town stands. `population` (the default) on a log scale of Natural Earth's POP_MAX, so a
 // megacity reads at a glance over a market town; `rank` the chief towns (scalerank 2 or less) a
@@ -695,7 +735,8 @@ function buildScene(data, sprites, ctx, world = {}) {
   }
 
   // Towns, lower scalerank first, >= TUNE.townGap apart. The selected town sprites fall into families
-  // by pack and style, and the tower is one when chosen; the i-th town placed takes family i mod n.
+  // by pack and style, and the tower is one when chosen; the i-th town placed takes family i mod n,
+  // save that the tower, plain at its first size, stands only for the smallest towns (SMALL_TOWN).
   const boxes = [obb(cartouche.x + cw / 2, cartouche.y + ch / 2, 0, cw / 2, ch / 2)];
   for (const r of roseDraws) boxes.push(obb(r.x, r.y, 0, r.size * 0.42, r.size * 0.42));
   const worldNames = placeWorldNames(data, ctx, boxes, { continents: world.continents ?? false, regions: world.regions ?? 'off' });
@@ -707,16 +748,16 @@ function buildScene(data, sprites, ctx, world = {}) {
     const [x, y] = p.xy;
     if (x < 8 || y < 8 || x > W - 8 || y > H - 8) continue;
     if (towns.some((t) => Math.hypot(t.x - x, t.y - y) < TUNE.townGap)) continue;
-    const size = townScale(p, world.townSize);
+    const fit = townGrandeur(p) < SMALL_TOWN || families.every((f) => !f) ? families : families.filter(Boolean);
+    const family = fit[towns.length % fit.length], size = townScale(p, world.townSize);
     // a town sprite stands where the tower would, its variant chosen for the town (townVariant)
-    const n = families.length, family = families[towns.length % n];
-    const sprite = family && townVariant(family, p, Math.floor(towns.length / n));
+    const sprite = family && townVariant(family, p, towns.filter((t) => t.family === family).length);
     const th = sprite ? townHeight(sprite) * size : 0;
     const icon = sprite
       ? obb(x, y - th / 2, 0, ((th / 2) * sprite.img.width) / sprite.img.height, th / 2)
       : obb(x, y - 8 * size, 0, 5 * size, 8.5 * size); // tower body and pennant
     if (boxes.some((b) => obbOverlap(b, icon))) continue;
-    towns.push({ x, y, size, red: p.rank <= 2, name: p.name, rank: p.rank, ...(sprite && { sprite }) });
+    towns.push({ x, y, size, family, red: p.rank <= 2, name: p.name, rank: p.rank, ...(sprite && { sprite }) });
     boxes.push(icon);
   }
 
@@ -962,8 +1003,8 @@ function drawSprite(g, s, x, y, size, { flip = false, rot = 0, anchor = s.anchor
   g.restore();
 }
 
-const TOWN_H = 30; // px a town sprite stands at size 1, flag to foot; a vignette is a speck at the tower's 17
-const townHeight = (s) => s.heightPx ?? TOWN_H; // a manifest's `heightPx` stands a busier drawing taller
+const TOWN_H = 30; // px a town sprite stands at size 1, flag to foot, before normalized() sets it from the ink
+const townHeight = (s) => s.heightPx ?? TOWN_H;
 
 function drawTower(g, t) {
   const s = t.size;

@@ -135,11 +135,15 @@ test('mountains: on by default, off when the kind is left out; inland, apart and
   assert.ok(data.proj.zoom >= 3);
 });
 
-test('town families mix: each placed town takes the next family in turn', async () => {
+test('town families mix, the plain tower among the smallest towns only', async () => {
   const sprites = [...manifest.sprites.filter((s) => s.style === 'martines' && s.kind === 'town').map((s) => `vivid/${s.id}`), 'plain/tower'];
   const { scene } = await createScene(env, { view: LIGURIA, sprites });
   assert.ok(scene.towns.length > 4);
-  scene.towns.forEach((t, i) => assert.equal(t.sprite?.style ?? 'tower', i % 2 ? 'tower' : 'martines', `${t.name}, town ${i}`));
+  const towers = scene.towns.filter((t) => !t.sprite);
+  assert.ok(towers.length && towers.length < scene.towns.length, 'both families stand');
+  for (const t of towers) assert.ok(t.size < 0.91, `${t.name}, size ${t.size}: too big a town for the tower`); // under about 700,000
+  const only = (await createScene(env, { view: LIGURIA, sprites: ['plain/tower'] })).scene.towns;
+  assert.ok(only.length > 4 && only.every((t) => !t.sprite), 'the tower alone stands for every town');
   assert.equal((await createScene(env, { view: LIGURIA, sprites: ['vivid/serpent-a'] })).scene.towns.length, 0, 'no town family, no towns');
 });
 
@@ -152,6 +156,28 @@ test('townSize: by population a great city stands bigger than a small town; by r
   for (const t of rank) assert.equal(t.size, t.rank <= 2 ? 1.25 : 1, t.name);
   const legacy = (await createScene(env, { view: NILE, town: 'tower' })).scene.towns;
   for (const t of legacy) assert.equal(t.size, t.rank <= 2 ? 1.25 : 1, `older caller, ${t.name}`);
+});
+
+test('sprites stand by their ink: one footprint per kind, and the grander town drawings for the bigger towns', async () => {
+  const list = await listSprites(env);
+  const towns = list.filter((s) => s.kind === 'town' && s.pack !== 'plain').map((s) => s.key);
+  const { scene } = await createScene(env, { view: LIGURIA, sprites: [...towns, ...list.filter((s) => s.kind === 'monster' || s.kind === 'ship').map((s) => s.key)] });
+  // a drawn sprite's inked box, as a geometric mean of its sides, at size 1
+  const foot = (s, w) => { const c = createCanvas(Math.ceil(w), Math.ceil((w * s.img.height) / s.img.width)), g = c.getContext('2d');
+    g.drawImage(s.tinted, 0, 0, c.width, c.height); const d = g.getImageData(0, 0, c.width, c.height).data; let x0 = 1e9, y0 = 1e9, x1 = -1, y1 = -1;
+    for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++) { const i = (y * c.width + x) * 4; if ((d[i + 3] / 255) * (1 - (0.3 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2]) / 255) > 0.3) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); } }
+    return Math.sqrt((x1 - x0 + 1) * (y1 - y0 + 1)); };
+  const placed = scene.towns.filter((t) => t.sprite);
+  assert.ok(new Set(placed.map((t) => `${t.sprite.pack}/${t.sprite.style}`)).size >= 3, 'towns from three families');
+  for (const t of placed) {
+    const h = t.sprite.heightPx, f = foot(t.sprite, (h * t.sprite.img.width) / t.sprite.img.height);
+    assert.ok(Math.abs(f - 40) < 4, `${t.sprite.key}: footprint ${f.toFixed(1)} at size 1`);
+  }
+  for (const m of scene.monsters) assert.ok(foot(m.sprite, m.sprite.sizePx) < 150, `${m.sprite.key}: monster footprint`);
+  // within the scanned Aguiar family, a bigger town never draws a humbler drawing than a smaller one
+  const aguiar = placed.filter((t) => t.sprite.pack === 'scanned').sort((a, b) => b.size - a.size);
+  assert.ok(aguiar.length >= 3, aguiar.map((t) => t.name).join());
+  assert.ok(aguiar[0].sprite.grandeur >= aguiar.at(-1).sprite.grandeur, aguiar.map((t) => `${t.name}:${t.sprite.id}`).join());
 });
 
 test('the monster and ship cast is the same for one view, and a big selection shows more of itself across views', async () => {
