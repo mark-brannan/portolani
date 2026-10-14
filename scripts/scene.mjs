@@ -204,6 +204,8 @@ const obbInside = (o, m = 4) => {
   const ex = o.hw * Math.abs(o.ux) + o.hh * Math.abs(o.uy), ey = o.hw * Math.abs(o.uy) + o.hh * Math.abs(o.ux);
   return o.cx - ex >= m && o.cx + ex <= W - m && o.cy - ey >= m && o.cy + ey <= H - m;
 };
+// The parchment patch under the scale bar, roughly: what mountains and relief keep clear of.
+const SCALE_BAR_BOX = obb(300, H - 90, 0, 270, 70);
 
 // ---------------------------------------------------------------- data
 
@@ -832,7 +834,7 @@ function placeMountains(data, field, boxes, sprites, scaleBar) {
   const cols = Math.ceil(W / CELL), rows = Math.ceil(H / CELL);
   const inland = chamfer(cols, rows, (i) => field.cells[i].land > 0); // px from each land cell to the sea
   const edge = (x, y) => Math.min(x, y, W - x, H - y);
-  const bar = scaleBar ? obb(300, H - 90, 0, 270, 70) : null; // the parchment patch under the bar, roughly
+  const bar = scaleBar ? SCALE_BAR_BOX : null;
   const bySize = [...sprites].sort((a, b) => b.sizePx - a.sizePx);
   const ranked = field.cells.map((c, i) => ({ ...c, d: Math.min(inland[i], edge(c.x, c.y)) }))
     .filter((c) => c.land === 0 && c.d >= bySize.at(-1).sizePx / 2 + MOUNTAIN_MARGIN).sort((a, b) => b.d - a.d);
@@ -988,7 +990,7 @@ function buildScene(data, sprites, ctx, world = {}) {
   for (const b of boxes.slice(1 + roseDraws.length).filter((b) => !cityBoxes.has(b))) occupied.push({ x: b.cx, y: b.cy, r: Math.max(b.hw, b.hh) * 0.6 });
   // drawn hills and mountains stand in for the mountain sprites, clear of what is placed so far
   // and of the built-up areas washed on the land
-  const bar = world.scaleBar ? obb(300, H - 90, 0, 270, 70) : null;
+  const bar = world.scaleBar ? SCALE_BAR_BOX : null;
   const urban = RELIEF[STYLE.relief] ? indexOf(data).urban.filter((u) => Math.max(u.box.x1 - u.box.x0, u.box.y1 - u.box.y0) * 2 >= URBAN_PX) : [];
   const relief = RELIEF[STYLE.relief] ? clearOf(reliefFor(data.proj, data.land), (x0, y0, x1, y1) => {
     const b = obb((x0 + x1) / 2, (y0 + y1) / 2, 0, (x1 - x0) / 2, (y1 - y0) / 2);
