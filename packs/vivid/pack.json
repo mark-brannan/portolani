@@ -326,7 +326,7 @@
       "kind": "town",
       "file": "town-martines-port.svg",
       "anchor": [0.5, 1],
-      "sizePx": 60,
+      "sizePx": 30,
       "bands": [0, 1],
       "after": "https://trinitycollegelibrarycambridge.wordpress.com/2015/08/14/portolan-chart-of-the-mediterranean/"
     },
@@ -336,7 +336,7 @@
       "kind": "town",
       "file": "town-martines-levant.svg",
       "anchor": [0.5, 1],
-      "sizePx": 60,
+      "sizePx": 30,
       "bands": [0, 1],
       "after": "https://trinitycollegelibrarycambridge.wordpress.com/2015/08/14/portolan-chart-of-the-mediterranean/"
     },
@@ -346,7 +346,7 @@
       "kind": "town",
       "file": "town-martines-small.svg",
       "anchor": [0.5, 1],
-      "sizePx": 60,
+      "sizePx": 30,
       "bands": [0, 1],
       "after": "https://trinitycollegelibrarycambridge.wordpress.com/2015/08/14/portolan-chart-of-the-mediterranean/"
     },
@@ -356,7 +356,7 @@
       "kind": "town",
       "file": "town-martines-fort.svg",
       "anchor": [0.5, 1],
-      "sizePx": 60,
+      "sizePx": 30,
       "bands": [0, 1],
       "after": "https://trinitycollegelibrarycambridge.wordpress.com/2015/08/14/portolan-chart-of-the-mediterranean/"
     },
