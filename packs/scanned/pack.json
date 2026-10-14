@@ -1,7 +1,7 @@
 {
   "name": "scanned",
-  "title": "Sprites cropped from public-domain scans: Olaus Magnus, Carta Marina 1539; Jorge de Aguiar 1492; Catalan Atlas 1375; Genoese chart c. 1320-1350; Frederik de Wit",
-  "licence": "Public domain (PD-Art); scans via Wikimedia Commons (James Ford Bell Library; Beinecke Library, Yale; BnF Gallica btv1b55002481n; Library of Congress 2003630429; Royal Museums Greenwich)",
+  "title": "Sprites cropped from scans: Olaus Magnus, Carta Marina 1539; Jorge de Aguiar 1492; Catalan Atlas 1375; Genoese chart c. 1320-1350; Frederik de Wit; Ambroise Paré, Des monstres; Master W with the Key, two ship engravings c. 1475-1490",
+  "licence": "Public domain (PD-Art); scans via Wikimedia Commons (James Ford Bell Library; Beinecke Library, Yale; BnF Gallica btv1b55002481n; Library of Congress 2003630429; Royal Museums Greenwich). The pare-* sprites: Wellcome Collection, CC BY 4.0. Ships ship-w-*: Art Institute of Chicago 27881 (CC0) and Rijksmuseum RP-P-2014-30 (Public Domain Mark)",
   "colour": "source",
   "ink": "#3b2a1a",
   "sprites": [
@@ -198,6 +198,164 @@
         "page": "https://commons.wikimedia.org/wiki/File:Mediterranean_chart_fourteenth_century2.jpg",
         "crop": [3709, 3816, 4399, 3939]
       }
+    },
+    {
+      "id": "pare-truie",
+      "kind": "monster",
+      "style": "pare",
+      "file": "pare-truie.png",
+      "anchor": [0.5, 0.75],
+      "sizePx": 190,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/8/88/Woodcut_of_marine_mosters_Wellcome_L0033289.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:Woodcut_of_marine_mosters_Wellcome_L0033289.jpg",
+        "crop": [998, 549, 2938, 1599]
+      },
+      "minClearancePx": 150,
+      "weight": 3
+    },
+    {
+      "id": "pare-boar",
+      "kind": "monster",
+      "style": "pare",
+      "file": "pare-boar.png",
+      "anchor": [0.5, 0.75],
+      "sizePx": 180,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/6/66/Woodcut_of_marine_mosters_Wellcome_L0033267.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:Woodcut_of_marine_mosters_Wellcome_L0033267.jpg",
+        "crop": [574, 2157, 2414, 3183]
+      },
+      "minClearancePx": 140,
+      "weight": 3
+    },
+    {
+      "id": "pare-lion",
+      "kind": "monster",
+      "style": "pare",
+      "file": "pare-lion.png",
+      "anchor": [0.5, 0.75],
+      "sizePx": 180,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/c/c8/Woodcut_marine_monsters_Wellcome_L0033060.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:Woodcut_marine_monsters_Wellcome_L0033060.jpg",
+        "crop": [692, 1221, 2348, 2213]
+      },
+      "minClearancePx": 140,
+      "weight": 2
+    },
+    {
+      "id": "pare-calf",
+      "kind": "monster",
+      "style": "pare",
+      "file": "pare-calf.png",
+      "anchor": [0.5, 0.75],
+      "sizePx": 170,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/6/66/Woodcut_of_marine_mosters_Wellcome_L0033267.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:Woodcut_of_marine_mosters_Wellcome_L0033267.jpg",
+        "crop": [647, 651, 2430, 1491]
+      },
+      "minClearancePx": 140,
+      "weight": 2
+    },
+    {
+      "id": "pare-elephant",
+      "kind": "monster",
+      "style": "pare",
+      "file": "pare-elephant.png",
+      "anchor": [0.5, 0.75],
+      "sizePx": 180,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/8/88/Woodcut_of_marine_mosters_Wellcome_L0033289.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:Woodcut_of_marine_mosters_Wellcome_L0033289.jpg",
+        "crop": [894, 2489, 2927, 3490]
+      },
+      "minClearancePx": 140,
+      "weight": 2
+    },
+    {
+      "id": "pare-bear",
+      "kind": "monster",
+      "style": "pare",
+      "file": "pare-bear.png",
+      "anchor": [0.5, 0.75],
+      "sizePx": 200,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/8/8b/Woodcut_of_marine_animals_Wellcome_L0033059.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:Woodcut_of_marine_animals_Wellcome_L0033059.jpg",
+        "crop": [1019, 3221, 2884, 3775]
+      },
+      "minClearancePx": 150,
+      "weight": 1
+    },
+    {
+      "id": "pare-seaman",
+      "kind": "monster",
+      "style": "pare",
+      "file": "pare-seaman.png",
+      "anchor": [0.5, 0.75],
+      "sizePx": 170,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/c/c8/Woodcut_marine_monsters_Wellcome_L0033060.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:Woodcut_marine_monsters_Wellcome_L0033060.jpg",
+        "crop": [521, 2941, 2380, 3873]
+      },
+      "minClearancePx": 140,
+      "weight": 1
+    },
+    {
+      "id": "pare-bishop",
+      "kind": "monster",
+      "style": "pare",
+      "file": "pare-bishop.png",
+      "anchor": [0.5, 0.75],
+      "sizePx": 110,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/8/8b/Woodcut_of_marine_animals_Wellcome_L0033059.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:Woodcut_of_marine_animals_Wellcome_L0033059.jpg",
+        "crop": [1421, 647, 2434, 2415]
+      },
+      "minClearancePx": 140,
+      "weight": 1
+    },
+    {
+      "id": "ship-w-key",
+      "kind": "ship",
+      "style": "pare",
+      "file": "ship-w-key.png",
+      "anchor": [0.5, 0.75],
+      "sizePx": 84,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://www.artic.edu/iiif/2/a4615587-d61f-20f6-541c-7ee4a9be6cb6/full/2139,/0/default.jpg",
+        "page": "https://www.artic.edu/artworks/27881",
+        "crop": [17, 21, 2109, 2976]
+      },
+      "heading": "left"
+    },
+    {
+      "id": "ship-w-buss",
+      "kind": "ship",
+      "style": "pare",
+      "file": "ship-w-buss.png",
+      "anchor": [0.5, 0.75],
+      "sizePx": 80,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://iiif.micr.io/qEOmq/full/max/0/default.jpg",
+        "page": "https://www.rijksmuseum.nl/en/collection/RP-P-2014-30",
+        "crop": [81, 142, 1747, 2153]
+      },
+      "heading": "left"
     }
   ]
 }

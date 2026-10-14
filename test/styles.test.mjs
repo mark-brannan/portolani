@@ -14,7 +14,7 @@ const env = { readJSON: async (p) => JSON.parse(readFileSync(join(ROOT, p), 'utf
 const manifests = { vivid: await env.readJSON('packs/vivid/pack.json'), scanned: await env.readJSON('packs/scanned/pack.json') };
 
 test('listStyles offers the styles in the packs, the tower first among towns', async () => {
-  assert.deepEqual(await listStyles(env), { rose: ['aguiar', 'martines', 'oliva', 'brouscon', 'fleurs', 'dieppe'], monster: ['carta-marina', 'bestiary'], town: ['tower', 'aguiar', 'martines'] });
+  assert.deepEqual(await listStyles(env), { rose: ['aguiar', 'martines', 'oliva', 'brouscon', 'fleurs', 'dieppe'], monster: ['carta-marina', 'bestiary', 'pare'], town: ['tower', 'aguiar', 'martines'] });
 });
 
 test('every sprite in both packs names its style', () => {
