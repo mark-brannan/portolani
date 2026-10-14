@@ -337,8 +337,8 @@ function clearanceField(data) {
 function buildScene(data, packs, measure) {
   const field = clearanceField(data);
   const roses = packs.catalan.sprites.filter((s) => s.kind === 'rose');
-  const bigRose = roses.find((s) => s.id === 'rose-aguiar');
-  const smallRose = roses.find((s) => s.id === 'rose-catalan');
+  const bigRose = roses.reduce((a, b) => (b.sizePx > a.sizePx ? b : a));
+  const smallRose = roses.reduce((a, b) => (b.sizePx < a.sizePx ? b : a));
   const cartoucheSprite = packs.catalan.sprites.find((s) => s.kind === 'cartouche');
   const occupied = []; // discs {x, y, r} that later ornaments keep clear of
   const edge = (x, y) => Math.min(x, y, W - x, H - y);
@@ -612,7 +612,53 @@ function latticeOf(scene, data) {
   return rays;
 }
 
+// The `plain` pack: no images, so a rose and a cartouche frame drawn in code, in the ink of the day.
+const PLAIN = [
+  { id: 'rose-plain-large', kind: 'rose', sizePx: 300 },
+  { id: 'rose-plain-small', kind: 'rose', sizePx: 110 },
+  { id: 'cartouche-plain', kind: 'cartouche', sizePx: 340, panel: [0.034, 0.665, 0.953, 0.994] },
+].map((s) => ({ ...s, plain: true, anchor: [0.5, 0.5], img: { width: 1031, height: 784 }, weight: 1 }));
+
+function drawPlainRose(g, x, y, size) {
+  const R = size / 2, w = Math.max(1, size / 150);
+  g.save();
+  g.translate(x, y);
+  g.lineJoin = 'miter';
+  g.strokeStyle = STYLE.ink;
+  g.lineWidth = w;
+  for (const r of [R, R * 0.86]) { g.beginPath(); g.arc(0, 0, r, 0, 2 * Math.PI); g.stroke(); }
+  // 32 points: 4 cardinal, 4 inter-cardinal (red), 8 half-winds (green), 16 quarter-winds
+  const ranks = [[4, 0, 0.8, STYLE.ink], [4, 45, 0.62, STYLE.windRed], [8, 22.5, 0.46, STYLE.windGreen], [16, 11.25, 0.32, STYLE.ink]];
+  for (const [n, off, len, col] of ranks) {
+    for (let i = 0; i < n; i++) {
+      const step = 360 / n, a = ((i * step + off) % 360 - 90) * RAD, half = (step / 2) * 0.55 * RAD, r = R * len;
+      g.fillStyle = col;
+      g.beginPath();
+      g.moveTo(0, 0); g.lineTo(Math.cos(a - half) * r * 0.22, Math.sin(a - half) * r * 0.22);
+      g.lineTo(Math.cos(a) * r, Math.sin(a) * r); g.lineTo(Math.cos(a + half) * r * 0.22, Math.sin(a + half) * r * 0.22);
+      g.closePath(); g.fill();
+    }
+  }
+  g.fillStyle = STYLE.parchment;
+  g.beginPath(); g.arc(0, 0, R * 0.05, 0, 2 * Math.PI); g.fill(); g.stroke();
+  g.restore();
+}
+
+// A double rule round the lettered panel.
+function drawPlainFrame(g, c) {
+  const [px0, py0, px1, py1] = c.sprite.panel;
+  const x = c.x + px0 * c.w, y = c.y + py0 * c.h, w = (px1 - px0) * c.w, h = (py1 - py0) * c.h;
+  g.save();
+  g.strokeStyle = STYLE.ink;
+  g.lineWidth = 2;
+  g.strokeRect(x - 4, y - 4, w + 8, h + 8);
+  g.lineWidth = 0.75;
+  g.strokeRect(x - 8, y - 8, w + 16, h + 16);
+  g.restore();
+}
+
 function drawSprite(g, s, x, y, size, { flip = false, rot = 0, anchor = s.anchor } = {}) {
+  if (s.plain) { if (s.kind === 'rose') drawPlainRose(g, x, y, size); return; }
   const w = size, h = (size * s.img.height) / s.img.width;
   g.save();
   g.translate(x, y);
@@ -693,7 +739,8 @@ function drawScene(g, scene, data, bg, view) {
   // 3. rhumb lattice: 16 nodes on a circle plus the centre, 32 rhumb lines each, in three inks
   const rays = latticeOf(scene, data);
   const inks = [STYLE.ink, STYLE.windRed, STYLE.windGreen]; // by kind: wind, quarter-wind, half-wind
-  for (const [kind, ink] of inks.entries()) {
+  const show = scene.show ?? { kinds: new Set(KINDS), names: true, rhumb: true };
+  for (const [kind, ink] of show.rhumb ? inks.entries() : []) {
     const lines = rays.filter((ray) => ray.kind === kind && meets(r, ray.box)).map((ray) => ray.line);
     limn(g, lines, data.proj.x, data.proj.y, { color: ink, alpha: STYLE.rhumbAlpha, width: STYLE.rhumbWidth, oneStroke: true, lonCenter: data.proj.lonCenter });
   }
@@ -703,7 +750,7 @@ function drawScene(g, scene, data, bg, view) {
 
   // 5. roses
   const spriteIn = (s, x, y, size) => disc(r, x, y, Math.hypot(size, (size * s.img.height) / s.img.width));
-  for (const d of scene.roseDraws) if (spriteIn(d.sprite, d.x, d.y, d.size)) drawSprite(g, d.sprite, d.x, d.y, d.size, { anchor: [0.5, 0.5] });
+  for (const d of show.kinds.has('rose') ? scene.roseDraws : []) if (spriteIn(d.sprite, d.x, d.y, d.size)) drawSprite(g, d.sprite, d.x, d.y, d.size, { anchor: [0.5, 0.5] });
 
   // 6. towns
   for (const t of scene.towns) if (disc(r, t.x, t.y - 8 * t.size, 12 * t.size)) drawTower(g, t);
@@ -711,7 +758,7 @@ function drawScene(g, scene, data, bg, view) {
   // 7. names
   g.save();
   g.textBaseline = 'middle';
-  for (const n of scene.names) {
+  for (const n of show.names ? scene.names : []) {
     if (!disc(r, n.x, n.y, n.width + n.fontPx)) continue;
     g.save();
     g.translate(n.x, n.y);
@@ -724,19 +771,19 @@ function drawScene(g, scene, data, bg, view) {
   g.restore();
 
   // 8. monsters, 9. ships
-  for (const m of scene.monsters) if (spriteIn(m.sprite, m.x, m.y, m.size)) drawSprite(g, m.sprite, m.x, m.y, m.size, { flip: m.flip, anchor: [0.5, 0.5] });
-  for (const s of scene.ships) if (spriteIn(s.sprite, s.x, s.y, s.size)) drawSprite(g, s.sprite, s.x, s.y, s.size, { flip: s.flip, rot: s.flip ? -s.tilt : s.tilt, anchor: [0.5, 0.6] });
+  for (const m of show.kinds.has('monster') ? scene.monsters : []) if (spriteIn(m.sprite, m.x, m.y, m.size)) drawSprite(g, m.sprite, m.x, m.y, m.size, { flip: m.flip, anchor: [0.5, 0.5] });
+  for (const s of show.kinds.has('ship') ? scene.ships : []) if (spriteIn(s.sprite, s.x, s.y, s.size)) drawSprite(g, s.sprite, s.x, s.y, s.size, { flip: s.flip, rot: s.flip ? -s.tilt : s.tilt, anchor: [0.5, 0.6] });
 
   // 10. cartouche, lettered in its cleared panel
   const c = scene.cartouche;
-  if (!meets(r, { x0: c.x, y0: c.y, x1: c.x + c.w, y1: c.y + c.h })) { g.restore(); return; }
+  if (!show.kinds.has('cartouche') || !meets(r, { x0: c.x, y0: c.y, x1: c.x + c.w, y1: c.y + c.h })) { g.restore(); return; }
   const [px0, py0, px1, py1] = c.sprite.panel;
   const pw = (px1 - px0) * c.w, ph = (py1 - py0) * c.h;
   g.save();
   g.beginPath(); g.rect(c.x + px0 * c.w, c.y + py0 * c.h, pw, ph); g.clip();
   bgPart(c.x + px0 * c.w, c.y + py0 * c.h, c.x + px1 * c.w, c.y + py1 * c.h);
   g.restore();
-  drawSprite(g, c.sprite, c.x, c.y, c.w, { anchor: [0, 0] });
+  if (c.sprite.plain) drawPlainFrame(g, c); else drawSprite(g, c.sprite, c.x, c.y, c.w, { anchor: [0, 0] });
   g.save();
   g.fillStyle = STYLE.ink;
   g.textAlign = 'center';
@@ -754,10 +801,12 @@ function drawScene(g, scene, data, bg, view) {
 // ---------------------------------------------------------------- setup
 
 // Load data and packs, place the ornaments, paint the parchment. `opts`: ink and parchment
-// colours (hex), density and view; defaults reproduce the committed mockup.
+// colours (hex), density and view; defaults reproduce the committed mockup. Also `pack` (one of
+// PACKS), `kinds` (the ornament kinds drawn, of KINDS), `names` and `rhumb` (booleans).
 export async function createScene(environment, opts = {}) {
   env = environment;
-  const { ink = '#3b2a1a', parchment: tone = '#e9d8b4', density = 1 } = opts;
+  const { ink = '#3b2a1a', parchment: tone = '#e9d8b4', density = 1, pack = 'all', names = true, rhumb: rhumbOn = true } = opts;
+  const show = { kinds: new Set(opts.kinds ?? KINDS), names, rhumb: rhumbOn };
   const view = clampView(opts.view ?? DEFAULT_VIEW);
   STYLE.ink = ink;
   STYLE.parchment = tone;
@@ -766,8 +815,13 @@ export async function createScene(environment, opts = {}) {
   TUNE.townGap = 48 / density;
 
   const t0 = performance.now();
-  const [, coarse, cartaMarina, catalan] = await Promise.all(
-    [env.loadFont(STYLE.font), loadWorld(), loadPack('carta-marina'), loadPack('catalan')]);
+  // a pack not chosen is not fetched: carta-marina draws monsters and ships, catalan roses and the
+  // cartouche, and `plain` stands in for the catalan kinds with shapes drawn in code
+  const [, coarse, cartaMarina, catalan] = await Promise.all([
+    env.loadFont(STYLE.font), loadWorld(),
+    pack === 'all' || pack === 'carta-marina' ? loadPack('carta-marina') : { sprites: [] },
+    pack === 'all' || pack === 'catalan' ? loadPack('catalan') : { sprites: PLAIN },
+  ]);
   const world = view.zoom > DETAIL_ZOOM ? await loadDetail(coarse, view) : coarse;
   const packs = { cartaMarina, catalan };
   const tLoad = performance.now();
@@ -775,11 +829,13 @@ export async function createScene(environment, opts = {}) {
   const data = viewData(world, view);
   const measureCtx = createCanvas(10, 10).getContext('2d');
   const measure = (text, px) => { measureCtx.font = `${px}px "${STYLE.font}"`; return measureCtx.measureText(text).width; };
-  const scene = buildScene(data, packs, measure);
+  const scene = { ...buildScene(data, packs, measure), show };
   if (!parchments.has(tone)) parchments.set(tone, parchment(1539));
   const bg = parchments.get(tone);
   return { scene, data, bg, proj: data.proj, world, coarse, view, timing: { load: tLoad - t0, place: performance.now() - tLoad } };
 }
 const parchments = new Map(); // by tone; the same seed paints the same sheet
 
+export const PACKS = ['all', 'carta-marina', 'catalan', 'plain'];
+export const KINDS = ['rose', 'ship', 'monster', 'cartouche'];
 export { drawScene, drawGround, covers, panView, zoomView, clampView, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };
