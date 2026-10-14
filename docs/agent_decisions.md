@@ -66,3 +66,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t194833z
 - Trees grow on any land between 72 S and 72 N, deserts included (no land-cover data) Undo: add a mask to plantTrees ([#91](https://github.com/mark-brannan/portolani/pull/91))
+
+### 20261014t194837z
+- Trees 13 px, a 64 px lattice, per-zoom CHANCE and MOST tables Undo: change the constants at the top of scripts/trees.mjs ([#91](https://github.com/mark-brannan/portolani/pull/91))
