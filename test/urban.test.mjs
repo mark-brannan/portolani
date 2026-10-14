@@ -103,3 +103,49 @@ test('a city close in is drawn as a plan over its footprint, on land only, its n
   assert.ok(changed > 2000, `${changed} px changed`)
   assert.ok(wet / changed < 0.01, `${wet} of ${changed} changed px are at sea`)
 })
+
+// The icon floor (scene.mjs ICON_GROW, ICON_MAX): a town's drawing is fixed by its name, and its icon
+// stands at least 0.75 of its ground tall, to 96 px, so it grows as the view closes in. The area-only
+// run (no urban footprints, so no download) pins the floor itself; the urban run, the drawing and growth.
+const ICON_GROW = 0.75, ICON_MAX = 96
+const areaEnv = { ...env, readJSON: async (p) => (p === 'geo/urban-10m.json' ? {} : env.readJSON(p)) }
+const iconRun = async (e, name, lon, lat, zooms) => {
+  const seen = []
+  for (const zoom of zooms) {
+    const { scene, data } = await createScene(e, { view: { lon, lat, zoom }, scale: 'off' })
+    const t = scene.towns.find((x) => x.name === name)
+    if (t?.city) break // the plan has taken over; it is not an icon
+    assert.ok(t?.sprite, `${name} has no drawing at z${zoom}`)
+    const p = data.places.find((x) => x.name === name)
+    const extent = Math.sqrt(p.area) * (data.proj.k * 1000) / (6371008.8 * Math.cos(p.lat * Math.PI / 180))
+    seen.push({ zoom, drawing: t.sprite.key, family: `${t.sprite.pack}/${t.sprite.style}`, h: t.h, floor: Math.min(ICON_MAX, ICON_GROW * extent) })
+  }
+  assert.ok(seen.length >= 2, `${name}: fewer than two icon zooms`)
+  assert.equal(new Set(seen.map((s) => s.drawing)).size, 1, `${name} changes drawing: ${JSON.stringify(seen)}`)
+  assert.equal(new Set(seen.map((s) => s.family)).size, 1, `${name} changes family: ${JSON.stringify(seen)}`)
+  for (let i = 1; i < seen.length; i++) assert.ok(seen[i].h >= seen[i - 1].h, `${name} shrinks z${seen[i - 1].zoom} -> z${seen[i].zoom}: ${JSON.stringify(seen)}`)
+  assert.ok(seen.at(-1).h > seen[0].h, `${name} does not grow: ${JSON.stringify(seen)}`)
+  return seen
+}
+
+test('a town keeps its drawing and its icon is floored at ICON_GROW of its metro area, to ICON_MAX', async () => {
+  const seen = await iconRun(areaEnv, 'Victoria', -123.37, 48.43, [7, 8, 9, 10])
+  for (const s of seen.filter((s) => s.h > seen[0].h)) assert.ok(Math.abs(s.h - s.floor) < 1e-6, `z${s.zoom}: h ${s.h}, floor ${s.floor}`)
+  assert.ok(seen.every((s) => s.h >= s.floor - 1e-6), JSON.stringify(seen))
+})
+
+test('the metro-area floor takes the north-south scale from the projection, so plate-carree does not overstate it', async () => {
+  const lon = -123.37, lat = 48.43, zoom = 9
+  const at = async (projection) => {
+    const { scene, data } = await createScene(areaEnv, { view: { lon, lat, zoom, projection }, scale: 'off' })
+    return { h: scene.towns.find((x) => x.name === 'Victoria').h, lat: data.places.find((x) => x.name === 'Victoria').lat }
+  }
+  const merc = await at('mercator'), plate = await at('plate-carree')
+  // plate-carree's north-south scale is cos(lat) of its east-west one; Mercator's are equal
+  assert.ok(Math.abs(plate.h - merc.h * Math.sqrt(Math.cos(merc.lat * Math.PI / 180))) < 1e-6, `mercator ${merc.h}, plate-carree ${plate.h}`)
+})
+
+test('a town with an urban footprint keeps its drawing and its icon grows until the city plan takes over', { skip: !existsSync(URBAN) && 'no urban areas download' }, async () => {
+  await iconRun(env, 'Victoria', -123.37, 48.43, [7, 7.5, 8, 8.5, 9])
+  await iconRun(env, 'Seattle', -122.33, 47.6, [5, 6, 7])
+})
