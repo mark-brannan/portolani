@@ -93,3 +93,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t195321z
 - Carta Marina buildings offered in the picker, left out of the default selection Undo: drop the carta-marina clause from DEFAULT_RULES in scene.mjs and refresh the goldens ([#94](https://github.com/mark-brannan/portolani/pull/94))
+
+### 20261014t195326z
+- Building ids house, church, castle, round-tower, tent with style carta-marina, their own picker family Undo: rename in buildings.mjs before any link names them ([#94](https://github.com/mark-brannan/portolani/pull/94))
