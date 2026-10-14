@@ -120,3 +120,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t195721z
 - Relief: ornaments clear it peak by peak, not range by range Undo: filter whole ranges in clearOf ([#95](https://github.com/mark-brannan/portolani/pull/95))
+
+### 20261014t195725z
+- Relief drawn over rivers and lakes, under coast ink and rhumb lines Undo: call paintRelief before paintWater ([#95](https://github.com/mark-brannan/portolani/pull/95))
