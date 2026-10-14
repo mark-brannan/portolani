@@ -88,7 +88,16 @@ export function cutCells({ land, coast }, size = 5, digits = 5) {
   return cells;
 }
 
-// Natural Earth rivers and lakes into the same square cells, for scripts/water.mjs past DETAIL_ZOOM.
+// The Natural Earth 10m water downloads, the world file first and then the regional supplements,
+// which hold what the world file leaves out (Lake Washington, Como, the Snohomish) and repeat none of
+// it. joinWater makes one collection of several, in this order, so cutWater's ids stay unique.
+export const WATER_FILES = {
+  rivers: ['ne_10m_rivers_lake_centerlines.geojson', 'ne_10m_rivers_north_america.geojson', 'ne_10m_rivers_europe.geojson'],
+  lakes: ['ne_10m_lakes.geojson', 'ne_10m_lakes_north_america.geojson', 'ne_10m_lakes_europe.geojson'],
+};
+export const joinWater = (geos) => ({ type: 'FeatureCollection', features: geos.flatMap((g) => g?.features ?? []) });
+
+// Natural Earth rivers and lakes into the same square cells, for scripts/water.mjs past WATER_ZOOM.
 // A feature goes whole into every cell it reaches (a river, each cell its segments' midpoints and
 // vertices fall in; a lake, each cell its box meets), so a river keeps one wiggle and a lake one
 // outline wherever the view is cut; its index in the source file is its GeoJSON `id`, by which

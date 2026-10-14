@@ -75,11 +75,15 @@ const LAND_WASH = { gilt: STYLE.gilt, green: STYLE.green, ochre: STYLE.ochre, is
 const SHOAL_OFFSET = 4, SHOAL_GAP = 6; // px seaward of the coast, and between dots
 let redSeaPolys = null; // the Red Sea to tint, or null
 // Rivers and lakes (water.mjs), from the 50m files, loaded once the first style that draws them is
-// chosen, and past DETAIL_ZOOM from Natural Earth 10m cut into WATER_10M's cells (cutWater), the
-// cells around the view; a site without them keeps the 50m. A lake or river is drawn where its box
-// meets the view widened by WATER_PX.
+// chosen, and past WATER_ZOOM from Natural Earth 10m with its regional supplements, cut into
+// WATER_10M's cells (cutWater), the cells around the view; a site without them keeps the 50m. A
+// lake or river is drawn where its box meets the view widened by WATER_PX.
 let water = null, waterLoad = null;
 const WATER_10M = { dir: 'water-10m', cell: 5, margin: 2 }; // must match scripts/build-preview.mjs
+// Where the 10m water takes over from the 50m, two zooms before the 10m land: the 50m lakes file has
+// no Lake Washington, Maggiore or Como, and at 5-degree cells a z7 view fetches the cells a z9 one
+// does (Seattle 8 cells, 0.7 MB; the Great Lakes 12, 1.7 MB).
+const WATER_ZOOM = 7;
 const WATER_PX = 64; // a lozenge and its tributaries reach past the lake they stand for
 const loadWater = () => (waterLoad ??= Promise.all(['ne-rivers-lake-centerlines-50m', 'ne-lakes-50m'].map(loadGeo))
   .then(([r, l]) => waterOf(r, l)).catch((e) => { waterLoad = null; throw e; })); // a failed fetch is tried again
@@ -1948,7 +1952,7 @@ export async function createScene(environment, opts = {}) {
   const [, coarse, chosen] = await Promise.all([env.loadFont(STYLE.font), loadWorld(), sprites]);
   const { scaleSprite, ...placed } = chosen;
   redSeaPolys = redSea ? geojsonPolygons(await env.readJSON('geo/red-sea-50m.json')) : null;
-  if (STYLE.rivers !== 'off' || STYLE.lakes !== 'off') water = (view.zoom > DETAIL_ZOOM && await loadWater10m(view)) || await loadWater();
+  if (STYLE.rivers !== 'off' || STYLE.lakes !== 'off') water = (view.zoom > WATER_ZOOM && await loadWater10m(view)) || await loadWater();
   const world = view.zoom > DETAIL_ZOOM ? await loadDetail(coarse, view) : coarse;
   const tLoad = performance.now();
 
