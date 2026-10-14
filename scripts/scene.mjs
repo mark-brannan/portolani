@@ -349,8 +349,8 @@ const letterOptions = (data) => ({
   visible: (lon, lat) => { const x = data.proj.x(lon), y = data.proj.y(lat); return x >= 0 && x <= W && y >= 0 && y <= H; },
 });
 
-// World-view lettering, hand-set: [Latin, English, lon, lat]. Continents are spaced capitals shown
-// at zoom <= CONTINENT_ZOOM; regions are italic below it and down to REGION_ZOOM_MAX.
+// World-view lettering, hand-set: [Latin, English, lon, lat]. Zoom levels are whole: continents are
+// spaced capitals at level 3 and out (zoom < REGION_ZOOM), regions italic at levels 4 and 5.
 const CONTINENTS = [
   ['EVROPA', 'EUROPE', 14, 50], ['AFRICA', 'AFRICA', 20, 7], ['ASIA', 'ASIA', 90, 48],
   ['AMERICA SEPTENTRIONALIS', 'NORTH AMERICA', -100, 45], ['AMERICA MERIDIONALIS', 'SOUTH AMERICA', -60, -12],
@@ -362,7 +362,7 @@ const REGIONS = [
   ['Syria', 'Syria', 38, 35], ['Egiptus', 'Egypt', 29.5, 27], ['Libya', 'Libya', 17, 29],
   ['Barbaria', 'Maghreb', 4, 31], ['Arabia', 'Arabia', 44, 24], ['Thracia', 'Thrace', 26, 42.3],
 ];
-const CONTINENT_ZOOM = 3, REGION_ZOOM_MAX = 6; // regions: CONTINENT_ZOOM < zoom <= REGION_ZOOM_MAX, which holds the default view (z5.4)
+const REGION_ZOOM = 4, REGION_ZOOM_END = 6; // regions: REGION_ZOOM <= zoom < REGION_ZOOM_END, which holds the default view
 
 // The continent and region names to letter, each with the box it reserves: measured with the font and
 // spacing they are drawn in, so later names and towns make way. A name off the canvas or meeting an
@@ -381,10 +381,10 @@ function placeWorldNames(data, ctx, boxes, { continents, regions }) {
     boxes.push(box);
     out.push({ text, x, y, size, spacing, italic, r: Math.max(box.hw, box.hh) });
   };
-  if (continents && z <= CONTINENT_ZOOM) {
+  if (continents && z < REGION_ZOOM) {
     for (const c of CONTINENTS) { const text = c[continents === 'latin' ? 0 : 1], size = text.length > 12 ? 22 : 30; put(text, c[2], c[3], size, size * 0.6, false); }
   }
-  if (regions !== 'off' && z > CONTINENT_ZOOM && z <= REGION_ZOOM_MAX) {
+  if (regions !== 'off' && z >= REGION_ZOOM && z < REGION_ZOOM_END) {
     for (const r of REGIONS) put(r[lang], r[2], r[3], 22, 1, true);
   }
   return out;
@@ -901,10 +901,11 @@ function drawScene(g, scene, data, bg, view) {
   // 6. towns
   for (const t of scene.towns) if (disc(r, t.x, t.y - 8 * t.size, 12 * t.size)) drawTower(g, t);
 
-  // 7. names, in ink, the chief towns in red; the continents and regions first, under them
+  // 7. names, in ink, the chief towns in red; the continents and regions first, under them. Those
+  // have their own settings, so they are drawn whether or not the other names are.
   g.save();
   g.fillStyle = STYLE.ink; g.textAlign = 'center'; g.textBaseline = 'middle';
-  for (const w of show.names ? scene.worldNames : []) {
+  for (const w of scene.worldNames) {
     if (!disc(r, w.x, w.y, w.r)) continue;
     g.font = `${w.italic ? 'italic ' : ''}${w.size}px "${STYLE.font}"`;
     g.letterSpacing = `${w.spacing}px`;
@@ -950,7 +951,7 @@ function drawScene(g, scene, data, bg, view) {
 // Load data and packs, place the ornaments, paint the parchment. `opts`: ink and parchment
 // colours (hex), density and view; defaults reproduce the committed mockup. Also `pack` (one of
 // PACKS), `kinds` (the ornament kinds drawn, of KINDS), `names` and `rhumb` (booleans), `scale` (a SCALE_NAMES entry, or 'off'),
-// `continents` (boolean) and `regions` ('off', 'latin' or 'english'); the continents follow the regions' language, English when those are off.
+// `continents` (boolean) and `regions` ('off', 'latin' or 'english'); the continents follow the regions' language, Latin when those are off.
 export async function createScene(environment, opts = {}) {
   env = environment;
   const { ink = '#3b2a1a', parchment: tone = '#e9d8b4', density = 1, pack = 'all', names = true, rhumb: rhumbOn = true, scale = 'chequer', continents = false, regions = 'off' } = opts;
@@ -975,7 +976,7 @@ export async function createScene(environment, opts = {}) {
   const tLoad = performance.now();
 
   const data = viewData(world, view);
-  const scene = { ...buildScene(data, packs, createCanvas(10, 10).getContext('2d'), { continents: continents && (regions === 'latin' ? 'latin' : 'english'), regions }), show };
+  const scene = { ...buildScene(data, packs, createCanvas(10, 10).getContext('2d'), { continents: continents && (regions === 'english' ? 'english' : 'latin'), regions }), show };
   if (!parchments.has(tone)) parchments.set(tone, parchment(1539));
   const bg = parchments.get(tone);
   return { scene, data, bg, proj: data.proj, world, coarse, view, timing: { load: tLoad - t0, place: performance.now() - tLoad } };

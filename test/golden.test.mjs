@@ -100,6 +100,11 @@ test('world lettering: continents at z2, regions at z5, nothing by default', asy
   assert.equal(await count(VIEWS['world-z2'], { regions: 'latin' }), 0);
   assert.ok(await count(VIEWS['region-z5'], { regions: 'latin' }) > 0, 'no regions at z5');
   assert.ok(await count(VIEWS['region-z5'], { regions: 'english' }) > 0, 'no regions at z5');
+  // drawn on their own setting, with the other names off
+  const { scene, data, bg } = await createScene(env, { view: VIEWS['world-z2'], names: false, continents: true });
+  const draw = (s) => { const c = createCanvas(W, H); drawScene(c.getContext('2d'), s, data, bg, { scale: 1, x: 0, y: 0 }); return c.getContext('2d').getImageData(0, 0, W, H).data; };
+  const a = draw(scene), b = draw({ ...scene, worldNames: [] });
+  assert.ok(a.some((v, i) => v !== b[i]), 'continents hidden with Names off');
 });
 
 test('scale bar: every style draws at z5 and is hidden at z2', async () => {
