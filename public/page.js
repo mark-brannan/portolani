@@ -254,7 +254,7 @@ const BORDER_GLYPHS = {
   transparent: svg(`${MAP_LINES}<path d="M7 9h14" ${stroke('#8c2f1e', 1.2)}/>`),
 };
 const CHOICES = {
-  projection: [['mercator', 'Mercator', 'rhumb lines straight'], ['plate-carree', 'Plate carrée', 'equal degrees'], ['miller', 'Miller', 'poles tamed'], ['equal-area', 'Equal-area', 'Gall–Peters'], ['orthographic', 'Globe', 'orthographic'], ['azimuthal-equidistant', 'Azimuthal equidistant', 'true from the centre'], ['stereographic', 'Stereographic', 'the polar chart']].map((o) => [...o, PROJECTION_GLYPHS[o[0]]]),
+  projection: [['mercator', 'Mercator', 'rhumb lines straight'], ['plate-carree', 'Plate carrée', 'equal degrees'], ['miller', 'Miller', 'poles tamed'], ['equal-area', 'Equal-area', 'Gall–Peters'], ['orthographic', 'Globe', 'orthographic'], ['azimuthal-equidistant', 'Azimuthal equidistant', 'true from the centre'], ['stereographic', 'Stereographic', 'the polar chart']].map(([value, label, note = '']) => [value, label, note, PROJECTION_GLYPHS[value]]),
   regions: [['latin', 'Latin', 'Hispania'], ['english', 'English', 'Iberia']],
   titleMode: [['auto', 'Automatic', 'what the view shows'], ['custom', 'Custom']],
   mountains: [['off', 'Off', '', MOUNTAIN_GLYPHS.off], ['ink', 'Ink', 'black and white hatching, as Engraved', MOUNTAIN_GLYPHS.ink], ['colour', 'Colour', 'ochre wash, as the Carta Marina', MOUNTAIN_GLYPHS.colour]],
@@ -265,8 +265,8 @@ const CHOICES = {
   rivers: [['off', 'Off'], ['aguiar', 'Wiggled ink', 'Aguiar, 1492', RIVER_GLYPHS.aguiar], ['marina', 'Double line', 'Carta Marina, 1539', RIVER_GLYPHS.marina], ['plain', 'Plain blue line', '', RIVER_GLYPHS.plain]],
   lakes: [['off', 'Off'], ['aguiar', 'Lozenges', 'Aguiar, 1492', LAKE_GLYPHS.aguiar], ['marina', 'True shapes, hatched', 'Carta Marina, 1539', LAKE_GLYPHS.marina], ['plain', 'True shapes, blue wash', '', LAKE_GLYPHS.plain]],
   trees: [['off', 'Off'], ['marina', 'Green crowns', 'Carta Marina, 1539', '#6b8a4a'], ['ink', 'Ink only']],
-  scale: [['off', 'Off'], ['genoese', 'Genoese', 'drawn as vectors'], ['chequer', 'Chequer'], ['chevron', 'Chevron ladder', 'Genoese'], ['ribbon', 'Ribbon', 'Martines'], ['beads', 'Beads', 'Prunes'], ['ruled', 'Ruled', 'Beccari']].map((o) => [...o, SCALE_GLYPHS[o[0]]]),
-  scaleBorder: [['bordered', 'Bordered', 'parchment and a double rule'], ['blank', 'Blank', 'parchment, no rule'], ['transparent', 'Transparent', 'drawn over the map']].map((o) => [...o, BORDER_GLYPHS[o[0]]]),
+  scale: [['off', 'Off'], ['genoese', 'Genoese', 'drawn as vectors'], ['chequer', 'Chequer'], ['chevron', 'Chevron ladder', 'Genoese'], ['ribbon', 'Ribbon', 'Martines'], ['beads', 'Beads', 'Prunes'], ['ruled', 'Ruled', 'Beccari']].map(([value, label, note = '']) => [value, label, note, SCALE_GLYPHS[value]]),
+  scaleBorder: [['bordered', 'Bordered', 'parchment and a double rule'], ['blank', 'Blank', 'parchment, no rule'], ['transparent', 'Transparent', 'drawn over the map']].map(([value, label, note = '']) => [value, label, note, BORDER_GLYPHS[value]]),
 };
 for (const [id, options] of Object.entries(CHOICES)) {
   const el = $(id);
