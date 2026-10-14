@@ -10,6 +10,14 @@
       "note": "(sea, gulf and bay names)"
     },
     {
+      "id": "ne_10m_urban_areas",
+      "file": "ne_10m_urban_areas.geojson",
+      "url": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_urban_areas.geojson",
+      "sha256": "5136ffd816a9b28c0f295e6797b4c03eaa421be80d78b90f542db4a932dd4497",
+      "rights": "Natural Earth, public domain",
+      "note": "(27,943,663 bytes; the towns' urban footprints, drawn as city plans)"
+    },
+    {
       "id": "im-fell-english",
       "file": "IMFeENrm28P.ttf",
       "url": "https://raw.githubusercontent.com/google/fonts/main/ofl/imfellenglish/IMFeENrm28P.ttf",

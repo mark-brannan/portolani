@@ -143,15 +143,27 @@ test('town families mix: each placed town takes the next family in turn', async 
   assert.equal((await createScene(env, { view: LIGURIA, sprites: ['vivid/serpent-a'] })).scene.towns.length, 0, 'no town family, no towns');
 });
 
-test('townSize: by population a great city stands bigger than a small town; by rank, as before', async () => {
-  const { scene } = await createScene(env, { view: NILE });
-  const by = Object.fromEntries(scene.towns.map((t) => [t.name, t]));
-  assert.ok(by.Cairo && by.Suez, scene.towns.map((t) => t.name).join());
-  assert.ok(by.Cairo.size > 1.3 && by.Cairo.size > by.Suez.size * 1.4, `Cairo ${by.Cairo.size}, Suez ${by.Suez.size}`);
+test('townSize: by metro area or population a great city stands bigger than a small town; by rank, as before', async () => {
+  for (const townSize of [undefined, 'area', 'population']) {
+    const { scene } = await createScene(env, { view: NILE, townSize });
+    const by = Object.fromEntries(scene.towns.map((t) => [t.name, t]));
+    assert.ok(by.Cairo && by.Suez, scene.towns.map((t) => t.name).join());
+    assert.ok(by.Cairo.size > 1.3 && by.Cairo.size > by.Suez.size * 1.4, `${townSize}: Cairo ${by.Cairo.size}, Suez ${by.Suez.size}`);
+  }
   const rank = (await createScene(env, { view: NILE, townSize: 'rank' })).scene.towns;
   for (const t of rank) assert.equal(t.size, t.rank <= 2 ? 1.25 : 1, t.name);
   const legacy = (await createScene(env, { view: NILE, town: 'tower' })).scene.towns;
   for (const t of legacy) assert.equal(t.size, t.rank <= 2 ? 1.25 : 1, `older caller, ${t.name}`);
+});
+
+test('a bigger metro is drawn taller, whichever drawing each town gets: Seattle over Portland', async () => {
+  const { scene } = await createScene(env, { view: { lon: -122.5, lat: 46.5, zoom: 7 } });
+  const by = Object.fromEntries(scene.towns.map((t) => [t.name, t]));
+  assert.ok(by.Seattle && by.Portland, scene.towns.map((t) => t.name).join());
+  assert.ok(by.Seattle.h > by.Portland.h, `Seattle ${by.Seattle.h}, Portland ${by.Portland.h}`);
+  // drawn height follows size alone, over every town in the view, so no drawing stands a smaller town taller
+  const towns = [...scene.towns].sort((a, b) => a.size - b.size);
+  for (let i = 1; i < towns.length; i++) assert.ok(towns[i].h >= towns[i - 1].h, `${towns[i].name} ${towns[i].h} under ${towns[i - 1].name} ${towns[i - 1].h}`);
 });
 
 test('the monster and ship cast is the same for one view, and a big selection shows more of itself across views', async () => {
