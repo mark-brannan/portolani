@@ -13,13 +13,14 @@
   .controls { display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: center; margin-bottom: 12px; }
   label { display: flex; align-items: center; gap: 8px; }
   input[type=color] { width: 40px; height: 28px; padding: 0; border: 1px solid var(--line); background: none; }
-  canvas { display: block; width: 100%; height: auto; border: 1px solid var(--line); }
+  canvas { display: block; width: 100%; height: auto; border: 1px solid var(--line); touch-action: none; cursor: grab; }
+  canvas:active { cursor: grabbing; }
   #status, footer { color: var(--muted); font-size: 13px; margin-top: 8px; }
 </style>
 </head>
 <body>
 <main>
-  <h1>Portolani: western Mediterranean, fixed view</h1>
+  <h1>Portolani: drag to pan, wheel or pinch to zoom</h1>
   <div class="controls">
     <label>Ink <input id="ink" type="color" value="#3b2a1a"></label>
     <label>Parchment <input id="parchment" type="color" value="#e9d8b4"></label>

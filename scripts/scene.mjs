@@ -3,6 +3,7 @@
 // environment: createCanvas(w, h), readJSON(path), loadImage(path), loadFont(). Paths are logical:
 // `geo/<id>.geojson`, a coastlines data id, and `packs/<pack>/<file>`. Land, wash, coast and
 // lattice are drawn in lon/lat through coast-wright, so any view or projection draws the same way.
+// A view is a Web Mercator centre and zoom, { lon, lat, zoom }, on a W x H canvas.
 
 import { fill, trace, limn, rhumb, geojsonPolygons, geojsonRings } from 'coast-wright';
 
@@ -30,6 +31,8 @@ const W = 1600, H = 1000;
 const FRAME = { lonMin: -6, lonMax: 20, latMin: 34, latMax: 46 };
 const MARGIN = 2; // degrees beyond FRAME whose features the scene keeps
 const DETAIL = { lon: 8.93, lat: 44.41, scale: 2 }; // Genoa; window clamped to the scene
+// The world spans the canvas at the far end; 50m data holds to about z9 at the near end.
+const ZOOM = { min: Math.log2(W / 512), max: 9 };
 
 // Per-run tuning; `density` scales how much ornament is placed (1 = the committed mockup).
 const TUNE = { monsterMax: 4, shipMax: 2, townGap: 48 };
@@ -56,25 +59,67 @@ const hexA = (hex, a) => {
   return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`;
 };
 
+const RAD = Math.PI / 180;
 const mercY = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360));
+const mercLat = (y) => (2 * Math.atan(Math.exp(y)) - Math.PI / 2) / RAD;
+const wrapLon = (lon) => ((((lon + 180) % 360) + 360) % 360) - 180;
+const kOf = (zoom) => (512 * 2 ** zoom) / (2 * Math.PI); // px per Mercator radian
 
-// Web Mercator fitted to cover the frame, centred on it.
-function makeProjection(frame, w, h) {
-  const lon0 = ((frame.lonMin + frame.lonMax) / 2) * Math.PI / 180;
-  const y0 = (mercY(frame.latMin) + mercY(frame.latMax)) / 2;
-  const lonCenter = (frame.lonMin + frame.lonMax) / 2;
-  const k = Math.max(w / ((frame.lonMax - frame.lonMin) * Math.PI / 180), h / (mercY(frame.latMax) - mercY(frame.latMin)));
+// Web Mercator centred on the view; longitudes are measured from its centre, so any seam is behind it.
+function makeProjection(view, w = W, h = H) {
+  const k = kOf(view.zoom), lonCenter = view.lon, y0 = mercY(view.lat);
   // x(lon, lat) and y(lat, lon), as coast-wright calls them
-  const x = (lon) => w / 2 + (lon * Math.PI / 180 - lon0) * k;
+  const x = (lon) => w / 2 + wrapLon(lon - lonCenter) * RAD * k;
   const y = (lat) => h / 2 - (mercY(lat) - y0) * k;
   return {
-    k,
-    zoom: Math.log2((k * 2 * Math.PI) / 512),
-    lonCenter, x, y,
+    k, zoom: view.zoom, lonCenter, x, y,
     project: (lon, lat) => [x(lon), y(lat)],
-    invert: (px, py) => [lonCenter + ((px - w / 2) / k) * 180 / Math.PI, (2 * Math.atan(Math.exp(y0 - (py - h / 2) / k)) - Math.PI / 2) * 180 / Math.PI],
+    invert: (px, py) => [lonCenter + (px - w / 2) / k / RAD, mercLat(y0 - (py - h / 2) / k)],
   };
 }
+
+// The view that covers a lon/lat frame, centred on it.
+function viewOfFrame(frame) {
+  const y0 = (mercY(frame.latMin) + mercY(frame.latMax)) / 2;
+  const k = Math.max(W / ((frame.lonMax - frame.lonMin) * RAD), H / (mercY(frame.latMax) - mercY(frame.latMin)));
+  return { lon: (frame.lonMin + frame.lonMax) / 2, lat: mercLat(y0), zoom: Math.log2((k * 2 * Math.PI) / 512) };
+}
+const DEFAULT_VIEW = viewOfFrame(FRAME);
+
+// Zoom within ZOOM, longitude wrapped, and the centre kept far enough from the poles that the
+// canvas stays inside the Mercator square.
+function clampView({ lon, lat, zoom }) {
+  zoom = Math.min(ZOOM.max, Math.max(ZOOM.min, zoom));
+  const room = Math.max(0, Math.PI - H / 2 / kOf(zoom));
+  return { lon: wrapLon(lon), lat: mercLat(Math.max(-room, Math.min(room, mercY(lat)))), zoom };
+}
+
+// The view moved so the map follows a drag of (dx, dy) canvas px.
+function panView(view, dx, dy) {
+  const k = kOf(view.zoom);
+  return clampView({ lon: view.lon - dx / k / RAD, lat: mercLat(mercY(view.lat) + dy / k), zoom: view.zoom });
+}
+
+// The view zoomed by `factor` about canvas point (px, py), which keeps its place on the map.
+function zoomView(view, factor, px, py) {
+  const k = kOf(view.zoom), ox = px - W / 2, oy = py - H / 2;
+  const zoom = Math.min(ZOOM.max, Math.max(ZOOM.min, view.zoom + Math.log2(factor))), k2 = kOf(zoom);
+  const lon = view.lon + (ox / k - ox / k2) / RAD;
+  return clampView({ lon, lat: mercLat(mercY(view.lat) - oy / k + oy / k2), zoom });
+}
+
+// The lon/lat frame a projection paints, widened by `margin` degrees.
+function frameOf(proj, margin) {
+  const half = W / 2 / proj.k / RAD;
+  return {
+    lonMin: proj.lonCenter - half - margin, lonMax: proj.lonCenter + half + margin,
+    latMin: proj.invert(0, H)[1] - margin, latMax: proj.invert(0, 0)[1] + margin,
+  };
+}
+// At any of a longitude's 360-degree copies, so a frame may run past the antimeridian.
+const SHIFTS = [-360, 0, 360];
+const nearLL = (f, lon, lat) => lat > f.latMin && lat < f.latMax && SHIFTS.some((s) => lon + s > f.lonMin && lon + s < f.lonMax);
+const meetsLL = (f, b) => b.y1 > f.latMin && b.y0 < f.latMax && SHIFTS.some((s) => b.x1 + s > f.lonMin && b.x0 + s < f.lonMax);
 
 // Oriented boxes for overlap tests: centre, unit axis u, half-extents.
 function obb(cx, cy, angle, hw, hh) {
@@ -99,22 +144,43 @@ const obbInside = (o, m = 4) => {
 
 const loadGeo = (id) => env.readJSON(`geo/${id}.geojson`);
 
-async function loadData(proj) {
-  const margin = MARGIN;
-  const near = (coords) => coords.some(([lon, lat]) =>
-    lon > FRAME.lonMin - margin && lon < FRAME.lonMax + margin && lat > FRAME.latMin - margin && lat < FRAME.latMax + margin);
-  const projectLine = (line) => line.map(([lon, lat]) => proj.project(lon, lat));
-
+// The whole world, parsed once per data set, each shape with its lon/lat box; coast lines also
+// split into short runs, which is what a frame drawn while dragging walks.
+const worlds = new WeakMap();
+async function loadWorld() {
   const [landGeo, coastGeo, placesGeo] = await Promise.all(
     ['ne-land-50m', 'ne-coastline-50m', 'ne-populated-places-50m'].map(loadGeo));
-  const land = geojsonPolygons(landGeo).filter((poly) => poly.some(near)); // [lon, lat] polygons
-  const coastLL = geojsonRings(coastGeo).filter(near); // [lon, lat] lines
-  const coast = coastLL.map(projectLine); // px, for placement
+  let world = worlds.get(landGeo);
+  if (world) return world;
+  const land = geojsonPolygons(landGeo).map((poly) => ({ poly, box: bbox(poly[0]) }));
+  const lines = geojsonRings(coastGeo).map((line) => ({ line, box: bbox(line) }));
+  const runs = lines.flatMap(({ line }) => coastRuns(line).map((run) => ({ run, box: bbox(run) })));
   const places = placesGeo.features
-    .map((f) => ({ ...f.properties, lon: f.geometry.coordinates[0], lat: f.geometry.coordinates[1] }))
-    .filter((p) => p.SCALERANK <= 4 && p.lon > FRAME.lonMin - margin && p.lon < FRAME.lonMax + margin &&
-      p.lat > FRAME.latMin - margin && p.lat < FRAME.latMax + margin)
-    .map((p) => ({ name: p.NAME, rank: p.SCALERANK, pop: p.POP_MAX, xy: proj.project(p.lon, p.lat) }));
+    .filter((f) => f.properties.SCALERANK <= 4)
+    .map((f) => ({ name: f.properties.NAME, rank: f.properties.SCALERANK, pop: f.properties.POP_MAX, lon: f.geometry.coordinates[0], lat: f.geometry.coordinates[1] }));
+  world = { land, lines, runs, places };
+  worlds.set(landGeo, world);
+  return world;
+}
+
+// What a view keeps of the world: the shapes with a point within MARGIN degrees of its frame.
+function viewData(world, view) {
+  const proj = makeProjection(view);
+  const f = frameOf(proj, MARGIN);
+  const near = ([lon, lat]) => nearLL(f, lon, lat);
+  const land = world.land.filter((l) => meetsLL(f, l.box) && l.poly.some((ring) => ring.some(near))).map((l) => l.poly);
+  const coastLL = world.lines.filter((l) => meetsLL(f, l.box) && l.line.some(near)).map((l) => l.line); // [lon, lat] lines
+  // px, for placement; a line is broken where it jumps the seam behind the view
+  const coast = coastLL.flatMap((line) => {
+    const out = [[]];
+    for (const [lon, lat] of line) {
+      const p = proj.project(lon, lat), cur = out[out.length - 1], prev = cur[cur.length - 1];
+      if (prev && Math.abs(p[0] - prev[0]) > Math.PI * proj.k) out.push([p]); else cur.push(p);
+    }
+    return out.filter((l) => l.length > 1);
+  });
+  const places = world.places.filter((p) => nearLL(f, p.lon, p.lat))
+    .map((p) => ({ name: p.name, rank: p.rank, pop: p.pop, xy: proj.project(p.lon, p.lat) }));
   return { proj, land, coastLL, coast, places };
 }
 
@@ -443,19 +509,22 @@ function bbox(pts) {
   return b;
 }
 
-// Land and coast with px bounding boxes; coast split into short runs so a view walks only its own.
+// Coast split into short runs so a view walks only its own.
 const COAST_RUN = 64;
+function coastRuns(line) {
+  const runs = [];
+  for (let i = 0; i < line.length - 1; i += COAST_RUN) runs.push(line.slice(i, i + COAST_RUN + 2)); // one shared segment keeps every join
+  return runs;
+}
+
+// Land and coast runs with px bounding boxes.
 const indexes = new WeakMap();
 function indexOf(data) {
   let ix = indexes.get(data);
   if (ix) return ix;
   const px = (ring) => ring.map(([lon, lat]) => data.proj.project(lon, lat));
   const land = data.land.map((poly) => ({ poly, box: bbox(px(poly[0])) }));
-  const coast = [];
-  for (const line of data.coastLL) for (let i = 0; i < line.length - 1; i += COAST_RUN) {
-    const run = line.slice(i, i + COAST_RUN + 2); // one shared segment keeps every join
-    coast.push({ run, box: bbox(px(run)) });
-  }
+  const coast = data.coastLL.flatMap(coastRuns).map((run) => ({ run, box: bbox(px(run)) }));
   ix = { land, coast };
   indexes.set(data, ix);
   return ix;
@@ -514,6 +583,32 @@ function drawTower(g, t) {
   g.restore();
 }
 
+// Flat tint, then a landward wash along the coast.
+function paintLand(g, data, land, coast) {
+  const { x, y, lonCenter } = data.proj;
+  fill(g, land, x, y, { color: STYLE.land, lonCenter });
+  g.save();
+  traceLand(g, data, land);
+  g.clip('evenodd');
+  for (const [wd, a] of [[STYLE.washWidth * 2, 0.3], [STYLE.washWidth * 1.3, 0.3], [STYLE.washWidth * 0.7, 0.35]]) {
+    limn(g, coast, x, y, { color: hexA(STYLE.gilt, a), alpha: 1, width: wd, cap: 'round', oneStroke: true, lonCenter });
+  }
+  g.restore();
+}
+const paintCoast = (g, data, coast) =>
+  limn(g, coast, data.proj.x, data.proj.y, { color: STYLE.ink, alpha: 1, width: STYLE.coastWidth, oneStroke: true, lonCenter: data.proj.lonCenter });
+
+// Parchment, land and coast for any view, with no ornaments or lattice: what a drag draws each frame.
+function drawGround(g, world, view, bg) {
+  const proj = makeProjection(view), data = { proj };
+  const f = frameOf(proj, 16 / proj.k / RAD); // 16 px, so strokes at the edge survive
+  const land = world.land.filter((l) => meetsLL(f, l.box)).map((l) => l.poly);
+  const coast = world.runs.filter((c) => meetsLL(f, c.box)).map((c) => c.run);
+  g.drawImage(bg, 0, 0);
+  paintLand(g, data, land, coast);
+  paintCoast(g, data, coast);
+}
+
 function drawScene(g, scene, data, bg, view) {
   g.save();
   g.setTransform(view.scale, 0, 0, view.scale, -view.x * view.scale, -view.y * view.scale);
@@ -521,7 +616,6 @@ function drawScene(g, scene, data, bg, view) {
   const r = viewRect(g, view), idx = indexOf(data);
   const land = idx.land.filter((l) => meets(r, l.box)).map((l) => l.poly);
   const coast = idx.coast.filter((c) => meets(r, c.box)).map((c) => c.run);
-  const { x, y, lonCenter } = data.proj;
   const bgPart = (x0, y0, x1, y1) => {
     x0 = Math.max(0, Math.floor(x0)); y0 = Math.max(0, Math.floor(y0));
     x1 = Math.min(W, Math.ceil(x1)); y1 = Math.min(H, Math.ceil(y1));
@@ -531,26 +625,19 @@ function drawScene(g, scene, data, bg, view) {
   // 1. parchment
   bgPart(r.x0, r.y0, r.x1, r.y1);
 
-  // 2. land: flat tint, then a landward wash along the coast
-  fill(g, land, x, y, { color: STYLE.land, lonCenter });
-  g.save();
-  traceLand(g, data, land);
-  g.clip('evenodd');
-  for (const [wd, a] of [[STYLE.washWidth * 2, 0.3], [STYLE.washWidth * 1.3, 0.3], [STYLE.washWidth * 0.7, 0.35]]) {
-    limn(g, coast, x, y, { color: hexA(STYLE.gilt, a), alpha: 1, width: wd, cap: 'round', oneStroke: true, lonCenter });
-  }
-  g.restore();
+  // 2. land
+  paintLand(g, data, land, coast);
 
   // 3. rhumb lattice: 16 nodes on a circle plus the centre, 32 rhumb lines each, in three inks
   const rays = latticeOf(scene, data);
   const inks = [STYLE.ink, STYLE.windRed, STYLE.windGreen]; // by kind: wind, quarter-wind, half-wind
   for (const [kind, ink] of inks.entries()) {
     const lines = rays.filter((ray) => ray.kind === kind && meets(r, ray.box)).map((ray) => ray.line);
-    limn(g, lines, x, y, { color: ink, alpha: STYLE.rhumbAlpha, width: STYLE.rhumbWidth, oneStroke: true, lonCenter });
+    limn(g, lines, data.proj.x, data.proj.y, { color: ink, alpha: STYLE.rhumbAlpha, width: STYLE.rhumbWidth, oneStroke: true, lonCenter: data.proj.lonCenter });
   }
 
   // 4. coast
-  limn(g, coast, x, y, { color: STYLE.ink, alpha: 1, width: STYLE.coastWidth, oneStroke: true, lonCenter });
+  paintCoast(g, data, coast);
 
   // 5. roses
   const spriteIn = (s, x, y, size) => disc(r, x, y, Math.hypot(size, (size * s.img.height) / s.img.width));
@@ -605,10 +692,11 @@ function drawScene(g, scene, data, bg, view) {
 // ---------------------------------------------------------------- setup
 
 // Load data and packs, place the ornaments, paint the parchment. `opts`: ink and parchment
-// colours (hex) and density; defaults reproduce the committed mockup.
+// colours (hex), density and view; defaults reproduce the committed mockup.
 export async function createScene(environment, opts = {}) {
   env = environment;
   const { ink = '#3b2a1a', parchment: tone = '#e9d8b4', density = 1 } = opts;
+  const view = clampView(opts.view ?? DEFAULT_VIEW);
   STYLE.ink = ink;
   STYLE.parchment = tone;
   TUNE.monsterMax = Math.round(4 * density);
@@ -616,17 +704,19 @@ export async function createScene(environment, opts = {}) {
   TUNE.townGap = 48 / density;
 
   const t0 = performance.now();
-  const proj = makeProjection(FRAME, W, H);
-  const [, data, cartaMarina, catalan] = await Promise.all(
-    [env.loadFont(STYLE.font), loadData(proj), loadPack('carta-marina'), loadPack('catalan')]);
+  const [, world, cartaMarina, catalan] = await Promise.all(
+    [env.loadFont(STYLE.font), loadWorld(), loadPack('carta-marina'), loadPack('catalan')]);
   const packs = { cartaMarina, catalan };
   const tLoad = performance.now();
 
+  const data = viewData(world, view);
   const measureCtx = createCanvas(10, 10).getContext('2d');
   const measure = (text, px) => { measureCtx.font = `${px}px "${STYLE.font}"`; return measureCtx.measureText(text).width; };
   const scene = buildScene(data, packs, measure);
-  const bg = parchment(1539);
-  return { scene, data, bg, proj, timing: { load: tLoad - t0, place: performance.now() - tLoad } };
+  if (!parchments.has(tone)) parchments.set(tone, parchment(1539));
+  const bg = parchments.get(tone);
+  return { scene, data, bg, proj: data.proj, world, view, timing: { load: tLoad - t0, place: performance.now() - tLoad } };
 }
+const parchments = new Map(); // by tone; the same seed paints the same sheet
 
-export { drawScene, W, H, DETAIL, FRAME, MARGIN, COAST_RUN };
+export { drawScene, drawGround, panView, zoomView, clampView, DEFAULT_VIEW, ZOOM, W, H, DETAIL };

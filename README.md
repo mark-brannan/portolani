@@ -6,7 +6,7 @@ A base map drawn the way a 15th-century portolan chart would have drawn it: ink 
 
 **[See the current proof of concept →](https://mark-brannan.github.io/portolani/)**
 
-It is a fixed view of the western Mediterranean, drawn in your browser from Natural Earth data and sprites cropped from public-domain scans (Olaus Magnus's *Carta Marina*, the Catalan Atlas, Aguiar, de Wit). Ink colour, parchment tone and ornament density are adjustable. No pan or zoom yet, and the known defects are still visible: a few sprites over land, some flipped names, halos around sprites. The live page is the work in progress and will change as the project moves toward a working map.
+It opens on the western Mediterranean, drawn in your browser from Natural Earth data and sprites cropped from public-domain scans (Olaus Magnus's *Carta Marina*, the Catalan Atlas, Aguiar, de Wit). Drag to pan and wheel or pinch to zoom, anywhere in the world; the view is kept in the URL, so a place can be linked. Ink colour, parchment tone and ornament density are adjustable. Ornaments are placed again each time the map stops, and the known defects are still visible: a few sprites over land, some flipped names, halos around sprites. The live page is the work in progress and will change as the project moves toward a working map.
 
 ## Where this is going
 
