@@ -41,8 +41,8 @@ const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true
 const MANIFESTS = await readManifests(env);
 const SPRITES = (await listSprites(env)).filter((s) => KINDS.includes(s.kind) || s.kind === 'town');
 const BY_KEY = new Map(SPRITES.map((s) => [s.key, s]));
-// the scene's default selection, less the kinds DEFAULT_KINDS hides (mountains), which wait to be asked for
-const DEFAULT_SELECTION = defaultSprites(SPRITES).filter((k) => BY_KEY.get(k).kind === 'town' || DEFAULT_KINDS.includes(BY_KEY.get(k).kind));
+// the scene's default selection
+const DEFAULT_SELECTION = defaultSprites(SPRITES);
 const sameSet = (a, b) => a.size === b.size && [...a].every((k) => b.has(k));
 
 // keys in the hash: the pack shortened (v:rose-aguiar); a pack with no short name is written whole
@@ -90,7 +90,7 @@ function selectionFromHash() {
   if (!LEGACY_KEYS.some((k) => q.has(k))) return new Set(DEFAULT_SELECTION);
   const rendering = RENDERINGS.includes(q.get('rendering')) ? q.get('rendering') : LEGACY_PACK[q.get('pack')] ?? 'vivid';
   const chosen = chooseSprites(MANIFESTS, { rendering, rose: q.get('rose') || undefined, monster: q.get('monster') || undefined, town: q.get('town') || undefined });
-  const kinds = q.has('kinds') ? q.get('kinds').split(',') : DEFAULT_KINDS;
+  const kinds = q.has('kinds') ? q.get('kinds').split(',') : DEFAULT_KINDS.filter((k) => k !== 'mountain'); // older links never drew mountains
   const keys = [...chosen.roses, chosen.cartouche, ...chosen.monsters, ...chosen.ships, ...chosen.mountains].filter(Boolean).map((s) => `${s.pack}/${s.id}`)
     .concat(chosen.roses.length ? [] : ['plain/rose'], chosen.cartouche ? [] : ['plain/cartouche'])
     .filter((k) => kinds.includes(BY_KEY.get(k)?.kind));
