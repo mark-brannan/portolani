@@ -1392,13 +1392,18 @@ function drawScene(g, scene, data, bg, view) {
   paintCoast(g, data, coast);
 
   // 4.5 town footprints: a city's built-up area, washed terracotta and edged in ink once its long
-  // side passes URBAN_PX on screen, the wash coming in over the next doubling of zoom
-  for (const u of idx.urban) {
-    const a = Math.min(1, (Math.max(u.box.x1 - u.box.x0, u.box.y1 - u.box.y0) * view.scale / URBAN_PX - 1)) * 0.45;
-    if (a <= 0 || !meets(r, u.box)) continue;
-    fill(g, [u.poly], data.proj.x, data.proj.y, { color: STYLE.terracotta, alpha: a, lonCenter: data.proj.lonCenter });
-    g.save(); g.beginPath(); trace(g, [u.poly], data.proj.x, data.proj.y, { lonCenter: data.proj.lonCenter });
-    g.globalAlpha = a * 1.5; g.strokeStyle = STYLE.ink; g.lineWidth = 0.8 / view.scale; g.stroke(); g.restore();
+  // side passes URBAN_PX on screen, the wash coming in over the next doubling of zoom; on land
+  // only, as the footprint is coarser than the coast and would otherwise spill over the water
+  const washes = idx.urban.map((u) => ({ u, a: Math.min(1, (Math.max(u.box.x1 - u.box.x0, u.box.y1 - u.box.y0) * view.scale / URBAN_PX - 1)) * 0.45 }))
+    .filter(({ u, a }) => a > 0 && meets(r, u.box));
+  if (washes.length) {
+    g.save(); g.beginPath(); traceLand(g, data, land); g.clip('evenodd');
+    for (const { u, a } of washes) {
+      fill(g, [u.poly], data.proj.x, data.proj.y, { color: STYLE.terracotta, alpha: a, lonCenter: data.proj.lonCenter });
+      g.save(); g.beginPath(); trace(g, [u.poly], data.proj.x, data.proj.y, { lonCenter: data.proj.lonCenter });
+      g.globalAlpha = a * 1.5; g.strokeStyle = STYLE.ink; g.lineWidth = 0.8 / view.scale; g.stroke(); g.restore();
+    }
+    g.restore();
   }
 
   // 5. roses
