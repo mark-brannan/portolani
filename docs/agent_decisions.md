@@ -78,3 +78,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t194849z
 - The density slider does not scale the trees Undo: pass density into plantTrees and scale CHANCE ([#91](https://github.com/mark-brannan/portolani/pull/91))
+
+### 20261014t195008z
+- 10m rivers and lakes ship in 5-degree cells, whole features duplicated per cell and deduped by id Undo: load the two 10m files whole once in loadWater10m ([#92](https://github.com/mark-brannan/portolani/pull/92))
