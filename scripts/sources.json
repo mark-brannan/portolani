@@ -86,6 +86,87 @@
       "sha256": "4938275405b38d501c1d192ad86f92761c9e6f5000827ff4f2f77e1b84924b47",
       "rights": "Public domain; anonymous, probably Genoese, c. 1320–1350, Library of Congress item 2003630429",
       "note": "(5,486 × 4,009)"
+    },
+    {
+      "id": "coa-sea-dragon",
+      "file": "Coa_Illustration_Elements_Animal_Sea_Dragon.svg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/3/3a/Coa_Illustration_Elements_Animal_Sea_Dragon.svg",
+      "page": "https://commons.wikimedia.org/wiki/File:Coa_Illustration_Elements_Animal_Sea_Dragon.svg",
+      "sha256": "6b31964e68198083d60fff53be136ae4243e67376c6fa2699d4b5886262b2f3a",
+      "rights": "public domain",
+      "note": "(heraldic sea-dragon, after Bara 1579)"
+    },
+    {
+      "id": "coa-sea-lion",
+      "file": "Coa_Illustration_Elements_Animal_Sea_Lion_Embowed.svg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/d/da/Coa_Illustration_Elements_Animal_Sea_Lion_Embowed.svg",
+      "page": "https://commons.wikimedia.org/wiki/File:Coa_Illustration_Elements_Animal_Sea_Lion_Embowed.svg",
+      "sha256": "8458e9af92a013639a4c973274a5c78936eaae102caf4c37e02dde0647cb5bd7",
+      "rights": "public domain",
+      "note": "(heraldic sea-lion, after Bara 1579)"
+    },
+    {
+      "id": "coa-dolphin",
+      "file": "Coa_Illustration_Elements_Animal_Dolphin_Haurient_1.svg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/a/ae/Coa_Illustration_Elements_Animal_Dolphin_Haurient_1.svg",
+      "page": "https://commons.wikimedia.org/wiki/File:Coa_Illustration_Elements_Animal_Dolphin_Haurient_1.svg",
+      "sha256": "9ea4bafa946ebb4adbee1a4e3d46c78f228789734536dbba6ae0f4f6a7ceaccc",
+      "rights": "public domain",
+      "note": "(heraldic dolphin, after Bara 1579)"
+    },
+    {
+      "id": "coa-merman",
+      "file": "Coa_Illustration_Elements_Merman_or_Triton.svg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/d/de/Coa_Illustration_Elements_Merman_or_Triton.svg",
+      "page": "https://commons.wikimedia.org/wiki/File:Coa_Illustration_Elements_Merman_or_Triton.svg",
+      "sha256": "c0f295e7e0ad593bce0f49c462ce79f592a506de3fce473cb331ee1fb96ab7ed",
+      "rights": "public domain",
+      "note": "(heraldic merman, after Bara 1579)"
+    },
+    {
+      "id": "coa-walrus",
+      "file": "Coa_Illustration_Elements_Animal_Walrus_Naiant.svg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/5/51/Coa_Illustration_Elements_Animal_Walrus_Naiant.svg",
+      "page": "https://commons.wikimedia.org/wiki/File:Coa_Illustration_Elements_Animal_Walrus_Naiant.svg",
+      "sha256": "ffecfe4eef0cf455bd455832ee7c503dbae6f1638a0aa308d1d007e2b5da3c7e",
+      "rights": "public domain",
+      "note": "(heraldic walrus, after Gessner)"
+    },
+    {
+      "id": "heraldry-fish-205",
+      "file": "Heraldry_Fish_205.svg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/6/69/Heraldry_Fish_205.svg",
+      "page": "https://commons.wikimedia.org/wiki/File:Heraldry_Fish_205.svg",
+      "sha256": "135055db4445db4ee37810257310eecfe6e80f673409394652d8f759fd2325cb",
+      "rights": "CC0",
+      "note": "(heraldic hippocampus, Mrmw)"
+    },
+    {
+      "id": "openclipart-galleon",
+      "file": "papapishu-galleon.svg",
+      "url": "https://openclipart.org/download/22696/papapishu-galleon.svg",
+      "page": "https://openclipart.org/detail/22696",
+      "sha256": "7066cad34b7b2b1acf1cd7cbe151f0036f3b9304e40299dc4e69f8aaea7c1ec2",
+      "rights": "CC0 (original public domain)",
+      "note": "(galleon, papapishu)"
+    },
+    {
+      "id": "openclipart-caravel",
+      "file": "papapishu-Caravel.svg",
+      "url": "https://openclipart.org/download/23328/papapishu-Caravel.svg",
+      "page": "https://openclipart.org/detail/23328",
+      "sha256": "c1e5cd0914dc9c8fe612436dbf8f85919fe894c5b5af3a826bf554613ede2bfc",
+      "rights": "CC0 (original public domain)",
+      "note": "(caravel, papapishu)"
+    },
+    {
+      "id": "openclipart-carrack",
+      "file": "johnny-automatic-Genoese-Carrack-16th-century.svg",
+      "url": "https://openclipart.org/download/7988/johnny-automatic-Genoese-Carrack-16th-century.svg",
+      "page": "https://openclipart.org/detail/7988",
+      "sha256": "b899bc6f3538f07c1917974242000e86817c9533393978921d02abd2031875ac",
+      "rights": "CC0 (original public domain)",
+      "note": "(carrack, johnny_automatic)"
     }
   ],
   "footer": [
