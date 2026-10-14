@@ -4,8 +4,10 @@
 // from coastlines (checked against its manifest) and the font, vendored so nothing loads from a
 // CDN. The font comes from downloads/, fetched from its pinned URL when missing, then checked
 // against its sha256; the URLs and hashes below duplicate the ASSETS.md table: re-pin both
-// together. The GeoJSON ships whole, since the map can be moved anywhere in the world; places keep
-// only the properties the scene reads.
+// together. The 50m GeoJSON ships whole, since the map can be moved anywhere in the world; places
+// keep only the properties the scene reads. The 10m land and coast, for close views, ship cut into
+// 5-degree cells (geo/10m/<xi>_<yi>.json, listed in geo/10m/index.json), so a close view fetches
+// only the cells around it.
 
 import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -13,10 +15,14 @@ import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { find, localUrl } from 'coastlines';
+import { geojsonPolygons, geojsonRings } from 'coast-wright';
+import { cutCells } from './detail-cells.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const out = path.join(root, '_site');
 const GEO = ['ne-land-50m', 'ne-coastline-50m', 'ne-populated-places-50m'];
+const GEO_10M = ['ne-land-10m', 'ne-coastline-10m', 'ne-minor-islands-10m'];
+const CELL_DEG = 5; // must match scene.mjs
 
 const KEEP = { 'ne-populated-places-50m': ['NAME', 'SCALERANK', 'POP_MAX'] };
 const slim = (geo, keys) => ({
@@ -42,13 +48,23 @@ for (const [url, name, sha, dir] of SOURCES) {
   await mkdir(path.join(out, dir), { recursive: true });
   await cp(file, path.join(out, dir, name));
 }
-await mkdir(path.join(out, 'geo'), { recursive: true });
-for (const id of GEO) {
+async function readGeo(id) {
   const entry = find(id), bytes = await readFile(localUrl(entry));
   const got = `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
   if (got !== entry.sha256) throw new Error(`${id}: ${got} does not match the coastlines manifest (${entry.sha256})`);
+  return bytes;
+}
+await mkdir(path.join(out, 'geo', '10m'), { recursive: true });
+for (const id of GEO) {
+  const bytes = await readGeo(id);
   await writeFile(path.join(out, 'geo', `${id}.geojson`), id in KEEP ? JSON.stringify(slim(JSON.parse(bytes), KEEP[id])) : bytes);
 }
+// 10m coast is the coastline file plus the minor islands' outlines, which 10m land fills but the
+// coastline file mostly leaves out.
+const [land10, coast10, minor10] = await Promise.all(GEO_10M.map(async (id) => JSON.parse(await readGeo(id))));
+const cells = cutCells({ land: geojsonPolygons(land10), coast: [...geojsonRings(coast10), ...geojsonPolygons(minor10).map((p) => p[0])] }, CELL_DEG);
+await Promise.all([...cells].map(([k, c]) => writeFile(path.join(out, 'geo', '10m', `${k}.json`), JSON.stringify(c))));
+await writeFile(path.join(out, 'geo', '10m', 'index.json'), JSON.stringify({ cell: CELL_DEG, cells: [...cells.keys()] }));
 await cp(path.join(root, 'node_modules', 'coast-wright', 'lib'), path.join(out, 'coast-wright'), { recursive: true });
 await cp(path.join(root, 'public'), out, { recursive: true });
 await cp(path.join(root, 'scripts', 'scene.mjs'), path.join(out, 'scene.mjs'));

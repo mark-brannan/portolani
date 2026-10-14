@@ -1,7 +1,8 @@
 // Portolani mockup scene: placement (buildScene) and draw order (drawScene), independent of where
 // it runs. A host (scripts/render.mjs in Node, public/page.js in a browser) supplies an
 // environment: createCanvas(w, h), readJSON(path), loadImage(path), loadFont(). Paths are logical:
-// `geo/<id>.geojson`, a coastlines data id, and `packs/<pack>/<file>`. Land, wash, coast and
+// `geo/<id>.geojson`, a coastlines data id, `geo/10m/<cell>.json`, a 10m cell cut by
+// scripts/build-preview.mjs (close views only), and `packs/<pack>/<file>`. Land, wash, coast and
 // lattice are drawn in lon/lat through coast-wright, so any view or projection draws the same way.
 // A view is a Web Mercator centre and zoom, { lon, lat, zoom }, on a W x H canvas.
 
@@ -31,8 +32,11 @@ const W = 1600, H = 1000;
 const FRAME = { lonMin: -6, lonMax: 20, latMin: 34, latMax: 46 };
 const MARGIN = 2; // degrees beyond FRAME whose features the scene keeps
 const DETAIL = { lon: 8.93, lat: 44.41, scale: 2 }; // Genoa; window clamped to the scene
-// Whole world at the far end; 50m data holds to about z9 at the near end.
-const ZOOM = { min: 1, max: 9 };
+// Whole world at the far end; 50m data holds to about z9, and past DETAIL_ZOOM a view draws from
+// 10m cells of CELL_DEG degrees, fetched around it.
+const ZOOM = { min: 1, max: 11 };
+const DETAIL_ZOOM = 9;
+const CELL_DEG = 5; // must match scripts/build-preview.mjs
 
 // Per-run tuning; `density` scales how much ornament is placed (1 = the committed mockup).
 const TUNE = { monsterMax: 4, shipMax: 2, townGap: 48 };
@@ -163,6 +167,39 @@ async function loadWorld() {
   world = { land, lines, runs, places };
   worlds.set(landGeo, world);
   return world;
+}
+
+// The 10m world around a view: the cells that meet its frame widened by MARGIN, each fetched and
+// boxed once, with the 50m places. Panning MARGIN degrees, a couple of screens at z10, stays on it.
+const cells = new Map();
+const cellKey = (xi, yi) => `${xi}_${yi}`;
+async function loadDetail(coarse, view) {
+  const { cells: have } = await env.readJSON('geo/10m/index.json');
+  const known = new Set(have), f = frameOf(makeProjection(view), MARGIN), n = 360 / CELL_DEG;
+  const keys = new Set();
+  for (let xi = Math.floor(f.lonMin / CELL_DEG); xi <= Math.floor(f.lonMax / CELL_DEG); xi++) {
+    const wx = ((((xi + n / 2) % n) + n) % n) - n / 2; // wrapped across the antimeridian
+    for (let yi = Math.max(-90 / CELL_DEG, Math.floor(f.latMin / CELL_DEG)); yi <= Math.min(90 / CELL_DEG - 1, Math.floor(f.latMax / CELL_DEG)); yi++) {
+      if (known.has(cellKey(wx, yi))) keys.add(cellKey(wx, yi));
+    }
+  }
+  const parts = await Promise.all([...keys].map((k) => {
+    if (!cells.has(k)) {
+      cells.set(k, env.readJSON(`geo/10m/${k}.json`).then((c) => {
+        const lines = c.coast.map((line) => ({ line, box: bbox(line) }));
+        return {
+          land: c.land.map((poly) => ({ poly, box: bbox(poly[0]) })),
+          lines,
+          runs: lines.flatMap(({ line }) => coastRuns(line).map((run) => ({ run, box: bbox(run) }))),
+        };
+      }));
+    }
+    return cells.get(k);
+  }));
+  return {
+    land: parts.flatMap((p) => p.land), lines: parts.flatMap((p) => p.lines), runs: parts.flatMap((p) => p.runs),
+    places: coarse.places, detail: true,
+  };
 }
 
 // What a view keeps of the world: the shapes with a point within MARGIN degrees of its frame.
@@ -707,8 +744,9 @@ export async function createScene(environment, opts = {}) {
   TUNE.townGap = 48 / density;
 
   const t0 = performance.now();
-  const [, world, cartaMarina, catalan] = await Promise.all(
+  const [, coarse, cartaMarina, catalan] = await Promise.all(
     [env.loadFont(STYLE.font), loadWorld(), loadPack('carta-marina'), loadPack('catalan')]);
+  const world = view.zoom > DETAIL_ZOOM ? await loadDetail(coarse, view) : coarse;
   const packs = { cartaMarina, catalan };
   const tLoad = performance.now();
 
@@ -718,8 +756,8 @@ export async function createScene(environment, opts = {}) {
   const scene = buildScene(data, packs, measure);
   if (!parchments.has(tone)) parchments.set(tone, parchment(1539));
   const bg = parchments.get(tone);
-  return { scene, data, bg, proj: data.proj, world, view, timing: { load: tLoad - t0, place: performance.now() - tLoad } };
+  return { scene, data, bg, proj: data.proj, world, coarse, view, timing: { load: tLoad - t0, place: performance.now() - tLoad } };
 }
 const parchments = new Map(); // by tone; the same seed paints the same sheet
 
-export { drawScene, drawGround, panView, zoomView, clampView, DEFAULT_VIEW, ZOOM, W, H, DETAIL };
+export { drawScene, drawGround, panView, zoomView, clampView, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };
