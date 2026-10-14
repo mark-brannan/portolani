@@ -33,3 +33,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t082135z
 - Cartouche corner order: open sea, then empty land, then any coast; land only breaks ties (coast*1000 + land) Undo: change the weights in the corner score in scripts/scene.mjs ([#62](https://github.com/mark-brannan/portolani/pull/62))
+
+### 20261014t083600z
+- Cartouche corner order: fewest coast crossings first, then least land (open sea, then empty land, then any coast) Undo: change the comparator on corners in scripts/scene.mjs buildScene ([#62](https://github.com/mark-brannan/portolani/pull/62))
