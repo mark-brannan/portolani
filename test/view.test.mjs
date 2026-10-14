@@ -73,6 +73,16 @@ test('a zoom on an azimuthal view keeps the point under the pointer where a nort
   }
 });
 
+test('a sideways drag near a pole swings the longitude but does not snap the view to the pole', () => {
+  const k = 512 * 2 ** 2 / (2 * Math.PI);
+  for (const projection of ['orthographic', 'azimuthal-equidistant', 'stereographic']) {
+    for (const deg of [1, 4, 12]) {
+      const v = panView(clampView({ lon: 0, lat: 89, zoom: 2, projection }), -deg * Math.PI / 180 * k, 0);
+      assert.ok(Math.abs(v.lat) < 89.5 && Math.abs(v.lat) > 70, `${projection} ${deg} deg: lat ${v.lat}`);
+    }
+  }
+});
+
 test('an unknown projection is Mercator, and a whole map shorter than the canvas sits on the equator', () => {
   assert.equal(clampView({ lon: 0, lat: 0, zoom: 4, projection: 'nonsense' }).projection, 'mercator');
   for (const name of ['constructor', 'toString', '__proto__']) assert.equal(clampView({ lon: 0, lat: 0, zoom: 4, projection: name }).projection, 'mercator', name);
