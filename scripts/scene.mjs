@@ -634,7 +634,7 @@ function buildScene(data, sprites, ctx, world = {}) {
     // a town sprite stands where the tower would, its variant chosen for the town (townVariant)
     const sprite = townVariant(sprites.towns, p, towns.length);
     const icon = sprite
-      ? obb(x, y - (TOWN_H / 2) * size, 0, ((TOWN_H / 2) * size * sprite.img.width) / sprite.img.height, (TOWN_H / 2) * size)
+      ? obb(x, y - (townH(sprite) / 2) * size, 0, ((townH(sprite) / 2) * size * sprite.img.width) / sprite.img.height, (townH(sprite) / 2) * size)
       : obb(x, y - 8 * size, 0, 5 * size, 8.5 * size); // tower body and pennant
     if (boxes.some((b) => obbOverlap(b, icon))) continue;
     towns.push({ x, y, size, red: p.rank <= 2, name: p.name, rank: p.rank, ...(sprite && { sprite }) });
@@ -646,7 +646,7 @@ function buildScene(data, sprites, ctx, world = {}) {
   // a name that meets an ornament or leaves the canvas is dropped.
   const lettering = [
     ...data.names.map((n) => ({ ...n, size: n.kind === 'sea' ? (n.rank <= 1 ? 22 : n.rank <= 3 ? 18 : 15) : n.rank <= 2 ? 17 : 14 })),
-    ...towns.map((t) => ({ text: t.name, at: data.proj.invert(t.x, t.y - (t.sprite ? TOWN_H * t.size + 6 : 17 * t.size)), size: t.rank <= 1 ? 17 : t.rank <= 2 ? 15 : 13, red: t.red })),
+    ...towns.map((t) => ({ text: t.name, at: data.proj.invert(t.x, t.y - (t.sprite ? townH(t.sprite) * t.size + 6 : 17 * t.size)), size: t.rank <= 1 ? 17 : t.rank <= 2 ? 15 : 13, red: t.red })),
   ];
   const opts = letterOptions(data);
   const names = [];
@@ -882,6 +882,8 @@ function drawSprite(g, s, x, y, size, { flip = false, rot = 0, anchor = s.anchor
 }
 
 const TOWN_H = 30; // px a town sprite stands at size 1, flag to foot; a vignette is a speck at the tower's 17
+// a town sprite's height at size 1: its manifest sizePx when it has one (the scanned Aguiar towns), else TOWN_H
+const townH = (sprite) => sprite.sizePx || TOWN_H;
 
 function drawTower(g, t) {
   const s = t.size;
@@ -1160,7 +1162,7 @@ function drawScene(g, scene, data, bg, view) {
   // 6. towns
   for (const t of scene.towns) {
     if (!t.sprite) { if (disc(r, t.x, t.y - 8 * t.size, 12 * t.size)) drawTower(g, t); continue; }
-    const h = TOWN_H * t.size, w = (h * t.sprite.img.width) / t.sprite.img.height;
+    const h = townH(t.sprite) * t.size, w = (h * t.sprite.img.width) / t.sprite.img.height;
     if (disc(r, t.x, t.y - h / 2, Math.hypot(w, h) / 2)) drawSprite(g, t.sprite, t.x, t.y, w, { anchor: [0.5, 1] });
   }
 

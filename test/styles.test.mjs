@@ -34,7 +34,8 @@ test('a kind the rendering lacks is drawn from the other pack; plain draws no pi
   const scanned = chooseSprites(manifests, { rendering: 'scanned', town: 'aguiar' });
   assert.deepEqual(scanned.roses.map((s) => s.id), ['rose-aguiar', 'rose-catalan', 'rose-aguiar-b']);
   assert.equal(scanned.cartouche.id, 'cartouche-dewit');
-  assert.deepEqual(scanned.towns.map((s) => `${s.pack}/${s.file}`), ['scanned/town-aguiar.png']);
+  assert.deepEqual(scanned.towns.map((s) => `${s.pack}/${s.file}`),
+    ['venice', 'genoa', 'lisbon', 'lake', 'lake-moat', 'smina', 'jerusalem', 'ceuta', 'avignon'].map((t) => `scanned/town-aguiar-${t}.png`));
   // a family drawn only as vectors still shows under the scanned rendering
   const bestiary = chooseSprites(manifests, { rendering: 'scanned', monster: 'bestiary' });
   assert.ok(bestiary.monsters.length > 0 && bestiary.monsters.every((s) => s.pack === 'vivid' && s.style === 'bestiary'));
