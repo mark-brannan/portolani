@@ -15,8 +15,9 @@
 // black RGB instead, and the renderer fills it with the pack ink, so one ink setting retints it.
 //
 // Keying: crop -> darkness channel (luminance, or min(R,G,B) so gilt and colour wash count as ink)
-// -> levels -> masks (saturation silhouette for figures on hatched sea, circle for roses,
-// rectangles erased for lettering) -> trim.
+// -> levels -> masks (saturation silhouette for coloured figures on hatched sea, a polygon drawn
+// round a figure whose sea is printed in the same ink, circle for roses, rectangles erased for
+// lettering) -> trim -> downscale. Line work on blank paper needs no mask: darkness alone keys it.
 
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync, readFileSync, existsSync, mkdtempSync, rmSync } from 'node:fs';
@@ -35,7 +36,9 @@ const SOURCES = Object.fromEntries(MANIFEST.sources.map((s) => [s.id, { ...s, pa
 async function fetchSource(src) {
   mkdirSync(DL, { recursive: true });
   if (!existsSync(src.path)) {
-    const res = await fetch(src.url, { headers: { 'user-agent': 'portolani-build/0.1 (https://github.com/mark-brannan/portolani)' } });
+    // the Art Institute of Chicago refuses a fetch without its own AIC-User-Agent header
+    const ua = 'portolani-build/0.1 (https://github.com/mark-brannan/portolani)';
+    const res = await fetch(src.url, { headers: { 'user-agent': ua, 'aic-user-agent': ua } });
     if (!res.ok) throw new Error(`${src.url}: ${res.status}`);
     const bytes = Buffer.from(await res.arrayBuffer());
     checkSha(src, bytes); // a bad fetch never reaches disk, so the next run retries it
@@ -59,16 +62,23 @@ const argv = process.argv.slice(2), keepAt = argv.indexOf('--keep');
 const keep = keepAt >= 0 ? join(ROOT, argv[keepAt + 1]) : null, keepPrefix = (keepAt >= 0 && argv[keepAt + 2]) || '';
 if (keep) mkdirSync(keep, { recursive: true });
 
-const CLEAN_DISK = 5;
+const CLEAN_DISK = 5; // px radius of the closing that removes scanned lettering
 const TOWN_LEVEL = [30, 80]; // darkness levels for the Aguiar towns: the thin brown ink is pushed to full alpha so it reads at map size
+// Woodcuts and engravings on blank paper (Paré, Master W): darkness alone keys them. The silhouette
+// is taken from the ink itself (`ink`: alpha % that counts), which drops paper grain, stains and
+// the faint lettering that shows through from the reverse; sizes are for ~600 dpi scans.
+const PAPER_LEVEL = [20, 50];
+const PAPER_FIGURE = { ink: 50, close: 14, open: 1, dilate: 8, feather: 4, minArea: 40000 };
+const MASK_FEATHER = 6; // px blur on a polygon mask's edge, in scan pixels (`maskFeather` widens it)
+const MAX_SCALE = 3; // a sprite is stored at most this many px wide per CSS px it is drawn (sizePx)
 
 // One pack of scanned sprites; each sprite's `style` names the design family it belongs to, which
 // the renderer offers as a setting (a rose set, a monster family, a town drawing).
 const PACKS = [
   {
     name: 'scanned',
-    title: 'Sprites cropped from public-domain scans: Olaus Magnus, Carta Marina 1539; Jorge de Aguiar 1492; Catalan Atlas 1375; Genoese chart c. 1320-1350; Frederik de Wit',
-    licence: 'Public domain (PD-Art); scans via Wikimedia Commons (James Ford Bell Library; Beinecke Library, Yale; BnF Gallica btv1b55002481n; Library of Congress 2003630429; Royal Museums Greenwich)',
+    title: 'Sprites cropped from scans: Olaus Magnus, Carta Marina 1539; Jorge de Aguiar 1492; Catalan Atlas 1375; Genoese chart c. 1320-1350; Frederik de Wit; Ambroise Paré, Des monstres; Master W with the Key, two ship engravings c. 1475-1490',
+    licence: 'Public domain (PD-Art); scans via Wikimedia Commons (James Ford Bell Library; Beinecke Library, Yale; BnF Gallica btv1b55002481n; Library of Congress 2003630429; Royal Museums Greenwich). The pare-* sprites: Wellcome Collection, CC BY 4.0. Ships ship-w-*: Art Institute of Chicago 27881 (CC0) and Rijksmuseum RP-P-2014-30 (Public Domain Mark)',
     ink: '#3b2a1a',
     sprites: [
       { id: 'serpent-a', kind: 'monster', style: 'carta-marina', scan: 'carta-marina', crop: [1698, 880, 2065, 1190], sizePx: 200, minClearancePx: 160, weight: 3, level: SEA_FIGURE_LEVEL, silhouette: SEA_FIGURE, erase: [[1975, 935, 2065, 1102], [1715, 1112, 1800, 1145]] },
@@ -122,6 +132,24 @@ const PACKS = [
       { id: 'town-aguiar-avignon', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', crop: [2342, 1026, 2452, 1086], sizePx: 48, dark: 'min', level: TOWN_LEVEL, rotate: -14,
         erase: [[2342, 1026, 2452, 1034], [2342, 1080, 2452, 1086]] },
       { id: 'scale-genoese', kind: 'scale', style: 'genoese', scan: 'genoese', crop: [3708, 3815, 4400, 3940], sizePx: 260, dark: 'min', level: [8, 50] },
+      // Paré's sea monsters (Des monstres), black line on blank paper, with Master W's ships
+      { id: 'pare-truie', kind: 'monster', style: 'pare', scan: 'pare-3289', crop: [970, 520, 2950, 1600], sizePx: 190, minClearancePx: 150, weight: 3, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
+      { id: 'pare-boar', kind: 'monster', style: 'pare', scan: 'pare-3267', crop: [560, 2140, 2420, 3200], sizePx: 180, minClearancePx: 140, weight: 3, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
+      { id: 'pare-lion', kind: 'monster', style: 'pare', scan: 'pare-3060', crop: [670, 1220, 2350, 2230], sizePx: 180, minClearancePx: 140, weight: 2, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
+      { id: 'pare-calf', kind: 'monster', style: 'pare', scan: 'pare-3267', crop: [640, 620, 2440, 1510], sizePx: 170, minClearancePx: 140, weight: 2, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
+      { id: 'pare-elephant', kind: 'monster', style: 'pare', scan: 'pare-3289', crop: [880, 2480, 2930, 3510], sizePx: 180, minClearancePx: 140, weight: 2, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
+      { id: 'pare-bear', kind: 'monster', style: 'pare', scan: 'pare-3059', crop: [980, 3220, 2920, 3860], sizePx: 200, minClearancePx: 150, weight: 1, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
+      { id: 'pare-seaman', kind: 'monster', style: 'pare', scan: 'pare-3060', crop: [520, 2940, 2410, 3910], sizePx: 170, minClearancePx: 140, weight: 1, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
+      // the sea bishop is tall, so drawn narrower; a stain at his feet is outside the drawn outline
+      { id: 'pare-bishop', kind: 'monster', style: 'pare', scan: 'pare-3059', crop: [1400, 630, 2520, 2470], sizePx: 110, minClearancePx: 140, weight: 1, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE,
+        mask: [[1990, 630], [2110, 650], [2200, 800], [2250, 1000], [2240, 1180], [2290, 1220], [2380, 1240], [2500, 1250], [2500, 1340], [2420, 1440], [2330, 1500], [2260, 1500], [2260, 2080], [2190, 2110], [2180, 2280], [2210, 2400], [2160, 2450], [2040, 2450], [1980, 2420], [1940, 2450], [1830, 2450], [1780, 2380], [1800, 2250], [1780, 2160], [1690, 2150], [1680, 2060], [1600, 1980], [1480, 1900], [1405, 1840], [1405, 1770], [1500, 1700], [1560, 1580], [1650, 1400], [1690, 1250], [1800, 1150], [1840, 900], [1910, 660]] },
+      // both ships sail bow to the left: the anchor and bowsprit are at the left end
+      // engraved lines are finer than a woodcut's: no median, and levels set by the paper
+      { id: 'ship-w-key', kind: 'ship', style: 'pare', scan: 'master-w-ship', crop: [10, 20, 2110, 2990], sizePx: 84, heading: 'left', level: [40, 66], bolden: 2,
+        // the waves fill the plate's foot and the plate cuts the bow: both fade out instead of ending at a cut
+        mask: [[70, 0], [2139, 0], [2139, 2800], [1950, 2930], [1800, 2900], [1500, 2760], [1100, 2720], [700, 2700], [300, 2600], [70, 2450]], maskFeather: 50 },
+      { id: 'ship-w-buss', kind: 'ship', style: 'pare', scan: 'master-w-buss', crop: [60, 140, 1780, 2160], sizePx: 80, heading: 'left', level: [45, 76], bolden: 2,
+        erase: [[1380, 140, 1540, 240]] }, // the WA monogram
     ],
   },
 ];
@@ -136,7 +164,9 @@ function buildSprite(sprite, colour, outDir, tmp) {
   const w = x1 - x0, h = y1 - y0;
   const t = (n) => join(tmp, `${sprite.id}.${n}.png`);
 
-  magick(`${scan.path}[0]`, '-crop', `${w}x${h}+${x0}+${y0}`, '+repage', '-alpha', 'off', t('crop'));
+  // `bolden` widens fine engraved lines (px, scan scale) that a large reduction would grey out
+  const bolden = sprite.bolden ? ['-morphology', 'Erode', `Disk:${sprite.bolden}`] : [];
+  magick(`${scan.path}[0]`, '-crop', `${w}x${h}+${x0}+${y0}`, '+repage', '-alpha', 'off', bolden, t('crop'));
   // deskew about the crop's centre; the corners fill from the edge pixels and fade out at the edge below
   if (sprite.rotate) magick(t('crop'), '-virtual-pixel', 'Edge', '-distort', 'SRT', String(sprite.rotate), t('crop'));
   if (keep && sprite.id.startsWith(keepPrefix)) magick(t('crop'), '-strip', join(keep, `${sprite.id}.raw.png`));
@@ -155,15 +185,18 @@ function buildSprite(sprite, colour, outDir, tmp) {
   const dark = sprite.dark === 'min'
     ? [t('crop'), '-separate', '-evaluate-sequence', 'min']
     : [t('crop'), '-colorspace', 'gray'];
+  // a grainy scan's paper speckles are taken out with a median before the levels catch them
+  const denoise = sprite.denoise ? ['-statistic', 'Median', `${sprite.denoise}x${sprite.denoise}`] : [];
   const [lo, hi] = sprite.level ?? [18, 64];
   // Keep the tone: alpha is continuous ink coverage, so shading, hatching and washes survive.
-  magick(dark, '-level', `${lo}%,${hi}%`, '-negate', t('ink'));
+  magick(dark, denoise, '-level', `${lo}%,${hi}%`, '-negate', t('ink'));
 
   const masks = [];
   if (sprite.silhouette) {
     const s = sprite.silhouette;
-    magick(t('crop'), '-colorspace', 'HSL', '-channel', 'G', '-separate', '+channel',
-      '-threshold', `${s.sat}%`, '-morphology', 'Open', 'Disk:1.5', '-morphology', 'Close', `Disk:${s.close}`,
+    const seed = s.ink ? [t('ink'), '-threshold', `${s.ink}%`]
+      : [t('crop'), '-colorspace', 'HSL', '-channel', 'G', '-separate', '+channel', '-threshold', `${s.sat}%`];
+    magick(seed, '-morphology', 'Open', 'Disk:1.5', '-morphology', 'Close', `Disk:${s.close}`,
       // fill enclosed holes: flood the outside from a 1 px border, then everything not outside is figure
       '-bordercolor', 'black', '-border', '1', '-fill', 'red', '-draw', 'color 0,0 floodfill',
       '-fill', 'white', '+opaque', 'red', '-fill', 'black', '-opaque', 'red', '-shave', '1x1',
@@ -172,6 +205,12 @@ function buildSprite(sprite, colour, outDir, tmp) {
       '-connected-components', '8',
       '-morphology', 'Dilate', `Disk:${s.dilate}`, '-blur', `0x${s.feather}`, t('sil'));
     masks.push(t('sil'));
+  }
+  if (sprite.mask) {
+    // the figure's outline, drawn by eye on the scan, for a figure on sea hatched in its own ink
+    const pts = sprite.mask.map(([mx, my]) => `${mx - x0},${my - y0}`).join(' ');
+    magick('-size', `${w}x${h}`, 'xc:black', '-fill', 'white', '-draw', `polygon ${pts}`, '-blur', `0x${sprite.maskFeather ?? MASK_FEATHER}`, t('mask'));
+    masks.push(t('mask'));
   }
   if (sprite.circle) {
     const [cx, cy, r] = sprite.circle;
@@ -212,8 +251,12 @@ function buildSprite(sprite, colour, outDir, tmp) {
     magick(t('crop'), '(', '-size', `${w}x${h}`, `xc:${paper}`, ')', '-compose', 'DivideDst', '-composite', t('rgb'));
     rgb = [t('rgb')];
   }
+  // Keyed at full size, then shrunk with Lanczos to MAX_SCALE x sizePx across when wider (the
+  // renderer draws a sprite sizePx wide), so line work stays crisp and no scan-sized PNG is kept.
+  const most = MAX_SCALE * sprite.sizePx;
+  const shrink = tw > most ? ['-filter', 'Lanczos', '-resize', `${most}x`] : [];
   magick(rgb, alpha, '-alpha', 'off', '-compose', 'CopyOpacity', '-composite',
-    '-crop', `${tw}x${th}+${tx}+${ty}`, '+repage', '-strip', join(outDir, file));
+    '-crop', `${tw}x${th}+${tx}+${ty}`, '+repage', shrink, '-strip', join(outDir, file));
 
   if (keep && sprite.id.startsWith(keepPrefix)) {
     magick(join(outDir, file), '-background', PARCHMENT, '-flatten', '-strip', join(keep, `${sprite.id}.cut.png`));
