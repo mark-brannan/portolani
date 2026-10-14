@@ -6,7 +6,8 @@ import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
-import { cutWater, joinWater, WATER_FILES } from '../scripts/detail-cells.mjs';
+import { shapefilePolygons } from 'coastlines';
+import { cutLakes, cutWater, dbfRecords, gshhgLakes, joinWater, WATER_FILES } from '../scripts/detail-cells.mjs';
 import { coastNames, joinNames } from '../scripts/names.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -14,6 +15,7 @@ const GEO = dirname(fileURLToPath(import.meta.resolve('coastlines/data/ne-land-5
 const DL = process.env.PORTOLANI_DOWNLOADS ?? join(ROOT, 'downloads');
 const WATER = [...WATER_FILES.rivers, ...WATER_FILES.lakes].map((f) => join(DL, f));
 const HAVE_10M = WATER.every(existsSync);
+const GSHHG = join(DL, 'gshhg-shp-2.3.7.zip'), HAVE_GSHHG = HAVE_10M && existsSync(GSHHG);
 const read = (file) => JSON.parse(readFileSync(file, 'utf8'));
 const resolve = (p) => (p.startsWith('geo/') ? join(GEO, p.slice(4)) : join(ROOT, p));
 
@@ -33,6 +35,19 @@ const with10m = { ...base, readJSON: async (p) => {
   cells ??= cutWater(...['rivers', 'lakes'].map((k) => joinWater(WATER_FILES[k].map((f) => read(join(DL, f))))));
   const k = p.slice('geo/water-10m/'.length, -'.json'.length);
   return k === 'index' ? { cell: 5, cells: [...cells.keys()] } : cells.get(k);
+} };
+
+// and the GSHHG "h" lakes, cut as scripts/build-preview.mjs cuts them into geo/h-lakes/
+let lakeCells;
+const withLakes = { ...with10m, readJSON: async (p) => {
+  if (!p.startsWith('geo/h-lakes/')) return with10m.readJSON(p);
+  if (!lakeCells) {
+    const { zipMember } = await import(new URL('zip.js', import.meta.resolve('coastlines')));
+    const zip = readFileSync(GSHHG), member = (level, ext) => zipMember(zip, `GSHHS_shp/h/GSHHS_h_L${level}.${ext}`);
+    lakeCells = cutLakes(gshhgLakes(...[2, 3].flatMap((level) => [shapefilePolygons(member(level, 'shp')), dbfRecords(member(level, 'dbf'))])), 1);
+  }
+  const k = p.slice('geo/h-lakes/'.length, -'.json'.length);
+  return k === 'index' ? { cell: 1, cells: [...lakeCells.keys()] } : lakeCells.get(k);
 } };
 
 // Lake Maggiore: 50m has the Ticino through it but not the lake; 10m has the lake and the Toce too
@@ -60,6 +75,23 @@ test('past z7 a view over Seattle keeps Lake Washington, which 50m lacks', { ski
   const b = names(coarse, (await coarse.createScene(base, { ...OPTS, view: SEATTLE })).data);
   assert.ok(a.includes('Lake Washington'), `10m lakes: ${a.join(', ')}`);
   assert.ok(!b.includes('Lake Washington'), `50m lakes: ${b.join(', ')}`);
+});
+
+// Kunming at z10.5: Dian Chi is in no Natural Earth file, only in GSHHG's lakes. Over Otsu, GSHHG's
+// Biwa stands in for Natural Earth's, which is dropped so the lake is drawn once. By Sudbury, Lake
+// Panache lies inside GSHHG Superior's box but not its water, so it stays.
+const KUNMING = { lon: 102.7, lat: 24.9, zoom: 10.5 }, DIAN_CHI = [102.69, 24.85];
+const OTSU = { lon: 135.9, lat: 35.05, zoom: 10.5 }, SUDBURY = { lon: -81.4, lat: 46.2, zoom: 10.5 };
+test('past z10 GSHHG lakes draw what Natural Earth lacks, Dian Chi at Kunming, and a lake once but every lake', { skip: !HAVE_GSHHG && 'no 10m water or GSHHG downloads' }, async () => {
+  const holds = (l, [lon, lat]) => l.box.x0 <= lon && lon <= l.box.x1 && l.box.y0 <= lat && lat <= l.box.y1;
+  const kept = async (tag, env, view) => { const m = await scene(tag); return m.keptWater((await m.createScene(env, { ...OPTS, view })).data).lakes; };
+  const ne = await kept('kunming-10m', with10m, KUNMING), both = await kept('kunming-gshhg', withLakes, KUNMING);
+  assert.ok(!ne.some((l) => holds(l, DIAN_CHI)), `10m lakes: ${ne.map((l) => l.key).join(', ')}`);
+  assert.ok(both.some((l) => l.key.startsWith('gshhg-') && holds(l, DIAN_CHI)), `lakes: ${both.map((l) => l.key).join(', ')}`);
+  const otsu = (await kept('otsu-gshhg', withLakes, OTSU)).map((l) => l.key);
+  assert.ok(!otsu.includes('Biwa Ko') && otsu.some((k) => k.startsWith('gshhg-')), `Otsu lakes: ${otsu.join(', ')}`);
+  const sudbury = (await kept('sudbury-gshhg', withLakes, SUDBURY)).map((l) => l.key);
+  assert.ok(sudbury.includes('Lake Panache'), `Sudbury lakes: ${sudbury.join(', ')}`);
 });
 
 test('without the 10m files a close view still draws its 50m rivers and lakes', async () => {

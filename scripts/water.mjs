@@ -79,13 +79,15 @@ export const RIVERS = {
   plain: (g, data, features) => stroke(g, pixelRuns(data, features, 1).map(({ run }) => run), RIVER_BLUE, 1.4),
 };
 
-// True shapes, washed, hatched if asked, and edged.
-function trueLakes(g, data, polys, { wash, alpha, hatching, edge }) {
+// True shapes, washed, hatched if asked, and edged along `shores`. A lake cut into cells (GSHHG,
+// scene.mjs LAKE_BANDS) brings its shore apart from its pieces, so a cut edge is never inked.
+const shoresOf = (features) => features.flatMap((f) => f.shore ?? f.polys.flat());
+function trueLakes(g, data, polys, shores, { wash, alpha, hatching, edge }) {
   if (!polys.length) return;
   const { x, y, seam } = data.proj;
   fill(g, polys, x, y, { color: wash, alpha, ...seam });
   if (hatching) hatch(g, polys, x, y, { ...hatching, ...seam });
-  limn(g, polys.flat(), x, y, { color: edge, alpha: 1, width: 1.2, oneStroke: true, ...seam });
+  limn(g, shores, x, y, { color: edge, alpha: 1, width: 1.2, oneStroke: true, ...seam });
 }
 const BLUE_HATCHED = { wash: LAKE_BLUE, alpha: 0.6, hatching: { angle: Math.PI / 2, gap: 9, wavelength: 22, amplitude: 2, color: HATCH_BLUE, width: 1.2 }, edge: RIVER_INK };
 
@@ -108,20 +110,22 @@ export const LAKES = {
   // above it; a great one keeps its shape, washed blue and hatched with waves
   aguiar: (g, data, features) => {
     const { x, y, seam } = data.proj, { pigments, seedOf } = data.palette;
-    const great = [], small = [];
+    const great = [], shores = [], small = [];
+    // a lake cut into cells is sized whole, its pieces' outlines together
+    const parts = (f) => (f.shore ? [{ polys: f.polys, ring: f.polys.flatMap((p) => p[0]), shore: f.shore }] : f.polys.map((p) => ({ polys: [p], ring: p[0], shore: p.flat() })));
     for (const f of features) {
-      for (const poly of f.polys) {
-        const [ring] = runs([poly[0]], x, y, { ...seam });
+      for (const part of parts(f)) {
+        const [ring] = runs([part.ring], x, y, { ...seam });
         if (!ring || ring.length < 3) continue;
         const box = footprint(ring);
-        if (box.length >= LOZENGE_PX) great.push(poly);
+        if (box.length >= LOZENGE_PX) { great.push(...part.polys); shores.push(...part.shore); }
         else if (box.length >= LAKE_MIN_PX) {
           const length = Math.max(box.length * 1.15, 34);
           small.push({ fit: { ...box, length, width: Math.max(length * 0.42, box.width) }, wash: pigments[(seedOf(f.key) >>> 0) % pigments.length] });
         }
       }
     }
-    trueLakes(g, data, great, BLUE_HATCHED);
+    trueLakes(g, data, great, shores, BLUE_HATCHED);
     if (!small.length) return;
     stroke(g, small.flatMap((s) => spurs(s.fit)), RIVER_INK, 2);
     g.save();
@@ -134,9 +138,9 @@ export const LAKES = {
     g.restore();
   },
   // Carta Marina, 1539: true shapes, grey-blue, ruled across with broken lines
-  marina: (g, data, features) => trueLakes(g, data, features.flatMap((f) => f.polys), {
+  marina: (g, data, features) => trueLakes(g, data, features.flatMap((f) => f.polys), shoresOf(features), {
     wash: LAKE_GREY, alpha: 0.85, hatching: { angle: 0, gap: 4, dash: [6, 4], color: data.palette.ink, width: 0.8, alpha: 0.7 }, edge: data.palette.ink }),
-  plain: (g, data, features) => trueLakes(g, data, features.flatMap((f) => f.polys), { wash: LAKE_BLUE, alpha: 0.6, edge: RIVER_INK }),
+  plain: (g, data, features) => trueLakes(g, data, features.flatMap((f) => f.polys), shoresOf(features), { wash: LAKE_BLUE, alpha: 0.6, edge: RIVER_INK }),
 };
 
 export const RIVER_STYLES = Object.keys(RIVERS);
