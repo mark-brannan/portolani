@@ -919,9 +919,10 @@ function buildScene(data, sprites, ctx, world = {}) {
   // a rose set: the biggest is the centre rose, the rest the ring's; a set of one serves both, small at 110 px
   const roses = sprites.roses;
   // the view's seed picks the centre rose from the whole set, so a selection shows each of its roses
-  // across the map; drawn at the biggest size in the set, the rest ring it
+  // across the map; drawn at the biggest size in the set, the rest ring it. No seed (an older caller):
+  // the biggest, as before
   const bigSizePx = Math.max(...roses.map((s) => s.sizePx));
-  const picked = castOrder(roses, world.seed, () => 1)[0];
+  const picked = world.seed == null ? roses.find((s) => s.sizePx === bigSizePx) : castOrder(roses, world.seed, () => 1)[0];
   const bigRose = { ...picked, sizePx: bigSizePx };
   const rest = roses.filter((s) => s !== picked), small = rest.filter((s) => s.sizePx < bigSizePx);
   // taken in set order, one per node; mixed sets ring the smaller roses, a set of big ones rings them at 110 px
