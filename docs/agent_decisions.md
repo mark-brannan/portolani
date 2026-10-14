@@ -96,3 +96,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t195326z
 - Building ids house, church, castle, round-tower, tent with style carta-marina, their own picker family Undo: rename in buildings.mjs before any link names them ([#94](https://github.com/mark-brannan/portolani/pull/94))
+
+### 20261014t195330z
+- Lesser places draw whenever any town family is drawn, always church or house, whatever is picked Undo: gate placeLesser on the selection in buildScene ([#94](https://github.com/mark-brannan/portolani/pull/94))
