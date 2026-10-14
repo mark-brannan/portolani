@@ -24,11 +24,11 @@ const { find, localUrl } = coastlines;
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const out = path.join(root, '_site');
-const GEO = ['ne-land-50m', 'ne-coastline-50m', 'ne-populated-places-50m'];
+const GEO = ['ne-land-50m', 'ne-coastline-50m', 'ne-populated-places-50m', ...(find('ne-urban-areas-50m') ? ['ne-urban-areas-50m'] : [])]; // urban areas from coastlines 0.0.5
 const GEO_10M = ['ne-land-10m', 'ne-coastline-10m', 'ne-minor-islands-10m'];
 const CELL_DEG = 5; // must match scene.mjs BANDS
 
-const KEEP = { 'ne-populated-places-50m': ['NAME', 'SCALERANK', 'POP_MAX'] };
+const KEEP = { 'ne-populated-places-50m': ['NAME', 'SCALERANK', 'POP_MAX'], 'ne-urban-areas-50m': [] };
 const slim = (geo, keys) => ({
   ...geo,
   features: geo.features.map((f) => ({ ...f, properties: Object.fromEntries(keys.map((k) => [k, f.properties[k]])) })),

@@ -29,6 +29,7 @@ const STYLE = {
   greenEdge: '#3f5a2e',
   ochre: '#c47f2c',
   gold: '#c9a13b',
+  terracotta: '#b8613f', // town footprints
   coastWidth: 1.5,
   washWidth: 5,
   rhumbAlpha: 0.3,
@@ -52,6 +53,7 @@ const BANDS = [
   { dir: 'h', zoom: 12, cell: 1, margin: 0.5 }, // GSHHG 2.3.7 "h" land, holds to about z13
 ];
 const ZOOM = { min: 1, max: 13 };
+const URBAN_PX = 56; // screen px a built-up area's long side reaches before it is drawn
 
 // Land treatments after the period charts: 'gilt' (today's wash), 'green' (Oliva, c.1590), 'ochre'
 // with a dotted shoal line off the coast (Benincasa, 1466) and 'islands' (Beccari, 1403): an ochre
@@ -196,8 +198,9 @@ const loadGeo = (id) => env.readJSON(`geo/${id}.geojson`);
 // split into short runs, which is what a frame drawn while dragging walks.
 const worlds = new WeakMap();
 async function loadWorld() {
-  const [landGeo, coastGeo, placesGeo, namesGeo] = await Promise.all(
-    [...['ne-land-50m', 'ne-coastline-50m', 'ne-populated-places-50m'].map(loadGeo), env.readJSON('geo/names-50m.json')]);
+  const [landGeo, coastGeo, placesGeo, namesGeo, urbanGeo] = await Promise.all(
+    [...['ne-land-50m', 'ne-coastline-50m', 'ne-populated-places-50m'].map(loadGeo), env.readJSON('geo/names-50m.json'),
+      loadGeo('ne-urban-areas-50m').catch(() => null)]); // a site without the urban areas draws no town footprints
   let world = worlds.get(landGeo);
   if (world) return world;
   const land = geojsonPolygons(landGeo).map((poly) => ({ poly: Object.assign(poly, { isl: islandInfo(poly) }), box: bbox(poly[0]) }));
@@ -211,7 +214,8 @@ async function loadWorld() {
     const pts = g.type === 'Point' ? [g.coordinates] : g.coordinates;
     return { text: p.name, at: g.coordinates, land: p.land, kind: p.kind, rank: p.rank, min: p.min, box: bbox(pts) };
   });
-  world = { land, lines, runs, places, names };
+  const urban = urbanGeo ? geojsonPolygons(urbanGeo).map((poly) => ({ poly, box: bbox(poly[0]) })) : [];
+  world = { land, lines, runs, places, names, urban };
   worlds.set(landGeo, world);
   return world;
 }
@@ -260,7 +264,7 @@ async function loadDetail(coarse, view) {
   }));
   return {
     land: parts.flatMap((p) => p.land), lines: parts.flatMap((p) => p.lines), runs: parts.flatMap((p) => p.runs),
-    places: coarse.places, names: coarse.names, detail: { ...f, band: band.dir }, // the lon/lat frame the loaded cells cover, and whose
+    places: coarse.places, names: coarse.names, urban: coarse.urban, detail: { ...f, band: band.dir }, // the lon/lat frame the loaded cells cover, and whose
   };
 }
 
@@ -307,7 +311,8 @@ function viewData(world, view) {
   // names worth showing at this zoom (Natural Earth's min_label), most important first
   const names = world.names.filter((n) => n.min <= view.zoom + 1 && meetsLL(f, n.box))
     .sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'sea' ? -1 : 1) || a.rank - b.rank);
-  return { proj, land, coastLL, coast, places, names };
+  const urban = world.urban.filter((u) => meetsLL(f, u.box)).map((u) => u.poly);
+  return { proj, land, coastLL, coast, places, names, urban };
 }
 
 // Two packs draw the same designs two ways: `vivid` as vectors, `scanned` as crops of the scans. A
@@ -920,7 +925,8 @@ function indexOf(data) {
   const px = (ring) => ring.map(([lon, lat]) => data.proj.project(lon, lat));
   const land = data.land.map((poly) => ({ poly, box: bbox(px(poly[0])) }));
   const coast = data.coastLL.flatMap(coastRuns).map((run) => ({ run, box: bbox(px(run)) }));
-  ix = { land, coast };
+  const urban = (data.urban ?? []).map((poly) => ({ poly, box: bbox(px(poly[0])) }));
+  ix = { land, coast, urban };
   indexes.set(data, ix);
   return ix;
 }
@@ -1272,6 +1278,15 @@ function drawScene(g, scene, data, bg, view) {
 
   // 4. coast
   paintCoast(g, data, coast);
+
+  // 4.5 town footprints: a city's built-up area, washed terracotta and edged in ink once its long
+  // side passes URBAN_PX on screen, the wash coming in over the next doubling of zoom
+  for (const u of idx.urban) {
+    const a = Math.min(1, (Math.max(u.box.x1 - u.box.x0, u.box.y1 - u.box.y0) * view.scale / URBAN_PX - 1)) * 0.45;
+    if (a <= 0 || !meets(r, u.box)) continue;
+    fill(g, [u.poly], data.proj.x, data.proj.y, { color: STYLE.terracotta, alpha: a, lonCenter: data.proj.lonCenter });
+    g.save(); g.globalAlpha = a * 1.5; g.strokeStyle = STYLE.ink; g.lineWidth = 0.8 / view.scale; g.stroke(); g.restore();
+  }
 
   // 5. roses
   const spriteIn = (s, x, y, size) => disc(r, x, y, Math.hypot(size, (size * s.img.height) / s.img.width));
