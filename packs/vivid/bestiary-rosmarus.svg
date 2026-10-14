@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-100 -70 200 140" width="400" height="280">
+  <!-- After the rosmarus, the walrus of Conrad Gesner's Historia animalium, 1558 (via Wikimedia
+       Commons, File:Gessner_walrus.JPG), set on a rock as Ortelius and Olaus Magnus show it: a
+       heavy hairy body hauled out, a fish's tail behind, clawed flippers, a whiskered muzzle and two
+       long tusks. Drawn, not traced; white ground where the paper shows, for the renderer's
+       `multiply`. -->
+  <defs><clipPath id="hide"><path d="M-78,22 C-64,2 -36,-14 0,-16 C30,-18 50,-26 62,-40 C66,-52 82,-60 94,-52 C104,-46 106,-32 100,-22 C96,-16 88,-14 80,-17 C70,-8 56,2 40,10 C10,20 -36,24 -78,22 Z"/></clipPath></defs>
+  <g stroke-linejoin="round" stroke-linecap="round" transform="translate(-6,2) scale(0.94)">
+    <!-- the rock, hatched -->
+    <path d="M-96,56 C-92,34 -78,22 -56,22 C-40,12 -20,16 -6,20 C14,10 44,12 62,22 C80,26 94,40 98,56 Z" fill="#c9c2a4" stroke="#2a1d12" stroke-width="2.4"/>
+    <path d="M-86,50 L-74,34 M-78,52 L-64,32 M-70,54 L-56,32 M-36,54 L-24,30 M-28,54 L-16,30 M10,54 L24,28 M18,54 L32,26 M26,54 L40,26 M60,54 L72,34 M68,54 L80,36 M76,54 L86,40" fill="none" stroke="#2a1d12" stroke-width="0.9"/>
+    <path d="M-52,40 C-44,34 -34,34 -26,40 M0,34 C8,30 18,30 26,34 M40,44 C50,38 60,40 66,46" fill="none" stroke="#2a1d12" stroke-width="1.3"/>
+    <!-- the fish's tail -->
+    <path d="M-76,18 C-84,8 -92,-6 -98,-20 C-92,-10 -84,-4 -74,0 C-86,-2 -94,4 -98,14 C-90,10 -82,12 -72,16 Z" fill="#d9b48e" stroke="#2a1d12" stroke-width="1.8"/>
+    <path d="M-78,8 L-94,-12 M-80,12 L-94,8" fill="none" stroke="#2a1d12" stroke-width="0.8"/>
+    <!-- hind flipper -->
+    <path d="M-50,16 C-56,26 -62,30 -70,32 L-66,36 L-58,34 L-56,38 L-48,32 L-42,34 L-40,18 Z" fill="#d9b48e" stroke="#2a1d12" stroke-width="1.8"/>
+    <!-- the body -->
+    <path d="M-78,22 C-64,2 -36,-14 0,-16 C30,-18 50,-26 62,-40 C66,-52 82,-60 94,-52 C104,-46 106,-32 100,-22 C96,-16 88,-14 80,-17 C70,-8 56,2 40,10 C10,20 -36,24 -78,22 Z" fill="#d9b48e" stroke="#2a1d12" stroke-width="2.6"/>
+    <path d="M-62,-3.4 l2.4,2 M-54,-3.8 l2.4,2 M-46,-4.2 l2.4,2 M-38,-4.6 l2.4,2 M-30,-5.0 l2.4,2 M-22,-5.4 l2.4,2 M-14,-5.8 l2.4,2 M-6,-5.8 l2.4,2 M2,-5.4 l2.4,2 M10,-5.0 l2.4,2 M18,-5.6 l2.4,2 M26,-6.1 l2.4,2 M34,-6.7 l2.4,2 M42,-7.2 l2.4,2 M50,-7.8 l2.4,2 M58,-8.4 l2.4,2 M-58,2.4 l2.4,2 M-50,2.0 l2.4,2 M-42,1.6 l2.4,2 M-34,1.2 l2.4,2 M-26,0.8 l2.4,2 M-18,0.4 l2.4,2 M-10,0.0 l2.4,2 M-2,0.4 l2.4,2 M6,0.8 l2.4,2 M14,0.7 l2.4,2 M22,0.2 l2.4,2 M30,-0.4 l2.4,2 M38,-1.0 l2.4,2 M46,-1.5 l2.4,2 M54,-2.1 l2.4,2 M62,-2.6 l2.4,2 M-62,8.6 l2.4,2 M-54,8.2 l2.4,2 M-46,7.8 l2.4,2 M-38,7.4 l2.4,2 M-30,7.0 l2.4,2 M-22,6.6 l2.4,2 M-14,6.2 l2.4,2 M-6,6.2 l2.4,2 M2,6.6 l2.4,2 M10,7.0 l2.4,2 M18,6.4 l2.4,2 M26,5.9 l2.4,2 M34,5.3 l2.4,2 M42,4.8 l2.4,2 M50,4.2 l2.4,2 M-58,14.4 l2.4,2 M-50,14.0 l2.4,2 M-42,13.6 l2.4,2 M-34,13.2 l2.4,2 M-26,12.8 l2.4,2 M-18,12.4 l2.4,2 M-10,12.0 l2.4,2 M-2,12.4 l2.4,2 M6,12.8 l2.4,2 M14,12.7 l2.4,2 M22,12.2 l2.4,2 M30,11.6 l2.4,2 M38,11.0 l2.4,2 M46,10.5 l2.4,2 M-62,20.6 l2.4,2 M-54,20.2 l2.4,2 M-46,19.8 l2.4,2 M-38,19.4 l2.4,2 M-30,19.0 l2.4,2 M-22,18.6 l2.4,2 M-14,18.2 l2.4,2 M-6,18.2 l2.4,2 M2,18.6 l2.4,2 M10,19.0 l2.4,2 M18,18.4 l2.4,2 M26,17.9 l2.4,2 M34,17.3 l2.4,2 M42,16.8 l2.4,2" clip-path="url(#hide)" fill="none" stroke="#2a1d12" stroke-width="0.8"/>
+    <path d="M-70,16 C-40,20 0,16 30,8 M50,-20 C54,-10 54,-2 50,6 M58,-30 C64,-20 64,-10 60,-2" fill="none" stroke="#2a1d12" stroke-width="1"/>
+    <!-- the head: a heavy brow, eye, whiskered muzzle, two long tusks -->
+    <path d="M76,-48 C80,-52 88,-52 92,-48" fill="none" stroke="#2a1d12" stroke-width="1.8"/>
+    <circle cx="84" cy="-42" r="3.6" fill="#ffffff" stroke="#2a1d12" stroke-width="1.3"/>
+    <circle cx="85" cy="-42" r="1.7" fill="#2a1d12"/>
+    <path d="M84,-20 C86,-4 86,12 80,26 C84,12 82,-4 80,-18 Z M92,-20 C96,-4 98,12 94,28 C96,12 92,-4 88,-18 Z" fill="#ffffff" stroke="#2a1d12" stroke-width="1.6"/>
+    <path d="M100,-30 l8,-4 M101,-26 l9,0 M100,-22 l8,4 M92,-27 l-1,-3 M88,-30 q2,-2 4,0" fill="none" stroke="#2a1d12" stroke-width="0.9"/>
+    <circle cx="94" cy="-27" r="0.8" fill="#2a1d12"/><circle cx="90" cy="-25" r="0.8" fill="#2a1d12"/><circle cx="92" cy="-22" r="0.8" fill="#2a1d12"/>
+    <!-- fore flipper, clawed, braced on the rock -->
+    <path d="M40,6 C44,16 46,22 42,28 L36,30 L42,32 L40,36 L48,34 L50,38 L54,32 L60,34 L58,26 C56,18 54,10 54,2 Z" fill="#d9b48e" stroke="#2a1d12" stroke-width="1.8"/>
+    <path d="M46,12 C48,18 48,24 46,28 M51,10 C53,18 53,24 52,30" fill="none" stroke="#2a1d12" stroke-width="0.8"/>
+    <!-- the sea at the foot of the rock -->
+    <g fill="none" stroke="#3f8a4a" stroke-width="2">
+      <path d="M-98,62 q8,-6 16,0 q8,6 16,0 q8,-6 16,0 q8,6 16,0 q8,-6 16,0 q8,6 16,0 q8,-6 16,0 q8,6 16,0 q8,-6 16,0 q8,6 16,0 q8,-6 16,0 q8,6 16,0"/>
+    </g>
+  </g>
+</svg>

@@ -1,7 +1,7 @@
 {
   "name": "vivid",
-  "title": "Portolan roses, scale, cartouche, town and palms, redrawn as vectors after Jorge de Aguiar 1492, the Catalan Atlas 1375, Genoese charts and Frederik de Wit",
-  "licence": "MIT; drawn for portolani after public-domain originals",
+  "title": "Portolan roses, scale, cartouche, town, palms, sea monsters and ships, redrawn as vectors after Jorge de Aguiar 1492, the Catalan Atlas 1375, Genoese charts, Frederik de Wit, Olaus Magnus's Carta Marina 1539, Sebastian Münster's Cosmographia, Conrad Gesner's Historia animalium 1558 and Abraham Ortelius 1589-90",
+  "licence": "MIT; drawn for portolani after public-domain originals (Aguiar, the Catalan Atlas, Genoese charts, de Wit, Olaus Magnus, Münster, Gesner, Ortelius, and a British Museum print of Candia)",
   "colour": "source",
   "ink": "#2a1d12",
   "sprites": [
@@ -60,6 +60,158 @@
       "bands": [0, 1],
       "bar": [0.0214, 0.9786],
       "divisions": 5
+    },
+    {
+      "id": "serpent-a",
+      "kind": "monster",
+      "style": "carta-marina",
+      "file": "carta-marina-serpent-a.svg",
+      "anchor": [0.5, 0.75],
+      "sizePx": 200,
+      "bands": [0, 1],
+      "minClearancePx": 160,
+      "weight": 3,
+      "after": "https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg"
+    },
+    {
+      "id": "whale-b",
+      "kind": "monster",
+      "style": "carta-marina",
+      "file": "carta-marina-whale-b.svg",
+      "anchor": [0.5, 0.75],
+      "sizePx": 190,
+      "bands": [0, 1],
+      "minClearancePx": 150,
+      "weight": 2,
+      "after": "https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg"
+    },
+    {
+      "id": "pistrix-c",
+      "kind": "monster",
+      "style": "carta-marina",
+      "file": "carta-marina-pistrix-c.svg",
+      "anchor": [0.5, 0.75],
+      "sizePx": 150,
+      "bands": [0, 1],
+      "minClearancePx": 130,
+      "weight": 2,
+      "after": "https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg"
+    },
+    {
+      "id": "cete-e",
+      "kind": "monster",
+      "style": "carta-marina",
+      "file": "carta-marina-cete-e.svg",
+      "anchor": [0.5, 0.75],
+      "sizePx": 180,
+      "bands": [0, 1],
+      "minClearancePx": 140,
+      "weight": 1,
+      "after": "https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg"
+    },
+    {
+      "id": "ship-a",
+      "kind": "ship",
+      "style": "carta-marina",
+      "file": "carta-marina-ship-a.svg",
+      "anchor": [0.5, 0.75],
+      "sizePx": 80,
+      "bands": [0, 1],
+      "heading": "right",
+      "after": "https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg"
+    },
+    {
+      "id": "ship-b",
+      "kind": "ship",
+      "style": "carta-marina",
+      "file": "carta-marina-ship-b.svg",
+      "anchor": [0.5, 0.75],
+      "sizePx": 64,
+      "bands": [0, 1],
+      "heading": "right",
+      "after": "https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg"
+    },
+    {
+      "id": "whale-spout",
+      "kind": "monster",
+      "style": "bestiary",
+      "file": "bestiary-whale-spout.svg",
+      "anchor": [0.5, 0.75],
+      "sizePx": 190,
+      "bands": [0, 1],
+      "minClearancePx": 150,
+      "weight": 3,
+      "after": "https://commons.wikimedia.org/wiki/File:Abraham_Ortelius-Islandia-ca_1590.jpg"
+    },
+    {
+      "id": "kraken",
+      "kind": "monster",
+      "style": "bestiary",
+      "file": "bestiary-kraken.svg",
+      "anchor": [0.5, 0.75],
+      "sizePx": 180,
+      "bands": [0, 1],
+      "minClearancePx": 150,
+      "weight": 3,
+      "after": "https://commons.wikimedia.org/wiki/File:Conradi_Gesneri_medici_Tigurini_Histori%C3%A6_animalivm_liber_IV._,_Qui_est_de_piscium_%26_aquatilium_animantium_natura._(IA_conradigesnerim00gesn).pdf"
+    },
+    {
+      "id": "serpent-fish",
+      "kind": "monster",
+      "style": "bestiary",
+      "file": "bestiary-serpent-fish.svg",
+      "anchor": [0.5, 0.75],
+      "sizePx": 200,
+      "bands": [0, 1],
+      "minClearancePx": 160,
+      "weight": 2,
+      "after": "https://commons.wikimedia.org/wiki/File:Sea_monsters_(1578).jpg"
+    },
+    {
+      "id": "pristis",
+      "kind": "monster",
+      "style": "bestiary",
+      "file": "bestiary-pristis.svg",
+      "anchor": [0.5, 0.75],
+      "sizePx": 170,
+      "bands": [0, 1],
+      "minClearancePx": 140,
+      "weight": 2,
+      "after": "https://commons.wikimedia.org/wiki/File:Monstra_marina_%26_terrestria_(IA_dr_monstra-marina-terrestria-15058206).jpg"
+    },
+    {
+      "id": "rosmarus",
+      "kind": "monster",
+      "style": "bestiary",
+      "file": "bestiary-rosmarus.svg",
+      "anchor": [0.5, 0.75],
+      "sizePx": 150,
+      "bands": [0, 1],
+      "minClearancePx": 130,
+      "weight": 1,
+      "after": "https://commons.wikimedia.org/wiki/File:Gessner_walrus.JPG"
+    },
+    {
+      "id": "galley",
+      "kind": "ship",
+      "style": "bestiary",
+      "file": "bestiary-galley.svg",
+      "anchor": [0.5, 0.75],
+      "sizePx": 90,
+      "bands": [0, 1],
+      "heading": "right",
+      "after": "https://commons.wikimedia.org/wiki/File:Candia_(BM_1882,0211.86).jpg"
+    },
+    {
+      "id": "caravel",
+      "kind": "ship",
+      "style": "bestiary",
+      "file": "bestiary-caravel.svg",
+      "anchor": [0.5, 0.75],
+      "sizePx": 76,
+      "bands": [0, 1],
+      "heading": "right",
+      "after": "https://commons.wikimedia.org/wiki/File:Ortelius_-_Maris_Pacifici_1589.jpg"
     }
   ]
 }

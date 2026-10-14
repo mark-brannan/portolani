@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-57 -40 114 81" width="228" height="162">
+  <!-- After the trading hulk under sail (Q) on Olaus Magnus's Carta Marina, 1539 (James Ford Bell
+       Library, via Wikimedia Commons, File:Carta_Marina.jpeg): a round-bellied hulk heading right
+       under one great square sail, a vermilion sheer strake, a gilt pennant. Drawn, not traced;
+       white ground where the paper shows, for the renderer's `multiply`. -->
+  <g stroke="#2a1d12" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M2,-34 L-40,14 M2,-34 L36,14 M40,8 L56,-4" fill="none" stroke-width="0.8"/>
+    <path d="M2,18 L2,-34 M38,10 L54,-2" fill="none" stroke-width="2.4"/>
+    <!-- the sail, ochre-gilt, bellied forward, its cloths seamed -->
+    <path d="M-20,-28 L24,-28 Q36,-6 26,12 L-18,12 Q-26,-8 -20,-28 Z" fill="#e2c27a" stroke-width="2.2"/>
+    <path d="M-12,-27 Q-18,-8 -11,11 M-3,-27 Q-6,-8 -2,11 M6,-27 Q6,-8 7,11 M15,-27 Q18,-8 16,11" fill="none" stroke-width="1"/>
+    <path d="M-24,-30 L28,-30" fill="none" stroke-width="2.4"/>
+    <path d="M2,-34 L2,-39 L20,-36 L12,-35 L18,-32 L2,-33" fill="#c4553a" stroke-width="1.2"/>
+    <!-- a small mizzen aft -->
+    <path d="M-34,14 L-34,-12 M-42,-6 L-24,-16 M-40,-6 Q-34,-6 -26,-14 L-30,6 Z" fill="#ffffff" stroke-width="1.6"/>
+    <!-- the hull -->
+    <path d="M-52,6 L-38,8 L-36,14 L34,14 L48,6 C46,22 34,32 10,34 L-30,34 C-44,32 -52,22 -52,6 Z" fill="#ffffff" stroke-width="2.2"/>
+    <path d="M-51,14 C-30,20 20,20 46,12 L44,19 C20,26 -30,26 -50,21 Z" fill="#c4553a" fill-opacity="0.75" stroke-width="1.2"/>
+    <path d="M-46,27 C-24,31 20,31 38,25" fill="none" stroke-width="1"/>
+    <!-- the sea -->
+    <path d="M-56,38 q6,-5 12,0 q6,5 12,0 q6,-5 12,0 q6,5 12,0 q6,-5 12,0 q6,5 12,0 q6,-5 12,0 q6,5 12,0 q6,-5 12,0" fill="none" stroke="#3f8a4a" stroke-width="2"/>
+  </g>
+</svg>
