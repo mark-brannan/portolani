@@ -8,7 +8,7 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createScene, drawScene, W, H, DETAIL } from './scene.mjs';
-import { seaNames, coastNames, joinNames } from './names.mjs';
+import { seaNames, coastNames, joinNames, redSea } from './names.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DL = join(ROOT, 'downloads');
@@ -23,7 +23,7 @@ const names = () => made ??= joinNames(seaNames(read(join(DL, 'ne_50m_geography_
   coastNames(read(join(GEO, 'ne-admin-0-countries-50m.geojson')), read(join(GEO, 'ne-coastline-50m.geojson'))));
 const env = {
   createCanvas,
-  readJSON: async (p) => (p === 'geo/names-50m.json' ? names() : read(resolve(p))),
+  readJSON: async (p) => (p === 'geo/names-50m.json' ? names() : p === 'geo/red-sea-50m.json' ? redSea(read(join(DL, 'ne_50m_geography_marine_polys.geojson'))) : read(resolve(p))),
   loadImage: (p) => loadImage(resolve(p)),
   loadFont: async (family) => { GlobalFonts.registerFromPath(join(DL, 'IMFeENrm28P.ttf'), family); GlobalFonts.registerFromPath(join(DL, 'IMFeENit28P.ttf'), family); },
 };

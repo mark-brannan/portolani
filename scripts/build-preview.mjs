@@ -19,7 +19,7 @@ import path from 'node:path';
 import * as coastlines from 'coastlines';
 import { geojsonPolygons, geojsonRings } from 'coast-wright';
 import { cutCells } from './detail-cells.mjs';
-import { seaNames, coastNames, joinNames } from './names.mjs';
+import { seaNames, coastNames, joinNames, redSea } from './names.mjs';
 const { find, localUrl } = coastlines;
 
 const root = fileURLToPath(new URL('..', import.meta.url));
@@ -74,6 +74,10 @@ const seas = seaNames(marine);
 // the golden test reads its seas from this fixture, offline: it must stay what the download gives
 const fixture = await readFile(path.join(root, 'test', 'fixtures', 'sea-names-50m.json'), 'utf8');
 if (JSON.stringify(JSON.parse(fixture)) !== JSON.stringify(seas)) throw new Error('test/fixtures/sea-names-50m.json is stale: write seaNames() of the marine download to it');
+// likewise the Red Sea the chart can tint (test/fixtures/red-sea-50m.json)
+const red = redSea(marine);
+if (JSON.stringify(JSON.parse(await readFile(path.join(root, 'test', 'fixtures', 'red-sea-50m.json'), 'utf8'))) !== JSON.stringify(red)) throw new Error('test/fixtures/red-sea-50m.json is stale: write redSea() of the marine download to it');
+await writeFile(path.join(out, 'geo', 'red-sea-50m.json'), JSON.stringify(red));
 await writeFile(path.join(out, 'geo', 'names-50m.json'), JSON.stringify(joinNames(seas, coastNames(countries, coast50))));
 // A band of detail cells: geo/<dir>/<xi>_<yi>.json and geo/<dir>/index.json.
 async function writeBand(dir, cellDeg, geometry) {
@@ -99,5 +103,6 @@ if (find(H_ID) && coastlines.shapefilePolygons) {
 await cp(path.join(root, 'node_modules', 'coast-wright', 'lib'), path.join(out, 'coast-wright'), { recursive: true });
 await cp(path.join(root, 'public'), out, { recursive: true });
 await cp(path.join(root, 'scripts', 'scene.mjs'), path.join(out, 'scene.mjs'));
+await cp(path.join(root, 'scripts', 'island.mjs'), path.join(out, 'island.mjs'));
 await cp(path.join(root, 'packs'), path.join(out, 'packs'), { recursive: true });
 console.log(`preview assembled in ${path.relative(root, out)}/`);

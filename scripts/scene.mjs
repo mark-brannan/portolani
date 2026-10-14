@@ -8,6 +8,7 @@
 // projection is one of PROJECTIONS, Mercator when left out.
 
 import { fill, trace, limn, rhumb, place, letter, geojsonPolygons, geojsonRings } from 'coast-wright';
+import { islandInfo, ISLAND_KM2 } from './island.mjs';
 
 let env;
 const createCanvas = (w, h) => env.createCanvas(w, h);
@@ -22,10 +23,17 @@ const STYLE = {
   windGreen: '#4f6b3a',
   windRed: '#8c2f1e',
   gilt: '#b58a3c',
+  // period pigments for the land treatments (LANDS)
+  red: '#a8432e',
+  green: '#6b8a4a',
+  greenEdge: '#3f5a2e',
+  ochre: '#c47f2c',
+  gold: '#c9a13b',
   coastWidth: 1.5,
   washWidth: 5,
   rhumbAlpha: 0.3,
   rhumbWidth: 0.75,
+  landMode: 'islands', // one of LANDS, set by createScene
   font: 'IM Fell English',
   fonts: ['IM Fell English', 'Georgia', 'serif'], // the stack names are lettered in; the first is loaded
 };
@@ -44,6 +52,14 @@ const BANDS = [
   { dir: 'h', zoom: 12, cell: 1, margin: 0.5 }, // GSHHG 2.3.7 "h" land, holds to about z13
 ];
 const ZOOM = { min: 1, max: 13 };
+
+// Land treatments after the period charts: 'gilt' (today's wash), 'green' (Oliva, c.1590), 'ochre'
+// with a dotted shoal line off the coast (Benincasa, 1466) and 'islands' (Beccari, 1403): an ochre
+// coast wash and every island under ISLAND_KM2 filled red, green or gold, each keeping its colour.
+export const LANDS = ['islands', 'gilt', 'green', 'ochre'];
+const LAND_WASH = { gilt: STYLE.gilt, green: STYLE.green, ochre: STYLE.ochre, islands: STYLE.ochre };
+const SHOAL_OFFSET = 4, SHOAL_GAP = 6; // px seaward of the coast, and between dots
+let redSeaPolys = null; // the Red Sea to tint, or null
 const DETAIL_ZOOM = BANDS[0].zoom;
 
 // Per-run tuning; `density` scales how much ornament is placed (1 = the committed mockup).
@@ -184,7 +200,7 @@ async function loadWorld() {
     [...['ne-land-50m', 'ne-coastline-50m', 'ne-populated-places-50m'].map(loadGeo), env.readJSON('geo/names-50m.json')]);
   let world = worlds.get(landGeo);
   if (world) return world;
-  const land = geojsonPolygons(landGeo).map((poly) => ({ poly, box: bbox(poly[0]) }));
+  const land = geojsonPolygons(landGeo).map((poly) => ({ poly: Object.assign(poly, { isl: islandInfo(poly) }), box: bbox(poly[0]) }));
   const lines = geojsonRings(coastGeo).map((line) => ({ line, box: bbox(line) }));
   const runs = lines.flatMap(({ line }) => coastRuns(line).map((run) => ({ run, box: bbox(run) })));
   const places = placesGeo.features
@@ -233,7 +249,8 @@ async function loadDetail(coarse, view) {
       cells.set(k, env.readJSON(`geo/${k}.json`).then((c) => {
         const lines = c.coast.map((line) => ({ line, box: bbox(line) }));
         return {
-          land: c.land.map((poly) => ({ poly, box: bbox(poly[0]) })),
+          // each piece carries its island's area and colour from the cut (a cell without them works one out from the piece)
+          land: c.land.map((poly, i) => ({ poly: Object.assign(poly, { isl: c.m ? { km2: c.m[i][0], hue: c.m[i][1] } : islandInfo(poly) }), box: bbox(poly[0]) })),
           lines,
           runs: lines.flatMap(({ line }) => coastRuns(line).map((run) => ({ run, box: bbox(run) }))),
         };
@@ -888,17 +905,67 @@ function drawTower(g, t) {
   g.restore();
 }
 
-// Flat tint, then a landward wash along the coast.
+// Dots a few px seaward of the coast, a stand-in for shoals until there is data for them. Both
+// sides of each run get dots; the land is painted over the landward ones.
+function paintShoals(g, data, coast) {
+  const { x, y, k } = data.proj;
+  g.save();
+  g.fillStyle = hexA(STYLE.red, 0.85);
+  g.beginPath();
+  for (const run of coast) {
+    let left = 0, prev = null;
+    for (const [lon, lat] of run) {
+      const p = [x(lon, lat), y(lat, lon)];
+      if (prev && Math.abs(p[0] - prev[0]) > Math.PI * k) { prev = null; left = 0; } // across the seam
+      if (prev) {
+        const dx = p[0] - prev[0], dy = p[1] - prev[1], len = Math.hypot(dx, dy);
+        if (len > 0) {
+          for (let d = SHOAL_GAP - left; d <= len; d += SHOAL_GAP) {
+            const t = d / len, cx = prev[0] + dx * t, cy = prev[1] + dy * t;
+            for (const sgn of [1, -1]) {
+              const ox = cx - (dy / len) * SHOAL_OFFSET * sgn, oy = cy + (dx / len) * SHOAL_OFFSET * sgn;
+              g.moveTo(ox + 1.2, oy); g.arc(ox, oy, 1.2, 0, 2 * Math.PI);
+            }
+          }
+          left = (left + len) % SHOAL_GAP;
+        }
+      }
+      prev = p;
+    }
+  }
+  g.fill();
+  g.restore();
+}
+
+// The treatment of the land, after the parchment: the Red Sea tint and shoals (both under the land,
+// which hides what falls on shore), a flat tint, a landward wash along the coast, and the islands.
 function paintLand(g, data, land, coast) {
   const { x, y, lonCenter } = data.proj;
+  const mode = STYLE.landMode;
+  if (redSeaPolys) {
+    trace(g, redSeaPolys, x, y, { lonCenter });
+    g.save(); g.fillStyle = hexA(STYLE.red, 0.5); g.fill('evenodd');
+    // a hair beyond the polygon, which is generalised and stops short of the shore
+    g.lineJoin = 'round'; g.lineWidth = 3; g.strokeStyle = hexA(STYLE.red, 0.5); g.stroke(); g.restore();
+  }
+  if (mode === 'ochre') paintShoals(g, data, coast);
   fill(g, land, x, y, { color: STYLE.land, lonCenter });
   g.save();
   traceLand(g, data, land);
   g.clip('evenodd');
+  const wash = LAND_WASH[mode];
   for (const [wd, a] of [[STYLE.washWidth * 2, 0.3], [STYLE.washWidth * 1.3, 0.3], [STYLE.washWidth * 0.7, 0.35]]) {
-    limn(g, coast, x, y, { color: hexA(STYLE.gilt, a), alpha: 1, width: wd, cap: 'round', oneStroke: true, lonCenter });
+    limn(g, coast, x, y, { color: hexA(wash, a), alpha: 1, width: wd, cap: 'round', oneStroke: true, lonCenter });
   }
+  if (mode === 'green') limn(g, coast, x, y, { color: STYLE.greenEdge, alpha: 0.8, width: 3.5, cap: 'round', oneStroke: true, lonCenter });
   g.restore();
+  if (mode === 'islands') {
+    const pigments = [STYLE.red, STYLE.green, STYLE.gold];
+    for (const [hue, pigment] of pigments.entries()) {
+      const isles = land.filter((p) => p.isl.km2 < ISLAND_KM2 && p.isl.hue === hue);
+      if (isles.length) fill(g, isles, x, y, { color: pigment, alpha: 0.92, lonCenter });
+    }
+  }
 }
 const paintCoast = (g, data, coast) =>
   limn(g, coast, data.proj.x, data.proj.y, { color: STYLE.ink, alpha: 1, width: STYLE.coastWidth, oneStroke: true, lonCenter: data.proj.lonCenter });
@@ -1148,16 +1215,18 @@ function drawScene(g, scene, data, bg, view) {
 // colours (hex), density and view; defaults reproduce the committed mockup. Also `rendering` (one of
 // RENDERINGS), the `rose`, `monster` and `town` styles (listStyles; town 'tower' is drawn in code), `kinds` (the ornament kinds drawn, of KINDS), `names` and `rhumb` (booleans), `scale` (a SCALE_NAMES entry, or 'off'),
 // `continents` (boolean) and `regions` ('off', 'latin' or 'english'); the continents follow the regions' language, Latin when those are off.
+// `land`: a LANDS entry, the land treatment ('islands' by default); `redSea` (boolean) tints the Red Sea red.
 // `autoTitle` (boolean, on by default) letters the cartouche with the name the view is about (viewTitle), in capitals;
 // `title` is its lettering when that is off, or when the view has no name in it.
 // `kinds` defaults to DEFAULT_KINDS: mountains are drawn only when asked for.
 export async function createScene(environment, opts = {}) {
   env = environment;
-  const { ink = '#3b2a1a', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', title = 'PORTOLANI', autoTitle = true } = opts;
+  const { ink = '#3b2a1a', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', title = 'PORTOLANI', autoTitle = true, land: landMode = 'islands', redSea = false } = opts;
   const show = { kinds: new Set(opts.kinds ?? DEFAULT_KINDS), names, rhumb: rhumbOn, scale };
   const view = clampView(opts.view ?? DEFAULT_VIEW);
   STYLE.ink = ink;
   STYLE.parchment = tone;
+  STYLE.landMode = LANDS.includes(landMode) ? landMode : 'islands';
   TUNE.monsterMax = Math.round(4 * density);
   TUNE.shipMax = Math.round(2 * density);
   TUNE.townGap = 48 / density;
@@ -1182,6 +1251,7 @@ export async function createScene(environment, opts = {}) {
   });
   const [, coarse, chosen] = await Promise.all([env.loadFont(STYLE.font), loadWorld(), sprites]);
   const { scaleSprite, ...placed } = chosen;
+  redSeaPolys = redSea ? geojsonPolygons(await env.readJSON('geo/red-sea-50m.json')) : null;
   const world = view.zoom > DETAIL_ZOOM ? await loadDetail(coarse, view) : coarse;
   const tLoad = performance.now();
 

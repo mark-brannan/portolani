@@ -70,6 +70,22 @@ export function seaNames(marine) {
   return { type: 'FeatureCollection', features: out };
 }
 
+// The Red Sea for the chart's red tint: Natural Earth's marine polygon, which stops at 28.13 N and
+// leaves out the Gulf of Suez and the Gulf of Aqaba (and is generalised, so it also leaves gaps off
+// Sinai), plus one box over the northern end. The polygons are drawn under the land, which hides
+// whatever of them lies on shore, so the box only needs to cover the water. Rounded to 3 decimals.
+const GULFS = [
+  { name: 'Gulfs of Suez and Aqaba', ring: [[32.2, 27], [35.4, 27], [35.4, 30.1], [32.2, 30.1], [32.2, 27]] },
+];
+export function redSea(marine) {
+  const red = marine.features.find((f) => f.properties.name === 'Red Sea');
+  if (!red) throw new Error('no Red Sea in the marine polygons');
+  const r3 = (n) => Math.round(n * 1000) / 1000;
+  const features = [{ name: 'Red Sea', rings: red.geometry.coordinates }, ...GULFS.map((g) => ({ name: g.name, rings: [g.ring] }))]
+    .map(({ name, rings }) => ({ type: 'Feature', properties: { name }, geometry: { type: 'Polygon', coordinates: rings.map((r) => r.map(([x, y]) => [r3(x), r3(y)])) } }));
+  return { type: 'FeatureCollection', features };
+}
+
 // Each country along every stretch of its coast: the runs of its outline that the coastline
 // shares, vertex for vertex.
 export function coastNames(countries, coastline) {
