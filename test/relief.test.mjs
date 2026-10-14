@@ -50,3 +50,16 @@ test('a pan keeps every peak where it stood on the map', () => {
   const kept = before.filter((p) => after.has(key(p, dx, dy)) || after.has(key(p, dx + 1, dy)) || after.has(key(p, dx - 1, dy)) || after.has(key(p, dx, dy + 1)) || after.has(key(p, dx, dy - 1)));
   assert.equal(kept.length, before.length, `${before.length - kept.length} of ${before.length} peaks moved under a pan`);
 });
+
+test('each range takes one of the styles selected, by its seed; the Catalan ranges come back as spines, not peaks', () => {
+  const view = { lon: 15, lat: 62, zoom: 4 }, at = (styles) => reliefOf({ proj: mercator(view), land, createCanvas, w: W, h: H, styles });
+  const mixed = at(['marina', 'engraved', 'catalan']), seen = new Set(mixed.peaks.map((p) => p.style));
+  assert.deepEqual([...seen].sort(), ['engraved', 'marina'], 'drawn ranges carry their style');
+  assert.ok(mixed.ranges.length > 0 && mixed.ranges.every((r) => r.spine.length >= 2 && r.height > 0 && r.peaks.length > 0), 'Catalan ranges come back as spines, with the peaks a drag draws meanwhile');
+  const marina = at(['marina']);
+  assert.equal(marina.ranges.length, 0);
+  assert.ok(marina.peaks.every((p) => p.style === 'marina'));
+  assert.ok(marina.peaks.length > mixed.peaks.length, 'a range given to another style is not also drawn');
+  assert.equal(at(['catalan']).peaks.length, 0, 'the sprites alone leave no drawn peak');
+  assert.deepEqual(at(['marina', 'engraved']).peaks.map((p) => [p.x, p.y, p.style]), at(['marina', 'engraved']).peaks.map((p) => [p.x, p.y, p.style]), 'the same view mixes the same way');
+});

@@ -8,7 +8,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
-import { createScene, drawScene, SCALE_NAMES, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, RELIEF_STYLES, W, H } from '../scripts/scene.mjs';
+import { createScene, drawScene, SCALE_NAMES, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, RELIEF_STYLES, PROJECTION_NAMES, W, H } from '../scripts/scene.mjs';
 import { plantTrees } from '../scripts/trees.mjs';
 import { coastNames, joinNames } from '../scripts/names.mjs';
 
@@ -168,24 +168,47 @@ test('rivers and lakes: every style draws, and off draws none', async () => {
   await renderView(danube, 'off', { rivers: 'aguiar', lakes: 'marina' }); // the two combine
 });
 
-// Hills and mountains are off by default (the goldens hold them off, with the mountain sprites); over
-// the Alps every style draws, and draws in place of the sprites, which are not placed beside it.
-test('hills and mountains: every style draws, and off draws none', async () => {
+// The goldens hold the drawn styles off (the Catalan mountain sprites are in the default selection, so the
+// ranges are seeded for them); over the Alps every drawn style draws, and a range given to them is not
+// also drawn as peaks.
+test('hills and mountains: every drawn style draws, the styles mix per range, and none draws no peak', async () => {
   const alps = { lon: 9, lat: 46.5, zoom: 7 };
-  const off = await renderView(alps, 'off', { relief: 'off' });
-  assert.ok(!differs(await renderView(alps), off), 'relief drawn by default');
+  const off = await renderView(alps, 'off', { relief: [] });
+  assert.ok(!differs(await renderView(alps), off), 'drawn relief by default');
   assert.deepEqual(RELIEF_STYLES, ['off', 'marina', 'engraved']);
   for (const relief of RELIEF_STYLES.slice(1)) {
     const { scene } = await createScene(env, { view: alps, scale: 'off', relief });
     assert.ok(scene.relief.peaks.length > 0, `relief ${relief}: no peaks placed`);
-    assert.equal(scene.mountains.length, 0, `relief ${relief}: mountain sprites placed beside it`);
+    assert.ok(scene.relief.peaks.every((p) => p.style === relief));
     assert.ok(differs(await renderView(alps, 'off', { relief }), off), `relief ${relief}: nothing drawn`);
   }
-  const { scene } = await createScene(env, { view: alps, scale: 'off' });
-  assert.equal(scene.relief, null, 'off places none');
+  const mixed = (await createScene(env, { view: alps, scale: 'off', relief: ['marina', 'engraved'] })).scene;
+  assert.deepEqual([...new Set(mixed.relief.peaks.map((p) => p.style))].sort(), ['engraved', 'marina'], 'one view, both styles');
+  const sprites = (await createScene(env, { view: alps, scale: 'off', relief: [] })).scene;
+  assert.equal(sprites.relief.peaks.length, 0, 'no drawn style: no peak');
+  assert.ok(sprites.relief.ranges.length > 0 && sprites.mountains.length > 0, 'the sprites take every range');
+  assert.equal((await createScene(env, { view: alps, scale: 'off', relief: [], kinds: ['rose', 'cartouche'] })).scene.relief, null, 'nothing selected: nothing seeded');
 });
 
-// Trees are off by default (the goldens hold them off); every style draws over central Sweden, and
+// Every projection places a scene with the hills on; relief once read a view's top row past the pole and never ended.
+test('hills and mountains: every projection places and ends', async () => {
+  for (const projection of PROJECTION_NAMES) {
+    const { scene } = await createScene(env, { view: { lon: 10, lat: 30, zoom: 2, projection }, scale: 'off', relief: ['marina'] });
+    assert.ok(scene.relief, projection);
+  }
+});
+
+// Roses stand in open water; where the water is heavily constrained they stand on open land instead, clear of the places.
+test('roses: open land holds them where the water is too constrained', async () => {
+  const inland = { lon: 30, lat: 50, zoom: 7 }; // Ukraine: no sea to hold half a big rose
+  const { scene } = await createScene(env, { view: inland, scale: 'off', sprites: ['vivid/rose-aguiar', 'vivid/rose-catalan'] });
+  assert.ok(scene.roseDraws.some((r) => scene.field.isLand(r.x, r.y)), 'no rose on the land');
+  for (const r of scene.roseDraws) for (const t of scene.towns) assert.ok(Math.hypot(r.x - t.x, r.y - t.y) > 20, `a rose sits on ${t.name}`);
+  const sea = (await createScene(env, { view: { lon: 10, lat: 38, zoom: 5 }, scale: 'off', sprites: ['vivid/rose-aguiar'] })).scene;
+  assert.ok(sea.roseDraws.every((r) => !sea.field.isLand(r.x, r.y)), 'a rose on land where there is sea');
+});
+
+// Trees are on by default in the page (the goldens hold them off); every style draws over central Sweden, and
 // off draws none.
 test('trees: every style draws, and off draws none', async () => {
   const svecia = { lon: 15.5, lat: 59.5, zoom: 7 };

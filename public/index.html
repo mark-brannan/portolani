@@ -77,13 +77,21 @@
   .thumb[aria-pressed=false] { border-style: dashed; border-color: var(--line); }
   .thumb[aria-pressed=false] > * { filter: grayscale(1); opacity: 0.3; }
   .thumb[aria-pressed=true] { box-shadow: inset 0 0 0 1px var(--accent); border-color: var(--accent); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; font: 13px var(--serif); cursor: pointer;
+    background: var(--sheet); color: var(--sheet-ink); border: 1px solid var(--rule); border-radius: 14px;
+  }
+  .chip[aria-checked=false] { border-style: dashed; border-color: var(--line); opacity: 0.6; }
+  .chip[aria-checked=true] { box-shadow: inset 0 0 0 1px var(--accent); border-color: var(--accent); }
+  .chip i { width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--rule); }
   .thumb.none { font: 13px var(--serif); padding: 0 10px; }
 
   label { display: flex; align-items: center; gap: 8px; }
   .rows { display: grid; gap: 8px; }
   .rows label { justify-content: space-between; }
   .rows label.check { justify-content: start; }
-  select, input[type=text] { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--rule); border-radius: 3px; padding: 3px 4px; max-width: 190px; }
+  input[type=text] { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--rule); border-radius: 3px; padding: 3px 4px; max-width: 190px; }
   input[type=color] { width: 40px; height: 28px; padding: 0; border: 1px solid var(--rule); background: none; }
   input[type=checkbox], input[type=range] { accent-color: var(--accent); }
   .title { display: flex; gap: 6px; }
@@ -136,8 +144,10 @@
 
   <section aria-labelledby="h-land">
     <h2 id="h-land">Land</h2>
-    <h3>Mountains</h3>
-    <div id="pick-mountain"></div>
+    <h3>Hills and mountains</h3>
+    <div id="pick-relief"></div>
+    <h3>Trees</h3>
+    <div id="trees" class="chips" role="radiogroup" aria-label="Trees"></div>
   </section>
 
   <section aria-labelledby="h-cartouche">
@@ -148,63 +158,25 @@
   <section aria-labelledby="h-map">
     <h2 id="h-map">Map</h2>
     <div class="rows">
-      <label>Projection <select id="projection">
-        <option value="mercator">Mercator (rhumb lines straight)</option>
-        <option value="plate-carree">Plate carrée (equal degrees)</option>
-        <option value="miller">Miller (poles tamed)</option>
-        <option value="equal-area">Equal-area (Gall–Peters)</option>
-      </select></label>
+      <h3>Projection</h3>
+      <div id="projection" class="chips" role="radiogroup" aria-label="Projection"></div>
       <label class="check"><input type="checkbox" id="names"> Names</label>
       <label class="check"><input type="checkbox" id="rhumb"> Rhumb lines</label>
       <label class="check"><input type="checkbox" id="continents"> Continents (zoom 5 and out)</label>
-      <label>Regions (zoom 7 and out) <select id="regions">
-        <option value="off">Off</option>
-        <option value="latin">Latin (Hispania)</option>
-        <option value="english">English (Iberia)</option>
-      </select></label>
-      <label>Title <select id="titleMode">
-        <option value="auto">Automatic (what the view shows)</option>
-        <option value="custom">Custom</option>
-      </select></label>
-      <div class="title"><input id="title" type="text" value="PORTOLANI" disabled maxlength="40" aria-label="Title text"></div>
-      <label>Land <select id="land">
-        <option value="islands">Coloured islands (Beccari, 1403)</option>
-        <option value="gilt">Gilt wash</option>
-        <option value="green">Green wash (Oliva, c.1590)</option>
-        <option value="ochre">Ochre with shoals (Benincasa, 1466)</option>
-      </select></label>
-      <label>Rivers <select id="rivers">
-        <option value="off">Off</option>
-        <option value="aguiar">Wiggled ink (Aguiar, 1492)</option>
-        <option value="marina">Double line (Carta Marina, 1539)</option>
-        <option value="plain">Plain blue line</option>
-      </select></label>
-      <label>Lakes <select id="lakes">
-        <option value="off">Off</option>
-        <option value="aguiar">Lozenges (Aguiar, 1492)</option>
-        <option value="marina">True shapes, hatched (Carta Marina, 1539)</option>
-        <option value="plain">True shapes, blue wash</option>
-      </select></label>
-      <label>Hills and mountains <select id="relief">
-        <option value="off">Off</option>
-        <option value="marina">Washed and hatched (Carta Marina, 1539)</option>
-        <option value="engraved">Ink only, engraved</option>
-        </select></label>
-      <label>Trees <select id="trees">
-        <option value="off">Off</option>
-        <option value="marina">Green crowns (Carta Marina, 1539)</option>
-        <option value="ink">Ink only</option>
-      </select></label>
       <label class="check"><input type="checkbox" id="redSea"> Red Sea in red</label>
-      <label>Scale bar <select id="scale">
-        <option value="off">Off</option>
-        <option value="genoese">Genoese (drawn as vectors)</option>
-        <option value="chequer">Chequer</option>
-        <option value="chevron">Chevron ladder (Genoese)</option>
-        <option value="ribbon">Ribbon (Martines)</option>
-        <option value="beads">Beads (Prunes)</option>
-        <option value="ruled">Ruled (Beccari)</option>
-      </select></label>
+      <h3>Regions (zoom 7 and out)</h3>
+      <div id="regions" class="chips" role="radiogroup" aria-label="Regions"></div>
+      <h3>Title</h3>
+      <div id="titleMode" class="chips" role="radiogroup" aria-label="Title"></div>
+      <div class="title"><input id="title" type="text" value="PORTOLANI" disabled maxlength="40" aria-label="Title text"></div>
+      <h3>Land</h3>
+      <div id="land" class="chips" role="radiogroup" aria-label="Land"></div>
+      <h3>Rivers</h3>
+      <div id="rivers" class="chips" role="radiogroup" aria-label="Rivers"></div>
+      <h3>Lakes</h3>
+      <div id="lakes" class="chips" role="radiogroup" aria-label="Lakes"></div>
+      <h3>Scale bar</h3>
+      <div id="scale" class="chips" role="radiogroup" aria-label="Scale bar"></div>
       <label>Density <span><input id="density" type="range" min="0" max="2" step="0.25" value="1"> <output id="densityOut">1</output></span></label>
     </div>
   </section>

@@ -2,8 +2,9 @@
 // Drag to pan, wheel or pinch to zoom; while the map moves only land and coast are drawn, and the
 // ornaments are placed again when it stops. The settings live in a drawer behind the rose button, so
 // the map has the window. The view and the style are kept in the URL hash, e.g.
-// #map=zoom/lat/lon&projection=miller&sprites=s:serpent-a,v:kraken,v:rose-aguiar,p:tower&townsize=rank&names=0&rhumb=0&scale=chevron&continents=1&regions=latin&land=green&rivers=aguiar&lakes=marina&relief=marina&trees=marina&redsea=1&autotitle=0&title=Mare+Nostrum&ink=5a1a1a&parchment=eee&density=1.5;
-// a setting left at its default is left out, `sprites` too (keys with the pack shortened, v: s: p:).
+// #map=zoom/lat/lon&projection=miller&sprites=s:serpent-a,v:kraken,v:rose-aguiar,p:tower&townsize=rank&names=0&rhumb=0&scale=chevron&continents=1&regions=latin&land=green&rivers=aguiar&lakes=marina&relief=marina,engraved&trees=ink&redsea=1&autotitle=0&title=Mare+Nostrum&ink=5a1a1a&parchment=eee&density=1.5;
+// a setting left at its default is left out, `sprites` too (keys with the pack shortened, v: s: p:); `relief` lists the drawn
+// styles of hills and mountains (the Catalan sprites are in `sprites`), or is `off`.
 // Older links naming a `rendering` (or `pack`), `rose`, `monster`, `town` and `kinds` open as the
 // selection those chose, and are written back in the new form.
 import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, panView, zoomView, clampView, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, RELIEF_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, W, H } from './scene.mjs';
@@ -33,7 +34,7 @@ const env = {
 const $ = (id) => document.getElementById(id);
 const canvas = $('map'), ctx = canvas.getContext('2d');
 
-const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continents: true, regions: 'latin', title: 'PORTOLANI', autoTitle: true, land: 'ochre', rivers: 'plain', lakes: 'marina', relief: 'off', trees: 'off', redSea: false, townSize: TOWN_SIZES[0] };
+const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continents: true, regions: 'latin', title: 'PORTOLANI', autoTitle: true, land: 'ochre', rivers: 'plain', lakes: 'marina', relief: ['marina', 'engraved'], trees: 'marina', redSea: false, townSize: TOWN_SIZES[0] };
 
 // ---------------------------------------------------------------- the sprites on offer
 
@@ -80,7 +81,7 @@ function styleFromHash() {
     land: LANDS.includes(q.get('land')) ? q.get('land') : DEFAULTS.land,
     rivers: RIVER_STYLES.includes(q.get('rivers')) ? q.get('rivers') : DEFAULTS.rivers,
     lakes: LAKE_STYLES.includes(q.get('lakes')) ? q.get('lakes') : DEFAULTS.lakes,
-    relief: RELIEF_STYLES.includes(q.get('relief')) ? q.get('relief') : DEFAULTS.relief,
+    relief: q.has('relief') ? q.get('relief').split(',').filter((r) => r !== 'off' && RELIEF_STYLES.includes(r)) : DEFAULTS.relief,
     trees: TREE_STYLES.includes(q.get('trees')) ? q.get('trees') : DEFAULTS.trees,
     redSea: q.get('redsea') === '1',
     scale: q.get('scale') === 'off' || SCALE_NAMES.includes(q.get('scale')) ? q.get('scale') : DEFAULTS.scale,
@@ -116,7 +117,7 @@ function writeHash() {
   if (st.land !== DEFAULTS.land) q.set('land', st.land);
   if (st.rivers !== DEFAULTS.rivers) q.set('rivers', st.rivers);
   if (st.lakes !== DEFAULTS.lakes) q.set('lakes', st.lakes);
-  if (st.relief !== DEFAULTS.relief) q.set('relief', st.relief);
+  if (st.relief.join() !== DEFAULTS.relief.join()) q.set('relief', st.relief.join() || 'off');
   if (st.trees !== DEFAULTS.trees) q.set('trees', st.trees);
   if (st.redSea) q.set('redsea', '1');
   if (st.scale !== DEFAULTS.scale) q.set('scale', st.scale);
@@ -164,9 +165,37 @@ function thumb(s, label) {
   return b;
 }
 
+// Hills and mountains are one feature in three styles, each a checkbox: the two drawn in code here, and the
+// Catalan sprites, which join below as a family. Every range takes one of the styles selected, by its seed.
+const RELIEF_LOOKS = {
+  marina: ['Carta Marina · drawn in code', '<svg viewBox="0 0 64 44"><path d="M4 38 17 12 24 22 36 5 60 38Z" fill="#d2965a" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M36 5 47 38 60 38ZM17 12 25 38 31 38 24 22Z" fill="rgba(150,70,32,.7)"/></svg>'],
+  engraved: ['Engraved · ink only', '<svg viewBox="0 0 64 44"><path d="M4 38 17 12 24 22 36 5 60 38Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M36 5 47 38M39 12 52 38M42 20 56 38M17 12 25 38M20 20 28 38" stroke="currentColor" stroke-width=".8"/></svg>'],
+};
+const reliefBoxes = new Map();
+for (const name of RELIEF_STYLES.slice(1)) {
+  const [label, glyph] = RELIEF_LOOKS[name], row = document.createElement('div'), head = document.createElement('label'), box = document.createElement('input'), thumbs = document.createElement('div');
+  row.className = 'family'; head.className = 'fam'; thumbs.className = 'thumbs';
+  box.type = 'checkbox';
+  head.append(box, label);
+  const b = Object.assign(document.createElement('button'), { type: 'button', className: 'thumb', title: name, innerHTML: glyph });
+  b.dataset.relief = name;
+  b.setAttribute('aria-label', label);
+  thumbs.append(b);
+  row.append(head, thumbs);
+  $('pick-relief').append(row);
+  reliefBoxes.set(name, { box, b });
+  box.addEventListener('change', () => toggleRelief(name));
+}
+const toggleRelief = (name) => {
+  const on = new Set(style.relief);
+  on.has(name) ? on.delete(name) : on.add(name);
+  style = { ...style, relief: RELIEF_STYLES.slice(1).filter((r) => on.has(r)) };
+  changed();
+};
+
 // Each family: a checkbox for the whole family (indeterminate when part of it is on) over its sprites, each its own toggle.
 const familyBoxes = [];
-for (const kind of ['monster', 'ship', 'rose', 'town', 'mountain']) {
+for (const kind of ['monster', 'ship', 'rose', 'town', 'mountain']) { // mountain last: the Catalan family follows the drawn styles
   for (const fam of familiesOf(kind)) {
     const row = document.createElement('div'), head = document.createElement('label'), box = document.createElement('input'), count = document.createElement('span'), thumbs = document.createElement('div');
     row.className = 'family'; head.className = 'fam'; count.className = 'count'; thumbs.className = 'thumbs';
@@ -174,7 +203,7 @@ for (const kind of ['monster', 'ship', 'rose', 'town', 'mountain']) {
     head.append(box, fam.label, count);
     thumbs.append(...fam.sprites.map((s) => thumb(s, fam.label)));
     row.append(head, thumbs);
-    $(`pick-${kind}`).append(row);
+    $(kind === 'mountain' ? 'pick-relief' : `pick-${kind}`).append(row);
     const keys = fam.sprites.map((s) => s.key);
     familyBoxes.push({ box, count, keys });
     box.addEventListener('change', () => { const all = keys.every((k) => selection.has(k)); for (const k of keys) all ? selection.delete(k) : selection.add(k); changed(); });
@@ -187,11 +216,46 @@ const CARTOUCHES = SPRITES.filter((s) => s.kind === 'cartouche').map((s) => s.ke
 $('drawer').addEventListener('click', (e) => {
   const b = e.target.closest('.thumb');
   if (!b) return;
+  if (b.dataset.relief) return toggleRelief(b.dataset.relief);
   const key = b.dataset.key;
   if (b === none || CARTOUCHES.includes(key)) { for (const k of CARTOUCHES) selection.delete(k); if (key) selection.add(key); }
   else if (selection.has(key)) selection.delete(key); else selection.add(key);
   changed();
 });
+
+// ---------------------------------------------------------------- the choices
+
+// One of a few, as chips rather than a dropdown: each `.chips` element reads and writes its choice as `.value`
+// and fires `input` when one is chosen, as the select it replaces did.
+const CHOICES = {
+  projection: [['mercator', 'Mercator', 'rhumb lines straight'], ['plate-carree', 'Plate carrée', 'equal degrees'], ['miller', 'Miller', 'poles tamed'], ['equal-area', 'Equal-area', 'Gall–Peters']],
+  regions: [['off', 'Off'], ['latin', 'Latin', 'Hispania'], ['english', 'English', 'Iberia']],
+  titleMode: [['auto', 'Automatic', 'what the view shows'], ['custom', 'Custom']],
+  land: [['islands', 'Coloured islands', 'Beccari, 1403', '#6b8a4a'], ['gilt', 'Gilt wash', '', '#b58a3c'], ['green', 'Green wash', 'Oliva, c.1590', '#6b8a4a'], ['ochre', 'Ochre with shoals', 'Benincasa, 1466', '#c47f2c']],
+  rivers: [['off', 'Off'], ['aguiar', 'Wiggled ink', 'Aguiar, 1492'], ['marina', 'Double line', 'Carta Marina, 1539'], ['plain', 'Plain blue line']],
+  lakes: [['off', 'Off'], ['aguiar', 'Lozenges', 'Aguiar, 1492'], ['marina', 'True shapes, hatched', 'Carta Marina, 1539'], ['plain', 'True shapes, blue wash']],
+  trees: [['off', 'Off'], ['marina', 'Green crowns', 'Carta Marina, 1539', '#6b8a4a'], ['ink', 'Ink only']],
+  scale: [['off', 'Off'], ['genoese', 'Genoese', 'drawn as vectors'], ['chequer', 'Chequer'], ['chevron', 'Chevron ladder', 'Genoese'], ['ribbon', 'Ribbon', 'Martines'], ['beads', 'Beads', 'Prunes'], ['ruled', 'Ruled', 'Beccari']],
+};
+for (const [id, options] of Object.entries(CHOICES)) {
+  const el = $(id);
+  for (const [value, label, note, dot] of options) {
+    const b = Object.assign(document.createElement('button'), { type: 'button', className: 'chip', title: note ? `${label} (${note})` : label });
+    b.dataset.value = value;
+    b.setAttribute('role', 'radio');
+    if (dot) b.append(Object.assign(document.createElement('i'), { style: `background:${dot}` }));
+    b.append(label);
+    el.append(b);
+  }
+  Object.defineProperty(el, 'value', {
+    get: () => el.dataset.value,
+    set: (v) => { el.dataset.value = v; for (const b of el.children) b.setAttribute('aria-checked', String(b.dataset.value === v)); },
+  });
+  el.addEventListener('click', (e) => {
+    const b = e.target.closest('.chip');
+    if (b && b.dataset.value !== el.value) { el.value = b.dataset.value; el.dispatchEvent(new Event('input')); }
+  });
+}
 
 // ---------------------------------------------------------------- the controls
 
@@ -201,11 +265,12 @@ function showStyle() {
   $('ink').value = style.ink; $('parchment').value = style.parchment;
   $('density').value = style.density; $('densityOut').textContent = style.density;
   $('names').checked = style.names; $('rhumb').checked = style.rhumb; $('scale').value = style.scale;
-  $('land').value = style.land; $('rivers').value = style.rivers; $('lakes').value = style.lakes; $('relief').value = style.relief; $('trees').value = style.trees; $('redSea').checked = style.redSea;
+  $('land').value = style.land; $('rivers').value = style.rivers; $('lakes').value = style.lakes; $('trees').value = style.trees; $('redSea').checked = style.redSea;
   $('continents').checked = style.continents; $('regions').value = style.regions;
   $('titleMode').value = style.autoTitle ? 'auto' : 'custom'; $('title').value = style.title; $('title').disabled = style.autoTitle;
   $('townSize').checked = style.townSize !== 'rank';
-  for (const b of document.querySelectorAll('#drawer .thumb')) b.setAttribute('aria-pressed', b === none ? !CARTOUCHES.some((k) => selection.has(k)) : selection.has(b.dataset.key));
+  for (const [name, { box, b }] of reliefBoxes) { box.checked = style.relief.includes(name); b.setAttribute('aria-pressed', box.checked); }
+  for (const b of document.querySelectorAll('#drawer .thumb:not([data-relief])')) b.setAttribute('aria-pressed', b === none ? !CARTOUCHES.some((k) => selection.has(k)) : selection.has(b.dataset.key));
   for (const { box, count, keys } of familyBoxes) {
     const on = keys.filter((k) => selection.has(k)).length;
     box.checked = on === keys.length; box.indeterminate = on > 0 && on < keys.length;
@@ -216,7 +281,7 @@ function readControls() {
   style = {
     ink: $('ink').value, parchment: $('parchment').value, density: Number($('density').value),
     names: $('names').checked, rhumb: $('rhumb').checked, scale: $('scale').value,
-    land: $('land').value, rivers: $('rivers').value, lakes: $('lakes').value, relief: $('relief').value, trees: $('trees').value, redSea: $('redSea').checked,
+    land: $('land').value, rivers: $('rivers').value, lakes: $('lakes').value, relief: style.relief, trees: $('trees').value, redSea: $('redSea').checked,
     continents: $('continents').checked, regions: $('regions').value,
     title: $('title').value, autoTitle: $('titleMode').value === 'auto',
     // checked, by metro area; a link's townsize=population is kept until the box is touched
@@ -346,6 +411,6 @@ canvas.addEventListener('wheel', (e) => {
   stopped(300);
 }, { passive: false });
 
-for (const id of ['projection', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'land', 'rivers', 'lakes', 'relief', 'trees', 'redSea', 'continents', 'regions', 'titleMode', 'title', 'townSize']) $(id).addEventListener('input', readControls);
+for (const id of ['projection', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'land', 'rivers', 'lakes', 'trees', 'redSea', 'continents', 'regions', 'titleMode', 'title', 'townSize']) $(id).addEventListener('input', readControls);
 addEventListener('hashchange', () => { view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); render(); });
 render();
