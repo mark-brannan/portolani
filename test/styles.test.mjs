@@ -13,7 +13,7 @@ const env = { readJSON: async (p) => JSON.parse(readFileSync(join(ROOT, p), 'utf
 const manifests = { vivid: await env.readJSON('packs/vivid/pack.json'), scanned: await env.readJSON('packs/scanned/pack.json') };
 
 test('listStyles offers the styles in the packs, the tower first among towns', async () => {
-  assert.deepEqual(await listStyles(env), { rose: ['aguiar'], monster: ['carta-marina'], town: ['tower', 'aguiar'] });
+  assert.deepEqual(await listStyles(env), { rose: ['aguiar'], monster: ['carta-marina', 'bestiary'], town: ['tower', 'aguiar'] });
 });
 
 test('every sprite in both packs names its style', () => {
@@ -26,8 +26,8 @@ test('a kind the rendering lacks is drawn from the other pack; plain draws no pi
   assert.deepEqual(RENDERINGS, ['vivid', 'scanned', 'plain']);
   const vivid = chooseSprites(manifests, { rendering: 'vivid' });
   assert.deepEqual(vivid.roses.map((s) => `${s.pack}/${s.id}`), ['vivid/rose-aguiar', 'vivid/rose-catalan']);
-  assert.ok(vivid.monsters.length > 0 && vivid.monsters.every((s) => s.pack === 'scanned' && s.style === 'carta-marina'));
-  assert.ok(vivid.ships.length > 0 && vivid.ships.every((s) => s.pack === 'scanned'));
+  assert.ok(vivid.monsters.length > 0 && vivid.monsters.every((s) => s.pack === 'vivid' && s.style === 'carta-marina'));
+  assert.ok(vivid.ships.length > 0 && vivid.ships.every((s) => s.pack === 'vivid'));
   assert.equal(vivid.cartouche.id, 'cartouche-frame');
   assert.deepEqual(vivid.towns, []); // the tower, drawn in code
 
@@ -35,6 +35,10 @@ test('a kind the rendering lacks is drawn from the other pack; plain draws no pi
   assert.deepEqual(scanned.roses.map((s) => s.id), ['rose-aguiar', 'rose-catalan', 'rose-aguiar-b']);
   assert.equal(scanned.cartouche.id, 'cartouche-dewit');
   assert.deepEqual(scanned.towns.map((s) => `${s.pack}/${s.file}`), ['scanned/town-aguiar.png']);
+  // a family drawn only as vectors still shows under the scanned rendering
+  const bestiary = chooseSprites(manifests, { rendering: 'scanned', monster: 'bestiary' });
+  assert.ok(bestiary.monsters.length > 0 && bestiary.monsters.every((s) => s.pack === 'vivid' && s.style === 'bestiary'));
+  assert.ok(bestiary.ships.length > 0 && bestiary.ships.every((s) => s.pack === 'vivid' && s.style === 'bestiary'));
 
   const plain = chooseSprites(manifests, { rendering: 'plain', town: 'aguiar' });
   assert.deepEqual([plain.roses, plain.monsters, plain.ships, plain.towns, plain.cartouche], [[], [], [], [], null]);
