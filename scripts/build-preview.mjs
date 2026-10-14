@@ -4,11 +4,11 @@
 // from coastlines (checked against its manifest) and the font, vendored so nothing loads from a
 // CDN. The font and Natural Earth's marine polygons come from downloads/, each fetched from its
 // pinned URL when missing, then checked against its sha256; the URLs and hashes below duplicate
-// the ASSETS.md table: re-pin both together. The 50m GeoJSON ships whole, since the map can be moved anywhere in the world; places
-// keep only the properties the scene reads. The 10m land and coast, for close views, ship cut into
-// 5-degree cells (geo/10m/<xi>_<yi>.json, listed in geo/10m/index.json), so a close view fetches
-// only the cells around it. The names the chart letters ship as geo/names-50m.json
-// (scripts/names.mjs).
+// the ASSETS.md table: re-pin both together. The 50m GeoJSON ships whole, since the map can be
+// moved anywhere in the world; places keep only the properties the scene reads. The 10m land and
+// coast, for close views, ship cut into 5-degree cells (geo/10m/<xi>_<yi>.json, listed in
+// geo/10m/index.json), so a close view fetches only the cells around it. The names the chart
+// letters ship as geo/names-50m.json (scripts/names.mjs).
 
 import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
