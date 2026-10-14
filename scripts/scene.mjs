@@ -1087,8 +1087,9 @@ export async function createScene(environment, opts = {}) {
   TUNE.townGap = 48 / density;
 
   const t0 = performance.now();
-  // only the sprites chosen are fetched; `plain` stands in for roses and cartouche with shapes drawn
-  // in code. A picture scale bar comes from the vivid pack whatever the rendering.
+  // only the sprites the settings choose are fetched, whichever kinds are shown, never a whole pack;
+  // `plain` stands in for roses and cartouche with shapes drawn in code. A picture scale bar comes
+  // from the vivid pack whatever the rendering.
   const sprites = readManifests().then(async (manifests) => {
     const chosen = chooseSprites(manifests, { rendering, rose, monster, town });
     const all = (list) => Promise.all(list.map(withImage));
