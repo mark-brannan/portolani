@@ -2,12 +2,13 @@
 // Assembles the browser preview into _site/, the Pages root:
 // the page, the shared scene module and coast-wright, the sprite packs, the Natural Earth GeoJSON
 // from coastlines (checked against its manifest) and the font, vendored so nothing loads from a
-// CDN. The font comes from downloads/, fetched from its pinned URL when missing, then checked
+// CDN. The font and Natural Earth's marine polygons come from downloads/, fetched from its pinned URL when missing, then checked
 // against its sha256; the URLs and hashes below duplicate the ASSETS.md table: re-pin both
 // together. The 50m GeoJSON ships whole, since the map can be moved anywhere in the world; places
 // keep only the properties the scene reads. The 10m land and coast, for close views, ship cut into
 // 5-degree cells (geo/10m/<xi>_<yi>.json, listed in geo/10m/index.json), so a close view fetches
-// only the cells around it.
+// only the cells around it. The names the chart letters ship as geo/names-50m.json
+// (scripts/names.mjs).
 
 import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -17,6 +18,7 @@ import path from 'node:path';
 import { find, localUrl } from 'coastlines';
 import { geojsonPolygons, geojsonRings } from 'coast-wright';
 import { cutCells } from './detail-cells.mjs';
+import { seaNames, coastNames, joinNames } from './names.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const out = path.join(root, '_site');
@@ -33,6 +35,8 @@ const slim = (geo, keys) => ({
 const SOURCES = [
   ['https://raw.githubusercontent.com/google/fonts/main/ofl/imfellenglish/IMFeENrm28P.ttf', 'IMFeENrm28P.ttf', 'fe9705bbde51af802719246d4608d08d37bde956ab99d9a590da996a5221a24c', 'font'],
   ['https://raw.githubusercontent.com/google/fonts/main/ofl/imfellenglish/OFL.txt', 'OFL-IMFellEnglish.txt', '2a3ca501fc4d5efcad9798531e3e06962b1e20c60e464f6cbd6c17630112c773', 'font'],
+  // read into geo/names-50m.json below, not shipped as is
+  ['https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_geography_marine_polys.geojson', 'ne_50m_geography_marine_polys.geojson', '6fe58083e0cc5c7fad9e396970e28a8580bbd8770cfa4d1d7b5a34423e912f97', null],
 ];
 
 await mkdir(path.join(root, 'downloads'), { recursive: true });
@@ -45,6 +49,7 @@ for (const [url, name, sha, dir] of SOURCES) {
   }
   const got = createHash('sha256').update(await readFile(file)).digest('hex');
   if (got !== sha) throw new Error(`${name}: sha256 ${got} does not match ASSETS.md (${sha})`);
+  if (!dir) continue;
   await mkdir(path.join(out, dir), { recursive: true });
   await cp(file, path.join(out, dir, name));
 }
@@ -59,6 +64,10 @@ for (const id of GEO) {
   const bytes = await readGeo(id);
   await writeFile(path.join(out, 'geo', `${id}.geojson`), id in KEEP ? JSON.stringify(slim(JSON.parse(bytes), KEEP[id])) : bytes);
 }
+// Names the chart letters: seas from the download, countries along their 50m coast.
+const marine = JSON.parse(await readFile(path.join(root, 'downloads', 'ne_50m_geography_marine_polys.geojson'), 'utf8'));
+const [countries, coast50] = await Promise.all(['ne-admin-0-countries-50m', 'ne-coastline-50m'].map(async (id) => JSON.parse(await readGeo(id))));
+await writeFile(path.join(out, 'geo', 'names-50m.json'), JSON.stringify(joinNames(seaNames(marine), coastNames(countries, coast50))));
 // 10m coast is the coastline file plus the minor islands' outlines, which 10m land fills but the
 // coastline file mostly leaves out.
 const [land10, coast10, minor10] = await Promise.all(GEO_10M.map(async (id) => JSON.parse(await readGeo(id))));
