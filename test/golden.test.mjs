@@ -127,3 +127,9 @@ test('cartouche title: custom by default, automatic from the view', async () => 
   assert.equal(await title({ lon: -9.14, lat: 38.7, zoom: 8 }, { autoTitle: true }), 'LISBON');
   assert.equal(await title(VIEWS['region-z5'], { autoTitle: true, regions: 'english' }), 'ITALY');
 });
+
+test('cartouche takes empty land over a coast', async () => {
+  const view = { lon: -122.747, lat: 47.642, zoom: 7 }; // Puget Sound: bare land to the north-east
+  const { scene } = await createScene(env, { view, scale: 'chequer' });
+  assert.ok(scene.cartouche.x > W / 2 && scene.cartouche.y < H / 2, 'cartouche not in the empty top-right corner');
+});

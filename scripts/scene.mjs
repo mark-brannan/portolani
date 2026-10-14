@@ -448,14 +448,19 @@ function buildScene(data, packs, ctx, world = {}) {
   const edge = (x, y) => Math.min(x, y, W - x, H - y);
   const free = (x, y) => Math.min(field.at(x, y), edge(x, y), ...occupied.map((o) => Math.hypot(x - o.x, y - o.y) - o.r));
 
-  // Cartouche: the corner whose rectangle covers the least land, leaving the scale bar's corner (bottom left) to it.
+  // Cartouche: the corner whose rectangle crosses the least coast, open sea before empty land; never
+  // the bottom-left corner while the scale bar holds it.
   const cw = cartoucheSprite.sizePx, ch = cw * cartoucheSprite.img.height / cartoucheSprite.img.width, m = 22;
   const corners = [[m, m], [W - m - cw, m], [m, H - m - ch], [W - m - cw, H - m - ch]].filter((_, i) => i !== 2 || !world.scaleBar).map(([x, y]) => {
-    let land = 0;
-    for (let yy = y; yy < y + ch; yy += 8) for (let xx = x; xx < x + cw; xx += 8) land += field.isLand(xx, yy);
-    return { x, y, w: cw, h: ch, land };
+    let land = 0, coast = 0;
+    for (let yy = y; yy < y + ch; yy += 8) for (let xx = x; xx < x + cw; xx += 8) {
+      const l = field.isLand(xx, yy);
+      land += l;
+      coast += l !== field.isLand(xx + 8, yy) || l !== field.isLand(xx, yy + 8);
+    }
+    return { x, y, w: cw, h: ch, coast, land };
   });
-  const cartouche = corners.sort((a, b) => a.land - b.land)[0];
+  const cartouche = corners.sort((a, b) => a.coast - b.coast || a.land - b.land)[0];
   occupied.push({ x: cartouche.x + cw / 2, y: cartouche.y + ch / 2, r: Math.hypot(cw, ch) / 2 });
 
   // Lattice centre: the clearest open-sea cell in the middle of the frame; the big rose sits on it.
