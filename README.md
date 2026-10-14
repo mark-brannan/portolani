@@ -55,20 +55,16 @@ The pan-frame times at z5 and above sit at two animation frames (33 ms at 60 Hz)
 | What | Bytes | Fetched at |
 | --- | ---: | --- |
 | 50m land, coast and places (`geo/*.geojson`) | 3,523,998 | every view |
-| Sprite packs (`packs/`: Carta Marina and Catalan; re-measured 2026-10-14 after the second Aguiar rose) | about 2,932 KB | every view, ornaments on or off |
+| Sprite packs (`packs/`: Carta Marina 573,062; Catalan 2,431,052) | 3,004,114 | every view, ornaments on or off |
 | 10m cells around the view (`geo/10m/`) | about 125 KB | z10 and z11 at this spot; whole set is 18,786,827 |
 | Font (`font/IMFeENrm28P.ttf`) | 194,992 | every view |
 
 ## Reading a portolan chart
 
-A portolan chart was a sailor's chart of the Mediterranean and its neighbouring coasts, drawn on vellum from the late 13th century on. Four things to look for:
-
-- **Wind roses and rhumb lines.** A ring of roses, each throwing out 32 lines, one per wind. Black for the eight principal winds, green for the half-winds, red for the quarter-winds. To set a course, a navigator found the line nearest parallel to the track from departure to destination and followed it back to a rose to read the wind's name.
-- **Names on the land side.** Ports are lettered at right angles to the coast, written inland so the coastline itself stays clear. Important harbours are in red, lesser ones in black.
-- **Scale bars.** A ladder of divisions, often red and green, for measuring distance with dividers.
-- **Ornament.** Flags over the cities that held them, city pictures, kings in tents, ships and sea creatures. On the finest charts this was as much a display of wealth as a working tool.
-
-For more, see the Trinity College Library's [Portolan Chart of the Mediterranean](https://trinitycollegelibrarycambridge.wordpress.com/2015/08/14/portolan-chart-of-the-mediterranean/), and Michael Ferrar's [Cartography Unchained](https://www.cartographyunchained.com/chug1/), which argues that the rhumb-line network was drawn first and the coasts placed on it.
+Rhumb lines run from each wind rose: black for the eight winds, green for the half-winds, red for the quarter-winds.
+A course is the line parallel to the track, followed back to a rose to read the wind's name.
+Ports are lettered inland, at right angles to the coast; important ones in red, lesser ones in black.
+More: [Trinity College Library](https://trinitycollegelibrarycambridge.wordpress.com/2015/08/14/portolan-chart-of-the-mediterranean/) and [Cartography Unchained](https://www.cartographyunchained.com/chug1/).
 
 ## Licence
 
