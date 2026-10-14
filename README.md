@@ -56,9 +56,10 @@ The pan-frame times at z5 and above sit at two animation frames (33 ms at 60 Hz)
 | --- | ---: | --- |
 | 50m land, coast and places (`geo/*.geojson`) | 3,523,998 | every view |
 | Sprite packs (`packs/`: Carta Marina 625,716; Catalan 2,244,573) | 2,870,289 | every view, ornaments on or off |
-| 10m cells around the view (`geo/10m/`) | about 125 KB | z10 and z11 at this spot; whole set is 18,786,827 |
+| 10m cells around the view (`geo/10m/`) | about 125 KB | z10 to z12 at this spot; whole set is 18,786,827 |
+| GSHHG "h" cells around the view (`geo/h/`, 1° cells) | 15 KB at Genoa, 570 KB at Bergen (four cells each) | past z12; whole set is 19,273 cells, 132 MB; built only when the installed `coastlines` carries `gshhg-land-h` |
 | Font (`font/IMFeENrm28P.ttf`) | 194,992 | every view |
 
 ## Licence
 
-MIT for the code. Natural Earth is public domain. The scans are public domain, credited to their holding institutions in [ASSETS.md](ASSETS.md). IM Fell English is under the SIL OFL 1.1, shipped with its licence text.
+MIT for the code. Natural Earth is public domain. GSHHG (the "h" shoreline past z12) is by Wessel and Smith, LGPL-3.0-or-later, shipped unchanged through `coastlines` with its copyright and permission notice. The scans are public domain, credited to their holding institutions in [ASSETS.md](ASSETS.md). IM Fell English is under the SIL OFL 1.1, shipped with its licence text.
