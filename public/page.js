@@ -1,9 +1,9 @@
 // Browser host for the shared scene code (scene.mjs): same scene as `npm run render`, drawn live.
 // Drag to pan, wheel or pinch to zoom; while the map moves only land and coast are drawn, and the
 // ornaments are placed again when it stops. The view and the style are kept in the URL hash, e.g.
-// #map=zoom/lat/lon&pack=plain&kinds=rose,ship&names=0&rhumb=0&scale=chevron&ink=5a1a1a&parchment=eee&density=1.5;
+// #map=zoom/lat/lon&pack=plain&kinds=rose,ship&names=0&rhumb=0&scale=chevron&continents=1&regions=latin&ink=5a1a1a&parchment=eee&density=1.5;
 // a setting left at its default is left out.
-import { createScene, drawScene, drawGround, panView, zoomView, clampView, covers, DEFAULT_VIEW, PACKS, KINDS, SCALE_NAMES, W, H } from './scene.mjs';
+import { createScene, REGION_LANGS, drawScene, drawGround, panView, zoomView, clampView, covers, DEFAULT_VIEW, PACKS, KINDS, SCALE_NAMES, W, H } from './scene.mjs';
 
 const memo = new Map();
 // a failed load is forgotten, so the next stop tries it again
@@ -22,15 +22,15 @@ const env = {
     img.src = p;
   })),
   loadFont: (family) => once('font', async () => {
-    const face = new FontFace(family, 'url(font/IMFeENrm28P.ttf)');
-    document.fonts.add(await face.load());
+    const faces = [new FontFace(family, 'url(font/IMFeENrm28P.ttf)'), new FontFace(family, 'url(font/IMFeENit28P.ttf)', { style: 'italic' })];
+    for (const face of faces) document.fonts.add(await face.load());
   }),
 };
 
 const $ = (id) => document.getElementById(id);
 const canvas = $('map'), ctx = canvas.getContext('2d');
 
-const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, pack: 'all', kinds: KINDS, names: true, rhumb: true, scale: 'chequer' };
+const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, pack: 'all', kinds: KINDS, names: true, rhumb: true, scale: 'chequer', continents: false, regions: 'off' };
 const hashParams = () => new URLSearchParams(location.hash.slice(1));
 
 function viewFromHash() {
@@ -50,6 +50,8 @@ function styleFromHash() {
     kinds: q.has('kinds') ? KINDS.filter((k) => q.get('kinds').split(',').includes(k)) : DEFAULTS.kinds,
     names: q.get('names') !== '0',
     rhumb: q.get('rhumb') !== '0',
+    continents: q.get('continents') === '1',
+    regions: REGION_LANGS.includes(q.get('regions')) ? q.get('regions') : DEFAULTS.regions,
     scale: q.get('scale') === 'off' || SCALE_NAMES.includes(q.get('scale')) ? q.get('scale') : DEFAULTS.scale,
   };
 }
@@ -60,6 +62,8 @@ function writeHash() {
   if (st.kinds.join() !== KINDS.join()) q.set('kinds', st.kinds.join());
   if (!st.names) q.set('names', '0');
   if (!st.rhumb) q.set('rhumb', '0');
+  if (st.continents) q.set('continents', '1');
+  if (st.regions !== DEFAULTS.regions) q.set('regions', st.regions);
   if (st.scale !== DEFAULTS.scale) q.set('scale', st.scale);
   if (st.density !== DEFAULTS.density) q.set('density', st.density);
   if (st.ink !== DEFAULTS.ink) q.set('ink', st.ink.slice(1));
@@ -72,6 +76,7 @@ function showStyle() {
   $('ink').value = style.ink; $('parchment').value = style.parchment;
   $('density').value = style.density; $('densityOut').textContent = style.density;
   $('pack').value = style.pack; $('names').checked = style.names; $('rhumb').checked = style.rhumb; $('scale').value = style.scale;
+  $('continents').checked = style.continents; $('regions').value = style.regions;
   for (const k of KINDS) {
     const box = $(`kind-${k}`);
     box.checked = style.kinds.includes(k);
@@ -82,6 +87,7 @@ function readControls() {
   style = {
     ink: $('ink').value, parchment: $('parchment').value, density: Number($('density').value),
     pack: $('pack').value, kinds: KINDS.filter((k) => $(`kind-${k}`).checked), names: $('names').checked, rhumb: $('rhumb').checked, scale: $('scale').value,
+    continents: $('continents').checked, regions: $('regions').value,
   };
   showStyle();
   writeHash();
@@ -183,6 +189,6 @@ canvas.addEventListener('wheel', (e) => {
   stopped(300);
 }, { passive: false });
 
-for (const id of ['ink', 'parchment', 'density', 'pack', 'names', 'rhumb', 'scale', ...KINDS.map((k) => `kind-${k}`)]) $(id).addEventListener('input', readControls);
+for (const id of ['ink', 'parchment', 'density', 'pack', 'names', 'rhumb', 'scale', 'continents', 'regions', ...KINDS.map((k) => `kind-${k}`)]) $(id).addEventListener('input', readControls);
 addEventListener('hashchange', () => { view = viewFromHash(); style = styleFromHash(); showStyle(); render(); });
 render();
