@@ -1074,10 +1074,11 @@ function drawScene(g, scene, data, bg, view) {
 // colours (hex), density and view; defaults reproduce the committed mockup. Also `rendering` (one of
 // RENDERINGS), the `rose`, `monster` and `town` styles (listStyles; town 'tower' is drawn in code), `kinds` (the ornament kinds drawn, of KINDS), `names` and `rhumb` (booleans), `scale` (a SCALE_NAMES entry, or 'off'),
 // `continents` (boolean) and `regions` ('off', 'latin' or 'english'); the continents follow the regions' language, Latin when those are off.
-// `title`: the cartouche's lettering; `autoTitle` (boolean) letters it instead with the name the view is about (viewTitle), in capitals.
+// `autoTitle` (boolean, on by default) letters the cartouche with the name the view is about (viewTitle), in capitals;
+// `title` is its lettering when that is off, or when the view has no name in it.
 export async function createScene(environment, opts = {}) {
   env = environment;
-  const { ink = '#3b2a1a', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', title = 'PORTOLANI', autoTitle = false } = opts;
+  const { ink = '#3b2a1a', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', title = 'PORTOLANI', autoTitle = true } = opts;
   const show = { kinds: new Set(opts.kinds ?? KINDS), names, rhumb: rhumbOn, scale };
   const view = clampView(opts.view ?? DEFAULT_VIEW);
   STYLE.ink = ink;

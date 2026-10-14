@@ -1,7 +1,7 @@
 // Browser host for the shared scene code (scene.mjs): same scene as `npm run render`, drawn live.
 // Drag to pan, wheel or pinch to zoom; while the map moves only land and coast are drawn, and the
 // ornaments are placed again when it stops. The view and the style are kept in the URL hash, e.g.
-// #map=zoom/lat/lon&rendering=scanned&rose=aguiar&monster=carta-marina&town=aguiar&kinds=rose,ship&names=0&rhumb=0&scale=chevron&continents=1&regions=latin&autotitle=1&title=Mare+Nostrum&ink=5a1a1a&parchment=eee&density=1.5;
+// #map=zoom/lat/lon&rendering=scanned&rose=aguiar&monster=carta-marina&town=aguiar&kinds=rose,ship&names=0&rhumb=0&scale=chevron&continents=1&regions=latin&autotitle=0&title=Mare+Nostrum&ink=5a1a1a&parchment=eee&density=1.5;
 // a setting left at its default is left out. The older `pack=` key is read as a rendering, so old links still work.
 import { createScene, REGION_LANGS, drawScene, drawGround, panView, zoomView, clampView, covers, DEFAULT_VIEW, RENDERINGS, KINDS, listStyles, SCALE_NAMES, W, H } from './scene.mjs';
 
@@ -30,7 +30,7 @@ const env = {
 const $ = (id) => document.getElementById(id);
 const canvas = $('map'), ctx = canvas.getContext('2d');
 
-const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, rendering: 'vivid', rose: 'aguiar', monster: 'carta-marina', town: 'tower', kinds: KINDS, names: true, rhumb: true, scale: 'genoese', continents: false, regions: 'off', title: 'PORTOLANI', autoTitle: false };
+const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, rendering: 'vivid', rose: 'aguiar', monster: 'carta-marina', town: 'tower', kinds: KINDS, names: true, rhumb: true, scale: 'genoese', continents: false, regions: 'off', title: 'PORTOLANI', autoTitle: true };
 // the styles the packs offer fill their selects; only the manifests are read
 const STYLES = await listStyles(env);
 for (const k of ['rose', 'monster', 'town']) {
@@ -60,7 +60,8 @@ function styleFromHash() {
     continents: q.get('continents') === '1',
     regions: REGION_LANGS.includes(q.get('regions')) ? q.get('regions') : DEFAULTS.regions,
     title: q.get('title') ?? DEFAULTS.title,
-    autoTitle: q.get('autotitle') === '1',
+    // a link from before automatic was the default, with a title and no autotitle, keeps its title
+    autoTitle: q.has('autotitle') ? q.get('autotitle') === '1' : !q.has('title') && DEFAULTS.autoTitle,
     scale: q.get('scale') === 'off' || SCALE_NAMES.includes(q.get('scale')) ? q.get('scale') : DEFAULTS.scale,
   };
 }
@@ -73,7 +74,8 @@ function writeHash() {
   if (!st.rhumb) q.set('rhumb', '0');
   if (st.continents) q.set('continents', '1');
   if (st.regions !== DEFAULTS.regions) q.set('regions', st.regions);
-  if (st.autoTitle) q.set('autotitle', '1');
+  // a title without autotitle reads as custom (readHash), so a typed title carries the mode with it
+  if (st.autoTitle !== DEFAULTS.autoTitle || st.title !== DEFAULTS.title) q.set('autotitle', st.autoTitle ? '1' : '0');
   if (st.title !== DEFAULTS.title) q.set('title', st.title);
   if (st.scale !== DEFAULTS.scale) q.set('scale', st.scale);
   if (st.density !== DEFAULTS.density) q.set('density', st.density);

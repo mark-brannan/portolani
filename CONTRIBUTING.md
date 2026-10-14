@@ -18,7 +18,7 @@ Node 20 or newer. `npm test` runs with the network unavailable. `npm run build:p
 - **Same inputs, same pixels.** The renderer is deterministic: `npm run render` must reproduce `docs/mockup/*.png` byte for byte unless the change is meant to move them, and then the pull request says so.
 - **Every ornament source is recorded.** A new sprite adds its URL, crop box, licence and sha256 to [ASSETS.md](ASSETS.md), and names its `style` (the design family it belongs to) in its pack's `pack.json`. Public domain or an open licence only.
 - Tests assert values, never printed layout, and never need the network.
-- **Golden images.** `test/golden.test.mjs` compares three views with `test/golden/*.png`; after a change that is meant to move the pixels, run `npm run golden` and commit the new PNGs (the test font in `test/fixtures/` is a copy of the one in ASSETS.md).
+- **Golden images.** `test/golden.test.mjs` compares three views with `test/golden/*.png`; after a change that is meant to move the pixels, run `npm run golden` and commit the new PNGs (the test font in `test/fixtures/` is a copy of the one in ASSETS.md). `region-z5` is also the README's picture, so it is drawn with the custom title PORTOLANI.
 - Branch from latest `main`. One logical change per pull request.
 - Commits are conventional: `<type>(<scope>): <subject>`, imperative, 50 characters or fewer.
 
