@@ -1,7 +1,7 @@
 {
   "name": "catalan",
-  "title": "Portolan roses and cartouche: Jorge de Aguiar 1492, Catalan Atlas 1375, Frederik de Wit",
-  "licence": "Public domain; scans via Wikimedia Commons (Beinecke Library, Yale; BnF Gallica btv1b55002481n; Royal Museums Greenwich)",
+  "title": "Portolan roses, vignettes, scale bar and cartouche: Jorge de Aguiar 1492, Catalan Atlas 1375, Genoese chart c. 1320-1350, Frederik de Wit",
+  "licence": "Public domain; scans via Wikimedia Commons (Beinecke Library, Yale; BnF Gallica btv1b55002481n; Library of Congress 2003630429; Royal Museums Greenwich)",
   "colour": "source",
   "ink": "#3b2a1a",
   "sprites": [
@@ -57,6 +57,45 @@
         "crop": [197, 251, 1228, 1035]
       },
       "panel": [0.034, 0.665, 0.953, 0.994]
+    },
+    {
+      "id": "palms-aguiar",
+      "kind": "tree",
+      "file": "palms-aguiar.png",
+      "anchor": [0.5, 0.5],
+      "sizePx": 70,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Jorge_Aguiar_1492_MR.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg",
+        "crop": [2538, 2963, 2718, 3247]
+      }
+    },
+    {
+      "id": "town-aguiar",
+      "kind": "town",
+      "file": "town-aguiar.png",
+      "anchor": [0.5, 0.5],
+      "sizePx": 60,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Jorge_Aguiar_1492_MR.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg",
+        "crop": [2306, 2351, 2447, 2464]
+      }
+    },
+    {
+      "id": "scale-genoese",
+      "kind": "scale",
+      "file": "scale-genoese.png",
+      "anchor": [0.5, 0.5],
+      "sizePx": 260,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/5/5c/Mediterranean_chart_fourteenth_century2.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:Mediterranean_chart_fourteenth_century2.jpg",
+        "crop": [3709, 3816, 4399, 3939]
+      }
     }
   ]
 }

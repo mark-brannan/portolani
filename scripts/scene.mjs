@@ -255,7 +255,8 @@ function viewData(world, view) {
 
 async function loadPack(name) {
   const manifest = await env.readJSON(`packs/${name}/pack.json`);
-  const sprites = await Promise.all(manifest.sprites.map(async (s) => {
+  // kinds the renderer does not place yet (town, tree, scale) are left unfetched
+  const sprites = await Promise.all(manifest.sprites.filter((s) => KINDS.includes(s.kind)).map(async (s) => {
     const img = await env.loadImage(`packs/${name}/${s.file}`);
     // a source-colour pack is drawn as scanned; an ink pack is filled with the ink of the day
     return { ...s, img, tinted: (manifest.colour ?? 'source') === 'source' ? img : tint(img, STYLE.ink) };

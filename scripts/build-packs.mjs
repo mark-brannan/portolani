@@ -68,8 +68,8 @@ const PACKS = [
   },
   {
     name: 'catalan',
-    title: 'Portolan roses and cartouche: Jorge de Aguiar 1492, Catalan Atlas 1375, Frederik de Wit',
-    licence: 'Public domain; scans via Wikimedia Commons (Beinecke Library, Yale; BnF Gallica btv1b55002481n; Royal Museums Greenwich)',
+    title: 'Portolan roses, vignettes, scale bar and cartouche: Jorge de Aguiar 1492, Catalan Atlas 1375, Genoese chart c. 1320-1350, Frederik de Wit',
+    licence: 'Public domain; scans via Wikimedia Commons (Beinecke Library, Yale; BnF Gallica btv1b55002481n; Library of Congress 2003630429; Royal Museums Greenwich)',
     ink: '#3b2a1a',
     sprites: [
       { id: 'rose-aguiar', kind: 'rose', scan: 'aguiar', crop: [55, 80, 665, 690], sizePx: 300, dark: 'min', level: [12, 78], circle: [300, 300, 300],
@@ -82,15 +82,7 @@ const PACKS = [
       { id: 'cartouche-dewit', kind: 'cartouche', scan: 'dewit', crop: [196, 250, 1229, 1039], sizePx: 340, dark: 'min', level: [12, 66],
         // panel lettering and scale bars cleared so the renderer can letter the panel; SYRIA and coast cleared
         erase: [[232, 772, 1180, 1039], [196, 250, 300, 690]], panel: [232, 772, 1180, 1030] },
-    ],
-  },
-  {
-    // not placed by the renderer yet: land vignettes and a scale bar, kinds it does not draw
-    name: 'vignettes',
-    title: 'Land vignettes and scale bar: Jorge de Aguiar 1492, Genoese chart c. 1320-1350',
-    licence: 'Public domain; scans via Wikimedia Commons (Beinecke Library, Yale; Library of Congress 2003630429)',
-    ink: '#3b2a1a',
-    sprites: [
+      // land vignettes and a scale bar: kinds the renderer does not place yet
       // the palms are less saturated than the paper, so darkness alone keys them and the faint rhumb lines drop out
       { id: 'palms-aguiar', kind: 'tree', scan: 'aguiar-chart', crop: [2530, 2962, 2732, 3248], sizePx: 70, level: [30, 62],
         erase: [[2695, 2962, 2732, 2995], [2680, 3170, 2732, 3248]] },
