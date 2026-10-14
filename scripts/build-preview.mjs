@@ -22,7 +22,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import * as coastlines from 'coastlines';
 import { geojsonPolygons, geojsonRings } from 'coast-wright';
-import { cutCells, cutWater } from './detail-cells.mjs';
+import { cutCells, cutWater, joinWater, WATER_FILES } from './detail-cells.mjs';
 import { seaNames, coastNames, joinNames, redSea } from './names.mjs';
 import { joinUrban } from './urban.mjs';
 const { find, localUrl } = coastlines;
@@ -49,9 +49,15 @@ const SOURCES = [
   ['https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_geography_marine_polys.geojson', 'ne_50m_geography_marine_polys.geojson', '6fe58083e0cc5c7fad9e396970e28a8580bbd8770cfa4d1d7b5a34423e912f97', null],
   // read into geo/urban-10m.json below; too big for coastlines, it moves to a coastlines-10m once that exists
   ['https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_urban_areas.geojson', 'ne_10m_urban_areas.geojson', '5136ffd816a9b28c0f295e6797b4c03eaa421be80d78b90f542db4a932dd4497', null],
-  // cut into geo/water-10m/ below; together 12 MB, too much to fetch whole for one close view
+  // cut into geo/water-10m/ below; together 26 MB, too much to fetch whole for one close view. The
+  // regional supplements hold what the world file leaves out (Lake Washington, Como, the Snohomish),
+  // with no feature in both.
   ['https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_rivers_lake_centerlines.geojson', 'ne_10m_rivers_lake_centerlines.geojson', 'bb854a900ecbd3b408df46d5e16e3e0f974ba55993f9d8b5c26e855273c0905a', null],
+  ['https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_rivers_north_america.geojson', 'ne_10m_rivers_north_america.geojson', 'dcd2348655a5f3d0ea7be35024073ab24f09115d2e4efb77e7bc0a33567db682', null],
+  ['https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_rivers_europe.geojson', 'ne_10m_rivers_europe.geojson', '90712202ac46985812e90840df9acd5101599a9c649868d5bc55ee96c2fedd4c', null],
   ['https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_lakes.geojson', 'ne_10m_lakes.geojson', '2d036f53dedec578001c5c30c2959ee7d4eebc1306900fa4367c49929ec8f2d9', null],
+  ['https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_lakes_north_america.geojson', 'ne_10m_lakes_north_america.geojson', '76f49d4b698f3529e690136a989713bcd3c028ade150346f4b358de9815cfc43', null],
+  ['https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_lakes_europe.geojson', 'ne_10m_lakes_europe.geojson', 'b4dd9e7a5edd0d07b54768b5404d1ebe77f80b9d579c85fff65f90cf50369769', null],
   // GSHHG "f" land is read from the zip below; at 65 MB it is too big for the coastlines package
   ['https://www.soest.hawaii.edu/pwessel/gshhg/gshhg-shp-2.3.7.zip', 'gshhg-shp-2.3.7.zip', '8dbbe7e071e77e9e75f2d639239099ebca8d5c16d6a07df8169729d49f15cf41', null],
 ];
@@ -108,9 +114,11 @@ async function writeBand(dir, cellDeg, geometry) {
   await writeFile(path.join(out, 'geo', dir, 'index.json'), JSON.stringify({ cell: cellDeg, cells: [...cells.keys()] }));
   return cells.size;
 }
-// 10m rivers and lakes, whole features in the cells they reach; WATER_CELL_DEG must match scene.mjs WATER_10M
+// 10m rivers and lakes with their regional supplements (detail-cells.mjs WATER_FILES), whole features
+// in the cells they reach; WATER_CELL_DEG must match scene.mjs WATER_10M
 const WATER_CELL_DEG = 5;
-const [rivers10, lakes10] = await Promise.all(['ne_10m_rivers_lake_centerlines.geojson', 'ne_10m_lakes.geojson'].map(async (f) => JSON.parse(await readFile(path.join(root, 'downloads', f), 'utf8'))));
+const geo = async (f) => JSON.parse(await readFile(path.join(root, 'downloads', f), 'utf8'));
+const [rivers10, lakes10] = await Promise.all([WATER_FILES.rivers, WATER_FILES.lakes].map(async (fs) => joinWater(await Promise.all(fs.map(geo)))));
 const waterCells = cutWater(rivers10, lakes10, { size: WATER_CELL_DEG });
 await mkdir(path.join(out, 'geo', 'water-10m'), { recursive: true });
 let waterBytes = 0;
