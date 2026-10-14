@@ -54,3 +54,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t121719z
 - GSHHG "f" read from the pinned GSHHG zip in portolani build-preview, not a coastlines package (a package would be ~66 MB packed, past the 30 MB line) Undo: read f from a package later; the cell cutter is unchanged ([#84](https://github.com/mark-brannan/portolani/pull/84))
+
+### 20261014t122229z
+- City plans: bastions and moat for a footprint >= 40 km on a side (about the largest 75 metros) Undo: change FORT_KM in scripts/city.mjs ([#85](https://github.com/mark-brannan/portolani/pull/85))
