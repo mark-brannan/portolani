@@ -1066,7 +1066,7 @@ function drawGround(g, world, view, bg) {
 // ---------------------------------------------------------------- scale bar
 
 const EARTH_R = 6371008.8, NM = 1852; // metres
-const NM_STEPS = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000];
+const NM_STEPS = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000];
 const SCALE_MIN_ZOOM = 3; // below this the Mercator scale varies too much across the view to quote one
 
 // A period ladder, true east-west at the latitude of the view's centre (in any of PROJECTIONS),
@@ -1178,7 +1178,7 @@ function drawScaleBar(g, data, bg, view, w, h, style = 'genoese', sprite = null)
   const pxPerNm = ((proj.k * NM) / (EARTH_R * Math.cos(lat * RAD))) * view.scale;
   const target = Math.min(w * 0.25, 360); // longest bar, px
   const fixed = sprite?.divisions;
-  const step = [...NM_STEPS].reverse().find((n) => n * pxPerNm * (fixed ?? 4) <= target) ?? NM_STEPS[0];
+  const step = [...NM_STEPS].reverse().find((n) => n * pxPerNm * (fixed ?? 4) <= target) ?? NM_STEPS[0]; // sub-divides a nautical mile when zoomed far in, so the bar stays within `target`
   const seg = step * pxPerNm, n = fixed ?? Math.max(4, Math.min(8, 2 * Math.floor(target / seg / 2)));
   const every = n % 2 ? 1 : 2; // which divisions are numbered
   // a picture taller than the ladder grows upward from the same foot
@@ -1196,7 +1196,7 @@ function drawScaleBar(g, data, bg, view, w, h, style = 'genoese', sprite = null)
   g.strokeRect(px + 3.5, py + 3.5, pw - 7, ph - 7);
   SCALE_STYLES[style](g, x0, y0, n, seg, sprite);
   g.fillStyle = STYLE.ink; g.textAlign = 'center'; g.textBaseline = 'bottom';
-  for (let i = 0; i <= n; i += every) g.fillText(String(i * step), x0 + i * seg, top - 5);
+  for (let i = 0; i <= n; i += every) g.fillText(String(+(i * step).toFixed(2)), x0 + i * seg, top - 5);
   g.textAlign = 'left'; g.fillText('nautical miles', x0 + n * seg + 24, y0 + SCALE_BAR_H);
   g.restore();
 }
