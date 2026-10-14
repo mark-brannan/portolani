@@ -1,10 +1,14 @@
 // Browser host for the shared scene code (scene.mjs): same scene as `npm run render`, drawn live.
 // Drag to pan, wheel or pinch to zoom; while the map moves only land and coast are drawn, and the
 // ornaments are placed again when it stops. The view is kept in the URL as #map=zoom/lat/lon.
-import { createScene, drawScene, drawGround, panView, zoomView, clampView, DEFAULT_VIEW, W, H } from './scene.mjs';
+import { createScene, drawScene, drawGround, panView, zoomView, clampView, covers, DEFAULT_VIEW, W, H } from './scene.mjs';
 
 const memo = new Map();
-const once = (key, make) => { if (!memo.has(key)) memo.set(key, make()); return memo.get(key); };
+// a failed load is forgotten, so the next stop tries it again
+const once = (key, make) => {
+  if (!memo.has(key)) memo.set(key, make().catch((e) => { memo.delete(key); throw e; }));
+  return memo.get(key);
+};
 
 const env = {
   createCanvas: (w, h) => Object.assign(document.createElement('canvas'), { width: w, height: h }),
@@ -33,7 +37,7 @@ function viewFromHash() {
 const writeHash = (v) => history.replaceState(null, '', `#map=${v.zoom.toFixed(2)}/${v.lat.toFixed(3)}/${v.lon.toFixed(3)}`);
 
 let view = viewFromHash();
-let ground = null; // { world, bg } from the last placement, all a moving frame needs
+let ground = null; // { world, coarse, bg } from the last placement, all a moving frame needs
 let placed = null; // the view the canvas shows with its ornaments
 let run = 0;
 
@@ -42,11 +46,11 @@ async function render() {
   $('densityOut').textContent = $('density').value;
   try {
     const t0 = performance.now();
-    const { scene, data, bg, world, timing } = await createScene(env, {
+    const { scene, data, bg, world, coarse, timing } = await createScene(env, {
       ink: $('ink').value, parchment: $('parchment').value, density: Number($('density').value), view,
     });
     if (me !== run) return; // a newer change or a move superseded this one
-    ground = { world, bg };
+    ground = { world, coarse, bg };
     placed = view;
     const t1 = performance.now();
     ctx.clearRect(0, 0, W, H);
@@ -71,7 +75,8 @@ function moved(next) {
   frame = requestAnimationFrame(() => {
     frame = 0;
     const t = performance.now();
-    drawGround(ctx, ground.world, view, ground.bg);
+    // the 10m cells placed last while they cover the view; 50m otherwise, until it stops and is placed again
+    drawGround(ctx, covers(ground.world, view) ? ground.world : ground.coarse, view, ground.bg);
     $('status').textContent = `z${view.zoom.toFixed(1)}: moving, frame ${(performance.now() - t).toFixed(0)} ms`;
   });
 }
