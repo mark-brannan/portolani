@@ -38,7 +38,7 @@ const names = () => made ??= joinNames(read(join(ROOT, 'test', 'fixtures', 'sea-
   coastNames(read(join(GEO, 'ne-admin-0-countries-50m.geojson')), read(join(GEO, 'ne-coastline-50m.geojson'))));
 const env = {
   createCanvas,
-  readJSON: async (p) => (p === 'geo/names-50m.json' ? names() : read(resolve(p))),
+  readJSON: async (p) => (p === 'geo/names-50m.json' ? names() : p === 'geo/red-sea-50m.json' ? read(join(ROOT, 'test', 'fixtures', 'red-sea-50m.json')) : read(resolve(p))),
   loadImage: (p) => loadImage(resolve(p)),
   loadFont: async (family) => { GlobalFonts.registerFromPath(join(ROOT, 'test', 'fixtures', 'IMFeENrm28P.ttf'), family); },
 };

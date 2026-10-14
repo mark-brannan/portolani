@@ -1,8 +1,11 @@
 // Cuts Natural Earth 10m land and coast into square lon/lat cells, so a close view fetches only the
 // few cells around it rather than the whole 10m world. Land polygons are clipped to each cell (fill
-// is even-odd, so the cut edges vanish); coast lines are split where they pass from one cell to the
+// is even-odd, so the cut edges vanish; each cell's `m` holds, for its land polygons in order, the
+// area in km2 and colour of the island each is a piece of, worked out before the cut); coast lines are split where they pass from one cell to the
 // next, each piece keeping the shared point so the line stays joined. Coordinates are rounded to
 // `digits` decimals (5 is about a metre). Cell keys are `${xi}_${yi}`, xi = floor(lon / size).
+
+import { islandInfo } from './island.mjs';
 
 const key = (xi, yi) => `${xi}_${yi}`;
 
@@ -43,7 +46,7 @@ function splitPolygons(polys, box, size, emit) {
     if (b[axis] >= mid) { hi.push(poly); continue; }
     for (const [side, keep] of [[lo, -1], [hi, 1]]) {
       const [outer, ...holes] = poly.map((r) => clipHalf(r, axis, mid, keep));
-      if (outer.length >= 3) side.push([outer, ...holes.filter((r) => r.length >= 3)]);
+      if (outer.length >= 3) side.push(Object.assign([outer, ...holes.filter((r) => r.length >= 3)], { isl: poly.isl }));
     }
   }
   const loBox = axis === 0 ? [x0, y0, mid, y1] : [x0, y0, x1, mid], hiBox = axis === 0 ? [mid, y0, x1, y1] : [x0, mid, x1, y1];
@@ -56,14 +59,14 @@ function splitPolygons(polys, box, size, emit) {
 export function cutCells({ land, coast }, size = 5, digits = 5) {
   const f = 10 ** digits, round = (p) => [Math.round(p[0] * f) / f, Math.round(p[1] * f) / f];
   const tidy = (pts) => pts.map(round).filter((p, i, a) => i === 0 || p[0] !== a[i - 1][0] || p[1] !== a[i - 1][1]);
-  const cells = new Map(), cell = (k) => cells.get(k) ?? cells.set(k, { land: [], coast: [] }).get(k);
+  const cells = new Map(), cell = (k) => cells.get(k) ?? cells.set(k, { land: [], coast: [], m: [] }).get(k);
 
   const open = (r) => (r.length > 1 && r[0][0] === r[r.length - 1][0] && r[0][1] === r[r.length - 1][1] ? r.slice(0, -1) : r);
-  splitPolygons(land.map((poly) => poly.map(open)), [-180, -90, 180, 90], size, (xi, yi, polys) => {
-    const out = cell(key(xi, yi)).land;
+  splitPolygons(land.map((poly) => Object.assign(poly.map(open), { isl: islandInfo(poly) })), [-180, -90, 180, 90], size, (xi, yi, polys) => {
+    const c = cell(key(xi, yi)), out = c.land;
     for (const poly of polys) {
       const rings = poly.map(tidy).filter((r) => r.length >= 3).map((r) => [...r, r[0]]);
-      if (rings.length) out.push(rings);
+      if (rings.length) { out.push(rings); c.m.push([poly.isl.km2, poly.isl.hue]); }
     }
   });
 
