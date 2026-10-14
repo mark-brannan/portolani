@@ -391,12 +391,12 @@ function placeWorldNames(data, ctx, boxes, { continents, regions }) {
   return out;
 }
 
-// The name a view is about, for an automatic cartouche title: of the seas, countries, towns and
-// hand-set continents and regions the scene letters, the one that best weighs its rank against
-// how much of the frame it fills; a town counts only where its name is lettered. Each kind of name has a zoom it is the subject at (a sea or a
-// country from Natural Earth's min_label, a town from its scalerank); a name scores less the
-// farther the view is from that zoom. A point counts more the nearer the frame's centre; a
-// country by how much of its coast lies in the frame. `lang` 0 Latin, 1 English, for the hand-set names.
+// The name a view is about, for an automatic cartouche title. Of the seas, countries, towns and
+// hand-set continents and regions the scene letters (a town only where its name is lettered), the
+// highest score wins. Each kind of name is the subject at a zoom (a sea or a country from Natural
+// Earth's min_label, a town from its scalerank), and scores less the farther the view is from it.
+// A point scores more the nearer the frame's centre; a country by how much of its coast is in frame.
+// `lang` 0 Latin, 1 English, for the hand-set names.
 function viewTitle(data, towns, lang) {
   const z = data.proj.zoom, half = Math.hypot(W, H) / 2;
   const fit = (s) => Math.exp(-(((z - s) / 1.6) ** 2));
