@@ -1,0 +1,48 @@
+<!-- Venice from Jorge de Aguiar's 1492 portolan chart: a walled city of white towers and red roofs with one very tall
+     campanile, sitting in a lagoon drawn as a halo of blue and green wavy rays around a blue water band.
+     Traced from the crop at docs/towns-aguiar/town-aguiar-venice.raw.png (pixel coordinates = user units). -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 230 160" width="920" height="640">
+ <!-- halo of wavy rays, drawn from the city edge outward -->
+ <g fill="none" stroke-linecap="round" stroke-width="1.8" opacity=".58">
+  <path stroke="#7f93c8" d="M66,88C66,73 50,65 50,50M85,70C78,59 79,45 72,34M104,72C95,59 103,42 94,28M133,70C140,58 137,44 144,32M157,78C166,66 158,50 168,38M50,56C37,70 15,69 2,84M54,76C40,93 16,96 2,114M57,106C38,118 33,142 14,154M60,124C48,133 52,151 40,160M160,46C179,52 187,72 206,78M176,66C194,76 199,98 218,108M178,106C184,124 205,131 212,150M166,125C168,140 186,145 188,160M100,134C103,143 97,151 100,160M124,134C130,142 126,152 132,160"/>
+  <path stroke="#5f8f4a" d="M66,72C59,64 59,52 52,44M94,70C96,55 80,45 82,30M100,56C102,45 96,35 98,24M145,60C146,49 155,41 156,30M170,78C173,66 183,57 186,44M52,66C32,72 21,93 0,100M55,86C34,95 25,118 4,128M58,116C52,134 31,141 24,160M66,130C65,141 55,149 54,160M170,56C181,73 203,77 214,94M178,80C188,98 210,103 220,122M174,116C188,127 187,148 202,160M156,131C164,139 164,152 172,160M112,134C110,143 118,151 116,160M140,133C141,143 151,150 152,160"/>
+  <path stroke="#3f5fa8" d="M74,68C73,58 63,51 62,40M123,76C119,62 132,50 128,36M56,48C39,48 28,65 10,66M56,96C44,116 20,122 8,142M74,133C69,141 73,151 68,160M178,94C196,104 200,126 218,136M88,134C84,142 88,152 84,160"/>
+ </g>
+ <!-- lagoon water band under the city, with a lighter wash below -->
+ <path d="M60,128C70,134 85,138 100,140C120,146 140,142 160,134C150,130 130,131 110,132C90,133 75,133 60,128Z" fill="#7f93c8" opacity=".55"/>
+ <path d="M58,124C75,123 93,123 111,121C131,119 150,116 166,114L186,101C194,105 190,112 186,112C180,116 172,120 166,122C150,127 135,129 119,131C100,132 84,133 70,132C64,131 60,128 58,124Z" fill="#3f5fa8" opacity=".9"/>
+ <g stroke="#2a1d12" stroke-width="1.2" stroke-linejoin="round" fill="#ffffff">
+  <!-- back tier of wall, left block and houses behind the front wall -->
+  <path d="M57,98L77,98L77,100L100,100L100,112L57,112Z"/>
+  <path d="M80,94L98,94L98,112L80,112Z"/>
+  <!-- tower 1: round top -->
+  <rect x="67" y="79" width="10" height="20"/><circle cx="72" cy="74" r="6"/>
+  <!-- tower 2: house, red roof, tower and spire -->
+  <path d="M79,94L83,86L94,86L98,94Z" fill="#c8432b"/>
+  <rect x="84" y="71" width="10" height="16"/><path d="M85,72L93,72L89,57Z"/><path d="M85,75L93,75" />
+  <!-- campanile -->
+  <rect x="99" y="84" width="8" height="16"/>
+  <path d="M107,57L121,57L122,100L104,100Z"/>
+  <rect x="104" y="48" width="18" height="9"/><path d="M104,52L122,52"/>
+  <rect x="107" y="36" width="12" height="12"/><path d="M107,40L119,40M107,44L119,44"/>
+  <path d="M110,36L116,36L113.5,2L112.5,2Z"/>
+  <g fill="#2a1d12" stroke="none"><rect x="110" y="71" width="2" height="3"/><rect x="114" y="71" width="2" height="3"/><rect x="110" y="90" width="2" height="3"/><rect x="114" y="90" width="2" height="3"/></g>
+  <!-- right of the campanile: red roof, tower 4, thin tower, canal, red roof -->
+  <path d="M122,87L124,80L134,80L135,87Z" fill="#c8432b"/>
+  <rect x="128" y="77" width="12" height="18"/>
+  <rect x="140" y="70" width="6" height="25"/>
+  <rect x="124" y="92" width="18" height="7" fill="#3f5fa8"/>
+  <path d="M122,106L124,99L146,99L148,106Z" fill="#c8432b"/>
+  <!-- tower 5: round top, and the right house -->
+  <rect x="145" y="61" width="11" height="25"/><circle cx="150" cy="56" r="6"/>
+  <path d="M151,88L154,81L170,81L173,88Z" fill="#c8432b"/>
+  <path d="M141,86L177,86L177,100L141,100Z"/>
+  <!-- front wall and right block -->
+  <path d="M72,110L150,110L150,100L178,100L178,118C168,121 158,122 148,122L100,124L72,123L57,121L57,110Z"/>
+  <path d="M72,110L100,110" stroke-width="1.6"/>
+  <!-- merlons -->
+  <g fill="#ffffff"><path d="M59,98v-3h3v3M66,98v-3h3v3M73,98v-3h3v3M82,100v-3h3v3M90,100v-3h3v3M78,110v-3h3v3M85,110v-3h3v3M92,110v-3h3v3M102,110v-3h3v3M109,110v-3h3v3M116,110v-3h3v3M123,110v-3h3v3M130,110v-3h3v3M137,110v-3h3v3M144,110v-3h3v3M153,100v-3h3v3M160,100v-3h3v3M167,100v-3h3v3M174,100v-3h3v3"/></g>
+  <!-- gate -->
+  <rect x="109" y="115" width="4" height="7" fill="#2a1d12"/>
+ </g>
+</svg>
