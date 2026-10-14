@@ -10,8 +10,9 @@
 // black RGB instead, and the renderer fills it with the pack ink, so one ink setting retints it.
 //
 // Keying: crop -> darkness channel (luminance, or min(R,G,B) so gilt and colour wash count as ink)
-// -> levels -> masks (saturation silhouette for figures on hatched sea, circle for roses,
-// rectangles erased for lettering) -> trim.
+// -> levels -> masks (saturation silhouette for coloured figures on hatched sea, a polygon drawn
+// round a figure whose sea is printed in the same ink, circle for roses, rectangles erased for
+// lettering) -> trim -> downscale. Line work on blank paper needs no mask: darkness alone keys it.
 
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync, readFileSync, existsSync, mkdtempSync, rmSync } from 'node:fs';
@@ -50,6 +51,8 @@ const SEA_FIGURE_LEVEL = [26, 56]; // woodcut line only; colour fills and sea ha
 const SEA_FIGURE = { sat: 24, close: 7, open: 5, dilate: 4, feather: 2, minArea: 900 };
 
 const CLEAN_DISK = 5; // px radius of the closing that removes scanned lettering
+const MASK_FEATHER = 6; // px blur on a polygon mask's edge, in scan pixels
+const MAX_SCALE = 3; // a sprite is stored at most this many px wide per CSS px it is drawn (sizePx)
 
 // One pack of scanned sprites; each sprite's `style` names the design family it belongs to, which
 // the renderer offers as a setting (a rose set, a monster family, a town drawing).
@@ -98,7 +101,9 @@ function buildSprite(sprite, colour, outDir, tmp) {
   const w = x1 - x0, h = y1 - y0;
   const t = (n) => join(tmp, `${sprite.id}.${n}.png`);
 
-  magick(`${scan.path}[0]`, '-crop', `${w}x${h}+${x0}+${y0}`, '+repage', '-alpha', 'off', t('crop'));
+  // `grey` drops a print's later colouring (gilt, wash), so the line work reads as ink alone
+  const grey = sprite.grey ? ['-colorspace', 'gray', '-colorspace', 'sRGB'] : [];
+  magick(`${scan.path}[0]`, '-crop', `${w}x${h}+${x0}+${y0}`, '+repage', '-alpha', 'off', grey, t('crop'));
 
   // Lettering on the scan (wind names on a rose) is closed away from the colour image before keying:
   // a grayscale closing removes dark strokes thinner than the disk and keeps the petal wash beneath.
@@ -114,9 +119,11 @@ function buildSprite(sprite, colour, outDir, tmp) {
   const dark = sprite.dark === 'min'
     ? [t('crop'), '-separate', '-evaluate-sequence', 'min']
     : [t('crop'), '-colorspace', 'gray'];
+  // a grainy scan's paper speckles are taken out with a median before the levels catch them
+  const denoise = sprite.denoise ? ['-statistic', 'Median', `${sprite.denoise}x${sprite.denoise}`] : [];
   const [lo, hi] = sprite.level ?? [18, 64];
   // Keep the tone: alpha is continuous ink coverage, so shading, hatching and washes survive.
-  magick(dark, '-level', `${lo}%,${hi}%`, '-negate', t('ink'));
+  magick(dark, denoise, '-level', `${lo}%,${hi}%`, '-negate', t('ink'));
 
   const masks = [];
   if (sprite.silhouette) {
@@ -131,6 +138,12 @@ function buildSprite(sprite, colour, outDir, tmp) {
       '-connected-components', '8',
       '-morphology', 'Dilate', `Disk:${s.dilate}`, '-blur', `0x${s.feather}`, t('sil'));
     masks.push(t('sil'));
+  }
+  if (sprite.mask) {
+    // the figure's outline, drawn by eye on the scan, for a figure on sea hatched in its own ink
+    const pts = sprite.mask.map(([mx, my]) => `${mx - x0},${my - y0}`).join(' ');
+    magick('-size', `${w}x${h}`, 'xc:black', '-fill', 'white', '-draw', `polygon ${pts}`, '-blur', `0x${MASK_FEATHER}`, t('mask'));
+    masks.push(t('mask'));
   }
   if (sprite.circle) {
     const [cx, cy, r] = sprite.circle;
@@ -169,8 +182,12 @@ function buildSprite(sprite, colour, outDir, tmp) {
     magick(t('crop'), '(', '-size', `${w}x${h}`, `xc:${paper}`, ')', '-compose', 'DivideDst', '-composite', t('rgb'));
     rgb = [t('rgb')];
   }
+  // Keyed at full size, then shrunk with Lanczos to MAX_SCALE x sizePx across when wider (the
+  // renderer draws a sprite sizePx wide), so line work stays crisp and no scan-sized PNG is kept.
+  const most = MAX_SCALE * sprite.sizePx;
+  const shrink = tw > most ? ['-filter', 'Lanczos', '-resize', `${most}x`] : [];
   magick(rgb, alpha, '-alpha', 'off', '-compose', 'CopyOpacity', '-composite',
-    '-crop', `${tw}x${th}+${tx}+${ty}`, '+repage', '-strip', join(outDir, file));
+    '-crop', `${tw}x${th}+${tx}+${ty}`, '+repage', shrink, '-strip', join(outDir, file));
 
   const entry = {
     id: sprite.id, kind: sprite.kind, style: sprite.style, file,
