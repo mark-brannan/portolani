@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 180 284" width="360" height="568">
+  <!-- After the palms on the African coast of Jorge de Aguiar's chart, 1492 (Beinecke Library,
+       Yale): three date palms, ringed trunks leaning a little apart, crowns of drooping verdigris
+       fronds. Drawn, not traced; transparent ground, for the renderer's `multiply`. -->
+  <defs>
+    <!-- a frond: a curved midrib, leaflets as a filled blade, drooping at the tip -->
+    <path id="frond" d="M0,0 C14,-10 34,-10 48,4 C40,0 30,-1 22,1 C30,4 38,10 44,18 C30,8 14,4 0,0 Z"
+          fill="#4f9a5a" stroke="#2f6b3a" stroke-width="1" stroke-linejoin="round"/>
+    <g id="crown">
+      <use xlink:href="#frond" transform="rotate(-10)"/>
+      <use xlink:href="#frond" transform="rotate(30)"/>
+      <use xlink:href="#frond" transform="rotate(-50)"/>
+      <use xlink:href="#frond" transform="scale(-1,1) rotate(-10)"/>
+      <use xlink:href="#frond" transform="scale(-1,1) rotate(30)"/>
+      <use xlink:href="#frond" transform="scale(-1,1) rotate(-50)"/>
+      <use xlink:href="#frond" transform="rotate(-82) scale(0.8)"/>
+      <use xlink:href="#frond" transform="scale(-1,1) rotate(-82) scale(0.8)"/>
+      <!-- dates, gilt -->
+      <circle cx="-4" cy="6" r="2.6" fill="#b08a2a" stroke="#8e6a25" stroke-width="0.8"/>
+      <circle cx="3" cy="7" r="2.6" fill="#b08a2a" stroke="#8e6a25" stroke-width="0.8"/>
+      <circle cx="0" cy="11" r="2.6" fill="#b08a2a" stroke="#8e6a25" stroke-width="0.8"/>
+    </g>
+    <!-- a trunk ring -->
+    <path id="ring" d="M-5,0 Q0,3 5,0" fill="none" stroke="#2a1d12" stroke-width="1"/>
+  </defs>
+  <g stroke-linejoin="round" stroke-linecap="round">
+    <!-- trunks: tapering, bowed, buff with ink edges -->
+    <g fill="#dcb85a" stroke="#2a1d12" stroke-width="1.4">
+      <path d="M44,274 C40,200 36,130 40,62 L48,62 C46,130 50,200 54,274 Z"/>
+      <path d="M86,276 C88,190 84,120 82,48 L90,48 C94,120 98,190 96,276 Z"/>
+      <path d="M128,272 C126,200 128,130 136,64 L144,64 C138,130 138,200 138,272 Z"/>
+    </g>
+    <!-- rings up each trunk -->
+    <g>
+      <use xlink:href="#ring" transform="translate(48,250)"/><use xlink:href="#ring" transform="translate(47,226)"/><use xlink:href="#ring" transform="translate(46,202)"/><use xlink:href="#ring" transform="translate(45,178)"/><use xlink:href="#ring" transform="translate(44,154)"/><use xlink:href="#ring" transform="translate(44,130)"/><use xlink:href="#ring" transform="translate(43,106)"/><use xlink:href="#ring" transform="translate(44,82)"/>
+      <use xlink:href="#ring" transform="translate(91,252)"/><use xlink:href="#ring" transform="translate(91,228)"/><use xlink:href="#ring" transform="translate(90,204)"/><use xlink:href="#ring" transform="translate(89,180)"/><use xlink:href="#ring" transform="translate(88,156)"/><use xlink:href="#ring" transform="translate(87,132)"/><use xlink:href="#ring" transform="translate(87,108)"/><use xlink:href="#ring" transform="translate(86,84)"/><use xlink:href="#ring" transform="translate(86,62)"/>
+      <use xlink:href="#ring" transform="translate(133,248)"/><use xlink:href="#ring" transform="translate(132,224)"/><use xlink:href="#ring" transform="translate(132,200)"/><use xlink:href="#ring" transform="translate(133,176)"/><use xlink:href="#ring" transform="translate(134,152)"/><use xlink:href="#ring" transform="translate(135,128)"/><use xlink:href="#ring" transform="translate(137,104)"/><use xlink:href="#ring" transform="translate(139,82)"/>
+    </g>
+    <!-- crowns -->
+    <use xlink:href="#crown" transform="translate(44,60)"/>
+    <use xlink:href="#crown" transform="translate(86,46) scale(1.1)"/>
+    <use xlink:href="#crown" transform="translate(140,62)"/>
+    <!-- ground, verdigris tufts -->
+    <path d="M30,276 Q90,268 154,276" fill="none" stroke="#3f8a4a" stroke-width="3"/>
+    <path d="M36,276 l4,-8 l3,8 M100,274 l3,-8 l4,8 M142,276 l3,-7 l3,7" fill="none" stroke="#3f8a4a" stroke-width="1.6"/>
+  </g>
+</svg>

@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 680 380" width="1360" height="760">
+  <!-- After Frederik de Wit's cartouche on his Mediterranean chart (Royal Museums Greenwich):
+       a crimson frame round a verdigris band and a blank panel, gilt C-scrolls at the corners,
+       lapis ribbons, and an armillary sphere on a scrolled plinth in place of the putti. Drawn,
+       not traced. The panel (x 40-640, y 160-346) is white, so the renderer's `multiply` leaves
+       the parchment it repaints there for the title. -->
+  <defs>
+    <!-- a gilt C-scroll, curling in at both ends -->
+    <path id="cs" d="M0,0 C-6,-22 14,-34 30,-24 C42,-16 36,0 24,-2 C16,-3 16,-14 24,-14 M0,0 C4,14 22,18 34,12"
+          fill="none" stroke="#8e6a25" stroke-width="7" stroke-linecap="round"/>
+    <path id="csg" d="M0,0 C-6,-22 14,-34 30,-24 C42,-16 36,0 24,-2 C16,-3 16,-14 24,-14 M0,0 C4,14 22,18 34,12"
+          fill="none" stroke="#e2bf55" stroke-width="3.2" stroke-linecap="round"/>
+    <g id="scroll"><use xlink:href="#cs"/><use xlink:href="#csg"/></g>
+    <!-- a lapis ribbon fold -->
+    <path id="rib" d="M0,0 C18,-14 40,-10 52,4 C40,0 26,4 18,14 C14,6 8,2 0,0 Z" fill="#2a4f8f" stroke="#1b3466" stroke-width="1.4" stroke-linejoin="round"/>
+  </defs>
+
+  <g stroke-linejoin="round">
+    <!-- crimson frame, its top edge swelling to a shallow arch under the plinth -->
+    <path d="M10,142 L268,142 C290,142 300,126 340,126 C380,126 390,142 412,142 L670,142 L670,372 L10,372 Z"
+          fill="#a92a17" stroke="#2a1d12" stroke-width="2.2"/>
+    <path d="M16,148 L268,148 C292,148 302,132 340,132 C378,132 388,148 412,148 L664,148 L664,366 L16,366 Z"
+          fill="none" stroke="#7a1d0f" stroke-width="1.2"/>
+    <!-- verdigris band -->
+    <rect x="28" y="150" width="624" height="208" fill="#4f9a5a" stroke="#2a1d12" stroke-width="1.6"/>
+    <rect x="34" y="155" width="612" height="198" fill="none" stroke="#2f6b3a" stroke-width="0.9"/>
+    <!-- the blank panel -->
+    <rect x="40" y="160" width="600" height="186" fill="#ffffff" stroke="#2a1d12" stroke-width="1.8"/>
+
+    <!-- gilt scrolls at the four corners and either side of the arch -->
+    <use xlink:href="#scroll" transform="translate(22,150)"/>
+    <use xlink:href="#scroll" transform="translate(658,150) scale(-1,1)"/>
+    <use xlink:href="#scroll" transform="translate(22,344) scale(1,-1)"/>
+    <use xlink:href="#scroll" transform="translate(658,344) scale(-1,-1)"/>
+    <use xlink:href="#scroll" transform="translate(236,146) scale(0.8)"/>
+    <use xlink:href="#scroll" transform="translate(444,146) scale(-0.8,0.8)"/>
+
+    <!-- lapis ribbons along the top edge, as on de Wit's frame -->
+    <use xlink:href="#rib" transform="translate(70,138)"/>
+    <use xlink:href="#rib" transform="translate(150,140) scale(0.85)"/>
+    <use xlink:href="#rib" transform="translate(610,138) scale(-1,1)"/>
+    <use xlink:href="#rib" transform="translate(530,140) scale(-0.85,0.85)"/>
+    <!-- ribbon tails down the sides -->
+    <path d="M10,180 C-2,214 18,240 6,276 C16,262 22,236 14,212 Z" fill="#2a4f8f" stroke="#1b3466" stroke-width="1.2"/>
+    <path d="M670,180 C682,214 662,240 674,276 C664,262 658,236 666,212 Z" fill="#2a4f8f" stroke="#1b3466" stroke-width="1.2"/>
+
+    <!-- the plinth: a gilt scrolled foot on the arch -->
+    <path d="M300,128 C306,112 324,108 340,108 C356,108 374,112 380,128 Z" fill="#dcb85a" stroke="#8e6a25" stroke-width="1.8"/>
+    <path d="M326,108 L330,94 L350,94 L354,108 Z" fill="#b08a2a" stroke="#8e6a25" stroke-width="1.6"/>
+    <rect x="336" y="80" width="8" height="14" fill="#b08a2a" stroke="#8e6a25" stroke-width="1.4"/>
+
+    <!-- the armillary sphere: a meridian, the equator, the ecliptic and two tropics, gilt -->
+    <g transform="translate(340,42)" fill="none" stroke-linecap="round">
+      <g stroke="#8e6a25" stroke-width="5">
+        <circle r="38"/>
+        <ellipse rx="38" ry="10"/>
+        <ellipse rx="38" ry="9" transform="rotate(-23.5)"/>
+        <ellipse rx="10" ry="38"/>
+      </g>
+      <g stroke="#e2bf55" stroke-width="2.4">
+        <circle r="38"/>
+        <ellipse rx="38" ry="10"/>
+        <ellipse rx="38" ry="9" transform="rotate(-23.5)"/>
+        <ellipse rx="10" ry="38"/>
+      </g>
+      <g stroke="#b08a2a" stroke-width="1.6">
+        <path d="M-34.6,-16 A34.6 6 0 0 0 34.6,-16"/>
+        <path d="M-34.6,16 A34.6 6 0 0 0 34.6,16"/>
+      </g>
+      <!-- the axis, and the earth at the centre in lapis -->
+      <path d="M0,-48 L0,38" stroke="#2a1d12" stroke-width="1.6"/>
+      <circle r="7" fill="#2a4f8f" stroke="#1b3466" stroke-width="1.2"/>
+    </g>
+    <!-- vermilion pennants either side of the sphere -->
+    <path d="M286,96 L250,80 L262,96 L250,112 Z" fill="#d8432a" stroke="#7a1d0f" stroke-width="1.2"/>
+    <path d="M394,96 L430,80 L418,96 L430,112 Z" fill="#d8432a" stroke="#7a1d0f" stroke-width="1.2"/>
+    <path d="M286,96 L300,124 M394,96 L380,124" stroke="#2a1d12" stroke-width="1.6" fill="none"/>
+  </g>
+</svg>

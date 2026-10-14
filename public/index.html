@@ -28,9 +28,10 @@
     <label>Parchment <input id="parchment" type="color" value="#e9d8b4"></label>
     <label>Density <input id="density" type="range" min="0" max="2" step="0.25" value="1"> <output id="densityOut">1</output></label>
     <label>Pack <select id="pack">
-      <option value="all">All packs</option>
+      <option value="all">All packs (Carta Marina and vivid)</option>
       <option value="carta-marina">Carta Marina (monsters, ships)</option>
-      <option value="catalan">Catalan (roses, cartouche)</option>
+      <option value="vivid">Vivid (roses, cartouche, drawn as vectors)</option>
+      <option value="catalan">Catalan (roses, cartouche, scanned)</option>
       <option value="plain">Plain (drawn in code, no images)</option>
     </select></label>
     <fieldset><legend>Ornaments</legend>
@@ -41,8 +42,15 @@
     </fieldset>
     <label><input type="checkbox" id="names"> Names</label>
     <label><input type="checkbox" id="rhumb"> Rhumb lines</label>
+    <label><input type="checkbox" id="continents"> Continents (zoom 3 and out)</label>
+    <label>Regions (zoom 4 and 5) <select id="regions">
+      <option value="off">Off</option>
+      <option value="latin">Latin (Hispania)</option>
+      <option value="english">English (Iberia)</option>
+    </select></label>
     <label>Scale bar <select id="scale">
       <option value="off">Off</option>
+      <option value="genoese">Genoese (vivid, drawn as vectors)</option>
       <option value="chequer">Chequer</option>
       <option value="chevron">Chevron ladder (Genoese)</option>
       <option value="ribbon">Ribbon (Martines)</option>

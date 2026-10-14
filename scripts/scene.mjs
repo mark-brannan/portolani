@@ -197,7 +197,9 @@ const cells = new Map();
 const cellKey = (xi, yi) => `${xi}_${yi}`;
 async function loadDetail(coarse, view) {
   for (const b of BANDS) if (view.zoom > b.zoom) await loadBandIndex(b);
-  const band = bandFor(view.zoom), known = bandIndex.get(band.dir);
+  const band = bandFor(view.zoom);
+  if (!band) return coarse;
+  const known = bandIndex.get(band.dir);
   const f = frameOf(makeProjection(view), band.margin), deg = band.cell, n = 360 / deg;
   const keys = new Set();
   for (let xi = Math.floor(f.lonMin / deg); xi <= Math.floor(f.lonMax / deg); xi++) {
@@ -271,9 +273,10 @@ function viewData(world, view) {
   return { proj, land, coastLL, coast, places, names };
 }
 
-async function loadPack(name) {
+async function loadPack(name, kinds = KINDS) {
   const manifest = await env.readJSON(`packs/${name}/pack.json`);
-  const sprites = await Promise.all(manifest.sprites.map(async (s) => {
+  // kinds the renderer does not place yet (town, tree) are left unfetched
+  const sprites = await Promise.all(manifest.sprites.filter((s) => kinds.includes(s.kind)).map(async (s) => {
     const img = await env.loadImage(`packs/${name}/${s.file}`);
     // a source-colour pack is drawn as scanned; an ink pack is filled with the ink of the day
     return { ...s, img, tinted: (manifest.colour ?? 'source') === 'source' ? img : tint(img, STYLE.ink) };
@@ -367,12 +370,54 @@ const letterOptions = (data) => ({
   visible: (lon, lat) => { const x = data.proj.x(lon), y = data.proj.y(lat); return x >= 0 && x <= W && y >= 0 && y <= H; },
 });
 
-function buildScene(data, packs, ctx) {
+// World-view lettering, hand-set: [Latin, English, lon, lat]. Zoom levels are whole: continents are
+// spaced capitals at level 3 and out (zoom < REGION_ZOOM), regions italic at levels 4 and 5.
+const CONTINENTS = [
+  ['EVROPA', 'EUROPE', 14, 50], ['AFRICA', 'AFRICA', 20, 7], ['ASIA', 'ASIA', 90, 48],
+  ['AMERICA SEPTENTRIONALIS', 'NORTH AMERICA', -100, 45], ['AMERICA MERIDIONALIS', 'SOUTH AMERICA', -60, -12],
+  ['TERRA AVSTRALIS', 'AUSTRALIA', 134, -25],
+];
+const REGIONS = [
+  ['Hispania', 'Iberia', -3.5, 40], ['Gallia', 'Gaul', 2.5, 46.2], ['Germania', 'Germany', 10, 51],
+  ['Italia', 'Italy', 12.2, 43], ['Grecia', 'Greece', 22, 39.6], ['Natolia', 'Anatolia', 33, 39],
+  ['Syria', 'Syria', 38, 35], ['Egiptus', 'Egypt', 29.5, 27], ['Libya', 'Libya', 17, 29],
+  ['Barbaria', 'Maghreb', 4, 31], ['Arabia', 'Arabia', 44, 24], ['Thracia', 'Thrace', 26, 42.3],
+];
+const REGION_ZOOM = 4, REGION_ZOOM_END = 6; // regions: REGION_ZOOM <= zoom < REGION_ZOOM_END, which holds the default view
+
+// The continent and region names to letter, each with the box it reserves: measured with the font and
+// spacing they are drawn in, so later names and towns make way. A name off the canvas or meeting an
+// earlier box is dropped. `continents` is 'latin', 'english' or false; `regions` 'latin', 'english' or 'off'.
+function placeWorldNames(data, ctx, boxes, { continents, regions }) {
+  const z = data.proj.zoom, out = [];
+  const lang = regions === 'latin' ? 0 : 1;
+  const put = (text, lon, lat, size, spacing, italic) => {
+    const [x, y] = data.proj.project(lon, lat);
+    ctx.font = `${italic ? 'italic ' : ''}${size}px "${STYLE.font}"`;
+    ctx.letterSpacing = `${spacing}px`;
+    const w = ctx.measureText(text).width;
+    ctx.letterSpacing = '0px'; // left set, every later name would measure too wide
+    const box = obb(x, y, 0, w / 2, size * 0.5);
+    if (!obbInside(box) || boxes.some((b) => obbOverlap(b, box))) return;
+    boxes.push(box);
+    out.push({ text, x, y, size, spacing, italic, r: Math.max(box.hw, box.hh) });
+  };
+  if (continents && z < REGION_ZOOM) {
+    for (const c of CONTINENTS) { const text = c[continents === 'latin' ? 0 : 1], size = text.length > 12 ? 22 : 30; put(text, c[2], c[3], size, size * 0.6, false); }
+  }
+  if (regions !== 'off' && z >= REGION_ZOOM && z < REGION_ZOOM_END) {
+    for (const r of REGIONS) put(r[lang], r[2], r[3], 22, 1, true);
+  }
+  return out;
+}
+
+function buildScene(data, packs, ctx, world = {}) {
   const field = clearanceField(data);
-  const roses = packs.catalan.sprites.filter((s) => s.kind === 'rose');
+  const roses = packs.ornaments.sprites.filter((s) => s.kind === 'rose');
   const bigRose = roses.reduce((a, b) => (b.sizePx > a.sizePx ? b : a));
-  const smallRose = roses.reduce((a, b) => (b.sizePx < a.sizePx ? b : a));
-  const cartoucheSprite = packs.catalan.sprites.find((s) => s.kind === 'cartouche');
+  const smallRoses = roses.filter((s) => s !== bigRose); // taken in pack order, one per node
+  const smallSize = Math.max(...smallRoses.map((s) => s.sizePx));
+  const cartoucheSprite = packs.ornaments.sprites.find((s) => s.kind === 'cartouche');
   const occupied = []; // discs {x, y, r} that later ornaments keep clear of
   const edge = (x, y) => Math.min(x, y, W - x, H - y);
   const free = (x, y) => Math.min(field.at(x, y), edge(x, y), ...occupied.map((o) => Math.hypot(x - o.x, y - o.y) - o.r));
@@ -399,25 +444,27 @@ function buildScene(data, packs, ctx) {
     const a = (i * 2 * Math.PI) / RHUMB_NODES;
     return { x: centre.x + R * Math.cos(a), y: centre.y + R * Math.sin(a) };
   });
-  const roseRoom = smallRose.sizePx / 2 + 6;
+  const roseRoom = smallSize / 2 + 6;
   let nodes = [], bestCount = -1;
   for (let R = Math.round(H * 0.36); R <= H * 0.62; R += 8) {
     const n = ring(R), count = n.filter((p) => free(p.x, p.y) >= roseRoom).length;
     if (count >= bestCount) { bestCount = count; nodes = n; }
   }
 
-  // Small roses: the clearest lattice nodes that hold the sprite.
+  // Small roses: the clearest lattice nodes that hold the sprite, each rose of the pack in turn.
   const nodeRank = nodes.map((n) => ({ ...n, c: free(n.x, n.y) })).filter((n) => n.c >= roseRoom).sort((a, b) => b.c - a.c);
   for (const n of nodeRank) {
     if (roseDraws.length >= 4) break;
-    if (free(n.x, n.y) < roseRoom || field.footprintBlocked(n.x, n.y, smallRose.sizePx, smallRose.sizePx)) continue;
-    roseDraws.push({ sprite: smallRose, x: n.x, y: n.y, size: smallRose.sizePx });
-    occupied.push({ x: n.x, y: n.y, r: smallRose.sizePx / 2 + 10 });
+    const sprite = smallRoses[(roseDraws.length - 1) % smallRoses.length];
+    if (free(n.x, n.y) < roseRoom || field.footprintBlocked(n.x, n.y, sprite.sizePx, sprite.sizePx)) continue;
+    roseDraws.push({ sprite, x: n.x, y: n.y, size: sprite.sizePx });
+    occupied.push({ x: n.x, y: n.y, r: sprite.sizePx / 2 + 10 });
   }
 
   // Towns, lower scalerank first, >= TUNE.townGap apart.
   const boxes = [obb(cartouche.x + cw / 2, cartouche.y + ch / 2, 0, cw / 2, ch / 2)];
   for (const r of roseDraws) boxes.push(obb(r.x, r.y, 0, r.size * 0.42, r.size * 0.42));
+  const worldNames = placeWorldNames(data, ctx, boxes, { continents: world.continents ?? false, regions: world.regions ?? 'off' });
   const towns = [];
   const sorted = [...data.places].sort((a, b) => a.rank - b.rank || b.pop - a.pop);
   for (const p of sorted) {
@@ -495,7 +542,7 @@ function buildScene(data, packs, ctx) {
     occupied.push({ x: cand.x, y: cand.y, r: sprite.sizePx * 0.6 + 120 });
   }
 
-  return { field, centre, nodes, roseDraws, towns, names, monsters, ships, cartouche: { ...cartouche, sprite: cartoucheSprite } };
+  return { field, centre, nodes, roseDraws, towns, names, worldNames, monsters, ships, cartouche: { ...cartouche, sprite: cartoucheSprite } };
 }
 
 // ---------------------------------------------------------------- drawing
@@ -811,30 +858,44 @@ const SCALE_STYLES = {
     for (let i = 0; i < n; i++) for (let d = 1; d < 4; d++) { g.beginPath(); g.arc(x0 + i * seg + (seg * d) / 4, ym, 0.8, 0, 2 * Math.PI); g.fillStyle = STYLE.ink; g.fill(); }
   },
 };
+// a picture from a pack, its divisions fixed: the pack's `bar` is the run of the divisions across the
+// picture, as fractions of its width; it is scaled whole, so its height follows its length
+SCALE_STYLES.genoese = (g, x0, y0, n, seg, sprite) => {
+  const [b0, b1] = sprite.bar, w = (n * seg) / (b1 - b0), h = (w * sprite.img.height) / sprite.img.width;
+  g.save(); g.globalCompositeOperation = 'multiply';
+  g.drawImage(sprite.tinted, x0 - b0 * w, y0 + SCALE_BAR_H - h, w, h);
+  g.restore();
+};
+SCALE_STYLES.genoese.height = (n, seg, sprite) => ((n * seg) / (sprite.bar[1] - sprite.bar[0])) * sprite.img.height / sprite.img.width;
+const SCALE_PICTURES = { genoese: 'scale-genoese' }; // style -> sprite id in the vivid pack
 const SCALE_NAMES = Object.keys(SCALE_STYLES);
 
-function drawScaleBar(g, data, bg, view, w, h, style = 'chequer') {
+function drawScaleBar(g, data, bg, view, w, h, style = 'genoese', sprite = null) {
   const proj = data.proj;
-  if (!(style in SCALE_STYLES) || proj.zoom < SCALE_MIN_ZOOM) return;
+  if (!(style in SCALE_STYLES) || proj.zoom < SCALE_MIN_ZOOM || (style in SCALE_PICTURES && !sprite)) return;
   const lat = proj.invert(view.x + w / 2 / view.scale, view.y + h / 2 / view.scale)[1];
   const pxPerNm = ((proj.k * NM) / (EARTH_R * Math.cos(lat * RAD))) * view.scale;
   const target = Math.min(w * 0.25, 360); // longest bar, px
-  const step = [...NM_STEPS].reverse().find((n) => n * pxPerNm * 4 <= target) ?? NM_STEPS[0];
-  const seg = step * pxPerNm, n = Math.max(4, Math.min(8, 2 * Math.floor(target / seg / 2)));
-  const x0 = 48, y0 = h - 36 - SCALE_BAR_H;
+  const fixed = sprite?.divisions;
+  const step = [...NM_STEPS].reverse().find((n) => n * pxPerNm * (fixed ?? 4) <= target) ?? NM_STEPS[0];
+  const seg = step * pxPerNm, n = fixed ?? Math.max(4, Math.min(8, 2 * Math.floor(target / seg / 2)));
+  const every = n % 2 ? 1 : 2; // which divisions are numbered
+  // a picture taller than the ladder grows upward from the same foot
+  const barH = Math.max(SCALE_BAR_H, SCALE_STYLES[style].height?.(n, seg, sprite) ?? 0);
+  const x0 = 48, y0 = h - 36 - SCALE_BAR_H, top = y0 + SCALE_BAR_H - barH;
   g.save();
   g.setTransform(1, 0, 0, 1, 0, 0);
   g.font = `22px "${STYLE.font}"`;
   // the chart is blank where a scale sits: the parchment is repainted over the map beneath it
-  const pad = 14, px = x0 - pad - 20, py = y0 - 22 - 5 - pad;
-  const pw = n * seg + 24 + g.measureText('nautical miles').width + 2 * pad + 20, ph = SCALE_BAR_H + 22 + 5 + 2 * pad;
+  const pad = 14, px = x0 - pad - 20, py = top - 22 - 5 - pad;
+  const pw = n * seg + 24 + g.measureText('nautical miles').width + 2 * pad + 20, ph = barH + 22 + 5 + 2 * pad;
   const sx = Math.max(0, view.x + px / view.scale), sy = Math.max(0, view.y + py / view.scale);
   g.drawImage(bg, sx, sy, Math.min(W - sx, pw / view.scale), Math.min(H - sy, ph / view.scale), px, py, pw, ph);
   g.strokeStyle = hexA(STYLE.windRed, 0.7); g.lineWidth = 1; g.strokeRect(px + 0.5, py + 0.5, pw - 1, ph - 1);
   g.strokeRect(px + 3.5, py + 3.5, pw - 7, ph - 7);
-  SCALE_STYLES[style](g, x0, y0, n, seg);
+  SCALE_STYLES[style](g, x0, y0, n, seg, sprite);
   g.fillStyle = STYLE.ink; g.textAlign = 'center'; g.textBaseline = 'bottom';
-  for (let i = 0; i <= n; i += 2) g.fillText(String(i * step), x0 + i * seg, y0 - 5);
+  for (let i = 0; i <= n; i += every) g.fillText(String(i * step), x0 + i * seg, top - 5);
   g.textAlign = 'left'; g.fillText('nautical miles', x0 + n * seg + 24, y0 + SCALE_BAR_H);
   g.restore();
 }
@@ -877,7 +938,17 @@ function drawScene(g, scene, data, bg, view) {
   // 6. towns
   for (const t of scene.towns) if (disc(r, t.x, t.y - 8 * t.size, 12 * t.size)) drawTower(g, t);
 
-  // 7. names, in ink, the chief towns in red
+  // 7. names, in ink, the chief towns in red; the continents and regions first, under them. Those
+  // have their own settings, so they are drawn whether or not the other names are.
+  g.save();
+  g.fillStyle = STYLE.ink; g.textAlign = 'center'; g.textBaseline = 'middle';
+  for (const w of scene.worldNames) {
+    if (!disc(r, w.x, w.y, w.r)) continue;
+    g.font = `${w.italic ? 'italic ' : ''}${w.size}px "${STYLE.font}"`;
+    g.letterSpacing = `${w.spacing}px`;
+    g.fillText(w.text, w.x + w.spacing / 2, w.y); // the trailing space of the last letter, taken back
+  }
+  g.restore();
   const shown = show.names ? scene.names.filter((n) => disc(r, n.x, n.y, n.r)) : [];
   const opts = letterOptions(data);
   letter(g, shown.filter((n) => !n.red), data.proj.x, data.proj.y, { ...opts, color: STYLE.ink });
@@ -889,7 +960,7 @@ function drawScene(g, scene, data, bg, view) {
 
   // 10. cartouche, lettered in its cleared panel
   const c = scene.cartouche;
-  if (!show.kinds.has('cartouche') || !meets(r, { x0: c.x, y0: c.y, x1: c.x + c.w, y1: c.y + c.h })) { g.restore(); drawScaleBar(g, data, bg, view, W, H, show.scale); return; }
+  if (!show.kinds.has('cartouche') || !meets(r, { x0: c.x, y0: c.y, x1: c.x + c.w, y1: c.y + c.h })) { g.restore(); drawScaleBar(g, data, bg, view, W, H, show.scale, scene.scaleSprite); return; }
   const [px0, py0, px1, py1] = c.sprite.panel;
   const pw = (px1 - px0) * c.w, ph = (py1 - py0) * c.h;
   g.save();
@@ -909,17 +980,18 @@ function drawScene(g, scene, data, bg, view) {
   g.restore();
 
   g.restore();
-  drawScaleBar(g, data, bg, view, W, H, show.scale);
+  drawScaleBar(g, data, bg, view, W, H, show.scale, scene.scaleSprite);
 }
 
 // ---------------------------------------------------------------- setup
 
 // Load data and packs, place the ornaments, paint the parchment. `opts`: ink and parchment
 // colours (hex), density and view; defaults reproduce the committed mockup. Also `pack` (one of
-// PACKS), `kinds` (the ornament kinds drawn, of KINDS), `names` and `rhumb` (booleans), `scale` (a SCALE_NAMES entry, or 'off').
+// PACKS), `kinds` (the ornament kinds drawn, of KINDS), `names` and `rhumb` (booleans), `scale` (a SCALE_NAMES entry, or 'off'),
+// `continents` (boolean) and `regions` ('off', 'latin' or 'english'); the continents follow the regions' language, Latin when those are off.
 export async function createScene(environment, opts = {}) {
   env = environment;
-  const { ink = '#3b2a1a', parchment: tone = '#e9d8b4', density = 1, pack = 'all', names = true, rhumb: rhumbOn = true, scale = 'chequer' } = opts;
+  const { ink = '#3b2a1a', parchment: tone = '#e9d8b4', density = 1, pack = 'all', names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off' } = opts;
   const show = { kinds: new Set(opts.kinds ?? KINDS), names, rhumb: rhumbOn, scale };
   const view = clampView(opts.view ?? DEFAULT_VIEW);
   STYLE.ink = ink;
@@ -929,25 +1001,29 @@ export async function createScene(environment, opts = {}) {
   TUNE.townGap = 48 / density;
 
   const t0 = performance.now();
-  // a pack not chosen is not fetched: carta-marina draws monsters and ships, catalan roses and the
-  // cartouche, and `plain` stands in for the catalan kinds with shapes drawn in code
-  const [, coarse, cartaMarina, catalan] = await Promise.all([
+  // a pack not chosen is not fetched: carta-marina draws monsters and ships; vivid (the default) or
+  // catalan the roses and the cartouche, and `plain` stands in for them with shapes drawn in code.
+  // A picture scale bar comes from the vivid pack whatever the pack.
+  const roses = { all: 'vivid', vivid: 'vivid', catalan: 'catalan' }[pack];
+  const [, coarse, cartaMarina, ornaments, scaleSprite] = await Promise.all([
     env.loadFont(STYLE.font), loadWorld(),
     pack === 'all' || pack === 'carta-marina' ? loadPack('carta-marina') : { sprites: [] },
-    pack === 'all' || pack === 'catalan' ? loadPack('catalan') : { sprites: PLAIN },
+    roses ? loadPack(roses) : { sprites: PLAIN },
+    scale in SCALE_PICTURES ? loadPack('vivid', ['scale']).then((p) => p.sprites.find((s) => s.id === SCALE_PICTURES[scale])) : null,
   ]);
   const world = view.zoom > DETAIL_ZOOM ? await loadDetail(coarse, view) : coarse;
-  const packs = { cartaMarina, catalan };
+  const packs = { cartaMarina, ornaments };
   const tLoad = performance.now();
 
   const data = viewData(world, view);
-  const scene = { ...buildScene(data, packs, createCanvas(10, 10).getContext('2d')), show };
+  const scene = { ...buildScene(data, packs, createCanvas(10, 10).getContext('2d'), { continents: continents && (regions === 'english' ? 'english' : 'latin'), regions }), show, scaleSprite };
   if (!parchments.has(tone)) parchments.set(tone, parchment(1539));
   const bg = parchments.get(tone);
   return { scene, data, bg, proj: data.proj, world, coarse, view, timing: { load: tLoad - t0, place: performance.now() - tLoad } };
 }
 const parchments = new Map(); // by tone; the same seed paints the same sheet
 
-export const PACKS = ['all', 'carta-marina', 'catalan', 'plain'];
+export const PACKS = ['all', 'carta-marina', 'vivid', 'catalan', 'plain'];
+export const REGION_LANGS = ['off', 'latin', 'english'];
 export const KINDS = ['rose', 'ship', 'monster', 'cartouche'];
 export { SCALE_NAMES, drawScene, drawGround, covers, panView, zoomView, clampView, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };
