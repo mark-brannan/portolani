@@ -698,6 +698,129 @@ function drawGround(g, world, view, bg) {
   paintCoast(g, data, coast);
 }
 
+// ---------------------------------------------------------------- scale bar
+
+const EARTH_R = 6371008.8, NM = 1852; // metres
+const NM_STEPS = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000];
+const SCALE_MIN_ZOOM = 3; // below this the Mercator scale varies too much across the view to quote one
+
+// A period ladder, true at the latitude of the view's centre, drawn in screen pixels. The styles
+// follow the scales on four charts: SCALE_STYLES.chevron the Genoese chart c.1320-50, ribbon Martines
+// 1584, beads Prunes 1559, ruled Beccari 1403, and chequer a plain red and green ladder.
+const SCALE_BAR_H = 36;
+const ring = (g, x, y, r, c) => { g.beginPath(); g.arc(x, y, r, 0, 2 * Math.PI); g.strokeStyle = c; g.stroke(); };
+const rule = (g, x0, y0, x1, y1, c, w) => { g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.strokeStyle = c; g.lineWidth = w; g.stroke(); };
+const SCALE_STYLES = {
+  // two rows of chequered divisions
+  chequer(g, x0, y0, n, seg) {
+    const bh = SCALE_BAR_H / 4, y = y0 + SCALE_BAR_H / 4;
+    for (let i = 0; i < n; i++) for (let row = 0; row < 2; row++) {
+      g.fillStyle = (i + row) % 2 ? STYLE.windGreen : STYLE.windRed;
+      g.fillRect(x0 + i * seg, y + row * bh, seg, bh);
+    }
+    g.strokeStyle = STYLE.ink; g.lineWidth = 1.25; g.strokeRect(x0, y, n * seg, 2 * bh);
+    rule(g, x0, y + bh, x0 + n * seg, y + bh, STYLE.ink, 0.75);
+  },
+  // framed ladder: bands of red chevrons and green tufts, red ticks with rings, a dotted line between
+  chevron(g, x0, y0, n, seg) {
+    const L = n * seg, bandH = 10, cells = n * 2, cw = L / cells, yb = y0 + SCALE_BAR_H - bandH;
+    for (const by of [y0, yb]) {
+      rule(g, x0, by, x0 + L, by, STYLE.windRed, 1); rule(g, x0, by + bandH, x0 + L, by + bandH, STYLE.windRed, 1);
+      for (let i = 0; i < cells; i++) {
+        const cx = x0 + i * cw, cy = by + bandH / 2;
+        if (i % 2 === 0) {
+          g.beginPath(); g.moveTo(cx + cw * 0.1, by + 1); g.lineTo(cx + cw * 0.65, by + 1); g.lineTo(cx + cw * 0.95, cy);
+          g.lineTo(cx + cw * 0.65, by + bandH - 1); g.lineTo(cx + cw * 0.1, by + bandH - 1); g.lineTo(cx + cw * 0.4, cy); g.closePath();
+          g.fillStyle = STYLE.windRed; g.fill();
+        } else {
+          g.beginPath(); g.ellipse(cx + cw / 2, cy, cw * 0.38, bandH * 0.36, 0, 0, 2 * Math.PI);
+          g.fillStyle = hexA(STYLE.windGreen, 0.55); g.fill();
+        }
+      }
+    }
+    const ym = y0 + SCALE_BAR_H / 2;
+    g.lineWidth = 1.25;
+    for (let i = 0; i <= n; i++) {
+      const x = x0 + i * seg;
+      rule(g, x, y0 + bandH, x, yb, STYLE.windRed, 1.25);
+      if (i % 2 === 0) { g.lineWidth = 1.25; ring(g, x, ym, 3, STYLE.windRed); }
+    }
+    g.fillStyle = STYLE.ink;
+    for (let i = 0; i < n; i++) for (let d = 1; d < 5; d++) { g.beginPath(); g.arc(x0 + i * seg + (seg * d) / 5, ym, 0.9, 0, 2 * Math.PI); g.fill(); }
+    rule(g, x0, y0, x0, y0 + SCALE_BAR_H, STYLE.windRed, 1.25); rule(g, x0 + L, y0, x0 + L, y0 + SCALE_BAR_H, STYLE.windRed, 1.25);
+  },
+  // a scroll: red-ruled strip, ticks and a dotted line, green ribbon tails curling off both ends
+  ribbon(g, x0, y0, n, seg) {
+    const L = n * seg, top = y0 + 4, bot = y0 + 22, tail = 18;
+    for (const side of [-1, 1]) {
+      const ex = side < 0 ? x0 : x0 + L;
+      g.beginPath(); g.moveTo(ex, top + 4); g.bezierCurveTo(ex + side * tail, top, ex + side * tail, bot + 8, ex, bot + 8);
+      g.lineTo(ex, bot - 2); g.bezierCurveTo(ex + side * (tail - 6), bot - 2, ex + side * (tail - 6), top + 8, ex, top + 8); g.closePath();
+      g.fillStyle = hexA(STYLE.windGreen, 0.75); g.fill(); g.strokeStyle = STYLE.windRed; g.lineWidth = 1; g.stroke();
+    }
+    g.beginPath(); g.rect(x0, top, L, bot - top); g.fillStyle = hexA(STYLE.parchment, 0.85); g.fill();
+    g.strokeStyle = STYLE.windRed; g.lineWidth = 1.75; g.stroke();
+    rule(g, x0, bot + 5, x0 + L, bot + 5, STYLE.windGreen, 3);
+    for (let i = 0; i <= n; i++) rule(g, x0 + i * seg, top, x0 + i * seg, bot, STYLE.windRed, i % 2 ? 1 : 1.5);
+    for (let i = 0; i < n * 2; i++) rule(g, x0 + (i + 0.5) * (seg / 2) , top, x0 + (i + 0.5) * (seg / 2), top + 5, STYLE.windRed, 1);
+    g.fillStyle = STYLE.ink;
+    for (let i = 0; i < n; i++) for (let d = 1; d < 5; d++) { g.beginPath(); g.arc(x0 + i * seg + (seg * d) / 5, (top + bot) / 2 + 3, 0.9, 0, 2 * Math.PI); g.fill(); }
+  },
+  // a thin ladder: two red rails, a ring on every division, a small crenellated cap at each end
+  beads(g, x0, y0, n, seg) {
+    const L = n * seg, ym = y0 + SCALE_BAR_H / 2, hh = 6;
+    rule(g, x0, ym - hh, x0 + L, ym - hh, STYLE.windRed, 1.25); rule(g, x0, ym + hh, x0 + L, ym + hh, STYLE.windRed, 1.25);
+    g.lineWidth = 1.25;
+    for (let i = 0; i <= n; i++) { const x = x0 + i * seg; rule(g, x, ym - hh, x, ym - 3.6, STYLE.windRed, 1.25); rule(g, x, ym + 3.6, x, ym + hh, STYLE.windRed, 1.25); g.lineWidth = 1.25; ring(g, x, ym, 3.6, STYLE.windRed); }
+    for (let i = 0; i < n * 2; i++) { g.lineWidth = 1; ring(g, x0 + (i + 0.5) * (seg / 2), ym, 1.6, STYLE.windRed); }
+    for (const [ex, side] of [[x0, -1], [x0 + L, 1]]) {
+      g.fillStyle = STYLE.ink;
+      g.fillRect(ex + (side < 0 ? -12 : 0), ym - hh - 3, 12, 2 * hh + 6);
+      for (let k = 0; k < 3; k++) g.fillRect(ex + (side < 0 ? -12 : 0) + k * 5, ym - hh - 8, 2.5, 5);
+      g.fillStyle = STYLE.windRed; g.fillRect(ex + (side < 0 ? -9 : 3), ym - 2, 6, 4);
+    }
+  },
+  // red rules above and below, a ring and dot on each division, hairlines between
+  ruled(g, x0, y0, n, seg) {
+    const L = n * seg, ym = y0 + SCALE_BAR_H / 2, hh = 12;
+    for (const sgn of [-1, 1]) for (let k = 0; k < 3; k++) rule(g, x0, ym + sgn * (hh - k * 2.5), x0 + L, ym + sgn * (hh - k * 2.5), STYLE.windRed, 0.9);
+    for (let i = 0; i <= n; i++) {
+      const x = x0 + i * seg;
+      rule(g, x, ym - hh, x, ym + hh, STYLE.windRed, 1);
+      g.beginPath(); g.arc(x, ym, 3.4, 0, 2 * Math.PI); g.fillStyle = STYLE.parchment; g.fill(); g.lineWidth = 1.1; g.strokeStyle = STYLE.windRed; g.stroke();
+      g.beginPath(); g.arc(x, ym, 1.1, 0, 2 * Math.PI); g.fillStyle = STYLE.windRed; g.fill();
+    }
+    for (let i = 0; i < n; i++) for (let d = 1; d < 4; d++) { g.beginPath(); g.arc(x0 + i * seg + (seg * d) / 4, ym, 0.8, 0, 2 * Math.PI); g.fillStyle = STYLE.ink; g.fill(); }
+  },
+};
+const SCALE_NAMES = Object.keys(SCALE_STYLES);
+
+function drawScaleBar(g, data, bg, view, w, h, style = 'chequer') {
+  const proj = data.proj;
+  if (!(style in SCALE_STYLES) || proj.zoom < SCALE_MIN_ZOOM) return;
+  const lat = proj.invert(view.x + w / 2 / view.scale, view.y + h / 2 / view.scale)[1];
+  const pxPerNm = ((proj.k * NM) / (EARTH_R * Math.cos(lat * RAD))) * view.scale;
+  const target = Math.min(w * 0.25, 360); // longest bar, px
+  const step = [...NM_STEPS].reverse().find((n) => n * pxPerNm * 4 <= target) ?? NM_STEPS[0];
+  const seg = step * pxPerNm, n = Math.max(4, Math.min(8, 2 * Math.floor(target / seg / 2)));
+  const x0 = 48, y0 = h - 36 - SCALE_BAR_H;
+  g.save();
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.font = `22px "${STYLE.font}"`;
+  // the chart is blank where a scale sits: the parchment is repainted over the map beneath it
+  const pad = 14, px = x0 - pad - 20, py = y0 - 22 - 5 - pad;
+  const pw = n * seg + 24 + g.measureText('nautical miles').width + 2 * pad + 20, ph = SCALE_BAR_H + 22 + 5 + 2 * pad;
+  const sx = Math.max(0, view.x + px / view.scale), sy = Math.max(0, view.y + py / view.scale);
+  g.drawImage(bg, sx, sy, Math.min(W - sx, pw / view.scale), Math.min(H - sy, ph / view.scale), px, py, pw, ph);
+  g.strokeStyle = hexA(STYLE.windRed, 0.7); g.lineWidth = 1; g.strokeRect(px + 0.5, py + 0.5, pw - 1, ph - 1);
+  g.strokeRect(px + 3.5, py + 3.5, pw - 7, ph - 7);
+  SCALE_STYLES[style](g, x0, y0, n, seg);
+  g.fillStyle = STYLE.ink; g.textAlign = 'center'; g.textBaseline = 'bottom';
+  for (let i = 0; i <= n; i += 2) g.fillText(String(i * step), x0 + i * seg, y0 - 5);
+  g.textAlign = 'left'; g.fillText('nautical miles', x0 + n * seg + 24, y0 + SCALE_BAR_H);
+  g.restore();
+}
+
 function drawScene(g, scene, data, bg, view) {
   g.save();
   g.setTransform(view.scale, 0, 0, view.scale, -view.x * view.scale, -view.y * view.scale);
@@ -748,7 +871,7 @@ function drawScene(g, scene, data, bg, view) {
 
   // 10. cartouche, lettered in its cleared panel
   const c = scene.cartouche;
-  if (!show.kinds.has('cartouche') || !meets(r, { x0: c.x, y0: c.y, x1: c.x + c.w, y1: c.y + c.h })) { g.restore(); return; }
+  if (!show.kinds.has('cartouche') || !meets(r, { x0: c.x, y0: c.y, x1: c.x + c.w, y1: c.y + c.h })) { g.restore(); drawScaleBar(g, data, bg, view, W, H, show.scale); return; }
   const [px0, py0, px1, py1] = c.sprite.panel;
   const pw = (px1 - px0) * c.w, ph = (py1 - py0) * c.h;
   g.save();
@@ -768,17 +891,18 @@ function drawScene(g, scene, data, bg, view) {
   g.restore();
 
   g.restore();
+  drawScaleBar(g, data, bg, view, W, H, show.scale);
 }
 
 // ---------------------------------------------------------------- setup
 
 // Load data and packs, place the ornaments, paint the parchment. `opts`: ink and parchment
 // colours (hex), density and view; defaults reproduce the committed mockup. Also `pack` (one of
-// PACKS), `kinds` (the ornament kinds drawn, of KINDS), `names` and `rhumb` (booleans).
+// PACKS), `kinds` (the ornament kinds drawn, of KINDS), `names` and `rhumb` (booleans), `scale` (a SCALE_NAMES entry, or 'off').
 export async function createScene(environment, opts = {}) {
   env = environment;
-  const { ink = '#3b2a1a', parchment: tone = '#e9d8b4', density = 1, pack = 'all', names = true, rhumb: rhumbOn = true } = opts;
-  const show = { kinds: new Set(opts.kinds ?? KINDS), names, rhumb: rhumbOn };
+  const { ink = '#3b2a1a', parchment: tone = '#e9d8b4', density = 1, pack = 'all', names = true, rhumb: rhumbOn = true, scale = 'chequer' } = opts;
+  const show = { kinds: new Set(opts.kinds ?? KINDS), names, rhumb: rhumbOn, scale };
   const view = clampView(opts.view ?? DEFAULT_VIEW);
   STYLE.ink = ink;
   STYLE.parchment = tone;
@@ -808,4 +932,4 @@ const parchments = new Map(); // by tone; the same seed paints the same sheet
 
 export const PACKS = ['all', 'carta-marina', 'catalan', 'plain'];
 export const KINDS = ['rose', 'ship', 'monster', 'cartouche'];
-export { drawScene, drawGround, covers, panView, zoomView, clampView, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };
+export { SCALE_NAMES, drawScene, drawGround, covers, panView, zoomView, clampView, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };
