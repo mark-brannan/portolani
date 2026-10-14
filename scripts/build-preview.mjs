@@ -13,7 +13,7 @@
 // letters ship as geo/names-50m.json (scripts/names.mjs), and the urban footprints of its towns, the
 // Natural Earth 10m urban areas joined to the places, as geo/urban-10m.json (scripts/urban.mjs). The
 // Natural Earth 10m rivers and lakes, drawn past z9 (scripts/water.mjs), ship whole-feature in
-// 5-degree cells (geo/water-10m/, cutWater).
+// 5-degree cells (geo/water-10m/, cutWater); GSHHG lakes, drawn past z10, as its land is (geo/h-lakes/, geo/f-lakes/).
 
 import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -22,7 +22,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import * as coastlines from 'coastlines';
 import { geojsonPolygons, geojsonRings } from 'coast-wright';
-import { cutCells, cutWater, joinWater, WATER_FILES } from './detail-cells.mjs';
+import { cutCells, cutLakes, cutWater, dbfRecords, gshhgLakes, joinWater, WATER_FILES } from './detail-cells.mjs';
 import { seaNames, coastNames, joinNames, redSea } from './names.mjs';
 import { joinUrban } from './urban.mjs';
 const { find, localUrl } = coastlines;
@@ -105,8 +105,7 @@ const urban = JSON.stringify(joinUrban(placesGeo, JSON.parse(await readFile(path
 await writeFile(path.join(out, 'geo', 'urban-10m.json'), urban);
 console.log(`urban footprints: ${(urban.length / 1e6).toFixed(2)} MB`);
 // A band of detail cells: geo/<dir>/<xi>_<yi>.json and geo/<dir>/index.json.
-async function writeBand(dir, cellDeg, geometry) {
-  const cells = cutCells(geometry, cellDeg);
+async function writeBand(dir, cellDeg, geometry, cells = cutCells(geometry, cellDeg)) {
   await mkdir(path.join(out, 'geo', dir), { recursive: true });
   // in batches: "f" has some 70,000 cells, past a CI runner's open-file limit if written at once
   const all = [...cells];
@@ -148,6 +147,17 @@ if (coastlines.shapefilePolygons) {
   const n = await writeBand('f', F_CELL_DEG, { land: landF, coast: landF.flat() });
   console.log(`GSHHG f: ${landF.length} polygons into ${n} cells of ${F_CELL_DEG} degree`);
 } else console.warn('this coastlines has no shapefilePolygons; the f band is skipped');
+// GSHHG lakes (level 2, with river-lakes) and their islands (level 3) at "h" and "f", from the same
+// zip, cut as the land bands are (cutLakes) into geo/h-lakes/ and geo/f-lakes/, for scene.mjs
+// LAKE_BANDS: the lakes no Natural Earth file has, Dian Chi at Kunming among them.
+if (coastlines.shapefilePolygons) {
+  for (const [res, cellDeg] of [['h', H_CELL_DEG], ['f', F_CELL_DEG]]) {
+    const member = (level, ext) => zipMember(gshhg, `GSHHS_shp/${res}/GSHHS_${res}_L${level}.${ext}`);
+    const lakes = gshhgLakes(...[2, 3].flatMap((level) => [coastlines.shapefilePolygons(member(level, 'shp')), dbfRecords(member(level, 'dbf'))]));
+    const n = await writeBand(`${res}-lakes`, cellDeg, null, cutLakes(lakes, cellDeg));
+    console.log(`GSHHG ${res} lakes: ${lakes.length} lakes into ${n} cells of ${cellDeg} degree`);
+  }
+}
 // LGPL: the GSHHG notice and licence travel with the cells cut from it, read from the pinned zip
 for (const [id, member] of [['gshhg-licence', 'LICENSE.TXT'], ['gshhg-copying-lesser', 'COPYING.LESSERv3']]) {
   await writeFile(path.join(out, 'geo', `${id}.txt`), zipMember(gshhg, member));

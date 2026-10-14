@@ -55,36 +55,44 @@ function splitPolygons(polys, box, size, emit) {
 }
 
 // `land`: GeoJSON polygons as [[outer, ...holes]] of closed [lon, lat] rings; `coast`: lines of
-// [lon, lat]. Returns Map(key -> { land, coast }), rings closed again, coordinates rounded.
-export function cutCells({ land, coast }, size = 5, digits = 5) {
+// [lon, lat]. Returns Map(key -> { land, coast, m }), rings closed again, coordinates rounded; `m`
+// holds `meta` of the whole polygon each land piece was cut from (by default its island's area and colour).
+const islandMeta = (poly) => { const i = islandInfo(poly); return [i.km2, i.hue]; };
+export function cutCells({ land, coast }, size = 5, digits = 5, meta = islandMeta) {
   const f = 10 ** digits, round = (p) => [Math.round(p[0] * f) / f, Math.round(p[1] * f) / f];
   const tidy = (pts) => pts.map(round).filter((p, i, a) => i === 0 || p[0] !== a[i - 1][0] || p[1] !== a[i - 1][1]);
   const cells = new Map(), cell = (k) => cells.get(k) ?? cells.set(k, { land: [], coast: [], m: [] }).get(k);
+  const ids = coast.some((l) => l.id !== undefined); // and if lines carry an `id`, `cm` holds each piece's
 
   const open = (r) => (r.length > 1 && r[0][0] === r[r.length - 1][0] && r[0][1] === r[r.length - 1][1] ? r.slice(0, -1) : r);
-  splitPolygons(land.map((poly) => Object.assign(poly.map(open), { isl: islandInfo(poly) })), [-180, -90, 180, 90], size, (xi, yi, polys) => {
+  splitPolygons(land.map((poly) => Object.assign(poly.map(open), { isl: meta(poly) })), [-180, -90, 180, 90], size, (xi, yi, polys) => {
     const c = cell(key(xi, yi)), out = c.land;
     for (const poly of polys) {
       const rings = poly.map(tidy).filter((r) => r.length >= 3).map((r) => [...r, r[0]]);
-      if (rings.length) { out.push(rings); c.m.push([poly.isl.km2, poly.isl.hue]); }
+      if (rings.length) { out.push(rings); c.m.push(poly.isl); }
     }
   });
 
   // A segment belongs to the cell holding its midpoint; a run of segments in one cell is one piece.
   const cellOf = (a, b) => key(Math.floor((a[0] + b[0]) / 2 / size), Math.floor((a[1] + b[1]) / 2 / size));
+  const put = (k, piece, id) => { const c = cell(k); c.coast.push(piece); if (ids) (c.cm ??= []).push(id); };
   for (const line of coast) {
     let piece = null, at = null;
     for (let i = 0; i < line.length - 1; i++) {
       const k = cellOf(line[i], line[i + 1]);
       if (k !== at) {
-        if (piece) cell(at).coast.push(piece);
+        if (piece) put(at, piece, line.id);
         piece = [line[i]]; at = k;
       }
       piece.push(line[i + 1]);
     }
-    if (piece) cell(at).coast.push(piece);
+    if (piece) put(at, piece, line.id);
   }
-  for (const c of cells.values()) c.coast = c.coast.map(tidy).filter((l) => l.length > 1);
+  for (const c of cells.values()) {
+    const lines = c.coast.map(tidy), keep = lines.map((l) => l.length > 1);
+    c.coast = lines.filter((_, i) => keep[i]);
+    if (c.cm) c.cm = c.cm.filter((_, i) => keep[i]);
+  }
   return cells;
 }
 
@@ -133,4 +141,34 @@ export function cutWater(riversGeo, lakesGeo, { keep = { rivers: ['name', 'featu
   }
   for (const [k, c] of cells) cells.set(k, { rivers: { type: 'FeatureCollection', features: c.rivers }, lakes: { type: 'FeatureCollection', features: c.lakes } });
   return cells;
+}
+
+// GSHHG lakes (level 2, river-lakes among them) with their islands (level 3) as holes, from the
+// shapefiles' polygons and dBASE records, for cutLakes. Each lake carries its GSHHG id and its
+// whole lon/lat box, which its cut pieces keep: the scene drops a 10m lake inside one.
+export function dbfRecords(bytes) {
+  const b = Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const n = b.readUInt32LE(4), headLength = b.readUInt16LE(8), recordLength = b.readUInt16LE(10), fields = [];
+  for (let at = 32, o = 1; b[at] !== 0x0d; at += 32) {
+    const name = b.toString('latin1', at, at + 11).replace(/\0.*/s, ''), length = b[at + 16];
+    fields.push([name, o, length]); o += length;
+  }
+  return Array.from({ length: n }, (_, i) => Object.fromEntries(fields.map(([k, o, l]) =>
+    [k, b.toString('latin1', headLength + i * recordLength + o, headLength + i * recordLength + o + l).trim()])));
+}
+export function gshhgLakes(lakes, lakeRecords, islands, islandRecords) {
+  const byId = new Map(lakes.map((poly, i) => [lakeRecords[i].id, Object.assign([...poly], { id: +lakeRecords[i].id })]));
+  islands.forEach((poly, i) => byId.get(islandRecords[i].parent_id)?.push(poly[0]));
+  return [...byId.values()];
+}
+// Lakes into cells as land is (cutCells): pieces clipped to each cell to fill, and the shores split
+// at cell edges to ink, so a cut edge is never drawn. `m` holds, per piece, [id, x0, y0, x1, y1]: the
+// lake's id and whole box, rounded out to `digits`; `cm` each shore piece's lake id.
+export function cutLakes(lakes, size, digits = 5) {
+  const f = 10 ** digits;
+  const shores = lakes.flatMap((lake) => lake.map((ring) => Object.assign([...ring], { id: lake.id })));
+  return cutCells({ land: lakes, coast: shores }, size, digits, (poly) => {
+    const [x0, y0, x1, y1] = ringBox(poly[0]);
+    return [poly.id, Math.floor(x0 * f) / f, Math.floor(y0 * f) / f, Math.ceil(x1 * f) / f, Math.ceil(y1 * f) / f];
+  });
 }

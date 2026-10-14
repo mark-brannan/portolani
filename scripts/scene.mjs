@@ -101,6 +101,43 @@ async function loadWater10m(view) {
   return { rivers: once(parts.flatMap((p) => p.rivers)), lakes: once(parts.flatMap((p) => p.lakes)) };
 }
 
+// GSHHG lakes past the h band's zoom, at the h or f resolution as the land is: the lakes no Natural
+// Earth file has (Dian Chi at Kunming, Lake Union's neighbours), cut as land is so a piece fills its
+// cell and only the shore is inked. A view adds them to its water and drops each Natural Earth lake
+// whose box lies inside one's, so a lake is not drawn twice. Must match scripts/build-preview.mjs.
+const LAKE_BANDS = [
+  { dir: 'h-lakes', zoom: BANDS[1].zoom, cell: BANDS[1].cell, margin: BANDS[1].margin },
+  { dir: 'f-lakes', zoom: BANDS[2].zoom, cell: BANDS[2].cell, margin: BANDS[2].margin },
+];
+const lakeCells = new Map(); // '<dir>/<xi>_<yi>' -> Map(lake id -> { polys, shore, box })
+async function loadLakes(view) {
+  for (const b of LAKE_BANDS) if (view.zoom > b.zoom) await loadBandIndex(b);
+  const band = LAKE_BANDS.filter((b) => view.zoom > b.zoom && bandIndex.get(b.dir)).at(-1);
+  if (!band) return [];
+  const parts = await Promise.all(cellsAround(band, view, bandIndex.get(band.dir)).map((k) => {
+    if (!lakeCells.has(k)) lakeCells.set(k, env.readJSON(`geo/${k}.json`).then((c) => {
+      const lakes = new Map(), lake = (id) => lakes.get(id) ?? lakes.set(id, { polys: [], shore: [] }).get(id);
+      c.land.forEach((poly, i) => { const [id, x0, y0, x1, y1] = c.m[i], l = lake(id); l.polys.push(poly); l.box = { x0, y0, x1, y1 }; });
+      c.coast.forEach((line, i) => lake(c.cm[i]).shore.push(line));
+      return lakes;
+    }).catch((e) => { lakeCells.delete(k); throw e; }));
+    return lakeCells.get(k);
+  }));
+  // a lake reaching several cells is one feature, its pieces and shores joined
+  const joined = new Map();
+  for (const p of parts) for (const [id, l] of p) {
+    const j = joined.get(id) ?? joined.set(id, { id: `gshhg-${id}`, key: `gshhg-${id}`, polys: [], shore: [], box: l.box, minZoom: 0 }).get(id);
+    j.polys.push(...l.polys); j.shore.push(...l.shore);
+    if (l.box) j.box = l.box;
+  }
+  return [...joined.values()].filter((l) => l.box);
+}
+// inside within LAKE_SLACK degrees, about Natural Earth 10m's vertex spacing: its Biwa reaches 0.004
+// past GSHHG's
+const LAKE_SLACK = 0.02;
+const inside = (a, b) => a.x0 >= b.x0 - LAKE_SLACK && a.x1 <= b.x1 + LAKE_SLACK && a.y0 >= b.y0 - LAKE_SLACK && a.y1 <= b.y1 + LAKE_SLACK;
+const withLakes = (w, lakes) => (lakes.length ? { ...w, lakes: [...w.lakes.filter((l) => !lakes.some((g) => inside(l.box, g.box))), ...lakes] } : w);
+
 // Per-run tuning; `density` scales how much ornament is placed (1 = the committed mockup).
 const TUNE = { monsterMax: 4, shipMax: 2, townGap: 48, mountainMax: 3 };
 
@@ -1815,6 +1852,7 @@ export async function createScene(environment, opts = {}) {
   const { scaleSprite, ...placed } = chosen;
   redSeaPolys = redSea ? geojsonPolygons(await env.readJSON('geo/red-sea-50m.json')) : null;
   if (STYLE.rivers !== 'off' || STYLE.lakes !== 'off') water = (view.zoom > WATER_ZOOM && await loadWater10m(view)) || await loadWater();
+  if (STYLE.lakes !== 'off') water = withLakes(water, await loadLakes(view));
   const world = view.zoom > DETAIL_ZOOM ? await loadDetail(coarse, view) : coarse;
   const tLoad = performance.now();
 

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cutCells } from '../scripts/detail-cells.mjs';
+import { cutCells, cutLakes } from '../scripts/detail-cells.mjs';
 
 const area = (ring) => Math.abs(ring.slice(1).reduce((s, [x, y], i) => s + ring[i][0] * y - x * ring[i][1], 0)) / 2;
 
@@ -25,4 +25,15 @@ test('a coast line crossing cells is split into pieces that share their end poin
   assert.deepEqual(cells.get('0_0').coast, [[[1, 1], [4, 1]]]);
   assert.deepEqual(cells.get('1_0').coast, [[[4, 1], [6, 1], [9, 1]]]);
   assert.deepEqual(cells.get('1_1').coast, [[[9, 1], [9, 9]]]);
+});
+
+test('a lake across cells keeps its id and whole box in every piece, and its shore its id', () => {
+  const lake = Object.assign([[[2, 2], [8, 2], [8, 4], [2, 4], [2, 2]], [[3, 3], [4, 3], [4, 3.5], [3, 3]]], { id: 7 });
+  const cells = cutLakes([lake], 5);
+  assert.deepEqual([...cells.keys()].sort(), ['0_0', '1_0']);
+  for (const c of cells.values()) {
+    assert.deepEqual(c.m, [[7, 2, 2, 8, 4]]);
+    assert.ok(c.coast.length && c.cm.every((id) => id === 7));
+  }
+  assert.equal(cells.get('0_0').land[0].length, 2); // the island, a hole
 });
