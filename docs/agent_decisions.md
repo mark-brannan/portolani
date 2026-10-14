@@ -57,3 +57,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t122229z
 - City plans: bastions and moat for a footprint >= 40 km on a side (about the largest 75 metros) Undo: change FORT_KM in scripts/city.mjs ([#85](https://github.com/mark-brannan/portolani/pull/85))
+
+### 20261014t122232z
+- City plans: a church on every 30th built block (was 20) now churches draw 2x Undo: the modulus in block() in scripts/city.mjs ([#85](https://github.com/mark-brannan/portolani/pull/85))
