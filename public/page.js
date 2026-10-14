@@ -3,7 +3,7 @@
 // ornaments are placed again when it stops. The view and the style are kept in the URL hash, e.g.
 // #map=zoom/lat/lon&projection=miller&rendering=scanned&rose=aguiar&monster=carta-marina&town=aguiar&kinds=rose,ship&names=0&rhumb=0&scale=chevron&continents=1&regions=latin&autotitle=0&title=Mare+Nostrum&ink=5a1a1a&parchment=eee&density=1.5;
 // a setting left at its default is left out. The older `pack=` key is read as a rendering, so old links still work.
-import { createScene, REGION_LANGS, drawScene, drawGround, panView, zoomView, clampView, covers, DEFAULT_VIEW, RENDERINGS, KINDS, listStyles, PROJECTION_NAMES, SCALE_NAMES, W, H } from './scene.mjs';
+import { createScene, REGION_LANGS, drawScene, drawGround, panView, zoomView, clampView, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, listStyles, PROJECTION_NAMES, SCALE_NAMES, W, H } from './scene.mjs';
 
 const memo = new Map();
 // a failed load is forgotten, so the next stop tries it again
@@ -30,7 +30,7 @@ const env = {
 const $ = (id) => document.getElementById(id);
 const canvas = $('map'), ctx = canvas.getContext('2d');
 
-const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, rendering: 'vivid', rose: 'aguiar', monster: 'carta-marina', town: 'tower', kinds: KINDS, names: true, rhumb: true, scale: 'genoese', continents: false, regions: 'off', title: 'PORTOLANI', autoTitle: true };
+const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, rendering: 'vivid', rose: 'aguiar', monster: 'carta-marina', town: 'tower', kinds: DEFAULT_KINDS, names: true, rhumb: true, scale: 'genoese', continents: false, regions: 'off', title: 'PORTOLANI', autoTitle: true };
 // the styles the packs offer fill their selects; only the manifests are read
 const STYLES = await listStyles(env);
 for (const k of ['rose', 'monster', 'town']) {
@@ -70,7 +70,7 @@ function writeHash() {
   q.set('map', `${v.zoom.toFixed(2)}/${v.lat.toFixed(3)}/${v.lon.toFixed(3)}`);
   if (v.projection !== PROJECTION_NAMES[0]) q.set('projection', v.projection);
   for (const k of ['rendering', 'rose', 'monster', 'town']) if (st[k] !== DEFAULTS[k]) q.set(k, st[k]);
-  if (st.kinds.join() !== KINDS.join()) q.set('kinds', st.kinds.join());
+  if (st.kinds.join() !== DEFAULT_KINDS.join()) q.set('kinds', st.kinds.join());
   if (!st.names) q.set('names', '0');
   if (!st.rhumb) q.set('rhumb', '0');
   if (st.continents) q.set('continents', '1');

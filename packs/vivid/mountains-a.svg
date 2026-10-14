@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-76 -38 152 44" width="456" height="132">
+  <!-- After the mountain ranges of Jorge de Aguiar's chart, 1492 (Beinecke Library, Yale), and the
+       Catalan Atlas, 1375: craggy ochre humps, lit on the left and shaded on the right, cut by ink
+       fissures, on a wash of grass, with a few dark trees. Drawn, not traced; transparent ground,
+       for the renderer's `multiply`. https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg -->
+  <path d="M-74,1 Q-37,-4 0,-3.5 Q37,-3 74,0.5 Q29.6,5 0,4.5 Q-37,5 -74,1 Z" fill="#7fa35a" fill-opacity="0.75" stroke="none"/>
+  <path d="M-8,0 Q-3.6,-6.4 -0.7,-13.6 Q3.8,-18.5 5.9,-24.8 Q10.3,-28.9 12.7,-34.4 Q16.6,-33.4 19.4,-36.3 Q21.7,-31.6 25.9,-28.5 Q28.1,-20.6 33.5,-14.4 Q35.1,-6.5 40,0 Z" fill="#c89a68" stroke="none"/>
+  <path d="M-8,0 L-0.7,-13.6 L5.9,-24.8 L12.7,-34.4 L19.4,-36.3 Q16.2,-18 21,0 Z" fill="#dcb886" fill-opacity="0.7" stroke="none"/>
+  <path d="M19.4,-36.3 L25.9,-28.5 L33.5,-14.4 L40,0 L21,0 Q16.2,-18 19.4,-36.3 Z" fill="#8d5e36" fill-opacity="0.6" stroke="none"/>
+  <path d="M19.4,-36.3 Q16.2,-18 21,0 M3.8,-13.6 q-1.4,7.2 0.6,12.6 M10.8,-24.1 q-0.7,7.2 -0.8,12.6 M24.7,-18.1 q-0.8,7.2 -0.8,12.6" fill="none" stroke="#2a1d12" stroke-width="0.6" stroke-linecap="round" stroke-opacity="0.8"/>
+  <path d="M-8,0 Q-3.6,-6.4 -0.7,-13.6 Q3.8,-18.5 5.9,-24.8 Q10.3,-28.9 12.7,-34.4 Q16.6,-33.4 19.4,-36.3 Q21.7,-31.6 25.9,-28.5 Q28.1,-20.6 33.5,-14.4 Q35.1,-6.5 40,0" fill="none" stroke="#2a1d12" stroke-width="0.9" stroke-linejoin="round"/>
+  <path d="M-38,0 Q-32.8,-5.2 -30.9,-12.3 Q-25.4,-17.1 -22.6,-23.9 Q-18.7,-26.3 -16.2,-30.1 Q-12.3,-28 -8.1,-29.4 Q-5.8,-22.4 -0.8,-17 Q1.5,-8 6,0 Z" fill="#c89a68" stroke="none"/>
+  <path d="M-38,0 L-30.9,-12.3 L-22.6,-23.9 L-16.2,-30.1 Q-14.8,-16 -10.4,0 Z" fill="#dcb886" fill-opacity="0.7" stroke="none"/>
+  <path d="M-16.2,-30.1 L-8.1,-29.4 L-0.8,-17 L6,0 L-10.4,0 Q-14.8,-16 -16.2,-30.1 Z" fill="#8d5e36" fill-opacity="0.6" stroke="none"/>
+  <path d="M-16.2,-30.1 Q-14.8,-16 -10.4,0 M-27.2,-10.4 q0.3,6.4 -1,11.2 M-20.8,-16.5 q-0.5,6.4 -0.3,11.2 M-8,-21.7 q-1,6.4 0.7,11.2" fill="none" stroke="#2a1d12" stroke-width="0.6" stroke-linecap="round" stroke-opacity="0.8"/>
+  <path d="M-38,0 Q-32.8,-5.2 -30.9,-12.3 Q-25.4,-17.1 -22.6,-23.9 Q-18.7,-26.3 -16.2,-30.1 Q-12.3,-28 -8.1,-29.4 Q-5.8,-22.4 -0.8,-17 Q1.5,-8 6,0" fill="none" stroke="#2a1d12" stroke-width="0.9" stroke-linejoin="round"/>
+  <path d="M28,0 Q32.4,-6.3 34.7,-13.6 Q39.1,-16.8 39.8,-22.1 Q43,-22.1 45.7,-23.7 Q47.1,-19.2 51.4,-17 Q53.1,-10.7 58.4,-6.8 Q60.3,-2.6 64,0 Z" fill="#c89a68" stroke="none"/>
+  <path d="M28,0 L34.7,-13.6 L39.8,-22.1 L45.7,-23.7 Q43.9,-12 47.5,0 Z" fill="#dcb886" fill-opacity="0.7" stroke="none"/>
+  <path d="M45.7,-23.7 L51.4,-17 L58.4,-6.8 L64,0 L47.5,0 Q43.9,-12 45.7,-23.7 Z" fill="#8d5e36" fill-opacity="0.6" stroke="none"/>
+  <path d="M45.7,-23.7 Q43.9,-12 47.5,0 M38,-12.9 q1.1,4.8 0.7,8.4 M50.8,-12.3 q0.6,4.8 0.1,8.4" fill="none" stroke="#2a1d12" stroke-width="0.6" stroke-linecap="round" stroke-opacity="0.8"/>
+  <path d="M28,0 Q32.4,-6.3 34.7,-13.6 Q39.1,-16.8 39.8,-22.1 Q43,-22.1 45.7,-23.7 Q47.1,-19.2 51.4,-17 Q53.1,-10.7 58.4,-6.8 Q60.3,-2.6 64,0" fill="none" stroke="#2a1d12" stroke-width="0.9" stroke-linejoin="round"/>
+  <path d="M-66,0 Q-61.6,-6.6 -59.6,-14.4 Q-55.8,-16.4 -53.2,-19.9 Q-49.3,-18.9 -45.6,-20.3 Q-44.3,-16 -40,-14.7 Q-37.1,-8.9 -32.2,-4.6 Q-30.2,-0.9 -26,0 Z" fill="#c89a68" stroke="none"/>
+  <path d="M-66,0 L-59.6,-14.4 L-53.2,-19.9 L-45.6,-20.3 Q-49.3,-11 -45.3,0 Z" fill="#dcb886" fill-opacity="0.7" stroke="none"/>
+  <path d="M-45.6,-20.3 L-40,-14.7 L-32.2,-4.6 L-26,0 L-45.3,0 Q-49.3,-11 -45.6,-20.3 Z" fill="#8d5e36" fill-opacity="0.6" stroke="none"/>
+  <path d="M-45.6,-20.3 Q-49.3,-11 -45.3,0 M-54.9,-12.4 q-1.2,4.4 0.6,7.7 M-40.7,-11.6 q-1.2,4.4 -0.3,7.7" fill="none" stroke="#2a1d12" stroke-width="0.6" stroke-linecap="round" stroke-opacity="0.8"/>
+  <path d="M-66,0 Q-61.6,-6.6 -59.6,-14.4 Q-55.8,-16.4 -53.2,-19.9 Q-49.3,-18.9 -45.6,-20.3 Q-44.3,-16 -40,-14.7 Q-37.1,-8.9 -32.2,-4.6 Q-30.2,-0.9 -26,0" fill="none" stroke="#2a1d12" stroke-width="0.9" stroke-linejoin="round"/>
+  <path d="M52,0 Q54.4,-3.5 54.7,-7.7 Q58.1,-8.6 59.3,-12 Q61.2,-11.6 62.4,-13.1 Q63.3,-10.7 65.8,-10.5 Q65.7,-6.9 68.7,-4.9 Q69.4,-1.8 72,0 Z" fill="#c89a68" stroke="none"/>
+  <path d="M52,0 L54.7,-7.7 L59.3,-12 L62.4,-13.1 Q61.2,-7 63.2,0 Z" fill="#dcb886" fill-opacity="0.7" stroke="none"/>
+  <path d="M62.4,-13.1 L65.8,-10.5 L68.7,-4.9 L72,0 L63.2,0 Q61.2,-7 62.4,-13.1 Z" fill="#8d5e36" fill-opacity="0.6" stroke="none"/>
+  <path d="M62.4,-13.1 Q61.2,-7 63.2,0 M58.6,-7.6 q-0.8,2.8 -0.5,4.9" fill="none" stroke="#2a1d12" stroke-width="0.6" stroke-linecap="round" stroke-opacity="0.8"/>
+  <path d="M52,0 Q54.4,-3.5 54.7,-7.7 Q58.1,-8.6 59.3,-12 Q61.2,-11.6 62.4,-13.1 Q63.3,-10.7 65.8,-10.5 Q65.7,-6.9 68.7,-4.9 Q69.4,-1.8 72,0" fill="none" stroke="#2a1d12" stroke-width="0.9" stroke-linejoin="round"/>
+  <path d="M-66,1 L-66,-8.4" stroke="#2a1d12" stroke-width="0.7" fill="none"/>
+  <ellipse cx="-66" cy="-9.8" rx="2.4" ry="4.2" fill="#3f7a4a" stroke="#2a1d12" stroke-width="0.5"/>
+  <path d="M0,1 L0,-7.2" stroke="#2a1d12" stroke-width="0.7" fill="none"/>
+  <ellipse cx="0" cy="-8.4" rx="2" ry="3.6" fill="#3f7a4a" stroke="#2a1d12" stroke-width="0.5"/>
+  <path d="M72,1 L72,-7.8" stroke="#2a1d12" stroke-width="0.7" fill="none"/>
+  <ellipse cx="72" cy="-9.1" rx="2.2" ry="3.9" fill="#3f7a4a" stroke="#2a1d12" stroke-width="0.5"/>
+</svg>

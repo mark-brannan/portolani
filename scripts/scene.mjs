@@ -47,7 +47,7 @@ const ZOOM = { min: 1, max: 13 };
 const DETAIL_ZOOM = BANDS[0].zoom;
 
 // Per-run tuning; `density` scales how much ornament is placed (1 = the committed mockup).
-const TUNE = { monsterMax: 4, shipMax: 2, townGap: 48 };
+const TUNE = { monsterMax: 4, shipMax: 2, townGap: 48, mountainMax: 3 };
 
 const CELL = 16;             // clearance field cell, px
 const MONSTER_GAP = 220;     // min centre spacing between monsters, px
@@ -286,7 +286,7 @@ function viewData(world, view) {
     return out.filter((l) => l.length > 1);
   });
   const places = world.places.filter((p) => nearLL(f, p.lon, p.lat))
-    .map((p) => ({ name: p.name, rank: p.rank, pop: p.pop, xy: proj.project(p.lon, p.lat) }));
+    .map((p) => ({ name: p.name, rank: p.rank, pop: p.pop, lon: p.lon, lat: p.lat, xy: proj.project(p.lon, p.lat) }));
   // names worth showing at this zoom (Natural Earth's min_label), most important first
   const names = world.names.filter((n) => n.min <= view.zoom + 1 && meetsLL(f, n.box))
     .sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'sea' ? -1 : 1) || a.rank - b.rank);
@@ -315,6 +315,7 @@ function spritesOf(manifests, rendering, kind, style) {
 // What a scene draws, chosen from the manifests before any picture is fetched. A style no pack has
 // falls back to the default family; ships follow the monster style, or the default family's ships.
 // Empty roses or no cartouche mean the shapes drawn in code (PLAIN); no town sprites, the tower.
+// Mountains have one family so far, `catalan`; they are fetched only when the kind is shown.
 function chooseSprites(manifests, { rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower' } = {}) {
   const pick = (kind, style, fallback) => {
     const found = spritesOf(manifests, rendering, kind, style);
@@ -326,6 +327,7 @@ function chooseSprites(manifests, { rendering = 'vivid', rose = 'aguiar', monste
     monsters: pick('monster', monster, 'carta-marina'),
     ships: pick('ship', monster, 'carta-marina'),
     towns: town === 'tower' ? [] : pick('town', town),
+    mountains: pick('mountain', 'catalan'),
   };
 }
 
@@ -358,6 +360,27 @@ function tint(img, ink) {
 
 const traceLand = (g, data, polys = data.land) => trace(g, polys, data.proj.x, data.proj.y, { lonCenter: data.proj.lonCenter });
 
+// Chamfer distance (1, sqrt2), in px, from every cell of a cols x rows grid of CELL px to the
+// nearest cell where `seed(i)` holds.
+function chamfer(cols, rows, seed) {
+  const INF = 1e9, d = new Float32Array(cols * rows);
+  for (let i = 0; i < cols * rows; i++) d[i] = seed(i) ? 0 : INF;
+  const D = Math.SQRT2;
+  const relax = (i, j, w) => { if (d[j] + w < d[i]) d[i] = d[j] + w; };
+  for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+    const i = y * cols + x;
+    if (x > 0) relax(i, i - 1, 1);
+    if (y > 0) { relax(i, i - cols, 1); if (x > 0) relax(i, i - cols - 1, D); if (x < cols - 1) relax(i, i - cols + 1, D); }
+  }
+  for (let y = rows - 1; y >= 0; y--) for (let x = cols - 1; x >= 0; x--) {
+    const i = y * cols + x;
+    if (x < cols - 1) relax(i, i + 1, 1);
+    if (y < rows - 1) { relax(i, i + cols, 1); if (x < cols - 1) relax(i, i + cols + 1, D); if (x > 0) relax(i, i + cols - 1, D); }
+  }
+  for (let i = 0; i < d.length; i++) d[i] *= CELL;
+  return d;
+}
+
 // Land rasterised at CELL px; chamfer distance (1, sqrt2) from every sea cell to land, in px.
 function clearanceField(data) {
   const cols = Math.ceil(W / CELL), rows = Math.ceil(H / CELL);
@@ -372,21 +395,7 @@ function clearanceField(data) {
   for (const line of data.coast) { g.beginPath(); line.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke(); }
   const px = g.getImageData(0, 0, cols, rows).data;
 
-  const INF = 1e9, d = new Float32Array(cols * rows);
-  for (let i = 0; i < cols * rows; i++) d[i] = px[i * 4 + 3] > 40 ? 0 : INF;
-  const D = Math.SQRT2;
-  const relax = (i, j, w) => { if (d[j] + w < d[i]) d[i] = d[j] + w; };
-  for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
-    const i = y * cols + x;
-    if (x > 0) relax(i, i - 1, 1);
-    if (y > 0) { relax(i, i - cols, 1); if (x > 0) relax(i, i - cols - 1, D); if (x < cols - 1) relax(i, i - cols + 1, D); }
-  }
-  for (let y = rows - 1; y >= 0; y--) for (let x = cols - 1; x >= 0; x--) {
-    const i = y * cols + x;
-    if (x < cols - 1) relax(i, i + 1, 1);
-    if (y < rows - 1) { relax(i, i + cols, 1); if (x < cols - 1) relax(i, i + cols + 1, D); if (x > 0) relax(i, i + cols - 1, D); }
-  }
-  for (let i = 0; i < d.length; i++) d[i] *= CELL;
+  const d = chamfer(cols, rows, (i) => px[i * 4 + 3] > 40);
 
   const at = (x, y) => {
     const cx = Math.min(cols - 1, Math.max(0, Math.floor(x / CELL))), cy = Math.min(rows - 1, Math.max(0, Math.floor(y / CELL)));
@@ -459,7 +468,7 @@ function placeWorldNames(data, ctx, boxes, { continents, regions }) {
     const box = obb(x, y, 0, w / 2, size * 0.5);
     if (!obbInside(box) || boxes.some((b) => obbOverlap(b, box))) return;
     boxes.push(box);
-    out.push({ text, x, y, size, spacing, italic, r: Math.max(box.hw, box.hh) });
+    out.push({ text, x, y, size, spacing, italic, r: Math.max(box.hw, box.hh), box });
   };
   if (continents && z < REGION_ZOOM) {
     for (const c of CONTINENTS) { const text = c[continents === 'latin' ? 0 : 1], size = text.length > 12 ? 22 : 30; put(text, c[2], c[3], size, size * 0.6, false); }
@@ -494,6 +503,46 @@ function viewTitle(data, towns, lang) {
     }),
   ];
   return scored.reduce((a, b) => (b.score > a.score ? b : a), { text: '', score: 0 }).text;
+}
+
+// The sprite a town draws from its family. A family of variants named `-port`, `-levant`, `-fort` and
+// `-small` (Martines) draws a chief town (scalerank 2 or less) as a Levantine city east of 20E and
+// south of 38N and as a port elsewhere, a scalerank 3 town as a fort and a lesser one small; any
+// other family's sprites are taken in turn, the `i`th town the `i`th.
+function townVariant(family, p, i) {
+  if (!family.length) return null;
+  const want = p.rank > 3 ? 'small' : p.rank > 2 ? 'fort' : p.lon > 20 && p.lat < 38 ? 'levant' : 'port';
+  return family.find((s) => s.id.endsWith(`-${want}`)) ?? family[i % family.length];
+}
+
+// Mountains: inland, on land at least half a sprite's width (and a margin) from the coast, deepest
+// first, MOUNTAIN_GAP apart, clear of every name, town, rose and the cartouche, and of the scale bar;
+// only from MOUNTAIN_ZOOM in, where land is big enough to hold a range. Each takes the widest sprite
+// that fits there, starting one further along the set each time, so a view mixes the ranges.
+const MOUNTAIN_GAP = 180, MOUNTAIN_ZOOM = 3, MOUNTAIN_MARGIN = 16;
+function placeMountains(data, field, boxes, sprites, scaleBar) {
+  if (!sprites.length || data.proj.zoom < MOUNTAIN_ZOOM || TUNE.mountainMax < 1) return [];
+  const cols = Math.ceil(W / CELL), rows = Math.ceil(H / CELL);
+  const inland = chamfer(cols, rows, (i) => field.cells[i].land > 0); // px from each land cell to the sea
+  const edge = (x, y) => Math.min(x, y, W - x, H - y);
+  const bar = scaleBar ? obb(300, H - 90, 0, 270, 70) : null; // the parchment patch under the bar, roughly
+  const bySize = [...sprites].sort((a, b) => b.sizePx - a.sizePx);
+  const ranked = field.cells.map((c, i) => ({ ...c, d: Math.min(inland[i], edge(c.x, c.y)) }))
+    .filter((c) => c.land === 0 && c.d >= bySize.at(-1).sizePx / 2 + MOUNTAIN_MARGIN).sort((a, b) => b.d - a.d);
+  const out = [];
+  for (const c of ranked) {
+    if (out.length >= TUNE.mountainMax) break;
+    if (out.some((m) => Math.hypot(m.x - c.x, m.y - c.y) < MOUNTAIN_GAP)) continue;
+    for (let k = 0; k < bySize.length; k++) {
+      const sprite = bySize[(out.length + k) % bySize.length], w = sprite.sizePx, h = (w * sprite.img.height) / sprite.img.width;
+      if (c.d < w / 2 + MOUNTAIN_MARGIN) continue;
+      const box = obb(c.x, c.y, 0, w / 2 + MOUNTAIN_MARGIN, h / 2 + MOUNTAIN_MARGIN); // with room round it
+      if (boxes.some((b) => obbOverlap(b, box)) || (bar && obbOverlap(bar, box))) continue;
+      out.push({ sprite, x: c.x, y: c.y, size: w });
+      break;
+    }
+  }
+  return out;
 }
 
 // `sprites`: what chooseSprites chose, with pictures.
@@ -565,8 +614,8 @@ function buildScene(data, sprites, ctx, world = {}) {
     if (x < 8 || y < 8 || x > W - 8 || y > H - 8) continue;
     if (towns.some((t) => Math.hypot(t.x - x, t.y - y) < TUNE.townGap)) continue;
     const size = p.rank <= 2 ? 1.25 : 1;
-    // a town sprite stands where the tower would, as tall, its sprites taken in turn
-    const sprite = sprites.towns.length ? sprites.towns[towns.length % sprites.towns.length] : null;
+    // a town sprite stands where the tower would, its variant chosen for the town (townVariant)
+    const sprite = townVariant(sprites.towns, p, towns.length);
     const icon = sprite
       ? obb(x, y - (TOWN_H / 2) * size, 0, ((TOWN_H / 2) * size * sprite.img.width) / sprite.img.height, (TOWN_H / 2) * size)
       : obb(x, y - 8 * size, 0, 5 * size, 8.5 * size); // tower body and pennant
@@ -580,7 +629,7 @@ function buildScene(data, sprites, ctx, world = {}) {
   // a name that meets an ornament or leaves the canvas is dropped.
   const lettering = [
     ...data.names.map((n) => ({ ...n, size: n.kind === 'sea' ? (n.rank <= 1 ? 22 : n.rank <= 3 ? 18 : 15) : n.rank <= 2 ? 17 : 14 })),
-    ...towns.map((t) => ({ text: t.name, at: data.proj.invert(t.x, t.y - 17 * t.size), size: t.rank <= 1 ? 17 : t.rank <= 2 ? 15 : 13, red: t.red })),
+    ...towns.map((t) => ({ text: t.name, at: data.proj.invert(t.x, t.y - (t.sprite ? TOWN_H * t.size + 6 : 17 * t.size)), size: t.rank <= 1 ? 17 : t.rank <= 2 ? 15 : 13, red: t.red })),
   ];
   const opts = letterOptions(data);
   const names = [];
@@ -593,9 +642,10 @@ function buildScene(data, sprites, ctx, world = {}) {
       Math.hypot(c1[0] - c0[0], c1[1] - c0[1]) / 2, Math.hypot(c2[0] - c1[0], c2[1] - c1[1]) / 2);
     if (!obbInside(box) || boxes.some((b) => obbOverlap(b, box))) continue;
     boxes.push(box);
-    names.push({ ...n, x: box.cx, y: box.cy, r: Math.max(box.hw, box.hh) });
+    names.push({ ...n, x: box.cx, y: box.cy, r: Math.max(box.hw, box.hh), box });
   }
   for (const b of boxes.slice(1 + roseDraws.length)) occupied.push({ x: b.cx, y: b.cy, r: Math.max(b.hw, b.hh) * 0.6 });
+  const mountains = placeMountains(data, field, boxes, sprites.mountains ?? [], world.scaleBar);
 
   // Monsters: farthest-first on the open-water field, >= MONSTER_GAP apart, heaviest sprite first.
   const monsterSprites = [...sprites.monsters].sort((a, b) => b.weight - a.weight);
@@ -641,7 +691,7 @@ function buildScene(data, sprites, ctx, world = {}) {
 
   // automatic, the typed title stands in where the view has no name in it
   const title = (world.autoTitle && viewTitle(data, towns.filter((t) => names.some((n) => n.text === t.name)), world.regions === 'english' ? 1 : 0).toUpperCase()) || world.title || 'PORTOLANI';
-  return { field, centre, nodes, roseDraws, towns, names, worldNames, monsters, ships, cartouche: { ...cartouche, sprite: cartoucheSprite, title } };
+  return { field, centre, nodes, roseDraws, towns, names, worldNames, monsters, ships, mountains, cartouche: { ...cartouche, sprite: cartoucheSprite, title } };
 }
 
 // ---------------------------------------------------------------- drawing
@@ -814,7 +864,7 @@ function drawSprite(g, s, x, y, size, { flip = false, rot = 0, anchor = s.anchor
   g.restore();
 }
 
-const TOWN_H = 17; // px a town stands at size 1, pennant to foot
+const TOWN_H = 30; // px a town sprite stands at size 1, flag to foot; a vignette is a speck at the tower's 17
 
 function drawTower(g, t) {
   const s = t.size;
@@ -1037,6 +1087,9 @@ function drawScene(g, scene, data, bg, view) {
   const spriteIn = (s, x, y, size) => disc(r, x, y, Math.hypot(size, (size * s.img.height) / s.img.width));
   for (const d of show.kinds.has('rose') ? scene.roseDraws : []) if (spriteIn(d.sprite, d.x, d.y, d.size)) drawSprite(g, d.sprite, d.x, d.y, d.size, { anchor: [0.5, 0.5] });
 
+  // 5.5 mountains, inland, under the towns and names
+  for (const m of show.kinds.has('mountain') ? scene.mountains ?? [] : []) if (spriteIn(m.sprite, m.x, m.y, m.size)) drawSprite(g, m.sprite, m.x, m.y, m.size, { anchor: [0.5, 0.5] });
+
   // 6. towns
   for (const t of scene.towns) {
     if (!t.sprite) { if (disc(r, t.x, t.y - 8 * t.size, 12 * t.size)) drawTower(g, t); continue; }
@@ -1097,16 +1150,18 @@ function drawScene(g, scene, data, bg, view) {
 // `continents` (boolean) and `regions` ('off', 'latin' or 'english'); the continents follow the regions' language, Latin when those are off.
 // `autoTitle` (boolean, on by default) letters the cartouche with the name the view is about (viewTitle), in capitals;
 // `title` is its lettering when that is off, or when the view has no name in it.
+// `kinds` defaults to DEFAULT_KINDS: mountains are drawn only when asked for.
 export async function createScene(environment, opts = {}) {
   env = environment;
   const { ink = '#3b2a1a', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', title = 'PORTOLANI', autoTitle = true } = opts;
-  const show = { kinds: new Set(opts.kinds ?? KINDS), names, rhumb: rhumbOn, scale };
+  const show = { kinds: new Set(opts.kinds ?? DEFAULT_KINDS), names, rhumb: rhumbOn, scale };
   const view = clampView(opts.view ?? DEFAULT_VIEW);
   STYLE.ink = ink;
   STYLE.parchment = tone;
   TUNE.monsterMax = Math.round(4 * density);
   TUNE.shipMax = Math.round(2 * density);
   TUNE.townGap = 48 / density;
+  TUNE.mountainMax = Math.round(3 * density);
 
   const t0 = performance.now();
   // only the sprites the settings choose are fetched, whichever kinds are shown, never a whole pack;
@@ -1116,13 +1171,13 @@ export async function createScene(environment, opts = {}) {
     const chosen = chooseSprites(manifests, { rendering, rose, monster, town });
     const all = (list) => Promise.all(list.map(withImage));
     const picture = scale in SCALE_PICTURES && manifests.vivid.sprites.find((s) => s.id === SCALE_PICTURES[scale]);
-    const [roses, monsters, ships, towns, cartouche, scaleSprite] = await Promise.all([
-      all(chosen.roses), all(chosen.monsters), all(chosen.ships), all(chosen.towns),
+    const [roses, monsters, ships, towns, mountains, cartouche, scaleSprite] = await Promise.all([
+      all(chosen.roses), all(chosen.monsters), all(chosen.ships), all(chosen.towns), all(show.kinds.has('mountain') ? chosen.mountains : []),
       chosen.cartouche && withImage(chosen.cartouche), picture && withImage({ ...picture, pack: 'vivid', colour: manifests.vivid.colour ?? 'source' }),
     ]);
     return {
       roses: roses.length ? roses : PLAIN.filter((s) => s.kind === 'rose'), cartouche: cartouche || PLAIN.find((s) => s.kind === 'cartouche'),
-      monsters, ships, towns, scaleSprite: scaleSprite || null,
+      monsters, ships, towns, mountains, scaleSprite: scaleSprite || null,
     };
   });
   const [, coarse, chosen] = await Promise.all([env.loadFont(STYLE.font), loadWorld(), sprites]);
@@ -1141,6 +1196,7 @@ const parchments = new Map(); // by tone; the same seed paints the same sheet
 
 export const RENDERINGS = ['vivid', 'scanned', 'plain'];
 export const REGION_LANGS = ['off', 'latin', 'english'];
-export const KINDS = ['rose', 'ship', 'monster', 'cartouche'];
+export const KINDS = ['rose', 'ship', 'monster', 'cartouche', 'mountain'];
+export const DEFAULT_KINDS = KINDS.filter((k) => k !== 'mountain'); // mountains are drawn only when asked for
 export const PROJECTION_NAMES = Object.keys(PROJECTIONS);
 export { SCALE_NAMES, listStyles, chooseSprites, drawScene, drawGround, covers, panView, zoomView, clampView, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };
