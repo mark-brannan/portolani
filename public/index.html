@@ -13,6 +13,8 @@
   .controls { display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: center; margin-bottom: 12px; }
   label { display: flex; align-items: center; gap: 8px; }
   input[type=color] { width: 40px; height: 28px; padding: 0; border: 1px solid var(--line); background: none; }
+  fieldset { display: flex; flex-wrap: wrap; gap: 4px 16px; border: 1px solid var(--line); padding: 2px 10px 4px; margin: 0; }
+  legend { font-size: 12px; color: var(--muted); padding: 0 4px; }
   canvas { display: block; width: 100%; height: auto; border: 1px solid var(--line); touch-action: none; cursor: grab; }
   canvas:active { cursor: grabbing; }
   #status, footer { color: var(--muted); font-size: 13px; margin-top: 8px; }
@@ -25,6 +27,20 @@
     <label>Ink <input id="ink" type="color" value="#3b2a1a"></label>
     <label>Parchment <input id="parchment" type="color" value="#e9d8b4"></label>
     <label>Density <input id="density" type="range" min="0" max="2" step="0.25" value="1"> <output id="densityOut">1</output></label>
+    <label>Pack <select id="pack">
+      <option value="all">All packs</option>
+      <option value="carta-marina">Carta Marina (monsters, ships)</option>
+      <option value="catalan">Catalan (roses, cartouche)</option>
+      <option value="plain">Plain (drawn in code, no images)</option>
+    </select></label>
+    <fieldset><legend>Ornaments</legend>
+      <label><input type="checkbox" id="kind-rose"> Roses</label>
+      <label><input type="checkbox" id="kind-ship"> Ships</label>
+      <label><input type="checkbox" id="kind-monster"> Monsters</label>
+      <label><input type="checkbox" id="kind-cartouche"> Cartouche</label>
+    </fieldset>
+    <label><input type="checkbox" id="names"> Names</label>
+    <label><input type="checkbox" id="rhumb"> Rhumb lines</label>
   </div>
   <canvas id="map" width="1600" height="1000"></canvas>
   <div id="status">Loading…</div>
