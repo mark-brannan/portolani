@@ -58,7 +58,7 @@ The pan-frame times at z5 and above sit at two animation frames (33 ms at 60 Hz)
 | Scanned sprites (`packs/scanned/`, default settings; whole pack 3,344,546) | 576,745 | every view, ornaments on or off |
 | Vivid sprites (`packs/vivid/`, default settings; whole pack 28,398) | 21,816 | every view, ornaments on or off |
 | 10m cells around the view (`geo/10m/`) | not measured at z9 to z10 | z9 to z10; whole set is 18,786,827 |
-| Natural Earth 10m rivers and lakes around the view (`geo/water-10m/`, 5° cells, whole features) | 124 KB at Lake Maggiore, 148 KB at Geneva, 320 KB at the Great Lakes, at z11 | past z9, when rivers or lakes are drawn; whole set is 662 cells, 22 MB; without it the 50m water is drawn |
+| 10m rivers and lakes around the view (`geo/water-10m/`) | 124 KB at Lake Maggiore at z11 | past z9, when water is drawn |
 | GSHHG "h" cells around the view (`geo/h/`, 1° cells) | 6 KB at Genoa, 181 KB at Bergen at z10.5 (126 KB at z13), 52 KB at Seattle | past z10; whole set is 19,273 cells, 132 MB; built only when the installed `coastlines` carries `gshhg-land-h` |
 | GSHHG "f" cells around the view (`geo/f/`, 0.5° cells) | 330 KB at Seattle at z13.5 | past z12; whole set is 70,692 cells, 384 MB |
 | Font (`font/IMFeENrm28P.ttf`) | 194,992 | every view |
