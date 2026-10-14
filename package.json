@@ -7,7 +7,8 @@
     "test": "node --test",
     "packs": "node scripts/build-packs.mjs",
     "render": "node scripts/render.mjs",
-    "build:preview": "node scripts/build-preview.mjs"
+    "build:preview": "node scripts/build-preview.mjs",
+    "golden": "UPDATE_GOLDEN=1 node --test test/golden.test.mjs"
   },
   "engines": {
     "node": ">=20"
