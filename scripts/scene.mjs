@@ -613,7 +613,7 @@ const letterOptions = (data) => ({
 });
 
 // World-view lettering, hand-set: [Latin, English, lon, lat]. Zoom levels are whole: continents are
-// spaced capitals below zoom 5, regions italic below zoom 7.
+// spaced capitals below zoom 5.5, regions italic below zoom 7.
 const CONTINENTS = [
   ['EVROPA', 'EUROPE', 14, 50], ['AFRICA', 'AFRICA', 20, 7], ['ASIA', 'ASIA', 90, 48],
   ['AMERICA SEPTENTRIONALIS', 'NORTH AMERICA', -100, 45], ['AMERICA MERIDIONALIS', 'SOUTH AMERICA', -60, -12],
@@ -625,7 +625,7 @@ const REGIONS = [
   ['Syria', 'Syria', 38, 35], ['Egiptus', 'Egypt', 29.5, 27], ['Libya', 'Libya', 17, 29],
   ['Barbaria', 'Maghreb', 4, 31], ['Arabia', 'Arabia', 44, 24], ['Thracia', 'Thrace', 26, 42.3],
 ];
-const CONTINENT_ZOOM_END = 5, REGION_ZOOM_END = 7; // continents: zoom < CONTINENT_ZOOM_END; regions: zoom < REGION_ZOOM_END (they meet a continent's box and make way)
+const CONTINENT_ZOOM_END = 5.5, REGION_ZOOM_END = 7; // continents: zoom < CONTINENT_ZOOM_END, regions overlap them to there; regions: zoom < REGION_ZOOM_END (they meet a continent's box and make way)
 
 // The continent and region names to letter, each with the box it reserves: measured with the font and
 // spacing they are drawn in, so later names and towns make way. A name off the canvas or meeting an
@@ -639,10 +639,13 @@ function placeWorldNames(data, ctx, boxes, { continents, regions }) {
     ctx.letterSpacing = `${spacing}px`;
     const w = ctx.measureText(text).width;
     ctx.letterSpacing = '0px'; // left set, every later name would measure too wide
-    const box = obb(x, y, 0, w / 2, size * 0.5);
-    if (!obbInside(box) || boxes.some((b) => obbOverlap(b, box))) return;
+    // a name whose anchor is in frame but whose letters run past the edge slides in; one whose anchor is out stays out
+    const hw = w / 2, hh = size * 0.5, m = 4;
+    if (x < m || x > W - m || y < m || y > H - m || 2 * hw > W - 2 * m) return;
+    const box = obb(Math.min(W - m - hw, Math.max(m + hw, x)), Math.min(H - m - hh, Math.max(m + hh, y)), 0, hw, hh);
+    if (boxes.some((b) => obbOverlap(b, box))) return;
     boxes.push(box);
-    out.push({ text, x, y, size, spacing, italic, r: Math.max(box.hw, box.hh), box });
+    out.push({ text, x: box.cx, y: box.cy, size, spacing, italic, r: Math.max(box.hw, box.hh), box });
   };
   if (continents && z < CONTINENT_ZOOM_END) {
     for (const c of CONTINENTS) { const text = c[continents === 'latin' ? 0 : 1], size = text.length > 12 ? 22 : 30; put(text, c[2], c[3], size, size * 0.6, false); }
