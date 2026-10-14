@@ -780,6 +780,18 @@ function chamfer(cols, rows, seed) {
   return d;
 }
 
+// Px from every point of the canvas to the nearest of `polys` (lon/lat, each filled even-odd), 0
+// inside one, at CELL px as the clearance field is.
+function distanceTo(data, polys) {
+  const cols = Math.ceil(W / CELL), rows = Math.ceil(H / CELL);
+  const g = createCanvas(cols, rows).getContext('2d');
+  g.scale(1 / CELL, 1 / CELL);
+  for (const poly of polys) fill(g, [poly], data.proj.x, data.proj.y, { color: '#000', ...data.proj.seam });
+  const px = g.getImageData(0, 0, cols, rows).data;
+  const d = chamfer(cols, rows, (i) => px[i * 4 + 3] > 40);
+  return (x, y) => d[Math.min(rows - 1, Math.max(0, Math.floor(y / CELL))) * cols + Math.min(cols - 1, Math.max(0, Math.floor(x / CELL)))];
+}
+
 // Land rasterised at CELL px; chamfer distance (1, sqrt2) from every sea cell to land, in px.
 function clearanceField(data) {
   const cols = Math.ceil(W / CELL), rows = Math.ceil(H / CELL);
@@ -1129,9 +1141,10 @@ function buildScene(data, sprites, ctx, world = {}) {
   const edge = (x, y) => Math.min(x, y, W - x, H - y);
   // Roses stand in open water. Where the water is heavily constrained (no clear sea in the middle of the
   // frame to hold half a big rose) they may stand on open land, clear of the coast by the same measure.
-  let landOk = false;
+  // `built`, while they are placed there, is the px to the nearest built-up area.
+  let landOk = false, built = null;
   const open = (x, y) => (landOk ? Math.max(field.at(x, y), field.depth(x, y)) : field.at(x, y));
-  const free = (x, y) => Math.min(open(x, y), edge(x, y), ...occupied.map((o) => Math.hypot(x - o.x, y - o.y) - o.r));
+  const free = (x, y) => Math.min(open(x, y), edge(x, y), built ? built(x, y) : Infinity, ...occupied.map((o) => Math.hypot(x - o.x, y - o.y) - o.r));
   const roseBlocked = (x, y, size) => (landOk ? x - size * 0.46 < 0 || y - size * 0.46 < 0 || x + size * 0.46 > W || y + size * 0.46 > H : field.footprintBlocked(x, y, size, size));
 
   // Cartouche: the corner whose rectangle crosses the least coast, open sea before empty land; never
@@ -1153,9 +1166,14 @@ function buildScene(data, sprites, ctx, world = {}) {
   const central = field.cells.filter((c) => c.x > W * 0.25 && c.x < W * 0.75 && c.y > H * 0.25 && c.y < H * 0.8);
   const seaRoom = Math.max(...central.map((c) => free(c.x, c.y)));
   landOk = seaRoom < bigRose.sizePx * LAND_ROSE;
-  // on land the towns are still to be placed, so the roses keep clear of their places for now
+  // the built-up areas whose long side on screen is at least half the URBAN_PX that washes them: roses on
+  // land and the relief keep clear of them
+  const urban = landOk || reliefWanted() ? indexOf(data).urban.filter((u) => Math.max(u.box.x1 - u.box.x0, u.box.y1 - u.box.y0) * 2 >= URBAN_PX) : [];
+  // on land the towns are still to be placed, so the roses keep clear of their places for now, and of
+  // the built-up areas, whose city plans and washes they would cover
   const places = new Set();
   if (landOk) for (const { xy: [x, y] } of data.places) if (x > -LAND_ROSE_TOWN && x < W + LAND_ROSE_TOWN && y > -LAND_ROSE_TOWN && y < H + LAND_ROSE_TOWN) { const o = { x, y, r: LAND_ROSE_TOWN }; places.add(o); occupied.push(o); }
+  if (landOk && urban.length) built = distanceTo(data, urban.map((u) => u.poly));
   const centre = central.reduce((a, b) => (free(b.x, b.y) > free(a.x, a.y) ? b : a));
   const bigSize = Math.min(bigRose.sizePx, 2 * 0.95 * free(centre.x, centre.y));
   const roseDraws = [{ sprite: bigRose, x: centre.x, y: centre.y, size: bigSize }];
@@ -1184,6 +1202,7 @@ function buildScene(data, sprites, ctx, world = {}) {
   }
 
   if (places.size) occupied.splice(0, occupied.length, ...occupied.filter((o) => !places.has(o)));
+  built = null;
 
   // Towns, lower scalerank first, >= TUNE.townGap apart. The selected town sprites fall into families
   // by pack and style, and the tower is one when chosen; each town keeps one family, picked by its
@@ -1263,7 +1282,6 @@ function buildScene(data, sprites, ctx, world = {}) {
   // and the Catalan sprites stand on the hills; all clear of what is placed so far and of the built-up
   // areas washed on the land
   const bar = world.scaleBar ? SCALE_BAR_BOX : null;
-  const urban = reliefWanted() ? indexOf(data).urban.filter((u) => Math.max(u.box.x1 - u.box.x0, u.box.y1 - u.box.y0) * 2 >= URBAN_PX) : [];
   const blocked = (x0, y0, x1, y1) => {
     const b = obb((x0 + x1) / 2, (y0 + y1) / 2, 0, (x1 - x0) / 2, (y1 - y0) / 2);
     return boxes.some((o) => obbOverlap(o, b)) || (bar && obbOverlap(bar, b)) || urban.some((u) => meets({ x0, y0, x1, y1 }, u.box));
