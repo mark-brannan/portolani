@@ -1,7 +1,7 @@
 {
   "name": "vivid",
-  "title": "Portolan roses, scale, cartouche, town, palms, sea monsters and ships, redrawn as vectors after Jorge de Aguiar 1492, the Catalan Atlas 1375, Joan Martines 1584 and 1591, Guillaume Brouscon 1543, the Dieppe atlas 1547, Salvator Oliva 1619, Genoese charts, Frederik de Wit, Olaus Magnus's Carta Marina 1539, Sebastian Münster's Cosmographia, Conrad Gesner's Historia animalium 1558 and Abraham Ortelius 1589-90",
-  "licence": "MIT; drawn for portolani after public-domain originals (Aguiar, the Catalan Atlas, Martines, Brouscon, the Dieppe atlas, Oliva, Genoese charts, de Wit, Olaus Magnus, Münster, Gesner, Ortelius, and a British Museum print of Candia)",
+  "title": "Portolan roses, scale, cartouche, town, palms, sea monsters and ships, redrawn as vectors after Jorge de Aguiar 1492, the Catalan Atlas 1375, Joan Martines 1584 and 1591, Guillaume Brouscon 1543, the Dieppe atlas 1547, Salvator Oliva 1619, Genoese charts, Frederik de Wit, Olaus Magnus's Carta Marina 1539, Sebastian Münster's Cosmographia, Conrad Gesner's Historia animalium 1558, Abraham Ortelius 1589-90, and heraldic sea monsters and ships traced from Hierosme de Bara's Le Blason des Armoiries 1579 and other public-domain sources",
+  "licence": "MIT; drawn for portolani after public-domain originals (Aguiar, the Catalan Atlas, Martines, Brouscon, the Dieppe atlas, Oliva, Genoese charts, de Wit, Olaus Magnus, Münster, Gesner, Ortelius, a British Museum print of Candia, and, as traced public-domain or CC0 SVGs, Bara 1579, Pearson Scott Foresman, Dorling 1912, Mrmw, papapishu and johnny_automatic)",
   "colour": "source",
   "ink": "#2a1d12",
   "sprites": [
@@ -388,6 +388,111 @@
       "sizePx": 50,
       "bands": [0, 1],
       "after": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg"
+    },
+    {
+      "id": "sea-dragon",
+      "kind": "monster",
+      "style": "heraldic",
+      "file": "heraldic-sea-dragon.svg",
+      "anchor": [0.5, 0.75],
+      "sizePx": 170,
+      "bands": [0, 1],
+      "minClearancePx": 140,
+      "weight": 3,
+      "after": "https://commons.wikimedia.org/wiki/File:Coa_Illustration_Elements_Animal_Sea_Dragon.svg"
+    },
+    {
+      "id": "sea-lion",
+      "kind": "monster",
+      "style": "heraldic",
+      "file": "heraldic-sea-lion.svg",
+      "anchor": [0.5, 0.75],
+      "sizePx": 180,
+      "bands": [0, 1],
+      "minClearancePx": 150,
+      "weight": 2,
+      "after": "https://commons.wikimedia.org/wiki/File:Coa_Illustration_Elements_Animal_Sea_Lion_Embowed.svg"
+    },
+    {
+      "id": "dolphin",
+      "kind": "monster",
+      "style": "heraldic",
+      "file": "heraldic-dolphin.svg",
+      "anchor": [0.5, 0.75],
+      "sizePx": 160,
+      "bands": [0, 1],
+      "minClearancePx": 130,
+      "weight": 2,
+      "after": "https://commons.wikimedia.org/wiki/File:Coa_Illustration_Elements_Animal_Dolphin_Haurient_1.svg"
+    },
+    {
+      "id": "merman",
+      "kind": "monster",
+      "style": "heraldic",
+      "file": "heraldic-merman.svg",
+      "anchor": [0.5, 0.75],
+      "sizePx": 140,
+      "bands": [0, 1],
+      "minClearancePx": 120,
+      "weight": 2,
+      "after": "https://commons.wikimedia.org/wiki/File:Coa_Illustration_Elements_Merman_or_Triton.svg"
+    },
+    {
+      "id": "hippocampus",
+      "kind": "monster",
+      "style": "heraldic",
+      "file": "heraldic-hippocampus.svg",
+      "anchor": [0.5, 0.75],
+      "sizePx": 170,
+      "bands": [0, 1],
+      "minClearancePx": 140,
+      "weight": 2,
+      "after": "https://commons.wikimedia.org/wiki/File:Heraldry_Fish_205.svg"
+    },
+    {
+      "id": "walrus",
+      "kind": "monster",
+      "style": "heraldic",
+      "file": "heraldic-walrus.svg",
+      "anchor": [0.5, 0.75],
+      "sizePx": 160,
+      "bands": [0, 1],
+      "minClearancePx": 130,
+      "weight": 1,
+      "after": "https://commons.wikimedia.org/wiki/File:Coa_Illustration_Elements_Animal_Walrus_Naiant.svg"
+    },
+    {
+      "id": "galleon",
+      "kind": "ship",
+      "style": "heraldic",
+      "file": "heraldic-galleon.svg",
+      "anchor": [0.5, 0.75],
+      "sizePx": 88,
+      "bands": [0, 1],
+      "heading": "right",
+      "after": "https://openclipart.org/detail/22696"
+    },
+    {
+      "id": "caravel",
+      "kind": "ship",
+      "style": "heraldic",
+      "file": "heraldic-caravel.svg",
+      "anchor": [0.5, 0.75],
+      "sizePx": 64,
+      "bands": [0, 1],
+      "heading": "right",
+      "after": "https://openclipart.org/detail/23328"
+    },
+    {
+      "id": "carrack",
+      "kind": "ship",
+      "style": "heraldic",
+      "file": "heraldic-carrack.svg",
+      "anchor": [0.5, 0.75],
+      "sizePx": 84,
+      "bands": [0, 1],
+      "heading": "right",
+      "after": "https://openclipart.org/detail/7988"
     }
   ]
 }
