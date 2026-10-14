@@ -202,7 +202,7 @@ const loadGeo = (id) => env.readJSON(`geo/${id}.geojson`);
 const worlds = new WeakMap();
 async function loadWorld() {
   // the urban footprints (scripts/urban.mjs) are optional: a site without them draws every town as an icon;
-  // so are the 50m urban areas, which wash a town's built-up ground before it grows into a city plan
+  // so are the 50m urban areas, which wash the built-up ground of a town without a footprint
   const missing = (e) => { if (!/404|ENOENT|no urban/.test(String(e?.code ?? e?.message ?? e))) throw e; return null; };
   const [landGeo, coastGeo, placesGeo, namesGeo, urban, urbanGeo] = await Promise.all(
     [...['ne-land-50m', 'ne-coastline-50m', 'ne-populated-places-50m'].map(loadGeo), env.readJSON('geo/names-50m.json'),
@@ -223,7 +223,11 @@ async function loadWorld() {
     const pts = g.type === 'Point' ? [g.coordinates] : g.coordinates;
     return { text: p.name, at: g.coordinates, land: p.land, kind: p.kind, rank: p.rank, min: p.min, box: bbox(pts) };
   });
-  const urbanAreas = urbanGeo ? geojsonPolygons(urbanGeo).map((poly) => ({ poly, box: bbox(poly[0]) })) : [];
+  // the built-up areas washed under the towns: a town's own 10m footprint, the ground its city plan's lots
+  // stand on, and the coarse 50m areas only where no footprint lies
+  const footprints = places.filter((p) => p.urban).map((p) => ({ poly: p.urban, box: p.ubox }));
+  const urbanAreas = [...footprints, ...(urbanGeo ? geojsonPolygons(urbanGeo).map((poly) => ({ poly, box: bbox(poly[0]) }))
+    .filter((u) => !footprints.some((t) => meets(t.box, u.box))) : [])];
   world = { land, lines, runs, places, names, urban: urbanAreas };
   worlds.set(landGeo, world);
   return world;
@@ -1019,7 +1023,7 @@ function indexOf(data) {
   const px = (ring) => ring.map(([lon, lat]) => data.proj.project(lon, lat));
   const land = data.land.map((poly) => ({ poly, box: bbox(px(poly[0])) }));
   const coast = data.coastLL.flatMap(coastRuns).map((run) => ({ run, box: bbox(px(run)) }));
-  const urban = (data.urban ?? []).map((poly) => ({ poly, box: bbox(px(poly[0])) }));
+  const urban = (data.urban ?? []).map((poly) => ({ poly, box: bbox(px(poly.flat())) })); // a footprint's pieces are rings of one poly
   ix = { land, coast, urban };
   indexes.set(data, ix);
   return ix;
@@ -1393,13 +1397,18 @@ function drawScene(g, scene, data, bg, view) {
   paintCoast(g, data, coast);
 
   // 4.5 town footprints: a city's built-up area, washed terracotta and edged in ink once its long
-  // side passes URBAN_PX on screen, the wash coming in over the next doubling of zoom
-  for (const u of idx.urban) {
-    const a = Math.min(1, (Math.max(u.box.x1 - u.box.x0, u.box.y1 - u.box.y0) * view.scale / URBAN_PX - 1)) * 0.45;
-    if (a <= 0 || !meets(r, u.box)) continue;
-    fill(g, [u.poly], data.proj.x, data.proj.y, { color: STYLE.terracotta, alpha: a, lonCenter: data.proj.lonCenter });
-    g.save(); g.beginPath(); trace(g, [u.poly], data.proj.x, data.proj.y, { lonCenter: data.proj.lonCenter });
-    g.globalAlpha = a * 1.5; g.strokeStyle = STYLE.ink; g.lineWidth = 0.8 / view.scale; g.stroke(); g.restore();
+  // side passes URBAN_PX on screen, the wash coming in over the next doubling of zoom; on land
+  // only, as the footprint is coarser than the coast and would otherwise spill over the water
+  const washes = idx.urban.map((u) => ({ u, a: Math.min(1, (Math.max(u.box.x1 - u.box.x0, u.box.y1 - u.box.y0) * view.scale / URBAN_PX - 1)) * 0.45 }))
+    .filter(({ u, a }) => a > 0 && meets(r, u.box));
+  if (washes.length) {
+    g.save(); g.beginPath(); traceLand(g, data, land); g.clip('evenodd');
+    for (const { u, a } of washes) {
+      fill(g, [u.poly], data.proj.x, data.proj.y, { color: STYLE.terracotta, alpha: a, lonCenter: data.proj.lonCenter });
+      g.save(); g.beginPath(); trace(g, [u.poly], data.proj.x, data.proj.y, { lonCenter: data.proj.lonCenter });
+      g.globalAlpha = a * 1.5; g.strokeStyle = STYLE.ink; g.lineWidth = 0.8 / view.scale; g.stroke(); g.restore();
+    }
+    g.restore();
   }
 
   // 5. roses

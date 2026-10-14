@@ -11,6 +11,7 @@ import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas'
 import { joinUrban, simplifyRing, urbanKey } from '../scripts/urban.mjs'
 import { cityPlan } from '../scripts/city.mjs'
 import { createScene, drawScene, W, H } from '../scripts/scene.mjs'
+import { fill, limn } from 'coast-wright'
 import { coastNames, joinNames } from '../scripts/names.mjs'
 
 const square = (x, y, d) => [[x - d, y - d], [x + d, y - d], [x + d, y + d], [x - d, y + d], [x - d, y - d]]
@@ -148,4 +149,36 @@ test('the metro-area floor takes the north-south scale from the projection, so p
 test('a town with an urban footprint keeps its drawing and its icon grows until the city plan takes over', { skip: !existsSync(URBAN) && 'no urban areas download' }, async () => {
   await iconRun(env, 'Victoria', -123.37, 48.43, [7, 7.5, 8, 8.5, 9])
   await iconRun(env, 'Seattle', -122.33, 47.6, [5, 6, 7])
+})
+
+// the GSHHG "h" cells npm run build:preview cuts into _site/, where the ship canal and the lakes are drawn
+const SITE = join(ROOT, '_site')
+const cellEnv = { ...env, readJSON: (p) => (/^geo\/(h|10m)\//.test(p) ? Promise.resolve(read(join(SITE, p))) : env.readJSON(p)) }
+
+test('a built-up area is washed over its town\'s footprint and on land only, though the footprint is coarser than the coast', { skip: !existsSync(join(SITE, 'geo', 'h', 'index.json')) && 'no _site cells' }, async () => {
+  const { scene, data, bg } = await createScene(cellEnv, { view: { lon: -122.35, lat: 47.648, zoom: 11 }, scale: 'off' })
+  assert.ok(data.urban.length > 0, 'no 50m urban areas about Seattle')
+  const draw = (d) => { const c = createCanvas(W, H); drawScene(c.getContext('2d'), { ...scene, towns: [] }, d, bg, { scale: 1, x: 0, y: 0 }); return c.getContext('2d').getImageData(0, 0, W, H).data }
+  const a = draw(data), b = draw({ ...data, urban: [] })
+  // the land as a mask, grown by the coast stroke, which the clip's antialiasing touches
+  const m = createCanvas(W, H), mg = m.getContext('2d')
+  fill(mg, data.land, data.proj.x, data.proj.y, { color: '#ffffff', lonCenter: data.proj.lonCenter })
+  limn(mg, data.coastLL, data.proj.x, data.proj.y, { color: '#ffffff', alpha: 1, width: 6, lonCenter: data.proj.lonCenter })
+  const land = mg.getImageData(0, 0, W, H).data
+  // every town's 10m footprint, the ground the city plans stand on (a town off the view may reach into
+  // it), grown by the edge's stroke; the rings are stored open
+  const f = createCanvas(W, H), fg = f.getContext('2d'), towns = Object.values(await cellEnv.readJSON('geo/urban-10m.json'))
+  fill(fg, towns, data.proj.x, data.proj.y, { color: '#ffffff', lonCenter: data.proj.lonCenter })
+  limn(fg, towns.flat().map((r) => [...r, r[0]]), data.proj.x, data.proj.y, { color: '#ffffff', alpha: 1, width: 4, lonCenter: data.proj.lonCenter })
+  const ground = fg.getImageData(0, 0, W, H).data
+  let changed = 0, wet = 0, off = 0
+  for (let i = 0; i < a.length; i += 4) {
+    if (Math.abs(a[i] - b[i]) + Math.abs(a[i + 1] - b[i + 1]) + Math.abs(a[i + 2] - b[i + 2]) < 30) continue
+    changed++
+    if (land[i + 3] === 0) wet++
+    if (ground[i + 3] === 0) off++
+  }
+  assert.ok(changed > 2000, `${changed} px changed`)
+  assert.equal(wet, 0, `${wet} of ${changed} washed px are at sea`)
+  assert.equal(off, 0, `${off} of ${changed} washed px lie off the towns' footprints`)
 })
