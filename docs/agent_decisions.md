@@ -108,3 +108,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t195342z
 - Church odds by rank 5-8: 3/4, 1/2, 1/4, 0 Undo: lesserBuilding in buildings.mjs ([#94](https://github.com/mark-brannan/portolani/pull/94))
+
+### 20261014t195700z
+- Relief: a second style, engraved (ink only), beside marina Undo: drop its RELIEF entry and menu option ([#95](https://github.com/mark-brannan/portolani/pull/95))
