@@ -34,10 +34,14 @@ test('the centre stays far enough from the poles to keep the canvas on the map',
   assert.ok(v.lat < 85.06 && v.lat > 0);
 });
 
-test('a moving view draws from 10m cells only while close and inside the frame they cover', () => {
-  const coarse = { land: [] }, cells = { land: [], detail: { lonMin: 6, lonMax: 12, latMin: 42, latMax: 47 } };
+test('a moving view draws from a band\'s cells only while it still picks that band, inside the frame they cover', () => {
+  const coarse = { land: [] }, cells = { land: [], detail: { lonMin: 6, lonMax: 12, latMin: 42, latMax: 47, band: '10m' } };
   assert.ok(covers(coarse, { zoom: 11, lat: 44.4, lon: 8.9 }));
   assert.ok(covers(cells, { zoom: 11, lat: 44.4, lon: 8.9 }));
   assert.ok(!covers(cells, { zoom: 9, lat: 44.4, lon: 8.9 })); // out to 50m
   assert.ok(!covers(cells, { zoom: 11, lat: 44.4, lon: 15 })); // dragged past the loaded cells
+  assert.ok(!covers(cells, { zoom: 12.5, lat: 44.4, lon: 8.9 })); // into the "h" band: its cells are wanted
+  const fine = { ...cells, detail: { ...cells.detail, band: 'h' } };
+  assert.ok(covers(fine, { zoom: 12.5, lat: 44.4, lon: 8.9 }));
+  assert.ok(!covers(fine, { zoom: 11, lat: 44.4, lon: 8.9 })); // back out to 10m
 });

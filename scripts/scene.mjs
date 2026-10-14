@@ -1,7 +1,7 @@
 // Portolani mockup scene: placement (buildScene) and draw order (drawScene), independent of where
 // it runs. A host (scripts/render.mjs in Node, public/page.js in a browser) supplies an
 // environment: createCanvas(w, h), readJSON(path), loadImage(path), loadFont(). Paths are logical:
-// `geo/<id>.geojson`, a coastlines data id, `geo/10m/<cell>.json`, a 10m cell cut by
+// `geo/<id>.geojson`, a coastlines data id, `geo/<band>/<cell>.json`, a detail cell cut by
 // scripts/build-preview.mjs (close views only), and `packs/<pack>/<file>`. Land, wash, coast and
 // lattice are drawn in lon/lat through coast-wright, so any view or projection draws the same way.
 // A view is a Web Mercator centre and zoom, { lon, lat, zoom }, on a W x H canvas.
@@ -33,11 +33,17 @@ const W = 1600, H = 1000;
 const FRAME = { lonMin: -6, lonMax: 20, latMin: 34, latMax: 46 };
 const MARGIN = 2; // degrees beyond FRAME whose features the scene keeps
 const DETAIL = { lon: 8.93, lat: 44.41, scale: 2 }; // Genoa; window clamped to the scene
-// Whole world at the far end; 50m data holds to about z9, and past DETAIL_ZOOM a view draws from
-// 10m cells of CELL_DEG degrees, fetched around it.
-const ZOOM = { min: 1, max: 11 };
-const DETAIL_ZOOM = 9;
-const CELL_DEG = 5; // must match scripts/build-preview.mjs
+// Whole world at the far end; 50m data holds to about z9. Past each band's zoom a view draws from
+// that band's cells (geo/<dir>/<xi>_<yi>.json, `cell` degrees square) within `margin` degrees of
+// its frame, a couple of screens at the band's first zoom, so a pan stays on loaded cells; a band
+// whose index the site lacks is skipped and the one below it drawn instead. Measured vertex
+// spacing (median, m): 50m 7,650; NE 10m 1,574; GSHHG h 707. Must match scripts/build-preview.mjs.
+const BANDS = [
+  { dir: '10m', zoom: 9, cell: 5, margin: 2 }, // Natural Earth 10m, holds to about z12
+  { dir: 'h', zoom: 12, cell: 1, margin: 0.5 }, // GSHHG 2.3.7 "h" land, holds to about z13
+];
+const ZOOM = { min: 1, max: 13 };
+const DETAIL_ZOOM = BANDS[0].zoom;
 
 // Per-run tuning; `density` scales how much ornament is placed (1 = the committed mockup).
 const TUNE = { monsterMax: 4, shipMax: 2, townGap: 48 };
@@ -174,23 +180,37 @@ async function loadWorld() {
   return world;
 }
 
-// The 10m world around a view: the cells that meet its frame widened by MARGIN, each fetched and
-// boxed once, with the 50m places. Panning MARGIN degrees, a couple of screens at z10, stays on it.
+// The band a view draws from: the closest one whose zoom it has passed and whose index is not known
+// to be missing (an index not yet asked for counts as present; loadDetail asks before choosing).
+const bandIndex = new Map(); // dir -> Set of cell keys, or null when the site has no such band
+const bandFor = (zoom) => BANDS.filter((b) => zoom > b.zoom && bandIndex.get(b.dir) !== null).at(-1);
+async function loadBandIndex(band) {
+  if (!bandIndex.has(band.dir)) {
+    bandIndex.set(band.dir, env.readJSON(`geo/${band.dir}/index.json`).then((i) => new Set(i.cells)).catch(() => null));
+  }
+  return (bandIndex.set(band.dir, await bandIndex.get(band.dir)), bandIndex.get(band.dir));
+}
+
+// The detail world around a view: the band's cells that meet its frame widened by its margin, each
+// fetched and boxed once, with the 50m places.
 const cells = new Map();
 const cellKey = (xi, yi) => `${xi}_${yi}`;
 async function loadDetail(coarse, view) {
-  const { cells: have } = await env.readJSON('geo/10m/index.json');
-  const known = new Set(have), f = frameOf(makeProjection(view), MARGIN), n = 360 / CELL_DEG;
+  for (const b of BANDS) if (view.zoom > b.zoom) await loadBandIndex(b);
+  const band = bandFor(view.zoom);
+  if (!band) return coarse;
+  const known = bandIndex.get(band.dir);
+  const f = frameOf(makeProjection(view), band.margin), deg = band.cell, n = 360 / deg;
   const keys = new Set();
-  for (let xi = Math.floor(f.lonMin / CELL_DEG); xi <= Math.floor(f.lonMax / CELL_DEG); xi++) {
+  for (let xi = Math.floor(f.lonMin / deg); xi <= Math.floor(f.lonMax / deg); xi++) {
     const wx = ((((xi + n / 2) % n) + n) % n) - n / 2; // wrapped across the antimeridian
-    for (let yi = Math.max(-90 / CELL_DEG, Math.floor(f.latMin / CELL_DEG)); yi <= Math.min(90 / CELL_DEG - 1, Math.floor(f.latMax / CELL_DEG)); yi++) {
-      if (known.has(cellKey(wx, yi))) keys.add(cellKey(wx, yi));
+    for (let yi = Math.max(-90 / deg, Math.floor(f.latMin / deg)); yi <= Math.min(90 / deg - 1, Math.floor(f.latMax / deg)); yi++) {
+      if (known.has(cellKey(wx, yi))) keys.add(`${band.dir}/${cellKey(wx, yi)}`);
     }
   }
   const parts = await Promise.all([...keys].map((k) => {
     if (!cells.has(k)) {
-      cells.set(k, env.readJSON(`geo/10m/${k}.json`).then((c) => {
+      cells.set(k, env.readJSON(`geo/${k}.json`).then((c) => {
         const lines = c.coast.map((line) => ({ line, box: bbox(line) }));
         return {
           land: c.land.map((poly) => ({ poly, box: bbox(poly[0]) })),
@@ -203,16 +223,16 @@ async function loadDetail(coarse, view) {
   }));
   return {
     land: parts.flatMap((p) => p.land), lines: parts.flatMap((p) => p.lines), runs: parts.flatMap((p) => p.runs),
-    places: coarse.places, names: coarse.names, detail: f, // the lon/lat frame the loaded cells cover
+    places: coarse.places, names: coarse.names, detail: { ...f, band: band.dir }, // the lon/lat frame the loaded cells cover, and whose
   };
 }
 
-// Whether a moving view can be drawn from `world`: 50m always; 10m cells only while the view is
-// closer than DETAIL_ZOOM and inside the frame they were loaded for, so a long drag shows the 50m
-// coast rather than an empty sea.
+// Whether a moving view can be drawn from `world`: 50m always; a band's cells only while the view
+// would still choose that band and sits inside the frame they were loaded for, so a long drag or a
+// zoom across a band edge shows the 50m coast rather than an empty sea or a coarser cell.
 function covers(world, view) {
   if (!world.detail) return true;
-  if (view.zoom <= DETAIL_ZOOM) return false;
+  if (bandFor(view.zoom)?.dir !== world.detail.band) return false;
   const d = world.detail, f = frameOf(makeProjection(view), 0);
   return f.latMin >= d.latMin && f.latMax <= d.latMax && SHIFTS.some((s) => f.lonMin + s >= d.lonMin && f.lonMax + s <= d.lonMax);
 }
