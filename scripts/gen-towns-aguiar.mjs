@@ -16,8 +16,7 @@
 // the Saharan lake) belong to one place each: their variants carry `only`, the town names they are
 // drawn for, and pack.json carries the same field so the scene keeps them for those towns alone.
 // The rays go to the city they were drawn for. The lake town is nowhere on today's map, so the lake
-// goes to Mexico City: Tenochtitlan was the walled city in its lake, causeways leaving it, and the
-// European prints of Aguiar's generation drew it in just this idiom.
+// goes to Mexico City: Tenochtitlan was the walled city in its lake, causeways leaving it.
 //
 // Each general kind is committed at three seeds, so the towns of one kind differ across a map.
 
