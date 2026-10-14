@@ -47,7 +47,9 @@ function checkSha(src, bytes) {
 
 // Figures on the Carta Marina sit on hatched sea, so they take a saturation silhouette.
 const SEA_FIGURE_LEVEL = [26, 56]; // woodcut line only; colour fills and sea hatching mostly drop out
-const SEA_FIGURE = { sat: 24, close: 7, open: 5, dilate: 9, feather: 4, minArea: 900 };
+const SEA_FIGURE = { sat: 24, close: 7, open: 5, dilate: 4, feather: 2, minArea: 900 };
+
+const CLEAN_DISK = 5; // px radius of the closing that removes scanned lettering
 
 const PACKS = [
   {
@@ -60,8 +62,8 @@ const PACKS = [
       { id: 'whale-b', kind: 'monster', scan: 'carta-marina', crop: [2040, 358, 2350, 532], sizePx: 190, minClearancePx: 150, weight: 2, level: SEA_FIGURE_LEVEL, silhouette: SEA_FIGURE },
       { id: 'pistrix-c', kind: 'monster', scan: 'carta-marina', crop: [374, 1236, 566, 1432], sizePx: 150, minClearancePx: 130, weight: 2, level: SEA_FIGURE_LEVEL, silhouette: SEA_FIGURE },
       { id: 'cete-e', kind: 'monster', scan: 'carta-marina', crop: [1788, 572, 2046, 732], sizePx: 180, minClearancePx: 140, weight: 1, level: SEA_FIGURE_LEVEL, silhouette: SEA_FIGURE },
-      { id: 'ship-a', kind: 'ship', scan: 'carta-marina', crop: [1160, 800, 1312, 1000], sizePx: 80, heading: 'right', level: SEA_FIGURE_LEVEL, silhouette: { ...SEA_FIGURE, dilate: 6, close: 9 }, erase: [[1215, 975, 1275, 1000]] },
-      { id: 'ship-b', kind: 'ship', scan: 'carta-marina', crop: [2085, 708, 2212, 802], sizePx: 64, heading: 'right', level: SEA_FIGURE_LEVEL, silhouette: { ...SEA_FIGURE, dilate: 6, minArea: 300 } },
+      { id: 'ship-a', kind: 'ship', scan: 'carta-marina', crop: [1160, 800, 1312, 1000], sizePx: 80, heading: 'right', level: SEA_FIGURE_LEVEL, silhouette: { ...SEA_FIGURE, dilate: 3, close: 9 }, erase: [[1215, 975, 1275, 1000]] },
+      { id: 'ship-b', kind: 'ship', scan: 'carta-marina', crop: [2085, 708, 2212, 802], sizePx: 64, heading: 'right', level: SEA_FIGURE_LEVEL, silhouette: { ...SEA_FIGURE, dilate: 3, minArea: 300 } },
     ],
   },
   {
@@ -70,7 +72,9 @@ const PACKS = [
     licence: 'Public domain; scans via Wikimedia Commons (Beinecke Library, Yale; BnF Gallica btv1b55002481n; Royal Museums Greenwich)',
     ink: '#3b2a1a',
     sprites: [
-      { id: 'rose-aguiar', kind: 'rose', scan: 'aguiar', crop: [55, 80, 665, 690], sizePx: 300, dark: 'min', level: [12, 78], circle: [300, 300, 300] },
+      { id: 'rose-aguiar', kind: 'rose', scan: 'aguiar', crop: [55, 80, 665, 690], sizePx: 300, dark: 'min', level: [12, 78], circle: [300, 300, 300],
+        // the scan's own wind names (norte, oeste, leste, sull and the petal inscriptions)
+        clean: [[355, 122, 377, 180], [175, 187, 235, 237], [495, 200, 552, 257], [115, 365, 165, 387], [555, 374, 609, 394], [162, 512, 197, 587], [340, 577, 364, 630], [489, 500, 535, 544], [112, 182, 147, 217]] },
       { id: 'rose-catalan', kind: 'rose', scan: 'catalan', crop: [120, 185, 440, 505], sizePx: 110, dark: 'min', level: [10, 70], circle: [160, 160, 152] },
       { id: 'cartouche-dewit', kind: 'cartouche', scan: 'dewit', crop: [196, 250, 1229, 1039], sizePx: 340, dark: 'min', level: [12, 66],
         // panel lettering and scale bars cleared so the renderer can letter the panel; SYRIA and coast cleared
@@ -90,6 +94,16 @@ function buildSprite(sprite, colour, outDir, tmp) {
   const t = (n) => join(tmp, `${sprite.id}.${n}.png`);
 
   magick(`${scan.path}[0]`, '-crop', `${w}x${h}+${x0}+${y0}`, '+repage', '-alpha', 'off', t('crop'));
+
+  // Lettering on the scan (wind names on a rose) is closed away from the colour image before keying:
+  // a grayscale closing removes dark strokes thinner than the disk and keeps the petal wash beneath.
+  for (const [cx0, cy0, cx1, cy1] of sprite.clean ?? []) {
+    const cw = cx1 - cx0, ch = cy1 - cy0, at = `+${cx0 - x0}+${cy0 - y0}`;
+    magick(t('crop'), '-crop', `${cw}x${ch}${at}`, '+repage', '-morphology', 'Close', `Disk:${CLEAN_DISK}`, t('closed'));
+    magick('-size', `${cw}x${ch}`, 'xc:black', '-fill', 'white', '-draw', `rectangle 3,3 ${cw - 4},${ch - 4}`, '-blur', '0x2', t('cmask'));
+    magick(t('closed'), t('cmask'), '-alpha', 'off', '-compose', 'CopyOpacity', '-composite', t('cpatch'));
+    magick(t('crop'), t('cpatch'), '-geometry', at, '-compose', 'Over', '-composite', t('crop'));
+  }
 
   // Ink = darkness. 'lum' for line work; 'min' (min of R,G,B) so gilt and colour count as ink too.
   const dark = sprite.dark === 'min'
