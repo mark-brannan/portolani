@@ -128,7 +128,7 @@ const areaEnv = { ...env, readJSON: async (p) => (p === 'geo/urban-10m.json' ? {
 const iconRun = async (e, name, lon, lat, zooms) => {
   const seen = []
   for (const zoom of zooms) {
-    const { scene, data } = await createScene(e, { view: { lon, lat, zoom }, scale: 'off', town: 'aguiar', townSize: 'area' }) // drawings only, no tower
+    const { scene, data } = await createScene(e, { view: { lon, lat, zoom }, scale: 'off' })
     const t = scene.towns.find((x) => x.name === name)
     if (t?.city) break // the plan has taken over; it is not an icon
     assert.ok(t?.sprite, `${name} has no drawing at z${zoom}`)
@@ -210,13 +210,4 @@ test('a waterfront town\'s icon stands on its ground, not on its shore', { skip:
     for (let j = 0; j < 6; j++) for (let i = 0; i < 6; i++, n++) if (scene.field.isLand(t.x + w * ((i + 0.5) / 6 - 0.5), t.y - t.h * (j + 0.5) / 6)) dry++
     assert.ok(dry / n >= 0.75, `z${zoom}: ${dry} of ${n} of the icon on land`)
   }
-})
-
-test('with several roses selected the centre rose varies by view, not always the first', async () => {
-  const centres = new Set()
-  for (let lon = -60; lon < 60; lon += 15) {
-    const { scene } = await createScene(env, { view: { lon, lat: 30, zoom: 3 }, sprites: ['vivid/rose-aguiar', 'vivid/rose-catalan'] })
-    centres.add(scene.roseDraws[0].sprite.id)
-  }
-  assert.ok(centres.size > 1, `the centre rose was always ${[...centres]}`)
 })

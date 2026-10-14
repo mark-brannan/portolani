@@ -17,17 +17,6 @@ from zoom 9). The last strip is the chart itself: Genoa, a lesser place, at zoom
 | 2 | Vplandia, (2760,2460)-(3000,2600): churches, Arosia, round towers | `church`, `castle`, `round-tower` |
 | 3 | Lappia, (3080,960)-(3320,1100): tents at Bircarli | `tent`, `house` |
 
-## trees.png
-
-Each row is a crop of the scan beside the trees of `scripts/trees.mjs`, both magnified 3x; the
-last strip is the chart itself at map size (`trees=marina`, 15.5 E 59.5 N, zoom 9).
-
-| Row | Scan crop | Drawn |
-| --- | --- | --- |
-| 1 | Svecia, (2850,2185)-(2950,2235): a row and a clump | `marina`: rows and a forest clump |
-| 2 | Lappia, (2950,1085)-(3050,1135): a row of oval crowns | `marina`: ovals and conifers |
-| 3 | Svecia, (2790,2160)-(2890,2210): Orsa's rows | `ink` |
-
 ## Hills and mountains
 
 ![Scan crops beside the drawn relief](relief.png)
@@ -41,3 +30,14 @@ draws, at map size (one map pixel to one sheet pixel), in both styles, `marina` 
 | Norvegia, the lesser hills | (1850,1950)-(2650,2550) | 10/61/9 | 420, 330, 400, 300 |
 
 The drawn views are rendered with the continents and Latin regions on and rivers and lakes in the Carta Marina style.
+
+## trees.png
+
+Each row is a crop of the scan beside the trees of `scripts/trees.mjs`, both magnified 3x; the
+last strip is the chart itself at map size (`trees=marina`, 15.5 E 59.5 N, zoom 9).
+
+| Row | Scan crop | Drawn |
+| --- | --- | --- |
+| 1 | Svecia, (2850,2185)-(2950,2235): a row and a clump | `marina`: rows and a forest clump |
+| 2 | Lappia, (2950,1085)-(3050,1135): a row of oval crowns | `marina`: ovals and conifers |
+| 3 | Svecia, (2790,2160)-(2890,2210): Orsa's rows | `ink` |
