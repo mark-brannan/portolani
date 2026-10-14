@@ -2,9 +2,9 @@
 // Assembles the browser preview into _site/, the Pages root:
 // the page, the shared scene module and coast-wright, the sprite packs, the Natural Earth GeoJSON
 // from coastlines (checked against its manifest) and the font, vendored so nothing loads from a
-// CDN. The font and Natural Earth's marine polygons come from downloads/, fetched from its pinned URL when missing, then checked
-// against its sha256; the URLs and hashes below duplicate the ASSETS.md table: re-pin both
-// together. The 50m GeoJSON ships whole, since the map can be moved anywhere in the world; places
+// CDN. The font and Natural Earth's marine polygons come from downloads/, each fetched from its
+// pinned URL when missing, then checked against its sha256; the URLs and hashes below duplicate
+// the ASSETS.md table: re-pin both together. The 50m GeoJSON ships whole, since the map can be moved anywhere in the world; places
 // keep only the properties the scene reads. The 10m land and coast, for close views, ship cut into
 // 5-degree cells (geo/10m/<xi>_<yi>.json, listed in geo/10m/index.json), so a close view fetches
 // only the cells around it. The names the chart letters ship as geo/names-50m.json
@@ -67,7 +67,11 @@ for (const id of GEO) {
 // Names the chart letters: seas from the download, countries along their 50m coast.
 const marine = JSON.parse(await readFile(path.join(root, 'downloads', 'ne_50m_geography_marine_polys.geojson'), 'utf8'));
 const [countries, coast50] = await Promise.all(['ne-admin-0-countries-50m', 'ne-coastline-50m'].map(async (id) => JSON.parse(await readGeo(id))));
-await writeFile(path.join(out, 'geo', 'names-50m.json'), JSON.stringify(joinNames(seaNames(marine), coastNames(countries, coast50))));
+const seas = seaNames(marine);
+// the golden test reads its seas from this fixture, offline: it must stay what the download gives
+const fixture = await readFile(path.join(root, 'test', 'fixtures', 'sea-names-50m.json'), 'utf8');
+if (JSON.stringify(JSON.parse(fixture)) !== JSON.stringify(seas)) throw new Error('test/fixtures/sea-names-50m.json is stale: write seaNames() of the marine download to it');
+await writeFile(path.join(out, 'geo', 'names-50m.json'), JSON.stringify(joinNames(seas, coastNames(countries, coast50))));
 // 10m coast is the coastline file plus the minor islands' outlines, which 10m land fills but the
 // coastline file mostly leaves out.
 const [land10, coast10, minor10] = await Promise.all(GEO_10M.map(async (id) => JSON.parse(await readGeo(id))));

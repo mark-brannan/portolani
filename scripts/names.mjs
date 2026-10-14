@@ -55,6 +55,9 @@ function labelPoint(geometry) {
 
 const SEA_KINDS = new Set(['sea', 'gulf', 'bay', 'ocean', 'strait', 'sound', 'channel', 'lagoon', 'fjord', 'inlet', 'reef']);
 
+// Natural Earth sets a few names in capitals (INDIAN OCEAN); letter them like the rest.
+const titled = (name) => (name === name.toUpperCase() ? name.toLowerCase().replace(/(^|[\s-])\p{L}/gu, (c) => c.toUpperCase()) : name);
+
 // Seas, gulfs and bays from Natural Earth's marine polygons, each at its label point.
 export function seaNames(marine) {
   const out = [];
@@ -62,7 +65,7 @@ export function seaNames(marine) {
     const p = f.properties;
     if (!p.name || !SEA_KINDS.has(String(p.featurecla).toLowerCase())) continue;
     const at = labelPoint(f.geometry);
-    if (at) out.push({ type: 'Feature', properties: { name: p.name, kind: 'sea', rank: p.scalerank, min: p.min_label }, geometry: { type: 'Point', coordinates: at } });
+    if (at) out.push({ type: 'Feature', properties: { name: titled(p.name), kind: 'sea', rank: p.scalerank, min: p.min_label }, geometry: { type: 'Point', coordinates: at } });
   }
   return { type: 'FeatureCollection', features: out };
 }

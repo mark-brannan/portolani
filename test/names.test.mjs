@@ -20,6 +20,12 @@ test('a sea is named at a point inside its water, away from its edges', () => {
   assert.ok(lon > 1 && lon < 3 && lat > 1 && lat < 3, `${lon}, ${lat}`);
 });
 
+test('a sea set in capitals is lettered like the rest', () => {
+  const sea = (name, featurecla) => ({ properties: { name, featurecla, scalerank: 0, min_label: 1 }, geometry: { type: 'Polygon', coordinates: [square(0, 0, 4)] } });
+  const marine = { features: [sea('INDIAN OCEAN', 'ocean'), sea('Golfe du Lion', 'gulf')] };
+  assert.deepEqual(seaNames(marine).features.map((f) => f.properties.name), ['Indian Ocean', 'Golfe du Lion']);
+});
+
 test('a country is named along the coast it shares with the coastline, land on the side its ring winds', () => {
   for (const cw of [false, true]) {
     const ring = dense(square(10, 10, 1, cw));
