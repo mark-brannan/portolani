@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { panView, zoomView, clampView, covers, DEFAULT_VIEW, ZOOM, PROJECTION_NAMES, W, H } from '../scripts/scene.mjs';
+import { panView, zoomView, clampView, covers, viewProjection, DEFAULT_VIEW, ZOOM, PROJECTION_NAMES, W, H } from '../scripts/scene.mjs';
 
 const close = (a, b, eps = 1e-9) => assert.ok(Math.abs(a - b) < eps, `${a} vs ${b}`);
 
@@ -65,7 +65,33 @@ test('an unknown projection is Mercator, and a whole map shorter than the canvas
   assert.equal(clampView({ lon: 0, lat: 0, zoom: 4, projection: 'nonsense' }).projection, 'mercator');
   for (const name of ['constructor', 'toString', '__proto__']) assert.equal(clampView({ lon: 0, lat: 0, zoom: 4, projection: name }).projection, 'mercator', name);
   assert.equal(clampView({ lon: 0, lat: 0, zoom: 4 }).projection, 'mercator');
-  for (const projection of PROJECTION_NAMES.filter((p) => p !== 'mercator')) {
+  for (const projection of ['plate-carree', 'miller', 'equal-area']) {
     assert.equal(clampView({ lon: 0, lat: 60, zoom: ZOOM.min, projection }).lat, 0, projection);
   }
+});
+
+const AZIMUTHAL = ['orthographic', 'azimuthal-equidistant', 'stereographic'];
+
+test('an azimuthal view centres anywhere short of the pole, where a drag stops', () => {
+  for (const projection of AZIMUTHAL) {
+    const v = clampView({ lon: 0, lat: 60, zoom: ZOOM.min, projection });
+    assert.equal(v.lat, 60, projection);
+    assert.ok(clampView({ lon: 0, lat: 95, zoom: 2, projection }).lat < 90);
+    const over = panView(clampView({ lon: 0, lat: 85, zoom: 2, projection }), 0, 400); // the map dragged down, far past the pole
+    assert.ok(over.lat > 89.99 && Math.abs(over.lon) < 1e-6, `${projection}: ${JSON.stringify(over)}`); // stops there
+    const near = panView(clampView({ lon: 0, lat: 85, zoom: 2, projection }), 0, 10);
+    assert.ok(near.lat > 85 && near.lat < 90 && Math.abs(near.lon) < 1e-6, `${projection}: ${JSON.stringify(near)}`);
+  }
+});
+
+test('a point behind the horizon is refused, one in front projects where it should', () => {
+  const view = clampView({ lon: 10, lat: 30, zoom: 2, projection: 'orthographic' });
+  const data = viewProjection(view);
+  assert.ok(data.visible(10, 30) && data.visible(60, 0) && !data.visible(-170, -30) && !data.visible(10, -70));
+  close(data.project(10, 30)[0], W / 2); close(data.project(10, 30)[1], H / 2);
+  assert.ok(data.project(100, 30)[0] > W / 2); // east is right
+  assert.ok(data.project(10, 80)[1] < H / 2); // north is up
+  const [lon, lat] = data.invert(...data.project(40, -20));
+  close(lon, 40, 1e-9); close(lat, -20, 1e-9);
+  assert.ok(data.rim > 0 && data.rim < H / 2); // the whole globe fits at z2
 });

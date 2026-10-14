@@ -45,8 +45,8 @@ export function waterOf(riversGeo, lakesGeo) {
 // Each feature's rings as pixel runs, simplified to `tolerance` px, with a phase of its own so
 // neighbouring rivers do not wiggle in step.
 function pixelRuns(data, features, tolerance) {
-  const { x, y, lonCenter } = data.proj;
-  return features.flatMap((f) => runs(f.rings, x, y, { lonCenter })
+  const { x, y, seam } = data.proj;
+  return features.flatMap((f) => runs(f.rings, x, y, { ...seam })
     .filter((run) => run.length > 1)
     .map((run, i) => ({ run: simplify(run, tolerance), phase: (data.palette.seedOf(f.key) >>> 0) % 628 / 100 + i })));
 }
@@ -82,10 +82,10 @@ export const RIVERS = {
 // True shapes, washed, hatched if asked, and edged.
 function trueLakes(g, data, polys, { wash, alpha, hatching, edge }) {
   if (!polys.length) return;
-  const { x, y, lonCenter } = data.proj;
-  fill(g, polys, x, y, { color: wash, alpha, lonCenter });
-  if (hatching) hatch(g, polys, x, y, { ...hatching, lonCenter });
-  limn(g, polys.flat(), x, y, { color: edge, alpha: 1, width: 1.2, oneStroke: true, lonCenter });
+  const { x, y, seam } = data.proj;
+  fill(g, polys, x, y, { color: wash, alpha, ...seam });
+  if (hatching) hatch(g, polys, x, y, { ...hatching, ...seam });
+  limn(g, polys.flat(), x, y, { color: edge, alpha: 1, width: 1.2, oneStroke: true, ...seam });
 }
 const BLUE_HATCHED = { wash: LAKE_BLUE, alpha: 0.6, hatching: { angle: Math.PI / 2, gap: 9, wavelength: 22, amplitude: 2, color: HATCH_BLUE, width: 1.2 }, edge: RIVER_INK };
 
@@ -107,11 +107,11 @@ export const LAKES = {
   // Aguiar, 1492: a small lake is a lozenge washed red, rose or green, with a comb of tributaries
   // above it; a great one keeps its shape, washed blue and hatched with waves
   aguiar: (g, data, features) => {
-    const { x, y, lonCenter } = data.proj, { pigments, seedOf } = data.palette;
+    const { x, y, seam } = data.proj, { pigments, seedOf } = data.palette;
     const great = [], small = [];
     for (const f of features) {
       for (const poly of f.polys) {
-        const [ring] = runs([poly[0]], x, y, { lonCenter });
+        const [ring] = runs([poly[0]], x, y, { ...seam });
         if (!ring || ring.length < 3) continue;
         const box = footprint(ring);
         if (box.length >= LOZENGE_PX) great.push(poly);
