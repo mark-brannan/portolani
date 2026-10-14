@@ -90,3 +90,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t195019z
 - scene.mjs exports keptWater(data) so a test can count what a view keeps Undo: inline keptWater back into paintWater ([#92](https://github.com/mark-brannan/portolani/pull/92))
+
+### 20261014t195321z
+- Carta Marina buildings offered in the picker, left out of the default selection Undo: drop the carta-marina clause from DEFAULT_RULES in scene.mjs and refresh the goldens ([#94](https://github.com/mark-brannan/portolani/pull/94))
