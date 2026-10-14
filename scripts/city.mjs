@@ -137,8 +137,8 @@ export function cityPlan({ rings, x: px, y: py, extent: E, zoom, kmPx, rnd, w, h
     const t = core ? 0 : Math.max(0, (d - wallR(ang)) / fall), near = core ? 0 : roadOut(bx, by);
     // inside the wall the lots stand close, with gardens in the outer ring (Braun and Hogenberg's
     // towns keep their orchards against the wall); outside they thin with distance from it
-    let p = core ? (d > 0.7 * wallR(ang) ? 0.8 : 0.97) : 0.95 * Math.exp(-0.4 * t);
-    if (near < 3 * s) p = Math.max(p, 0.97 * Math.exp(-0.2 * t)); // ribbon suburbs along the roads
+    let p = core ? (d > 0.7 * wallR(ang) ? 0.8 : 0.97) : 0.97 * Math.exp(-0.15 * t);
+    if (near < 3 * s) p = Math.max(p, 0.98 * Math.exp(-0.08 * t)); // ribbon suburbs along the roads
     const roll = rnd();
     const L = (u, v) => P(u, v);
     if (roll >= p) {
@@ -162,7 +162,7 @@ export function cityPlan({ rings, x: px, y: py, extent: E, zoom, kmPx, rnd, w, h
       churches.push({ x: bx, y: by + (v1 - v0) * 0.25, w: Math.min(u1 - u0, 1.4 * s) * 0.8, kind: rnd() < 0.25 ? 'dome' : 'church', seed: rnd() });
       return;
     }
-    const keep = core ? 1 : Math.max(0.65, 1 - 0.3 * t);
+    const keep = core ? 1 : Math.max(0.85, 1 - 0.12 * t);
     // lots: one or two rows back to back along the block's long side, frontages of a few sizes
     const longU = u1 - u0 >= v1 - v0;
     const [a1, a2, b1, b2] = longU ? [u0, u1, v0, v1] : [v0, v1, u0, u1];
@@ -269,7 +269,6 @@ const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
 const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
 
 const LOT = 30; // floats a lot holds: centre, roof, shade, front, ridge
-const quad = (g, a, o) => { g.moveTo(a[o], a[o + 1]); g.lineTo(a[o + 2], a[o + 3]); g.lineTo(a[o + 4], a[o + 5]); g.lineTo(a[o + 6], a[o + 7]); g.closePath(); };
 const poly = (g, a, close) => { g.moveTo(a[0], a[1]); for (let i = 2; i < a.length; i += 2) g.lineTo(a[i], a[i + 1]); if (close) g.closePath(); };
 
 // A church drawn standing on its ground (x, y): a gabled nave and a campanile with a pyramid cap,
@@ -338,15 +337,25 @@ export function drawCity(g, plan, r, { ink, parchment, clip }) {
     g.beginPath(); poly(g, plan.core, true); g.fillStyle = 'rgba(181,83,60,0.22)'; g.fill();
     g.beginPath(); poly(g, plan.moat, true); g.strokeStyle = 'rgba(127,148,136,0.45)'; g.lineWidth = plan.wt * 1.4; g.stroke();
   }
-  // the lots: one fill per colour, then one ink stroke for every outline and one for the ridges
-  const L = plan.lots, seen = [];
-  for (let i = 0; i < L.length; i += LOT) if (near(L[i], L[i + 1])) seen.push(i);
-  const fillAll = (off, colour) => { g.beginPath(); for (const i of seen) quad(g, L, i + off); g.fillStyle = colour; g.fill(); };
-  fillAll(2, 'rgba(181,83,60,0.6)');
-  fillAll(10, SHADE);
-  fillAll(18, FRONT);
-  g.beginPath(); for (const i of seen) quad(g, L, i + 2); g.strokeStyle = ink; g.lineWidth = 0.7; g.stroke();
-  g.beginPath(); for (const i of seen) { g.moveTo(L[i + 26], L[i + 27]); g.lineTo(L[i + 28], L[i + 29]); } g.lineWidth = 0.4; g.stroke();
+  // the lots, standing: each roof raised over its ground by a storey, its front wall hung below the
+  // edge facing the viewer, as the bird's-eye plans draw them. Back rows first, a band of rows at a
+  // time, so a nearer house hides the one behind it; within a band, one fill per colour.
+  const L = plan.lots, up = Math.max(2.5, plan.s * 0.38), bands = new Map();
+  for (let i = 0; i < L.length; i += LOT) if (near(L[i], L[i + 1], pad + up)) {
+    const k = Math.floor(L[i + 1] / Math.max(4, plan.s * 0.5));
+    if (!bands.has(k)) bands.set(k, []);
+    bands.get(k).push(i);
+  }
+  const raised = (o, n) => { g.moveTo(L[o], L[o + 1] - up); for (let k = 1; k < n; k++) g.lineTo(L[o + 2 * k], L[o + 2 * k + 1] - up); g.closePath(); };
+  const wallOf = (i) => { const o = i + 18; g.moveTo(L[o], L[o + 1]); g.lineTo(L[o + 2], L[o + 3]); g.lineTo(L[o + 2], L[o + 3] - up); g.lineTo(L[o], L[o + 1] - up); g.closePath(); };
+  for (const k of [...bands.keys()].sort((a, b) => a - b)) {
+    const seen = bands.get(k);
+    g.beginPath(); for (const i of seen) wallOf(i); g.fillStyle = FRONT; g.fill(); g.strokeStyle = ink; g.lineWidth = 0.55; g.stroke();
+    g.beginPath(); for (const i of seen) raised(i + 2, 4); g.fillStyle = ROOF; g.fill();
+    g.beginPath(); for (const i of seen) raised(i + 10, 4); g.fillStyle = SHADE; g.fill();
+    g.beginPath(); for (const i of seen) raised(i + 2, 4); g.strokeStyle = ink; g.lineWidth = 0.7; g.stroke();
+    g.beginPath(); for (const i of seen) { g.moveTo(L[i + 26], L[i + 27] - up); g.lineTo(L[i + 28], L[i + 29] - up); } g.lineWidth = 0.4; g.stroke();
+  }
   // the wall: a stone band between two ink lines, crenellated with ticks across it
   g.beginPath(); for (const w of plan.wall) poly(g, w.mid, false);
   g.strokeStyle = STONE; g.lineWidth = plan.wt; g.lineCap = 'butt'; g.stroke();
@@ -360,5 +369,29 @@ export function drawCity(g, plan, r, { ink, parchment, clip }) {
   g.fillStyle = ROOF; g.fill();
   g.lineCap = 'round';
   for (const c of plan.churches) if (near(c.x, c.y - c.w, c.w * 2)) church(g, c, ink, parchment);
+  g.restore();
+}
+
+// Little houses standing in the wash of a built-up area too far off for its plan, after the Carta
+// Marina's towns: a gabled front, its roof running back up and to the right, a side wall in shade.
+// `pts` holds x, y (the foot of the front), width and a seed in [0, 1) per house; drawn back to
+// front, each a little askew, as a hand would.
+export function drawHouses(g, pts, { ink, alpha = 1 }) {
+  const order = [];
+  for (let i = 0; i < pts.length; i += 4) order.push(i);
+  order.sort((a, b) => pts[a + 1] - pts[b + 1]);
+  g.save(); g.globalAlpha = alpha; g.lineJoin = 'round';
+  for (const i of order) {
+    const x = pts[i], y = pts[i + 1], w = pts[i + 2], sd = pts[i + 3];
+    const wob = (k) => (((sd * 9301 * (k + 1)) % 1) - 0.5) * 0.14 * w;
+    const hw = w * (0.4 + 0.2 * ((sd * 7) % 1)), rise = w * 0.45, ox = w * 0.65, oy = -w * 0.38;
+    const A = [x - w / 2 + wob(1), y], B = [x + w / 2 + wob(2), y], C = [B[0] + wob(3), y - hw], D = [A[0] + wob(4), y - hw], P = [x + wob(5), y - hw - rise];
+    const path = (pp) => { g.beginPath(); pp.forEach(([px, py], k) => (k ? g.lineTo(px, py) : g.moveTo(px, py))); g.closePath(); };
+    const shift = ([px, py]) => [px + ox, py + oy];
+    path([B, shift(B), shift(C), C]); g.fillStyle = '#c4ad86'; g.fill(); g.strokeStyle = ink; g.lineWidth = 0.5; g.stroke();
+    path([P, C, shift(C), shift(P)]); g.fillStyle = ROOF; g.fill(); g.stroke();
+    path([A, B, C, P, D]); g.fillStyle = '#dcc9a0'; g.fill(); g.stroke();
+    if (w > 5) { g.beginPath(); g.rect(x - w * 0.1, y - hw * 0.55, w * 0.2, hw * 0.55); g.fillStyle = ink; g.fill(); } // a door
+  }
   g.restore();
 }

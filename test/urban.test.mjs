@@ -82,9 +82,9 @@ const env = {
 }
 
 test('a city close in is drawn as a plan over its footprint, on land only, its name lettered', { skip: !existsSync(URBAN) && 'no urban areas download' }, async () => {
-  const { scene, data, bg } = await createScene(env, { view: { lon: -122.33, lat: 47.6, zoom: 9 }, scale: 'off' })
+  const { scene, data, bg } = await createScene(env, { view: { lon: -122.33, lat: 47.6, zoom: 10 }, scale: 'off' })
   const seattle = scene.towns.find((t) => t.name === 'Seattle')
-  assert.ok(seattle?.city, 'Seattle is not a city at z9')
+  assert.ok(seattle?.city, 'Seattle is not a city at z10')
   assert.ok(scene.names.some((n) => n.text === 'Seattle'), 'no Seattle lettered')
   const L = seattle.city.plan.lots
   assert.ok(L.length / 30 > 100, `${L.length / 30} lots`)
@@ -181,4 +181,18 @@ test('a built-up area is washed over its town\'s footprint and on land only, tho
   assert.ok(changed > 2000, `${changed} px changed`)
   assert.equal(wet, 0, `${wet} of ${changed} washed px are at sea`)
   assert.equal(off, 0, `${off} of ${changed} washed px lie off the towns' footprints`)
+})
+
+// A waterfront town's icon stands over its built-up ground, not on its shore (scene.mjs standOf):
+// Seattle's place point is on Elliott Bay, and its icon's box is mostly land through z9.
+test('a waterfront town\'s icon stands on its ground, not on its shore', { skip: !existsSync(URBAN) && 'no urban areas download' }, async () => {
+  for (const zoom of [6, 7, 8, 9]) {
+    const { scene } = await createScene(env, { view: { lon: -122.33, lat: 47.6, zoom }, scale: 'off' })
+    const t = scene.towns.find((x) => x.name === 'Seattle')
+    assert.ok(t && !t.city && t.sprite, `Seattle is not an icon at z${zoom}`)
+    const w = (t.h * t.sprite.img.width) / t.sprite.img.height
+    let n = 0, dry = 0
+    for (let j = 0; j < 6; j++) for (let i = 0; i < 6; i++, n++) if (scene.field.isLand(t.x + w * ((i + 0.5) / 6 - 0.5), t.y - t.h * (j + 0.5) / 6)) dry++
+    assert.ok(dry / n >= 0.75, `z${zoom}: ${dry} of ${n} of the icon on land`)
+  }
 })
