@@ -943,14 +943,17 @@ function buildScene(data, sprites, ctx, world = {}) {
   // Towns, lower scalerank first, >= TUNE.townGap apart. The selected town sprites fall into families
   // by pack and style, and the tower is one when chosen; each town keeps one family, picked by its
   // name, save that the tower, plain at its first size, stands only for the smallest towns (SMALL_TOWN).
+  // A sprite whose manifest names towns (`only`: Venice's halo of rays) is kept out of its family's
+  // pool and drawn for those towns alone.
   const boxes = [obb(cartouche.x + cw / 2, cartouche.y + ch / 2, 0, cw / 2, ch / 2)];
   for (const r of roseDraws) boxes.push(obb(r.x, r.y, 0, r.size * 0.42, r.size * 0.42));
   const worldNames = placeWorldNames(data, ctx, boxes, { continents: world.continents ?? false, regions: world.regions ?? 'off' });
-  const families = [...(sprites.towns ?? []).reduce((m, s) => m.set(`${s.pack}/${s.style}`, [...(m.get(`${s.pack}/${s.style}`) ?? []), s]), new Map()).values()];
+  const special = new Map((sprites.towns ?? []).flatMap((s) => (s.only ?? []).map((name) => [name, s])));
+  const families = [...(sprites.towns ?? []).filter((s) => !s.only).reduce((m, s) => m.set(`${s.pack}/${s.style}`, [...(m.get(`${s.pack}/${s.style}`) ?? []), s]), new Map()).values()];
   if (sprites.tower ?? !families.length) families.push(null); // null: the towers drawn in code
   const towerIds = sprites.towers?.length ? sprites.towers : ['tower'];
   const towns = [];
-  const sorted = families.length ? [...data.places].sort((a, b) => a.rank - b.rank || b.pop - a.pop) : [];
+  const sorted = families.length || special.size ? [...data.places].sort((a, b) => a.rank - b.rank || b.pop - a.pop) : [];
   // cities first: they are ground, drawn under the ornaments, and their boxes make the icons and names give way
   const cities = new Set(), cityBoxes = new Set();
   for (const p of sorted) {
@@ -966,11 +969,12 @@ function buildScene(data, sprites, ctx, world = {}) {
     const [px, py] = p.xy;
     if (cities.has(p) || px < 8 || py < 8 || px > W - 8 || py > H - 8) continue;
     if (towns.some((t) => !t.city && Math.hypot(t.x - px, t.y - py) < TUNE.townGap)) continue;
+    if (!families.length && !special.has(p.name)) continue; // only the named towns' own drawings chosen
     const fit = townGrandeur(p) < SMALL_TOWN || families.every((f) => !f) ? families : families.filter(Boolean);
     // the town's own drawing, whatever the view: its family and variant follow from its name, so a
     // zoom or a pan never redraws it as another (townVariant)
     const pick = seedOf(p.name) >>> 0, family = fit[pick % fit.length], size = townScale(p, world.townSize);
-    const sprite = family && townVariant(family, p, pick >>> 8), tower = !sprite && TOWER_BY_ID.get(towerIds[(pick >>> 8) % towerIds.length]);
+    const sprite = special.get(p.name) ?? (family && townVariant(family, p, pick >>> 8)), tower = !sprite && TOWER_BY_ID.get(towerIds[(pick >>> 8) % towerIds.length]);
     const base = (sprite ? townHeight(sprite) : TOWER_H) * size, ground = footprint(p, data.proj);
     const th = Math.max(base, Math.min(ICON_MAX, ICON_GROW * ground.extent));
     const [x, y] = standOf(p, th, sprite ? ((th / 2) * sprite.img.width) / sprite.img.height : (th * tower.w) / TOWER_H, field, ground.rings);
