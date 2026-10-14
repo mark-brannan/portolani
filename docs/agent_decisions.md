@@ -117,3 +117,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t195715z
 - Relief: mountainous country is a seeded 7-degree noise over half the land, NOISE_SALT 3781 chosen so the great named ranges fall on it Undo: drop the noise gate in reliefOf, or change NOISE_SALT or share ([#95](https://github.com/mark-brannan/portolani/pull/95))
+
+### 20261014t195721z
+- Relief: ornaments clear it peak by peak, not range by range Undo: filter whole ranges in clearOf ([#95](https://github.com/mark-brannan/portolani/pull/95))
