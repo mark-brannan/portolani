@@ -200,7 +200,10 @@ const worlds = new WeakMap();
 async function loadWorld() {
   const [landGeo, coastGeo, placesGeo, namesGeo, urbanGeo] = await Promise.all(
     [...['ne-land-50m', 'ne-coastline-50m', 'ne-populated-places-50m'].map(loadGeo), env.readJSON('geo/names-50m.json'),
-      loadGeo('ne-urban-areas-50m').catch(() => null)]); // a site without the urban areas draws no town footprints
+      loadGeo('ne-urban-areas-50m').catch((e) => { // a site without the urban areas draws no town footprints
+        if (!/404|ENOENT/.test(String(e?.code ?? e?.message ?? e))) throw e;
+        return null;
+      })]);
   let world = worlds.get(landGeo);
   if (world) return world;
   const land = geojsonPolygons(landGeo).map((poly) => ({ poly: Object.assign(poly, { isl: islandInfo(poly) }), box: bbox(poly[0]) }));
@@ -1285,7 +1288,8 @@ function drawScene(g, scene, data, bg, view) {
     const a = Math.min(1, (Math.max(u.box.x1 - u.box.x0, u.box.y1 - u.box.y0) * view.scale / URBAN_PX - 1)) * 0.45;
     if (a <= 0 || !meets(r, u.box)) continue;
     fill(g, [u.poly], data.proj.x, data.proj.y, { color: STYLE.terracotta, alpha: a, lonCenter: data.proj.lonCenter });
-    g.save(); g.globalAlpha = a * 1.5; g.strokeStyle = STYLE.ink; g.lineWidth = 0.8 / view.scale; g.stroke(); g.restore();
+    g.save(); g.beginPath(); trace(g, [u.poly], data.proj.x, data.proj.y, { lonCenter: data.proj.lonCenter });
+    g.globalAlpha = a * 1.5; g.strokeStyle = STYLE.ink; g.lineWidth = 0.8 / view.scale; g.stroke(); g.restore();
   }
 
   // 5. roses
