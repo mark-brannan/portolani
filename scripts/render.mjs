@@ -8,16 +8,22 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createScene, drawScene, W, H, DETAIL } from './scene.mjs';
+import { seaNames, coastNames, joinNames } from './names.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DL = join(ROOT, 'downloads');
 const GEO = dirname(fileURLToPath(import.meta.resolve('coastlines/data/ne-land-50m')));
 
-// Logical paths: geo/<id>.geojson is a coastlines data file, packs/... in the repo.
+// Logical paths: geo/<id>.geojson is a coastlines data file, packs/... in the repo; the names are
+// made here from the marine download and the coastlines countries.
 const resolve = (p) => (p.startsWith('geo/') ? join(GEO, p.slice(4)) : join(ROOT, p));
+const read = (file) => JSON.parse(readFileSync(file, 'utf8'));
+let made;
+const names = () => made ??= joinNames(seaNames(read(join(DL, 'ne_50m_geography_marine_polys.geojson'))),
+  coastNames(read(join(GEO, 'ne-admin-0-countries-50m.geojson')), read(join(GEO, 'ne-coastline-50m.geojson'))));
 const env = {
   createCanvas,
-  readJSON: async (p) => JSON.parse(readFileSync(resolve(p), 'utf8')),
+  readJSON: async (p) => (p === 'geo/names-50m.json' ? names() : read(resolve(p))),
   loadImage: (p) => loadImage(resolve(p)),
   loadFont: async (family) => { GlobalFonts.registerFromPath(join(DL, 'IMFeENrm28P.ttf'), family); },
 };
