@@ -133,9 +133,13 @@ const wrapLon = (lon) => ((((lon + 180) % 360) + 360) % 360) - 180;
 const fromCentre = (d) => (d > 180 ? d - 360 : d < -180 ? d + 360 : d);
 const kOf = (zoom) => (512 * 2 ** zoom) / (2 * Math.PI); // px per radian of longitude
 
-// Cylindrical projections: x is longitude, the same in each, and y is f(lat) in radians of
-// longitude, with inv its inverse and max the y of the map's top edge. Rhumb lines are straight
-// only on Mercator, which is why he drew it; on the others they bow toward the poles.
+// A projection is cylindrical or azimuthal. Cylindrical: x is longitude, the same in each, and y is
+// f(lat) in radians of longitude, with inv its inverse and max the y of the map's top edge. Rhumb
+// lines are straight only on Mercator, which is why he drew it; on the others they bow toward the
+// poles. Azimuthal: about the view's centre, north up; r(c) is the radius, in radians of longitude at
+// the centre, of a point c radians away, inv its inverse, and cap the distance past which a point
+// is refused: the globe's far side, the equidistant's antipode (every bearing meets there) and the
+// stereographic's far reaches, which run off to infinity. The scale at the centre is the same in all.
 const PROJECTIONS = {
   mercator: { f: mercY, inv: mercLat, max: Math.PI }, // Web Mercator's square, to 85.05 degrees
   'plate-carree': { f: (lat) => lat * RAD, inv: (y) => y / RAD, max: Math.PI / 2 },
@@ -146,20 +150,69 @@ const PROJECTIONS = {
   },
   // Gall-Peters: equal-area, true scale at 45 degrees; here scaled so x matches the others
   'equal-area': { f: (lat) => 2 * Math.sin(lat * RAD), inv: (y) => Math.asin(y / 2) / RAD, max: 2 },
+  orthographic: { r: Math.sin, inv: Math.asin, cap: Math.PI / 2 }, // the globe as seen from afar
+  'azimuthal-equidistant': { r: (c) => c, inv: (r) => r, cap: Math.PI - 15 * RAD }, // distance and bearing true from the centre
+  stereographic: { r: (c) => 2 * Math.tan(c / 2), inv: (r) => 2 * Math.atan(r / 2), cap: 150 * RAD }, // conformal, the polar chart's
 };
 const projectionOf = (view) => PROJECTIONS[Object.hasOwn(PROJECTIONS, view.projection) ? view.projection : 'mercator'];
+const POLE = 90 - 1e-4; // an azimuthal centre stops a hair short of the pole, where a bearing means nothing
 
-// The view's projection centred on it; longitudes are measured from its centre, so any seam is behind it.
+// Great-circle moves, in degrees: the point `d` radians from (lon, lat) on bearing `az` (radians,
+// clockwise from north), and the bearing from one point toward another.
+function destination([lon, lat], az, d) {
+  const p1 = lat * RAD, sd = Math.sin(d), cd = Math.cos(d);
+  const p2 = Math.asin(Math.sin(p1) * cd + Math.cos(p1) * sd * Math.cos(az));
+  return [lon + Math.atan2(Math.sin(az) * sd * Math.cos(p1), cd - Math.sin(p1) * Math.sin(p2)) / RAD, p2 / RAD];
+}
+function bearing([lon1, lat1], [lon2, lat2]) {
+  const p1 = lat1 * RAD, p2 = lat2 * RAD, dl = (lon2 - lon1) * RAD;
+  return Math.atan2(Math.sin(dl) * Math.cos(p2), Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl));
+}
+const wrapAngle = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+
+// The view's projection centred on it; longitudes are measured from its centre, so any seam is behind
+// it. `seam` is what every coast-wright call takes: the centre longitude and, on an azimuthal
+// projection, the `visible` predicate that refuses the far side; `rim` is the px radius of what it
+// shows, null on a cylindrical projection.
 function makeProjection(view, w = W, h = H) {
-  const P = projectionOf(view), k = kOf(view.zoom), lonCenter = view.lon, y0 = P.f(view.lat);
-  // x(lon, lat) and y(lat, lon), as coast-wright calls them
-  const x = (lon) => w / 2 + fromCentre(lon - lonCenter) * RAD * k;
-  const y = (lat) => h / 2 - (P.f(lat) - y0) * k;
+  const P = projectionOf(view), k = kOf(view.zoom), lonCenter = view.lon;
+  if (!P.cap) {
+    const y0 = P.f(view.lat);
+    // x(lon, lat) and y(lat, lon), as coast-wright calls them
+    const x = (lon) => w / 2 + fromCentre(lon - lonCenter) * RAD * k;
+    const y = (lat) => h / 2 - (P.f(lat) - y0) * k;
+    return {
+      k, zoom: view.zoom, lonCenter, lat: view.lat, x, y, seam: { lonCenter }, rim: null,
+      project: (lon, lat) => [x(lon), y(lat)],
+      // a point past the map's top or bottom edge inverts to the edge's latitude
+      invert: (px, py) => [lonCenter + (px - w / 2) / k / RAD, P.inv(Math.max(-P.max, Math.min(P.max, y0 - (py - h / 2) / k)))],
+    };
+  }
+  const p1 = view.lat * RAD, sp1 = Math.sin(p1), cp1 = Math.cos(p1), cosCap = Math.cos(P.cap), rimR = P.r(P.cap);
+  // the point's offset from the centre, in radians of longitude at the centre, east and north
+  const offset = (lon, lat) => {
+    const p = lat * RAD, dl = (lon - lonCenter) * RAD, cp = Math.cos(p), sp = Math.sin(p), cdl = Math.cos(dl);
+    const cosc = sp1 * sp + cp1 * cp * cdl, sinc = Math.sqrt(Math.max(0, 1 - cosc * cosc));
+    const m = sinc < 1e-12 ? 1 : P.r(Math.acos(Math.max(-1, Math.min(1, cosc)))) / sinc;
+    return [cp * Math.sin(dl) * m, (cp1 * sp - sp1 * cp * cdl) * m];
+  };
+  const x = (lon, lat) => w / 2 + offset(lon, lat)[0] * k;
+  const y = (lat, lon) => h / 2 - offset(lon, lat)[1] * k;
+  const visible = (lon, lat) => {
+    const p = lat * RAD;
+    return sp1 * Math.sin(p) + cp1 * Math.cos(p) * Math.cos((lon - lonCenter) * RAD) > cosCap;
+  };
   return {
-    k, zoom: view.zoom, lonCenter, x, y,
-    project: (lon, lat) => [x(lon), y(lat)],
-    // a point past the map's top or bottom edge inverts to the edge's latitude
-    invert: (px, py) => [lonCenter + (px - w / 2) / k / RAD, P.inv(Math.max(-P.max, Math.min(P.max, y0 - (py - h / 2) / k)))],
+    k, zoom: view.zoom, lonCenter, lat: view.lat, x, y, visible, seam: { lonCenter, visible }, rim: rimR * k, cap: P.cap,
+    project: (lon, lat) => { const [ox, oy] = offset(lon, lat); return [w / 2 + ox * k, h / 2 - oy * k]; },
+    // a point past the rim inverts to the rim
+    invert: (px, py) => {
+      const ox = (px - w / 2) / k, oy = (h / 2 - py) / k, d = Math.hypot(ox, oy);
+      if (d < 1e-12) return [lonCenter, view.lat];
+      const rho = Math.min(d, rimR), c = P.inv(rho), sc = Math.sin(c), cc = Math.cos(c);
+      const lat = Math.asin(Math.max(-1, Math.min(1, cc * sp1 + (oy / d) * sc * cp1)));
+      return [lonCenter + Math.atan2((ox / d) * sc, cp1 * cc - sp1 * (oy / d) * sc) / RAD, lat / RAD];
+    },
   };
 }
 
@@ -173,36 +226,97 @@ const DEFAULT_VIEW = viewOfFrame(FRAME);
 
 // Zoom within ZOOM, longitude wrapped, projection one of PROJECTIONS, and the centre kept far
 // enough from the poles that the canvas stays on the map, or centred on the equator once the
-// whole map is shorter than the canvas.
+// whole map is shorter than the canvas; an azimuthal centre goes anywhere short of the poles.
 function clampView({ lon, lat, zoom, projection }) {
   zoom = Math.min(ZOOM.max, Math.max(ZOOM.min, zoom));
   projection = Object.hasOwn(PROJECTIONS, projection) ? projection : 'mercator';
-  const P = PROJECTIONS[projection], room = Math.max(0, P.max - H / 2 / kOf(zoom));
+  const P = PROJECTIONS[projection];
+  if (P.cap) return { lon: wrapLon(lon), lat: Math.max(-POLE, Math.min(POLE, lat)), zoom, projection };
+  const room = Math.max(0, P.max - H / 2 / kOf(zoom));
   return { lon: wrapLon(lon), lat: P.inv(Math.max(-room, Math.min(room, P.f(lat)))), zoom, projection };
 }
 
-// The view moved so the map follows a drag of (dx, dy) canvas px.
+// The view moved so the map follows a drag of (dx, dy) canvas px. On an azimuthal projection the
+// centre rolls along a great circle, a radian per k px; the move is read in the view centred on the
+// way's midpoint, so that the reverse drag comes back to the same view (north-up bearings converge
+// otherwise). A drag over a pole has no north-up answer, so it stops at the pole.
 function panView(view, dx, dy) {
   const P = projectionOf(view), k = kOf(view.zoom);
-  return clampView({ ...view, lon: view.lon - dx / k / RAD, lat: P.inv(P.f(view.lat) + dy / k) });
+  if (!P.cap) return clampView({ ...view, lon: view.lon - dx / k / RAD, lat: P.inv(P.f(view.lat) + dy / k) });
+  const d = Math.min(Math.PI, Math.hypot(dx, dy) / k), az = Math.atan2(-dx, dy), c = [view.lon, view.lat];
+  if (d < 1e-12) return clampView(view);
+  let b = az, mid, err = Infinity;
+  for (let i = 0; i < 24 && Math.abs(err) > 1e-13; i++) { // the bearing from the centre to the midpoint, from which the centre lies on az + 180
+    mid = destination(c, b, d / 2);
+    err = wrapAngle(az + Math.PI - bearing(mid, c));
+    b += err;
+  }
+  const [lon, lat] = Math.abs(err) < 1e-9 ? destination(mid, az, d / 2) : destination(c, az, d);
+  if (Math.abs(fromCentre(lon - view.lon)) > 90) return clampView({ ...view, lat: Math.sign(view.lat) * POLE }); // past the pole
+  return clampView({ ...view, lon, lat });
 }
 
 // The view zoomed by `factor` about canvas point (px, py), which keeps its place on the map.
 function zoomView(view, factor, px, py) {
   const P = projectionOf(view), k = kOf(view.zoom), ox = px - W / 2, oy = py - H / 2;
   const zoom = Math.min(ZOOM.max, Math.max(ZOOM.min, view.zoom + Math.log2(factor))), k2 = kOf(zoom);
-  const lon = view.lon + (ox / k - ox / k2) / RAD;
-  return clampView({ ...view, lon, lat: P.inv(P.f(view.lat) - oy / k + oy / k2), zoom });
+  if (!P.cap) {
+    const lon = view.lon + (ox / k - ox / k2) / RAD;
+    return clampView({ ...view, lon, lat: P.inv(P.f(view.lat) - oy / k + oy / k2), zoom });
+  }
+  const proj = makeProjection(view), at = proj.invert(px, py);
+  if (Math.hypot(ox, oy) / k >= P.r(P.cap)) return clampView({ ...view, zoom }); // off the map: about the centre
+  // the centre that puts `at` back under (px, py): `at` lies c2 from it on the pointer's screen angle, a
+  // spherical triangle with the pole solved for the centre's latitude (two roots; the one that lands
+  // `at` nearest the pointer wins) and then its longitude
+  const ang = Math.atan2(ox, -oy), rho2 = Math.hypot(ox, oy) / k2;
+  if (rho2 >= P.r(P.cap)) return clampView({ ...view, zoom });
+  const c2 = P.inv(rho2), sc2 = Math.sin(c2), cc2 = Math.cos(c2);
+  const R = Math.hypot(cc2, sc2 * Math.cos(ang)), delta = Math.atan2(sc2 * Math.cos(ang), cc2);
+  const sArg = Math.max(-1, Math.min(1, Math.sin(at[1] * RAD) / R));
+  let c = [view.lon, view.lat], best = Infinity;
+  for (const phi of [Math.asin(sArg) - delta, Math.PI - Math.asin(sArg) - delta]) {
+    const lat = wrapAngle(phi);
+    if (Math.abs(lat) > Math.PI / 2) continue; // a latitude past a pole is the other root
+    const dl = Math.atan2(Math.sin(ang) * sc2 * Math.cos(lat), cc2 - Math.sin(lat) * Math.sin(at[1] * RAD));
+    const cand = [at[0] - dl / RAD, lat / RAD];
+    const [qx, qy] = makeProjection({ ...view, lon: cand[0], lat: cand[1], zoom }).project(...at);
+    const e = Math.hypot(qx - px, qy - py);
+    if (e < best) { best = e; c = cand; }
+  }
+  if (best > 1) return clampView({ ...view, zoom }); // no north-up centre keeps it there (it wants a pole): about the centre
+  return clampView({ ...view, lon: c[0], lat: c[1], zoom });
 }
 
-// The lon/lat frame a projection paints, widened by `margin` degrees.
+// The lon/lat frame a projection paints, widened by `margin` degrees. An azimuthal view whose canvas
+// holds a pole or the rim takes all it can show; otherwise the canvas edge bounds it.
 function frameOf(proj, margin) {
-  const half = W / 2 / proj.k / RAD;
-  return {
-    lonMin: proj.lonCenter - half - margin, lonMax: proj.lonCenter + half + margin,
-    latMin: proj.invert(0, H)[1] - margin, latMax: proj.invert(0, 0)[1] + margin,
-  };
+  if (!proj.rim) {
+    const half = W / 2 / proj.k / RAD;
+    return {
+      lonMin: proj.lonCenter - half - margin, lonMax: proj.lonCenter + half + margin,
+      latMin: proj.invert(0, H)[1] - margin, latMax: proj.invert(0, 0)[1] + margin,
+    };
+  }
+  const onCanvas = ([x, y]) => x >= 0 && x <= W && y >= 0 && y <= H;
+  const pole = [90, -90].some((lat) => proj.visible(0, lat) && onCanvas(proj.project(0, lat)));
+  const rimIn = [[0, 0], [W, 0], [0, H], [W, H]].some(([x, y]) => Math.hypot(x - W / 2, y - H / 2) >= proj.rim);
+  if (pole || rimIn) {
+    const reach = proj.cap / RAD;
+    return { lonMin: proj.lonCenter - 180 - margin, lonMax: proj.lonCenter + 180 + margin, latMin: Math.max(-90, proj.lat - reach) - margin, latMax: Math.min(90, proj.lat + reach) + margin };
+  }
+  let dMin = 0, dMax = 0, latMin = 90, latMax = -90;
+  const STEP = 50;
+  for (let t = 0; t <= Math.max(W, H); t += STEP) {
+    for (const [x, y] of [[Math.min(t, W), 0], [Math.min(t, W), H], [0, Math.min(t, H)], [W, Math.min(t, H)]]) {
+      const [lon, lat] = proj.invert(x, y), d = fromCentre(lon - proj.lonCenter);
+      if (d < dMin) dMin = d; if (d > dMax) dMax = d; if (lat < latMin) latMin = lat; if (lat > latMax) latMax = lat;
+    }
+  }
+  return { lonMin: proj.lonCenter + dMin - margin, lonMax: proj.lonCenter + dMax + margin, latMin: latMin - margin, latMax: latMax + margin };
 }
+// Whether a projection shows a point: all of them on a cylindrical one, the near side on an azimuthal.
+const shows = (proj, lon, lat) => !proj.visible || proj.visible(lon, lat);
 // At any of a longitude's 360-degree copies, so a frame may run past the antimeridian.
 const SHIFTS = [-360, 0, 360];
 const nearLL = (f, lon, lat) => lat > f.latMin && lat < f.latMax && SHIFTS.some((s) => lon + s > f.lonMin && lon + s < f.lonMax);
@@ -358,13 +472,16 @@ function viewData(world, view) {
   const coast = coastLL.flatMap((line) => {
     const out = [[]];
     for (const [lon, lat] of line) {
-      const p = proj.project(lon, lat), cur = out[out.length - 1], prev = cur[cur.length - 1];
+      const cur = out[out.length - 1];
+      if (!shows(proj, lon, lat)) { if (cur.length) out.push([]); continue; }
+      const p = proj.project(lon, lat), prev = cur[cur.length - 1];
       if (prev && Math.abs(p[0] - prev[0]) > Math.PI * proj.k) out.push([p]); else cur.push(p);
     }
     return out.filter((l) => l.length > 1);
   });
-  const places = world.places.filter((p) => nearLL(f, p.lon, p.lat)).map((p) => ({ ...p, xy: proj.project(p.lon, p.lat) }));
-  const lesser = view.zoom < DETAIL_ZOOM ? [] : world.lesser.filter((p) => nearLL(f, p.lon, p.lat)).map((p) => ({ ...p, xy: proj.project(p.lon, p.lat) }));
+  const shown = (p) => nearLL(f, p.lon, p.lat) && shows(proj, p.lon, p.lat);
+  const places = world.places.filter(shown).map((p) => ({ ...p, xy: proj.project(p.lon, p.lat) }));
+  const lesser = view.zoom < DETAIL_ZOOM ? [] : world.lesser.filter(shown).map((p) => ({ ...p, xy: proj.project(p.lon, p.lat) }));
   // names worth showing at this zoom (Natural Earth's min_label), most important first
   const names = world.names.filter((n) => n.min <= view.zoom + 1 && meetsLL(f, n.box))
     .sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'sea' ? -1 : 1) || a.rank - b.rank);
@@ -569,7 +686,14 @@ function tint(img, ink) {
 
 // ---------------------------------------------------------------- clearance field
 
-const traceLand = (g, data, polys = data.land) => trace(g, polys, data.proj.x, data.proj.y, { lonCenter: data.proj.lonCenter });
+const traceLand = (g, data, polys = data.land) => trace(g, polys, data.proj.x, data.proj.y, { ...data.proj.seam });
+// The canvas outside an azimuthal projection's rim, as a path (even-odd); nothing on a cylindrical one.
+function beyondRim(g, proj) {
+  g.beginPath();
+  if (!proj.rim) return;
+  g.rect(-W, -H, 3 * W, 3 * H);
+  g.arc(W / 2, H / 2, proj.rim, 0, 2 * Math.PI);
+}
 
 // Chamfer distance (1, sqrt2), in px, from every cell of a cols x rows grid of CELL px to the
 // nearest cell where `seed(i)` holds.
@@ -601,6 +725,7 @@ function clearanceField(data) {
   g.fillStyle = '#000';
   traceLand(g, data);
   g.fill('evenodd');
+  beyondRim(g, data.proj); g.fill('evenodd');
   g.strokeStyle = '#000';
   g.lineWidth = CELL; // keeps islands smaller than a cell
   for (const line of data.coast) { g.beginPath(); line.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke(); }
@@ -623,6 +748,7 @@ function clearanceField(data) {
   fg.scale(1 / FINE, 1 / FINE);
   traceLand(fg, data);
   fg.fill('evenodd');
+  beyondRim(fg, data.proj); fg.fill('evenodd');
   const fpx = fg.getImageData(0, 0, fc, fr).data;
   const isLand = (x, y) => {
     const cx = Math.floor(x / FINE), cy = Math.floor(y / FINE);
@@ -645,8 +771,8 @@ function clearanceField(data) {
 // How names are lettered, the same when placed and when drawn so both lay them out alike: a
 // coast is lettered along its stretch inside the canvas.
 const letterOptions = (data) => ({
-  fonts: STYLE.fonts, lonCenter: data.proj.lonCenter,
-  visible: (lon, lat) => { const x = data.proj.x(lon), y = data.proj.y(lat); return x >= 0 && x <= W && y >= 0 && y <= H; },
+  fonts: STYLE.fonts, ...data.proj.seam,
+  visible: (lon, lat) => { if (!shows(data.proj, lon, lat)) return false; const x = data.proj.x(lon, lat), y = data.proj.y(lat, lon); return x >= 0 && x <= W && y >= 0 && y <= H; },
 });
 
 // World-view lettering, hand-set: [Latin, English, lon, lat]. Zoom levels are whole: continents are
@@ -671,6 +797,7 @@ function placeWorldNames(data, ctx, boxes, { continents, regions }) {
   const z = data.proj.zoom, out = [];
   const lang = regions === 'latin' ? 0 : 1;
   const put = (text, lon, lat, size, spacing, italic) => {
+    if (!shows(data.proj, lon, lat)) return;
     const [x, y] = data.proj.project(lon, lat);
     ctx.font = `${italic ? 'italic ' : ''}${size}px "${STYLE.font}"`;
     ctx.letterSpacing = `${spacing}px`;
@@ -703,7 +830,7 @@ function viewTitle(data, towns, lang) {
   const z = data.proj.zoom, half = Math.hypot(W, H) / 2;
   const fit = (s) => Math.exp(-(((z - s) / 1.6) ** 2));
   const central = ([x, y]) => (x < 0 || y < 0 || x > W || y > H ? 0 : 1 - Math.hypot(x - W / 2, y - H / 2) / half);
-  const at = (lon, lat) => central(data.proj.project(lon, lat));
+  const at = (lon, lat) => (shows(data.proj, lon, lat) ? central(data.proj.project(lon, lat)) : 0);
   const scored = [
     ...CONTINENTS.map((c) => ({ text: c[lang], score: at(c[2], c[3]) * fit(2) })),
     ...REGIONS.map((r) => ({ text: r[lang], score: at(r[2], r[3]) * fit(4.6) })),
@@ -786,12 +913,15 @@ function cutRing(ring, b) {
 // it has one (the measure CITY_PX reads), else its metro area (MAX_AREAKM); 0 with neither. The
 // metro area is km2, so it takes the px per km east-west (kmPxAt) and north-south (the projection's
 // own y against latitude, which equals the east-west scale only where the projection is conformal).
-const kmPxAt = (proj, lat) => (proj.k * 1000) / (EARTH_R * Math.cos(lat * RAD));
+const kmPxAt = (proj, lon, lat) => {
+  const d = 1e-4, [ax, ay] = proj.project(lon - d, lat), [bx, by] = proj.project(lon + d, lat);
+  return (Math.hypot(bx - ax, by - ay) / (2 * d * RAD)) * 1000 / (EARTH_R * Math.cos(lat * RAD));
+};
 function footprint(p, proj) {
   if (!p.urban) {
     if (!(p.area > 0)) return { extent: 0 };
     const d = 1e-4, ns = (proj.project(p.lon, p.lat - d)[1] - proj.project(p.lon, p.lat + d)[1]) / (2 * d * RAD) * 1000 / EARTH_R;
-    return { extent: Math.sqrt(p.area * kmPxAt(proj, p.lat) * Math.abs(ns)) };
+    return { extent: Math.sqrt(p.area * kmPxAt(proj, p.lon, p.lat) * Math.abs(ns)) };
   }
   const rings = p.urban.map((ring) => ring.map(([lon, lat]) => proj.project(lon, lat)));
   return { rings, extent: Math.sqrt(rings.reduce((a, r) => a + ringArea(r), 0)) };
@@ -829,7 +959,7 @@ function cityOf(p, proj, landPolys) {
   if (extent < CITY_PX) return null;
   const b = bbox(rings.flat());
   if (b.x1 < 0 || b.y1 < 0 || b.x0 > W || b.y0 > H) return null;
-  const kmPx = kmPxAt(proj, p.lat);
+  const kmPx = kmPxAt(proj, p.lon, p.lat);
   // the land about it, each ring cut to the footprint's box (a little wider) on its nearest copy
   const u = p.ubox, lb = { x0: u.x0 - 0.02, y0: u.y0 - 0.02, x1: u.x1 + 0.02, y1: u.y1 + 0.02 };
   const land = [];
@@ -1377,6 +1507,7 @@ function paintShoals(g, data, coast) {
   for (const run of coast) {
     let left = 0, prev = null;
     for (const [lon, lat] of run) {
+      if (!shows(data.proj, lon, lat)) { prev = null; left = 0; continue; } // behind the horizon
       const p = [x(lon, lat), y(lat, lon)];
       if (prev && Math.abs(p[0] - prev[0]) > Math.PI * k) { prev = null; left = 0; } // across the seam
       if (prev) {
@@ -1402,30 +1533,30 @@ function paintShoals(g, data, coast) {
 // The treatment of the land, after the parchment: the Red Sea tint and shoals (both under the land,
 // which hides what falls on shore), a flat tint, a landward wash along the coast, and the islands.
 function paintLand(g, data, land, coast, relief) {
-  const { x, y, lonCenter } = data.proj;
+  const { x, y, seam } = data.proj;
   const mode = STYLE.landMode;
   if (redSeaPolys) {
-    trace(g, redSeaPolys, x, y, { lonCenter });
+    trace(g, redSeaPolys, x, y, { ...seam });
     g.save(); g.fillStyle = hexA(STYLE.red, 0.5); g.fill('evenodd');
     // a hair beyond the polygon, which is generalised and stops short of the shore
     g.lineJoin = 'round'; g.lineWidth = 3; g.strokeStyle = hexA(STYLE.red, 0.5); g.stroke(); g.restore();
   }
   if (mode === 'ochre') paintShoals(g, data, coast);
-  fill(g, land, x, y, { color: STYLE.land, lonCenter });
+  fill(g, land, x, y, { color: STYLE.land, ...seam });
   g.save();
   traceLand(g, data, land);
   g.clip('evenodd');
   const wash = LAND_WASH[mode];
   for (const [wd, a] of [[STYLE.washWidth * 2, 0.3], [STYLE.washWidth * 1.3, 0.3], [STYLE.washWidth * 0.7, 0.35]]) {
-    limn(g, coast, x, y, { color: hexA(wash, a), alpha: 1, width: wd, cap: 'round', oneStroke: true, lonCenter });
+    limn(g, coast, x, y, { color: hexA(wash, a), alpha: 1, width: wd, cap: 'round', oneStroke: true, ...seam });
   }
-  if (mode === 'green') limn(g, coast, x, y, { color: STYLE.greenEdge, alpha: 0.8, width: 3.5, cap: 'round', oneStroke: true, lonCenter });
+  if (mode === 'green') limn(g, coast, x, y, { color: STYLE.greenEdge, alpha: 0.8, width: 3.5, cap: 'round', oneStroke: true, ...seam });
   g.restore();
   if (mode === 'islands') {
     const pigments = [STYLE.red, STYLE.green, STYLE.gold];
     for (const [hue, pigment] of pigments.entries()) {
       const isles = land.filter((p) => p.isl.km2 < ISLAND_KM2 && p.isl.hue === hue);
-      if (isles.length) fill(g, isles, x, y, { color: pigment, alpha: 0.92, lonCenter });
+      if (isles.length) fill(g, isles, x, y, { color: pigment, alpha: 0.92, ...seam });
     }
   }
   paintWater(g, data);
@@ -1456,7 +1587,7 @@ function paintRelief(g, data, relief) {
   if (draw && relief) draw(g, { proj: data.proj, palette: { ink: STYLE.ink, land: STYLE.land } }, relief);
 }
 const paintCoast = (g, data, coast) =>
-  limn(g, coast, data.proj.x, data.proj.y, { color: STYLE.ink, alpha: 1, width: STYLE.coastWidth, oneStroke: true, lonCenter: data.proj.lonCenter });
+  limn(g, coast, data.proj.x, data.proj.y, { color: STYLE.ink, alpha: 1, width: STYLE.coastWidth, oneStroke: true, ...data.proj.seam });
 
 // Parchment, land and coast for any view, with no ornaments or lattice: what a drag draws each frame.
 function drawGround(g, world, view, bg) {
@@ -1633,7 +1764,14 @@ function drawScene(g, scene, data, bg, view) {
   const show = scene.show ?? { kinds: new Set(KINDS), names: true, rhumb: true };
   for (const [kind, ink] of show.rhumb ? inks.entries() : []) {
     const lines = rays.filter((ray) => ray.kind === kind && meets(r, ray.box)).map((ray) => ray.line);
-    limn(g, lines, data.proj.x, data.proj.y, { color: ink, alpha: STYLE.rhumbAlpha, width: STYLE.rhumbWidth, oneStroke: true, lonCenter: data.proj.lonCenter });
+    limn(g, lines, data.proj.x, data.proj.y, { color: ink, alpha: STYLE.rhumbAlpha, width: STYLE.rhumbWidth, oneStroke: true, ...data.proj.seam });
+  }
+
+  // 3.2 an azimuthal projection's rim: the horizon, or where the chart stops
+  if (data.proj.rim) {
+    g.save(); g.beginPath(); g.arc(W / 2, H / 2, data.proj.rim, 0, 2 * Math.PI);
+    g.strokeStyle = STYLE.ink; g.lineWidth = 2; g.stroke();
+    g.beginPath(); g.arc(W / 2, H / 2, data.proj.rim + 5, 0, 2 * Math.PI); g.lineWidth = 0.8; g.stroke(); g.restore();
   }
 
   // 3.5 cities, over their urban footprint and on land only (a lagoon city over its water too),
@@ -1672,8 +1810,8 @@ function drawScene(g, scene, data, bg, view) {
   if (washes.length) {
     g.save(); g.beginPath(); traceLand(g, data, land); g.clip('evenodd');
     for (const { u, a } of washes) {
-      fill(g, [u.poly], data.proj.x, data.proj.y, { color: STYLE.terracotta, alpha: a, lonCenter: data.proj.lonCenter });
-      g.save(); g.beginPath(); trace(g, [u.poly], data.proj.x, data.proj.y, { lonCenter: data.proj.lonCenter });
+      fill(g, [u.poly], data.proj.x, data.proj.y, { color: STYLE.terracotta, alpha: a, ...data.proj.seam });
+      g.save(); g.beginPath(); trace(g, [u.poly], data.proj.x, data.proj.y, { ...data.proj.seam });
       g.globalAlpha = Math.min(1, a * 1.5); g.strokeStyle = STYLE.ink; g.lineWidth = 0.8 / view.scale; g.stroke(); g.restore();
     }
     // clear of the town icons, which stand over them
@@ -1833,6 +1971,7 @@ export const REGION_LANGS = ['off', 'latin', 'english'];
 export const KINDS = ['rose', 'ship', 'monster', 'cartouche', 'mountain'];
 export const DEFAULT_KINDS = KINDS;
 export const PROJECTION_NAMES = Object.keys(PROJECTIONS);
+export const viewProjection = (view) => makeProjection(clampView(view)); // for tests
 export const TOWN_SIZES = ['area', 'population', 'rank'];
 export { RIVER_STYLES, LAKE_STYLES, TREE_STYLES, RELIEF_STYLES };
 export { towerGlyph, SCALE_NAMES, readManifests, listStyles, listSprites, defaultSprites, selectSprites, chooseSprites, drawScene, drawGround, covers, panView, zoomView, clampView, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };

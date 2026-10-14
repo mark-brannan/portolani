@@ -34,7 +34,7 @@
   "homepage": "https://github.com/mark-brannan/portolani#readme",
   "devDependencies": {
     "@napi-rs/canvas": "^1.0.11",
-    "coast-wright": "github:mark-brannan/coast-wright#82a6b310918a6b1dc731b86c7dec7102d1b3b19c",
+    "coast-wright": "^0.0.3-alpha.1",
     "coastlines": "^0.0.5-alpha.0"
   },
   "private": true

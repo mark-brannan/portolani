@@ -58,7 +58,7 @@ function noise(lon, lat) {
 function depthField({ proj, land, createCanvas, w, h }) {
   const { k, lonCenter } = proj;
   // the screen position of the map's pixel origin, so the cells sit still under a pan
-  const ox = w / 2 - lonCenter * RAD * k, oy = proj.y(0);
+  const ox = w / 2 - lonCenter * RAD * k, oy = proj.y(0, lonCenter);
   const x0 = Math.floor((-PAD - ox) / CELL) * CELL + ox, y0 = Math.floor((-PAD - oy) / CELL) * CELL + oy;
   const cols = Math.ceil((w + 2 * PAD) / CELL) + 1, rows = Math.ceil((h + 2 * PAD) / CELL) + 1;
   const c = createCanvas(cols, rows), g = c.getContext('2d');
@@ -68,8 +68,9 @@ function depthField({ proj, land, createCanvas, w, h }) {
   for (const poly of land) for (const ring of poly) {
     let prev = null;
     ring.forEach(([lon, lat], i) => {
+      if (proj.visible && !proj.visible(lon, lat)) { prev = null; return; } // behind an azimuthal horizon
       const px = proj.x(lon, lat), py = proj.y(lat, lon);
-      if (!i || (prev !== null && Math.abs(px - prev) > Math.PI * k)) g.moveTo(px, py); else g.lineTo(px, py);
+      if (!i || prev === null || Math.abs(px - prev) > Math.PI * k) g.moveTo(px, py); else g.lineTo(px, py);
       prev = px;
     });
     g.closePath();
