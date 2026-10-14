@@ -201,7 +201,7 @@ const loadGeo = (id) => env.readJSON(`geo/${id}.geojson`);
 const worlds = new WeakMap();
 async function loadWorld() {
   // the urban footprints (scripts/urban.mjs) are optional: a site without them draws every town as an icon;
-  // so are the 50m urban areas, which wash a town's built-up ground before it grows into a city plan
+  // so are the 50m urban areas, which wash the built-up ground of a town without a footprint
   const missing = (e) => { if (!/404|ENOENT|no urban/.test(String(e?.code ?? e?.message ?? e))) throw e; return null; };
   const [landGeo, coastGeo, placesGeo, namesGeo, urban, urbanGeo] = await Promise.all(
     [...['ne-land-50m', 'ne-coastline-50m', 'ne-populated-places-50m'].map(loadGeo), env.readJSON('geo/names-50m.json'),
@@ -222,7 +222,11 @@ async function loadWorld() {
     const pts = g.type === 'Point' ? [g.coordinates] : g.coordinates;
     return { text: p.name, at: g.coordinates, land: p.land, kind: p.kind, rank: p.rank, min: p.min, box: bbox(pts) };
   });
-  const urbanAreas = urbanGeo ? geojsonPolygons(urbanGeo).map((poly) => ({ poly, box: bbox(poly[0]) })) : [];
+  // the built-up areas washed under the towns: a town's own 10m footprint, the ground its city plan's lots
+  // stand on, and the coarse 50m areas only where no footprint lies
+  const footprints = places.filter((p) => p.urban).map((p) => ({ poly: p.urban, box: p.ubox }));
+  const urbanAreas = [...footprints, ...(urbanGeo ? geojsonPolygons(urbanGeo).map((poly) => ({ poly, box: bbox(poly[0]) }))
+    .filter((u) => !footprints.some((t) => meets(t.box, u.box))) : [])];
   world = { land, lines, runs, places, names, urban: urbanAreas };
   worlds.set(landGeo, world);
   return world;
@@ -1018,7 +1022,7 @@ function indexOf(data) {
   const px = (ring) => ring.map(([lon, lat]) => data.proj.project(lon, lat));
   const land = data.land.map((poly) => ({ poly, box: bbox(px(poly[0])) }));
   const coast = data.coastLL.flatMap(coastRuns).map((run) => ({ run, box: bbox(px(run)) }));
-  const urban = (data.urban ?? []).map((poly) => ({ poly, box: bbox(px(poly[0])) }));
+  const urban = (data.urban ?? []).map((poly) => ({ poly, box: bbox(px(poly.flat())) })); // a footprint's pieces are rings of one poly
   ix = { land, coast, urban };
   indexes.set(data, ix);
   return ix;
