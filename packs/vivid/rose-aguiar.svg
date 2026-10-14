@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-300 -300 600 600" width="600" height="600">
+  <!-- After the wind rose of Jorge de Aguiar's chart, 1492 (Beinecke Library, Yale).
+       Drawn, not traced: 16 outer points (cardinals lapis, the rest vermilion), 32 middle
+       points (vermilion and gilt), an 8-point inner star (lapis and verdigris), on white so
+       the renderer's `multiply` lays it on the parchment. Each point has a light and a dark half. -->
+  <defs>
+    <!-- outer point: tip r 284, base on r 206, half-angle 11.25 deg; concave sides -->
+    <path id="oL" d="M0,-284 Q-10,-238 -40.2,-202 L0,-206 Z"/>
+    <path id="oR" d="M0,-284 Q10,-238 40.2,-202 L0,-206 Z"/>
+    <!-- middle point: tip r 202, base on r 134, half-angle 5.625 deg -->
+    <path id="mL" d="M0,-202 Q-4,-168 -13.1,-133.4 L0,-134 Z"/>
+    <path id="mR" d="M0,-202 Q4,-168 13.1,-133.4 L0,-134 Z"/>
+    <!-- inner star: cardinal tip r 120, diagonal tip r 84, waist r 26 -->
+    <path id="cL" d="M0,-120 L-18.4,-18.4 L0,0 Z"/>
+    <path id="cR" d="M0,-120 L18.4,-18.4 L0,0 Z"/>
+    <path id="dL" d="M0,-84 L-18.4,-18.4 L0,0 Z"/>
+    <path id="dR" d="M0,-84 L18.4,-18.4 L0,0 Z"/>
+    <!-- scallop arch hung between two outer tips, under the rim -->
+    <path id="arch" d="M-55,-276.6 Q0,-218 55,-276.6" fill="none"/>
+    <g id="outerBlue"><use xlink:href="#oL" fill="#2a4f8f"/><use xlink:href="#oR" fill="#1b3466"/></g>
+    <g id="outerRed"><use xlink:href="#oL" fill="#d8432a"/><use xlink:href="#oR" fill="#a92a17"/></g>
+    <g id="midRed"><use xlink:href="#mL" fill="#d8432a"/><use xlink:href="#mR" fill="#a92a17"/></g>
+    <g id="midGilt"><use xlink:href="#mL" fill="#dcb85a"/><use xlink:href="#mR" fill="#b08a32"/></g>
+  </defs>
+  <g stroke="#2a1d12" stroke-width="1.2" stroke-linejoin="round">
+    <!-- fine rhumb ticks through the bands, green and red -->
+    <g stroke-width="0.8" opacity="0.8">
+      <g stroke="#3f7a45">
+        <path d="M0,-280V-30M0,280V30M-280,0H-30M280,0H30"/>
+        <path d="M-198,-198L-21,-21M198,198L21,21M198,-198L21,-21M-198,198L-21,21"/>
+      </g>
+      <g stroke="#c0392b">
+        <path d="M-107,-258L-11,-28M107,258L11,28M107,-258L11,-28M-107,258L-11,28"/>
+        <path d="M-258,-107L-28,-11M258,107L28,11M258,-107L28,-11M-258,107L-28,11"/>
+      </g>
+    </g>
+    <!-- arches between outer points, ochre wash -->
+    <g fill="none" stroke="#8e6a25" stroke-width="1.1">
+      <use xlink:href="#arch" transform="rotate(11.25)"/><use xlink:href="#arch" transform="rotate(33.75)"/>
+      <use xlink:href="#arch" transform="rotate(56.25)"/><use xlink:href="#arch" transform="rotate(78.75)"/>
+      <use xlink:href="#arch" transform="rotate(101.25)"/><use xlink:href="#arch" transform="rotate(123.75)"/>
+      <use xlink:href="#arch" transform="rotate(146.25)"/><use xlink:href="#arch" transform="rotate(168.75)"/>
+      <use xlink:href="#arch" transform="rotate(191.25)"/><use xlink:href="#arch" transform="rotate(213.75)"/>
+      <use xlink:href="#arch" transform="rotate(236.25)"/><use xlink:href="#arch" transform="rotate(258.75)"/>
+      <use xlink:href="#arch" transform="rotate(281.25)"/><use xlink:href="#arch" transform="rotate(303.75)"/>
+      <use xlink:href="#arch" transform="rotate(326.25)"/><use xlink:href="#arch" transform="rotate(348.75)"/>
+    </g>
+    <!-- 16 outer points -->
+    <use xlink:href="#outerBlue"/><use xlink:href="#outerBlue" transform="rotate(90)"/>
+    <use xlink:href="#outerBlue" transform="rotate(180)"/><use xlink:href="#outerBlue" transform="rotate(270)"/>
+    <use xlink:href="#outerRed" transform="rotate(22.5)"/><use xlink:href="#outerRed" transform="rotate(45)"/>
+    <use xlink:href="#outerRed" transform="rotate(67.5)"/><use xlink:href="#outerRed" transform="rotate(112.5)"/>
+    <use xlink:href="#outerRed" transform="rotate(135)"/><use xlink:href="#outerRed" transform="rotate(157.5)"/>
+    <use xlink:href="#outerRed" transform="rotate(202.5)"/><use xlink:href="#outerRed" transform="rotate(225)"/>
+    <use xlink:href="#outerRed" transform="rotate(247.5)"/><use xlink:href="#outerRed" transform="rotate(292.5)"/>
+    <use xlink:href="#outerRed" transform="rotate(315)"/><use xlink:href="#outerRed" transform="rotate(337.5)"/>
+    <!-- 32 middle points: vermilion on the 16 winds, gilt between -->
+    <g>
+      <use xlink:href="#midRed"/><use xlink:href="#midRed" transform="rotate(22.5)"/><use xlink:href="#midRed" transform="rotate(45)"/><use xlink:href="#midRed" transform="rotate(67.5)"/>
+      <use xlink:href="#midRed" transform="rotate(90)"/><use xlink:href="#midRed" transform="rotate(112.5)"/><use xlink:href="#midRed" transform="rotate(135)"/><use xlink:href="#midRed" transform="rotate(157.5)"/>
+      <use xlink:href="#midRed" transform="rotate(180)"/><use xlink:href="#midRed" transform="rotate(202.5)"/><use xlink:href="#midRed" transform="rotate(225)"/><use xlink:href="#midRed" transform="rotate(247.5)"/>
+      <use xlink:href="#midRed" transform="rotate(270)"/><use xlink:href="#midRed" transform="rotate(292.5)"/><use xlink:href="#midRed" transform="rotate(315)"/><use xlink:href="#midRed" transform="rotate(337.5)"/>
+      <use xlink:href="#midGilt" transform="rotate(11.25)"/><use xlink:href="#midGilt" transform="rotate(33.75)"/><use xlink:href="#midGilt" transform="rotate(56.25)"/><use xlink:href="#midGilt" transform="rotate(78.75)"/>
+      <use xlink:href="#midGilt" transform="rotate(101.25)"/><use xlink:href="#midGilt" transform="rotate(123.75)"/><use xlink:href="#midGilt" transform="rotate(146.25)"/><use xlink:href="#midGilt" transform="rotate(168.75)"/>
+      <use xlink:href="#midGilt" transform="rotate(191.25)"/><use xlink:href="#midGilt" transform="rotate(213.75)"/><use xlink:href="#midGilt" transform="rotate(236.25)"/><use xlink:href="#midGilt" transform="rotate(258.75)"/>
+      <use xlink:href="#midGilt" transform="rotate(281.25)"/><use xlink:href="#midGilt" transform="rotate(303.75)"/><use xlink:href="#midGilt" transform="rotate(326.25)"/><use xlink:href="#midGilt" transform="rotate(348.75)"/>
+    </g>
+    <!-- rings -->
+    <g fill="none">
+      <circle r="292" stroke-width="3.2"/><circle r="284"/>
+      <circle r="210"/><circle r="203"/>
+      <circle r="134"/><circle r="126"/>
+    </g>
+    <!-- inner star: cardinals lapis, diagonals verdigris -->
+    <g>
+      <g transform="rotate(45)"><use xlink:href="#dL" fill="#4f9a5a"/><use xlink:href="#dR" fill="#2f6b3a"/></g>
+      <g transform="rotate(135)"><use xlink:href="#dL" fill="#4f9a5a"/><use xlink:href="#dR" fill="#2f6b3a"/></g>
+      <g transform="rotate(225)"><use xlink:href="#dL" fill="#4f9a5a"/><use xlink:href="#dR" fill="#2f6b3a"/></g>
+      <g transform="rotate(315)"><use xlink:href="#dL" fill="#4f9a5a"/><use xlink:href="#dR" fill="#2f6b3a"/></g>
+      <g><use xlink:href="#cL" fill="#2a4f8f"/><use xlink:href="#cR" fill="#1b3466"/></g>
+      <g transform="rotate(90)"><use xlink:href="#cL" fill="#2a4f8f"/><use xlink:href="#cR" fill="#1b3466"/></g>
+      <g transform="rotate(180)"><use xlink:href="#cL" fill="#2a4f8f"/><use xlink:href="#cR" fill="#1b3466"/></g>
+      <g transform="rotate(270)"><use xlink:href="#cL" fill="#2a4f8f"/><use xlink:href="#cR" fill="#1b3466"/></g>
+    </g>
+    <!-- centre rosette: gilt boss, ringed, with a cross for the east (levante) -->
+    <circle r="22" fill="#dcb85a"/>
+    <circle r="14" fill="none"/>
+    <circle r="5" fill="#a92a17"/>
+    <g transform="translate(103,0)" stroke="none" fill="#2a1d12">
+      <path d="M-3,-11h6v8h8v6h-8v8h-6v-8h-8v-6h8z"/>
+    </g>
+  </g>
+</svg>
