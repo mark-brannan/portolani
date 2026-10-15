@@ -15,7 +15,7 @@ import { cityPlan, drawCity, drawHouses, pxRings, insideRings } from './city.mjs
 import { urbanKey } from './urban.mjs';
 import { RIVERS, LAKES, RIVER_STYLES, LAKE_STYLES, waterOf, shown } from './water.mjs';
 import { RELIEF_STYLES, reliefOf, clearOf, drawRelief } from './relief.mjs';
-import { TREES, TREE_STYLES, plantTrees } from './trees.mjs';
+import { TREES, TREE_STYLES, plantTrees, plantPalms } from './trees.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
 import { BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from './buildings.mjs';
 
@@ -1708,7 +1708,9 @@ function paintLand(g, data, land, coast, relief) {
   paintMarks(g, data);
   paintWater(g, data);
   paintRelief(g, data, relief);
-  if (data.trees) TREES[STYLE.trees]?.(g, { proj: data.proj, palette: { ink: STYLE.ink, parchment: STYLE.parchment } }, data.trees); // a drag's frame has none
+  const palette = { ink: STYLE.ink, parchment: STYLE.parchment };
+  if (data.trees) TREES[STYLE.trees]?.(g, { proj: data.proj, palette }, data.trees); // a drag's frame has none
+  if (data.palms?.length) (TREES[STYLE.trees] ?? TREES.marina)(g, { proj: data.proj, palette }, data.palms); // the points of interest's own, whatever the trees
 }
 
 // The islands the drawn land lacks, the way period charts drew those too small to draw: an ink dot
@@ -2212,6 +2214,8 @@ export async function createScene(environment, opts = {}) {
     continentsEnd: zoomEnd(continentsZoom, CONTINENT_ZOOM_END), regionsEnd: zoomEnd(regionsZoom, REGION_ZOOM_END),
     scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM, townSize: townBy, seed: legacy ? null : castSeed(view) }), show, scaleSprite };
   data.trees = TREES[STYLE.trees] ? plantTrees({ proj: data.proj, isLand: scene.field.isLand, scene, lakes: STYLE.lakes !== 'off' && water ? water.lakes : [], w: W, h: H }) : [];
+  data.palms = plantPalms({ proj: data.proj, isLand: scene.field.isLand, scene, w: W, h: H,
+    pois: scene.lesser.filter((l) => l.poi).map((l) => ({ x: l.x, y: l.y, palms: POIS.find((p) => p.name === l.name)?.palms ?? 0 })) });
   if (!parchments.has(tone)) parchments.set(tone, parchment(1539));
   const bg = parchments.get(tone);
   return { scene, data, bg, proj: data.proj, world, coarse, view, timing: { load: tLoad - t0, place: performance.now() - tLoad } };

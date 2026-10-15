@@ -101,6 +101,10 @@ test('points of interest are lettered from POI_ZOOM, bigger than the lesser plac
     assert.ok(near.names.some((n) => n.text === p.name), `${p.name}: not lettered`)
     assert.equal(near.cartouche.title, p.name.toUpperCase(), `${p.name}: the cartouche names the view`)
   }
+  // palms stand beside a point of interest on an island with room, whatever the tree style (off here)
+  const majorca = await createScene(env, { view: { lon: 2.9, lat: 39.6, zoom: 8 } })
+  assert.equal(majorca.data.palms.length, POIS.find((p) => p.name === 'Majorca').palms)
+  assert.ok(majorca.data.palms.every((s) => s.trees.every((t) => t.shape === 'palm')))
   assert.ok(POI_ZOOM > 0 && !(await at(POIS[0], POI_ZOOM - 1)).lesser.some((l) => l.poi), 'a point of interest below POI_ZOOM')
   // a place flown to names the cartouche, whatever scores highest in the frame, and the title is capitals
   const world = { lon: 10, lat: 25, zoom: 0 }

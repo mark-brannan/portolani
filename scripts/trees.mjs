@@ -63,6 +63,13 @@ const SHAPES = {
     ['d', 'M2.9 -10Q3.6 -6.4 1.8 -4.4Q0.2 -3.6 -1.4 -4.2Q1.6 -5.6 2.9 -10Z'],
     ['s', 'M-1.8 -10Q-1 -11.6 0.4 -11.8M-2.2 0.4H2.2'],
   ],
+  // a palm: a bare trunk under a crown of fronds, as the Aguiar chart draws the tropics
+  palm: [
+    ['k', 'M-0.7 0.3L-0.2 -7.6H0.7L1 0.3Z'],
+    ['c', 'M0.3 -8L-4.6 -6.6Q-6.4 -6 -7.4 -4.4Q-4.4 -5.8 -1.6 -6.4L-3.4 -10.4Q-1.4 -9 0.2 -8.4L0.6 -12.2Q1.6 -10.2 2 -8.4Q4.2 -10.4 6.6 -10.2Q4.6 -8.6 3.6 -7.4L7.2 -5.6Q4.2 -5.8 1.8 -6.8Z'],
+    ['d', 'M0.3 -8L1.8 -6.8Q4.2 -5.8 7.2 -5.6L3.6 -7.4Q4.6 -8.6 6.6 -10.2Q4.2 -10.4 2 -8.4Z'],
+    ['s', 'M-2.4 0.4H2.4'],
+  ],
   // a conifer, three tiers of spiky boughs
   conifer: [
     ['k', 'M-0.6 0.3V-2.4H0.6V0.3Z'],
@@ -219,6 +226,27 @@ const insideRing = (ring, lon, lat) => {
 // Is a lon/lat in one of `lakes` (water.mjs's, each { polys, box })?
 const inLake = (lakes, [lon, lat]) => (lon = ((((lon + 180) % 360) + 360) % 360) - 180, lakes.some((l) => lat > l.box.y0 && lat < l.box.y1 && lon > l.box.x0 && lon < l.box.x1 &&
   l.polys.some((p) => insideRing(p[0], lon, lat) && !p.slice(1).some((hole) => insideRing(hole, lon, lat)))));
+
+// The palms beside the points of interest in view: `pois` are { x, y, palms } in px (the buildings the
+// scene placed), `scene` and `isLand` as for plantTrees. A palm stands on the ground round the building
+// at a few distances, clear of the coast only so far as a small island allows; none where there is no land.
+// Returned as stands (one palm each) so TREES draws them.
+export function plantPalms({ proj, isLand, scene = {}, pois, w, h }) {
+  const keepOut = keepOutOf(scene), stands = [];
+  const ok = (x, y) => x > 0 && y > 0 && x < w && y < h && isLand(x, y - 2) && !keepOut.some((b) => x + 4 > b.x0 && x - 4 < b.x1 && y > b.y0 && y - TREE_H < b.y1);
+  for (const { x, y, palms } of pois) {
+    const placed = [];
+    for (const r of [22, 32, 44]) for (let k = 0; k < 8 && placed.length < palms; k++) {
+      const a = (k * Math.PI) / 4 + 0.4, px = x + r * Math.cos(a), py = y + 0.6 * r * Math.sin(a);
+      if (ok(px, py) && placed.every((q) => Math.hypot(q.x - px, q.y - py) > 12)) placed.push({ x: px, y: py });
+    }
+    for (const q of placed) {
+      const [lon, lat] = proj.invert(q.x, q.y);
+      stands.push({ lon, lat, trees: [{ dx: 0, dy: 0, shape: 'palm' }], cx: 0, cy: 0, rx: 5, ry: 2 });
+    }
+  }
+  return stands;
+}
 
 // The stands for a view: each { lon, lat, trees: [{ dx, dy, shape }], cx, cy, rx, ry }, the trees in
 // px about the site and the ellipse that holds them. `proj` is the view's projection, `isLand(x, y)`
