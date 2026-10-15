@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
-import { createScene, viewProjection } from '../scripts/scene.mjs';
+import { createScene, viewProjection, panView } from '../scripts/scene.mjs';
 import { coastNames, joinNames } from '../scripts/names.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -98,3 +98,25 @@ test('a sheet holds the same roses, monsters and ships at every zoom of its band
   assert.ok(common.some((k) => all[0].get(k).length > 0), 'a shared sheet holds something');
   for (const sheet of common) for (const m of all.slice(1)) assert.deepEqual(m.get(sheet), all[0].get(sheet), sheet);
 });
+
+// #131 step 4, the issue's measurement: Genoa, a drag of 1% of the window width, at z5 and z9. A decoration
+// keeps its place if one of its kind stands within 2 px of it on the earth afterwards.
+for (const zoom of [5, 9]) {
+  test(`after a drag of 1% of the window at z${zoom} every rose, monster and ship keeps its place`, async () => {
+    const from = { lon: 8.93, lat: 44.41, zoom };
+    const to = panView(from, 1600 * 0.01, 0);
+    const [a, b] = await Promise.all([from, to].map(async (view) => {
+      const { scene, data } = await createScene(env, { view, scale: 'off' });
+      return { proj: data.proj, list: [['rose', scene.roseDraws], ['monster', scene.monsters], ['ship', scene.ships]].flatMap(([kind, l]) => l.map((o) => ({ kind, ll: data.proj.invert(o.x, o.y), x: o.x, y: o.y }))) };
+    }));
+    // every ornament placed in the first window, whether or not it is on screen: a sheet's are placed in its own frame
+    const kept = (o) => { const [x, y] = b.proj.project(...o.ll); return b.list.some((q) => q.kind === o.kind && Math.hypot(x - q.x, y - q.y) <= 2); };
+    const stayed = a.list;
+    for (const kind of ['rose', 'monster', 'ship']) {
+      const of = stayed.filter((o) => o.kind === kind), ok = of.filter(kept).length;
+      console.log(`# z${zoom} ${kind}: ${ok}/${of.length} kept after a 1% drag (all placed: ${a.list.filter((o) => o.kind === kind).length})`);
+      assert.equal(ok, of.length, `every ${kind} still inside the window keeps its place`);
+    }
+    assert.ok(stayed.length > 0, 'something is placed');
+  });
+}
