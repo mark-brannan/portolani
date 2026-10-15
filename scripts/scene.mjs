@@ -1207,6 +1207,10 @@ function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
     const onLand = sites.filter((q, i) => clear(q.lon, q.lat, i ? smallSize : big.sizePx)).length < SHEET_SEA_SITES;
     // what is kept is decided in the frame; the page's projection only says where it falls and whether it is seen
     const put = (sprite, n) => { if (shows(data.proj, n.lon, n.lat)) { const [fx, fy] = fp.project(n.lon, n.lat); roseDraws.push({ sprite, ...at(n), fx, fy, size: sprite.sizePx, sheet: sh.name }); } };
+    if (ownSet(world, sh)) {
+      for (const f of ownFigures(sh, 'rose')) put(figureSprite(sh, roses, ring, f), f);
+      continue;
+    }
     // a curated sheet's network is not drawn where a smaller curated sheet lies
     const clear2 = (lon, lat, size, land) => !inShadow(sh, lon, lat) && clear(lon, lat, size, land);
     if (clear2(c.lon, c.lat, big.sizePx, onLand)) put(big, c);
@@ -1239,13 +1243,35 @@ function placeSheetBeasts(data, world, sprites, roseDraws) {
     // its roses, placed in the sheet's frame, as discs in the beasts' frame; a size is screen px in either
     const rf = sheetFrame(sh), bf = beastFrame(sh);
     const avoid = roseDraws.filter((r) => r.sheet === sh.name).map((r) => { const [x, y] = bf.project(...rf.invert(r.fx, r.fy)); return { x, y, r: r.size / 2 + (r.size > 200 ? 0 : 10) }; });
-    const mine = placeBeastsOf(sh, world, sprites, avoid);
+    const mine = ownSet(world, sh) ? ownBeastsOf(sh, world, sprites) : placeBeastsOf(sh, world, sprites, avoid);
     // the page's projection only says where a beast falls and whether it is seen
     const at = (b) => { const [x, y] = data.proj.project(b.lon, b.lat); return { ...b, x, y }; };
     for (const m of mine.monsters) if (shows(data.proj, m.lon, m.lat)) monsters.push(at(m));
     for (const m of mine.ships) if (shows(data.proj, m.lon, m.lat)) ships.push(at(m));
   }
   return { monsters, ships };
+}
+// Historical accuracy (on unless `historical: false`): a curated sheet whose chart has been read draws that
+// chart's own figures (docs/atlas/ornaments.md) in place of the seeded ones, each where the chart puts it,
+// on the sheet's own ground: inside its extent, out of a smaller sheet's shadow. A sheet with an empty set
+// draws none.
+const ownSet = (world, sh) => world.historical !== false && !!sh.ornaments;
+const ownFigures = (sh, kind) => sh.ornaments.filter((f) => f.kind === kind && f.lon >= sh.extent.west && f.lon <= sh.extent.east && f.lat >= sh.extent.south && f.lat <= sh.extent.north && !inShadow(sh, f.lon, f.lat));
+// A figure's own sprite where the chosen sprites hold it; with none cropped (or not chosen), a stand-in of
+// the same kind in the sheet's style, by the figure's place among its chart's figures of that kind, so a
+// figure keeps its stand-in from any view; a style with none of that kind
+// stands in the chosen sprites of the kind.
+const figureSprite = (sh, chosen, fallback, f) => {
+  const own = f.sprite && chosen.find((s) => s.id === f.sprite);
+  if (own) return own;
+  const styled = chosen.filter((s) => s.style === sh.style), standIns = styled.length ? styled : fallback;
+  return standIns[sh.ornaments.filter((o) => o.kind === f.kind).indexOf(f) % standIns.length];
+};
+// One sheet's own beasts and ships, each in the sea where its chart draws it; one the fit puts on land is left out.
+function ownBeastsOf(sh, world, sprites) {
+  const take = (kind, set) => !set.length ? [] : ownFigures(sh, kind).map((f) => ({ f, sprite: figureSprite(sh, set, set, f) })).filter(({ f }) => world.seaAt(f.lon, f.lat))
+    .map(({ f, sprite }) => ({ sprite, lon: f.lon, lat: f.lat, size: sprite.sizePx, flip: false, ...(kind === 'ship' && { tilt: 0 }), sheet: sh.name }));
+  return { monsters: take('monster', sprites.monsters), ships: take('ship', sprites.ships) };
 }
 // One sheet's beasts, in the sheet's frame. `avoid` are its roses as discs {x, y, r} in frame px.
 function placeBeastsOf(sh, world, sprites, avoid) {
@@ -2339,7 +2365,7 @@ function seaAtOf(world) {
 }
 export async function createScene(environment, opts = {}) {
   env = environment;
-  const { ink = '#3b2a1a', continentsZoom, regionsZoom, scaleBorder = 'bordered', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', title = 'PORTOLANI', autoTitle = true, pinTitle, land: landMode = 'islands', islands, seaTint = false, rivers = 'off', lakes = 'off', relief = [], trees = 'off' } = opts;
+  const { ink = '#3b2a1a', continentsZoom, regionsZoom, scaleBorder = 'bordered', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', title = 'PORTOLANI', autoTitle = true, pinTitle, land: landMode = 'islands', islands, seaTint = false, rivers = 'off', lakes = 'off', relief = [], trees = 'off', historical = true } = opts;
   const legacy = ['rendering', 'rose', 'monster', 'town'].some((k) => opts[k] !== undefined);
   const townBy = townSize ?? (legacy ? 'rank' : 'area');
   const show = { kinds: new Set(opts.kinds ?? DEFAULT_KINDS), names, rhumb: rhumbOn, scale };
@@ -2393,7 +2419,7 @@ export async function createScene(environment, opts = {}) {
   const worldBand = view.zoom < ATLAS_BANDS[0].from;
   const sheets = sheetsFor(view, { radius: SHEET_RADIUS, curated: true }).map((sh) => ({ ...sh, reach: sheetReach(sh.extent),
     from: worldBand ? Math.log2(1125 / (sh.extent.east - sh.extent.west)) : ATLAS_BANDS.find((b) => b.band === sh.band).from }));
-  const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, seaAt: sheets && seaAtOf(coarse), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, title, autoTitle, pinTitle,
+  const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, historical, seaAt: sheets && seaAtOf(coarse), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, title, autoTitle, pinTitle,
     continentsEnd: zoomEnd(continentsZoom, CONTINENT_ZOOM_END), regionsEnd: zoomEnd(regionsZoom, REGION_ZOOM_END),
     scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM, townSize: townBy, seed: legacy ? null : castSeed(view) }), show, scaleSprite };
   data.trees = TREES[STYLE.trees] ? plantTrees({ proj: data.proj, isLand: scene.field.isLand, scene, lakes: STYLE.lakes !== 'off' && water ? water.lakes : [], w: W, h: H }) : [];
