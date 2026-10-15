@@ -81,7 +81,7 @@ test('no polar caps beyond the last whole row', () => {
   const north = sheetsFor(bounds(6, -10, 60, 10, 90));
   assert.ok(Math.max(...north.map((s) => s.extent.north)) <= 80.5 + 1e-9); // 42.1 + 2 * 19.2 = 80.5; the next row reaches 90
   const south = sheetsFor(bounds(6, -10, -90, 10, -60));
-  assert.ok(Math.min(...south.map((s) => s.extent.south)) >= -73.4 - 1e-9); // 42.1 - 6 * 19.2 = -73.1 is the last whole row's south edge
+  assert.ok(Math.min(...south.map((s) => s.extent.south)) >= -73.1 - 1e-9); // 42.1 - 6 * 19.2 = -73.1 is the last whole row's south edge; the next row reaches -92.3
   assert.ok(Math.min(...south.map((s) => s.extent.south)) > -90);
   for (const z of [8, 10, 12, 14]) for (const s of sheetsFor(bounds(z, 0, 85, 1, 90))) assert.ok(s.extent.north <= 90 + 1e-9);
   assert.equal(sheetsFor(bounds(6, 0, 81, 1, 90)).length, 0);
