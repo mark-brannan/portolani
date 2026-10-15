@@ -207,3 +207,14 @@ test('curated sheets carry their charts\' own figures', () => {
   assert.equal(baltic.find((s) => s.source === 'Carta Marina, 1539').ornaments, marina);
   assert.deepEqual(baltic.find((s) => s.source === 'Dulcert, 1339').ornaments, []);
 });
+
+// A figure drawn outside its sheet's extent is never drawn, so a sheet's extent holds every figure the packs
+// crop from its chart: the Carta Marina's reach west to Iceland and the Faroes.
+test('a curated sheet\'s extent holds its cropped figures', () => {
+  for (const c of CURATED) for (const f of (c.ornaments ?? []).filter((o) => o.sprite)) {
+    const e = c.extent;
+    assert.ok(f.lon >= e.west && f.lon <= e.east && f.lat >= e.south && f.lat <= e.north, `${c.source}: ${f.sprite} at ${f.lon}, ${f.lat} is off the sheet`);
+  }
+  const marina = CURATED.find((c) => c.source === 'Carta Marina, 1539').ornaments.filter((f) => f.sprite).map((f) => f.sprite);
+  assert.deepEqual(marina.sort(), ['cete-e', 'pistrix-c', 'serpent-a', 'ship-a', 'ship-b', 'whale-b']);
+});
