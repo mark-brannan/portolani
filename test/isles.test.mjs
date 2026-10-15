@@ -32,12 +32,14 @@ const env = {
 };
 
 const ISLANDS = { pukapuka: [-138.81, -14.82], pitcairn: [-130.10, -25.07], nukuHiva: [-140.10, -8.86] };
+const RANGIROA = [-147.65, -15.13]; // 80 km of rim, its motus often more than JOIN_KM apart
 const near = ([lon, lat], km) => islesOf(index).filter((i) => Math.hypot((i.lon - lon) * Math.cos(lat * Math.PI / 180), i.lat - lat) * 111.2 < km);
 
 test('the index holds the islands 50m lacks, an atoll as an atoll, and not those it holds', () => {
   assert.deepEqual(near(ISLANDS.pukapuka, 10).map((i) => i.atoll), [true]);
   assert.deepEqual(near(ISLANDS.pitcairn, 10).map((i) => i.atoll), [false]);
   assert.equal(near(ISLANDS.nukuHiva, 20).length, 0); // 50m draws it
+  assert.deepEqual(near(RANGIROA, 30).map((i) => i.atoll), [true]); // one ring, its arcs folded in
 });
 
 test('a z5 view of the eastern Pacific draws Pukapuka, Pitcairn and Nuku Hiva, and no ornament covers them', async () => {

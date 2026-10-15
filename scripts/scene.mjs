@@ -500,7 +500,7 @@ async function loadDetail(coarse, view) {
   }));
   return {
     land: parts.flatMap((p) => p.land), lines: parts.flatMap((p) => p.lines), runs: parts.flatMap((p) => p.runs),
-    places: coarse.places, lesser: coarse.lesser, names: coarse.names, urban: coarse.urban, isles: band.zoom < MARKS_END ? coarse.isles : [], detail: { ...f, band: band.dir }, // the lon/lat frame the loaded cells cover, and whose
+    places: coarse.places, lesser: coarse.lesser, names: coarse.names, urban: coarse.urban, isles: band.zoom < MARKS_END ? coarse.isles.filter((i) => nearLL(f, i.lon, i.lat)) : [], detail: { ...f, band: band.dir }, // the lon/lat frame the loaded cells cover, and whose
   };
 }
 

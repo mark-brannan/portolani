@@ -10,7 +10,8 @@
 // geo/10m/index.json), GSHHG "h" land into 1-degree cells (geo/h/), when the installed
 // coastlines carries it, and GSHHG "f" land into half-degree cells (geo/f/), read from the GSHHG
 // zip in downloads/, so a close view fetches only the cells around it. The islands of "h" that 50m
-// lacks ship as an index of points, geo/isles.json (scripts/isles.mjs), so every view can mark them. The names the chart
+// lacks ship as an index of points, geo/isles.json (scripts/isles.mjs), so every view can mark
+// them. The names the chart
 // letters ship as geo/names-50m.json (scripts/names.mjs), and the urban footprints of its towns, the
 // Natural Earth 10m urban areas joined to the places, as geo/urban-10m.json (scripts/urban.mjs). The
 // Natural Earth 10m rivers and lakes, drawn past z9 (scripts/water.mjs), ship whole-feature in

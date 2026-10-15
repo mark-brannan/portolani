@@ -88,6 +88,23 @@ function segKm(lon, lat, [ax, ay], [bx, by]) {
   return Math.hypot(x1 + t * dx, y1 + t * dy) * KM_DEG;
 }
 
+// Group q takes in p (an islet or a group): its land, its box (p moved next to q across the
+// antimeridian) and its largest islet.
+function join(q, p) {
+  q.km2 += p.km2;
+  const s = wrap(p.box[0] - q.box[0]) - (p.box[0] - q.box[0]);
+  q.box = [Math.min(q.box[0], p.box[0] + s), Math.min(q.box[1], p.box[1]), Math.max(q.box[2], p.box[2] + s), Math.max(q.box[3], p.box[3])];
+  const big = p.big ?? p;
+  if (big.km2 > q.big.km2) q.big = big;
+}
+// A group's centre, its half-extent in km, the radius of a circle of its land, and whether it is an atoll.
+function shape(q) {
+  const lon = wrap((q.box[0] + q.box[2]) / 2), lat = (q.box[1] + q.box[3]) / 2;
+  const c = Math.cos(lat * RAD), ext = (Math.max((q.box[2] - q.box[0]) * c, q.box[3] - q.box[1]) * KM_DEG) / 2;
+  const req = Math.sqrt(q.km2 / Math.PI);
+  return Object.assign(q, { lon, lat, ext, req, atoll: ext * ext > ATOLL * req * req });
+}
+
 // The index of `islands` (GSHHG "h" land, [outer, ...holes] in lon/lat) against `coarse` (the 50m
 // land, likewise): { v, isles: [lon, lat, r, ...] }, flat, three numbers a record, lon and lat to a
 // thousandth of a degree; r is the radius in km of a circle of the island's land, or, negative,
@@ -105,18 +122,31 @@ export function isleIndex(islands, coarse) {
   const groups = new Map();
   parts.forEach((p, i) => {
     const r = root(i), q = groups.get(r);
-    if (!q) { groups.set(r, { km2: p.km2, box: [...p.box], big: p }); return; }
-    q.km2 += p.km2;
-    const s = wrap(p.box[0] - q.box[0]) - (p.box[0] - q.box[0]);
-    q.box = [Math.min(q.box[0], p.box[0] + s), Math.min(q.box[1], p.box[1]), Math.max(q.box[2], p.box[2] + s), Math.max(q.box[3], p.box[3])];
-    if (p.km2 > q.big.km2) q.big = p;
+    if (!q) groups.set(r, { km2: p.km2, box: [...p.box], big: p });
+    else join(q, p);
   });
+  // a rim whose gaps run wider than JOIN_KM leaves arcs of motus, each an atoll of its own: a group
+  // whose box meets an atoll's, or whose centre falls inside its ring, is folded into it, until none
+  // is, so one atoll is one ring
+  const all = [...groups.values()].map(shape), gg = grid(1);
+  all.forEach((q) => gg.put(q, q.box));
+  for (let folded = true; folded;) {
+    folded = false;
+    for (const a of all.filter((q) => q.atoll && !q.gone).sort((p, q) => q.ext - p.ext)) {
+      if (a.gone) continue;
+      for (const b of gg.near(widen(a.box, 0))) {
+        if (b === a || b.gone || b.ext > a.ext) continue;
+        if (gapKm(a.box, b.box) === 0 || Math.hypot(wrap(b.lon - a.lon) * Math.cos(a.lat * RAD), b.lat - a.lat) * KM_DEG < a.ext) { join(a, b); b.gone = folded = true; }
+      }
+      shape(a); gg.put(a, a.box);
+    }
+  }
   // the 50m land, boxed, and the outlines of its large polygons cut into segments
-  const land = coarse.map((poly) => ({ poly, box: boxOf(poly[0]) })), lg = grid(1);
+  const land = coarse.map((poly) => ({ poly, km2: polyKm2(poly), box: boxOf(poly[0]) })), lg = grid(1);
   land.forEach((l, i) => lg.put(i, l.box));
   const sg = grid(0.5);
-  for (const { poly } of land) {
-    if (polyKm2(poly) < ISLAND_KM2) continue;
+  for (const { poly, km2 } of land) {
+    if (km2 < ISLAND_KM2) continue;
     for (const ring of poly) for (let i = 0; i < ring.length; i++) {
       const a = ring[i], b = ring[(i + 1) % ring.length];
       sg.put([a, b], boxOf([a, b]));
@@ -127,15 +157,15 @@ export function isleIndex(islands, coarse) {
     return insideRing(outer, x, lat) && !holes.some((h) => insideRing(h, x, lat));
   });
   const nearCoast = (lon, lat) => [...sg.near(widen([lon, lat, lon, lat], NEAR_KM))].some(([a, b]) => segKm(lon, lat, a, b) < NEAR_KM);
+  // a small 50m island within JOIN_KM of a group is the same island, drawn already
+  const beside = (q) => [...lg.near(widen(q.box, JOIN_KM))].some((i) => land[i].km2 < ISLAND_KM2 && gapKm(q.box, land[i].box) < JOIN_KM);
   const out = [];
-  for (const q of groups.values()) {
-    if (q.km2 >= ISLAND_KM2) continue;
-    const lon = wrap((q.box[0] + q.box[2]) / 2), lat = (q.box[1] + q.box[3]) / 2;
-    const c = Math.cos(lat * RAD), ext = (Math.max((q.box[2] - q.box[0]) * c, q.box[3] - q.box[1]) * KM_DEG) / 2;
-    const req = Math.sqrt(q.km2 / Math.PI), atoll = ext * ext > ATOLL * req * req;
+  for (const q of all) {
+    if (q.gone || q.km2 >= ISLAND_KM2) continue;
+    const { lon, lat, ext, req, atoll } = q;
     // a probe on the largest islet: the group's centre is lagoon in an atoll
     const [bx0, by0, bx1, by1] = q.big.box, plon = wrap((bx0 + bx1) / 2), plat = (by0 + by1) / 2;
-    if (held(plon, plat) || held(lon, lat) || nearCoast(lon, lat)) continue;
+    if (held(plon, plat) || held(lon, lat) || beside(q) || nearCoast(lon, lat)) continue;
     out.push(+lon.toFixed(3), +lat.toFixed(3), atoll ? -+ext.toFixed(2) || -0.01 : +req.toFixed(2) || 0.01);
   }
   return { v: 1, isles: out };
