@@ -490,17 +490,17 @@ const ORIGINS = [
     ['De la Cosa, east', around(65, 23.4, 15)],
   ]],
   ['Elsewhere', [
-    ['Lisbon', at(-9.14, 38.72, 10)],
-    ['Seville', at(-5.98, 37.39, 10)],
-    ['Majorca', at(3.0, 39.6, 9)], // Catalan Atlas, 1375
-    ['Dieppe', at(1.08, 49.93, 10)], // Vallard Atlas, 1547
-    ['Guam', at(144.79, 13.44, 10)], // Islas de los Ladrones
-    ['Cebu', at(123.89, 10.32, 9)],
-    ['Maluku Islands', at(128, -3, 5.5)],
-    ['Solomon Islands', at(160, -9, 6)],
-    ['Marquesas Islands', at(-140, -9, 8)],
-    ['Pukapuka Atoll', at(-138.8, -14.82, 11)], // Magellan's San Pablo, 1521 (the Tuamotu one)
-    ['Pitcairn Island', at(-130.1, -25.07, 11)],
+    ['Lisbon', at(-9.14, 38.72, 7.5)],
+    ['Seville', at(-5.98, 37.39, 7.5)],
+    ['Majorca', at(3.0, 39.6, 7)], // Catalan Atlas, 1375
+    ['Dieppe', at(1.08, 49.93, 7.5)], // Vallard Atlas, 1547
+    ['Guam', at(144.79, 13.44, 7)], // Islas de los Ladrones
+    ['Cebu', at(123.89, 10.32, 7)],
+    ['Maluku Islands', at(128, -3, 5)],
+    ['Solomon Islands', at(160, -9, 5)],
+    ['Marquesas Islands', at(-140, -9, 6)],
+    ['Pukapuka Atoll', at(-138.8, -14.82, 6.5)], // Magellan's San Pablo, 1521 (the Tuamotu one)
+    ['Pitcairn Island', at(-130.1, -25.07, 6.5)],
   ]],
 ];
 const originViews = [];
