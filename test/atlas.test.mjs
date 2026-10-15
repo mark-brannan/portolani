@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { sheetsFor, inShadow, bandFor, widening, BANDS, hiddenCircle, ROSE, CURATED } from '../scripts/atlas.mjs';
+import { sheetsFor, inShadow, cutOut, bandFor, widening, BANDS, hiddenCircle, ROSE, CURATED } from '../scripts/atlas.mjs';
 import { readFileSync } from 'node:fs';
 
 const bounds = (zoom, west, south, east, north) => ({ zoom, west, south, east, north });
@@ -172,6 +172,23 @@ test('where curated sheets overlap, the smaller wins; the Carte Pisane pair shar
   assert.equal(s['Mediterranean, east'].shadow.length, 1, 'Vesconte, the smaller, lies over its north-east');
   assert.ok(s['Europe and the Mediterranean'].shadow.length >= 2);
   assert.ok(inShadow(s['Europe and the Mediterranean'], 8, 40));
+});
+
+test('a line is cut where a smaller sheet lies, on the edge, and left whole elsewhere', () => {
+  const box = { west: 10, east: 20, south: 30, north: 40 };
+  const line = [[0, 35], [5, 35], [30, 35]];
+  const runs = cutOut(line, [box]);
+  assert.equal(runs.length, 2);
+  assert.deepEqual(runs[0].slice(0, 2), [[0, 35], [5, 35]]);
+  close(runs[0].at(-1)[0], 10); close(runs[1][0][0], 20); assert.deepEqual(runs[1].at(-1), [30, 35]);
+  // a line leaving through the north edge starts there
+  const [out] = cutOut([[15, 35], [15, 50]], [box]);
+  close(out[0][1], 40); assert.deepEqual(out.at(-1), [15, 50]);
+  assert.deepEqual(cutOut(line, []), [line]);
+  assert.deepEqual(cutOut([[0, 0], [5, 5]], [box]), [[[0, 0], [5, 5]]], 'a line that misses the box is whole');
+  assert.deepEqual(cutOut([[12, 32], [18, 38]], [box]), [], 'a line wholly inside is gone');
+  // two boxes on one segment leave three runs
+  assert.equal(cutOut([[0, 35], [60, 35]], [box, { west: 40, east: 50, south: 30, north: 40 }]).length, 3);
 });
 
 // docs/atlas/ornaments.md: a read chart carries its own figures, a chart that draws none an empty set, and
