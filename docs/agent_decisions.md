@@ -144,3 +144,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261015t090345z
 - World-band beasts are paced at the zoom where the sheet is one window wide Undo: one line in createScene (from:) ([#143](https://github.com/mark-brannan/portolani/pull/143))
+
+### 20261015t090350z
+- A world-band view no curated sheet reaches draws no roses, only the Catalan rose's lines Undo: fall back to the window when sheets is empty ([#143](https://github.com/mark-brannan/portolani/pull/143))
