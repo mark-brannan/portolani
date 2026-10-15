@@ -237,17 +237,19 @@ const wrapAngle = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 // The view's projection centred on it; longitudes are measured from its centre, so any seam is behind
 // it. `seam` is what every coast-wright call takes: the centre longitude and, on an azimuthal
 // projection, the `visible` predicate that refuses the far side; `rim` is the px radius of what it
-// shows, null on a cylindrical projection.
+// shows, null on a cylindrical projection. `toPx` is the same projection as coast-wright's
+// `project([lon, lat])` takes it, returning [px, py].
 function makeProjection(view, w = W, h = H) {
   const P = projectionOf(view), k = kOf(view.zoom), lonCenter = view.lon;
   if (!P.cap) {
     const y0 = P.f(view.lat);
-    // x(lon, lat) and y(lat, lon), as coast-wright calls them
+    // x(lon) and y(lat), for the cylindrical case
     const x = (lon) => w / 2 + fromCentre(lon - lonCenter) * RAD * k;
     const y = (lat) => h / 2 - (P.f(lat) - y0) * k;
     return {
-      k, zoom: view.zoom, lonCenter, lat: view.lat, x, y, seam: { lonCenter }, rim: null,
+      k, zoom: view.zoom, lonCenter, lat: view.lat, x, y, seam: { centralMeridian: lonCenter }, rim: null,
       project: (lon, lat) => [x(lon), y(lat)],
+      toPx: ([lon, lat]) => [x(lon), y(lat)],
       // a point past the map's top or bottom edge inverts to the edge's latitude
       invert: (px, py) => [lonCenter + (px - w / 2) / k / RAD, P.inv(Math.max(-P.max, Math.min(P.max, y0 - (py - h / 2) / k)))],
     };
@@ -267,8 +269,9 @@ function makeProjection(view, w = W, h = H) {
     return sp1 * Math.sin(p) + cp1 * Math.cos(p) * Math.cos((lon - lonCenter) * RAD) > cosCap;
   };
   return {
-    k, zoom: view.zoom, lonCenter, lat: view.lat, x, y, visible, seam: { lonCenter, visible }, rim: rimR * k, cap: P.cap,
+    k, zoom: view.zoom, lonCenter, lat: view.lat, x, y, visible, seam: { centralMeridian: lonCenter, visible }, rim: rimR * k, cap: P.cap,
     project: (lon, lat) => { const [ox, oy] = offset(lon, lat); return [w / 2 + ox * k, h / 2 - oy * k]; },
+    toPx: ([lon, lat]) => { const [ox, oy] = offset(lon, lat); return [w / 2 + ox * k, h / 2 - oy * k]; },
     // a point past the rim inverts to the rim
     invert: (px, py) => {
       const ox = (px - w / 2) / k, oy = (h / 2 - py) / k, d = Math.hypot(ox, oy);
@@ -786,7 +789,7 @@ function tint(img, ink) {
 
 // ---------------------------------------------------------------- clearance field
 
-const traceLand = (g, data, polys = data.land) => trace(g, polys, data.proj.x, data.proj.y, { ...data.proj.seam });
+const traceLand = (g, data, polys = data.land) => trace(g, polys, data.proj.toPx, { ...data.proj.seam });
 // The canvas outside an azimuthal projection's rim, as a path (even-odd); nothing on a cylindrical one.
 function beyondRim(g, proj) {
   g.beginPath();
@@ -822,7 +825,7 @@ function distanceTo(data, polys) {
   const cols = Math.ceil(W / CELL), rows = Math.ceil(H / CELL);
   const g = createCanvas(cols, rows).getContext('2d');
   g.scale(1 / CELL, 1 / CELL);
-  for (const poly of polys) fill(g, [poly], data.proj.x, data.proj.y, { color: '#000', ...data.proj.seam });
+  for (const poly of polys) fill(g, [poly], data.proj.toPx, { color: '#000', ...data.proj.seam });
   const px = g.getImageData(0, 0, cols, rows).data;
   const d = chamfer(cols, rows, (i) => px[i * 4 + 3] > 40);
   return (x, y) => d[Math.min(rows - 1, Math.max(0, Math.floor(y / CELL))) * cols + Math.min(cols - 1, Math.max(0, Math.floor(x / CELL)))];
@@ -1163,7 +1166,7 @@ function placeLesser(data, field, boxes, ctx, towns, names, poi) {
     const icon = obb(x, y - top / 2, 0, hw, top / 2);
     if (!obbInside(icon) || boxes.some((b) => obbOverlap(b, icon))) continue;
     const n = { text: p.name, at: data.proj.invert(x, y - top - 5), size: Math.round(LESSER_LETTER * (poi ? 1.4 : 1)) };
-    const [q] = place(ctx, [n], data.proj.x, data.proj.y, opts);
+    const [q] = place(ctx, [n], data.proj.toPx, opts);
     const box = q && placedBox(q);
     if (!box || !obbInside(box) || boxes.some((b) => obbOverlap(b, box))) continue;
     boxes.push(icon, box);
@@ -1474,7 +1477,7 @@ function buildScene(data, sprites, ctx, world = {}) {
   const pois = placeLesser(data, field, boxes, ctx, towns, names, true);
   for (const n of lettering) {
     if (n.kind === 'coast' && names.some((m) => m.kind === 'coast' && m.text === n.text)) continue; // once a view
-    const [p] = place(ctx, [n], data.proj.x, data.proj.y, opts);
+    const [p] = place(ctx, [n], data.proj.toPx, opts);
     if (!p) continue;
     const box = placedBox(p); // coast-wright's corners, as an oriented box
     // a city's name sits on its own plan; seas and coasts are lettered over any city's water
@@ -1835,30 +1838,30 @@ function paintShoals(g, data, coast) {
 // The treatment of the land, after the parchment: the Red Sea tint and shoals (both under the land,
 // which hides what falls on shore), a flat tint, a landward wash along the coast, and the islands.
 function paintLand(g, data, land, coast, relief) {
-  const { x, y, seam } = data.proj;
+  const { toPx, seam } = data.proj;
   const mode = STYLE.landMode;
   if (tintPolys) {
-    trace(g, tintPolys, x, y, { ...seam });
+    trace(g, tintPolys, toPx, { ...seam });
     g.save(); g.fillStyle = hexA(STYLE.red, 0.5); g.fill('evenodd');
     // a hair beyond the polygon, which is generalised and stops short of the shore
     g.lineJoin = 'round'; g.lineWidth = 3; g.strokeStyle = hexA(STYLE.red, 0.5); g.stroke(); g.restore();
   }
   if (mode === 'ochre') paintShoals(g, data, coast);
-  fill(g, land, x, y, { color: STYLE.land, ...seam });
+  fill(g, land, toPx, { color: STYLE.land, ...seam });
   g.save();
   traceLand(g, data, land);
   g.clip('evenodd');
   const wash = LAND_WASH[mode];
   for (const [wd, a] of wash ? [[STYLE.washWidth * 2, 0.3], [STYLE.washWidth * 1.3, 0.3], [STYLE.washWidth * 0.7, 0.35]] : []) {
-    limn(g, coast, x, y, { color: hexA(wash, a), alpha: 1, width: wd, cap: 'round', oneStroke: true, ...seam });
+    limn(g, coast, toPx, { color: hexA(wash, a), alpha: 1, width: wd, lineCap: 'round', oneStroke: true, ...seam });
   }
-  if (mode === 'green') limn(g, coast, x, y, { color: STYLE.greenEdge, alpha: 0.8, width: 3.5, cap: 'round', oneStroke: true, ...seam });
+  if (mode === 'green') limn(g, coast, toPx, { color: STYLE.greenEdge, alpha: 0.8, width: 3.5, lineCap: 'round', oneStroke: true, ...seam });
   g.restore();
   if (STYLE.islands) {
     const pigments = [STYLE.red, STYLE.green, STYLE.gold];
     for (const [hue, pigment] of pigments.entries()) {
       const isles = land.filter((p) => p.isl.km2 < ISLAND_KM2 && p.isl.hue === hue);
-      if (isles.length) fill(g, isles, x, y, { color: pigment, alpha: 0.92, ...seam });
+      if (isles.length) fill(g, isles, toPx, { color: pigment, alpha: 0.92, ...seam });
     }
   }
   paintMarks(g, data);
@@ -1910,7 +1913,7 @@ function paintRelief(g, data, relief) {
   if (relief) drawRelief(g, { proj: data.proj, palette: { ink: STYLE.ink, land: STYLE.land } }, relief);
 }
 const paintCoast = (g, data, coast) =>
-  limn(g, coast, data.proj.x, data.proj.y, { color: STYLE.ink, alpha: 1, width: STYLE.coastWidth, oneStroke: true, ...data.proj.seam });
+  limn(g, coast, data.proj.toPx, { color: STYLE.ink, alpha: 1, width: STYLE.coastWidth, oneStroke: true, ...data.proj.seam });
 
 // Parchment, land, water and coast for any view: what a drag draws each frame. The ornaments, the
 // lattice, the relief and the trees wait for the stop, which places and draws the scene whole
@@ -2113,7 +2116,7 @@ function drawScene(g, scene, data, bg, view) {
   const show = scene.show ?? { kinds: new Set(KINDS), names: true, rhumb: true };
   for (const [kind, ink] of show.rhumb ? inks.entries() : []) {
     const lines = rays.filter((ray) => ray.kind === kind && meets(r, ray.box)).map((ray) => ray.line);
-    limn(g, lines, data.proj.x, data.proj.y, { color: ink, alpha: STYLE.rhumbAlpha, width: STYLE.rhumbWidth, oneStroke: true, ...data.proj.seam });
+    limn(g, lines, data.proj.toPx, { color: ink, alpha: STYLE.rhumbAlpha, width: STYLE.rhumbWidth, oneStroke: true, ...data.proj.seam });
   }
 
   // 3.2 an azimuthal projection's rim: the horizon, or where the chart stops
@@ -2159,8 +2162,8 @@ function drawScene(g, scene, data, bg, view) {
   if (washes.length) {
     g.save(); g.beginPath(); traceLand(g, data, land); g.clip('evenodd');
     for (const { u, a } of washes) {
-      fill(g, [u.poly], data.proj.x, data.proj.y, { color: STYLE.terracotta, alpha: a, ...data.proj.seam });
-      g.save(); g.beginPath(); trace(g, [u.poly], data.proj.x, data.proj.y, { ...data.proj.seam });
+      fill(g, [u.poly], data.proj.toPx, { color: STYLE.terracotta, alpha: a, ...data.proj.seam });
+      g.save(); g.beginPath(); trace(g, [u.poly], data.proj.toPx, { ...data.proj.seam });
       g.globalAlpha = Math.min(1, a * 1.5); g.strokeStyle = STYLE.ink; g.lineWidth = 0.8 / view.scale; g.stroke(); g.restore();
     }
     // clear of the town icons, which stand over them
@@ -2209,8 +2212,8 @@ function drawScene(g, scene, data, bg, view) {
     g.strokeStyle = hexA(STYLE.windRed, 0.7); g.lineWidth = 0.75; g.strokeRect(cx - hw - 4, cy - hh - 1, 2 * hw + 8, 2 * hh + 2);
   }
   const opts = letterOptions(data);
-  letter(g, shown.filter((n) => !n.red), data.proj.x, data.proj.y, { ...opts, color: STYLE.ink });
-  letter(g, shown.filter((n) => n.red), data.proj.x, data.proj.y, { ...opts, color: STYLE.windRed });
+  letter(g, shown.filter((n) => !n.red), data.proj.toPx, { ...opts, color: STYLE.ink });
+  letter(g, shown.filter((n) => n.red), data.proj.toPx, { ...opts, color: STYLE.windRed });
 
   // 8. monsters, 9. ships
   for (const m of show.kinds.has('monster') ? scene.monsters : []) if (spriteIn(m.sprite, m.x, m.y, m.size)) drawSprite(g, m.sprite, m.x, m.y, m.size, { flip: m.flip, anchor: [0.5, 0.5] });
@@ -2255,7 +2258,7 @@ function drawAnchored(g, a, bg, view) {
   g.setTransform(1, 0, 0, 1, 0, 0);
   const inks = [STYLE.ink, STYLE.windRed, STYLE.windGreen];
   for (const [kind, ink] of show.rhumb ? inks.entries() : []) {
-    limn(g, a.rays.filter((ray) => ray.kind === kind).map((ray) => ray.line), proj.x, proj.y, { color: ink, alpha: STYLE.rhumbAlpha, width: STYLE.rhumbWidth, oneStroke: true, ...proj.seam });
+    limn(g, a.rays.filter((ray) => ray.kind === kind).map((ray) => ray.line), proj.toPx, { color: ink, alpha: STYLE.rhumbAlpha, width: STYLE.rhumbWidth, oneStroke: true, ...proj.seam });
   }
   if (proj.rim) {
     g.beginPath(); g.arc(W / 2, H / 2, proj.rim, 0, 2 * Math.PI);
@@ -2279,8 +2282,8 @@ function drawAnchored(g, a, bg, view) {
   if (show.names) {
     const onMap = (n) => (Array.isArray(n.at[0]) ? n.at.some((p) => at(p, 200)) : at(n.at, 200)); // a coast name's `at` is a run of points, a sea name's one
     const shown = a.names.filter(onMap), opts = letterOptions({ proj });
-    letter(g, shown.filter((n) => !n.red), proj.x, proj.y, { ...opts, color: STYLE.ink });
-    letter(g, shown.filter((n) => n.red), proj.x, proj.y, { ...opts, color: STYLE.windRed });
+    letter(g, shown.filter((n) => !n.red), proj.toPx, { ...opts, color: STYLE.ink });
+    letter(g, shown.filter((n) => n.red), proj.toPx, { ...opts, color: STYLE.windRed });
   }
   if (show.kinds.has('monster')) for (const { o: m, at: ll } of a.monsters) {
     const size = m.size * scaled('monster'), p = at(ll, size);
