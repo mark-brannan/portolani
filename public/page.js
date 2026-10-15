@@ -347,6 +347,7 @@ showStyle();
 if (LEGACY_KEYS.some((k) => hashParams().has(k))) writeHash(); // an older link, rewritten in the new form
 let ground = null; // { world, coarse, bg, anchored } from the last placement, all a moving frame needs
 let placed = null; // the view the canvas shows with its ornaments
+let pinTitle = null; // the name of the place last flown to, on the cartouche until the map is moved by hand
 let run = 0;
 
 async function render() {
@@ -359,7 +360,7 @@ async function render() {
       ...style, relief: style.mountains === 'colour' ? ['marina'] : style.mountains === 'ink' ? ['engraved'] : [],
       continents: style.continentsZoom > 0, continentsZoom: style.continentsZoom,
       regions: style.regionsZoom > 0 ? style.regions : 'off', regionsZoom: style.regionsZoom,
-      sprites: [...selection], kinds, view,
+      sprites: [...selection], kinds, view, pinTitle: style.autoTitle ? pinTitle : null,
     });
     if (me !== run) return; // a newer change or a move superseded this one
     ground = { world, coarse, bg, anchored: anchorScene(scene, data) };
@@ -397,8 +398,9 @@ canvas.addEventListener('pointerdown', () => setDrawer(false));
 // ---------------------------------------------------------------- moving
 
 let frame = 0, settle = 0;
-function moved(next) {
+function moved(next, flying = false) {
   if (next.zoom === view.zoom && next.lon === view.lon && next.lat === view.lat) return; // e.g. wheel at a zoom bound
+  if (!flying) pinTitle = null; // a drag or a wheel leaves the place flown to
   view = next;
   run++; // a placement still in flight is for a view already left
   clearTimeout(settle);
@@ -473,22 +475,23 @@ const around = (lon, lat, r) => viewOfFrame({ lonMin: lon - r, lonMax: lon + r, 
 const at = (lon, lat, zoom) => ({ lon, lat, zoom });
 const ORIGINS = [
   ['', [
-    ['Mediterranean', DEFAULT_VIEW],
-    ['The North', viewOfFrame({ lonMin: 0, lonMax: 40, latMin: 54, latMax: 72 })], // Carta Marina
+    ['Mediterranean', DEFAULT_VIEW, 'The Mediterranean'],
+    ['The North', viewOfFrame({ lonMin: 0, lonMax: 40, latMin: 54, latMax: 72 }), 'The North'], // Carta Marina
     ['Virginia', at(-76, 36.28, 7.47)], // de Bry
-    ['The world', at(10, 25, 0)],
+    ['The world', at(10, 25, 0), 'The World'],
   ]],
   ['Chart centres', [
-    ['Carte Pisane, west', around(7.4, 40.0, 8)],
-    ['Carte Pisane, east', around(27.4, 36.8, 7.5)],
+    ['Carte Pisane, west', around(7.4, 40.0, 8), 'Carte Pisane'],
+    ['Carte Pisane, east', around(27.4, 36.8, 7.5), 'Carte Pisane'],
     ['Vesconte 1311', around(25.2, 37.5, 3)],
     ['Dulcert 1339', around(14.5, 40.0, 17)],
-    ['Catalan Atlas, rose', around(-20.7, 42.1, 16)],
-    ['Catalan Atlas, network', around(-5.4, 42.3, 16)],
-    ['Carta Marina, Bothnian rose', around(19.7, 61.7, 6)],
-    ['De la Cosa, west', around(-45, 23.4, 15)],
-    ['De la Cosa, east', around(65, 23.4, 15)],
+    ['Catalan Atlas, rose', around(-20.7, 42.1, 16), 'Catalan Atlas'],
+    ['Catalan Atlas, network', around(-5.4, 42.3, 16), 'Catalan Atlas'],
+    ['Carta Marina, Bothnian rose', around(19.7, 61.7, 6), 'Carta Marina'],
+    ['De la Cosa, west', around(-45, 23.4, 15), 'De la Cosa'],
+    ['De la Cosa, east', around(65, 23.4, 15), 'De la Cosa'],
   ]],
+  // the places that are lettered on the chart whatever the city data holds are in scripts/pois.mjs
   ['Elsewhere', [
     ['Lisbon', at(-9.14, 38.72, 7.5)],
     ['Seville', at(-5.98, 37.39, 7.5)],
@@ -499,15 +502,16 @@ const ORIGINS = [
     ['Maluku Islands', at(128, -3, 5)],
     ['Solomon Islands', at(160, -9, 5)],
     ['Marquesas Islands', at(-140, -9, 6)],
-    ['Pukapuka Atoll', at(-138.8, -14.82, 6.5)], // Magellan's San Pablo, 1521 (the Tuamotu one)
-    ['Pitcairn Island', at(-130.1, -25.07, 6.5)],
+    ['Pukapuka Atoll', at(-138.8, -14.82, 6.5), 'Pukapuka'], // Magellan's San Pablo, 1521 (the Tuamotu one)
+    ['Pitcairn Island', at(-130.1, -25.07, 6.5), 'Pitcairn'],
   ]],
 ];
 const originViews = [];
-$('origins').innerHTML = ORIGINS.map(([title, items]) =>
-  (title ? `<li class="group">${title}</li>` : '') + items.map(([name, v]) => `<li><button type="button" data-origin="${originViews.push(v) - 1}">${name}</button></li>`).join('')).join('');
+// The cartouche names the place flown to (its title, else the button's name), not whatever scores highest in the frame.
+$('origins').innerHTML = ORIGINS.map(([group, items]) =>
+  (group ? `<li class="group">${group}</li>` : '') + items.map(([name, v, title]) => `<li><button type="button" data-origin="${originViews.push({ ...v, title: title ?? name }) - 1}">${name}</button></li>`).join('')).join('');
 $('origins').addEventListener('click', (e) => { const b = e.target.closest('[data-origin]'); if (b) goTo(originViews[b.dataset.origin]); });
-$('home').addEventListener('click', () => goTo(DEFAULT_VIEW));
+$('home').addEventListener('click', () => goTo({ ...DEFAULT_VIEW, title: 'The Mediterranean' }));
 
 // A typed position: "36.28, -76" or "36.28N 76W" (latitude first), flown to and marked as the position.
 function parseLatLon(text) {
@@ -530,13 +534,14 @@ $('clearHere').addEventListener('click', () => setHere(null));
 let flight = 0;
 function goTo(target) {
   cancelAnimationFrame(flight);
+  pinTitle = null;
   const from = view, to = clampView({ ...target, projection: view.projection });
   const dlon = ((to.lon - from.lon + 540) % 360) - 180; // the short way round
   const ms = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 600, t0 = performance.now();
   const step = (now) => {
     const u = ms ? Math.min(1, (now - t0) / ms) : 1, e = u < 0.5 ? 2 * u * u : 1 - (2 - 2 * u) ** 2 / 2;
-    moved(u < 1 ? clampView({ lon: from.lon + dlon * e, lat: from.lat + (to.lat - from.lat) * e, zoom: from.zoom + (to.zoom - from.zoom) * e, projection: to.projection }) : to);
-    if (u < 1) flight = requestAnimationFrame(step); else stopped();
+    moved(u < 1 ? clampView({ lon: from.lon + dlon * e, lat: from.lat + (to.lat - from.lat) * e, zoom: from.zoom + (to.zoom - from.zoom) * e, projection: to.projection }) : to, true);
+    if (u < 1) flight = requestAnimationFrame(step); else { pinTitle = target.title ?? null; placed = null; stopped(); }
   };
   step(t0);
 }
