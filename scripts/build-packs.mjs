@@ -93,17 +93,34 @@ const MAX_SCALE = 3; // a sprite is stored at most this many px wide per CSS px 
 const PACKS = [
   {
     name: 'scanned',
-    key: 'ink', // cut before the patch key existed; re-keying it as patches is #111
+    key: 'ink', // cut before the patch key existed; re-keying it as patches is #111, a sprite at a time (`key: 'patch'` on the sprite; the Carta Marina monsters and ships are done)
     title: 'Sprites cropped from scans: Olaus Magnus, Carta Marina 1539; Jorge de Aguiar 1492; Catalan Atlas 1375; Genoese chart c. 1320-1350; Frederik de Wit; Ambroise Paré, Des monstres; Master W with the Key, two ship engravings c. 1475-1490',
     licence: 'Public domain (PD-Art); scans via Wikimedia Commons (James Ford Bell Library; Beinecke Library, Yale; BnF Gallica btv1b55002481n; Library of Congress 2003630429; Royal Museums Greenwich). The pare-* sprites: Wellcome Collection, CC BY 4.0. Ships ship-w-*: Art Institute of Chicago 27881 (CC0) and Rijksmuseum RP-P-2014-30 (Public Domain Mark)',
     ink: '#3b2a1a',
     sprites: [
-      { id: 'serpent-a', kind: 'monster', style: 'carta-marina', scan: 'carta-marina', crop: [1698, 880, 2065, 1190], sizePx: 200, minClearancePx: 160, weight: 3, level: SEA_FIGURE_LEVEL, silhouette: SEA_FIGURE, erase: [[1975, 935, 2065, 1102], [1715, 1112, 1800, 1145]] },
-      { id: 'whale-b', kind: 'monster', style: 'carta-marina', scan: 'carta-marina', crop: [2040, 358, 2350, 532], sizePx: 190, minClearancePx: 150, weight: 2, level: SEA_FIGURE_LEVEL, silhouette: SEA_FIGURE },
-      { id: 'pistrix-c', kind: 'monster', style: 'carta-marina', scan: 'carta-marina', crop: [374, 1236, 566, 1432], sizePx: 150, minClearancePx: 130, weight: 2, level: SEA_FIGURE_LEVEL, silhouette: SEA_FIGURE },
-      { id: 'cete-e', kind: 'monster', style: 'carta-marina', scan: 'carta-marina', crop: [1788, 572, 2046, 732], sizePx: 180, minClearancePx: 140, weight: 1, level: SEA_FIGURE_LEVEL, silhouette: SEA_FIGURE },
-      { id: 'ship-a', kind: 'ship', style: 'carta-marina', scan: 'carta-marina', crop: [1160, 800, 1312, 1000], sizePx: 80, heading: 'right', level: SEA_FIGURE_LEVEL, silhouette: { ...SEA_FIGURE, dilate: 3, close: 9 }, erase: [[1215, 975, 1275, 1000]] },
-      { id: 'ship-b', kind: 'ship', style: 'carta-marina', scan: 'carta-marina', crop: [2085, 708, 2212, 802], sizePx: 64, heading: 'right', level: SEA_FIGURE_LEVEL, silhouette: { ...SEA_FIGURE, dilate: 3, minArea: 300 } },
+      // Carta Marina figures are patches (#111): the whole crop, sea and swell and all, its edge feathered.
+      // `figure` is the old tight box round the subject: the sprite is drawn so the figure keeps its sizePx
+      // and its anchor, with the extra water round it. `erase` cuts only lettering and neighbouring figures.
+      // the sea serpent with the ship it coils round; the ship, boat and coast beside it, and lettering, erased
+      { id: 'serpent-a', kind: 'monster', style: 'carta-marina', scan: 'carta-marina', key: 'patch', crop: [1670, 874, 2065, 1215], figure: [1698, 880, 2065, 1190], sizePx: 200, minClearancePx: 160, weight: 3,
+        // the polygon cuts the neighbouring ship and boat at the top right and fades into the sea (the tail runs on beneath them)
+        mask: [[1670, 874], [1990, 874], [1990, 1124], [2065, 1124], [2065, 1215], [1670, 1215]], maskFeather: 12,
+        erase: [[1715, 1108, 1845, 1146], [1900, 927, 1918, 945], [1676, 1008, 1727, 1030], [2010, 1178, 2070, 1215]] },
+      // the whale with its swell and the sea below; the crop stops short of the monster heads either side and the wreck above
+      { id: 'whale-b', kind: 'monster', style: 'carta-marina', scan: 'carta-marina', key: 'patch', crop: [1996, 356, 2362, 590], figure: [2040, 358, 2350, 532], sizePx: 190, minClearancePx: 150, weight: 2,
+        erase: [[2328, 550, 2362, 590]] }, // the coast house in the corner
+      // the spiny sea-beast in its swell, with the water below; the lettering at its left edge erased
+      { id: 'pistrix-c', kind: 'monster', style: 'carta-marina', scan: 'carta-marina', key: 'patch', crop: [372, 1210, 566, 1480], figure: [374, 1236, 566, 1432], sizePx: 150, minClearancePx: 130, weight: 2,
+        erase: [[370, 1236, 386, 1256], [370, 1334, 386, 1352]] },
+      // the whale that has seized a ship, with its ripples and the sea below; "C" and the "CETE" lettering erased
+      { id: 'cete-e', kind: 'monster', style: 'carta-marina', scan: 'carta-marina', key: 'patch', crop: [1772, 572, 2060, 775], figure: [1788, 572, 2046, 732], sizePx: 180, minClearancePx: 140, weight: 1,
+        erase: [[1960, 590, 1985, 612], [2036, 618, 2062, 640]] },
+      // the three-master with the water round and under the hull; the "L" and "ANGLI" lettering erased
+      { id: 'ship-a', kind: 'ship', style: 'carta-marina', scan: 'carta-marina', key: 'patch', crop: [1130, 780, 1335, 1050], figure: [1160, 800, 1312, 1000], sizePx: 80, heading: 'right',
+        erase: [[1210, 824, 1224, 838], [1232, 962, 1300, 990]] },
+      // the smaller ship under sail; the coast lettering, the islet and the letters above erased
+      { id: 'ship-b', kind: 'ship', style: 'carta-marina', scan: 'carta-marina', key: 'patch', crop: [2050, 690, 2210, 840], figure: [2085, 708, 2212, 802], sizePx: 64, heading: 'right',
+        erase: [[2198, 706, 2212, 738], [2170, 690, 2212, 705], [2168, 808, 2212, 842]] },
       { id: 'rose-aguiar', kind: 'rose', style: 'aguiar', scan: 'aguiar', crop: [55, 80, 665, 690], sizePx: 300, dark: 'min', level: [12, 78], circle: [300, 300, 300],
         // the scan's own wind names (norte, oeste, leste, sull and the petal inscriptions)
         clean: [[355, 122, 377, 180], [175, 187, 235, 237], [495, 200, 552, 257], [115, 365, 165, 387], [555, 374, 609, 394], [162, 512, 197, 587], [340, 577, 364, 630], [489, 500, 535, 544], [112, 182, 147, 217]] },
@@ -208,6 +225,14 @@ function magick(...args) {
   return execFileSync('magick', args.flat(), { encoding: 'utf8' }).trim();
 }
 
+// The anchor of a sprite cut wider than its figure: the figure's own anchor (centred across, a monster or
+// ship 0.75 down, else centred), as a fraction of the finished sprite.
+function figureAnchor(sprite, fig, ox, oy, tw, th) {
+  const ay = sprite.kind === 'monster' || sprite.kind === 'ship' ? 0.75 : 0.5;
+  const r = (v) => Math.round(Math.min(1, Math.max(0, v)) * 1000) / 1000;
+  return [r(((fig[0] + fig[2]) / 2 - ox) / tw), r((fig[1] + ay * (fig[3] - fig[1]) - oy) / th)];
+}
+
 function buildSprite(sprite, colour, key, outDir, tmp) {
   const scan = SOURCES[sprite.scan];
   const [x0, y0, x1, y1] = sprite.crop;
@@ -308,7 +333,11 @@ function buildSprite(sprite, colour, key, outDir, tmp) {
   }
   // Keyed at full size, then shrunk with Lanczos to MAX_SCALE x sizePx across when wider (the
   // renderer draws a sprite sizePx wide), so line work stays crisp and no scan-sized PNG is kept.
-  const most = MAX_SCALE * sprite.sizePx;
+  // `figure` is the box round the subject alone, for a sprite whose crop holds water or ground round it: the
+  // figure keeps its sizePx and its anchor, so the extra surroundings do not shrink it on the map.
+  const fig = sprite.figure;
+  const sizePx = fig ? Math.round(sprite.sizePx * tw / (fig[2] - fig[0])) : sprite.sizePx;
+  const most = MAX_SCALE * sizePx;
   const shrink = tw > most ? ['-filter', 'Lanczos', '-resize', `${most}x`] : [];
   magick(rgb, alpha, '-alpha', 'off', '-compose', 'CopyOpacity', '-composite',
     '-crop', `${tw}x${th}+${tx}+${ty}`, '+repage', shrink, '-strip', join(outDir, file));
@@ -321,8 +350,8 @@ function buildSprite(sprite, colour, key, outDir, tmp) {
 
   const entry = {
     id: sprite.id, kind: sprite.kind, style: sprite.style, file,
-    anchor: [0.5, sprite.kind === 'monster' || sprite.kind === 'ship' ? 0.75 : 0.5],
-    sizePx: sprite.sizePx, bands: [0, 1],
+    anchor: fig ? figureAnchor(sprite, fig, x0 + tx, y0 + ty, tw, th) : [0.5, sprite.kind === 'monster' || sprite.kind === 'ship' ? 0.75 : 0.5],
+    sizePx, bands: [0, 1],
     source: { url: scan.url, page: scan.page, crop: [x0 + tx, y0 + ty, x0 + tx + tw, y0 + ty + th] },
   };
   if (sprite.minClearancePx) entry.minClearancePx = sprite.minClearancePx;
