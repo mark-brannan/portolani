@@ -91,13 +91,24 @@ export function hiddenCircle(extent, radius = 0.5) {
 // a sheet serves, 0 for the world band. The Carta Marina has no ring and de la Cosa's is in pixels, so both
 // take the overview grid's rule, 0.4 of a sheet height (7.68 degrees).
 const RULE = 0.4 * BANDS[0].height;
+// A curated chart's own figures (docs/atlas/ornaments.md), as { kind, sprite, lon, lat }: `sprite` names the
+// pack sprite cropped from that figure, or null where none is cropped yet and the scene stands in one of the
+// sheet's `style`, the pack family its crops belong to. An
+// empty set is a chart that draws none; a sheet with no set has not been read, and keeps the seeded figures.
+const figures = (sets) => Object.entries(sets).flatMap(([kind, list]) => list.map(([sprite, lon, lat]) => ({ kind, sprite, lon, lat })));
+const CARTA_MARINA = figures({
+  rose: [[null, -10.5, 65.8], [null, -4.7, 60.7], [null, 7.8, 58.3], [null, 20.6, 62.4]],
+  monster: [['serpent-a', -5.5, 66.2], ['whale-b', -8.2, 69.0], ['cete-e', -8.4, 67.5], ['pistrix-c', -13.6, 59.7], [null, -9.5, 57.6], [null, -12.7, 58.5], [null, -4.5, 62.5], [null, -9.3, 64.7], [null, -3.1, 64.5], [null, -7.1, 56.3], [null, 8.9, 60.0]],
+  ship: [['ship-a', -11.5, 64.5], ['ship-b', -5.9, 67.9], [null, -19.6, 60.6], [null, -17.5, 61.3], [null, -14.1, 62.8], [null, -12.5, 60.5], [null, -20.1, 62.0], [null, -14.5, 64.0], [null, 8.7, 55.1], [null, 19.5, 58.8], [null, 20.1, 57.0], [null, 17.4, 56.0]],
+});
+const CATALAN = figures({ rose: [['rose-catalan', -20.7, 42.1]], ship: [[null, -15.5, 26.1]] });
 export const CURATED = [
-  { name: 'Mediterranean, west', source: 'Carte Pisane, western circle', bands: [0, 1], extent: { west: -10, east: 20, south: 30, north: 48 }, lon: 7.4, lat: 40.0, radius: 8.0 },
-  { name: 'Mediterranean, east', source: 'Carte Pisane, eastern circle', bands: [0, 1], extent: { west: 15, east: 42, south: 30, north: 48 }, lon: 27.4, lat: 36.8, radius: 7.5 },
-  { name: 'Levant and Black Sea', source: 'Vesconte, 1311', bands: [1], extent: { west: 20, east: 42, south: 30, north: 48 }, lon: 25.2, lat: 37.5, radius: 3 },
-  { name: 'Europe and the Mediterranean', source: 'Dulcert, 1339', bands: [0, 1], extent: { west: -25, east: 42, south: 28, north: 60 }, lon: 14.5, lat: 40.0, radius: 17 },
-  { name: 'The known world of 1375', source: 'Catalan Atlas', bands: [0], extent: { west: -25, east: 120, south: 10, north: 60 }, lon: -5.4, lat: 42.3, radius: 16 },
-  { name: 'Scandinavia and the Baltic', source: 'Carta Marina, 1539', bands: [1], extent: { west: -5, east: 45, south: 53, north: 72 }, lon: 19.7, lat: 61.7, radius: RULE },
+  { name: 'Mediterranean, west', source: 'Carte Pisane, western circle', bands: [0, 1], extent: { west: -10, east: 20, south: 30, north: 48 }, lon: 7.4, lat: 40.0, radius: 8.0, ornaments: [] },
+  { name: 'Mediterranean, east', source: 'Carte Pisane, eastern circle', bands: [0, 1], extent: { west: 15, east: 42, south: 30, north: 48 }, lon: 27.4, lat: 36.8, radius: 7.5, ornaments: [] },
+  { name: 'Levant and Black Sea', source: 'Vesconte, 1311', bands: [1], extent: { west: 20, east: 42, south: 30, north: 48 }, lon: 25.2, lat: 37.5, radius: 3, ornaments: [] },
+  { name: 'Europe and the Mediterranean', source: 'Dulcert, 1339', bands: [0, 1], extent: { west: -25, east: 42, south: 28, north: 60 }, lon: 14.5, lat: 40.0, radius: 17, ornaments: [] },
+  { name: 'The known world of 1375', source: 'Catalan Atlas', bands: [0], extent: { west: -25, east: 120, south: 10, north: 60 }, lon: -5.4, lat: 42.3, radius: 16, ornaments: CATALAN, style: 'catalan' },
+  { name: 'Scandinavia and the Baltic', source: 'Carta Marina, 1539', bands: [1], extent: { west: -5, east: 45, south: 53, north: 72 }, lon: 19.7, lat: 61.7, radius: RULE, ornaments: CARTA_MARINA, style: 'carta-marina' },
   { name: 'The Atlantic and the Americas', source: 'Juan de la Cosa, 1500', bands: [0], extent: { west: -100, east: 20, south: -20, north: 65 }, lon: -45, lat: 23.4, radius: RULE },
 ].map((c) => ({ ...c, area: (c.extent.east - c.extent.west) * (c.extent.north - c.extent.south) }));
 // the Carte Pisane's two sheets share their overlap; every other overlap goes to the smaller sheet
@@ -122,6 +133,7 @@ function curatedFor(world, band, b) {
   return serving.filter((c) => overlaps(c.extent, b)).map((c) => ({
     name: c.name, source: c.source, curated: true, band: band.band, bandName: band.name, extent: c.extent,
     circle: curatedCircle(c),
+    ...(c.ornaments && { ornaments: c.ornaments, style: c.style }),
     shadow: serving.filter((o) => o.area < c.area && !(PISANE.has(c.name) && PISANE.has(o.name)) && overlaps(o.extent, c.extent)).map((o) => o.extent),
   }));
 }
