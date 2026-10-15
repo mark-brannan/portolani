@@ -147,15 +147,26 @@ The sheets:
 |---|---|---|---|---|---|
 | Mediterranean, west | Carte Pisane, western circle | world, overview | 10°W to 20°E, 30°N to 48°N | 8°E 39°N, off Sardinia | the earliest chart splits the sea into two circles; this is the western |
 | Mediterranean, east | Carte Pisane, eastern circle | world, overview | 15°E to 42°E, 30°N to 48°N | 26°E 36°N, the Aegean | the eastern circle of the same chart |
-| Levant and Black Sea | Vesconte 1311 | overview, general | 20°E to 42°E, 30°N to 48°N | 30°E 40°N, between the Aegean and the Black Sea | the chart covers the eastern Mediterranean and the Black Sea alone |
+| Levant and Black Sea | Vesconte 1311 | overview | 20°E to 42°E, 30°N to 48°N | 30°E 40°N, between the Aegean and the Black Sea | the chart covers the eastern Mediterranean and the Black Sea alone |
 | Europe and the Mediterranean | Dulcert 1339 | world, overview | 25°W to 42°E, 28°N to 60°N | 5°E 40°N, the Balearic sea | the first Majorcan chart; the Atlantic and the Baltic added to the frame |
 | The known world of 1375 | Catalan Atlas | world | 25°W to 120°E, 10°N to 60°N | 20°W 37°N, off Morocco | the first drawn compass rose, on its western leaf; the big rose goes there |
-| Scandinavia and the Baltic | Carta Marina 1539 | overview, general | 5°W to 45°E, 53°N to 72°N | 22°E 60°N, the Baltic off Stockholm | its roses are already the chart's ornament pack; the big rose follows its central one |
+| Scandinavia and the Baltic | Carta Marina 1539 | overview | 5°W to 45°E, 53°N to 72°N | 22°E 60°N, the Baltic off Stockholm | its roses are already the chart's ornament pack; the big rose follows its central one |
 | The Atlantic and the Americas | Juan de la Cosa 1500 | world | 100°W to 20°E, 20°S to 65°N | 35°W 30°N, the open Atlantic | its rose with the Virgin and Child sits at the western edge; the big rose stands for it |
 
-Two notes on the table. A chart appears in two bands when its extent is about one window wide in
-both; the same circle serves, and the page turn between those bands keeps the roses still. The
-Carta Marina is the odd one out: it is a printed map of the north, not a navigator's chart, and
+Three notes on the table. A curated sheet serves the bands in which its extent is one to four
+windows wide at the band's first zoom, the range a grid sheet spans; wider than that, it is a page
+of the band above. Where a sheet serves two bands the same circle serves both, and the page turn
+between them keeps the roses still. The world band is the exception again: at those zooms the earth
+is one page, so it takes every curated sheet from the planispheres down to the Carte Pisane's two
+circles.
+
+Where curated sheets overlap in one band, the smaller extent wins over the ground it covers and the
+larger sheet's network is drawn only where no smaller sheet lies: the Carte Pisane's circles over
+Dulcert's, Dulcert's over the Catalan Atlas's. The Carte Pisane's two sheets share their overlap, as
+the original's two circles did. A view therefore meets one network, plus its neighbours' lines
+inside the reach margin.
+
+The Carta Marina is the odd one out: it is a printed map of the north, not a navigator's chart, and
 Olaus's roses and lines were decoration. It is in the list because its ornaments are already the
 chart's (the `scanned` pack), and a reader who zooms to the Baltic should meet them where he put
 them.
@@ -244,8 +255,11 @@ wait on it.
   one that also draws the ornaments. The mechanism stays open until it is measured; the measurement
   that settles it: a scratch page driving sixty 4 px pans and sixty 1.02x zooms at zooms 5, 9 and 12
   over Genoa, recording median and p90 frame time for today's frame and for the projected ornaments.
-  A median under about 50 ms at zoom 5 holds the design; above it, the ornaments are drawn every
-  other frame during a move, which is still no flicker.
+  A median of a
+  few hundred milliseconds at zoom 5 is acceptable while the chart is in development, and about
+  50 ms is the bar to aim at later; the ruling is in [decisions.md](../decisions.md). Above the
+  acceptable bar, the ornaments are drawn every other frame during a move, which is still no
+  flicker.
 
 ## Not decided here
 
