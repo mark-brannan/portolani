@@ -1,6 +1,7 @@
 // Browser host for the shared scene code (scene.mjs): same scene as `npm run render`, drawn live.
-// Drag to pan, wheel or pinch to zoom; while the map moves only land and coast are drawn, and the
-// ornaments are placed again when it stops. The settings live in a drawer behind the rose button, so
+// Drag to pan, wheel or pinch to zoom; while the map moves the land and coast are drawn and the placed
+// ornaments slide with it, held to the earth; they are placed again when it stops. The settings live in a
+// drawer behind the rose button, so
 // the map has the window. The view and the style are kept in the URL hash, e.g.
 // #map=zoom/lat/lon&projection=miller&sprites=s:serpent-a,v:kraken,v:rose-aguiar,p:tower&townsize=rank&names=0&rhumb=0&scale=chevron&scaleborder=blank&continents=5&regions=latin&regionszoom=7&land=green&islands=1&rivers=aguiar&lakes=marina&mountains=ink&trees=ink&seas=1&autotitle=0&title=Mare+Nostrum&ink=5a1a1a&parchment=eee&density=1.5;
 // a setting left at its default is left out, `sprites` too (keys with the pack shortened, v: s: p:); `mountains` is `ink`
@@ -8,7 +9,7 @@
 // they are drawn down from (0 off, the top always).
 // Older links naming a `rendering` (or `pack`), `rose`, `monster`, `town` and `kinds` open as the
 // selection those chose, and are written back in the new form.
-import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, panView, zoomView, clampView, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, W, H } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, W, H } from './scene.mjs';
 
 const memo = new Map();
 // a failed load is forgotten, so the next stop tries it again
@@ -344,7 +345,7 @@ let style = styleFromHash();
 let selection = selectionFromHash();
 showStyle();
 if (LEGACY_KEYS.some((k) => hashParams().has(k))) writeHash(); // an older link, rewritten in the new form
-let ground = null; // { world, coarse, bg } from the last placement, all a moving frame needs
+let ground = null; // { world, coarse, bg, anchored } from the last placement, all a moving frame needs
 let placed = null; // the view the canvas shows with its ornaments
 let run = 0;
 
@@ -361,7 +362,7 @@ async function render() {
       sprites: [...selection], kinds, view,
     });
     if (me !== run) return; // a newer change or a move superseded this one
-    ground = { world, coarse, bg };
+    ground = { world, coarse, bg, anchored: anchorScene(scene, data) };
     if (style.autoTitle) $('title').value = scene.cartouche.title; // the box shows what the cartouche letters, and cannot be edited
     placed = view;
     const t1 = performance.now();
@@ -405,6 +406,7 @@ function moved(next) {
     const t = performance.now();
     // the 10m cells placed last while they cover the view; 50m otherwise, until it stops and is placed again
     drawGround(ctx, covers(ground.world, view) ? ground.world : ground.coarse, view, ground.bg);
+    drawAnchored(ctx, ground.anchored, ground.bg, view); // the placed ornaments, held to the earth
     $('status').textContent = `z${view.zoom.toFixed(1)}: moving, frame ${(performance.now() - t).toFixed(0)} ms`;
   });
 }

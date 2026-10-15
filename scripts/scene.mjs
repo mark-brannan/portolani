@@ -49,6 +49,10 @@ const STYLE = {
   islands: false, // the small islands washed in the three pigments, set by createScene
   scaleBorder: 'bordered', // one of SCALE_BORDERS, set by createScene
   trees: 'off', // one of TREE_STYLES, set by createScene
+  // How much of the map's growth within a band each kind of ornament takes (docs/atlas, "What size an
+  // ornament is"): 1 is ink on the map and grows with it, 0 holds a fixed pixel size, 0.5 the square root.
+  // A rhumb line's stroke is 0 and its reach 1; the lines are geography. Tuned by eye, a number per kind.
+  sizeFactor: { rose: 0.5, monster: 0, ship: 0, town: 0.5, names: 0, mountain: 1 },
   font: 'IM Fell English',
   fonts: ['IM Fell English', 'Georgia', 'serif'], // the stack names are lettered in; the first is loaded
 };
@@ -1840,6 +1844,27 @@ function drawScaleBar(g, data, bg, view, w, h, style = 'genoese', sprite = null)
   g.restore();
 }
 
+// The cartouche, lettered in its cleared panel. `bgPart` repaints the parchment (x0, y0, x1, y1) under the panel.
+function drawCartouche(g, c, bgPart) {
+  const [px0, py0, px1, py1] = c.sprite.panel;
+  const pw = (px1 - px0) * c.w, ph = (py1 - py0) * c.h;
+  g.save();
+  g.beginPath(); g.rect(c.x + px0 * c.w, c.y + py0 * c.h, pw, ph); g.clip();
+  bgPart(c.x + px0 * c.w, c.y + py0 * c.h, c.x + px1 * c.w, c.y + py1 * c.h);
+  g.restore();
+  if (c.sprite.plain) drawPlainFrame(g, c); else drawSprite(g, c.sprite, c.x, c.y, c.w, { anchor: [0, 0] });
+  g.save();
+  g.fillStyle = STYLE.ink;
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  let fpx = ph * 0.62;
+  g.font = `${fpx}px "${STYLE.font}"`;
+  g.letterSpacing = `${fpx * 0.12}px`;
+  while (fpx > 6 && g.measureText(c.title).width > pw * 0.86) { fpx -= 1; g.font = `${fpx}px "${STYLE.font}"`; g.letterSpacing = `${fpx * 0.12}px`; }
+  g.fillText(c.title, c.x + (px0 * c.w) + pw / 2 + fpx * 0.06, c.y + py0 * c.h + ph * 0.54);
+  g.restore();
+}
+
 function drawScene(g, scene, data, bg, view) {
   g.save();
   g.setTransform(view.scale, 0, 0, view.scale, -view.x * view.scale, -view.y * view.scale);
@@ -1971,26 +1996,80 @@ function drawScene(g, scene, data, bg, view) {
   // 10. cartouche, lettered in its cleared panel
   const c = scene.cartouche;
   if (!show.kinds.has('cartouche') || !meets(r, { x0: c.x, y0: c.y, x1: c.x + c.w, y1: c.y + c.h })) { g.restore(); drawScaleBar(g, data, bg, view, W, H, show.scale, scene.scaleSprite); return; }
-  const [px0, py0, px1, py1] = c.sprite.panel;
-  const pw = (px1 - px0) * c.w, ph = (py1 - py0) * c.h;
-  g.save();
-  g.beginPath(); g.rect(c.x + px0 * c.w, c.y + py0 * c.h, pw, ph); g.clip();
-  bgPart(c.x + px0 * c.w, c.y + py0 * c.h, c.x + px1 * c.w, c.y + py1 * c.h);
-  g.restore();
-  if (c.sprite.plain) drawPlainFrame(g, c); else drawSprite(g, c.sprite, c.x, c.y, c.w, { anchor: [0, 0] });
-  g.save();
-  g.fillStyle = STYLE.ink;
-  g.textAlign = 'center';
-  g.textBaseline = 'middle';
-  let fpx = ph * 0.62;
-  g.font = `${fpx}px "${STYLE.font}"`;
-  g.letterSpacing = `${fpx * 0.12}px`;
-  while (fpx > 6 && g.measureText(c.title).width > pw * 0.86) { fpx -= 1; g.font = `${fpx}px "${STYLE.font}"`; g.letterSpacing = `${fpx * 0.12}px`; }
-  g.fillText(c.title, c.x + (px0 * c.w) + pw / 2 + fpx * 0.06, c.y + py0 * c.h + ph * 0.54);
-  g.restore();
-
+  drawCartouche(g, c, bgPart);
   g.restore();
   drawScaleBar(g, data, bg, view, W, H, show.scale, scene.scaleSprite);
+}
+
+// ---------------------------------------------------------------- anchored to the earth
+
+// A placed scene's ornaments as longitude and latitude, so a moving frame can draw them through the
+// live projection. Placement is unchanged: once a view, at release. A city's plan and the continent
+// and region names are left out of a moving frame; the release draws them.
+function anchorScene(scene, data) {
+  const ll = (o) => ({ o, at: data.proj.invert(o.x, o.y) });
+  return {
+    k: data.proj.k, show: scene.show, scaleSprite: scene.scaleSprite, cartouche: scene.cartouche,
+    rays: latticeOf(scene, data),
+    roses: scene.roseDraws.map(ll), mountains: (scene.mountains ?? []).map(ll),
+    towns: [...scene.towns.filter((t) => !t.city), ...(scene.lesser ?? [])].map(ll),
+    monsters: scene.monsters.map(ll), ships: scene.ships.map(ll),
+    names: scene.names.filter((n) => !n.plate),
+  };
+}
+
+// One moving frame of the anchored ornaments over the ground, through `view`'s projection; the
+// cartouche and the scale bar stay on the window.
+function drawAnchored(g, a, bg, view) {
+  const proj = makeProjection(clampView(view)), grow = proj.k / a.k, f = STYLE.sizeFactor, show = a.show;
+  const scaled = (kind) => grow ** f[kind];
+  const at = ([lon, lat], pad) => {
+    if (proj.visible && !proj.visible(lon, lat)) return null;
+    const [x, y] = proj.project(lon, lat);
+    return x > -pad && x < W + pad && y > -pad && y < H + pad ? [x, y] : null;
+  };
+  g.save();
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  const inks = [STYLE.ink, STYLE.windRed, STYLE.windGreen];
+  for (const [kind, ink] of show.rhumb ? inks.entries() : []) {
+    limn(g, a.rays.filter((ray) => ray.kind === kind).map((ray) => ray.line), proj.x, proj.y, { color: ink, alpha: STYLE.rhumbAlpha, width: STYLE.rhumbWidth, oneStroke: true, ...proj.seam });
+  }
+  if (proj.rim) {
+    g.beginPath(); g.arc(W / 2, H / 2, proj.rim, 0, 2 * Math.PI);
+    g.strokeStyle = STYLE.ink; g.lineWidth = 2; g.stroke();
+    g.beginPath(); g.arc(W / 2, H / 2, proj.rim + 5, 0, 2 * Math.PI); g.lineWidth = 0.8; g.stroke();
+  }
+  if (show.kinds.has('rose')) for (const { o, at: ll } of a.roses) {
+    const size = o.size * scaled('rose'), p = at(ll, size);
+    if (p) drawSprite(g, o.sprite, p[0], p[1], size, { anchor: [0.5, 0.5] });
+  }
+  if (show.kinds.has('mountain')) for (const { o, at: ll } of a.mountains) {
+    const size = o.size * scaled('mountain'), p = at(ll, size);
+    if (p) drawSprite(g, o.sprite, p[0], p[1], size, { anchor: [0.5, 0.5] });
+  }
+  for (const { o: t, at: ll } of a.towns) {
+    const h = t.h * scaled('town'), p = at(ll, h * 2);
+    if (!p) continue;
+    if (t.sprite) drawSprite(g, t.sprite, p[0], p[1], (h * t.sprite.img.width) / t.sprite.img.height, { anchor: [0.5, 1] });
+    else drawTower(g, { ...t, x: p[0], y: p[1], h });
+  }
+  if (show.names) {
+    const onMap = (n) => (Array.isArray(n.at[0]) ? n.at.some((p) => at(p, 200)) : at(n.at, 200)); // a coast name's `at` is a run of points, a sea name's one
+    const shown = a.names.filter(onMap), opts = letterOptions({ proj });
+    letter(g, shown.filter((n) => !n.red), proj.x, proj.y, { ...opts, color: STYLE.ink });
+    letter(g, shown.filter((n) => n.red), proj.x, proj.y, { ...opts, color: STYLE.windRed });
+  }
+  if (show.kinds.has('monster')) for (const { o: m, at: ll } of a.monsters) {
+    const size = m.size * scaled('monster'), p = at(ll, size);
+    if (p) drawSprite(g, m.sprite, p[0], p[1], size, { flip: m.flip, anchor: [0.5, 0.5] });
+  }
+  if (show.kinds.has('ship')) for (const { o: s, at: ll } of a.ships) {
+    const size = s.size * scaled('ship'), p = at(ll, size);
+    if (p) drawSprite(g, s.sprite, p[0], p[1], size, { flip: s.flip, rot: s.flip ? -s.tilt : s.tilt, anchor: [0.5, 0.6] });
+  }
+  g.restore();
+  if (show.kinds.has('cartouche')) drawCartouche(g, a.cartouche, (x0, y0, x1, y1) => g.drawImage(bg, x0, y0, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0));
+  drawScaleBar(g, { proj }, bg, { scale: 1, x: 0, y: 0 }, W, H, show.scale, a.scaleSprite);
 }
 
 // ---------------------------------------------------------------- setup
@@ -2084,4 +2163,4 @@ export const viewProjection = (view) => makeProjection(clampView(view)); // for 
 export const TOWN_SIZES = ['area', 'population', 'rank'];
 export { RIVER_STYLES, LAKE_STYLES, TREE_STYLES, RELIEF_STYLES };
 export const MAX_ZOOM = ZOOM.max;
-export { towerGlyph, SCALE_NAMES, readManifests, listStyles, listSprites, defaultSprites, selectSprites, chooseSprites, drawScene, drawGround, covers, panView, zoomView, clampView, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };
+export { anchorScene, drawAnchored, towerGlyph, SCALE_NAMES, readManifests, listStyles, listSprites, defaultSprites, selectSprites, chooseSprites, drawScene, drawGround, covers, panView, zoomView, clampView, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };
