@@ -153,3 +153,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261015t182250z
 - PR143: no code change; test left red, needs-human. Undo: remove label (no PR, branch claude/portolani-unattended-shift-2c08b5)
+
+### 20261015t190448z
+- PR151 merge: kept main's rose-frame avoid discs plus #146 ownSet branch; goldens regenerated; undo = revert merge 34777c3 (no PR, branch main)
