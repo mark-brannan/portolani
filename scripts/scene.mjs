@@ -60,13 +60,13 @@ const MARGIN = 2; // degrees beyond FRAME whose features the scene keeps
 const DETAIL = { lon: 8.93, lat: 44.41, scale: 2 }; // Genoa; window clamped to the scene
 // Whole world at the far end; 50m data holds to about z9. The bands are read from the catalogue
 // (scripts/catalogue.json, a copy of coastlines' catalogue.json until the package publishes it):
-// past a record's `zoom.min` a view draws from its cells (geo/<id>/<xi>_<yi>.json, `grid.cellDeg`
+// past a record's `zoom.min` a view draws from its cells (geo/<dir>/<xi>_<yi>.json, `grid.cellDeg`
 // degrees square) within `grid.marginDeg` degrees of its frame, a couple of screens at the band's
 // first zoom, so a pan stays on loaded cells; a band whose index the site lacks is skipped and the
 // one below it drawn instead. Measured vertex spacing (median, m): 50m 7,650; NE 10m 1,574; GSHHG h 707.
 const bandOf = (id) => {
   const r = catalogue.find((c) => c.id === id);
-  return { dir: r.id, zoom: r.zoom.min, cell: r.grid.cellDeg, margin: r.grid.marginDeg };
+  return { dir: r.sources.find((x) => x.kind === 'cells').url.replace(/^geo\/|\/$/g, ''), zoom: r.zoom.min, cell: r.grid.cellDeg, margin: r.grid.marginDeg };
 };
 const BANDS = ['ne-10m-land', 'gshhg-h-land', 'gshhg-f-land'].map(bandOf);
 const ZOOM = { min: 1, max: 15 };

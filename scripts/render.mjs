@@ -19,7 +19,7 @@ const GEO = dirname(fileURLToPath(import.meta.resolve('coastlines/data/ne-land-5
 // Logical paths: geo/<id>.geojson is a coastlines data file, packs/... in the repo; the names are
 // made here from the marine download and the coastlines countries, the urban footprints from the
 // urban areas download (npm run build:preview fetches it), the towns drawn as icons without it;
-// the 10m water cells (geo/ne-10m-water/) are cut here from the rivers and lakes downloads and their
+// the 10m water cells (geo/water-10m/) are cut here from the rivers and lakes downloads and their
 // regional supplements, the 50m water drawn at every zoom without them.
 const resolve = (p) => (p.startsWith('geo/') ? join(GEO, p.slice(4)) : join(ROOT, p));
 const read = (file) => JSON.parse(readFileSync(file, 'utf8'));
@@ -34,7 +34,7 @@ let water10m;
 const waterCells = () => water10m ??= existsSync(RIVERS_10M) && existsSync(LAKES_10M) ? cutWater(waterFiles(WATER_FILES.rivers), waterFiles(WATER_FILES.lakes))
   : (console.warn(`${RIVERS_10M} or ${LAKES_10M} is missing; rivers and lakes are drawn from 50m`), null);
 const water = (p) => {
-  const cells = waterCells(), k = p.slice('geo/ne-10m-water/'.length, -'.json'.length);
+  const cells = waterCells(), k = p.slice('geo/water-10m/'.length, -'.json'.length);
   if (!cells) throw new Error('no 10m water');
   return k === 'index' ? { cell: 5, cells: [...cells.keys()] } : cells.get(k);
 };
@@ -43,7 +43,7 @@ const names = () => made ??= joinNames(seaNames(read(join(DL, 'ne_50m_geography_
 const env = {
   createCanvas,
   readJSON: async (p) => (p === 'geo/names-50m.json' ? names() : p === 'geo/urban-10m.json' ? footprints() : p === 'geo/seas-50m.json' ? tintedSeas(read(join(DL, 'ne_50m_geography_marine_polys.geojson')))
-    : p.startsWith('geo/ne-10m-water/') ? water(p) : read(resolve(p))),
+    : p.startsWith('geo/water-10m/') ? water(p) : read(resolve(p))),
   loadImage: (p) => loadImage(resolve(p)),
   loadFont: async (family) => { GlobalFonts.registerFromPath(join(DL, 'IMFeENrm28P.ttf'), family); GlobalFonts.registerFromPath(join(DL, 'IMFeENit28P.ttf'), family); },
 };

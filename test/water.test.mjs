@@ -31,22 +31,22 @@ const base = {
 };
 let cells;
 const with10m = { ...base, readJSON: async (p) => {
-  if (!p.startsWith('geo/ne-10m-water/')) return base.readJSON(p);
+  if (!p.startsWith('geo/water-10m/')) return base.readJSON(p);
   cells ??= cutWater(...['rivers', 'lakes'].map((k) => joinWater(WATER_FILES[k].map((f) => read(join(DL, f))))));
-  const k = p.slice('geo/ne-10m-water/'.length, -'.json'.length);
+  const k = p.slice('geo/water-10m/'.length, -'.json'.length);
   return k === 'index' ? { cell: 5, cells: [...cells.keys()] } : cells.get(k);
 } };
 
-// and the GSHHG "h" lakes, cut as scripts/build-preview.mjs cuts them into geo/gshhg-h-lakes/
+// and the GSHHG "h" lakes, cut as scripts/build-preview.mjs cuts them into geo/h-lakes/
 let lakeCells;
 const withLakes = { ...with10m, readJSON: async (p) => {
-  if (!p.startsWith('geo/gshhg-h-lakes/')) return with10m.readJSON(p);
+  if (!p.startsWith('geo/h-lakes/')) return with10m.readJSON(p);
   if (!lakeCells) {
     const { zipMember } = await import(new URL('zip.js', import.meta.resolve('coastlines')));
     const zip = readFileSync(GSHHG), member = (level, ext) => zipMember(zip, `GSHHS_shp/h/GSHHS_h_L${level}.${ext}`);
     lakeCells = cutLakes(gshhgLakes(...[2, 3].flatMap((level) => [shapefilePolygons(member(level, 'shp')), dbfRecords(member(level, 'dbf'))])), 1);
   }
-  const k = p.slice('geo/gshhg-h-lakes/'.length, -'.json'.length);
+  const k = p.slice('geo/h-lakes/'.length, -'.json'.length);
   return k === 'index' ? { cell: 1, cells: [...lakeCells.keys()] } : lakeCells.get(k);
 } };
 
