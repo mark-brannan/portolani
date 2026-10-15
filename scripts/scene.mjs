@@ -1267,7 +1267,8 @@ function placeBeastsOf(sh, world, sprites, avoid) {
   for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
     const lon = e.west + ((c + 0.2 + 0.6 * rnd()) * (e.east - e.west)) / cols, my = y0 + ((r + 0.2 + 0.6 * rnd()) * (y1 - y0)) / rows;
     const lat = (2 * Math.atan(Math.exp(my * RAD)) - Math.PI / 2) / RAD;
-    if (!seaAt(lon, lat)) continue;
+    // a smaller curated sheet's ground is its own: no beast of this sheet stands there
+    if (!seaAt(lon, lat) || inShadow(sh, lon, lat)) continue;
     const [x, y] = fp.project(lon, lat);
     sites.push({ lon, lat, x, y, c: clearance(x, y, 240) });
   }
