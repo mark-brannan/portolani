@@ -1,0 +1,199 @@
+{
+  "name": "debry",
+  "title": "Sprites cropped from Theodor de Bry after John White, The arrival of the Englishmen in Virginia, Briefe and True Report, 1590 (hand-coloured)",
+  "licence": "Public domain; Harvard University via the Public Domain Image Archive (Public Domain Worldwide, no additional rights)",
+  "colour": "source",
+  "ink": "#3b2a1a",
+  "sprites": [
+    {
+      "id": "debry-ship-a",
+      "kind": "ship",
+      "style": "debry",
+      "file": "debry-ship-a.png",
+      "anchor": [0.5, 0.75],
+      "sizePx": 84,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://images.pdimagearchive.org/collections/briefe-and-true-report-de-bry-engravings/477644612.jpg",
+        "page": "https://pdimagearchive.org/images/3b6b815a-daac-402a-accd-de396e1ba3a5/",
+        "crop": [1122, 1064, 1678, 1578]
+      },
+      "heading": "left"
+    },
+    {
+      "id": "debry-ship-b",
+      "kind": "ship",
+      "style": "debry",
+      "file": "debry-ship-b.png",
+      "anchor": [0.5, 0.75],
+      "sizePx": 72,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://images.pdimagearchive.org/collections/briefe-and-true-report-de-bry-engravings/477644612.jpg",
+        "page": "https://pdimagearchive.org/images/3b6b815a-daac-402a-accd-de396e1ba3a5/",
+        "crop": [1831, 991, 2214, 1479]
+      },
+      "heading": "left"
+    },
+    {
+      "id": "debry-monster",
+      "kind": "monster",
+      "style": "debry",
+      "file": "debry-monster.png",
+      "anchor": [0.5, 0.75],
+      "sizePx": 190,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://images.pdimagearchive.org/collections/briefe-and-true-report-de-bry-engravings/477644612.jpg",
+        "page": "https://pdimagearchive.org/images/3b6b815a-daac-402a-accd-de396e1ba3a5/",
+        "crop": [441, 1216, 1009, 1589]
+      },
+      "minClearancePx": 150,
+      "weight": 2
+    },
+    {
+      "id": "debry-canoe",
+      "kind": "ship",
+      "style": "debry",
+      "file": "debry-canoe.png",
+      "anchor": [0.5, 0.75],
+      "sizePx": 34,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://images.pdimagearchive.org/collections/briefe-and-true-report-de-bry-engravings/477644612.jpg",
+        "page": "https://pdimagearchive.org/images/3b6b815a-daac-402a-accd-de396e1ba3a5/",
+        "crop": [171, 691, 309, 789]
+      },
+      "heading": "left"
+    },
+    {
+      "id": "debry-tree-poplar",
+      "kind": "tree",
+      "style": "debry",
+      "file": "debry-tree-poplar.png",
+      "anchor": [0.5, 0.5],
+      "sizePx": 36,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://images.pdimagearchive.org/collections/briefe-and-true-report-de-bry-engravings/477644612.jpg",
+        "page": "https://pdimagearchive.org/images/3b6b815a-daac-402a-accd-de396e1ba3a5/",
+        "crop": [77, 121, 261, 319]
+      }
+    },
+    {
+      "id": "debry-tree-poplars",
+      "kind": "tree",
+      "style": "debry",
+      "file": "debry-tree-poplars.png",
+      "anchor": [0.5, 0.5],
+      "sizePx": 44,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://images.pdimagearchive.org/collections/briefe-and-true-report-de-bry-engravings/477644612.jpg",
+        "page": "https://pdimagearchive.org/images/3b6b815a-daac-402a-accd-de396e1ba3a5/",
+        "crop": [93, 346, 254, 527]
+      }
+    },
+    {
+      "id": "debry-tree-broadleaf",
+      "kind": "tree",
+      "style": "debry",
+      "file": "debry-tree-broadleaf.png",
+      "anchor": [0.5, 0.5],
+      "sizePx": 56,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://images.pdimagearchive.org/collections/briefe-and-true-report-de-bry-engravings/477644612.jpg",
+        "page": "https://pdimagearchive.org/images/3b6b815a-daac-402a-accd-de396e1ba3a5/",
+        "crop": [263, 201, 477, 377]
+      }
+    },
+    {
+      "id": "debry-tree-grove",
+      "kind": "tree",
+      "style": "debry",
+      "file": "debry-tree-grove.png",
+      "anchor": [0.5, 0.5],
+      "sizePx": 54,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://images.pdimagearchive.org/collections/briefe-and-true-report-de-bry-engravings/477644612.jpg",
+        "page": "https://pdimagearchive.org/images/3b6b815a-daac-402a-accd-de396e1ba3a5/",
+        "crop": [1376, 406, 1589, 581]
+      }
+    },
+    {
+      "id": "debry-tree-conifer",
+      "kind": "tree",
+      "style": "debry",
+      "file": "debry-tree-conifer.png",
+      "anchor": [0.5, 0.5],
+      "sizePx": 26,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://images.pdimagearchive.org/collections/briefe-and-true-report-de-bry-engravings/477644612.jpg",
+        "page": "https://pdimagearchive.org/images/3b6b815a-daac-402a-accd-de396e1ba3a5/",
+        "crop": [1586, 451, 1689, 574]
+      }
+    },
+    {
+      "id": "debry-tree-palm",
+      "kind": "tree",
+      "style": "debry",
+      "file": "debry-tree-palm.png",
+      "anchor": [0.5, 0.5],
+      "sizePx": 24,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://images.pdimagearchive.org/collections/briefe-and-true-report-de-bry-engravings/477644612.jpg",
+        "page": "https://pdimagearchive.org/images/3b6b815a-daac-402a-accd-de396e1ba3a5/",
+        "crop": [2006, 406, 2109, 594]
+      }
+    },
+    {
+      "id": "debry-village-dasamonguepeuc",
+      "kind": "town",
+      "style": "debry",
+      "file": "debry-village-dasamonguepeuc.png",
+      "anchor": [0.5, 0.5],
+      "sizePx": 44,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://images.pdimagearchive.org/collections/briefe-and-true-report-de-bry-engravings/477644612.jpg",
+        "page": "https://pdimagearchive.org/images/3b6b815a-daac-402a-accd-de396e1ba3a5/",
+        "crop": [586, 297, 694, 384]
+      },
+      "heightPx": 44
+    },
+    {
+      "id": "debry-village-pasquenoke",
+      "kind": "town",
+      "style": "debry",
+      "file": "debry-village-pasquenoke.png",
+      "anchor": [0.5, 0.5],
+      "sizePx": 44,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://images.pdimagearchive.org/collections/briefe-and-true-report-de-bry-engravings/477644612.jpg",
+        "page": "https://pdimagearchive.org/images/3b6b815a-daac-402a-accd-de396e1ba3a5/",
+        "crop": [1289, 151, 1405, 227]
+      },
+      "heightPx": 44
+    },
+    {
+      "id": "debry-village-roanoac",
+      "kind": "town",
+      "style": "debry",
+      "file": "debry-village-roanoac.png",
+      "anchor": [0.5, 0.5],
+      "sizePx": 48,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://images.pdimagearchive.org/collections/briefe-and-true-report-de-bry-engravings/477644612.jpg",
+        "page": "https://pdimagearchive.org/images/3b6b815a-daac-402a-accd-de396e1ba3a5/",
+        "crop": [756, 603, 924, 701]
+      },
+      "heightPx": 48
+    }
+  ]
+}
