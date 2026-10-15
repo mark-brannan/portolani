@@ -91,7 +91,6 @@ const WATER_ZOOM = 7;
 const WATER_PX = 64; // a lozenge and its tributaries reach past the lake they stand for
 const loadWater = () => (waterLoad ??= Promise.all(['ne-rivers-lake-centerlines-50m', 'ne-lakes-50m'].map(loadGeo))
   .then(([r, l]) => waterOf(r, l)).catch((e) => { waterLoad = null; throw e; })); // a failed fetch is tried again
-let planted = []; // the trees (trees.mjs) of the last scene, which a drag draws where they stand; a scene's own are data.trees
 const DETAIL_ZOOM = BANDS[0].zoom;
 const waterCells = new Map(); // 'water-10m/<xi>_<yi>' -> waterOf of the cell
 async function loadWater10m(view) {
@@ -164,7 +163,8 @@ const sameLake = (l, g) => inside(l.box, g.box) && l.polys.some((poly) => inWate
 const withLakes = (w, lakes) => (lakes.length ? { ...w, lakes: [...w.lakes.filter((l) => !lakes.some((g) => sameLake(l, g))), ...lakes] } : w);
 
 // Per-run tuning; `density` scales how much ornament is placed (1 = the committed mockup).
-const TUNE = { monsterMax: 4, shipMax: 2, townGap: 48 };
+// `hillShare`: the share of the hill sprites that fit which stand, all of them from density 1.
+const TUNE = { monsterMax: 4, shipMax: 2, townGap: 48, hillShare: 1 };
 
 const CELL = 16;             // clearance field cell, px
 const MONSTER_GAP = 220;     // min centre spacing between monsters, px
@@ -780,6 +780,18 @@ function chamfer(cols, rows, seed) {
   return d;
 }
 
+// Px from every point of the canvas to the nearest of `polys` (lon/lat, each filled even-odd), 0
+// inside one, at CELL px as the clearance field is.
+function distanceTo(data, polys) {
+  const cols = Math.ceil(W / CELL), rows = Math.ceil(H / CELL);
+  const g = createCanvas(cols, rows).getContext('2d');
+  g.scale(1 / CELL, 1 / CELL);
+  for (const poly of polys) fill(g, [poly], data.proj.x, data.proj.y, { color: '#000', ...data.proj.seam });
+  const px = g.getImageData(0, 0, cols, rows).data;
+  const d = chamfer(cols, rows, (i) => px[i * 4 + 3] > 40);
+  return (x, y) => d[Math.min(rows - 1, Math.max(0, Math.floor(y / CELL))) * cols + Math.min(cols - 1, Math.max(0, Math.floor(x / CELL)))];
+}
+
 // Land rasterised at CELL px; chamfer distance (1, sqrt2) from every sea cell to land, in px.
 function clearanceField(data) {
   const cols = Math.ceil(W / CELL), rows = Math.ceil(H / CELL);
@@ -796,7 +808,10 @@ function clearanceField(data) {
   const px = g.getImageData(0, 0, cols, rows).data;
 
   const d = chamfer(cols, rows, (i) => px[i * 4 + 3] > 40);
-  const inland = chamfer(cols, rows, (i) => px[i * 4 + 3] <= 40); // px from each land cell to the sea
+  // px from each land cell to the sea; past an azimuthal rim, which counts as land above so nothing
+  // stands at sea there, is no ground to stand on either, so it counts as sea here
+  const rim = data.proj.rim, beyond = (i) => rim && Math.hypot(((i % cols) + 0.5) * CELL - W / 2, (Math.floor(i / cols) + 0.5) * CELL - H / 2) > rim;
+  const inland = chamfer(cols, rows, (i) => px[i * 4 + 3] <= 40 || beyond(i));
 
   const cellAt = (x, y) => Math.min(cols - 1, Math.max(0, Math.floor(y / CELL))) * cols + Math.min(cols - 1, Math.max(0, Math.floor(x / CELL)));
   const at = (x, y) => d[cellAt(x, y)];
@@ -1062,10 +1077,11 @@ function castSeed(view) {
 // wide, so smaller than a mountain, starting one further along the set each time so a cluster mixes
 // them; only where the box clears `blocked` (names, towns, roses, the cartouche, the scale bar,
 // built-up land) and the sprites already stood, and the land round it holds (half its width and a
-// margin from the sea and the frame's edge).
+// margin from the sea and the frame's edge). Under density 1 only TUNE.hillShare of them stand, the
+// first in the humps' seeded order, so the clusters thin out whole; none at density 0.
 const HILL_MARGIN = 16, HILL_SIZE = 4.5;
 function placeHillSprites(humps, sprites, blocked, field) {
-  if (!sprites.length) return [];
+  if (!sprites.length || TUNE.hillShare <= 0) return [];
   const out = [];
   humps.forEach((hump, n) => {
     const cap = hump.h * HILL_SIZE;
@@ -1077,7 +1093,7 @@ function placeHillSprites(humps, sprites, blocked, field) {
       break;
     }
   });
-  return out.map(({ box, ...m }) => m);
+  return out.slice(0, Math.round(out.length * TUNE.hillShare)).map(({ box, ...m }) => m);
 }
 
 // A name coast-wright placed, as an oriented box from its corners.
@@ -1129,9 +1145,10 @@ function buildScene(data, sprites, ctx, world = {}) {
   const edge = (x, y) => Math.min(x, y, W - x, H - y);
   // Roses stand in open water. Where the water is heavily constrained (no clear sea in the middle of the
   // frame to hold half a big rose) they may stand on open land, clear of the coast by the same measure.
-  let landOk = false;
+  // `built`, while they are placed there, is the px to the nearest built-up area.
+  let landOk = false, built = null;
   const open = (x, y) => (landOk ? Math.max(field.at(x, y), field.depth(x, y)) : field.at(x, y));
-  const free = (x, y) => Math.min(open(x, y), edge(x, y), ...occupied.map((o) => Math.hypot(x - o.x, y - o.y) - o.r));
+  const free = (x, y) => Math.min(open(x, y), edge(x, y), built ? built(x, y) : Infinity, ...occupied.map((o) => Math.hypot(x - o.x, y - o.y) - o.r));
   const roseBlocked = (x, y, size) => (landOk ? x - size * 0.46 < 0 || y - size * 0.46 < 0 || x + size * 0.46 > W || y + size * 0.46 > H : field.footprintBlocked(x, y, size, size));
 
   // Cartouche: the corner whose rectangle crosses the least coast, open sea before empty land; never
@@ -1153,9 +1170,14 @@ function buildScene(data, sprites, ctx, world = {}) {
   const central = field.cells.filter((c) => c.x > W * 0.25 && c.x < W * 0.75 && c.y > H * 0.25 && c.y < H * 0.8);
   const seaRoom = Math.max(...central.map((c) => free(c.x, c.y)));
   landOk = seaRoom < bigRose.sizePx * LAND_ROSE;
-  // on land the towns are still to be placed, so the roses keep clear of their places for now
+  // the built-up areas whose long side on screen is at least half the URBAN_PX that washes them: roses on
+  // land and the relief keep clear of them
+  const urban = landOk || reliefWanted() ? indexOf(data).urban.filter((u) => Math.max(u.box.x1 - u.box.x0, u.box.y1 - u.box.y0) * 2 >= URBAN_PX) : [];
+  // on land the towns are still to be placed, so the roses keep clear of their places for now, and of
+  // the built-up areas, whose city plans and washes they would cover
   const places = new Set();
   if (landOk) for (const { xy: [x, y] } of data.places) if (x > -LAND_ROSE_TOWN && x < W + LAND_ROSE_TOWN && y > -LAND_ROSE_TOWN && y < H + LAND_ROSE_TOWN) { const o = { x, y, r: LAND_ROSE_TOWN }; places.add(o); occupied.push(o); }
+  if (landOk && urban.length) built = distanceTo(data, urban.map((u) => u.poly));
   const centre = central.reduce((a, b) => (free(b.x, b.y) > free(a.x, a.y) ? b : a));
   const bigSize = Math.min(bigRose.sizePx, 2 * 0.95 * free(centre.x, centre.y));
   const roseDraws = [{ sprite: bigRose, x: centre.x, y: centre.y, size: bigSize }];
@@ -1184,6 +1206,7 @@ function buildScene(data, sprites, ctx, world = {}) {
   }
 
   if (places.size) occupied.splice(0, occupied.length, ...occupied.filter((o) => !places.has(o)));
+  built = null;
 
   // Towns, lower scalerank first, >= TUNE.townGap apart. The selected town sprites fall into families
   // by pack and style, and the tower is one when chosen; each town keeps one family, picked by its
@@ -1263,7 +1286,6 @@ function buildScene(data, sprites, ctx, world = {}) {
   // and the Catalan sprites stand on the hills; all clear of what is placed so far and of the built-up
   // areas washed on the land
   const bar = world.scaleBar ? SCALE_BAR_BOX : null;
-  const urban = reliefWanted() ? indexOf(data).urban.filter((u) => Math.max(u.box.x1 - u.box.x0, u.box.y1 - u.box.y0) * 2 >= URBAN_PX) : [];
   const blocked = (x0, y0, x1, y1) => {
     const b = obb((x0 + x1) / 2, (y0 + y1) / 2, 0, (x1 - x0) / 2, (y1 - y0) / 2);
     return boxes.some((o) => obbOverlap(o, b)) || (bar && obbOverlap(bar, b)) || urban.some((u) => meets({ x0, y0, x1, y1 }, u.box));
@@ -1633,7 +1655,7 @@ function paintLand(g, data, land, coast, relief) {
   }
   paintWater(g, data);
   paintRelief(g, data, relief);
-  TREES[STYLE.trees]?.(g, { proj: data.proj, palette: { ink: STYLE.ink, parchment: STYLE.parchment } }, data.trees ?? planted);
+  if (data.trees) TREES[STYLE.trees]?.(g, { proj: data.proj, palette: { ink: STYLE.ink, parchment: STYLE.parchment } }, data.trees); // a drag's frame has none
 }
 
 // Rivers, then lakes over them, each in its chosen style, on the land and under the coast's ink.
@@ -1653,8 +1675,8 @@ export function keptWater(data) {
   return { rivers: kept(water.rivers), lakes: kept(water.lakes) };
 }
 // Hills and mountains (relief.mjs) for a view's land, and drawn over the water in the chosen style.
-// Mountains in the style chosen, hills where the Catalan sprites are selected. A drag, which has no
-// sprites, draws the hills as washed humps, until the next placement stands the sprites.
+// Mountains in the style chosen, hills where the Catalan sprites are selected. A drag draws neither:
+// they return with the ornaments when it stops.
 const reliefWanted = () => STYLE.relief.length > 0 || STYLE.mountainSprites;
 const reliefFor = (proj, land) => reliefOf({ proj, land, createCanvas, w: W, h: H, styles: STYLE.relief, hills: STYLE.mountainSprites });
 function paintRelief(g, data, relief) {
@@ -1663,15 +1685,16 @@ function paintRelief(g, data, relief) {
 const paintCoast = (g, data, coast) =>
   limn(g, coast, data.proj.x, data.proj.y, { color: STYLE.ink, alpha: 1, width: STYLE.coastWidth, oneStroke: true, ...data.proj.seam });
 
-// Parchment, land and coast for any view, with no ornaments or lattice: what a drag draws each frame.
+// Parchment, land, water and coast for any view: what a drag draws each frame. The ornaments, the
+// lattice, the relief and the trees wait for the stop, which places and draws the scene whole
+// (drawScene); the relief, placed and hatched afresh, is too slow for a frame.
 function drawGround(g, world, view, bg) {
   const proj = makeProjection(view), data = { proj };
   const f = frameOf(proj, 16 / proj.k / RAD); // 16 px, so strokes at the edge survive
   const land = world.land.filter((l) => meetsLL(f, l.box)).map((l) => l.poly);
   const coast = world.runs.filter((c) => meetsLL(f, c.box)).map((c) => c.run);
   g.drawImage(bg, 0, 0);
-  const relief = reliefWanted() && reliefFor(proj, world.land.filter((l) => meetsLL(frameOf(proj, MARGIN), l.box)).map((l) => l.poly));
-  paintLand(g, data, land, coast, relief);
+  paintLand(g, data, land, coast, null);
   paintCoast(g, data, coast);
 }
 
@@ -2008,6 +2031,7 @@ export async function createScene(environment, opts = {}) {
   TUNE.monsterMax = Math.round(4 * density);
   TUNE.shipMax = Math.round(2 * density);
   TUNE.townGap = 48 / density;
+  TUNE.hillShare = Math.min(1, density);
 
   const t0 = performance.now();
   // only the sprites the settings choose are fetched, whichever kinds are shown, never a whole pack;
@@ -2041,7 +2065,7 @@ export async function createScene(environment, opts = {}) {
   const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, title, autoTitle,
     continentsEnd: zoomEnd(continentsZoom, CONTINENT_ZOOM_END), regionsEnd: zoomEnd(regionsZoom, REGION_ZOOM_END),
     scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM, townSize: townBy, seed: legacy ? null : castSeed(view) }), show, scaleSprite };
-  data.trees = planted = TREES[STYLE.trees] ? plantTrees({ proj: data.proj, isLand: scene.field.isLand, scene, lakes: STYLE.lakes !== 'off' && water ? water.lakes : [], w: W, h: H }) : [];
+  data.trees = TREES[STYLE.trees] ? plantTrees({ proj: data.proj, isLand: scene.field.isLand, scene, lakes: STYLE.lakes !== 'off' && water ? water.lakes : [], w: W, h: H }) : [];
   if (!parchments.has(tone)) parchments.set(tone, parchment(1539));
   const bg = parchments.get(tone);
   return { scene, data, bg, proj: data.proj, world, coarse, view, timing: { load: tLoad - t0, place: performance.now() - tLoad } };
