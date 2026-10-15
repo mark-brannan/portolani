@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 558 516" width="558" height="516">
+  <!-- debry-ship-a traced over docs/debry-virginia/debry-ship-a.raw.png: viewBox = the crop's pixel size -->
+  <defs>
+    <pattern id="ratlines" width="8" height="7" patternUnits="userSpaceOnUse"><path d="M0 3.5H8" stroke="#3b2a1a" stroke-width="0.7"/></pattern>
+    <clipPath id="fore-shrouds"><path d="M222 135L205 335L250 340L245 135Z"/></clipPath>
+    <clipPath id="main-shrouds"><path d="M292 110L275 340L340 335L322 110Z"/></clipPath>
+  </defs>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- rigging: stays, backstays and the hanging lines from the yard ends -->
+    <g stroke="#3b2a1a" stroke-width="0.9">
+      <path d="M303 8L232 52M303 8L330 60L415 40M303 8L385 138L430 200"/>
+      <path d="M232 52L95 78M95 78Q100 170 150 260M232 52L222 135M232 52L248 135"/>
+      <path d="M415 40Q425 150 420 245M385 138L425 152M385 138L420 240"/>
+      <path d="M292 110L180 270M322 110L350 260M303 8L290 110M303 8L325 110"/>
+    </g>
+    <!-- ratlines between the shrouds -->
+    <rect x="195" y="130" width="60" height="215" fill="url(#ratlines)" clip-path="url(#fore-shrouds)"/>
+    <rect x="265" y="105" width="85" height="240" fill="url(#ratlines)" clip-path="url(#main-shrouds)"/>
+    <g stroke="#3b2a1a" stroke-width="0.9">
+      <path d="M222 135L205 335M245 135L250 340M292 110L275 340M322 110L340 335"/>
+    </g>
+    <!-- masts and yards -->
+    <g stroke="#6b3f1f" stroke-width="5">
+      <path d="M303 8L312 350"/><path d="M232 52L236 360"/><path d="M385 138L388 335"/>
+    </g>
+    <g stroke="#6b3f1f" stroke-width="6">
+      <path d="M262 108L362 96"/><path d="M180 132L285 120"/>
+      <path d="M95 78L345 262" stroke-width="7"/>
+      <path d="M415 40L215 295" stroke-width="7"/>
+      <path d="M425 152L360 300" stroke-width="5"/>
+      <path d="M130 205L190 330" stroke-width="7"/>
+      <path d="M470 233L415 288" stroke-width="7"/>
+    </g>
+    <path d="M150 290Q143 296 155 305" stroke="#6b3f1f" stroke-width="3"/>
+  </g>
+  <!-- tops -->
+  <path d="M215 148H248L245 160H218Z" fill="#d9b45a" stroke="#3b2a1a" stroke-width="1"/>
+  <path d="M288 124H328L324 138H292Z" fill="#d9b45a" stroke="#3b2a1a" stroke-width="1"/>
+  <!-- hull: one smooth closed curve, bow to keel to the foot of the stern face, then back up the face to the works -->
+  <path d="M176 345C172 388 215 424 285 434C335 440 365 442 396 442L396 350L330 352Z" fill="#e6dcc4" stroke="#3b2a1a" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M176 345Q250 375 330 350L372 332L400 302L432 292L432 345L402 352L330 380L250 388L195 378Z" fill="#8a5a2e" stroke="#3b2a1a" stroke-width="1.5"/>
+  <path d="M190 372L225 345L255 388L330 380L380 352" fill="none" stroke="#d9b45a" stroke-width="3"/>
+  <g fill="#3b2a1a"><rect x="215" y="396" width="12" height="7"/><rect x="250" y="404" width="12" height="7"/><rect x="285" y="410" width="12" height="7"/><rect x="320" y="413" width="12" height="7"/><rect x="352" y="414" width="12" height="7"/></g>
+  <!-- stern: a flat face, round because the hull curves; the hull line meets its top and runs under its bottom -->
+  <path d="M396 350C420 352 434 372 434 396C434 420 420 440 396 442C376 436 366 418 366 396C366 374 376 356 396 350Z" fill="#5a3a22" stroke="#3b2a1a" stroke-width="1.5"/>
+  <path d="M372 384Q400 392 430 384M370 410Q400 420 432 410" stroke="#3b2a1a" stroke-width="1.2" fill="none"/>
+  <circle cx="392" cy="398" r="4" fill="#e6dcc4" stroke="#3b2a1a" stroke-width="1"/>
+  <!-- rudder: hung on the stern post, angled slightly, dipping into the water -->
+  <path d="M430 376L438 380L426 460L417 455Z" fill="#6b4a2a" stroke="#3b2a1a" stroke-width="1.2" stroke-linejoin="round"/>
+  <path d="M142 408L100 415" stroke="#3b2a1a" stroke-width="1.2" fill="none"/>
+</svg>

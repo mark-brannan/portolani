@@ -1,10 +1,15 @@
 // Pack build: crop public-domain scans into sprites and write each pack's pack.json.
-// Usage: node scripts/build-packs.mjs [--keep <dir> [idPrefix]]
+// Usage: node scripts/build-packs.mjs [--only <packName>] [--keep <dir> [idPrefix]]
 //   (needs ImageMagick 7 `magick` on PATH; network for the first run)
+// `--only` builds just that pack and downloads just its scans; the other packs and ASSETS.md are
+// left untouched.
 // `--keep` also writes each sprite's working images into <dir>, for sprites whose id starts with
 // idPrefix (all when omitted): `<id>.raw.png`, the crop as cut and deskewed from the scan with no
-// background removal, and `<id>.cut.png`, the finished sprite laid on parchment at 1:1. They are the
-// before and after of the keying, kept so a crop can be judged and refined later (docs/towns-aguiar).
+// background removal; `<id>.key.png`, the key between them, white where the sprite is opaque and
+// black where it is not, after the levels, silhouette and masks and before the scan's colour is
+// put back; and `<id>.cut.png`, the finished sprite laid on parchment at 1:1. They are the before,
+// the middle and the after of the keying, kept so a crop can be judged and refined later
+// (docs/towns-aguiar, docs/debry-virginia).
 //
 // scripts/sources.json is the sources manifest: every file, URL, sha256 and rights line. Scans are
 // downloaded into downloads/ when missing, checked against it, and ASSETS.md is written from it.
@@ -18,6 +23,15 @@
 // -> levels -> masks (saturation silhouette for coloured figures on hatched sea, a polygon drawn
 // round a figure whose sea is printed in the same ink, circle for roses, rectangles erased for
 // lettering) -> trim -> downscale. Line work on blank paper needs no mask: darkness alone keys it.
+//
+// Two keys (`key` on a pack, overridden per sprite). `patch`, the default: alpha is the figure's
+// outline alone, the masks with their feathered edges, and everything inside stays, the water a
+// ship sits in, the grass under a tree, the hatching round a village. The paper is divided out,
+// so under the renderer's `multiply` it vanishes into our parchment and the figure lands on the
+// map as it sat on the plate; the levels only seed a silhouette. `ink`: alpha is ink coverage from
+// the levels, so paper and every wash lighter than the levels drop out; it thins colour and loses
+// the surroundings (the scanned pack was cut this way, see #111), so it is for a pack drawn in ink
+// alone, where nothing but line is wanted.
 
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync, readFileSync, existsSync, mkdtempSync, rmSync } from 'node:fs';
@@ -58,8 +72,10 @@ const SEA_FIGURE_LEVEL = [26, 56]; // woodcut line only; colour fills and sea ha
 const SEA_FIGURE = { sat: 24, close: 7, open: 5, dilate: 4, feather: 2, minArea: 900 };
 
 const PARCHMENT = '#e9d8b4'; // the renderer's default paper, for the kept `.cut.png`
-const argv = process.argv.slice(2), keepAt = argv.indexOf('--keep');
-const keep = keepAt >= 0 ? join(ROOT, argv[keepAt + 1]) : null, keepPrefix = (keepAt >= 0 && argv[keepAt + 2]) || '';
+const argv = process.argv.slice(2), keepAt = argv.indexOf('--keep'), onlyAt = argv.indexOf('--only');
+const keep = keepAt >= 0 ? join(ROOT, argv[keepAt + 1]) : null;
+const keepPrefix = keepAt >= 0 && argv[keepAt + 2] && !argv[keepAt + 2].startsWith('--') ? argv[keepAt + 2] : '';
+const only = onlyAt >= 0 ? argv[onlyAt + 1] : null;
 if (keep) mkdirSync(keep, { recursive: true });
 
 const CLEAN_DISK = 5; // px radius of the closing that removes scanned lettering
@@ -77,6 +93,7 @@ const MAX_SCALE = 3; // a sprite is stored at most this many px wide per CSS px 
 const PACKS = [
   {
     name: 'scanned',
+    key: 'ink', // cut before the patch key existed; re-keying it as patches is #111
     title: 'Sprites cropped from scans: Olaus Magnus, Carta Marina 1539; Jorge de Aguiar 1492; Catalan Atlas 1375; Genoese chart c. 1320-1350; Frederik de Wit; Ambroise Paré, Des monstres; Master W with the Key, two ship engravings c. 1475-1490',
     licence: 'Public domain (PD-Art); scans via Wikimedia Commons (James Ford Bell Library; Beinecke Library, Yale; BnF Gallica btv1b55002481n; Library of Congress 2003630429; Royal Museums Greenwich). The pare-* sprites: Wellcome Collection, CC BY 4.0. Ships ship-w-*: Art Institute of Chicago 27881 (CC0) and Rijksmuseum RP-P-2014-30 (Public Domain Mark)',
     ink: '#3b2a1a',
@@ -152,13 +169,46 @@ const PACKS = [
         erase: [[1380, 140, 1540, 240]] }, // the WA monogram
     ],
   },
+  {
+    // de Bry after John White, The arrival of the Englishmen in Virginia (1590): a hand-coloured engraving,
+    // so the pack keeps the scan's colour (the default). Ships, the sea monster, trees and palisaded villages.
+    name: 'debry',
+    key: 'patch',
+    title: 'Sprites cropped from Theodor de Bry after John White, The arrival of the Englishmen in Virginia, Briefe and True Report, 1590 (hand-coloured)',
+    licence: 'Public domain; Harvard University via the Public Domain Image Archive (Public Domain Worldwide, no additional rights)',
+    ink: '#3b2a1a',
+    sprites: [
+      // every sprite is the whole crop, feathered at its edge; `erase` cuts only what is not the subject.
+      // The two three-masted ships, both bows to the left, with the sea below and round the hull
+      // (a wrecked hull above the stern is erased)
+      { id: 'debry-ship-a', kind: 'ship', style: 'debry', scan: 'debry-virginia', crop: [1121, 1063, 1679, 1579], sizePx: 84, heading: 'left',
+        erase: [[1505, 1000, 1690, 1096]] },
+      { id: 'debry-ship-b', kind: 'ship', style: 'debry', scan: 'debry-virginia', crop: [1830, 990, 2215, 1480], sizePx: 72, heading: 'left' },
+      // the sea monster at the foot of the plate, with the swell it rises from and the water below
+      { id: 'debry-monster', kind: 'monster', style: 'debry', scan: 'debry-virginia', crop: [440, 1215, 1010, 1590], sizePx: 190, minClearancePx: 150, weight: 2 },
+      // a dugout canoe with two paddlers, on its own water
+      { id: 'debry-canoe', kind: 'ship', style: 'debry', scan: 'debry-virginia', crop: [170, 690, 310, 790], sizePx: 34, heading: 'left', erase: [[285, 755, 312, 792]] },
+      // trees: the figure with the grass mound and shrubs it stands among; a tall neighbour above the poplar is erased
+      { id: 'debry-tree-poplar', kind: 'tree', style: 'debry', scan: 'debry-virginia', crop: [76, 120, 262, 320], sizePx: 36, erase: [[195, 100, 270, 195]] },
+      { id: 'debry-tree-poplars', kind: 'tree', style: 'debry', scan: 'debry-virginia', crop: [92, 345, 255, 528], sizePx: 44 },
+      { id: 'debry-tree-broadleaf', kind: 'tree', style: 'debry', scan: 'debry-virginia', crop: [262, 200, 478, 378], sizePx: 56 },
+      { id: 'debry-tree-grove', kind: 'tree', style: 'debry', scan: 'debry-virginia', crop: [1375, 405, 1590, 582], sizePx: 54, erase: [[1370, 400, 1445, 424]] },
+      // the grapevine's leaf beside the conifer is erased
+      { id: 'debry-tree-conifer', kind: 'tree', style: 'debry', scan: 'debry-virginia', crop: [1585, 450, 1690, 575], sizePx: 26, erase: [[1666, 440, 1700, 500]] },
+      { id: 'debry-tree-palm', kind: 'tree', style: 'debry', scan: 'debry-virginia', crop: [2005, 405, 2110, 595], sizePx: 24 },
+      // palisaded Algonquian villages with the land, shore and haystacks round them; the place-name lettering is outside the crop
+      { id: 'debry-village-dasamonguepeuc', kind: 'town', style: 'debry', scan: 'debry-virginia', crop: [585, 296, 695, 385], sizePx: 44 },
+      { id: 'debry-village-pasquenoke', kind: 'town', style: 'debry', scan: 'debry-virginia', crop: [1288, 150, 1406, 228], sizePx: 44 },
+      { id: 'debry-village-roanoac', kind: 'town', style: 'debry', scan: 'debry-virginia', crop: [755, 602, 925, 702], sizePx: 48, erase: [[785, 693, 835, 702]] },
+    ],
+  },
 ];
 
 function magick(...args) {
   return execFileSync('magick', args.flat(), { encoding: 'utf8' }).trim();
 }
 
-function buildSprite(sprite, colour, outDir, tmp) {
+function buildSprite(sprite, colour, key, outDir, tmp) {
   const scan = SOURCES[sprite.scan];
   const [x0, y0, x1, y1] = sprite.crop;
   const w = x1 - x0, h = y1 - y0;
@@ -232,11 +282,15 @@ function buildSprite(sprite, colour, outDir, tmp) {
   magick('-size', `${w - 2 * f}x${h - 2 * f}`, 'xc:white', '-bordercolor', 'black', '-border', String(f), '-blur', `0x${f / 2}`, t('edge'));
   masks.push(t('edge'));
 
+  // the patch key starts from the whole crop and lets the masks cut the figure's outline
   let alpha = t('ink');
+  if ((sprite.key ?? key) === 'patch') { magick('-size', `${w}x${h}`, 'xc:white', t('all')); alpha = t('all'); }
   for (const m of masks) {
     magick(alpha, m, '-compose', 'multiply', '-composite', t('alpha'));
     alpha = t('alpha');
   }
+
+  if (keep && sprite.id.startsWith(keepPrefix)) magick(alpha, '-strip', '-define', 'png:exclude-chunk=all', join(keep, `${sprite.id}.key.png`));
 
   // Trim box on the alpha, recorded so the manifest crop is the final sprite's footprint in the scan.
   const trim = magick(alpha, '-fuzz', '3%', '-format', '%@', 'info:');
@@ -260,7 +314,9 @@ function buildSprite(sprite, colour, outDir, tmp) {
     '-crop', `${tw}x${th}+${tx}+${ty}`, '+repage', shrink, '-strip', join(outDir, file));
 
   if (keep && sprite.id.startsWith(keepPrefix)) {
-    magick(join(outDir, file), '-background', PARCHMENT, '-flatten', '-strip', '-define', 'png:exclude-chunk=all', join(keep, `${sprite.id}.cut.png`));
+    // multiplied onto parchment, as the renderer draws it, so the kept `.cut.png` shows the true colours
+    magick(join(outDir, file), '(', '+clone', '-alpha', 'off', '-fill', PARCHMENT, '-colorize', '100', ')', '+swap', '-compose', 'Multiply', '-composite',
+      '-strip', '-define', 'png:exclude-chunk=all', join(keep, `${sprite.id}.cut.png`));
   }
 
   const entry = {
@@ -301,20 +357,22 @@ function writeAssets() {
 
 const tmp = mkdtempSync(join(tmpdir(), 'packs-'));
 try {
-  const used = new Set(PACKS.flatMap((p) => p.sprites.map((s) => s.scan)));
+  const packs = only ? PACKS.filter((p) => p.name === only) : PACKS;
+  if (!packs.length) throw new Error(`--only ${only}: no such pack (${PACKS.map((p) => p.name).join(', ')})`);
+  const used = new Set(packs.flatMap((p) => p.sprites.map((s) => s.scan)));
   for (const id of used) await fetchSource(SOURCES[id]);
-  for (const pack of PACKS) {
+  for (const pack of packs) {
     const outDir = join(ROOT, 'packs', pack.name);
     mkdirSync(outDir, { recursive: true });
     const colour = pack.colour ?? 'source';
-    const sprites = pack.sprites.map((s) => buildSprite(s, colour, outDir, tmp));
+    const sprites = pack.sprites.map((s) => buildSprite(s, colour, pack.key ?? 'patch', outDir, tmp));
     const manifest = { name: pack.name, title: pack.title, licence: pack.licence, colour, ink: pack.ink, sprites };
     // keep short numeric arrays (anchor, crop, panel) on one line
     const json = JSON.stringify(manifest, null, 2).replace(/\[\s+([-\d.,\s]+?)\s+\]/g, (_, xs) => `[${xs.split(/,\s*/).join(', ')}]`);
     writeFileSync(join(outDir, 'pack.json'), json + '\n');
     console.log(`${pack.name}: ${sprites.map((s) => s.id).join(', ')}`);
   }
-  writeAssets();
+  if (!only) writeAssets();
 } finally {
   rmSync(tmp, { recursive: true, force: true });
 }
