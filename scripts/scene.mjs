@@ -1223,6 +1223,9 @@ function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
 // Where a sheet is placed: Mercator at its band's first zoom, centred on the sheet, whatever the page's
 // projection, zoom or window. Placement is a function of the sheet and the land alone.
 const sheetFrame = (sh) => makeProjection({ lon: sh.circle.lon, lat: sh.circle.lat, zoom: ATLAS_BANDS.find((b) => b.band === sh.band).from });
+// A sheet's beasts are placed at the zoom that paces them (`from`), so the room they are given is the room
+// they take where they are spaced; in the world band that is the zoom at which the sheet is one window wide.
+const beastFrame = (sh) => makeProjection({ lon: sh.circle.lon, lat: sh.circle.lat, zoom: sh.from });
 
 // The monsters and ships of the atlas's sheets (docs/atlas/README.md): each sheet seeds a jittered grid of
 // sites over its own extent, ranks them by the open sea round them, and takes its beasts from the top,
@@ -1233,7 +1236,9 @@ function placeSheetBeasts(data, world, sprites, roseDraws) {
   const monsters = [], ships = [];
   // each sheet is placed against its own roses alone: a neighbour in the view must not change what it holds
   for (const sh of world.sheets) {
-    const avoid = roseDraws.filter((r) => r.sheet === sh.name).map((r) => ({ x: r.fx, y: r.fy, r: r.size / 2 + (r.size > 200 ? 0 : 10) }));
+    // its roses, placed in the sheet's frame, as discs in the beasts' frame; a size is screen px in either
+    const rf = sheetFrame(sh), bf = beastFrame(sh);
+    const avoid = roseDraws.filter((r) => r.sheet === sh.name).map((r) => { const [x, y] = bf.project(...rf.invert(r.fx, r.fy)); return { x, y, r: r.size / 2 + (r.size > 200 ? 0 : 10) }; });
     const mine = placeBeastsOf(sh, world, sprites, avoid);
     // the page's projection only says where a beast falls and whether it is seen
     const at = (b) => { const [x, y] = data.proj.project(b.lon, b.lat); return { ...b, x, y }; };
@@ -1244,7 +1249,7 @@ function placeSheetBeasts(data, world, sprites, roseDraws) {
 }
 // One sheet's beasts, in the sheet's frame. `avoid` are its roses as discs {x, y, r} in frame px.
 function placeBeastsOf(sh, world, sprites, avoid) {
-  const fp = sheetFrame(sh), seaAt = world.seaAt, monsters = [], ships = [];
+  const fp = beastFrame(sh), seaAt = world.seaAt, monsters = [], ships = [];
   const ringClear = (x, y, r, rx = r, ry = r) => {
     for (let i = 0; i < 8; i++) {
       const [a, b] = fp.invert(x + rx * Math.cos((i * Math.PI) / 4), y + ry * Math.sin((i * Math.PI) / 4));
