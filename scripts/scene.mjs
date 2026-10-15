@@ -1863,7 +1863,6 @@ function drawCartouche(g, c, bgPart) {
   while (fpx > 6 && g.measureText(c.title).width > pw * 0.86) { fpx -= 1; g.font = `${fpx}px "${STYLE.font}"`; g.letterSpacing = `${fpx * 0.12}px`; }
   g.fillText(c.title, c.x + (px0 * c.w) + pw / 2 + fpx * 0.06, c.y + py0 * c.h + ph * 0.54);
   g.restore();
-
 }
 
 function drawScene(g, scene, data, bg, view) {

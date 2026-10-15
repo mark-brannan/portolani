@@ -1,6 +1,7 @@
 // Browser host for the shared scene code (scene.mjs): same scene as `npm run render`, drawn live.
 // Drag to pan, wheel or pinch to zoom; while the map moves the land and coast are drawn and the placed
-// ornaments slide with it, held to the earth; they are placed again when it stops. The settings live in a drawer behind the rose button, so
+// ornaments slide with it, held to the earth; they are placed again when it stops. The settings live in a
+// drawer behind the rose button, so
 // the map has the window. The view and the style are kept in the URL hash, e.g.
 // #map=zoom/lat/lon&projection=miller&sprites=s:serpent-a,v:kraken,v:rose-aguiar,p:tower&townsize=rank&names=0&rhumb=0&scale=chevron&scaleborder=blank&continents=5&regions=latin&regionszoom=7&land=green&islands=1&rivers=aguiar&lakes=marina&mountains=ink&trees=ink&seas=1&autotitle=0&title=Mare+Nostrum&ink=5a1a1a&parchment=eee&density=1.5;
 // a setting left at its default is left out, `sprites` too (keys with the pack shortened, v: s: p:); `mountains` is `ink`
