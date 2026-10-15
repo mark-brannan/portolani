@@ -512,7 +512,7 @@ $('home').addEventListener('click', () => goTo(DEFAULT_VIEW));
 // A typed position: "36.28, -76" or "36.28N 76W" (latitude first), flown to and marked as the position.
 function parseLatLon(text) {
   const m = /^\s*(-?\d+(?:\.\d+)?)\s*°?\s*([NSns])?\s*[,;\s]\s*(-?\d+(?:\.\d+)?)\s*°?\s*([EWew])?\s*$/.exec(text);
-  if (!m) return null;
+  if (!m || (m[2] && m[1].startsWith('-')) || (m[4] && m[3].startsWith('-'))) return null; // a sign and a letter disagree, or say it twice
   const lat = Number(m[1]) * (/s/i.test(m[2] ?? '') ? -1 : 1), lon = Number(m[3]) * (/w/i.test(m[4] ?? '') ? -1 : 1);
   return Math.abs(lat) <= 90 && Math.abs(lon) <= 180 ? { lon, lat } : null;
 }
