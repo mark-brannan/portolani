@@ -65,16 +65,16 @@ test('listSprites keys every sprite by pack, ids that repeat across packs apart,
     ...['house', 'church', 'castle', 'round-tower', 'tent'].map((id) => [id, 'town', 'carta-marina', null])]);
 });
 
-test('defaultSprites: Carta Marina and Paré scans, de Bry’s, plus heraldic drawn monsters, every ship, town (but the Carta Marina buildings) and mountain, one cartouche', async () => {
+test('defaultSprites: Carta Marina, Paré and de Bry scans plus heraldic drawn monsters, every ship, rose, town (the Carta Marina buildings too) and mountain, one cartouche', async () => {
   const list = await listSprites(env), picked = new Set(defaultSprites(list)), on = list.filter((s) => picked.has(s.key));
   const wanted = (s) => s.kind === 'monster' && ((s.pack === 'scanned' && ['carta-marina', 'pare'].includes(s.style)) || s.pack === 'debry' || (s.pack === 'vivid' && s.style === 'heraldic'));
   assert.deepEqual(on.filter((s) => s.kind === 'monster').map((s) => s.key), list.filter(wanted).map((s) => s.key));
   assert.ok(on.some((s) => s.style === 'pare') && on.some((s) => s.style === 'heraldic') && on.some((s) => s.style === 'carta-marina'));
-  const offered = (s) => s.pack === 'plain' && s.style === 'carta-marina'; // the Carta Marina buildings: offered, not drawn unasked
-  for (const kind of ['ship', 'town', 'mountain']) assert.deepEqual(on.filter((s) => s.kind === kind).map((s) => s.key), list.filter((s) => s.kind === kind && !offered(s)).map((s) => s.key), kind);
+  for (const kind of ['ship', 'rose', 'town', 'mountain']) assert.deepEqual(on.filter((s) => s.kind === kind).map((s) => s.key), list.filter((s) => s.kind === kind).map((s) => s.key), kind);
+  assert.ok(on.some((s) => s.kind === 'town' && s.style === 'carta-marina'), 'the Carta Marina buildings are drawn unasked');
+  assert.ok(new Set(on.filter((s) => s.kind === 'rose').map((s) => s.style)).size > 3, 'roses of every family');
   assert.ok(new Set(on.filter((s) => s.kind === 'ship').map((s) => s.pack)).size === 3, 'ships of every pack');
   assert.deepEqual(on.filter((s) => s.kind === 'cartouche').map((s) => s.key), ['vivid/cartouche-frame']);
-  assert.ok(on.filter((s) => s.kind === 'rose').every((s) => s.pack === 'vivid' && s.style === 'aguiar'));
 });
 
 test('defaultSprites follows its rule, so a sprite added to a pack joins or stays out by family', async () => {

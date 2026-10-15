@@ -70,19 +70,24 @@ export function seaNames(marine) {
   return { type: 'FeatureCollection', features: out };
 }
 
-// The Red Sea for the chart's red tint: Natural Earth's marine polygon, which stops at 28.13 N and
+// The seas a chart tints red: the Red Sea, the Persian Gulf and the inland Black and Caspian Seas, from Natural Earth's marine polygons. The Red Sea's polygon which stops at 28.13 N and
 // leaves out the Gulf of Suez and the Gulf of Aqaba (and is generalised, so it also leaves gaps off
 // Sinai), plus one box over the northern end. The polygons are drawn under the land, which hides
 // whatever of them lies on shore, so the box only needs to cover the water. Rounded to 3 decimals.
 const GULFS = [
   { name: 'Gulfs of Suez and Aqaba', ring: [[32.2, 27], [35.4, 27], [35.4, 30.1], [32.2, 30.1], [32.2, 27]] },
 ];
-export function redSea(marine) {
-  const red = marine.features.find((f) => f.properties.name === 'Red Sea');
-  if (!red) throw new Error('no Red Sea in the marine polygons');
+export const TINTED_SEAS = ['Red Sea', 'Persian Gulf', 'Black Sea', 'Caspian Sea'];
+export function tintedSeas(marine) {
   const r3 = (n) => Math.round(n * 1000) / 1000;
-  const features = [{ name: 'Red Sea', rings: red.geometry.coordinates }, ...GULFS.map((g) => ({ name: g.name, rings: [g.ring] }))]
-    .map(({ name, rings }) => ({ type: 'Feature', properties: { name }, geometry: { type: 'Polygon', coordinates: rings.map((r) => r.map(([x, y]) => [r3(x), r3(y)])) } }));
+  const feature = (name, rings) => ({ type: 'Feature', properties: { name }, geometry: { type: 'Polygon', coordinates: rings.map((r) => r.map(([x, y]) => [r3(x), r3(y)])) } });
+  const features = [];
+  for (const name of TINTED_SEAS) {
+    const sea = marine.features.find((f) => f.properties.name === name);
+    if (!sea) throw new Error(`no ${name} in the marine polygons`);
+    features.push(...polysOf(sea.geometry).map((rings) => feature(name, rings)));
+    if (name === 'Red Sea') features.push(...GULFS.map((g) => feature(g.name, [g.ring])));
+  }
   return { type: 'FeatureCollection', features };
 }
 
