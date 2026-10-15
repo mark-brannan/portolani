@@ -48,7 +48,7 @@ const DEFAULT_SELECTION = defaultSprites(SPRITES);
 const sameSet = (a, b) => a.size === b.size && [...a].every((k) => b.has(k));
 
 // keys in the hash: the pack shortened (v:rose-aguiar); a pack with no short name is written whole
-const SHORT = { vivid: 'v', scanned: 's', plain: 'p' };
+const SHORT = { vivid: 'v', scanned: 's', plain: 'p', debry: 'd' };
 const LONG = Object.fromEntries(Object.entries(SHORT).map(([k, v]) => [v, k]));
 const encodeKey = (key) => { const [pack, id] = key.split('/'); return `${SHORT[pack] ?? pack}:${id}`; };
 const decodeKey = (t) => { const i = t.indexOf(':'); return `${LONG[t.slice(0, i)] ?? t.slice(0, i)}/${t.slice(i + 1)}`; };
@@ -141,8 +141,8 @@ function writeHash() {
 // ---------------------------------------------------------------- the pickers
 
 // A family is a style drawn one way: "Carta Marina · scan" beside "Carta Marina · drawn".
-const HOW = { scanned: 'scan', vivid: 'drawn', plain: 'drawn in code' };
-const PACK_ORDER = ['scanned', 'vivid', 'plain'];
+const HOW = { scanned: 'scan', debry: 'scan', vivid: 'drawn', plain: 'drawn in code' };
+const PACK_ORDER = ['scanned', 'debry', 'vivid', 'plain'];
 const titleCase = (s) => s.split('-').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ');
 function familiesOf(kind) {
   const sprites = SPRITES.filter((s) => s.kind === kind), styles = [...new Set(sprites.map((s) => s.style))];
