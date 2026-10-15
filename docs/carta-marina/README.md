@@ -46,7 +46,9 @@ The drawn views are rendered with the continents and Latin regions on and rivers
 
 The six Carta Marina sprites of the `scanned` pack are cut as patches: the whole crop, sea and swell
 and ripples with it, its edge feathered, the paper divided out so the renderer's multiply sinks it
-into the parchment. They were cut by ink coverage, which dropped the sea round each figure. Every
+into the parchment. The paper divided out is the plate's own (a bright land patch, `#ded2af`), not the
+mean of the crop's surroundings: a crop of open sea holds no paper, and dividing the sea out would take its
+wash with it. They were cut by ink coverage, which dropped the sea round each figure. Every
 crop box now reaches well below the figure so the bottom edge keeps the most water.
 
 Rebuild everything here (the other sprites in the pack are untouched and rebuild byte-identical) with:

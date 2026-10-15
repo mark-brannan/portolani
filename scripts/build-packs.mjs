@@ -71,6 +71,9 @@ function checkSha(src, bytes) {
 const SEA_FIGURE_LEVEL = [26, 56]; // woodcut line only; colour fills and sea hatching mostly drop out
 const SEA_FIGURE = { sat: 24, close: 7, open: 5, dilate: 4, feather: 2, minArea: 900 };
 
+// The Carta Marina's own paper (the mean of the bright land patch round Svecia), divided out of the sea figures: a crop
+// of open sea holds no paper, so its surroundings would be taken for paper and the sea wash lost with it.
+const CARTA_PAPER = '#ded2af';
 const PARCHMENT = '#e9d8b4'; // the renderer's default paper, for the kept `.cut.png`
 const argv = process.argv.slice(2), keepAt = argv.indexOf('--keep'), onlyAt = argv.indexOf('--only');
 const keep = keepAt >= 0 ? join(ROOT, argv[keepAt + 1]) : null;
@@ -102,24 +105,24 @@ const PACKS = [
       // `figure` is the old tight box round the subject: the sprite is drawn so the figure keeps its sizePx
       // and its anchor, with the extra water round it. `erase` cuts only lettering and neighbouring figures.
       // the sea serpent with the ship it coils round; the ship, boat and coast beside it, and lettering, erased
-      { id: 'serpent-a', kind: 'monster', style: 'carta-marina', scan: 'carta-marina', key: 'patch', crop: [1670, 874, 2065, 1215], figure: [1698, 880, 2065, 1190], sizePx: 200, minClearancePx: 160, weight: 3,
+      { id: 'serpent-a', kind: 'monster', style: 'carta-marina', scan: 'carta-marina', key: 'patch', paper: CARTA_PAPER, crop: [1670, 874, 2065, 1215], figure: [1698, 880, 2065, 1190], sizePx: 200, minClearancePx: 160, weight: 3,
         // the polygon cuts the neighbouring ship and boat at the top right and fades into the sea (the tail runs on beneath them)
         mask: [[1670, 874], [1990, 874], [1990, 1124], [2065, 1124], [2065, 1215], [1670, 1215]], maskFeather: 12,
         erase: [[1715, 1108, 1845, 1146], [1900, 927, 1918, 945], [1676, 1008, 1727, 1030], [2010, 1178, 2070, 1215]] },
       // the whale with its swell and the sea below; the crop stops short of the monster heads either side and the wreck above
-      { id: 'whale-b', kind: 'monster', style: 'carta-marina', scan: 'carta-marina', key: 'patch', crop: [1996, 356, 2362, 590], figure: [2040, 358, 2350, 532], sizePx: 190, minClearancePx: 150, weight: 2,
+      { id: 'whale-b', kind: 'monster', style: 'carta-marina', scan: 'carta-marina', key: 'patch', paper: CARTA_PAPER, crop: [1996, 356, 2362, 590], figure: [2040, 358, 2350, 532], sizePx: 190, minClearancePx: 150, weight: 2,
         erase: [[2328, 550, 2362, 590]] }, // the coast house in the corner
       // the spiny sea-beast in its swell, with the water below; the lettering at its left edge erased
-      { id: 'pistrix-c', kind: 'monster', style: 'carta-marina', scan: 'carta-marina', key: 'patch', crop: [372, 1210, 566, 1480], figure: [374, 1236, 566, 1432], sizePx: 150, minClearancePx: 130, weight: 2,
+      { id: 'pistrix-c', kind: 'monster', style: 'carta-marina', scan: 'carta-marina', key: 'patch', paper: CARTA_PAPER, crop: [372, 1210, 566, 1480], figure: [374, 1236, 566, 1432], sizePx: 150, minClearancePx: 130, weight: 2,
         erase: [[370, 1236, 386, 1256], [370, 1334, 386, 1352]] },
       // the whale that has seized a ship, with its ripples and the sea below; "C" and the "CETE" lettering erased
-      { id: 'cete-e', kind: 'monster', style: 'carta-marina', scan: 'carta-marina', key: 'patch', crop: [1772, 572, 2060, 775], figure: [1788, 572, 2046, 732], sizePx: 180, minClearancePx: 140, weight: 1,
+      { id: 'cete-e', kind: 'monster', style: 'carta-marina', scan: 'carta-marina', key: 'patch', paper: CARTA_PAPER, crop: [1772, 572, 2060, 775], figure: [1788, 572, 2046, 732], sizePx: 180, minClearancePx: 140, weight: 1,
         erase: [[1960, 590, 1985, 612], [2036, 618, 2062, 640]] },
       // the three-master with the water round and under the hull; the "L" and "ANGLI" lettering erased
-      { id: 'ship-a', kind: 'ship', style: 'carta-marina', scan: 'carta-marina', key: 'patch', crop: [1130, 780, 1335, 1050], figure: [1160, 800, 1312, 1000], sizePx: 80, heading: 'right',
+      { id: 'ship-a', kind: 'ship', style: 'carta-marina', scan: 'carta-marina', key: 'patch', paper: CARTA_PAPER, crop: [1130, 780, 1335, 1050], figure: [1160, 800, 1312, 1000], sizePx: 80, heading: 'right',
         erase: [[1210, 824, 1224, 838], [1232, 962, 1300, 990]] },
       // the smaller ship under sail; the coast lettering, the islet and the letters above erased
-      { id: 'ship-b', kind: 'ship', style: 'carta-marina', scan: 'carta-marina', key: 'patch', crop: [2050, 690, 2210, 840], figure: [2085, 708, 2212, 802], sizePx: 64, heading: 'right',
+      { id: 'ship-b', kind: 'ship', style: 'carta-marina', scan: 'carta-marina', key: 'patch', paper: CARTA_PAPER, crop: [2050, 690, 2210, 840], figure: [2085, 708, 2212, 802], sizePx: 64, heading: 'right',
         erase: [[2198, 706, 2212, 738], [2170, 690, 2212, 705], [2168, 808, 2212, 842]] },
       { id: 'rose-aguiar', kind: 'rose', style: 'aguiar', scan: 'aguiar', crop: [55, 80, 665, 690], sizePx: 300, dark: 'min', level: [12, 78], circle: [300, 300, 300],
         // the scan's own wind names (norte, oeste, leste, sull and the petal inscriptions)
@@ -326,7 +329,7 @@ function buildSprite(sprite, colour, key, outDir, tmp) {
   // scan's paper reads as white under `multiply` and only the inks and washes carry tone.
   let rgb = ['-size', `${w}x${h}`, 'xc:black'];
   if (colour === 'source') {
-    const paper = magick(t('crop'), '(', alpha, '-negate', '-threshold', '96%', ')', '-alpha', 'off',
+    const paper = sprite.paper ?? magick(t('crop'), '(', alpha, '-negate', '-threshold', '96%', ')', '-alpha', 'off',
       '-compose', 'CopyOpacity', '-composite', '-scale', '1x1!', '-alpha', 'off', '-format', '%[pixel:p{0,0}]', 'info:');
     magick(t('crop'), '(', '-size', `${w}x${h}`, `xc:${paper}`, ')', '-compose', 'DivideDst', '-composite', t('rgb'));
     rgb = [t('rgb')];
