@@ -15,7 +15,8 @@ import { cityPlan, drawCity, drawHouses, pxRings, insideRings } from './city.mjs
 import { urbanKey } from './urban.mjs';
 import { RIVERS, LAKES, RIVER_STYLES, LAKE_STYLES, waterOf, shown } from './water.mjs';
 import { RELIEF_STYLES, reliefOf, clearOf, drawRelief } from './relief.mjs';
-import { TREES, TREE_STYLES, plantTrees } from './trees.mjs';
+import { TREES, TREE_STYLES, plantTrees, plantPalms } from './trees.mjs';
+import { POIS, POI_ZOOM } from './pois.mjs';
 import { BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from './buildings.mjs';
 
 let env;
@@ -573,7 +574,8 @@ function viewData(world, view) {
   });
   const shown = (p) => nearLL(f, p.lon, p.lat) && shows(proj, p.lon, p.lat);
   const places = world.places.filter(shown).map((p) => ({ ...p, xy: proj.project(p.lon, p.lat) }));
-  const lesser = view.zoom < DETAIL_ZOOM ? [] : world.lesser.filter(shown).map((p) => ({ ...p, xy: proj.project(p.lon, p.lat) }));
+  const lesser = [...(view.zoom < POI_ZOOM ? [] : POIS.filter((p) => !world.places.some((q) => Math.hypot((q.lon - p.lon) * Math.cos(p.lat * RAD), q.lat - p.lat) < 0.3)).map((p) => ({ ...p, poi: true, rank: 0, pop: 0 }))),
+    ...(view.zoom < DETAIL_ZOOM ? [] : world.lesser)].filter(shown).map((p) => ({ ...p, xy: proj.project(p.lon, p.lat) }));
   // names worth showing at this zoom (Natural Earth's min_label), most important first
   const names = world.names.filter((n) => n.min <= view.zoom + 1 && meetsLL(f, n.box))
     .sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'sea' ? -1 : 1) || a.rank - b.rank);
@@ -625,6 +627,7 @@ function chooseSprites(manifests, { rendering = 'vivid', rose = 'aguiar', monste
 
 // The share of a big rose's width that the best clear sea must reach, or the roses may stand on open land.
 const LAND_ROSE = 0.25, LAND_ROSE_TOWN = 60; // and how far, px, a rose on land keeps from a place
+const POI_ROOM = 90; // px a rose or a beast keeps clear of a point of interest
 const TOWER_H = 16.5; // a tower's own height, in its drawing units, foot at y = 0
 
 // The towers drawn in code, for the smallest towns: each a list of layers in SVG path data (absolute
@@ -949,7 +952,7 @@ function placeWorldNames(data, ctx, boxes, { continents, regions, continentsEnd 
 // Earth's min_label, a town from its scalerank), and scores less the farther the view is from it.
 // A point scores more the nearer the frame's centre; a country by how much of its coast is in frame.
 // `lang` 0 Latin, 1 English, for the hand-set names.
-function viewTitle(data, towns, lang) {
+function viewTitle(data, towns, lang, pois = []) {
   const z = data.proj.zoom, half = Math.hypot(W, H) / 2;
   const fit = (s) => Math.exp(-(((z - s) / 1.6) ** 2));
   const central = ([x, y]) => (x < 0 || y < 0 || x > W || y > H ? 0 : 1 - Math.hypot(x - W / 2, y - H / 2) / half);
@@ -958,6 +961,7 @@ function viewTitle(data, towns, lang) {
     ...CONTINENTS.map((c) => ({ text: c[lang], score: at(c[2], c[3]) * fit(2) })),
     ...REGIONS.map((r) => ({ text: r[lang], score: at(r[2], r[3]) * fit(4.6) })),
     ...towns.map((t) => ({ text: t.name, score: central([t.x, t.y]) * fit(7 + t.rank) })),
+    ...pois.map((t) => ({ text: t.name, score: 1.5 * central([t.x, t.y]) * fit(7) })), // a curated place outweighs a sea round it
     ...data.names.map((n) => {
       if (n.kind === 'sea') return { text: n.text, score: at(...n.at) * fit(n.min + 1.5) };
       // the stretch's points are 0.1 degrees apart: its length in the frame, against the frame's width
@@ -1147,22 +1151,23 @@ const placedBox = ({ box: [c0, c1, c2] }) => obb((c0[0] + c2[0]) / 2, (c0[1] + c
 // The lesser places (buildings.mjs), after every other name: each a church or a house LESSER_PX tall
 // whatever the zoom, standing on its land (standOf, on the clearance field), its name small above it;
 // kept only where the building and its name both clear the towns, names and ornaments placed before.
-function placeLesser(data, field, boxes, ctx, towns, names) {
-  const out = [], opts = letterOptions(data), s = LESSER_PX / TOWER_H;
-  for (const p of [...data.lesser].sort((a, b) => a.rank - b.rank || b.pop - a.pop)) {
+// The points of interest (pois.mjs) are placed first of all the names (`poi`), so no sea or country takes their ground.
+function placeLesser(data, field, boxes, ctx, towns, names, poi) {
+  const out = [], opts = letterOptions(data), k = poi ? 1.7 : 1, s = (LESSER_PX * k) / TOWER_H; // a point of interest stands bigger
+  for (const p of data.lesser.filter((l) => !!l.poi === poi).sort((a, b) => a.rank - b.rank || b.pop - a.pop)) {
     const [px, py] = p.xy;
     if (px < 8 || py < 8 || px > W - 8 || py > H - 8 || towns.some((t) => Math.hypot(t.x - px, t.y - py) < TUNE.townGap / 2)) continue;
-    const shape = TOWER_BY_ID.get(lesserBuilding(p.rank, seedOf(p.name))), top = (shape.top ?? TOWER_H) * s, hw = shape.w * s;
+    const shape = TOWER_BY_ID.get(p.building ?? lesserBuilding(p.rank, seedOf(p.name))), top = (shape.top ?? TOWER_H) * s, hw = shape.w * s;
     const [x, y] = standOf(p, top, hw, field);
     const icon = obb(x, y - top / 2, 0, hw, top / 2);
     if (!obbInside(icon) || boxes.some((b) => obbOverlap(b, icon))) continue;
-    const n = { text: p.name, at: data.proj.invert(x, y - top - 5), size: LESSER_LETTER };
+    const n = { text: p.name, at: data.proj.invert(x, y - top - 5), size: Math.round(LESSER_LETTER * (poi ? 1.4 : 1)) };
     const [q] = place(ctx, [n], data.proj.x, data.proj.y, opts);
     const box = q && placedBox(q);
     if (!box || !obbInside(box) || boxes.some((b) => obbOverlap(b, box))) continue;
     boxes.push(icon, box);
     names.push({ ...n, x: box.cx, y: box.cy, r: Math.max(box.hw, box.hh), box });
-    out.push({ x, y, h: LESSER_PX, tower: shape.id, name: p.name, rank: p.rank, label: box });
+    out.push({ x, y, h: LESSER_PX * k, tower: shape.id, name: p.name, rank: p.rank, label: box, ...(p.poi && { poi: true }) });
   }
   return out;
 }
@@ -1221,6 +1226,8 @@ function buildScene(data, sprites, ctx, world = {}) {
   // the built-up areas, whose city plans and washes they would cover
   const places = new Set();
   if (landOk) for (const { xy: [x, y] } of data.places) if (x > -LAND_ROSE_TOWN && x < W + LAND_ROSE_TOWN && y > -LAND_ROSE_TOWN && y < H + LAND_ROSE_TOWN) { const o = { x, y, r: LAND_ROSE_TOWN }; places.add(o); occupied.push(o); }
+  // a point of interest is lettered whatever the view, so the roses and the beasts keep clear of it, on sea too
+  for (const { xy: [x, y] } of data.lesser.filter((l) => l.poi)) occupied.push({ x, y, r: POI_ROOM });
   if (landOk && urban.length) built = distanceTo(data, urban.map((u) => u.poly));
   const centre = central.reduce((a, b) => (free(b.x, b.y) > free(a.x, a.y) ? b : a));
   const bigSize = Math.min(bigRose.sizePx, 2 * 0.95 * free(centre.x, centre.y));
@@ -1314,6 +1321,7 @@ function buildScene(data, sprites, ctx, world = {}) {
   ];
   const opts = letterOptions(data);
   const names = [];
+  const pois = placeLesser(data, field, boxes, ctx, towns, names, true);
   for (const n of lettering) {
     if (n.kind === 'coast' && names.some((m) => m.kind === 'coast' && m.text === n.text)) continue; // once a view
     const [p] = place(ctx, [n], data.proj.x, data.proj.y, opts);
@@ -1324,7 +1332,7 @@ function buildScene(data, sprites, ctx, world = {}) {
     boxes.push(box);
     names.push({ ...n, x: box.cx, y: box.cy, r: Math.max(box.hw, box.hh), box });
   }
-  const lesser = families.length ? placeLesser(data, field, boxes, ctx, towns, names) : [];
+  const lesser = [...pois, ...(families.length ? placeLesser(data, field, boxes, ctx, towns, names, false) : [])];
   for (const b of boxes.slice(1 + roseDraws.length).filter((b) => !cityBoxes.has(b))) occupied.push({ x: b.cx, y: b.cy, r: Math.max(b.hw, b.hh) * 0.6 });
   // hills and mountains (relief.mjs), seeded once: each range takes one of the mountain styles selected
   // and the Catalan sprites stand on the hills; all clear of what is placed so far and of the built-up
@@ -1382,7 +1390,7 @@ function buildScene(data, sprites, ctx, world = {}) {
   }
 
   // automatic, the typed title stands in where the view has no name in it
-  const title = (world.autoTitle && viewTitle(data, towns.filter((t) => names.some((n) => n.text === t.name)), world.regions === 'english' ? 1 : 0).toUpperCase()) || world.title || 'PORTOLANI';
+  const title = world.pinTitle?.toUpperCase() || (world.autoTitle && viewTitle(data, towns.filter((t) => names.some((n) => n.text === t.name)), world.regions === 'english' ? 1 : 0, lesser.filter((l) => l.poi)).toUpperCase()) || world.title || 'PORTOLANI';
   return { field, centre, nodes, roseDraws, towns, lesser, names, worldNames, monsters, ships, mountains, relief, cartouche: { ...cartouche, sprite: cartoucheSprite, title } };
 }
 
@@ -1700,7 +1708,9 @@ function paintLand(g, data, land, coast, relief) {
   paintMarks(g, data);
   paintWater(g, data);
   paintRelief(g, data, relief);
-  if (data.trees) TREES[STYLE.trees]?.(g, { proj: data.proj, palette: { ink: STYLE.ink, parchment: STYLE.parchment } }, data.trees); // a drag's frame has none
+  const palette = { ink: STYLE.ink, parchment: STYLE.parchment };
+  if (data.trees) TREES[STYLE.trees]?.(g, { proj: data.proj, palette }, data.trees); // a drag's frame has none
+  if (data.palms?.length) (TREES[STYLE.trees] ?? TREES.marina)(g, { proj: data.proj, palette }, data.palms); // the points of interest's own, whatever the trees
 }
 
 // The islands the drawn land lacks, the way period charts drew those too small to draw: an ink dot
@@ -2146,12 +2156,13 @@ function drawAnchored(g, a, bg, view) {
 // `relief`: a RELIEF_STYLES entry or a list of them (relief.mjs), none by default; with several each range takes one, by its seed.
 // The mountain sprites in the selection join them: one more style, stood along the ranges that take it.
 // `autoTitle` (boolean, on by default) letters the cartouche with the name the view is about (viewTitle), in capitals;
-// `title` is its lettering when that is off, or when the view has no name in it.
+// `title` is its lettering when that is off, or when the view has no name in it. `pinTitle` is a name the caller says
+// the view is about (a place flown to), lettered in capitals whatever the scoring finds.
 // `kinds` defaults to DEFAULT_KINDS, every kind. A kind left out is still
 // placed when the lattice needs it (a rose, the cartouche's corner), only not drawn.
 export async function createScene(environment, opts = {}) {
   env = environment;
-  const { ink = '#3b2a1a', continentsZoom, regionsZoom, scaleBorder = 'bordered', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', title = 'PORTOLANI', autoTitle = true, land: landMode = 'islands', islands, seaTint = false, rivers = 'off', lakes = 'off', relief = [], trees = 'off' } = opts;
+  const { ink = '#3b2a1a', continentsZoom, regionsZoom, scaleBorder = 'bordered', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', title = 'PORTOLANI', autoTitle = true, pinTitle, land: landMode = 'islands', islands, seaTint = false, rivers = 'off', lakes = 'off', relief = [], trees = 'off' } = opts;
   const legacy = ['rendering', 'rose', 'monster', 'town'].some((k) => opts[k] !== undefined);
   const townBy = townSize ?? (legacy ? 'rank' : 'area');
   const show = { kinds: new Set(opts.kinds ?? DEFAULT_KINDS), names, rhumb: rhumbOn, scale };
@@ -2199,10 +2210,12 @@ export async function createScene(environment, opts = {}) {
   const tLoad = performance.now();
 
   const data = viewData(world, view);
-  const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, title, autoTitle,
+  const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, title, autoTitle, pinTitle,
     continentsEnd: zoomEnd(continentsZoom, CONTINENT_ZOOM_END), regionsEnd: zoomEnd(regionsZoom, REGION_ZOOM_END),
     scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM, townSize: townBy, seed: legacy ? null : castSeed(view) }), show, scaleSprite };
   data.trees = TREES[STYLE.trees] ? plantTrees({ proj: data.proj, isLand: scene.field.isLand, scene, lakes: STYLE.lakes !== 'off' && water ? water.lakes : [], w: W, h: H }) : [];
+  data.palms = plantPalms({ proj: data.proj, isLand: scene.field.isLand, scene, w: W, h: H,
+    pois: scene.lesser.filter((l) => l.poi).map((l) => ({ x: l.x, y: l.y, palms: POIS.find((p) => p.name === l.name)?.palms ?? 0 })) });
   if (!parchments.has(tone)) parchments.set(tone, parchment(1539));
   const bg = parchments.get(tone);
   return { scene, data, bg, proj: data.proj, world, coarse, view, timing: { load: tLoad - t0, place: performance.now() - tLoad } };

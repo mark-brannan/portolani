@@ -9,6 +9,7 @@ import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { loadImage, createCanvas, GlobalFonts } from '@napi-rs/canvas'
 import { BUILDINGS, LESSER_PX, lesserBuilding } from '../scripts/buildings.mjs'
+import { POIS, POI_ZOOM } from '../scripts/pois.mjs'
 import { createScene, towerGlyph, DETAIL_ZOOM } from '../scripts/scene.mjs'
 import { coastNames, joinNames } from '../scripts/names.mjs'
 
@@ -74,6 +75,7 @@ test('a lesser place is a church or a house, the bigger likelier a church, never
 test('lesser places stand at zoom 10, lettered, a fixed height, and not at zoom 5', async () => {
   const LIGURIA = { lon: 8.7, lat: 44.3 }
   const close = (await createScene(env, { view: { ...LIGURIA, zoom: 10 } })).scene
+  close.lesser = close.lesser.filter((t) => !t.poi) // the points of interest have their own test
   assert.ok(DETAIL_ZOOM <= 10)
   assert.ok(close.lesser.length > 0, 'no lesser place at zoom 10')
   for (const t of close.lesser) {
@@ -85,5 +87,27 @@ test('lesser places stand at zoom 10, lettered, a fixed height, and not at zoom 
   }
   assert.ok(close.lesser.some((t) => t.name === 'Genoa'))
   const far = (await createScene(env, { view: { ...LIGURIA, zoom: 5 } })).scene
-  assert.deepEqual(far.lesser, [])
+  assert.deepEqual(far.lesser.filter((t) => !t.poi), [])
+})
+
+test('points of interest are lettered from POI_ZOOM, bigger than the lesser places, and name the cartouche', async () => {
+  const at = (p, zoom, opts = {}) => createScene(env, { view: { lon: p.lon, lat: p.lat, zoom }, ...opts }).then((r) => r.scene)
+  for (const p of POIS) {
+    const near = await at(p, 7)
+    const t = near.lesser.find((l) => l.name === p.name)
+    assert.ok(t?.poi, `${p.name}: not placed at zoom 7`)
+    assert.equal(t.tower, p.building, p.name)
+    assert.ok(t.h > LESSER_PX, p.name)
+    assert.ok(near.names.some((n) => n.text === p.name), `${p.name}: not lettered`)
+    assert.equal(near.cartouche.title, p.name.toUpperCase(), `${p.name}: the cartouche names the view`)
+  }
+  // palms stand beside a point of interest on an island with room, whatever the tree style (off here)
+  const majorca = await createScene(env, { view: { lon: 2.9, lat: 39.6, zoom: 8 } })
+  assert.equal(majorca.data.palms.length, POIS.find((p) => p.name === 'Majorca').palms)
+  assert.ok(majorca.data.palms.every((s) => s.trees.every((t) => t.shape === 'palm')))
+  assert.ok(POI_ZOOM > 0 && !(await at(POIS[0], POI_ZOOM - 1)).lesser.some((l) => l.poi), 'a point of interest below POI_ZOOM')
+  // a place flown to names the cartouche, whatever scores highest in the frame, and the title is capitals
+  const world = { lon: 10, lat: 25, zoom: 0 }
+  assert.notEqual((await at(world, 0)).cartouche.title, 'THE WORLD')
+  assert.equal((await at(world, 0, { pinTitle: 'The World' })).cartouche.title, 'THE WORLD')
 })
