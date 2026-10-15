@@ -7,7 +7,7 @@
 // A view is a centre, zoom and projection, { lon, lat, zoom, projection }, on a W x H canvas; the
 // projection is one of PROJECTIONS, Mercator when left out.
 
-import { sheetsFor, BANDS as ATLAS_BANDS } from './atlas.mjs';
+import { sheetsFor, BANDS as ATLAS_BANDS, ROSE as ATLAS_ROSE } from './atlas.mjs';
 import { fill, trace, limn, rhumb, place, letter, geojsonPolygons, geojsonRings } from 'coast-wright';
 import { bandOf } from './bands.mjs';
 import { islandInfo, ISLAND_KM2 } from './island.mjs';
@@ -1668,6 +1668,9 @@ function latticeOf(scene, data) {
   const origins = scene.sheets
     ? scene.sheets.flatMap((sh) => [sh.circle, ...sh.circle.nodes].map((n) => ({ lon: n.lon, lat: n.lat, reach: sh.reach })))
     : [scene.centre, ...scene.nodes].map((n) => { const [lon, lat] = data.proj.invert(n.x, n.y); return { lon, lat, reach }; });
+  // The Catalan Atlas rose's lines run at every zoom, beside the network of the sheets or the window
+  // (docs/atlas/README.md, "Zoom bands"): the same lines through every view and every band.
+  origins.push({ lon: ATLAS_ROSE.lon, lat: ATLAS_ROSE.lat, reach: 180 });
   for (const { lon, lat, reach } of origins) {
     for (let k = 0; k < RHUMB_RAYS; k++) {
       const kind = k % 4 === 0 ? 0 : k % 2 === 1 ? 1 : 2; // wind, quarter (red), half (green)
