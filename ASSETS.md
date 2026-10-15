@@ -67,7 +67,7 @@ Not used: Gabriel de Vallseca 1439 (`Gabriel_Vallseca._Museo_Marítimo,_Barcelon
 
 Not yet cropped from `debry-arrival-englishmen-virginia.jpg`: the wrecked hulls, the fish weir and the grapevine. Hand colour makes it a colour-source pack, not an ink one.
 
-Pinned, not yet cropped (charts of the New World, sourced 2026-10): Agnese c. 1544; the Huntington's HM 28, catalogued as Francesco Ghisolfi, Genoa, 1550–1599, whose world sheet carries the cherub wind-heads; Desliens 1566, drawn south up; Vaz Dourado 1580; Martines 1587; Thornton 1700; Murillo Velarde 1734; and the two Pitcairn plates. The Huntington's record grants no licence; its library policy asks no permission for public-domain material, only the call number. Desliens rests on the Commons PD-Art tags, since Gallica's own terms could not be read.
+Pinned, not yet cropped (charts of the New World): Agnese c. 1544; the Huntington's HM 28, catalogued as Francesco Ghisolfi, Genoa, 1550–1599, whose world sheet carries the cherub wind-heads; Desliens 1566, drawn south up; Vaz Dourado 1580; Martines 1587; Thornton 1700; Murillo Velarde 1734; and the two Pitcairn plates. The Huntington's record grants no licence; its library policy asks no permission for public-domain material, only the call number. Desliens rests on the Commons PD-Art tags; Gallica's own terms are not pinned.
 
 Reference only, not usable: A Chart and Views of Pitcairns Island, Bayly sculp. 1773, David Rumsey Map Collection 3403.012 (4,415 × 3,499; https://davidrumsey.com/maps870029-23984.html), CC BY-NC-SA. It is the same plate as `Pitcairn_Island_accountofvoyages01hawk_0423.jpg` at 1.6 times the size.
 
