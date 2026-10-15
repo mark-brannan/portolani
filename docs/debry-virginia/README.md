@@ -9,23 +9,33 @@ Regenerate everything here (the other packs are untouched) with:
 
     node scripts/build-packs.mjs --only debry --keep docs/debry-virginia
 
+and `steps.png` (one row per sprite: raw, key, cut, map size, labelled) with:
+
+    cd docs/debry-virginia
+    args=(); while read -r id px; do
+      args+=(-label "$id: raw" $id.raw.png -label key $id.key.png -label "cut (multiplied)" $id.cut.png \
+             -label "map size, ${px}px wide" \( $id.cut.png -resize ${px}x \))
+    done < <(node -e "for (const s of require('../../packs/debry/pack.json').sprites) console.log(s.id, s.sizePx)")
+    magick montage -background '#e9d8b4' -fill '#3b2a1a' -pointsize 13 -tile 4x -geometry '300x220>+8+8' \
+      "${args[@]}" -depth 8 -define png:compression-level=9 steps.png
+
 ## Files
 
 | File | What it is |
 |---|---|
 | `overview.png` | the scan at 1,400 px wide, every crop box outlined and named |
-| `steps.png` | a row per sprite: raw, key, cut on parchment, and the sprite at map size |
+| `steps.png` | a row per sprite: raw, key, cut, and the cut at map size, labelled |
 | `<id>.raw.png` | the crop straight from the scan, no background removal: the before |
-| `<id>.key.png` | the alpha after levels and masks, white = opaque, before the scan's colour goes back |
-| `<id>.cut.png` | the finished sprite on parchment at 1:1: the after |
-| `svg/debry-ship-a.svg`, `.overlay.png` | the one SVG trace; overlay is raw, SVG on parchment, SVG at half opacity over raw |
+| `<id>.key.png` | the outline: white inside the figure's masks, feathered at the edge, the alpha the sprite ships with |
+| `<id>.cut.png` | the finished sprite multiplied onto parchment at 1:1, as the renderer draws it, so the colours are true: the after |
+| `svg/debry-ship-a.svg`, `.overlay.png` | the one SVG trace, and its overlay on the raw crop |
 
-In `steps.png` the third column is `<id>.cut.png` (a plain composite); the fourth multiplies the
-sprite onto parchment at its `sizePx`, as the renderer does, so colours there are the true ones.
+In `steps.png` the third column is `<id>.cut.png` and the fourth is the same cut shrunk to the
+sprite's `sizePx`, the width it is drawn at on the map.
 
 ## Sprites
 
-| id | what | crop (scan px) | how it was keyed |
+| id | what | crop (scan px) | how its outline was drawn |
 |---|---|---|---|
 | ship-a | the large three-master, bow left | 1202,1055 to 1595,1517 | polygon round hull and rigging; the sea hatching is the same ink |
 | ship-b | the smaller three-master | 1892,1008 to 2176,1350 | same |
@@ -41,10 +51,13 @@ sprite onto parchment at its `sizePx`, as the renderer does, so colours there ar
 | village-pasquenoke | the same, paler land | 1310,173 to 1408,223 | same |
 | village-roanoac | the ring on Roanoac | 767,625 to 895,703 | same; huts are fuller |
 
-Why each key differs: the sea is hatched in the ink the ships are drawn in, so no tone or colour
-separates them and a hand-drawn polygon does it. The teal and green foliage sits on a yellow wash
-hatched in brown, which the red channel splits cleanly. The village huts are straw yellow, so the
-darkest of R, G, B counts them as ink.
+The key is a patch: the masks below draw the outline round each figure and everything inside it
+stays, the water a ship sits in, the grass under a tree, the hatching round a village, with the
+paper divided out so the renderer's multiply blend hides it. The masks define the whole patch; the
+levels only seed the tree silhouette. The sea is hatched in the ink the ships are drawn in, so no
+tone separates them and a hand-drawn polygon does it. The teal and green foliage sits on a yellow
+wash hatched in brown, which the red channel splits into a silhouette. The village huts are straw
+yellow, so the darkest of R, G, B finds them.
 
 ## Not cropped
 
@@ -55,9 +68,7 @@ darkest of R, G, B counts them as ink.
 
 ## SVG verdict
 
-Poor. The masts, spars and hull line up with the raw crop, but the ratlines, shading and colour
-wash do not survive tracing: the result is a diagram of a ship, not the engraving. Only
-`debry-ship-a` was traced and none of the rest were tried.
+Poor: the trace of `debry-ship-a` keeps the masts and hull but loses the ratlines, shading and colour, a diagram rather than the engraving.
 
 ## Renderer
 
