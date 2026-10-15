@@ -41,3 +41,22 @@ test('two views over one part of the world put the roses at the same map positio
     assert.deepEqual(of(a), of(b));
   }
 });
+
+const beasts = async (view) => {
+  const { scene, data } = await createScene(env, { view, scale: 'off' });
+  return [...scene.monsters, ...scene.ships].map((b) => `${b.sheet} ${b.sprite.id} ${data.proj.invert(b.x, b.y).map((v) => v.toFixed(6)).join(' ')}`).sort();
+};
+
+test('two views over one part of the world put the monsters and ships at the same map positions', async () => {
+  const a = await beasts({ lon: 8.93, lat: 44.41, zoom: 9 });
+  const b = await beasts({ lon: 9.05, lat: 44.35, zoom: 9 });
+  assert.ok(a.length > 0, 'a beast is placed');
+  const inB = (x) => b.filter((l) => l.split(' ')[0] === x);
+  const common = [...new Set(a.map((l) => l.split(' ')[0]))].filter((s) => inB(s).length);
+  assert.ok(common.length > 0, 'the views share a sheet with beasts');
+  for (const sheet of common) {
+    const key = (l) => l.split(' ').slice(1).join(' ');
+    const sa = a.filter((l) => l.startsWith(sheet)).map(key), sb = inB(sheet).map(key);
+    assert.deepEqual(sa, sb);
+  }
+});
