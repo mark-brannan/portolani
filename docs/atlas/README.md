@@ -22,22 +22,22 @@ page turn, from one sheet of an atlas to the sheet below it.
 
 ## The historical construction
 
-A portolan chart was not drawn coast first. The chartmaker began with a circle, scraped into the vellum with a
-compass point and on most charts never inked; Campbell reports a pinhole usually still visible at
-each of its sixteen points. The circle was divided into sixteen equal parts. From the centre and from each of the
-sixteen nodes ran the lines of the winds, eight principal winds in black (or brown), the eight
-half-winds in green and the sixteen quarter-winds in red, thirty-two directions in all. Only after
-that network was laid down were the coastlines copied in over it, from a pattern chart. Tony
-Campbell's chapter in *The History of Cartography* (volume 1, 1987, pages 390 to 391) is the
-reference for the order of work, overturning the earlier view (Stevenson, 1911) that the lines
-were added afterwards; the Wikipedia article on the rhumbline network, citing Ramon Pujades, has Pietro Vesconte drawing
-the rhumbline grid first.
+A portolan chart was not drawn coast first. The chartmaker began with a circle, scraped into the
+vellum with a compass point and on most charts never inked; Campbell reports a pinhole usually still
+visible at each of its sixteen points. The circle was divided into sixteen equal parts. From the
+centre and from each of the sixteen nodes ran the lines of the winds, eight principal winds in black
+(or brown), the eight half-winds in green and the sixteen quarter-winds in red, thirty-two
+directions in all. Only after that network was laid down were the coastlines copied in over it, from
+a pattern chart. Tony Campbell's chapter in *The History of Cartography* (volume 1, 1987, pages 390
+to 391) is the reference for the order of work, overturning the earlier view (Stevenson, 1911) that
+the lines were added afterwards; the Wikipedia article on the rhumbline network, citing Ramon
+Pujades, has Pietro Vesconte drawing the rhumbline grid first.
 
 The circle itself was the chart's hidden skeleton. The earliest surviving chart, the Carte Pisane,
 has two: one for the western basin of the Mediterranean, one for the eastern, each divided into
-sixteen. Most charts have one circle. Some, from the Carte Pisane on, have two, joined in different ways:
-tangent on the Carte Pisane, one inside the other on the Canepa chart of 1489, separate on Juan de
-la Cosa's. The decorated compass rose came later than the network. Campbell calls it a
+sixteen. Most charts have one circle. Some, from the Carte Pisane on, have two, joined in different
+ways: tangent on the Carte Pisane, one inside the other on the Canepa chart of 1489, separate on
+Juan de la Cosa's. The decorated compass rose came later than the network. Campbell calls it a
 Catalan innovation, and the Catalan Atlas of 1375 is the first chart known to carry one. Before
 that, a node was a node: a point where the lines met, sometimes marked with a small rose or an
 initial for the wind, sometimes not marked at all.
@@ -48,12 +48,12 @@ was drawn around the rose. Second, the circle was a property of the sheet, not o
 the sheet the reader was looking at. Both are the opposite of what the chart does today, and both
 are what this design restores.
 
-One claim this document does not make: that the circle on a given chart sat at a particular
-latitude and longitude. Charts of this period were drawn from magnetic compass bearings, and the
-whole network is turned about 8° to 10° anticlockwise from true north, an angle that held for three
-centuries (Joaquim Alves Gaspar's cartometric work, 2008, pp. 196 and 201, and his 2010 thesis). The centres
-proposed below are positions on the modern earth chosen to echo each chart's layout. They are not
-measurements of the originals; see the table's `centre` column.
+One claim this document does not make: that the circle on a given chart sat at a particular latitude
+and longitude. Charts of this period were drawn from magnetic compass bearings, and the whole
+network is turned about 8° to 10° anticlockwise from true north, an angle that held for three
+centuries (Joaquim Alves Gaspar's cartometric work, 2008, pp. 196 and 201, and his 2010 thesis). The
+centres proposed below are positions on the modern earth chosen to echo each chart's layout. They
+are not measurements of the originals; see the table's `centre` column.
 
 ## The design
 
@@ -87,12 +87,12 @@ that they are also drawn on the moving frames, which today draw the ground alone
 ### Lines
 
 The rhumb lines are already drawn this way: each ray is a rhumb line in longitude and latitude from
-its node, projected at every render, so on a plate carrée page they bow and on a globe they curve. The
-design keeps that and adds one rule: a sheet's lines reach to the edge of the sheet's extent plus a
-margin of about half a sheet, not to the edge of the window. Two adjacent sheets both cast lines
-into a view that straddles them, as two adjacent charts in a real atlas would; the margin is what
-keeps the crossing from reading as a tangle. The right margin is a thing to look at on screen, not
-to decide here.
+its node, projected at every render, so on a plate carrée page they bow and on a globe they curve.
+The design keeps that and adds one rule: a sheet's lines reach to the edge of the sheet's extent
+plus a margin of about half a sheet, not to the edge of the window. Two adjacent sheets both cast
+lines into a view that straddles them, as two adjacent charts in a real atlas would; the margin is
+what keeps the crossing from reading as a tangle. The right margin is a thing to look at on screen,
+not to decide here.
 
 ### Zoom bands
 
@@ -139,8 +139,8 @@ The charts:
 | Juan de la Cosa's chart of 1500 | El Puerto de Santa María; about 93 to 96 by 183 cm, two skins joined, the New World drawn at a larger scale than the Old | Museo Naval, Madrid |
 
 The Carte Pisane's date is argued: Campbell holds c.1290, revised in 2021 to c.1270; Pujades once
-put it in the later 14th century or even the 1420s or 30s, and by 2023 allowed the 1280s or 90s. The doc says "late 13th
-century" and leaves the argument to them.
+put it in the later 14th century or even the 1420s or 30s, and by 2023 allowed the 1280s or 90s. The
+doc says "late 13th century" and leaves the argument to them.
 
 The sheets:
 
@@ -177,17 +177,17 @@ them.
 ### The fallback grid
 
 Everywhere no curated sheet reaches, the atlas is a grid modelled on NOAA's reschemed electronic
-charts. NOAA's traditional paper charts (the last cancelled in December 2024) had irregular, overlapping limits
-set by hand: sailing charts at 1:600,000 and smaller, general charts from 1:150,000 to 1:600,000,
-coast charts from 1:50,000 to 1:150,000, harbor charts larger than 1:50,000. Those limits are worth
-reading for what they say about attention: a harbour that earned its own large-scale chart is a
-place people look at closely, and that is where a curated sheet, or at least a hand-set centre, is
-worth the effort. But the limits themselves are a poor grid, and NOAA replaced them. The reschemed
-layout has six usage bands with two standard scales each, twelve scales in place of more than a
-hundred, and rectangular cells on lines of longitude and latitude, each band's cell a quarter the
-height of the band above (the last a half), so sixteen cells nest in one. From band 3 down, above
-49° 12' N a cell is twice as wide as it is high, above 69° 12' N four times, so a cell on the ground
-does not become a sliver as the meridians converge.
+charts. NOAA's traditional paper charts (the last cancelled in December 2024) had irregular,
+overlapping limits set by hand: sailing charts at 1:600,000 and smaller, general charts from
+1:150,000 to 1:600,000, coast charts from 1:50,000 to 1:150,000, harbor charts larger than 1:50,000.
+Those limits are worth reading for what they say about attention: a harbour that earned its own
+large-scale chart is a place people look at closely, and that is where a curated sheet, or at least
+a hand-set centre, is worth the effort. But the limits themselves are a poor grid, and NOAA replaced
+them. The reschemed layout has six usage bands with two standard scales each, twelve scales in place
+of more than a hundred, and rectangular cells on lines of longitude and latitude, each band's cell a
+quarter the height of the band above (the last a half), so sixteen cells nest in one. From band 3
+down, above 49° 12' N a cell is twice as wide as it is high, above 69° 12' N four times, so a cell
+on the ground does not become a sliver as the meridians converge.
 
 The chart's grid takes all of that: the ladder of heights in the band table, the nesting, the
 widening at the same two latitudes applied north and south, and cell edges on whole multiples of
@@ -278,10 +278,11 @@ wait on it.
 Consulted 2026-10-14. Where an entry was read through a secondary source, it says so. Page
 references are to the printed chapter where given.
 
-- Tony Campbell, "Portolan Charts from the Late Thirteenth Century to 1500", in *The History of
-  Cartography*, vol. 1 (Chicago, 1987), ch. 19: p. 377 on the line colours, pp. 390–92 on the network being drawn
-  first (against Stevenson, 1911), the scraped circle and its pinholes, and the Carte Pisane's grid
-  of small squares: <https://press.uchicago.edu/books/HOC/HOC_V1/HOC_VOLUME1_chapter19.pdf>.
+- - Tony Campbell, "Portolan Charts from the Late Thirteenth Century to 1500", in *The History of
+  Cartography*, vol. 1 (Chicago, 1987), ch. 19: p. 377 on the line colours, pp. 390–92 on the
+  network being drawn first (against Stevenson, 1911), the scraped circle and its pinholes, and the
+  Carte Pisane's grid of small squares:
+  <https://press.uchicago.edu/books/HOC/HOC_V1/HOC_VOLUME1_chapter19.pdf>.
 - Tony Campbell, *The Carte Pisane* essay and updates (c.1290, revised to c.1270 in 2021), and the
   Pujades debate: <https://www.maphistory.info/CartePisaneTEXT.html>,
   <https://www.maphistory.info/CartePisaneConclusions.html>.
@@ -307,10 +308,12 @@ references are to the printed chapter where given.
   0.0375°, widening to 2x above 49° 12' N and 4x above 69° 12' N:
   <https://www.nauticalcharts.noaa.gov/publications/docs/enc-design-handbook.pdf>. The handbook
   calls itself informative; the Nautical Chart Manual governs.
-- NOAA, *U.S. Coast Pilot*, chapter 1, "General Information": the paper chart categories, sailing
+- - NOAA, *U.S. Coast Pilot*, chapter 1, "General Information": the paper chart categories, sailing
   1:600,000 and smaller, general 1:150,000 to 1:600,000, coast 1:50,000 to 1:150,000, harbor larger
-  than 1:50,000: <https://nauticalcharts.noaa.gov/publications/coast-pilot/files/cp1/CPB1_C01_WEB.pdf>.
-- NOAA, *Sunset Plan for Raster Nautical Charts* (2019): the last traditional paper charts cancelled in December 2024: <https://nauticalcharts.noaa.gov/publications/docs/raster-sunset.pdf>.
+  than 1:50,000:
+  <https://nauticalcharts.noaa.gov/publications/coast-pilot/files/cp1/CPB1_C01_WEB.pdf>.
+- - NOAA, *Sunset Plan for Raster Nautical Charts* (2019): the last traditional paper charts
+  cancelled in December 2024: <https://nauticalcharts.noaa.gov/publications/docs/raster-sunset.pdf>.
 
 Unverified, and so not claimed above: the geometry of the Juan de la Cosa chart's rhumb network;
 which leaf of the Catalan Atlas carries its rose (the BnF says folio 5v); and Pujades's own words on
