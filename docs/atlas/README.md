@@ -119,6 +119,13 @@ above, exactly as NOAA's cells do. The world band is the exception: there the ea
 curated sheet by curated sheet, because at those zooms a grid cell would be most of a hemisphere
 and the famous charts are the better model.
 
+One rose belongs to no band: the Catalan Atlas rose at 20.7°W 42.1°N, the point every band's grid
+counts from ("The fallback grid", below). Current thinking: its rhumb lines are drawn at every zoom,
+from the world band to the harbour band, beside the network of whatever sheets the view shows.
+Pinning one rose is what pins the lines: the same lines run through every view and every sheet, and
+a page turn between bands leaves them where they were. How far they reach, and how they sit beside
+a band's own lines, is a thing to look at on screen, as the sheet margin is.
+
 ### The curated sheets
 
 Where a real chart covers a region, the sheet is modelled on that chart: its extent is the chart's,
@@ -189,9 +196,25 @@ quarter the height of the band above (the last a half), so sixteen cells nest in
 down, above 49° 12' N a cell is twice as wide as it is high, above 69° 12' N four times, so a cell
 on the ground does not become a sliver as the meridians converge.
 
-The chart's grid takes all of that: the ladder of heights in the band table, the nesting, the
-widening at the same two latitudes applied north and south, and cell edges on whole multiples of
-the cell height from the equator and the prime meridian. A grid sheet's circle sits at the cell's
+The chart's grid takes all of that: the ladder of heights in the band table, the nesting, and the
+widening at the same two latitudes, applied north and south to every row that lies wholly beyond
+them. What it does not take is NOAA's zero. NOAA counts its cells from the equator and the prime
+meridian, which suits a survey and says nothing about a chart, so the hidden circles would fall
+wherever the cells happened to land.
+
+Current thinking: every band counts its cell edges in whole multiples of the cell height, and of
+the cell width east and west, out from one point, the Catalan Atlas rose at 20.7°W 42.1°N, read off
+the scan in [centres.md](centres.md) to ±2°. It is the first drawn compass rose known on any chart,
+and it is the point the world band's big rose is pinned to. Because each band's height divides the
+one above, sixteen sheets still nest in one, and the rose sits on a corner every band's grid shares:
+zoom in on it from the overview band to the harbour band and it stays on a sheet corner all the way
+down. Where a column reaches the date line or a row a pole, the sheet ends there. If a sharper
+reading of the scan moves the rose, every grid moves with it.
+
+Open: the rose is the centre of no grid sheet's circle. It is carried by its own lines, drawn at
+every zoom (see "Zoom bands"), not by any sheet's.
+
+A grid sheet's circle sits at the cell's
 centre with a radius of 0.36 to 0.62 of the cell's height, chosen as today's placement chooses it:
 the radius that puts the most nodes in water clear enough for a small rose. If the centre is on
 land, the big rose is not drawn; the lines still run from it, as they did from a node on land on a
@@ -240,8 +263,8 @@ wait on it.
 
 ## Risks and the measurement
 
-- **Two networks in one view.** Lines from neighbouring sheets cross. The reach margin is the
-  control; it must be looked at, at a band boundary and at a sheet corner, before the design is
+- **Two networks in one view.** Lines from neighbouring sheets cross, and the world rose's lines
+  cross every band's. The reach margin is the control; it must be looked at, at a band boundary and at a sheet corner, before the design is
   trusted.
 - **Projection.** The circle is drawn through the projection, so it is round only on the
   cylindrical pages. On the orthographic globe and the azimuthal views it is an ellipse or an egg,
