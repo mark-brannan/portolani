@@ -35,29 +35,24 @@ sprite's `sizePx`, the width it is drawn at on the map.
 
 ## Sprites
 
-| id | what | crop (scan px) | how its outline was drawn |
+| id | what | crop (scan px) | erased, and why |
 |---|---|---|---|
-| ship-a | the large three-master, bow left | 1202,1055 to 1595,1517 | polygon round hull and rigging; the sea hatching is the same ink |
-| ship-b | the smaller three-master | 1892,1008 to 2176,1350 | same |
-| monster | sea monster at the foot, with its swell | 522,1263 to 927,1519 | polygon; the blue swell stays, faint |
-| canoe | dugout with two paddlers | 190,713 to 292,767 | polygon; heading left is a guess |
-| tree-poplar | tall teal poplar | 85,142 to 169,304 | red channel as ink, wash silhouette |
-| tree-poplars | three poplars | 103,343 to 239,489 | same |
-| tree-broadleaf | three round-crowned trees | 276,206 to 464,359 | same |
-| tree-grove | five poplars | 1400,419 to 1567,579 | same; the plate's fold line shows through |
-| tree-conifer | one spruce-like tree | 1594,458 to 1669,563 | same; a vine leaf erased at the edge |
-| tree-palm | the tiered palm | 2024,424 to 2088,579 | same |
-| village-dasamonguepeuc | palisaded ring of huts | 609,300 to 710,369 | min(R,G,B) as ink, ellipse mask |
-| village-pasquenoke | the same, paler land | 1310,173 to 1408,223 | same |
-| village-roanoac | the ring on Roanoac | 767,625 to 895,703 | same; huts are fuller |
+| ship-a | the large three-master, bow left, on its sea | 1122,1064 to 1678,1578 | the wrecked hull above the stern: a neighbouring figure |
+| ship-b | the smaller three-master, on its sea | 1831,991 to 2214,1479 | nothing |
+| monster | sea monster at the foot, with its swell and the water below | 441,1216 to 1009,1589 | nothing |
+| canoe | dugout with two paddlers, on its water; heading left is a guess | 171,691 to 309,789 | the bottom-right corner: a neighbour's edge |
+| tree-poplar | tall teal poplar with its grass mound and the shrubs beside it | 77,121 to 261,319 | the tall tree above it: a neighbouring figure |
+| tree-poplars | three poplars on their mound | 93,346 to 254,527 | nothing |
+| tree-broadleaf | three round-crowned trees | 263,201 to 477,377 | nothing |
+| tree-grove | five poplars; the plate's fold line shows through | 1376,406 to 1589,581 | the top-left corner: a neighbour's edge |
+| tree-conifer | one spruce-like tree | 1586,451 to 1689,574 | the grapevine's leaf at its right edge |
+| tree-palm | the tiered palm | 2006,406 to 2109,594 | nothing |
+| village-dasamonguepeuc | palisaded ring of huts with the land and shore round it | 586,297 to 694,384 | nothing |
+| village-pasquenoke | the same, paler land | 1289,151 to 1405,227 | nothing |
+| village-roanoac | the ring on Roanoac, huts fuller, haystacks beside | 756,603 to 924,701 | the lettering at its foot |
 
-The key is a patch: the masks below draw the outline round each figure and everything inside it
-stays, the water a ship sits in, the grass under a tree, the hatching round a village, with the
-paper divided out so the renderer's multiply blend hides it. The masks define the whole patch; the
-levels only seed the tree silhouette. The sea is hatched in the ink the ships are drawn in, so no
-tone separates them and a hand-drawn polygon does it. The teal and green foliage sits on a yellow
-wash hatched in brown, which the red channel splits into a silhouette. The village huts are straw
-yellow, so the darkest of R, G, B finds them.
+Each sprite's alpha is the whole crop, feathered at its edge, with the paper divided out; an
+`erase` box cuts only a neighbour. Nothing in the raw crop is lost but what the last column names.
 
 ## Not cropped
 

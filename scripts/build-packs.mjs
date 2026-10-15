@@ -233,11 +233,8 @@ function buildSprite(sprite, colour, key, outDir, tmp) {
   }
 
   // Ink = darkness. 'lum' for line work; 'min' (min of R,G,B) so gilt and colour count as ink too.
-  // 'red' is the red channel alone: teal and green washes on a yellow ground read as dark, paper and
-  // the yellow wash as light, which keys the green foliage of a hand-coloured engraving.
   const dark = sprite.dark === 'min'
     ? [t('crop'), '-separate', '-evaluate-sequence', 'min']
-    : sprite.dark === 'red' ? [t('crop'), '-channel', 'R', '-separate', '+channel']
     : [t('crop'), '-colorspace', 'gray'];
   // a grainy scan's paper speckles are taken out with a median before the levels catch them
   const denoise = sprite.denoise ? ['-statistic', 'Median', `${sprite.denoise}x${sprite.denoise}`] : [];
@@ -265,12 +262,6 @@ function buildSprite(sprite, colour, key, outDir, tmp) {
     const pts = sprite.mask.map(([mx, my]) => `${mx - x0},${my - y0}`).join(' ');
     magick('-size', `${w}x${h}`, 'xc:black', '-fill', 'white', '-draw', `polygon ${pts}`, '-blur', `0x${sprite.maskFeather ?? MASK_FEATHER}`, t('mask'));
     masks.push(t('mask'));
-  }
-  if (sprite.ellipse) {
-    // [cx, cy, rx, ry] in crop pixels: a village's palisade ring, say, with the land round it dropped
-    const [ex, ey, rx, ry] = sprite.ellipse;
-    magick('-size', `${w}x${h}`, 'xc:black', '-fill', 'white', '-draw', `ellipse ${ex},${ey} ${rx},${ry} 0,360`, '-blur', '0x2', t('ellipse'));
-    masks.push(t('ellipse'));
   }
   if (sprite.circle) {
     const [cx, cy, r] = sprite.circle;
