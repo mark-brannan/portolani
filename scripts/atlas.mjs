@@ -155,10 +155,16 @@ function curatedCircle(c) {
   return { lon: c.lon, lat: c.lat, radius: c.radius / (c.extent.north - c.extent.south), nodes };
 }
 
+// Widths, in windows, a curated sheet is seen at in the world band; narrower or wider, it contributes nothing to the view.
+const WORLD_SEEN = { min: 0.25, max: 4 };
+
 // The curated sheets the band serves that the view overlaps, each with `shadow`: the extents of the smaller
 // curated sheets over it, where its network is not drawn.
-function curatedFor(world, band, b) {
-  const serving = CURATED.filter((c) => c.bands.includes(world ? 0 : band.band));
+function curatedFor(world, band, b, zoom) {
+  // in the world band a sheet is seen only where its width is a quarter to four windows of the view's zoom
+  const windows = (c) => (c.extent.east - c.extent.west) / (1125 / 2 ** zoom);
+  const seen = (c) => !world || (windows(c) >= WORLD_SEEN.min && windows(c) <= WORLD_SEEN.max);
+  const serving = CURATED.filter((c) => c.bands.includes(world ? 0 : band.band) && seen(c));
   return serving.filter((c) => overlaps(c.extent, b)).map((c) => ({
     name: c.name, source: c.source, curated: true, band: band.band, bandName: band.name, extent: c.extent,
     circle: curatedCircle(c),
@@ -175,7 +181,7 @@ export function sheetsFor(view, { radius = 0.5, curated = false } = {}) {
   const b = viewBounds(view);
   const world = view.zoom < BANDS[0].from;
   const all = { west: -180, east: 180, south: -90, north: 90 };
-  const everywhere = curated && band.band === 1 ? curatedFor(world, band, all) : [];
+  const everywhere = curated && band.band === 1 ? curatedFor(world, band, all, view.zoom) : [];
   const cur = everywhere.filter((c) => overlaps(c.extent, b));
   if (curated && world) return cur;
   const held = (extent) => everywhere.some((c) => within(c.extent, (extent.west + extent.east) / 2, (extent.south + extent.north) / 2));
