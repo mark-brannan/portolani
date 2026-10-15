@@ -22,7 +22,7 @@
     "signalk",
     "canvas"
   ],
-  "license": "MIT AND LGPL-3.0-or-later",
+  "license": "MIT",
   "author": "Mark Brannan",
   "repository": {
     "type": "git",
