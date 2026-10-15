@@ -60,14 +60,21 @@ multiplied onto parchment at 1:1, and the cut at the width the map draws it. `<i
 `<id>.key.png` and `<id>.cut.png` are the three images behind it. The monster or ship keeps the size
 and anchor it had; the extra water is drawn round it (`figure` in the build script is the old tight box).
 
-| id | what | crop (scan px) | in the raw, absent from the sprite, and why |
-|---|---|---|---|
-| serpent-a | sea serpent coiled round a ship | 1670,874 to 2065,1215 | the ship and boat beside it at the top right: neighbouring figures (the cut fades into the sea); "GOTHI", "SOOPEDVM", a "D" and the coast corner at the foot: lettering and land |
-| whale-b | the striped whale with its swell | 1996,356 to 2362,590 | the coast house in the bottom-right corner: a neighbour |
-| pistrix-c | the spiny sea-beast | 372,1210 to 566,1480 | two letters of "STR&SIVE" at the left edge: lettering |
-| cete-e | the whale that has seized a ship | 1772,572 to 2060,775 | a "C" and the end of "CETE": lettering |
-| ship-a | the three-master | 1130,780 to 1335,1050 | an "L" beside the foremast and "ANGLI" under the hull: lettering |
-| ship-b | the smaller ship under sail | 2050,690 to 2210,840 | the islet "HUST" at the foot, the end of "QUEDEFIORD" and "NA": land and lettering. The tiny boat under the hull stays: it is part of its water |
+The crop of each sprite is `source.crop` in its `pack.json`. In the raw, absent from the sprite:
+
+| sprite | absent | why |
+|---|---|---|
+| serpent-a | the ship and boat at the top right | neighbouring figures; the cut fades into the sea |
+| serpent-a | "GOTHI", "SOOPEDVM", a "D" | lettering |
+| serpent-a | the coast corner at the foot | land |
+| whale-b | the coast house, bottom right | a neighbour |
+| pistrix-c | two letters of "STR&SIVE", left edge | lettering |
+| cete-e | a "C" and the end of "CETE" | lettering |
+| ship-a | an "L" by the foremast, "ANGLI" under the hull | lettering |
+| ship-b | the islet "HUST" at the foot | land |
+| ship-b | the end of "QUEDEFIORD", and "NA" | lettering |
+
+The tiny boat under ship-b's hull stays: it is part of its water.
 
 Still cut by ink, to follow: the roses, cartouche, palms, scale, Aguiar towns, Paré monsters and
 Master W ships (`docs/towns-aguiar` for the towns).
