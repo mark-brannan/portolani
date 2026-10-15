@@ -499,7 +499,7 @@ const ORIGINS = [
     ['Maluku Islands', at(128, -3, 5.5)],
     ['Solomon Islands', at(160, -9, 6)],
     ['Marquesas Islands', at(-140, -9, 8)],
-    ['Pukapuka Atoll', at(-165.84, -10.88, 11)],
+    ['Pukapuka Atoll', at(-138.8, -14.82, 11)], // Magellan's San Pablo, 1521 (the Tuamotu one)
     ['Pitcairn Island', at(-130.1, -25.07, 11)],
   ]],
 ];
