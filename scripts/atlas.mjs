@@ -106,6 +106,46 @@ const within = (e, lon, lat) => lon >= e.west && lon <= e.east && lat >= e.south
 const overlaps = (a, b) => a.west < b.east && b.west < a.east && a.south < b.north && b.south < a.north;
 export const inShadow = (sheet, lon, lat) => !!sheet.shadow?.some((e) => within(e, lon, lat));
 
+// The part of segment a-b, as [t0, t1] along it, inside rectangle r (Liang-Barsky), or null.
+function across(ax, ay, bx, by, r) {
+  let t0 = 0, t1 = 1;
+  const dx = bx - ax, dy = by - ay;
+  for (const [p, q] of [[-dx, ax - r.x0], [dx, r.x1 - ax], [-dy, ay - r.y0], [dy, r.y1 - ay]]) {
+    if (p === 0) { if (q < 0) return null; continue; }
+    const t = q / p;
+    if (p < 0) { if (t > t1) return null; if (t > t0) t0 = t; } else { if (t < t0) return null; if (t < t1) t1 = t; }
+  }
+  return t1 > t0 ? [t0, t1] : null;
+}
+
+// A line [[lon, lat], ...] with what lies inside any of `extents` cut out: the runs left, each a line. The
+// cut is made on the Mercator page, where a rhumb line's segments are straight, so a run ends on the edge.
+const PAGE_LAT = 89.9; // a line may run to a pole, which has no Mercator y
+export function cutOut(line, extents) {
+  if (!extents?.length) return [line];
+  const yOf = (lat) => mercY(Math.max(-PAGE_LAT, Math.min(PAGE_LAT, lat)));
+  const rects = extents.map((e) => ({ x0: e.west, x1: e.east, y0: yOf(e.south), y1: yOf(e.north) }));
+  const runs = [];
+  let run = null;
+  for (let i = 1; i < line.length; i++) {
+    const a = line[i - 1], b = line[i], ay = yOf(a[1]), by = yOf(b[1]);
+    const at = (t) => (t === 0 ? a : t === 1 ? b : [a[0] + (b[0] - a[0]) * t, unMercY(ay + (by - ay) * t)]);
+    const hidden = rects.map((r) => across(a[0], ay, b[0], by, r)).filter(Boolean).sort((p, q) => p[0] - q[0]);
+    // what the hidden spans leave of the segment
+    const kept = [];
+    let s = 0;
+    for (const [h0, h1] of hidden) { if (h0 > s) kept.push([s, h0]); s = Math.max(s, h1); }
+    if (s < 1) kept.push([s, 1]);
+    for (const [k0, k1] of kept) {
+      if (k0 > 0 || !run) { if (run) runs.push(run); run = [at(k0)]; }
+      run.push(at(k1));
+      if (k1 < 1) { runs.push(run); run = null; }
+    }
+  }
+  if (run) runs.push(run);
+  return runs;
+}
+
 function curatedCircle(c) {
   const cy = mercY(c.lat), R = c.radius / Math.cos(c.lat * RAD), nodes = [];
   for (let i = 0; i < NODES; i++) {

@@ -212,11 +212,13 @@ test('a waterfront town\'s icon stands on its ground, not on its shore', { skip:
   }
 })
 
-test('with several roses selected the centre rose varies by view, not always the first', async () => {
+test('with several roses selected the big roses vary by sheet, not always the first', async () => {
   const centres = new Set()
   for (let lon = -60; lon < 60; lon += 15) {
-    const { scene } = await createScene(env, { view: { lon, lat: 30, zoom: 3 }, sprites: ['vivid/rose-aguiar', 'vivid/rose-catalan'] })
-    centres.add(scene.roseDraws[0].sprite.id)
+    // each sheet picks its rose by its name: the five world-band sheets are too few to show the pair, so the grid's
+    const { scene } = await createScene(env, { view: { lon, lat: 30, zoom: 6 }, sprites: ['vivid/rose-aguiar', 'vivid/rose-catalan'] })
+    const big = Math.max(...scene.roseDraws.map((r) => r.size))
+    for (const r of scene.roseDraws) if (r.size === big) centres.add(r.sprite.id)
   }
-  assert.ok(centres.size > 1, `the centre rose was always ${[...centres]}`)
+  assert.ok(centres.size > 1, `the big rose was always ${[...centres]}`)
 })
