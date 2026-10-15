@@ -404,6 +404,27 @@ $('close').addEventListener('click', () => setDrawer(false));
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && isOpen()) setDrawer(false); });
 canvas.addEventListener('pointerdown', () => setDrawer(false));
 
+// Reset: every control back to its default, the place kept. The hash holds the whole style, so a
+// hash with only the view is the default style; the hashchange handler below redraws from it.
+$('reset').addEventListener('click', () => {
+  const m = hashParams().get('map');
+  $('shareUrl').hidden = true; $('shareNote').textContent = '';
+  location.hash = m ? `map=${m}` : '';
+});
+// Copy link: the hash is kept current by writeHash. Where the clipboard is refused (an insecure page,
+// a denied permission) the link is put in a box, selected, to copy by hand.
+$('copy').addEventListener('click', async () => {
+  const url = $('shareUrl'), note = $('shareNote');
+  url.value = location.href;
+  try {
+    await navigator.clipboard.writeText(location.href);
+    url.hidden = true; note.textContent = 'Link copied';
+  } catch {
+    url.hidden = false; url.focus(); url.select();
+    note.textContent = 'Could not copy automatically: the link is selected, press Ctrl+C';
+  }
+});
+
 // ---------------------------------------------------------------- moving
 
 let frame = 0, settle = 0;
