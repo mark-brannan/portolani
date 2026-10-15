@@ -51,13 +51,17 @@
   #locate:disabled { cursor: progress; }
   #locate.busy svg { animation: seek 1.2s linear infinite; }
   @keyframes seek { to { transform: rotate(360deg); } }
-  #origins {
-    list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+  #flyout {
+    display: flex; flex-direction: column; align-items: flex-end; gap: 6px; max-height: calc(100vh - 80px); overflow-y: auto;
     opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0s linear 0.2s;
   }
-  #where:hover #origins, #where:has(:focus-visible) #origins { opacity: 1; visibility: visible; transition: opacity 0.2s; }
-  #origins button { padding: 3px 10px; font: 13px var(--serif); border-radius: 12px; }
-  @media (prefers-reduced-motion: reduce) { #origins, #locate.busy svg { animation: none; transition: none; } }
+  #where:hover #flyout, #where:has(:focus-visible) #flyout { opacity: 1; visibility: visible; transition: opacity 0.2s; }
+  #origins { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  #origins .group { font: italic 12px var(--serif); color: var(--fg); opacity: 0.7; margin-top: 4px; text-shadow: 0 0 4px var(--panel); }
+  #origins button, #coords button { padding: 3px 10px; font: 13px var(--serif); border-radius: 12px; }
+  #coords { display: flex; gap: 4px; }
+  #coords input { width: 150px; padding: 3px 8px; font: 13px var(--serif); border-radius: 12px; background: var(--panel); color: var(--fg); border: 1px solid var(--rule); }
+  @media (prefers-reduced-motion: reduce) { #flyout, #locate.busy svg { animation: none; transition: none; } }
 
   /* the drawer: slides in from the left over the map, hidden (and out of the tab order) when shut */
   #drawer {
@@ -149,6 +153,12 @@
         <circle r="2" fill="#8c2f1e" stroke="none"/>
       </svg>
     </button>
+    <button id="clearHere" type="button" aria-label="Clear my position" title="Clear position" hidden>
+      <svg viewBox="-16 -16 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+        <circle r="8" stroke-dasharray="2.5 2.5"/>
+        <path d="M-4-4 4 4M4-4-4 4" stroke="#8c2f1e"/>
+      </svg>
+    </button>
     <button id="home" type="button" aria-label="Back to the Mediterranean" title="Home">
       <svg viewBox="-16 -16 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
         <circle cy="-10" r="2.6"/>
@@ -157,7 +167,13 @@
       </svg>
     </button>
   </div>
-  <ul id="origins"></ul>
+  <div id="flyout">
+    <form id="coords" autocomplete="off">
+      <input id="coordsText" type="text" inputmode="decimal" placeholder="lat, lon  (36.28, -76)" aria-label="Latitude, longitude">
+      <button type="submit" aria-label="Go to these coordinates" title="Go">Go</button>
+    </form>
+    <ul id="origins"></ul>
+  </div>
 </nav>
 
 <aside id="drawer" role="dialog" aria-label="Settings" aria-modal="false">
