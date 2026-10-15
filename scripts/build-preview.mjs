@@ -157,6 +157,9 @@ if (coastlines.shapefilePolygons) {
   const n = await writeBand(F.dir, F_CELL_DEG, { land: landF, coast: landF.flat() });
   console.log(`GSHHG f: ${landF.length} polygons into ${n} cells of ${F_CELL_DEG} degree`);
 } else console.warn('this coastlines has no shapefilePolygons; the f band is skipped');
+// GSHHG is LGPL-3.0; "h" and "f" ship cut into JSON cells, a modified form, and this line says so (#124).
+// The date is written to this file only, never to a cell, a golden or a render.
+await writeFile(path.join(out, 'geo', 'gshhg-modified.txt'), `GSHHG "h" and "f" are shipped cut into JSON cells, a modified form, by the portolani build of ${new Date().toISOString().slice(0, 10)}.\n`);
 // GSHHG lakes (level 2, with river-lakes) and their islands (level 3) at "h" and "f", from the same
 // zip, cut as the land bands are (cutLakes) into geo/h-lakes/ and geo/f-lakes/, for scene.mjs
 // LAKE_BANDS: the lakes no Natural Earth file has, Dian Chi at Kunming among them.
