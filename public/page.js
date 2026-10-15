@@ -467,16 +467,63 @@ canvas.addEventListener('wheel', (e) => {
 
 // ---------------------------------------------------------------- going somewhere
 
-// The origins: the chart's home frame and the frames of the scans the ornaments come from.
+// The origins: the chart's home frame, the frames of the scans the ornaments come from, the centres
+// read off the scans (docs/atlas/centres.md), and some places worth the flight.
+const around = (lon, lat, r) => viewOfFrame({ lonMin: lon - r, lonMax: lon + r, latMin: lat - r, latMax: lat + r });
+const at = (lon, lat, zoom) => ({ lon, lat, zoom });
 const ORIGINS = [
-  ['Mediterranean', DEFAULT_VIEW],
-  ['The North', viewOfFrame({ lonMin: 0, lonMax: 40, latMin: 54, latMax: 72 })], // Carta Marina
-  ['Virginia', viewOfFrame({ lonMin: -78, lonMax: -74, latMin: 34, latMax: 38.5 })], // de Bry
-  ['The world', { lon: 10, lat: 25, zoom: 0 }],
+  ['', [
+    ['Mediterranean', DEFAULT_VIEW],
+    ['The North', viewOfFrame({ lonMin: 0, lonMax: 40, latMin: 54, latMax: 72 })], // Carta Marina
+    ['Virginia', at(-76, 36.28, 7.47)], // de Bry
+    ['The world', at(10, 25, 0)],
+  ]],
+  ['Chart centres', [
+    ['Carte Pisane, west', around(7.4, 40.0, 8)],
+    ['Carte Pisane, east', around(27.4, 36.8, 7.5)],
+    ['Vesconte 1311', around(25.2, 37.5, 3)],
+    ['Dulcert 1339', around(14.5, 40.0, 17)],
+    ['Catalan Atlas, rose', around(-20.7, 42.1, 16)],
+    ['Catalan Atlas, network', around(-5.4, 42.3, 16)],
+    ['Carta Marina, Bothnian rose', around(19.7, 61.7, 6)],
+    ['De la Cosa, west', around(-45, 23.4, 15)],
+    ['De la Cosa, east', around(65, 23.4, 15)],
+  ]],
+  ['Elsewhere', [
+    ['Lisbon', at(-9.14, 38.72, 10)],
+    ['Seville', at(-5.98, 37.39, 10)],
+    ['Majorca', at(3.0, 39.6, 9)], // Catalan Atlas, 1375
+    ['Dieppe', at(1.08, 49.93, 10)], // Vallard Atlas, 1547
+    ['Guam', at(144.79, 13.44, 10)], // Islas de los Ladrones
+    ['Cebu', at(123.89, 10.32, 9)],
+    ['Maluku Islands', at(128, -3, 5.5)],
+    ['Solomon Islands', at(160, -9, 6)],
+    ['Marquesas Islands', at(-140, -9, 8)],
+    ['Pukapuka Atoll', at(-165.84, -10.88, 11)],
+    ['Pitcairn Island', at(-130.1, -25.07, 11)],
+  ]],
 ];
-$('origins').innerHTML = ORIGINS.map(([name], i) => `<li><button type="button" data-origin="${i}">${name}</button></li>`).join('');
-$('origins').addEventListener('click', (e) => { const b = e.target.closest('[data-origin]'); if (b) goTo(ORIGINS[b.dataset.origin][1]); });
+const originViews = [];
+$('origins').innerHTML = ORIGINS.map(([title, items]) =>
+  (title ? `<li class="group">${title}</li>` : '') + items.map(([name, v]) => `<li><button type="button" data-origin="${originViews.push(v) - 1}">${name}</button></li>`).join('')).join('');
+$('origins').addEventListener('click', (e) => { const b = e.target.closest('[data-origin]'); if (b) goTo(originViews[b.dataset.origin]); });
 $('home').addEventListener('click', () => goTo(DEFAULT_VIEW));
+
+// A typed position: "36.28, -76" or "36.28N 76W" (latitude first), flown to and marked as the position.
+function parseLatLon(text) {
+  const m = /^\s*(-?\d+(?:\.\d+)?)\s*°?\s*([NSns])?\s*[,;\s]\s*(-?\d+(?:\.\d+)?)\s*°?\s*([EWew])?\s*$/.exec(text);
+  if (!m) return null;
+  const lat = Number(m[1]) * (/s/i.test(m[2] ?? '') ? -1 : 1), lon = Number(m[3]) * (/w/i.test(m[4] ?? '') ? -1 : 1);
+  return Math.abs(lat) <= 90 && Math.abs(lon) <= 180 ? { lon, lat } : null;
+}
+$('coords').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const p = parseLatLon($('coordsText').value);
+  if (!p) { $('status').textContent = 'Position: type latitude, longitude, e.g. 36.28, -76'; return; }
+  setHere(p);
+  goTo({ ...p, zoom: Math.max(view.zoom, LOCATE_ZOOM) });
+});
+$('clearHere').addEventListener('click', () => setHere(null));
 
 // A short flight from the view to a target, in the view's projection: the ground is drawn on the
 // way as for a drag, and the ornaments placed when it lands. Reduced motion jumps.
@@ -497,7 +544,12 @@ function goTo(target) {
 // My position: asked for on the button, kept for the mark, and flown to at z10 or closer. The
 // button is not offered where the browser has no geolocation (an insecure page has none).
 const LOCATE_ZOOM = 10;
-let here = null; // { lon, lat } of the last fix
+let here = null; // { lon, lat } of the last fix or typed position
+function setHere(p) {
+  here = p;
+  $('clearHere').hidden = !p;
+  if (!p) render(); // the mark is drawn with the ornaments, so redraw without it
+}
 const locate = $('locate');
 locate.hidden = !navigator.geolocation;
 locate.addEventListener('click', () => {
@@ -505,7 +557,7 @@ locate.addEventListener('click', () => {
   const done = () => { locate.disabled = false; locate.classList.remove('busy'); };
   navigator.geolocation.getCurrentPosition((p) => {
     done();
-    here = { lon: p.coords.longitude, lat: p.coords.latitude };
+    setHere({ lon: p.coords.longitude, lat: p.coords.latitude });
     goTo({ ...here, zoom: Math.max(view.zoom, LOCATE_ZOOM) });
   }, (e) => {
     done();
