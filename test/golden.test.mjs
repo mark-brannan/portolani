@@ -200,7 +200,7 @@ test('hills and mountains: every projection places and ends', async () => {
 
 // Roses stand in open water; where the water is heavily constrained they stand on open land instead, clear of the places.
 test('roses: open land holds them where the water is too constrained', async () => {
-  const inland = { lon: 30, lat: 50, zoom: 7 }; // Ukraine: no sea to hold half a big rose
+  const inland = { lon: 45, lat: 52, zoom: 7 }; // the Volga steppe: the sheet's circle holds no clear sea
   const { scene } = await createScene(env, { view: inland, scale: 'off', sprites: ['vivid/rose-aguiar', 'vivid/rose-catalan'] });
   assert.ok(scene.roseDraws.some((r) => scene.field.isLand(r.x, r.y)), 'no rose on the land');
   for (const r of scene.roseDraws) for (const t of scene.towns) assert.ok(Math.hypot(r.x - t.x, r.y - t.y) > 20, `a rose sits on ${t.name}`);

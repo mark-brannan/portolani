@@ -1,9 +1,14 @@
 // The atlas's grid sheets as a pure function of the view (docs/atlas/README.md, "Zoom bands" and
-// "An atlas of sheets"). Sheets follow NOAA's reschemed ENC cells: heights of 19.2, 4.8, 1.2, 0.3 and
-// 0.075 degrees, sixteen of a band inside one of the band above, widened to 2x above 49 12' and 4x
-// above 69 12' (north and south) from the coastal band down, edges on whole multiples of the cell
-// height from the equator and of the cell width from the prime meridian. No sheet crosses the date
-// line, and none lies beyond the last whole row before a pole. Nothing here reads land or draws.
+// "The fallback grid"). Sheets follow NOAA's reschemed ENC cells: heights of 19.2, 4.8, 1.2, 0.3 and
+// 0.075 degrees, sixteen of a band inside one of the band above, widened to 2x in a row wholly past
+// 49 12' and 4x in a row wholly past 69 12' (north and south) from the coastal band down. Unlike NOAA's,
+// every band counts its edges out from the Catalan Atlas rose, in whole multiples of the cell height
+// north and south and of the cell width east and west, so the rose is a corner of a sheet in every band.
+// No sheet crosses the date line, and none reaches a pole. Nothing here reads land or draws.
+
+// The Catalan Atlas rose, read off the scan to +-2 degrees (docs/atlas/centres.md): the point the grids
+// count from and the origin of the lines drawn at every zoom.
+export const ROSE = { lon: -20.7, lat: 42.1 };
 
 // Page window: the doc's 1125 / 2^z degrees of longitude wide, on a 1600 x 1000 page.
 const WINDOW_DEG = 1125, ASPECT = 1000 / 1600;
@@ -33,13 +38,13 @@ export function bandFor(zoom) {
   return BANDS[BANDS.length - 1];
 }
 
-// How many cell heights wide a cell is in the row whose south edge is `south` and height `h`. A row
-// is widened by the latitude of its centre, so a row that straddles a threshold goes with its larger
-// half (69 12' is not a whole number of 0.3 or 0.075 rows).
+// How many cell heights wide a cell is in the row from `south` to `south + h`. A row widens only when it
+// lies wholly past the threshold, north or south (49 12' is not a whole number of rows from the rose).
 export function widening(band, south, h) {
   if (!band.widens) return 1;
-  const m = Math.abs(south + h / 2);
-  return m > WIDEN_4X + EPS ? 4 : m > WIDEN_2X + EPS ? 2 : 1;
+  const north = south + h;
+  const m = south >= 0 ? south : north <= 0 ? -north : 0; // the row's edge nearest the equator
+  return m > WIDEN_4X - EPS ? 4 : m > WIDEN_2X - EPS ? 2 : 1;
 }
 
 // The window of a view as { west, east, south, north }, or the view's own bounds if it gives them.
@@ -56,12 +61,13 @@ export function viewBounds(view) {
 
 const pad = (n, w) => String(n).padStart(w, '0');
 
-// An ENC-style name: PT, the band number, then the cell's south-west corner as a row off the equator
-// and a column off the prime meridian, e.g. PT3N041E0123 (band 3, 41st row north, 123rd column east).
-// South and west count outward from 0, so row -1 is S000 and column -1 is W0000.
+// An ENC-style name: PT, the band number, then the cell's south-west corner as a row north or south of
+// the rose and a column east or west of it, e.g. PT3N041E0123 (band 3, 41st row north, 123rd column east).
+// South and west count outward from 0, so row -1 is S000 and column -1 is W0000; N000E0000 is the cell
+// whose south-west corner is the rose.
 export function sheetName(band, row, col) {
   const r = row < 0 ? -row - 1 : row, c = col < 0 ? -col - 1 : col;
-  return `PT${band.band}${row < 0 ? 'S' : 'N'}${pad(r, Math.max(3, String(Math.floor(90 / band.height + EPS)).length))}${col < 0 ? 'W' : 'E'}${pad(c, 4)}`;
+  return `PT${band.band}${row < 0 ? 'S' : 'N'}${pad(r, Math.max(3, String(Math.ceil(180 / band.height)).length))}${col < 0 ? 'W' : 'E'}${pad(c, 4)}`;
 }
 
 // The hidden circle: centre at the cell centre, sixteen nodes at equal bearings from it, round on the
@@ -85,21 +91,21 @@ export function sheetsFor(view, { radius = 0.5 } = {}) {
   const band = bandFor(view.zoom);
   const h = band.height;
   const b = viewBounds(view);
-  // Whole rows off the equator that end short of a pole: a row touching the pole (90 is a whole number of
-  // 1.2, 0.3 and 0.075 rows) has no Mercator centre, so it is left out like the caps beyond the last.
-  const rows = Math.ceil(90 / h - EPS) - 1;
-  const south = Math.max(Math.floor(b.south / h + EPS), -rows);
-  const north = Math.min(Math.ceil(b.north / h - EPS), rows);
+  // Whole rows out from the rose that stop short of both poles: a row touching a pole has no Mercator
+  // centre, so it is left out like the caps beyond the last.
+  const rowLo = Math.floor((-90 - ROSE.lat) / h + EPS) + 1, rowHi = Math.ceil((90 - ROSE.lat) / h - EPS) - 1; // rows rowLo to rowHi - 1
+  const south = Math.max(Math.floor((b.south - ROSE.lat) / h + EPS), rowLo);
+  const north = Math.min(Math.ceil((b.north - ROSE.lat) / h - EPS), rowHi);
   const out = [];
   for (let row = south; row < north; row++) {
-    const s = row * h;
+    const s = round(ROSE.lat + row * h);
     const w = h * widening(band, s, h);
-    // The window may run past the date line; the sheets stay inside it. 180 is not a whole number of
-    // 19.2 or 4.8 degree columns, so the last column of those bands ends at 180 and a narrower sheet closes it.
-    const c0 = Math.floor(Math.max(b.west, -180) / w + EPS);
-    const c1 = Math.ceil(Math.min(b.east, 180) / w - EPS);
+    // The window may run past the date line; the sheets stay inside it, and the column the line falls in ends
+    // there, so a narrower sheet closes each row at 180 and at -180.
+    const c0 = Math.floor((Math.max(b.west, -180) - ROSE.lon) / w + EPS);
+    const c1 = Math.ceil((Math.min(b.east, 180) - ROSE.lon) / w - EPS);
     for (let col = c0; col < c1; col++) {
-      const extent = { west: Math.max(-180, round(col * w)), east: Math.min(180, round((col + 1) * w)), south: round(s), north: round(s + h) };
+      const extent = { west: Math.max(-180, round(ROSE.lon + col * w)), east: Math.min(180, round(ROSE.lon + (col + 1) * w)), south: s, north: round(s + h) };
       out.push({
         name: sheetName(band, row, col), band: band.band, bandName: band.name, row, col, extent,
         circle: hiddenCircle(extent, radius),

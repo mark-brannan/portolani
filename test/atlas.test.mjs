@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { sheetsFor, bandFor, widening, BANDS, hiddenCircle } from '../scripts/atlas.mjs';
+import { sheetsFor, bandFor, widening, BANDS, hiddenCircle, ROSE } from '../scripts/atlas.mjs';
 
 const bounds = (zoom, west, south, east, north) => ({ zoom, west, south, east, north });
 const close = (a, b, e = 1e-6) => assert.ok(Math.abs(a - b) < e, `${a} vs ${b}`);
@@ -11,14 +11,28 @@ test('zoom bands pick the doc heights; the world band gets the overview grid', (
   assert.deepEqual([1, 5.9, 6, 7.9, 8, 10, 12, 14, 14.9, 15, 17].map(h), [19.2, 19.2, 19.2, 19.2, 4.8, 1.2, 0.3, 0.075, 0.075, 0.075, 0.075]);
 });
 
-test('edges sit on whole multiples of the height from the equator and prime meridian', () => {
+test('edges sit on whole multiples of the height and width out from the rose', () => {
   for (const z of [6, 8, 10, 12, 14]) {
     for (const s of sheetsFor({ lon: 12.3, lat: 41.9, zoom: z })) {
       const h = s.extent.north - s.extent.south, w = s.extent.east - s.extent.west;
-      close(s.extent.south / h, Math.round(s.extent.south / h));
-      if (s.extent.west > -180) close(s.extent.west / w, Math.round(s.extent.west / w));
-      if (s.extent.east < 180) close(s.extent.east / w, Math.round(s.extent.east / w));
+      const q = (v) => v - Math.round(v);
+      close(q((s.extent.south - ROSE.lat) / h), 0);
+      if (s.extent.west > -180) close(q((s.extent.west - ROSE.lon) / w), 0);
+      if (s.extent.east < 180) close(q((s.extent.east - ROSE.lon) / w), 0);
     }
+  }
+});
+
+test('the rose is a sheet corner in every band', () => {
+  for (const b of BANDS) {
+    const z = b.from, e = 1e-5;
+    const got = sheetsFor(bounds(z, ROSE.lon - e, ROSE.lat - e, ROSE.lon + e, ROSE.lat + e));
+    assert.equal(got.length, 4, `band ${b.band}`);
+    for (const s of got) {
+      const { west, east, south, north } = s.extent;
+      assert.ok([west, east].some((v) => Math.abs(v - ROSE.lon) < 1e-9) && [south, north].some((v) => Math.abs(v - ROSE.lat) < 1e-9), `${s.name} ${JSON.stringify(s.extent)}`);
+    }
+    assert.ok(got.some((s) => /^PT\dN0+E0+$/.test(s.name))); // the cell whose south-west corner is the rose
   }
 });
 
@@ -29,13 +43,16 @@ test('sixteen sheets of a band nest in one of the band above', () => {
   for (const k of kids) assert.ok(inside(k.extent, parent));
 });
 
-test('widening: 1x, 2x above 49 12, 4x above 69 12, north and south, coastal band down only', () => {
+test('widening: 1x, 2x wholly past 49 12, 4x wholly past 69 12, north and south, coastal band down only', () => {
   const coastal = BANDS[2], general = BANDS[1];
   assert.equal(widening(coastal, 40, 1.2), 1);
+  assert.equal(widening(coastal, 48.5, 1.2), 1); // straddles 49 12: not wholly past
   assert.equal(widening(coastal, 49.2, 1.2), 2);
   assert.equal(widening(coastal, 60, 1.2), 2);
+  assert.equal(widening(coastal, 68.5, 1.2), 2);
   assert.equal(widening(coastal, 70.8, 1.2), 4);
   assert.equal(widening(coastal, -50.4, 1.2), 2);
+  assert.equal(widening(coastal, -49.5, 1.2), 1); // its north edge is at -48.3
   assert.equal(widening(coastal, -72, 1.2), 4);
   assert.equal(widening(general, 80, 4.8), 1);
   const w = (lat) => { const e = sheetsFor(bounds(10, 0.01, lat, 0.02, lat + 0.01))[0].extent; return +(e.east - e.west).toFixed(6); };
@@ -62,11 +79,12 @@ test('no sheet crosses the date line', () => {
 
 test('no polar caps beyond the last whole row', () => {
   const north = sheetsFor(bounds(6, -10, 60, 10, 90));
-  assert.ok(Math.max(...north.map((s) => s.extent.north)) <= 76.8 + 1e-9);
+  assert.ok(Math.max(...north.map((s) => s.extent.north)) <= 80.5 + 1e-9); // 42.1 + 2 * 19.2 = 80.5; the next row reaches 90
   const south = sheetsFor(bounds(6, -10, -90, 10, -60));
-  assert.ok(Math.min(...south.map((s) => s.extent.south)) >= -76.8 - 1e-9);
+  assert.ok(Math.min(...south.map((s) => s.extent.south)) >= -73.1 - 1e-9); // 42.1 - 6 * 19.2 = -73.1 is the last whole row's south edge; the next row reaches -92.3
+  assert.ok(Math.min(...south.map((s) => s.extent.south)) > -90);
   for (const z of [8, 10, 12, 14]) for (const s of sheetsFor(bounds(z, 0, 85, 1, 90))) assert.ok(s.extent.north <= 90 + 1e-9);
-  assert.equal(sheetsFor(bounds(6, 0, 80, 1, 90)).length, 0);
+  assert.equal(sheetsFor(bounds(6, 0, 81, 1, 90)).length, 0);
 });
 
 test('names are ENC-style, unique, and the same wherever the view is', () => {
@@ -75,10 +93,11 @@ test('names are ENC-style, unique, and the same wherever the view is', () => {
   assert.equal(new Set(a.map((s) => s.name)).size, a.length);
   const b = sheetsFor({ lon: 12.31, lat: 41.91, zoom: 10 });
   for (const s of b) { const m = a.find((x) => x.name === s.name); if (m) assert.deepEqual(m.extent, s.extent); }
-  const ne = sheetsFor(bounds(10, 0.1, 0.1, 0.2, 0.2))[0].name;
-  assert.notEqual(ne, sheetsFor(bounds(10, 0.1, -0.2, 0.2, -0.1))[0].name);
-  assert.notEqual(ne, sheetsFor(bounds(10, -0.2, 0.1, -0.1, 0.2))[0].name);
-  assert.equal(ne, 'PT3N000E0000');
+  const at = (dLon, dLat) => sheetsFor(bounds(10, ROSE.lon + dLon, ROSE.lat + dLat, ROSE.lon + dLon + 0.1, ROSE.lat + dLat + 0.1))[0].name;
+  assert.equal(at(0.1, 0.1), 'PT3N000E0000'); // north-east of the rose
+  assert.equal(at(0.1, -0.2), 'PT3S000E0000');
+  assert.equal(at(-0.2, 0.1), 'PT3N000W0000');
+  assert.equal(at(-0.2, -0.2), 'PT3S000W0000');
 });
 
 test('a view returns every sheet it overlaps and none that it does not', () => {
@@ -118,6 +137,6 @@ test("no sheet touches a pole, so every hidden circle has finite nodes below it"
 
 test('band 5 names keep the row digits whole, 4 digits past row 999', () => {
   const [s] = sheetsFor(bounds(14, 10, 80, 10.01, 80.01));
-  assert.match(s.name, /^PT5N\d{4}[EW]\d{4}$/);
-  assert.match(sheetsFor(bounds(14, 10, 40, 10.01, 40.01))[0].name, /^PT5N\d{4}E\d{4}$/);
+  assert.match(s.name, /^PT5[NS]\d{4}[EW]\d{4}$/);
+  assert.match(sheetsFor(bounds(14, 10, 40, 10.01, 40.01))[0].name, /^PT5[NS]\d{4}[EW]\d{4}$/);
 });
