@@ -169,12 +169,13 @@ is one page, so it takes every curated sheet from the planispheres down to the C
 circles.
 
 Where curated sheets overlap in one band, the sheet of smaller area (its extent in square degrees)
-wins over the ground it covers, and the larger sheet's network is drawn only where no smaller sheet
-lies: the Carte Pisane's circles over Dulcert's, Dulcert's over the Catalan Atlas's, and in the
-Atlantic the Catalan Atlas (7,250 square degrees) over Juan de la Cosa (10,200) between 25°W and
-20°E, which keeps the Catalan rose off Morocco and leaves de la Cosa's rose in the open Atlantic
-untouched. The Carte Pisane's two sheets share their overlap, as the original's two circles did. A
-view therefore meets one network, plus its neighbours' lines inside the reach margin.
+wins over the ground it covers, and the larger sheet's network, its small roses and its beasts are
+placed only where no smaller sheet lies: the Carte Pisane's circles over Dulcert's, Dulcert's over
+the Catalan Atlas's, and in the Atlantic the Catalan Atlas (7,250 square degrees) over Juan de la
+Cosa (10,200) between 25°W and 20°E, which keeps the Catalan rose off Morocco and leaves de la
+Cosa's rose in the open Atlantic untouched. The Carte Pisane's two sheets share their overlap, as
+the original's two circles did. A view therefore meets one network, one set of beasts and roses,
+plus its neighbours' lines inside the reach margin.
 
 The Carta Marina is the odd one out: it is a printed map of the north, not a navigator's chart, and
 Olaus's roses and lines were decoration. It is in the list because its ornaments are already the
