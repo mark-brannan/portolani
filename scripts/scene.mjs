@@ -2054,7 +2054,8 @@ function drawAnchored(g, a, bg, view) {
     else drawTower(g, { ...t, x: p[0], y: p[1], h });
   }
   if (show.names) {
-    const shown = a.names.filter((n) => at(n.at, 200)), opts = letterOptions({ proj });
+    const onMap = (n) => (Array.isArray(n.at[0]) ? n.at.some((p) => at(p, 200)) : at(n.at, 200)); // a coast name's `at` is a run of points, a sea name's one
+    const shown = a.names.filter(onMap), opts = letterOptions({ proj });
     letter(g, shown.filter((n) => !n.red), proj.x, proj.y, { ...opts, color: STYLE.ink });
     letter(g, shown.filter((n) => n.red), proj.x, proj.y, { ...opts, color: STYLE.windRed });
   }

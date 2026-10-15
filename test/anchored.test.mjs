@@ -47,4 +47,15 @@ test('anchored ornaments land where they were placed at the placed view, and sli
   let moved = 0;
   for (let i = 0; i < after.length; i += 4) if (after[i] !== before[i]) moved++;
   assert.ok(moved > 1000, 'ornaments were drawn');
+
+  const coast = a.names.filter((n) => Array.isArray(n.at[0]));
+  assert.ok(coast.length > 0, 'the view has coast names');
+  const h = createCanvas(W, H).getContext('2d');
+  h.drawImage(bg, 0, 0);
+  const blank = h.getImageData(0, 0, W, H).data.slice();
+  drawAnchored(h, { ...a, towns: [], show: { ...a.show, rhumb: false, scale: "off", kinds: new Set(), names: true }, names: coast }, bg, VIEW);
+  const inked = h.getImageData(0, 0, W, H).data;
+  let drawn = 0;
+  for (let i = 0; i < inked.length; i += 4) if (inked[i] !== blank[i]) drawn++;
+  assert.ok(drawn > 100, 'a coast name is lettered in a moving frame');
 });
