@@ -165,8 +165,8 @@ The radius is given in pixels; each ring's radius in degrees waits on a fit to i
 
 The design doc's sources list three claims as unverified. What the scans and sources show:
 
-- **De la Cosa's network.** Two equal, separate rings, each centred on the Tropic of Cancer.
-- **The rose with the Virgin and Child.** On the Tropic of Cancer, not the equator.
+- **De la Cosa's network.** Two equal, separate rings, each centred on the Tropic of Cancer; the
+  rose with the Virgin and Child sits on the Tropic too, not the equator.
 - **The Catalan Atlas's rose.** On the Atlantic panel, which Gallica labels "Feuille 5" of 12.
 - **Pujades on Vesconte.** Wikipedia's sentence gives no page and is tagged "[clarification needed]".
 
