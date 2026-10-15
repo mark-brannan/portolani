@@ -85,10 +85,6 @@ const TOWN_LEVEL = [30, 80]; // darkness levels for the Aguiar towns: the thin b
 // the faint lettering that shows through from the reverse; sizes are for ~600 dpi scans.
 const PAPER_LEVEL = [20, 50];
 const PAPER_FIGURE = { ink: 50, close: 14, open: 1, dilate: 8, feather: 4, minArea: 40000 };
-const DEBRY_LEVEL = [30, 72]; // de Bry's hand-coloured engraving: brown ink and colour wash count, the cream paper does not
-const TREE_LEVEL = [45, 75]; // the red channel: teal and green foliage dark, yellow land and cream paper light
-const TREE_FIGURE = { ink: 50, close: 8, open: 3, dilate: 16, feather: 6, minArea: 2000 }; // dilated wide, so the land round the trunks comes with the trees
-const VILLAGE_LEVEL = [25, 58]; // min(R,G,B): the straw huts count as ink, the yellow land and cream paper mostly do not
 const MASK_FEATHER = 6; // px blur on a polygon mask's edge, in scan pixels (`maskFeather` widens it)
 const MAX_SCALE = 3; // a sprite is stored at most this many px wide per CSS px it is drawn (sizePx)
 
@@ -182,27 +178,28 @@ const PACKS = [
     licence: 'Public domain; Harvard University via the Public Domain Image Archive (Public Domain Worldwide, no additional rights)',
     ink: '#3b2a1a',
     sprites: [
-      // the two three-masted ships, hand-coloured, both bows to the left; the sea is hatched in the same ink as the rigging, so a polygon drawn round each
-      { id: 'debry-ship-a', kind: 'ship', style: 'debry', scan: 'debry-virginia', crop: [1180, 1050, 1620, 1520], sizePx: 84, heading: 'left', level: DEBRY_LEVEL,
-        mask: [[1208, 1130], [1330, 1105], [1415, 1058], [1430, 1058], [1480, 1100], [1542, 1098], [1552, 1150], [1548, 1240], [1592, 1295], [1580, 1312], [1555, 1340], [1558, 1505], [1510, 1512], [1420, 1512], [1320, 1485], [1275, 1460], [1228, 1475], [1268, 1445], [1280, 1390], [1248, 1265], [1212, 1170]] },
-      { id: 'debry-ship-b', kind: 'ship', style: 'debry', scan: 'debry-virginia', crop: [1860, 1000, 2180, 1400], sizePx: 72, heading: 'left', level: DEBRY_LEVEL,
-        mask: [[1896, 1178], [1918, 1112], [1972, 1096], [1980, 1050], [2010, 1040], [2038, 1008], [2050, 1012], [2105, 1070], [2135, 1080], [2145, 1150], [2160, 1185], [2178, 1190], [2160, 1215], [2152, 1250], [2152, 1325], [2128, 1342], [2050, 1338], [1970, 1305], [1935, 1300], [1890, 1338], [1912, 1300], [1920, 1240], [1900, 1190]] },
-      // the sea monster at the foot of the plate, with the swell it rises from
-      { id: 'debry-monster', kind: 'monster', style: 'debry', scan: 'debry-virginia', crop: [500, 1250, 980, 1550], sizePx: 190, minClearancePx: 150, weight: 2, level: DEBRY_LEVEL,
-        mask: [[528, 1355], [552, 1270], [590, 1275], [628, 1292], [628, 1350], [622, 1420], [650, 1435], [685, 1428], [700, 1410], [715, 1390], [745, 1368], [790, 1352], [830, 1350], [892, 1358], [892, 1420], [920, 1450], [915, 1485], [850, 1505], [790, 1510], [750, 1500], [730, 1490], [680, 1465], [620, 1455], [570, 1472], [550, 1465], [560, 1400]] },
-      // a dugout canoe with two paddlers, on water hatched in its own ink: a polygon drawn round it
-      { id: 'debry-canoe', kind: 'ship', style: 'debry', scan: 'debry-virginia', crop: [175, 690, 310, 775], sizePx: 34, heading: 'left', level: DEBRY_LEVEL, mask: [[190, 748], [200, 727], [213, 721], [220, 712], [222, 703], [233, 707], [237, 718], [270, 717], [285, 707], [295, 720], [289, 737], [280, 747], [252, 758], [227, 763], [205, 762]], maskFeather: 3 },
-      // trees: the foliage is a teal or green wash on yellow land hatched in brown, so the red channel keys it and a silhouette of the wash drops the hatching round it
-      { id: 'debry-tree-poplar', kind: 'tree', style: 'debry', scan: 'debry-virginia', crop: [70, 125, 185, 305], sizePx: 36, dark: 'red', level: TREE_LEVEL, silhouette: TREE_FIGURE },
-      { id: 'debry-tree-poplars', kind: 'tree', style: 'debry', scan: 'debry-virginia', crop: [100, 340, 240, 490], sizePx: 44, dark: 'red', level: TREE_LEVEL, silhouette: TREE_FIGURE },
-      { id: 'debry-tree-broadleaf', kind: 'tree', style: 'debry', scan: 'debry-virginia', crop: [275, 205, 465, 360], sizePx: 56, dark: 'red', level: TREE_LEVEL, silhouette: TREE_FIGURE },
-      { id: 'debry-tree-grove', kind: 'tree', style: 'debry', scan: 'debry-virginia', crop: [1390, 415, 1575, 580], sizePx: 54, dark: 'red', level: TREE_LEVEL, silhouette: TREE_FIGURE },
-      { id: 'debry-tree-conifer', kind: 'tree', style: 'debry', scan: 'debry-virginia', crop: [1590, 450, 1675, 565], sizePx: 26, dark: 'red', level: TREE_LEVEL, silhouette: TREE_FIGURE, erase: [[1648, 450, 1675, 520]] },
-      { id: 'debry-tree-palm', kind: 'tree', style: 'debry', scan: 'debry-virginia', crop: [2015, 415, 2095, 580], sizePx: 24, dark: 'red', level: TREE_LEVEL, silhouette: TREE_FIGURE },
-      // palisaded Algonquian villages: dark ink on pale land, an ellipse round each ring drops the hatching beyond it
-      { id: 'debry-village-dasamonguepeuc', kind: 'town', style: 'debry', scan: 'debry-virginia', crop: [595, 290, 715, 375], sizePx: 44, dark: 'min', level: VILLAGE_LEVEL, ellipse: [62, 43, 50, 32] },
-      { id: 'debry-village-pasquenoke', kind: 'town', style: 'debry', scan: 'debry-virginia', crop: [1300, 160, 1415, 235], sizePx: 44, dark: 'min', level: VILLAGE_LEVEL, ellipse: [57, 38, 48, 30] },
-      { id: 'debry-village-roanoac', kind: 'town', style: 'debry', scan: 'debry-virginia', crop: [760, 620, 900, 710], sizePx: 48, dark: 'min', level: VILLAGE_LEVEL, ellipse: [70, 43, 62, 38] },
+      // every sprite is the whole crop, feathered at its edge; `erase` cuts only what is not the subject.
+      // The two three-masted ships, both bows to the left, with the sea below and round the hull
+      // (a wrecked hull above the stern is erased)
+      { id: 'debry-ship-a', kind: 'ship', style: 'debry', scan: 'debry-virginia', crop: [1120, 1062, 1680, 1580], sizePx: 84, heading: 'left',
+        erase: [[1505, 1000, 1690, 1096]] },
+      { id: 'debry-ship-b', kind: 'ship', style: 'debry', scan: 'debry-virginia', crop: [1830, 990, 2215, 1480], sizePx: 72, heading: 'left' },
+      // the sea monster at the foot of the plate, with the swell it rises from and the water below
+      { id: 'debry-monster', kind: 'monster', style: 'debry', scan: 'debry-virginia', crop: [440, 1215, 1010, 1590], sizePx: 190, minClearancePx: 150, weight: 2 },
+      // a dugout canoe with two paddlers, on its own water
+      { id: 'debry-canoe', kind: 'ship', style: 'debry', scan: 'debry-virginia', crop: [170, 690, 310, 790], sizePx: 34, heading: 'left', erase: [[285, 755, 312, 792]] },
+      // trees: the figure with the grass mound and shrubs it stands among; a tall neighbour above the poplar is erased
+      { id: 'debry-tree-poplar', kind: 'tree', style: 'debry', scan: 'debry-virginia', crop: [76, 120, 262, 320], sizePx: 36, erase: [[195, 100, 270, 195]] },
+      { id: 'debry-tree-poplars', kind: 'tree', style: 'debry', scan: 'debry-virginia', crop: [92, 345, 255, 528], sizePx: 44 },
+      { id: 'debry-tree-broadleaf', kind: 'tree', style: 'debry', scan: 'debry-virginia', crop: [262, 200, 478, 378], sizePx: 56 },
+      { id: 'debry-tree-grove', kind: 'tree', style: 'debry', scan: 'debry-virginia', crop: [1375, 405, 1590, 582], sizePx: 54, erase: [[1370, 400, 1445, 424]] },
+      // the grapevine's leaf beside the conifer is erased
+      { id: 'debry-tree-conifer', kind: 'tree', style: 'debry', scan: 'debry-virginia', crop: [1585, 450, 1690, 575], sizePx: 26, erase: [[1666, 440, 1700, 500]] },
+      { id: 'debry-tree-palm', kind: 'tree', style: 'debry', scan: 'debry-virginia', crop: [2005, 405, 2110, 595], sizePx: 24 },
+      // palisaded Algonquian villages with the land, shore and haystacks round them; the place-name lettering is outside the crop
+      { id: 'debry-village-dasamonguepeuc', kind: 'town', style: 'debry', scan: 'debry-virginia', crop: [585, 296, 695, 385], sizePx: 44 },
+      { id: 'debry-village-pasquenoke', kind: 'town', style: 'debry', scan: 'debry-virginia', crop: [1288, 150, 1406, 228], sizePx: 44 },
+      { id: 'debry-village-roanoac', kind: 'town', style: 'debry', scan: 'debry-virginia', crop: [755, 602, 925, 702], sizePx: 48, erase: [[785, 693, 835, 702]] },
     ],
   },
 ];
