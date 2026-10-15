@@ -138,3 +138,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261014t202914z
 - GSHHG level-4 ponds left out Undo: add L4 as L3 holes are added ([#97](https://github.com/mark-brannan/portolani/pull/97))
+
+### 20261015t021925z
+- Origins are the home frame, the frames of the chart scans the ornaments come from (Carta Marina, de Bry Virginia) and the world; locate flies to z10 unless closer; the flyout shows on hover or keyboard focus; the mark is red ink on a parchment halo Undo: edit ORIGINS, LOCATE_ZOOM, the #origins selector or drawHere in public/ ([#121](https://github.com/mark-brannan/portolani/pull/121))
