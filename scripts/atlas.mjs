@@ -108,7 +108,7 @@ export const CURATED = [
   { name: 'Levant and Black Sea', source: 'Vesconte, 1311', bands: [1], extent: { west: 20, east: 42, south: 30, north: 48 }, lon: 25.2, lat: 37.5, radius: 3, ornaments: [] },
   { name: 'Europe and the Mediterranean', source: 'Dulcert, 1339', bands: [0, 1], extent: { west: -25, east: 42, south: 28, north: 60 }, lon: 14.5, lat: 40.0, radius: 17, ornaments: [] },
   { name: 'The known world of 1375', source: 'Catalan Atlas', bands: [0], extent: { west: -25, east: 120, south: 10, north: 60 }, lon: -5.4, lat: 42.3, radius: 16, ornaments: CATALAN, style: 'catalan' },
-  { name: 'Scandinavia and the Baltic', source: 'Carta Marina, 1539', bands: [1], extent: { west: -5, east: 45, south: 53, north: 72 }, lon: 19.7, lat: 61.7, radius: RULE, ornaments: CARTA_MARINA, style: 'carta-marina' },
+  { name: 'Scandinavia and the Baltic', source: 'Carta Marina, 1539', bands: [1], extent: { west: -25, east: 45, south: 53, north: 72 }, lon: 19.7, lat: 61.7, radius: RULE, ornaments: CARTA_MARINA, style: 'carta-marina' },
   { name: 'The Atlantic and the Americas', source: 'Juan de la Cosa, 1500', bands: [0], extent: { west: -100, east: 20, south: -20, north: 65 }, lon: -45, lat: 23.4, radius: RULE },
 ].map((c) => ({ ...c, area: (c.extent.east - c.extent.west) * (c.extent.north - c.extent.south) }));
 // the Carte Pisane's two sheets share their overlap; every other overlap goes to the smaller sheet
