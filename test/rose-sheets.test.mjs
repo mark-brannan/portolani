@@ -41,3 +41,37 @@ test('two views over one part of the world put the roses at the same map positio
     assert.deepEqual(of(a), of(b));
   }
 });
+
+const beasts = async (view) => {
+  const { scene, data } = await createScene(env, { view, scale: 'off' });
+  return [...scene.monsters, ...scene.ships].map((b) => `${b.sheet} ${b.sprite.id} ${data.proj.invert(b.x, b.y).map((v) => v.toFixed(6)).join(' ')}`).sort();
+};
+
+test('two views over one part of the world put the monsters and ships at the same map positions', async () => {
+  const a = await beasts({ lon: 8.93, lat: 44.41, zoom: 9 });
+  const b = await beasts({ lon: 9.05, lat: 44.35, zoom: 9 });
+  assert.ok(a.length > 0, 'a beast is placed');
+  const inB = (x) => b.filter((l) => l.split(' ')[0] === x);
+  const common = [...new Set(a.map((l) => l.split(' ')[0]))].filter((s) => inB(s).length);
+  assert.ok(common.length > 0, 'the views share a sheet with beasts');
+  for (const sheet of common) {
+    const key = (l) => l.split(' ').slice(1).join(' ');
+    const sa = a.filter((l) => l.startsWith(sheet)).map(key), sb = inB(sheet).map(key);
+    assert.deepEqual(sa, sb);
+  }
+});
+
+// a drag south, the sheet's beasts mostly below the first window: a beast whose place is inside both windows is placed in both
+test('a beast inside both of two overlapping windows is placed in both', async () => {
+  const views = [{ lon: 8.6, lat: 44.2, zoom: 9 }, { lon: 8.6, lat: 44, zoom: 9 }];
+  const placed = await Promise.all(views.map(async (view) => {
+    const { scene, data } = await createScene(env, { view, scale: 'off' });
+    return { proj: data.proj, at: [...scene.monsters, ...scene.ships].map((b) => ({ id: `${b.sheet} ${b.sprite.id}`, ll: data.proj.invert(b.x, b.y) })) };
+  }));
+  const inside = (proj, [lon, lat]) => { const [x, y] = proj.project(lon, lat); return x > 0 && y > 0 && x < 1600 && y < 1000; };
+  const both = placed.flatMap((p) => p.at).filter((b) => placed.every((q) => inside(q.proj, b.ll)));
+  assert.ok(both.length > 0, 'a beast stands where the windows overlap');
+  for (const b of both) for (const q of placed) {
+    assert.ok(q.at.some((o) => o.id === b.id && Math.hypot(o.ll[0] - b.ll[0], o.ll[1] - b.ll[1]) < 1e-6), `${b.id} at ${b.ll} in both views`);
+  }
+});
