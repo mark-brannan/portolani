@@ -9,7 +9,8 @@
 // coast, for close views, ship cut into 5-degree cells (geo/10m/<xi>_<yi>.json, listed in
 // geo/10m/index.json), GSHHG "h" land into 1-degree cells (geo/h/), when the installed
 // coastlines carries it, and GSHHG "f" land into half-degree cells (geo/f/), read from the GSHHG
-// zip in downloads/, so a close view fetches only the cells around it. The names the chart
+// zip in downloads/, so a close view fetches only the cells around it. The islands of "h" that 50m
+// lacks ship as an index of points, geo/isles.json (scripts/isles.mjs), so every view can mark them. The names the chart
 // letters ship as geo/names-50m.json (scripts/names.mjs), and the urban footprints of its towns, the
 // Natural Earth 10m urban areas joined to the places, as geo/urban-10m.json (scripts/urban.mjs). The
 // Natural Earth 10m rivers and lakes, drawn past z9 (scripts/water.mjs), ship whole-feature in
@@ -26,6 +27,7 @@ import { bandOf } from './bands.mjs';
 import { cutCells, cutLakes, cutWater, dbfRecords, gshhgLakes, joinWater, WATER_FILES } from './detail-cells.mjs';
 import { seaNames, coastNames, joinNames, tintedSeas } from './names.mjs';
 import { joinUrban } from './urban.mjs';
+import { isleIndex } from './isles.mjs';
 import { ATTEMPTS, fetchBytesWithRetry } from './fetch-retry.mjs';
 const { find, localUrl } = coastlines;
 
@@ -139,6 +141,10 @@ if (find(H_ID) && coastlines.shapefilePolygons) {
   const landH = coastlines.shapefilePolygons(await readGeo(H_ID));
   const n = await writeBand(H.dir, H_CELL_DEG, { land: landH, coast: landH.flat() });
   console.log(`GSHHG h: ${landH.length} polygons into ${n} cells of ${H_CELL_DEG} degree`);
+  // the islands 50m leaves out, marked at every zoom before the h band (scripts/isles.mjs)
+  const isles = JSON.stringify(isleIndex(landH, geojsonPolygons(JSON.parse(await readGeo('ne-land-50m')))));
+  await writeFile(path.join(out, 'geo', 'isles.json'), isles);
+  console.log(`island index: ${isles.length / 1e3} kB`);
 } else console.warn(`${H_ID} is not in this coastlines (${coastlines.manifest.sources?.gshhg ? 'entry' : 'source'} missing); the h band is skipped`);
 // GSHHG "f", the full resolution, the same way, from the zip coastlines pins for "h". Its zip reader
 // is not a package export, so it is loaded by file next to coastlines' entry point.

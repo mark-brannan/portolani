@@ -10,6 +10,7 @@
 import { fill, trace, limn, rhumb, place, letter, geojsonPolygons, geojsonRings } from 'coast-wright';
 import { bandOf } from './bands.mjs';
 import { islandInfo, ISLAND_KM2 } from './island.mjs';
+import { islesOf } from './isles.mjs';
 import { cityPlan, drawCity, drawHouses, pxRings, insideRings } from './city.mjs';
 import { urbanKey } from './urban.mjs';
 import { RIVERS, LAKES, RIVER_STYLES, LAKE_STYLES, waterOf, shown } from './water.mjs';
@@ -418,6 +419,8 @@ async function loadWorld() {
   const [landGeo, coastGeo, placesGeo, namesGeo, urban, urbanGeo] = await Promise.all(
     [...['ne-land-50m', 'ne-coastline-50m', 'ne-populated-places-50m'].map(loadGeo), env.readJSON('geo/names-50m.json'),
       env.readJSON('geo/urban-10m.json').catch(missing), loadGeo('ne-urban-areas-50m').catch(missing)]);
+  // the island index (scripts/isles.mjs) is optional too: without it the islands 50m lacks go unmarked
+  const islesIndex = await env.readJSON('geo/isles.json').catch(missing);
   let world = worlds.get(landGeo);
   if (world) return world;
   const land = geojsonPolygons(landGeo).map((poly) => ({ poly: Object.assign(poly, { isl: islandInfo(poly) }), box: bbox(poly[0]) }));
@@ -442,7 +445,8 @@ async function loadWorld() {
   const footprints = places.filter((p) => p.urban).map((p) => ({ poly: p.urban, box: p.ubox }));
   const urbanAreas = [...footprints, ...(urbanGeo ? geojsonPolygons(urbanGeo).map((poly) => ({ poly, box: bbox(poly[0]) }))
     .filter((u) => !footprints.some((t) => meets(t.box, u.box))) : [])];
-  world = { land, lines, runs, places, lesser, names, urban: urbanAreas };
+  const isles = islesOf(islesIndex).map((i) => ({ ...i, box: { x0: i.lon, x1: i.lon, y0: i.lat, y1: i.lat } }));
+  world = { land, lines, runs, places, lesser, names, urban: urbanAreas, isles };
   worlds.set(landGeo, world);
   return world;
 }
@@ -496,7 +500,7 @@ async function loadDetail(coarse, view) {
   }));
   return {
     land: parts.flatMap((p) => p.land), lines: parts.flatMap((p) => p.lines), runs: parts.flatMap((p) => p.runs),
-    places: coarse.places, lesser: coarse.lesser, names: coarse.names, urban: coarse.urban, detail: { ...f, band: band.dir }, // the lon/lat frame the loaded cells cover, and whose
+    places: coarse.places, lesser: coarse.lesser, names: coarse.names, urban: coarse.urban, isles: band.zoom < MARKS_END ? coarse.isles : [], detail: { ...f, band: band.dir }, // the lon/lat frame the loaded cells cover, and whose
   };
 }
 
@@ -518,6 +522,33 @@ function insideRing(ring, lon, lat) {
     if ((yi > lat) !== (yj > lat) && lon < xj + ((lat - yj) * (xi - xj)) / (yi - yj)) inside = !inside;
   }
   return inside;
+}
+
+// The islands a world's land lacks (scripts/isles.mjs), worked out once per world: an index record
+// is drawn where no land polygon holds its centre, nor, for an atoll, an islet within its ring.
+// The GSHHG "h" band and those after it hold every island in the index, so a view drawn from them
+// marks none (loadDetail).
+const MARKS_END = bandOf('gshhg-h-land').zoom;
+const lacking = new WeakMap();
+function islesLacking(world) {
+  if (!lacking.has(world)) {
+    const holds = (i) => world.land.some(({ poly, box }) => SHIFTS.some((s) => {
+      const lon = i.lon + s;
+      if (i.atoll && Math.hypot(((box.x0 + box.x1) / 2 - lon) * Math.cos(i.lat * RAD), (box.y0 + box.y1) / 2 - i.lat) * KM_DEG < i.km) return true;
+      return lon > box.x0 && lon < box.x1 && i.lat > box.y0 && i.lat < box.y1 && insideRing(poly[0], lon, i.lat);
+    }));
+    lacking.set(world, (world.isles ?? []).filter((i) => !holds(i)));
+  }
+  return lacking.get(world);
+}
+const KM_DEG = 6371.0088 * RAD;
+// Where `proj` draws an island mark: px centre and radius, its true size never under MARK_MIN px
+// (a dot) or ATOLL_MIN px (a ring round its lagoon), or null when it is behind the horizon.
+const MARK_MIN = 1.5, ATOLL_MIN = 2.5;
+function markOf(proj, i) {
+  if (!shows(proj, i.lon, i.lat)) return null;
+  const [x, y] = proj.project(i.lon, i.lat), r = Math.abs(proj.y(i.lat + i.km / KM_DEG, i.lon) - y);
+  return { x, y, r: Math.max(i.atoll ? ATOLL_MIN : MARK_MIN, r), atoll: i.atoll };
 }
 
 // What a view keeps of the world: the shapes with a point within MARGIN degrees of its frame.
@@ -547,7 +578,8 @@ function viewData(world, view) {
   const names = world.names.filter((n) => n.min <= view.zoom + 1 && meetsLL(f, n.box))
     .sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'sea' ? -1 : 1) || a.rank - b.rank);
   const urban = world.urban.filter((u) => meetsLL(f, u.box)).map((u) => u.poly);
-  return { proj, land, coastLL, coast, places, lesser, names, urban };
+  const isles = islesLacking(world).filter((i) => nearLL(f, i.lon, i.lat));
+  return { proj, land, coastLL, coast, places, lesser, names, urban, isles };
 }
 
 // Two packs draw the same designs two ways: `vivid` as vectors, `scanned` as crops of the scans.
@@ -792,7 +824,17 @@ function distanceTo(data, polys) {
   return (x, y) => d[Math.min(rows - 1, Math.max(0, Math.floor(y / CELL))) * cols + Math.min(cols - 1, Math.max(0, Math.floor(x / CELL)))];
 }
 
-// Land rasterised at CELL px; chamfer distance (1, sqrt2) from every sea cell to land, in px.
+// The island marks as circles, each MARK_CLEAR px wider than drawn and at least `min` px in radius.
+const MARK_CLEAR = 4;
+function traceMarks(g, data, min) {
+  g.beginPath();
+  for (const i of data.isles ?? []) {
+    const m = markOf(data.proj, i);
+    if (m) { const r = Math.max(min, m.r + MARK_CLEAR); g.moveTo(m.x + r, m.y); g.arc(m.x, m.y, r, 0, 2 * Math.PI); }
+  }
+}
+
+// Land rasterised at CELL px, the island marks with it; chamfer distance (1, sqrt2) from every sea cell to land, in px.
 function clearanceField(data) {
   const cols = Math.ceil(W / CELL), rows = Math.ceil(H / CELL);
   const c = createCanvas(cols, rows);
@@ -805,6 +847,7 @@ function clearanceField(data) {
   g.strokeStyle = '#000';
   g.lineWidth = CELL; // keeps islands smaller than a cell
   for (const line of data.coast) { g.beginPath(); line.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke(); }
+  traceMarks(g, data, CELL * 0.6); g.fill(); // an island mark is land too, kept like an island smaller than a cell
   const px = g.getImageData(0, 0, cols, rows).data;
 
   const d = chamfer(cols, rows, (i) => px[i * 4 + 3] > 40);
@@ -828,6 +871,7 @@ function clearanceField(data) {
   traceLand(fg, data);
   fg.fill('evenodd');
   beyondRim(fg, data.proj); fg.fill('evenodd');
+  traceMarks(fg, data, 0); fg.fill();
   const fpx = fg.getImageData(0, 0, fc, fr).data;
   const isLand = (x, y) => {
     const cx = Math.floor(x / FINE), cy = Math.floor(y / FINE);
@@ -1653,9 +1697,26 @@ function paintLand(g, data, land, coast, relief) {
       if (isles.length) fill(g, isles, x, y, { color: pigment, alpha: 0.92, ...seam });
     }
   }
+  paintMarks(g, data);
   paintWater(g, data);
   paintRelief(g, data, relief);
   if (data.trees) TREES[STYLE.trees]?.(g, { proj: data.proj, palette: { ink: STYLE.ink, parchment: STYLE.parchment } }, data.trees); // a drag's frame has none
+}
+
+// The islands the drawn land lacks, the way period charts drew those too small to draw: an ink dot
+// for an island, an ink ring round parchment for an atoll.
+function paintMarks(g, data) {
+  const marks = (data.isles ?? []).map((i) => markOf(data.proj, i)).filter(Boolean);
+  if (!marks.length) return;
+  g.save();
+  g.fillStyle = STYLE.ink; g.beginPath();
+  for (const m of marks) if (!m.atoll) { g.moveTo(m.x + m.r, m.y); g.arc(m.x, m.y, m.r, 0, 2 * Math.PI); }
+  g.fill();
+  g.beginPath();
+  for (const m of marks) if (m.atoll) { g.moveTo(m.x + m.r, m.y); g.arc(m.x, m.y, m.r, 0, 2 * Math.PI); }
+  g.fillStyle = STYLE.parchment; g.fill();
+  g.strokeStyle = STYLE.ink; g.lineWidth = 1.2; g.stroke();
+  g.restore();
 }
 
 // Rivers, then lakes over them, each in its chosen style, on the land and under the coast's ink.
@@ -1689,8 +1750,9 @@ const paintCoast = (g, data, coast) =>
 // lattice, the relief and the trees wait for the stop, which places and draws the scene whole
 // (drawScene); the relief, placed and hatched afresh, is too slow for a frame.
 function drawGround(g, world, view, bg) {
-  const proj = makeProjection(view), data = { proj };
+  const proj = makeProjection(view);
   const f = frameOf(proj, 16 / proj.k / RAD); // 16 px, so strokes at the edge survive
+  const data = { proj, isles: islesLacking(world).filter((i) => nearLL(f, i.lon, i.lat)) };
   const land = world.land.filter((l) => meetsLL(f, l.box)).map((l) => l.poly);
   const coast = world.runs.filter((c) => meetsLL(f, c.box)).map((c) => c.run);
   g.drawImage(bg, 0, 0);
