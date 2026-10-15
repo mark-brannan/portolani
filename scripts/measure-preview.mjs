@@ -4,8 +4,7 @@
 // does not depend on: `npm i --prefix /some/dir playwright-core && npx --prefix /some/dir
 // playwright-core install chromium-headless-shell`, then
 //   PLAYWRIGHT=/some/dir/node_modules/playwright-core/index.mjs node scripts/measure-preview.mjs [lat lon [zooms]] [flags]
-// Flags: --ornaments=on|off|both (default both; off sets the density slider to 0 before the page
-// draws) and --sizes=1440x900,1024x768 (default both: laptop and tablet).
+// Flags: --ornaments=on|off|both (default both; off loads the page with density=0 in the hash) and --sizes=1440x900,1024x768 (default both: laptop and tablet).
 // Times are what the page reports (performance.now around the work), so they leave out the
 // browser's compositing after the call returns.
 
@@ -19,7 +18,7 @@ const site = fileURLToPath(new URL('../_site/', import.meta.url));
 const flags = Object.fromEntries(process.argv.slice(2).filter((a) => a.startsWith('--')).map((a) => a.slice(2).split('=')));
 const args = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const [lat = 44.41, lon = 8.93] = args.slice(0, 2).map(Number);
-const zooms = (args[2] ?? '9,10,11').split(',').map(Number);
+const zooms = (args[2] ?? '9,10,11,12,13').split(',').map(Number);
 const sizes = (flags.sizes ?? '1440x900,1024x768').split(',').map((s) => s.split('x').map(Number));
 const modes = (flags.ornaments ?? 'both') === 'both' ? ['on', 'off'] : [flags.ornaments];
 const REDRAWS = 5, DRAGS = 3, MOVES = 20;
@@ -47,13 +46,12 @@ for (const [width, height] of sizes) for (const mode of modes) for (const zoom o
   const page = await browser.newPage({ viewport: { width, height } });
   fetched.clear();
   await page.addInitScript((off) => {
-    if (off) new MutationObserver((_, o) => { const d = document.getElementById('density'); if (d) { d.value = 0; o.disconnect(); } }).observe(document, { childList: true, subtree: true });
     window.statuses = [];
     addEventListener('DOMContentLoaded', () => new MutationObserver(() => window.statuses.push(document.getElementById('status').textContent))
       .observe(document.getElementById('status'), { childList: true, characterData: true, subtree: true }));
-  }, mode === 'off');
+  });
   const done = async (n) => { await page.waitForFunction((k) => window.statuses.filter((s) => s.includes('total')).length >= k, n, { timeout: 60000 }); };
-  await page.goto(`${base}#map=${zoom}/${lat}/${lon}`);
+  await page.goto(`${base}#map=${zoom}/${lat}/${lon}${mode === 'off' ? '&density=0' : ''}`);
   await done(1);
   const firstText = (await page.evaluate(() => window.statuses)).find((s) => s.includes('total'));
   const sum = (re) => [...fetched].filter(([u]) => re.test(u)).reduce((t, [, b]) => t + b, 0);
