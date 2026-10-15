@@ -38,6 +38,27 @@
   }
   #open svg { width: 30px; height: 30px; }
 
+  /* top right: my position and home; the other origins fly out beneath under the pointer or a keyboard focus */
+  #where { position: fixed; top: 12px; right: 12px; z-index: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  #where .row { display: flex; gap: 6px; }
+  #where button {
+    padding: 0; display: grid; place-items: center; cursor: pointer; border-radius: 50%;
+    background: var(--panel); color: var(--fg); border: 1px solid var(--rule); box-shadow: 0 1px 6px rgb(0 0 0 / 0.25);
+  }
+  #where [hidden] { display: none; }
+  #where .row button { width: 36px; height: 36px; }
+  #where .row svg { width: 22px; height: 22px; }
+  #locate:disabled { cursor: progress; }
+  #locate.busy svg { animation: seek 1.2s linear infinite; }
+  @keyframes seek { to { transform: rotate(360deg); } }
+  #origins {
+    list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+    opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0s linear 0.2s;
+  }
+  #where:hover #origins, #where:has(:focus-visible) #origins { opacity: 1; visibility: visible; transition: opacity 0.2s; }
+  #origins button { padding: 3px 10px; font: 13px var(--serif); border-radius: 12px; }
+  @media (prefers-reduced-motion: reduce) { #origins, #locate.busy svg { animation: none; transition: none; } }
+
   /* the drawer: slides in from the left over the map, hidden (and out of the tab order) when shut */
   #drawer {
     position: fixed; inset: 0 auto 0 0; z-index: 2; box-sizing: border-box;
@@ -118,6 +139,26 @@
     <circle r="1.6" fill="none" stroke="currentColor" stroke-width="0.8"/>
   </svg>
 </button>
+
+<nav id="where" aria-label="Go to">
+  <div class="row">
+    <button id="locate" type="button" aria-label="Centre on my position" title="My position">
+      <svg viewBox="-16 -16 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+        <circle r="8"/>
+        <path d="M0-14v5M0 9v5M-14 0h5M9 0h5"/>
+        <circle r="2" fill="#8c2f1e" stroke="none"/>
+      </svg>
+    </button>
+    <button id="home" type="button" aria-label="Back to the Mediterranean" title="Home">
+      <svg viewBox="-16 -16 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <circle cy="-10" r="2.6"/>
+        <path d="M0-7.4V13M-6-3h12"/>
+        <path d="M-12 2q1 10 12 11 11-1 12-11l-3 2.5M-12 2l3 2.5"/>
+      </svg>
+    </button>
+  </div>
+  <ul id="origins"></ul>
+</nav>
 
 <aside id="drawer" role="dialog" aria-label="Settings" aria-modal="false">
   <header>
