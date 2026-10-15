@@ -254,18 +254,27 @@ const BORDER_GLYPHS = {
   blank: svg(`${MAP_LINES}<rect x="4" y="4" width="20" height="10" fill="#e9d8b4"/><path d="M7 9h14" ${stroke('#8c2f1e', 1.2)}/>`),
   transparent: svg(`${MAP_LINES}<path d="M7 9h14" ${stroke('#8c2f1e', 1.2)}/>`),
 };
+const COAST = 'M2 8q4-4 8 0t8 0 8 0V16H2Z';
+const LAND_GLYPH = (wash, shoals = '') => svg(`<path d="${COAST}" fill="${wash}" fill-opacity=".75" stroke="#3b2a1a" stroke-width="1" stroke-linejoin="round"/>${shoals}`);
+const SHOAL_DOTS = '<g fill="#a8432e"><circle cx="4" cy="3.2" r="1"/><circle cx="9" cy="2.2" r="1"/><circle cx="14" cy="3.4" r="1"/><circle cx="19" cy="2.2" r="1"/><circle cx="24" cy="3.4" r="1"/></g>';
+const LAND_GLYPHS = { gilt: LAND_GLYPH('#b58a3c'), green: LAND_GLYPH('#6b8a4a'), ochre: LAND_GLYPH('#c47f2c', SHOAL_DOTS) };
+const CROWN = 'M14 4a4 4 0 0 1 4 3 3.5 3.5 0 0 1 1 6.5H9A3.5 3.5 0 0 1 10 7a4 4 0 0 1 4-3Z';
+const TREE_GLYPHS = {
+  marina: svg(`<path d="M14 13v3" ${stroke('#3b2a1a', 1.2)}/><path d="${CROWN}" fill="#6b8a4a" stroke="#3b2a1a" stroke-width="1" stroke-linejoin="round"/>`),
+  ink: svg(`<path d="M14 13v3" ${stroke('currentColor', 1.2)}/><path d="${CROWN}" ${stroke('currentColor', 1)}/><path d="M11 9l1 1M14 7l1 1M16 10l1 1" ${stroke('currentColor', 0.6)}/>`),
+};
 const CHOICES = {
   projection: [['mercator', 'Mercator', 'rhumb lines straight'], ['plate-carree', 'Plate carrée', 'equal degrees'], ['miller', 'Miller', 'poles tamed'], ['equal-area', 'Equal-area', 'Gall–Peters'], ['orthographic', 'Globe', 'orthographic'], ['azimuthal-equidistant', 'Azimuthal equidistant', 'true from the centre'], ['stereographic', 'Stereographic', 'the polar chart']].map(([value, label, note = '']) => [value, label, note, PROJECTION_GLYPHS[value]]),
   regions: [['latin', 'Latin', 'Hispania'], ['english', 'English', 'Iberia']],
   titleMode: [['auto', 'Automatic', 'what the view shows'], ['custom', 'Custom']],
   mountains: [['off', 'Off', '', MOUNTAIN_GLYPHS.off], ['ink', 'Ink', 'black and white hatching, as Engraved', MOUNTAIN_GLYPHS.ink], ['colour', 'Colour', 'ochre wash, as the Carta Marina', MOUNTAIN_GLYPHS.colour]],
   hills: [['off', 'Off', '', MOUNTAIN_GLYPHS.off], ['catalan', 'Catalan drawings', 'Catalan Atlas, 1375', HILL_GLYPH]],
-  land: [['off', 'Off'], ['gilt', 'Gilt wash', '', lineOf('#b58a3c', 4)], ['green', 'Green wash', 'Oliva, c.1590', lineOf('#6b8a4a', 4)], ['ochre', 'Ochre with shoals', 'Benincasa, 1466', lineOf('#c47f2c', 4)]],
+  land: [['off', 'Off', '', MOUNTAIN_GLYPHS.off], ['gilt', 'Gilt wash', '', LAND_GLYPHS.gilt], ['green', 'Green wash', 'Oliva, c.1590', LAND_GLYPHS.green], ['ochre', 'Ochre with shoals', 'Benincasa, 1466', LAND_GLYPHS.ochre]],
   islands: [['off', 'Plain islands'], ['on', 'Coloured islands', 'Beccari, 1403', ISLANDS_GLYPH]],
   seaTint: [['off', 'Plain seas'], ['on', 'Coloured seas', 'Red, Black and Caspian Seas, the Persian Gulf', SEAS_GLYPH]],
   rivers: [['off', 'Off'], ['aguiar', 'Wiggled ink', 'Aguiar, 1492', RIVER_GLYPHS.aguiar], ['marina', 'Double line', 'Carta Marina, 1539', RIVER_GLYPHS.marina], ['plain', 'Plain blue line', '', RIVER_GLYPHS.plain]],
   lakes: [['off', 'Off'], ['aguiar', 'Lozenges', 'Aguiar, 1492', LAKE_GLYPHS.aguiar], ['marina', 'True shapes, hatched', 'Carta Marina, 1539', LAKE_GLYPHS.marina], ['plain', 'True shapes, blue wash', '', LAKE_GLYPHS.plain]],
-  trees: [['off', 'Off'], ['marina', 'Green crowns', 'Carta Marina, 1539', '#6b8a4a'], ['ink', 'Ink only']],
+  trees: [['off', 'Off', '', MOUNTAIN_GLYPHS.off], ['marina', 'Green crowns', 'Carta Marina, 1539', TREE_GLYPHS.marina], ['ink', 'Ink only', '', TREE_GLYPHS.ink]],
   scale: [['off', 'Off'], ['genoese', 'Genoese', 'drawn as vectors'], ['chequer', 'Chequer'], ['chevron', 'Chevron ladder', 'Genoese'], ['ribbon', 'Ribbon', 'Martines'], ['beads', 'Beads', 'Prunes'], ['ruled', 'Ruled', 'Beccari']].map(([value, label, note = '']) => [value, label, note, SCALE_GLYPHS[value]]),
   scaleBorder: [['bordered', 'Bordered', 'parchment and a double rule'], ['blank', 'Blank', 'parchment, no rule'], ['transparent', 'Transparent', 'drawn over the map']].map(([value, label, note = '']) => [value, label, note, BORDER_GLYPHS[value]]),
 };
