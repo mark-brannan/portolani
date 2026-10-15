@@ -41,3 +41,11 @@ test('two views over one part of the world put the roses at the same map positio
     assert.deepEqual(of(a), of(b));
   }
 });
+
+test('past the middle of a band, the next band\'s sheets keep a rose in a window that falls between the nodes', async () => {
+  for (const view of [{ lon: 8.93, lat: 44.2, zoom: 9.9 }, { lon: 9.05, lat: 44.15, zoom: 9.9 }]) {
+    const { scene } = await createScene(env, { view, scale: 'off' });
+    const seen = scene.roseDraws.filter((r) => r.x > 0 && r.x < 1600 && r.y > 0 && r.y < 1000);
+    assert.ok(seen.some((r) => r.sheet.startsWith('PT3')), `a coastal sheet's rose shows at ${view.lon} ${view.lat}`);
+  }
+});

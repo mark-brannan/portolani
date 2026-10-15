@@ -7,7 +7,7 @@
 // A view is a centre, zoom and projection, { lon, lat, zoom, projection }, on a W x H canvas; the
 // projection is one of PROJECTIONS, Mercator when left out.
 
-import { sheetsFor, BANDS as ATLAS_BANDS } from './atlas.mjs';
+import { sheetsFor, bandFor as atlasBand, BANDS as ATLAS_BANDS } from './atlas.mjs';
 import { fill, trace, limn, rhumb, place, letter, geojsonPolygons, geojsonRings } from 'coast-wright';
 import { bandOf } from './bands.mjs';
 import { islandInfo, ISLAND_KM2 } from './island.mjs';
@@ -1211,6 +1211,17 @@ function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
       if (n < SHEET_SMALL_ROSES && clear(node.lon, node.lat, sprite.sizePx, onLand)) { roseDraws.push({ sprite, ...at(node), size: sprite.sizePx, sheet: sh.name }); n++; }
     }
   }
+  // Past the middle of a band, small roses on the centre and cardinal nodes of the next band's sheets, in the
+  // sprite that sheet's big rose will take at the page turn, so the window holds a rose when it falls between
+  // this band's sites
+  for (const sh of world.nextSheets ?? []) {
+    const picked = world.seed == null ? roses.find((s) => s.sizePx === bigSizePx) : castOrder(roses, seedOf(sh.name), () => 1)[0];
+    for (const q of [sh.circle, ...SHEET_NODE_ORDER.slice(0, 4).map((i) => sh.circle.nodes[i])]) {
+      const { x, y } = at(q);
+      if (!clear(q.lon, q.lat, smallSize) || roseDraws.some((r) => Math.hypot(r.x - x, r.y - y) < (r.size + smallSize) / 2)) continue;
+      roseDraws.push({ sprite: { ...picked, sizePx: smallSize }, x, y, size: smallSize, sheet: sh.name });
+    }
+  }
   const pts = world.sheets.flatMap((sh) => [sh.circle, ...sh.circle.nodes]).map(at);
   return { roseDraws, centre: pts[0], nodes: pts.slice(1) };
 }
@@ -2281,7 +2292,10 @@ export async function createScene(environment, opts = {}) {
   const data = viewData(world, view);
   // the sheets from the atlas's first band down; above it (the world band) the window still places the roses
   const sheets = view.zoom >= ATLAS_BANDS[0].from ? sheetsFor(view, { radius: SHEET_RADIUS }).map((sh) => ({ ...sh, reach: sheetReach(sh.extent) })) : null;
-  const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, seaAt: sheets && seaAtOf(world), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, title, autoTitle, pinTitle,
+  // past a band's middle, the next band's sheets lend their centres to small roses (none past the last band)
+  const sheetBand = atlasBand(view.zoom), next = ATLAS_BANDS[ATLAS_BANDS.indexOf(sheetBand) + 1];
+  const nextSheets = sheets && next && view.zoom >= (sheetBand.from + sheetBand.to) / 2 ? sheetsFor(view, { radius: SHEET_RADIUS, band: next }) : [];
+  const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, nextSheets, seaAt: sheets && seaAtOf(world), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, title, autoTitle, pinTitle,
     continentsEnd: zoomEnd(continentsZoom, CONTINENT_ZOOM_END), regionsEnd: zoomEnd(regionsZoom, REGION_ZOOM_END),
     scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM, townSize: townBy, seed: legacy ? null : castSeed(view) }), show, scaleSprite };
   data.trees = TREES[STYLE.trees] ? plantTrees({ proj: data.proj, isLand: scene.field.isLand, scene, lakes: STYLE.lakes !== 'off' && water ? water.lakes : [], w: W, h: H }) : [];

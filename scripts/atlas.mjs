@@ -80,9 +80,9 @@ export function hiddenCircle(extent, radius = 0.5) {
   return { lon, lat, radius, nodes };
 }
 
-// Every grid sheet the view overlaps: [{ name, band, bandName, row, col, extent, circle }].
-export function sheetsFor(view, { radius = 0.5 } = {}) {
-  const band = bandFor(view.zoom);
+// Every grid sheet the view overlaps: [{ name, band, bandName, row, col, extent, circle }]. `band`, when
+// given, is the band whose grid to cut the view by, instead of the view's own.
+export function sheetsFor(view, { radius = 0.5, band = bandFor(view.zoom) } = {}) {
   const h = band.height;
   const b = viewBounds(view);
   // Whole rows off the equator that end short of a pole: a row touching the pole (90 is a whole number of
