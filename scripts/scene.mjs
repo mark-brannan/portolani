@@ -8,6 +8,7 @@
 // projection is one of PROJECTIONS, Mercator when left out.
 
 import { fill, trace, limn, rhumb, place, letter, geojsonPolygons, geojsonRings } from 'coast-wright';
+import catalogue from './catalogue.json' with { type: 'json' };
 import { islandInfo, ISLAND_KM2 } from './island.mjs';
 import { cityPlan, drawCity, drawHouses, pxRings, insideRings } from './city.mjs';
 import { urbanKey } from './urban.mjs';
@@ -57,16 +58,17 @@ const W = 1600, H = 1000;
 const FRAME = { lonMin: -6, lonMax: 20, latMin: 34, latMax: 46 };
 const MARGIN = 2; // degrees beyond FRAME whose features the scene keeps
 const DETAIL = { lon: 8.93, lat: 44.41, scale: 2 }; // Genoa; window clamped to the scene
-// Whole world at the far end; 50m data holds to about z9. Past each band's zoom a view draws from
-// that band's cells (geo/<dir>/<xi>_<yi>.json, `cell` degrees square) within `margin` degrees of
-// its frame, a couple of screens at the band's first zoom, so a pan stays on loaded cells; a band
-// whose index the site lacks is skipped and the one below it drawn instead. Measured vertex
-// spacing (median, m): 50m 7,650; NE 10m 1,574; GSHHG h 707. Must match scripts/build-preview.mjs.
-const BANDS = [
-  { dir: '10m', zoom: 9, cell: 5, margin: 2 }, // Natural Earth 10m, holds to about z12 but has no narrow channels
-  { dir: 'h', zoom: 10, cell: 1, margin: 0.5 }, // GSHHG 2.3.7 "h" land, holds to about z13; draws Seattle's ship canal
-  { dir: 'f', zoom: 12, cell: 0.5, margin: 0.25 }, // GSHHG 2.3.7 "f" land, the full resolution; the canal's real shape
-];
+// Whole world at the far end; 50m data holds to about z9. The bands are read from the catalogue
+// (scripts/catalogue.json, a copy of coastlines' catalogue.json until the package publishes it):
+// past a record's `zoom.min` a view draws from its cells (geo/<id>/<xi>_<yi>.json, `grid.cellDeg`
+// degrees square) within `grid.marginDeg` degrees of its frame, a couple of screens at the band's
+// first zoom, so a pan stays on loaded cells; a band whose index the site lacks is skipped and the
+// one below it drawn instead. Measured vertex spacing (median, m): 50m 7,650; NE 10m 1,574; GSHHG h 707.
+const bandOf = (id) => {
+  const r = catalogue.find((c) => c.id === id);
+  return { dir: r.id, zoom: r.zoom.min, cell: r.grid.cellDeg, margin: r.grid.marginDeg };
+};
+const BANDS = ['ne-10m-land', 'gshhg-h-land', 'gshhg-f-land'].map(bandOf);
 const ZOOM = { min: 1, max: 15 };
 const URBAN_PX = 56; // screen px a built-up area's long side reaches before it is drawn
 
@@ -83,11 +85,11 @@ let tintPolys = null; // the seas to tint, or null
 // WATER_10M's cells (cutWater), the cells around the view; a site without them keeps the 50m. A
 // lake or river is drawn where its box meets the view widened by WATER_PX.
 let water = null, waterLoad = null;
-const WATER_10M = { dir: 'water-10m', cell: 5, margin: 2 }; // must match scripts/build-preview.mjs
+const WATER_10M = bandOf('ne-10m-water');
 // Where the 10m water takes over from the 50m, two zooms before the 10m land: the 50m lakes file has
 // no Lake Washington, Maggiore or Como, and at 5-degree cells a z7 view fetches the cells a z9 one
 // does (Seattle 8 cells, 0.7 MB; the Great Lakes 12, 1.7 MB).
-const WATER_ZOOM = 7;
+const WATER_ZOOM = WATER_10M.zoom;
 const WATER_PX = 64; // a lozenge and its tributaries reach past the lake they stand for
 const loadWater = () => (waterLoad ??= Promise.all(['ne-rivers-lake-centerlines-50m', 'ne-lakes-50m'].map(loadGeo))
   .then(([r, l]) => waterOf(r, l)).catch((e) => { waterLoad = null; throw e; })); // a failed fetch is tried again
@@ -107,11 +109,8 @@ async function loadWater10m(view) {
 // GSHHG lakes past the h band's zoom, at the h or f resolution as the land is: the lakes no Natural
 // Earth file has (Dian Chi at Kunming, Lago Mascardi at Bariloche), cut as land is so a piece fills
 // its cell and only the shore is inked. A view adds them to its water and drops each Natural Earth
-// lake that is one of them (sameLake), so a lake is not drawn twice. Must match scripts/build-preview.mjs.
-const LAKE_BANDS = [
-  { dir: 'h-lakes', zoom: BANDS[1].zoom, cell: BANDS[1].cell, margin: BANDS[1].margin },
-  { dir: 'f-lakes', zoom: BANDS[2].zoom, cell: BANDS[2].cell, margin: BANDS[2].margin },
-];
+// lake that is one of them (sameLake), so a lake is not drawn twice.
+const LAKE_BANDS = ['gshhg-h-lakes', 'gshhg-f-lakes'].map(bandOf);
 const lakeCells = new Map(); // '<dir>/<xi>_<yi>' -> Map(lake id -> { polys, shore, box })
 async function loadLakes(view) {
   for (const b of LAKE_BANDS) if (view.zoom > b.zoom) await loadBandIndex(b);
