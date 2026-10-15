@@ -1,14 +1,15 @@
 // Browser host for the shared scene code (scene.mjs): same scene as `npm run render`, drawn live.
 // Drag to pan, wheel or pinch to zoom; while the map moves only land and coast are drawn, and the
 // ornaments are placed again when it stops. The settings live in a drawer behind the rose button, so
-// the map has the window. The view and the style are kept in the URL hash, e.g.
+// the map has the window; two buttons top right go to the user's position, marked in red ink, and
+// back to an origin. The view and the style are kept in the URL hash, e.g.
 // #map=zoom/lat/lon&projection=miller&sprites=s:serpent-a,v:kraken,v:rose-aguiar,p:tower&townsize=rank&names=0&rhumb=0&scale=chevron&scaleborder=blank&continents=5&regions=latin&regionszoom=7&land=green&islands=1&rivers=aguiar&lakes=marina&mountains=ink&trees=ink&seas=1&autotitle=0&title=Mare+Nostrum&ink=5a1a1a&parchment=eee&density=1.5;
 // a setting left at its default is left out, `sprites` too (keys with the pack shortened, v: s: p:); `mountains` is `ink`
 // or `off` (colour is the default); the hills are the Catalan sprites in `sprites`. `continents` and `regionszoom` are the zoom
 // they are drawn down from (0 off, the top always).
 // Older links naming a `rendering` (or `pack`), `rose`, `monster`, `town` and `kinds` open as the
 // selection those chose, and are written back in the new form.
-import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, panView, zoomView, clampView, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, W, H } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, panView, zoomView, clampView, viewOfFrame, viewProjection, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, W, H } from './scene.mjs';
 
 const memo = new Map();
 // a failed load is forgotten, so the next stop tries it again
@@ -364,9 +365,11 @@ async function render() {
     ground = { world, coarse, bg };
     if (style.autoTitle) $('title').value = scene.cartouche.title; // the box shows what the cartouche letters, and cannot be edited
     placed = view;
+    cancelAnimationFrame(frame); frame = 0; // a moving frame still queued would paint over the scene
     const t1 = performance.now();
     ctx.clearRect(0, 0, W, H);
     drawScene(ctx, scene, data, bg, { scale: 1, x: 0, y: 0 });
+    drawHere();
     const t2 = performance.now();
     $('status').textContent = `z${view.zoom.toFixed(1)}: load ${timing.load.toFixed(0)} ms, placement + parchment ${timing.place.toFixed(0)} ms, draw ${(t2 - t1).toFixed(0)} ms (total ${(t2 - t0).toFixed(0)} ms)`;
   } catch (e) {
@@ -405,6 +408,7 @@ function moved(next) {
     const t = performance.now();
     // the 10m cells placed last while they cover the view; 50m otherwise, until it stops and is placed again
     drawGround(ctx, covers(ground.world, view) ? ground.world : ground.coarse, view, ground.bg);
+    drawHere();
     $('status').textContent = `z${view.zoom.toFixed(1)}: moving, frame ${(performance.now() - t).toFixed(0)} ms`;
   });
 }
@@ -426,6 +430,7 @@ const pinch = () => {
 };
 
 canvas.addEventListener('pointerdown', (e) => {
+  cancelAnimationFrame(flight); // a touch takes over from a flight
   canvas.setPointerCapture(e.pointerId);
   pointers.set(e.pointerId, toCanvas(e.clientX, e.clientY));
   clearTimeout(settle);
@@ -457,6 +462,74 @@ canvas.addEventListener('wheel', (e) => {
   moved(zoomView(view, 2 ** (-px / 300), x, y));
   stopped(300);
 }, { passive: false });
+
+// ---------------------------------------------------------------- going somewhere
+
+// The origins: the chart's home frame and the frames of the scans the ornaments come from.
+const ORIGINS = [
+  ['Mediterranean', DEFAULT_VIEW],
+  ['The North', viewOfFrame({ lonMin: 0, lonMax: 40, latMin: 54, latMax: 72 })], // Carta Marina
+  ['Virginia', viewOfFrame({ lonMin: -78, lonMax: -74, latMin: 34, latMax: 38.5 })], // de Bry
+  ['The world', { lon: 10, lat: 25, zoom: 0 }],
+];
+$('origins').innerHTML = ORIGINS.map(([name], i) => `<li><button type="button" data-origin="${i}">${name}</button></li>`).join('');
+$('origins').addEventListener('click', (e) => { const b = e.target.closest('[data-origin]'); if (b) goTo(ORIGINS[b.dataset.origin][1]); });
+$('home').addEventListener('click', () => goTo(DEFAULT_VIEW));
+
+// A short flight from the view to a target, in the view's projection: the ground is drawn on the
+// way as for a drag, and the ornaments placed when it lands. Reduced motion jumps.
+let flight = 0;
+function goTo(target) {
+  cancelAnimationFrame(flight);
+  const from = view, to = clampView({ ...target, projection: view.projection });
+  const dlon = ((to.lon - from.lon + 540) % 360) - 180; // the short way round
+  const ms = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 600, t0 = performance.now();
+  const step = (now) => {
+    const u = ms ? Math.min(1, (now - t0) / ms) : 1, e = u < 0.5 ? 2 * u * u : 1 - (2 - 2 * u) ** 2 / 2;
+    moved(u < 1 ? clampView({ lon: from.lon + dlon * e, lat: from.lat + (to.lat - from.lat) * e, zoom: from.zoom + (to.zoom - from.zoom) * e, projection: to.projection }) : to);
+    if (u < 1) flight = requestAnimationFrame(step); else stopped();
+  };
+  step(t0);
+}
+
+// My position: asked for on the button, kept for the mark, and flown to at z10 or closer. The
+// button is not offered where the browser has no geolocation (an insecure page has none).
+const LOCATE_ZOOM = 10;
+let here = null; // { lon, lat } of the last fix
+const locate = $('locate');
+locate.hidden = !navigator.geolocation;
+locate.addEventListener('click', () => {
+  locate.disabled = true; locate.classList.add('busy');
+  const done = () => { locate.disabled = false; locate.classList.remove('busy'); };
+  navigator.geolocation.getCurrentPosition((p) => {
+    done();
+    here = { lon: p.coords.longitude, lat: p.coords.latitude };
+    goTo({ ...here, zoom: Math.max(view.zoom, LOCATE_ZOOM) });
+  }, (e) => {
+    done();
+    $('status').textContent = e.code === e.PERMISSION_DENIED ? 'My position: not allowed' : `My position: ${e.message}`;
+  }, { timeout: 15000, maximumAge: 60000 });
+});
+
+// The mark: a red ink ring and dot with the four winds on a pale halo, where the fix falls on the canvas.
+function drawHere() {
+  if (!here) return;
+  const proj = viewProjection(view);
+  if (proj.visible && !proj.visible(here.lon, here.lat)) return; // the far side of a globe
+  const [x, y] = proj.project(here.lon, here.lat);
+  if (x < 0 || x > W || y < 0 || y > H) return;
+  ctx.save();
+  ctx.fillStyle = 'rgb(244 239 228 / 0.6)';
+  ctx.beginPath(); ctx.arc(x, y, 22, 0, 2 * Math.PI); ctx.fill();
+  ctx.strokeStyle = ctx.fillStyle = '#8c2f1e';
+  ctx.lineWidth = 2.2; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.arc(x, y, 4, 0, 2 * Math.PI); ctx.fill();
+  ctx.beginPath(); ctx.arc(x, y, 13, 0, 2 * Math.PI); ctx.stroke();
+  ctx.beginPath();
+  for (const [dx, dy] of [[0, -1], [1, 0], [0, 1], [-1, 0]]) { ctx.moveTo(x + dx * 16, y + dy * 16); ctx.lineTo(x + dx * 24, y + dy * 24); }
+  ctx.stroke();
+  ctx.restore();
+}
 
 for (const id of ['projection', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'scaleBorder', 'land', 'islands', 'seaTint', 'rivers', 'lakes', 'trees', 'mountains', 'hills', 'continentsZoom', 'regions', 'regionsZoom', 'titleMode', 'townSize']) $(id).addEventListener('input', readControls);
 let typing = 0; // a typed title is placed when the typing pauses, not on every key: a placement takes up to a few hundred ms
