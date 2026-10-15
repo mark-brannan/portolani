@@ -10,13 +10,13 @@
       "kind": "monster",
       "style": "carta-marina",
       "file": "serpent-a.png",
-      "anchor": [0.5, 0.75],
-      "sizePx": 200,
+      "anchor": [0.536, 0.701],
+      "sizePx": 214,
       "bands": [0, 1],
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Carta_Marina.jpeg",
         "page": "https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg",
-        "crop": [1705, 896, 2060, 1189]
+        "crop": [1671, 875, 2064, 1214]
       },
       "minClearancePx": 160,
       "weight": 3
@@ -26,13 +26,13 @@
       "kind": "monster",
       "style": "carta-marina",
       "file": "whale-b.png",
-      "anchor": [0.5, 0.75],
-      "sizePx": 190,
+      "anchor": [0.544, 0.567],
+      "sizePx": 223,
       "bands": [0, 1],
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Carta_Marina.jpeg",
         "page": "https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg",
-        "crop": [2052, 360, 2349, 513]
+        "crop": [1997, 357, 2361, 589]
       },
       "minClearancePx": 150,
       "weight": 2
@@ -42,13 +42,13 @@
       "kind": "monster",
       "style": "carta-marina",
       "file": "pistrix-c.png",
-      "anchor": [0.5, 0.75],
+      "anchor": [0.505, 0.642],
       "sizePx": 150,
       "bands": [0, 1],
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Carta_Marina.jpeg",
         "page": "https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg",
-        "crop": [375, 1272, 536, 1429]
+        "crop": [373, 1211, 565, 1479]
       },
       "minClearancePx": 130,
       "weight": 2
@@ -58,13 +58,13 @@
       "kind": "monster",
       "style": "carta-marina",
       "file": "cete-e.png",
-      "anchor": [0.5, 0.75],
-      "sizePx": 180,
+      "anchor": [0.503, 0.592],
+      "sizePx": 200,
       "bands": [0, 1],
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Carta_Marina.jpeg",
         "page": "https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg",
-        "crop": [1811, 577, 2042, 731]
+        "crop": [1773, 573, 2059, 774]
       },
       "minClearancePx": 140,
       "weight": 1
@@ -74,13 +74,13 @@
       "kind": "ship",
       "style": "carta-marina",
       "file": "ship-a.png",
-      "anchor": [0.5, 0.75],
-      "sizePx": 80,
+      "anchor": [0.517, 0.631],
+      "sizePx": 107,
       "bands": [0, 1],
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Carta_Marina.jpeg",
         "page": "https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg",
-        "crop": [1208, 803, 1311, 960]
+        "crop": [1131, 781, 1334, 1049]
       },
       "heading": "right"
     },
@@ -89,13 +89,13 @@
       "kind": "ship",
       "style": "carta-marina",
       "file": "ship-b.png",
-      "anchor": [0.5, 0.75],
-      "sizePx": 64,
+      "anchor": [0.617, 0.591],
+      "sizePx": 80,
       "bands": [0, 1],
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Carta_Marina.jpeg",
         "page": "https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg",
-        "crop": [2093, 718, 2207, 799]
+        "crop": [2051, 691, 2209, 839]
       },
       "heading": "right"
     },

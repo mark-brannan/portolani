@@ -41,3 +41,40 @@ draws, at map size (one map pixel to one sheet pixel), in both styles, `marina` 
 | Norvegia, the lesser hills | (1850,1950)-(2650,2550) | 10/61/9 | 420, 330, 400, 300 |
 
 The drawn views are rendered with the continents and Latin regions on and rivers and lakes in the Carta Marina style.
+
+## Monster and ship sprites as patches (#111)
+
+The six Carta Marina sprites of the `scanned` pack are cut as patches: the whole crop, sea and swell
+and ripples with it, its edge feathered, the paper divided out so the renderer's multiply sinks it
+into the parchment. The paper divided out is the plate's own (a bright land patch, `#ded2af`), not the
+mean of the crop's surroundings: a crop of open sea holds no paper, and dividing the sea out would take its
+wash with it. They were cut by ink coverage, which dropped the sea round each figure. Every
+crop box now reaches well below the figure so the bottom edge keeps the most water.
+
+Rebuild everything here (the other sprites in the pack are untouched and rebuild byte-identical) with:
+
+    node scripts/build-packs.mjs --only scanned --keep docs/carta-marina
+
+`steps.png` is a row per sprite: the raw crop, the key (white where the sprite is opaque), the cut
+multiplied onto parchment at 1:1, and the cut at the width the map draws it. `<id>.raw.png`,
+`<id>.key.png` and `<id>.cut.png` are the three images behind it. The monster or ship keeps the size
+and anchor it had; the extra water is drawn round it (`figure` in the build script is the old tight box).
+
+The crop of each sprite is `source.crop` in its `pack.json`. In the raw, absent from the sprite:
+
+| sprite | absent | why |
+|---|---|---|
+| serpent-a | the ship and boat at the top right | neighbouring figures; the cut fades into the sea |
+| serpent-a | "GOTHI", "SOOPEDVM", a "D" | lettering |
+| serpent-a | the coast corner at the foot | land |
+| whale-b | the coast house, bottom right | a neighbour |
+| pistrix-c | two letters of "STR&SIVE", left edge | lettering |
+| cete-e | a "C" and the end of "CETE" | lettering |
+| ship-a | an "L" by the foremast, "ANGLI" under the hull | lettering |
+| ship-b | the islet "HUST" at the foot | land |
+| ship-b | the end of "QUEDEFIORD", and "NA" | lettering |
+
+The tiny boat under ship-b's hull stays: it is part of its water.
+
+Still cut by ink, to follow: the roses, cartouche, palms, scale, Aguiar towns, Paré monsters and
+Master W ships (`docs/towns-aguiar` for the towns).
