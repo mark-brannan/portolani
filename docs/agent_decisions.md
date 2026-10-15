@@ -159,3 +159,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261015t193510z
 - Reset keeps view, resets projection (PR 156) (no PR, branch claude/portolani-unattended-shift-2c08b5)
+
+### 20261015t193513z
+- Reset adds a history entry (PR 156) (no PR, branch claude/portolani-unattended-shift-2c08b5)
