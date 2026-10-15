@@ -117,6 +117,25 @@ const within = (e, lon, lat) => lon >= e.west && lon <= e.east && lat >= e.south
 const overlaps = (a, b) => a.west < b.east && b.west < a.east && a.south < b.north && b.south < a.north;
 export const inShadow = (sheet, lon, lat) => !!sheet.shadow?.some((e) => within(e, lon, lat));
 
+// A sheet's territory, in windows: its extent less the smaller curated sheets over it, on the Mercator page,
+// over the page window at zoom `from` (1125 / 2^from degrees across, 1000 / 1600 as tall). It is a property of
+// the sheet and its shadow, so it is the same from any view  (#147).
+export function territory(sheet, from) {
+  const e = sheet.extent, y0 = mercY(e.south), y1 = mercY(e.north);
+  const cuts = (sheet.shadow ?? []).filter((o) => overlaps(o, e)).map((o) => ({ x0: Math.max(o.west, e.west), x1: Math.min(o.east, e.east), y0: Math.max(mercY(o.south), y0), y1: Math.min(mercY(o.north), y1) }));
+  // the extent's area less the union of the cuts, by the strips between their x edges
+  const xs = [...new Set([e.west, e.east, ...cuts.flatMap((c) => [c.x0, c.x1])])].sort((a, b) => a - b);
+  let area = 0;
+  for (let i = 1; i < xs.length; i++) {
+    const mid = (xs[i - 1] + xs[i]) / 2, spans = cuts.filter((c) => c.x0 <= mid && mid <= c.x1).sort((a, b) => a.y0 - b.y0);
+    let covered = 0, top = y0;
+    for (const c of spans) { const lo = Math.max(c.y0, top); if (c.y1 > lo) { covered += c.y1 - lo; top = c.y1; } }
+    area += (xs[i] - xs[i - 1]) * (y1 - y0 - covered);
+  }
+  const width = WINDOW_DEG / 2 ** from;
+  return area / (width * width * ASPECT);
+}
+
 // The part of segment a-b, as [t0, t1] along it, inside rectangle r (Liang-Barsky), or null.
 function across(ax, ay, bx, by, r) {
   let t0 = 0, t1 = 1;

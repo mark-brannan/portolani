@@ -7,7 +7,7 @@
 // A view is a centre, zoom and projection, { lon, lat, zoom, projection }, on a W x H canvas; the
 // projection is one of PROJECTIONS, Mercator when left out.
 
-import { sheetsFor, inShadow, cutOut, BANDS as ATLAS_BANDS, ROSE as ATLAS_ROSE } from './atlas.mjs';
+import { sheetsFor, inShadow, territory, cutOut, BANDS as ATLAS_BANDS, ROSE as ATLAS_ROSE } from './atlas.mjs';
 import { fill, trace, limn, rhumb, place, letter, geojsonPolygons, geojsonRings } from 'coast-wright';
 import { bandOf } from './bands.mjs';
 import { islandInfo, ISLAND_KM2 } from './island.mjs';
@@ -166,7 +166,15 @@ const withLakes = (w, lakes) => (lakes.length ? { ...w, lakes: [...w.lakes.filte
 
 // Per-run tuning; `density` scales how much ornament is placed (1 = the committed mockup).
 // `hillShare`: the share of the hill sprites that fit which stand, all of them from density 1.
-const TUNE = { monsterMax: 4, shipMax: 2, townGap: 48, hillShare: 1 };
+// `budget`: the ornaments (roses, monsters and ships together) one window holds at density 1, shared out among
+// the sheets in view by territory (#147; counts in docs/measurements.md). It is main's window placement
+// summed, which drew up to 4 roses, 4 monsters and 2 ships; `ROSE_SHARE` of it goes to roses, the rest
+// to beasts, two monsters to a ship. A new kind takes its share from these, so the total stays the budget.
+export const BUDGET = 10, ROSE_SHARE = 0.4, SHEET_ROSES = 4;
+const TUNE = { budget: BUDGET, monsterMax: 4, shipMax: 2, townGap: 48, hillShare: 1 };
+// A sheet's allotment: its territory in windows times the budget, whole and the same from any view.
+const allotment = (sh) => Math.round(TUNE.budget * territory(sh, sh.from));
+const roseQuota = (sh) => Math.min(SHEET_ROSES, Math.round(ROSE_SHARE * allotment(sh)));
 
 const CELL = 16;             // clearance field cell, px
 const MONSTER_GAP = 220;     // min centre spacing between monsters, px
@@ -1181,9 +1189,9 @@ function placeLesser(data, field, boxes, ctx, towns, names, poi) {
 // the sea round it is clear. Which sprite a sheet takes is picked by the sheet's name, so a sheet draws
 // the same roses from any view. Returns what buildScene's window placement does: roseDraws, centre, nodes.
 // a sheet with fewer than this many of its 17 sites in clear sea is land's, and its roses may stand on land
-const SHEET_SEA_SITES = 4, SHEET_SMALL_ROSES = 3, SHEET_NODE_ORDER = [0, 4, 8, 12, 2, 6, 10, 14, 1, 3, 5, 7, 9, 11, 13, 15];
+const SHEET_SEA_SITES = 4, SHEET_SMALL_ROSES = SHEET_ROSES - 1, SHEET_NODE_ORDER = [0, 4, 8, 12, 2, 6, 10, 14, 1, 3, 5, 7, 9, 11, 13, 15];
 function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
-  const roseDraws = [], at = (n) => { const [x, y] = data.proj.project(n.lon, n.lat); return { x, y }; };
+  const roseDraws = [], held = {}, at = (n) => { const [x, y] = data.proj.project(n.lon, n.lat); return { x, y }; };
   for (const sh of world.sheets) {
     const fp = sheetFrame(sh), seed = seedOf(sh.name);
     // `onLand`: a sheet with no clear sea to hold its big rose lets its roses stand on land, clear of the places
@@ -1206,22 +1214,24 @@ function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
     const sites = [c, ...c.nodes];
     const onLand = sites.filter((q, i) => clear(q.lon, q.lat, i ? smallSize : big.sizePx)).length < SHEET_SEA_SITES;
     // what is kept is decided in the frame; the page's projection only says where it falls and whether it is seen
-    const put = (sprite, n) => { if (shows(data.proj, n.lon, n.lat)) { const [fx, fy] = fp.project(n.lon, n.lat); roseDraws.push({ sprite, ...at(n), fx, fy, size: sprite.sizePx, sheet: sh.name }); } };
+    const put = (sprite, n) => { held[sh.name] = (held[sh.name] ?? 0) + 1; if (shows(data.proj, n.lon, n.lat)) { const [fx, fy] = fp.project(n.lon, n.lat); roseDraws.push({ sprite, ...at(n), fx, fy, size: sprite.sizePx, sheet: sh.name }); } };
     if (ownSet(world, sh)) {
-      for (const f of ownFigures(sh, 'rose')) put(figureSprite(sh, roses, ring, f), f);
+      // a chart's own roses are inside the sheet's allotment, like every other ornament of it
+      for (const f of ownFigures(sh, 'rose').slice(0, allotment(sh))) put(figureSprite(sh, roses, ring, f), f);
       continue;
     }
     // a curated sheet's network is not drawn where a smaller curated sheet lies
     const clear2 = (lon, lat, size, land) => !inShadow(sh, lon, lat) && clear(lon, lat, size, land);
-    if (clear2(c.lon, c.lat, big.sizePx, onLand)) put(big, c);
+    const quota = roseQuota(sh);
+    if (quota > 0 && clear2(c.lon, c.lat, big.sizePx, onLand)) put(big, c);
     let n = 0;
     for (const i of SHEET_NODE_ORDER) {
       const node = c.nodes[i], sprite = ring[n % ring.length];
-      if (n < SHEET_SMALL_ROSES && clear2(node.lon, node.lat, sprite.sizePx, onLand)) { put(sprite, node); n++; }
+      if (n < SHEET_SMALL_ROSES && (held[sh.name] ?? 0) < quota && clear2(node.lon, node.lat, sprite.sizePx, onLand)) { put(sprite, node); n++; }
     }
   }
   const pts = world.sheets.flatMap((sh) => [sh.circle, ...sh.circle.nodes]).map(at);
-  return { roseDraws, centre: pts[0], nodes: pts.slice(1) };
+  return { roseDraws, held, centre: pts[0], nodes: pts.slice(1) };
 }
 
 // Where a sheet is placed: Mercator at its band's first zoom, centred on the sheet, whatever the page's
@@ -1236,14 +1246,14 @@ const beastFrame = (sh) => makeProjection({ lon: sh.circle.lon, lat: sh.circle.l
 // the cast picked by the sheet's name, so a sheet draws the same beasts from any view. Monsters stand in
 // the clearest water; ships in coastal water, heading along the coast. The sea they are placed against is the 50m land, whatever the view has loaded.
 const SHEET_BEAST_PROBE = 24; // px between the rings a site's clearance is read at
-function placeSheetBeasts(data, world, sprites, roseDraws) {
+function placeSheetBeasts(data, world, sprites, roseDraws, held) {
   const monsters = [], ships = [];
   // each sheet is placed against its own roses alone: a neighbour in the view must not change what it holds
   for (const sh of world.sheets) {
     // its roses, placed in the sheet's frame, as discs in the beasts' frame; a size is screen px in either
     const rf = sheetFrame(sh), bf = beastFrame(sh);
     const avoid = roseDraws.filter((r) => r.sheet === sh.name).map((r) => { const [x, y] = bf.project(...rf.invert(r.fx, r.fy)); return { x, y, r: r.size / 2 + (r.size > 200 ? 0 : 10) }; });
-    const mine = ownSet(world, sh) ? ownBeastsOf(sh, world, sprites) : placeBeastsOf(sh, world, sprites, avoid);
+    const mine = ownSet(world, sh) ? ownBeastsOf(sh, world, sprites, held[sh.name] ?? 0) : placeBeastsOf(sh, world, sprites, avoid, held[sh.name] ?? 0);
     // the page's projection only says where a beast falls and whether it is seen
     const at = (b) => { const [x, y] = data.proj.project(b.lon, b.lat); return { ...b, x, y }; };
     for (const m of mine.monsters) if (shows(data.proj, m.lon, m.lat)) monsters.push(at(m));
@@ -1268,13 +1278,17 @@ const figureSprite = (sh, chosen, fallback, f) => {
   return standIns[sh.ornaments.filter((o) => o.kind === f.kind).indexOf(f) % standIns.length];
 };
 // One sheet's own beasts and ships, each in the sea where its chart draws it; one the fit puts on land is left out.
-function ownBeastsOf(sh, world, sprites) {
+function ownBeastsOf(sh, world, sprites, roses) {
+  // the chart's own figures count against the sheet's allotment, roses first, then monsters, then ships
+  let room = Math.max(0, allotment(sh) - roses);
   const take = (kind, set) => !set.length ? [] : ownFigures(sh, kind).map((f) => ({ f, sprite: figureSprite(sh, set, set, f) })).filter(({ f }) => world.seaAt(f.lon, f.lat))
-    .map(({ f, sprite }) => ({ sprite, lon: f.lon, lat: f.lat, size: sprite.sizePx, flip: false, ...(kind === 'ship' && { tilt: 0 }), sheet: sh.name }));
-  return { monsters: take('monster', sprites.monsters), ships: take('ship', sprites.ships) };
+    .slice(0, room).map(({ f, sprite }) => ({ sprite, lon: f.lon, lat: f.lat, size: sprite.sizePx, flip: false, ...(kind === 'ship' && { tilt: 0 }), sheet: sh.name }));
+  const monsters = take('monster', sprites.monsters);
+  room -= monsters.length;
+  return { monsters, ships: take('ship', sprites.ships) };
 }
 // One sheet's beasts, in the sheet's frame. `avoid` are its roses as discs {x, y, r} in frame px.
-function placeBeastsOf(sh, world, sprites, avoid) {
+function placeBeastsOf(sh, world, sprites, avoid, roses) {
   const fp = beastFrame(sh), seaAt = world.seaAt, monsters = [], ships = [];
   const ringClear = (x, y, r, rx = r, ry = r) => {
     for (let i = 0; i < 8; i++) {
@@ -1304,10 +1318,11 @@ function placeBeastsOf(sh, world, sprites, avoid) {
     sites.push({ lon, lat, x, y, c: clearance(x, y, 240) });
   }
   sites.sort((a, b) => b.c - a.c);
-  const windows = Math.max(1, ((e.east - e.west) / win) * ((y1 - y0) / ((win * H) / W))), seed = world.seed == null ? null : seedOf(sh.name);
+  // what the roses leave of the sheet's allotment: a third of it ships, the rest monsters
+  const beasts = Math.max(0, allotment(sh) - roses), shipQuota = Math.floor(beasts / 3), monsterQuota = beasts - shipQuota, seed = world.seed == null ? null : seedOf(sh.name);
   const mine = [];
   for (const sprite of castOrder(sprites.monsters, seed)) {
-    if (mine.length >= Math.round(TUNE.monsterMax * windows)) break;
+    if (mine.length >= monsterQuota) break;
     const aspect = sprite.img.height / sprite.img.width;
     for (const s of sites) {
       const size = Math.min(sprite.sizePx, s.c * 2 * 0.85);
@@ -1320,7 +1335,7 @@ function placeBeastsOf(sh, world, sprites, avoid) {
   }
   let shipsHere = 0;
   for (const sprite of castOrder(sprites.ships, seed == null ? null : seed ^ 0x5eed, () => 1)) {
-    if (shipsHere >= Math.round(TUNE.shipMax * windows)) break;
+    if (shipsHere >= shipQuota) break;
     const half = sprite.sizePx / 2, aspect = sprite.img.height / sprite.img.width;
     // coastal: clear sea for the hull, land within 72 px but none within 24
     const s = sites.find((q) => q.c >= half && free(q.x, q.y, half) && ringClear(q.x, q.y, half, half, half * aspect) && !ringClear(q.x, q.y, 72));
@@ -1364,7 +1379,7 @@ function buildScene(data, sprites, ctx, world = {}) {
   // not to the window: a sheet's big rose stands on its circle's centre, small roses on its nodes, wherever
   // the window is. A site is kept or dropped by the sea round it, never by what the window shows.
   const sheetRoses = world.sheets ? placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) : null;
-  const sheetBeasts = sheetRoses ? placeSheetBeasts(data, world, sprites, sheetRoses.roseDraws) : null;
+  const sheetBeasts = sheetRoses ? placeSheetBeasts(data, world, sprites, sheetRoses.roseDraws, sheetRoses.held) : null;
   const edge = (x, y) => Math.min(x, y, W - x, H - y);
   // Roses stand in open water. Where the water is heavily constrained (no clear sea in the middle of the
   // frame to hold half a big rose) they may stand on open land, clear of the coast by the same measure.
@@ -2379,8 +2394,9 @@ export async function createScene(environment, opts = {}) {
   STYLE.lakes = LAKE_STYLES.includes(lakes) ? lakes : 'off';
   STYLE.relief = [relief].flat().filter((r) => r !== 'off' && RELIEF_STYLES.includes(r));
   STYLE.trees = TREE_STYLES.includes(trees) ? trees : 'off';
-  TUNE.monsterMax = Math.round(4 * density);
-  TUNE.shipMax = Math.round(2 * density);
+  TUNE.budget = BUDGET * density;
+  TUNE.monsterMax = Math.round(TUNE.budget * (1 - ROSE_SHARE) * 2 / 3);
+  TUNE.shipMax = Math.round(TUNE.budget * (1 - ROSE_SHARE) / 3);
   TUNE.townGap = 48 / density;
   TUNE.hillShare = Math.min(1, density);
 

@@ -38,3 +38,51 @@ The pan-frame times at z5 and above sit at two animation frames (33 ms at 60 Hz)
 | GSHHG "f" cells around the view (`geo/f/`, 0.5° cells) | 330 KB at Seattle at z13.5 | past z12; whole set is 70,692 cells, 384 MB |
 | GSHHG lakes around the view (`geo/h-lakes/`, `geo/f-lakes/`) | 168 KB in Finland, 53 KB in Minnesota at z10 | past z10, when lakes are drawn; 50 MB whole |
 | Font (`font/IMFeENrm28P.ttf`) | 194,992 | every view |
+
+## Ornaments per window
+
+One budget of 10 ornaments (roses, monsters and ships together) a window holds at density 1 (#147); the density slider scales it. It is main's window placement summed (4 roses, 4 monsters, 2 ships; counted from the code, not guessed). A sheet's share is its territory in windows, its extent less the smaller curated sheets over it, and a window here is the sheet's pacing window: the page at its band's first zoom, or in the world band at the zoom the sheet is one window wide. The roses take 4 of every 10 at most, the rest go two monsters to a ship; a rose that cannot stand gives its place to the beasts, so the total stays the budget. A curated chart's own figures (history on, the default) count inside the sheet's share, roses first, then monsters, then ships.
+
+Measured on 2026-10-15 with `node scripts/measure-ornaments.mjs` (density 1, `scale: 'off'`, the 50m land only, one scene per view, about 2 s each, 12 views, about 25 s a run; not part of `npm test`). Counted: figures whose centre lies on the page.
+
+History on (the default). A Mediterranean or Baltic view is empty because the charts there draw none of their own (#146).
+
+| View | Zoom | Roses | Monsters | Ships | Total |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| world, Atlantic | 2 | 5 | 5 | 3 | 13 |
+| world, North Atlantic | 3 | 4 | 3 | 3 | 10 |
+| world, Baltic | 5 | 0 | 0 | 0 | 0 |
+| overview, Caribbean | 6 | 4 | 6 | 1 | 11 |
+| overview, Mediterranean | 6 | 0 | 0 | 0 | 0 |
+| overview, Bay of Bengal | 6 | 3 | 10 | 2 | 15 |
+| general, Aegean | 8 | 1 | 9 | 2 | 12 |
+| general, Caribbean | 8 | 2 | 0 | 0 | 2 |
+| coastal, Aegean | 10 | 0 | 0 | 3 | 3 |
+| coastal, Liguria | 10 | 2 | 0 | 1 | 3 |
+| approach, Cyclades | 12 | 2 | 1 | 2 | 5 |
+| harbour, Genoa | 14 | 0 | 0 | 3 | 3 |
+
+mean 6.4, max 15 of 12 views at density 1.
+
+History off (seeded figures everywhere):
+
+| View | Zoom | Roses | Monsters | Ships | Total |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| world, Atlantic | 2 | 7 | 7 | 2 | 16 |
+| world, North Atlantic | 3 | 9 | 8 | 4 | 21 |
+| world, Baltic | 5 | 1 | 0 | 0 | 1 |
+| overview, Caribbean | 6 | 4 | 6 | 1 | 11 |
+| overview, Mediterranean | 6 | 3 | 11 | 2 | 16 |
+| overview, Bay of Bengal | 6 | 3 | 10 | 2 | 15 |
+| general, Aegean | 8 | 1 | 9 | 2 | 12 |
+| general, Caribbean | 8 | 2 | 0 | 0 | 2 |
+| coastal, Aegean | 10 | 0 | 0 | 3 | 3 |
+| coastal, Liguria | 10 | 2 | 0 | 1 | 3 |
+| approach, Cyclades | 12 | 2 | 1 | 2 | 5 |
+| harbour, Genoa | 14 | 0 | 0 | 3 | 3 |
+
+mean 9.0, max 21 of 12 views at density 1.
+
+Margin: no view is over 15 (1.5 times the budget) with history on, and none is over 15 with history off at the overview band and below. The two seeded world-band rows above it (zoom 2 and 3) add the budgets of the two or three world sheets that overlap one window there, each paced at its own zoom. Views deeper into a band than its first zoom, or over coast, hold fewer: a sheet holds its share across its whole extent, and the land takes the sites a beast needs. Density 2 measures a mean of 8.2 and a maximum of 19 over the same views, 0.5 a mean of 3.3 and a maximum of 7, and 0 none (history on). `test/rose-sheets.test.mjs` checks that no sheet holds more than its share.
+
+Before this change the same views held at most 15 on the page (zoom 2, history on), and 8 at the overview band over the Caribbean against 11 now; the per-sheet caps summed to more than one window holds wherever sheets overlap it.

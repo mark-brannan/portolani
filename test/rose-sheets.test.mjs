@@ -5,7 +5,8 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
-import { createScene, viewProjection, panView } from '../scripts/scene.mjs';
+import { createScene, viewProjection, panView, BUDGET } from '../scripts/scene.mjs';
+import { territory } from '../scripts/atlas.mjs';
 import { coastNames, joinNames } from '../scripts/names.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -119,3 +120,29 @@ for (const zoom of [5, 9]) {
     assert.ok(a.list.length > 0, 'something is placed');
   });
 }
+
+// One ornament budget per window (#147): a sheet holds no more roses, monsters and ships together than its
+// territory in windows times the budget, whatever the density, and the density scales that budget.
+const heldAt = async (view, density) => {
+  const { scene } = await createScene(env, { view, scale: 'off', density, historical: false });
+  const per = {};
+  for (const o of [...scene.roseDraws, ...scene.monsters, ...scene.ships]) per[o.sheet] = (per[o.sheet] ?? 0) + 1;
+  return { scene, per, total: Object.values(per).reduce((a, b) => a + b, 0) };
+};
+
+test('each sheet keeps its roses, monsters and ships within its share of the one budget', async () => {
+  for (const view of [{ lon: -75, lat: 18, zoom: 6 }, { lon: 25, lat: 38, zoom: 8 }]) {
+    for (const density of [1, 0.5]) {
+      const { scene, per } = await heldAt(view, density);
+      assert.ok(Object.keys(per).length > 0, 'ornaments are placed');
+      for (const sh of scene.sheets) assert.ok((per[sh.name] ?? 0) <= Math.round(BUDGET * density * territory(sh, sh.from)), `${sh.name} at density ${density}`);
+    }
+  }
+});
+
+test('the density slider scales the one budget', async () => {
+  const view = { lon: -75, lat: 18, zoom: 6 };
+  const [half, one, two] = [await heldAt(view, 0.5), await heldAt(view, 1), await heldAt(view, 2)];
+  assert.ok(half.total < one.total && one.total < two.total, `${half.total} < ${one.total} < ${two.total}`);
+  assert.equal((await heldAt(view, 0)).total, 0);
+});
