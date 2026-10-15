@@ -175,7 +175,16 @@ for (const [id, member] of [['gshhg-licence', 'LICENSE.TXT'], ['gshhg-copying-le
 }
 await cp(path.join(root, 'node_modules', 'coast-wright', 'lib'), path.join(out, 'coast-wright'), { recursive: true });
 await cp(path.join(root, 'public'), out, { recursive: true });
-await cp(path.join(root, 'scripts', 'scene.mjs'), path.join(out, 'scene.mjs'));
-for (const f of ['bands.mjs', 'catalogue.json', 'island.mjs', 'city.mjs', 'urban.mjs', 'water.mjs', 'buildings.mjs', 'trees.mjs', 'relief.mjs']) await cp(path.join(root, 'scripts', f), path.join(out, f));
+// scene.mjs and every file it reaches by a relative import, walked rather than listed, so a new
+// module ships with the scene that imports it (a hand-kept list once left the page blank)
+async function relativeImports(entry, seen = new Set()) {
+  if (seen.has(entry)) return seen;
+  seen.add(entry);
+  if (!entry.endsWith('.mjs')) return seen;
+  const src = await readFile(path.join(root, 'scripts', entry), 'utf8');
+  for (const [, f] of src.matchAll(/^\s*(?:import|export)\b[^;]*?\bfrom\s+'\.\/([^']+)'/gm)) await relativeImports(f, seen);
+  return seen;
+}
+for (const f of await relativeImports('scene.mjs')) await cp(path.join(root, 'scripts', f), path.join(out, f));
 await cp(path.join(root, 'packs'), path.join(out, 'packs'), { recursive: true });
 console.log(`preview assembled in ${path.relative(root, out)}/`);
