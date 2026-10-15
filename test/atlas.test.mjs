@@ -108,3 +108,16 @@ test('the hidden circle: centre at the cell centre, sixteen nodes, radius a para
   const d = (n) => Math.hypot(n.lon - c.lon, my(n.lat) - my(c.lat));
   for (const n of c.nodes) close(d(n), d(c.nodes[0]), 1e-6);
 });
+
+test("no sheet touches a pole, so every hidden circle has finite nodes below it", () => {
+  for (const z of [6, 8, 10, 12, 14]) for (const x of sheetsFor(bounds(z, 0, 85, 1, 90))) {
+    assert.ok(x.extent.north < 90);
+    for (const n of x.circle.nodes) assert.ok(Number.isFinite(n.lon) && n.lat < 90, x.name);
+  }
+});
+
+test('band 5 names keep the row digits whole, 4 digits past row 999', () => {
+  const [s] = sheetsFor(bounds(14, 10, 80, 10.01, 80.01));
+  assert.match(s.name, /^PT5N\d{4}[EW]\d{4}$/);
+  assert.match(sheetsFor(bounds(14, 10, 40, 10.01, 40.01))[0].name, /^PT5N\d{4}E\d{4}$/);
+});

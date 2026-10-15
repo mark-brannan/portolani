@@ -61,7 +61,7 @@ const pad = (n, w) => String(n).padStart(w, '0');
 // South and west count outward from 0, so row -1 is S000 and column -1 is W0000.
 export function sheetName(band, row, col) {
   const r = row < 0 ? -row - 1 : row, c = col < 0 ? -col - 1 : col;
-  return `PT${band.band}${row < 0 ? 'S' : 'N'}${pad(r, 3)}${col < 0 ? 'W' : 'E'}${pad(c, 4)}`;
+  return `PT${band.band}${row < 0 ? 'S' : 'N'}${pad(r, Math.max(3, String(Math.floor(90 / band.height + EPS)).length))}${col < 0 ? 'W' : 'E'}${pad(c, 4)}`;
 }
 
 // The hidden circle: centre at the cell centre, sixteen nodes at equal bearings from it, round on the
@@ -85,7 +85,9 @@ export function sheetsFor(view, { radius = 0.5 } = {}) {
   const band = bandFor(view.zoom);
   const h = band.height;
   const b = viewBounds(view);
-  const rows = Math.floor(90 / h + EPS); // whole rows off the equator; no cap beyond the last
+  // Whole rows off the equator that end short of a pole: a row touching the pole (90 is a whole number of
+  // 1.2, 0.3 and 0.075 rows) has no Mercator centre, so it is left out like the caps beyond the last.
+  const rows = Math.ceil(90 / h - EPS) - 1;
   const south = Math.max(Math.floor(b.south / h + EPS), -rows);
   const north = Math.min(Math.ceil(b.north / h - EPS), rows);
   const out = [];
