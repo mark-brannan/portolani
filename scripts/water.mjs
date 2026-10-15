@@ -6,7 +6,7 @@
 // already cut to the view. 'off' maps to null. A later ground layer (mountains, forests) follows the
 // same shape: a table of styles, a loader, and a pick by zoom.
 
-import { fill, limn, runs, pen, simplify, meander, footprint, lozenge, hatch, geojsonRings, geojsonPolygons } from 'coast-wright';
+import { fill, limn, runs, pen, simplify, meander, boundingBox, lozenge, hatch, geojsonRings, geojsonPolygons } from 'coast-wright';
 
 const RIVER_INK = '#26355a'; // blue-black, as the Aguiar rivers are drawn
 const RIVER_BLUE = '#2f5f8f', RIVER_DARK_BLUE = '#14284f'; // the plain line's blue; the Carta Marina pair's dark blue
@@ -45,8 +45,8 @@ export function waterOf(riversGeo, lakesGeo) {
 // Each feature's rings as pixel runs, simplified to `tolerance` px, with a phase of its own so
 // neighbouring rivers do not wiggle in step.
 function pixelRuns(data, features, tolerance) {
-  const { x, y, seam } = data.proj;
-  return features.flatMap((f) => runs(f.rings, x, y, { ...seam })
+  const { toPx, seam } = data.proj;
+  return features.flatMap((f) => runs(f.rings, toPx, { ...seam })
     .filter((run) => run.length > 1)
     .map((run, i) => ({ run: simplify(run, tolerance), phase: (data.palette.seedOf(f.key) >>> 0) % 628 / 100 + i })));
 }
@@ -84,10 +84,10 @@ export const RIVERS = {
 const shoresOf = (features) => features.flatMap((f) => f.shore ?? f.polys.flat());
 function trueLakes(g, data, polys, shores, { wash, alpha, hatching, edge }) {
   if (!polys.length) return;
-  const { x, y, seam } = data.proj;
-  fill(g, polys, x, y, { color: wash, alpha, ...seam });
-  if (hatching) hatch(g, polys, x, y, { ...hatching, ...seam });
-  limn(g, shores, x, y, { color: edge, alpha: 1, width: 1.2, oneStroke: true, ...seam });
+  const { toPx, seam } = data.proj;
+  fill(g, polys, toPx, { color: wash, alpha, ...seam });
+  if (hatching) hatch(g, polys, toPx, { ...hatching, ...seam });
+  limn(g, shores, toPx, { color: edge, alpha: 1, width: 1.2, oneStroke: true, ...seam });
 }
 const BLUE_HATCHED = { wash: LAKE_BLUE, alpha: 0.6, hatching: { angle: Math.PI / 2, gap: 9, wavelength: 22, amplitude: 2, color: HATCH_BLUE, width: 1.2 }, edge: RIVER_INK };
 
@@ -109,15 +109,15 @@ export const LAKES = {
   // Aguiar, 1492: a small lake is a lozenge washed red, rose or green, with a comb of tributaries
   // above it; a great one keeps its shape, washed blue and hatched with waves
   aguiar: (g, data, features) => {
-    const { x, y, seam } = data.proj, { pigments, seedOf } = data.palette;
+    const { toPx, seam } = data.proj, { pigments, seedOf } = data.palette;
     const great = [], shores = [], small = [];
     // a lake cut into cells is sized whole, its pieces' outlines together
     const parts = (f) => (f.shore ? [{ polys: f.polys, ring: f.polys.flatMap((p) => p[0]), shore: f.shore }] : f.polys.map((p) => ({ polys: [p], ring: p[0], shore: p.flat() })));
     for (const f of features) {
       for (const part of parts(f)) {
-        const [ring] = runs([part.ring], x, y, { ...seam });
+        const [ring] = runs([part.ring], toPx, { ...seam });
         if (!ring || ring.length < 3) continue;
-        const box = footprint(ring);
+        const box = boundingBox(ring);
         if (box.length >= LOZENGE_PX) { great.push(...part.polys); shores.push(...part.shore); }
         else if (box.length >= LAKE_MIN_PX) {
           const length = Math.max(box.length * 1.15, 34);

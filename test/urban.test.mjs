@@ -177,14 +177,14 @@ test('a built-up area is washed over its town\'s footprint and on land only, tho
   const a = draw(data), b = draw({ ...data, urban: [] })
   // the land as a mask, grown by the coast stroke, which the clip's antialiasing touches
   const m = createCanvas(W, H), mg = m.getContext('2d')
-  fill(mg, data.land, data.proj.x, data.proj.y, { color: '#ffffff', lonCenter: data.proj.lonCenter })
-  limn(mg, data.coastLL, data.proj.x, data.proj.y, { color: '#ffffff', alpha: 1, width: 6, lonCenter: data.proj.lonCenter })
+  fill(mg, data.land, data.proj.toPx, { color: '#ffffff', centralMeridian: data.proj.lonCenter })
+  limn(mg, data.coastLL, data.proj.toPx, { color: '#ffffff', alpha: 1, width: 6, centralMeridian: data.proj.lonCenter })
   const land = mg.getImageData(0, 0, W, H).data
   // every town's 10m footprint, the ground the city plans stand on (a town off the view may reach into
   // it), grown by the edge's stroke; the rings are stored open
   const f = createCanvas(W, H), fg = f.getContext('2d'), towns = Object.values(await cellEnv.readJSON('geo/urban-10m.json'))
-  fill(fg, towns, data.proj.x, data.proj.y, { color: '#ffffff', lonCenter: data.proj.lonCenter })
-  limn(fg, towns.flat().map((r) => [...r, r[0]]), data.proj.x, data.proj.y, { color: '#ffffff', alpha: 1, width: 4, lonCenter: data.proj.lonCenter })
+  fill(fg, towns, data.proj.toPx, { color: '#ffffff', centralMeridian: data.proj.lonCenter })
+  limn(fg, towns.flat().map((r) => [...r, r[0]]), data.proj.toPx, { color: '#ffffff', alpha: 1, width: 4, centralMeridian: data.proj.lonCenter })
   const ground = fg.getImageData(0, 0, W, H).data
   let changed = 0, wet = 0, off = 0
   for (let i = 0; i < a.length; i += 4) {
