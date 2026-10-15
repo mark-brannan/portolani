@@ -156,3 +156,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261015t190448z
 - PR151 merge: kept main's rose-frame avoid discs plus #146 ownSet branch; goldens regenerated; undo = revert merge 34777c3 (no PR, branch main)
+
+### 20261015t193510z
+- Reset keeps view, resets projection (PR 156) (no PR, branch claude/portolani-unattended-shift-2c08b5)
