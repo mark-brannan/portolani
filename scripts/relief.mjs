@@ -266,7 +266,7 @@ function humpShape({ x, y, w, h, lean }) {
 
 // coast-wright's hatch takes lon/lat; a shape already in px goes through as it is, measured from
 // its own x so no stroke is taken for a seam.
-const asIs = (v) => v;
+const asIs = ([lon, lat]) => [lon, lat];
 
 // Each shape back to front: washed, its shadow side darker and hatched with short ink strokes down
 // the slope, then the flanks and crest inked. `wash` null leaves the paper showing (an engraving).
@@ -277,7 +277,7 @@ function drawShapes(g, shapes, lookOf) {
     const { ink, light, shade, hatching, width } = lookOf(s.style);
     if (light) { g.beginPath(); pen(g, [s.outline], { close: true }); g.fillStyle = light; g.fill(); }
     if (shade) { g.beginPath(); pen(g, [s.shadow], { close: true }); g.fillStyle = shade; g.fill(); }
-    hatch(g, [[s.shadow]], asIs, asIs, { angle: s.slope + 0.35, gap: hatching.gap, color: ink, width: hatching.width, alpha: hatching.alpha, lonCenter: s.outline[0][0] });
+    hatch(g, [[s.shadow]], asIs, { angle: s.slope + 0.35, gap: hatching.gap, color: ink, width: hatching.width, alpha: hatching.alpha, centralMeridian: s.outline[0][0] });
     g.strokeStyle = ink; g.lineWidth = width;
     g.beginPath(); pen(g, [s.flanks]); g.stroke();
     g.lineWidth = width * 0.7;

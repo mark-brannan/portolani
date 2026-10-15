@@ -75,3 +75,26 @@ test('a beast inside both of two overlapping windows is placed in both', async (
     assert.ok(q.at.some((o) => o.id === b.id && Math.hypot(o.ll[0] - b.ll[0], o.ll[1] - b.ll[1]) < 1e-6), `${b.id} at ${b.ll} in both views`);
   }
 });
+
+// everything a sheet holds, by where it stands on the earth: zoom within the band and a small drag change nothing
+const held = async (view) => {
+  const { scene, data } = await createScene(env, { view, scale: 'off' });
+  const bySheet = new Map();
+  for (const [kind, list] of [['rose', scene.roseDraws], ['monster', scene.monsters], ['ship', scene.ships]]) {
+    for (const o of list) {
+      const [lon, lat] = data.proj.invert(o.x, o.y);
+      bySheet.set(o.sheet, [...(bySheet.get(o.sheet) ?? []), `${kind} ${o.sprite.id} ${lon.toFixed(6)} ${lat.toFixed(6)}`]);
+    }
+  }
+  for (const [k, v] of bySheet) bySheet.set(k, v.sort());
+  return bySheet;
+};
+
+test('a sheet holds the same roses, monsters and ships at every zoom of its band and after a drag', async () => {
+  const views = [8.1, 9, 9.9].map((zoom) => ({ lon: 8.93, lat: 44.41, zoom })).concat([{ lon: 8.93 + 1125 / 2 ** 9 * 0.01, lat: 44.41, zoom: 9 }]);
+  const all = await Promise.all(views.map(held));
+  const common = [...all[0].keys()].filter((k) => all.every((m) => m.has(k)));
+  assert.ok(common.length > 0, 'the views share a sheet');
+  assert.ok(common.some((k) => all[0].get(k).length > 0), 'a shared sheet holds something');
+  for (const sheet of common) for (const m of all.slice(1)) assert.deepEqual(m.get(sheet), all[0].get(sheet), sheet);
+});
