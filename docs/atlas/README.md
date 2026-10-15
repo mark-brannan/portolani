@@ -160,11 +160,13 @@ between them keeps the roses still. The world band is the exception again: at th
 is one page, so it takes every curated sheet from the planispheres down to the Carte Pisane's two
 circles.
 
-Where curated sheets overlap in one band, the smaller extent wins over the ground it covers and the
-larger sheet's network is drawn only where no smaller sheet lies: the Carte Pisane's circles over
-Dulcert's, Dulcert's over the Catalan Atlas's. The Carte Pisane's two sheets share their overlap, as
-the original's two circles did. A view therefore meets one network, plus its neighbours' lines
-inside the reach margin.
+Where curated sheets overlap in one band, the sheet of smaller area (its extent in square degrees)
+wins over the ground it covers, and the larger sheet's network is drawn only where no smaller sheet
+lies: the Carte Pisane's circles over Dulcert's, Dulcert's over the Catalan Atlas's, and in the
+Atlantic the Catalan Atlas (7,250 square degrees) over Juan de la Cosa (10,200) between 25°W and
+20°E, which keeps the Catalan rose off Morocco and leaves de la Cosa's rose in the open Atlantic
+untouched. The Carte Pisane's two sheets share their overlap, as the original's two circles did. A
+view therefore meets one network, plus its neighbours' lines inside the reach margin.
 
 The Carta Marina is the odd one out: it is a printed map of the north, not a navigator's chart, and
 Olaus's roses and lines were decoration. It is in the list because its ornaments are already the
@@ -251,15 +253,14 @@ wait on it.
 - **Magnetic tilt.** The originals' networks were rotated by the magnetic declination of their day.
   Drawing the curated circles with that tilt would be more faithful and would confuse the modern
   reader who expects north up. Left open; the sheet record has room for an `orientation` field.
-- **Cost per frame.** Projecting every anchor each frame replaces today's ground-only frame with
-  one that also draws the ornaments. The mechanism stays open until it is measured; the measurement
-  that settles it: a scratch page driving sixty 4 px pans and sixty 1.02x zooms at zooms 5, 9 and 12
-  over Genoa, recording median and p90 frame time for today's frame and for the projected ornaments.
-  A median of a
-  few hundred milliseconds at zoom 5 is acceptable while the chart is in development, and about
-  50 ms is the bar to aim at later; the ruling is in [decisions.md](../decisions.md). Above the
-  acceptable bar, the ornaments are drawn every other frame during a move, which is still no
-  flicker.
+- **Cost per frame.** Projecting every anchor each frame replaces today's ground-only frame with one
+  that also draws the ornaments. The mechanism stays open until it is measured; the measurement that
+  settles it: a scratch page driving sixty 4 px pans and sixty 1.02x zooms at zooms 5, 9 and 12 over
+  Genoa, recording median and p90 frame time for today's frame and for the projected ornaments. A
+  median of a few hundred milliseconds at zoom 5 is acceptable while the chart is in development,
+  and about 50 ms is the bar to aim at later; the ruling is in [decisions.md](../decisions.md).
+  Above the acceptable bar, the ornaments are drawn every other frame during a move, which is still
+  no flicker.
 
 ## Not decided here
 
