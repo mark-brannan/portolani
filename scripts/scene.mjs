@@ -7,11 +7,7 @@
 // A view is a centre, zoom and projection, { lon, lat, zoom, projection }, on a W x H canvas; the
 // projection is one of PROJECTIONS, Mercator when left out.
 
-<<<<<<< Updated upstream
-import { sheetsFor, BANDS as ATLAS_BANDS, ROSE as ATLAS_ROSE } from './atlas.mjs';
-=======
-import { sheetsFor, inShadow, BANDS as ATLAS_BANDS } from './atlas.mjs';
->>>>>>> Stashed changes
+import { sheetsFor, inShadow, BANDS as ATLAS_BANDS, ROSE as ATLAS_ROSE } from './atlas.mjs';
 import { fill, trace, limn, rhumb, place, letter, geojsonPolygons, geojsonRings } from 'coast-wright';
 import { bandOf } from './bands.mjs';
 import { islandInfo, ISLAND_KM2 } from './island.mjs';

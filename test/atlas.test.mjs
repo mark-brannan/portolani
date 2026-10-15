@@ -1,10 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-<<<<<<< Updated upstream
-import { sheetsFor, bandFor, widening, BANDS, hiddenCircle, ROSE } from '../scripts/atlas.mjs';
-=======
-import { sheetsFor, inShadow, bandFor, widening, BANDS, hiddenCircle } from '../scripts/atlas.mjs';
->>>>>>> Stashed changes
+import { sheetsFor, inShadow, bandFor, widening, BANDS, hiddenCircle, ROSE } from '../scripts/atlas.mjs';
 
 const bounds = (zoom, west, south, east, north) => ({ zoom, west, south, east, north });
 const close = (a, b, e = 1e-6) => assert.ok(Math.abs(a - b) < e, `${a} vs ${b}`);

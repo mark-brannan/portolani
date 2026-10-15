@@ -133,25 +133,17 @@ export function sheetsFor(view, { radius = 0.5, curated = false } = {}) {
   const band = bandFor(view.zoom);
   const h = band.height;
   const b = viewBounds(view);
-<<<<<<< Updated upstream
-  // Whole rows out from the rose that stop short of both poles: a row touching a pole has no Mercator
-  // centre, so it is left out like the caps beyond the last.
-  const rowLo = Math.floor((-90 - ROSE.lat) / h + EPS) + 1, rowHi = Math.ceil((90 - ROSE.lat) / h - EPS) - 1; // rows rowLo to rowHi - 1
-  const south = Math.max(Math.floor((b.south - ROSE.lat) / h + EPS), rowLo);
-  const north = Math.min(Math.ceil((b.north - ROSE.lat) / h - EPS), rowHi);
-=======
   const world = view.zoom < BANDS[0].from;
   const all = { west: -180, east: 180, south: -90, north: 90 };
   const everywhere = curated && band.band === 1 ? curatedFor(world, band, all) : [];
   const cur = everywhere.filter((c) => overlaps(c.extent, b));
   if (curated && world) return cur;
   const held = (extent) => everywhere.some((c) => within(c.extent, (extent.west + extent.east) / 2, (extent.south + extent.north) / 2));
-  // Whole rows off the equator that end short of a pole: a row touching the pole (90 is a whole number of
-  // 1.2, 0.3 and 0.075 rows) has no Mercator centre, so it is left out like the caps beyond the last.
-  const rows = Math.ceil(90 / h - EPS) - 1;
-  const south = Math.max(Math.floor(b.south / h + EPS), -rows);
-  const north = Math.min(Math.ceil(b.north / h - EPS), rows);
->>>>>>> Stashed changes
+  // Whole rows out from the rose that stop short of both poles: a row touching a pole has no Mercator
+  // centre, so it is left out like the caps beyond the last.
+  const rowLo = Math.floor((-90 - ROSE.lat) / h + EPS) + 1, rowHi = Math.ceil((90 - ROSE.lat) / h - EPS) - 1; // rows rowLo to rowHi - 1
+  const south = Math.max(Math.floor((b.south - ROSE.lat) / h + EPS), rowLo);
+  const north = Math.min(Math.ceil((b.north - ROSE.lat) / h - EPS), rowHi);
   const out = [];
   for (let row = south; row < north; row++) {
     const s = round(ROSE.lat + row * h);
@@ -161,12 +153,8 @@ export function sheetsFor(view, { radius = 0.5, curated = false } = {}) {
     const c0 = Math.floor((Math.max(b.west, -180) - ROSE.lon) / w + EPS);
     const c1 = Math.ceil((Math.min(b.east, 180) - ROSE.lon) / w - EPS);
     for (let col = c0; col < c1; col++) {
-<<<<<<< Updated upstream
       const extent = { west: Math.max(-180, round(ROSE.lon + col * w)), east: Math.min(180, round(ROSE.lon + (col + 1) * w)), south: s, north: round(s + h) };
-=======
-      const extent = { west: Math.max(-180, round(col * w)), east: Math.min(180, round((col + 1) * w)), south: round(s), north: round(s + h) };
       if (held(extent)) continue;
->>>>>>> Stashed changes
       out.push({
         name: sheetName(band, row, col), band: band.band, bandName: band.name, row, col, extent,
         circle: hiddenCircle(extent, radius),
