@@ -23,6 +23,15 @@
 // -> levels -> masks (saturation silhouette for coloured figures on hatched sea, a polygon drawn
 // round a figure whose sea is printed in the same ink, circle for roses, rectangles erased for
 // lettering) -> trim -> downscale. Line work on blank paper needs no mask: darkness alone keys it.
+//
+// Two keys (`key` on a pack, overridden per sprite). `patch`, the default: alpha is the figure's
+// outline alone, the masks with their feathered edges, and everything inside stays, the water a
+// ship sits in, the grass under a tree, the hatching round a village. The paper is divided out,
+// so under the renderer's `multiply` it vanishes into our parchment and the figure lands on the
+// map as it sat on the plate; the levels only seed a silhouette. `ink`: alpha is ink coverage from
+// the levels, so paper and every wash lighter than the levels drop out; it thins colour and loses
+// the surroundings (the scanned pack was cut this way, see #111), so it is for a pack drawn in ink
+// alone, where nothing but line is wanted.
 
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync, readFileSync, existsSync, mkdtempSync, rmSync } from 'node:fs';
@@ -78,7 +87,7 @@ const PAPER_LEVEL = [20, 50];
 const PAPER_FIGURE = { ink: 50, close: 14, open: 1, dilate: 8, feather: 4, minArea: 40000 };
 const DEBRY_LEVEL = [30, 72]; // de Bry's hand-coloured engraving: brown ink and colour wash count, the cream paper does not
 const TREE_LEVEL = [45, 75]; // the red channel: teal and green foliage dark, yellow land and cream paper light
-const TREE_FIGURE = { ink: 50, close: 8, open: 3, dilate: 3, feather: 2, minArea: 2000 };
+const TREE_FIGURE = { ink: 50, close: 8, open: 3, dilate: 16, feather: 6, minArea: 2000 }; // dilated wide, so the land round the trunks comes with the trees
 const VILLAGE_LEVEL = [25, 58]; // min(R,G,B): the straw huts count as ink, the yellow land and cream paper mostly do not
 const MASK_FEATHER = 6; // px blur on a polygon mask's edge, in scan pixels (`maskFeather` widens it)
 const MAX_SCALE = 3; // a sprite is stored at most this many px wide per CSS px it is drawn (sizePx)
@@ -88,6 +97,7 @@ const MAX_SCALE = 3; // a sprite is stored at most this many px wide per CSS px 
 const PACKS = [
   {
     name: 'scanned',
+    key: 'ink', // cut before the patch key existed; re-keying it as patches is #111
     title: 'Sprites cropped from scans: Olaus Magnus, Carta Marina 1539; Jorge de Aguiar 1492; Catalan Atlas 1375; Genoese chart c. 1320-1350; Frederik de Wit; Ambroise Paré, Des monstres; Master W with the Key, two ship engravings c. 1475-1490',
     licence: 'Public domain (PD-Art); scans via Wikimedia Commons (James Ford Bell Library; Beinecke Library, Yale; BnF Gallica btv1b55002481n; Library of Congress 2003630429; Royal Museums Greenwich). The pare-* sprites: Wellcome Collection, CC BY 4.0. Ships ship-w-*: Art Institute of Chicago 27881 (CC0) and Rijksmuseum RP-P-2014-30 (Public Domain Mark)',
     ink: '#3b2a1a',
@@ -167,6 +177,7 @@ const PACKS = [
     // de Bry after John White, The arrival of the Englishmen in Virginia (1590): a hand-coloured engraving,
     // so the pack keeps the scan's colour (the default). Ships, the sea monster, trees and palisaded villages.
     name: 'debry',
+    key: 'patch',
     title: 'Sprites cropped from Theodor de Bry after John White, The arrival of the Englishmen in Virginia, Briefe and True Report, 1590 (hand-coloured)',
     licence: 'Public domain; Harvard University via the Public Domain Image Archive (Public Domain Worldwide, no additional rights)',
     ink: '#3b2a1a',
@@ -200,7 +211,7 @@ function magick(...args) {
   return execFileSync('magick', args.flat(), { encoding: 'utf8' }).trim();
 }
 
-function buildSprite(sprite, colour, outDir, tmp) {
+function buildSprite(sprite, colour, key, outDir, tmp) {
   const scan = SOURCES[sprite.scan];
   const [x0, y0, x1, y1] = sprite.crop;
   const w = x1 - x0, h = y1 - y0;
@@ -283,7 +294,9 @@ function buildSprite(sprite, colour, outDir, tmp) {
   magick('-size', `${w - 2 * f}x${h - 2 * f}`, 'xc:white', '-bordercolor', 'black', '-border', String(f), '-blur', `0x${f / 2}`, t('edge'));
   masks.push(t('edge'));
 
+  // the patch key starts from the whole crop and lets the masks cut the figure's outline
   let alpha = t('ink');
+  if ((sprite.key ?? key) === 'patch') { magick('-size', `${w}x${h}`, 'xc:white', t('all')); alpha = t('all'); }
   for (const m of masks) {
     magick(alpha, m, '-compose', 'multiply', '-composite', t('alpha'));
     alpha = t('alpha');
@@ -313,7 +326,9 @@ function buildSprite(sprite, colour, outDir, tmp) {
     '-crop', `${tw}x${th}+${tx}+${ty}`, '+repage', shrink, '-strip', join(outDir, file));
 
   if (keep && sprite.id.startsWith(keepPrefix)) {
-    magick(join(outDir, file), '-background', PARCHMENT, '-flatten', '-strip', '-define', 'png:exclude-chunk=all', join(keep, `${sprite.id}.cut.png`));
+    // multiplied onto parchment, as the renderer draws it, so the kept `.cut.png` shows the true colours
+    magick(join(outDir, file), '(', '+clone', '-alpha', 'off', '-fill', PARCHMENT, '-colorize', '100', ')', '+swap', '-compose', 'Multiply', '-composite',
+      '-strip', '-define', 'png:exclude-chunk=all', join(keep, `${sprite.id}.cut.png`));
   }
 
   const entry = {
@@ -362,7 +377,7 @@ try {
     const outDir = join(ROOT, 'packs', pack.name);
     mkdirSync(outDir, { recursive: true });
     const colour = pack.colour ?? 'source';
-    const sprites = pack.sprites.map((s) => buildSprite(s, colour, outDir, tmp));
+    const sprites = pack.sprites.map((s) => buildSprite(s, colour, pack.key ?? 'patch', outDir, tmp));
     const manifest = { name: pack.name, title: pack.title, licence: pack.licence, colour, ink: pack.ink, sprites };
     // keep short numeric arrays (anchor, crop, panel) on one line
     const json = JSON.stringify(manifest, null, 2).replace(/\[\s+([-\d.,\s]+?)\s+\]/g, (_, xs) => `[${xs.split(/,\s*/).join(', ')}]`);
