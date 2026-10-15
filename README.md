@@ -6,12 +6,12 @@ A base map drawn the way a 15th-century portolan chart would have drawn it: ink 
 
 **[See the current proof of concept →](https://mark-brannan.github.io/portolani/)**
 
-It opens on the western Mediterranean, drawn in your browser from Natural Earth data and ornaments after public-domain charts (Olaus Magnus's *Carta Marina*, the Catalan Atlas, Aguiar, de Wit), drawn as vectors or cropped from the scans. Drag to pan and wheel or pinch to zoom, anywhere in the world; the view is kept in the URL, so a place can be linked. Ink colour, parchment tone and ornament density are adjustable, and so is which roses, monsters, ships and towns are drawn, one by one or by family, scans and vectors mixed. Ornaments are placed again each time the map stops, and the known defects are still visible: a few sprites over land, some flipped names, halos around sprites. The live page is the work in progress and will change as the project moves toward a working map.
+It opens on the western Mediterranean, drawn in your browser from Natural Earth data. The ornaments follow public-domain charts (Olaus Magnus's *Carta Marina*, the Catalan Atlas, Aguiar, de Wit), drawn as vectors or cropped from the scans. Drag to pan and wheel or pinch to zoom, anywhere in the world; the view is kept in the URL, so a place can be linked. Ink colour, parchment tone and ornament density are adjustable, and so is which roses, monsters, ships and towns are drawn, one by one or by family, scans and vectors mixed. Ornaments are placed again each time the map stops. Known defects: a few sprites over land, some flipped names, halos around sprites. It is a work in progress and changes often.
 
 ## Reading a portolan chart
 
 - Rhumb lines run from each wind rose: black for the eight winds, green for the half-winds, red for the quarter-winds.
-- A course is the line parallel to the track, followed back to a rose to read the wind's name.
+- To read a course, find the rhumb line parallel to the track and follow it back to a rose for the wind's name.
 - Ports are lettered inland, at right angles to the coast; important ones in red, lesser ones in black.
 - More: [Trinity College Library](https://trinitycollegelibrarycambridge.wordpress.com/2015/08/14/portolan-chart-of-the-mediterranean/) and [Cartography Unchained](https://www.cartographyunchained.com/chug1/).
 
