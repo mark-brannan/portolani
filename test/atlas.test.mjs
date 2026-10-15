@@ -1,6 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+<<<<<<< Updated upstream
 import { sheetsFor, bandFor, widening, BANDS, hiddenCircle, ROSE } from '../scripts/atlas.mjs';
+=======
+import { sheetsFor, inShadow, bandFor, widening, BANDS, hiddenCircle } from '../scripts/atlas.mjs';
+>>>>>>> Stashed changes
 
 const bounds = (zoom, west, south, east, north) => ({ zoom, west, south, east, north });
 const close = (a, b, e = 1e-6) => assert.ok(Math.abs(a - b) < e, `${a} vs ${b}`);
@@ -139,4 +143,36 @@ test('band 5 names keep the row digits whole, 4 digits past row 999', () => {
   const [s] = sheetsFor(bounds(14, 10, 80, 10.01, 80.01));
   assert.match(s.name, /^PT5[NS]\d{4}[EW]\d{4}$/);
   assert.match(sheetsFor(bounds(14, 10, 40, 10.01, 40.01))[0].name, /^PT5[NS]\d{4}[EW]\d{4}$/);
+});
+
+test('curated sheets: the overview band serves five, the world band the curated alone, and they displace grid cells', () => {
+  const names = (z, v) => sheetsFor({ ...v, zoom: z }, { curated: true }).filter((s) => s.curated).map((s) => s.name);
+  const med = bounds(6, 0, 35, 30, 45);
+  assert.deepEqual(names(6, med).sort(), ['Europe and the Mediterranean', 'Levant and Black Sea', 'Mediterranean, east', 'Mediterranean, west']);
+  const wide = bounds(6, -60, 0, 100, 50), got = sheetsFor(wide, { curated: true });
+  assert.ok(got.some((s) => !s.curated), 'grid cells still fill what no curated sheet holds');
+  const cur = got.filter((s) => s.curated).map((s) => s.extent);
+  for (const g of got.filter((s) => !s.curated)) {
+    const lon = (g.extent.west + g.extent.east) / 2, lat = (g.extent.south + g.extent.north) / 2;
+    assert.ok(!cur.some((e) => lon >= e.west && lon <= e.east && lat >= e.south && lat <= e.north), g.name);
+  }
+  const world = sheetsFor({ lon: 0, lat: 30, zoom: 3 }, { curated: true });
+  assert.ok(world.length > 0 && world.every((s) => s.curated && s.band === 1));
+  assert.ok(world.some((s) => s.name === 'The known world of 1375') && world.some((s) => s.name === 'The Atlantic and the Americas'));
+  assert.deepEqual(sheetsFor(med).filter((s) => s.curated), [], 'off by default');
+});
+
+test('curated circles sit at the read centres with sixteen nodes at the read radius', () => {
+  const [w] = sheetsFor(bounds(6, 5, 38, 9, 42), { curated: true }).filter((s) => s.name === 'Mediterranean, west');
+  close(w.circle.lon, 7.4); close(w.circle.lat, 40.0);
+  assert.equal(w.circle.nodes.length, 16);
+  assert.ok(w.circle.nodes[0].lat > 47 && w.circle.nodes[0].lat < 49, 'north node 8 degrees up');
+});
+
+test('where curated sheets overlap, the smaller wins; the Carte Pisane pair shares its overlap', () => {
+  const s = Object.fromEntries(sheetsFor(bounds(6, 0, 35, 30, 45), { curated: true }).filter((x) => x.curated).map((x) => [x.name, x]));
+  assert.equal(s['Mediterranean, west'].shadow.length, 0);
+  assert.equal(s['Mediterranean, east'].shadow.length, 1, 'Vesconte, the smaller, lies over its north-east');
+  assert.ok(s['Europe and the Mediterranean'].shadow.length >= 2);
+  assert.ok(inShadow(s['Europe and the Mediterranean'], 8, 40));
 });
