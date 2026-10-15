@@ -548,7 +548,8 @@ let here = null; // { lon, lat } of the last fix or typed position
 function setHere(p) {
   here = p;
   $('clearHere').hidden = !p;
-  if (!p) render(); // the mark is drawn with the ornaments, so redraw without it
+  placed = null; // the mark is drawn with the ornaments: a flight that lands where it started still redraws
+  if (!p) render();
 }
 const locate = $('locate');
 locate.hidden = !navigator.geolocation;
