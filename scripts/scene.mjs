@@ -8,7 +8,7 @@
 // projection is one of PROJECTIONS, Mercator when left out.
 
 import { fill, trace, limn, rhumb, place, letter, geojsonPolygons, geojsonRings } from 'coast-wright';
-import catalogue from './catalogue.json' with { type: 'json' };
+import { bandOf } from './bands.mjs';
 import { islandInfo, ISLAND_KM2 } from './island.mjs';
 import { cityPlan, drawCity, drawHouses, pxRings, insideRings } from './city.mjs';
 import { urbanKey } from './urban.mjs';
@@ -59,15 +59,11 @@ const FRAME = { lonMin: -6, lonMax: 20, latMin: 34, latMax: 46 };
 const MARGIN = 2; // degrees beyond FRAME whose features the scene keeps
 const DETAIL = { lon: 8.93, lat: 44.41, scale: 2 }; // Genoa; window clamped to the scene
 // Whole world at the far end; 50m data holds to about z9. The bands are read from the catalogue
-// (scripts/catalogue.json, a copy of coastlines' catalogue.json until the package publishes it):
+// (scripts/bands.mjs reads scripts/catalogue.json, a copy of coastlines' catalogue.json until the package publishes it; build-preview.mjs reads the same records to write the cells):
 // past a record's `zoom.min` a view draws from its cells (geo/<dir>/<xi>_<yi>.json, `grid.cellDeg`
 // degrees square) within `grid.marginDeg` degrees of its frame, a couple of screens at the band's
 // first zoom, so a pan stays on loaded cells; a band whose index the site lacks is skipped and the
 // one below it drawn instead. Measured vertex spacing (median, m): 50m 7,650; NE 10m 1,574; GSHHG h 707.
-const bandOf = (id) => {
-  const r = catalogue.find((c) => c.id === id);
-  return { dir: r.sources.find((x) => x.kind === 'cells').url.replace(/^geo\/|\/$/g, ''), zoom: r.zoom.min, cell: r.grid.cellDeg, margin: r.grid.marginDeg };
-};
 const BANDS = ['ne-10m-land', 'gshhg-h-land', 'gshhg-f-land'].map(bandOf);
 const ZOOM = { min: 1, max: 15 };
 const URBAN_PX = 56; // screen px a built-up area's long side reaches before it is drawn
@@ -94,7 +90,7 @@ const WATER_PX = 64; // a lozenge and its tributaries reach past the lake they s
 const loadWater = () => (waterLoad ??= Promise.all(['ne-rivers-lake-centerlines-50m', 'ne-lakes-50m'].map(loadGeo))
   .then(([r, l]) => waterOf(r, l)).catch((e) => { waterLoad = null; throw e; })); // a failed fetch is tried again
 const DETAIL_ZOOM = BANDS[0].zoom;
-const waterCells = new Map(); // 'ne-10m-water/<xi>_<yi>' -> waterOf of the cell
+const waterCells = new Map(); // 'water-10m/<xi>_<yi>' -> waterOf of the cell
 async function loadWater10m(view) {
   const known = await loadBandIndex(WATER_10M);
   if (!known) return null;
