@@ -11,7 +11,7 @@
 //
 // Mountains are the ranges, drawn in the style selected (RELIEF_STYLES; several mix per range by
 // seed). Hills are the clusters between them, which come back as humps for the scene to stand the
-// Catalan Atlas's sprites on (the humps themselves are only what a drag draws meanwhile). A hill sits
+// Catalan Atlas's sprites on (the scene draws the sprites, not the humps). A hill sits
 // on the foothill ground of the same noise as the ranges, inland and lower than a range, which
 // stands in for elevation, the data holding none.
 

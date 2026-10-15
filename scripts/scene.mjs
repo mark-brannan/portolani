@@ -91,7 +91,6 @@ const WATER_ZOOM = 7;
 const WATER_PX = 64; // a lozenge and its tributaries reach past the lake they stand for
 const loadWater = () => (waterLoad ??= Promise.all(['ne-rivers-lake-centerlines-50m', 'ne-lakes-50m'].map(loadGeo))
   .then(([r, l]) => waterOf(r, l)).catch((e) => { waterLoad = null; throw e; })); // a failed fetch is tried again
-let planted = []; // the trees (trees.mjs) of the last scene, which a drag draws where they stand; a scene's own are data.trees
 const DETAIL_ZOOM = BANDS[0].zoom;
 const waterCells = new Map(); // 'water-10m/<xi>_<yi>' -> waterOf of the cell
 async function loadWater10m(view) {
@@ -1656,7 +1655,7 @@ function paintLand(g, data, land, coast, relief) {
   }
   paintWater(g, data);
   paintRelief(g, data, relief);
-  TREES[STYLE.trees]?.(g, { proj: data.proj, palette: { ink: STYLE.ink, parchment: STYLE.parchment } }, data.trees ?? planted);
+  if (data.trees) TREES[STYLE.trees]?.(g, { proj: data.proj, palette: { ink: STYLE.ink, parchment: STYLE.parchment } }, data.trees); // a drag's frame has none
 }
 
 // Rivers, then lakes over them, each in its chosen style, on the land and under the coast's ink.
@@ -1676,8 +1675,8 @@ export function keptWater(data) {
   return { rivers: kept(water.rivers), lakes: kept(water.lakes) };
 }
 // Hills and mountains (relief.mjs) for a view's land, and drawn over the water in the chosen style.
-// Mountains in the style chosen, hills where the Catalan sprites are selected. A drag, which has no
-// sprites, draws the hills as washed humps, until the next placement stands the sprites.
+// Mountains in the style chosen, hills where the Catalan sprites are selected. A drag draws neither:
+// they return with the ornaments when it stops.
 const reliefWanted = () => STYLE.relief.length > 0 || STYLE.mountainSprites;
 const reliefFor = (proj, land) => reliefOf({ proj, land, createCanvas, w: W, h: H, styles: STYLE.relief, hills: STYLE.mountainSprites });
 function paintRelief(g, data, relief) {
@@ -1686,15 +1685,16 @@ function paintRelief(g, data, relief) {
 const paintCoast = (g, data, coast) =>
   limn(g, coast, data.proj.x, data.proj.y, { color: STYLE.ink, alpha: 1, width: STYLE.coastWidth, oneStroke: true, ...data.proj.seam });
 
-// Parchment, land and coast for any view, with no ornaments or lattice: what a drag draws each frame.
+// Parchment, land, water and coast for any view: what a drag draws each frame. The ornaments, the
+// lattice, the relief and the trees wait for the stop, which places and draws the scene whole
+// (drawScene); the relief, placed and hatched afresh, is too slow for a frame.
 function drawGround(g, world, view, bg) {
   const proj = makeProjection(view), data = { proj };
   const f = frameOf(proj, 16 / proj.k / RAD); // 16 px, so strokes at the edge survive
   const land = world.land.filter((l) => meetsLL(f, l.box)).map((l) => l.poly);
   const coast = world.runs.filter((c) => meetsLL(f, c.box)).map((c) => c.run);
   g.drawImage(bg, 0, 0);
-  const relief = reliefWanted() && reliefFor(proj, world.land.filter((l) => meetsLL(frameOf(proj, MARGIN), l.box)).map((l) => l.poly));
-  paintLand(g, data, land, coast, relief);
+  paintLand(g, data, land, coast, null);
   paintCoast(g, data, coast);
 }
 
@@ -2065,7 +2065,7 @@ export async function createScene(environment, opts = {}) {
   const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, title, autoTitle,
     continentsEnd: zoomEnd(continentsZoom, CONTINENT_ZOOM_END), regionsEnd: zoomEnd(regionsZoom, REGION_ZOOM_END),
     scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM, townSize: townBy, seed: legacy ? null : castSeed(view) }), show, scaleSprite };
-  data.trees = planted = TREES[STYLE.trees] ? plantTrees({ proj: data.proj, isLand: scene.field.isLand, scene, lakes: STYLE.lakes !== 'off' && water ? water.lakes : [], w: W, h: H }) : [];
+  data.trees = TREES[STYLE.trees] ? plantTrees({ proj: data.proj, isLand: scene.field.isLand, scene, lakes: STYLE.lakes !== 'off' && water ? water.lakes : [], w: W, h: H }) : [];
   if (!parchments.has(tone)) parchments.set(tone, parchment(1539));
   const bg = parchments.get(tone);
   return { scene, data, bg, proj: data.proj, world, coarse, view, timing: { load: tLoad - t0, place: performance.now() - tLoad } };
