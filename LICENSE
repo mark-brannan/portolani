@@ -22,10 +22,10 @@ SOFTWARE.
 
 ---
 
-The code and documentation are MIT, above, and so is the package: the
-repository carries no GSHHG data. The built site ships data with its own
-terms: Natural Earth is public domain; the GSHHG shoreline is
-LGPL-3.0-or-later, cut into cells by the build, with its copyright and
+The code and documentation are MIT, above. The data the built site ships
+carries its own terms: Natural Earth is public domain; the GSHHG shoreline
+is LGPL-3.0-or-later, cut into cells by the build, with its copyright and
 permission notice at geo/gshhg-licence.txt and the licence text at
-geo/gshhg-copying-lesser.txt beside them. The scans and the font are
+geo/gshhg-copying-lesser.txt beside them. The package's SPDX expression,
+`MIT AND LGPL-3.0-or-later`, names both. The scans and the font are
 credited in ASSETS.md.
