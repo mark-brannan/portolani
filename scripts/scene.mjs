@@ -627,6 +627,7 @@ function chooseSprites(manifests, { rendering = 'vivid', rose = 'aguiar', monste
 
 // The share of a big rose's width that the best clear sea must reach, or the roses may stand on open land.
 const LAND_ROSE = 0.25, LAND_ROSE_TOWN = 60; // and how far, px, a rose on land keeps from a place
+const POI_ROOM = 90; // px a rose or a beast keeps clear of a point of interest
 const TOWER_H = 16.5; // a tower's own height, in its drawing units, foot at y = 0
 
 // The towers drawn in code, for the smallest towns: each a list of layers in SVG path data (absolute
@@ -990,7 +991,6 @@ function townVariant(family, p, i) {
 
 // Where a town falls between a market town (0) and a megacity (1), from its population: the span
 // townScale draws by population, whichever way the scene sizes its towns.
-const POI_ROOM = 90; // px kept clear round a point of interest
 const SMALL_TOWN = 0.15; // grandeur under about 700,000 people
 const townGrandeur = (p) => (townScale(p, 'population') - 0.75) / (1.8 - 0.75);
 
