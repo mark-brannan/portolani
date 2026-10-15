@@ -147,3 +147,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261015t090350z
 - A world-band view no curated sheet reaches draws no roses, only the Catalan rose's lines Undo: fall back to the window when sheets is empty ([#143](https://github.com/mark-brannan/portolani/pull/143))
+
+### 20261015t090354z
+- The rose-variety test checks the big roses at z6, where grid sheets give the variety, not z3 Undo: revert the test hunk ([#143](https://github.com/mark-brannan/portolani/pull/143))
