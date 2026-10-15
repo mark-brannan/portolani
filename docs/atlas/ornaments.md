@@ -1,8 +1,8 @@
 # The curated charts' own figures
 
 A curated sheet whose chart has been read draws that chart's own roses, beasts and ships, each where the
-chart puts it, in place of the seeded ones ([#146](https://github.com/mark-brannan/portolani/issues/146);
-historical accuracy is on by default, docs/decisions.md, 2026-10-15). The figures live in `CURATED` in
+chart puts it, in place of the seeded ones ([#146](https://github.com/mark-brannan/portolani/issues/146)),
+unless the reader turns historical accuracy off. The figures live in `CURATED` in
 `scripts/atlas.mjs` as `{ kind, sprite, lon, lat }`. A figure is drawn on its sheet's own ground: inside
 the sheet's extent and out of a smaller sheet's shadow (the frame rule in [README.md](README.md)).
 
