@@ -11,6 +11,9 @@ import { createScene, drawScene, W, H, DETAIL } from './scene.mjs';
 import { seaNames, coastNames, joinNames, tintedSeas } from './names.mjs';
 import { joinUrban } from './urban.mjs';
 import { cutWater, joinWater, WATER_FILES } from './detail-cells.mjs';
+import { isleIndex } from './isles.mjs';
+import * as coastlines from 'coastlines';
+import { geojsonPolygons } from 'coast-wright';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DL = join(ROOT, 'downloads');
@@ -20,7 +23,8 @@ const GEO = dirname(fileURLToPath(import.meta.resolve('coastlines/data/ne-land-5
 // made here from the marine download and the coastlines countries, the urban footprints from the
 // urban areas download (npm run build:preview fetches it), the towns drawn as icons without it;
 // the 10m water cells (geo/water-10m/) are cut here from the rivers and lakes downloads and their
-// regional supplements, the 50m water drawn at every zoom without them.
+// regional supplements, the 50m water drawn at every zoom without them; the island index from the
+// installed GSHHG "h" shapefile.
 const resolve = (p) => (p.startsWith('geo/') ? join(GEO, p.slice(4)) : join(ROOT, p));
 const read = (file) => JSON.parse(readFileSync(file, 'utf8'));
 let made, urban;
@@ -38,12 +42,16 @@ const water = (p) => {
   if (!cells) throw new Error('no 10m water');
   return k === 'index' ? { cell: 5, cells: [...cells.keys()] } : cells.get(k);
 };
+// the island index, built here from the installed GSHHG "h" shapefile as build-preview.mjs builds it
+let isles;
+const islesIndex = () => isles ??= isleIndex(coastlines.shapefilePolygons(readFileSync(coastlines.localUrl(coastlines.find('gshhg-land-h')))),
+  geojsonPolygons(read(join(GEO, 'ne-land-50m.geojson'))));
 const names = () => made ??= joinNames(seaNames(read(join(DL, 'ne_50m_geography_marine_polys.geojson'))),
   coastNames(read(join(GEO, 'ne-admin-0-countries-50m.geojson')), read(join(GEO, 'ne-coastline-50m.geojson'))));
 const env = {
   createCanvas,
   readJSON: async (p) => (p === 'geo/names-50m.json' ? names() : p === 'geo/urban-10m.json' ? footprints() : p === 'geo/seas-50m.json' ? tintedSeas(read(join(DL, 'ne_50m_geography_marine_polys.geojson')))
-    : p.startsWith('geo/water-10m/') ? water(p) : read(resolve(p))),
+    : p === 'geo/isles.json' ? islesIndex() : p.startsWith('geo/water-10m/') ? water(p) : read(resolve(p))),
   loadImage: (p) => loadImage(resolve(p)),
   loadFont: async (family) => { GlobalFonts.registerFromPath(join(DL, 'IMFeENrm28P.ttf'), family); GlobalFonts.registerFromPath(join(DL, 'IMFeENit28P.ttf'), family); },
 };
