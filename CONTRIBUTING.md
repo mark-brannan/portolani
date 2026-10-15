@@ -19,6 +19,7 @@ Node 20 or newer. `npm test` runs with the network unavailable. `npm run build:p
 - **Every ornament source is recorded.** A new sprite adds its URL, crop box, licence and sha256 to [ASSETS.md](ASSETS.md), and names its `style` (the design family it belongs to) in its pack's `pack.json`. Public domain or an open licence only.
 - Tests assert values, never printed layout, and never need the network.
 - **Golden images.** `test/golden.test.mjs` compares three views with `test/golden/*.png`; after a change that is meant to move the pixels, run `npm run golden` and commit the new PNGs (the test font in `test/fixtures/` is a copy of the one in ASSETS.md). `region-z5` is also the README's picture, so it is drawn with the custom title PORTOLANI.
+- **Timings.** Draw times and fetched bytes for the preview are in [docs/measurements.md](docs/measurements.md); re-measure there with `scripts/measure-preview.mjs` when a change moves them.
 - Branch from latest `main`. One logical change per pull request.
 - Commits are conventional: `<type>(<scope>): <subject>`, imperative, 50 characters or fewer.
 
