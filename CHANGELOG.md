@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.1.2](https://github.com/mark-brannan/portolani/compare/v0.1.1...v0.1.2) (2026-10-15)
+
+
+### Added
+
+* **atlas:** curated sheets draw their charts' own figures ([#146](https://github.com/mark-brannan/portolani/issues/146)) ([#151](https://github.com/mark-brannan/portolani/issues/151)) ([2fe5bd7](https://github.com/mark-brannan/portolani/commit/2fe5bd7c47fce8bae8408a6dbf4f8149dddb6c7f))
+* **atlas:** the Carta Marina sheet reaches 25°W, so its western figures draw ([#146](https://github.com/mark-brannan/portolani/issues/146)) ([#153](https://github.com/mark-brannan/portolani/issues/153)) ([1420984](https://github.com/mark-brannan/portolani/commit/1420984aa4a79326a691d8c6a70fb99dbb8a93b1))
+* **drawer:** drawn samples for the land washes and the tree crowns ([#103](https://github.com/mark-brannan/portolani/issues/103)) ([#155](https://github.com/mark-brannan/portolani/issues/155)) ([f69bb71](https://github.com/mark-brannan/portolani/commit/f69bb71b2806842f163c6d13973cae920808fcc3))
+* **drawer:** Reset and Copy link ([#106](https://github.com/mark-brannan/portolani/issues/106)) ([#156](https://github.com/mark-brannan/portolani/issues/156)) ([32635ed](https://github.com/mark-brannan/portolani/commit/32635edff859124020c68f4901a25e9c0c831afc))
+* **scene:** one ornament budget per window, shared across kinds and sheets ([#147](https://github.com/mark-brannan/portolani/issues/147)) ([#158](https://github.com/mark-brannan/portolani/issues/158)) ([bb23ca5](https://github.com/mark-brannan/portolani/commit/bb23ca5753176709b14ff70bade106d5af4d95a3))
+* **scene:** the world band takes the curated sheets; a larger sheet's lines stop where a smaller lies ([#107](https://github.com/mark-brannan/portolani/issues/107)) ([#143](https://github.com/mark-brannan/portolani/issues/143)) ([f29db69](https://github.com/mark-brannan/portolani/commit/f29db6985362a28a87c3b64951a06ff4faed5522))
+* **site:** write a GSHHG modification notice at build ([#124](https://github.com/mark-brannan/portolani/issues/124)) ([#149](https://github.com/mark-brannan/portolani/issues/149)) ([9530afb](https://github.com/mark-brannan/portolani/commit/9530afb08685d7c99bf52fed42a5406fd5e585bb))
+
+
+### Fixed
+
+* **scene:** a world-band sheet's beasts are placed at the zoom that spaces them ([#107](https://github.com/mark-brannan/portolani/issues/107)) ([#152](https://github.com/mark-brannan/portolani/issues/152)) ([9200c59](https://github.com/mark-brannan/portolani/commit/9200c59ce4e4afd6bac29107646d98a8fa639697))
+
 ## [0.1.1](https://github.com/mark-brannan/portolani/compare/v0.1.0...v0.1.1) (2026-10-15)
 
 
