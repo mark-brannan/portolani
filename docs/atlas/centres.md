@@ -38,7 +38,7 @@ named in each section; reading at a library's full resolution would tighten ever
 | Levant and Black Sea (Vesconte 1311) | 30°E 40°N | 25.2°E 37.5°N, the Cyclades | 3° | ±0.7°, from a tracing |
 | Europe and the Mediterranean (Dulcert 1339) | 5°E 40°N | 14.5°E 40.0°N, the south Tyrrhenian | 17° | ±1.5° |
 | The known world of 1375 (Catalan Atlas) | 20°W 37°N | rose 20.7°W 42.1°N; network centre 5.4°W 42.3°N | 16° | ±2° |
-| Scandinavia and the Baltic (Carta Marina) | 22°E 60°N | 19.5°E 62°N, the Bothnian Sea | no ring | ±1° |
+| Scandinavia and the Baltic (Carta Marina) | 22°E 60°N | 19.7°E 61.7°N, the Bothnian Sea | no ring | ±1° |
 | The Atlantic and the Americas (de la Cosa) | 35°W 30°N | 45°W 23.4°N, on the Tropic of Cancer | 360 px, not in degrees | latitude ±0.5°, longitude ±10° |
 
 The radius is in degrees of a great circle on the modern earth, from the same transform; de la Cosa's
@@ -133,7 +133,7 @@ central one, the hub the sheet follows, is read by eye between the Medelpad and 
 
 - **Scan.** [Commons](https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg), 5016 px wide,
   read at 3840.
-- **Position.** **19.5°E 62°N**, the Bothnian Sea; no ring.
+- **Position.** **19.7°E 61.7°N**, the Bothnian Sea; no ring.
 - **Error.** ±1°, by eye.
 
 ## Juan de la Cosa, 1500
