@@ -4,7 +4,8 @@
 // does not depend on: `npm i --prefix /some/dir playwright-core && npx --prefix /some/dir
 // playwright-core install chromium-headless-shell`, then
 //   PLAYWRIGHT=/some/dir/node_modules/playwright-core/index.mjs node scripts/measure-preview.mjs [lat lon [zooms]] [flags]
-// Flags: --ornaments=on|off|both (default both; off loads the page with density=0 in the hash) and --sizes=1440x900,1024x768 (default both: laptop and tablet).
+// Flags: --ornaments=on|off|both (default both; off loads the page with density=0 in the hash)
+// and --sizes=1440x900,1024x768 (default both: laptop and tablet).
 // Times are what the page reports (performance.now around the work), so they leave out the
 // browser's compositing after the call returns.
 
