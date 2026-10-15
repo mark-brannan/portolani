@@ -1246,12 +1246,12 @@ function placeSheetBeasts(data, world, sprites, avoid) {
       const lon = e.west + ((c + 0.2 + 0.6 * rnd()) * (e.east - e.west)) / cols, my = y0 + ((r + 0.2 + 0.6 * rnd()) * (y1 - y0)) / rows;
       const lat = (2 * Math.atan(Math.exp(my * RAD)) - Math.PI / 2) / RAD;
       if (!shows(proj, lon, lat) || !seaAt(lon, lat)) continue;
+      // every site of the sheet is ranked, on screen or off, so the window never changes which are taken
       const [x, y] = proj.project(lon, lat);
-      if (x < -MONSTER_GAP || y < -MONSTER_GAP || x > W + MONSTER_GAP || y > H + MONSTER_GAP) continue;
       sites.push({ lon, lat, x, y, c: clearance(x, y, 240) });
     }
     sites.sort((a, b) => b.c - a.c);
-    const windows = Math.max(1, (e.east - e.west) / win), seed = world.seed == null ? null : seedOf(sh.name);
+    const windows = Math.max(1, ((e.east - e.west) / win) * ((y1 - y0) / ((win * H) / W))), seed = world.seed == null ? null : seedOf(sh.name);
     const mine = [];
     for (const sprite of castOrder(sprites.monsters, seed)) {
       if (mine.length >= Math.round(TUNE.monsterMax * windows)) break;
