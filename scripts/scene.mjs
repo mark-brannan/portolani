@@ -94,7 +94,7 @@ const WATER_PX = 64; // a lozenge and its tributaries reach past the lake they s
 const loadWater = () => (waterLoad ??= Promise.all(['ne-rivers-lake-centerlines-50m', 'ne-lakes-50m'].map(loadGeo))
   .then(([r, l]) => waterOf(r, l)).catch((e) => { waterLoad = null; throw e; })); // a failed fetch is tried again
 const DETAIL_ZOOM = BANDS[0].zoom;
-const waterCells = new Map(); // 'water-10m/<xi>_<yi>' -> waterOf of the cell
+const waterCells = new Map(); // 'ne-10m-water/<xi>_<yi>' -> waterOf of the cell
 async function loadWater10m(view) {
   const known = await loadBandIndex(WATER_10M);
   if (!known) return null;

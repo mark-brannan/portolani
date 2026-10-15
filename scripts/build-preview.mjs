@@ -6,14 +6,14 @@
 // pinned URL when missing, then checked against its sha256; the URLs and hashes below duplicate
 // the ASSETS.md table: re-pin both together. The 50m GeoJSON ships whole, since the map can be
 // moved anywhere in the world; places keep only the properties the scene reads. The 10m land and
-// coast, for close views, ship cut into 5-degree cells (geo/10m/<xi>_<yi>.json, listed in
-// geo/10m/index.json), GSHHG "h" land into 1-degree cells (geo/h/), when the installed
-// coastlines carries it, and GSHHG "f" land into half-degree cells (geo/f/), read from the GSHHG
+// coast, for close views, ship cut into 5-degree cells (geo/ne-10m-land/<xi>_<yi>.json, listed in
+// geo/ne-10m-land/index.json), GSHHG "h" land into 1-degree cells (geo/gshhg-h-land/), when the installed
+// coastlines carries it, and GSHHG "f" land into half-degree cells (geo/gshhg-f-land/), read from the GSHHG
 // zip in downloads/, so a close view fetches only the cells around it. The names the chart
 // letters ship as geo/names-50m.json (scripts/names.mjs), and the urban footprints of its towns, the
 // Natural Earth 10m urban areas joined to the places, as geo/urban-10m.json (scripts/urban.mjs). The
 // Natural Earth 10m rivers and lakes, drawn past z9 (scripts/water.mjs), ship whole-feature in
-// 5-degree cells (geo/water-10m/, cutWater); GSHHG lakes, drawn past z10, as its land is (geo/h-lakes/, geo/f-lakes/).
+// 5-degree cells (geo/ne-10m-water/, cutWater); GSHHG lakes, drawn past z10, as its land is (geo/gshhg-h-lakes/, geo/gshhg-f-lakes/).
 
 import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -22,6 +22,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import * as coastlines from 'coastlines';
 import { geojsonPolygons, geojsonRings } from 'coast-wright';
+import catalogue from './catalogue.json' with { type: 'json' };
 import { cutCells, cutLakes, cutWater, dbfRecords, gshhgLakes, joinWater, WATER_FILES } from './detail-cells.mjs';
 import { seaNames, coastNames, joinNames, tintedSeas } from './names.mjs';
 import { joinUrban } from './urban.mjs';
@@ -32,7 +33,8 @@ const out = path.join(root, '_site');
 const GEO = ['ne-land-50m', 'ne-coastline-50m', 'ne-populated-places-50m', ...(find('ne-urban-areas-50m') ? ['ne-urban-areas-50m'] : []),
   'ne-rivers-lake-centerlines-50m', 'ne-lakes-50m']; // urban areas from coastlines 0.0.5; rivers and lakes for scripts/water.mjs
 const GEO_10M = ['ne-land-10m', 'ne-coastline-10m', 'ne-minor-islands-10m'];
-const CELL_DEG = 5; // must match scene.mjs BANDS
+const cellOf = (id) => catalogue.find((c) => c.id === id).grid.cellDeg; // the same catalogue record scene.mjs reads
+const CELL_DEG = cellOf('ne-10m-land');
 
 const KEEP = { 'ne-populated-places-50m': ['NAME', 'SCALERANK', 'POP_MAX', 'MAX_AREAKM'], 'ne-urban-areas-50m': [],
   'ne-rivers-lake-centerlines-50m': ['name', 'featurecla', 'min_zoom'], 'ne-lakes-50m': ['name', 'min_zoom'] }; // what scripts/water.mjs reads
@@ -49,7 +51,7 @@ const SOURCES = [
   ['https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_geography_marine_polys.geojson', 'ne_50m_geography_marine_polys.geojson', '6fe58083e0cc5c7fad9e396970e28a8580bbd8770cfa4d1d7b5a34423e912f97', null],
   // read into geo/urban-10m.json below; too big for coastlines, it moves to a coastlines-10m once that exists
   ['https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_urban_areas.geojson', 'ne_10m_urban_areas.geojson', '5136ffd816a9b28c0f295e6797b4c03eaa421be80d78b90f542db4a932dd4497', null],
-  // cut into geo/water-10m/ below; together 26 MB, too much to fetch whole for one close view. The
+  // cut into geo/ne-10m-water/ below; together 26 MB, too much to fetch whole for one close view. The
   // regional supplements hold what the world file leaves out (Lake Washington, Como, the Snohomish),
   // with no feature in both.
   ['https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_rivers_lake_centerlines.geojson', 'ne_10m_rivers_lake_centerlines.geojson', 'bb854a900ecbd3b408df46d5e16e3e0f974ba55993f9d8b5c26e855273c0905a', null],
@@ -82,7 +84,7 @@ async function readGeo(id) {
   if (got !== entry.sha256) throw new Error(`${id}: ${got} does not match the coastlines manifest (${entry.sha256})`);
   return bytes;
 }
-await mkdir(path.join(out, 'geo', '10m'), { recursive: true });
+await mkdir(path.join(out, 'geo', 'ne-10m-land'), { recursive: true });
 let placesGeo;
 for (const id of GEO) {
   const bytes = await readGeo(id);
@@ -114,47 +116,47 @@ async function writeBand(dir, cellDeg, geometry, cells = cutCells(geometry, cell
   return cells.size;
 }
 // 10m rivers and lakes with their regional supplements (detail-cells.mjs WATER_FILES), whole features
-// in the cells they reach; WATER_CELL_DEG must match scene.mjs WATER_10M
-const WATER_CELL_DEG = 5;
+// in the cells they reach
+const WATER_CELL_DEG = cellOf('ne-10m-water');
 const geo = async (f) => JSON.parse(await readFile(path.join(root, 'downloads', f), 'utf8'));
 const [rivers10, lakes10] = await Promise.all([WATER_FILES.rivers, WATER_FILES.lakes].map(async (fs) => joinWater(await Promise.all(fs.map(geo)))));
 const waterCells = cutWater(rivers10, lakes10, { size: WATER_CELL_DEG });
-await mkdir(path.join(out, 'geo', 'water-10m'), { recursive: true });
+await mkdir(path.join(out, 'geo', 'ne-10m-water'), { recursive: true });
 let waterBytes = 0;
-for (const [k, c] of waterCells) { const json = JSON.stringify(c); waterBytes += json.length; await writeFile(path.join(out, 'geo', 'water-10m', `${k}.json`), json); }
-await writeFile(path.join(out, 'geo', 'water-10m', 'index.json'), JSON.stringify({ cell: WATER_CELL_DEG, cells: [...waterCells.keys()] }));
+for (const [k, c] of waterCells) { const json = JSON.stringify(c); waterBytes += json.length; await writeFile(path.join(out, 'geo', 'ne-10m-water', `${k}.json`), json); }
+await writeFile(path.join(out, 'geo', 'ne-10m-water', 'index.json'), JSON.stringify({ cell: WATER_CELL_DEG, cells: [...waterCells.keys()] }));
 console.log(`10m water: ${waterCells.size} cells of ${WATER_CELL_DEG} degree, ${(waterBytes / 1e6).toFixed(2)} MB`);
 // 10m coast is the coastline file plus the minor islands' outlines, which 10m land fills but the
 // coastline file mostly leaves out.
 const [land10, coast10, minor10] = await Promise.all(GEO_10M.map(async (id) => JSON.parse(await readGeo(id))));
-await writeBand('10m', CELL_DEG, { land: geojsonPolygons(land10), coast: [...geojsonRings(coast10), ...geojsonPolygons(minor10).map((p) => p[0])] });
+await writeBand('ne-10m-land', CELL_DEG, { land: geojsonPolygons(land10), coast: [...geojsonRings(coast10), ...geojsonPolygons(minor10).map((p) => p[0])] });
 // GSHHG "h" ships polygons only, as a shapefile: the coast is every ring's outline, split at cell
 // edges by cutCells. A coastlines without the entry (before 0.0.4) builds a site without the band,
 // and the scene then stays on 10m cells past z10.
-const H_ID = 'gshhg-land-h', H_CELL_DEG = 1; // must match scene.mjs
+const H_ID = 'gshhg-land-h', H_CELL_DEG = cellOf('gshhg-h-land');
 if (find(H_ID) && coastlines.shapefilePolygons) {
   const landH = coastlines.shapefilePolygons(await readGeo(H_ID));
-  const n = await writeBand('h', H_CELL_DEG, { land: landH, coast: landH.flat() });
+  const n = await writeBand('gshhg-h-land', H_CELL_DEG, { land: landH, coast: landH.flat() });
   console.log(`GSHHG h: ${landH.length} polygons into ${n} cells of ${H_CELL_DEG} degree`);
 } else console.warn(`${H_ID} is not in this coastlines (${coastlines.manifest.sources?.gshhg ? 'entry' : 'source'} missing); the h band is skipped`);
 // GSHHG "f", the full resolution, the same way, from the zip coastlines pins for "h". Its zip reader
 // is not a package export, so it is loaded by file next to coastlines' entry point.
-const F_MEMBER = 'GSHHS_shp/f/GSHHS_f_L1.shp', F_CELL_DEG = 0.5; // must match scene.mjs
+const F_MEMBER = 'GSHHS_shp/f/GSHHS_f_L1.shp', F_CELL_DEG = cellOf('gshhg-f-land');
 const { zipMember } = await import(new URL('zip.js', import.meta.resolve('coastlines')));
 const gshhg = await readFile(path.join(root, 'downloads', 'gshhg-shp-2.3.7.zip'));
 if (coastlines.shapefilePolygons) {
   const landF = coastlines.shapefilePolygons(zipMember(gshhg, F_MEMBER));
-  const n = await writeBand('f', F_CELL_DEG, { land: landF, coast: landF.flat() });
+  const n = await writeBand('gshhg-f-land', F_CELL_DEG, { land: landF, coast: landF.flat() });
   console.log(`GSHHG f: ${landF.length} polygons into ${n} cells of ${F_CELL_DEG} degree`);
 } else console.warn('this coastlines has no shapefilePolygons; the f band is skipped');
 // GSHHG lakes (level 2, with river-lakes) and their islands (level 3) at "h" and "f", from the same
-// zip, cut as the land bands are (cutLakes) into geo/h-lakes/ and geo/f-lakes/, for scene.mjs
+// zip, cut as the land bands are (cutLakes) into geo/gshhg-h-lakes/ and geo/gshhg-f-lakes/, for scene.mjs
 // LAKE_BANDS: the lakes no Natural Earth file has, Dian Chi at Kunming among them.
 if (coastlines.shapefilePolygons) {
   for (const [res, cellDeg] of [['h', H_CELL_DEG], ['f', F_CELL_DEG]]) {
     const member = (level, ext) => zipMember(gshhg, `GSHHS_shp/${res}/GSHHS_${res}_L${level}.${ext}`);
     const lakes = gshhgLakes(...[2, 3].flatMap((level) => [coastlines.shapefilePolygons(member(level, 'shp')), dbfRecords(member(level, 'dbf'))]));
-    const n = await writeBand(`${res}-lakes`, cellDeg, null, cutLakes(lakes, cellDeg));
+    const n = await writeBand(`gshhg-${res}-lakes`, cellDeg, null, cutLakes(lakes, cellDeg));
     console.log(`GSHHG ${res} lakes: ${lakes.length} lakes into ${n} cells of ${cellDeg} degree`);
   }
 }
