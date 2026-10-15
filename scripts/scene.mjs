@@ -7,6 +7,7 @@
 // A view is a centre, zoom and projection, { lon, lat, zoom, projection }, on a W x H canvas; the
 // projection is one of PROJECTIONS, Mercator when left out.
 
+import { sheetsFor, BANDS as ATLAS_BANDS } from './atlas.mjs';
 import { fill, trace, limn, rhumb, place, letter, geojsonPolygons, geojsonRings } from 'coast-wright';
 import { bandOf } from './bands.mjs';
 import { islandInfo, ISLAND_KM2 } from './island.mjs';
@@ -1172,6 +1173,48 @@ function placeLesser(data, field, boxes, ctx, towns, names, poi) {
   return out;
 }
 
+// The roses of the atlas's sheets (docs/atlas/README.md, "An atlas of sheets"): each sheet's big rose on
+// its circle's centre, then small roses on its nodes, the cardinal ones first, up to three, each where
+// the sea round it is clear. Which sprite a sheet takes is picked by the sheet's name, so a sheet draws
+// the same roses from any view. Returns what buildScene's window placement does: roseDraws, centre, nodes.
+// a sheet with fewer than this many of its 17 sites in clear sea is land's, and its roses may stand on land
+const SHEET_SEA_SITES = 4, SHEET_SMALL_ROSES = 3, SHEET_NODE_ORDER = [0, 4, 8, 12, 2, 6, 10, 14, 1, 3, 5, 7, 9, 11, 13, 15];
+function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
+  const proj = data.proj;
+  // `onLand`: a sheet with no clear sea to hold its big rose lets its roses stand on land, clear of the places
+  const clear = (lon, lat, size, onLand = false) => {
+    if (!shows(proj, lon, lat)) return false;
+    const [x, y] = proj.project(lon, lat), r = size * 0.46;
+    if (onLand && world.placesLL.some((p) => Math.hypot(...proj.project(p.lon, p.lat).map((v, i) => v - [x, y][i])) < LAND_ROSE_TOWN)) return false;
+    if ((!onLand && !world.seaAt(lon, lat)) || POIS.some((p) => Math.hypot(...proj.project(p.lon, p.lat).map((v, i) => v - [x, y][i])) < POI_ROOM)) return false;
+    for (let i = 0; i < 8; i++) {
+      const [a, b] = proj.invert(x + r * Math.cos((i * Math.PI) / 4), y + r * Math.sin((i * Math.PI) / 4));
+      if (!(Math.abs(a) <= 540) || (!onLand && !world.seaAt(a, b))) return false;
+    }
+    return true;
+  };
+  const roseDraws = [], at = (n) => { const [x, y] = proj.project(n.lon, n.lat); return { x, y }; };
+  for (const sh of world.sheets) {
+    const seed = seedOf(sh.name);
+    const picked = world.seed == null ? roses.find((s) => s.sizePx === bigSizePx) : castOrder(roses, seed, () => 1)[0];
+    const big = { ...picked, sizePx: bigSizePx };
+    const rest = roses.filter((s) => s !== picked), small = rest.filter((s) => s.sizePx < bigSizePx);
+    const smallRoses = small.length ? small : rest.length ? rest.map((s) => ({ ...s, sizePx: 110 })) : [{ ...big, sizePx: 110 }];
+    const ring = world.seed == null ? smallRoses : castOrder(smallRoses, seed ^ 0x5bd1e995, () => 1);
+    const c = sh.circle;
+    const sites = [c, ...c.nodes];
+    const onLand = sites.filter((q, i) => clear(q.lon, q.lat, i ? smallSize : big.sizePx)).length < SHEET_SEA_SITES;
+    if (clear(c.lon, c.lat, big.sizePx, onLand)) roseDraws.push({ sprite: big, ...at(c), size: big.sizePx, sheet: sh.name });
+    let n = 0;
+    for (const i of SHEET_NODE_ORDER) {
+      const node = c.nodes[i], sprite = ring[n % ring.length];
+      if (n < SHEET_SMALL_ROSES && clear(node.lon, node.lat, sprite.sizePx, onLand)) { roseDraws.push({ sprite, ...at(node), size: sprite.sizePx, sheet: sh.name }); n++; }
+    }
+  }
+  const pts = world.sheets.flatMap((sh) => [sh.circle, ...sh.circle.nodes]).map(at);
+  return { roseDraws, centre: pts[0], nodes: pts.slice(1) };
+}
+
 // `sprites`: what chooseSprites chose, with pictures.
 function buildScene(data, sprites, ctx, world = {}) {
   const field = clearanceField(data);
@@ -1191,6 +1234,10 @@ function buildScene(data, sprites, ctx, world = {}) {
   const ringRoses = world.seed == null ? smallRoses : castOrder(smallRoses, world.seed ^ 0x5bd1e995, () => 1);
   const cartoucheSprite = sprites.cartouche;
   const occupied = []; // discs {x, y, r} that later ornaments keep clear of
+  // From the zoom the atlas has sheets for, the roses and the lines belong to the sheets the view overlaps,
+  // not to the window: a sheet's big rose stands on its circle's centre, small roses on its nodes, wherever
+  // the window is. A site is kept or dropped by the sea round it, never by what the window shows.
+  const sheetRoses = world.sheets ? placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) : null;
   const edge = (x, y) => Math.min(x, y, W - x, H - y);
   // Roses stand in open water. Where the water is heavily constrained (no clear sea in the middle of the
   // frame to hold half a big rose) they may stand on open land, clear of the coast by the same measure.
@@ -1210,15 +1257,18 @@ function buildScene(data, sprites, ctx, world = {}) {
       land += l;
       coast += l !== field.isLand(xx + 8, yy) || l !== field.isLand(xx, yy + 8);
     }
-    return { x, y, w: cw, h: ch, coast, land };
+    const rosy = (sheetRoses?.roseDraws ?? []).filter((r) => Math.abs(r.x - (x + cw / 2)) < cw / 2 + r.size * 0.42 && Math.abs(r.y - (y + ch / 2)) < ch / 2 + r.size * 0.42).length;
+    return { x, y, w: cw, h: ch, coast, land, rosy };
   });
-  const cartouche = corners.sort((a, b) => a.coast - b.coast || a.land - b.land)[0];
+  const cartouche = corners.sort((a, b) => a.rosy - b.rosy || a.coast - b.coast || a.land - b.land)[0];
   occupied.push({ x: cartouche.x + cw / 2, y: cartouche.y + ch / 2, r: Math.hypot(cw, ch) / 2 });
 
+  let centre, nodes, roseDraws;
   // Lattice centre: the clearest open-sea cell in the middle of the frame; the big rose sits on it.
-  const central = field.cells.filter((c) => c.x > W * 0.25 && c.x < W * 0.75 && c.y > H * 0.25 && c.y < H * 0.8);
-  const seaRoom = Math.max(...central.map((c) => free(c.x, c.y)));
-  landOk = seaRoom < bigRose.sizePx * LAND_ROSE;
+  if (!sheetRoses) {
+    const central = field.cells.filter((c) => c.x > W * 0.25 && c.x < W * 0.75 && c.y > H * 0.25 && c.y < H * 0.8);
+    landOk = Math.max(...central.map((c) => free(c.x, c.y))) < bigRose.sizePx * LAND_ROSE;
+  }
   // the built-up areas whose long side on screen is at least half the URBAN_PX that washes them: roses on
   // land and the relief keep clear of them
   const urban = landOk || reliefWanted() ? indexOf(data).urban.filter((u) => Math.max(u.box.x1 - u.box.x0, u.box.y1 - u.box.y0) * 2 >= URBAN_PX) : [];
@@ -1229,31 +1279,38 @@ function buildScene(data, sprites, ctx, world = {}) {
   // a point of interest is lettered whatever the view, so the roses and the beasts keep clear of it, on sea too
   for (const { xy: [x, y] } of data.lesser.filter((l) => l.poi)) occupied.push({ x, y, r: POI_ROOM });
   if (landOk && urban.length) built = distanceTo(data, urban.map((u) => u.poly));
-  const centre = central.reduce((a, b) => (free(b.x, b.y) > free(a.x, a.y) ? b : a));
-  const bigSize = Math.min(bigRose.sizePx, 2 * 0.95 * free(centre.x, centre.y));
-  const roseDraws = [{ sprite: bigRose, x: centre.x, y: centre.y, size: bigSize }];
-  occupied.push({ x: centre.x, y: centre.y, r: bigSize / 2 });
+  if (sheetRoses) {
+    ({ centre, nodes, roseDraws } = sheetRoses);
+    for (const r of roseDraws) occupied.push({ x: r.x, y: r.y, r: r.size / 2 + (r.size > 200 ? 0 : 10) });
+  } else {
+    const central = field.cells.filter((c) => c.x > W * 0.25 && c.x < W * 0.75 && c.y > H * 0.25 && c.y < H * 0.8);
+    centre = central.reduce((a, b) => (free(b.x, b.y) > free(a.x, a.y) ? b : a));
+    const bigSize = Math.min(bigRose.sizePx, 2 * 0.95 * free(centre.x, centre.y));
+    roseDraws = [{ sprite: bigRose, x: centre.x, y: centre.y, size: bigSize }];
+    occupied.push({ x: centre.x, y: centre.y, r: bigSize / 2 });
 
-  // Circle radius: the one that puts the most nodes in water clear enough for a small rose.
-  const ring = (R) => Array.from({ length: RHUMB_NODES }, (_, i) => {
-    const a = (i * 2 * Math.PI) / RHUMB_NODES;
-    return { x: centre.x + R * Math.cos(a), y: centre.y + R * Math.sin(a) };
-  });
-  const roseRoom = smallSize / 2 + 6;
-  let nodes = [], bestCount = -1;
-  for (let R = Math.round(H * 0.36); R <= H * 0.62; R += 8) {
-    const n = ring(R), count = n.filter((p) => free(p.x, p.y) >= roseRoom).length;
-    if (count >= bestCount) { bestCount = count; nodes = n; }
-  }
+    // Circle radius: the one that puts the most nodes in water clear enough for a small rose.
+    const ring = (R) => Array.from({ length: RHUMB_NODES }, (_, i) => {
+      const a = (i * 2 * Math.PI) / RHUMB_NODES;
+      return { x: centre.x + R * Math.cos(a), y: centre.y + R * Math.sin(a) };
+    });
+    const roseRoom = smallSize / 2 + 6;
+    nodes = []; let bestCount = -1;
+    for (let R = Math.round(H * 0.36); R <= H * 0.62; R += 8) {
+      const n = ring(R), count = n.filter((p) => free(p.x, p.y) >= roseRoom).length;
+      if (count >= bestCount) { bestCount = count; nodes = n; }
+    }
 
-  // Small roses: the clearest lattice nodes that hold the sprite, each rose of the pack in turn.
-  const nodeRank = nodes.map((n) => ({ ...n, c: free(n.x, n.y) })).filter((n) => n.c >= roseRoom).sort((a, b) => b.c - a.c);
-  for (const n of nodeRank) {
-    if (roseDraws.length >= 4) break;
-    const sprite = ringRoses[(roseDraws.length - 1) % ringRoses.length];
-    if (free(n.x, n.y) < roseRoom || roseBlocked(n.x, n.y, sprite.sizePx)) continue;
-    roseDraws.push({ sprite, x: n.x, y: n.y, size: sprite.sizePx });
-    occupied.push({ x: n.x, y: n.y, r: sprite.sizePx / 2 + 10 });
+    // Small roses: the clearest lattice nodes that hold the sprite, each rose of the pack in turn.
+    const nodeRank = nodes.map((n) => ({ ...n, c: free(n.x, n.y) })).filter((n) => n.c >= roseRoom).sort((a, b) => b.c - a.c);
+    for (const n of nodeRank) {
+      if (roseDraws.length >= 4) break;
+      const sprite = ringRoses[(roseDraws.length - 1) % ringRoses.length];
+      if (free(n.x, n.y) < roseRoom || roseBlocked(n.x, n.y, sprite.sizePx)) continue;
+      roseDraws.push({ sprite, x: n.x, y: n.y, size: sprite.sizePx });
+      occupied.push({ x: n.x, y: n.y, r: sprite.sizePx / 2 + 10 });
+    }
+
   }
 
   if (places.size) occupied.splice(0, occupied.length, ...occupied.filter((o) => !places.has(o)));
@@ -1391,7 +1448,7 @@ function buildScene(data, sprites, ctx, world = {}) {
 
   // automatic, the typed title stands in where the view has no name in it
   const title = world.pinTitle?.toUpperCase() || (world.autoTitle && viewTitle(data, towns.filter((t) => names.some((n) => n.text === t.name)), world.regions === 'english' ? 1 : 0, lesser.filter((l) => l.poi)).toUpperCase()) || world.title || 'PORTOLANI';
-  return { field, centre, nodes, roseDraws, towns, lesser, names, worldNames, monsters, ships, mountains, relief, cartouche: { ...cartouche, sprite: cartoucheSprite, title } };
+  return { field, centre, nodes, sheets: world.sheets, roseDraws, towns, lesser, names, worldNames, monsters, ships, mountains, relief, cartouche: { ...cartouche, sprite: cartoucheSprite, title } };
 }
 
 // ---------------------------------------------------------------- drawing
@@ -1529,8 +1586,11 @@ function latticeOf(scene, data) {
   rays = [];
   // Mercator radians at the equator, in degrees; never past half the world, where a ray would lap itself
   const reach = Math.min(180, (Math.hypot(W, H) * 1.5 / data.proj.k) * 180 / Math.PI);
-  for (const n of [scene.centre, ...scene.nodes]) {
-    const [lon, lat] = data.proj.invert(n.x, n.y);
+  // a sheet's lines reach its extent plus half a sheet; a window's, past the scene's far corner
+  const origins = scene.sheets
+    ? scene.sheets.flatMap((sh) => [sh.circle, ...sh.circle.nodes].map((n) => ({ lon: n.lon, lat: n.lat, reach: sh.reach })))
+    : [scene.centre, ...scene.nodes].map((n) => { const [lon, lat] = data.proj.invert(n.x, n.y); return { lon, lat, reach }; });
+  for (const { lon, lat, reach } of origins) {
     for (let k = 0; k < RHUMB_RAYS; k++) {
       const kind = k % 4 === 0 ? 0 : k % 2 === 1 ? 1 : 2; // wind, quarter (red), half (green)
       const line = rhumb([lon, lat], 90 + (k * 360) / RHUMB_RAYS, reach * Math.cos(lat * Math.PI / 180));
@@ -2160,6 +2220,15 @@ function drawAnchored(g, a, bg, view) {
 // the view is about (a place flown to), lettered in capitals whatever the scoring finds.
 // `kinds` defaults to DEFAULT_KINDS, every kind. A kind left out is still
 // placed when the lattice needs it (a rose, the cartouche's corner), only not drawn.
+// A sheet's hidden circle reaches 0.4 of its height, so a node never lands on the edge a neighbour shares.
+const SHEET_RADIUS = 0.4;
+// Degrees of rhumb line from a node: the sheet's extent plus half a sheet, over its diagonal on the page.
+const sheetReach = (e) => Math.min(180, 1.5 * Math.hypot(e.east - e.west, mercatorDeg(e.north) - mercatorDeg(e.south)));
+const mercatorDeg = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * RAD) / 2)) / RAD;
+// Whether a point of the earth is sea, by the world's land and not the window's.
+function seaAtOf(world) {
+  return (lon, lat) => !world.land.some(({ poly, box }) => lat > box.y0 && lat < box.y1 && SHIFTS.some((s) => lon + s > box.x0 && lon + s < box.x1 && insideRing(poly[0], lon + s, lat)));
+}
 export async function createScene(environment, opts = {}) {
   env = environment;
   const { ink = '#3b2a1a', continentsZoom, regionsZoom, scaleBorder = 'bordered', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', title = 'PORTOLANI', autoTitle = true, pinTitle, land: landMode = 'islands', islands, seaTint = false, rivers = 'off', lakes = 'off', relief = [], trees = 'off' } = opts;
@@ -2210,7 +2279,9 @@ export async function createScene(environment, opts = {}) {
   const tLoad = performance.now();
 
   const data = viewData(world, view);
-  const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, title, autoTitle, pinTitle,
+  // the sheets from the atlas's first band down; above it (the world band) the window still places the roses
+  const sheets = view.zoom >= ATLAS_BANDS[0].from ? sheetsFor(view, { radius: SHEET_RADIUS }).map((sh) => ({ ...sh, reach: sheetReach(sh.extent) })) : null;
+  const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, seaAt: sheets && seaAtOf(world), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, title, autoTitle, pinTitle,
     continentsEnd: zoomEnd(continentsZoom, CONTINENT_ZOOM_END), regionsEnd: zoomEnd(regionsZoom, REGION_ZOOM_END),
     scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM, townSize: townBy, seed: legacy ? null : castSeed(view) }), show, scaleSprite };
   data.trees = TREES[STYLE.trees] ? plantTrees({ proj: data.proj, isLand: scene.field.isLand, scene, lakes: STYLE.lakes !== 'off' && water ? water.lakes : [], w: W, h: H }) : [];
