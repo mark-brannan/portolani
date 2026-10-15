@@ -167,8 +167,8 @@ const withLakes = (w, lakes) => (lakes.length ? { ...w, lakes: [...w.lakes.filte
 // Per-run tuning; `density` scales how much ornament is placed (1 = the committed mockup).
 // `hillShare`: the share of the hill sprites that fit which stand, all of them from density 1.
 // `budget`: the ornaments (roses, monsters and ships together) one window holds at density 1, shared out among
-// the sheets in view by territory (#147; counts in docs/measurements.md). It is main's window placement
-// summed, which drew up to 4 roses, 4 monsters and 2 ships; `ROSE_SHARE` of it goes to roses, the rest
+// the sheets in view by territory (#147; counts in docs/measurements.md). 10 = 4 roses + 4 monsters + 2 ships,
+// the per-window caps the sheets used to carry; `ROSE_SHARE` of it goes to roses, the rest
 // to beasts, two monsters to a ship. A new kind takes its share from these, so the total stays the budget.
 export const BUDGET = 10, ROSE_SHARE = 0.4, SHEET_ROSES = 4;
 const TUNE = { budget: BUDGET, monsterMax: 4, shipMax: 2, townGap: 48, hillShare: 1 };
