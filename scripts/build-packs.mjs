@@ -181,7 +181,7 @@ const PACKS = [
       // every sprite is the whole crop, feathered at its edge; `erase` cuts only what is not the subject.
       // The two three-masted ships, both bows to the left, with the sea below and round the hull
       // (a wrecked hull above the stern is erased)
-      { id: 'debry-ship-a', kind: 'ship', style: 'debry', scan: 'debry-virginia', crop: [1120, 1062, 1680, 1580], sizePx: 84, heading: 'left',
+      { id: 'debry-ship-a', kind: 'ship', style: 'debry', scan: 'debry-virginia', crop: [1121, 1063, 1679, 1579], sizePx: 84, heading: 'left',
         erase: [[1505, 1000, 1690, 1096]] },
       { id: 'debry-ship-b', kind: 'ship', style: 'debry', scan: 'debry-virginia', crop: [1830, 990, 2215, 1480], sizePx: 72, heading: 'left' },
       // the sea monster at the foot of the plate, with the swell it rises from and the water below
