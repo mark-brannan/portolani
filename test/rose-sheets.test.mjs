@@ -111,12 +111,11 @@ for (const zoom of [5, 9]) {
     }));
     // every ornament placed in the first window, whether or not it is on screen: a sheet's are placed in its own frame
     const kept = (o) => { const [x, y] = b.proj.project(...o.ll); return b.list.some((q) => q.kind === o.kind && Math.hypot(x - q.x, y - q.y) <= 2); };
-    const stayed = a.list;
     for (const kind of ['rose', 'monster', 'ship']) {
-      const of = stayed.filter((o) => o.kind === kind), ok = of.filter(kept).length;
-      console.log(`# z${zoom} ${kind}: ${ok}/${of.length} kept after a 1% drag (all placed: ${a.list.filter((o) => o.kind === kind).length})`);
-      assert.equal(ok, of.length, `every ${kind} still inside the window keeps its place`);
+      const of = a.list.filter((o) => o.kind === kind), ok = of.filter(kept).length;
+      console.log(`# z${zoom} ${kind}: ${ok}/${of.length} kept after a 1% drag`);
+      assert.equal(ok, of.length, `every ${kind} placed in the first window keeps its place`);
     }
-    assert.ok(stayed.length > 0, 'something is placed');
+    assert.ok(a.list.length > 0, 'something is placed');
   });
 }
