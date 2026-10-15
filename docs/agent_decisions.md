@@ -150,3 +150,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261015t090354z
 - The rose-variety test checks the big roses at z6, where grid sheets give the variety, not z3 Undo: revert the test hunk ([#143](https://github.com/mark-brannan/portolani/pull/143))
+
+### 20261015t182250z
+- PR143: no code change; test left red, needs-human. Undo: remove label (no PR, branch claude/portolani-unattended-shift-2c08b5)
