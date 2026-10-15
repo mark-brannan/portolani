@@ -86,11 +86,59 @@ export function hiddenCircle(extent, radius = 0.5) {
   return { lon, lat, radius, nodes };
 }
 
+// The curated sheets (docs/atlas/README.md, "The curated sheets"): extents from that table, circles from
+// the readings in centres.md (centre, and radius in degrees of a great circle). `bands` are the atlas bands
+// a sheet serves, 0 for the world band. The Carta Marina has no ring and de la Cosa's is in pixels, so both
+// take the overview grid's rule, 0.4 of a sheet height (7.68 degrees).
+const RULE = 0.4 * BANDS[0].height;
+export const CURATED = [
+  { name: 'Mediterranean, west', source: 'Carte Pisane, western circle', bands: [0, 1], extent: { west: -10, east: 20, south: 30, north: 48 }, lon: 7.4, lat: 40.0, radius: 8.0 },
+  { name: 'Mediterranean, east', source: 'Carte Pisane, eastern circle', bands: [0, 1], extent: { west: 15, east: 42, south: 30, north: 48 }, lon: 27.4, lat: 36.8, radius: 7.5 },
+  { name: 'Levant and Black Sea', source: 'Vesconte, 1311', bands: [1], extent: { west: 20, east: 42, south: 30, north: 48 }, lon: 25.2, lat: 37.5, radius: 3 },
+  { name: 'Europe and the Mediterranean', source: 'Dulcert, 1339', bands: [0, 1], extent: { west: -25, east: 42, south: 28, north: 60 }, lon: 14.5, lat: 40.0, radius: 17 },
+  { name: 'The known world of 1375', source: 'Catalan Atlas', bands: [0], extent: { west: -25, east: 120, south: 10, north: 60 }, lon: -5.4, lat: 42.3, radius: 16 },
+  { name: 'Scandinavia and the Baltic', source: 'Carta Marina, 1539', bands: [1], extent: { west: -5, east: 45, south: 53, north: 72 }, lon: 19.7, lat: 61.7, radius: RULE },
+  { name: 'The Atlantic and the Americas', source: 'Juan de la Cosa, 1500', bands: [0], extent: { west: -100, east: 20, south: -20, north: 65 }, lon: -45, lat: 23.4, radius: RULE },
+].map((c) => ({ ...c, area: (c.extent.east - c.extent.west) * (c.extent.north - c.extent.south) }));
+// the Carte Pisane's two sheets share their overlap; every other overlap goes to the smaller sheet
+const PISANE = new Set(['Mediterranean, west', 'Mediterranean, east']);
+const within = (e, lon, lat) => lon >= e.west && lon <= e.east && lat >= e.south && lat <= e.north;
+const overlaps = (a, b) => a.west < b.east && b.west < a.east && a.south < b.north && b.south < a.north;
+export const inShadow = (sheet, lon, lat) => !!sheet.shadow?.some((e) => within(e, lon, lat));
+
+function curatedCircle(c) {
+  const cy = mercY(c.lat), R = c.radius / Math.cos(c.lat * RAD), nodes = [];
+  for (let i = 0; i < NODES; i++) {
+    const b = (i * 2 * Math.PI) / NODES;
+    nodes.push({ lon: c.lon + R * Math.sin(b), lat: unMercY(cy + R * Math.cos(b)) });
+  }
+  return { lon: c.lon, lat: c.lat, radius: c.radius / (c.extent.north - c.extent.south), nodes };
+}
+
+// The curated sheets the band serves that the view overlaps, each with `shadow`: the extents of the smaller
+// curated sheets over it, where its network is not drawn.
+function curatedFor(world, band, b) {
+  const serving = CURATED.filter((c) => c.bands.includes(world ? 0 : band.band));
+  return serving.filter((c) => overlaps(c.extent, b)).map((c) => ({
+    name: c.name, source: c.source, curated: true, band: band.band, bandName: band.name, extent: c.extent,
+    circle: curatedCircle(c),
+    shadow: serving.filter((o) => o.area < c.area && !(PISANE.has(c.name) && PISANE.has(o.name)) && overlaps(o.extent, c.extent)).map((o) => o.extent),
+  }));
+}
+
 // Every grid sheet the view overlaps: [{ name, band, bandName, row, col, extent, circle }].
-export function sheetsFor(view, { radius = 0.5 } = {}) {
+// With `curated`, the world and overview bands take the curated sheets, and a grid cell whose centre lies in
+// one is left out; the world band (below zoom 6) is the curated sheets alone.
+export function sheetsFor(view, { radius = 0.5, curated = false } = {}) {
   const band = bandFor(view.zoom);
   const h = band.height;
   const b = viewBounds(view);
+  const world = view.zoom < BANDS[0].from;
+  const all = { west: -180, east: 180, south: -90, north: 90 };
+  const everywhere = curated && band.band === 1 ? curatedFor(world, band, all) : [];
+  const cur = everywhere.filter((c) => overlaps(c.extent, b));
+  if (curated && world) return cur;
+  const held = (extent) => everywhere.some((c) => within(c.extent, (extent.west + extent.east) / 2, (extent.south + extent.north) / 2));
   // Whole rows out from the rose that stop short of both poles: a row touching a pole has no Mercator
   // centre, so it is left out like the caps beyond the last.
   const rowLo = Math.floor((-90 - ROSE.lat) / h + EPS) + 1, rowHi = Math.ceil((90 - ROSE.lat) / h - EPS) - 1; // rows rowLo to rowHi - 1
@@ -106,11 +154,12 @@ export function sheetsFor(view, { radius = 0.5 } = {}) {
     const c1 = Math.ceil((Math.min(b.east, 180) - ROSE.lon) / w - EPS);
     for (let col = c0; col < c1; col++) {
       const extent = { west: Math.max(-180, round(ROSE.lon + col * w)), east: Math.min(180, round(ROSE.lon + (col + 1) * w)), south: s, north: round(s + h) };
+      if (held(extent)) continue;
       out.push({
         name: sheetName(band, row, col), band: band.band, bandName: band.name, row, col, extent,
         circle: hiddenCircle(extent, radius),
       });
     }
   }
-  return out;
+  return [...cur, ...out];
 }
