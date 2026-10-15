@@ -105,7 +105,7 @@ than the cell at each). That is a happy accident, and the design takes it. The c
 
 | band | zooms | sheet height | modelled on |
 |---|---|---|---|
-| world | 1 to 6 | the whole earth, a few curated sheets | the world charts (Juan de la Cosa, the Catalan Atlas's span) |
+| world | 1 to 6 | the whole earth, the curated sheets that fit the view | the world charts (Juan de la Cosa, the Catalan Atlas's span) |
 | overview | 6 to 8 | 19.2° | ENC band 1, Overview, 1:10,000,000 and 1:3,500,000 |
 | general | 8 to 10 | 4.8° | ENC band 2, General, 1:1,500,000 and 1:700,000 |
 | coastal | 10 to 12 | 1.2° | ENC band 3, Coastal, 1:350,000 and 1:180,000 |
@@ -115,9 +115,11 @@ than the cell at each). That is a happy accident, and the design takes it. The c
 A band is two zoom steps, so inside a band the map scales by up to 4x and a sheet is between one
 and four windows wide; the harbour band is one step, one to two windows, because the chart's zoom
 ends at 15. Sixteen sheets of a band nest inside one sheet of the band
-above, exactly as NOAA's cells do. The world band is the exception: there the earth is one page,
-curated sheet by curated sheet, because at those zooms a grid cell would be most of a hemisphere
-and the famous charts are the better model.
+above, exactly as NOAA's cells do. The world band is no exception: there a grid cell would be most
+of a hemisphere and the famous charts are the better model, but they come by the same rule as every
+band's sheets. A curated sheet places its ornaments and its network only in a view where its extent
+is about a quarter to four windows wide at the view's zoom; a narrower sheet contributes nothing to
+that view, and a wider one is a page of the band above.
 
 One rose belongs to no band: the Catalan Atlas rose at 20.7°W 42.1°N, the point every band's grid
 counts from ("The fallback grid", below). Current thinking: its rhumb lines are drawn at every zoom,
@@ -164,9 +166,10 @@ The sheets:
 Three notes on the table. A curated sheet serves the bands in which its extent is one to four
 windows wide at the band's first zoom, the range a grid sheet spans; wider than that, it is a page
 of the band above. Where a sheet serves two bands the same circle serves both, and the page turn
-between them keeps the roses still. The world band is the exception again: at those zooms the earth
-is one page, so it takes every curated sheet from the planispheres down to the Carte Pisane's two
-circles.
+between them keeps the roses still. The world band is no exception: there too a sheet places only
+where its extent is about a quarter to four windows wide at the view's zoom, so at zoom 2 the
+Catalan Atlas and Juan de la Cosa alone are drawn, and the Carte Pisane's circles appear from about
+zoom 4.
 
 Where curated sheets overlap in one band, the sheet of smaller area (its extent in square degrees)
 wins over the ground it covers, and the larger sheet's network, its small roses and its beasts are
