@@ -158,7 +158,7 @@ The sheets:
 | Levant and Black Sea | Vesconte 1311 | overview | 20°E to 42°E, 30°N to 48°N | 30°E 40°N, between the Aegean and the Black Sea | the chart covers the eastern Mediterranean and the Black Sea alone |
 | Europe and the Mediterranean | Dulcert 1339 | world, overview | 25°W to 42°E, 28°N to 60°N | 5°E 40°N, the Balearic sea | the first Majorcan chart; the Atlantic and the Baltic added to the frame |
 | The known world of 1375 | Catalan Atlas | world | 25°W to 120°E, 10°N to 60°N | 20°W 37°N, off Morocco | the first drawn compass rose, on folio 5v; the big rose goes there |
-| Scandinavia and the Baltic | Carta Marina 1539 | overview | 5°W to 45°E, 53°N to 72°N | 22°E 60°N, the Baltic off Stockholm | its roses are already the chart's ornament pack; the big rose follows its central one |
+| Scandinavia and the Baltic | Carta Marina 1539 | overview | 25°W to 45°E, 53°N to 72°N | 22°E 60°N, the Baltic off Stockholm | its roses are already the chart's ornament pack; the big rose follows its central one |
 | The Atlantic and the Americas | Juan de la Cosa 1500 | world | 100°W to 20°E, 20°S to 65°N | 35°W 30°N, the open Atlantic | its rose with the Virgin and Child sits in mid-Atlantic on the equator; the big rose stands for it |
 
 Three notes on the table. A curated sheet serves the bands in which its extent is one to four
