@@ -23,7 +23,7 @@ import path from 'node:path';
 import * as coastlines from 'coastlines';
 import { geojsonPolygons, geojsonRings } from 'coast-wright';
 import { cutCells, cutLakes, cutWater, dbfRecords, gshhgLakes, joinWater, WATER_FILES } from './detail-cells.mjs';
-import { seaNames, coastNames, joinNames, redSea } from './names.mjs';
+import { seaNames, coastNames, joinNames, tintedSeas } from './names.mjs';
 import { joinUrban } from './urban.mjs';
 const { find, localUrl } = coastlines;
 
@@ -96,10 +96,10 @@ const seas = seaNames(marine);
 // the golden test reads its seas from this fixture, offline: it must stay what the download gives
 const fixture = await readFile(path.join(root, 'test', 'fixtures', 'sea-names-50m.json'), 'utf8');
 if (JSON.stringify(JSON.parse(fixture)) !== JSON.stringify(seas)) throw new Error('test/fixtures/sea-names-50m.json is stale: write seaNames() of the marine download to it');
-// likewise the Red Sea the chart can tint (test/fixtures/red-sea-50m.json)
-const red = redSea(marine);
-if (JSON.stringify(JSON.parse(await readFile(path.join(root, 'test', 'fixtures', 'red-sea-50m.json'), 'utf8'))) !== JSON.stringify(red)) throw new Error('test/fixtures/red-sea-50m.json is stale: write redSea() of the marine download to it');
-await writeFile(path.join(out, 'geo', 'red-sea-50m.json'), JSON.stringify(red));
+// likewise the seas the chart can tint (test/fixtures/seas-50m.json)
+const red = tintedSeas(marine);
+if (JSON.stringify(JSON.parse(await readFile(path.join(root, 'test', 'fixtures', 'seas-50m.json'), 'utf8'))) !== JSON.stringify(red)) throw new Error('test/fixtures/seas-50m.json is stale: write tintedSeas() of the marine download to it');
+await writeFile(path.join(out, 'geo', 'seas-50m.json'), JSON.stringify(red));
 await writeFile(path.join(out, 'geo', 'names-50m.json'), JSON.stringify(joinNames(seas, coastNames(countries, coast50))));
 const urban = JSON.stringify(joinUrban(placesGeo, JSON.parse(await readFile(path.join(root, 'downloads', 'ne_10m_urban_areas.geojson'), 'utf8'))));
 await writeFile(path.join(out, 'geo', 'urban-10m.json'), urban);

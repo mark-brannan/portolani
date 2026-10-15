@@ -24,7 +24,7 @@ const sizes = (flags.sizes ?? '1440x900,1024x768').split(',').map((s) => s.split
 const modes = (flags.ornaments ?? 'both') === 'both' ? ['on', 'off'] : [flags.ornaments];
 const REDRAWS = 5, DRAGS = 3, MOVES = 20;
 
-const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json', '.geojson': 'application/json', '.png': 'image/png', '.webp': 'image/webp', '.ttf': 'font/ttf' };
+const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json', '.geojson': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml', '.webp': 'image/webp', '.ttf': 'font/ttf' };
 const fetched = new Map(); // path -> bytes, per page load
 const server = createServer(async (req, res) => {
   let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));

@@ -41,7 +41,7 @@
   /* the drawer: slides in from the left over the map, hidden (and out of the tab order) when shut */
   #drawer {
     position: fixed; inset: 0 auto 0 0; z-index: 2; box-sizing: border-box;
-    width: min(340px, 100vw); overflow-y: auto; overscroll-behavior: contain;
+    width: min(480px, 100vw); overflow-y: auto; overscroll-behavior: contain;
     padding: 14px 16px 28px; background: var(--panel);
     border-right: 1px solid var(--rule); outline: 1px solid var(--rule); outline-offset: -5px;
     box-shadow: 4px 0 24px rgb(0 0 0 / 0.3);
@@ -50,7 +50,7 @@
   }
   #drawer.open { transform: none; visibility: visible; transition: transform 0.25s ease; }
   @media (prefers-reduced-motion: reduce) { #drawer, #drawer.open { transition: none; } }
-  @media (max-width: 480px) { #drawer { width: 100vw; border-right: none; } }
+  @media (max-width: 520px) { #drawer { width: 100vw; border-right: none; } }
 
   header { display: flex; align-items: start; justify-content: space-between; gap: 8px; }
   h1 { font: 28px/1.1 var(--serif); margin: 4px 0 2px; letter-spacing: 0.06em; }
@@ -77,13 +77,26 @@
   .thumb[aria-pressed=false] { border-style: dashed; border-color: var(--line); }
   .thumb[aria-pressed=false] > * { filter: grayscale(1); opacity: 0.3; }
   .thumb[aria-pressed=true] { box-shadow: inset 0 0 0 1px var(--accent); border-color: var(--accent); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; font: 13px var(--serif); cursor: pointer;
+    background: var(--sheet); color: var(--sheet-ink); border: 1px solid var(--rule); border-radius: 14px;
+  }
+  .chip[aria-checked=false] { border-style: dashed; border-color: var(--line); opacity: 0.6; }
+  .chip[aria-checked=true] { box-shadow: inset 0 0 0 1px var(--accent); border-color: var(--accent); }
+  .chip i { width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--rule); }
+  .chip svg { width: 28px; height: 18px; flex: none; }
+  .chip svg.wide { width: 34px; }
+  .slider { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+  .slider input { flex: 1; }
+  .slider output { min-width: 84px; text-align: right; font-size: 12px; color: var(--muted); }
   .thumb.none { font: 13px var(--serif); padding: 0 10px; }
 
   label { display: flex; align-items: center; gap: 8px; }
   .rows { display: grid; gap: 8px; }
   .rows label { justify-content: space-between; }
   .rows label.check { justify-content: start; }
-  select, input[type=text] { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--rule); border-radius: 3px; padding: 3px 4px; max-width: 190px; }
+  input[type=text] { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--rule); border-radius: 3px; padding: 3px 4px; max-width: 190px; }
   input[type=color] { width: 40px; height: 28px; padding: 0; border: 1px solid var(--rule); background: none; }
   input[type=checkbox], input[type=range] { accent-color: var(--accent); }
   .title { display: flex; gap: 6px; }
@@ -117,6 +130,7 @@
 
   <section aria-labelledby="h-sea">
     <h2 id="h-sea">Sea</h2>
+    <div class="slider"><label for="density">Density (monsters, ships, towns)</label><input id="density" type="range" min="0" max="2" step="0.25" value="1"><output id="densityOut">1</output></div>
     <h3>Monsters</h3>
     <div id="pick-monster"></div>
     <h3>Ships</h3>
@@ -137,78 +151,45 @@
   <section aria-labelledby="h-land">
     <h2 id="h-land">Land</h2>
     <h3>Mountains</h3>
-    <div id="pick-mountain"></div>
+    <div id="mountains" class="chips" role="radiogroup" aria-label="Mountains"></div>
+    <h3>Hills</h3>
+    <div id="hills" class="chips" role="radiogroup" aria-label="Hills"></div>
+    <div id="pick-relief"></div>
+    <h3>Trees</h3>
+    <div id="trees" class="chips" role="radiogroup" aria-label="Trees"></div>
   </section>
 
   <section aria-labelledby="h-cartouche">
     <h2 id="h-cartouche">Cartouche</h2>
     <div id="pick-cartouche" class="thumbs" role="group" aria-label="Cartouche, one of"></div>
+    <h3>Title</h3>
+    <div id="titleMode" class="chips" role="radiogroup" aria-label="Title"></div>
+    <div class="title"><input id="title" type="text" value="PORTOLANI" disabled maxlength="40" aria-label="Title text"></div>
   </section>
 
   <section aria-labelledby="h-map">
     <h2 id="h-map">Map</h2>
     <div class="rows">
-      <label>Projection <select id="projection">
-        <option value="mercator">Mercator (rhumb lines straight)</option>
-        <option value="plate-carree">Plate carrée (equal degrees)</option>
-        <option value="miller">Miller (poles tamed)</option>
-        <option value="equal-area">Equal-area (Gall–Peters)</option>
-        <option value="orthographic">Globe (orthographic)</option>
-        <option value="azimuthal-equidistant">Azimuthal equidistant (true from the centre)</option>
-        <option value="stereographic">Stereographic (the polar chart)</option>
-      </select></label>
+      <h3>Projection</h3>
+      <div id="projection" class="chips" role="radiogroup" aria-label="Projection"></div>
       <label class="check"><input type="checkbox" id="names"> Names</label>
       <label class="check"><input type="checkbox" id="rhumb"> Rhumb lines</label>
-      <label class="check"><input type="checkbox" id="continents"> Continents (zoom 5 and out)</label>
-      <label>Regions (zoom 7 and out) <select id="regions">
-        <option value="off">Off</option>
-        <option value="latin">Latin (Hispania)</option>
-        <option value="english">English (Iberia)</option>
-      </select></label>
-      <label>Title <select id="titleMode">
-        <option value="auto">Automatic (what the view shows)</option>
-        <option value="custom">Custom</option>
-      </select></label>
-      <div class="title"><input id="title" type="text" value="PORTOLANI" disabled maxlength="40" aria-label="Title text"></div>
-      <label>Land <select id="land">
-        <option value="islands">Coloured islands (Beccari, 1403)</option>
-        <option value="gilt">Gilt wash</option>
-        <option value="green">Green wash (Oliva, c.1590)</option>
-        <option value="ochre">Ochre with shoals (Benincasa, 1466)</option>
-      </select></label>
-      <label>Rivers <select id="rivers">
-        <option value="off">Off</option>
-        <option value="aguiar">Wiggled ink (Aguiar, 1492)</option>
-        <option value="marina">Double line (Carta Marina, 1539)</option>
-        <option value="plain">Plain blue line</option>
-      </select></label>
-      <label>Lakes <select id="lakes">
-        <option value="off">Off</option>
-        <option value="aguiar">Lozenges (Aguiar, 1492)</option>
-        <option value="marina">True shapes, hatched (Carta Marina, 1539)</option>
-        <option value="plain">True shapes, blue wash</option>
-      </select></label>
-      <label>Hills and mountains <select id="relief">
-        <option value="off">Off</option>
-        <option value="marina">Washed and hatched (Carta Marina, 1539)</option>
-        <option value="engraved">Ink only, engraved</option>
-        </select></label>
-      <label>Trees <select id="trees">
-        <option value="off">Off</option>
-        <option value="marina">Green crowns (Carta Marina, 1539)</option>
-        <option value="ink">Ink only</option>
-      </select></label>
-      <label class="check"><input type="checkbox" id="redSea"> Red Sea in red</label>
-      <label>Scale bar <select id="scale">
-        <option value="off">Off</option>
-        <option value="genoese">Genoese (drawn as vectors)</option>
-        <option value="chequer">Chequer</option>
-        <option value="chevron">Chevron ladder (Genoese)</option>
-        <option value="ribbon">Ribbon (Martines)</option>
-        <option value="beads">Beads (Prunes)</option>
-        <option value="ruled">Ruled (Beccari)</option>
-      </select></label>
-      <label>Density <span><input id="density" type="range" min="0" max="2" step="0.25" value="1"> <output id="densityOut">1</output></span></label>
+      <h3>Continents</h3>
+      <div class="slider"><input id="continentsZoom" type="range" min="0" max="15" step="1" value="5" aria-label="Continents, zoom drawn to"><output id="continentsOut"></output></div>
+      <h3>Regions</h3>
+      <div id="regions" class="chips" role="radiogroup" aria-label="Regions"></div>
+      <div class="slider"><input id="regionsZoom" type="range" min="0" max="15" step="1" value="7" aria-label="Regions, zoom drawn to"><output id="regionsOut"></output></div>
+      <h3>Land border</h3>
+      <div id="land" class="chips" role="radiogroup" aria-label="Land border"></div>
+      <h3>Colour</h3>
+      <div class="chips"><div id="islands" class="chips" role="radiogroup" aria-label="Coloured islands"></div><div id="seaTint" class="chips" role="radiogroup" aria-label="Coloured seas"></div></div>
+      <h3>Rivers</h3>
+      <div id="rivers" class="chips" role="radiogroup" aria-label="Rivers"></div>
+      <h3>Lakes</h3>
+      <div id="lakes" class="chips" role="radiogroup" aria-label="Lakes"></div>
+      <h3>Scale bar</h3>
+      <div id="scale" class="chips" role="radiogroup" aria-label="Scale bar"></div>
+      <div id="scaleBorder" class="chips" role="radiogroup" aria-label="Scale bar border"></div>
     </div>
   </section>
 

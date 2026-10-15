@@ -24,10 +24,13 @@ function mercator({ lon, lat, zoom }) {
     invert: (px, py) => [lon + (px - W / 2) / k / RAD, (2 * Math.atan(Math.exp(y0 - (py - H / 2) / k)) - Math.PI / 2) / RAD],
   };
 }
-const place = (view) => reliefOf({ proj: mercator(view), land, createCanvas, w: W, h: H });
+const place = (view, extra = { styles: ['marina'], hills: true }) => reliefOf({ proj: mercator(view), land, createCanvas, w: W, h: H, ...extra });
 
-test('relief stands on land: ranges in Scandinavia from afar, hills from zoom 9', () => {
+test('relief stands on land: ranges in Scandinavia from afar, hills from zoom 5', () => {
   const far = place({ lon: 15, lat: 62, zoom: 4 });
+  assert.equal(place({ lon: 15, lat: 62, zoom: 5 }).humps.length > 0, true, 'hills at zoom 5');
+  assert.equal(place({ lon: 15, lat: 62, zoom: 5 }, { styles: [], hills: false }).humps.length, 0, 'hills off: none');
+  assert.equal(place({ lon: 15, lat: 62, zoom: 5 }, { styles: [], hills: true }).peaks.length, 0, 'mountains off: no peak');
   assert.ok(far.peaks.length > 20, `a far view of Scandinavia holds ranges (${far.peaks.length} peaks)`);
   assert.equal(far.humps.length, 0, 'no hills from afar');
   const close = place({ lon: 9, lat: 61, zoom: 10 });
@@ -49,4 +52,11 @@ test('a pan keeps every peak where it stood on the map', () => {
   assert.ok(before.length > 10);
   const kept = before.filter((p) => after.has(key(p, dx, dy)) || after.has(key(p, dx + 1, dy)) || after.has(key(p, dx - 1, dy)) || after.has(key(p, dx, dy + 1)) || after.has(key(p, dx, dy - 1)));
   assert.equal(kept.length, before.length, `${before.length - kept.length} of ${before.length} peaks moved under a pan`);
+});
+
+test('each range takes one of the styles selected, by its seed; hills are humps for the sprites', () => {
+  const view = { lon: 15, lat: 62, zoom: 4 };
+  const mixed = place(view, { styles: ['marina', 'engraved'], hills: true }), seen = new Set(mixed.peaks.map((p) => p.style));
+  assert.deepEqual([...seen].sort(), ['engraved', 'marina'], 'drawn ranges carry their style');
+  assert.deepEqual([...new Set(place(view, { styles: ['engraved'] }).peaks.map((p) => p.style))], ['engraved']);
 });

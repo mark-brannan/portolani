@@ -8,6 +8,12 @@
 // between them. A slow seeded noise over lon/lat says which country is mountainous, so the same
 // regions stay mountainous as the view zooms. The distance field is laid on the map's own pixel
 // grid and every seed comes from its cell, so a pan does not reshuffle the land.
+//
+// Mountains are the ranges, drawn in the style selected (RELIEF_STYLES; several mix per range by
+// seed). Hills are the clusters between them, which come back as humps for the scene to stand the
+// Catalan Atlas's sprites on (the humps themselves are only what a drag draws meanwhile). A hill sits
+// on the foothill ground of the same noise as the ranges, inland and lower than a range, which
+// stands in for elevation, the data holding none.
 
 import { hatch, pen } from 'coast-wright';
 
@@ -24,7 +30,7 @@ const HILL_ZOOM = 9;
 // From each zoom: the range cell (px), a peak's height (px) and the share of the land that is mountainous.
 const BANDS = [
   { zoom: 0, cell: 260, peak: 30, share: 0.5 },
-  { zoom: 5, cell: 260, peak: 26, share: 0.5 },
+  { zoom: 5, cell: 260, peak: 26, share: 0.5, hillCell: 140, hill: 9 },
   { zoom: HILL_ZOOM, cell: 320, peak: 20, share: 0.5, hillCell: 120, hill: 11 },
 ];
 export const RELIEF_ZOOM = 2; // from here the land is big enough to hold a range
@@ -107,7 +113,8 @@ const bandOf = (zoom) => BANDS.findLast((b) => zoom >= b.zoom);
 // round it meets, each with its own random stream; a cell is the same cell under any pan.
 function cellsOf(proj, w, h, px, pad, salt) {
   const zi = Math.floor(proj.zoom), deg = (px * 360) / (512 * 2 ** zi), row = deg * RAD, n = Math.round(360 / deg);
-  const merc = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * RAD) / 2));
+  // clamped, as Mercator is: a view's top row in another projection can reach past the pole, and the loop below would never end
+  const merc = (lat) => Math.log(Math.tan(Math.PI / 4 + (Math.max(-85, Math.min(85, lat)) * RAD) / 2));
   const [lonA, latA] = proj.invert(-pad, -pad), [lonB, latB] = proj.invert(w + pad, h + pad);
   const out = [];
   for (let i = Math.floor(lonA / deg); i <= Math.floor(lonB / deg); i++) {
@@ -164,12 +171,16 @@ function peakOf(x, y, w, h, rnd) {
   return { x, y, w, h, lean: (rnd() - 0.5) * 0.25, jag: [rnd(), rnd(), rnd(), rnd(), rnd(), rnd()] };
 }
 
-// What a view holds: { peaks: [...], humps: [...] }, each { x, y, w, h, ... } in screen px, its
-// base at (x, y). `view` is { proj, land, createCanvas, w, h }: the projection, the land in
-// lon/lat, a canvas maker and the canvas size.
+// What a view holds: { peaks, humps }, each { x, y, w, h, style, ... } in screen px, its base at
+// (x, y); a peak's `style` is one of `view.styles`, a hump (a hill, only when `view.hills`) is
+// 'marina'. `view` is { proj, land, createCanvas, w, h, styles, hills }: the projection, the land in
+// lon/lat, a canvas maker, the canvas size, the styles the mountains are drawn in (RELIEF_STYLES; none
+// draws no mountain) and whether hills are wanted.
 export function reliefOf(view) {
   const { proj, w, h } = view, band = bandOf(proj.zoom);
-  if (proj.zoom < RELIEF_ZOOM || !view.land.length) return { peaks: [], humps: [] };
+  const styles = view.styles ?? [];
+  const styleOf = (key, of) => of[Math.floor(key * 1e9) % of.length];
+  if (proj.zoom < RELIEF_ZOOM || !view.land.length || !(styles.length || view.hills)) return { peaks: [], humps: [] };
   const depth = depthField(view), P = band.peak, min = P * 0.9;
   const peaks = [], spines = [];
   const near = (x, y, r) => spines.some((s) => s.some(([sx, sy]) => Math.hypot(sx - x, sy - y) < r));
@@ -183,25 +194,27 @@ export function reliefOf(view) {
     const kept = spine.filter(([x, y]) => !near(x, y, P * 2.2));
     if (kept.length < 2) continue;
     spines.push(kept);
+    const style = styles.length && styleOf(c.key, styles), mine = [];
     // tallest midway, lower toward the ends
     kept.forEach(([x, y], i) => {
       const t = kept.length > 1 ? i / (kept.length - 1) : 0.5, swell = 0.6 + 0.4 * Math.sin(Math.PI * t);
       const ph = P * swell * (0.85 + 0.3 * c.rnd());
-      peaks.push(peakOf(x + (c.rnd() - 0.5) * P * 0.3, y, ph * (1.7 + 0.4 * c.rnd()), ph, c.rnd));
+      mine.push(peakOf(x + (c.rnd() - 0.5) * P * 0.3, y, ph * (1.7 + 0.4 * c.rnd()), ph, c.rnd));
       // the heap: peaks behind to either side, more of them midway, and there a lower one in front
       for (const side of [-1, 1]) {
         if (c.rnd() > swell * 0.85) continue;
         const bh = ph * (0.7 + 0.25 * c.rnd());
-        peaks.push(peakOf(x + side * ph * (0.7 + 0.3 * c.rnd()), y - ph * (0.3 + 0.25 * c.rnd()), bh * 1.8, bh, c.rnd));
+        mine.push(peakOf(x + side * ph * (0.7 + 0.3 * c.rnd()), y - ph * (0.3 + 0.25 * c.rnd()), bh * 1.8, bh, c.rnd));
       }
       if (swell > 0.9 && c.rnd() < 0.5) {
         const fh = ph * (0.55 + 0.15 * c.rnd());
-        peaks.push(peakOf(x + (c.rnd() - 0.5) * P * 1.2, y + ph * 0.35, fh * 1.7, fh, c.rnd));
+        mine.push(peakOf(x + (c.rnd() - 0.5) * P * 1.2, y + ph * 0.35, fh * 1.7, fh, c.rnd));
       }
     });
+    if (style) peaks.push(...mine.map((p) => ({ ...p, style })));
   }
   const humps = [];
-  if (band.hillCell) {
+  if (band.hillCell && view.hills) {
     const H = band.hill;
     for (const c of cellsOf(proj, w, h, band.hillCell, SEED_PAD / 2, 2)) {
       if (noise(c.lon, c.lat) < 0.8 - band.share) continue;
@@ -211,7 +224,7 @@ export function reliefOf(view) {
       const n = [1, 2, 2, 3, 3][Math.floor(c.rnd() * 5)];
       for (let i = 0; i < n; i++) {
         const hh = H * (i === Math.floor(n / 2) ? 1 : 0.75) * (0.85 + 0.3 * c.rnd()), hx = x + (i - (n - 1) / 2) * H * 1.6;
-        if (depth(hx, y) >= H) humps.push({ x: hx, y: y + (c.rnd() - 0.5) * H * 0.3, w: hh * 2.2, h: hh, lean: (c.rnd() - 0.5) * 0.2 });
+        if (depth(hx, y) >= H) humps.push({ x: hx, y: y + (c.rnd() - 0.5) * H * 0.3, w: hh * 2.2, h: hh, lean: (c.rnd() - 0.5) * 0.2, style: 'marina' });
       }
     }
   }
@@ -222,7 +235,7 @@ export function reliefOf(view) {
 // the other ornaments.
 export const clearOf = (relief, blocked) => {
   const free = (p) => !blocked(p.x - p.w / 2, p.y - p.h, p.x + p.w / 2, p.y);
-  return { peaks: relief.peaks.filter(free), humps: relief.humps.filter(free) };
+  return { ...relief, peaks: relief.peaks.filter(free), humps: relief.humps.filter(free) };
 };
 
 // ---------------------------------------------------------------- drawing
@@ -257,10 +270,11 @@ const asIs = (v) => v;
 
 // Each shape back to front: washed, its shadow side darker and hatched with short ink strokes down
 // the slope, then the flanks and crest inked. `wash` null leaves the paper showing (an engraving).
-function drawShapes(g, shapes, { ink, light, shade, hatching, width }) {
+function drawShapes(g, shapes, lookOf) {
   g.save();
   g.lineJoin = 'round'; g.lineCap = 'round';
   for (const s of shapes) {
+    const { ink, light, shade, hatching, width } = lookOf(s.style);
     if (light) { g.beginPath(); pen(g, [s.outline], { close: true }); g.fillStyle = light; g.fill(); }
     if (shade) { g.beginPath(); pen(g, [s.shadow], { close: true }); g.fillStyle = shade; g.fill(); }
     hatch(g, [[s.shadow]], asIs, asIs, { angle: s.slope + 0.35, gap: hatching.gap, color: ink, width: hatching.width, alpha: hatching.alpha, lonCenter: s.outline[0][0] });
@@ -273,19 +287,22 @@ function drawShapes(g, shapes, { ink, light, shade, hatching, width }) {
 }
 
 const byDepth = (relief) => [
-  ...relief.peaks.map((p) => ({ y: p.y, shape: () => peakShape(p) })),
-  ...relief.humps.map((p) => ({ y: p.y, shape: () => humpShape(p) })),
+  ...relief.peaks.map((p) => ({ y: p.y, shape: () => ({ ...peakShape(p), style: p.style }) })),
+  ...relief.humps.map((p) => ({ y: p.y, shape: () => ({ ...humpShape(p), style: p.style }) })),
 ].sort((a, b) => a.y - b.y).map((s) => s.shape());
 
-// Each style draws (g, data, relief): `data` is { proj, palette }, the palette { ink, land } (the scene's ink and land tint), `relief`
-// what reliefOf placed.
-export const RELIEF = {
-  off: null,
+// The styles' pens: the palette is { ink, land } (the scene's ink and land tint).
+const LOOKS = {
   // Carta Marina, 1539: craggy ranges and humped hills washed ochre-brown, the shadow side red-brown
   // and hatched in ink
-  marina: (g, data, relief) => drawShapes(g, byDepth(relief), { ink: data.palette.ink, light: '#d2965a', shade: 'rgba(150, 70, 32, 0.7)', hatching: { gap: 2.4, width: 0.7, alpha: 0.8 }, width: 1.1 }),
+  marina: ({ ink }) => ({ ink, light: '#d2965a', shade: 'rgba(150, 70, 32, 0.7)', hatching: { gap: 2.4, width: 0.7, alpha: 0.8 }, width: 1.1 }),
   // the same in ink alone, as the uncoloured prints were
-  engraved: (g, data, relief) => drawShapes(g, byDepth(relief), { ink: data.palette.ink, light: data.palette.land, shade: null, hatching: { gap: 2.2, width: 0.7, alpha: 0.9 }, width: 1.1 }),
+  engraved: ({ ink, land }) => ({ ink, light: land, shade: null, hatching: { gap: 2.2, width: 0.7, alpha: 0.9 }, width: 1.1 }),
 };
 
-export const RELIEF_STYLES = Object.keys(RELIEF);
+export const RELIEF_STYLES = ['off', ...Object.keys(LOOKS)];
+
+// Draw what reliefOf placed, each peak and hump in its own style, back to front; `data` is { proj, palette }.
+export function drawRelief(g, data, relief) {
+  drawShapes(g, byDepth(relief), (style) => LOOKS[style]?.(data.palette) ?? LOOKS.marina(data.palette));
+}
