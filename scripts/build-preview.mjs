@@ -25,7 +25,7 @@ import { geojsonPolygons, geojsonRings } from 'coast-wright';
 import { cutCells, cutLakes, cutWater, dbfRecords, gshhgLakes, joinWater, WATER_FILES } from './detail-cells.mjs';
 import { seaNames, coastNames, joinNames, tintedSeas } from './names.mjs';
 import { joinUrban } from './urban.mjs';
-import { fetchWithRetry } from './fetch-retry.mjs';
+import { ATTEMPTS, fetchBytesWithRetry } from './fetch-retry.mjs';
 const { find, localUrl } = coastlines;
 
 const root = fileURLToPath(new URL('..', import.meta.url));
@@ -67,10 +67,10 @@ await mkdir(path.join(root, 'downloads'), { recursive: true });
 for (const [url, name, sha, dir] of SOURCES) {
   const file = path.join(root, 'downloads', name);
   if (!existsSync(file)) {
-    const res = await fetchWithRetry(url, {
-      onRetry: (error, attempt, wait) => console.error(`${url}: ${error.cause?.code ?? error.message}; attempt ${attempt} of 3 failed, retrying in ${wait / 1000} s`),
+    const bytes = await fetchBytesWithRetry(url, {
+      onRetry: (error, attempt, wait) => console.error(`${url}: ${error.cause?.code ?? error.message}; attempt ${attempt} of ${ATTEMPTS} failed, retrying in ${wait / 1000} s`),
     });
-    await writeFile(file, Buffer.from(await res.arrayBuffer()));
+    await writeFile(file, bytes);
   }
   const got = createHash('sha256').update(await readFile(file)).digest('hex');
   if (got !== sha) throw new Error(`${name}: sha256 ${got} does not match ASSETS.md (${sha})`);

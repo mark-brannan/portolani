@@ -1,13 +1,14 @@
-// A fetch that tries again on a network error or an HTTP 5xx, never on a 4xx.
-// Three attempts, waiting 2 s and then 6 s between them. The caller's sha256
-// check stays the only trust: a retry changes how bytes arrive, not whether
-// they are believed.
+// A download that tries again on a network error, an HTTP 5xx or a body cut off
+// mid-read, never on a 4xx. Three attempts, waiting 2 s and then 6 s between
+// them. The caller's sha256 check stays the only trust: a retry changes how
+// bytes arrive, not whether they are believed.
 export const WAITS_MS = [2000, 6000];
+export const ATTEMPTS = WAITS_MS.length + 1;
 
 const sleepFor = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/** Response of `fetchImpl(url)`; throws on a 4xx at once, or on the last failure. */
-export async function fetchWithRetry(
+/** The body of `fetchImpl(url)` as a Buffer; throws on a 4xx at once, or on the last failure. */
+export async function fetchBytesWithRetry(
   url,
   { fetchImpl = fetch, sleep = sleepFor, waits = WAITS_MS, onRetry = () => {} } = {},
 ) {
@@ -15,7 +16,7 @@ export async function fetchWithRetry(
     let failure;
     try {
       const response = await fetchImpl(url);
-      if (response.ok) return response;
+      if (response.ok) return Buffer.from(await response.arrayBuffer());
       failure = new Error(`${url}: HTTP ${response.status}`);
       if (response.status < 500) throw Object.assign(failure, { final: true });
     } catch (error) {
