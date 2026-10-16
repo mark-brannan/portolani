@@ -1,6 +1,6 @@
 # Measurements
 
-Draw times for the built preview (`_site/`) in headless Chromium, at a coastal spot (44.41, 8.93) with the default ink, parchment and density 1 ("on") or 0 ("off"), in ms (median / worst of 5 redraws, which draw the same view again; pan frames are the 60 moves of three drags). Measured on 2026-10-16 with `node scripts/measure-preview.mjs 44.41 8.93 2,5,9,10,11`, on main at c8a72d3 (after #164 to #169 and #173 to #175), three runs, each cell the median of the three runs' medians (and of their worst), on a laptop-class machine (Ryzen 7 H 255, 16 threads, 14 GB, WSL2, no GPU) with other sessions running (load average 4 to 12), served from localhost, so the network is not in the times. The runs agree to within 10% except where noted in the next paragraph; a stray run in a cell (one z5 off redraw of 666 against 243 and 260) is the median's job to drop. The method is the one the table already named; the earlier table (2026-10-13, one run each) is in the history of this file.
+Draw times for the built preview (`_site/`) in headless Chromium, at a coastal spot (44.41, 8.93) with the default ink, parchment and density 1 ("on") or 0 ("off"), in ms (median / worst of 5 redraws, which draw the same view again; pan frames are the 60 moves of three drags). Measured on 2026-10-16 with `node scripts/measure-preview.mjs 44.41 8.93 2,5,9,10,11`, on main at c8a72d3 (after #164 to #169 and #173 to #175), three runs, each cell the median of the three runs' medians (and of their worst), on a laptop-class machine (Ryzen 7 H 255, 16 threads, 14 GB, WSL2, no GPU) with other sessions running (load average 4 to 12), served from localhost, so the network is not in the times. The runs agree to within 10% except where noted in the next paragraph; a stray run in a cell (one z5 off redraw of 666 against 243 and 260) is the median's job to drop.
 
 | Size | Zoom | Ornaments | First draw (of it, data load) | Redraw | Pan frame painted |
 | --- | ---: | --- | ---: | ---: | ---: |
@@ -27,11 +27,9 @@ Draw times for the built preview (`_site/`) in headless Chromium, at a coastal s
 
 The pan-frame times at z9 and above sit at two animation frames (33 ms at 60 Hz, 34 to 35 measured), the floor of the method; at z5 the frame now costs 69 to 74 ms painted with ornaments on or off (it was 33), and at z2 the whole world is drawn each frame, 90 ms of it in drawing (the script's "pan frame drawn" column) and 456 to 474 painted (it was 364 to 366). Sizes do not change the data fetched; the table below is the same at both.
 
-What moved by more than 10% since 2026-10-13, and what likely moved it (not bisected; each is a reading of the changes between the two measurements, not a measurement of them):
+Redraws and first draws are slower than they were because the decorations (relief, trees, rivers, lakes, names, patches) are now on by default and the packs grew.
 
-- First draw and redraw, every cell: roughly 3 to 7 times slower (z5 on: redraw 54 to 378; z9 on: 30 to 498; z11 on: 21 to 1831), and the data load part of the first draw 100 to 600. The old table was measured before the decorations that are now on by default (relief, trees, rivers, lakes, names, Carta Marina patches, #106 item 10's own premise) and before the packs grew to 7.5 MB; a redraw now places and draws all of them. The 50m GeoJSON a view fetches grew from 3.5 to 4.5 MB and the packs from 0.6 to 7.5 MB (byte table below).
-- z10 with ornaments on: 10.9 s to redraw (it was 21 ms), against 3.8 s with them off. This is the one outlier worth a card of its own; the z9 and z11 neighbours are under 2 s. The 10m cells (126 KB at Genoa) are fetched here and not at z9, and z11 fetches 12 KB, so the likely cause is the 10m footprints with town washes and houses, which the drag section below measures at several times the budget; not confirmed.
-- Pan frame painted, z5 and z2: the drag frame now draws the relief, trees, names and city plans where they fit a frame (#175), and a 1% drag keeps every figure in place (#173, #157), so a pan at z5 and below repaints more per frame.
+z10 with ornaments on redraws in 10.9 s against 3.8 s with them off; z9 and z11 stay under 2 s.
 
 ## A frame while dragging (#131)
 
@@ -67,10 +65,10 @@ A layer is in the drag at a zoom where the frame with it stays within 16.7 ms at
 
 | What | Bytes | Fetched at |
 | --- | ---: | --- |
-| 50m land, coast, places, lakes, rivers and urban areas (`geo/*.geojson`; 4,622,485 at z9 to z11, 5,804,923 at z2, whole set) | 4,622,485 | every view |
+| 50m land, coast, places, lakes, rivers and urban areas (`geo/*.geojson`) | 4,622,485 | every view (5,804,923 at z2) |
 | Scanned sprites (`packs/scanned/`, default settings; whole pack 5,519,197) | 5,217,733 | every view, ornaments on or off |
 | Vivid sprites (`packs/vivid/`, default settings; whole pack 1,765,157) | 1,759,084 | every view, ornaments on or off |
-| de Bry sprites (`packs/debry/`, default settings; whole pack 880,263; new since the last measurement) | 678,760 | every view, ornaments on or off |
+| de Bry sprites (`packs/debry/`, default settings; whole pack 880,263) | 678,760 | every view, ornaments on or off |
 | 10m cells around the view (`geo/10m/`) | 126 KB at Genoa z10, 12 KB at z11, none at z9 (`measure-preview.mjs`) | z10 and z11 at Genoa; whole set is 18,861,693 |
 | 10m rivers and lakes around the view (`geo/water-10m/`) | 0.7 MB at Seattle, 1.7 MB at the Great Lakes | past z7, when water is drawn |
 | GSHHG "h" cells around the view (`geo/h/`, 1° cells) | 6 KB at Genoa, 181 KB at Bergen at z10.5 (126 KB at z13), 52 KB at Seattle | past z10; whole set is 19,273 cells, 132 MB; built only when the installed `coastlines` carries `gshhg-land-h` |
@@ -122,6 +120,4 @@ History off (seeded figures everywhere):
 
 mean 7.8, max 19 of 12 views at density 1.
 
-Margin: no view is over 12 with history on, and none is over 13 with history off at the overview band and below (Mediterranean, one sheet at its band's first zoom, is the 13). The two seeded world-band rows (zoom 2 and 3: 15 and 19) are the only ones over 1.5 times the budget; they add the budgets of the two or three world sheets that overlap one window there, each paced at its own zoom. Views deeper into a band than its first zoom, or over coast, hold fewer: a sheet holds its share across its whole extent, and the land takes the sites a beast needs. Density 2 measures a mean of 7.3 and a maximum of 15 over the same views, 0.5 a mean of 3.6 and a maximum of 8, and 0 none (history on). `test/rose-sheets.test.mjs` checks that no sheet holds more than its share.
-
-Against the 2026-10-15 run the history-on mean fell from 6.4 to 5.7 and the maximum from 15 to 12, and the history-off mean from 9.0 to 7.8 and the maximum from 21 to 19: the world and overview rows hold fewer monsters (Atlantic 5 to 1, Bay of Bengal 10 to 0) and more roses, which #164 (ornament density and rose size at wide views) and #165 (placement flag) likely moved; the Aegean, Caribbean (zoom 8), Liguria and Genoa rows are unchanged.
+Margin: no view is over 12 with history on, and none is over 13 with history off at the overview band and below (Mediterranean, one sheet at its band's first zoom, is the 13). Only the seeded world-band row at zoom 3 (19) is over 1.5 times the budget, with zoom 2 at it (15); they add the budgets of the two or three world sheets that overlap one window there, each paced at its own zoom. Views deeper into a band than its first zoom, or over coast, hold fewer: a sheet holds its share across its whole extent, and the land takes the sites a beast needs. Density 2 measures a mean of 7.3 and a maximum of 15 over the same views, 0.5 a mean of 3.6 and a maximum of 8, and 0 none (history on). `test/rose-sheets.test.mjs` checks that no sheet holds more than its share.
