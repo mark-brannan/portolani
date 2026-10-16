@@ -325,13 +325,13 @@
       "kind": "scale",
       "style": "genoese",
       "file": "scale-genoese.png",
-      "anchor": [0.5, 0.5],
-      "sizePx": 260,
+      "anchor": [0.499, 0.51],
+      "sizePx": 274,
       "bands": [0, 1],
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/5/5c/Mediterranean_chart_fourteenth_century2.jpg",
         "page": "https://commons.wikimedia.org/wiki/File:Mediterranean_chart_fourteenth_century2.jpg",
-        "crop": [3709, 3816, 4399, 3939]
+        "crop": [3691, 3798, 4419, 3954]
       }
     },
     {
