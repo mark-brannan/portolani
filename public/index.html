@@ -157,6 +157,35 @@
   .title input { flex: 1; min-width: 0; }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
+
+  /* ?ui=presets and ?ui=grid: the same selection and style, chosen another way; the figure pickers they replace are hidden */
+  html[data-ui] :is(#pick-monster, #pick-ship, #pick-rose, #pick-town, #pick-relief, .pick-h, #s-roses) { display: none; }
+  #ui h3 { margin-top: 14px; }
+  .chip[aria-checked=mixed] { box-shadow: inset 0 0 0 1px var(--accent); border-color: var(--accent); border-style: dotted; opacity: 0.85; }
+  .sample { display: inline-flex; align-items: center; gap: 2px; flex: none; }
+  .sample img, .sample svg { height: 22px; max-width: 30px; width: auto; object-fit: contain; display: block; }
+  .sample svg.wide, .sample svg { width: 30px; }
+  .presets { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px; }
+  .preset { flex-direction: column; align-items: flex-start; gap: 4px; padding: 6px 10px; border-radius: 10px; text-align: left; }
+  .chip.preset[aria-checked=false] { opacity: 1; border-style: solid; border-color: var(--rule); }
+  .preset b { font-weight: 400; font-size: 14px; }
+  .preset small { font: 11px system-ui, sans-serif; color: var(--muted); }
+  .preset .sample { background: var(--sheet); border-radius: 3px; padding: 2px 4px; }
+  .switches { display: flex; flex-wrap: wrap; gap: 6px; }
+  .switch { padding-right: 12px; }
+  .switch .sample { background: var(--sheet); border-radius: 3px; padding: 1px 3px; }
+  .switch::after { content: 'off'; font: 10px system-ui, sans-serif; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .switch[aria-checked=true]::after { content: 'on'; color: var(--accent); }
+  .gk { padding: 6px 0 8px; border-bottom: 1px solid var(--line); }
+  .gk:last-child { border-bottom: none; }
+  .gh { display: flex; align-items: center; gap: 8px; font: 15px var(--serif); }
+  .gh .count { margin-left: auto; font: 11px system-ui, sans-serif; color: var(--muted); }
+  .gf { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .gf .chip { padding: 2px 8px; font-size: 12px; }
+  .gg { display: grid; grid-template-columns: repeat(auto-fill, 40px); gap: 4px; margin-top: 6px; }
+  .gg .thumb { height: 40px; width: 40px; min-width: 0; padding: 2px; box-sizing: border-box; }
+  .gg .thumb img, .gg .thumb svg { height: 34px; max-width: 34px; }
+
   .about p { color: var(--muted); font-size: 12px; margin: 0; }
 </style>
 </head>
@@ -229,16 +258,22 @@
     <input id="shareUrl" type="text" readonly hidden aria-label="Link to this view and style">
   </div>
 
+  <!-- ?ui=presets and ?ui=grid: another way to choose the figures, built by page.js; the default drawer has none of it -->
+  <section id="ui" aria-labelledby="h-ui" hidden>
+    <h2 id="h-ui">Figures</h2>
+    <div id="ui-body"></div>
+  </section>
+
   <section aria-labelledby="h-sea">
     <h2 id="h-sea">Sea</h2>
     <div class="slider"><label for="density">Density (monsters, ships, towns, hills)</label><input id="density" type="range" min="0" max="2" step="0.25" value="1"><output id="densityOut">1</output></div>
-    <h3>Monsters</h3>
+    <h3 class="pick-h">Monsters</h3>
     <div id="pick-monster"></div>
-    <h3>Ships</h3>
+    <h3 class="pick-h">Ships</h3>
     <div id="pick-ship"></div>
   </section>
 
-  <section aria-labelledby="h-roses">
+  <section id="s-roses" aria-labelledby="h-roses">
     <h2 id="h-roses">Roses</h2>
     <div id="pick-rose"></div>
   </section>

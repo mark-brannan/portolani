@@ -322,6 +322,7 @@ function showStyle() {
   $('titleMode').value = style.autoTitle ? 'auto' : 'custom'; $('title').disabled = style.autoTitle;
   if (!style.autoTitle) $('title').value = style.title; // automatic shows the view's own name, once placed (render)
   $('townSize').checked = style.townSize !== 'rank';
+  showUiNow();
   for (const b of document.querySelectorAll('#drawer .thumb')) b.setAttribute('aria-pressed', b === none ? !CARTOUCHES.some((k) => selection.has(k)) : selection.has(b.dataset.key));
   for (const { box, count, keys } of familyBoxes) {
     const on = keys.filter((k) => selection.has(k)).length;
@@ -353,6 +354,113 @@ function changed() {
   showStyle();
   writeHash();
   render();
+}
+
+// ---------------------------------------------------------------- the other drawers (?ui=presets, ?ui=grid)
+
+// The default drawer has no flag. `?ui=presets` offers a few named presets and one master switch per kind of
+// decoration; `?ui=grid` a compact grid of every figure with a whole-set toggle for each family. Both read
+// and write the same selection and style as the default drawer, so the link carries the same hash. The flag
+// is in the query, which the hash writes, Reset and Copy link leave alone, and the phone's bottom sheet shows.
+const UI = ['presets', 'grid'].find((u) => u === new URLSearchParams(location.search).get('ui')) ?? null;
+const KIND_UI = [['monster', 'Monsters'], ['ship', 'Ships'], ['rose', 'Roses'], ['town', 'Towns'], ['mountain', 'Hill drawings'], ['cartouche', 'Cartouche']];
+const kindKeys = (kind) => SPRITES.filter((s) => s.kind === kind).map((s) => s.key);
+const sampleOf = (s) => {
+  const el = document.createElement('span');
+  el.className = 'sample';
+  if (s.file) el.append(Object.assign(new Image(), { src: `packs/${s.pack}/${s.file}`, alt: '', decoding: 'async' }));
+  else el.innerHTML = GLYPHS[s.id] ?? towerGlyph(s.id);
+  return el;
+};
+const glyphSample = (html) => Object.assign(document.createElement('span'), { className: 'sample', innerHTML: html });
+const chipButton = (role, ...kids) => {
+  const b = Object.assign(document.createElement('button'), { type: 'button', className: 'chip' });
+  b.setAttribute('role', role);
+  b.append(...kids);
+  return b;
+};
+// the style switches: off, or the default (the first drawn style where the default is off)
+const STYLE_SWITCHES = [
+  ['mountains', 'Mountain style', MOUNTAIN_GLYPHS.colour], ['trees', 'Trees', TREE_GLYPHS.marina],
+  ['rivers', 'Rivers', RIVER_GLYPHS.plain], ['lakes', 'Lakes', LAKE_GLYPHS.marina],
+];
+let showUiNow = () => {};
+if (UI) {
+  document.documentElement.dataset.ui = UI;
+  $('ui').hidden = false;
+  const body = $('ui-body'), refreshers = [], DEFAULT_SET = new Set(DEFAULT_SELECTION);
+  const sample = (kinds, set) => kinds.map((k) => SPRITES.find((s) => s.kind === k && set.has(s.key))).filter(Boolean);
+  const kindOn = (kind) => kindKeys(kind).some((k) => selection.has(k));
+  const setKind = (kind, on) => {
+    const keys = kindKeys(kind), dflt = keys.filter((k) => DEFAULT_SET.has(k));
+    for (const k of keys) selection.delete(k);
+    if (on) for (const k of dflt.length ? dflt : keys) selection.add(k);
+    changed();
+  };
+  if (UI === 'presets') {
+    const scan = new Set(['scanned', 'debry']);
+    const ofPack = (pred) => new Set(SPRITES.filter((s) => (DEFAULT_SET.has(s.key) || s.pack === 'plain') && pred(s)).map((s) => s.key));
+    const PRESETS = [
+      ['everything', 'Everything', 'the default: every figure the chart draws', () => new Set(DEFAULT_SET)],
+      ['scans', 'Scans', 'figures cut from the old charts, with the default cartouche', () => ofPack((s) => scan.has(s.pack) || (s.kind === 'cartouche' && s.pack === 'vivid'))],
+      ['drawn', 'Drawn', 'the vector redrawings', () => ofPack((s) => s.pack === 'vivid')],
+      ['plain', 'Plain', 'a rose, a cartouche and tower towns, drawn in code', () => new Set(SPRITES.filter((s) => s.pack === 'plain').map((s) => s.key))],
+      ['bare', 'Bare chart', 'a rose and a cartouche, no creatures or towns', () => new Set(SPRITES.filter((s) => DEFAULT_SET.has(s.key) && ['rose', 'cartouche'].includes(s.kind) && s.pack === 'vivid').map((s) => s.key))],
+    ];
+    body.insertAdjacentHTML('beforeend', '<h3>Presets</h3><div class="presets" role="radiogroup" aria-label="Preset"></div><h3>Switches</h3><div class="switches" role="group" aria-label="Decorations"></div>');
+    const presets = body.querySelector('.presets'), switches = body.querySelector('.switches');
+    for (const [id, label, note, make] of PRESETS) {
+      const set = make(), strip = document.createElement('span');
+      strip.className = 'sample';
+      for (const s of sample(['monster', 'ship', 'rose', 'town', 'cartouche'], set).slice(0, 4)) strip.append(...sampleOf(s).children);
+      const b = chipButton('radio', strip, Object.assign(document.createElement('b'), { textContent: label }), Object.assign(document.createElement('small'), { textContent: `${note}` }));
+      b.classList.add('preset'); b.title = `${label}: ${note}`;
+      b.addEventListener('click', () => { selection = make(); changed(); });
+      presets.append(b);
+      refreshers.push(() => b.setAttribute('aria-checked', String(sameSet(selection, make()))));
+    }
+    for (const [kind, label] of KIND_UI) {
+      const first = SPRITES.find((s) => s.kind === kind && DEFAULT_SET.has(s.key)) ?? SPRITES.find((s) => s.kind === kind);
+      const b = chipButton('switch', sampleOf(first), label);
+      b.classList.add('switch'); b.title = `${label}: all on or all off`;
+      b.addEventListener('click', () => setKind(kind, !kindOn(kind)));
+      switches.append(b);
+      refreshers.push(() => b.setAttribute('aria-checked', String(kindOn(kind))));
+    }
+    for (const [id, label, glyph] of STYLE_SWITCHES) {
+      const b = chipButton('switch', glyphSample(glyph), label);
+      b.classList.add('switch'); b.title = `${label}: on or off`;
+      b.addEventListener('click', () => {
+        $(id).value = style[id] !== 'off' ? 'off' : DEFAULTS[id] !== 'off' ? DEFAULTS[id] : CHOICES[id].find(([v]) => v !== 'off')[0];
+        readControls();
+      });
+      switches.append(b);
+      refreshers.push(() => b.setAttribute('aria-checked', String(style[id] !== 'off')));
+    }
+  } else {
+    for (const [kind, label] of KIND_UI.filter(([k]) => k !== 'cartouche')) { // the cartouche is one of its pictures: its own section below
+      const all = kindKeys(kind), box = document.createElement('div'), head = document.createElement('div'), count = document.createElement('span'), fams = document.createElement('div'), grid = document.createElement('div');
+      box.className = 'gk'; head.className = 'gh'; count.className = 'count'; fams.className = 'gf'; grid.className = 'gg';
+      const whole = chipButton('switch', 'All');
+      whole.title = `${label}: every figure on or off`;
+      whole.addEventListener('click', () => { const on = all.every((k) => selection.has(k)); for (const k of all) on ? selection.delete(k) : selection.add(k); changed(); });
+      head.append(label, count, whole);
+      for (const fam of familiesOf(kind)) {
+        const keys = fam.sprites.map((s) => s.key), n = document.createElement('span');
+        const b = chipButton('checkbox', sampleOf(fam.sprites[0]), fam.label, n);
+        n.style.cssText = 'font:11px system-ui,sans-serif;color:var(--muted)';
+        b.title = `${fam.label}: the whole set on or off`;
+        b.addEventListener('click', () => { const on = keys.every((k) => selection.has(k)); for (const k of keys) on ? selection.delete(k) : selection.add(k); changed(); });
+        fams.append(b);
+        grid.append(...fam.sprites.map((s) => thumb(s, fam.label)));
+        refreshers.push(() => { const on = keys.filter((k) => selection.has(k)).length; b.setAttribute('aria-checked', on === keys.length ? 'true' : on ? 'mixed' : 'false'); n.textContent = `${on}/${keys.length}`; });
+      }
+      refreshers.push(() => { const on = all.filter((k) => selection.has(k)).length; whole.setAttribute('aria-checked', String(on === all.length)); count.textContent = `${on} of ${all.length}`; });
+      box.append(head, fams, grid);
+      body.append(box);
+    }
+  }
+  showUiNow = () => { for (const f of refreshers) f(); };
 }
 
 let view = viewFromHash();
