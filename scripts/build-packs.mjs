@@ -75,6 +75,7 @@ const SEA_FIGURE = { sat: 24, close: 7, open: 5, dilate: 4, feather: 2, minArea:
 // of open sea holds no paper, so its surroundings would be taken for paper and the sea wash lost with it.
 const CARTA_PAPER = '#ded2af';
 const CATALAN_PAPER = '#e9dfcf'; // the vellum inside the Catalan Atlas rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness
+const GENOESE_PAPER = '#a48c75'; // the vellum inside the Genoese chart's scale bar: the mean of the 80th to 90th percentile of its pixels by brightness (the brightest are specks)
 const PRUNES_PAPER = '#b4a38d'; // the vellum of Prunes 1559 inside the west rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness (the brightest are specks)
 const PARCHMENT = '#e9d8b4'; // the renderer's default paper, for the kept `.cut.png`
 const argv = process.argv.slice(2), keepAt = argv.indexOf('--keep'), onlyAt = argv.indexOf('--only');
@@ -98,7 +99,7 @@ const MAX_SCALE = 3; // a sprite is stored at most this many px wide per CSS px 
 const PACKS = [
   {
     name: 'scanned',
-    key: 'ink', // cut before the patch key existed; re-keying it as patches is #111, a sprite at a time (`key: 'patch'` on the sprite; the Carta Marina monsters and ships and the Catalan Atlas rose are done)
+    key: 'ink', // cut before the patch key existed; re-keying it as patches is #111, a sprite at a time (`key: 'patch'` on the sprite; the Carta Marina monsters and ships, the Catalan Atlas rose and the Genoese scale are done)
     title: 'Sprites cropped from scans: Olaus Magnus, Carta Marina 1539; Jorge de Aguiar 1492; Catalan Atlas 1375; Genoese chart c. 1320-1350; Frederik de Wit; Ambroise Paré, Des monstres; Master W with the Key, two ship engravings c. 1475-1490',
     licence: 'Public domain (PD-Art); scans via Wikimedia Commons (James Ford Bell Library; Beinecke Library, Yale; BnF Gallica btv1b55002481n; Library of Congress 2003630429; Royal Museums Greenwich). The pare-* sprites: Wellcome Collection, CC BY 4.0. Ships ship-w-*: Art Institute of Chicago 27881 (CC0) and Rijksmuseum RP-P-2014-30 (Public Domain Mark)',
     ink: '#3b2a1a',
@@ -177,7 +178,8 @@ const PACKS = [
       // Avignon: the long red palace with its flag, drawn askew on the chart
       { id: 'town-aguiar-avignon', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', crop: [2342, 1026, 2452, 1086], sizePx: 48, dark: 'min', level: TOWN_LEVEL, rotate: -14,
         erase: [[2342, 1026, 2452, 1034], [2342, 1080, 2452, 1086]] },
-      { id: 'scale-genoese', kind: 'scale', style: 'genoese', scan: 'genoese', crop: [3708, 3815, 4400, 3940], sizePx: 260, dark: 'min', level: [8, 50] },
+      // the Genoese scale bar: the old tight box is `figure`, the crop reaches a little past it so the edge feather falls on bare vellum, not on the bar's border
+      { id: 'scale-genoese', kind: 'scale', style: 'genoese', scan: 'genoese', key: 'patch', paper: GENOESE_PAPER, crop: [3690, 3797, 4420, 3955], figure: [3708, 3815, 4400, 3940], sizePx: 260 },
       // Paré's sea monsters (Des monstres), black line on blank paper, with Master W's ships
       { id: 'pare-truie', kind: 'monster', style: 'pare', scan: 'pare-3289', crop: [970, 520, 2950, 1600], sizePx: 190, minClearancePx: 150, weight: 3, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
       { id: 'pare-boar', kind: 'monster', style: 'pare', scan: 'pare-3267', crop: [560, 2140, 2420, 3200], sizePx: 180, minClearancePx: 140, weight: 3, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
