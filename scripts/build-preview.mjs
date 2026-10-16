@@ -180,6 +180,8 @@ await cp(path.join(root, 'node_modules', 'coast-wright', 'lib'), path.join(out, 
 await mkdir(path.join(out, 'coastlines'), { recursive: true });
 await cp(path.join(root, 'node_modules', 'coastlines', 'catalogue.json'), path.join(out, 'coastlines', 'catalogue.json'));
 await cp(path.join(root, 'public'), out, { recursive: true });
+import { buildLearn } from './learn.mjs';
+await buildLearn(root, out); // docs/learn/*.md into _site/learn/*.html
 // scene.mjs and every file it reaches by a relative import, walked rather than listed, so a new
 // module ships with the scene that imports it (a hand-kept list once left the page blank)
 async function relativeImports(entry, seen = new Set()) {
