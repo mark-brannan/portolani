@@ -9,7 +9,7 @@
 // they are drawn down from (0 off, the top always).
 // Older links naming a `rendering` (or `pack`), `rose`, `monster`, `town` and `kinds` open as the
 // selection those chose, and are written back in the new form.
-import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, W, H } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, W, H } from './scene.mjs';
 
 const memo = new Map();
 // a failed load is forgotten, so the next stop tries it again
@@ -35,6 +35,9 @@ const env = {
 
 const $ = (id) => document.getElementById(id);
 const canvas = $('map'), ctx = canvas.getContext('2d');
+// A phone (under 520 px wide): the drawer is a bottom sheet, and the cartouche and the scale bar sit on
+// cards beside the map, not on the sea.
+const phone = matchMedia('(max-width: 520px)');
 
 const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: 5, regions: 'latin', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0] };
 
@@ -372,10 +375,10 @@ async function render() {
       ...style, ...parsePlacement(style.placement), relief: style.mountains === 'colour' ? ['marina'] : style.mountains === 'ink' ? ['engraved'] : [],
       continents: style.continentsZoom > 0, continentsZoom: style.continentsZoom,
       regions: style.regionsZoom > 0 ? style.regions : 'off', regionsZoom: style.regionsZoom,
-      sprites: [...selection], kinds, view, pinTitle: style.autoTitle ? pinTitle : null,
+      sprites: [...selection], kinds, view, pinned: !phone.matches, pinTitle: style.autoTitle ? pinTitle : null,
     });
     if (me !== run) return; // a newer change or a move superseded this one
-    ground = { world, coarse, bg, anchored: anchorScene(scene, data) };
+    ground = { world, coarse, bg, anchored: anchorScene(scene, data), cards: { cartouche: kinds.includes('cartouche') ? scene.cartouche : null, scaleSprite: scene.scaleSprite, scale: style.scale, bg } };
     if (style.autoTitle) $('title').value = scene.cartouche.title; // the box shows what the cartouche letters, and cannot be edited
     placed = view;
     cancelAnimationFrame(frame); frame = 0; // a moving frame still queued would paint over the scene
@@ -383,6 +386,7 @@ async function render() {
     ctx.clearRect(0, 0, W, H);
     drawScene(ctx, scene, data, bg, { scale: 1, x: 0, y: 0 });
     drawHere();
+    drawCards();
     const t2 = performance.now();
     $('status').textContent = `z${view.zoom.toFixed(1)}: load ${timing.load.toFixed(0)} ms, placement + parchment ${timing.place.toFixed(0)} ms, draw ${(t2 - t1).toFixed(0)} ms (total ${(t2 - t0).toFixed(0)} ms)`;
   } catch (e) {
@@ -391,21 +395,45 @@ async function render() {
   }
 }
 
+// The cards: the cartouche at the top of the window and the scale bar at the foot of the map, each on a
+// canvas of its own, drawn at the sheet's size and shown at 1.1 times the sheet's scale on the page.
+const cardCartouche = $('cardCartouche'), cardScale = $('cardScale');
+function drawCards(scaleOnly = false) { // scaleOnly: a moving frame, where only the scale bar depends on the view
+  const c = ground?.cards, on = phone.matches && c;
+  cardCartouche.hidden = !(on && c.cartouche);
+  cardScale.hidden = !(on && c.scale !== 'off');
+  if (!on) return;
+  const k = (innerWidth / 1600) * 1.1;
+  if (c.cartouche && !scaleOnly) {
+    if (cardCartouche.width !== Math.round(c.cartouche.w) || cardCartouche.height !== Math.round(c.cartouche.h)) { cardCartouche.width = Math.round(c.cartouche.w); cardCartouche.height = Math.round(c.cartouche.h); }
+    cardCartouche.style.width = `${c.cartouche.w * k}px`;
+    drawCartoucheCard(cardCartouche.getContext('2d'), c.cartouche, c.bg);
+  }
+  if (c.scale !== 'off') {
+    cardScale.style.width = `${SCALE_CARD_W * k}px`;
+    drawScaleCard(cardScale.getContext('2d'), viewProjection(view), c.bg, c.scale, c.scaleSprite);
+  }
+}
+addEventListener('resize', () => drawCards()); // the cards' width follows the window, in rotation too
+phone.addEventListener('change', () => { drawCards(); if (ground) render(); }); // the sheet is placed again with or without them
+
 // ---------------------------------------------------------------- the drawer
 
-// Shut by default; Esc, the close button or a touch on the map shuts it, and focus goes back to the rose button.
+// Shut by default; Esc or the close button shuts it (on a wider screen a touch on the map does too), and focus goes back to the rose button.
 const drawer = $('drawer'), opener = $('open');
 const isOpen = () => drawer.classList.contains('open');
 function setDrawer(open) {
   if (open === isOpen()) return;
   drawer.classList.toggle('open', open);
+  document.documentElement.classList.toggle('sheet', open); // on a phone the map makes room above the sheet
   opener.setAttribute('aria-expanded', String(open));
   (open ? $('close') : opener).focus({ preventScroll: true });
 }
 opener.addEventListener('click', () => setDrawer(!isOpen()));
 $('close').addEventListener('click', () => setDrawer(false));
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && isOpen()) setDrawer(false); });
-canvas.addEventListener('pointerdown', () => { setDrawer(false); setFlyout(false); });
+// On a phone the sheet stays up while the map is moved above it: that is how a control's effect is seen.
+canvas.addEventListener('pointerdown', () => { if (!phone.matches) setDrawer(false); setFlyout(false); });
 
 // Reset: every control back to its default, the place kept. The hash holds the whole style, so a
 // hash with only the view is the default style; the hashchange handler below redraws from it.
@@ -458,6 +486,7 @@ function moved(next, flying = false) {
     drawGround(ctx, covers(ground.world, view) ? ground.world : ground.coarse, view, ground.bg);
     drawAnchored(ctx, ground.anchored, ground.bg, view); // the placed ornaments, held to the earth
     drawHere();
+    drawCards(true);
     $('status').textContent = `z${view.zoom.toFixed(1)}: moving, frame ${(performance.now() - t).toFixed(0)} ms`;
   });
 }
