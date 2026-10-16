@@ -307,7 +307,7 @@ for (const [id, options] of Object.entries(CHOICES)) {
 // ---------------------------------------------------------------- the captions
 
 // Where a style comes from, as a caption under its chip group: plain text, with each chart or maker
-// linking to its page on Wikipedia or Wikimedia Commons. Every claim is listed with its source in the PR that added it.
+// linking to its page on Wikipedia or Wikimedia Commons.
 const C = 'https://commons.wikimedia.org/wiki/File:';
 const WP = {
   marina: ['Carta marina', 'https://en.wikipedia.org/wiki/Carta_marina'],
@@ -342,7 +342,7 @@ for (const [id, parts] of Object.entries(CAPTIONS)) {
     p.append(a);
   }
   const g = $(id);
-  (id === 'seaTint' ? g.parentElement : g).after(p); // the two colour groups share a row; the scale caption closes the scale bar's two groups
+  (id === 'seaTint' ? g.parentElement : g).after(p); // #seaTint shares a row with #islands, so its caption goes after the row
 }
 
 // ---------------------------------------------------------------- the controls
