@@ -19,7 +19,8 @@ renderer's multiply sinks it into the parchment.
 waves outside the ring are cut by the circle, and its feather fades them out rather than ending them on a line.
 A colour mask was not needed: the ring itself separates subject from surround.
 
-| in the raw | absent from the sprite | why |
-|---|---|---|
-| the sea's blue waves round the ring | all of it | surround, outside the subject's ring |
-| lettering of the neighbouring winds at three corners | all of it | lettering, outside the ring |
+Visual pass (`steps.png`, raw beside the cut at map size): the star, the ring, the vellum between the rhumbs and the
+washes all survive. Absent from the cut, and why:
+
+- the sea's blue waves round the ring: surround, outside the subject's ring;
+- the lettering of the neighbouring winds at three corners: outside the ring.
