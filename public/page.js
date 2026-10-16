@@ -419,7 +419,7 @@ phone.addEventListener('change', () => { drawCards(); if (ground) render(); }); 
 
 // ---------------------------------------------------------------- the drawer
 
-// Shut by default; Esc, the close button or a touch on the map shuts it, and focus goes back to the rose button.
+// Shut by default; Esc or the close button shuts it (on a wider screen a touch on the map does too), and focus goes back to the rose button.
 const drawer = $('drawer'), opener = $('open');
 const isOpen = () => drawer.classList.contains('open');
 function setDrawer(open) {

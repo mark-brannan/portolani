@@ -175,7 +175,7 @@ for (const width of [360, 412]) {
       await page.waitForFunction((h) => location.hash !== h, h0, { timeout: 60000 });
       assert.equal(await page.evaluate(() => document.getElementById('drawer').classList.contains('open')), true, 'a drag on the map shut the sheet');
 
-      // its controls are the same: a chip toggles, and the sheet scrolls to the foot
+      // its controls are the same chips, then the close button shuts the sheet
       assert.ok(await page.locator('#drawer .chip').count() > 10);
       await page.tap('#close');
       await page.waitForTimeout(400);
