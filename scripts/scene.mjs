@@ -1147,10 +1147,13 @@ function castSeed(view) {
 // margin from the sea and the frame's edge). Under density 1 only TUNE.hillShare of them stand, the
 // first in the humps' seeded order, so the clusters thin out whole; none at density 0.
 const HILL_MARGIN = 16, HILL_SIZE = 4.5;
-function placeHillSprites(humps, sprites, blocked, field) {
+// The first sprite a hump tries is picked by where the hump stands on the earth, not by its place in the
+// view's list, so a short drag leaves each hill with the sprite it had (#131).
+function placeHillSprites(humps, sprites, blocked, field, proj) {
   if (!sprites.length || TUNE.hillShare <= 0) return [];
   const out = [];
-  humps.forEach((hump, n) => {
+  humps.forEach((hump) => {
+    const n = townPick(proj.invert(hump.x, hump.y).map((v) => v.toFixed(3)).join(' '));
     const cap = hump.h * HILL_SIZE;
     for (let k = 0; k < sprites.length; k++) {
       const sprite = sprites[(n + k) % sprites.length], w = Math.min(sprite.sizePx, cap), h = (w * sprite.img.height) / sprite.img.width, x = hump.x, y = hump.y - h / 2;
@@ -1556,7 +1559,7 @@ function buildScene(data, sprites, ctx, world = {}) {
     return boxes.some((o) => obbOverlap(o, b)) || (bar && obbOverlap(bar, b)) || urban.some((u) => meets({ x0, y0, x1, y1 }, u.box));
   };
   const relief = reliefWanted() ? clearOf(reliefFor(data.proj, data.land), blocked) : null;
-  const mountains = relief ? placeHillSprites(relief.humps, sprites.mountains ?? [], blocked, field) : [];
+  const mountains = relief ? placeHillSprites(relief.humps, sprites.mountains ?? [], blocked, field, data.proj) : [];
 
   // Monsters: farthest-first on the open-water field, >= MONSTER_GAP apart, in the view's cast order
   // (heavier sprites tend to come first).
