@@ -180,3 +180,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261016t024242z
 - Re-roll uses Math.random 31-bit; undo counter (no PR, branch main)
+
+### 20261016t040813z
+- oddlines PR: left horizontal ray bundle alone; undo: ask fewer rays or lower alpha ([#168](https://github.com/mark-brannan/portolani/pull/168))
