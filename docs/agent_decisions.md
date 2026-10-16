@@ -174,3 +174,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261016t024236z
 - Default placement equals historic; undo parsePlacement fallthrough (no PR, branch main)
+
+### 20261016t024238z
+- seed:<n> implies seeded; undo layer seed over historic (no PR, branch main)
