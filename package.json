@@ -35,7 +35,7 @@
   "devDependencies": {
     "@napi-rs/canvas": "^1.0.11",
     "coast-wright": "^0.0.5-alpha.1",
-    "coastlines": "^0.0.7-alpha.0",
+    "coastlines": "^0.0.9-alpha.0",
     "playwright-core": "^1.63.0"
   },
   "private": true
