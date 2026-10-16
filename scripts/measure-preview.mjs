@@ -6,6 +6,8 @@
 //   PLAYWRIGHT=/some/dir/node_modules/playwright-core/index.mjs node scripts/measure-preview.mjs [lat lon [zooms]] [flags]
 // Flags: --ornaments=on|off|both (default both; off loads the page with density=0 in the hash)
 // and --sizes=1440x900,1024x768 (default both: laptop and tablet).
+// --late=none|all|<layer> (a layer of LATE in scene.mjs: relief, trees, worldNames) sets which late drawings a drag frame
+// draws, whatever IN_DRAG says, so that each one's cost is the frame with it less the frame with none (#131).
 // Times are what the page reports (performance.now around the work), so they leave out the
 // browser's compositing after the call returns.
 
@@ -37,8 +39,11 @@ const server = createServer(async (req, res) => {
 }).listen(0);
 const base = `http://localhost:${server.address().port}/`;
 
+const late = flags.late;
+const p90 = (a) => [...a].sort((x, y) => x - y)[Math.min(a.length - 1, Math.floor(0.9 * a.length))];
 const median = (a) => { const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
 const stat = (a) => `${median(a).toFixed(0)} / ${Math.max(...a).toFixed(0)}`;
+const stat1 = (a) => `${median(a).toFixed(1)} / ${p90(a).toFixed(1)}`; // median / p90 to a tenth of a ms
 const num = (re, s) => Number(re.exec(s)?.[1]);
 
 const browser = await chromium.launch();
@@ -64,6 +69,10 @@ for (const [width, height] of sizes) for (const mode of modes) for (const zoom o
   }
   const redraws = (await page.evaluate(() => window.statuses)).filter((s) => s.includes('total')).slice(1).map((s) => num(/total (\d+)/, s));
 
+  if (late) await page.evaluate(async (which) => {
+    const { LATE, IN_DRAG } = await import('./scene.mjs'); // the page's own instance
+    for (const l of LATE) IN_DRAG[l] = new Set(which === 'all' || which === l ? Array.from({ length: 31 }, (_, z) => z) : []);
+  }, late);
   const box = await page.locator('#map').boundingBox();
   const cx = box.x + box.width / 2, cy = box.y + box.height / 2;
   await page.evaluate(() => { window.statuses = []; });
@@ -87,7 +96,7 @@ for (const [width, height] of sizes) for (const mode of modes) for (const zoom o
     await page.mouse.up();
     await done(++placed); // let it place again before the next drag
   }
-  const frames = (await page.evaluate(() => window.statuses)).map((s) => num(/frame (\d+) ms/, s)).filter(Number.isFinite);
+  const frames = (await page.evaluate(() => window.statuses)).map((s) => num(/frame ([\d.]+) ms/, s)).filter(Number.isFinite);
   rows.push({ size: `${width}x${height}`, mode, zoom, spans, first: num(/total (\d+)/, firstText), load: num(/load (\d+)/, firstText), redraws, frames, bytes });
   await page.close();
 }
@@ -95,8 +104,8 @@ await browser.close();
 server.close();
 
 const kb = (b) => (b ? `${(b / 1024).toFixed(0)}` : '–');
-console.log(`| Size | Ornaments | Zoom | First draw, ms (of it, data load) | Redraw, ms: median / worst (${REDRAWS} runs) | Pan frame drawn, ms: median / worst | Pan frame painted, ms: median / worst (n) | 50m geo, KB | 10m cells, KB | Packs, KB |`);
+console.log(`| Size | Ornaments | Zoom | First draw, ms (of it, data load) | Redraw, ms: median / worst (${REDRAWS} runs) | Pan frame drawn, ms: median / p90 | Pan frame painted, ms: median / worst (n) | 50m geo, KB | 10m cells, KB | Packs, KB |`);
 console.log('| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |');
 for (const r of rows) {
-  console.log(`| ${r.size} | ${r.mode} | z${r.zoom} | ${r.first} (${r.load}) | ${stat(r.redraws)} | ${stat(r.frames)} | ${stat(r.spans)} (${r.spans.length}) | ${kb(r.bytes.geo50)} | ${kb(r.bytes.geo10)} | ${kb(r.bytes.packs)} |`);
+  console.log(`| ${r.size} | ${r.mode} | z${r.zoom} | ${r.first} (${r.load}) | ${stat(r.redraws)} | ${stat1(r.frames)} | ${stat(r.spans)} (${r.spans.length}) | ${kb(r.bytes.geo50)} | ${kb(r.bytes.geo10)} | ${kb(r.bytes.packs)} |`);
 }
