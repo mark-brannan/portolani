@@ -23,6 +23,32 @@ jobs:
       - run: npm ci
       - run: npm test
 
+  # The golden-image test as its own named check, so a moved picture shows up by name rather than
+  # inside a matrix leg. On failure the diff images test/golden.test.mjs writes are uploaded.
+  # This repeats what `test` runs, on one Node version: no matrix leg is added.
+  golden-images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with: { persist-credentials: false }
+      - uses: actions/setup-node@v7
+        with: { node-version: '22' }
+      - run: npm ci
+      - run: node --test test/golden.test.mjs
+      - uses: actions/upload-artifact@v5
+        if: failure()
+        with: { name: golden-failure, path: out/golden-diff, if-no-files-found: ignore }
+
+  # Old versus new of the goldens a pull request regenerates: its own job (a reusable workflow) so
+  # it can move to deploy time. A measurement, so it stays out of ci-gate's needs.
+  golden-diff:
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/golden-diff.yml
+    with:
+      base-ref: origin/${{ github.base_ref }}
+
   # Separate from `test` because this one needs the network -- it fetches
   # Natural Earth data, same as the Pages deploy does. Runs on pull_request
   # so the build is exercised before merge, not first on a live-page failure.
@@ -72,7 +98,7 @@ jobs:
   # evaluate when a dependency failed or was skipped, so it reports an explicit
   # pass or fail of its own rather than inheriting the skip.
   ci-gate:
-    needs: [test, build-preview, nonempty]
+    needs: [test, golden-images, build-preview, nonempty]
     if: always()
     # It reads nothing and writes nothing; the results go in as an input.
     permissions: {}
