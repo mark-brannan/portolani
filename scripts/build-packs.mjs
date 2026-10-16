@@ -132,7 +132,7 @@ const PACKS = [
       // the Catalan Atlas rose (BnF), a patch (#111): the whole disc inside its ring, the blue, ochre and gilt washes and the
       // vellum between the rhumbs kept. The circle is the only outline and cuts the sea waves and the lettering round the
       // ring; it is not erased but feathered (`circleFeather`), so there is no pale hole where a name was
-      { id: 'rose-catalan', kind: 'rose', style: 'aguiar', scan: 'catalan', key: 'patch', paper: CATALAN_PAPER, crop: [120, 185, 440, 505], sizePx: 110, circle: [160, 160, 152], circleFeather: 4 },
+      { id: 'rose-catalan', kind: 'rose', style: 'aguiar', scan: 'catalan', key: 'patch', paper: CATALAN_PAPER, crop: [120, 185, 440, 505], sizePx: 110, circle: [160, 160, 158], circleFeather: 4 },
       // Prunes 1559 (Library of Congress), the best 32-point rose of any chart checked for #52: whole crop with its
       // sea of parchment and the rhumb lines running off, a patch not a keyed ink, so the blue and red washes and the
       // gilt keep their tone. North is to the right on the scan, so the cut is turned a quarter anticlockwise.

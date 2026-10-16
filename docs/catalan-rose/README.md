@@ -14,7 +14,7 @@ It was cut by ink coverage, which dropped the vellum between the rhumbs and thin
 washes. Now the whole disc inside the ring is the sprite, its paper (`#e9dfcf`, the vellum's own) divided out so the
 renderer's multiply sinks it into the parchment.
 
-**Edge: a heavier feather, not erase boxes.** The ring is the only outline (a circle at its outer edge) and its blur is
+**Edge: a heavier feather, not erase boxes.** The ring is the only outline (a circle, radius 158 of a 160 px half-width, so its feather sits outside the rhumb tips and does not fade them) and its blur is
 4 px instead of 2 (`circleFeather`). Nothing is erased, so no pale hole is left where lettering was; the lettering and
 waves outside the ring are cut by the circle, and its feather fades them out rather than ending them on a line.
 A colour mask was not needed: the ring itself separates subject from surround.
