@@ -192,3 +192,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261016t053412z
 - Took: coast (country) names stay lettered on the window's stretch of coast; undo: letter coast names by fixed chunks of the coast (no PR, branch main)
+
+### 20261016t054437z
+- portolani#131 Country names: only chunks wholly in the window are lettered; chunk size = window width/0.5 deg rounded to power of 2 points. Undo: revert the commit (no PR, branch claude/131s5b-s2)
