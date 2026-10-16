@@ -195,3 +195,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261016t054437z
 - portolani#131 Country names: only chunks wholly in the window are lettered; chunk size = window width/0.5 deg rounded to power of 2 points. Undo: revert the commit (no PR, branch claude/131s5b-s2)
+
+### 20261016t083716z
+- rose in style aguiar not a new style change style in build-packs.mjs and rebuild ([#179](https://github.com/mark-brannan/portolani/pull/179))
