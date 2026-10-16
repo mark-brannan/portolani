@@ -10,10 +10,9 @@
 `steps.png`: the raw crop on the left, the sprite on the right, both multiplied onto parchment at the width the map
 draws them. `rose-aguiar.raw.png`, `.key.png` and `.cut.png` are the images behind it.
 
-It was keyed by ink levels with nine erase-by-closing boxes over the wind names, which thinned the red, blue and
-green washes and took the lettering out. Now the whole disc inside the outer ring is the sprite, its paper
-(`#e9e6d2`, the vellum's own) divided out so the renderer's multiply sinks it into the parchment. The `dark`, `level`
-and `clean` fields are gone: `norte`, `oeste`, `leste`, `sull` and the petal inscriptions stay as drawn.
+The whole disc inside the outer ring is the sprite, its paper (`#e9e6d2`, the vellum's own) divided out so the
+renderer's multiply sinks it into the parchment. No `dark`, `level` or `clean` field: ink levels would thin the washes, so
+`norte`, `oeste`, `leste`, `sull` and the petal inscriptions stay as drawn.
 
 **Edge: a feather, not erase boxes.** The ring is the only outline (a circle of radius 308, centre (335,331) in the
 crop, just outside the heavy outer ring), feathered 4 px (`circleFeather`).
