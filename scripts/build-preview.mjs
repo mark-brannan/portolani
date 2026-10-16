@@ -177,6 +177,8 @@ for (const [id, member] of [['gshhg-licence', 'LICENSE.TXT'], ['gshhg-copying-le
   await writeFile(path.join(out, 'geo', `${id}.txt`), zipMember(gshhg, member));
 }
 await cp(path.join(root, 'node_modules', 'coast-wright', 'lib'), path.join(out, 'coast-wright'), { recursive: true });
+await mkdir(path.join(out, 'coastlines'), { recursive: true });
+await cp(path.join(root, 'node_modules', 'coastlines', 'catalogue.json'), path.join(out, 'coastlines', 'catalogue.json'));
 await cp(path.join(root, 'public'), out, { recursive: true });
 // scene.mjs and every file it reaches by a relative import, walked rather than listed, so a new
 // module ships with the scene that imports it (a hand-kept list once left the page blank)
