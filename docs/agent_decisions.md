@@ -189,3 +189,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261016t040823z
 - oddlines PR: jpeg screenshots under docs/oddlines; undo: delete folder ([#168](https://github.com/mark-brannan/portolani/pull/168))
+
+### 20261016t053412z
+- Took: coast (country) names stay lettered on the window's stretch of coast; undo: letter coast names by fixed chunks of the coast (no PR, branch main)
