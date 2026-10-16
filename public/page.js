@@ -304,6 +304,47 @@ for (const [id, options] of Object.entries(CHOICES)) {
   });
 }
 
+// ---------------------------------------------------------------- the captions
+
+// Where a style comes from, as a caption under its chip group: plain text, with each chart or maker
+// linking to its page on Wikipedia or Wikimedia Commons. Every claim is listed with its source in the PR that added it.
+const C = 'https://commons.wikimedia.org/wiki/File:';
+const WP = {
+  marina: ['Carta marina', 'https://en.wikipedia.org/wiki/Carta_marina'],
+  olaus: ['Olaus Magnus', 'https://en.wikipedia.org/wiki/Olaus_Magnus'],
+  catalan: ['Catalan Atlas', 'https://en.wikipedia.org/wiki/Catalan_Atlas'],
+  cresques: ['Cresques Abraham', 'https://en.wikipedia.org/wiki/Cresques_Abraham'],
+  oliva: ['Joan Oliva', `${C}1590_Portolan_chart_of_the_Eastern_Mediterranean,_the_Aegean_and_the_Black_Sea_by_Joan_Oliva.tif`],
+  benincasa: ['Grazioso Benincasa', `${C}1466_Portolan_chart_of_the_Eastern_Mediterrenean,_the_Aegean_Sea_and_the_Sea_of_Marmara_by_Grazioso_Benincasa.jpg`],
+  beccario: ['Francesco Beccario', `${C}Francesco_Beccario_chart_(1403).jpg`],
+  aguiar: ['Jorge de Aguiar', `${C}Jorge_Aguiar_1492_MR.jpg`],
+  genoese: ['an anonymous chart, probably Genoese', `${C}Mediterranean_chart_fourteenth_century2.jpg`],
+  martines: ['Joan Martines', 'https://en.wikipedia.org/wiki/Joan_Martines'],
+  prunes: ['Mateus Prunes', `${C}(Chart_of_the_Mediterranean,_Black_Sea,_and_the_coasts_of_western_Europe_and_northwest_Africa)_LOC_2014588812.jpg`],
+};
+// a string is text; a key is a link
+const CAPTIONS = {
+  mountains: ['After the ', 'marina', ' of ', 'olaus', ', first printed in 1539.'],
+  hills: ['After the ', 'catalan', ', conventionally dated 1375, by ', 'cresques', ' of Mallorca.'],
+  trees: ['After the ', 'marina', ' of ', 'olaus', ', first printed in 1539.'],
+  land: ['Green wash: ', 'oliva', ', 1590. Ochre with shoals: ', 'benincasa', ', 1466.'],
+  seaTint: ['Coloured islands: ', 'beccario', ', Genoa, 1403.'],
+  rivers: ['Wiggled ink: ', 'aguiar', ', Lisbon, 1492. Double line: the ', 'marina', ', 1539.'],
+  lakes: ['Lozenges: ', 'aguiar', ', Lisbon, 1492. Hatched shapes: the ', 'marina', ', 1539.'],
+  scaleBorder: ['Ladders after ', 'genoese', ', about 1320 to 1350 (chevron); ', 'prunes', ', 1559 (beads); ', 'martines', ' of Messina (ribbon); ', 'beccario', ', 1403 (ruled).'],
+};
+for (const [id, parts] of Object.entries(CAPTIONS)) {
+  const p = document.createElement('p');
+  p.className = 'caption';
+  for (const part of parts) {
+    if (!WP[part]) { p.append(part); continue; }
+    const a = Object.assign(document.createElement('a'), { href: WP[part][1], textContent: WP[part][0], target: '_blank', rel: 'noopener noreferrer' });
+    p.append(a);
+  }
+  const g = $(id);
+  (id === 'seaTint' ? g.parentElement : g).after(p); // the two colour groups share a row; the scale caption closes the scale bar's two groups
+}
+
 // ---------------------------------------------------------------- the controls
 
 // the controls show the style and the selection
