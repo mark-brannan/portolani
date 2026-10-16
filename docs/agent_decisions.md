@@ -162,3 +162,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261015t193513z
 - Reset adds a history entry (PR 156) (no PR, branch claude/portolani-unattended-shift-2c08b5)
+
+### 20261016t021922z
+- Rose cap at wide views (zoom < 8): big 5%, small 2.4% of page width, from the three charts Undo: set WIDE.bigRose and WIDE.smallRose to 1 in scripts/scene.mjs (no PR, branch claude/162a-s2)
