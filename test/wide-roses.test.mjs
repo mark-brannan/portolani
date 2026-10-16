@@ -28,3 +28,9 @@ for (const [name, view] of [['default view', { lon: 7, lat: 40, zoom: 5.4 }], ['
     for (const r of scene.roseDraws) assert.ok(r.size <= ROSE_CAP.big * W + 1e-9, `a rose ${r.size} px wide`);
   });
 }
+
+test('a shipped sheet that names its own rose is held to the cap too (Catalan Atlas, history on)', async () => {
+  const { scene } = await createScene(env, { view: { lon: -20.7, lat: 42.1, zoom: 3 }, scale: 'off', historical: true });
+  assert.ok(scene.roseDraws.some((r) => r.sprite.id === 'rose-catalan'), 'the Catalan Atlas rose is drawn');
+  for (const r of scene.roseDraws) assert.ok(r.size <= ROSE_CAP.big * W + 1e-9, `a rose ${r.size} px wide`);
+});
