@@ -174,7 +174,13 @@ export const BUDGET = 10, ROSE_SHARE = 0.4, SHEET_ROSES = 4;
 const TUNE = { budget: BUDGET, monsterMax: 4, shipMax: 2, townGap: 48, hillShare: 1 };
 // A sheet's allotment: its territory in windows times the budget, whole and the same from any view.
 const allotment = (sh) => Math.round(TUNE.budget * territory(sh, sh.from));
-const roseQuota = (sh) => Math.min(SHEET_ROSES, Math.round(ROSE_SHARE * allotment(sh)));
+// The world and overview bands (a sheet paced below zoom 8) follow the world charts of the portolan tradition,
+// measured in docs/ornaments-at-wide-views.md: many small roses, few beasts and those mostly ships, no rose
+// wider than `bigRose` of the page (a chart's own is 5% of its width), its ring ones `smallRose`.
+export const WIDE = { zoom: 8, roseShare: 0.6, sheetRoses: 6, monsterShare: 0.25, bigRose: 0.05, smallRose: 0.024 };
+const wide = (sh) => sh.from < WIDE.zoom;
+const sheetRoseMax = (sh) => (wide(sh) ? WIDE.sheetRoses : SHEET_ROSES);
+const roseQuota = (sh) => Math.min(sheetRoseMax(sh), Math.round((wide(sh) ? WIDE.roseShare : ROSE_SHARE) * allotment(sh)));
 
 const CELL = 16;             // clearance field cell, px
 const MONSTER_GAP = 220;     // min centre spacing between monsters, px
@@ -1189,7 +1195,7 @@ function placeLesser(data, field, boxes, ctx, towns, names, poi) {
 // the sea round it is clear. Which sprite a sheet takes is picked by the sheet's name, so a sheet draws
 // the same roses from any view. Returns what buildScene's window placement does: roseDraws, centre, nodes.
 // a sheet with fewer than this many of its 17 sites in clear sea is land's, and its roses may stand on land
-const SHEET_SEA_SITES = 4, SHEET_SMALL_ROSES = SHEET_ROSES - 1, SHEET_NODE_ORDER = [0, 4, 8, 12, 2, 6, 10, 14, 1, 3, 5, 7, 9, 11, 13, 15];
+const SHEET_SEA_SITES = 4, SHEET_NODE_ORDER = [0, 4, 8, 12, 2, 6, 10, 14, 1, 3, 5, 7, 9, 11, 13, 15];
 function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
   const roseDraws = [], held = {}, at = (n) => { const [x, y] = data.proj.project(n.lon, n.lat); return { x, y }; };
   for (const sh of world.sheets) {
@@ -1205,14 +1211,16 @@ function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
       }
       return true;
     };
+    // at wide views a rose is held to a chart's share of the page, never the sprite's own size
+    const capBig = (px) => (wide(sh) ? Math.min(px, WIDE.bigRose * W) : px), capSmall = (px) => (wide(sh) ? Math.min(px, WIDE.smallRose * W) : px);
     const picked = world.seed == null ? roses.find((s) => s.sizePx === bigSizePx) : castOrder(roses, seed, () => 1)[0];
-    const big = { ...picked, sizePx: bigSizePx };
+    const big = { ...picked, sizePx: capBig(bigSizePx) };
     const rest = roses.filter((s) => s !== picked), small = rest.filter((s) => s.sizePx < bigSizePx);
-    const smallRoses = small.length ? small : rest.length ? rest.map((s) => ({ ...s, sizePx: 110 })) : [{ ...big, sizePx: 110 }];
+    const smallRoses = (small.length ? small : rest.length ? rest.map((s) => ({ ...s, sizePx: 110 })) : [{ ...big, sizePx: 110 }]).map((s) => ({ ...s, sizePx: capSmall(s.sizePx) }));
     const ring = world.seed == null ? smallRoses : castOrder(smallRoses, seed ^ 0x5bd1e995, () => 1);
     const c = sh.circle;
     const sites = [c, ...c.nodes];
-    const onLand = sites.filter((q, i) => clear(q.lon, q.lat, i ? smallSize : big.sizePx)).length < SHEET_SEA_SITES;
+    const onLand = sites.filter((q, i) => clear(q.lon, q.lat, i ? capSmall(smallSize) : big.sizePx)).length < SHEET_SEA_SITES;
     // what is kept is decided in the frame; the page's projection only says where it falls and whether it is seen
     const put = (sprite, n) => { held[sh.name] = (held[sh.name] ?? 0) + 1; if (shows(data.proj, n.lon, n.lat)) { const [fx, fy] = fp.project(n.lon, n.lat); roseDraws.push({ sprite, ...at(n), fx, fy, size: sprite.sizePx, sheet: sh.name }); } };
     if (ownSet(world, sh)) {
@@ -1227,7 +1235,7 @@ function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
     let n = 0;
     for (const i of SHEET_NODE_ORDER) {
       const node = c.nodes[i], sprite = ring[n % ring.length];
-      if (n < SHEET_SMALL_ROSES && (held[sh.name] ?? 0) < quota && clear2(node.lon, node.lat, sprite.sizePx, onLand)) { put(sprite, node); n++; }
+      if (n < sheetRoseMax(sh) - 1 && (held[sh.name] ?? 0) < quota && clear2(node.lon, node.lat, sprite.sizePx, onLand)) { put(sprite, node); n++; }
     }
   }
   const pts = world.sheets.flatMap((sh) => [sh.circle, ...sh.circle.nodes]).map(at);
@@ -1319,7 +1327,7 @@ function placeBeastsOf(sh, world, sprites, avoid, roses) {
   }
   sites.sort((a, b) => b.c - a.c);
   // what the roses leave of the sheet's allotment: a third of it ships, the rest monsters
-  const beasts = Math.max(0, allotment(sh) - roses), shipQuota = Math.floor(beasts / 3), monsterQuota = beasts - shipQuota, seed = world.seed == null ? null : seedOf(sh.name);
+  const beasts = Math.max(0, allotment(sh) - roses), monsterQuota = wide(sh) ? Math.floor(WIDE.monsterShare * beasts) : beasts - Math.floor(beasts / 3), shipQuota = beasts - monsterQuota, seed = world.seed == null ? null : seedOf(sh.name);
   const mine = [];
   for (const sprite of castOrder(sprites.monsters, seed)) {
     if (mine.length >= monsterQuota) break;
