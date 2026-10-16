@@ -16,7 +16,7 @@ export const inline = (s) => esc(s)
   .replace(/`([^`]+)`/g, '<code>$1</code>')
   .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
   .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-  .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, t, u) => `<a href="${esc(href(u.replace(/&amp;/g, '&')))}">${t}</a>`);
+  .replace(/\[([^\]]+)\]\(((?:[^()\s]|\([^()\s]*\))+)\)/g, (_, t, u) => `<a href="${esc(href(u.replace(/&amp;/g, '&')))}">${t}</a>`);
 
 // markdown -> { title, html }; the first `# ` line is the title.
 export function render(md) {

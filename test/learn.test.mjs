@@ -14,6 +14,7 @@ test('the markdown subset renders, and escapes what it must', () => {
   assert.match(r.html, /<em>b<\/em> <strong>c<\/strong> <code>d<\/code> <a href="other.html#f">e<\/a>/);
   assert.match(r.html, /<a href="#">g<\/a>/); // a script link is not kept
   assert.match(r.html, /&lt;i&gt;/);
+  assert.match(render('[C](https://en.wikipedia.org/wiki/Cartouche_(design)) after').html, /<a href="https:\/\/en\.wikipedia\.org\/wiki\/Cartouche_\(design\)">C<\/a> after/); // a parenthesis in a URL stays in it
   assert.match(r.html, /<ul><li>one<\/li><li>two<\/li><\/ul>/);
   assert.match(r.html, /<h2>H<\/h2>\n<ol>/);
 });
