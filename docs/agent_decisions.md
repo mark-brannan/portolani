@@ -171,3 +171,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261016t021927z
 - Cap and mix apply below zoom 8 only; general band and finer keep sprite sizes Undo: change WIDE.zoom (no PR, branch claude/162a-s2)
+
+### 20261016t024236z
+- Default placement equals historic; undo parsePlacement fallthrough (no PR, branch main)
