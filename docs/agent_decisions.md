@@ -201,3 +201,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261016t083722z
 - rose-prunes sizePx 300 level with rose-aguiar lower sizePx ([#179](https://github.com/mark-brannan/portolani/pull/179))
+
+### 20261016t083728z
+- west rose cut, not south or north-east change crop ([#179](https://github.com/mark-brannan/portolani/pull/179))
