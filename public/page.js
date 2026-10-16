@@ -9,7 +9,7 @@
 // they are drawn down from (0 off, the top always).
 // Older links naming a `rendering` (or `pack`), `rose`, `monster`, `town` and `kinds` open as the
 // selection those chose, and are written back in the new form.
-import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, W, H } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, W, H } from './scene.mjs';
 
 const memo = new Map();
 // a failed load is forgotten, so the next stop tries it again
@@ -95,6 +95,7 @@ function styleFromHash() {
     scaleBorder: SCALE_BORDERS.includes(q.get('scaleborder')) ? q.get('scaleborder') : DEFAULTS.scaleBorder,
     scale: q.get('scale') === 'off' || SCALE_NAMES.includes(q.get('scale')) ? q.get('scale') : DEFAULTS.scale,
     townSize: TOWN_SIZES.includes(q.get('townsize')) ? q.get('townsize') : DEFAULTS.townSize,
+    placement: parsePlacement(q.get('placement')).text,
   };
 }
 // The selection a hash names; an older link's rendering, styles and kinds become the selection they drew.
@@ -130,6 +131,7 @@ function writeHash() {
   if (st.lakes !== DEFAULTS.lakes) q.set('lakes', st.lakes);
   if (st.mountains !== DEFAULTS.mountains) q.set('mountains', st.mountains);
   if (st.trees !== DEFAULTS.trees) q.set('trees', st.trees);
+  if (st.placement) q.set('placement', st.placement);
   if (st.seaTint) q.set('seas', '1');
   if (st.scaleBorder !== DEFAULTS.scaleBorder) q.set('scaleborder', st.scaleBorder);
   if (st.scale !== DEFAULTS.scale) q.set('scale', st.scale);
@@ -336,6 +338,7 @@ function readControls() {
     autoTitle: $('titleMode').value === 'auto',
     // checked, by metro area; a link's townsize=population is kept until the box is touched
     townSize: $('townSize').checked ? (style.townSize === 'rank' ? 'area' : style.townSize) : 'rank',
+    placement: style.placement, // chosen by the placement chips below
   };
   // hills are the Catalan sprites: the chip selects all of them or none
   const hills = $('hills').value === 'catalan';
@@ -366,7 +369,7 @@ async function render() {
     // a kind is drawn while any of its sprites is selected
     const kinds = KINDS.filter((k) => SPRITES.some((s) => s.kind === k && selection.has(s.key)));
     const { scene, data, bg, world, coarse, timing } = await createScene(env, {
-      ...style, relief: style.mountains === 'colour' ? ['marina'] : style.mountains === 'ink' ? ['engraved'] : [],
+      ...style, ...parsePlacement(style.placement), relief: style.mountains === 'colour' ? ['marina'] : style.mountains === 'ink' ? ['engraved'] : [],
       continents: style.continentsZoom > 0, continentsZoom: style.continentsZoom,
       regions: style.regionsZoom > 0 ? style.regions : 'off', regionsZoom: style.regionsZoom,
       sprites: [...selection], kinds, view, pinTitle: style.autoTitle ? pinTitle : null,
@@ -423,6 +426,19 @@ $('copy').addEventListener('click', async () => {
     url.hidden = false; url.focus(); url.select();
     note.textContent = 'Could not copy automatically: the link is selected, press Ctrl+C';
   }
+});
+
+// Placement: the chips choose how the ornaments are placed; the choice rides in the link (`placement=`).
+// Re-roll takes a new seed and keeps it in the link, so an arrangement can be kept and shared.
+const PLACEMENT_CHIPS = [...document.querySelectorAll('#placement [data-placement]')];
+function showPlacement() {
+  const now = parsePlacement(style.placement).text, seeded = now.startsWith('seed:');
+  for (const c of PLACEMENT_CHIPS) c.setAttribute('aria-checked', String(c.dataset.placement === (seeded ? 'reroll' : now || 'default')));
+}
+for (const c of PLACEMENT_CHIPS) c.addEventListener('click', () => {
+  const v = c.dataset.placement;
+  style = { ...style, placement: v === 'reroll' ? `seed:${(Math.random() * 2 ** 31) | 0}` : v === 'default' ? '' : v };
+  showPlacement(); changed();
 });
 
 // ---------------------------------------------------------------- moving
@@ -624,5 +640,6 @@ function drawHere() {
 for (const id of ['projection', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'scaleBorder', 'land', 'islands', 'seaTint', 'rivers', 'lakes', 'trees', 'mountains', 'hills', 'continentsZoom', 'regions', 'regionsZoom', 'titleMode', 'townSize']) $(id).addEventListener('input', readControls);
 let typing = 0; // a typed title is placed when the typing pauses, not on every key: a placement takes up to a few hundred ms
 $('title').addEventListener('input', () => { clearTimeout(typing); typing = setTimeout(readControls, 400); });
-addEventListener('hashchange', () => { view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); render(); });
+addEventListener('hashchange', () => { view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); render(); });
+showPlacement();
 render();

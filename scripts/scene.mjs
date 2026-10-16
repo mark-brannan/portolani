@@ -1200,7 +1200,7 @@ const SHEET_SEA_SITES = 4, SHEET_NODE_ORDER = [0, 4, 8, 12, 2, 6, 10, 14, 1, 3, 
 function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
   const roseDraws = [], held = {}, at = (n) => { const [x, y] = data.proj.project(n.lon, n.lat); return { x, y }; };
   for (const sh of world.sheets) {
-    const fp = sheetFrame(sh), seed = seedOf(sh.name);
+    const fp = sheetFrame(sh), seed = seedOf(sh.name) ^ (world.salt | 0);
     // `onLand`: a sheet with no clear sea to hold its big rose lets its roses stand on land, clear of the places
     const clear = (lon, lat, size, onLand = false) => {
       const [x, y] = fp.project(lon, lat), r = size * 0.46;
@@ -1312,7 +1312,7 @@ function placeBeastsOf(sh, world, sprites, avoid, roses) {
   };
   const taken = [...avoid];
   const free = (x, y, r) => taken.every((o) => Math.hypot(o.x - x, o.y - y) >= o.r + r) && !POIS.some((p) => Math.hypot(...fp.project(p.lon, p.lat).map((v, i) => v - [x, y][i])) < POI_ROOM);
-  const e = sh.extent, rnd = mulberry32(seedOf(sh.name));
+  const e = sh.extent, rnd = mulberry32(seedOf(sh.name) ^ (world.salt | 0));
   const [y0, y1] = [e.south, e.north].map((v) => Math.log(Math.tan(Math.PI / 4 + (v * RAD) / 2)) / RAD);
   // sites a monster-gap apart at the sheet's pacing zoom, one window of 360 / 2^z * 3.125 degrees across
   const win = 1125 / 2 ** sh.from, step = win * (MONSTER_GAP / W);
@@ -1328,7 +1328,7 @@ function placeBeastsOf(sh, world, sprites, avoid, roses) {
   }
   sites.sort((a, b) => b.c - a.c);
   // what the roses leave of the sheet's allotment: a third of it ships, the rest monsters
-  const beasts = Math.max(0, allotment(sh) - roses), monsterQuota = wide(sh) ? Math.floor(WIDE.monsterShare * beasts) : beasts - Math.floor(beasts / 3), shipQuota = beasts - monsterQuota, seed = world.seed == null ? null : seedOf(sh.name);
+  const beasts = Math.max(0, allotment(sh) - roses), monsterQuota = wide(sh) ? Math.floor(WIDE.monsterShare * beasts) : beasts - Math.floor(beasts / 3), shipQuota = beasts - monsterQuota, seed = world.seed == null ? null : seedOf(sh.name) ^ (world.salt | 0);
   const mine = [];
   for (const sprite of castOrder(sprites.monsters, seed)) {
     if (mine.length >= monsterQuota) break;
@@ -2371,6 +2371,7 @@ function drawAnchored(g, a, bg, view) {
 // `continents` (boolean) and `regions` ('off', 'latin' or 'english'); the continents follow the regions' language, Latin when those are off.
 // `land`: a LANDS entry, the land treatment ('islands' by default); `seaTint` (boolean) tints the Red Sea, the Persian Gulf and the Black and Caspian Seas red.
 // `rivers` and `lakes`: a RIVER_STYLES and a LAKE_STYLES entry (water.mjs), each 'off' by default; `trees` a TREE_STYLES entry (trees.mjs), 'off' too.
+// `historical` (default true) and `seed` (an integer: keys every seeded placement on it, see parsePlacement).
 // `relief`: a RELIEF_STYLES entry or a list of them (relief.mjs), none by default; with several each range takes one, by its seed.
 // The mountain sprites in the selection join them: one more style, stood along the ranges that take it.
 // `autoTitle` (boolean, on by default) letters the cartouche with the name the view is about (viewTitle), in capitals;
@@ -2387,9 +2388,21 @@ const mercatorDeg = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * RAD) / 2)) /
 function seaAtOf(world) {
   return (lon, lat) => !world.land.some(({ poly, box }) => lat > box.y0 && lat < box.y1 && SHIFTS.some((s) => lon + s > box.x0 && lon + s < box.x1 && insideRing(poly[0], lon + s, lat)));
 }
+// The ornament placement a link names (`placement=` in the page's hash): none is the default, which draws each
+// curated sheet's own figures where the chart has read them; `historic` says the same outright; `seeded` draws the
+// seeded figures of every sheet; `seed:<n>` is seeded with the whole arrangement keyed on the integer n, so a
+// re-roll that keeps its n in the link keeps its arrangement. Anything else reads as none. Returns the
+// createScene options `{ historical, seed }` and the canonical text to write back.
+export function parsePlacement(text) {
+  const m = /^seed:(-?\d{1,10})$/.exec(text ?? '');
+  if (m && Number.isSafeInteger(Number(m[1]))) { const n = Number(m[1]) | 0; return { historical: false, seed: n, text: `seed:${n}` }; }
+  if (text === 'seeded') return { historical: false, text };
+  if (text === 'historic') return { historical: true, text };
+  return { historical: true, text: '' };
+}
 export async function createScene(environment, opts = {}) {
   env = environment;
-  const { ink = '#3b2a1a', continentsZoom, regionsZoom, scaleBorder = 'bordered', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', title = 'PORTOLANI', autoTitle = true, pinTitle, land: landMode = 'islands', islands, seaTint = false, rivers = 'off', lakes = 'off', relief = [], trees = 'off', historical = true } = opts;
+  const { ink = '#3b2a1a', continentsZoom, regionsZoom, scaleBorder = 'bordered', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', title = 'PORTOLANI', autoTitle = true, pinTitle, land: landMode = 'islands', islands, seaTint = false, rivers = 'off', lakes = 'off', relief = [], trees = 'off', historical = true, seed: pickedSeed } = opts;
   const legacy = ['rendering', 'rose', 'monster', 'town'].some((k) => opts[k] !== undefined);
   const townBy = townSize ?? (legacy ? 'rank' : 'area');
   const show = { kinds: new Set(opts.kinds ?? DEFAULT_KINDS), names, rhumb: rhumbOn, scale };
@@ -2446,7 +2459,7 @@ export async function createScene(environment, opts = {}) {
     from: worldBand ? Math.log2(1125 / (sh.extent.east - sh.extent.west)) : ATLAS_BANDS.find((b) => b.band === sh.band).from }));
   const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, historical, seaAt: sheets && seaAtOf(coarse), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, title, autoTitle, pinTitle,
     continentsEnd: zoomEnd(continentsZoom, CONTINENT_ZOOM_END), regionsEnd: zoomEnd(regionsZoom, REGION_ZOOM_END),
-    scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM, townSize: townBy, seed: legacy ? null : castSeed(view) }), show, scaleSprite };
+    scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM, townSize: townBy, seed: legacy ? null : pickedSeed == null ? castSeed(view) : pickedSeed | 0, salt: legacy || pickedSeed == null ? 0 : pickedSeed | 0 }), show, scaleSprite };
   data.trees = TREES[STYLE.trees] ? plantTrees({ proj: data.proj, isLand: scene.field.isLand, scene, lakes: STYLE.lakes !== 'off' && water ? water.lakes : [], w: W, h: H }) : [];
   data.palms = plantPalms({ proj: data.proj, isLand: scene.field.isLand, scene, w: W, h: H,
     pois: scene.lesser.filter((l) => l.poi).map((l) => ({ x: l.x, y: l.y, palms: POIS.find((p) => p.name === l.name)?.palms ?? 0 })) });
