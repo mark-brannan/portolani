@@ -218,3 +218,18 @@ test('a curated sheet\'s extent holds its cropped figures', () => {
   const marina = CURATED.find((c) => c.source === 'Carta Marina, 1539').ornaments.filter((f) => f.sprite).map((f) => f.sprite);
   assert.deepEqual(marina.sort(), ['cete-e', 'pistrix-c', 'serpent-a', 'ship-a', 'ship-b', 'whale-b']);
 });
+
+test('a ray across the antimeridian is cut at the meridian, not swept across a sheet it never crosses', () => {
+  const sheet = { west: -25, east: 120, south: 10, north: 60 };
+  // an eastward ray wrapped to +-180, as rhumb() gives it: 100 -> 179, then -177 -> -120
+  const ray = [[100, 40], [179, 40], [-177, 40], [-120, 40]];
+  for (const runs of [cutOut(ray, []), cutOut(ray, [sheet])]) {
+    for (const run of runs) for (let i = 1; i < run.length; i++) assert.ok(Math.abs(run[i][0] - run[i - 1][0]) < 180, `no run jumps the seam: ${JSON.stringify(run)}`);
+  }
+  const [a, b] = cutOut(ray.slice(1), []);
+  assert.deepEqual([a.at(-1)[0], b[0][0]], [180, -180], 'one piece ends on the meridian and the next starts on it');
+  close(a.at(-1)[1], 40);
+  // a ray wholly outside the sheet keeps every point and gains the two on the meridian
+  const kept = cutOut(ray.slice(1), [sheet]).flat().length;
+  assert.equal(kept, 5);
+});
