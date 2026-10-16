@@ -1988,8 +1988,8 @@ export function keptWater(data) {
   return { rivers: kept(water.rivers), lakes: kept(water.lakes) };
 }
 // Hills and mountains (relief.mjs) for a view's land, and drawn over the water in the chosen style.
-// Mountains in the style chosen, hills where the Catalan sprites are selected. A drag draws neither:
-// they return with the ornaments when it stops.
+// Mountains in the style chosen, hills where the Catalan sprites are selected. A drag draws them from
+// the placed scene (drawLate) at the zooms IN_DRAG names, and at the stop they are placed afresh.
 const reliefWanted = () => STYLE.relief.length > 0 || STYLE.mountainSprites;
 const reliefFor = (proj, land) => reliefOf({ proj, land, createCanvas, w: W, h: H, styles: STYLE.relief, hills: STYLE.mountainSprites });
 function paintRelief(g, data, relief) {
@@ -1998,9 +1998,9 @@ function paintRelief(g, data, relief) {
 const paintCoast = (g, data, coast) =>
   limn(g, coast, data.proj.toPx, { color: STYLE.ink, alpha: 1, width: STYLE.coastWidth, oneStroke: true, ...data.proj.seam });
 
-// Parchment, land, water and coast for any view: what a drag draws each frame. The ornaments, the
-// lattice, the relief and the trees wait for the stop, which places and draws the scene whole
-// (drawScene); the relief, placed and hatched afresh, is too slow for a frame.
+// Parchment, land, water and coast for any view: what a drag draws each frame. The ornaments and the
+// lattice follow (drawAnchored), with the relief, trees, names and city plans where they are fast
+// enough (IN_DRAG); the stop places and draws the scene whole (drawScene).
 function drawGround(g, world, view, bg) {
   const proj = makeProjection(view);
   const f = frameOf(proj, 16 / proj.k / RAD); // 16 px, so strokes at the edge survive
@@ -2174,6 +2174,16 @@ function drawCartouche(g, c, bgPart) {
   g.restore();
 }
 
+// The clip a city's plan is drawn through: its urban footprint, and the land within it (a lagoon city's water too).
+const cityClip = (t, data) => (cg) => {
+  cg.beginPath();
+  for (const ring of t.city.rings) ring.forEach(([x, y], i) => (i ? cg.lineTo(x, y) : cg.moveTo(x, y)));
+  cg.clip('evenodd');
+  if (t.city.lagoon) return; // a lagoon city stands over its water
+  cg.beginPath();
+  traceLand(cg, data, t.city.land);
+  cg.clip('evenodd');
+};
 function drawScene(g, scene, data, bg, view) {
   g.save();
   g.setTransform(view.scale, 0, 0, view.scale, -view.x * view.scale, -view.y * view.scale);
@@ -2215,15 +2225,7 @@ function drawScene(g, scene, data, bg, view) {
     if (!t.city || !meets(r, t.city.box)) continue;
     drawCity(g, t.city.plan, r, {
       ink: STYLE.ink, parchment: STYLE.parchment,
-      clip: (cg) => {
-        cg.beginPath();
-        for (const ring of t.city.rings) ring.forEach(([x, y], i) => (i ? cg.lineTo(x, y) : cg.moveTo(x, y)));
-        cg.clip('evenodd');
-        if (t.city.lagoon) return; // a lagoon city stands over its water
-        cg.beginPath();
-        traceLand(cg, data, t.city.land);
-        cg.clip('evenodd');
-      },
+      clip: cityClip(t, data),
     });
   }
 
@@ -2326,8 +2328,9 @@ function drawScaleCard(g, proj, bg, style, sprite) {
 // ---------------------------------------------------------------- anchored to the earth
 
 // A placed scene's ornaments as longitude and latitude, so a moving frame can draw them through the
-// live projection. Placement is unchanged: once a view, at release. A city's plan and the continent
-// and region names are left out of a moving frame; the release draws them.
+// live projection. Placement is unchanged: once a view, at release. The late drawings (lateOf) join
+// them at the zooms IN_DRAG names; the town washes and houses are left out of a moving frame, and the
+// release draws them.
 function anchorScene(scene, data) {
   const ll = (o) => ({ o, at: data.proj.invert(o.x, o.y) });
   return {
@@ -2337,19 +2340,79 @@ function anchorScene(scene, data) {
     towns: [...scene.towns.filter((t) => !t.city), ...(scene.lesser ?? [])].map(ll),
     monsters: scene.monsters.map(ll), ships: scene.ships.map(ll),
     names: scene.names.filter((n) => !n.plate),
+    late: lateOf(scene, data, ll),
   };
 }
 
-// One moving frame of the anchored ornaments over the ground, through `view`'s projection; the
-// cartouche and the scale bar stay on the window.
-function drawAnchored(g, a, bg, view) {
-  const proj = makeProjection(clampView(view)), grow = proj.k / a.k, f = STYLE.sizeFactor, show = a.show;
-  const scaled = (kind) => grow ** f[kind];
+// The late drawings (those once drawn only at the stop) as a moving frame holds them: kept as
+// longitude and latitude where they stand on the earth, drawn through the live projection like the
+// ornaments. IN_DRAG says at which whole zooms (the view's zoom, rounded down) each is drawn in a drag;
+// a layer left out at a zoom waits for the stop. The sets are read off docs/measurements.md ("A frame
+// while dragging"): a layer is in where the frame with it stays within 16.7 ms at the 90th percentile.
+const LATE = ['relief', 'trees', 'worldNames', 'cities'];
+const EVERY_ZOOM = Array.from({ length: 31 }, (_, z) => z);
+const IN_DRAG = { relief: new Set([6, 7, 11, 12]), trees: new Set([6, 7, 9, 12]), worldNames: new Set(EVERY_ZOOM), cities: new Set(EVERY_ZOOM) };
+function lateOf(scene, data, ll) {
+  return {
+    relief: scene.relief && { peaks: scene.relief.peaks.map(ll), humps: scene.relief.humps.map(ll) },
+    trees: [...(data.trees ?? []), ...(data.palms ?? [])].map((s) => ({ s, at: [s.lon, s.lat] })),
+    worldNames: scene.worldNames.map(ll),
+    // a city's plan is in the px of the view it was placed in; a frame draws it there, moved and grown about its centre
+    cities: scene.towns.filter((t) => t.city).map((t) => ({ t, data, at: data.proj.invert((t.city.box.x0 + t.city.box.x1) / 2, (t.city.box.y0 + t.city.box.y1) / 2), c: [(t.city.box.x0 + t.city.box.x1) / 2, (t.city.box.y0 + t.city.box.y1) / 2] })),
+  };
+}
+// Where a point of the earth falls in the live projection (null off the page by `pad` px, or past the horizon).
+function framing(a, view) {
+  const proj = makeProjection(clampView(view)), grow = proj.k / a.k, f = STYLE.sizeFactor;
   const at = ([lon, lat], pad) => {
     if (proj.visible && !proj.visible(lon, lat)) return null;
     const [x, y] = proj.project(lon, lat);
     return x > -pad && x < W + pad && y > -pad && y < H + pad ? [x, y] : null;
   };
+  return { proj, grow, at, scaled: (kind) => grow ** f[kind] };
+}
+// The late layers named in `layers` (a subset of LATE), for a view; exported so the drag can be timed layer by layer.
+function drawLate(g, a, view, layers = LATE.filter((l) => IN_DRAG[l].has(Math.floor(view.zoom))), fr = framing(a, view)) {
+  const { proj, at, scaled } = fr, late = a.late, palette = { ink: STYLE.ink, parchment: STYLE.parchment, land: STYLE.land };
+  if (layers.includes('relief') && late.relief) {
+    const s = scaled('mountain'), live = { peaks: [], humps: [] };
+    for (const kind of ['peaks', 'humps']) for (const { o, at: ll } of late.relief[kind]) {
+      const p = at(ll, o.w * s);
+      if (p) live[kind].push({ ...o, x: p[0], y: p[1], w: o.w * s, h: o.h * s });
+    }
+    drawRelief(g, { proj, palette }, live);
+  }
+  if (layers.includes('trees')) {
+    const stands = late.trees.filter(({ at: ll }) => at(ll, 60)).map(({ s }) => s);
+    if (stands.length) (TREES[STYLE.trees] ?? TREES.marina)(g, { proj, palette }, stands);
+  }
+  if (layers.includes('cities')) for (const { t, data, at: ll, c } of late.cities) {
+    const p = at(ll, 400);
+    if (!p) continue;
+    const s = fr.grow, r = { x0: c[0] - p[0] / s, y0: c[1] - p[1] / s, x1: c[0] + (W - p[0]) / s, y1: c[1] + (H - p[1]) / s };
+    g.save();
+    g.translate(p[0], p[1]); g.scale(s, s); g.translate(-c[0], -c[1]);
+    drawCity(g, t.city.plan, r, { ink: STYLE.ink, parchment: STYLE.parchment, clip: cityClip(t, data) });
+    g.restore();
+  }
+  if (layers.includes('worldNames') && late.worldNames.length) {
+    g.save();
+    g.fillStyle = STYLE.ink; g.textAlign = 'center'; g.textBaseline = 'middle';
+    for (const { o: w, at: ll } of late.worldNames) {
+      const p = at(ll, 200);
+      if (!p) continue;
+      g.font = `${w.italic ? 'italic ' : ''}${w.size}px "${STYLE.font}"`;
+      g.letterSpacing = `${w.spacing}px`;
+      g.fillText(w.text, p[0] + w.spacing / 2, p[1]);
+    }
+    g.restore();
+  }
+}
+
+// One moving frame of the anchored ornaments over the ground, through `view`'s projection; the
+// cartouche and the scale bar stay on the window.
+function drawAnchored(g, a, bg, view, layers) {
+  const fr = framing(a, view), { proj, at, scaled } = fr, show = a.show;
   g.save();
   g.setTransform(1, 0, 0, 1, 0, 0);
   const inks = [STYLE.ink, STYLE.windRed, STYLE.windGreen];
@@ -2361,6 +2424,7 @@ function drawAnchored(g, a, bg, view) {
     g.strokeStyle = STYLE.ink; g.lineWidth = 2; g.stroke();
     g.beginPath(); g.arc(W / 2, H / 2, proj.rim + 5, 0, 2 * Math.PI); g.lineWidth = 0.8; g.stroke();
   }
+  drawLate(g, a, view, layers, fr);
   if (show.kinds.has('rose')) for (const { o, at: ll } of a.roses) {
     const size = o.size * scaled('rose'), p = at(ll, size);
     if (p) drawSprite(g, o.sprite, p[0], p[1], size, { anchor: [0.5, 0.5] });
@@ -2522,4 +2586,4 @@ export const viewProjection = (view) => makeProjection(clampView(view));
 export const TOWN_SIZES = ['area', 'population', 'rank'];
 export { RIVER_STYLES, LAKE_STYLES, TREE_STYLES, RELIEF_STYLES };
 export const MAX_ZOOM = ZOOM.max;
-export { SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, anchorScene, drawAnchored, towerGlyph, SCALE_NAMES, readManifests, listStyles, listSprites, defaultSprites, selectSprites, chooseSprites, drawScene, drawGround, covers, panView, zoomView, clampView, viewOfFrame, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };
+export { SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, anchorScene, drawAnchored, towerGlyph, SCALE_NAMES, readManifests, listStyles, listSprites, defaultSprites, selectSprites, chooseSprites, drawScene, drawGround, drawLate, LATE, IN_DRAG, covers, panView, zoomView, clampView, viewOfFrame, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };
