@@ -186,3 +186,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261016t040818z
 - oddlines PR: split rays at meridian always; undo: early return in cutOut when no extents ([#168](https://github.com/mark-brannan/portolani/pull/168))
+
+### 20261016t040823z
+- oddlines PR: jpeg screenshots under docs/oddlines; undo: delete folder ([#168](https://github.com/mark-brannan/portolani/pull/168))
