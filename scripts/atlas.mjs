@@ -152,7 +152,32 @@ function across(ax, ay, bx, by, r) {
 // cut is made on the Mercator page, where a rhumb line's segments are straight, so a run ends on the edge.
 const PAGE_LAT = 89.9; // a line may run to a pole, which has no Mercator y
 export function cutOut(line, extents) {
-  if (!extents?.length) return [line];
+  const pieces = splitAtSeam(line);
+  if (!extents?.length) return pieces;
+  return pieces.flatMap((piece) => cutPiece(piece, extents));
+}
+
+// A line [[lon, lat], ...] whose longitudes are wrapped to +-180, as rhumb() gives them, in pieces that
+// each stay on one side: a segment that jumps the antimeridian (179 to -177) is a 4 degree step the other way,
+// not a 356 degree sweep across the page, so it ends one piece on the meridian and starts the next there.
+export function splitAtSeam(line) {
+  const out = [];
+  let run = line.length ? [line[0]] : [];
+  for (let i = 1; i < line.length; i++) {
+    const a = line[i - 1], b = line[i];
+    if (Math.abs(b[0] - a[0]) <= 180) { run.push(b); continue; }
+    const east = a[0] > b[0], edge = east ? 180 : -180, bu = b[0] + (east ? 360 : -360);
+    const t = (edge - a[0]) / (bu - a[0]), ay = mercY(Math.max(-PAGE_LAT, Math.min(PAGE_LAT, a[1]))), by = mercY(Math.max(-PAGE_LAT, Math.min(PAGE_LAT, b[1])));
+    const lat = unMercY(ay + (by - ay) * t);
+    run.push([edge, lat]);
+    out.push(run);
+    run = [[-edge, lat], b];
+  }
+  if (run.length) out.push(run);
+  return out;
+}
+
+function cutPiece(line, extents) {
   const yOf = (lat) => mercY(Math.max(-PAGE_LAT, Math.min(PAGE_LAT, lat)));
   const rects = extents.map((e) => ({ x0: e.west, x1: e.east, y0: yOf(e.south), y1: yOf(e.north) }));
   const runs = [];
