@@ -636,7 +636,7 @@ function moved(next, flying = false) {
     drawAnchored(ctx, ground.anchored, ground.bg, view); // the placed ornaments, held to the earth
     drawHere();
     drawCards(true);
-    $('status').textContent = `z${view.zoom.toFixed(1)}: moving, frame ${(performance.now() - t).toFixed(0)} ms`;
+    $('status').textContent = `z${view.zoom.toFixed(1)}: moving, frame ${(performance.now() - t).toFixed(1)} ms`;
   });
 }
 function stopped(delay = 0) {
