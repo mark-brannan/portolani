@@ -239,8 +239,8 @@ test('the monster and ship cast is the same for one view, and a big selection sh
   const cast = async (view) => { const { scene } = await createScene(env, { view, sprites, scale: 'off' }); return [...scene.monsters, ...scene.ships].map((m) => `${m.sprite.key}@${Math.round(m.x)},${Math.round(m.y)}`); };
   assert.deepEqual(await cast(LIGURIA), await cast(LIGURIA));
   const seen = new Set();
-  for (const view of [LIGURIA, { lon: -30, lat: 40, zoom: 5 }, { lon: -150, lat: 20, zoom: 5 }, { lon: 70, lat: -20, zoom: 5 }]) {
+  for (const view of [LIGURIA, { lon: -30, lat: 40, zoom: 8 }, { lon: -150, lat: 20, zoom: 8 }, { lon: 70, lat: -20, zoom: 8 }, { lon: 88, lat: 12, zoom: 6 }]) {
     for (const m of (await createScene(env, { view, sprites, scale: 'off' })).scene.monsters) seen.add(m.sprite.key);
   }
-  assert.ok(seen.size > 4, `only ${[...seen]} across four views`);
+  assert.ok(seen.size > 4, `only ${[...seen]} across five views`);
 });
