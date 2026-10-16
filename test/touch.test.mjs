@@ -123,3 +123,28 @@ for (const width of [360, 412]) {
     }
   });
 }
+
+test('mouse: a click on the map does not stop the flyout opening on hover', { skip, timeout: 240000 }, async () => {
+  const server = createServer(async (req, res) => {
+    let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
+    if (p.endsWith('/')) p = path.join(p, 'index.html');
+    try { res.writeHead(200, { 'content-type': TYPES[path.extname(p)] ?? 'application/octet-stream' }).end(await readFile(p)); } catch { res.writeHead(404).end(); }
+  }).listen(0);
+  const browser = await chromium.launch();
+  try {
+    const page = await (await browser.newContext({ viewport: { width: 1100, height: 740 } })).newPage();
+    await page.goto(`http://localhost:${server.address().port}/#map=7/40/12`);
+    await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
+    const shown = () => page.evaluate(() => getComputedStyle(document.getElementById('flyout')).visibility === 'visible');
+    await page.mouse.click(400, 400);
+    await page.hover('#home');
+    await page.waitForTimeout(400);
+    assert.equal(await shown(), true, 'hovering the row opens the flyout after a click on the map');
+    await page.hover('#origins .group >> nth=0');
+    await page.waitForTimeout(500);
+    assert.equal(await shown(), true, 'resting on a group heading holds the flyout open');
+  } finally {
+    await browser.close();
+    server.close();
+  }
+});

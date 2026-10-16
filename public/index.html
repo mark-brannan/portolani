@@ -41,6 +41,7 @@
   /* top right: my position and home; the other origins fly out beneath under the pointer or a keyboard focus */
   #where { position: fixed; top: 12px; right: 12px; z-index: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; pointer-events: none; }
   #where :is(button, input) { pointer-events: auto; } /* the box (and the shut flyout's) is empty map: a touch there is the map's, to drag or pinch */
+  @media (hover: hover) { #flyout { pointer-events: auto; } } /* the open list holds the hover across its gaps and headings; shut, it is hidden and takes nothing */
   #where .row { display: flex; gap: 6px; }
   #where button {
     padding: 0; display: grid; place-items: center; cursor: pointer; border-radius: 50%;

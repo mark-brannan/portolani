@@ -559,7 +559,7 @@ const originViews = [];
 const where = $('where'), places = $('places');
 function setFlyout(open) {
   where.classList.toggle('open', open);
-  where.classList.toggle('shut', !open);
+  where.classList.toggle('shut', !open && where.matches(':hover'));
   places.setAttribute('aria-expanded', String(open));
   if (!open && where.contains(document.activeElement)) document.activeElement.blur();
 }
