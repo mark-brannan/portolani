@@ -55,3 +55,16 @@ test('a zoom-10 scene with the ornaments on is built in seconds, not tens of the
   // ~0.8 s measured with the index on a loaded 16-thread laptop, 4 s without it; the bound is for a slow, busy runner
   assert.ok(ms < 3500, `${Math.round(ms)} ms`);
 });
+
+test('a long ring is read at least 10x faster than the plain walk (a ratio, so a slow runner does not move it)', () => {
+  const rings = read(join(GEO, 'ne-land-50m.geojson')).features.flatMap((f) => (f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates).map((p) => p[0]));
+  const ring = rings.reduce((a, b) => (b.length > a.length ? b : a));
+  assert.ok(ring.length > 5000);
+  const ys = ring.map((p) => p[1]), y0 = Math.min(...ys), y1 = Math.max(...ys), xs = ring.map((p) => p[0]), x0 = Math.min(...xs), x1 = Math.max(...xs);
+  const qs = Array.from({ length: 3000 }, (_, i) => [x0 + ((i * 0.618034) % 1) * (x1 - x0), y0 + ((i * 0.381966 + 0.1) % 1) * (y1 - y0)]);
+  insideRing(ring, 0, 0); // build the index outside the clock
+  const time = (f) => { const t = performance.now(); for (const [x, y] of qs) f(ring, x, y); return performance.now() - t; };
+  const fast = time(insideRing), slow = time(naive);
+  console.log(`ring ${ring.length} points: indexed ${fast.toFixed(1)} ms, plain ${slow.toFixed(1)} ms, ${(slow / fast).toFixed(0)}x`);
+  assert.ok(slow / fast > 10, `${(slow / fast).toFixed(1)}x`);
+});
