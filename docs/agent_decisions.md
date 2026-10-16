@@ -168,3 +168,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261016t021925z
 - Wide-band mix: 60% roses up to 6 a sheet, beasts a quarter monsters, budget 10 unchanged Undo: set WIDE.roseShare 0.4, sheetRoses 4, monsterShare 0.333 (no PR, branch claude/162a-s2)
+
+### 20261016t021927z
+- Cap and mix apply below zoom 8 only; general band and finer keep sprite sizes Undo: change WIDE.zoom (no PR, branch claude/162a-s2)
