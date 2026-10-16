@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import { createScene, drawScene, SCALE_NAMES, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, RELIEF_STYLES, PROJECTION_NAMES, W, H } from '../scripts/scene.mjs';
 import { plantTrees } from '../scripts/trees.mjs';
+import { compare, CHANNEL } from '../scripts/golden-compare.mjs';
 import { coastNames, joinNames } from '../scripts/names.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -19,7 +20,6 @@ const GEO = dirname(fileURLToPath(import.meta.resolve('coastlines/data/ne-land-5
 const UPDATE = process.env.UPDATE_GOLDEN === '1';
 
 const SW = 400, SH = 250;     // goldens are the 1600 x 1000 canvas shrunk 4x, to keep them small
-const CHANNEL = 24;          // a pixel differs when any channel moves more than this
 const SHARE = 0.005;         // and the views differ when more than this share of pixels do
 
 const VIEWS = {
@@ -81,18 +81,12 @@ for (const [name, view] of Object.entries(VIEWS)) {
     const want = createCanvas(SW, SH);
     want.getContext('2d').drawImage(await loadImage(file), 0, 0);
     const a = pixels(canvas), b = pixels(want);
-    const diff = createCanvas(SW, SH), dg = diff.getContext('2d'), out = dg.createImageData(SW, SH);
-    let bad = 0;
-    for (let i = 0; i < a.length; i += 4) {
-      const off = Math.max(Math.abs(a[i] - b[i]), Math.abs(a[i + 1] - b[i + 1]), Math.abs(a[i + 2] - b[i + 2]));
-      const hit = off > CHANNEL;
-      if (hit) bad++;
-      out.data.set(hit ? [255, 0, 0, 255] : [a[i] >> 1, a[i + 1] >> 1, a[i + 2] >> 1, 255], i);
-    }
+    const diff = createCanvas(SW, SH), dg = diff.getContext('2d');
+    const { bad, data } = compare(a, b, SW, SH, (x, y) => dg.createImageData(x, y));
     const share = bad / (SW * SH);
     if (share > SHARE) {
       mkdirSync(OUT, { recursive: true });
-      dg.putImageData(out, 0, 0);
+      dg.putImageData(data, 0, 0);
       writeFileSync(join(OUT, `${name}.png`), diff.toBuffer('image/png'));
       writeFileSync(join(OUT, `${name}-got.png`), canvas.toBuffer('image/png'));
     }
