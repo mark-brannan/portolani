@@ -39,7 +39,8 @@
   #open svg { width: 30px; height: 30px; }
 
   /* top right: my position and home; the other origins fly out beneath under the pointer or a keyboard focus */
-  #where { position: fixed; top: 12px; right: 12px; z-index: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  #where { position: fixed; top: 12px; right: 12px; z-index: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; pointer-events: none; }
+  #where :is(button, input) { pointer-events: auto; } /* the box (and the shut flyout's) is empty map: a touch there is the map's, to drag or pinch */
   #where .row { display: flex; gap: 6px; }
   #where button {
     padding: 0; display: grid; place-items: center; cursor: pointer; border-radius: 50%;
@@ -55,7 +56,10 @@
     display: flex; flex-direction: column; align-items: flex-end; gap: 6px; max-height: calc(100vh - 80px); overflow-y: auto;
     opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0s linear 0.2s;
   }
-  #where:hover #flyout, #where:has(:focus-visible) #flyout { opacity: 1; visibility: visible; transition: opacity 0.2s; }
+  /* open by a tap on the places button or a focus in it; under a pointer that hovers, by hovering too (a touch leaves :hover stuck on the last thing tapped) */
+  #where.open #flyout, #where:has(:focus-visible) #flyout { opacity: 1; visibility: visible; transition: opacity 0.2s; }
+  @media (hover: hover) { #where:hover #flyout { opacity: 1; visibility: visible; transition: opacity 0.2s; } }
+  #where.shut #flyout { opacity: 0; visibility: hidden; transition: none; } /* after a choice, until the pointer leaves */
   #origins { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
   #origins .group { font: italic 12px var(--serif); color: var(--fg); opacity: 0.7; margin-top: 4px; text-shadow: 0 0 4px var(--panel); }
   #origins button, #coords button { padding: 3px 10px; font: 13px var(--serif); border-radius: 12px; }
@@ -163,6 +167,12 @@
       <svg viewBox="-16 -16 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
         <circle r="8" stroke-dasharray="2.5 2.5"/>
         <path d="M-4-4 4 4M4-4-4 4" stroke="#8c2f1e"/>
+      </svg>
+    </button>
+    <button id="places" type="button" aria-label="Places" aria-controls="flyout" aria-expanded="false" title="Places">
+      <svg viewBox="-16 -16 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M0 13C-7 6-9 2-9-2a9 9 0 0 1 18 0c0 4-2 8-9 15Z"/>
+        <circle cy="-2" r="3"/>
       </svg>
     </button>
     <button id="home" type="button" aria-label="Back to the Mediterranean" title="Home">
