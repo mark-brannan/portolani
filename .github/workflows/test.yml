@@ -40,6 +40,10 @@ jobs:
       - uses: actions/cache@v6
         with: { path: downloads, key: "downloads-${{ steps.pins.outputs.hash }}" }
       - run: npm run build:preview
+      # the page under touch emulation at phone widths (test/touch.test.mjs); needs the built _site/
+      - run: npx playwright-core install chromium-headless-shell
+      - run: node --test test/touch.test.mjs
+        env: { TOUCH_REQUIRED: '1' }
 
   # Refuses to call an empty PR green: a branch whose tree equals its base at
   # the merge base (a stray commit reverted it) merges cleanly and lands

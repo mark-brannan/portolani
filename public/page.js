@@ -405,7 +405,7 @@ function setDrawer(open) {
 opener.addEventListener('click', () => setDrawer(!isOpen()));
 $('close').addEventListener('click', () => setDrawer(false));
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && isOpen()) setDrawer(false); });
-canvas.addEventListener('pointerdown', () => setDrawer(false));
+canvas.addEventListener('pointerdown', () => { setDrawer(false); setFlyout(false); });
 
 // Reset: every control back to its default, the place kept. The hash holds the whole style, so a
 // hash with only the view is the default style; the hashchange handler below redraws from it.
@@ -553,11 +553,25 @@ const ORIGINS = [
   ]],
 ];
 const originViews = [];
+
+// The places flyout: opened by the places button, by hovering where the pointer hovers, or by focus; shut by a
+// choice, a tap on the map, or Esc. A shut flyout stays shut under a pointer that has not left it.
+const where = $('where'), places = $('places');
+function setFlyout(open) {
+  where.classList.toggle('open', open);
+  where.classList.toggle('shut', !open && where.matches(':hover'));
+  places.setAttribute('aria-expanded', String(open));
+  if (!open && where.contains(document.activeElement)) document.activeElement.blur();
+}
+places.addEventListener('click', () => setFlyout(!where.classList.contains('open')));
+where.addEventListener('pointerleave', () => where.classList.remove('shut'));
+addEventListener('keydown', (e) => { if (e.key === 'Escape') setFlyout(false); });
+
 // The cartouche names the place flown to (its title, else the button's name), not whatever scores highest in the frame.
 $('origins').innerHTML = ORIGINS.map(([group, items]) =>
   (group ? `<li class="group">${group}</li>` : '') + items.map(([name, v, title]) => `<li><button type="button" data-origin="${originViews.push({ ...v, title: title ?? name }) - 1}">${name}</button></li>`).join('')).join('');
-$('origins').addEventListener('click', (e) => { const b = e.target.closest('[data-origin]'); if (b) goTo(originViews[b.dataset.origin]); });
-$('home').addEventListener('click', () => goTo({ ...DEFAULT_VIEW, title: 'The Mediterranean' }));
+$('origins').addEventListener('click', (e) => { const b = e.target.closest('[data-origin]'); if (b) { setFlyout(false); goTo(originViews[b.dataset.origin]); } });
+$('home').addEventListener('click', () => { setFlyout(false); goTo({ ...DEFAULT_VIEW, title: 'The Mediterranean' }); });
 
 // A typed position: "36.28, -76" or "36.28N 76W" (latitude first), flown to and marked as the position.
 function parseLatLon(text) {
@@ -571,6 +585,7 @@ $('coords').addEventListener('submit', (e) => {
   const p = parseLatLon($('coordsText').value);
   if (!p) { $('status').textContent = 'Position: type latitude, longitude, e.g. 36.28, -76'; return; }
   setHere(p);
+  setFlyout(false);
   goTo({ ...p, zoom: Math.max(view.zoom, LOCATE_ZOOM) });
 });
 $('clearHere').addEventListener('click', () => setHere(null));
@@ -609,6 +624,7 @@ locate.addEventListener('click', () => {
   const done = () => { locate.disabled = false; locate.classList.remove('busy'); };
   navigator.geolocation.getCurrentPosition((p) => {
     done();
+    setFlyout(false);
     setHere({ lon: p.coords.longitude, lat: p.coords.latitude });
     goTo({ ...here, zoom: Math.max(view.zoom, LOCATE_ZOOM) });
   }, (e) => {
