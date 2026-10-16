@@ -74,6 +74,7 @@ const SEA_FIGURE = { sat: 24, close: 7, open: 5, dilate: 4, feather: 2, minArea:
 // The Carta Marina's own paper (the mean of the bright land patch round Svecia), divided out of the sea figures: a crop
 // of open sea holds no paper, so its surroundings would be taken for paper and the sea wash lost with it.
 const CARTA_PAPER = '#ded2af';
+const PRUNES_PAPER = '#b4a38d'; // the vellum of Prunes 1559 inside the west rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness (the brightest are specks)
 const PARCHMENT = '#e9d8b4'; // the renderer's default paper, for the kept `.cut.png`
 const argv = process.argv.slice(2), keepAt = argv.indexOf('--keep'), onlyAt = argv.indexOf('--only');
 const keep = keepAt >= 0 ? join(ROOT, argv[keepAt + 1]) : null;
@@ -128,6 +129,10 @@ const PACKS = [
         // the scan's own wind names (norte, oeste, leste, sull and the petal inscriptions)
         clean: [[355, 122, 377, 180], [175, 187, 235, 237], [495, 200, 552, 257], [115, 365, 165, 387], [555, 374, 609, 394], [162, 512, 197, 587], [340, 577, 364, 630], [489, 500, 535, 544], [112, 182, 147, 217]] },
       { id: 'rose-catalan', kind: 'rose', style: 'aguiar', scan: 'catalan', crop: [120, 185, 440, 505], sizePx: 110, dark: 'min', level: [10, 70], circle: [160, 160, 152] },
+      // Prunes 1559 (Library of Congress), the best 32-point rose of any chart checked for #52: whole crop with its
+      // sea of parchment and the rhumb lines running off, a patch not a keyed ink, so the blue and red washes and the
+      // gilt keep their tone. North is to the right on the scan, so the cut is turned a quarter anticlockwise.
+      { id: 'rose-prunes', kind: 'rose', style: 'aguiar', scan: 'prunes', key: 'patch', paper: PRUNES_PAPER, crop: [5068, 2595, 7168, 4695], turn: -90, sizePx: 300, circle: [1050, 1050, 1020] },
       // a smaller rose from the whole Aguiar chart, its wind names closed away
       { id: 'rose-aguiar-b', kind: 'rose', style: 'aguiar', scan: 'aguiar-chart', crop: [4178, 2464, 4482, 2768], sizePx: 110, dark: 'min', level: [12, 78], circle: [152, 152, 148],
         clean: [[4225, 2605, 4258, 2633], [4411, 2608, 4443, 2630], [4325, 2505, 4341, 2538], [4323, 2693, 4341, 2728], [4236, 2513, 4290, 2566], [4385, 2528, 4425, 2572], [4238, 2664, 4282, 2708], [4386, 2668, 4421, 2700]] },
@@ -239,12 +244,19 @@ function figureAnchor(sprite, fig, ox, oy, tw, th) {
 function buildSprite(sprite, colour, key, outDir, tmp) {
   const scan = SOURCES[sprite.scan];
   const [x0, y0, x1, y1] = sprite.crop;
-  const w = x1 - x0, h = y1 - y0;
+  // `turn`: degrees clockwise (a multiple of 90) the cut is rotated by before anything else, for a scan
+  // drawn on its side (Prunes 1559 has north to the right). `crop` stays in the scan's own pixels, so it
+  // is what the manifest records; everything after the cut (circle, level, size) is in the turned crop.
+  // The turn is on the cut, not the scan: a 186 MP scan will not turn whole inside ImageMagick's limits.
+  const turn = sprite.turn ?? 0, sideways = turn % 180 !== 0;
+  if (turn % 90 !== 0) throw new Error(`${sprite.id}: turn must be a multiple of 90`);
+  if (turn && (sprite.mask || sprite.erase || sprite.clean || sprite.rotate)) throw new Error(`${sprite.id}: a turned sprite takes only a circle`);
+  const w = sideways ? y1 - y0 : x1 - x0, h = sideways ? x1 - x0 : y1 - y0;
   const t = (n) => join(tmp, `${sprite.id}.${n}.png`);
 
   // `bolden` widens fine engraved lines (px, scan scale) that a large reduction would grey out
   const bolden = sprite.bolden ? ['-morphology', 'Erode', `Disk:${sprite.bolden}`] : [];
-  magick(`${scan.path}[0]`, '-crop', `${w}x${h}+${x0}+${y0}`, '+repage', '-alpha', 'off', bolden, t('crop'));
+  magick(`${scan.path}[0]`, '-crop', `${x1 - x0}x${y1 - y0}+${x0}+${y0}`, '+repage', '-alpha', 'off', bolden, turn ? ['-rotate', String(turn)] : [], t('crop'));
   // deskew about the crop's centre; the corners fill from the edge pixels and fade out at the edge below
   if (sprite.rotate) magick(t('crop'), '-virtual-pixel', 'Edge', '-distort', 'SRT', String(sprite.rotate), t('crop'));
   // kept images carry no date chunks, so a rebuild with the same inputs is byte-identical
@@ -321,7 +333,7 @@ function buildSprite(sprite, colour, key, outDir, tmp) {
   if (keep && sprite.id.startsWith(keepPrefix)) magick(alpha, '-strip', '-define', 'png:exclude-chunk=all', join(keep, `${sprite.id}.key.png`));
 
   // Trim box on the alpha, recorded so the manifest crop is the final sprite's footprint in the scan.
-  const trim = magick(alpha, '-fuzz', '3%', '-format', '%@', 'info:');
+  const trim = turn ? `${w}x${h}+0+0` : magick(alpha, '-fuzz', '3%', '-format', '%@', 'info:'); // a turned crop is kept whole
   const m = /^(\d+)x(\d+)\+(\d+)\+(\d+)$/.exec(trim);
   const [tw, th, tx, ty] = m.slice(1).map(Number);
   const file = `${sprite.id}.png`;
@@ -355,8 +367,9 @@ function buildSprite(sprite, colour, key, outDir, tmp) {
     id: sprite.id, kind: sprite.kind, style: sprite.style, file,
     anchor: fig ? figureAnchor(sprite, fig, x0 + tx, y0 + ty, tw, th) : [0.5, sprite.kind === 'monster' || sprite.kind === 'ship' ? 0.75 : 0.5],
     sizePx, bands: [0, 1],
-    source: { url: scan.url, page: scan.page, crop: [x0 + tx, y0 + ty, x0 + tx + tw, y0 + ty + th] },
+    source: { url: scan.url, page: scan.page, crop: turn ? [x0, y0, x1, y1] : [x0 + tx, y0 + ty, x0 + tx + tw, y0 + ty + th] },
   };
+  if (turn) entry.source.turn = turn;
   if (sprite.minClearancePx) entry.minClearancePx = sprite.minClearancePx;
   if (sprite.weight) entry.weight = sprite.weight;
   if (sprite.heading) entry.heading = sprite.heading;
