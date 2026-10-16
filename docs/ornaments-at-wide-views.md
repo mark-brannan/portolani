@@ -1,6 +1,6 @@
 # Ornaments at wide views
 
-Issue #162, part 1. The world and overview bands (a sheet paced below zoom 8) take their ornaments from three world charts drawn in the portolan manner, and a rose is held to the share of the page that a chart's own rose takes.
+Issue #162, part 1. The world and overview bands (a sheet paced below zoom 8) take their ornaments from three world charts drawn in the portolan manner, and at every view a rose is held to the share of the page that a chart's own rose takes.
 
 ## What the charts carry
 
@@ -24,8 +24,8 @@ A chart is one world wide; the app's world view at zoom 2 shows 0.78 of that. Wh
 
 ## What changed
 
-- A rose at a sheet paced below zoom 8 is at most 5% of the page wide, and a ring rose 2.4%. Before, the big Aguiar rose was 300 px of a 1600 px page (19%), which is the rose over Sardinia at the default view with history off.
+- A rose is at most 5% of the page wide, and a ring rose 2.4%, at every view (the issue: "cap the rose's size at narrower views by the same measure"); before, the region and close bands still drew 300 px roses. Before, the big Aguiar rose was 300 px of a 1600 px page (19%), which is the rose over Sardinia at the default view with history off.
 - Those sheets hold up to 6 roses (they held 4) and 60% of the window budget goes to roses; of the rest a quarter is monsters and the rest ships. The charts carry no monsters and more roses than ships, two to one.
-- The window budget, 10 at density 1, is unchanged (#158); the constants are `WIDE` in `scripts/scene.mjs`.
+- The window budget, 10 at density 1, is unchanged (#158); the constants are `WIDE` and `ROSE_CAP` in `scripts/scene.mjs`.
 
 Before and after, `docs/wide-ornaments/`: `{before,after}-world-seeded.jpg` is `#map=2.15/28.736/-60.871`, `{before,after}-default-seeded.jpg` the default view, both with history off; `{before,after}-world-historic.jpg` is the world view with history on. Drawn with the Node renderer (`scripts/scene.mjs`, 50m land), as the golden images are.

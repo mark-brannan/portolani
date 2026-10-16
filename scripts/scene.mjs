@@ -175,9 +175,10 @@ const TUNE = { budget: BUDGET, monsterMax: 4, shipMax: 2, townGap: 48, hillShare
 // A sheet's allotment: its territory in windows times the budget, whole and the same from any view.
 const allotment = (sh) => Math.round(TUNE.budget * territory(sh, sh.from));
 // The world and overview bands (a sheet paced below zoom 8) follow the world charts of the portolan tradition,
-// measured in docs/ornaments-at-wide-views.md: many small roses, few beasts and those mostly ships, no rose
-// wider than `bigRose` of the page (a chart's own is 5% of its width), its ring ones `smallRose`.
-export const WIDE = { zoom: 8, roseShare: 0.6, sheetRoses: 6, monsterShare: 0.25, bigRose: 0.05, smallRose: 0.024 };
+// measured in docs/ornaments-at-wide-views.md: many small roses, few beasts and those mostly ships.
+export const WIDE = { zoom: 8, roseShare: 0.6, sheetRoses: 6, monsterShare: 0.25 };
+// At every view, no rose wider than `big` of the page (a chart's own is 5% of its width), its ring ones `small`.
+export const ROSE_CAP = { big: 0.05, small: 0.024 };
 const wide = (sh) => sh.from < WIDE.zoom;
 const sheetRoseMax = (sh) => (wide(sh) ? WIDE.sheetRoses : SHEET_ROSES);
 const roseQuota = (sh) => Math.min(sheetRoseMax(sh), Math.round((wide(sh) ? WIDE.roseShare : ROSE_SHARE) * allotment(sh)));
@@ -1211,8 +1212,8 @@ function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
       }
       return true;
     };
-    // at wide views a rose is held to a chart's share of the page, never the sprite's own size
-    const capBig = (px) => (wide(sh) ? Math.min(px, WIDE.bigRose * W) : px), capSmall = (px) => (wide(sh) ? Math.min(px, WIDE.smallRose * W) : px);
+    // a rose is held to a chart's share of the page, never the sprite's own size
+    const capBig = (px) => Math.min(px, ROSE_CAP.big * W), capSmall = (px) => Math.min(px, ROSE_CAP.small * W);
     const picked = world.seed == null ? roses.find((s) => s.sizePx === bigSizePx) : castOrder(roses, seed, () => 1)[0];
     const big = { ...picked, sizePx: capBig(bigSizePx) };
     const rest = roses.filter((s) => s !== picked), small = rest.filter((s) => s.sizePx < bigSizePx);
