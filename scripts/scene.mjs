@@ -965,6 +965,25 @@ function placeWorldNames(data, ctx, boxes, { continents, regions, continentsEnd 
   return out;
 }
 
+// A country's stretch of coast cut into chunks at fixed points along it (every N points from the
+// stretch's start, N a power of two taken from the window's width in degrees), so the chunk a name is
+// lettered on belongs to the world, not to the window: a drag keeps the name where it stood. The
+// stretches are evenly spaced points (scripts/names.mjs); a chunk shares its end point with the next.
+function coastChunks(n, proj, boxOf) {
+  const pts = n.at, widthDeg = (W * 180) / (Math.PI * proj.k);
+  const step = Math.max(8, 2 ** Math.round(Math.log2(widthDeg / 0.5)));
+  // only a chunk wholly in the window is lettered: the name sits on the middle of what shows of a
+  // chunk, so one cut by the edge would slide with it
+  const inside = (at) => at.every(([lon, lat]) => { if (!shows(proj, lon, lat)) return false; const [x, y] = proj.project(lon, lat); return x >= 0 && x <= W && y >= 0 && y <= H; });
+  if (pts.length <= step * 1.5) return inside(pts) ? [n] : [];
+  const out = [];
+  for (let i = 0; i < pts.length - 2; i += step) {
+    const at = pts.slice(i, Math.min(pts.length, i + step + 1));
+    if (at.length >= 3 && inside(at)) out.push({ ...n, at, box: boxOf(at) });
+  }
+  return out;
+}
+
 // The name a view is about, for an automatic cartouche title. Of the seas, countries, towns and
 // hand-set continents and regions the scene letters (a town only where its name is lettered), the
 // highest score wins. Each kind of name is the subject at a zoom (a sea or a country from Natural
@@ -1532,7 +1551,7 @@ function buildScene(data, sprites, ctx, world = {}) {
   const lettering = [
     ...data.names.filter((n) => n.kind === 'sea').map(named),
     ...towns.filter(metro).map(townName),
-    ...data.names.filter((n) => n.kind !== 'sea').map(named),
+    ...data.names.filter((n) => n.kind !== 'sea').flatMap((n) => (n.kind === 'coast' ? coastChunks(n, data.proj, bbox) : [n])).map(named),
     ...towns.filter((t) => !metro(t)).map(townName),
   ];
   const opts = letterOptions(data);
