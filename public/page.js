@@ -398,13 +398,13 @@ async function render() {
 // The cards: the cartouche at the top of the window and the scale bar at the foot of the map, each on a
 // canvas of its own, drawn at the sheet's size and shown at 1.1 times the sheet's scale on the page.
 const cardCartouche = $('cardCartouche'), cardScale = $('cardScale');
-function drawCards() {
+function drawCards(scaleOnly = false) { // scaleOnly: a moving frame, where only the scale bar depends on the view
   const c = ground?.cards, on = phone.matches && c;
   cardCartouche.hidden = !(on && c.cartouche);
   cardScale.hidden = !(on && c.scale !== 'off');
   if (!on) return;
   const k = (innerWidth / 1600) * 1.1;
-  if (c.cartouche) {
+  if (c.cartouche && !scaleOnly) {
     if (cardCartouche.width !== Math.round(c.cartouche.w) || cardCartouche.height !== Math.round(c.cartouche.h)) { cardCartouche.width = Math.round(c.cartouche.w); cardCartouche.height = Math.round(c.cartouche.h); }
     cardCartouche.style.width = `${c.cartouche.w * k}px`;
     drawCartoucheCard(cardCartouche.getContext('2d'), c.cartouche, c.bg);
@@ -414,6 +414,7 @@ function drawCards() {
     drawScaleCard(cardScale.getContext('2d'), viewProjection(view), c.bg, c.scale, c.scaleSprite);
   }
 }
+addEventListener('resize', () => drawCards()); // the cards' width follows the window, in rotation too
 phone.addEventListener('change', () => { drawCards(); if (ground) render(); }); // the sheet is placed again with or without them
 
 // ---------------------------------------------------------------- the drawer
@@ -485,7 +486,7 @@ function moved(next, flying = false) {
     drawGround(ctx, covers(ground.world, view) ? ground.world : ground.coarse, view, ground.bg);
     drawAnchored(ctx, ground.anchored, ground.bg, view); // the placed ornaments, held to the earth
     drawHere();
-    drawCards();
+    drawCards(true);
     $('status').textContent = `z${view.zoom.toFixed(1)}: moving, frame ${(performance.now() - t).toFixed(0)} ms`;
   });
 }
