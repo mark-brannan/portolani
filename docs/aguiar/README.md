@@ -20,6 +20,5 @@ crop, just outside the heavy outer ring), feathered 4 px (`circleFeather`).
 Visual pass: the star, the three rings, the vellum between the rhumbs, the washes and the lettering all survive.
 Absent from the sprite, and why:
 
-- the rhumb lines running out past the ring, and the coast lettering at the top left and top right: outside the ring, so
-  surround. A sliver of the top-left lettering's feather remains inside the circle where the text meets the ring.
+- rhumb lines and coast lettering outside the ring: surround.
 - the scan's paper tone outside the ring: surround.
