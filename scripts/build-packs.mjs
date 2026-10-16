@@ -76,6 +76,7 @@ const SEA_FIGURE = { sat: 24, close: 7, open: 5, dilate: 4, feather: 2, minArea:
 const CARTA_PAPER = '#ded2af';
 const CATALAN_PAPER = '#e9dfcf'; // the vellum inside the Catalan Atlas rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness
 const GENOESE_PAPER = '#a48c75'; // the vellum inside the Genoese chart's scale bar: the mean of the 80th to 90th percentile of its pixels by brightness (the brightest are specks)
+const DEWIT_PAPER = '#e3dfc4'; // the paper inside the de Wit cartouche's tablet: the mean of the 80th to 90th percentile of its pixels by brightness (the brightest are specks)
 const PRUNES_PAPER = '#b4a38d'; // the vellum of Prunes 1559 inside the west rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness (the brightest are specks)
 const PARCHMENT = '#e9d8b4'; // the renderer's default paper, for the kept `.cut.png`
 const argv = process.argv.slice(2), keepAt = argv.indexOf('--keep'), onlyAt = argv.indexOf('--only');
@@ -99,7 +100,7 @@ const MAX_SCALE = 3; // a sprite is stored at most this many px wide per CSS px 
 const PACKS = [
   {
     name: 'scanned',
-    key: 'ink', // cut before the patch key existed; re-keying it as patches is #111, a sprite at a time (`key: 'patch'` on the sprite; the Carta Marina monsters and ships, the Catalan Atlas rose and the Genoese scale are done)
+    key: 'ink', // cut before the patch key existed; re-keying it as patches is #111, a sprite at a time (`key: 'patch'` on the sprite; the Carta Marina monsters and ships, the Catalan Atlas rose, the Genoese scale and the de Wit cartouche are done)
     title: 'Sprites cropped from scans: Olaus Magnus, Carta Marina 1539; Jorge de Aguiar 1492; Catalan Atlas 1375; Genoese chart c. 1320-1350; Frederik de Wit; Ambroise Paré, Des monstres; Master W with the Key, two ship engravings c. 1475-1490',
     licence: 'Public domain (PD-Art); scans via Wikimedia Commons (James Ford Bell Library; Beinecke Library, Yale; BnF Gallica btv1b55002481n; Library of Congress 2003630429; Royal Museums Greenwich). The pare-* sprites: Wellcome Collection, CC BY 4.0. Ships ship-w-*: Art Institute of Chicago 27881 (CC0) and Rijksmuseum RP-P-2014-30 (Public Domain Mark)',
     ink: '#3b2a1a',
@@ -141,9 +142,11 @@ const PACKS = [
       // a smaller rose from the whole Aguiar chart, its wind names closed away
       { id: 'rose-aguiar-b', kind: 'rose', style: 'aguiar', scan: 'aguiar-chart', crop: [4178, 2464, 4482, 2768], sizePx: 110, dark: 'min', level: [12, 78], circle: [152, 152, 148],
         clean: [[4225, 2605, 4258, 2633], [4411, 2608, 4443, 2630], [4325, 2505, 4341, 2538], [4323, 2693, 4341, 2728], [4236, 2513, 4290, 2566], [4385, 2528, 4425, 2572], [4238, 2664, 4282, 2708], [4386, 2668, 4421, 2700]] },
-      { id: 'cartouche-dewit', kind: 'cartouche', style: 'dewit', scan: 'dewit', crop: [196, 250, 1229, 1039], sizePx: 340, dark: 'min', level: [12, 66],
-        // panel lettering and scale bars cleared so the renderer can letter the panel; SYRIA and coast cleared
-        erase: [[232, 772, 1180, 1039], [196, 250, 300, 690]], panel: [232, 772, 1180, 1030] },
+      // the de Wit cartouche as a patch (#111): the three putti, the scrollwork and the chart's rhumb lines and coast lettering round them
+      // all stay, the edge feathered; `figure` is the old box, so the cartouche keeps its sizePx and anchor. Only the tablet's paper is
+      // cleared (its scale bars and Dutch lettering), because the renderer letters the map's title there.
+      { id: 'cartouche-dewit', kind: 'cartouche', style: 'dewit', scan: 'dewit', key: 'patch', paper: DEWIT_PAPER, crop: [150, 200, 1229, 1039], figure: [196, 250, 1229, 1039], sizePx: 340,
+        erase: [[236, 764, 1142, 1010]], panel: [236, 764, 1142, 1010] },
       // land vignettes and a scale bar: the palms are not placed yet, the town is a town style, the scale bar the vivid one's source
       // the palms are less saturated than the paper, so darkness alone keys them and the faint rhumb lines drop out
       { id: 'palms-aguiar', kind: 'tree', style: 'aguiar', scan: 'aguiar-chart', crop: [2530, 2962, 2732, 3248], sizePx: 70, level: [30, 62],
