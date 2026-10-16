@@ -128,6 +128,21 @@
       }
     },
     {
+      "id": "rose-prunes",
+      "kind": "rose",
+      "style": "aguiar",
+      "file": "rose-prunes.png",
+      "anchor": [0.5, 0.5],
+      "sizePx": 300,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/0/0f/%28Chart_of_the_Mediterranean%2C_Black_Sea%2C_and_the_coasts_of_western_Europe_and_northwest_Africa%29_LOC_2014588812.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:(Chart_of_the_Mediterranean,_Black_Sea,_and_the_coasts_of_western_Europe_and_northwest_Africa)_LOC_2014588812.jpg",
+        "crop": [5068, 2595, 7168, 4695],
+        "turn": -90
+      }
+    },
+    {
       "id": "rose-aguiar-b",
       "kind": "rose",
       "style": "aguiar",
