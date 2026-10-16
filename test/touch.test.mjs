@@ -1,7 +1,9 @@
 // The page under touch, in headless Chromium with touch emulation at the two common phone widths
 // (360 and 412 px): a two-finger pinch zooms the map about the pinch centre and not the page, one
 // finger drags, the places flyout opens on a tap and shuts on a choice or a tap on the map, and the
-// locate button flies to the fix and leaves the flyout shut.
+// locate button flies to the fix and leaves the flyout shut. Under 520 px the settings drawer is a bottom
+// sheet at half the window's height with the map above it, and the cartouche and the scale bar sit on
+// cards clear of the map.
 //
 // Needs the built preview (`npm run build:preview` -> _site/), playwright-core and a Chromium
 // (`npx playwright-core install chromium-headless-shell`); without them it skips, since `npm test`
@@ -116,6 +118,70 @@ for (const width of [360, 412]) {
         await page.waitForTimeout(400);
         await page.screenshot({ path: path.join(process.env.TOUCH_SHOTS, `touch-${width}.png`) });
       }
+      assert.deepEqual(errors, []);
+    } finally {
+      await browser.close();
+      server.close();
+    }
+  });
+}
+
+for (const width of [360, 412]) {
+  test(`phone layout at ${width} px: the drawer is a half-height bottom sheet, the cartouche and scale bar are clear of the map`, { skip, timeout: 240000 }, async () => {
+    const height = 740;
+    const server = createServer(async (req, res) => {
+      let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
+      if (p.endsWith('/')) p = path.join(p, 'index.html');
+      try { res.writeHead(200, { 'content-type': TYPES[path.extname(p)] ?? 'application/octet-stream' }).end(await readFile(p)); } catch { res.writeHead(404).end(); }
+    }).listen(0);
+    const browser = await chromium.launch();
+    try {
+      const ctx = await browser.newContext({ viewport: { width, height }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
+      const page = await ctx.newPage();
+      const errors = [];
+      page.on('pageerror', (e) => errors.push(e.message));
+      await page.goto(`http://localhost:${server.address().port}/#map=8/43.5/7.5`);
+      await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
+      const box = async (id) => (await page.locator(id).boundingBox());
+      const apart = (a, b) => a.y + a.height <= b.y + 1 || b.y + b.height <= a.y + 1 || a.x + a.width <= b.x + 1 || b.x + b.width <= a.x + 1;
+      const visible = (id) => page.evaluate((i) => { const e = document.getElementById(i); return !e.hidden && getComputedStyle(e).visibility === 'visible'; }, id);
+      const shot = async (name) => { if (process.env.TOUCH_SHOTS) { await page.waitForTimeout(400); await page.screenshot({ path: path.join(process.env.TOUCH_SHOTS, `phone-${width}-${name}.png`) }); } };
+
+      // sheet shut: the map has the window; both cards are shown and clear of it
+      assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('drawer')).visibility), 'hidden');
+      assert.ok(await visible('cardCartouche') && await visible('cardScale'), 'the cartouche and scale cards are not shown');
+      let map = await box('#map');
+      for (const id of ['#cardCartouche', '#cardScale']) assert.ok(apart(await box(id), map), `${id} overlaps the map when the sheet is shut`);
+      await shot('closed');
+
+      // sheet open: half the window, full width, at the foot; the map wholly above it, the cards clear of both
+      await page.tap('#open');
+      await page.waitForTimeout(400);
+      const sheet = await box('#drawer');
+      assert.ok(Math.abs(sheet.height - height / 2) <= 2 && Math.abs(sheet.width - width) <= 1 && Math.abs(sheet.y + sheet.height - height) <= 1, JSON.stringify(sheet));
+      map = await box('#map');
+      assert.ok(map.y + map.height <= sheet.y + 1, `the sheet covers the map: map ${JSON.stringify(map)}, sheet ${JSON.stringify(sheet)}`);
+      for (const id of ['#cardCartouche', '#cardScale']) { const c = await box(id); assert.ok(apart(c, map), `${id} overlaps the map when the sheet is open`); assert.ok(c.y + c.height <= sheet.y + 1, `${id} is under the sheet`); }
+      await shot('open');
+
+      // the map is still the map: a drag above the sheet moves it and leaves the sheet up
+      const h0 = await page.evaluate(() => location.hash);
+      const cdp = await ctx.newCDPSession(page);
+      const touch = (type, pts) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: pts.map(([x, y], id) => ({ x, y, id })) });
+      const cx = map.x + map.width / 2, cy = map.y + map.height / 2;
+      await touch('touchStart', [[cx, cy]]);
+      for (let i = 1; i <= 8; i++) await touch('touchMove', [[cx + i * 10, cy]]);
+      await touch('touchEnd', []);
+      await page.waitForFunction((h) => location.hash !== h, h0, { timeout: 60000 });
+      assert.equal(await page.evaluate(() => document.getElementById('drawer').classList.contains('open')), true, 'a drag on the map shut the sheet');
+
+      // its controls are the same: a chip toggles, and the sheet scrolls to the foot
+      assert.ok(await page.locator('#drawer .chip').count() > 10);
+      await page.tap('#close');
+      await page.waitForTimeout(400);
+      assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('drawer')).visibility), 'hidden');
+      map = await box('#map');
+      assert.ok(Math.abs(map.y + map.height / 2 - height / 2) <= 2, 'the map did not come back to the middle of the window');
       assert.deepEqual(errors, []);
     } finally {
       await browser.close();

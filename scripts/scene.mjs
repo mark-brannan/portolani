@@ -1411,8 +1411,10 @@ function buildScene(data, sprites, ctx, world = {}) {
     const rosy = [...(sheetRoses?.roseDraws ?? []), ...(sheetBeasts?.monsters ?? []), ...(sheetBeasts?.ships ?? [])].filter((r) => Math.abs(r.x - (x + cw / 2)) < cw / 2 + r.size * 0.42 && Math.abs(r.y - (y + ch / 2)) < ch / 2 + r.size * 0.42).length;
     return { x, y, w: cw, h: ch, coast, land, rosy };
   });
-  const cartouche = corners.sort((a, b) => a.rosy - b.rosy || a.coast - b.coast || a.land - b.land)[0];
-  occupied.push({ x: cartouche.x + cw / 2, y: cartouche.y + ch / 2, r: Math.hypot(cw, ch) / 2 });
+  // `world.pinned` false (the phone layout): the cartouche is drawn on a card of its own beside the map
+  // (drawCartoucheCard), so it holds no corner of the sheet and nothing keeps clear of it.
+  const cartouche = world.pinned === false ? { x: -4 * W, y: -4 * H, w: cw, h: ch, coast: 0, land: 0, rosy: 0 } : corners.sort((a, b) => a.rosy - b.rosy || a.coast - b.coast || a.land - b.land)[0];
+  if (world.pinned !== false) occupied.push({ x: cartouche.x + cw / 2, y: cartouche.y + ch / 2, r: Math.hypot(cw, ch) / 2 });
 
   let centre, nodes, roseDraws;
   // Lattice centre: the clearest open-sea cell in the middle of the frame; the big rose sits on it.
@@ -2286,6 +2288,19 @@ function drawScene(g, scene, data, bg, view) {
   drawScaleBar(g, data, bg, view, W, H, show.scale, scene.scaleSprite);
 }
 
+// The phone layout's cards: the cartouche and the scale bar on canvases of their own, set by the page
+// beside the map rather than on the sea. The cartouche card is the cartouche's own size; the scale
+// card is SCALE_CARD_W x SCALE_CARD_H, the bar at the bottom left of it as on the sheet.
+const SCALE_CARD_W = 700, SCALE_CARD_H = 170;
+function drawCartoucheCard(g, c, bg) {
+  g.clearRect(0, 0, c.w, c.h);
+  drawCartouche(g, { ...c, x: 0, y: 0 }, (x0, y0, x1, y1) => g.drawImage(bg, x0 + 22, y0 + 22, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0)); // the parchment from the sheet's corner
+}
+function drawScaleCard(g, proj, bg, style, sprite) {
+  g.clearRect(0, 0, SCALE_CARD_W, SCALE_CARD_H);
+  drawScaleBar(g, { proj }, bg, { scale: 1, x: 0, y: (H - SCALE_CARD_H) / 2 }, W, SCALE_CARD_H, style, sprite);
+}
+
 // ---------------------------------------------------------------- anchored to the earth
 
 // A placed scene's ornaments as longitude and latitude, so a moving frame can draw them through the
@@ -2405,7 +2420,12 @@ export async function createScene(environment, opts = {}) {
   const { ink = '#3b2a1a', continentsZoom, regionsZoom, scaleBorder = 'bordered', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', title = 'PORTOLANI', autoTitle = true, pinTitle, land: landMode = 'islands', islands, seaTint = false, rivers = 'off', lakes = 'off', relief = [], trees = 'off', historical = true, seed: pickedSeed } = opts;
   const legacy = ['rendering', 'rose', 'monster', 'town'].some((k) => opts[k] !== undefined);
   const townBy = townSize ?? (legacy ? 'rank' : 'area');
-  const show = { kinds: new Set(opts.kinds ?? DEFAULT_KINDS), names, rhumb: rhumbOn, scale };
+  // `pinned` (default true): the cartouche and the scale bar are drawn on the sheet, pinned to the window.
+  // False, for a phone, leaves both off the sheet; the page draws them on cards (drawCartoucheCard, drawScaleCard).
+  const pinned = opts.pinned !== false;
+  const kinds = new Set(opts.kinds ?? DEFAULT_KINDS);
+  if (!pinned) kinds.delete('cartouche');
+  const show = { kinds, names, rhumb: rhumbOn, scale: pinned ? scale : 'off' };
   const view = clampView(opts.view ?? DEFAULT_VIEW);
   STYLE.ink = ink;
   STYLE.parchment = tone;
@@ -2459,7 +2479,7 @@ export async function createScene(environment, opts = {}) {
     from: worldBand ? Math.log2(1125 / (sh.extent.east - sh.extent.west)) : ATLAS_BANDS.find((b) => b.band === sh.band).from }));
   const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, historical, seaAt: sheets && seaAtOf(coarse), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, title, autoTitle, pinTitle,
     continentsEnd: zoomEnd(continentsZoom, CONTINENT_ZOOM_END), regionsEnd: zoomEnd(regionsZoom, REGION_ZOOM_END),
-    scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM, townSize: townBy, seed: legacy ? null : pickedSeed == null ? castSeed(view) : pickedSeed | 0, salt: legacy || pickedSeed == null ? 0 : pickedSeed | 0 }), show, scaleSprite };
+    scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM && pinned, pinned, townSize: townBy, seed: legacy ? null : pickedSeed == null ? castSeed(view) : pickedSeed | 0, salt: legacy || pickedSeed == null ? 0 : pickedSeed | 0 }), show, scaleSprite };
   data.trees = TREES[STYLE.trees] ? plantTrees({ proj: data.proj, isLand: scene.field.isLand, scene, lakes: STYLE.lakes !== 'off' && water ? water.lakes : [], w: W, h: H }) : [];
   data.palms = plantPalms({ proj: data.proj, isLand: scene.field.isLand, scene, w: W, h: H,
     pois: scene.lesser.filter((l) => l.poi).map((l) => ({ x: l.x, y: l.y, palms: POIS.find((p) => p.name === l.name)?.palms ?? 0 })) });
@@ -2480,4 +2500,4 @@ export const viewProjection = (view) => makeProjection(clampView(view));
 export const TOWN_SIZES = ['area', 'population', 'rank'];
 export { RIVER_STYLES, LAKE_STYLES, TREE_STYLES, RELIEF_STYLES };
 export const MAX_ZOOM = ZOOM.max;
-export { anchorScene, drawAnchored, towerGlyph, SCALE_NAMES, readManifests, listStyles, listSprites, defaultSprites, selectSprites, chooseSprites, drawScene, drawGround, covers, panView, zoomView, clampView, viewOfFrame, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };
+export { SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, anchorScene, drawAnchored, towerGlyph, SCALE_NAMES, readManifests, listStyles, listSprites, defaultSprites, selectSprites, chooseSprites, drawScene, drawGround, covers, panView, zoomView, clampView, viewOfFrame, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };
