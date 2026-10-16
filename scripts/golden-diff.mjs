@@ -7,10 +7,10 @@ import { mkdirSync, writeFileSync, appendFileSync, readFileSync } from 'node:fs'
 import { join, basename, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
+import { compare } from './golden-compare.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = join(ROOT, 'out', 'golden-diff');
-const CHANNEL = 24; // the same bar test/golden.test.mjs holds a pixel to
 const base = process.argv[2] || 'origin/main';
 const git = (...a) => execFileSync('git', a, { cwd: ROOT, maxBuffer: 1 << 26 });
 
@@ -31,13 +31,8 @@ for (const [status, path] of files) {
   const w = now.width, h = now.height;
   const px = (img) => { const c = createCanvas(w, h), g = c.getContext('2d'); g.drawImage(img, 0, 0); return g.getImageData(0, 0, w, h).data; };
   const a = px(now), b = px(was);
-  const c = createCanvas(w, h), g = c.getContext('2d'), out = g.createImageData(w, h);
-  let bad = 0;
-  for (let i = 0; i < a.length; i += 4) {
-    const hit = Math.max(Math.abs(a[i] - b[i]), Math.abs(a[i + 1] - b[i + 1]), Math.abs(a[i + 2] - b[i + 2])) > CHANNEL;
-    if (hit) bad++;
-    out.data.set(hit ? [255, 0, 0, 255] : [a[i] >> 1, a[i + 1] >> 1, a[i + 2] >> 1, 255], i);
-  }
+  const c = createCanvas(w, h), g = c.getContext('2d');
+  const { bad, data: out } = compare(a, b, w, h, (x, y) => g.createImageData(x, y));
   g.putImageData(out, 0, 0);
   writeFileSync(join(OUT, `${name}-diff.png`), c.toBuffer('image/png'));
   rows.push(`| ${name} | changed | ${(100 * bad / (w * h)).toFixed(2)}% of pixels |`);

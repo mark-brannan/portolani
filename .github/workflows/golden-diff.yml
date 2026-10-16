@@ -21,6 +21,7 @@ jobs:
       - uses: actions/setup-node@v7
         with: { node-version: '22' }
       - run: npm ci
-      - run: node scripts/golden-diff.mjs "${{ inputs.base-ref }}"
+      - run: node scripts/golden-diff.mjs "$BASE_REF"
+        env: { BASE_REF: '${{ inputs.base-ref }}' }
       - uses: actions/upload-artifact@v5
         with: { name: golden-diff, path: out/golden-diff, if-no-files-found: ignore }
