@@ -74,6 +74,7 @@ const SEA_FIGURE = { sat: 24, close: 7, open: 5, dilate: 4, feather: 2, minArea:
 // The Carta Marina's own paper (the mean of the bright land patch round Svecia), divided out of the sea figures: a crop
 // of open sea holds no paper, so its surroundings would be taken for paper and the sea wash lost with it.
 const CARTA_PAPER = '#ded2af';
+const CATALAN_PAPER = '#e9dfcf'; // the vellum inside the Catalan Atlas rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness
 const PRUNES_PAPER = '#b4a38d'; // the vellum of Prunes 1559 inside the west rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness (the brightest are specks)
 const PARCHMENT = '#e9d8b4'; // the renderer's default paper, for the kept `.cut.png`
 const argv = process.argv.slice(2), keepAt = argv.indexOf('--keep'), onlyAt = argv.indexOf('--only');
@@ -97,7 +98,7 @@ const MAX_SCALE = 3; // a sprite is stored at most this many px wide per CSS px 
 const PACKS = [
   {
     name: 'scanned',
-    key: 'ink', // cut before the patch key existed; re-keying it as patches is #111, a sprite at a time (`key: 'patch'` on the sprite; the Carta Marina monsters and ships are done)
+    key: 'ink', // cut before the patch key existed; re-keying it as patches is #111, a sprite at a time (`key: 'patch'` on the sprite; the Carta Marina monsters and ships and the Catalan Atlas rose are done)
     title: 'Sprites cropped from scans: Olaus Magnus, Carta Marina 1539; Jorge de Aguiar 1492; Catalan Atlas 1375; Genoese chart c. 1320-1350; Frederik de Wit; Ambroise Paré, Des monstres; Master W with the Key, two ship engravings c. 1475-1490',
     licence: 'Public domain (PD-Art); scans via Wikimedia Commons (James Ford Bell Library; Beinecke Library, Yale; BnF Gallica btv1b55002481n; Library of Congress 2003630429; Royal Museums Greenwich). The pare-* sprites: Wellcome Collection, CC BY 4.0. Ships ship-w-*: Art Institute of Chicago 27881 (CC0) and Rijksmuseum RP-P-2014-30 (Public Domain Mark)',
     ink: '#3b2a1a',
@@ -128,7 +129,10 @@ const PACKS = [
       { id: 'rose-aguiar', kind: 'rose', style: 'aguiar', scan: 'aguiar', crop: [55, 80, 665, 690], sizePx: 300, dark: 'min', level: [12, 78], circle: [300, 300, 300],
         // the scan's own wind names (norte, oeste, leste, sull and the petal inscriptions)
         clean: [[355, 122, 377, 180], [175, 187, 235, 237], [495, 200, 552, 257], [115, 365, 165, 387], [555, 374, 609, 394], [162, 512, 197, 587], [340, 577, 364, 630], [489, 500, 535, 544], [112, 182, 147, 217]] },
-      { id: 'rose-catalan', kind: 'rose', style: 'aguiar', scan: 'catalan', crop: [120, 185, 440, 505], sizePx: 110, dark: 'min', level: [10, 70], circle: [160, 160, 152] },
+      // the Catalan Atlas rose (BnF), a patch (#111): the whole disc inside its ring, the blue, ochre and gilt washes and the
+      // vellum between the rhumbs kept. The circle is the only outline and cuts the sea waves and the lettering round the
+      // ring; it is not erased but feathered (`circleFeather`), so there is no pale hole where a name was
+      { id: 'rose-catalan', kind: 'rose', style: 'aguiar', scan: 'catalan', key: 'patch', paper: CATALAN_PAPER, crop: [120, 185, 440, 505], sizePx: 110, circle: [160, 160, 158], circleFeather: 4 },
       // Prunes 1559 (Library of Congress), the best 32-point rose of any chart checked for #52: whole crop with its
       // sea of parchment and the rhumb lines running off, a patch not a keyed ink, so the blue and red washes and the
       // gilt keep their tone. North is to the right on the scan, so the cut is turned a quarter anticlockwise.
@@ -305,7 +309,7 @@ function buildSprite(sprite, colour, key, outDir, tmp) {
   }
   if (sprite.circle) {
     const [cx, cy, r] = sprite.circle;
-    magick('-size', `${w}x${h}`, 'xc:black', '-fill', 'white', '-draw', `circle ${cx},${cy} ${cx + r},${cy}`, '-blur', '0x2', t('circle'));
+    magick('-size', `${w}x${h}`, 'xc:black', '-fill', 'white', '-draw', `circle ${cx},${cy} ${cx + r},${cy}`, '-blur', `0x${sprite.circleFeather ?? 2}`, t('circle'));
     masks.push(t('circle'));
   }
   if (sprite.erase) {

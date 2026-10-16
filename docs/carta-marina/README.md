@@ -76,5 +76,5 @@ The crop of each sprite is `source.crop` in its `pack.json`. In the raw, absent 
 
 The tiny boat under ship-b's hull stays: it is part of its water.
 
-Still cut by ink, to follow: the roses, cartouche, palms, scale, Aguiar towns, Paré monsters and
+Still cut by ink, to follow: the Aguiar roses, cartouche, palms, scale, Aguiar towns, Paré monsters and
 Master W ships (`docs/towns-aguiar` for the towns).
