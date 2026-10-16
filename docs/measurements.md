@@ -27,6 +27,38 @@ Draw times for the built preview (`_site/`) in headless Chromium, at a coastal s
 
 The pan-frame times at z5 and above sit at two animation frames (33 ms at 60 Hz), the floor of the method; at z2 the whole world is drawn each frame, about 60 ms of it in drawing. Sizes do not change the data fetched; the table below is the same at both.
 
+## A frame while dragging (#131)
+
+What one frame costs while the map is dragged with every decoration on (the page's defaults: plain rivers, hatched lakes, coloured mountains, Carta Marina trees, continents and regions named, ornaments on), and what each drawing that used to wait for the stop adds to it. The budget is 16.7 ms, one frame at 60 Hz.
+
+Measured on 2026-10-15 with `node scripts/measure-preview.mjs 44.41 8.93 <zooms> --sizes=1440x900 --ornaments=on --late=<layer>` on the built preview in headless Chromium (Genoa, 1440x900; the page's own "frame" figure, `drawGround` and `drawAnchored` for one pointer move; 3 drags of 20 moves, so 60 frames a cell; each move is 6 px east and 2 px south). The machine is the laptop above (Ryzen 7 H 255, 16 threads, WSL2, no GPU) with other sessions running (load average 5 to 11), so a cell is good to about 3 ms at p90; one run each. `--late=none` draws none of the late drawings (the frame as it was before), `relief` or `trees` that one only, `all` every one. Median / p90, ms:
+
+| Zoom | none (before) | + relief | + trees | + all | as shipped |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 2 | 91.9 / 105.1 | 93.1 / 106.5 | 91.1 / 104.8 | 94.4 / 117.5 | 99.8 / 127.0 |
+| 3 | 33.9 / 40.9 | 42.7 / 93.8 | 33.7 / 40.9 | 32.7 / 39.6 | 33.7 / 42.6 |
+| 4 | 25.9 / 28.5 | 26.8 / 34.3 | 29.3 / 39.0 | 25.4 / 30.6 | 26.0 / 29.4 |
+| 5 | 19.3 / 22.9 | 20.0 / 22.0 | 18.9 / 21.9 | 21.9 / 28.9 | 19.5 / 21.8 |
+| 6 | 11.5 / 13.7 | 12.9 / 15.5 | 14.0 / 18.7 | 14.4 / 16.2 | 14.4 / 15.5 |
+| 7 | 9.1 / 11.2 | 11.1 / 13.2 | 10.9 / 12.7 | 12.5 / 14.0 | 12.8 / 15.7 |
+| 8 | 11.8 / 13.4 | 15.3 / 20.0 | 14.0 / 15.8 | 16.5 / 18.9 | 14.3 / 17.1 (trees were in) |
+| 9 | 11.0 / 12.3 | 15.0 / 19.1 | 14.5 / 16.4 | 19.3 / 22.8 | 14.4 / 16.6 |
+| 10 | 14.8 / 17.0 | 18.4 / 23.5 | 18.6 / 21.0 | 23.8 / 43.6 | 14.6 / 17.3 |
+| 11 | 7.7 / 9.1 | 10.4 / 11.9 | 13.7 / 17.1 | 15.3 / 18.9 | 10.3 / 14.6 |
+| 12 | 8.4 / 11.5 | 8.5 / 10.0 | 12.9 / 17.7 | 12.5 / 14.8 | 12.6 / 14.9 |
+
+The ground, the lines and the ornaments alone are over the budget at zoom 5 and below (the whole world is drawn each frame), so nothing late is added there. The rivers and lakes are not late: a drag already draws them with the ground. What each late drawing adds is its column less "none":
+
+| Drawing | Added to a frame, median | In the drag |
+| --- | --- | --- |
+| Region and continent names (`worldNames`) | within the noise in the browser; 0.0 to 0.3 ms in the Node renderer | at every zoom |
+| City plans (`cities`) | not run in the browser (no city is in a Genoa view); in the Node renderer, Venice at zoom 13 (one city), 4.5 / 5.7 ms median / p90, against 3.6 / 5.6 for relief at the same view | at every zoom |
+| Shaded hills and mountains (`relief`) | zoom 5 to 12: 0.7, 1.4, 2.0, 3.5, 4.0, 3.6, 2.7, 0.1 | zooms 6, 7, 11, 12 |
+| Trees and palms (`trees`) | zoom 5 to 12: -0.4, 2.5, 1.8, 2.2, 3.5, 3.8, 6.0, 4.5 | zooms 6, 7, 9, 12 |
+| Town washes and houses (the footprint wash and `housesIn` of `drawScene`) | in the Node renderer: 40 (Genoa z9), 68 (z11), 328 (z12), 8 to 12 (Venice z12, z13); that renderer's whole ground-and-ornaments frame is 60 to 65 at z9 and z11 | stays late |
+
+A layer is in the drag at a zoom where the frame with it stays within 16.7 ms at p90. Relief and trees are both in only where "+ all" fits (zooms 6, 7 and 12); where one fits (9: trees, 11: relief) that one is in; at 8 neither relief (20.0) nor, once measured as shipped, trees (17.1, over by 0.4 ms) fits, so trees were taken out of 8 after the last run, and that cell is not re-measured. At 10 the ground alone is over (17.0 ms), and 13 and above were not measured, so the late drawings wait for the stop there (the names and cities excepted, which cost nothing measurable). The town washes and houses are one wash and a lattice of houses per footprint, redrawn every frame, several times the budget at every zoom they show; they stay late. The Node renderer figures come from `node scripts/measure-drag.mjs` (`DOWNLOADS=downloads` for the 10m footprints): the same drawing code in `@napi-rs/canvas`, which draws the ground about six times slower than Chromium does, so they are read as ratios and not as frame times.
+
 | What | Bytes | Fetched at |
 | --- | ---: | --- |
 | 50m land, coast and places (`geo/*.geojson`) | 3,523,998 | every view |
