@@ -363,7 +363,7 @@ function changed() {
 // and write the same selection and style as the default drawer, so the link carries the same hash. The flag
 // is in the query, which the hash writes, Reset and Copy link leave alone, and the phone's bottom sheet shows.
 const UI = ['presets', 'grid'].find((u) => u === new URLSearchParams(location.search).get('ui')) ?? null;
-const KIND_UI = [['monster', 'Monsters'], ['ship', 'Ships'], ['rose', 'Roses'], ['town', 'Towns'], ['mountain', 'Hills'], ['cartouche', 'Cartouche']];
+const KIND_UI = [['monster', 'Monsters'], ['ship', 'Ships'], ['rose', 'Roses'], ['town', 'Towns'], ['mountain', 'Hill drawings'], ['cartouche', 'Cartouche']];
 const kindKeys = (kind) => SPRITES.filter((s) => s.kind === kind).map((s) => s.key);
 const sampleOf = (s) => {
   const el = document.createElement('span');
@@ -381,7 +381,7 @@ const chipButton = (role, ...kids) => {
 };
 // the style switches: off, or the default (the first drawn style where the default is off)
 const STYLE_SWITCHES = [
-  ['mountains', 'Mountains', MOUNTAIN_GLYPHS.colour], ['trees', 'Trees', TREE_GLYPHS.marina],
+  ['mountains', 'Mountain style', MOUNTAIN_GLYPHS.colour], ['trees', 'Trees', TREE_GLYPHS.marina],
   ['rivers', 'Rivers', RIVER_GLYPHS.plain], ['lakes', 'Lakes', LAKE_GLYPHS.marina],
 ];
 let showUiNow = () => {};
