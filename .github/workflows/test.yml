@@ -45,9 +45,11 @@ jobs:
     if: github.event_name == 'pull_request'
     permissions:
       contents: read
-    uses: ./.github/workflows/golden-diff.yml
+      pull-requests: write
+    uses: mark-brannan/.github/.github/workflows/golden-diff.yml@claude/golden-diff
     with:
-      base-ref: origin/${{ github.base_ref }}
+      paths: test/golden/**
+      label: goldens-large
 
   # Separate from `test` because this one needs the network -- it fetches
   # Natural Earth data, same as the Pages deploy does. Runs on pull_request
