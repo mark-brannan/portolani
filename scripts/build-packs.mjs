@@ -100,7 +100,7 @@ const MAX_SCALE = 3; // a sprite is stored at most this many px wide per CSS px 
 const PACKS = [
   {
     name: 'scanned',
-    key: 'ink', // cut before the patch key existed; re-keying it as patches is #111, a sprite at a time (`key: 'patch'` on the sprite; the Carta Marina monsters and ships, the Catalan Atlas rose, the Aguiar 1492 rose and the Genoese scale are done)
+    key: 'ink', // cut before the patch key existed; re-keying it as patches is #111, a sprite at a time (`key: 'patch'` on the sprite; the Carta Marina monsters and ships, the Catalan Atlas rose, the Aguiar 1492 rose, the Genoese scale and Master W's `ship-w-key`, which stays ink by a visual pass, are done)
     title: 'Sprites cropped from scans: Olaus Magnus, Carta Marina 1539; Jorge de Aguiar 1492; Catalan Atlas 1375; Genoese chart c. 1320-1350; Frederik de Wit; Ambroise Paré, Des monstres; Master W with the Key, two ship engravings c. 1475-1490',
     licence: 'Public domain (PD-Art); scans via Wikimedia Commons (James Ford Bell Library; Beinecke Library, Yale; BnF Gallica btv1b55002481n; Library of Congress 2003630429; Royal Museums Greenwich). The pare-* sprites: Wellcome Collection, CC BY 4.0. Ships ship-w-*: Art Institute of Chicago 27881 (CC0) and Rijksmuseum RP-P-2014-30 (Public Domain Mark)',
     ink: '#3b2a1a',
@@ -194,8 +194,8 @@ const PACKS = [
       // both ships sail bow to the left: the anchor and bowsprit are at the left end
       // engraved lines are finer than a woodcut's: no median, and levels set by the paper
       { id: 'ship-w-key', kind: 'ship', style: 'pare', scan: 'master-w-ship', crop: [10, 20, 2110, 2990], sizePx: 84, heading: 'left', level: [40, 66], bolden: 2,
-        // the waves fill the plate's foot and the plate cuts the bow: both fade out instead of ending at a cut
-        mask: [[70, 0], [2139, 0], [2139, 2800], [1950, 2930], [1800, 2900], [1500, 2760], [1100, 2720], [700, 2700], [300, 2600], [70, 2450]], maskFeather: 50 },
+        // the plate mark at the crop's edge is not the ship's: a feathered inset cuts it. The waves fill the plate's foot and are the ship's water, so they stay
+        mask: [[70, 40], [2090, 40], [2090, 2960], [70, 2960]], maskFeather: 40 },
       { id: 'ship-w-buss', kind: 'ship', style: 'pare', scan: 'master-w-buss', crop: [60, 140, 1780, 2160], sizePx: 80, heading: 'left', level: [45, 76], bolden: 2,
         erase: [[1380, 140, 1540, 240]] }, // the WA monogram
     ],
