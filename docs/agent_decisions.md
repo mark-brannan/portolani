@@ -225,3 +225,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261017t015813z
 - Rose circle radius 160 (crop widened 20 px each side) leaving a river fleck at the east tip; palms mask polygon cuts the red bars only Undo: edit circle/mask in build-packs.mjs and rebuild (branch:claude/aguiar-chart-a-s3) (no PR, branch claude/aguiar-chart-a-s3)
+
+### 20261017t202827z
+- dev server takes geo/ and font/ from the published Pages site rather than a shared local cache Undo: point DATA_URL at a local cache, or make --build the default ([#197](https://github.com/mark-brannan/portolani/issues/197)) (no PR, branch claude/portolani-issue-197-7c59d0)
