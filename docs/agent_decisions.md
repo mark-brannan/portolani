@@ -213,3 +213,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261017t010125z
 - pare-seaman keeps ink key by a visual pass, crop widened at top for both horns (#111) Undo: key: 'patch' on pare-seaman in scripts/build-packs.mjs (no PR, branch claude/pare-3060-s3)
+
+### 20261017t011603z
+- pare-boar keeps ink key (pare-3267) Undo: key: 'patch', paper '#d6d6d6' on pare-boar, no silhouette (no PR, branch claude/pare-3267-s3)
