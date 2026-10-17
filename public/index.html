@@ -118,6 +118,9 @@
   }
   h3 { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin: 12px 0 4px; }
 
+  .lead { margin: 0 0 8px; font-size: 13px; line-height: 1.4; color: var(--muted); }
+  .lead a { color: var(--accent); white-space: nowrap; }
+
   .family { padding: 6px 0 8px; border-bottom: 1px solid var(--line); }
   .family:last-child { border-bottom: none; }
   .fam { display: flex; align-items: center; gap: 8px; font-family: var(--serif); font-size: 15px; }
@@ -266,6 +269,7 @@
 
   <section aria-labelledby="h-sea">
     <h2 id="h-sea">Sea</h2>
+    <p class="lead">The empty sea was filled with figures: the Carta Marina of 1539 crowds it with whales, walrus and other creatures. <a href="learn/sea-monsters-and-ships.html">Learn more</a></p>
     <div class="slider"><label for="density">Density (monsters, ships, towns, hills)</label><input id="density" type="range" min="0" max="2" step="0.25" value="1"><output id="densityOut">1</output></div>
     <h3 class="pick-h">Monsters</h3>
     <div id="pick-monster"></div>
@@ -275,6 +279,7 @@
 
   <section id="s-roses" aria-labelledby="h-roses">
     <h2 id="h-roses">Roses</h2>
+    <p class="lead">A portolan chart carried wind roses, colour-coded lines for the winds, and the network of rhumb lines spread from them across the sheet. <a href="learn/rhumb-lines.html">Learn more</a></p>
     <div id="pick-rose"></div>
   </section>
 
@@ -290,12 +295,14 @@
 
   <section aria-labelledby="h-towns">
     <h2 id="h-towns">Towns</h2>
+    <p class="lead">A portolan chart named its ports at right angles to the coast; the Catalan Atlas of about 1375 drew many cities as small pictures. <a href="learn/portolan-charts.html">Learn more</a></p>
     <div class="rows"><label class="check"><input type="checkbox" id="townSize"> Size by metro area</label></div>
     <div id="pick-town"></div>
   </section>
 
   <section aria-labelledby="h-land">
     <h2 id="h-land">Land</h2>
+    <p class="lead">A portolan chart left the inland nearly blank; the coast was its subject. <a href="learn/portolan-charts.html">Learn more</a></p>
     <h3>Mountains</h3>
     <div id="mountains" class="chips" role="radiogroup" aria-label="Mountains"></div>
     <h3>Hills</h3>
@@ -307,6 +314,7 @@
 
   <section aria-labelledby="h-cartouche">
     <h2 id="h-cartouche">Cartouche</h2>
+    <p class="lead">A cartouche is a decorated frame for a map's title, scale and legends; it grew out of decorative borders in the 15th century and had its heyday in the Baroque. <a href="learn/charts-and-makers.html">Learn more</a></p>
     <div id="pick-cartouche" class="thumbs" role="group" aria-label="Cartouche, one of"></div>
     <h3>Title</h3>
     <div id="titleMode" class="chips" role="radiogroup" aria-label="Title"></div>
@@ -315,6 +323,7 @@
 
   <section aria-labelledby="h-map">
     <h2 id="h-map">Map</h2>
+    <p class="lead">Rhumb lines radiate from the wind roses, and a navigator used a parallel rule to carry a line of course over to the rose's nearest line. <a href="learn/rhumb-lines.html">Learn more</a></p>
     <div class="rows">
       <h3>Projection</h3>
       <div id="projection" class="chips" role="radiogroup" aria-label="Projection"></div>
@@ -341,6 +350,7 @@
 
   <section aria-labelledby="h-colours">
     <h2 id="h-colours">Colours</h2>
+    <p class="lead">A portolan chart was drawn on calf skin with a ruler, dividers, a pen and inks of several colours. <a href="learn/portolan-charts.html">Learn more</a></p>
     <div class="rows">
       <label>Ink <input id="ink" type="color" value="#3b2a1a"></label>
       <label>Parchment <input id="parchment" type="color" value="#e9d8b4"></label>
