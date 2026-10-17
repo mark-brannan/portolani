@@ -8,7 +8,9 @@
     "packs": "node scripts/build-packs.mjs",
     "render": "node scripts/render.mjs",
     "build:preview": "node --max-old-space-size=6144 scripts/build-preview.mjs",
-    "golden": "UPDATE_GOLDEN=1 node --test test/golden.test.mjs"
+    "golden": "UPDATE_GOLDEN=1 node --test test/golden.test.mjs",
+    "dev": "node scripts/dev.mjs",
+    "try-it": "node scripts/try-it.mjs"
   },
   "engines": {
     "node": ">=20"
