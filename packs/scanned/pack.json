@@ -425,7 +425,7 @@
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/8/8b/Woodcut_of_marine_animals_Wellcome_L0033059.jpg",
         "page": "https://commons.wikimedia.org/wiki/File:Woodcut_of_marine_animals_Wellcome_L0033059.jpg",
-        "crop": [1019, 3221, 2884, 3775]
+        "crop": [1019, 3181, 2884, 3775]
       },
       "minClearancePx": 150,
       "weight": 1
