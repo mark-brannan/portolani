@@ -39,15 +39,18 @@ jobs:
         if: failure()
         with: { name: golden-failure, path: out/golden-diff, if-no-files-found: ignore }
 
-  # Old versus new of the goldens a pull request regenerates: its own job (a reusable workflow) so
-  # it can move to deploy time. A measurement, so it stays out of ci-gate's needs.
+  # How far each golden a pull request re-baselines moved, scored per image and posted as one sticky
+  # PR comment, hence pull-requests: write. A measurement, so it stays out of ci-gate's needs. The
+  # engine and the grade thresholds live in mark-brannan/.github.
   golden-diff:
     if: github.event_name == 'pull_request'
     permissions:
       contents: read
-    uses: ./.github/workflows/golden-diff.yml
+      pull-requests: write
+    uses: mark-brannan/.github/.github/workflows/golden-diff.yml@main
     with:
-      base-ref: origin/${{ github.base_ref }}
+      paths: test/golden/**
+      label: goldens-large
 
   # Separate from `test` because this one needs the network -- it fetches
   # Natural Earth data, same as the Pages deploy does. Runs on pull_request
