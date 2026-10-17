@@ -41,3 +41,30 @@ survive. Absent from the sprite, and why:
 - the red bars of the figure above right: a neighbouring figure, not the palms, cut by the polygon, whose edge sits
   just outside the fronds.
 - the coast and its lettering below y 3290: outside the crop; the ground under the trees is whole.
+
+## The nine towns
+
+Each is a patch: the whole crop, divided by `AGUIAR_CHART_PAPER`, its edge feathered. `figure` holds the old box, so each
+keeps its `sizePx` and anchor with the surroundings added round it. Dropped fields: `dark`, `level` (`TOWN_LEVEL` is
+retired) and every `erase` box; lettering and rhumb lines beside a town stay as drawn. Rows 3 to 11 of `steps.png`.
+
+| Sprite | Crop (scan px) | Cut |
+|---|---|---|
+| `town-aguiar-venice` | (2915,690)-(3170,915) | none |
+| `town-aguiar-genoa` | (2745,858)-(2950,1048) | none |
+| `town-aguiar-lisbon` | (1806,1458)-(1972,1596) | none, turned -4 degrees |
+| `town-aguiar-lake` | (2321,2366)-(2435,2459) | none; the crop stops inside the lake's ring |
+| `town-aguiar-lake-moat` | (2290,2334)-(2464,2494) | polygon just outside the ring, 3 px feather |
+| `town-aguiar-smina` | (2918,3072)-(3084,3214) | none, turned 6 degrees |
+| `town-aguiar-jerusalem` | (4694,1598)-(4826,1730) | none |
+| `town-aguiar-ceuta` | (1998,1894)-(2104,2040) | none, turned 8 degrees |
+| `town-aguiar-avignon` | (2330,1016)-(2462,1104) | none, turned -14 degrees |
+
+Visual pass: every town, its hatching, wash and ground survive, as does the lettering beside it (the `Veneci` name,
+`Genoa`, the coast names under Lisbon, Genoa and Smina). Absent from a sprite, and why:
+
+- `town-aguiar-lake-moat`, the rivers leaving the lake (three tails below, one each side): a river is not the town, and
+  the polygon runs just outside the ring so the rivers do not end in a cut stub far from the lake; the short stubs left are
+  the feather's reach.
+- the other eight: nothing present in the raw is missing at map size. The only difference is the edge feather, a few
+  pixels of vellum, which the multiply sinks into the parchment.
