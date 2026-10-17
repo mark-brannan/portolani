@@ -16,7 +16,5 @@ feathered at its edge), each multiplied onto parchment. The top two rows are 3x 
 | `pare-truie` | keep `ink` | Ink alone on paper; horns, spines, claws, tail tuft all in | page tone; verso ghost behind the neck |
 | `pare-elephant` | keep `ink` | Ink alone on paper; tusk, head tuft, fish tail, toes all in | page tone; verso ghost of a figure and lettering |
 
-The sow's old crop ended 1 px below a claw tip and 12 px from the tail tuft, the elephant's 3 px from the tusk tip and 9 px from the head tuft, so both are
-widened (a crop within 20 px of the figure cuts its edge). Neither plate draws water or ground, so the raw holds none
-for the ink key to lose. The verso show-through (a ghost figure above the elephant, lettering along its foot) is not the plate.
+Crops sit more than 20 px clear of the figure; the verso ghost and lettering are not the plate.
 Undo for each: `key: 'patch'` on the sprite (with `paper: '#b1b1b1'`, as in the candidates, and no `silhouette`) in `scripts/build-packs.mjs`.
