@@ -10,11 +10,8 @@
 354 px across with its surroundings; the old tight box keeps 340 px as `figure`), then the cut multiplied onto the same
 parchment. `cartouche-dewit.raw.png`, `.key.png` and `.cut.png` are the three images behind it.
 
-It was cut by ink coverage (levels 12 to 66 %, minimum of R, G, B), which thinned the washes and dropped the rhumb lines and
-coast, and two erase boxes cut the coast lettering at the left as pale holes. Now the whole crop is the sprite, its paper
-(`#e3dfc4`, the tablet's own paper) divided out so the renderer's multiply sinks it into the parchment, its edge feathered.
-The crop reaches 46 px further left and 50 px further up than before, so the feather falls on the chart, not across a putto's
-wing or the sextant; the right and bottom edges are the scan's own edge.
+The whole crop is the sprite: its paper (`#e3dfc4`, the tablet's own) divided out so the renderer's multiply sinks it into the
+parchment, its edge feathered outside the figure. The right and bottom edges are the scan's own edge.
 
 Visual pass (`steps.png`): the three putti, the armillary sphere, the cannon, the sextant, the scrollwork with its gilt,
 blue and red wash, the green tablet border, the rhumb lines, the wind rose at the top and the coast lettering at the left
