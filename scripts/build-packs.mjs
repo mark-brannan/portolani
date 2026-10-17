@@ -100,7 +100,7 @@ const MAX_SCALE = 3; // a sprite is stored at most this many px wide per CSS px 
 const PACKS = [
   {
     name: 'scanned',
-    key: 'ink', // cut before the patch key existed; re-keying it as patches is #111, a sprite at a time (`key: 'patch'` on the sprite; the Carta Marina monsters and ships, the Catalan Atlas rose, the Aguiar 1492 rose, the Genoese scale and Master W's `ship-w-key`, which stays ink by a visual pass, are done)
+    key: 'ink', // cut before the patch key existed; re-keying it as patches is #111, a sprite at a time (`key: 'patch'` on the sprite; the Carta Marina monsters and ships, the Catalan Atlas rose, the Aguiar 1492 rose, the Genoese scale, and Master W's `ship-w-key` and `ship-w-buss`, which stay ink by a visual pass, are done)
     title: 'Sprites cropped from scans: Olaus Magnus, Carta Marina 1539; Jorge de Aguiar 1492; Catalan Atlas 1375; Genoese chart c. 1320-1350; Frederik de Wit; Ambroise Paré, Des monstres; Master W with the Key, two ship engravings c. 1475-1490',
     licence: 'Public domain (PD-Art); scans via Wikimedia Commons (James Ford Bell Library; Beinecke Library, Yale; BnF Gallica btv1b55002481n; Library of Congress 2003630429; Royal Museums Greenwich). The pare-* sprites: Wellcome Collection, CC BY 4.0. Ships ship-w-*: Art Institute of Chicago 27881 (CC0) and Rijksmuseum RP-P-2014-30 (Public Domain Mark)',
     ink: '#3b2a1a',
