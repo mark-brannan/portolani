@@ -207,3 +207,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261017t002523z
 - ship-w-buss keeps ink key by visual pass Undo: set key: 'patch', paper: '#d6cdbc' on ship-w-buss (candidate in docs/master-w-buss/) (no PR, branch main)
+
+### 20261017t010122z
+- pare-lion keeps ink key by a visual pass (#111) Undo: key: 'patch' on pare-lion in scripts/build-packs.mjs (no PR, branch claude/pare-3060-s3)
