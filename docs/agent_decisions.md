@@ -204,3 +204,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261016t083728z
 - west rose cut, not south or north-east change crop ([#179](https://github.com/mark-brannan/portolani/pull/179))
+
+### 20261017t002523z
+- ship-w-buss keeps ink key by visual pass Undo: set key: 'patch', paper: '#d6cdbc' on ship-w-buss (candidate in docs/master-w-buss/) (no PR, branch main)
