@@ -222,3 +222,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261017t015810z
 - Aguiar chart paper #d3cfbb measured from the rose ring, shared by the later town sprites Undo: change AGUIAR_CHART_PAPER and rebuild packs (branch:claude/aguiar-chart-a-s3) (no PR, branch claude/aguiar-chart-a-s3)
+
+### 20261017t015813z
+- Rose circle radius 160 (crop widened 20 px each side) leaving a river fleck at the east tip; palms mask polygon cuts the red bars only Undo: edit circle/mask in build-packs.mjs and rebuild (branch:claude/aguiar-chart-a-s3) (no PR, branch claude/aguiar-chart-a-s3)
