@@ -10,12 +10,13 @@
 import { createServer } from 'node:http';
 import { spawnSync } from 'node:child_process';
 import { createReadStream, existsSync, statSync } from 'node:fs';
-import { mkdtemp } from 'node:fs/promises';
+import { mkdtemp, rm } from 'node:fs/promises';
 import { Readable } from 'node:stream';
 import { fileURLToPath } from 'node:url';
 import os from 'node:os';
 import path from 'node:path';
 import { buildLearn } from './learn.mjs';
+import { relativeImports } from './scene-modules.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 export const DATA_URL = 'https://mark-brannan.github.io/portolani/';
@@ -23,41 +24,62 @@ const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '
   '.geojson': 'application/geo+json', '.css': 'text/css', '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp',
   '.svg': 'image/svg+xml', '.ttf': 'font/ttf', '.txt': 'text/plain; charset=utf-8' };
 
-// URL path -> local file, by the layout build-preview.mjs writes into _site/. Only the prefixes in
-// `remote` go to the published site: anything else missing is a 404 here, as it would be on Pages.
+// URL path -> local file, by the layout build-preview.mjs writes into _site/: the scene modules land
+// over public/, so on a name clash scripts/ wins, and only the modules scene.mjs reaches by import
+// are there at all (`only`, checked per request so a new import shows without a restart). Only the
+// prefixes in `remote` go to the published site: anything else missing is a 404 here, as on Pages.
 export function routes({ learn, site }) {
   if (site) return { local: [['', site]], remote: [] };
   return {
     local: [['coast-wright/', path.join(root, 'node_modules', 'coast-wright', 'lib')],
       ['coastlines/catalogue.json', path.join(root, 'node_modules', 'coastlines', 'catalogue.json')],
       ['packs/', path.join(root, 'packs')], ['learn/', path.join(learn, 'learn')], ['font/', path.join(root, 'downloads')],
-      ['', path.join(root, 'public')], ['', path.join(root, 'scripts')]],
+      ['', path.join(root, 'scripts'), { only: () => relativeImports(root) }], ['', path.join(root, 'public')]],
     remote: ['geo/', 'font/'],
   };
 }
 
-function localFile(table, rel) {
-  for (const [prefix, base] of table) {
+async function localFile(table, rel) {
+  for (const [prefix, base, { only } = {}] of table) {
     if (!rel.startsWith(prefix) && rel !== prefix.replace(/\/$/, '')) continue;
     const rest = rel.slice(prefix.length), file = rest ? path.join(base, rest) : base;
     if (file !== base && !file.startsWith(base + path.sep)) continue; // no climbing out of the base
+    if (only && !(await only()).has(rest)) continue;
     if (existsSync(file) && statSync(file).isFile()) return file;
   }
   return null;
 }
 
+// The upstream URL for a remote path: the data site's own origin and base path, then the request's
+// segments, each one encoded, so no request can name another host or climb above the base. A --data
+// typed without its trailing slash gets one, or `new URL` would drop its last segment.
+export function upstream(rel, data) {
+  const base = new URL(data.replace(/\/?$/, '/')), segments = path.posix.normalize(`/${rel}`).split('/').filter(Boolean);
+  const url = new URL(base);
+  url.pathname = base.pathname + segments.map(encodeURIComponent).join('/');
+  if (url.origin !== base.origin || !url.pathname.startsWith(base.pathname)) throw new Error(`${rel}: outside ${data}`);
+  return url;
+}
+
 export function devServer({ learn, site, data = DATA_URL }) {
   const { local, remote } = routes({ learn, site });
   return createServer(async (req, res) => {
-    const rel = decodeURIComponent(new URL(req.url, 'http://x').pathname).replace(/^\/+/, '') || 'index.html';
-    const file = localFile(local, rel.endsWith('/') ? `${rel}index.html` : rel);
+    let rel;
+    try { rel = decodeURIComponent(new URL(req.url, 'http://x').pathname).replace(/^\/+/, '') || 'index.html'; } catch {
+      res.writeHead(400, { 'content-type': 'text/plain' });
+      return res.end('bad path\n');
+    }
+    if (learn && rel.startsWith('learn/')) { // the Learn pages render live, like every other route
+      try { await buildLearn(root, learn); } catch (e) { res.writeHead(500, { 'content-type': 'text/plain' }); return res.end(`learn: ${e.message}\n`); }
+    }
+    const file = await localFile(local, rel.endsWith('/') ? `${rel}index.html` : rel);
     if (file) {
       res.writeHead(200, { 'content-type': TYPES[path.extname(file)] ?? 'application/octet-stream', 'cache-control': 'no-store' });
       return createReadStream(file).pipe(res);
     }
     if (remote.some((p) => rel.startsWith(p))) {
       try {
-        const up = await fetch(new URL(rel, data));
+        const up = await fetch(upstream(rel, data));
         res.writeHead(up.status, { 'content-type': up.headers.get('content-type') ?? 'application/octet-stream', 'cache-control': 'max-age=3600' });
         return up.body ? Readable.fromWeb(up.body).pipe(res) : res.end();
       } catch (e) {
@@ -81,7 +103,7 @@ async function main(argv) {
     site = path.join(root, '_site');
   } else {
     learn = await mkdtemp(path.join(os.tmpdir(), 'portolani-learn-'));
-    await buildLearn(root, learn);
+    for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => rm(learn, { recursive: true, force: true }).then(() => process.exit(0)));
   }
   devServer({ learn, site, data }).listen(port, 'localhost', () => {
     console.log(`portolani on http://localhost:${port}/ (${site ? 'the built _site/' : `this checkout's sources; geo/ and font/ from ${data}`})`);
