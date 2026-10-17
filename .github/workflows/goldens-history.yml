@@ -35,7 +35,8 @@ jobs:
       - name: Install the engine's libraries from its lockfile
         run: npm ci --prefix "$ENGINE_DIR/golden-diff" --no-audit --no-fund
       - name: Walk the goldens' history
+        shell: bash # pipefail, so a failed script fails the step, not just tee
         env: { N: '${{ inputs.n }}' }
         run: node scripts/goldens-history.mjs "$N" | tee -a "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v7.0.2
-        with: { name: goldens-history, path: out/goldens-history, retention-days: 30 }
+        with: { name: goldens-history, path: out/goldens-history, retention-days: 30, if-no-files-found: error }

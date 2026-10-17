@@ -29,6 +29,7 @@ const { scorePair, grade } = engine;
 
 const git = (...a) => execFileSync('git', a, { maxBuffer: 256 * 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'] });
 const gitText = (...a) => git(...a).toString();
+const engineSha = (() => { try { return gitText('-C', ENGINE_DIR, 'rev-parse', 'HEAD').trim(); } catch { return null; } })(); // which engine scored this sheet
 
 const commits = gitText('log', `-n${N}`, '--first-parent', '--format=%H%x09%cs%x09%s', '--', GOLDEN_DIR)
   .split('\n').filter(Boolean).map((l) => { const [sha, date, ...s] = l.split('\t'); return { sha, date, title: s.join('\t') }; })
@@ -85,7 +86,7 @@ writeFileSync(join(OUT_DIR, 'index.html'), `<!doctype html><meta charset="utf-8"
 <style>body{font:14px system-ui;margin:1rem}table{border-collapse:collapse}td,th{border:1px solid #bbb;padding:4px 8px;vertical-align:top}
 tr.large td.g{background:#f8c9c0}tr.medium td.g{background:#fbe8b0}tr.noise td.g{background:#d6efd2}img{display:block}</style>
 <h1>Goldens history: last ${commits.length} commit(s) touching <code>${esc(GOLDEN_DIR)}</code></h1>
-<p>Oldest first. Each golden against its parent commit's version, scored by the shared golden-diff engine
+<p>Oldest first; engine <code>${esc(engineSha ?? 'unknown')}</code>. Each golden against its parent commit's version, scored by the shared golden-diff engine
 (large = SSIM &lt; ${LARGE_SSIM} or a size change; medium = SSIM &lt; ${MEDIUM_SSIM}; else noise).</p>
 <table><tr><th>commit</th><th>PR / title</th><th>golden</th><th>SSIM</th><th>pixels</th><th>box union</th><th>grade</th><th>before</th><th>after</th><th>diff</th></tr>
 ${body}
@@ -94,6 +95,6 @@ ${body}
 const md = ['| commit | PR | golden | SSIM | pixels | box union | grade |', '|---|---|---|---|---|---|---|',
   ...rows.map((r) => `| ${r.commit} | ${r.pr ? `#${r.pr}` : ''} | ${name(r).replace(/\.png$/i, '')} | ${ssimCell(r)} | ${fracs(r).join(' | ')} | ${r.grade} |`)].join('\n');
 writeFileSync(join(OUT_DIR, 'history.md'), md + '\n');
-writeFileSync(join(OUT_DIR, 'history.json'), JSON.stringify({ n: N, goldenDir: GOLDEN_DIR, commits, rows }, null, 2));
+writeFileSync(join(OUT_DIR, 'history.json'), JSON.stringify({ n: N, goldenDir: GOLDEN_DIR, engineSha, commits, rows }, null, 2));
 process.stdout.write(md + '\n');
 console.error(`goldens-history: ${rows.length} row(s) over ${commits.length} commit(s); sheet in ${OUT_DIR}/index.html`);
