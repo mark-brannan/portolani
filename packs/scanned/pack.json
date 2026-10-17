@@ -148,12 +148,12 @@
       "style": "aguiar",
       "file": "rose-aguiar-b.png",
       "anchor": [0.5, 0.5],
-      "sizePx": 110,
+      "sizePx": 122,
       "bands": [0, 1],
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Jorge_Aguiar_1492_MR.jpg",
         "page": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg",
-        "crop": [4181, 2467, 4479, 2765]
+        "crop": [4162, 2448, 4498, 2784]
       }
     },
     {
@@ -176,13 +176,13 @@
       "kind": "tree",
       "style": "aguiar",
       "file": "palms-aguiar.png",
-      "anchor": [0.5, 0.5],
-      "sizePx": 70,
+      "anchor": [0.505, 0.464],
+      "sizePx": 76,
       "bands": [0, 1],
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Jorge_Aguiar_1492_MR.jpg",
         "page": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg",
-        "crop": [2538, 2963, 2718, 3247]
+        "crop": [2521, 2946, 2739, 3289]
       }
     },
     {
