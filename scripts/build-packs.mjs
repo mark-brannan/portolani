@@ -76,6 +76,7 @@ const SEA_FIGURE = { sat: 24, close: 7, open: 5, dilate: 4, feather: 2, minArea:
 const CARTA_PAPER = '#ded2af';
 const CATALAN_PAPER = '#e9dfcf'; // the vellum inside the Catalan Atlas rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness
 const GENOESE_PAPER = '#a48c75'; // the vellum inside the Genoese chart's scale bar: the mean of the 80th to 90th percentile of its pixels by brightness (the brightest are specks)
+const AGUIAR_PAPER = '#e9e6d2'; // the vellum inside the Aguiar 1492 rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness
 const PRUNES_PAPER = '#b4a38d'; // the vellum of Prunes 1559 inside the west rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness (the brightest are specks)
 const PARCHMENT = '#e9d8b4'; // the renderer's default paper, for the kept `.cut.png`
 const argv = process.argv.slice(2), keepAt = argv.indexOf('--keep'), onlyAt = argv.indexOf('--only');
@@ -99,7 +100,7 @@ const MAX_SCALE = 3; // a sprite is stored at most this many px wide per CSS px 
 const PACKS = [
   {
     name: 'scanned',
-    key: 'ink', // cut before the patch key existed; re-keying it as patches is #111, a sprite at a time (`key: 'patch'` on the sprite; the Carta Marina monsters and ships, the Catalan Atlas rose and the Genoese scale are done)
+    key: 'ink', // cut before the patch key existed; re-keying it as patches is #111, a sprite at a time (`key: 'patch'` on the sprite; the Carta Marina monsters and ships, the Catalan Atlas rose, the Aguiar 1492 rose and the Genoese scale are done)
     title: 'Sprites cropped from scans: Olaus Magnus, Carta Marina 1539; Jorge de Aguiar 1492; Catalan Atlas 1375; Genoese chart c. 1320-1350; Frederik de Wit; Ambroise Paré, Des monstres; Master W with the Key, two ship engravings c. 1475-1490',
     licence: 'Public domain (PD-Art); scans via Wikimedia Commons (James Ford Bell Library; Beinecke Library, Yale; BnF Gallica btv1b55002481n; Library of Congress 2003630429; Royal Museums Greenwich). The pare-* sprites: Wellcome Collection, CC BY 4.0. Ships ship-w-*: Art Institute of Chicago 27881 (CC0) and Rijksmuseum RP-P-2014-30 (Public Domain Mark)',
     ink: '#3b2a1a',
@@ -127,9 +128,8 @@ const PACKS = [
       // the smaller ship under sail; the coast lettering, the islet and the letters above erased
       { id: 'ship-b', kind: 'ship', style: 'carta-marina', scan: 'carta-marina', key: 'patch', paper: CARTA_PAPER, crop: [2050, 690, 2210, 840], figure: [2085, 708, 2212, 802], sizePx: 64, heading: 'right',
         erase: [[2198, 706, 2212, 738], [2170, 690, 2212, 705], [2168, 808, 2212, 842]] },
-      { id: 'rose-aguiar', kind: 'rose', style: 'aguiar', scan: 'aguiar', crop: [55, 80, 665, 690], sizePx: 300, dark: 'min', level: [12, 78], circle: [300, 300, 300],
-        // the scan's own wind names (norte, oeste, leste, sull and the petal inscriptions)
-        clean: [[355, 122, 377, 180], [175, 187, 235, 237], [495, 200, 552, 257], [115, 365, 165, 387], [555, 374, 609, 394], [162, 512, 197, 587], [340, 577, 364, 630], [489, 500, 535, 544], [112, 182, 147, 217]] },
+      // the Aguiar 1492 rose, a patch (#111): the whole disc inside its ring, wind names and petal inscriptions as drawn
+      { id: 'rose-aguiar', kind: 'rose', style: 'aguiar', scan: 'aguiar', key: 'patch', paper: AGUIAR_PAPER, crop: [25, 50, 695, 720], figure: [55, 80, 665, 690], sizePx: 300, circle: [335, 331, 308], circleFeather: 4 },
       // the Catalan Atlas rose (BnF), a patch (#111): the whole disc inside its ring, the blue, ochre and gilt washes and the
       // vellum between the rhumbs kept. The circle is the only outline and cuts the sea waves and the lettering round the
       // ring; it is not erased but feathered (`circleFeather`), so there is no pale hole where a name was
