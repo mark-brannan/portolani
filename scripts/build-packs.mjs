@@ -77,6 +77,7 @@ const CARTA_PAPER = '#ded2af';
 const CATALAN_PAPER = '#e9dfcf'; // the vellum inside the Catalan Atlas rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness
 const GENOESE_PAPER = '#a48c75'; // the vellum inside the Genoese chart's scale bar: the mean of the 80th to 90th percentile of its pixels by brightness (the brightest are specks)
 const AGUIAR_PAPER = '#e9e6d2'; // the vellum inside the Aguiar 1492 rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness
+const AGUIAR_CHART_PAPER = '#d3cfbb'; // the vellum of the whole Aguiar 1492 chart, inside its small rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness; the town sprites of the same scan share it
 const PRUNES_PAPER = '#b4a38d'; // the vellum of Prunes 1559 inside the west rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness (the brightest are specks)
 const PARCHMENT = '#e9d8b4'; // the renderer's default paper, for the kept `.cut.png`
 const argv = process.argv.slice(2), keepAt = argv.indexOf('--keep'), onlyAt = argv.indexOf('--only');
@@ -100,7 +101,7 @@ const MAX_SCALE = 3; // a sprite is stored at most this many px wide per CSS px 
 const PACKS = [
   {
     name: 'scanned',
-    key: 'ink', // cut before the patch key existed; re-keying it as patches is #111, a sprite at a time (`key: 'patch'` on the sprite; the Carta Marina monsters and ships, the Catalan Atlas rose, the Aguiar 1492 rose, the Genoese scale, Master W's `ship-w-key` and `ship-w-buss`, Paré's `pare-bear` and `pare-bishop` (scan `pare-3059`), Paré's `pare-lion` and `pare-seaman` (scan `pare-3060`), Paré's `pare-boar` and `pare-calf` (scan `pare-3267`), and Paré's `pare-truie` and `pare-elephant` (scan `pare-3289`), which stay ink by a visual pass, are done)
+    key: 'ink', // cut before the patch key existed; re-keying it as patches is #111, a sprite at a time (`key: 'patch'` on the sprite; the Carta Marina monsters and ships, the Catalan Atlas rose, the Aguiar 1492 rose, the Genoese scale, Master W's `ship-w-key` and `ship-w-buss`, Paré's `pare-bear` and `pare-bishop` (scan `pare-3059`), Paré's `pare-lion` and `pare-seaman` (scan `pare-3060`), Paré's `pare-boar` and `pare-calf` (scan `pare-3267`), and Paré's `pare-truie` and `pare-elephant` (scan `pare-3289`), which stay ink by a visual pass, and the Aguiar chart's `rose-aguiar-b` and `palms-aguiar`, are done)
     title: 'Sprites cropped from scans: Olaus Magnus, Carta Marina 1539; Jorge de Aguiar 1492; Catalan Atlas 1375; Genoese chart c. 1320-1350; Frederik de Wit; Ambroise Paré, Des monstres; Master W with the Key, two ship engravings c. 1475-1490',
     licence: 'Public domain (PD-Art); scans via Wikimedia Commons (James Ford Bell Library; Beinecke Library, Yale; BnF Gallica btv1b55002481n; Library of Congress 2003630429; Royal Museums Greenwich). The pare-* sprites: Wellcome Collection, CC BY 4.0. Ships ship-w-*: Art Institute of Chicago 27881 (CC0) and Rijksmuseum RP-P-2014-30 (Public Domain Mark)',
     ink: '#3b2a1a',
@@ -138,16 +139,18 @@ const PACKS = [
       // sea of parchment and the rhumb lines running off, a patch not a keyed ink, so the blue and red washes and the
       // gilt keep their tone. North is to the right on the scan, so the cut is turned a quarter anticlockwise.
       { id: 'rose-prunes', kind: 'rose', style: 'aguiar', scan: 'prunes', key: 'patch', paper: PRUNES_PAPER, crop: [5068, 2595, 7168, 4695], turn: -90, sizePx: 300, circle: [1050, 1050, 1020] },
-      // a smaller rose from the whole Aguiar chart, its wind names closed away
-      { id: 'rose-aguiar-b', kind: 'rose', style: 'aguiar', scan: 'aguiar-chart', crop: [4178, 2464, 4482, 2768], sizePx: 110, dark: 'min', level: [12, 78], circle: [152, 152, 148],
-        clean: [[4225, 2605, 4258, 2633], [4411, 2608, 4443, 2630], [4325, 2505, 4341, 2538], [4323, 2693, 4341, 2728], [4236, 2513, 4290, 2566], [4385, 2528, 4425, 2572], [4238, 2664, 4282, 2708], [4386, 2668, 4421, 2700]] },
+      // a smaller rose from the whole Aguiar chart, a patch (#111): the whole disc inside its outer ring, wind names as drawn;
+      // the crop is 20 px wider each side because the old one met the ring, and the circle feathers its edge outside the ring
+      { id: 'rose-aguiar-b', kind: 'rose', style: 'aguiar', scan: 'aguiar-chart', key: 'patch', paper: AGUIAR_CHART_PAPER, crop: [4158, 2444, 4502, 2788], figure: [4178, 2464, 4482, 2768], sizePx: 110, circle: [172, 172, 165], circleFeather: 3 },
       { id: 'cartouche-dewit', kind: 'cartouche', style: 'dewit', scan: 'dewit', crop: [196, 250, 1229, 1039], sizePx: 340, dark: 'min', level: [12, 66],
         // panel lettering and scale bars cleared so the renderer can letter the panel; SYRIA and coast cleared
         erase: [[232, 772, 1180, 1039], [196, 250, 300, 690]], panel: [232, 772, 1180, 1030] },
       // land vignettes and a scale bar: the palms are not placed yet, the town is a town style, the scale bar the vivid one's source
-      // the palms are less saturated than the paper, so darkness alone keys them and the faint rhumb lines drop out
-      { id: 'palms-aguiar', kind: 'tree', style: 'aguiar', scan: 'aguiar-chart', crop: [2530, 2962, 2732, 3248], sizePx: 70, level: [30, 62],
-        erase: [[2695, 2962, 2732, 2995], [2680, 3170, 2732, 3248]] },
+      // the palms with the ground they stand on, a patch (#111): the crop runs 40 px lower than the old one, which cut the trunks
+      // short of their roots. Coast lettering and rhumb lines stay as drawn; the polygon cuts only the red bars of the figure above
+      // right, fading just outside the fronds
+      { id: 'palms-aguiar', kind: 'tree', style: 'aguiar', scan: 'aguiar-chart', key: 'patch', paper: AGUIAR_CHART_PAPER, crop: [2520, 2945, 2740, 3290], figure: [2530, 2962, 2732, 3248], sizePx: 70,
+        mask: [[2520, 2945], [2698, 2945], [2698, 2994], [2740, 2994], [2740, 3290], [2520, 3290]], maskFeather: 2 },
       // Towns: every town drawing on the chart, one sprite each, taken in turn by the renderer. `rotate`
       // deskews a drawing that leans on the vellum (degrees clockwise), and sizePx is the height a town
       // stands at, flag to foot. Lettering, rivers and rhumb lines beside each are erased. The level is
