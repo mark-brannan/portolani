@@ -50,6 +50,7 @@ jobs:
     with:
       paths: test/golden/**
       label: goldens-large
+      engine-ref: claude/golden-diff
 
   # Separate from `test` because this one needs the network -- it fetches
   # Natural Earth data, same as the Pages deploy does. Runs on pull_request
