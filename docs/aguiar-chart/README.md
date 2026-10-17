@@ -14,7 +14,7 @@ map draws them. `<id>.raw.png`, `.key.png` and `.cut.png` are the images behind 
 
 | Sprite | Crop (scan px) | Edge | Dropped fields |
 |---|---|---|---|
-| `rose-aguiar-b` | (4158,2444)-(4502,2788), 20 px wider each side than before: the old crop met the outer ring | circle, radius 160 about the crop centre, feathered 2 px (`circleFeather`) | `dark`, `level`, eight `clean` boxes |
+| `rose-aguiar-b` | (4158,2444)-(4502,2788), 20 px wider each side than before: the old crop met the outer ring | circle, radius 165 about the crop centre, feathered 3 px (`circleFeather`) | `dark`, `level`, eight `clean` boxes |
 | `palms-aguiar` | (2520,2945)-(2740,3290): the old crop stopped 40 px short of the roots | polygon at the top right only, feathered 2 px | `level`, two `erase` boxes |
 
 `figure` holds the old box on both, so each keeps its `sizePx` and anchor with the extra surroundings round it.
@@ -25,8 +25,9 @@ Visual pass: the star, the three rings, the vellum between the rhumbs, the red, 
 names (`ocsti`, `leste` and the rest) all survive, as drawn. Absent from the sprite, and why:
 
 - the river and coast beyond the ring, and the rhumb lines running off: surround, outside the circle.
-- a fleck of the river at the east rhumb tip: the tip meets the river, so the circle (radius 160, past the 157 px tip)
+- a fleck of the river at the east rhumb tip: the tip meets the river, so the circle (radius 165, past the tip)
   takes a little of it; trimming it would cut the tip.
+- the brown blot outside the ring at the east: surround, outside the circle.
 
 ## `palms-aguiar`
 
