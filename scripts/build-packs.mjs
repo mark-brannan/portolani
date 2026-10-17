@@ -76,6 +76,7 @@ const SEA_FIGURE = { sat: 24, close: 7, open: 5, dilate: 4, feather: 2, minArea:
 const CARTA_PAPER = '#ded2af';
 const CATALAN_PAPER = '#e9dfcf'; // the vellum inside the Catalan Atlas rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness
 const GENOESE_PAPER = '#a48c75'; // the vellum inside the Genoese chart's scale bar: the mean of the 80th to 90th percentile of its pixels by brightness (the brightest are specks)
+const DEWIT_PAPER = '#e3dfc4'; // the paper inside the de Wit cartouche's tablet: the mean of the 80th to 90th percentile of its pixels by brightness (the brightest are specks)
 const AGUIAR_PAPER = '#e9e6d2'; // the vellum inside the Aguiar 1492 rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness
 const AGUIAR_CHART_PAPER = '#d3cfbb'; // the vellum of the whole Aguiar 1492 chart, inside its small rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness; the town sprites of the same scan share it
 const PRUNES_PAPER = '#b4a38d'; // the vellum of Prunes 1559 inside the west rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness (the brightest are specks)
@@ -141,9 +142,11 @@ const PACKS = [
       // a smaller rose from the whole Aguiar chart, a patch (#111): the whole disc inside its outer ring, wind names as drawn;
       // the crop is 20 px wider each side because the old one met the ring, and the circle feathers its edge outside the ring
       { id: 'rose-aguiar-b', kind: 'rose', style: 'aguiar', scan: 'aguiar-chart', key: 'patch', paper: AGUIAR_CHART_PAPER, crop: [4158, 2444, 4502, 2788], figure: [4178, 2464, 4482, 2768], sizePx: 110, circle: [172, 172, 165], circleFeather: 3 },
-      { id: 'cartouche-dewit', kind: 'cartouche', style: 'dewit', scan: 'dewit', key: 'ink', crop: [196, 250, 1229, 1039], sizePx: 340, dark: 'min', level: [12, 66],
-        // panel lettering and scale bars cleared so the renderer can letter the panel; SYRIA and coast cleared
-        erase: [[232, 772, 1180, 1039], [196, 250, 300, 690]], panel: [232, 772, 1180, 1030] },
+      // the de Wit cartouche as a patch (#111): the three putti, the scrollwork and the chart's rhumb lines and coast lettering round them
+      // all stay, the edge feathered; `figure` is the old box, so the cartouche keeps its sizePx and anchor. Only the tablet's paper is
+      // cleared (its scale bars and Dutch lettering), because the renderer letters the map's title there.
+      { id: 'cartouche-dewit', kind: 'cartouche', style: 'dewit', scan: 'dewit', key: 'patch', paper: DEWIT_PAPER, crop: [150, 200, 1229, 1039], figure: [196, 250, 1229, 1039], sizePx: 340,
+        erase: [[236, 764, 1142, 1010]], panel: [236, 764, 1142, 1010] },
       // land vignettes and a scale bar: the palms are not placed yet, the town is a town style, the scale bar the vivid one's source
       // the palms with the ground they stand on, a patch (#111): the crop runs 40 px lower than the old one, which cut the trunks
       // short of their roots. Coast lettering and rhumb lines stay as drawn; the polygon cuts only the red bars of the figure above

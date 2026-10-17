@@ -161,15 +161,15 @@
       "kind": "cartouche",
       "style": "dewit",
       "file": "cartouche-dewit.png",
-      "anchor": [0.5, 0.5],
-      "sizePx": 340,
+      "anchor": [0.521, 0.53],
+      "sizePx": 354,
       "bands": [0, 1],
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/6/68/Angel_cartouche_on_a_Mediterranean_map_by_de_Wit.tiff",
         "page": "https://commons.wikimedia.org/wiki/File:Angel_cartouche_on_a_Mediterranean_map_by_de_Wit.tiff",
-        "crop": [197, 251, 1228, 1035]
+        "crop": [151, 201, 1228, 1038]
       },
-      "panel": [0.034, 0.665, 0.953, 0.994]
+      "panel": [0.079, 0.673, 0.92, 0.967]
     },
     {
       "id": "palms-aguiar",
