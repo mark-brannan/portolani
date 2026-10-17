@@ -441,7 +441,7 @@
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/c/c8/Woodcut_marine_monsters_Wellcome_L0033060.jpg",
         "page": "https://commons.wikimedia.org/wiki/File:Woodcut_marine_monsters_Wellcome_L0033060.jpg",
-        "crop": [521, 2941, 2380, 3873]
+        "crop": [514, 2874, 2380, 3873]
       },
       "minClearancePx": 140,
       "weight": 1
