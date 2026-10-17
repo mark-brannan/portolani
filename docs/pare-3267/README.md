@@ -13,11 +13,8 @@ ink sprites; `.patch.cut.png` is the candidate.
 
 | Sprite | Call | Reason | In the raw, not in the sprite |
 |---|---|---|---|
-| `pare-boar` | keep `ink` | Ink alone on paper; every tooth, claw, the tail's curl and its lower tip are in, and the patch adds only the page | the page's grey tone and mottling; the verso's ghost (a fish's tail right of the legs, reversed lettering at the top edge) |
-| `pare-calf` | keep `ink` | Ink alone on paper; whiskers, flippers and both tail lobes are in, and the patch adds only the page | the page's grey tone and mottling; a wavy grey haze behind and right of the body, which is the verso's print showing through, not drawn on this plate |
+| `pare-boar` | keep `ink` | Ink alone on paper; tusks, claws, tail all in | page tone; verso ghost (fish tail, reversed lettering) |
+| `pare-calf` | keep `ink` | Ink alone on paper; whiskers, flippers, tail lobes in | page tone; wavy verso haze, not drawn on this plate |
 
-Both crops are wider than before (the boar by 40 px left, 80 right, 40 above and 60 below; the calf by 60 left, 80 right, 30 above and
-20 below): the old boxes ran within 15 px of the calf's whisker and tail tip and within 20 px of the boar's tail tip and
-snout, and a crop that close cuts the figure's own edge. The outline (`PAPER_FIGURE`) takes the ink and drops the book's
-text below each figure.
+Both crops are widened: a crop within 20 px of the figure cuts its edge.
 Undo for each: `key: 'patch'` on the sprite (with `paper: '#d6d6d6'`, as in the candidates, and no `silhouette`) in `scripts/build-packs.mjs`.
