@@ -219,3 +219,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261017t011605z
 - pare-calf keeps ink key (pare-3267) Undo: key: 'patch', paper '#d6d6d6' on pare-calf, no silhouette (no PR, branch claude/pare-3267-s3)
+
+### 20261017t015810z
+- Aguiar chart paper #d3cfbb measured from the rose ring, shared by the later town sprites Undo: change AGUIAR_CHART_PAPER and rebuild packs (branch:claude/aguiar-chart-a-s3) (no PR, branch claude/aguiar-chart-a-s3)
