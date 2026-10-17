@@ -1,0 +1,12 @@
+# Rendered paths: a PR touching any of these must show a picture or a preview
+# URL in its body (mark-brannan/.github show-dont-tell workflow), and carry a
+# "## Try it" block that serves the PR's head in one paste. `node
+# scripts/try-it.mjs <pr>` prints that block from the three scalar keys below.
+paths:
+  - "public/**"        # the page and its drawer
+  - "scripts/*.mjs"    # the scene and the modules it imports
+  - "packs/**"         # the sprite packs
+  - "test/golden/**"   # the golden images
+checkout: ~/portolani                               # the user's local clone
+install: npm ci
+serve: npm run dev -- --port {port}                 # {port} = 10000 + PR number

@@ -4,3 +4,4 @@ _site/
 out/
 *.tgz
 .DS_Store
+.claude/worktrees/

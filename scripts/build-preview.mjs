@@ -181,17 +181,9 @@ await mkdir(path.join(out, 'coastlines'), { recursive: true });
 await cp(path.join(root, 'node_modules', 'coastlines', 'catalogue.json'), path.join(out, 'coastlines', 'catalogue.json'));
 await cp(path.join(root, 'public'), out, { recursive: true });
 import { buildLearn } from './learn.mjs';
+import { relativeImports } from './scene-modules.mjs';
 await buildLearn(root, out); // docs/learn/*.md into _site/learn/*.html
-// scene.mjs and every file it reaches by a relative import, walked rather than listed, so a new
-// module ships with the scene that imports it (a hand-kept list once left the page blank)
-async function relativeImports(entry, seen = new Set()) {
-  if (seen.has(entry)) return seen;
-  seen.add(entry);
-  if (!entry.endsWith('.mjs')) return seen;
-  const src = await readFile(path.join(root, 'scripts', entry), 'utf8');
-  for (const [, f] of src.matchAll(/^\s*(?:import|export)\b[^;]*?\bfrom\s+'\.\/([^']+)'/gm)) await relativeImports(f, seen);
-  return seen;
-}
-for (const f of await relativeImports('scene.mjs')) await cp(path.join(root, 'scripts', f), path.join(out, f));
+// scene.mjs and the modules it reaches (scene-modules.mjs walks them; the dev server serves the same set)
+for (const f of await relativeImports(root)) await cp(path.join(root, 'scripts', f), path.join(out, f));
 await cp(path.join(root, 'packs'), path.join(out, 'packs'), { recursive: true });
 console.log(`preview assembled in ${path.relative(root, out)}/`);
