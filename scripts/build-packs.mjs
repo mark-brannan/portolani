@@ -186,7 +186,7 @@ const PACKS = [
       { id: 'pare-lion', kind: 'monster', style: 'pare', scan: 'pare-3060', crop: [670, 1220, 2350, 2230], sizePx: 180, minClearancePx: 140, weight: 2, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
       { id: 'pare-calf', kind: 'monster', style: 'pare', scan: 'pare-3267', crop: [640, 620, 2440, 1510], sizePx: 170, minClearancePx: 140, weight: 2, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
       { id: 'pare-elephant', kind: 'monster', style: 'pare', scan: 'pare-3289', crop: [880, 2480, 2930, 3510], sizePx: 180, minClearancePx: 140, weight: 2, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
-      { id: 'pare-bear', kind: 'monster', style: 'pare', scan: 'pare-3059', crop: [980, 3220, 2920, 3860], sizePx: 200, minClearancePx: 150, weight: 1, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
+      { id: 'pare-bear', kind: 'monster', style: 'pare', scan: 'pare-3059', crop: [980, 3140, 2980, 3860], sizePx: 200, minClearancePx: 150, weight: 1, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
       { id: 'pare-seaman', kind: 'monster', style: 'pare', scan: 'pare-3060', crop: [520, 2940, 2410, 3910], sizePx: 170, minClearancePx: 140, weight: 1, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
       // the sea bishop is tall, so drawn narrower; a stain at his feet is outside the drawn outline
       { id: 'pare-bishop', kind: 'monster', style: 'pare', scan: 'pare-3059', crop: [1400, 630, 2520, 2470], sizePx: 110, minClearancePx: 140, weight: 1, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE,
