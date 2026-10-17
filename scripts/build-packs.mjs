@@ -87,9 +87,9 @@ const only = onlyAt >= 0 ? argv[onlyAt + 1] : null;
 if (keep) mkdirSync(keep, { recursive: true });
 
 const CLEAN_DISK = 5; // px radius of the closing that removes scanned lettering
-const TOWN_LEVEL = [30, 80]; // darkness levels for the Aguiar towns: the thin brown ink is pushed to full alpha so it reads at map size
-// Woodcuts and engravings on blank paper (Paré, Master W): darkness alone keys them. The silhouette
-// is taken from the ink itself (`ink`: alpha % that counts), which drops paper grain, stains and
+// Ink-alone sprites (Paré, Master W, the De Wit cartouche) take `key: 'ink'`: darkness levels key them, because nothing
+// but line is wanted. A coloured plate never does: levels thin every wash and lose the surroundings, so it is a patch.
+// The silhouette is taken from the ink itself (`ink`: alpha % that counts), which drops paper grain, stains and
 // the faint lettering that shows through from the reverse; sizes are for ~600 dpi scans.
 const PAPER_LEVEL = [20, 50];
 const PAPER_FIGURE = { ink: 50, close: 14, open: 1, dilate: 8, feather: 4, minArea: 40000 };
@@ -101,7 +101,6 @@ const MAX_SCALE = 3; // a sprite is stored at most this many px wide per CSS px 
 const PACKS = [
   {
     name: 'scanned',
-    key: 'ink', // cut before the patch key existed; re-keying it as patches is #111, a sprite at a time (`key: 'patch'` on the sprite; the Carta Marina monsters and ships, the Catalan Atlas rose, the Aguiar 1492 rose, the Genoese scale, Master W's `ship-w-key` and `ship-w-buss`, Paré's `pare-bear` and `pare-bishop` (scan `pare-3059`), Paré's `pare-lion` and `pare-seaman` (scan `pare-3060`), Paré's `pare-boar` and `pare-calf` (scan `pare-3267`), and Paré's `pare-truie` and `pare-elephant` (scan `pare-3289`), which stay ink by a visual pass, and the Aguiar chart's `rose-aguiar-b` and `palms-aguiar`, are done)
     title: 'Sprites cropped from scans: Olaus Magnus, Carta Marina 1539; Jorge de Aguiar 1492; Catalan Atlas 1375; Genoese chart c. 1320-1350; Frederik de Wit; Ambroise Paré, Des monstres; Master W with the Key, two ship engravings c. 1475-1490',
     licence: 'Public domain (PD-Art); scans via Wikimedia Commons (James Ford Bell Library; Beinecke Library, Yale; BnF Gallica btv1b55002481n; Library of Congress 2003630429; Royal Museums Greenwich). The pare-* sprites: Wellcome Collection, CC BY 4.0. Ships ship-w-*: Art Institute of Chicago 27881 (CC0) and Rijksmuseum RP-P-2014-30 (Public Domain Mark)',
     ink: '#3b2a1a',
@@ -142,7 +141,7 @@ const PACKS = [
       // a smaller rose from the whole Aguiar chart, a patch (#111): the whole disc inside its outer ring, wind names as drawn;
       // the crop is 20 px wider each side because the old one met the ring, and the circle feathers its edge outside the ring
       { id: 'rose-aguiar-b', kind: 'rose', style: 'aguiar', scan: 'aguiar-chart', key: 'patch', paper: AGUIAR_CHART_PAPER, crop: [4158, 2444, 4502, 2788], figure: [4178, 2464, 4482, 2768], sizePx: 110, circle: [172, 172, 165], circleFeather: 3 },
-      { id: 'cartouche-dewit', kind: 'cartouche', style: 'dewit', scan: 'dewit', crop: [196, 250, 1229, 1039], sizePx: 340, dark: 'min', level: [12, 66],
+      { id: 'cartouche-dewit', kind: 'cartouche', style: 'dewit', scan: 'dewit', key: 'ink', crop: [196, 250, 1229, 1039], sizePx: 340, dark: 'min', level: [12, 66],
         // panel lettering and scale bars cleared so the renderer can letter the panel; SYRIA and coast cleared
         erase: [[232, 772, 1180, 1039], [196, 250, 300, 690]], panel: [232, 772, 1180, 1030] },
       // land vignettes and a scale bar: the palms are not placed yet, the town is a town style, the scale bar the vivid one's source
@@ -151,55 +150,48 @@ const PACKS = [
       // right, fading just outside the fronds
       { id: 'palms-aguiar', kind: 'tree', style: 'aguiar', scan: 'aguiar-chart', key: 'patch', paper: AGUIAR_CHART_PAPER, crop: [2520, 2945, 2740, 3290], figure: [2530, 2962, 2732, 3248], sizePx: 70,
         mask: [[2520, 2945], [2698, 2945], [2698, 2994], [2740, 2994], [2740, 3290], [2520, 3290]], maskFeather: 2 },
-      // Towns: every town drawing on the chart, one sprite each, taken in turn by the renderer. `rotate`
-      // deskews a drawing that leans on the vellum (degrees clockwise), and sizePx is the height a town
-      // stands at, flag to foot. Lettering, rivers and rhumb lines beside each are erased. The level is
-      // tighter than the roses' so the thin brown ink reads at map size.
-      // Venice in its lagoon halo; the name and flagpole above and the coast names beside erased
-      { id: 'town-aguiar-venice', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', crop: [2930, 728, 3160, 888], sizePx: 84, dark: 'min', level: TOWN_LEVEL,
-        erase: [[3060, 728, 3160, 756], [3036, 728, 3052, 772], [3098, 786, 3160, 888], [3000, 856, 3160, 888]] },
-      // Genoa under its mountain: towers, a domed gate and the blue harbour mole
-      { id: 'town-aguiar-genoa', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', crop: [2762, 882, 2940, 1018], sizePx: 80, dark: 'min', level: TOWN_LEVEL,
-        erase: [[2762, 882, 2802, 935], [2762, 1002, 2940, 1018], [2905, 975, 2940, 1018]] },
+      // Towns: every town drawing on the chart, a patch (#111): the whole crop, its edge feathered, so the hatching, the
+      // ground and the lagoon a town stands in come with it. `figure` is the old box round the town, so each keeps its
+      // sizePx and anchor with the extra surroundings round it. `rotate` deskews a drawing that leans on the vellum
+      // (degrees clockwise). Lettering and rhumb lines beside each stay as drawn; only the lake town's polygon cuts anything.
+      // Venice in its lagoon halo, flag and pole above; the crop reaches the flag, the halo's hatching and the sea below
+      { id: 'town-aguiar-venice', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', key: 'patch', paper: AGUIAR_CHART_PAPER, crop: [2915, 690, 3170, 915], figure: [2930, 728, 3160, 888], sizePx: 84 },
+      // Genoa under its mountain: the spires, a domed gate and the blue harbour mole, the hatching below
+      { id: 'town-aguiar-genoa', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', key: 'patch', paper: AGUIAR_CHART_PAPER, crop: [2745, 858, 2950, 1048], figure: [2762, 882, 2940, 1018], sizePx: 80 },
       // Lisbon on the Tagus: red roofs behind a wall on a green hill, the river below
-      { id: 'town-aguiar-lisbon', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', crop: [1822, 1472, 1958, 1578], sizePx: 72, dark: 'min', level: TOWN_LEVEL, rotate: -4,
-        erase: [[1822, 1472, 1890, 1494], [1822, 1494, 1844, 1578], [1870, 1556, 1958, 1578], [1822, 1566, 1870, 1578]] },
-      // the walled town in its lake, the lake cut away (the old town-aguiar crop kept it)
-      { id: 'town-aguiar-lake', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', crop: [2326, 2372, 2430, 2452], sizePx: 72, dark: 'min', level: TOWN_LEVEL },
-      // the same town with its lake, the rivers leaving it erased
-      { id: 'town-aguiar-lake-moat', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', crop: [2300, 2358, 2448, 2486], sizePx: 84, dark: 'min', level: TOWN_LEVEL,
-        erase: [[2350, 2340, 2368, 2366], [2300, 2455, 2322, 2486], [2435, 2425, 2448, 2486], [2345, 2470, 2365, 2486], [2405, 2466, 2425, 2486]] },
-      // Smina on the Niger: a round walled town on a mound, leaning on the vellum; the river erased
-      { id: 'town-aguiar-smina', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', crop: [2932, 3086, 3072, 3202], sizePx: 72, dark: 'min', level: TOWN_LEVEL, rotate: 6,
-        erase: [[2932, 3086, 2962, 3112], [3040, 3086, 3072, 3142], [3062, 3142, 3072, 3202], [2932, 3188, 3072, 3202], [2932, 3150, 2958, 3202]] },
-      // Jerusalem, in ink only and drawn lightly, so its level is pushed harder still: a keep and a domed church inside a wall
-      { id: 'town-aguiar-jerusalem', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', crop: [4708, 1612, 4815, 1714], sizePx: 72, level: [45, 85],
-        erase: [[4708, 1612, 4815, 1630], [4762, 1612, 4815, 1650], [4708, 1630, 4738, 1700], [4708, 1702, 4815, 1714], [4800, 1612, 4815, 1660]] },
-      // a red gate tower on the Moroccan coast (Ceuta), the coast names round it erased
-      { id: 'town-aguiar-ceuta', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', crop: [2010, 1908, 2092, 2012], sizePx: 56, dark: 'min', level: TOWN_LEVEL, rotate: 8,
-        erase: [[2010, 1908, 2024, 2012], [2072, 1908, 2092, 2012], [2010, 1908, 2092, 1916], [2010, 1992, 2092, 2012]] },
+      { id: 'town-aguiar-lisbon', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', key: 'patch', paper: AGUIAR_CHART_PAPER, crop: [1806, 1458, 1972, 1596], figure: [1822, 1472, 1958, 1578], sizePx: 72, rotate: -4 },
+      // the walled town in its lake: the crop stops just inside the lake's ring, so the ring stays the other sprite's
+      { id: 'town-aguiar-lake', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', key: 'patch', paper: AGUIAR_CHART_PAPER, crop: [2321, 2366, 2435, 2459], figure: [2326, 2372, 2430, 2452], sizePx: 72 },
+      // the same town with its lake; the polygon runs just outside the ring and cuts the rivers that leave it
+      { id: 'town-aguiar-lake-moat', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', key: 'patch', paper: AGUIAR_CHART_PAPER, crop: [2290, 2334, 2464, 2494], figure: [2300, 2358, 2448, 2486], sizePx: 84,
+        mask: [[2306, 2362], [2340, 2346], [2380, 2344], [2420, 2352], [2450, 2372], [2454, 2410], [2446, 2444], [2420, 2464], [2380, 2470], [2340, 2464], [2314, 2440], [2304, 2400]], maskFeather: 3 },
+      // Smina on the Niger: a round walled town on a mound, leaning on the vellum, with its ground
+      { id: 'town-aguiar-smina', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', key: 'patch', paper: AGUIAR_CHART_PAPER, crop: [2918, 3072, 3084, 3214], figure: [2932, 3086, 3072, 3202], sizePx: 72, rotate: 6 },
+      // Jerusalem, drawn lightly: a keep and a domed church inside a wall
+      { id: 'town-aguiar-jerusalem', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', key: 'patch', paper: AGUIAR_CHART_PAPER, crop: [4694, 1598, 4826, 1730], figure: [4708, 1612, 4815, 1714], sizePx: 72 },
+      // a red gate tower on the Moroccan coast (Ceuta), with the ground it stands on
+      { id: 'town-aguiar-ceuta', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', key: 'patch', paper: AGUIAR_CHART_PAPER, crop: [1998, 1894, 2104, 2040], figure: [2010, 1908, 2092, 2012], sizePx: 56, rotate: 8 },
       // Avignon: the long red palace with its flag, drawn askew on the chart
-      { id: 'town-aguiar-avignon', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', crop: [2342, 1026, 2452, 1086], sizePx: 48, dark: 'min', level: TOWN_LEVEL, rotate: -14,
-        erase: [[2342, 1026, 2452, 1034], [2342, 1080, 2452, 1086]] },
+      { id: 'town-aguiar-avignon', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', key: 'patch', paper: AGUIAR_CHART_PAPER, crop: [2330, 1016, 2462, 1104], figure: [2342, 1026, 2452, 1086], sizePx: 48, rotate: -14 },
       // the Genoese scale bar: the old tight box is `figure`, the crop reaches a little past it so the edge feather falls on bare vellum, not on the bar's border
       { id: 'scale-genoese', kind: 'scale', style: 'genoese', scan: 'genoese', key: 'patch', paper: GENOESE_PAPER, crop: [3690, 3797, 4420, 3955], figure: [3708, 3815, 4400, 3940], sizePx: 260 },
       // Paré's sea monsters (Des monstres), black line on blank paper, with Master W's ships
-      { id: 'pare-truie', kind: 'monster', style: 'pare', scan: 'pare-3289', crop: [880, 440, 3030, 1640], sizePx: 190, minClearancePx: 150, weight: 3, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
-      { id: 'pare-boar', kind: 'monster', style: 'pare', scan: 'pare-3267', crop: [520, 2100, 2500, 3260], sizePx: 180, minClearancePx: 140, weight: 3, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
-      { id: 'pare-lion', kind: 'monster', style: 'pare', scan: 'pare-3060', crop: [670, 1220, 2350, 2230], sizePx: 180, minClearancePx: 140, weight: 2, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
-      { id: 'pare-calf', kind: 'monster', style: 'pare', scan: 'pare-3267', crop: [580, 590, 2520, 1530], sizePx: 170, minClearancePx: 140, weight: 2, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
-      { id: 'pare-elephant', kind: 'monster', style: 'pare', scan: 'pare-3289', crop: [790, 2410, 3020, 3560], sizePx: 180, minClearancePx: 140, weight: 2, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
-      { id: 'pare-bear', kind: 'monster', style: 'pare', scan: 'pare-3059', crop: [980, 3140, 2980, 3860], sizePx: 200, minClearancePx: 150, weight: 1, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
-      { id: 'pare-seaman', kind: 'monster', style: 'pare', scan: 'pare-3060', crop: [480, 2830, 2440, 3930], sizePx: 170, minClearancePx: 140, weight: 1, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
+      { id: 'pare-truie', kind: 'monster', style: 'pare', scan: 'pare-3289', key: 'ink', crop: [880, 440, 3030, 1640], sizePx: 190, minClearancePx: 150, weight: 3, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
+      { id: 'pare-boar', kind: 'monster', style: 'pare', scan: 'pare-3267', key: 'ink', crop: [520, 2100, 2500, 3260], sizePx: 180, minClearancePx: 140, weight: 3, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
+      { id: 'pare-lion', kind: 'monster', style: 'pare', scan: 'pare-3060', key: 'ink', crop: [670, 1220, 2350, 2230], sizePx: 180, minClearancePx: 140, weight: 2, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
+      { id: 'pare-calf', kind: 'monster', style: 'pare', scan: 'pare-3267', key: 'ink', crop: [580, 590, 2520, 1530], sizePx: 170, minClearancePx: 140, weight: 2, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
+      { id: 'pare-elephant', kind: 'monster', style: 'pare', scan: 'pare-3289', key: 'ink', crop: [790, 2410, 3020, 3560], sizePx: 180, minClearancePx: 140, weight: 2, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
+      { id: 'pare-bear', kind: 'monster', style: 'pare', scan: 'pare-3059', key: 'ink', crop: [980, 3140, 2980, 3860], sizePx: 200, minClearancePx: 150, weight: 1, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
+      { id: 'pare-seaman', kind: 'monster', style: 'pare', scan: 'pare-3060', key: 'ink', crop: [480, 2830, 2440, 3930], sizePx: 170, minClearancePx: 140, weight: 1, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
       // the sea bishop is tall, so drawn narrower; a stain at his feet is outside the drawn outline
-      { id: 'pare-bishop', kind: 'monster', style: 'pare', scan: 'pare-3059', crop: [1400, 630, 2520, 2470], sizePx: 110, minClearancePx: 140, weight: 1, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE,
+      { id: 'pare-bishop', kind: 'monster', style: 'pare', scan: 'pare-3059', key: 'ink', crop: [1400, 630, 2520, 2470], sizePx: 110, minClearancePx: 140, weight: 1, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE,
         mask: [[1990, 630], [2110, 650], [2200, 800], [2250, 1000], [2240, 1180], [2290, 1220], [2380, 1240], [2500, 1250], [2500, 1340], [2420, 1440], [2330, 1500], [2260, 1500], [2260, 2080], [2190, 2110], [2180, 2280], [2210, 2400], [2160, 2450], [2040, 2450], [1980, 2420], [1940, 2450], [1830, 2450], [1780, 2380], [1800, 2250], [1780, 2160], [1690, 2150], [1680, 2060], [1600, 1980], [1480, 1900], [1405, 1840], [1405, 1770], [1500, 1700], [1560, 1580], [1650, 1400], [1690, 1250], [1800, 1150], [1840, 900], [1910, 660]] },
       // both ships sail bow to the left: the anchor and bowsprit are at the left end
       // engraved lines are finer than a woodcut's: no median, and levels set by the paper
-      { id: 'ship-w-key', kind: 'ship', style: 'pare', scan: 'master-w-ship', crop: [10, 20, 2110, 2990], sizePx: 84, heading: 'left', level: [40, 66], bolden: 2,
+      { id: 'ship-w-key', kind: 'ship', style: 'pare', scan: 'master-w-ship', key: 'ink', crop: [10, 20, 2110, 2990], sizePx: 84, heading: 'left', level: [40, 66], bolden: 2,
         // the plate mark at the crop's edge is not the ship's: a feathered inset cuts it. The waves fill the plate's foot and are the ship's water, so they stay
         mask: [[70, 40], [2090, 40], [2090, 2960], [70, 2960]], maskFeather: 40 },
-      { id: 'ship-w-buss', kind: 'ship', style: 'pare', scan: 'master-w-buss', crop: [60, 140, 1780, 2160], sizePx: 80, heading: 'left', level: [45, 76], bolden: 2,
+      { id: 'ship-w-buss', kind: 'ship', style: 'pare', scan: 'master-w-buss', key: 'ink', crop: [60, 140, 1780, 2160], sizePx: 80, heading: 'left', level: [45, 76], bolden: 2,
         erase: [[1380, 140, 1540, 240]] }, // the WA monogram
     ],
   },
@@ -383,7 +375,7 @@ function buildSprite(sprite, colour, key, outDir, tmp) {
   if (sprite.weight) entry.weight = sprite.weight;
   if (sprite.heading) entry.heading = sprite.heading;
   if (sprite.heightPx) entry.heightPx = sprite.heightPx;
-  else if (sprite.kind === 'town') entry.heightPx = sprite.sizePx; // a town stands at sizePx, flag to foot
+  else if (sprite.kind === 'town') entry.heightPx = fig ? Math.round(sprite.sizePx * th / (fig[3] - fig[1])) : sprite.sizePx; // a town stands at sizePx, flag to foot
   if (sprite.panel) {
     const [px0, py0, px1, py1] = sprite.panel;
     // panel in sprite-local fractions, for lettering
