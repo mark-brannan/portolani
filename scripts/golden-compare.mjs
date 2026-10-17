@@ -1,5 +1,5 @@
-// The pixel bar for a golden, shared by test/golden.test.mjs (the gate) and scripts/golden-diff.mjs
-// (the report), so the two cannot drift apart.
+// The pixel bar for a golden, used by test/golden.test.mjs (the gate). The report of how far a
+// golden moved is the shared golden-diff workflow in mark-brannan/.github, with its own scoring.
 export const CHANNEL = 24; // a pixel differs when any channel moves more than this
 
 // Compare two RGBA buffers of w x h. Returns the count of differing pixels and an RGBA diff image
