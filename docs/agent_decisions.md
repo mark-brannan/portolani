@@ -228,3 +228,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261017t202827z
 - dev server takes geo/ and font/ from the published Pages site rather than a shared local cache Undo: point DATA_URL at a local cache, or make --build the default ([#197](https://github.com/mark-brannan/portolani/issues/197)) (no PR, branch claude/portolani-issue-197-7c59d0)
+
+### 20261017t202830z
+- show-dont-tell rendered paths: public/**, scripts/*.mjs, packs/**, test/golden/** Undo: edit paths: in .github/show-dont-tell.yml ([#197](https://github.com/mark-brannan/portolani/issues/197)) (no PR, branch claude/portolani-issue-197-7c59d0)
