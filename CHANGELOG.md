@@ -1,5 +1,42 @@
 # Changelog
 
+## [0.1.3](https://github.com/mark-brannan/portolani/compare/v0.1.2...v0.1.3) (2026-10-17)
+
+
+### Added
+
+* **drawer:** section lead-ins with Learn links ([#106](https://github.com/mark-brannan/portolani/issues/106)) ([#171](https://github.com/mark-brannan/portolani/issues/171)) ([605a564](https://github.com/mark-brannan/portolani/commit/605a564ce946dfb918195aedc20a1a8e84853b4d))
+* **drawer:** visible provenance captions under each chip group, each chart linked ([#106](https://github.com/mark-brannan/portolani/issues/106)) ([#170](https://github.com/mark-brannan/portolani/issues/170)) ([03a635f](https://github.com/mark-brannan/portolani/commit/03a635f44553575e5c8cf40ab0d014bb654e648f))
+* **learn:** Learn pages built into _site/learn ([#106](https://github.com/mark-brannan/portolani/issues/106)) ([#172](https://github.com/mark-brannan/portolani/issues/172)) ([933375f](https://github.com/mark-brannan/portolani/commit/933375f1fb2c1718ad3b2e299e4091a5149b6918))
+* **packs:** Carta Marina monsters and ships cut as patches ([#111](https://github.com/mark-brannan/portolani/issues/111)) ([#159](https://github.com/mark-brannan/portolani/issues/159)) ([57ccfee](https://github.com/mark-brannan/portolani/commit/57ccfeef777e9ae98f3f1ad45b73255c5aa95dcc))
+* **packs:** Master W's herring buss stays ink by a visual pass ([#111](https://github.com/mark-brannan/portolani/issues/111)) ([#186](https://github.com/mark-brannan/portolani/issues/186)) ([3104adb](https://github.com/mark-brannan/portolani/commit/3104adb62696911cc02aaaa7286603a21d8bc1f5))
+* **packs:** Master W's ship stays ink by a visual pass, its waves widened ([#111](https://github.com/mark-brannan/portolani/issues/111)) ([#185](https://github.com/mark-brannan/portolani/issues/185)) ([23da580](https://github.com/mark-brannan/portolani/commit/23da5808bb75e3f7d7c50db69bea4bf110bf19f4))
+* **packs:** Paré's bear-headed monster and sea bishop stay ink by a visual pass ([#111](https://github.com/mark-brannan/portolani/issues/111)) ([#187](https://github.com/mark-brannan/portolani/issues/187)) ([f243b16](https://github.com/mark-brannan/portolani/commit/f243b168ef89cd5eb169332c73f197236e4f6ca8))
+* **packs:** Paré's scaled sea lion and horned sea-man stay ink by a visual pass, the sea-man's crop takes both horns ([#111](https://github.com/mark-brannan/portolani/issues/111)) ([#188](https://github.com/mark-brannan/portolani/issues/188)) ([03e87bc](https://github.com/mark-brannan/portolani/commit/03e87bc64adf5da120dfcf18f13dcf1c3241f1e3))
+* **packs:** Paré's sea boar and sea calf stay ink by a visual pass, both crops widened ([#111](https://github.com/mark-brannan/portolani/issues/111)) ([#189](https://github.com/mark-brannan/portolani/issues/189)) ([a6f18b3](https://github.com/mark-brannan/portolani/commit/a6f18b3616cd336632a0f6ed36188da7a287c89c))
+* **packs:** Paré's sea sow and sea elephant stay ink by a visual pass ([#111](https://github.com/mark-brannan/portolani/issues/111)) ([#190](https://github.com/mark-brannan/portolani/issues/190)) ([0af8df7](https://github.com/mark-brannan/portolani/commit/0af8df7ff8b07078c6072109b8df25c2b8ae89d0))
+* **packs:** the Aguiar 1492 rose as a patch, its edge feathered ([#111](https://github.com/mark-brannan/portolani/issues/111)) ([#184](https://github.com/mark-brannan/portolani/issues/184)) ([4a543ff](https://github.com/mark-brannan/portolani/commit/4a543ff713901477139a470d3e4dada48be863c3))
+* **packs:** the Aguiar chart's nine towns as patches; the scanned pack's ink default retired ([#111](https://github.com/mark-brannan/portolani/issues/111)) ([#192](https://github.com/mark-brannan/portolani/issues/192)) ([09ec52f](https://github.com/mark-brannan/portolani/commit/09ec52fdf1f20f9780d9e029d129a30b1a25d4e5))
+* **packs:** the Aguiar chart's rose and palms as patches, edges feathered ([#111](https://github.com/mark-brannan/portolani/issues/111)) ([#191](https://github.com/mark-brannan/portolani/issues/191)) ([db3355c](https://github.com/mark-brannan/portolani/commit/db3355cdf64a7cba40919e1da30867cbfe851924))
+* **packs:** the Catalan Atlas rose as a patch, its edge feathered ([#111](https://github.com/mark-brannan/portolani/issues/111)) ([#181](https://github.com/mark-brannan/portolani/issues/181)) ([40d83cb](https://github.com/mark-brannan/portolani/commit/40d83cb2dde5d184fd5899c3734d5a57675f8e5d))
+* **packs:** the de Wit cartouche as a patch, its crop widened ([#111](https://github.com/mark-brannan/portolani/issues/111)) ([#183](https://github.com/mark-brannan/portolani/issues/183)) ([5778ac1](https://github.com/mark-brannan/portolani/commit/5778ac13e602a45fbc12384d998272929bdcd6a0))
+* **packs:** the Genoese scale bar as a patch, the crop reaching past its border ([#111](https://github.com/mark-brannan/portolani/issues/111)) ([#182](https://github.com/mark-brannan/portolani/issues/182)) ([51cb9f4](https://github.com/mark-brannan/portolani/commit/51cb9f44ff77a9deac8e7958b6ea45c738820f4e))
+* **packs:** the Prunes 1559 rose, via a turn step for a scan with north to the right ([#52](https://github.com/mark-brannan/portolani/issues/52)) ([#179](https://github.com/mark-brannan/portolani/issues/179)) ([f0acb61](https://github.com/mark-brannan/portolani/commit/f0acb61a9b785d77f4a988c4f5851d179938af71))
+* **page:** phone layout, a half-height bottom sheet and the cartouche and scale bar off the sea ([#109](https://github.com/mark-brannan/portolani/issues/109), [#106](https://github.com/mark-brannan/portolani/issues/106)) ([#167](https://github.com/mark-brannan/portolani/issues/167)) ([19693ba](https://github.com/mark-brannan/portolani/commit/19693ba9b6f96035bac3940c52da4a8ac4d97c50))
+* **page:** two other drawers behind ?ui=presets and ?ui=grid ([#106](https://github.com/mark-brannan/portolani/issues/106)) ([#169](https://github.com/mark-brannan/portolani/issues/169)) ([7e4c00f](https://github.com/mark-brannan/portolani/commit/7e4c00f763baa285271cd1af4b6df76cc6823923))
+* **scene:** a 1% drag keeps every mountain, small town and name in place ([#131](https://github.com/mark-brannan/portolani/issues/131)) ([#173](https://github.com/mark-brannan/portolani/issues/173)) ([b81602c](https://github.com/mark-brannan/portolani/commit/b81602ccd4661f7b9f053b407207c61b833b04a5))
+* **scene:** a country's name is lettered on a fixed chunk of its coast, so a 1% drag keeps it in place ([#131](https://github.com/mark-brannan/portolani/issues/131)) ([#174](https://github.com/mark-brannan/portolani/issues/174)) ([a5f1940](https://github.com/mark-brannan/portolani/commit/a5f1940dce5ff2434b11278216daaf5730988dc0))
+* **scene:** a drag frame draws the relief, trees, region names and city plans where it stays within 16.7 ms ([#131](https://github.com/mark-brannan/portolani/issues/131)) ([#175](https://github.com/mark-brannan/portolani/issues/175)) ([c8a72d3](https://github.com/mark-brannan/portolani/commit/c8a72d33a80d20a87cede0f1408a6e596f30580e))
+* **scene:** a placement flag in the link: historic, seeded, seed:&lt;n&gt; ([#162](https://github.com/mark-brannan/portolani/issues/162), part 2) ([#165](https://github.com/mark-brannan/portolani/issues/165)) ([55c71bc](https://github.com/mark-brannan/portolani/commit/55c71bc8e825475977efb63da3cd7d8b012e13a1))
+* **scene:** ornament density and rose size at wide views ([#162](https://github.com/mark-brannan/portolani/issues/162), part 1) ([#164](https://github.com/mark-brannan/portolani/issues/164)) ([44814e9](https://github.com/mark-brannan/portolani/commit/44814e91c28e8806ee5fb12c9eb28fddb6c6756e))
+
+
+### Fixed
+
+* **page:** pinch zooms the map, the places flyout shuts, locate no longer pops it ([#109](https://github.com/mark-brannan/portolani/issues/109)) ([#166](https://github.com/mark-brannan/portolani/issues/166)) ([a015a3a](https://github.com/mark-brannan/portolani/commit/a015a3a3167d369250a3e280fe78d35d2d22658a))
+* **scene:** a zoom-10 redraw with ornaments takes 0.4 s, not 11 s ([#177](https://github.com/mark-brannan/portolani/issues/177)) ([#178](https://github.com/mark-brannan/portolani/issues/178)) ([af1351e](https://github.com/mark-brannan/portolani/commit/af1351ebd0eeb5c709162ba66237ebd7f0927221))
+* **scene:** rhumb rays that cross the antimeridian no longer draw chords across the page ([#168](https://github.com/mark-brannan/portolani/issues/168)) ([d75fb19](https://github.com/mark-brannan/portolani/commit/d75fb1966f9a2bfdacbce71b16720bda6da4d96b))
+
 ## [0.1.2](https://github.com/mark-brannan/portolani/compare/v0.1.1...v0.1.2) (2026-10-15)
 
 
