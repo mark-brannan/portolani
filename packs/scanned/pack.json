@@ -345,7 +345,7 @@
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/8/88/Woodcut_of_marine_mosters_Wellcome_L0033289.jpg",
         "page": "https://commons.wikimedia.org/wiki/File:Woodcut_of_marine_mosters_Wellcome_L0033289.jpg",
-        "crop": [998, 549, 2938, 1599]
+        "crop": [998, 549, 2938, 1601]
       },
       "minClearancePx": 150,
       "weight": 3
@@ -409,7 +409,7 @@
       "source": {
         "url": "https://upload.wikimedia.org/wikipedia/commons/8/88/Woodcut_of_marine_mosters_Wellcome_L0033289.jpg",
         "page": "https://commons.wikimedia.org/wiki/File:Woodcut_of_marine_mosters_Wellcome_L0033289.jpg",
-        "crop": [894, 2489, 2927, 3490]
+        "crop": [894, 2485, 2927, 3490]
       },
       "minClearancePx": 140,
       "weight": 2
