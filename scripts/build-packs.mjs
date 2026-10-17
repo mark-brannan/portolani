@@ -87,10 +87,9 @@ const only = onlyAt >= 0 ? argv[onlyAt + 1] : null;
 if (keep) mkdirSync(keep, { recursive: true });
 
 const CLEAN_DISK = 5; // px radius of the closing that removes scanned lettering
-// Woodcuts and engravings on blank paper (Paré, Master W), and the De Wit cartouche: a sprite drawn in ink alone
-// takes `key: 'ink'`, so darkness levels key it and nothing but line is wanted. A coloured plate never does: levels
-// thin every wash and lose the surroundings, so it is a patch. Darkness alone keys them. The silhouette
-// is taken from the ink itself (`ink`: alpha % that counts), which drops paper grain, stains and
+// Ink-alone sprites (Paré, Master W, the De Wit cartouche) take `key: 'ink'`: darkness levels key them, because nothing
+// but line is wanted. A coloured plate never does: levels thin every wash and lose the surroundings, so it is a patch.
+// The silhouette is taken from the ink itself (`ink`: alpha % that counts), which drops paper grain, stains and
 // the faint lettering that shows through from the reverse; sizes are for ~600 dpi scans.
 const PAPER_LEVEL = [20, 50];
 const PAPER_FIGURE = { ink: 50, close: 14, open: 1, dilate: 8, feather: 4, minArea: 40000 };
