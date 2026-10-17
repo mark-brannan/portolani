@@ -1,0 +1,41 @@
+name: goldens-history
+
+# The goldens history sheet: before / after / diff and the golden-diff engine's score for every golden
+# the last N golden-touching commits changed. Dispatch only; never on push or pull_request. Its own
+# job, seconds. The sheet (index.html, history.md, history.json, images/) is the artifact.
+on:
+  workflow_dispatch:
+    inputs:
+      n:
+        description: "How many of the latest golden-touching commits to walk"
+        type: string
+        default: "20"
+
+permissions:
+  contents: read
+
+jobs:
+  goldens-history:
+    runs-on: ubuntu-latest
+    env:
+      ENGINE_DIR: ${{ github.workspace }}/.golden-diff-engine/.github/scripts
+    steps:
+      - uses: actions/checkout@v7
+        with: { fetch-depth: 0, persist-credentials: false }
+      - uses: actions/checkout@v7
+        with:
+          repository: mark-brannan/.github
+          ref: main
+          sparse-checkout: |
+            /.github/scripts/golden-diff.mjs
+            /.github/scripts/golden-diff/
+          sparse-checkout-cone-mode: false
+          path: .golden-diff-engine
+          persist-credentials: false
+      - name: Install the engine's libraries from its lockfile
+        run: npm ci --prefix "$ENGINE_DIR/golden-diff" --no-audit --no-fund
+      - name: Walk the goldens' history
+        env: { N: '${{ inputs.n }}' }
+        run: node scripts/goldens-history.mjs "$N" | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7.0.2
+        with: { name: goldens-history, path: out/goldens-history, retention-days: 30 }
