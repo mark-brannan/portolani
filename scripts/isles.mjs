@@ -185,13 +185,15 @@ export function isleIndex(islands, coarse) {
 // The outlines of the same islands, for the coarse land to draw: { v, land: [[outer, ...holes], ...] },
 // each point [lon, lat] to PLACES decimals (a ten-thousandth of a degree is some 11 m, under a pixel
 // until z13, past where the detail bands take over). Fed Natural Earth 10m land, this is the remote
-// oceanic islands 50m drops (Pitcairn, Ducie, Oeno), drawn as land at every zoom before the 10m band.
+// oceanic islands 50m drops (Pitcairn, Ducie, Oeno), drawn as land from z5 until the 10m band.
 const PLACES = 4;
 export function isleLand(islands, coarse) {
   const round = (ring) => ring.map(([lon, lat]) => [+lon.toFixed(PLACES), +lat.toFixed(PLACES)])
     .filter((p, i, r) => i === 0 || p[0] !== r[i - 1][0] || p[1] !== r[i - 1][1]);
-  const land = lacking(islands, coarse).flatMap((q) => q.parts.map(({ poly }) => poly.map(round).filter((r) => r.length >= 4)))
-    .filter((poly) => poly.length);
+  // an islet whose outer ring rounds away goes whole, so a hole never stands in for it as land
+  const land = lacking(islands, coarse).flatMap((q) => q.parts.map(({ poly }) => poly.map(round)))
+    .filter((poly) => poly[0].length >= 4)
+    .map((poly) => poly.filter((r, i) => i === 0 || r.length >= 4));
   return { v: 1, land };
 }
 
