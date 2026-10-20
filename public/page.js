@@ -1,8 +1,8 @@
 // Browser host for the shared scene code (scene.mjs): same scene as `npm run render`, drawn live.
 // Drag to pan, wheel or pinch to zoom; while the map moves the land and coast are drawn and the placed
 // ornaments slide with it, held to the earth; they are placed again when it stops. The settings live in a
-// drawer behind the rose button, so the map has the window; beside it the charts open a second drawer, the
-// compass Go and the anchor flies home. The view and the style are kept in the URL hash, e.g.
+// drawer behind the rose button, so the map has the window; beside it the charts open a second drawer, and
+// the astrolabe, the compass, the dividers and the anchor open menus of places. The view and the style are kept in the URL hash, e.g.
 // #map=zoom/lat/lon&projection=miller&sprites=s:serpent-a,v:kraken,v:rose-aguiar,p:tower&townsize=rank&names=0&rhumb=0&scale=chevron&scaleborder=blank&continents=5&regions=latin&regionszoom=7&land=green&islands=1&rivers=aguiar&lakes=marina&mountains=ink&trees=ink&seas=1&autotitle=0&title=Mare+Nostrum&ink=5a1a1a&parchment=eee&density=1.5;
 // a setting left at its default is left out, `sprites` too (keys with the pack shortened, v: s: p:); `mountains` is `ink`
 // or `off` (colour is the default); the hills are the Catalan sprites in `sprites`. `continents` and `regionszoom` are the zoom
@@ -696,28 +696,37 @@ canvas.addEventListener('wheel', (e) => {
 
 // ---------------------------------------------------------------- going somewhere
 
-// The places Go offers: the chart's home frame and some places worth the flight. The charts: each sheet's
-// frame, from the centres read off the scans (docs/atlas/centres.md) and the frames of the scans the ornaments come from.
+// The places: the anchorages (home first, then the seas and islands worth the flight) and the points of
+// interest (where the charts were made, and the remote islands). The charts: each sheet's frame, from the
+// centres read off the scans (docs/atlas/centres.md) and the frames of the scans the ornaments come from.
+// Go finds any of them by name.
 const around = (lon, lat, r) => viewOfFrame({ lonMin: lon - r, lonMax: lon + r, latMin: lat - r, latMax: lat + r });
 const at = (lon, lat, zoom) => ({ lon, lat, zoom });
 const both = (a, b) => viewOfFrame({ lonMin: a[0] - a[2], lonMax: b[0] + b[2], latMin: Math.min(a[1] - a[2], b[1] - b[2]), latMax: Math.max(a[1] + a[2], b[1] + b[2]) }); // two centres, west then east, on one sheet
-const HOME = { ...DEFAULT_VIEW, title: 'The Mediterranean' };
-const ORIGINS = [
+const ANCHORAGES = [ // group, [name, view, title, note]
   ['', [
-    ['Mediterranean', DEFAULT_VIEW, 'The Mediterranean'],
+    ['Home: the Mediterranean', DEFAULT_VIEW, 'The Mediterranean'],
     ['The world', at(10, 25, 0), 'The World'],
   ]],
-  // the places that are lettered on the chart whatever the city data holds are in scripts/pois.mjs
-  ['Elsewhere', [
-    ['Lisbon', at(-9.14, 38.72, 7.5)],
-    ['Seville', at(-5.98, 37.39, 7.5)],
-    ['Majorca', at(3.0, 39.6, 7)], // Catalan Atlas, 1375
-    ['Dieppe', at(1.08, 49.93, 7.5)], // Vallard Atlas, 1547
+  ['Seas and islands', [
     ['Guam', at(144.79, 13.44, 7)], // Islas de los Ladrones
     ['Cebu', at(123.89, 10.32, 7)],
     ['Maluku Islands', at(128, -3, 5)],
     ['Solomon Islands', at(160, -9, 5)],
     ['Marquesas Islands', at(-140, -9, 6)],
+  ]],
+];
+// the places that are lettered on the chart whatever the city data holds are in scripts/pois.mjs
+const SIGHTS = [
+  ['Where the charts were made', [
+    ['Genoa', at(8.93, 44.41, 7.5), null, 'Vesconte, 1311'],
+    ['Venice', at(12.33, 45.44, 7.5), null, 'Pizzigani, 1367'],
+    ['Majorca', at(3.0, 39.6, 7), null, 'Cresques, 1375'],
+    ['Lisbon', at(-9.14, 38.72, 7.5), null, 'the Armazém'],
+    ['Seville', at(-5.98, 37.39, 7.5), null, 'Casa de Contratación'],
+    ['Dieppe', at(1.08, 49.93, 7.5), null, 'Vallard, 1547'],
+  ]],
+  ['Remote islands', [
     ['Pukapuka Atoll', at(-138.8, -14.82, 6.5), 'Pukapuka'], // Magellan's San Pablo, 1521 (the Tuamotu one)
     ['Pitcairn Islands', viewOfFrame({ lonMin: -131.3, lonMax: -124.2, latMin: -26.6, latMax: -22.4 })], // all four; the latitudes padded so the longitudes bind
   ]],
@@ -731,12 +740,13 @@ const CHARTS = [ // name, year, view
   ['Carta Marina', '1539', viewOfFrame({ lonMin: 0, lonMax: 40, latMin: 54, latMax: 72 })],
   ['De Bry, Virginia', '1590', at(-76, 36.28, 7.47)],
 ].map(([name, year, v]) => ({ name, year, view: { ...v, title: name } }));
-const originViews = [];
+const places = []; // every anchorage and point of interest: { name, view }
 
-// The two menus: the compass opens Go, the dividers the voyages (to come). Each opens on a click and shuts on a
-// choice, a second click, a click anywhere outside it, or Esc; opening one shuts the other.
+// The menus: the astrolabe opens the points of interest, the compass Go, the dividers the voyages (to come),
+// the anchor the anchorages. Each opens on a click and shuts on a choice, a second click, a click anywhere
+// outside it, or Esc; opening one shuts the others.
 const where = $('where');
-const menus = [[$('go'), $('goPanel')], [$('voyages'), $('voyagesPanel')]];
+const menus = [[$('sights'), $('sightsPanel')], [$('go'), $('goPanel')], [$('voyages'), $('voyagesPanel')], [$('anchor'), $('anchorPanel')]];
 function setFlyout(open) { // the panel to open, or false for none
   for (const [button, panel] of menus) {
     panel.classList.toggle('open', panel === open);
@@ -754,10 +764,11 @@ addEventListener('keydown', (e) => { if (e.key === 'Escape') setFlyout(false); }
 where.addEventListener('focusout', (e) => { if (e.relatedTarget && !where.contains(e.relatedTarget)) setFlyout(false); }); // tabbed out; a click that focuses nothing has no relatedTarget
 
 // The cartouche names the place flown to (its title, else the button's name), not whatever scores highest in the frame.
-$('origins').innerHTML = ORIGINS.map(([group, items]) =>
-  (group ? `<li class="group">${group}</li>` : '') + items.map(([name, v, title]) => `<li><button type="button" data-origin="${originViews.push({ ...v, title: title ?? name }) - 1}">${name}</button></li>`).join('')).join('');
-$('origins').addEventListener('click', (e) => { const b = e.target.closest('[data-origin]'); if (b) { setFlyout(false); goTo(originViews[b.dataset.origin]); } });
-$('home').addEventListener('click', () => { setFlyout(false); goTo(HOME); });
+for (const [list, groups] of [[$('anchorages'), ANCHORAGES], [$('sightsList'), SIGHTS]]) {
+  list.innerHTML = groups.map(([group, items]) => (group ? `<li class="group">${group}</li>` : '') + items.map(([name, v, title, note]) =>
+    `<li><button type="button" data-place="${places.push({ name, view: { ...v, title: title ?? name } }) - 1}">${name}${note ? `<small>${note}</small>` : ''}</button></li>`).join('')).join('');
+  list.addEventListener('click', (e) => { const b = e.target.closest('[data-place]'); if (b) { setFlyout(false); goTo(places[b.dataset.place].view); } });
+}
 
 // Each chart on its own sheet of skin, the button's.
 const skin = $('charts').querySelector('svg').outerHTML;
@@ -777,8 +788,8 @@ async function findPlace(text) {
   if (!fold(text)) return null;
   const towns = await env.readJSON('geo/ne-populated-places-50m.geojson').then((g) => g.features.toSorted((a, b) => a.properties.SCALERANK - b.properties.SCALERANK), () => []); // the bigger town first
   const candidates = [
-    ...originViews.map((v) => ({ name: v.title, view: v })),
-    ...ORIGINS.flatMap(([, items]) => items).map(([name], i) => ({ name, view: originViews[i] })),
+    ...places.map(({ view: v }) => ({ name: v.title, view: v })),
+    ...places,
     ...CHARTS.map(({ name, view }) => ({ name, view })),
     ...POIS.map((p) => ({ name: p.name, view: { lon: p.lon, lat: p.lat, zoom: 7, title: p.name } })),
     ...towns.map(({ properties: p, geometry: { coordinates: [lon, lat] } }) => ({ name: p.NAME, view: { lon, lat, zoom: 8, title: p.NAME } })),

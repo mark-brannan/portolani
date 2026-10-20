@@ -1,6 +1,6 @@
 // The page under touch, in headless Chromium with touch emulation at the two common phone widths
 // (360 and 412 px): a two-finger pinch zooms the map about the pinch centre and not the page, one
-// finger drags, the compass's Go panel opens on a tap and shuts on a choice or a tap on the map, and
+// finger drags, the anchor's menu opens on a tap and shuts on a choice, Go shuts on a tap on the map, and
 // its My position button flies to the fix and leaves the panel shut. Under 520 px the settings drawer is a bottom
 // sheet at half the window's height with the map above it, and the cartouche and the scale bar sit on
 // cards clear of the map.
@@ -87,27 +87,28 @@ for (const width of [360, 412]) {
       const v3 = await view();
       assert.ok(v3.lon < v2.lon - 0.0001 && v3.zoom === v2.zoom, `a drag right carries the chart with it, so the centre moves west: ${JSON.stringify(v2)} -> ${JSON.stringify(v3)}`);
 
-      // the flyout: shut, opened by a tap on the compass, shut by a choice
-      assert.equal(await shown(), false);
-      await page.tap('#go');
-      assert.equal(await shown(), true);
-      assert.equal(await page.getAttribute('#go', 'aria-expanded'), 'true');
+      // the flyout: shut, opened by a tap on the anchor, shut by a choice
+      assert.equal(await shown('anchorPanel'), false);
+      await page.tap('#anchor');
+      assert.equal(await shown('anchorPanel'), true);
+      assert.equal(await page.getAttribute('#anchor', 'aria-expanded'), 'true');
       const h3 = await hash();
-      await page.tap('#origins button >> nth=2');
-      assert.equal(await shown(), false, 'the flyout stayed open after a choice');
+      await page.tap('#anchorages button >> nth=2');
+      assert.equal(await shown('anchorPanel'), false, 'the flyout stayed open after a choice');
       await settled(h3);
 
       // shut by a tap on the map
       await page.tap('#go');
       assert.equal(await shown(), true);
-      await page.touchscreen.tap(canvas.x + 20, cy); // the left edge: at 360 px the open list covers the centre
+      await page.touchscreen.tap(canvas.x + 20, cy); // the left edge, clear of the open panel
       assert.equal(await shown(), false, 'the flyout stayed open after a tap on the map');
 
       // locate: the fix, at z10 or closer, the flyout shut, the button free again
       const h4 = await hash();
       await page.tap('#go');
       await page.tap('#locate');
-      assert.equal(await shown(), false, 'locate popped the flyout');
+      await page.waitForFunction(() => getComputedStyle(document.getElementById('goPanel')).display === 'none', null, { timeout: 15000 }).catch(() => {}); // the fix comes back async, and the panel shuts on it
+      assert.equal(await shown(), false, 'My position left Go open');
       await settled(h4);
       const v4 = await view();
       assert.ok(Math.abs(v4.lat - FIX.latitude) < 0.01 && Math.abs(v4.lon - FIX.longitude) < 0.01 && v4.zoom >= 10, JSON.stringify(v4));
@@ -216,6 +217,13 @@ test('mouse: the menus open on a click, not a hover, and shut on a click elsewhe
     assert.equal(await shown('voyagesPanel'), true);
     await page.mouse.click(400, 400);
     assert.equal(await shown('voyagesPanel'), false, 'a click on the map left the voyages open');
+    // the astrolabe's points of interest: a choice flies there and shuts the menu
+    await page.click('#sights');
+    assert.equal(await shown('sightsPanel'), true, 'the astrolabe did not open the points of interest');
+    const hs = await page.evaluate(() => location.hash);
+    await page.click('#sightsList button >> text=Pitcairn Islands');
+    assert.equal(await shown('sightsPanel'), false, 'a point of interest left its menu open');
+    await page.waitForFunction((x) => location.hash !== x, hs, { timeout: 60000 });
     await page.click('#go');
     await page.keyboard.press('Escape');
     assert.equal(await shown('goPanel'), false, 'Esc left Go open');
