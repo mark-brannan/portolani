@@ -441,11 +441,17 @@ async function loadWorld() {
       env.readJSON('geo/urban-10m.json').catch(missing), loadGeo('ne-urban-areas-50m').catch(missing)]);
   // the island index (scripts/isles.mjs) is optional too: without it the islands 50m lacks go unmarked
   const islesIndex = await env.readJSON('geo/isles.json').catch(missing);
+  // and the remote islands 50m drops, drawn from Natural Earth 10m (scripts/isles.mjs isleLand) from
+  // ISLE_LAND_ZOOM on: without them Pitcairn, Ducie and Oeno are marks, not land, until the 10m band
+  const isleLand = await env.readJSON('geo/isles-land.json').catch(missing);
   let world = worlds.get(landGeo);
   if (world) return world;
-  const land = geojsonPolygons(landGeo).map((poly) => ({ poly: Object.assign(poly, { isl: islandInfo(poly) }), box: bbox(poly[0]) }));
-  const lines = geojsonRings(coastGeo).map((line) => ({ line, box: bbox(line) }));
-  const runs = lines.flatMap(({ line }) => coastRuns(line).map((run) => ({ run, box: bbox(run) })));
+  const extra = isleLand?.land ?? [];
+  const land = [...geojsonPolygons(landGeo), ...extra].map((poly, i, all) => ({ poly: Object.assign(poly, { isl: islandInfo(poly) }), box: bbox(poly[0]),
+    ...(i >= all.length - extra.length && { isle: true }) }));
+  const lines = [...geojsonRings(coastGeo).map((line) => ({ line })), ...extra.flat().map((line) => ({ line, isle: true }))]
+    .map((l) => ({ ...l, box: bbox(l.line) }));
+  const runs = lines.flatMap(({ line, isle }) => coastRuns(line).map((run) => ({ run, box: bbox(run), ...(isle && { isle }) })));
   const places = placesGeo.features
     .filter((f) => f.properties.SCALERANK <= 4)
     .map(({ properties: p, geometry: { coordinates: [lon, lat] } }) => {
@@ -577,21 +583,28 @@ export function insideRing(ring, lon, lat) {
 }
 
 // The islands a world's land lacks (scripts/isles.mjs), worked out once per world: an index record
-// is drawn where no land polygon holds its centre, nor, for an atoll, an islet within its ring.
+// is drawn where no land polygon holds its centre, nor, for an atoll, an islet within its ring. An
+// islet of the remote islands' outlines (`isle`) does not stand for its atoll: 10m holds a motu or two
+// of a rim, and the ring says more.
 // The GSHHG "h" band and those after it hold every island in the index, so a view drawn from them
 // marks none (loadDetail).
 const MARKS_END = bandOf('gshhg-h-land').zoom;
-const lacking = new WeakMap();
-function islesLacking(world) {
-  if (!lacking.has(world)) {
-    const holds = (i) => world.land.some(({ poly, box }) => SHIFTS.some((s) => {
+// The remote islands' outlines are drawn from this zoom on, where Pitcairn is a couple of px across;
+// before it the marks stand for them, at less cost than some two thousand outlines under a pixel each.
+const ISLE_LAND_ZOOM = 5;
+const drawnAt = (zoom) => (l) => !l.isle || zoom >= ISLE_LAND_ZOOM;
+const lacking = [new WeakMap(), new WeakMap()]; // before ISLE_LAND_ZOOM, and from it
+function islesLacking(world, zoom) {
+  const outlined = zoom >= ISLE_LAND_ZOOM, cache = lacking[+outlined];
+  if (!cache.has(world)) {
+    const holds = (i) => world.land.some(({ poly, box, isle }) => !(isle && (i.atoll || !outlined)) && SHIFTS.some((s) => {
       const lon = i.lon + s;
       if (i.atoll && Math.hypot(((box.x0 + box.x1) / 2 - lon) * Math.cos(i.lat * RAD), (box.y0 + box.y1) / 2 - i.lat) * KM_DEG < i.km) return true;
       return lon > box.x0 && lon < box.x1 && i.lat > box.y0 && i.lat < box.y1 && insideRing(poly[0], lon, i.lat);
     }));
-    lacking.set(world, (world.isles ?? []).filter((i) => !holds(i)));
+    cache.set(world, (world.isles ?? []).filter((i) => !holds(i)));
   }
-  return lacking.get(world);
+  return cache.get(world);
 }
 const KM_DEG = 6371.0088 * RAD;
 // Where `proj` draws an island mark: px centre and radius, its true size never under MARK_MIN px
@@ -610,8 +623,9 @@ function viewData(world, view) {
   const near = ([lon, lat]) => nearLL(f, lon, lat);
   // or that holds the view's centre, so a view far inland keeps the land it sits on
   const centre = (l) => SHIFTS.some((s) => insideRing(l.poly[0], view.lon + s, view.lat));
-  const land = world.land.filter((l) => meetsLL(f, l.box) && (l.poly.some((ring) => ring.some(near)) || centre(l))).map((l) => l.poly);
-  const coastLL = world.lines.filter((l) => meetsLL(f, l.box) && l.line.some(near)).map((l) => l.line); // [lon, lat] lines
+  const drawn = drawnAt(view.zoom);
+  const land = world.land.filter((l) => drawn(l) && meetsLL(f, l.box) && (l.poly.some((ring) => ring.some(near)) || centre(l))).map((l) => l.poly);
+  const coastLL = world.lines.filter((l) => drawn(l) && meetsLL(f, l.box) && l.line.some(near)).map((l) => l.line); // [lon, lat] lines
   // px, for placement; a line is broken where it jumps the seam behind the view
   const coast = coastLL.flatMap((line) => {
     const out = [[]];
@@ -631,7 +645,7 @@ function viewData(world, view) {
   const names = world.names.filter((n) => n.min <= view.zoom + 1 && meetsLL(f, n.box))
     .sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'sea' ? -1 : 1) || a.rank - b.rank);
   const urban = world.urban.filter((u) => meetsLL(f, u.box)).map((u) => u.poly);
-  const isles = islesLacking(world).filter((i) => nearLL(f, i.lon, i.lat));
+  const isles = islesLacking(world, view.zoom).filter((i) => nearLL(f, i.lon, i.lat));
   return { proj, land, coastLL, coast, places, lesser, names, urban, isles };
 }
 
@@ -1126,8 +1140,10 @@ function footprint(p, proj) {
 // Where a town's icon of height `th` (anchored at its foot) stands: its place where the icon's box is
 // on land, else the nearest point within reach whose box is most on land, inside the town's own
 // footprint where it has one, so a waterfront city stands over its built-up ground rather than on
-// its shore.
-function standOf(p, th, w, field, rings) {
+// its shore. With `beside` (a point of interest), an island too small to stand on, one the icon would
+// only hide, keeps the icon at its side: its west edge BESIDE_PX east of the place, its middle level with it.
+const BESIDE_PX = 3;
+function standOf(p, th, w, field, rings, beside = false) {
   const [x0, y0] = p.xy, rs = rings && pxRings(rings);
   const dry = (x, y) => {
     let n = 0;
@@ -1147,7 +1163,7 @@ function standOf(p, th, w, field, rings) {
     if (v > best + 0.05) { best = v; at = [x, y]; }
     if (best >= 0.9) break;
   }
-  return at;
+  return beside && best < 0.5 ? [x0 + w + BESIDE_PX, y0 + th / 2] : at;
 }
 
 function cityOf(p, proj, landPolys) {
@@ -1231,7 +1247,7 @@ function placeLesser(data, field, boxes, ctx, towns, names, poi) {
     const [px, py] = p.xy;
     if (px < 8 || py < 8 || px > W - 8 || py > H - 8 || towns.some((t) => Math.hypot(t.x - px, t.y - py) < TUNE.townGap / 2)) continue;
     const shape = TOWER_BY_ID.get(p.building ?? lesserBuilding(p.rank, seedOf(p.name))), top = (shape.top ?? TOWER_H) * s, hw = shape.w * s;
-    const [x, y] = standOf(p, top, hw, field);
+    const [x, y] = standOf(p, top, hw, field, null, poi);
     const icon = obb(x, y - top / 2, 0, hw, top / 2);
     if (!obbInside(icon) || boxes.some((b) => obbOverlap(b, icon))) continue;
     const n = { text: p.name, at: data.proj.invert(x, y - top - 5), size: Math.round(LESSER_LETTER * (poi ? 1.4 : 1)) };
@@ -2036,9 +2052,10 @@ const paintCoast = (g, data, coast) =>
 function drawGround(g, world, view, bg) {
   const proj = makeProjection(view);
   const f = frameOf(proj, 16 / proj.k / RAD); // 16 px, so strokes at the edge survive
-  const data = { proj, isles: islesLacking(world).filter((i) => nearLL(f, i.lon, i.lat)) };
-  const land = world.land.filter((l) => meetsLL(f, l.box)).map((l) => l.poly);
-  const coast = world.runs.filter((c) => meetsLL(f, c.box)).map((c) => c.run);
+  const data = { proj, isles: islesLacking(world, view.zoom).filter((i) => nearLL(f, i.lon, i.lat)) };
+  const drawn = drawnAt(view.zoom);
+  const land = world.land.filter((l) => drawn(l) && meetsLL(f, l.box)).map((l) => l.poly);
+  const coast = world.runs.filter((c) => drawn(c) && meetsLL(f, c.box)).map((c) => c.run);
   g.drawImage(bg, 0, 0);
   paintLand(g, data, land, coast, null);
   paintCoast(g, data, coast);

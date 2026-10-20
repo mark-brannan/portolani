@@ -5,7 +5,9 @@
 // node_modules and the committed fixtures. A drag is DRAGS drags of MOVES pointer moves of 6 px east
 // and 2 px south each, as scripts/measure-preview.mjs makes; each frame is timed with
 // performance.now() around the draw. Prints a markdown table of median / p90 in ms.
-//   node scripts/measure-drag.mjs [--layers=relief,trees] [--water=off]   (off: rivers and lakes not drawn, which the base frame otherwise includes)
+//   node scripts/measure-drag.mjs [--layers=relief,trees] [--water=off] [--isle-land=off]
+// (--water=off: rivers and lakes not drawn, which the base frame otherwise includes; --isle-land=off: the
+// remote islands' 10m outlines, scripts/isles.mjs isleLand, left out of the coarse land)
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -14,6 +16,8 @@ import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import { joinUrban } from './urban.mjs';
 import { createScene, drawScene, anchorScene, drawGround, drawLate, drawAnchored, LATE, IN_DRAG, panView, covers, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, RELIEF_STYLES, W, H } from './scene.mjs';
 import { coastNames, joinNames } from './names.mjs';
+import { isleLand } from './isles.mjs';
+import { geojsonPolygons } from 'coast-wright';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const GEO = dirname(fileURLToPath(import.meta.resolve('coastlines/data/ne-land-50m')));
@@ -23,15 +27,17 @@ const names = joinNames(read(join(ROOT, 'test', 'fixtures', 'sea-names-50m.json'
   coastNames(read(join(GEO, 'ne-admin-0-countries-50m.geojson')), read(join(GEO, 'ne-coastline-50m.geojson'))));
 // DOWNLOADS=<dir holding ne_10m_urban_areas.geojson>: the 10m urban footprints, which give a city its plan
 const urban = process.env.DOWNLOADS && joinUrban(read(join(GEO, 'ne-populated-places-50m.geojson')), read(join(process.env.DOWNLOADS, 'ne_10m_urban_areas.geojson')));
+const flags = Object.fromEntries(process.argv.slice(2).filter((a) => a.startsWith('--')).map((a) => a.slice(2).split('=')));
+const outlines = flags['isle-land'] === 'off' ? null
+  : isleLand(geojsonPolygons(read(join(GEO, 'ne-land-10m.geojson'))), geojsonPolygons(read(join(GEO, 'ne-land-50m.geojson'))));
 const env = {
   createCanvas,
-  readJSON: async (p) => (p === 'geo/urban-10m.json' && urban ? urban : p === 'geo/names-50m.json' ? names : p === 'geo/seas-50m.json' ? read(join(ROOT, 'test', 'fixtures', 'seas-50m.json')) : read(resolve(p))),
+  readJSON: async (p) => (p === 'geo/urban-10m.json' && urban ? urban : p === 'geo/isles-land.json' && outlines ? outlines : p === 'geo/names-50m.json' ? names : p === 'geo/seas-50m.json' ? read(join(ROOT, 'test', 'fixtures', 'seas-50m.json')) : read(resolve(p))),
   loadImage: (p) => loadImage(resolve(p)),
   loadFont: async (family) => { GlobalFonts.registerFromPath(join(ROOT, 'test', 'fixtures', 'IMFeENrm28P.ttf'), family); },
 };
-const flags = Object.fromEntries(process.argv.slice(2).filter((a) => a.startsWith('--')).map((a) => a.slice(2).split('=')));
 const layers = flags.layers ? flags.layers.split(',') : LATE;
-const VIEWS = [['z2', 10, 30, 2], ['z5', 8.93, 44.41, 5], ['z9', 8.93, 44.41, 9], ['z11', 8.93, 44.41, 11], ['Venice z13', 12.33, 45.44, 13]];
+const VIEWS = [['z2', 10, 30, 2], ['Pacific z2', -150, -15, 2], ['z5', 8.93, 44.41, 5], ['Pitcairn Is. z7.3', -127.75, -24.52, 7.31], ['z9', 8.93, 44.41, 9], ['z11', 8.93, 44.41, 11], ['Venice z13', 12.33, 45.44, 13]];
 const DRAGS = 5, MOVES = 20, WARM = 10;
 const q = (a, p) => { const s = [...a].sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.floor(p * s.length))]; };
 const cell = (a) => `${q(a, 0.5).toFixed(1)} / ${q(a, 0.9).toFixed(1)}`;
