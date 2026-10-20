@@ -100,7 +100,7 @@ for (const width of [360, 412]) {
       // shut by a tap on the map
       await page.tap('#places');
       assert.equal(await shown(), true);
-      await page.touchscreen.tap(cx, cy);
+      await page.touchscreen.tap(canvas.x + 20, cy); // the left edge: at 360 px the open list covers the centre
       assert.equal(await shown(), false, 'the flyout stayed open after a tap on the map');
 
       // locate: the fix, at z10 or closer, the flyout shut, the button free again
