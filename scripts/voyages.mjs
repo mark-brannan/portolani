@@ -146,6 +146,6 @@ export function problems(v) {
     need(typeof e.source === 'string' && e.source.length, `event ${i}: a source`);
     if (e.kind === 'death') need(typeof e.who === 'string' && e.who.length, `event ${i}: who died`);
   }
-  need((v.events ?? []).some((e) => e.kind === 'death'), 'events: where each named person died, at least one death');
+  for (const w of Array.isArray(v.who) ? v.who : []) need((v.events ?? []).some((e) => e.kind === 'death' && e.who === w), `events: where ${w} died`);
   return out;
 }

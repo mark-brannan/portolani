@@ -2235,7 +2235,9 @@ const VOYAGE_LINE = 2.2, VOYAGE_HALO = 5.5, VOYAGE_END = 2.8, SKULL_H = 16;
 
 // A voyage (docs/voyages/README.md) through any projection: each leg cut at the seam and stroked in red
 // over a parchment halo, dashed by its confidence; then its events, a death as a skull and crossbones.
-function drawVoyage(g, voyage, proj, rect) {
+// `rect` culls the legs (padded, so a stroke at the edge survives); `eventRect` is the view itself: a mark
+// is drawn only when the whole of it is in view, so its label never points at nothing.
+function drawVoyage(g, voyage, proj, rect, eventRect = rect) {
   if (!voyage) return;
   g.save();
   g.lineCap = 'round'; g.lineJoin = 'round';
@@ -2256,10 +2258,10 @@ function drawVoyage(g, voyage, proj, rect) {
   for (const e of voyage.events ?? []) {
     if (proj.visible && !proj.visible(e.lon, e.lat)) continue;
     const [x, y] = proj.toPx([e.lon, e.lat]);
-    if (!disc(rect, x, y, SKULL_H / 2)) continue; // a label with its mark off the view would point at nothing
+    if (!disc(eventRect, x, y, -SKULL_H / 2)) continue; // the whole mark in view, or no label
     if (e.kind === 'death') drawSkull(g, x, y, SKULL_H);
     else { g.beginPath(); g.arc(x, y, 3, 0, 2 * Math.PI); g.strokeStyle = STYLE.ink; g.lineWidth = 1.4; g.stroke(); }
-    eventLabel(g, e.label, x, y, e.kind === 'death' ? SKULL_H / 2 + 3 : 6, rect);
+    eventLabel(g, e.label, x, y, e.kind === 'death' ? SKULL_H / 2 + 3 : 6, eventRect);
   }
   g.restore();
 }
@@ -2434,7 +2436,7 @@ function drawScene(g, scene, data, bg, view) {
   for (const s of show.kinds.has('ship') ? scene.ships : []) if (spriteIn(s.sprite, s.x, s.y, s.size)) drawSprite(g, s.sprite, s.x, s.y, s.size, { flip: s.flip, rot: s.flip ? -s.tilt : s.tilt, anchor: [0.5, 0.6] });
 
   // a voyage over the ornaments, under the cartouche
-  drawVoyage(g, scene.voyage, data.proj, r);
+  drawVoyage(g, scene.voyage, data.proj, r, viewRect(g, view, 0));
 
   // 10. cartouche, lettered in its cleared panel
   const c = scene.cartouche;

@@ -9,7 +9,7 @@ a smooth curve the way the winds and currents would have taken a ship, and it sa
 | Confidence | Stroke | Means |
 |---|---|---|
 | `attested` | solid | the course is recorded: a log, a journal, a pilot's roteiro, a named landfall every few days |
-| `inferred` | dashed | the ends are known and the way between is worked out from the season's winds and currents, or from a later account |
+| `inferred` | dashed | ends known; the way between worked out from winds and currents, or a later account |
 | `conventional` | dotted | the way scholars usually draw it; the sources do not say |
 
 Each leg is joined one of three ways: `rhumb` (a constant bearing, straight on Mercator: how a pilot
@@ -48,16 +48,10 @@ One file per voyage, `data/voyages/<id>.json`; `data/voyages/index.json` lists t
 }
 ```
 
-- `legs[].mode`: `sea` or `land`. Every sample of a sea leg must be at sea on the Natural Earth 50m
-  coast (`npm test` checks, `node scripts/check-voyages.mjs <id>` lists the samples that are not):
-  a strait is followed by its waypoints, 25 km apart or closer where it is narrow.
-- `legs[].points`: `[lon, lat]` pairs, first the departure, last the arrival. A `rhumb` or
-  `great-circle` leg joins each consecutive pair; a `spline` leg curves through all of them.
-- `legs[].source`: where the course comes from, in a few words; `sources[]` carries the full
-  citations with URLs. `note` is free.
-- `events[]`: `kind` is `death`, `landfall` or `event`; a death carries `who` and is drawn as a skull
-  and crossbones with its label. Each of the voyage's named people has a death event, wherever it
-  fell: on the track (Magellan at Mactan) or far from it (Columbus at Valladolid).
+- `legs[].mode`: `sea` or `land`; a sea leg must stay at sea on the 50m coast (`npm test` checks it).
+- `legs[].points`: `[lon, lat]` from departure to arrival; `spline` curves through all of them.
+- `legs[].source`: where the course comes from, in a few words; full citations go in `sources[]`.
+- `events[]`: `death`, `landfall` or `event`; each named person has a `death`, on or off the track.
 
 ## What is drawn
 

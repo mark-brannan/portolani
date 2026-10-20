@@ -1,4 +1,5 @@
 // Checks the voyage records (docs/voyages/README.md): the schema, and that every sample of a sea leg
+// (sampled every STEP_KM, 25 km, in scripts/voyages.mjs; a strait needs waypoints that close or closer)
 // is at sea on the Natural Earth 50m coast. Prints each problem with the leg and the point, so a
 // waypoint can be moved. Offline, from coastlines.
 //   node scripts/check-voyages.mjs [id ...]
