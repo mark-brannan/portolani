@@ -1,8 +1,8 @@
 // Browser host for the shared scene code (scene.mjs): same scene as `npm run render`, drawn live.
 // Drag to pan, wheel or pinch to zoom; while the map moves the land and coast are drawn and the placed
-// ornaments slide with it, held to the earth; they are placed again when it stops. The settings live in a
-// drawer behind the rose button, so the map has the window; beside it the charts open a second drawer, and
-// the astrolabe, the compass, the dividers and the anchor open menus of places. The view and the style are kept in the URL hash, e.g.
+// ornaments slide with it, held to the earth; they are placed again when it stops. A row of six instruments
+// at the top right opens one drawer each, one at a time: the settings behind the rose, so the map has the
+// window, the charts, the points of interest, Go, the voyages and the anchorages. The view and the style are kept in the URL hash, e.g.
 // #map=zoom/lat/lon&projection=miller&sprites=s:serpent-a,v:kraken,v:rose-aguiar,p:tower&townsize=rank&names=0&rhumb=0&scale=chevron&scaleborder=blank&continents=5&regions=latin&regionszoom=7&land=green&islands=1&rivers=aguiar&lakes=marina&mountains=ink&trees=ink&seas=1&autotitle=0&title=Mare+Nostrum&ink=5a1a1a&parchment=eee&density=1.5;
 // a setting left at its default is left out, `sprites` too (keys with the pack shortened, v: s: p:); `mountains` is `ink`
 // or `off` (colour is the default); the hills are the Catalan sprites in `sprites`. `continents` and `regionszoom` are the zoom
@@ -37,7 +37,7 @@ const env = {
 
 const $ = (id) => document.getElementById(id);
 const canvas = $('map'), ctx = canvas.getContext('2d');
-// A phone (under 520 px wide): the drawer is a bottom sheet, and the cartouche and the scale bar sit on
+// A phone (under 520 px wide): a drawer is a bottom sheet, and the cartouche and the scale bar sit on
 // cards beside the map, not on the sea.
 const phone = matchMedia('(max-width: 520px)');
 
@@ -567,26 +567,35 @@ function drawCards(scaleOnly = false) { // scaleOnly: a moving frame, where only
 addEventListener('resize', () => drawCards()); // the cards' width follows the window, in rotation too
 phone.addEventListener('change', () => { drawCards(); if (ground) render(); }); // the sheet is placed again with or without them
 
-// ---------------------------------------------------------------- the drawer
+// ---------------------------------------------------------------- the drawers
 
-// Two drawers, the settings behind the rose and the charts, at most one open. Shut by default; Esc or its close
-// button shuts one (on a wider screen a touch on the map does too), and focus goes back to its button.
-const drawers = [[$('drawer'), $('open')], [$('chartsDrawer'), $('charts')]];
-const openDrawer = () => drawers.find(([d]) => d.classList.contains('open'))?.[0] ?? false;
-function setDrawer(open) { // the drawer to open, or false for none
+// Six buttons in the row, each with its own drawer: the rose the settings, the chart the charts, the
+// astrolabe the points of interest, the compass Go, the dividers the voyages, the anchor the anchorages.
+// At most one is open. A click on a button opens its drawer and a second click shuts it; a click on another
+// button shuts it and opens that one; a choice in it, Esc, or a click or a focus outside the row and the
+// drawer shuts it. On a wide screen the drawer hangs below the row, which it never covers or moves, and a
+// touch on the map shuts it; on a phone it is a bottom sheet with the map shrunk above it, and it stays up
+// while the map is moved: that is how a control's effect is seen. An open drawer takes the focus (Go its
+// text box, on a wide screen only, so a phone's keyboard does not cover the sheet); shut by the keyboard,
+// the focus goes back to its button.
+const where = $('where');
+const drawers = [[$('open'), $('drawer')], [$('charts'), $('chartsDrawer')], [$('sights'), $('sightsPanel')], [$('go'), $('goPanel')], [$('voyages'), $('voyagesPanel')], [$('anchor'), $('anchorPanel')]];
+const openDrawer = () => drawers.find(([, d]) => d.classList.contains('open'))?.[1] ?? false;
+const focusable = (d) => [...d.querySelectorAll('button, input, a[href]')].find((e) => !e.disabled && e.getClientRects().length);
+function setDrawer(open, byKeyboard = false) { // the drawer to open, or false for none
   const was = openDrawer();
   if (open === was) return;
-  for (const [d, b] of drawers) { d.classList.toggle('open', d === open); b.setAttribute('aria-expanded', String(d === open)); }
+  for (const [b, d] of drawers) { d.classList.toggle('open', d === open); b.setAttribute('aria-expanded', String(d === open)); }
   document.documentElement.classList.toggle('sheet', !!open); // on a phone the map makes room above the sheet
-  (open ? open.querySelector('.close') : drawers.find(([d]) => d === was)[1]).focus({ preventScroll: true });
+  if (open) (open.id === 'goPanel' ? (phone.matches ? null : $('coordsText')) : focusable(open))?.focus({ preventScroll: true });
+  else if (byKeyboard) drawers.find(([, d]) => d === was)[0].focus({ preventScroll: true });
+  else if (was.contains(document.activeElement)) document.activeElement.blur(); // a phone's keyboard goes with it
 }
-for (const [d, b] of drawers) {
-  b.addEventListener('click', () => { setFlyout(false); setDrawer(d === openDrawer() ? false : d); });
-  d.querySelector('.close').addEventListener('click', () => setDrawer(false));
-}
-addEventListener('keydown', (e) => { if (e.key === 'Escape' && openDrawer()) setDrawer(false); });
-// On a phone the sheet stays up while the map is moved above it: that is how a control's effect is seen.
-canvas.addEventListener('pointerdown', () => { if (!phone.matches) setDrawer(false); });
+for (const [b, d] of drawers) b.addEventListener('click', (e) => setDrawer(d === openDrawer() ? false : d, e.detail === 0)); // detail 0: Enter or Space
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && openDrawer()) setDrawer(false, true); });
+const outside = (t) => { const d = openDrawer(); return d && t instanceof Node && !where.contains(t) && !d.contains(t); };
+addEventListener('pointerdown', (e) => { if (outside(e.target) && !(phone.matches && e.target === canvas)) setDrawer(false); });
+addEventListener('focusout', (e) => { if (e.relatedTarget && outside(e.relatedTarget)) setDrawer(false); }); // tabbed out; a click that focuses nothing has no relatedTarget
 
 // Reset: every control back to its default, the place kept. The hash holds the whole style, so a
 // hash with only the view is the default style; the hashchange handler below redraws from it.
@@ -742,32 +751,11 @@ const CHARTS = [ // name, year, view
 ].map(([name, year, v]) => ({ name, year, view: { ...v, title: name } }));
 const places = []; // every anchorage and point of interest: { name, view }
 
-// The menus: the astrolabe opens the points of interest, the compass Go, the dividers the voyages (to come),
-// the anchor the anchorages. Each opens on a click and shuts on a choice, a second click, a click anywhere
-// outside it, or Esc; opening one shuts the others.
-const where = $('where');
-const menus = [[$('sights'), $('sightsPanel')], [$('go'), $('goPanel')], [$('voyages'), $('voyagesPanel')], [$('anchor'), $('anchorPanel')]];
-function setFlyout(open) { // the panel to open, or false for none
-  for (const [button, panel] of menus) {
-    panel.classList.toggle('open', panel === open);
-    button.setAttribute('aria-expanded', String(panel === open));
-  }
-  if (!open && where.contains(document.activeElement)) document.activeElement.blur();
-}
-for (const [button, panel] of menus) button.addEventListener('click', () => {
-  setDrawer(false);
-  setFlyout(panel.classList.contains('open') ? false : panel);
-  if (panel.id === 'goPanel' && panel.classList.contains('open') && !phone.matches) $('coordsText').focus();
-});
-addEventListener('pointerdown', (e) => { if (!where.contains(e.target)) setFlyout(false); });
-addEventListener('keydown', (e) => { if (e.key === 'Escape') setFlyout(false); });
-where.addEventListener('focusout', (e) => { if (e.relatedTarget && !where.contains(e.relatedTarget)) setFlyout(false); }); // tabbed out; a click that focuses nothing has no relatedTarget
-
 // The cartouche names the place flown to (its title, else the button's name), not whatever scores highest in the frame.
 for (const [list, groups] of [[$('anchorages'), ANCHORAGES], [$('sightsList'), SIGHTS]]) {
   list.innerHTML = groups.map(([group, items]) => (group ? `<li class="group">${group}</li>` : '') + items.map(([name, v, title, note]) =>
     `<li><button type="button" data-place="${places.push({ name, view: { ...v, title: title ?? name } }) - 1}">${name}${note ? `<small>${note}</small>` : ''}</button></li>`).join('')).join('');
-  list.addEventListener('click', (e) => { const b = e.target.closest('[data-place]'); if (b) { setFlyout(false); goTo(places[b.dataset.place].view); } });
+  list.addEventListener('click', (e) => { const b = e.target.closest('[data-place]'); if (b) { setDrawer(false); goTo(places[b.dataset.place].view); } });
 }
 
 // Each chart on its own sheet of skin, the button's.
@@ -803,7 +791,7 @@ $('coords').addEventListener('submit', async (e) => {
   const target = p ? { ...p, zoom: Math.max(view.zoom, LOCATE_ZOOM) } : await findPlace(text);
   if (!target) { miss.textContent = text.trim() ? `No place called “${text.trim()}”` : 'Type a place, or latitude, longitude: 36.28, -76'; miss.hidden = false; return; } // the text before the unhide, so a reader announces it
   miss.hidden = true;
-  setFlyout(false);
+  setDrawer(false);
   goTo(target);
 });
 $('coordsText').addEventListener('input', () => { $('goMiss').hidden = true; });
@@ -825,8 +813,9 @@ function goTo(target) {
   step(t0);
 }
 
-// My position: asked for on the button and flown to at z10 or closer, with nothing drawn there. The
-// button is not offered where the browser has no geolocation (an insecure page has none).
+// My position: asked for on the button in Go and written into its box as latitude, longitude, to go to
+// (at z10 or closer, like any typed position) or to edit first; nothing is drawn there. The button is not
+// offered where the browser has no geolocation (an insecure page has none).
 const LOCATE_ZOOM = 10;
 const locate = $('locate');
 locate.hidden = !navigator.geolocation;
@@ -835,8 +824,9 @@ locate.addEventListener('click', () => {
   const done = () => { locate.disabled = false; };
   navigator.geolocation.getCurrentPosition((p) => {
     done();
-    setFlyout(false);
-    goTo({ lon: p.coords.longitude, lat: p.coords.latitude, zoom: Math.max(view.zoom, LOCATE_ZOOM) });
+    $('coordsText').value = `${p.coords.latitude.toFixed(4)}, ${p.coords.longitude.toFixed(4)}`;
+    $('goMiss').hidden = true;
+    $('coordsText').focus({ preventScroll: true });
   }, (e) => {
     done();
     $('status').textContent = e.code === e.PERMISSION_DENIED ? 'My position: not allowed' : `My position: ${e.message}`;

@@ -1,9 +1,10 @@
 // The page under touch, in headless Chromium with touch emulation at the two common phone widths
 // (360 and 412 px): a two-finger pinch zooms the map about the pinch centre and not the page, one
-// finger drags, the anchor's menu opens on a tap and shuts on a choice, Go shuts on a tap on the map, and
-// its My position button flies to the fix and leaves the panel shut. Under 520 px the settings drawer is a bottom
-// sheet at half the window's height with the map above it, and the cartouche and the scale bar sit on
-// cards clear of the map.
+// finger drags, the anchor's drawer opens on a tap and shuts on a choice, Go stays up under a tap on the
+// map and shuts on a second tap on its compass, and its Find my position button fills in the fix without
+// flying there. Under 520 px every drawer is a bottom sheet at half the window's height with the map above
+// it, and the cartouche and the scale bar sit on cards clear of the map. With a mouse on a wide screen
+// each of the six drawers hangs below the row without covering or moving it, one at a time.
 //
 // Needs the built preview (`npm run build:preview` -> _site/), playwright-core and a Chromium
 // (`npx playwright-core install chromium-headless-shell`); without them it skips, since `npm test`
@@ -29,7 +30,7 @@ const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/ja
 const FIX = { latitude: 43.7, longitude: 7.3 };
 
 for (const width of [360, 412]) {
-  test(`touch at ${width} px: pinch, drag, flyout, locate`, { skip, timeout: 240000 }, async () => {
+  test(`touch at ${width} px: pinch, drag, drawers, locate`, { skip, timeout: 240000 }, async () => {
     const server = createServer(async (req, res) => {
       let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
       if (p.endsWith('/')) p = path.join(p, 'index.html');
@@ -51,7 +52,7 @@ for (const width of [360, 412]) {
         await page.waitForFunction((h) => location.hash !== h, before, { timeout: 60000 });
         await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 60000 });
       };
-      const shown = (id = 'goPanel') => page.evaluate((i) => getComputedStyle(document.getElementById(i)).display !== 'none', id);
+      const shown = (id = 'goPanel') => page.evaluate((i) => document.getElementById(i).classList.contains('open') && getComputedStyle(document.getElementById(i)).visibility === 'visible', id);
       const pageScale = () => page.evaluate(() => visualViewport.scale);
       const hash = () => page.evaluate(() => location.hash);
       const canvas = await page.locator('#map').boundingBox();
@@ -73,10 +74,10 @@ for (const width of [360, 412]) {
       assert.ok(Math.abs(v1.lon - v0.lon) < 0.01 && Math.abs(v1.lat - v0.lat) < 0.01, `centre moved: ${JSON.stringify(v0)} -> ${JSON.stringify(v1)}`);
       assert.equal(await pageScale(), 1, 'the pinch zoomed the page');
 
-      // a pinch where the shut menus' box lies (top right, below the icons) is the map's too
+      // a pinch just below the row of instruments (top right) is the map's too
       await pinchOut(canvas.x + canvas.width - 100, canvas.y + 80);
-      assert.ok((await view()).zoom > v1.zoom + 1, 'a pinch under the flyout box did not zoom the map');
-      assert.equal(await pageScale(), 1, 'the pinch under the flyout box zoomed the page');
+      assert.ok((await view()).zoom > v1.zoom + 1, 'a pinch below the row did not zoom the map');
+      assert.equal(await pageScale(), 1, 'the pinch below the row zoomed the page');
 
       // one finger drags
       const v2 = await view(), h2 = await hash();
@@ -87,33 +88,42 @@ for (const width of [360, 412]) {
       const v3 = await view();
       assert.ok(v3.lon < v2.lon - 0.0001 && v3.zoom === v2.zoom, `a drag right carries the chart with it, so the centre moves west: ${JSON.stringify(v2)} -> ${JSON.stringify(v3)}`);
 
-      // the flyout: shut, opened by a tap on the anchor, shut by a choice
+      // the anchor's drawer: shut, opened by a tap on the anchor, shut by a choice
       assert.equal(await shown('anchorPanel'), false);
       await page.tap('#anchor');
       assert.equal(await shown('anchorPanel'), true);
       assert.equal(await page.getAttribute('#anchor', 'aria-expanded'), 'true');
       const h3 = await hash();
       await page.tap('#anchorages button >> nth=2');
-      assert.equal(await shown('anchorPanel'), false, 'the flyout stayed open after a choice');
+      assert.equal(await shown('anchorPanel'), false, 'the drawer stayed open after a choice');
       await settled(h3);
 
-      // shut by a tap on the map
+      // Go: a sheet that stays up under a tap on the map, and shuts on a second tap on the compass
       await page.tap('#go');
       assert.equal(await shown(), true);
-      await page.touchscreen.tap(canvas.x + 20, cy); // the left edge, clear of the open panel
-      assert.equal(await shown(), false, 'the flyout stayed open after a tap on the map');
+      await page.waitForTimeout(400);
+      const above = await page.locator('#map').boundingBox();
+      await page.touchscreen.tap(above.x + 20, above.y + above.height / 2);
+      assert.equal(await shown(), true, 'a tap on the map shut the Go sheet');
+      await page.tap('#go');
+      assert.equal(await shown(), false, 'a second tap on the compass left Go open');
 
-      // locate: the fix, at z10 or closer, the flyout shut, the button free again
+      // locate: the fix fills in the box, Go stays open and nothing flies; Go then flies there at z10 or closer
       const h4 = await hash();
       await page.tap('#go');
       await page.tap('#locate');
-      await page.waitForFunction(() => getComputedStyle(document.getElementById('goPanel')).display === 'none', null, { timeout: 15000 }).catch(() => {}); // the fix comes back async, and the panel shuts on it
-      assert.equal(await shown(), false, 'My position left Go open');
+      await page.waitForFunction(() => document.getElementById('coordsText').value !== '', null, { timeout: 15000 }); // the fix comes back async
+      assert.equal(await page.inputValue('#coordsText'), `${FIX.latitude.toFixed(4)}, ${FIX.longitude.toFixed(4)}`);
+      assert.equal(await shown(), true, 'Find my position shut Go');
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'coordsText');
+      assert.equal(await page.$eval('#locate', (b) => b.disabled), false);
+      await page.waitForTimeout(800);
+      assert.equal(await hash(), h4, 'Find my position moved the map');
+      await page.tap('#coords button[type=submit]');
+      assert.equal(await shown(), false, 'Go stayed open after going');
       await settled(h4);
       const v4 = await view();
       assert.ok(Math.abs(v4.lat - FIX.latitude) < 0.01 && Math.abs(v4.lon - FIX.longitude) < 0.01 && v4.zoom >= 10, JSON.stringify(v4));
-      assert.equal(await page.$eval('#locate', (b) => b.disabled), false);
-      assert.equal(await shown(), false);
 
       if (process.env.TOUCH_SHOTS) {
         await page.tap('#go');
@@ -129,7 +139,7 @@ for (const width of [360, 412]) {
 }
 
 for (const width of [360, 412]) {
-  test(`phone layout at ${width} px: the drawer is a half-height bottom sheet, the cartouche and scale bar are clear of the map`, { skip, timeout: 240000 }, async () => {
+  test(`phone layout at ${width} px: a drawer is a half-height bottom sheet, the cartouche and scale bar are clear of the map`, { skip, timeout: 240000 }, async () => {
     const height = 740;
     const server = createServer(async (req, res) => {
       let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
@@ -177,11 +187,20 @@ for (const width of [360, 412]) {
       await page.waitForFunction((h) => location.hash !== h, h0, { timeout: 60000 });
       assert.equal(await page.evaluate(() => document.getElementById('drawer').classList.contains('open')), true, 'a drag on the map shut the sheet');
 
-      // its controls are the same chips, then the close button shuts the sheet
+      // its controls are the same chips; the anchor swaps it for the anchorages, the same sheet at the foot
       assert.ok(await page.locator('#drawer .chip').count() > 10);
-      await page.tap('#close');
+      await page.tap('#anchor');
       await page.waitForTimeout(400);
-      assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('drawer')).visibility), 'hidden');
+      assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('drawer')).visibility), 'hidden', 'the anchor left the settings open');
+      const light = await box('#anchorPanel');
+      assert.ok(Math.abs(light.height - height / 2) <= 2 && Math.abs(light.width - width) <= 1 && Math.abs(light.y + light.height - height) <= 1, JSON.stringify(light));
+      map = await box('#map');
+      assert.ok(map.y + map.height <= light.y + 1, `the anchorages cover the map: map ${JSON.stringify(map)}, sheet ${JSON.stringify(light)}`);
+
+      // a second tap on the anchor shuts the sheet, and the map has the window again
+      await page.tap('#anchor');
+      await page.waitForTimeout(400);
+      assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('anchorPanel')).visibility), 'hidden');
       map = await box('#map');
       assert.ok(Math.abs(map.y + map.height / 2 - height / 2) <= 2, 'the map did not come back to the middle of the window');
       assert.deepEqual(errors, []);
@@ -192,7 +211,7 @@ for (const width of [360, 412]) {
   });
 }
 
-test('mouse: the menus open on a click, not a hover, and shut on a click elsewhere or Esc; one drawer at a time', { skip, timeout: 240000 }, async () => {
+test('mouse: the drawers open on a click, not a hover, one at a time below the row without moving it, and shut on a second click, a click elsewhere or Esc', { skip, timeout: 240000 }, async () => {
   const server = createServer(async (req, res) => {
     let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
     if (p.endsWith('/')) p = path.join(p, 'index.html');
@@ -205,34 +224,51 @@ test('mouse: the menus open on a click, not a hover, and shut on a click elsewhe
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(`http://localhost:${server.address().port}/#map=7/40/12`);
     await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
-    const shown = (id) => page.evaluate((i) => getComputedStyle(document.getElementById(i)).display !== 'none', id);
-    const opened = (id) => page.evaluate((i) => document.getElementById(i).classList.contains('open'), id);
+    const opened = (id) => page.evaluate((i) => document.getElementById(i).classList.contains('open') && getComputedStyle(document.getElementById(i)).visibility === 'visible', id);
+    const row = () => page.locator('#where .row').boundingBox();
+    const apart = (a, b) => a.y + a.height <= b.y + 1 || b.y + b.height <= a.y + 1 || a.x + a.width <= b.x + 1 || b.x + b.width <= a.x + 1;
     await page.hover('#go');
     await page.waitForTimeout(400);
-    assert.equal(await shown('goPanel'), false, 'a hover opened Go');
-    await page.click('#go');
-    assert.equal(await shown('goPanel'), true, 'a click did not open Go');
+    assert.equal(await opened('goPanel'), false, 'a hover opened Go');
+
+    // each button opens its own drawer and shuts the one before; the row stays put and the drawer clear of it
+    const row0 = await row();
+    for (const [b, d] of [['#open', 'drawer'], ['#charts', 'chartsDrawer'], ['#sights', 'sightsPanel'], ['#go', 'goPanel'], ['#voyages', 'voyagesPanel'], ['#anchor', 'anchorPanel']]) {
+      await page.click(b);
+      await page.waitForTimeout(400);
+      assert.equal(await opened(d), true, `${b} did not open ${d}`);
+      assert.equal(await page.getAttribute(b, 'aria-expanded'), 'true');
+      assert.equal(await page.evaluate(() => document.querySelectorAll('.drawer.open').length), 1, `${b}: more than one drawer open`);
+      assert.deepEqual(await row(), row0, `${d} moved the row`);
+      const box = await page.locator(`#${d}`).boundingBox();
+      assert.ok(apart(box, row0), `${d} covers the row: ${JSON.stringify(box)}, row ${JSON.stringify(row0)}`);
+    }
+    assert.equal(await page.locator('.drawer .close, #close').count(), 0, 'a close button is back');
+    await page.click('#anchor');
+    assert.equal(await opened('anchorPanel'), false, 'a second click left the anchorages open');
+
     await page.click('#voyages');
-    assert.equal(await shown('goPanel'), false, 'opening the voyages left Go open');
-    assert.equal(await shown('voyagesPanel'), true);
+    assert.equal(await opened('voyagesPanel'), true);
     await page.mouse.click(400, 400);
-    assert.equal(await shown('voyagesPanel'), false, 'a click on the map left the voyages open');
-    // the astrolabe's points of interest: a choice flies there and shuts the menu
+    assert.equal(await opened('voyagesPanel'), false, 'a click on the map left the voyages open');
+    await page.click('#open');
+    await page.mouse.click(400, 400);
+    assert.equal(await opened('drawer'), false, 'a click on the map left the settings open');
+    // the astrolabe's points of interest: a choice flies there and shuts the drawer
     await page.click('#sights');
-    assert.equal(await shown('sightsPanel'), true, 'the astrolabe did not open the points of interest');
+    assert.equal(await opened('sightsPanel'), true, 'the astrolabe did not open the points of interest');
     const hs = await page.evaluate(() => location.hash);
     await page.click('#sightsList button >> text=Pitcairn Islands');
-    assert.equal(await shown('sightsPanel'), false, 'a point of interest left its menu open');
+    assert.equal(await opened('sightsPanel'), false, 'a point of interest left its drawer open');
     await page.waitForFunction((x) => location.hash !== x, hs, { timeout: 60000 });
+    // Go takes the focus in its box; Esc shuts it and gives the focus back to the compass
     await page.click('#go');
+    assert.equal(await page.evaluate(() => document.activeElement.id), 'coordsText');
     await page.keyboard.press('Escape');
-    assert.equal(await shown('goPanel'), false, 'Esc left Go open');
-    // the drawers: one at a time, the buttons clear of it
-    await page.click('#open');
-    assert.equal(await opened('drawer'), true, 'the rose did not open the settings');
+    assert.equal(await opened('goPanel'), false, 'Esc left Go open');
+    assert.equal(await page.evaluate(() => document.activeElement.id), 'go', 'Esc did not give the focus back to the compass');
+    // a chart flies to its sheet and shuts the drawer
     await page.click('#charts');
-    assert.equal(await opened('chartsDrawer'), true, 'the charts did not open');
-    assert.equal(await opened('drawer'), false, 'opening the charts left the settings open');
     const h = await page.evaluate(() => location.hash);
     await page.click('#chartList button >> nth=0');
     assert.equal(await opened('chartsDrawer'), false, 'a chart left its drawer open');

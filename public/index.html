@@ -30,7 +30,7 @@
     text-shadow: 0 0 3px var(--bg), 0 0 3px var(--bg);
   }
 
-  /* top right: the settings rose and the charts open drawers; the astrolabe opens the points of interest, the compass Go (a typed place or position, or mine), the dividers the voyages, the anchor the anchorages (home first). A menu opens on a click and shuts on a choice, a second click, a click elsewhere or Esc */
+  /* top right, a row of six instruments, each opening its own drawer: the rose the settings, the chart the charts, the astrolabe the points of interest, the compass Go (a typed place or position, or mine filled in), the dividers the voyages, the anchor the anchorages (home first). One drawer at a time: a click on its button opens it and a second click shuts it, another button swaps it for its own, and a choice, a click elsewhere or Esc shuts it. The row never moves */
   #where { position: fixed; top: 12px; right: 12px; z-index: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; pointer-events: none; }
   #where :is(button, input) { pointer-events: auto; } /* the box is empty map: a touch there is the map's, to drag or pinch */
   #where .row { display: flex; gap: 6px; align-items: center; }
@@ -46,42 +46,44 @@
   #where .row #open { width: 44px; height: 44px; } /* the settings rose, the largest of the group */
   #where .row #open svg { width: 30px; height: 30px; }
   #locate:disabled { cursor: progress; opacity: 0.7; }
-  .panel {
-    display: none; flex-direction: column; align-items: flex-end; gap: 6px; max-height: calc(100vh - 80px); overflow-y: auto; pointer-events: auto;
-  }
-  .panel.open { display: flex; }
-  .places { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-  .places small { display: block; text-align: right; margin-top: -2px; font-size: 11px; margin-left: 6px; font-style: italic; opacity: 0.7; }
-  .places .group { font: italic 12px var(--serif); color: var(--fg); opacity: 0.7; margin-top: 4px; text-shadow: 0 0 4px var(--panel); }
+  .menu { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; } /* the lighter drawers: a list of places, Go, the voyages */
+  .places { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+  .places small { display: block; margin-top: -2px; font-size: 11px; font-style: italic; opacity: 0.7; }
+  .places .group { font: italic 12px var(--serif); color: var(--fg); opacity: 0.7; margin-top: 4px; }
   #where .places button, #goPanel button, #voyagesPanel .note { padding: 3px 10px; font: 13px var(--serif); border-radius: 12px; }
-  #coords { display: flex; gap: 4px; }
-  #coords input { width: 170px; padding: 3px 8px; font: 13px var(--serif); border-radius: 12px; background: var(--panel); color: var(--fg); border: 1px solid var(--rule); }
+  #where .places button { display: block; text-align: left; }
+  #coords { display: flex; gap: 4px; align-self: stretch; }
+  #coords input { flex: 1; min-width: 0; max-width: none; padding: 3px 8px; font: 13px var(--serif); border-radius: 12px; background: var(--panel); color: var(--fg); border: 1px solid var(--rule); }
   #voyagesPanel .note { margin: 0; font-style: italic; background: var(--panel); border: 1px solid var(--rule); }
   #goMiss { margin: 0; padding: 2px 8px; font: italic 12px var(--serif); background: var(--panel); border-radius: 8px; }
 
-  /* the drawers (settings, charts): slide in from the right over the map, hidden (and out of the tab order) when shut; the buttons step left of one that is open */
+  /* the drawers: on a wide screen each slides in from the right below the row, right-aligned with it and clear
+     of it, scrolling inside; hidden (and out of the tab order) when shut */
   .drawer {
-    position: fixed; inset: 0 0 0 auto; z-index: 2; box-sizing: border-box;
-    width: min(480px, 100vw); overflow-y: auto; overscroll-behavior: contain;
-    padding: 14px 16px 28px; background: var(--panel);
-    border-left: 1px solid var(--rule); outline: 1px solid var(--rule); outline-offset: -5px;
-    box-shadow: -4px 0 24px rgb(0 0 0 / 0.3);
-    transform: translateX(102%); visibility: hidden;
+    position: fixed; top: 64px; right: 12px; z-index: 2; box-sizing: border-box; pointer-events: auto;
+    width: min(480px, 100vw - 24px); max-height: calc(100vh - 76px); max-height: calc(100dvh - 76px); overflow-y: auto; overscroll-behavior: contain;
+    padding: 14px 16px 20px; background: var(--panel);
+    border: 1px solid var(--rule); outline: 1px solid var(--rule); outline-offset: -5px;
+    box-shadow: -4px 4px 24px rgb(0 0 0 / 0.3);
+    transform: translateX(calc(100% + 24px)); visibility: hidden;
     transition: transform 0.25s ease, visibility 0s linear 0.25s;
   }
   .drawer.open { transform: none; visibility: visible; transition: transform 0.25s ease; }
   @media (prefers-reduced-motion: reduce) { .drawer, .drawer.open { transition: none; } }
-  @media (min-width: 521px) { html.sheet #where { right: calc(min(480px, 100vw) + 12px); } }
+  @media (min-width: 521px) { /* the lighter drawers as wide as their lines, Go as wide as a position needs */
+    .drawer.menu { width: max-content; min-width: min(240px, 100vw - 24px); max-width: min(480px, 100vw - 24px); }
+    #goPanel { width: min(360px, 100vw - 24px); }
+  }
 
-  /* a phone: the drawer is a bottom sheet at half the window's height, the map above it (toggled by the
-     rose button, the close button or Esc); the cartouche and the scale bar sit on cards beside the map */
+  /* a phone: every drawer is a bottom sheet at half the window's height, the map above it (toggled by its
+     button or Esc); the cartouche and the scale bar sit on cards beside the map */
   .card { position: fixed; z-index: 1; pointer-events: none; height: auto; }
   #cardCartouche { top: 12px; left: 12px; }
   #cardScale { left: 8px; bottom: 44px; }
   @media (min-width: 521px) { .card { display: none; } }
   @media (max-width: 520px) {
     .drawer {
-      inset: auto 0 0 0; width: 100vw; height: 50vh; height: 50dvh; border-left: none; border-top: 1px solid var(--rule);
+      inset: auto 0 0 0; width: 100vw; height: 50vh; height: 50dvh; max-height: none; border: none; border-top: 1px solid var(--rule);
       border-radius: 14px 14px 0 0; box-shadow: 0 -4px 24px rgb(0 0 0 / 0.3);
       transform: translateY(102%);
     }
@@ -104,7 +106,6 @@
   header { display: flex; align-items: start; justify-content: space-between; gap: 8px; }
   h1 { font: 28px/1.1 var(--serif); margin: 4px 0 2px; letter-spacing: 0.06em; }
   header p { margin: 0; color: var(--muted); font-size: 12px; }
-  .close { flex: none; width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--rule); background: none; color: var(--fg); font-size: 16px; cursor: pointer; }
 
   #share { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px; }
   #share .chip { cursor: pointer; }
@@ -231,21 +232,21 @@
       </svg>
     </button>
   </div>
-  <div id="goPanel" class="panel">
+  <div id="goPanel" class="drawer menu">
+    <button id="locate" type="button" title="Fill in my position">Find my position</button>
     <form id="coords" autocomplete="off">
       <input id="coordsText" type="text" placeholder="a place, or lat, lon" aria-label="A place, or latitude, longitude">
       <button type="submit" aria-label="Go there" title="Go">Go</button>
     </form>
     <p id="goMiss" role="status" hidden></p>
-    <button id="locate" type="button" title="Centre on my position">My position</button>
   </div>
-  <div id="sightsPanel" class="panel">
+  <div id="sightsPanel" class="drawer menu">
     <ul id="sightsList" class="places"></ul>
   </div>
-  <div id="voyagesPanel" class="panel">
+  <div id="voyagesPanel" class="drawer menu">
     <p class="note">Famous voyages: soon</p>
   </div>
-  <div id="anchorPanel" class="panel">
+  <div id="anchorPanel" class="drawer menu">
     <ul id="anchorages" class="places"></ul>
   </div>
 </nav>
@@ -256,7 +257,6 @@
       <h1>Charts</h1>
       <p>A chart flies to its sheet.</p>
     </div>
-    <button class="close" type="button" aria-label="Close charts">✕</button>
   </header>
   <ul id="chartList"></ul>
 </aside>
@@ -267,7 +267,6 @@
       <h1>Portolani</h1>
       <p>Drag to pan, wheel or pinch to zoom.</p>
     </div>
-    <button id="close" class="close" type="button" aria-label="Close settings">✕</button>
   </header>
 
   <div id="share">
