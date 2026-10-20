@@ -39,7 +39,7 @@ const canvas = $('map'), ctx = canvas.getContext('2d');
 // cards beside the map, not on the sea.
 const phone = matchMedia('(max-width: 520px)');
 
-const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: 5, regions: 'latin', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0] };
+const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: 5, regions: 'latin', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyage: 'off' };
 
 // ---------------------------------------------------------------- the sprites on offer
 
@@ -99,6 +99,8 @@ function styleFromHash() {
     scale: q.get('scale') === 'off' || SCALE_NAMES.includes(q.get('scale')) ? q.get('scale') : DEFAULTS.scale,
     townSize: TOWN_SIZES.includes(q.get('townsize')) ? q.get('townsize') : DEFAULTS.townSize,
     placement: parsePlacement(q.get('placement')).text,
+    // a voyage overlay by its id (data/voyages/<id>.json); one the site lacks draws nothing
+    voyage: /^[a-z][a-z0-9-]*$/.test(q.get('voyage') ?? '') ? q.get('voyage') : DEFAULTS.voyage,
   };
 }
 // The selection a hash names; an older link's rendering, styles and kinds become the selection they drew.
@@ -135,6 +137,7 @@ function writeHash() {
   if (st.mountains !== DEFAULTS.mountains) q.set('mountains', st.mountains);
   if (st.trees !== DEFAULTS.trees) q.set('trees', st.trees);
   if (st.placement) q.set('placement', st.placement);
+  if (st.voyage !== DEFAULTS.voyage) q.set('voyage', st.voyage);
   if (st.seaTint) q.set('seas', '1');
   if (st.scaleBorder !== DEFAULTS.scaleBorder) q.set('scaleborder', st.scaleBorder);
   if (st.scale !== DEFAULTS.scale) q.set('scale', st.scale);
@@ -524,7 +527,7 @@ async function render() {
       ...style, ...parsePlacement(style.placement), relief: style.mountains === 'colour' ? ['marina'] : style.mountains === 'ink' ? ['engraved'] : [],
       continents: style.continentsZoom > 0, continentsZoom: style.continentsZoom,
       regions: style.regionsZoom > 0 ? style.regions : 'off', regionsZoom: style.regionsZoom,
-      sprites: [...selection], kinds, view, pinned: !phone.matches, pinTitle: style.autoTitle ? pinTitle : null,
+      sprites: [...selection], kinds, view, pinned: !phone.matches, pinTitle: style.autoTitle ? pinTitle : null, voyage: style.voyage,
     });
     if (me !== run) return; // a newer change or a move superseded this one
     ground = { world, coarse, bg, anchored: anchorScene(scene, data), cards: { cartouche: kinds.includes('cartouche') ? scene.cartouche : null, scaleSprite: scene.scaleSprite, scale: style.scale, bg } };
