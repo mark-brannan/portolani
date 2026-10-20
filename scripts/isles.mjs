@@ -9,6 +9,10 @@
 // any other is an island, drawn as a dot. Dropped: a group the 50m land already holds, and a group
 // within NEAR_KM of a 50m coast over ISLAND_KM2, where the skerries of a large coast would only
 // thicken its line. A small island in open ocean is never dropped.
+//
+// The same groups, read from Natural Earth 10m rather than GSHHG, give the outlines of the remote
+// islands 50m drops (isleLand: Pitcairn, Ducie, Oeno), which build-preview.mjs writes to
+// geo/isles-land.json for the coarse land to draw before the 10m band takes over.
 
 import { ISLAND_KM2 } from './island.mjs';
 
@@ -88,10 +92,11 @@ function segKm(lon, lat, [ax, ay], [bx, by]) {
   return Math.hypot(x1 + t * dx, y1 + t * dy) * KM_DEG;
 }
 
-// Group q takes in p (an islet or a group): its land, its box (p moved next to q across the
-// antimeridian) and its largest islet.
+// Group q takes in p (an islet or a group): its land, its islets, its box (p moved next to q across
+// the antimeridian) and its largest islet.
 function join(q, p) {
   q.km2 += p.km2;
+  if (p.parts) q.parts.push(...p.parts); else q.parts.push(p);
   const s = wrap(p.box[0] - q.box[0]) - (p.box[0] - q.box[0]);
   q.box = [Math.min(q.box[0], p.box[0] + s), Math.min(q.box[1], p.box[1]), Math.max(q.box[2], p.box[2] + s), Math.max(q.box[3], p.box[3])];
   const big = p.big ?? p;
@@ -105,11 +110,9 @@ function shape(q) {
   return Object.assign(q, { lon, lat, ext, req, atoll: ext * ext > ATOLL * req * req });
 }
 
-// The index of `islands` (GSHHG "h" land, [outer, ...holes] in lon/lat) against `coarse` (the 50m
-// land, likewise): { v, isles: [lon, lat, r, ...] }, flat, three numbers a record, lon and lat to a
-// thousandth of a degree; r is the radius in km of a circle of the island's land, or, negative,
-// of the atoll's ring.
-export function isleIndex(islands, coarse) {
+// The groups of `islands` ([outer, ...holes] in lon/lat) that `coarse` (the 50m land, likewise)
+// lacks, by the rules above: each { lon, lat, ext, req, atoll, parts }, `parts` its islets' { poly }.
+function lacking(islands, coarse) {
   const parts = islands.map((poly) => ({ poly, km2: polyKm2(poly), box: boxOf(poly[0]) })).filter((p) => p.km2 < ISLAND_KM2);
   // join islets within JOIN_KM: union-find over the boxes
   const up = parts.map((_, i) => i);
@@ -122,7 +125,7 @@ export function isleIndex(islands, coarse) {
   const groups = new Map();
   parts.forEach((p, i) => {
     const r = root(i), q = groups.get(r);
-    if (!q) groups.set(r, { km2: p.km2, box: [...p.box], big: p });
+    if (!q) groups.set(r, { km2: p.km2, box: [...p.box], big: p, parts: [p] });
     else join(q, p);
   });
   // a rim whose gaps run wider than JOIN_KM leaves arcs of motus, each an atoll of its own: a group
@@ -159,16 +162,37 @@ export function isleIndex(islands, coarse) {
   const nearCoast = (lon, lat) => [...sg.near(widen([lon, lat, lon, lat], NEAR_KM))].some(([a, b]) => segKm(lon, lat, a, b) < NEAR_KM);
   // a small 50m island within JOIN_KM of a group is the same island, drawn already
   const beside = (q) => [...lg.near(widen(q.box, JOIN_KM))].some((i) => land[i].km2 < ISLAND_KM2 && gapKm(q.box, land[i].box) < JOIN_KM);
-  const out = [];
-  for (const q of all) {
-    if (q.gone || q.km2 >= ISLAND_KM2) continue;
-    const { lon, lat, ext, req, atoll } = q;
+  return all.filter((q) => {
+    if (q.gone || q.km2 >= ISLAND_KM2) return false;
     // a probe on the largest islet: the group's centre is lagoon in an atoll
     const [bx0, by0, bx1, by1] = q.big.box, plon = wrap((bx0 + bx1) / 2), plat = (by0 + by1) / 2;
-    if (held(plon, plat) || held(lon, lat) || beside(q) || nearCoast(lon, lat)) continue;
+    return !(held(plon, plat) || held(q.lon, q.lat) || beside(q) || nearCoast(q.lon, q.lat));
+  });
+}
+
+// The index of `islands` (GSHHG "h" land, [outer, ...holes] in lon/lat) against `coarse` (the 50m
+// land, likewise): { v, isles: [lon, lat, r, ...] }, flat, three numbers a record, lon and lat to a
+// thousandth of a degree; r is the radius in km of a circle of the island's land, or, negative,
+// of the atoll's ring.
+export function isleIndex(islands, coarse) {
+  const out = [];
+  for (const { lon, lat, ext, req, atoll } of lacking(islands, coarse)) {
     out.push(+lon.toFixed(3), +lat.toFixed(3), atoll ? -+ext.toFixed(2) || -0.01 : +req.toFixed(2) || 0.01);
   }
   return { v: 1, isles: out };
+}
+
+// The outlines of the same islands, for the coarse land to draw: { v, land: [[outer, ...holes], ...] },
+// each point [lon, lat] to PLACES decimals (a ten-thousandth of a degree is some 11 m, under a pixel
+// until z13, past where the detail bands take over). Fed Natural Earth 10m land, this is the remote
+// oceanic islands 50m drops (Pitcairn, Ducie, Oeno), drawn as land at every zoom before the 10m band.
+const PLACES = 4;
+export function isleLand(islands, coarse) {
+  const round = (ring) => ring.map(([lon, lat]) => [+lon.toFixed(PLACES), +lat.toFixed(PLACES)])
+    .filter((p, i, r) => i === 0 || p[0] !== r[i - 1][0] || p[1] !== r[i - 1][1]);
+  const land = lacking(islands, coarse).flatMap((q) => q.parts.map(({ poly }) => poly.map(round).filter((r) => r.length >= 4)))
+    .filter((poly) => poly.length);
+  return { v: 1, land };
 }
 
 // The records of an index as { lon, lat, km, atoll }.

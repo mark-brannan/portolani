@@ -11,7 +11,8 @@ import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import * as coastlines from 'coastlines';
 import { geojsonPolygons } from 'coast-wright';
 import { createScene, drawScene, W, H } from '../scripts/scene.mjs';
-import { isleIndex, islesOf } from '../scripts/isles.mjs';
+import { isleIndex, islesOf, isleLand } from '../scripts/isles.mjs';
+import { POIS } from '../scripts/pois.mjs';
 import { coastNames, joinNames } from '../scripts/names.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -19,13 +20,15 @@ const GEO = dirname(fileURLToPath(import.meta.resolve('coastlines/data/ne-land-5
 const read = (file) => JSON.parse(readFileSync(file, 'utf8'));
 const resolve = (p) => (p.startsWith('geo/') ? join(GEO, p.slice(4)) : join(ROOT, p));
 
+const land50 = geojsonPolygons(read(join(GEO, 'ne-land-50m.geojson')));
+const outlines = isleLand(geojsonPolygons(read(join(GEO, 'ne-land-10m.geojson'))), land50);
 const index = isleIndex(coastlines.shapefilePolygons(readFileSync(coastlines.localUrl(coastlines.find('gshhg-land-h')))),
   geojsonPolygons(read(join(GEO, 'ne-land-50m.geojson'))));
 const names = joinNames(read(join(ROOT, 'test', 'fixtures', 'sea-names-50m.json')),
   coastNames(read(join(GEO, 'ne-admin-0-countries-50m.geojson')), read(join(GEO, 'ne-coastline-50m.geojson'))));
 const env = {
   createCanvas,
-  readJSON: async (p) => (p === 'geo/names-50m.json' ? names : p === 'geo/isles.json' ? index
+  readJSON: async (p) => (p === 'geo/names-50m.json' ? names : p === 'geo/isles.json' ? index : p === 'geo/isles-land.json' ? outlines
     : p === 'geo/seas-50m.json' ? read(join(ROOT, 'test', 'fixtures', 'seas-50m.json')) : read(resolve(p))),
   loadImage: (p) => loadImage(resolve(p)),
   loadFont: async (family) => { GlobalFonts.registerFromPath(join(ROOT, 'test', 'fixtures', 'IMFeENrm28P.ttf'), family); },
@@ -71,5 +74,34 @@ test('a z5 view of the eastern Pacific draws Pukapuka, Pitcairn and Nuku Hiva, a
     assert.ok(x > 0 && x < W && y > 0 && y < H, `${name} is in the view`);
     assert.ok(darkest(x, y) < 100, `${name} is inked at (${x.toFixed(0)}, ${y.toFixed(0)})`);
     for (const [kind, b] of ornaments) assert.ok(!(x > b.x0 && x < b.x1 && y > b.y0 && y < b.y1), `${name} is under a ${kind}`);
+  }
+});
+
+// The remote islands 50m drops are drawn from their 10m outlines (isleLand): the Pitcairn Islands
+// are Henderson in 50m and all four in 10m.
+const inside = (ring, [x, y]) => {
+  let n = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i], [xj, yj] = ring[j];
+    if ((yi > y) !== (yj > y) && x < xj + ((y - yj) * (xi - xj)) / (yi - yj)) n = !n;
+  }
+  return n;
+};
+// the point within the outline's box: an atoll's middle is its lagoon
+const boxed = (ring, [x, y]) => Math.min(...ring.map((p) => p[0])) < x && x < Math.max(...ring.map((p) => p[0])) && Math.min(...ring.map((p) => p[1])) < y && y < Math.max(...ring.map((p) => p[1]));
+const poi = (name) => { const p = POIS.find((q) => q.name === name); return [p.lon, p.lat]; };
+test('the outlines hold Pitcairn, Oeno and Ducie, each round its point of interest, and not Henderson, which 50m holds', () => {
+  for (const name of ['Pitcairn', 'Oeno', 'Ducie']) assert.ok(outlines.land.some((poly) => boxed(poly[0], poi(name))), `${name} is outlined`);
+  assert.ok(!outlines.land.some((poly) => inside(poly[0], poi('Henderson'))), 'Henderson is not outlined twice');
+  assert.ok(land50.some((poly) => inside(poly[0], poi('Henderson'))), 'Henderson is in 50m');
+});
+
+test('the Pitcairn Islands view letters all four, each tent beside its island and not over it', async () => {
+  const { scene, proj } = await createScene(env, { view: { lon: -127.75, lat: -24.52, zoom: 7.31 }, scale: 'off' });
+  for (const name of ['Pitcairn', 'Henderson', 'Ducie', 'Oeno']) {
+    const t = scene.lesser.find((l) => l.poi && l.name === name);
+    assert.ok(t, `${name} is lettered`);
+    const [x, y] = proj.project(...poi(name));
+    assert.ok(!(Math.abs(x - t.x) < t.h / 3 && y > t.y - t.h && y < t.y), `${name}'s tent at (${t.x.toFixed(0)}, ${t.y.toFixed(0)}) stands over it at (${x.toFixed(0)}, ${y.toFixed(0)})`);
   }
 });
