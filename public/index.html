@@ -30,7 +30,7 @@
     text-shadow: 0 0 3px var(--bg), 0 0 3px var(--bg);
   }
 
-  /* top right: the settings rose, then the astrolabe takes my position; the dividers open Go (a place, a position, or mine), the anchor the curated chart views; each opens on a click and shuts on a choice, a second click, a click elsewhere or Esc */
+  /* top right: the settings rose, then the astrolabe takes my position; the spyglass opens Go (a place, a position, or mine), the dividers the voyages (one at a time, or none), the anchor the curated chart views; each opens on a click and shuts on a choice, a second click, a click elsewhere or Esc */
   #where { position: fixed; top: 12px; right: 12px; z-index: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; pointer-events: none; }
   #where :is(button, input) { pointer-events: auto; } /* the box is empty map: a touch there is the map's, to drag or pinch */
   #where .row { display: flex; gap: 6px; align-items: center; }
@@ -40,7 +40,7 @@
   }
   #where [hidden] { display: none; }
   #where .row button { width: 36px; height: 36px; }
-  #where .row :is(#locate, #go, #places) { background: #efe3c6; border-color: #b89a68; } /* brass reads on parchment, in a dark theme too */
+  #where .row :is(#locate, #go, #voyages, #places) { background: #efe3c6; border-color: #b89a68; } /* brass reads on parchment, in a dark theme too */
   #where .row button[aria-expanded="true"] { background: #e2cd9e; }
   #where .row svg { width: 24px; height: 24px; }
   #where .row #open { width: 44px; height: 44px; } /* the settings rose, the largest of the group */
@@ -52,7 +52,13 @@
   .panel.open { display: flex; }
   #origins { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
   #origins .group { font: italic 12px var(--serif); color: var(--fg); opacity: 0.7; margin-top: 4px; text-shadow: 0 0 4px var(--panel); }
-  #origins button, #goPanel button { padding: 3px 10px; font: 13px var(--serif); border-radius: 12px; }
+  #origins button, #goPanel button, #voyageList button { padding: 3px 10px; font: 13px var(--serif); border-radius: 12px; }
+  #voyageList { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  #voyageList button { white-space: nowrap; }
+  #voyageList button[aria-checked="true"] { background: #e2cd9e; color: #3b2a1a; border-color: #b89a68; } /* the chosen voyage, lit like an open instrument */
+  #voyageList .when { font-size: 11px; font-style: italic; opacity: 0.75; margin-left: 6px; }
+  #voyageList .brief { display: none; }
+  @media (max-width: 520px) { #voyageList .full { display: none; } #voyageList .brief { display: inline; } } /* a phone: the short name and the years, so no title wraps */
   #coords { display: flex; gap: 4px; }
   #coords input { width: 170px; padding: 3px 8px; font: 13px var(--serif); border-radius: 12px; background: var(--panel); color: var(--fg); border: 1px solid var(--rule); }
   #goMiss { margin: 0; padding: 2px 8px; font: italic 12px var(--serif); background: var(--panel); border-radius: 8px; }
@@ -212,6 +218,15 @@
       </svg>
     </button>
     <button id="go" type="button" aria-label="Go to a place or a position" aria-controls="goPanel" aria-expanded="false" title="Go to">
+      <svg viewBox="-16 -16 32 32" aria-hidden="true" fill="none" stroke-linecap="butt"><defs><linearGradient id="brassSpyglass" gradientUnits="userSpaceOnUse" x1="0" y1="-3.6" x2="0" y2="3.6"><stop offset="0" stop-color="#fff4c2"/><stop offset="0.35" stop-color="#e8b84a"/><stop offset="0.6" stop-color="#b07a1e"/><stop offset="0.8" stop-color="#e9c060"/><stop offset="1" stop-color="#7a5212"/></linearGradient></defs>
+        <g transform="rotate(-38)">
+          <g stroke="#5a3a0c"><path d="M-15.2 0h6.6" stroke-width="4.2"/><path d="M-9.4 0h9" stroke-width="5.6"/><path d="M-1.2 0h12.8" stroke-width="7.2"/><path d="M10.6 0h4.6" stroke-width="8.6"/></g>
+          <g stroke="url(#brassSpyglass)"><path d="M-14.5 0h5.6" stroke-width="2.6"/><path d="M-8.7 0h7.8" stroke-width="4"/><path d="M-0.5 0h11.4" stroke-width="5.6"/><path d="M11.3 0h3.2" stroke-width="7"/></g>
+          <path d="M5 -2.8v5.6M-4.6-2v4" stroke="#5a3a0c" stroke-width="0.7"/>
+        </g>
+      </svg>
+    </button>
+    <button id="voyages" type="button" aria-label="Voyages" aria-controls="voyagePanel" aria-expanded="false" title="Voyages">
       <svg viewBox="-16 -16 32 32" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round"><defs><linearGradient id="brassDividers" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4c2"/><stop offset="0.35" stop-color="#e8b84a"/><stop offset="0.6" stop-color="#b07a1e"/><stop offset="0.8" stop-color="#e9c060"/><stop offset="1" stop-color="#7a5212"/></linearGradient></defs>
         <g stroke="#5a3a0c" stroke-width="3.4"><path d="M-1.6-9-7 12.5M1.6-9 7 12.5"/><path d="M-4.6 3h9.2" stroke-width="2.2"/></g>
         <g stroke="url(#brassDividers)" stroke-width="2"><path d="M-1.6-9-7 12.5M1.6-9 7 12.5"/><path d="M-4.6 3h9.2" stroke-width="1"/></g>
@@ -232,6 +247,9 @@
       <button type="submit" aria-label="Go there" title="Go">Go</button>
     </form>
     <p id="goMiss" role="status" hidden></p>
+  </div>
+  <div id="voyagePanel" class="panel">
+    <ul id="voyageList" role="radiogroup" aria-label="Voyage"></ul>
   </div>
   <div id="flyout" class="panel">
     <ul id="origins"></ul>

@@ -735,10 +735,10 @@ const ORIGINS = [
 ];
 const originViews = [];
 
-// The two menus: the anchor opens the chart views, the dividers Go. Each opens on a click and shuts on a
-// choice, a second click, a click anywhere outside it, or Esc; opening one shuts the other.
+// The three menus: the anchor opens the chart views, the spyglass Go, the dividers the voyages. Each opens on a
+// click and shuts on a choice, a second click, a click anywhere outside it, or Esc; opening one shuts the others.
 const where = $('where');
-const menus = [[$('places'), $('flyout')], [$('go'), $('goPanel')]];
+const menus = [[$('places'), $('flyout')], [$('go'), $('goPanel')], [$('voyages'), $('voyagePanel')]];
 function setFlyout(open) { // the panel to open, or false for none
   for (const [button, panel] of menus) {
     panel.classList.toggle('open', panel === open);
@@ -749,10 +749,40 @@ function setFlyout(open) { // the panel to open, or false for none
 for (const [button, panel] of menus) button.addEventListener('click', () => {
   setFlyout(panel.classList.contains('open') ? false : panel);
   if (panel.id === 'goPanel' && panel.classList.contains('open') && !phone.matches) $('coordsText').focus();
+  if (panel.id === 'voyagePanel' && panel.classList.contains('open')) fillVoyages();
 });
 addEventListener('pointerdown', (e) => { if (!where.contains(e.target)) setFlyout(false); });
 addEventListener('keydown', (e) => { if (e.key === 'Escape') setFlyout(false); });
 where.addEventListener('focusout', (e) => { if (e.relatedTarget && !where.contains(e.relatedTarget)) setFlyout(false); }); // tabbed out; a click that focuses nothing has no relatedTarget
+
+// The voyages: one drawn at a time, or none (the default). The list is None, then data/voyages/index.json in its
+// order, each by its title (a phone shows the short name and the years, so none wraps); the titles load on the first
+// open and stay cached. A choice rides in the link (`voyage=`) like any style.
+let voyageList = null;
+const escapeHTML = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
+const voyageItem = (id, full, brief, when) => `<li><button type="button" role="radio" aria-checked="false" data-voyage="${id}">` +
+  `<span class="full">${full}</span><span class="brief">${brief}${when ? `<span class="when">${when}</span>` : ''}</span></button></li>`;
+function showVoyage() {
+  for (const b of $('voyageList').querySelectorAll('[data-voyage]')) b.setAttribute('aria-checked', String(b.dataset.voyage === style.voyage));
+}
+function fillVoyages() {
+  voyageList ??= env.readJSON('data/voyages/index.json')
+    .then((ids) => Promise.all(ids.map((id) => env.readJSON(`data/voyages/${id}.json`).then((v) => [id, v], () => [id, { title: id, short: id }]))))
+    .then((voyages) => {
+      $('voyageList').innerHTML = voyageItem('off', 'None', 'None', '') +
+        voyages.map(([id, v]) => voyageItem(escapeHTML(id), escapeHTML(v.title ?? id), escapeHTML(v.short ?? v.title ?? id), escapeHTML(v.when))).join('');
+      showVoyage();
+    }, (e) => { voyageList = null; $('voyageList').innerHTML = `<li>${escapeHTML(e.message)}</li>`; });
+  showVoyage();
+}
+$('voyageList').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-voyage]');
+  if (!b) return;
+  setFlyout(false);
+  if (b.dataset.voyage === style.voyage) return;
+  style = { ...style, voyage: b.dataset.voyage };
+  showVoyage(); writeHash(); render();
+});
 
 // The cartouche names the place flown to (its title, else the button's name), not whatever scores highest in the frame.
 $('origins').innerHTML = ORIGINS.map(([group, items]) =>
@@ -829,6 +859,6 @@ locate.addEventListener('click', () => {
 for (const id of ['projection', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'scaleBorder', 'land', 'islands', 'seaTint', 'rivers', 'lakes', 'trees', 'mountains', 'hills', 'continentsZoom', 'regions', 'regionsZoom', 'titleMode', 'townSize']) $(id).addEventListener('input', readControls);
 let typing = 0; // a typed title is placed when the typing pauses, not on every key: a placement takes up to a few hundred ms
 $('title').addEventListener('input', () => { clearTimeout(typing); typing = setTimeout(readControls, 400); });
-addEventListener('hashchange', () => { view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); render(); });
+addEventListener('hashchange', () => { view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); showVoyage(); render(); });
 showPlacement();
 render();
