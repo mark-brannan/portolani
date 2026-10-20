@@ -240,3 +240,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261020t214401z
 - Places' 'Pitcairn Island' became 'Pitcairn Islands', framing all four islands. Undo: restore the 'Pitcairn Island' line in public/page.js ORIGINS ([#204](https://github.com/mark-brannan/portolani/pull/204))
+
+### 20261020t214405z
+- The remote islands' 10m outlines draw from z5; below it the island marks stand in, for drag cost. Undo: set ISLE_LAND_ZOOM in scene.mjs to 0 ([#204](https://github.com/mark-brannan/portolani/pull/204))
