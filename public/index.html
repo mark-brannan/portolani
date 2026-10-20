@@ -38,10 +38,9 @@
   }
   #open svg { width: 30px; height: 30px; }
 
-  /* top right: my position and home; the other origins fly out beneath under the pointer or a keyboard focus */
+  /* top right: the dividers open Go (a place, a position, or mine), the anchor the curated chart views; each opens on a click and shuts on a choice, a second click, a click elsewhere or Esc */
   #where { position: fixed; top: 12px; right: 12px; z-index: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; pointer-events: none; }
-  #where :is(button, input) { pointer-events: auto; } /* the box (and the shut flyout's) is empty map: a touch there is the map's, to drag or pinch */
-  @media (hover: hover) { #flyout { pointer-events: auto; } } /* the open list holds the hover across its gaps and headings; shut, it is hidden and takes nothing */
+  #where :is(button, input) { pointer-events: auto; } /* the box is empty map: a touch there is the map's, to drag or pinch */
   #where .row { display: flex; gap: 6px; }
   #where button {
     padding: 0; display: grid; place-items: center; cursor: pointer; border-radius: 50%;
@@ -49,24 +48,19 @@
   }
   #where [hidden] { display: none; }
   #where .row button { width: 36px; height: 36px; }
+  #where .row button[aria-expanded="true"] { background: var(--sheet); }
   #where .row svg { width: 22px; height: 22px; }
-  #locate:disabled { cursor: progress; }
-  #locate.busy svg { animation: seek 1.2s linear infinite; }
-  @keyframes seek { to { transform: rotate(360deg); } }
-  #flyout {
-    display: flex; flex-direction: column; align-items: flex-end; gap: 6px; max-height: calc(100vh - 80px); overflow-y: auto;
-    opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0s linear 0.2s;
+  #locate:disabled { cursor: progress; opacity: 0.7; }
+  .panel {
+    display: none; flex-direction: column; align-items: flex-end; gap: 6px; max-height: calc(100vh - 80px); overflow-y: auto; pointer-events: auto;
   }
-  /* open by a tap on the places button or a focus in it; under a pointer that hovers, by hovering too (a touch leaves :hover stuck on the last thing tapped) */
-  #where.open #flyout, #where:has(:focus-visible) #flyout { opacity: 1; visibility: visible; transition: opacity 0.2s; }
-  @media (hover: hover) { #where:hover #flyout { opacity: 1; visibility: visible; transition: opacity 0.2s; } }
-  #where.shut #flyout { opacity: 0; visibility: hidden; transition: none; } /* after a choice, until the pointer leaves */
+  .panel.open { display: flex; }
   #origins { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
   #origins .group { font: italic 12px var(--serif); color: var(--fg); opacity: 0.7; margin-top: 4px; text-shadow: 0 0 4px var(--panel); }
-  #origins button, #coords button { padding: 3px 10px; font: 13px var(--serif); border-radius: 12px; }
+  #origins button, #goPanel button { padding: 3px 10px; font: 13px var(--serif); border-radius: 12px; }
   #coords { display: flex; gap: 4px; }
-  #coords input { width: 150px; padding: 3px 8px; font: 13px var(--serif); border-radius: 12px; background: var(--panel); color: var(--fg); border: 1px solid var(--rule); }
-  @media (prefers-reduced-motion: reduce) { #flyout, #locate.busy svg { animation: none; transition: none; } }
+  #coords input { width: 170px; padding: 3px 8px; font: 13px var(--serif); border-radius: 12px; background: var(--panel); color: var(--fg); border: 1px solid var(--rule); }
+  #goMiss { margin: 0; padding: 2px 8px; font: italic 12px var(--serif); background: var(--panel); border-radius: 8px; }
 
   /* the drawer: slides in from the left over the map, hidden (and out of the tab order) when shut */
   #drawer {
@@ -212,26 +206,15 @@
 
 <nav id="where" aria-label="Go to">
   <div class="row">
-    <button id="locate" type="button" aria-label="Centre on my position" title="My position">
-      <svg viewBox="-16 -16 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
-        <circle r="8"/>
-        <path d="M0-14v5M0 9v5M-14 0h5M9 0h5"/>
-        <circle r="2" fill="#8c2f1e" stroke="none"/>
-      </svg>
-    </button>
-    <button id="clearHere" type="button" aria-label="Clear my position" title="Clear position" hidden>
-      <svg viewBox="-16 -16 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
-        <circle r="8" stroke-dasharray="2.5 2.5"/>
-        <path d="M-4-4 4 4M4-4-4 4" stroke="#8c2f1e"/>
-      </svg>
-    </button>
-    <button id="places" type="button" aria-label="Places" aria-controls="flyout" aria-expanded="false" title="Places">
+    <button id="go" type="button" aria-label="Go to a place or my position" aria-controls="goPanel" aria-expanded="false" title="Go to">
       <svg viewBox="-16 -16 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M0 13C-7 6-9 2-9-2a9 9 0 0 1 18 0c0 4-2 8-9 15Z"/>
-        <circle cy="-2" r="3"/>
+        <circle cy="-11" r="2.4"/>
+        <path d="M-1.4-9-7 13M1.4-9 7 13"/>
+        <path d="M-4.5 3h9" stroke-width="1.1"/>
+        <path d="M-9 14.5h4M5 14.5h4" stroke="#8c2f1e" stroke-width="1.2"/>
       </svg>
     </button>
-    <button id="home" type="button" aria-label="Back to the Mediterranean" title="Home">
+    <button id="places" type="button" aria-label="Chart views" aria-controls="flyout" aria-expanded="false" title="Chart views">
       <svg viewBox="-16 -16 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
         <circle cy="-10" r="2.6"/>
         <path d="M0-7.4V13M-6-3h12"/>
@@ -239,11 +222,15 @@
       </svg>
     </button>
   </div>
-  <div id="flyout">
+  <div id="goPanel" class="panel">
+    <button id="locate" type="button">My position</button>
     <form id="coords" autocomplete="off">
-      <input id="coordsText" type="text" inputmode="decimal" placeholder="lat, lon  (36.28, -76)" aria-label="Latitude, longitude">
-      <button type="submit" aria-label="Go to these coordinates" title="Go">Go</button>
+      <input id="coordsText" type="text" placeholder="a place, or lat, lon" aria-label="A place, or latitude, longitude">
+      <button type="submit" aria-label="Go there" title="Go">Go</button>
     </form>
+    <p id="goMiss" role="status" hidden></p>
+  </div>
+  <div id="flyout" class="panel">
     <ul id="origins"></ul>
   </div>
 </nav>

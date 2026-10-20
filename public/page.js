@@ -10,6 +10,7 @@
 // Older links naming a `rendering` (or `pack`), `rose`, `monster`, `town` and `kinds` open as the
 // selection those chose, and are written back in the new form.
 import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, W, H } from './scene.mjs';
+import { POIS } from './pois.mjs';
 
 const memo = new Map();
 // a failed load is forgotten, so the next stop tries it again
@@ -534,7 +535,6 @@ async function render() {
     const t1 = performance.now();
     ctx.clearRect(0, 0, W, H);
     drawScene(ctx, scene, data, bg, { scale: 1, x: 0, y: 0 });
-    drawHere();
     drawCards();
     const t2 = performance.now();
     $('status').textContent = `z${view.zoom.toFixed(1)}: load ${timing.load.toFixed(0)} ms, placement + parchment ${timing.place.toFixed(0)} ms, draw ${(t2 - t1).toFixed(0)} ms (total ${(t2 - t0).toFixed(0)} ms)`;
@@ -582,7 +582,7 @@ opener.addEventListener('click', () => setDrawer(!isOpen()));
 $('close').addEventListener('click', () => setDrawer(false));
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && isOpen()) setDrawer(false); });
 // On a phone the sheet stays up while the map is moved above it: that is how a control's effect is seen.
-canvas.addEventListener('pointerdown', () => { if (!phone.matches) setDrawer(false); setFlyout(false); });
+canvas.addEventListener('pointerdown', () => { if (!phone.matches) setDrawer(false); });
 
 // Reset: every control back to its default, the place kept. The hash holds the whole style, so a
 // hash with only the view is the default style; the hashchange handler below redraws from it.
@@ -634,7 +634,6 @@ function moved(next, flying = false) {
     // the 10m cells placed last while they cover the view; 50m otherwise, until it stops and is placed again
     drawGround(ctx, covers(ground.world, view) ? ground.world : ground.coarse, view, ground.bg);
     drawAnchored(ctx, ground.anchored, ground.bg, view); // the placed ornaments, held to the earth
-    drawHere();
     drawCards(true);
     $('status').textContent = `z${view.zoom.toFixed(1)}: moving, frame ${(performance.now() - t).toFixed(1)} ms`;
   });
@@ -732,41 +731,83 @@ const ORIGINS = [
 ];
 const originViews = [];
 
-// The places flyout: opened by the places button, by hovering where the pointer hovers, or by focus; shut by a
-// choice, a tap on the map, or Esc. A shut flyout stays shut under a pointer that has not left it.
-const where = $('where'), places = $('places');
-function setFlyout(open) {
-  where.classList.toggle('open', open);
-  where.classList.toggle('shut', !open && where.matches(':hover'));
-  places.setAttribute('aria-expanded', String(open));
+// The two menus: the anchor opens the chart views, the dividers Go. Each opens on a click and shuts on a
+// choice, a second click, a click anywhere outside it, or Esc; opening one shuts the other.
+const where = $('where');
+const menus = [[$('places'), $('flyout')], [$('go'), $('goPanel')]];
+function setFlyout(open) { // the panel to open, or false for none
+  for (const [button, panel] of menus) {
+    panel.classList.toggle('open', panel === open);
+    button.setAttribute('aria-expanded', String(panel === open));
+  }
   if (!open && where.contains(document.activeElement)) document.activeElement.blur();
 }
-places.addEventListener('click', () => setFlyout(!where.classList.contains('open')));
-where.addEventListener('pointerleave', () => where.classList.remove('shut'));
+for (const [button, panel] of menus) button.addEventListener('click', () => {
+  setFlyout(panel.classList.contains('open') ? false : panel);
+  if (panel.id === 'goPanel' && panel.classList.contains('open') && !phone.matches) $('coordsText').focus();
+});
+addEventListener('pointerdown', (e) => { if (!where.contains(e.target)) setFlyout(false); });
 addEventListener('keydown', (e) => { if (e.key === 'Escape') setFlyout(false); });
 
 // The cartouche names the place flown to (its title, else the button's name), not whatever scores highest in the frame.
 $('origins').innerHTML = ORIGINS.map(([group, items]) =>
   (group ? `<li class="group">${group}</li>` : '') + items.map(([name, v, title]) => `<li><button type="button" data-origin="${originViews.push({ ...v, title: title ?? name }) - 1}">${name}</button></li>`).join('')).join('');
 $('origins').addEventListener('click', (e) => { const b = e.target.closest('[data-origin]'); if (b) { setFlyout(false); goTo(originViews[b.dataset.origin]); } });
-$('home').addEventListener('click', () => { setFlyout(false); goTo({ ...DEFAULT_VIEW, title: 'The Mediterranean' }); });
 
-// A typed position: "36.28, -76" or "36.28N 76W" (latitude first), flown to and marked as the position.
+// A typed position: "36.28, -76" or "36.28N 76W" (latitude first).
 function parseLatLon(text) {
   const m = /^\s*(-?\d+(?:\.\d+)?)\s*°?\s*([NSns])?\s*[,;\s]\s*(-?\d+(?:\.\d+)?)\s*°?\s*([EWew])?\s*$/.exec(text);
   if (!m || (m[2] && m[1].startsWith('-')) || (m[4] && m[3].startsWith('-'))) return null; // a sign and a letter disagree, or say it twice
   const lat = Number(m[1]) * (/s/i.test(m[2] ?? '') ? -1 : 1), lon = Number(m[3]) * (/w/i.test(m[4] ?? '') ? -1 : 1);
   return Math.abs(lat) <= 90 && Math.abs(lon) <= 180 ? { lon, lat } : null;
 }
-$('coords').addEventListener('submit', (e) => {
+
+// A typed place: the chart views, then the points of interest, then Natural Earth's towns, matched without
+// case or accents, and loosely: a whole name, its start, one of its words, or a few letters' slip from one.
+const fold = (s) => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+function edits(a, b) {
+  let row = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const next = [i];
+    for (let j = 1; j <= b.length; j++) next[j] = Math.min(row[j] + 1, next[j - 1] + 1, row[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    row = next;
+  }
+  return row[b.length];
+}
+function nameScore(q, name) {
+  const n = fold(name), words = n.split(' ');
+  if (n === q) return 0;
+  if (n.startsWith(q)) return 1;
+  if (words.some((w) => w.startsWith(q))) return 2;
+  if (q.length < 4) return Infinity;
+  const d = Math.min(edits(q, n), edits(q, n.slice(0, q.length)) + 0.25, ...words.map((w) => edits(q, w) + 0.5)); // the whole name before a part of it
+  return d < Math.floor(q.length / 3) + 1 ? 3 + d : Infinity;
+}
+async function findPlace(text) {
+  const q = fold(text);
+  if (!q) return null;
+  const towns = await env.readJSON('geo/ne-populated-places-50m.geojson').then((g) => g.features.toSorted((a, b) => a.properties.SCALERANK - b.properties.SCALERANK), () => []); // the bigger town first
+  const candidates = [
+    ...originViews.map((v) => ({ name: v.title, view: v })),
+    ...ORIGINS.flatMap(([, items]) => items).map(([name], i) => ({ name, view: originViews[i] })),
+    ...POIS.map((p) => ({ name: p.name, view: { lon: p.lon, lat: p.lat, zoom: 7, title: p.name } })),
+    ...towns.map(({ properties: p, geometry: { coordinates: [lon, lat] } }) => ({ name: p.NAME, view: { lon, lat, zoom: 8, title: p.NAME } })),
+  ];
+  let best = null, bestScore = Infinity;
+  for (const c of candidates) { const s = nameScore(q, c.name); if (s < bestScore) { best = c; bestScore = s; } } // ties keep the earlier list
+  return best?.view ?? null;
+}
+
+$('coords').addEventListener('submit', async (e) => {
   e.preventDefault();
-  const p = parseLatLon($('coordsText').value);
-  if (!p) { $('status').textContent = 'Position: type latitude, longitude, e.g. 36.28, -76'; return; }
-  setHere(p);
+  const text = $('coordsText').value, p = parseLatLon(text), miss = $('goMiss');
+  const target = p ? { ...p, zoom: Math.max(view.zoom, LOCATE_ZOOM) } : await findPlace(text);
+  miss.hidden = !!target;
+  if (!target) { miss.textContent = text.trim() ? `No place called “${text.trim()}”` : 'Type a place, or latitude, longitude: 36.28, -76'; return; }
   setFlyout(false);
-  goTo({ ...p, zoom: Math.max(view.zoom, LOCATE_ZOOM) });
+  goTo(target);
 });
-$('clearHere').addEventListener('click', () => setHere(null));
+$('coordsText').addEventListener('input', () => { $('goMiss').hidden = true; });
 
 // A short flight from the view to a target, in the view's projection: the ground is drawn on the
 // way as for a drag, and the ornaments placed when it lands. Reduced motion jumps.
@@ -785,51 +826,23 @@ function goTo(target) {
   step(t0);
 }
 
-// My position: asked for on the button, kept for the mark, and flown to at z10 or closer. The
+// My position: asked for on the button and flown to at z10 or closer, with nothing drawn there. The
 // button is not offered where the browser has no geolocation (an insecure page has none).
 const LOCATE_ZOOM = 10;
-let here = null; // { lon, lat } of the last fix or typed position
-function setHere(p) {
-  here = p;
-  $('clearHere').hidden = !p;
-  placed = null; // the mark is drawn with the ornaments: a flight that lands where it started still redraws
-  if (!p) render();
-}
 const locate = $('locate');
 locate.hidden = !navigator.geolocation;
 locate.addEventListener('click', () => {
-  locate.disabled = true; locate.classList.add('busy');
-  const done = () => { locate.disabled = false; locate.classList.remove('busy'); };
+  locate.disabled = true; locate.textContent = 'Finding…';
+  const done = () => { locate.disabled = false; locate.textContent = 'My position'; };
   navigator.geolocation.getCurrentPosition((p) => {
     done();
     setFlyout(false);
-    setHere({ lon: p.coords.longitude, lat: p.coords.latitude });
-    goTo({ ...here, zoom: Math.max(view.zoom, LOCATE_ZOOM) });
+    goTo({ lon: p.coords.longitude, lat: p.coords.latitude, zoom: Math.max(view.zoom, LOCATE_ZOOM) });
   }, (e) => {
     done();
     $('status').textContent = e.code === e.PERMISSION_DENIED ? 'My position: not allowed' : `My position: ${e.message}`;
   }, { timeout: 15000, maximumAge: 60000 });
 });
-
-// The mark: a red ink ring and dot with the four winds on a pale halo, where the fix falls on the canvas.
-function drawHere() {
-  if (!here) return;
-  const proj = viewProjection(view);
-  if (proj.visible && !proj.visible(here.lon, here.lat)) return; // the far side of a globe
-  const [x, y] = proj.project(here.lon, here.lat);
-  if (x < 0 || x > W || y < 0 || y > H) return;
-  ctx.save();
-  ctx.fillStyle = 'rgb(244 239 228 / 0.6)';
-  ctx.beginPath(); ctx.arc(x, y, 22, 0, 2 * Math.PI); ctx.fill();
-  ctx.strokeStyle = ctx.fillStyle = '#8c2f1e';
-  ctx.lineWidth = 2.2; ctx.lineCap = 'round';
-  ctx.beginPath(); ctx.arc(x, y, 4, 0, 2 * Math.PI); ctx.fill();
-  ctx.beginPath(); ctx.arc(x, y, 13, 0, 2 * Math.PI); ctx.stroke();
-  ctx.beginPath();
-  for (const [dx, dy] of [[0, -1], [1, 0], [0, 1], [-1, 0]]) { ctx.moveTo(x + dx * 16, y + dy * 16); ctx.lineTo(x + dx * 24, y + dy * 24); }
-  ctx.stroke();
-  ctx.restore();
-}
 
 for (const id of ['projection', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'scaleBorder', 'land', 'islands', 'seaTint', 'rivers', 'lakes', 'trees', 'mountains', 'hills', 'continentsZoom', 'regions', 'regionsZoom', 'titleMode', 'townSize']) $(id).addEventListener('input', readControls);
 let typing = 0; // a typed title is placed when the typing pauses, not on every key: a placement takes up to a few hundred ms
