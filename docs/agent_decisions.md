@@ -231,3 +231,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261017t202830z
 - show-dont-tell rendered paths: public/**, scripts/*.mjs, packs/**, test/golden/** Undo: edit paths: in .github/show-dont-tell.yml ([#197](https://github.com/mark-brannan/portolani/issues/197)) (no PR, branch claude/portolani-issue-197-7c59d0)
+
+### 20261020t210834z
+- Icon functions until ruled: astrolabe = my position (one click), dividers = Go box, anchor = chart views Undo: swap the three buttons' handlers in public/page.js ([#202](https://github.com/mark-brannan/portolani/pull/202))
