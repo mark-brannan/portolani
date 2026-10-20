@@ -1,7 +1,7 @@
 // The page under touch, in headless Chromium with touch emulation at the two common phone widths
 // (360 and 412 px): a two-finger pinch zooms the map about the pinch centre and not the page, one
-// finger drags, the chart views open on a tap and shuts on a choice or a tap on the map, and the
-// locate button flies to the fix and leaves the flyout shut. Under 520 px the settings drawer is a bottom
+// finger drags, the compass's Go panel opens on a tap and shuts on a choice or a tap on the map, and
+// its My position button flies to the fix and leaves the panel shut. Under 520 px the settings drawer is a bottom
 // sheet at half the window's height with the map above it, and the cartouche and the scale bar sit on
 // cards clear of the map.
 //
@@ -51,7 +51,7 @@ for (const width of [360, 412]) {
         await page.waitForFunction((h) => location.hash !== h, before, { timeout: 60000 });
         await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 60000 });
       };
-      const shown = (id = 'flyout') => page.evaluate((i) => getComputedStyle(document.getElementById(i)).display !== 'none', id);
+      const shown = (id = 'goPanel') => page.evaluate((i) => getComputedStyle(document.getElementById(i)).display !== 'none', id);
       const pageScale = () => page.evaluate(() => visualViewport.scale);
       const hash = () => page.evaluate(() => location.hash);
       const canvas = await page.locator('#map').boundingBox();
@@ -87,24 +87,25 @@ for (const width of [360, 412]) {
       const v3 = await view();
       assert.ok(v3.lon < v2.lon - 0.0001 && v3.zoom === v2.zoom, `a drag right carries the chart with it, so the centre moves west: ${JSON.stringify(v2)} -> ${JSON.stringify(v3)}`);
 
-      // the flyout: shut, opened by a tap on the places button, shut by a choice
+      // the flyout: shut, opened by a tap on the compass, shut by a choice
       assert.equal(await shown(), false);
-      await page.tap('#places');
+      await page.tap('#go');
       assert.equal(await shown(), true);
-      assert.equal(await page.getAttribute('#places', 'aria-expanded'), 'true');
+      assert.equal(await page.getAttribute('#go', 'aria-expanded'), 'true');
       const h3 = await hash();
       await page.tap('#origins button >> nth=2');
       assert.equal(await shown(), false, 'the flyout stayed open after a choice');
       await settled(h3);
 
       // shut by a tap on the map
-      await page.tap('#places');
+      await page.tap('#go');
       assert.equal(await shown(), true);
       await page.touchscreen.tap(canvas.x + 20, cy); // the left edge: at 360 px the open list covers the centre
       assert.equal(await shown(), false, 'the flyout stayed open after a tap on the map');
 
       // locate: the fix, at z10 or closer, the flyout shut, the button free again
       const h4 = await hash();
+      await page.tap('#go');
       await page.tap('#locate');
       assert.equal(await shown(), false, 'locate popped the flyout');
       await settled(h4);
@@ -114,7 +115,7 @@ for (const width of [360, 412]) {
       assert.equal(await shown(), false);
 
       if (process.env.TOUCH_SHOTS) {
-        await page.tap('#places');
+        await page.tap('#go');
         await page.waitForTimeout(400);
         await page.screenshot({ path: path.join(process.env.TOUCH_SHOTS, `touch-${width}.png`) });
       }
@@ -190,7 +191,7 @@ for (const width of [360, 412]) {
   });
 }
 
-test('mouse: the menus open on a click, not a hover, and shut on a click elsewhere or Esc', { skip, timeout: 240000 }, async () => {
+test('mouse: the menus open on a click, not a hover, and shut on a click elsewhere or Esc; one drawer at a time', { skip, timeout: 240000 }, async () => {
   const server = createServer(async (req, res) => {
     let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
     if (p.endsWith('/')) p = path.join(p, 'index.html');
@@ -204,19 +205,30 @@ test('mouse: the menus open on a click, not a hover, and shut on a click elsewhe
     await page.goto(`http://localhost:${server.address().port}/#map=7/40/12`);
     await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
     const shown = (id) => page.evaluate((i) => getComputedStyle(document.getElementById(i)).display !== 'none', id);
-    await page.hover('#places');
+    const opened = (id) => page.evaluate((i) => document.getElementById(i).classList.contains('open'), id);
+    await page.hover('#go');
     await page.waitForTimeout(400);
-    assert.equal(await shown('flyout'), false, 'a hover opened the chart views');
-    await page.click('#places');
-    assert.equal(await shown('flyout'), true, 'a click did not open the chart views');
+    assert.equal(await shown('goPanel'), false, 'a hover opened Go');
     await page.click('#go');
-    assert.equal(await shown('flyout'), false, 'opening Go left the chart views open');
-    assert.equal(await shown('goPanel'), true);
+    assert.equal(await shown('goPanel'), true, 'a click did not open Go');
+    await page.click('#voyages');
+    assert.equal(await shown('goPanel'), false, 'opening the voyages left Go open');
+    assert.equal(await shown('voyagesPanel'), true);
     await page.mouse.click(400, 400);
-    assert.equal(await shown('goPanel'), false, 'a click on the map left Go open');
-    await page.click('#places');
+    assert.equal(await shown('voyagesPanel'), false, 'a click on the map left the voyages open');
+    await page.click('#go');
     await page.keyboard.press('Escape');
-    assert.equal(await shown('flyout'), false, 'Esc left the chart views open');
+    assert.equal(await shown('goPanel'), false, 'Esc left Go open');
+    // the drawers: one at a time, the buttons clear of it
+    await page.click('#open');
+    assert.equal(await opened('drawer'), true, 'the rose did not open the settings');
+    await page.click('#charts');
+    assert.equal(await opened('chartsDrawer'), true, 'the charts did not open');
+    assert.equal(await opened('drawer'), false, 'opening the charts left the settings open');
+    const h = await page.evaluate(() => location.hash);
+    await page.click('#chartList button >> nth=0');
+    assert.equal(await opened('chartsDrawer'), false, 'a chart left its drawer open');
+    await page.waitForFunction((x) => location.hash !== x, h, { timeout: 60000 });
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();

@@ -1,8 +1,8 @@
 // Browser host for the shared scene code (scene.mjs): same scene as `npm run render`, drawn live.
 // Drag to pan, wheel or pinch to zoom; while the map moves the land and coast are drawn and the placed
 // ornaments slide with it, held to the earth; they are placed again when it stops. The settings live in a
-// drawer behind the rose button, so the map has the window; two buttons top right go to the user's
-// position, marked in red ink, and back to an origin. The view and the style are kept in the URL hash, e.g.
+// drawer behind the rose button, so the map has the window; beside it the charts open a second drawer, the
+// compass Go and the anchor flies home. The view and the style are kept in the URL hash, e.g.
 // #map=zoom/lat/lon&projection=miller&sprites=s:serpent-a,v:kraken,v:rose-aguiar,p:tower&townsize=rank&names=0&rhumb=0&scale=chevron&scaleborder=blank&continents=5&regions=latin&regionszoom=7&land=green&islands=1&rivers=aguiar&lakes=marina&mountains=ink&trees=ink&seas=1&autotitle=0&title=Mare+Nostrum&ink=5a1a1a&parchment=eee&density=1.5;
 // a setting left at its default is left out, `sprites` too (keys with the pack shortened, v: s: p:); `mountains` is `ink`
 // or `off` (colour is the default); the hills are the Catalan sprites in `sprites`. `continents` and `regionszoom` are the zoom
@@ -569,19 +569,22 @@ phone.addEventListener('change', () => { drawCards(); if (ground) render(); }); 
 
 // ---------------------------------------------------------------- the drawer
 
-// Shut by default; Esc or the close button shuts it (on a wider screen a touch on the map does too), and focus goes back to the rose button.
-const drawer = $('drawer'), opener = $('open');
-const isOpen = () => drawer.classList.contains('open');
-function setDrawer(open) {
-  if (open === isOpen()) return;
-  drawer.classList.toggle('open', open);
-  document.documentElement.classList.toggle('sheet', open); // on a phone the map makes room above the sheet
-  opener.setAttribute('aria-expanded', String(open));
-  (open ? $('close') : opener).focus({ preventScroll: true });
+// Two drawers, the settings behind the rose and the charts, at most one open. Shut by default; Esc or its close
+// button shuts one (on a wider screen a touch on the map does too), and focus goes back to its button.
+const drawers = [[$('drawer'), $('open')], [$('chartsDrawer'), $('charts')]];
+const openDrawer = () => drawers.find(([d]) => d.classList.contains('open'))?.[0] ?? false;
+function setDrawer(open) { // the drawer to open, or false for none
+  const was = openDrawer();
+  if (open === was) return;
+  for (const [d, b] of drawers) { d.classList.toggle('open', d === open); b.setAttribute('aria-expanded', String(d === open)); }
+  document.documentElement.classList.toggle('sheet', !!open); // on a phone the map makes room above the sheet
+  (open ? open.querySelector('.close') : drawers.find(([d]) => d === was)[1]).focus({ preventScroll: true });
 }
-opener.addEventListener('click', () => { setFlyout(false); setDrawer(!isOpen()); });
-$('close').addEventListener('click', () => setDrawer(false));
-addEventListener('keydown', (e) => { if (e.key === 'Escape' && isOpen()) setDrawer(false); });
+for (const [d, b] of drawers) {
+  b.addEventListener('click', () => { setFlyout(false); setDrawer(d === openDrawer() ? false : d); });
+  d.querySelector('.close').addEventListener('click', () => setDrawer(false));
+}
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && openDrawer()) setDrawer(false); });
 // On a phone the sheet stays up while the map is moved above it: that is how a control's effect is seen.
 canvas.addEventListener('pointerdown', () => { if (!phone.matches) setDrawer(false); });
 
@@ -693,27 +696,16 @@ canvas.addEventListener('wheel', (e) => {
 
 // ---------------------------------------------------------------- going somewhere
 
-// The origins: the chart's home frame, the frames of the scans the ornaments come from, the centres
-// read off the scans (docs/atlas/centres.md), and some places worth the flight.
+// The places Go offers: the chart's home frame and some places worth the flight. The charts: each sheet's
+// frame, from the centres read off the scans (docs/atlas/centres.md) and the frames of the scans the ornaments come from.
 const around = (lon, lat, r) => viewOfFrame({ lonMin: lon - r, lonMax: lon + r, latMin: lat - r, latMax: lat + r });
 const at = (lon, lat, zoom) => ({ lon, lat, zoom });
+const both = (a, b) => viewOfFrame({ lonMin: a[0] - a[2], lonMax: b[0] + b[2], latMin: Math.min(a[1] - a[2], b[1] - b[2]), latMax: Math.max(a[1] + a[2], b[1] + b[2]) }); // two centres, west then east, on one sheet
+const HOME = { ...DEFAULT_VIEW, title: 'The Mediterranean' };
 const ORIGINS = [
   ['', [
     ['Mediterranean', DEFAULT_VIEW, 'The Mediterranean'],
-    ['The North', viewOfFrame({ lonMin: 0, lonMax: 40, latMin: 54, latMax: 72 }), 'The North'], // Carta Marina
-    ['Virginia', at(-76, 36.28, 7.47)], // de Bry
     ['The world', at(10, 25, 0), 'The World'],
-  ]],
-  ['Chart centres', [
-    ['Carte Pisane, west', around(7.4, 40.0, 8), 'Carte Pisane'],
-    ['Carte Pisane, east', around(27.4, 36.8, 7.5), 'Carte Pisane'],
-    ['Vesconte 1311', around(25.2, 37.5, 3)],
-    ['Dulcert 1339', around(14.5, 40.0, 17)],
-    ['Catalan Atlas, rose', around(-20.7, 42.1, 16), 'Catalan Atlas'],
-    ['Catalan Atlas, network', around(-5.4, 42.3, 16), 'Catalan Atlas'],
-    ['Carta Marina, Bothnian rose', around(19.7, 61.7, 6), 'Carta Marina'],
-    ['De la Cosa, west', around(-45, 23.4, 15), 'De la Cosa'],
-    ['De la Cosa, east', around(65, 23.4, 15), 'De la Cosa'],
   ]],
   // the places that are lettered on the chart whatever the city data holds are in scripts/pois.mjs
   ['Elsewhere', [
@@ -730,12 +722,21 @@ const ORIGINS = [
     ['Pitcairn Islands', viewOfFrame({ lonMin: -131.3, lonMax: -124.2, latMin: -26.6, latMax: -22.4 })], // all four; the latitudes padded so the longitudes bind
   ]],
 ];
+const CHARTS = [ // name, year, view
+  ['Carte Pisane', 'c. 1275', both([7.4, 40.0, 8], [27.4, 36.8, 7.5])],
+  ['Vesconte', '1311', around(25.2, 37.5, 3)],
+  ['Dulcert', '1339', around(14.5, 40.0, 17)],
+  ['Catalan Atlas', '1375', both([-20.7, 42.1, 16], [-5.4, 42.3, 16])],
+  ['De la Cosa', '1500', both([-45, 23.4, 15], [65, 23.4, 15])],
+  ['Carta Marina', '1539', viewOfFrame({ lonMin: 0, lonMax: 40, latMin: 54, latMax: 72 })],
+  ['De Bry, Virginia', '1590', at(-76, 36.28, 7.47)],
+].map(([name, year, v]) => ({ name, year, view: { ...v, title: name } }));
 const originViews = [];
 
-// The two menus: the anchor opens the chart views, the dividers Go. Each opens on a click and shuts on a
+// The two menus: the compass opens Go, the dividers the voyages (to come). Each opens on a click and shuts on a
 // choice, a second click, a click anywhere outside it, or Esc; opening one shuts the other.
 const where = $('where');
-const menus = [[$('places'), $('flyout')], [$('go'), $('goPanel')]];
+const menus = [[$('go'), $('goPanel')], [$('voyages'), $('voyagesPanel')]];
 function setFlyout(open) { // the panel to open, or false for none
   for (const [button, panel] of menus) {
     panel.classList.toggle('open', panel === open);
@@ -744,6 +745,7 @@ function setFlyout(open) { // the panel to open, or false for none
   if (!open && where.contains(document.activeElement)) document.activeElement.blur();
 }
 for (const [button, panel] of menus) button.addEventListener('click', () => {
+  setDrawer(false);
   setFlyout(panel.classList.contains('open') ? false : panel);
   if (panel.id === 'goPanel' && panel.classList.contains('open') && !phone.matches) $('coordsText').focus();
 });
@@ -755,6 +757,12 @@ where.addEventListener('focusout', (e) => { if (e.relatedTarget && !where.contai
 $('origins').innerHTML = ORIGINS.map(([group, items]) =>
   (group ? `<li class="group">${group}</li>` : '') + items.map(([name, v, title]) => `<li><button type="button" data-origin="${originViews.push({ ...v, title: title ?? name }) - 1}">${name}</button></li>`).join('')).join('');
 $('origins').addEventListener('click', (e) => { const b = e.target.closest('[data-origin]'); if (b) { setFlyout(false); goTo(originViews[b.dataset.origin]); } });
+$('home').addEventListener('click', () => { setFlyout(false); goTo(HOME); });
+
+// Each chart on its own sheet of skin, the button's.
+const skin = $('charts').querySelector('svg').outerHTML;
+$('chartList').innerHTML = CHARTS.map(({ name, year }, i) => `<li><button type="button" data-chart="${i}">${skin}<span>${name}</span><small>${year}</small></button></li>`).join('');
+$('chartList').addEventListener('click', (e) => { const b = e.target.closest('[data-chart]'); if (b) { setDrawer(false); goTo(CHARTS[b.dataset.chart].view); } });
 
 // A typed position: "36.28, -76" or "36.28N 76W" (latitude first).
 function parseLatLon(text) {
@@ -771,6 +779,7 @@ async function findPlace(text) {
   const candidates = [
     ...originViews.map((v) => ({ name: v.title, view: v })),
     ...ORIGINS.flatMap(([, items]) => items).map(([name], i) => ({ name, view: originViews[i] })),
+    ...CHARTS.map(({ name, view }) => ({ name, view })),
     ...POIS.map((p) => ({ name: p.name, view: { lon: p.lon, lat: p.lat, zoom: 7, title: p.name } })),
     ...towns.map(({ properties: p, geometry: { coordinates: [lon, lat] } }) => ({ name: p.NAME, view: { lon, lat, zoom: 8, title: p.NAME } })),
   ];
