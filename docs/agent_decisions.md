@@ -234,3 +234,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261020t210834z
 - Icon functions until ruled: astrolabe = my position (one click), dividers = Go box, anchor = chart views Undo: swap the three buttons' handlers in public/page.js ([#202](https://github.com/mark-brannan/portolani/pull/202))
+
+### 20261020t214355z
+- A point of interest's tent stands beside an island too small to stand on, rather than over it. Undo: drop the beside argument in scene.mjs standOf ([#204](https://github.com/mark-brannan/portolani/pull/204))
