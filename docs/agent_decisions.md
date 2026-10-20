@@ -237,3 +237,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261020t214355z
 - A point of interest's tent stands beside an island too small to stand on, rather than over it. Undo: drop the beside argument in scene.mjs standOf ([#204](https://github.com/mark-brannan/portolani/pull/204))
+
+### 20261020t214401z
+- Places' 'Pitcairn Island' became 'Pitcairn Islands', framing all four islands. Undo: restore the 'Pitcairn Island' line in public/page.js ORIGINS ([#204](https://github.com/mark-brannan/portolani/pull/204))
