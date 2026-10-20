@@ -765,7 +765,7 @@ const SIGHTS = [
     ['Barygaza', port(72.99, 21.71), 'Barygaza (Bharuch)', 'in the Periplus'],
   ], 'sub'],
   ['The age of discovery', [
-    ['Lisbon', port(-9.15, 38.73), null, 'the Carreira da Índia'],
+    ['Lisbon', port(-9.14, 38.72), null, 'the Carreira da Índia'], // also a chart city above, on purpose: the same view, so Go lands in one place
     ['Elmina', port(-1.35, 5.08), null, 'Portuguese, then Dutch, fort'],
     ['Goa', port(73.91, 15.50), null, "Portugal's Asian capital"],
     ['Manila', port(120.98, 14.60), null, 'the galleons, 1571'],
