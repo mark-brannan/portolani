@@ -243,3 +243,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261020t214405z
 - The remote islands' 10m outlines draw from z5; below it the island marks stand in, for drag cost. Undo: set ISLE_LAND_ZOOM in scene.mjs to 0 ([#204](https://github.com/mark-brannan/portolani/pull/204))
+
+### 20261020t223119z
+- Instrument jobs: compass opens Go (box, My position, places), sheepskin chart opens the Charts drawer, dividers hold the voyages placeholder, anchor flies home in one click, astrolabe has no job and sits in docs/where/astrolabe.svg Undo: swap the buttons' handlers in public/page.js and the row in public/index.html ([#206](https://github.com/mark-brannan/portolani/pull/206))
