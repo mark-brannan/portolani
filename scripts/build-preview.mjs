@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Assembles the browser preview into _site/, the Pages root:
-// the page, the shared scene module and coast-wright, the sprite packs, the Natural Earth GeoJSON
+// the page, the shared scene module and coast-wright, the sprite packs, the voyages, the Natural Earth GeoJSON
 // from coastlines (checked against its manifest) and the font, vendored so nothing loads from a
 // CDN. The font and Natural Earth's marine polygons come from downloads/, each fetched from its
 // pinned URL when missing, then checked against its sha256; the URLs and hashes below duplicate
@@ -186,4 +186,5 @@ await buildLearn(root, out); // docs/learn/*.md into _site/learn/*.html
 // scene.mjs and the modules it reaches (scene-modules.mjs walks them; the dev server serves the same set)
 for (const f of await relativeImports(root)) await cp(path.join(root, 'scripts', f), path.join(out, f));
 await cp(path.join(root, 'packs'), path.join(out, 'packs'), { recursive: true });
+await cp(path.join(root, 'data'), path.join(out, 'data'), { recursive: true }); // the voyages (docs/voyages/README.md)
 console.log(`preview assembled in ${path.relative(root, out)}/`);

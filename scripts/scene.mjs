@@ -19,6 +19,7 @@ import { RELIEF_STYLES, reliefOf, clearOf, drawRelief } from './relief.mjs';
 import { TREES, TREE_STYLES, plantTrees, plantPalms } from './trees.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
 import { BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from './buildings.mjs';
+import { legPath, splitAtSeam, DASHES } from './voyages.mjs';
 
 let env;
 const createCanvas = (w, h) => env.createCanvas(w, h);
@@ -2206,6 +2207,85 @@ function drawCartouche(g, c, bgPart) {
   g.restore();
 }
 
+// ---------------------------------------------------------------- voyages
+
+// A leg's dense path, made once per leg: a moving frame redraws the overlay every frame
+const legPaths = new WeakMap();
+const pathOf = (leg) => legPaths.get(leg) ?? legPaths.set(leg, legPath(leg)).get(leg);
+// A round cap grows each dash by the stroke's width, so the pattern gives it back to read as DASHES says
+const capped = (dash, w) => dash.map((d, i) => (i % 2 ? d + w : Math.max(0.01, d - w)));
+const VOYAGE_LINE = 2.2, VOYAGE_HALO = 5.5, VOYAGE_END = 2.8, SKULL_H = 16;
+
+// A voyage (docs/voyages/README.md) through any projection: each leg cut at the seam and stroked in red
+// over a parchment halo, dashed by its confidence; then its events, a death as a skull and crossbones.
+function drawVoyage(g, voyage, proj, rect) {
+  if (!voyage) return;
+  g.save();
+  g.lineCap = 'round'; g.lineJoin = 'round';
+  for (const leg of voyage.legs) {
+    const pieces = splitAtSeam(pathOf(leg), proj.lonCenter, proj.visible).map((p) => p.map(proj.toPx)).filter((px) => meets(rect, bbox(px)));
+    for (const [style, width, alpha, dash] of [[STYLE.parchment, VOYAGE_HALO, 0.6, []], [STYLE.windRed, VOYAGE_LINE, 0.9, capped(DASHES[leg.confidence] ?? [], VOYAGE_LINE)]]) {
+      g.strokeStyle = style; g.lineWidth = width; g.globalAlpha = alpha; g.setLineDash(dash);
+      for (const px of pieces) { g.beginPath(); px.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke(); }
+    }
+    g.setLineDash([]); g.globalAlpha = 0.9; g.fillStyle = STYLE.windRed;
+    for (const end of [leg.points[0], leg.points.at(-1)]) {
+      if (proj.visible && !proj.visible(...end)) continue;
+      const [x, y] = proj.toPx(end);
+      if (disc(rect, x, y, 3)) { g.beginPath(); g.arc(x, y, VOYAGE_END, 0, 2 * Math.PI); g.fill(); }
+    }
+  }
+  g.globalAlpha = 1;
+  for (const e of voyage.events ?? []) {
+    if (proj.visible && !proj.visible(e.lon, e.lat)) continue;
+    const [x, y] = proj.toPx([e.lon, e.lat]);
+    if (!disc(rect, x, y, SKULL_H / 2)) continue; // a label with its mark off the view would point at nothing
+    if (e.kind === 'death') drawSkull(g, x, y, SKULL_H);
+    else { g.beginPath(); g.arc(x, y, 3, 0, 2 * Math.PI); g.strokeStyle = STYLE.ink; g.lineWidth = 1.4; g.stroke(); }
+    eventLabel(g, e.label, x, y, e.kind === 'death' ? SKULL_H / 2 + 3 : 6, rect);
+  }
+  g.restore();
+}
+
+// A skull and crossbones `h` px tall centred on x, y, in ink over a parchment disc so it reads on the lattice
+function drawSkull(g, x, y, h) {
+  g.save();
+  g.translate(x, y); g.scale(h / 18, h / 18); // drawn in an 18-unit box, -9 to 9
+  g.fillStyle = STYLE.parchment; g.globalAlpha = 0.85;
+  g.beginPath(); g.arc(0, 0, 12, 0, 2 * Math.PI); g.fill();
+  g.globalAlpha = 1; g.fillStyle = g.strokeStyle = STYLE.ink; g.lineCap = 'round';
+  for (const s of [-1, 1]) { // the bones, crossed under the jaw, a knob either side of each end
+    const a = [-6.5 * s, 3.5], b = [6.5 * s, 8.5], len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    const u = [(b[0] - a[0]) / len, (b[1] - a[1]) / len], n = [-u[1], u[0]];
+    g.lineWidth = 2; g.beginPath(); g.moveTo(...a); g.lineTo(...b); g.stroke();
+    for (const [e, out] of [[a, -1], [b, 1]]) for (const k of [-1, 1]) {
+      g.beginPath(); g.arc(e[0] + out * u[0] * 0.5 + k * n[0], e[1] + out * u[1] * 0.5 + k * n[1], 1.3, 0, 2 * Math.PI); g.fill();
+    }
+  }
+  g.beginPath(); g.arc(0, -3.5, 5.5, 0, 2 * Math.PI); g.fill(); // cranium
+  g.beginPath(); g.roundRect(-3.4, 0.5, 6.8, 4, 1.2); g.fill(); // jaw
+  g.fillStyle = g.strokeStyle = STYLE.parchment;
+  for (const sx of [-2.2, 2.2]) { g.beginPath(); g.ellipse(sx, -3.4, 1.55, 1.85, 0, 0, 2 * Math.PI); g.fill(); } // sockets
+  g.beginPath(); g.moveTo(0, -1.2); g.lineTo(-0.9, 0.6); g.lineTo(0.9, 0.6); g.closePath(); g.fill(); // nose
+  g.lineWidth = 0.7; g.lineCap = 'butt';
+  for (const tx of [-1.15, 1.15]) { g.beginPath(); g.moveTo(tx, 1.9); g.lineTo(tx, 4.5); g.stroke(); } // three teeth between two gaps
+  g.beginPath(); g.moveTo(-3.4, 2.4); g.lineTo(3.4, 2.4); g.stroke();
+  g.restore();
+}
+
+// An event's label beside its mark, haloed in parchment, on the left where the right would run off the view
+function eventLabel(g, text, x, y, off, rect) {
+  if (!text) return;
+  g.save();
+  g.font = `italic 12px "${STYLE.font}"`; g.textBaseline = 'middle';
+  const left = x + off + g.measureText(text).width > rect.x1 - 4;
+  g.textAlign = left ? 'right' : 'left';
+  const tx = left ? x - off : x + off;
+  g.lineJoin = 'round'; g.lineWidth = 3; g.strokeStyle = STYLE.parchment; g.strokeText(text, tx, y);
+  g.fillStyle = STYLE.ink; g.fillText(text, tx, y);
+  g.restore();
+}
+
 // The clip a city's plan is drawn through: its urban footprint, and the land within it (a lagoon city's water too).
 const cityClip = (t, data) => (cg) => {
   cg.beginPath();
@@ -2336,6 +2416,9 @@ function drawScene(g, scene, data, bg, view) {
   for (const m of show.kinds.has('monster') ? scene.monsters : []) if (spriteIn(m.sprite, m.x, m.y, m.size)) drawSprite(g, m.sprite, m.x, m.y, m.size, { flip: m.flip, anchor: [0.5, 0.5] });
   for (const s of show.kinds.has('ship') ? scene.ships : []) if (spriteIn(s.sprite, s.x, s.y, s.size)) drawSprite(g, s.sprite, s.x, s.y, s.size, { flip: s.flip, rot: s.flip ? -s.tilt : s.tilt, anchor: [0.5, 0.6] });
 
+  // a voyage over the ornaments, under the cartouche
+  drawVoyage(g, scene.voyage, data.proj, r);
+
   // 10. cartouche, lettered in its cleared panel
   const c = scene.cartouche;
   if (!show.kinds.has('cartouche') || !meets(r, { x0: c.x, y0: c.y, x1: c.x + c.w, y1: c.y + c.h })) { g.restore(); drawScaleBar(g, data, bg, view, W, H, show.scale, scene.scaleSprite); return; }
@@ -2366,7 +2449,7 @@ function drawScaleCard(g, proj, bg, style, sprite) {
 function anchorScene(scene, data) {
   const ll = (o) => ({ o, at: data.proj.invert(o.x, o.y) });
   return {
-    k: data.proj.k, show: scene.show, scaleSprite: scene.scaleSprite, cartouche: scene.cartouche,
+    k: data.proj.k, show: scene.show, scaleSprite: scene.scaleSprite, cartouche: scene.cartouche, voyage: scene.voyage,
     rays: latticeOf(scene, data),
     roses: scene.roseDraws.map(ll), mountains: (scene.mountains ?? []).map(ll),
     towns: [...scene.towns.filter((t) => !t.city), ...(scene.lesser ?? [])].map(ll),
@@ -2485,6 +2568,7 @@ function drawAnchored(g, a, bg, view, layers) {
     const size = s.size * scaled('ship'), p = at(ll, size);
     if (p) drawSprite(g, s.sprite, p[0], p[1], size, { flip: s.flip, rot: s.flip ? -s.tilt : s.tilt, anchor: [0.5, 0.6] });
   }
+  drawVoyage(g, a.voyage, proj, { x0: 0, y0: 0, x1: W, y1: H });
   g.restore();
   if (show.kinds.has('cartouche')) drawCartouche(g, a.cartouche, (x0, y0, x1, y1) => g.drawImage(bg, x0, y0, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0));
   drawScaleBar(g, { proj }, bg, { scale: 1, x: 0, y: 0 }, W, H, show.scale, a.scaleSprite);
@@ -2510,6 +2594,7 @@ function drawAnchored(g, a, bg, view, layers) {
 // `autoTitle` (boolean, on by default) letters the cartouche with the name the view is about (viewTitle), in capitals;
 // `title` is its lettering when that is off, or when the view has no name in it. `pinTitle` is a name the caller says
 // the view is about (a place flown to), lettered in capitals whatever the scoring finds.
+// `voyage`: a voyage id (data/voyages/<id>.json, docs/voyages/README.md) drawn over the ornaments; 'off' or left out draws none.
 // `kinds` defaults to DEFAULT_KINDS, every kind. A kind left out is still
 // placed when the lattice needs it (a rose, the cartouche's corner), only not drawn.
 // A sheet's hidden circle reaches 0.4 of its height, so a node never lands on the edge a neighbour shares.
@@ -2586,6 +2671,7 @@ export async function createScene(environment, opts = {}) {
   if (STYLE.rivers !== 'off' || STYLE.lakes !== 'off') water = (view.zoom > WATER_ZOOM && await loadWater10m(view)) || await loadWater();
   if (STYLE.lakes !== 'off') water = withLakes(water, await loadLakes(view));
   const world = view.zoom > DETAIL_ZOOM ? await loadDetail(coarse, view) : coarse;
+  const voyage = await loadVoyage(opts.voyage);
   const tLoad = performance.now();
 
   const data = viewData(world, view);
@@ -2597,13 +2683,18 @@ export async function createScene(environment, opts = {}) {
     from: worldBand ? Math.log2(1125 / (sh.extent.east - sh.extent.west)) : ATLAS_BANDS.find((b) => b.band === sh.band).from }));
   const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, historical, seaAt: sheets && seaAtOf(coarse), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, title, autoTitle, pinTitle,
     continentsEnd: zoomEnd(continentsZoom, CONTINENT_ZOOM_END), regionsEnd: zoomEnd(regionsZoom, REGION_ZOOM_END),
-    scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM && pinned, pinned, townSize: townBy, seed: legacy ? null : pickedSeed == null ? castSeed(view) : pickedSeed | 0, salt: legacy || pickedSeed == null ? 0 : pickedSeed | 0 }), show, scaleSprite };
+    scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM && pinned, pinned, townSize: townBy, seed: legacy ? null : pickedSeed == null ? castSeed(view) : pickedSeed | 0, salt: legacy || pickedSeed == null ? 0 : pickedSeed | 0 }), show, scaleSprite, voyage };
   data.trees = TREES[STYLE.trees] ? plantTrees({ proj: data.proj, isLand: scene.field.isLand, scene, lakes: STYLE.lakes !== 'off' && water ? water.lakes : [], w: W, h: H }) : [];
   data.palms = plantPalms({ proj: data.proj, isLand: scene.field.isLand, scene, w: W, h: H,
     pois: scene.lesser.filter((l) => l.poi).map((l) => ({ x: l.x, y: l.y, palms: POIS.find((p) => p.name === l.name)?.palms ?? 0 })) });
   if (!parchments.has(tone)) parchments.set(tone, parchment(1539));
   const bg = parchments.get(tone);
   return { scene, data, bg, proj: data.proj, world, coarse, view, timing: { load: tLoad - t0, place: performance.now() - tLoad } };
+}
+// The voyage a link names, or null for none or one the site lacks: a missing overlay never stops the map
+async function loadVoyage(id) {
+  if (!/^[a-z][a-z0-9-]*$/.test(id ?? '') || id === 'off') return null;
+  try { return await env.readJSON(`data/voyages/${id}.json`); } catch { return null; }
 }
 // A zoom slider's value as the zoom a name stops at: unset keeps `dflt`, 0 or less is off, the top is always, N draws at zoom N and out
 const zoomEnd = (n, dflt) => (n == null ? dflt : n <= 0 ? -Infinity : n >= ZOOM.max ? Infinity : n + 0.5);

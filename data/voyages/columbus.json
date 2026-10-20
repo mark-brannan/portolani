@@ -1,0 +1,45 @@
+{
+  "id": "columbus",
+  "title": "Columbus's first voyage to the Indies, 1492–93",
+  "short": "Columbus 1492",
+  "who": ["Christopher Columbus"],
+  "when": "1492–1493",
+  "summary": "Three ships out of Palos, a month on the trade winds from the Canaries, landfall in the Bahamas, then Cuba and Hispaniola; home on the westerlies by the Azores and Lisbon.",
+  "sources": [
+    { "title": "Voyages of Christopher Columbus (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Voyages_of_Christopher_Columbus" },
+    { "title": "Christopher Columbus's journal, in Bartolomé de las Casas's abstract (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Christopher_Columbus's_journal" },
+    { "title": "Columbus, Christopher, 1911 Encyclopædia Britannica (Wikisource)", "url": "https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Columbus,_Christopher" }
+  ],
+  "legs": [
+    { "from": "Palos de la Frontera", "to": "Las Palmas, Gran Canaria", "dates": "3–9 Aug 1492", "mode": "sea", "line": "rhumb",
+      "confidence": "attested", "points": [[-6.85, 37.0], [-8.2, 34.6], [-12.0, 31.0], [-15.0, 28.6], [-15.3, 28.15]], "source": "Columbus's journal via Las Casas" },
+    { "from": "Las Palmas, Gran Canaria", "to": "San Sebastián de la Gomera", "dates": "1–2 Sep 1492", "mode": "sea", "line": "rhumb",
+      "confidence": "attested", "points": [[-15.3, 28.15], [-15.2, 27.9], [-15.45, 27.5], [-16.4, 27.5], [-17.0, 27.85], [-17.13, 28.06]], "source": "Columbus's journal via Las Casas" },
+    { "from": "San Sebastián de la Gomera", "to": "Guanahaní (San Salvador)", "dates": "6 Sep – 12 Oct 1492", "mode": "sea", "line": "spline",
+      "confidence": "attested", "points": [[-17.3, 28.0], [-25, 28.0], [-35, 27.6], [-45, 27.0], [-55, 26.4], [-65, 25.4], [-72, 24.5], [-74.1, 24.3], [-74.6, 24.15]],
+      "source": "daily courses and distances in the journal", "note": "west along 28°N, then a little south of west from 7 Oct" },
+    { "from": "Guanahaní (San Salvador)", "to": "Isabela (Crooked Island)", "dates": "14–19 Oct 1492", "mode": "sea", "line": "spline",
+      "confidence": "attested", "points": [[-74.6, 24.15], [-74.65, 23.4], [-74.65, 22.95], [-74.45, 22.65]], "source": "journal; islands as identified by later scholars", "note": "by Santa María de la Concepción (Rum Cay) and Fernandina (Long Island)" },
+    { "from": "Isabela (Crooked Island)", "to": "Bariay, Cuba", "dates": "24–28 Oct 1492", "mode": "sea", "line": "spline",
+      "confidence": "attested", "points": [[-74.45, 22.65], [-75.2, 22.2], [-75.9, 22.0], [-76.1, 21.6], [-76.15, 21.25]], "source": "journal; by the Islas de Arena (Ragged Islands)" },
+    { "from": "Bariay, Cuba", "to": "Río de Mares (Puerto del Príncipe)", "dates": "29 Oct – 12 Nov 1492", "mode": "sea", "line": "spline",
+      "confidence": "attested", "points": [[-76.15, 21.25], [-76.6, 21.6], [-77.0, 22.0], [-77.5, 22.4]], "source": "journal; west along Cuba's north coast", "note": "the western limit of the exploration" },
+    { "from": "Río de Mares (Puerto del Príncipe)", "to": "Cape Maisí", "dates": "12 Nov – 5 Dec 1492", "mode": "sea", "line": "spline",
+      "confidence": "attested", "points": [[-77.5, 22.4], [-76.8, 21.9], [-75.9, 21.6], [-75.2, 21.4], [-74.6, 20.9], [-74.0, 20.5], [-73.9, 20.3]], "source": "journal; east along the coast, Baracoa on 27 Nov" },
+    { "from": "Cape Maisí", "to": "Cap-Haïtien (Santa María aground)", "dates": "5–25 Dec 1492", "mode": "sea", "line": "spline",
+      "confidence": "attested", "points": [[-73.9, 20.3], [-73.5, 20.15], [-73.2, 20.2], [-72.8, 20.3], [-72.4, 20.1], [-72.2, 19.95]], "source": "journal; Môle Saint-Nicolas on 6 Dec, Tortuga and the Haitian north coast" },
+    { "from": "Cap-Haïtien (Navidad)", "to": "Samaná Bay", "dates": "4–16 Jan 1493", "mode": "sea", "line": "spline",
+      "confidence": "attested", "points": [[-72.2, 19.95], [-71.6, 20.2], [-70.6, 20.2], [-69.9, 19.95], [-69.4, 19.65], [-69.3, 19.4]], "source": "journal; Niña alone, then with Pinzón's Pinta from 6 Jan" },
+    { "from": "Samaná Bay", "to": "Santa Maria, Azores", "dates": "16 Jan – 18 Feb 1493", "mode": "sea", "line": "spline",
+      "confidence": "inferred", "points": [[-69.1, 19.5], [-65, 22.5], [-60.5, 26.5], [-55, 30.5], [-48, 34], [-40, 36.5], [-33, 38.0], [-27.5, 37.7], [-25.4, 37.2]], "source": "journal courses, which the pilots' reckoning disputed", "note": "north-east to the westerlies, the storm of 12–14 Feb near the Azores" },
+    { "from": "Santa Maria, Azores", "to": "Lisbon", "dates": "24 Feb – 4 Mar 1493", "mode": "sea", "line": "spline",
+      "confidence": "attested", "points": [[-25.4, 37.2], [-20, 38.0], [-14, 38.5], [-10.0, 38.6], [-9.4, 38.64]], "source": "journal; a second storm off Portugal on 2–3 Mar" },
+    { "from": "Lisbon", "to": "Palos de la Frontera", "dates": "13–15 Mar 1493", "mode": "sea", "line": "spline",
+      "confidence": "attested", "points": [[-9.4, 38.64], [-9.7, 38.0], [-9.5, 37.0], [-8.5, 36.6], [-7.5, 36.7], [-6.85, 37.0]], "source": "journal; round Cape St Vincent and along the Algarve" }
+  ],
+  "events": [
+    { "kind": "landfall", "lon": -74.5, "lat": 24.0, "date": "12 Oct 1492", "label": "Landfall at Guanahaní (San Salvador)", "source": "Columbus's journal via Las Casas; Watling Island identification" },
+    { "kind": "event", "lon": -72.15, "lat": 19.85, "date": "25 Dec 1492", "label": "Santa María wrecked off Hispaniola; Navidad built", "source": "Columbus's journal via Las Casas" },
+    { "kind": "death", "who": "Christopher Columbus", "lon": -4.72, "lat": 41.65, "date": "20 May 1506", "label": "Columbus dies at Valladolid", "source": "Britannica 1911, Columbus" }
+  ]
+}
