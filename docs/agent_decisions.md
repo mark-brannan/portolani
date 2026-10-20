@@ -249,3 +249,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261020t223124z
 - One row per chart: a chart with two read centres (Carte Pisane, Catalan Atlas, De la Cosa) frames both; The North becomes Carta Marina 1539 and Virginia becomes De Bry, Virginia 1590 in the charts list Undo: edit CHARTS and ORIGINS in public/page.js ([#206](https://github.com/mark-brannan/portolani/pull/206))
+
+### 20261020t224746z
+- portolani#206: places split anchor=anchorages (home first), astrolabe=points of interest (chart schools, remote islands) Undo: move rows between ANCHORAGES and SIGHTS in public/page.js ([#206](https://github.com/mark-brannan/portolani/pull/206))
