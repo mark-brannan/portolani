@@ -30,18 +30,11 @@
     text-shadow: 0 0 3px var(--bg), 0 0 3px var(--bg);
   }
 
-  #open {
-    position: fixed; top: 12px; left: 12px; z-index: 1; width: 44px; height: 44px; padding: 0;
-    display: grid; place-items: center; border-radius: 50%; cursor: pointer;
-    background: var(--panel); color: var(--fg); border: 1px solid var(--rule);
-    box-shadow: 0 1px 6px rgb(0 0 0 / 0.25);
-  }
-  #open svg { width: 30px; height: 30px; }
 
-  /* top right: the dividers open Go (a place, a position, or mine), the anchor the curated chart views; each opens on a click and shuts on a choice, a second click, a click elsewhere or Esc */
+  /* top right: the settings rose, then the astrolabe takes my position; the dividers open Go (a place, a position, or mine), the anchor the curated chart views; each opens on a click and shuts on a choice, a second click, a click elsewhere or Esc */
   #where { position: fixed; top: 12px; right: 12px; z-index: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; pointer-events: none; }
   #where :is(button, input) { pointer-events: auto; } /* the box is empty map: a touch there is the map's, to drag or pinch */
-  #where .row { display: flex; gap: 6px; }
+  #where .row { display: flex; gap: 6px; align-items: center; }
   #where button {
     padding: 0; display: grid; place-items: center; cursor: pointer; border-radius: 50%;
     background: var(--panel); color: var(--fg); border: 1px solid var(--rule); box-shadow: 0 1px 6px rgb(0 0 0 / 0.25);
@@ -49,7 +42,9 @@
   #where [hidden] { display: none; }
   #where .row button { width: 36px; height: 36px; }
   #where .row button[aria-expanded="true"] { background: var(--sheet); }
-  #where .row svg { width: 22px; height: 22px; }
+  #where .row svg { width: 24px; height: 24px; }
+  #where .row #open { width: 44px; height: 44px; } /* the settings rose, the largest of the group */
+  #where .row #open svg { width: 30px; height: 30px; }
   #locate:disabled { cursor: progress; opacity: 0.7; }
   .panel {
     display: none; flex-direction: column; align-items: flex-end; gap: 6px; max-height: calc(100vh - 80px); overflow-y: auto; pointer-events: auto;
@@ -78,7 +73,7 @@
   /* a phone: the drawer is a bottom sheet at half the window's height, the map above it (toggled by the
      rose button, the close button or Esc); the cartouche and the scale bar sit on cards beside the map */
   .card { position: fixed; z-index: 1; pointer-events: none; height: auto; }
-  #cardCartouche { top: 12px; left: 64px; }
+  #cardCartouche { top: 12px; left: 12px; }
   #cardScale { left: 8px; bottom: 44px; }
   @media (min-width: 521px) { .card { display: none; } }
   @media (max-width: 520px) {
@@ -195,35 +190,43 @@
 <canvas id="cardScale" class="card" width="700" height="170" aria-hidden="true" hidden></canvas>
 <p id="status" role="status">Loading…</p>
 
-<button id="open" type="button" aria-label="Settings" aria-controls="drawer" aria-expanded="false">
-  <svg viewBox="-16 -16 32 32" aria-hidden="true">
-    <circle r="13" fill="none" stroke="currentColor" stroke-width="1"/>
-    <path d="M0-14 2.4-2.4 14 0 2.4 2.4 0 14-2.4 2.4-14 0-2.4-2.4Z" fill="currentColor"/>
-    <path d="M7-7 1.5 0 7 7 0 1.5-7 7-1.5 0-7-7 0-1.5Z" fill="#8c2f1e" opacity="0.85"/>
-    <circle r="1.6" fill="none" stroke="currentColor" stroke-width="0.8"/>
-  </svg>
-</button>
-
 <nav id="where" aria-label="Go to">
   <div class="row">
-    <button id="go" type="button" aria-label="Go to a place or my position" aria-controls="goPanel" aria-expanded="false" title="Go to">
-      <svg viewBox="-16 -16 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-        <circle cy="-11" r="2.4"/>
-        <path d="M-1.4-9-7 13M1.4-9 7 13"/>
-        <path d="M-4.5 3h9" stroke-width="1.1"/>
-        <path d="M-9 14.5h4M5 14.5h4" stroke="#8c2f1e" stroke-width="1.2"/>
+    <button id="open" type="button" aria-label="Settings" aria-controls="drawer" aria-expanded="false">
+      <svg viewBox="-16 -16 32 32" aria-hidden="true">
+        <circle r="13" fill="none" stroke="currentColor" stroke-width="1"/>
+        <path d="M0-14 2.4-2.4 14 0 2.4 2.4 0 14-2.4 2.4-14 0-2.4-2.4Z" fill="currentColor"/>
+        <path d="M7-7 1.5 0 7 7 0 1.5-7 7-1.5 0-7-7 0-1.5Z" fill="#8c2f1e" opacity="0.85"/>
+        <circle r="1.6" fill="none" stroke="currentColor" stroke-width="0.8"/>
+      </svg>
+    </button>
+    <button id="locate" type="button" aria-label="Centre on my position" title="My position">
+      <svg viewBox="-16 -16 32 32" aria-hidden="true" stroke-linecap="round" stroke-linejoin="round"><defs><linearGradient id="brassAstro" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4c2"/><stop offset="0.35" stop-color="#e8b84a"/><stop offset="0.6" stop-color="#b07a1e"/><stop offset="0.8" stop-color="#e9c060"/><stop offset="1" stop-color="#7a5212"/></linearGradient></defs>
+        <circle cy="-14" r="1.7" fill="none" stroke="#5a3a0c" stroke-width="1.2"/>
+        <path d="M-1.4-12.3h2.8v2.2h-2.8z" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.7"/>
+        <path d="M0-10a11 11 0 1 1 0 22a11 11 0 1 1 0-22zM0-7.4a8.4 8.4 0 1 0 0 16.8a8.4 8.4 0 1 0 0-16.8z" fill="url(#brassAstro)" fill-rule="evenodd" stroke="#5a3a0c" stroke-width="0.8"/>
+        <path d="M-8.4 1H8.4M0-7.4V9.4" stroke="#5a3a0c" stroke-width="2.6"/><path d="M-8.4 1H8.4M0-7.4V9.4" stroke="url(#brassAstro)" stroke-width="1.4"/>
+        <path d="M-8.40 1.00L-10.20 1.00M-8.11 -1.17L-9.85 -1.64M-7.27 -3.20L-8.83 -4.10M-5.94 -4.94L-7.21 -6.21M-4.20 -6.27L-5.10 -7.83M-2.17 -7.11L-2.64 -8.85M-0.00 -7.40L-0.00 -9.20M2.17 -7.11L2.64 -8.85M4.20 -6.27L5.10 -7.83M5.94 -4.94L7.21 -6.21M7.27 -3.20L8.83 -4.10M8.11 -1.17L9.85 -1.64M8.40 1.00L10.20 1.00" stroke="#5a3a0c" stroke-width="0.5"/>
+        <g transform="translate(0 1) rotate(-32)"><path d="M-9.6-0.9h19.2v1.8h-19.2z" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.7"/><path d="M-7.6-2.8h1.6v5.6h-1.6zM6-2.8h1.6v5.6h-1.6z" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.6"/></g>
+        <circle cy="1" r="1.5" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.7"/>
+      </svg>
+    </button>
+    <button id="go" type="button" aria-label="Go to a place or a position" aria-controls="goPanel" aria-expanded="false" title="Go to">
+      <svg viewBox="-16 -16 32 32" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round"><defs><linearGradient id="brassDividers" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4c2"/><stop offset="0.35" stop-color="#e8b84a"/><stop offset="0.6" stop-color="#b07a1e"/><stop offset="0.8" stop-color="#e9c060"/><stop offset="1" stop-color="#7a5212"/></linearGradient></defs>
+        <g stroke="#5a3a0c" stroke-width="3.4"><path d="M-1.6-9-7 12.5M1.6-9 7 12.5"/><path d="M-4.6 3h9.2" stroke-width="2.2"/></g>
+        <g stroke="url(#brassDividers)" stroke-width="2"><path d="M-1.6-9-7 12.5M1.6-9 7 12.5"/><path d="M-4.6 3h9.2" stroke-width="1"/></g>
+        <path d="M-7 12.5-7.3 14.5M7 12.5 7.3 14.5" stroke="#3b2a1a" stroke-width="1.1"/>
+        <circle cy="-11" r="2.8" fill="url(#brassDividers)" stroke="#5a3a0c" stroke-width="0.9"/><circle cy="-11" r="0.9" fill="#5a3a0c"/>
       </svg>
     </button>
     <button id="places" type="button" aria-label="Chart views" aria-controls="flyout" aria-expanded="false" title="Chart views">
-      <svg viewBox="-16 -16 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-        <circle cy="-10" r="2.6"/>
-        <path d="M0-7.4V13M-6-3h12"/>
-        <path d="M-12 2q1 10 12 11 11-1 12-11l-3 2.5M-12 2l3 2.5"/>
+      <svg viewBox="-16 -16 32 32" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round"><defs><linearGradient id="brassAnchor" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4c2"/><stop offset="0.35" stop-color="#e8b84a"/><stop offset="0.6" stop-color="#b07a1e"/><stop offset="0.8" stop-color="#e9c060"/><stop offset="1" stop-color="#7a5212"/></linearGradient></defs>
+        <g stroke="#5a3a0c" stroke-width="3.6"><circle cy="-10" r="2.6"/><path d="M0-7.4V13M-6-3h12"/><path d="M-12 2q1 10 12 11 11-1 12-11l-3 2.5M-12 2l3 2.5"/></g>
+        <g stroke="url(#brassAnchor)" stroke-width="2.2"><circle cy="-10" r="2.6"/><path d="M0-7.4V13M-6-3h12"/><path d="M-12 2q1 10 12 11 11-1 12-11l-3 2.5M-12 2l3 2.5"/></g>
       </svg>
     </button>
   </div>
   <div id="goPanel" class="panel">
-    <button id="locate" type="button">My position</button>
     <form id="coords" autocomplete="off">
       <input id="coordsText" type="text" placeholder="a place, or lat, lon" aria-label="A place, or latitude, longitude">
       <button type="submit" aria-label="Go there" title="Go">Go</button>

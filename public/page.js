@@ -578,7 +578,7 @@ function setDrawer(open) {
   opener.setAttribute('aria-expanded', String(open));
   (open ? $('close') : opener).focus({ preventScroll: true });
 }
-opener.addEventListener('click', () => setDrawer(!isOpen()));
+opener.addEventListener('click', () => { setFlyout(false); setDrawer(!isOpen()); });
 $('close').addEventListener('click', () => setDrawer(false));
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && isOpen()) setDrawer(false); });
 // On a phone the sheet stays up while the map is moved above it: that is how a control's effect is seen.
@@ -832,8 +832,8 @@ const LOCATE_ZOOM = 10;
 const locate = $('locate');
 locate.hidden = !navigator.geolocation;
 locate.addEventListener('click', () => {
-  locate.disabled = true; locate.textContent = 'Finding…';
-  const done = () => { locate.disabled = false; locate.textContent = 'My position'; };
+  locate.disabled = true;
+  const done = () => { locate.disabled = false; };
   navigator.geolocation.getCurrentPosition((p) => {
     done();
     setFlyout(false);
