@@ -11,6 +11,7 @@
 // selection those chose, and are written back in the new form.
 import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, W, H } from './scene.mjs';
 import { POIS } from './pois.mjs';
+import { fold, bestPlace } from './placename.mjs';
 
 const memo = new Map();
 // a failed load is forgotten, so the next stop tries it again
@@ -748,6 +749,7 @@ for (const [button, panel] of menus) button.addEventListener('click', () => {
 });
 addEventListener('pointerdown', (e) => { if (!where.contains(e.target)) setFlyout(false); });
 addEventListener('keydown', (e) => { if (e.key === 'Escape') setFlyout(false); });
+where.addEventListener('focusout', (e) => { if (e.relatedTarget && !where.contains(e.relatedTarget)) setFlyout(false); }); // tabbed out; a click that focuses nothing has no relatedTarget
 
 // The cartouche names the place flown to (its title, else the button's name), not whatever scores highest in the frame.
 $('origins').innerHTML = ORIGINS.map(([group, items]) =>
@@ -762,30 +764,9 @@ function parseLatLon(text) {
   return Math.abs(lat) <= 90 && Math.abs(lon) <= 180 ? { lon, lat } : null;
 }
 
-// A typed place: the chart views, then the points of interest, then Natural Earth's towns, matched without
-// case or accents, and loosely: a whole name, its start, one of its words, or a few letters' slip from one.
-const fold = (s) => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-function edits(a, b) {
-  let row = Array.from({ length: b.length + 1 }, (_, j) => j);
-  for (let i = 1; i <= a.length; i++) {
-    const next = [i];
-    for (let j = 1; j <= b.length; j++) next[j] = Math.min(row[j] + 1, next[j - 1] + 1, row[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
-    row = next;
-  }
-  return row[b.length];
-}
-function nameScore(q, name) {
-  const n = fold(name), words = n.split(' ');
-  if (n === q) return 0;
-  if (n.startsWith(q)) return 1;
-  if (words.some((w) => w.startsWith(q))) return 2;
-  if (q.length < 4) return Infinity;
-  const d = Math.min(edits(q, n), edits(q, n.slice(0, q.length)) + 0.25, ...words.map((w) => edits(q, w) + 0.5)); // the whole name before a part of it
-  return d < Math.floor(q.length / 3) + 1 ? 3 + d : Infinity;
-}
+// A typed place: the chart views, then the points of interest, then Natural Earth's towns (placename.mjs matches them).
 async function findPlace(text) {
-  const q = fold(text);
-  if (!q) return null;
+  if (!fold(text)) return null;
   const towns = await env.readJSON('geo/ne-populated-places-50m.geojson').then((g) => g.features.toSorted((a, b) => a.properties.SCALERANK - b.properties.SCALERANK), () => []); // the bigger town first
   const candidates = [
     ...originViews.map((v) => ({ name: v.title, view: v })),
@@ -793,17 +774,15 @@ async function findPlace(text) {
     ...POIS.map((p) => ({ name: p.name, view: { lon: p.lon, lat: p.lat, zoom: 7, title: p.name } })),
     ...towns.map(({ properties: p, geometry: { coordinates: [lon, lat] } }) => ({ name: p.NAME, view: { lon, lat, zoom: 8, title: p.NAME } })),
   ];
-  let best = null, bestScore = Infinity;
-  for (const c of candidates) { const s = nameScore(q, c.name); if (s < bestScore) { best = c; bestScore = s; } } // ties keep the earlier list
-  return best?.view ?? null;
+  return bestPlace(text, candidates)?.view ?? null;
 }
 
 $('coords').addEventListener('submit', async (e) => {
   e.preventDefault();
   const text = $('coordsText').value, p = parseLatLon(text), miss = $('goMiss');
   const target = p ? { ...p, zoom: Math.max(view.zoom, LOCATE_ZOOM) } : await findPlace(text);
-  miss.hidden = !!target;
-  if (!target) { miss.textContent = text.trim() ? `No place called “${text.trim()}”` : 'Type a place, or latitude, longitude: 36.28, -76'; return; }
+  if (!target) { miss.textContent = text.trim() ? `No place called “${text.trim()}”` : 'Type a place, or latitude, longitude: 36.28, -76'; miss.hidden = false; return; } // the text before the unhide, so a reader announces it
+  miss.hidden = true;
   setFlyout(false);
   goTo(target);
 });
