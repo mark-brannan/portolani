@@ -30,7 +30,7 @@
     text-shadow: 0 0 3px var(--bg), 0 0 3px var(--bg);
   }
 
-  /* top right: the settings rose, then the astrolabe takes my position; the dividers open Go (a place, a position, or mine), the anchor the curated chart views; each opens on a click and shuts on a choice, a second click, a click elsewhere or Esc */
+  /* top right, a row of six instruments, each opening its own drawer: the rose the settings, the chart the charts, the astrolabe the points of interest, the compass Go (a typed place or position, or mine filled in), the dividers the voyages, the anchor the anchorages (home first). One drawer at a time: a click on its button opens it and a second click shuts it, another button swaps it for its own, and a choice, a click elsewhere or Esc shuts it. The row never moves */
   #where { position: fixed; top: 12px; right: 12px; z-index: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; pointer-events: none; }
   #where :is(button, input) { pointer-events: auto; } /* the box is empty map: a touch there is the map's, to drag or pinch */
   #where .row { display: flex; gap: 6px; align-items: center; }
@@ -40,59 +40,72 @@
   }
   #where [hidden] { display: none; }
   #where .row button { width: 36px; height: 36px; }
-  #where .row :is(#locate, #go, #places) { background: #efe3c6; border-color: #b89a68; } /* brass reads on parchment, in a dark theme too */
+  #where .row button { background: #efe3c6; border-color: #b89a68; } /* brass reads on parchment, in a dark theme too */
   #where .row button[aria-expanded="true"] { background: #e2cd9e; }
   #where .row svg { width: 24px; height: 24px; }
   #where .row #open { width: 44px; height: 44px; } /* the settings rose, the largest of the group */
   #where .row #open svg { width: 30px; height: 30px; }
   #locate:disabled { cursor: progress; opacity: 0.7; }
-  .panel {
-    display: none; flex-direction: column; align-items: flex-end; gap: 6px; max-height: calc(100vh - 80px); overflow-y: auto; pointer-events: auto;
-  }
-  .panel.open { display: flex; }
-  #origins { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-  #origins .group { font: italic 12px var(--serif); color: var(--fg); opacity: 0.7; margin-top: 4px; text-shadow: 0 0 4px var(--panel); }
-  #origins button, #goPanel button { padding: 3px 10px; font: 13px var(--serif); border-radius: 12px; }
-  #coords { display: flex; gap: 4px; }
-  #coords input { width: 170px; padding: 3px 8px; font: 13px var(--serif); border-radius: 12px; background: var(--panel); color: var(--fg); border: 1px solid var(--rule); }
+  .menu { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; } /* the lighter drawers: a list of places, Go, the voyages */
+  .places { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+  .places small { display: block; margin-top: -2px; font-size: 11px; font-style: italic; opacity: 0.7; }
+  .places .group { font: italic 12px var(--serif); color: var(--fg); opacity: 0.7; margin-top: 4px; }
+  #where .places button, #goPanel button, #voyagesPanel .note { padding: 3px 10px; font: 13px var(--serif); border-radius: 12px; }
+  #where .places button { display: block; text-align: left; }
+  #coords { display: flex; gap: 4px; align-self: stretch; }
+  #coords input { flex: 1; min-width: 0; max-width: none; padding: 3px 8px; font: 13px var(--serif); border-radius: 12px; background: var(--panel); color: var(--fg); border: 1px solid var(--rule); }
+  #voyagesPanel .note { margin: 0; font-style: italic; background: var(--panel); border: 1px solid var(--rule); }
   #goMiss { margin: 0; padding: 2px 8px; font: italic 12px var(--serif); background: var(--panel); border-radius: 8px; }
 
-  /* the drawer: slides in from the left over the map, hidden (and out of the tab order) when shut */
-  #drawer {
-    position: fixed; inset: 0 auto 0 0; z-index: 2; box-sizing: border-box;
-    width: min(480px, 100vw); overflow-y: auto; overscroll-behavior: contain;
-    padding: 14px 16px 28px; background: var(--panel);
-    border-right: 1px solid var(--rule); outline: 1px solid var(--rule); outline-offset: -5px;
-    box-shadow: 4px 0 24px rgb(0 0 0 / 0.3);
-    transform: translateX(-102%); visibility: hidden;
+  /* the drawers: on a wide screen each slides in from the right below the row, right-aligned with it and clear
+     of it, scrolling inside; hidden (and out of the tab order) when shut */
+  .drawer {
+    position: fixed; top: 64px; right: 12px; z-index: 2; box-sizing: border-box; pointer-events: auto;
+    width: min(480px, 100vw - 24px); max-height: calc(100vh - 76px); max-height: calc(100dvh - 76px); overflow-y: auto; overscroll-behavior: contain;
+    padding: 14px 16px 20px; background: var(--panel);
+    border: 1px solid var(--rule); outline: 1px solid var(--rule); outline-offset: -5px;
+    box-shadow: -4px 4px 24px rgb(0 0 0 / 0.3);
+    transform: translateX(calc(100% + 24px)); visibility: hidden;
     transition: transform 0.25s ease, visibility 0s linear 0.25s;
   }
-  #drawer.open { transform: none; visibility: visible; transition: transform 0.25s ease; }
-  @media (prefers-reduced-motion: reduce) { #drawer, #drawer.open { transition: none; } }
+  .drawer.open { transform: none; visibility: visible; transition: transform 0.25s ease; }
+  @media (prefers-reduced-motion: reduce) { .drawer, .drawer.open { transition: none; } }
+  @media (min-width: 521px) { /* the lighter drawers as wide as their lines, Go as wide as a position needs */
+    .drawer.menu { width: max-content; min-width: min(240px, 100vw - 24px); max-width: min(480px, 100vw - 24px); }
+    #goPanel { width: min(360px, 100vw - 24px); }
+  }
 
-  /* a phone: the drawer is a bottom sheet at half the window's height, the map above it (toggled by the
-     rose button, the close button or Esc); the cartouche and the scale bar sit on cards beside the map */
+  /* a phone: every drawer is a bottom sheet at half the window's height, the map above it (toggled by its
+     button or Esc); the cartouche and the scale bar sit on cards beside the map */
   .card { position: fixed; z-index: 1; pointer-events: none; height: auto; }
   #cardCartouche { top: 12px; left: 12px; }
   #cardScale { left: 8px; bottom: 44px; }
   @media (min-width: 521px) { .card { display: none; } }
   @media (max-width: 520px) {
-    #drawer {
-      inset: auto 0 0 0; width: 100vw; height: 50vh; height: 50dvh; border-right: none; border-top: 1px solid var(--rule);
+    .drawer {
+      inset: auto 0 0 0; width: 100vw; height: 50vh; height: 50dvh; max-height: none; border: none; border-top: 1px solid var(--rule);
       border-radius: 14px 14px 0 0; box-shadow: 0 -4px 24px rgb(0 0 0 / 0.3);
       transform: translateY(102%);
     }
-    #drawer.open { transform: none; }
+    .drawer.open { transform: none; }
     /* the sheet open: the cartouche above the map and the scale bar between it and the sheet, so the map
        is shrunk (never cropped) to what is left of the top half; the cards are 1.1 of the sheet's scale */
     html.sheet #map { inset: calc(18px + 15vw) 0 auto 0; width: min(100vw, calc(1.6 * (50dvh - 28px - 27vw))); height: min(62.5vw, calc(50dvh - 28px - 27vw)); }
     html.sheet #cardScale { bottom: calc(50vh + 8px); bottom: calc(50dvh + 8px); }
   }
 
+  #chartList { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 6px; }
+  #chartList button {
+    width: 100%; display: flex; align-items: center; gap: 10px; padding: 6px 12px 6px 6px; cursor: pointer; text-align: left;
+    font: 16px var(--serif); background: var(--sheet); color: var(--sheet-ink); border: 1px solid var(--rule); border-radius: 6px;
+  }
+  #chartList button:hover { border-color: var(--accent); }
+  #chartList svg { width: 34px; height: 34px; flex: none; }
+  #chartList small { margin-left: auto; font: 13px var(--serif); opacity: 0.7; }
+
   header { display: flex; align-items: start; justify-content: space-between; gap: 8px; }
   h1 { font: 28px/1.1 var(--serif); margin: 4px 0 2px; letter-spacing: 0.06em; }
   header p { margin: 0; color: var(--muted); font-size: 12px; }
-  #close { flex: none; width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--rule); background: none; color: var(--fg); font-size: 16px; cursor: pointer; }
 
   #share { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px; }
   #share .chip { cursor: pointer; }
@@ -193,25 +206,18 @@
 <nav id="where" aria-label="Go to">
   <div class="row">
     <button id="open" type="button" aria-label="Settings" aria-controls="drawer" aria-expanded="false">
-      <svg viewBox="-16 -16 32 32" aria-hidden="true">
-        <circle r="13" fill="none" stroke="currentColor" stroke-width="1"/>
-        <path d="M0-14 2.4-2.4 14 0 2.4 2.4 0 14-2.4 2.4-14 0-2.4-2.4Z" fill="currentColor"/>
-        <path d="M7-7 1.5 0 7 7 0 1.5-7 7-1.5 0-7-7 0-1.5Z" fill="#8c2f1e" opacity="0.85"/>
-        <circle r="1.6" fill="none" stroke="currentColor" stroke-width="0.8"/>
-      </svg>
+      <svg viewBox="-16 -16 32 32" aria-hidden="true"><defs><linearGradient id="brassRose" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4c2"/><stop offset="0.35" stop-color="#e8b84a"/><stop offset="0.6" stop-color="#b07a1e"/><stop offset="0.8" stop-color="#e9c060"/><stop offset="1" stop-color="#7a5212"/></linearGradient></defs><circle r="11.4" fill="none" stroke="#5a3a0c" stroke-width="2.4"/><circle r="11.4" fill="none" stroke="url(#brassRose)" stroke-width="1.4"/><path d="M0 0L2.03 -10.2L-0.06 -1.9Z" fill="#6f9a58"/><path d="M0 0L2.03 -10.2L0.78 -1.73Z" fill="#4f7a3a"/><path d="M-0.06 -1.9L2.03 -10.2L0.78 -1.73" fill="none" stroke="#5a3a0c" stroke-width="0.2" stroke-linejoin="miter"/><path d="M0 0L5.78 -8.65L0.67 -1.78Z" fill="#c0614a"/><path d="M0 0L5.78 -8.65L1.38 -1.3Z" fill="#a8432e"/><path d="M0.67 -1.78L5.78 -8.65L1.38 -1.3" fill="none" stroke="#5a3a0c" stroke-width="0.2" stroke-linejoin="miter"/><path d="M0 0L8.65 -5.78L1.3 -1.38Z" fill="#6f9a58"/><path d="M0 0L8.65 -5.78L1.78 -0.67Z" fill="#4f7a3a"/><path d="M1.3 -1.38L8.65 -5.78L1.78 -0.67" fill="none" stroke="#5a3a0c" stroke-width="0.2" stroke-linejoin="miter"/><path d="M0 0L10.2 -2.03L1.73 -0.78Z" fill="#c0614a"/><path d="M0 0L10.2 -2.03L1.9 0.06Z" fill="#a8432e"/><path d="M1.73 -0.78L10.2 -2.03L1.9 0.06" fill="none" stroke="#5a3a0c" stroke-width="0.2" stroke-linejoin="miter"/><path d="M0 0L10.2 2.03L1.9 -0.06Z" fill="#6f9a58"/><path d="M0 0L10.2 2.03L1.73 0.78Z" fill="#4f7a3a"/><path d="M1.9 -0.06L10.2 2.03L1.73 0.78" fill="none" stroke="#5a3a0c" stroke-width="0.2" stroke-linejoin="miter"/><path d="M0 0L8.65 5.78L1.78 0.67Z" fill="#c0614a"/><path d="M0 0L8.65 5.78L1.3 1.38Z" fill="#a8432e"/><path d="M1.78 0.67L8.65 5.78L1.3 1.38" fill="none" stroke="#5a3a0c" stroke-width="0.2" stroke-linejoin="miter"/><path d="M0 0L5.78 8.65L1.38 1.3Z" fill="#6f9a58"/><path d="M0 0L5.78 8.65L0.67 1.78Z" fill="#4f7a3a"/><path d="M1.38 1.3L5.78 8.65L0.67 1.78" fill="none" stroke="#5a3a0c" stroke-width="0.2" stroke-linejoin="miter"/><path d="M0 0L2.03 10.2L0.78 1.73Z" fill="#c0614a"/><path d="M0 0L2.03 10.2L-0.06 1.9Z" fill="#a8432e"/><path d="M0.78 1.73L2.03 10.2L-0.06 1.9" fill="none" stroke="#5a3a0c" stroke-width="0.2" stroke-linejoin="miter"/><path d="M0 0L-2.03 10.2L0.06 1.9Z" fill="#6f9a58"/><path d="M0 0L-2.03 10.2L-0.78 1.73Z" fill="#4f7a3a"/><path d="M0.06 1.9L-2.03 10.2L-0.78 1.73" fill="none" stroke="#5a3a0c" stroke-width="0.2" stroke-linejoin="miter"/><path d="M0 0L-5.78 8.65L-0.67 1.78Z" fill="#c0614a"/><path d="M0 0L-5.78 8.65L-1.38 1.3Z" fill="#a8432e"/><path d="M-0.67 1.78L-5.78 8.65L-1.38 1.3" fill="none" stroke="#5a3a0c" stroke-width="0.2" stroke-linejoin="miter"/><path d="M0 0L-8.65 5.78L-1.3 1.38Z" fill="#6f9a58"/><path d="M0 0L-8.65 5.78L-1.78 0.67Z" fill="#4f7a3a"/><path d="M-1.3 1.38L-8.65 5.78L-1.78 0.67" fill="none" stroke="#5a3a0c" stroke-width="0.2" stroke-linejoin="miter"/><path d="M0 0L-10.2 2.03L-1.73 0.78Z" fill="#c0614a"/><path d="M0 0L-10.2 2.03L-1.9 -0.06Z" fill="#a8432e"/><path d="M-1.73 0.78L-10.2 2.03L-1.9 -0.06" fill="none" stroke="#5a3a0c" stroke-width="0.2" stroke-linejoin="miter"/><path d="M0 0L-10.2 -2.03L-1.9 0.06Z" fill="#6f9a58"/><path d="M0 0L-10.2 -2.03L-1.73 -0.78Z" fill="#4f7a3a"/><path d="M-1.9 0.06L-10.2 -2.03L-1.73 -0.78" fill="none" stroke="#5a3a0c" stroke-width="0.2" stroke-linejoin="miter"/><path d="M0 0L-8.65 -5.78L-1.78 -0.67Z" fill="#c0614a"/><path d="M0 0L-8.65 -5.78L-1.3 -1.38Z" fill="#a8432e"/><path d="M-1.78 -0.67L-8.65 -5.78L-1.3 -1.38" fill="none" stroke="#5a3a0c" stroke-width="0.2" stroke-linejoin="miter"/><path d="M0 0L-5.78 -8.65L-1.38 -1.3Z" fill="#6f9a58"/><path d="M0 0L-5.78 -8.65L-0.67 -1.78Z" fill="#4f7a3a"/><path d="M-1.38 -1.3L-5.78 -8.65L-0.67 -1.78" fill="none" stroke="#5a3a0c" stroke-width="0.2" stroke-linejoin="miter"/><path d="M0 0L-2.03 -10.2L-0.78 -1.73Z" fill="#c0614a"/><path d="M0 0L-2.03 -10.2L0.06 -1.9Z" fill="#a8432e"/><path d="M-0.78 -1.73L-2.03 -10.2L0.06 -1.9" fill="none" stroke="#5a3a0c" stroke-width="0.2" stroke-linejoin="miter"/><path d="M0 0L4.97 -12.01L-0.06 -2.4Z" fill="#9a6fb0"/><path d="M0 0L4.97 -12.01L1.74 -1.65Z" fill="#4e2a66"/><path d="M-0.06 -2.4L4.97 -12.01L1.74 -1.65" fill="none" stroke="#5a3a0c" stroke-width="0.22" stroke-linejoin="miter"/><path d="M0 0L12.01 -4.97L1.65 -1.74Z" fill="#9a6fb0"/><path d="M0 0L12.01 -4.97L2.4 0.06Z" fill="#4e2a66"/><path d="M1.65 -1.74L12.01 -4.97L2.4 0.06" fill="none" stroke="#5a3a0c" stroke-width="0.22" stroke-linejoin="miter"/><path d="M0 0L12.01 4.97L2.4 -0.06Z" fill="#9a6fb0"/><path d="M0 0L12.01 4.97L1.65 1.74Z" fill="#4e2a66"/><path d="M2.4 -0.06L12.01 4.97L1.65 1.74" fill="none" stroke="#5a3a0c" stroke-width="0.22" stroke-linejoin="miter"/><path d="M0 0L4.97 12.01L1.74 1.65Z" fill="#9a6fb0"/><path d="M0 0L4.97 12.01L-0.06 2.4Z" fill="#4e2a66"/><path d="M1.74 1.65L4.97 12.01L-0.06 2.4" fill="none" stroke="#5a3a0c" stroke-width="0.22" stroke-linejoin="miter"/><path d="M0 0L-4.97 12.01L0.06 2.4Z" fill="#9a6fb0"/><path d="M0 0L-4.97 12.01L-1.74 1.65Z" fill="#4e2a66"/><path d="M0.06 2.4L-4.97 12.01L-1.74 1.65" fill="none" stroke="#5a3a0c" stroke-width="0.22" stroke-linejoin="miter"/><path d="M0 0L-12.01 4.97L-1.65 1.74Z" fill="#9a6fb0"/><path d="M0 0L-12.01 4.97L-2.4 -0.06Z" fill="#4e2a66"/><path d="M-1.65 1.74L-12.01 4.97L-2.4 -0.06" fill="none" stroke="#5a3a0c" stroke-width="0.22" stroke-linejoin="miter"/><path d="M0 0L-12.01 -4.97L-2.4 0.06Z" fill="#9a6fb0"/><path d="M0 0L-12.01 -4.97L-1.65 -1.74Z" fill="#4e2a66"/><path d="M-2.4 0.06L-12.01 -4.97L-1.65 -1.74" fill="none" stroke="#5a3a0c" stroke-width="0.22" stroke-linejoin="miter"/><path d="M0 0L-4.97 -12.01L-1.74 -1.65Z" fill="#9a6fb0"/><path d="M0 0L-4.97 -12.01L0.06 -2.4Z" fill="#4e2a66"/><path d="M-1.74 -1.65L-4.97 -12.01L0.06 -2.4" fill="none" stroke="#5a3a0c" stroke-width="0.22" stroke-linejoin="miter"/><path d="M0 0L0 -10.2L-1.47 -2.26Z" fill="#f3d27a"/><path d="M0 0L0 -10.2L1.47 -2.26Z" fill="#a8741c"/><path d="M-1.47 -2.26L0 -10.2L1.47 -2.26" fill="none" stroke="#5a3a0c" stroke-width="0.28" stroke-linejoin="miter"/><path d="M0 0L10.32 -10.32L0.56 -2.64Z" fill="#f3d27a"/><path d="M0 0L10.32 -10.32L2.64 -0.56Z" fill="#a8741c"/><path d="M0.56 -2.64L10.32 -10.32L2.64 -0.56" fill="none" stroke="#5a3a0c" stroke-width="0.28" stroke-linejoin="miter"/><path d="M0 0L11.6 0L2.26 -1.47Z" fill="#f3d27a"/><path d="M0 0L11.6 0L2.26 1.47Z" fill="#a8741c"/><path d="M2.26 -1.47L11.6 0L2.26 1.47" fill="none" stroke="#5a3a0c" stroke-width="0.28" stroke-linejoin="miter"/><path d="M0 0L10.32 10.32L2.64 0.56Z" fill="#f3d27a"/><path d="M0 0L10.32 10.32L0.56 2.64Z" fill="#a8741c"/><path d="M2.64 0.56L10.32 10.32L0.56 2.64" fill="none" stroke="#5a3a0c" stroke-width="0.28" stroke-linejoin="miter"/><path d="M0 0L0 14.6L1.47 2.26Z" fill="#f3d27a"/><path d="M0 0L0 14.6L-1.47 2.26Z" fill="#a8741c"/><path d="M1.47 2.26L0 14.6L-1.47 2.26" fill="none" stroke="#5a3a0c" stroke-width="0.28" stroke-linejoin="miter"/><path d="M0 0L-10.32 10.32L-0.56 2.64Z" fill="#f3d27a"/><path d="M0 0L-10.32 10.32L-2.64 0.56Z" fill="#a8741c"/><path d="M-0.56 2.64L-10.32 10.32L-2.64 0.56" fill="none" stroke="#5a3a0c" stroke-width="0.28" stroke-linejoin="miter"/><path d="M0 0L-14.6 0L-2.26 1.47Z" fill="#f3d27a"/><path d="M0 0L-14.6 0L-2.26 -1.47Z" fill="#a8741c"/><path d="M-2.26 1.47L-14.6 0L-2.26 -1.47" fill="none" stroke="#5a3a0c" stroke-width="0.28" stroke-linejoin="miter"/><path d="M0 0L-10.32 -10.32L-2.64 -0.56Z" fill="#f3d27a"/><path d="M0 0L-10.32 -10.32L-0.56 -2.64Z" fill="#a8741c"/><path d="M-2.64 -0.56L-10.32 -10.32L-0.56 -2.64" fill="none" stroke="#5a3a0c" stroke-width="0.28" stroke-linejoin="miter"/><path transform="translate(0 -9.6)" d="M0-6.2C1.5-4.8 1.6-2.6 0.55-1.1L-0.55-1.1C-1.6-2.6-1.5-4.8 0-6.2ZM0.6-1.3C1.4-2.4 3.1-2.7 3.5-4.4C4.4-2.5 3.2-0.6 1.2-0.6ZM-0.6-1.3C-1.4-2.4-3.1-2.7-3.5-4.4C-4.4-2.5-3.2-0.6-1.2-0.6ZM-2.1-1.3H2.1V-0.3H-2.1ZM-0.55-0.3H0.55L0.9 1.2H-0.9Z" fill="url(#brassRose)" stroke="#5a3a0c" stroke-width="0.45" stroke-linejoin="round"/><path d="M11.2-0.6H13V-2.4H14.2V-0.6H16V0.6H14.2V2.4H13V0.6H11.2Z" fill="#a8432e" stroke="#5a3a0c" stroke-width="0.35"/><circle r="1.5" fill="url(#brassRose)" stroke="#5a3a0c" stroke-width="0.5"/></svg>
     </button>
-    <button id="locate" type="button" aria-label="Centre on my position" title="My position">
-      <svg viewBox="-16 -16 32 32" aria-hidden="true" stroke-linecap="round" stroke-linejoin="round"><defs><linearGradient id="brassAstro" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4c2"/><stop offset="0.35" stop-color="#e8b84a"/><stop offset="0.6" stop-color="#b07a1e"/><stop offset="0.8" stop-color="#e9c060"/><stop offset="1" stop-color="#7a5212"/></linearGradient></defs>
-        <circle cy="-14" r="1.7" fill="none" stroke="#5a3a0c" stroke-width="1.2"/>
-        <path d="M-1.4-12.3h2.8v2.2h-2.8z" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.7"/>
-        <path d="M0-10a11 11 0 1 1 0 22a11 11 0 1 1 0-22zM0-7.4a8.4 8.4 0 1 0 0 16.8a8.4 8.4 0 1 0 0-16.8z" fill="url(#brassAstro)" fill-rule="evenodd" stroke="#5a3a0c" stroke-width="0.8"/>
-        <path d="M-8.4 1H8.4M0-7.4V9.4" stroke="#5a3a0c" stroke-width="2.6"/><path d="M-8.4 1H8.4M0-7.4V9.4" stroke="url(#brassAstro)" stroke-width="1.4"/>
-        <path d="M-8.40 1.00L-10.20 1.00M-8.11 -1.17L-9.85 -1.64M-7.27 -3.20L-8.83 -4.10M-5.94 -4.94L-7.21 -6.21M-4.20 -6.27L-5.10 -7.83M-2.17 -7.11L-2.64 -8.85M-0.00 -7.40L-0.00 -9.20M2.17 -7.11L2.64 -8.85M4.20 -6.27L5.10 -7.83M5.94 -4.94L7.21 -6.21M7.27 -3.20L8.83 -4.10M8.11 -1.17L9.85 -1.64M8.40 1.00L10.20 1.00" stroke="#5a3a0c" stroke-width="0.5"/>
-        <g transform="translate(0 1) rotate(-32)"><path d="M-9.6-0.9h19.2v1.8h-19.2z" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.7"/><path d="M-7.6-2.8h1.6v5.6h-1.6zM6-2.8h1.6v5.6h-1.6z" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.6"/></g>
-        <circle cy="1" r="1.5" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.7"/>
-      </svg>
+    <button id="charts" type="button" aria-label="Charts" aria-controls="chartsDrawer" aria-expanded="false" title="Charts">
+      <svg viewBox="-16 -16 32 32" aria-hidden="true" stroke-linecap="round" stroke-linejoin="round"><defs><radialGradient id="hdChart" cx="0.5" cy="0.5" r="0.62"><stop offset="0" stop-color="#f3e6c6"/><stop offset="0.68" stop-color="#ead8b0"/><stop offset="0.9" stop-color="#d2b27a"/><stop offset="1" stop-color="#b08f58"/></radialGradient><clipPath id="hcChart"><path d="M-15.2 -1.2C-15.27 -0.26 -15.14 0.92 -14.6 1.6C-14.06 2.28 -12.56 1.81 -12.2 2.6C-11.84 3.39 -12.1 4.6 -12.6 6C-13.1 7.4 -15.04 9.46 -15 10.4C-14.96 11.34 -13.37 11.31 -12.4 11.2C-11.43 11.09 -10.93 9.84 -9.6 9.8C-8.27 9.76 -6.62 10.93 -5 11C-3.38 11.07 -2.26 10.13 -0.6 10.2C1.06 10.27 2.65 11.36 4.2 11.4C5.75 11.44 6.74 10.04 8 10.4C9.26 10.76 10.23 13 11.2 13.4C12.17 13.8 13.15 13.39 13.4 12.6C13.65 11.81 12.46 10.33 12.6 9C12.74 7.67 14.09 6.64 14.2 5.2C14.31 3.76 13.09 2.58 13.2 1C13.31 -0.58 14.73 -1.94 14.8 -3.6C14.87 -5.26 13.56 -6.54 13.6 -8.2C13.64 -9.86 15.32 -12.04 15 -12.8C14.68 -13.56 12.95 -12.8 11.8 -12.4C10.65 -12 10 -10.71 8.6 -10.6C7.2 -10.49 5.69 -11.84 4 -11.8C2.31 -11.76 0.93 -10.44 -0.8 -10.4C-2.53 -10.36 -4.02 -11.64 -5.6 -11.6C-7.18 -11.56 -8.2 -9.95 -9.6 -10.2C-11 -10.45 -12.61 -12.93 -13.4 -13C-14.19 -13.07 -14.25 -11.61 -14 -10.6C-13.75 -9.59 -12.29 -8.62 -12 -7.4C-11.71 -6.18 -12 -4.48 -12.4 -3.8C-12.8 -3.12 -13.7 -4.07 -14.2 -3.6C-14.7 -3.13 -15.13 -2.14 -15.2 -1.2Z"/></clipPath></defs><path d="M-15.2 -1.2C-15.27 -0.26 -15.14 0.92 -14.6 1.6C-14.06 2.28 -12.56 1.81 -12.2 2.6C-11.84 3.39 -12.1 4.6 -12.6 6C-13.1 7.4 -15.04 9.46 -15 10.4C-14.96 11.34 -13.37 11.31 -12.4 11.2C-11.43 11.09 -10.93 9.84 -9.6 9.8C-8.27 9.76 -6.62 10.93 -5 11C-3.38 11.07 -2.26 10.13 -0.6 10.2C1.06 10.27 2.65 11.36 4.2 11.4C5.75 11.44 6.74 10.04 8 10.4C9.26 10.76 10.23 13 11.2 13.4C12.17 13.8 13.15 13.39 13.4 12.6C13.65 11.81 12.46 10.33 12.6 9C12.74 7.67 14.09 6.64 14.2 5.2C14.31 3.76 13.09 2.58 13.2 1C13.31 -0.58 14.73 -1.94 14.8 -3.6C14.87 -5.26 13.56 -6.54 13.6 -8.2C13.64 -9.86 15.32 -12.04 15 -12.8C14.68 -13.56 12.95 -12.8 11.8 -12.4C10.65 -12 10 -10.71 8.6 -10.6C7.2 -10.49 5.69 -11.84 4 -11.8C2.31 -11.76 0.93 -10.44 -0.8 -10.4C-2.53 -10.36 -4.02 -11.64 -5.6 -11.6C-7.18 -11.56 -8.2 -9.95 -9.6 -10.2C-11 -10.45 -12.61 -12.93 -13.4 -13C-14.19 -13.07 -14.25 -11.61 -14 -10.6C-13.75 -9.59 -12.29 -8.62 -12 -7.4C-11.71 -6.18 -12 -4.48 -12.4 -3.8C-12.8 -3.12 -13.7 -4.07 -14.2 -3.6C-14.7 -3.13 -15.13 -2.14 -15.2 -1.2Z" fill="url(#hdChart)" stroke="#7a5a2a" stroke-width="0.8"/><g clip-path="url(#hcChart)" stroke-width="0.32" opacity="0.85"><path d="M0 0L0 -30" stroke="#2a2018"/><path d="M0 0L11.48 -27.72" stroke="#a8432e"/><path d="M0 0L21.21 -21.21" stroke="#4f7a3a"/><path d="M0 0L27.72 -11.48" stroke="#a8432e"/><path d="M0 0L30 0" stroke="#2a2018"/><path d="M0 0L27.72 11.48" stroke="#a8432e"/><path d="M0 0L21.21 21.21" stroke="#4f7a3a"/><path d="M0 0L11.48 27.72" stroke="#a8432e"/><path d="M0 0L0 30" stroke="#2a2018"/><path d="M0 0L-11.48 27.72" stroke="#a8432e"/><path d="M0 0L-21.21 21.21" stroke="#4f7a3a"/><path d="M0 0L-27.72 11.48" stroke="#a8432e"/><path d="M0 0L-30 0" stroke="#2a2018"/><path d="M0 0L-27.72 -11.48" stroke="#a8432e"/><path d="M0 0L-21.21 -21.21" stroke="#4f7a3a"/><path d="M0 0L-11.48 -27.72" stroke="#a8432e"/></g><path d="M-11.2-7.6C-9.4-6.6-8.6-8.4-6.8-7.4S-5-5.2-3.4-6.6-1-8 0.4-7S2.6-4.4 4-5.6 6-8 8.2-7.2 11.4-7.4 12.8-8.6" fill="none" stroke="#5a3a1a" stroke-width="0.6"/><circle cx="7.4" cy="6.4" r="0.9" fill="#a8432e"/><circle cx="-7.6" cy="6.8" r="0.8" fill="#c99a3a"/><circle cx="10" cy="3" r="0.6" fill="#c99a3a"/><path d="M0 0L0 -4.8L0.48 -0.99Z" fill="#e0b04a"/><path d="M0 0L0 -4.8L-0.48 -0.99Z" fill="#8a6418"/><path d="M0 0L2.12 -2.12L1.04 -0.36Z" fill="#4f7a3a"/><path d="M0 0L2.12 -2.12L0.36 -1.04Z" fill="#2f5a22"/><path d="M0 0L4.8 0L0.99 0.48Z" fill="#e0b04a"/><path d="M0 0L4.8 0L0.99 -0.48Z" fill="#8a6418"/><path d="M0 0L2.12 2.12L0.36 1.04Z" fill="#4f7a3a"/><path d="M0 0L2.12 2.12L1.04 0.36Z" fill="#2f5a22"/><path d="M0 0L0 4.8L-0.48 0.99Z" fill="#e0b04a"/><path d="M0 0L0 4.8L0.48 0.99Z" fill="#8a6418"/><path d="M0 0L-2.12 2.12L-1.04 0.36Z" fill="#4f7a3a"/><path d="M0 0L-2.12 2.12L-0.36 1.04Z" fill="#2f5a22"/><path d="M0 0L-4.8 0L-0.99 -0.48Z" fill="#e0b04a"/><path d="M0 0L-4.8 0L-0.99 0.48Z" fill="#8a6418"/><path d="M0 0L-2.12 -2.12L-0.36 -1.04Z" fill="#4f7a3a"/><path d="M0 0L-2.12 -2.12L-1.04 -0.36Z" fill="#2f5a22"/><circle cx="0" cy="0" r="5" fill="none" stroke="#2a2018" stroke-width="0.3"/></svg>
     </button>
-    <button id="go" type="button" aria-label="Go to a place or a position" aria-controls="goPanel" aria-expanded="false" title="Go to">
+    <button id="sights" type="button" aria-label="Points of interest" aria-controls="sightsPanel" aria-expanded="false" title="Points of interest">
+      <svg viewBox="-16 -16 32 32" aria-hidden="true" stroke-linejoin="round" stroke-linecap="round"><defs><linearGradient id="brassAstro" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4c2"/><stop offset="0.35" stop-color="#e8b84a"/><stop offset="0.6" stop-color="#b07a1e"/><stop offset="0.8" stop-color="#e9c060"/><stop offset="1" stop-color="#7a5212"/></linearGradient></defs><g stroke="#5a3a0c" stroke-width="1.6" fill="#5a3a0c"><path d="M-6.2 -8.100000000000001C-5.4-11.2-4-11.6-3.2-12.8L3.2-12.8C4-11.6 5.4-11.2 6.2 -8.100000000000001Z"/><circle cy="-13.4" r="2.3"/><circle cx="-3.6" cy="-12" r="1.6"/><circle cx="3.6" cy="-12" r="1.6"/></g><g fill="url(#brassAstro)"><path d="M-6.2 -8.100000000000001C-5.4-11.2-4-11.6-3.2-12.8L3.2-12.8C4-11.6 5.4-11.2 6.2 -8.100000000000001Z"/><circle cy="-13.4" r="2.3"/><circle cx="-3.6" cy="-12" r="1.6"/><circle cx="3.6" cy="-12" r="1.6"/></g><circle cy="-13.4" r="0.85" fill="#5a3a0c"/><path d="M-2.6-11.2h5.2" stroke="#5a3a0c" stroke-width="0.4"/><circle cy="2.6" r="12.9" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.9"/><circle cy="2.6" r="10.1" fill="#6e4710" stroke="#5a3a0c" stroke-width="0.6"/><path d="M0 -7.5L0 -9.5M1.75 -7.35L1.94 -8.43M3.45 -6.89L3.83 -7.92M5.05 -6.15L6.05 -7.88M6.49 -5.14L7.2 -5.98M7.74 -3.89L8.58 -4.6M8.75 -2.45L10.48 -3.45M9.49 -0.85L10.52 -1.23M9.95 0.85L11.03 0.66M10.1 2.6L12.1 2.6M9.95 4.35L11.03 4.54M9.49 6.05L10.52 6.43M8.75 7.65L10.48 8.65M7.74 9.09L8.58 9.8M6.49 10.34L7.2 11.18M5.05 11.35L6.05 13.08M3.45 12.09L3.83 13.12M1.75 12.55L1.94 13.63M0 12.7L0 14.7M-1.75 12.55L-1.94 13.63M-3.45 12.09L-3.83 13.12M-5.05 11.35L-6.05 13.08M-6.49 10.34L-7.2 11.18M-7.74 9.09L-8.58 9.8M-8.75 7.65L-10.48 8.65M-9.49 6.05L-10.52 6.43M-9.95 4.35L-11.03 4.54M-10.1 2.6L-12.1 2.6M-9.95 0.85L-11.03 0.66M-9.49 -0.85L-10.52 -1.23M-8.75 -2.45L-10.48 -3.45M-7.74 -3.89L-8.58 -4.6M-6.49 -5.14L-7.2 -5.98M-5.05 -6.15L-6.05 -7.88M-3.45 -6.89L-3.83 -7.92M-1.75 -7.35L-1.94 -8.43" stroke="#5a3a0c" stroke-width="0.45"/><path d="M-9.7 4.1Q0 -3.4 9.7 4.1M-7 7.4Q0 1.4000000000000001 7 7.4" fill="none" stroke="#a87a2a" stroke-width="0.4"/><g stroke="#5a3a0c" stroke-width="2.3"><circle cy="2.6" r="8.6" fill="none"/><circle cx="0" cy="0" r="6" fill="none"/></g><g stroke="url(#brassAstro)" stroke-width="1.2"><circle cy="2.6" r="8.6" fill="none"/><circle cx="0" cy="0" r="6" fill="none"/></g><path d="M-1.2 11.12Q-1.68 8.46 -1.58 5.84Q-3.05 7.88 -4.56 9.89Z" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.4"/><path d="M6.78 7.89Q4.52 7.28 2.46 6.25Q3.25 8.23 4.04 10.19Z" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.4"/><path d="M-7.29 7.16Q-5.85 5.2 -4.08 3.62Q-6.3 3.71 -8.52 3.8Z" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.4"/><path d="M8.54 1.55Q6.7 2.72 4.71 3.52Q6.47 4.33 8.22 5.11Z" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.4"/><path d="M-7.92 -0.76Q-5.66 -0.8 -3.47 -0.42Q-4.67 -2.07 -5.87 -3.69Z" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.4"/><path d="M2.66 -5.58Q3.29 -4.14 3.76 -2.58Q4.82 -3.15 5.75 -3.79Z" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.4"/><g transform="translate(0 2.6) rotate(-58)"><path d="M-11.8 0-8.6-0.8H8.6L11.8 0 8.6 0.8H-8.6Z" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.6"/><path d="M0-1.1V1.1" stroke="#5a3a0c" stroke-width="0.4"/></g><circle cy="2.6" r="1.4" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.6"/><circle cy="2.6" r="0.4" fill="#5a3a0c"/></svg>
+    </button>
+    <button id="go" type="button" aria-label="Go to a place or my position" aria-controls="goPanel" aria-expanded="false" title="Go to">
+      <svg viewBox="-16 -16 32 32" aria-hidden="true" stroke-linejoin="round"><defs><linearGradient id="brassCompass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4c2"/><stop offset="0.35" stop-color="#e8b84a"/><stop offset="0.6" stop-color="#b07a1e"/><stop offset="0.8" stop-color="#e9c060"/><stop offset="1" stop-color="#7a5212"/></linearGradient></defs><rect x="-14" y="-14" width="28" height="28" rx="3" fill="url(#brassCompass)" stroke="#5a3a0c" stroke-width="1"/><rect x="-12.3" y="-12.3" width="24.6" height="24.6" rx="1.8" fill="none" stroke="#5a3a0c" stroke-width="0.4" opacity="0.7"/><circle cx="-11.6" cy="-11.6" r="0.9" fill="#5a3a0c" opacity="0.8"/><circle cx="11.6" cy="-11.6" r="0.9" fill="#5a3a0c" opacity="0.8"/><circle cx="11.6" cy="11.6" r="0.9" fill="#5a3a0c" opacity="0.8"/><circle cx="-11.6" cy="11.6" r="0.9" fill="#5a3a0c" opacity="0.8"/><circle r="11" fill="#5a3a0c"/><circle r="10" fill="#f6ecd0"/><circle r="9" fill="none" stroke="#5a3a0c" stroke-width="0.35"/><path d="M-0.29 -1.37L0 -8.8L0.29 -1.37M0.37 -1.35L2.3 -5.54L0.69 -1.22M0.76 -1.17L5.3 -5.3L1.17 -0.76M1.22 -0.69L5.54 -2.3L1.35 -0.37M1.37 -0.29L8.8 0L1.37 0.29M1.35 0.37L5.54 2.3L1.22 0.69M1.17 0.76L5.3 5.3L0.76 1.17M0.69 1.22L2.3 5.54L0.37 1.35M0.29 1.37L0 8.8L-0.29 1.37M-0.37 1.35L-2.3 5.54L-0.69 1.22M-0.76 1.17L-5.3 5.3L-1.17 0.76M-1.22 0.69L-5.54 2.3L-1.35 0.37M-1.37 0.29L-8.8 0L-1.37 -0.29M-1.35 -0.37L-5.54 -2.3L-1.22 -0.69M-1.17 -0.76L-5.3 -5.3L-0.76 -1.17M-0.69 -1.22L-2.3 -5.54L-0.37 -1.35" fill="none" stroke="#7a5a2a" stroke-width="0.35"/><path transform="translate(0 -5.6) scale(0.62)" d="M0-6.2C1.5-4.8 1.6-2.6 0.55-1.1L-0.55-1.1C-1.6-2.6-1.5-4.8 0-6.2ZM0.6-1.3C1.4-2.4 3.1-2.7 3.5-4.4C4.4-2.5 3.2-0.6 1.2-0.6ZM-0.6-1.3C-1.4-2.4-3.1-2.7-3.5-4.4C-4.4-2.5-3.2-0.6-1.2-0.6ZM-2.1-1.3H2.1V-0.3H-2.1ZM-0.55-0.3H0.55L0.9 1.2H-0.9Z" fill="#a8741c" stroke="#5a3a0c" stroke-width="0.5"/><g transform="rotate(28)"><path d="M0-8.6 1.6 0H-1.6Z" fill="#b8402a" stroke="#3b1a0c" stroke-width="0.4"/><path d="M0 8.6 1.6 0H-1.6Z" fill="#1e2a3a" stroke="#0e141c" stroke-width="0.4"/></g><circle r="1.1" fill="url(#brassCompass)" stroke="#5a3a0c" stroke-width="0.4"/></svg>
+    </button>
+    <button id="voyages" type="button" aria-label="Famous voyages" aria-controls="voyagesPanel" aria-expanded="false" title="Famous voyages">
       <svg viewBox="-16 -16 32 32" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round"><defs><linearGradient id="brassDividers" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4c2"/><stop offset="0.35" stop-color="#e8b84a"/><stop offset="0.6" stop-color="#b07a1e"/><stop offset="0.8" stop-color="#e9c060"/><stop offset="1" stop-color="#7a5212"/></linearGradient></defs>
         <g stroke="#5a3a0c" stroke-width="3.4"><path d="M-1.6-9-7 12.5M1.6-9 7 12.5"/><path d="M-4.6 3h9.2" stroke-width="2.2"/></g>
         <g stroke="url(#brassDividers)" stroke-width="2"><path d="M-1.6-9-7 12.5M1.6-9 7 12.5"/><path d="M-4.6 3h9.2" stroke-width="1"/></g>
@@ -219,32 +225,48 @@
         <circle cy="-11" r="2.8" fill="url(#brassDividers)" stroke="#5a3a0c" stroke-width="0.9"/><circle cy="-11" r="0.9" fill="#5a3a0c"/>
       </svg>
     </button>
-    <button id="places" type="button" aria-label="Chart views" aria-controls="flyout" aria-expanded="false" title="Chart views">
+    <button id="anchor" type="button" aria-label="Anchorages: home, and the seas and islands" aria-controls="anchorPanel" aria-expanded="false" title="Anchorages">
       <svg viewBox="-16 -16 32 32" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round"><defs><linearGradient id="brassAnchor" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4c2"/><stop offset="0.35" stop-color="#e8b84a"/><stop offset="0.6" stop-color="#b07a1e"/><stop offset="0.8" stop-color="#e9c060"/><stop offset="1" stop-color="#7a5212"/></linearGradient></defs>
         <g stroke="#5a3a0c" stroke-width="3.6"><circle cy="-10" r="2.6"/><path d="M0-7.4V13M-6-3h12"/><path d="M-12 2q1 10 12 11 11-1 12-11l-3 2.5M-12 2l3 2.5"/></g>
         <g stroke="url(#brassAnchor)" stroke-width="2.2"><circle cy="-10" r="2.6"/><path d="M0-7.4V13M-6-3h12"/><path d="M-12 2q1 10 12 11 11-1 12-11l-3 2.5M-12 2l3 2.5"/></g>
       </svg>
     </button>
   </div>
-  <div id="goPanel" class="panel">
+  <div id="goPanel" class="drawer menu">
+    <button id="locate" type="button" title="Fill in my position">Find my position</button>
     <form id="coords" autocomplete="off">
       <input id="coordsText" type="text" placeholder="a place, or lat, lon" aria-label="A place, or latitude, longitude">
       <button type="submit" aria-label="Go there" title="Go">Go</button>
     </form>
     <p id="goMiss" role="status" hidden></p>
   </div>
-  <div id="flyout" class="panel">
-    <ul id="origins"></ul>
+  <div id="sightsPanel" class="drawer menu">
+    <ul id="sightsList" class="places"></ul>
+  </div>
+  <div id="voyagesPanel" class="drawer menu">
+    <p class="note">Famous voyages: soon</p>
+  </div>
+  <div id="anchorPanel" class="drawer menu">
+    <ul id="anchorages" class="places"></ul>
   </div>
 </nav>
 
-<aside id="drawer" role="dialog" aria-label="Settings" aria-modal="false">
+<aside id="chartsDrawer" class="drawer" role="dialog" aria-label="Charts" aria-modal="false">
+  <header>
+    <div>
+      <h1>Charts</h1>
+      <p>A chart flies to its sheet.</p>
+    </div>
+  </header>
+  <ul id="chartList"></ul>
+</aside>
+
+<aside id="drawer" class="drawer" role="dialog" aria-label="Settings" aria-modal="false">
   <header>
     <div>
       <h1>Portolani</h1>
       <p>Drag to pan, wheel or pinch to zoom.</p>
     </div>
-    <button id="close" type="button" aria-label="Close settings">✕</button>
   </header>
 
   <div id="share">
