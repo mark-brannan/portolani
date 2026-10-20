@@ -1,6 +1,6 @@
 // The page under touch, in headless Chromium with touch emulation at the two common phone widths
 // (360 and 412 px): a two-finger pinch zooms the map about the pinch centre and not the page, one
-// finger drags, the places flyout opens on a tap and shuts on a choice or a tap on the map, and the
+// finger drags, the chart views open on a tap and shuts on a choice or a tap on the map, and the
 // locate button flies to the fix and leaves the flyout shut. Under 520 px the settings drawer is a bottom
 // sheet at half the window's height with the map above it, and the cartouche and the scale bar sit on
 // cards clear of the map.
@@ -51,7 +51,7 @@ for (const width of [360, 412]) {
         await page.waitForFunction((h) => location.hash !== h, before, { timeout: 60000 });
         await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 60000 });
       };
-      const shown = () => page.evaluate(() => getComputedStyle(document.getElementById('flyout')).visibility === 'visible');
+      const shown = (id = 'flyout') => page.evaluate((i) => getComputedStyle(document.getElementById(i)).display !== 'none', id);
       const pageScale = () => page.evaluate(() => visualViewport.scale);
       const hash = () => page.evaluate(() => location.hash);
       const canvas = await page.locator('#map').boundingBox();
@@ -73,8 +73,8 @@ for (const width of [360, 412]) {
       assert.ok(Math.abs(v1.lon - v0.lon) < 0.01 && Math.abs(v1.lat - v0.lat) < 0.01, `centre moved: ${JSON.stringify(v0)} -> ${JSON.stringify(v1)}`);
       assert.equal(await pageScale(), 1, 'the pinch zoomed the page');
 
-      // a pinch where the shut flyout's box lies (top right) is the map's too
-      await pinchOut(canvas.x + canvas.width - 100, canvas.y + 30);
+      // a pinch where the shut menus' box lies (top right, below the icons) is the map's too
+      await pinchOut(canvas.x + canvas.width - 100, canvas.y + 80);
       assert.ok((await view()).zoom > v1.zoom + 1, 'a pinch under the flyout box did not zoom the map');
       assert.equal(await pageScale(), 1, 'the pinch under the flyout box zoomed the page');
 
@@ -190,7 +190,7 @@ for (const width of [360, 412]) {
   });
 }
 
-test('mouse: a click on the map does not stop the flyout opening on hover', { skip, timeout: 240000 }, async () => {
+test('mouse: the menus open on a click, not a hover, and shut on a click elsewhere or Esc', { skip, timeout: 240000 }, async () => {
   const server = createServer(async (req, res) => {
     let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
     if (p.endsWith('/')) p = path.join(p, 'index.html');
@@ -199,16 +199,25 @@ test('mouse: a click on the map does not stop the flyout opening on hover', { sk
   const browser = await chromium.launch();
   try {
     const page = await (await browser.newContext({ viewport: { width: 1100, height: 740 } })).newPage();
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(`http://localhost:${server.address().port}/#map=7/40/12`);
     await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
-    const shown = () => page.evaluate(() => getComputedStyle(document.getElementById('flyout')).visibility === 'visible');
-    await page.mouse.click(400, 400);
-    await page.hover('#home');
+    const shown = (id) => page.evaluate((i) => getComputedStyle(document.getElementById(i)).display !== 'none', id);
+    await page.hover('#places');
     await page.waitForTimeout(400);
-    assert.equal(await shown(), true, 'hovering the row opens the flyout after a click on the map');
-    await page.hover('#origins .group >> nth=0');
-    await page.waitForTimeout(500);
-    assert.equal(await shown(), true, 'resting on a group heading holds the flyout open');
+    assert.equal(await shown('flyout'), false, 'a hover opened the chart views');
+    await page.click('#places');
+    assert.equal(await shown('flyout'), true, 'a click did not open the chart views');
+    await page.click('#go');
+    assert.equal(await shown('flyout'), false, 'opening Go left the chart views open');
+    assert.equal(await shown('goPanel'), true);
+    await page.mouse.click(400, 400);
+    assert.equal(await shown('goPanel'), false, 'a click on the map left Go open');
+    await page.click('#places');
+    await page.keyboard.press('Escape');
+    assert.equal(await shown('flyout'), false, 'Esc left the chart views open');
+    assert.deepEqual(errors, []);
   } finally {
     await browser.close();
     server.close();
