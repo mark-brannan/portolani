@@ -50,6 +50,9 @@
   .places { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
   .places small { display: block; margin-top: -2px; font-size: 11px; font-style: italic; opacity: 0.7; }
   .places .group { font: italic 12px var(--serif); color: var(--fg); opacity: 0.7; margin-top: 4px; }
+  .places .group.sub { margin: 0 0 0 10px; font-size: 11px; } /* an era under Noteworthy ports */
+  .notes { display: block; font: italic 13px var(--serif); color: var(--muted); } /* an entry's caption, or "notes to come" */
+  .places .notes { margin: -2px 0 2px 10px; }
   #where .places button, #goPanel button, #voyageList button { padding: 3px 10px; font: 13px var(--serif); border-radius: 12px; }
   #where .places button { display: block; text-align: left; }
   #coords { display: flex; gap: 4px; align-self: stretch; }
@@ -99,14 +102,16 @@
     html.sheet #cardScale { bottom: calc(50vh + 8px); bottom: calc(50dvh + 8px); }
   }
 
-  #chartList { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 6px; }
-  #chartList button {
-    width: 100%; display: flex; align-items: center; gap: 10px; padding: 6px 12px 6px 6px; cursor: pointer; text-align: left;
-    font: 16px var(--serif); background: var(--sheet); color: var(--sheet-ink); border: 1px solid var(--rule); border-radius: 6px;
-  }
-  #chartList button:hover { border-color: var(--accent); }
+  #chartList { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 8px; }
+  #chartList .chart { padding: 6px 12px 8px 6px; background: var(--sheet); color: var(--sheet-ink); border: 1px solid var(--rule); border-radius: 6px; } /* a chart's section */
+  #chartList h3 { display: flex; align-items: center; gap: 10px; margin: 0; font: 16px var(--serif); letter-spacing: normal; text-transform: none; color: inherit; }
   #chartList svg { width: 34px; height: 34px; flex: none; }
-  #chartList small { margin-left: auto; font: 13px var(--serif); opacity: 0.7; }
+  #chartList h3 small { margin-left: auto; font: 13px var(--serif); opacity: 0.7; }
+  #chartList .notes { margin: 2px 0 0 44px; }
+  #chartList .acts { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 0 44px; }
+  #chartList .acts button { padding: 2px 10px; font: 13px var(--serif); cursor: pointer; background: var(--panel); color: var(--fg); border: 1px solid var(--rule); border-radius: 12px; }
+  #chartList .acts button:hover:enabled { border-color: var(--accent); }
+  #chartList .acts button:disabled { cursor: default; opacity: 0.5; }
 
   header { display: flex; align-items: start; justify-content: space-between; gap: 8px; }
   h1 { font: 28px/1.1 var(--serif); margin: 4px 0 2px; letter-spacing: 0.06em; }
@@ -230,7 +235,7 @@
         <circle cy="-11" r="2.8" fill="url(#brassDividers)" stroke="#5a3a0c" stroke-width="0.9"/><circle cy="-11" r="0.9" fill="#5a3a0c"/>
       </svg>
     </button>
-    <button id="anchor" type="button" aria-label="Anchorages: home, and the seas and islands" aria-controls="anchorPanel" aria-expanded="false" title="Anchorages">
+    <button id="anchor" type="button" aria-label="Anchorages: home, the regions, and the seas and islands" aria-controls="anchorPanel" aria-expanded="false" title="Anchorages">
       <svg viewBox="-16 -16 32 32" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round"><defs><linearGradient id="brassAnchor" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4c2"/><stop offset="0.35" stop-color="#e8b84a"/><stop offset="0.6" stop-color="#b07a1e"/><stop offset="0.8" stop-color="#e9c060"/><stop offset="1" stop-color="#7a5212"/></linearGradient></defs>
         <g stroke="#5a3a0c" stroke-width="3.6"><circle cy="-10" r="2.6"/><path d="M0-7.4V13M-6-3h12"/><path d="M-12 2q1 10 12 11 11-1 12-11l-3 2.5M-12 2l3 2.5"/></g>
         <g stroke="url(#brassAnchor)" stroke-width="2.2"><circle cy="-10" r="2.6"/><path d="M0-7.4V13M-6-3h12"/><path d="M-12 2q1 10 12 11 11-1 12-11l-3 2.5M-12 2l3 2.5"/></g>
@@ -260,7 +265,8 @@
   <header>
     <div>
       <h1>Charts</h1>
-      <p>A chart flies to its sheet.</p>
+      <p>Each chart: where it was made, its sheet, and its scan.</p>
+      <span class="notes">notes to come</span>
     </div>
   </header>
   <ul id="chartList"></ul>
