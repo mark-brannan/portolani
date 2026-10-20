@@ -11,11 +11,12 @@
 // coastlines carries it, and GSHHG "f" land into half-degree cells (geo/f/), read from the GSHHG
 // zip in downloads/, so a close view fetches only the cells around it. The islands of "h" that 50m
 // lacks ship as an index of points, geo/isles.json (scripts/isles.mjs), so every view can mark
-// them. The names the chart letters ship as geo/names-50m.json (scripts/names.mjs), and the urban
-// footprints of its towns, the Natural Earth 10m urban areas joined to the places, as
-// geo/urban-10m.json (scripts/urban.mjs). The Natural Earth 10m rivers and lakes, drawn past z9
-// (scripts/water.mjs), ship whole-feature in 5-degree cells (geo/water-10m/, cutWater); GSHHG
-// lakes, drawn past z10, as its land is (geo/h-lakes/, geo/f-lakes/).
+// them, and the 10m outlines of those 10m holds as geo/isles-land.json, drawn as land. The names
+// the chart letters ship as geo/names-50m.json (scripts/names.mjs), and the urban footprints of its
+// towns, the Natural Earth 10m urban areas joined to the places, as geo/urban-10m.json
+// (scripts/urban.mjs). The Natural Earth 10m rivers and lakes, drawn past z9 (scripts/water.mjs),
+// ship whole-feature in 5-degree cells (geo/water-10m/, cutWater); GSHHG lakes, drawn past z10, as
+// its land is (geo/h-lakes/, geo/f-lakes/).
 
 import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -28,7 +29,7 @@ import { bandOf } from './bands.mjs';
 import { cutCells, cutLakes, cutWater, dbfRecords, gshhgLakes, joinWater, WATER_FILES } from './detail-cells.mjs';
 import { seaNames, coastNames, joinNames, tintedSeas } from './names.mjs';
 import { joinUrban } from './urban.mjs';
-import { isleIndex } from './isles.mjs';
+import { isleIndex, isleLand } from './isles.mjs';
 import { ATTEMPTS, fetchBytesWithRetry } from './fetch-retry.mjs';
 const { find, localUrl } = coastlines;
 
@@ -134,6 +135,10 @@ console.log(`10m water: ${waterCells.size} cells of ${WATER_CELL_DEG} degree, ${
 // coastline file mostly leaves out.
 const [land10, coast10, minor10] = await Promise.all(GEO_10M.map(async (id) => JSON.parse(await readGeo(id))));
 await writeBand(LAND_10M.dir, LAND_10M.cell, { land: geojsonPolygons(land10), coast: [...geojsonRings(coast10), ...geojsonPolygons(minor10).map((p) => p[0])] });
+// the remote islands 50m drops, as 10m outlines the coarse land draws (scripts/isles.mjs isleLand)
+const isleLandJson = JSON.stringify(isleLand(geojsonPolygons(land10), geojsonPolygons(JSON.parse(await readGeo('ne-land-50m')))));
+await writeFile(path.join(out, 'geo', 'isles-land.json'), isleLandJson);
+console.log(`island outlines: ${(isleLandJson.length / 1e3).toFixed(0)} kB`);
 // GSHHG "h" ships polygons only, as a shapefile: the coast is every ring's outline, split at cell
 // edges by cutCells. A coastlines without the entry (before 0.0.4) builds a site without the band,
 // and the scene then stays on 10m cells past z10.

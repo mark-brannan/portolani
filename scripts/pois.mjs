@@ -13,4 +13,8 @@ export const POIS = [
   { name: 'Marquesas', lon: -140.1, lat: -8.91, building: 'tent', palms: 2 }, // Taiohae, Nuku Hiva
   { name: 'Pukapuka', lon: -138.8, lat: -14.82, building: 'tent', palms: 2 }, // Magellan's San Pablo
   { name: 'Pitcairn', lon: -130.1, lat: -25.07, building: 'tent', palms: 2 }, // Adamstown
+  // the rest of the Pitcairn Islands, each at the middle of its Natural Earth 10m outline
+  { name: 'Henderson', lon: -128.32, lat: -24.369, building: 'tent', palms: 2 },
+  { name: 'Ducie', lon: -124.788, lat: -24.669, building: 'tent', palms: 1 },
+  { name: 'Oeno', lon: -130.747, lat: -23.93, building: 'tent', palms: 1 },
 ];

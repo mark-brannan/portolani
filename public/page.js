@@ -726,7 +726,7 @@ const ORIGINS = [
     ['Solomon Islands', at(160, -9, 5)],
     ['Marquesas Islands', at(-140, -9, 6)],
     ['Pukapuka Atoll', at(-138.8, -14.82, 6.5), 'Pukapuka'], // Magellan's San Pablo, 1521 (the Tuamotu one)
-    ['Pitcairn Island', at(-130.1, -25.07, 6.5), 'Pitcairn'],
+    ['Pitcairn Islands', viewOfFrame({ lonMin: -131.3, lonMax: -124.2, latMin: -26.6, latMax: -22.4 })], // all four; the latitudes padded so the longitudes bind
   ]],
 ];
 const originViews = [];
