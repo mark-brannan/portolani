@@ -727,7 +727,7 @@ const ANCHORAGES = [
     ['The world', at(10, 25, 0), 'The World'],
     ['The North', viewOfFrame({ lonMin: 0, lonMax: 40, latMin: 54, latMax: 72 })], // the Carta Marina's frame
   ]],
-  ['Regions', [ // after the boxes in the 2026-10-20 research draft, widened where a frame taller than the window cropped its ends (a view covers its frame); checked by eye at 1280 px
+  ['Regions', [ // a view covers its whole frame and crops what overflows the window, so each frame is about the window's shape
     ['Europe and the Atlantic', viewOfFrame({ lonMin: -35, lonMax: 45, latMin: 25, latMax: 70 })],
     ['The Indian Ocean and Arabia', viewOfFrame({ lonMin: 20, lonMax: 120, latMin: -30, latMax: 32 })],
     ['The China Seas', viewOfFrame({ lonMin: 92, lonMax: 150, latMin: 2, latMax: 40 })],
@@ -754,7 +754,7 @@ const SIGHTS = [
     ['Seville', port(-5.98, 37.39), null, 'Casa de Contratación'],
     ['Dieppe', port(1.08, 49.93), null, 'Vallard, 1547'],
   ]],
-  // European ports a minority in each era; positions from the Wikipedia geodata API (the research draft's [v] rows)
+  // three eras of six ports, most of them outside Europe
   ['Noteworthy ports', []],
   ['The ancient world', [
     ['Alexandria', port(29.89, 31.20), null, 'Ptolemaic; the Pharos'],
