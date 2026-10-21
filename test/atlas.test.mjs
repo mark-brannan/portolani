@@ -9,7 +9,7 @@ const inside = (k, p) => k.west >= p.west - 1e-9 && k.east <= p.east + 1e-9 && k
 
 test('zoom bands pick the doc heights, the ladder run on upward 4x a band; the world band gets the first grid', () => {
   const h = (z) => bandFor(z).height;
-  assert.deepEqual([1, 2, 3.9, 4, 5.9, 6, 7.9, 8, 10, 12, 14, 14.9, 15, 17].map(h), [307.2, 307.2, 307.2, 76.8, 76.8, 19.2, 19.2, 4.8, 1.2, 0.3, 0.075, 0.075, 0.075, 0.075]);
+  assert.deepEqual([1, 2, 3.9, 4, 5.9, 6, 7.9, 8, 10, 12, 14, 14.9, 15, 17].map(h), [76.8, 76.8, 76.8, 76.8, 76.8, 19.2, 19.2, 4.8, 1.2, 0.3, 0.075, 0.075, 0.075, 0.075]);
   // every band's cell is four of the one below, and at the band's first zoom the window is about 9% narrower
   for (let i = 1; i < BANDS.length; i++) if (BANDS[i].to - BANDS[i].from === 2) close(BANDS[i - 1].height / BANDS[i].height, 4);
   for (const b of BANDS) close(1125 / 2 ** b.from / b.height, 0.9155, 1e-3);
@@ -86,9 +86,9 @@ test('a row that would reach a pole ends at the page edge', () => {
   assert.ok(north.some((s) => s.extent.south === 80.5 && s.extent.north === PAGE_EDGE)); // 42.1 + 2 * 19.2 = 80.5; the row would reach 99.7
   const south = sheetsFor(bounds(6, -10, -90, 10, -60));
   assert.ok(south.some((s) => s.extent.south === -PAGE_EDGE && s.extent.north === -73.1)); // 42.1 - 6 * 19.2 = -73.1; the row would reach -92.3
-  for (const z of [2, 4, 6, 8, 10, 12, 14]) for (const s of sheetsFor(bounds(z, 0, -90, 1, 90))) assert.ok(s.extent.north <= PAGE_EDGE && s.extent.south >= -PAGE_EDGE && s.extent.north > s.extent.south, `${z} ${s.name}`);
-  // the 307.2 band's cells are taller than the earth: two rows, either side of the rose, each to the page edge
-  assert.deepEqual([...new Set(sheetsFor(bounds(2, -180, -90, 180, 90)).map((s) => `${s.extent.south}..${s.extent.north}`))], [`${-PAGE_EDGE}..42.1`, `42.1..${PAGE_EDGE}`]);
+  for (const z of [4, 6, 8, 10, 12, 14]) for (const s of sheetsFor(bounds(z, 0, -90, 1, 90))) assert.ok(s.extent.north <= PAGE_EDGE && s.extent.south >= -PAGE_EDGE && s.extent.north > s.extent.south, `${z} ${s.name}`);
+  // the 76.8 band: one whole row through the tropics, and one each side of it to the page edge
+  assert.deepEqual([...new Set(sheetsFor(bounds(4, -180, -90, 180, 90)).map((s) => `${s.extent.south}..${s.extent.north}`))], [`${-PAGE_EDGE}..-34.7`, '-34.7..42.1', `42.1..${PAGE_EDGE}`]);
 });
 
 test('names are ENC-style, unique, and the same wherever the view is', () => {
@@ -133,7 +133,7 @@ test('the hidden circle: centre at the cell centre, sixteen nodes, radius a para
 });
 
 test("no sheet touches a pole, so every hidden circle has finite nodes below it", () => {
-  for (const z of [2, 4, 6, 8, 10, 12, 14]) for (const x of sheetsFor(bounds(z, 0, 85, 1, 90))) {
+  for (const z of [4, 6, 8, 10, 12, 14]) for (const x of sheetsFor(bounds(z, 0, 85, 1, 90))) {
     assert.ok(x.extent.north < 90);
     for (const n of x.circle.nodes) assert.ok(Number.isFinite(n.lon) && n.lat < 90, x.name);
   }
@@ -159,12 +159,13 @@ test('curated sheets: the overview band serves five, the world band the curated 
   const world = sheetsFor({ lon: 0, lat: 30, zoom: 1.5 }, { curated: true });
   assert.ok(world.length > 0 && world.every((s) => s.curated && s.band === BANDS[0].band));
   assert.ok(world.some((s) => s.name === 'The known world of 1375') && world.some((s) => s.name === 'The Atlantic and the Americas'));
-  assert.ok(sheetsFor({ lon: 0, lat: 30, zoom: 3 }, { curated: true }).every((s) => !s.curated), 'no curated sheet is one to four windows wide at zoom 2');
+  assert.ok(sheetsFor({ lon: 0, lat: 30, zoom: 3 }, { curated: true }).every((s) => s.curated), 'below zoom 4, the curated sheets alone');
   assert.deepEqual(sheetsFor(med).filter((s) => s.curated), [], 'off by default');
 });
 
-// #199: the bands a curated sheet serves are those in which it is one to four windows wide at the band's first
-// zoom, and in each it replaces the grid cells whose centres it holds.
+// #199: from the overview band on, a curated sheet serves the bands in which it is one to four windows wide at
+// the band's first zoom; the first band (76.8) takes the world band's sheets by their width at the view's zoom.
+// In every band a curated sheet replaces the grid cells whose centres it holds.
 test('a curated sheet serves the bands it is one to four windows wide in, and replaces the cells it holds there', () => {
   const by = Object.fromEntries(CURATED.map((c) => [c.source, c.bands]));
   assert.deepEqual(by, {
@@ -172,7 +173,10 @@ test('a curated sheet serves the bands it is one to four windows wide in, and re
     'Catalan Atlas': [0], 'Carta Marina, 1539': [1], 'Juan de la Cosa, 1500': [0],
   });
   const ocean = sheetsFor(bounds(4.5, -180, -85, 180, 85), { curated: true });
-  assert.deepEqual(ocean.filter((s) => s.curated).map((s) => s.source).sort(), ['Catalan Atlas', 'Juan de la Cosa, 1500']);
+  assert.deepEqual(ocean.filter((s) => s.curated).map((s) => s.source).sort(), ['Carte Pisane, eastern circle', 'Carte Pisane, western circle', 'Catalan Atlas', 'Dulcert, 1339', 'Juan de la Cosa, 1500']);
+  const med = sheetsFor({ zoom: 5.48, lat: 40.27, lon: 7 }, { curated: true }).filter((s) => s.curated).map((s) => s.source);
+  assert.deepEqual(med, ['Carte Pisane, western circle', 'Carte Pisane, eastern circle', 'Dulcert, 1339'], 'the world band\'s sheets, by their width at the view\'s zoom');
+  assert.ok(sheetsFor({ zoom: 5.5, lat: -9, lon: -140 }, { curated: true }).some((s) => !s.curated && s.band === 0), 'the open Pacific has a grid cell');
   const cur = ocean.filter((s) => s.curated).map((s) => s.extent);
   for (const g of ocean.filter((s) => !s.curated)) {
     const lon = (g.extent.west + g.extent.east) / 2, lat = (g.extent.south + g.extent.north) / 2;
@@ -186,8 +190,8 @@ test('a curated sheet serves the bands it is one to four windows wide in, and re
 
 test('the Catalan rose takes the reach of the sheet that holds it at each zoom', () => {
   const at = (z) => roseSheet(z).source ?? roseSheet(z).name;
-  assert.deepEqual([1, 4, 5.9, 6, 7.9].map(at), ['Catalan Atlas', 'Catalan Atlas', 'Catalan Atlas', 'Dulcert, 1339', 'Dulcert, 1339']);
-  assert.deepEqual([2, 3.9, 8, 10].map(at), ['PT-1N000E0000', 'PT-1N000E0000', 'PT2N000E0000', 'PT3N000E0000']);
+  assert.deepEqual([1, 2, 3.9, 4, 5.9, 6, 7.9].map(at), ['Catalan Atlas', 'Catalan Atlas', 'Dulcert, 1339', 'Dulcert, 1339', 'Dulcert, 1339', 'Dulcert, 1339', 'Dulcert, 1339']);
+  assert.deepEqual([8, 10].map(at), ['PT2N000E0000', 'PT3N000E0000']);
 });
 
 test('curated circles sit at the read centres with sixteen nodes at the read radius', () => {
