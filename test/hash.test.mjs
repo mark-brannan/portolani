@@ -1,7 +1,8 @@
 // The URL hash as the page reads and writes it, in headless Chromium: the view round-trips, clamps and
-// wraps; editing the hash redraws without a reload; Reset keeps only the view; Copy link copies the URL,
-// or selects it in a box when the clipboard is refused; and the three drawer sliders (density, continents,
-// regions) read from and write to the hash. Each scenario opens a fresh page at a hash.
+// wraps; editing the hash redraws without a reload; Reset keeps only the view (and the drawer's layout);
+// Copy link copies the URL, or selects it in a box when the clipboard is refused; the three drawer sliders
+// (density, continents, regions) read from and write to the hash; and the drawer's four layouts each show
+// every control and ride in the hash (`layout=`). Each scenario opens a fresh page at a hash.
 //
 // Needs the built preview (`npm run build:preview` -> _site/), playwright-core and a Chromium
 // (`npx playwright-core install chromium-headless-shell`); without them it skips, since `npm test`
@@ -196,4 +197,85 @@ scenario('regions: the slider round-trips', 'map=5.48/40.265/7.000', async (page
 scenario('regions: 1 reads as an older link\'s checked box', 'map=5.48/40.265/7.000&regionszoom=1', async (page) => {
   // Mismatch: as continents, regionszoom=1 reads back as the default 7.
   assert.equal(await value(page, 'regionsZoom'), '7');
+});
+
+// ---------------------------------------------------------------- the drawer's layouts (#225)
+
+// Every control in the drawer, by its element's id. Each layout shows all of them, each one element.
+const CONTROLS = ['density', 'pick-monster', 'pick-ship', 'pick-rose', 'placement', 'townSize', 'pick-town', 'mountains', 'hills', 'pick-relief', 'trees',
+  'pick-cartouche', 'titleMode', 'title', 'projection', 'names', 'rhumb', 'continentsZoom', 'regions', 'regionsZoom', 'land', 'islands', 'seaTint',
+  'rivers', 'lakes', 'scale', 'scaleBorder', 'ink', 'parchment'];
+const HEADINGS = {
+  default: ['Sea', 'Roses', 'Placement', 'Towns', 'Land', 'Cartouche', 'Map', 'Colours'],
+  question: ['The chart', 'The land', 'The figures'],
+  moods: ['The chart', 'The land', 'The figures'], // under Fine controls, once it is opened
+  sheet: ['Sea', 'Land', 'Margins'],
+};
+// the drawer's headings as shown, less the ?ui= figures and About, which no layout moves
+const headings = (page) => page.evaluate(() => [...document.querySelectorAll('#drawer h2')].filter((h) => h.getClientRects().length && !['h-ui', 'h-about'].includes(h.id)).map((h) => h.textContent));
+async function showsEveryControl(page, name) {
+  for (const id of CONTROLS) {
+    assert.equal(await page.locator(`#drawer [id="${id}"]`).count(), 1, `${name}: #${id} is one element`);
+    assert.equal(await page.locator(`#${id}`).isVisible(), true, `${name}: #${id} shown`);
+  }
+}
+const layoutChip = (page, name) => page.locator(`#layout [data-layout="${name}"]`);
+
+scenario('layout: each of the four shows every control once, under its own headings', 'map=5.48/40.265/7.000', async (page) => {
+  await openDrawer(page);
+  assert.deepEqual(await headings(page), HEADINGS.default);
+  await showsEveryControl(page, 'default');
+  for (const name of ['question', 'moods', 'sheet', 'default']) {
+    await layoutChip(page, name).click();
+    assert.equal(await layoutChip(page, name).getAttribute('aria-checked'), 'true');
+    assert.equal((await params(page)).get('layout'), name === 'default' ? null : name, 'the layout rides in the hash; Default is no key');
+    if (name === 'moods') {
+      assert.equal(await page.locator('#drawer details.fine').evaluate((d) => d.open), false, 'Fine controls starts closed');
+      assert.deepEqual(await page.locator('.moods .preset b').allTextContents(), ['Tasteful', 'All the things']);
+      await page.locator('#drawer details.fine > summary').click();
+    }
+    assert.deepEqual(await headings(page), HEADINGS[name]);
+    await showsEveryControl(page, name);
+  }
+});
+
+scenario('layout: a link opens its layout, and a write, Reset and a hash edit keep or change it', 'map=7.00/43.700/7.300&layout=sheet', async (page) => {
+  assert.equal(await layoutChip(page, 'sheet').getAttribute('aria-checked'), 'true');
+  await slide(page, 'density', 1.5);
+  assert.deepEqual(await headings(page), HEADINGS.sheet);
+  assert.equal((await params(page)).get('layout'), 'sheet', 'a write from another control keeps it');
+  assert.equal((await params(page)).get('density'), '1.5');
+  await page.evaluate(() => { document.getElementById('status').textContent = ''; });
+  await page.locator('#reset').click();
+  await placed(page);
+  assert.equal(await hash(page), '#map=7.00/43.700/7.300&layout=sheet', 'Reset keeps the view and the layout');
+  await page.evaluate(() => { location.hash = 'map=7.00/43.700/7.300&layout=question'; });
+  await placed(page);
+  assert.equal(await layoutChip(page, 'question').getAttribute('aria-checked'), 'true');
+  assert.deepEqual(await headings(page), HEADINGS.question);
+  await page.evaluate(() => { location.hash = 'map=7.00/43.700/7.300&layout=nonsense'; });
+  await placed(page);
+  assert.deepEqual(await headings(page), HEADINGS.default, 'an unknown layout opens Default');
+});
+
+scenario('layout: Two moods sets the existing controls at once', 'map=5.48/40.265/7.000&layout=moods', async (page) => {
+  await openDrawer(page);
+  const mood = (label) => page.locator('.moods .preset', { hasText: label });
+  const choose = async (label) => { await page.evaluate(() => { document.getElementById('status').textContent = ''; }); await mood(label).click(); await placed(page); };
+  await choose('All the things');
+  let q = await params(page);
+  assert.equal(q.get('density'), '2');
+  assert.match(q.get('placement'), /^seed:-?\d+$/);
+  assert.ok(q.get('sprites').split(',').length > 10, 'every figure on');
+  assert.equal(await value(page, 'density'), '2');
+  assert.equal(await mood('All the things').getAttribute('aria-checked'), 'true');
+  assert.equal(await mood('Tasteful').getAttribute('aria-checked'), 'false');
+  await choose('Tasteful');
+  q = await params(page);
+  assert.equal(q.get('density'), '0.5');
+  assert.equal(q.get('placement'), 'historic');
+  assert.equal(q.has('sprites'), false, 'the default figures');
+  assert.equal(await page.locator('#placement [data-placement="historic"]').getAttribute('aria-checked'), 'true');
+  assert.equal(await mood('Tasteful').getAttribute('aria-checked'), 'true');
+  assert.equal(await mood('All the things').getAttribute('aria-checked'), 'false');
 });
