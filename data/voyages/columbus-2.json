@@ -1,0 +1,49 @@
+{
+  "id": "columbus-2",
+  "title": "Columbus's second voyage, 1493–96",
+  "short": "Columbus 1493",
+  "who": ["Christopher Columbus"],
+  "when": "1493–1496",
+  "summary": "Seventeen ships and some 1,200 colonists out of Cádiz; a more southerly Atlantic run to Dominica and the Leeward Islands, Puerto Rico, the ruined Navidad and the new town of La Isabela; then Cuba and Jamaica, and home from Hispaniola by the Leewards.",
+  "sources": [
+    { "title": "Voyages of Christopher Columbus (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Voyages_of_Christopher_Columbus" },
+    { "title": "Second voyage of Christopher Columbus (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Second_voyage_of_Christopher_Columbus" },
+    { "title": "Third voyage of Christopher Columbus (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Third_voyage_of_Christopher_Columbus" },
+    { "title": "Fourth voyage of Christopher Columbus (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Fourth_voyage_of_Christopher_Columbus" },
+    { "title": "Columbus, Christopher, 1911 Encyclopædia Britannica (Wikisource)", "url": "https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Columbus,_Christopher" }
+  ],
+  "legs": [
+    { "from": "Cádiz", "to": "San Sebastián de la Gomera", "dates": "25 Sep – 5 Oct 1493", "mode": "sea", "line": "rhumb",
+      "confidence": "attested", "source": "Columbus’s letters and Dr Chanca’s account of the voyage",
+      "points": [[-6.3,36.5], [-8.5,34], [-12,31.5], [-15.5,29.5], [-16.6,29], [-17.3,28.6], [-17.13,28.06]] },
+    { "from": "San Sebastián de la Gomera", "to": "Dominica", "dates": "13 Oct – 3 Nov 1493", "mode": "sea", "line": "spline",
+      "confidence": "attested", "source": "Chanca; sailed on a more southerly course than in 1492 and made landfall on a Sunday",
+      "points": [[-17.3,27.9], [-18.6,26.8], [-25,25], [-35,20.5], [-45,17.5], [-55,15.8], [-61.2,15.4]] },
+    { "from": "Dominica", "to": "Puerto Rico", "dates": "3–19 Nov 1493", "mode": "sea", "line": "spline",
+      "confidence": "attested", "source": "Chanca; Marie-Galante, Guadeloupe, Montserrat, Santa Cruz, the Virgin Islands",
+      "points": [[-61.2,15.4], [-60.6,16.5], [-61.4,17.8], [-63.4,17.2], [-64.8,17.4], [-66.2,17.7], [-67.1,17.8], [-67.5,18.1], [-67.4,18.4]] },
+    { "from": "Puerto Rico", "to": "Navidad (Cap-Haïtien)", "dates": "22–27 Nov 1493", "mode": "sea", "line": "spline",
+      "confidence": "attested", "source": "Chanca; Navidad found burned",
+      "points": [[-67.2,18.5], [-68.5,19.3], [-70.6,20.4], [-72.2,19.98]] },
+    { "from": "Navidad", "to": "La Isabela", "dates": "Dec 1493 – Jan 1494", "mode": "sea", "line": "spline",
+      "confidence": "attested", "source": "Chanca; the new town founded east of the Río Yaque",
+      "points": [[-72.2,19.98], [-71.6,20.2], [-70.9,20]] },
+    { "from": "La Isabela", "to": "Jamaica (St Ann’s Bay)", "dates": "24 Apr – May 1494", "mode": "sea", "line": "spline",
+      "confidence": "inferred", "source": "Columbus’s exploration of the Cuban south coast is told by Andrés Bernáldez", "note": "by the south coast of Cuba",
+      "points": [[-70.9,20], [-72.9,20.2], [-74.2,19.9], [-75.5,19.8], [-76.4,19.7], [-77.2,18.55]] },
+    { "from": "Jamaica", "to": "Cuba, Cabo de Cruz", "dates": "May 1494", "mode": "sea", "line": "spline",
+      "confidence": "inferred", "source": "Bernáldez",
+      "points": [[-77.2,18.55], [-77.6,19.2], [-77.8,19.8]] },
+    { "from": "Cuba, Cabo de Cruz", "to": "La Isabela", "dates": "Jun – Sep 1494", "mode": "sea", "line": "spline",
+      "confidence": "inferred", "source": "Bernáldez; Cuba taken as a mainland",
+      "points": [[-77.9,19.6], [-77,19.6], [-75.5,19.7], [-74.1,19.8], [-72.7,20.3], [-71.2,20.3], [-70.9,20]] },
+    { "from": "La Isabela", "to": "Cádiz", "dates": "10 Mar – 11 Jun 1496", "mode": "sea", "line": "spline",
+      "confidence": "inferred", "source": "Wikipedia; the Niña and India went by Guadeloupe and the Azores latitude",
+      "points": [[-70.9,20], [-67.5,19.7], [-63,18.5], [-61.8,16.7], [-58,19], [-50,25], [-40,31], [-30,36], [-20,37], [-12,37], [-9,36.6], [-6.3,36.5]] }
+  ],
+  "events": [
+    { "kind": "landfall", "lon": -61.35, "lat": 15.4, "date": "3 Nov 1493", "label": "Landfall at Dominica", "source": "Chanca" },
+    { "kind": "event", "lon": -70.9, "lat": 19.95, "date": "Jan 1494", "label": "La Isabela, the first European town in the New World", "source": "Wikipedia: Second voyage" },
+    { "kind": "death", "who": "Christopher Columbus", "lon": -4.72, "lat": 41.65, "date": "20 May 1506", "label": "Columbus dies at Valladolid", "source": "Britannica 1911, Columbus" }
+  ]
+}
