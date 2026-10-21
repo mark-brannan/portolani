@@ -832,7 +832,7 @@ function fillTile(t) {
 let sightList = null;
 function sightTiles() {
   sightList ??= [...new Map([...places.map(({ name, view: v }) => [name, v]), ...CHARTS.map(({ made }) => [made.title, made])]).entries()]
-    .filter(([name]) => SIGHT_TILES[name]).map(([name, v]) => ({ lon: v.lon, lat: v.lat, tile: { title: name, ...SIGHT_TILES[name] } }));
+    .filter(([name]) => SIGHT_TILES[name]).map(([name, v]) => { const { at, ...tile } = SIGHT_TILES[name]; return { lon: at?.[0] ?? v.lon, lat: at?.[1] ?? v.lat, tile: { title: name, ...tile } }; });
   return sightList;
 }
 function showTileAt([x, y]) {

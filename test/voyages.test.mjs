@@ -148,3 +148,10 @@ test('a place with a tile makes a mark where it stands, and none off the view', 
   const marks = sightMarks(sights, viewProjection({ lon: 8.93, lat: 44.41, zoom: 6 }), rect);
   assert.deepEqual(marks.map((m) => m.tile.title), ['Genoa']);
 });
+
+test('every place tile is keyed by a name the page lists', async () => {
+  const { SIGHT_TILES } = await import('../scripts/sights.mjs');
+  // the list is the page's own: each row opens `['Name', <view>(`, and so does each chart's city
+  const listed = new Set([...readFileSync('public/page.js', 'utf8').matchAll(/\['([^']+)', (?:port|at|viewOfFrame|both|around)\(/g)].map((m) => m[1]));
+  for (const name of Object.keys(SIGHT_TILES)) assert.ok(listed.has(name), `${name} is not a listed place`);
+});
