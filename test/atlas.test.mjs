@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { sheetsFor, roseSheet, cutOut, bandFor, widening, BANDS, hiddenCircle, ROSE, CURATED, PAGE_EDGE, WORLD_SHEET } from '../scripts/atlas.mjs';
+import { sheetsFor, bandFor, widening, BANDS, hiddenCircle, ROSE, CURATED, PAGE_EDGE, WORLD_SHEET, cutOut, roseSheet, OVERLAP_RULES } from '../scripts/atlas.mjs';
 import { readFileSync } from 'node:fs';
 
 const bounds = (zoom, west, south, east, north) => ({ zoom, west, south, east, north });
@@ -145,13 +145,15 @@ test('band 5 names keep the row digits whole, 4 digits past row 999', () => {
   assert.match(sheetsFor(bounds(14, 10, 40, 10.01, 40.01))[0].name, /^PT5[NS]\d{4}[EW]\d{4}$/);
 });
 
+// Under the `smallest` overlap rule; `fit`, the default, has its own test below (#199).
 test('curated sheets: of overlapping ones the smallest is kept, the world band is one sheet, and they displace grid cells', () => {
-  const names = (z, v) => sheetsFor({ ...v, zoom: z }, { curated: true }).filter((s) => s.curated).map((s) => s.name);
+  const smallest = { curated: true, overlap: 'smallest' };
+  const names = (z, v) => sheetsFor({ ...v, zoom: z }, smallest).filter((s) => s.curated).map((s) => s.name);
   const med = bounds(6, 0, 35, 30, 45);
   // Vesconte over the Carte Pisane's east, which overlaps it; the Carte Pisane's west touches Vesconte only at 20E; Dulcert overlaps both
   assert.deepEqual(names(6, med).sort(), ['Levant and Black Sea', 'Mediterranean, west']);
   assert.deepEqual(names(6, bounds(6, -30, 20, 50, 75)).sort(), ['Levant and Black Sea', 'Mediterranean, west', 'Scandinavia and the Baltic']);
-  const wide = bounds(6, -60, 0, 100, 50), got = sheetsFor(wide, { curated: true });
+  const wide = bounds(6, -60, 0, 100, 50), got = sheetsFor(wide, smallest);
   assert.ok(got.some((s) => !s.curated), 'grid cells still fill what no curated sheet holds');
   const cur = got.filter((s) => s.curated).map((s) => s.extent);
   for (const g of got.filter((s) => !s.curated)) {
@@ -160,10 +162,10 @@ test('curated sheets: of overlapping ones the smallest is kept, the world band i
   }
   // no two kept sheets overlap, in any band, so none shadows another
   for (const z of [4, 6]) {
-    const kept = sheetsFor(bounds(z, -180, -85, 180, 85), { curated: true }).filter((s) => s.curated);
+    const kept = sheetsFor(bounds(z, -180, -85, 180, 85), smallest).filter((s) => s.curated);
     for (const a of kept) assert.equal(a.shadow.length, 0, `${z} ${a.name}`);
   }
-  for (const z of [1, 2, 3.9]) assert.deepEqual(sheetsFor({ lon: 0, lat: 30, zoom: z }, { curated: true }), [WORLD_SHEET]);
+  for (const z of [1, 2, 3.9]) assert.deepEqual(sheetsFor({ lon: 0, lat: 30, zoom: z }, smallest), [WORLD_SHEET]);
   assert.deepEqual(sheetsFor(med).filter((s) => s.curated), [], 'off by default');
 });
 
@@ -176,12 +178,13 @@ test('a curated sheet serves the bands it is one to four windows wide in, and re
     'Carte Pisane, western circle': [1], 'Carte Pisane, eastern circle': [1], 'Vesconte, 1311': [1], 'Dulcert, 1339': [1],
     'Catalan Atlas': [0], 'Carta Marina, 1539': [1], 'Juan de la Cosa, 1500': [0],
   });
-  const ocean = sheetsFor(bounds(4.5, -180, -85, 180, 85), { curated: true });
+  const smallest = { curated: true, overlap: 'smallest' };
+  const ocean = sheetsFor(bounds(4.5, -180, -85, 180, 85), smallest);
   assert.deepEqual(ocean.filter((s) => s.curated).map((s) => s.source), ['Carte Pisane, eastern circle'], 'the smallest of the overlapping world sheets; the grid holds the others\' ground');
-  const med = sheetsFor({ zoom: 5.48, lat: 40.27, lon: 7 }, { curated: true }).filter((s) => s.curated).map((s) => s.source);
+  const med = sheetsFor({ zoom: 5.48, lat: 40.27, lon: 7 }, smallest).filter((s) => s.curated).map((s) => s.source);
   assert.deepEqual(med, ['Carte Pisane, eastern circle'], 'the world band\'s sheets, by their width at the view\'s zoom, the smallest of those that overlap');
-  assert.deepEqual(sheetsFor({ zoom: 4.3, lat: 40, lon: -30 }, { curated: true }).filter((s) => s.curated), [], 'the Atlantic is the grid\'s');
-  assert.ok(sheetsFor({ zoom: 5.5, lat: -9, lon: -140 }, { curated: true }).some((s) => !s.curated && s.band === 0), 'the open Pacific has a grid cell');
+  assert.deepEqual(sheetsFor({ zoom: 4.3, lat: 40, lon: -30 }, smallest).filter((s) => s.curated), [], 'the Atlantic is the grid\'s');
+  assert.ok(sheetsFor({ zoom: 5.5, lat: -9, lon: -140 }, smallest).some((s) => !s.curated && s.band === 0), 'the open Pacific has a grid cell');
   const cur = ocean.filter((s) => s.curated).map((s) => s.extent);
   for (const g of ocean.filter((s) => !s.curated)) {
     const lon = (g.extent.west + g.extent.east) / 2, lat = (g.extent.south + g.extent.north) / 2;
@@ -191,8 +194,9 @@ test('a curated sheet serves the bands it is one to four windows wide in, and re
 });
 
 test('the Catalan rose takes the reach of the sheet that holds it at each zoom', () => {
-  const at = (z) => roseSheet(z).source ?? roseSheet(z).name;
+  const at = (z) => roseSheet(z, 'smallest').source ?? roseSheet(z, 'smallest').name;
   assert.deepEqual([1, 3.9].map(at), ['The world', 'The world']);
+  assert.deepEqual([3, 4.33, 6].map((z) => roseSheet(z).source ?? roseSheet(z).name), ['Catalan Atlas', 'Dulcert, 1339', 'PT1N000E0000'], 'under fit, the chart the view fits holds the rose; at 6 Vesconte and the Carte Pisane fit and Dulcert is dropped, so the rose is its grid cell\'s');
   assert.deepEqual([4, 5.9, 6, 7.9, 8, 10].map(at), ['PT0N000E0000', 'PT0N000E0000', 'PT1N000E0000', 'PT1N000E0000', 'PT2N000E0000', 'PT3N000E0000']);
 });
 
@@ -257,4 +261,36 @@ test('a ray across the antimeridian is cut at the meridian, not swept across a s
   // the ray keeps every point and gains the two on the meridian
   const kept = cutOut(ray.slice(1)).flat().length;
   assert.equal(kept, 5);
+});
+
+// #199: where curated charts overlap, the `overlap` rule says which are kept and how their lines run. Each rule gives
+// its own set at the Azores (zoom 2.82, in the world band) and at the issue's view 2 (zoom 4.33, the first band).
+test('overlap rules: smallest, fit, all cut and all uncut each keep their own charts', () => {
+  const azores = { zoom: 2.82, lat: 38.43, lon: -25.468 }, view2 = { zoom: 4.33, lat: 39.525, lon: -26.502 };
+  const kept = (view, overlap) => sheetsFor(view, { curated: true, overlap }).map((s) => [s.name, (s.shadow ?? []).length]);
+  assert.deepEqual(OVERLAP_RULES, ['smallest', 'fit', 'cut', 'uncut']);
+  assert.deepEqual(kept(azores, 'smallest'), [['The world', 0]], 'smallest: the world band is the planisphere alone');
+  assert.deepEqual(kept(azores, 'fit'), [['The known world of 1375', 0], ['The world', 1]], 'fit: the Catalan Atlas is 0.9 windows wide at 2.82, and shadows the world ring');
+  assert.deepEqual(kept(azores, 'cut'), [['Europe and the Mediterranean', 0], ['The known world of 1375', 1], ['The Atlantic and the Americas', 2], ['The world', 3]], 'cut: every chart seen, each shadowed by the smaller ones over it');
+  assert.deepEqual(kept(azores, 'uncut'), [['Europe and the Mediterranean', 0], ['The known world of 1375', 0], ['The Atlantic and the Americas', 0], ['The world', 0]], 'uncut: every chart in full');
+  assert.deepEqual(sheetsFor(azores, { curated: true }), sheetsFor(azores, { curated: true, overlap: 'fit' }), 'fit is the default');
+  assert.deepEqual(sheetsFor(azores, { curated: true, overlap: 'nonsense' }), sheetsFor(azores, { curated: true, overlap: 'fit' }), 'an unknown rule reads as the default');
+  const curated = (view, overlap) => kept(view, overlap).filter(([name]) => name !== 'The world' && !name.startsWith('PT')).map(([name]) => name);
+  assert.deepEqual(curated(view2, 'smallest'), [], 'the Carte Pisane\'s east is the smallest world sheet and lies out of view');
+  assert.deepEqual(curated(view2, 'fit'), ['Europe and the Mediterranean'], 'Dulcert is 1.2 windows wide at 4.33');
+  assert.deepEqual(curated(view2, 'cut').sort(), curated(view2, 'uncut').sort());
+  assert.ok(curated(view2, 'cut').length >= 3);
+  assert.equal(roseSheet(2.82, 'fit').name, 'The known world of 1375');
+  assert.equal(roseSheet(2.82, 'smallest').name, 'The world');
+  assert.equal(roseSheet(4.33, 'uncut').name, 'Europe and the Mediterranean', 'of the charts over the rose, the smallest');
+});
+
+test('cutOut cuts a line where it crosses an extent, and nowhere without one', () => {
+  const line = [[-30, 40], [0, 40], [30, 40]];
+  assert.deepEqual(cutOut(line), [line]);
+  assert.deepEqual(cutOut(line, []), [line]);
+  const [a, b] = cutOut(line, [{ west: -10, east: 10, south: 30, north: 50 }]);
+  assert.deepEqual(a.map(([x]) => Math.round(x)), [-30, -10]);
+  assert.deepEqual(b.map(([x]) => Math.round(x)), [10, 30]);
+  assert.deepEqual(cutOut(line, [{ west: -10, east: 10, south: 50, north: 60 }]), [line], 'an extent beside the line cuts nothing');
 });

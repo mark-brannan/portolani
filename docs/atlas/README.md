@@ -168,14 +168,15 @@ between them keeps the roses still. The world band is the exception again: at th
 is one page, so it takes every curated sheet from the planispheres down to the Carte Pisane's two
 circles.
 
-Where curated sheets overlap in one band, the sheet of smaller area (its extent in square degrees)
-wins over the ground it covers, and the larger sheet's network, its small roses and its beasts are
-placed only where no smaller sheet lies: the Carte Pisane's circles over Dulcert's, Dulcert's over
-the Catalan Atlas's, and in the Atlantic the Catalan Atlas (7,250 square degrees) over Juan de la
-Cosa (10,200) between 25°W and 20°E, which keeps the Catalan rose off Morocco and leaves de la
-Cosa's rose in the open Atlantic untouched. The Carte Pisane's two sheets share their overlap, as
-the original's two circles did. A view therefore meets one network, one set of beasts and roses,
-plus its neighbours' lines inside the reach margin.
+Where curated sheets overlap in one band, a rule chosen in the settings drawer (`overlap=` in the
+link) says which are drawn (#199). *Fit*, the default, draws only the sheet closest to one window
+wide at the view's zoom: the Catalan Atlas at zoom 2.8, Dulcert at 4.3, the Carte Pisane's circles
+at 6. *Smallest* draws only the sheet of smaller area, and below zoom 4 the planisphere alone. Under
+either, no two drawn sheets overlap, the grid holds the others' ground, and a view meets one
+network, one set of beasts and roses, plus its neighbours' lines inside the reach margin. *All, cut*
+draws every sheet, each line stopping at the edge of a smaller sheet over it; *all, uncut* draws
+every sheet in full. A line is never cut under any other rule, and a larger sheet's small roses and
+beasts are placed only where no smaller drawn sheet lies, under every rule but *all, uncut*.
 
 The Carta Marina is the odd one out: it is a printed map of the north, not a navigator's chart, and
 Olaus's roses and lines were decoration. It is in the list because its ornaments are already the

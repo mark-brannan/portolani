@@ -3,13 +3,13 @@
 // ornaments slide with it, held to the earth; they are placed again when it stops. A row of six instruments
 // at the top right opens one drawer each, one at a time: the settings behind the rose, so the map has the
 // window, the charts, the points of interest, Go, the voyages and the anchorages. The view and the style are kept in the URL hash, e.g.
-// #map=zoom/lat/lon&projection=miller&sprites=s:serpent-a,v:kraken,v:rose-aguiar,p:tower&townsize=rank&names=0&rhumb=0&scale=chevron&scaleborder=blank&continents=5&regions=latin&regionszoom=7&land=green&islands=1&rivers=aguiar&lakes=marina&mountains=ink&trees=ink&seas=1&autotitle=0&title=Mare+Nostrum&ink=5a1a1a&parchment=eee&density=1.5;
+// #map=zoom/lat/lon&projection=miller&overlap=cut&sprites=s:serpent-a,v:kraken,v:rose-aguiar,p:tower&townsize=rank&names=0&rhumb=0&scale=chevron&scaleborder=blank&continents=5&regions=latin&regionszoom=7&land=green&islands=1&rivers=aguiar&lakes=marina&mountains=ink&trees=ink&seas=1&autotitle=0&title=Mare+Nostrum&ink=5a1a1a&parchment=eee&density=1.5;
 // a setting left at its default is left out, `sprites` too (keys with the pack shortened, v: s: p:); `mountains` is `ink`
 // or `off` (colour is the default); the hills are the Catalan sprites in `sprites`. `continents` and `regionszoom` are the zoom
 // they are drawn down from (0 off, the top always).
 // Older links naming a `rendering` (or `pack`), `rose`, `monster`, `town` and `kinds` open as the
 // selection those chose, and are written back in the new form.
-import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, OVERLAP_RULES, DEFAULT_OVERLAP, scaleRect, W, H } from './scene.mjs';
 import { POIS } from './pois.mjs';
 import { fold, bestPlace } from './placename.mjs';
 
@@ -41,7 +41,7 @@ const canvas = $('map'), ctx = canvas.getContext('2d');
 // cards beside the map, not on the sea.
 const phone = matchMedia('(max-width: 520px)');
 
-const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: 5, regions: 'latin', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyage: 'off', cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER };
+const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: 5, regions: 'latin', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyage: 'off', cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER, overlap: DEFAULT_OVERLAP };
 
 // ---------------------------------------------------------------- the sprites on offer
 
@@ -103,6 +103,8 @@ function styleFromHash() {
     scalePos: CORNERS.includes(q.get('scalepos')) ? q.get('scalepos') : DEFAULTS.scalePos,
     townSize: TOWN_SIZES.includes(q.get('townsize')) ? q.get('townsize') : DEFAULTS.townSize,
     placement: parsePlacement(q.get('placement')).text,
+    // how curated charts that overlap are drawn: one of OVERLAP_RULES (atlas.mjs)
+    overlap: OVERLAP_RULES.includes(q.get('overlap')) ? q.get('overlap') : DEFAULTS.overlap,
     // a voyage overlay by its id (data/voyages/<id>.json); one the site lacks draws nothing
     voyage: /^[a-z][a-z0-9-]*$/.test(q.get('voyage') ?? '') ? q.get('voyage') : DEFAULTS.voyage,
   };
@@ -141,6 +143,7 @@ function writeHash() {
   if (st.mountains !== DEFAULTS.mountains) q.set('mountains', st.mountains);
   if (st.trees !== DEFAULTS.trees) q.set('trees', st.trees);
   if (st.placement) q.set('placement', st.placement);
+  if (st.overlap !== DEFAULTS.overlap) q.set('overlap', st.overlap);
   if (st.voyage !== DEFAULTS.voyage) q.set('voyage', st.voyage);
   if (st.seaTint) q.set('seas', '1');
   if (st.scaleBorder !== DEFAULTS.scaleBorder) q.set('scaleborder', st.scaleBorder);
@@ -277,7 +280,21 @@ const TREE_GLYPHS = {
   marina: svg(`<path d="M14 13v3" ${stroke('#3b2a1a', 1.2)}/><path d="${CROWN}" fill="#6b8a4a" stroke="#3b2a1a" stroke-width="1" stroke-linejoin="round"/>`),
   ink: svg(`<path d="M14 13v3" ${stroke('currentColor', 1.2)}/><path d="${CROWN}" ${stroke('currentColor', 1)}/><path d="M11 9l1 1M14 7l1 1M16 10l1 1" ${stroke('currentColor', 0.6)}/>`),
 };
+// Two charts, the smaller in the larger's corner, each with its hub and rays: what each overlap rule keeps and draws.
+const OVERLAP_GLYPHS = (() => {
+  const chart = (x, y, w, h, faint) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" ${stroke('currentColor', 1)}${faint ? ' opacity=".3"' : ''}/>`;
+  const big = (faint) => chart(2, 2, 24, 14, faint), small = (faint) => chart(14, 8, 12, 8, faint);
+  const bigRays = (cut) => `<path d="M9 9 2 2M9 9 26 2M9 9 2 16M9 9 ${cut ? '14 11.1' : '26 16'}M9 9H${cut ? 14 : 26}M9 9H2" ${stroke('currentColor', 0.6)}/>`;
+  const smallRays = `<path d="M20 12 14 8M20 12 26 8M20 12 26 16M20 12 14 16M20 12H14M20 12H26" ${stroke('currentColor', 0.6)}/>`;
+  return {
+    smallest: svg(big(true) + small() + smallRays),
+    fit: svg(big() + bigRays(false) + small(true)),
+    cut: svg(big() + small() + bigRays(true) + smallRays),
+    uncut: svg(big() + small() + bigRays(false) + smallRays),
+  };
+})();
 const CHOICES = {
+  overlap: [['smallest', 'Smallest', 'only the smallest of the charts that overlap'], ['fit', 'Fit', 'the chart nearest one window wide'], ['cut', 'All, cut', 'every chart, its lines stopping at a smaller chart\'s edge'], ['uncut', 'All, uncut', 'every chart in full']].map(([value, label, note]) => [value, label, note, OVERLAP_GLYPHS[value]]),
   projection: [['mercator', 'Mercator', 'rhumb lines straight'], ['plate-carree', 'Plate carrée', 'equal degrees'], ['miller', 'Miller', 'poles tamed'], ['equal-area', 'Equal-area', 'Gall–Peters'], ['orthographic', 'Globe', 'orthographic'], ['azimuthal-equidistant', 'Azimuthal equidistant', 'true from the centre'], ['stereographic', 'Stereographic', 'the polar chart']].map(([value, label, note = '']) => [value, label, note, PROJECTION_GLYPHS[value]]),
   regions: [['latin', 'Latin', 'Hispania'], ['english', 'English', 'Iberia']],
   titleMode: [['auto', 'Automatic', 'what the view shows'], ['custom', 'Custom']],
@@ -366,6 +383,7 @@ function showStyle() {
   $('names').checked = style.names; $('rhumb').checked = style.rhumb; $('scale').value = style.scale; $('scaleBorder').value = style.scaleBorder;
   $('land').value = style.land; $('islands').value = style.islands ? 'on' : 'off'; $('seaTint').value = style.seaTint ? 'on' : 'off';
   $('rivers').value = style.rivers; $('lakes').value = style.lakes; $('trees').value = style.trees;
+  $('overlap').value = style.overlap;
   $('mountains').value = style.mountains; $('hills').value = CATALAN_KEYS.some((k) => selection.has(k)) ? 'catalan' : 'off';
   $('continentsZoom').value = style.continentsZoom; $('continentsOut').textContent = zoomLabel(style.continentsZoom);
   $('regions').value = style.regions; $('regionsZoom').value = style.regionsZoom; $('regionsOut').textContent = zoomLabel(style.regionsZoom);
@@ -393,6 +411,7 @@ function readControls() {
     // checked, by metro area; a link's townsize=population is kept until the box is touched
     townSize: $('townSize').checked ? (style.townSize === 'rank' ? 'area' : style.townSize) : 'rank',
     placement: style.placement, // chosen by the placement chips below
+    overlap: $('overlap').value,
     cartouchePos: style.cartouchePos, scalePos: style.scalePos, // set by dragging the cartouche or the scale bar
   };
   // hills are the Catalan sprites: the chip selects all of them or none
@@ -947,7 +966,7 @@ locate.addEventListener('click', () => {
   }, { timeout: 15000, maximumAge: 60000 });
 });
 
-for (const id of ['projection', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'scaleBorder', 'land', 'islands', 'seaTint', 'rivers', 'lakes', 'trees', 'mountains', 'hills', 'continentsZoom', 'regions', 'regionsZoom', 'titleMode', 'townSize']) $(id).addEventListener('input', readControls);
+for (const id of ['overlap', 'projection', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'scaleBorder', 'land', 'islands', 'seaTint', 'rivers', 'lakes', 'trees', 'mountains', 'hills', 'continentsZoom', 'regions', 'regionsZoom', 'titleMode', 'townSize']) $(id).addEventListener('input', readControls);
 let typing = 0; // a typed title is placed when the typing pauses, not on every key: a placement takes up to a few hundred ms
 $('title').addEventListener('input', () => { clearTimeout(typing); typing = setTimeout(readControls, 400); });
 addEventListener('hashchange', () => { view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); showVoyage(); render(); });
