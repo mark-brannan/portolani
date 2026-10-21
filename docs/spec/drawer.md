@@ -215,7 +215,7 @@ Feature: Continents  (slider `#continentsZoom` 0..15 step 1; hash `continents`, 
     Given the chart at `#continents=99`
     When the page loads
     Then the slider reads 15 (`zoomOf` clamps to MAX_ZOOM and rounds)
-    # The layer ends at N + 0.5 (`zoomEnd`, scene.mjs:2626; drawn while zoom < N + 0.5): at default 5, the default view (zoom 5.48) still shows continents. That half zoom is by ruling (Solace, 2026-10-14: continents stay visible all the way through 5.5), so only the label "zoom N and out" lags it; it is not a code mismatch.
+    # The layer ends at N + 0.5 (`zoomEnd`, scene.mjs:2626; drawn while zoom < N + 0.5): at default 5, the default view (zoom 5.48) still shows continents. That half zoom is deliberate (continents stay visible through 5.5), so only the label "zoom N and out" lags it; not a code mismatch.
     # Mismatch: setting the slider to 1 writes `continents=1`, which the reader treats as an older link's checked box and maps to the default 5 (page.js:74, `v === '1' ? dflt`). The value 1 does not round-trip.
 
 Feature: Regions language  (chips `#regions`, hash `regions`, default `latin`, values `latin|english`; legacy `off`) [verified page.js:81-83, 280]
@@ -308,7 +308,7 @@ Feature: Scale bar border  (chips `#scaleBorder`, hash `scaleborder`, default `b
   Scenario: bordered is the default
     Given the chart at the same view
     When the page loads with no `scaleborder` key
-    Then the bar sits on an opaque parchment repaint with a double red rule (`bordered`, ruled the default by Solace 2026-10-14; `transparent` is not)
+    Then the bar sits on an opaque parchment repaint with a double red rule (`bordered` is the default; `transparent` is not)
 
 Feature: Ink  (colour input `#ink`, hash `ink`, 3 or 6 hex digits without `#`, default `3b2a1a`) [verified page.js:73-77, 148]
   Scenario: round-trip
