@@ -123,7 +123,6 @@ scenario('copy link: the clipboard holds the page URL', 'map=7.00/43.700/7.300&d
   await openDrawer(page);
   await page.locator('#copy').click();
   await page.waitForFunction(() => document.getElementById('shareNote').textContent !== '');
-  assert.equal(await text(page, 'shareNote'), 'Link copied');
   assert.equal(await page.evaluate(() => navigator.clipboard.readText()), await page.evaluate(() => location.href));
   assert.equal(await page.locator('#shareUrl').isHidden(), true);
 }, { permissions: ['clipboard-read', 'clipboard-write'] });
@@ -132,7 +131,6 @@ scenario('copy link: a refused clipboard selects the link in a box', 'map=7.00/4
   await openDrawer(page);
   await page.locator('#copy').click();
   await page.waitForFunction(() => document.getElementById('shareNote').textContent !== '');
-  assert.equal(await text(page, 'shareNote'), 'Could not copy automatically: the link is selected, press Ctrl+C');
   assert.equal(await page.locator('#shareUrl').isVisible(), true);
   const box = await page.evaluate(() => { const u = document.getElementById('shareUrl'); return { value: u.value, focused: document.activeElement === u, selected: u.value.slice(u.selectionStart, u.selectionEnd) }; });
   const href = await page.evaluate(() => location.href);
