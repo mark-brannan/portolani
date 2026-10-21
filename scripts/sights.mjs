@@ -28,7 +28,7 @@ export const SIGHT_TILES = {
   Suez: { date: 'the canal, 1869', text: 'The canal, opened in 1869, cut the voyage from London to Bombay by some 4,000 miles and steamships took it, leaving the Cape route to sailing ships.' },
   Panama: { date: 'the canal, 1914', text: 'The canal, opened in 1914, saved ships the long way round Cape Horn. The Spanish had once carried gold across the isthmus on mule-back, and Drake raided the route.' },
   Singapore: { date: '1819', text: 'Raffles founded a British trading post here in 1819, beside a Malay village at the river mouth, and it became one of the world\'s busiest ports.' },
-  'Hong Kong': { date: '1841', text: 'Ceded to Britain in 1842 after the First Opium War, fought to keep British opium selling into China, a fishing coast became a free port within a few years.' },
+  'Hong Kong': { date: '1841–42', text: 'Britain occupied the island in 1841 and took it by treaty in 1842, at the end of the First Opium War. That war was fought to keep British opium selling into China. A fishing coast became a free port within a few years.' },
   Shanghai: { date: 'treaty port, 1843', text: 'Opened to foreign trade by the treaty that ended the First Opium War, on Britain\'s terms, Shanghai grew in a few decades from a county town into China\'s greatest port.' },
   Rotterdam: { date: 'the Nieuwe Waterweg, 1872', text: 'A new cut to the North Sea, finished in 1872, took ocean ships to Rotterdam without the silting of the old channels and made it the gateway of the Rhine.' },
   // remote islands
