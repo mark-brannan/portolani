@@ -535,6 +535,7 @@ async function render() {
     ground = { world, coarse, bg, voyage: scene.voyage, anchored: anchorScene(scene, data), cards: { cartouche: kinds.includes('cartouche') ? scene.cartouche : null, scaleSprite: scene.scaleSprite, scale: style.scale, bg } };
     if (style.autoTitle) $('title').value = scene.cartouche.title; // the box shows what the cartouche letters, and cannot be edited
     placed = view;
+    hideTile(); // its mark may be gone: another voyage, or none
     cancelAnimationFrame(frame); frame = 0; // a moving frame still queued would paint over the scene
     const t1 = performance.now();
     ctx.clearRect(0, 0, W, H);
@@ -567,7 +568,7 @@ function drawCards(scaleOnly = false) { // scaleOnly: a moving frame, where only
     drawScaleCard(cardScale.getContext('2d'), viewProjection(view), c.bg, c.scale, c.scaleSprite);
   }
 }
-addEventListener('resize', () => drawCards()); // the cards' width follows the window, in rotation too
+addEventListener('resize', () => { drawCards(); hideTile(); }); // the cards' width follows the window, in rotation too, and the tile was placed in its px
 phone.addEventListener('change', () => { drawCards(); if (ground) render(); }); // the sheet is placed again with or without them
 
 // ---------------------------------------------------------------- the drawers
@@ -734,7 +735,7 @@ function fillTile(t) {
   const head = part('tile-title', t.title);
   const meta = part('tile-date', [t.date, t.alternative ? 'another account' : null].filter(Boolean).join(' · '));
   const text = part('tile-text', t.text);
-    const source = part('tile-source', t.source && `Source: ${t.source}`);
+  const source = part('tile-source', t.source && `Source: ${t.source}`);
   tileEl.replaceChildren(close, ...[head, meta, text, source].filter(Boolean));
   tileEl.setAttribute('aria-label', t.title ?? 'Point of interest');
 }
