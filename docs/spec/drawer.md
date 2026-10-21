@@ -47,7 +47,7 @@ Feature: Density  (hash `density`, default `1`, slider 0..2 step 0.25) [verified
     When the page loads
     Then density is 1 and the first write omits `density`
     # Mismatch: the hash accepts any real in [0,2] (`density=1.3`), the slider snaps to 1.25 on display while the style stays 1.3 until any control is touched (`readControls` then reads the slider's 1.25). Also `#density=` (empty) reads as 0, because `Number('')` is 0 [page.js:77].
-    # Mismatch: label reads "Density (monsters, ships, towns, hills)"; the same number also sets the ornament budget that roses share (`ROSE_SHARE`, scene.mjs:174 at main; docs/README.md family 2).
+    # Mismatch: label reads "Density (monsters, ships, towns, hills)"; the same number also sets the ornament budget that roses share (`ROSE_SHARE`, scene.mjs:174 at main).
 
 Feature: Monsters and ships pickers  (hash `sprites`, list of `pack:id`, pack letters `v`=vivid `s`=scanned `p`=plain `d`=debry; omitted when equal to the default selection) [verified page.js:55-60, 107-111, 119-122, 187-197; scene.mjs:775]
   Scenario: one sprite off, by item
@@ -142,7 +142,7 @@ Feature: Mountains  (chips `#mountains`, hash `mountains`, default `colour`, val
   Scenario: ink
     Given the chart at `#map=6.00/46.500/8.000`
     When the user clicks "Ink" in Mountains
-    Then the hash gains `mountains=ink` and range hatching is ink-only, no ochre wash (`engraved` has `light: land`, `shade: null`, relief.mjs:299)
+    Then the hash gains `mountains=ink` and range hatching is ink-only, no ochre wash (`engraved` has `light: land`, `shade: null`, relief.mjs:300 at main)
   Scenario: off
     Given the chart at the same view
     When the user clicks "Off"
@@ -287,7 +287,7 @@ Feature: Lakes  (chips `#lakes`, hash `lakes`, default `marina`, values `off|agu
     Given the chart at `#map=7.00/45.700/9.300`
     When the user clicks "Lozenges"
     Then the hash gains `lakes=aguiar` and Como draws as a diamond, while Maggiore, about 150 px long at this zoom, keeps its true shape (estimated from `LOZENGE_PX = 120`, water.mjs:14; not rendered)
-    # lozenge vs true shape switches at 120 px (docs/README.md family 6), not a control
+    # lozenge vs true shape switches at 120 px, not a control
 
 Feature: Scale bar  (chips `#scale`, hash `scale`, default `genoese`, values `off|chequer|chevron|ribbon|beads|ruled|genoese`) [verified page.js:96, 286; scene.mjs:2077-2170]
   Scenario: style
@@ -319,7 +319,7 @@ Feature: Ink  (colour input `#ink`, hash `ink`, 3 or 6 hex digits without `#`, d
     Given the chart at `#ink=f00`, then at `#ink=zzz`
     When each loads
     Then `#ink` shows `#ff0000`, then the default `#3b2a1a`
-    # Mismatch: ink colours the lines and lettering; the wind reds and greens, rose colours, and pigments in the chart's period palette do not follow it (docs/README.md family 5).
+    # Mismatch: ink colours the lines and lettering; the wind reds and greens, rose colours, and pigments in the chart's period palette do not follow it.
 
 Feature: Parchment  (colour input `#parchment`, hash `parchment`, default `e9d8b4`) [verified page.js:73-78, 149; scene.mjs:2626-2631]
   Scenario: round-trip
