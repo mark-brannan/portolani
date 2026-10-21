@@ -11,7 +11,7 @@
 // selection those chose, and are written back in the new form.
 // For a while, `debug=sheets[,rings]` and `tune=name:value,...` carry the under-the-hood section
 // (docs/atlas/under-the-hood.md), off by default.
-import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE } from './scene.mjs';
 import { ORIGINS } from './atlas.mjs';
 import { POIS } from './pois.mjs';
 import { fold, bestPlace } from './placename.mjs';
@@ -589,9 +589,10 @@ async function render() {
       debug: parseDebug(style.debug).debug, tune: parseTune(style.tune).tune,
     });
     if (me !== run) return; // a newer change or a move superseded this one
-    ground = { world, coarse, bg, anchored: anchorScene(scene, data), cards: { cartouche: kinds.includes('cartouche') ? scene.cartouche : null, scaleSprite: scene.scaleSprite, scale: style.scale, bg } };
+    ground = { world, coarse, bg, voyage: scene.voyage, anchored: anchorScene(scene, data), cards: { cartouche: kinds.includes('cartouche') ? scene.cartouche : null, scaleSprite: scene.scaleSprite, scale: style.scale, bg } };
     if (style.autoTitle) $('title').value = scene.cartouche.title; // the box shows what the cartouche letters, and cannot be edited
     placed = view;
+    hideTile(); // its mark may be gone: another voyage, or none
     cancelAnimationFrame(frame); frame = 0; // a moving frame still queued would paint over the scene
     const t1 = performance.now();
     ctx.clearRect(0, 0, W, H);
@@ -624,7 +625,7 @@ function drawCards(scaleOnly = false) { // scaleOnly: a moving frame, where only
     drawScaleCard(cardScale.getContext('2d'), viewProjection(view), c.bg, c.scale, c.scaleSprite);
   }
 }
-addEventListener('resize', () => drawCards()); // the cards' width follows the window, in rotation too
+addEventListener('resize', () => { drawCards(); hideTile(); }); // the cards' width follows the window, in rotation too, and the tile was placed in its px
 phone.addEventListener('change', () => { drawCards(); if (ground) render(); }); // the sheet is placed again with or without them
 
 // ---------------------------------------------------------------- the drawers
@@ -699,6 +700,7 @@ function moved(next, flying = false) {
   if (next.zoom === view.zoom && next.lon === view.lon && next.lat === view.lat) return; // e.g. wheel at a zoom bound
   if (!flying) pinTitle = null; // a drag or a wheel leaves the place flown to
   view = next;
+  hideTile();
   run++; // a placement still in flight is for a view already left
   clearTimeout(settle);
   if (!ground || frame) return;
@@ -724,6 +726,7 @@ const toCanvas = (cx, cy) => {
 };
 
 const pointers = new Map(); // pointerId -> [x, y] in canvas px
+let tap = null; // a lone pointer's start, [x, y] in canvas px, until it moves far enough to be a drag
 const pinch = () => {
   const [[ax, ay], [bx, by]] = pointers.values();
   return { d: Math.hypot(bx - ax, by - ay), x: (ax + bx) / 2, y: (ay + by) / 2 };
@@ -757,6 +760,8 @@ canvas.addEventListener('pointerdown', (e) => {
   }
   canvas.setPointerCapture(e.pointerId);
   pointers.set(e.pointerId, toCanvas(e.clientX, e.clientY));
+  tap = pointers.size === 1 ? pointers.get(e.pointerId) : null;
+  hideTile();
   clearTimeout(settle);
 });
 canvas.addEventListener('pointermove', (e) => {
@@ -764,6 +769,7 @@ canvas.addEventListener('pointermove', (e) => {
   if (!pointers.size) { canvas.style.cursor = cardAt(toCanvas(e.clientX, e.clientY)) ? 'grab' : ''; return; }
   if (!pointers.has(e.pointerId)) return;
   const p = toCanvas(e.clientX, e.clientY);
+  if (tap && Math.hypot(p[0] - tap[0], p[1] - tap[1]) > cssPx(TAP_SLOP)) tap = null;
   if (pointers.size === 2) {
     const before = pinch();
     pointers.set(e.pointerId, p);
@@ -785,8 +791,12 @@ const lift = (e) => {
   if (!pointers.delete(e.pointerId)) return;
   if (pointers.size === 0) stopped();
 };
-canvas.addEventListener('pointerup', lift);
-canvas.addEventListener('pointercancel', lift);
+canvas.addEventListener('pointerup', (e) => {
+  const at = tap; tap = null;
+  lift(e);
+  if (at && view === placed) showTileAt(at);
+});
+canvas.addEventListener('pointercancel', (e) => { tap = null; lift(e); });
 canvas.addEventListener('wheel', (e) => {
   e.preventDefault();
   cancelAnimationFrame(flight); // the wheel takes over from a flight
@@ -795,6 +805,44 @@ canvas.addEventListener('wheel', (e) => {
   moved(zoomView(view, 2 ** (-px / 300), x, y));
   stopped(300);
 }, { passive: false });
+
+// ---------------------------------------------------------------- the tile
+
+// A click or tap on a point of interest opens a small tile beside it with what there is to know: its heading,
+// date, text and source. Nothing is lettered beside the mark itself. Today the points of interest are the
+// voyages' events (scripts/scene.mjs voyageMarks); the tile takes any { title, date, text, source }.
+// It shuts on the next touch of the map, on Esc, on its own close button, or when the map moves.
+const TAP_SLOP = 8, TAP_REACH = 22; // CSS px, so a finger is as forgiving on a phone's small canvas as a mouse on a wide one: a touch that stays within the slop is a tap; a mark takes a tap within the reach
+const cssPx = (n) => n * (W / canvas.getBoundingClientRect().width); // CSS px to the canvas px the view moves in
+const tileEl = $('tile');
+function hideTile() { tileEl.hidden = true; }
+function fillTile(t) {
+  const part = (cls, text) => { if (!text) return null; const p = document.createElement('p'); p.className = cls; p.textContent = text; return p; };
+  const close = document.createElement('button');
+  close.type = 'button'; close.className = 'tile-close'; close.setAttribute('aria-label', 'Close'); close.textContent = '×';
+  close.addEventListener('click', hideTile);
+  const head = part('tile-title', t.title);
+  const meta = part('tile-date', [t.date, t.alternative ? 'another account' : null].filter(Boolean).join(' · '));
+  const text = part('tile-text', t.text);
+  const source = part('tile-source', t.source && `Source: ${t.source}`);
+  tileEl.replaceChildren(close, ...[head, meta, text, source].filter(Boolean));
+  tileEl.setAttribute('aria-label', t.title ?? 'Point of interest');
+}
+function showTileAt([x, y]) {
+  const marks = ground?.voyage ? voyageMarks(ground.voyage, viewProjection(placed), { x0: 0, y0: 0, x1: W, y1: H }) : [];
+  let best = null, bestD = Infinity;
+  for (const m of marks) { const d = Math.hypot(m.x - x, m.y - y); if (d <= Math.max(cssPx(TAP_REACH), m.h / 2) && d < bestD) { best = m; bestD = d; } }
+  if (!best) return;
+  fillTile(best.tile);
+  // beside the mark, in client px: below and to its right, flipped inside the window where that would run off it
+  const r = canvas.getBoundingClientRect(), cx = r.left + best.x * (r.width / W), cy = r.top + best.y * (r.height / H);
+  tileEl.hidden = false;
+  const w = tileEl.offsetWidth, h = tileEl.offsetHeight, gap = best.h / 2 + 8;
+  const left = cx + gap + w > innerWidth - 8 ? cx - gap - w : cx + gap;
+  const top = cy + h > innerHeight - 8 ? cy - h : cy - 8;
+  tileEl.style.left = `${Math.max(8, left)}px`; tileEl.style.top = `${Math.max(8, top)}px`;
+}
+addEventListener('keydown', (e) => { if (e.key === 'Escape') hideTile(); });
 
 // ---------------------------------------------------------------- going somewhere
 
