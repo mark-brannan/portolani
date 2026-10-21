@@ -2213,6 +2213,10 @@ const VOYAGE_HALO = 3.3, VOYAGE_END = 2.8, SKULL_H = 16, SKULL_ALT_H = 13;
 // `rect` culls the legs (padded, so a stroke at the edge survives); `eventRect` is the view itself: a mark is
 // drawn only when the whole of it is in view, so a tile never opens on half a mark.
 // Every track is drawn before any mark, so no line crosses a skull.
+function drawVoyages(g, voyages, proj, rect, eventRect = rect) {
+  for (const v of voyages ?? []) drawTrack(g, v, proj, rect);
+  for (const v of voyages ?? []) drawEvents(g, v, proj, eventRect);
+}
 // A small ringed mark on each note's figure while the Carta Marina is laid over the map; no lettering, a click opens its tile (notes.mjs)
 function drawNotes(g, overlay, proj, rect) {
   for (const m of noteMarks(overlay, proj, rect)) {
@@ -2223,10 +2227,6 @@ function drawNotes(g, overlay, proj, rect) {
     g.beginPath(); g.arc(m.x, m.y, 2, 0, 2 * Math.PI); g.fill();
     g.restore();
   }
-}
-function drawVoyages(g, voyages, proj, rect, eventRect = rect) {
-  for (const v of voyages ?? []) drawTrack(g, v, proj, rect);
-  for (const v of voyages ?? []) drawEvents(g, v, proj, eventRect);
 }
 function drawTrack(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH }, proj, rect) {
   g.save();
