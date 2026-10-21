@@ -4,10 +4,10 @@
 
 - The hash: `location.hash`, rewritten with `history.replaceState` (no history entry) by `writeHash` [page.js:119]. A setting at its default is left out. The hash is written when the map stops (drag lift, 300 ms after the last wheel event, flight landing), not while it moves [page.js:642].
 - Control state: chips carry `aria-checked`; thumbs carry `aria-pressed`; `#density`, `#continentsZoom`, `#regionsZoom` are range inputs; `#title` shows the cartouche's own lettering while Automatic is on [page.js:355-372, 540].
-- `#status` text `z<zoom>: load N ms, placement + parchment N ms, draw N ms` after each placement [page.js:540].
+- `#status` text `z<zoom>: load N ms, placement + parchment N ms, draw N ms (total N ms)` after each placement [page.js:540].
 - Canvas pixels of `#map` (1600 x 1000 backing store) for visible effects.
 - Default view when the hash has no valid `map`: `{ zoom 5.48, lat 40.265, lon 7 }` (measured: `DEFAULT_VIEW`, scene.mjs:304, node import).
-- Hash key order as written: `map, projection, sprites, townsize, names, rhumb, continents, regions, regionszoom, autotitle, title, land, islands, rivers, lakes, mountains, trees, placement, seas, scaleborder, scale, density, ink, parchment` [page.js:119-146].
+- Hash key order as written: `map, projection, sprites, townsize, names, rhumb, continents, regions, regionszoom, autotitle, title, land, islands, rivers, lakes, mountains, trees, placement, voyage, seas, scaleborder, scale, cartouche, scalepos, density, ink, parchment` [page.js:119-146; `voyage` from #205, `cartouche` and `scalepos` from #219, none of them specified here yet].
 
 ---
 

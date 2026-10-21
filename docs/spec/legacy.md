@@ -42,7 +42,7 @@ Feature: Legacy hash keys, rewritten on load  (`rendering`, `pack`, `rose`, `mon
   Scenario: an older `pack` link becomes a sprites list
     Given the chart at `#pack=plain`
     When the page loads
-    Then the first rewrite drops `pack` and gains `sprites=` holding `p:` keys (`LEGACY_PACK`: `all, vivid` -> vivid; `catalan, carta-marina` -> scanned; `plain` -> plain) (unverified: the exact key set)
+    Then the first rewrite drops `pack` and gains `sprites=p:rose,p:cartouche` (no towers; `LEGACY_PACK`: `all, vivid` -> vivid; `catalan, carta-marina` -> scanned; `plain` -> plain; measured with `chooseSprites`)
   Scenario: `sprites` wins
     Given the chart at `#sprites=s:serpent-a&pack=plain`
     When the page loads
@@ -63,4 +63,4 @@ Feature: Legacy hash keys, read but not rewritten at load  (`relief`, `redsea`, 
     Given the chart at `#relief=engraved`
     When the page loads
     Then `location.hash` still holds `relief=engraved` (not in `LEGACY_KEYS`); touching any control writes the new form (`mountains=ink`) and drops `relief`
-    # Mismatch: the file header says older links "are written back in the new form"; that covers only the six `LEGACY_KEYS`, not `relief`, `redsea` or `land=islands`.
+    # The page.js header names only the six `LEGACY_KEYS` as rewritten; `relief`, `redsea` and `land=islands` are read but left in place, which the header does not claim otherwise.

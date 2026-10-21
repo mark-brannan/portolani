@@ -2,15 +2,19 @@
 
 One Feature per control.
 
-Feature: Drawer open and close  (rose button `#open`, `#close`, Esc) [verified page.js:575-598]
+Feature: Drawer open and close  (rose button `#open`, one of six instrument buttons in `#where`; shut by `#open` again, Esc, a press outside it or focus leaving it; there is no close button) [verified page.js:593-612 at main]
   Scenario: open, then Esc
     Given the chart with the drawer shut (`#open` has `aria-expanded=false`)
     When the user clicks `#open`, then presses Escape
     Then `#drawer` gains the class `open` and `aria-expanded=true`, then both revert and focus returns to `#open`
+  Scenario: one drawer at a time
+    Given the settings drawer open
+    When the user clicks another instrument (`#charts`, `#sights`, `#go`, `#voyages`, `#anchor`)
+    Then the settings drawer shuts and that one opens
   Scenario: a map touch shuts it on a wide screen only
     Given a viewport wider than 520 px and the drawer open
     When the user presses on the map
-    Then the drawer shuts; at 520 px or narrower it stays open (so a control's effect is seen) [page.js:598]
+    Then the drawer shuts; at 520 px or narrower a press on the canvas leaves it open (so a control's effect is seen), though any other outside press or focus-out still shuts it [page.js:607-610 at main]
 
 Feature: Projection  (hash `projection`, default `mercator`, 7 values: `mercator, plate-carree, miller, equal-area, orthographic, azimuthal-equidistant, stereographic`) [verified page.js:68-71, scene.mjs:222, 312]
   Scenario: chip round-trips
@@ -24,7 +28,7 @@ Feature: Projection  (hash `projection`, default `mercator`, 7 values: `mercator
   Scenario: the globe cuts at the horizon
     Given the chart at `#map=2.00/30.000/10.000&projection=orthographic`
     When the page loads
-    Then the corners of the canvas are outside the disc, painted as bare sheet (unverified: look of the corners)
+    Then the corners of the canvas are outside the disc, painted as bare sheet (`test/golden/world-z2-orthographic.png` shows it)
 
 Feature: Density  (hash `density`, default `1`, slider 0..2 step 0.25) [verified page.js:77, 363; index.html:266; scene.mjs:2570-2575]
   Tested by: test/hash.test.mjs — 'density: the slider round-trips'
@@ -37,13 +41,13 @@ Feature: Density  (hash `density`, default `1`, slider 0..2 step 0.25) [verified
   Scenario: boundary
     Given the chart at `#density=0`
     When the page loads
-    Then no monsters, ships or hill drawings are placed (budget = 0; scene.mjs:2570-2575) (unverified: towns; the town gap becomes 48/0 = Infinity)
+    Then no monsters, ships, hill drawings or roses are placed (budget = 0; scene.mjs:2570-2575; roses take `ROSE_SHARE` 0.4 of the same budget), and at most one plain town stands (the town gap is 48/0 = Infinity; city plans are unaffected)
   Scenario: out-of-range hash falls back
     Given the chart at `#density=3`
     When the page loads
     Then density is 1 and the first write omits `density`
-    # Mismatch: the hash accepts any real in [0,2] (`density=1.3`), the slider snaps to 1.25 on display while the style stays 1.3 until the control is touched. Also `#density=` (empty) reads as 0, because `Number('')` is 0 [page.js:77].
-    # Mismatch: label reads "Density (monsters, ships, towns, hills)"; the same number also sets the ornament budget that roses share (scene.mjs:2570, README family 2) (unverified).
+    # Mismatch: the hash accepts any real in [0,2] (`density=1.3`), the slider snaps to 1.25 on display while the style stays 1.3 until any control is touched (`readControls` then reads the slider's 1.25). Also `#density=` (empty) reads as 0, because `Number('')` is 0 [page.js:77].
+    # Mismatch: label reads "Density (monsters, ships, towns, hills)"; the same number also sets the ornament budget that roses share (`ROSE_SHARE`, scene.mjs:174 at main; docs/README.md family 2).
 
 Feature: Monsters and ships pickers  (hash `sprites`, list of `pack:id`, pack letters `v`=vivid `s`=scanned `p`=plain `d`=debry; omitted when equal to the default selection) [verified page.js:55-60, 107-111, 119-122, 187-197; scene.mjs:775]
   Scenario: one sprite off, by item
@@ -69,16 +73,17 @@ Feature: Roses picker  (hash `sprites`; kind `rose`) [verified page.js:187-197; 
     Given the chart at the default view
     When the user ticks off every rose family but "Aguiar · drawn"
     Then the hash `sprites=` holds only `v:rose-aguiar,v:rose-catalan` among roses
-  Scenario: no rose selected still draws a rose
+  Scenario: no rose selected draws no rose
     Given `sprites=` with no rose keys
     When the page loads
-    Then roses are not drawn as sprites (the scene drops the kind) (unverified: `PLAIN` rose stands in, scene.mjs:2590)
+    Then no rose is drawn: the page drops `rose` from `kinds`, so the scene's `PLAIN` fallback never runs
 
 Feature: Towns picker  (hash `sprites`; kind `town`, including the code-drawn towers `p:tower`, `p:tower-round`, `p:tower-gate`, `p:tower-spire`, `p:tower-dome`) [verified page.js:187-197; scene.mjs:703-745]
   Scenario: tower towns only
     Given the chart at `#map=7.00/43.700/7.300`
     When the user turns off every town family except "Tower · drawn in code"
     Then the hash holds `p:tower*` as its only town keys and towns draw as plain towers (unverified: look)
+    # a second code-drawn family, "Carta Marina · drawn in code" (`p:house`, `p:church`, `p:castle`, `p:round-tower`, `p:tent`), is also in the picker and the defaults
 
 Feature: Town size  (checkbox `#townSize` "Size by metro area"; hash `townsize`, default `area`; values `area|population|rank`) [verified page.js:78, 388; scene.mjs:2555, TOWN_SIZES]
   Scenario: checkbox to rank
@@ -97,6 +102,7 @@ Feature: Hills (Catalan drawings)  (chip `#hills`, `off|catalan`; stored as the 
     When the user clicks "Off" in Hills
     Then every `v:mountains-*` key leaves `sprites=` (the three vivid/catalan mountain sprites; list read from `packs/vivid/pack.json`)
     And the "Catalan drawings" chip reads unchecked
+    # the same three sprites also appear as a family checkbox with thumbs (`#pick-relief`, index.html:338 at main); the chip and the family set the same keys
   Scenario: partial selection reads as On
     Given `sprites=` holding only one of the Catalan keys
     When the page loads
@@ -105,7 +111,7 @@ Feature: Hills (Catalan drawings)  (chip `#hills`, `off|catalan`; stored as the 
 Feature: Cartouche picker  (hash `sprites`; one of `v:cartouche-frame`, `s:cartouche-dewit`, `p:cartouche`, or None) [verified page.js:201-212]
   Scenario: one at a time
     Given the chart at the default view
-    When the user clicks the "scanned de Wit" cartouche thumb
+    When the user clicks the de Wit cartouche thumb (aria-label "cartouche-dewit, Dewit · scan")
     Then exactly one cartouche key remains in `sprites=`, and the previous thumb is `aria-pressed=false`
   Scenario: None
     Given the chart at the default view
@@ -124,7 +130,7 @@ Feature: Placement  (hash `placement`, default empty; values `historic`, `seeded
   Scenario: the same seed gives the same arrangement
     Given the chart at `#placement=seed:12345`
     When the page loads twice
-    Then both canvases are pixel-identical (unverified: no test read)
+    Then both canvases are pixel-identical (by reading: nothing under `scripts/` calls `Math.random`; only Re-roll does, page.js:639 at main; no pixel test)
   Scenario: bad text reads as default
     Given the chart at `#placement=seed:99999999999` (11 digits) or `#placement=bogus`
     When the page loads
@@ -136,7 +142,7 @@ Feature: Mountains  (chips `#mountains`, hash `mountains`, default `colour`, val
   Scenario: ink
     Given the chart at `#map=6.00/46.500/8.000`
     When the user clicks "Ink" in Mountains
-    Then the hash gains `mountains=ink` and range hatching is ink-only (no ochre wash) (unverified: look)
+    Then the hash gains `mountains=ink` and range hatching is ink-only, no ochre wash (`engraved` has `light: land`, `shade: null`, relief.mjs:299)
   Scenario: off
     Given the chart at the same view
     When the user clicks "Off"
@@ -152,13 +158,15 @@ Feature: Trees  (chips `#trees`, hash `trees`, default `marina`, values `off|mar
   Scenario: off removes trees
     Given the same view
     When the user clicks "Off"
-    Then the hash gains `trees=off` and the green crowns disappear (unverified: look)
+    Then the hash gains `trees=off` and the green crowns disappear from the land
+    # the palms drawn at points of interest keep `TREES.marina` whatever this chip says (scene.mjs:2011 at main)
 
 Feature: Title  (chips `#titleMode` Automatic/Custom, input `#title` maxlength 40; hash `autotitle`, `title`; defaults automatic, `PORTOLANI`) [verified page.js:82-84, 372-395, 830-833; index.html:314]
   Scenario: automatic names the view
     Given the chart at `#map=7.00/38.720/-9.140`
     When the page loads
-    Then `#title` is disabled and its value is the cartouche's lettering, in capitals (scene.mjs:2536 comment) (unverified: the exact word)
+    Then `#title` is disabled and its value is the cartouche's lettering, in capitals (`pinTitle?.toUpperCase()`, scene.mjs:1676 at main)
+    # after a flight (Go, a chart, a sight, an anchorage) the landing place's name is pinned on the cartouche until the map is moved by hand
   Scenario: custom, typed
     Given the chart at the default view
     When the user clicks "Custom", types `Mare Nostrum` and waits 400 ms
@@ -231,7 +239,7 @@ Feature: Regions  (slider `#regionsZoom` 0..15 step 1; hash `regionszoom`, defau
   Scenario: the same pop as the continents slider
     Given `#map=7.40/40.000/12.000`
     When Regions is 7
-    Then region names are drawn (zoom < 7.5) (unverified: region box overlap with a continent)
+    Then region names are drawn (zoom < 7.5); no continent name competes, since continents end at 5.5 by default, though a cartouche, rose or beast can still drop a region name
     # Mismatch: as Continents, a slider at 1 does not round-trip (`regionszoom=1` reads as the default 7).
 
 Feature: Land border  (chips `#land`, hash `land`, default `ochre`, values `off|gilt|green|ochre`; legacy `islands`) [verified page.js:86-87, 281; scene.mjs:81, 2566]
@@ -242,7 +250,7 @@ Feature: Land border  (chips `#land`, hash `land`, default `ochre`, values `off|
   Scenario: ochre draws shoal dots
     Given `#land=ochre` (the default)
     When the page loads
-    Then a dotted line of shoals runs 4 px seaward of the coast at 6 px intervals (scene.mjs:85 `SHOAL_OFFSET`, `SHOAL_GAP`) (unverified: only `ochre` draws them; the glyph shows them on ochre only)
+    Then a dotted line of shoals runs 4 px seaward of the coast at 6 px intervals (scene.mjs:85 `SHOAL_OFFSET`, `SHOAL_GAP`); only `ochre` draws them (`paintShoals` runs for that mode alone)
 
 Feature: Coloured islands  (chips `#islands`, hash `islands=1`, default off) [verified page.js:86-87, 282; scene.mjs:1991, 2568]
   Scenario: on
@@ -278,8 +286,8 @@ Feature: Lakes  (chips `#lakes`, hash `lakes`, default `marina`, values `off|agu
   Scenario: lozenges
     Given the chart at `#map=7.00/45.700/9.300`
     When the user clicks "Lozenges"
-    Then the hash gains `lakes=aguiar` and Como and Maggiore draw as diamonds (unverified: lake names)
-    # lozenge vs true shape switches at 120 px (README family 6), not a control
+    Then the hash gains `lakes=aguiar` and Como draws as a diamond, while Maggiore, about 150 px long at this zoom, keeps its true shape (estimated from `LOZENGE_PX = 120`, water.mjs:14; not rendered)
+    # lozenge vs true shape switches at 120 px (docs/README.md family 6), not a control
 
 Feature: Scale bar  (chips `#scale`, hash `scale`, default `genoese`, values `off|chequer|chevron|ribbon|beads|ruled|genoese`) [verified page.js:96, 286; scene.mjs:2077-2170]
   Scenario: style
@@ -307,7 +315,7 @@ Feature: Ink  (colour input `#ink`, hash `ink`, 3 or 6 hex digits without `#`, d
     Given the chart at `#ink=f00`, then at `#ink=zzz`
     When each loads
     Then `#ink` shows `#ff0000`, then the default `#3b2a1a`
-    # Mismatch: ink colours the lines and lettering; the wind reds and greens, rose colours, and pigments in the chart's period palette do not follow it (README family 5).
+    # Mismatch: ink colours the lines and lettering; the wind reds and greens, rose colours, and pigments in the chart's period palette do not follow it (docs/README.md family 5).
 
 Feature: Parchment  (colour input `#parchment`, hash `parchment`, default `e9d8b4`) [verified page.js:73-78, 149; scene.mjs:2626-2631]
   Scenario: round-trip
@@ -317,4 +325,4 @@ Feature: Parchment  (colour input `#parchment`, hash `parchment`, default `e9d8b
   Scenario: the sheet repaints
     Given the same
     When the page places
-    Then the canvas background pixels read close to `#eeeeee` (grain and stains are fixed by seed 1539, so the pattern is the same)
+    Then the canvas background pixels read near `#eeeeee`, a little darker and warmer at the centre and much darker at the corners (mottling, grain and a vignette multiply the colour, scene.mjs:1682-1725 at main; the pattern is fixed by seed 1539)

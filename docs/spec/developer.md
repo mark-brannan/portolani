@@ -8,7 +8,7 @@ Feature: `createScene(env, opts)`  [verified scene.mjs:2553-2578]
     When it places
     Then `land` is `islands`, `rivers`, `lakes`, `trees` are `off`, `relief` is none, `continents` false, `regions` `off`, `historical` true, `scale` `genoese`, `view` is `DEFAULT_VIEW`, `autoTitle` true (page: `land` ochre, rivers `plain`, lakes `marina`, trees `marina`, mountains colour)
     # per CLAUDE.md the headless scene keeps relief, trees, rivers and lakes off so each golden isolates one thing
-  Options read: `ink, parchment, density, names, rhumb, scale, scaleBorder, land, islands, seaTint, rivers, lakes, relief (a style or a list), trees, continents, continentsZoom, regions, regionsZoom, title, autoTitle, pinTitle, townSize, historical, seed, view, sprites, kinds, pinned`, and the legacy `rendering, rose, monster, town` (any one set turns on legacy mode: `rank` town sizing, no seed, unshuffled order, scene.mjs:2556-2557).
+  Options read: `ink, parchment, density, names, rhumb, scale, scaleBorder, land, islands, seaTint, rivers, lakes, relief (a style or a list), trees, continents, continentsZoom, regions, regionsZoom, title, autoTitle, pinTitle, townSize, historical, seed, view, sprites, kinds, pinned, voyage`, and the legacy `rendering, rose, monster, town` (any one set turns on legacy mode: `rank` town sizing, no seed, unshuffled order, scene.mjs:2556-2557).
   Scenario: a mix of relief styles
     Given `createScene(env, { relief: ['marina', 'engraved'] })`
     When the Alps are placed

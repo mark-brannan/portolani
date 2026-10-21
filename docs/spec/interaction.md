@@ -16,7 +16,7 @@ Feature: Pan  (pointer drag on `#map`) [verified page.js:665-684, 625-651; scene
   Scenario: pan stops at the poles, wraps in longitude
     Given the chart at `#map=3.00/80.000/0.000`
     When the user drags downward by 400 px
-    Then lat stays within the projection's limit (`clampView`) (unverified: the exact bound)
+    Then lat stays within the projection's limit (`clampView`; at Mercator zoom 3 the bound is 79.368, and it depends on zoom)
 
 Feature: Wheel zoom  (wheel on `#map`) [verified page.js:685-694; scene.mjs:342]
   Scenario: 300 px of delta is one zoom level
@@ -43,7 +43,7 @@ Feature: Pinch zoom  (two pointers on `#map`) [verified page.js:665-679; touch.t
     Then the zoom grows by one level (ratio 2 = log2(2) = 1) about their midpoint, and the page itself does not zoom
     # pinch has no minimum finger distance (page.js:665)
 
-Feature: Flight  (a Chart view, Go or Locate) [verified page.js:794-806]
+Feature: Flight  (a sight, a chart, an anchorage or Go; My position no longer flies) [verified page.js:916 at main]
   Scenario: a touch takes over
     Given a flight in progress
     When the user presses the map or turns the wheel
