@@ -88,7 +88,7 @@ for (const width of [360, 412]) {
       const v3 = await view();
       assert.ok(v3.lon < v2.lon - 0.0001 && v3.zoom === v2.zoom, `a drag right carries the chart with it, so the centre moves west: ${JSON.stringify(v2)} -> ${JSON.stringify(v3)}`);
 
-      // the anchor's drawer: shut, opened by a tap on the anchor, shut by a choice
+      // the anchor's drawer: shut, opened by a tap on the anchor, shut by a choice (the third line, The North)
       assert.equal(await shown('anchorPanel'), false);
       await page.tap('#anchor');
       assert.equal(await shown('anchorPanel'), true);
@@ -267,12 +267,16 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     await page.keyboard.press('Escape');
     assert.equal(await opened('goPanel'), false, 'Esc left Go open');
     assert.equal(await page.evaluate(() => document.activeElement.id), 'go', 'Esc did not give the focus back to the compass');
-    // a chart flies to its sheet and shuts the drawer
+    // a chart is a section: its sheet button flies to the sheet and shuts the drawer; its scan is still to come
     await page.click('#charts');
     const h = await page.evaluate(() => location.hash);
-    await page.click('#chartList button >> nth=0');
-    assert.equal(await opened('chartsDrawer'), false, 'a chart left its drawer open');
+    const vesconte = page.locator('#chartList .chart', { hasText: 'Vesconte' });
+    assert.equal(await vesconte.locator('button', { hasText: 'The scan' }).isDisabled(), true, 'the scan button is live');
+    await vesconte.locator('button', { hasText: 'The sheet' }).click();
+    assert.equal(await opened('chartsDrawer'), false, "a chart's sheet left its drawer open");
     await page.waitForFunction((x) => location.hash !== x, h, { timeout: 60000 });
+    const [, lat, lon] = (await page.evaluate(() => location.hash)).replace('#map=', '').split('/').map(Number);
+    assert.ok(Math.abs(lat - 37.5) < 1 && Math.abs(lon - 25.2) < 1, `Vesconte's sheet is not round the Cyclades: ${lat}, ${lon}`);
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();
