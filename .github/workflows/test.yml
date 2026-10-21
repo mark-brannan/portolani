@@ -87,12 +87,14 @@ jobs:
       contents: read
     uses: mark-brannan/.github/.github/workflows/nonempty-diff.yml@main
 
-  # The squash title is the commit release-please reads, so it carries a
-  # type: `fix(area): ...`, not `area: ...`.
+  # The squash title is the commit release-please reads, so it opens with a
+  # conventional type: `fix(area): ...`, not `area: ...`.
   pr-title:
     permissions:
       pull-requests: read
     uses: mark-brannan/.github/.github/workflows/pr-title.yml@main
+    with:
+      conventional: true
 
   # A measurement, not a gate, so it stays out of ci-gate's needs. Writes the
   # sticky PR comment, hence pull-requests: write.
