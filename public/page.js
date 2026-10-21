@@ -911,7 +911,7 @@ const SIGHTS = [
   ], 'sub'],
   ['The age of discovery', [
     ['Lisbon', port(-9.14, 38.72), null, 'the Carreira da Índia'], // also a chart city above, on purpose: the same view, so Go lands in one place
-    ['Elmina', port(-1.35, 5.08), null, 'Portuguese, then Dutch, fort'],
+    ['São Jorge da Mina', port(-1.35, 5.08), 'São Jorge da Mina (Elmina)', 'fort, 1482; the Atlantic slave trade'],
     ['Goa', port(73.91, 15.50), null, "Portugal's Asian capital"],
     ['Manila', port(120.98, 14.60), null, 'the galleons, 1571'],
     ['Acapulco', port(-99.88, 16.86), null, 'the galleons, 1565'],
@@ -921,7 +921,7 @@ const SIGHTS = [
     ['Suez', port(32.55, 29.97), null, 'the canal, 1869'],
     ['Panama', port(-79.53, 8.97), null, 'the canal, 1914'],
     ['Singapore', port(103.83, 1.28), null, '1819'],
-    ['Hong Kong', port(114.20, 22.30), null, '1841'],
+    ['Hong Kong', port(114.20, 22.30), null, 'ceded, 1841'],
     ['Shanghai', port(121.47, 31.23), null, 'treaty port, 1843'],
     ['Rotterdam', port(4.48, 51.92), null, 'the Nieuwe Waterweg, 1872'],
   ], 'sub'],
