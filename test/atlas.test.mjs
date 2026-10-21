@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { sheetsFor, roseSheet, cutOut, bandFor, widening, BANDS, hiddenCircle, ROSE, CURATED, PAGE_EDGE, WORLD_SHEET } from '../scripts/atlas.mjs';
+import { sheetsFor, roseSheet, cutOut, bandFor, widening, BANDS, hiddenCircle, ROSE, ORIGINS, CURATED, PAGE_EDGE, WORLD_SHEET } from '../scripts/atlas.mjs';
 import { readFileSync } from 'node:fs';
 
 const bounds = (zoom, west, south, east, north) => ({ zoom, west, south, east, north });
@@ -257,4 +257,47 @@ test('a ray across the antimeridian is cut at the meridian, not swept across a s
   // the ray keeps every point and gains the two on the meridian
   const kept = cutOut(ray.slice(1)).flat().length;
   assert.equal(kept, 5);
+});
+
+test('origin zero: every band counts from 0E 0N, so a cell corner lies on it and the edges are whole cells from it', () => {
+  const zero = ORIGINS.zero, e = 1e-5;
+  for (const b of BANDS) {
+    const got = sheetsFor(bounds(b.from, -e, -e, e, e), { origin: zero });
+    assert.equal(got.length, 4, `band ${b.band}`);
+    for (const s of got) assert.ok([s.extent.west, s.extent.east].includes(0) && [s.extent.south, s.extent.north].includes(0), `${s.name} ${JSON.stringify(s.extent)}`);
+    assert.ok(got.some((s) => /^PT\dN0+E0+$/.test(s.name) && s.extent.west === 0 && s.extent.south === 0), 'N000E0000 is the cell whose south-west corner is 0, 0');
+  }
+  for (const s of sheetsFor({ lon: 12.3, lat: 41.9, zoom: 8 }, { origin: zero })) {
+    const h = s.extent.north - s.extent.south, w = s.extent.east - s.extent.west;
+    close(s.extent.south / h - Math.round(s.extent.south / h), 0);
+    close(s.extent.west / w - Math.round(s.extent.west / w), 0);
+  }
+  // the default is the rose, so a sheet set counted from the rose is the one given no origin
+  assert.deepEqual(sheetsFor({ lon: 12.3, lat: 41.9, zoom: 8 }, { origin: ROSE }), sheetsFor({ lon: 12.3, lat: 41.9, zoom: 8 }));
+});
+
+test('origin zero: the rose\'s sheet still holds the rose, in a cell no longer cornered on it', () => {
+  for (const z of [6, 8, 10]) {
+    const s = roseSheet(z, { origin: ORIGINS.zero, curated: false }), { west, east, south, north } = s.extent;
+    assert.ok(west <= ROSE.lon && ROSE.lon <= east && south <= ROSE.lat && ROSE.lat <= north, `z${z} ${s.name}`);
+    assert.ok(![west, east].includes(ROSE.lon), `z${z}: the rose is not on a cell edge`);
+  }
+});
+
+test('radius: a grid sheet\'s hidden circle takes the radius given; a curated sheet keeps its read one', () => {
+  const view = { lon: 7.4, lat: 40.5, zoom: 6.2 };
+  for (const radius of [0.25, 0.5, 0.8]) {
+    const got = sheetsFor(view, { radius, curated: true });
+    const grid = got.filter((s) => !s.curated), cur = got.filter((s) => s.curated);
+    assert.ok(grid.length && cur.length);
+    for (const s of grid) assert.deepEqual(s.circle, hiddenCircle(s.extent, radius));
+    for (const s of cur) { const c = CURATED.find((k) => k.name === s.name); close(s.circle.radius, c.radius / (c.extent.north - c.extent.south)); }
+  }
+});
+
+test('curated false: grid cells everywhere, none of them held back', () => {
+  const view = { lon: 7.4, lat: 40.5, zoom: 6.2 };
+  const plain = sheetsFor(view), with_ = sheetsFor(view, { curated: true });
+  assert.ok(plain.every((s) => !s.curated));
+  assert.ok(plain.filter((s) => !s.curated).length > with_.filter((s) => !s.curated).length, 'the curated sheets hold cells back');
 });

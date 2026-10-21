@@ -221,6 +221,9 @@
   .caption a { color: var(--accent); text-underline-offset: 2px; }
 
   .about p { color: var(--muted); font-size: 12px; margin: 0; }
+  /* under the hood: knobs fixed in the code, for a while; collapsed */
+  .hood summary { font: 15px var(--serif); color: var(--accent); letter-spacing: 0.06em; font-variant: small-caps; cursor: pointer; }
+  .hood .lead { margin-top: 6px; }
 </style>
 </head>
 <body>
@@ -404,6 +407,32 @@
   <section class="about" aria-labelledby="h-about">
     <h2 id="h-about">About</h2>
     <p>Ornaments drawn as vectors after, or cropped from, public-domain scans via Wikimedia Commons: Olaus Magnus, Carta Marina (1539); Jorge de Aguiar, wind rose and chart (1492, Beinecke Library, Yale); Cresques Abraham, Catalan Atlas (1375, BnF Gallica); a Genoese chart (c. 1320-1350, Library of Congress); Frederik de Wit, cartouche (Royal Museums Greenwich). Coasts and places: Natural Earth. Lettering: IM Fell English (SIL OFL).</p>
+  </section>
+
+  <!-- temporary: docs/atlas/under-the-hood.md -->
+  <section>
+    <details id="hood" class="hood">
+      <summary>Under the hood (temporary)</summary>
+      <p class="lead">Knobs that are fixed in the code today, exposed while the roses and rhumb lines are being worked on. Shared in the link.</p>
+      <div class="rows">
+        <h3>Sheets</h3>
+        <div id="debug" class="chips" role="radiogroup" aria-label="Sheets"></div>
+        <h3>Grid counts from</h3>
+        <div id="tuneOrigin" class="chips" role="radiogroup" aria-label="Grid counts from"></div>
+        <h3>Curated charts</h3>
+        <div id="tuneCurated" class="chips" role="radiogroup" aria-label="Curated charts"></div>
+        <h3>Catalan rose lines at every zoom</h3>
+        <div id="tuneRoselines" class="chips" role="radiogroup" aria-label="Catalan rose lines at every zoom"></div>
+        <h3>Ring radius</h3>
+        <div class="slider"><input id="tuneRadius" type="range" step="0.05" aria-label="Ring radius, of the sheet's height"><output id="tuneRadiusOut"></output></div>
+        <h3>Line reach</h3>
+        <div class="slider"><input id="tuneReach" type="range" step="0.25" aria-label="Line reach, times the sheet's diagonal"><output id="tuneReachOut"></output></div>
+        <h3>Rose share</h3>
+        <div class="slider"><input id="tuneRoseshare" type="range" step="0.1" aria-label="Rose share of a sheet's allotment"><output id="tuneRoseshareOut"></output></div>
+        <h3>Roses per sheet</h3>
+        <div class="slider"><input id="tuneSheetroses" type="range" step="1" aria-label="Roses per sheet, at most"><output id="tuneSheetrosesOut"></output></div>
+      </div>
+    </details>
   </section>
 </aside>
 <script type="importmap">{ "imports": { "coast-wright": "./coast-wright/index.js", "coastlines/catalogue.json": "./coastlines/catalogue.json" } }</script>
