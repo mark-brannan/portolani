@@ -17,6 +17,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { buildLearn } from './learn.mjs';
 import { relativeImports } from './scene-modules.mjs';
+import { buildInfo } from './build-info.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 export const DATA_URL = 'https://mark-brannan.github.io/portolani/';
@@ -71,6 +72,11 @@ export function devServer({ learn, site, data = DATA_URL }) {
     }
     if (learn && rel.startsWith('learn/')) { // the Learn pages render live, like every other route
       try { await buildLearn(root, learn); } catch (e) { res.writeHead(500, { 'content-type': 'text/plain' }); return res.end(`learn: ${e.message}\n`); }
+    }
+    if (rel === 'build.json' && !site) { // the checkout's commit, read on each request; no build time, as nothing was built
+      const info = buildInfo(root);
+      res.writeHead(info ? 200 : 404, { 'content-type': TYPES['.json'], 'cache-control': 'no-store' });
+      return res.end(info ? JSON.stringify(info) : '');
     }
     const file = await localFile(local, rel.endsWith('/') ? `${rel}index.html` : rel);
     if (file) {
