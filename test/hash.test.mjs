@@ -232,7 +232,7 @@ scenario('layout: each of the four shows every control once, under its own headi
     assert.equal((await params(page)).get('layout'), name === 'default' ? null : name, 'the layout rides in the hash; Default is no key');
     if (name === 'moods') {
       assert.equal(await page.locator('#drawer details.fine').evaluate((d) => d.open), false, 'Fine controls starts closed');
-      assert.deepEqual(await page.locator('.moods .preset b').allTextContents(), ['Tasteful', 'All the things']);
+      assert.deepEqual(await page.locator('.moods .preset b').allTextContents(), ['Pilot’s chart', 'Tasteful', 'Woodcut', 'Illuminated', 'All the things']);
       await page.locator('#drawer details.fine > summary').click();
     }
     assert.deepEqual(await headings(page), HEADINGS[name]);
@@ -259,26 +259,46 @@ scenario('layout: a link opens its layout, and a write, Reset and a hash edit ke
   assert.deepEqual(await headings(page), HEADINGS.default, 'an unknown layout opens Default');
 });
 
-scenario('layout: Two moods sets the existing controls at once', 'map=5.48/40.265/7.000&layout=moods', async (page) => {
+// The five moods, sparse to dense, and what each writes to the hash: its figures as a set, and every other key a
+// mood sets (null where it is the default, which the hash leaves out). All the things' figures and seed are checked
+// below. Each mood is a whole look, so a key the mood before it set is gone.
+const HILLS = ['v:mountains-a', 'v:mountains-b', 'v:mountains-c'];
+const AGUIAR_SCAN = ['venice', 'genoa', 'lisbon', 'lake', 'lake-moat', 'smina', 'jerusalem', 'ceuta', 'avignon'].map((t) => `s:town-aguiar-${t}`);
+const AGUIAR_DRAWN = ['walled', 'walled-2', 'walled-3', 'hall', 'hall-2', 'hall-3', 'towers', 'towers-2', 'towers-3', 'hill', 'hill-2', 'hill-3', 'church', 'church-2', 'church-3', 'gate', 'gate-2', 'gate-3', 'venice', 'moat'].map((t) => `v:town-aguiar-${t}`);
+const PLAIN = { land: null, islands: null, seas: null, rivers: null, lakes: null, mountains: null, trees: null, ink: null, parchment: null };
+const MOODS = [
+  ['Pilot’s chart', { ...PLAIN, sprites: ['p:rose'], density: '0', placement: 'historic', land: 'off', rivers: 'off', lakes: 'off', mountains: 'off', trees: 'off' }],
+  ['Tasteful', { ...PLAIN, sprites: ['s:rose-catalan', 'v:rose-catalan', 'v:cartouche-frame', 'v:merman', 'v:hippocampus', 'v:galley', 'v:caravel', ...HILLS, ...AGUIAR_SCAN],
+    density: '0.5', placement: 'historic', islands: '1', seas: '1', mountains: 'off' }],
+  ['Woodcut', { ...PLAIN, sprites: ['p:rose', 's:cartouche-dewit', 's:serpent-a', 's:whale-b', 's:pistrix-c', 's:cete-e', 's:pare-truie', 's:pare-boar', 's:pare-lion', 's:pare-calf', 's:pare-elephant', 's:pare-bear', 's:pare-seaman', 's:pare-bishop', 'd:debry-monster', 's:ship-a', 's:ship-b', 's:ship-w-key', 's:ship-w-buss', 'd:debry-ship-a', 'd:debry-ship-b', 'd:debry-canoe', 'p:tower', 'p:tower-dome', 'p:house', 'p:church', 'p:castle', 'p:round-tower', 'p:tent'],
+    density: null, placement: 'historic', land: 'off', rivers: 'marina', mountains: 'ink', trees: 'ink', ink: '1d1913', parchment: 'efe9dc' }], // density 1 and lakes marina are the defaults
+  ['Illuminated', { ...PLAIN, sprites: ['s:rose-aguiar', 's:rose-catalan', 's:rose-prunes', 's:rose-aguiar-b', 'v:rose-fleurs', 'v:rose-fleurs-small', 'v:cartouche-frame', 'v:sea-dragon', 'v:sea-lion', 'v:dolphin', 'v:merman', 'v:hippocampus', 'v:walrus', 'v:galleon', 'v:caravel-heraldic', 'v:carrack', 'v:galley', 'v:caravel', ...HILLS, ...AGUIAR_SCAN, ...AGUIAR_DRAWN],
+    density: '1.5', placement: 'historic', land: 'gilt', islands: '1', seas: '1', rivers: 'aguiar', lakes: 'aguiar' }],
+  ['All the things', { ...PLAIN, density: '2' }],
+];
+scenario('layout: Moods sets the existing controls at once, a whole look each', 'map=5.48/40.265/7.000&layout=moods', async (page) => {
   await openDrawer(page);
   const mood = (label) => page.locator('.moods .preset', { hasText: label });
-  const choose = async (label) => { await page.evaluate(() => { document.getElementById('status').textContent = ''; }); await mood(label).click(); await placed(page); };
-  await choose('All the things');
-  let q = await params(page);
-  assert.equal(q.get('density'), '2');
+  const checked = () => page.locator('.moods .preset').evaluateAll((bs) => bs.map((b) => b.getAttribute('aria-checked')));
+  assert.deepEqual(await checked(), MOODS.map(() => 'false'), 'a page with no mood chosen shows no mood on');
+  for (const [i, [label, want]] of MOODS.entries()) {
+    await page.evaluate(() => { document.getElementById('status').textContent = ''; });
+    await mood(label).click();
+    await placed(page);
+    const q = await params(page);
+    for (const [key, v] of Object.entries(want)) {
+      if (key === 'sprites') assert.deepEqual(new Set(q.get('sprites').split(',')), new Set(v), `${label}: its figures`);
+      else assert.equal(q.get(key), v, `${label}: ${key}`);
+    }
+    assert.equal(await value(page, 'density'), want.density ?? '1', `${label}: the slider shows its density`);
+    if (want.placement) assert.equal(await page.locator('#placement [data-placement="historic"]').getAttribute('aria-checked'), 'true', `${label}: Historic shows on`);
+    assert.deepEqual(await checked(), MOODS.map((_, j) => String(j === i)), `${label}: its chip alone shows on`);
+  }
+  const q = await params(page); // All the things
   assert.match(q.get('placement'), /^seed:-?\d+$/);
   assert.ok(q.get('sprites').split(',').length > 10, 'every figure on');
-  assert.equal(await value(page, 'density'), '2');
-  assert.equal(await mood('All the things').getAttribute('aria-checked'), 'true');
-  assert.equal(await mood('Tasteful').getAttribute('aria-checked'), 'false');
-  await choose('Tasteful');
-  q = await params(page);
-  assert.equal(q.get('density'), '0.5');
-  assert.equal(q.get('placement'), 'historic');
-  assert.equal(q.has('sprites'), false, 'the default figures');
-  assert.equal(await page.locator('#placement [data-placement="historic"]').getAttribute('aria-checked'), 'true');
-  assert.equal(await mood('Tasteful').getAttribute('aria-checked'), 'true');
-  assert.equal(await mood('All the things').getAttribute('aria-checked'), 'false');
+  assert.equal(await value(page, 'land'), 'ochre', 'the controls show the default styles again');
+  assert.equal(await value(page, 'ink'), '#3b2a1a');
 });
 
 // ---------------------------------------------------------------- under the hood (temporary): debug= and tune=
