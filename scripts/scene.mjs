@@ -1300,7 +1300,7 @@ function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
       for (const f of ownFigures(sh, 'rose').slice(0, allotment(sh))) put(figureSprite(sh, roses, ring, f), f);
       continue;
     }
-    // a curated sheet's network is not drawn where a smaller curated sheet lies
+    // a smaller kept sheet's ground is its own: no rose of this sheet is placed there
     const clear2 = (lon, lat, size, land) => !inShadow(sh, lon, lat) && clear(lon, lat, size, land);
     const quota = roseQuota(sh);
     if (quota > 0 && clear2(c.lon, c.lat, big.sizePx, onLand)) put(big, c);
@@ -1813,7 +1813,7 @@ function latticeOf(scene, data) {
   rays = [];
   // Mercator radians at the equator, in degrees; never past half the world, where a ray would lap itself
   const reach = Math.min(180, (Math.hypot(W, H) * 1.5 / data.proj.k) * 180 / Math.PI);
-  // a sheet's lines reach its extent plus half a sheet; a window's, past the scene's far corner
+  // a sheet's lines reach its page diagonal; a window's, past the scene's far corner
   const origins = scene.sheets
     ? scene.sheets.flatMap((sh) => [sh.circle, ...sh.circle.nodes].filter((n) => !inShadow(sh, n.lon, n.lat)).map((n) => ({ lon: n.lon, lat: n.lat, reach: sh.reach })))
     : [scene.centre, ...scene.nodes].map((n) => { const [lon, lat] = data.proj.invert(n.x, n.y); return { lon, lat, reach }; });
@@ -2620,8 +2620,7 @@ function drawAnchored(g, a, bg, view, layers) {
 // placed when the lattice needs it (a rose, the cartouche's corner), only not drawn.
 // A sheet's hidden circle reaches 0.4 of its height, so a node never lands on the edge a neighbour shares.
 const SHEET_RADIUS = 0.4;
-// Degrees of rhumb line from a node: the sheet's extent plus half a sheet, its diagonal on the page (a node
-// stands about half a sheet in from the edge).
+// Degrees of rhumb line from a node: the sheet's diagonal on the page.
 const sheetReach = (e) => Math.min(180, Math.hypot(e.east - e.west, mercatorDeg(e.north) - mercatorDeg(e.south)));
 const mercatorDeg = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * RAD) / 2)) / RAD;
 // Whether a point of the earth is sea, by the world's land and not the window's.
