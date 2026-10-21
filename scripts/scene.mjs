@@ -98,6 +98,12 @@ const WATER_PX = 64; // a lozenge and its tributaries reach past the lake they s
 // The first zoom of the 10m land's cells: from there the lesser places are drawn as buildings.
 const DETAIL_ZOOM = record('ne-10m-land').zoom.min;
 const isArea = (f) => /Polygon$/.test(f.geometry?.type ?? '');
+// Rejects when the provider drew a view's layer from a band below the one it chose, because a cell
+// could not be read: the scene is then made again at the next stop, rather than kept with the
+// coarser data under the finer band's name.
+async function whole(g, cv, ...layers) {
+  for (const layer of layers) if (!(await g.loaded(cv, layer))) throw new Error(`${layer}: a cell of ${g.bandFor(cv, layer)} could not be read`);
+}
 // A Natural Earth river or lake as waterOf makes it, once per feature: a whole file's and a cell's
 // features are the provider's same objects from view to view.
 const neWater = new WeakMap();
@@ -105,6 +111,7 @@ const neOf = (f, kind) => neWater.get(f) ?? neWater.set(f, waterOf(kind === 'riv
 async function loadWater(view, lakesOn) {
   const g = coast(), cv = coastView(view);
   const [w, shoreFeatures] = await Promise.all([collect(g.features(cv, 'water')), lakesOn ? collect(g.features(cv, 'lakeshore')) : []]);
+  await whole(g, cv, 'water', ...(lakesOn ? ['lakeshore'] : []));
   // below the 10m water's cells the provider's water is the 50m rivers alone, and the lakes their own file
   const lakeFeatures = g.bandFor(cv, 'water') === 'ne-50m-rivers-lake-centerlines' ? (lakesOn ? await collect(g.features(cv, 'lakes')) : []) : w.filter(isArea);
   const rivers = w.filter((f) => !isArea(f)).map((f) => neOf(f, 'rivers'));
@@ -474,6 +481,7 @@ async function loadDetail(coarse, view) {
   const band = record((await g.pending(cv, 'land')).band);
   if (!band?.grid) return coarse;
   const [landFeatures, coastFeatures] = await Promise.all([collect(g.features(cv, 'land')), collect(g.features(cv, 'coastline'))]);
+  await whole(g, cv, 'land', 'coastline');
   // each piece carries its island's area and colour from the cut (a cell without them works one out from the piece)
   const land = landFeatures.flatMap((f) => featurePolys(f).map((poly) => piece(poly, () => ({
     poly: Object.assign(poly, { isl: f.properties?.km2 !== undefined ? { km2: f.properties.km2, hue: f.properties.hue } : islandInfo(poly) }), box: bbox(poly[0]) }))));

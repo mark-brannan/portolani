@@ -74,6 +74,13 @@ test('a moving view draws from a band\'s cells only while it still picks that ba
   assert.ok(!covers(full, { zoom: 11.5, lat: 44.4, lon: 8.9 })); // back out to "h"
 });
 
+test('a view whose band has a cell that cannot be read is not made from the band below under its name', async () => {
+  // the h band's index lists the cells round Genoa, but none of them reads: the provider draws the
+  // view from the 10m band, and the scene rejects so the page makes it again at the next stop
+  const broken = { ...site, readJSON: async (p) => (/^geo\/h\/(?!index)/.test(p) ? Promise.reject(new Error(`no ${p}`)) : site.readJSON(p)) };
+  await assert.rejects(createScene(broken, { view: { zoom: 10.5, lat: 44.4, lon: 8.9 }, scale: 'off', kinds: [], names: false, rhumb: false }), /could not be read/);
+});
+
 test('in every projection a drag, a zoom and their reverses return to the same view', () => {
   for (const projection of PROJECTION_NAMES) {
     const v0 = clampView({ lon: 12, lat: 41, zoom: 5, projection });
