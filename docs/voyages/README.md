@@ -22,7 +22,7 @@ coasting run or a route drawn by the winds).
 ## The record
 
 Each piece of text is written once, in `data/voyages/`: a voyage in `<id>.json` (`index.json` gives the
-menu order), each person's death in `people.json`, each source in `sources.json`. `readVoyage` in
+menu order: chronological by start year, a voyage's own sub-voyages kept together in date order), each person's death in `people.json`, each source in `sources.json`. `readVoyage` in
 `scripts/voyages.mjs` puts a voyage together and `problems` beside it is the schema;
 `node scripts/check-voyages.mjs` checks every record and that each sea leg stays at sea.
 
