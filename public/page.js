@@ -6,12 +6,13 @@
 // #map=zoom/lat/lon&projection=miller&sprites=s:serpent-a,v:kraken,v:rose-aguiar,p:tower&townsize=rank&names=0&rhumb=0&scale=chevron&scaleborder=blank&continents=5&regions=latin&regionszoom=7&land=green&islands=1&rivers=aguiar&lakes=marina&mountains=ink&trees=ink&seas=1&autotitle=0&title=Mare+Nostrum&ink=5a1a1a&parchment=eee&density=1.5;
 // a setting left at its default is left out, `sprites` too (keys with the pack shortened, v: s: p:); `mountains` is `ink`
 // or `off` (colour is the default); the hills are the Catalan sprites in `sprites`. `continents` and `regionszoom` are the zoom
-// they are drawn down from (0 off, the top always).
+// they are drawn down from (0 off, the top always). `voyages=columbus,drake:1f4e8c` are the voyages in the order chosen, a picked
+// colour after an id, and `voyagewidth=3.2` their line weight.
 // Older links naming a `rendering` (or `pack`), `rose`, `monster`, `town` and `kinds` open as the
 // selection those chose, and are written back in the new form.
 // For a while, `debug=sheets[,rings]` and `tune=name:value,...` carry the under-the-hood section
 // (docs/atlas/under-the-hood.md), off by default.
-import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours } from './scene.mjs';
 import { ORIGINS } from './atlas.mjs';
 import { POIS } from './pois.mjs';
 import { fold, bestPlace } from './placename.mjs';
@@ -44,7 +45,7 @@ const canvas = $('map'), ctx = canvas.getContext('2d');
 // cards beside the map, not on the sea.
 const phone = matchMedia('(max-width: 520px)');
 
-const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: 5, regions: 'latin', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyage: 'off', cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER };
+const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: 5, regions: 'latin', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyages: [], voyageWidth: VOYAGE_WIDTH, cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER };
 
 // ---------------------------------------------------------------- the sprites on offer
 
@@ -109,12 +110,21 @@ function styleFromHash() {
     scalePos: CORNERS.includes(q.get('scalepos')) ? q.get('scalepos') : DEFAULTS.scalePos,
     townSize: TOWN_SIZES.includes(q.get('townsize')) ? q.get('townsize') : DEFAULTS.townSize,
     placement: parsePlacement(q.get('placement')).text,
-    // a voyage overlay by its id (data/voyages/<id>.json); one the site lacks draws nothing
-    voyage: /^[a-z][a-z0-9-]*$/.test(q.get('voyage') ?? '') ? q.get('voyage') : DEFAULTS.voyage,
     // under the hood, for a while: the sheets in red and the knobs fixed in the code, each as its canonical text
     debug: parseDebug(q.get('debug')).text,
     tune: parseTune(q.get('tune')).text,
+    voyages: voyagesFromHash(q),
+    voyageWidth: VOYAGE_WIDTHS.includes(Number(q.get('voyagewidth'))) ? Number(q.get('voyagewidth')) : DEFAULTS.voyageWidth,
   };
+}
+// The voyages drawn, in the order chosen, by their ids (data/voyages/<id>.json; one the site lacks draws nothing),
+// each with the colour picked for it or null for its own (voyageColours): voyages=columbus,drake:1f4e8c. An older
+// link's single voyage=<id> is read as a list of one.
+function voyagesFromHash(q) {
+  const list = q.has('voyages') ? q.get('voyages').split(',') : q.has('voyage') ? [q.get('voyage')] : [];
+  const seen = new Set();
+  return list.map((t) => { const [id, c] = t.split(':'); return { id, colour: /^[0-9a-f]{6}$/i.test(c ?? '') ? `#${c.toLowerCase()}` : null }; })
+    .filter((v) => /^[a-z][a-z0-9-]*$/.test(v.id) && v.id !== 'off' && !seen.has(v.id) && seen.add(v.id));
 }
 // The selection a hash names; an older link's rendering, styles and kinds become the selection they drew.
 function selectionFromHash() {
@@ -151,9 +161,10 @@ function writeHash() {
   if (st.mountains !== DEFAULTS.mountains) q.set('mountains', st.mountains);
   if (st.trees !== DEFAULTS.trees) q.set('trees', st.trees);
   if (st.placement) q.set('placement', st.placement);
-  if (st.voyage !== DEFAULTS.voyage) q.set('voyage', st.voyage);
   if (st.debug) q.set('debug', st.debug);
   if (st.tune) q.set('tune', st.tune);
+  if (st.voyages.length) q.set('voyages', st.voyages.map((v) => (v.colour ? `${v.id}:${v.colour.slice(1)}` : v.id)).join(','));
+  if (st.voyageWidth !== DEFAULTS.voyageWidth) q.set('voyagewidth', st.voyageWidth);
   if (st.seaTint) q.set('seas', '1');
   if (st.scaleBorder !== DEFAULTS.scaleBorder) q.set('scaleborder', st.scaleBorder);
   if (st.scale !== DEFAULTS.scale) q.set('scale', st.scale);
@@ -316,6 +327,7 @@ const CHOICES = {
   lakes: [['off', 'Off'], ['aguiar', 'Lozenges', 'Aguiar, 1492', LAKE_GLYPHS.aguiar], ['marina', 'True shapes, hatched', 'Carta Marina, 1539', LAKE_GLYPHS.marina], ['plain', 'True shapes, blue wash', '', LAKE_GLYPHS.plain]],
   trees: [['off', 'Off', '', MOUNTAIN_GLYPHS.off], ['marina', 'Green crowns', 'Carta Marina, 1539', TREE_GLYPHS.marina], ['ink', 'Ink only', '', TREE_GLYPHS.ink]],
   scale: [['off', 'Off'], ['genoese', 'Genoese', 'drawn as vectors'], ['chequer', 'Chequer'], ['chevron', 'Chevron ladder', 'Genoese'], ['ribbon', 'Ribbon', 'Martines'], ['beads', 'Beads', 'Prunes'], ['ruled', 'Ruled', 'Beccari']].map(([value, label, note = '']) => [value, label, note, SCALE_GLYPHS[value]]),
+  voyageWidth: VOYAGE_WIDTHS.map((w, i) => [String(w), ['Fine', 'Standard', 'Bold', 'Heavy'][i] ?? `${w} px`, `${w} px`, lineOf('#8c2f1e', w)]),
   scaleBorder: [['bordered', 'Bordered', 'parchment and a double rule'], ['blank', 'Blank', 'parchment, no rule'], ['transparent', 'Transparent', 'drawn over the map']].map(([value, label, note = '']) => [value, label, note, BORDER_GLYPHS[value]]),
   debug: [['off', 'Off', '', HOOD_GLYPHS.off], ['sheets', 'Outlines', 'each sheet of the atlas at this view, in red, with its name', HOOD_GLYPHS.sheets], ['sheets,rings', 'Outlines + rings', 'and each sheet\'s hidden circle: its hub and sixteen nodes', HOOD_GLYPHS.rings]],
   tuneOrigin: [['rose', `Catalan rose (${ROSE_AT})`, 'every band\'s grid has a corner on the rose', HOOD_GLYPHS.rose], ['zero', '0° 0°', 'NOAA\'s own zero', HOOD_GLYPHS.zero]],
@@ -403,7 +415,9 @@ function showStyle() {
   if (!style.autoTitle) $('title').value = style.title; // automatic shows the view's own name, once placed (render)
   $('townSize').checked = style.townSize !== 'rank';
   showHood();
+  $('voyageWidth').value = String(style.voyageWidth);
   showUiNow(); showMoods();
+  for (const f of toolRefreshers) f();
   for (const b of document.querySelectorAll('#drawer .thumb')) b.setAttribute('aria-pressed', b === none ? !CARTOUCHES.some((k) => selection.has(k)) : selection.has(b.dataset.key));
   for (const { box, count, keys } of familyBoxes) {
     const on = keys.filter((k) => selection.has(k)).length;
@@ -426,6 +440,7 @@ function readControls() {
     placement: style.placement, // chosen by the placement chips below
     cartouchePos: style.cartouchePos, scalePos: style.scalePos, // set by dragging the cartouche or the scale bar
     ...readHood(),
+    voyages: style.voyages, voyageWidth: Number($('voyageWidth').value), // chosen in the voyages drawer
   };
   // hills are the Catalan sprites: the chip selects all of them or none
   const hills = $('hills').value === 'catalan';
@@ -485,6 +500,35 @@ const chipButton = (role, ...kids) => {
   b.append(...kids);
   return b;
 };
+// Every group of independent toggles has a Clear (none on) and, where its default is not none, a Defaults
+// (back to the default set); each greyed when the group is already so. `get` reads the group's keys that are on,
+// `set` puts a list of keys on in their place.
+const CLEAR_GLYPH = svg(`<rect x="4" y="3" width="20" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2 2"/><path d="M10 6l8 6M18 6l-8 6" ${stroke('currentColor', 1.2)}/>`);
+const RESET_GLYPH = svg(`<path d="M9 5.5a5 5 0 1 1-1.6 4" ${stroke('currentColor', 1.3)}/><path d="M9 2v3.5H5.5" ${stroke('currentColor', 1.3)}/>`);
+const DEFAULT_KEYS = new Set(DEFAULT_SELECTION);
+const toolRefreshers = [];
+function groupTools(label, { all, dflt, get, set }) {
+  const row = document.createElement('div');
+  row.className = 'tools';
+  const same = (a, b) => a.length === b.length && a.every((k) => b.includes(k));
+  for (const [name, glyph, keys, note] of [['Clear', CLEAR_GLYPH, [], 'none'], ...(dflt.length ? [['Defaults', RESET_GLYPH, dflt, 'the default set']] : [])]) {
+    const b = Object.assign(chipButton('button', glyphSample(glyph), name), { title: `${label}: ${note}` });
+    b.classList.add('tool');
+    b.addEventListener('click', () => set(keys));
+    row.append(b);
+    toolRefreshers.push(() => { b.disabled = same([...get()].sort(), [...keys].sort()) || !all().length; });
+  }
+  return row;
+}
+// the figures of a kind, by their sprite keys
+const spriteTools = (label, keys) => groupTools(label, {
+  all: () => keys, dflt: keys.filter((k) => DEFAULT_KEYS.has(k)), get: () => keys.filter((k) => selection.has(k)),
+  set: (on) => { for (const k of keys) selection.delete(k); for (const k of on) selection.add(k); changed(); },
+});
+for (const [kind, label] of [['monster', 'Monsters'], ['ship', 'Ships'], ['rose', 'Roses'], ['town', 'Towns'], ['mountain', 'Hill drawings']]) {
+  $(kind === 'mountain' ? 'pick-relief' : `pick-${kind}`).prepend(spriteTools(label, SPRITES.filter((s) => s.kind === kind).map((s) => s.key)));
+}
+
 // the style switches: off, or the default (the first drawn style where the default is off)
 const STYLE_SWITCHES = [
   ['mountains', 'Mountain style', MOUNTAIN_GLYPHS.colour], ['trees', 'Trees', TREE_GLYPHS.marina],
@@ -516,6 +560,19 @@ if (UI) {
     ];
     body.insertAdjacentHTML('beforeend', '<h3>Presets</h3><div class="presets" role="radiogroup" aria-label="Preset"></div><h3>Switches</h3><div class="switches" role="group" aria-label="Decorations"></div>');
     const presets = body.querySelector('.presets'), switches = body.querySelector('.switches');
+    const decoKeys = SPRITES.filter((s) => KIND_UI.some(([k]) => k === s.kind)).map((s) => s.key);
+    const styleOn = () => STYLE_SWITCHES.filter(([id]) => style[id] !== 'off').map(([id]) => `style:${id}`);
+    switches.before(groupTools('Decorations', {
+      all: () => decoKeys, dflt: [...decoKeys.filter((k) => DEFAULT_SET.has(k)), ...STYLE_SWITCHES.filter(([id]) => DEFAULTS[id] !== 'off').map(([id]) => `style:${id}`)],
+      get: () => [...decoKeys.filter((k) => selection.has(k)), ...styleOn()],
+      set: (on) => {
+        for (const k of decoKeys) selection.delete(k);
+        for (const k of on) if (!k.startsWith('style:')) selection.add(k);
+        for (const [id] of STYLE_SWITCHES) $(id).value = on.includes(`style:${id}`) ? DEFAULTS[id] : 'off';
+        $('hills').value = CATALAN_KEYS.some((k) => selection.has(k)) ? 'catalan' : 'off'; // readControls reads the hills from their chip
+        readControls();
+      },
+    }));
     for (const [id, label, note, make] of PRESETS) {
       const set = make(), strip = document.createElement('span');
       strip.className = 'sample';
@@ -563,7 +620,7 @@ if (UI) {
         refreshers.push(() => { const on = keys.filter((k) => selection.has(k)).length; b.setAttribute('aria-checked', on === keys.length ? 'true' : on ? 'mixed' : 'false'); n.textContent = `${on}/${keys.length}`; });
       }
       refreshers.push(() => { const on = all.filter((k) => selection.has(k)).length; whole.setAttribute('aria-checked', String(on === all.length)); count.textContent = `${on} of ${all.length}`; });
-      box.append(head, fams, grid);
+      box.append(head, spriteTools(label, all), fams, grid);
       body.append(box);
     }
   }
@@ -591,11 +648,12 @@ async function render() {
       ...style, ...parsePlacement(style.placement), relief: style.mountains === 'colour' ? ['marina'] : style.mountains === 'ink' ? ['engraved'] : [],
       continents: style.continentsZoom > 0, continentsZoom: style.continentsZoom,
       regions: style.regionsZoom > 0 ? style.regions : 'off', regionsZoom: style.regionsZoom,
-      sprites: [...selection], kinds, view, pinned: !phone.matches, pinTitle: style.autoTitle ? pinTitle : null, voyage: style.voyage,
+      sprites: [...selection], kinds, view, pinned: !phone.matches, pinTitle: style.autoTitle ? pinTitle : null,
+      voyages: style.voyages.map((v) => ({ id: v.id, colour: v.colour ?? undefined, width: style.voyageWidth })),
       debug: parseDebug(style.debug).debug, tune: parseTune(style.tune).tune,
     });
     if (me !== run) return; // a newer change or a move superseded this one
-    ground = { world, coarse, bg, voyage: scene.voyage, anchored: anchorScene(scene, data), cards: { cartouche: kinds.includes('cartouche') ? scene.cartouche : null, scaleSprite: scene.scaleSprite, scale: style.scale, bg } };
+    ground = { world, coarse, bg, voyages: scene.voyages, anchored: anchorScene(scene, data), cards: { cartouche: kinds.includes('cartouche') ? scene.cartouche : null, scaleSprite: scene.scaleSprite, scale: style.scale, bg } };
     if (style.autoTitle) $('title').value = scene.cartouche.title; // the box shows what the cartouche letters, and cannot be edited
     placed = view;
     hideTile(); // its mark may be gone: another voyage, or none
@@ -954,7 +1012,8 @@ function fillTile(t) {
   tileEl.setAttribute('aria-label', t.title ?? 'Point of interest');
 }
 function showTileAt([x, y]) {
-  const marks = ground?.voyage ? voyageMarks(ground.voyage, viewProjection(placed), { x0: 0, y0: 0, x1: W, y1: H }) : [];
+  const proj = ground?.voyages?.length ? viewProjection(placed) : null;
+  const marks = proj ? ground.voyages.flatMap((v) => voyageMarks(v.voyage, proj, { x0: 0, y0: 0, x1: W, y1: H })) : [];
   let best = null, bestD = Infinity;
   for (const m of marks) { const d = Math.hypot(m.x - x, m.y - y); if (d <= Math.max(cssPx(TAP_REACH), m.h / 2) && d < bestD) { best = m; bestD = d; } }
   if (!best) return;
@@ -1059,22 +1118,43 @@ const CHARTS = [
 ].map(([name, year, v, [city, made], text]) => ({ name, year, view: { ...v, title: name }, made: { ...made, title: city }, text }));
 const places = []; // every anchorage and point of interest: { name, view }
 
-// The voyages: one drawn at a time, or none (the default). The list is None, then data/voyages/index.json in its
-// order, each by its title (a phone shows the short name and the years, so none wraps); the titles load on the first
-// open and stay cached. A choice rides in the link (`voyage=`) like any style.
+// The voyages: any number drawn at once, none by default. The list is data/voyages/index.json in its order, each by
+// its title (a phone shows the short name and the years, so none wraps); the titles load on the first open and stay
+// cached. A click puts a voyage on or off and leaves the drawer open, so several can be chosen; each one on shows its
+// ink beside it, a swatch to pick another. The first chosen is the chart's red, each further one a colour of its
+// own (voyageColours). Above the list, the line weight for them all and Clear. The choice rides in the link
+// (`voyages=`, `voyagewidth=`) like any style.
 let voyageList = null;
 const escapeHTML = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
-const voyageItem = (id, full, brief, when) => `<li><button type="button" role="radio" aria-checked="false" data-voyage="${id}">` +
-  `<span class="full">${full}</span><span class="brief">${brief}${when ? `<span class="when">${when}</span>` : ''}</span></button></li>`;
+const voyageItem = (id, full, brief, when) => `<li><button type="button" role="checkbox" aria-checked="false" data-voyage="${id}">` +
+  `<svg viewBox="0 0 28 18" aria-hidden="true"><path d="M2 9h24" fill="none" stroke-linecap="round"/></svg>` +
+  `<span class="full">${full}</span><span class="brief">${brief}${when ? `<span class="when">${when}</span>` : ''}</span></button>` +
+  `<input type="color" data-ink="${id}" aria-label="Colour of ${full}" title="Colour of ${full}" hidden></li>`;
+const voyagesTools = groupTools('Voyages', {
+  all: () => style.voyages, dflt: [], get: () => style.voyages,
+  set: () => { style = { ...style, voyages: [] }; showVoyage(); writeHash(); render(); },
+});
+$('voyagesPanel').querySelector('.vtools').append(...voyagesTools.children);
+const voyageInk = () => voyageColours(style.voyages.map((v) => v.id), Object.fromEntries(style.voyages.filter((v) => v.colour).map((v) => [v.id, v.colour])));
 function showVoyage() {
-  for (const b of $('voyageList').querySelectorAll('[data-voyage]')) b.setAttribute('aria-checked', String(b.dataset.voyage === style.voyage));
+  const ink = voyageInk();
+  for (const b of $('voyageList').querySelectorAll('[data-voyage]')) {
+    const id = b.dataset.voyage, on = id in ink, line = b.querySelector('path'), pick = b.parentElement.querySelector('[data-ink]');
+    b.setAttribute('aria-checked', String(on));
+    line.setAttribute('stroke', on ? ink[id] : 'currentColor');
+    line.setAttribute('stroke-width', String(style.voyageWidth));
+    line.setAttribute('stroke-dasharray', on ? '' : '2 3');
+    line.setAttribute('opacity', on ? '1' : '0.45');
+    pick.hidden = !on;
+    if (on) pick.value = ink[id];
+  }
+  for (const f of toolRefreshers) f();
 }
 function fillVoyages() {
   voyageList ??= env.readJSON('data/voyages/index.json')
     .then((ids) => Promise.all(ids.map((id) => env.readJSON(`data/voyages/${id}.json`).then((v) => [id, v], () => [id, { title: id, short: id }]))))
     .then((voyages) => {
-      $('voyageList').innerHTML = voyageItem('off', 'None', 'None', '') +
-        voyages.map(([id, v]) => voyageItem(escapeHTML(id), escapeHTML(v.title ?? id), escapeHTML(v.short ?? v.title ?? id), escapeHTML(v.when))).join('');
+      $('voyageList').innerHTML = voyages.map(([id, v]) => voyageItem(escapeHTML(id), escapeHTML(v.title ?? id), escapeHTML(v.short ?? v.title ?? id), escapeHTML(v.when))).join('');
       showVoyage();
     }, (e) => { voyageList = null; $('voyageList').innerHTML = `<li>${escapeHTML(e.message)}</li>`; });
   showVoyage();
@@ -1082,10 +1162,17 @@ function fillVoyages() {
 $('voyageList').addEventListener('click', (e) => {
   const b = e.target.closest('[data-voyage]');
   if (!b) return;
-  setDrawer(false);
-  if (b.dataset.voyage === style.voyage) return;
-  style = { ...style, voyage: b.dataset.voyage };
+  const id = b.dataset.voyage, on = style.voyages.some((v) => v.id === id);
+  style = { ...style, voyages: on ? style.voyages.filter((v) => v.id !== id) : [...style.voyages, { id, colour: null }] };
   showVoyage(); writeHash(); render();
+});
+let picking = 0; // a colour is placed when the picker pauses, not on every step of a drag across it
+$('voyageList').addEventListener('input', (e) => {
+  const id = e.target.dataset?.ink;
+  if (!id) return;
+  style = { ...style, voyages: style.voyages.map((v) => (v.id === id ? { ...v, colour: e.target.value.toLowerCase() } : v)) };
+  showVoyage(); writeHash();
+  clearTimeout(picking); picking = setTimeout(render, 150);
 });
 
 // The cartouche names the place flown to (its title, else the button's name), not whatever scores highest in the frame.
@@ -1173,7 +1260,7 @@ locate.addEventListener('click', () => {
 });
 
 for (const id of Object.values(KNOB_SLIDERS)) $(id).addEventListener('input', (e) => { e.target.dataset.set = '1'; }); // moved, so set
-for (const id of ['debug', ...Object.values(KNOB_CHIPS), ...Object.values(KNOB_SLIDERS), 'projection', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'scaleBorder', 'land', 'islands', 'seaTint', 'rivers', 'lakes', 'trees', 'mountains', 'hills', 'continentsZoom', 'regions', 'regionsZoom', 'titleMode', 'townSize']) $(id).addEventListener('input', readControls);
+for (const id of ['debug', ...Object.values(KNOB_CHIPS), ...Object.values(KNOB_SLIDERS), 'projection', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'scaleBorder', 'land', 'islands', 'seaTint', 'rivers', 'lakes', 'trees', 'mountains', 'hills', 'continentsZoom', 'regions', 'regionsZoom', 'titleMode', 'townSize', 'voyageWidth']) $(id).addEventListener('input', readControls);
 let typing = 0; // a typed title is placed when the typing pauses, not on every key: a placement takes up to a few hundred ms
 $('title').addEventListener('input', () => { clearTimeout(typing); typing = setTimeout(readControls, 400); });
 addEventListener('hashchange', () => { layout = layoutFromHash(); showLayout(); view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); showVoyage(); render(); });

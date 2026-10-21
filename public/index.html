@@ -60,8 +60,14 @@
   #coords { display: flex; gap: 4px; align-self: stretch; }
   #coords input { flex: 1; min-width: 0; max-width: none; padding: 3px 8px; font: 13px var(--serif); border-radius: 12px; background: var(--panel); color: var(--fg); border: 1px solid var(--rule); }
   #voyageList { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
-  #voyageList button { white-space: nowrap; }
-  #voyageList button[aria-checked="true"] { background: #e2cd9e; color: #3b2a1a; border-color: #b89a68; } /* the chosen voyage, lit like an open instrument */
+  #voyageList li { display: flex; align-items: center; gap: 6px; }
+  #voyageList button { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+  #voyageList button svg { width: 28px; height: 18px; flex: none; }
+  #voyageList button[aria-checked="true"] { background: #e2cd9e; color: #3b2a1a; border-color: #b89a68; } /* a chosen voyage, lit like an open instrument */
+  #voyageList input[type=color] { width: 28px; height: 22px; border-radius: 6px; cursor: pointer; } /* the swatch is the voyage's ink; a click picks another */
+  #voyagesPanel .vtools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 4px; }
+  #voyagesPanel .chip { display: inline-flex; padding: 3px 8px; border-radius: 14px; box-shadow: none; font: 12px var(--serif); background: var(--sheet); color: var(--sheet-ink); }
+  #voyagesPanel .chip[aria-checked=true] { box-shadow: inset 0 0 0 1px var(--accent); border-color: var(--accent); }
   #voyageList .when { font-size: 11px; font-style: italic; opacity: 0.75; margin-left: 6px; }
   #voyageList .brief { display: none; }
   @media (max-width: 520px) { #voyageList .full { display: none; } #voyageList .brief { display: inline; } } /* a phone: the short name and the years, so no title wraps */
@@ -163,6 +169,10 @@
   .slider input { flex: 1; }
   .slider output { min-width: 84px; text-align: right; font-size: 12px; color: var(--muted); }
   .thumb.none { font: 13px var(--serif); padding: 0 10px; }
+  /* a group's Clear and Defaults: an action, not a choice, so never lit; greyed when the group is already there */
+  .tools { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 4px; }
+  .tools .chip, .chip.tool { padding: 2px 8px; font-size: 12px; }
+  .chip.tool:disabled { opacity: 0.4; cursor: default; }
 
   label { display: flex; align-items: center; gap: 8px; }
   .rows { display: grid; gap: 8px; }
@@ -291,7 +301,8 @@
     <ul id="sightsList" class="places"></ul>
   </div>
   <div id="voyagesPanel" class="drawer menu">
-    <ul id="voyageList" role="radiogroup" aria-label="Voyage"></ul>
+    <div class="vtools"><div id="voyageWidth" class="chips" role="radiogroup" aria-label="Line weight"></div></div>
+    <ul id="voyageList" role="group" aria-label="Voyages, any number"></ul>
   </div>
   <div id="anchorPanel" class="drawer menu">
     <ul id="anchorages" class="places"></ul>

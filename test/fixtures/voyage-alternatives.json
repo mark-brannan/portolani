@@ -1,0 +1,20 @@
+{
+  "id": "fixture-alternatives",
+  "title": "A test voyage whose captain died at one of three places",
+  "short": "Test voyage",
+  "when": "1500",
+  "who": ["A. Captain"],
+  "summary": "A fixture for test/voyages.test.mjs: one sea leg across the open Atlantic and a death whose accounts disagree on where.",
+  "sources": [{ "title": "None: a test fixture", "url": "https://example.org/" }],
+  "legs": [
+    { "from": "West", "to": "East", "mode": "sea", "line": "rhumb", "confidence": "attested",
+      "points": [[-40, 20], [-25, 20]], "source": "the test" }
+  ],
+  "events": [
+    { "kind": "death", "who": "A. Captain", "lon": -30, "lat": 20, "label": "A. Captain dies", "source": "account one",
+      "alternatives": [
+        { "lon": -36, "lat": 12, "place": "South-west", "label": "or here, by account two", "source": "account two" },
+        { "lon": -22, "lat": 28, "place": "North-east", "label": "or here, by account three", "source": "account three" }
+      ] }
+  ]
+}
