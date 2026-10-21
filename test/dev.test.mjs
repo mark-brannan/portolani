@@ -30,6 +30,9 @@ test('serves the sources and fetches geo/ from the data site', async (t) => {
   assert.equal((await get('/bands.mjs')).status, 200); // reached from scene.mjs by import, so Pages has it
   assert.equal((await get('/build-preview.mjs')).status, 404); // in scripts/ but not reached, so Pages lacks it, and so does dev
   assert.equal((await get('/learn/')).status, 200); // rendered on request
+  const build = await (await get('/build.json')).json(); // the checkout's commit, for the page's corner
+  assert.match(build.sha, /^[0-9a-f]{40}$/);
+  assert.equal(build.built, undefined); // nothing was built
   assert.equal((await get('/nothing.mjs')).status, 404); // a missing module is not fetched from the site
   assert.equal((await get('/%2e%2e/package.json')).status, 404);
   assert.equal((await get('/%E0')).status, 400); // a malformed escape is a bad request, not a crash
