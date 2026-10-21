@@ -2,15 +2,99 @@ name: pages
 on:
   push: { branches: [main] }
   workflow_dispatch:
+  # A push to a holding branch, relayed so this runs on main's ref: see preview-relay.yml.
+  workflow_run:
+    workflows: [preview-relay]
+    types: [completed]
 
 permissions:
   contents: read
 
-concurrency: { group: pages, cancel-in-progress: true }
+# A relay run never cancels a run in progress, so a push to a holding branch cannot cancel main's
+# deploy; it waits. A run that arrives while another waits still replaces the waiting one, which
+# loses nothing: every run here builds main's latest commit, and lists the previews afresh. A
+# workflow_run that fails the holding-branch gate below gets a group of its own, so a run that
+# would skip every job cannot replace a waiting one.
+concurrency:
+  group: >-
+    ${{ (github.event_name != 'workflow_run'
+         || (github.event.workflow_run.event == 'push'
+             && github.event.workflow_run.head_repository.full_name == github.repository
+             && startsWith(github.event.workflow_run.head_branch, 'hold/')))
+        && 'pages' || format('pages-ignored-{0}', github.run_id) }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_run' }}
 
 jobs:
-  build:
+  # Which holding branches (hold/<name>, not yet merged into main) the site previews, freshest
+  # first. main's code only; pull-requests: read to see which are merged (preview-branches.mjs).
+  list:
+    if: >-
+      github.event_name != 'workflow_run'
+      || (github.event.workflow_run.event == 'push'
+          && github.event.workflow_run.head_repository.full_name == github.repository
+          && startsWith(github.event.workflow_run.head_branch, 'hold/'))
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      previews: ${{ steps.list.outputs.previews }}
+      drop: ${{ steps.list.outputs.drop }}
+    steps:
+      - uses: actions/checkout@v7
+        with: { persist-credentials: false }
+      - uses: actions/setup-node@v7
+        with: { node-version: '22' }
+      - id: list
+        env: { GH_TOKEN: '${{ github.token }}' }
+        run: |
+          # assigned first, so a failure fails the step rather than writing an empty output
+          previews=$(node .github/scripts/preview-branches.mjs --json)
+          # the finest coastline and lake bands, which would take main plus one preview past 1 GB
+          drop=$(node --input-type=module -e "import { bandOf } from './scripts/bands.mjs'; console.log(['gshhg-f-land', 'gshhg-f-lakes'].map((id) => 'geo/' + bandOf(id).dir).join(' '))")
+          echo "previews=$previews" >> "$GITHUB_OUTPUT"
+          echo "drop=$drop" >> "$GITHUB_OUTPUT"
+
+  # Each holding branch's own build, run with no token and no secrets, and no cache to restore or
+  # save: it is the branch's code, so it gets nothing of main's. Its site goes up as an artifact;
+  # the build job below copies it in and runs none of it.
+  preview:
+    needs: list
+    if: needs.list.result == 'success' && needs.list.outputs.previews != '[]' && needs.list.outputs.previews != ''
+    runs-on: ubuntu-latest
+    permissions: {}
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include: ${{ fromJSON(needs.list.outputs.previews) }}
+    env:
+      SHA: ${{ matrix.sha }}
+      DROP: ${{ needs.list.outputs.drop }}
+      REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+    steps:
+      # A plain anonymous fetch of the one commit, not actions/checkout, so no token is handed over.
+      - run: git init -q . && git fetch -q --no-tags --depth=1 "$REPO_URL" "$SHA" && git checkout -q --detach FETCH_HEAD
+      - uses: actions/setup-node@v7
+        with: { node-version: '22' }
+      - run: npm ci && npm run build:preview
+      - run: for d in $DROP; do rm -rf "_site/${d:?}"; done
+      - uses: actions/upload-artifact@v7
+        with: { name: 'preview-${{ matrix.slug }}', path: _site, retention-days: 1, if-no-files-found: error }
+
+  build:
+    needs: [list, preview]
+    # Main deploys whatever became of the previews.
+    if: >-
+      !cancelled()
+      && (github.event_name != 'workflow_run'
+          || (github.event.workflow_run.event == 'push'
+              && github.event.workflow_run.head_repository.full_name == github.repository
+              && startsWith(github.event.workflow_run.head_branch, 'hold/')))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v7
         with: { persist-credentials: false }
@@ -25,6 +109,22 @@ jobs:
         with: { path: downloads, key: "downloads-${{ steps.pins.outputs.hash }}" }
       # Assembles _site/: the browser-rendered mockup, with its data vendored.
       - run: npm run build:preview
+      # Pages serves one site per repository, from one deployment, so main's deploy carries the
+      # previews at _site/preview/<slug>/, and every rebuild (a push to main or to a holding
+      # branch) lists them afresh, which drops a merged one. Main deploys even if this step fails.
+      - uses: actions/download-artifact@v8
+        if: needs.list.outputs.previews != '[]' && needs.list.outputs.previews != ''
+        continue-on-error: true
+        with: { pattern: 'preview-*', path: '${{ runner.temp }}/previews' }
+      - name: Previews of the holding branches
+        if: needs.list.outputs.previews != '[]' && needs.list.outputs.previews != ''
+        continue-on-error: true
+        env:
+          PREVIEWS: ${{ needs.list.outputs.previews }}
+          PREVIEW_DIR: ${{ runner.temp }}/previews
+          PREVIEW_DROP: ${{ needs.list.outputs.drop }}
+          PREVIEW_SITE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+        run: jq -r '.[] | [.slug, .branch, .sha] | @tsv' <<< "$PREVIEWS" | bash .github/scripts/place-previews.sh
       - uses: actions/upload-pages-artifact@v5
         with: { path: _site }
   deploy:
