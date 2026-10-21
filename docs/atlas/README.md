@@ -168,15 +168,14 @@ between them keeps the roses still. The world band is the exception again: at th
 is one page, so it takes every curated sheet from the planispheres down to the Carte Pisane's two
 circles.
 
-Where curated sheets overlap in one band, a rule chosen in the settings drawer (`overlap=` in the
-link) says which are drawn (#199). *Fit*, the default, draws only the sheet closest to one window
-wide at the view's zoom: the Catalan Atlas at zoom 2.8, Dulcert at 4.3, the Carte Pisane's circles
-at 6. *Smallest* draws only the sheet of smaller area, and below zoom 4 the planisphere alone. Under
-either, no two drawn sheets overlap, the grid holds the others' ground, and a view meets one
-network, one set of beasts and roses, plus its neighbours' lines inside the reach margin. *All, cut*
-draws every sheet, each line stopping at the edge of a smaller sheet over it; *all, uncut* draws
-every sheet in full. A line is never cut under any other rule, and a larger sheet's small roses and
-beasts are placed only where no smaller drawn sheet lies, under every rule but *all, uncut*.
+Where curated sheets overlap, a rule in the settings drawer (`overlap=` in the link) says which are drawn (#199):
+
+| rule | draws |
+|---|---|
+| *Fit* (default) | the sheet closest to one window wide at the view's zoom |
+| *Smallest* | the sheet of smaller area; below zoom 4 the planisphere alone |
+| *All, cut* | every sheet, a line stopping at the edge of a smaller sheet over it |
+| *All, uncut* | every sheet in full |
 
 The Carta Marina is the odd one out: it is a printed map of the north, not a navigator's chart, and
 Olaus's roses and lines were decoration. It is in the list because its ornaments are already the

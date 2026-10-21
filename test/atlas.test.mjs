@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { sheetsFor, bandFor, widening, BANDS, hiddenCircle, ROSE, CURATED, PAGE_EDGE, WORLD_SHEET, cutOut, roseSheet, OVERLAP_RULES } from '../scripts/atlas.mjs';
+import { sheetsFor, roseSheet, cutOut, bandFor, widening, BANDS, hiddenCircle, ROSE, ORIGINS, CURATED, PAGE_EDGE, WORLD_SHEET, OVERLAP_RULES } from '../scripts/atlas.mjs';
 import { readFileSync } from 'node:fs';
 
 const bounds = (zoom, west, south, east, north) => ({ zoom, west, south, east, north });
@@ -194,7 +194,7 @@ test('a curated sheet serves the bands it is one to four windows wide in, and re
 });
 
 test('the Catalan rose takes the reach of the sheet that holds it at each zoom', () => {
-  const at = (z) => roseSheet(z, 'smallest').source ?? roseSheet(z, 'smallest').name;
+  const at = (z) => roseSheet(z, { overlap: 'smallest' }).source ?? roseSheet(z, { overlap: 'smallest' }).name;
   assert.deepEqual([1, 3.9].map(at), ['The world', 'The world']);
   assert.deepEqual([3, 4.33, 6].map((z) => roseSheet(z).source ?? roseSheet(z).name), ['Catalan Atlas', 'Dulcert, 1339', 'PT1N000E0000'], 'under fit, the chart the view fits holds the rose; at 6 Vesconte and the Carte Pisane fit and Dulcert is dropped, so the rose is its grid cell\'s');
   assert.deepEqual([4, 5.9, 6, 7.9, 8, 10].map(at), ['PT0N000E0000', 'PT0N000E0000', 'PT1N000E0000', 'PT1N000E0000', 'PT2N000E0000', 'PT3N000E0000']);
@@ -280,9 +280,9 @@ test('overlap rules: smallest, fit, all cut and all uncut each keep their own ch
   assert.deepEqual(curated(view2, 'fit'), ['Europe and the Mediterranean'], 'Dulcert is 1.2 windows wide at 4.33');
   assert.deepEqual(curated(view2, 'cut').sort(), curated(view2, 'uncut').sort());
   assert.ok(curated(view2, 'cut').length >= 3);
-  assert.equal(roseSheet(2.82, 'fit').name, 'The known world of 1375');
-  assert.equal(roseSheet(2.82, 'smallest').name, 'The world');
-  assert.equal(roseSheet(4.33, 'uncut').name, 'Europe and the Mediterranean', 'of the charts over the rose, the smallest');
+  assert.equal(roseSheet(2.82, { overlap: 'fit' }).name, 'The known world of 1375');
+  assert.equal(roseSheet(2.82, { overlap: 'smallest' }).name, 'The world');
+  assert.equal(roseSheet(4.33, { overlap: 'uncut' }).name, 'Europe and the Mediterranean', 'of the charts over the rose, the smallest');
 });
 
 test('cutOut cuts a line where it crosses an extent, and nowhere without one', () => {
@@ -293,4 +293,47 @@ test('cutOut cuts a line where it crosses an extent, and nowhere without one', (
   assert.deepEqual(a.map(([x]) => Math.round(x)), [-30, -10]);
   assert.deepEqual(b.map(([x]) => Math.round(x)), [10, 30]);
   assert.deepEqual(cutOut(line, [{ west: -10, east: 10, south: 50, north: 60 }]), [line], 'an extent beside the line cuts nothing');
+});
+
+test('origin zero: every band counts from 0E 0N, so a cell corner lies on it and the edges are whole cells from it', () => {
+  const zero = ORIGINS.zero, e = 1e-5;
+  for (const b of BANDS) {
+    const got = sheetsFor(bounds(b.from, -e, -e, e, e), { origin: zero });
+    assert.equal(got.length, 4, `band ${b.band}`);
+    for (const s of got) assert.ok([s.extent.west, s.extent.east].includes(0) && [s.extent.south, s.extent.north].includes(0), `${s.name} ${JSON.stringify(s.extent)}`);
+    assert.ok(got.some((s) => /^PT\dN0+E0+$/.test(s.name) && s.extent.west === 0 && s.extent.south === 0), 'N000E0000 is the cell whose south-west corner is 0, 0');
+  }
+  for (const s of sheetsFor({ lon: 12.3, lat: 41.9, zoom: 8 }, { origin: zero })) {
+    const h = s.extent.north - s.extent.south, w = s.extent.east - s.extent.west;
+    close(s.extent.south / h - Math.round(s.extent.south / h), 0);
+    close(s.extent.west / w - Math.round(s.extent.west / w), 0);
+  }
+  // the default is the rose, so a sheet set counted from the rose is the one given no origin
+  assert.deepEqual(sheetsFor({ lon: 12.3, lat: 41.9, zoom: 8 }, { origin: ROSE }), sheetsFor({ lon: 12.3, lat: 41.9, zoom: 8 }));
+});
+
+test('origin zero: the rose\'s sheet still holds the rose, in a cell no longer cornered on it', () => {
+  for (const z of [6, 8, 10]) {
+    const s = roseSheet(z, { origin: ORIGINS.zero, curated: false }), { west, east, south, north } = s.extent;
+    assert.ok(west <= ROSE.lon && ROSE.lon <= east && south <= ROSE.lat && ROSE.lat <= north, `z${z} ${s.name}`);
+    assert.ok(![west, east].includes(ROSE.lon), `z${z}: the rose is not on a cell edge`);
+  }
+});
+
+test('radius: a grid sheet\'s hidden circle takes the radius given; a curated sheet keeps its read one', () => {
+  const view = { lon: 7.4, lat: 40.5, zoom: 6.2 };
+  for (const radius of [0.25, 0.5, 0.8]) {
+    const got = sheetsFor(view, { radius, curated: true });
+    const grid = got.filter((s) => !s.curated), cur = got.filter((s) => s.curated);
+    assert.ok(grid.length && cur.length);
+    for (const s of grid) assert.deepEqual(s.circle, hiddenCircle(s.extent, radius));
+    for (const s of cur) { const c = CURATED.find((k) => k.name === s.name); close(s.circle.radius, c.radius / (c.extent.north - c.extent.south)); }
+  }
+});
+
+test('curated false: grid cells everywhere, none of them held back', () => {
+  const view = { lon: 7.4, lat: 40.5, zoom: 6.2 };
+  const plain = sheetsFor(view), with_ = sheetsFor(view, { curated: true });
+  assert.ok(plain.every((s) => !s.curated));
+  assert.ok(plain.filter((s) => !s.curated).length > with_.filter((s) => !s.curated).length, 'the curated sheets hold cells back');
 });
