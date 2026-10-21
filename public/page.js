@@ -3,7 +3,7 @@
 // ornaments slide with it, held to the earth; they are placed again when it stops. A row of six instruments
 // at the top right opens one drawer each, one at a time: the settings behind the rose, so the map has the
 // window, the charts, the points of interest, Go, the voyages and the anchorages. The view and the style are kept in the URL hash, e.g.
-// #map=zoom/lat/lon&projection=miller&sprites=s:serpent-a,v:kraken,v:rose-aguiar,p:tower&townsize=rank&names=0&rhumb=0&scale=chevron&scaleborder=blank&continents=5&regions=latin&regionszoom=7&land=green&islands=1&rivers=aguiar&lakes=marina&mountains=ink&trees=ink&seas=1&autotitle=0&title=Mare+Nostrum&ink=5a1a1a&parchment=eee&density=1.5;
+// #map=zoom/lat/lon&projection=miller&overlap=cut&sprites=s:serpent-a,v:kraken,v:rose-aguiar,p:tower&townsize=rank&names=0&rhumb=0&scale=chevron&scaleborder=blank&continents=5&regions=latin&regionszoom=7&land=green&islands=1&rivers=aguiar&lakes=marina&mountains=ink&trees=ink&seas=1&autotitle=0&title=Mare+Nostrum&ink=5a1a1a&parchment=eee&density=1.5;
 // a setting left at its default is left out, `sprites` too (keys with the pack shortened, v: s: p:); `mountains` is `ink`
 // or `off` (colour is the default); the hills are the Catalan sprites in `sprites`. `continents` and `regionszoom` are the zoom
 // they are drawn down from (0 off, the top always). `voyages=columbus,drake:1f4e8c` are the voyages in the order chosen, a picked
@@ -12,7 +12,7 @@
 // selection those chose, and are written back in the new form.
 // For a while, `debug=sheets[,rings]` and `tune=name:value,...` carry the under-the-hood section
 // (docs/atlas/under-the-hood.md), off by default.
-import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, sightMarks, SIGHT_TILES, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, sightMarks, SIGHT_TILES } from './scene.mjs';
 import { ORIGINS } from './atlas.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
 import { fold, bestPlace } from './placename.mjs';
@@ -45,7 +45,7 @@ const canvas = $('map'), ctx = canvas.getContext('2d');
 // cards beside the map, not on the sea.
 const phone = matchMedia('(max-width: 520px)');
 
-const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: 5, regions: 'latin', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyages: [], voyageWidth: VOYAGE_WIDTH, cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER };
+const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: 5, regions: 'latin', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyages: [], voyageWidth: VOYAGE_WIDTH, cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER, overlap: DEFAULT_OVERLAP };
 
 // ---------------------------------------------------------------- the sprites on offer
 
@@ -110,6 +110,8 @@ function styleFromHash() {
     scalePos: CORNERS.includes(q.get('scalepos')) ? q.get('scalepos') : DEFAULTS.scalePos,
     townSize: TOWN_SIZES.includes(q.get('townsize')) ? q.get('townsize') : DEFAULTS.townSize,
     placement: parsePlacement(q.get('placement')).text,
+    // how curated charts that overlap are drawn: one of OVERLAP_RULES (atlas.mjs)
+    overlap: OVERLAP_RULES.includes(q.get('overlap')) ? q.get('overlap') : DEFAULTS.overlap,
     // under the hood, for a while: the sheets in red and the knobs fixed in the code, each as its canonical text
     debug: parseDebug(q.get('debug')).text,
     tune: parseTune(q.get('tune')).text,
@@ -161,6 +163,7 @@ function writeHash() {
   if (st.mountains !== DEFAULTS.mountains) q.set('mountains', st.mountains);
   if (st.trees !== DEFAULTS.trees) q.set('trees', st.trees);
   if (st.placement) q.set('placement', st.placement);
+  if (st.overlap !== DEFAULTS.overlap) q.set('overlap', st.overlap);
   if (st.debug) q.set('debug', st.debug);
   if (st.tune) q.set('tune', st.tune);
   if (st.voyages.length) q.set('voyages', st.voyages.map((v) => (v.colour ? `${v.id}:${v.colour.slice(1)}` : v.id)).join(','));
@@ -300,6 +303,19 @@ const TREE_GLYPHS = {
   marina: svg(`<path d="M14 13v3" ${stroke('#3b2a1a', 1.2)}/><path d="${CROWN}" fill="#6b8a4a" stroke="#3b2a1a" stroke-width="1" stroke-linejoin="round"/>`),
   ink: svg(`<path d="M14 13v3" ${stroke('currentColor', 1.2)}/><path d="${CROWN}" ${stroke('currentColor', 1)}/><path d="M11 9l1 1M14 7l1 1M16 10l1 1" ${stroke('currentColor', 0.6)}/>`),
 };
+// Two charts, the smaller in the larger's corner, each with its hub and rays: what each overlap rule keeps and draws.
+const OVERLAP_GLYPHS = (() => {
+  const chart = (x, y, w, h, faint) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" ${stroke('currentColor', 1)}${faint ? ' opacity=".3"' : ''}/>`;
+  const big = (faint) => chart(2, 2, 24, 14, faint), small = (faint) => chart(14, 8, 12, 8, faint);
+  const bigRays = (cut) => `<path d="M9 9 2 2M9 9 26 2M9 9 2 16M9 9 ${cut ? '14 11.1' : '26 16'}M9 9H${cut ? 14 : 26}M9 9H2" ${stroke('currentColor', 0.6)}/>`;
+  const smallRays = `<path d="M20 12 14 8M20 12 26 8M20 12 26 16M20 12 14 16M20 12H14M20 12H26" ${stroke('currentColor', 0.6)}/>`;
+  return {
+    smallest: svg(big(true) + small() + smallRays),
+    fit: svg(big() + bigRays(false) + small(true)),
+    cut: svg(big() + small() + bigRays(true) + smallRays),
+    uncut: svg(big() + small() + bigRays(false) + smallRays),
+  };
+})();
 // Under the hood: the sheets' red, a sheet's outline and its ring, a grid's origin, the rose's lines.
 const RED = '#d00';
 const SHEET_GLYPH = `<rect x="4" y="3" width="20" height="12" ${stroke(RED, 1.5)}/>`;
@@ -315,6 +331,7 @@ const HOOD_GLYPHS = {
 };
 const ROSE_AT = `${Math.abs(ORIGINS.rose.lon)}°${ORIGINS.rose.lon < 0 ? 'W' : 'E'} ${Math.abs(ORIGINS.rose.lat)}°${ORIGINS.rose.lat < 0 ? 'S' : 'N'}`;
 const CHOICES = {
+  overlap: [['smallest', 'Smallest', 'only the smallest of the charts that overlap'], ['fit', 'Fit', 'the chart nearest one window wide'], ['cut', 'All, cut', 'every chart, its lines stopping at a smaller chart\'s edge'], ['uncut', 'All, uncut', 'every chart in full']].map(([value, label, note]) => [value, label, note, OVERLAP_GLYPHS[value]]),
   projection: [['mercator', 'Mercator', 'rhumb lines straight'], ['plate-carree', 'Plate carrée', 'equal degrees'], ['miller', 'Miller', 'poles tamed'], ['equal-area', 'Equal-area', 'Gall–Peters'], ['orthographic', 'Globe', 'orthographic'], ['azimuthal-equidistant', 'Azimuthal equidistant', 'true from the centre'], ['stereographic', 'Stereographic', 'the polar chart']].map(([value, label, note = '']) => [value, label, note, PROJECTION_GLYPHS[value]]),
   regions: [['latin', 'Latin', 'Hispania'], ['english', 'English', 'Iberia']],
   titleMode: [['auto', 'Automatic', 'what the view shows'], ['custom', 'Custom']],
@@ -408,6 +425,7 @@ function showStyle() {
   $('names').checked = style.names; $('rhumb').checked = style.rhumb; $('scale').value = style.scale; $('scaleBorder').value = style.scaleBorder;
   $('land').value = style.land; $('islands').value = style.islands ? 'on' : 'off'; $('seaTint').value = style.seaTint ? 'on' : 'off';
   $('rivers').value = style.rivers; $('lakes').value = style.lakes; $('trees').value = style.trees;
+  $('overlap').value = style.overlap;
   $('mountains').value = style.mountains; $('hills').value = CATALAN_KEYS.some((k) => selection.has(k)) ? 'catalan' : 'off';
   $('continentsZoom').value = style.continentsZoom; $('continentsOut').textContent = zoomLabel(style.continentsZoom);
   $('regions').value = style.regions; $('regionsZoom').value = style.regionsZoom; $('regionsOut').textContent = zoomLabel(style.regionsZoom);
@@ -438,6 +456,7 @@ function readControls() {
     // checked, by metro area; a link's townsize=population is kept until the box is touched
     townSize: $('townSize').checked ? (style.townSize === 'rank' ? 'area' : style.townSize) : 'rank',
     placement: style.placement, // chosen by the placement chips below
+    overlap: $('overlap').value,
     cartouchePos: style.cartouchePos, scalePos: style.scalePos, // set by dragging the cartouche or the scale bar
     ...readHood(),
     voyages: style.voyages, voyageWidth: Number($('voyageWidth').value), // chosen in the voyages drawer
@@ -764,7 +783,7 @@ for (const c of PLACEMENT_CHIPS) c.addEventListener('click', () => {
 // with the lead paragraph written for it) into groups of their own and back again, so a control is one
 // element and one hash key whichever layout shows it.
 const LAND_GROUP = ['continents', 'regions', 'land', 'colour', 'rivers', 'lakes', 'mountains', 'hills', 'trees', 'towns'];
-const BY_QUESTION = [['The chart', ['cartouche', 'projection', 'names', 'rhumb', 'scale']], ['The land', LAND_GROUP], ['The figures', ['density', 'monsters', 'ships', 'roses', 'placement', 'colours']]];
+const BY_QUESTION = [['The chart', ['cartouche', 'projection', 'names', 'rhumb', 'scale', 'overlap']], ['The land', LAND_GROUP], ['The figures', ['density', 'monsters', 'ships', 'roses', 'placement', 'colours']]];
 const LAYOUTS = {
   default: { label: 'Default', note: 'the drawer by kind of thing: sea, roses, towns, land, cartouche, map, colours',
     glyph: svg(`<path d="M3 3h22M3 6.5h15M3 10h22M3 13.5h12M3 17h18" ${stroke('currentColor', 1)}/>`) },
@@ -773,7 +792,7 @@ const LAYOUTS = {
   moods: { label: 'Moods', note: 'five looks at a click, every control under Fine controls', groups: BY_QUESTION, moods: true,
     glyph: svg(`<rect x="1.5" y="2" width="4.4" height="7" rx="2.2" fill="currentColor"/>${[6.8, 12.1, 17.4, 22.7].map((x) => `<rect x="${x}" y="2" width="4.4" height="7" rx="2.2" ${stroke('currentColor', 0.8)}/>`).join('')}<path d="M3 12.5l2 2 2-2M9 13.5h16" ${stroke('currentColor', 0.8)}/>`) },
   sheet: { label: 'By the sheet', note: 'where it is drawn: the sea, the land, the margins',
-    groups: [['Sea', ['monsters', 'ships', 'density', 'placement']], ['Land', LAND_GROUP], ['Margins', ['cartouche', 'scale', 'roses', 'rhumb', 'names', 'projection', 'colours']]],
+    groups: [['Sea', ['monsters', 'ships', 'density', 'placement']], ['Land', LAND_GROUP], ['Margins', ['cartouche', 'scale', 'roses', 'overlap', 'rhumb', 'names', 'projection', 'colours']]],
     glyph: svg(`<rect x="1.5" y="1.5" width="25" height="15" ${stroke('currentColor', 1)}/><rect x="4" y="4" width="20" height="10" ${stroke('currentColor', 0.5)}/><path d="M14 5q5 0 8 3t-3 5h-5q-2-4 0-8Z" fill="#c47f2c" fill-opacity=".75"/><path d="M5.5 8q1.5-1.5 3 0t3 0M5.5 11q1.5-1.5 3 0" ${stroke('#4a7fa0', 0.8)}/>`) },
 };
 const CTLS = new Map([...document.querySelectorAll('#drawer .ctl')].map((el) => [el.dataset.ctl, el]));
@@ -1267,7 +1286,7 @@ locate.addEventListener('click', () => {
 });
 
 for (const id of Object.values(KNOB_SLIDERS)) $(id).addEventListener('input', (e) => { e.target.dataset.set = '1'; }); // moved, so set
-for (const id of ['debug', ...Object.values(KNOB_CHIPS), ...Object.values(KNOB_SLIDERS), 'projection', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'scaleBorder', 'land', 'islands', 'seaTint', 'rivers', 'lakes', 'trees', 'mountains', 'hills', 'continentsZoom', 'regions', 'regionsZoom', 'titleMode', 'townSize', 'voyageWidth']) $(id).addEventListener('input', readControls);
+for (const id of ['debug', 'overlap', ...Object.values(KNOB_CHIPS), ...Object.values(KNOB_SLIDERS), 'projection', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'scaleBorder', 'land', 'islands', 'seaTint', 'rivers', 'lakes', 'trees', 'mountains', 'hills', 'continentsZoom', 'regions', 'regionsZoom', 'titleMode', 'townSize', 'voyageWidth']) $(id).addEventListener('input', readControls);
 let typing = 0; // a typed title is placed when the typing pauses, not on every key: a placement takes up to a few hundred ms
 $('title').addEventListener('input', () => { clearTimeout(typing); typing = setTimeout(readControls, 400); });
 addEventListener('hashchange', () => { layout = layoutFromHash(); showLayout(); view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); showVoyage(); render(); });

@@ -7,7 +7,7 @@
 // A view is a centre, zoom and projection, { lon, lat, zoom, projection }, on a W x H canvas; the
 // projection is one of PROJECTIONS, Mercator when left out.
 
-import { sheetsFor, roseSheet, inShadow, territory, cutOut, WORLD_BAND, BANDS as ATLAS_BANDS, ROSE as ATLAS_ROSE, ORIGINS as ATLAS_ORIGINS } from './atlas.mjs';
+import { sheetsFor, roseSheet, inShadow, territory, cutOut, overlapRule, OVERLAP_RULES, DEFAULT_OVERLAP, WORLD_BAND, BANDS as ATLAS_BANDS, ROSE as ATLAS_ROSE, ORIGINS as ATLAS_ORIGINS } from './atlas.mjs';
 import { fill, trace, limn, rhumb, place, letter, geojsonPolygons, geojsonRings } from 'coast-wright';
 import { bandOf } from './bands.mjs';
 import { islandInfo, ISLAND_KM2 } from './island.mjs';
@@ -1308,7 +1308,7 @@ function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
     const put = (sprite, n) => { held[sh.name] = (held[sh.name] ?? 0) + 1; if (shows(data.proj, n.lon, n.lat)) { const [fx, fy] = fp.project(n.lon, n.lat); roseDraws.push({ sprite, ...at(n), fx, fy, size: sprite.sizePx, sheet: sh.name }); } };
     if (ownSet(world, sh)) {
       // a chart's own roses are inside the sheet's allotment, like every other ornament of it
-      for (const f of ownFigures(sh, 'rose').slice(0, allotment(sh))) put(figureSprite(sh, roses, ring, f), f);
+      for (const f of ownFigures(sh, 'rose').slice(0, allotment(sh))) { const r = figureSprite(sh, roses, ring, f); put({ ...r, sizePx: capBig(r.sizePx) }, f); }
       continue;
     }
     // a smaller kept sheet's ground is its own: no rose of this sheet is placed there
@@ -1817,7 +1817,7 @@ function latticeOf(scene, data) {
   const reach = Math.min(180, (Math.hypot(W, H) * 1.5 / data.proj.k) * 180 / Math.PI);
   // a sheet's lines reach its page diagonal; a window's, past the scene's far corner
   const origins = scene.sheets
-    ? scene.sheets.flatMap((sh) => [sh.circle, ...sh.circle.nodes].filter((n) => !inShadow(sh, n.lon, n.lat)).map((n) => ({ lon: n.lon, lat: n.lat, reach: sh.reach })))
+    ? scene.sheets.flatMap((sh) => [sh.circle, ...sh.circle.nodes].filter((n) => !inShadow(sh, n.lon, n.lat)).map((n) => ({ lon: n.lon, lat: n.lat, reach: sh.reach, shadow: sh.shadow })))
     : [scene.centre, ...scene.nodes].map((n) => { const [lon, lat] = data.proj.invert(n.x, n.y); return { lon, lat, reach }; });
   // The Catalan Atlas rose's lines run at every zoom, beside the network of the sheets or the window
   // (docs/atlas/README.md, "Zoom bands"), as one more hub of the view's band: the reach of the sheet that
@@ -1825,12 +1825,14 @@ function latticeOf(scene, data) {
   // In the world band the rose is a node of the world's ring, whose lines are already there. `roseLines` false
   // (the `roselines` knob) leaves the rose to whatever sheet it falls in.
   if (scene.roseLines !== false && !origins.some((o) => Math.abs(o.lon - ATLAS_ROSE.lon) < 1e-9 && Math.abs(o.lat - ATLAS_ROSE.lat) < 1e-9)) origins.push({ lon: ATLAS_ROSE.lon, lat: ATLAS_ROSE.lat, reach: scene.roseReach ?? 180 });
-  // A line runs its whole reach: it is never cut where another sheet lies (#199).
-  for (const { lon, lat, reach } of origins) {
+  // A line runs its whole reach: it is never cut where another sheet lies (#199), except under the `cut`
+  // overlap rule, where it stops at the edge of a smaller chart over its sheet (the sheet's shadow).
+  const cut = scene.overlap === 'cut';
+  for (const { lon, lat, reach, shadow } of origins) {
     for (let k = 0; k < RHUMB_RAYS; k++) {
       const kind = k % 4 === 0 ? 0 : k % 2 === 1 ? 1 : 2; // wind, quarter (red), half (green)
       const ray = rhumb([lon, lat], 90 + (k * 360) / RHUMB_RAYS, reach * Math.cos(lat * Math.PI / 180));
-      for (const line of cutOut(ray)) rays.push({ kind, line, box: bbox(line.map(([a, b]) => data.proj.project(a, b))) });
+      for (const line of cutOut(ray, cut ? shadow : null)) rays.push({ kind, line, box: bbox(line.map(([a, b]) => data.proj.project(a, b))) });
     }
   }
   lattices.set(scene, rays);
@@ -2814,7 +2816,8 @@ export function parsePlacement(text) {
 }
 export async function createScene(environment, opts = {}) {
   env = environment;
-  const { ink = '#3b2a1a', continentsZoom, regionsZoom, scaleBorder = 'bordered', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', title = 'PORTOLANI', autoTitle = true, pinTitle, land: landMode = 'islands', islands, seaTint = false, rivers = 'off', lakes = 'off', relief = [], trees = 'off', historical = true, seed: pickedSeed, cartouchePos, scalePos } = opts;
+  const { ink = '#3b2a1a', continentsZoom, regionsZoom, scaleBorder = 'bordered', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', title = 'PORTOLANI', autoTitle = true, pinTitle, land: landMode = 'islands', islands, seaTint = false, rivers = 'off', lakes = 'off', relief = [], trees = 'off', historical = true, seed: pickedSeed, cartouchePos, scalePos, overlap: overlapPick } = opts;
+  const overlap = overlapRule(overlapPick); // how overlapping curated charts are drawn (atlas.mjs, OVERLAP_RULES)
   const legacy = ['rendering', 'rose', 'monster', 'town'].some((k) => opts[k] !== undefined);
   const townBy = townSize ?? (legacy ? 'rank' : 'area');
   // `pinned` (default true): the cartouche and the scale bar are drawn on the sheet, pinned to the window.
@@ -2878,12 +2881,12 @@ export async function createScene(environment, opts = {}) {
   const worldBand = view.zoom < ATLAS_BANDS[0].from;
   // The knobs: `curated` 0 leaves grid cells everywhere but the world band, which is one sheet either way.
   const origin = ATLAS_ORIGINS[knobs.origin];
-  const sheets = sheetsFor(view, { radius: knobs.radius, curated: knobs.curated === 1 || worldBand, origin }).map((sh) => ({ ...sh, reach: sheetReach(sh.extent, knobs.reach),
+  const sheets = sheetsFor(view, { radius: knobs.radius, curated: knobs.curated === 1 || worldBand, overlap, origin }).map((sh) => ({ ...sh, reach: sheetReach(sh.extent, knobs.reach),
     from: worldBand ? Math.log2(1125 / (sh.extent.east - sh.extent.west)) : ATLAS_BANDS.find((b) => b.band === sh.band).from }));
-  const roseReach = sheetReach(roseSheet(view.zoom, { origin, curated: knobs.curated === 1 }).extent, knobs.reach);
+  const roseReach = sheetReach(roseSheet(view.zoom, { origin, curated: knobs.curated === 1, overlap }).extent, knobs.reach);
   const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, historical, seaAt: sheets && seaAtOf(coarse), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, title, autoTitle, pinTitle,
     continentsEnd: zoomEnd(continentsZoom, CONTINENT_ZOOM_END), regionsEnd: zoomEnd(regionsZoom, REGION_ZOOM_END),
-    scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM && pinned, pinned, cartouchePos, scalePos, townSize: townBy, seed: legacy ? null : pickedSeed == null ? castSeed(view) : pickedSeed | 0, salt: legacy || pickedSeed == null ? 0 : pickedSeed | 0 }), show, scaleSprite, voyages, roseReach, roseLines: knobs.roselines === 1, debug, scalePos: cornerOf(scalePos, DEFAULT_SCALE_CORNER) };
+    scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM && pinned, pinned, cartouchePos, scalePos, townSize: townBy, seed: legacy ? null : pickedSeed == null ? castSeed(view) : pickedSeed | 0, salt: legacy || pickedSeed == null ? 0 : pickedSeed | 0 }), show, scaleSprite, voyages, roseReach, roseLines: knobs.roselines === 1, debug, overlap, scalePos: cornerOf(scalePos, DEFAULT_SCALE_CORNER) };
   data.trees = TREES[STYLE.trees] ? plantTrees({ proj: data.proj, isLand: scene.field.isLand, scene, lakes: STYLE.lakes !== 'off' && water ? water.lakes : [], w: W, h: H }) : [];
   data.palms = plantPalms({ proj: data.proj, isLand: scene.field.isLand, scene, w: W, h: H,
     pois: scene.lesser.filter((l) => l.poi).map((l) => ({ x: l.x, y: l.y, palms: POIS.find((p) => p.name === l.name)?.palms ?? 0 })) });
@@ -2912,4 +2915,5 @@ export const viewProjection = (view) => makeProjection(clampView(view));
 export const TOWN_SIZES = ['area', 'population', 'rank'];
 export { RIVER_STYLES, LAKE_STYLES, TREE_STYLES, RELIEF_STYLES };
 export const MAX_ZOOM = ZOOM.max;
+export { OVERLAP_RULES, DEFAULT_OVERLAP };
 export { CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, anchorScene, drawAnchored, towerGlyph, SCALE_NAMES, readManifests, listStyles, listSprites, defaultSprites, selectSprites, chooseSprites, drawScene, drawGround, drawLate, LATE, IN_DRAG, covers, panView, zoomView, clampView, viewOfFrame, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };

@@ -151,10 +151,63 @@ export function territory(sheet, from) {
   return area / (width * width * ASPECT);
 }
 
-// A line [[lon, lat], ...] in the pieces that each stay on one side of the antimeridian. A line is never cut
-// where another sheet lies: every sheet's lines run their whole reach (#199).
+// How the curated charts that overlap one another are drawn (the page's `overlap=`; #199):
+//   smallest  only the smallest of the overlapping charts; the grid holds the others' ground, and the world
+//             band is the planisphere alone
+//   fit       only the chart closest to one window wide at the view's zoom (the default)
+//   cut       every chart, each line stopping at the edge of a smaller chart over it (cutOut)
+//   uncut     every chart in full, lines and figures alike
+// Under smallest and fit no two kept charts overlap, so one network holds any place.
+export const OVERLAP_RULES = ['smallest', 'fit', 'cut', 'uncut'];
+export const DEFAULT_OVERLAP = 'fit';
+export const overlapRule = (rule) => (OVERLAP_RULES.includes(rule) ? rule : DEFAULT_OVERLAP);
+
+// The part of segment a-b, as [t0, t1] along it, inside rectangle r (Liang-Barsky), or null.
+function across(ax, ay, bx, by, r) {
+  let t0 = 0, t1 = 1;
+  const dx = bx - ax, dy = by - ay;
+  for (const [p, q] of [[-dx, ax - r.x0], [dx, r.x1 - ax], [-dy, ay - r.y0], [dy, r.y1 - ay]]) {
+    if (p === 0) { if (q < 0) return null; continue; }
+    const t = q / p;
+    if (p < 0) { if (t > t1) return null; if (t > t0) t0 = t; } else { if (t < t0) return null; if (t < t1) t1 = t; }
+  }
+  return t1 > t0 ? [t0, t1] : null;
+}
+
+// A line [[lon, lat], ...] in the pieces that each stay on one side of the antimeridian, and, given `extents`
+// (the `cut` rule), with what lies inside any of them cut out: the runs left, each a line. The cut is made on
+// the Mercator page, where a rhumb line's segments are straight, so a run ends on the edge. Without extents a
+// line is never cut where another sheet lies: every sheet's lines run their whole reach (#199).
 const PAGE_LAT = 89.9; // a line may run to a pole, which has no Mercator y
-export const cutOut = (line) => splitAtSeam(line);
+export function cutOut(line, extents) {
+  const pieces = splitAtSeam(line);
+  if (!extents?.length) return pieces;
+  return pieces.flatMap((piece) => cutPiece(piece, extents));
+}
+
+function cutPiece(line, extents) {
+  const yOf = (lat) => mercY(Math.max(-PAGE_LAT, Math.min(PAGE_LAT, lat)));
+  const rects = extents.map((e) => ({ x0: e.west, x1: e.east, y0: yOf(e.south), y1: yOf(e.north) }));
+  const runs = [];
+  let run = null;
+  for (let i = 1; i < line.length; i++) {
+    const a = line[i - 1], b = line[i], ay = yOf(a[1]), by = yOf(b[1]);
+    const at = (t) => (t === 0 ? a : t === 1 ? b : [a[0] + (b[0] - a[0]) * t, unMercY(ay + (by - ay) * t)]);
+    const hidden = rects.map((r) => across(a[0], ay, b[0], by, r)).filter(Boolean).sort((p, q) => p[0] - q[0]);
+    // what the hidden spans leave of the segment
+    const kept = [];
+    let s = 0;
+    for (const [h0, h1] of hidden) { if (h0 > s) kept.push([s, h0]); s = Math.max(s, h1); }
+    if (s < 1) kept.push([s, 1]);
+    for (const [k0, k1] of kept) {
+      if (k0 > 0 || !run) { if (run) runs.push(run); run = [at(k0)]; }
+      run.push(at(k1));
+      if (k1 < 1) { runs.push(run); run = null; }
+    }
+  }
+  if (run) runs.push(run);
+  return runs;
+}
 
 // A line [[lon, lat], ...] whose longitudes are wrapped to +-180, as rhumb() gives them, in pieces that
 // each stay on one side: a segment that jumps the antimeridian (179 to -177) is a 4 degree step the other way,
@@ -188,33 +241,43 @@ function curatedCircle(c) {
 // Widths, in windows, a world sheet is seen at in the first band; narrower or wider, it contributes nothing to the view.
 const WORLD_SEEN = { min: 0.25, max: 4 };
 
-// The curated sheets of a band: in the first band the world sheets seen at the view's zoom, in a later band the
-// sheets that serve it. Of those that overlap one another only the smallest is a sheet, so one network holds
-// any place and no line need stop at another's edge (#199); the grid covers the ground of the others.
-// Smallest first, a sheet is kept where it overlaps none kept before it.
-function keptIn(band, zoom) {
-  const windows = (c) => (c.extent.east - c.extent.west) / (1125 / 2 ** zoom);
+// The curated sheets of a band under an overlap rule (OVERLAP_RULES). The candidates are, in the world band and
+// the first band, the world sheets seen at the view's zoom, in a later band the sheets that serve it. `smallest`
+// and `fit` sort them (by area, or by distance from one window wide at the view's zoom) and keep a sheet where
+// it overlaps none kept before it, so the grid covers the ground of the others; `cut` and `uncut` keep them all,
+// smallest first. Under `smallest` the world band keeps none: it is the planisphere alone.
+function keptIn(band, zoom, rule = DEFAULT_OVERLAP) {
+  if (band === WORLD_BAND && rule === 'smallest') return [];
+  const windows = (c) => (c.extent.east - c.extent.west) / (WINDOW_DEG / 2 ** zoom);
   const seen = (c) => windows(c) >= WORLD_SEEN.min && windows(c) <= WORLD_SEEN.max;
+  const serves = (c) => (band === WORLD_BAND || band === BANDS[0] ? c.world && seen(c) : c.bands.includes(band.band));
+  const misfit = (c) => Math.abs(Math.log2(windows(c)));
+  const order = rule === 'fit' ? (p, q) => misfit(p) - misfit(q) || p.area - q.area : (p, q) => p.area - q.area;
+  const all = rule === 'cut' || rule === 'uncut';
   const kept = [];
-  for (const c of CURATED.filter((c) => (band === BANDS[0] ? c.world && seen(c) : c.bands.includes(band.band))).sort((p, q) => p.area - q.area)) if (!kept.some((k) => overlaps(k.extent, c.extent))) kept.push(c);
+  for (const c of CURATED.filter(serves).sort(order)) if (all || !kept.some((k) => overlaps(k.extent, c.extent))) kept.push(c);
   return kept;
 }
 
 // The curated sheets the band keeps that the view overlaps, each with `shadow`: the extents of the smaller
-// kept sheets over it, where its roses and beasts are not placed (none while kept sheets never overlap).
-function curatedFor(band, b, zoom) {
-  const serving = keptIn(band, zoom);
+// kept sheets over it, where its roses and beasts are not placed and, under `cut`, where its lines stop
+// (none under `uncut`, and none while kept sheets never overlap).
+function curatedFor(band, b, zoom, rule) {
+  const serving = keptIn(band, zoom, rule);
+  const shadowOf = (c) => (rule === 'uncut' ? [] : serving.filter((o) => o.area < c.area && overlaps(o.extent, c.extent)).map((o) => o.extent));
   return serving.filter((c) => overlaps(c.extent, b)).map((c) => ({
     name: c.name, source: c.source, curated: true, band: band.band, bandName: band.name, extent: c.extent,
     circle: curatedCircle(c),
     ...(c.ornaments && { ornaments: c.ornaments, style: c.style }),
-    shadow: serving.filter((o) => o.area < c.area && overlaps(o.extent, c.extent)).map((o) => o.extent),
+    shadow: shadowOf(c),
   }));
 }
 
 // The world band (below the first band's zoom) is one sheet, the whole earth, with one ring as a planisphere
 // has (Juan de la Cosa's, Cantino's): the hub mid-ocean on the equator, due south of the Catalan rose, and the
-// rose the ring's north node, so the band's lines run through it (#199). Its lines reach the page.
+// rose the ring's north node, so the band's lines run through it (#199). Its lines reach the page. Under every
+// rule but `smallest` the world sheets seen at the zoom lie over it, and shadow its nodes as the grid's cells
+// are replaced in the bands above.
 export const WORLD_BAND = { band: -1, name: 'world', from: 2, to: BANDS[0].from };
 export const WORLD_SHEET = (() => {
   const R = mercY(ROSE.lat), nodes = []; // the ring's radius on the page, in degrees of longitude
@@ -229,17 +292,20 @@ export const WORLD_SHEET = (() => {
 })();
 
 // Every grid sheet the view overlaps: [{ name, band, bandName, row, col, extent, circle }], counted out from `origin`
-// (ORIGINS; the rose by default). With `curated`, each band takes the curated sheets that serve it (curatedFor), and a grid cell whose centre lies in one
-// is left out, so a curated sheet replaces the cells it holds (#199); the world band (below the first band's
-// zoom) is the one world sheet.
-export function sheetsFor(view, { radius = 0.5, curated = false, origin = ROSE } = {}) {
-  const band = bandFor(view.zoom);
+// (ORIGINS; the rose by default). With `curated`, each band takes the curated sheets that serve it under the `overlap`
+// rule (curatedFor), and a grid cell whose centre lies in one is left out, so a curated sheet replaces the cells it
+// holds (#199); the world band (below the first band's zoom) is the world sheet, under the charts the rule keeps there.
+export function sheetsFor(view, { radius = 0.5, curated = false, overlap = DEFAULT_OVERLAP, origin = ROSE } = {}) {
+  const band = bandFor(view.zoom), rule = overlapRule(overlap);
   const h = band.height;
   const b = viewBounds(view);
   const world = view.zoom < BANDS[0].from;
   const all = { west: -180, east: 180, south: -90, north: 90 };
-  if (curated && world) return [WORLD_SHEET];
-  const everywhere = curated ? curatedFor(band, all, view.zoom) : [];
+  if (curated && world) {
+    const shadow = rule === 'uncut' ? [] : keptIn(WORLD_BAND, view.zoom, rule).map((c) => c.extent);
+    return [...curatedFor(WORLD_BAND, b, view.zoom, rule), { ...WORLD_SHEET, shadow }];
+  }
+  const everywhere = curated ? curatedFor(band, all, view.zoom, rule) : [];
   const cur = everywhere.filter((c) => overlaps(c.extent, b));
   const held = (extent) => everywhere.some((c) => within(c.extent, (extent.west + extent.east) / 2, (extent.south + extent.north) / 2));
   // Rows out from the origin up to the page's edge: a pole has no Mercator centre, so a row that would reach
@@ -269,11 +335,13 @@ export function sheetsFor(view, { radius = 0.5, curated = false, origin = ROSE }
 }
 
 // The sheet that holds the Catalan Atlas rose at a zoom, whatever the view: the curated sheet over it whose
-// ground it is, or else the grid cell north-east of it (whose south-west corner it is, counted from the rose).
-// Its reach is the rose's (#199). `origin` and `curated` as sheetsFor's; the world band is the one world sheet.
-export function roseSheet(zoom, { origin = ROSE, curated = true } = {}) {
-  if (zoom < BANDS[0].from) return WORLD_SHEET;
-  const e = 1e-6, got = curated ? sheetsFor({ zoom, west: ROSE.lon - e, east: ROSE.lon + e, south: ROSE.lat - e, north: ROSE.lat + e }, { curated: true, origin }) : [];
+// ground it is (the smallest, where the rule keeps several), or else the world sheet below the first band and the
+// grid cell north-east of it above (whose south-west corner it is, counted from the rose). Its reach is the rose's
+// (#199). `origin` and `curated` as sheetsFor's.
+export function roseSheet(zoom, { origin = ROSE, curated = true, overlap = DEFAULT_OVERLAP } = {}) {
+  const world = zoom < BANDS[0].from;
+  if (world && !curated) return WORLD_SHEET;
+  const e = 1e-6, got = curated ? sheetsFor({ zoom, west: ROSE.lon - e, east: ROSE.lon + e, south: ROSE.lat - e, north: ROSE.lat + e }, { curated: true, origin, overlap }) : [];
   return got.find((s) => s.curated && within(s.extent, ROSE.lon, ROSE.lat) && !inShadow(s, ROSE.lon, ROSE.lat))
-    ?? sheetsFor({ zoom: Math.max(zoom, BANDS[0].from), west: ROSE.lon + e, east: ROSE.lon + 2 * e, south: ROSE.lat + e, north: ROSE.lat + 2 * e }, { origin })[0];
+    ?? (world ? WORLD_SHEET : sheetsFor({ zoom, west: ROSE.lon + e, east: ROSE.lon + 2 * e, south: ROSE.lat + e, north: ROSE.lat + 2 * e }, { origin })[0]);
 }
