@@ -73,6 +73,9 @@ jobs:
       - run: npx playwright-core install chromium-headless-shell
       - run: node --test test/touch.test.mjs
         env: { TOUCH_REQUIRED: '1' }
+      # the URL hash: view, Reset, Copy link and the drawer sliders (test/hash.test.mjs)
+      - run: node --test test/hash.test.mjs
+        env: { HASH_REQUIRED: '1' }
 
   # Refuses to call an empty PR green: a branch whose tree equals its base at
   # the merge base (a stray commit reverted it) merges cleanly and lands
