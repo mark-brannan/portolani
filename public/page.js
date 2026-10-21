@@ -709,17 +709,31 @@ canvas.addEventListener('wheel', (e) => {
 
 // ---------------------------------------------------------------- going somewhere
 
-// The places: the anchorages (home first, then the seas and islands worth the flight) and the points of
-// interest (where the charts were made, and the remote islands). The charts: each sheet's frame, from the
-// centres read off the scans (docs/atlas/centres.md) and the frames of the scans the ornaments come from.
-// Go finds any of them by name.
+// The places: the anchorages (home first, then the world's regions, then the seas and islands worth the
+// flight) and the points of interest (where the charts were made, the noteworthy ports by era, and the
+// remote islands). The charts: each sheet's frame, from the centres read off the scans
+// (docs/atlas/centres.md) and the frames of the scans the ornaments come from, and the city its school
+// worked in. Each entry may carry a caption (`text`), shown under it; until it has one the line says
+// "notes to come". Go finds any of them by name.
 const around = (lon, lat, r) => viewOfFrame({ lonMin: lon - r, lonMax: lon + r, latMin: lat - r, latMax: lat + r });
 const at = (lon, lat, zoom) => ({ lon, lat, zoom });
 const both = (a, b) => viewOfFrame({ lonMin: a[0] - a[2], lonMax: b[0] + b[2], latMin: Math.min(a[1] - a[2], b[1] - b[2]), latMax: Math.max(a[1] + a[2], b[1] + b[2]) }); // two centres, west then east, on one sheet
-const ANCHORAGES = [ // group, [name, view, title, note]
+const CAPTION = 'notes to come'; // the line under an entry until its caption is written
+// A group: [heading, rows, sub] (an empty heading for none, sub for a heading under the one before);
+// a row: [name, view, title, note, text], the title the cartouche's when it differs from the name.
+const ANCHORAGES = [
   ['', [
     ['Home: the Mediterranean', DEFAULT_VIEW, 'The Mediterranean'],
     ['The world', at(10, 25, 0), 'The World'],
+    ['The North', viewOfFrame({ lonMin: 0, lonMax: 40, latMin: 54, latMax: 72 })], // the Carta Marina's frame
+  ]],
+  ['Regions', [ // a view covers its whole frame and crops what overflows the window, so each frame is about the window's shape
+    ['Europe and the Atlantic', viewOfFrame({ lonMin: -35, lonMax: 45, latMin: 25, latMax: 70 })],
+    ['The Indian Ocean and Arabia', viewOfFrame({ lonMin: 20, lonMax: 120, latMin: -30, latMax: 32 })],
+    ['The China Seas', viewOfFrame({ lonMin: 92, lonMax: 150, latMin: 2, latMax: 40 })],
+    ['The Malay archipelago', viewOfFrame({ lonMin: 95, lonMax: 135, latMin: -11, latMax: 8 })],
+    ['The Caribbean', viewOfFrame({ lonMin: -90, lonMax: -58, latMin: 8, latMax: 28 })],
+    ['The Pacific', viewOfFrame({ lonMin: 150, lonMax: 280, latMin: -47, latMax: 30 })], // Hawai'i, Aotearoa and Rapa Nui, across the date line: 280 is 80°W
   ]],
   ['Seas and islands', [
     ['Guam', at(144.79, 13.44, 7)], // Islas de los Ladrones
@@ -730,29 +744,57 @@ const ANCHORAGES = [ // group, [name, view, title, note]
   ]],
 ];
 // the places that are lettered on the chart whatever the city data holds are in scripts/pois.mjs
+const port = (lon, lat) => at(lon, lat, 7.5);
 const SIGHTS = [
   ['Where the charts were made', [
-    ['Genoa', at(8.93, 44.41, 7.5), null, 'Vesconte, 1311'],
-    ['Venice', at(12.33, 45.44, 7.5), null, 'Pizzigani, 1367'],
+    ['Genoa', port(8.93, 44.41), null, 'Vesconte, 1311'],
+    ['Venice', port(12.33, 45.44), null, 'Pizzigani, 1367'],
     ['Majorca', at(3.0, 39.6, 7), null, 'Cresques, 1375'],
-    ['Lisbon', at(-9.14, 38.72, 7.5), null, 'the Armazém'],
-    ['Seville', at(-5.98, 37.39, 7.5), null, 'Casa de Contratación'],
-    ['Dieppe', at(1.08, 49.93, 7.5), null, 'Vallard, 1547'],
+    ['Lisbon', port(-9.14, 38.72), null, 'the Armazém'],
+    ['Seville', port(-5.98, 37.39), null, 'Casa de Contratación'],
+    ['Dieppe', port(1.08, 49.93), null, 'Vallard, 1547'],
   ]],
+  // three eras of six ports, most of them outside Europe
+  ['Noteworthy ports', []],
+  ['The ancient world', [
+    ['Alexandria', port(29.89, 31.20), null, 'Ptolemaic; the Pharos'],
+    ['Tyre', port(35.20, 33.27), null, 'Phoenician'],
+    ['Carthage', port(10.33, 36.84), null, 'Phoenician, then Punic'],
+    ['Ostia', port(12.29, 41.76), null, "Rome's harbour"],
+    ['Berenike', port(35.47, 23.91), null, 'Red Sea, for India'],
+    ['Barygaza', port(72.99, 21.71), 'Barygaza (Bharuch)', 'in the Periplus'],
+  ], 'sub'],
+  ['The age of discovery', [
+    ['Lisbon', port(-9.14, 38.72), null, 'the Carreira da Índia'], // also a chart city above, on purpose: the same view, so Go lands in one place
+    ['Elmina', port(-1.35, 5.08), null, 'Portuguese, then Dutch, fort'],
+    ['Goa', port(73.91, 15.50), null, "Portugal's Asian capital"],
+    ['Manila', port(120.98, 14.60), null, 'the galleons, 1571'],
+    ['Acapulco', port(-99.88, 16.86), null, 'the galleons, 1565'],
+    ['Batavia', port(106.83, -6.18), 'Batavia (Jakarta)', 'the VOC, 1619'],
+  ], 'sub'],
+  ['The modern world', [
+    ['Suez', port(32.55, 29.97), null, 'the canal, 1869'],
+    ['Panama', port(-79.53, 8.97), null, 'the canal, 1914'],
+    ['Singapore', port(103.83, 1.28), null, '1819'],
+    ['Hong Kong', port(114.20, 22.30), null, '1841'],
+    ['Shanghai', port(121.47, 31.23), null, 'treaty port, 1843'],
+    ['Rotterdam', port(4.48, 51.92), null, 'the Nieuwe Waterweg, 1872'],
+  ], 'sub'],
   ['Remote islands', [
     ['Pukapuka Atoll', at(-138.8, -14.82, 6.5), 'Pukapuka'], // Magellan's San Pablo, 1521 (the Tuamotu one)
     ['Pitcairn Islands', viewOfFrame({ lonMin: -131.3, lonMax: -124.2, latMin: -26.6, latMax: -22.4 })], // all four; the latitudes padded so the longitudes bind
   ]],
 ];
-const CHARTS = [ // name, year, view
-  ['Carte Pisane', 'c. 1275', both([7.4, 40.0, 8], [27.4, 36.8, 7.5])],
-  ['Vesconte', '1311', around(25.2, 37.5, 3)],
-  ['Dulcert', '1339', around(14.5, 40.0, 17)],
-  ['Catalan Atlas', '1375', both([-20.7, 42.1, 16], [-5.4, 42.3, 16])],
-  ['De la Cosa', '1500', both([-45, 23.4, 15], [65, 23.4, 15])],
-  ['Carta Marina', '1539', viewOfFrame({ lonMin: 0, lonMax: 40, latMin: 54, latMax: 72 })],
-  ['De Bry, Virginia', '1590', at(-76, 36.28, 7.47)],
-].map(([name, year, v]) => ({ name, year, view: { ...v, title: name } }));
+// name, year, view, [the city it was made in, its view], text
+const CHARTS = [
+  ['Carte Pisane', 'c. 1275', both([7.4, 40.0, 8], [27.4, 36.8, 7.5]), ['Genoa', port(8.93, 44.41)]], // maker unknown; Genoa the usual attribution, Pisa only its owners
+  ['Vesconte', '1311', around(25.2, 37.5, 3), ['Genoa', port(8.93, 44.41)]], // signed "de Janua"; he later worked in Venice, and where this sheet was drawn is disputed
+  ['Dulcert', '1339', around(14.5, 40.0, 17), ['Majorca', port(2.65, 39.57)]], // signed in the city of Majorca, today's Palma
+  ['Catalan Atlas', '1375', both([-20.7, 42.1, 16], [-5.4, 42.3, 16]), ['Majorca', port(2.65, 39.57)]], // Cresques Abraham's workshop, Palma
+  ['De la Cosa', '1500', both([-45, 23.4, 15], [65, 23.4, 15]), ['El Puerto de Santa María', port(-6.23, 36.60)]], // signed "la fizo en el puerto de S. Mª"
+  ['Carta Marina', '1539', viewOfFrame({ lonMin: 0, lonMax: 40, latMin: 54, latMax: 72 }), ['Venice', port(12.33, 45.44)]], // Olaus Magnus had it printed there
+  ['De Bry, Virginia', '1590', at(-76, 36.28, 7.47), ['Frankfurt', port(8.68, 50.11)]], // de Bry's America, part I, printed at Frankfurt am Main
+].map(([name, year, v, [city, made], text]) => ({ name, year, view: { ...v, title: name }, made: { ...made, title: city }, text }));
 const places = []; // every anchorage and point of interest: { name, view }
 
 // The voyages: one drawn at a time, or none (the default). The list is None, then data/voyages/index.json in its
@@ -785,16 +827,18 @@ $('voyageList').addEventListener('click', (e) => {
 });
 
 // The cartouche names the place flown to (its title, else the button's name), not whatever scores highest in the frame.
+const caption = (text) => `<span class="notes">${text ?? CAPTION}</span>`;
 for (const [list, groups] of [[$('anchorages'), ANCHORAGES], [$('sightsList'), SIGHTS]]) {
-  list.innerHTML = groups.map(([group, items]) => (group ? `<li class="group">${group}</li>` : '') + items.map(([name, v, title, note]) =>
-    `<li><button type="button" data-place="${places.push({ name, view: { ...v, title: title ?? name } }) - 1}">${name}${note ? `<small>${note}</small>` : ''}</button></li>`).join('')).join('');
+  list.innerHTML = groups.map(([group, items, sub]) => (group ? `<li class="group${sub ? ' sub' : ''}">${group}</li>` : '') + items.map(([name, v, title, note, text]) =>
+    `<li><button type="button" data-place="${places.push({ name, view: { ...v, title: title ?? name } }) - 1}">${name}${note ? `<small>${note}</small>` : ''}</button>${caption(text)}</li>`).join('')).join('');
   list.addEventListener('click', (e) => { const b = e.target.closest('[data-place]'); if (b) { setDrawer(false); goTo(places[b.dataset.place].view); } });
 }
 
-// Each chart on its own sheet of skin, the button's.
+// Each chart a section on its own sheet of skin, the button's: where it was made, the sheet, and (to come) the scan.
 const skin = $('charts').querySelector('svg').outerHTML;
-$('chartList').innerHTML = CHARTS.map(({ name, year }, i) => `<li><button type="button" data-chart="${i}">${skin}<span>${name}</span><small>${year}</small></button></li>`).join('');
-$('chartList').addEventListener('click', (e) => { const b = e.target.closest('[data-chart]'); if (b) { setDrawer(false); goTo(CHARTS[b.dataset.chart].view); } });
+$('chartList').innerHTML = CHARTS.map(({ name, year, made, text }, i) => `<li class="chart"><h3>${skin}<span>${name}</span><small>${year}</small></h3>${caption(text)}
+  <div class="acts"><button type="button" data-chart="${i}" data-to="made" title="${made.title}">Where it was made</button><button type="button" data-chart="${i}" data-to="view">The sheet</button><button type="button" disabled title="The original, to come">The scan</button></div></li>`).join('');
+$('chartList').addEventListener('click', (e) => { const b = e.target.closest('[data-chart]'); if (b) { setDrawer(false); goTo(CHARTS[b.dataset.chart][b.dataset.to]); } });
 
 // A typed position: "36.28, -76" or "36.28N 76W" (latitude first).
 function parseLatLon(text) {
