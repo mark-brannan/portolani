@@ -1,10 +1,12 @@
 // The atlas's grid sheets as a pure function of the view (docs/atlas/README.md, "Zoom bands" and
 // "The fallback grid"). Sheets follow NOAA's reschemed ENC cells: heights of 19.2, 4.8, 1.2, 0.3 and
 // 0.075 degrees, sixteen of a band inside one of the band above, widened to 2x in a row wholly past
-// 49 12' and 4x in a row wholly past 69 12' (north and south) from the coastal band down. Unlike NOAA's,
+// 49 12' and 4x in a row wholly past 69 12' (north and south) from the coastal band down; the ladder runs
+// on upward by the same 4x to 76.8 and 307.2 degree cells for the wide zooms (#199). Unlike NOAA's,
 // every band counts its edges out from the Catalan Atlas rose, in whole multiples of the cell height
 // north and south and of the cell width east and west, so the rose is a corner of a sheet in every band.
-// No sheet crosses the date line, and none reaches a pole. Nothing here reads land or draws.
+// No sheet crosses the date line, and a row that would reach a pole ends at the page's edge. Nothing here
+// reads land or draws.
 
 // The Catalan Atlas rose, read off the scan to +-2 degrees (docs/atlas/centres.md): the point the grids
 // count from and the origin of the lines drawn at every zoom.
@@ -13,7 +15,11 @@ export const ROSE = { lon: -20.7, lat: 42.1 };
 // Page window: the doc's 1125 / 2^z degrees of longitude wide, on a 1600 x 1000 page.
 const WINDOW_DEG = 1125, ASPECT = 1000 / 1600;
 
+// Bands -1 and 0 extend NOAA's ladder upward (each cell 4x the one below, the window at a band's first
+// zoom about 9% narrower than its cell), so the wide zooms have a grid too (#199).
 export const BANDS = [
+  { band: -1, name: 'hemisphere', from: 2, to: 4, height: 307.2, widens: false },
+  { band: 0, name: 'ocean', from: 4, to: 6, height: 76.8, widens: false },
   { band: 1, name: 'overview', from: 6, to: 8, height: 19.2, widens: false },
   { band: 2, name: 'general', from: 8, to: 10, height: 4.8, widens: false },
   { band: 3, name: 'coastal', from: 10, to: 12, height: 1.2, widens: true },
@@ -29,9 +35,11 @@ const RAD = Math.PI / 180;
 const mercY = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * RAD) / 2)) / RAD;
 const unMercY = (y) => (2 * Math.atan(Math.exp(y * RAD)) - Math.PI / 2) / RAD;
 const round = (v) => Math.round(v * 1e9) / 1e9; // edges are n * 0.075 and the like; keep them clean
+// Web Mercator's square: the page ends here, and so does a row that would reach a pole.
+export const PAGE_EDGE = 85.0511287798;
 
-// The band a zoom falls in. The world band (below 6) returns the overview grid for now; beyond the
-// chart's last zoom the harbour band holds.
+// The band a zoom falls in. The world band (below the first band's zoom) returns the first band's grid;
+// beyond the chart's last zoom the harbour band holds.
 export function bandFor(zoom) {
   if (zoom < BANDS[0].from) return BANDS[0];
   for (const b of BANDS) if (zoom < b.to) return b;
@@ -88,13 +96,16 @@ export function hiddenCircle(extent, radius = 0.5) {
 
 // The curated sheets (docs/atlas/README.md, "The curated sheets"): extents from that table, circles from
 // the readings in centres.md (centre, and radius in degrees of a great circle). `bands` are the atlas bands
-// a sheet serves, 0 for the world band. The Carta Marina has no ring and de la Cosa's is in pixels, so both
-// take the overview grid's rule, 0.4 of a sheet height (7.68 degrees).
-const RULE = 0.4 * BANDS[0].height;
+// a sheet serves: those in which its extent is one to four windows wide at the band's first zoom. Below the
+// first band (the world band) every curated sheet is a candidate (curatedFor). The Carta Marina has no ring
+// and de la Cosa's is in pixels, so both take the overview grid's rule, 0.4 of a sheet height (7.68 degrees).
+const RULE = 0.4 * BANDS.find((b) => b.band === 1).height;
+const servedBands = (extent) => BANDS.filter((b) => { const w = (extent.east - extent.west) / (WINDOW_DEG / 2 ** b.from); return w >= 1 - EPS && w <= 4 + EPS; }).map((b) => b.band);
 // A curated chart's own figures (docs/atlas/ornaments.md), as { kind, sprite, lon, lat }: `sprite` names the
 // pack sprite cropped from that figure, or null where none is cropped yet and the scene stands in one of the
 // sheet's `style`, the pack family its crops belong to. An
-// empty set is a chart that draws none; a sheet with no set has not been read, and keeps the seeded figures.
+// empty set is a chart that draws none; a sheet with no set has not been read, and keeps the seeded figures
+// (the four Mediterranean charts: centres.md read their circles, not their figures; #199).
 const figures = (sets) => Object.entries(sets).flatMap(([kind, list]) => list.map(([sprite, lon, lat]) => ({ kind, sprite, lon, lat })));
 const CARTA_MARINA = figures({
   rose: [[null, -10.5, 65.8], [null, -4.7, 60.7], [null, 7.8, 58.3], [null, 20.6, 62.4]],
@@ -103,14 +114,14 @@ const CARTA_MARINA = figures({
 });
 const CATALAN = figures({ rose: [['rose-catalan', -20.7, 42.1]], ship: [[null, -15.5, 26.1]] });
 export const CURATED = [
-  { name: 'Mediterranean, west', source: 'Carte Pisane, western circle', bands: [0, 1], extent: { west: -10, east: 20, south: 30, north: 48 }, lon: 7.4, lat: 40.0, radius: 8.0, ornaments: [] },
-  { name: 'Mediterranean, east', source: 'Carte Pisane, eastern circle', bands: [0, 1], extent: { west: 15, east: 42, south: 30, north: 48 }, lon: 27.4, lat: 36.8, radius: 7.5, ornaments: [] },
-  { name: 'Levant and Black Sea', source: 'Vesconte, 1311', bands: [1], extent: { west: 20, east: 42, south: 30, north: 48 }, lon: 25.2, lat: 37.5, radius: 3, ornaments: [] },
-  { name: 'Europe and the Mediterranean', source: 'Dulcert, 1339', bands: [0, 1], extent: { west: -25, east: 42, south: 28, north: 60 }, lon: 14.5, lat: 40.0, radius: 17, ornaments: [] },
-  { name: 'The known world of 1375', source: 'Catalan Atlas', bands: [0], extent: { west: -25, east: 120, south: 10, north: 60 }, lon: -5.4, lat: 42.3, radius: 16, ornaments: CATALAN, style: 'catalan' },
-  { name: 'Scandinavia and the Baltic', source: 'Carta Marina, 1539', bands: [1], extent: { west: -25, east: 45, south: 53, north: 72 }, lon: 19.7, lat: 61.7, radius: RULE, ornaments: CARTA_MARINA, style: 'carta-marina' },
-  { name: 'The Atlantic and the Americas', source: 'Juan de la Cosa, 1500', bands: [0], extent: { west: -100, east: 20, south: -20, north: 65 }, lon: -45, lat: 23.4, radius: RULE },
-].map((c) => ({ ...c, area: (c.extent.east - c.extent.west) * (c.extent.north - c.extent.south) }));
+  { name: 'Mediterranean, west', source: 'Carte Pisane, western circle', extent: { west: -10, east: 20, south: 30, north: 48 }, lon: 7.4, lat: 40.0, radius: 8.0 },
+  { name: 'Mediterranean, east', source: 'Carte Pisane, eastern circle', extent: { west: 15, east: 42, south: 30, north: 48 }, lon: 27.4, lat: 36.8, radius: 7.5 },
+  { name: 'Levant and Black Sea', source: 'Vesconte, 1311', extent: { west: 20, east: 42, south: 30, north: 48 }, lon: 25.2, lat: 37.5, radius: 3 },
+  { name: 'Europe and the Mediterranean', source: 'Dulcert, 1339', extent: { west: -25, east: 42, south: 28, north: 60 }, lon: 14.5, lat: 40.0, radius: 17 },
+  { name: 'The known world of 1375', source: 'Catalan Atlas', extent: { west: -25, east: 120, south: 10, north: 60 }, lon: -5.4, lat: 42.3, radius: 16, ornaments: CATALAN, style: 'catalan' },
+  { name: 'Scandinavia and the Baltic', source: 'Carta Marina, 1539', extent: { west: -25, east: 45, south: 53, north: 72 }, lon: 19.7, lat: 61.7, radius: RULE, ornaments: CARTA_MARINA, style: 'carta-marina' },
+  { name: 'The Atlantic and the Americas', source: 'Juan de la Cosa, 1500', extent: { west: -100, east: 20, south: -20, north: 65 }, lon: -45, lat: 23.4, radius: RULE },
+].map((c) => ({ ...c, bands: servedBands(c.extent), area: (c.extent.east - c.extent.west) * (c.extent.north - c.extent.south) }));
 // the Carte Pisane's two sheets share their overlap; every other overlap goes to the smaller sheet
 const PISANE = new Set(['Mediterranean, west', 'Mediterranean, east']);
 const within = (e, lon, lat) => lon >= e.west && lon <= e.east && lat >= e.south && lat <= e.north;
@@ -216,10 +227,11 @@ const WORLD_SEEN = { min: 0.25, max: 4 };
 // The curated sheets the band serves that the view overlaps, each with `shadow`: the extents of the smaller
 // curated sheets over it, where its network is not drawn.
 function curatedFor(world, band, b, zoom) {
-  // in the world band a sheet is seen only where its width is a quarter to four windows of the view's zoom
+  // in the world band every curated sheet is a candidate, seen only where its width is a quarter to four
+  // windows of the view's zoom; in a band, the sheets that serve it
   const windows = (c) => (c.extent.east - c.extent.west) / (1125 / 2 ** zoom);
-  const seen = (c) => !world || (windows(c) >= WORLD_SEEN.min && windows(c) <= WORLD_SEEN.max);
-  const serving = CURATED.filter((c) => c.bands.includes(world ? 0 : band.band) && seen(c));
+  const seen = (c) => windows(c) >= WORLD_SEEN.min && windows(c) <= WORLD_SEEN.max;
+  const serving = CURATED.filter((c) => (world ? seen(c) : c.bands.includes(band.band)));
   return serving.filter((c) => overlaps(c.extent, b)).map((c) => ({
     name: c.name, source: c.source, curated: true, band: band.band, bandName: band.name, extent: c.extent,
     circle: curatedCircle(c),
@@ -229,33 +241,34 @@ function curatedFor(world, band, b, zoom) {
 }
 
 // Every grid sheet the view overlaps: [{ name, band, bandName, row, col, extent, circle }].
-// With `curated`, the world and overview bands take the curated sheets, and a grid cell whose centre lies in
-// one is left out; the world band (below zoom 6) is the curated sheets alone.
+// With `curated`, each band takes the curated sheets that serve it, and a grid cell whose centre lies in one
+// is left out, so a curated sheet replaces the cells it holds (#199); the world band (below the first band's
+// zoom) is the curated sheets alone.
 export function sheetsFor(view, { radius = 0.5, curated = false } = {}) {
   const band = bandFor(view.zoom);
   const h = band.height;
   const b = viewBounds(view);
   const world = view.zoom < BANDS[0].from;
   const all = { west: -180, east: 180, south: -90, north: 90 };
-  const everywhere = curated && band.band === 1 ? curatedFor(world, band, all, view.zoom) : [];
+  const everywhere = curated ? curatedFor(world, band, all, view.zoom) : [];
   const cur = everywhere.filter((c) => overlaps(c.extent, b));
   if (curated && world) return cur;
   const held = (extent) => everywhere.some((c) => within(c.extent, (extent.west + extent.east) / 2, (extent.south + extent.north) / 2));
-  // Whole rows out from the rose that stop short of both poles: a row touching a pole has no Mercator
-  // centre, so it is left out like the caps beyond the last.
-  const rowLo = Math.floor((-90 - ROSE.lat) / h + EPS) + 1, rowHi = Math.ceil((90 - ROSE.lat) / h - EPS) - 1; // rows rowLo to rowHi - 1
+  // Rows out from the rose up to the page's edge: a pole has no Mercator centre, so a row that would reach
+  // past the edge ends on it (a band's cells may be taller than the earth: 307.2 degrees).
+  const rowLo = Math.floor((-PAGE_EDGE - ROSE.lat) / h + EPS), rowHi = Math.ceil((PAGE_EDGE - ROSE.lat) / h - EPS); // rows rowLo to rowHi - 1
   const south = Math.max(Math.floor((b.south - ROSE.lat) / h + EPS), rowLo);
   const north = Math.min(Math.ceil((b.north - ROSE.lat) / h - EPS), rowHi);
   const out = [];
   for (let row = south; row < north; row++) {
-    const s = round(ROSE.lat + row * h);
-    const w = h * widening(band, s, h);
+    const s0 = round(ROSE.lat + row * h), s = Math.max(s0, -PAGE_EDGE), n = Math.min(round(s0 + h), PAGE_EDGE);
+    const w = h * widening(band, s0, h);
     // The window may run past the date line; the sheets stay inside it, and the column the line falls in ends
     // there, so a narrower sheet closes each row at 180 and at -180.
     const c0 = Math.floor((Math.max(b.west, -180) - ROSE.lon) / w + EPS);
     const c1 = Math.ceil((Math.min(b.east, 180) - ROSE.lon) / w - EPS);
     for (let col = c0; col < c1; col++) {
-      const extent = { west: Math.max(-180, round(ROSE.lon + col * w)), east: Math.min(180, round(ROSE.lon + (col + 1) * w)), south: s, north: round(s + h) };
+      const extent = { west: Math.max(-180, round(ROSE.lon + col * w)), east: Math.min(180, round(ROSE.lon + (col + 1) * w)), south: s, north: n };
       if (held(extent)) continue;
       out.push({
         name: sheetName(band, row, col), band: band.band, bandName: band.name, row, col, extent,
@@ -264,4 +277,12 @@ export function sheetsFor(view, { radius = 0.5, curated = false } = {}) {
     }
   }
   return [...cur, ...out];
+}
+
+// The sheet that holds the Catalan Atlas rose at a zoom, whatever the view: the curated sheet over it whose
+// ground it is, or else the grid cell whose south-west corner it is. Its reach is the rose's (#199).
+export function roseSheet(zoom) {
+  const e = 1e-6, got = sheetsFor({ zoom, west: ROSE.lon - e, east: ROSE.lon + e, south: ROSE.lat - e, north: ROSE.lat + e }, { curated: true });
+  return got.find((s) => s.curated && within(s.extent, ROSE.lon, ROSE.lat) && !inShadow(s, ROSE.lon, ROSE.lat))
+    ?? sheetsFor({ zoom: Math.max(zoom, BANDS[0].from), west: ROSE.lon + e, east: ROSE.lon + 2 * e, south: ROSE.lat + e, north: ROSE.lat + 2 * e })[0];
 }
