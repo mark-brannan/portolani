@@ -51,10 +51,36 @@ One file per voyage, `data/voyages/<id>.json`; `data/voyages/index.json` lists t
 - `legs[].mode`: `sea` or `land`; a sea leg must stay at sea on the 50m coast (`npm test` checks it).
 - `legs[].points`: `[lon, lat]` from departure to arrival; `spline` curves through all of them.
 - `legs[].source`: where the course comes from, in a few words; full citations go in `sources[]`.
-- `events[]`: `death`, `landfall` or `event`; each named person has a `death`, on or off the track.
+- `events[]`: `death`, `landfall` or `event`; each named person has a `death`, on or off the track (every voyage of the same person carries it).
+- `deathUnknown`: names from `who` whose place of death nobody knows (Hanno, Pytheas, Nearchus); they get no skull, and a name may not be both here and in a `death`.
+- `events[].alternatives` (on a `death` only): other candidate places where the death is disputed, `[{ "lon", "lat", "place", "label", "source" }]`. The event itself stays the usual account; an alternative is a place of death, never of burial.
 
 ## What is drawn
 
 Each leg is stroked in the chart's red ink over a parchment halo, dashed by its confidence, with a
 dot at each leg's ends; a death is a skull and crossbones with its label beside it. The overlay rides
 in the link as `voyage=<id>`.
+
+## Where each person died
+
+The skull sits at the usual account; `alternatives` are the other places the sources or the scholars give. An em dash means no dispute is recorded.
+
+| Person | Skull drawn | Alternatives | Sources |
+|---|---|---|---|
+| Leif Erikson | Brattahlíð, Greenland, c. 1020 | — | Saga of the Greenlanders |
+| Marco Polo | Venice, 8 Jan 1324 | — | Wikipedia, Marco Polo |
+| Ibn Battuta | Morocco near Fez (-5.00, 34.03), c. 1369 | Tangier (-5.81, 35.77): where he was born and a tomb is shown | Wikipedia, Ibn Battuta |
+| Zheng He | At sea off the Malabar coast (74.00, 9.00), 1433 | Calicut (75.78, 11.25), 1433, the usual account; Nanjing (118.78, 32.07), 1435, the later account of a death at home | Ming shi; Zheng He (Wikipedia) |
+| Bartolomeu Dias | Off the Cape of Good Hope, 29 May 1500 | — | Wikipedia; Britannica 1911 |
+| Christopher Columbus | Valladolid, 20 May 1506 | — (his burial place is disputed, his place of death is not) | Britannica 1911, Columbus |
+| Vasco da Gama | Cochin, 24 Dec 1524 | — | Wikipedia, Vasco da Gama |
+| Paulo da Gama | Angra, Terceira, 1499 | — | Barros; Correia |
+| Ferdinand Magellan | Mactan, 27 Apr 1521 | — | Pigafetta |
+| Juan Sebastián Elcano | At sea in the Pacific (-135.00, 1.00), 4 Aug 1526 | — (the position is a guess in mid-ocean) | Wikipedia, Juan Sebastián Elcano |
+| Francis Drake | Off Portobelo, 28 Jan 1596 | — | Wikipedia, Francis Drake |
+| Hanno the Navigator | none drawn (`deathUnknown`) | — | Hanno the Navigator (Wikipedia) |
+| Pytheas | none drawn (`deathUnknown`) | — | Pytheas (Wikipedia) |
+| Nearchus | none drawn (`deathUnknown`) | — | Nearchus (Wikipedia) |
+| Phoenician mariners of Necho II | none drawn (`deathUnknown`) | — | Herodotus 4.42 |
+
+The ancient voyages are the broad brush throughout: Hanno's Periplus, Pytheas as reported by Strabo and Pliny, Nearchus in Arrian, and Herodotus on Necho's sailors are each told at second hand, and every identification of a place (Cerne, the Chariot of the Gods, Thule, the amber island) is one scholarly guess among several.

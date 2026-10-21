@@ -1,0 +1,34 @@
+{
+  "id": "nearchus",
+  "title": "Nearchus sails Alexander’s fleet from the Indus to the Gulf, 325–324 BC",
+  "short": "Nearchus",
+  "who": ["Nearchus"],
+  "when": "325–324 BC",
+  "deathUnknown": ["Nearchus"],
+  "summary": "Alexander’s admiral takes the fleet from the mouths of the Indus along the barren coast of Gedrosia, past Pasni and Gwadar and the Strait of Hormuz, to the head of the Persian Gulf, with Onesicritus; his log, preserved by Arrian, is the earliest coasting voyage known day by day.",
+  "sources": [
+    { "title": "Nearchus (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Nearchus" },
+    { "title": "Arrian, Indica (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Indica_(Arrian)" }
+  ],
+  "legs": [
+    { "from": "Indus delta (Stura)", "to": "Cape Monze (Morontobara)", "dates": "21 Sep – Oct 325 BC", "mode": "sea", "line": "spline",
+      "confidence": "attested", "source": "Arrian, Indica 21–23; delayed by the monsoon until the winds changed",
+      "points": [[67.3,24.2], [67,24.4], [66.8,24.7], [66.6,24.8]] },
+    { "from": "Cape Monze", "to": "Gwadar (Cape Bagia)", "dates": "Oct – Nov 325 BC", "mode": "sea", "line": "spline",
+      "confidence": "attested", "source": "Arrian, Indica 24–26; Arabis, Ichthyophagoi, Pasni, a day-by-day coasting log",
+      "points": [[66.6,24.8], [66,25.2], [64.5,25.2], [63.5,25.2], [62.3,25]] },
+    { "from": "Gwadar", "to": "Harmozia (Minab)", "dates": "Nov – Dec 325 BC", "mode": "sea", "line": "spline",
+      "confidence": "attested", "source": "Arrian, Indica 27–33; Carmania and the land of the Ichthyophagoi",
+      "points": [[62.3,25], [61.5,24.9], [60.2,24.9], [58.8,25.2], [57.8,25.3], [57,26], [56.97,26.83]] },
+    { "from": "Harmozia", "to": "Strait of Hormuz and Musandam", "dates": "Dec 325 BC", "mode": "sea", "line": "spline",
+      "confidence": "attested", "source": "Arrian, Indica 37; the fleet met Alexander at Harmozia, then sailed on",
+      "points": [[56.97,26.83], [56.9,26.55], [56.5,26.3], [56.27,26.27]] },
+    { "from": "Musandam", "to": "Susa, the Pasitigris mouth", "dates": "Dec 325 – Feb 324 BC", "mode": "sea", "line": "spline",
+      "confidence": "attested", "source": "Arrian, Indica 38–42; Kharg and the islands up the Persian Gulf, up the Pasitigris to Susa",
+      "points": [[56.27,26.27], [55,26.4], [53.5,26.7], [52.5,27.2], [51,28.3], [50.2,29.2], [49.5,29.8], [48.5,29.9]] }
+  ],
+  "events": [
+    { "kind": "event", "lon": 67.3, "lat": 24.2, "date": "325 BC", "label": "The fleet leaves the mouth of the Indus", "source": "Arrian, Indica 21" },
+    { "kind": "landfall", "lon": 57.15, "lat": 26.8, "date": "Dec 325 BC", "label": "Harmozia: Nearchus meets Alexander", "source": "Arrian, Indica 33–36" }
+  ]
+}

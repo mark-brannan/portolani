@@ -48,3 +48,43 @@ test('a rhumb leg keeps between its ends\' latitudes and is sampled about every 
   assert.ok(Math.max(...steps) <= STEP_KM * 1.05, `a step of ${Math.max(...steps).toFixed(1)} km`);
   assert.ok(Math.min(...steps) >= STEP_KM * 0.8, `a step of ${Math.min(...steps).toFixed(1)} km`);
 });
+
+// A minimal well-formed record to bend in the schema tests below.
+const base = () => ({
+  id: 'x', title: 't', short: 's', when: 'w', summary: 'm', who: ['A B'], sources: [{ title: 't', url: 'u' }],
+  legs: [{ from: 'a', to: 'b', mode: 'sea', line: 'rhumb', confidence: 'attested', source: 's', points: [[0, 0], [1, 1]] }],
+  events: [{ kind: 'death', who: 'A B', lon: 1, lat: 1, label: 'l', source: 's' }]
+});
+const alt = { lon: 2, lat: 2, place: 'Elsewhere', label: 'Died elsewhere', source: 'a chronicle' };
+
+test('a death may list alternative places, each with a position, a place, a label and a source', () => {
+  const v = base();
+  v.events[0].alternatives = [alt];
+  assert.deepEqual(problems(v), []);
+  v.events[0].alternatives = [{ ...alt, lon: 200 }, { ...alt, source: '' }, { lat: 1 }];
+  const found = problems(v);
+  assert.ok(found.some((p) => p.includes('alternative 0: lon and lat')), found.join('; '));
+  assert.ok(found.some((p) => p.includes('alternative 1: a source')), found.join('; '));
+  assert.ok(found.some((p) => p.includes('alternative 2: lon and lat')), found.join('; '));
+  v.events[0].alternatives = [];
+  assert.ok(problems(v).some((p) => p.includes('alternatives')));
+});
+
+test('alternatives belong to a death, not to a landfall', () => {
+  const v = base();
+  v.events.push({ kind: 'landfall', lon: 1, lat: 1, label: 'l', source: 's', alternatives: [alt] });
+  assert.ok(problems(v).some((p) => p.includes('alternatives belong to a death')));
+});
+
+test('a person whose place of death is unknown goes in deathUnknown, and only then needs no death event', () => {
+  const v = base();
+  v.events = [];
+  assert.ok(problems(v).some((p) => p.includes('where A B died')));
+  v.deathUnknown = ['A B'];
+  assert.deepEqual(problems(v), []);
+  v.deathUnknown = ['C D'];
+  assert.ok(problems(v).some((p) => p.includes('deathUnknown: names from who')));
+  v.deathUnknown = ['A B'];
+  v.events = base().events;
+  assert.ok(problems(v).some((p) => p.includes('is in deathUnknown but has a death event')));
+});

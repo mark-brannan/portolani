@@ -68,6 +68,10 @@
   ],
   "events": [
     { "kind": "death", "who": "Zheng He", "lon": 74, "lat": 9, "date": "1433", "label": "Zheng He died on the way home, 1433 (by the usual account)", "source": "Ming shi; the usual account",
-      "note": "another account has him home and dying at Nanjing in 1435" }
+      "note": "another account has him home and dying at Nanjing in 1435",
+      "alternatives": [
+        { "lon": 75.78, "lat": 11.25, "place": "Calicut (Kozhikode)", "label": "Died at Calicut on the way home, 1433", "source": "Zheng He (Wikipedia); the usual account" },
+        { "lon": 118.78, "lat": 32.07, "place": "Nanjing", "label": "Home at Nanjing, died 1435", "source": "Zheng He (Wikipedia); the later Nanjing account" }
+      ] }
   ]
 }

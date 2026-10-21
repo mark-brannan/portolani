@@ -66,6 +66,7 @@
     {"kind":"landfall","who":"Ibn Battuta","lon":118.68,"lat":24.88,"date":"1345–46","label":"Zaytun (Quanzhou), the Chinese port","source":"Rihla"},
     {"kind":"event","who":"Ibn Battuta","lon":36.3,"lat":33.51,"date":"1348","label":"Damascus in the year of the Black Death","source":"Rihla"},
     {"kind":"event","who":"Ibn Battuta","lon":-8.8,"lat":11.4,"date":"1352–53","label":"The court of Mansa Sulayman, Mali","source":"Rihla"},
-    {"kind":"death","who":"Ibn Battuta","lon":-5,"lat":34.03,"date":"c. 1369","label":"Ibn Battuta died in Morocco, c. 1369","note":"The place is unrecorded; Tangier and Fez are the usual guesses.","source":"Wikipedia, Ibn Battuta"}
+    {"kind":"death","who":"Ibn Battuta","lon":-5,"lat":34.03,"date":"c. 1369","label":"Ibn Battuta died in Morocco, c. 1369","note":"The place is unrecorded; Tangier and Fez are the usual guesses.","source":"Wikipedia, Ibn Battuta",
+     "alternatives":[{"lon":-5.81,"lat":35.77,"place":"Tangier","label":"Died at Tangier, his birthplace, where a tomb is shown","source":"Wikipedia, Ibn Battuta (the tomb tradition)"}]}
   ]
 }
