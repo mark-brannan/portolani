@@ -7,7 +7,7 @@
 // A view is a centre, zoom and projection, { lon, lat, zoom, projection }, on a W x H canvas; the
 // projection is one of PROJECTIONS, Mercator when left out.
 
-import { sheetsFor, inShadow, territory, cutOut, BANDS as ATLAS_BANDS, ROSE as ATLAS_ROSE } from './atlas.mjs';
+import { sheetsFor, roseSheet, inShadow, territory, cutOut, WORLD_BAND, BANDS as ATLAS_BANDS, ROSE as ATLAS_ROSE } from './atlas.mjs';
 import { fill, trace, limn, rhumb, place, letter, geojsonPolygons, geojsonRings } from 'coast-wright';
 import { bandOf } from './bands.mjs';
 import { islandInfo, ISLAND_KM2 } from './island.mjs';
@@ -425,6 +425,14 @@ const obbInside = (o, m = 4) => {
 };
 // The parchment patch under the scale bar, roughly: what mountains and relief keep clear of.
 const SCALE_BAR_BOX = obb(300, H - 90, 0, 270, 70);
+// The corners an ornament can stand in: top or bottom (t, b) then left or right (l, r). The cartouche and the
+// scale bar each keep to one, wherever the coast runs; the defaults are here, the one place to change them.
+const CORNERS = ['tl', 'tr', 'bl', 'br'];
+const DEFAULT_CARTOUCHE_CORNER = 'tr', DEFAULT_SCALE_CORNER = 'bl';
+const cornerOf = (c, dflt) => (CORNERS.includes(c) ? c : dflt);
+// the scale bar's keep-clear box in a corner
+// `lift` raises it clear of a cartouche in the same corner (scalePlace)
+const scaleBox = (c, lift = 0) => obb(c[1] === 'l' ? 300 : W - 300, c[0] === 'b' ? H - 90 - lift : 90 + lift, 0, 270, 70);
 
 // ---------------------------------------------------------------- data
 
@@ -1300,7 +1308,7 @@ function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
       for (const f of ownFigures(sh, 'rose').slice(0, allotment(sh))) put(figureSprite(sh, roses, ring, f), f);
       continue;
     }
-    // a curated sheet's network is not drawn where a smaller curated sheet lies
+    // a smaller kept sheet's ground is its own: no rose of this sheet is placed there
     const clear2 = (lon, lat, size, land) => !inShadow(sh, lon, lat) && clear(lon, lat, size, land);
     const quota = roseQuota(sh);
     if (quota > 0 && clear2(c.lon, c.lat, big.sizePx, onLand)) put(big, c);
@@ -1316,7 +1324,7 @@ function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
 
 // Where a sheet is placed: Mercator at its band's first zoom, centred on the sheet, whatever the page's
 // projection, zoom or window. Placement is a function of the sheet and the land alone.
-const sheetFrame = (sh) => makeProjection({ lon: sh.circle.lon, lat: sh.circle.lat, zoom: ATLAS_BANDS.find((b) => b.band === sh.band).from });
+const sheetFrame = (sh) => makeProjection({ lon: sh.circle.lon, lat: sh.circle.lat, zoom: [WORLD_BAND, ...ATLAS_BANDS].find((b) => b.band === sh.band).from });
 // A sheet's beasts are placed at the zoom that paces them (`from`), so the room they are given is the room
 // they take where they are spaced; in the world band that is the zoom at which the sheet is one window wide.
 const beastFrame = (sh) => makeProjection({ lon: sh.circle.lon, lat: sh.circle.lat, zoom: sh.from });
@@ -1469,22 +1477,12 @@ function buildScene(data, sprites, ctx, world = {}) {
   const free = (x, y) => Math.min(open(x, y), edge(x, y), built ? built(x, y) : Infinity, ...occupied.map((o) => Math.hypot(x - o.x, y - o.y) - o.r));
   const roseBlocked = (x, y, size) => (landOk ? x - size * 0.46 < 0 || y - size * 0.46 < 0 || x + size * 0.46 > W || y + size * 0.46 > H : field.footprintBlocked(x, y, size, size));
 
-  // Cartouche: the corner whose rectangle crosses the least coast, open sea before empty land; never
-  // the bottom-left corner while the scale bar holds it.
+  // Cartouche: in the corner it is set to (top right unless told otherwise), however the coast runs.
   const cw = cartoucheSprite.sizePx, ch = cw * cartoucheSprite.img.height / cartoucheSprite.img.width, m = 22;
-  const corners = [[m, m], [W - m - cw, m], [m, H - m - ch], [W - m - cw, H - m - ch]].filter((_, i) => i !== 2 || !world.scaleBar).map(([x, y]) => {
-    let land = 0, coast = 0;
-    for (let yy = y; yy < y + ch; yy += 8) for (let xx = x; xx < x + cw; xx += 8) {
-      const l = field.isLand(xx, yy);
-      land += l;
-      coast += l !== field.isLand(xx + 8, yy) || l !== field.isLand(xx, yy + 8);
-    }
-    const rosy = [...(sheetRoses?.roseDraws ?? []), ...(sheetBeasts?.monsters ?? []), ...(sheetBeasts?.ships ?? [])].filter((r) => Math.abs(r.x - (x + cw / 2)) < cw / 2 + r.size * 0.42 && Math.abs(r.y - (y + ch / 2)) < ch / 2 + r.size * 0.42).length;
-    return { x, y, w: cw, h: ch, coast, land, rosy };
-  });
-  // `world.pinned` false (the phone layout): the cartouche is drawn on a card of its own beside the map
-  // (drawCartoucheCard), so it holds no corner of the sheet and nothing keeps clear of it.
-  const cartouche = world.pinned === false ? { x: -4 * W, y: -4 * H, w: cw, h: ch, coast: 0, land: 0, rosy: 0 } : corners.sort((a, b) => a.rosy - b.rosy || a.coast - b.coast || a.land - b.land)[0];
+  const cartoucheCorner = cornerOf(world.cartouchePos, DEFAULT_CARTOUCHE_CORNER);
+  // where the scale bar stands in the same corner, the cartouche sits beyond it; the bar is lifted clear (scalePlace)
+  const cartouche = world.pinned === false ? { x: -4 * W, y: -4 * H, w: cw, h: ch }
+    : { x: cartoucheCorner[1] === 'l' ? m : W - m - cw, y: cartoucheCorner[0] === 't' ? m : H - m - ch, w: cw, h: ch };
   if (world.pinned !== false) occupied.push({ x: cartouche.x + cw / 2, y: cartouche.y + ch / 2, r: Math.hypot(cw, ch) / 2 });
 
   let centre, nodes, roseDraws;
@@ -1621,7 +1619,8 @@ function buildScene(data, sprites, ctx, world = {}) {
   // hills and mountains (relief.mjs), seeded once: each range takes one of the mountain styles selected
   // and the Catalan sprites stand on the hills; all clear of what is placed so far and of the built-up
   // areas washed on the land
-  const bar = world.scaleBar ? SCALE_BAR_BOX : null;
+  const barCorner = cornerOf(world.scalePos, DEFAULT_SCALE_CORNER);
+  const bar = world.scaleBar ? scaleBox(barCorner, world.pinned !== false && barCorner === cartoucheCorner ? cartouche.h + 10 : 0) : null;
   const blocked = (x0, y0, x1, y1) => {
     const b = obb((x0 + x1) / 2, (y0 + y1) / 2, 0, (x1 - x0) / 2, (y1 - y0) / 2);
     return boxes.some((o) => obbOverlap(o, b)) || (bar && obbOverlap(bar, b)) || urban.some((u) => meets({ x0, y0, x1, y1 }, u.box));
@@ -1675,7 +1674,7 @@ function buildScene(data, sprites, ctx, world = {}) {
 
   // automatic, the typed title stands in where the view has no name in it
   const title = world.pinTitle?.toUpperCase() || (world.autoTitle && viewTitle(data, towns.filter((t) => names.some((n) => n.text === t.name)), world.regions === 'english' ? 1 : 0, lesser.filter((l) => l.poi)).toUpperCase()) || world.title || 'PORTOLANI';
-  return { field, centre, nodes, sheets: world.sheets, roseDraws, towns, lesser, names, worldNames, monsters, ships, mountains, relief, cartouche: { ...cartouche, sprite: cartoucheSprite, title } };
+  return { field, centre, nodes, sheets: world.sheets, roseDraws, towns, lesser, names, worldNames, monsters, ships, mountains, relief, cartouche: { ...cartouche, sprite: cartoucheSprite, title }, cartouchePos: cartoucheCorner };
 }
 
 // ---------------------------------------------------------------- drawing
@@ -1813,19 +1812,21 @@ function latticeOf(scene, data) {
   rays = [];
   // Mercator radians at the equator, in degrees; never past half the world, where a ray would lap itself
   const reach = Math.min(180, (Math.hypot(W, H) * 1.5 / data.proj.k) * 180 / Math.PI);
-  // a sheet's lines reach its extent plus half a sheet; a window's, past the scene's far corner
+  // a sheet's lines reach its page diagonal; a window's, past the scene's far corner
   const origins = scene.sheets
-    ? scene.sheets.flatMap((sh) => [sh.circle, ...sh.circle.nodes].filter((n) => !inShadow(sh, n.lon, n.lat)).map((n) => ({ lon: n.lon, lat: n.lat, reach: sh.reach, shadow: sh.shadow })))
+    ? scene.sheets.flatMap((sh) => [sh.circle, ...sh.circle.nodes].filter((n) => !inShadow(sh, n.lon, n.lat)).map((n) => ({ lon: n.lon, lat: n.lat, reach: sh.reach })))
     : [scene.centre, ...scene.nodes].map((n) => { const [lon, lat] = data.proj.invert(n.x, n.y); return { lon, lat, reach }; });
   // The Catalan Atlas rose's lines run at every zoom, beside the network of the sheets or the window
-  // (docs/atlas/README.md, "Zoom bands"): the same lines through every view and every band.
-  origins.push({ lon: ATLAS_ROSE.lon, lat: ATLAS_ROSE.lat, reach: 180 });
-  // A curated sheet's lines stop where a smaller curated sheet lies, whose network holds that ground.
-  for (const { lon, lat, reach, shadow } of origins) {
+  // (docs/atlas/README.md, "Zoom bands"), as one more hub of the view's band: the reach of the sheet that
+  // holds the rose at this zoom. The balance between hubs asked for in #199 is not written yet.
+  // In the world band the rose is a node of the world's ring, whose lines are already there.
+  if (!origins.some((o) => Math.abs(o.lon - ATLAS_ROSE.lon) < 1e-9 && Math.abs(o.lat - ATLAS_ROSE.lat) < 1e-9)) origins.push({ lon: ATLAS_ROSE.lon, lat: ATLAS_ROSE.lat, reach: scene.roseReach ?? 180 });
+  // A line runs its whole reach: it is never cut where another sheet lies (#199).
+  for (const { lon, lat, reach } of origins) {
     for (let k = 0; k < RHUMB_RAYS; k++) {
       const kind = k % 4 === 0 ? 0 : k % 2 === 1 ? 1 : 2; // wind, quarter (red), half (green)
       const ray = rhumb([lon, lat], 90 + (k * 360) / RHUMB_RAYS, reach * Math.cos(lat * Math.PI / 180));
-      for (const line of cutOut(ray, shadow)) rays.push({ kind, line, box: bbox(line.map(([a, b]) => data.proj.project(a, b))) });
+      for (const line of cutOut(ray)) rays.push({ kind, line, box: bbox(line.map(([a, b]) => data.proj.project(a, b))) });
     }
   }
   lattices.set(scene, rays);
@@ -2170,8 +2171,17 @@ SCALE_STYLES.genoese.height = (n, seg, sprite) => ((n * seg) / (sprite.bar[1] - 
 const SCALE_PICTURES = { genoese: 'scale-genoese' }; // style -> sprite id in the vivid pack
 const SCALE_NAMES = Object.keys(SCALE_STYLES);
 
-function drawScaleBar(g, data, bg, view, w, h, style = 'genoese', sprite = null) {
+// Where the scale bar stands: its corner, and how far it is lifted off the edge to clear a cartouche in the same corner.
+const scalePlace = (o) => {
+  const pos = cornerOf(o.scalePos, DEFAULT_SCALE_CORNER);
+  const shared = o.show.kinds.has('cartouche') && o.cartouche && (o.cartouchePos ?? DEFAULT_CARTOUCHE_CORNER) === pos;
+  return { pos, lift: shared ? o.cartouche.h + 10 : 0 };
+};
+let scaleHit = null; // the rectangle the scale bar was last drawn in, in canvas px, for the page to pick it up
+const scaleRect = () => scaleHit;
+function drawScaleBar(g, data, bg, view, w, h, style = 'genoese', sprite = null, place = { pos: 'bl', lift: 0 }) {
   const proj = data.proj;
+  scaleHit = null; // not drawn, not grabbable
   if (!(style in SCALE_STYLES) || proj.zoom < SCALE_MIN_ZOOM || (style in SCALE_PICTURES && !sprite)) return;
   const lat = proj.invert(view.x + w / 2 / view.scale, view.y + h / 2 / view.scale)[1];
   const pxPerNm = ((proj.k * NM) / (EARTH_R * Math.cos(lat * RAD))) * view.scale;
@@ -2182,13 +2192,15 @@ function drawScaleBar(g, data, bg, view, w, h, style = 'genoese', sprite = null)
   const every = n % 2 ? 1 : 2; // which divisions are numbered
   // a picture taller than the ladder grows upward from the same foot
   const barH = Math.max(SCALE_BAR_H, SCALE_STYLES[style].height?.(n, seg, sprite) ?? 0);
-  const x0 = 48, y0 = h - 36 - SCALE_BAR_H, top = y0 + SCALE_BAR_H - barH;
   g.save();
   g.setTransform(1, 0, 0, 1, 0, 0);
   g.font = `22px "${STYLE.font}"`;
   // the chart is blank where a scale sits: the parchment is repainted over the map beneath it
-  const pad = 14, px = x0 - pad - 20, py = top - 22 - 5 - pad;
+  const pad = 14;
   const pw = n * seg + 24 + g.measureText('nautical miles').width + 2 * pad + 20, ph = barH + 22 + 5 + 2 * pad;
+  const px = place.pos[1] === 'r' ? w - 14 - pw : 14, py = place.pos[0] === 'b' ? h - 22 - ph - place.lift : 22 + place.lift;
+  const x0 = px + pad + 20, top = py + 22 + 5 + pad, y0 = top + barH - SCALE_BAR_H;
+  scaleHit = { x: px, y: py, w: pw, h: ph };
   const sx = Math.max(0, view.x + px / view.scale), sy = Math.max(0, view.y + py / view.scale);
   const border = STYLE.scaleBorder; // blank: the parchment alone; transparent: the map shows through; bordered: parchment and a double rule
   if (border !== 'transparent') g.drawImage(bg, sx, sy, Math.min(W - sx, pw / view.scale), Math.min(H - sy, ph / view.scale), px, py, pw, ph);
@@ -2447,10 +2459,10 @@ function drawScene(g, scene, data, bg, view) {
 
   // 10. cartouche, lettered in its cleared panel
   const c = scene.cartouche;
-  if (!show.kinds.has('cartouche') || !meets(r, { x0: c.x, y0: c.y, x1: c.x + c.w, y1: c.y + c.h })) { g.restore(); drawScaleBar(g, data, bg, view, W, H, show.scale, scene.scaleSprite); return; }
+  if (!show.kinds.has('cartouche') || !meets(r, { x0: c.x, y0: c.y, x1: c.x + c.w, y1: c.y + c.h })) { g.restore(); drawScaleBar(g, data, bg, view, W, H, show.scale, scene.scaleSprite, scalePlace(scene)); return; }
   drawCartouche(g, c, bgPart);
   g.restore();
-  drawScaleBar(g, data, bg, view, W, H, show.scale, scene.scaleSprite);
+  drawScaleBar(g, data, bg, view, W, H, show.scale, scene.scaleSprite, scalePlace(scene));
 }
 
 // The phone layout's cards: the cartouche and the scale bar on canvases of their own, set by the page
@@ -2475,7 +2487,7 @@ function drawScaleCard(g, proj, bg, style, sprite) {
 function anchorScene(scene, data) {
   const ll = (o) => ({ o, at: data.proj.invert(o.x, o.y) });
   return {
-    k: data.proj.k, show: scene.show, scaleSprite: scene.scaleSprite, cartouche: scene.cartouche, voyage: scene.voyage,
+    k: data.proj.k, show: scene.show, scaleSprite: scene.scaleSprite, cartouche: scene.cartouche, cartouchePos: scene.cartouchePos, scalePos: scene.scalePos, voyage: scene.voyage,
     rays: latticeOf(scene, data),
     roses: scene.roseDraws.map(ll), mountains: (scene.mountains ?? []).map(ll),
     towns: [...scene.towns.filter((t) => !t.city), ...(scene.lesser ?? [])].map(ll),
@@ -2597,7 +2609,7 @@ function drawAnchored(g, a, bg, view, layers) {
   drawVoyage(g, a.voyage, proj, { x0: 0, y0: 0, x1: W, y1: H });
   g.restore();
   if (show.kinds.has('cartouche')) drawCartouche(g, a.cartouche, (x0, y0, x1, y1) => g.drawImage(bg, x0, y0, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0));
-  drawScaleBar(g, { proj }, bg, { scale: 1, x: 0, y: 0 }, W, H, show.scale, a.scaleSprite);
+  drawScaleBar(g, { proj }, bg, { scale: 1, x: 0, y: 0 }, W, H, show.scale, a.scaleSprite, scalePlace(a));
 }
 
 // ---------------------------------------------------------------- setup
@@ -2625,8 +2637,8 @@ function drawAnchored(g, a, bg, view, layers) {
 // placed when the lattice needs it (a rose, the cartouche's corner), only not drawn.
 // A sheet's hidden circle reaches 0.4 of its height, so a node never lands on the edge a neighbour shares.
 const SHEET_RADIUS = 0.4;
-// Degrees of rhumb line from a node: the sheet's extent plus half a sheet, over its diagonal on the page.
-const sheetReach = (e) => Math.min(180, 1.5 * Math.hypot(e.east - e.west, mercatorDeg(e.north) - mercatorDeg(e.south)));
+// Degrees of rhumb line from a node: the sheet's diagonal on the page.
+const sheetReach = (e) => Math.min(180, Math.hypot(e.east - e.west, mercatorDeg(e.north) - mercatorDeg(e.south)));
 const mercatorDeg = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * RAD) / 2)) / RAD;
 // Whether a point of the earth is sea, by the world's land and not the window's.
 function seaAtOf(world) {
@@ -2646,7 +2658,7 @@ export function parsePlacement(text) {
 }
 export async function createScene(environment, opts = {}) {
   env = environment;
-  const { ink = '#3b2a1a', continentsZoom, regionsZoom, scaleBorder = 'bordered', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', title = 'PORTOLANI', autoTitle = true, pinTitle, land: landMode = 'islands', islands, seaTint = false, rivers = 'off', lakes = 'off', relief = [], trees = 'off', historical = true, seed: pickedSeed } = opts;
+  const { ink = '#3b2a1a', continentsZoom, regionsZoom, scaleBorder = 'bordered', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', title = 'PORTOLANI', autoTitle = true, pinTitle, land: landMode = 'islands', islands, seaTint = false, rivers = 'off', lakes = 'off', relief = [], trees = 'off', historical = true, seed: pickedSeed, cartouchePos, scalePos } = opts;
   const legacy = ['rendering', 'rose', 'monster', 'town'].some((k) => opts[k] !== undefined);
   const townBy = townSize ?? (legacy ? 'rank' : 'area');
   // `pinned` (default true): the cartouche and the scale bar are drawn on the sheet, pinned to the window.
@@ -2702,14 +2714,16 @@ export async function createScene(environment, opts = {}) {
 
   const data = viewData(world, view);
   // the atlas's sheets at every zoom: the curated sheets alone in the world band, then curated and grid sheets.
+  // The Catalan rose's lines reach as far as those of the sheet that holds it at this zoom.
   // `from` paces a sheet's beasts: the first zoom of its band, or in the world band, where the earth is one page,
   // the zoom at which the sheet is one window wide.
   const worldBand = view.zoom < ATLAS_BANDS[0].from;
   const sheets = sheetsFor(view, { radius: SHEET_RADIUS, curated: true }).map((sh) => ({ ...sh, reach: sheetReach(sh.extent),
     from: worldBand ? Math.log2(1125 / (sh.extent.east - sh.extent.west)) : ATLAS_BANDS.find((b) => b.band === sh.band).from }));
+  const roseReach = sheetReach(roseSheet(view.zoom).extent);
   const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, historical, seaAt: sheets && seaAtOf(coarse), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, title, autoTitle, pinTitle,
     continentsEnd: zoomEnd(continentsZoom, CONTINENT_ZOOM_END), regionsEnd: zoomEnd(regionsZoom, REGION_ZOOM_END),
-    scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM && pinned, pinned, townSize: townBy, seed: legacy ? null : pickedSeed == null ? castSeed(view) : pickedSeed | 0, salt: legacy || pickedSeed == null ? 0 : pickedSeed | 0 }), show, scaleSprite, voyage };
+    scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM && pinned, pinned, cartouchePos, scalePos, townSize: townBy, seed: legacy ? null : pickedSeed == null ? castSeed(view) : pickedSeed | 0, salt: legacy || pickedSeed == null ? 0 : pickedSeed | 0 }), show, scaleSprite, voyage, roseReach, scalePos: cornerOf(scalePos, DEFAULT_SCALE_CORNER) };
   data.trees = TREES[STYLE.trees] ? plantTrees({ proj: data.proj, isLand: scene.field.isLand, scene, lakes: STYLE.lakes !== 'off' && water ? water.lakes : [], w: W, h: H }) : [];
   data.palms = plantPalms({ proj: data.proj, isLand: scene.field.isLand, scene, w: W, h: H,
     pois: scene.lesser.filter((l) => l.poi).map((l) => ({ x: l.x, y: l.y, palms: POIS.find((p) => p.name === l.name)?.palms ?? 0 })) });
@@ -2735,4 +2749,4 @@ export const viewProjection = (view) => makeProjection(clampView(view));
 export const TOWN_SIZES = ['area', 'population', 'rank'];
 export { RIVER_STYLES, LAKE_STYLES, TREE_STYLES, RELIEF_STYLES };
 export const MAX_ZOOM = ZOOM.max;
-export { SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, anchorScene, drawAnchored, towerGlyph, SCALE_NAMES, readManifests, listStyles, listSprites, defaultSprites, selectSprites, chooseSprites, drawScene, drawGround, drawLate, LATE, IN_DRAG, covers, panView, zoomView, clampView, viewOfFrame, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };
+export { CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, anchorScene, drawAnchored, towerGlyph, SCALE_NAMES, readManifests, listStyles, listSprites, defaultSprites, selectSprites, chooseSprites, drawScene, drawGround, drawLate, LATE, IN_DRAG, covers, panView, zoomView, clampView, viewOfFrame, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };

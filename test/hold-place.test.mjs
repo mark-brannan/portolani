@@ -26,7 +26,7 @@ const placed = async (view) => {
   const { scene, data } = await createScene(env, { view, scale: 'off', kinds: KINDS, relief: ['marina'] });
   const all = (kind, l, label) => (l ?? []).map((o) => ({ kind, label: label(o), ll: data.proj.invert(o.x, o.y) }));
   return {
-    proj: data.proj,
+    proj: data.proj, cart: scene.cartouche,
     list: [
       ...all('mountain', scene.mountains, (o) => o.sprite.id),
       ...all('town', scene.towns.filter((t) => !t.city), (o) => o.name),
@@ -46,7 +46,9 @@ for (const [site, [lon, lat]] of Object.entries(SITES)) for (const zoom of [5, 7
     let total = 0;
     for (const kind of kinds) {
       // those still well inside the second window: one that leaves it, or comes in at its edge, is not a jump
-      const of = a.list.filter((o) => o.kind === kind).filter((o) => { const [x, y] = b.proj.project(...o.ll); return x > 80 && x < 1520 && y > 80 && y < 920; });
+      // (and not beside the cartouche, which is pinned to the window and clears what stands near it as the map slides under it)
+      const c = a.cart, nearCart = (x, y) => x > c.x - 100 && x < c.x + c.w + 100 && y > c.y - 100 && y < c.y + c.h + 100;
+      const of = a.list.filter((o) => o.kind === kind).filter((o) => { const [x, y] = b.proj.project(...o.ll); return x > 80 && x < 1520 && y > 80 && y < 920 && !nearCart(x, y); });
       const lost = of.filter((o) => { const [x, y] = b.proj.project(...o.ll); return !b.list.some((q) => q.kind === kind && q.label === o.label && Math.hypot(b.proj.project(...q.ll)[0] - x, b.proj.project(...q.ll)[1] - y) <= 2); });
       console.log(`# ${site} z${zoom} ${kind}: ${of.length - lost.length}/${of.length} kept after a 1% drag`);
       assert.deepEqual(lost.map((o) => o.label), [], `every ${kind} in the window keeps its place`);

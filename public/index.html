@@ -88,6 +88,7 @@
   /* a phone: every drawer is a bottom sheet at half the window's height, the map above it (toggled by its
      button or Esc); the cartouche and the scale bar sit on cards beside the map */
   .card { position: fixed; z-index: 1; pointer-events: none; height: auto; }
+  #snap { display: none; position: fixed; z-index: 2; pointer-events: none; box-sizing: border-box; border: 2px dashed var(--accent); border-radius: 4px; }
   #cardCartouche { top: 12px; left: 12px; }
   #cardScale { left: 8px; bottom: 44px; }
   @media (min-width: 521px) { .card { display: none; } }
@@ -224,6 +225,7 @@
 </head>
 <body>
 <canvas id="map" width="1600" height="1000" aria-label="Chart: drag to pan, wheel or pinch to zoom"></canvas>
+<div id="snap" aria-hidden="true"></div>
 <canvas id="cardCartouche" class="card" aria-hidden="true" hidden></canvas>
 <canvas id="cardScale" class="card" width="700" height="170" aria-hidden="true" hidden></canvas>
 <div id="tile" class="tile" role="dialog" tabindex="-1" hidden></div>
