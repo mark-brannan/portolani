@@ -25,7 +25,7 @@
       "points": [[-5.4,35.95], [-3,35.9], [0,37], [3,37.6], [6,38], [9,38], [11.2,37.3], [13,36.5], [14.5,35.4], [18,34.5], [20,33.6], [22,33.7], [25,33], [28,32.4], [30.6,31.8]] }
   ],
   "events": [
-    { "kind": "event", "lon": 32.55, "lat": 29.9, "date": "c. 600 BC", "label": "The Phoenicians put out from the Red Sea", "source": "Herodotus 4.42" },
-    { "kind": "event", "lon": 18.4, "lat": -34.4, "date": "c. 598 BC", "label": "Round Libya (Africa): the sun on the right hand", "source": "Herodotus 4.42" }
+    { "kind": "event", "lon": 32.55, "lat": 29.9, "date": "c. 600 BC", "label": "The Phoenicians put out from the Red Sea", "source": "Herodotus 4.42", "text": "Herodotus says that Pharaoh Necho sent Phoenicians down the Red Sea and told them to come home through the Pillars of Heracles, the Strait of Gibraltar. Each autumn they landed, sowed grain, waited for the harvest, and put out again." },
+    { "kind": "event", "lon": 18.4, "lat": -34.4, "date": "c. 598 BC", "label": "Round Libya (Africa): the sun on the right hand", "source": "Herodotus 4.42", "text": "Herodotus doesn't believe it: the crews claimed that, in rounding Libya, they had the sun on their right hand. That odd detail, the sun in the north, is just what sailors in the southern hemisphere would see, and what makes the story likely to be true." }
   ]
 }

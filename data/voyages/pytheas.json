@@ -35,7 +35,7 @@
       "points": [[7.9,54.2], [5,54], [3.5,52.8], [1.7,51.2], [0.8,50.2], [-1,50.1], [-3,49.9], [-6,48.3], [-5,46.5], [-2.5,44.5], [-1.64,43.47]] }
   ],
   "events": [
-    { "kind": "event", "lon": -5.9, "lat": 50, "date": "c. 325 BC", "label": "Belerion, the tin coast of Cornwall", "source": "Diodorus Siculus, from Pytheas" },
-    { "kind": "landfall", "lon": -16.5, "lat": 67.3, "date": "c. 325 BC", "label": "Thule, six days north of Britain (place disputed)", "source": "Strabo, Geography" }
+    { "kind": "event", "lon": -5.9, "lat": 50, "date": "c. 325 BC", "label": "Belerion, the tin coast of Cornwall", "source": "Diodorus Siculus, from Pytheas", "text": "Pytheas of Massalia (Marseille) reached the tin coast of Cornwall and found the people friendly. Diodorus says they carried the tin out at low tide to an island, which some identify with St Michael's Mount, to sell it to traders." },
+    { "kind": "landfall", "lon": -16.5, "lat": 67.3, "date": "c. 325 BC", "label": "Thule, six days north of Britain (place disputed)", "source": "Strabo, Geography", "text": "Pytheas reported a land six days north of Britain where in summer the sun hardly set, and beyond it a sea that was neither land nor water nor air, like a sea lung, on which one could neither walk nor sail: sea ice, perhaps. Thule may be Iceland, Norway or Shetland. Strabo thought him a liar." }
   ]
 }

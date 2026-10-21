@@ -134,3 +134,17 @@ test('every Zheng He file carries the same death as the seventh voyage', () => {
   const death = (id) => readVoyage(id).events.find((e) => e.kind === 'death');
   for (const id of ['zheng-he-1', 'zheng-he-4', 'zheng-he-5']) assert.deepEqual(death(id), death('zheng-he'), id);
 });
+
+test('every event of every voyage has text for its tile', () => {
+  for (const id of JSON.parse(readFileSync('data/voyages/index.json', 'utf8'))) {
+    for (const e of readVoyage(id).events ?? []) assert.ok(e.text, `${id}: ${e.label} has no text`);
+  }
+});
+
+test('a place with a tile makes a mark where it stands, and none off the view', async () => {
+  const { sightMarks } = await import('../scripts/scene.mjs');
+  const rect = { x0: 0, y0: 0, x1: W, y1: H };
+  const sights = [{ lon: 8.93, lat: 44.41, tile: { title: 'Genoa' } }, { lon: 150, lat: -30, tile: { title: 'Far' } }];
+  const marks = sightMarks(sights, viewProjection({ lon: 8.93, lat: 44.41, zoom: 6 }), rect);
+  assert.deepEqual(marks.map((m) => m.tile.title), ['Genoa']);
+});

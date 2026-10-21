@@ -28,7 +28,7 @@
       "points": [[56.27,26.27], [55,26.4], [53.5,26.7], [52.5,27.2], [51,28.3], [50.2,29.2], [49.5,29.8], [48.5,29.9]] }
   ],
   "events": [
-    { "kind": "event", "lon": 67.3, "lat": 24.2, "date": "325 BC", "label": "The fleet leaves the mouth of the Indus", "source": "Arrian, Indica 21" },
-    { "kind": "landfall", "lon": 57.15, "lat": 26.8, "date": "Dec 325 BC", "label": "Harmozia: Nearchus meets Alexander", "source": "Arrian, Indica 33–36" }
+    { "kind": "event", "lon": 67.3, "lat": 24.2, "date": "325 BC", "label": "The fleet leaves the mouth of the Indus", "source": "Arrian, Indica 21", "text": "Alexander had turned back from India and ordered his fleet, under his friend Nearchus, a Cretan, to find a sea route from the Indus to the Gulf. Nobody knew if it could be done. They waited for the monsoon to ease and put out in the autumn." },
+    { "kind": "landfall", "lon": 57.15, "lat": 26.8, "date": "Dec 325 BC", "label": "Harmozia: Nearchus meets Alexander", "source": "Arrian, Indica 33–36", "text": "Alexander had given the fleet up for lost. When Nearchus came inland to find him, Alexander wept, and swore by Zeus and Ammon that this news pleased him more than the conquest of all Asia. Arrian tells it." }
   ]
 }

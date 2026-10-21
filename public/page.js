@@ -9,8 +9,8 @@
 // they are drawn down from (0 off, the top always).
 // Older links naming a `rendering` (or `pack`), `rose`, `monster`, `town` and `kinds` open as the
 // selection those chose, and are written back in the new form.
-import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, W, H } from './scene.mjs';
-import { POIS } from './pois.mjs';
+import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, sightMarks, SIGHT_TILES, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, W, H } from './scene.mjs';
+import { POIS, POI_ZOOM } from './pois.mjs';
 import { fold, bestPlace } from './placename.mjs';
 
 const memo = new Map();
@@ -739,8 +739,16 @@ function fillTile(t) {
   tileEl.replaceChildren(close, ...[head, meta, text, source].filter(Boolean));
   tileEl.setAttribute('aria-label', t.title ?? 'Point of interest');
 }
+// every listed place with a tile, once by name, at the view its button flies to
+let sightList = null;
+function sightTiles() {
+  sightList ??= [...new Map([...places.map(({ name, view: v }) => [name, v]), ...CHARTS.map(({ made }) => [made.title, made])]).entries()]
+    .filter(([name]) => SIGHT_TILES[name]).map(([name, v]) => ({ lon: v.lon, lat: v.lat, tile: { title: name, ...SIGHT_TILES[name] } }));
+  return sightList;
+}
 function showTileAt([x, y]) {
-  const marks = ground?.voyage ? voyageMarks(ground.voyage, viewProjection(placed), { x0: 0, y0: 0, x1: W, y1: H }) : [];
+  const proj = viewProjection(placed), rect = { x0: 0, y0: 0, x1: W, y1: H };
+  const marks = [...(ground?.voyage ? voyageMarks(ground.voyage, proj, rect) : []), ...(placed.zoom >= POI_ZOOM ? sightMarks(sightTiles(), proj, rect) : [])];
   let best = null, bestD = Infinity;
   for (const m of marks) { const d = Math.hypot(m.x - x, m.y - y); if (d <= Math.max(cssPx(TAP_REACH), m.h / 2) && d < bestD) { best = m; bestD = d; } }
   if (!best) return;
