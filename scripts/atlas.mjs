@@ -13,6 +13,10 @@
 // count from and the origin of the lines drawn at every zoom.
 export const ROSE = { lon: -20.7, lat: 42.1 };
 
+// The points a grid may count from (`origin` of sheetsFor): the Catalan rose, the default, or 0E 0N, NOAA's own
+// zero. Exposed for a while as a knob (docs/atlas/under-the-hood.md).
+export const ORIGINS = { rose: ROSE, zero: { lon: 0, lat: 0 } };
+
 // Page window: the doc's 1125 / 2^z degrees of longitude wide, on a 1600 x 1000 page.
 const WINDOW_DEG = 1125, ASPECT = 1000 / 1600;
 
@@ -70,7 +74,7 @@ export function viewBounds(view) {
 const pad = (n, w) => String(n).padStart(w, '0');
 
 // An ENC-style name: PT, the band number, then the cell's south-west corner as a row north or south of
-// the rose and a column east or west of it, e.g. PT3N041E0123 (band 3, 41st row north, 123rd column east).
+// the grid's origin (the rose) and a column east or west of it, e.g. PT3N041E0123 (band 3, 41st row north, 123rd column east).
 // South and west count outward from 0, so row -1 is S000 and column -1 is W0000; N000E0000 is the cell
 // whose south-west corner is the rose.
 export function sheetName(band, row, col) {
@@ -223,11 +227,11 @@ export const WORLD_SHEET = (() => {
   };
 })();
 
-// Every grid sheet the view overlaps: [{ name, band, bandName, row, col, extent, circle }].
-// With `curated`, each band takes the curated sheets that serve it (curatedFor), and a grid cell whose centre lies in one
+// Every grid sheet the view overlaps: [{ name, band, bandName, row, col, extent, circle }], counted out from `origin`
+// (ORIGINS; the rose by default). With `curated`, each band takes the curated sheets that serve it (curatedFor), and a grid cell whose centre lies in one
 // is left out, so a curated sheet replaces the cells it holds (#199); the world band (below the first band's
 // zoom) is the one world sheet.
-export function sheetsFor(view, { radius = 0.5, curated = false } = {}) {
+export function sheetsFor(view, { radius = 0.5, curated = false, origin = ROSE } = {}) {
   const band = bandFor(view.zoom);
   const h = band.height;
   const b = viewBounds(view);
@@ -237,21 +241,22 @@ export function sheetsFor(view, { radius = 0.5, curated = false } = {}) {
   const everywhere = curated ? curatedFor(band, all, view.zoom) : [];
   const cur = everywhere.filter((c) => overlaps(c.extent, b));
   const held = (extent) => everywhere.some((c) => within(c.extent, (extent.west + extent.east) / 2, (extent.south + extent.north) / 2));
-  // Rows out from the rose up to the page's edge: a pole has no Mercator centre, so a row that would reach
+  // Rows out from the origin up to the page's edge: a pole has no Mercator centre, so a row that would reach
   // past the edge ends on it.
-  const rowLo = Math.floor((-PAGE_EDGE - ROSE.lat) / h + EPS), rowHi = Math.ceil((PAGE_EDGE - ROSE.lat) / h - EPS); // rows rowLo to rowHi - 1
-  const south = Math.max(Math.floor((b.south - ROSE.lat) / h + EPS), rowLo);
-  const north = Math.min(Math.ceil((b.north - ROSE.lat) / h - EPS), rowHi);
+  const O = origin;
+  const rowLo = Math.floor((-PAGE_EDGE - O.lat) / h + EPS), rowHi = Math.ceil((PAGE_EDGE - O.lat) / h - EPS); // rows rowLo to rowHi - 1
+  const south = Math.max(Math.floor((b.south - O.lat) / h + EPS), rowLo);
+  const north = Math.min(Math.ceil((b.north - O.lat) / h - EPS), rowHi);
   const out = [];
   for (let row = south; row < north; row++) {
-    const s0 = round(ROSE.lat + row * h), s = Math.max(s0, -PAGE_EDGE), n = Math.min(round(s0 + h), PAGE_EDGE);
+    const s0 = round(O.lat + row * h), s = Math.max(s0, -PAGE_EDGE), n = Math.min(round(s0 + h), PAGE_EDGE);
     const w = h * widening(band, s0, h);
     // The window may run past the date line; the sheets stay inside it, and the column the line falls in ends
     // there, so a narrower sheet closes each row at 180 and at -180.
-    const c0 = Math.floor((Math.max(b.west, -180) - ROSE.lon) / w + EPS);
-    const c1 = Math.ceil((Math.min(b.east, 180) - ROSE.lon) / w - EPS);
+    const c0 = Math.floor((Math.max(b.west, -180) - O.lon) / w + EPS);
+    const c1 = Math.ceil((Math.min(b.east, 180) - O.lon) / w - EPS);
     for (let col = c0; col < c1; col++) {
-      const extent = { west: Math.max(-180, round(ROSE.lon + col * w)), east: Math.min(180, round(ROSE.lon + (col + 1) * w)), south: s, north: n };
+      const extent = { west: Math.max(-180, round(O.lon + col * w)), east: Math.min(180, round(O.lon + (col + 1) * w)), south: s, north: n };
       if (held(extent)) continue;
       out.push({
         name: sheetName(band, row, col), band: band.band, bandName: band.name, row, col, extent,
@@ -263,10 +268,11 @@ export function sheetsFor(view, { radius = 0.5, curated = false } = {}) {
 }
 
 // The sheet that holds the Catalan Atlas rose at a zoom, whatever the view: the curated sheet over it whose
-// ground it is, or else the grid cell whose south-west corner it is. Its reach is the rose's (#199).
-export function roseSheet(zoom) {
+// ground it is, or else the grid cell north-east of it (whose south-west corner it is, counted from the rose).
+// Its reach is the rose's (#199). `origin` and `curated` as sheetsFor's; the world band is the one world sheet.
+export function roseSheet(zoom, { origin = ROSE, curated = true } = {}) {
   if (zoom < BANDS[0].from) return WORLD_SHEET;
-  const e = 1e-6, got = sheetsFor({ zoom, west: ROSE.lon - e, east: ROSE.lon + e, south: ROSE.lat - e, north: ROSE.lat + e }, { curated: true });
+  const e = 1e-6, got = curated ? sheetsFor({ zoom, west: ROSE.lon - e, east: ROSE.lon + e, south: ROSE.lat - e, north: ROSE.lat + e }, { curated: true, origin }) : [];
   return got.find((s) => s.curated && within(s.extent, ROSE.lon, ROSE.lat) && !inShadow(s, ROSE.lon, ROSE.lat))
-    ?? sheetsFor({ zoom: Math.max(zoom, BANDS[0].from), west: ROSE.lon + e, east: ROSE.lon + 2 * e, south: ROSE.lat + e, north: ROSE.lat + 2 * e })[0];
+    ?? sheetsFor({ zoom: Math.max(zoom, BANDS[0].from), west: ROSE.lon + e, east: ROSE.lon + 2 * e, south: ROSE.lat + e, north: ROSE.lat + 2 * e }, { origin })[0];
 }
