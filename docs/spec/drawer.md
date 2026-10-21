@@ -1,4 +1,6 @@
-## B. Settings drawer, one feature per control
+# The settings drawer
+
+One Feature per control.
 
 Feature: Drawer open and close  (rose button `#open`, `#close`, Esc) [verified page.js:575-598]
   Scenario: open, then Esc

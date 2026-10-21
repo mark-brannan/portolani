@@ -1,8 +1,4 @@
-# Portolani: what a user can configure today, as specs
-
-Read-only reading of `mark-brannan/portolani` at `ab47ea7` (worktree `configurability-audit-spec-4d325e`). Written to become Playwright tests driven by the URL hash.
-Format: one Gherkin `Feature` per control, `[verified file:line]` where I read it, `(unverified)` on any `Then` I could not confirm from code, `# Mismatch:` where label and code disagree. Paths: `page.js` = `public/page.js`, `scene.mjs` = `scripts/scene.mjs`, `index.html` = `public/index.html`.
-**Count: 48 features** (A: 4, B: 27, C: 5, D: 4, E: 5 including legacy keys, F: 3 developer); 17 `# Mismatch:` comments.
+# The link
 
 ## Observables a test can read (all verified)
 
@@ -15,7 +11,7 @@ Format: one Gherkin `Feature` per control, `[verified file:line]` where I read i
 
 ---
 
-## A. The hash and the view
+## The hash and the view
 
 Feature: Map view  (hash key `map=<zoom>/<lat>/<lon>`, default `5.48/40.265/7.000`, zoom 1..15) [verified page.js:68-73, 119-121; scene.mjs:312]
   Tested by: test/hash.test.mjs — 'map: the view round-trips through the hash'

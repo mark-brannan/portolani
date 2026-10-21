@@ -1,4 +1,4 @@
-## C. Going somewhere
+# Going somewhere
 
 Feature: Chart views menu  (anchor button `#places`, panel `#flyout`; 24 entries in `ORIGINS`) [verified page.js:700-754, 739-758]
   Scenario: pick a view

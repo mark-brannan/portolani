@@ -1,4 +1,6 @@
-## F. Developer options (headless, not a user surface)
+# Developer options
+
+Headless, not a user surface.
 
 Feature: `createScene(env, opts)`  [verified scene.mjs:2553-2578]
   Scenario: defaults differ from the page's DEFAULTS
@@ -27,11 +29,11 @@ Feature: Dev server and goldens  [verified package.json scripts; scripts/dev.mjs
   Scenario: dev server port
     Given `npm run dev -- --port 9000` (or a bare number as an argument)
     When it starts
-    Then it serves `public/` on port 9000 (default 8080), and `--build` is the other flag (dev.mjs:97-100)
+    Then it serves `public/` on port 9000 (default 8080); `--build` and `--data <url>` are the other flags (dev.mjs:8, 97-100)
   Scenario: goldens
     Given `npm run golden` (`UPDATE_GOLDEN=1 node --test test/golden.test.mjs`)
     When it runs
-    Then the five golden views (`world-z2`, `region-z5`, `close-z9`, `world-z2-plate-carree`, `world-z2-orthographic`) are redrawn at 400 x 250
+    Then the six golden views (`world-z2`, `region-z5`, `close-z9`, `world-z2-plate-carree`, `world-z2-orthographic`, `world-z2-voyage` with `voyage: 'magellan'`) are redrawn at 400 x 250
   Scenario: touch test environment
     Given `TOUCH_REQUIRED=1`, `TOUCH_SHOTS=<dir>` or `PLAYWRIGHT=<module>`
     When `test/touch.test.mjs` runs

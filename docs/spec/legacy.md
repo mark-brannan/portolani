@@ -1,4 +1,4 @@
-## E. Other drawers and older links
+# Other drawers and older links
 
 Feature: Presets drawer  (query `?ui=presets`, not hash) [verified page.js:408-482]
   Scenario: choosing a preset
