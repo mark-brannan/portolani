@@ -4,12 +4,8 @@
   "short": "Nearchus",
   "who": ["Nearchus"],
   "when": "325–324 BC",
-  "deathUnknown": ["Nearchus"],
   "summary": "Alexander’s admiral takes the fleet from the mouths of the Indus along the barren coast of Gedrosia, past Pasni and Gwadar and the Strait of Hormuz, to the head of the Persian Gulf, with Onesicritus; his log, preserved by Arrian, is the earliest coasting voyage known day by day.",
-  "sources": [
-    { "title": "Nearchus (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Nearchus" },
-    { "title": "Arrian, Indica (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Indica_(Arrian)" }
-  ],
+  "sources": ["nearchus", "indica-arrian"],
   "legs": [
     { "from": "Indus delta (Stura)", "to": "Cape Monze (Morontobara)", "dates": "21 Sep – Oct 325 BC", "mode": "sea", "line": "spline",
       "confidence": "attested", "source": "Arrian, Indica 21–23; delayed by the monsoon until the winds changed",
