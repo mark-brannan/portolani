@@ -252,3 +252,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261020t224746z
 - portolani#206: places split anchor=anchorages (home first), astrolabe=points of interest (chart schools, remote islands) Undo: move rows between ANCHORAGES and SIGHTS in public/page.js ([#206](https://github.com/mark-brannan/portolani/pull/206))
+
+### 20261021t092348z
+- Build diagnostic: one line under the timing line, sha · build time UTC with age · subject Undo: revert PR 241 ([#241](https://github.com/mark-brannan/portolani/pull/241))
