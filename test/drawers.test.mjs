@@ -62,9 +62,12 @@ test('every drawer is parchment inside, the margin dark, with the browser set to
   await page.waitForFunction(() => /total \d+ ms\)$/.test(document.getElementById('status').textContent), null, { timeout: 90000 });
   for (const [button, hash] of CASES) {
     await page.evaluate((h) => { location.hash = h; }, hash);
+    const want = new URLSearchParams(hash).get('layout') ?? 'default'; // the page follows the hash on a later task
+    await page.waitForFunction((l) => document.querySelector(`#layout [data-layout="${l}"]`)?.getAttribute('aria-checked') === 'true', want);
     await page.click(`#${button}`);
     const id = await page.getAttribute(`#${button}`, 'aria-controls');
     await page.waitForFunction((i) => getComputedStyle(document.getElementById(i)).visibility === 'visible', id);
+    if (button === 'voyages') await page.waitForSelector('#voyageList [data-voyage]'); // the list loads on first open
     const r = await page.evaluate((i) => {
       const token = (name) => { // a token's value as the browser computes a colour
         const probe = document.createElement('i');
