@@ -7,14 +7,16 @@
 <style>
   :root {
     --bg: #f4efe4; --fg: #3b2a1a; --muted: #7a6a58; --line: #d8cdb6;
-    --panel: #efe3c6; --rule: #b89a68; --accent: #8c2f1e; --sheet: #e9d8b4; --sheet-ink: #3b2a1a;
+    --panel: #efe3c6; --margin: #b08d52; --rule: #b89a68; --accent: #8c2f1e; --sheet: #e9d8b4; --sheet-ink: #3b2a1a;
     --serif: 'IM Fell English', Georgia, serif;
   }
   @media (prefers-color-scheme: dark) {
-    :root { --bg: #1d1913; --fg: #e9d8b4; --muted: #a39679; --line: #3a3225; --panel: #241e16; --rule: #6b5634; --accent: #d0806a; --sheet: #d4c199; }
+    :root { --bg: #1d1913; --fg: #e9d8b4; --muted: #a39679; --line: #3a3225; --panel: #efe3c6; --margin: #4a3519; --rule: #6b5634; --accent: #d0806a; --sheet: #d4c199; }
+    /* a drawer stays parchment in the dark theme, so it keeps the light theme's ink */
+    .drawer { --bg: #f4efe4; --fg: #3b2a1a; --muted: #7a6a58; --line: #d8cdb6; --rule: #b89a68; --accent: #8c2f1e; color: var(--fg); }
   }
   html, body { height: 100%; }
-  body { margin: 0; overflow: hidden; background: var(--bg); color: var(--fg); font: 14px/1.4 system-ui, sans-serif; }
+  body { margin: 0; overflow: hidden; background: var(--margin); /* the margins round the map */ color: var(--fg); font: 14px/1.4 system-ui, sans-serif; }
 
   /* the map fills the window, its 1600 x 1000 canvas scaled to fit and centred */
   #map {
