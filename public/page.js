@@ -12,9 +12,9 @@
 // selection those chose, and are written back in the new form.
 // For a while, `debug=sheets[,rings]` and `tune=name:value,...` carry the under-the-hood section
 // (docs/atlas/under-the-hood.md), off by default.
-import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, sightMarks, SIGHT_TILES } from './scene.mjs';
 import { ORIGINS } from './atlas.mjs';
-import { POIS } from './pois.mjs';
+import { POIS, POI_ZOOM } from './pois.mjs';
 import { fold, bestPlace } from './placename.mjs';
 
 const memo = new Map();
@@ -905,9 +905,16 @@ function fillTile(t) {
   tileEl.replaceChildren(close, ...[head, meta, text, source].filter(Boolean));
   tileEl.setAttribute('aria-label', t.title ?? 'Point of interest');
 }
+// every listed place with a tile, once by name, at the view its button flies to
+let sightList = null;
+function sightTiles() {
+  sightList ??= [...new Map([...places.map(({ name, view: v }) => [name, v]), ...CHARTS.map(({ made }) => [made.title, made])]).entries()]
+    .filter(([name]) => SIGHT_TILES[name]).map(([name, v]) => { const { at, ...tile } = SIGHT_TILES[name]; return { lon: at?.[0] ?? v.lon, lat: at?.[1] ?? v.lat, tile: { title: name, ...tile } }; });
+  return sightList;
+}
 function showTileAt([x, y]) {
-  const proj = ground?.voyages?.length ? viewProjection(placed) : null;
-  const marks = proj ? ground.voyages.flatMap((v) => voyageMarks(v.voyage, proj, { x0: 0, y0: 0, x1: W, y1: H })) : [];
+  const proj = viewProjection(placed), rect = { x0: 0, y0: 0, x1: W, y1: H };
+  const marks = [...(ground?.voyages ?? []).flatMap((v) => voyageMarks(v.voyage, proj, rect)), ...(placed.zoom >= POI_ZOOM ? sightMarks(sightTiles(), proj, rect) : [])];
   let best = null, bestD = Infinity;
   for (const m of marks) { const d = Math.hypot(m.x - x, m.y - y); if (d <= Math.max(cssPx(TAP_REACH), m.h / 2) && d < bestD) { best = m; bestD = d; } }
   if (!best) return;
@@ -981,7 +988,7 @@ const SIGHTS = [
   ], 'sub'],
   ['The age of discovery', [
     ['Lisbon', port(-9.14, 38.72), null, 'the Carreira da Índia'], // also a chart city above, on purpose: the same view, so Go lands in one place
-    ['Elmina', port(-1.35, 5.08), null, 'Portuguese, then Dutch, fort'],
+    ['São Jorge da Mina', port(-1.35, 5.08), 'São Jorge da Mina (Elmina)', 'fort, 1482; the Atlantic slave trade'],
     ['Goa', port(73.91, 15.50), null, "Portugal's Asian capital"],
     ['Manila', port(120.98, 14.60), null, 'the galleons, 1571'],
     ['Acapulco', port(-99.88, 16.86), null, 'the galleons, 1565'],
@@ -991,7 +998,7 @@ const SIGHTS = [
     ['Suez', port(32.55, 29.97), null, 'the canal, 1869'],
     ['Panama', port(-79.53, 8.97), null, 'the canal, 1914'],
     ['Singapore', port(103.83, 1.28), null, '1819'],
-    ['Hong Kong', port(114.20, 22.30), null, '1841'],
+    ['Hong Kong', port(114.20, 22.30), null, 'ceded, 1841'],
     ['Shanghai', port(121.47, 31.23), null, 'treaty port, 1843'],
     ['Rotterdam', port(4.48, 51.92), null, 'the Nieuwe Waterweg, 1872'],
   ], 'sub'],

@@ -66,9 +66,9 @@
       "source": "chroniclers" }
   ],
   "events": [
-    { "kind": "landfall", "lon": 31.4, "lat": -29.85, "date": "25 Dec 1497", "label": "Natal named, Christmas Day", "source": "Roteiro" },
-    { "kind": "landfall", "lon": 75.72, "lat": 11.38, "date": "20 May 1498", "label": "Calicut, Kappad", "source": "Roteiro" },
-    { "kind": "death", "who": "Paulo da Gama", "lon": -27.22, "lat": 38.65, "date": "1499", "label": "Paulo da Gama died at Angra, Terceira", "source": "Barros; Correia" },
-    { "kind": "death", "who": "Vasco da Gama", "lon": 76.26, "lat": 9.97, "date": "24 Dec 1524", "label": "Vasco da Gama died at Cochin as Viceroy of India", "source": "Wikipedia: Vasco da Gama" }
+    { "kind": "landfall", "lon": 31.4, "lat": -29.85, "date": "25 Dec 1497", "label": "Natal named, Christmas Day", "source": "Roteiro", "text": "Christmas Day 1497 found the fleet off the coast of what is now South Africa, and Vasco da Gama named it Natal, for the Nativity. The name survives in KwaZulu-Natal." },
+    { "kind": "landfall", "lon": 75.72, "lat": 11.38, "date": "20 May 1498", "label": "Calicut, Kappad", "source": "Roteiro", "text": "Ten months out of Lisbon, the first ships to reach India from Europe by sea anchored off Kappad, north of Calicut. The Zamorin received them; his merchants thought the Portuguese gifts of cloth, hats and honey poor, and the Portuguese left with pepper and a promise of trouble." },
+    { "kind": "death", "who": "Paulo da Gama", "lon": -27.22, "lat": 38.65, "date": "1499", "label": "Paulo da Gama died at Angra, Terceira", "source": "Barros; Correia", "text": "Paulo commanded the São Rafael, burned on the East African coast when there were too few men left to sail her. He fell ill on the way home; Vasco sailed on ahead in a fast caravel, to hurry him to the Azores, and stayed with his brother until he died." },
+    { "kind": "death", "who": "Vasco da Gama", "lon": 76.26, "lat": 9.97, "date": "24 Dec 1524", "label": "Vasco da Gama died at Cochin as Viceroy of India", "source": "Wikipedia: Vasco da Gama", "text": "Sent back to India at last as viceroy, he fell ill within months of landing and died at Cochin on Christmas Eve. His body was taken to Portugal in 1539, and lies today in the Jerónimos Monastery at Lisbon." }
   ]
 }
