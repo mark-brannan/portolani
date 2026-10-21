@@ -4,11 +4,8 @@
   "short": "Hanno",
   "who": ["Hanno the Navigator"],
   "when": "c. 500 BC",
-  "deathUnknown": ["Hanno the Navigator"],
   "summary": "Sixty fifty-oared ships and thirty thousand settlers leave Carthage for the Atlantic coast of Africa, found cities beyond the Pillars of Heracles, and sail on past the river Lixos to a fiery mountain and an island of hairy people, the Gorillai.",
-  "sources": [
-    { "title": "Hanno the Navigator (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Hanno_the_Navigator" }
-  ],
+  "sources": ["hanno-the-navigator"],
   "legs": [
     { "from": "Carthage", "to": "Pillars of Heracles (Strait of Gibraltar)", "dates": "c. 500 BC", "mode": "sea", "line": "spline",
       "confidence": "conventional", "source": "the Periplus does not give the Mediterranean leg; the way along the African shore",

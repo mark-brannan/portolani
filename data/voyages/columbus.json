@@ -5,11 +5,7 @@
   "who": ["Christopher Columbus"],
   "when": "1492–1493",
   "summary": "Three ships out of Palos, a month on the trade winds from the Canaries, landfall in the Bahamas, then Cuba and Hispaniola; home on the westerlies by the Azores and Lisbon.",
-  "sources": [
-    { "title": "Voyages of Christopher Columbus (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Voyages_of_Christopher_Columbus" },
-    { "title": "Christopher Columbus's journal, in Bartolomé de las Casas's abstract (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Christopher_Columbus's_journal" },
-    { "title": "Columbus, Christopher, 1911 Encyclopædia Britannica (Wikisource)", "url": "https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Columbus,_Christopher" }
-  ],
+  "sources": ["voyages-of-christopher-columbus", "christopher-columbus-s-journal", "britannica-1911-columbus"],
   "legs": [
     { "from": "Palos de la Frontera", "to": "Las Palmas, Gran Canaria", "dates": "3–9 Aug 1492", "mode": "sea", "line": "rhumb",
       "confidence": "attested", "points": [[-6.85, 37.0], [-8.2, 34.6], [-12.0, 31.0], [-15.0, 28.6], [-15.3, 28.15]], "source": "Columbus's journal via Las Casas" },
@@ -39,7 +35,6 @@
   ],
   "events": [
     { "kind": "landfall", "lon": -74.5, "lat": 24.0, "date": "12 Oct 1492", "label": "Landfall at Guanahaní (San Salvador)", "source": "Columbus's journal via Las Casas; Watling Island identification" },
-    { "kind": "event", "lon": -72.15, "lat": 19.85, "date": "25 Dec 1492", "label": "Santa María wrecked off Hispaniola; Navidad built", "source": "Columbus's journal via Las Casas" },
-    { "kind": "death", "who": "Christopher Columbus", "lon": -4.72, "lat": 41.65, "date": "20 May 1506", "label": "Columbus dies at Valladolid", "source": "Britannica 1911, Columbus" }
+    { "kind": "event", "lon": -72.15, "lat": 19.85, "date": "25 Dec 1492", "label": "Santa María wrecked off Hispaniola; Navidad built", "source": "Columbus's journal via Las Casas" }
   ]
 }

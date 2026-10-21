@@ -7,20 +7,7 @@
   ],
   "when": "1271–1295",
   "summary": "Out by sea to Acre and overland through Persia, the Pamirs and the Gobi to Kublai Khan's court; home by sea from Zaiton past Sumatra, Ceylon and India to Hormuz, then Trebizond, Constantinople and Venice.",
-  "sources": [
-    {
-      "title": "Marco Polo, The Travels of Marco Polo (Il Milione), the Yule–Cordier translation",
-      "url": "https://en.wikipedia.org/wiki/The_Travels_of_Marco_Polo"
-    },
-    {
-      "title": "Marco Polo",
-      "url": "https://en.wikipedia.org/wiki/Marco_Polo"
-    },
-    {
-      "title": "Silk Road",
-      "url": "https://en.wikipedia.org/wiki/Silk_Road"
-    }
-  ],
+  "sources": ["the-travels-of-marco-polo", "marco-polo", "silk-road"],
   "legs": [
     {
       "from": "Venice",
@@ -1122,15 +1109,6 @@
       "date": "1292",
       "label": "Samudra, five months waiting for the monsoon",
       "source": "Polo, Book (Yule–Cordier)"
-    },
-    {
-      "kind": "death",
-      "who": "Marco Polo",
-      "lon": 12.34,
-      "lat": 45.44,
-      "date": "8 Jan 1324",
-      "label": "Marco Polo died at Venice, 8 Jan 1324",
-      "source": "Wikipedia, Marco Polo"
     }
   ]
 }

@@ -19,7 +19,7 @@ import { RELIEF_STYLES, reliefOf, clearOf, drawRelief } from './relief.mjs';
 import { TREES, TREE_STYLES, plantTrees, plantPalms } from './trees.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
 import { BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from './buildings.mjs';
-import { legPath, splitAtSeam, DASHES } from './voyages.mjs';
+import { legPath, splitAtSeam, DASHES, readVoyage } from './voyages.mjs';
 
 let env;
 const createCanvas = (w, h) => env.createCanvas(w, h);
@@ -2856,7 +2856,7 @@ export async function createScene(environment, opts = {}) {
 // The voyage a link names, or null for none or one the site lacks: a missing overlay never stops the map
 async function loadVoyage(id) {
   if (!/^[a-z][a-z0-9-]*$/.test(id ?? '') || id === 'off') return null;
-  try { return await env.readJSON(`data/voyages/${id}.json`); } catch { return null; }
+  try { return await readVoyage(id, (path) => env.readJSON(path)); } catch { return null; }
 }
 // A zoom slider's value as the zoom a name stops at: unset keeps `dflt`, 0 or less is off, the top is always, N draws at zoom N and out
 const zoomEnd = (n, dflt) => (n == null ? dflt : n <= 0 ? -Infinity : n >= ZOOM.max ? Infinity : n + 0.5);

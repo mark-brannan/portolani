@@ -1,0 +1,146 @@
+{
+  "Leif Erikson": {
+    "death": {
+      "lon": -45.5,
+      "lat": 61.1,
+      "date": "c. 1020",
+      "label": "Leif Erikson died, c. 1020, probably at Brattahlíð",
+      "source": "Leif Erikson (Wikipedia): no saga records his death",
+      "text": "The sagas are silent. He is last named alive about 1018–19 and his son Thorkell held the chieftaincy by 1025; Brattahlíð, the family estate, is the likeliest place."
+    }
+  },
+  "Marco Polo": {
+    "death": {
+      "lon": 12.34,
+      "lat": 45.44,
+      "date": "8 Jan 1324",
+      "label": "Marco Polo died at Venice, 8 Jan 1324",
+      "source": "Wikipedia, Marco Polo"
+    }
+  },
+  "Ibn Battuta": {
+    "death": {
+      "lon": -5,
+      "lat": 34.03,
+      "date": "c. 1369",
+      "label": "Ibn Battuta died in Morocco, c. 1369",
+      "text": "He dictated the Rihla at Fez in 1355–56 and died in Morocco about 1368–69. Nobody recorded where, so the skull stands in the country, not on a town.",
+      "source": "Wikipedia, Ibn Battuta",
+      "alternatives": [
+        {
+          "lon": -7.99,
+          "lat": 31.63,
+          "place": "Marrakesh",
+          "label": "Died at Marrakesh, by one modern account",
+          "text": "Some modern summaries put his death at Marrakesh; the Rihla ends in 1355 and no chronicle of his death survives. The tomb shown at Tangier, his birthplace, is purported, and marks a burial tradition, not a place of death.",
+          "source": "Wikipedia, Ibn Battuta (infobox); the Tangier tomb is captioned \"purported\""
+        }
+      ]
+    }
+  },
+  "Zheng He": {
+    "death": {
+      "lon": 87.54,
+      "lat": 5.99,
+      "date": "1433",
+      "label": "Zheng He died at sea on the way home, 1433",
+      "source": "Zheng He (Wikipedia); no source gives the place",
+      "text": "Most accounts have him die in 1433 on the way home from the seventh voyage, some say buried at sea. None gives a place, so the skull stands mid-way along that voyage's Calicut–Malacca leg.",
+      "alternatives": [
+        {
+          "lon": 75.78,
+          "lat": 11.25,
+          "place": "Calicut (Kozhikode)",
+          "label": "Died at Calicut on the way home, 1433",
+          "text": "On the seventh voyage the fleet called at Calicut on its way back from Hormuz. Some historians have him die there, before it sailed for Malacca.",
+          "source": "Zheng He (Wikipedia): probably at Calicut"
+        },
+        {
+          "lon": 118.78,
+          "lat": 32.07,
+          "place": "Nanjing",
+          "label": "Home at Nanjing, died 1435",
+          "text": "A minority view, from later texts and inscriptions, has him live two years more. A tomb is shown at Nanjing.",
+          "source": "Zheng He (Wikipedia); the later Nanjing account"
+        }
+      ]
+    }
+  },
+  "Bartolomeu Dias": {
+    "death": {
+      "lon": 15,
+      "lat": -36,
+      "date": "29 May 1500",
+      "label": "Dias lost in a storm off the Cape, on Cabral's fleet, 1500",
+      "source": "Wikipedia; Britannica 1911",
+      "text": "Four of Cabral's ships went down in one storm on the way to the Cape. The wreck's position is not recorded; the skull stands off the Cape."
+    }
+  },
+  "Christopher Columbus": {
+    "death": {
+      "lon": -4.72,
+      "lat": 41.65,
+      "date": "20 May 1506",
+      "label": "Columbus dies at Valladolid",
+      "source": "Britannica 1911, Columbus"
+    }
+  },
+  "Paulo da Gama": {
+    "death": {
+      "lon": -27.22,
+      "lat": 38.65,
+      "date": "1499",
+      "label": "Paulo da Gama died at Angra, Terceira",
+      "source": "Barros; Correia"
+    }
+  },
+  "Vasco da Gama": {
+    "death": {
+      "lon": 76.26,
+      "lat": 9.97,
+      "date": "24 Dec 1524",
+      "label": "Vasco da Gama died at Cochin as Viceroy of India",
+      "source": "Wikipedia: Vasco da Gama"
+    }
+  },
+  "Ferdinand Magellan": {
+    "death": {
+      "lon": 123.97,
+      "lat": 10.29,
+      "date": "27 Apr 1521",
+      "label": "Magellan killed at Mactan",
+      "source": "Pigafetta"
+    }
+  },
+  "Juan Sebastián Elcano": {
+    "death": {
+      "lon": -135,
+      "lat": 1,
+      "date": "4 Aug 1526",
+      "label": "Elcano died at sea on the Loaísa expedition, 1526",
+      "source": "Wikipedia: Juan Sebastián Elcano",
+      "text": "He took command when Loaísa died days before, and died himself at sea on 4 August. No position is recorded; the skull is a guess in the middle of the Pacific."
+    }
+  },
+  "Francis Drake": {
+    "death": {
+      "lon": -79.65,
+      "lat": 9.6,
+      "date": "28 Jan 1596",
+      "label": "Drake died off Portobelo, 1596; buried at sea in a lead coffin",
+      "source": "Wikipedia: Francis Drake"
+    }
+  },
+  "Phoenician mariners of Necho II": {
+    "death": "unknown"
+  },
+  "Hanno the Navigator": {
+    "death": "unknown"
+  },
+  "Pytheas": {
+    "death": "unknown"
+  },
+  "Nearchus": {
+    "death": "unknown"
+  }
+}

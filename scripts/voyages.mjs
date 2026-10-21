@@ -1,5 +1,5 @@
 // Voyage overlays: a historical track drawn on the modern-geometry map in any projection. A voyage
-// is one file, data/voyages/<id>.json (the schema is docs/voyages/README.md): legs of waypoints in
+// is one file, data/voyages/<id>.json, put together by readVoyage below (problems() is the schema): legs of waypoints in
 // [lon, lat], each leg joined by one of LINES and graded by one of CONFIDENCES, plus events along
 // the way (a death is drawn as a skull and crossbones). This module turns a leg into a dense path
 // and cuts it at the seam; the drawing is in scene.mjs, the land test in test/voyages.test.mjs.
@@ -156,13 +156,45 @@ export function problems(v) {
       }
     }
   }
-  // a person whose place of death nobody knows is named in deathUnknown instead of given a skull
-  const unknown = v.deathUnknown ?? [];
-  need(Array.isArray(unknown) && unknown.every((w) => typeof w === 'string' && Array.isArray(v.who) && v.who.includes(w)), 'deathUnknown: names from who');
+  // every named person has a skull, unless people.json says nobody knows where they died
   for (const w of Array.isArray(v.who) ? v.who : []) {
-    const died = (v.events ?? []).some((e) => e.kind === 'death' && e.who === w);
-    if (Array.isArray(unknown) && unknown.includes(w)) need(!died, `events: ${w} is in deathUnknown but has a death event`);
-    else need(died, `events: where ${w} died (or list them in deathUnknown)`);
+    if (!(v.deathUnknown ?? []).includes(w)) need((v.events ?? []).some((e) => e.kind === 'death' && e.who === w), `events: where ${w} died (a death in people.json, or "unknown")`);
   }
   return out;
+}
+
+// The one reader of the voyage files: each piece of text lives in one place, and this puts a voyage
+// back together. A person's death is in people.json, keyed by name ({ "death": { lon, lat, date, label,
+// text, source, alternatives } }, or { "death": "unknown" }), and joins every voyage whose `who` names
+// them; a voyage's `sources` are ids into sources.json; a leg sailed again on another voyage is
+// { "sameAs": "<voyage id>/<leg id>", "dates" }, the leg's own file giving it an `id`. `readJSON(path)`
+// reads a path under the site root, sync or async. Returns the whole record problems() and the drawing
+// take; throws on a reference that does not resolve or a death written in the voyage file.
+export const VOYAGE_DIR = 'data/voyages';
+export async function readVoyage(id, readJSON) {
+  const file = (name) => `${VOYAGE_DIR}/${name}.json`;
+  const [raw, people, sources] = await Promise.all([file(id), file('people'), file('sources')].map((p) => readJSON(p)));
+  const fail = (what) => { throw new Error(`${id}: ${what}`); };
+  if (raw.deathUnknown || (raw.events ?? []).some((e) => e.kind === 'death')) fail('a death belongs in people.json, not the voyage');
+  const others = new Map([[id, raw]]);
+  const legs = [];
+  for (const [i, leg] of (raw.legs ?? []).entries()) {
+    if (leg.sameAs === undefined) { legs.push(leg); continue; }
+    const extra = Object.keys(leg).filter((k) => k !== 'sameAs' && k !== 'dates');
+    if (extra.length) fail(`leg ${i} (sameAs ${leg.sameAs}): only dates may be given beside sameAs, not ${extra.join(', ')}`);
+    const [owner, legId] = String(leg.sameAs).split('/');
+    if (!others.has(owner)) others.set(owner, Promise.resolve().then(() => readJSON(file(owner))).catch(() => ({})));
+    const target = (await others.get(owner)).legs?.find((l) => l.id === legId && l.sameAs === undefined);
+    if (!target) fail(`leg ${i}: sameAs ${leg.sameAs} names no leg`);
+    const { id: _, ...shared } = target;
+    legs.push({ ...shared, ...(leg.dates !== undefined && { dates: leg.dates }) });
+  }
+  const deaths = [], unknown = [];
+  for (const who of raw.who ?? []) {
+    const death = people[who]?.death;
+    if (death === 'unknown') unknown.push(who);
+    else if (death) deaths.push({ kind: 'death', who, ...death });
+  }
+  const cited = (raw.sources ?? []).map((s) => sources[s] ?? fail(`source ${s} is not in sources.json`));
+  return { ...raw, sources: cited, legs, events: [...(raw.events ?? []), ...deaths], ...(unknown.length && { deathUnknown: unknown }) };
 }

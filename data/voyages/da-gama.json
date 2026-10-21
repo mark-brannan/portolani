@@ -5,11 +5,7 @@
   "who": ["Vasco da Gama", "Paulo da Gama"],
   "when": "1497–1499",
   "summary": "Four ships out of Lisbon swing wide into the South Atlantic, round the Cape, work up the East African coast and cross the monsoon sea to Calicut, the first sea road from Europe to India.",
-  "sources": [
-    { "title": "Álvaro Velho (attrib.), Roteiro da viagem de Vasco da Gama em MCCCCXCVII", "url": "https://archive.org/details/roteirodaviagem00velhgoog" },
-    { "title": "A Journal of the First Voyage of Vasco da Gama, 1497–1499 (Hakluyt Society, 1898)", "url": "https://archive.org/details/worksissuedbyha00unkngoog" },
-    { "title": "Vasco da Gama (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Vasco_da_Gama" }
-  ],
+  "sources": ["roteiro-velho", "hakluyt-da-gama-journal", "vasco-da-gama"],
   "legs": [
     { "from": "Lisbon", "to": "Santiago, Cape Verde", "dates": "8–26 Jul 1497", "mode": "sea", "line": "rhumb", "confidence": "attested",
       "points": [[-9.55, 38.62], [-11, 36], [-14.5, 31.5], [-19.5, 28], [-21.5, 22], [-21.5, 19], [-22, 16], [-22.7, 14.7], [-23.6, 14.65]],
@@ -67,8 +63,6 @@
   ],
   "events": [
     { "kind": "landfall", "lon": 31.4, "lat": -29.85, "date": "25 Dec 1497", "label": "Natal named, Christmas Day", "source": "Roteiro" },
-    { "kind": "landfall", "lon": 75.72, "lat": 11.38, "date": "20 May 1498", "label": "Calicut, Kappad", "source": "Roteiro" },
-    { "kind": "death", "who": "Paulo da Gama", "lon": -27.22, "lat": 38.65, "date": "1499", "label": "Paulo da Gama died at Angra, Terceira", "source": "Barros; Correia" },
-    { "kind": "death", "who": "Vasco da Gama", "lon": 76.26, "lat": 9.97, "date": "24 Dec 1524", "label": "Vasco da Gama died at Cochin as Viceroy of India", "source": "Wikipedia: Vasco da Gama" }
+    { "kind": "landfall", "lon": 75.72, "lat": 11.38, "date": "20 May 1498", "label": "Calicut, Kappad", "source": "Roteiro" }
   ]
 }

@@ -5,12 +5,7 @@
   "who": ["Ibn Battuta"],
   "when": "1325–1354",
   "summary": "A judge from Tangier sets out for Mecca and keeps going for twenty-nine years: Cairo, Persia, East Africa, Delhi, the Maldives, China, then home by way of Granada and the Sahara to Mali.",
-  "sources": [
-    {"title":"Ibn Battuta, Wikipedia","url":"https://en.wikipedia.org/wiki/Ibn_Battuta"},
-    {"title":"H. A. R. Gibb (trans.), Ibn Battuta: Travels in Asia and Africa, 1325–1354 (1929), Internet Archive","url":"https://archive.org/details/ibnbatttatrave00ibnb"},
-    {"title":"The Travels of Ibn Battuta, Berkeley ORIAS","url":"https://orias.berkeley.edu/resources-teachers/travels-ibn-battuta"},
-    {"title":"Rihla, Wikipedia","url":"https://en.wikipedia.org/wiki/Rihla"}
-  ],
+  "sources": ["ibn-battuta", "gibb-ibn-battuta", "orias-ibn-battuta", "rihla"],
   "legs": [
     {"from":"Tangier","to":"Alexandria","dates":"Jun 1325 – Apr 1326","mode":"land","line":"spline","confidence":"attested","points":[[-5.8,35.77],[-4,34.2],[-1.32,34.88],[3.06,36.75],[5.08,36.75],[6.61,36.37],[10.18,36.8],[10.76,34.74],[10.1,33.88],[13.18,32.89],[16.6,31.2],[20.07,32.1],[23.98,32.08],[29.92,31.2]],"source":"Rihla, the coast road through Tlemcen, Tunis and Tripoli"},
     {"from":"Alexandria","to":"Aydhab","dates":"1326","mode":"land","line":"spline","confidence":"attested","points":[[29.92,31.2],[31.24,30.04],[30.74,28.12],[31.18,27.18],[32.72,26.17],[32.64,25.7],[32.9,24.09],[34.5,23],[36.33,22.33]],"source":"Rihla, up the Nile to the Red Sea port","note":"turned back at Aydhab by a revolt in the Sudan"},
@@ -65,8 +60,6 @@
     {"kind":"event","who":"Ibn Battuta","lon":73.5,"lat":4.18,"date":"1343–44","label":"The Maldives: qadi of the islands","source":"Rihla"},
     {"kind":"landfall","who":"Ibn Battuta","lon":118.68,"lat":24.88,"date":"1345–46","label":"Zaytun (Quanzhou), the Chinese port","source":"Rihla"},
     {"kind":"event","who":"Ibn Battuta","lon":36.3,"lat":33.51,"date":"1348","label":"Damascus in the year of the Black Death","source":"Rihla"},
-    {"kind":"event","who":"Ibn Battuta","lon":-8.8,"lat":11.4,"date":"1352–53","label":"The court of Mansa Sulayman, Mali","source":"Rihla"},
-    {"kind":"death","who":"Ibn Battuta","lon":-5,"lat":34.03,"date":"c. 1369","label":"Ibn Battuta died in Morocco, c. 1369","note":"The place is unrecorded.","text":"He dictated the Rihla at Fez in 1355–56 and died in Morocco about 1368–69. Nobody recorded where, so the skull stands in the country, not on a town.","source":"Wikipedia, Ibn Battuta",
-     "alternatives":[{"lon":-7.99,"lat":31.63,"place":"Marrakesh","label":"Died at Marrakesh, by one modern account","text":"Some modern summaries put his death at Marrakesh; the Rihla ends in 1355 and no chronicle of his death survives. The tomb shown at Tangier, his birthplace, is purported, and marks a burial tradition, not a place of death.","source":"Wikipedia, Ibn Battuta (infobox); the Tangier tomb is captioned \"purported\""}]}
+    {"kind":"event","who":"Ibn Battuta","lon":-8.8,"lat":11.4,"date":"1352–53","label":"The court of Mansa Sulayman, Mali","source":"Rihla"}
   ]
 }

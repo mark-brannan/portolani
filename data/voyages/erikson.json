@@ -7,28 +7,7 @@
   ],
   "when": "c. 1000",
   "summary": "From Brattahlíð in Greenland west across the Davis Strait to Helluland, down the Labrador coast to Markland, and on to Vinland; Leif's landfalls as the Saga of the Greenlanders names them.",
-  "sources": [
-    {
-      "title": "Saga of the Greenlanders (Grœnlendinga saga), 13th-century text",
-      "url": "https://en.wikipedia.org/wiki/Saga_of_the_Greenlanders"
-    },
-    {
-      "title": "Leif Erikson (Wikipedia)",
-      "url": "https://en.wikipedia.org/wiki/Leif_Erikson"
-    },
-    {
-      "title": "L'Anse aux Meadows, the one excavated Norse site in North America",
-      "url": "https://en.wikipedia.org/wiki/L%27Anse_aux_Meadows"
-    },
-    {
-      "title": "Vinland, the Norse name for the land west of Greenland",
-      "url": "https://en.wikipedia.org/wiki/Vinland"
-    },
-    {
-      "title": "Leif Erikson",
-      "url": "https://en.wikipedia.org/wiki/Leif_Erikson"
-    }
-  ],
+  "sources": ["saga-of-the-greenlanders", "leif-erikson", "l-anse-aux-meadows", "vinland"],
   "legs": [
     {
       "from": "Brattahlíð",
@@ -252,16 +231,6 @@
       "date": "c. 1000",
       "label": "Vinland",
       "source": "Saga of the Greenlanders; L'Anse aux Meadows"
-    },
-    {
-      "kind": "death",
-      "who": "Leif Erikson",
-      "lon": -45.5,
-      "lat": 61.1,
-      "date": "c. 1020",
-      "label": "Leif Erikson died, c. 1020, probably at Brattahlíð",
-      "source": "Leif Erikson (Wikipedia): no saga records his death",
-      "text": "The sagas are silent. He is last named alive about 1018–19 and his son Thorkell held the chieftaincy by 1025; Brattahlíð, the family estate, is the likeliest place."
     }
   ]
 }
