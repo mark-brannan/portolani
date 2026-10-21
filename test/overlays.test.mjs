@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { similarityFit, applyFit, affineThrough3, loadOverlay, drawOverlay } from '../scripts/overlays.mjs';
+import { similarityFit, applyFit, affineThrough3, loadOverlay, drawOverlay, OVERLAY_DEFAULTS, overlayFromHash, overlayToHash } from '../scripts/overlays.mjs';
 import { figureRows } from '../scripts/build-overlays.mjs';
 import { viewProjection } from '../scripts/scene.mjs';
 
@@ -72,4 +72,22 @@ test('an overlay the site lacks loads as null and draws nothing', async () => {
   const g = new Proxy({}, { get: (_, k) => (...args) => calls.push(k) });
   drawOverlay(g, null, viewProjection({ lon: 0, lat: 0, zoom: 2 }), 0.6);
   assert.deepEqual(calls, []);
+});
+
+// docs/spec/drawer.md "Scan overlay": the overlay's two hash keys, defaults off and 0.6.
+const written = (st) => { const q = new URLSearchParams(); overlayToHash(st, q); return q.toString(); };
+test('the overlay in the hash: the default writes nothing, a link round-trips, an unknown id reads as off', () => {
+  assert.deepEqual(OVERLAY_DEFAULTS, { overlay: null, overlayOpacity: 0.6 });
+  assert.equal(written(OVERLAY_DEFAULTS), '', 'the default writes nothing');
+  assert.deepEqual(overlayFromHash(new URLSearchParams('')), OVERLAY_DEFAULTS, 'no keys read as the default');
+  const ids = new Set(overlays.map((o) => o.id));
+  const read = overlayFromHash(new URLSearchParams('overlay=carta-marina&overlayopacity=0.6'), ids);
+  assert.deepEqual(read, { overlay: 'carta-marina', overlayOpacity: 0.6 });
+  assert.equal(written(read), 'overlay=carta-marina', '0.6 is the default, so only the id is written back');
+  const faint = overlayFromHash(new URLSearchParams('overlay=carta-marina&overlayopacity=0.3'), ids);
+  assert.equal(written(faint), 'overlay=carta-marina&overlayopacity=0.3');
+  assert.equal(overlayFromHash(new URLSearchParams('overlay=nowhere'), ids).overlay, null, 'an id the site lacks reads as off');
+  assert.equal(overlayFromHash(new URLSearchParams('overlay=off')).overlay, null);
+  assert.equal(overlayFromHash(new URLSearchParams('overlay=../etc')).overlay, null);
+  assert.equal(overlayFromHash(new URLSearchParams('overlayopacity=2')).overlayOpacity, 0.6, 'out of range falls back');
 });

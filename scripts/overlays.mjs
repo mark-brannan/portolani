@@ -92,3 +92,19 @@ export function drawOverlay(g, overlay, proj, opacity = 0.6, { w = 1600, h = 160
   }
   g.restore();
 }
+
+// The overlay in the link: `overlay=<id>` the scan laid over the map, `overlayopacity=<0..1>` how strongly.
+// Off (no overlay) and 0.6 are the defaults, and a default is left out of the hash. `ids`, when given, are the
+// overlays the site has: any other id reads as off. `q` is a URLSearchParams.
+export const OVERLAY_DEFAULTS = { overlay: null, overlayOpacity: 0.6 };
+export function overlayFromHash(q, ids) {
+  const id = q.get('overlay') ?? '', o = Number(q.get('overlayopacity'));
+  return {
+    overlay: /^[a-z][a-z0-9-]*$/.test(id) && id !== 'off' && (!ids || ids.has(id)) ? id : OVERLAY_DEFAULTS.overlay,
+    overlayOpacity: q.has('overlayopacity') && o >= 0 && o <= 1 ? o : OVERLAY_DEFAULTS.overlayOpacity,
+  };
+}
+export function overlayToHash(st, q) {
+  if (st.overlay) q.set('overlay', st.overlay);
+  if (st.overlayOpacity !== OVERLAY_DEFAULTS.overlayOpacity) q.set('overlayopacity', st.overlayOpacity);
+}
