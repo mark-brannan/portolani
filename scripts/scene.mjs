@@ -7,7 +7,7 @@
 // A view is a centre, zoom and projection, { lon, lat, zoom, projection }, on a W x H canvas; the
 // projection is one of PROJECTIONS, Mercator when left out.
 
-import { sheetsFor, inShadow, territory, cutOut, BANDS as ATLAS_BANDS, ROSE as ATLAS_ROSE } from './atlas.mjs';
+import { sheetsFor, roseSheet, inShadow, territory, cutOut, WORLD_BAND, BANDS as ATLAS_BANDS, ROSE as ATLAS_ROSE } from './atlas.mjs';
 import { fill, trace, limn, rhumb, place, letter, geojsonPolygons, geojsonRings } from 'coast-wright';
 import { bandOf } from './bands.mjs';
 import { islandInfo, ISLAND_KM2 } from './island.mjs';
@@ -1300,7 +1300,7 @@ function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
       for (const f of ownFigures(sh, 'rose').slice(0, allotment(sh))) put(figureSprite(sh, roses, ring, f), f);
       continue;
     }
-    // a curated sheet's network is not drawn where a smaller curated sheet lies
+    // a smaller kept sheet's ground is its own: no rose of this sheet is placed there
     const clear2 = (lon, lat, size, land) => !inShadow(sh, lon, lat) && clear(lon, lat, size, land);
     const quota = roseQuota(sh);
     if (quota > 0 && clear2(c.lon, c.lat, big.sizePx, onLand)) put(big, c);
@@ -1316,7 +1316,7 @@ function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
 
 // Where a sheet is placed: Mercator at its band's first zoom, centred on the sheet, whatever the page's
 // projection, zoom or window. Placement is a function of the sheet and the land alone.
-const sheetFrame = (sh) => makeProjection({ lon: sh.circle.lon, lat: sh.circle.lat, zoom: ATLAS_BANDS.find((b) => b.band === sh.band).from });
+const sheetFrame = (sh) => makeProjection({ lon: sh.circle.lon, lat: sh.circle.lat, zoom: [WORLD_BAND, ...ATLAS_BANDS].find((b) => b.band === sh.band).from });
 // A sheet's beasts are placed at the zoom that paces them (`from`), so the room they are given is the room
 // they take where they are spaced; in the world band that is the zoom at which the sheet is one window wide.
 const beastFrame = (sh) => makeProjection({ lon: sh.circle.lon, lat: sh.circle.lat, zoom: sh.from });
@@ -1813,19 +1813,21 @@ function latticeOf(scene, data) {
   rays = [];
   // Mercator radians at the equator, in degrees; never past half the world, where a ray would lap itself
   const reach = Math.min(180, (Math.hypot(W, H) * 1.5 / data.proj.k) * 180 / Math.PI);
-  // a sheet's lines reach its extent plus half a sheet; a window's, past the scene's far corner
+  // a sheet's lines reach its page diagonal; a window's, past the scene's far corner
   const origins = scene.sheets
-    ? scene.sheets.flatMap((sh) => [sh.circle, ...sh.circle.nodes].filter((n) => !inShadow(sh, n.lon, n.lat)).map((n) => ({ lon: n.lon, lat: n.lat, reach: sh.reach, shadow: sh.shadow })))
+    ? scene.sheets.flatMap((sh) => [sh.circle, ...sh.circle.nodes].filter((n) => !inShadow(sh, n.lon, n.lat)).map((n) => ({ lon: n.lon, lat: n.lat, reach: sh.reach })))
     : [scene.centre, ...scene.nodes].map((n) => { const [lon, lat] = data.proj.invert(n.x, n.y); return { lon, lat, reach }; });
   // The Catalan Atlas rose's lines run at every zoom, beside the network of the sheets or the window
-  // (docs/atlas/README.md, "Zoom bands"): the same lines through every view and every band.
-  origins.push({ lon: ATLAS_ROSE.lon, lat: ATLAS_ROSE.lat, reach: 180 });
-  // A curated sheet's lines stop where a smaller curated sheet lies, whose network holds that ground.
-  for (const { lon, lat, reach, shadow } of origins) {
+  // (docs/atlas/README.md, "Zoom bands"), as one more hub of the view's band: the reach of the sheet that
+  // holds the rose at this zoom. The balance between hubs asked for in #199 is not written yet.
+  // In the world band the rose is a node of the world's ring, whose lines are already there.
+  if (!origins.some((o) => Math.abs(o.lon - ATLAS_ROSE.lon) < 1e-9 && Math.abs(o.lat - ATLAS_ROSE.lat) < 1e-9)) origins.push({ lon: ATLAS_ROSE.lon, lat: ATLAS_ROSE.lat, reach: scene.roseReach ?? 180 });
+  // A line runs its whole reach: it is never cut where another sheet lies (#199).
+  for (const { lon, lat, reach } of origins) {
     for (let k = 0; k < RHUMB_RAYS; k++) {
       const kind = k % 4 === 0 ? 0 : k % 2 === 1 ? 1 : 2; // wind, quarter (red), half (green)
       const ray = rhumb([lon, lat], 90 + (k * 360) / RHUMB_RAYS, reach * Math.cos(lat * Math.PI / 180));
-      for (const line of cutOut(ray, shadow)) rays.push({ kind, line, box: bbox(line.map(([a, b]) => data.proj.project(a, b))) });
+      for (const line of cutOut(ray)) rays.push({ kind, line, box: bbox(line.map(([a, b]) => data.proj.project(a, b))) });
     }
   }
   lattices.set(scene, rays);
@@ -2618,8 +2620,8 @@ function drawAnchored(g, a, bg, view, layers) {
 // placed when the lattice needs it (a rose, the cartouche's corner), only not drawn.
 // A sheet's hidden circle reaches 0.4 of its height, so a node never lands on the edge a neighbour shares.
 const SHEET_RADIUS = 0.4;
-// Degrees of rhumb line from a node: the sheet's extent plus half a sheet, over its diagonal on the page.
-const sheetReach = (e) => Math.min(180, 1.5 * Math.hypot(e.east - e.west, mercatorDeg(e.north) - mercatorDeg(e.south)));
+// Degrees of rhumb line from a node: the sheet's diagonal on the page.
+const sheetReach = (e) => Math.min(180, Math.hypot(e.east - e.west, mercatorDeg(e.north) - mercatorDeg(e.south)));
 const mercatorDeg = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * RAD) / 2)) / RAD;
 // Whether a point of the earth is sea, by the world's land and not the window's.
 function seaAtOf(world) {
@@ -2695,14 +2697,16 @@ export async function createScene(environment, opts = {}) {
 
   const data = viewData(world, view);
   // the atlas's sheets at every zoom: the curated sheets alone in the world band, then curated and grid sheets.
+  // The Catalan rose's lines reach as far as those of the sheet that holds it at this zoom.
   // `from` paces a sheet's beasts: the first zoom of its band, or in the world band, where the earth is one page,
   // the zoom at which the sheet is one window wide.
   const worldBand = view.zoom < ATLAS_BANDS[0].from;
   const sheets = sheetsFor(view, { radius: SHEET_RADIUS, curated: true }).map((sh) => ({ ...sh, reach: sheetReach(sh.extent),
     from: worldBand ? Math.log2(1125 / (sh.extent.east - sh.extent.west)) : ATLAS_BANDS.find((b) => b.band === sh.band).from }));
+  const roseReach = sheetReach(roseSheet(view.zoom).extent);
   const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, historical, seaAt: sheets && seaAtOf(coarse), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, title, autoTitle, pinTitle,
     continentsEnd: zoomEnd(continentsZoom, CONTINENT_ZOOM_END), regionsEnd: zoomEnd(regionsZoom, REGION_ZOOM_END),
-    scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM && pinned, pinned, townSize: townBy, seed: legacy ? null : pickedSeed == null ? castSeed(view) : pickedSeed | 0, salt: legacy || pickedSeed == null ? 0 : pickedSeed | 0 }), show, scaleSprite, voyage };
+    scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM && pinned, pinned, townSize: townBy, seed: legacy ? null : pickedSeed == null ? castSeed(view) : pickedSeed | 0, salt: legacy || pickedSeed == null ? 0 : pickedSeed | 0 }), show, scaleSprite, voyage, roseReach };
   data.trees = TREES[STYLE.trees] ? plantTrees({ proj: data.proj, isLand: scene.field.isLand, scene, lakes: STYLE.lakes !== 'off' && water ? water.lakes : [], w: W, h: H }) : [];
   data.palms = plantPalms({ proj: data.proj, isLand: scene.field.isLand, scene, w: W, h: H,
     pois: scene.lesser.filter((l) => l.poi).map((l) => ({ x: l.x, y: l.y, palms: POIS.find((p) => p.name === l.name)?.palms ?? 0 })) });
