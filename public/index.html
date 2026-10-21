@@ -231,6 +231,22 @@
   .caption a { color: var(--accent); text-underline-offset: 2px; }
 
   .about p { color: var(--muted); font-size: 12px; margin: 0; }
+
+  /* the drawer's layouts (layout=): in Default each control's wrapper (.ctl) lays out as if it were not there,
+     so the drawer is as it was; another layout moves the wrappers into its own groups, where each is a block
+     and the headings only a moved control needs (.lo) show */
+  #layout { margin-top: 10px; }
+  .ctl { display: contents; }
+  .lo { display: none; }
+  html[data-layout] .ctl { display: block; }
+  html[data-layout] .ctl + .ctl, html[data-layout] .ctl + .lead { margin-top: 8px; }
+  html[data-layout] .lo { display: block; }
+  .moods { margin-top: 18px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .moods .preset b { font-size: 16px; }
+  .moods .sample img, .moods .sample svg { height: 28px; max-width: 38px; }
+  .fine { margin-top: 14px; }
+  .fine > summary { font: 17px var(--serif); color: var(--accent); letter-spacing: 0.06em; font-variant: small-caps; cursor: pointer; }
+
   /* under the hood: knobs fixed in the code, for a while; collapsed */
   .hood summary { font: 15px var(--serif); color: var(--accent); letter-spacing: 0.06em; font-variant: small-caps; cursor: pointer; }
   .hood .lead { margin-top: 6px; }
@@ -312,6 +328,10 @@
     </div>
   </header>
 
+  <!-- the layouts: one chip each, the choice kept in the link (`layout=`). Default is the drawer below as it
+       stands; the others move these same controls into new groups, so each control is one element -->
+  <div id="layout" class="chips" role="radiogroup" aria-label="Drawer layout"></div>
+
   <div id="share">
     <button id="reset" type="button" class="chip" title="Every control back to its default; the view stays"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8a5 5 0 1 0 1.6-3.7"/><path d="M3 2.5v3h3"/></svg>Reset</button>
     <button id="copy" type="button" class="chip" title="Copy the link to this view and style"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 9.5a3 3 0 0 0 4.2 0l2-2a3 3 0 0 0-4.2-4.2l-.8.8"/><path d="M9.5 6.5a3 3 0 0 0-4.2 0l-2 2a3 3 0 0 0 4.2 4.2l.8-.8"/></svg>Copy link</button>
@@ -325,93 +345,137 @@
     <div id="ui-body"></div>
   </section>
 
-  <section aria-labelledby="h-sea">
+  <!-- the groups of a layout other than Default, built by page.js from the same controls (each a .ctl) -->
+  <div id="layoutGroups" hidden></div>
+
+  <section class="home" aria-labelledby="h-sea">
     <h2 id="h-sea">Sea</h2>
-    <p class="lead">The empty sea was filled with figures: the Carta Marina of 1539 crowds it with whales, walrus and other creatures. <a href="learn/sea-monsters-and-ships.html">Learn more</a></p>
-    <div class="slider"><label for="density">Density (monsters, ships, towns, hills)</label><input id="density" type="range" min="0" max="2" step="0.25" value="1"><output id="densityOut">1</output></div>
+    <p class="lead" data-lead-for="monsters">The empty sea was filled with figures: the Carta Marina of 1539 crowds it with whales, walrus and other creatures. <a href="learn/sea-monsters-and-ships.html">Learn more</a></p>
+    <div class="ctl" data-ctl="density"><div class="slider"><label for="density">Density (monsters, ships, towns, hills)</label><input id="density" type="range" min="0" max="2" step="0.25" value="1"><output id="densityOut">1</output></div></div>
+    <div class="ctl" data-ctl="monsters">
     <h3 class="pick-h">Monsters</h3>
     <div id="pick-monster"></div>
+    </div>
+    <div class="ctl" data-ctl="ships">
     <h3 class="pick-h">Ships</h3>
     <div id="pick-ship"></div>
+    </div>
   </section>
 
-  <section id="s-roses" aria-labelledby="h-roses">
+  <section id="s-roses" class="home" aria-labelledby="h-roses">
     <h2 id="h-roses">Roses</h2>
-    <p class="lead">A portolan chart carried wind roses, colour-coded lines for the winds, and the network of rhumb lines spread from them across the sheet. <a href="learn/rhumb-lines.html">Learn more</a></p>
+    <p class="lead" data-lead-for="roses">A portolan chart carried wind roses, colour-coded lines for the winds, and the network of rhumb lines spread from them across the sheet. <a href="learn/rhumb-lines.html">Learn more</a></p>
+    <div class="ctl" data-ctl="roses">
+    <h3 class="lo pick-h">Roses</h3>
     <div id="pick-rose"></div>
+    </div>
   </section>
 
-  <section aria-labelledby="h-placement">
+  <section class="home" aria-labelledby="h-placement">
     <h2 id="h-placement">Placement</h2>
+    <div class="ctl" data-ctl="placement">
+    <h3 class="lo">Placement</h3>
     <div id="placement" class="chips" role="radiogroup" aria-label="Ornament placement">
       <button type="button" class="chip" role="radio" data-placement="default" title="As the map draws them now: a chart's own figures where its sheet has been read">Default</button>
       <button type="button" class="chip" role="radio" data-placement="historic" title="Each curated sheet's own figures, at the chart's places">Historic</button>
       <button type="button" class="chip" role="radio" data-placement="seeded" title="Seeded figures on every sheet">Seeded</button>
       <button type="button" class="chip" role="radio" data-placement="reroll" title="Pick a new seed and keep it in the link">Re-roll</button>
     </div>
+    </div>
   </section>
 
-  <section aria-labelledby="h-towns">
+  <section class="home" aria-labelledby="h-towns">
     <h2 id="h-towns">Towns</h2>
-    <p class="lead">A portolan chart named its ports at right angles to the coast; the Catalan Atlas of about 1375 drew many cities as small pictures. <a href="learn/portolan-charts.html">Learn more</a></p>
+    <p class="lead" data-lead-for="towns">A portolan chart named its ports at right angles to the coast; the Catalan Atlas of about 1375 drew many cities as small pictures. <a href="learn/portolan-charts.html">Learn more</a></p>
+    <div class="ctl" data-ctl="towns">
+    <h3 class="lo">Towns</h3>
     <div class="rows"><label class="check"><input type="checkbox" id="townSize"> Size by metro area</label></div>
     <div id="pick-town"></div>
+    </div>
   </section>
 
-  <section aria-labelledby="h-land">
+  <section class="home" aria-labelledby="h-land">
     <h2 id="h-land">Land</h2>
-    <p class="lead">A portolan chart left the inland nearly blank; the coast was its subject. <a href="learn/portolan-charts.html">Learn more</a></p>
+    <p class="lead" data-lead-for="mountains">A portolan chart left the inland nearly blank; the coast was its subject. <a href="learn/portolan-charts.html">Learn more</a></p>
+    <div class="ctl" data-ctl="mountains">
     <h3>Mountains</h3>
     <div id="mountains" class="chips" role="radiogroup" aria-label="Mountains"></div>
+    </div>
+    <div class="ctl" data-ctl="hills">
     <h3>Hills</h3>
     <div id="hills" class="chips" role="radiogroup" aria-label="Hills"></div>
     <div id="pick-relief"></div>
+    </div>
+    <div class="ctl" data-ctl="trees">
     <h3>Trees</h3>
     <div id="trees" class="chips" role="radiogroup" aria-label="Trees"></div>
+    </div>
   </section>
 
-  <section aria-labelledby="h-cartouche">
+  <section class="home" aria-labelledby="h-cartouche">
     <h2 id="h-cartouche">Cartouche</h2>
-    <p class="lead">A cartouche is a decorated frame for a map's title, scale and legends; it grew out of decorative borders in the 15th century and had its heyday in the Baroque. <a href="learn/charts-and-makers.html">Learn more</a></p>
+    <p class="lead" data-lead-for="cartouche">A cartouche is a decorated frame for a map's title, scale and legends; it grew out of decorative borders in the 15th century and had its heyday in the Baroque. <a href="learn/charts-and-makers.html">Learn more</a></p>
+    <div class="ctl" data-ctl="cartouche">
+    <h3 class="lo">Cartouche</h3>
     <div id="pick-cartouche" class="thumbs" role="group" aria-label="Cartouche, one of"></div>
     <h3>Title</h3>
     <div id="titleMode" class="chips" role="radiogroup" aria-label="Title"></div>
     <div class="title"><input id="title" type="text" value="PORTOLANI" disabled maxlength="40" aria-label="Title text"></div>
-  </section>
-
-  <section aria-labelledby="h-map">
-    <h2 id="h-map">Map</h2>
-    <p class="lead">Rhumb lines radiate from the wind roses, and a navigator used a parallel rule to carry a line of course over to the rose's nearest line. <a href="learn/rhumb-lines.html">Learn more</a></p>
-    <div class="rows">
-      <h3>Projection</h3>
-      <div id="projection" class="chips" role="radiogroup" aria-label="Projection"></div>
-      <label class="check"><input type="checkbox" id="names"> Names</label>
-      <label class="check"><input type="checkbox" id="rhumb"> Rhumb lines</label>
-      <h3>Continents</h3>
-      <div class="slider"><input id="continentsZoom" type="range" min="0" max="15" step="1" value="5" aria-label="Continents, zoom drawn to"><output id="continentsOut"></output></div>
-      <h3>Regions</h3>
-      <div id="regions" class="chips" role="radiogroup" aria-label="Regions"></div>
-      <div class="slider"><input id="regionsZoom" type="range" min="0" max="15" step="1" value="7" aria-label="Regions, zoom drawn to"><output id="regionsOut"></output></div>
-      <h3>Land border</h3>
-      <div id="land" class="chips" role="radiogroup" aria-label="Land border"></div>
-      <h3>Colour</h3>
-      <div class="chips"><div id="islands" class="chips" role="radiogroup" aria-label="Coloured islands"></div><div id="seaTint" class="chips" role="radiogroup" aria-label="Coloured seas"></div></div>
-      <h3>Rivers</h3>
-      <div id="rivers" class="chips" role="radiogroup" aria-label="Rivers"></div>
-      <h3>Lakes</h3>
-      <div id="lakes" class="chips" role="radiogroup" aria-label="Lakes"></div>
-      <h3>Scale bar</h3>
-      <div id="scale" class="chips" role="radiogroup" aria-label="Scale bar"></div>
-      <div id="scaleBorder" class="chips" role="radiogroup" aria-label="Scale bar border"></div>
     </div>
   </section>
 
-  <section aria-labelledby="h-colours">
+  <section class="home" aria-labelledby="h-map">
+    <h2 id="h-map">Map</h2>
+    <p class="lead" data-lead-for="rhumb">Rhumb lines radiate from the wind roses, and a navigator used a parallel rule to carry a line of course over to the rose's nearest line. <a href="learn/rhumb-lines.html">Learn more</a></p>
+    <div class="rows">
+      <div class="ctl" data-ctl="projection">
+      <h3>Projection</h3>
+      <div id="projection" class="chips" role="radiogroup" aria-label="Projection"></div>
+      </div>
+      <div class="ctl" data-ctl="names"><label class="check"><input type="checkbox" id="names"> Names</label></div>
+      <div class="ctl" data-ctl="rhumb"><label class="check"><input type="checkbox" id="rhumb"> Rhumb lines</label></div>
+      <div class="ctl" data-ctl="continents">
+      <h3>Continents</h3>
+      <div class="slider"><input id="continentsZoom" type="range" min="0" max="15" step="1" value="5" aria-label="Continents, zoom drawn to"><output id="continentsOut"></output></div>
+      </div>
+      <div class="ctl" data-ctl="regions">
+      <h3>Regions</h3>
+      <div id="regions" class="chips" role="radiogroup" aria-label="Regions"></div>
+      <div class="slider"><input id="regionsZoom" type="range" min="0" max="15" step="1" value="7" aria-label="Regions, zoom drawn to"><output id="regionsOut"></output></div>
+      </div>
+      <div class="ctl" data-ctl="land">
+      <h3>Land border</h3>
+      <div id="land" class="chips" role="radiogroup" aria-label="Land border"></div>
+      </div>
+      <div class="ctl" data-ctl="colour">
+      <h3>Colour</h3>
+      <div class="chips"><div id="islands" class="chips" role="radiogroup" aria-label="Coloured islands"></div><div id="seaTint" class="chips" role="radiogroup" aria-label="Coloured seas"></div></div>
+      </div>
+      <div class="ctl" data-ctl="rivers">
+      <h3>Rivers</h3>
+      <div id="rivers" class="chips" role="radiogroup" aria-label="Rivers"></div>
+      </div>
+      <div class="ctl" data-ctl="lakes">
+      <h3>Lakes</h3>
+      <div id="lakes" class="chips" role="radiogroup" aria-label="Lakes"></div>
+      </div>
+      <div class="ctl" data-ctl="scale">
+      <h3>Scale bar</h3>
+      <div id="scale" class="chips" role="radiogroup" aria-label="Scale bar"></div>
+      <div id="scaleBorder" class="chips" role="radiogroup" aria-label="Scale bar border"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="home" aria-labelledby="h-colours">
     <h2 id="h-colours">Colours</h2>
-    <p class="lead">A portolan chart was drawn on calf skin with a ruler, dividers, a pen and inks of several colours. <a href="learn/portolan-charts.html">Learn more</a></p>
+    <p class="lead" data-lead-for="colours">A portolan chart was drawn on calf skin with a ruler, dividers, a pen and inks of several colours. <a href="learn/portolan-charts.html">Learn more</a></p>
+    <div class="ctl" data-ctl="colours">
+    <h3 class="lo">Ink and parchment</h3>
     <div class="rows">
       <label>Ink <input id="ink" type="color" value="#3b2a1a"></label>
       <label>Parchment <input id="parchment" type="color" value="#e9d8b4"></label>
+    </div>
     </div>
   </section>
 
