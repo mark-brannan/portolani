@@ -60,13 +60,11 @@ One file per voyage, `data/voyages/<id>.json`; `data/voyages/index.json` lists t
 ## What is drawn
 
 Any number of voyages are drawn at once, each in its own ink: the first voyage on is the chart's red,
-and the rest are seeded on their id among the colours still free, so the same link always draws the
-same colours; a colour picked for a voyage overrides its seed. Each leg is stroked in its voyage's ink
-over a parchment halo, dashed by its confidence, with a dot at each leg's ends; the line weight is one
-for all of them (Fine, Standard, Bold or Heavy), and the halo and dots grow with it. A death is a skull
-and crossbones, and each of its `alternatives` a smaller, fainter skull tied to it by a thin dashed
-line in the voyage's ink; an event or landfall is a ring. Every track is drawn before any mark.
-Nothing is lettered beside a mark: a click or tap on one, on any voyage that is on, opens a small tile
+the rest get their own colours, and a colour picked for a voyage overrides them. Each leg is stroked
+in its voyage's ink over a parchment halo, dashed by its confidence, with a dot at each leg's ends; the
+line weight is one for all of them (Fine, Standard, Bold or Heavy). A death is a skull and crossbones,
+and each of its `alternatives` a smaller, fainter skull tied to it by a thin dashed line in the
+voyage's ink; an event or landfall is a ring. Nothing is lettered beside a mark: a click or tap on one, on any voyage that is on, opens a small tile
 beside it with its heading, date, text and source, and the next touch of the map, Esc or the tile's ×
 shuts it.
 
