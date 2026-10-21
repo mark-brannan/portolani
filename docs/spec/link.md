@@ -7,7 +7,7 @@
 - `#status` text `z<zoom>: load N ms, placement + parchment N ms, draw N ms (total N ms)` after each placement [page.js:540].
 - Canvas pixels of `#map` (1600 x 1000 backing store) for visible effects.
 - Default view when the hash has no valid `map`: `{ zoom 5.48, lat 40.265, lon 7 }` (measured: `DEFAULT_VIEW`, scene.mjs:304, node import).
-- Hash key order as written: `map, projection, sprites, townsize, names, rhumb, continents, regions, regionszoom, autotitle, title, land, islands, rivers, lakes, mountains, trees, placement, voyage, seas, scaleborder, scale, cartouche, scalepos, density, ink, parchment` [page.js:119-146; `voyage` from #205, `cartouche` and `scalepos` from #219, none of them specified here yet].
+- Hash key order as written: `map, projection, sprites, townsize, names, rhumb, continents, regions, regionszoom, autotitle, title, land, islands, rivers, lakes, mountains, trees, placement, voyage, overlay, overlayopacity, seas, scaleborder, scale, cartouche, scalepos, density, ink, parchment` [page.js:119-146; `voyage` from #205, `cartouche` and `scalepos` from #219, none of them specified here yet; `overlay` and `overlayopacity` from #161, in drawer.md "Scan overlay"].
 
 ---
 

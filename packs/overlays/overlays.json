@@ -1,0 +1,36 @@
+{
+  "overlays": [
+    {
+      "id": "carta-marina",
+      "title": "Carta Marina, Olaus Magnus, 1539",
+      "source": "https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg",
+      "licence": "Public domain; Olaus Magnus 1539",
+      "file": "carta-marina.jpg",
+      "width": 5016,
+      "height": 3715,
+      "scale": 2,
+      "pieces": [
+        {
+          "x0": 0,
+          "x1": 2700,
+          "fit": {
+            "a": 0.00749481269045847,
+            "b": 0.008427653814909918,
+            "tx": -28.37655247354347,
+            "ty": 81.21436744949904
+          }
+        },
+        {
+          "x0": 2700,
+          "x1": 5016,
+          "fit": {
+            "a": 0.010010811555614377,
+            "b": 0.0005341306963617114,
+            "tx": -14.121711812391121,
+            "ty": 98.71443923376921
+          }
+        }
+      ]
+    }
+  ]
+}
