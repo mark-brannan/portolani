@@ -25,7 +25,7 @@ export { SIGHT_TILES } from './sights.mjs'; // the page's tiles for its places; 
 import { BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from './buildings.mjs';
 import { legPath, splitAtSeam, DASHES, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, readVoyage } from './voyages.mjs';
 export { VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours };
-import { loadOverlay, drawOverlay } from './overlays.mjs';
+import { loadOverlay, drawOverlay, scanPlace } from './overlays.mjs';
 const record = (id) => catalogue.find((r) => r.id === id); // a coastlines catalogue record by its id
 
 let env;
@@ -2290,6 +2290,34 @@ export function sightMarks(sights, proj, rect) {
 }
 const SIGHT_H = 20; // the reach of a place, canvas px, as a mark's height
 
+// The marks of an overlay's notes in view (data/notes/<id>.json, docs/notes/README.md): { x, y, h, tile } in canvas px.
+// Each sits on the figure the note is about, its scan px taken through the overlay's fit, so it moves with the
+// scan; a note's real place (`at.lonlat`) is kept in the data, not drawn. The tile is the note: what the maker
+// drew, then a blank line and what was there, its source linked. None without an overlay.
+export function noteMarks(notes, overlay, proj, rect) {
+  const out = [];
+  for (const n of overlay ? notes ?? [] : []) {
+    const ll = n?.at?.px && scanPlace(overlay, n.at.px);
+    if (!ll || (proj.visible && !proj.visible(...ll))) continue;
+    const [x, y] = proj.toPx(ll);
+    if (!disc(rect, x, y, -NOTE_H / 2)) continue;
+    out.push({ x, y, h: NOTE_H, tile: { title: n.title, date: n.date, text: `${n.drew}\n\nToday: ${n.was}`, source: n.source?.title, sourceUrl: n.source?.url, licence: n.source?.licence } });
+  }
+  return out;
+}
+const NOTE_H = SKULL_H, NOTE_R = 3; // the size of a voyage's event ring
+// A note's mark: a ring in the chart's red over a parchment halo, so it reads on the scan
+function drawNotes(g, overlay, proj, rect) {
+  const marks = noteMarks(overlay?.notes, overlay, proj, rect);
+  if (!marks.length) return;
+  g.save();
+  for (const [style, w, alpha] of [[STYLE.parchment, 3.6, 0.8], [STYLE.windRed, 1.6, 1]]) {
+    g.strokeStyle = style; g.lineWidth = w; g.globalAlpha = alpha;
+    for (const m of marks) { g.beginPath(); g.arc(m.x, m.y, NOTE_R, 0, 2 * Math.PI); g.stroke(); }
+  }
+  g.restore();
+}
+
 // A skull and crossbones `h` px tall centred on x, y, in ink over a parchment disc so it reads on the lattice
 function drawSkull(g, x, y, h) {
   g.save();
@@ -2407,6 +2435,9 @@ function drawScene(g, scene, data, bg, view) {
     drawHouses(g, clear, { ink: STYLE.ink });
     g.restore();
   }
+
+  // 4.9 the overlay's notes, a red ring on each figure a note tells of, over the scan and under the ornaments
+  if (scene.overlay) drawNotes(g, scene.overlay, data.proj, viewRect(g, view, 0));
 
   // 5. roses
   const spriteIn = (s, x, y, size) => disc(r, x, y, Math.hypot(size, (size * s.img.height) / s.img.width));
@@ -2653,6 +2684,7 @@ function drawAnchored(g, a, bg, view, layers) {
     g.beginPath(); g.arc(W / 2, H / 2, proj.rim + 5, 0, 2 * Math.PI); g.lineWidth = 0.8; g.stroke();
   }
   drawLate(g, a, view, layers, fr);
+  if (a.overlay) drawNotes(g, a.overlay, proj, { x0: 0, y0: 0, x1: W, y1: H }); // the notes over the scan, under the ornaments, as at a stop
   if (show.kinds.has('rose')) for (const { o, at: ll } of a.roses) {
     const size = o.size * scaled('rose'), p = at(ll, size);
     if (p) drawSprite(g, o.sprite, p[0], p[1], size, { anchor: [0.5, 0.5] });
@@ -2713,7 +2745,7 @@ function drawAnchored(g, a, bg, view, layers) {
 // None by default. The older `voyage` (one id, or 'off') still draws that one.
 // `overlay`: { id, opacity }, a chart's scan laid over the map at that opacity (0 to 1), over the land and under the
 // lattice and the ornaments: `id` names an entry of packs/overlays/overlays.json (docs/overlay/README.md). None by default;
-// an id the site lacks draws nothing.
+// an id the site lacks draws nothing. Its notes (data/notes/<id>.json, docs/notes/README.md) come with it, a red ring on each figure.
 // `kinds` defaults to DEFAULT_KINDS, every kind. A kind left out is still
 // placed when the lattice needs it (a rose, the cartouche's corner), only not drawn.
 // `debug`: a list of DEBUG_LAYERS ('sheets', 'rings'), the atlas's sheets drawn in red over everything; none by default.

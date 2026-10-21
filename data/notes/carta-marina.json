@@ -1,0 +1,106 @@
+{
+  "overlay": "carta-marina",
+  "chart": "Carta Marina, Olaus Magnus, 1539",
+  "notes": [
+    {
+      "id": "maelstrom",
+      "title": "The maelstrom",
+      "date": "1539",
+      "drew": "Off the tip of Lofoten, Olaus draws a great whirlpool swallowing a ship. He letters it Charybdis, after the monster of Homer's strait, and calls it horrible.",
+      "was": "Moskstraumen, between Lofotodden and the island of Mosken: a system of tidal eddies and small whirlpools in currents of about 2 to 5 metres a second. There is no single giant whirlpool.",
+      "source": { "title": "Moskstraumen, Wikipedia", "url": "https://en.wikipedia.org/wiki/Moskstraumen", "licence": "CC BY-SA 4.0" },
+      "at": { "px": [2154, 852], "lonlat": [12.83, 67.80] },
+      "checked": "web"
+    },
+    {
+      "id": "sea-serpent",
+      "title": "The sea serpent",
+      "date": "1539",
+      "drew": "A red serpent coiled round a ship off Helgeland, taking a sailor from the deck; the chart's key gives it 200 feet. In his Historia Olaus puts it in the caves near Bergen, and has its rising foretell upheaval in the kingdom.",
+      "was": "No such animal. The place is the Historia's Bergen, far to the south of where the chart draws the beast.",
+      "source": { "title": "Olaus Magnus' sea serpent, The Public Domain Review", "url": "https://publicdomainreview.org/2014/02/05/olaus-magnuss-sea-serpent/", "licence": "CC BY-SA 4.0" },
+      "at": { "px": [1810, 1050], "lonlat": [5.32, 60.39] },
+      "checked": "web"
+    },
+    {
+      "id": "lofoten-stockfish",
+      "title": "The Lofoten stockfish",
+      "date": "1539",
+      "drew": "Bundles of dried fish on the Lofoten shore, and a line saying that here is the busiest fish market. In the Historia the fish are dried in the wind, piled like stacks of wood and shipped to Bergen to trade.",
+      "was": "The Lofoten winter cod fishery, whose fish were dried as stockfish and sold through Bergen. Vågan, by Kabelvåg, was the islands' first town.",
+      "source": { "title": "A Compendious History of the Goths, Swedes, & Vandals (1658), Book 21", "url": "https://distantreader.org/stacks/earlyprint/txt/B26436.txt", "licence": "Public domain (the 1658 text; the transcription's licence unverified)" },
+      "at": { "px": [2540, 965], "lonlat": [14.56, 68.23] },
+      "checked": "text (Book 21: dried, piled, shipped to Bergen); web (Lofoten fishery, Vågan)"
+    },
+    {
+      "id": "hekla",
+      "title": "Hekla",
+      "date": "1539",
+      "drew": "Flames under a mountain lettered Mons Hekla. Olaus tells of Iceland's mountains with snow on their tops and fire of brimstone at their feet, and of a rock that boils like Etna and is taken for the place of Hell.",
+      "was": "Hekla, the volcano medieval Europe called the gateway to Hell. It erupted in 1510, within Olaus's lifetime.",
+      "source": { "title": "Hekla, Wikipedia", "url": "https://en.wikipedia.org/wiki/Hekla", "licence": "CC BY-SA 4.0" },
+      "at": { "px": [575, 645], "lonlat": [-19.67, 63.99] },
+      "checked": "web (Hekla, 1510, gateway to Hell); text (Book 2: snow and brimstone, boils like Etna)"
+    },
+    {
+      "id": "vardohus",
+      "title": "Vardøhus",
+      "date": "1539",
+      "drew": "A walled house lettered Vardahus on Norway's far north-east shore, which the chart stretches up toward the pole.",
+      "was": "Vardøhus Fortress, first built by Haakon V in 1306 on Norway's border with Russia.",
+      "source": { "title": "Vardøhus Fortress, Wikipedia", "url": "https://en.wikipedia.org/wiki/Vard%C3%B8hus_Fortress", "licence": "CC BY-SA 4.0" },
+      "at": { "px": [3094, 267], "lonlat": [31.09, 70.37] },
+      "checked": "web"
+    },
+    {
+      "id": "tornio-birkarls",
+      "title": "The Tornio market and the Birkarls",
+      "date": "1539",
+      "drew": "By Tornio, at the head of the Gulf of Bothnia, the chart marks a great market with bales of goods beside it. Further west it draws the houses and the chiefs of the Birkarls.",
+      "was": "Tornio was the base of the Birkarls, a small group of traders who held the Sámi trade and its taxes from 1328 until the crown took them over in 1553.",
+      "source": { "title": "Birkarls, Wikipedia", "url": "https://en.wikipedia.org/wiki/Birkarls", "licence": "CC BY-SA 4.0" },
+      "at": { "px": [3634, 749], "lonlat": [24.15, 65.85] },
+      "checked": "web (Birkarls, Tornio their base); scan (the market's label, read at low resolution: unverified)"
+    },
+    {
+      "id": "glutton",
+      "title": "The glutton",
+      "date": "1539",
+      "drew": "A beast gorging on a carcass, then squeezing between two trees to empty its belly so that it can eat again. The Historia gives this Gulo a chapter of its own.",
+      "was": "The wolverine, mostly a scavenger. Its name of glutton comes partly from a false etymology, the Norwegian fjellfross heard as the German Vielfraß, much-eater.",
+      "source": { "title": "Wolverine, Wikipedia", "url": "https://en.wikipedia.org/wiki/Wolverine", "licence": "CC BY-SA 4.0" },
+      "at": { "px": [2716, 1045], "lonlat": [15.0, 67.0] },
+      "checked": "web (the animal, the etymology); text (the Historia's chapter of the Gulos)"
+    },
+    {
+      "id": "white-lake",
+      "title": "The White Lake",
+      "date": "1539",
+      "drew": "Lacus Albus, the White Lake: a closed water in the far east of the sheet, full of fish and birds, with boats on it.",
+      "was": "The White Sea, about 90,000 km², an inlet of the Barents Sea and open to it through the Gorlo strait.",
+      "source": { "title": "White Sea, Wikipedia", "url": "https://en.wikipedia.org/wiki/White_Sea", "licence": "CC BY-SA 4.0" },
+      "at": { "px": [4369, 641], "lonlat": [37.5, 65.5] },
+      "checked": "web"
+    },
+    {
+      "id": "tile",
+      "title": "Tile",
+      "date": "1539",
+      "drew": "An island lettered Tile between the Orkneys and the Faroes, which the chart says holds thirty thousand people.",
+      "was": "No island lies there. Thule was the land Pytheas reached about 330 BC and no one found again; it has been read as Shetland, the Faroes, Iceland or Norway.",
+      "source": { "title": "Thule, Wikipedia", "url": "https://en.wikipedia.org/wiki/Thule", "licence": "CC BY-SA 4.0" },
+      "at": { "px": [562, 1708], "lonlat": null },
+      "checked": "web (Thule); scan (the population, read off the chart's lettering)"
+    },
+    {
+      "id": "hvitsark",
+      "title": "Hvitsark",
+      "date": "1539",
+      "drew": "A round rock lettered Hvitsark, west of Iceland. The Historia sets it half way from Iceland's west coast to Greenland.",
+      "was": "No such island. The Denmark Strait, about 290 km across at its narrowest, has none.",
+      "source": { "title": "Carta marina, Swedish Wikipedia", "url": "https://sv.wikipedia.org/wiki/Carta_marina", "licence": "CC BY-SA 4.0" },
+      "at": { "px": [305, 395], "lonlat": null },
+      "checked": "web (no such island, sv.wiki; the strait's width); text (half way)"
+    }
+  ]
+}

@@ -48,8 +48,15 @@ export function affineThrough3(src, dst) {
   return [a, b, c, d, e, f];
 }
 
-// The overlay `id` names in packs/overlays/overlays.json, with its image; null for an id the site lacks
-// or a file that fails to load, so a missing overlay never stops the map.
+// Where a scan pixel lies on the earth, [lon, lat], by the fit of the piece that holds it; null outside the scan.
+export function scanPlace(overlay, [x, y]) {
+  const pieces = overlay?.pieces ?? [], piece = pieces.find((p) => x >= p.x0 && x < p.x1) ?? (x === pieces.at(-1)?.x1 ? pieces.at(-1) : null);
+  return piece && y >= 0 && y <= overlay.height ? applyFit(piece.fit, x, y) : null;
+}
+
+// The overlay `id` names in packs/overlays/overlays.json, with its image and its notes (data/notes/<id>.json,
+// docs/notes/README.md; none when the file is missing); null for an id the site lacks or an image that fails
+// to load, so a missing overlay never stops the map, and missing notes never stop the overlay.
 const loaded = new Map();
 export function loadOverlay(id, env) {
   if (!/^[a-z][a-z0-9-]*$/.test(id ?? '')) return Promise.resolve(null);
@@ -57,7 +64,9 @@ export function loadOverlay(id, env) {
     loaded.set(id, (async () => {
       const list = await env.readJSON('packs/overlays/overlays.json');
       const o = (list?.overlays ?? []).find((v) => v.id === id);
-      return o ? { ...o, img: await env.loadImage(`packs/overlays/${o.file}`) } : null;
+      if (!o) return null;
+      const [img, notes] = await Promise.all([env.loadImage(`packs/overlays/${o.file}`), Promise.resolve().then(() => env.readJSON(`data/notes/${id}.json`)).then((d) => d?.notes ?? [], () => [])]);
+      return { ...o, img, notes };
     })().catch(() => (loaded.delete(id), null)));
   }
   return loaded.get(id);

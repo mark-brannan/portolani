@@ -370,3 +370,12 @@ Feature: Scan overlay  (charts drawer `#chartsDrawer`: under a chart whose scan 
     When the hash is read against the site's overlays
     Then the overlay is off
     # Tested by: test/overlays.test.mjs 'the overlay in the hash: ...' (offline, `overlayFromHash` and `overlayToHash`)
+  Scenario: the scan's notes come with it
+    Given the chart at `#map=5.60/67.300/-3.500&overlay=carta-marina`
+    Then a small red ring sits on each figure of the scan that `data/notes/carta-marina.json` tells of, placed through the overlay's fit, with no lettering beside it
+    When the user clicks or taps the ring on the whirlpool off Lofoten
+    Then a tile opens beside it: "The maelstrom", the date, what the maker drew, a blank line, "Today: " and what was there, and the source as a link with its licence
+    Given the chart at `#map=5.60/67.300/-3.500` (no overlay)
+    Then no ring is drawn and a click there opens no tile
+    # Notes have no key of their own: they are on whenever the overlay is on (in pencil: a config default, adjustable; one less default to test). A note's real place (`at.lonlat`) is kept in the data and not drawn (docs/notes/README.md).
+    # Tested by: test/notes.test.mjs (offline: the records, their anchors inside the scan and the chart, `noteMarks` on the figure, none without an overlay, `loadOverlay` with and without the notes file)
