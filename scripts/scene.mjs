@@ -2245,12 +2245,12 @@ const legPaths = new WeakMap();
 const pathOf = (leg) => legPaths.get(leg) ?? legPaths.set(leg, legPath(leg)).get(leg);
 // A round cap grows each dash by the stroke's width, so the pattern gives it back to read as DASHES says
 const capped = (dash, w) => dash.map((d, i) => (i % 2 ? d + w : Math.max(0.01, d - w)));
-const VOYAGE_LINE = 2.2, VOYAGE_HALO = 5.5, VOYAGE_END = 2.8, SKULL_H = 16;
+const VOYAGE_LINE = 2.2, VOYAGE_HALO = 5.5, VOYAGE_END = 2.8, SKULL_H = 16, SKULL_ALT_H = 13;
 
 // A voyage (docs/voyages/README.md) through any projection: each leg cut at the seam and stroked in red
 // over a parchment halo, dashed by its confidence; then its events, a death as a skull and crossbones.
 // `rect` culls the legs (padded, so a stroke at the edge survives); `eventRect` is the view itself: a mark
-// is drawn only when the whole of it is in view, so its label never points at nothing.
+// is drawn only when the whole of it is in view, so a tile never opens on half a mark.
 function drawVoyage(g, voyage, proj, rect, eventRect = rect) {
   if (!voyage) return;
   g.save();
@@ -2269,24 +2269,44 @@ function drawVoyage(g, voyage, proj, rect, eventRect = rect) {
     }
   }
   g.globalAlpha = 1;
-  for (const e of voyage.events ?? []) {
-    if (proj.visible && !proj.visible(e.lon, e.lat)) continue;
-    const [x, y] = proj.toPx([e.lon, e.lat]);
-    if (!disc(eventRect, x, y, -SKULL_H / 2)) continue; // the whole mark in view, or no label
-    if (e.kind === 'death') drawSkull(g, x, y, SKULL_H);
-    else { g.beginPath(); g.arc(x, y, 3, 0, 2 * Math.PI); g.strokeStyle = STYLE.ink; g.lineWidth = 1.4; g.stroke(); }
-    eventLabel(g, e.label, x, y, e.kind === 'death' ? SKULL_H / 2 + 3 : 6, eventRect);
+  for (const m of voyageMarks(voyage, proj, eventRect)) {
+    g.save(); g.globalAlpha = m.alpha;
+    if (m.skull) drawSkull(g, m.x, m.y, m.h);
+    else { g.beginPath(); g.arc(m.x, m.y, 3, 0, 2 * Math.PI); g.strokeStyle = STYLE.ink; g.lineWidth = 1.4; g.stroke(); }
+    g.restore();
   }
   g.restore();
+}
+
+// The marks of a voyage's events in view, in the order they are drawn (a disputed death's other places first,
+// smaller and fainter, so the usual account sits on top): { x, y, h, alpha, skull, tile } in canvas px.
+// A mark is listed only when the whole of it is in view. Its `tile` is what a click or tap on it shows, in
+// the page's popover: the heading, the date, the text, the source and, on a death, the place it is set at.
+// No lettering is drawn beside a mark; the tile carries it.
+export function voyageMarks(voyage, proj, rect) {
+  const out = [];
+  const add = (p, h, alpha, skull, tile) => {
+    if (proj.visible && !proj.visible(p.lon, p.lat)) return;
+    const [x, y] = proj.toPx([p.lon, p.lat]);
+    if (disc(rect, x, y, -h / 2)) out.push({ x, y, h, alpha, skull, tile });
+  };
+  for (const e of voyage?.events ?? []) {
+    const tile = { title: e.label, date: e.date, text: e.text, note: e.note, source: e.source, who: e.who };
+    if (e.kind !== 'death') { add(e, SKULL_H, 1, false, tile); continue; }
+    for (const a of e.alternatives ?? []) add(a, SKULL_ALT_H, 0.75, true, { title: a.label, date: e.date, text: a.text, source: a.source, who: e.who, place: a.place, alternative: true });
+    add(e, SKULL_H, 1, true, tile);
+  }
+  return out;
 }
 
 // A skull and crossbones `h` px tall centred on x, y, in ink over a parchment disc so it reads on the lattice
 function drawSkull(g, x, y, h) {
   g.save();
+  const alpha = g.globalAlpha; // a faint skull is the same skull at the caller's alpha
   g.translate(x, y); g.scale(h / 18, h / 18); // drawn in an 18-unit box, -9 to 9
-  g.fillStyle = STYLE.parchment; g.globalAlpha = 0.85;
+  g.fillStyle = STYLE.parchment; g.globalAlpha = 0.85 * alpha;
   g.beginPath(); g.arc(0, 0, 12, 0, 2 * Math.PI); g.fill();
-  g.globalAlpha = 1; g.fillStyle = g.strokeStyle = STYLE.ink; g.lineCap = 'round';
+  g.globalAlpha = alpha; g.fillStyle = g.strokeStyle = STYLE.ink; g.lineCap = 'round';
   for (const s of [-1, 1]) { // the bones, crossed under the jaw, a knob either side of each end
     const a = [-6.5 * s, 3.5], b = [6.5 * s, 8.5], len = Math.hypot(b[0] - a[0], b[1] - a[1]);
     const u = [(b[0] - a[0]) / len, (b[1] - a[1]) / len], n = [-u[1], u[0]];
@@ -2303,19 +2323,6 @@ function drawSkull(g, x, y, h) {
   g.lineWidth = 0.7; g.lineCap = 'butt';
   for (const tx of [-1.15, 1.15]) { g.beginPath(); g.moveTo(tx, 1.9); g.lineTo(tx, 4.5); g.stroke(); } // three teeth between two gaps
   g.beginPath(); g.moveTo(-3.4, 2.4); g.lineTo(3.4, 2.4); g.stroke();
-  g.restore();
-}
-
-// An event's label beside its mark, haloed in parchment, on the left where the right would run off the view
-function eventLabel(g, text, x, y, off, rect) {
-  if (!text) return;
-  g.save();
-  g.font = `italic 12px "${STYLE.font}"`; g.textBaseline = 'middle';
-  const left = x + off + g.measureText(text).width > rect.x1 - 4;
-  g.textAlign = left ? 'right' : 'left';
-  const tx = left ? x - off : x + off;
-  g.lineJoin = 'round'; g.lineWidth = 3; g.strokeStyle = STYLE.parchment; g.strokeText(text, tx, y);
-  g.fillStyle = STYLE.ink; g.fillText(text, tx, y);
   g.restore();
 }
 
