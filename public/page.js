@@ -7,13 +7,15 @@
 // a setting left at its default is left out, `sprites` too (keys with the pack shortened, v: s: p:); `mountains` is `ink`
 // or `off` (colour is the default); the hills are the Catalan sprites in `sprites`. `continents` and `regionszoom` are the zoom
 // they are drawn down from (0 off, the top always). `voyages=columbus,drake:1f4e8c` are the voyages in the order chosen, a picked
-// colour after an id, and `voyagewidth=3.2` their line weight.
+// colour after an id, and `voyagewidth=3.2` their line weight. `overlay=carta-marina` lays that chart's scan over the map,
+// `overlayopacity=0.6` how strongly (0 to 1); off by default.
 // Older links naming a `rendering` (or `pack`), `rose`, `monster`, `town` and `kinds` open as the
 // selection those chose, and are written back in the new form.
 // For a while, `debug=sheets[,rings]` and `tune=name:value,...` carry the under-the-hood section
 // (docs/atlas/under-the-hood.md), off by default.
 import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, sightMarks, SIGHT_TILES } from './scene.mjs';
 import { ORIGINS } from './atlas.mjs';
+import { OVERLAY_DEFAULTS, overlayFromHash, overlayToHash } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
 import { fold, bestPlace } from './placename.mjs';
 
@@ -45,7 +47,7 @@ const canvas = $('map'), ctx = canvas.getContext('2d');
 // cards beside the map, not on the sea.
 const phone = matchMedia('(max-width: 520px)');
 
-const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: 5, regions: 'latin', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyages: [], voyageWidth: VOYAGE_WIDTH, cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER, overlap: DEFAULT_OVERLAP };
+const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: 5, regions: 'latin', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyages: [], voyageWidth: VOYAGE_WIDTH, ...OVERLAY_DEFAULTS, cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER, overlap: DEFAULT_OVERLAP };
 
 // ---------------------------------------------------------------- the sprites on offer
 
@@ -117,6 +119,8 @@ function styleFromHash() {
     tune: parseTune(q.get('tune')).text,
     voyages: voyagesFromHash(q),
     voyageWidth: VOYAGE_WIDTHS.includes(Number(q.get('voyagewidth'))) ? Number(q.get('voyagewidth')) : DEFAULTS.voyageWidth,
+    // a chart's scan laid over the map (packs/overlays/overlays.json; an id the site lacks draws nothing), and how strongly
+    ...overlayFromHash(q),
   };
 }
 // The voyages drawn, in the order chosen, by their ids (data/voyages/<id>.json; one the site lacks draws nothing),
@@ -168,6 +172,7 @@ function writeHash() {
   if (st.tune) q.set('tune', st.tune);
   if (st.voyages.length) q.set('voyages', st.voyages.map((v) => (v.colour ? `${v.id}:${v.colour.slice(1)}` : v.id)).join(','));
   if (st.voyageWidth !== DEFAULTS.voyageWidth) q.set('voyagewidth', st.voyageWidth);
+  overlayToHash(st, q);
   if (st.seaTint) q.set('seas', '1');
   if (st.scaleBorder !== DEFAULTS.scaleBorder) q.set('scaleborder', st.scaleBorder);
   if (st.scale !== DEFAULTS.scale) q.set('scale', st.scale);
@@ -434,6 +439,7 @@ function showStyle() {
   $('townSize').checked = style.townSize !== 'rank';
   showHood();
   $('voyageWidth').value = String(style.voyageWidth);
+  showOverlay();
   showUiNow(); showMoods();
   for (const f of toolRefreshers) f();
   for (const b of document.querySelectorAll('#drawer .thumb')) b.setAttribute('aria-pressed', b === none ? !CARTOUCHES.some((k) => selection.has(k)) : selection.has(b.dataset.key));
@@ -460,6 +466,7 @@ function readControls() {
     cartouchePos: style.cartouchePos, scalePos: style.scalePos, // set by dragging the cartouche or the scale bar
     ...readHood(),
     voyages: style.voyages, voyageWidth: Number($('voyageWidth').value), // chosen in the voyages drawer
+    overlay: style.overlay, overlayOpacity: style.overlayOpacity, // chosen in the charts drawer
   };
   // hills are the Catalan sprites: the chip selects all of them or none
   const hills = $('hills').value === 'catalan';
@@ -669,6 +676,7 @@ async function render() {
       regions: style.regionsZoom > 0 ? style.regions : 'off', regionsZoom: style.regionsZoom,
       sprites: [...selection], kinds, view, pinned: !phone.matches, pinTitle: style.autoTitle ? pinTitle : null,
       voyages: style.voyages.map((v) => ({ id: v.id, colour: v.colour ?? undefined, width: style.voyageWidth })),
+      overlay: style.overlay ? { id: style.overlay, opacity: style.overlayOpacity } : null,
       debug: parseDebug(style.debug).debug, tune: parseTune(style.tune).tune,
     });
     if (me !== run) return; // a newer change or a move superseded this one
@@ -1214,6 +1222,45 @@ const skin = $('charts').querySelector('svg').outerHTML;
 $('chartList').innerHTML = CHARTS.map(({ name, year, made, text }, i) => `<li class="chart"><h3>${skin}<span>${name}</span><small>${year}</small></h3>${caption(text)}
   <div class="acts"><button type="button" data-chart="${i}" data-to="made" title="${made.title}">Where it was made</button><button type="button" data-chart="${i}" data-to="view">The sheet</button><button type="button" disabled title="The original, to come">The scan</button></div></li>`).join('');
 $('chartList').addEventListener('click', (e) => { const b = e.target.closest('[data-chart]'); if (b) { setDrawer(false); goTo(CHARTS[b.dataset.chart][b.dataset.to]); } });
+
+// A chart whose scan is in packs/overlays/overlays.json gets a chip under its buttons that lays the scan over the map,
+// its own thumbnail the chip's glyph, and while on, a slider for how strongly: 0 today's coast alone, 1 the scan alone.
+// An overlay's id is its chart's name in lower case, hyphenated (Carta Marina, carta-marina). Kept in the link like any style.
+const overlayOf = (name) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+let overlayTimer = 0;
+env.readJSON('packs/overlays/overlays.json').then(({ overlays }) => {
+  const ids = new Set(overlays.map((o) => o.id));
+  CHARTS.forEach(({ name }, i) => {
+    const o = overlays.find((v) => v.id === overlayOf(name));
+    if (!o) return;
+    $('chartList').children[i].insertAdjacentHTML('beforeend', `<div class="overlay" data-overlay="${o.id}">
+      <button type="button" class="chip" role="checkbox" aria-checked="false" title="${escapeHTML(o.title)}, public domain"><img src="packs/overlays/${o.file}" alt="" loading="lazy">Lay the scan over the map</button>
+      <div class="slider" hidden><label for="opacity-${o.id}">Opacity</label><input id="opacity-${o.id}" type="range" min="0" max="1" step="0.05"><output></output></div></div>`);
+  });
+  if (style.overlay && !ids.has(style.overlay)) console.warn(`overlay ${style.overlay}: not on this site`);
+  showOverlay();
+}).catch(() => {}); // no overlays on this site: no chips, and the map unchanged
+$('chartList').addEventListener('click', (e) => {
+  const box = e.target.closest('[data-overlay]'), chip = e.target.closest('.chip');
+  if (!box || !chip) return;
+  style = { ...style, overlay: style.overlay === box.dataset.overlay ? null : box.dataset.overlay };
+  showOverlay(); writeHash(); render();
+});
+$('chartList').addEventListener('input', (e) => {
+  if (e.target.type !== 'range' || !e.target.closest('[data-overlay]')) return;
+  style = { ...style, overlayOpacity: Number(e.target.value) };
+  showOverlay(); writeHash();
+  clearTimeout(overlayTimer); overlayTimer = setTimeout(render, 120); // drawn when the slider pauses, not on every step
+});
+function showOverlay() {
+  for (const box of document.querySelectorAll('#chartList [data-overlay]')) {
+    const on = style.overlay === box.dataset.overlay, range = box.querySelector('input');
+    box.querySelector('.chip').setAttribute('aria-checked', String(on));
+    box.querySelector('.slider').hidden = !on;
+    range.value = String(style.overlayOpacity);
+    box.querySelector('output').textContent = `${Math.round(style.overlayOpacity * 100)}%`;
+  }
+}
 
 // A typed position: "36.28, -76" or "36.28N 76W" (latitude first).
 function parseLatLon(text) {
