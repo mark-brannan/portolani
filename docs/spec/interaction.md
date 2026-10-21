@@ -1,4 +1,4 @@
-## D. Interaction
+# Interaction
 
 Feature: Pan  (pointer drag on `#map`) [verified page.js:665-684, 625-651; scene.mjs:325]
   Scenario: dragging east-to-west moves the centre east
