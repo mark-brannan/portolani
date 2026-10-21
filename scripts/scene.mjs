@@ -18,6 +18,7 @@ import { RIVERS, LAKES, RIVER_STYLES, LAKE_STYLES, waterOf, shown } from './wate
 import { RELIEF_STYLES, reliefOf, clearOf, drawRelief } from './relief.mjs';
 import { TREES, TREE_STYLES, plantTrees, plantPalms } from './trees.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
+export { SIGHT_TILES } from './sights.mjs'; // the page's tiles for its places; here so the module ships with the scene
 import { BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from './buildings.mjs';
 import { legPath, splitAtSeam, DASHES, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours } from './voyages.mjs';
 export { VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours };
@@ -2320,6 +2321,19 @@ export function voyageMarks(voyage, proj, rect) {
   }
   return out;
 }
+
+// The marks of the astrolabe's points of interest and the chart-making sites in view: { x, y, h, tile } in canvas
+// px, for the same tile as a voyage's mark. They draw nothing of their own (the place is already lettered).
+export function sightMarks(sights, proj, rect) {
+  const out = [];
+  for (const { lon, lat, tile } of sights) {
+    if (proj.visible && !proj.visible(lon, lat)) continue;
+    const [x, y] = proj.toPx([lon, lat]);
+    if (disc(rect, x, y, 0)) out.push({ x, y, h: SIGHT_H, tile });
+  }
+  return out;
+}
+const SIGHT_H = 20; // the reach of a place, canvas px, as a mark's height
 
 // A skull and crossbones `h` px tall centred on x, y, in ink over a parchment disc so it reads on the lattice
 function drawSkull(g, x, y, h) {
