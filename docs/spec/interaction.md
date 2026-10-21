@@ -52,3 +52,17 @@ Feature: Flight  (a sight, a chart, an anchorage or Go; My position no longer fl
     Given the chart at `#map=5/40/170`
     When the user submits Go `40, -170`
     Then the view crosses the antimeridian the short way (+20 degrees of longitude, `dlon`, page.js:797), landing at `-170.000`
+
+Feature: Cartouche and scale bar corners  (hash `cartouche`, `scalepos`; values `tl|tr|bl|br`; defaults `tr` and `bl`) [verified page.js:937-990, scene.mjs:431-436 at main] (#219)
+  Scenario: the corner does not follow the coast
+    Given the cartouche in the top right and the scale bar in the bottom left of the window
+    When the user pans, zooms, flies to another sea (Go, a chart, a sight, an anchorage) or resizes the window
+    Then each ornament stays in its corner of the window, wherever the coast runs
+  Scenario: a drag moves it to another corner
+    Given the same
+    When the user presses the cartouche, drags it into the bottom right quarter and lets go
+    Then a dashed frame shows the corner it will take while it is held, and on release it stands there
+  Scenario: the link keeps the dragged place
+    Given the cartouche dragged to the bottom right and the scale bar to the top left
+    When the link is read, or the page is reloaded with it
+    Then the hash holds `cartouche=br` and `scalepos=tl`, and each ornament stands in its dragged corner through further views
