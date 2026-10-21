@@ -1292,3 +1292,20 @@ $('title').addEventListener('input', () => { clearTimeout(typing); typing = setT
 addEventListener('hashchange', () => { layout = layoutFromHash(); showLayout(); view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); showVoyage(); render(); });
 showPlacement();
 render();
+
+// the bottom-right corner: the commit this site was built from, its subject, and the build's time
+// (build.json, from build-preview.mjs; the dev server's has no build time, so it says so)
+const ago = (t) => {
+  const m = Math.round((Date.now() - Date.parse(t)) / 60000);
+  return m < 60 ? `${m} min ago` : m < 2880 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} d ago`;
+};
+fetch('build.json').then((r) => (r.ok ? r.json() : null)).then((b) => {
+  if (!b?.sha) return;
+  const el = $('build');
+  const link = Object.assign(document.createElement('a'), { href: `https://github.com/mark-brannan/portolani/commit/${b.sha}`, textContent: b.sha.slice(0, 7) });
+  const built = b.built ? `built ${b.built.replace('T', ' ').slice(0, 16)} UTC (${ago(b.built)})` : 'dev server';
+  el.append(link, ` · ${built} · ${b.subject}`);
+  el.title = `${b.sha}\ncommitted ${b.committed}\n${b.built ? `built ${b.built}` : 'served live by the dev server'}\n${b.subject}`;
+  el.hidden = false;
+  document.documentElement.classList.add('built');
+}).catch(() => {});

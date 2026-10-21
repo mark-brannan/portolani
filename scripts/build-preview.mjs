@@ -31,6 +31,7 @@ import { seaNames, coastNames, joinNames, tintedSeas } from './names.mjs';
 import { joinUrban } from './urban.mjs';
 import { isleIndex, isleLand } from './isles.mjs';
 import { ATTEMPTS, fetchBytesWithRetry } from './fetch-retry.mjs';
+import { buildInfo } from './build-info.mjs';
 const { find, localUrl } = coastlines;
 
 const root = fileURLToPath(new URL('..', import.meta.url));
@@ -192,4 +193,7 @@ await buildLearn(root, out); // docs/learn/*.md into _site/learn/*.html
 for (const f of await relativeImports(root)) await cp(path.join(root, 'scripts', f), path.join(out, f));
 await cp(path.join(root, 'packs'), path.join(out, 'packs'), { recursive: true });
 await cp(path.join(root, 'data'), path.join(out, 'data'), { recursive: true }); // the voyages (docs/voyages/README.md)
+// the commit this site was built from, and when, for the page's corner; none without git history
+const info = buildInfo(root);
+if (info) await writeFile(path.join(out, 'build.json'), JSON.stringify({ ...info, built: new Date().toISOString() }));
 console.log(`preview assembled in ${path.relative(root, out)}/`);
