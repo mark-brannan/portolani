@@ -431,7 +431,8 @@ const CORNERS = ['tl', 'tr', 'bl', 'br'];
 const DEFAULT_CARTOUCHE_CORNER = 'tr', DEFAULT_SCALE_CORNER = 'bl';
 const cornerOf = (c, dflt) => (CORNERS.includes(c) ? c : dflt);
 // the scale bar's keep-clear box in a corner
-const scaleBox = (c) => obb(c[1] === 'l' ? 300 : W - 300, c[0] === 'b' ? H - 90 : 90, 0, 270, 70);
+// `lift` raises it clear of a cartouche in the same corner (scalePlace)
+const scaleBox = (c, lift = 0) => obb(c[1] === 'l' ? 300 : W - 300, c[0] === 'b' ? H - 90 - lift : 90 + lift, 0, 270, 70);
 
 // ---------------------------------------------------------------- data
 
@@ -1618,7 +1619,8 @@ function buildScene(data, sprites, ctx, world = {}) {
   // hills and mountains (relief.mjs), seeded once: each range takes one of the mountain styles selected
   // and the Catalan sprites stand on the hills; all clear of what is placed so far and of the built-up
   // areas washed on the land
-  const bar = world.scaleBar ? scaleBox(cornerOf(world.scalePos, DEFAULT_SCALE_CORNER)) : null;
+  const barCorner = cornerOf(world.scalePos, DEFAULT_SCALE_CORNER);
+  const bar = world.scaleBar ? scaleBox(barCorner, world.pinned !== false && barCorner === cartoucheCorner ? cartouche.h + 10 : 0) : null;
   const blocked = (x0, y0, x1, y1) => {
     const b = obb((x0 + x1) / 2, (y0 + y1) / 2, 0, (x1 - x0) / 2, (y1 - y0) / 2);
     return boxes.some((o) => obbOverlap(o, b)) || (bar && obbOverlap(bar, b)) || urban.some((u) => meets({ x0, y0, x1, y1 }, u.box));
@@ -2179,6 +2181,7 @@ let scaleHit = null; // the rectangle the scale bar was last drawn in, in canvas
 const scaleRect = () => scaleHit;
 function drawScaleBar(g, data, bg, view, w, h, style = 'genoese', sprite = null, place = { pos: 'bl', lift: 0 }) {
   const proj = data.proj;
+  scaleHit = null; // not drawn, not grabbable
   if (!(style in SCALE_STYLES) || proj.zoom < SCALE_MIN_ZOOM || (style in SCALE_PICTURES && !sprite)) return;
   const lat = proj.invert(view.x + w / 2 / view.scale, view.y + h / 2 / view.scale)[1];
   const pxPerNm = ((proj.k * NM) / (EARTH_R * Math.cos(lat * RAD))) * view.scale;
