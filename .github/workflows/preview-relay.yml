@@ -1,0 +1,17 @@
+name: preview-relay
+# A push to a holding branch (hold/<name>) asks pages.yml to rebuild the site with that branch's
+# preview in it, at <site>/preview/<name>/. It does nothing itself: pages.yml runs on this
+# workflow's completion (workflow_run), and a workflow_run run executes main's pages.yml on main's
+# ref. That is why the relay exists: the github-pages environment takes deployments from main only,
+# so pages.yml triggered by the push itself would run on hold/<name> and its deploy would be
+# refused. The prefix is also PREFIX in .github/scripts/preview-branches.mjs; change both together.
+on:
+  push: { branches: ['hold/**'] }
+
+permissions: {}
+
+jobs:
+  relay:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "$GITHUB_REF_NAME is at $GITHUB_SHA; pages rebuilds the site with its preview"

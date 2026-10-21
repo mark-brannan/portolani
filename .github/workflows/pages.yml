@@ -2,6 +2,10 @@ name: pages
 on:
   push: { branches: [main] }
   workflow_dispatch:
+  # A push to a holding branch, relayed so this runs on main's ref: see preview-relay.yml.
+  workflow_run:
+    workflows: [preview-relay]
+    types: [completed]
 
 permissions:
   contents: read
@@ -11,6 +15,10 @@ concurrency: { group: pages, cancel-in-progress: true }
 jobs:
   build:
     runs-on: ubuntu-latest
+    # pull-requests: read to see which holding branches are already merged (preview-branches.mjs)
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@v7
         with: { persist-credentials: false }
@@ -25,6 +33,22 @@ jobs:
         with: { path: downloads, key: "downloads-${{ steps.pins.outputs.hash }}" }
       # Assembles _site/: the browser-rendered mockup, with its data vendored.
       - run: npm run build:preview
+      # Each holding branch (hold/<name>) not yet merged into main, built by its own build:preview
+      # into _site/preview/<name>/ of this one artifact: Pages serves one site per repository, from
+      # one deployment, so main's deploy carries the previews and every rebuild (a push to main or
+      # to a holding branch) lists them afresh, which drops a merged one. Main deploys even if
+      # this step fails.
+      - name: Previews of the holding branches
+        continue-on-error: true
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PREVIEW_SITE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+        run: |
+          # the finest coastline and lake bands, which would take main plus one preview past 1 GB
+          PREVIEW_DROP=$(node --input-type=module -e "import { bandOf } from './scripts/bands.mjs'; console.log(['gshhg-f-land', 'gshhg-f-lakes'].map((id) => 'geo/' + bandOf(id).dir).join(' '))")
+          export PREVIEW_DROP
+          node .github/scripts/preview-branches.mjs | bash .github/scripts/build-previews.sh
       - uses: actions/upload-pages-artifact@v5
         with: { path: _site }
   deploy:
