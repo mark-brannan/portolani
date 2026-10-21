@@ -46,11 +46,11 @@
     { "from": "Jardines de la Reina", "to": "Jamaica (St Ann’s Bay)", "dates": "May – 25 Jun 1503", "mode": "sea", "line": "spline",
       "confidence": "attested", "source": "Historie; south-east to Jamaica, the ships worm-eaten, run aground at St Ann’s Bay",
       "points": [[-79,20.55], [-78.6,19.8], [-77.8,18.9], [-77.2,18.5]] },
-    { "from": "Jamaica (St Ann’s Bay)", "to": "Santo Domingo", "dates": "Jun 1504 – 13 Aug 1504", "mode": "sea", "line": "spline",
-      "confidence": "attested", "source": "Historie; the relief ship of Diego de Escobar after a year marooned",
+    { "from": "Jamaica (St Ann’s Bay)", "to": "Santo Domingo", "dates": "29 Jun – 13 Aug 1504", "mode": "sea", "line": "spline",
+      "confidence": "attested", "source": "Historie; a caravel from Santo Domingo, got by Diego Méndez, after a year marooned",
       "points": [[-77.2,18.5], [-75.5,18], [-73.5,17.7], [-71.5,17.7], [-69.88,18.4]] },
     { "from": "Santo Domingo", "to": "Sanlúcar de Barrameda", "dates": "12 Sep – 7 Nov 1504", "mode": "sea", "line": "spline",
-      "confidence": "inferred", "source": "Wikipedia; the voyage home in the Vizcaína",
+      "confidence": "inferred", "source": "Wikipedia; home as passengers on two caravels, the last of the fleet abandoned",
       "points": [[-69.88,18.25], [-69.3,18], [-68.7,17.88], [-68.2,18.1], [-67.9,18.5], [-67.3,19.3], [-62,24], [-45,33], [-30,37], [-18,37.3], [-9,36.6], [-6.4,36.8]] }
   ],
   "events": [
