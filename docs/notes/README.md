@@ -6,8 +6,8 @@ ring in the chart's red on its figure; nothing is lettered beside it. A click or
 page's tile: the note's title, its date, what the maker drew, a blank line, "Today: " and what was there,
 and the source as a link with its licence.
 
-Notes have no key of their own: they are on whenever the overlay is on (in pencil: a config default,
-adjustable). A chart's notes are `data/notes/<overlay id>.json`; a chart without the file has none, and a
+Notes have no key of their own: they are on whenever the overlay is on. A chart's notes are `data/notes/<overlay id>.json`; a chart
+  without the file has none, and a
 file that fails to load never stops the overlay or the map. The text ships before a human reads it
 (docs/decisions.md, 2026-10-20); `checked` says how far each claim was confirmed, so the copy pass knows
 what to re-check.
