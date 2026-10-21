@@ -24,7 +24,7 @@
       "points": [[-13.3,7.5], [-10.5,5.4], [-7.5,3.6], [-2,4.2], [2,4.3], [6.5,3.3], [8.3,3.1]] }
   ],
   "events": [
-    { "kind": "event", "lon": -16.1, "lat": 23.8, "date": "c. 500 BC", "label": "Cerne, Hanno’s base on the Atlantic coast", "source": "Periplus of Hanno" },
-    { "kind": "landfall", "lon": 9.3, "lat": 4.1, "date": "c. 500 BC", "label": "The Chariot of the Gods and the Gorillai", "source": "Periplus of Hanno" }
+    { "kind": "event", "lon": -16.1, "lat": 23.8, "date": "c. 500 BC", "label": "Cerne, Hanno’s base on the Atlantic coast", "source": "Periplus of Hanno", "text": "The Periplus says Hanno of Carthage sailed with sixty ships of fifty oars and 30,000 settlers to found colonies on the coast of Libya, as Africa was then called. Cerne was the island where they settled. Where it was, from Morocco to Senegal, is still debated." },
+    { "kind": "landfall", "lon": 9.3, "lat": 4.1, "date": "c. 500 BC", "label": "The Chariot of the Gods and the Gorillai", "source": "Periplus of Hanno", "text": "Fire in the sea, streams of it running down a mountain, and the \"Chariot of the Gods\": a volcano, perhaps Mount Cameroon. Beyond it, a bay of hairy creatures the interpreters called Gorillai; the Carthaginians caught three females, who fought until they were killed, and took their skins home. Whether these were apes or people has been argued ever since; the gorilla took its name from them in 1847." }
   ]
 }

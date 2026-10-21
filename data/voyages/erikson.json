@@ -214,6 +214,7 @@
       "lat": 62.0,
       "date": "c. 1000",
       "label": "Helluland",
+      "text": "The Saga of the Greenlanders gives the name as \"Flat-stone land\": mountains, glaciers and slabs of rock, and no grass. It is usually taken for Baffin Island. Leif landed, looked and went on.",
       "source": "Saga of the Greenlanders"
     },
     {
@@ -222,6 +223,7 @@
       "lat": 54.0,
       "date": "c. 1000",
       "label": "Markland",
+      "text": "The \"Forest land\": a low, flat coast of woods and white sand beaches, usually taken for Labrador. Greenland had almost no timber of its own, so a coast of trees was worth knowing.",
       "source": "Saga of the Greenlanders"
     },
     {
@@ -230,6 +232,7 @@
       "lat": 51.6,
       "date": "c. 1000",
       "label": "Vinland",
+      "text": "Leif wintered here, in a country of self-sown wheat and grapes, the saga says, and called it Vinland. In 1960 a Norse settlement was found at L'Anse aux Meadows on Newfoundland, with a smithy and three halls; tree rings date its felled timber to exactly 1021. Whether it was Vinland itself or a base on the way is still argued.",
       "source": "Saga of the Greenlanders; L'Anse aux Meadows"
     }
   ]

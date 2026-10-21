@@ -30,7 +30,7 @@
       "points": [[-69.88,18.25], [-69.3,18], [-68.7,17.88], [-68.2,18.1], [-67.9,18.5], [-67.3,19.3], [-62,24], [-45,33], [-30,37], [-18,37.5], [-9,36.6], [-6.3,36.5]] }
   ],
   "events": [
-    { "kind": "landfall", "lon": -60.9, "lat": 10.1, "date": "31 Jul 1498", "label": "Trinidad sighted, then the South American mainland", "source": "Las Casas, Columbus’s narrative" },
-    { "kind": "event", "lon": -69.9, "lat": 18.45, "date": "1500", "label": "Columbus arrested at Santo Domingo by Bobadilla", "source": "Wikipedia: Third voyage" }
+    { "kind": "landfall", "lon": -60.9, "lat": 10.1, "date": "31 Jul 1498", "label": "Trinidad sighted, then the South American mainland", "source": "Las Casas, Columbus’s narrative", "text": "He sighted three hills and named the island for the Trinity. A few days later, in the Gulf of Paria, the great weight of fresh water from the Orinoco made him suspect a continent, and a land so green he wrote that it might be the Earthly Paradise." },
+    { "kind": "event", "lon": -69.9, "lat": 18.45, "date": "1500", "label": "Columbus arrested at Santo Domingo by Bobadilla", "source": "Wikipedia: Third voyage", "text": "Francisco de Bobadilla, sent to look into complaints against the Columbus brothers' rule, had Columbus and his brothers put in irons and shipped to Spain. Columbus is said to have kept the shackles in his room and asked to be buried in them." }
   ]
 }

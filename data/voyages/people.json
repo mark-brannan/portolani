@@ -15,7 +15,8 @@
       "lat": 45.44,
       "date": "8 Jan 1324",
       "label": "Marco Polo died at Venice, 8 Jan 1324",
-      "source": "Wikipedia, Marco Polo"
+      "source": "Wikipedia, Marco Polo",
+      "text": "He died at home in January 1324. His will freed Peter, his Tatar slave. Priests are said to have urged him on his deathbed to take back his Book; he answered that he had not told the half of what he saw."
     }
   },
   "Ibn Battuta": {
@@ -82,7 +83,8 @@
       "lat": 41.65,
       "date": "20 May 1506",
       "label": "Columbus dies at Valladolid",
-      "source": "Britannica 1911, Columbus"
+      "source": "Britannica 1911, Columbus",
+      "text": "He died in a rented house, ill, still arguing that the Crown owed him the titles and the tenth of the profits it had promised. He is generally said to have held that he had reached the edge of Asia. His bones were carried to Seville, then Santo Domingo, then Havana, then Seville again, and Seville and Santo Domingo both still claim him."
     }
   },
   "Paulo da Gama": {
@@ -91,7 +93,8 @@
       "lat": 38.65,
       "date": "1499",
       "label": "Paulo da Gama died at Angra, Terceira",
-      "source": "Barros; Correia"
+      "source": "Barros; Correia",
+      "text": "Paulo commanded the São Rafael, burned on the East African coast when there were too few men left to sail her. He fell ill on the way home; Vasco sailed on ahead in a fast caravel, to hurry him to the Azores, and stayed with his brother until he died."
     }
   },
   "Vasco da Gama": {
@@ -100,7 +103,8 @@
       "lat": 9.97,
       "date": "24 Dec 1524",
       "label": "Vasco da Gama died at Cochin as Viceroy of India",
-      "source": "Wikipedia: Vasco da Gama"
+      "source": "Wikipedia: Vasco da Gama",
+      "text": "Sent back to India at last as viceroy, he fell ill within months of landing and died at Cochin on Christmas Eve. His body was taken to Portugal in 1539, and lies today in the Jerónimos Monastery at Lisbon."
     }
   },
   "Ferdinand Magellan": {
@@ -109,7 +113,8 @@
       "lat": 10.29,
       "date": "27 Apr 1521",
       "label": "Magellan killed at Mactan",
-      "source": "Pigafetta"
+      "source": "Pigafetta",
+      "text": "Magellan took sides in a local quarrel, for the Cebu king against Lapulapu of Mactan, and went ashore with about fifty men. The ships' guns could not reach the beach, the Mactan fighters came on in waves, and the captain-general was killed in the water. Pigafetta, who was there, called him \"our mirror, our light, our comfort and our true guide\"."
     }
   },
   "Juan Sebastián Elcano": {
@@ -128,7 +133,8 @@
       "lat": 9.6,
       "date": "28 Jan 1596",
       "label": "Drake died off Portobelo, 1596; buried at sea in a lead coffin",
-      "source": "Wikipedia: Francis Drake"
+      "source": "Wikipedia: Francis Drake",
+      "text": "Dysentery killed him on his last raid on the Spanish Caribbean. Drake asked to be dressed in his armour, and was buried at sea in a lead coffin off Portobelo. Divers still look for it."
     }
   },
   "Phoenician mariners of Necho II": {

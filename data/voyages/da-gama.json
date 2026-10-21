@@ -62,7 +62,7 @@
       "source": "chroniclers" }
   ],
   "events": [
-    { "kind": "landfall", "lon": 31.4, "lat": -29.85, "date": "25 Dec 1497", "label": "Natal named, Christmas Day", "source": "Roteiro" },
-    { "kind": "landfall", "lon": 75.72, "lat": 11.38, "date": "20 May 1498", "label": "Calicut, Kappad", "source": "Roteiro" }
+    { "kind": "landfall", "lon": 31.4, "lat": -29.85, "date": "25 Dec 1497", "label": "Natal named, Christmas Day", "source": "Roteiro", "text": "Christmas Day 1497 found the fleet off the coast of what is now South Africa, and Vasco da Gama named it Natal, for the Nativity. The name survives in KwaZulu-Natal." },
+    { "kind": "landfall", "lon": 75.72, "lat": 11.38, "date": "20 May 1498", "label": "Calicut, Kappad", "source": "Roteiro", "text": "Ten months out of Lisbon, the first ships to reach India from Europe by sea anchored off Kappad, north of Calicut. The Zamorin received them; his merchants thought the Portuguese gifts of cloth, hats and honey poor, and the Portuguese left with pepper and a promise of trouble." }
   ]
 }

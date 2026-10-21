@@ -53,7 +53,7 @@
       "points": [[-23.8, 14.6], [-25.5, 21], [-24, 29], [-17, 34], [-11, 35.7], [-8, 36.2], [-6.47, 36.63]], "source": "Pigafetta; the home run past the Canaries", "note": "Eighteen men of the 237 who set out" }
   ],
   "events": [
-    { "kind": "landfall", "lon": 144.66, "lat": 13.29, "date": "6 Mar 1521", "label": "Guam: first land after the Pacific", "source": "Pigafetta" },
-    { "kind": "event", "lon": 127.4, "lat": 0.7, "date": "8 Nov – 21 Dec 1521", "label": "Tidore: the Victoria loads cloves", "source": "Pigafetta" }
+    { "kind": "landfall", "lon": 144.66, "lat": 13.29, "date": "6 Mar 1521", "label": "Guam: first land after the Pacific", "source": "Pigafetta", "text": "More than three months from the strait, starving and scurvied, with the crew eating leather and rats, the ships made Guam. The Chamorro came out in outrigger canoes and took what they could, a ship's boat among it; Magellan called the islands the Isles of Thieves and had houses burned and seven Chamorro killed over the boat. They were the first people the fleet had met since South America." },
+    { "kind": "event", "lon": 127.4, "lat": 0.7, "date": "8 Nov – 21 Dec 1521", "label": "Tidore: the Victoria loads cloves", "source": "Pigafetta", "text": "Magellan was dead, the fleet reduced to two ships, and Elcano and the remains of the crew found the Spice Islands at last. The Sultan of Tidore sold them cloves enough to pay for the whole expedition. The Victoria sailed home alone; eighteen of the men who had set out came into Sanlúcar." }
   ]
 }
