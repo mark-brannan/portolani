@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-// preview-branches: the holding branches the Pages site carries a preview of, one per line as
-// slug<TAB>branch<TAB>sha, freshest commit first, for build-previews.sh to build into
+// preview-branches: the holding branches the Pages site carries a preview of, freshest commit
+// first, at most MAX_PREVIEWS of them: one per line as slug<TAB>branch<TAB>sha, or with --json one
+// array of { slug, branch, sha }, the matrix pages.yml builds each preview from, into
 // _site/preview/<slug>/.
 //
-//   GH_TOKEN=... node .github/scripts/preview-branches.mjs [owner/repo]
+//   GH_TOKEN=... node .github/scripts/preview-branches.mjs [--json] [owner/repo]
 //
 // A holding branch is one named hold/<name>; preview-relay.yml's push filter names the same
 // prefix. A branch whose head is the head of a pull request already merged into main is left out,
@@ -13,6 +14,9 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 export const PREFIX = 'hold/';
+// More than the 1 GB site holds once main is in it (place-previews.sh keeps to the budget), so no
+// more preview builds run than could be served.
+export const MAX_PREVIEWS = 4;
 
 // The path segment a branch is served under: its name past the prefix, lower-cased, anything but
 // letters, digits, dot, dash and underscore run together into one dash.
@@ -38,8 +42,10 @@ export function selectPreviews(branches, prefix = PREFIX) {
 const gh = (...args) => JSON.parse(execFileSync('gh', ['api', ...args], { encoding: 'utf8' }) || 'null');
 
 function main() {
-  const repo = process.argv[2] || process.env.GITHUB_REPOSITORY;
-  if (!/^[^/\s]+\/[^/\s]+$/.test(repo || '')) { console.error('usage: preview-branches.mjs <owner/repo> (or GITHUB_REPOSITORY)'); return 2; }
+  const args = process.argv.slice(2);
+  const json = args.includes('--json');
+  const repo = args.find((a) => a !== '--json') || process.env.GITHUB_REPOSITORY;
+  if (!/^[^/\s]+\/[^/\s]+$/.test(repo || '')) { console.error('usage: preview-branches.mjs [--json] <owner/repo> (or GITHUB_REPOSITORY)'); return 2; }
   const owner = repo.split('/')[0];
   const refs = gh('--paginate', '--slurp', `repos/${repo}/git/matching-refs/heads/${PREFIX}`).flat();
   const branches = refs.map(({ ref, object: { sha } }) => {
@@ -50,7 +56,9 @@ function main() {
     const date = gh(`repos/${repo}/commits/${sha}`).commit.committer.date;
     return { name, sha, date, mergedHeads };
   });
-  for (const p of selectPreviews(branches)) console.log([p.slug, p.branch, p.sha].join('\t'));
+  const previews = selectPreviews(branches).slice(0, MAX_PREVIEWS);
+  if (json) console.log(JSON.stringify(previews));
+  else for (const p of previews) console.log([p.slug, p.branch, p.sha].join('\t'));
   return 0;
 }
 
