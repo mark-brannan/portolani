@@ -45,6 +45,8 @@ jobs:
         with: { persist-credentials: false }
       - uses: actions/setup-node@v7
         with: { node-version: '22' }
+      # bands.mjs reads the coastlines package's catalogue; main's lockfile, no install scripts
+      - run: npm ci --ignore-scripts
       - id: list
         env: { GH_TOKEN: '${{ github.token }}' }
         run: |
