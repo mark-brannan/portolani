@@ -4,12 +4,8 @@
   "short": "Necho’s Phoenicians",
   "who": ["Phoenician mariners of Necho II"],
   "when": "c. 600 BC",
-  "deathUnknown": ["Phoenician mariners of Necho II"],
   "summary": "Pharaoh Necho II sends Phoenician sailors down the Red Sea, with orders to return by the Pillars of Heracles; each autumn they land and sow a crop, and in the third year they come home to Egypt. Herodotus doubts the sun on their right hand. The course is the story told, drawn with a broad brush.",
-  "sources": [
-    { "title": "Herodotus, Histories 4.42, the circumnavigation of Libya (Perseus)", "url": "https://www.perseus.tufts.edu/hopper/text?doc=Perseus:text:1999.01.0126:book=4:chapter=42" },
-    { "title": "Necho II (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Necho_II" }
-  ],
+  "sources": ["herodotus-4-42", "necho-ii"],
   "legs": [
     { "from": "Gulf of Suez", "to": "Bab-el-Mandeb", "dates": "c. 600 BC", "mode": "sea", "line": "spline",
       "confidence": "conventional", "source": "Herodotus 4.42: from the Arabian Gulf into the southern sea",

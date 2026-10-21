@@ -5,13 +5,7 @@
   "who": ["Christopher Columbus"],
   "when": "1493–1496",
   "summary": "Seventeen ships and some 1,200 colonists out of Cádiz; a more southerly Atlantic run to Dominica and the Leeward Islands, Puerto Rico, the ruined Navidad and the new town of La Isabela; then Cuba and Jamaica, and home from Hispaniola by the Leewards.",
-  "sources": [
-    { "title": "Voyages of Christopher Columbus (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Voyages_of_Christopher_Columbus" },
-    { "title": "Second voyage of Christopher Columbus (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Second_voyage_of_Christopher_Columbus" },
-    { "title": "Third voyage of Christopher Columbus (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Third_voyage_of_Christopher_Columbus" },
-    { "title": "Fourth voyage of Christopher Columbus (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Fourth_voyage_of_Christopher_Columbus" },
-    { "title": "Columbus, Christopher, 1911 Encyclopædia Britannica (Wikisource)", "url": "https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Columbus,_Christopher" }
-  ],
+  "sources": ["voyages-of-christopher-columbus", "second-voyage-of-christopher-columbus", "third-voyage-of-christopher-columbus", "fourth-voyage-of-christopher-columbus", "britannica-1911-columbus"],
   "legs": [
     { "from": "Cádiz", "to": "San Sebastián de la Gomera", "dates": "25 Sep – 5 Oct 1493", "mode": "sea", "line": "rhumb",
       "confidence": "attested", "source": "Columbus’s letters and Dr Chanca’s account of the voyage",
@@ -43,7 +37,6 @@
   ],
   "events": [
     { "kind": "landfall", "lon": -61.35, "lat": 15.4, "date": "3 Nov 1493", "label": "Landfall at Dominica", "source": "Chanca", "text": "Sighted on a Sunday, whence the name. This time Columbus came with seventeen ships and well over a thousand men, with horses, cattle, seed and sugar cane: not to look, but to found a colony." },
-    { "kind": "event", "lon": -70.9, "lat": 19.95, "date": "Jan 1494", "label": "La Isabela, the first European town in the New World", "source": "Wikipedia: Second voyage", "text": "Founded on the north coast of Hispaniola and named for the queen. Fever, short rations and quarrels emptied it within a few years, and the Spanish moved to the south coast and built Santo Domingo. The ruins are in the Dominican Republic." },
-    { "kind": "death", "who": "Christopher Columbus", "lon": -4.72, "lat": 41.65, "date": "20 May 1506", "label": "Columbus dies at Valladolid", "source": "Britannica 1911, Columbus", "text": "He died in a rented house, ill, still arguing that the Crown owed him the titles and the tenth of the profits it had promised. He is generally said to have held that he had reached the edge of Asia. His bones were carried to Seville, then Santo Domingo, then Havana, then Seville again, and Seville and Santo Domingo both still claim him." }
+    { "kind": "event", "lon": -70.9, "lat": 19.95, "date": "Jan 1494", "label": "La Isabela, the first European town in the New World", "source": "Wikipedia: Second voyage", "text": "Founded on the north coast of Hispaniola and named for the queen. Fever, short rations and quarrels emptied it within a few years, and the Spanish moved to the south coast and built Santo Domingo. The ruins are in the Dominican Republic." }
   ]
 }

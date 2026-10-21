@@ -5,13 +5,7 @@
   "who": ["Christopher Columbus"],
   "when": "1502–1504",
   "summary": "Four ships out of Cádiz to find a strait to the Indies: Martinique, Santo Domingo, the coast of Honduras and Central America to Veragua and Panama, then a year marooned on Jamaica before the road home.",
-  "sources": [
-    { "title": "Voyages of Christopher Columbus (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Voyages_of_Christopher_Columbus" },
-    { "title": "Second voyage of Christopher Columbus (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Second_voyage_of_Christopher_Columbus" },
-    { "title": "Third voyage of Christopher Columbus (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Third_voyage_of_Christopher_Columbus" },
-    { "title": "Fourth voyage of Christopher Columbus (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Fourth_voyage_of_Christopher_Columbus" },
-    { "title": "Columbus, Christopher, 1911 Encyclopædia Britannica (Wikisource)", "url": "https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Columbus,_Christopher" }
-  ],
+  "sources": ["voyages-of-christopher-columbus", "second-voyage-of-christopher-columbus", "third-voyage-of-christopher-columbus", "fourth-voyage-of-christopher-columbus", "britannica-1911-columbus"],
   "legs": [
     { "from": "Cádiz", "to": "Gran Canaria", "dates": "11–20 May 1502", "mode": "sea", "line": "rhumb",
       "confidence": "attested", "source": "Ferdinand Columbus, Historie; Wikipedia",
@@ -55,7 +49,6 @@
   ],
   "events": [
     { "kind": "event", "lon": -85.9, "lat": 16.45, "date": "30 Jul 1502", "label": "Columbus meets a Maya trading canoe off Guanaja", "source": "Historie of Ferdinand Columbus", "text": "Off Guanaja his men met a large trading canoe from the Maya coast, as long as a galley, loaded with cotton cloth, copper bells, obsidian-edged swords and cacao beans. They took what they liked, and seized an old man to serve as interpreter. The Maya spoke of rich lands to the west; Columbus sailed east." },
-    { "kind": "event", "lon": -77.15, "lat": 18.45, "date": "1503–04", "label": "Marooned on Jamaica for a year", "source": "Wikipedia: Fourth voyage", "text": "Worm-eaten, the ships were run aground on Jamaica and roofed over as huts. A man named Diego Méndez paddled a canoe four hundred miles for help while the crew mutinied and the islanders stopped feeding them; Columbus, knowing from his almanac that there would be a lunar eclipse, told them God was angry, and they came back with food. Rescue took a year." },
-    { "kind": "death", "who": "Christopher Columbus", "lon": -4.72, "lat": 41.65, "date": "20 May 1506", "label": "Columbus dies at Valladolid", "source": "Britannica 1911, Columbus", "text": "He died in a rented house, ill, still arguing that the Crown owed him the titles and the tenth of the profits it had promised. He is generally said to have held that he had reached the edge of Asia. His bones were carried to Seville, then Santo Domingo, then Havana, then Seville again, and Seville and Santo Domingo both still claim him." }
+    { "kind": "event", "lon": -77.15, "lat": 18.45, "date": "1503–04", "label": "Marooned on Jamaica for a year", "source": "Wikipedia: Fourth voyage", "text": "Worm-eaten, the ships were run aground on Jamaica and roofed over as huts. A man named Diego Méndez paddled a canoe four hundred miles for help while the crew mutinied and the islanders stopped feeding them; Columbus, knowing from his almanac that there would be a lunar eclipse, told them God was angry, and they came back with food. Rescue took a year." }
   ]
 }

@@ -4,13 +4,8 @@
   "short": "Pytheas",
   "who": ["Pytheas"],
   "when": "c. 330–320 BC",
-  "deathUnknown": ["Pytheas"],
   "summary": "A Greek geographer sails from Massalia, past the Pillars of Heracles and up the Atlantic coast to Cornwall; round Britain, to the Thule of the midnight sun and the frozen sea, and to the amber coast of the North Sea. His book is lost, and survives only as quoted by Strabo, Pliny and others, some of whom disbelieved him.",
-  "sources": [
-    { "title": "Pytheas (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Pytheas" },
-    { "title": "Strabo, Geography (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Geographica" },
-    { "title": "Thule (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Thule" }
-  ],
+  "sources": ["pytheas", "geographica", "thule"],
   "legs": [
     { "from": "Massalia (Marseille)", "to": "Gades (Cádiz)", "dates": "c. 325 BC", "mode": "sea", "line": "spline",
       "confidence": "conventional", "source": "Strabo: Pytheas passed through the Pillars; the coast-wise way",

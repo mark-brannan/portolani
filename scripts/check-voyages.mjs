@@ -1,4 +1,5 @@
-// Checks the voyage records (docs/voyages/README.md): the schema, and that every sample of a sea leg
+// Checks the voyage records (problems() and readVoyage() in scripts/voyages.mjs are the schema): that
+// every reference resolves, the schema, and that every sample of a sea leg
 // (sampled every STEP_KM, 25 km, in scripts/voyages.mjs; a strait needs waypoints that close or closer)
 // is at sea on the Natural Earth 50m coast. Prints each problem with the leg and the point, so a
 // waypoint can be moved. Offline, from coastlines.
@@ -7,7 +8,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { geojsonPolygons } from 'coast-wright';
-import { seaSamples, problems } from './voyages.mjs';
+import { seaSamples, problems, readVoyage as resolve } from './voyages.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const GEO = dirname(fileURLToPath(import.meta.resolve('coastlines/data/ne-land-50m')));
@@ -37,8 +38,10 @@ export function landAt(land, lon, lat) {
   return null;
 }
 
-export const voyageIds = () => readdirSync(DIR).filter((f) => f.endsWith('.json') && f !== 'index.json').map((f) => f.slice(0, -5));
-export const readVoyage = (id) => JSON.parse(readFileSync(join(DIR, `${id}.json`), 'utf8'));
+const SHARED = ['index.json', 'people.json', 'sources.json']; // the files in data/voyages/ that are not voyages
+export const voyageIds = () => readdirSync(DIR).filter((f) => f.endsWith('.json') && !SHARED.includes(f)).map((f) => f.slice(0, -5));
+export const readJSON = (path) => JSON.parse(readFileSync(join(ROOT, path), 'utf8'));
+export const readVoyage = (id) => resolve(id, readJSON);
 
 // [{ what, where }] for a voyage: schema problems, then every sea sample on land
 export function checkVoyage(v, land) {
@@ -53,7 +56,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const land = loadLand();
   let bad = 0;
   for (const id of process.argv.length > 2 ? process.argv.slice(2) : voyageIds()) {
-    const found = checkVoyage(readVoyage(id), land);
+    const found = await readVoyage(id).then((v) => checkVoyage(v, land), (e) => [{ what: e.message }]);
     bad += found.length;
     console.log(`${id}: ${found.length ? `${found.length} problems` : 'ok'}`);
     for (const f of found) console.log(`  ${f.what}${f.where ? ` at ${f.where.join(', ')}` : ''}`);
