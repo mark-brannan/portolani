@@ -6,8 +6,8 @@ import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { legPath, splitAtSeam, problems, distanceKm, STEP_KM } from '../scripts/voyages.mjs';
 import { viewProjection, voyageMarks, W, H } from '../scripts/scene.mjs';
+import { legPath, splitAtSeam, problems, distanceKm, STEP_KM, voyageColours, VOYAGE_PALETTE } from '../scripts/voyages.mjs';
 import { loadLand, checkVoyage, voyageIds, readVoyage } from '../scripts/check-voyages.mjs';
 
 const DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'data', 'voyages');
@@ -154,4 +154,25 @@ test('every place tile is keyed by a name the page lists', async () => {
   // the list is the page's own: each row opens `['Name', <view>(`, and so does each chart's city
   const listed = new Set([...readFileSync('public/page.js', 'utf8').matchAll(/\['([^']+)', (?:port|at|viewOfFrame|both|around)\(/g)].map((m) => m[1]));
   for (const name of Object.keys(SIGHT_TILES)) assert.ok(listed.has(name), `${name} is not a listed place`);
+});
+
+test('the alternatives fixture is well formed, and a bad alternative is named for each thing it lacks', () => {
+  const v = JSON.parse(readFileSync(join(DIR, '..', '..', 'test', 'fixtures', 'voyage-alternatives.json'), 'utf8'));
+  assert.deepEqual(problems(v), []);
+  const bad = structuredClone(v);
+  bad.events[0].alternatives.push({ lon: 200, lat: 0, label: 'off the earth' });
+  assert.deepEqual(problems(bad), ['event 0 alternative 2: lon and lat', 'event 0 alternative 2: a place', 'event 0 alternative 2: a source']);
+});
+
+test('voyage colours: the first red, the rest distinct and seeded on the id, a picked one kept', () => {
+  const ids = ['columbus', 'drake', 'magellan', 'polo'];
+  const c = voyageColours(ids);
+  assert.equal(c.columbus, VOYAGE_PALETTE[0]);
+  assert.equal(new Set(Object.values(c)).size, ids.length);
+  assert.deepEqual(voyageColours(ids), c, 'the same list drew other colours');
+  assert.equal(voyageColours(['magellan', 'drake']).drake, voyageColours(['polo', 'drake']).drake, 'a voyage changed ink with its neighbour');
+  const picked = voyageColours(ids, { columbus: '#1f4e8c' });
+  assert.equal(picked.columbus, '#1f4e8c');
+  assert.equal(picked.drake, VOYAGE_PALETTE[0], 'red is free, so the next one takes it');
+  assert.equal(Object.keys(voyageColours(VOYAGE_PALETTE.map((_, i) => `v${i}`).concat('extra'))).length, VOYAGE_PALETTE.length + 1);
 });
