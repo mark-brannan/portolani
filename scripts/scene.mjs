@@ -19,7 +19,8 @@ import { RELIEF_STYLES, reliefOf, clearOf, drawRelief } from './relief.mjs';
 import { TREES, TREE_STYLES, plantTrees, plantPalms } from './trees.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
 import { BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from './buildings.mjs';
-import { legPath, splitAtSeam, DASHES } from './voyages.mjs';
+import { legPath, splitAtSeam, DASHES, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours } from './voyages.mjs';
+export { VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours };
 
 let env;
 const createCanvas = (w, h) => env.createCanvas(w, h);
@@ -2245,30 +2246,51 @@ const legPaths = new WeakMap();
 const pathOf = (leg) => legPaths.get(leg) ?? legPaths.set(leg, legPath(leg)).get(leg);
 // A round cap grows each dash by the stroke's width, so the pattern gives it back to read as DASHES says
 const capped = (dash, w) => dash.map((d, i) => (i % 2 ? d + w : Math.max(0.01, d - w)));
-const VOYAGE_LINE = 2.2, VOYAGE_HALO = 5.5, VOYAGE_END = 2.8, SKULL_H = 16, SKULL_ALT_H = 13;
+const VOYAGE_HALO = 3.3, VOYAGE_END = 2.8, SKULL_H = 16, SKULL_ALT_H = 13;
 
-// A voyage (docs/voyages/README.md) through any projection: each leg cut at the seam and stroked in red
-// over a parchment halo, dashed by its confidence; then its events, a death as a skull and crossbones.
-// `rect` culls the legs (padded, so a stroke at the edge survives); `eventRect` is the view itself: a mark
-// is drawn only when the whole of it is in view, so a tile never opens on half a mark.
-function drawVoyage(g, voyage, proj, rect, eventRect = rect) {
-  if (!voyage) return;
+// The voyages, each through any projection: each leg cut at the seam and stroked in its colour (the chart's
+// red by default) at its width over a parchment halo, dashed by its confidence; then its events, a death as a
+// skull and crossbones, and the other places an account puts that death as fainter skulls on a thin dashed
+// line to it, in the voyage's colour. No lettering: a click or tap on a mark opens its tile (voyageMarks).
+// `rect` culls the legs (padded, so a stroke at the edge survives); `eventRect` is the view itself: a mark is
+// drawn only when the whole of it is in view, so a tile never opens on half a mark.
+// Every track is drawn before any mark, so no line crosses a skull.
+function drawVoyages(g, voyages, proj, rect, eventRect = rect) {
+  for (const v of voyages ?? []) drawTrack(g, v, proj, rect);
+  for (const v of voyages ?? []) drawEvents(g, v, proj, eventRect);
+}
+function drawTrack(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH }, proj, rect) {
   g.save();
   g.lineCap = 'round'; g.lineJoin = 'round';
+  const end = Math.max(VOYAGE_END, width * 1.25);
   for (const leg of voyage.legs) {
     const pieces = splitAtSeam(pathOf(leg), proj.lonCenter, proj.visible).map((p) => p.map(proj.toPx)).filter((px) => meets(rect, bbox(px)));
-    for (const [style, width, alpha, dash] of [[STYLE.parchment, VOYAGE_HALO, 0.6, []], [STYLE.windRed, VOYAGE_LINE, 0.9, capped(DASHES[leg.confidence] ?? [], VOYAGE_LINE)]]) {
-      g.strokeStyle = style; g.lineWidth = width; g.globalAlpha = alpha; g.setLineDash(dash);
+    for (const [style, w, alpha, dash] of [[STYLE.parchment, width + VOYAGE_HALO, 0.6, []], [colour, width, 0.9, capped(DASHES[leg.confidence] ?? [], width)]]) {
+      g.strokeStyle = style; g.lineWidth = w; g.globalAlpha = alpha; g.setLineDash(dash);
       for (const px of pieces) { g.beginPath(); px.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke(); }
     }
-    g.setLineDash([]); g.globalAlpha = 0.9; g.fillStyle = STYLE.windRed;
-    for (const end of [leg.points[0], leg.points.at(-1)]) {
-      if (proj.visible && !proj.visible(...end)) continue;
-      const [x, y] = proj.toPx(end);
-      if (disc(rect, x, y, 3)) { g.beginPath(); g.arc(x, y, VOYAGE_END, 0, 2 * Math.PI); g.fill(); }
+    g.setLineDash([]); g.globalAlpha = 0.9; g.fillStyle = colour;
+    for (const p of [leg.points[0], leg.points.at(-1)]) {
+      if (proj.visible && !proj.visible(...p)) continue;
+      const [x, y] = proj.toPx(p);
+      if (disc(rect, x, y, end + 1)) { g.beginPath(); g.arc(x, y, end, 0, 2 * Math.PI); g.fill(); }
     }
   }
-  g.globalAlpha = 1;
+  g.restore();
+}
+function drawEvents(g, { voyage, colour = STYLE.windRed }, proj, eventRect) {
+  const at = (lon, lat) => (Number.isFinite(lon) && Number.isFinite(lat) && (!proj.visible || proj.visible(lon, lat)) ? proj.toPx([lon, lat]) : null);
+  g.save();
+  for (const e of voyage.events ?? []) { // the tie from each alternative to the usual skull first, so both skulls sit on it
+    if (e.kind !== 'death' || !Array.isArray(e.alternatives)) continue;
+    const p = at(e.lon, e.lat);
+    for (const a of e.alternatives) {
+      const q = at(a?.lon, a?.lat);
+      if (!p || !q || !meets(eventRect, { x0: Math.min(p[0], q[0]), y0: Math.min(p[1], q[1]), x1: Math.max(p[0], q[0]), y1: Math.max(p[1], q[1]) })) continue;
+      g.save(); g.strokeStyle = colour; g.globalAlpha = 0.75; g.lineWidth = 1.3; g.setLineDash([5, 3]);
+      g.beginPath(); g.moveTo(...p); g.lineTo(...q); g.stroke(); g.restore();
+    }
+  }
   for (const m of voyageMarks(voyage, proj, eventRect)) {
     g.save(); g.globalAlpha = m.alpha;
     if (m.skull) drawSkull(g, m.x, m.y, m.h);
@@ -2456,8 +2478,8 @@ function drawScene(g, scene, data, bg, view) {
   for (const m of show.kinds.has('monster') ? scene.monsters : []) if (spriteIn(m.sprite, m.x, m.y, m.size)) drawSprite(g, m.sprite, m.x, m.y, m.size, { flip: m.flip, anchor: [0.5, 0.5] });
   for (const s of show.kinds.has('ship') ? scene.ships : []) if (spriteIn(s.sprite, s.x, s.y, s.size)) drawSprite(g, s.sprite, s.x, s.y, s.size, { flip: s.flip, rot: s.flip ? -s.tilt : s.tilt, anchor: [0.5, 0.6] });
 
-  // a voyage over the ornaments, under the cartouche
-  drawVoyage(g, scene.voyage, data.proj, r, viewRect(g, view, 0));
+  // the voyages over the ornaments, under the cartouche
+  drawVoyages(g, scene.voyages, data.proj, r, viewRect(g, view, 0));
 
   // 10. cartouche, lettered in its cleared panel
   const c = scene.cartouche;
@@ -2567,8 +2589,13 @@ function drawScaleCard(g, proj, bg, style, sprite) {
 function anchorScene(scene, data) {
   const ll = (o) => ({ o, at: data.proj.invert(o.x, o.y) });
   return {
+<<<<<<< HEAD
     k: data.proj.k, show: scene.show, scaleSprite: scene.scaleSprite, cartouche: scene.cartouche, cartouchePos: scene.cartouchePos, scalePos: scene.scalePos, voyage: scene.voyage,
     rays: latticeOf(scene, data), sheets: scene.sheets, debug: scene.debug,
+=======
+    k: data.proj.k, show: scene.show, scaleSprite: scene.scaleSprite, cartouche: scene.cartouche, cartouchePos: scene.cartouchePos, scalePos: scene.scalePos, voyages: scene.voyages,
+    rays: latticeOf(scene, data),
+>>>>>>> 1137c53 (feat(voyages): several at once, each in its own ink; line weights; Clear and Defaults on every toggle group)
     roses: scene.roseDraws.map(ll), mountains: (scene.mountains ?? []).map(ll),
     towns: [...scene.towns.filter((t) => !t.city), ...(scene.lesser ?? [])].map(ll),
     monsters: scene.monsters.map(ll), ships: scene.ships.map(ll),
@@ -2686,7 +2713,7 @@ function drawAnchored(g, a, bg, view, layers) {
     const size = s.size * scaled('ship'), p = at(ll, size);
     if (p) drawSprite(g, s.sprite, p[0], p[1], size, { flip: s.flip, rot: s.flip ? -s.tilt : s.tilt, anchor: [0.5, 0.6] });
   }
-  drawVoyage(g, a.voyage, proj, { x0: 0, y0: 0, x1: W, y1: H });
+  drawVoyages(g, a.voyages, proj, { x0: 0, y0: 0, x1: W, y1: H });
   g.restore();
   if (show.kinds.has('cartouche')) drawCartouche(g, a.cartouche, (x0, y0, x1, y1) => g.drawImage(bg, x0, y0, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0));
   drawScaleBar(g, { proj }, bg, { scale: 1, x: 0, y: 0 }, W, H, show.scale, a.scaleSprite, scalePlace(a));
@@ -2713,7 +2740,9 @@ function drawAnchored(g, a, bg, view, layers) {
 // `autoTitle` (boolean, on by default) letters the cartouche with the name the view is about (viewTitle), in capitals;
 // `title` is its lettering when that is off, or when the view has no name in it. `pinTitle` is a name the caller says
 // the view is about (a place flown to), lettered in capitals whatever the scoring finds.
-// `voyage`: a voyage id (data/voyages/<id>.json, docs/voyages/README.md) drawn over the ornaments; 'off' or left out draws none.
+// `voyages`: the voyages drawn over the ornaments, in order, as [{ id, colour, width }]: `id` names data/voyages/<id>.json
+// (docs/voyages/README.md); `colour` (hex) defaults by voyageColours, the first the chart's red; `width` (px) to VOYAGE_WIDTH.
+// None by default. The older `voyage` (one id, or 'off') still draws that one.
 // `kinds` defaults to DEFAULT_KINDS, every kind. A kind left out is still
 // placed when the lattice needs it (a rose, the cartouche's corner), only not drawn.
 // `debug`: a list of DEBUG_LAYERS ('sheets', 'rings'), the atlas's sheets drawn in red over everything; none by default.
@@ -2829,7 +2858,7 @@ export async function createScene(environment, opts = {}) {
   if (STYLE.rivers !== 'off' || STYLE.lakes !== 'off') water = (view.zoom > WATER_ZOOM && await loadWater10m(view)) || await loadWater();
   if (STYLE.lakes !== 'off') water = withLakes(water, await loadLakes(view));
   const world = view.zoom > DETAIL_ZOOM ? await loadDetail(coarse, view) : coarse;
-  const voyage = await loadVoyage(opts.voyage);
+  const voyages = await loadVoyages(opts.voyages ?? (opts.voyage ? [{ id: opts.voyage }] : []));
   const tLoad = performance.now();
 
   const data = viewData(world, view);
@@ -2845,7 +2874,11 @@ export async function createScene(environment, opts = {}) {
   const roseReach = sheetReach(roseSheet(view.zoom, { origin, curated: knobs.curated === 1 }).extent, knobs.reach);
   const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, historical, seaAt: sheets && seaAtOf(coarse), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, title, autoTitle, pinTitle,
     continentsEnd: zoomEnd(continentsZoom, CONTINENT_ZOOM_END), regionsEnd: zoomEnd(regionsZoom, REGION_ZOOM_END),
+<<<<<<< HEAD
     scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM && pinned, pinned, cartouchePos, scalePos, townSize: townBy, seed: legacy ? null : pickedSeed == null ? castSeed(view) : pickedSeed | 0, salt: legacy || pickedSeed == null ? 0 : pickedSeed | 0 }), show, scaleSprite, voyage, roseReach, roseLines: knobs.roselines === 1, debug, scalePos: cornerOf(scalePos, DEFAULT_SCALE_CORNER) };
+=======
+    scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM && pinned, pinned, cartouchePos, scalePos, townSize: townBy, seed: legacy ? null : pickedSeed == null ? castSeed(view) : pickedSeed | 0, salt: legacy || pickedSeed == null ? 0 : pickedSeed | 0 }), show, scaleSprite, voyages, roseReach, scalePos: cornerOf(scalePos, DEFAULT_SCALE_CORNER) };
+>>>>>>> 1137c53 (feat(voyages): several at once, each in its own ink; line weights; Clear and Defaults on every toggle group)
   data.trees = TREES[STYLE.trees] ? plantTrees({ proj: data.proj, isLand: scene.field.isLand, scene, lakes: STYLE.lakes !== 'off' && water ? water.lakes : [], w: W, h: H }) : [];
   data.palms = plantPalms({ proj: data.proj, isLand: scene.field.isLand, scene, w: W, h: H,
     pois: scene.lesser.filter((l) => l.poi).map((l) => ({ x: l.x, y: l.y, palms: POIS.find((p) => p.name === l.name)?.palms ?? 0 })) });
@@ -2853,10 +2886,13 @@ export async function createScene(environment, opts = {}) {
   const bg = parchments.get(tone);
   return { scene, data, bg, proj: data.proj, world, coarse, view, timing: { load: tLoad - t0, place: performance.now() - tLoad } };
 }
-// The voyage a link names, or null for none or one the site lacks: a missing overlay never stops the map
-async function loadVoyage(id) {
-  if (!/^[a-z][a-z0-9-]*$/.test(id ?? '') || id === 'off') return null;
-  try { return await env.readJSON(`data/voyages/${id}.json`); } catch { return null; }
+// The voyages a link names, loaded, coloured and sized: one the site lacks, or 'off', is left out, so a missing overlay never stops the map
+async function loadVoyages(list) {
+  const items = (Array.isArray(list) ? list : []).filter((v) => /^[a-z][a-z0-9-]*$/.test(v?.id ?? '') && v.id !== 'off');
+  const hex = (c) => (/^#[0-9a-f]{6}$/i.test(c ?? '') ? c.toLowerCase() : null);
+  const colours = voyageColours(items.map((v) => v.id), Object.fromEntries(items.filter((v) => hex(v.colour)).map((v) => [v.id, hex(v.colour)])));
+  const loaded = await Promise.all(items.map((v) => env.readJSON(`data/voyages/${v.id}.json`).catch(() => null)));
+  return items.map((v, i) => loaded[i] && { voyage: loaded[i], colour: colours[v.id], width: Number.isFinite(v.width) && v.width > 0 && v.width <= 12 ? v.width : VOYAGE_WIDTH }).filter(Boolean);
 }
 // A zoom slider's value as the zoom a name stops at: unset keeps `dflt`, 0 or less is off, the top is always, N draws at zoom N and out
 const zoomEnd = (n, dflt) => (n == null ? dflt : n <= 0 ? -Infinity : n >= ZOOM.max ? Infinity : n + 0.5);
