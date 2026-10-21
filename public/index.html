@@ -202,6 +202,19 @@
   .gg .thumb img, .gg .thumb svg { height: 34px; max-width: 34px; }
 
   .caption { margin: 4px 0 0; font: 12px/1.35 system-ui, sans-serif; color: var(--muted); }
+  /* the tile a click or tap on a point of interest opens beside it: the drawers' parchment and double rule, small */
+  .tile {
+    position: fixed; z-index: 3; box-sizing: border-box; width: min(300px, 100vw - 16px); max-height: calc(100dvh - 16px); overflow-y: auto;
+    margin: 0; padding: 10px 28px 12px 14px; background: var(--panel); color: var(--fg); font: 13px/1.4 var(--serif);
+    border: 1px solid var(--rule); outline: 1px solid var(--rule); outline-offset: -4px; box-shadow: 0 4px 20px rgb(0 0 0 / 0.3);
+  }
+  .tile[hidden] { display: none; }
+  .tile p { margin: 0 0 6px; }
+  .tile p:last-of-type { margin-bottom: 0; }
+  .tile-title { font-size: 15px; font-weight: bold; }
+  .tile-date { font-style: italic; color: var(--muted); }
+  .tile-source { font-size: 12px; color: var(--muted); }
+  .tile-close { position: absolute; top: 4px; right: 6px; padding: 0 6px; font: 18px/1 var(--serif); color: var(--fg); background: none; border: 0; cursor: pointer; }
   .caption a { color: var(--accent); text-underline-offset: 2px; }
 
   .about p { color: var(--muted); font-size: 12px; margin: 0; }
@@ -211,6 +224,7 @@
 <canvas id="map" width="1600" height="1000" aria-label="Chart: drag to pan, wheel or pinch to zoom"></canvas>
 <canvas id="cardCartouche" class="card" aria-hidden="true" hidden></canvas>
 <canvas id="cardScale" class="card" width="700" height="170" aria-hidden="true" hidden></canvas>
+<div id="tile" class="tile" role="dialog" tabindex="-1" hidden></div>
 <p id="status" role="status">Loading…</p>
 
 <nav id="where" aria-label="Go to">

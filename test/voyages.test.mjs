@@ -7,6 +7,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { legPath, splitAtSeam, problems, distanceKm, STEP_KM } from '../scripts/voyages.mjs';
+import { viewProjection, voyageMarks, W, H } from '../scripts/scene.mjs';
 import { loadLand, checkVoyage, voyageIds, readVoyage } from '../scripts/check-voyages.mjs';
 
 const DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'data', 'voyages');
@@ -87,4 +88,49 @@ test('a person whose place of death is unknown goes in deathUnknown, and only th
   v.deathUnknown = ['A B'];
   v.events = base().events;
   assert.ok(problems(v).some((p) => p.includes('is in deathUnknown but has a death event')));
+});
+
+test('an event and an alternative may carry text for its tile, and it must be a non-empty string', () => {
+  const v = base();
+  v.events[0].text = 'Flavour.';
+  v.events[0].alternatives = [{ ...alt, text: 'Also flavour.' }];
+  assert.deepEqual(problems(v), []);
+  v.events[0].text = '';
+  v.events[0].alternatives = [{ ...alt, text: 3 }];
+  const found = problems(v);
+  assert.ok(found.some((p) => p.includes('event 0: text')), found.join('; '));
+  assert.ok(found.some((p) => p.includes('alternative 0: text')), found.join('; '));
+});
+
+test('a voyage\'s marks carry the tile a tap opens: the usual skull last, its alternatives fainter and first', () => {
+  const v = readVoyage('zheng-he');
+  const proj = viewProjection({ lon: 85, lat: 20, zoom: 1.5 });
+  const marks = voyageMarks(v, proj, { x0: 0, y0: 0, x1: W, y1: H });
+  const [usual] = marks.slice(-1);
+  assert.equal(usual.tile.title, v.events[0].label);
+  assert.ok(usual.tile.text.length > 0, 'the usual account has text');
+  const alts = marks.slice(0, -1);
+  assert.ok(alts.length >= 1 && alts.every((m) => m.tile.alternative && m.alpha < 1 && m.h < usual.h));
+  assert.deepEqual(voyageMarks(null, proj, { x0: 0, y0: 0, x1: W, y1: H }), []);
+});
+
+test('Zheng He\'s skull stands at the middle of the Calicut–Malacca leg, the first homeward leg, since no source gives a place', () => {
+  const v = readVoyage('zheng-he');
+  const leg = v.legs.find((l) => l.from === 'Calicut' && l.to === 'Malacca');
+  const path = legPath(leg), death = v.events.find((e) => e.kind === 'death');
+  let total = 0;
+  for (let i = 1; i < path.length; i++) total += distanceKm(path[i - 1], path[i]);
+  let nearest = Infinity, along = 0, run = 0;
+  for (let i = 1; i < path.length; i++) {
+    const d = distanceKm(path[i], [death.lon, death.lat]);
+    if (d < nearest) { nearest = d; along = run + distanceKm(path[i - 1], path[i]); }
+    run += distanceKm(path[i - 1], path[i]);
+  }
+  assert.ok(nearest < STEP_KM, `the skull is ${nearest.toFixed(0)} km from the leg`);
+  assert.ok(Math.abs(along / total - 0.5) < 0.03, `the skull is ${(100 * along / total).toFixed(0)}% along the leg`);
+});
+
+test('every Zheng He file carries the same death as the seventh voyage', () => {
+  const death = (id) => readVoyage(id).events.find((e) => e.kind === 'death');
+  for (const id of ['zheng-he-1', 'zheng-he-4', 'zheng-he-5']) assert.deepEqual(death(id), death('zheng-he'), id);
 });

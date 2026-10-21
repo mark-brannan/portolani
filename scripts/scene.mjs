@@ -2236,7 +2236,7 @@ const VOYAGE_LINE = 2.2, VOYAGE_HALO = 5.5, VOYAGE_END = 2.8, SKULL_H = 16, SKUL
 // A voyage (docs/voyages/README.md) through any projection: each leg cut at the seam and stroked in red
 // over a parchment halo, dashed by its confidence; then its events, a death as a skull and crossbones.
 // `rect` culls the legs (padded, so a stroke at the edge survives); `eventRect` is the view itself: a mark
-// is drawn only when the whole of it is in view, so its label never points at nothing.
+// is drawn only when the whole of it is in view, so a tile never opens on half a mark.
 function drawVoyage(g, voyage, proj, rect, eventRect = rect) {
   if (!voyage) return;
   g.save();
@@ -2255,28 +2255,34 @@ function drawVoyage(g, voyage, proj, rect, eventRect = rect) {
     }
   }
   g.globalAlpha = 1;
-  for (const e of voyage.events ?? []) {
-    // a disputed death's other candidate places first, smaller and fainter, so the usual account sits on top
-    for (const a of e.kind === 'death' ? e.alternatives ?? [] : []) drawDeathAt(g, a, proj, eventRect, SKULL_ALT_H, 0.75);
-    if (e.kind === 'death') { drawDeathAt(g, e, proj, eventRect, SKULL_H, 1); continue; }
-    if (proj.visible && !proj.visible(e.lon, e.lat)) continue;
-    const [x, y] = proj.toPx([e.lon, e.lat]);
-    if (!disc(eventRect, x, y, -SKULL_H / 2)) continue; // the whole mark in view, or no label
-    g.beginPath(); g.arc(x, y, 3, 0, 2 * Math.PI); g.strokeStyle = STYLE.ink; g.lineWidth = 1.4; g.stroke();
-    eventLabel(g, e.label, x, y, 6, eventRect);
+  for (const m of voyageMarks(voyage, proj, eventRect)) {
+    g.save(); g.globalAlpha = m.alpha;
+    if (m.skull) drawSkull(g, m.x, m.y, m.h);
+    else { g.beginPath(); g.arc(m.x, m.y, 3, 0, 2 * Math.PI); g.strokeStyle = STYLE.ink; g.lineWidth = 1.4; g.stroke(); }
+    g.restore();
   }
   g.restore();
 }
 
-// A skull `h` px tall and its label at a place of death, when the whole skull is in view
-function drawDeathAt(g, p, proj, rect, h, alpha) {
-  if (proj.visible && !proj.visible(p.lon, p.lat)) return;
-  const [x, y] = proj.toPx([p.lon, p.lat]);
-  if (!disc(rect, x, y, -h / 2)) return;
-  g.save(); g.globalAlpha = alpha;
-  drawSkull(g, x, y, h);
-  eventLabel(g, p.label, x, y, h / 2 + 3, rect);
-  g.restore();
+// The marks of a voyage's events in view, in the order they are drawn (a disputed death's other places first,
+// smaller and fainter, so the usual account sits on top): { x, y, h, alpha, skull, tile } in canvas px.
+// A mark is listed only when the whole of it is in view. Its `tile` is what a click or tap on it shows, in
+// the page's popover: the heading, the date, the text, the source and, on a death, the place it is set at.
+// No lettering is drawn beside a mark; the tile carries it.
+export function voyageMarks(voyage, proj, rect) {
+  const out = [];
+  const add = (p, h, alpha, skull, tile) => {
+    if (proj.visible && !proj.visible(p.lon, p.lat)) return;
+    const [x, y] = proj.toPx([p.lon, p.lat]);
+    if (disc(rect, x, y, -h / 2)) out.push({ x, y, h, alpha, skull, tile });
+  };
+  for (const e of voyage?.events ?? []) {
+    const tile = { title: e.label, date: e.date, text: e.text, note: e.note, source: e.source, who: e.who };
+    if (e.kind !== 'death') { add(e, SKULL_H, 1, false, tile); continue; }
+    for (const a of e.alternatives ?? []) add(a, SKULL_ALT_H, 0.75, true, { title: a.label, date: e.date, text: a.text, source: a.source, who: e.who, place: a.place, alternative: true });
+    add(e, SKULL_H, 1, true, tile);
+  }
+  return out;
 }
 
 // A skull and crossbones `h` px tall centred on x, y, in ink over a parchment disc so it reads on the lattice
@@ -2303,19 +2309,6 @@ function drawSkull(g, x, y, h) {
   g.lineWidth = 0.7; g.lineCap = 'butt';
   for (const tx of [-1.15, 1.15]) { g.beginPath(); g.moveTo(tx, 1.9); g.lineTo(tx, 4.5); g.stroke(); } // three teeth between two gaps
   g.beginPath(); g.moveTo(-3.4, 2.4); g.lineTo(3.4, 2.4); g.stroke();
-  g.restore();
-}
-
-// An event's label beside its mark, haloed in parchment, on the left where the right would run off the view
-function eventLabel(g, text, x, y, off, rect) {
-  if (!text) return;
-  g.save();
-  g.font = `italic 12px "${STYLE.font}"`; g.textBaseline = 'middle';
-  const left = x + off + g.measureText(text).width > rect.x1 - 4;
-  g.textAlign = left ? 'right' : 'left';
-  const tx = left ? x - off : x + off;
-  g.lineJoin = 'round'; g.lineWidth = 3; g.strokeStyle = STYLE.parchment; g.strokeText(text, tx, y);
-  g.fillStyle = STYLE.ink; g.fillText(text, tx, y);
   g.restore();
 }
 

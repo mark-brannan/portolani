@@ -53,16 +53,19 @@ One file per voyage, `data/voyages/<id>.json`; `data/voyages/index.json` lists t
 - `legs[].source`: where the course comes from, in a few words; full citations go in `sources[]`.
 - `events[]`: `death`, `landfall` or `event`; each named person has a `death`, on or off the track (every voyage of the same person carries it).
 - `deathUnknown`: names from `who` whose place of death nobody knows (Hanno, Pytheas, Nearchus); they get no skull, and a name may not be both here and in a `death`.
-- `events[].alternatives` (on a `death` only): other candidate places where the death is disputed, `[{ "lon", "lat", "place", "label", "source" }]`. The event itself stays the usual account; an alternative is a place of death, never of burial.
+- `events[].text` (optional, on any event or alternative): the flavour text its tile shows, a sentence or two for a reader who has tapped the mark. `label` is the tile's heading, `date` its second line and `source` its foot.
+- `events[].alternatives` (on a `death` only): other candidate places where the death is disputed, `[{ "lon", "lat", "place", "label", "text", "source" }]`. The event itself stays the usual account; an alternative is a place of death, never of burial.
+- Where a source says a person died at sea or on the way but gives no place, the skull stands at the middle of the leg it must have happened on, and the event's `text` says so.
 
 ## What is drawn
 
 Each leg is stroked in the chart's red ink over a parchment halo, dashed by its confidence, with a
-dot at each leg's ends; a death is a skull and crossbones with its label beside it, and each of its
-`alternatives` a smaller, fainter skull with its own label. The overlay rides
-in the link as `voyage=<id>`.
+dot at each leg's ends; a death is a skull and crossbones, and each of its `alternatives` a smaller,
+fainter skull; an event or landfall is a ring. Nothing is lettered beside a mark: a click or tap on one
+opens a small tile beside it with its heading, date, text and source, and the next touch of the map,
+Esc or the tile's × shuts it. The overlay rides in the link as `voyage=<id>`.
 
-![Zheng He's skull before and after its alternatives are drawn](zheng-he-alternatives.jpg)
+![Zheng He's skull at the middle of the Calicut–Malacca leg, its tile open, the Calicut alternative beside the coast](zheng-he-alternatives.jpg)
 
 ## Where each person died
 
@@ -70,11 +73,11 @@ The skull sits at the usual account; `alternatives` are the other places the sou
 
 | Person | Skull drawn | Alternatives | Sources |
 |---|---|---|---|
-| Leif Erikson | Brattahlíð, Greenland, c. 1020 | — | Saga of the Greenlanders |
+| Leif Erikson | Brattahlíð, Greenland, c. 1020 (inferred: no saga records his death) | — | Leif Erikson (Wikipedia) |
 | Marco Polo | Venice, 8 Jan 1324 | — | Wikipedia, Marco Polo |
 | Ibn Battuta | Morocco near Fez (-5.00, 34.03), c. 1369 | Tangier (-5.81, 35.77) | Wikipedia, Ibn Battuta |
-| Zheng He | At sea off the Malabar coast (74.00, 9.00), 1433 | Calicut (75.78, 11.25); Nanjing (118.78, 32.07) | Ming shi; Zheng He (Wikipedia) |
-| Bartolomeu Dias | Off the Cape of Good Hope, 29 May 1500 | — | Wikipedia; Britannica 1911 |
+| Zheng He | At sea, mid-way along the Calicut–Malacca leg (87.54, 5.99), 1433 | Calicut (75.78, 11.25); Nanjing (118.78, 32.07) | Ming shi; Zheng He (Wikipedia) |
+| Bartolomeu Dias | Off the Cape of Good Hope, 29 May 1500 (the position is a guess) | — | Wikipedia; Britannica 1911 |
 | Christopher Columbus | Valladolid, 20 May 1506 | — (his burial place is disputed, his place of death is not) | Britannica 1911, Columbus |
 | Vasco da Gama | Cochin, 24 Dec 1524 | — | Wikipedia, Vasco da Gama |
 | Paulo da Gama | Angra, Terceira, 1499 | — | Barros; Correia |
