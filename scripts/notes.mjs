@@ -58,7 +58,7 @@ export const NOTES = [
     drawn: 'A whale with her calf, attacked by an orca. Olaus: the orca "rents the Whales Guts, and tears his Calves body".',
     real: 'True to life: orcas hunting large whales often target the calves.',
     source: { label: '1658 Historia Book 21 ch. 7; Orca', url: 'https://en.wikipedia.org/wiki/Orca' },
-    at: { px: [600, 1785], lonlat: null },
+    at: { px: [620, 1865], lonlat: null },
   },
   {
     id: 'barnacle-geese', title: 'Barnacle geese',
