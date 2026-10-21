@@ -8,7 +8,7 @@ A temporary developer view, there while the roses and rhumb lines are being work
 | `debug=sheets,rings` | off | And each hidden circle: hub hollow, sixteen nodes filled | `drawSheetsDebug` | #107, #199 |
 | `tune=radius:` | 0.4 | A grid sheet's hidden circle, of its height (0.25 to 0.8) | `SHEET_RADIUS` | #107 |
 | `tune=reach:` | 1 | Times each sheet's diagonal, and the rose's (0.5 to 2) | `sheetReach` | #199 |
-| `tune=origin:` | `rose` | Grids count from the Catalan rose, or `zero` (0°E 0°N, NOAA's own) | `ROSE`, `ORIGINS` | #138 |
+| `tune=origin:` | `rose` | Grids count from the Catalan rose, or `zero` (0°E 0°N, where NOAA's own scheme counts from; README.md, "The fallback grid") | `ROSE`, `ORIGINS` | #138 |
 | `tune=curated:` | 1 | 0: grid cells everywhere; the world band stays one sheet | `sheetsFor` | #199 |
 | `tune=roselines:` | 1 | 0: drops the Catalan rose's extra hub of 32 lines | `latticeOf` | #138, #199 |
 | `tune=roseshare:` | band's own (0.4; 0.6 wide) | Rose share of a sheet's allotment, every band (0 to 1) | `ROSE_SHARE`, `WIDE.roseShare` | #162 |

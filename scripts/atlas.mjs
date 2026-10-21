@@ -4,8 +4,9 @@
 // 49 12' and 4x in a row wholly past 69 12' (north and south) from the coastal band down; the ladder runs
 // on upward by the same 4x to 76.8 degree cells for zooms 4 to 6. Below zoom 4 the atlas is one sheet, the
 // whole earth with one ring, as on a planisphere (#199). Unlike NOAA's,
-// every band counts its edges out from the Catalan Atlas rose, in whole multiples of the cell height
-// north and south and of the cell width east and west, so the rose is a corner of a sheet in every band.
+// every band counts its edges out from one origin, the Catalan Atlas rose by default (ORIGINS; `origin` of
+// sheetsFor), in whole multiples of the cell height north and south and of the cell width east and west, so
+// the origin is a corner of a sheet in every band.
 // No sheet crosses the date line, and a row that would reach a pole ends at the page's edge. Nothing here
 // reads land or draws.
 
@@ -74,9 +75,9 @@ export function viewBounds(view) {
 const pad = (n, w) => String(n).padStart(w, '0');
 
 // An ENC-style name: PT, the band number, then the cell's south-west corner as a row north or south of
-// the grid's origin (the rose) and a column east or west of it, e.g. PT3N041E0123 (band 3, 41st row north, 123rd column east).
+// the grid's origin and a column east or west of it, e.g. PT3N041E0123 (band 3, 41st row north, 123rd column east).
 // South and west count outward from 0, so row -1 is S000 and column -1 is W0000; N000E0000 is the cell
-// whose south-west corner is the rose.
+// whose south-west corner is the origin.
 export function sheetName(band, row, col) {
   const r = row < 0 ? -row - 1 : row, c = col < 0 ? -col - 1 : col;
   return `PT${band.band}${row < 0 ? 'S' : 'N'}${pad(r, Math.max(3, String(Math.ceil(180 / band.height)).length))}${col < 0 ? 'W' : 'E'}${pad(c, 4)}`;
