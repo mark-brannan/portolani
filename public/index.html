@@ -5,16 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Portolani preview</title>
 <style>
+  /* one mode: dark margins round the map, parchment drawers. The browser's light/dark setting is not followed. */
   :root {
+    color-scheme: light;
     --bg: #f4efe4; --fg: #3b2a1a; --muted: #7a6a58; --line: #d8cdb6;
     --panel: #efe3c6; --rule: #b89a68; --accent: #8c2f1e; --sheet: #e9d8b4; --sheet-ink: #3b2a1a;
+    --margin: #1d1913; --margin-ink: #a39679;
     --serif: 'IM Fell English', Georgia, serif;
   }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg: #1d1913; --fg: #e9d8b4; --muted: #a39679; --line: #3a3225; --panel: #241e16; --rule: #6b5634; --accent: #d0806a; --sheet: #d4c199; }
-  }
+  /* a low-light mode (red-heavy) is reserved here, set by data-light="low" on the root; no control and no tokens yet */
+  :root[data-light="low"] { }
   html, body { height: 100%; }
-  body { margin: 0; overflow: hidden; background: var(--bg); color: var(--fg); font: 14px/1.4 system-ui, sans-serif; }
+  body { margin: 0; overflow: hidden; background: var(--margin); color: var(--margin-ink); font: 14px/1.4 system-ui, sans-serif; }
 
   /* the map fills the window, its 1600 x 1000 canvas scaled to fit and centred */
   #map {
@@ -26,8 +28,8 @@
   #map:active { cursor: grabbing; }
   #status {
     position: fixed; right: 10px; bottom: 6px; margin: 0; max-width: calc(100vw - 20px);
-    font-size: 11px; color: var(--muted); opacity: 0.75; pointer-events: none;
-    text-shadow: 0 0 3px var(--bg), 0 0 3px var(--bg);
+    font-size: 11px; color: var(--margin-ink); opacity: 0.75; pointer-events: none;
+    text-shadow: 0 0 3px var(--margin), 0 0 3px var(--margin);
   }
 
   /* top right, a row of six instruments, each opening its own drawer: the rose the settings, the chart the charts, the astrolabe the points of interest, the compass Go (a typed place or position, or mine filled in), the dividers the voyages, the anchor the anchorages (home first). One drawer at a time: a click on its button opens it and a second click shuts it, another button swaps it for its own, and a choice, a click elsewhere or Esc shuts it. The row never moves */
@@ -70,7 +72,7 @@
   .drawer {
     position: fixed; top: 64px; right: 12px; z-index: 2; box-sizing: border-box; pointer-events: auto;
     width: min(480px, 100vw - 24px); max-height: calc(100vh - 76px); max-height: calc(100dvh - 76px); overflow-y: auto; overscroll-behavior: contain;
-    padding: 14px 16px 20px; background: var(--panel);
+    padding: 14px 16px 20px; background: var(--panel); color: var(--fg);
     border: 1px solid var(--rule); outline: 1px solid var(--rule); outline-offset: -5px;
     box-shadow: -4px 4px 24px rgb(0 0 0 / 0.3);
     transform: translateX(calc(100% + 24px)); visibility: hidden;
@@ -86,6 +88,7 @@
   /* a phone: every drawer is a bottom sheet at half the window's height, the map above it (toggled by its
      button or Esc); the cartouche and the scale bar sit on cards beside the map */
   .card { position: fixed; z-index: 1; pointer-events: none; height: auto; }
+  #snap { display: none; position: fixed; z-index: 2; pointer-events: none; box-sizing: border-box; border: 2px dashed var(--accent); border-radius: 4px; }
   #cardCartouche { top: 12px; left: 12px; }
   #cardScale { left: 8px; bottom: 44px; }
   @media (min-width: 521px) { .card { display: none; } }
@@ -218,10 +221,14 @@
   .caption a { color: var(--accent); text-underline-offset: 2px; }
 
   .about p { color: var(--muted); font-size: 12px; margin: 0; }
+  /* under the hood: knobs fixed in the code, for a while; collapsed */
+  .hood summary { font: 15px var(--serif); color: var(--accent); letter-spacing: 0.06em; font-variant: small-caps; cursor: pointer; }
+  .hood .lead { margin-top: 6px; }
 </style>
 </head>
 <body>
 <canvas id="map" width="1600" height="1000" aria-label="Chart: drag to pan, wheel or pinch to zoom"></canvas>
+<div id="snap" aria-hidden="true"></div>
 <canvas id="cardCartouche" class="card" aria-hidden="true" hidden></canvas>
 <canvas id="cardScale" class="card" width="700" height="170" aria-hidden="true" hidden></canvas>
 <div id="tile" class="tile" role="dialog" tabindex="-1" hidden></div>
@@ -400,6 +407,32 @@
   <section class="about" aria-labelledby="h-about">
     <h2 id="h-about">About</h2>
     <p>Ornaments drawn as vectors after, or cropped from, public-domain scans via Wikimedia Commons: Olaus Magnus, Carta Marina (1539); Jorge de Aguiar, wind rose and chart (1492, Beinecke Library, Yale); Cresques Abraham, Catalan Atlas (1375, BnF Gallica); a Genoese chart (c. 1320-1350, Library of Congress); Frederik de Wit, cartouche (Royal Museums Greenwich). Coasts and places: Natural Earth. Lettering: IM Fell English (SIL OFL).</p>
+  </section>
+
+  <!-- temporary: docs/atlas/under-the-hood.md -->
+  <section>
+    <details id="hood" class="hood">
+      <summary>Under the hood (temporary)</summary>
+      <p class="lead">Knobs that are fixed in the code today, exposed while the roses and rhumb lines are being worked on. Shared in the link.</p>
+      <div class="rows">
+        <h3>Sheets</h3>
+        <div id="debug" class="chips" role="radiogroup" aria-label="Sheets"></div>
+        <h3>Grid counts from</h3>
+        <div id="tuneOrigin" class="chips" role="radiogroup" aria-label="Grid counts from"></div>
+        <h3>Curated charts</h3>
+        <div id="tuneCurated" class="chips" role="radiogroup" aria-label="Curated charts"></div>
+        <h3>Catalan rose lines at every zoom</h3>
+        <div id="tuneRoselines" class="chips" role="radiogroup" aria-label="Catalan rose lines at every zoom"></div>
+        <h3>Ring radius</h3>
+        <div class="slider"><input id="tuneRadius" type="range" step="0.05" aria-label="Ring radius, of the sheet's height"><output id="tuneRadiusOut"></output></div>
+        <h3>Line reach</h3>
+        <div class="slider"><input id="tuneReach" type="range" step="0.25" aria-label="Line reach, times the sheet's diagonal"><output id="tuneReachOut"></output></div>
+        <h3>Rose share</h3>
+        <div class="slider"><input id="tuneRoseshare" type="range" step="0.1" aria-label="Rose share of a sheet's allotment"><output id="tuneRoseshareOut"></output></div>
+        <h3>Roses per sheet</h3>
+        <div class="slider"><input id="tuneSheetroses" type="range" step="1" aria-label="Roses per sheet, at most"><output id="tuneSheetrosesOut"></output></div>
+      </div>
+    </details>
   </section>
 </aside>
 <script type="importmap">{ "imports": { "coast-wright": "./coast-wright/index.js", "coastlines/catalogue.json": "./coastlines/catalogue.json" } }</script>
