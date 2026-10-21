@@ -135,6 +135,27 @@ test('every Zheng He file carries the same death as the seventh voyage', () => {
   for (const id of ['zheng-he-1', 'zheng-he-4', 'zheng-he-5']) assert.deepEqual(death(id), death('zheng-he'), id);
 });
 
+test('every event of every voyage has text for its tile', () => {
+  for (const id of JSON.parse(readFileSync('data/voyages/index.json', 'utf8'))) {
+    for (const e of readVoyage(id).events ?? []) assert.ok(e.text, `${id}: ${e.label} has no text`);
+  }
+});
+
+test('a place with a tile makes a mark where it stands, and none off the view', async () => {
+  const { sightMarks } = await import('../scripts/scene.mjs');
+  const rect = { x0: 0, y0: 0, x1: W, y1: H };
+  const sights = [{ lon: 8.93, lat: 44.41, tile: { title: 'Genoa' } }, { lon: 150, lat: -30, tile: { title: 'Far' } }];
+  const marks = sightMarks(sights, viewProjection({ lon: 8.93, lat: 44.41, zoom: 6 }), rect);
+  assert.deepEqual(marks.map((m) => m.tile.title), ['Genoa']);
+});
+
+test('every place tile is keyed by a name the page lists', async () => {
+  const { SIGHT_TILES } = await import('../scripts/sights.mjs');
+  // the list is the page's own: each row opens `['Name', <view>(`, and so does each chart's city
+  const listed = new Set([...readFileSync('public/page.js', 'utf8').matchAll(/\['([^']+)', (?:port|at|viewOfFrame|both|around)\(/g)].map((m) => m[1]));
+  for (const name of Object.keys(SIGHT_TILES)) assert.ok(listed.has(name), `${name} is not a listed place`);
+});
+
 test('the alternatives fixture is well formed, and a bad alternative is named for each thing it lacks', () => {
   const v = JSON.parse(readFileSync(join(DIR, '..', '..', 'test', 'fixtures', 'voyage-alternatives.json'), 'utf8'));
   assert.deepEqual(problems(v), []);
