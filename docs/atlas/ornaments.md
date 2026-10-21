@@ -75,6 +75,8 @@ Lake Vänern's ships are inland and left out. The sheet's extent (README.md, "Th
 5°W, so 17 of its 27 figures, the four cropped ones among them, lie off it and are not drawn until that
 edge moves west to take in Iceland.
 
+The two fits also lay the whole scan over the map, refitted from this table: [docs/overlay/README.md](../overlay/README.md).
+
 ## Juan de la Cosa, 1500
 
 Not read in place: two rings of roses (the west centre's Virgin and Child, small node roses; the east

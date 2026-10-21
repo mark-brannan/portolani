@@ -22,6 +22,7 @@ export { SIGHT_TILES } from './sights.mjs'; // the page's tiles for its places; 
 import { BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from './buildings.mjs';
 import { legPath, splitAtSeam, DASHES, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, readVoyage } from './voyages.mjs';
 export { VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours };
+import { loadOverlay, drawOverlay } from './overlays.mjs';
 
 let env;
 const createCanvas = (w, h) => env.createCanvas(w, h);
@@ -2393,6 +2394,9 @@ function drawScene(g, scene, data, bg, view) {
   // 2. land
   paintLand(g, data, land, coast, scene.relief && { ...scene.relief, humps: [] });
 
+  // 2.1 a chart's scan laid over the land and sea, under the lattice and every ornament (overlays.mjs)
+  if (scene.overlay) drawOverlay(g, scene.overlay, data.proj, scene.overlay.opacity, { w: W, h: H });
+
   // 3. rhumb lattice: 16 nodes on a circle plus the centre, 32 rhumb lines each, in three inks
   const rays = latticeOf(scene, data);
   const inks = [STYLE.ink, STYLE.windRed, STYLE.windGreen]; // by kind: wind, quarter-wind, half-wind
@@ -2605,7 +2609,7 @@ function drawScaleCard(g, proj, bg, style, sprite) {
 function anchorScene(scene, data) {
   const ll = (o) => ({ o, at: data.proj.invert(o.x, o.y) });
   return {
-    k: data.proj.k, show: scene.show, scaleSprite: scene.scaleSprite, cartouche: scene.cartouche, cartouchePos: scene.cartouchePos, scalePos: scene.scalePos, voyages: scene.voyages,
+    k: data.proj.k, show: scene.show, scaleSprite: scene.scaleSprite, cartouche: scene.cartouche, cartouchePos: scene.cartouchePos, scalePos: scene.scalePos, voyages: scene.voyages, overlay: scene.overlay,
     rays: latticeOf(scene, data), sheets: scene.sheets, debug: scene.debug,
     roses: scene.roseDraws.map(ll), mountains: (scene.mountains ?? []).map(ll),
     towns: [...scene.towns.filter((t) => !t.city), ...(scene.lesser ?? [])].map(ll),
@@ -2686,6 +2690,7 @@ function drawAnchored(g, a, bg, view, layers) {
   const fr = framing(a, view), { proj, at, scaled } = fr, show = a.show;
   g.save();
   g.setTransform(1, 0, 0, 1, 0, 0);
+  if (a.overlay) drawOverlay(g, a.overlay, proj, a.overlay.opacity, { w: W, h: H }); // the scan first, as at a stop
   const inks = [STYLE.ink, STYLE.windRed, STYLE.windGreen];
   for (const [kind, ink] of show.rhumb ? inks.entries() : []) {
     limn(g, a.rays.filter((ray) => ray.kind === kind).map((ray) => ray.line), proj.toPx, { color: ink, alpha: STYLE.rhumbAlpha, width: STYLE.rhumbWidth, oneStroke: true, ...proj.seam });
@@ -2754,6 +2759,9 @@ function drawAnchored(g, a, bg, view, layers) {
 // `voyages`: the voyages drawn over the ornaments, in order, as [{ id, colour, width }]: `id` names data/voyages/<id>.json
 // (docs/voyages/README.md); `colour` (hex) defaults by voyageColours, the first the chart's red; `width` (px) to VOYAGE_WIDTH.
 // None by default. The older `voyage` (one id, or 'off') still draws that one.
+// `overlay`: { id, opacity }, a chart's scan laid over the map at that opacity (0 to 1), over the land and under the
+// lattice and the ornaments: `id` names an entry of packs/overlays/overlays.json (docs/overlay/README.md). None by default;
+// an id the site lacks draws nothing.
 // `kinds` defaults to DEFAULT_KINDS, every kind. A kind left out is still
 // placed when the lattice needs it (a rose, the cartouche's corner), only not drawn.
 // `debug`: a list of DEBUG_LAYERS ('sheets', 'rings'), the atlas's sheets drawn in red over everything; none by default.
@@ -2870,7 +2878,9 @@ export async function createScene(environment, opts = {}) {
   if (STYLE.rivers !== 'off' || STYLE.lakes !== 'off') water = (view.zoom > WATER_ZOOM && await loadWater10m(view)) || await loadWater();
   if (STYLE.lakes !== 'off') water = withLakes(water, await loadLakes(view));
   const world = view.zoom > DETAIL_ZOOM ? await loadDetail(coarse, view) : coarse;
-  const voyages = await loadVoyages(opts.voyages ?? (opts.voyage ? [{ id: opts.voyage }] : []));
+  const [voyages, overlaid] = await Promise.all([loadVoyages(opts.voyages ?? (opts.voyage ? [{ id: opts.voyage }] : [])), opts.overlay ? loadOverlay(opts.overlay.id, env) : null]);
+  const opacity = Number(opts.overlay?.opacity ?? 0.6);
+  const overlay = overlaid && { ...overlaid, opacity: Number.isFinite(opacity) ? Math.max(0, Math.min(1, opacity)) : 0.6 };
   const tLoad = performance.now();
 
   const data = viewData(world, view);
@@ -2886,7 +2896,7 @@ export async function createScene(environment, opts = {}) {
   const roseReach = sheetReach(roseSheet(view.zoom, { origin, curated: knobs.curated === 1, overlap }).extent, knobs.reach);
   const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, historical, seaAt: sheets && seaAtOf(coarse), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, title, autoTitle, pinTitle,
     continentsEnd: zoomEnd(continentsZoom, CONTINENT_ZOOM_END), regionsEnd: zoomEnd(regionsZoom, REGION_ZOOM_END),
-    scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM && pinned, pinned, cartouchePos, scalePos, townSize: townBy, seed: legacy ? null : pickedSeed == null ? castSeed(view) : pickedSeed | 0, salt: legacy || pickedSeed == null ? 0 : pickedSeed | 0 }), show, scaleSprite, voyages, roseReach, roseLines: knobs.roselines === 1, debug, overlap, scalePos: cornerOf(scalePos, DEFAULT_SCALE_CORNER) };
+    scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM && pinned, pinned, cartouchePos, scalePos, townSize: townBy, seed: legacy ? null : pickedSeed == null ? castSeed(view) : pickedSeed | 0, salt: legacy || pickedSeed == null ? 0 : pickedSeed | 0 }), show, scaleSprite, voyages, overlay, roseReach, roseLines: knobs.roselines === 1, debug, overlap, scalePos: cornerOf(scalePos, DEFAULT_SCALE_CORNER) };
   data.trees = TREES[STYLE.trees] ? plantTrees({ proj: data.proj, isLand: scene.field.isLand, scene, lakes: STYLE.lakes !== 'off' && water ? water.lakes : [], w: W, h: H }) : [];
   data.palms = plantPalms({ proj: data.proj, isLand: scene.field.isLand, scene, w: W, h: H,
     pois: scene.lesser.filter((l) => l.poi).map((l) => ({ x: l.x, y: l.y, palms: POIS.find((p) => p.name === l.name)?.palms ?? 0 })) });
