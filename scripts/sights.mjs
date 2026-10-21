@@ -19,19 +19,19 @@ export const SIGHT_TILES = {
   Berenike: { date: 'Red Sea, for India', text: 'A Ptolemaic port on the Red Sea, from which the monsoon ships sailed to India with Roman gold and came back with pepper, pearls and cloth. Its ruins have been dug from the sand since the 1990s.' },
   Barygaza: { date: 'in the Periplus', text: 'Bharuch on the Narmada. The Periplus of the Erythraean Sea, a Greek merchant\'s guide of the first century, warns of its tides, which came in like an army, and tells pilots to wait for the local pilots to take them up the gulf.' },
   // the age of discovery
-  Elmina: { date: 'Portuguese, then Dutch, fort', text: 'The Portuguese built São Jorge da Mina in 1482 on the Gold Coast to buy gold. Later it became a place from which people were sold into slavery across the Atlantic. The Dutch took it in 1637.' },
+  Elmina: { date: 'Portuguese, then Dutch, fort', text: 'The Portuguese built São Jorge da Mina in 1482 on the Gold Coast to buy gold. From the 1500s the Portuguese, and after 1637 the Dutch who took it from them, shipped enslaved people from here across the Atlantic.' },
   Goa: { date: "Portugal's Asian capital", text: 'Taken by Afonso de Albuquerque in 1510, Goa remained Portugal\'s capital in Asia for four and a half centuries, until India took it in 1961. The pepper fleets, and the Inquisition, were based here.' },
   Manila: { date: 'the galleons, 1571', text: 'Founded by Legazpi in 1571 as the west end of the galleon trade: Chinese silk and porcelain went across the Pacific to Acapulco, and Mexican silver came back.' },
   Acapulco: { date: 'the galleons, 1565', text: 'After Urdaneta found the way back across the Pacific in 1565, the Manila galleon unloaded here once a year, and the fair of Acapulco sold Asia\'s silk to the Americas.' },
   Batavia: { date: 'the VOC, 1619', text: 'Founded in 1619 by the Dutch East India Company on the ruins of Jayakarta, and laid out like a Dutch town with canals. Today it is Jakarta.' },
   // the modern world
-  Suez: { date: 'the canal, 1869', text: 'The canal, opened in 1869, cut the voyage from London to Bombay by some 4,000 miles and the steamships left the Cape route to sail.' },
+  Suez: { date: 'the canal, 1869', text: 'The canal, opened in 1869, cut the voyage from London to Bombay by some 4,000 miles and steamships took it, leaving the Cape route to sailing ships.' },
   Panama: { date: 'the canal, 1914', text: 'The canal, opened in 1914, saved ships the long way round Cape Horn. The Spanish had once carried gold across the isthmus on mule-back, and Drake raided the route.' },
   Singapore: { date: '1819', text: 'Raffles founded a British trading post here in 1819, beside a Malay village at the river mouth, and it became one of the world\'s busiest ports.' },
-  'Hong Kong': { date: '1841', text: 'Ceded to Britain after the First Opium War, a fishing coast became a free port within a few years.' },
-  Shanghai: { date: 'treaty port, 1843', text: 'Opened to foreign trade by the treaty that ended the First Opium War, Shanghai grew in a few decades from a county town into China\'s greatest port.' },
+  'Hong Kong': { date: '1841', text: 'Ceded to Britain in 1842 after the First Opium War, fought to keep British opium selling into China, a fishing coast became a free port within a few years.' },
+  Shanghai: { date: 'treaty port, 1843', text: 'Opened to foreign trade by the treaty that ended the First Opium War, on Britain\'s terms, Shanghai grew in a few decades from a county town into China\'s greatest port.' },
   Rotterdam: { date: 'the Nieuwe Waterweg, 1872', text: 'A new cut to the North Sea, finished in 1872, took ocean ships to Rotterdam without the silting of the old channels and made it the gateway of the Rhine.' },
   // remote islands
-  'Pukapuka Atoll': { date: "Magellan's San Pablo, 1521", text: 'Magellan\'s ships sighted this atoll of the Tuamotus on 24 January 1521 and called it San Pablo, finding it without anchorage or people, and sailed on.' },
+  'Pukapuka Atoll': { date: "Magellan's San Pablo, 1521", text: 'Magellan\'s ships sighted this atoll of the Tuamotus on 24 January 1521 and called it San Pablo; Pigafetta recorded no anchorage and nobody ashore, and they sailed on. Its village stands on the eastern shore today.' },
   'Pitcairn Islands': { at: [-130.10, -25.07], date: 'the Bounty, 1790', text: 'Four islands of volcanic and coral rock. Pitcairn itself, its Polynesian settlers long gone, was empty when the Bounty mutineers and the Tahitians with them landed in 1790 to hide from the Royal Navy. Their descendants live at Adamstown today.' },
 };
