@@ -87,6 +87,15 @@ jobs:
       contents: read
     uses: mark-brannan/.github/.github/workflows/nonempty-diff.yml@main
 
+  # The squash title is the commit release-please reads, so it opens with a
+  # conventional type: `fix(area): ...`, not `area: ...`.
+  pr-title:
+    permissions:
+      pull-requests: read
+    uses: mark-brannan/.github/.github/workflows/pr-title.yml@main
+    with:
+      conventional: true
+
   # A measurement, not a gate, so it stays out of ci-gate's needs. Writes the
   # sticky PR comment, hence pull-requests: write.
   complexity:
@@ -104,7 +113,7 @@ jobs:
   # evaluate when a dependency failed or was skipped, so it reports an explicit
   # pass or fail of its own rather than inheriting the skip.
   ci-gate:
-    needs: [test, golden-images, build-preview, nonempty]
+    needs: [test, golden-images, build-preview, nonempty, pr-title]
     if: always()
     # It reads nothing and writes nothing; the results go in as an input.
     permissions: {}
