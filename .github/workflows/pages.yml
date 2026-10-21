@@ -131,6 +131,8 @@ jobs:
         with: { path: _site }
   deploy:
     needs: build
+    # A skipped preview upstream would otherwise make the implicit success() false.
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
     runs-on: ubuntu-latest
     # Only this job actually publishes, so only this job gets the write
     # scopes -- the build job that runs untrusted-ish PR-shaped code (npm ci,
