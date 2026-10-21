@@ -11,6 +11,28 @@ export const EVENT_KINDS = ['death', 'landfall', 'event'];
 export const DASHES = { attested: [], inferred: [9, 5], conventional: [2, 4] };
 export const STEP_KM = 25; // the path's sample spacing, close enough that a strait is followed and a curve reads smooth
 
+// The inks a voyage is drawn in, each dark enough to read on parchment and on the land washes. The first is the
+// chart's red (scene.mjs windRed), which the first voyage chosen takes; each further one takes a colour seeded on
+// its id, the next free one along when that is taken, so a link draws the same colours wherever it is opened.
+export const VOYAGE_PALETTE = ['#8c2f1e', '#1f4e8c', '#2e6b34', '#6b2d7a', '#b0601a', '#16727a', '#9c2a5c', '#4a4f9a', '#5c4a1e'];
+// the stroke widths on offer, in px on the 1600 px sheet; 2.2 is the width a voyage has always had
+export const VOYAGE_WIDTHS = [1.4, 2.2, 3.2, 4.5];
+export const VOYAGE_WIDTH = 2.2;
+const seedOf = (id) => [...id].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0, 2166136261);
+// The colours of a list of chosen voyages, in the order chosen: `picked` maps an id to a colour picked by hand.
+// Red goes to the first one not picked while no other has it; the rest are seeded on their ids among the free colours.
+export function voyageColours(ids, picked = {}) {
+  const used = new Set(ids.map((id) => picked[id]).filter(Boolean)), out = {};
+  for (const [i, id] of ids.entries()) {
+    if (picked[id]) { out[id] = picked[id]; continue; }
+    const red = VOYAGE_PALETTE[0], rest = VOYAGE_PALETTE.slice(1), start = seedOf(id) % rest.length;
+    const round = rest.map((_, k) => rest[(start + k) % rest.length]); // from the id's own colour on
+    const c = !used.has(red) ? red : round.find((r) => !used.has(r)) ?? round[0];
+    used.add(c); out[id] = c;
+  }
+  return out;
+}
+
 const RAD = Math.PI / 180, R_KM = 6371.0088;
 const fromCentre = (d) => (d > 180 ? d - 360 : d < -180 ? d + 360 : d);
 export const wrapLon = (lon) => ((((lon + 180) % 360) + 360) % 360) - 180;
@@ -145,7 +167,24 @@ export function problems(v) {
     need(typeof e.label === 'string' && e.label.length, `event ${i}: a label`);
     need(typeof e.source === 'string' && e.source.length, `event ${i}: a source`);
     if (e.kind === 'death') need(typeof e.who === 'string' && e.who.length, `event ${i}: who died`);
+    need(e.text === undefined || (typeof e.text === 'string' && e.text.length), `event ${i}: text, when given, a string`);
+    if (e.alternatives !== undefined) {
+      need(e.kind === 'death', `event ${i}: alternatives belong to a death`);
+      need(Array.isArray(e.alternatives) && e.alternatives.length, `event ${i}: alternatives: [{ lon, lat, place, label, source }], one or more`);
+      for (const [j, a] of (Array.isArray(e.alternatives) ? e.alternatives : []).entries()) {
+        need(a && Number.isFinite(a.lon) && Number.isFinite(a.lat) && Math.abs(a.lon) <= 180 && Math.abs(a.lat) <= 90, `event ${i} alternative ${j}: lon and lat`);
+        for (const k of ['place', 'label', 'source']) need(a && typeof a[k] === 'string' && a[k].length, `event ${i} alternative ${j}: a ${k}`);
+        need(a && (a.text === undefined || (typeof a.text === 'string' && a.text.length)), `event ${i} alternative ${j}: text, when given, a string`);
+      }
+    }
   }
-  for (const w of Array.isArray(v.who) ? v.who : []) need((v.events ?? []).some((e) => e.kind === 'death' && e.who === w), `events: where ${w} died`);
+  // a person whose place of death nobody knows is named in deathUnknown instead of given a skull
+  const unknown = v.deathUnknown ?? [];
+  need(Array.isArray(unknown) && unknown.every((w) => typeof w === 'string' && Array.isArray(v.who) && v.who.includes(w)), 'deathUnknown: names from who');
+  for (const w of Array.isArray(v.who) ? v.who : []) {
+    const died = (v.events ?? []).some((e) => e.kind === 'death' && e.who === w);
+    if (Array.isArray(unknown) && unknown.includes(w)) need(!died, `events: ${w} is in deathUnknown but has a death event`);
+    else need(died, `events: where ${w} died (or list them in deathUnknown)`);
+  }
   return out;
 }

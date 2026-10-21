@@ -60,8 +60,14 @@
   #coords { display: flex; gap: 4px; align-self: stretch; }
   #coords input { flex: 1; min-width: 0; max-width: none; padding: 3px 8px; font: 13px var(--serif); border-radius: 12px; background: var(--panel); color: var(--fg); border: 1px solid var(--rule); }
   #voyageList { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
-  #voyageList button { white-space: nowrap; }
-  #voyageList button[aria-checked="true"] { background: #e2cd9e; color: #3b2a1a; border-color: #b89a68; } /* the chosen voyage, lit like an open instrument */
+  #voyageList li { display: flex; align-items: center; gap: 6px; }
+  #voyageList button { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+  #voyageList button svg { width: 28px; height: 18px; flex: none; }
+  #voyageList button[aria-checked="true"] { background: #e2cd9e; color: #3b2a1a; border-color: #b89a68; } /* a chosen voyage, lit like an open instrument */
+  #voyageList input[type=color] { width: 28px; height: 22px; border-radius: 6px; cursor: pointer; } /* the swatch is the voyage's ink; a click picks another */
+  #voyagesPanel .vtools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 4px; }
+  #voyagesPanel .chip { display: inline-flex; padding: 3px 8px; border-radius: 14px; box-shadow: none; font: 12px var(--serif); background: var(--sheet); color: var(--sheet-ink); }
+  #voyagesPanel .chip[aria-checked=true] { box-shadow: inset 0 0 0 1px var(--accent); border-color: var(--accent); }
   #voyageList .when { font-size: 11px; font-style: italic; opacity: 0.75; margin-left: 6px; }
   #voyageList .brief { display: none; }
   @media (max-width: 520px) { #voyageList .full { display: none; } #voyageList .brief { display: inline; } } /* a phone: the short name and the years, so no title wraps */
@@ -163,6 +169,10 @@
   .slider input { flex: 1; }
   .slider output { min-width: 84px; text-align: right; font-size: 12px; color: var(--muted); }
   .thumb.none { font: 13px var(--serif); padding: 0 10px; }
+  /* a group's Clear and Defaults: an action, not a choice, so never lit; greyed when the group is already there */
+  .tools { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 4px; }
+  .tools .chip, .chip.tool { padding: 2px 8px; font-size: 12px; }
+  .chip.tool:disabled { opacity: 0.4; cursor: default; }
 
   label { display: flex; align-items: center; gap: 8px; }
   .rows { display: grid; gap: 8px; }
@@ -205,6 +215,19 @@
   .gg .thumb img, .gg .thumb svg { height: 34px; max-width: 34px; }
 
   .caption { margin: 4px 0 0; font: 12px/1.35 system-ui, sans-serif; color: var(--muted); }
+  /* the tile a click or tap on a point of interest opens beside it: the drawers' parchment and double rule, small */
+  .tile {
+    position: fixed; z-index: 3; box-sizing: border-box; width: min(300px, 100vw - 16px); max-height: calc(100dvh - 16px); overflow-y: auto;
+    margin: 0; padding: 10px 28px 12px 14px; background: var(--panel); color: var(--fg); font: 13px/1.4 var(--serif);
+    border: 1px solid var(--rule); outline: 1px solid var(--rule); outline-offset: -4px; box-shadow: 0 4px 20px rgb(0 0 0 / 0.3);
+  }
+  .tile[hidden] { display: none; }
+  .tile p { margin: 0 0 6px; }
+  .tile p:last-of-type { margin-bottom: 0; }
+  .tile-title { font-size: 15px; font-weight: bold; }
+  .tile-date { font-style: italic; color: var(--muted); }
+  .tile-source { font-size: 12px; color: var(--muted); }
+  .tile-close { position: absolute; top: 4px; right: 6px; padding: 0 6px; font: 18px/1 var(--serif); color: var(--fg); background: none; border: 0; cursor: pointer; }
   .caption a { color: var(--accent); text-underline-offset: 2px; }
 
   .about p { color: var(--muted); font-size: 12px; margin: 0; }
@@ -218,6 +241,7 @@
 <div id="snap" aria-hidden="true"></div>
 <canvas id="cardCartouche" class="card" aria-hidden="true" hidden></canvas>
 <canvas id="cardScale" class="card" width="700" height="170" aria-hidden="true" hidden></canvas>
+<div id="tile" class="tile" role="dialog" tabindex="-1" hidden></div>
 <p id="status" role="status">Loading…</p>
 
 <nav id="where" aria-label="Go to">
@@ -261,7 +285,8 @@
     <ul id="sightsList" class="places"></ul>
   </div>
   <div id="voyagesPanel" class="drawer menu">
-    <ul id="voyageList" role="radiogroup" aria-label="Voyage"></ul>
+    <div class="vtools"><div id="voyageWidth" class="chips" role="radiogroup" aria-label="Line weight"></div></div>
+    <ul id="voyageList" role="group" aria-label="Voyages, any number"></ul>
   </div>
   <div id="anchorPanel" class="drawer menu">
     <ul id="anchorages" class="places"></ul>

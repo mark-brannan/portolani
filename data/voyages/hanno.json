@@ -1,0 +1,33 @@
+{
+  "id": "hanno",
+  "title": "Hanno the Navigator down the African coast, c. 500 BC",
+  "short": "Hanno",
+  "who": ["Hanno the Navigator"],
+  "when": "c. 500 BC",
+  "deathUnknown": ["Hanno the Navigator"],
+  "summary": "Sixty fifty-oared ships and thirty thousand settlers leave Carthage for the Atlantic coast of Africa, found cities beyond the Pillars of Heracles, and sail on past the river Lixos to a fiery mountain and an island of hairy people, the Gorillai.",
+  "sources": [
+    { "title": "Hanno the Navigator (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Hanno_the_Navigator" }
+  ],
+  "legs": [
+    { "from": "Carthage", "to": "Pillars of Heracles (Strait of Gibraltar)", "dates": "c. 500 BC", "mode": "sea", "line": "spline",
+      "confidence": "conventional", "source": "the Periplus does not give the Mediterranean leg; the way along the African shore",
+      "points": [[10.6,37.2], [9.5,37.6], [7,37.5], [4,37.3], [1,36.7], [-1.5,36], [-3,35.9], [-5.4,35.95]] },
+    { "from": "Pillars of Heracles", "to": "Cerne", "dates": "c. 500 BC", "mode": "sea", "line": "spline",
+      "confidence": "inferred", "source": "the Periplus: Thymiaterion, Soloeis, five cities, Lixos, then Cerne", "note": "Cerne is identified with Herne Island at Rio de Oro, one place among several proposed",
+      "points": [[-5.4,35.95], [-5.9,36], [-6.9,35.3], [-8.5,34.2], [-10.2,31], [-12.8,28.8], [-15.5,26], [-16.1,23.8]] },
+    { "from": "Cerne", "to": "the Chretes river", "dates": "c. 500 BC", "mode": "sea", "line": "spline",
+      "confidence": "inferred", "source": "the Periplus; the Chretes river is usually read as the Senegal",
+      "points": [[-16.1,23.8], [-17.2,21], [-17.2,18], [-16.6,16.3]] },
+    { "from": "Chretes river", "to": "the Chariot of the Gods", "dates": "c. 500 BC", "mode": "sea", "line": "spline",
+      "confidence": "conventional", "source": "the Periplus tells of fire and the Horn of the West; the Mount of the Chariot of the Gods is variously Mount Cameroon or the Guinean highlands",
+      "points": [[-16.6,16.3], [-17.5,14], [-17.6,11.5], [-16,9.5], [-14,8], [-13.3,7.5]] },
+    { "from": "Chariot of the Gods", "to": "Gorillai island", "dates": "c. 500 BC", "mode": "sea", "line": "spline",
+      "confidence": "conventional", "source": "the Periplus: the Horn of the South, the island of the hairy people; the fiery mountain is conventionally Mount Cameroon", "note": "the furthest the text goes, short of food",
+      "points": [[-13.3,7.5], [-10.5,5.4], [-7.5,3.6], [-2,4.2], [2,4.3], [6.5,3.3], [8.3,3.1]] }
+  ],
+  "events": [
+    { "kind": "event", "lon": -16.1, "lat": 23.8, "date": "c. 500 BC", "label": "Cerne, Hanno’s base on the Atlantic coast", "source": "Periplus of Hanno" },
+    { "kind": "landfall", "lon": 9.3, "lat": 4.1, "date": "c. 500 BC", "label": "The Chariot of the Gods and the Gorillai", "source": "Periplus of Hanno" }
+  ]
+}

@@ -67,7 +67,11 @@
       "source": "Ming shi; Taicang reached 6 Jul 1433" }
   ],
   "events": [
-    { "kind": "death", "who": "Zheng He", "lon": 74, "lat": 9, "date": "1433", "label": "Zheng He died on the way home, 1433 (by the usual account)", "source": "Ming shi; the usual account",
-      "note": "another account has him home and dying at Nanjing in 1435" }
+    { "kind": "death", "who": "Zheng He", "lon": 87.54, "lat": 5.99, "date": "1433", "label": "Zheng He died at sea on the way home, 1433", "source": "Zheng He (Wikipedia); no source gives the place",
+      "text": "Most accounts have him die in 1433 on the way home from the seventh voyage, some say buried at sea. None gives a place, so the skull stands mid-way along that voyage's Calicut–Malacca leg.",
+      "alternatives": [
+        { "lon": 75.78, "lat": 11.25, "place": "Calicut (Kozhikode)", "label": "Died at Calicut on the way home, 1433", "text": "On the seventh voyage the fleet called at Calicut on its way back from Hormuz. Some historians have him die there, before it sailed for Malacca.", "source": "Zheng He (Wikipedia): probably at Calicut" },
+        { "lon": 118.78, "lat": 32.07, "place": "Nanjing", "label": "Home at Nanjing, died 1435", "text": "A minority view, from later texts and inscriptions, has him live two years more. A tomb is shown at Nanjing.", "source": "Zheng He (Wikipedia); the later Nanjing account" }
+      ] }
   ]
 }
