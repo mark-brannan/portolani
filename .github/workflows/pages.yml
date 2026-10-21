@@ -48,16 +48,19 @@ jobs:
       - id: list
         env: { GH_TOKEN: '${{ github.token }}' }
         run: |
-          echo "previews=$(node .github/scripts/preview-branches.mjs --json)" >> "$GITHUB_OUTPUT"
+          # assigned first, so a failure fails the step rather than writing an empty output
+          previews=$(node .github/scripts/preview-branches.mjs --json)
           # the finest coastline and lake bands, which would take main plus one preview past 1 GB
-          echo "drop=$(node --input-type=module -e "import { bandOf } from './scripts/bands.mjs'; console.log(['gshhg-f-land', 'gshhg-f-lakes'].map((id) => 'geo/' + bandOf(id).dir).join(' '))")" >> "$GITHUB_OUTPUT"
+          drop=$(node --input-type=module -e "import { bandOf } from './scripts/bands.mjs'; console.log(['gshhg-f-land', 'gshhg-f-lakes'].map((id) => 'geo/' + bandOf(id).dir).join(' '))")
+          echo "previews=$previews" >> "$GITHUB_OUTPUT"
+          echo "drop=$drop" >> "$GITHUB_OUTPUT"
 
   # Each holding branch's own build, run with no token and no secrets, and no cache to restore or
   # save: it is the branch's code, so it gets nothing of main's. Its site goes up as an artifact;
   # the build job below copies it in and runs none of it.
   preview:
     needs: list
-    if: needs.list.result == 'success' && needs.list.outputs.previews != '[]'
+    if: needs.list.result == 'success' && needs.list.outputs.previews != '[]' && needs.list.outputs.previews != ''
     runs-on: ubuntu-latest
     permissions: {}
     continue-on-error: true
