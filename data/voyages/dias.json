@@ -5,11 +5,7 @@
   "who": ["Bartolomeu Dias"],
   "when": "1487–1488",
   "summary": "Two caravels and a supply ship out of Lisbon, down the coast of Africa past Diogo Cão's last padrão, blown out to sea by a storm, and back onto the coast at Mossel Bay; the first Europeans to round the southern tip of Africa.",
-  "sources": [
-    { "title": "Bartolomeu Dias (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Bartolomeu_Dias" },
-    { "title": "Diaz de Novaes, Bartholomeu, 1911 Encyclopædia Britannica (Wikisource)", "url": "https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Diaz_de_Novaes,_Bartholomeu" },
-    { "title": "E. G. Ravenstein, The Voyages of Diogo Cão and Bartholomeu Dias, 1482–88, Geographical Journal 16 (1900)", "url": "https://www.jstor.org/stable/1775267" }
-  ],
+  "sources": ["bartolomeu-dias", "britannica-1911-dias", "ravenstein-1900"],
   "legs": [
     { "from": "Lisbon", "to": "Cape Verde (Dakar)", "dates": "Aug – Sep 1487", "mode": "sea", "line": "spline",
       "confidence": "conventional", "points": [[-9.6, 38.6], [-9.8, 36.9], [-10.4, 34.5], [-10.6, 32], [-12.2, 29.0], [-13.6, 27.4], [-15.3, 26.1], [-16.8, 23.7], [-17.9, 21.0], [-17.7, 18.5], [-17.8, 16.0], [-17.9, 14.7]],
@@ -46,7 +42,6 @@
       "source": "by Mina and the Guinea coast, the ordinary homeward run; Lisbon in Dec 1488" }
   ],
   "events": [
-    { "kind": "event", "lon": 26.64, "lat": -33.72, "date": "12 Mar 1488", "label": "Padrão de São Gregório at Kwaaihoek, the farthest point", "source": "Barros", "text": "Having been blown round the Cape without seeing it, Dias sailed on east along the coast, until his tired crew begged him to turn. He raised a stone pillar, a padrão, to St Gregory here and went home, seeing the Cape on the way. Its fragments were found at Kwaaihoek in 1938." },
-    { "kind": "death", "who": "Bartolomeu Dias", "lon": 15.0, "lat": -36.0, "date": "29 May 1500", "label": "Dias lost in a storm off the Cape, on Cabral's fleet, 1500", "source": "Wikipedia; Britannica 1911", "text": "Four of Cabral's ships went down in one storm on the way to the Cape. The wreck's position is not recorded; the skull stands off the Cape." }
+    { "kind": "event", "lon": 26.64, "lat": -33.72, "date": "12 Mar 1488", "label": "Padrão de São Gregório at Kwaaihoek, the farthest point", "source": "Barros", "text": "Having been blown round the Cape without seeing it, Dias sailed on east along the coast, until his tired crew begged him to turn. He raised a stone pillar, a padrão, to St Gregory here and went home, seeing the Cape on the way. Its fragments were found at Kwaaihoek in 1938." }
   ]
 }

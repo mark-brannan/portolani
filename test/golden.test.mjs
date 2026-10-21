@@ -255,7 +255,13 @@ test('voyages: a list, coloured and sized; an older single voyage; alternatives 
   assert.deepEqual(await of({}), []);
 
   const fixture = read(join(ROOT, 'test', 'fixtures', 'voyage-alternatives.json'));
-  const withFixture = { ...env, readJSON: (p) => (p === 'data/voyages/fixture-alternatives.json' ? Promise.resolve(fixture) : env.readJSON(p)) };
+  // the fixture is one flat file; split it the way the site keeps it: the death in people.json, the sources by id
+  const death = fixture.events.find((e) => e.kind === 'death');
+  const { kind, who, ...rest } = death;
+  const served = { 'data/voyages/fixture-alternatives.json': { ...fixture, who: [who], sources: ['fixture'], events: fixture.events.filter((e) => e !== death) } };
+  const withFixture = { ...env, readJSON: async (p) => (p === 'data/voyages/people.json' ? { ...(await env.readJSON(p)), [who]: { death: rest } }
+    : p === 'data/voyages/sources.json' ? { ...(await env.readJSON(p)), fixture: fixture.sources[0] }
+    : served[p] ?? env.readJSON(p)) };
   const { scene, data, bg } = await createScene(withFixture, { view: VIEWS['world-z2-voyages'], voyages: [{ id: 'fixture-alternatives' }] });
   assert.equal(scene.voyages.length, 1);
   const draw = (s) => { const c = createCanvas(W, H); drawScene(c.getContext('2d'), s, data, bg, { scale: 1, x: 0, y: 0 }); return c.getContext('2d').getImageData(0, 0, W, H).data; };
