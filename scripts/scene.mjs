@@ -2231,7 +2231,7 @@ const legPaths = new WeakMap();
 const pathOf = (leg) => legPaths.get(leg) ?? legPaths.set(leg, legPath(leg)).get(leg);
 // A round cap grows each dash by the stroke's width, so the pattern gives it back to read as DASHES says
 const capped = (dash, w) => dash.map((d, i) => (i % 2 ? d + w : Math.max(0.01, d - w)));
-const VOYAGE_LINE = 2.2, VOYAGE_HALO = 5.5, VOYAGE_END = 2.8, SKULL_H = 16;
+const VOYAGE_LINE = 2.2, VOYAGE_HALO = 5.5, VOYAGE_END = 2.8, SKULL_H = 16, SKULL_ALT_H = 13;
 
 // A voyage (docs/voyages/README.md) through any projection: each leg cut at the seam and stroked in red
 // over a parchment halo, dashed by its confidence; then its events, a death as a skull and crossbones.
@@ -2256,23 +2256,37 @@ function drawVoyage(g, voyage, proj, rect, eventRect = rect) {
   }
   g.globalAlpha = 1;
   for (const e of voyage.events ?? []) {
+    // a disputed death's other candidate places first, smaller and fainter, so the usual account sits on top
+    for (const a of e.kind === 'death' ? e.alternatives ?? [] : []) drawDeathAt(g, a, proj, eventRect, SKULL_ALT_H, 0.75);
+    if (e.kind === 'death') { drawDeathAt(g, e, proj, eventRect, SKULL_H, 1); continue; }
     if (proj.visible && !proj.visible(e.lon, e.lat)) continue;
     const [x, y] = proj.toPx([e.lon, e.lat]);
     if (!disc(eventRect, x, y, -SKULL_H / 2)) continue; // the whole mark in view, or no label
-    if (e.kind === 'death') drawSkull(g, x, y, SKULL_H);
-    else { g.beginPath(); g.arc(x, y, 3, 0, 2 * Math.PI); g.strokeStyle = STYLE.ink; g.lineWidth = 1.4; g.stroke(); }
-    eventLabel(g, e.label, x, y, e.kind === 'death' ? SKULL_H / 2 + 3 : 6, eventRect);
+    g.beginPath(); g.arc(x, y, 3, 0, 2 * Math.PI); g.strokeStyle = STYLE.ink; g.lineWidth = 1.4; g.stroke();
+    eventLabel(g, e.label, x, y, 6, eventRect);
   }
+  g.restore();
+}
+
+// A skull `h` px tall and its label at a place of death, when the whole skull is in view
+function drawDeathAt(g, p, proj, rect, h, alpha) {
+  if (proj.visible && !proj.visible(p.lon, p.lat)) return;
+  const [x, y] = proj.toPx([p.lon, p.lat]);
+  if (!disc(rect, x, y, -h / 2)) return;
+  g.save(); g.globalAlpha = alpha;
+  drawSkull(g, x, y, h);
+  eventLabel(g, p.label, x, y, h / 2 + 3, rect);
   g.restore();
 }
 
 // A skull and crossbones `h` px tall centred on x, y, in ink over a parchment disc so it reads on the lattice
 function drawSkull(g, x, y, h) {
   g.save();
+  const alpha = g.globalAlpha; // a faint skull is the same skull at the caller's alpha
   g.translate(x, y); g.scale(h / 18, h / 18); // drawn in an 18-unit box, -9 to 9
-  g.fillStyle = STYLE.parchment; g.globalAlpha = 0.85;
+  g.fillStyle = STYLE.parchment; g.globalAlpha = 0.85 * alpha;
   g.beginPath(); g.arc(0, 0, 12, 0, 2 * Math.PI); g.fill();
-  g.globalAlpha = 1; g.fillStyle = g.strokeStyle = STYLE.ink; g.lineCap = 'round';
+  g.globalAlpha = alpha; g.fillStyle = g.strokeStyle = STYLE.ink; g.lineCap = 'round';
   for (const s of [-1, 1]) { // the bones, crossed under the jaw, a knob either side of each end
     const a = [-6.5 * s, 3.5], b = [6.5 * s, 8.5], len = Math.hypot(b[0] - a[0], b[1] - a[1]);
     const u = [(b[0] - a[0]) / len, (b[1] - a[1]) / len], n = [-u[1], u[0]];

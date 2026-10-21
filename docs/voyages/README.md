@@ -58,8 +58,11 @@ One file per voyage, `data/voyages/<id>.json`; `data/voyages/index.json` lists t
 ## What is drawn
 
 Each leg is stroked in the chart's red ink over a parchment halo, dashed by its confidence, with a
-dot at each leg's ends; a death is a skull and crossbones with its label beside it. The overlay rides
+dot at each leg's ends; a death is a skull and crossbones with its label beside it, and each of its
+`alternatives` a smaller, fainter skull with its own label. The overlay rides
 in the link as `voyage=<id>`.
+
+![Zheng He's skull before and after its alternatives are drawn](zheng-he-alternatives.jpg)
 
 ## Where each person died
 
@@ -69,8 +72,8 @@ The skull sits at the usual account; `alternatives` are the other places the sou
 |---|---|---|---|
 | Leif Erikson | Brattahlíð, Greenland, c. 1020 | — | Saga of the Greenlanders |
 | Marco Polo | Venice, 8 Jan 1324 | — | Wikipedia, Marco Polo |
-| Ibn Battuta | Morocco near Fez (-5.00, 34.03), c. 1369 | Tangier (-5.81, 35.77): where he was born and a tomb is shown | Wikipedia, Ibn Battuta |
-| Zheng He | At sea off the Malabar coast (74.00, 9.00), 1433 | Calicut (75.78, 11.25), 1433, the usual account; Nanjing (118.78, 32.07), 1435, the later account of a death at home | Ming shi; Zheng He (Wikipedia) |
+| Ibn Battuta | Morocco near Fez (-5.00, 34.03), c. 1369 | Tangier (-5.81, 35.77) | Wikipedia, Ibn Battuta |
+| Zheng He | At sea off the Malabar coast (74.00, 9.00), 1433 | Calicut (75.78, 11.25); Nanjing (118.78, 32.07) | Ming shi; Zheng He (Wikipedia) |
 | Bartolomeu Dias | Off the Cape of Good Hope, 29 May 1500 | — | Wikipedia; Britannica 1911 |
 | Christopher Columbus | Valladolid, 20 May 1506 | — (his burial place is disputed, his place of death is not) | Britannica 1911, Columbus |
 | Vasco da Gama | Cochin, 24 Dec 1524 | — | Wikipedia, Vasco da Gama |
@@ -83,4 +86,4 @@ The skull sits at the usual account; `alternatives` are the other places the sou
 | Nearchus | none drawn (`deathUnknown`) | — | Nearchus (Wikipedia) |
 | Phoenician mariners of Necho II | none drawn (`deathUnknown`) | — | Herodotus 4.42 |
 
-The ancient voyages are the broad brush throughout: Hanno's Periplus, Pytheas as reported by Strabo and Pliny, Nearchus in Arrian, and Herodotus on Necho's sailors are each told at second hand, and every identification of a place (Cerne, the Chariot of the Gods, Thule, the amber island) is one scholarly guess among several.
+The ancient voyages are told at second hand; every identification of a place on them is one scholarly guess among several.
