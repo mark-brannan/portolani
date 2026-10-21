@@ -9,7 +9,10 @@
 // they are drawn down from (0 off, the top always).
 // Older links naming a `rendering` (or `pack`), `rose`, `monster`, `town` and `kinds` open as the
 // selection those chose, and are written back in the new form.
-import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H } from './scene.mjs';
+// For a while, `debug=sheets[,rings]` and `tune=name:value,...` carry the under-the-hood section
+// (docs/atlas/under-the-hood.md), off by default.
+import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE } from './scene.mjs';
+import { ORIGINS } from './atlas.mjs';
 import { POIS } from './pois.mjs';
 import { fold, bestPlace } from './placename.mjs';
 
@@ -108,6 +111,9 @@ function styleFromHash() {
     placement: parsePlacement(q.get('placement')).text,
     // a voyage overlay by its id (data/voyages/<id>.json); one the site lacks draws nothing
     voyage: /^[a-z][a-z0-9-]*$/.test(q.get('voyage') ?? '') ? q.get('voyage') : DEFAULTS.voyage,
+    // under the hood, for a while: the sheets in red and the knobs fixed in the code, each as its canonical text
+    debug: parseDebug(q.get('debug')).text,
+    tune: parseTune(q.get('tune')).text,
   };
 }
 // The selection a hash names; an older link's rendering, styles and kinds become the selection they drew.
@@ -146,6 +152,8 @@ function writeHash() {
   if (st.trees !== DEFAULTS.trees) q.set('trees', st.trees);
   if (st.placement) q.set('placement', st.placement);
   if (st.voyage !== DEFAULTS.voyage) q.set('voyage', st.voyage);
+  if (st.debug) q.set('debug', st.debug);
+  if (st.tune) q.set('tune', st.tune);
   if (st.seaTint) q.set('seas', '1');
   if (st.scaleBorder !== DEFAULTS.scaleBorder) q.set('scaleborder', st.scaleBorder);
   if (st.scale !== DEFAULTS.scale) q.set('scale', st.scale);
@@ -281,6 +289,20 @@ const TREE_GLYPHS = {
   marina: svg(`<path d="M14 13v3" ${stroke('#3b2a1a', 1.2)}/><path d="${CROWN}" fill="#6b8a4a" stroke="#3b2a1a" stroke-width="1" stroke-linejoin="round"/>`),
   ink: svg(`<path d="M14 13v3" ${stroke('currentColor', 1.2)}/><path d="${CROWN}" ${stroke('currentColor', 1)}/><path d="M11 9l1 1M14 7l1 1M16 10l1 1" ${stroke('currentColor', 0.6)}/>`),
 };
+// Under the hood: the sheets' red, a sheet's outline and its ring, a grid's origin, the rose's lines.
+const RED = '#d00';
+const SHEET_GLYPH = `<rect x="4" y="3" width="20" height="12" ${stroke(RED, 1.5)}/>`;
+const HOOD_GLYPHS = {
+  off: MOUNTAIN_GLYPHS.off,
+  sheets: svg(SHEET_GLYPH),
+  rings: svg(`${SHEET_GLYPH}<circle cx="14" cy="9" r="4.5" ${stroke(RED, 1)}/><circle cx="14" cy="9" r="1.3" ${stroke(RED, 0.8)}/>${[0, 1, 2, 3, 4, 5, 6, 7].map((i) => `<circle cx="${(14 + 4.5 * Math.sin(i * Math.PI / 4)).toFixed(2)}" cy="${(9 - 4.5 * Math.cos(i * Math.PI / 4)).toFixed(2)}" r=".9" fill="${RED}"/>`).join('')}`),
+  rose: svg(`<path d="M2 9h24M14 2v14M8 2v14M20 2v14M2 5h24M2 13h24" ${stroke('currentColor', 0.5)}/><path d="M14 6l1 3-1 3-1-3Z M11 9l3-1 3 1-3 1Z" fill="${RED}"/>`),
+  zero: svg(`<path d="M2 9h24M14 2v14M8 2v14M20 2v14M2 5h24M2 13h24" ${stroke('currentColor', 0.5)}/><circle cx="14" cy="9" r="2.6" ${stroke(RED, 1.2)}/>`),
+  curated: svg(`<rect x="3" y="3" width="22" height="12" ${stroke('currentColor', 1)}/><circle cx="14" cy="9" r="4" ${stroke('currentColor', 0.8)}/>`),
+  grid: svg(`<rect x="3" y="3" width="22" height="12" ${stroke('currentColor', 1)}/><path d="M8.5 3v12M14 3v12M19.5 3v12M3 9h22" ${stroke('currentColor', 0.6)}/>`),
+  roselines: svg(`<path d="M6 9h20M6 9l18-6M6 9l18 6M6 9l12-7M6 9l12 7" ${stroke('currentColor', 0.6)}/><circle cx="6" cy="9" r="1.6" fill="${RED}"/>`),
+};
+const ROSE_AT = `${Math.abs(ORIGINS.rose.lon)}°${ORIGINS.rose.lon < 0 ? 'W' : 'E'} ${Math.abs(ORIGINS.rose.lat)}°${ORIGINS.rose.lat < 0 ? 'S' : 'N'}`;
 const CHOICES = {
   projection: [['mercator', 'Mercator', 'rhumb lines straight'], ['plate-carree', 'Plate carrée', 'equal degrees'], ['miller', 'Miller', 'poles tamed'], ['equal-area', 'Equal-area', 'Gall–Peters'], ['orthographic', 'Globe', 'orthographic'], ['azimuthal-equidistant', 'Azimuthal equidistant', 'true from the centre'], ['stereographic', 'Stereographic', 'the polar chart']].map(([value, label, note = '']) => [value, label, note, PROJECTION_GLYPHS[value]]),
   regions: [['latin', 'Latin', 'Hispania'], ['english', 'English', 'Iberia']],
@@ -295,6 +317,10 @@ const CHOICES = {
   trees: [['off', 'Off', '', MOUNTAIN_GLYPHS.off], ['marina', 'Green crowns', 'Carta Marina, 1539', TREE_GLYPHS.marina], ['ink', 'Ink only', '', TREE_GLYPHS.ink]],
   scale: [['off', 'Off'], ['genoese', 'Genoese', 'drawn as vectors'], ['chequer', 'Chequer'], ['chevron', 'Chevron ladder', 'Genoese'], ['ribbon', 'Ribbon', 'Martines'], ['beads', 'Beads', 'Prunes'], ['ruled', 'Ruled', 'Beccari']].map(([value, label, note = '']) => [value, label, note, SCALE_GLYPHS[value]]),
   scaleBorder: [['bordered', 'Bordered', 'parchment and a double rule'], ['blank', 'Blank', 'parchment, no rule'], ['transparent', 'Transparent', 'drawn over the map']].map(([value, label, note = '']) => [value, label, note, BORDER_GLYPHS[value]]),
+  debug: [['off', 'Off', '', HOOD_GLYPHS.off], ['sheets', 'Outlines', 'each sheet of the atlas at this view, in red, with its name', HOOD_GLYPHS.sheets], ['sheets,rings', 'Outlines + rings', 'and each sheet\'s hidden circle: its hub and sixteen nodes', HOOD_GLYPHS.rings]],
+  tuneOrigin: [['rose', `Catalan rose (${ROSE_AT})`, 'every band\'s grid has a corner on the rose', HOOD_GLYPHS.rose], ['zero', '0° 0°', 'NOAA\'s own zero', HOOD_GLYPHS.zero]],
+  tuneCurated: [['1', 'On', 'the curated charts take the place of the grid cells they hold', HOOD_GLYPHS.curated], ['0', 'Off', 'grid cells everywhere', HOOD_GLYPHS.grid]],
+  tuneRoselines: [['1', 'On', 'the rose\'s 32 lines as one more hub at every zoom', HOOD_GLYPHS.roselines], ['0', 'Off', 'only the sheet the rose falls in', HOOD_GLYPHS.off]],
 };
 for (const [id, options] of Object.entries(CHOICES)) {
   const el = $(id);
@@ -376,6 +402,7 @@ function showStyle() {
   $('titleMode').value = style.autoTitle ? 'auto' : 'custom'; $('title').disabled = style.autoTitle;
   if (!style.autoTitle) $('title').value = style.title; // automatic shows the view's own name, once placed (render)
   $('townSize').checked = style.townSize !== 'rank';
+  showHood();
   showUiNow(); showMoods();
   for (const b of document.querySelectorAll('#drawer .thumb')) b.setAttribute('aria-pressed', b === none ? !CARTOUCHES.some((k) => selection.has(k)) : selection.has(b.dataset.key));
   for (const { box, count, keys } of familyBoxes) {
@@ -398,12 +425,36 @@ function readControls() {
     townSize: $('townSize').checked ? (style.townSize === 'rank' ? 'area' : style.townSize) : 'rank',
     placement: style.placement, // chosen by the placement chips below
     cartouchePos: style.cartouchePos, scalePos: style.scalePos, // set by dragging the cartouche or the scale bar
+    ...readHood(),
   };
   // hills are the Catalan sprites: the chip selects all of them or none
   const hills = $('hills').value === 'catalan';
   if (hills !== CATALAN_KEYS.some((k) => selection.has(k))) for (const k of CATALAN_KEYS) hills ? selection.add(k) : selection.delete(k);
   view = clampView({ ...view, projection: $('projection').value });
   changed();
+}
+// Under the hood: the sheets chips and the knobs. A knob whose default is each band's own (rose share, roses per
+// sheet) is unset until its slider is moved; its slider then rests at the narrow bands' value.
+const KNOB_SLIDERS = { radius: 'tuneRadius', reach: 'tuneReach', roseshare: 'tuneRoseshare', sheetroses: 'tuneSheetroses' };
+const KNOB_CHIPS = { origin: 'tuneOrigin', curated: 'tuneCurated', roselines: 'tuneRoselines' };
+const BAND_OWN = { roseshare: `band's own: ${ROSE_SHARE}, ${WIDE.roseShare} wide`, sheetroses: `band's own: ${SHEET_ROSES}, ${WIDE.sheetRoses} wide` };
+const KNOB_OUT = { radius: (v) => `${v} of sheet height`, reach: (v) => `${v} × diagonal`, roseshare: String, sheetroses: String };
+for (const [name, id] of Object.entries(KNOB_SLIDERS)) Object.assign($(id), { min: TUNE_KNOBS[name].min, max: TUNE_KNOBS[name].max });
+function showHood() {
+  $('debug').value = style.debug || 'off';
+  const t = parseTune(style.tune).tune, at = (name) => t[name] ?? TUNE_KNOBS[name].def;
+  for (const [name, id] of Object.entries(KNOB_CHIPS)) $(id).value = String(at(name));
+  for (const [name, id] of Object.entries(KNOB_SLIDERS)) {
+    const v = at(name), el = $(id);
+    el.value = v ?? { roseshare: ROSE_SHARE, sheetroses: SHEET_ROSES }[name];
+    if (v == null) delete el.dataset.set; else el.dataset.set = '1';
+    $(`${id}Out`).textContent = v == null ? BAND_OWN[name] : KNOB_OUT[name](v);
+  }
+}
+function readHood() {
+  const pairs = [...Object.entries(KNOB_CHIPS).map(([name, id]) => [name, $(id).value]),
+    ...Object.entries(KNOB_SLIDERS).filter(([, id]) => $(id).dataset.set).map(([name, id]) => [name, $(id).value])];
+  return { debug: parseDebug($('debug').value).text, tune: parseTune(pairs.map(([n, v]) => `${n}:${v}`).join(',')).text };
 }
 function changed() {
   showStyle();
@@ -541,6 +592,7 @@ async function render() {
       continents: style.continentsZoom > 0, continentsZoom: style.continentsZoom,
       regions: style.regionsZoom > 0 ? style.regions : 'off', regionsZoom: style.regionsZoom,
       sprites: [...selection], kinds, view, pinned: !phone.matches, pinTitle: style.autoTitle ? pinTitle : null, voyage: style.voyage,
+      debug: parseDebug(style.debug).debug, tune: parseTune(style.tune).tune,
     });
     if (me !== run) return; // a newer change or a move superseded this one
     ground = { world, coarse, bg, anchored: anchorScene(scene, data), cards: { cartouche: kinds.includes('cartouche') ? scene.cartouche : null, scaleSprite: scene.scaleSprite, scale: style.scale, bg } };
@@ -1051,7 +1103,8 @@ locate.addEventListener('click', () => {
   }, { timeout: 15000, maximumAge: 60000 });
 });
 
-for (const id of ['projection', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'scaleBorder', 'land', 'islands', 'seaTint', 'rivers', 'lakes', 'trees', 'mountains', 'hills', 'continentsZoom', 'regions', 'regionsZoom', 'titleMode', 'townSize']) $(id).addEventListener('input', readControls);
+for (const id of Object.values(KNOB_SLIDERS)) $(id).addEventListener('input', (e) => { e.target.dataset.set = '1'; }); // moved, so set
+for (const id of ['debug', ...Object.values(KNOB_CHIPS), ...Object.values(KNOB_SLIDERS), 'projection', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'scaleBorder', 'land', 'islands', 'seaTint', 'rivers', 'lakes', 'trees', 'mountains', 'hills', 'continentsZoom', 'regions', 'regionsZoom', 'titleMode', 'townSize']) $(id).addEventListener('input', readControls);
 let typing = 0; // a typed title is placed when the typing pauses, not on every key: a placement takes up to a few hundred ms
 $('title').addEventListener('input', () => { clearTimeout(typing); typing = setTimeout(readControls, 400); });
 addEventListener('hashchange', () => { layout = layoutFromHash(); showLayout(); view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); showVoyage(); render(); });

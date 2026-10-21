@@ -1,8 +1,9 @@
 // The URL hash as the page reads and writes it, in headless Chromium: the view round-trips, clamps and
 // wraps; editing the hash redraws without a reload; Reset keeps only the view (and the drawer's layout);
 // Copy link copies the URL, or selects it in a box when the clipboard is refused; the three drawer sliders
-// (density, continents, regions) read from and write to the hash; and the drawer's four layouts each show
-// every control and ride in the hash (`layout=`). Each scenario opens a fresh page at a hash.
+// (density, continents, regions) read from and write to the hash, as do the temporary sheets overlay and
+// knobs (debug=, tune=); and the drawer's four layouts each show every control and ride in the hash
+// (`layout=`). Each scenario opens a fresh page at a hash.
 //
 // Needs the built preview (`npm run build:preview` -> _site/), playwright-core and a Chromium
 // (`npx playwright-core install chromium-headless-shell`); without them it skips, since `npm test`
@@ -278,4 +279,82 @@ scenario('layout: Two moods sets the existing controls at once', 'map=5.48/40.26
   assert.equal(await page.locator('#placement [data-placement="historic"]').getAttribute('aria-checked'), 'true');
   assert.equal(await mood('Tasteful').getAttribute('aria-checked'), 'true');
   assert.equal(await mood('All the things').getAttribute('aria-checked'), 'false');
+});
+
+// ---------------------------------------------------------------- under the hood (temporary): debug= and tune=
+
+// the drawer open at its collapsed "Under the hood" section, opened
+const hood = async (page) => { await openDrawer(page); await page.evaluate(() => { document.getElementById('hood').open = true; }); };
+const chip = (page, id, v) => page.locator(`#${id} [data-value="${v}"]`).click();
+
+scenario('debug: the sheets chips round-trip', 'map=6.14/40.474/7.400', async (page) => {
+  assert.equal((await params(page)).has('debug'), false);
+  assert.equal(await value(page, 'debug'), 'off');
+  await hood(page);
+  await chip(page, 'debug', 'sheets,rings');
+  assert.equal((await params(page)).get('debug'), 'sheets,rings');
+  await chip(page, 'debug', 'off');
+  assert.equal((await params(page)).has('debug'), false);
+});
+
+scenario('debug: a hash names its layers in one order, and an unknown word is dropped', 'map=6.14/40.474/7.400&debug=rings,bogus,sheets', async (page) => {
+  assert.equal(await value(page, 'debug'), 'sheets,rings');
+  await slide(page, 'density', 1.5);
+  assert.equal((await params(page)).get('debug'), 'sheets,rings');
+});
+
+scenario('debug: a bad value falls back to off and is not written back', 'map=6.14/40.474/7.400&debug=bogus', async (page) => {
+  assert.equal(await value(page, 'debug'), 'off');
+  await slide(page, 'density', 1.5);
+  assert.equal((await params(page)).has('debug'), false);
+});
+
+scenario('tune: a link\'s knobs round-trip', 'map=6.14/40.474/7.400&tune=radius:0.5,reach:1.5,origin:zero,curated:0,roselines:0,roseshare:0.6,sheetroses:6', async (page) => {
+  assert.deepEqual(await Promise.all(['tuneRadius', 'tuneReach', 'tuneOrigin', 'tuneCurated', 'tuneRoselines', 'tuneRoseshare', 'tuneSheetroses'].map((id) => value(page, id))), ['0.5', '1.5', 'zero', '0', '0', '0.6', '6']);
+  assert.equal(await text(page, 'tuneRadiusOut'), '0.5 of sheet height');
+  assert.equal(await text(page, 'tuneReachOut'), '1.5 × diagonal');
+  await slide(page, 'density', 1.5);
+  assert.equal((await params(page)).get('tune'), 'radius:0.5,reach:1.5,origin:zero,curated:0,roselines:0,roseshare:0.6,sheetroses:6');
+});
+
+scenario('tune: the sliders and chips write their knob, and only it', 'map=6.14/40.474/7.400', async (page) => {
+  assert.equal((await params(page)).has('tune'), false);
+  await hood(page);
+  await page.locator('#tuneRadius').fill('0.5');
+  assert.equal((await params(page)).get('tune'), 'radius:0.5');
+  assert.equal(await text(page, 'tuneRadiusOut'), '0.5 of sheet height');
+  await chip(page, 'tuneOrigin', 'zero');
+  assert.equal((await params(page)).get('tune'), 'radius:0.5,origin:zero');
+  await page.locator('#tuneRadius').fill('0.4'); // back to the default: left out
+  await chip(page, 'tuneOrigin', 'rose');
+  assert.equal((await params(page)).has('tune'), false);
+});
+
+scenario('tune: rose share and roses per sheet are the band\'s own until moved', 'map=6.14/40.474/7.400', async (page) => {
+  assert.match(await text(page, 'tuneRoseshareOut'), /band's own/);
+  await slide(page, 'density', 1.5); // a write from another control leaves them unset
+  assert.equal((await params(page)).has('tune'), false);
+  await hood(page);
+  await page.locator('#tuneSheetroses').fill('2');
+  assert.equal((await params(page)).get('tune'), 'sheetroses:2');
+  assert.equal(await text(page, 'tuneSheetrosesOut'), '2');
+});
+
+scenario('tune: a bad or default value falls back and is not written back', 'map=6.14/40.474/7.400&tune=radius:9,reach:x,origin:north,curated:2,sheetroses:2.5,roseshare:0.4,junk', async (page) => {
+  assert.equal(await value(page, 'tuneRadius'), '0.4');
+  assert.equal(await value(page, 'tuneOrigin'), 'rose');
+  assert.equal(await value(page, 'tuneCurated'), '1');
+  await slide(page, 'density', 1.5);
+  // roseshare:0.4 is in range, so it is kept: its default is each band's own, not 0.4
+  assert.equal((await params(page)).get('tune'), 'roseshare:0.4');
+});
+
+scenario('reset: the sheets and the knobs go back to default with the rest', 'map=6.14/40.474/7.400&debug=sheets&tune=radius:0.5,origin:zero,sheetroses:2', async (page) => {
+  await page.evaluate(() => { document.getElementById('status').textContent = ''; });
+  await openDrawer(page);
+  await page.locator('#reset').click();
+  await placed(page);
+  assert.equal(await hash(page), '#map=6.14/40.474/7.400');
+  assert.deepEqual(await Promise.all(['debug', 'tuneRadius', 'tuneOrigin', 'tuneSheetroses'].map((id) => value(page, id))), ['off', '0.4', 'rose', '4']);
+  assert.match(await text(page, 'tuneSheetrosesOut'), /band's own/);
 });
