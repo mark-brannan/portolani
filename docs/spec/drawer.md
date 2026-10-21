@@ -330,3 +330,14 @@ Feature: Parchment  (colour input `#parchment`, hash `parchment`, default `e9d8b
     Given the same
     When the page places
     Then the canvas background pixels read near `#eeeeee`, a little darker and warmer at the centre and much darker at the corners (mottling, grain and a vignette multiply the colour, scene.mjs:1682-1725 at main; the pattern is fixed by seed 1539)
+
+Feature: One mode  (tokens `--panel` #efe3c6, `--fg`, `--margin` #1d1913; no `prefers-color-scheme` in `public/`) [verified at main] (#211)
+  Scenario: every drawer is parchment inside, on the dark margin
+    Given the page with the browser set to dark, then to light
+    When the user opens each drawer (`#open`, `#charts`, `#sights`, `#go`, `#voyages`, `#anchor`) and, for the settings drawer, each layout (default, `question`, `moods`, `sheet`)
+    Then the drawer's background is `--panel` and its ink `--fg`, the margin round the map is `--margin` (`#1d1913`), and nothing visible inside a drawer has a dark background
+  Scenario: the browser's light/dark setting changes nothing
+    Given the same page
+    When the browser's colour scheme is switched
+    Then no colour on the page changes; no stylesheet or script reads `prefers-color-scheme`
+    # Tested by: test/drawers.test.mjs (the last line only, offline)

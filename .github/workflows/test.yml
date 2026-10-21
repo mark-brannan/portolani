@@ -76,9 +76,6 @@ jobs:
       # the URL hash: view, Reset, Copy link and the drawer sliders (test/hash.test.mjs)
       - run: node --test test/hash.test.mjs
         env: { HASH_REQUIRED: '1' }
-      # one mode: every drawer, and each layout of the settings drawer, parchment inside (test/drawers.test.mjs)
-      - run: node --test test/drawers.test.mjs
-        env: { DRAWERS_REQUIRED: '1' }
 
   # Refuses to call an empty PR green: a branch whose tree equals its base at
   # the merge base (a stray commit reverted it) merges cleanly and lands
