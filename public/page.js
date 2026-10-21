@@ -13,7 +13,7 @@
 // selection those chose, and are written back in the new form.
 // For a while, `debug=sheets[,rings]` and `tune=name:value,...` carry the under-the-hood section
 // (docs/atlas/under-the-hood.md), off by default.
-import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, sightMarks, SIGHT_TILES } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, sightMarks, SIGHT_TILES, noteMarks } from './scene.mjs';
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, overlayFromHash, overlayToHash } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
@@ -680,7 +680,7 @@ async function render() {
       debug: parseDebug(style.debug).debug, tune: parseTune(style.tune).tune,
     });
     if (me !== run) return; // a newer change or a move superseded this one
-    ground = { world, coarse, bg, voyages: scene.voyages, anchored: anchorScene(scene, data), cards: { cartouche: kinds.includes('cartouche') ? scene.cartouche : null, scaleSprite: scene.scaleSprite, scale: style.scale, bg } };
+    ground = { world, coarse, bg, voyages: scene.voyages, anchored: anchorScene(scene, data), overlay: scene.overlay, cards: { cartouche: kinds.includes('cartouche') ? scene.cartouche : null, scaleSprite: scene.scaleSprite, scale: style.scale, bg } };
     if (style.autoTitle) $('title').value = scene.cartouche.title; // the box shows what the cartouche letters, and cannot be edited
     placed = view;
     hideTile(); // its mark may be gone: another voyage, or none
@@ -1034,6 +1034,15 @@ function fillTile(t) {
   const head = part('tile-title', t.title);
   const meta = part('tile-date', [t.date, t.alternative ? 'another account' : null].filter(Boolean).join(' · '));
   const text = part('tile-text', t.text);
+  if (t.link) { // a note on the Carta Marina: what was drawn, what was there, and the source as a link
+    const labelled = (label, body) => { const p = part('tile-text', body); const b = document.createElement('strong'); b.textContent = `${label} `; p.prepend(b); return p; };
+    const a = document.createElement('a');
+    a.href = t.link; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = t.source;
+    const src = document.createElement('p'); src.className = 'tile-source'; src.append('Source: ', a);
+    tileEl.replaceChildren(close, head, labelled('Drawn.', t.drawn), labelled('Really.', t.real), src);
+    tileEl.setAttribute('aria-label', t.title);
+    return;
+  }
   const source = part('tile-source', t.source && `Source: ${t.source}`);
   tileEl.replaceChildren(close, ...[head, meta, text, source].filter(Boolean));
   tileEl.setAttribute('aria-label', t.title ?? 'Point of interest');
@@ -1047,7 +1056,7 @@ function sightTiles() {
 }
 function showTileAt([x, y]) {
   const proj = viewProjection(placed), rect = { x0: 0, y0: 0, x1: W, y1: H };
-  const marks = [...(ground?.voyages ?? []).flatMap((v) => voyageMarks(v.voyage, proj, rect)), ...(placed.zoom >= POI_ZOOM ? sightMarks(sightTiles(), proj, rect) : [])];
+  const marks = [...(ground?.voyages ?? []).flatMap((v) => voyageMarks(v.voyage, proj, rect)), ...(placed.zoom >= POI_ZOOM ? sightMarks(sightTiles(), proj, rect) : []), ...noteMarks(ground?.overlay, proj, rect)];
   let best = null, bestD = Infinity;
   for (const m of marks) { const d = Math.hypot(m.x - x, m.y - y); if (d <= Math.max(cssPx(TAP_REACH), m.h / 2) && d < bestD) { best = m; bestD = d; } }
   if (!best) return;
