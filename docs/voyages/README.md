@@ -32,10 +32,17 @@ so; and an `alternative` is another place of death, never of burial.
 
 ## What is drawn
 
-Each leg is stroked in the chart's red ink over a parchment halo, dashed by its confidence, with a
-dot at each leg's ends; a death is a skull and crossbones, and each of its `alternatives` a smaller,
-fainter skull; an event or landfall is a ring. Nothing is lettered beside a mark: a click or tap on one
-opens a small tile beside it with its heading, date, text and source, and the next touch of the map,
-Esc or the tile's × shuts it. The overlay rides in the link as `voyage=<id>`.
+Any number of voyages are drawn at once, each in its own ink: the first voyage on is the chart's red,
+the rest get their own colours, and a colour picked for a voyage overrides them. Each leg is stroked
+in its voyage's ink over a parchment halo, dashed by its confidence, with a dot at each leg's ends; the
+line weight is one for all of them (Fine, Standard, Bold or Heavy). A death is a skull and crossbones,
+and each of its `alternatives` a smaller, fainter skull tied to it by a thin dashed line in the
+voyage's ink; an event or landfall is a ring. Nothing is lettered beside a mark: a click or tap on one, on any voyage that is on, opens a small tile
+beside it with its heading, date, text and source, and the next touch of the map, Esc or the tile's ×
+shuts it.
+
+The overlay rides in the link as `voyages=<id>[:rrggbb],...`, in the order chosen, a picked colour
+after its id (`voyages=magellan,columbus,da-gama:16727a`), and `voyagewidth=<px>` when the weight is
+not Standard. An older `voyage=<id>` link still opens, as a list of one.
 
 ![Zheng He's skull at the middle of the Calicut–Malacca leg, its tile open, the Calicut alternative beside the coast](zheng-he-alternatives.jpg)

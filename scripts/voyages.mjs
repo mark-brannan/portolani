@@ -1,5 +1,6 @@
 // Voyage overlays: a historical track drawn on the modern-geometry map in any projection. A voyage
-// is one file, data/voyages/<id>.json, put together by readVoyage below (problems() is the schema): legs of waypoints in
+// is data/voyages/<id>.json with its deaths and sources joined in by readVoyage below (problems() is
+// the schema): legs of waypoints in
 // [lon, lat], each leg joined by one of LINES and graded by one of CONFIDENCES, plus events along
 // the way (a death is drawn as a skull and crossbones). This module turns a leg into a dense path
 // and cuts it at the seam; the drawing is in scene.mjs, the land test in test/voyages.test.mjs.
@@ -10,6 +11,28 @@ export const EVENT_KINDS = ['death', 'landfall', 'event'];
 // how each confidence is stroked, a setLineDash pattern in px at the stroke's width
 export const DASHES = { attested: [], inferred: [9, 5], conventional: [2, 4] };
 export const STEP_KM = 25; // the path's sample spacing, close enough that a strait is followed and a curve reads smooth
+
+// The inks a voyage is drawn in, each dark enough to read on parchment and on the land washes. The first is the
+// chart's red (scene.mjs windRed), which the first voyage chosen takes; each further one takes a colour seeded on
+// its id, the next free one along when that is taken, so a link draws the same colours wherever it is opened.
+export const VOYAGE_PALETTE = ['#8c2f1e', '#1f4e8c', '#2e6b34', '#6b2d7a', '#b0601a', '#16727a', '#9c2a5c', '#4a4f9a', '#5c4a1e'];
+// the stroke widths on offer, in px on the 1600 px sheet; 2.2 is the width a voyage has always had
+export const VOYAGE_WIDTHS = [1.4, 2.2, 3.2, 4.5];
+export const VOYAGE_WIDTH = 2.2;
+const seedOf = (id) => [...id].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0, 2166136261);
+// The colours of a list of chosen voyages, in the order chosen: `picked` maps an id to a colour picked by hand.
+// Red goes to the first one not picked while no other has it; the rest are seeded on their ids among the free colours.
+export function voyageColours(ids, picked = {}) {
+  const used = new Set(ids.map((id) => picked[id]).filter(Boolean)), out = {};
+  for (const [i, id] of ids.entries()) {
+    if (picked[id]) { out[id] = picked[id]; continue; }
+    const red = VOYAGE_PALETTE[0], rest = VOYAGE_PALETTE.slice(1), start = seedOf(id) % rest.length;
+    const round = rest.map((_, k) => rest[(start + k) % rest.length]); // from the id's own colour on
+    const c = !used.has(red) ? red : round.find((r) => !used.has(r)) ?? round[0];
+    used.add(c); out[id] = c;
+  }
+  return out;
+}
 
 const RAD = Math.PI / 180, R_KM = 6371.0088;
 const fromCentre = (d) => (d > 180 ? d - 360 : d < -180 ? d + 360 : d);
