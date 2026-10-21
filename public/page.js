@@ -9,7 +9,7 @@
 // they are drawn down from (0 off, the top always).
 // Older links naming a `rendering` (or `pack`), `rose`, `monster`, `town` and `kinds` open as the
 // selection those chose, and are written back in the new form.
-import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, W, H } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H } from './scene.mjs';
 import { POIS } from './pois.mjs';
 import { fold, bestPlace } from './placename.mjs';
 
@@ -41,7 +41,7 @@ const canvas = $('map'), ctx = canvas.getContext('2d');
 // cards beside the map, not on the sea.
 const phone = matchMedia('(max-width: 520px)');
 
-const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: 5, regions: 'latin', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyage: 'off' };
+const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: 5, regions: 'latin', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyage: 'off', cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER };
 
 // ---------------------------------------------------------------- the sprites on offer
 
@@ -99,6 +99,8 @@ function styleFromHash() {
     seaTint: q.get('seas') === '1' || q.get('redsea') === '1',
     scaleBorder: SCALE_BORDERS.includes(q.get('scaleborder')) ? q.get('scaleborder') : DEFAULTS.scaleBorder,
     scale: q.get('scale') === 'off' || SCALE_NAMES.includes(q.get('scale')) ? q.get('scale') : DEFAULTS.scale,
+    cartouchePos: CORNERS.includes(q.get('cartouche')) ? q.get('cartouche') : DEFAULTS.cartouchePos, // dragged to a corner of the map
+    scalePos: CORNERS.includes(q.get('scalepos')) ? q.get('scalepos') : DEFAULTS.scalePos,
     townSize: TOWN_SIZES.includes(q.get('townsize')) ? q.get('townsize') : DEFAULTS.townSize,
     placement: parsePlacement(q.get('placement')).text,
     // a voyage overlay by its id (data/voyages/<id>.json); one the site lacks draws nothing
@@ -143,6 +145,8 @@ function writeHash() {
   if (st.seaTint) q.set('seas', '1');
   if (st.scaleBorder !== DEFAULTS.scaleBorder) q.set('scaleborder', st.scaleBorder);
   if (st.scale !== DEFAULTS.scale) q.set('scale', st.scale);
+  if (st.cartouchePos !== DEFAULTS.cartouchePos) q.set('cartouche', st.cartouchePos);
+  if (st.scalePos !== DEFAULTS.scalePos) q.set('scalepos', st.scalePos);
   if (st.density !== DEFAULTS.density) q.set('density', st.density);
   if (st.ink !== DEFAULTS.ink) q.set('ink', st.ink.slice(1));
   if (st.parchment !== DEFAULTS.parchment) q.set('parchment', st.parchment.slice(1));
@@ -389,6 +393,7 @@ function readControls() {
     // checked, by metro area; a link's townsize=population is kept until the box is touched
     townSize: $('townSize').checked ? (style.townSize === 'rank' ? 'area' : style.townSize) : 'rank',
     placement: style.placement, // chosen by the placement chips below
+    cartouchePos: style.cartouchePos, scalePos: style.scalePos, // set by dragging the cartouche or the scale bar
   };
   // hills are the Catalan sprites: the chip selects all of them or none
   const hills = $('hills').value === 'catalan';
@@ -672,13 +677,39 @@ const pinch = () => {
   return { d: Math.hypot(bx - ax, by - ay), x: (ax + bx) / 2, y: (ay + by) / 2 };
 };
 
+// The cartouche and the scale bar are dragged to a corner of the map and stay there (cartouche=, scalepos=
+// in the link). While one is held a dashed frame shows the corner it will take.
+const snap = $('snap');
+let carried = null; // { key: 'cartouchePos' | 'scalePos', w, h, corner } while one is being dragged
+const cardAt = ([x, y]) => {
+  if (phone.matches || !ground) return null;
+  const c = ground.cards.cartouche, s = ground.cards.scale !== 'off' ? scaleRect() : null;
+  const hit = (r) => r && x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h;
+  if (hit(s)) return { key: 'scalePos', w: s.w, h: s.h };
+  if (hit(c)) return { key: 'cartouchePos', w: c.w, h: c.h };
+  return null;
+};
+const cornerAt = ([x, y]) => `${y < H / 2 ? 't' : 'b'}${x < W / 2 ? 'l' : 'r'}`;
+function showSnap(corner, w, h) {
+  const r = canvas.getBoundingClientRect(), kx = r.width / W, ky = r.height / H, m = 14;
+  Object.assign(snap.style, { display: 'block', width: `${w * kx}px`, height: `${h * ky}px`,
+    left: `${r.left + (corner[1] === 'l' ? m : W - m - w) * kx}px`, top: `${r.top + (corner[0] === 't' ? m : H - m - h) * ky}px` });
+}
 canvas.addEventListener('pointerdown', (e) => {
   cancelAnimationFrame(flight); // a touch takes over from a flight
+  if (!pointers.size && e.isPrimary && (carried = cardAt(toCanvas(e.clientX, e.clientY)))) {
+    carried.corner = style[carried.key];
+    canvas.setPointerCapture(e.pointerId);
+    showSnap(carried.corner, carried.w, carried.h);
+    return;
+  }
   canvas.setPointerCapture(e.pointerId);
   pointers.set(e.pointerId, toCanvas(e.clientX, e.clientY));
   clearTimeout(settle);
 });
 canvas.addEventListener('pointermove', (e) => {
+  if (carried) { carried.corner = cornerAt(toCanvas(e.clientX, e.clientY)); showSnap(carried.corner, carried.w, carried.h); return; }
+  if (!pointers.size) { canvas.style.cursor = cardAt(toCanvas(e.clientX, e.clientY)) ? 'grab' : ''; return; }
   if (!pointers.has(e.pointerId)) return;
   const p = toCanvas(e.clientX, e.clientY);
   if (pointers.size === 2) {
@@ -693,6 +724,12 @@ canvas.addEventListener('pointermove', (e) => {
   }
 });
 const lift = (e) => {
+  if (carried) { // dropped: the corner is kept, the sheet placed again
+    const { key, corner } = carried;
+    carried = null; snap.style.display = 'none';
+    if (e.type === 'pointerup' && style[key] !== corner) { style = { ...style, [key]: corner }; writeHash(); render(); }
+    return;
+  }
   if (!pointers.delete(e.pointerId)) return;
   if (pointers.size === 0) stopped();
 };
