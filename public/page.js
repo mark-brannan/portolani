@@ -41,7 +41,7 @@ const canvas = $('map'), ctx = canvas.getContext('2d');
 // cards beside the map, not on the sea.
 const phone = matchMedia('(max-width: 520px)');
 
-const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: 5, regions: 'latin', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0] };
+const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: 5, regions: 'latin', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyage: 'off' };
 
 // ---------------------------------------------------------------- the sprites on offer
 
@@ -101,6 +101,8 @@ function styleFromHash() {
     scale: q.get('scale') === 'off' || SCALE_NAMES.includes(q.get('scale')) ? q.get('scale') : DEFAULTS.scale,
     townSize: TOWN_SIZES.includes(q.get('townsize')) ? q.get('townsize') : DEFAULTS.townSize,
     placement: parsePlacement(q.get('placement')).text,
+    // a voyage overlay by its id (data/voyages/<id>.json); one the site lacks draws nothing
+    voyage: /^[a-z][a-z0-9-]*$/.test(q.get('voyage') ?? '') ? q.get('voyage') : DEFAULTS.voyage,
   };
 }
 // The selection a hash names; an older link's rendering, styles and kinds become the selection they drew.
@@ -137,6 +139,7 @@ function writeHash() {
   if (st.mountains !== DEFAULTS.mountains) q.set('mountains', st.mountains);
   if (st.trees !== DEFAULTS.trees) q.set('trees', st.trees);
   if (st.placement) q.set('placement', st.placement);
+  if (st.voyage !== DEFAULTS.voyage) q.set('voyage', st.voyage);
   if (st.seaTint) q.set('seas', '1');
   if (st.scaleBorder !== DEFAULTS.scaleBorder) q.set('scaleborder', st.scaleBorder);
   if (st.scale !== DEFAULTS.scale) q.set('scale', st.scale);
@@ -526,7 +529,7 @@ async function render() {
       ...style, ...parsePlacement(style.placement), relief: style.mountains === 'colour' ? ['marina'] : style.mountains === 'ink' ? ['engraved'] : [],
       continents: style.continentsZoom > 0, continentsZoom: style.continentsZoom,
       regions: style.regionsZoom > 0 ? style.regions : 'off', regionsZoom: style.regionsZoom,
-      sprites: [...selection], kinds, view, pinned: !phone.matches, pinTitle: style.autoTitle ? pinTitle : null,
+      sprites: [...selection], kinds, view, pinned: !phone.matches, pinTitle: style.autoTitle ? pinTitle : null, voyage: style.voyage,
     });
     if (me !== run) return; // a newer change or a move superseded this one
     ground = { world, coarse, bg, anchored: anchorScene(scene, data), cards: { cartouche: kinds.includes('cartouche') ? scene.cartouche : null, scaleSprite: scene.scaleSprite, scale: style.scale, bg } };
@@ -587,6 +590,7 @@ function setDrawer(open, byKeyboard = false) { // the drawer to open, or false f
   if (open === was) return;
   for (const [b, d] of drawers) { d.classList.toggle('open', d === open); b.setAttribute('aria-expanded', String(d === open)); }
   document.documentElement.classList.toggle('sheet', !!open); // on a phone the map makes room above the sheet
+  if (open?.id === 'voyagesPanel') fillVoyages(); // the list loads on the first open
   if (open) (open.id === 'goPanel' ? (phone.matches ? null : $('coordsText')) : focusable(open))?.focus({ preventScroll: true });
   else if (byKeyboard) drawers.find(([, d]) => d === was)[0].focus({ preventScroll: true });
   else if (was.contains(document.activeElement)) document.activeElement.blur(); // a phone's keyboard goes with it
@@ -751,6 +755,35 @@ const CHARTS = [ // name, year, view
 ].map(([name, year, v]) => ({ name, year, view: { ...v, title: name } }));
 const places = []; // every anchorage and point of interest: { name, view }
 
+// The voyages: one drawn at a time, or none (the default). The list is None, then data/voyages/index.json in its
+// order, each by its title (a phone shows the short name and the years, so none wraps); the titles load on the first
+// open and stay cached. A choice rides in the link (`voyage=`) like any style.
+let voyageList = null;
+const escapeHTML = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
+const voyageItem = (id, full, brief, when) => `<li><button type="button" role="radio" aria-checked="false" data-voyage="${id}">` +
+  `<span class="full">${full}</span><span class="brief">${brief}${when ? `<span class="when">${when}</span>` : ''}</span></button></li>`;
+function showVoyage() {
+  for (const b of $('voyageList').querySelectorAll('[data-voyage]')) b.setAttribute('aria-checked', String(b.dataset.voyage === style.voyage));
+}
+function fillVoyages() {
+  voyageList ??= env.readJSON('data/voyages/index.json')
+    .then((ids) => Promise.all(ids.map((id) => env.readJSON(`data/voyages/${id}.json`).then((v) => [id, v], () => [id, { title: id, short: id }]))))
+    .then((voyages) => {
+      $('voyageList').innerHTML = voyageItem('off', 'None', 'None', '') +
+        voyages.map(([id, v]) => voyageItem(escapeHTML(id), escapeHTML(v.title ?? id), escapeHTML(v.short ?? v.title ?? id), escapeHTML(v.when))).join('');
+      showVoyage();
+    }, (e) => { voyageList = null; $('voyageList').innerHTML = `<li>${escapeHTML(e.message)}</li>`; });
+  showVoyage();
+}
+$('voyageList').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-voyage]');
+  if (!b) return;
+  setDrawer(false);
+  if (b.dataset.voyage === style.voyage) return;
+  style = { ...style, voyage: b.dataset.voyage };
+  showVoyage(); writeHash(); render();
+});
+
 // The cartouche names the place flown to (its title, else the button's name), not whatever scores highest in the frame.
 for (const [list, groups] of [[$('anchorages'), ANCHORAGES], [$('sightsList'), SIGHTS]]) {
   list.innerHTML = groups.map(([group, items]) => (group ? `<li class="group">${group}</li>` : '') + items.map(([name, v, title, note]) =>
@@ -836,6 +869,6 @@ locate.addEventListener('click', () => {
 for (const id of ['projection', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'scaleBorder', 'land', 'islands', 'seaTint', 'rivers', 'lakes', 'trees', 'mountains', 'hills', 'continentsZoom', 'regions', 'regionsZoom', 'titleMode', 'townSize']) $(id).addEventListener('input', readControls);
 let typing = 0; // a typed title is placed when the typing pauses, not on every key: a placement takes up to a few hundred ms
 $('title').addEventListener('input', () => { clearTimeout(typing); typing = setTimeout(readControls, 400); });
-addEventListener('hashchange', () => { view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); render(); });
+addEventListener('hashchange', () => { view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); showVoyage(); render(); });
 showPlacement();
 render();

@@ -28,9 +28,10 @@ const VIEWS = {
   'close-z9': { lon: 8.93, lat: 44.41, zoom: 9 },
   'world-z2-plate-carree': { lon: 10, lat: 30, zoom: 2, projection: 'plate-carree' }, // rhumb lines bow
   'world-z2-orthographic': { lon: 10, lat: 30, zoom: 2, projection: 'orthographic' }, // the globe, cut at the horizon
+  'world-z2-voyage': { lon: 10, lat: 30, zoom: 2 }, // Magellan's Pacific crossing, cut at the seam
 };
 // settings a golden draws with beyond the defaults; region-z5 is the README's picture, lettered PORTOLANI
-const OPTS = { 'region-z5': { autoTitle: false } };
+const OPTS = { 'region-z5': { autoTitle: false }, 'world-z2-voyage': { voyage: 'magellan' } };
 // and its full-size render is kept for the README, so `npm run golden` refreshes both together
 const README_IMAGE = join(ROOT, 'docs', 'readme.jpg');
 

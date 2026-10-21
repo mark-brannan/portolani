@@ -1,0 +1,151 @@
+// Voyage overlays: a historical track drawn on the modern-geometry map in any projection. A voyage
+// is one file, data/voyages/<id>.json (the schema is docs/voyages/README.md): legs of waypoints in
+// [lon, lat], each leg joined by one of LINES and graded by one of CONFIDENCES, plus events along
+// the way (a death is drawn as a skull and crossbones). This module turns a leg into a dense path
+// and cuts it at the seam; the drawing is in scene.mjs, the land test in test/voyages.test.mjs.
+export const LINES = ['rhumb', 'great-circle', 'spline'];
+export const CONFIDENCES = ['attested', 'inferred', 'conventional'];
+export const MODES = ['sea', 'land'];
+export const EVENT_KINDS = ['death', 'landfall', 'event'];
+// how each confidence is stroked, a setLineDash pattern in px at the stroke's width
+export const DASHES = { attested: [], inferred: [9, 5], conventional: [2, 4] };
+export const STEP_KM = 25; // the path's sample spacing, close enough that a strait is followed and a curve reads smooth
+
+const RAD = Math.PI / 180, R_KM = 6371.0088;
+const fromCentre = (d) => (d > 180 ? d - 360 : d < -180 ? d + 360 : d);
+export const wrapLon = (lon) => ((((lon + 180) % 360) + 360) % 360) - 180;
+const mercY = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * RAD) / 2));
+const mercLat = (y) => (2 * Math.atan(Math.exp(y)) - Math.PI / 2) / RAD;
+
+// great-circle distance in km
+export function distanceKm([lon1, lat1], [lon2, lat2]) {
+  const p1 = lat1 * RAD, p2 = lat2 * RAD, dl = (lon2 - lon1) * RAD;
+  const a = Math.sin((p2 - p1) / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2;
+  return 2 * R_KM * Math.asin(Math.min(1, Math.sqrt(a)));
+}
+
+// Waypoints with longitude made continuous from the first (no jump across the date line), so a
+// Pacific crossing runs 150 → 190 rather than 150 → -170.
+export function unwrap(points) {
+  const out = [];
+  let prev = null;
+  for (const [lon, lat] of points) {
+    const l = prev == null ? lon : prev + fromCentre(lon - prev);
+    out.push([l, lat]);
+    prev = l;
+  }
+  return out;
+}
+
+const steps = (a, b) => Math.max(1, Math.ceil(distanceKm(a, b) / STEP_KM));
+
+// A to B along the loxodrome (constant bearing): straight on Mercator
+function rhumbPath(a, b) {
+  const n = steps(a, b), ya = mercY(Math.max(-89, Math.min(89, a[1]))), yb = mercY(Math.max(-89, Math.min(89, b[1])));
+  const out = [];
+  for (let i = 1; i <= n; i++) {
+    const t = i / n;
+    out.push([a[0] + (b[0] - a[0]) * t, mercLat(ya + (yb - ya) * t)]);
+  }
+  return out;
+}
+
+// A to B along the great circle (the shortest way), lon kept continuous with A
+function greatCirclePath(a, b) {
+  const n = steps(a, b), toXYZ = ([lon, lat]) => [Math.cos(lat * RAD) * Math.cos(lon * RAD), Math.cos(lat * RAD) * Math.sin(lon * RAD), Math.sin(lat * RAD)];
+  const p = toXYZ(a), q = toXYZ(b), dot = Math.max(-1, Math.min(1, p[0] * q[0] + p[1] * q[1] + p[2] * q[2])), w = Math.acos(dot);
+  const out = [];
+  let prev = a[0];
+  for (let i = 1; i <= n; i++) {
+    const t = i / n, sa = w < 1e-9 ? 1 - t : Math.sin((1 - t) * w) / Math.sin(w), sb = w < 1e-9 ? t : Math.sin(t * w) / Math.sin(w);
+    const x = sa * p[0] + sb * q[0], y = sa * p[1] + sb * q[1], z = sa * p[2] + sb * q[2];
+    const lon = prev + fromCentre(Math.atan2(y, x) / RAD - prev);
+    out.push([lon, Math.atan2(z, Math.hypot(x, y)) / RAD]);
+    prev = lon;
+  }
+  return out;
+}
+
+// A smooth curve through every waypoint (Catmull-Rom on lon/lat, x scaled by cos lat so the curve
+// bends the same on the ground at any latitude): the broad brush for a leg whose course is a guess
+function splinePath(pts) {
+  const out = [];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(pts.length - 1, i + 2)];
+    const n = steps(p1, p2);
+    for (let j = 1; j <= n; j++) {
+      const t = j / n, t2 = t * t, t3 = t2 * t;
+      const at = (k) => 0.5 * ((2 * p1[k]) + (-p0[k] + p2[k]) * t + (2 * p0[k] - 5 * p1[k] + 4 * p2[k] - p3[k]) * t2 + (-p0[k] + 3 * p1[k] - 3 * p2[k] + p3[k]) * t3);
+      out.push([at(0), Math.max(-89, Math.min(89, at(1)))]);
+    }
+  }
+  return out;
+}
+
+// The leg as a dense path of [lon, lat], longitude continuous from its first point.
+export function legPath(leg) {
+  const pts = unwrap(leg.points);
+  if (pts.length < 2) return pts;
+  if (leg.line === 'spline') return [pts[0], ...splinePath(pts)];
+  const join = leg.line === 'great-circle' ? greatCirclePath : rhumbPath;
+  const out = [pts[0]];
+  for (let i = 0; i < pts.length - 1; i++) out.push(...join(pts[i], pts[i + 1]));
+  return out;
+}
+
+// The path cut where it crosses the seam of a map centred on `lonCenter` (the meridian opposite it),
+// and where `visible` (an azimuthal projection's horizon) refuses a point: pieces of wrapped
+// [lon, lat], each one drawable as a single stroke.
+export function splitAtSeam(path, lonCenter = 0, visible = null) {
+  const pieces = [];
+  let piece = [], prev = null;
+  for (const [lon, lat] of path) {
+    const d = fromCentre(lon - lonCenter);
+    const cut = (prev != null && Math.abs(d - prev) > 180) || (visible && !visible(lon, lat));
+    if (cut && piece.length) { pieces.push(piece); piece = []; }
+    if (!visible || visible(lon, lat)) piece.push([wrapLon(lon), lat]);
+    prev = d;
+  }
+  if (piece.length) pieces.push(piece);
+  return pieces.filter((p) => p.length > 1);
+}
+
+// Every sea leg's samples, for the land test: [{ leg, i, lon, lat }], longitudes wrapped.
+export function seaSamples(voyage) {
+  const out = [];
+  voyage.legs.forEach((leg, i) => {
+    if (leg.mode !== 'sea') return;
+    for (const [lon, lat] of legPath(leg)) out.push({ leg, i, lon: wrapLon(lon), lat });
+  });
+  return out;
+}
+
+// Schema check: the problems in a voyage record, as strings; none when it is well formed.
+export function problems(v) {
+  const out = [];
+  const need = (ok, msg) => { if (!ok) out.push(msg); };
+  need(typeof v.id === 'string' && /^[a-z][a-z0-9-]*$/.test(v.id), 'id: lower-case slug');
+  for (const k of ['title', 'short', 'when', 'summary']) need(typeof v[k] === 'string' && v[k].length, `${k}: a string`);
+  need(Array.isArray(v.who) && v.who.length, 'who: the named people');
+  need(Array.isArray(v.sources) && v.sources.length && v.sources.every((s) => s.title && s.url), 'sources: [{ title, url }]');
+  need(Array.isArray(v.legs) && v.legs.length, 'legs: at least one');
+  for (const [i, leg] of (v.legs ?? []).entries()) {
+    const at = `leg ${i} (${leg.from} → ${leg.to})`;
+    need(typeof leg.from === 'string' && typeof leg.to === 'string', `${at}: from and to`);
+    need(MODES.includes(leg.mode), `${at}: mode one of ${MODES}`);
+    need(LINES.includes(leg.line), `${at}: line one of ${LINES}`);
+    need(CONFIDENCES.includes(leg.confidence), `${at}: confidence one of ${CONFIDENCES}`);
+    need(typeof leg.source === 'string' && leg.source.length, `${at}: a source`);
+    need(Array.isArray(leg.points) && leg.points.length >= 2 && leg.points.every((p) => Array.isArray(p) && p.length === 2 && Math.abs(p[0]) <= 180 && Math.abs(p[1]) <= 90), `${at}: points [[lon, lat], ...], two or more`);
+  }
+  need(Array.isArray(v.events), 'events: an array');
+  for (const [i, e] of (v.events ?? []).entries()) {
+    need(EVENT_KINDS.includes(e.kind), `event ${i}: kind one of ${EVENT_KINDS}`);
+    need(Number.isFinite(e.lon) && Number.isFinite(e.lat) && Math.abs(e.lon) <= 180 && Math.abs(e.lat) <= 90, `event ${i}: lon and lat`);
+    need(typeof e.label === 'string' && e.label.length, `event ${i}: a label`);
+    need(typeof e.source === 'string' && e.source.length, `event ${i}: a source`);
+    if (e.kind === 'death') need(typeof e.who === 'string' && e.who.length, `event ${i}: who died`);
+  }
+  for (const w of Array.isArray(v.who) ? v.who : []) need((v.events ?? []).some((e) => e.kind === 'death' && e.who === w), `events: where ${w} died`);
+  return out;
+}

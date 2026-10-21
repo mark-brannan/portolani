@@ -50,11 +50,16 @@
   .places { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
   .places small { display: block; margin-top: -2px; font-size: 11px; font-style: italic; opacity: 0.7; }
   .places .group { font: italic 12px var(--serif); color: var(--fg); opacity: 0.7; margin-top: 4px; }
-  #where .places button, #goPanel button, #voyagesPanel .note { padding: 3px 10px; font: 13px var(--serif); border-radius: 12px; }
+  #where .places button, #goPanel button, #voyageList button { padding: 3px 10px; font: 13px var(--serif); border-radius: 12px; }
   #where .places button { display: block; text-align: left; }
   #coords { display: flex; gap: 4px; align-self: stretch; }
   #coords input { flex: 1; min-width: 0; max-width: none; padding: 3px 8px; font: 13px var(--serif); border-radius: 12px; background: var(--panel); color: var(--fg); border: 1px solid var(--rule); }
-  #voyagesPanel .note { margin: 0; font-style: italic; background: var(--panel); border: 1px solid var(--rule); }
+  #voyageList { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+  #voyageList button { white-space: nowrap; }
+  #voyageList button[aria-checked="true"] { background: #e2cd9e; color: #3b2a1a; border-color: #b89a68; } /* the chosen voyage, lit like an open instrument */
+  #voyageList .when { font-size: 11px; font-style: italic; opacity: 0.75; margin-left: 6px; }
+  #voyageList .brief { display: none; }
+  @media (max-width: 520px) { #voyageList .full { display: none; } #voyageList .brief { display: inline; } } /* a phone: the short name and the years, so no title wraps */
   #goMiss { margin: 0; padding: 2px 8px; font: italic 12px var(--serif); background: var(--panel); border-radius: 8px; }
 
   /* the drawers: on a wide screen each slides in from the right below the row, right-aligned with it and clear
@@ -244,7 +249,7 @@
     <ul id="sightsList" class="places"></ul>
   </div>
   <div id="voyagesPanel" class="drawer menu">
-    <p class="note">Famous voyages: soon</p>
+    <ul id="voyageList" role="radiogroup" aria-label="Voyage"></ul>
   </div>
   <div id="anchorPanel" class="drawer menu">
     <ul id="anchorages" class="places"></ul>

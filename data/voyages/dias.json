@@ -1,0 +1,52 @@
+{
+  "id": "dias",
+  "title": "Bartolomeu Dias round the Cape of Good Hope, 1487–88",
+  "short": "Dias 1487",
+  "who": ["Bartolomeu Dias"],
+  "when": "1487–1488",
+  "summary": "Two caravels and a supply ship out of Lisbon, down the coast of Africa past Diogo Cão's last padrão, blown out to sea by a storm, and back onto the coast at Mossel Bay; the first Europeans to round the southern tip of Africa.",
+  "sources": [
+    { "title": "Bartolomeu Dias (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Bartolomeu_Dias" },
+    { "title": "Diaz de Novaes, Bartholomeu, 1911 Encyclopædia Britannica (Wikisource)", "url": "https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Diaz_de_Novaes,_Bartholomeu" },
+    { "title": "E. G. Ravenstein, The Voyages of Diogo Cão and Bartholomeu Dias, 1482–88, Geographical Journal 16 (1900)", "url": "https://www.jstor.org/stable/1775267" }
+  ],
+  "legs": [
+    { "from": "Lisbon", "to": "Cape Verde (Dakar)", "dates": "Aug – Sep 1487", "mode": "sea", "line": "spline",
+      "confidence": "conventional", "points": [[-9.6, 38.6], [-9.8, 36.9], [-10.4, 34.5], [-10.6, 32], [-12.2, 29.0], [-13.6, 27.4], [-15.3, 26.1], [-16.8, 23.7], [-17.9, 21.0], [-17.7, 18.5], [-17.8, 16.0], [-17.9, 14.7]],
+      "source": "the usual outward run of the Portuguese caravels", "note": "the roteiro is lost; the line follows the coast at an offing" },
+    { "from": "Cape Verde (Dakar)", "to": "São Jorge da Mina (Elmina)", "dates": "Sep – Oct 1487", "mode": "sea", "line": "spline",
+      "confidence": "conventional", "points": [[-17.9, 14.7], [-17.8, 12.0], [-17.3, 10.3], [-15.0, 8.8], [-13.8, 7.6], [-11.8, 6.0], [-9.5, 4.3], [-7.7, 3.6], [-5.0, 4.0], [-2.3, 4.0], [-1.4, 4.5]],
+      "source": "the Guinea coast route to the Portuguese fort at Mina" },
+    { "from": "São Jorge da Mina (Elmina)", "to": "Cabo Padrão (Congo mouth)", "dates": "Oct – Nov 1487", "mode": "sea", "line": "spline",
+      "confidence": "inferred", "points": [[-1.4, 4.5], [2.0, 3.7], [5.0, 2.5], [6.5, -0.8], [7.7, -1.8], [9.5, -3.0], [10.8, -4.8], [11.8, -6.3]],
+      "source": "the Gulf of Guinea and the coast of Gabon, which Cão had already charted" },
+    { "from": "Cabo Padrão (Congo mouth)", "to": "Cabo de Santa Maria (Angola)", "dates": "Nov 1487", "mode": "sea", "line": "spline",
+      "confidence": "conventional", "points": [[11.8, -6.3], [12.0, -8.0], [12.2, -10.0], [12.0, -12.0], [11.9, -13.6]],
+      "source": "along Cão's padrão sites, the stone pillars he set up in 1482–86" },
+    { "from": "Cabo de Santa Maria (Angola)", "to": "Walvis Bay", "dates": "Nov – Dec 1487", "mode": "sea", "line": "spline",
+      "confidence": "conventional", "points": [[11.9, -13.6], [11.5, -15.2], [11.0, -17.3], [11.0, -18.8], [12.2, -20.5], [12.8, -21.6], [13.4, -23.0]],
+      "source": "by Monte Negro and Cape Cross, the last of Cão's padrões" },
+    { "from": "Walvis Bay", "to": "Angra Pequena (Lüderitz)", "dates": "Dec 1487", "mode": "sea", "line": "spline",
+      "confidence": "inferred", "points": [[13.4, -23.0], [13.7, -24.0], [14.0, -25.5], [14.2, -26.6]],
+      "source": "the Namibian coast, the stop where Dias set up a padrão (São Cristóvão)" },
+    { "from": "Angra Pequena (Lüderitz)", "to": "Mossel Bay", "dates": "Dec 1487 – 3 Feb 1488", "mode": "sea", "line": "spline",
+      "confidence": "inferred", "points": [[14.2, -26.6], [11.0, -30.0], [8.5, -35.0], [11.5, -38.5], [17.0, -39.0], [21.5, -37.0], [22.3, -34.4]],
+      "source": "Barros: thirteen days of storm, south then east without sight of land", "note": "stood out to sea, passed the Cape unseen, then turned north to find the coast" },
+    { "from": "Mossel Bay", "to": "Kwaaihoek (Rio do Infante)", "dates": "4 Feb – 12 Mar 1488", "mode": "sea", "line": "spline",
+      "confidence": "attested", "points": [[22.3, -34.4], [23.5, -34.5], [24.8, -34.65], [25.8, -34.4], [26.3, -34.1], [26.8, -33.95]],
+      "source": "Barros: Aguada de São Brás, the Ilhéu da Cruz, the Rio do Infante", "note": "the farthest point; the padrão de São Gregório on Kwaaihoek" },
+    { "from": "Kwaaihoek (Rio do Infante)", "to": "Cape of Good Hope", "dates": "13 Mar – May 1488", "mode": "sea", "line": "spline",
+      "confidence": "inferred", "points": [[26.8, -33.95], [25.8, -34.4], [24.8, -34.65], [23.5, -34.6], [22.0, -34.9], [20.0, -35.3], [19.0, -35.0], [18.2, -34.8]],
+      "source": "Barros: the Cape sighted for the first time on the way back", "note": "named the Cabo das Tormentas; the king renamed it Good Hope" },
+    { "from": "Cape of Good Hope", "to": "Príncipe", "dates": "May – Aug 1488", "mode": "sea", "line": "spline",
+      "confidence": "conventional", "points": [[18.2, -34.8], [15.5, -30.0], [12.0, -24.0], [8.5, -15.0], [7.0, -5.0], [7.0, 0.5], [7.2, 1.0]],
+      "source": "the way up the Benguela current to the Gulf of Guinea" },
+    { "from": "Príncipe", "to": "Lisbon", "dates": "Aug – Dec 1488", "mode": "sea", "line": "spline",
+      "confidence": "conventional", "points": [[7.2, 1.0], [2.0, 3.7], [-1.4, 4.5], [-2.3, 4.0], [-5.0, 4.0], [-7.7, 3.6], [-9.5, 4.3], [-11.8, 6.0], [-13.8, 7.6], [-15.0, 8.8], [-17.3, 10.3], [-17.8, 12.0], [-17.9, 14.7], [-17.8, 16.0], [-17.7, 18.5], [-17.9, 21.0], [-16.8, 23.7], [-15.3, 26.1], [-13.6, 27.4], [-12.2, 29.0], [-10.6, 32], [-10.4, 34.5], [-9.8, 36.9], [-9.6, 38.6]],
+      "source": "by Mina and the Guinea coast, the ordinary homeward run; Lisbon in Dec 1488" }
+  ],
+  "events": [
+    { "kind": "event", "lon": 26.64, "lat": -33.72, "date": "12 Mar 1488", "label": "Padrão de São Gregório at Kwaaihoek, the farthest point", "source": "Barros" },
+    { "kind": "death", "who": "Bartolomeu Dias", "lon": 15.0, "lat": -36.0, "date": "29 May 1500", "label": "Dias lost in a storm off the Cape, on Cabral's fleet, 1500", "source": "Wikipedia; Britannica 1911" }
+  ]
+}

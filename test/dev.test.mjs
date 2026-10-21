@@ -25,6 +25,7 @@ test('serves the sources and fetches geo/ from the data site', async (t) => {
   assert.equal((await get('/coast-wright/index.js')).status, 200);
   assert.equal((await get('/coastlines/catalogue.json')).status, 200);
   assert.equal((await get('/packs/debry/pack.json')).status, 200);
+  assert.equal((await get('/data/voyages/index.json')).status, 200);
   assert.deepEqual(await (await get('/geo/f/index.json')).json(), { from: '/geo/f/index.json' });
   assert.equal((await get('/bands.mjs')).status, 200); // reached from scene.mjs by import, so Pages has it
   assert.equal((await get('/build-preview.mjs')).status, 404); // in scripts/ but not reached, so Pages lacks it, and so does dev
