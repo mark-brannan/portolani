@@ -1,15 +1,18 @@
 // Portolani mockup scene: placement (buildScene) and draw order (drawScene), independent of where
 // it runs. A host (scripts/render.mjs in Node, public/page.js in a browser) supplies an
 // environment: createCanvas(w, h), readJSON(path), loadImage(path), loadFont(). Paths are logical:
-// `geo/<id>.geojson`, a coastlines data id, `geo/<band>/<cell>.json`, a detail cell cut by
-// scripts/build-preview.mjs (close views only), and `packs/<pack>/<file>`. Land, wash, coast and
+// `geo/<file>.geojson`, a coastlines data file, `geo/<band>/<cell>.json`, a detail cell cut by
+// scripts/build-preview.mjs (close views only), and `packs/<pack>/<file>`. Which of the coastlines
+// files and cells a view draws its land, coast, rivers and lakes from is coastlines' provider's
+// choice (`coastlines/provider`), not this module's. Land, wash, coast and
 // lattice are drawn in lon/lat through coast-wright, so any view or projection draws the same way.
 // A view is a centre, zoom and projection, { lon, lat, zoom, projection }, on a W x H canvas; the
 // projection is one of PROJECTIONS, Mercator when left out.
 
 import { sheetsFor, roseSheet, inShadow, territory, cutOut, overlapRule, OVERLAP_RULES, DEFAULT_OVERLAP, WORLD_BAND, BANDS as ATLAS_BANDS, ROSE as ATLAS_ROSE, ORIGINS as ATLAS_ORIGINS } from './atlas.mjs';
 import { fill, trace, limn, rhumb, place, letter, geojsonPolygons, geojsonRings } from 'coast-wright';
-import { bandOf } from './bands.mjs';
+import { provider } from 'coastlines/provider';
+import catalogue from 'coastlines/catalogue.json' with { type: 'json' };
 import { islandInfo, ISLAND_KM2 } from './island.mjs';
 import { islesOf } from './isles.mjs';
 import { cityPlan, drawCity, drawHouses, pxRings, insideRings } from './city.mjs';
@@ -22,6 +25,7 @@ export { SIGHT_TILES } from './sights.mjs'; // the page's tiles for its places; 
 import { BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from './buildings.mjs';
 import { legPath, splitAtSeam, DASHES, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, readVoyage } from './voyages.mjs';
 export { VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours };
+const record = (id) => catalogue.find((r) => r.id === id); // a coastlines catalogue record by its id
 
 let env;
 const createCanvas = (w, h) => env.createCanvas(w, h);
@@ -68,13 +72,11 @@ const W = 1600, H = 1000;
 const FRAME = { lonMin: -6, lonMax: 20, latMin: 34, latMax: 46 };
 const MARGIN = 2; // degrees beyond FRAME whose features the scene keeps
 const DETAIL = { lon: 8.93, lat: 44.41, scale: 2 }; // Genoa; window clamped to the scene
-// Whole world at the far end; 50m data holds to about z9. The bands are read from the catalogue
-// (scripts/bands.mjs reads the catalogue the coastlines package publishes; build-preview.mjs reads the same records to write the cells):
-// past a record's `zoom.min` a view draws from its cells (geo/<dir>/<xi>_<yi>.json, `grid.cellDeg`
-// degrees square) within `grid.marginDeg` degrees of its frame, a couple of screens at the band's
-// first zoom, so a pan stays on loaded cells; a band whose index the site lacks is skipped and the
-// one below it drawn instead. Measured vertex spacing (median, m): 50m 7,650; NE 10m 1,574; GSHHG h 707.
-const BANDS = ['ne-10m-land', 'gshhg-h-land', 'gshhg-f-land'].map(bandOf);
+// Whole world at the far end; 50m data holds to about z9. Close in, coastlines' provider draws the
+// view from the finest band of cells it has passed (geo/<dir>/<xi>_<yi>.json), the cells within the
+// band's margin of its frame, a couple of screens at the band's first zoom, so a pan stays on loaded
+// cells; a band whose index the site lacks is skipped and the one below it drawn instead. Measured
+// vertex spacing (median, m): 50m 7,650; NE 10m 1,574; GSHHG h 707.
 const ZOOM = { min: 1, max: 15 };
 const URBAN_PX = 56; // screen px a built-up area's long side reaches before it is drawn
 
@@ -86,86 +88,39 @@ export const SCALE_BORDERS = ['bordered', 'blank', 'transparent'];
 const LAND_WASH = { gilt: STYLE.gilt, green: STYLE.green, ochre: STYLE.ochre, islands: STYLE.ochre };
 const SHOAL_OFFSET = 4, SHOAL_GAP = 6; // px seaward of the coast, and between dots
 let tintPolys = null; // the seas to tint, or null
-// Rivers and lakes (water.mjs), from the 50m files, loaded once the first style that draws them is
-// chosen, and past WATER_ZOOM from Natural Earth 10m with its regional supplements, cut into
-// WATER_10M's cells (cutWater), the cells around the view; a site without them keeps the 50m. A
-// lake or river is drawn where its box meets the view widened by WATER_PX.
-let water = null, waterLoad = null;
-const WATER_10M = bandOf('ne-10m-water');
-// Where the 10m water takes over from the 50m, two zooms before the 10m land: the 50m lakes file has
-// no Lake Washington, Maggiore or Como, and at 5-degree cells a z7 view fetches the cells a z9 one
-// does (Seattle 8 cells, 0.7 MB; the Great Lakes 12, 1.7 MB).
-const WATER_ZOOM = WATER_10M.zoom;
+// Rivers and lakes (water.mjs), as coastlines' provider serves them for the view: the 50m files from
+// far out, and close in Natural Earth 10m with its regional supplements, cut into cells (cutWater),
+// then GSHHG's lakes too, those no Natural Earth file has (Dian Chi at Kunming, Lago Mascardi at
+// Bariloche), each Natural Earth lake that is one of them left out by the provider so a lake is
+// drawn once. A lake or river is drawn where its box meets the view widened by WATER_PX.
+let water = null;
 const WATER_PX = 64; // a lozenge and its tributaries reach past the lake they stand for
-const loadWater = () => (waterLoad ??= Promise.all(['ne-rivers-lake-centerlines-50m', 'ne-lakes-50m'].map(loadGeo))
-  .then(([r, l]) => waterOf(r, l)).catch((e) => { waterLoad = null; throw e; })); // a failed fetch is tried again
-const DETAIL_ZOOM = BANDS[0].zoom;
-const waterCells = new Map(); // 'water-10m/<xi>_<yi>' -> waterOf of the cell
-async function loadWater10m(view) {
-  const known = await loadBandIndex(WATER_10M);
-  if (!known) return null;
-  const parts = await Promise.all(cellsAround(WATER_10M, view, known).map((k) => {
-    if (!waterCells.has(k)) waterCells.set(k, env.readJSON(`geo/${k}.json`).then((c) => waterOf(c.rivers, c.lakes)).catch((e) => { waterCells.delete(k); throw e; }));
-    return waterCells.get(k);
-  }));
-  const once = (list) => [...new Map(list.map((w) => [w.id, w])).values()]; // a feature reaching several cells is in each
-  return { rivers: once(parts.flatMap((p) => p.rivers)), lakes: once(parts.flatMap((p) => p.lakes)) };
+// The first zoom of the 10m land's cells: from there the lesser places are drawn as buildings.
+const DETAIL_ZOOM = record('ne-10m-land').zoom.min;
+const isArea = (f) => /Polygon$/.test(f.geometry?.type ?? '');
+// A Natural Earth river or lake as waterOf makes it, once per feature: a whole file's and a cell's
+// features are the provider's same objects from view to view.
+const neWater = new WeakMap();
+const neOf = (f, kind) => neWater.get(f) ?? neWater.set(f, waterOf(kind === 'rivers' ? { features: [f] } : null, kind === 'lakes' ? { features: [f] } : null)[kind][0]).get(f);
+async function loadWater(view, lakesOn) {
+  const g = coast(), cv = coastView(view);
+  const [w, shoreFeatures] = await Promise.all([collect(g.features(cv, 'water')), lakesOn ? collect(g.features(cv, 'lakeshore')) : []]);
+  // below the 10m water's cells the provider's water is the 50m rivers alone, and the lakes their own file
+  const lakeFeatures = g.bandFor(cv, 'water') === 'ne-50m-rivers-lake-centerlines' ? (lakesOn ? await collect(g.features(cv, 'lakes')) : []) : w.filter(isArea);
+  const rivers = w.filter((f) => !isArea(f)).map((f) => neOf(f, 'rivers'));
+  // a GSHHG lake's pieces in several cells are one lake, its pieces and shores joined; its key, GSHHG's
+  // number, keeps its colour from view to view
+  const gshhg = new Map(), ne = [];
+  for (const f of lakeFeatures) {
+    if (typeof f.id === 'string' && f.id.startsWith('gshhg-')) {
+      const [x0, y0, x1, y1] = f.bbox;
+      const l = gshhg.get(f.id) ?? gshhg.set(f.id, { id: f.id, key: `gshhg-${f.id.split(':')[1]}`, polys: [], shore: [], box: { x0, y0, x1, y1 }, minZoom: 0 }).get(f.id);
+      l.polys.push(f.geometry.coordinates);
+    } else ne.push(neOf(f, 'lakes'));
+  }
+  for (const f of shoreFeatures) gshhg.get(f.id)?.shore.push(f.geometry.coordinates);
+  return { rivers, lakes: [...ne, ...gshhg.values()] };
 }
-
-// GSHHG lakes past the h band's zoom, at the h or f resolution as the land is: the lakes no Natural
-// Earth file has (Dian Chi at Kunming, Lago Mascardi at Bariloche), cut as land is so a piece fills
-// its cell and only the shore is inked. A view adds them to its water and drops each Natural Earth
-// lake that is one of them (sameLake), so a lake is not drawn twice.
-const LAKE_BANDS = ['gshhg-h-lakes', 'gshhg-f-lakes'].map(bandOf);
-const lakeCells = new Map(); // '<dir>/<xi>_<yi>' -> Map(lake id -> { polys, shore, box })
-async function loadLakes(view) {
-  for (const b of LAKE_BANDS) if (view.zoom > b.zoom) await loadBandIndex(b);
-  const band = LAKE_BANDS.filter((b) => view.zoom > b.zoom && bandIndex.get(b.dir)).at(-1);
-  if (!band) return [];
-  const parts = await Promise.all(cellsAround(band, view, bandIndex.get(band.dir)).map((k) => {
-    if (!lakeCells.has(k)) lakeCells.set(k, env.readJSON(`geo/${k}.json`).then((c) => {
-      const lakes = new Map(), lake = (id) => lakes.get(id) ?? lakes.set(id, { polys: [], shore: [] }).get(id);
-      c.land.forEach((poly, i) => { const [id, x0, y0, x1, y1] = c.m[i], l = lake(id); l.polys.push(poly); l.box = { x0, y0, x1, y1 }; });
-      c.coast.forEach((line, i) => lake(c.cm[i]).shore.push(line));
-      return lakes;
-    }).catch((e) => { lakeCells.delete(k); throw e; }));
-    return lakeCells.get(k);
-  }));
-  // a lake reaching several cells is one feature, its pieces and shores joined
-  const joined = new Map();
-  for (const p of parts) for (const [id, l] of p) {
-    const j = joined.get(id) ?? joined.set(id, { id: `gshhg-${id}`, key: `gshhg-${id}`, polys: [], shore: [], box: l.box, minZoom: 0 }).get(id);
-    j.polys.push(...l.polys); j.shore.push(...l.shore);
-    if (l.box) j.box = l.box;
-  }
-  return [...joined.values()].filter((l) => l.box);
-}
-// A Natural Earth lake is the same lake as a GSHHG one, and dropped, when its box lies inside the
-// GSHHG lake's within LAKE_SLACK degrees (about Natural Earth 10m's vertex spacing: its Biwa reaches
-// 0.004 past GSHHG's) and a point of it, a ring's centroid or a vertex, lies in the GSHHG water. The
-// box alone would drop every lake inside Superior's or the Caspian's box: 151 worldwide, Lake Panache
-// by Sudbury among them.
-const LAKE_SLACK = 0.02;
-const inside = (a, b) => a.x0 >= b.x0 - LAKE_SLACK && a.x1 <= b.x1 + LAKE_SLACK && a.y0 >= b.y0 - LAKE_SLACK && a.y1 <= b.y1 + LAKE_SLACK;
-const inRing = ([px, py], ring) => {
-  let c = false;
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    const [xi, yi] = ring[i], [xj, yj] = ring[j];
-    if ((yi > py) !== (yj > py) && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) c = !c;
-  }
-  return c;
-};
-const inWater = (p, polys) => polys.some((poly) => inRing(p, poly[0]) && !poly.slice(1).some((hole) => inRing(p, hole)));
-const centroid = (ring) => {
-  let a = 0, x = 0, y = 0;
-  for (let i = 0; i < ring.length - 1; i++) {
-    const [x0, y0] = ring[i], [x1, y1] = ring[i + 1], w = x0 * y1 - x1 * y0;
-    a += w; x += (x0 + x1) * w; y += (y0 + y1) * w;
-  }
-  return a ? [x / (3 * a), y / (3 * a)] : ring[0];
-};
-const sameLake = (l, g) => inside(l.box, g.box) && l.polys.some((poly) => inWater(centroid(poly[0]), g.polys) || poly[0].some((p, i) => i % 4 === 0 && inWater(p, g.polys)));
-const withLakes = (w, lakes) => (lakes.length ? { ...w, lakes: [...w.lakes.filter((l) => !lakes.some((g) => sameLake(l, g))), ...lakes] } : w);
 
 // Per-run tuning; `density` scales how much ornament is placed (1 = the committed mockup).
 // `hillShare`: the share of the hill sprites that fit which stand, all of them from density 1.
@@ -439,7 +394,23 @@ const scaleBox = (c, lift = 0) => obb(c[1] === 'l' ? 300 : W - 300, c[0] === 'b'
 
 // ---------------------------------------------------------------- data
 
-const loadGeo = (id) => env.readJSON(`geo/${id}.geojson`);
+// Where the site keeps a catalogue record's whole file: the catalogue's `data/<file>` under geo/
+// (build-preview.mjs writes it there; render.mjs and the tests read it from the package's data/).
+const sitePath = (p) => (p.startsWith('data/') ? `geo/${p.slice('data/'.length)}` : p);
+const loadGeo = (id) => env.readJSON(sitePath(record(id).sources.find((s) => s.kind === 'file').url));
+
+// coastlines' provider over this environment's files: one per environment, as it keeps the indexes and
+// cells it has read. A view for it is the frame a scene paints and its scale at the centre, in metres
+// per px of a 512 px web-mercator world, which the provider turns back into the scene's zoom.
+let coastEnv = null, coastProvider = null;
+const coast = () => (coastEnv === env ? coastProvider : (coastEnv = env, coastProvider = provider({ read: (p) => env.readJSON(sitePath(p)) })));
+const WEB_MERCATOR_R = 6378137;
+const coastView = (view, f = frameOf(makeProjection(view), 0)) => ({
+  lat: view.lat, resolution: (2 * Math.PI * WEB_MERCATOR_R * Math.cos(view.lat * RAD)) / (512 * 2 ** view.zoom),
+  lonMin: f.lonMin, lonMax: f.lonMax, latMin: f.latMin, latMax: f.latMax,
+});
+const WORLD_VIEW = { lat: 0, resolution: (2 * Math.PI * WEB_MERCATOR_R) / 512, lonMin: -180, lonMax: 180, latMin: -90, latMax: 90 }; // zoom 0
+const collect = async (features) => { const out = []; for await (const f of features) out.push(f); return out; };
 
 // The whole world, parsed once per data set, each shape with its lon/lat box; coast lines also
 // split into short runs, which is what a frame drawn while dragging walks.
@@ -448,15 +419,18 @@ async function loadWorld() {
   // the urban footprints (scripts/urban.mjs) are optional: a site without them draws every town as an icon;
   // so are the 50m urban areas, which wash the built-up ground of a town without a footprint
   const missing = (e) => { if (!/404|ENOENT|no urban/.test(String(e?.code ?? e?.message ?? e))) throw e; return null; };
-  const [landGeo, coastGeo, placesGeo, namesGeo, urban, urbanGeo] = await Promise.all(
-    [...['ne-land-50m', 'ne-coastline-50m', 'ne-populated-places-50m'].map(loadGeo), env.readJSON('geo/names-50m.json'),
-      env.readJSON('geo/urban-10m.json').catch(missing), loadGeo('ne-urban-areas-50m').catch(missing)]);
+  // the land and coast of the whole world, as the provider serves a world view: the 50m files
+  const [landFeatures, coastFeatures, placesGeo, namesGeo, urban, urbanGeo] = await Promise.all(
+    [collect(coast().features(WORLD_VIEW, 'land')), collect(coast().features(WORLD_VIEW, 'coastline')), loadGeo('ne-50m-populated-places'), env.readJSON('geo/names-50m.json'),
+      env.readJSON('geo/urban-10m.json').catch(missing), loadGeo('ne-50m-urban-areas').catch(missing)]);
+  const landGeo = { type: 'FeatureCollection', features: landFeatures }, coastGeo = { type: 'FeatureCollection', features: coastFeatures };
+  const worldKey = landFeatures[0] ?? landFeatures; // the provider's own Feature, the same object while it keeps the file
   // the island index (scripts/isles.mjs) is optional too: without it the islands 50m lacks go unmarked
   const islesIndex = await env.readJSON('geo/isles.json').catch(missing);
   // and the remote islands 50m drops, drawn from Natural Earth 10m (scripts/isles.mjs isleLand) from
   // ISLE_LAND_ZOOM on: without them Pitcairn, Ducie and Oeno are marks, not land, until the 10m band
   const isleLand = await env.readJSON('geo/isles-land.json').catch(missing);
-  let world = worlds.get(landGeo);
+  let world = worlds.get(worldKey);
   if (world) return world;
   const extra = isleLand?.land ?? [];
   const land = [...geojsonPolygons(landGeo), ...extra].map((poly, i, all) => ({ poly: Object.assign(poly, { isl: islandInfo(poly) }), box: bbox(poly[0]),
@@ -485,70 +459,40 @@ async function loadWorld() {
     .filter((u) => !footprints.some((t) => meets(t.box, u.box))) : [])];
   const isles = islesOf(islesIndex).map((i) => ({ ...i, box: { x0: i.lon, x1: i.lon, y0: i.lat, y1: i.lat } }));
   world = { land, lines, runs, places, lesser, names, urban: urbanAreas, isles };
-  worlds.set(landGeo, world);
+  worlds.set(worldKey, world);
   return world;
 }
 
-// The band a view draws from: the closest one whose zoom it has passed and whose index is not known
-// to be missing (an index not yet asked for counts as present; loadDetail asks before choosing).
-const bandIndex = new Map(); // dir -> Set of cell keys, or null when the site has no such band
-const bandFor = (zoom) => BANDS.filter((b) => zoom > b.zoom && bandIndex.get(b.dir) !== null).at(-1);
-async function loadBandIndex(band) {
-  if (!bandIndex.has(band.dir)) {
-    bandIndex.set(band.dir, env.readJSON(`geo/${band.dir}/index.json`).then((i) => new Set(i.cells)).catch(() => null));
-  }
-  return (bandIndex.set(band.dir, await bandIndex.get(band.dir)), bandIndex.get(band.dir));
-}
-
-// The detail world around a view: the band's cells that meet its frame widened by its margin, each
-// fetched and boxed once, with the 50m places.
-const cells = new Map();
-const cellKey = (xi, yi) => `${xi}_${yi}`;
-// The band's cells, '<dir>/<xi>_<yi>', that meet the view's frame widened by its margin and that the
-// band's index (`known`) lists.
-function cellsAround(band, view, known) {
-  const f = frameOf(makeProjection(view), band.margin), deg = band.cell, n = 360 / deg;
-  const keys = new Set();
-  for (let xi = Math.floor(f.lonMin / deg); xi <= Math.floor(f.lonMax / deg); xi++) {
-    const wx = ((((xi + n / 2) % n) + n) % n) - n / 2; // wrapped across the antimeridian
-    for (let yi = Math.max(-90 / deg, Math.floor(f.latMin / deg)); yi <= Math.min(90 / deg - 1, Math.floor(f.latMax / deg)); yi++) {
-      if (known.has(cellKey(wx, yi))) keys.add(`${band.dir}/${cellKey(wx, yi)}`);
-    }
-  }
-  return [...keys];
-}
+// The detail world around a view: the land and coast of the band coastlines' provider draws it from,
+// each piece boxed once, with the 50m places; the 50m world itself where the provider would draw the
+// view from its whole file.
+const detailPieces = new WeakMap(); // a piece's coordinates -> what the scene keeps of it
+const piece = (key, make) => detailPieces.get(key) ?? detailPieces.set(key, make()).get(key);
+const featurePolys = (f) => (f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates : []);
 async function loadDetail(coarse, view) {
-  for (const b of BANDS) if (view.zoom > b.zoom) await loadBandIndex(b);
-  const band = bandFor(view.zoom);
-  if (!band) return coarse;
-  const f = frameOf(makeProjection(view), band.margin);
-  const parts = await Promise.all(cellsAround(band, view, bandIndex.get(band.dir)).map((k) => {
-    if (!cells.has(k)) {
-      cells.set(k, env.readJSON(`geo/${k}.json`).then((c) => {
-        const lines = c.coast.map((line) => ({ line, box: bbox(line) }));
-        return {
-          // each piece carries its island's area and colour from the cut (a cell without them works one out from the piece)
-          land: c.land.map((poly, i) => ({ poly: Object.assign(poly, { isl: c.m ? { km2: c.m[i][0], hue: c.m[i][1] } : islandInfo(poly) }), box: bbox(poly[0]) })),
-          lines,
-          runs: lines.flatMap(({ line }) => coastRuns(line).map((run) => ({ run, box: bbox(run) }))),
-        };
-      }).catch((e) => { cells.delete(k); throw e; })); // a failed fetch is tried again at the next stop
-    }
-    return cells.get(k);
-  }));
+  const g = coast(), cv = coastView(view);
+  const band = record((await g.pending(cv, 'land')).band);
+  if (!band?.grid) return coarse;
+  const [landFeatures, coastFeatures] = await Promise.all([collect(g.features(cv, 'land')), collect(g.features(cv, 'coastline'))]);
+  // each piece carries its island's area and colour from the cut (a cell without them works one out from the piece)
+  const land = landFeatures.flatMap((f) => featurePolys(f).map((poly) => piece(poly, () => ({
+    poly: Object.assign(poly, { isl: f.properties?.km2 !== undefined ? { km2: f.properties.km2, hue: f.properties.hue } : islandInfo(poly) }), box: bbox(poly[0]) }))));
+  const coastPieces = coastFeatures.flatMap((f) => geojsonRings(f)).map((line) => piece(line, () => ({ line, box: bbox(line), runs: coastRuns(line).map((run) => ({ run, box: bbox(run) })) })));
+  const f = frameOf(makeProjection(view), band.grid.marginDeg);
   return {
-    land: parts.flatMap((p) => p.land), lines: parts.flatMap((p) => p.lines), runs: parts.flatMap((p) => p.runs),
-    places: coarse.places, lesser: coarse.lesser, names: coarse.names, urban: coarse.urban, isles: band.zoom < MARKS_END ? coarse.isles.filter((i) => nearLL(f, i.lon, i.lat)) : [], detail: { ...f, band: band.dir }, // the lon/lat frame the loaded cells cover, and whose
+    land, lines: coastPieces.map(({ line, box }) => ({ line, box })), runs: coastPieces.flatMap((p) => p.runs),
+    places: coarse.places, lesser: coarse.lesser, names: coarse.names, urban: coarse.urban, isles: band.zoom.min < MARKS_END ? coarse.isles.filter((i) => nearLL(f, i.lon, i.lat)) : [], detail: { ...f, band: band.id }, // the lon/lat frame the loaded cells cover, and whose
   };
 }
 
-// Whether a moving view can be drawn from `world`: 50m always; a band's cells only while the view
-// would still choose that band and sits inside the frame they were loaded for, so a long drag or a
-// zoom across a band edge shows the 50m coast rather than an empty sea or a coarser cell.
+// Whether a moving view can be drawn from `world`: 50m always; a band's cells only while the
+// provider would still choose that band for the view and it sits inside the frame they were loaded
+// for, so a long drag or a zoom across a band edge shows the 50m coast rather than an empty sea or a
+// coarser cell.
 function covers(world, view) {
   if (!world.detail) return true;
-  if (bandFor(view.zoom)?.dir !== world.detail.band) return false;
   const d = world.detail, f = frameOf(makeProjection(view), 0);
+  if (coast().bandFor(coastView(view, f), 'land') !== d.band) return false;
   return f.latMin >= d.latMin && f.latMax <= d.latMax && SHIFTS.some((s) => f.lonMin + s >= d.lonMin && f.lonMax + s <= d.lonMax);
 }
 
@@ -600,7 +544,7 @@ export function insideRing(ring, lon, lat) {
 // of a rim, and the ring says more.
 // The GSHHG "h" band and those after it hold every island in the index, so a view drawn from them
 // marks none (loadDetail).
-const MARKS_END = bandOf('gshhg-h-land').zoom;
+const MARKS_END = record('gshhg-h-land').zoom.min;
 // The remote islands' outlines are drawn from this zoom on, where Pitcairn is a couple of px across;
 // before it the marks stand for them, at less cost than some two thousand outlines under a pixel each.
 const ISLE_LAND_ZOOM = 5;
@@ -2867,9 +2811,8 @@ export async function createScene(environment, opts = {}) {
   const { scaleSprite, ...placed } = chosen;
   STYLE.mountainSprites = placed.mountains.length > 0;
   tintPolys = seaTint ? geojsonPolygons(await env.readJSON('geo/seas-50m.json')) : null;
-  if (STYLE.rivers !== 'off' || STYLE.lakes !== 'off') water = (view.zoom > WATER_ZOOM && await loadWater10m(view)) || await loadWater();
-  if (STYLE.lakes !== 'off') water = withLakes(water, await loadLakes(view));
-  const world = view.zoom > DETAIL_ZOOM ? await loadDetail(coarse, view) : coarse;
+  if (STYLE.rivers !== 'off' || STYLE.lakes !== 'off') water = await loadWater(view, STYLE.lakes !== 'off');
+  const world = await loadDetail(coarse, view);
   const voyages = await loadVoyages(opts.voyages ?? (opts.voyage ? [{ id: opts.voyage }] : []));
   const tLoad = performance.now();
 

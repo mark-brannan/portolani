@@ -16,7 +16,7 @@ const LAKE_MIN_PX = 8; // and one shorter than this is too small to draw as one 
 
 // Whether a river or lake is worth drawing at a zoom: Natural Earth's own min_zoom, counted in
 // 256 px tiles, one zoom behind the scene's 512 px ones. The greatest show from far out, every 50m
-// one from zoom 4, so a world view is not a hairball; the 10m ones, drawn only past WATER_ZOOM (z7),
+// one from zoom 4, so a world view is not a hairball; the 10m ones, drawn only past the 10m water's first zoom (z7),
 // all carry a min_zoom of 7.2 or less, so a view past z7 draws every one, the view's few cells' worth.
 export const shown = (feature, zoom) => feature.minZoom <= zoom + 1;
 
@@ -80,7 +80,7 @@ export const RIVERS = {
 };
 
 // True shapes, washed, hatched if asked, and edged along `shores`. A lake cut into cells (GSHHG,
-// scene.mjs LAKE_BANDS) brings its shore apart from its pieces, so a cut edge is never inked.
+// from coastlines' provider) brings its shore apart from its pieces, so a cut edge is never inked.
 const shoresOf = (features) => features.flatMap((f) => f.shore ?? f.polys.flat());
 function trueLakes(g, data, polys, shores, { wash, alpha, hatching, edge }) {
   if (!polys.length) return;

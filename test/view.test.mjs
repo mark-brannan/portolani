@@ -1,6 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { panView, zoomView, clampView, covers, viewProjection, DEFAULT_VIEW, ZOOM, PROJECTION_NAMES, W, H } from '../scripts/scene.mjs';
+import { readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
+import { createScene, panView, zoomView, clampView, covers, viewProjection, DEFAULT_VIEW, ZOOM, PROJECTION_NAMES, W, H } from '../scripts/scene.mjs';
 
 const close = (a, b, eps = 1e-9) => assert.ok(Math.abs(a - b) < eps, `${a} vs ${b}`);
 
@@ -34,18 +38,38 @@ test('the centre stays far enough from the poles to keep the canvas on the map',
   assert.ok(v.lat < 85.06 && v.lat > 0);
 });
 
-test('a moving view draws from a band\'s cells only while it still picks that band, inside the frame they cover', () => {
-  const coarse = { land: [] }, cells = { land: [], detail: { lonMin: 6, lonMax: 12, latMin: 42, latMax: 47, band: '10m' } };
+// a site whose land bands each hold every cell round Genoa, empty, so coastlines' provider has
+// read their indexes when it picks a band, as it has on the page by the time a drag starts
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const GEO = dirname(fileURLToPath(import.meta.resolve('coastlines/data/ne-land-50m')));
+const read = (file) => JSON.parse(readFileSync(file, 'utf8'));
+const resolve = (p) => (p.startsWith('geo/') ? join(GEO, p.slice(4)) : join(ROOT, p));
+const CELL = { '10m': 5, h: 1, f: 0.5 };
+const around = (deg) => { const keys = []; for (let x = Math.floor(0 / deg); x < 20 / deg; x++) for (let y = Math.floor(36 / deg); y < 52 / deg; y++) keys.push(`${x}_${y}`); return keys; };
+const site = {
+  createCanvas,
+  readJSON: async (p) => {
+    const m = /^geo\/(10m|h|f)\/(.+)\.json$/.exec(p);
+    if (m) return m[2] === 'index' ? { cells: around(CELL[m[1]]) } : { land: [], coast: [] };
+    return p === 'geo/names-50m.json' ? { type: 'FeatureCollection', features: [] } : read(resolve(p));
+  },
+  loadImage: (p) => loadImage(resolve(p)),
+  loadFont: async (family) => { GlobalFonts.registerFromPath(join(ROOT, 'test', 'fixtures', 'IMFeENrm28P.ttf'), family); },
+};
+
+test('a moving view draws from a band\'s cells only while it still picks that band, inside the frame they cover', async () => {
+  const at = async (zoom) => (await createScene(site, { view: { zoom, lat: 44.4, lon: 8.9 }, scale: 'off', kinds: [], names: false, rhumb: false })).world;
+  const coarse = await at(5), cells = await at(9.5), fine = await at(10.5), full = await at(14.5);
+  assert.equal(coarse.detail, undefined);
+  assert.deepEqual([cells, fine, full].map((w) => w.detail.band), ['ne-10m-land', 'gshhg-h-land', 'gshhg-f-land']);
   assert.ok(covers(coarse, { zoom: 9.5, lat: 44.4, lon: 8.9 }));
   assert.ok(covers(cells, { zoom: 9.5, lat: 44.4, lon: 8.9 }));
   assert.ok(!covers(cells, { zoom: 9, lat: 44.4, lon: 8.9 })); // out to 50m
   assert.ok(!covers(cells, { zoom: 9.5, lat: 44.4, lon: 15 })); // dragged past the loaded cells
   assert.ok(!covers(cells, { zoom: 10.5, lat: 44.4, lon: 8.9 })); // into the "h" band: its cells are wanted
-  const fine = { ...cells, detail: { ...cells.detail, band: 'h' } };
   assert.ok(covers(fine, { zoom: 10.5, lat: 44.4, lon: 8.9 }));
   assert.ok(!covers(fine, { zoom: 9.5, lat: 44.4, lon: 8.9 })); // back out to 10m
   assert.ok(!covers(fine, { zoom: 12.5, lat: 44.4, lon: 8.9 })); // into the "f" band
-  const full = { ...cells, detail: { ...cells.detail, band: 'f' } };
   assert.ok(covers(full, { zoom: 14.5, lat: 44.4, lon: 8.9 }));
   assert.ok(!covers(full, { zoom: 11.5, lat: 44.4, lon: 8.9 })); // back out to "h"
 });

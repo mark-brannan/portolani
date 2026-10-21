@@ -45,7 +45,7 @@ jobs:
         with: { persist-credentials: false }
       - uses: actions/setup-node@v7
         with: { node-version: '22' }
-      # bands.mjs reads the coastlines package's catalogue; main's lockfile, no install scripts
+      # the coastlines package's catalogue names the bands' dirs; main's lockfile, no install scripts
       - run: npm ci --ignore-scripts
       - id: list
         env: { GH_TOKEN: '${{ github.token }}' }
@@ -53,7 +53,7 @@ jobs:
           # assigned first, so a failure fails the step rather than writing an empty output
           previews=$(node .github/scripts/preview-branches.mjs --json)
           # the finest coastline and lake bands, which would take main plus one preview past 1 GB
-          drop=$(node --input-type=module -e "import { bandOf } from './scripts/bands.mjs'; console.log(['gshhg-f-land', 'gshhg-f-lakes'].map((id) => 'geo/' + bandOf(id).dir).join(' '))")
+          drop=$(node --input-type=module -e "import c from 'coastlines/catalogue.json' with { type: 'json' }; console.log(['gshhg-f-land', 'gshhg-f-lakes'].map((id) => c.find((r) => r.id === id).sources.find((s) => s.kind === 'cells').url.replace(/\/\$/, '')).join(' '))")
           echo "previews=$previews" >> "$GITHUB_OUTPUT"
           echo "drop=$drop" >> "$GITHUB_OUTPUT"
 
