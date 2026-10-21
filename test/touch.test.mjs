@@ -4,7 +4,8 @@
 // map and shuts on a second tap on its compass, and its Find my position button fills in the fix without
 // flying there. Under 520 px every drawer is a bottom sheet at half the window's height with the map above
 // it, and the cartouche and the scale bar sit on cards clear of the map. With a mouse on a wide screen
-// each of the six drawers hangs below the row without covering or moving it, one at a time.
+// each of the six drawers hangs below the row without covering or moving it, one at a time; several voyages
+// are drawn at once, each in its own ink, and the link carries them.
 //
 // Needs the built preview (`npm run build:preview` -> _site/), playwright-core and a Chromium
 // (`npx playwright-core install chromium-headless-shell`); without them it skips, since `npm test`
@@ -277,6 +278,47 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     await page.waitForFunction((x) => location.hash !== x, h, { timeout: 60000 });
     const [, lat, lon] = (await page.evaluate(() => location.hash)).replace('#map=', '').split('/').map(Number);
     assert.ok(Math.abs(lat - 37.5) < 1 && Math.abs(lon - 25.2) < 1, `Vesconte's sheet is not round the Cyclades: ${lat}, ${lon}`);
+    assert.deepEqual(errors, []);
+  } finally {
+    await browser.close();
+    server.close();
+  }
+});
+
+test('voyages: several drawn at once, each in its own ink, carried by the link; an older single voyage= link opens; Clear empties the list', { skip, timeout: 240000 }, async () => {
+  const server = createServer(async (req, res) => {
+    let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
+    if (p.endsWith('/')) p = path.join(p, 'index.html');
+    try { res.writeHead(200, { 'content-type': TYPES[path.extname(p)] ?? 'application/octet-stream' }).end(await readFile(p)); } catch { res.writeHead(404).end(); }
+  }).listen(0);
+  const browser = await chromium.launch();
+  try {
+    const page = await (await browser.newContext({ viewport: { width: 1100, height: 740 } })).newPage();
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await page.goto(`http://localhost:${server.address().port}/#map=2/15/-20&voyage=magellan`);
+    await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
+    await page.click('#voyages');
+    await page.waitForSelector('#voyageList [data-voyage]');
+    const on = () => page.$$eval('#voyageList [aria-checked=true]', (bs) => bs.map((b) => b.dataset.voyage));
+    const inks = () => page.$$eval('#voyageList [data-ink]:not([hidden])', (is) => is.map((i) => i.value));
+    const hash = () => page.evaluate(() => decodeURIComponent(location.hash));
+    assert.deepEqual(await on(), ['magellan'], 'the older voyage= link');
+    await page.click('#voyageList [data-voyage="columbus"]');
+    await page.click('#voyageList [data-voyage="drake"]');
+    assert.equal(await page.$eval('#voyagesPanel', (d) => d.classList.contains('open')), true, 'a choice shut the drawer');
+    assert.deepEqual(await on(), ['columbus', 'magellan', 'drake']); // the list's order
+    assert.equal(new Set(await inks()).size, 3, 'two voyages share an ink');
+    assert.match(await hash(), /voyages=magellan,columbus,drake(&|$)/);
+    await page.$eval('#voyageList [data-ink="drake"]', (i) => { i.value = '#16727a'; i.dispatchEvent(new Event('input', { bubbles: true })); });
+    assert.match(await hash(), /voyages=magellan,columbus,drake:16727a/);
+    await page.click('#voyageWidth [data-value="4.5"]');
+    assert.match(await hash(), /voyagewidth=4.5/);
+    if (!(await page.$eval('#voyagesPanel', (d) => d.classList.contains('open')))) await page.click('#voyages');
+    await page.click('#voyagesPanel .tool');
+    assert.deepEqual(await on(), []);
+    assert.doesNotMatch(await hash(), /voyages=/);
+    assert.equal(await page.$eval('#voyagesPanel .tool', (b) => b.disabled), true, 'Clear still offered with nothing to clear');
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();

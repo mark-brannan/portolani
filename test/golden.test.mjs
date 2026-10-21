@@ -29,9 +29,11 @@ const VIEWS = {
   'world-z2-plate-carree': { lon: 10, lat: 30, zoom: 2, projection: 'plate-carree' }, // rhumb lines bow
   'world-z2-orthographic': { lon: 10, lat: 30, zoom: 2, projection: 'orthographic' }, // the globe, cut at the horizon
   'world-z2-voyage': { lon: 10, lat: 30, zoom: 2 }, // Magellan's Pacific crossing, cut at the seam
+  'world-z2-voyages': { lon: -20, lat: 15, zoom: 2 }, // three voyages at once, each in its own ink, at the bold weight
 };
 // settings a golden draws with beyond the defaults; region-z5 is the README's picture, lettered PORTOLANI
-const OPTS = { 'region-z5': { autoTitle: false }, 'world-z2-voyage': { voyage: 'magellan' } };
+const OPTS = { 'region-z5': { autoTitle: false }, 'world-z2-voyage': { voyages: [{ id: 'magellan' }] },
+  'world-z2-voyages': { voyages: [{ id: 'columbus' }, { id: 'da-gama' }, { id: 'drake' }].map((v) => ({ ...v, width: 3.2 })) } };
 // and its full-size render is kept for the README, so `npm run golden` refreshes both together
 const README_IMAGE = join(ROOT, 'docs', 'readme.jpg');
 
@@ -235,4 +237,29 @@ test('trees: a pan keeps the forest, a zoom in thickens it', () => {
   const count = (zoom) => plant(10, zoom).reduce((n, s) => n + s.trees.length, 0);
   assert.ok(count(3) < count(6) && count(6) < count(9), 'trees do not thicken with zoom');
   assert.equal(count(1), 0, 'trees at zoom 1');
+});
+
+// The voyages: a list of { id, colour, width }, the older single `voyage` read as a list of one, the first red by
+// default and the rest each a colour of its own; an id the site lacks is left out. A death's `alternatives` draw
+// (fainter skulls tied to it), and a death without them draws as before.
+test('voyages: a list, coloured and sized; an older single voyage; alternatives drawn when a death has them', async () => {
+  const of = async (opts) => (await createScene(env, { view: VIEWS['world-z2'], ...opts })).scene.voyages;
+  const one = await of({ voyage: 'magellan' });
+  assert.deepEqual(one.map((v) => [v.voyage.id, v.colour, v.width]), [['magellan', '#8c2f1e', 2.2]]);
+  const three = await of({ voyages: [{ id: 'columbus' }, { id: 'nowhere' }, { id: 'drake', colour: '#1F4E8C' }, { id: 'polo', width: 4.5 }] });
+  assert.deepEqual(three.map((v) => v.voyage.id), ['columbus', 'drake', 'polo']);
+  assert.equal(three[0].colour, '#8c2f1e');
+  assert.equal(three[1].colour, '#1f4e8c');
+  assert.equal(new Set(three.map((v) => v.colour)).size, 3, 'two voyages share an ink');
+  assert.equal(three[2].width, 4.5);
+  assert.deepEqual(await of({}), []);
+
+  const fixture = read(join(ROOT, 'test', 'fixtures', 'voyage-alternatives.json'));
+  const withFixture = { ...env, readJSON: (p) => (p === 'data/voyages/fixture-alternatives.json' ? Promise.resolve(fixture) : env.readJSON(p)) };
+  const { scene, data, bg } = await createScene(withFixture, { view: VIEWS['world-z2-voyages'], voyages: [{ id: 'fixture-alternatives' }] });
+  assert.equal(scene.voyages.length, 1);
+  const draw = (s) => { const c = createCanvas(W, H); drawScene(c.getContext('2d'), s, data, bg, { scale: 1, x: 0, y: 0 }); return c.getContext('2d').getImageData(0, 0, W, H).data; };
+  const bare = { ...scene.voyages[0], voyage: { ...fixture, events: fixture.events.map(({ alternatives, ...e }) => e) } };
+  const a = draw(scene), b = draw({ ...scene, voyages: [bare] });
+  assert.ok(a.some((v, i) => v !== b[i]), 'a death\'s alternatives drew nothing');
 });
