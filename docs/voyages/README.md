@@ -75,7 +75,7 @@ The skull sits at the usual account; `alternatives` are the other places the sou
 |---|---|---|---|
 | Leif Erikson | Brattahlíð, Greenland, c. 1020 (inferred: no saga records his death) | — | Leif Erikson (Wikipedia) |
 | Marco Polo | Venice, 8 Jan 1324 | — | Wikipedia, Marco Polo |
-| Ibn Battuta | Morocco near Fez (-5.00, 34.03), c. 1369 | Tangier (-5.81, 35.77) | Wikipedia, Ibn Battuta |
+| Ibn Battuta | Morocco near Fez (-5.00, 34.03), c. 1369 | Marrakesh (-7.99, 31.63) | Wikipedia, Ibn Battuta |
 | Zheng He | At sea, mid-way along the Calicut–Malacca leg (87.54, 5.99), 1433 | Calicut (75.78, 11.25); Nanjing (118.78, 32.07) | Ming shi; Zheng He (Wikipedia) |
 | Bartolomeu Dias | Off the Cape of Good Hope, 29 May 1500 (the position is a guess) | — | Wikipedia; Britannica 1911 |
 | Christopher Columbus | Valladolid, 20 May 1506 | — (his burial place is disputed, his place of death is not) | Britannica 1911, Columbus |
