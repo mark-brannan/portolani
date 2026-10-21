@@ -34,6 +34,7 @@ export function routes({ learn, site }) {
   return {
     local: [['coast-wright/', path.join(root, 'node_modules', 'coast-wright', 'lib')],
       ['coastlines/catalogue.json', path.join(root, 'node_modules', 'coastlines', 'catalogue.json')],
+      ['coastlines/lib/provider.js', path.join(root, 'node_modules', 'coastlines', 'lib', 'provider.js')],
       ['packs/', path.join(root, 'packs')], ['data/', path.join(root, 'data')], ['learn/', path.join(learn, 'learn')], ['font/', path.join(root, 'downloads')],
       ['', path.join(root, 'scripts'), { only: () => relativeImports(root) }], ['', path.join(root, 'public')]],
     remote: ['geo/', 'font/'],

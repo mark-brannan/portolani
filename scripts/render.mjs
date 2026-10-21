@@ -15,13 +15,16 @@ import { joinUrban } from './urban.mjs';
 import { cutWater, joinWater, WATER_FILES } from './detail-cells.mjs';
 import { isleIndex, isleLand } from './isles.mjs';
 import * as coastlines from 'coastlines';
+import { band } from 'coastlines/catalogue';
 import { geojsonPolygons } from 'coast-wright';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DL = join(ROOT, 'downloads');
 const GEO = dirname(fileURLToPath(import.meta.resolve('coastlines/data/ne-land-50m')));
+// the pinned file a catalogue record is read from, by the record's id
+const entryOf = (id) => coastlines.find(band(id).inputs.find((input) => typeof input === 'string'));
 
-// Logical paths: geo/<id>.geojson is a coastlines data file, packs/... in the repo; the names are
+// Logical paths: geo/<file>.geojson is a coastlines data file, packs/... in the repo; the names are
 // made here from the marine download and the coastlines countries, the urban footprints from the
 // urban areas download (npm run build:preview fetches it), the towns drawn as icons without it;
 // the 10m water cells (geo/water-10m/) are cut here from the rivers and lakes downloads and their
@@ -46,7 +49,7 @@ const water = (p) => {
 };
 // the island index, built here from the installed GSHHG "h" shapefile as build-preview.mjs builds it
 let isles;
-const islesIndex = () => isles ??= isleIndex(coastlines.shapefilePolygons(readFileSync(coastlines.localUrl(coastlines.find('gshhg-land-h')))),
+const islesIndex = () => isles ??= isleIndex(coastlines.shapefilePolygons(readFileSync(coastlines.localUrl(entryOf('gshhg-h-land')))),
   geojsonPolygons(read(join(GEO, 'ne-land-50m.geojson'))));
 let outlines;
 const islesLand = () => outlines ??= isleLand(geojsonPolygons(read(join(GEO, 'ne-land-10m.geojson'))), geojsonPolygons(read(join(GEO, 'ne-land-50m.geojson'))));

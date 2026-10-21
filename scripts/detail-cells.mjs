@@ -105,7 +105,7 @@ export const WATER_FILES = {
 };
 export const joinWater = (geos) => ({ type: 'FeatureCollection', features: geos.flatMap((g) => g?.features ?? []) });
 
-// Natural Earth rivers and lakes into the same square cells, for scripts/water.mjs past WATER_ZOOM.
+// Natural Earth rivers and lakes into the same square cells, for scripts/water.mjs past the 10m water's first zoom.
 // A feature goes whole into every cell it reaches (a river, each cell its segments' midpoints and
 // vertices fall in; a lake, each cell its box meets), so a river keeps one wiggle and a lake one
 // outline wherever the view is cut; its index in the source file is its GeoJSON `id`, by which
