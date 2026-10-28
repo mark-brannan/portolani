@@ -1,5 +1,5 @@
 // The URL hash as the page reads and writes it, in headless Chromium: the view round-trips, clamps and
-// wraps; editing the hash redraws without a reload; Reset keeps only the view (and the drawer's layout);
+// wraps; editing the hash redraws without a reload; Reset keeps only the view, its projection with it (and the drawer's layout);
 // Copy link copies the URL, or selects it in a box when the clipboard is refused; the three drawer sliders
 // (density, continents, regions) read from and write to the hash, as do the temporary sheets overlay and
 // knobs (debug=, tune=); and the drawer's four layouts each show every control and ride in the hash
@@ -108,15 +108,14 @@ scenario('hashchange: editing the hash redraws without a reload', 'map=5.48/40.2
   assert.equal(await hash(page), '#map=5.48/40.265/7.000&ink=5a1a1a&density=1.5', 'a hash edit is not rewritten');
 });
 
-scenario('reset: every control back to default, only the view kept', 'map=7.00/43.700/7.300&ink=5a1a1a&density=1.5&projection=miller', async (page) => {
+scenario('reset: every control back to default, only the view and its projection kept', 'map=7.00/43.700/7.300&ink=5a1a1a&density=1.5&projection=miller', async (page) => {
   assert.equal(await value(page, 'projection'), 'miller');
   await page.evaluate(() => { document.getElementById('status').textContent = ''; });
   await openDrawer(page);
   await page.locator('#reset').click();
   await placed(page);
-  // Mismatch: the tooltip says "the view stays", but the projection goes with the rest, back to Mercator.
-  assert.equal(await hash(page), '#map=7.00/43.700/7.300');
-  assert.equal(await value(page, 'projection'), 'mercator');
+  assert.equal(await hash(page), '#map=7.00/43.700/7.300&projection=miller');
+  assert.equal(await value(page, 'projection'), 'miller');
   assert.equal(await value(page, 'ink'), '#3b2a1a');
   assert.equal(await value(page, 'density'), '1');
 });
@@ -184,20 +183,31 @@ scenario('continents: a hash number past the top clamps to 15', 'map=5.48/40.265
   assert.equal(await text(page, 'continentsOut'), 'always');
 });
 
-scenario('continents: 1 reads as an older link\'s checked box', 'map=5.48/40.265/7.000&continents=1', async (page) => {
-  // Mismatch: the slider at 1 writes continents=1, which reads back as the default 5; 1 does not round-trip.
-  assert.equal(await value(page, 'continentsZoom'), '5');
+scenario('continents: no key is the default 6', 'map=5.48/40.265/7.000', async (page) => {
+  assert.equal(await value(page, 'continentsZoom'), '6');
+  assert.equal(await text(page, 'continentsOut'), 'zoom 6 and out');
 });
+
+// The slider at 1 writes continents=1 (or regionszoom=1), and a page opened at that hash reads 1 back.
+for (const [id, key, out] of [['continentsZoom', 'continents', 'continentsOut'], ['regionsZoom', 'regionszoom', 'regionsOut']]) {
+  scenario(`${key}: 1 round-trips through the hash`, 'map=5.48/40.265/7.000', async (page) => {
+    await slide(page, id, 1);
+    const written = (await hash(page)).slice(1);
+    assert.equal(new URLSearchParams(written).get(key), '1');
+    const again = await open(written);
+    try {
+      assert.equal(await value(again.page, id), '1');
+      assert.equal(await text(again.page, out), 'zoom 1 and out');
+      assert.equal(await hash(again.page), `#${written}`);
+      assert.deepEqual(again.errors, [], 'page errors on the reopened link');
+    } finally { await again.close(); }
+  });
+}
 
 scenario('regions: the slider round-trips', 'map=5.48/40.265/7.000', async (page) => {
   await slide(page, 'regionsZoom', 9);
   assert.equal((await params(page)).get('regionszoom'), '9');
   assert.equal(await text(page, 'regionsOut'), 'zoom 9 and out');
-});
-
-scenario('regions: 1 reads as an older link\'s checked box', 'map=5.48/40.265/7.000&regionszoom=1', async (page) => {
-  // Mismatch: as continents, regionszoom=1 reads back as the default 7.
-  assert.equal(await value(page, 'regionsZoom'), '7');
 });
 
 // ---------------------------------------------------------------- the drawer's layouts (#225)
