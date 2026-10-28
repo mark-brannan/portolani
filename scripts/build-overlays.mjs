@@ -7,7 +7,8 @@
 // The Carta Marina's two fits are refitted from the figures table in docs/atlas/ornaments.md ("Carta
 // Marina, 1539"): every row gives a figure's scan px and the lon, lat its side's fit put it at, so a
 // least-squares similarity through a side's rows gives back that side's fit. The Catalan Atlas's one fit
-// is made from its landmarks table there ("Landmarks, sheet 5"): each row's scan px and real lon, lat.
+// is made from its landmarks table there ("Landmarks, sheet 5"): each row's scan px and real lon, lat. Juan de
+// la Cosa's three are made the same way from "Landmarks, 1500", each from the rows of its piece.
 
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
@@ -30,18 +31,24 @@ export function figureRows(markdown, heading = '## Carta Marina, 1539') {
     .map((c) => ({ id: c[1], px: num(c[3]), fit: c[4], ll: num(c[5]) }));
 }
 // The rows of a landmarks table under a heading of ornaments.md, as { id, px: [x, y], ll: [lon, lat] }: the
-// landmark's real place, not where a fit puts it.
+// landmark's real place, not where a fit puts it. A table with a piece column adds `piece`, the fit it belongs to.
 export function landmarkRows(markdown, heading) {
   const at = markdown.indexOf(heading), next = markdown.indexOf('\n#', at + heading.length);
   const section = markdown.slice(at, next < 0 ? undefined : next);
   const num = (t) => t.split(',').map(Number);
   return section.split('\n').map((l) => l.split('|').map((c) => c.trim()))
     .filter((c) => c.length > 5 && /^L\d+$/.test(c[1]))
-    .map((c) => ({ id: c[1], px: num(c[3]), ll: num(c[4]) }));
+    .map((c) => ({ id: c[1], px: num(c[3]), ll: num(c[4]), ...(/^[a-z]+$/.test(c[5]) && { piece: c[5] }) }));
 }
 // One side's similarity, refitted from its rows
 export function fitOf(rows, side) {
   const { a, b, tx, ty } = similarityFit(rows.filter((r) => r.fit === side).map((r) => [r.px, r.ll]));
+  return { a, b, tx, ty };
+}
+
+// One piece's similarity, fitted to the landmarks of that piece
+export function pieceFit(rows, piece) {
+  const { a, b, tx, ty } = similarityFit(rows.filter((r) => r.piece === piece).map((r) => [r.px, r.ll]));
   return { a, b, tx, ty };
 }
 
@@ -52,6 +59,8 @@ const CHARTS = [
     pieces: (md) => { const rows = figureRows(md); return [[0, 2700, fitOf(rows, 'west')], [2700, null, fitOf(rows, 'baltic')]]; } },
   { id: 'catalan-atlas', title: 'Catalan Atlas, sheet 5, 1375', source: 'catalan-atlas-5', file: 'catalan-atlas.jpg', scale: 4,
     pieces: (md) => { const { a, b, tx, ty } = similarityFit(landmarkRows(md, '### Landmarks, sheet 5').map((r) => [r.px, r.ll])); return [[240, 6080, { a, b, tx, ty }]]; } }, // the parchment, not the scan's white margin
+  { id: 'de-la-cosa', title: 'Juan de la Cosa, 1500', source: 'de-la-cosa', file: 'de-la-cosa.jpg', scale: 1, // the scan is small: shrunk, the coasts would go; the pieces run from the parchment's west edge to its east
+    pieces: (md) => { const rows = landmarkRows(md, '### Landmarks, 1500'); return [[70, 880, 'west'], [880, 1150, 'atlantic'], [1150, 2060, 'east']].map(([x0, x1, p]) => [x0, x1, pieceFit(rows, p)]); } },
 ];
 
 async function scanOf(src) {

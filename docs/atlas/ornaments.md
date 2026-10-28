@@ -126,3 +126,51 @@ The two fits also lay the whole scan over the map, refitted from this table: [do
 
 Not read in place: two rings of roses (the west centre's Virgin and Child, small node roses; the east
 ring's node roses), its beasts and ships not read at 1400 px. With no set, the sheet keeps the seeded figures.
+
+### Landmarks, 1500
+
+Read off the Commons scan (2127 x 1163, `1500_map_by_Juan_de_la_Cosa_rotated.jpg` in scripts/sources.json, the
+one centres.md reads) on 2026-10-28, by eye at 3 to 4 times, about ±8 px. The scan is a photograph of the
+chart at about 8 px a degree in the Old World and 13 in the New, so a coast is a hatched edge a few pixels wide and a cape is
+where that edge turns; each landmark below is placed by its shape and its neighbours, not by lettering, which
+is not legible at this size.
+
+One similarity will not hold the chart: fitted to all fourteen rows it leaves 790 km RMS and Cape Santo
+Agostinho 1738 km out, because the New World is drawn at a larger scale than the Old and Africa's east is
+turned against its west. So it takes three, split at x = 880 scan px (the meridian line drawn down the
+chart, west of the Canaries and the Cape Verde coast) and x = 1150 (east of Iberia), each
+a similarity fitted by least squares from scan pixels to longitude and Mercator latitude, as the Carta
+Marina's are:
+
+| fit | landmarks | scale | turn | residual, RMS | worst |
+|---|---|---|---|---|---|
+| west, x 70 to 880 | L1 to L5 | 0.0780 °/px | 8° | 154 km | the Amazon mouth, 287 km |
+| atlantic, x 880 to 1150 | L6 to L11 | 0.1307 °/px | -1° | 140 km | Gran Canaria, 254 km |
+| east, x 1150 to 2060 | L12 to L14 | 0.1403 °/px | -5° | 406 km | Bab el Mandeb, 581 km |
+
+The east fit has only the three landmarks it needs: the Red Sea is drawn too long and too far west for the
+Cape, so it is the weakest of the three. The west and atlantic fits disagree by 1400 to 2000 km at their
+seam, the two scales of the chart meeting in mid-ocean.
+
+| | landmark | scan px | lon, lat | piece | fit puts it at | off by |
+|---|---|---|---|---|---|---|
+| L1 | Cape Maisí, Cuba | 405, 483 | -74.13, 20.22 | west | -74.0, 20.2 | 16 km |
+| L2 | Cape Dame Marie, Hispaniola | 395, 508 | -74.43, 18.60 | west | -74.5, 18.3 | 32 km |
+| L3 | Cape Engaño, Hispaniola | 485, 522 | -68.32, 18.61 | west | -67.4, 18.2 | 109 km |
+| L4 | Amazon mouth, the Mar Dulce | 645, 770 | -50.00, 0.00 | west | -52.3, 1.1 | 287 km |
+| L5 | Cape Santo Agostinho | 865, 928 | -34.95, -8.35 | west | -33.6, -8.7 | 150 km |
+| L6 | Ireland, its middle | 995, 268 | -8.00, 53.40 | atlantic | -7.9, 52.7 | 77 km |
+| L7 | Cape Finisterre | 988, 372 | -9.27, 42.88 | atlantic | -9.2, 43.7 | 91 km |
+| L8 | Cape St Vincent | 995, 440 | -8.99, 37.02 | atlantic | -8.5, 36.9 | 48 km |
+| L9 | Strait of Gibraltar | 1015, 455 | -5.60, 35.95 | atlantic | -5.9, 35.3 | 80 km |
+| L10 | Gran Canaria | 930, 507 | -15.60, 27.96 | atlantic | -17.2, 29.8 | 254 km |
+| L11 | Cape Verde | 940, 640 | -17.47, 14.72 | atlantic | -16.3, 13.7 | 171 km |
+| L12 | Suez, the head of the Red Sea | 1365, 470 | 32.55, 29.97 | east | 36.0, 31.4 | 365 km |
+| L13 | Bab el Mandeb | 1395, 625 | 43.40, 12.60 | east | 38.3, 11.0 | 581 km |
+| L14 | Cape of Good Hope | 1295, 975 | 18.47, -34.36 | east | 20.1, -34.4 | 152 km |
+
+Left out of the fit: the large coloured island north-west of Ireland at 925, 215, which may be Iceland;
+the two orange islands at 1070, 442 and 1107, 412, which may be the Balearics or Sardinia and Corsica; and
+the Asian coast east of the Red Sea, whose capes cannot be told apart at this size.
+
+The fits lay the scan over the map: [docs/overlay/README.md](../overlay/README.md).

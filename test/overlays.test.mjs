@@ -48,6 +48,24 @@ test('the Catalan Atlas fit is the least-squares fit of its 19 landmarks, and th
   assert.equal(landmarks[off.indexOf(Math.max(...off))].id, 'L19');
 });
 
+// ornaments.md, "Landmarks, 1500": three similarities, west 154 km RMS, atlantic 140, east 406; one fit for
+// the whole chart leaves 790.
+test('Juan de la Cosa\'s three pieces are the least-squares fits of their landmarks, with the doc\'s residuals', () => {
+  const cosa = overlays.find((o) => o.id === 'de-la-cosa');
+  const rows = landmarkRows(readFileSync(new URL('docs/atlas/ornaments.md', ROOT), 'utf8'), '### Landmarks, 1500');
+  assert.equal(rows.length, 14);
+  const km = ([lon, lat], [lo2, la2]) => 6371 * Math.hypot((lon - lo2) * Math.cos(((lat + la2) / 2) * Math.PI / 180), lat - la2) * Math.PI / 180;
+  const rms = (fit, rs) => Math.round(Math.sqrt(rs.reduce((s, r) => s + km(applyFit(fit, ...r.px), r.ll) ** 2, 0) / rs.length));
+  assert.deepEqual(cosa.pieces.map((p) => [p.x0, p.x1]), [[70, 880], [880, 1150], [1150, 2060]]);
+  ['west', 'atlantic', 'east'].forEach((name, i) => {
+    const rs = rows.filter((r) => r.piece === name), fit = similarityFit(rs.map((r) => [r.px, r.ll]));
+    for (const k of ['a', 'b', 'tx', 'ty']) assert.ok(Math.abs(fit[k] - cosa.pieces[i].fit[k]) < 1e-9, `${name} ${k}`);
+    for (const r of rs) assert.ok(r.px[0] >= cosa.pieces[i].x0 && r.px[0] < cosa.pieces[i].x1, `${r.id} in ${name}`);
+    assert.equal(rms(fit, rs), [154, 140, 406][i], name);
+  });
+  assert.equal(rms(similarityFit(rows.map((r) => [r.px, r.ll])), rows), 790);
+});
+
 test('a similarity fitted to exact pairs is recovered', () => {
   const fit = { a: 0.01, b: 0.002, tx: -5, ty: 70 };
   const pts = [[100, 200], [3000, 400], [1500, 3000], [4000, 2500]];

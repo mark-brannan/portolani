@@ -6,9 +6,10 @@ and sea, under the rhumb lines, names, towns, roses, beasts, ships and voyages. 
 voyage; turned on under the chart in the Charts drawer ("Lay the scan over the map", with an opacity
 slider) and kept in the link as `overlay=carta-marina&overlayopacity=0.6`.
 
-Two charts have it so far, each a Commons scan in the public domain (see ASSETS.md): the Carta Marina,
-1539 (Olaus Magnus), at half size, and sheet 5 of the Catalan Atlas, 1375, the Atlantic panel, at a quarter.
-Both are in `packs/overlays/` with `overlays.json`. `npm run overlays` makes them from the full scans
+Three charts have it so far, each a Commons scan in the public domain (see ASSETS.md): the Carta Marina,
+1539 (Olaus Magnus), at half size; sheet 5 of the Catalan Atlas, 1375, the Atlantic panel, at a quarter; and
+Juan de la Cosa's chart of 1500 at full size, since its only scan is 2127 px wide. All are in
+`packs/overlays/` with `overlays.json`. `npm run overlays` makes them from the full scans
 (`scripts/build-overlays.mjs`).
 
 ## How it is placed
@@ -76,3 +77,33 @@ Opacity 0.6, the default: the chart's Canaries, strung out further west than the
 Opacity 1: the scan alone, Portugal and Morocco meeting today's coast at the panel's east edge.
 
 ![The same view with the scan opaque](catalan-atlas-1.jpg)
+
+## At Juan de la Cosa, 1500
+
+One similarity will not hold this chart: the New World is drawn at a larger scale than the Old, and the Red
+Sea and the Cape are turned against the Atlantic coast. So it takes three pieces, each a similarity fitted to
+the landmarks read off the scan in [docs/atlas/ornaments.md](../atlas/ornaments.md) ("Landmarks, 1500"):
+
+| piece | scan px | landmarks | scale | turn | residual, RMS |
+|---|---|---|---|---|---|
+| west | x 70 to 880 | Cuba, Hispaniola, the Amazon, Cape Santo Agostinho | 0.0780 °/px | 8° | 154 km |
+| atlantic | x 880 to 1150 | Ireland, Iberia, the Canaries, Cape Verde | 0.1307 °/px | -1° | 140 km |
+| east | x 1150 to 2060 | Suez, Bab el Mandeb, the Cape of Good Hope | 0.1403 °/px | -5° | 406 km |
+
+The pieces run from the parchment's west edge to its east; above and below the parchment the scan's white
+shows. Where the west and atlantic pieces meet, the two scales of the chart disagree by 1400 to 2000 km,
+so a band of open Atlantic between about 37°W and 24°W has no scan over it.
+
+`npm run render -- --view -30,15,2.6 --overlay de-la-cosa:<opacity> --out <file>`, scaled to 1000 px.
+
+Opacity 0.3: the Caribbean and Brazil faint over today's.
+
+![The Atlantic with Juan de la Cosa's chart faint over it](de-la-cosa-0.3.jpg)
+
+Opacity 0.6, the default: Cuba and Hispaniola sit on today's; the chart's Africa runs east of the real one.
+
+![The same view with the scan at 0.6](de-la-cosa-0.6.jpg)
+
+Opacity 1: the scan alone, the gap between its two worlds open in mid-ocean.
+
+![The same view with the scan opaque](de-la-cosa-1.jpg)
