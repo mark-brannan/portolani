@@ -96,8 +96,8 @@ export const CATALAN_NOTES = [
   },
   {
     id: 'stillanda', title: 'Stillanda',
-    drawn: 'A dark island at the top of the sheet, east of Ireland\'s latitude, "Island of Stillanda, where they speak the language of Norway and are Christians" (III.2).',
-    real: 'Iceland, or Shetland: both spoke Norse, were Christian and were under the Norwegian crown in 1375. Iceland lies about 1,000 km north-west of where the fit puts the drawing.',
+    drawn: 'A dark island at the top of the sheet, north-east of the Irish legend, "Island of Stillanda, where they speak the language of Norway and are Christians" (III.2).',
+    real: 'Iceland, or Shetland: both spoke Norse, were Christian and were under the Norwegian crown in 1375. Iceland lies north-west of where the fit puts the drawing.',
     source: { label: 'Cresques Project III.2; Iceland', url: 'https://en.wikipedia.org/wiki/Iceland' },
     at: { px: [5520, 1680], lonlat: [-19.0, 64.9] },
   },

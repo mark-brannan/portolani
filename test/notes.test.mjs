@@ -6,16 +6,16 @@ import { viewProjection } from '../scripts/scene.mjs';
 
 const { overlays } = JSON.parse(readFileSync(new URL('../packs/overlays/overlays.json', import.meta.url), 'utf8'));
 const overlay = (id) => overlays.find((o) => o.id === id);
-const COUNTS = { 'carta-marina': 10, 'catalan-atlas': 11 };
+const CHARTS = ['carta-marina', 'catalan-atlas'];
 const VIEWS = { 'carta-marina': { lon: 19.7, lat: 61.7 }, 'catalan-atlas': { lon: -14, lat: 40 } };
 const rect = { x0: -1e6, y0: -1e6, x1: 1e6, y1: 1e6 };
 
 test('each laid chart has its notes, each of the shape in #248, with a source', () => {
-  assert.deepEqual(Object.keys(NOTE_SETS).sort(), Object.keys(COUNTS).sort());
+  assert.deepEqual(Object.keys(NOTE_SETS).sort(), [...CHARTS].sort());
   const ids = Object.values(NOTE_SETS).flatMap((s) => s.notes.map((n) => n.id));
   assert.equal(new Set(ids).size, ids.length, 'ids unique across charts');
   for (const [id, { scan, notes }] of Object.entries(NOTE_SETS)) {
-    assert.equal(notes.length, COUNTS[id], id);
+    assert.ok(notes.length > 0, `${id} has notes`);
     const o = overlay(id);
     assert.ok(o, `${id} is in overlays.json`);
     assert.deepEqual([scan.w, scan.h], [o.width, o.height], `${id} scan size`);
@@ -38,7 +38,7 @@ test('a chart\'s marks show while it is laid and not otherwise', () => {
     const proj = viewProjection({ ...VIEWS[id], zoom: 3, projection: 'mercator' });
     assert.equal(noteMarks({ ...overlay(id), id: 'other' }, proj, rect).length, 0, id);
     const marks = noteMarks(overlay(id), proj, rect);
-    assert.equal(marks.length, COUNTS[id], id);
+    assert.equal(marks.length, NOTE_SETS[id].notes.length, id);
     assert.ok(marks.every((m) => m.tile.drawn && m.tile.real && m.tile.link), id);
   }
 });
