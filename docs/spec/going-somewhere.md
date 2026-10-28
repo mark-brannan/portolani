@@ -4,8 +4,10 @@ Feature: Places to fly to  (the astrolabe `#sights`, 39 rows of sights and secti
   # The audit at ab47ea7 read one anchor button `#places` with a `#flyout` of 24 `ORIGINS`; #206 and #209 split it into these three drawers. Their contents are not yet specified here.
   Scenario: noteworthy ports by era
     Given the astrolabe drawer open
-    When the user reads the "Noteworthy ports" group
-    Then it holds four eras under their own headings, in time order: the ancient world, the medieval Indian Ocean and Asia, the age of discovery, the modern world; six ports each, most of them outside Europe
+    When the user reads the groups after "Where the charts were made"
+    Then the noteworthy ports come in four eras, each under its own heading, in time order: the ancient world, the medieval Indian Ocean and Asia, the age of discovery, the modern world; six ports each, most of them outside Europe
+    And each heading is the port names' size and weight, in italic, and folds its group: only the age of discovery is open at first
+    And under each port's name is its date (a year, a century or a span) and under that its caption, the text of its tile
     And a port whose name has changed lists the historic name first and today's in brackets, "Batavia (Jakarta)", "Calicut (Kozhikode)"
     And each port opens a flavour-text tile on a click of its mark, with no lettering beside the mark
   Scenario: pick a sight
