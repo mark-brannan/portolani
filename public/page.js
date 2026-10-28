@@ -738,7 +738,7 @@ function setDrawer(open, byKeyboard = false) { // the drawer to open, or false f
   const was = openDrawer();
   if (open === was) return;
   for (const [b, d] of drawers) { d.classList.toggle('open', d === open); b.setAttribute('aria-expanded', String(d === open)); }
-  document.documentElement.classList.toggle('sheet', !!open); // on a phone the map makes room above the sheet
+  document.documentElement.classList.toggle('sheet', !!open && !open.classList.contains('menu')); // on a phone the map makes room above the settings or the charts; a lighter drawer sits over its foot
   if (open?.id === 'voyagesPanel') fillVoyages(); // the list loads on the first open
   if (open) (open.id === 'goPanel' ? (phone.matches ? null : $('coordsText')) : focusable(open))?.focus({ preventScroll: true });
   else if (byKeyboard) drawers.find(([, d]) => d === was)[0].focus({ preventScroll: true });
@@ -747,7 +747,8 @@ function setDrawer(open, byKeyboard = false) { // the drawer to open, or false f
 for (const [b, d] of drawers) b.addEventListener('click', (e) => setDrawer(d === openDrawer() ? false : d, e.detail === 0)); // detail 0: Enter or Space
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && openDrawer()) setDrawer(false, true); });
 const outside = (t) => { const d = openDrawer(); return d && t instanceof Node && !where.contains(t) && !d.contains(t); };
-addEventListener('pointerdown', (e) => { if (outside(e.target) && !(phone.matches && e.target === canvas)) setDrawer(false); });
+// On a phone the settings and the charts stay up while the map is moved; a lighter drawer shuts as on a wide screen.
+addEventListener('pointerdown', (e) => { if (outside(e.target) && !(phone.matches && e.target === canvas && !openDrawer().classList.contains('menu'))) setDrawer(false); });
 addEventListener('focusout', (e) => { if (e.relatedTarget && outside(e.relatedTarget)) setDrawer(false); }); // tabbed out; a click that focuses nothing has no relatedTarget
 
 // Reset: every control back to its default, the place and the drawer's layout kept. The hash holds the whole
@@ -1335,23 +1336,29 @@ function goTo(target) {
   step(t0);
 }
 
-// My position: asked for on the button in Go and written into its box as latitude, longitude, to go to
-// (at z10 or closer, like any typed position) or to edit first; nothing is drawn there. The button is not
-// offered where the browser has no geolocation (an insecure page has none).
+// My position: asked for on the button in Go; the fix is written into its box as latitude, longitude, Go
+// shuts and the map flies there (at z10 or closer, like any typed position); nothing is drawn there. The box
+// is not focused, so a phone's keyboard does not come up over the map. While the browser looks, the button
+// says so; a refusal or a failure is said in Go itself, where the eye is. The button is not offered where the
+// browser has no geolocation (an insecure page has none).
 const LOCATE_ZOOM = 10;
-const locate = $('locate');
+const locate = $('locate'), LOCATE_LABEL = locate.textContent;
 locate.hidden = !navigator.geolocation;
 locate.addEventListener('click', () => {
-  locate.disabled = true;
-  const done = () => { locate.disabled = false; };
+  const miss = $('goMiss');
+  locate.disabled = true; locate.textContent = 'Finding my position…'; miss.hidden = true;
+  const done = () => { locate.disabled = false; locate.textContent = LOCATE_LABEL; };
   navigator.geolocation.getCurrentPosition((p) => {
     done();
-    $('coordsText').value = `${p.coords.latitude.toFixed(4)}, ${p.coords.longitude.toFixed(4)}`;
-    $('goMiss').hidden = true;
-    $('coordsText').focus({ preventScroll: true });
+    const { latitude: lat, longitude: lon } = p.coords;
+    $('coordsText').value = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+    setDrawer(false);
+    goTo({ lat, lon, zoom: Math.max(view.zoom, LOCATE_ZOOM) });
   }, (e) => {
     done();
-    $('status').textContent = e.code === e.PERMISSION_DENIED ? 'My position: not allowed' : `My position: ${e.message}`;
+    const say = e.code === e.PERMISSION_DENIED ? 'My position: not allowed' : `My position: ${e.message}`;
+    miss.textContent = say; miss.hidden = false; // the text before the unhide, so a reader announces it
+    $('status').textContent = say;
   }, { timeout: 15000, maximumAge: 60000 });
 });
 
