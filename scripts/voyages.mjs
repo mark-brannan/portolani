@@ -143,6 +143,9 @@ export function seaSamples(voyage) {
   return out;
 }
 
+// A resolved cite is a link the page writes into an href, so its url must be https, never javascript: or the like.
+const citedOk = (c) => c === undefined || (c && typeof c.title === 'string' && typeof c.url === 'string' && /^https:\/\//.test(c.url));
+
 // Schema check: the problems in a voyage record, as strings; none when it is well formed.
 export function problems(v) {
   const out = [];
@@ -169,13 +172,14 @@ export function problems(v) {
     need(typeof e.source === 'string' && e.source.length, `event ${i}: a source`);
     if (e.kind === 'death') need(typeof e.who === 'string' && e.who.length, `event ${i}: who died`);
     need(e.text === undefined || (typeof e.text === 'string' && e.text.length), `event ${i}: text, when given, a string`);
-    need(e.cited === undefined || (e.cited && typeof e.cited.title === 'string' && typeof e.cited.url === 'string'), `event ${i}: cited, when given, { title, url } from sources.json`);
+    need(citedOk(e.cited), `event ${i}: cited, when given, { title, url } with an https url, from sources.json`);
     if (e.alternatives !== undefined) {
       need(e.kind === 'death', `event ${i}: alternatives belong to a death`);
       need(Array.isArray(e.alternatives) && e.alternatives.length, `event ${i}: alternatives: [{ lon, lat, place, label, source }], one or more`);
       for (const [j, a] of (Array.isArray(e.alternatives) ? e.alternatives : []).entries()) {
         need(a && Number.isFinite(a.lon) && Number.isFinite(a.lat) && Math.abs(a.lon) <= 180 && Math.abs(a.lat) <= 90, `event ${i} alternative ${j}: lon and lat`);
         for (const k of ['place', 'label', 'source']) need(a && typeof a[k] === 'string' && a[k].length, `event ${i} alternative ${j}: a ${k}`);
+        need(a && citedOk(a.cited), `event ${i} alternative ${j}: cited, when given, { title, url } with an https url`);
         need(a && (a.text === undefined || (typeof a.text === 'string' && a.text.length)), `event ${i} alternative ${j}: text, when given, a string`);
       }
     }

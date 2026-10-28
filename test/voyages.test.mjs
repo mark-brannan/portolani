@@ -88,7 +88,7 @@ const raw = () => {
   const { events, sources, ...v } = base();
   return { ...v, sources: ['s1'], events: [] };
 };
-const shared = () => ({ people: { 'A B': { death: { lon: 1, lat: 1, date: 'd', label: 'l', source: 's' } } }, sources: { s1: { title: 't', url: 'u' } } });
+const shared = () => ({ people: { 'A B': { death: { lon: 1, lat: 1, date: 'd', label: 'l', source: 's' } } }, sources: { s1: { title: 't', url: 'https://u' } } });
 
 test('a person\'s death lives once, in people.json, and joins every voyage that names them', async () => {
   const set = { x: raw(), y: { ...raw(), id: 'y' }, ...shared() };
@@ -96,7 +96,7 @@ test('a person\'s death lives once, in people.json, and joins every voyage that 
     const v = await readVoyage(id, files(set));
     assert.deepEqual(problems(v), []);
     assert.deepEqual(v.events, [{ kind: 'death', who: 'A B', lon: 1, lat: 1, date: 'd', label: 'l', source: 's' }]);
-    assert.deepEqual(v.sources, [{ title: 't', url: 'u' }]);
+    assert.deepEqual(v.sources, [{ title: 't', url: 'https://u' }]);
   }
   set.x.events = [{ kind: 'death', who: 'A B', lon: 1, lat: 1, label: 'l', source: 's' }];
   await assert.rejects(readVoyage('x', files(set)), /people\.json/);
@@ -190,9 +190,11 @@ test('a cite resolves into sources.json; an alternative place takes its death\'s
   set.people['A B'].death = { ...set.people['A B'].death, cite: 's1', alternatives: [alt] };
   const v = await readVoyage('x', files(set));
   assert.deepEqual(problems(v), []);
-  assert.deepEqual(v.events.map((e) => [e.cite, e.cited, e.alternatives?.[0].cited]), [[undefined, { title: 't', url: 'u' }, undefined], [undefined, { title: 't', url: 'u' }, { title: 't', url: 'u' }]]);
+  assert.deepEqual(v.events.map((e) => [e.cite, e.cited, e.alternatives?.[0].cited]), [[undefined, { title: 't', url: 'https://u' }, undefined], [undefined, { title: 't', url: 'https://u' }, { title: 't', url: 'https://u' }]]);
   const proj = { toPx: ([lon, lat]) => [lon * 10, lat * 10] };
-  assert.ok(voyageMarks(v, proj, { x0: -100, y0: -100, x1: 100, y1: 100 }).every((m) => m.tile.cited?.url === 'u'));
+  assert.ok(voyageMarks(v, proj, { x0: -100, y0: -100, x1: 100, y1: 100 }).every((m) => m.tile.cited?.url === 'https://u'));
+  const bad = { ...v, events: v.events.map((e) => ({ ...e, cited: { title: 't', url: 'javascript:alert(1)' }, ...(e.alternatives ? { alternatives: e.alternatives.map((a) => ({ ...a, cited: { title: 't', url: 'javascript:alert(1)' } })) } : {}) })) };
+  assert.ok(problems(bad).filter((p) => p.includes('https url')).length >= 3, 'a non-https cite is a problem, on events and alternatives');
   set.x.events[0].cite = 'nowhere';
   await assert.rejects(readVoyage('x', files(set)), /source nowhere/);
 });
