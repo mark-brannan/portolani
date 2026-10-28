@@ -13,7 +13,7 @@
 // selection those chose, and are written back in the new form.
 // For a while, `debug=sheets[,rings]` and `tune=name:value,...` carry the under-the-hood section
 // (docs/atlas/under-the-hood.md), off by default.
-import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, sightMarks, SIGHT_TILES, noteMarks } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, voyageView, readVoyage, sightMarks, SIGHT_TILES, noteMarks } from './scene.mjs';
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, overlayFromHash, overlayToHash } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
@@ -47,7 +47,7 @@ const canvas = $('map'), ctx = canvas.getContext('2d');
 // cards beside the map, not on the sea.
 const phone = matchMedia('(max-width: 520px)');
 
-const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: 5, regions: 'latin', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyages: [], voyageWidth: VOYAGE_WIDTH, ...OVERLAY_DEFAULTS, cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER, overlap: DEFAULT_OVERLAP };
+const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: 6, regions: 'latin', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyages: [], voyageWidth: VOYAGE_WIDTH, ...OVERLAY_DEFAULTS, cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER, overlap: DEFAULT_OVERLAP };
 
 // ---------------------------------------------------------------- the sprites on offer
 
@@ -80,7 +80,7 @@ function viewFromHash() {
   const at = v && Object.values(v).every(Number.isFinite) ? v : DEFAULT_VIEW; // e.g. #map=1.2.3/40/5
   return clampView({ ...at, projection: q.get('projection') });
 }
-const zoomOf = (v, dflt) => (v === '1' ? dflt : Number.isFinite(Number(v)) ? Math.max(0, Math.min(MAX_ZOOM, Math.round(Number(v)))) : dflt); // '1' is an older link's checked box
+const zoomOf = (v, dflt) => (v !== '' && Number.isFinite(Number(v)) ? Math.max(0, Math.min(MAX_ZOOM, Math.round(Number(v)))) : dflt);
 const hex = (v, fallback) => (/^[0-9a-f]{3}$|^[0-9a-f]{6}$/i.test(v ?? '') ? `#${v.length === 3 ? [...v].map((c) => c + c).join('') : v}`.toLowerCase() : fallback);
 function styleFromHash() {
   const q = hashParams(), density = Number(q.get('density') ?? DEFAULTS.density);
@@ -90,7 +90,7 @@ function styleFromHash() {
     density: density >= 0 && density <= 2 ? density : DEFAULTS.density,
     names: q.get('names') !== '0',
     rhumb: q.get('rhumb') !== '0',
-    // older links: continents=1 / 0, and regions=off
+    // older links: continents=0, and regions=off
     continentsZoom: q.has('continents') ? zoomOf(q.get('continents'), DEFAULTS.continentsZoom) : DEFAULTS.continentsZoom,
     regions: ['latin', 'english'].includes(q.get('regions')) ? q.get('regions') : DEFAULTS.regions,
     regionsZoom: q.get('regions') === 'off' ? 0 : q.has('regionszoom') ? zoomOf(q.get('regionszoom'), DEFAULTS.regionsZoom) : DEFAULTS.regionsZoom,
@@ -738,7 +738,7 @@ function setDrawer(open, byKeyboard = false) { // the drawer to open, or false f
   const was = openDrawer();
   if (open === was) return;
   for (const [b, d] of drawers) { d.classList.toggle('open', d === open); b.setAttribute('aria-expanded', String(d === open)); }
-  document.documentElement.classList.toggle('sheet', !!open); // on a phone the map makes room above the sheet
+  document.documentElement.classList.toggle('sheet', !!open && !open.classList.contains('menu')); // on a phone the map makes room above the settings or the charts; a lighter drawer sits over its foot
   if (open?.id === 'voyagesPanel') fillVoyages(); // the list loads on the first open
   if (open) (open.id === 'goPanel' ? (phone.matches ? null : $('coordsText')) : focusable(open))?.focus({ preventScroll: true });
   else if (byKeyboard) drawers.find(([, d]) => d === was)[0].focus({ preventScroll: true });
@@ -747,15 +747,16 @@ function setDrawer(open, byKeyboard = false) { // the drawer to open, or false f
 for (const [b, d] of drawers) b.addEventListener('click', (e) => setDrawer(d === openDrawer() ? false : d, e.detail === 0)); // detail 0: Enter or Space
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && openDrawer()) setDrawer(false, true); });
 const outside = (t) => { const d = openDrawer(); return d && t instanceof Node && !where.contains(t) && !d.contains(t); };
-addEventListener('pointerdown', (e) => { if (outside(e.target) && !(phone.matches && e.target === canvas)) setDrawer(false); });
+// On a phone the settings and the charts stay up while the map is moved; a lighter drawer shuts as on a wide screen.
+addEventListener('pointerdown', (e) => { if (outside(e.target) && !(phone.matches && e.target === canvas && !openDrawer().classList.contains('menu'))) setDrawer(false); });
 addEventListener('focusout', (e) => { if (e.relatedTarget && outside(e.relatedTarget)) setDrawer(false); }); // tabbed out; a click that focuses nothing has no relatedTarget
 
-// Reset: every control back to its default, the place and the drawer's layout kept. The hash holds the whole
+// Reset: every control back to its default, the view (place and projection) and the drawer's layout kept. The hash holds the whole
 // style, so a hash with only the view is the default style; the hashchange handler below redraws from it.
 $('reset').addEventListener('click', () => {
-  const m = hashParams().get('map');
+  const m = hashParams().get('map'), p = hashParams().get('projection');
   $('shareUrl').hidden = true; $('shareNote').textContent = '';
-  location.hash = [m && `map=${m}`, layout !== 'default' && `layout=${layout}`].filter(Boolean).join('&');
+  location.hash = [m && `map=${m}`, p && `projection=${p}`, layout !== 'default' && `layout=${layout}`].filter(Boolean).join('&');
 });
 // Copy link: the hash is kept current by writeHash. Where the clipboard is refused (an insecure page,
 // a denied permission) the link is put in a box, selected, to copy by hand.
@@ -961,7 +962,7 @@ function showSnap(corner, w, h) {
     left: `${r.left + (corner[1] === 'l' ? m : W - m - w) * kx}px`, top: `${r.top + (corner[0] === 't' ? m : H - m - h) * ky}px` });
 }
 canvas.addEventListener('pointerdown', (e) => {
-  cancelAnimationFrame(flight); // a touch takes over from a flight
+  cancelAnimationFrame(flight); flightTo = null; // a touch takes over from a flight
   if (!pointers.size && e.isPrimary && (carried = cardAt(toCanvas(e.clientX, e.clientY)))) {
     carried.corner = style[carried.key];
     canvas.setPointerCapture(e.pointerId);
@@ -1009,7 +1010,7 @@ canvas.addEventListener('pointerup', (e) => {
 canvas.addEventListener('pointercancel', (e) => { tap = null; lift(e); });
 canvas.addEventListener('wheel', (e) => {
   e.preventDefault();
-  cancelAnimationFrame(flight); // the wheel takes over from a flight
+  cancelAnimationFrame(flight); flightTo = null; // the wheel takes over from a flight
   const [x, y] = toCanvas(e.clientX, e.clientY);
   const px = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY; // lines to px
   moved(zoomView(view, 2 ** (-px / 300), x, y));
@@ -1208,8 +1209,21 @@ $('voyageList').addEventListener('click', (e) => {
   const id = b.dataset.voyage, on = style.voyages.some((v) => v.id === id);
   style = { ...style, voyages: on ? style.voyages.filter((v) => v.id !== id) : [...style.voyages, { id, colour: null }] };
   showVoyage(); writeHash(); render();
+  if (!on) flyToVoyage(id);
 });
 let picking = 0; // a colour is placed when the picker pauses, not on every step of a drag across it
+// A voyage put on stays where it is if any of its track is in view, or where the view is flying to; if none is, the
+// map flies to fit the whole track. The last choice that needs a flight wins, however the loads interleave: an earlier
+// choice is dropped only once a later one has flown, not because a later one stayed put or was taken off.
+let voyageChosen = 0, voyageFlown = 0;
+function flyToVoyage(id) {
+  const n = ++voyageChosen;
+  readVoyage(id, (path) => env.readJSON(path)).then((v) => {
+    if (n < voyageFlown || !style.voyages.some((s) => s.id === id)) return;
+    const to = voyageView(v, flightTo ?? view);
+    if (to) { voyageFlown = n; goTo(to); }
+  }, () => {});
+}
 $('voyageList').addEventListener('input', (e) => {
   const id = e.target.dataset?.ink;
   if (!id) return;
@@ -1306,38 +1320,45 @@ $('coordsText').addEventListener('input', () => { $('goMiss').hidden = true; });
 
 // A short flight from the view to a target, in the view's projection: the ground is drawn on the
 // way as for a drag, and the ornaments placed when it lands. Reduced motion jumps.
-let flight = 0;
+let flight = 0, flightTo = null; // the view a flight is bound for, while it flies
 function goTo(target) {
   cancelAnimationFrame(flight);
   pinTitle = null;
   const from = view, to = clampView({ ...target, projection: view.projection });
+  flightTo = to;
   const dlon = ((to.lon - from.lon + 540) % 360) - 180; // the short way round
   const ms = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 600, t0 = performance.now();
   const step = (now) => {
     const u = ms ? Math.min(1, (now - t0) / ms) : 1, e = u < 0.5 ? 2 * u * u : 1 - (2 - 2 * u) ** 2 / 2;
     moved(u < 1 ? clampView({ lon: from.lon + dlon * e, lat: from.lat + (to.lat - from.lat) * e, zoom: from.zoom + (to.zoom - from.zoom) * e, projection: to.projection }) : to, true);
-    if (u < 1) flight = requestAnimationFrame(step); else { pinTitle = target.title ?? null; placed = null; stopped(); }
+    if (u < 1) flight = requestAnimationFrame(step); else { flightTo = null; pinTitle = target.title ?? null; placed = null; stopped(); }
   };
   step(t0);
 }
 
-// My position: asked for on the button in Go and written into its box as latitude, longitude, to go to
-// (at z10 or closer, like any typed position) or to edit first; nothing is drawn there. The button is not
-// offered where the browser has no geolocation (an insecure page has none).
+// My position: asked for on the button in Go; the fix is written into its box as latitude, longitude, Go
+// shuts and the map flies there (at z10 or closer, like any typed position); nothing is drawn there. The box
+// is not focused, so a phone's keyboard does not come up over the map. While the browser looks, the button
+// says so; a refusal or a failure is said in Go itself, where the eye is. The button is not offered where the
+// browser has no geolocation (an insecure page has none).
 const LOCATE_ZOOM = 10;
-const locate = $('locate');
+const locate = $('locate'), LOCATE_LABEL = locate.textContent;
 locate.hidden = !navigator.geolocation;
 locate.addEventListener('click', () => {
-  locate.disabled = true;
-  const done = () => { locate.disabled = false; };
+  const miss = $('goMiss');
+  locate.disabled = true; locate.textContent = 'Finding my position…'; miss.hidden = true;
+  const done = () => { locate.disabled = false; locate.textContent = LOCATE_LABEL; };
   navigator.geolocation.getCurrentPosition((p) => {
     done();
-    $('coordsText').value = `${p.coords.latitude.toFixed(4)}, ${p.coords.longitude.toFixed(4)}`;
-    $('goMiss').hidden = true;
-    $('coordsText').focus({ preventScroll: true });
+    const { latitude: lat, longitude: lon } = p.coords;
+    $('coordsText').value = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+    setDrawer(false);
+    goTo({ lat, lon, zoom: Math.max(view.zoom, LOCATE_ZOOM) });
   }, (e) => {
     done();
-    $('status').textContent = e.code === e.PERMISSION_DENIED ? 'My position: not allowed' : `My position: ${e.message}`;
+    const say = e.code === e.PERMISSION_DENIED ? 'My position: not allowed' : `My position: ${e.message}`;
+    miss.textContent = say; miss.hidden = false; // the text before the unhide, so a reader announces it
+    $('status').textContent = say;
   }, { timeout: 15000, maximumAge: 60000 });
 });
 

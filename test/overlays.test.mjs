@@ -2,13 +2,15 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { similarityFit, applyFit, affineThrough3, loadOverlay, drawOverlay, OVERLAY_DEFAULTS, overlayFromHash, overlayToHash } from '../scripts/overlays.mjs';
-import { figureRows } from '../scripts/build-overlays.mjs';
+import { figureRows, landmarkRows } from '../scripts/build-overlays.mjs';
 import { viewProjection } from '../scripts/scene.mjs';
 
 const ROOT = new URL('..', import.meta.url);
 const rows = figureRows(readFileSync(new URL('docs/atlas/ornaments.md', ROOT), 'utf8'));
 const { overlays } = JSON.parse(readFileSync(new URL('packs/overlays/overlays.json', ROOT), 'utf8'));
 const carta = overlays.find((o) => o.id === 'carta-marina');
+const catalan = overlays.find((o) => o.id === 'catalan-atlas');
+const landmarks = landmarkRows(readFileSync(new URL('docs/atlas/ornaments.md', ROOT), 'utf8'), '### Landmarks, sheet 5');
 
 test('the figures table of the Carta Marina has its 27 rows, 23 west and 4 Baltic', () => {
   assert.equal(rows.length, 27);
@@ -32,6 +34,18 @@ test('the committed fits give back every figure of ornaments.md to within 0.1 de
   const b = similarityFit(rows.filter((r) => r.fit === 'baltic').map((r) => [r.px, r.ll]));
   assert.equal(w.scale.toFixed(4), '0.0113'); assert.equal(Math.round(w.turn), 48);
   assert.equal(b.scale.toFixed(4), '0.0100'); assert.equal(Math.round(b.turn), 3);
+});
+
+// ornaments.md, "Landmarks, sheet 5": one similarity, 0.00331 deg/px, no turn, 127 km RMS, El Hierro worst at 284.
+test('the Catalan Atlas fit is the least-squares fit of its 19 landmarks, and their residual is the doc\'s', () => {
+  assert.equal(landmarks.length, 19);
+  const [piece] = catalan.pieces, fit = similarityFit(landmarks.map((r) => [r.px, r.ll]));
+  for (const k of ['a', 'b', 'tx', 'ty']) assert.ok(Math.abs(fit[k] - piece.fit[k]) < 1e-9, k);
+  assert.equal(fit.scale.toFixed(5), '0.00331'); assert.ok(Math.abs(fit.turn) < 0.5);
+  const km = ([lon, lat], [lo2, la2]) => 6371 * Math.hypot((lon - lo2) * Math.cos(((lat + la2) / 2) * Math.PI / 180), lat - la2) * Math.PI / 180;
+  const off = landmarks.map((r) => km(applyFit(piece.fit, ...r.px), r.ll));
+  assert.equal(Math.round(Math.sqrt(off.reduce((s, d) => s + d * d, 0) / off.length) / 10), 13); // 127 km, to the nearest 10
+  assert.equal(landmarks[off.indexOf(Math.max(...off))].id, 'L19');
 });
 
 test('a similarity fitted to exact pairs is recovered', () => {

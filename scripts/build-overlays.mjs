@@ -6,7 +6,8 @@
 //
 // The Carta Marina's two fits are refitted from the figures table in docs/atlas/ornaments.md ("Carta
 // Marina, 1539"): every row gives a figure's scan px and the lon, lat its side's fit put it at, so a
-// least-squares similarity through a side's rows gives back that side's fit.
+// least-squares similarity through a side's rows gives back that side's fit. The Catalan Atlas's one fit
+// is made from its landmarks table there ("Landmarks, sheet 5"): each row's scan px and real lon, lat.
 
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
@@ -28,13 +29,30 @@ export function figureRows(markdown, heading = '## Carta Marina, 1539') {
     .filter((c) => c.length > 6 && /^[RMS]\d+$/.test(c[1]) && /^(west|baltic)$/.test(c[4]))
     .map((c) => ({ id: c[1], px: num(c[3]), fit: c[4], ll: num(c[5]) }));
 }
+// The rows of a landmarks table under a heading of ornaments.md, as { id, px: [x, y], ll: [lon, lat] }: the
+// landmark's real place, not where a fit puts it.
+export function landmarkRows(markdown, heading) {
+  const at = markdown.indexOf(heading), next = markdown.indexOf('\n#', at + heading.length);
+  const section = markdown.slice(at, next < 0 ? undefined : next);
+  const num = (t) => t.split(',').map(Number);
+  return section.split('\n').map((l) => l.split('|').map((c) => c.trim()))
+    .filter((c) => c.length > 5 && /^L\d+$/.test(c[1]))
+    .map((c) => ({ id: c[1], px: num(c[3]), ll: num(c[4]) }));
+}
 // One side's similarity, refitted from its rows
 export function fitOf(rows, side) {
   const { a, b, tx, ty } = similarityFit(rows.filter((r) => r.fit === side).map((r) => [r.px, r.ll]));
   return { a, b, tx, ty };
 }
 
-const CHARTS = [{ id: 'carta-marina', title: 'Carta Marina, Olaus Magnus, 1539', source: 'carta-marina', file: 'carta-marina.jpg', split: 2700 }];
+// Each chart's pieces from ornaments.md, as [x0, x1, fit]; x1 null for the scan's right edge. `scale` is how
+// far the scan is shrunk for the site.
+const CHARTS = [
+  { id: 'carta-marina', title: 'Carta Marina, Olaus Magnus, 1539', source: 'carta-marina', file: 'carta-marina.jpg', scale: 2,
+    pieces: (md) => { const rows = figureRows(md); return [[0, 2700, fitOf(rows, 'west')], [2700, null, fitOf(rows, 'baltic')]]; } },
+  { id: 'catalan-atlas', title: 'Catalan Atlas, sheet 5, 1375', source: 'catalan-atlas-5', file: 'catalan-atlas.jpg', scale: 4,
+    pieces: (md) => { const { a, b, tx, ty } = similarityFit(landmarkRows(md, '### Landmarks, sheet 5').map((r) => [r.px, r.ll])); return [[240, 6080, { a, b, tx, ty }]]; } }, // the parchment, not the scan's white margin
+];
 
 async function scanOf(src) {
   const path = join(DL, src.file);
@@ -47,22 +65,22 @@ async function scanOf(src) {
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const sources = JSON.parse(readFileSync(join(ROOT, 'scripts', 'sources.json'), 'utf8')).sources;
-  const rows = figureRows(readFileSync(join(ROOT, 'docs', 'atlas', 'ornaments.md'), 'utf8'));
+  const md = readFileSync(join(ROOT, 'docs', 'atlas', 'ornaments.md'), 'utf8');
   mkdirSync(OUT, { recursive: true });
   const overlays = [];
   for (const c of CHARTS) {
     const src = sources.find((s) => s.id === c.source);
     const img = await loadImage(await scanOf(src));
-    const scale = 2, fw = Math.round(img.width / scale), fh = Math.round(img.height / scale);
+    const scale = c.scale, fw = Math.round(img.width / scale), fh = Math.round(img.height / scale);
     const canvas = createCanvas(fw, fh);
     canvas.getContext('2d').drawImage(img, 0, 0, fw, fh);
     writeFileSync(join(OUT, c.file), canvas.toBuffer('image/jpeg', 80));
     overlays.push({
       id: c.id, title: c.title, source: src.page ?? src.url, licence: src.rights, file: c.file,
       width: img.width, height: img.height, scale,
-      pieces: [{ x0: 0, x1: c.split, fit: fitOf(rows, 'west') }, { x0: c.split, x1: img.width, fit: fitOf(rows, 'baltic') }],
+      pieces: c.pieces(md).map(([x0, x1, fit]) => ({ x0, x1: x1 ?? img.width, fit })),
     });
-    console.log(`${c.id}: ${fw} x ${fh} from ${img.width} x ${img.height}; ${rows.length} figures`);
+    console.log(`${c.id}: ${fw} x ${fh} from ${img.width} x ${img.height}`);
   }
   writeFileSync(join(OUT, 'overlays.json'), `${JSON.stringify({ overlays }, null, 2)}\n`);
 }
