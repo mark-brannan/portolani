@@ -107,17 +107,17 @@ Feature: Hills (Catalan drawings)  (chip `#hills`, `off|catalan`; stored as the 
     When the page loads
     Then the Hills chip is "Catalan drawings" (any one selected)
 
-Feature: Hill drawings picker  (`#pick-relief` under the Hills chips, index.html:424; one family checkbox "Catalan" with a thumb per `mountain`-kind sprite, plus Clear and Defaults) [verified page.js:226-237, 536-556 at acf745d]
+Feature: Hill drawings picker  (`#pick-relief` under the Hills chips, index.html:424; one family checkbox "Catalan · drawn" with a thumb per `mountain`-kind sprite, plus Clear and Defaults) [verified page.js:226-237, 536-556 at acf745d]
   # The chip `#hills` and this picker set the same `mountain`-kind keys in `sprites`.
   Scenario: the family checkbox
     Given the chart at the default view (all three Catalan hills on)
     When the user unticks the family checkbox
-    Then every `v:mountains-*` key leaves `sprites=`, the count reads `0/3`, and the Hills chip reads Off
+    Then every `v:mountains-*` key leaves `sprites=`, the count reads `0 of 3`, and the Hills chip reads Off
     And ticking it again puts all three back
   Scenario: one thumb
     Given the same
     When the user clicks one thumb
-    Then only that key leaves `sprites=`; the family checkbox reads indeterminate (`2/3`) and the Hills chip still reads "Catalan drawings"
+    Then only that key leaves `sprites=`; the family checkbox reads indeterminate (`2 of 3`) and the Hills chip still reads "Catalan drawings"
   Scenario: Clear and Defaults
     Given the same
     When the user presses Clear in the "Hill drawings" tools

@@ -18,7 +18,7 @@ Feature: Learn links in the drawer  (a `p.lead[data-lead-for]` above a control g
   Scenario: the link leaves the map
     Given the drawer open
     When the user follows "Learn more"
-    Then the browser opens the Learn page, whose nav has "Back to the map" (`../`); the map's hash is unchanged
+    Then the browser opens the Learn page, whose nav has "Back to the map" (`../`, which opens the default view without the hash); the browser's Back returns to the map as it was
   Scenario: the lead moves with its control
     Given the layout chip "By the sheet" or "Moods"
     When the layout changes

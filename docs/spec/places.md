@@ -1,6 +1,6 @@
 # Remote islands
 
-Feature: Remote islands  (the astrolabe `#sights`, a group heading "Remote islands" in `SIGHTS`, two rows; a sub-group under the era groups) [verified page.js:1147-1150 at acf745d]
+Feature: Remote islands  (the astrolabe `#sights`, a group heading "Remote islands" in `SIGHTS`, two rows; a top-level group after the era groups) [verified page.js:1147-1150 at acf745d]
   Scenario: the group and its rows
     Given the astrolabe drawer open
     When the user scrolls to the heading "Remote islands"
