@@ -1212,14 +1212,15 @@ $('voyageList').addEventListener('click', (e) => {
 });
 let picking = 0; // a colour is placed when the picker pauses, not on every step of a drag across it
 // A voyage put on stays where it is if any of its track is in view, or where the view is flying to; if none is, the
-// map flies to fit the whole track. Only the last one chosen flies, however its load and an earlier one's interleave.
-let voyageWanted = null;
+// map flies to fit the whole track. The last choice that needs a flight wins, however the loads interleave: an earlier
+// choice is dropped only once a later one has flown, not because a later one stayed put or was taken off.
+let voyageChosen = 0, voyageFlown = 0;
 function flyToVoyage(id) {
-  voyageWanted = id;
+  const n = ++voyageChosen;
   readVoyage(id, (path) => env.readJSON(path)).then((v) => {
-    if (voyageWanted !== id || !style.voyages.some((s) => s.id === id)) return;
+    if (n < voyageFlown || !style.voyages.some((s) => s.id === id)) return;
     const to = voyageView(v, flightTo ?? view);
-    if (to) goTo(to);
+    if (to) { voyageFlown = n; goTo(to); }
   }, () => {});
 }
 $('voyageList').addEventListener('input', (e) => {

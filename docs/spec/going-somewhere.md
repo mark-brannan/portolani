@@ -63,7 +63,7 @@ Feature: My position  (button `#locate`, inside the Go drawer) [verified page.js
     When the page loads
     Then `#locate` is hidden
 
-Feature: Going to a voyage  (the dividers `#voyages`, list `#voyageList`; `voyageView` in scene.mjs) [#242] Tested by: test/voyages.test.mjs (the in-view and fit decision)
+Feature: Going to a voyage  (the dividers `#voyages`, list `#voyageList`; `voyageView` in scene.mjs) [#242] Tested by: test/voyages.test.mjs (the in-view and fit decision); "several chosen at once" and "putting a voyage off" are verified by hand in a headless browser (PR #261), with no automated test
   Scenario: some of the track is in view
     Given the view `map=5.50/38.000/-8.000`, on Iberia
     When the user opens `#voyages` and chooses "Magellan and Elcano round the world"
