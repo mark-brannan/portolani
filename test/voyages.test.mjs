@@ -149,9 +149,9 @@ test('an event and an alternative may carry text for its tile, and it must be a 
 test('a voyage\'s marks carry the tile a tap opens: the usual skull last, its alternatives fainter and first', async () => {
   const v = await voyage('zheng-he');
   const proj = viewProjection({ lon: 85, lat: 20, zoom: 1.5 });
-  const marks = voyageMarks(v, proj, { x0: 0, y0: 0, x1: W, y1: H });
+  const marks = voyageMarks(v, proj, { x0: 0, y0: 0, x1: W, y1: H }).filter((m) => m.skull);
   const [usual] = marks.slice(-1);
-  assert.equal(usual.tile.title, v.events[0].label);
+  assert.equal(usual.tile.title, v.events.find((e) => e.kind === 'death').label);
   assert.ok(usual.tile.text.length > 0, 'the usual account has text');
   const alts = marks.slice(0, -1);
   assert.ok(alts.length >= 1 && alts.every((m) => m.tile.alternative && m.alpha < 1 && m.h < usual.h));
@@ -172,6 +172,29 @@ test('Zheng He\'s skull stands at the middle of the Calicut–Malacca leg, the f
   }
   assert.ok(nearest < STEP_KM, `the skull is ${nearest.toFixed(0)} km from the leg`);
   assert.ok(Math.abs(along / total - 0.5) < 0.03, `the skull is ${(100 * along / total).toFixed(0)}% along the leg`);
+});
+
+test('every event and death of every voyage links its tile to a source, and every voyage has a landing, death or fight to tap', async () => {
+  for (const id of JSON.parse(readFileSync('data/voyages/index.json', 'utf8'))) {
+    const { events } = await voyage(id);
+    assert.ok(events.length, `${id}: no event`);
+    for (const e of events) {
+      assert.ok(e.cited?.url?.startsWith('https://'), `${id}: ${e.label} cites no source`);
+      for (const a of e.alternatives ?? []) assert.ok(a.cited?.url, `${id}: ${a.label} cites no source`);
+    }
+  }
+});
+
+test('a cite resolves into sources.json; an alternative place takes its death\'s; one not there does not resolve; the mark\'s tile carries it', async () => {
+  const set = { x: { ...raw(), events: [{ kind: 'landfall', lon: 1, lat: 1, label: 'l', source: 's', cite: 's1' }] }, ...shared() };
+  set.people['A B'].death = { ...set.people['A B'].death, cite: 's1', alternatives: [alt] };
+  const v = await readVoyage('x', files(set));
+  assert.deepEqual(problems(v), []);
+  assert.deepEqual(v.events.map((e) => [e.cite, e.cited, e.alternatives?.[0].cited]), [[undefined, { title: 't', url: 'u' }, undefined], [undefined, { title: 't', url: 'u' }, { title: 't', url: 'u' }]]);
+  const proj = { toPx: ([lon, lat]) => [lon * 10, lat * 10] };
+  assert.ok(voyageMarks(v, proj, { x0: -100, y0: -100, x1: 100, y1: 100 }).every((m) => m.tile.cited?.url === 'u'));
+  set.x.events[0].cite = 'nowhere';
+  await assert.rejects(readVoyage('x', files(set)), /source nowhere/);
 });
 
 test('every event of every voyage has text for its tile', async () => {

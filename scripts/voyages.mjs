@@ -169,6 +169,7 @@ export function problems(v) {
     need(typeof e.source === 'string' && e.source.length, `event ${i}: a source`);
     if (e.kind === 'death') need(typeof e.who === 'string' && e.who.length, `event ${i}: who died`);
     need(e.text === undefined || (typeof e.text === 'string' && e.text.length), `event ${i}: text, when given, a string`);
+    need(e.cited === undefined || (e.cited && typeof e.cited.title === 'string' && typeof e.cited.url === 'string'), `event ${i}: cited, when given, { title, url } from sources.json`);
     if (e.alternatives !== undefined) {
       need(e.kind === 'death', `event ${i}: alternatives belong to a death`);
       need(Array.isArray(e.alternatives) && e.alternatives.length, `event ${i}: alternatives: [{ lon, lat, place, label, source }], one or more`);
@@ -189,7 +190,8 @@ export function problems(v) {
 // The one reader of the voyage files: each piece of text lives in one place, and this puts a voyage
 // back together. A person's death is in people.json, keyed by name ({ "death": { lon, lat, date, label,
 // text, source, alternatives } }, or { "death": "unknown" }), and joins every voyage whose `who` names
-// them; a voyage's `sources` are ids into sources.json; a leg sailed again on another voyage is
+// them; a voyage's `sources` are ids into sources.json, and so is an event's or a death's `cite`, the one its
+// tile links to (resolved to `cited`, { title, url }); a leg sailed again on another voyage is
 // { "sameAs": "<voyage id>/<leg id>", "dates" }, the leg's own file giving it an `id`. `readJSON(path)`
 // reads a path under the site root, sync or async. Returns the whole record problems() and the drawing
 // take; throws on a reference that does not resolve or a death written in the voyage file.
@@ -218,6 +220,13 @@ export async function readVoyage(id, readJSON) {
     if (death === 'unknown') unknown.push(who);
     else if (death) deaths.push({ kind: 'death', who, ...death });
   }
-  const cited = (raw.sources ?? []).map((s) => sources[s] ?? fail(`source ${s} is not in sources.json`));
-  return { ...raw, sources: cited, legs, events: [...(raw.events ?? []), ...deaths], ...(unknown.length && { deathUnknown: unknown }) };
+  const source = (s) => sources[s] ?? fail(`source ${s} is not in sources.json`);
+  // an event's or a death's `cite` is the sources.json id its tile links to; an alternative place without its own takes the death's
+  const linked = (e, up) => { const { cite, ...rest } = e; const cited = cite === undefined ? up : source(cite); return cited ? { ...rest, cited } : rest; };
+  const events = [...(raw.events ?? []), ...deaths].map((e) => {
+    const out = linked(e);
+    if (Array.isArray(e.alternatives)) out.alternatives = e.alternatives.map((a) => linked(a, out.cited));
+    return out;
+  });
+  return { ...raw, sources: (raw.sources ?? []).map(source), legs, events, ...(unknown.length && { deathUnknown: unknown }) };
 }

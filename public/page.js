@@ -1019,7 +1019,7 @@ canvas.addEventListener('wheel', (e) => {
 // ---------------------------------------------------------------- the tile
 
 // A click or tap on a point of interest opens a small tile beside it with what there is to know: its heading,
-// date, text and source. Nothing is lettered beside the mark itself. Today the points of interest are the
+// date, text and source, and for a voyage's mark a link to the source it cites. Nothing is lettered beside the mark itself. Today the points of interest are the
 // voyages' events (scripts/scene.mjs voyageMarks); the tile takes any { title, date, text, source }.
 // It shuts on the next touch of the map, on Esc, on its own close button, or when the map moves.
 const TAP_SLOP = 8, TAP_REACH = 22; // CSS px, so a finger is as forgiving on a phone's small canvas as a mouse on a wide one: a touch that stays within the slop is a tap; a mark takes a tap within the reach
@@ -1044,7 +1044,13 @@ function fillTile(t) {
     return;
   }
   const source = part('tile-source', t.source && `Source: ${t.source}`);
-  tileEl.replaceChildren(close, ...[head, meta, text, source].filter(Boolean));
+  let more = null;
+  if (t.cited) { // a voyage's event or death: the source it cites, as a link out
+    const a = document.createElement('a');
+    a.href = t.cited.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = t.cited.title;
+    more = document.createElement('p'); more.className = 'tile-source'; more.append('Read: ', a);
+  }
+  tileEl.replaceChildren(close, ...[head, meta, text, source, more].filter(Boolean));
   tileEl.setAttribute('aria-label', t.title ?? 'Point of interest');
 }
 // every listed place with a tile, once by name, at the view its button flies to
