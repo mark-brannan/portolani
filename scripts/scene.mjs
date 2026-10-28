@@ -2282,9 +2282,9 @@ export function voyageMarks(voyage, proj, rect) {
     if (disc(rect, x, y, -h / 2)) out.push({ x, y, h, alpha, skull, tile });
   };
   for (const e of voyage?.events ?? []) {
-    const tile = { title: e.label, date: e.date, text: e.text, note: e.note, source: e.source, who: e.who };
+    const tile = { title: e.label, date: e.date, text: e.text, note: e.note, source: e.source, cited: e.cited, who: e.who };
     if (e.kind !== 'death') { add(e, SKULL_H, 1, false, tile); continue; }
-    for (const a of e.alternatives ?? []) add(a, SKULL_ALT_H, 0.75, true, { title: a.label, date: e.date, text: a.text, source: a.source, who: e.who, place: a.place, alternative: true });
+    for (const a of e.alternatives ?? []) add(a, SKULL_ALT_H, 0.75, true, { title: a.label, date: e.date, text: a.text, source: a.source, cited: a.cited, who: e.who, place: a.place, alternative: true });
     add(e, SKULL_H, 1, true, tile);
   }
   return out;

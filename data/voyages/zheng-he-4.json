@@ -5,7 +5,7 @@
   "who": ["Zheng He"],
   "when": "1413–1415",
   "summary": "The fleet follows the route of the earlier voyages to Calicut, then goes on to Hormuz at the mouth of the Persian Gulf, the first of the voyages to reach it, and returns by Calicut, Malacca and Champa.",
-  "sources": ["zheng-he", "mao-kun-map", "ming-shi"],
+  "sources": ["zheng-he", "mao-kun-map", "ming-shi", "ming-treasure-voyages", "ma-huan"],
   "legs": [
     { "sameAs": "zheng-he/nanjing-liujiagang", "dates": "1413" },
     { "sameAs": "zheng-he/liujiagang-changle", "dates": "1413" },
@@ -21,5 +21,9 @@
     { "sameAs": "zheng-he/calicut-malacca", "dates": "1415" },
     { "sameAs": "zheng-he/malacca-champa", "dates": "1415" },
     { "sameAs": "zheng-he-1/champa-liujiagang", "dates": "Aug 1415" }
+  ],
+  "events": [
+    { "kind": "landfall", "lon": 56.45, "lat": 27.1, "date": "1414", "label": "Hormuz, the first voyage past India", "source": "Ming treasure voyages (Wikipedia)", "cite": "ming-treasure-voyages", "text": "The first three voyages had turned at Calicut. The fourth went on to Hormuz, the great market at the mouth of the Persian Gulf, with Arabic-speaking interpreters aboard for the first time, among them Ma Huan, whose book is the best account of the voyages." },
+    { "kind": "event", "lon": 97.2, "lat": 5.15, "date": "1415", "label": "Semudera: the pretender Sekandar defeated", "source": "Ming treasure voyages (Wikipedia); Ma Huan", "cite": "ming-treasure-voyages", "text": "Sekandar had tried to take the throne of Semudera from Zain al-'Abidin, the king the Ming recognised. His men, reportedly tens of thousands, attacked the fleet and were beaten; he was chased to Lambri and taken with his wife and child, shown to the emperor at the palace gate, and executed." }
   ]
 }
