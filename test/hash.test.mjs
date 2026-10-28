@@ -210,7 +210,6 @@ scenario('regions: the slider round-trips', 'map=5.48/40.265/7.000', async (page
   assert.equal(await text(page, 'regionsOut'), 'zoom 9 and out');
 });
 
-
 // ---------------------------------------------------------------- the drawer's layouts (#225)
 
 // Every control in the drawer, by its element's id. Each layout shows all of them, each one element.
