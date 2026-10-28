@@ -215,3 +215,28 @@ test('voyage colours: the first red, the rest distinct and seeded on the id, a p
   assert.equal(picked.drake, VOYAGE_PALETTE[0], 'red is free, so the next one takes it');
   assert.equal(Object.keys(voyageColours(VOYAGE_PALETTE.map((_, i) => `v${i}`).concat('extra'))).length, VOYAGE_PALETTE.length + 1);
 });
+
+// The menu is chronological: the first number of `when` is the start year (BC negative). A voyage's own
+// sub-voyages (columbus, columbus-2..4; zheng-he, zheng-he-1, -4, -5) stay together, ordered by their own
+// dates, and the family sits where its first voyage starts.
+test('the index is in chronological order of start year, sub-voyages together', () => {
+  const year = (id) => {
+    const when = JSON.parse(readFileSync(join(DIR, `${id}.json`), 'utf8')).when;
+    const n = Number(/\d+/.exec(when)[0]);
+    return /\bBC\b/.test(when) ? -n : n;
+  };
+  const family = (id) => id.replace(/-\d+$/, '');
+  const years = INDEX.map(year);
+  const firstOf = new Map();
+  INDEX.forEach((id, i) => { const f = family(id); firstOf.set(f, Math.min(firstOf.get(f) ?? Infinity, years[i])); });
+  const seen = new Set();
+  INDEX.forEach((id, i) => {
+    const f = family(id);
+    if (i && family(INDEX[i - 1]) === f) assert.ok(years[i] >= years[i - 1], `${id} (${years[i]}) is before ${INDEX[i - 1]} (${years[i - 1]})`);
+    else {
+      assert.ok(!seen.has(f), `${f}: its voyages are not together in the index`);
+      if (i) assert.ok(firstOf.get(f) >= firstOf.get(family(INDEX[i - 1])), `${f} is listed after ${family(INDEX[i - 1])}`);
+    }
+    seen.add(f);
+  });
+});

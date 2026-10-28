@@ -9,6 +9,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import * as coastlines from 'coastlines';
+import { band } from 'coastlines/catalogue';
 import { geojsonPolygons } from 'coast-wright';
 import { createScene, drawScene, W, H } from '../scripts/scene.mjs';
 import { isleIndex, islesOf, isleLand } from '../scripts/isles.mjs';
@@ -22,7 +23,7 @@ const resolve = (p) => (p.startsWith('geo/') ? join(GEO, p.slice(4)) : join(ROOT
 
 const land50 = geojsonPolygons(read(join(GEO, 'ne-land-50m.geojson')));
 const outlines = isleLand(geojsonPolygons(read(join(GEO, 'ne-land-10m.geojson'))), land50);
-const index = isleIndex(coastlines.shapefilePolygons(readFileSync(coastlines.localUrl(coastlines.find('gshhg-land-h')))),
+const index = isleIndex(coastlines.shapefilePolygons(readFileSync(coastlines.localUrl(coastlines.find(band('gshhg-h-land').inputs[0])))),
   geojsonPolygons(read(join(GEO, 'ne-land-50m.geojson'))));
 const names = joinNames(read(join(ROOT, 'test', 'fixtures', 'sea-names-50m.json')),
   coastNames(read(join(GEO, 'ne-admin-0-countries-50m.geojson')), read(join(GEO, 'ne-coastline-50m.geojson'))));

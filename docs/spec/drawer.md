@@ -341,3 +341,32 @@ Feature: One mode  (tokens `--panel` #efe3c6, `--fg`, `--margin` #1d1913; no `pr
     When the browser's colour scheme is switched
     Then no colour on the page changes; no stylesheet or script reads `prefers-color-scheme`
     # Tested by: test/drawers.test.mjs (the last line only, offline)
+
+Feature: Scan overlay  (charts drawer `#chartsDrawer`: under a chart whose scan is in `packs/overlays/overlays.json`, a chip `[data-overlay=<id>] .chip` (role checkbox, the scan as its glyph) "Lay the scan over the map" and, while on, a range input 0..1 step 0.05 with its percentage; hash `overlay=<id>`, default none (`null`, in pencil: a config default, adjustable), and `overlayopacity`, default `0.6` (`OVERLAY_DEFAULTS`, overlays.mjs); scene `overlay: { id, opacity }`) [page.js `showOverlay`; scene.mjs drawScene step 2.1, drawAnchored; overlays.mjs]
+  Scenario: the scan laid over the map
+    Given the chart at `#map=4.60/61.700/19.700`
+    When the user opens the charts drawer and clicks "Lay the scan over the map" under Carta Marina
+    Then the chip is `aria-checked=true`, the slider shows 60%, the hash gains `overlay=carta-marina`, and the scan is drawn over the land and under the rhumb lines, its Gotland over today's Gotland
+  Scenario: opacity
+    Given the chart at `#map=4.60/61.700/19.700&overlay=carta-marina`
+    When the user moves the slider to 0.3
+    Then the hash gains `overlayopacity=0.3` and the scan is drawn fainter when the slider pauses
+  Scenario: off, and a chart without a scan
+    Given the same
+    When the user clicks the chip again
+    Then the chip is `aria-checked=false`, the slider is hidden and `overlay` leaves the hash; the other charts show no chip
+  Scenario: an id the site lacks
+    Given the chart at `#overlay=nowhere`
+    When the page loads
+    Then the map draws as without it
+  Scenario: the overlay keys round-trip through the hash
+    Given the chart at the default
+    When the hash is written
+    Then neither `overlay` nor `overlayopacity` is in it
+    Given the chart at `#overlay=carta-marina&overlayopacity=0.6`
+    When the hash is read and written again
+    Then the overlay is `carta-marina` at 0.6, and the hash says `overlay=carta-marina` (0.6 is the default, left out)
+    Given the chart at `#overlay=nowhere`
+    When the hash is read against the site's overlays
+    Then the overlay is off
+    # Tested by: test/overlays.test.mjs 'the overlay in the hash: ...' (offline, `overlayFromHash` and `overlayToHash`)

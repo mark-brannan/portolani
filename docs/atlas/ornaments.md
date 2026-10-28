@@ -25,6 +25,51 @@ Vesconte's is known. Each has an empty set, so these sheets draw no roses, beast
 
 Sheets 6 to 12 are not read.
 
+### Landmarks, sheet 5
+
+Read off the Commons scan at full size (6454 x 15862, `Catalan_Atlas_BNF,_sheet_5.jpg` in scripts/sources.json)
+on 2026-10-21, by eye, about ±40 px; each placed by its own lettering on the chart (Lumenegh by the Shannon,
+Lixbona on the Tagus, Mogador, caua de guer, caua de Non, insula de legname, the Canaries by name). The sheet
+is north up and takes one similarity, fitted by least squares from scan pixels to longitude and Mercator
+latitude, as the Carta Marina's are:
+
+| fit | landmarks | scale | turn | residual, RMS | worst |
+|---|---|---|---|---|---|
+| sheet 5 | L1 to L19 | 0.00331 °/px | 0° | 127 km | El Hierro, 284 km |
+
+The chart strings the Canaries out west to east, about half again their true span, and sets Ireland a little
+south and west, so those are the worst rows. The scan's corners land at 27.0°W to 5.6°W, 21.8°N to 59.7°N.
+
+| | landmark | scan px | lon, lat | fit puts it at | off by |
+|---|---|---|---|---|---|
+| L1 | Shannon mouth | 4975, 4710 | -9.75, 52.58 | -10.5, 50.9 | 199 km |
+| L2 | Cape Finisterre | 5425, 8290 | -9.27, 42.88 | -9.1, 42.8 | 21 km |
+| L3 | Douro mouth, Porto | 5650, 9030 | -8.67, 41.14 | -8.3, 41.0 | 37 km |
+| L4 | Mondego mouth | 5480, 9200 | -8.87, 40.15 | -8.9, 40.5 | 42 km |
+| L5 | Tagus mouth, Lisbon | 5435, 9695 | -9.30, 38.68 | -9.0, 39.3 | 71 km |
+| L6 | Cape Cantin | 5440, 12000 | -9.27, 32.55 | -9.0, 33.1 | 69 km |
+| L7 | Mogador island | 5390, 12280 | -9.78, 31.50 | -9.2, 32.4 | 111 km |
+| L8 | Cape Ghir | 5420, 12650 | -9.89, 30.63 | -9.1, 31.3 | 109 km |
+| L9 | Cape Nun | 5200, 13190 | -11.08, 28.75 | -9.8, 29.8 | 169 km |
+| L10 | Porto Santo | 3420, 11790 | -16.34, 33.07 | -15.7, 33.7 | 94 km |
+| L11 | Madeira | 3210, 12000 | -16.95, 32.75 | -16.4, 33.1 | 68 km |
+| L12 | Desertas | 3500, 12290 | -16.52, 32.50 | -15.4, 32.3 | 105 km |
+| L13 | Selvagens | 3800, 12850 | -15.87, 30.14 | -14.4, 30.7 | 154 km |
+| L14 | Lanzarote | 4080, 13450 | -13.63, 29.05 | -13.5, 29.0 | 12 km |
+| L15 | Fuerteventura | 3850, 13820 | -14.02, 28.40 | -14.3, 28.0 | 55 km |
+| L16 | Gran Canaria | 3200, 14020 | -15.60, 27.96 | -16.4, 27.4 | 104 km |
+| L17 | Tenerife | 2750, 13900 | -16.60, 28.27 | -17.9, 27.7 | 142 km |
+| L18 | La Gomera | 2390, 13990 | -17.23, 28.10 | -19.1, 27.5 | 197 km |
+| L19 | El Hierro | 1900, 14180 | -18.00, 27.75 | -20.7, 26.9 | 284 km |
+
+Left out of the fit: "Illa de Stillanda", Iceland, drawn east of Ireland at 5600, 1700, which the fit puts at
+8.5°W 56.7°N, 1059 km from where it lies; Hy-Brasil, the round island west of Ireland, and the other islands
+of legend; and the islands between Galicia and Madeira (insule de corvi marini, insula de brazi), which may be
+the Azores but are too far from them to read as any one. The rose at 2000, 7950 lands at 20.4°W 43.6°N by this
+fit, within centres.md's ±2° of R1.
+
+The fit lays the scan over the map: [docs/overlay/README.md](../overlay/README.md).
+
 ## Carta Marina, 1539
 
 Read off the Commons scan at full size (5016 x 3715, `Carta_Marina.jpeg` in scripts/sources.json) on
@@ -74,6 +119,8 @@ where it lies, so that fit is the weaker one. Figures at x > 2700 px take the Ba
 Lake Vänern's ships are inland and left out. The sheet's extent (README.md, "The curated sheets") stops at
 5°W, so 17 of its 27 figures, the four cropped ones among them, lie off it and are not drawn until that
 edge moves west to take in Iceland.
+
+The two fits also lay the whole scan over the map, refitted from this table: [docs/overlay/README.md](../overlay/README.md).
 
 ## Juan de la Cosa, 1500
 

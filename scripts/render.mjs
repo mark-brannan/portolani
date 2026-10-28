@@ -2,6 +2,8 @@
 // @napi-rs/canvas. The browser host is public/page.js; both share the scene code.
 //
 // Usage: npm run render   -> out/mockup.png, out/mockup-detail.png
+//        npm run render -- --view 19.7,61.7,5.4[,projection] [--overlay carta-marina[:0.6]] --out docs/x.jpg
+//          -> one view, optionally with a chart's scan laid over it (docs/overlay/README.md), as .png or .jpg
 
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
@@ -13,13 +15,16 @@ import { joinUrban } from './urban.mjs';
 import { cutWater, joinWater, WATER_FILES } from './detail-cells.mjs';
 import { isleIndex, isleLand } from './isles.mjs';
 import * as coastlines from 'coastlines';
+import { band } from 'coastlines/catalogue';
 import { geojsonPolygons } from 'coast-wright';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DL = join(ROOT, 'downloads');
 const GEO = dirname(fileURLToPath(import.meta.resolve('coastlines/data/ne-land-50m')));
+// the pinned file a catalogue record is read from, by the record's id
+const entryOf = (id) => coastlines.find(band(id).inputs.find((input) => typeof input === 'string'));
 
-// Logical paths: geo/<id>.geojson is a coastlines data file, packs/... in the repo; the names are
+// Logical paths: geo/<file>.geojson is a coastlines data file, packs/... in the repo; the names are
 // made here from the marine download and the coastlines countries, the urban footprints from the
 // urban areas download (npm run build:preview fetches it), the towns drawn as icons without it;
 // the 10m water cells (geo/water-10m/) are cut here from the rivers and lakes downloads and their
@@ -44,7 +49,7 @@ const water = (p) => {
 };
 // the island index, built here from the installed GSHHG "h" shapefile as build-preview.mjs builds it
 let isles;
-const islesIndex = () => isles ??= isleIndex(coastlines.shapefilePolygons(readFileSync(coastlines.localUrl(coastlines.find('gshhg-land-h')))),
+const islesIndex = () => isles ??= isleIndex(coastlines.shapefilePolygons(readFileSync(coastlines.localUrl(entryOf('gshhg-h-land')))),
   geojsonPolygons(read(join(GEO, 'ne-land-50m.geojson'))));
 let outlines;
 const islesLand = () => outlines ??= isleLand(geojsonPolygons(read(join(GEO, 'ne-land-10m.geojson'))), geojsonPolygons(read(join(GEO, 'ne-land-50m.geojson'))));
@@ -57,6 +62,18 @@ const env = {
   loadImage: (p) => loadImage(resolve(p)),
   loadFont: async (family) => { GlobalFonts.registerFromPath(join(DL, 'IMFeENrm28P.ttf'), family); GlobalFonts.registerFromPath(join(DL, 'IMFeENit28P.ttf'), family); },
 };
+
+const arg = (name) => { const i = process.argv.indexOf(`--${name}`); return i > 0 ? process.argv[i + 1] : undefined; };
+if (arg('view')) {
+  const [lon, lat, zoom, projection] = arg('view').split(',');
+  const [id, opacity] = (arg('overlay') ?? '').split(':');
+  const one = await createScene(env, { view: { lon: +lon, lat: +lat, zoom: +zoom, projection }, overlay: id ? { id, opacity: opacity ?? 0.6 } : null });
+  const canvas = createCanvas(W, H), out = arg('out') ?? join(ROOT, 'out', 'view.png');
+  drawScene(canvas.getContext('2d'), one.scene, one.data, one.bg, { scale: 1, x: 0, y: 0 });
+  writeFileSync(out, out.endsWith('.jpg') ? canvas.toBuffer('image/jpeg', 82) : canvas.toBuffer('image/png'));
+  console.log(`${out}: ${W} x ${H}, overlay ${one.scene.overlay ? `${one.scene.overlay.id} at ${one.scene.overlay.opacity}` : 'none'}`);
+  process.exit(0);
+}
 
 const t0 = performance.now();
 const { scene, data, bg, proj, timing } = await createScene(env);

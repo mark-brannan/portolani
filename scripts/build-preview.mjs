@@ -25,7 +25,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import * as coastlines from 'coastlines';
 import { geojsonPolygons, geojsonRings } from 'coast-wright';
-import { bandOf } from './bands.mjs';
+import { band } from 'coastlines/catalogue';
 import { cutCells, cutLakes, cutWater, dbfRecords, gshhgLakes, joinWater, WATER_FILES } from './detail-cells.mjs';
 import { seaNames, coastNames, joinNames, tintedSeas } from './names.mjs';
 import { joinUrban } from './urban.mjs';
@@ -33,16 +33,22 @@ import { isleIndex, isleLand } from './isles.mjs';
 import { ATTEMPTS, fetchBytesWithRetry } from './fetch-retry.mjs';
 import { buildInfo } from './build-info.mjs';
 const { find, localUrl } = coastlines;
+// By catalogue id: the pinned manifest entry a record is read from, the name of its whole file (the
+// catalogue's `data/<file>`, written to geo/<file>, where scene.mjs reads it), and the dir and cell
+// size of its cells (the catalogue's `geo/<dir>/`, where coastlines' provider reads them).
+const entryOf = (id) => find(band(id)?.inputs.find((input) => typeof input === 'string'));
+const fileName = (id) => path.basename(band(id).sources.find((s) => s.kind === 'file').url);
+const bandOf = (id) => { const r = band(id); return { dir: r.sources.find((s) => s.kind === 'cells').url.replace(/^geo\/|\/$/g, ''), cell: r.grid.cellDeg }; };
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const out = path.join(root, '_site');
-const GEO = ['ne-land-50m', 'ne-coastline-50m', 'ne-populated-places-50m', ...(find('ne-urban-areas-50m') ? ['ne-urban-areas-50m'] : []),
-  'ne-rivers-lake-centerlines-50m', 'ne-lakes-50m']; // urban areas from coastlines 0.0.5; rivers and lakes for scripts/water.mjs
-const GEO_10M = ['ne-land-10m', 'ne-coastline-10m', 'ne-minor-islands-10m'];
-const LAND_10M = bandOf('ne-10m-land'); // the bands scene.mjs reads: each is written to its own dir at its own cell size
+const GEO = ['ne-50m-land', 'ne-50m-coastline', 'ne-50m-populated-places', ...(entryOf('ne-50m-urban-areas') ? ['ne-50m-urban-areas'] : []),
+  'ne-50m-rivers-lake-centerlines', 'ne-50m-lakes']; // urban areas from coastlines 0.0.5; rivers and lakes for scripts/water.mjs
+const GEO_10M = ['ne-10m-land', 'ne-10m-coastline', 'ne-10m-minor-islands'];
+const LAND_10M = bandOf('ne-10m-land'); // the bands coastlines' provider reads: each is written to its own dir at its own cell size
 
-const KEEP = { 'ne-populated-places-50m': ['NAME', 'SCALERANK', 'POP_MAX', 'MAX_AREAKM'], 'ne-urban-areas-50m': [],
-  'ne-rivers-lake-centerlines-50m': ['name', 'featurecla', 'min_zoom'], 'ne-lakes-50m': ['name', 'min_zoom'] }; // what scripts/water.mjs reads
+const KEEP = { 'ne-50m-populated-places': ['NAME', 'SCALERANK', 'POP_MAX', 'MAX_AREAKM'], 'ne-50m-urban-areas': [],
+  'ne-50m-rivers-lake-centerlines': ['name', 'featurecla', 'min_zoom'], 'ne-50m-lakes': ['name', 'min_zoom'] }; // what scripts/water.mjs reads
 const slim = (geo, keys) => ({
   ...geo,
   features: geo.features.map((f) => ({ ...f, properties: Object.fromEntries(keys.map((k) => [k, f.properties[k]])) })),
@@ -85,7 +91,7 @@ for (const [url, name, sha, dir] of SOURCES) {
   await cp(file, path.join(out, dir, name));
 }
 async function readGeo(id) {
-  const entry = find(id), bytes = await readFile(localUrl(entry));
+  const entry = entryOf(id), bytes = await readFile(localUrl(entry));
   const got = `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
   if (got !== entry.sha256) throw new Error(`${id}: ${got} does not match the coastlines manifest (${entry.sha256})`);
   return bytes;
@@ -94,12 +100,12 @@ await mkdir(path.join(out, 'geo', LAND_10M.dir), { recursive: true });
 let placesGeo;
 for (const id of GEO) {
   const bytes = await readGeo(id);
-  if (id === 'ne-populated-places-50m') placesGeo = JSON.parse(bytes);
-  await writeFile(path.join(out, 'geo', `${id}.geojson`), id in KEEP ? JSON.stringify(slim(JSON.parse(bytes), KEEP[id])) : bytes);
+  if (id === 'ne-50m-populated-places') placesGeo = JSON.parse(bytes);
+  await writeFile(path.join(out, 'geo', fileName(id)), id in KEEP ? JSON.stringify(slim(JSON.parse(bytes), KEEP[id])) : bytes);
 }
 // Names the chart letters: seas from the download, countries along their 50m coast.
 const marine = JSON.parse(await readFile(path.join(root, 'downloads', 'ne_50m_geography_marine_polys.geojson'), 'utf8'));
-const [countries, coast50] = await Promise.all(['ne-admin-0-countries-50m', 'ne-coastline-50m'].map(async (id) => JSON.parse(await readGeo(id))));
+const [countries, coast50] = await Promise.all(['ne-50m-admin-0-countries', 'ne-50m-coastline'].map(async (id) => JSON.parse(await readGeo(id))));
 const seas = seaNames(marine);
 // the golden test reads its seas from this fixture, offline: it must stay what the download gives
 const fixture = await readFile(path.join(root, 'test', 'fixtures', 'sea-names-50m.json'), 'utf8');
@@ -137,19 +143,19 @@ console.log(`10m water: ${waterCells.size} cells of ${WATER_CELL_DEG} degree, ${
 const [land10, coast10, minor10] = await Promise.all(GEO_10M.map(async (id) => JSON.parse(await readGeo(id))));
 await writeBand(LAND_10M.dir, LAND_10M.cell, { land: geojsonPolygons(land10), coast: [...geojsonRings(coast10), ...geojsonPolygons(minor10).map((p) => p[0])] });
 // the remote islands 50m drops, as 10m outlines the coarse land draws (scripts/isles.mjs isleLand)
-const isleLandJson = JSON.stringify(isleLand(geojsonPolygons(land10), geojsonPolygons(JSON.parse(await readGeo('ne-land-50m')))));
+const isleLandJson = JSON.stringify(isleLand(geojsonPolygons(land10), geojsonPolygons(JSON.parse(await readGeo('ne-50m-land')))));
 await writeFile(path.join(out, 'geo', 'isles-land.json'), isleLandJson);
 console.log(`island outlines: ${(isleLandJson.length / 1e3).toFixed(0)} kB`);
 // GSHHG "h" ships polygons only, as a shapefile: the coast is every ring's outline, split at cell
 // edges by cutCells. A coastlines without the entry (before 0.0.4) builds a site without the band,
 // and the scene then stays on 10m cells past z10.
-const H_ID = 'gshhg-land-h', H = bandOf('gshhg-h-land'), H_CELL_DEG = H.cell;
-if (find(H_ID) && coastlines.shapefilePolygons) {
+const H_ID = 'gshhg-h-land', H = bandOf(H_ID), H_CELL_DEG = H.cell;
+if (entryOf(H_ID) && coastlines.shapefilePolygons) {
   const landH = coastlines.shapefilePolygons(await readGeo(H_ID));
   const n = await writeBand(H.dir, H_CELL_DEG, { land: landH, coast: landH.flat() });
   console.log(`GSHHG h: ${landH.length} polygons into ${n} cells of ${H_CELL_DEG} degree`);
   // the islands 50m leaves out, marked at every zoom before the h band (scripts/isles.mjs)
-  const isles = JSON.stringify(isleIndex(landH, geojsonPolygons(JSON.parse(await readGeo('ne-land-50m')))));
+  const isles = JSON.stringify(isleIndex(landH, geojsonPolygons(JSON.parse(await readGeo('ne-50m-land')))));
   await writeFile(path.join(out, 'geo', 'isles.json'), isles);
   console.log(`island index: ${isles.length / 1e3} kB`);
 } else console.warn(`${H_ID} is not in this coastlines (${coastlines.manifest.sources?.gshhg ? 'entry' : 'source'} missing); the h band is skipped`);
@@ -167,8 +173,8 @@ if (coastlines.shapefilePolygons) {
 // The date is written to this file only, never to a cell, a golden or a render.
 await writeFile(path.join(out, 'geo', 'gshhg-modified.txt'), `GSHHG "h" and "f" are shipped cut into JSON cells, a modified form, by the portolani build of ${new Date().toISOString().slice(0, 10)}.\n`);
 // GSHHG lakes (level 2, with river-lakes) and their islands (level 3) at "h" and "f", from the same
-// zip, cut as the land bands are (cutLakes) into geo/h-lakes/ and geo/f-lakes/, for scene.mjs
-// LAKE_BANDS: the lakes no Natural Earth file has, Dian Chi at Kunming among them.
+// zip, cut as the land bands are (cutLakes) into geo/h-lakes/ and geo/f-lakes/, for coastlines'
+// provider: the lakes no Natural Earth file has, Dian Chi at Kunming among them.
 if (coastlines.shapefilePolygons) {
   for (const [res, id] of [['h', 'gshhg-h-lakes'], ['f', 'gshhg-f-lakes']]) {
     const { dir, cell: cellDeg } = bandOf(id);
@@ -185,6 +191,9 @@ for (const [id, member] of [['gshhg-licence', 'LICENSE.TXT'], ['gshhg-copying-le
 await cp(path.join(root, 'node_modules', 'coast-wright', 'lib'), path.join(out, 'coast-wright'), { recursive: true });
 await mkdir(path.join(out, 'coastlines'), { recursive: true });
 await cp(path.join(root, 'node_modules', 'coastlines', 'catalogue.json'), path.join(out, 'coastlines', 'catalogue.json'));
+// coastlines' provider, which scene.mjs draws through; it imports ../catalogue.json, beside it here as in the package
+await mkdir(path.join(out, 'coastlines', 'lib'), { recursive: true });
+await cp(path.join(root, 'node_modules', 'coastlines', 'lib', 'provider.js'), path.join(out, 'coastlines', 'lib', 'provider.js'));
 await cp(path.join(root, 'public'), out, { recursive: true });
 import { buildLearn } from './learn.mjs';
 import { relativeImports } from './scene-modules.mjs';
