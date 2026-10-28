@@ -1035,7 +1035,7 @@ function fillTile(t) {
   const head = part('tile-title', t.title);
   const meta = part('tile-date', [t.date, t.alternative ? 'another account' : null].filter(Boolean).join(' · '));
   const text = part('tile-text', t.text);
-  if (t.link) { // a note on the Carta Marina: what was drawn, what was there, and the source as a link
+  if (t.link) { // a note on a laid chart: what was drawn, what was there, and the source as a link
     const labelled = (label, body) => { const p = part('tile-text', body); const b = document.createElement('strong'); b.textContent = `${label} `; p.prepend(b); return p; };
     const a = document.createElement('a');
     a.href = t.link; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = t.source;

@@ -2217,7 +2217,7 @@ function drawVoyages(g, voyages, proj, rect, eventRect = rect) {
   for (const v of voyages ?? []) drawTrack(g, v, proj, rect);
   for (const v of voyages ?? []) drawEvents(g, v, proj, eventRect);
 }
-// A small ringed mark on each note's figure while the Carta Marina is laid over the map; no lettering, a click opens its tile (notes.mjs)
+// A small ringed mark on each note's figure while its chart is laid over the map; no lettering, a click opens its tile (notes.mjs)
 function drawNotes(g, overlay, proj, rect) {
   for (const m of noteMarks(overlay, proj, rect)) {
     g.save();
