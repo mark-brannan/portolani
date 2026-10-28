@@ -1,9 +1,10 @@
 // The page under touch, in headless Chromium with touch emulation at the two common phone widths
-// (360 and 412 px): a two-finger pinch zooms the map about the pinch centre and not the page, one
-// finger drags, the anchor's drawer opens on a tap and shuts on a choice, Go stays up under a tap on the
-// map and shuts on a second tap on its compass, and its Find my position button fills in the fix without
-// flying there. Under 520 px every drawer is a bottom sheet at half the window's height with the map above
-// it, and the cartouche and the scale bar sit on cards clear of the map. With a mouse on a wide screen
+// (360 and 412 px): a two-finger pinch zooms the map about the pinch centre and not the page, anywhere in
+// the window, one finger drags, the anchor's drawer opens on a tap and shuts on a choice, Go shuts on a tap
+// on the map and on a second tap on its compass, and its Find my position button fills in the fix, shuts Go
+// and flies there without bringing up the keyboard. Under 520 px the map fills the window, cropped at its
+// sides; the settings are a bottom sheet at half the window's height with the map above it, a lighter
+// drawer a sheet as tall as its lines over the map's foot, and the cartouche and the scale bar sit on cards. With a mouse on a wide screen
 // each of the six drawers hangs below the row without covering or moving it, one at a time; several voyages
 // are drawn at once, each in its own ink, and the link carries them.
 //
@@ -75,8 +76,14 @@ for (const width of [360, 412]) {
       assert.ok(Math.abs(v1.lon - v0.lon) < 0.01 && Math.abs(v1.lat - v0.lat) < 0.01, `centre moved: ${JSON.stringify(v0)} -> ${JSON.stringify(v1)}`);
       assert.equal(await pageScale(), 1, 'the pinch zoomed the page');
 
+      // a pinch in the window's upper part, once empty margin above a band of map, is the map's
+      const v1b = await view();
+      await pinchOut(width / 2, 160);
+      assert.ok((await view()).zoom > v1b.zoom + 1, 'a pinch in the upper part of the window did not zoom the map');
+      assert.equal(await pageScale(), 1, 'the pinch in the upper part of the window zoomed the page');
+
       // a pinch just below the row of instruments (top right) is the map's too
-      await pinchOut(canvas.x + canvas.width - 100, canvas.y + 80);
+      await pinchOut(width - 100, 80); // the canvas is wider than the window: its right edge is off screen
       assert.ok((await view()).zoom > v1.zoom + 1, 'a pinch below the row did not zoom the map');
       assert.equal(await pageScale(), 1, 'the pinch below the row zoomed the page');
 
@@ -99,29 +106,27 @@ for (const width of [360, 412]) {
       assert.equal(await shown('anchorPanel'), false, 'the drawer stayed open after a choice');
       await settled(h3);
 
-      // Go: a sheet that stays up under a tap on the map, and shuts on a second tap on the compass
+      // Go: a sheet that shuts on a tap on the map, and on a second tap on the compass
       await page.tap('#go');
       assert.equal(await shown(), true);
       await page.waitForTimeout(400);
-      const above = await page.locator('#map').boundingBox();
-      await page.touchscreen.tap(above.x + 20, above.y + above.height / 2);
-      assert.equal(await shown(), true, 'a tap on the map shut the Go sheet');
+      await page.touchscreen.tap(20, 300);
+      assert.equal(await shown(), false, 'a tap on the map left the Go sheet up');
+      await page.tap('#go');
+      assert.equal(await shown(), true);
       await page.tap('#go');
       assert.equal(await shown(), false, 'a second tap on the compass left Go open');
 
-      // locate: the fix fills in the box, Go stays open and nothing flies; Go then flies there at z10 or closer
+      // locate: the fix fills in the box, Go shuts and the map flies there at z10 or closer; the box is not
+      // focused, so no keyboard comes up
       const h4 = await hash();
       await page.tap('#go');
       await page.tap('#locate');
       await page.waitForFunction(() => document.getElementById('coordsText').value !== '', null, { timeout: 15000 }); // the fix comes back async
       assert.equal(await page.inputValue('#coordsText'), `${FIX.latitude.toFixed(4)}, ${FIX.longitude.toFixed(4)}`);
-      assert.equal(await shown(), true, 'Find my position shut Go');
-      assert.equal(await page.evaluate(() => document.activeElement.id), 'coordsText');
+      assert.equal(await shown(), false, 'Find my position left Go open');
+      assert.notEqual(await page.evaluate(() => document.activeElement.id), 'coordsText', 'Find my position focused the box');
       assert.equal(await page.$eval('#locate', (b) => b.disabled), false);
-      await page.waitForTimeout(800);
-      assert.equal(await hash(), h4, 'Find my position moved the map');
-      await page.tap('#coords button[type=submit]');
-      assert.equal(await shown(), false, 'Go stayed open after going');
       await settled(h4);
       const v4 = await view();
       assert.ok(Math.abs(v4.lat - FIX.latitude) < 0.01 && Math.abs(v4.lon - FIX.longitude) < 0.01 && v4.zoom >= 10, JSON.stringify(v4));
@@ -140,7 +145,7 @@ for (const width of [360, 412]) {
 }
 
 for (const width of [360, 412]) {
-  test(`phone layout at ${width} px: a drawer is a half-height bottom sheet, the cartouche and scale bar are clear of the map`, { skip, timeout: 240000 }, async () => {
+  test(`phone layout at ${width} px: the map fills the window, the settings are a half-height bottom sheet, the cartouche and scale bar are on cards`, { skip, timeout: 240000 }, async () => {
     const height = 740;
     const server = createServer(async (req, res) => {
       let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
@@ -156,7 +161,6 @@ for (const width of [360, 412]) {
       await page.goto(`http://localhost:${server.address().port}/#map=8/43.5/7.5`);
       await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
       const box = async (id) => (await page.locator(id).boundingBox());
-      const apart = (a, b) => a.y + a.height <= b.y + 1 || b.y + b.height <= a.y + 1 || a.x + a.width <= b.x + 1 || b.x + b.width <= a.x + 1;
       const visible = (id) => page.evaluate((i) => { const e = document.getElementById(i); return !e.hidden && getComputedStyle(e).visibility === 'visible'; }, id);
       const shot = async (name) => { if (process.env.TOUCH_SHOTS) { await page.waitForTimeout(400); await page.screenshot({ path: path.join(process.env.TOUCH_SHOTS, `phone-${width}-${name}.png`) }); } };
 
@@ -164,7 +168,7 @@ for (const width of [360, 412]) {
       assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('drawer')).visibility), 'hidden');
       assert.ok(await visible('cardCartouche') && await visible('cardScale'), 'the cartouche and scale cards are not shown');
       let map = await box('#map');
-      for (const id of ['#cardCartouche', '#cardScale']) assert.ok(apart(await box(id), map), `${id} overlaps the map when the sheet is shut`);
+      assert.ok(map.x <= 0 && map.y <= 0 && map.x + map.width >= width && map.y + map.height >= height, `the map does not fill the window: ${JSON.stringify(map)}`);
       await shot('closed');
 
       // sheet open: half the window, full width, at the foot; the map wholly above it, the cards clear of both
@@ -174,7 +178,8 @@ for (const width of [360, 412]) {
       assert.ok(Math.abs(sheet.height - height / 2) <= 2 && Math.abs(sheet.width - width) <= 1 && Math.abs(sheet.y + sheet.height - height) <= 1, JSON.stringify(sheet));
       map = await box('#map');
       assert.ok(map.y + map.height <= sheet.y + 1, `the sheet covers the map: map ${JSON.stringify(map)}, sheet ${JSON.stringify(sheet)}`);
-      for (const id of ['#cardCartouche', '#cardScale']) { const c = await box(id); assert.ok(apart(c, map), `${id} overlaps the map when the sheet is open`); assert.ok(c.y + c.height <= sheet.y + 1, `${id} is under the sheet`); }
+      assert.ok(map.y <= 0 && map.x <= 0 && map.x + map.width >= width, `the map does not fill the half above the sheet: ${JSON.stringify(map)}`);
+      for (const id of ['#cardCartouche', '#cardScale']) { const c = await box(id); assert.ok(c.y + c.height <= sheet.y + 1, `${id} is under the sheet`); }
       await shot('open');
 
       // the map is still the map: a drag above the sheet moves it and leaves the sheet up
@@ -194,9 +199,9 @@ for (const width of [360, 412]) {
       await page.waitForTimeout(400);
       assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('drawer')).visibility), 'hidden', 'the anchor left the settings open');
       const light = await box('#anchorPanel');
-      assert.ok(Math.abs(light.height - height / 2) <= 2 && Math.abs(light.width - width) <= 1 && Math.abs(light.y + light.height - height) <= 1, JSON.stringify(light));
+      assert.ok(light.height <= height / 2 + 2 && Math.abs(light.width - width) <= 1 && Math.abs(light.y + light.height - height) <= 1, JSON.stringify(light));
       map = await box('#map');
-      assert.ok(map.y + map.height <= light.y + 1, `the anchorages cover the map: map ${JSON.stringify(map)}, sheet ${JSON.stringify(light)}`);
+      assert.ok(map.y <= 0 && map.y + map.height >= height, `the map does not stay full behind the anchorages: ${JSON.stringify(map)}`);
 
       // a second tap on the anchor shuts the sheet, and the map has the window again
       await page.tap('#anchor');
@@ -204,6 +209,7 @@ for (const width of [360, 412]) {
       assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('anchorPanel')).visibility), 'hidden');
       map = await box('#map');
       assert.ok(Math.abs(map.y + map.height / 2 - height / 2) <= 2, 'the map did not come back to the middle of the window');
+      assert.ok(map.y <= 0 && map.y + map.height >= height, `the map does not fill the window again: ${JSON.stringify(map)}`);
       assert.deepEqual(errors, []);
     } finally {
       await browser.close();
