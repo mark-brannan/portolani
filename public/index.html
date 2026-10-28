@@ -100,23 +100,28 @@
     #goPanel { width: min(360px, 100vw - 24px); }
   }
 
-  /* a phone: every drawer is a bottom sheet at half the window's height, the map above it (toggled by its
-     button or Esc); the cartouche and the scale bar sit on cards beside the map */
+  /* a phone: every drawer is a bottom sheet, the settings and the charts at half the window's height with the
+     map above them (toggled by the button or Esc); the cartouche and the scale bar sit on cards over the map */
   .card { position: fixed; z-index: 1; pointer-events: none; height: auto; }
   #snap { display: none; position: fixed; z-index: 2; pointer-events: none; box-sizing: border-box; border: 2px dashed var(--accent); border-radius: 4px; }
   #cardCartouche { top: 12px; left: 12px; }
   #cardScale { left: 8px; bottom: 44px; }
   @media (min-width: 521px) { .card { display: none; } }
   @media (max-width: 520px) {
+    /* a phone held upright: the map fills the window, cropped at its sides rather than shrunk to a band
+       with empty margin above and below it, so its lettering can be read and a pinch anywhere lands on it */
+    #map { inset: auto; left: 50%; top: 50%; transform: translate(-50%, -50%); width: max(100vw, 160vh); height: max(100vh, 62.5vw); width: max(100vw, 160dvh); height: max(100dvh, 62.5vw); }
     .drawer {
       inset: auto 0 0 0; width: 100vw; height: 50vh; height: 50dvh; max-height: none; border: none; border-top: 1px solid var(--rule);
       border-radius: 14px 14px 0 0; box-shadow: 0 -4px 24px rgb(0 0 0 / 0.3);
       transform: translateY(102%);
     }
     .drawer.open { transform: none; }
-    /* the sheet open: the cartouche above the map and the scale bar between it and the sheet, so the map
-       is shrunk (never cropped) to what is left of the top half; the cards are 1.1 of the sheet's scale */
-    html.sheet #map { inset: calc(18px + 15vw) 0 auto 0; width: min(100vw, calc(1.6 * (50dvh - 28px - 27vw))); height: min(62.5vw, calc(50dvh - 28px - 27vw)); }
+    /* the lighter drawers (Go, the places, the voyages, the anchorages) as tall as their lines, up to half
+       the window, over the foot of the map */
+    .drawer.menu { height: auto; max-height: 50vh; max-height: 50dvh; }
+    /* the settings or the charts open: the map fills the half above the sheet, cropped as above, the cards on it */
+    html.sheet #map { top: 25vh; top: 25dvh; width: max(100vw, 80vh); height: max(50vh, 62.5vw); width: max(100vw, 80dvh); height: max(50dvh, 62.5vw); }
     html.sheet #cardScale { bottom: calc(50vh + 8px); bottom: calc(50dvh + 8px); }
   }
 
