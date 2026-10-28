@@ -1118,7 +1118,8 @@ const SIGHTS = [
     ['Seville', port(-5.98, 37.39), null, 'Casa de Contratación'],
     ['Dieppe', port(1.08, 49.93), null, 'Vallard, 1547'],
   ]],
-  // three eras of six ports, most of them outside Europe
+  // four eras of six ports, most of them outside Europe; a port whose name has changed lists as its title, the
+  // historic name first and today's in brackets
   ['Noteworthy ports', []],
   ['The ancient world', [
     ['Alexandria', port(29.89, 31.20), null, 'Ptolemaic; the Pharos'],
@@ -1127,6 +1128,14 @@ const SIGHTS = [
     ['Ostia', port(12.29, 41.76), null, "Rome's harbour"],
     ['Berenike', port(35.47, 23.91), null, 'Red Sea, for India'],
     ['Barygaza', port(72.99, 21.71), 'Barygaza (Bharuch)', 'in the Periplus'],
+  ], 'sub'],
+  ['The medieval Indian Ocean and Asia', [
+    ['Siraf', port(52.33, 27.67), null, 'the Gulf, for China'],
+    ['Aden', port(45.03, 12.78), null, 'the Red Sea gate'],
+    ['Kilwa', port(39.52, -8.96), 'Kilwa Kisiwani', 'Swahili gold'],
+    ['Calicut', port(75.78, 11.25), 'Calicut (Kozhikode)', "the Zamorin's pepper"],
+    ['Malacca', port(102.25, 2.19), 'Malacca (Melaka)', 'the strait, c. 1400'],
+    ['Quanzhou', port(118.68, 24.87), null, 'Zayton'],
   ], 'sub'],
   ['The age of discovery', [
     ['Lisbon', port(-9.14, 38.72), null, 'the Carreira da Índia'], // also a chart city above, on purpose: the same view, so Go lands in one place
@@ -1222,7 +1231,7 @@ $('voyageList').addEventListener('input', (e) => {
 const caption = (text) => `<span class="notes">${text ?? CAPTION}</span>`;
 for (const [list, groups] of [[$('anchorages'), ANCHORAGES], [$('sightsList'), SIGHTS]]) {
   list.innerHTML = groups.map(([group, items, sub]) => (group ? `<li class="group${sub ? ' sub' : ''}">${group}</li>` : '') + items.map(([name, v, title, note, text]) =>
-    `<li><button type="button" data-place="${places.push({ name, view: { ...v, title: title ?? name } }) - 1}">${name}${note ? `<small>${note}</small>` : ''}</button>${caption(text)}</li>`).join('')).join('');
+    `<li><button type="button" data-place="${places.push({ name, view: { ...v, title: title ?? name } }) - 1}">${title?.startsWith(`${name} (`) ? title : name}${note ? `<small>${note}</small>` : ''}</button>${caption(text)}</li>`).join('')).join('');
   list.addEventListener('click', (e) => { const b = e.target.closest('[data-place]'); if (b) { setDrawer(false); goTo(places[b.dataset.place].view); } });
 }
 

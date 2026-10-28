@@ -195,6 +195,18 @@ test('every place tile is keyed by a name the page lists', async () => {
   for (const name of Object.keys(SIGHT_TILES)) assert.ok(listed.has(name), `${name} is not a listed place`);
 });
 
+test('noteworthy ports: four eras in time order, six ports each, every one with a tile', async () => {
+  const { SIGHT_TILES } = await import('../scripts/sights.mjs');
+  const src = readFileSync('public/page.js', 'utf8');
+  const eras = [...src.matchAll(/^ {2}\['(The [^']+)', \[\n([\s\S]*?)^ {2}\], 'sub'\],$/gm)]
+    .map(([, era, rows]) => [era, [...rows.matchAll(/^ {4}\['([^']+)', port\(/gm)].map((m) => m[1])]);
+  assert.deepEqual(eras.map(([era]) => era), ['The ancient world', 'The medieval Indian Ocean and Asia', 'The age of discovery', 'The modern world']);
+  for (const [era, ports] of eras) {
+    assert.equal(ports.length, 6, `${era} has ${ports.length} ports`);
+    for (const name of ports) assert.ok(SIGHT_TILES[name], `${name} has no tile`);
+  }
+});
+
 test('the alternatives fixture is well formed, and a bad alternative is named for each thing it lacks', () => {
   const v = JSON.parse(readFileSync(join(DIR, '..', '..', 'test', 'fixtures', 'voyage-alternatives.json'), 'utf8'));
   assert.deepEqual(problems(v), []);

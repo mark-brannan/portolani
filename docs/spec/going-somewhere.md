@@ -1,7 +1,13 @@
 # Going somewhere
 
-Feature: Places to fly to  (the astrolabe `#sights`, 26 rows of sights and sections; the anchor `#anchor`, 14 anchorages; the chart `#charts`, 7 charts with "Where it was made" and "The sheet"; each a drawer in the `#where` row) [verified page.js:585, 786-830 at main]
+Feature: Places to fly to  (the astrolabe `#sights`, 39 rows of sights and sections; the anchor `#anchor`, 14 anchorages; the chart `#charts`, 7 charts with "Where it was made" and "The sheet"; each a drawer in the `#where` row) [verified page.js:585, 786-830 at main]
   # The audit at ab47ea7 read one anchor button `#places` with a `#flyout` of 24 `ORIGINS`; #206 and #209 split it into these three drawers. Their contents are not yet specified here.
+  Scenario: noteworthy ports by era
+    Given the astrolabe drawer open
+    When the user reads the "Noteworthy ports" group
+    Then it holds four eras under their own headings, in time order: the ancient world, the medieval Indian Ocean and Asia, the age of discovery, the modern world; six ports each, most of them outside Europe
+    And a port whose name has changed lists the historic name first and today's in brackets, "Batavia (Jakarta)", "Calicut (Kozhikode)"
+    And each port opens a flavour-text tile on a click of its mark, with no lettering beside the mark
   Scenario: pick a sight
     Given the chart at the default view
     When the user clicks `#sights`, then "Lisbon"
