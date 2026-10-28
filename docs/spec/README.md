@@ -8,3 +8,4 @@ These are specs of what the page does today, written as Gherkin so that they can
 - `interaction.md`: pan, wheel zoom, pinch zoom and flight.
 - `legacy.md`: the other drawers (`?ui=`) and older hash keys.
 - `developer.md`: headless options, `scripts/render.mjs`, the dev server and goldens.
+- `design.md`: the design rules the user gave, each with its source and a fast test or none (#234).
