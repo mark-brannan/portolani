@@ -2282,9 +2282,9 @@ export function voyageMarks(voyage, proj, rect) {
     if (disc(rect, x, y, -h / 2)) out.push({ x, y, h, alpha, skull, tile });
   };
   for (const e of voyage?.events ?? []) {
-    const tile = { title: e.label, date: e.date, text: e.text, note: e.note, source: e.source, who: e.who };
+    const tile = { title: e.label, date: e.date, text: e.text, note: e.note, source: e.source, cited: e.cited, who: e.who };
     if (e.kind !== 'death') { add(e, SKULL_H, 1, false, tile); continue; }
-    for (const a of e.alternatives ?? []) add(a, SKULL_ALT_H, 0.75, true, { title: a.label, date: e.date, text: a.text, source: a.source, who: e.who, place: a.place, alternative: true });
+    for (const a of e.alternatives ?? []) add(a, SKULL_ALT_H, 0.75, true, { title: a.label, date: e.date, text: a.text, source: a.source, cited: a.cited, who: e.who, place: a.place, alternative: true });
     add(e, SKULL_H, 1, true, tile);
   }
   return out;
@@ -2879,7 +2879,8 @@ async function loadVoyages(list) {
   return items.map((v, i) => loaded[i] && { voyage: loaded[i], colour: colours[v.id], width: Number.isFinite(v.width) && v.width > 0 && v.width <= 12 ? v.width : VOYAGE_WIDTH }).filter(Boolean);
 }
 // A zoom slider's value as the zoom a name stops at: unset keeps `dflt`, 0 or less is off, the top is always, N draws at zoom N and out
-const zoomEnd = (n, dflt) => (n == null ? dflt : n <= 0 ? -Infinity : n >= ZOOM.max ? Infinity : n + 0.5);
+// (zoom <= N: the layers test zoom < end, so the end sits a hair past N).
+const zoomEnd = (n, dflt) => (n == null ? dflt : n <= 0 ? -Infinity : n >= ZOOM.max ? Infinity : n + 1e-9);
 const parchments = new Map(); // by tone; the same seed paints the same sheet
 
 export const RENDERINGS = ['vivid', 'scanned', 'plain'];

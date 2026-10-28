@@ -5,7 +5,7 @@
   "who": ["Zheng He"],
   "when": "1431–1433",
   "summary": "The last and largest treasure fleet leaves the Yangtze for Fujian, crosses the South China Sea to Champa, Java and Malacca, and sails on past Ceylon to Calicut, with squadrons to Hormuz, Aden and Jeddah, and the East African coast.",
-  "sources": ["zheng-he", "mao-kun-map", "ming-shi"],
+  "sources": ["zheng-he", "mao-kun-map", "ming-shi", "ming-treasure-voyages", "ma-huan"],
   "legs": [
     { "id": "nanjing-liujiagang", "from": "Nanjing (Longjiang)", "to": "Liujiagang (Taicang)", "dates": "1431", "mode": "land", "line": "spline", "confidence": "conventional",
       "points": [[118.78, 32.07], [119.45, 32.2], [120.3, 31.95], [121.1, 31.45], [121.8, 31.3], [122.3, 31.15]],
@@ -61,5 +61,8 @@
     { "from": "Champa (Qui Nhon)", "to": "Liujiagang (Taicang)", "dates": "Jun–Jul 1433", "mode": "sea", "line": "rhumb", "confidence": "conventional",
       "points": [[109.5, 13.75], [109.8, 14.5], [110.6, 16.5], [111.3, 18.8], [112, 19.5], [114, 21.5], [116.5, 22.4], [118.6, 23.2], [119.3, 24], [120.2, 24.4], [120.6, 25.4], [120.1, 26.05], [120.5, 26], [121.2, 26.3], [122, 27], [122.7, 28.5], [123.3, 30.5], [122.3, 31.15]],
       "source": "Ming shi; Taicang reached 6 Jul 1433" }
+  ],
+  "events": [
+    { "kind": "event", "lon": 39.17, "lat": 21.48, "date": "1433", "label": "Envoys to Mecca from Calicut", "source": "Ma Huan, Yingya Shenglan", "cite": "ma-huan", "text": "From Calicut, Hong Bao sent seven men, the Muslim interpreter Ma Huan among them, in a local ship to Mecca. They came back with a picture of the Kaaba and with giraffes and lions. Zheng He, himself a Muslim, never made the pilgrimage, and died on the way home." }
   ]
 }
