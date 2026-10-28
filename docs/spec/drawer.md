@@ -102,11 +102,29 @@ Feature: Hills (Catalan drawings)  (chip `#hills`, `off|catalan`; stored as the 
     When the user clicks "Off" in Hills
     Then every `v:mountains-*` key leaves `sprites=` (the three vivid/catalan mountain sprites; list read from `packs/vivid/pack.json`)
     And the "Catalan drawings" chip reads unchecked
-    # the same three sprites also appear as a family checkbox with thumbs (`#pick-relief`, index.html:338 at main); the chip and the family set the same keys
   Scenario: partial selection reads as On
     Given `sprites=` holding only one of the Catalan keys
     When the page loads
     Then the Hills chip is "Catalan drawings" (any one selected)
+
+Feature: Hill drawings picker  (`#pick-relief` under the Hills chips, index.html:424; one family checkbox "Catalan · drawn" with a thumb per `mountain`-kind sprite, plus Clear and Defaults) [verified page.js:226-237, 536-556 at acf745d]
+  # The chip `#hills` and this picker set the same `mountain`-kind keys in `sprites`.
+  Scenario: the family checkbox
+    Given the chart at the default view (all three Catalan hills on)
+    When the user unticks the family checkbox
+    Then every `v:mountains-*` key leaves `sprites=`, the count reads `0 of 3`, and the Hills chip reads Off
+    And ticking it again puts all three back
+  Scenario: one thumb
+    Given the same
+    When the user clicks one thumb
+    Then only that key leaves `sprites=`; the family checkbox reads indeterminate (`2 of 3`) and the Hills chip still reads "Catalan drawings"
+  Scenario: Clear and Defaults
+    Given the same
+    When the user presses Clear in the "Hill drawings" tools
+    Then no hill key is in `sprites=` and Clear is disabled; Defaults restores the default hill keys and is disabled while they are the selection
+  Scenario: hidden in the other drawers
+    Given `?ui=presets` or `?ui=grid`
+    Then `#pick-relief` is not shown (index.html:202)
 
 Feature: Cartouche picker  (hash `sprites`; one of `v:cartouche-frame`, `s:cartouche-dewit`, `p:cartouche`, or None) [verified page.js:201-212]
   Scenario: one at a time

@@ -6,9 +6,10 @@ and sea, under the rhumb lines, names, towns, roses, beasts, ships and voyages. 
 voyage; turned on under the chart in the Charts drawer ("Lay the scan over the map", with an opacity
 slider) and kept in the link as `overlay=carta-marina&overlayopacity=0.6`.
 
-One chart has it so far: the Carta Marina, 1539 (Olaus Magnus; Commons scan, public domain, see
-ASSETS.md), in `packs/overlays/` at half size with `overlays.json`. `npm run overlays` makes both from the
-full scan (`scripts/build-overlays.mjs`).
+Two charts have it so far, each a Commons scan in the public domain (see ASSETS.md): the Carta Marina,
+1539 (Olaus Magnus), at half size, and sheet 5 of the Catalan Atlas, 1375, the Atlantic panel, at a quarter.
+Both are in `packs/overlays/` with `overlays.json`. `npm run overlays` makes them from the full scans
+(`scripts/build-overlays.mjs`).
 
 ## How it is placed
 
@@ -52,3 +53,26 @@ so it lands as a parallelogram where the true warp would curve; Scandinavia sits
 far edges of the chart drift.
 
 ![The Carta Marina scan over an orthographic view of northern Europe, its two pieces as parallelograms](carta-marina-orthographic.jpg)
+
+## At the Catalan Atlas, sheet 5
+
+The Atlantic panel, Ireland at the top and the Canaries at the foot, is north up and takes one similarity:
+0.00331 °/px, no turn, fitted to 19 landmarks read off the scan (the Shannon, the Portuguese and Moroccan
+coasts, Madeira and the Canaries) with an RMS residual of 127 km; the table is in
+[docs/atlas/ornaments.md](../atlas/ornaments.md) ("Landmarks, sheet 5"). The piece is the parchment,
+x 240 to 6080 scan px, not the scan's white margin. The panel's east edge is the join with sheet 6, so
+the scan stops at the Iberian coast.
+
+`npm run render -- --view -14,40,4.4 --overlay catalan-atlas:<opacity> --out <file>`, scaled to 1000 px.
+
+Opacity 0.3: the rose, Madeira and the Canaries faint over the open Atlantic.
+
+![The Atlantic off Iberia with the Catalan Atlas's sheet 5 faint over it](catalan-atlas-0.3.jpg)
+
+Opacity 0.6, the default: the chart's Canaries, strung out further west than they lie, sit across today's.
+
+![The same view with the scan at 0.6](catalan-atlas-0.6.jpg)
+
+Opacity 1: the scan alone, Portugal and Morocco meeting today's coast at the panel's east edge.
+
+![The same view with the scan opaque](catalan-atlas-1.jpg)

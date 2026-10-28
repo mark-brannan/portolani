@@ -7,7 +7,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { legPath, splitAtSeam, problems, distanceKm, STEP_KM, readVoyage, voyageColours, VOYAGE_PALETTE } from '../scripts/voyages.mjs';
-import { viewProjection, voyageMarks, W, H } from '../scripts/scene.mjs';
+import { viewProjection, voyageMarks, voyageView, W, H } from '../scripts/scene.mjs';
 import { loadLand, checkVoyage, voyageIds, readJSON } from '../scripts/check-voyages.mjs';
 
 const DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'data', 'voyages');
@@ -49,6 +49,31 @@ test('a rhumb leg keeps between its ends\' latitudes and is sampled about every 
   const steps = path.slice(1).map((p, i) => distanceKm(path[i], p));
   assert.ok(Math.max(...steps) <= STEP_KM * 1.05, `a step of ${Math.max(...steps).toFixed(1)} km`);
   assert.ok(Math.min(...steps) >= STEP_KM * 0.8, `a step of ${Math.min(...steps).toFixed(1)} km`);
+});
+
+// Choosing a voyage: the view stays while any of its track is on the canvas, else it fits the whole track.
+test('a voyage chosen in view keeps the view; one off screen is fitted, the short way round the date line', async () => {
+  const leg = (points) => ({ line: 'rhumb', points });
+  const atlantic = { legs: [leg([[-10, 40], [-30, 30]]), leg([[-30, 30], [-60, 15]])] };
+  const lisbon = { lon: -9, lat: 38.7, zoom: 7.5, projection: 'mercator' };
+  assert.equal(voyageView(atlantic, lisbon), null, 'the track starts in view, so the view should stay');
+  const china = { lon: 120, lat: 25, zoom: 6, projection: 'mercator' };
+  const to = voyageView(atlantic, china);
+  assert.ok(to, 'none of the track is in view, so the view should move');
+  const proj = viewProjection(to);
+  for (const p of atlantic.legs.flatMap((l) => l.points)) {
+    const [x, y] = proj.toPx(p);
+    assert.ok(x >= 0 && x <= W && y >= 0 && y <= H, `${p} is off the fitted canvas at ${x.toFixed(0)}, ${y.toFixed(0)}`);
+  }
+  // across the date line: centred on the Pacific, not on the other side of the globe
+  const pacific = { legs: [leg([[170, -10], [-170, -15]])] };
+  const far = voyageView(pacific, { lon: 0, lat: 40, zoom: 6, projection: 'mercator' });
+  assert.ok(Math.abs(Math.abs(far.lon) - 180) < 1, `centred on ${far.lon}`);
+  assert.ok(far.zoom > 3, `zoom ${far.zoom}: framed the long way round`);
+  // a real record: Magellan sets out from Sanlúcar, so a view on Seville stays, and one on the North Sea moves
+  const magellan = await voyage('magellan');
+  assert.equal(voyageView(magellan, { lon: -6, lat: 37, zoom: 7, projection: 'mercator' }), null);
+  assert.ok(voyageView(magellan, { lon: 0, lat: 60, zoom: 9, projection: 'mercator' }));
 });
 
 // A minimal well-formed record to bend in the schema tests below.
