@@ -13,7 +13,7 @@
 // selection those chose, and are written back in the new form.
 // For a while, `debug=sheets[,rings]` and `tune=name:value,...` carry the under-the-hood section
 // (docs/atlas/under-the-hood.md), off by default.
-import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, sightMarks, SIGHT_TILES, noteMarks } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, voyageView, readVoyage, sightMarks, SIGHT_TILES, noteMarks } from './scene.mjs';
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, overlayFromHash, overlayToHash } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
@@ -961,7 +961,7 @@ function showSnap(corner, w, h) {
     left: `${r.left + (corner[1] === 'l' ? m : W - m - w) * kx}px`, top: `${r.top + (corner[0] === 't' ? m : H - m - h) * ky}px` });
 }
 canvas.addEventListener('pointerdown', (e) => {
-  cancelAnimationFrame(flight); // a touch takes over from a flight
+  cancelAnimationFrame(flight); flightTo = null; // a touch takes over from a flight
   if (!pointers.size && e.isPrimary && (carried = cardAt(toCanvas(e.clientX, e.clientY)))) {
     carried.corner = style[carried.key];
     canvas.setPointerCapture(e.pointerId);
@@ -1009,7 +1009,7 @@ canvas.addEventListener('pointerup', (e) => {
 canvas.addEventListener('pointercancel', (e) => { tap = null; lift(e); });
 canvas.addEventListener('wheel', (e) => {
   e.preventDefault();
-  cancelAnimationFrame(flight); // the wheel takes over from a flight
+  cancelAnimationFrame(flight); flightTo = null; // the wheel takes over from a flight
   const [x, y] = toCanvas(e.clientX, e.clientY);
   const px = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY; // lines to px
   moved(zoomView(view, 2 ** (-px / 300), x, y));
@@ -1208,8 +1208,21 @@ $('voyageList').addEventListener('click', (e) => {
   const id = b.dataset.voyage, on = style.voyages.some((v) => v.id === id);
   style = { ...style, voyages: on ? style.voyages.filter((v) => v.id !== id) : [...style.voyages, { id, colour: null }] };
   showVoyage(); writeHash(); render();
+  if (!on) flyToVoyage(id);
 });
 let picking = 0; // a colour is placed when the picker pauses, not on every step of a drag across it
+// A voyage put on stays where it is if any of its track is in view, or where the view is flying to; if none is, the
+// map flies to fit the whole track. The last choice that needs a flight wins, however the loads interleave: an earlier
+// choice is dropped only once a later one has flown, not because a later one stayed put or was taken off.
+let voyageChosen = 0, voyageFlown = 0;
+function flyToVoyage(id) {
+  const n = ++voyageChosen;
+  readVoyage(id, (path) => env.readJSON(path)).then((v) => {
+    if (n < voyageFlown || !style.voyages.some((s) => s.id === id)) return;
+    const to = voyageView(v, flightTo ?? view);
+    if (to) { voyageFlown = n; goTo(to); }
+  }, () => {});
+}
 $('voyageList').addEventListener('input', (e) => {
   const id = e.target.dataset?.ink;
   if (!id) return;
@@ -1306,17 +1319,18 @@ $('coordsText').addEventListener('input', () => { $('goMiss').hidden = true; });
 
 // A short flight from the view to a target, in the view's projection: the ground is drawn on the
 // way as for a drag, and the ornaments placed when it lands. Reduced motion jumps.
-let flight = 0;
+let flight = 0, flightTo = null; // the view a flight is bound for, while it flies
 function goTo(target) {
   cancelAnimationFrame(flight);
   pinTitle = null;
   const from = view, to = clampView({ ...target, projection: view.projection });
+  flightTo = to;
   const dlon = ((to.lon - from.lon + 540) % 360) - 180; // the short way round
   const ms = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 600, t0 = performance.now();
   const step = (now) => {
     const u = ms ? Math.min(1, (now - t0) / ms) : 1, e = u < 0.5 ? 2 * u * u : 1 - (2 - 2 * u) ** 2 / 2;
     moved(u < 1 ? clampView({ lon: from.lon + dlon * e, lat: from.lat + (to.lat - from.lat) * e, zoom: from.zoom + (to.zoom - from.zoom) * e, projection: to.projection }) : to, true);
-    if (u < 1) flight = requestAnimationFrame(step); else { pinTitle = target.title ?? null; placed = null; stopped(); }
+    if (u < 1) flight = requestAnimationFrame(step); else { flightTo = null; pinTitle = target.title ?? null; placed = null; stopped(); }
   };
   step(t0);
 }

@@ -24,7 +24,7 @@ import { POIS, POI_ZOOM } from './pois.mjs';
 export { SIGHT_TILES } from './sights.mjs'; // the page's tiles for its places; here so the module ships with the scene
 import { BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from './buildings.mjs';
 import { legPath, splitAtSeam, DASHES, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, readVoyage } from './voyages.mjs';
-export { VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours };
+export { VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, readVoyage };
 import { loadOverlay, drawOverlay } from './overlays.mjs';
 import { noteMarks } from './notes.mjs';
 export { noteMarks };
@@ -2888,6 +2888,29 @@ export const KINDS = ['rose', 'ship', 'monster', 'cartouche', 'mountain'];
 export const DEFAULT_KINDS = KINDS;
 export const PROJECTION_NAMES = Object.keys(PROJECTIONS);
 export const viewProjection = (view) => makeProjection(clampView(view));
+
+// Where to go for a voyage just chosen: null while any of its track is on the canvas of `view` (the view stays), else
+// the view that fits its whole track with a margin of `pad` of the track's span on each side, in the view's projection.
+// The track's longitudes are read round the globe, so a track across the date line is framed the short way.
+export const VOYAGE_FIT_PAD = 0.1;
+export function voyageView(voyage, view, pad = VOYAGE_FIT_PAD) {
+  const proj = viewProjection(view), pts = (voyage?.legs ?? []).flatMap(pathOf);
+  if (!pts.length) return null;
+  for (const [lon, lat] of pts) {
+    if (proj.visible && !proj.visible(lon, lat)) continue;
+    const [x, y] = proj.toPx([lon, lat]);
+    if (x >= 0 && x <= W && y >= 0 && y <= H) return null;
+  }
+  // the longitudes as an arc: the circle less its widest gap
+  const lons = [...new Set(pts.map(([lon]) => ((lon % 360) + 360) % 360))].sort((a, b) => a - b);
+  let gap = 360 - lons.at(-1) + lons[0], west = lons[0];
+  for (let i = 1; i < lons.length; i++) if (lons[i] - lons[i - 1] > gap) { gap = lons[i] - lons[i - 1]; west = lons[i]; }
+  const span = 360 - gap, lats = pts.map(([, lat]) => lat);
+  const latMin = Math.max(-80, Math.min(...lats)), latMax = Math.min(80, Math.max(...lats));
+  const dLon = Math.max(span, 0.5) * pad, yMin = mercY(latMin), yMax = mercY(latMax), dY = Math.max(yMax - yMin, 0.01) * pad;
+  const k = Math.min(W / ((Math.max(span, 0.5) + 2 * dLon) * RAD), H / (Math.max(yMax - yMin, 0.01) + 2 * dY));
+  return clampView({ lon: west + span / 2, lat: mercLat((yMin + yMax) / 2), zoom: Math.log2((k * 2 * Math.PI) / 512), projection: view.projection });
+}
 export const TOWN_SIZES = ['area', 'population', 'rank'];
 export { RIVER_STYLES, LAKE_STYLES, TREE_STYLES, RELIEF_STYLES };
 export const MAX_ZOOM = ZOOM.max;
