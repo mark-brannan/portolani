@@ -288,3 +288,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261029t182025z
 - high-contrast voyage palette applies only to voyages with a dashed or dotted leg; all-solid voyages keep the current palette at Heavy Undo: edit docs/spec/design.md ([#274](https://github.com/mark-brannan/portolani/pull/274))
+
+### 20261029t195328z
+- doubt tile: heading first, then 'Scholars doubt this part:' and the doubt, then date, note, source Undo: move doubt after meta in fillTile ([#278](https://github.com/mark-brannan/portolani/pull/278))
