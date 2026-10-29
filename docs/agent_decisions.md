@@ -297,3 +297,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261029t195417z
 - the doubt cloud is a fixed ~88x66 px at every zoom Undo: scale CLOUD_LOBES by zoom ([#278](https://github.com/mark-brannan/portolani/pull/278))
+
+### 20261029t210256z
+- people.json keyed by slug, name a field, who holds slugs confidence replaces known on born and death, one word with the legs role and origin folded into bio images[] replaces portrait, the #280 shape death: unknown becomes an absent death Pytheas's stand-in manuscript page is kind scene a who that people.json lacks fails the read ([#275](https://github.com/mark-brannan/portolani/pull/275))
