@@ -1,6 +1,6 @@
 // The people as the People drawer reads them (data/voyages/people.json, scripts/people.mjs): every picture built for
 // the site, and the timeline, the link keys, the marks and the lit and dimmed voyages. The records' schema is
-// personProblems (test/voyages.test.mjs). Offline and fast.
+// checkPerson (test/voyages.test.mjs). Offline and fast.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
@@ -10,13 +10,15 @@ import { peopleOf, yearOf, lifeSpan, timelineAxis, voyageYears, parsePictures, p
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => JSON.parse(readFileSync(join(ROOT, p), 'utf8'));
-const people = peopleOf(read('data/voyages/people.json'));
+const index = read('data/voyages/index.json'), whoMap = Object.fromEntries(index.map((id) => [id, read(`data/voyages/${id}.json`).who]));
+const people = peopleOf(read('data/voyages/people.json'), whoMap);
 const who = (id) => people.find((p) => p.id === id);
 
-test('everyone a voyage names is listed in the drawer, with a unique id', () => {
-  const ids = new Set(people.map((p) => p.name));
-  for (const id of read('data/voyages/index.json')) for (const w of read(`data/voyages/${id}.json`).who) assert.ok(ids.has(w), `${id}: ${w} has no id`);
-  assert.equal(new Set(people.map((p) => p.id)).size, people.length);
+test('everyone a voyage names is listed in the drawer, with their voyages from its who', () => {
+  const ids = new Set(people.map((p) => p.id));
+  for (const [id, w] of Object.entries(whoMap)) for (const s of w) assert.ok(ids.has(s) && who(s).voyages.includes(id), `${id}: ${s}`);
+  assert.deepEqual(who('juan-garrido').voyages, ['ponce-de-leon-1513', 'juan-garrido'].filter((v) => index.includes(v)).sort((a, b) => index.indexOf(a) - index.indexOf(b)));
+  assert.equal(who('juan-de-la-cosa').name, 'Juan de la Cosa');
 });
 
 test('every picture is built for the site (npm run people), under its own name, and credited', () => {
@@ -70,7 +72,8 @@ test('a person chosen lights their voyages in red and dims the others', () => {
 
 test('a birth is a mark, and a death no voyage carries is marked too', () => {
   const sources = read('data/voyages/sources.json');
-  assert.deepEqual(personMarks(who('juan-de-la-cosa'), sources).events.map((e) => e.kind), ['birth', 'death']);
+  assert.deepEqual(personMarks({ ...who('juan-de-la-cosa'), voyages: [] }, sources).events.map((e) => e.kind), ['birth', 'death']);
+  assert.deepEqual(personMarks(who('juan-de-la-cosa'), sources).events.map((e) => e.kind), ['birth']); // Columbus 1492 carries his death
   const ib = personMarks(who('ibn-battuta'), sources).events;
   assert.deepEqual(ib.map((e) => e.kind), ['birth']); // his voyages carry his death
   assert.ok(ib[0].label && ib[0].cited?.url);

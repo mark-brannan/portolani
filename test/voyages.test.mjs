@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { legPath, splitAtSeam, problems, personProblems, distanceKm, STEP_KM, readVoyage, voyageColours, VOYAGE_PALETTE } from '../scripts/voyages.mjs';
+import { legPath, splitAtSeam, problems, checkPerson, distanceKm, STEP_KM, readVoyage, voyageColours, VOYAGE_PALETTE, reachPath, seaSamples } from '../scripts/voyages.mjs';
 import { viewProjection, voyageMarks, voyageView, W, H } from '../scripts/scene.mjs';
 import { loadLand, checkVoyage, voyageIds, readJSON } from '../scripts/check-voyages.mjs';
 
@@ -78,9 +78,9 @@ test('a voyage chosen in view keeps the view; one off screen is fitted, the shor
 
 // A minimal well-formed record to bend in the schema tests below.
 const base = () => ({
-  id: 'x', title: 't', short: 's', when: 'w', summary: 'm', who: ['A B'], sources: [{ title: 't', url: 'u' }],
+  id: 'x', title: 't', short: 's', when: 'w', summary: 'm', who: ['a-b'], sources: [{ title: 't', url: 'u' }],
   legs: [{ from: 'a', to: 'b', mode: 'sea', line: 'rhumb', confidence: 'attested', source: 's', points: [[0, 0], [1, 1]] }],
-  events: [{ kind: 'death', who: 'A B', lon: 1, lat: 1, label: 'l', source: 's' }]
+  events: [{ kind: 'death', who: 'a-b', lon: 1, lat: 1, label: 'l', source: 's' }]
 });
 const alt = { lon: 2, lat: 2, place: 'Elsewhere', label: 'Died elsewhere', source: 'a chronicle' };
 
@@ -113,7 +113,7 @@ const raw = () => {
   const { events, sources, ...v } = base();
   return { ...v, sources: ['s1'], events: [] };
 };
-const shared = () => ({ people: { 'A B': { death: { lon: 1, lat: 1, date: 'd', label: 'l', source: 's' } } }, sources: { s1: { title: 't', url: 'https://u' } } });
+const shared = () => ({ people: { 'a-b': { name: 'A B', death: { lon: 1, lat: 1, date: 'd', label: 'l', source: 's' } } }, sources: { s1: { title: 't', url: 'https://u' } } });
 
 test('a person\'s death lives once, in people.json, and joins every voyage that names them', async () => {
   const set = { x: raw(), y: { ...raw(), id: 'y' }, ...shared() };
@@ -123,37 +123,47 @@ test('a person\'s death lives once, in people.json, and joins every voyage that 
     assert.deepEqual(v.events, [{ kind: 'death', who: 'A B', lon: 1, lat: 1, date: 'd', label: 'l', source: 's' }]);
     assert.deepEqual(v.sources, [{ title: 't', url: 'https://u' }]);
   }
-  set.x.events = [{ kind: 'death', who: 'A B', lon: 1, lat: 1, label: 'l', source: 's' }];
+  set.x.events = [{ kind: 'death', who: 'a-b', lon: 1, lat: 1, label: 'l', source: 's' }];
   await assert.rejects(readVoyage('x', files(set)), /people\.json/);
 });
 
-test('a person nobody knows the place of death of is "unknown" in people.json and gets no skull; one missing there is a problem', async () => {
+test('a death without lon and lat is not drawn; a who that people.json lacks does not resolve', async () => {
   const set = { x: raw(), ...shared() };
-  set.people['A B'] = { death: 'unknown' };
+  set.people['a-b'] = { name: 'A B', death: { date: 'd', text: 'nobody knows where' } };
   const v = await readVoyage('x', files(set));
-  assert.deepEqual([v.events, v.deathUnknown, problems(v)], [[], ['A B'], []]);
+  assert.deepEqual([v.events, problems(v), v.people], [[], [], [{ id: 'a-b', ...set.people['a-b'] }]]);
+  set.people['a-b'] = {};
+  assert.deepEqual((await readVoyage('x', files(set))).events, []);
   set.people = {};
-  assert.ok(problems(await readVoyage('x', files(set))).some((p) => p.includes('where A B died')));
+  await assert.rejects(readVoyage('x', files(set)), /a-b is not in people\.json/);
 });
 
-test('a person record may be a death alone, or carry a birth, bio and images; a living person gets no skull', async () => {
+test('a person record needs nothing; what is there is checked, and a skull takes the name', async () => {
   const death = { lon: 1, lat: 1, date: 'd', label: 'l', source: 's' };
-  assert.deepEqual(personProblems('A B', { death }), []);
-  assert.deepEqual(personProblems('A B', { death: 'unknown' }), []);
+  assert.deepEqual(checkPerson('a-b', {}), []);
+  assert.deepEqual(checkPerson('a-b', { death }), []);
+  assert.deepEqual(checkPerson('a-b', { death: { date: 'd', text: 'where is not recorded' } }), []);
   const full = {
-    id: 'a-b', aka: ['Ab'], origin: 'o', role: ['r'], voyages: ['x'], bio: 'b', sources: ['https://u'],
-    images: [{ file: 'A_B.jpg', kind: 'life', author: 'a', date: '1600', licence: 'Public domain' }],
-    born: { ...death, known: 'speculative', cite: 's1', alternatives: [{ lon: 2, lat: 2, place: 'p', label: 'l', source: 's' }] }, death,
+    name: 'A B', aka: ['Ab'], bio: 'b', sources: ['s1'],
+    images: [{ file: 'A_B.jpg', kind: 'life', author: 'a', date: '1600', licence: 'Public domain', note: 'n' }],
+    born: { ...death, confidence: 'speculative', cite: 's1', alternatives: [{ lon: 2, lat: 2, place: 'p', label: 'l', source: 's' }] },
+    death: { ...death, confidence: 'conventional' },
   };
-  assert.deepEqual(personProblems('A B', full, { sources: { s1: {} }, voyageIds: ['x'] }), []);
-  const bad = personProblems('A B', { ...full, born: { ...death, known: 'certain' }, images: [{ kind: 'life', file: 'https://x/A.jpg' }] }, { voyageIds: [] });
-  for (const p of ['born: known', 'images[0]: file', 'images[0]: a licence', 'x is not a voyage']) assert.ok(bad.some((b) => b.includes(p)), p);
-  assert.ok(personProblems('A B', { living: true, death }).some((p) => p.includes('living')));
+  assert.deepEqual(checkPerson('a-b', full, { sources: { s1: {} } }), []);
+  const bad = checkPerson('A B', { ...full, sources: ['s2'], born: { ...death, confidence: 'certain', cite: 's2' }, death: { lon: 1, date: 'd' },
+    images: [{ kind: 'life', file: 'File:A.jpg' }, { kind: 'none', file: 'https://x/A.jpg' }] }, { sources: { s1: {} } });
+  const drawn = checkPerson('a-b', { death: { lon: 1, lat: 1, alternatives: [{ date: 'x' }] } });
+  for (const p of ['death: a label', 'death: a source', 'alternative 0: lon and lat', 'alternative 0: a place', 'alternative 0: a label', 'alternative 0: a source']) assert.ok(drawn.some((b) => b.includes(p)), p);
+  for (const p of ['key: a lower-case slug', 'sources: s2 is not', 'born: confidence one of', 'born: cite s2 is not', 'death: lon and lat, together',
+    'image 0: file, a Commons file name', 'image 1: file, a Commons file name', 'image 1: kind one of']) assert.ok(bad.some((b) => b.includes(p)), p);
   const set = { x: raw(), ...shared() };
-  set.people['A B'] = { living: true, born: { ...death, known: 'attested' } };
-  assert.deepEqual(personProblems('A B', set.people['A B']), []);
-  const v = await readVoyage('x', files(set));
-  assert.deepEqual([v.events, v.living, problems(v)], [[], ['A B'], []]);
+  set.people['a-b'] = { death };
+  assert.equal((await readVoyage('x', files(set))).events[0].who, 'a-b');
+});
+
+test('every record in people.json passes checkPerson against sources.json', () => {
+  const people = readJSON('data/voyages/people.json'), sources = readJSON('data/voyages/sources.json');
+  assert.deepEqual(Object.entries(people).flatMap(([id, p]) => checkPerson(id, p, { sources })), []);
 });
 
 test('a source is an id into sources.json, and one that is not there does not resolve', async () => {
@@ -172,10 +182,13 @@ test('a shared leg is sameAs the leg its owner names, with its own dates and not
   await assert.rejects(readVoyage('y', files(set)), /only dates/);
 });
 
-test('every person in people.json is named by a voyage or listed in the People drawer (an id), and every source in sources.json by a voyage', async () => {
+test('every person in people.json and every source in sources.json is named by a voyage', async () => {
   const voyages = await Promise.all(INDEX.map((id) => readJSON(`data/voyages/${id}.json`)));
-  const people = Object.entries(readJSON('data/voyages/people.json')).filter(([w, p]) => !p.id && !voyages.some((v) => v.who.includes(w))).map(([w]) => w);
-  const sources = Object.keys(readJSON('data/voyages/sources.json')).filter((s) => !voyages.some((v) => v.sources.includes(s)));
+  const records = readJSON('data/voyages/people.json');
+  const people = Object.keys(records).filter((w) => !voyages.some((v) => v.who.includes(w)));
+  // a source is named by a voyage, by a person, or as the cite of a birth or a death
+  const cited = new Set(Object.values(records).flatMap((p) => [...(p.sources ?? []), p.born?.cite, p.death?.cite]));
+  const sources = Object.keys(readJSON('data/voyages/sources.json')).filter((s) => !cited.has(s) && !voyages.some((v) => v.sources.includes(s)));
   assert.deepEqual([people, sources], [[], []]);
 });
 
@@ -246,7 +259,7 @@ test('every event and death of every voyage links its tile to a source, and ever
 
 test('a cite resolves into sources.json; an alternative place takes its death\'s; one not there does not resolve; the mark\'s tile carries it', async () => {
   const set = { x: { ...raw(), events: [{ kind: 'landfall', lon: 1, lat: 1, label: 'l', source: 's', cite: 's1' }] }, ...shared() };
-  set.people['A B'].death = { ...set.people['A B'].death, cite: 's1', alternatives: [alt] };
+  set.people['a-b'].death = { ...set.people['a-b'].death, cite: 's1', alternatives: [alt] };
   const v = await readVoyage('x', files(set));
   assert.deepEqual(problems(v), []);
   assert.deepEqual(v.events.map((e) => [e.cite, e.cited, e.alternatives?.[0].cited]), [[undefined, { title: 't', url: 'https://u' }, undefined], [undefined, { title: 't', url: 'https://u' }, { title: 't', url: 'https://u' }]]);
@@ -344,4 +357,37 @@ test('the index is in chronological order of start year, sub-voyages together', 
     }
     seen.add(f);
   });
+});
+
+// A migration (docs/voyages/README.md): no named people, each leg's reach and heads, its places waypoints with dates
+test('a migration names nobody, gives each leg a reach and heads, and its waypoints dates; a voyage may not have waypoints', () => {
+  const leg = { from: 'a', to: 'b', mode: 'sea', line: 'spline', confidence: 'conventional', source: 's', points: [[170, -10], [-170, -12]] };
+  const m = { id: 'm', kind: 'migration', title: 't', short: 's', when: 'c. 900 BC', summary: 's', who: [], sources: [{ title: 't', url: 'https://u' }],
+    legs: [{ ...leg, reach: [0, 0.8], heads: 'end' }, { ...leg, reach: [0.5, 0.5], heads: 'both' }, { ...leg, reach: [0, 0.2], heads: 'none', pause: true }],
+    events: [{ kind: 'waypoint', lon: 170, lat: -10, date: 'c. 900 BC', label: 'l', source: 's' }] };
+  assert.deepEqual(problems(m), []);
+  const bad = structuredClone(m);
+  bad.legs[0].reach = [0.9, 0.2]; bad.legs[1].heads = 'two'; bad.legs[2].pause = 'yes'; delete bad.events[0].date;
+  assert.deepEqual(problems(bad), ['leg 0 (a → b): reach [from, to], 0 to 1, from no more than to', 'leg 1 (a → b): heads one of end,both,none',
+    'leg 2 (a → b): pause, when given, true or false', 'event 0: a waypoint belongs to a migration and has a date']);
+  assert.ok(problems({ ...m, kind: 'drift' }).includes('kind: one of voyage,migration'));
+  assert.ok(problems({ ...m, kind: undefined }).includes('who: distinct slugs into people.json'), 'a voyage still names its people');
+  assert.equal(seaSamples(m).length, 0, 'a migration runs island to island, so it is not held to the sea');
+});
+
+test('a migration leg\'s reach runs 0 to 1 along it and survives the cut at the seam', () => {
+  const path = reachPath({ line: 'spline', points: [[170, -10], [-170, -12]] });
+  assert.equal(path[0][2], 0); assert.equal(path.at(-1)[2], 1);
+  assert.ok(path.every((p, i) => !i || p[2] >= path[i - 1][2]), 'the reach only grows');
+  const pieces = splitAtSeam(path, 0); // the seam at 180
+  assert.equal(pieces.length, 2);
+  assert.ok(pieces.every((p) => p.every((q) => q.length === 3)));
+  assert.equal(pieces[0][0][2], 0); assert.equal(pieces[1].at(-1)[2], 1);
+});
+
+test('a migration\'s waypoints are beads whose tile carries the date', async () => {
+  const v = await voyage('lapita-expansion');
+  const proj = viewProjection({ lon: 170, lat: -12, zoom: 3 });
+  const marks = voyageMarks(v, proj, { x0: 0, y0: 0, x1: W, y1: H });
+  assert.ok(marks.length >= 5 && marks.every((m) => m.bead && m.tile.date));
 });

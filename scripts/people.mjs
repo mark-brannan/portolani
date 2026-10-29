@@ -1,19 +1,27 @@
 // People: the navigators and travellers behind the voyages, as the People drawer (public/page.js) and the scene
-// (scene.mjs) read them. Their records are data/voyages/people.json, keyed by name (personProblems in voyages.mjs is the
-// schema): a record with an `id` is a person the drawer lists. Its `born` and `death` are markers ({ lon, lat, date,
-// place, label, text, source, known }; a death may be "unknown"), `voyages` ids in data/voyages/, and `images` pictures
+// (scene.mjs) read them. Their records are data/voyages/people.json, keyed by slug (checkPerson in voyages.mjs is the
+// schema), and a person's voyages are those whose `who` names that slug. Their `born` and `death` are markers ({ lon,
+// lat, date, place, label, text, source, confidence }; a death with no lon and lat is not drawn), and `images` pictures
 // on Wikimedia Commons, best first ({ file, kind, author, date, licence }), shrunk for the site by
 // scripts/build-people.mjs into packs/overlays/people/.
-import { DASHES, KNOWN } from './voyages.mjs';
-export { DASHES, KNOWN };
+import { DASHES, VOYAGE_DIR } from './voyages.mjs';
+export { DASHES };
 
 export const PEOPLE_FILE = 'data/voyages/people.json';
 export const PICTURES_FILE = 'packs/overlays/people/people.json';
 export const PERSON_RED = '#8c2f1e'; // the chosen person's bar and voyages: the chart's red (scene.mjs windRed)
 export const DIMMED = 0.2; // the alpha of every other voyage while a person is chosen
 
-// The people the drawer lists, from people.json: each record with an id, its name beside it, in the file's order.
-export const peopleOf = (json) => Object.entries(json ?? {}).filter(([, p]) => p && typeof p.id === 'string').map(([name, p]) => ({ name, ...p, voyages: p.voyages ?? [], images: p.images ?? [] }));
+// Each voyage's `who`, { [voyage id]: [slug] } in the menu's order (index.json), read through `readJSON(path)`
+export async function whoOf(readJSON) {
+  const ids = await readJSON(`${VOYAGE_DIR}/index.json`);
+  const vs = await Promise.all(ids.map((id) => Promise.resolve(readJSON(`${VOYAGE_DIR}/${id}.json`)).catch(() => null)));
+  return Object.fromEntries(ids.map((id, i) => [id, vs[i]?.who ?? []]));
+}
+// The people the drawer lists, from people.json, in the file's order: each record with its slug as `id`, its name (the
+// slug where it has none), and `voyages`, the ids of the voyages whose `who` names it (`who` from whoOf).
+export const peopleOf = (json, who = {}) => Object.entries(json ?? {}).filter(([, p]) => p && typeof p === 'object')
+  .map(([id, p]) => ({ ...p, id, name: p.name ?? id, voyages: Object.keys(who).filter((v) => who[v].includes(id)), images: p.images ?? [] }));
 // A death as a marker, or null where nobody knows
 export const deathOf = (p) => (p.death && typeof p.death === 'object' ? p.death : null);
 
@@ -34,7 +42,7 @@ export function lifeSpan(person, voyageYears = [], reach = 40) {
   const death = deathOf(person), b = yearOf(person.born?.date), d = yearOf(death?.date);
   const vs = voyageYears.filter(Number.isFinite);
   const lo = Number.isFinite(b) ? b : Math.min(...vs), hi = Number.isFinite(d) ? d : Math.max(...vs, lo);
-  const fromKnown = Number.isFinite(b) && person.born.known !== 'speculative', toKnown = Number.isFinite(d) && death.known !== 'speculative';
+  const fromKnown = Number.isFinite(b) && person.born.confidence !== 'speculative', toKnown = Number.isFinite(d) && death.confidence !== 'speculative';
   return [fromKnown ? lo : lo - reach, toKnown ? hi : hi + reach, fromKnown, toKnown];
 }
 
@@ -75,7 +83,7 @@ export function personMarks(person, sources = {}) {
   const events = [];
   if (person.born && Number.isFinite(person.born.lon)) events.push(linked({ kind: 'birth', who: person.name, ...person.born }));
   const death = deathOf(person);
-  if (!person.voyages?.length && death) events.push(linked({ kind: 'death', who: person.name, ...death }));
+  if (!person.voyages?.length && death && Number.isFinite(death.lon)) events.push(linked({ kind: 'death', who: person.name, ...death }));
   return { id: `person-${person.id}`, title: person.name, legs: [], events };
 }
 

@@ -18,7 +18,7 @@ import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorSce
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
-import { PEOPLE_FILE, PICTURES_FILE, PERSON_RED, lifeSpan, timelineAxis, ticksOf, pictureCredit, commonsPage, voyageYears, parsePictures, picturesText, parsePictureAt, pictureAtText, picturePlaces, frameOf, viewContaining, withPictures, DASHES, peopleOf, deathOf } from './people.mjs';
+import { PEOPLE_FILE, PICTURES_FILE, PERSON_RED, lifeSpan, timelineAxis, ticksOf, pictureCredit, commonsPage, voyageYears, parsePictures, picturesText, parsePictureAt, pictureAtText, picturePlaces, frameOf, viewContaining, withPictures, DASHES, peopleOf, whoOf, deathOf } from './people.mjs';
 import { fold, bestPlace } from './placename.mjs';
 
 const memo = new Map();
@@ -1405,7 +1405,7 @@ $('voyageList').addEventListener('input', (e) => {
 function loadPeople() {
   peopleLoad ??= Promise.all([env.readJSON(PEOPLE_FILE), env.readJSON(PICTURES_FILE).catch(() => ({ pictures: {} })), env.readJSON('data/voyages/sources.json').catch(() => ({}))])
     .then(async ([records, { pictures }, sources]) => {
-      const people = peopleOf(records);
+      const people = peopleOf(records, await whoOf(env.readJSON));
       const ids = [...new Set(people.flatMap((p) => p.voyages))];
       const vs = await Promise.all(ids.map((id) => readVoyage(id, (path) => env.readJSON(path)).catch(() => null)));
       peopleData = { people, pictures, sources, voyages: Object.fromEntries(ids.map((id, i) => [id, vs[i]]).filter(([, v]) => v)) };
@@ -1437,9 +1437,9 @@ function drawTimeline() {
 // How a birth or a death is known, as a chip with the voyages' line for it beside the word
 const knownChip = (e) => {
   if (!e) return '<span class="chip known" title="nobody recorded it">unknown</span>';
-  if (!e.known) return '<span class="chip known" title="the record does not grade how well this is known">not graded</span>';
-  const dash = (DASHES[e.known] ?? [1, 4]).join(' '); // speculative, which no leg is, the faintest
-  return `<span class="chip known" title="${escapeHTML(e.known)}: drawn so on a voyage's line"><svg viewBox="0 0 20 8" aria-hidden="true"><path d="M2 4h16" stroke="currentColor" stroke-width="1.6" stroke-dasharray="${dash}" fill="none"/></svg>${escapeHTML(e.known)}</span>`;
+  if (!e.confidence) return '<span class="chip known" title="the record does not grade how well this is known">not graded</span>';
+  const dash = (DASHES[e.confidence] ?? [1, 4]).join(' '); // speculative, which no leg is, the faintest
+  return `<span class="chip known" title="${escapeHTML(e.confidence)}: drawn so on a voyage's line"><svg viewBox="0 0 20 8" aria-hidden="true"><path d="M2 4h16" stroke="currentColor" stroke-width="1.6" stroke-dasharray="${dash}" fill="none"/></svg>${escapeHTML(e.confidence)}</span>`;
 };
 const BIRTH_GLYPH = `<svg class="glyph" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="6" fill="none" stroke="${PERSON_RED}" stroke-width="2.2"/><circle cx="9" cy="9" r="2.2" fill="${PERSON_RED}"/></svg>`;
 function showPeople() {

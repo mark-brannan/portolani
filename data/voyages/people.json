@@ -1,16 +1,8 @@
 {
-  "Leif Erikson": {
-    "id": "leif-erikson",
+  "leif-erikson": {
+    "name": "Leif Erikson",
     "aka": [
       "Leif the Lucky"
-    ],
-    "origin": "Norse, son of Erik the Red",
-    "role": [
-      "explorer",
-      "chieftain of the Greenland settlement"
-    ],
-    "voyages": [
-      "erikson"
     ],
     "bio": "Son of Erik the Red, who founded the first Norse settlement in Greenland, he was raised there. The Icelandic sagas have him reach Vinland, usually read as the coast of North America, about half a millennium before Columbus; the Norse site at L'Anse aux Meadows in Newfoundland may be his. After his father died he led the Greenland settlement.",
     "images": [
@@ -30,7 +22,7 @@
       },
       {
         "file": "2022-08-27_05_View_of_L'Anse_aux_Meadows,_NFL_CAN.jpg",
-        "kind": "none",
+        "kind": "scene",
         "author": "Gordon Leggett",
         "date": "2022",
         "licence": "CC BY-SA 4.0"
@@ -52,8 +44,8 @@
       }
     ],
     "sources": [
-      "https://en.wikipedia.org/wiki/Leif_Erikson",
-      "https://www.sagadb.org/eiriks_saga_rauda.en"
+      "leif-erikson",
+      "eiriks-saga-rauda"
     ],
     "born": {
       "lon": -21.54,
@@ -62,31 +54,22 @@
       "place": "Eiríksstaðir, Haukadalur, Iceland",
       "label": "Leif Erikson born in Iceland, c. 970s",
       "text": "The sagas do not say where. Iceland, where his parents met, is the likeliest country, and Haukadalur, his mother's family's valley, the usual guess; the mark stands at Eiríksstaðir, the farm there.",
-      "known": "inferred",
       "source": "Leif Erikson (Wikipedia)",
-      "cite": "leif-erikson"
+      "cite": "leif-erikson",
+      "confidence": "inferred"
     },
     "death": {
       "lon": -45.5,
       "lat": 61.1,
       "date": "c. 1020",
       "label": "Leif Erikson died, c. 1020, probably at Brattahlíð",
+      "text": "The sagas are silent. He is last named alive about 1018–19 and his son Thorkell held the chieftaincy by 1025; Brattahlíð, the family estate, is the likeliest place.",
       "source": "Leif Erikson (Wikipedia): no saga records his death",
-      "cite": "leif-erikson",
-      "text": "The sagas are silent. He is last named alive about 1018–19 and his son Thorkell held the chieftaincy by 1025; Brattahlíð, the family estate, is the likeliest place."
+      "cite": "leif-erikson"
     }
   },
-  "Marco Polo": {
-    "id": "marco-polo",
-    "origin": "Venetian, from a merchant family",
-    "role": [
-      "merchant",
-      "traveller",
-      "envoy of Kublai Khan"
-    ],
-    "voyages": [
-      "polo"
-    ],
+  "marco-polo": {
+    "name": "Marco Polo",
     "bio": "A Venetian merchant who set out with his father Niccolò and uncle Maffeo in 1271 and reached the court of Kublai Khan, who sent him on missions across the empire and beyond. He was back in Venice in 1295. His Travels, written down about 1300, gave Europe its first broad look at China, Persia and India.",
     "images": [
       {
@@ -127,8 +110,8 @@
       }
     ],
     "sources": [
-      "https://en.wikipedia.org/wiki/Marco_Polo",
-      "https://archive.org/details/descriptionofwor01polo"
+      "marco-polo",
+      "moule-pelliot-polo"
     ],
     "born": {
       "lon": 12.33,
@@ -137,40 +120,23 @@
       "place": "Venice",
       "label": "Marco Polo born at Venice, c. 1254",
       "text": "Born about 1254 in Venice, though the archives give neither the day nor the place; claims for Korčula and Constantinople have not won scholars over.",
-      "known": "conventional",
       "source": "Wikipedia, Marco Polo",
-      "cite": "marco-polo"
+      "cite": "marco-polo",
+      "confidence": "conventional"
     },
     "death": {
       "lon": 12.34,
       "lat": 45.44,
       "date": "8 Jan 1324",
       "label": "Marco Polo died at Venice, 8 Jan 1324",
+      "text": "He died at home in January 1324. His will freed Peter, his Tatar slave. Priests are said to have urged him on his deathbed to take back his Book; he answered that he had not told the half of what he saw.",
       "source": "Wikipedia, Marco Polo",
-      "cite": "marco-polo",
-      "text": "He died at home in January 1324. His will freed Peter, his Tatar slave. Priests are said to have urged him on his deathbed to take back his Book; he answered that he had not told the half of what he saw."
+      "cite": "marco-polo"
     }
   },
-  "Ibn Battuta": {
-    "id": "ibn-battuta",
-    "origin": "Maghrebi, from Tangier",
-    "role": [
-      "traveller",
-      "scholar",
-      "judge"
-    ],
-    "voyages": [
-      "ibn-battuta",
-      "ibn-battuta-1",
-      "ibn-battuta-2",
-      "ibn-battuta-3",
-      "ibn-battuta-4",
-      "ibn-battuta-5",
-      "ibn-battuta-6",
-      "ibn-battuta-7",
-      "ibn-battuta-8"
-    ],
-    "bio": "A scholar from Tangier who spent about thirty years, 1325 to 1354, travelling through much of Africa, Asia and Iberia, by most counts farther than any other traveller before modern times. Near the end of his life he dictated the account known as the Rihla.",
+  "ibn-battuta": {
+    "name": "Ibn Battuta",
+    "bio": "A scholar and judge from Tangier who spent about thirty years, 1325 to 1354, travelling through much of Africa, Asia and Iberia, by most counts farther than any other traveller before modern times. Near the end of his life he dictated the account known as the Rihla.",
     "images": [
       {
         "file": "Bust_of_Ibn_Battuta_at_Ibn_Battuta_museum.jpg",
@@ -195,7 +161,7 @@
       },
       {
         "file": "Manuscript_of_Ibn_Juzayy_(XIV).png",
-        "kind": "none",
+        "kind": "scene",
         "author": "Ibn Juzayy; Bibliothèque nationale de France",
         "date": "1354",
         "licence": "CC BY-SA 4.0"
@@ -210,8 +176,8 @@
       }
     ],
     "sources": [
-      "https://en.wikipedia.org/wiki/Ibn_Battuta",
-      "https://sourcebooks.fordham.edu/source/1354-ibnbattuta.asp"
+      "ibn-battuta",
+      "fordham-ibn-battuta"
     ],
     "born": {
       "lon": -5.8,
@@ -220,9 +186,9 @@
       "place": "Tangier",
       "label": "Ibn Battuta born at Tangier, 24 Feb 1304",
       "text": "The day comes from his own account in the Rihla.",
-      "known": "attested",
       "source": "Wikipedia, Ibn Battuta",
-      "cite": "ibn-battuta"
+      "cite": "ibn-battuta",
+      "confidence": "attested"
     },
     "death": {
       "lon": -5,
@@ -244,24 +210,13 @@
       ]
     }
   },
-  "Zheng He": {
-    "id": "zheng-he",
+  "zheng-he": {
+    "name": "Zheng He",
     "aka": [
       "Ma He",
       "San Bao"
     ],
-    "origin": "Hui, born into a Muslim family in Yunnan",
-    "role": [
-      "admiral",
-      "diplomat"
-    ],
-    "voyages": [
-      "zheng-he-1",
-      "zheng-he-4",
-      "zheng-he-5",
-      "zheng-he"
-    ],
-    "bio": "Born Ma He to a Muslim family in Yunnan, he served the Yongle Emperor, who gave him the name Zheng. Between 1405 and 1433 he commanded seven treasure voyages across the Indian Ocean as far as the Swahili coast, and he served as commander of the southern capital, Nanjing.",
+    "bio": "Born Ma He to a Hui Muslim family in Yunnan, he served the Yongle Emperor, who gave him the name Zheng. Between 1405 and 1433 he commanded seven treasure voyages across the Indian Ocean as far as the Swahili coast, and he served as commander of the southern capital, Nanjing.",
     "images": [
       {
         "file": "Model_of_Zheng_He's_treasure_ship,_Maritime_Experiential_Museum_&_Aquarium_-_20111006.jpg",
@@ -301,7 +256,7 @@
       }
     ],
     "sources": [
-      "https://en.wikipedia.org/wiki/Zheng_He"
+      "zheng-he"
     ],
     "born": {
       "lon": 102.71,
@@ -310,18 +265,19 @@
       "place": "Kunyang, Kunming, Yunnan",
       "label": "Zheng He born in Yunnan, 1371",
       "text": "Born Ma He to a Hui family of Kunyang, Kunming, then held for the Northern Yuan. The mark stands on Kunming.",
-      "known": "inferred",
       "source": "Zheng He (Wikipedia)",
-      "cite": "zheng-he"
+      "cite": "zheng-he",
+      "confidence": "inferred"
     },
     "death": {
       "lon": 87.54,
       "lat": 5.99,
       "date": "1433",
       "label": "Zheng He died at sea on the way home, 1433",
+      "text": "Most accounts have him die in 1433 on the way home from the seventh voyage, some say buried at sea. None gives a place, so the skull stands mid-way along that voyage's Calicut–Malacca leg.",
       "source": "Zheng He (Wikipedia); no source gives the place",
       "cite": "zheng-he",
-      "text": "Most accounts have him die in 1433 on the way home from the seventh voyage, some say buried at sea. None gives a place, so the skull stands mid-way along that voyage's Calicut–Malacca leg.",
+      "confidence": "conventional",
       "alternatives": [
         {
           "lon": 75.78,
@@ -342,17 +298,9 @@
       ]
     }
   },
-  "Bartolomeu Dias": {
-    "id": "bartolomeu-dias",
-    "origin": "Portuguese, of a seafaring family",
-    "role": [
-      "mariner",
-      "explorer"
-    ],
-    "voyages": [
-      "dias"
-    ],
-    "bio": "In February 1488 he became the first European to round the southern tip of Africa, and showed that the way south lies well out to sea, southwest of the African coast. Vasco da Gama used what he found to reach India.",
+  "bartolomeu-dias": {
+    "name": "Bartolomeu Dias",
+    "bio": "A Portuguese mariner, in February 1488 he became the first European to round the southern tip of Africa, and showed that the way south lies well out to sea, southwest of the African coast. Vasco da Gama used what he found to reach India.",
     "images": [
       {
         "file": "F._Benda-The_planting_of_cross_by_Bartholomew_Dias_in_1488-0681.jpg",
@@ -399,31 +347,20 @@
       }
     ],
     "sources": [
-      "https://en.wikipedia.org/wiki/Bartolomeu_Dias"
+      "bartolomeu-dias"
     ],
     "death": {
       "lon": 15,
       "lat": -36,
       "date": "29 May 1500",
       "label": "Dias lost in a storm off the Cape, on Cabral's fleet, 1500",
+      "text": "Four of Cabral's ships went down in one storm on the way to the Cape. The wreck's position is not recorded; the skull stands off the Cape.",
       "source": "Wikipedia; Britannica 1911",
-      "cite": "bartolomeu-dias",
-      "text": "Four of Cabral's ships went down in one storm on the way to the Cape. The wreck's position is not recorded; the skull stands off the Cape."
+      "cite": "bartolomeu-dias"
     }
   },
-  "Christopher Columbus": {
-    "id": "christopher-columbus",
-    "origin": "Genoese",
-    "role": [
-      "navigator",
-      "explorer"
-    ],
-    "voyages": [
-      "columbus",
-      "columbus-2",
-      "columbus-3",
-      "columbus-4"
-    ],
+  "christopher-columbus": {
+    "name": "Christopher Columbus",
     "bio": "A Genoese navigator who went to sea young, sailed as far as the British Isles and the Gold Coast, and lived some years in Lisbon. Sponsored by the Catholic Monarchs, he left Palos in August 1492 and made landfall in the Americas on 12 October; he made four Spanish crossings in all.",
     "images": [
       {
@@ -471,8 +408,8 @@
       }
     ],
     "sources": [
-      "https://en.wikipedia.org/wiki/Christopher_Columbus",
-      "https://archive.org/details/selectlettersch00colugoog"
+      "christopher-columbus",
+      "major-select-letters-columbus"
     ],
     "born": {
       "lon": 8.93,
@@ -481,30 +418,80 @@
       "place": "Genoa",
       "label": "Columbus born at Genoa, between Aug and Oct 1451",
       "text": "Born between 25 August and 31 October 1451 in the Republic of Genoa; Genoa is the majority view among several rival claims.",
-      "known": "conventional",
-      "source": "Wikipedia, Christopher Columbus"
+      "source": "Wikipedia, Christopher Columbus",
+      "confidence": "conventional",
+      "cite": "christopher-columbus"
     },
     "death": {
       "lon": -4.72,
       "lat": 41.65,
       "date": "20 May 1506",
       "label": "Columbus dies at Valladolid",
+      "text": "He died in a rented house, ill, still arguing that the Crown owed him the titles and the tenth of the profits it had promised. He is generally said to have held that he had reached the edge of Asia. His bones were carried to Seville, then Santo Domingo, then Havana, then Seville again, and Seville and Santo Domingo both still claim him.",
       "source": "Britannica 1911, Columbus",
-      "cite": "britannica-1911-columbus",
-      "text": "He died in a rented house, ill, still arguing that the Crown owed him the titles and the tenth of the profits it had promised. He is generally said to have held that he had reached the edge of Asia. His bones were carried to Seville, then Santo Domingo, then Havana, then Seville again, and Seville and Santo Domingo both still claim him."
+      "cite": "britannica-1911-columbus"
     }
   },
-  "Paulo da Gama": {
-    "id": "paulo-da-gama",
-    "origin": "Portuguese, son of Estêvão da Gama and Isabel Sodré",
-    "role": [
-      "explorer",
-      "ship's captain"
+  "juan-de-la-cosa": {
+    "name": "Juan de la Cosa",
+    "bio": "Owner and master of the Santa María on the first voyage, pilot on later ones, and maker of the oldest surviving chart to show the New World, in 1500.",
+    "images": [
+      {
+        "file": "Juan_de_la_Cosa,_Juan_Manuel_Núñez_Báñez.jpg",
+        "kind": "imaginary",
+        "author": "Jl FilpoC",
+        "date": "2021",
+        "licence": "CC BY-SA 4.0"
+      },
+      {
+        "file": "Juan-de-la-cosa.jpg",
+        "kind": "imaginary",
+        "author": "unknown artist",
+        "date": "undated",
+        "licence": "Public domain"
+      },
+      {
+        "file": "1500_map_by_Juan_de_la_Cosa.jpg",
+        "kind": "map",
+        "author": "Juan de la Cosa",
+        "date": "1500",
+        "licence": "Public domain"
+      },
+      {
+        "file": "Busto-juan-de-la-cosa.jpg",
+        "kind": "modern",
+        "author": "Panarria",
+        "date": "2007",
+        "licence": "CC BY 2.5"
+      }
     ],
-    "voyages": [
-      "da-gama"
+    "sources": [
+      "juan-de-la-cosa"
     ],
-    "bio": "Vasco da Gama's elder brother, he commanded the São Rafael on the first voyage to India. She was scuttled on the way home and he went over to the São Gabriel. He fell ill; his brother took him to Terceira in the Azores and stayed with him until he died. He is buried at Angra do Heroísmo.",
+    "born": {
+      "lon": -3.46,
+      "lat": 43.44,
+      "date": "c. 1450–1460",
+      "place": "Santoña, Cantabria",
+      "label": "Juan de la Cosa born at Santoña, c. 1450–1460",
+      "text": "No record of his birth survives; Santoña is the usual account, and the years are read back from his career.",
+      "source": "Wikipedia: Juan de la Cosa",
+      "cite": "juan-de-la-cosa",
+      "confidence": "inferred"
+    },
+    "death": {
+      "lon": -75.33,
+      "lat": 10.33,
+      "date": "1510",
+      "label": "Juan de la Cosa killed near Turbaco, 1510",
+      "text": "Sailing as pilot to Alonso de Ojeda on the coast of what is now Colombia, he went ashore with a raiding party near Turbaco and was killed by the townspeople's poisoned arrows.",
+      "source": "Juan de la Cosa (Wikipedia)",
+      "cite": "juan-de-la-cosa"
+    }
+  },
+  "paulo-da-gama": {
+    "name": "Paulo da Gama",
+    "bio": "Vasco da Gama's elder brother, a son of Estêvão da Gama and Isabel Sodré, he commanded the São Rafael on the first voyage to India. She was scuttled on the way home and he went over to the São Gabriel. He fell ill; his brother took him to Terceira in the Azores and stayed with him until he died. He is buried at Angra do Heroísmo.",
     "images": [
       {
         "file": "Paulo_da_Gama_-_Diario_Illustrado_(30Jun1897).png",
@@ -516,37 +503,29 @@
       }
     ],
     "sources": [
-      "https://en.wikipedia.org/wiki/Paulo_da_Gama"
+      "paulo-da-gama"
     ],
     "death": {
       "lon": -27.22,
       "lat": 38.65,
       "date": "1499",
       "label": "Paulo da Gama died at Angra, Terceira",
+      "text": "Paulo commanded the São Rafael, burned on the East African coast when there were too few men left to sail her. He fell ill on the way home; Vasco sailed on ahead in a fast caravel, to hurry him to the Azores, and stayed with his brother until he died.",
       "source": "Barros; Correia",
-      "cite": "paulo-da-gama",
-      "text": "Paulo commanded the São Rafael, burned on the East African coast when there were too few men left to sail her. He fell ill on the way home; Vasco sailed on ahead in a fast caravel, to hurry him to the Azores, and stayed with his brother until he died."
+      "cite": "paulo-da-gama"
     }
   },
-  "Vasco da Gama": {
-    "id": "vasco-da-gama",
-    "origin": "Portuguese nobleman, from Sines",
-    "role": [
-      "mariner",
-      "explorer",
-      "viceroy of India"
-    ],
-    "voyages": [
-      "da-gama"
-    ],
-    "bio": "On his first voyage, 1497 to 1499, he found the sea road from Europe to India, round the Cape of Good Hope and across the Indian Ocean from Malindi to Calicut, the longest ocean voyage made until then. He went back to India as viceroy and died there in 1524.",
+  "vasco-da-gama": {
+    "name": "Vasco da Gama",
+    "bio": "A Portuguese nobleman from Sines, on his first voyage, 1497 to 1499, he found the sea road from Europe to India, round the Cape of Good Hope and across the Indian Ocean from Malindi to Calicut, the longest ocean voyage made until then. He went back to India as viceroy and died there in 1524.",
     "images": [
       {
         "file": "Gregório_Lopes_-_Vasco_da_Gama_(ca_1524).jpg",
         "kind": "near",
         "author": "Gregório Lopes",
         "date": "c. 1524",
-        "licence": "Public domain"
+        "licence": "Public domain",
+        "note": "Painted about the year he died."
       },
       {
         "file": "Lisboa-Museu_Nacional_de_Arte_Antiga-Retrato_dito_de_Vasco_da_Gama-20140917.jpg",
@@ -571,8 +550,8 @@
       }
     ],
     "sources": [
-      "https://en.wikipedia.org/wiki/Vasco_da_Gama",
-      "https://sourcebooks.fordham.edu/mod/1497degama.asp"
+      "vasco-da-gama",
+      "fordham-da-gama"
     ],
     "born": {
       "lon": -8.86,
@@ -581,31 +560,23 @@
       "place": "Sines",
       "label": "Vasco da Gama born at Sines, c. 1460s",
       "text": "Born at Sines, a seaport on the Alentejo coast; some give about 1460, others 1469.",
-      "known": "conventional",
       "source": "Wikipedia: Vasco da Gama",
-      "cite": "vasco-da-gama"
+      "cite": "vasco-da-gama",
+      "confidence": "conventional"
     },
     "death": {
       "lon": 76.26,
       "lat": 9.97,
       "date": "24 Dec 1524",
       "label": "Vasco da Gama died at Cochin as Viceroy of India",
+      "text": "Sent back to India at last as viceroy, he fell ill within months of landing and died at Cochin on Christmas Eve. His body was taken to Portugal in 1539, and lies today in the Jerónimos Monastery at Lisbon.",
       "source": "Wikipedia: Vasco da Gama",
-      "cite": "vasco-da-gama",
-      "text": "Sent back to India at last as viceroy, he fell ill within months of landing and died at Cochin on Christmas Eve. His body was taken to Portugal in 1539, and lies today in the Jerónimos Monastery at Lisbon."
+      "cite": "vasco-da-gama"
     }
   },
-  "Ferdinand Magellan": {
-    "id": "ferdinand-magellan",
-    "origin": "Portuguese, of minor nobility",
-    "role": [
-      "explorer",
-      "admiral"
-    ],
-    "voyages": [
-      "magellan"
-    ],
-    "bio": "A Portuguese officer who served the Crown in Asia, then, refused by King Manuel, took his plan to sail west to the Moluccas to Charles I of Spain. He led the 1519 expedition through the strait that bears his name and across the Pacific, and was killed at Mactan in 1521; Elcano brought the Victoria home in 1522.",
+  "ferdinand-magellan": {
+    "name": "Ferdinand Magellan",
+    "bio": "A Portuguese officer of minor nobility who served the Crown in Asia, then, refused by King Manuel, took his plan to sail west to the Moluccas to Charles I of Spain. He led the 1519 expedition through the strait that bears his name and across the Pacific, and was killed at Mactan in 1521; Elcano brought the Victoria home in 1522.",
     "images": [
       {
         "file": "Fernand_de_Magellan_-_Charles-Philippe_Larivière_(Musée_de_l'Histoire_de_France,_Versailles).png",
@@ -616,10 +587,11 @@
       },
       {
         "file": "Retrato_de_Hernando_de_Magallanes.jpg",
-        "kind": "imaginary",
-        "author": "unknown artist",
+        "kind": "posthumous",
+        "author": "Unknown",
         "date": "1848",
-        "licence": "Public domain"
+        "licence": "Public domain",
+        "note": "A copy after the portrait in the Naval Museum, Madrid; no authenticated likeness exists."
       },
       {
         "file": "Magellan_expedition_by_Stradanus.jpg",
@@ -644,7 +616,7 @@
       }
     ],
     "sources": [
-      "https://en.wikipedia.org/wiki/Ferdinand_Magellan"
+      "ferdinand-magellan"
     ],
     "born": {
       "lon": -7.58,
@@ -653,9 +625,9 @@
       "place": "Sabrosa, northern Portugal",
       "label": "Magellan born in northern Portugal, c. 1480",
       "text": "Born in northern Portugal, possibly around 1480. The mark stands on Sabrosa, where the family house stood.",
-      "known": "inferred",
       "source": "Wikipedia: Ferdinand Magellan",
       "cite": "ferdinand-magellan",
+      "confidence": "inferred",
       "alternatives": [
         {
           "lon": -8.42,
@@ -672,26 +644,18 @@
       "lat": 10.29,
       "date": "27 Apr 1521",
       "label": "Magellan killed at Mactan",
+      "text": "Magellan took sides in a local quarrel, for the Cebu king against Lapulapu of Mactan, and went ashore with about fifty men. The ships' guns could not reach the beach, the Mactan fighters came on in waves, and the captain-general was killed in the water. Pigafetta, who was there, called him \"our mirror, our light, our comfort and our true guide\".",
       "source": "Pigafetta",
-      "cite": "battle-of-mactan",
-      "text": "Magellan took sides in a local quarrel, for the Cebu king against Lapulapu of Mactan, and went ashore with about fifty men. The ships' guns could not reach the beach, the Mactan fighters came on in waves, and the captain-general was killed in the water. Pigafetta, who was there, called him \"our mirror, our light, our comfort and our true guide\"."
+      "cite": "battle-of-mactan"
     }
   },
-  "Juan Sebastián Elcano": {
-    "id": "juan-sebastian-elcano",
+  "juan-sebastian-elcano": {
+    "name": "Juan Sebastián Elcano",
     "aka": [
       "Elkano",
       "del Cano"
     ],
-    "origin": "Basque, from Getaria",
-    "role": [
-      "navigator",
-      "ship-owner"
-    ],
-    "voyages": [
-      "magellan"
-    ],
-    "bio": "He brought the Victoria home in 1522, the first ship round the world, after choosing to go on west across the Indian Ocean against his orders to return by the Pacific. Charles V gave him arms with a globe and Primus circumdedisti me. Sent out again under Loaísa, he died of scurvy in the Pacific in 1526. Little is known of his private life.",
+    "bio": "A Basque ship-owner from Getaria, he brought the Victoria home in 1522, the first ship round the world, after choosing to go on west across the Indian Ocean against his orders to return by the Pacific. Charles V gave him arms with a globe and Primus circumdedisti me. Sent out again under Loaísa, he died of scurvy in the Pacific in 1526. Little is known of his private life.",
     "images": [
       {
         "file": "Juan_Sebastián_Elcano,_anonymous_19th_century_painting.jpg",
@@ -703,7 +667,7 @@
       }
     ],
     "sources": [
-      "https://en.wikipedia.org/wiki/Juan_Sebasti%C3%A1n_Elcano"
+      "juan-sebastian-elcano"
     ],
     "born": {
       "lon": -2.2,
@@ -712,32 +676,24 @@
       "place": "Getaria",
       "label": "Elcano born at Getaria, 1486 or 1487",
       "text": "His own will names Getaria. The year comes from his saying, in August 1519, that he was \"approximately\" 32.",
-      "known": "inferred",
       "source": "Wikipedia: Juan Sebastián Elcano",
-      "cite": "juan-sebastian-elcano"
+      "cite": "juan-sebastian-elcano",
+      "confidence": "inferred"
     },
     "death": {
       "lon": -135,
       "lat": 1,
       "date": "4 Aug 1526",
       "label": "Elcano died at sea on the Loaísa expedition, 1526",
+      "text": "He took command when Loaísa died days before, and died himself at sea on 4 August. No position is recorded; the skull is a guess in the middle of the Pacific.",
       "source": "Wikipedia: Juan Sebastián Elcano",
       "cite": "juan-sebastian-elcano",
-      "text": "He took command when Loaísa died days before, and died himself at sea on 4 August. No position is recorded; the skull is a guess in the middle of the Pacific."
+      "confidence": "conventional"
     }
   },
-  "Francis Drake": {
-    "id": "francis-drake",
-    "origin": "English, from Devon",
-    "role": [
-      "explorer",
-      "privateer",
-      "vice admiral"
-    ],
-    "voyages": [
-      "drake"
-    ],
-    "bio": "Raised in the Plymouth household of William Hawkins, he sailed on his cousin John Hawkins's slaving voyages and raided the Spanish Main. From 1577 to 1580 he made the second voyage round the world, the first English one, and was knighted aboard the Golden Hind. He was vice admiral against the Armada in 1588.",
+  "francis-drake": {
+    "name": "Francis Drake",
+    "bio": "Born in Devon and raised in the Plymouth household of William Hawkins, he sailed on his cousin John Hawkins's slaving voyages and raided the Spanish Main. From 1577 to 1580 he made the second voyage round the world, the first English one, and was knighted aboard the Golden Hind. He was vice admiral against the Armada in 1588.",
     "images": [
       {
         "file": "1590_or_later_Marcus_Gheeraerts,_Sir_Francis_Drake_Buckland_Abbey,_Devon.jpg",
@@ -783,7 +739,7 @@
       }
     ],
     "sources": [
-      "https://en.wikipedia.org/wiki/Francis_Drake"
+      "francis-drake"
     ],
     "born": {
       "lon": -4.14,
@@ -792,47 +748,47 @@
       "place": "Crowndale Farm, Tavistock, Devon",
       "label": "Drake born at Tavistock, c. 1540",
       "text": "Born at Crowndale Farm, Tavistock; the year is reckoned, and accounts differ.",
-      "known": "inferred",
       "source": "Wikipedia: Francis Drake",
-      "cite": "francis-drake"
+      "cite": "francis-drake",
+      "confidence": "inferred"
     },
     "death": {
       "lon": -79.65,
       "lat": 9.6,
       "date": "28 Jan 1596",
       "label": "Drake died off Portobelo, 1596; buried at sea in a lead coffin",
+      "text": "Dysentery killed him on his last raid on the Spanish Caribbean. Drake asked to be dressed in his armour, and was buried at sea in a lead coffin off Portobelo. Divers still look for it.",
       "source": "Wikipedia: Francis Drake",
-      "cite": "francis-drake",
-      "text": "Dysentery killed him on his last raid on the Spanish Caribbean. Drake asked to be dressed in his armour, and was buried at sea in a lead coffin off Portobelo. Divers still look for it."
+      "cite": "francis-drake"
     }
   },
-  "Phoenician mariners of Necho II": {
-    "id": "phoenician-mariners-of-necho-ii",
-    "role": [
-      "mariners"
-    ],
-    "voyages": [
-      "phoenician-africa"
-    ],
+  "phoenician-mariners-of-necho-ii": {
+    "name": "Phoenician mariners of Necho II",
     "bio": "Herodotus tells that Necho II of Egypt (610–595 BC) sent out Phoenicians who sailed from the Red Sea round Africa to the Strait of Gibraltar and back to Egypt in three years. Nobody named them.",
     "sources": [
-      "https://en.wikipedia.org/wiki/Necho_II"
-    ],
-    "death": "unknown"
+      "necho-ii"
+    ]
   },
-  "Hanno the Navigator": {
-    "id": "hanno-the-navigator",
+  "hanno-the-navigator": {
+    "name": "Hanno the Navigator",
     "aka": [
       "Hannon"
     ],
-    "origin": "Carthaginian",
-    "role": [
-      "explorer"
-    ],
-    "voyages": [
-      "hanno"
-    ],
     "bio": "A Carthaginian, sometimes called a king, who sailed down the coast of West Africa in the fifth century BC. Only a Greek periplus tells of it, and nobody agrees how far he went: some say Gabon, others no farther than southern Morocco.",
+    "sources": [
+      "hanno-the-navigator"
+    ],
+    "born": {
+      "lon": 10.32,
+      "lat": 36.85,
+      "date": "5th century BC",
+      "place": "Carthage",
+      "label": "Hanno of Carthage, 5th century BC",
+      "text": "Nothing is known of his birth. He was a Carthaginian who lived in the fifth century BC, so the mark stands on Carthage.",
+      "source": "Hanno the Navigator (Wikipedia)",
+      "cite": "hanno-the-navigator",
+      "confidence": "speculative"
+    },
     "images": [
       {
         "file": "The_Periplus_of_Hanno_-_Mediterranean_Galley_of_the_period_of_Hanno's_Periplus.png",
@@ -862,36 +818,12 @@
         "date": "1913",
         "licence": "Public domain"
       }
-    ],
-    "sources": [
-      "https://en.wikipedia.org/wiki/Hanno_the_Navigator"
-    ],
-    "born": {
-      "lon": 10.32,
-      "lat": 36.85,
-      "date": "5th century BC",
-      "place": "Carthage",
-      "label": "Hanno of Carthage, 5th century BC",
-      "text": "Nothing is known of his birth. He was a Carthaginian who lived in the fifth century BC, so the mark stands on Carthage.",
-      "known": "speculative",
-      "source": "Hanno the Navigator (Wikipedia)",
-      "cite": "hanno-the-navigator"
-    },
-    "death": "unknown"
+    ]
   },
-  "Pytheas": {
-    "id": "pytheas",
+  "pytheas": {
+    "name": "Pytheas",
     "aka": [
       "Pytheas of Massalia"
-    ],
-    "origin": "Greek, of Massalia",
-    "role": [
-      "geographer",
-      "explorer",
-      "astronomer"
-    ],
-    "voyages": [
-      "pytheas"
     ],
     "bio": "A Greek of Massalia who sailed to northern Europe about 325 BC, round much of the British Isles, and was the first on record to describe the midnight sun and polar ice. He gave the world Thule, and first tied the tides to the moon. His own book is lost; he survives in quotation by later writers.",
     "images": [
@@ -911,10 +843,11 @@
       },
       {
         "file": "Parisinus_gr_1397_f.162_pytheas_of_massalia_from_Strabo_7.3.1.jpg",
-        "kind": "none",
+        "kind": "scene",
         "author": "Mellangoose",
         "date": "2025",
-        "licence": "CC BY-SA 4.0"
+        "licence": "CC BY-SA 4.0",
+        "note": "No likeness exists. The page of the oldest manuscript of Strabo (10th century) that quotes him, the text he survives in."
       },
       {
         "file": "Pytheas_itineraire.png",
@@ -925,7 +858,7 @@
       }
     ],
     "sources": [
-      "https://en.wikipedia.org/wiki/Pytheas"
+      "pytheas"
     ],
     "born": {
       "lon": 5.37,
@@ -934,38 +867,30 @@
       "place": "Massalia (Marseille)",
       "label": "Pytheas born at Massalia, c. 350 BC",
       "text": "Known only through later writers who quote him; the year is a reckoning from when he flourished.",
-      "known": "inferred",
       "source": "Pytheas (Wikipedia)",
-      "cite": "pytheas"
-    },
-    "death": "unknown"
+      "cite": "pytheas",
+      "confidence": "inferred"
+    }
   },
-  "Nearchus": {
-    "id": "nearchus",
+  "nearchus": {
+    "name": "Nearchus",
     "aka": [
       "Nearchos"
-    ],
-    "origin": "Greek, of Lato in Crete; raised at Amphipolis",
-    "role": [
-      "navarch",
-      "officer of Alexander"
-    ],
-    "voyages": [
-      "nearchus"
     ],
     "bio": "A Cretan whose family settled at Amphipolis in Macedonia; one of Alexander's boyhood friends and his navarch. In 326–324 BC he led the fleet from the Indus along the coast and up the Persian Gulf to the mouth of the Tigris.",
     "images": [
       {
         "file": "The_wounded_Alexander_passing_through_his_fleet_in_India_by_Andre_Castaigne_(1898-1899).jpg",
-        "kind": "scene",
+        "kind": "imaginary",
         "author": "André Castaigne",
         "date": "c. 1898–1899",
-        "licence": "Public domain"
+        "licence": "Public domain",
+        "note": "Alexander's fleet on the Indus as a 19th-century illustrator saw it; not a likeness of Nearchus."
       }
     ],
     "sources": [
-      "https://en.wikipedia.org/wiki/Nearchus",
-      "https://www.livius.org/articles/person/nearchus/"
+      "nearchus",
+      "livius-nearchus"
     ],
     "born": {
       "lon": 25.66,
@@ -974,77 +899,13 @@
       "place": "Lato, Crete",
       "label": "Nearchus born on Crete, c. 360 BC",
       "text": "A native of Lato, son of Androtimus, whose family moved to Amphipolis while he was a boy; so he was quite possibly born on Crete.",
-      "known": "inferred",
       "source": "Nearchus (Wikipedia)",
-      "cite": "nearchus"
-    },
-    "death": "unknown"
-  },
-  "Juan de la Cosa": {
-    "id": "juan-de-la-cosa",
-    "origin": "Cantabrian, from Santoña",
-    "role": [
-      "pilot",
-      "chartmaker"
-    ],
-    "bio": "Owner and master of the Santa María on the first voyage, pilot on later ones, and maker of the oldest surviving chart to show the New World, in 1500.",
-    "sources": [
-      "https://en.wikipedia.org/wiki/Juan_de_la_Cosa"
-    ],
-    "born": {
-      "lon": -3.46,
-      "lat": 43.44,
-      "date": "c. 1450–1460",
-      "place": "Santoña, Cantabria",
-      "label": "Juan de la Cosa born at Santoña, c. 1450–1460",
-      "text": "No record of his birth survives; Santoña is the usual account, and the years are read back from his career.",
-      "known": "inferred",
-      "source": "Wikipedia: Juan de la Cosa"
-    },
-    "images": [
-      {
-        "file": "Juan_de_la_Cosa,_Juan_Manuel_Núñez_Báñez.jpg",
-        "kind": "imaginary",
-        "author": "Jl FilpoC",
-        "date": "2021",
-        "licence": "CC BY-SA 4.0"
-      },
-      {
-        "file": "Juan-de-la-cosa.jpg",
-        "kind": "imaginary",
-        "author": "unknown artist",
-        "date": "undated",
-        "licence": "Public domain"
-      },
-      {
-        "file": "1500_map_by_Juan_de_la_Cosa.jpg",
-        "kind": "map",
-        "author": "Juan de la Cosa",
-        "date": "1500",
-        "licence": "Public domain"
-      },
-      {
-        "file": "Busto-juan-de-la-cosa.jpg",
-        "kind": "modern",
-        "author": "Panarria",
-        "date": "2007",
-        "licence": "CC BY 2.5"
-      }
-    ],
-    "death": {
-      "lon": -75.33,
-      "lat": 10.33,
-      "date": "1510",
-      "label": "Juan de la Cosa killed near Turbaco, 1510",
-      "text": "Sailing as pilot to Alonso de Ojeda on the coast of what is now Colombia, he went ashore with a raiding party near Turbaco and was killed by the townspeople's poisoned arrows.",
-      "source": "Juan de la Cosa (Wikipedia)"
+      "cite": "nearchus",
+      "confidence": "inferred"
     }
   },
-  "Juan Ponce de León": {
-    "id": "juan-ponce-de-leon",
-    "voyages": [
-      "ponce-de-leon-1513"
-    ],
+  "juan-ponce-de-leon": {
+    "name": "Juan Ponce de León",
     "death": {
       "lon": -82.37,
       "lat": 23.14,
@@ -1055,12 +916,8 @@
       "text": "A Calusa arrow struck his thigh on his 1521 attempt to colonise south-west Florida, and he died in the first week of July, probably of infection, soon after the expedition sailed to Cuba; he was buried in Puerto Rico. The page names no town, so the mark stands at Havana, the port the expedition made for, an editorial guess."
     }
   },
-  "Juan Garrido": {
-    "id": "juan-garrido",
-    "voyages": [
-      "juan-garrido",
-      "ponce-de-leon-1513"
-    ],
+  "juan-garrido": {
+    "name": "Juan Garrido",
     "death": {
       "lon": -99.1,
       "lat": 19.4,
@@ -1071,25 +928,14 @@
       "text": "NPS dates his death between 1547 and 1550 from legal documents; Wikipedia says about 1550, in New Spain. His burial place is unknown."
     }
   },
-  "Isabel de Olvera": {
-    "id": "isabel-de-olvera",
-    "voyages": [
-      "isabel-de-olvera"
-    ],
-    "death": "unknown"
+  "isabel-de-olvera": {
+    "name": "Isabel de Olvera"
   },
-  "Pedro Alonso Niño": {
-    "id": "pedro-alonso-nino",
-    "voyages": [
-      "columbus"
-    ],
-    "death": "unknown"
+  "pedro-alonso-nino": {
+    "name": "Pedro Alonso Niño"
   },
-  "Pánfilo de Narváez": {
-    "id": "panfilo-de-narvaez",
-    "voyages": [
-      "narvaez-expedition"
-    ],
+  "panfilo-de-narvaez": {
+    "name": "Pánfilo de Narváez",
     "death": {
       "lon": -89.31,
       "lat": 28.61,
@@ -1097,15 +943,12 @@
       "label": "Narváez lost at sea, 1528",
       "source": "Wikipedia, Narváez expedition",
       "cite": "narvaez-expedition",
-      "text": "He is believed to have been swept out to sea in a storm while the boats worked west along the Gulf coast; nobody recorded where. The skull stands at the middle of the boat leg, and the place is only inferred."
+      "text": "He is believed to have been swept out to sea in a storm while the boats worked west along the Gulf coast; nobody recorded where. The skull stands at the middle of the boat leg, and the place is only inferred.",
+      "confidence": "conventional"
     }
   },
-  "Álvar Núñez Cabeza de Vaca": {
-    "id": "alvar-nunez-cabeza-de-vaca",
-    "voyages": [
-      "narvaez-expedition",
-      "estevanico-1528-36"
-    ],
+  "alvar-nunez-cabeza-de-vaca": {
+    "name": "Álvar Núñez Cabeza de Vaca",
     "death": {
       "lon": -6.14,
       "lat": 36.69,
@@ -1125,28 +968,14 @@
       ]
     }
   },
-  "Andrés Dorantes de Carranza": {
-    "id": "andres-dorantes-de-carranza",
-    "voyages": [
-      "narvaez-expedition",
-      "estevanico-1528-36"
-    ],
-    "death": "unknown"
+  "andres-dorantes-de-carranza": {
+    "name": "Andrés Dorantes de Carranza"
   },
-  "Alonso del Castillo Maldonado": {
-    "id": "alonso-del-castillo-maldonado",
-    "voyages": [
-      "narvaez-expedition",
-      "estevanico-1528-36"
-    ],
-    "death": "unknown"
+  "alonso-del-castillo-maldonado": {
+    "name": "Alonso del Castillo Maldonado"
   },
-  "Esteban de Dorantes": {
-    "id": "esteban-de-dorantes",
-    "voyages": [
-      "narvaez-expedition",
-      "estevanico-1528-36"
-    ],
+  "esteban-de-dorantes": {
+    "name": "Esteban de Dorantes",
     "death": {
       "lon": -108.98,
       "lat": 34.93,

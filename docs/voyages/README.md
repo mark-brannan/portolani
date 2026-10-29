@@ -23,39 +23,54 @@ coasting run or a route drawn by the winds).
 
 Each piece of text is written once, in `data/voyages/`: a voyage in `<id>.json` (`index.json` gives the
 menu order: chronological by start year, a voyage's own sub-voyages kept together in date order), each
-person's death in `people.json`, each source in `sources.json`. `readVoyage` in
-`scripts/voyages.mjs` puts a voyage together and `problems` beside it is the schema;
+person in `people.json`, each source in `sources.json`. `readVoyage` in `scripts/voyages.mjs` puts a
+voyage together; `problems` and `checkPerson` beside it are the schema, and
 `node scripts/check-voyages.mjs` checks every record and that each sea leg stays at sea.
 
-A person in `people.json` is keyed by the name a voyage's `who` uses. Only the death is required (`personProblems` in `scripts/voyages.mjs` says the rest): a
-`death` marker, or `"unknown"`, or `"living": true` and no death for someone alive (no skull). Every other
-field is optional:
+A voyage names its people in `who`, slugs into `people.json` in order of prominence: the one has-relationship
+between the two, and the only place it is written. There is no leader field; a voyage's title says whose it is,
+and a crew member or a nameless company is a record like any other.
 
 ```json
-"Juan Sebastián Elcano": {
-  "id": "juan-sebastian-elcano",
-  "aka": ["Elkano", "del Cano"],
-  "origin": "Basque, from Getaria",
-  "role": ["navigator", "ship-owner"],
-  "voyages": ["magellan"],
-  "bio": "He brought the Victoria home in 1522, the first ship round the world, …",
-  "images": [{ "file": "Juan_Sebastián_Elcano,_anonymous_19th_century_painting.jpg",
-                "kind": "posthumous", "author": "Unknown", "date": "19th century",
-                "licence": "Public domain", "note": "Museo Naval, Madrid; …" }],
-  "sources": ["https://en.wikipedia.org/wiki/Juan_Sebasti%C3%A1n_Elcano"],
-  "born": { "lon": -2.2, "lat": 43.3, "date": "1486 or 1487", "place": "Getaria",
-            "label": "Elcano born at Getaria, 1486 or 1487", "text": "His own will names Getaria. …",
-            "known": "inferred", "source": "Wikipedia: Juan Sebastián Elcano",
-            "cite": "juan-sebastian-elcano" },
-  "death": { "…": "as before" }
+"who": ["ferdinand-magellan", "juan-sebastian-elcano"]
+```
+
+A person is a record keyed by that slug. Nothing is required: what is there is checked, and what is not is
+simply unknown. `name` is the display name, `aka` other names, `bio` a paragraph, `images` Wikimedia Commons
+files credited as their file pages ask, `sources` ids into `sources.json`.
+
+```json
+"ferdinand-magellan": {
+  "name": "Ferdinand Magellan",
+  "bio": "A Portuguese officer of minor nobility who served the Crown in Asia, …",
+  "images": [{ "file": "Retrato_de_Hernando_de_Magallanes.jpg", "kind": "posthumous", "author": "Unknown",
+               "date": "1848", "licence": "Public domain", "note": "A copy after the Madrid portrait; …" }],
+  "sources": ["ferdinand-magellan"],
+  "born":  { "lon": -7.58, "lat": 41.27, "date": "c. 1480", "place": "Sabrosa, northern Portugal",
+             "label": "Magellan born in northern Portugal, c. 1480", "text": "…", "confidence": "inferred",
+             "source": "Wikipedia: Ferdinand Magellan", "cite": "ferdinand-magellan",
+             "alternatives": [{ "lon": -8.42, "lat": 41.8, "place": "Ponte da Barca",
+                                "label": "Born at Ponte da Barca", "source": "Wikidata" }] },
+  "death": { "lon": 123.97, "lat": 10.29, "date": "27 Apr 1521", "label": "Magellan killed at Mactan",
+             "source": "Pigafetta", "cite": "battle-of-mactan", "text": "…" }
 }
 ```
 
-The People drawer draws the birth and lays the `images` on the map (`npm run people` builds them for the site).
+A marker is one shape for `events`, `born`, `death` and `alternatives`; the fields are in the `checkPerson`
+header. The coordinates are where the mark stands, not a claim of exactness:
+
+| the death record has | drawn | means |
+|---|---|---|
+| lon, lat, `confidence: attested` | skull | the place is recorded |
+| lon, lat, `conventional` | skull | the mid-leg or mid-ocean convention below |
+| lon, lat, `speculative` | skull | one guess among several, `alternatives` beside it |
+| a date, a sentence, no lon and lat | nothing | nobody knows where; the record still has the date |
+
+The People drawer marks the birth and lays the `images` on the map; `npm run people` builds them for the site.
 
 Two conventions the checks cannot see: where a source says a person died at sea or on the way but gives
-no place, the skull stands at the middle of the leg it must have happened on and the death's `text` says
-so; and an `alternative` is another place of death, never of burial.
+no place, the skull stands at the middle of the leg it must have happened on, its `confidence` is `conventional`
+and the death's `text` says so; and an `alternative` is another place of death, never of burial.
 
 A traveller whose road splits into journeys has the whole road in one file and each journey in its own
 (`ibn-battuta` and `ibn-battuta-1` to `ibn-battuta-8`): the parts name the whole road's legs by `sameAs`, so a
@@ -82,5 +97,24 @@ part:" and the doubt. A doubted event's mark is drawn at half its ink, and its t
 The overlay rides in the link as `voyages=<id>[:rrggbb],...`, in the order chosen, a picked colour
 after its id (`voyages=magellan,columbus,da-gama:16727a`), and `voyagewidth=<px>` when the weight is
 not Standard. An older `voyage=<id>` link still opens, as a list of one.
+
+## Migrations
+
+A record with `"kind": "migration"` is the spread of a people rather than a course sailed by named ones:
+`lapita-expansion` (the Bismarcks to Samoa, c. 1500–800 BC) and `east-polynesia-settlement` (the long pause,
+then the burst across the Polynesian Triangle, c. 1000–1300). `who` may be empty, and each settled place is a
+`waypoint` event whose tile carries its date and story. How it is drawn is in the header of `scripts/voyages.mjs`.
+
+A migration's legs add three fields to the usual ones:
+
+| Field | Values | What it sets |
+| --- | --- | --- |
+| `reach` | `[0, 0.85]` | how far along the whole spread the leg runs: 0 at the start, 1 at the furthest front |
+| `heads` | `end`, `both`, `none` | where the ink chevrons go; `both` for a leg whose direction is unknown |
+| `pause` | `true` | a long wait, drawn fainter with a dotted trail |
+
+A branch is a leg that starts on another leg's waypoint.
+
+![The Lapita expansion in red and the settlement of East Polynesia in blue](migrations.jpg)
 
 ![Zheng He's skull at the middle of the Calicut–Malacca leg, its tile open, the Calicut alternative beside the coast](zheng-he-alternatives.jpg)

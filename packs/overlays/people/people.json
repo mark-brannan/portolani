@@ -224,6 +224,34 @@
       "page": "https://commons.wikimedia.org/wiki/File:Portrait_of_a_Man,_Said_to_be_Christopher_Columbus.jpg",
       "sha1": "359aefa828c990b6878e49d39007f26e74931eeb"
     },
+    "Juan_de_la_Cosa,_Juan_Manuel_Núñez_Báñez.jpg": {
+      "src": "people/juan-de-la-cosa-juan-manuel-nunez-banez.jpg",
+      "width": 489,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:Juan_de_la_Cosa,_Juan_Manuel_N%C3%BA%C3%B1ez_B%C3%A1%C3%B1ez.jpg",
+      "sha1": "d0a67a6ecbfceb4f394004ee3f9bf6d7584eb334"
+    },
+    "Juan-de-la-cosa.jpg": {
+      "src": "people/juan-de-la-cosa.jpg",
+      "width": 194,
+      "height": 250,
+      "page": "https://commons.wikimedia.org/wiki/File:Juan-de-la-cosa.jpg",
+      "sha1": "fa97a033287735e4de711930f50833c78eab1496"
+    },
+    "1500_map_by_Juan_de_la_Cosa.jpg": {
+      "src": "people/1500-map-by-juan-de-la-cosa.jpg",
+      "width": 350,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:1500_map_by_Juan_de_la_Cosa.jpg",
+      "sha1": "d97ffb74e726846f0e7564d5ab594545053eebb7"
+    },
+    "Busto-juan-de-la-cosa.jpg": {
+      "src": "people/busto-juan-de-la-cosa.jpg",
+      "width": 426,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:Busto-juan-de-la-cosa.jpg",
+      "sha1": "2067241a59d461a772483357ed60556488aa4f12"
+    },
     "Paulo_da_Gama_-_Diario_Illustrado_(30Jun1897).png": {
       "src": "people/paulo-da-gama-diario-illustrado-30jun1897.jpg",
       "width": 455,
@@ -405,34 +433,6 @@
       "height": 397,
       "page": "https://commons.wikimedia.org/wiki/File:The_wounded_Alexander_passing_through_his_fleet_in_India_by_Andre_Castaigne_(1898-1899).jpg",
       "sha1": "ae8b4e4ced46432a762663a67f436ea71f555f82"
-    },
-    "Juan_de_la_Cosa,_Juan_Manuel_Núñez_Báñez.jpg": {
-      "src": "people/juan-de-la-cosa-juan-manuel-nunez-banez.jpg",
-      "width": 489,
-      "height": 640,
-      "page": "https://commons.wikimedia.org/wiki/File:Juan_de_la_Cosa,_Juan_Manuel_N%C3%BA%C3%B1ez_B%C3%A1%C3%B1ez.jpg",
-      "sha1": "d0a67a6ecbfceb4f394004ee3f9bf6d7584eb334"
-    },
-    "Juan-de-la-cosa.jpg": {
-      "src": "people/juan-de-la-cosa.jpg",
-      "width": 194,
-      "height": 250,
-      "page": "https://commons.wikimedia.org/wiki/File:Juan-de-la-cosa.jpg",
-      "sha1": "fa97a033287735e4de711930f50833c78eab1496"
-    },
-    "1500_map_by_Juan_de_la_Cosa.jpg": {
-      "src": "people/1500-map-by-juan-de-la-cosa.jpg",
-      "width": 350,
-      "height": 640,
-      "page": "https://commons.wikimedia.org/wiki/File:1500_map_by_Juan_de_la_Cosa.jpg",
-      "sha1": "d97ffb74e726846f0e7564d5ab594545053eebb7"
-    },
-    "Busto-juan-de-la-cosa.jpg": {
-      "src": "people/busto-juan-de-la-cosa.jpg",
-      "width": 426,
-      "height": 640,
-      "page": "https://commons.wikimedia.org/wiki/File:Busto-juan-de-la-cosa.jpg",
-      "sha1": "2067241a59d461a772483357ed60556488aa4f12"
     }
   }
 }
