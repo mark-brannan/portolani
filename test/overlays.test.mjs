@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { similarityFit, applyFit, affineThrough3, loadOverlay, drawOverlay, drawSheet, sheetOf, sheetTransform, sheetCorners, onSheet, sheetFrame, sheetView, OVERLAY_DEFAULTS, overlayFromHash, overlayToHash, sheetText, sameSheet } from '../scripts/overlays.mjs';
-import { figureRows, landmarkRows, sheetPlacements, paperMask, redLines } from '../scripts/build-overlays.mjs';
+import { figureRows, landmarkRows, sheetPlacements, paperMask, redLines, catalanPieces, CATALAN_PAGES, pageOffsets } from '../scripts/build-overlays.mjs';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { viewProjection } from '../scripts/scene.mjs';
 
@@ -38,13 +38,14 @@ test('the committed fits give back every figure of ornaments.md to within 0.1 de
 });
 
 // ornaments.md, "Landmarks, sheet 5": one similarity, 0.00331 deg/px, no turn, 127 km RMS, El Hierro worst at 284.
-test('the Catalan Atlas fit is the least-squares fit of its 19 landmarks, and their residual is the doc\'s', () => {
+// Sheet 5 is the first page of the eight, cropped at its own x 288, so its piece's px are the scan's less 288.
+test('the Catalan Atlas\'s first page is fitted to its 19 landmarks, and their residual is the doc\'s', () => {
   assert.equal(landmarks.length, 19);
-  const [piece] = catalan.pieces, fit = similarityFit(landmarks.map((r) => [r.px, r.ll]));
+  const [piece] = catalan.pieces, fit = similarityFit(landmarks.map((r) => [[r.px[0] - 288, r.px[1]], r.ll]));
   for (const k of ['a', 'b', 'tx', 'ty']) assert.ok(Math.abs(fit[k] - piece.fit[k]) < 1e-9, k);
   assert.equal(fit.scale.toFixed(5), '0.00331'); assert.ok(Math.abs(fit.turn) < 0.5);
   const km = ([lon, lat], [lo2, la2]) => 6371 * Math.hypot((lon - lo2) * Math.cos(((lat + la2) / 2) * Math.PI / 180), lat - la2) * Math.PI / 180;
-  const off = landmarks.map((r) => km(applyFit(piece.fit, ...r.px), r.ll));
+  const off = landmarks.map((r) => km(applyFit(piece.fit, r.px[0] - 288, r.px[1]), r.ll));
   assert.equal(Math.round(Math.sqrt(off.reduce((s, d) => s + d * d, 0) / off.length) / 10), 13); // 127 km, to the nearest 10
   assert.equal(landmarks[off.indexOf(Math.max(...off))].id, 'L19');
 });
@@ -162,8 +163,8 @@ test('each chart\'s sheet and snaps in overlays.json are made from its pieces, o
   const carta2 = overlays.find((o) => o.id === 'carta-marina'), [w2, b2] = carta2.pieces.map((p) => p.fit);
   assert.equal(carta2.sheet.turn, 0);
   assert.ok(Math.abs(carta2.sheet.scale - Math.sqrt(Math.hypot(w2.a, w2.b) * Math.hypot(b2.a, b2.b))) < 1e-12);
-  assert.equal(catalan.snaps.length, 0, 'one piece: the fit itself, no snaps');
-  assert.ok(Math.abs(catalan.sheet.scale - Math.hypot(catalan.pieces[0].fit.a, catalan.pieces[0].fit.b)) < 1e-12);
+  assert.deepEqual(catalan.snaps.map((s) => s.label), ['Atlantic', 'Mali', 'Italy', 'Black Sea', 'Persia', 'Central Asia', 'India', 'Cathay'], 'a snap per page');
+  assert.equal(catalan.sheet.turn, 0, 'level, at the mean of the first and last pages\' fits');
 });
 
 // sheetOf: the turn is clockwise on the page, so a fit whose b > 0 (the x axis tilting north going east) turns anticlockwise.
@@ -256,4 +257,71 @@ test('paperMask keys the paper from the border and keeps the skin, tinted or enc
   assert.equal(at(2, 2), 0, 'paper'); assert.equal(at(20, 8), 255, 'skin'); assert.equal(at(15, 11), 255, 'tinted sea'); assert.equal(at(23, 15), 255, 'enclosed patch');
   assert.equal(at(8, 15), 128, 'the skin\'s edge px is feathered');
   assert.ok(keyed > 0.5 && keyed < 0.7, `${keyed}`);
+});
+
+// The Catalan Atlas is one sheet of eight panels, BnF sheets 5 to 12, each page cropped to its parchment and butted to the
+// last: each panel at its offset, a piece per page over exactly its panel, each piece the fit of its page's landmarks.
+test('the Catalan Atlas is eight panels butted west to east, a piece and a snap per page', () => {
+  const md = readFileSync(new URL('docs/atlas/ornaments.md', ROOT), 'utf8'), at = pageOffsets(CATALAN_PAGES);
+  assert.equal(catalan.panels.length, 8);
+  assert.equal(catalan.file, undefined, 'no one scan file: its panels');
+  catalan.panels.forEach((p, i) => {
+    assert.equal(p.x, at[i], `sheet ${CATALAN_PAGES[i].n} at its offset`);
+    assert.equal(p.width, CATALAN_PAGES[i].x1 - CATALAN_PAGES[i].x0);
+    assert.equal(p.x + p.width, catalan.panels[i + 1]?.x ?? catalan.width, 'butted to the next, the last at the sheet\'s edge');
+    assert.deepEqual([catalan.pieces[i].x0, catalan.pieces[i].x1], [p.x, p.x + p.width], 'its piece is the page');
+    assert.match(p.file, new RegExp(`^catalan-atlas-${CATALAN_PAGES[i].n}\\.jpg$`));
+  });
+  assert.equal(catalan.height, Math.max(...catalan.panels.map((p) => p.height)));
+  catalanPieces(md).forEach(([, , fit], i) => { for (const k of ['a', 'b', 'tx', 'ty']) assert.ok(Math.abs(fit[k] - catalan.pieces[i].fit[k]) < 1e-9, `sheet ${CATALAN_PAGES[i].n} ${k}`); });
+  // west to east: each page's fit puts its middle east of the last page's
+  const mids = catalan.pieces.map((p) => applyFit(p.fit, (p.x0 + p.x1) / 2, catalan.height / 2)[0]);
+  mids.slice(1).forEach((lon, i) => assert.ok(lon > mids[i], `sheet ${CATALAN_PAGES[i + 1].n} east of sheet ${CATALAN_PAGES[i].n}: ${mids}`));
+  const frame = sheetFrame(catalan, catalan.sheet);
+  assert.ok(frame.lonMin < -15 && frame.lonMax > 110, `the atlas from the Atlantic to Cathay: ${frame.lonMin} to ${frame.lonMax}`);
+});
+
+// A chart with panels draws each panel that has arrived at its offset, through the sheet's one transform; one without
+// draws its one image as before (the de la Cosa test above). The warped pieces draw each panel's part inside the piece.
+test('drawSheet and drawOverlay draw each panel that has arrived at its offset, and skip one still loading', () => {
+  const img = (w, h) => ({ width: w, height: h });
+  const paged = { id: 'paged', scale: 4, width: 300, height: 80, sheet: { lon: 0, lat: 0, scale: 0.1, turn: 0 },
+    panels: [{ x: 0, width: 100, height: 80, img: img(25, 20) }, { x: 100, width: 100, height: 72, img: null }, { x: 200, width: 100, height: 80, img: img(25, 20) }],
+    pieces: [{ x0: 0, x1: 100, fit: { a: 0.1, b: 0, tx: 0, ty: 0 } }, { x0: 100, x1: 200, fit: { a: 0.1, b: 0, tx: 0, ty: 0 } }, { x0: 200, x1: 300, fit: { a: 0.1, b: 0, tx: 0, ty: 0 } }] };
+  const record = () => { const calls = []; return [calls, new Proxy({}, { get: (_, k) => (k === 'globalAlpha' || k === 'globalCompositeOperation' ? undefined : (...a) => calls.push([k, a])), set: () => true })]; };
+  const proj = viewProjection({ lon: 15, lat: -4, zoom: 4 });
+  const [sheetCalls, g1] = record();
+  drawSheet(g1, paged, proj, paged.sheet);
+  const drawn = sheetCalls.filter((c) => c[0] === 'drawImage');
+  assert.equal(drawn.length, 2, 'the panel still loading is skipped');
+  assert.deepEqual(drawn.map((c) => c[1].slice(1)), [[0, 0, 25, 20], [50, 0, 25, 20]], 'each at its offset in drawn px, at its own size');
+  assert.equal(sheetCalls.filter((c) => c[0] === 'transform').length, 1, 'one transform for the whole sheet');
+  const [pieceCalls, g2] = record();
+  drawOverlay(g2, paged, proj, 1, { w: 1e6, h: 1e6 });
+  const warped = pieceCalls.filter((c) => c[0] === 'drawImage').map((c) => c[1].slice(1));
+  assert.deepEqual(warped, [[0, 0, 25, 20, 0, 0, 25, 20], [0, 0, 25, 20, 50, 0, 25, 20]], 'each piece draws the panel under it');
+});
+
+// loadOverlay of a chart with panels: on the page (env.onPanel) it comes back at once and each panel lands as its file
+// arrives, onPanel called for each; headless (no onPanel) it comes back with every panel landed.
+test('a chart of panels loads page by page on the page, and whole headless', async () => {
+  const list = { overlays: [{ id: 'paged-lazy', panels: [{ file: 'a.jpg', x: 0, width: 4, height: 4 }, { file: 'b.jpg', x: 4, width: 4, height: 4 }] },
+    { id: 'paged-whole', panels: [{ file: 'a.jpg', x: 0, width: 4, height: 4 }, { file: 'missing.jpg', x: 4, width: 4, height: 4 }] }] };
+  let release; const gate = new Promise((ok) => { release = ok; });
+  const landed = [];
+  const lazy = await loadOverlay('paged-lazy', { readJSON: async () => list, loadImage: async (p) => { await gate; return { width: 1, height: 1, p }; }, onPanel: (id) => landed.push(id) });
+  assert.deepEqual(lazy.panels.map((p) => p.img), [null, null], 'back before any panel lands');
+  release(); await new Promise((ok) => setTimeout(ok, 0));
+  assert.deepEqual(lazy.panels.map((p) => p.img?.p), ['packs/overlays/a.jpg', 'packs/overlays/b.jpg']);
+  assert.deepEqual(landed, ['paged-lazy', 'paged-lazy']);
+  const whole = await loadOverlay('paged-whole', { readJSON: async () => list, loadImage: async (p) => { if (p.includes('missing')) throw new Error('no'); return { width: 1, height: 1, p }; } });
+  assert.deepEqual(whole.panels.map((p) => p.img?.p ?? null), ['packs/overlays/a.jpg', null], 'every panel landed, a failed one left empty');
+});
+
+// The 1959 copy is its own chart, its rights the CC BY 3.0 attribution the Commons page gives.
+test('the 1959 copy of the Mediterranean is its own chart, titled as a copy, with its attribution', () => {
+  const copy = overlays.find((o) => o.id === 'catalan-atlas-1959-copy');
+  assert.match(copy.title, /copy of 1959/);
+  assert.match(copy.licence, /^CC BY 3\.0;.*Library of Congress, Geography and Map Division/);
+  assert.equal(copy.sheet.turn, 0, 'laid level');
 });

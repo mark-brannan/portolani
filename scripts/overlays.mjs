@@ -2,6 +2,8 @@
 // (docs/overlay/README.md). Each scan is split into pieces, each with its own fit: a similarity from
 // scan pixels to longitude and Mercator latitude, read off the chart's figures (docs/atlas/ornaments.md).
 // packs/overlays/overlays.json lists the overlays; scripts/build-overlays.mjs makes it and the image.
+// A chart of several pages (the Catalan Atlas's eight) is one sheet of `panels`: each page its own image and
+// mask at an x offset within the sheet's full-resolution px, loaded one by one and drawn as each arrives.
 
 const RAD = Math.PI / 180;
 const mercDeg = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * RAD) / 2)) / RAD; // Mercator latitude, in degrees
@@ -104,22 +106,44 @@ export function sheetView(overlay, sheet, { w = 1600, h = 1000, pad = 0.08 } = {
   return { lon: (f.lonMin + f.lonMax) / 2, lat: latOf((m0 + m1) / 2), zoom: Math.log2((k * 2 * Math.PI) / 512) };
 }
 
+// Whether there is anything of the overlay to draw: its image, or a chart of panels (drawn as they arrive).
+const drawable = (overlay) => !!(overlay?.img || overlay?.panels);
+
 // The sheet drawn whole, opaque (or at `overlay.alpha` while it fades in), over whatever the context holds, under its current transform.
+// A chart of panels draws each panel that has arrived at its offset, in the sheet's drawn px.
 export function drawSheet(g, overlay, proj, sheet) {
-  if (!overlay?.img || !sheet) return;
+  if (!drawable(overlay) || !sheet) return;
   const m = sheetTransform(overlay, proj, sheet);
   if (!m) return;
   g.save();
   g.globalAlpha = overlay.alpha ?? 1;
   g.globalCompositeOperation = 'source-over';
   g.transform(...m);
-  g.drawImage(overlay.img, 0, 0);
+  if (overlay.panels) {
+    const s = overlay.scale ?? 1;
+    for (const p of overlay.panels) if (p.img) g.drawImage(p.img, p.x / s, (p.y ?? 0) / s, p.width / s, p.height / s);
+  } else g.drawImage(overlay.img, 0, 0);
   g.restore();
+}
+
+// An image of packs/overlays/, composed with its `mask` (the scanner's paper round the skin, transparent) on a
+// canvas of the env's when it has one.
+async function maskedImage(file, maskFile, env) {
+  const img = await env.loadImage(`packs/overlays/${file}`);
+  if (!maskFile || !env.createCanvas) return img;
+  const mask = await env.loadImage(`packs/overlays/${maskFile}`), c = env.createCanvas(img.width, img.height), g = c.getContext('2d');
+  g.drawImage(img, 0, 0);
+  g.globalCompositeOperation = 'destination-in';
+  g.drawImage(mask, 0, 0, img.width, img.height);
+  return c;
 }
 
 // The overlay `id` names in packs/overlays/overlays.json, with its image; null for an id the site lacks
 // or a file that fails to load, so a missing overlay never stops the map. With a `mask` (the scanner's
 // paper round the skin, transparent) the image is the scan composed with it on a canvas of the env's.
+// A chart of `panels` comes back with each panel's `img` null, and each is filled as its file arrives: with
+// `env.onPanel` (the page) at once, calling it with the id as each panel lands, so the sheet appears page by page;
+// without (a headless render, a test) once every panel has landed. A panel that fails to load stays null.
 const loaded = new Map();
 export function loadOverlay(id, env) {
   if (!/^[a-z][a-z0-9-]*$/.test(id ?? '')) return Promise.resolve(null);
@@ -128,15 +152,13 @@ export function loadOverlay(id, env) {
       const list = await env.readJSON('packs/overlays/overlays.json');
       const o = (list?.overlays ?? []).find((v) => v.id === id);
       if (!o) return null;
-      let img = await env.loadImage(`packs/overlays/${o.file}`);
-      if (o.mask && env.createCanvas) {
-        const mask = await env.loadImage(`packs/overlays/${o.mask}`), c = env.createCanvas(img.width, img.height), g = c.getContext('2d');
-        g.drawImage(img, 0, 0);
-        g.globalCompositeOperation = 'destination-in';
-        g.drawImage(mask, 0, 0, img.width, img.height);
-        img = c;
+      if (o.panels) {
+        const out = { ...o, panels: o.panels.map((p) => ({ ...p, img: null })) };
+        const landed = Promise.all(out.panels.map((p) => maskedImage(p.file, p.mask, env).then((img) => { p.img = img; env.onPanel?.(id); }, () => {})));
+        if (!env.onPanel) await landed;
+        return out;
       }
-      return { ...o, img };
+      return { ...o, img: await maskedImage(o.file, o.mask, env) };
     })().catch(() => (loaded.delete(id), null)));
   }
   return loaded.get(id);
@@ -150,23 +172,29 @@ export function loadOverlay(id, env) {
 // between them, the more the further the chart reaches from the view's centre. A piece with a corner
 // past an azimuthal projection's horizon, or wholly off the page, is left out.
 export function drawOverlay(g, overlay, proj, opacity = 0.6, { w = 1600, h = 1600 } = {}) {
-  if (!overlay?.img || !(opacity > 0)) return;
-  const s = overlay.scale ?? 1, H = overlay.height;
+  if (!drawable(overlay) || !(opacity > 0)) return;
+  const s = overlay.scale ?? 1, H = overlay.height, ih = overlay.img ? overlay.img.height : H / s;
   g.save();
   g.globalAlpha = Math.min(1, opacity);
   g.globalCompositeOperation = 'source-over';
   for (const { x0, x1, fit } of overlay.pieces) {
-    const yb = Math.min(H, overlay.img.height * s), corners = [[x0, 0], [x1, 0], [x0, yb], [x1, yb]].map(([x, y]) => applyFit(fit, x, y));
+    const yb = Math.min(H, ih * s), corners = [[x0, 0], [x1, 0], [x0, yb], [x1, yb]].map(([x, y]) => applyFit(fit, x, y));
     if (proj.visible && !corners.every(([lon, lat]) => proj.visible(lon, lat))) continue;
     const page = corners.map(([lon, lat]) => proj.project(lon, lat));
     const xs = page.map((p) => p[0]), ys = page.map((p) => p[1]);
     if (!page.flat().every(Number.isFinite) || Math.max(...xs) < 0 || Math.min(...xs) > w || Math.max(...ys) < 0 || Math.min(...ys) > h) continue;
-    const sh = Math.min(H / s, overlay.img.height), src = [[x0 / s, 0], [x1 / s, 0], [x0 / s, sh]];
+    const sh = Math.min(H / s, ih), src = [[x0 / s, 0], [x1 / s, 0], [x0 / s, sh]];
     const m = affineThrough3(src, page.slice(0, 3));
     if (!m) continue;
     g.save();
     g.transform(...m);
-    g.drawImage(overlay.img, x0 / s, 0, (x1 - x0) / s, sh, x0 / s, 0, (x1 - x0) / s, sh);
+    if (overlay.panels) {
+      // each panel that has arrived, the part of it inside the piece, at its offset (a piece is one page of the atlas, so one panel)
+      for (const p of overlay.panels) {
+        const a = Math.max(x0, p.x), b = Math.min(x1, p.x + p.width), k = p.img && p.img.width / p.width;
+        if (p.img && a < b) g.drawImage(p.img, (a - p.x) * k, 0, (b - a) * k, p.img.height, a / s, (p.y ?? 0) / s, (b - a) / s, p.height / s);
+      }
+    } else g.drawImage(overlay.img, x0 / s, 0, (x1 - x0) / s, sh, x0 / s, 0, (x1 - x0) / s, sh);
     g.restore();
   }
   g.restore();

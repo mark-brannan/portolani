@@ -27,7 +27,11 @@ const once = (key, make) => {
   return memo.get(key);
 };
 
+// A chart of several pages (packs/overlays/overlays.json `panels`) loads page by page: each page that lands redraws
+// the map, a few landings at once in one redraw, so the sheet fills in rather than waiting for the last.
+let panelLanded = 0;
 const env = {
+  onPanel: () => { clearTimeout(panelLanded); panelLanded = setTimeout(() => render(), 120); },
   createCanvas: (w, h) => Object.assign(document.createElement('canvas'), { width: w, height: h }),
   readJSON: (p) => once(p, () => fetch(p).then((r) => { if (!r.ok) throw new Error(`${p}: ${r.status}`); return r.json(); })),
   loadImage: (p) => once(p, () => new Promise((ok, no) => {
@@ -1286,7 +1290,8 @@ const CHARTS = [
   ['Carte Pisane', 'c. 1275', both([7.4, 40.0, 8], [27.4, 36.8, 7.5]), ['Genoa', port(8.93, 44.41)]], // maker unknown; Genoa the usual attribution, Pisa only its owners
   ['Vesconte', '1311', around(25.2, 37.5, 3), ['Genoa', port(8.93, 44.41)]], // signed "de Janua"; he later worked in Venice, and where this sheet was drawn is disputed
   ['Dulcert', '1339', around(14.5, 40.0, 17), ['Majorca', port(2.65, 39.57)]], // signed in the city of Majorca, today's Palma
-  ['Catalan Atlas', '1375', both([-20.7, 42.1, 16], [-5.4, 42.3, 16]), ['Majorca', port(2.65, 39.57)], null, 'catalan-atlas'], // Cresques Abraham's workshop, Palma
+  ['Catalan Atlas', '1375', both([-20.7, 42.1, 16], [-5.4, 42.3, 16]), ['Majorca', port(2.65, 39.57)], null, 'catalan-atlas'], // Cresques Abraham's workshop, Palma; its eight map pages side by side
+  ['Catalan Atlas, Mediterranean, a copy of 1959', '1375, copied 1959', both([-20.7, 42.1, 16], [-5.4, 42.3, 16]), ['Majorca', port(2.65, 39.57)], null, 'catalan-atlas-1959-copy'], // a painted copy (Library of Congress, CC BY 3.0), not the original
   ['Chart of Jorge de Aguiar', '1492', at(2.64, 31.29, 3.18), ['Lisbon', port(-9.14, 38.72)], null, 'aguiar'], // the Beinecke Library's chart; Lisbon, Portugal's chartmaking port, the usual attribution
   ['Map of Juan de la Cosa', '1500', both([-45, 23.4, 15], [65, 23.4, 15]), ['El Puerto de Santa María', port(-6.23, 36.60)], null, 'de-la-cosa'], // signed "la fizo en el puerto de S. Mª"
   ['Carta Marina', '1539', viewOfFrame({ lonMin: 0, lonMax: 40, latMin: 54, latMax: 72 }), ['Venice', port(12.33, 45.44)], null, 'carta-marina'], // Olaus Magnus had it printed there
@@ -1418,8 +1423,8 @@ env.readJSON('packs/overlays/overlays.json').then(({ overlays }) => {
     if (!o) continue;
     const b = li.querySelector('.thumb');
     b.classList.remove('none');
-    b.replaceChildren(Object.assign(document.createElement('img'), { src: `packs/overlays/${o.file}`, alt: '', loading: 'lazy' }));
-    b.title = `${o.title}, public domain: its frame, with the scan laid over the map`;
+    b.replaceChildren(Object.assign(document.createElement('img'), { src: `packs/overlays/${o.thumb ?? o.file}`, alt: '', loading: 'lazy' })); // a chart of pages has a thumbnail strip of them all
+    b.title = `${o.title} (${o.licence}): its frame, with the scan laid over the map`;
     li.querySelector('.eye').hidden = false;
   }
   if (style.overlay && !overlays.some((o) => o.id === style.overlay)) console.warn(`overlay ${style.overlay}: not on this site`);
