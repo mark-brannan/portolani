@@ -278,7 +278,7 @@ const AGUIAR_DRAWN = ['walled', 'walled-2', 'walled-3', 'hall', 'hall-2', 'hall-
 const PLAIN = { land: null, islands: null, seas: null, rivers: null, lakes: null, mountains: null, trees: null, ink: null, parchment: null };
 const MOODS = [
   ['Pilot’s chart', { ...PLAIN, sprites: ['p:rose'], density: '0', placement: 'historic', land: 'off', rivers: 'off', lakes: 'off', mountains: 'off', trees: 'off' }],
-  ['Tasteful', { ...PLAIN, sprites: ['s:rose-catalan', 'v:rose-catalan', 'v:cartouche-frame', 'v:merman', 'v:hippocampus', 'v:galley', 'v:caravel', ...HILLS, ...AGUIAR_SCAN],
+  ['Tasteful', { ...PLAIN, sprites: ['s:rose-catalan', 'v:rose-catalan', 'v:rose-catalan-small', 'v:cartouche-frame', 'v:merman', 'v:hippocampus', 'v:galley', 'v:caravel', ...HILLS, ...AGUIAR_SCAN],
     density: '0.5', placement: 'historic', islands: '1', seas: '1', mountains: 'off' }],
   ['Woodcut', { ...PLAIN, sprites: ['p:rose', 's:cartouche-dewit', 's:serpent-a', 's:whale-b', 's:pistrix-c', 's:cete-e', 's:pare-truie', 's:pare-boar', 's:pare-lion', 's:pare-calf', 's:pare-elephant', 's:pare-bear', 's:pare-seaman', 's:pare-bishop', 'd:debry-monster', 's:ship-a', 's:ship-b', 's:ship-w-key', 's:ship-w-buss', 'd:debry-ship-a', 'd:debry-ship-b', 'd:debry-canoe', 'p:tower', 'p:tower-dome', 'p:house', 'p:church', 'p:castle', 'p:round-tower', 'p:tent'],
     density: null, placement: 'historic', land: 'off', rivers: 'marina', mountains: 'ink', trees: 'ink', ink: '1d1913', parchment: 'efe9dc' }], // density 1 and lakes marina are the defaults

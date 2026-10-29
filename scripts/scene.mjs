@@ -1492,6 +1492,12 @@ function buildScene(data, sprites, ctx, world = {}) {
     }
 
   }
+  // a rose drawn no bigger than its `-small` sibling's own size is drawn as that sibling, when the set has it:
+  // the full drawing's outer work (the Catalan rose's wind names) would leave its star too small to read
+  roseDraws = roseDraws.map((r) => {
+    const sib = roses.find((s) => s.pack === r.sprite.pack && s.id === `${r.sprite.id}-small`);
+    return sib && r.size <= sib.sizePx ? { ...r, sprite: sib } : r;
+  });
 
   if (places.size) occupied.splice(0, occupied.length, ...occupied.filter((o) => !places.has(o)));
   built = null;

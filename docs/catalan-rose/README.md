@@ -7,15 +7,18 @@ pack. Both now come from the full-size BnF sheet,
 (6454 x 15862, source `catalan-atlas-5`), where the rose's ring is 1380 px across. They were cut from a 570 px
 Commons detail, where it was about 306.
 
-![old cut, new cut, old drawing, new vector: each raw beside the sprite multiplied onto parchment, at 330 px and at the map's 110 px](steps.png)
+![old cut, new cut, old drawing, new vector, new small vector: each raw beside the sprite multiplied onto parchment, at 330 px and at 110 px](steps.png)
 
 `steps.png`, one row per sprite. Left to right: the raw scan and the sprite multiplied onto parchment at 330 px
-(the scanned sprite's stored width), then the same pair at 110 px, the width the map draws them.
+(the scanned sprite's stored width, and near the 300 px the full vector is listed at), then the same pair at
+110 px, the width the map draws the small roses.
 
 1. the old scanned cut, from the 570 px detail;
 2. the new scanned cut, from sheet 5;
 3. the old drawn SVG ("drawn, not traced"), beside the 570 px detail it was after;
-4. the new vector, beside the same frame of sheet 5, wind names and all.
+4. the new vector, `rose-catalan`, beside the same frame of sheet 5, wind names and all. Its 110 px pair is
+   what it would look like drawn small, which is why the small sprite below exists;
+5. the new small vector, `rose-catalan-small`, beside the ring's frame of sheet 5 (row 2's raw).
 
 ## Colour
 
@@ -50,7 +53,7 @@ In the raw but not in the cut, and why:
 ## The vector
 
 `packs/vivid/rose-catalan.svg`, traced from a 3200 px sRGB crop of the sheet centred on the ring. The viewBox
-(-160..160) and `sizePx` (110) are unchanged. One viewBox unit is 8.46 sheet px (0.1182 units per px), the
+(-160..160) is unchanged. One viewBox unit is 8.46 sheet px (0.1182 units per px), the
 scale at which the farthest wind name, *tramuntana* (r 1320 px), ends 4 units inside the box.
 
 **Measured geometry** (bearings clockwise from north, radii in sheet px):
@@ -91,10 +94,21 @@ cross the banners are erased only where the red is thin, because a word written 
 straight red run. The points, rings, ticks, green lines and pole star are drawn from the measurements above, not
 from the trace. The file is 40 KB.
 
-**Size on the map.** The names reach 1.9 ring radii out (*tramuntana* to r 1320), so with them in the box the ring
-is r 81.5 of 160: the star is half the sprite, about 56 px across at 110 px, against the old drawing's 103. At
-the goldens' world zoom, where roses are drawn smaller still, the star is barely seen: `goldens.jpg` shows the
-five world goldens before and after.
+**Size on the map: a full rose and a small one.** The names reach 1.9 ring radii out (*tramuntana* to r 1320),
+so with them in the box the ring is r 81.5 of 160 and the star is half the sprite: about 56 px across at 110 px,
+against the old drawing's 103. So the vector ships as a pair, as the Martines, Oliva, Brouscon, fleurs and
+Dieppe roses do:
+
+| sprite | what it holds | `sizePx` | star across at that size |
+|---|---|---|---|
+| `rose-catalan` | the whole trace, wind names and all | 300 | 153 px |
+| `rose-catalan-small` | the same drawing inside the ring (star, rings, ticks, green rhumbs, cross, pole star), no names, scaled 1.84x so the ring reaches r 150 | 110 | 103 px |
+
+The full one is the centre rose when the view's seed picks it, and the small one rings it. Wherever a rose is
+drawn no bigger than its `-small` sibling's own size and the set holds that sibling, the scene draws the sibling
+instead: at world zoom every rose is held to a twentieth of the page (80 px), so there the Catalan rose is
+always the small one. `goldens.jpg` shows the five world goldens on main, with the names in the 110 px sprite,
+and with the pair.
 
 In the raw but not in the vector, and why:
 
@@ -109,3 +123,8 @@ In the raw but not in the vector, and why:
   the ring line;
 - the finest hairlines of the lapis ornament: below the trace's tolerance;
 - the gilt trefoil island and red mark at lower right: another figure.
+
+The small vector lacks all of the above, and also:
+
+- the eight wind names in their banners: outside the ring, and at 110 px they would shrink the star to half;
+  the full sprite carries them.

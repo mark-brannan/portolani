@@ -21,6 +21,16 @@
       "style": "aguiar",
       "file": "rose-catalan.svg",
       "anchor": [0.5, 0.5],
+      "sizePx": 300,
+      "bands": [0, 1],
+      "after": "https://commons.wikimedia.org/wiki/File:Catalan_Atlas_BNF,_sheet_5.jpg"
+    },
+    {
+      "id": "rose-catalan-small",
+      "kind": "rose",
+      "style": "aguiar",
+      "file": "rose-catalan-small.svg",
+      "anchor": [0.5, 0.5],
       "sizePx": 110,
       "bands": [0, 1],
       "after": "https://commons.wikimedia.org/wiki/File:Catalan_Atlas_BNF,_sheet_5.jpg"
