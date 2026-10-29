@@ -2,7 +2,7 @@
   "id": "ibn-battuta",
   "title": "Ibn Battuta’s travels, 1325–54",
   "short": "Ibn Battuta",
-  "who": ["Ibn Battuta"],
+  "who": ["ibn-battuta"],
   "when": "1325–1354",
   "summary": "A judge from Tangier sets out for Mecca and keeps going for twenty-nine years: Cairo, Persia, East Africa, Delhi, the Maldives, China, then home by way of Granada and the Sahara to Mali.",
   "sources": ["ibn-battuta", "gibb-ibn-battuta", "orias-ibn-battuta", "rihla"],

@@ -23,40 +23,62 @@ coasting run or a route drawn by the winds).
 
 Each piece of text is written once, in `data/voyages/`: a voyage in `<id>.json` (`index.json` gives the
 menu order: chronological by start year, a voyage's own sub-voyages kept together in date order), each
-person's death in `people.json`, each source in `sources.json`. `readVoyage` in
-`scripts/voyages.mjs` puts a voyage together and `problems` beside it is the schema;
+person in `people.json`, each source in `sources.json`. `readVoyage` in `scripts/voyages.mjs` puts a
+voyage together; `problems` and `checkPerson` beside it are the schema, and
 `node scripts/check-voyages.mjs` checks every record and that each sea leg stays at sea.
 
-A person in `people.json` is keyed by the name a voyage's `who` uses. Only the death is required: a
-`death` marker, or `"unknown"`, or `"living": true` and no death for someone alive (no skull). Every other
-field is optional:
+A voyage names its people in `who`, slugs into `people.json` in order of prominence: the one has-relationship
+between the two, and the only place it is written. There is no leader field; a voyage's title says whose it is,
+and a crew member or a nameless company is a record like any other.
 
 ```json
-"Juan Sebastián Elcano": {
-  "id": "juan-sebastian-elcano",
-  "aka": ["Elkano", "del Cano"],
-  "origin": "Basque, from Getaria",
-  "role": ["navigator", "ship-owner"],
-  "voyages": ["magellan"],
-  "bio": "He brought the Victoria home in 1522, the first ship round the world, …",
-  "portrait": { "file": "Juan_Sebastián_Elcano,_anonymous_19th_century_painting.jpg",
-                "kind": "posthumous", "author": "Unknown", "date": "19th century",
-                "licence": "Public domain", "note": "Museo Naval, Madrid; …" },
-  "sources": ["https://en.wikipedia.org/wiki/Juan_Sebasti%C3%A1n_Elcano"],
-  "born": { "lon": -2.2, "lat": 43.3, "date": "1486 or 1487", "place": "Getaria",
-            "label": "Elcano born at Getaria, 1486 or 1487", "text": "His own will names Getaria. …",
-            "known": "inferred", "source": "Wikipedia: Juan Sebastián Elcano",
-            "cite": "juan-sebastian-elcano" },
-  "death": { "…": "as before" }
+"who": ["ferdinand-magellan", "juan-sebastian-elcano"]
+```
+
+A person is a record keyed by that slug. Nothing is required: what is there is checked, and what is not is
+simply unknown. `name` is the display name, `aka` other names, `bio` a paragraph, `images` Wikimedia Commons
+files credited as their file pages ask, `sources` ids into `sources.json`.
+
+```json
+"ferdinand-magellan": {
+  "name": "Ferdinand Magellan",
+  "bio": "A Portuguese officer of minor nobility who served the Crown in Asia, …",
+  "images": [{ "file": "Retrato_de_Hernando_de_Magallanes.jpg", "kind": "posthumous", "author": "Unknown",
+               "date": "1848", "licence": "Public domain", "note": "A copy after the portrait in the Naval Museum, Madrid; …" }],
+  "sources": ["ferdinand-magellan"],
+  "born":  { "lon": -7.58, "lat": 41.27, "date": "c. 1480", "place": "Sabrosa, northern Portugal",
+             "label": "Magellan born in northern Portugal, c. 1480", "text": "…", "confidence": "inferred",
+             "source": "Wikipedia: Ferdinand Magellan", "cite": "ferdinand-magellan",
+             "alternatives": [{ "lon": -8.42, "lat": 41.8, "place": "Ponte da Barca", "label": "Born at Ponte da Barca, by another account", "source": "Wikidata" }] },
+  "death": { "lon": 123.97, "lat": 10.29, "date": "27 Apr 1521", "label": "Magellan killed at Mactan",
+             "source": "Pigafetta", "cite": "battle-of-mactan", "text": "…" }
 }
 ```
 
-Only the death is required; `personProblems` in `scripts/voyages.mjs` says the rest. Births and portraits
-are data only for now: nothing draws them.
+A **marker** is one shape wherever a placed, dated, told thing is recorded: a voyage's `events` (a landfall, a
+battle, a mutiny), a person's `born` and `death`, and each of a marker's `alternatives`. Its fields are `lon`
+and `lat` (together, or neither), `date`, `place`, `label` (the tile's heading), `text` (its body), `source`
+(prose), `cite` (an id into `sources.json`, the link), `confidence` and `alternatives`. `confidence` is the leg
+word (`attested`, `inferred`, `conventional`) or `speculative` for a guessed place; a `doubt` in prose says who
+doubts the thing and why. The coordinates are where the mark stands, not a claim of exactness:
+
+| the death record has | drawn | means |
+|---|---|---|
+| lon, lat, `confidence: attested` | skull | the place is recorded |
+| lon, lat, `conventional` | skull | the mid-leg or mid-ocean convention below |
+| lon, lat, `speculative` | skull | one guess among several, `alternatives` beside it |
+| a date, a sentence, no lon and lat | nothing | nobody knows where; the record still has the date |
+
+Births and images are data only for now: nothing draws them.
+
+Two directions the record has not taken yet: a `places.json`, so a port's coordinates are written once (Genoa's
+are written five times in `data/charts/portolans.json`), and one Commons-image shape shared by the charts and
+the people.
+
 
 Two conventions the checks cannot see: where a source says a person died at sea or on the way but gives
-no place, the skull stands at the middle of the leg it must have happened on and the death's `text` says
-so; and an `alternative` is another place of death, never of burial.
+no place, the skull stands at the middle of the leg it must have happened on, its `confidence` is `conventional`
+and the death's `text` says so; and an `alternative` is another place of death, never of burial.
 
 ## What is drawn
 
