@@ -1,0 +1,30 @@
+{
+  "id": "lapita-expansion",
+  "kind": "migration",
+  "title": "The Lapita expansion, the Bismarcks to Samoa, c. 1500–800 BC",
+  "short": "Lapita",
+  "who": [],
+  "when": "c. 1500–800 BC",
+  "summary": "The makers of dentate-stamped Lapita pottery spread from the Bismarck Archipelago through the Solomons, Vanuatu and New Caledonia to Fiji, Tonga and Samoa in some six or seven centuries: the first people anywhere to settle islands beyond sight of land, sailing upwind into the trade winds.",
+  "sources": ["lapita-culture", "denham-lapita-dating", "teouma"],
+  "legs": [
+    { "from": "Mussau, the Bismarck Archipelago", "to": "Samoa", "dates": "c. 1500–800 BC", "mode": "sea", "line": "spline",
+      "confidence": "conventional", "source": "the dated Lapita sites (Denham, Bronk Ramsey and Specht 2012; Burley); the way between them is the usual drawing, not a recorded course",
+      "reach": [0, 0.85], "heads": "end",
+      "points": [[149.6,-1.45], [152.1,-4.1], [155.3,-6.2], [166.2,-10.25], [168.4,-17.75], [177.45,-17.7], [-175.15,-21.13], [-172.03,-13.83]] },
+    { "from": "Efate, Vanuatu", "to": "New Caledonia", "dates": "c. 1100 BC", "mode": "sea", "line": "spline",
+      "confidence": "conventional", "source": "the Lapita sites of New Caledonia (Foué, Koné), a side branch off the main stream",
+      "reach": [0.55, 0.8], "heads": "end",
+      "points": [[168.4,-17.75], [164.8,-21.1]] }
+  ],
+  "events": [
+    { "kind": "waypoint", "lon": 149.6, "lat": -1.45, "date": "c. 1500–1300 BC", "label": "Talepakemalai, Mussau", "source": "Denham, Bronk Ramsey and Specht 2012", "cite": "denham-lapita-dating", "text": "The oldest Lapita site known. The stamped pottery appears here with no local forerunner. Whether it begins nearer 1500 or 1300 BC is still argued." },
+    { "kind": "waypoint", "lon": 152.1, "lat": -4.1, "date": "c. 1350 BC", "label": "Watom, off New Britain", "source": "Denham, Bronk Ramsey and Specht 2012", "cite": "denham-lapita-dating", "text": "Early Lapita settlement in the Bismarcks. Whether this first stage was a fast \"express train\" out of island Southeast Asia or a slow mingling with the people already there is one of the long arguments of Pacific archaeology." },
+    { "kind": "waypoint", "lon": 166.2, "lat": -10.25, "date": "c. 1200 BC", "label": "Nenumbo, Reef Islands", "source": "Lapita culture", "cite": "lapita-culture", "text": "Past the main Solomons into Remote Oceania, the islands nobody had reached before. From here on, every island was settled across open sea." },
+    { "kind": "waypoint", "lon": 168.4, "lat": -17.75, "date": "c. 1200–1000 BC", "label": "Teouma, Efate", "source": "Teouma", "cite": "teouma", "text": "A Lapita cemetery with headless burials, the skulls taken away and some later set on the chests of others. The ancient DNA from it shows the first settlers were mostly of East Asian ancestry; Papuan ancestry came later." },
+    { "kind": "waypoint", "lon": 164.8, "lat": -21.1, "date": "c. 1100 BC", "label": "Foué and Koné, New Caledonia", "source": "Lapita culture", "cite": "lapita-culture", "text": "Lapita reached New Caledonia from Vanuatu. The culture takes its name from a site here, Lapita near Koné, dug in 1952." },
+    { "kind": "waypoint", "lon": 177.45, "lat": -17.7, "date": "c. 1100 BC", "label": "Natunuku and Bourewa, Viti Levu", "source": "Lapita culture", "cite": "lapita-culture", "text": "The first settlement of Fiji, across some 850 km of open sea east of Vanuatu." },
+    { "kind": "waypoint", "lon": -175.15, "lat": -21.13, "date": "c. 900–880 BC", "label": "Nukuleka, Tongatapu", "source": "Lapita culture", "cite": "lapita-culture", "text": "The first known settlement in Polynesia. A date of 1500 BC for Fiji or Tonga, still met with, is too early." },
+    { "kind": "waypoint", "lon": -172.03, "lat": -13.83, "date": "c. 800 BC", "label": "Mulifanua, ʻUpolu, Samoa", "source": "Lapita culture", "cite": "lapita-culture", "text": "The one Lapita site in Samoa, drowned under the ferry berth and found when it was dredged. Here the stream stopped for nearly two thousand years." }
+  ]
+}
