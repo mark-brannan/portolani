@@ -282,3 +282,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261029t113206z
 - link-only rows get an enabled 'link' button; a ship without a thumb gets 'open' Undo: revert the button change in ba785ff ([#271](https://github.com/mark-brannan/portolani/pull/271))
+
+### 20261029t182005z
+- modern city on a POI's spot means a town of today on the same site; Tyre and Carthage get the town glyph, Berenike the ruin Undo: edit docs/spec/design.md ([#274](https://github.com/mark-brannan/portolani/pull/274))
