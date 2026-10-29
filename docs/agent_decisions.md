@@ -279,3 +279,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261029t113150z
 - world.json credit: the name Commons gives (uploader, or the source museum for Ino) Undo: revert ba785ff's world.json credit lines ([#271](https://github.com/mark-brannan/portolani/pull/271))
+
+### 20261029t113206z
+- link-only rows get an enabled 'link' button; a ship without a thumb gets 'open' Undo: revert the button change in ba785ff ([#271](https://github.com/mark-brannan/portolani/pull/271))
