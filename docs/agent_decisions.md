@@ -294,3 +294,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261029t195346z
 - Samudra-Quanzhou drawn speculative whole, since the leg carries the Tawalisi doubt Undo: split the leg at Tawalisi ([#278](https://github.com/mark-brannan/portolani/pull/278))
+
+### 20261029t195417z
+- the doubt cloud is a fixed ~88x66 px at every zoom Undo: scale CLOUD_LOBES by zoom ([#278](https://github.com/mark-brannan/portolani/pull/278))
