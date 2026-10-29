@@ -22,7 +22,10 @@ for (const file of files) {
       assert.ok(c.title && c.licence && c.page, `${c.id}: title, licence and page`);
       assert.ok(['ship', 'link'].includes(c.status), `${c.id}: status ${c.status}`);
       if (c.status === 'link') assert.ok(c.reason, `${c.id}: a link-only chart says why`);
-      if (c.bbox) assert.ok(c.bbox.length === 4 && c.bbox[0] < c.bbox[1] && c.bbox[2] < c.bbox[3], `${c.id}: bbox [lonMin, lonMax, latMin, latMax]`);
+      if (c.bbox) {
+        const [x0, x1, y0, y1] = c.bbox;
+        assert.ok(c.bbox.length === 4 && x0 < x1 && y0 < y1 && x0 >= -180 && x1 <= 180 && y0 >= -90 && y1 <= 90, `${c.id}: bbox [lonMin, lonMax, latMin, latMax] on the globe`);
+      }
     }
   });
 
@@ -31,6 +34,10 @@ for (const file of files) {
       assert.match(c.original, COMMONS, c.id);
       assert.match(c.display, COMMONS, c.id);
       if (c.thumb) assert.match(c.thumb, COMMONS, c.id);
+      assert.ok(c.width > 0 && c.height > 0, `${c.id}: dimensions`);
+      const at = c.original.split('/commons/')[1].split('/').slice(0, 2).join('/');
+      if (Math.max(c.width, c.height) > 3840) assert.ok(c.display.includes(`/thumb/${at}/`) && c.display.includes('/3840px-'), `${c.id}: display is a 3840 px rendering of original`);
+      else assert.equal(c.display, c.original, `${c.id}: a scan within 3840 px is its own display`);
     }
   });
 }
