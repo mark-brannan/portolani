@@ -321,3 +321,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261029t223625z
 - No skull for the predecessor: never seen again, not recorded dead; portrait kind near Undo: add death lon/lat mid-leg, conventional ([#284](https://github.com/mark-brannan/portolani/pull/284))
+
+### 20261029t231020z
+- The branch's 'none' picture kind is not in main's checkPerson; its pictures are 'scene' Undo: set the kind back in data/voyages/people.json ([#280](https://github.com/mark-brannan/portolani/pull/280))
