@@ -324,3 +324,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261029t231020z
 - The branch's 'none' picture kind is not in main's checkPerson; its pictures are 'scene' Undo: set the kind back in data/voyages/people.json ([#280](https://github.com/mark-brannan/portolani/pull/280))
+
+### 20261029t231416z
+- Juan de la Cosa goes in Columbus 1492's who, keeping main's every-person-named-by-a-voyage test Undo: remove juan-de-la-cosa from columbus.json who ([#280](https://github.com/mark-brannan/portolani/pull/280))
