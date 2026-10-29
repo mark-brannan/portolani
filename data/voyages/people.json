@@ -63,8 +63,8 @@
       "date": "c. 1254",
       "place": "Venice",
       "label": "Marco Polo born at Venice, c. 1254",
-      "text": "Born about 1254 in Venice.",
-      "doubt": "The archives give neither the day nor the place; claims for Korčula and Constantinople have not won scholars over.",
+      "text": "Born about 1254 in Venice; no document of the time records the day.",
+      "doubt": "Korčula, an island off the Dalmatian coast, says he was born there and shows visitors a house it calls his; others have put his birth in Constantinople.",
       "source": "Wikipedia, Marco Polo",
       "cite": "marco-polo",
       "confidence": "conventional"
@@ -237,7 +237,7 @@
       "place": "Genoa",
       "label": "Columbus born at Genoa, between Aug and Oct 1451",
       "text": "Born between 25 August and 31 October 1451 in the Republic of Genoa.",
-      "doubt": "Genoa is the majority view among several rival claims.",
+      "doubt": "Calvi in Corsica still marks a house as his birthplace, and Catalans, Galicians and Portuguese have each argued he was one of their own.",
       "source": "Wikipedia, Christopher Columbus",
       "confidence": "conventional",
       "cite": "christopher-columbus"
@@ -582,7 +582,7 @@
       "source": "Wikipedia, Esteban de Dorantes",
       "cite": "esteban-de-dorantes",
       "text": "He went ahead of Fray Marcos de Niza and was held overnight without food or water, then attacked and killed at Cíbola. The Zuni may have thought him a bad man; Castañeda says he asked for turquoise and women; Alarcón says he boasted of armed men behind him; Sancho Dorantes says he was shot through with arrows.",
-      "doubt": "In 2002 Juan Francisco Maura argued he was not killed but stayed among the Zuni."
+      "doubt": "In 2002 the historian Juan Francisco Maura argued that Esteban was never killed at all: the story of his death was a ruse that set a slave free, and he lived on among the Zuni."
     }
   }
 }

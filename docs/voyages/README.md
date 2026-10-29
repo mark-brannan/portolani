@@ -65,13 +65,12 @@ that binds is the drawing's: a death with `lon` and `lat` is drawn, so it carrie
 ```
 
 A marker is one shape for `events`, `born`, `death` and `alternatives`; the fields are in the `checkPerson`
-header.
+header. Here is Narváez's death, where nobody recorded the place, so the gap is told in `text`:
 
 ```json
 "death": { "lon": -89.31, "lat": 28.61, "date": "1528",
            "label": "Narváez lost at sea, 1528", "confidence": "inferred",
-           "doubt": "Nobody recorded where. The skull stands at the middle of the boat leg, …",
-           "text": "He is believed to have been swept out to sea in a storm …",
+           "text": "He is believed to have been swept out to sea in a storm …; nobody recorded where. …",
            "source": "Wikipedia, Narváez expedition", "cite": "narvaez-expedition" }
 ```
 
@@ -82,7 +81,7 @@ header.
 | `lon` and `lat` | a skull | its `confidence` says how the place is known |
 | a date and a sentence, no `lon` and `lat` | nothing | nobody knows where; the record keeps the date |
 
-Births are data only for now: nothing draws them.
+Births and images are data only for now: nothing draws them.
 
 ### Confidence
 

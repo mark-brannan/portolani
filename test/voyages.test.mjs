@@ -87,7 +87,7 @@ const alt = { lon: 2, lat: 2, place: 'Elsewhere', label: 'Died elsewhere', sourc
 test('a voyage names each of its people once', () => {
   const v = base();
   v.who = ['a-b', 'a-b'];
-  assert.ok(problems(v).includes('who: each person once'));
+  assert.ok(problems(v).includes('who: distinct slugs into people.json'));
 });
 
 test('a death may list alternative places, each with a position, a place, a label and a source', () => {
