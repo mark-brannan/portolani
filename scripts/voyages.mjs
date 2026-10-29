@@ -7,7 +7,21 @@
 export const LINES = ['rhumb', 'great-circle', 'spline'];
 export const CONFIDENCES = ['attested', 'inferred', 'conventional'];
 export const MODES = ['sea', 'land'];
-export const EVENT_KINDS = ['death', 'landfall', 'event'];
+export const EVENT_KINDS = ['death', 'landfall', 'event', 'waypoint'];
+// What a record draws: a `voyage` (the default) is a course sailed by named people, each leg a line dashed by its
+// confidence; a `migration` is the spread of a people, drawn as a stream of chevrons over a soft ribbon (scene.mjs).
+// A migration names nobody (`who` may be empty), its places are `waypoint` events whose dates show in their tiles,
+// and each leg says how far along the spread it runs (`reach`, 0 at the start to 1 at the furthest front: the
+// chevrons shrink toward the front), which ends carry a head (HEADS) and whether it is a long `pause`, drawn fainter.
+// A branch is a leg that starts on another leg's waypoint. Its line runs from settlement to settlement, island to
+// island, so it is not held to the sea.
+// Drawn (scene.mjs) as chevrons in the record's ink pointing the way the people went, shrinking toward the front
+// with an ink chevron at each head, over one light, wide, soft-edged ribbon of one width all along (a moving frame
+// strokes it without the blur); a two-headed leg's chevrons point out from its middle, a pause has a dotted trail
+// and no chevrons, nothing is dashed or lettered, the chevrons follow the line weight, and a leg is cut at the seam.
+export const KINDS = ['voyage', 'migration'];
+export const HEADS = ['end', 'both', 'none'];
+export const isMigration = (v) => v?.kind === 'migration';
 // how each confidence is stroked, a setLineDash pattern in px at the stroke's width
 export const DASHES = { attested: [], inferred: [9, 5], conventional: [2, 4] };
 export const STEP_KM = 25; // the path's sample spacing, close enough that a strait is followed and a curve reads smooth
@@ -118,24 +132,33 @@ export function legPath(leg) {
 
 // The path cut where it crosses the seam of a map centred on `lonCenter` (the meridian opposite it),
 // and where `visible` (an azimuthal projection's horizon) refuses a point: pieces of wrapped
-// [lon, lat], each one drawable as a single stroke.
+// [lon, lat], each one drawable as a single stroke. A third value on a point (a migration's reach) is kept.
 export function splitAtSeam(path, lonCenter = 0, visible = null) {
   const pieces = [];
   let piece = [], prev = null;
-  for (const [lon, lat] of path) {
-    const d = fromCentre(lon - lonCenter);
+  for (const p of path) {
+    const [lon, lat] = p, d = fromCentre(lon - lonCenter);
     const cut = (prev != null && Math.abs(d - prev) > 180) || (visible && !visible(lon, lat));
     if (cut && piece.length) { pieces.push(piece); piece = []; }
-    if (!visible || visible(lon, lat)) piece.push([wrapLon(lon), lat]);
+    if (!visible || visible(lon, lat)) piece.push(p.length > 2 ? [wrapLon(lon), lat, p[2]] : [wrapLon(lon), lat]);
     prev = d;
   }
   if (piece.length) pieces.push(piece);
   return pieces.filter((p) => p.length > 1);
 }
 
+// A migration leg's dense path with each point's share of the way along it, by distance: [lon, lat, 0 … 1]
+export function reachPath(leg) {
+  const path = legPath(leg), c = [0];
+  for (let i = 1; i < path.length; i++) c.push(c[i - 1] + distanceKm(path[i - 1], path[i]));
+  const L = c.at(-1) || 1;
+  return path.map(([lon, lat], i) => [lon, lat, c[i] / L]);
+}
+
 // Every sea leg's samples, for the land test: [{ leg, i, lon, lat }], longitudes wrapped.
 export function seaSamples(voyage) {
   const out = [];
+  if (isMigration(voyage)) return out;
   voyage.legs.forEach((leg, i) => {
     if (leg.mode !== 'sea') return;
     for (const [lon, lat] of legPath(leg)) out.push({ leg, i, lon: wrapLon(lon), lat });
@@ -152,7 +175,9 @@ export function problems(v) {
   const need = (ok, msg) => { if (!ok) out.push(msg); };
   need(typeof v.id === 'string' && /^[a-z][a-z0-9-]*$/.test(v.id), 'id: lower-case slug');
   for (const k of ['title', 'short', 'when', 'summary']) need(typeof v[k] === 'string' && v[k].length, `${k}: a string`);
-  need(Array.isArray(v.who) && v.who.length, 'who: the named people');
+  need(v.kind === undefined || KINDS.includes(v.kind), `kind: one of ${KINDS}`);
+  const migration = isMigration(v);
+  need(Array.isArray(v.who) && (v.who.length || migration), 'who: the named people');
   need(Array.isArray(v.sources) && v.sources.length && v.sources.every((s) => s.title && s.url), 'sources: [{ title, url }]');
   need(Array.isArray(v.legs) && v.legs.length, 'legs: at least one');
   for (const [i, leg] of (v.legs ?? []).entries()) {
@@ -162,11 +187,17 @@ export function problems(v) {
     need(LINES.includes(leg.line), `${at}: line one of ${LINES}`);
     need(CONFIDENCES.includes(leg.confidence), `${at}: confidence one of ${CONFIDENCES}`);
     need(typeof leg.source === 'string' && leg.source.length, `${at}: a source`);
+    if (migration) {
+      need(Array.isArray(leg.reach) && leg.reach.length === 2 && leg.reach.every((r) => Number.isFinite(r) && r >= 0 && r <= 1) && leg.reach[0] <= leg.reach[1], `${at}: reach [from, to], 0 to 1, from no more than to`);
+      need(HEADS.includes(leg.heads), `${at}: heads one of ${HEADS}`);
+      need(leg.pause === undefined || typeof leg.pause === 'boolean', `${at}: pause, when given, true or false`);
+    }
     need(Array.isArray(leg.points) && leg.points.length >= 2 && leg.points.every((p) => Array.isArray(p) && p.length === 2 && Math.abs(p[0]) <= 180 && Math.abs(p[1]) <= 90), `${at}: points [[lon, lat], ...], two or more`);
   }
   need(Array.isArray(v.events), 'events: an array');
   for (const [i, e] of (v.events ?? []).entries()) {
     need(EVENT_KINDS.includes(e.kind), `event ${i}: kind one of ${EVENT_KINDS}`);
+    if (e.kind === 'waypoint') need(migration && typeof e.date === 'string' && e.date.length, `event ${i}: a waypoint belongs to a migration and has a date`);
     need(Number.isFinite(e.lon) && Number.isFinite(e.lat) && Math.abs(e.lon) <= 180 && Math.abs(e.lat) <= 90, `event ${i}: lon and lat`);
     need(typeof e.label === 'string' && e.label.length, `event ${i}: a label`);
     need(typeof e.source === 'string' && e.source.length, `event ${i}: a source`);

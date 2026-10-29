@@ -52,4 +52,23 @@ The overlay rides in the link as `voyages=<id>[:rrggbb],...`, in the order chose
 after its id (`voyages=magellan,columbus,da-gama:16727a`), and `voyagewidth=<px>` when the weight is
 not Standard. An older `voyage=<id>` link still opens, as a list of one.
 
+## Migrations
+
+A record with `"kind": "migration"` is the spread of a people rather than a course sailed by named ones:
+`lapita-expansion` (the Bismarcks to Samoa, c. 1500–800 BC) and `east-polynesia-settlement` (the long pause,
+then the burst across the Polynesian Triangle, c. 1000–1300). `who` may be empty, and each settled place is a
+`waypoint` event whose tile carries its date and story. How it is drawn is in the header of `scripts/voyages.mjs`.
+
+A migration's legs add three fields to the usual ones:
+
+| Field | Values | What it sets |
+| --- | --- | --- |
+| `reach` | `[0, 0.85]` | how far along the whole spread the leg runs: 0 at the start, 1 at the furthest front |
+| `heads` | `end`, `both`, `none` | where the ink chevrons go; `both` for a leg whose direction is unknown |
+| `pause` | `true` | a long wait, drawn fainter with a dotted trail |
+
+A branch is a leg that starts on another leg's waypoint.
+
+![The Lapita expansion in red and the settlement of East Polynesia in blue](migrations.jpg)
+
 ![Zheng He's skull at the middle of the Calicut–Malacca leg, its tile open, the Calicut alternative beside the coast](zheng-he-alternatives.jpg)
