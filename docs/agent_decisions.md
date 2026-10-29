@@ -270,3 +270,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261029t100145z
 - thumbnails 96x66, the brief's floor Undo: edit public/page.js or index.html ([#267](https://github.com/mark-brannan/portolani/pull/267))
+
+### 20261029t100158z
+- fade 0.5 s after landing, not during the flight Undo: edit public/page.js or index.html ([#267](https://github.com/mark-brannan/portolani/pull/267))
