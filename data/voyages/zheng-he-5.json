@@ -5,7 +5,7 @@
   "who": ["Zheng He"],
   "when": "1417–1419",
   "summary": "The fleet takes the foreign ambassadors home, with squadrons to Aden and down the Swahili coast to Mogadishu, Brava and Malindi, the African reach the Ming shi records.",
-  "sources": ["zheng-he", "mao-kun-map", "ming-shi"],
+  "sources": ["zheng-he", "mao-kun-map", "ming-shi", "ming-treasure-voyages"],
   "legs": [
     { "sameAs": "zheng-he/nanjing-liujiagang", "dates": "1417" },
     { "sameAs": "zheng-he/liujiagang-changle", "dates": "1417" },
@@ -31,5 +31,9 @@
     { "sameAs": "zheng-he/calicut-malacca", "dates": "1419" },
     { "sameAs": "zheng-he/malacca-champa", "dates": "1419" },
     { "sameAs": "zheng-he-1/champa-liujiagang", "dates": "Aug 1419" }
+  ],
+  "events": [
+    { "kind": "event", "lon": 45.03, "lat": 12.8, "date": "Jan – Mar 1419", "label": "Aden: the fleet at the Rasulid court", "source": "Tarih al-Yaman, via Ming treasure voyages (Wikipedia)", "cite": "ming-treasure-voyages", "text": "A Yemeni chronicle records the Chinese ships on the Aden coast in January 1419, their envoys staying at the Rasulid capital of Ta'izz until March. It is one of the few accounts of the voyages written by the people they visited." },
+    { "kind": "landfall", "lon": 40.12, "lat": -3.22, "date": "1418–19", "label": "Malindi: lions, zebras and giraffes for the emperor", "source": "Ming treasure voyages (Wikipedia)", "cite": "ming-treasure-voyages", "text": "The farthest the fleet came: the East African coast, by Mogadishu, Brava and Malindi. The envoys who came back with it in 1419 brought lions, leopards, ostriches, zebras, rhinoceroses and giraffes, a sensation at the Ming court, where a giraffe was taken for the qilin of good omen." }
   ]
 }

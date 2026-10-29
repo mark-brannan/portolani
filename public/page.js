@@ -48,7 +48,7 @@ const canvas = $('map'), ctx = canvas.getContext('2d');
 // cards beside the map, not on the sea.
 const phone = matchMedia('(max-width: 520px)');
 
-const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: 5, regions: 'latin', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyages: [], voyageWidth: VOYAGE_WIDTH, ...OVERLAY_DEFAULTS, cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER, overlap: DEFAULT_OVERLAP };
+const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: 6, regions: 'latin', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyages: [], voyageWidth: VOYAGE_WIDTH, ...OVERLAY_DEFAULTS, cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER, overlap: DEFAULT_OVERLAP };
 
 // ---------------------------------------------------------------- the sprites on offer
 
@@ -81,7 +81,7 @@ function viewFromHash() {
   const at = v && Object.values(v).every(Number.isFinite) ? v : DEFAULT_VIEW; // e.g. #map=1.2.3/40/5
   return clampView({ ...at, projection: q.get('projection') });
 }
-const zoomOf = (v, dflt) => (v === '1' ? dflt : Number.isFinite(Number(v)) ? Math.max(0, Math.min(MAX_ZOOM, Math.round(Number(v)))) : dflt); // '1' is an older link's checked box
+const zoomOf = (v, dflt) => (v !== '' && Number.isFinite(Number(v)) ? Math.max(0, Math.min(MAX_ZOOM, Math.round(Number(v)))) : dflt);
 const hex = (v, fallback) => (/^[0-9a-f]{3}$|^[0-9a-f]{6}$/i.test(v ?? '') ? `#${v.length === 3 ? [...v].map((c) => c + c).join('') : v}`.toLowerCase() : fallback);
 function styleFromHash() {
   const q = hashParams(), density = Number(q.get('density') ?? DEFAULTS.density);
@@ -91,7 +91,7 @@ function styleFromHash() {
     density: density >= 0 && density <= 2 ? density : DEFAULTS.density,
     names: q.get('names') !== '0',
     rhumb: q.get('rhumb') !== '0',
-    // older links: continents=1 / 0, and regions=off
+    // older links: continents=0, and regions=off
     continentsZoom: q.has('continents') ? zoomOf(q.get('continents'), DEFAULTS.continentsZoom) : DEFAULTS.continentsZoom,
     regions: ['latin', 'english'].includes(q.get('regions')) ? q.get('regions') : DEFAULTS.regions,
     regionsZoom: q.get('regions') === 'off' ? 0 : q.has('regionszoom') ? zoomOf(q.get('regionszoom'), DEFAULTS.regionsZoom) : DEFAULTS.regionsZoom,
@@ -757,12 +757,12 @@ const outside = (t) => { const d = openDrawer(); return d && t instanceof Node &
 addEventListener('pointerdown', (e) => { if (outside(e.target) && !(phone.matches && e.target === canvas && !openDrawer().classList.contains('menu'))) setDrawer(false); });
 addEventListener('focusout', (e) => { if (e.relatedTarget && outside(e.relatedTarget)) setDrawer(false); }); // tabbed out; a click that focuses nothing has no relatedTarget
 
-// Reset: every control back to its default, the place and the drawer's layout kept. The hash holds the whole
+// Reset: every control back to its default, the view (place and projection) and the drawer's layout kept. The hash holds the whole
 // style, so a hash with only the view is the default style; the hashchange handler below redraws from it.
 $('reset').addEventListener('click', () => {
-  const m = hashParams().get('map');
+  const m = hashParams().get('map'), p = hashParams().get('projection');
   $('shareUrl').hidden = true; $('shareNote').textContent = '';
-  location.hash = [m && `map=${m}`, layout !== 'default' && `layout=${layout}`].filter(Boolean).join('&');
+  location.hash = [m && `map=${m}`, p && `projection=${p}`, layout !== 'default' && `layout=${layout}`].filter(Boolean).join('&');
 });
 // Copy link: the hash is kept current by writeHash. Where the clipboard is refused (an insecure page,
 // a denied permission) the link is put in a box, selected, to copy by hand.
@@ -1125,7 +1125,7 @@ canvas.addEventListener('wheel', (e) => {
 // ---------------------------------------------------------------- the tile
 
 // A click or tap on a point of interest opens a small tile beside it with what there is to know: its heading,
-// date, text and source. Nothing is lettered beside the mark itself. Today the points of interest are the
+// date, text and source, and for a voyage's mark a link to the source it cites. Nothing is lettered beside the mark itself. Today the points of interest are the
 // voyages' events (scripts/scene.mjs voyageMarks); the tile takes any { title, date, text, source }.
 // It shuts on the next touch of the map, on Esc, on its own close button, or when the map moves.
 const TAP_SLOP = 8, TAP_REACH = 22; // CSS px, so a finger is as forgiving on a phone's small canvas as a mouse on a wide one: a touch that stays within the slop is a tap; a mark takes a tap within the reach
@@ -1140,7 +1140,7 @@ function fillTile(t) {
   const head = part('tile-title', t.title);
   const meta = part('tile-date', [t.date, t.alternative ? 'another account' : null].filter(Boolean).join(' · '));
   const text = part('tile-text', t.text);
-  if (t.link) { // a note on the Carta Marina: what was drawn, what was there, and the source as a link
+  if (t.link) { // a note on a laid chart: what was drawn, what was there, and the source as a link
     const labelled = (label, body) => { const p = part('tile-text', body); const b = document.createElement('strong'); b.textContent = `${label} `; p.prepend(b); return p; };
     const a = document.createElement('a');
     a.href = t.link; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = t.source;
@@ -1150,7 +1150,13 @@ function fillTile(t) {
     return;
   }
   const source = part('tile-source', t.source && `Source: ${t.source}`);
-  tileEl.replaceChildren(close, ...[head, meta, text, source].filter(Boolean));
+  let more = null;
+  if (t.cited) { // a voyage's event or death: the source it cites, as a link out
+    const a = document.createElement('a');
+    a.href = t.cited.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = t.cited.title;
+    more = document.createElement('p'); more.className = 'tile-source'; more.append('Read: ', a);
+  }
+  tileEl.replaceChildren(close, ...[head, meta, text, source, more].filter(Boolean));
   tileEl.setAttribute('aria-label', t.title ?? 'Point of interest');
 }
 // every listed place with a tile, once by name, at the view its button flies to
@@ -1189,8 +1195,9 @@ const around = (lon, lat, r) => viewOfFrame({ lonMin: lon - r, lonMax: lon + r, 
 const at = (lon, lat, zoom) => ({ lon, lat, zoom });
 const both = (a, b) => viewOfFrame({ lonMin: a[0] - a[2], lonMax: b[0] + b[2], latMin: Math.min(a[1] - a[2], b[1] - b[2]), latMax: Math.max(a[1] + a[2], b[1] + b[2]) }); // two centres, west then east, on one sheet
 const CAPTION = 'notes to come'; // the line under an entry until its caption is written
-// A group: [heading, rows, sub] (an empty heading for none, sub for a heading under the one before);
-// a row: [name, view, title, note, text], the title the cartouche's when it differs from the name.
+// A group: [heading, rows, open] (an empty heading for none); a heading folds its rows, shut unless open;
+// a row: [name, view, title, text], the title the cartouche's when it differs from the name. A row with a tile
+// in SIGHT_TILES takes the line under its name (the tile's date) and its caption (the tile's text) from it.
 const ANCHORAGES = [
   ['', [
     ['Home: the Mediterranean', DEFAULT_VIEW, 'The Mediterranean'],
@@ -1204,55 +1211,59 @@ const ANCHORAGES = [
     ['The Malay archipelago', viewOfFrame({ lonMin: 95, lonMax: 135, latMin: -11, latMax: 8 })],
     ['The Caribbean', viewOfFrame({ lonMin: -90, lonMax: -58, latMin: 8, latMax: 28 })],
     ['The Pacific', viewOfFrame({ lonMin: 150, lonMax: 280, latMin: -47, latMax: 30 })], // Hawai'i, Aotearoa and Rapa Nui, across the date line: 280 is 80°W
-  ]],
+  ], 'open'],
   ['Seas and islands', [
     ['Guam', at(144.79, 13.44, 7)], // Islas de los Ladrones
     ['Cebu', at(123.89, 10.32, 7)],
     ['Maluku Islands', at(128, -3, 5)],
     ['Solomon Islands', at(160, -9, 5)],
     ['Marquesas Islands', at(-140, -9, 6)],
-  ]],
+    ['Pukapuka Atoll', at(-138.8, -14.82, 6.5), 'Pukapuka'], // Magellan's San Pablo, 1521 (the Tuamotu one)
+    ['Pitcairn Islands', viewOfFrame({ lonMin: -131.3, lonMax: -124.2, latMin: -26.6, latMax: -22.4 })], // all four; the latitudes padded so the longitudes bind
+  ], 'open'],
 ];
 // the places that are lettered on the chart whatever the city data holds are in scripts/pois.mjs
 const port = (lon, lat) => at(lon, lat, 7.5);
+const CHARTMAKING = 'charts made here'; // after a port's date, for a city known more for its mapmakers
 const SIGHTS = [
-  ['Where the charts were made', [
-    ['Genoa', port(8.93, 44.41), null, 'Vesconte, 1311'],
-    ['Venice', port(12.33, 45.44), null, 'Pizzigani, 1367'],
-    ['Majorca', at(3.0, 39.6, 7), null, 'Cresques, 1375'],
-    ['Lisbon', port(-9.14, 38.72), null, 'the Armazém'],
-    ['Seville', port(-5.98, 37.39), null, 'Casa de Contratación'],
-    ['Dieppe', port(1.08, 49.93), null, 'Vallard, 1547'],
-  ]],
-  // three eras of six ports, most of them outside Europe
-  ['Noteworthy ports', []],
+  // the noteworthy ports, in four eras of six, most of them outside Europe; a port whose name has changed lists
+  // as its title, the historic name first and today's in brackets
   ['The ancient world', [
-    ['Alexandria', port(29.89, 31.20), null, 'Ptolemaic; the Pharos'],
-    ['Tyre', port(35.20, 33.27), null, 'Phoenician'],
-    ['Carthage', port(10.33, 36.84), null, 'Phoenician, then Punic'],
-    ['Ostia', port(12.29, 41.76), null, "Rome's harbour"],
-    ['Berenike', port(35.47, 23.91), null, 'Red Sea, for India'],
-    ['Barygaza', port(72.99, 21.71), 'Barygaza (Bharuch)', 'in the Periplus'],
-  ], 'sub'],
+    ['Alexandria', port(29.89, 31.20)],
+    ['Tyre', port(35.20, 33.27)],
+    ['Carthage', port(10.33, 36.84)],
+    ['Ostia', port(12.29, 41.76)],
+    ['Berenike', port(35.47, 23.91)],
+    ['Barygaza', port(72.99, 21.71), 'Barygaza (Bharuch)'],
+  ]],
+  ['The medieval Indian Ocean and Asia', [
+    ['Siraf', port(52.33, 27.67)],
+    ['Aden', port(45.03, 12.78)],
+    ['Kilwa', port(39.52, -8.96), 'Kilwa Kisiwani'],
+    ['Calicut', port(75.78, 11.25), 'Calicut (Kozhikode)'],
+    ['Malacca', port(102.25, 2.19), 'Malacca (Melaka)'],
+    ['Quanzhou', port(118.68, 24.87)],
+  ]],
   ['The age of discovery', [
-    ['Lisbon', port(-9.14, 38.72), null, 'the Carreira da Índia'], // also a chart city above, on purpose: the same view, so Go lands in one place
-    ['São Jorge da Mina', port(-1.35, 5.08), 'São Jorge da Mina (Elmina)', 'fort, 1482; the Atlantic slave trade'],
-    ['Goa', port(73.91, 15.50), null, "Portugal's Asian capital"],
-    ['Manila', port(120.98, 14.60), null, 'the galleons, 1571'],
-    ['Acapulco', port(-99.88, 16.86), null, 'the galleons, 1565'],
-    ['Batavia', port(106.83, -6.18), 'Batavia (Jakarta)', 'the VOC, 1619'],
-  ], 'sub'],
+    ['Lisbon', port(-9.14, 38.72)], // also where charts were made
+    ['São Jorge da Mina', port(-1.35, 5.08), 'São Jorge da Mina (Elmina)'],
+    ['Goa', port(73.91, 15.50)],
+    ['Manila', port(120.98, 14.60)],
+    ['Acapulco', port(-99.88, 16.86)],
+    ['Batavia', port(106.83, -6.18), 'Batavia (Jakarta)'],
+    ['Seville', port(-5.98, 37.39), null, null, CHARTMAKING],
+    ['Genoa', port(8.93, 44.41), null, null, CHARTMAKING],
+    ['Venice', port(12.33, 45.44), null, null, CHARTMAKING],
+    ['Majorca', at(3.0, 39.6, 7), null, null, CHARTMAKING],
+    ['Dieppe', port(1.08, 49.93), null, null, CHARTMAKING],
+  ], 'open'],
   ['The modern world', [
-    ['Suez', port(32.55, 29.97), null, 'the canal, 1869'],
-    ['Panama', port(-79.53, 8.97), null, 'the canal, 1914'],
-    ['Singapore', port(103.83, 1.28), null, '1819'],
-    ['Hong Kong', port(114.20, 22.30), null, 'ceded, 1841'],
-    ['Shanghai', port(121.47, 31.23), null, 'treaty port, 1843'],
-    ['Rotterdam', port(4.48, 51.92), null, 'the Nieuwe Waterweg, 1872'],
-  ], 'sub'],
-  ['Remote islands', [
-    ['Pukapuka Atoll', at(-138.8, -14.82, 6.5), 'Pukapuka'], // Magellan's San Pablo, 1521 (the Tuamotu one)
-    ['Pitcairn Islands', viewOfFrame({ lonMin: -131.3, lonMax: -124.2, latMin: -26.6, latMax: -22.4 })], // all four; the latitudes padded so the longitudes bind
+    ['Suez', port(32.55, 29.97)],
+    ['Panama', port(-79.53, 8.97)],
+    ['Singapore', port(103.83, 1.28)],
+    ['Hong Kong', port(114.20, 22.30)],
+    ['Shanghai', port(121.47, 31.23)],
+    ['Rotterdam', port(4.48, 51.92)],
   ]],
 ];
 // name, year, view, [the city it was made in, its view], text, the id of its scan in packs/overlays/overlays.json (none without one)
@@ -1340,8 +1351,9 @@ $('voyageList').addEventListener('input', (e) => {
 // The cartouche names the place flown to (its title, else the button's name), not whatever scores highest in the frame.
 const caption = (text) => `<span class="notes">${text ?? CAPTION}</span>`;
 for (const [list, groups] of [[$('anchorages'), ANCHORAGES], [$('sightsList'), SIGHTS]]) {
-  list.innerHTML = groups.map(([group, items, sub]) => (group ? `<li class="group${sub ? ' sub' : ''}">${group}</li>` : '') + items.map(([name, v, title, note, text]) =>
-    `<li><button type="button" data-place="${places.push({ name, view: { ...v, title: title ?? name } }) - 1}">${name}${note ? `<small>${note}</small>` : ''}</button>${caption(text)}</li>`).join('')).join('');
+  const rows = (items) => items.map(([name, v, title, text, tag]) => { const tile = SIGHT_TILES[name];
+    return `<li><button type="button" data-place="${places.push({ name, view: { ...v, title: title ?? name } }) - 1}">${title?.startsWith(`${name} (`) ? title : name}${tile?.date ? `<small>${[tile.date, tag].filter(Boolean).join(' · ')}</small>` : ''}</button>${caption(text ?? tile?.text)}</li>`; }).join('');
+  list.innerHTML = groups.map(([group, items, open]) => (group ? `<li class="group"><details${open ? ' open' : ''}><summary>${group}</summary><ul class="places">${rows(items)}</ul></details></li>` : rows(items))).join('');
   list.addEventListener('click', (e) => { const b = e.target.closest('[data-place]'); if (b) { setDrawer(false); goTo(places[b.dataset.place].view); } });
 }
 

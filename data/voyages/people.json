@@ -6,6 +6,7 @@
       "date": "c. 1020",
       "label": "Leif Erikson died, c. 1020, probably at Brattahlíð",
       "source": "Leif Erikson (Wikipedia): no saga records his death",
+      "cite": "leif-erikson",
       "text": "The sagas are silent. He is last named alive about 1018–19 and his son Thorkell held the chieftaincy by 1025; Brattahlíð, the family estate, is the likeliest place."
     }
   },
@@ -16,6 +17,7 @@
       "date": "8 Jan 1324",
       "label": "Marco Polo died at Venice, 8 Jan 1324",
       "source": "Wikipedia, Marco Polo",
+      "cite": "marco-polo",
       "text": "He died at home in January 1324. His will freed Peter, his Tatar slave. Priests are said to have urged him on his deathbed to take back his Book; he answered that he had not told the half of what he saw."
     }
   },
@@ -27,6 +29,7 @@
       "label": "Ibn Battuta died in Morocco, c. 1369",
       "text": "He dictated the Rihla at Fez in 1355–56 and died in Morocco about 1368–69. Nobody recorded where, so the skull stands in the country, not on a town.",
       "source": "Wikipedia, Ibn Battuta",
+      "cite": "ibn-battuta",
       "alternatives": [
         {
           "lon": -7.99,
@@ -46,6 +49,7 @@
       "date": "1433",
       "label": "Zheng He died at sea on the way home, 1433",
       "source": "Zheng He (Wikipedia); no source gives the place",
+      "cite": "zheng-he",
       "text": "Most accounts have him die in 1433 on the way home from the seventh voyage, some say buried at sea. None gives a place, so the skull stands mid-way along that voyage's Calicut–Malacca leg.",
       "alternatives": [
         {
@@ -74,6 +78,7 @@
       "date": "29 May 1500",
       "label": "Dias lost in a storm off the Cape, on Cabral's fleet, 1500",
       "source": "Wikipedia; Britannica 1911",
+      "cite": "bartolomeu-dias",
       "text": "Four of Cabral's ships went down in one storm on the way to the Cape. The wreck's position is not recorded; the skull stands off the Cape."
     }
   },
@@ -84,6 +89,7 @@
       "date": "20 May 1506",
       "label": "Columbus dies at Valladolid",
       "source": "Britannica 1911, Columbus",
+      "cite": "britannica-1911-columbus",
       "text": "He died in a rented house, ill, still arguing that the Crown owed him the titles and the tenth of the profits it had promised. He is generally said to have held that he had reached the edge of Asia. His bones were carried to Seville, then Santo Domingo, then Havana, then Seville again, and Seville and Santo Domingo both still claim him."
     }
   },
@@ -94,6 +100,7 @@
       "date": "1499",
       "label": "Paulo da Gama died at Angra, Terceira",
       "source": "Barros; Correia",
+      "cite": "paulo-da-gama",
       "text": "Paulo commanded the São Rafael, burned on the East African coast when there were too few men left to sail her. He fell ill on the way home; Vasco sailed on ahead in a fast caravel, to hurry him to the Azores, and stayed with his brother until he died."
     }
   },
@@ -104,6 +111,7 @@
       "date": "24 Dec 1524",
       "label": "Vasco da Gama died at Cochin as Viceroy of India",
       "source": "Wikipedia: Vasco da Gama",
+      "cite": "vasco-da-gama",
       "text": "Sent back to India at last as viceroy, he fell ill within months of landing and died at Cochin on Christmas Eve. His body was taken to Portugal in 1539, and lies today in the Jerónimos Monastery at Lisbon."
     }
   },
@@ -114,6 +122,7 @@
       "date": "27 Apr 1521",
       "label": "Magellan killed at Mactan",
       "source": "Pigafetta",
+      "cite": "battle-of-mactan",
       "text": "Magellan took sides in a local quarrel, for the Cebu king against Lapulapu of Mactan, and went ashore with about fifty men. The ships' guns could not reach the beach, the Mactan fighters came on in waves, and the captain-general was killed in the water. Pigafetta, who was there, called him \"our mirror, our light, our comfort and our true guide\"."
     }
   },
@@ -124,6 +133,7 @@
       "date": "4 Aug 1526",
       "label": "Elcano died at sea on the Loaísa expedition, 1526",
       "source": "Wikipedia: Juan Sebastián Elcano",
+      "cite": "juan-sebastian-elcano",
       "text": "He took command when Loaísa died days before, and died himself at sea on 4 August. No position is recorded; the skull is a guess in the middle of the Pacific."
     }
   },
@@ -134,6 +144,7 @@
       "date": "28 Jan 1596",
       "label": "Drake died off Portobelo, 1596; buried at sea in a lead coffin",
       "source": "Wikipedia: Francis Drake",
+      "cite": "francis-drake",
       "text": "Dysentery killed him on his last raid on the Spanish Caribbean. Drake asked to be dressed in his armour, and was buried at sea in a lead coffin off Portobelo. Divers still look for it."
     }
   },
