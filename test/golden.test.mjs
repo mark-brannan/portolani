@@ -281,7 +281,7 @@ test('a doubted leg has a cloud on empty ground of its medium, and the cloud car
   const [m] = marks;
   assert.match(m.tile.doubt, /Khanbaliq/);
   assert.equal(m.tile.title, 'Hangzhou to Quanzhou, by Khanbaliq');
-  assert.ok(scene.field.isLand(m.x, m.y), 'a land leg\'s cloud is at sea');
+  assert.ok(scene.field.isLand(m.x, m.y), 'a land leg\'s cloud stands at sea');
   const d = Math.hypot(m.to[0] - m.x, m.to[1] - m.y);
   assert.ok(d >= 100 && d <= 400, `the cloud is ${d.toFixed(0)} px from its leg`);
   assert.ok(scene.names.every((n) => Math.abs(n.box.cx - m.x) > n.box.hw + 40 || Math.abs(n.box.cy - m.y) > n.box.hh + 30), 'the cloud sits on a name');

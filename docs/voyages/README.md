@@ -48,10 +48,7 @@ voyage's ink; an event or landfall is a ring. Nothing is lettered beside a mark:
 beside it with its heading, date, text and source, and the next touch of the map, Esc or the tile's ×
 shuts it.
 
-A doubted leg is drawn speculative, whatever its confidence: sparse open rings along the path in the voyage's ink,
-no line between, over a faint parchment band. Near it, on empty land for a land leg and empty sea for a sea leg,
-clear of the names, towns, ornaments and every track, stands a thought cloud with a broken edge, trailing three to
-five small puffs toward the route; a tap on the cloud opens the leg's tile, which opens with "Scholars doubt this
+A doubted leg is drawn as sparse open rings in the voyage's ink, not a line, with a thought cloud nearby; a tap on the cloud opens the leg's tile, which opens with "Scholars doubt this
 part:" and the doubt. A doubted event's mark is drawn at half its ink, and its tile opens the same way.
 
 ![The doubted Khanbaliq leg of Ibn Battuta's sixth journey: rings, and a cloud on empty land west of it](doubt-before-after.jpg)
