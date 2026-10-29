@@ -147,7 +147,8 @@ Feature: A chart's position chips, and the line each was fitted to
     When the user clicks a chip
     Then the sheet is shown at that placement, and the map frames it as the chart's name does
     And over the sheet, in today's geography, the feature that placement was fitted to draws itself as a plain line, from one end to the other, holds, then fades to a faint line (about a quarter of its strength) that stays while the sheet lies at that placement
-    And the faint line may lighten later to a ghost (about a tenth) or go entirely; the user chose faint for now, after comparing all three (the user on [#259](https://github.com/mark-brannan/portolani/pull/259), 2026-10-29: "C for now, may lighten to B or A later")
+    And the faint line may lighten later to a ghost (about a tenth) or go entirely; the user chose faint for now, after comparing all three (the user on [#259](https://github.com/mark-brannan/portolani/pull/259), 2026-10-29: "C for now, may lighten to B or A later", where C was faint, B ghost and A gone)
+    And the faint line is the lit chip's: a click on another chip replaces it with that chip's line, drawn from the start; a click on the lit chip draws it again; hiding the chart with its eye takes the line off with the sheet; and as the sheet fades in or out, the line fades with it
     And "Parallels" draws today's equator and Tropic of Cancer; a coast's chip ("New World") draws only the stretch of today's coast that fit used, not the whole coast; the chart's own "Level" draws every coast it is centred between
     And the line is the feature the fit was computed from, carried with the placement in the chart's data, never a stretch drawn by hand to look right
     And with reduced motion the line shows whole, then fades to faint
@@ -177,7 +178,7 @@ Feature: A drawer stays open on a click or a choice
     Then the sheet behaves as it does today, until the user has walked the phone's drawers and set this rule
 
 Feature: A voyage's row in the Voyages drawer
-  Source: the user on [#259](https://github.com/mark-brannan/portolani/pull/259), 2026-10-29: "Clicking a new voyage button always zooms to that voyages target window."; "The first time any given voyage is selected after opening the drawer, if it was not previously selected, zoom to the window for that voyage and then animate the line from the start to the finish."; "Each voyage has a show/hide button to the right of it, before the color selector. The show hide always does a quick show/hide action for the line without changing the zoom or view."; "The voyages colors should not "jump" or reset when multiple voyages were selected and an earlier one is then de-selected. The colors in the current display should remain 'sticky' to the voyage they were already assigned to." The pace of the first draw, after comparing three: "A but faster, maybe 1s +/- .5s." This replaces the rule that a voyage put on stays where it is if any of its track is in view, and that a click on a shown voyage takes it off (`public/page.js` at `6960f78`).
+  Source: the user on [#259](https://github.com/mark-brannan/portolani/pull/259), 2026-10-29: "Clicking a new voyage button always zooms to that voyages target window."; "The first time any given voyage is selected after opening the drawer, if it was not previously selected, zoom to the window for that voyage and then animate the line from the start to the finish."; "Each voyage has a show/hide button to the right of it, before the color selector. The show hide always does a quick show/hide action for the line without changing the zoom or view."; "The voyages colors should not "jump" or reset when multiple voyages were selected and an earlier one is then de-selected. The colors in the current display should remain 'sticky' to the voyage they were already assigned to." The pace of the first draw, after comparing three: "A but faster, maybe 1s +/- .5s." (A: an even pace along the line; B: the voyage's dates) This replaces the rule that a voyage put on stays where it is if any of its track is in view, and that a click on a shown voyage takes it off (`public/page.js` at `6960f78`).
   Scenario: the row
     Given the Voyages drawer open
     When the user looks at a voyage's row
@@ -212,16 +213,37 @@ Feature: A voyage's row in the Voyages drawer
     Then it takes the first colour of the palette that no shown voyage has, its own former colour first if that one is free
     And a reload of the link shows every voyage in the colour it had
 
+Feature: A dashed or dotted voyage is easy to see
+  Source: the user on [#273](https://github.com/mark-brannan/portolani/pull/273), 2026-10-29, looking at the Narváez and Esteban renders: "The dashed legs are hard to see. Why are we using dashes? Same for dots but even worse than dashes. Hard to see!"; "The dots are a no-go though...you have to find something much better"; "part of the problem is the line and part of the problem is the default color palette. You're using grays and reds and they just blend in too much. Blue is no, because it would be confusing with rivers. Green might work. Purple. A brigher red maybe or yellow/orange. The red...idk, it's nice for the aesthetics but if you are using a dash or a dot, you've got to use a better color and heavier weights"; and, after comparing Heavy with Standard in green and purple: "heavy should be our default. ... IT is supposed to be configurable colors and weights anyway...and the colors are supposed to be sticky to one voyage while it is enabled, even if others are selected and deselected. So let's just make sure that when it is any voyage being toggled on where the lines are dashed/dotted that we pick from the higher contrast palette and with heavier weights, by default."
+  Scenario: the default weight
+    Given a link with no line weight in it
+    When any voyage is shown
+    Then its line is drawn at Heavy, the heaviest weight in the Voyages drawer
+    And a weight the user picks in the drawer, or a link's `voyagewidth=`, still wins
+  Scenario: a voyage with dashed or dotted legs takes a high-contrast colour
+    Given a voyage with at least one dashed or dotted leg, and no colour picked for it
+    When the user shows it
+    Then it takes the first colour of the high-contrast palette that no shown voyage has: a green, a purple, a brighter red, an orange or yellow
+    And never a blue, which reads as a river, and never a grey, a brown or the chart's muted red, which sink into the parchment and the coast
+    And the colour stays with it while it is shown, however other voyages are shown and hidden, as for every voyage
+    And a colour the user picks for it still wins
+  Scenario: a dashed or dotted leg is never thin
+    Given a voyage with a dashed or dotted leg
+    When it is drawn at the default weight
+    Then each dash and each dot reads on its own at map size, against the parchment, the coast and the chart's rhumb lines, with no zoom
+    And a dashed or dotted leg is drawn no lighter than a solid leg of the same voyage
+    And what a dash or a dot stands for, and whether dots stay or give way to something else, is open; this holds for any leg drawn broken
+
 Feature: Every point of interest has a mark
   Source: the user on [#257](https://github.com/mark-brannan/portolani/pull/257#discussion_r4407848703), 2026-10-29: "any of the cities that do not have a modern equivalent should get some kind of marker on them, on the map. We could use a decorative placeholder for now similar to other cities but I think in the long run it should be different. Use something like ruins or ...not sure. But for this iteration at least put a placeholder so we are not searching for 'Tyre' on the map when it is merely coordinates and there is nothing there to see."; and on [#259](https://github.com/mark-brannan/portolani/pull/259), 2026-10-29: "for now at least just look at each POI and ensure it has a something. Even a plain "X""
   Scenario: a place with a tile and nothing drawn there
     Given a point of interest with a tile (a noteworthy port, an ancient city, a place where charts were made) and no town, sprite or mark drawn at its spot (Tyre today)
     When the map is at a zoom where its tile opens on a tap
-    Then a stand-in mark is drawn at its spot, so the user sees where to tap, and no lettering beside it
+    Then a stand-in mark is drawn at its spot, so the user sees where to tap, and no lettering beside it: the ruin glyph below, or the plain town glyph where a modern city stands
     And a place that already has a town or a sprite drawn there gets no second mark
     And every place listed in the Sights drawer is checked, not only Tyre
   Scenario: a place with no modern city is a ruin
-    Given a point of interest with no modern city on its spot (Tyre's ancient island city, Berenike, Carthage)
+    Given a point of interest with no modern city on its spot (Berenike), where a modern city is on its spot when a town of today stands on the same site, as Sour stands on Tyre and a suburb of Tunis on Carthage
     When its mark is drawn
     Then it is a small ink glyph of a broken colonnade: three columns on a step, two of them snapped short, about the height of a town glyph
     And it is drawn in code, in ink, like the towers, not cut from a scan
