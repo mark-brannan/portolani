@@ -82,13 +82,8 @@ Opacity 1: the scan alone, Portugal and Morocco meeting today's coast at the pan
 
 One similarity will not hold this chart: the New World is drawn at a larger scale than the Old, and the Red
 Sea and the Cape are turned against the Atlantic coast. So it takes three pieces, each a similarity fitted to
-the landmarks read off the scan in [docs/atlas/ornaments.md](../atlas/ornaments.md) ("Landmarks, 1500"):
-
-| piece | scan px | landmarks | scale | turn | residual, RMS |
-|---|---|---|---|---|---|
-| west | x 70 to 880 | Cuba, Hispaniola, the Amazon, Cape Santo Agostinho | 0.0780 °/px | 8° | 154 km |
-| atlantic | x 880 to 1150 | Ireland, Iberia, the Canaries, Cape Verde | 0.1307 °/px | -1° | 140 km |
-| east | x 1150 to 2060 | Suez, Bab el Mandeb, the Cape of Good Hope | 0.1403 °/px | -5° | 406 km |
+the landmarks read off the scan in [docs/atlas/ornaments.md](../atlas/ornaments.md) ("Landmarks, 1500", which
+has each piece's scan range, scale, turn and residual):
 
 The pieces run from the parchment's west edge to its east; above and below the parchment the scan's white
 shows. Where the west and atlantic pieces meet, the two scales of the chart disagree by 1400 to 2000 km,
