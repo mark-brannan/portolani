@@ -581,5 +581,60 @@
       "cite": "esteban-de-dorantes",
       "text": "He went ahead of Fray Marcos de Niza and was held overnight without food or water, then attacked and killed at Cíbola. The Zuni may have thought him a bad man; Castañeda says he asked for turquoise and women; Alarcón says he boasted of armed men behind him; Sancho Dorantes says he was shot through with arrows. In 2002 Juan Francisco Maura argued he was not killed but stayed among the Zuni."
     }
+  },
+  "mansa-musa": {
+    "name": "Mansa Musa",
+    "aka": [
+      "Musa I of Mali",
+      "Kankan Musa",
+      "Kanku Musa"
+    ],
+    "bio": "Mansa, or king, of Mali from about 1312 to about 1337. On his pilgrimage to Mecca in 1324–25 he spent three months in Cairo and gave away and spent so much gold that, by al-Umari's report, its price there had not recovered twelve years later. European charts drew him within years: Dulcert's of 1339 names him, and the Catalan Atlas of 1375 sets him on a throne holding up gold. Under him part of the Djinguereber Mosque was built at Timbuktu, and the city grew into a centre of Islamic learning. In Cairo he told how he came to the throne: the mansa before him had sailed west into the Atlantic with a great fleet, leaving Musa to rule in his place, and never came back.",
+    "images": [
+      {
+        "file": "Catalan_Atlas_BNF_Sheet_6_Mansa_Musa.jpg",
+        "kind": "near",
+        "author": "Attributed to Abraham Cresques",
+        "date": "1375",
+        "licence": "Public domain",
+        "note": "Sheet 6 of the Catalan Atlas: Musa on a throne, holding a gold coin. Drawn about forty years after his death, from report rather than sight, it is the only medieval picture of him."
+      }
+    ],
+    "sources": [
+      "mansa-musa",
+      "levtzion-hopkins-corpus"
+    ],
+    "born": {
+      "date": "c. 1280",
+      "text": "Nobody recorded when or where he was born; c. 1280 is a modern estimate, and the place is given only as the Mali Empire.",
+      "source": "Wikipedia, Mansa Musa",
+      "cite": "mansa-musa"
+    },
+    "death": {
+      "date": "c. 1337",
+      "text": "The date is uncertain: estimates run from about 1332 to 1337, and Levtzion thought 1337 the likeliest. Nobody recorded where, so no skull is drawn.",
+      "source": "Wikipedia, Mansa Musa",
+      "cite": "mansa-musa"
+    }
+  },
+  "abu-bakr-ii": {
+    "name": "The mansa before Musa",
+    "aka": [
+      "Abu Bakr II",
+      "Abubakari II",
+      "Muhammad ibn Qu"
+    ],
+    "bio": "The king of Mali before Mansa Musa, known only from Musa's own account, told in Cairo in 1324 and written down by al-Umari: he wished to find the far edge of the Atlantic, sent out a fleet of which one ship came back, then sailed himself with a greater one, leaving Musa to rule in his place, and was never seen again. His name is not certain. Al-Umari gives none; Ibn Khaldun, writing decades later, makes Musa's predecessor Muhammad ibn Qu, and some historians suggest Qu, Muhammad's father and the mansa before him; the name Abu Bakr II, by which he is popularly known, comes from a nineteenth-century mistranslation of Ibn Khaldun. No other medieval Arab historian and no West African oral tradition tells of the voyage. Some historians take it seriously; others suspect that Musa deposed his predecessor and told of the voyage to justify his rise.",
+    "sources": [
+      "atlantic-voyage-of-musa-s-predecessor",
+      "mansa-musa",
+      "levtzion-hopkins-corpus"
+    ],
+    "death": {
+      "date": "c. 1312, never returned",
+      "text": "No death is recorded. In Musa's telling he sailed west with his fleet and was never seen again; where, or whether he sailed at all, nobody knows, so no skull is drawn.",
+      "source": "Musa's account, in al-Umari",
+      "cite": "atlantic-voyage-of-musa-s-predecessor"
+    }
   }
 }
