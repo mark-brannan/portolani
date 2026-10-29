@@ -26,8 +26,8 @@ import { BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from
 import { legPath, splitAtSeam, DASHES, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, readVoyage, chronological, voyageLink } from './voyages.mjs';
 export { VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, readVoyage, chronological, voyageLink };
 import { loadOverlay, drawOverlay, drawSheet } from './overlays.mjs';
-import { noteMarks } from './notes.mjs';
-export { noteMarks };
+import { noteMarks, pickMark } from './notes.mjs';
+export { noteMarks, pickMark };
 const record = (id) => catalogue.find((r) => r.id === id); // a coastlines catalogue record by its id
 
 let env;

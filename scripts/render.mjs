@@ -4,13 +4,13 @@
 // Usage: npm run render   -> out/mockup.png, out/mockup-detail.png
 //        npm run render -- --view 19.7,61.7,5.4[,projection] [--overlay carta-marina[:0.6]] [--sheet lon,lat,scale,turn] --out docs/x.jpg
 //          -> one view, optionally with a chart's sheet laid over it, or its warped pieces at an opacity
-//             (docs/overlay/README.md), as .png or .jpg
+//             (docs/overlay/README.md), as .png or .jpg; `--notes` outlines the laid chart's notes (docs/notes)
 
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createScene, drawScene, W, H, DETAIL } from './scene.mjs';
+import { createScene, drawScene, W, H, DETAIL, noteMarks } from './scene.mjs';
 import { seaNames, coastNames, joinNames, tintedSeas } from './names.mjs';
 import { joinUrban } from './urban.mjs';
 import { cutWater, joinWater, WATER_FILES } from './detail-cells.mjs';
@@ -64,6 +64,20 @@ const env = {
   loadFont: async (family) => { GlobalFonts.registerFromPath(join(DL, 'IMFeENrm28P.ttf'), family); GlobalFonts.registerFromPath(join(DL, 'IMFeENit28P.ttf'), family); },
 };
 
+// `--notes`: each laid note's hit box, the click area of its figure, in red with its title inside it (dashed and
+// marked for a stub, a note with no copy yet), to check the boxes against the figures. The page draws none of this.
+function drawNoteBoxes(g, overlay, proj) {
+  g.save();
+  g.strokeStyle = g.fillStyle = '#d00'; g.lineWidth = 1.5; g.font = '11px sans-serif'; g.textBaseline = 'top';
+  for (const m of noteMarks(overlay, proj, { x0: 0, y0: 0, x1: W, y1: H })) {
+    g.setLineDash(m.tile.real ? [] : [5, 3]);
+    g.beginPath(); m.hit.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.closePath(); g.stroke();
+    const x0 = Math.min(...m.hit.map((p) => p[0])), y0 = Math.min(...m.hit.map((p) => p[1]));
+    g.fillText(m.tile.real ? m.tile.title : `${m.tile.title} (stub)`, Math.max(2, x0 + 3), Math.max(2, y0 + 3));
+  }
+  g.restore();
+}
+
 const arg = (name) => { const i = process.argv.indexOf(`--${name}`); return i > 0 ? process.argv[i + 1] : undefined; };
 if (arg('view')) {
   const [lon, lat, zoom, projection] = arg('view').split(',');
@@ -72,6 +86,7 @@ if (arg('view')) {
   const one = await createScene(env, { view: { lon: +lon, lat: +lat, zoom: +zoom, projection }, overlay: id ? { id, mode: opacity ? 'pieces' : 'sheet', sheet, opacity: opacity ?? 0.6 } : null });
   const canvas = createCanvas(W, H), out = arg('out') ?? join(ROOT, 'out', 'view.png');
   drawScene(canvas.getContext('2d'), one.scene, one.data, one.bg, { scale: 1, x: 0, y: 0 });
+  if (process.argv.includes('--notes')) drawNoteBoxes(canvas.getContext('2d'), one.scene.overlay, one.proj);
   writeFileSync(out, out.endsWith('.jpg') ? canvas.toBuffer('image/jpeg', 82) : canvas.toBuffer('image/png'));
   console.log(`${out}: ${W} x ${H}, overlay ${one.scene.overlay ? `${one.scene.overlay.id} ${one.scene.overlay.mode === 'sheet' ? `sheet at ${JSON.stringify(one.scene.overlay.sheet)}` : `pieces at ${one.scene.overlay.opacity}`}` : 'none'}`);
   process.exit(0);
