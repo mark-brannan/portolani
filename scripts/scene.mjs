@@ -2217,17 +2217,6 @@ function drawVoyages(g, voyages, proj, rect, eventRect = rect) {
   for (const v of voyages ?? []) drawTrack(g, v, proj, rect);
   for (const v of voyages ?? []) drawEvents(g, v, proj, eventRect);
 }
-// A small ringed mark on each note's figure while its chart is laid over the map; no lettering, a click opens its tile (notes.mjs)
-function drawNotes(g, overlay, proj, rect) {
-  for (const m of noteMarks(overlay, proj, rect)) {
-    g.save();
-    g.fillStyle = STYLE.parchment; g.globalAlpha = 0.85; g.beginPath(); g.arc(m.x, m.y, 7, 0, 2 * Math.PI); g.fill();
-    g.globalAlpha = 1; g.strokeStyle = g.fillStyle = STYLE.ink; g.lineWidth = 1.4;
-    g.beginPath(); g.arc(m.x, m.y, 6, 0, 2 * Math.PI); g.stroke();
-    g.beginPath(); g.arc(m.x, m.y, 2, 0, 2 * Math.PI); g.fill();
-    g.restore();
-  }
-}
 function drawTrack(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH }, proj, rect) {
   g.save();
   g.lineCap = 'round'; g.lineJoin = 'round';
@@ -2465,8 +2454,7 @@ function drawScene(g, scene, data, bg, view) {
 
   // the voyages over the ornaments, under the cartouche
   drawVoyages(g, scene.voyages, data.proj, r, viewRect(g, view, 0));
-  drawNotes(g, scene.overlay, data.proj, r);
-  // 9.1 the chart's sheet, whole and opaque, over everything on the map (overlays.mjs)
+  // 9.1 the chart's sheet, whole and opaque, over everything on the map (overlays.mjs); its notes are drawn nowhere, found by the cursor (page.js)
   if (scene.overlay?.mode === 'sheet') drawSheet(g, scene.overlay, data.proj, scene.overlay.sheet);
 
   // 10. cartouche, lettered in its cleared panel
@@ -2698,7 +2686,6 @@ function drawAnchored(g, a, bg, view, layers) {
     if (p) drawSprite(g, s.sprite, p[0], p[1], size, { flip: s.flip, rot: s.flip ? -s.tilt : s.tilt, anchor: [0.5, 0.6] });
   }
   drawVoyages(g, a.voyages, proj, { x0: 0, y0: 0, x1: W, y1: H });
-  drawNotes(g, a.overlay, proj, { x0: 0, y0: 0, x1: W, y1: H });
   if (a.overlay?.mode === 'sheet') drawSheet(g, a.overlay, proj, a.overlay.sheet); // the sheet last, as at a stop
   g.restore();
   if (show.kinds.has('cartouche')) drawCartouche(g, a.cartouche, (x0, y0, x1, y1) => g.drawImage(bg, x0, y0, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0));

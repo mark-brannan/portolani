@@ -1,10 +1,10 @@
 // Notes on the charts laid over the map (#161): what the maker drew, what was really there, and where to read more.
 // Each is a point-of-interest tile (page.js fillTile) with two anchors:
 //   at.px     the figure on the scan, in px of the chart's full-size scan (overlays.json width x height), read by
-//             eye, about +-40 px; the mark sits there through the overlay's own fit, so it stays on the figure as drawn
+//             eye, about +-40 px; the mark rides on the sheet wherever it lies (or on the warped piece that holds it), so it stays on the figure as drawn
 //   at.lonlat the real place, [lon, lat], or null where nothing is there
 // NOTE_SETS holds one list per overlay id; the marks of a list show only while its overlay is laid.
-import { applyFit } from './overlays.mjs';
+import { applyFit, sheetTransform } from './overlays.mjs';
 
 // The Carta Marina, 1539 (#248). Quotations from the 1658 English Historia (public domain) are from the EarlyPrint
 // transcription https://distantreader.org/stacks/earlyprint/txt/B26436.txt, spelling kept. at.lonlat is notional
@@ -288,25 +288,264 @@ export const CATALAN_NOTES = [
 ];
 
 // Each overlay's notes and the size of the scan their px are read off.
+// The map of Juan de la Cosa, 1500 (Museo Naval, Madrid). at.px in the Commons "rotated" scan (2127 x 1163).
+export const DE_LA_COSA_NOTES = [
+  {
+    id: 'cosa-new-world', title: 'The New World',
+    drawn: 'A long green coast down the west of the sheet, flagged where each crown had sailed.',
+    real: 'The Caribbean and the coasts of the Americas as Spanish, Portuguese and English voyages had found them by 1500. It is the oldest known European map that shows the New World.',
+    source: { label: 'Juan de la Cosa, Wikipedia', url: 'https://en.wikipedia.org/wiki/Juan_de_la_Cosa' },
+    at: { px: [420, 260], lonlat: null },
+  },
+  {
+    id: 'cosa-cuba', title: 'Cuba, an island',
+    drawn: 'A long island among the Antilles, drawn north of the red Tropic of Cancer.',
+    real: 'Cuba is an island, as drawn, though Columbus never believed it was one; it lies just south of the Tropic of Cancer, not north of it.',
+    source: { label: 'Map of Juan de la Cosa, Wikipedia', url: 'https://en.wikipedia.org/wiki/Map_of_Juan_de_la_Cosa' },
+    at: { px: [345, 455], lonlat: [-79.5, 21.8] },
+  },
+  {
+    id: 'cosa-hispaniola', title: 'Hispaniola',
+    drawn: 'A long mountainous island south of Cuba, on the red line of the tropic.',
+    real: 'Hispaniola, where Columbus founded the first Spanish towns in the Americas; it lies at 18 to 20 degrees north, south of the tropic.',
+    source: { label: 'Hispaniola, Wikipedia', url: 'https://en.wikipedia.org/wiki/Hispaniola' },
+    at: { px: [440, 510], lonlat: [-71.0, 19.0] },
+  },
+  {
+    id: 'cosa-st-christopher', title: 'St Christopher',
+    drawn: 'A panel of St Christopher bearing the infant Christ across the water, where the land should run on to the west.',
+    real: 'Central America, unknown in 1500. The panel may stand for Columbus carrying Christianity over the Atlantic, and it leaves open a passage on to the Indian Ocean.',
+    source: { label: 'Map of Juan de la Cosa, Wikipedia', url: 'https://en.wikipedia.org/wiki/Map_of_Juan_de_la_Cosa' },
+    at: { px: [190, 545], lonlat: [-80.0, 9.0] },
+  },
+  {
+    id: 'cosa-english-flags', title: 'Flags in the north',
+    drawn: 'Small flags along the northern coast of the New World.',
+    real: 'The flags give each region to the crown whose ships found it; the northern coast takes in John Cabot\'s English voyage of 1497.',
+    source: { label: 'Map of Juan de la Cosa, Wikipedia', url: 'https://en.wikipedia.org/wiki/Map_of_Juan_de_la_Cosa' },
+    at: { px: [580, 307], lonlat: null },
+  },
+  {
+    id: 'cosa-parallels', title: 'The equator and the tropic',
+    drawn: 'Two long red lines across the sheet, the upper the Tropic of Cancer, the lower the equator.',
+    real: 'The earliest known equator and Tropic of Cancer on a nautical chart. The sheet is laid here by them.',
+    source: { label: 'Map of Juan de la Cosa, Wikipedia', url: 'https://en.wikipedia.org/wiki/Map_of_Juan_de_la_Cosa' },
+    at: { px: [1000, 762], lonlat: null },
+  },
+  {
+    id: 'cosa-rediscovery', title: 'Found in a junk shop',
+    drawn: 'The whole skin: Europe, Africa and Asia east of the ocean, the New World west of it.',
+    real: 'Baron Walckenaer bought the map from a Paris junk dealer early in the 1800s; Humboldt recognised it as important in 1832. It is now in the Museo Naval, Madrid.',
+    source: { label: 'Map of Juan de la Cosa, Wikipedia', url: 'https://en.wikipedia.org/wiki/Map_of_Juan_de_la_Cosa' },
+    at: { px: [1700, 300], lonlat: null },
+  },
+];
+
+// Jorge de Aguiar's chart, Lisbon 1492 (Beinecke Library, Yale). at.px in File:Jorge_Aguiar_1492_MR.jpg (5016 x 3878).
+export const AGUIAR_NOTES = [
+  {
+    id: 'aguiar-signature', title: 'The maker\'s name',
+    drawn: 'A line of lettering up the chart\'s west edge, the maker\'s signature.',
+    real: 'Jorge de Aguiar\'s chart of the Mediterranean, western Europe and the African coast, 1492, now at the Beinecke Library, Yale.',
+    source: { label: 'Jorge Aguiar 1492, Wikimedia Commons', url: 'https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg' },
+    at: { px: [209, 2070], lonlat: null },
+  },
+  {
+    id: 'aguiar-granada', title: 'Granada',
+    drawn: 'A city on a green mountain with its flags, inland from the south coast of Spain.',
+    real: 'Granada, the last Muslim kingdom in Iberia, surrendered to Castile and Aragon in January 1492, the chart\'s year.',
+    source: { label: 'Fall of Granada, Wikipedia', url: 'https://en.wikipedia.org/wiki/Fall_of_Granada' },
+    at: { px: [2145, 1560], lonlat: [-3.60, 37.18] },
+  },
+  {
+    id: 'aguiar-lisbon', title: 'Lisbon',
+    drawn: 'A walled town at the Tagus mouth, lettered for Lisbon.',
+    real: 'Lisbon, where the chart was made, the home port of the Portuguese voyages down Africa.',
+    source: { label: 'Lisbon, Wikipedia', url: 'https://en.wikipedia.org/wiki/Lisbon' },
+    at: { px: [1895, 1491], lonlat: [-9.14, 38.72] },
+  },
+  {
+    id: 'aguiar-venice', title: 'Venice',
+    drawn: 'A walled city on a round green island at the head of the Adriatic.',
+    real: 'Venice on its islands in the lagoon, then the great sea power of the eastern Mediterranean.',
+    source: { label: 'Venice, Wikipedia', url: 'https://en.wikipedia.org/wiki/Venice' },
+    at: { px: [3093, 738], lonlat: [12.33, 45.44] },
+  },
+  {
+    id: 'aguiar-red-sea', title: 'The Red Sea, painted red',
+    drawn: 'The Red Sea at the chart\'s east edge, coloured solid red.',
+    real: 'The Red Sea is blue-green like any sea; chartmakers painted it red after its name.',
+    source: { label: 'Red Sea, Wikipedia', url: 'https://en.wikipedia.org/wiki/Red_Sea' },
+    at: { px: [4740, 2290], lonlat: [38.0, 20.0] },
+  },
+  {
+    id: 'aguiar-canaries', title: 'The Canaries',
+    drawn: 'A cluster of islands off the African coast, flagged.',
+    real: 'The Canary Islands, still being conquered by Castile in 1492; Columbus called there that September on his way west.',
+    source: { label: 'Canary Islands, Wikipedia', url: 'https://en.wikipedia.org/wiki/Canary_Islands' },
+    at: { px: [1400, 2300], lonlat: [-15.5, 28.3] },
+  },
+  {
+    id: 'aguiar-mina', title: 'The Mina',
+    drawn: 'A castle under the Portuguese flag on the Guinea coast.',
+    real: 'São Jorge da Mina (Elmina), the fort Portugal built in 1482 to trade for West African gold, and later for slaves.',
+    source: { label: 'Elmina Castle, Wikipedia', url: 'https://en.wikipedia.org/wiki/Elmina_Castle' },
+    at: { px: [3023, 3037], lonlat: [-1.35, 5.08] },
+  },
+];
+
+// Battista Agnese's oval world map, map 10 of his portolan atlas, Venice about 1544 (Library of Congress). at.px in
+// the LoC IIIF scan (11880 x 8614).
+export const AGNESE_NOTES = [
+  {
+    id: 'agnese-magellan-track', title: 'Magellan\'s track',
+    drawn: 'A dark line from Spain down the Atlantic, through a strait at the foot of South America, over the Pacific to the Moluccas and home round Africa.',
+    real: 'The Magellan–Elcano voyage of 1519–1522, the first round the world. Five ships left Spain; one, the Victoria, came home, with 18 of the crew.',
+    source: { label: 'Magellan expedition, Wikipedia', url: 'https://en.wikipedia.org/wiki/Magellan_expedition' },
+    at: { px: [3013, 4595], lonlat: null },
+  },
+  {
+    id: 'agnese-strait', title: 'The strait',
+    drawn: 'The track squeezing between South America and a southern land, lettered for Magellan\'s strait.',
+    real: 'The Strait of Magellan, found in 1520. The land south of it is Tierra del Fuego, an island, not the edge of a southern continent.',
+    source: { label: 'Strait of Magellan, Wikipedia', url: 'https://en.wikipedia.org/wiki/Strait_of_Magellan' },
+    at: { px: [4959, 5523], lonlat: [-70.9, -53.5] },
+  },
+  {
+    id: 'agnese-moluccas', title: 'The Moluccas',
+    drawn: '"INSULE MALUCHE" at the far west edge, where the track begins and ends.',
+    real: 'The Maluku Islands, the Spice Islands of cloves and nutmeg, the prize Magellan sailed for.',
+    source: { label: 'Maluku Islands, Wikipedia', url: 'https://en.wikipedia.org/wiki/Maluku_Islands' },
+    at: { px: [2107, 4052], lonlat: [127.5, -1.0] },
+  },
+  {
+    id: 'agnese-peru-route', title: 'The road to Peru',
+    drawn: 'A gold line from Spain to the isthmus of Panama, lettered for the way to Peru.',
+    real: 'The Spanish route to Peru: by sea to the Caribbean side of the isthmus, overland to Panama, then south by sea; Pizarro took the Inca empire from 1532.',
+    source: { label: 'Spanish conquest of the Inca Empire, Wikipedia', url: 'https://en.wikipedia.org/wiki/Spanish_conquest_of_the_Inca_Empire' },
+    at: { px: [4868, 3735], lonlat: [-79.5, 9.0] },
+  },
+  {
+    id: 'agnese-tenochtitlan', title: 'Temistitan',
+    drawn: 'A city in a blue lake in Mexico, "timistitan".',
+    real: 'Tenochtitlan, the Aztec capital on an island in Lake Texcoco, taken by Cortés in 1521; Mexico City stands on it.',
+    source: { label: 'Tenochtitlan, Wikipedia', url: 'https://en.wikipedia.org/wiki/Tenochtitlan' },
+    at: { px: [3691, 3780], lonlat: [-99.13, 19.43] },
+  },
+  {
+    id: 'agnese-california', title: 'A red gulf',
+    drawn: 'A long gulf painted red behind a peninsula on the west coast of North America.',
+    real: 'The Gulf of California. Francisco de Ulloa sailed to its head in 1539, showing that Baja California is a peninsula, as drawn here; later maps made it an island.',
+    source: { label: 'Gulf of California, Wikipedia', url: 'https://en.wikipedia.org/wiki/Gulf_of_California' },
+    at: { px: [3035, 3622], lonlat: [-110.5, 26.0] },
+  },
+  {
+    id: 'agnese-red-sea', title: 'The Red Sea, painted red',
+    drawn: 'The Red Sea coloured solid red, as the gulf in the west is.',
+    real: 'The Red Sea, named red but blue-green like any sea.',
+    source: { label: 'Red Sea, Wikipedia', url: 'https://en.wikipedia.org/wiki/Red_Sea' },
+    at: { px: [7312, 3803], lonlat: [38.0, 20.0] },
+  },
+  {
+    id: 'agnese-bacalaos', title: 'Land of cod',
+    drawn: '"terra de bachalaos", the land of cod, in the north-west Atlantic.',
+    real: 'Newfoundland and the Grand Banks, where Portuguese, Basque, French and English boats fished cod through the 1500s.',
+    source: { label: 'Grand Banks of Newfoundland, Wikipedia', url: 'https://en.wikipedia.org/wiki/Grand_Banks_of_Newfoundland' },
+    at: { px: [5275, 2785], lonlat: [-55.0, 48.5] },
+  },
+  {
+    id: 'agnese-cathay', title: 'America joined to Cathay',
+    drawn: 'North America running west off the sheet into "CATAIO", China.',
+    real: 'Asia and America are parted by the Bering Strait, which Europeans first sailed through with Vitus Bering in 1728.',
+    source: { label: 'Bering Strait, Wikipedia', url: 'https://en.wikipedia.org/wiki/Bering_Strait' },
+    at: { px: [2356, 3305], lonlat: null },
+  },
+];
+
+// Fernão Vaz Dourado's chart 4, the North Atlantic, from his atlas made at Goa in 1580 (Bayerische Staatsbibliothek,
+// Cod.icon. 137). at.px in the BSB IIIF scan (10302 x 7611).
+export const DOURADO_NOTES = [
+  {
+    id: 'dourado-arms', title: 'Portugal\'s arms on the far shore',
+    drawn: 'The crowned arms of Portugal over the land in the north-west.',
+    real: 'The Corte-Real brothers sailed there for Portugal in 1500–1502; King Manuel held such lands to fall on Portugal\'s side of the Treaty of Tordesillas. Portugal never settled them.',
+    source: { label: 'Gaspar Corte-Real, Wikipedia', url: 'https://en.wikipedia.org/wiki/Gaspar_Corte-Real' },
+    at: { px: [1660, 1600], lonlat: null },
+  },
+  {
+    id: 'dourado-archers', title: 'Archers',
+    drawn: 'Naked people with bows among the hills of the north-west.',
+    real: 'The coast\'s own peoples. Gaspar Corte-Real\'s 1501 voyage is believed to have seized 57 of them and taken them to Portugal to be enslaved.',
+    source: { label: 'Gaspar Corte-Real, Wikipedia', url: 'https://en.wikipedia.org/wiki/Gaspar_Corte-Real' },
+    at: { px: [858, 1202], lonlat: null },
+  },
+  {
+    id: 'dourado-lavrador', title: 'Tera do Lavrador',
+    drawn: '"TERA DO LAVRADOR" across the north-western land.',
+    real: 'Named after João Fernandes Lavrador, who reached these coasts about 1499–1500; for most of the 1500s the name was sometimes given to Greenland too.',
+    source: { label: 'Labrador, Wikipedia', url: 'https://en.wikipedia.org/wiki/Labrador' },
+    at: { px: [2232, 3222], lonlat: [-61.0, 54.0] },
+  },
+  {
+    id: 'dourado-arctic-circle', title: 'The Arctic Circle',
+    drawn: '"CIRCVLVS ARTICVS", a red line across the ocean just north of Iceland.',
+    real: 'The Arctic Circle, about 66.5 degrees north; it crosses Iceland only at the island of Grímsey, off the north coast.',
+    source: { label: 'Arctic Circle, Wikipedia', url: 'https://en.wikipedia.org/wiki/Arctic_Circle' },
+    at: { px: [5150, 2318], lonlat: [-18.0, 66.56] },
+  },
+  {
+    id: 'dourado-iceland', title: 'Islanda',
+    drawn: 'Iceland, "Islanda", under the Arctic Circle.',
+    real: 'Iceland, then under the Danish crown, visited by English and German ships for its fish.',
+    source: { label: 'Iceland, Wikipedia', url: 'https://en.wikipedia.org/wiki/Iceland' },
+    at: { px: [6532, 2610], lonlat: [-18.5, 65.0] },
+  },
+  {
+    id: 'dourado-brasil', title: 'O Brazil',
+    drawn: 'A small round island far west of Ireland, "obrazil".',
+    real: 'Nothing: open Atlantic. Hy-Brasil, always round and always west of Ireland, stayed on charts into the 1800s.',
+    source: { label: 'Brasil (mythical island), Wikipedia', url: 'https://en.wikipedia.org/wiki/Brasil_(mythical_island)' },
+    at: { px: [6078, 4424], lonlat: null },
+  },
+  {
+    id: 'dourado-azores', title: 'The Azores',
+    drawn: 'A scatter of islands mid-ocean, west of Lisbon.',
+    real: 'The Azores, Portuguese since the 1430s, the last landfall on the way home from the Americas and the Indies.',
+    source: { label: 'Azores, Wikipedia', url: 'https://en.wikipedia.org/wiki/Azores' },
+    at: { px: [5065, 5980], lonlat: [-28.0, 38.5] },
+  },
+];
+
 export const NOTE_SETS = {
   'carta-marina': { scan: { w: 5016, h: 3715 }, notes: CARTA_MARINA_NOTES },
   'catalan-atlas': { scan: { w: 6454, h: 15862 }, notes: CATALAN_NOTES },
+  'de-la-cosa': { scan: { w: 2127, h: 1163 }, notes: DE_LA_COSA_NOTES },
+  aguiar: { scan: { w: 5016, h: 3878 }, notes: AGUIAR_NOTES },
+  'agnese-world': { scan: { w: 11880, h: 8614 }, notes: AGNESE_NOTES },
+  'dourado-atlantic': { scan: { w: 10302, h: 7611 }, notes: DOURADO_NOTES },
 };
 
 // The marks of a laid overlay's notes through the view's projection: [{ x, y, h, tile }] in canvas px, the
-// tile in the shape page.js fillTile takes. The scan px goes through the piece (overlays.json) that holds it.
+// tile in the shape page.js fillTile takes. The scan px goes through the sheet as it lies now, or, in pieces mode, the piece that holds it.
 // Nothing for an overlay with no notes, or none laid, so the notes are hidden with the scan.
 export const NOTE_H = 20;
+// A note's page px: on the sheet (`m`, its affine from drawn px), where the sheet lies now, dragged, turned or
+// resized; on the warped pieces, through the piece that holds it. [] past an azimuthal projection's horizon.
+function notePx(overlay, proj, [px, py], m) {
+  if (m) { const x = px / (overlay.scale ?? 1), y = py / (overlay.scale ?? 1); return [m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]]; }
+  const piece = overlay.pieces.find((p) => px >= p.x0 && px < p.x1) ?? overlay.pieces.at(-1);
+  const [lon, lat] = applyFit(piece.fit, px, py);
+  if (proj.visible && !proj.visible(lon, lat)) return [];
+  return proj.toPx([lon, lat]);
+}
 export function noteMarks(overlay, proj, rect) {
   const set = overlay && NOTE_SETS[overlay.id];
   if (!set) return [];
-  const out = [];
+  const out = [], sheet = overlay.mode === 'pieces' ? null : overlay.sheet && sheetTransform(overlay, proj, overlay.sheet);
+  if (overlay.mode !== 'pieces' && overlay.sheet && !sheet) return []; // the sheet's centre is past the horizon, so is the sheet
   for (const n of set.notes) {
-    const [px, py] = n.at.px;
-    const piece = overlay.pieces.find((p) => px >= p.x0 && px < p.x1) ?? overlay.pieces.at(-1);
-    const [lon, lat] = applyFit(piece.fit, px, py);
-    if (proj.visible && !proj.visible(lon, lat)) continue;
-    const [x, y] = proj.toPx([lon, lat]);
+    const [x, y] = notePx(overlay, proj, n.at.px, sheet);
+    if (x === undefined) continue;
     if (Number.isFinite(x) && Number.isFinite(y) && x >= rect.x0 && x <= rect.x1 && y >= rect.y0 && y <= rect.y1) {
       out.push({ x, y, h: NOTE_H, tile: { title: n.title, drawn: n.drawn, real: n.real, source: n.source.label, link: n.source.url } });
     }
