@@ -265,7 +265,7 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     await page.click('#sights');
     assert.equal(await opened('sightsPanel'), true, 'the astrolabe did not open the points of interest');
     const hs = await page.evaluate(() => location.hash);
-    await page.click('#sightsList button >> text=Pitcairn Islands');
+    await page.click('#sightsList button >> text=Goa'); // the age of discovery, the one group open at first
     assert.equal(await opened('sightsPanel'), false, 'a point of interest left its drawer open');
     await page.waitForFunction((x) => location.hash !== x, hs, { timeout: 60000 });
     // Go takes the focus in its box; Esc shuts it and gives the focus back to the compass

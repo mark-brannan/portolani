@@ -1,7 +1,15 @@
 # Going somewhere
 
-Feature: Places to fly to  (the astrolabe `#sights`, 26 rows of sights and sections; the anchor `#anchor`, 14 anchorages; the chart `#charts`, 7 charts with "Where it was made" and "The sheet"; each a drawer in the `#where` row) [verified page.js:585, 786-830 at main]
+Feature: Places to fly to  (the astrolabe `#sights`, 39 rows of sights and sections; the anchor `#anchor`, 14 anchorages; the chart `#charts`, 7 charts with "Where it was made" and "The sheet"; each a drawer in the `#where` row) [verified page.js:585, 786-830 at main]
   # The audit at ab47ea7 read one anchor button `#places` with a `#flyout` of 24 `ORIGINS`; #206 and #209 split it into these three drawers. Their contents are not yet specified here.
+  Scenario: noteworthy ports by era
+    Given the astrolabe drawer open
+    When the user reads the astrolabe's groups
+    Then the noteworthy ports come in four eras, each under its own heading, in time order: the ancient world, the medieval Indian Ocean and Asia, the age of discovery, the modern world; six ports each, most of them outside Europe
+    And each heading is the port names' size and weight, in italic, and folds its group: only the age of discovery is open at first
+    And the date sits to the right of the name, so the button is short and wide, and under it is the caption; the date (a year, a century or a span); the age of discovery also holds Seville, Genoa, Venice, Majorca and Dieppe, their dates followed by "charts made here"
+    And a port whose name has changed lists the historic name first and today's in brackets, "Batavia (Jakarta)", "Calicut (Kozhikode)"
+    And each port opens a flavour-text tile on a click of its mark, with no lettering beside the mark
   Scenario: pick a sight
     Given the chart at the default view
     When the user clicks `#sights`, then "Lisbon"
@@ -103,3 +111,6 @@ Feature: Phone layout  (viewport 520 px or narrower) [verified page.js:40, 519-5
     Given a wide viewport
     When it narrows past 520 px
     Then the sheet is placed again without the cartouche and scale bar (the `phone` change handler, page.js:571)
+  Scenario: a port with no town today still has a mark on the map
+    Given the chart at zoom 4 or more over Berenike, Siraf or Kilwa
+    Then a placeholder building stands there, lettered with the port's name, so a search for it finds something to see

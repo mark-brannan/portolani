@@ -5,7 +5,7 @@
   "who": ["Zheng He"],
   "when": "1405–1407",
   "summary": "The first fleet, some 300 ships, goes from the Yangtze by Fujian and Champa to Java, Palembang and Malacca, then across to Ceylon and Calicut; on the way home Palembang is cleared of the pirate Chen Zuyi.",
-  "sources": ["zheng-he", "mao-kun-map", "ming-shi"],
+  "sources": ["zheng-he", "mao-kun-map", "ming-shi", "ming-treasure-voyages", "chen-zuyi"],
   "legs": [
     { "sameAs": "zheng-he/nanjing-liujiagang", "dates": "1405" },
     { "sameAs": "zheng-he/liujiagang-changle", "dates": "1405" },
@@ -32,5 +32,10 @@
     { "id": "champa-liujiagang", "from": "Champa (Qui Nhon)", "to": "Liujiagang (Taicang)", "dates": "1407", "mode": "sea", "line": "rhumb",
       "confidence": "conventional", "source": "Ming shi",
       "points": [[109.5,13.75], [109.8,14.5], [110.6,16.5], [111.3,18.8], [112,19.5], [114,21.5], [116.5,22.4], [118.6,23.2], [119.3,24], [120.2,24.4], [120.6,25.4], [120.1,26.05], [120.5,26], [121.2,26.3], [122,27], [122.7,28.5], [123.3,30.5], [122.3,31.15]] }
+  ],
+  "events": [
+    { "kind": "event", "lon": 112.75, "lat": -7.25, "date": "1406", "label": "Java: 170 of the fleet killed in a civil war", "source": "Ming Shilu, 23 Oct 1407", "cite": "ming-treasure-voyages", "text": "Java was split between an eastern and a western king. A party of the fleet that went ashore to trade in the east was caught in the war, and the western king's men killed 170 of them. He later sent an envoy to own the mistake, and the Ming court asked 60,000 liang of gold in amends." },
+    { "kind": "landfall", "lon": 75.78, "lat": 11.25, "date": "1407", "label": "Calicut, the voyage's farthest port", "source": "Ming treasure voyages (Wikipedia)", "cite": "ming-treasure-voyages", "text": "The fleet's goal, the pepper port of the Malabar coast. Zheng He brought the Yongle Emperor's investiture to its king and set up a tablet to mark the bond between the two courts. Calicut stayed the turning point of the first three voyages." },
+    { "kind": "event", "lon": 104.75, "lat": -2.99, "date": "1407", "label": "Palembang: Chen Zuyi's pirate fleet destroyed", "source": "Chen Zuyi (Wikipedia); Ming Shi", "cite": "chen-zuyi", "text": "Chen Zuyi, a pirate from Guangdong, ruled Palembang and preyed on shipping in the Strait of Malacca. On the way home the treasure fleet fought him, burned his ships and killed thousands of his men. Chen was taken to Nanjing and executed in October 1407." }
   ]
 }
