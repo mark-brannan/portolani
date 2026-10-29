@@ -238,17 +238,19 @@ export async function readVoyage(id, readJSON) {
 
 // How well a birth or a death is known: the leg confidences, and one more for what is only a guess.
 export const KNOWN = [...CONFIDENCES, 'speculative'];
-export const PORTRAIT_KINDS = ['life', 'near', 'posthumous', 'imaginary', 'modern', 'none'];
+export const PORTRAIT_KINDS = ['life', 'near', 'posthumous', 'imaginary', 'modern', 'none', 'scene', 'ship', 'map'];
 // Schema check for one people.json record, keyed by `name`: the problems as strings, none when well formed. Only the
 // death (or "unknown", or `living: true` and no death) is required; every other field is checked when it is there, so
 // an older record with a death alone passes. `sources` and `voyageIds`, when given, are what a cite and a voyage id
 // must name.
 // `born` has the death marker's shape, `alternatives` included, plus `known`: how well it is known, in the leg words or
-// `speculative` (a death may carry it too). A `portrait` is a Wikimedia Commons file name, never a URL: its page is
+// `speculative` (a death may carry it too). `images` are pictures of them or of their world, best first (the People drawer
+// lays them on the map; the first is their portrait): each a Wikimedia Commons file name, never a URL: its page is
 // https://commons.wikimedia.org/wiki/File:<file> and its image .../wiki/Special:FilePath/<file>?width=480. Its `kind` says
 // what the picture is: life (made while they lived), near (about then, or a copy), posthumous, imaginary (no likeness
-// claimed), modern (a statue or a photograph of one), or none (no likeness exists; a named file, if any, stands in, a
-// manuscript say). `author`, `date` and `licence` are copied from the file page. New keys go before `death`, so a death
+// claimed), modern (a statue or a photograph of one), none (no likeness exists; a named file, if any, stands in, a
+// manuscript say), or a scene, a ship or a map of their world. `author`, `date` and `licence` are copied from the file
+// page, and show with it. New keys go before `death`, so a death
 // block is never rewritten.
 export function personProblems(name, p, { sources, voyageIds } = {}) {
   const out = [];
@@ -285,8 +287,8 @@ export function personProblems(name, p, { sources, voyageIds } = {}) {
   };
   if (p.born !== undefined) { marker(p.born, 'born'); need(KNOWN.includes(p.born?.known), `born: known one of ${KNOWN}`); }
   if (p.death && typeof p.death === 'object' && p.death.known !== undefined) need(KNOWN.includes(p.death.known), `death: known one of ${KNOWN}`);
-  if (p.portrait !== undefined) {
-    const q = p.portrait;
+  if (p.images !== undefined) need(Array.isArray(p.images), 'images: a list');
+  for (const q of Array.isArray(p.images) ? p.images : []) {
     need(q && PORTRAIT_KINDS.includes(q.kind), `portrait: kind one of ${PORTRAIT_KINDS}`);
     // a file is a Commons file name, never a url, credited as its file page asks; kind "none" may still name a stand-in image
     if (q?.file !== undefined || q?.kind !== 'none') {

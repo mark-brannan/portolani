@@ -39,9 +39,9 @@ field is optional:
   "role": ["navigator", "ship-owner"],
   "voyages": ["magellan"],
   "bio": "He brought the Victoria home in 1522, the first ship round the world, …",
-  "portrait": { "file": "Juan_Sebastián_Elcano,_anonymous_19th_century_painting.jpg",
+  "images": [{ "file": "Juan_Sebastián_Elcano,_anonymous_19th_century_painting.jpg",
                 "kind": "posthumous", "author": "Unknown", "date": "19th century",
-                "licence": "Public domain", "note": "Museo Naval, Madrid; …" },
+                "licence": "Public domain", "note": "Museo Naval, Madrid; …" }],
   "sources": ["https://en.wikipedia.org/wiki/Juan_Sebasti%C3%A1n_Elcano"],
   "born": { "lon": -2.2, "lat": 43.3, "date": "1486 or 1487", "place": "Getaria",
             "label": "Elcano born at Getaria, 1486 or 1487", "text": "His own will names Getaria. …",
@@ -51,8 +51,8 @@ field is optional:
 }
 ```
 
-Only the death is required; `personProblems` in `scripts/voyages.mjs` says the rest. Births and portraits
-are data only for now: nothing draws them.
+Only the death is required; `personProblems` in `scripts/voyages.mjs` says the rest. The People drawer
+draws the birth and lays the `images` on the map (`npm run people` builds them for the site).
 
 Two conventions the checks cannot see: where a source says a person died at sea or on the way but gives
 no place, the skull stands at the middle of the leg it must have happened on and the death's `text` says

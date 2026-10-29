@@ -5,7 +5,7 @@
 // and flies there without bringing up the keyboard. Under 520 px the map fills the window, cropped at its
 // sides; the settings are a bottom sheet at half the window's height with the map above it, a lighter
 // drawer a sheet as tall as its lines over the map's foot, and the cartouche and the scale bar sit on cards. With a mouse on a wide screen
-// each of the six drawers hangs below the row without covering or moving it, one at a time; several voyages
+// each of the seven drawers hangs below the row without covering or moving it, one at a time; several voyages
 // are drawn at once, each in its own ink, and the link carries them.
 //
 // Needs the built preview (`npm run build:preview` -> _site/), playwright-core and a Chromium
@@ -240,7 +240,7 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
 
     // each button opens its own drawer and shuts the one before; the row stays put and the drawer clear of it
     const row0 = await row();
-    for (const [b, d] of [['#open', 'drawer'], ['#charts', 'chartsDrawer'], ['#sights', 'sightsPanel'], ['#go', 'goPanel'], ['#voyages', 'voyagesPanel'], ['#anchor', 'anchorPanel']]) {
+    for (const [b, d] of [['#open', 'drawer'], ['#charts', 'chartsDrawer'], ['#sights', 'sightsPanel'], ['#go', 'goPanel'], ['#voyages', 'voyagesPanel'], ['#people', 'peoplePanel'], ['#anchor', 'anchorPanel']]) {
       await page.click(b);
       await page.waitForTimeout(400);
       assert.equal(await opened(d), true, `${b} did not open ${d}`);

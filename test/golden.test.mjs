@@ -30,10 +30,12 @@ const VIEWS = {
   'world-z2-orthographic': { lon: 10, lat: 30, zoom: 2, projection: 'orthographic' }, // the globe, cut at the horizon
   'world-z2-voyage': { lon: 10, lat: 30, zoom: 2 }, // Magellan's Pacific crossing, cut at the seam
   'world-z2-voyages': { lon: -20, lat: 15, zoom: 2 }, // three voyages at once, each in its own ink, at the bold weight
+  'world-z2-person': { lon: 40, lat: 25, zoom: 2 }, // a person chosen: Ibn Battuta's journeys lit in red with his birth marked, Columbus dimmed
 };
 // settings a golden draws with beyond the defaults; region-z5 is the README's picture, lettered PORTOLANI
 const OPTS = { 'region-z5': { autoTitle: false }, 'world-z2-voyage': { voyages: [{ id: 'magellan' }] },
-  'world-z2-voyages': { voyages: [{ id: 'columbus' }, { id: 'da-gama' }, { id: 'drake' }].map((v) => ({ ...v, width: 3.2 })) } };
+  'world-z2-voyages': { voyages: [{ id: 'columbus' }, { id: 'da-gama' }, { id: 'drake' }].map((v) => ({ ...v, width: 3.2 })) },
+  'world-z2-person': { person: 'ibn-battuta', voyages: [{ id: 'columbus' }] } };
 // and its full-size render is kept for the README, so `npm run golden` refreshes both together
 const README_IMAGE = join(ROOT, 'docs', 'readme.jpg');
 

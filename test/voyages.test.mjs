@@ -136,17 +136,17 @@ test('a person nobody knows the place of death of is "unknown" in people.json an
   assert.ok(problems(await readVoyage('x', files(set))).some((p) => p.includes('where A B died')));
 });
 
-test('a person record may be a death alone, or carry a birth, bio and portrait; a living person gets no skull', async () => {
+test('a person record may be a death alone, or carry a birth, bio and images; a living person gets no skull', async () => {
   const death = { lon: 1, lat: 1, date: 'd', label: 'l', source: 's' };
   assert.deepEqual(personProblems('A B', { death }), []);
   assert.deepEqual(personProblems('A B', { death: 'unknown' }), []);
   const full = {
     id: 'a-b', aka: ['Ab'], origin: 'o', role: ['r'], voyages: ['x'], bio: 'b', sources: ['https://u'],
-    portrait: { file: 'A_B.jpg', kind: 'life', author: 'a', date: '1600', licence: 'Public domain' },
+    images: [{ file: 'A_B.jpg', kind: 'life', author: 'a', date: '1600', licence: 'Public domain' }],
     born: { ...death, known: 'speculative', cite: 's1', alternatives: [{ lon: 2, lat: 2, place: 'p', label: 'l', source: 's' }] }, death,
   };
   assert.deepEqual(personProblems('A B', full, { sources: { s1: {} }, voyageIds: ['x'] }), []);
-  const bad = personProblems('A B', { ...full, born: { ...death, known: 'certain' }, portrait: { kind: 'life', file: 'https://x/A.jpg' } }, { voyageIds: [] });
+  const bad = personProblems('A B', { ...full, born: { ...death, known: 'certain' }, images: [{ kind: 'life', file: 'https://x/A.jpg' }] }, { voyageIds: [] });
   for (const p of ['born: known', 'portrait: file', 'portrait: a licence', 'x is not a voyage']) assert.ok(bad.some((b) => b.includes(p)), p);
   assert.ok(personProblems('A B', { living: true, death }).some((p) => p.includes('living')));
   const set = { x: raw(), ...shared() };
@@ -172,9 +172,9 @@ test('a shared leg is sameAs the leg its owner names, with its own dates and not
   await assert.rejects(readVoyage('y', files(set)), /only dates/);
 });
 
-test('every person in people.json and every source in sources.json is named by a voyage', async () => {
+test('every person in people.json is named by a voyage or listed in the People drawer (an id), and every source in sources.json by a voyage', async () => {
   const voyages = await Promise.all(INDEX.map((id) => readJSON(`data/voyages/${id}.json`)));
-  const people = Object.keys(readJSON('data/voyages/people.json')).filter((w) => !voyages.some((v) => v.who.includes(w)));
+  const people = Object.entries(readJSON('data/voyages/people.json')).filter(([w, p]) => !p.id && !voyages.some((v) => v.who.includes(w))).map(([w]) => w);
   const sources = Object.keys(readJSON('data/voyages/sources.json')).filter((s) => !voyages.some((v) => v.sources.includes(s)));
   assert.deepEqual([people, sources], [[], []]);
 });

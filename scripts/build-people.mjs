@@ -1,0 +1,68 @@
+// Builds packs/overlays/people/: each picture of a person in data/voyages/people.json (`images`) shrunk for the site, and
+// people.json, the manifest the page reads (the picture's file on the site, its size, its Commons page). The pictures
+// lie on the map as sheets, as the charts' scans do (scripts/overlays.mjs), so they live beside them.
+//
+// Usage: npm run people
+//
+// Each file is looked up through the Commons API (its licence must still read as the record says, and the original's
+// sha1 is kept in the manifest, so a file changed upstream shows in the diff), and the API's thumbnail, at most 800 px a
+// side, is downloaded once into downloads/people/ and reused after. A picture already in the manifest under the same sha1
+// is not fetched again.
+
+import { createCanvas, loadImage } from '@napi-rs/canvas';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { fetchBytesWithRetry } from './fetch-retry.mjs';
+import { pictureName, peopleOf, PEOPLE_FILE } from './people.mjs';
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const DL = join(ROOT, 'downloads', 'people'), OUT = join(ROOT, 'packs', 'overlays', 'people');
+const API = 'https://commons.wikimedia.org/w/api.php';
+const AGENT = { 'User-Agent': 'portolani-build (https://github.com/mark-brannan/portolani)' };
+const LONG = 640; // the long side of a picture on the site, px
+
+// What the Commons API says of `titles`: { [title]: { url, thumb, sha1, licence } }, null for one it does not have
+async function lookUp(titles) {
+  const out = {};
+  for (let i = 0; i < titles.length; i += 40) {
+    const q = new URLSearchParams({ action: 'query', format: 'json', prop: 'imageinfo', iiprop: 'url|sha1|extmetadata', iiextmetadatafilter: 'LicenseShortName', iiurlwidth: '800', iiurlheight: '800', titles: titles.slice(i, i + 40).join('|') });
+    const j = JSON.parse(String(await fetchBytesWithRetry(`${API}?${q}`, { fetchImpl: (u) => fetch(u, { headers: AGENT }) })));
+    const from = Object.fromEntries((j.query.normalized ?? []).map((n) => [n.to, n.from]));
+    for (const p of Object.values(j.query.pages)) {
+      const ii = p.imageinfo?.[0], t = from[p.title] ?? p.title;
+      out[t] = ii ? { url: ii.descriptionurl, thumb: ii.thumburl ?? ii.url, sha1: ii.sha1, licence: ii.extmetadata?.LicenseShortName?.value } : null;
+    }
+  }
+  return out;
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const people = peopleOf(JSON.parse(readFileSync(join(ROOT, PEOPLE_FILE), 'utf8')));
+  const manifestPath = join(OUT, 'people.json');
+  const before = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, 'utf8')).pictures : {};
+  const wanted = people.flatMap((p) => p.images.map((im) => ({ ...im, title: `File:${im.file.replace(/_/g, ' ')}`, person: p.id })));
+  const api = await lookUp([...new Set(wanted.map((w) => w.title))]);
+  mkdirSync(DL, { recursive: true }); mkdirSync(OUT, { recursive: true });
+  const pictures = {}, problems = [];
+  for (const w of wanted) {
+    const a = api[w.title];
+    if (!a) { problems.push(`${w.file}: not on Commons`); continue; }
+    if (a.licence !== w.licence) { problems.push(`${w.file}: Commons says ${a.licence}, the record ${w.licence}`); continue; }
+    const name = pictureName(w.file), out = join(OUT, name);
+    if (before[w.file]?.sha1 === a.sha1 && existsSync(out)) { pictures[w.file] = before[w.file]; continue; }
+    const cached = join(DL, `${a.sha1}.img`);
+    const bytes = existsSync(cached) ? readFileSync(cached) : await fetchBytesWithRetry(a.thumb, { fetchImpl: (u) => fetch(u, { headers: AGENT }), onRetry: (e, n) => console.warn(`retry ${n}: ${e.message}`) });
+    if (!existsSync(cached)) writeFileSync(cached, bytes);
+    const img = await loadImage(bytes), k = Math.min(1, LONG / Math.max(img.width, img.height));
+    const width = Math.round(img.width * k), height = Math.round(img.height * k);
+    const c = createCanvas(width, height), g = c.getContext('2d');
+    g.fillStyle = '#ffffff'; g.fillRect(0, 0, width, height); // a transparent PNG on paper, as it shows on its page
+    g.drawImage(img, 0, 0, width, height);
+    writeFileSync(out, c.toBuffer('image/jpeg', 82));
+    pictures[w.file] = { src: `people/${name}`, width, height, page: a.url, sha1: a.sha1 };
+    console.log(`${w.person}: ${name} ${width} x ${height}`);
+  }
+  writeFileSync(manifestPath, `${JSON.stringify({ pictures }, null, 2)}\n`);
+  if (problems.length) { console.error(problems.join('\n')); process.exitCode = 1; }
+}
