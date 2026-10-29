@@ -32,12 +32,14 @@ const VIEWS = {
   'world-z2-voyages': { lon: -20, lat: 15, zoom: 2 }, // three voyages at once, each in its own ink, at the bold weight
   'pacific-z3-migrations': { lon: -170, lat: -15, zoom: 3 }, // two migrations, chevrons over a soft ribbon, across the date line
   'china-z5-doubt': { lon: 117, lat: 35, zoom: 5 }, // a doubted leg: its rings, and its cloud on empty land (Ibn Battuta to Khanbaliq)
+  'old-world-z2.6-1375': { lon: 62, lat: 33, zoom: 2.6 }, // the regions in the Catalan Atlas's names, read in English (docs/period-names)
 };
 // settings a golden draws with beyond the defaults; region-z5 is the README's picture, lettered PORTOLANI
 const OPTS = { 'region-z5': { autoTitle: false }, 'world-z2-voyage': { voyages: [{ id: 'magellan' }] },
   'world-z2-voyages': { voyages: [{ id: 'columbus' }, { id: 'da-gama' }, { id: 'drake' }].map((v) => ({ ...v, width: 3.2 })) },
   'pacific-z3-migrations': { voyages: [{ id: 'lapita-expansion' }, { id: 'east-polynesia-settlement', colour: '#1f4e8c' }] } ,
-  'china-z5-doubt': { voyages: [{ id: 'ibn-battuta-6' }] } };
+  'china-z5-doubt': { voyages: [{ id: 'ibn-battuta-6' }] },
+  'old-world-z2.6-1375': { regions: 'english', regionSet: 'catalan-1375' } };
 // and its full-size render is kept for the README, so `npm run golden` refreshes both together
 const README_IMAGE = join(ROOT, 'docs', 'readme.jpg');
 
@@ -122,6 +124,13 @@ test('world lettering: continents below z5.5, regions below z7, nothing by defau
   assert.ok(await count(VIEWS['world-z2'], { regions: 'latin' }) > 0, 'no regions at z2');
   assert.ok(await count(VIEWS['region-z5'], { regions: 'latin' }) > 0, 'no regions at z5');
   assert.ok(await count(VIEWS['region-z5'], { regions: 'english' }) > 0, 'no regions at z5');
+  // a period's names letter its realms in its own spelling or read in English, each in its zoom band; an unknown set letters today's
+  const lettered = async (opts) => (await createScene(env, { view: { lon: 62, lat: 33, zoom: 2.6 }, ...opts })).scene.worldNames.map((n) => n.text);
+  const read = await lettered({ regions: 'english', regionSet: 'catalan-1375' });
+  for (const name of ['Golden Horde', 'Mali Empire', 'Il-Khanate', 'Cathay']) assert.ok(read.includes(name), `no ${name} at z2.6`);
+  assert.ok(!read.includes('Lombardy'), 'Lombardy is lettered from z4.5');
+  assert.ok((await lettered({ regions: 'latin', regionSet: 'catalan-1375' })).includes('Melly'));
+  assert.deepEqual(await lettered({ regions: 'latin', regionSet: 'nowhere' }), await lettered({ regions: 'latin' }));
   // drawn on their own setting, with the other names off
   const { scene, data, bg } = await createScene(env, { view: VIEWS['world-z2'], names: false, continents: true });
   const draw = (s) => { const c = createCanvas(W, H); drawScene(c.getContext('2d'), s, data, bg, { scale: 1, x: 0, y: 0 }); return c.getContext('2d').getImageData(0, 0, W, H).data; };
