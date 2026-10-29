@@ -48,8 +48,71 @@ export function affineThrough3(src, dst) {
   return [a, b, c, d, e, f];
 }
 
+// A sheet placement from a similarity: the scan's centre px through the fit, its scale in Mercator degrees
+// per scan px, and its turn in degrees clockwise on the page (the fit's b > 0 tilts the scan's x axis
+// north going east, which is anticlockwise with y down).
+export function sheetOf(fit, width, height) {
+  const [lon, lat] = applyFit(fit, width / 2, height / 2);
+  return { lon, lat, scale: Math.hypot(fit.a, fit.b), turn: -Math.atan2(fit.b, fit.a) / RAD };
+}
+
+// The sheet's affine on the page: [a, b, c, d, e, f] for drawn px (the scan at `overlay.scale`) ->
+// page px, by `proj`: its centre at proj.project(lon, lat), its px size from the view's zoom alone (proj.k is
+// px per radian of longitude, the same in every projection), turned clockwise by `turn`. Null when the centre
+// is past an azimuthal projection's horizon.
+export function sheetTransform(overlay, proj, sheet) {
+  if (proj.visible && !proj.visible(sheet.lon, sheet.lat)) return null;
+  const [cx, cy] = proj.project(sheet.lon, sheet.lat);
+  if (![cx, cy].every(Number.isFinite)) return null;
+  const k = sheet.scale * (overlay.scale ?? 1) * proj.k * RAD, t = sheet.turn * RAD, c = Math.cos(t) * k, s = Math.sin(t) * k;
+  const w = overlay.img?.width ?? overlay.width / (overlay.scale ?? 1), h = overlay.img?.height ?? overlay.height / (overlay.scale ?? 1);
+  return [c, s, -s, c, cx - c * (w / 2) + s * (h / 2), cy - s * (w / 2) - c * (h / 2)];
+}
+// The sheet's four page corners, top-left first then clockwise; null off the horizon.
+export function sheetCorners(overlay, proj, sheet) {
+  const m = sheetTransform(overlay, proj, sheet);
+  if (!m) return null;
+  const w = overlay.img?.width ?? overlay.width / (overlay.scale ?? 1), h = overlay.img?.height ?? overlay.height / (overlay.scale ?? 1);
+  return [[0, 0], [w, 0], [w, h], [0, h]].map(([x, y]) => [m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]]);
+}
+// Whether page px (x, y) lies on the sheet, by the inverse of its affine.
+export function onSheet(overlay, proj, sheet, x, y) {
+  const m = sheetTransform(overlay, proj, sheet);
+  if (!m) return false;
+  const det = m[0] * m[3] - m[1] * m[2], dx = x - m[4], dy = y - m[5];
+  const u = (m[3] * dx - m[2] * dy) / det, v = (m[0] * dy - m[1] * dx) / det;
+  const w = overlay.img?.width ?? overlay.width / (overlay.scale ?? 1), h = overlay.img?.height ?? overlay.height / (overlay.scale ?? 1);
+  return u >= 0 && u <= w && v >= 0 && v <= h;
+}
+// The lon/lat frame the sheet covers, its four corners in Mercator coordinates about the centre (the
+// placement's own geometry, no projection), for a view that frames the whole sheet.
+export function sheetFrame(overlay, sheet) {
+  const t = sheet.turn * RAD, c = Math.cos(t), s = Math.sin(t), w = overlay.width, h = overlay.height;
+  const u0 = sheet.lon, v0 = mercDeg(sheet.lat);
+  const lons = [], mercs = [];
+  for (const [x, y] of [[-w / 2, -h / 2], [w / 2, -h / 2], [w / 2, h / 2], [-w / 2, h / 2]]) {
+    // page axes: x east, y down; a clockwise turn by t takes (x, y) to (x c - y s, x s + y c)
+    lons.push(u0 + (x * c - y * s) * sheet.scale); mercs.push(v0 - (x * s + y * c) * sheet.scale);
+  }
+  return { lonMin: Math.min(...lons), lonMax: Math.max(...lons), latMin: latOf(Math.min(...mercs)), latMax: latOf(Math.max(...mercs)) };
+}
+
+// The sheet drawn whole, opaque, over whatever the context holds, under its current transform.
+export function drawSheet(g, overlay, proj, sheet) {
+  if (!overlay?.img || !sheet) return;
+  const m = sheetTransform(overlay, proj, sheet);
+  if (!m) return;
+  g.save();
+  g.globalAlpha = 1;
+  g.globalCompositeOperation = 'source-over';
+  g.transform(...m);
+  g.drawImage(overlay.img, 0, 0);
+  g.restore();
+}
+
 // The overlay `id` names in packs/overlays/overlays.json, with its image; null for an id the site lacks
-// or a file that fails to load, so a missing overlay never stops the map.
+// or a file that fails to load, so a missing overlay never stops the map. With a `mask` (the scanner's
+// paper round the skin, transparent) the image is the scan composed with it on a canvas of the env's.
 const loaded = new Map();
 export function loadOverlay(id, env) {
   if (!/^[a-z][a-z0-9-]*$/.test(id ?? '')) return Promise.resolve(null);
@@ -57,7 +120,16 @@ export function loadOverlay(id, env) {
     loaded.set(id, (async () => {
       const list = await env.readJSON('packs/overlays/overlays.json');
       const o = (list?.overlays ?? []).find((v) => v.id === id);
-      return o ? { ...o, img: await env.loadImage(`packs/overlays/${o.file}`) } : null;
+      if (!o) return null;
+      let img = await env.loadImage(`packs/overlays/${o.file}`);
+      if (o.mask && env.createCanvas) {
+        const mask = await env.loadImage(`packs/overlays/${o.mask}`), c = env.createCanvas(img.width, img.height), g = c.getContext('2d');
+        g.drawImage(img, 0, 0);
+        g.globalCompositeOperation = 'destination-in';
+        g.drawImage(mask, 0, 0, img.width, img.height);
+        img = c;
+      }
+      return { ...o, img };
     })().catch(() => (loaded.delete(id), null)));
   }
   return loaded.get(id);
@@ -93,18 +165,32 @@ export function drawOverlay(g, overlay, proj, opacity = 0.6, { w = 1600, h = 160
   g.restore();
 }
 
-// The overlay in the link: `overlay=<id>` the scan laid over the map, `overlayopacity=<0..1>` how strongly.
-// Off (no overlay) and 0.6 are the defaults, and a default is left out of the hash. `ids`, when given, are the
-// overlays the site has: any other id reads as off. `q` is a URLSearchParams.
-export const OVERLAY_DEFAULTS = { overlay: null, overlayOpacity: 0.6 };
+// The overlay in the link: `overlay=<id>` the chart's sheet laid over the map at its own placement;
+// `sheet=<lon>,<lat>,<scale>,<turn>` where it was dragged to (the chart's own when left out);
+// `overlaymode=pieces` the warped pieces instead, with `overlayopacity=<0..1>` how strongly. Off (no
+// overlay), the sheet, its own placement and 0.6 are the defaults, and a default is left out of the hash.
+// `ids`, when given, are the overlays the site has: any other id reads as off. `q` is a URLSearchParams.
+export const OVERLAY_MODES = ['sheet', 'pieces'];
+export const OVERLAY_DEFAULTS = { overlay: null, overlayMode: 'sheet', sheet: null, overlayOpacity: 0.6 };
 export function overlayFromHash(q, ids) {
-  const id = q.get('overlay') ?? '', o = Number(q.get('overlayopacity'));
+  const id = q.get('overlay') ?? '', o = Number(q.get('overlayopacity')), mode = q.get('overlaymode');
+  const at = (q.get('sheet') ?? '').split(',').map(Number);
+  const sheet = at.length === 4 && at.every(Number.isFinite) && Math.abs(at[1]) < 85.1 && at[2] > 0 ? { lon: at[0], lat: at[1], scale: at[2], turn: at[3] } : null;
   return {
     overlay: /^[a-z][a-z0-9-]*$/.test(id) && id !== 'off' && (!ids || ids.has(id)) ? id : OVERLAY_DEFAULTS.overlay,
+    overlayMode: OVERLAY_MODES.includes(mode) ? mode : OVERLAY_DEFAULTS.overlayMode,
+    sheet,
     overlayOpacity: q.has('overlayopacity') && o >= 0 && o <= 1 ? o : OVERLAY_DEFAULTS.overlayOpacity,
   };
 }
 export function overlayToHash(st, q) {
   if (st.overlay) q.set('overlay', st.overlay);
+  if (st.overlayMode && st.overlayMode !== OVERLAY_DEFAULTS.overlayMode) q.set('overlaymode', st.overlayMode);
+  if (st.sheet) q.set('sheet', sheetText(st.sheet));
   if (st.overlayOpacity !== OVERLAY_DEFAULTS.overlayOpacity) q.set('overlayopacity', st.overlayOpacity);
 }
+// A placement as the hash writes it: the centre to a thousandth of a degree, the scale to five places (a
+// scan px is a few thousandths of a degree), the turn to a tenth.
+export const sheetText = (s) => `${(+s.lon).toFixed(3)},${(+s.lat).toFixed(3)},${(+s.scale).toFixed(5)},${(+s.turn).toFixed(1)}`;
+// Whether two placements are the same to the hash's rounding.
+export const sameSheet = (a, b) => !!a && !!b && sheetText(a) === sheetText(b);
