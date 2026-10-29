@@ -153,6 +153,14 @@
   /* the snap chips at the sheet's top left corner, over the map */
   #sheetChips { position: fixed; z-index: 2; margin: 0; }
   #sheetChips[hidden] { display: none; }
+  #otherTraditions h2 { margin: 18px 0 0; font: 18px var(--serif); }
+  #worldList { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+  #worldList .chart { display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 12px; background: var(--sheet); color: var(--sheet-ink); border: 1px solid var(--rule); border-radius: 6px; }
+  #worldList .chart div { display: grid; flex: 1; font: 15px var(--serif); }
+  #worldList small { font: 12px var(--serif); opacity: 0.7; }
+  #worldList .scan { flex: none; width: 64px; height: 44px; padding: 0; overflow: hidden; cursor: pointer; background: var(--panel); color: var(--fg); border: 1px solid var(--rule); border-radius: 4px; font: 11px var(--serif); }
+  #worldList .scan img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  #worldList .scan:hover { border-color: var(--accent); }
 
   header { display: flex; align-items: start; justify-content: space-between; gap: 8px; }
   h1 { font: 28px/1.1 var(--serif); margin: 4px 0 2px; letter-spacing: 0.06em; }
@@ -353,6 +361,10 @@
     </div>
   </header>
   <ul id="chartList"></ul>
+  <section id="otherTraditions" hidden>
+    <h2>Other traditions</h2>
+    <ul id="worldList"></ul>
+  </section>
 </aside>
 
 <aside id="drawer" class="drawer" role="dialog" aria-label="Settings" aria-modal="false">
