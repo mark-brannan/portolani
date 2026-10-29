@@ -31,6 +31,28 @@
           }
         }
       ]
+    },
+    {
+      "id": "catalan-atlas",
+      "title": "Catalan Atlas, sheet 5, 1375",
+      "source": "https://commons.wikimedia.org/wiki/File:Catalan_Atlas_BNF,_sheet_5.jpg",
+      "licence": "Public domain; Cresques Abraham, BnF Gallica btv1b55002481n",
+      "file": "catalan-atlas.jpg",
+      "width": 6454,
+      "height": 15862,
+      "scale": 4,
+      "pieces": [
+        {
+          "x0": 240,
+          "x1": 6080,
+          "fit": {
+            "a": 0.0033069994130441654,
+            "b": -0.000001166464530706482,
+            "tx": -26.98118659922556,
+            "ty": 74.83956042334086
+          }
+        }
+      ]
     }
   ]
 }

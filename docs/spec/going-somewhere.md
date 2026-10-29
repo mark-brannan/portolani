@@ -71,6 +71,31 @@ Feature: My position  (button `#locate`, inside the Go drawer) [verified page.js
     When the page loads
     Then `#locate` is hidden
 
+Feature: Going to a voyage  (the dividers `#voyages`, list `#voyageList`; `voyageView` in scene.mjs) [#242] Tested by: test/voyages.test.mjs (the in-view and fit decision); "several chosen at once" and "putting a voyage off" are verified by hand in a headless browser (PR #261), with no automated test
+  Scenario: some of the track is in view
+    Given the view `map=5.50/38.000/-8.000`, on Iberia
+    When the user opens `#voyages` and chooses "Magellan and Elcano round the world"
+    Then the track is drawn and the hash still holds `map=5.50/38.000/-8.000`
+    # The default view, centred on 7° E, stops just short of Sanlúcar, so from there Magellan flies.
+  Scenario: none of the track is in view
+    Given the view `map=6.00/25.000/120.000`, on the China Seas, where no part of Columbus's first voyage lies
+    When the user chooses "Columbus's first voyage to the Indies"
+    Then the map flies (the 600 ms flight of a sight) to the view that fits the whole track, with a tenth of its span spare on each side
+    And the drawer stays open, so another can be chosen
+  Scenario: a track across the date line
+    Given a view far from the Pacific
+    When the user chooses a voyage that crosses the date line
+    Then the fitted view is centred on the Pacific, the short way round, not on the far side of the globe
+  Scenario: several chosen at once
+    Given a view where neither voyage lies
+    When the user chooses one voyage and then another before the first flight lands
+    Then the map fits the last one chosen; the first is drawn but not flown to
+    And a choice is weighed against where a flight is bound, not the frame it is passing through
+  Scenario: putting a voyage off
+    Given a voyage on
+    When the user clicks it again
+    Then it is taken off the chart and the view does not move
+
 Feature: Reduced motion  (OS setting `prefers-reduced-motion`) [verified page.js:796]
   Scenario: a jump, not a flight
     Given `prefers-reduced-motion: reduce`
