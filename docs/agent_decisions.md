@@ -303,3 +303,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261029t212506z
 - A click on the open group's heading does nothing; a grouped list is never left with no group open The group slide takes about a quarter of a second The notes pulse is three rings over about four seconds, then the marks fade to nothing; the hide-for-a-voyage setting sits under Settings, Under the hood A cluster badge counts marks within a tap's reach and sits on the mark nearest the group's centre; the tile heads with the count and the date span ([#274](https://github.com/mark-brannan/portolani/pull/274))
+
+### 20261029t212628z
+- decisions line appended at the bottom per the file's 'newest last by date' header, not the top spec header points at decisions.md and touch.test.mjs instead of 'verified at main' until #282 merges ([#281](https://github.com/mark-brannan/portolani/pull/281))
