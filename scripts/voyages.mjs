@@ -6,6 +6,7 @@
 // and cuts it at the seam; the drawing is in scene.mjs, the land test in test/voyages.test.mjs.
 export const LINES = ['rhumb', 'great-circle', 'spline'];
 export const CONFIDENCES = ['attested', 'inferred', 'conventional'];
+export const MARKER_CONFIDENCES = [...CONFIDENCES, 'speculative']; // how a marker's place is known: the leg words, and a guess
 export const MODES = ['sea', 'land'];
 export const EVENT_KINDS = ['death', 'landfall', 'event'];
 // how each confidence is stroked, a setLineDash pattern in px at the stroke's width
@@ -152,7 +153,7 @@ export function problems(v) {
   const need = (ok, msg) => { if (!ok) out.push(msg); };
   need(typeof v.id === 'string' && /^[a-z][a-z0-9-]*$/.test(v.id), 'id: lower-case slug');
   for (const k of ['title', 'short', 'when', 'summary']) need(typeof v[k] === 'string' && v[k].length, `${k}: a string`);
-  need(Array.isArray(v.who) && v.who.length, 'who: the named people');
+  need(Array.isArray(v.who) && v.who.length && v.who.every((w) => typeof w === 'string' && SLUG.test(w)) && new Set(v.who).size === v.who.length, 'who: distinct slugs into people.json');
   need(Array.isArray(v.sources) && v.sources.length && v.sources.every((s) => s.title && s.url), 'sources: [{ title, url }]');
   need(Array.isArray(v.legs) && v.legs.length, 'legs: at least one');
   for (const [i, leg] of (v.legs ?? []).entries()) {
@@ -174,6 +175,7 @@ export function problems(v) {
     if (e.kind === 'death') need(typeof e.who === 'string' && e.who.length, `event ${i}: who died`);
     need(e.text === undefined || (typeof e.text === 'string' && e.text.length), `event ${i}: text, when given, a string`);
     need(e.doubt === undefined || (typeof e.doubt === 'string' && e.doubt.length), `event ${i}: doubt, when given, a string (who doubts it and why)`);
+    need(e.confidence === undefined || MARKER_CONFIDENCES.includes(e.confidence), `event ${i}: confidence, when given, one of ${MARKER_CONFIDENCES}`);
     need(citedOk(e.cited), `event ${i}: cited, when given, { title, url } with an https url, from sources.json`);
     if (e.alternatives !== undefined) {
       need(e.kind === 'death', `event ${i}: alternatives belong to a death`);
@@ -186,27 +188,23 @@ export function problems(v) {
       }
     }
   }
-  // every named person has a skull, unless people.json says nobody knows where they died
-  for (const w of Array.isArray(v.who) ? v.who : []) {
-    if (!(v.deathUnknown ?? []).includes(w)) need((v.events ?? []).some((e) => e.kind === 'death' && e.who === w), `events: where ${w} died (a death in people.json, or "unknown")`);
-  }
   return out;
 }
 
-// The one reader of the voyage files: each piece of text lives in one place, and this puts a voyage
-// back together. A person's death is in people.json, keyed by name ({ "death": { lon, lat, date, label,
-// text, source, alternatives } }, or { "death": "unknown" }), and joins every voyage whose `who` names
-// them; a voyage's `sources` are ids into sources.json, and so is an event's or a death's `cite`, the one its
-// tile links to (resolved to `cited`, { title, url }); a leg sailed again on another voyage is
-// { "sameAs": "<voyage id>/<leg id>", "dates" }, the leg's own file giving it an `id`. `readJSON(path)`
-// reads a path under the site root, sync or async. Returns the whole record problems() and the drawing
-// take; throws on a reference that does not resolve or a death written in the voyage file.
+// The one reader of the voyage files: each piece of text lives in one place, and this puts a voyage back
+// together. A voyage's `who` is slugs into people.json (checkPerson below is the person's schema), its `sources`
+// ids into sources.json, and so is an event's or a marker's `cite`, resolved to `cited` { title, url } for the tile.
+// Each person's death with a place joins the events as a skull, its `who` the person's name. A leg sailed again on
+// another voyage is { "sameAs": "<voyage id>/<leg id>", "dates" }, the leg's own file giving it an `id`.
+// `readJSON(path)` reads a path under the site root, sync or async. Returns the whole record problems() and the
+// drawing take, with `people` [{ id, ...record }]; throws on a reference that does not resolve or a death written
+// in the voyage file.
 export const VOYAGE_DIR = 'data/voyages';
 export async function readVoyage(id, readJSON) {
   const file = (name) => `${VOYAGE_DIR}/${name}.json`;
   const [raw, people, sources] = await Promise.all([file(id), file('people'), file('sources')].map((p) => readJSON(p)));
   const fail = (what) => { throw new Error(`${id}: ${what}`); };
-  if (raw.deathUnknown || (raw.events ?? []).some((e) => e.kind === 'death')) fail('a death belongs in people.json, not the voyage');
+  if ((raw.events ?? []).some((e) => e.kind === 'death')) fail('a death belongs in people.json, not the voyage');
   const others = new Map([[id, raw]]);
   const legs = [];
   for (const [i, leg] of (raw.legs ?? []).entries()) {
@@ -220,12 +218,9 @@ export async function readVoyage(id, readJSON) {
     const { id: _, ...shared } = target;
     legs.push({ ...shared, ...(leg.dates !== undefined && { dates: leg.dates }) });
   }
-  const deaths = [], unknown = [];
-  for (const who of raw.who ?? []) {
-    const death = people[who]?.death;
-    if (death === 'unknown') unknown.push(who);
-    else if (death) deaths.push({ kind: 'death', who, ...death });
-  }
+  const persons = (raw.who ?? []).map((w) => people[w] ? { id: w, ...people[w] } : fail(`${w} is not in people.json`));
+  const deaths = persons.filter((p) => p.death && Number.isFinite(p.death.lon) && Number.isFinite(p.death.lat))
+    .map((p) => ({ kind: 'death', who: p.name ?? p.id, ...p.death }));
   const source = (s) => sources[s] ?? fail(`source ${s} is not in sources.json`);
   // an event's or a death's `cite` is the sources.json id its tile links to; an alternative place without its own takes the death's
   const linked = (e, up) => { const { cite, ...rest } = e; const cited = cite === undefined ? up : source(cite); return cited ? { ...rest, cited } : rest; };
@@ -234,7 +229,62 @@ export async function readVoyage(id, readJSON) {
     if (Array.isArray(e.alternatives)) out.alternatives = e.alternatives.map((a) => linked(a, out.cited));
     return out;
   });
-  return { ...raw, sources: (raw.sources ?? []).map(source), legs, events, ...(unknown.length && { deathUnknown: unknown }) };
+  return { ...raw, sources: (raw.sources ?? []).map(source), legs, events, people: persons };
+}
+
+// A person's record in people.json, keyed by a lower-case slug: nothing is required, and each field is checked only
+// when it is there. `name` is the display name (the key stands in when there is none), `aka` other names, `bio` a
+// paragraph, `sources` ids into sources.json. `born` and `death` are markers: { lon, lat, date, place, label, text,
+// source, cite, confidence, alternatives }, lon and lat together or not at all, confidence one of MARKER_CONFIDENCES
+// (the leg words, and `speculative` for a guessed place). A death with lon and lat is drawn as a skull; one without is
+// not drawn. `images` are Wikimedia Commons files, { file, kind, author, date, licence, note }: `file` is the Commons
+// file name, never a URL (its page is https://commons.wikimedia.org/wiki/File:<file>, its image
+// .../wiki/Special:FilePath/<file>?width=480), `kind` one of IMAGE_KINDS, the rest copied from the file page.
+export const IMAGE_KINDS = ['life', 'near', 'posthumous', 'imaginary', 'modern', 'scene', 'ship', 'map'];
+export const SLUG = /^[a-z][a-z0-9-]*$/;
+// The problems in one person record, as strings; none when it is well formed. `sources` is what a `cite` must name.
+export function checkPerson(id, p, { sources } = {}) {
+  const out = [];
+  const need = (ok, msg) => { if (!ok) out.push(`${id}: ${msg}`); };
+  const str = (s) => typeof s === 'string' && s.length > 0;
+  const strs = (a) => Array.isArray(a) && a.every(str);
+  need(SLUG.test(id), 'key: a lower-case slug');
+  if (!p || typeof p !== 'object' || Array.isArray(p)) return [...out, `${id}: a record`];
+  for (const k of ['name', 'bio']) if (p[k] !== undefined) need(str(p[k]), `${k}: a string`);
+  for (const k of ['aka', 'sources']) if (p[k] !== undefined) need(strs(p[k]), `${k}: strings`);
+  if (sources && Array.isArray(p.sources)) for (const s of p.sources) need(s in sources, `sources: ${s} is not in sources.json`);
+  const place = (m, at) => {
+    if (m.lon === undefined && m.lat === undefined) return;
+    need(Number.isFinite(m.lon) && Number.isFinite(m.lat) && Math.abs(m.lon) <= 180 && Math.abs(m.lat) <= 90, `${at}: lon and lat, together`);
+  };
+  // Where a mark is drawn (lon or lat given) it needs a label and a source; an alternative is always drawn, so it needs a place too.
+  const marker = (m, at, alt = false) => {
+    if (!m || typeof m !== 'object' || Array.isArray(m)) return need(false, `${at}: { lon, lat, date, place, label, text, source, cite, confidence, alternatives }`);
+    place(m, at);
+    if (alt || m.lon !== undefined || m.lat !== undefined) {
+      need(alt ? Number.isFinite(m.lon) && Number.isFinite(m.lat) : true, `${at}: lon and lat, together`);
+      for (const k of alt ? ['place', 'label', 'source'] : ['label', 'source']) need(str(m[k]), `${at}: a ${k}, since it is drawn`);
+    }
+    for (const k of ['date', 'place', 'label', 'text', 'source']) if (m[k] !== undefined) need(str(m[k]), `${at}: ${k}, a string`);
+    if (m.cite !== undefined) need(str(m.cite) && (!sources || m.cite in sources), `${at}: cite ${m.cite} is not in sources.json`);
+    if (m.confidence !== undefined) need(MARKER_CONFIDENCES.includes(m.confidence), `${at}: confidence one of ${MARKER_CONFIDENCES}`);
+    if (m.alternatives !== undefined) {
+      need(Array.isArray(m.alternatives), `${at}: alternatives, a list`);
+      for (const [j, a] of (Array.isArray(m.alternatives) ? m.alternatives : []).entries()) marker(a, `${at} alternative ${j}`, true);
+    }
+  };
+  for (const k of ['born', 'death']) if (p[k] !== undefined) marker(p[k], k);
+  if (p.images !== undefined) {
+    need(Array.isArray(p.images), 'images: a list');
+    for (const [j, q] of (Array.isArray(p.images) ? p.images : []).entries()) {
+      const at = `image ${j}`;
+      if (!q || typeof q !== 'object') { need(false, `${at}: { file, kind, author, date, licence, note }`); continue; }
+      need(str(q.file) && !/^(File:|https?:)|\//i.test(q.file), `${at}: file, a Commons file name`);
+      need(IMAGE_KINDS.includes(q.kind), `${at}: kind one of ${IMAGE_KINDS}`);
+      for (const k of ['author', 'date', 'licence', 'note']) if (q[k] !== undefined) need(str(q[k]), `${at}: ${k}, a string`);
+    }
+  }
+  return out;
 }
 
 // The year a voyage set out, read off its `when` ("c. 600 BC", "c. 330–320 BC", "1271–1295"): the first number,
