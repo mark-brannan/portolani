@@ -55,7 +55,7 @@ export function pieceFit(rows, piece) {
 // A level similarity (no turn) through `pairs` [[x, y], [lon, lat]] by least squares: a rough centre and scale for a
 // chart laid by a handful of landmarks read off the scan, so the sheet's own placement is truly level.
 export function levelFit(pairs) {
-  const { a, b } = similarityFit(pairs), k = Math.hypot(a, b), n = pairs.length;
+  const k = similarityFit(pairs).a, n = pairs.length; // with the turn held at 0, the real part is the least-squares scale
   const mx = pairs.reduce((t, [[x]]) => t + x, 0) / n, my = pairs.reduce((t, [[, y]]) => t + y, 0) / n;
   const mu = pairs.reduce((t, [, [lon]]) => t + lon, 0) / n, mv = pairs.reduce((t, [, [, lat]]) => t + mercDeg(lat), 0) / n;
   return { a: k, b: 0, tx: mu - k * mx, ty: mv + k * my };

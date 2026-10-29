@@ -162,14 +162,9 @@ the scan by eye (`levelFit` in scripts/build-overlays.mjs: the least-squares sca
 turn held at 0), so the Level chip is true and the hand does the rest. The landmarks sit beside each chart in
 the build's `CHARTS`.
 
-- **Jorge de Aguiar, 1492** (Beinecke Library): Lisbon, Gibraltar, Venice, Jerusalem. The scan is on black, so
-  its mask keys the black round the skin as well as light paper (`paperMask`'s `dark`).
-- **Battista Agnese, world map, about 1544** (Library of Congress, map 10 of the atlas): Gibraltar, the Cape of
-  Good Hope, the Strait of Magellan, the Plate, Cape St Augustine, Cape Comorin. The oval projection bends every
-  meridian, so one level similarity is rough away from the centre. The scan is the open book and its page is
-  tinted, so the mask keys only the scanner's edge: the sheet carries the whole page and the binding.
-- **Fernão Vaz Dourado, chart 4, 1580** (Bayerische Staatsbibliothek): Lisbon, Finisterre, Gibraltar, Brest,
-  Ireland, Palamós, Iceland. At this fit the chart's Iceland and Labrador coast lie east of today's.
+- **Aguiar, 1492** (Beinecke): Lisbon, Gibraltar, Venice, Jerusalem; its black scan keys `dark`.
+- **Agnese, about 1544** (LoC, map 10): six capes and straits; the oval bends, so rough away from the centre.
+- **Dourado, 1580** (BSB, chart 4): seven points, Lisbon to Iceland; its Iceland lies east of today's.
 
 `npm run render -- --view <lon,lat,zoom> --overlay <id> --out <file>`, at each sheet's own frame.
 
