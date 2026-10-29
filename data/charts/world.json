@@ -1,5 +1,5 @@
 {
-  "note": "Maps and charts from other traditions than the European portolan: Islamic, Ottoman, Chinese, Korean, Japanese, Pacific, Inuit, African, Mesoamerican, ancient, and the mappae mundi for contrast. Same shape as portolans.json. original: the full-size scan on Wikimedia Commons; display: the original when its long side is 3840 px or less, else Commons' own 3840 px rendering; thumb: Commons' 120 px rendering, for the drawer. licence: as the Commons page states it. A photo of a 3D object (a tablet, a mosaic, a stick chart) ships only under the photo's own licence, never PD-Art. bbox [lonMin, lonMax, latMin, latMax] is a rough guess, null when the work is not a map of a place in that sense. status ship: the image is open; link: named and linked only, with the reason.",
+  "note": "Maps and charts from other traditions than the European portolan: Islamic, Ottoman, Chinese, Korean, Japanese, Pacific, Inuit, African, Mesoamerican, ancient, and the mappae mundi for contrast. Same shape as portolans.json. original: the full-size scan on Wikimedia Commons; display: the original when its long side is 3840 px or less, else Commons' own 3840 px rendering; thumb: Commons' 120 px rendering, for the drawer. licence: as the Commons page states it; credit: whom a CC BY or CC BY-SA licence requires crediting, as the Commons page names them. A photo of a 3D object (a tablet, a mosaic, a stick chart) ships only under the photo's own licence, never PD-Art. bbox [lonMin, lonMax, latMin, latMax] is a rough guess, null when the work is not a map of a place in that sense. status ship: the image is open; link: named and linked only, with the reason.",
   "charts": [
     {
       "id": "piri-reis-1513",
@@ -207,6 +207,7 @@
       "kind": "world map",
       "page": "https://commons.wikimedia.org/wiki/File:Ibn_Howqal_World_map-001.jpg",
       "licence": "cc-by-sa-4.0",
+      "credit": "Zereshk, Wikimedia Commons",
       "bbox": [
         -15,
         90,
@@ -236,6 +237,7 @@
       "kind": "world map",
       "page": "https://commons.wikimedia.org/wiki/File:Mahmud_al-Kashgari_map.jpg",
       "licence": "self|cc-by-sa-3.0",
+      "credit": "Maytham Mahdipoor",
       "bbox": [
         20,
         140,
@@ -584,6 +586,7 @@
       "kind": "map",
       "page": "https://commons.wikimedia.org/wiki/File:Ino_Tadataka_map_(daizu,,_Atsumi-hanto).jpg",
       "licence": "cc-by-sa-3.0",
+      "credit": "Inō Tadataka Memorial Museum, Katori",
       "bbox": [
         136.9,
         137.4,
@@ -790,7 +793,8 @@
       "holder": "Brooklyn Museum, 76.20.4",
       "kind": "object",
       "page": "https://commons.wikimedia.org/wiki/File:Brooklyn_Museum_76.20.4_Lukasa_Memory_Board.jpg",
-      "licence": "WikiAfrica/Brooklyn Museum (CC BY 3.0, attribution Brooklyn Museum)",
+      "licence": "WikiAfrica/Brooklyn Museum (CC BY 3.0)",
+      "credit": "Brooklyn Museum",
       "bbox": null,
       "why": "Places and lineages set in beads, a map held in the hand",
       "status": "ship",
@@ -995,6 +999,7 @@
       "kind": "object",
       "page": "https://commons.wikimedia.org/wiki/File:Madaba_map_Palestine.jpg",
       "licence": "self|cc-by-sa-4.0",
+      "credit": "Onceinawhile, Wikimedia Commons",
       "bbox": [
         34,
         37,
@@ -1098,7 +1103,7 @@
         "lat": 25.8
       },
       "holder": "Bibliothèque nationale de France",
-      "kind": "chart",
+      "kind": "text",
       "page": "https://en.wikipedia.org/wiki/Ahmad_ibn_Majid",
       "licence": "not found",
       "bbox": [

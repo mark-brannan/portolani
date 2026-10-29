@@ -23,9 +23,9 @@ import { TREES, TREE_STYLES, plantTrees, plantPalms } from './trees.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
 export { SIGHT_TILES } from './sights.mjs'; // the page's tiles for its places; here so the module ships with the scene
 import { BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from './buildings.mjs';
-import { legPath, splitAtSeam, DASHES, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, readVoyage } from './voyages.mjs';
-export { VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, readVoyage };
-import { loadOverlay, drawOverlay } from './overlays.mjs';
+import { legPath, splitAtSeam, DASHES, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, readVoyage, chronological, voyageLink } from './voyages.mjs';
+export { VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, readVoyage, chronological, voyageLink };
+import { loadOverlay, drawOverlay, drawSheet } from './overlays.mjs';
 import { noteMarks } from './notes.mjs';
 export { noteMarks };
 const record = (id) => catalogue.find((r) => r.id === id); // a coastlines catalogue record by its id
@@ -2359,8 +2359,8 @@ function drawScene(g, scene, data, bg, view) {
   // 2. land
   paintLand(g, data, land, coast, scene.relief && { ...scene.relief, humps: [] });
 
-  // 2.1 a chart's scan laid over the land and sea, under the lattice and every ornament (overlays.mjs)
-  if (scene.overlay) drawOverlay(g, scene.overlay, data.proj, scene.overlay.opacity, { w: W, h: H });
+  // 2.1 the warped pieces of a chart's scan laid over the land and sea, under the lattice and every ornament (overlays.mjs)
+  if (scene.overlay?.mode === 'pieces') drawOverlay(g, scene.overlay, data.proj, scene.overlay.opacity, { w: W, h: H });
 
   // 3. rhumb lattice: 16 nodes on a circle plus the centre, 32 rhumb lines each, in three inks
   const rays = latticeOf(scene, data);
@@ -2466,6 +2466,8 @@ function drawScene(g, scene, data, bg, view) {
   // the voyages over the ornaments, under the cartouche
   drawVoyages(g, scene.voyages, data.proj, r, viewRect(g, view, 0));
   drawNotes(g, scene.overlay, data.proj, r);
+  // 9.1 the chart's sheet, whole and opaque, over everything on the map (overlays.mjs)
+  if (scene.overlay?.mode === 'sheet') drawSheet(g, scene.overlay, data.proj, scene.overlay.sheet);
 
   // 10. cartouche, lettered in its cleared panel
   const c = scene.cartouche;
@@ -2656,7 +2658,7 @@ function drawAnchored(g, a, bg, view, layers) {
   const fr = framing(a, view), { proj, at, scaled } = fr, show = a.show;
   g.save();
   g.setTransform(1, 0, 0, 1, 0, 0);
-  if (a.overlay) drawOverlay(g, a.overlay, proj, a.overlay.opacity, { w: W, h: H }); // the scan first, as at a stop
+  if (a.overlay?.mode === 'pieces') drawOverlay(g, a.overlay, proj, a.overlay.opacity, { w: W, h: H }); // the pieces first, as at a stop
   const inks = [STYLE.ink, STYLE.windRed, STYLE.windGreen];
   for (const [kind, ink] of show.rhumb ? inks.entries() : []) {
     limn(g, a.rays.filter((ray) => ray.kind === kind).map((ray) => ray.line), proj.toPx, { color: ink, alpha: STYLE.rhumbAlpha, width: STYLE.rhumbWidth, oneStroke: true, ...proj.seam });
@@ -2697,6 +2699,7 @@ function drawAnchored(g, a, bg, view, layers) {
   }
   drawVoyages(g, a.voyages, proj, { x0: 0, y0: 0, x1: W, y1: H });
   drawNotes(g, a.overlay, proj, { x0: 0, y0: 0, x1: W, y1: H });
+  if (a.overlay?.mode === 'sheet') drawSheet(g, a.overlay, proj, a.overlay.sheet); // the sheet last, as at a stop
   g.restore();
   if (show.kinds.has('cartouche')) drawCartouche(g, a.cartouche, (x0, y0, x1, y1) => g.drawImage(bg, x0, y0, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0));
   drawScaleBar(g, { proj }, bg, { scale: 1, x: 0, y: 0 }, W, H, show.scale, a.scaleSprite, scalePlace(a));
@@ -2726,9 +2729,11 @@ function drawAnchored(g, a, bg, view, layers) {
 // `voyages`: the voyages drawn over the ornaments, in order, as [{ id, colour, width }]: `id` names data/voyages/<id>.json
 // (docs/voyages/README.md); `colour` (hex) defaults by voyageColours, the first the chart's red; `width` (px) to VOYAGE_WIDTH.
 // None by default. The older `voyage` (one id, or 'off') still draws that one.
-// `overlay`: { id, opacity }, a chart's scan laid over the map at that opacity (0 to 1), over the land and under the
-// lattice and the ornaments: `id` names an entry of packs/overlays/overlays.json (docs/overlay/README.md). None by default;
-// an id the site lacks draws nothing.
+// `overlay`: { id, mode, sheet, opacity }, a chart's scan laid over the map: `id` names an entry of packs/overlays/overlays.json
+// (docs/overlay/README.md). `mode` 'sheet' (the default) lays the whole scan, opaque, over everything on the map at
+// `sheet` ({ lon, lat, scale, turn }; the chart's own placement when left out); 'pieces' warps its pieces onto today's
+// coast at `opacity` (0 to 1), over the land and under the lattice and the ornaments. None by default; an id the site
+// lacks draws nothing.
 // `kinds` defaults to DEFAULT_KINDS, every kind. A kind left out is still
 // placed when the lattice needs it (a rose, the cartouche's corner), only not drawn.
 // `debug`: a list of DEBUG_LAYERS ('sheets', 'rings'), the atlas's sheets drawn in red over everything; none by default.
@@ -2846,7 +2851,7 @@ export async function createScene(environment, opts = {}) {
   const world = await loadDetail(coarse, view);
   const [voyages, overlaid] = await Promise.all([loadVoyages(opts.voyages ?? (opts.voyage ? [{ id: opts.voyage }] : [])), opts.overlay ? loadOverlay(opts.overlay.id, env) : null]);
   const opacity = Number(opts.overlay?.opacity ?? 0.6);
-  const overlay = overlaid && { ...overlaid, opacity: Number.isFinite(opacity) ? Math.max(0, Math.min(1, opacity)) : 0.6 };
+  const overlay = overlaid && { ...overlaid, mode: opts.overlay.mode === 'pieces' ? 'pieces' : 'sheet', sheet: opts.overlay.sheet ?? overlaid.sheet, opacity: Number.isFinite(opacity) ? Math.max(0, Math.min(1, opacity)) : 0.6 };
   const tLoad = performance.now();
 
   const data = viewData(world, view);

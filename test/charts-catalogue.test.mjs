@@ -22,6 +22,7 @@ for (const file of files) {
       assert.ok(c.title && c.licence && c.page, `${c.id}: title, licence and page`);
       assert.ok(['ship', 'link'].includes(c.status), `${c.id}: status ${c.status}`);
       if (c.status === 'link') assert.ok(c.reason, `${c.id}: a link-only chart says why`);
+      if (c.status === 'ship' && /cc[- ]by/i.test(c.licence)) assert.ok(c.credit, `${c.id}: a CC BY licence names whom to credit`);
       if (c.bbox) {
         const [x0, x1, y0, y1] = c.bbox;
         assert.ok(c.bbox.length === 4 && x0 < x1 && y0 < y1 && x0 >= -180 && x1 <= 180 && y0 >= -90 && y1 <= 90, `${c.id}: bbox [lonMin, lonMax, latMin, latMax] on the globe`);
