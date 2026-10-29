@@ -132,14 +132,20 @@
 
   #chartList { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 8px; }
   /* a chart's row: its scan, the sheet's button (lit while the sheet is on the map); beside it the name, then its city (a link to it) and year */
-  #chartList .chart { display: flex; align-items: center; gap: 12px; padding: 6px 10px 6px 6px; background: var(--sheet); color: var(--sheet-ink); border: 1px solid var(--rule); border-radius: 6px; }
-  #chartList .thumb { width: 64px; height: 44px; padding: 0; flex: none; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 3px; border: 1px solid var(--rule); background: var(--panel); cursor: pointer; }
-  #chartList .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  #chartList .thumb.none { opacity: 0.4; } #chartList .thumb.none svg { width: 32px; height: 32px; }
-  #chartList .thumb[aria-pressed=true] { box-shadow: inset 0 0 0 2px var(--accent); border-color: var(--accent); }
+  #chartList .chart { display: flex; align-items: flex-start; gap: 12px; padding: 6px 10px 6px 6px; background: var(--sheet); color: var(--sheet-ink); border: 1px solid var(--rule); border-radius: 6px; }
+  #chartList .thumb { width: 96px; height: 66px; padding: 0; flex: none; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 3px; border: 1px solid var(--rule); background: var(--panel); cursor: pointer; }
+  #chartList .thumb img { width: 100%; height: 100%; max-width: none; object-fit: cover; display: block; }
+  #chartList .thumb.none { opacity: 0.4; } #chartList .thumb.none svg { width: 40px; height: 40px; }
   #chartList .thumb:hover { border-color: var(--accent); }
-  #chartList .about { display: flex; flex-direction: column; min-width: 0; }
-  #chartList .name { font: 16px var(--serif); }
+  #chartList .about { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+  #chartList .head { display: flex; align-items: flex-start; gap: 6px; }
+  #chartList .name { padding: 0; font: 16px var(--serif); color: inherit; background: none; border: 0; cursor: pointer; text-align: left; }
+  #chartList .name:hover { color: var(--accent); }
+  #chartList .eye { flex: none; margin-left: auto; width: 28px; height: 24px; padding: 2px 4px; color: var(--sheet-ink); background: none; border: 1px solid transparent; border-radius: 3px; cursor: pointer; }
+  #chartList .eye:hover { border-color: var(--rule); color: var(--accent); }
+  #chartList .eye svg { width: 20px; height: 20px; display: block; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+  #chartList .eye[aria-pressed=true] .slash { display: none; }
+  #chartList .eye[aria-pressed=false] { opacity: 0.7; }
   #chartList .where { font: 13px var(--serif); opacity: 0.85; }
   #chartList .city { padding: 0; font: inherit; color: inherit; background: none; border: 0; cursor: pointer; text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 2px; }
   #chartList .city:hover { color: var(--accent); text-decoration-color: var(--accent); }
@@ -342,7 +348,7 @@
   <header>
     <div>
       <h1>Charts</h1>
-      <p>A chart's picture lays its scan over the map as one sheet, to drag, turn and resize by hand; its city flies there.</p>
+      <p>A chart's picture or name flies to it and lays its scan over the map as one sheet, to drag, turn and resize by hand; the eye shows or hides the sheet; its city flies there.</p>
       <span class="notes">notes to come</span>
     </div>
   </header>

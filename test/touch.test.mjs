@@ -284,6 +284,23 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     await page.waitForFunction((x) => location.hash !== x, h, { timeout: 60000 });
     const [, lat, lon] = (await page.evaluate(() => location.hash)).replace('#map=', '').split('/').map(Number);
     assert.ok(Math.abs(lat - 37.5) < 1 && Math.abs(lon - 25.2) < 1, `Vesconte's sheet is not round the Cyclades: ${lat}, ${lon}`);
+    // the eye shows and hides a chart's sheet and leaves the drawer open
+    await page.click('#charts');
+    const cosa = page.locator('#chartList .chart', { hasText: 'Juan de la Cosa' });
+    const overlaid = () => page.evaluate(() => /[#&]overlay=de-la-cosa(&|$)/.test(location.hash));
+    await cosa.locator('.eye').click();
+    await page.waitForFunction(() => /[#&]overlay=de-la-cosa(&|$)/.test(location.hash), null, { timeout: 60000 });
+    assert.equal(await opened('chartsDrawer'), true, 'the eye shut the drawer');
+    assert.equal(await cosa.locator('.eye').getAttribute('aria-pressed'), 'true');
+    await cosa.locator('.eye').click();
+    await page.waitForFunction(() => !/[#&]overlay=/.test(location.hash), null, { timeout: 60000 });
+    assert.equal(await opened('chartsDrawer'), true, 'the eye shut the drawer');
+    // the city under the sheet: the flight there takes the sheet off
+    await cosa.locator('.eye').click();
+    await page.waitForFunction(() => /[#&]overlay=de-la-cosa(&|$)/.test(location.hash), null, { timeout: 60000 });
+    await cosa.locator('.city').click();
+    await page.waitForFunction(() => !/[#&]overlay=/.test(location.hash), null, { timeout: 60000 });
+    assert.equal(await overlaid(), false, 'the sheet still covers El Puerto de Santa María');
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();
