@@ -63,3 +63,54 @@ Feature: No icon removed, no section gone, until the reorg
     Given the instrument buttons and drawer sections on main
     When a PR changes a drawer, before the larger reorg
     Then every instrument button and every drawer section on main is still there after it
+
+Feature: A chart's scan lies on the map as one sheet
+  Source: the user's brief on [#266](https://github.com/mark-brannan/portolani/pull/266), 2026-10-29: "the cutout of the jpg scan overlaid, very simply. KISS."; "apply full transparency around the empty 'edge' of the image and do not occlude the background main portolani map, yet also no transparency or mixing of the chart scan with the background map. Purely one on top of the other."; "land as one unsplit image, in whatever orientation is closest, using some average, to the real map features"; "One sheet of paper (or animal skin) set directly on top of another."
+  Scenario: the default look of a chart's scan on the map
+    Given a chart whose scan the site carries
+    When the user shows it
+    Then the scan is drawn whole, as one image under one similarity (scale, turn and shift; no warp, no split)
+    And the scanner's paper round the skin is transparent, keyed from the image's border inward, so the map shows round the sheet's ragged edge
+    And inside that edge the scan is fully opaque: no opacity, no blend, no onion skin
+    And it is drawn above every layer of the map (coast, lattice, names, towns, roses, ships, voyages), as one sheet laid on another
+  Scenario: where the sheet lands by default
+    Given a chart whose coasts fit the map at more than one scale or turn (de la Cosa's two worlds, the Carta Marina's two halves)
+    When the user shows it
+    Then it lies level, at a scale midway between those fits, centred between them: close, not exact
+    And the placements that fit one coast best (the European coast, the New World coast, a third where it is as good) are offered as snaps on the sheet, as many as fit well, not only two
+  Scenario: the user moves the sheet
+    Given the sheet shown
+    When the user drags inside it
+    Then it slides up, down, left and right over the map, and the map does not pan
+    When the user drags its corner handle
+    Then it turns about its centre (and, while the user is trying it, resizes by its other handle; resizing may go)
+    And the link keeps the placement
+  Scenario: the map's projection changes under the sheet
+    Given the sheet shown and the view at some zoom and centre
+    When the user picks another projection
+    Then the map re-draws in it at the same zoom and centre, no jump
+    And the sheet keeps its pixel size and turn, its centre pinned to the same longitude and latitude, undistorted
+
+Feature: The warped pieces are the alternative, behind a setting
+  Source: the user's brief on [#266](https://github.com/mark-brannan/portolani/pull/266), 2026-10-29: "I do not want to throw this logic away, but it is not working as well as I would like (it's ugly and needs refinement) so I want to make it the alternative UX experience, not the default, that we hide behind a separate setting."
+  Scenario: the pieces mode
+    Given a chart whose scan is split into pieces, each warped onto today's coast with its own fit
+    When the user looks for it
+    Then it is off by default and lives under Settings, Under the hood, with its opacity slider beside it, not in the Charts drawer
+    And on, it draws exactly as before: each piece under the lattice and the ornaments, at the slider's opacity
+    And other comparison controls (a slider wipe, a swipe) are later work, behind the same setting
+
+Feature: A chart's row in the Charts drawer
+  Source: the user's brief on [#266](https://github.com/mark-brannan/portolani/pull/266), 2026-10-29: "if the only button we need is to jump to the chart's default position and show it, then we really need no button beyond the name of the chart itself"; "put the originating city immediately to the right ... and use it as another button. In that case the button text is still 'Majorca' and no further explanation is needed"; "'Where it was made' is not helpful"; "all charts to have a miniature version of the scan for their icon"
+  Scenario: the row
+    Given the Charts drawer open
+    When the user looks at a chart's row
+    Then its icon is a miniature of that chart's own scan, not the drawer's chart glyph
+    And the chart's name is the one button for the chart: it shows the sheet at its default placement and flies to the view that frames the whole sheet; a second click hides it
+    And the city it was made in and its year are one button, "Majorca, 1375", that flies to the city; no "where it was made" wording, no tooltip-only meaning
+    And a chart without a scan yet shows the glyph greyed, its name flying to its sheet view as before
+  Scenario: the view that frames the sheet
+    Given a chart shown by its name
+    When the map flies to it
+    Then the zoom shows the whole sheet with a small margin, derived from the sheet's corners, never a hand-typed zoom (de la Cosa lands near zoom 2, not 4.4)
+    And a chart brought in later carries its own frame, checked at the chart's size on screen before it ships
