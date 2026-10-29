@@ -224,7 +224,7 @@ test('noteworthy ports: four eras in time order, six ports each, every one with 
   const { SIGHT_TILES } = await import('../scripts/sights.mjs');
   const src = readFileSync('public/page.js', 'utf8');
   const eras = [...src.matchAll(/^ {2}\['(The [^']+)', \[\n([\s\S]*?)^ {2}\](?:, 'open')?\],$/gm)]
-    .map(([, era, rows]) => [era, [...rows.matchAll(/^ {4}\['([^']+)', port\(/gm)].map((m) => m[1])]);
+    .map(([, era, rows]) => [era, [...rows.matchAll(/^ {4}\['([^']+)', port\((?!.*CHARTMAKING)/gm)].map((m) => m[1])]);
   assert.deepEqual(eras.map(([era]) => era), ['The ancient world', 'The medieval Indian Ocean and Asia', 'The age of discovery', 'The modern world']);
   for (const [era, ports] of eras) {
     assert.equal(ports.length, 6, `${era} has ${ports.length} ports`);

@@ -1107,19 +1107,14 @@ const ANCHORAGES = [
     ['Maluku Islands', at(128, -3, 5)],
     ['Solomon Islands', at(160, -9, 5)],
     ['Marquesas Islands', at(-140, -9, 6)],
+    ['Pukapuka Atoll', at(-138.8, -14.82, 6.5), 'Pukapuka'], // Magellan's San Pablo, 1521 (the Tuamotu one)
+    ['Pitcairn Islands', viewOfFrame({ lonMin: -131.3, lonMax: -124.2, latMin: -26.6, latMax: -22.4 })], // all four; the latitudes padded so the longitudes bind
   ], 'open'],
 ];
 // the places that are lettered on the chart whatever the city data holds are in scripts/pois.mjs
 const port = (lon, lat) => at(lon, lat, 7.5);
+const CHARTMAKING = 'charts made here'; // after a port's date, for a city known more for its mapmakers
 const SIGHTS = [
-  ['Where the charts were made', [
-    ['Genoa', port(8.93, 44.41)],
-    ['Venice', port(12.33, 45.44)],
-    ['Majorca', at(3.0, 39.6, 7)],
-    ['Lisbon', port(-9.14, 38.72)],
-    ['Seville', port(-5.98, 37.39)],
-    ['Dieppe', port(1.08, 49.93)],
-  ]],
   // the noteworthy ports, in four eras of six, most of them outside Europe; a port whose name has changed lists
   // as its title, the historic name first and today's in brackets
   ['The ancient world', [
@@ -1139,12 +1134,17 @@ const SIGHTS = [
     ['Quanzhou', port(118.68, 24.87)],
   ]],
   ['The age of discovery', [
-    ['Lisbon', port(-9.14, 38.72)], // also a chart city above, on purpose: the same view, so Go lands in one place
+    ['Lisbon', port(-9.14, 38.72)], // also where charts were made
     ['São Jorge da Mina', port(-1.35, 5.08), 'São Jorge da Mina (Elmina)'],
     ['Goa', port(73.91, 15.50)],
     ['Manila', port(120.98, 14.60)],
     ['Acapulco', port(-99.88, 16.86)],
     ['Batavia', port(106.83, -6.18), 'Batavia (Jakarta)'],
+    ['Seville', port(-5.98, 37.39), null, null, CHARTMAKING],
+    ['Genoa', port(8.93, 44.41), null, null, CHARTMAKING],
+    ['Venice', port(12.33, 45.44), null, null, CHARTMAKING],
+    ['Majorca', at(3.0, 39.6, 7), null, null, CHARTMAKING],
+    ['Dieppe', port(1.08, 49.93), null, null, CHARTMAKING],
   ], 'open'],
   ['The modern world', [
     ['Suez', port(32.55, 29.97)],
@@ -1153,10 +1153,6 @@ const SIGHTS = [
     ['Hong Kong', port(114.20, 22.30)],
     ['Shanghai', port(121.47, 31.23)],
     ['Rotterdam', port(4.48, 51.92)],
-  ]],
-  ['Remote islands', [
-    ['Pukapuka Atoll', at(-138.8, -14.82, 6.5), 'Pukapuka'], // Magellan's San Pablo, 1521 (the Tuamotu one)
-    ['Pitcairn Islands', viewOfFrame({ lonMin: -131.3, lonMax: -124.2, latMin: -26.6, latMax: -22.4 })], // all four; the latitudes padded so the longitudes bind
   ]],
 ];
 // name, year, view, [the city it was made in, its view], text
@@ -1244,8 +1240,8 @@ $('voyageList').addEventListener('input', (e) => {
 // The cartouche names the place flown to (its title, else the button's name), not whatever scores highest in the frame.
 const caption = (text) => `<span class="notes">${text ?? CAPTION}</span>`;
 for (const [list, groups] of [[$('anchorages'), ANCHORAGES], [$('sightsList'), SIGHTS]]) {
-  const rows = (items) => items.map(([name, v, title, text]) => { const tile = SIGHT_TILES[name];
-    return `<li><button type="button" data-place="${places.push({ name, view: { ...v, title: title ?? name } }) - 1}">${title?.startsWith(`${name} (`) ? title : name}${tile?.date ? `<small>${tile.date}</small>` : ''}</button>${caption(text ?? tile?.text)}</li>`; }).join('');
+  const rows = (items) => items.map(([name, v, title, text, tag]) => { const tile = SIGHT_TILES[name];
+    return `<li><button type="button" data-place="${places.push({ name, view: { ...v, title: title ?? name } }) - 1}">${title?.startsWith(`${name} (`) ? title : name}${tile?.date ? `<small>${[tile.date, tag].filter(Boolean).join(' · ')}</small>` : ''}</button>${caption(text ?? tile?.text)}</li>`; }).join('');
   list.innerHTML = groups.map(([group, items, open]) => (group ? `<li class="group"><details${open ? ' open' : ''}><summary>${group}</summary><ul class="places">${rows(items)}</ul></details></li>` : rows(items))).join('');
   list.addEventListener('click', (e) => { const b = e.target.closest('[data-place]'); if (b) { setDrawer(false); goTo(places[b.dataset.place].view); } });
 }
