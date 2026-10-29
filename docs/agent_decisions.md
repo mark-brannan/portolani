@@ -285,3 +285,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261029t182005z
 - modern city on a POI's spot means a town of today on the same site; Tyre and Carthage get the town glyph, Berenike the ruin Undo: edit docs/spec/design.md ([#274](https://github.com/mark-brannan/portolani/pull/274))
+
+### 20261029t182025z
+- high-contrast voyage palette applies only to voyages with a dashed or dotted leg; all-solid voyages keep the current palette at Heavy Undo: edit docs/spec/design.md ([#274](https://github.com/mark-brannan/portolani/pull/274))
