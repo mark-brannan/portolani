@@ -63,7 +63,8 @@
       "date": "c. 1254",
       "place": "Venice",
       "label": "Marco Polo born at Venice, c. 1254",
-      "text": "Born about 1254 in Venice, though the archives give neither the day nor the place; claims for Korčula and Constantinople have not won scholars over.",
+      "text": "Born about 1254 in Venice; no document of the time records the day.",
+      "doubt": "Korčula, an island off the Dalmatian coast, says he was born there and shows visitors a house it calls his; others have put his birth in Constantinople.",
       "source": "Wikipedia, Marco Polo",
       "cite": "marco-polo",
       "confidence": "conventional"
@@ -235,7 +236,8 @@
       "date": "1451",
       "place": "Genoa",
       "label": "Columbus born at Genoa, between Aug and Oct 1451",
-      "text": "Born between 25 August and 31 October 1451 in the Republic of Genoa; Genoa is the majority view among several rival claims.",
+      "text": "Born between 25 August and 31 October 1451 in the Republic of Genoa.",
+      "doubt": "Calvi in Corsica still marks a house as his birthplace, and Catalans, Galicians and Portuguese have each argued he was one of their own.",
       "source": "Wikipedia, Christopher Columbus",
       "confidence": "conventional",
       "cite": "christopher-columbus"
@@ -395,9 +397,9 @@
     "death": {
       "lon": -135,
       "lat": 1,
-      "date": "4 Aug 1526",
+      "date": "4–6 Aug 1526",
       "label": "Elcano died at sea on the Loaísa expedition, 1526",
-      "text": "He took command when Loaísa died days before, and died himself at sea on 4 August. No position is recorded; the skull is a guess in the middle of the Pacific.",
+      "text": "He took command when Loaísa died days before, and died himself at sea in early August, in mid-Pacific near the equator; accounts give the 4th, 5th or 6th. No position is recorded, so the skull stands on the equator mid-ocean.",
       "source": "Wikipedia: Juan Sebastián Elcano",
       "cite": "juan-sebastian-elcano",
       "confidence": "conventional"
@@ -530,6 +532,36 @@
       "confidence": "inferred"
     }
   },
+  "juan-ponce-de-leon": {
+    "name": "Juan Ponce de León",
+    "death": {
+      "lon": -82.37,
+      "lat": 23.14,
+      "date": "early July 1521",
+      "label": "Ponce de León died in Cuba, July 1521",
+      "source": "Wikipedia, Juan Ponce de León",
+      "cite": "juan-ponce-de-leon",
+      "text": "A Calusa arrow struck his thigh on his 1521 attempt to colonise south-west Florida, and he died in the first week of July, probably of infection, soon after the expedition sailed to Cuba; he was buried in Puerto Rico. The page names no town, so the mark stands at Havana, the port the expedition made for, an editorial guess."
+    }
+  },
+  "juan-garrido": {
+    "name": "Juan Garrido",
+    "death": {
+      "lon": -99.10,
+      "lat": 19.40,
+      "date": "between 1547 and 1550",
+      "label": "Juan Garrido died in Mexico City, between 1547 and 1550",
+      "source": "NPS, Juan Garrido: from legal documents",
+      "cite": "juan-garrido-nps",
+      "text": "NPS dates his death between 1547 and 1550 from legal documents; Wikipedia says about 1550, in New Spain. His burial place is unknown."
+    }
+  },
+  "isabel-de-olvera": {
+    "name": "Isabel de Olvera"
+  },
+  "pedro-alonso-nino": {
+    "name": "Pedro Alonso Niño"
+  },
   "panfilo-de-narvaez": {
     "name": "Pánfilo de Narváez",
     "death": {
@@ -540,7 +572,7 @@
       "source": "Wikipedia, Narváez expedition",
       "cite": "narvaez-expedition",
       "text": "He is believed to have been swept out to sea in a storm while the boats worked west along the Gulf coast; nobody recorded where. The skull stands at the middle of the boat leg, and the place is only inferred.",
-      "confidence": "conventional"
+      "confidence": "inferred"
     }
   },
   "alvar-nunez-cabeza-de-vaca": {
@@ -579,7 +611,8 @@
       "label": "Esteban killed at Hawikuh, 1539",
       "source": "Wikipedia, Esteban de Dorantes",
       "cite": "esteban-de-dorantes",
-      "text": "He went ahead of Fray Marcos de Niza and was held overnight without food or water, then attacked and killed at Cíbola. The Zuni may have thought him a bad man; Castañeda says he asked for turquoise and women; Alarcón says he boasted of armed men behind him; Sancho Dorantes says he was shot through with arrows. In 2002 Juan Francisco Maura argued he was not killed but stayed among the Zuni."
+      "text": "He went ahead of Fray Marcos de Niza and was held overnight without food or water, then attacked and killed at Cíbola. The Zuni may have thought him a bad man; Castañeda says he asked for turquoise and women; Alarcón says he boasted of armed men behind him; Sancho Dorantes says he was shot through with arrows.",
+      "doubt": "In 2002 the historian Juan Francisco Maura argued that Esteban was never killed at all: the story of his death was a ruse that set a slave free, and he lived on among the Zuni."
     }
   },
   "mansa-musa": {

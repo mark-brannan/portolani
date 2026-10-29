@@ -1,0 +1,17 @@
+{
+  "id": "isabel-de-olvera",
+  "title": "Isabel de Olvera walks north to New Mexico, 1600",
+  "short": "isabel-de-olvera",
+  "who": ["isabel-de-olvera"],
+  "when": "1600",
+  "summary": "A free woman, daughter of an African father and an Indigenous mother, swore before the magistrate of Querétaro that she was free and unmarried, then went north as a servant with the expedition of Juan Guerra de Resa, about seventy-five African soldiers and their families among it, to Santa Fe in New Mexico.",
+  "sources": ["isabel-de-olvera"],
+  "legs": [
+    {"dates": "1600", "mode": "land", "line": "spline", "confidence": "conventional", "points": [[-100.39, 20.59], [-102.5, 22.5], [-104.0, 24.5], [-105.82, 26.8]], "source": "Wikipedia, Isabel de Olvera: the route ran from Querétaro to Santa Bárbara", "note": "The towns are the sources'; the road between is a broad brush", "from": "Querétaro", "to": "Santa Bárbara"},
+    {"dates": "1600", "mode": "land", "line": "spline", "confidence": "conventional", "points": [[-105.82, 26.8], [-106.1, 29.2], [-106.49, 31.76]], "source": "Wikipedia, Isabel de Olvera", "from": "Santa Bárbara", "to": "El Paso"},
+    {"dates": "1600", "mode": "land", "line": "spline", "confidence": "conventional", "points": [[-106.49, 31.76], [-106.7, 33.9], [-105.94, 35.69]], "source": "Wikipedia, Isabel de Olvera: about 1,400 miles in all, nine to twelve months by the article's estimate", "from": "El Paso", "to": "Santa Fe"}
+  ],
+  "events": [
+    {"kind": "event", "lon": -100.39, "lat": 20.59, "date": "1600", "label": "Querétaro: the affidavit", "source": "Wikipedia, Isabel de Olvera", "cite": "isabel-de-olvera", "text": "Before the alcalde mayor she swore that she was a free, unmarried woman. Daughter of Hernando, an African man, and Magdalena, an Indigenous woman, she often called herself mulatta, and by one account she had always been free. Nothing is known of her life in New Mexico."}
+  ]
+}
