@@ -1,0 +1,441 @@
+{
+  "note": "Public-domain portolan charts. original: the full-size scan on Wikimedia Commons; display: Commons' own 3840 px rendering of it, the one a page lays over the map (a full-size scan is 50 to 200 megapixels, past what a phone decodes). Nothing is downloaded or committed. bbox [lonMin, lonMax, latMin, latMax] is a rough guess at what the chart shows, to frame a first placement; made lon, lat is the city. status ship: the scan is open; link: named and linked only, with the reason.",
+  "charts": [
+    {
+      "id": "carte-pisane",
+      "title": "Carte Pisane",
+      "maker": "anonymous (Genoese or Pisan)",
+      "year": 1290,
+      "made": {
+        "city": "Genoa",
+        "lon": 8.93,
+        "lat": 44.41
+      },
+      "holder": "BnF, Cartes et plans, GE B-1118 (RES)",
+      "page": "https://commons.wikimedia.org/wiki/File:Carte_marine_de_l%27oc%C3%A9an_Atlantique_Est,_de_la_mer_M%C3%A9diterran%C3%A9e_et_d%27une_partie_de_la_mer_Noire,_connue_sous_le_nom_de_Carte_Pisane_-_btv1b52503226n_(1_of_2).jpg",
+      "licence": "PD-old-assumed; PD-US-expired; PD-France",
+      "bbox": [
+        -12,
+        42,
+        28,
+        55
+      ],
+      "why": "Oldest surviving portolan chart",
+      "status": "ship",
+      "original": "https://upload.wikimedia.org/wikipedia/commons/0/06/Carte_marine_de_l%27oc%C3%A9an_Atlantique_Est%2C_de_la_mer_M%C3%A9diterran%C3%A9e_et_d%27une_partie_de_la_mer_Noire%2C_connue_sous_le_nom_de_Carte_Pisane_-_btv1b52503226n_%281_of_2%29.jpg",
+      "width": 16842,
+      "height": 8069,
+      "display": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Carte_marine_de_l%27oc%C3%A9an_Atlantique_Est%2C_de_la_mer_M%C3%A9diterran%C3%A9e_et_d%27une_partie_de_la_mer_Noire%2C_connue_sous_le_nom_de_Carte_Pisane_-_btv1b52503226n_%281_of_2%29.jpg/3840px-Carte_marine_de_l%27oc%C3%A9an_Atlantique_Est%2C_de_la_mer_M%C3%A9diterran%C3%A9e_et_d%27une_partie_de_la_mer_Noire%2C_connue_sous_le_nom_de_Carte_Pisane_-_btv1b52503226n_%281_of_2%29.jpg"
+    },
+    {
+      "id": "dulcert-1339",
+      "title": "Portolan chart of Angelino Dulcert",
+      "maker": "Angelino Dulcert",
+      "year": 1339,
+      "made": {
+        "city": "Palma de Mallorca",
+        "lon": 2.65,
+        "lat": 39.57
+      },
+      "holder": "BnF, Cartes et plans, GE B-696 (RES)",
+      "page": "https://commons.wikimedia.org/wiki/File:Carte_marine_de_la_mer_Baltique,_de_la_mer_du_Nord,_de_l%27oc%C3%A9an_Atlantique_Est,_de_la_mer_M%C3%A9diterran%C3%A9e,_de_la_mer_Noire_et_de_la_mer_Rouge_-_Hoc_opus_fecit_angelino_dulcert-_ano_M_CCC_XXX_VIIII_de_mense..._-_btv1b52503220z_(1_of_2).jpg",
+      "licence": "PD-France; PD-US-expired",
+      "bbox": [
+        -18,
+        50,
+        15,
+        60
+      ],
+      "why": "First Majorcan chart; founding work of the Catalan school",
+      "status": "ship",
+      "original": "https://upload.wikimedia.org/wikipedia/commons/1/18/Carte_marine_de_la_mer_Baltique%2C_de_la_mer_du_Nord%2C_de_l%27oc%C3%A9an_Atlantique_Est%2C_de_la_mer_M%C3%A9diterran%C3%A9e%2C_de_la_mer_Noire_et_de_la_mer_Rouge_-_Hoc_opus_fecit_angelino_dulcert-_ano_M_CCC_XXX_VIIII_de_mense..._-_btv1b52503220z_%281_of_2%29.jpg",
+      "width": 16368,
+      "height": 12176,
+      "display": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Carte_marine_de_la_mer_Baltique%2C_de_la_mer_du_Nord%2C_de_l%27oc%C3%A9an_Atlantique_Est%2C_de_la_mer_M%C3%A9diterran%C3%A9e%2C_de_la_mer_Noire_et_de_la_mer_Rouge_-_Hoc_opus_fecit_angelino_dulcert-_ano_M_CCC_XXX_VIIII_de_mense..._-_btv1b52503220z_%281_of_2%29.jpg/3840px-Carte_marine_de_la_mer_Baltique%2C_de_la_mer_du_Nord%2C_de_l%27oc%C3%A9an_Atlantique_Est%2C_de_la_mer_M%C3%A9diterran%C3%A9e%2C_de_la_mer_Noire_et_de_la_mer_Rouge_-_Hoc_opus_fecit_angelino_dulcert-_ano_M_CCC_XXX_VIIII_de_mense..._-_btv1b52503220z_%281_of_2%29.jpg"
+    },
+    {
+      "id": "viladestes-1413",
+      "title": "Portolan chart of Mecia de Viladestes",
+      "maker": "Mecia de Viladestes",
+      "year": 1413,
+      "made": {
+        "city": "Palma de Mallorca",
+        "lon": 2.65,
+        "lat": 39.57
+      },
+      "holder": "BnF, Cartes et plans, GE AA-566 (RES)",
+      "page": "https://commons.wikimedia.org/wiki/File:1413_Portolan_chart_by_Mecia_de_Viladestes_-_Carte_marine_de_l%27oc%C3%A9an_Atlantique_Nord-Est,_de_la_mer_M%C3%A9diterran%C3%A9e,_de_la_mer_Noire,_de_la_mer_Rouge,_d%27une_partie_de_la_mer_Caspienne,_du_golfe_Persique_et_de_la_mer_Baltique.jpg",
+      "licence": "Gallica btv1b55007074s; PD-old-70-1923",
+      "bbox": [
+        -25,
+        60,
+        5,
+        60
+      ],
+      "why": "Richly illustrated Catalan chart reaching into Saharan Africa",
+      "status": "ship",
+      "original": "https://upload.wikimedia.org/wikipedia/commons/8/87/1413_Portolan_chart_by_Mecia_de_Viladestes_-_Carte_marine_de_l%27oc%C3%A9an_Atlantique_Nord-Est%2C_de_la_mer_M%C3%A9diterran%C3%A9e%2C_de_la_mer_Noire%2C_de_la_mer_Rouge%2C_d%27une_partie_de_la_mer_Caspienne%2C_du_golfe_Persique_et_de_la_mer_Baltique.jpg",
+      "width": 14554,
+      "height": 10327,
+      "display": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/1413_Portolan_chart_by_Mecia_de_Viladestes_-_Carte_marine_de_l%27oc%C3%A9an_Atlantique_Nord-Est%2C_de_la_mer_M%C3%A9diterran%C3%A9e%2C_de_la_mer_Noire%2C_de_la_mer_Rouge%2C_d%27une_partie_de_la_mer_Caspienne%2C_du_golfe_Persique_et_de_la_mer_Baltique.jpg/3840px-1413_Portolan_chart_by_Mecia_de_Viladestes_-_Carte_marine_de_l%27oc%C3%A9an_Atlantique_Nord-Est%2C_de_la_mer_M%C3%A9diterran%C3%A9e%2C_de_la_mer_Noire%2C_de_la_mer_Rouge%2C_d%27une_partie_de_la_mer_Caspienne%2C_du_golfe_Persique_et_de_la_mer_Baltique.jpg"
+    },
+    {
+      "id": "vallseca-1447",
+      "title": "Portolan chart of Gabriel de Vallseca",
+      "maker": "Gabriel de Vallseca",
+      "year": 1447,
+      "made": {
+        "city": "Palma de Mallorca",
+        "lon": 2.65,
+        "lat": 39.57
+      },
+      "holder": "BnF, Cartes et plans, GE C-4607 (RES)",
+      "page": "https://commons.wikimedia.org/wiki/File:Carte_marine_de_la_mer_M%C3%A9diterran%C3%A9e_et_de_la_mer_Noire_-_Gabriel_Devallsecha_la_affeta_en_mallorcha_an_MCCCCXXXXVII_-_btv1b53064893j_(1_of_2).jpg",
+      "licence": "PD-France; PD-US-expired",
+      "bbox": [
+        -10,
+        42,
+        30,
+        48
+      ],
+      "why": "Late Majorcan master; his 1439 Barcelona chart has no good open scan",
+      "status": "ship",
+      "original": "https://upload.wikimedia.org/wikipedia/commons/b/b6/Carte_marine_de_la_mer_M%C3%A9diterran%C3%A9e_et_de_la_mer_Noire_-_Gabriel_Devallsecha_la_affeta_en_mallorcha_an_MCCCCXXXXVII_-_btv1b53064893j_%281_of_2%29.jpg",
+      "width": 15414,
+      "height": 10081,
+      "display": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Carte_marine_de_la_mer_M%C3%A9diterran%C3%A9e_et_de_la_mer_Noire_-_Gabriel_Devallsecha_la_affeta_en_mallorcha_an_MCCCCXXXXVII_-_btv1b53064893j_%281_of_2%29.jpg/3840px-Carte_marine_de_la_mer_M%C3%A9diterran%C3%A9e_et_de_la_mer_Noire_-_Gabriel_Devallsecha_la_affeta_en_mallorcha_an_MCCCCXXXXVII_-_btv1b53064893j_%281_of_2%29.jpg"
+    },
+    {
+      "id": "cantino-1502",
+      "title": "Cantino planisphere",
+      "maker": "anonymous Portuguese",
+      "year": 1502,
+      "made": {
+        "city": "Lisbon",
+        "lon": -9.14,
+        "lat": 38.72
+      },
+      "holder": "Biblioteca Estense Universitaria, Modena",
+      "page": "https://commons.wikimedia.org/wiki/File:Cantino_planisphere_(1502).jpg",
+      "licence": "PD-Scan; PD-old-100",
+      "bbox": [
+        -100,
+        150,
+        -50,
+        75
+      ],
+      "why": "Earliest surviving Portuguese world chart; shows the Tordesillas line",
+      "status": "ship",
+      "original": "https://upload.wikimedia.org/wikipedia/commons/9/9c/Cantino_planisphere_%281502%29.jpg",
+      "width": 10643,
+      "height": 4998,
+      "display": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Cantino_planisphere_%281502%29.jpg/3840px-Cantino_planisphere_%281502%29.jpg"
+    },
+    {
+      "id": "caverio-1505",
+      "title": "Caverio planisphere",
+      "maker": "Nicolay de Caveri",
+      "year": 1505,
+      "made": {
+        "city": "Genoa",
+        "lon": 8.93,
+        "lat": 44.41
+      },
+      "holder": "BnF",
+      "page": "https://commons.wikimedia.org/wiki/File:Caverio_Map_btv1b550070757.jpg",
+      "licence": "PD-old-100-expired",
+      "bbox": [
+        -100,
+        150,
+        -50,
+        75
+      ],
+      "why": "Genoese copy of a Portuguese world chart; a source for Waldseemüller",
+      "status": "ship",
+      "original": "https://upload.wikimedia.org/wikipedia/commons/6/64/Caverio_Map_btv1b550070757.jpg",
+      "width": 13994,
+      "height": 7264,
+      "display": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/64/Caverio_Map_btv1b550070757.jpg/3840px-Caverio_Map_btv1b550070757.jpg"
+    },
+    {
+      "id": "miller-atlas-1519",
+      "title": "Miller Atlas, sheet 1",
+      "maker": "Lopo Homem, Pedro and Jorge Reinel",
+      "year": 1519,
+      "made": {
+        "city": "Lisbon",
+        "lon": -9.14,
+        "lat": 38.72
+      },
+      "holder": "BnF, GE-26179 (RES)",
+      "page": "https://commons.wikimedia.org/wiki/File:Atlas_nautique_du_Monde,_dit_atlas_Miller._1,_Atlas_Miller_-_h%C3%A9misph%C3%A8re_portugais_et_page_de_titre_-_btv1b55002620g_(1_of_2).jpg",
+      "licence": "PD-scan; PD-old-100",
+      "bbox": [
+        -60,
+        120,
+        -40,
+        70
+      ],
+      "why": "The most lavish Portuguese atlas of its age",
+      "status": "ship",
+      "original": "https://upload.wikimedia.org/wikipedia/commons/d/d6/Atlas_nautique_du_Monde%2C_dit_atlas_Miller._1%2C_Atlas_Miller_-_h%C3%A9misph%C3%A8re_portugais_et_page_de_titre_-_btv1b55002620g_%281_of_2%29.jpg",
+      "width": 14656,
+      "height": 10608,
+      "display": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Atlas_nautique_du_Monde%2C_dit_atlas_Miller._1%2C_Atlas_Miller_-_h%C3%A9misph%C3%A8re_portugais_et_page_de_titre_-_btv1b55002620g_%281_of_2%29.jpg/3840px-Atlas_nautique_du_Monde%2C_dit_atlas_Miller._1%2C_Atlas_Miller_-_h%C3%A9misph%C3%A8re_portugais_et_page_de_titre_-_btv1b55002620g_%281_of_2%29.jpg"
+    },
+    {
+      "id": "aguiar-1492",
+      "title": "Portolan chart of Jorge de Aguiar",
+      "maker": "Jorge de Aguiar",
+      "year": 1492,
+      "made": {
+        "city": "Lisbon",
+        "lon": -9.14,
+        "lat": 38.72
+      },
+      "holder": "Yale, Beinecke Rare Book and Manuscript Library",
+      "page": "https://commons.wikimedia.org/wiki/File:1492_Portolan_chart_of_the_Mediterranean_Sea,_the_North_Atlantic_Ocean,_the_Black_Sea,_and_the_West_African_coast_as_far_south_as_Sierra_Leone.png",
+      "licence": "PD-old-70-1923",
+      "bbox": [
+        -20,
+        42,
+        5,
+        56
+      ],
+      "why": "Oldest signed and dated Portuguese chart",
+      "status": "ship",
+      "original": "https://upload.wikimedia.org/wikipedia/commons/6/63/1492_Portolan_chart_of_the_Mediterranean_Sea%2C_the_North_Atlantic_Ocean%2C_the_Black_Sea%2C_and_the_West_African_coast_as_far_south_as_Sierra_Leone.png",
+      "width": 5780,
+      "height": 7475,
+      "display": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/1492_Portolan_chart_of_the_Mediterranean_Sea%2C_the_North_Atlantic_Ocean%2C_the_Black_Sea%2C_and_the_West_African_coast_as_far_south_as_Sierra_Leone.png/3840px-1492_Portolan_chart_of_the_Mediterranean_Sea%2C_the_North_Atlantic_Ocean%2C_the_Black_Sea%2C_and_the_West_African_coast_as_far_south_as_Sierra_Leone.png"
+    },
+    {
+      "id": "beccario-1403",
+      "title": "Portolan chart of Francesco Beccario",
+      "maker": "Francesco Beccario",
+      "year": 1403,
+      "made": {
+        "city": "Genoa",
+        "lon": 8.93,
+        "lat": 44.41
+      },
+      "holder": "Yale, Beinecke Rare Book and Manuscript Library",
+      "page": "https://commons.wikimedia.org/wiki/File:Francesco_Beccario_chart_(1403).jpg",
+      "licence": "PD-old-100",
+      "bbox": [
+        -20,
+        42,
+        15,
+        58
+      ],
+      "why": "A fine early Genoese chart",
+      "status": "ship",
+      "original": "https://upload.wikimedia.org/wikipedia/commons/5/52/Francesco_Beccario_chart_%281403%29.jpg",
+      "width": 8772,
+      "height": 5651,
+      "display": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Francesco_Beccario_chart_%281403%29.jpg/3840px-Francesco_Beccario_chart_%281403%29.jpg"
+    },
+    {
+      "id": "agnese-1545",
+      "title": "Chart of the Mediterranean and north-east Atlantic",
+      "maker": "Battista Agnese (attributed)",
+      "year": 1545,
+      "made": {
+        "city": "Venice",
+        "lon": 12.34,
+        "lat": 45.44
+      },
+      "holder": "BnF, GE B-9945 (RES)",
+      "page": "https://commons.wikimedia.org/wiki/File:Carte_nautique_de_la_Mer_M%C3%A9diterran%C3%A9e_et_de_l%27Oc%C3%A9an_Atlantique_nord-est_-_btv1b530748301_(1_of_2).jpg",
+      "licence": "PD-France; PD-US-expired",
+      "bbox": [
+        -15,
+        38,
+        28,
+        58
+      ],
+      "why": "The most prolific Venetian chart workshop of the 16th century",
+      "status": "ship",
+      "original": "https://upload.wikimedia.org/wikipedia/commons/2/2f/Carte_nautique_de_la_Mer_M%C3%A9diterran%C3%A9e_et_de_l%27Oc%C3%A9an_Atlantique_nord-est_-_btv1b530748301_%281_of_2%29.jpg",
+      "width": 16487,
+      "height": 11795,
+      "display": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Carte_nautique_de_la_Mer_M%C3%A9diterran%C3%A9e_et_de_l%27Oc%C3%A9an_Atlantique_nord-est_-_btv1b530748301_%281_of_2%29.jpg/3840px-Carte_nautique_de_la_Mer_M%C3%A9diterran%C3%A9e_et_de_l%27Oc%C3%A9an_Atlantique_nord-est_-_btv1b530748301_%281_of_2%29.jpg"
+    },
+    {
+      "id": "cornaro-atlas-black-sea",
+      "title": "Cornaro Atlas: Black Sea and eastern Mediterranean",
+      "maker": "Piero Roselli (as credited on Commons)",
+      "year": 1492,
+      "made": {
+        "city": "Venice",
+        "lon": 12.34,
+        "lat": 45.44
+      },
+      "holder": "British Library, Egerton MS 73, f.3r",
+      "page": "https://commons.wikimedia.org/wiki/File:Chart_of_the_Black_Sea_and_eastern_Mediterranean_-_Cornaro_Atlas_(Egerton_MS_73,_f.3r).jpeg",
+      "licence": "PD-old",
+      "bbox": [
+        22,
+        42,
+        34,
+        48
+      ],
+      "why": "An atlas compiled from charts by many 15th-century makers",
+      "status": "ship",
+      "original": "https://upload.wikimedia.org/wikipedia/commons/9/9f/Chart_of_the_Black_Sea_and_eastern_Mediterranean_-_Cornaro_Atlas_%28Egerton_MS_73%2C_f.3r%29.jpeg",
+      "width": 8197,
+      "height": 6309,
+      "display": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Chart_of_the_Black_Sea_and_eastern_Mediterranean_-_Cornaro_Atlas_%28Egerton_MS_73%2C_f.3r%29.jpeg/3840px-Chart_of_the_Black_Sea_and_eastern_Mediterranean_-_Cornaro_Atlas_%28Egerton_MS_73%2C_f.3r%29.jpeg"
+    },
+    {
+      "id": "maggiolo-1547",
+      "title": "Portolan chart of the Mediterranean",
+      "maker": "Vesconte Maggiolo",
+      "year": 1547,
+      "made": {
+        "city": "Genoa",
+        "lon": 8.93,
+        "lat": 44.41
+      },
+      "holder": "BnF (Gallica btv1b53074829n)",
+      "page": "https://commons.wikimedia.org/wiki/File:1547_Portolan_chart_of_the_Mediterranean_Sea_by_Vesconte_Maggiolo.jpg",
+      "licence": "Gallica btv1b53074829n; PD-old-70-1923",
+      "bbox": [
+        -10,
+        37,
+        30,
+        47
+      ],
+      "why": "The leading Genoese chartmaker of the 16th century",
+      "status": "ship",
+      "original": "https://upload.wikimedia.org/wikipedia/commons/2/26/1547_Portolan_chart_of_the_Mediterranean_Sea_by_Vesconte_Maggiolo.jpg",
+      "width": 11492,
+      "height": 7786,
+      "display": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/1547_Portolan_chart_of_the_Mediterranean_Sea_by_Vesconte_Maggiolo.jpg/3840px-1547_Portolan_chart_of_the_Mediterranean_Sea_by_Vesconte_Maggiolo.jpg"
+    },
+    {
+      "id": "agnese-1550",
+      "title": "Chart of the Mediterranean and Black Sea",
+      "maker": "Battista Agnese",
+      "year": 1550,
+      "made": {
+        "city": "Venice",
+        "lon": 12.34,
+        "lat": 45.44
+      },
+      "holder": "BnF (Gallica btv1b530648940)",
+      "page": "https://commons.wikimedia.org/wiki/File:1550_Portolan_chart_of_the_Mediterranean_Sea_and_the_Black_Sea.jpg",
+      "licence": "Gallica btv1b530648940; PD-old-70-1923",
+      "bbox": [
+        -8,
+        42,
+        30,
+        48
+      ],
+      "why": "A clean late Venetian Mediterranean chart",
+      "status": "ship",
+      "original": "https://upload.wikimedia.org/wikipedia/commons/0/05/1550_Portolan_chart_of_the_Mediterranean_Sea_and_the_Black_Sea.jpg",
+      "width": 16161,
+      "height": 8710,
+      "display": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/1550_Portolan_chart_of_the_Mediterranean_Sea_and_the_Black_Sea.jpg/3840px-1550_Portolan_chart_of_the_Mediterranean_Sea_and_the_Black_Sea.jpg"
+    },
+    {
+      "id": "loc-genoese-c1330",
+      "title": "Anonymous chart of the Mediterranean and Black Sea",
+      "maker": "anonymous, probably Genoese",
+      "year": 1330,
+      "made": {
+        "city": "Genoa",
+        "lon": 8.93,
+        "lat": 44.41
+      },
+      "holder": "Library of Congress, g5672m.ct000821",
+      "page": "https://commons.wikimedia.org/wiki/File:Mediterranean_chart_fourteenth_century2.jpg",
+      "licence": "PD-old",
+      "bbox": [
+        -10,
+        42,
+        30,
+        48
+      ],
+      "why": "An early 14th-century chart of the Vesconte era",
+      "status": "ship",
+      "original": "https://upload.wikimedia.org/wikipedia/commons/5/5c/Mediterranean_chart_fourteenth_century2.jpg",
+      "width": 5486,
+      "height": 4009,
+      "display": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Mediterranean_chart_fourteenth_century2.jpg/3840px-Mediterranean_chart_fourteenth_century2.jpg"
+    },
+    {
+      "id": "benincasa-1466-black-sea",
+      "title": "Benincasa atlas: Black Sea sheet",
+      "maker": "Grazioso Benincasa",
+      "year": 1466,
+      "made": {
+        "city": "Venice",
+        "lon": 12.34,
+        "lat": 45.44
+      },
+      "holder": "BnF (Gallica btv1b59011091)",
+      "page": "https://commons.wikimedia.org/wiki/File:1466_Portolan_chart_of_the_Black_Sea,_Sea_of_Marmara_and_the_Eastern_Mediterrenean_by_Grazioso_Benincasa.jpg",
+      "licence": "Gallica btv1b59011091; PD-old-70-1923",
+      "bbox": [
+        22,
+        42,
+        36,
+        48
+      ],
+      "why": "The most prolific 15th-century Italian chartmaker",
+      "status": "ship",
+      "original": "https://upload.wikimedia.org/wikipedia/commons/5/5f/1466_Portolan_chart_of_the_Black_Sea%2C_Sea_of_Marmara_and_the_Eastern_Mediterrenean_by_Grazioso_Benincasa.jpg",
+      "width": 4681,
+      "height": 5739,
+      "display": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/1466_Portolan_chart_of_the_Black_Sea%2C_Sea_of_Marmara_and_the_Eastern_Mediterrenean_by_Grazioso_Benincasa.jpg/3840px-1466_Portolan_chart_of_the_Black_Sea%2C_Sea_of_Marmara_and_the_Eastern_Mediterrenean_by_Grazioso_Benincasa.jpg"
+    },
+    {
+      "id": "pizzigani-1367",
+      "title": "Pizzigani chart",
+      "maker": "Francesco and Domenico Pizzigano",
+      "year": 1367,
+      "made": {
+        "city": "Venice",
+        "lon": 12.34,
+        "lat": 45.44
+      },
+      "holder": "Biblioteca Palatina, Parma",
+      "page": "https://commons.wikimedia.org/wiki/File:Pizigani_1367_Chart_10MB.jpg",
+      "licence": "PD-old-100, with a CC BY 3.0 credit line for the editor who enhanced it",
+      "bbox": [
+        -30,
+        50,
+        10,
+        60
+      ],
+      "why": "A major Venetian chart with the Atlantic islands",
+      "status": "link",
+      "reason": "the scan is digitally enhanced and carries a CC BY 3.0 credit beside the PD tag"
+    },
+    {
+      "id": "vesconte-1311",
+      "title": "Portolan chart of Pietro Vesconte",
+      "maker": "Pietro Vesconte",
+      "year": 1311,
+      "made": {
+        "city": "Genoa",
+        "lon": 8.93,
+        "lat": 44.41
+      },
+      "holder": "Archivio di Stato di Firenze",
+      "page": "https://commons.wikimedia.org/wiki/Category:Pietro_Vesconte",
+      "licence": "public domain work",
+      "bbox": [
+        -10,
+        42,
+        30,
+        48
+      ],
+      "why": "The oldest signed and dated portolan chart",
+      "status": "link",
+      "reason": "no scan larger than 588 x 490 is open"
+    }
+  ]
+}
