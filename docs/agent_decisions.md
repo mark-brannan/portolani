@@ -315,3 +315,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261029t223614z
 - The predecessor's display name is 'The mansa before Musa', key kept abu-bakr-ii Undo: rename the name field ([#284](https://github.com/mark-brannan/portolani/pull/284))
+
+### 20261029t223620z
+- Departure drawn at the Senegal mouth, al-Umari's coast at Tura, not the Gambia Undo: move first point and event to -16.9, 13.45 ([#284](https://github.com/mark-brannan/portolani/pull/284))
