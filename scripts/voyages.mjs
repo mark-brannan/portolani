@@ -237,6 +237,7 @@ export async function readVoyage(id, readJSON) {
 
 // The year a voyage set out, read off its `when` ("c. 600 BC", "c. 330–320 BC", "1271–1295"): the first number,
 // negative before Christ; NaN when there is none. The voyages drawer lists them by it, earliest first (#242).
+// Years only: a century ("5th century BC") would read as year 5, so it would sort wrong.
 export function voyageStart(when) {
   const m = /(\d+)/.exec(String(when ?? ''));
   if (!m) return NaN;
