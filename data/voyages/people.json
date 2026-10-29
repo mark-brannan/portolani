@@ -25,7 +25,8 @@
       "date": "c. 970s",
       "place": "Eiríksstaðir, Haukadalur, Iceland",
       "label": "Leif Erikson born in Iceland, c. 970s",
-      "text": "The sagas do not say where. Iceland, where his parents met, is the likeliest country, and Haukadalur, his mother's family's valley, the usual guess; the mark stands at Eiríksstaðir, the farm there.",
+      "text": "Iceland, where his parents met, is the likeliest country, and Haukadalur, his mother's family's valley, the usual guess; the mark stands at Eiríksstaðir, the farm there.",
+      "doubt": "The sagas do not say where.",
       "source": "Leif Erikson (Wikipedia)",
       "cite": "leif-erikson",
       "confidence": "inferred"
@@ -35,7 +36,8 @@
       "lat": 61.1,
       "date": "c. 1020",
       "label": "Leif Erikson died, c. 1020, probably at Brattahlíð",
-      "text": "The sagas are silent. He is last named alive about 1018–19 and his son Thorkell held the chieftaincy by 1025; Brattahlíð, the family estate, is the likeliest place.",
+      "text": "He is last named alive about 1018–19 and his son Thorkell held the chieftaincy by 1025; Brattahlíð, the family estate, is the likeliest place.",
+      "doubt": "The sagas are silent.",
       "source": "Leif Erikson (Wikipedia): no saga records his death",
       "cite": "leif-erikson"
     }
@@ -63,7 +65,8 @@
       "date": "c. 1254",
       "place": "Venice",
       "label": "Marco Polo born at Venice, c. 1254",
-      "text": "Born about 1254 in Venice, though the archives give neither the day nor the place; claims for Korčula and Constantinople have not won scholars over.",
+      "text": "Born about 1254 in Venice.",
+      "doubt": "The archives give neither the day nor the place; claims for Korčula and Constantinople have not won scholars over.",
       "source": "Wikipedia, Marco Polo",
       "cite": "marco-polo",
       "confidence": "conventional"
@@ -111,7 +114,8 @@
       "lat": 34.03,
       "date": "c. 1369",
       "label": "Ibn Battuta died in Morocco, c. 1369",
-      "text": "He dictated the Rihla at Fez in 1355–56 and died in Morocco about 1368–69. Nobody recorded where, so the skull stands in the country, not on a town.",
+      "text": "He dictated the Rihla at Fez in 1355–56 and died in Morocco about 1368–69.",
+      "doubt": "Nobody recorded where, so the skull stands in the country, not on a town.",
       "source": "Wikipedia, Ibn Battuta",
       "cite": "ibn-battuta",
       "alternatives": [
@@ -162,7 +166,8 @@
       "lat": 5.99,
       "date": "1433",
       "label": "Zheng He died at sea on the way home, 1433",
-      "text": "Most accounts have him die in 1433 on the way home from the seventh voyage, some say buried at sea. None gives a place, so the skull stands mid-way along that voyage's Calicut–Malacca leg.",
+      "text": "Most accounts have him die in 1433 on the way home from the seventh voyage, some say buried at sea.",
+      "doubt": "None gives a place, so the skull stands mid-way along that voyage's Calicut–Malacca leg.",
       "source": "Zheng He (Wikipedia); no source gives the place",
       "cite": "zheng-he",
       "confidence": "conventional",
@@ -207,7 +212,8 @@
       "lat": -36,
       "date": "29 May 1500",
       "label": "Dias lost in a storm off the Cape, on Cabral's fleet, 1500",
-      "text": "Four of Cabral's ships went down in one storm on the way to the Cape. The wreck's position is not recorded; the skull stands off the Cape.",
+      "text": "Four of Cabral's ships went down in one storm on the way to the Cape.",
+      "doubt": "The wreck's position is not recorded; the skull stands off the Cape.",
       "source": "Wikipedia; Britannica 1911",
       "cite": "bartolomeu-dias"
     }
@@ -235,7 +241,8 @@
       "date": "1451",
       "place": "Genoa",
       "label": "Columbus born at Genoa, between Aug and Oct 1451",
-      "text": "Born between 25 August and 31 October 1451 in the Republic of Genoa; Genoa is the majority view among several rival claims.",
+      "text": "Born between 25 August and 31 October 1451 in the Republic of Genoa.",
+      "doubt": "Genoa is the majority view among several rival claims.",
       "source": "Wikipedia, Christopher Columbus",
       "confidence": "conventional",
       "cite": "christopher-columbus"
@@ -299,7 +306,8 @@
       "date": "c. 1460s",
       "place": "Sines",
       "label": "Vasco da Gama born at Sines, c. 1460s",
-      "text": "Born at Sines, a seaport on the Alentejo coast; some give about 1460, others 1469.",
+      "text": "Born at Sines, a seaport on the Alentejo coast.",
+      "doubt": "Some give about 1460, others 1469.",
       "source": "Wikipedia: Vasco da Gama",
       "cite": "vasco-da-gama",
       "confidence": "conventional"
@@ -387,7 +395,8 @@
       "date": "1486 or 1487",
       "place": "Getaria",
       "label": "Elcano born at Getaria, 1486 or 1487",
-      "text": "His own will names Getaria. The year comes from his saying, in August 1519, that he was \"approximately\" 32.",
+      "text": "His own will names Getaria.",
+      "doubt": "The year comes from his saying, in August 1519, that he was \"approximately\" 32.",
       "source": "Wikipedia: Juan Sebastián Elcano",
       "cite": "juan-sebastian-elcano",
       "confidence": "inferred"
@@ -397,7 +406,8 @@
       "lat": 1,
       "date": "4 Aug 1526",
       "label": "Elcano died at sea on the Loaísa expedition, 1526",
-      "text": "He took command when Loaísa died days before, and died himself at sea on 4 August. No position is recorded; the skull is a guess in the middle of the Pacific.",
+      "text": "He took command when Loaísa died days before, and died himself at sea on 4 August.",
+      "doubt": "No position is recorded; the skull is a guess in the middle of the Pacific.",
       "source": "Wikipedia: Juan Sebastián Elcano",
       "cite": "juan-sebastian-elcano",
       "confidence": "conventional"
@@ -424,7 +434,8 @@
       "date": "c. 1540",
       "place": "Crowndale Farm, Tavistock, Devon",
       "label": "Drake born at Tavistock, c. 1540",
-      "text": "Born at Crowndale Farm, Tavistock; the year is reckoned, and accounts differ.",
+      "text": "Born at Crowndale Farm, Tavistock.",
+      "doubt": "The year is reckoned, and accounts differ.",
       "source": "Wikipedia: Francis Drake",
       "cite": "francis-drake",
       "confidence": "inferred"
@@ -461,7 +472,8 @@
       "date": "5th century BC",
       "place": "Carthage",
       "label": "Hanno of Carthage, 5th century BC",
-      "text": "Nothing is known of his birth. He was a Carthaginian who lived in the fifth century BC, so the mark stands on Carthage.",
+      "text": "He was a Carthaginian who lived in the fifth century BC.",
+      "doubt": "Nothing is known of his birth, so the mark stands on Carthage.",
       "source": "Hanno the Navigator (Wikipedia)",
       "cite": "hanno-the-navigator",
       "confidence": "speculative"
@@ -492,7 +504,8 @@
       "date": "c. 350 BC",
       "place": "Massalia (Marseille)",
       "label": "Pytheas born at Massalia, c. 350 BC",
-      "text": "Known only through later writers who quote him; the year is a reckoning from when he flourished.",
+      "text": "Known only through later writers who quote him.",
+      "doubt": "The year is a reckoning from when he flourished.",
       "source": "Pytheas (Wikipedia)",
       "cite": "pytheas",
       "confidence": "inferred"
@@ -539,8 +552,9 @@
       "label": "Narváez lost at sea, 1528",
       "source": "Wikipedia, Narváez expedition",
       "cite": "narvaez-expedition",
-      "text": "He is believed to have been swept out to sea in a storm while the boats worked west along the Gulf coast; nobody recorded where. The skull stands at the middle of the boat leg, and the place is only inferred.",
-      "confidence": "conventional"
+      "text": "He is believed to have been swept out to sea in a storm while the boats worked west along the Gulf coast.",
+      "doubt": "Nobody recorded where. The skull stands at the middle of the boat leg, and the place is only inferred.",
+      "confidence": "inferred"
     }
   },
   "alvar-nunez-cabeza-de-vaca": {
@@ -579,7 +593,8 @@
       "label": "Esteban killed at Hawikuh, 1539",
       "source": "Wikipedia, Esteban de Dorantes",
       "cite": "esteban-de-dorantes",
-      "text": "He went ahead of Fray Marcos de Niza and was held overnight without food or water, then attacked and killed at Cíbola. The Zuni may have thought him a bad man; Castañeda says he asked for turquoise and women; Alarcón says he boasted of armed men behind him; Sancho Dorantes says he was shot through with arrows. In 2002 Juan Francisco Maura argued he was not killed but stayed among the Zuni."
+      "text": "He went ahead of Fray Marcos de Niza and was held overnight without food or water, then attacked and killed at Cíbola. The Zuni may have thought him a bad man; Castañeda says he asked for turquoise and women; Alarcón says he boasted of armed men behind him; Sancho Dorantes says he was shot through with arrows.",
+      "doubt": "In 2002 Juan Francisco Maura argued he was not killed but stayed among the Zuni."
     }
   }
 }

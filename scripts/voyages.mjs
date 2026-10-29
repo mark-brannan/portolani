@@ -234,12 +234,10 @@ export async function readVoyage(id, readJSON) {
 
 // A person's record in people.json, keyed by a lower-case slug: nothing is required, and each field is checked only
 // when it is there. `name` is the display name (the key stands in when there is none), `aka` other names, `bio` a
-// paragraph, `sources` ids into sources.json. `born` and `death` are markers: { lon, lat, date, place, label, text,
-// source, cite, confidence, alternatives }, lon and lat together or not at all, confidence one of MARKER_CONFIDENCES
-// (the leg words, and `speculative` for a guessed place). A death with lon and lat is drawn as a skull; one without is
-// not drawn. `images` are Wikimedia Commons files, { file, kind, author, date, licence, note }: `file` is the Commons
-// file name, never a URL (its page is https://commons.wikimedia.org/wiki/File:<file>, its image
-// .../wiki/Special:FilePath/<file>?width=480), `kind` one of IMAGE_KINDS, the rest copied from the file page.
+// paragraph, `sources` ids into sources.json. `born` and `death` are markers (docs/voyages/README.md "The record"):
+// lon and lat together or not at all, `confidence` one of MARKER_CONFIDENCES, `doubt` the optional sentence. `images`
+// are Wikimedia Commons files, { file, kind, author, date, licence, note }: `file` the bare file name, no scheme, no
+// slash; `kind` one of IMAGE_KINDS.
 export const IMAGE_KINDS = ['life', 'near', 'posthumous', 'imaginary', 'modern', 'scene', 'ship', 'map'];
 export const SLUG = /^[a-z][a-z0-9-]*$/;
 // The problems in one person record, as strings; none when it is well formed. `sources` is what a `cite` must name.
@@ -259,13 +257,13 @@ export function checkPerson(id, p, { sources } = {}) {
   };
   // Where a mark is drawn (lon or lat given) it needs a label and a source; an alternative is always drawn, so it needs a place too.
   const marker = (m, at, alt = false) => {
-    if (!m || typeof m !== 'object' || Array.isArray(m)) return need(false, `${at}: { lon, lat, date, place, label, text, source, cite, confidence, alternatives }`);
+    if (!m || typeof m !== 'object' || Array.isArray(m)) return need(false, `${at}: { lon, lat, date, place, label, text, doubt, source, cite, confidence, alternatives }`);
     place(m, at);
     if (alt || m.lon !== undefined || m.lat !== undefined) {
       need(alt ? Number.isFinite(m.lon) && Number.isFinite(m.lat) : true, `${at}: lon and lat, together`);
       for (const k of alt ? ['place', 'label', 'source'] : ['label', 'source']) need(str(m[k]), `${at}: a ${k}, since it is drawn`);
     }
-    for (const k of ['date', 'place', 'label', 'text', 'source']) if (m[k] !== undefined) need(str(m[k]), `${at}: ${k}, a string`);
+    for (const k of ['date', 'place', 'label', 'text', 'doubt', 'source']) if (m[k] !== undefined) need(str(m[k]), `${at}: ${k}, a string`);
     if (m.cite !== undefined) need(str(m.cite) && (!sources || m.cite in sources), `${at}: cite ${m.cite} is not in sources.json`);
     if (m.confidence !== undefined) need(MARKER_CONFIDENCES.includes(m.confidence), `${at}: confidence one of ${MARKER_CONFIDENCES}`);
     if (m.alternatives !== undefined) {
@@ -274,12 +272,21 @@ export function checkPerson(id, p, { sources } = {}) {
     }
   };
   for (const k of ['born', 'death']) if (p[k] !== undefined) marker(p[k], k);
+  // a death with lon and lat is drawn, so it needs what its skull and tile show (problems() on its event)
+  const d = p.death;
+  if (d && typeof d === 'object' && Number.isFinite(d.lon) && Number.isFinite(d.lat)) {
+    for (const k of ['label', 'source']) need(str(d[k]), `death: a ${k}, since it is drawn`);
+    for (const [j, a] of (Array.isArray(d.alternatives) ? d.alternatives : []).entries()) {
+      need(a && Number.isFinite(a.lon) && Number.isFinite(a.lat), `death alternative ${j}: lon and lat, since it is drawn`);
+      for (const k of ['place', 'label', 'source']) need(a && str(a[k]), `death alternative ${j}: a ${k}, since it is drawn`);
+    }
+  }
   if (p.images !== undefined) {
     need(Array.isArray(p.images), 'images: a list');
     for (const [j, q] of (Array.isArray(p.images) ? p.images : []).entries()) {
       const at = `image ${j}`;
       if (!q || typeof q !== 'object') { need(false, `${at}: { file, kind, author, date, licence, note }`); continue; }
-      need(str(q.file) && !/^(File:|https?:)|\//i.test(q.file), `${at}: file, a Commons file name`);
+      need(str(q.file) && !/^[a-z][a-z0-9+.-]*:/i.test(q.file) && !q.file.includes('/'), `${at}: file, a bare Commons file name`);
       need(IMAGE_KINDS.includes(q.kind), `${at}: kind one of ${IMAGE_KINDS}`);
       for (const k of ['author', 'date', 'licence', 'note']) if (q[k] !== undefined) need(str(q[k]), `${at}: ${k}, a string`);
     }
