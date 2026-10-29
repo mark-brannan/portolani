@@ -1040,6 +1040,51 @@
       "source": "Juan de la Cosa (Wikipedia)"
     }
   },
+  "Juan Ponce de León": {
+    "id": "juan-ponce-de-leon",
+    "voyages": [
+      "ponce-de-leon-1513"
+    ],
+    "death": {
+      "lon": -82.37,
+      "lat": 23.14,
+      "date": "early July 1521",
+      "label": "Ponce de León died in Cuba, July 1521",
+      "source": "Wikipedia, Juan Ponce de León",
+      "cite": "juan-ponce-de-leon",
+      "text": "A Calusa arrow struck his thigh on his 1521 attempt to colonise south-west Florida, and he died in the first week of July, probably of infection, soon after the expedition sailed to Cuba; he was buried in Puerto Rico. The page names no town, so the mark stands at Havana, the port the expedition made for, an editorial guess."
+    }
+  },
+  "Juan Garrido": {
+    "id": "juan-garrido",
+    "voyages": [
+      "juan-garrido",
+      "ponce-de-leon-1513"
+    ],
+    "death": {
+      "lon": -99.1,
+      "lat": 19.4,
+      "date": "between 1547 and 1550",
+      "label": "Juan Garrido died in Mexico City, between 1547 and 1550",
+      "source": "NPS, Juan Garrido: from legal documents",
+      "cite": "juan-garrido-nps",
+      "text": "NPS dates his death between 1547 and 1550 from legal documents; Wikipedia says about 1550, in New Spain. His burial place is unknown."
+    }
+  },
+  "Isabel de Olvera": {
+    "id": "isabel-de-olvera",
+    "voyages": [
+      "isabel-de-olvera"
+    ],
+    "death": "unknown"
+  },
+  "Pedro Alonso Niño": {
+    "id": "pedro-alonso-nino",
+    "voyages": [
+      "columbus"
+    ],
+    "death": "unknown"
+  },
   "Pánfilo de Narváez": {
     "id": "panfilo-de-narvaez",
     "voyages": [
