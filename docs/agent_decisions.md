@@ -312,3 +312,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261029t223606z
 - Mansa Musa named in the Atlantic fleet's who, since the data test needs every person on a voyage Undo: drop mansa-musa from mali-atlantic who once a hajj voyage names him ([#284](https://github.com/mark-brannan/portolani/pull/284))
+
+### 20261029t223614z
+- The predecessor's display name is 'The mansa before Musa', key kept abu-bakr-ii Undo: rename the name field ([#284](https://github.com/mark-brannan/portolani/pull/284))
