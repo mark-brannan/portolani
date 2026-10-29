@@ -102,19 +102,55 @@ Feature: The warped pieces are the alternative, behind a setting
     And other comparison controls (a slider wipe, a swipe) are later work, behind the same setting
 
 Feature: A chart's row in the Charts drawer
-  Source: the user's brief on [#266](https://github.com/mark-brannan/portolani/pull/266), 2026-10-29, and the follow-up the same day ("row shape: D", "I would like to use the full name for the chart link on our page: 'Map of Juan de la Cosa'"): "if the only button we need is to jump to the chart's default position and show it, then we really need no button beyond the name of the chart itself"; "put the originating city immediately to the right ... and use it as another button. In that case the button text is still 'Majorca' and no further explanation is needed"; "'Where it was made' is not helpful"; "all charts to have a miniature version of the scan for their icon"
+  Source: the user's brief on [#266](https://github.com/mark-brannan/portolani/pull/266), 2026-10-29, and the follow-up the same day ("row shape: D", "I would like to use the full name for the chart link on our page: 'Map of Juan de la Cosa'"): "if the only button we need is to jump to the chart's default position and show it, then we really need no button beyond the name of the chart itself"; "put the originating city immediately to the right ... and use it as another button. In that case the button text is still 'Majorca' and no further explanation is needed"; "'Where it was made' is not helpful"; "all charts to have a miniature version of the scan for their icon". The second pass, later that day: "I do want to increase the size of the drawer thumbnails, by at least ~50%, accounting for more vertical space when the notes come in for these entries also. I would like all chart thumbnails for charts that we have to be the full color version all the time (if we have the chart in the project), no fade/gray when unselected. grey when chart not imported is still ok. I would like a show/hide icon (or button?) to the right of each chart name instead of clicking the chart. It might be a simple eye vs closed eye with slash in the usual style, or it might be an eye with an eye patch evocative of a pirate."; "clicking the origin city should hide the chart when zooming to the city, if the chart would result in the obstructing the city from view. Clicking either the map icon, or the map name should zoom to the correct position for the chart...but the show/hide button controls show/hide. The very first time any chart is selected after opening the drawer, when none was selected previously is to fade in the chart when clicking any of these: the chart icon, the chart name; however the show/hide is still a fast show action. Clicking the chart icon or chart name after the chart is already shown does not hide it, only the show/hide icon hides it."
   Scenario: the row
     Given the Charts drawer open
     When the user looks at a chart's row
-    Then its icon is a miniature of that chart's own scan, not the drawer's chart glyph, and that icon is the one button for the chart: it shows the sheet at its default placement and flies to the view that frames the whole sheet; a second click hides it
-    And beside it the chart's full name as text ("Map of Juan de la Cosa"), and under the name the city it was made in and its year, "Majorca, 1375", the city a link that flies to the city; no "where it was made" wording, no tooltip-only meaning
+    Then its icon is a miniature of that chart's own scan, not the drawer's chart glyph, at least half as big again as 64 by 44, with room below the name for the notes to come
+    And a chart whose scan is in the project shows its miniature in full colour, shown or not: no fade, no grey
+    And beside the icon the chart's full name as text ("Map of Juan de la Cosa"), and to the right of the name a show/hide icon (an eye and an eye struck through, or an eye with a pirate's patch)
+    And under the name the city it was made in and its year, "Majorca, 1375", the city a link that flies to the city; no "where it was made" wording, no tooltip-only meaning
     And no other control sits in the row; the pieces mode and its opacity live under Settings, Under the hood
     And a chart without a scan yet shows the glyph greyed, its name flying to its sheet view as before
+  Scenario: the icon or the name shows the chart; only the eye hides it
+    Given a chart in the row
+    When the user clicks its icon or its name
+    Then the map flies to the view that frames the sheet, and the sheet is shown if it was hidden
+    And if no chart was shown since the drawer opened, the sheet fades in
+    When the user clicks the icon or the name again, the sheet shown
+    Then the map flies to the frame again and the sheet stays shown
+    When the user clicks the show/hide icon
+    Then the sheet shows at once, no fade, or hides if it was shown; nothing else in the row hides it
+  Scenario: the city clears the way to itself
+    Given a chart's sheet shown
+    When the user clicks the chart's city
+    Then the map flies to the city
+    And if the sheet would cover the city in that view, the sheet hides, and its eye shows it hidden
   Scenario: the view that frames the sheet
     Given a chart shown by its name
     When the map flies to it
     Then the zoom shows the whole sheet with a small margin, derived from the sheet's corners, never a hand-typed zoom (de la Cosa lands near zoom 2, not 4.4)
     And a chart brought in later carries its own frame, checked at the chart's size on screen before it ships
+
+Feature: The projection chips live in the Charts drawer
+  Source: the user on [#266](https://github.com/mark-brannan/portolani/pull/266), 2026-10-29: "The controls for map projections should live under charts now, not the compass rose. I'm not sure about other map settings...they probably stay under the rose but it could change."
+  Scenario: the user looks for the projection
+    Given the drawers on main
+    When the user opens the Charts drawer
+    Then the projection chips are there, each showing its projection as before
+    And they are no longer in the settings drawer under the rose; the rest of its Map section (continents, regions, the land border, colour, rivers, lakes, the scale bar) stays there, and no section goes
+
+Feature: A drawer stays open on a click or a choice
+  Source: the user on [#266](https://github.com/mark-brannan/portolani/pull/266), 2026-10-29: "I want to change the behavior on all drawer actions. This may reverse an earlier position I took, but it matters more now: do not immediately close the drawer on click/select but leave the drawer open. This is flexible for mobile and should perhaps be treated differently. I need to see a UI walk specifically for that at a later time." The earlier position, as recorded in [#206](https://github.com/mark-brannan/portolani/pull/206)'s body from the UI walk behind [#202](https://github.com/mark-brannan/portolani/pull/202) (paraphrase): "A choice, Esc or a click outside the row and the drawer also closes it."
+  Scenario: a choice in a drawer on a wide screen
+    Given any drawer open on a wide screen
+    When the user clicks a button, a chip, a link or a checkbox inside it, or picks a place in it
+    Then the drawer stays open and the map does what was asked behind it
+    And the drawer closes only from its own button, another instrument's button, Esc or a click on the map
+  Scenario: a choice in a bottom sheet on a phone (waiting on a UI walk)
+    Given a drawer open as the bottom sheet, at 520 px and under
+    When the user taps a choice inside it
+    Then the sheet behaves as it does today, until the user has walked the phone's drawers and set this rule
 
 Feature: The world turned to the chart (deferred)
   Source: the user on [#266](https://github.com/mark-brannan/portolani/pull/266), 2026-10-29: "A nice to have, not required for any of the charts would be to rotate the world to match the orientation of the chart, rather than the other way around. De La Cosa's map was originally meant to be read vertical, with the equator running up and down and the new world at the top. You can defer this or add it as a 'future' spec."
