@@ -146,10 +146,11 @@ Feature: A chart's position chips, and the line each was fitted to
     Given a chart's row with its position chips
     When the user clicks a chip
     Then the sheet is shown at that placement, and the map frames it as the chart's name does
-    And over the sheet, in today's geography, the feature that placement was fitted to draws itself as a plain line, from one end to the other, then fades out
+    And over the sheet, in today's geography, the feature that placement was fitted to draws itself as a plain line, from one end to the other, holds, then fades to a faint line (about a quarter of its strength) that stays while the sheet lies at that placement
+    And the faint line may lighten later to a ghost (about a tenth) or go entirely; the user chose faint for now, after comparing all three (the user on [#259](https://github.com/mark-brannan/portolani/pull/259), 2026-10-29: "C for now, may lighten to B or A later")
     And "Parallels" draws today's equator and Tropic of Cancer; a coast's chip ("New World") draws only the stretch of today's coast that fit used, not the whole coast; the chart's own "Level" draws every coast it is centred between
     And the line is the feature the fit was computed from, carried with the placement in the chart's data, never a stretch drawn by hand to look right
-    And with reduced motion the line shows whole, then fades
+    And with reduced motion the line shows whole, then fades to faint
   Scenario: a phone (waiting on a UI walk)
     Given the Charts drawer open as the bottom sheet, at 520 px and under
     When the user looks for the position chips
@@ -176,23 +177,33 @@ Feature: A drawer stays open on a click or a choice
     Then the sheet behaves as it does today, until the user has walked the phone's drawers and set this rule
 
 Feature: A voyage's row in the Voyages drawer
-  Source: the user on [#259](https://github.com/mark-brannan/portolani/pull/259), 2026-10-29: "Clicking a new voyage button always zooms to that voyages target window."; "The first time any given voyage is selected after opening the drawer, if it was not previously selected, zoom to the window for that voyage and then animate the line from the start to the finish."; "Each voyage has a show/hide button to the right of it, before the color selector. The show hide always does a quick show/hide action for the line without changing the zoom or view."; "The voyages colors should not "jump" or reset when multiple voyages were selected and an earlier one is then de-selected. The colors in the current display should remain 'sticky' to the voyage they were already assigned to." This replaces the rule that a voyage put on stays where it is if any of its track is in view, and that a click on a shown voyage takes it off (`public/page.js` at `6960f78`).
+  Source: the user on [#259](https://github.com/mark-brannan/portolani/pull/259), 2026-10-29: "Clicking a new voyage button always zooms to that voyages target window."; "The first time any given voyage is selected after opening the drawer, if it was not previously selected, zoom to the window for that voyage and then animate the line from the start to the finish."; "Each voyage has a show/hide button to the right of it, before the color selector. The show hide always does a quick show/hide action for the line without changing the zoom or view."; "The voyages colors should not "jump" or reset when multiple voyages were selected and an earlier one is then de-selected. The colors in the current display should remain 'sticky' to the voyage they were already assigned to." The pace of the first draw, after comparing three: "A but faster, maybe 1s +/- .5s." This replaces the rule that a voyage put on stays where it is if any of its track is in view, and that a click on a shown voyage takes it off (`public/page.js` at `6960f78`).
   Scenario: the row
     Given the Voyages drawer open
     When the user looks at a voyage's row
-    Then it reads, left to right: the voyage's name, a show/hide icon (the same eye as a chart's row), then its colour picker
+    Then it reads, left to right: the voyage's name, a show/hide icon (the same eye as a chart's row), a play button, then its colour picker
   Scenario: the name flies; only the eye hides
     Given a voyage in the list
     When the user clicks its name
     Then the map flies to the view that frames the whole voyage, whether or not any of it was already in view
     And the voyage is shown if it was hidden
-    And if this is the first time since the drawer opened that this voyage is shown, and it was not shown when the drawer opened, the line draws itself from the start of the voyage to its end once the flight lands
+    And if this is the first time since the drawer opened that this voyage is shown, and it was not shown when the drawer opened, the line draws itself from the start of the voyage to its end once the flight lands, in about a second (half a second to a second and a half) whatever the voyage's length, at an even pace along the line
     When the user clicks its name again
     Then the map flies to the frame again, the line stays drawn whole, and nothing is hidden
     When the user clicks its eye
     Then the line shows at once, drawn whole, or hides; the view does not move
     And a voyage shown by its eye and then clicked by name in the same opening of the drawer flies but does not draw itself again
     And with reduced motion the line shows whole, no drawing
+  Scenario: the play button sails the voyage on its own calendar (may land after the rest of this Feature)
+    Source: the user on [#259](https://github.com/mark-brannan/portolani/pull/259), 2026-10-29, after comparing three paces drawn from Magellan's dates: "I want to add scope and put a play button (or maybe other play-style controls) next to each voyage that do the B variant." (B: the voyage's dates, true.)
+    Given a voyage whose legs carry their dates
+    When the user clicks its play button
+    Then the map flies to the voyage's frame if it is not in view, and the line draws itself again from the start, on the voyage's own calendar: the pen runs across open water and sits still through every wait (Magellan's winter at San Julián, the months at Tidore)
+    And the date the pen has reached, and the leg it is on, show as it goes
+    And the landings, deaths and fights appear as the pen reaches their dates
+    And the whole voyage takes some seconds (Magellan's 1,082 days, about nine), however long it was
+    And other play-style controls (pause, a scrubber) may join the play button; which ones is open
+    And every leg of every voyage needs a start and an end date as data for this; today a leg's dates are free text, often a month at one end ("Nov – 29 Nov 1519")
   Scenario: colours stay with their voyages
     Given three voyages shown, each in its own colour
     When the user hides the first of them
@@ -209,10 +220,13 @@ Feature: Every point of interest has a mark
     Then a stand-in mark is drawn at its spot, so the user sees where to tap, and no lettering beside it
     And a place that already has a town or a sprite drawn there gets no second mark
     And every place listed in the Sights drawer is checked, not only Tyre
-  Scenario: the stand-in is a placeholder
-    Given a city with no modern equivalent
-    When its own mark is drawn later (ruins, or whatever the user picks)
-    Then it replaces the stand-in for that place; until then the stand-in stays
+  Scenario: a place with no modern city is a ruin
+    Given a point of interest with no modern city on its spot (Tyre's ancient island city, Berenike, Carthage)
+    When its mark is drawn
+    Then it is a small ink glyph of a broken colonnade: three columns on a step, two of them snapped short, about the height of a town glyph
+    And it is drawn in code, in ink, like the towers, not cut from a scan
+    And a place with a modern city on its spot but nothing drawn there yet gets the plain town glyph instead, so no living city reads as a ruin
+    And a place's own decoration, link or image laid on later replaces its glyph
 
 Feature: The world turned to the chart (deferred)
   Source: the user on [#266](https://github.com/mark-brannan/portolani/pull/266), 2026-10-29: "A nice to have, not required for any of the charts would be to rotate the world to match the orientation of the chart, rather than the other way around. De La Cosa's map was originally meant to be read vertical, with the equator running up and down and the new world at the top. You can defer this or add it as a 'future' spec."
