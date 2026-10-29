@@ -39,5 +39,11 @@
   "geographica": { "title": "Strabo, Geography (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Geographica" },
   "thule": { "title": "Thule (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Thule" },
   "nearchus": { "title": "Nearchus (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Nearchus" },
-  "indica-arrian": { "title": "Arrian, Indica (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Indica_(Arrian)" }
+  "indica-arrian": { "title": "Arrian, Indica (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Indica_(Arrian)" },
+  "ming-treasure-voyages": { "title": "Ming treasure voyages (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Ming_treasure_voyages" },
+  "chen-zuyi": { "title": "Chen Zuyi, the pirate of Palembang (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Chen_Zuyi" },
+  "ma-huan": { "title": "Ma Huan, interpreter on three of the voyages and author of the Yingya Shenglan (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Ma_Huan" },
+  "mossel-bay": { "title": "Mossel Bay, where Dias first landed (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Mossel_Bay" },
+  "battle-of-mactan": { "title": "Battle of Mactan (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Battle_of_Mactan" },
+  "paulo-da-gama": { "title": "Paulo da Gama (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Paulo_da_Gama" }
 }

@@ -265,7 +265,7 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     await page.click('#sights');
     assert.equal(await opened('sightsPanel'), true, 'the astrolabe did not open the points of interest');
     const hs = await page.evaluate(() => location.hash);
-    await page.click('#sightsList button >> text=Pitcairn Islands');
+    await page.click('#sightsList button >> text=Goa'); // the age of discovery, the one group open at first
     assert.equal(await opened('sightsPanel'), false, 'a point of interest left its drawer open');
     await page.waitForFunction((x) => location.hash !== x, hs, { timeout: 60000 });
     // Go takes the focus in its box; Esc shuts it and gives the focus back to the compass
@@ -274,12 +274,13 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     await page.keyboard.press('Escape');
     assert.equal(await opened('goPanel'), false, 'Esc left Go open');
     assert.equal(await page.evaluate(() => document.activeElement.id), 'go', 'Esc did not give the focus back to the compass');
-    // a chart's name flies to its frame and shuts the drawer
+    // a chart is a row: without a scan its thumbnail is the greyed chart glyph, and it flies to the chart's frame and shuts the drawer
     await page.click('#charts');
     const h = await page.evaluate(() => location.hash);
-    const vesconte = page.locator('#chartList .chart', { hasText: 'Vesconte' });
-    await vesconte.locator('.name').click();
-    assert.equal(await opened('chartsDrawer'), false, "a chart's name left its drawer open");
+    const thumb = page.locator('#chartList .chart', { hasText: 'Vesconte' }).locator('.thumb');
+    assert.equal(await thumb.evaluate((b) => b.classList.contains('none')), true, 'Vesconte has a scan thumbnail');
+    await thumb.click();
+    assert.equal(await opened('chartsDrawer'), false, "a chart's sheet left its drawer open");
     await page.waitForFunction((x) => location.hash !== x, h, { timeout: 60000 });
     const [, lat, lon] = (await page.evaluate(() => location.hash)).replace('#map=', '').split('/').map(Number);
     assert.ok(Math.abs(lat - 37.5) < 1 && Math.abs(lon - 25.2) < 1, `Vesconte's sheet is not round the Cyclades: ${lat}, ${lon}`);
