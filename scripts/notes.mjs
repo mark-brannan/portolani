@@ -1,16 +1,15 @@
-// Notes on the Carta Marina (#248): what the maker drew, what was really there, and where to read more.
+// Notes on the charts laid over the map (#161): what the maker drew, what was really there, and where to read more.
 // Each is a point-of-interest tile (page.js fillTile) with two anchors:
-//   at.px     the figure on the scan, in px of File:Carta_Marina.jpeg (5016 x 3715), read by eye, about +-40 px;
-//             the mark sits there through the overlay's own fit, so it stays on the figure as drawn
-//   at.lonlat the real place, [lon, lat], or null where nothing is there; notional for 3, 8 and 10
-// Quotations from the 1658 English Historia (public domain) are from the EarlyPrint transcription
-// https://distantreader.org/stacks/earlyprint/txt/B26436.txt, spelling kept. The marks show only while the overlay is on.
+//   at.px     the figure on the scan, in px of the chart's full-size scan (overlays.json width x height), read by
+//             eye, about +-40 px; the mark sits there through the overlay's own fit, so it stays on the figure as drawn
+//   at.lonlat the real place, [lon, lat], or null where nothing is there
+// NOTE_SETS holds one list per overlay id; the marks of a list show only while its overlay is laid.
 import { applyFit } from './overlays.mjs';
 
-export const NOTES_OVERLAY = 'carta-marina';
-export const NOTES_SCAN = { w: 5016, h: 3715 };
-
-export const NOTES = [
+// The Carta Marina, 1539 (#248). Quotations from the 1658 English Historia (public domain) are from the EarlyPrint
+// transcription https://distantreader.org/stacks/earlyprint/txt/B26436.txt, spelling kept. at.lonlat is notional
+// for the stockfish, the barnacle geese and the glutton.
+export const CARTA_MARINA_NOTES = [
   {
     id: 'maelstrom', title: 'The maelstrom',
     drawn: 'A whirlpool swallowing a ship off Lofoten, "HEC EST HORRENDA CARIBDIS".',
@@ -83,14 +82,105 @@ export const NOTES = [
   },
 ];
 
+// The Catalan Atlas, sheet 5 (File:Catalan_Atlas_BNF,_sheet_5.jpg, 6454 x 15862), the Atlantic edge of its
+// westernmost panel. Quoted legends are the Cresques Project's English translations of panel III
+// (https://www.cresquesproject.net/catalan-atlas-legends/panel-iii), cited by their numbers there; the island names
+// are read off the scan. at.lonlat is notional for the tents and the cape of Africa.
+export const CATALAN_NOTES = [
+  {
+    id: 'irish-wonders', title: 'The wonders of Ireland',
+    drawn: 'A legend west of Ireland (III.1): of its many islands, "a small one where men never die", for they are carried off it to die; no snakes, frogs or poisonous spiders; and "trees that attract birds like ripe figs".',
+    real: 'Gerald of Wales\'s Topography of Ireland, about 1188, which the legend follows: the island of the living is Monaincha, a bog island near Roscrea. Ireland truly has no native snakes; the sea cut it off before they came back after the Ice Age.',
+    source: { label: 'Cresques Project III.1; Monaincha', url: 'https://en.wikipedia.org/wiki/Monaincha' },
+    at: { px: [3400, 3600], lonlat: [-7.80, 52.95] },
+  },
+  {
+    id: 'stillanda', title: 'Stillanda',
+    drawn: 'A dark island at the top of the sheet, north-east of the Irish legend, "Island of Stillanda, where they speak the language of Norway and are Christians" (III.2).',
+    real: 'Iceland, or Shetland: both spoke Norse, were Christian and were under the Norwegian crown in 1375. Iceland lies north-west of where the fit puts the drawing.',
+    source: { label: 'Cresques Project III.2; Iceland', url: 'https://en.wikipedia.org/wiki/Iceland' },
+    at: { px: [5520, 1680], lonlat: [-19.0, 64.9] },
+  },
+  {
+    id: 'brasil', title: 'Brasil',
+    drawn: 'A round purple island west of Ireland, a ring of land round a dotted middle.',
+    real: 'Nothing: open Atlantic. Hy-Brasil sat on charts from the 1320s, always round and always west of Ireland; Bristol ships went looking for it in the 1480s, and it left the charts only in the 1800s.',
+    source: { label: 'Brasil (mythical island), Wikipedia', url: 'https://en.wikipedia.org/wiki/Brasil_(mythical_island)' },
+    at: { px: [4240, 4780], lonlat: null },
+  },
+  {
+    id: 'corvi-marini', title: 'The island of sea crows',
+    drawn: 'A gilt island far out from Galicia, "insule de corvi marini", the islands of sea crows (cormorants).',
+    real: 'Perhaps the Azores, 1,300 km further west, which the Portuguese reached only about 1427. Corvo, the smallest and most westerly, may take its name from these charts.',
+    source: { label: 'Corvo Island, Wikipedia', url: 'https://en.wikipedia.org/wiki/Corvo_Island' },
+    at: { px: [3253, 8908], lonlat: [-31.11, 39.70] },
+  },
+  {
+    id: 'madeira', title: 'The island of timber',
+    drawn: 'A gilt half-disc, "insula de legname", the island of timber, with Porto Santo above and the Desertas below.',
+    real: 'Madeira, Portuguese for wood. Empty of people in 1375; Zarco and Teixeira claimed it for Portugal in 1419–20 and the settlers burned much of the forest.',
+    source: { label: 'Madeira, Wikipedia', url: 'https://en.wikipedia.org/wiki/Madeira' },
+    at: { px: [3220, 11980], lonlat: [-16.95, 32.75] },
+  },
+  {
+    id: 'fortunate-isles', title: 'The Fortunate Isles',
+    drawn: 'A long legend, upside down to the chart, on the islands "called fortunate because they are replete with all sorts of goods", among them the goat and dog islands; it calls the pagans\' belief that they are paradise a fable (III.4).',
+    real: 'The Canaries, home of the Guanches. The names are Pliny\'s, after King Juba\'s men, who found big dogs on Canaria; Ptolemy ran his prime meridian through the islands.',
+    source: { label: 'Cresques Project III.4; Canary Islands', url: 'https://en.wikipedia.org/wiki/Canary_Islands' },
+    at: { px: [1200, 10900], lonlat: [-15.6, 28.1] },
+  },
+  {
+    id: 'isle-of-hell', title: 'The isle of hell',
+    drawn: 'A red island with a white peak, lettered the isle of hell.',
+    real: 'Tenerife and Teide, 3,715 m, the highest peak in Spain and an active volcano: the Guanches held that Guayota, their devil, lived inside it. Columbus saw it erupt in 1492.',
+    source: { label: 'Teide, Wikipedia', url: 'https://en.wikipedia.org/wiki/Teide' },
+    at: { px: [2760, 13870], lonlat: [-16.64, 28.27] },
+  },
+  {
+    id: 'lanzarote', title: 'Lanzarotto\'s island',
+    drawn: 'A dark island with a red cross, the arms of Genoa: "insula de lanzaroto maloxelo".',
+    real: 'Lanzarote, still named after Lanzarotto Malocello, a Genoese who landed there about 1312 and stayed some twenty years, until the islanders drove him out.',
+    source: { label: 'Lanzarotto Malocello, Wikipedia', url: 'https://en.wikipedia.org/wiki/Lanzarotto_Malocello' },
+    at: { px: [4140, 13380], lonlat: [-13.63, 29.05] },
+  },
+  {
+    id: 'jaume-ferrer', title: 'Jaume Ferrer\'s ship',
+    drawn: 'A ship under the red and gold of Majorca: "The ship of Jaume Ferrer departed for the River of Gold on the 10th of August of 1346, the feast of St. Lawrence" (III.5).',
+    real: 'Ferrer, a Majorcan, sailed south past the Canaries for the gold of West Africa and was never heard of again. No ship is known to have passed Cape Bojador and come back until Gil Eanes in 1434.',
+    source: { label: 'Cresques Project III.5; Jaume Ferrer', url: 'https://en.wikipedia.org/wiki/Jaume_Ferrer' },
+    at: { px: [3000, 15000], lonlat: null },
+  },
+  {
+    id: 'finisterre-of-africa', title: 'The western end of Africa',
+    drawn: 'A legend under the coast: "Here starts Africa, which ends in Alexandria and Babylon", a cape at the world\'s western end, with ivory from its many elephants (III.6).',
+    real: 'The coast runs on another 3,000 km south to Cape Verde. North Africa\'s own elephants had died out by Roman times; the ivory came across the Sahara from the south.',
+    source: { label: 'Cresques Project III.6; North African elephant', url: 'https://en.wikipedia.org/wiki/North_African_elephant' },
+    at: { px: [4800, 15000], lonlat: [-14.5, 26.13] },
+  },
+  {
+    id: 'tents', title: 'The tents of Gozola',
+    drawn: 'Black tents with gold finials under "GOZOLA". The panel\'s legend of the desert peoples: veiled so only their eyes show, they live in tents and ride camels (III.11).',
+    real: 'The Gazula, Berbers of the Sous and the Anti-Atlas, on the caravan road south from Morocco; veiling was the mark of the Sanhaja and the Tuareg men of the desert.',
+    source: { label: 'Cresques Project III.11; Tuareg people', url: 'https://en.wikipedia.org/wiki/Tuareg_people' },
+    at: { px: [5200, 14120], lonlat: [-10.06, 28.99] },
+  },
+];
+
+// Each overlay's notes and the size of the scan their px are read off.
+export const NOTE_SETS = {
+  'carta-marina': { scan: { w: 5016, h: 3715 }, notes: CARTA_MARINA_NOTES },
+  'catalan-atlas': { scan: { w: 6454, h: 15862 }, notes: CATALAN_NOTES },
+};
+
 // The marks of a laid overlay's notes through the view's projection: [{ x, y, h, tile }] in canvas px, the
 // tile in the shape page.js fillTile takes. The scan px goes through the piece (overlays.json) that holds it.
-// Nothing for any overlay but the Carta Marina, so the notes are hidden with the scan.
+// Nothing for an overlay with no notes, or none laid, so the notes are hidden with the scan.
 export const NOTE_H = 20;
 export function noteMarks(overlay, proj, rect) {
-  if (overlay?.id !== NOTES_OVERLAY) return [];
+  const set = overlay && NOTE_SETS[overlay.id];
+  if (!set) return [];
   const out = [];
-  for (const n of NOTES) {
+  for (const n of set.notes) {
     const [px, py] = n.at.px;
     const piece = overlay.pieces.find((p) => px >= p.x0 && px < p.x1) ?? overlay.pieces.at(-1);
     const [lon, lat] = applyFit(piece.fit, px, py);

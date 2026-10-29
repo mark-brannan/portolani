@@ -5,7 +5,7 @@
   "who": ["Vasco da Gama", "Paulo da Gama"],
   "when": "1497–1499",
   "summary": "Four ships out of Lisbon swing wide into the South Atlantic, round the Cape, work up the East African coast and cross the monsoon sea to Calicut, the first sea road from Europe to India.",
-  "sources": ["roteiro-velho", "hakluyt-da-gama-journal", "vasco-da-gama"],
+  "sources": ["roteiro-velho", "hakluyt-da-gama-journal", "vasco-da-gama", "paulo-da-gama"],
   "legs": [
     { "from": "Lisbon", "to": "Santiago, Cape Verde", "dates": "8–26 Jul 1497", "mode": "sea", "line": "rhumb", "confidence": "attested",
       "points": [[-9.55, 38.62], [-11, 36], [-14.5, 31.5], [-19.5, 28], [-21.5, 22], [-21.5, 19], [-22, 16], [-22.7, 14.7], [-23.6, 14.65]],
@@ -62,7 +62,8 @@
       "source": "chroniclers" }
   ],
   "events": [
-    { "kind": "landfall", "lon": 31.4, "lat": -29.85, "date": "25 Dec 1497", "label": "Natal named, Christmas Day", "source": "Roteiro", "text": "Christmas Day 1497 found the fleet off the coast of what is now South Africa, and Vasco da Gama named it Natal, for the Nativity. The name survives in KwaZulu-Natal." },
-    { "kind": "landfall", "lon": 75.72, "lat": 11.38, "date": "20 May 1498", "label": "Calicut, Kappad", "source": "Roteiro", "text": "Ten months out of Lisbon, the first ships to reach India from Europe by sea anchored off Kappad, north of Calicut. The Zamorin received them; his merchants thought the Portuguese gifts of cloth, hats and honey poor, and the Portuguese left with pepper and a promise of trouble." }
+    { "kind": "landfall", "lon": 31.4, "lat": -29.85, "date": "25 Dec 1497", "label": "Natal named, Christmas Day", "source": "Roteiro", "cite": "roteiro-velho", "text": "Christmas Day 1497 found the fleet off the coast of what is now South Africa, and Vasco da Gama named it Natal, for the Nativity. The name survives in KwaZulu-Natal." },
+    { "kind": "event", "lon": 39.68, "lat": -4.06, "date": "7–13 Apr 1498", "label": "Mombasa: a hostile port", "source": "Roteiro", "cite": "roteiro-velho", "text": "The first Europeans known at Mombasa were met with suspicion. Men swam out at night to cut the anchor cables, and two captives from Mozambique, put to the question with boiling oil, said the city meant to take the ships. Da Gama sailed north to Malindi, its rival, which gave him a pilot for India." },
+    { "kind": "landfall", "lon": 75.72, "lat": 11.38, "date": "20 May 1498", "label": "Calicut, Kappad", "source": "Roteiro", "cite": "roteiro-velho", "text": "Ten months out of Lisbon, the first ships to reach India from Europe by sea anchored off Kappad, north of Calicut. The Zamorin received them; his merchants thought the Portuguese gifts of cloth, hats and honey poor, and the Portuguese left with pepper and a promise of trouble." }
   ]
 }
