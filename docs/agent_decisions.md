@@ -264,3 +264,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261029t095644z
 - earlier drawer position cited from #206 body as paraphrase Undo: replace with the user's sentence when found ([#259](https://github.com/mark-brannan/portolani/pull/259))
+
+### 20261029t100120z
+- name and thumbnail still shut the drawer; the eye does not Undo: edit public/page.js or index.html ([#267](https://github.com/mark-brannan/portolani/pull/267))
