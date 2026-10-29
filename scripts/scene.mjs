@@ -1632,7 +1632,7 @@ function buildScene(data, sprites, ctx, world = {}) {
 
   // automatic, the typed title stands in where the view has no name in it
   const title = world.pinTitle?.toUpperCase() || (world.autoTitle && viewTitle(data, towns.filter((t) => names.some((n) => n.text === t.name)), world.regions === 'english' ? 1 : 0, lesser.filter((l) => l.poi)).toUpperCase()) || world.title || 'PORTOLANI';
-  return { field, centre, nodes, sheets: world.sheets, roseDraws, towns, lesser, names, worldNames, monsters, ships, mountains, relief, cartouche: { ...cartouche, sprite: cartoucheSprite, title }, cartouchePos: cartoucheCorner };
+  return { field, boxes, occupied, centre, nodes, sheets: world.sheets, roseDraws, towns, lesser, names, worldNames, monsters, ships, mountains, relief, cartouche: { ...cartouche, sprite: cartoucheSprite, title }, cartouchePos: cartoucheCorner };
 }
 
 // ---------------------------------------------------------------- drawing
@@ -2216,6 +2216,7 @@ const VOYAGE_HALO = 3.3, VOYAGE_END = 2.8, SKULL_H = 16, SKULL_ALT_H = 13, WAYPO
 function drawVoyages(g, voyages, proj, rect, eventRect = rect, moving = false) {
   for (const v of voyages ?? []) if (isMigration(v.voyage)) drawRibbon(g, v, proj, rect, moving);
   for (const v of voyages ?? []) (isMigration(v.voyage) ? drawStream : drawTrack)(g, v, proj, rect);
+  for (const v of voyages ?? []) for (const m of doubtMarks(v, proj, eventRect)) drawCloud(g, m, v.colour ?? STYLE.windRed);
   for (const v of voyages ?? []) drawEvents(g, v, proj, eventRect);
 }
 // A small ringed mark on each note's figure while its chart is laid over the map; no lettering, a click opens its tile (notes.mjs)
@@ -2332,7 +2333,8 @@ function drawTrack(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH }, 
   const end = Math.max(VOYAGE_END, width * 1.25);
   for (const leg of voyage.legs) {
     const pieces = splitAtSeam(pathOf(leg), proj.lonCenter, proj.visible).map((p) => p.map(proj.toPx)).filter((px) => meets(rect, bbox(px)));
-    for (const [style, w, alpha, dash] of [[STYLE.parchment, width + VOYAGE_HALO, 0.6, []], [colour, width, 0.9, capped(DASHES[leg.confidence] ?? [], width)]]) {
+    if (leg.doubt) speculative(g, pieces, colour);
+    else for (const [style, w, alpha, dash] of [[STYLE.parchment, width + VOYAGE_HALO, 0.6, []], [colour, width, 0.9, capped(DASHES[leg.confidence] ?? [], width)]]) {
       g.strokeStyle = style; g.lineWidth = w; g.globalAlpha = alpha; g.setLineDash(dash);
       for (const px of pieces) { g.beginPath(); px.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke(); }
     }
@@ -2381,13 +2383,128 @@ export function voyageMarks(voyage, proj, rect) {
     if (disc(rect, x, y, -h / 2)) out.push({ x, y, h, alpha, skull, tile, ...(bead && { bead }) });
   };
   for (const e of voyage?.events ?? []) {
-    const tile = { title: e.label, date: e.date, text: e.text, note: e.note, source: e.source, cited: e.cited, who: e.who };
-    if (e.kind === 'waypoint') { add(e, WAYPOINT_H, 1, false, tile, true); continue; }
-    if (e.kind !== 'death') { add(e, SKULL_H, 1, false, tile); continue; }
+    const tile = { title: e.label, date: e.date, doubt: e.doubt, text: e.text, note: e.note, source: e.source, cited: e.cited, who: e.who };
+    const alpha = e.doubt ? 0.5 : 1; // a doubted event at half its ink
+    if (e.kind === 'waypoint') { add(e, WAYPOINT_H, alpha, false, tile, true); continue; }
+    if (e.kind !== 'death') { add(e, SKULL_H, alpha, false, tile); continue; }
     for (const a of e.alternatives ?? []) add(a, SKULL_ALT_H, 0.75, true, { title: a.label, date: e.date, text: a.text, source: a.source, cited: a.cited, who: e.who, place: a.place, alternative: true });
-    add(e, SKULL_H, 1, true, tile);
+    add(e, SKULL_H, alpha, true, tile);
   }
   return out;
+}
+
+// ---------------------------------------------------------------- doubted legs
+// A leg scholars doubt (its `doubt`, docs/voyages/README.md) is drawn as a speculative stroke: sparse open rings
+// along the path and no line between, over a faint parchment band. Near it, on empty ground of its own medium
+// (land for a land leg, sea for a sea leg), a thought cloud with a broken edge trails small separate puffs toward
+// the route; a tap on the cloud opens the leg's tile, which opens with the doubt. No lettering and no icon.
+const RING_R = 2.6, RING_W = 1.4, RING_EVERY = 16, BAND_W = 6;
+const CLOUD_LOBES = [[-13, 2, 8], [-5, -7, 9], [7, -7, 8.5], [14, 2, 7.5], [5, 8, 8], [-6, 8, 7.5]].map((l) => l.map((n) => n * 1.8));
+const CLOUD_HW = 44, CLOUD_HH = 33, CLOUD_GAP = 8; // the cloud's half extent, px, and the room kept round it
+// f(point) every `step` px along a px path, from half a step in
+function along(pts, step, f) {
+  let walked = 0, next = step / 2;
+  for (let i = 1; i < pts.length; i++) {
+    const [ax, ay] = pts[i - 1], [bx, by] = pts[i], d = Math.hypot(bx - ax, by - ay);
+    while (walked + d >= next) { const t = (next - walked) / (d || 1); f([ax + (bx - ax) * t, ay + (by - ay) * t]); next += step; }
+    walked += d;
+  }
+}
+function speculative(g, pieces, colour) {
+  g.save(); g.setLineDash([]);
+  g.strokeStyle = STYLE.parchment; g.lineWidth = BAND_W; g.globalAlpha = 0.35;
+  for (const px of pieces) { g.beginPath(); px.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke(); }
+  g.strokeStyle = colour; g.lineWidth = RING_W; g.globalAlpha = 0.85;
+  for (const px of pieces) along(px, RING_EVERY, ([x, y]) => { g.beginPath(); g.arc(x, y, RING_R, 0, 2 * Math.PI); g.stroke(); });
+  g.restore();
+}
+// The puffs from the cloud's edge toward the route, 3 to 5 as the room allows, shrinking as they go: [x, y, r]
+const PUFF_GAP = 18, TRAIL = 100; // px between puffs; the least px from a cloud's centre to its leg, room for the trail
+function puffs([x, y], [tx, ty]) {
+  const L = Math.hypot(tx - x, ty - y) || 1, ux = (tx - x) / L, uy = (ty - y) / L, s0 = 1 / Math.hypot(ux / CLOUD_HW, uy / CLOUD_HH) + 10, s1 = Math.max(s0 + 40, L - 12);
+  const n = Math.max(3, Math.min(5, Math.floor((s1 - s0) / 14) + 1)), sizes = [6.5, 5.2, 4.2, 3.2, 2.4].slice(5 - n), gap = Math.min(PUFF_GAP, (s1 - s0) / (n - 1));
+  return sizes.map((r, i) => { const s = s0 + gap * i, o = (i % 2 ? -1 : 1) * (5 - i); return [x + ux * s - uy * o, y + uy * s + ux * o, r]; });
+}
+function drawCloud(g, { x, y, to }, colour) {
+  g.save(); g.lineCap = 'round';
+  g.fillStyle = STYLE.parchment; g.globalAlpha = 0.85;
+  for (const [dx, dy, r] of CLOUD_LOBES) { g.beginPath(); g.arc(x + dx, y + dy, r + 2, 0, 2 * Math.PI); g.fill(); }
+  g.strokeStyle = colour; g.globalAlpha = 0.9; g.lineWidth = 2.2; g.setLineDash([7, 5]); // the broken edge
+  for (const [dx, dy, r] of CLOUD_LOBES) { const a = Math.atan2(dy, dx); g.beginPath(); g.arc(x + dx, y + dy, r, a - 1.35, a + 1.35); g.stroke(); } // each lobe's outer arc, so it reads as one cloud
+  g.setLineDash([]); g.lineWidth = 1.6;
+  for (const [px, py, r] of puffs([x, y], to)) { // the trail, small separate clouds drifting toward the leg
+    g.fillStyle = STYLE.parchment; g.globalAlpha = 0.85; g.beginPath(); g.arc(px, py, r + 1.5, 0, 2 * Math.PI); g.fill();
+    g.globalAlpha = 0.9; g.beginPath(); g.arc(px - r * 0.35, py, r * 0.75, Math.PI * 0.55, Math.PI * 1.75); g.arc(px + r * 0.35, py - r * 0.1, r * 0.8, Math.PI * 1.2, Math.PI * 2.45); g.stroke();
+  }
+  g.restore();
+}
+// The tile a doubted leg opens: its ends, its dates, the doubt first, then its note and source
+const legTile = (leg) => ({ title: `${leg.from} to ${leg.to}`, date: leg.dates, doubt: leg.doubt, text: leg.note, source: leg.source });
+// The clouds of a voyage in view, through any projection: { x, y, h, to, tile } in canvas px, `to` the point of
+// the route the trail drifts to. A cloud is listed only when the whole of it is in view.
+export function doubtMarks(v, proj, rect) {
+  const out = [];
+  for (const c of v?.clouds ?? []) {
+    if (proj.visible && !(proj.visible(...c.at) && proj.visible(...c.to))) continue;
+    const [x, y] = proj.toPx(c.at);
+    if (disc(rect, x, y, -CLOUD_HW)) out.push({ x, y, h: 2 * CLOUD_HW, to: proj.toPx(c.to), tile: c.tile });
+  }
+  return out;
+}
+// Where each doubted leg's cloud stands, found once a view is placed: the free spot nearest the leg's middle in
+// view, on the leg's own medium (field.isLand), inside the frame and clear of what the scene placed (its boxes
+// and discs: names, towns, roses, the cartouche, beasts, hills), of every voyage's track and marks, and of the
+// clouds before it, TRAIL px or more from the leg so the puffs have room, the puffs too clear of boxes and sprites.
+// Tried so first, then without the room the scene keeps round its ornaments, then clear of the sprites alone, then
+// anywhere clear of the tracks; a leg with no spot even then, or none of it in view, has no cloud. Kept in
+// [lon, lat] so a moving frame carries it. Returns the scene's voyages, each doubted one with its `clouds`.
+function placeDoubts(scene, data) {
+  const voyages = scene.voyages ?? [], proj = data.proj, field = scene.field;
+  if (!voyages.some((v) => v.voyage.legs.some((l) => l.doubt))) return voyages;
+  const pxOf = (leg) => splitAtSeam(pathOf(leg), proj.lonCenter, proj.visible).map((p) => p.map(proj.toPx));
+  const track = [];
+  for (const v of voyages) {
+    for (const leg of v.voyage.legs) for (const px of pxOf(leg)) along(px, 6, (p) => track.push(p));
+    for (const m of voyageMarks(v.voyage, proj, { x0: 0, y0: 0, x1: W, y1: H })) track.push([m.x, m.y]);
+  }
+  const placed = [], hw = CLOUD_HW + CLOUD_GAP, hh = CLOUD_HH + CLOUD_GAP;
+  const sprites = [...(scene.monsters ?? []), ...(scene.ships ?? []), ...(scene.mountains ?? [])].map((m) => ({ x: m.x, y: m.y, r: m.size / 2 }));
+  const inside = (x, y) => x - hw > 0 && y - hh > 0 && x + hw < W && y + hh < H;
+  const medium = (x, y, land) => { // every point of the cloud's ellipse on the leg's medium
+    for (let dy = -hh; dy <= hh; dy += 6) for (let dx = -hw; dx <= hw; dx += 6) {
+      if ((dx * dx) / (hw * hw) + (dy * dy) / (hh * hh) <= 1 && field.isLand(x + dx, y + dy) !== land) return false;
+    }
+    return true;
+  };
+  const clearOfTrack = (x, y) => track.every(([tx, ty]) => Math.abs(tx - x) > hw || Math.abs(ty - y) > hh);
+  const clearOfClouds = (x, y) => placed.every((o) => !obbOverlap(o, obb(x, y, 0, hw, hh)));
+  const clearOfBoxes = (x, y) => { const b = obb(x, y, 0, hw, hh); return (scene.boxes ?? []).every((o) => !obbOverlap(o, b)); };
+  const clear = (discs, k) => (x, y) => discs.every((o) => Math.max(Math.abs(o.x - x) - hw, Math.abs(o.y - y) - hh) > o.r * k);
+  const clearOfRoom = clear(scene.occupied ?? [], 0.7), clearOfSprites = clear(sprites, 0.8);
+  // the trail too keeps off the scene's boxes and sprites, so no puff sits on a town or a ship
+  const trailOff = (trail, boxes) => trail.every(([x, y, r]) => sprites.every((o) => Math.hypot(o.x - x, o.y - y) > o.r * 0.8 + r) && (!boxes || (scene.boxes ?? []).every((o) => !obbOverlap(o, obb(x, y, 0, r, r)))));
+  const tiers = [(x, y, land, trail) => medium(x, y, land) && clearOfBoxes(x, y) && clearOfSprites(x, y) && clearOfRoom(x, y) && trailOff(trail(), true),
+    (x, y, land, trail) => medium(x, y, land) && clearOfBoxes(x, y) && clearOfSprites(x, y) && trailOff(trail(), true),
+    (x, y, land, trail) => medium(x, y, land) && clearOfSprites(x, y) && trailOff(trail(), false), () => true];
+  return voyages.map((v) => {
+    const clouds = [];
+    for (const leg of v.voyage.legs) {
+      if (!leg.doubt) continue;
+      const shown = [];
+      for (const px of pxOf(leg)) along(px, 4, (p) => { if (p[0] >= 0 && p[1] >= 0 && p[0] <= W && p[1] <= H) shown.push(p); });
+      if (!shown.length) continue;
+      const [mx, my] = shown[Math.floor(shown.length / 2)], cands = [];
+      for (let d = hw + 24; d <= 360; d += 16) for (let k = 0; k < 32; k++) { const a = (k * Math.PI) / 16; cands.push([mx + d * Math.cos(a), my + d * Math.sin(a) * 0.8]); }
+      const ok = cands.filter(([x, y]) => inside(x, y) && clearOfTrack(x, y) && clearOfClouds(x, y) && shown.every(([px, py]) => Math.hypot(px - x, py - y) >= TRAIL));
+      const nearest = (x, y) => shown.reduce((b, p) => (Math.hypot(p[0] - x, p[1] - y) < Math.hypot(b[0] - x, b[1] - y) ? p : b));
+      const spot = tiers.reduce((got, fits) => got ?? ok.find(([x, y]) => fits(x, y, leg.mode === 'land', () => puffs([x, y], nearest(x, y)))), null);
+      if (!spot) continue;
+      const near = nearest(...spot);
+      placed.push(obb(spot[0], spot[1], 0, hw, hh));
+      clouds.push({ at: proj.invert(...spot), to: proj.invert(...near), tile: legTile(leg) });
+    }
+    return clouds.length ? { ...v, clouds } : v;
+  });
 }
 
 // The marks of the astrolabe's points of interest and the chart-making sites in view: { x, y, h, tile } in canvas
@@ -2565,8 +2682,7 @@ function drawScene(g, scene, data, bg, view) {
 
   // the voyages over the ornaments, under the cartouche
   drawVoyages(g, scene.voyages, data.proj, r, viewRect(g, view, 0));
-  drawNotes(g, scene.overlay, data.proj, r);
-  // 9.1 the chart's sheet, whole and opaque, over everything on the map (overlays.mjs)
+  // 9.1 the chart's sheet, whole and opaque, over everything on the map (overlays.mjs); its notes are drawn nowhere, found by the cursor (page.js)
   if (scene.overlay?.mode === 'sheet') drawSheet(g, scene.overlay, data.proj, scene.overlay.sheet);
 
   // 10. cartouche, lettered in its cleared panel
@@ -2968,6 +3084,7 @@ export async function createScene(environment, opts = {}) {
   const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, historical, seaAt: sheets && seaAtOf(coarse), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, title, autoTitle, pinTitle,
     continentsEnd: zoomEnd(continentsZoom, CONTINENT_ZOOM_END), regionsEnd: zoomEnd(regionsZoom, REGION_ZOOM_END),
     scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM && pinned, pinned, cartouchePos, scalePos, townSize: townBy, seed: legacy ? null : pickedSeed == null ? castSeed(view) : pickedSeed | 0, salt: legacy || pickedSeed == null ? 0 : pickedSeed | 0 }), show, scaleSprite, voyages, overlay, roseReach, roseLines: knobs.roselines === 1, debug, overlap, scalePos: cornerOf(scalePos, DEFAULT_SCALE_CORNER) };
+  scene.voyages = placeDoubts(scene, data);
   data.trees = TREES[STYLE.trees] ? plantTrees({ proj: data.proj, isLand: scene.field.isLand, scene, lakes: STYLE.lakes !== 'off' && water ? water.lakes : [], w: W, h: H }) : [];
   data.palms = plantPalms({ proj: data.proj, isLand: scene.field.isLand, scene, w: W, h: H,
     pois: scene.lesser.filter((l) => l.poi).map((l) => ({ x: l.x, y: l.y, palms: POIS.find((p) => p.name === l.name)?.palms ?? 0 })) });
