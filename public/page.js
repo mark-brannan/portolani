@@ -70,6 +70,8 @@ const decodeKey = (t) => { const i = t.indexOf(':'); return `${LONG[t.slice(0, i
 const LEGACY_PACK = { all: 'vivid', vivid: 'vivid', catalan: 'scanned', 'carta-marina': 'scanned', plain: 'plain' };
 const LEGACY_KEYS = ['rendering', 'pack', 'rose', 'monster', 'town', 'kinds'];
 const hashParams = () => new URLSearchParams(location.hash.slice(1));
+// `charts=all` (in the hash or the query) also lists the charts of other traditions under the portolans; read once, and kept in the link
+const ALL_CHARTS = [hashParams(), new URLSearchParams(location.search)].some((q) => q.get('charts') === 'all');
 // the drawer's layout (`layout=`), a way of grouping the same controls; Default is written as no key
 const LAYOUT_NAMES = ['default', 'question', 'moods', 'sheet'];
 const layoutFromHash = () => (LAYOUT_NAMES.includes(hashParams().get('layout')) ? hashParams().get('layout') : 'default');
@@ -181,6 +183,7 @@ function writeHash() {
   if (st.density !== DEFAULTS.density) q.set('density', st.density);
   if (st.ink !== DEFAULTS.ink) q.set('ink', st.ink.slice(1));
   if (st.parchment !== DEFAULTS.parchment) q.set('parchment', st.parchment.slice(1));
+  if (ALL_CHARTS) q.set('charts', 'all');
   history.replaceState(null, '', `#${q.toString().replaceAll('%2C', ',').replaceAll('%2F', '/').replaceAll('%3A', ':')}`);
 }
 
@@ -1296,6 +1299,15 @@ function showOverlay() {
     box.querySelector('output').textContent = `${Math.round(style.overlayOpacity * 100)}%`;
   }
 }
+
+// Other traditions (data/charts/world.json), shown only on a `charts=all` link: a row per chart, its title, culture and date,
+// and a button with the scan's thumbnail that opens its Commons page; a link-only chart's button is disabled, its title the reason.
+if (ALL_CHARTS) env.readJSON('data/charts/world.json').then(({ charts }) => {
+  $('worldList').innerHTML = charts.map((c) => `<li class="chart"><div><span>${escapeHTML(c.title)}</span><small>${escapeHTML([c.culture, c.date ?? c.year].filter(Boolean).join(' · '))}</small></div>
+    <button type="button" class="scan" data-page="${escapeHTML(c.page)}" ${c.status === 'ship' ? `title="${escapeHTML(`${c.title}: open on Wikimedia Commons (${c.licence})`)}"><img src="${escapeHTML(c.thumb)}" alt="" loading="lazy">` : `disabled title="${escapeHTML(c.reason)}"><span>link only</span>`}</button></li>`).join('');
+  $('otherTraditions').hidden = false;
+}).catch((e) => console.warn(`other traditions: ${e.message}`));
+$('worldList').addEventListener('click', (e) => { const b = e.target.closest('[data-page]'); if (b && !b.disabled) window.open(b.dataset.page, '_blank', 'noopener'); });
 
 // A typed position: "36.28, -76" or "36.28N 76W" (latitude first).
 function parseLatLon(text) {
