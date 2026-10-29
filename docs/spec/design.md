@@ -257,3 +257,36 @@ Feature: The world turned to the chart (deferred)
     When the user asks for the chart's own orientation
     Then the map turns under the sheet to match it, and the sheet stays as scanned
     And until this lands, the sheet turns and the map stays north-up
+
+Feature: The voyage record: people, deaths and what a skull means
+  Source: the user on [#275](https://github.com/mark-brannan/portolani/pull/275), 2026-10-29: "the death date and place is either known or unknown. No statement about living = true is necessary (or correct). In fact, nothing should be required at all for the person record besides, perhaps, a name or ID (even a name might be omitted if we wanted to have certain anonymous persons in the project where other details were known but NOT the name). Use a permissive approach and make no assumptions about what is required, or what is present unless strictly required."; "People with a known death location get a skull. Full stop."; "Voyages should have a name or title that we work from, and it will *usually* include the name of the leader (or a singular leader) but there will be a "has" relationship for people and voyages...we could separately have a "leader" relationship but it will get complicated for voyages like Magellan's (maybe Drakes?) where he died before the end and someone else took over leading the remainder."; and in the session that rebuilt the record, 2026-10-29: "we might include a few modern recreation voyages of living people who attempted to recreate polynesian voyages using traditional methods"; "We have some error bars on exact location of death but have chosen to make reasonable judgements about the location. For example, if we know the sea leg where a death took place, we just mark it in the middle of the voyage. ... We have some death locations that might be speculative as well....or deaths that we chose to place in the middle of the ocean in a 'close enough' location on a wide patch of empty sea". The files are `data/voyages/`: a voyage in `<id>.json`, the people in `people.json`, the sources in `sources.json`; `scripts/voyages.mjs` is the schema and `node scripts/check-voyages.mjs` the check.
+  Tested by: `node scripts/check-voyages.mjs` and `test/voyages.test.mjs`, which run every record of `people.json` and every voyage through the schema
+  Scenario: nothing in a person's record is required
+    Given a person in `people.json`
+    When the record holds only a name, or only a death, or only a sentence about an unnamed crew, or nothing at all
+    Then the check passes: each field is checked for its shape only when it is there
+    And no field says whether the person is living; a person with no death recorded is simply a person with no death recorded, a sailor of a modern recreation voyage as much as a Phoenician nobody named
+  Scenario: a skull stands where the death record has a place
+    Given a person whose `death` has `lon` and `lat`
+    When a voyage that names them is shown
+    Then a skull and crossbones stands at that place, on the track or off it
+    And the coordinates are where the mark stands, not a claim that the place is exact: the record's `confidence` says how it is known (`attested`: recorded; `inferred`: worked out from the sources; `conventional`: the middle of the leg the death happened on, or a 'close enough' spot on an empty patch of sea, as the voyages README has always said; `speculative`: one guess among several), and `alternatives` beside it are the other places
+    And a `death` with a date and a sentence but no `lon` and `lat` draws nothing: nobody knows where, and the record says what is known without a mark; the word "unknown" is not a value
+  Scenario: one word for how sure, wherever a thing is placed (current thinking: the agent's default on #275, 2026-10-29; the user asked for the semantics and has not yet ruled)
+    Given a leg, an event on a voyage, a birth or a death
+    When the record says how well its place or course is known
+    Then it says so in `confidence`, from one list for all four: `attested` (a source records it), `inferred` (the ends known, the way or the place worked out from the sources), `conventional` (the way scholars usually draw it, or the editorial convention: the middle of the leg, a 'close enough' patch of sea), `speculative` (may not have happened, or one guess among several); the first three are the user's strokes of 2026-10-20 (solid, dashed, dotted), the fourth is [#278](https://github.com/mark-brannan/portolani/pull/278)'s
+    And `doubt` beside it is the prose: who doubts it and why
+  Scenario: a voyage has its people; the title names the voyage
+    Given a voyage record
+    When it names the people who were on it
+    Then `who` lists them in order of prominence, the one the title is named for first, and every one of them has a record in `people.json`
+    And there is no leader field: who led, and who took over when the leader died, is the voyage's story, told in its summary and events
+    And a person's voyages are read off the voyages that name them, never kept as a second list on the person
+  Scenario: a person is keyed by a slug, not by the spelling of a name
+    Source: the user in the session that rebuilt the record, 2026-10-29: "slug, yes"; "role replaced with bio, yes"
+    Given a person in `people.json`
+    When a voyage names them, a link carries them, or a death is joined to a voyage
+    Then the key is a lower-case slug (`ferdinand-magellan`), the one identifier a person has; `name` is a field, `aka` the other spellings
+    And a person's pictures are `images`, each a Wikimedia Commons file with its kind, author, date and licence, and the person's `bio` is one paragraph of prose: no `role` or `origin` lists, which were a taxonomy with no vocabulary
+    And the same marker shape (place, date, label, text, source, cite, confidence, alternatives) serves a voyage's events and a person's birth and death; a `places.json` for the places written more than once, and one Commons-image shape shared with the charts, are the direction, not yet the record
