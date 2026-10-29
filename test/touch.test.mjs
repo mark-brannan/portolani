@@ -274,16 +274,33 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     await page.keyboard.press('Escape');
     assert.equal(await opened('goPanel'), false, 'Esc left Go open');
     assert.equal(await page.evaluate(() => document.activeElement.id), 'go', 'Esc did not give the focus back to the compass');
-    // a chart is a section: its sheet button flies to the sheet and shuts the drawer; its scan is still to come
+    // a chart is a row: without a scan its thumbnail is the greyed chart glyph, and it flies to the chart's frame and shuts the drawer
     await page.click('#charts');
     const h = await page.evaluate(() => location.hash);
-    const vesconte = page.locator('#chartList .chart', { hasText: 'Vesconte' });
-    assert.equal(await vesconte.locator('button', { hasText: 'The scan' }).isDisabled(), true, 'the scan button is live');
-    await vesconte.locator('button', { hasText: 'The sheet' }).click();
+    const thumb = page.locator('#chartList .chart', { hasText: 'Vesconte' }).locator('.thumb');
+    assert.equal(await thumb.evaluate((b) => b.classList.contains('none')), true, 'Vesconte has a scan thumbnail');
+    await thumb.click();
     assert.equal(await opened('chartsDrawer'), false, "a chart's sheet left its drawer open");
     await page.waitForFunction((x) => location.hash !== x, h, { timeout: 60000 });
     const [, lat, lon] = (await page.evaluate(() => location.hash)).replace('#map=', '').split('/').map(Number);
     assert.ok(Math.abs(lat - 37.5) < 1 && Math.abs(lon - 25.2) < 1, `Vesconte's sheet is not round the Cyclades: ${lat}, ${lon}`);
+    // the eye shows and hides a chart's sheet and leaves the drawer open
+    await page.click('#charts');
+    const cosa = page.locator('#chartList .chart', { hasText: 'Juan de la Cosa' });
+    const overlaid = () => page.evaluate(() => /[#&]overlay=de-la-cosa(&|$)/.test(location.hash));
+    await cosa.locator('.eye').click();
+    await page.waitForFunction(() => /[#&]overlay=de-la-cosa(&|$)/.test(location.hash), null, { timeout: 60000 });
+    assert.equal(await opened('chartsDrawer'), true, 'the eye shut the drawer');
+    assert.equal(await cosa.locator('.eye').getAttribute('aria-pressed'), 'true');
+    await cosa.locator('.eye').click();
+    await page.waitForFunction(() => !/[#&]overlay=/.test(location.hash), null, { timeout: 60000 });
+    assert.equal(await opened('chartsDrawer'), true, 'the eye shut the drawer');
+    // the city under the sheet: the flight there takes the sheet off
+    await cosa.locator('.eye').click();
+    await page.waitForFunction(() => /[#&]overlay=de-la-cosa(&|$)/.test(location.hash), null, { timeout: 60000 });
+    await cosa.locator('.city').click();
+    await page.waitForFunction(() => !/[#&]overlay=/.test(location.hash), null, { timeout: 60000 });
+    assert.equal(await overlaid(), false, 'the sheet still covers El Puerto de Santa María');
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();
