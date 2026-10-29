@@ -66,7 +66,7 @@ are traced paths (40 KB). The viewBox (-160..160) is unchanged, at 8.46 sheet px
 | eight points | kites from the centre, tips at r 690; bearings NE 43.5, E 89, SE 137.5, S 178, SW 226, W 270, NW 313 |
 | shoulders | r 230 to 268, about 22 deg either side of each axis |
 | north | a lapis diamond (tip r 308) under a lapis arrowhead (tip r 518, on the inner circle) |
-| pole star | eight gilt lobes round a core, centred at r 602, reaching 98 px |
+| pole star | eight gilt spurs with round tips (clubs: a neck about 22 px across, a bulb 40 to 50 px across, the tip rounded) round a core of r 45, centred at r 602 on bearing 0; spurs at bearings 2.7, 48, 85, 131.8, 178.2, 230, 269.3, 315.2, so NE and E sit 37 deg apart and SW and W 39, the rest 45 to 52; tips at 105 px, N 84 (under the ring line) and S 81 (on the arrowhead's tip). [pole-star.png](pole-star.png): raw, the old sun, the first lobes, this star, and each at map size; [pole-star-goldens.png](pole-star-goldens.png): the world goldens change by 8 to 11 px, at the star |
 | ticks | 16 vermilion, inner circle to ring, at 12.7, 33.3, 56.5, 78, 103.1, 124.8, 149.4, 169.1, 193.5, 212.6, 235.9, 256.6, 282.5, 302.5, 327, 346.1 |
 | green rhumbs | 8 half-wind lines, centre to ring: 22.3, 68, 113.9, 158.6, 202.9, 247, 292, 338.1 |
 | east cross | the Levant cross, vermilion, in the band at 89 deg |
@@ -109,7 +109,7 @@ In the raw but not in the vector, and why:
 - the chart's own rhumb network and the brown meridian through the north and east banners: lines of the chart, not of the rose;
 - the gilt's craquelure and worn grey patches: the leaf's ageing, drawn as one flat gilt;
 - the darker brown on the points' shadowed edges: drawn as one even outline;
-- the pole star's own edge: drawn as eight measured lobes, because its gilt bleeds into the ring line;
+- the pole star's ragged, worn edge: drawn as eight even clubs at the measured bearings, because its gilt bleeds into the ring line and has flaked between the spurs;
 - the finest hairlines of the lapis ornament: below the trace's tolerance;
 - the gilt trefoil island and red mark at lower right: another figure.
 
