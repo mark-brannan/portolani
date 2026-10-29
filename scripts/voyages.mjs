@@ -290,14 +290,15 @@ export function personProblems(name, p, { sources, voyageIds } = {}) {
   if (p.born !== undefined) { marker(p.born, 'born'); need(KNOWN.includes(p.born?.known), `born: known one of ${KNOWN}`); }
   if (p.death && typeof p.death === 'object' && p.death.known !== undefined) need(KNOWN.includes(p.death.known), `death: known one of ${KNOWN}`);
   if (p.images !== undefined) need(Array.isArray(p.images), 'images: a list');
-  for (const q of Array.isArray(p.images) ? p.images : []) {
-    need(q && PORTRAIT_KINDS.includes(q.kind), `portrait: kind one of ${PORTRAIT_KINDS}`);
+  for (const [i, q] of (Array.isArray(p.images) ? p.images : []).entries()) {
+    const at = `images[${i}]`;
+    need(q && PORTRAIT_KINDS.includes(q.kind), `${at}: kind one of ${PORTRAIT_KINDS}`);
     // a file is a Commons file name, never a url, credited as its file page asks; kind "none" may still name a stand-in image
     if (q?.file !== undefined || q?.kind !== 'none') {
-      need(str(q?.file) && !/^https?:|\//.test(q.file), 'portrait: file, a Commons file name');
-      for (const k of ['author', 'date', 'licence']) need(str(q?.[k]), `portrait: a ${k}`);
+      need(str(q?.file) && !/^https?:|\//.test(q.file), `${at}: file, a Commons file name`);
+      for (const k of ['author', 'date', 'licence']) need(str(q?.[k]), `${at}: a ${k}`);
     }
-    if (q?.note !== undefined) need(str(q.note), 'portrait: note, when given, a string');
+    if (q?.note !== undefined) need(str(q.note), `${at}: note, when given, a string`);
   }
   return out;
 }
@@ -318,7 +319,7 @@ export function chronological(pairs) {
 // Where the drawer's "Read more" goes for a raw voyage file: its first source in sources.json, else the Wikipedia
 // page of the first person on it. { label, url }, or null with neither.
 export function voyageLink(v, sources = {}) {
-  const s = sources[v?.sources?.[0]];
+  const first = v?.sources?.[0], s = typeof first === 'string' ? sources[first] : first; // an id, or already resolved by readVoyage
   if (s?.url) return { label: s.title ?? s.url, url: s.url };
   const who = v?.who?.[0];
   return who ? { label: `${who}, Wikipedia`, url: `https://en.wikipedia.org/wiki/${encodeURIComponent(who.replace(/ /g, '_'))}` } : null;

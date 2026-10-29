@@ -27,7 +27,7 @@ person's death in `people.json`, each source in `sources.json`. `readVoyage` in
 `scripts/voyages.mjs` puts a voyage together and `problems` beside it is the schema;
 `node scripts/check-voyages.mjs` checks every record and that each sea leg stays at sea.
 
-A person in `people.json` is keyed by the name a voyage's `who` uses. Only the death is required: a
+A person in `people.json` is keyed by the name a voyage's `who` uses. Only the death is required (`personProblems` in `scripts/voyages.mjs` says the rest): a
 `death` marker, or `"unknown"`, or `"living": true` and no death for someone alive (no skull). Every other
 field is optional:
 
@@ -51,8 +51,7 @@ field is optional:
 }
 ```
 
-Only the death is required; `personProblems` in `scripts/voyages.mjs` says the rest. The People drawer
-draws the birth and lays the `images` on the map (`npm run people` builds them for the site).
+The People drawer draws the birth and lays the `images` on the map (`npm run people` builds them for the site).
 
 Two conventions the checks cannot see: where a source says a person died at sea or on the way but gives
 no place, the skull stands at the middle of the leg it must have happened on and the death's `text` says

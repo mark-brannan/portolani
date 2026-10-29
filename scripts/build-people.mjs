@@ -37,11 +37,13 @@ async function lookUp(titles) {
   return out;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const people = peopleOf(JSON.parse(readFileSync(join(ROOT, PEOPLE_FILE), 'utf8')));
   const manifestPath = join(OUT, 'people.json');
   const before = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, 'utf8')).pictures : {};
   const wanted = people.flatMap((p) => p.images.map((im) => ({ ...im, title: `File:${im.file.replace(/_/g, ' ')}`, person: p.id })));
+  const names = new Map();
+  for (const w of wanted) { const n = pictureName(w.file); if (names.has(n) && names.get(n) !== w.file) throw new Error(`${w.file} and ${names.get(n)} would both be built as ${n}`); names.set(n, w.file); }
   const api = await lookUp([...new Set(wanted.map((w) => w.title))]);
   mkdirSync(DL, { recursive: true }); mkdirSync(OUT, { recursive: true });
   const pictures = {}, problems = [];

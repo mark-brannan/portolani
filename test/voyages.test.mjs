@@ -147,7 +147,7 @@ test('a person record may be a death alone, or carry a birth, bio and images; a 
   };
   assert.deepEqual(personProblems('A B', full, { sources: { s1: {} }, voyageIds: ['x'] }), []);
   const bad = personProblems('A B', { ...full, born: { ...death, known: 'certain' }, images: [{ kind: 'life', file: 'https://x/A.jpg' }] }, { voyageIds: [] });
-  for (const p of ['born: known', 'portrait: file', 'portrait: a licence', 'x is not a voyage']) assert.ok(bad.some((b) => b.includes(p)), p);
+  for (const p of ['born: known', 'images[0]: file', 'images[0]: a licence', 'x is not a voyage']) assert.ok(bad.some((b) => b.includes(p)), p);
   assert.ok(personProblems('A B', { living: true, death }).some((p) => p.includes('living')));
   const set = { x: raw(), ...shared() };
   set.people['A B'] = { living: true, born: { ...death, known: 'attested' } };

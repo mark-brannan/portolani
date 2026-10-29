@@ -2243,7 +2243,7 @@ function drawEvents(g, { voyage, colour = STYLE.windRed, alpha: dim = 1 }, proj,
   const at = (lon, lat) => (Number.isFinite(lon) && Number.isFinite(lat) && (!proj.visible || proj.visible(lon, lat)) ? proj.toPx([lon, lat]) : null);
   g.save();
   for (const e of voyage.events ?? []) { // the tie from each alternative to the usual skull first, so both skulls sit on it
-    if (e.kind !== 'death' || !Array.isArray(e.alternatives)) continue;
+    if ((e.kind !== 'death' && e.kind !== 'birth') || !Array.isArray(e.alternatives)) continue;
     const p = at(e.lon, e.lat);
     for (const a of e.alternatives) {
       const q = at(a?.lon, a?.lat);
@@ -2277,7 +2277,10 @@ export function voyageMarks(voyage, proj, rect) {
   for (const e of voyage?.events ?? []) {
     const tile = { title: e.label, date: e.date, doubt: e.doubt, text: e.text, note: e.note, source: e.source, cited: e.cited, who: e.who };
     const alpha = e.doubt ? 0.5 : 1; // a doubted event at half its ink
-    if (e.kind === 'birth') { add(e, SKULL_H, 1, false, tile, true); continue; }
+    if (e.kind === 'birth') {
+      for (const a of e.alternatives ?? []) add(a, SKULL_ALT_H, 0.75, false, { title: a.label, date: e.date, text: a.text, source: a.source, cited: a.cited, who: e.who, place: a.place, alternative: true }, true);
+      add(e, SKULL_H, 1, false, tile, true); continue;
+    }
     if (e.kind !== 'death') { add(e, SKULL_H, alpha, false, tile); continue; }
     for (const a of e.alternatives ?? []) add(a, SKULL_ALT_H, 0.75, true, { title: a.label, date: e.date, text: a.text, source: a.source, cited: a.cited, who: e.who, place: a.place, alternative: true });
     add(e, SKULL_H, alpha, true, tile);

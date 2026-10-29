@@ -123,7 +123,7 @@ function styleFromHash() {
     tune: parseTune(q.get('tune')).text,
     voyages: voyagesFromHash(q),
     voyageWidth: VOYAGE_WIDTHS.includes(Number(q.get('voyagewidth'))) ? Number(q.get('voyagewidth')) : DEFAULTS.voyageWidth,
-    // the person chosen in the People drawer (data/people/people.json), which of their pictures lie on the map, and where
+    // the person chosen in the People drawer (data/voyages/people.json), which of their pictures lie on the map, and where
     person: /^[a-z][a-z0-9-]*$/.test(q.get('person') ?? '') ? q.get('person') : DEFAULTS.person,
     pictures: parsePictures(q.get('pictures'), DEFAULTS.pictures),
     pictureAt: parsePictureAt(q.get('pictureat')),
@@ -1090,12 +1090,9 @@ function showSnap(corner, w, h) {
 canvas.addEventListener('pointerdown', (e) => {
   cancelAnimationFrame(flight); flightTo = null; // a touch takes over from a flight
   if (!pointers.size && e.isPrimary && !held && !holding) {
-    const p = toCanvas(e.clientX, e.clientY), pic = pictureHit(p);
-    if (pic) { holdPicture(pic, p); canvas.setPointerCapture(e.pointerId); canvas.style.cursor = 'grabbing'; return; }
-  }
-  if (!pointers.size && e.isPrimary && !held && !holding) {
-    const p = toCanvas(e.clientX, e.clientY), hit = sheetHit(p);
-    if (hit) { hideTile(); holdSheet(hit, p); sheetTap = p; canvas.setPointerCapture(e.pointerId); canvas.style.cursor = 'grabbing'; return; }
+    const p = toCanvas(e.clientX, e.clientY), pic = pictureHit(p), hit = pic ? null : sheetHit(p);
+    if (pic) holdPicture(pic, p); else if (hit) { hideTile(); holdSheet(hit, p); sheetTap = p; }
+    if (pic || hit) { canvas.setPointerCapture(e.pointerId); canvas.style.cursor = 'grabbing'; return; }
   }
   if (!pointers.size && e.isPrimary && (carried = cardAt(toCanvas(e.clientX, e.clientY)))) {
     carried.corner = style[carried.key];
@@ -1396,7 +1393,7 @@ $('voyageList').addEventListener('input', (e) => {
 
 // ---------------------------------------------------------------- people
 
-// The People drawer: a timeline strip, one life bar per person (data/people/people.json, scripts/people.mjs) on a year
+// The People drawer: a timeline strip, one life bar per person (data/voyages/people.json, scripts/people.mjs) on a year
 // axis broken between the ancient world and the medieval, so who overlapped whom shows; a bar fades where the record
 // leaves a birth or a death undated. A click on a bar chooses that person (a second click lets them go): their bar turns
 // red, their voyages are drawn lit in the chart's red and every other voyage chosen is dimmed (the scene's `person`),
@@ -1410,7 +1407,7 @@ function loadPeople() {
     .then(async ([records, { pictures }, sources]) => {
       const people = peopleOf(records);
       const ids = [...new Set(people.flatMap((p) => p.voyages))];
-      const vs = await Promise.all(ids.map((id) => env.readJSON(`data/voyages/${id}.json`).catch(() => null)));
+      const vs = await Promise.all(ids.map((id) => readVoyage(id, (path) => env.readJSON(path)).catch(() => null)));
       peopleData = { people, pictures, sources, voyages: Object.fromEntries(ids.map((id, i) => [id, vs[i]]).filter(([, v]) => v)) };
       return peopleData;
     }, (e) => { peopleLoad = null; throw e; });
@@ -1494,7 +1491,7 @@ function showVoyageTile(id, el) {
 // The box round a person's birth, death and voyages, once per person
 async function frameOfPerson(p) {
   if (!frames.has(p.id)) {
-    const vs = await Promise.all(p.voyages.map((id) => readVoyage(id, (path) => env.readJSON(path)).catch(() => null)));
+    const vs = p.voyages.map((id) => peopleData.voyages[id]);
     const pts = [p.born && [p.born.lon, p.born.lat], deathOf(p) && [deathOf(p).lon, deathOf(p).lat], ...vs.flatMap((v) => (v?.legs ?? []).flatMap((l) => l.points))].filter(Boolean);
     frames.set(p.id, frameOf(pts.map(([lon, lat]) => [((((lon + 180) % 360) + 360) % 360) - 180, lat])));
   }
