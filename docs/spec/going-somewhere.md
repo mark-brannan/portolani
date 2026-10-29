@@ -56,7 +56,7 @@ Feature: Go box  (button `#go`, input `#coordsText`, form `#coords`) [verified p
     When submitted
     Then the chart view wins, then the POI, then the bigger town first (`SCALERANK` order) (page.js:768-775)
 
-Feature: My position  (button `#locate`, inside the Go drawer) [docs/decisions.md 2026-10-29; Tested by: test/touch.test.mjs]
+Feature: My position  (button `#locate`, inside the Go drawer) [docs/decisions.md 2026-10-29; Tested by: test/touch.test.mjs — 'touch at N px: pinch, drag, drawers, locate' (asserts the old behaviour; updated in the code PR)]
   # Find my position only fills the box; Go is what moves the map and writes the link. The box holds the fix at the precision the browser gives, never rounded.
   Scenario: granted, the box is filled and the map stays
     Given the chart at the default view
