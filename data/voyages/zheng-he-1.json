@@ -2,7 +2,7 @@
   "id": "zheng-he-1",
   "title": "Zheng He's first treasure voyage, 1405–07",
   "short": "Zheng He 1405",
-  "who": ["Zheng He"],
+  "who": ["zheng-he"],
   "when": "1405–1407",
   "summary": "The first fleet, some 300 ships, goes from the Yangtze by Fujian and Champa to Java, Palembang and Malacca, then across to Ceylon and Calicut; on the way home Palembang is cleared of the pirate Chen Zuyi.",
   "sources": ["zheng-he", "mao-kun-map", "ming-shi", "ming-treasure-voyages", "chen-zuyi"],

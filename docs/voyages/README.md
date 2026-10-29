@@ -23,13 +23,54 @@ coasting run or a route drawn by the winds).
 
 Each piece of text is written once, in `data/voyages/`: a voyage in `<id>.json` (`index.json` gives the
 menu order: chronological by start year, a voyage's own sub-voyages kept together in date order), each
-person's death in `people.json`, each source in `sources.json`. `readVoyage` in
-`scripts/voyages.mjs` puts a voyage together and `problems` beside it is the schema;
+person in `people.json`, each source in `sources.json`. `readVoyage` in `scripts/voyages.mjs` puts a
+voyage together; `problems` and `checkPerson` beside it are the schema, and
 `node scripts/check-voyages.mjs` checks every record and that each sea leg stays at sea.
 
+A voyage names its people in `who`, slugs into `people.json` in order of prominence: the one has-relationship
+between the two, and the only place it is written. There is no leader field; a voyage's title says whose it is,
+and a crew member or a nameless company is a record like any other.
+
+```json
+"who": ["ferdinand-magellan", "juan-sebastian-elcano"]
+```
+
+A person is a record keyed by that slug. Nothing is required: what is there is checked, and what is not is
+simply unknown. `name` is the display name, `aka` other names, `bio` a paragraph, `images` Wikimedia Commons
+files credited as their file pages ask, `sources` ids into `sources.json`.
+
+```json
+"ferdinand-magellan": {
+  "name": "Ferdinand Magellan",
+  "bio": "A Portuguese officer of minor nobility who served the Crown in Asia, …",
+  "images": [{ "file": "Retrato_de_Hernando_de_Magallanes.jpg", "kind": "posthumous", "author": "Unknown",
+               "date": "1848", "licence": "Public domain", "note": "A copy after the Madrid portrait; …" }],
+  "sources": ["ferdinand-magellan"],
+  "born":  { "lon": -7.58, "lat": 41.27, "date": "c. 1480", "place": "Sabrosa, northern Portugal",
+             "label": "Magellan born in northern Portugal, c. 1480", "text": "…", "confidence": "inferred",
+             "source": "Wikipedia: Ferdinand Magellan", "cite": "ferdinand-magellan",
+             "alternatives": [{ "lon": -8.42, "lat": 41.8, "place": "Ponte da Barca",
+                                "label": "Born at Ponte da Barca", "source": "Wikidata" }] },
+  "death": { "lon": 123.97, "lat": 10.29, "date": "27 Apr 1521", "label": "Magellan killed at Mactan",
+             "source": "Pigafetta", "cite": "battle-of-mactan", "text": "…" }
+}
+```
+
+A marker is one shape for `events`, `born`, `death` and `alternatives`; the fields are in the `checkPerson`
+header. The coordinates are where the mark stands, not a claim of exactness:
+
+| the death record has | drawn | means |
+|---|---|---|
+| lon, lat, `confidence: attested` | skull | the place is recorded |
+| lon, lat, `conventional` | skull | the mid-leg or mid-ocean convention below |
+| lon, lat, `speculative` | skull | one guess among several, `alternatives` beside it |
+| a date, a sentence, no lon and lat | nothing | nobody knows where; the record still has the date |
+
+Births and images are data only for now: nothing draws them.
+
 Two conventions the checks cannot see: where a source says a person died at sea or on the way but gives
-no place, the skull stands at the middle of the leg it must have happened on and the death's `text` says
-so; and an `alternative` is another place of death, never of burial.
+no place, the skull stands at the middle of the leg it must have happened on, its `confidence` is `conventional`
+and the death's `text` says so; and an `alternative` is another place of death, never of burial.
 
 A traveller whose road splits into journeys has the whole road in one file and each journey in its own
 (`ibn-battuta` and `ibn-battuta-1` to `ibn-battuta-8`): the parts name the whole road's legs by `sameAs`, so a

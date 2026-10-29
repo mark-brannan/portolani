@@ -2,7 +2,7 @@
   "id": "da-gama",
   "title": "Vasco da Gama's first voyage to India, 1497–99",
   "short": "Da Gama",
-  "who": ["Vasco da Gama", "Paulo da Gama"],
+  "who": ["vasco-da-gama", "paulo-da-gama"],
   "when": "1497–1499",
   "summary": "Four ships out of Lisbon swing wide into the South Atlantic, round the Cape, work up the East African coast and cross the monsoon sea to Calicut, the first sea road from Europe to India.",
   "sources": ["roteiro-velho", "hakluyt-da-gama-journal", "vasco-da-gama", "paulo-da-gama"],
