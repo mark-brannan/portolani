@@ -2384,7 +2384,7 @@ export function voyageMarks(voyage, proj, rect) {
   };
   for (const e of voyage?.events ?? []) {
     const tile = { title: e.label, date: e.date, doubt: e.doubt, text: e.text, note: e.note, source: e.source, cited: e.cited, who: e.who };
-    const alpha = e.doubt ? 0.5 : 1; // a doubted event at half its ink
+    const alpha = e.doubt && e.kind !== 'death' ? 0.5 : 1; // a doubted event at half its ink; a death's doubt only opens its tile
     if (e.kind === 'waypoint') { add(e, WAYPOINT_H, alpha, false, tile, true); continue; }
     if (e.kind !== 'death') { add(e, SKULL_H, alpha, false, tile); continue; }
     for (const a of e.alternatives ?? []) add(a, SKULL_ALT_H, 0.75, true, { title: a.label, date: e.date, text: a.text, source: a.source, cited: a.cited, who: e.who, place: a.place, alternative: true });
