@@ -191,6 +191,20 @@ test('an event and an alternative may carry text for its tile, and it must be a 
   assert.ok(found.some((p) => p.includes('alternative 0: text')), found.join('; '));
 });
 
+test('a leg or an event may carry a doubt, a non-empty string; a shared leg brings its doubt', async () => {
+  const v = base();
+  v.legs[0].doubt = 'Who doubts it, and why.';
+  v.events[0].doubt = 'Who doubts it, and why.';
+  assert.deepEqual(problems(v), []);
+  v.legs[0].doubt = '';
+  v.events[0].doubt = 3;
+  const found = problems(v);
+  assert.ok(found.some((p) => p.startsWith('leg 0') && p.includes('doubt')), found.join('; '));
+  assert.ok(found.some((p) => p.includes('event 0: doubt')), found.join('; '));
+  const journey = await voyage('ibn-battuta-6');
+  assert.match(journey.legs.find((l) => l.to === 'Quanzhou, by Khanbaliq').doubt ?? '', /Khanbaliq/);
+});
+
 test('a voyage\'s marks carry the tile a tap opens: the usual skull last, its alternatives fainter and first', async () => {
   const v = await voyage('zheng-he');
   const proj = viewProjection({ lon: 85, lat: 20, zoom: 1.5 });

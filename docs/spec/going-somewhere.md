@@ -56,16 +56,28 @@ Feature: Go box  (button `#go`, input `#coordsText`, form `#coords`) [verified p
     When submitted
     Then the chart view wins, then the POI, then the bigger town first (`SCALERANK` order) (page.js:768-775)
 
-Feature: My position  (button `#locate`, inside the Go drawer) [verified page.js:933-950 at main; touch.test.mjs:111]
-  Scenario: granted
-    Given a browser context with geolocation `{ latitude: 43.7, longitude: 7.3 }` and permission granted
-    When the user clicks `#locate`
-    Then `#coordsText` is filled with `43.7000, 7.3000` and focused; nothing flies and no mark is drawn. Submitting Go then flies to zoom `max(current, 10)` and the hash ends `map=10.00/43.700/7.300`
-    # The audit at ab47ea7 read a flight and a red position mark here; at main the position only fills the Go box.
+Feature: My position  (button `#locate`, inside the Go drawer) [docs/decisions.md 2026-10-29; Tested by: test/touch.test.mjs — 'touch at N px: pinch, drag, drawers, locate' (asserts the old behaviour; updated in the code PR)]
+  # Find my position only fills the box; Go is what moves the map and writes the link. The box holds the fix at the precision the browser gives, never rounded.
+  Scenario: granted, the box is filled and the map stays
+    Given the chart at the default view
+    And a browser context with geolocation `{ latitude: 43.712345678, longitude: 7.298765432 }` and permission granted
+    And the Go drawer is open
+    When the user presses `#locate`
+    Then `#locate` reads `Finding my position…` while the browser looks
+    And `#coordsText` holds `43.712345678, 7.298765432`, the fix at the full precision the browser gave
+    And the map has not moved and the hash is unchanged
+    And the Go drawer is still open
+    And `#coordsText` is not focused, so no keyboard comes up on a phone
+    And no mark is drawn
+  Scenario: granted, then Go
+    Given `#locate` has filled `#coordsText` with the fix
+    When the user presses Go
+    Then the Go drawer shuts and the view flies to the fix at zoom `max(current, 10)`
+    And the hash ends `map=10.00/43.712/7.299`, the link carrying the position in its usual `map=` form
   Scenario: refused
     Given geolocation permission denied
     When the user clicks `#locate`
-    Then `#status` reads `My position: not allowed` and `#locate` is enabled again
+    Then `#goMiss`, inside Go, and `#status` read `My position: not allowed`, and `#locate` is enabled again
   Scenario: unavailable
     Given a page with no `navigator.geolocation`
     When the page loads

@@ -62,7 +62,7 @@ A traveller whose road splits into journeys has the whole road in one file and e
 (`ibn-battuta` and `ibn-battuta-1` to `ibn-battuta-8`): the parts name the whole road's legs by `sameAs`, so a
 course is drawn once. Where the traveller's own dates and a modern chronology differ, a leg's `dates` are the
 modern one, and the journey's `summary` or the leg's `note` gives the traveller's. A leg scholars doubt (one the traveller may never have gone)
-says so in its `note`: who doubts it and why.
+carries a `doubt`: who doubts it and why. An event may carry one too.
 
 ## What is drawn
 
@@ -74,6 +74,11 @@ and each of its `alternatives` a smaller, fainter skull tied to it by a thin das
 voyage's ink; an event or landfall is a ring. Nothing is lettered beside a mark: a click or tap on one, on any voyage that is on, opens a small tile
 beside it with its heading, date, text and source, and the next touch of the map, Esc or the tile's ×
 shuts it.
+
+A doubted leg is drawn as sparse open rings in the voyage's ink, not a line, with a thought cloud nearby; a tap on the cloud opens the leg's tile, which opens with "Scholars doubt this
+part:" and the doubt. A doubted event's mark is drawn at half its ink, and its tile opens the same way.
+
+![The doubted Khanbaliq leg of Ibn Battuta's sixth journey: rings, and a cloud on empty land west of it](doubt-before-after.jpg)
 
 The overlay rides in the link as `voyages=<id>[:rrggbb],...`, in the order chosen, a picked colour
 after its id (`voyages=magellan,columbus,da-gama:16727a`), and `voyagewidth=<px>` when the weight is

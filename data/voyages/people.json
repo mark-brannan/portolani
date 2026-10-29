@@ -1039,5 +1039,77 @@
       "text": "Sailing as pilot to Alonso de Ojeda on the coast of what is now Colombia, he went ashore with a raiding party near Turbaco and was killed by the townspeople's poisoned arrows.",
       "source": "Juan de la Cosa (Wikipedia)"
     }
+  },
+  "Pánfilo de Narváez": {
+    "id": "panfilo-de-narvaez",
+    "voyages": [
+      "narvaez-expedition"
+    ],
+    "death": {
+      "lon": -89.31,
+      "lat": 28.61,
+      "date": "1528",
+      "label": "Narváez lost at sea, 1528",
+      "source": "Wikipedia, Narváez expedition",
+      "cite": "narvaez-expedition",
+      "text": "He is believed to have been swept out to sea in a storm while the boats worked west along the Gulf coast; nobody recorded where. The skull stands at the middle of the boat leg, and the place is only inferred."
+    }
+  },
+  "Álvar Núñez Cabeza de Vaca": {
+    "id": "alvar-nunez-cabeza-de-vaca",
+    "voyages": [
+      "narvaez-expedition",
+      "estevanico-1528-36"
+    ],
+    "death": {
+      "lon": -6.14,
+      "lat": 36.69,
+      "date": "after 19 May 1559",
+      "label": "Cabeza de Vaca died in Spain, on an uncertain date",
+      "source": "Wikipedia, Álvar Núñez Cabeza de Vaca",
+      "cite": "cabeza-de-vaca",
+      "text": "His last surviving record is dated 19 May 1559. He died on an uncertain date, at Jerez de la Frontera or at Valladolid.",
+      "alternatives": [
+        {
+          "lon": -4.72,
+          "lat": 41.65,
+          "place": "Valladolid",
+          "label": "Died at Valladolid, by the other account",
+          "source": "Wikipedia, Álvar Núñez Cabeza de Vaca"
+        }
+      ]
+    }
+  },
+  "Andrés Dorantes de Carranza": {
+    "id": "andres-dorantes-de-carranza",
+    "voyages": [
+      "narvaez-expedition",
+      "estevanico-1528-36"
+    ],
+    "death": "unknown"
+  },
+  "Alonso del Castillo Maldonado": {
+    "id": "alonso-del-castillo-maldonado",
+    "voyages": [
+      "narvaez-expedition",
+      "estevanico-1528-36"
+    ],
+    "death": "unknown"
+  },
+  "Esteban de Dorantes": {
+    "id": "esteban-de-dorantes",
+    "voyages": [
+      "narvaez-expedition",
+      "estevanico-1528-36"
+    ],
+    "death": {
+      "lon": -108.98,
+      "lat": 34.93,
+      "date": "1539",
+      "label": "Esteban killed at Hawikuh, 1539",
+      "source": "Wikipedia, Esteban de Dorantes",
+      "cite": "esteban-de-dorantes",
+      "text": "He went ahead of Fray Marcos de Niza and was held overnight without food or water, then attacked and killed at Cíbola. The Zuni may have thought him a bad man; Castañeda says he asked for turquoise and women; Alarcón says he boasted of armed men behind him; Sancho Dorantes says he was shot through with arrows. In 2002 Juan Francisco Maura argued he was not killed but stayed among the Zuni."
+    }
   }
 }

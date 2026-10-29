@@ -52,6 +52,15 @@ export function pieceFit(rows, piece) {
   return { a, b, tx, ty };
 }
 
+// A level similarity (no turn) through `pairs` [[x, y], [lon, lat]] by least squares: a rough centre and scale for a
+// chart laid by a handful of landmarks read off the scan, so the sheet's own placement is truly level.
+export function levelFit(pairs) {
+  const k = similarityFit(pairs).a, n = pairs.length; // with the turn held at 0, the real part is the least-squares scale
+  const mx = pairs.reduce((t, [[x]]) => t + x, 0) / n, my = pairs.reduce((t, [[, y]]) => t + y, 0) / n;
+  const mu = pairs.reduce((t, [, [lon]]) => t + lon, 0) / n, mv = pairs.reduce((t, [, [, lat]]) => t + mercDeg(lat), 0) / n;
+  return { a: k, b: 0, tx: mu - k * mx, ty: mv + k * my };
+}
+
 // Each chart's pieces from ornaments.md, as [x0, x1, fit]; x1 null for the scan's right edge. `scale` is how
 // far the scan is shrunk for the site.
 const CHARTS = [
@@ -65,6 +74,17 @@ const CHARTS = [
     parallels: [23.44, 0], // the two long red lines across the skin, top first: the Tropic of Cancer and the equator
     pieces: (md) => { const rows = landmarkRows(md, '### Landmarks, 1500'); return [[70, 880, 'west'], [880, 1150, 'atlantic'], [1150, 2060, 'east']].map(([x0, x1, p]) => [x0, x1, pieceFit(rows, p)]); },
     snaps: ['New World', 'Atlantic', 'Europe'] },
+  // The charts below are laid level by a few landmarks read off the scan by eye, scan px to real lon, lat (#161 follow-up):
+  // a rough centre and scale, no warped coast fits.
+  { id: 'aguiar', title: 'Chart of Jorge de Aguiar, 1492', source: 'aguiar-chart', file: 'aguiar.jpg', scale: 2, dark: true, // scanned on black
+    pieces: () => [[0, null, levelFit([[[1895, 1491], [-9.14, 38.72]], [[1992, 1825], [-5.6, 36.0]], [[3093, 738], [12.33, 45.44]], [[4347, 1755], [35.22, 31.78]]])]],
+    snaps: [] },
+  { id: 'agnese-world', title: 'World map of Battista Agnese, about 1544', source: 'agnese-1544-world', file: 'agnese-world.jpg', scale: 4,
+    pieces: () => [[0, null, levelFit([[[5796, 3432], [-5.6, 36.0]], [[7290, 4867], [18.47, -34.36]], [[4959, 5523], [-70.5, -53.0]], [[5140, 5116], [-57.5, -35.0]], [[5479, 4391], [-35.0, -8.4]], [[8395, 3961], [77.5, 8.1]]])]],
+    snaps: [] },
+  { id: 'dourado-atlantic', title: 'North Atlantic of Fernão Vaz Dourado, 1580', source: 'dourado-1580-k4', file: 'dourado-atlantic.jpg', scale: 4,
+    pieces: () => [[0, null, levelFit([[[7010, 5975], [-9.14, 38.72]], [[6877, 5458], [-9.26, 42.88]], [[7314, 6452], [-5.6, 36.0]], [[7407, 4624], [-4.77, 48.36]], [[6983, 3908], [-8.0, 53.4]], [[8626, 5432], [3.13, 41.85]], [[6532, 2610], [-18.5, 65.0]]])]],
+    snaps: [] },
 ];
 
 // The sheet's own placement. With the chart's drawn `parallels` ([{ lat, from, to }], top first, in scan px): the turn
@@ -129,10 +149,10 @@ export function redLines(ctx, w, h, n = 2) {
 // The mask of the scanner's paper round the skin, on the shrunk scan: a flood fill from the image's border
 // through light or grey unsaturated pixels (never the pale sea inside the skin, which is tinted), the outermost px
 // keyed whatever they hold, one px of feather at its edge. Returns { png, keyed }: the mask as an RGBA PNG (alpha 0 where paper) and the share of pixels keyed.
-export function paperMask(ctx, w, h) {
+export function paperMask(ctx, w, h, { dark = false } = {}) {
   const d = ctx.getImageData(0, 0, w, h).data, n = w * h;
   // the paper and the scanner's shadow on it are light to mid grey, unsaturated; the skin is tinted even where it is pale
-  const paper = (p) => { const i = p * 4, r = d[i], g = d[i + 1], b = d[i + 2], mn = Math.min(r, g, b), mx = Math.max(r, g, b); return mn > 150 && mx - mn < 30; };
+  const paper = (p) => { const i = p * 4, r = d[i], g = d[i + 1], b = d[i + 2], mn = Math.min(r, g, b), mx = Math.max(r, g, b); return (mn > 150 && mx - mn < 30) || (dark && mx < 60 && mx - mn < 25); }; // `dark`: a scan laid on black
   const band = Math.max(2, Math.round(Math.min(w, h) * 0.006)); // the scan's outermost px are the scanner's edge, never the skin
   const seen = new Uint8Array(n), stack = [];
   for (let x = 0; x < w; x++) stack.push(x, (h - 1) * w + x);
@@ -176,7 +196,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const canvas = createCanvas(fw, fh), g = canvas.getContext('2d');
     g.drawImage(img, 0, 0, fw, fh);
     writeFileSync(join(OUT, c.file), canvas.toBuffer('image/jpeg', 80));
-    const { mask, keyed } = paperMask(g, fw, fh), maskFile = `${c.id}-mask.png`;
+    const { mask, keyed } = paperMask(g, fw, fh, { dark: !!c.dark }), maskFile = `${c.id}-mask.png`;
     const mc = createCanvas(fw, fh); mc.getContext('2d').putImageData(mask, 0, 0);
     if (keyed > 0) writeFileSync(join(OUT, maskFile), mc.toBuffer('image/png'));
     const pieces = c.pieces(md).map(([x0, x1, fit]) => [x0, x1 ?? img.width, fit]);

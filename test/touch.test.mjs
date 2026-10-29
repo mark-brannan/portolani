@@ -29,7 +29,7 @@ const skip = !existsSync(path.join(site, 'index.html')) ? 'no _site/: run `npm r
 if (skip && required) throw new Error(`touch test cannot run: ${skip}`);
 
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml', '.webp': 'image/webp', '.ttf': 'font/ttf' };
-const FIX = { latitude: 43.7, longitude: 7.3 };
+const FIX = { latitude: 43.712345678, longitude: 7.298765432 }; // more digits than any rounding would keep
 
 for (const width of [360, 412]) {
   test(`touch at ${width} px: pinch, drag, drawers, locate`, { skip, timeout: 240000 }, async () => {
@@ -117,19 +117,24 @@ for (const width of [360, 412]) {
       await page.tap('#go');
       assert.equal(await shown(), false, 'a second tap on the compass left Go open');
 
-      // locate: the fix fills in the box, Go shuts and the map flies there at z10 or closer; the box is not
-      // focused, so no keyboard comes up
+      // locate: the fix fills in the box at full precision and the map stays put, Go still open; the box is not
+      // focused, so no keyboard comes up. Go then flies there at z10 or closer and writes the link
+      // (docs/decisions.md, 2026-10-29)
       const h4 = await hash();
       await page.tap('#go');
       await page.tap('#locate');
       await page.waitForFunction(() => document.getElementById('coordsText').value !== '', null, { timeout: 15000 }); // the fix comes back async
-      assert.equal(await page.inputValue('#coordsText'), `${FIX.latitude.toFixed(4)}, ${FIX.longitude.toFixed(4)}`);
-      assert.equal(await shown(), false, 'Find my position left Go open');
+      assert.equal(await page.inputValue('#coordsText'), `${FIX.latitude}, ${FIX.longitude}`, 'the box does not hold the fix at full precision');
+      assert.equal(await shown(), true, 'Find my position shut Go');
       assert.notEqual(await page.evaluate(() => document.activeElement.id), 'coordsText', 'Find my position focused the box');
       assert.equal(await page.$eval('#locate', (b) => b.disabled), false);
+      await page.waitForTimeout(800); // longer than a flight
+      assert.equal(await hash(), h4, 'Find my position moved the map');
+      await page.tap('#coords button[type=submit]');
       await settled(h4);
+      assert.equal(await shown(), false, 'Go left the drawer open');
       const v4 = await view();
-      assert.ok(Math.abs(v4.lat - FIX.latitude) < 0.01 && Math.abs(v4.lon - FIX.longitude) < 0.01 && v4.zoom >= 10, JSON.stringify(v4));
+      assert.ok(Math.abs(v4.lat - FIX.latitude) < 0.001 && Math.abs(v4.lon - FIX.longitude) < 0.001 && v4.zoom >= 10, JSON.stringify(v4));
 
       if (process.env.TOUCH_SHOTS) {
         await page.tap('#go');

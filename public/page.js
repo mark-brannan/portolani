@@ -14,7 +14,7 @@
 // selection those chose, and are written back in the new form.
 // For a while, `debug=sheets[,rings]` and `tune=name:value,...` carry the under-the-hood section
 // (docs/atlas/under-the-hood.md), off by default.
-import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, voyageView, readVoyage, chronological, voyageLink, sightMarks, SIGHT_TILES, noteMarks } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, voyageView, readVoyage, chronological, voyageLink, sightMarks, SIGHT_TILES, noteMarks } from './scene.mjs';
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
@@ -997,6 +997,7 @@ function sheetHit([x, y]) {
   if (near(geo.corners[2])) return { kind: 'size', ...geo };
   return onSheet(geo.o, geo.proj, geo.o.sheet, x, y) ? { kind: 'move', ...geo } : null;
 }
+let sheetTap = null; // where a press on the sheet began, until it moves far enough to be a drag: a tap there opens a note
 let held = null; // { kind, o, proj, start, sheet (as taken), centre } while the sheet is held
 let sheetFrameId = 0;
 function holdSheet(hit, p) {
@@ -1094,7 +1095,7 @@ canvas.addEventListener('pointerdown', (e) => {
   }
   if (!pointers.size && e.isPrimary && !held && !holding) {
     const p = toCanvas(e.clientX, e.clientY), hit = sheetHit(p);
-    if (hit) { holdSheet(hit, p); canvas.setPointerCapture(e.pointerId); canvas.style.cursor = 'grabbing'; return; }
+    if (hit) { hideTile(); holdSheet(hit, p); sheetTap = p; canvas.setPointerCapture(e.pointerId); canvas.style.cursor = 'grabbing'; return; }
   }
   if (!pointers.size && e.isPrimary && (carried = cardAt(toCanvas(e.clientX, e.clientY)))) {
     carried.corner = style[carried.key];
@@ -1110,9 +1111,9 @@ canvas.addEventListener('pointerdown', (e) => {
 });
 canvas.addEventListener('pointermove', (e) => {
   if (holding) { dragPicture(toCanvas(e.clientX, e.clientY)); return; }
-  if (held) { dragSheet(toCanvas(e.clientX, e.clientY)); return; }
+  if (held) { const p = toCanvas(e.clientX, e.clientY); if (sheetTap && Math.hypot(p[0] - sheetTap[0], p[1] - sheetTap[1]) > cssPx(TAP_SLOP)) sheetTap = null; if (!sheetTap) dragSheet(p); return; }
   if (carried) { carried.corner = cornerAt(toCanvas(e.clientX, e.clientY)); showSnap(carried.corner, carried.w, carried.h); return; }
-  if (!pointers.size) { const p = toCanvas(e.clientX, e.clientY); canvas.style.cursor = cardAt(p) ? 'grab' : { move: 'grab', turn: 'crosshair', size: 'nwse-resize' }[(pictureHit(p) ?? sheetHit(p))?.kind] ?? ''; return; }
+  if (!pointers.size) { const p = toCanvas(e.clientX, e.clientY); canvas.style.cursor = cardAt(p) ? 'grab' : markAt(p) ? 'pointer' : { move: 'grab', turn: 'crosshair', size: 'nwse-resize' }[(pictureHit(p) ?? sheetHit(p))?.kind] ?? ''; return; }
   if (!pointers.has(e.pointerId)) return;
   const p = toCanvas(e.clientX, e.clientY);
   if (tap && Math.hypot(p[0] - tap[0], p[1] - tap[1]) > cssPx(TAP_SLOP)) tap = null;
@@ -1129,7 +1130,7 @@ canvas.addEventListener('pointermove', (e) => {
 });
 const lift = (e) => {
   if (holding) { canvas.style.cursor = ''; dropPicture(); return; }
-  if (held) { canvas.style.cursor = ''; dropSheet(); return; }
+  if (held) { const at = sheetTap; sheetTap = null; canvas.style.cursor = ''; if (at) { held = null; if (e.type === 'pointerup') showTileAt(at); } else dropSheet(); return; } // a tap moved nothing: no render, which would hide the tile
   if (carried) { // dropped: the corner is kept, the sheet placed again
     const { key, corner } = carried;
     carried = null; snap.style.display = 'none';
@@ -1158,7 +1159,7 @@ canvas.addEventListener('wheel', (e) => {
 
 // A click or tap on a point of interest opens a small tile beside it with what there is to know: its heading,
 // date, text and source, and for a voyage's mark a link to the source it cites. Nothing is lettered beside the mark itself. Today the points of interest are the
-// voyages' events (scripts/scene.mjs voyageMarks); the tile takes any { title, date, text, source }.
+// voyages' events (scripts/scene.mjs voyageMarks) and the clouds by doubted legs (doubtMarks); the tile takes any { title, date, doubt, text, source }.
 // It shuts on the next touch of the map, on Esc, on its own close button, or when the map moves.
 const TAP_SLOP = 8, TAP_REACH = 22; // CSS px, so a finger is as forgiving on a phone's small canvas as a mouse on a wide one: a touch that stays within the slop is a tap; a mark takes a tap within the reach
 const cssPx = (n) => n * (W / canvas.getBoundingClientRect().width); // CSS px to the canvas px the view moves in
@@ -1172,6 +1173,8 @@ function fillTile(t) {
   const head = part('tile-title', t.title);
   const meta = part('tile-date', [t.date, t.alternative ? 'another account' : null].filter(Boolean).join(' · '));
   const text = part('tile-text', t.text);
+  const doubt = part('tile-text tile-doubt', t.doubt); // a doubted leg or event: who doubts it and why, first under the heading
+  doubt?.prepend(Object.assign(document.createElement('strong'), { textContent: 'Scholars doubt this part: ' }));
   if (t.link) { // a note on a laid chart: what was drawn, what was there, and the source as a link
     const labelled = (label, body) => { const p = part('tile-text', body); const b = document.createElement('strong'); b.textContent = `${label} `; p.prepend(b); return p; };
     const a = document.createElement('a');
@@ -1188,7 +1191,7 @@ function fillTile(t) {
     a.href = t.cited.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = t.cited.title;
     more = document.createElement('p'); more.className = 'tile-source'; more.append('Read: ', a);
   }
-  tileEl.replaceChildren(close, ...[head, meta, text, source, more].filter(Boolean));
+  tileEl.replaceChildren(close, ...[head, doubt, meta, text, source, more].filter(Boolean));
   tileEl.setAttribute('aria-label', t.title ?? 'Point of interest');
 }
 // every listed place with a tile, once by name, at the view its button flies to
@@ -1198,11 +1201,16 @@ function sightTiles() {
     .filter(([name]) => SIGHT_TILES[name]).map(([name, v]) => { const { at, ...tile } = SIGHT_TILES[name]; return { lon: at?.[0] ?? v.lon, lat: at?.[1] ?? v.lat, tile: { title: name, ...tile } }; });
   return sightList;
 }
-function showTileAt([x, y]) {
+// the mark nearest [x, y] within reach: a voyage's event, a sight, or a note on a laid chart (drawn nowhere)
+function markAt([x, y]) {
   const proj = viewProjection(placed), rect = { x0: 0, y0: 0, x1: W, y1: H };
-  const marks = [...(ground?.voyages ?? []).flatMap((v) => voyageMarks(v.voyage, proj, rect)), ...(placed.zoom >= POI_ZOOM ? sightMarks(sightTiles(), proj, rect) : []), ...noteMarks(ground?.overlay, proj, rect)];
+  const marks = [...(ground?.voyages ?? []).flatMap((v) => [...voyageMarks(v.voyage, proj, rect), ...doubtMarks(v, proj, rect)]), ...(placed.zoom >= POI_ZOOM ? sightMarks(sightTiles(), proj, rect) : []), ...noteMarks(ground?.overlay, proj, rect)];
   let best = null, bestD = Infinity;
   for (const m of marks) { const d = Math.hypot(m.x - x, m.y - y); if (d <= Math.max(cssPx(TAP_REACH), m.h / 2) && d < bestD) { best = m; bestD = d; } }
+  return best;
+}
+function showTileAt(at) {
+  const best = markAt(at);
   if (!best) return;
   fillTile(best.tile);
   // beside the mark, in client px: below and to its right, flipped inside the window where that would run off it
@@ -1304,8 +1312,11 @@ const CHARTS = [
   ['Vesconte', '1311', around(25.2, 37.5, 3), ['Genoa', port(8.93, 44.41)]], // signed "de Janua"; he later worked in Venice, and where this sheet was drawn is disputed
   ['Dulcert', '1339', around(14.5, 40.0, 17), ['Majorca', port(2.65, 39.57)]], // signed in the city of Majorca, today's Palma
   ['Catalan Atlas', '1375', both([-20.7, 42.1, 16], [-5.4, 42.3, 16]), ['Majorca', port(2.65, 39.57)], null, 'catalan-atlas'], // Cresques Abraham's workshop, Palma
+  ['Chart of Jorge de Aguiar', '1492', at(2.64, 31.29, 3.18), ['Lisbon', port(-9.14, 38.72)], null, 'aguiar'], // the Beinecke Library's chart; Lisbon, Portugal's chartmaking port, the usual attribution
   ['Map of Juan de la Cosa', '1500', both([-45, 23.4, 15], [65, 23.4, 15]), ['El Puerto de Santa María', port(-6.23, 36.60)], null, 'de-la-cosa'], // signed "la fizo en el puerto de S. Mª"
   ['Carta Marina', '1539', viewOfFrame({ lonMin: 0, lonMax: 40, latMin: 54, latMax: 72 }), ['Venice', port(12.33, 45.44)], null, 'carta-marina'], // Olaus Magnus had it printed there
+  ['World map of Battista Agnese', 'c. 1544', at(-21.83, -6.47, 0.78), ['Venice', port(12.33, 45.44)], null, 'agnese-world'], // map 10 of his atlas, made in Venice (Library of Congress)
+  ['Fernão Vaz Dourado, North Atlantic', '1580', at(-31.75, 55.58, 2.78), ['Goa', port(73.83, 15.50)], null, 'dourado-atlantic'], // chart 4 of his atlas, made at Goa (Bayerische Staatsbibliothek)
   ['De Bry, Virginia', '1590', at(-76, 36.28, 7.47), ['Frankfurt', port(8.68, 50.11)]], // de Bry's America, part I, printed at Frankfurt am Main
 ].map(([name, year, v, [city, made], text, overlay = null]) => ({ name, year, view: { ...v, title: name }, made: { ...made, title: city }, text, overlay }));
 const places = []; // every anchorage and point of interest: { name, view }
@@ -1728,11 +1739,12 @@ function goTo(target) {
   step(t0);
 }
 
-// My position: asked for on the button in Go; the fix is written into its box as latitude, longitude, Go
-// shuts and the map flies there (at z10 or closer, like any typed position); nothing is drawn there. The box
-// is not focused, so a phone's keyboard does not come up over the map. While the browser looks, the button
-// says so; a refusal or a failure is said in Go itself, where the eye is. The button is not offered where the
-// browser has no geolocation (an insecure page has none).
+// My position: asked for on the button in Go; the fix is written into its box as latitude, longitude, at
+// the precision the browser gives, and the map stays put: Go is what flies there (at z10 or closer, like any
+// typed position) and writes it into the link (docs/decisions.md, 2026-10-29). Nothing is drawn there. The
+// box is not focused, so a phone's keyboard does not come up over the map. While the browser looks, the
+// button says so; a refusal or a failure is said in Go itself, where the eye is. The button is not offered
+// where the browser has no geolocation (an insecure page has none).
 const LOCATE_ZOOM = 10;
 const locate = $('locate'), LOCATE_LABEL = locate.textContent;
 locate.hidden = !navigator.geolocation;
@@ -1743,9 +1755,8 @@ locate.addEventListener('click', () => {
   navigator.geolocation.getCurrentPosition((p) => {
     done();
     const { latitude: lat, longitude: lon } = p.coords;
-    $('coordsText').value = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
-    setDrawer(false);
-    goTo({ lat, lon, zoom: Math.max(view.zoom, LOCATE_ZOOM) });
+    const full = (x) => (/e/.test(String(x)) ? x.toFixed(20).replace(/\.?0+$/, '') : String(x)); // every digit, never exponent form, which the box would not read
+    $('coordsText').value = `${full(lat)}, ${full(lon)}`;
   }, (e) => {
     done();
     const say = e.code === e.PERMISSION_DENIED ? 'My position: not allowed' : `My position: ${e.message}`;
