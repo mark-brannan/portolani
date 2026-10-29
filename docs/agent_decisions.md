@@ -291,3 +291,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261029t195328z
 - doubt tile: heading first, then 'Scholars doubt this part:' and the doubt, then date, note, source Undo: move doubt after meta in fillTile ([#278](https://github.com/mark-brannan/portolani/pull/278))
+
+### 20261029t195346z
+- Samudra-Quanzhou drawn speculative whole, since the leg carries the Tawalisi doubt Undo: split the leg at Tawalisi ([#278](https://github.com/mark-brannan/portolani/pull/278))
