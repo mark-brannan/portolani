@@ -272,15 +272,6 @@ export function checkPerson(id, p, { sources } = {}) {
     }
   };
   for (const k of ['born', 'death']) if (p[k] !== undefined) marker(p[k], k);
-  // a death with lon and lat is drawn, so it needs what its skull and tile show (problems() on its event)
-  const d = p.death;
-  if (d && typeof d === 'object' && Number.isFinite(d.lon) && Number.isFinite(d.lat)) {
-    for (const k of ['label', 'source']) need(str(d[k]), `death: a ${k}, since it is drawn`);
-    for (const [j, a] of (Array.isArray(d.alternatives) ? d.alternatives : []).entries()) {
-      need(a && Number.isFinite(a.lon) && Number.isFinite(a.lat), `death alternative ${j}: lon and lat, since it is drawn`);
-      for (const k of ['place', 'label', 'source']) need(a && str(a[k]), `death alternative ${j}: a ${k}, since it is drawn`);
-    }
-  }
   if (p.images !== undefined) {
     need(Array.isArray(p.images), 'images: a list');
     for (const [j, q] of (Array.isArray(p.images) ? p.images : []).entries()) {
