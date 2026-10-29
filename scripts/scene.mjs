@@ -23,9 +23,9 @@ import { TREES, TREE_STYLES, plantTrees, plantPalms } from './trees.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
 export { SIGHT_TILES } from './sights.mjs'; // the page's tiles for its places; here so the module ships with the scene
 import { BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from './buildings.mjs';
-import { legPath, splitAtSeam, DASHES, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, readVoyage } from './voyages.mjs';
-export { VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours };
-import { loadOverlay, drawOverlay } from './overlays.mjs';
+import { legPath, splitAtSeam, DASHES, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, readVoyage, chronological, voyageLink } from './voyages.mjs';
+export { VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, readVoyage, chronological, voyageLink };
+import { loadOverlay, drawOverlay, drawSheet } from './overlays.mjs';
 import { noteMarks } from './notes.mjs';
 export { noteMarks };
 const record = (id) => catalogue.find((r) => r.id === id); // a coastlines catalogue record by its id
@@ -2217,7 +2217,7 @@ function drawVoyages(g, voyages, proj, rect, eventRect = rect) {
   for (const v of voyages ?? []) drawTrack(g, v, proj, rect);
   for (const v of voyages ?? []) drawEvents(g, v, proj, eventRect);
 }
-// A small ringed mark on each note's figure while the Carta Marina is laid over the map; no lettering, a click opens its tile (notes.mjs)
+// A small ringed mark on each note's figure while its chart is laid over the map; no lettering, a click opens its tile (notes.mjs)
 function drawNotes(g, overlay, proj, rect) {
   for (const m of noteMarks(overlay, proj, rect)) {
     g.save();
@@ -2282,9 +2282,9 @@ export function voyageMarks(voyage, proj, rect) {
     if (disc(rect, x, y, -h / 2)) out.push({ x, y, h, alpha, skull, tile });
   };
   for (const e of voyage?.events ?? []) {
-    const tile = { title: e.label, date: e.date, text: e.text, note: e.note, source: e.source, who: e.who };
+    const tile = { title: e.label, date: e.date, text: e.text, note: e.note, source: e.source, cited: e.cited, who: e.who };
     if (e.kind !== 'death') { add(e, SKULL_H, 1, false, tile); continue; }
-    for (const a of e.alternatives ?? []) add(a, SKULL_ALT_H, 0.75, true, { title: a.label, date: e.date, text: a.text, source: a.source, who: e.who, place: a.place, alternative: true });
+    for (const a of e.alternatives ?? []) add(a, SKULL_ALT_H, 0.75, true, { title: a.label, date: e.date, text: a.text, source: a.source, cited: a.cited, who: e.who, place: a.place, alternative: true });
     add(e, SKULL_H, 1, true, tile);
   }
   return out;
@@ -2359,8 +2359,8 @@ function drawScene(g, scene, data, bg, view) {
   // 2. land
   paintLand(g, data, land, coast, scene.relief && { ...scene.relief, humps: [] });
 
-  // 2.1 a chart's scan laid over the land and sea, under the lattice and every ornament (overlays.mjs)
-  if (scene.overlay) drawOverlay(g, scene.overlay, data.proj, scene.overlay.opacity, { w: W, h: H });
+  // 2.1 the warped pieces of a chart's scan laid over the land and sea, under the lattice and every ornament (overlays.mjs)
+  if (scene.overlay?.mode === 'pieces') drawOverlay(g, scene.overlay, data.proj, scene.overlay.opacity, { w: W, h: H });
 
   // 3. rhumb lattice: 16 nodes on a circle plus the centre, 32 rhumb lines each, in three inks
   const rays = latticeOf(scene, data);
@@ -2466,6 +2466,8 @@ function drawScene(g, scene, data, bg, view) {
   // the voyages over the ornaments, under the cartouche
   drawVoyages(g, scene.voyages, data.proj, r, viewRect(g, view, 0));
   drawNotes(g, scene.overlay, data.proj, r);
+  // 9.1 the chart's sheet, whole and opaque, over everything on the map (overlays.mjs)
+  if (scene.overlay?.mode === 'sheet') drawSheet(g, scene.overlay, data.proj, scene.overlay.sheet);
 
   // 10. cartouche, lettered in its cleared panel
   const c = scene.cartouche;
@@ -2656,7 +2658,7 @@ function drawAnchored(g, a, bg, view, layers) {
   const fr = framing(a, view), { proj, at, scaled } = fr, show = a.show;
   g.save();
   g.setTransform(1, 0, 0, 1, 0, 0);
-  if (a.overlay) drawOverlay(g, a.overlay, proj, a.overlay.opacity, { w: W, h: H }); // the scan first, as at a stop
+  if (a.overlay?.mode === 'pieces') drawOverlay(g, a.overlay, proj, a.overlay.opacity, { w: W, h: H }); // the pieces first, as at a stop
   const inks = [STYLE.ink, STYLE.windRed, STYLE.windGreen];
   for (const [kind, ink] of show.rhumb ? inks.entries() : []) {
     limn(g, a.rays.filter((ray) => ray.kind === kind).map((ray) => ray.line), proj.toPx, { color: ink, alpha: STYLE.rhumbAlpha, width: STYLE.rhumbWidth, oneStroke: true, ...proj.seam });
@@ -2697,6 +2699,7 @@ function drawAnchored(g, a, bg, view, layers) {
   }
   drawVoyages(g, a.voyages, proj, { x0: 0, y0: 0, x1: W, y1: H });
   drawNotes(g, a.overlay, proj, { x0: 0, y0: 0, x1: W, y1: H });
+  if (a.overlay?.mode === 'sheet') drawSheet(g, a.overlay, proj, a.overlay.sheet); // the sheet last, as at a stop
   g.restore();
   if (show.kinds.has('cartouche')) drawCartouche(g, a.cartouche, (x0, y0, x1, y1) => g.drawImage(bg, x0, y0, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0));
   drawScaleBar(g, { proj }, bg, { scale: 1, x: 0, y: 0 }, W, H, show.scale, a.scaleSprite, scalePlace(a));
@@ -2726,9 +2729,11 @@ function drawAnchored(g, a, bg, view, layers) {
 // `voyages`: the voyages drawn over the ornaments, in order, as [{ id, colour, width }]: `id` names data/voyages/<id>.json
 // (docs/voyages/README.md); `colour` (hex) defaults by voyageColours, the first the chart's red; `width` (px) to VOYAGE_WIDTH.
 // None by default. The older `voyage` (one id, or 'off') still draws that one.
-// `overlay`: { id, opacity }, a chart's scan laid over the map at that opacity (0 to 1), over the land and under the
-// lattice and the ornaments: `id` names an entry of packs/overlays/overlays.json (docs/overlay/README.md). None by default;
-// an id the site lacks draws nothing.
+// `overlay`: { id, mode, sheet, opacity }, a chart's scan laid over the map: `id` names an entry of packs/overlays/overlays.json
+// (docs/overlay/README.md). `mode` 'sheet' (the default) lays the whole scan, opaque, over everything on the map at
+// `sheet` ({ lon, lat, scale, turn }; the chart's own placement when left out); 'pieces' warps its pieces onto today's
+// coast at `opacity` (0 to 1), over the land and under the lattice and the ornaments. None by default; an id the site
+// lacks draws nothing.
 // `kinds` defaults to DEFAULT_KINDS, every kind. A kind left out is still
 // placed when the lattice needs it (a rose, the cartouche's corner), only not drawn.
 // `debug`: a list of DEBUG_LAYERS ('sheets', 'rings'), the atlas's sheets drawn in red over everything; none by default.
@@ -2846,7 +2851,7 @@ export async function createScene(environment, opts = {}) {
   const world = await loadDetail(coarse, view);
   const [voyages, overlaid] = await Promise.all([loadVoyages(opts.voyages ?? (opts.voyage ? [{ id: opts.voyage }] : [])), opts.overlay ? loadOverlay(opts.overlay.id, env) : null]);
   const opacity = Number(opts.overlay?.opacity ?? 0.6);
-  const overlay = overlaid && { ...overlaid, opacity: Number.isFinite(opacity) ? Math.max(0, Math.min(1, opacity)) : 0.6 };
+  const overlay = overlaid && { ...overlaid, mode: opts.overlay.mode === 'pieces' ? 'pieces' : 'sheet', sheet: opts.overlay.sheet ?? overlaid.sheet, opacity: Number.isFinite(opacity) ? Math.max(0, Math.min(1, opacity)) : 0.6 };
   const tLoad = performance.now();
 
   const data = viewData(world, view);
@@ -2879,7 +2884,8 @@ async function loadVoyages(list) {
   return items.map((v, i) => loaded[i] && { voyage: loaded[i], colour: colours[v.id], width: Number.isFinite(v.width) && v.width > 0 && v.width <= 12 ? v.width : VOYAGE_WIDTH }).filter(Boolean);
 }
 // A zoom slider's value as the zoom a name stops at: unset keeps `dflt`, 0 or less is off, the top is always, N draws at zoom N and out
-const zoomEnd = (n, dflt) => (n == null ? dflt : n <= 0 ? -Infinity : n >= ZOOM.max ? Infinity : n + 0.5);
+// (zoom <= N: the layers test zoom < end, so the end sits a hair past N).
+const zoomEnd = (n, dflt) => (n == null ? dflt : n <= 0 ? -Infinity : n >= ZOOM.max ? Infinity : n + 1e-9);
 const parchments = new Map(); // by tone; the same seed paints the same sheet
 
 export const RENDERINGS = ['vivid', 'scanned', 'plain'];
@@ -2888,6 +2894,29 @@ export const KINDS = ['rose', 'ship', 'monster', 'cartouche', 'mountain'];
 export const DEFAULT_KINDS = KINDS;
 export const PROJECTION_NAMES = Object.keys(PROJECTIONS);
 export const viewProjection = (view) => makeProjection(clampView(view));
+
+// Where to go for a voyage just chosen: null while any of its track is on the canvas of `view` (the view stays), else
+// the view that fits its whole track with a margin of `pad` of the track's span on each side, in the view's projection.
+// The track's longitudes are read round the globe, so a track across the date line is framed the short way.
+export const VOYAGE_FIT_PAD = 0.1;
+export function voyageView(voyage, view, pad = VOYAGE_FIT_PAD) {
+  const proj = viewProjection(view), pts = (voyage?.legs ?? []).flatMap(pathOf);
+  if (!pts.length) return null;
+  for (const [lon, lat] of pts) {
+    if (proj.visible && !proj.visible(lon, lat)) continue;
+    const [x, y] = proj.toPx([lon, lat]);
+    if (x >= 0 && x <= W && y >= 0 && y <= H) return null;
+  }
+  // the longitudes as an arc: the circle less its widest gap
+  const lons = [...new Set(pts.map(([lon]) => ((lon % 360) + 360) % 360))].sort((a, b) => a - b);
+  let gap = 360 - lons.at(-1) + lons[0], west = lons[0];
+  for (let i = 1; i < lons.length; i++) if (lons[i] - lons[i - 1] > gap) { gap = lons[i] - lons[i - 1]; west = lons[i]; }
+  const span = 360 - gap, lats = pts.map(([, lat]) => lat);
+  const latMin = Math.max(-80, Math.min(...lats)), latMax = Math.min(80, Math.max(...lats));
+  const dLon = Math.max(span, 0.5) * pad, yMin = mercY(latMin), yMax = mercY(latMax), dY = Math.max(yMax - yMin, 0.01) * pad;
+  const k = Math.min(W / ((Math.max(span, 0.5) + 2 * dLon) * RAD), H / (Math.max(yMax - yMin, 0.01) + 2 * dY));
+  return clampView({ lon: west + span / 2, lat: mercLat((yMin + yMax) / 2), zoom: Math.log2((k * 2 * Math.PI) / 512), projection: view.projection });
+}
 export const TOWN_SIZES = ['area', 'population', 'rank'];
 export { RIVER_STYLES, LAKE_STYLES, TREE_STYLES, RELIEF_STYLES };
 export const MAX_ZOOM = ZOOM.max;

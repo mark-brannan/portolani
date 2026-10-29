@@ -36,7 +36,7 @@
       "points": [[-70.9,20], [-67.5,19.7], [-63,18.5], [-61.8,16.7], [-58,19], [-50,25], [-40,31], [-30,36], [-20,37], [-12,37], [-9,36.6], [-6.3,36.5]] }
   ],
   "events": [
-    { "kind": "landfall", "lon": -61.35, "lat": 15.4, "date": "3 Nov 1493", "label": "Landfall at Dominica", "source": "Chanca", "text": "Sighted on a Sunday, whence the name. This time Columbus came with seventeen ships and well over a thousand men, with horses, cattle, seed and sugar cane: not to look, but to found a colony." },
-    { "kind": "event", "lon": -70.9, "lat": 19.95, "date": "Jan 1494", "label": "La Isabela, the first European town in the New World", "source": "Wikipedia: Second voyage", "text": "Founded on the north coast of Hispaniola and named for the queen. Fever, short rations and quarrels emptied it within a few years, and the Spanish moved to the south coast and built Santo Domingo. The ruins are in the Dominican Republic." }
+    { "kind": "landfall", "lon": -61.35, "lat": 15.4, "date": "3 Nov 1493", "label": "Landfall at Dominica", "source": "Chanca", "cite": "second-voyage-of-christopher-columbus", "text": "Sighted on a Sunday, whence the name. This time Columbus came with seventeen ships and well over a thousand men, with horses, cattle, seed and sugar cane: not to look, but to found a colony." },
+    { "kind": "event", "lon": -70.9, "lat": 19.95, "date": "Jan 1494", "label": "La Isabela, the first European town in the New World", "source": "Wikipedia: Second voyage", "cite": "second-voyage-of-christopher-columbus", "text": "Founded on the north coast of Hispaniola and named for the queen. Fever, short rations and quarrels emptied it within a few years, and the Spanish moved to the south coast and built Santo Domingo. The ruins are in the Dominican Republic." }
   ]
 }

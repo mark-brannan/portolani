@@ -1,14 +1,68 @@
 # The scan laid over the map
 
-A chart's scan can be laid over the live map as an image, warped onto today's coast, so the reader slides
-between the old chart and the vector one. It is an ornament over the vector coast: drawn over the land
-and sea, under the rhumb lines, names, towns, roses, beasts, ships and voyages. Off by default, like a
-voyage; turned on under the chart in the Charts drawer ("Lay the scan over the map", with an opacity
-slider) and kept in the link as `overlay=carta-marina&overlayopacity=0.6`.
+A chart's scan is laid over the live map as one sheet: the whole scan, undistorted, fully opaque, over
+everything on the map (the land and sea, the rhumb lines, the names, the towns, the roses, the beasts,
+the ships and the voyages), like one chart set down on another. The scanner's paper round the skin is
+keyed off, so the map shows round the skin's ragged edge and nowhere else. The sheet is on when a chart's
+name in the Charts drawer is clicked (the map flies to frame the whole sheet) and off when it is clicked
+again; it is kept in the link as `overlay=de-la-cosa`.
 
-One chart has it so far: the Carta Marina, 1539 (Olaus Magnus; Commons scan, public domain, see
-ASSETS.md), in `packs/overlays/` at half size with `overlays.json`. `npm run overlays` makes both from the
-full scan (`scripts/build-overlays.mjs`).
+Three charts have a scan so far, each a Commons scan in the public domain (see ASSETS.md): the Carta
+Marina, 1539 (Olaus Magnus), at half size; sheet 5 of the Catalan Atlas, 1375, the Atlantic panel, at a
+quarter; and Juan de la Cosa's chart of 1500 at full size, since its only scan is 2127 px wide. All are in
+`packs/overlays/` with `overlays.json`. `npm run overlays` makes them from the full scans
+(`scripts/build-overlays.mjs`): the shrunk JPEG, a mask PNG of the paper round the skin (a flood fill from
+the image's border through light or grey unsaturated pixels, which the tinted skin stops; the outermost
+px keyed whatever they hold; 19 to 38 KB each), and the placements below.
+
+## Where the sheet lies
+
+A placement is one similarity: the scan's centre at a longitude and latitude, a scale in Mercator degrees
+per scan px, and a turn in degrees clockwise. The sheet's page size comes from the view's zoom alone, so it
+keeps its size and its turn in every projection, its centre pinned; only the map under it changes.
+
+A chart's own placement (`sheet` in overlays.json) comes from its drawn parallels where it has them: Juan de
+la Cosa's chart carries the Tropic of Cancer and the equator as two long red lines across the whole skin (the
+first on any nautical chart), and the build finds them (`redLines`: thin red runs in every column, a Hough
+vote over slopes within 4° of level, a least-squares refit) and records them as `parallels`, each line's
+endpoints in scan px with its latitude. The turn is what lays them level (the Commons scan, "rotated", still
+tilts 2.2° down to the east), the scale what sets them their Mercator distance apart (0.1208 °/px, between
+the east fit's 0.140 and the west's 0.078), the latitude what puts the scan's centre where it lies against
+the equator, and the longitude midway between where the chart's two coasts' fits put the centre. That is the
+"Parallels" chip. Without parallels a chart's own placement (the "Level" chip) is level, its scale the
+geometric mean of its two coasts' fits and its centre midway between where those put the scan's centre; a
+chart fitted in one piece takes that fit as it is. The `snaps` are the per-piece fits applied to the whole
+scan, each a chip on the sheet: Juan de la Cosa's New World, Atlantic and Europe; the Carta Marina's West
+and Baltic. The sheet is moved by hand: held anywhere on it, it is dragged; by the ring at its bottom left
+corner it turns about its centre; by the square at its bottom right it is resized. Where it is let go goes
+into the link as `sheet=<lon>,<lat>,<scale>,<turn>`.
+
+| chart | own placement | snaps |
+|---|---|---|
+| Map of Juan de la Cosa | Parallels: 0.1208 °/px, turned 2.2° anticlockwise so its tropic and equator lie level at 23.44°N and 0°, centred 14.8°W | New World (0.0780 °/px, 7.9° anticlockwise), Atlantic (0.1307, 1.4° clockwise), Europe (0.1403, 4.9° clockwise) |
+| Catalan Atlas, sheet 5 | 0.00331 °/px, level | none |
+| Carta Marina | 0.0106 °/px, level | West (0.0113 °/px, 48° anticlockwise), Baltic (0.0100, 3° anticlockwise) |
+
+`npm run render -- --view -25,22,2 --overlay de-la-cosa [--sheet lon,lat,scale,turn] --out <file>` draws it headless.
+
+![Juan de la Cosa's sheet, keyed and opaque, its parallels level over the Atlantic](de-la-cosa-sheet.jpg)
+
+The same placement over an orthographic view (`&projection=orthographic`): the sheet's size and turn are the
+same, the map under it is the globe.
+
+![The same sheet over the orthographic globe](de-la-cosa-sheet-orthographic.jpg)
+
+The Charts drawer: each chart's scan as its thumbnail, the sheet's button; beside it the chart's name, and
+under that the city it was made in (a link that flies there) with its year.
+
+![The Charts drawer](charts-drawer.jpg)
+
+## Warped pieces
+
+The older way is kept as a mode, "Warped pieces" under Settings → Under the hood, with its opacity slider
+(`overlaymode=pieces&overlayopacity=0.6` in the link). It cuts the scan into pieces and warps each onto
+today's coast, drawn over the land and sea and under the rhumb lines, names, towns, roses, beasts, ships and
+voyages at that opacity. The rest of this page is about those pieces.
 
 ## How it is placed
 
@@ -33,7 +87,7 @@ of it; that is the two fits disagreeing, not a fault in the drawing.
 
 ## At the Carta Marina view
 
-`npm run render -- --view 19.7,61.7,4.6 --overlay carta-marina:<opacity> --out <file>`, scaled to 1000 px.
+`npm run render -- --view 19.7,61.7,4.6 --overlay carta-marina:<opacity> --out <file>` (an opacity after the id asks for the pieces), scaled to 1000 px.
 
 Opacity 0.3: today's coast reads first, the chart under it.
 
@@ -52,3 +106,51 @@ so it lands as a parallelogram where the true warp would curve; Scandinavia sits
 far edges of the chart drift.
 
 ![The Carta Marina scan over an orthographic view of northern Europe, its two pieces as parallelograms](carta-marina-orthographic.jpg)
+
+## At the Catalan Atlas, sheet 5
+
+The Atlantic panel, Ireland at the top and the Canaries at the foot, is north up and takes one similarity:
+0.00331 °/px, no turn, fitted to 19 landmarks read off the scan (the Shannon, the Portuguese and Moroccan
+coasts, Madeira and the Canaries) with an RMS residual of 127 km; the table is in
+[docs/atlas/ornaments.md](../atlas/ornaments.md) ("Landmarks, sheet 5"). The piece is the parchment,
+x 240 to 6080 scan px, not the scan's white margin. The panel's east edge is the join with sheet 6, so
+the scan stops at the Iberian coast.
+
+`npm run render -- --view -14,40,4.4 --overlay catalan-atlas:<opacity> --out <file>`, scaled to 1000 px.
+
+Opacity 0.3: the rose, Madeira and the Canaries faint over the open Atlantic.
+
+![The Atlantic off Iberia with the Catalan Atlas's sheet 5 faint over it](catalan-atlas-0.3.jpg)
+
+Opacity 0.6, the default: the chart's Canaries, strung out further west than they lie, sit across today's.
+
+![The same view with the scan at 0.6](catalan-atlas-0.6.jpg)
+
+Opacity 1: the scan alone, Portugal and Morocco meeting today's coast at the panel's east edge.
+
+![The same view with the scan opaque](catalan-atlas-1.jpg)
+
+## At Juan de la Cosa, 1500
+
+One similarity will not hold this chart: the New World is drawn at a larger scale than the Old, and the Red
+Sea and the Cape are turned against the Atlantic coast. So it takes three pieces, each a similarity fitted to
+the landmarks read off the scan in [docs/atlas/ornaments.md](../atlas/ornaments.md) ("Landmarks, 1500"), which
+has each piece's scan range, scale, turn and residual.
+
+The pieces run from the parchment's west edge to its east; above and below the parchment the scan's white
+shows. Where the west and atlantic pieces meet, the two scales of the chart disagree by 1400 to 2000 km,
+so a band of open Atlantic between about 37°W and 24°W has no scan over it.
+
+`npm run render -- --view -30,15,2.6 --overlay de-la-cosa:<opacity> --out <file>`, scaled to 1000 px.
+
+Opacity 0.3: the Caribbean and Brazil faint over today's.
+
+![The Atlantic with Juan de la Cosa's chart faint over it](de-la-cosa-0.3.jpg)
+
+Opacity 0.6, the default: Cuba and Hispaniola sit on today's; the chart's Africa runs east of the real one.
+
+![The same view with the scan at 0.6](de-la-cosa-0.6.jpg)
+
+Opacity 1: the scan alone, the gap between its two worlds open in mid-ocean.
+
+![The same view with the scan opaque](de-la-cosa-1.jpg)

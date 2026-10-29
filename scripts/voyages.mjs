@@ -143,6 +143,9 @@ export function seaSamples(voyage) {
   return out;
 }
 
+// A resolved cite is a link the page writes into an href, so its url must be https, never javascript: or the like.
+const citedOk = (c) => c === undefined || (c && typeof c.title === 'string' && typeof c.url === 'string' && /^https:\/\//.test(c.url));
+
 // Schema check: the problems in a voyage record, as strings; none when it is well formed.
 export function problems(v) {
   const out = [];
@@ -169,12 +172,14 @@ export function problems(v) {
     need(typeof e.source === 'string' && e.source.length, `event ${i}: a source`);
     if (e.kind === 'death') need(typeof e.who === 'string' && e.who.length, `event ${i}: who died`);
     need(e.text === undefined || (typeof e.text === 'string' && e.text.length), `event ${i}: text, when given, a string`);
+    need(citedOk(e.cited), `event ${i}: cited, when given, { title, url } with an https url, from sources.json`);
     if (e.alternatives !== undefined) {
       need(e.kind === 'death', `event ${i}: alternatives belong to a death`);
       need(Array.isArray(e.alternatives) && e.alternatives.length, `event ${i}: alternatives: [{ lon, lat, place, label, source }], one or more`);
       for (const [j, a] of (Array.isArray(e.alternatives) ? e.alternatives : []).entries()) {
         need(a && Number.isFinite(a.lon) && Number.isFinite(a.lat) && Math.abs(a.lon) <= 180 && Math.abs(a.lat) <= 90, `event ${i} alternative ${j}: lon and lat`);
         for (const k of ['place', 'label', 'source']) need(a && typeof a[k] === 'string' && a[k].length, `event ${i} alternative ${j}: a ${k}`);
+        need(a && citedOk(a.cited), `event ${i} alternative ${j}: cited, when given, { title, url } with an https url`);
         need(a && (a.text === undefined || (typeof a.text === 'string' && a.text.length)), `event ${i} alternative ${j}: text, when given, a string`);
       }
     }
@@ -189,7 +194,8 @@ export function problems(v) {
 // The one reader of the voyage files: each piece of text lives in one place, and this puts a voyage
 // back together. A person's death is in people.json, keyed by name ({ "death": { lon, lat, date, label,
 // text, source, alternatives } }, or { "death": "unknown" }), and joins every voyage whose `who` names
-// them; a voyage's `sources` are ids into sources.json; a leg sailed again on another voyage is
+// them; a voyage's `sources` are ids into sources.json, and so is an event's or a death's `cite`, the one its
+// tile links to (resolved to `cited`, { title, url }); a leg sailed again on another voyage is
 // { "sameAs": "<voyage id>/<leg id>", "dates" }, the leg's own file giving it an `id`. `readJSON(path)`
 // reads a path under the site root, sync or async. Returns the whole record problems() and the drawing
 // take; throws on a reference that does not resolve or a death written in the voyage file.
@@ -218,6 +224,35 @@ export async function readVoyage(id, readJSON) {
     if (death === 'unknown') unknown.push(who);
     else if (death) deaths.push({ kind: 'death', who, ...death });
   }
-  const cited = (raw.sources ?? []).map((s) => sources[s] ?? fail(`source ${s} is not in sources.json`));
-  return { ...raw, sources: cited, legs, events: [...(raw.events ?? []), ...deaths], ...(unknown.length && { deathUnknown: unknown }) };
+  const source = (s) => sources[s] ?? fail(`source ${s} is not in sources.json`);
+  // an event's or a death's `cite` is the sources.json id its tile links to; an alternative place without its own takes the death's
+  const linked = (e, up) => { const { cite, ...rest } = e; const cited = cite === undefined ? up : source(cite); return cited ? { ...rest, cited } : rest; };
+  const events = [...(raw.events ?? []), ...deaths].map((e) => {
+    const out = linked(e);
+    if (Array.isArray(e.alternatives)) out.alternatives = e.alternatives.map((a) => linked(a, out.cited));
+    return out;
+  });
+  return { ...raw, sources: (raw.sources ?? []).map(source), legs, events, ...(unknown.length && { deathUnknown: unknown }) };
+}
+
+// The year a voyage set out, read off its `when` ("c. 600 BC", "c. 330–320 BC", "1271–1295"): the first number,
+// negative before Christ; NaN when there is none. The voyages drawer lists them by it, earliest first (#242).
+// Years only: a century ("5th century BC") would read as year 5, so it would sort wrong.
+export function voyageStart(when) {
+  const m = /(\d+)/.exec(String(when ?? ''));
+  if (!m) return NaN;
+  return /\bBCE?\b/.test(when) ? -Number(m[1]) : Number(m[1]);
+}
+// [id, voyage] pairs in the order they set out; the given order breaks ties and puts an undated one last.
+export function chronological(pairs) {
+  const key = (v) => { const y = voyageStart(v?.when); return Number.isNaN(y) ? Infinity : y; };
+  return pairs.map((p, i) => [p, i]).sort(([a, i], [b, j]) => key(a[1]) - key(b[1]) || i - j).map(([p]) => p);
+}
+// Where the drawer's "Read more" goes for a raw voyage file: its first source in sources.json, else the Wikipedia
+// page of the first person on it. { label, url }, or null with neither.
+export function voyageLink(v, sources = {}) {
+  const s = sources[v?.sources?.[0]];
+  if (s?.url) return { label: s.title ?? s.url, url: s.url };
+  const who = v?.who?.[0];
+  return who ? { label: `${who}, Wikipedia`, url: `https://en.wikipedia.org/wiki/${encodeURIComponent(who.replace(/ /g, '_'))}` } : null;
 }

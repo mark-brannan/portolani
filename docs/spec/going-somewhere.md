@@ -1,7 +1,15 @@
 # Going somewhere
 
-Feature: Places to fly to  (the astrolabe `#sights`, 26 rows of sights and sections; the anchor `#anchor`, 14 anchorages; the chart `#charts`, 7 charts with "Where it was made" and "The sheet"; each a drawer in the `#where` row) [verified page.js:585, 786-830 at main]
+Feature: Places to fly to  (the astrolabe `#sights`, 39 rows of sights and sections; the anchor `#anchor`, 14 anchorages; the chart `#charts`, 7 charts with "Where it was made" and "The sheet"; each a drawer in the `#where` row) [verified page.js:585, 786-830 at main]
   # The audit at ab47ea7 read one anchor button `#places` with a `#flyout` of 24 `ORIGINS`; #206 and #209 split it into these three drawers. Their contents are not yet specified here.
+  Scenario: noteworthy ports by era
+    Given the astrolabe drawer open
+    When the user reads the astrolabe's groups
+    Then the noteworthy ports come in four eras, each under its own heading, in time order: the ancient world, the medieval Indian Ocean and Asia, the age of discovery, the modern world; six ports each, most of them outside Europe
+    And each heading is the port names' size and weight, in italic, and folds its group: only the age of discovery is open at first
+    And the date sits to the right of the name, so the button is short and wide, and under it is the caption; the date (a year, a century or a span); the age of discovery also holds Seville, Genoa, Venice, Majorca and Dieppe, their dates followed by "charts made here"
+    And a port whose name has changed lists the historic name first and today's in brackets, "Batavia (Jakarta)", "Calicut (Kozhikode)"
+    And each port opens a flavour-text tile on a click of its mark, with no lettering beside the mark
   Scenario: pick a sight
     Given the chart at the default view
     When the user clicks `#sights`, then "Lisbon"
@@ -63,6 +71,31 @@ Feature: My position  (button `#locate`, inside the Go drawer) [verified page.js
     When the page loads
     Then `#locate` is hidden
 
+Feature: Going to a voyage  (the dividers `#voyages`, list `#voyageList`; `voyageView` in scene.mjs) [#242] Tested by: test/voyages.test.mjs (the in-view and fit decision); "several chosen at once" and "putting a voyage off" are verified by hand in a headless browser (PR #261), with no automated test
+  Scenario: some of the track is in view
+    Given the view `map=5.50/38.000/-8.000`, on Iberia
+    When the user opens `#voyages` and chooses "Magellan and Elcano round the world"
+    Then the track is drawn and the hash still holds `map=5.50/38.000/-8.000`
+    # The default view, centred on 7° E, stops just short of Sanlúcar, so from there Magellan flies.
+  Scenario: none of the track is in view
+    Given the view `map=6.00/25.000/120.000`, on the China Seas, where no part of Columbus's first voyage lies
+    When the user chooses "Columbus's first voyage to the Indies"
+    Then the map flies (the 600 ms flight of a sight) to the view that fits the whole track, with a tenth of its span spare on each side
+    And the drawer stays open, so another can be chosen
+  Scenario: a track across the date line
+    Given a view far from the Pacific
+    When the user chooses a voyage that crosses the date line
+    Then the fitted view is centred on the Pacific, the short way round, not on the far side of the globe
+  Scenario: several chosen at once
+    Given a view where neither voyage lies
+    When the user chooses one voyage and then another before the first flight lands
+    Then the map fits the last one chosen; the first is drawn but not flown to
+    And a choice is weighed against where a flight is bound, not the frame it is passing through
+  Scenario: putting a voyage off
+    Given a voyage on
+    When the user clicks it again
+    Then it is taken off the chart and the view does not move
+
 Feature: Reduced motion  (OS setting `prefers-reduced-motion`) [verified page.js:796]
   Scenario: a jump, not a flight
     Given `prefers-reduced-motion: reduce`
@@ -78,3 +111,6 @@ Feature: Phone layout  (viewport 520 px or narrower) [verified page.js:40, 519-5
     Given a wide viewport
     When it narrows past 520 px
     Then the sheet is placed again without the cartouche and scale bar (the `phone` change handler, page.js:571)
+  Scenario: a port with no town today still has a mark on the map
+    Given the chart at zoom 4 or more over Berenike, Siraf or Kilwa
+    Then a placeholder building stands there, lettered with the port's name, so a search for it finds something to see
