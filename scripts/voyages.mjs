@@ -243,6 +243,13 @@ export const PORTRAIT_KINDS = ['life', 'near', 'posthumous', 'imaginary', 'moder
 // death (or "unknown", or `living: true` and no death) is required; every other field is checked when it is there, so
 // an older record with a death alone passes. `sources` and `voyageIds`, when given, are what a cite and a voyage id
 // must name.
+// `born` has the death marker's shape, `alternatives` included, plus `known`: how well it is known, in the leg words or
+// `speculative` (a death may carry it too). A `portrait` is a Wikimedia Commons file name, never a URL: its page is
+// https://commons.wikimedia.org/wiki/File:<file> and its image .../wiki/Special:FilePath/<file>?width=480. Its `kind` says
+// what the picture is: life (made while they lived), near (about then, or a copy), posthumous, imaginary (no likeness
+// claimed), modern (a statue or a photograph of one), or none (no likeness exists; a named file, if any, stands in, a
+// manuscript say). `author`, `date` and `licence` are copied from the file page. New keys go before `death`, so a death
+// block is never rewritten.
 export function personProblems(name, p, { sources, voyageIds } = {}) {
   const out = [];
   const need = (ok, msg) => { if (!ok) out.push(`${name}: ${msg}`); };

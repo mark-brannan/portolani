@@ -29,7 +29,7 @@ person's death in `people.json`, each source in `sources.json`. `readVoyage` in
 
 A person in `people.json` is keyed by the name a voyage's `who` uses. Only the death is required: a
 `death` marker, or `"unknown"`, or `"living": true` and no death for someone alive (no skull). Every other
-field is optional, and checked when it is there (`personProblems` in `scripts/voyages.mjs`):
+field is optional:
 
 ```json
 "Juan Sebastián Elcano": {
@@ -39,24 +39,20 @@ field is optional, and checked when it is there (`personProblems` in `scripts/vo
   "role": ["navigator", "ship-owner"],
   "voyages": ["magellan"],
   "bio": "He brought the Victoria home in 1522, the first ship round the world, …",
-  "portrait": { "file": "Juan_Sebastián_Elcano,_anonymous_19th_century_painting.jpg", "kind": "posthumous",
-                "author": "Unknown", "date": "19th century", "licence": "Public domain", "note": "Museo Naval, Madrid; …" },
+  "portrait": { "file": "Juan_Sebastián_Elcano,_anonymous_19th_century_painting.jpg",
+                "kind": "posthumous", "author": "Unknown", "date": "19th century",
+                "licence": "Public domain", "note": "Museo Naval, Madrid; …" },
   "sources": ["https://en.wikipedia.org/wiki/Juan_Sebasti%C3%A1n_Elcano"],
-  "born": { "lon": -2.2, "lat": 43.3, "date": "1486 or 1487", "place": "Getaria", "label": "Elcano born at Getaria, 1486 or 1487",
-            "text": "His own will names Getaria. …", "known": "inferred", "source": "Wikipedia: Juan Sebastián Elcano", "cite": "juan-sebastian-elcano" },
+  "born": { "lon": -2.2, "lat": 43.3, "date": "1486 or 1487", "place": "Getaria",
+            "label": "Elcano born at Getaria, 1486 or 1487", "text": "His own will names Getaria. …",
+            "known": "inferred", "source": "Wikipedia: Juan Sebastián Elcano",
+            "cite": "juan-sebastian-elcano" },
   "death": { "…": "as before" }
 }
 ```
 
-`born` has the death marker's shape, `alternatives` included, plus `known`: how well the birth is known, in
-the leg words or `speculative` (a death may carry `known` too). A `portrait` is a Wikimedia Commons file
-name, never a URL: its page is `https://commons.wikimedia.org/wiki/File:<file>` and its image
-`https://commons.wikimedia.org/wiki/Special:FilePath/<file>?width=480`. Its `kind` says what the picture
-is: `life` (made while they lived), `near` (about then, or a copy of one), `posthumous`, `imaginary` (no
-likeness claimed), `modern` (a statue or a photograph of one), or `none`, where no likeness exists and a
-named file, if any, stands in for one (a manuscript, say). `author`, `date` and `licence` are copied from
-the file page, and the credit given is the one it asks for. Births and portraits are data only for now;
-nothing draws them. New keys go before `death`, so a person's death block is never rewritten.
+Only the death is required; `personProblems` in `scripts/voyages.mjs` says the rest. Births and portraits
+are data only for now: nothing draws them.
 
 Two conventions the checks cannot see: where a source says a person died at sea or on the way but gives
 no place, the skull stands at the middle of the leg it must have happened on and the death's `text` says

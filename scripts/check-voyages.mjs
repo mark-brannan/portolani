@@ -63,6 +63,12 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   }
   const people = readJSON('data/voyages/people.json'), sources = readJSON('data/voyages/sources.json'), ids = voyageIds();
   const who = Object.entries(people).flatMap(([name, p]) => personProblems(name, p, { sources, voyageIds: ids }));
+  // a person's `voyages` is the voyages whose `who` names them
+  for (const [name, p] of Object.entries(people)) {
+    if (!p.voyages) continue;
+    const named = ids.filter((i) => (readJSON(`data/voyages/${i}.json`).who ?? []).includes(name));
+    if ([...p.voyages].sort().join() !== named.sort().join()) who.push(`${name}: voyages ${p.voyages.join(', ')} but named in ${named.join(', ') || 'none'}`);
+  }
   bad += who.length;
   console.log(`people: ${who.length ? `${who.length} problems` : 'ok'}`);
   for (const w of who) console.log(`  ${w}`);
