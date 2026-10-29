@@ -153,7 +153,7 @@ export function problems(v) {
   const need = (ok, msg) => { if (!ok) out.push(msg); };
   need(typeof v.id === 'string' && /^[a-z][a-z0-9-]*$/.test(v.id), 'id: lower-case slug');
   for (const k of ['title', 'short', 'when', 'summary']) need(typeof v[k] === 'string' && v[k].length, `${k}: a string`);
-  need(Array.isArray(v.who) && v.who.length && v.who.every((w) => typeof w === 'string' && SLUG.test(w)), 'who: slugs into people.json');
+  need(Array.isArray(v.who) && v.who.length && v.who.every((w) => typeof w === 'string' && SLUG.test(w)) && new Set(v.who).size === v.who.length, 'who: distinct slugs into people.json');
   need(Array.isArray(v.sources) && v.sources.length && v.sources.every((s) => s.title && s.url), 'sources: [{ title, url }]');
   need(Array.isArray(v.legs) && v.legs.length, 'legs: at least one');
   for (const [i, leg] of (v.legs ?? []).entries()) {
@@ -257,15 +257,20 @@ export function checkPerson(id, p, { sources } = {}) {
     if (m.lon === undefined && m.lat === undefined) return;
     need(Number.isFinite(m.lon) && Number.isFinite(m.lat) && Math.abs(m.lon) <= 180 && Math.abs(m.lat) <= 90, `${at}: lon and lat, together`);
   };
-  const marker = (m, at) => {
+  // Where a mark is drawn (lon or lat given) it needs a label and a source; an alternative is always drawn, so it needs a place too.
+  const marker = (m, at, alt = false) => {
     if (!m || typeof m !== 'object' || Array.isArray(m)) return need(false, `${at}: { lon, lat, date, place, label, text, source, cite, confidence, alternatives }`);
     place(m, at);
+    if (alt || m.lon !== undefined || m.lat !== undefined) {
+      need(alt ? Number.isFinite(m.lon) && Number.isFinite(m.lat) : true, `${at}: lon and lat, together`);
+      for (const k of alt ? ['place', 'label', 'source'] : ['label', 'source']) need(str(m[k]), `${at}: a ${k}, since it is drawn`);
+    }
     for (const k of ['date', 'place', 'label', 'text', 'source']) if (m[k] !== undefined) need(str(m[k]), `${at}: ${k}, a string`);
     if (m.cite !== undefined) need(str(m.cite) && (!sources || m.cite in sources), `${at}: cite ${m.cite} is not in sources.json`);
     if (m.confidence !== undefined) need(MARKER_CONFIDENCES.includes(m.confidence), `${at}: confidence one of ${MARKER_CONFIDENCES}`);
     if (m.alternatives !== undefined) {
       need(Array.isArray(m.alternatives), `${at}: alternatives, a list`);
-      for (const [j, a] of (Array.isArray(m.alternatives) ? m.alternatives : []).entries()) marker(a, `${at} alternative ${j}`);
+      for (const [j, a] of (Array.isArray(m.alternatives) ? m.alternatives : []).entries()) marker(a, `${at} alternative ${j}`, true);
     }
   };
   for (const k of ['born', 'death']) if (p[k] !== undefined) marker(p[k], k);

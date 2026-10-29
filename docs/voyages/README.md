@@ -44,23 +44,20 @@ files credited as their file pages ask, `sources` ids into `sources.json`.
   "name": "Ferdinand Magellan",
   "bio": "A Portuguese officer of minor nobility who served the Crown in Asia, …",
   "images": [{ "file": "Retrato_de_Hernando_de_Magallanes.jpg", "kind": "posthumous", "author": "Unknown",
-               "date": "1848", "licence": "Public domain", "note": "A copy after the portrait in the Naval Museum, Madrid; …" }],
+               "date": "1848", "licence": "Public domain", "note": "A copy after the Madrid portrait; …" }],
   "sources": ["ferdinand-magellan"],
   "born":  { "lon": -7.58, "lat": 41.27, "date": "c. 1480", "place": "Sabrosa, northern Portugal",
              "label": "Magellan born in northern Portugal, c. 1480", "text": "…", "confidence": "inferred",
              "source": "Wikipedia: Ferdinand Magellan", "cite": "ferdinand-magellan",
-             "alternatives": [{ "lon": -8.42, "lat": 41.8, "place": "Ponte da Barca", "label": "Born at Ponte da Barca, by another account", "source": "Wikidata" }] },
+             "alternatives": [{ "lon": -8.42, "lat": 41.8, "place": "Ponte da Barca",
+                                "label": "Born at Ponte da Barca", "source": "Wikidata" }] },
   "death": { "lon": 123.97, "lat": 10.29, "date": "27 Apr 1521", "label": "Magellan killed at Mactan",
              "source": "Pigafetta", "cite": "battle-of-mactan", "text": "…" }
 }
 ```
 
-A **marker** is one shape wherever a placed, dated, told thing is recorded: a voyage's `events` (a landfall, a
-battle, a mutiny), a person's `born` and `death`, and each of a marker's `alternatives`. Its fields are `lon`
-and `lat` (together, or neither), `date`, `place`, `label` (the tile's heading), `text` (its body), `source`
-(prose), `cite` (an id into `sources.json`, the link), `confidence` and `alternatives`. `confidence` is the leg
-word (`attested`, `inferred`, `conventional`) or `speculative` for a guessed place; a `doubt` in prose says who
-doubts the thing and why. The coordinates are where the mark stands, not a claim of exactness:
+A marker is one shape for `events`, `born`, `death` and `alternatives`; the fields are in the `checkPerson`
+header. The coordinates are where the mark stands, not a claim of exactness:
 
 | the death record has | drawn | means |
 |---|---|---|
@@ -70,11 +67,6 @@ doubts the thing and why. The coordinates are where the mark stands, not a claim
 | a date, a sentence, no lon and lat | nothing | nobody knows where; the record still has the date |
 
 Births and images are data only for now: nothing draws them.
-
-Two directions the record has not taken yet: a `places.json`, so a port's coordinates are written once (Genoa's
-are written five times in `data/charts/portolans.json`), and one Commons-image shape shared by the charts and
-the people.
-
 
 Two conventions the checks cannot see: where a source says a person died at sea or on the way but gives
 no place, the skull stands at the middle of the leg it must have happened on, its `confidence` is `conventional`

@@ -152,6 +152,8 @@ test('a person record needs nothing; what is there is checked, and a skull takes
   assert.deepEqual(checkPerson('a-b', full, { sources: { s1: {} } }), []);
   const bad = checkPerson('A B', { ...full, sources: ['s2'], born: { ...death, confidence: 'certain', cite: 's2' }, death: { lon: 1, date: 'd' },
     images: [{ kind: 'life', file: 'File:A.jpg' }, { kind: 'none', file: 'https://x/A.jpg' }] }, { sources: { s1: {} } });
+  const drawn = checkPerson('a-b', { death: { lon: 1, lat: 1, alternatives: [{ date: 'x' }] } });
+  for (const p of ['death: a label', 'death: a source', 'alternative 0: lon and lat', 'alternative 0: a place', 'alternative 0: a label', 'alternative 0: a source']) assert.ok(drawn.some((b) => b.includes(p)), p);
   for (const p of ['key: a lower-case slug', 'sources: s2 is not', 'born: confidence one of', 'born: cite s2 is not', 'death: lon and lat, together',
     'image 0: file, a Commons file name', 'image 1: file, a Commons file name', 'image 1: kind one of']) assert.ok(bad.some((b) => b.includes(p)), p);
   const set = { x: raw(), ...shared() };
