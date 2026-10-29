@@ -1,0 +1,38 @@
+{
+  "id": "ibn-battuta-3",
+  "title": "Ibn Battuta: Yemen, the Swahili coast, Oman and the Gulf, 1328–30",
+  "short": "Ibn Battuta 1328",
+  "who": ["Ibn Battuta"],
+  "when": "1328–1330",
+  "summary": "A storm puts him ashore in Africa; he reaches Yemen by Suakin, sails from Aden down the Swahili coast to Kilwa and back to Zafar, walks across Oman to Nizwa, and comes home to Mecca by Hormuz, the pearl banks and al-Hasa. Dunn's dates; the Rihla's are 1330–32.",
+  "sources": ["ibn-battuta", "gibb-hakluyt", "gibb-ibn-battuta", "orias-ibn-battuta", "rihla"],
+  "legs": [
+    {"sameAs": "ibn-battuta/mecca-jeddah"},
+    {"sameAs": "ibn-battuta/jeddah-dawair"},
+    {"sameAs": "ibn-battuta/dawair-suakin"},
+    {"sameAs": "ibn-battuta/suakin-hali"},
+    {"sameAs": "ibn-battuta/hali-ahwab"},
+    {"sameAs": "ibn-battuta/ahwab-taiz"},
+    {"sameAs": "ibn-battuta/taiz-sanaa"},
+    {"sameAs": "ibn-battuta/taiz-aden"},
+    {"sameAs": "ibn-battuta/aden-zeila"},
+    {"sameAs": "ibn-battuta/zeila-mogadishu"},
+    {"sameAs": "ibn-battuta/mogadishu-kilwa"},
+    {"sameAs": "ibn-battuta/kilwa-zafar"},
+    {"sameAs": "ibn-battuta/zafar-sur"},
+    {"sameAs": "ibn-battuta/sur-nizwa"},
+    {"sameAs": "ibn-battuta/nizwa-sohar"},
+    {"sameAs": "ibn-battuta/sohar-hormuz"},
+    {"sameAs": "ibn-battuta/hormuz-khunj"},
+    {"sameAs": "ibn-battuta/khunj-siraf"},
+    {"sameAs": "ibn-battuta/siraf-bahrain"},
+    {"sameAs": "ibn-battuta/bahrain-qatif"},
+    {"sameAs": "ibn-battuta/qatif-mecca"}
+  ],
+  "events": [
+    {"kind": "event", "lon": 44.02, "lat": 13.58, "date": "1328", "label": "Ta'izz: the Rasulid sultan", "source": "Rihla, Gibb and Beckingham", "cite": "gibb-hakluyt", "text": "At Ta'izz he was received by the sultan of Yemen, al-Malik al-Mujahid Nur al-Din Ali.", "who": "Ibn Battuta"},
+    {"kind": "landfall", "lon": 45.34, "lat": 2.04, "date": "1329", "label": "Mogadishu: guest of the sultan", "source": "Rihla, Gibb and Beckingham", "cite": "gibb-hakluyt", "text": "The sultan of Mogadishu, Abu Bakr son of Shaikh Umar, lodged him as a guest. When a ship came in, young men of the town rowed out with platters of food, each claiming one merchant aboard as his guest.", "who": "Ibn Battuta"},
+    {"kind": "event", "lon": 59.37, "lat": 22.69, "date": "1329", "label": "The walk to Qalhat", "source": "Rihla, Gibb and Beckingham", "cite": "gibb-hakluyt", "text": "Tired of the ship's company, he left it at Sur and set out on foot for Qalhat with a hired guide, who tried to make off with his clothes. He spent the night under a thorn tree, awake with a spear in his hand, and reached the town in the morning.", "who": "Ibn Battuta"},
+    {"kind": "event", "lon": 50.58, "lat": 26.2, "date": "1330", "label": "The pearl divers", "source": "Rihla, Gibb and Beckingham", "cite": "gibb-hakluyt", "text": "The Rihla describes the divers between Siraf and Bahrain in April and May, with a tortoise-shell mask, a clip on the nose and a rope round the waist. Gibb thinks he was never there in the season: the place is vague, the method exact.", "who": "Ibn Battuta"}
+  ]
+}

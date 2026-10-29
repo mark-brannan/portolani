@@ -31,6 +31,12 @@ Two conventions the checks cannot see: where a source says a person died at sea 
 no place, the skull stands at the middle of the leg it must have happened on and the death's `text` says
 so; and an `alternative` is another place of death, never of burial.
 
+A traveller whose road splits into journeys has the whole road in one file and each journey in its own
+(`ibn-battuta` and `ibn-battuta-1` to `ibn-battuta-8`): the parts name the whole road's legs by `sameAs`, so a
+course is drawn once. Where the traveller's own dates and a modern chronology differ, a leg's `dates` are the
+modern one, and the journey's `summary` or the leg's `note` gives the traveller's. A leg scholars doubt (one the traveller may never have gone)
+says so in its `note`: who doubts it and why.
+
 ## What is drawn
 
 Any number of voyages are drawn at once, each in its own ink: the first voyage on is the chart's red,
