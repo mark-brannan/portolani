@@ -143,8 +143,11 @@ async function maskedImage(file, maskFile, env) {
 // paper round the skin, transparent) the image is the scan composed with it on a canvas of the env's.
 // A chart of `panels` comes back with each panel's `img` null, and each is filled as its file arrives: with
 // `env.onPanel` (the page) at once, calling it with the id as each panel lands, so the sheet appears page by page;
-// without (a headless render, a test) once every panel has landed. A panel that fails to load stays null.
+// without (a headless render, a test) once every panel has landed. A panel that fails to load is tried once more; on
+// the page a second failure is warned with the panel's file and the sheet draws the rest, and headless it throws,
+// since a missing panel there is a build fault.
 const loaded = new Map();
+class PanelFault extends Error {}
 export function loadOverlay(id, env) {
   if (!/^[a-z][a-z0-9-]*$/.test(id ?? '')) return Promise.resolve(null);
   if (!loaded.has(id)) {
@@ -154,12 +157,17 @@ export function loadOverlay(id, env) {
       if (!o) return null;
       if (o.panels) {
         const out = { ...o, panels: o.panels.map((p) => ({ ...p, img: null })) };
-        const landed = Promise.all(out.panels.map((p) => maskedImage(p.file, p.mask, env).then((img) => { p.img = img; env.onPanel?.(id); }, () => {})));
+        const landed = Promise.all(out.panels.map((p) => maskedImage(p.file, p.mask, env).catch(() => maskedImage(p.file, p.mask, env)).then(
+          (img) => { p.img = img; env.onPanel?.(id); },
+          (err) => {
+            if (!env.onPanel) throw new PanelFault(`overlay ${id}: panel packs/overlays/${p.file} failed to load (${err?.message ?? err})`);
+            console.warn(`overlay ${id}: panel packs/overlays/${p.file} failed to load twice; the sheet draws without it`);
+          })));
         if (!env.onPanel) await landed;
         return out;
       }
       return { ...o, img: await maskedImage(o.file, o.mask, env) };
-    })().catch(() => (loaded.delete(id), null)));
+    })().catch((err) => { loaded.delete(id); if (err instanceof PanelFault) throw err; return null; }));
   }
   return loaded.get(id);
 }

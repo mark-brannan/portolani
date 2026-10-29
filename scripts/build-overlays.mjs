@@ -65,11 +65,13 @@ export function levelFit(pairs, k = similarityFit(pairs).a) { // with the turn h
 
 // The Catalan Atlas's eight map pages, BnF sheets 5 to 12, west to east, each cropped to its parchment: x0 to x1 of
 // its own scan, measured on 2026-10-29 as the columns where the scanner's paper is under a third of the page's
-// middle 70%. `label` names the page's snap by what it shows. Sheets 1 to 4 are the calendar and cosmography.
+// middle 70%. `label` names the page's snap by what it shows. `part` is which half of the atlas the page is: 'portolan'
+// (sheets 5 to 8), fitted by similarity, turn and all; 'mappa mundi' (sheets 9 to 12, east of the Caspian), laid level
+// at the atlas scale. Sheets 1 to 4 are the calendar and cosmography.
 export const CATALAN_PAGES = [
-  [5, 288, 6160, 'Atlantic'], [6, 304, 6144, 'Mali'], [7, 288, 6136, 'Italy'], [8, 352, 6216, 'Black Sea'],
-  [9, 304, 6184, 'Persia'], [10, 272, 6088, 'Central Asia'], [11, 312, 6136, 'India'], [12, 344, 6200, 'Cathay'],
-].map(([n, x0, x1, label]) => ({ n, source: `catalan-atlas-${n}`, x0, x1, label }));
+  [5, 288, 6160, 'Atlantic', 'portolan'], [6, 304, 6144, 'Mali', 'portolan'], [7, 288, 6136, 'Italy', 'portolan'], [8, 352, 6216, 'Black Sea', 'portolan'],
+  [9, 304, 6184, 'Persia', 'mappa mundi'], [10, 272, 6088, 'Central Asia', 'mappa mundi'], [11, 312, 6136, 'India', 'mappa mundi'], [12, 344, 6200, 'Cathay', 'mappa mundi'],
+].map(([n, x0, x1, label, part]) => ({ n, source: `catalan-atlas-${n}`, x0, x1, label, part }));
 
 // Each page's offset in the open atlas: where its parchment starts in the sheet's full-resolution px.
 export function pageOffsets(pages) {
@@ -78,8 +80,8 @@ export function pageOffsets(pages) {
 }
 
 // Each page's piece, as [x0, x1, fit] in the sheet's px, from its landmarks table in ornaments.md ("### Landmarks,
-// sheet N", page px; the page's offset added here). Sheets 5 to 8, the portolan part, take the least-squares
-// similarity through their rows, turn and all. Sheets 9 to 12, the mappa mundi east of the Caspian, are level, each
+// sheet N", page px; the page's offset added here). A page of the portolan part takes the least-squares
+// similarity through its rows, turn and all. A page of the mappa mundi, east of the Caspian, is level, each
 // centred through its own few named places, at the scale of the atlas as a whole (the least-squares scale through
 // every row of the eight pages at their offsets): too few places, too far from where they lie, to set a scale of
 // their own. Sheet 10 has no place read (its lettering is upside down and worn), so it is centred through the rows
@@ -92,7 +94,9 @@ export function catalanPieces(md, pages = CATALAN_PAGES) {
     .map((r) => [[at[i] + r.px[0] - p.x0, r.px[1]], r.ll]));
   const atlas = similarityFit(rows.flat()).scale;
   return pages.map((p, i) => {
-    const { a, b, tx, ty } = p.n <= 8 ? similarityFit(rows[i]) : levelFit(rows[i].length ? rows[i] : [...rows[i - 1], ...rows[i + 1]], atlas);
+    if (p.part === 'portolan') { const { a, b, tx, ty } = similarityFit(rows[i]); return [at[i], at[i] + p.x1 - p.x0, { a, b, tx, ty }]; }
+    if (!rows[i].length && !(rows[i - 1]?.length && rows[i + 1]?.length)) throw new Error(`Catalan Atlas sheet ${p.n} has no landmarks and no neighbour on both sides to centre it by`);
+    const { a, b, tx, ty } = levelFit(rows[i].length ? rows[i] : [...rows[i - 1], ...rows[i + 1]], atlas);
     return [at[i], at[i] + p.x1 - p.x0, { a, b, tx, ty }];
   });
 }
