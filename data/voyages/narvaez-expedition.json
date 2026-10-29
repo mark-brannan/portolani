@@ -1,0 +1,319 @@
+{
+  "id": "narvaez-expedition",
+  "title": "The Narváez expedition to La Florida, 1527–28",
+  "short": "Narváez",
+  "who": [
+    "panfilo-de-narvaez",
+    "alvar-nunez-cabeza-de-vaca",
+    "andres-dorantes-de-carranza",
+    "alonso-del-castillo-maldonado",
+    "esteban-de-dorantes"
+  ],
+  "when": "1527–1528",
+  "summary": "Six hundred set out from Sanlúcar to settle the Gulf coast. A hurricane at Trinidad, a march from Tampa Bay to Apalachee, and five boats built of horsehide ended it: about eighty reached the Texas shore, and four lived to reach New Spain.",
+  "sources": [
+    "narvaez-expedition",
+    "cabeza-de-vaca"
+  ],
+  "legs": [
+    {
+      "from": "Sanlúcar de Barrameda",
+      "to": "Santo Domingo",
+      "dates": "17 Jun 1527 – 1527",
+      "mode": "sea",
+      "line": "great-circle",
+      "confidence": "inferred",
+      "points": [
+        [
+          -6.6,
+          36.45
+        ],
+        [
+          -14.0,
+          30.2
+        ],
+        [
+          -16.3,
+          29.0
+        ],
+        [
+          -18.8,
+          26.8
+        ],
+        [
+          -40,
+          22
+        ],
+        [
+          -60,
+          17.5
+        ],
+        [
+          -67.5,
+          17.3
+        ],
+        [
+          -69.9,
+          18.3
+        ]
+      ],
+      "source": "Wikipedia, Narváez expedition; the course between the ports is worked out"
+    },
+    {
+      "from": "Santo Domingo",
+      "to": "Trinidad, Cuba",
+      "dates": "1527 – c. 30 Oct 1527",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          -69.9,
+          18.3
+        ],
+        [
+          -71.0,
+          17.6
+        ],
+        [
+          -72.6,
+          17.7
+        ],
+        [
+          -74.3,
+          17.9
+        ],
+        [
+          -75.3,
+          19.0
+        ],
+        [
+          -75.9,
+          19.7
+        ],
+        [
+          -77.0,
+          19.6
+        ],
+        [
+          -77.8,
+          19.6
+        ],
+        [
+          -79.0,
+          20.2
+        ],
+        [
+          -79.9,
+          21.4
+        ]
+      ],
+      "source": "Wikipedia, Narváez expedition; the ports are named, the way between is not"
+    },
+    {
+      "from": "Trinidad, Cuba",
+      "to": "Boca Ciega Bay, Florida",
+      "dates": "Feb – 12 Apr 1528",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          -79.9,
+          21.4
+        ],
+        [
+          -80.4,
+          21.8
+        ],
+        [
+          -81.5,
+          21.7
+        ],
+        [
+          -82.2,
+          21.5
+        ],
+        [
+          -83.5,
+          21.2
+        ],
+        [
+          -85.2,
+          21.5
+        ],
+        [
+          -85.0,
+          22.6
+        ],
+        [
+          -84.0,
+          24.0
+        ],
+        [
+          -83.3,
+          25.5
+        ],
+        [
+          -83.0,
+          27.7
+        ]
+      ],
+      "source": "Wikipedia, Narváez expedition: Cienfuegos on 20 Feb, land sighted 12 Apr"
+    },
+    {
+      "from": "Boca Ciega Bay",
+      "to": "Bay of Horses",
+      "dates": "1 May – 22 Sep 1528",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "points": [
+        [
+          -83.0,
+          27.7
+        ],
+        [
+          -82.75,
+          27.79
+        ],
+        [
+          -82.6,
+          28.3
+        ],
+        [
+          -82.4,
+          28.9
+        ],
+        [
+          -82.7,
+          29.5
+        ],
+        [
+          -83,
+          29.95
+        ],
+        [
+          -83.6,
+          30.3
+        ],
+        [
+          -84.28,
+          30.45
+        ],
+        [
+          -84.25,
+          30.2
+        ],
+        [
+          -84.2,
+          29.9
+        ]
+      ],
+      "source": "Wikipedia, Narváez expedition; the landing site and the road to Apalachee are both disputed"
+    },
+    {
+      "from": "Bay of Horses",
+      "to": "Malhado, Texas",
+      "dates": "22 Sep – late 1528",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          -84.2,
+          29.9
+        ],
+        [
+          -85.5,
+          29.4
+        ],
+        [
+          -86.7,
+          30.0
+        ],
+        [
+          -88.0,
+          29.9
+        ],
+        [
+          -89.1,
+          28.7
+        ],
+        [
+          -90.5,
+          28.6
+        ],
+        [
+          -92.0,
+          29.0
+        ],
+        [
+          -93.3,
+          29.4
+        ],
+        [
+          -94.5,
+          29.0
+        ],
+        [
+          -95.15,
+          28.8
+        ]
+      ],
+      "source": "Wikipedia, Narváez expedition: sailed 22 Sep 1528, following the Gulf coast west; few fixes"
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": -79.98,
+      "lat": 21.75,
+      "date": "c. 30 Oct 1527",
+      "label": "Trinidad: the hurricane",
+      "source": "Wikipedia, Narváez expedition",
+      "cite": "narvaez-expedition",
+      "text": "Two ships had just reached Trinidad when a hurricane struck. Both sank; 60 men drowned, a fifth of the horses, and the new supplies were lost."
+    },
+    {
+      "kind": "landfall",
+      "lon": -82.75,
+      "lat": 27.79,
+      "date": "12 Apr 1528",
+      "label": "Boca Ciega Bay: the landing",
+      "source": "Wikipedia, Narváez expedition",
+      "cite": "narvaez-expedition",
+      "text": "Land was sighted on 12 April 1528 and the expedition came ashore at the Jungle Prada site, near St. Petersburg. Where exactly in Tampa Bay they landed is argued."
+    },
+    {
+      "kind": "event",
+      "lon": -82.6,
+      "lat": 27.95,
+      "date": "1 May 1528",
+      "label": "Tampa Bay: the force divides",
+      "source": "Wikipedia, Narváez expedition",
+      "cite": "narvaez-expedition",
+      "text": "About 300 men marched inland while 100 men and ten women sailed on in the ships. The two parties never met again."
+    },
+    {
+      "kind": "event",
+      "lon": -84.28,
+      "lat": 30.45,
+      "date": "25 Jun 1528",
+      "label": "Apalachee: forty houses",
+      "source": "Wikipedia, Narváez expedition",
+      "cite": "narvaez-expedition",
+      "text": "The march entered the Apalachee village it had hoped would be rich and found about forty houses, a small outlying place and not the capital."
+    },
+    {
+      "kind": "event",
+      "lon": -84.2,
+      "lat": 30.08,
+      "date": "4 Aug – 22 Sep 1528",
+      "label": "The Bay of Horses: five boats",
+      "source": "Wikipedia, Narváez expedition",
+      "cite": "narvaez-expedition",
+      "text": "The men killed a horse every third day for food and for the hides and materials to build five boats, started 4 August and finished by 20 September. 242 survivors, about fifty to a boat, put to sea on 22 September."
+    }
+  ]
+}

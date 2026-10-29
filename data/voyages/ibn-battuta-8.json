@@ -1,0 +1,26 @@
+{
+  "id": "ibn-battuta-8",
+  "title": "Ibn Battuta: Mali and the Sahara, 1351–54",
+  "short": "Ibn Battuta 1351",
+  "who": ["ibn-battuta"],
+  "when": "1351–1354",
+  "summary": "With the salt caravan from Sijilmasa across the Sahara to Walata and the court of Mansa Sulayman, down the Niger by Timbuktu to Gao, and home by Takedda, the Hoggar and Tuat in winter snow.",
+  "sources": ["ibn-battuta", "gibb-hakluyt", "gibb-ibn-battuta", "orias-ibn-battuta", "rihla"],
+  "legs": [
+    {"sameAs": "ibn-battuta/fez-sijilmasa"},
+    {"sameAs": "ibn-battuta/sijilmasa-walata"},
+    {"sameAs": "ibn-battuta/walata-mali"},
+    {"sameAs": "ibn-battuta/mali-timbuktu"},
+    {"sameAs": "ibn-battuta/timbuktu-gao"},
+    {"sameAs": "ibn-battuta/gao-takedda"},
+    {"sameAs": "ibn-battuta/takedda-sijilmasa"},
+    {"sameAs": "ibn-battuta/sijilmasa-fez"}
+  ],
+  "events": [
+    {"kind": "event", "lon": -4.97, "lat": 23.6, "date": "Mar 1352", "label": "Taghaza, the salt town", "source": "Rihla, Gibb and Beckingham", "cite": "gibb-hakluyt", "text": "Twenty-five days out of Sijilmasa, a village where the houses and the mosque are built of blocks of salt and roofed with camel skins, worked by slaves of the Massufa. He spent ten hard days there, the water brackish.", "who": "Ibn Battuta"},
+    {"kind": "event", "lon": -7.03, "lat": 17.29, "date": "Apr 1352", "label": "Walata", "source": "Rihla, Gibb and Beckingham", "cite": "gibb-hakluyt", "text": "Among the Massufa of Walata no man takes his name from his father but from his mother's brother, and sons do not inherit, only sisters' sons. The women, he says, were more highly regarded than the men, and the men without jealousy, though strict in their prayers.", "who": "Ibn Battuta"},
+    {"kind": "event", "lon": -8.6, "lat": 11.6, "date": "Jul 1352", "label": "Two months ill", "source": "Rihla, Gibb and Beckingham", "cite": "gibb-hakluyt", "text": "Ten days after he reached the capital, all six of his party fell ill from a dish of qafi, something like taro; one died. He fainted at the dawn prayer and was ill for two months.", "who": "Ibn Battuta"},
+    {"kind": "event", "lon": -3.0, "lat": 16.77, "date": "1353", "label": "Timbuktu", "source": "Rihla, Gibb and Beckingham", "cite": "gibb-hakluyt", "text": "Most of the town were Massufa, under a governor called Farba Musa. He saw the grave of Abu Ishaq al-Sahili, the Granadan poet who came back to Mali with Mansa Musa from his pilgrimage and built for him.", "who": "Ibn Battuta"},
+    {"kind": "event", "lon": 6.43, "lat": 17.62, "date": "1353", "label": "Takedda: copper, and the call home", "source": "Rihla, Gibb and Beckingham", "cite": "gibb-hakluyt", "text": "A town of red stone, its water tainted by the copper mines, where slaves smelted copper into rods used as money. Here the sultan of Morocco's order to come home reached him. He left with a big caravan carrying some six hundred enslaved women.", "who": "Ibn Battuta"}
+  ]
+}

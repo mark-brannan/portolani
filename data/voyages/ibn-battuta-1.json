@@ -1,0 +1,22 @@
+{
+  "id": "ibn-battuta-1",
+  "title": "Ibn Battuta: The road to Mecca and the first hajj, 1325–26",
+  "short": "Ibn Battuta 1325",
+  "who": ["ibn-battuta"],
+  "when": "1325–1326",
+  "summary": "A young judge from Tangier rides the coast road to Alexandria and up the Nile, is turned back at the Red Sea, and goes round by Gaza, Jerusalem and Damascus to make his first pilgrimage with the Syrian caravan.",
+  "sources": ["ibn-battuta", "gibb-hakluyt", "gibb-ibn-battuta", "orias-ibn-battuta", "rihla"],
+  "legs": [
+    {"sameAs": "ibn-battuta/tangier-alexandria"},
+    {"sameAs": "ibn-battuta/alexandria-aydhab"},
+    {"sameAs": "ibn-battuta/aydhab-cairo"},
+    {"sameAs": "ibn-battuta/cairo-damascus"},
+    {"sameAs": "ibn-battuta/damascus-mecca"}
+  ],
+  "events": [
+    {"kind": "event", "lon": 13.18, "lat": 32.89, "date": "early 1326", "label": "A marriage on the road", "source": "Rihla, Gibb and Beckingham", "cite": "gibb-hakluyt", "text": "At Sfax he contracted to marry the daughter of a syndic of Tunis, and she was brought to him at Tripoli. A quarrel with her father ended it before Egypt; he married the daughter of a student from Fez instead, and held the caravan a day for the wedding feast.", "who": "Ibn Battuta"},
+    {"kind": "event", "lon": 29.92, "lat": 31.2, "date": "1326", "label": "Alexandria: a holy man's prophecy", "source": "Rihla, Gibb and Beckingham", "cite": "gibb-hakluyt", "text": "Burhan al-Din the Lame, an ascetic he stayed three days with, told him he would visit his brothers Farid al-Din in India, Rukn al-Din in Sind and Burhan al-Din in China. The idea had not crossed his mind, he says, and he went on until he had met all three.", "who": "Ibn Battuta"},
+    {"kind": "event", "lon": 36.33, "lat": 22.33, "date": "1326", "label": "Aydhab: the crossing shut", "source": "Rihla, Gibb and Beckingham", "cite": "gibb-hakluyt", "text": "He meant to cross the Red Sea from Aydhab, but the sultan of the Beja was at war with the Mamluks and had sunk the ships. He sold his provisions, went back down the Nile to Cairo and took the long way round by Syria.", "who": "Ibn Battuta"},
+    {"kind": "event", "lon": 36.3, "lat": 33.51, "date": "Aug 1326", "label": "Damascus in Ramadan", "source": "Rihla, Gibb and Beckingham", "cite": "gibb-hakluyt", "text": "He reached Damascus on 9 August 1326 and stayed through Ramadan before the pilgrim caravan left south for Medina and Mecca.", "who": "Ibn Battuta"}
+  ]
+}

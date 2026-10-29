@@ -1,0 +1,40 @@
+{
+  "id": "ibn-battuta-7",
+  "title": "Ibn Battuta: Home by the Gulf, Syria and the plague, to Granada, 1346–50",
+  "short": "Ibn Battuta 1346",
+  "who": ["ibn-battuta"],
+  "when": "1346–1350",
+  "summary": "From China back by Sumatra and Calicut to Zafar and Hormuz, across Persia to Basra and by Palmyra to Damascus as the Black Death comes, a last hajj, then Tunis, Sardinia and Fez, and a crossing to Granada.",
+  "sources": ["ibn-battuta", "gibb-hakluyt", "gibb-ibn-battuta", "orias-ibn-battuta", "rihla"],
+  "legs": [
+    {"sameAs": "ibn-battuta/quanzhou-calicut"},
+    {"sameAs": "ibn-battuta/calicut-zafar"},
+    {"sameAs": "ibn-battuta/zafar-hormuz"},
+    {"sameAs": "ibn-battuta/hormuz-shiraz"},
+    {"sameAs": "ibn-battuta/shiraz-basra"},
+    {"sameAs": "ibn-battuta/basra-damascus"},
+    {"sameAs": "ibn-battuta/damascus-aleppo"},
+    {"sameAs": "ibn-battuta/damascus-cairo"},
+    {"sameAs": "ibn-battuta/cairo-aydhab"},
+    {"sameAs": "ibn-battuta/aydhab-jeddah"},
+    {"sameAs": "ibn-battuta/jeddah-mecca"},
+    {"sameAs": "ibn-battuta/mecca-cairo"},
+    {"sameAs": "ibn-battuta/cairo-alexandria"},
+    {"sameAs": "ibn-battuta/alexandria-tunis"},
+    {"sameAs": "ibn-battuta/tunis-tenes"},
+    {"sameAs": "ibn-battuta/tenes-fez"},
+    {"sameAs": "ibn-battuta/fez-ceuta"},
+    {"sameAs": "ibn-battuta/ceuta-gibraltar"},
+    {"sameAs": "ibn-battuta/gibraltar-granada"},
+    {"sameAs": "ibn-battuta/granada-ceuta"},
+    {"sameAs": "ibn-battuta/ceuta-marrakesh"},
+    {"sameAs": "ibn-battuta/marrakesh-fez"}
+  ],
+  "events": [
+    {"kind": "event", "lon": 37.16, "lat": 36.2, "date": "1348", "label": "Aleppo: news of the plague", "source": "Rihla, Gibb and Beckingham", "cite": "gibb-hakluyt", "text": "At Aleppo word came that the plague in Gaza was killing more than a thousand a day. He turned south through it; at Cairo, he was told, it had reached twenty-one thousand a day, and all the shaikhs he had known were dead.", "who": "Ibn Battuta"},
+    {"kind": "event", "lon": 8.6, "lat": 39.2, "date": "1349", "label": "Sardinia", "source": "Rihla, Gibb and Beckingham", "cite": "gibb-hakluyt", "text": "The Catalan ship from Tunis called at Sardinia, where they heard the islanders meant to follow them and take them prisoner when they sailed. He vowed two months of fasting if God delivered them.", "who": "Ibn Battuta"},
+    {"kind": "event", "lon": -4.01, "lat": 34.21, "date": "Nov 1349", "label": "Taza: his mother's death", "source": "Rihla, Gibb and Beckingham", "cite": "gibb-hakluyt", "text": "At Taza, a few days from home, he learnt that his mother had died of the plague.", "who": "Ibn Battuta"},
+    {"kind": "event", "lon": -4.62, "lat": 36.54, "date": "1350", "label": "Raiders on the Malaga road", "source": "Rihla, Gibb and Beckingham", "cite": "gibb-hakluyt", "text": "Riding ahead of his companions near the Suhail fort, he found a dead fisherman's basket: four Christian galleys had landed, killed one of twelve horsemen from Marbella and taken ten. He spent the night in the fort with the galleys moored nearby.", "who": "Ibn Battuta"},
+    {"kind": "event", "lon": -3.6, "lat": 37.18, "date": "1350", "label": "Granada: Ibn Juzayy", "source": "Rihla, Gibb and Beckingham", "cite": "gibb-hakluyt", "text": "At Granada he met Ibn Juzayy, the scholar who would later write the Rihla down from his telling at Fez.", "who": "Ibn Battuta"}
+  ]
+}

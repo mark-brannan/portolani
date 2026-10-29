@@ -1,0 +1,23 @@
+{
+  "id": "ibn-battuta-2",
+  "title": "Ibn Battuta: Iraq and Persia, 1326–27",
+  "short": "Ibn Battuta 1326",
+  "who": ["ibn-battuta"],
+  "when": "1326–1327",
+  "summary": "From Mecca with the Iraqi caravan to Najaf, Basra and Shiraz, then Baghdad, a ride north with the court of the last Ilkhan to Tabriz, and a loop up the Tigris to Mardin, before the pilgrim road back to Mecca.",
+  "sources": ["ibn-battuta", "gibb-hakluyt", "gibb-ibn-battuta", "orias-ibn-battuta", "rihla"],
+  "legs": [
+    {"sameAs": "ibn-battuta/mecca-najaf"},
+    {"sameAs": "ibn-battuta/najaf-basra"},
+    {"sameAs": "ibn-battuta/basra-shiraz"},
+    {"sameAs": "ibn-battuta/shiraz-baghdad"},
+    {"sameAs": "ibn-battuta/baghdad-tabriz"},
+    {"sameAs": "ibn-battuta/baghdad-mardin"},
+    {"sameAs": "ibn-battuta/baghdad-mecca"}
+  ],
+  "events": [
+    {"kind": "event", "lon": 44.33, "lat": 32.0, "date": "Dec 1326", "label": "Najaf: the shrine of Ali", "source": "Wikipedia", "cite": "ibn-battuta", "text": "His first stop in Iraq was the tomb of Ali, the Prophet's son-in-law, at Najaf.", "who": "Ibn Battuta"},
+    {"kind": "event", "lon": 44.36, "lat": 33.31, "date": "Jun 1327", "label": "Baghdad: the Ilkhan's camp", "source": "Wikipedia", "cite": "ibn-battuta", "text": "He found Abu Sa'id, the last khan of the united Ilkhanate, breaking camp at Baghdad, and rode north with the court towards Tabriz.", "who": "Ibn Battuta"},
+    {"kind": "event", "lon": 41.88, "lat": 36.32, "date": "1327", "label": "Sinjar: a hermit's coins", "source": "Wikipedia", "cite": "ibn-battuta", "text": "On the way back from Mardin a Kurdish hermit at Sinjar gave him silver coins.", "who": "Ibn Battuta"}
+  ]
+}

@@ -8,7 +8,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
-import { createScene, drawScene, SCALE_NAMES, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, RELIEF_STYLES, PROJECTION_NAMES, W, H } from '../scripts/scene.mjs';
+import { createScene, drawScene, doubtMarks, SCALE_NAMES, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, RELIEF_STYLES, PROJECTION_NAMES, W, H } from '../scripts/scene.mjs';
 import { plantTrees } from '../scripts/trees.mjs';
 import { compare, CHANNEL } from '../scripts/golden-compare.mjs';
 import { coastNames, joinNames } from '../scripts/names.mjs';
@@ -30,10 +30,12 @@ const VIEWS = {
   'world-z2-orthographic': { lon: 10, lat: 30, zoom: 2, projection: 'orthographic' }, // the globe, cut at the horizon
   'world-z2-voyage': { lon: 10, lat: 30, zoom: 2 }, // Magellan's Pacific crossing, cut at the seam
   'world-z2-voyages': { lon: -20, lat: 15, zoom: 2 }, // three voyages at once, each in its own ink, at the bold weight
+  'china-z5-doubt': { lon: 117, lat: 35, zoom: 5 }, // a doubted leg: its rings, and its cloud on empty land (Ibn Battuta to Khanbaliq)
 };
 // settings a golden draws with beyond the defaults; region-z5 is the README's picture, lettered PORTOLANI
 const OPTS = { 'region-z5': { autoTitle: false }, 'world-z2-voyage': { voyages: [{ id: 'magellan' }] },
-  'world-z2-voyages': { voyages: [{ id: 'columbus' }, { id: 'da-gama' }, { id: 'drake' }].map((v) => ({ ...v, width: 3.2 })) } };
+  'world-z2-voyages': { voyages: [{ id: 'columbus' }, { id: 'da-gama' }, { id: 'drake' }].map((v) => ({ ...v, width: 3.2 })) },
+  'china-z5-doubt': { voyages: [{ id: 'ibn-battuta-6' }] } };
 // and its full-size render is kept for the README, so `npm run golden` refreshes both together
 const README_IMAGE = join(ROOT, 'docs', 'readme.jpg');
 
@@ -268,4 +270,19 @@ test('voyages: a list, coloured and sized; an older single voyage; alternatives 
   const bare = { ...scene.voyages[0], voyage: { ...fixture, events: fixture.events.map(({ alternatives, ...e }) => e) } };
   const a = draw(scene), b = draw({ ...scene, voyages: [bare] });
   assert.ok(a.some((v, i) => v !== b[i]), 'a death\'s alternatives drew nothing');
+});
+
+// A doubted leg's cloud stands on its own medium, clear of the names, far enough from the leg for its trail,
+// and a tap on it opens the leg's tile with the doubt (doubtMarks).
+test('a doubted leg has a cloud on empty ground of its medium, and the cloud carries the leg\'s tile', async () => {
+  const { scene, data } = await createScene(env, { view: VIEWS['china-z5-doubt'], voyages: [{ id: 'ibn-battuta-6' }] });
+  const marks = doubtMarks(scene.voyages[0], data.proj, { x0: 0, y0: 0, x1: W, y1: H });
+  assert.equal(marks.length, 1);
+  const [m] = marks;
+  assert.match(m.tile.doubt, /Khanbaliq/);
+  assert.equal(m.tile.title, 'Hangzhou to Quanzhou, by Khanbaliq');
+  assert.ok(scene.field.isLand(m.x, m.y), 'a land leg\'s cloud stands at sea');
+  const d = Math.hypot(m.to[0] - m.x, m.to[1] - m.y);
+  assert.ok(d >= 100 && d <= 400, `the cloud is ${d.toFixed(0)} px from its leg`);
+  assert.ok(scene.names.every((n) => Math.abs(n.box.cx - m.x) > n.box.hw + 40 || Math.abs(n.box.cy - m.y) > n.box.hh + 30), 'the cloud sits on a name');
 });

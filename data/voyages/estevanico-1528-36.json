@@ -1,0 +1,136 @@
+{
+  "id": "estevanico-1528-36",
+  "title": "The four survivors’ walk, Malhado to Mexico City, 1528–36",
+  "short": "Esteban’s walk",
+  "who": [
+    "alvar-nunez-cabeza-de-vaca",
+    "andres-dorantes-de-carranza",
+    "alonso-del-castillo-maldonado",
+    "esteban-de-dorantes"
+  ],
+  "when": "1528–1536",
+  "summary": "About eighty wrecked on the Texas coast; four lived. Esteban, an enslaved man born at Azemmour in Morocco, walked across Texas and northern Mexico with Cabeza de Vaca, Dorantes and Castillo to Mexico City. The line between is drawn dotted: the route is among the most argued in American history.",
+  "sources": [
+    "esteban-de-dorantes",
+    "cabeza-de-vaca",
+    "narvaez-expedition"
+  ],
+  "legs": [
+    {
+      "from": "Malhado, Texas",
+      "to": "Mexico City",
+      "dates": "Nov 1528 – 1536",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "points": [
+        [
+          -95.15,
+          28.8
+        ],
+        [
+          -96.5,
+          28.6
+        ],
+        [
+          -97.0,
+          28.8
+        ],
+        [
+          -98.2,
+          28.1
+        ],
+        [
+          -99.2,
+          26.5
+        ],
+        [
+          -100.3,
+          26.8
+        ],
+        [
+          -101.4,
+          26.9
+        ],
+        [
+          -103.0,
+          28.6
+        ],
+        [
+          -104.4,
+          29.56
+        ],
+        [
+          -106.0,
+          29.9
+        ],
+        [
+          -108.0,
+          30.0
+        ],
+        [
+          -109.6,
+          29.6
+        ],
+        [
+          -110.3,
+          29.4
+        ],
+        [
+          -109.7,
+          28.0
+        ],
+        [
+          -108.4,
+          26.0
+        ],
+        [
+          -107.39,
+          24.8
+        ],
+        [
+          -104.9,
+          21.25
+        ],
+        [
+          -99.13,
+          19.43
+        ]
+      ],
+      "source": "Wikipedia, Cabeza de Vaca and Esteban de Dorantes; the route drawn is one of several",
+      "note": "The way between south Texas and Sonora is disputed: a route through Coahuila and the Rio Grande is one, a route through New Mexico another"
+    }
+  ],
+  "events": [
+    {
+      "kind": "landfall",
+      "lon": -95.15,
+      "lat": 28.8,
+      "date": "Nov 1528",
+      "label": "Malhado: the Isle of Ill Fate",
+      "source": "Wikipedia, Cabeza de Vaca",
+      "cite": "cabeza-de-vaca",
+      "text": "The survivors, about eighty in all, were cast ashore in November 1528 and called the island Malhado, “ill fate”. Historians have usually placed it at Galveston; Follet’s Island is now thought more likely."
+    },
+    {
+      "kind": "event",
+      "lon": -107.39,
+      "lat": 24.8,
+      "date": "1536",
+      "label": "Near Culiacán: other Spaniards",
+      "source": "Wikipedia, Cabeza de Vaca",
+      "cite": "cabeza-de-vaca",
+      "text": "Nearly eight years after the wreck the four met Spaniards near Culiacán. Wikipedia’s pages differ on the month, March in one and July in another."
+    },
+    {
+      "kind": "event",
+      "lon": -99.13,
+      "lat": 19.43,
+      "date": "1536",
+      "label": "Mexico City: the four arrive",
+      "source": "Wikipedia, Esteban de Dorantes",
+      "cite": "esteban-de-dorantes",
+      "text": "They reached Mexico City in 1536, about a thousand miles on from Sinaloa, and reported to Viceroy Mendoza. Dorantes planned to go home to Spain and sold Esteban to the viceroy."
+    }
+  ]
+}

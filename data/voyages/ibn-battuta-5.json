@@ -1,0 +1,24 @@
+{
+  "id": "ibn-battuta-5",
+  "title": "Ibn Battuta: Central Asia and the road to Delhi, 1332–34",
+  "short": "Ibn Battuta 1332",
+  "who": ["ibn-battuta"],
+  "when": "1332–1334",
+  "summary": "From the Volga across the desert to Khwarizm and Bukhara, a winter with the Chagatai khan, over the Oxus to Balkh, round Khorasan, over the Hindu Kush to Kabul, and down to the Indus and Delhi.",
+  "sources": ["ibn-battuta", "gibb-hakluyt", "gibb-ibn-battuta", "orias-ibn-battuta", "rihla"],
+  "legs": [
+    {"sameAs": "ibn-battuta/sarai-urgench"},
+    {"sameAs": "ibn-battuta/urgench-qarshi"},
+    {"sameAs": "ibn-battuta/qarshi-balkh"},
+    {"sameAs": "ibn-battuta/balkh-khorasan-kunduz"},
+    {"sameAs": "ibn-battuta/kunduz-kabul"},
+    {"sameAs": "ibn-battuta/kabul-indus"},
+    {"sameAs": "ibn-battuta/indus-delhi"}
+  ],
+  "events": [
+    {"kind": "event", "lon": 64.42, "lat": 39.77, "date": "1333", "label": "Bukhara in ruins", "source": "ORIAS", "cite": "orias-ibn-battuta", "text": "Most of Bukhara's mosques, colleges and bazaars still lay in ruins from the Mongol sack a century before.", "who": "Ibn Battuta"},
+    {"kind": "event", "lon": 65.79, "lat": 38.86, "date": "winter 1333", "label": "The camp of Tarmashirin", "source": "Rihla, Gibb and Beckingham", "cite": "gibb-hakluyt", "text": "He stayed fifty-four days at the camp of Tarmashirin, the first Chagatai khan of Transoxiana to take up Islam.", "who": "Ibn Battuta"},
+    {"kind": "event", "lon": 69.6, "lat": 35.6, "date": "spring 1333", "label": "The Hindu Kush", "source": "Rihla, Gibb and Beckingham", "cite": "gibb-hakluyt", "text": "He waited for warm weather to cross it, and gives the name as 'the slayer of the Indians', because so many of the enslaved boys and girls brought from India died there of cold and snow.", "who": "Ibn Battuta"},
+    {"kind": "landfall", "lon": 67.9, "lat": 26.6, "date": "12 Sep 1333", "label": "The Indus, on 1 Muharram 734", "source": "Rihla, Gibb and Beckingham", "cite": "gibb-hakluyt", "text": "The Rihla says he came to the Indus on the first day of the year 734, 12 September 1333. It is the one firm date the chronology of his first eight years hangs on, and why Dunn moves the years before it earlier.", "who": "Ibn Battuta"}
+  ]
+}

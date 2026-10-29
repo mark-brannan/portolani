@@ -163,6 +163,7 @@ export function problems(v) {
     need(LINES.includes(leg.line), `${at}: line one of ${LINES}`);
     need(CONFIDENCES.includes(leg.confidence), `${at}: confidence one of ${CONFIDENCES}`);
     need(typeof leg.source === 'string' && leg.source.length, `${at}: a source`);
+    need(leg.doubt === undefined || (typeof leg.doubt === 'string' && leg.doubt.length), `${at}: doubt, when given, a string (who doubts it and why)`);
     need(Array.isArray(leg.points) && leg.points.length >= 2 && leg.points.every((p) => Array.isArray(p) && p.length === 2 && Math.abs(p[0]) <= 180 && Math.abs(p[1]) <= 90), `${at}: points [[lon, lat], ...], two or more`);
   }
   need(Array.isArray(v.events), 'events: an array');
@@ -173,6 +174,7 @@ export function problems(v) {
     need(typeof e.source === 'string' && e.source.length, `event ${i}: a source`);
     if (e.kind === 'death') need(typeof e.who === 'string' && e.who.length, `event ${i}: who died`);
     need(e.text === undefined || (typeof e.text === 'string' && e.text.length), `event ${i}: text, when given, a string`);
+    need(e.doubt === undefined || (typeof e.doubt === 'string' && e.doubt.length), `event ${i}: doubt, when given, a string (who doubts it and why)`);
     need(e.confidence === undefined || MARKER_CONFIDENCES.includes(e.confidence), `event ${i}: confidence, when given, one of ${MARKER_CONFIDENCES}`);
     need(citedOk(e.cited), `event ${i}: cited, when given, { title, url } with an https url, from sources.json`);
     if (e.alternatives !== undefined) {
