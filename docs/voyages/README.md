@@ -27,6 +27,33 @@ person's death in `people.json`, each source in `sources.json`. `readVoyage` in
 `scripts/voyages.mjs` puts a voyage together and `problems` beside it is the schema;
 `node scripts/check-voyages.mjs` checks every record and that each sea leg stays at sea.
 
+A person in `people.json` is keyed by the name a voyage's `who` uses. Only the death is required: a
+`death` marker, or `"unknown"`, or `"living": true` and no death for someone alive (no skull). Every other
+field is optional:
+
+```json
+"Juan Sebastián Elcano": {
+  "id": "juan-sebastian-elcano",
+  "aka": ["Elkano", "del Cano"],
+  "origin": "Basque, from Getaria",
+  "role": ["navigator", "ship-owner"],
+  "voyages": ["magellan"],
+  "bio": "He brought the Victoria home in 1522, the first ship round the world, …",
+  "portrait": { "file": "Juan_Sebastián_Elcano,_anonymous_19th_century_painting.jpg",
+                "kind": "posthumous", "author": "Unknown", "date": "19th century",
+                "licence": "Public domain", "note": "Museo Naval, Madrid; …" },
+  "sources": ["https://en.wikipedia.org/wiki/Juan_Sebasti%C3%A1n_Elcano"],
+  "born": { "lon": -2.2, "lat": 43.3, "date": "1486 or 1487", "place": "Getaria",
+            "label": "Elcano born at Getaria, 1486 or 1487", "text": "His own will names Getaria. …",
+            "known": "inferred", "source": "Wikipedia: Juan Sebastián Elcano",
+            "cite": "juan-sebastian-elcano" },
+  "death": { "…": "as before" }
+}
+```
+
+Only the death is required; `personProblems` in `scripts/voyages.mjs` says the rest. Births and portraits
+are data only for now: nothing draws them.
+
 Two conventions the checks cannot see: where a source says a person died at sea or on the way but gives
 no place, the skull stands at the middle of the leg it must have happened on and the death's `text` says
 so; and an `alternative` is another place of death, never of burial.
