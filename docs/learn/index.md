@@ -8,3 +8,4 @@ The chart borrows from real charts. These pages say what they were and where the
 - [The scale ladder](scale-ladder.md)
 - [Sea monsters and ships](sea-monsters-and-ships.md)
 - [Projections, and what each keeps true](projections.md)
+- [Mali and Mansa Musa](mali-and-mansa-musa.md)
