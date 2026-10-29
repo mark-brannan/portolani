@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { legPath, splitAtSeam, problems, distanceKm, STEP_KM, readVoyage, voyageColours, VOYAGE_PALETTE } from '../scripts/voyages.mjs';
+import { legPath, splitAtSeam, problems, personProblems, distanceKm, STEP_KM, readVoyage, voyageColours, VOYAGE_PALETTE } from '../scripts/voyages.mjs';
 import { viewProjection, voyageMarks, voyageView, W, H } from '../scripts/scene.mjs';
 import { loadLand, checkVoyage, voyageIds, readJSON } from '../scripts/check-voyages.mjs';
 
@@ -134,6 +134,26 @@ test('a person nobody knows the place of death of is "unknown" in people.json an
   assert.deepEqual([v.events, v.deathUnknown, problems(v)], [[], ['A B'], []]);
   set.people = {};
   assert.ok(problems(await readVoyage('x', files(set))).some((p) => p.includes('where A B died')));
+});
+
+test('a person record may be a death alone, or carry a birth, bio and portrait; a living person gets no skull', async () => {
+  const death = { lon: 1, lat: 1, date: 'd', label: 'l', source: 's' };
+  assert.deepEqual(personProblems('A B', { death }), []);
+  assert.deepEqual(personProblems('A B', { death: 'unknown' }), []);
+  const full = {
+    id: 'a-b', aka: ['Ab'], origin: 'o', role: ['r'], voyages: ['x'], bio: 'b', sources: ['https://u'],
+    portrait: { file: 'A_B.jpg', kind: 'life', author: 'a', date: '1600', licence: 'Public domain' },
+    born: { ...death, known: 'speculative', cite: 's1', alternatives: [{ lon: 2, lat: 2, place: 'p', label: 'l', source: 's' }] }, death,
+  };
+  assert.deepEqual(personProblems('A B', full, { sources: { s1: {} }, voyageIds: ['x'] }), []);
+  const bad = personProblems('A B', { ...full, born: { ...death, known: 'certain' }, portrait: { kind: 'life', file: 'https://x/A.jpg' } }, { voyageIds: [] });
+  for (const p of ['born: known', 'portrait: file', 'portrait: a licence', 'x is not a voyage']) assert.ok(bad.some((b) => b.includes(p)), p);
+  assert.ok(personProblems('A B', { living: true, death }).some((p) => p.includes('living')));
+  const set = { x: raw(), ...shared() };
+  set.people['A B'] = { living: true, born: { ...death, known: 'attested' } };
+  assert.deepEqual(personProblems('A B', set.people['A B']), []);
+  const v = await readVoyage('x', files(set));
+  assert.deepEqual([v.events, v.living, problems(v)], [[], ['A B'], []]);
 });
 
 test('a source is an id into sources.json, and one that is not there does not resolve', async () => {

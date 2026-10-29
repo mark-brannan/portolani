@@ -1,4 +1,4 @@
-// Checks the voyage records (problems() and readVoyage() in scripts/voyages.mjs are the schema): that
+// Checks the voyage records (problems(), personProblems() and readVoyage() in scripts/voyages.mjs are the schema): that
 // every reference resolves, the schema, and that every sample of a sea leg
 // (sampled every STEP_KM, 25 km, in scripts/voyages.mjs; a strait needs waypoints that close or closer)
 // is at sea on the Natural Earth 50m coast. Prints each problem with the leg and the point, so a
@@ -8,7 +8,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { geojsonPolygons } from 'coast-wright';
-import { seaSamples, problems, readVoyage as resolve } from './voyages.mjs';
+import { seaSamples, problems, personProblems, readVoyage as resolve } from './voyages.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const GEO = dirname(fileURLToPath(import.meta.resolve('coastlines/data/ne-land-50m')));
@@ -61,5 +61,10 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     console.log(`${id}: ${found.length ? `${found.length} problems` : 'ok'}`);
     for (const f of found) console.log(`  ${f.what}${f.where ? ` at ${f.where.join(', ')}` : ''}`);
   }
+  const people = readJSON('data/voyages/people.json'), sources = readJSON('data/voyages/sources.json'), ids = voyageIds();
+  const who = Object.entries(people).flatMap(([name, p]) => personProblems(name, p, { sources, voyageIds: ids }));
+  bad += who.length;
+  console.log(`people: ${who.length ? `${who.length} problems` : 'ok'}`);
+  for (const w of who) console.log(`  ${w}`);
   process.exitCode = bad ? 1 : 0;
 }

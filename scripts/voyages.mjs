@@ -184,17 +184,17 @@ export function problems(v) {
       }
     }
   }
-  // every named person has a skull, unless people.json says nobody knows where they died
+  // every named person has a skull, unless people.json says nobody knows where they died, or they are living
   for (const w of Array.isArray(v.who) ? v.who : []) {
-    if (!(v.deathUnknown ?? []).includes(w)) need((v.events ?? []).some((e) => e.kind === 'death' && e.who === w), `events: where ${w} died (a death in people.json, or "unknown")`);
+    if (!(v.deathUnknown ?? []).includes(w) && !(v.living ?? []).includes(w)) need((v.events ?? []).some((e) => e.kind === 'death' && e.who === w), `events: where ${w} died (a death in people.json, or "unknown")`);
   }
   return out;
 }
 
 // The one reader of the voyage files: each piece of text lives in one place, and this puts a voyage
 // back together. A person's death is in people.json, keyed by name ({ "death": { lon, lat, date, label,
-// text, source, alternatives } }, or { "death": "unknown" }), and joins every voyage whose `who` names
-// them; a voyage's `sources` are ids into sources.json, and so is an event's or a death's `cite`, the one its
+// text, source, alternatives } }, or { "death": "unknown" }, or `living: true` and no death; personProblems below
+// is the person's schema), and joins every voyage whose `who` names them; a voyage's `sources` are ids into sources.json, and so is an event's or a death's `cite`, the one its
 // tile links to (resolved to `cited`, { title, url }); a leg sailed again on another voyage is
 // { "sameAs": "<voyage id>/<leg id>", "dates" }, the leg's own file giving it an `id`. `readJSON(path)`
 // reads a path under the site root, sync or async. Returns the whole record problems() and the drawing
@@ -218,10 +218,11 @@ export async function readVoyage(id, readJSON) {
     const { id: _, ...shared } = target;
     legs.push({ ...shared, ...(leg.dates !== undefined && { dates: leg.dates }) });
   }
-  const deaths = [], unknown = [];
+  const deaths = [], unknown = [], living = [];
   for (const who of raw.who ?? []) {
     const death = people[who]?.death;
-    if (death === 'unknown') unknown.push(who);
+    if (people[who]?.living === true && death === undefined) living.push(who);
+    else if (death === 'unknown') unknown.push(who);
     else if (death) deaths.push({ kind: 'death', who, ...death });
   }
   const source = (s) => sources[s] ?? fail(`source ${s} is not in sources.json`);
@@ -232,7 +233,62 @@ export async function readVoyage(id, readJSON) {
     if (Array.isArray(e.alternatives)) out.alternatives = e.alternatives.map((a) => linked(a, out.cited));
     return out;
   });
-  return { ...raw, sources: (raw.sources ?? []).map(source), legs, events, ...(unknown.length && { deathUnknown: unknown }) };
+  return { ...raw, sources: (raw.sources ?? []).map(source), legs, events, ...(unknown.length && { deathUnknown: unknown }), ...(living.length && { living }) };
+}
+
+// How well a birth or a death is known: the leg confidences, and one more for what is only a guess.
+export const KNOWN = [...CONFIDENCES, 'speculative'];
+export const PORTRAIT_KINDS = ['life', 'near', 'posthumous', 'imaginary', 'modern', 'none'];
+// Schema check for one people.json record, keyed by `name`: the problems as strings, none when well formed. Only the
+// death (or "unknown", or `living: true` and no death) is required; every other field is checked when it is there, so
+// an older record with a death alone passes. `sources` and `voyageIds`, when given, are what a cite and a voyage id
+// must name.
+export function personProblems(name, p, { sources, voyageIds } = {}) {
+  const out = [];
+  const need = (ok, msg) => { if (!ok) out.push(`${name}: ${msg}`); };
+  const str = (s) => typeof s === 'string' && s.length > 0;
+  const strs = (a) => Array.isArray(a) && a.length > 0 && a.every(str);
+  const place = (m) => m && Number.isFinite(m.lon) && Number.isFinite(m.lat) && Math.abs(m.lon) <= 180 && Math.abs(m.lat) <= 90;
+  if (!p || typeof p !== 'object') return [`${name}: a record`];
+  if (p.living !== undefined) need(p.living === true && p.death === undefined, 'living: true, and then no death');
+  else need(p.death === 'unknown' || (p.death && typeof p.death === 'object'), 'death: { lon, lat, date, label, source }, or "unknown"');
+  if (p.id !== undefined) need(typeof p.id === 'string' && /^[a-z][a-z0-9-]*$/.test(p.id), 'id: lower-case slug');
+  for (const k of ['aka', 'role']) if (p[k] !== undefined) need(strs(p[k]), `${k}: strings`);
+  for (const k of ['origin', 'bio']) if (p[k] !== undefined) need(str(p[k]), `${k}: a string`);
+  if (p.voyages !== undefined) {
+    need(strs(p.voyages), 'voyages: voyage ids');
+    if (voyageIds && Array.isArray(p.voyages)) for (const v of p.voyages) need(voyageIds.includes(v), `voyages: ${v} is not a voyage`);
+  }
+  if (p.sources !== undefined) need(Array.isArray(p.sources) && p.sources.length && p.sources.every((u) => typeof u === 'string' && /^https:\/\//.test(u)), 'sources: https urls');
+  const cite = (m, at) => { if (m.cite !== undefined) need(str(m.cite) && (!sources || m.cite in sources), `${at}: cite ${m.cite} is not in sources.json`); };
+  // a birth is drawn the way a death is: a marker, its tile's label, text and source, and other places beside it
+  const marker = (m, at) => {
+    need(place(m), `${at}: lon and lat`);
+    for (const k of ['date', 'label', 'source']) need(m && str(m[k]), `${at}: a ${k}`);
+    for (const k of ['place', 'text']) if (m?.[k] !== undefined) need(str(m[k]), `${at}: ${k}, when given, a string`);
+    if (m?.known !== undefined) need(KNOWN.includes(m.known), `${at}: known one of ${KNOWN}`);
+    if (m) cite(m, at);
+    if (m?.alternatives !== undefined) {
+      need(Array.isArray(m.alternatives) && m.alternatives.length, `${at}: alternatives: [{ lon, lat, place, label, source }], one or more`);
+      for (const [j, a] of (Array.isArray(m.alternatives) ? m.alternatives : []).entries()) {
+        need(place(a), `${at} alternative ${j}: lon and lat`);
+        for (const k of ['place', 'label', 'source']) need(a && str(a[k]), `${at} alternative ${j}: a ${k}`);
+      }
+    }
+  };
+  if (p.born !== undefined) { marker(p.born, 'born'); need(KNOWN.includes(p.born?.known), `born: known one of ${KNOWN}`); }
+  if (p.death && typeof p.death === 'object' && p.death.known !== undefined) need(KNOWN.includes(p.death.known), `death: known one of ${KNOWN}`);
+  if (p.portrait !== undefined) {
+    const q = p.portrait;
+    need(q && PORTRAIT_KINDS.includes(q.kind), `portrait: kind one of ${PORTRAIT_KINDS}`);
+    // a file is a Commons file name, never a url, credited as its file page asks; kind "none" may still name a stand-in image
+    if (q?.file !== undefined || q?.kind !== 'none') {
+      need(str(q?.file) && !/^https?:|\//.test(q.file), 'portrait: file, a Commons file name');
+      for (const k of ['author', 'date', 'licence']) need(str(q?.[k]), `portrait: a ${k}`);
+    }
+    if (q?.note !== undefined) need(str(q.note), 'portrait: note, when given, a string');
+  }
+  return out;
 }
 
 // The year a voyage set out, read off its `when` ("c. 600 BC", "c. 330–320 BC", "1271–1295"): the first number,
