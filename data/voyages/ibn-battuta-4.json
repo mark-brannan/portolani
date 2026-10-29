@@ -1,0 +1,33 @@
+{
+  "id": "ibn-battuta-4",
+  "title": "Ibn Battuta: Anatolia, the Golden Horde and Constantinople, 1330–32",
+  "short": "Ibn Battuta 1330",
+  "who": ["Ibn Battuta"],
+  "when": "1330–1332",
+  "summary": "By Aydhab, Cairo and Syria to Latakia, by sea to Anatolia and across it to Sinop, over the Black Sea to the Golden Horde, and with the khan's Byzantine wife to Constantinople and back to the Volga. Dunn's dates; the Rihla's are 1332–34.",
+  "sources": ["ibn-battuta", "gibb-hakluyt", "gibb-ibn-battuta", "orias-ibn-battuta", "rihla"],
+  "legs": [
+    {"sameAs": "ibn-battuta/mecca-jeddah"},
+    {"sameAs": "ibn-battuta/jeddah-dawair"},
+    {"sameAs": "ibn-battuta/dawair-aydhab"},
+    {"sameAs": "ibn-battuta/aydhab-cairo"},
+    {"sameAs": "ibn-battuta/cairo-latakia"},
+    {"sameAs": "ibn-battuta/latakia-alanya"},
+    {"sameAs": "ibn-battuta/alanya-milas"},
+    {"sameAs": "ibn-battuta/milas-erzurum-birgi"},
+    {"sameAs": "ibn-battuta/birgi-sinop"},
+    {"sameAs": "ibn-battuta/sinop-kaffa"},
+    {"sameAs": "ibn-battuta/kaffa-azaq"},
+    {"sameAs": "ibn-battuta/azaq-beshtau"},
+    {"sameAs": "ibn-battuta/beshtau-bulghar"},
+    {"sameAs": "ibn-battuta/beshtau-astrakhan"},
+    {"sameAs": "ibn-battuta/astrakhan-constantinople"},
+    {"sameAs": "ibn-battuta/constantinople-sarai"}
+  ],
+  "events": [
+    {"kind": "event", "lon": 30.7, "lat": 36.89, "date": "1330–31", "label": "The Young Akhis", "source": "Rihla, Gibb and Beckingham", "cite": "gibb-hakluyt", "text": "In every Turkmen town of Anatolia he was lodged by the akhis, guilds of young unmarried tradesmen who pooled each day's earnings to feed and house any traveller who came. Nowhere in the world, he says, were men so solicitous for strangers.", "who": "Ibn Battuta"},
+    {"kind": "event", "lon": 29.72, "lat": 40.43, "date": "1331", "label": "Bursa and Iznik: Orhan and Bayalun", "source": "Rihla, Gibb and Beckingham", "cite": "gibb-hakluyt", "text": "At Bursa the sultan was Orhan, son of Osman, the greatest of the Turkmen kings. Iznik, taken from the Byzantines that year, was half empty; his wife Bayalun Khatun lived there in command of its few men.", "who": "Ibn Battuta"},
+    {"kind": "event", "lon": 43.1, "lat": 44.1, "date": "1332", "label": "The khan's moving city", "source": "ORIAS", "cite": "orias-ibn-battuta", "text": "He found the camp of Öz Beg Khan of the Golden Horde on the move near Beshtau, a vast city of waggons travelling with its mosques and markets.", "who": "Ibn Battuta"},
+    {"kind": "event", "lon": 28.98, "lat": 41.01, "date": "autumn 1332", "label": "Constantinople", "source": "Rihla, Gibb and Beckingham", "cite": "gibb-hakluyt", "text": "He came with the khatun Bayalun, the khan's Byzantine wife, going home to her father's court to give birth, and had an audience of the emperor. Dunn's year; the Rihla's is 1334.", "who": "Ibn Battuta"}
+  ]
+}

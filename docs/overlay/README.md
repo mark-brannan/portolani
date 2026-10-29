@@ -154,3 +154,25 @@ Opacity 0.6, the default: Cuba and Hispaniola sit on today's; the chart's Africa
 Opacity 1: the scan alone, the gap between its two worlds open in mid-ocean.
 
 ![The same view with the scan opaque](de-la-cosa-1.jpg)
+
+## Laid by a few landmarks: Aguiar, Agnese, Dourado
+
+Three more charts are sheets with no warped coast fits: each is laid level by a handful of landmarks read off
+the scan by eye (`levelFit` in scripts/build-overlays.mjs: the least-squares scale and centre through them, the
+turn held at 0), so the Level chip is true and the hand does the rest. The landmarks sit beside each chart in
+the build's `CHARTS`.
+
+- **Aguiar, 1492** (Beinecke): Lisbon, Gibraltar, Venice, Jerusalem; its black scan keys `dark`.
+- **Agnese, about 1544** (LoC, map 10): six capes and straits; the oval bends, so rough away from the centre.
+- **Dourado, 1580** (BSB, chart 4): seven points, Lisbon to Iceland; its Iceland lies east of today's.
+
+`npm run render -- --view <lon,lat,zoom> --overlay <id> --out <file>`, at each sheet's own frame.
+
+![Aguiar's chart laid level over the Mediterranean](aguiar-sheet.jpg)
+
+![Agnese's oval world laid over the whole map](agnese-world-sheet.jpg)
+
+![Dourado's North Atlantic laid over it](dourado-atlantic-sheet.jpg)
+
+Nothing marks a note on the scan. Over a noted figure the cursor turns to a pointer, and a click opens its
+tile. The notes ride on the sheet where it lies, dragged, turned or resized. Juan de la Cosa has notes too.
