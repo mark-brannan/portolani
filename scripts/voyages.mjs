@@ -234,3 +234,24 @@ export async function readVoyage(id, readJSON) {
   });
   return { ...raw, sources: (raw.sources ?? []).map(source), legs, events, ...(unknown.length && { deathUnknown: unknown }) };
 }
+
+// The year a voyage set out, read off its `when` ("c. 600 BC", "c. 330–320 BC", "1271–1295"): the first number,
+// negative before Christ; NaN when there is none. The voyages drawer lists them by it, earliest first (#242).
+export function voyageStart(when) {
+  const m = /(\d+)/.exec(String(when ?? ''));
+  if (!m) return NaN;
+  return /\bBCE?\b/.test(when) ? -Number(m[1]) : Number(m[1]);
+}
+// [id, voyage] pairs in the order they set out; the given order breaks ties and puts an undated one last.
+export function chronological(pairs) {
+  const key = (v) => { const y = voyageStart(v?.when); return Number.isNaN(y) ? Infinity : y; };
+  return pairs.map((p, i) => [p, i]).sort(([a, i], [b, j]) => key(a[1]) - key(b[1]) || i - j).map(([p]) => p);
+}
+// Where the drawer's "Read more" goes for a raw voyage file: its first source in sources.json, else the Wikipedia
+// page of the first person on it. { label, url }, or null with neither.
+export function voyageLink(v, sources = {}) {
+  const s = sources[v?.sources?.[0]];
+  if (s?.url) return { label: s.title ?? s.url, url: s.url };
+  const who = v?.who?.[0];
+  return who ? { label: `${who}, Wikipedia`, url: `https://en.wikipedia.org/wiki/${encodeURIComponent(who.replace(/ /g, '_'))}` } : null;
+}
