@@ -276,3 +276,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261029t113101z
 - portolani#270: sheet thumbnails not re-rendered after levelFit scale fix (<0.6%) ([#270](https://github.com/mark-brannan/portolani/pull/270))
+
+### 20261029t113150z
+- world.json credit: the name Commons gives (uploader, or the source museum for Ino) Undo: revert ba785ff's world.json credit lines ([#271](https://github.com/mark-brannan/portolani/pull/271))
