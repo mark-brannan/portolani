@@ -6,9 +6,32 @@
       "source": "https://commons.wikimedia.org/wiki/File:Carta_Marina.jpeg",
       "licence": "Public domain; Olaus Magnus 1539",
       "file": "carta-marina.jpg",
+      "mask": "carta-marina-mask.png",
       "width": 5016,
       "height": 3715,
       "scale": 2,
+      "sheet": {
+        "lon": 9.026178026451579,
+        "lat": 64.41499022429926,
+        "scale": 0.010633175730781484,
+        "turn": 0
+      },
+      "snaps": [
+        {
+          "label": "West",
+          "lon": 6.074804715321541,
+          "lat": 65.87935924280599,
+          "scale": 0.011278189840972843,
+          "turn": -48.35292487330983
+        },
+        {
+          "label": "Baltic",
+          "lon": 11.977551337581614,
+          "lat": 62.86805091662286,
+          "scale": 0.010025050803004353,
+          "turn": -3.054142349418816
+        }
+      ],
       "pieces": [
         {
           "x0": 0,
@@ -38,9 +61,17 @@
       "source": "https://commons.wikimedia.org/wiki/File:Catalan_Atlas_BNF,_sheet_5.jpg",
       "licence": "Public domain; Cresques Abraham, BnF Gallica btv1b55002481n",
       "file": "catalan-atlas.jpg",
+      "mask": "catalan-atlas-mask.png",
       "width": 6454,
       "height": 15862,
       "scale": 4,
+      "sheet": {
+        "lon": -16.31875072352507,
+        "lat": 43.64725918915991,
+        "scale": 0.0033069996187653178,
+        "turn": 0.020209707787023273
+      },
+      "snaps": [],
       "pieces": [
         {
           "x0": 240,
@@ -50,6 +81,102 @@
             "b": -0.000001166464530706482,
             "tx": -26.98118659922556,
             "ty": 74.83956042334086
+          }
+        }
+      ]
+    },
+    {
+      "id": "de-la-cosa",
+      "title": "Map of Juan de la Cosa, 1500",
+      "source": "https://commons.wikimedia.org/wiki/File:1500_map_by_Juan_de_la_Cosa_rotated.jpg",
+      "licence": "Public domain; Juan de la Cosa 1500, Museo Naval, Madrid",
+      "file": "de-la-cosa.jpg",
+      "mask": "de-la-cosa-mask.png",
+      "width": 2127,
+      "height": 1163,
+      "scale": 1,
+      "sheet": {
+        "lon": -14.769128768781052,
+        "lat": 21.113198391433304,
+        "scale": 0.12075566788478133,
+        "turn": -2.1708444644318083
+      },
+      "snaps": [
+        {
+          "label": "New World",
+          "lon": -22.030252171735313,
+          "lat": 19.753529487541506,
+          "scale": 0.07803089636816112,
+          "turn": -7.935273693528174
+        },
+        {
+          "label": "Atlantic",
+          "lon": 0.027034708925157247,
+          "lat": 20.590774869302766,
+          "scale": 0.1307460140534885,
+          "turn": 1.4193155876982098
+        },
+        {
+          "label": "Europe",
+          "lon": -7.50800536582679,
+          "lat": 20.67473967901687,
+          "scale": 0.14031755647655075,
+          "turn": 4.916302627492229
+        }
+      ],
+      "parallels": [
+        {
+          "lat": 23.44,
+          "from": [
+            92,
+            523.4
+          ],
+          "to": [
+            2084,
+            599.8
+          ]
+        },
+        {
+          "lat": 0,
+          "from": [
+            106,
+            724.7
+          ],
+          "to": [
+            1964,
+            794.3
+          ]
+        }
+      ],
+      "pieces": [
+        {
+          "x0": 70,
+          "x1": 880,
+          "fit": {
+            "a": 0.07728372391806891,
+            "b": 0.01077250228008348,
+            "tx": -110.48570263447014,
+            "ty": 53.64082938336412
+          }
+        },
+        {
+          "x0": 880,
+          "x1": 1150,
+          "fit": {
+            "a": 0.13070590070340818,
+            "b": -0.00323847374326442,
+            "tx": -137.09551820744116,
+            "ty": 100.49846565157355
+          }
+        },
+        {
+          "x0": 1150,
+          "x1": 2060,
+          "fit": {
+            "a": 0.13980132142232907,
+            "b": -0.012025272725416588,
+            "tx": -149.194014608644,
+            "ty": 115.22193311027402
           }
         }
       ]

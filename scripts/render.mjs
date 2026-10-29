@@ -2,8 +2,9 @@
 // @napi-rs/canvas. The browser host is public/page.js; both share the scene code.
 //
 // Usage: npm run render   -> out/mockup.png, out/mockup-detail.png
-//        npm run render -- --view 19.7,61.7,5.4[,projection] [--overlay carta-marina[:0.6]] --out docs/x.jpg
-//          -> one view, optionally with a chart's scan laid over it (docs/overlay/README.md), as .png or .jpg
+//        npm run render -- --view 19.7,61.7,5.4[,projection] [--overlay carta-marina[:0.6]] [--sheet lon,lat,scale,turn] --out docs/x.jpg
+//          -> one view, optionally with a chart's sheet laid over it, or its warped pieces at an opacity
+//             (docs/overlay/README.md), as .png or .jpg
 
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
@@ -66,12 +67,13 @@ const env = {
 const arg = (name) => { const i = process.argv.indexOf(`--${name}`); return i > 0 ? process.argv[i + 1] : undefined; };
 if (arg('view')) {
   const [lon, lat, zoom, projection] = arg('view').split(',');
-  const [id, opacity] = (arg('overlay') ?? '').split(':');
-  const one = await createScene(env, { view: { lon: +lon, lat: +lat, zoom: +zoom, projection }, overlay: id ? { id, opacity: opacity ?? 0.6 } : null });
+  const [id, opacity] = (arg('overlay') ?? '').split(':'); // `id` the sheet; `id:<opacity>` the warped pieces at that opacity
+  const at = (arg('sheet') ?? '').split(',').map(Number), sheet = at.length === 4 && at.every(Number.isFinite) ? { lon: at[0], lat: at[1], scale: at[2], turn: at[3] } : null;
+  const one = await createScene(env, { view: { lon: +lon, lat: +lat, zoom: +zoom, projection }, overlay: id ? { id, mode: opacity ? 'pieces' : 'sheet', sheet, opacity: opacity ?? 0.6 } : null });
   const canvas = createCanvas(W, H), out = arg('out') ?? join(ROOT, 'out', 'view.png');
   drawScene(canvas.getContext('2d'), one.scene, one.data, one.bg, { scale: 1, x: 0, y: 0 });
   writeFileSync(out, out.endsWith('.jpg') ? canvas.toBuffer('image/jpeg', 82) : canvas.toBuffer('image/png'));
-  console.log(`${out}: ${W} x ${H}, overlay ${one.scene.overlay ? `${one.scene.overlay.id} at ${one.scene.overlay.opacity}` : 'none'}`);
+  console.log(`${out}: ${W} x ${H}, overlay ${one.scene.overlay ? `${one.scene.overlay.id} ${one.scene.overlay.mode === 'sheet' ? `sheet at ${JSON.stringify(one.scene.overlay.sheet)}` : `pieces at ${one.scene.overlay.opacity}`}` : 'none'}`);
   process.exit(0);
 }
 
