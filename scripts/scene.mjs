@@ -2465,9 +2465,9 @@ function drawScene(g, scene, data, bg, view) {
 
   // the voyages over the ornaments, under the cartouche
   drawVoyages(g, scene.voyages, data.proj, r, viewRect(g, view, 0));
-  drawNotes(g, scene.overlay, data.proj, r);
-  // 9.1 the chart's sheet, whole and opaque, over everything on the map (overlays.mjs)
+  // 9.1 the chart's sheet, whole and opaque, over everything on the map (overlays.mjs), its notes' marks on it
   if (scene.overlay?.mode === 'sheet') drawSheet(g, scene.overlay, data.proj, scene.overlay.sheet);
+  drawNotes(g, scene.overlay, data.proj, r);
 
   // 10. cartouche, lettered in its cleared panel
   const c = scene.cartouche;
@@ -2698,8 +2698,8 @@ function drawAnchored(g, a, bg, view, layers) {
     if (p) drawSprite(g, s.sprite, p[0], p[1], size, { flip: s.flip, rot: s.flip ? -s.tilt : s.tilt, anchor: [0.5, 0.6] });
   }
   drawVoyages(g, a.voyages, proj, { x0: 0, y0: 0, x1: W, y1: H });
+  if (a.overlay?.mode === 'sheet') drawSheet(g, a.overlay, proj, a.overlay.sheet); // the sheet last, as at a stop, its notes' marks on it
   drawNotes(g, a.overlay, proj, { x0: 0, y0: 0, x1: W, y1: H });
-  if (a.overlay?.mode === 'sheet') drawSheet(g, a.overlay, proj, a.overlay.sheet); // the sheet last, as at a stop
   g.restore();
   if (show.kinds.has('cartouche')) drawCartouche(g, a.cartouche, (x0, y0, x1, y1) => g.drawImage(bg, x0, y0, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0));
   drawScaleBar(g, { proj }, bg, { scale: 1, x: 0, y: 0 }, W, H, show.scale, a.scaleSprite, scalePlace(a));

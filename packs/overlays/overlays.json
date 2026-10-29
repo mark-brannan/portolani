@@ -180,6 +180,96 @@
           }
         }
       ]
+    },
+    {
+      "id": "aguiar",
+      "title": "Chart of Jorge de Aguiar, 1492",
+      "source": "https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg",
+      "licence": "Public domain; Jorge de Aguiar 1492, Beinecke Library, Yale",
+      "file": "aguiar.jpg",
+      "mask": "aguiar-mask.png",
+      "width": 5016,
+      "height": 3878,
+      "scale": 2,
+      "sheet": {
+        "lon": 2.6374990097450066,
+        "lat": 31.29066317604374,
+        "scale": 0.01718919224789188,
+        "turn": 0
+      },
+      "snaps": [],
+      "pieces": [
+        {
+          "x0": 0,
+          "x1": 5016,
+          "fit": {
+            "a": 0.01718919224789188,
+            "b": 0,
+            "tx": -40.47299514796783,
+            "ty": 66.30300125412913
+          }
+        }
+      ]
+    },
+    {
+      "id": "agnese-world",
+      "title": "World map of Battista Agnese, about 1544",
+      "source": "https://www.loc.gov/resource/gmdatlases.98687206/?sp=15",
+      "licence": "Public domain (Library of Congress, Parallel Histories); Battista Agnese, portolan atlas, Venice c. 1544, LoC G1001 .A4 1544",
+      "file": "agnese-world.jpg",
+      "mask": "agnese-world-mask.png",
+      "width": 11880,
+      "height": 8614,
+      "scale": 4,
+      "sheet": {
+        "lon": -21.825393691326866,
+        "lat": -6.472246680525988,
+        "scale": 0.04110103040730184,
+        "turn": 0
+      },
+      "snaps": [],
+      "pieces": [
+        {
+          "x0": 0,
+          "x1": 11880,
+          "fit": {
+            "a": 0.04110103040730184,
+            "b": 0,
+            "tx": -265.9655143106998,
+            "ty": 170.53608244847223
+          }
+        }
+      ]
+    },
+    {
+      "id": "dourado-atlantic",
+      "title": "North Atlantic of Fernão Vaz Dourado, 1580",
+      "source": "https://www.digitale-sammlungen.de/en/view/bsb00003364?page=22",
+      "licence": "Public Domain Mark 1.0; Fernão Vaz Dourado, portolan atlas, Goa 1580, Bayerische Staatsbibliothek Cod.icon. 137",
+      "file": "dourado-atlantic.jpg",
+      "mask": "dourado-atlantic-mask.png",
+      "width": 10302,
+      "height": 7611,
+      "scale": 4,
+      "sheet": {
+        "lon": -31.754677206056826,
+        "lat": 55.58159470035391,
+        "scale": 0.011580638472801375,
+        "turn": 0
+      },
+      "snaps": [],
+      "pieces": [
+        {
+          "x0": 0,
+          "x1": 10302,
+          "fit": {
+            "a": 0.011580638472801375,
+            "b": 0,
+            "tx": -91.40654597945671,
+            "ty": 111.2243068712014
+          }
+        }
+      ]
     }
   ]
 }

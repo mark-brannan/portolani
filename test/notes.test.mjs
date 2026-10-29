@@ -6,8 +6,8 @@ import { viewProjection } from '../scripts/scene.mjs';
 
 const { overlays } = JSON.parse(readFileSync(new URL('../packs/overlays/overlays.json', import.meta.url), 'utf8'));
 const overlay = (id) => overlays.find((o) => o.id === id);
-const CHARTS = ['carta-marina', 'catalan-atlas'];
-const VIEWS = { 'carta-marina': { lon: 19.7, lat: 61.7 }, 'catalan-atlas': { lon: -14, lat: 40 } };
+const CHARTS = ['carta-marina', 'catalan-atlas', 'de-la-cosa', 'aguiar', 'agnese-world', 'dourado-atlantic'];
+const VIEWS = Object.fromEntries(overlays.map((o) => [o.id, { lon: o.sheet.lon, lat: o.sheet.lat }])); // each sheet's own centre
 const rect = { x0: -1e6, y0: -1e6, x1: 1e6, y1: 1e6 };
 
 test('each laid chart has its notes, each of the shape in #248, with a source', () => {
@@ -41,4 +41,16 @@ test('a chart\'s marks show while it is laid and not otherwise', () => {
     assert.equal(marks.length, NOTE_SETS[id].notes.length, id);
     assert.ok(marks.every((m) => m.tile.drawn && m.tile.real && m.tile.link), id);
   }
+});
+
+test('the marks ride on the sheet where it lies: dragged, turned or resized, each follows its figure', () => {
+  const o = overlay('aguiar'), n = NOTE_SETS.aguiar.notes[0], proj = viewProjection({ lon: o.sheet.lon, lat: o.sheet.lat, zoom: 3, projection: 'mercator' });
+  const at = (sheet) => noteMarks({ ...o, sheet }, proj, rect).find((m) => m.tile.title === n.title);
+  const home = at(o.sheet), moved = at({ ...o.sheet, lon: o.sheet.lon + 10 });
+  assert.ok(moved.x - home.x > 50 && Math.abs(moved.y - home.y) < 1e-6, 'moved east, the mark goes east with it');
+  const turned = at({ ...o.sheet, turn: 90 }), [cx, cy] = proj.project(o.sheet.lon, o.sheet.lat);
+  assert.ok(Math.abs(Math.hypot(turned.x - cx, turned.y - cy) - Math.hypot(home.x - cx, home.y - cy)) < 1e-6, 'turned, the mark keeps its distance from the centre');
+  const big = at({ ...o.sheet, scale: o.sheet.scale * 2 });
+  assert.ok(Math.abs((big.x - cx) - 2 * (home.x - cx)) < 1e-6, 'twice the scale, twice as far from the centre');
+  assert.equal(noteMarks({ ...o, mode: 'pieces' }, proj, rect).length, NOTE_SETS.aguiar.notes.length, 'the warped pieces still carry the marks');
 });

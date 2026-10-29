@@ -154,3 +154,34 @@ Opacity 0.6, the default: Cuba and Hispaniola sit on today's; the chart's Africa
 Opacity 1: the scan alone, the gap between its two worlds open in mid-ocean.
 
 ![The same view with the scan opaque](de-la-cosa-1.jpg)
+
+## Laid by a few landmarks: Aguiar, Agnese, Dourado
+
+Three more charts are sheets with no warped coast fits: each is laid level by a handful of landmarks read off
+the scan by eye (`levelFit` in scripts/build-overlays.mjs: the least-squares scale and centre through them, the
+turn held at 0), so the Level chip is true and the hand does the rest. The landmarks sit beside each chart in
+the build's `CHARTS`.
+
+- **Jorge de Aguiar, 1492** (Beinecke Library): Lisbon, Gibraltar, Venice, Jerusalem. The scan is on black, so
+  its mask keys the black round the skin as well as light paper (`paperMask`'s `dark`).
+- **Battista Agnese, world map, about 1544** (Library of Congress, map 10 of the atlas): Gibraltar, the Cape of
+  Good Hope, the Strait of Magellan, the Plate, Cape St Augustine, Cape Comorin. The oval projection bends every
+  meridian, so one level similarity is rough away from the centre. The scan is the open book and its page is
+  tinted, so the mask keys only the scanner's edge: the sheet carries the whole page and the binding.
+- **Fernão Vaz Dourado, chart 4, 1580** (Bayerische Staatsbibliothek): Lisbon, Finisterre, Gibraltar, Brest,
+  Ireland, Palamós, Iceland. At this fit the chart's Iceland and Labrador coast lie east of today's.
+
+`npm run render -- --view <lon,lat,zoom> --overlay <id> --out <file>`, at each sheet's own frame.
+
+![Aguiar's chart laid level over the Mediterranean, its notes' marks on it](aguiar-sheet.jpg)
+
+![Agnese's oval world laid over the whole map, its notes' marks on Magellan's track](agnese-world-sheet.jpg)
+
+![Dourado's North Atlantic laid over it, its notes' marks on the arms, Iceland and the Azores](dourado-atlantic-sheet.jpg)
+
+The notes' marks ride on the sheet where it lies, dragged, turned or resized, and are drawn over it (before,
+they were drawn under the opaque sheet and placed by the pieces' fits). Juan de la Cosa now has notes too:
+
+| before: the sheet at its parallels, no marks | after: its seven notes on the figures |
+|---|---|
+| ![before](de-la-cosa-sheet.jpg) | ![after](de-la-cosa-notes.jpg) |
