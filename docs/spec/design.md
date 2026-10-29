@@ -76,7 +76,8 @@ Feature: A chart's scan lies on the map as one sheet
   Scenario: where the sheet lands by default
     Given a chart whose coasts fit the map at more than one scale or turn (de la Cosa's two worlds, the Carta Marina's two halves)
     When the user shows it
-    Then it lies level, at a scale midway between those fits, centred between them: close, not exact
+    Then it lies close, not exact: level, at a scale midway between those fits, centred between them
+    And a chart that draws a parallel (de la Cosa's equator and Tropic of Cancer, "the first depiction of the equator and the tropic of cancer on a nautical chart") is anchored by those lines first: its turn from their tilt, its scale and latitude from their spacing, the coasts only setting the longitude
     And the placements that fit one coast best (the European coast, the New World coast, a third where it is as good) are offered as snaps on the sheet, as many as fit well, not only two
   Scenario: the user moves the sheet
     Given the sheet shown
@@ -101,16 +102,24 @@ Feature: The warped pieces are the alternative, behind a setting
     And other comparison controls (a slider wipe, a swipe) are later work, behind the same setting
 
 Feature: A chart's row in the Charts drawer
-  Source: the user's brief on [#266](https://github.com/mark-brannan/portolani/pull/266), 2026-10-29: "if the only button we need is to jump to the chart's default position and show it, then we really need no button beyond the name of the chart itself"; "put the originating city immediately to the right ... and use it as another button. In that case the button text is still 'Majorca' and no further explanation is needed"; "'Where it was made' is not helpful"; "all charts to have a miniature version of the scan for their icon"
+  Source: the user's brief on [#266](https://github.com/mark-brannan/portolani/pull/266), 2026-10-29, and the follow-up the same day ("row shape: D", "I would like to use the full name for the chart link on our page: 'Map of Juan de la Cosa'"): "if the only button we need is to jump to the chart's default position and show it, then we really need no button beyond the name of the chart itself"; "put the originating city immediately to the right ... and use it as another button. In that case the button text is still 'Majorca' and no further explanation is needed"; "'Where it was made' is not helpful"; "all charts to have a miniature version of the scan for their icon"
   Scenario: the row
     Given the Charts drawer open
     When the user looks at a chart's row
-    Then its icon is a miniature of that chart's own scan, not the drawer's chart glyph
-    And the chart's name is the one button for the chart: it shows the sheet at its default placement and flies to the view that frames the whole sheet; a second click hides it
-    And the city it was made in and its year are one button, "Majorca, 1375", that flies to the city; no "where it was made" wording, no tooltip-only meaning
+    Then its icon is a miniature of that chart's own scan, not the drawer's chart glyph, and that icon is the one button for the chart: it shows the sheet at its default placement and flies to the view that frames the whole sheet; a second click hides it
+    And beside it the chart's full name as text ("Map of Juan de la Cosa"), and under the name the city it was made in and its year, "Majorca, 1375", the city a link that flies to the city; no "where it was made" wording, no tooltip-only meaning
+    And no other control sits in the row; the pieces mode and its opacity live under Settings, Under the hood
     And a chart without a scan yet shows the glyph greyed, its name flying to its sheet view as before
   Scenario: the view that frames the sheet
     Given a chart shown by its name
     When the map flies to it
     Then the zoom shows the whole sheet with a small margin, derived from the sheet's corners, never a hand-typed zoom (de la Cosa lands near zoom 2, not 4.4)
     And a chart brought in later carries its own frame, checked at the chart's size on screen before it ships
+
+Feature: The world turned to the chart (deferred)
+  Source: the user on [#266](https://github.com/mark-brannan/portolani/pull/266), 2026-10-29: "A nice to have, not required for any of the charts would be to rotate the world to match the orientation of the chart, rather than the other way around. De La Cosa's map was originally meant to be read vertical, with the equator running up and down and the new world at the top. You can defer this or add it as a 'future' spec."
+  Scenario: the map takes the chart's orientation
+    Given a chart drawn to be read in another orientation (de la Cosa's, vertical, the New World at the top)
+    When the user asks for the chart's own orientation
+    Then the map turns under the sheet to match it, and the sheet stays as scanned
+    And until this lands, the sheet turns and the map stays north-up
