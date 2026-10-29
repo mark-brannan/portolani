@@ -2,7 +2,7 @@
   "id": "ibn-battuta-5",
   "title": "Ibn Battuta: Central Asia and the road to Delhi, 1332–34",
   "short": "Ibn Battuta 1332",
-  "who": ["Ibn Battuta"],
+  "who": ["ibn-battuta"],
   "when": "1332–1334",
   "summary": "From the Volga across the desert to Khwarizm and Bukhara, a winter with the Chagatai khan, over the Oxus to Balkh, round Khorasan, over the Hindu Kush to Kabul, and down to the Indus and Delhi.",
   "sources": ["ibn-battuta", "gibb-hakluyt", "gibb-ibn-battuta", "orias-ibn-battuta", "rihla"],

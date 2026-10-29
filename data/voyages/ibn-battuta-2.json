@@ -2,7 +2,7 @@
   "id": "ibn-battuta-2",
   "title": "Ibn Battuta: Iraq and Persia, 1326–27",
   "short": "Ibn Battuta 1326",
-  "who": ["Ibn Battuta"],
+  "who": ["ibn-battuta"],
   "when": "1326–1327",
   "summary": "From Mecca with the Iraqi caravan to Najaf, Basra and Shiraz, then Baghdad, a ride north with the court of the last Ilkhan to Tabriz, and a loop up the Tigris to Mardin, before the pilgrim road back to Mecca.",
   "sources": ["ibn-battuta", "gibb-hakluyt", "gibb-ibn-battuta", "orias-ibn-battuta", "rihla"],
