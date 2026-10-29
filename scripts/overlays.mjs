@@ -104,13 +104,13 @@ export function sheetView(overlay, sheet, { w = 1600, h = 1000, pad = 0.08 } = {
   return { lon: (f.lonMin + f.lonMax) / 2, lat: latOf((m0 + m1) / 2), zoom: Math.log2((k * 2 * Math.PI) / 512) };
 }
 
-// The sheet drawn whole, opaque, over whatever the context holds, under its current transform.
+// The sheet drawn whole, opaque (or at `overlay.alpha` while it fades in), over whatever the context holds, under its current transform.
 export function drawSheet(g, overlay, proj, sheet) {
   if (!overlay?.img || !sheet) return;
   const m = sheetTransform(overlay, proj, sheet);
   if (!m) return;
   g.save();
-  g.globalAlpha = 1;
+  g.globalAlpha = overlay.alpha ?? 1;
   g.globalCompositeOperation = 'source-over';
   g.transform(...m);
   g.drawImage(overlay.img, 0, 0);
