@@ -159,5 +159,33 @@
   },
   "Nearchus": {
     "death": "unknown"
+  },
+  "Juan Ponce de León": {
+    "death": {
+      "lon": -82.37,
+      "lat": 23.14,
+      "date": "early July 1521",
+      "label": "Ponce de León died in Cuba, July 1521",
+      "source": "Wikipedia, Juan Ponce de León",
+      "cite": "juan-ponce-de-leon",
+      "text": "A Calusa arrow struck his thigh on his 1521 attempt to colonise south-west Florida, and he died in the first week of July, probably of infection, soon after reaching Cuba; he was buried in Puerto Rico. The page names no town, so the skull stands at Havana, an editorial guess."
+    }
+  },
+  "Juan Garrido": {
+    "death": {
+      "lon": -99.13,
+      "lat": 19.43,
+      "date": "between 1547 and 1550",
+      "label": "Juan Garrido died in Mexico City, between 1547 and 1550",
+      "source": "NPS, Juan Garrido: from legal documents",
+      "cite": "juan-garrido-nps",
+      "text": "NPS dates his death between 1547 and 1550 from legal documents; Wikipedia says about 1550, in New Spain. His burial place is unknown."
+    }
+  },
+  "Isabel de Olvera": {
+    "death": "unknown"
+  },
+  "Pedro Alonso Niño": {
+    "death": "unknown"
   }
 }
