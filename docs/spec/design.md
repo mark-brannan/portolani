@@ -110,7 +110,7 @@ Feature: A chart's row in the Charts drawer
     And a chart whose scan is in the project shows its miniature in full colour, shown or not: no fade, no grey
     And beside the icon the chart's full name as text ("Map of Juan de la Cosa"), and to the right of the name a show/hide icon (an eye and an eye struck through, or an eye with a pirate's patch)
     And under the name the city it was made in and its year, "Majorca, 1375", the city a link that flies to the city; no "where it was made" wording, no tooltip-only meaning
-    And no other control sits in the row but its Chart position chips (below); the pieces mode and its opacity live under Settings, Under the hood
+    And no other control sits in the row but its Chart position chips (below) and, for a chart whose sheet carries notes, its Notes chip ("A chart's notes get their moment", below; the user asked for it on 2026-10-29: "there should be a way to show/hide them or retrigger the animation"); the pieces mode and its opacity live under Settings, Under the hood
     And a chart without a scan yet shows the glyph greyed, its name flying to its sheet view as before
   Scenario: the icon or the name shows the chart; only the eye hides it
     Given a chart in the row
@@ -290,3 +290,74 @@ Feature: The voyage record: people, deaths and what a skull means
     Then the key is a lower-case slug (`ferdinand-magellan`), the one identifier a person has; `name` is a field, `aka` the other spellings
     And a person's pictures are `images`, each a Wikimedia Commons file with its kind, author, date and licence, and the person's `bio` is one paragraph of prose: no `role` or `origin` lists, which were a taxonomy with no vocabulary
     And the same marker shape (place, date, label, text, source, cite, confidence, alternatives) serves a voyage's events and a person's birth and death; a `places.json` for the places written more than once, and one Commons-image shape shared with the charts, are the direction, not yet the record
+
+Feature: A laid sheet and what the user flies to next
+  Source: the user in the session that captured these requirements for [#274](https://github.com/mark-brannan/portolani/pull/274), 2026-10-29: "Similar to how we did for chart origin cities, after showing a chart, and then zooming to other items such as a voyage route, POI, port, etc. it should hide the chart again so that it is not covering the items we want to see. The alternative for voyages would be to try and draw the voyages line over the charts (regardless of placement?) and that is a nice to have (it might be easy to code and similar to how we do the coastline animation)"; asked which: "Try Draw voyages over as the default, but let me also try a UX option for the recommended. I need to see both and play with it." Today the sheet is painted after the voyages (`scripts/scene.mjs` drawScene, step 9.1 after step 8), so a voyage under a sheet is hidden by it.
+  Scenario: a voyage rides over the sheet (the default to try first)
+    Given a chart's sheet shown
+    When the user shows a voyage, by its name or its eye
+    Then the voyage is drawn over the sheet, wherever the sheet lies, in its own colour at its own weight, and the sheet stays shown
+    And the line reads against the scan as it reads against the parchment: a voyage with no colour picked takes a colour from the high-contrast palette while any of it crosses a sheet
+  Scenario: the sheet clears the way instead (a setting, to compare)
+    Given a chart's sheet shown and the setting "Sheet hides for a voyage" on (under Settings, Under the hood, beside the pieces mode)
+    When the user clicks a voyage's name and the map flies to its frame
+    Then if the sheet would cover any of that frame, the sheet hides as it does for the chart's city, and its eye shows it hidden
+    And the eye, or the chart's name or icon, brings it back
+    And both behaviours are built so the user can switch between them on the live page; which stays, and whether the other goes, is the user's call after playing with both
+  Scenario: a point of interest or a port clears the way
+    Given a chart's sheet shown
+    When the user clicks a sight, a port, an anchorage or Go, and the map flies there
+    Then if the sheet would cover the place in that view, the sheet hides, and its eye shows it hidden, as for the chart's city
+    And a fly that lands clear of the sheet leaves it shown
+
+Feature: A chart's notes get their moment, then leave the art alone
+  Source: the user in the session that captured these requirements for [#274](https://github.com/mark-brannan/portolani/pull/274), 2026-10-29: "Previously I asked that when opening chart that we hid the poi indications for that chart. However, it is still hard to find them and the change from 'grab hand' to 'pointing finger' is too subtle of a change to find the points of interest. Instead I want to see animated POI point indications when the chart first pops up, that then fade out and disappear. As an alternative we could have a 'show/hide' specifically for a charts points of interest."; and, shown a pulse and a toggle: "Both, but the dots fade to nothing. I need to see that first and see if it is too subtle. The problem is that we don't want the dots covering the art all of the time. The art should get it's moment to shine. If we need the dots for locating information, then there should be a way to show/hide them or retrigger the animation but not automatically mar the surface of the chart with their blemishes."
+  Scenario: the notes announce themselves as the sheet arrives
+    Given a chart whose sheet carries notes
+    When the sheet fades in, or the user clicks the chart's name or icon with the sheet already shown
+    Then a ring swells out from every note's spot and fades, three times over about four seconds, and the marks fade to nothing with the last ring
+    And nothing stays drawn on the scan afterwards: no dot, no ring, no mark
+    And a click or tap where a note was still opens its tile, and the cursor still changes over it
+    And with reduced motion the marks show whole for the same time, then fade
+  Scenario: the user asks for the notes back
+    Given a chart's sheet shown, its notes faded
+    When the user looks at the chart's row
+    Then a chip beside the position chips reads "Notes · N", N the count, off after the pulse
+    And a click on the chip shows the marks and keeps them until it is clicked again; a second control, or the same chip when the marks are already off, plays the rings again
+    And the marks are never left on by default; the scan is the thing, the marks are a way to find what is on it
+  Scenario: the user sees it first
+    Given the pulse built as above
+    When the PR that builds it hands over
+    Then its body shows the pulse as a short recording or a strip of frames at map size, and the user says whether it reads or is too subtle before the timing is settled
+
+Feature: Points of interest close together
+  Source: the user in the session that captured these requirements for [#274](https://github.com/mark-brannan/portolani/pull/274), 2026-10-29: "There are similar problems as the too-subtle change between grab hand and pointer finger when we have POIs very close to one another. ... a good example is Magellan's death at Mactan being very close to the Massacre at Cebu....there's no indication that more than one POI exists here. Either you accidentally see the tile for the massacre when trying to hover over the X for Magellan's death and are surprised...or you see Magellan's death there at Mactan and think there is no more to the story." The pick, from three drawn: "A: count badge".
+  Scenario: a badge says how many
+    Given two or more points of interest whose marks lie within a tap's reach of each other at the current zoom (Mactan, 27 Apr 1521, and Cebu, 1 May 1521, at the zoom that frames Magellan's voyage)
+    When they are drawn
+    Then the mark nearest the group's centre carries a small badge with the count, in the chart's red, and the others draw as they do today
+    And the badge goes when the zoom separates the marks by more than a tap's reach
+  Scenario: one tap, every story
+    Given a badged mark
+    When the user clicks or taps it, or any mark of its group
+    Then one tile opens, headed by the count and the span of their dates ("2 here · Apr–May 1521"), and lists each story as a line: its mark glyph, its title, its date
+    And a click on a line opens that story's tile in the same place, with a way back to the list
+    And a group of one is today's tile, unchanged
+
+Feature: A grouped list in a drawer opens one group at a time
+  Source: the user in the session that captured these requirements for [#274](https://github.com/mark-brannan/portolani/pull/274), 2026-10-29: "Sections for the famous ports should open one at a time with an animated slide instead of the open/closed triangle."; asked whether the anchorages list too: "All such lists, probably. We're going to have a similar problem (I think) for all of these as we add content: charts (expanding to other cultures and non-portolan style charts), voyages, ports/anchorages/POIs (And these may be reorganized or subdivided again anyway...I'm not sure which menus I really want to organize them under)". Today the Sights and anchorages lists are `details` elements with a disclosure triangle, any number open at once (`public/page.js`, the `SIGHTS` and `ANCHORAGES` groups).
+  Scenario: the groups
+    Given any drawer list arranged in groups (the Sights eras, the anchor's regions and seas, and the charts and voyages once they are grouped)
+    When the user looks at it
+    Then each group is a heading row with no triangle; the heading carries what the group holds (its count, and its span of years where the group is an era)
+    And exactly one group is open; the one the list opens with is the group the data marks open, else the first
+  Scenario: the slide
+    Given one group open
+    When the user clicks a closed group's heading
+    Then the open group slides shut and the clicked one slides open together, in about a quarter of a second, and the list does not jump
+    And a click on the open group's heading does nothing; the list is never left with no group open
+    And with reduced motion the groups swap with no slide
+  Scenario: the groups are the content's, not the control's
+    Given the lists grow and are reorganised, as the user expects
+    When a group is added, split or moved to another drawer
+    Then the one-open rule and the slide follow it with no new code: the behaviour belongs to the grouped list, not to the Sights drawer
