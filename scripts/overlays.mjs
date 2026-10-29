@@ -97,6 +97,13 @@ export function sheetFrame(overlay, sheet) {
   return { lonMin: Math.min(...lons), lonMax: Math.max(...lons), latMin: latOf(Math.min(...mercs)), latMax: latOf(Math.max(...mercs)) };
 }
 
+// The view that shows the whole sheet, in Mercator, with `pad` of its size clear round it: contained, never cropped.
+export function sheetView(overlay, sheet, { w = 1600, h = 1000, pad = 0.08 } = {}) {
+  const f = sheetFrame(overlay, sheet), m0 = mercDeg(f.latMin), m1 = mercDeg(f.latMax);
+  const k = Math.min(w / ((f.lonMax - f.lonMin) * (1 + 2 * pad) * RAD), h / ((m1 - m0) * (1 + 2 * pad) * RAD)); // px per radian
+  return { lon: (f.lonMin + f.lonMax) / 2, lat: latOf((m0 + m1) / 2), zoom: Math.log2((k * 2 * Math.PI) / 512) };
+}
+
 // The sheet drawn whole, opaque, over whatever the context holds, under its current transform.
 export function drawSheet(g, overlay, proj, sheet) {
   if (!overlay?.img || !sheet) return;

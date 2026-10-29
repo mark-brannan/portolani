@@ -87,7 +87,7 @@
     },
     {
       "id": "de-la-cosa",
-      "title": "Juan de la Cosa, 1500",
+      "title": "Map of Juan de la Cosa, 1500",
       "source": "https://commons.wikimedia.org/wiki/File:1500_map_by_Juan_de_la_Cosa_rotated.jpg",
       "licence": "Public domain; Juan de la Cosa 1500, Museo Naval, Madrid",
       "file": "de-la-cosa.jpg",
@@ -97,9 +97,9 @@
       "scale": 1,
       "sheet": {
         "lon": -14.769128768781052,
-        "lat": 20.214816311506222,
-        "scale": 0.10463796972445197,
-        "turn": 0
+        "lat": 21.113198391433304,
+        "scale": 0.12075566788478133,
+        "turn": -2.1708444644318083
       },
       "snaps": [
         {
@@ -122,6 +122,30 @@
           "lat": 20.67473967901687,
           "scale": 0.14031755647655075,
           "turn": 4.916302627492229
+        }
+      ],
+      "parallels": [
+        {
+          "lat": 23.44,
+          "from": [
+            92,
+            523.4
+          ],
+          "to": [
+            2084,
+            599.8
+          ]
+        },
+        {
+          "lat": 0,
+          "from": [
+            106,
+            724.7
+          ],
+          "to": [
+            1964,
+            794.3
+          ]
         }
       ],
       "pieces": [
