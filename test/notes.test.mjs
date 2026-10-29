@@ -55,13 +55,11 @@ test('the marks ride on the sheet where it lies: dragged, turned or resized, eac
   assert.equal(noteMarks({ ...o, mode: 'pieces' }, proj, rect).length, NOTE_SETS.aguiar.notes.length, 'the warped pieces still carry the marks');
 });
 
-// The sheet is opaque, so a second draw after the marks hides them all (a merge left one in, #270)
-test('in drawScene and drawAnchored the sheet is drawn once, before the notes\' marks', () => {
+// The sheet is opaque and drawn once; a second draw hid what lay on it (a merge left one in, #270)
+test('in drawScene and drawAnchored the sheet is drawn once', () => {
   const src = readFileSync(new URL('../scripts/scene.mjs', import.meta.url), 'utf8');
   for (const fn of ['drawScene', 'drawAnchored']) {
     const body = src.slice(src.indexOf(`\nfunction ${fn}(`)).split(/\n}\n/)[0];
-    const sheets = [...body.matchAll(/drawSheet\(/g)].map((m) => m.index), notes = body.indexOf('drawNotes(');
-    assert.equal(sheets.length, 1, `${fn} draws the sheet once`);
-    assert.ok(notes > sheets[0], `${fn} draws the marks over the sheet`);
+    assert.equal([...body.matchAll(/drawSheet\(/g)].length, 1, `${fn} draws the sheet once`);
   }
 });

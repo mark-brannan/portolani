@@ -168,15 +168,11 @@ the build's `CHARTS`.
 
 `npm run render -- --view <lon,lat,zoom> --overlay <id> --out <file>`, at each sheet's own frame.
 
-![Aguiar's chart laid level over the Mediterranean, its notes' marks on it](aguiar-sheet.jpg)
+![Aguiar's chart laid level over the Mediterranean](aguiar-sheet.jpg)
 
-![Agnese's oval world laid over the whole map, its notes' marks on Magellan's track](agnese-world-sheet.jpg)
+![Agnese's oval world laid over the whole map](agnese-world-sheet.jpg)
 
-![Dourado's North Atlantic laid over it, its notes' marks on the arms, Iceland and the Azores](dourado-atlantic-sheet.jpg)
+![Dourado's North Atlantic laid over it](dourado-atlantic-sheet.jpg)
 
-The notes' marks ride on the sheet where it lies, dragged, turned or resized, and are drawn over it (before,
-they were drawn under the opaque sheet and placed by the pieces' fits). Juan de la Cosa now has notes too:
-
-| before: the sheet at its parallels, no marks | after: its seven notes on the figures |
-|---|---|
-| ![before](de-la-cosa-sheet.jpg) | ![after](de-la-cosa-notes.jpg) |
+Nothing marks a note on the scan. Over a noted figure the cursor turns to a pointer, and a click opens its
+tile. The notes ride on the sheet where it lies, dragged, turned or resized. Juan de la Cosa has notes too.
