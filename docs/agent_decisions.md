@@ -300,3 +300,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261029t210256z
 - people.json keyed by slug, name a field, who holds slugs confidence replaces known on born and death, one word with the legs role and origin folded into bio images[] replaces portrait, the #280 shape death: unknown becomes an absent death Pytheas's stand-in manuscript page is kind scene a who that people.json lacks fails the read ([#275](https://github.com/mark-brannan/portolani/pull/275))
+
+### 20261029t212506z
+- A click on the open group's heading does nothing; a grouped list is never left with no group open The group slide takes about a quarter of a second The notes pulse is three rings over about four seconds, then the marks fade to nothing; the hide-for-a-voyage setting sits under Settings, Under the hood A cluster badge counts marks within a tap's reach and sits on the mark nearest the group's centre; the tile heads with the count and the date span ([#274](https://github.com/mark-brannan/portolani/pull/274))
