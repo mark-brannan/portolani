@@ -1511,11 +1511,12 @@ function goTo(target) {
   step(t0);
 }
 
-// My position: asked for on the button in Go; the fix is written into its box as latitude, longitude, Go
-// shuts and the map flies there (at z10 or closer, like any typed position); nothing is drawn there. The box
-// is not focused, so a phone's keyboard does not come up over the map. While the browser looks, the button
-// says so; a refusal or a failure is said in Go itself, where the eye is. The button is not offered where the
-// browser has no geolocation (an insecure page has none).
+// My position: asked for on the button in Go; the fix is written into its box as latitude, longitude, at
+// the precision the browser gives, and the map stays put: Go is what flies there (at z10 or closer, like any
+// typed position) and writes it into the link (docs/decisions.md, 2026-10-29). Nothing is drawn there. The
+// box is not focused, so a phone's keyboard does not come up over the map. While the browser looks, the
+// button says so; a refusal or a failure is said in Go itself, where the eye is. The button is not offered
+// where the browser has no geolocation (an insecure page has none).
 const LOCATE_ZOOM = 10;
 const locate = $('locate'), LOCATE_LABEL = locate.textContent;
 locate.hidden = !navigator.geolocation;
@@ -1526,9 +1527,8 @@ locate.addEventListener('click', () => {
   navigator.geolocation.getCurrentPosition((p) => {
     done();
     const { latitude: lat, longitude: lon } = p.coords;
-    $('coordsText').value = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
-    setDrawer(false);
-    goTo({ lat, lon, zoom: Math.max(view.zoom, LOCATE_ZOOM) });
+    const full = (x) => (/e/.test(String(x)) ? x.toFixed(20).replace(/\.?0+$/, '') : String(x)); // every digit, never exponent form, which the box would not read
+    $('coordsText').value = `${full(lat)}, ${full(lon)}`;
   }, (e) => {
     done();
     const say = e.code === e.PERMISSION_DENIED ? 'My position: not allowed' : `My position: ${e.message}`;
