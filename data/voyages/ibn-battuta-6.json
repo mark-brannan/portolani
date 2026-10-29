@@ -1,0 +1,43 @@
+{
+  "id": "ibn-battuta-6",
+  "title": "Ibn Battuta: The embassy to China, 1341–46",
+  "short": "Ibn Battuta 1341",
+  "who": ["Ibn Battuta"],
+  "when": "1341–1346",
+  "summary": "Sent from Delhi as the sultan's envoy to China, he is captured on the road, loses the embassy's ships at Calicut, stays in the Maldives, climbs Adam's Peak, is wrecked, robbed and twice back in the Maldives, then sails by Bengal and Sumatra to Quanzhou.",
+  "sources": ["ibn-battuta", "gibb-hakluyt", "gibb-ibn-battuta", "orias-ibn-battuta", "rihla"],
+  "legs": [
+    {"sameAs": "ibn-battuta/delhi-cambay"},
+    {"sameAs": "ibn-battuta/cambay-calicut"},
+    {"sameAs": "ibn-battuta/calicut-quilon"},
+    {"sameAs": "ibn-battuta/quilon-hinawr"},
+    {"sameAs": "ibn-battuta/hinawr-sandabur-calicut"},
+    {"sameAs": "ibn-battuta/calicut-maldives"},
+    {"sameAs": "ibn-battuta/maldives-puttalam"},
+    {"sameAs": "ibn-battuta/puttalam-colombo"},
+    {"sameAs": "ibn-battuta/colombo-maabar"},
+    {"sameAs": "ibn-battuta/maabar-madurai"},
+    {"sameAs": "ibn-battuta/fattan-quilon"},
+    {"sameAs": "ibn-battuta/quilon-hinawr"},
+    {"sameAs": "ibn-battuta/hinawr-calicut"},
+    {"sameAs": "ibn-battuta/calicut-maldives"},
+    {"sameAs": "ibn-battuta/maldives-chittagong"},
+    {"sameAs": "ibn-battuta/chittagong-sonargaon"},
+    {"sameAs": "ibn-battuta/sonargaon-meghna"},
+    {"sameAs": "ibn-battuta/meghna-samudra"},
+    {"sameAs": "ibn-battuta/samudra-quanzhou"},
+    {"sameAs": "ibn-battuta/quanzhou-guangzhou"},
+    {"sameAs": "ibn-battuta/quanzhou-hangzhou"},
+    {"sameAs": "ibn-battuta/hangzhou-khanbaliq"}
+  ],
+  "events": [
+    {"kind": "event", "lon": 78.25, "lat": 27.83, "date": "1342", "label": "Taken prisoner near Koil", "source": "Rihla, Gibb and Beckingham", "cite": "gibb-hakluyt", "text": "Riding out after raiders near al-Jalali, east of Koil (Aligarh), he was cut off, captured and stripped, escaped, and wandered for days before a holy man brought him back to the embassy.", "who": "Ibn Battuta"},
+    {"kind": "event", "lon": 75.78, "lat": 11.25, "date": "1342", "label": "Calicut: the embassy's fleet wrecked", "source": "Rihla, Gibb and Beckingham", "cite": "gibb-hakluyt", "text": "A storm wrecked the junk carrying the sultan's gifts for the Mongol emperor in Calicut roads. The smaller ship with his goods and slaves sailed off without him, and he was left alone on the beach with ten dinars and a carpet.", "who": "Ibn Battuta"},
+    {"kind": "event", "lon": 80.5, "lat": 6.81, "date": "1344", "label": "Adam's Peak", "source": "Rihla, Gibb and Beckingham", "cite": "gibb-hakluyt", "text": "From Puttalam he went up Adam's Peak, the mountain of the footprint, with leeches on the road and chains to climb by.", "who": "Ibn Battuta"},
+    {"kind": "event", "lon": 78.12, "lat": 9.93, "date": "1344", "label": "Madurai in a plague", "source": "Rihla, Gibb and Beckingham", "cite": "gibb-hakluyt", "text": "Wrecked on the Coromandel coast, he went to the sultan of Ma'bar's capital at Madurai and found a plague there; those who fell ill died in two or three days.", "who": "Ibn Battuta"},
+    {"kind": "event", "lon": 74.33, "lat": 14.02, "date": "1344", "label": "Robbed by pirates", "source": "Rihla, Gibb and Beckingham", "cite": "gibb-hakluyt", "text": "Off a small island near Hinawr, twelve warships took everything he had, the pearls and rubies the king of Ceylon had given him among them, and set him ashore in his trousers.", "who": "Ibn Battuta"},
+    {"kind": "event", "lon": 73.5, "lat": 4.18, "date": "1345", "label": "The Maldives again: his son", "source": "Rihla, Gibb and Beckingham", "cite": "gibb-hakluyt", "text": "He went back to fetch the son born to the wife he had left, a boy of about two, and stayed five days; he thought it best the child stay with them.", "who": "Ibn Battuta"},
+    {"kind": "event", "lon": 91.87, "lat": 24.89, "date": "1345", "label": "Shah Jalal of Sylhet", "source": "Rihla, Gibb and Beckingham", "cite": "gibb-hakluyt", "text": "He went up into the hills to see the Sufi Shaikh Jalal al-Din, and tells of his miracles.", "who": "Ibn Battuta"},
+    {"kind": "event", "lon": 120.16, "lat": 30.27, "date": "1346", "label": "Hangzhou", "source": "ORIAS", "cite": "orias-ibn-battuta", "text": "The largest city he had seen, where he lodged with an Egyptian Muslim merchant.", "who": "Ibn Battuta"}
+  ]
+}
