@@ -309,3 +309,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261029t212641z
 - exponent-form coordinates written as decimals so the Go box parser reads them ([#282](https://github.com/mark-brannan/portolani/pull/282))
+
+### 20261029t223606z
+- Mansa Musa named in the Atlantic fleet's who, since the data test needs every person on a voyage Undo: drop mansa-musa from mali-atlantic who once a hajj voyage names him ([#284](https://github.com/mark-brannan/portolani/pull/284))
