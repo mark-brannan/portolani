@@ -306,3 +306,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261029t212628z
 - decisions line appended at the bottom per the file's 'newest last by date' header, not the top spec header points at decisions.md and touch.test.mjs instead of 'verified at main' until #282 merges ([#281](https://github.com/mark-brannan/portolani/pull/281))
+
+### 20261029t212641z
+- exponent-form coordinates written as decimals so the Go box parser reads them ([#282](https://github.com/mark-brannan/portolani/pull/282))
