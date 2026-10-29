@@ -412,7 +412,7 @@
       ],
       "why": "A major Venetian chart with the Atlantic islands",
       "status": "link",
-      "reason": "the scan is digitally enhanced and carries a CC BY 3.0 credit beside the PD tag; which governs is the user's call"
+      "reason": "the scan is digitally enhanced and carries a CC BY 3.0 credit beside the PD tag"
     },
     {
       "id": "vesconte-1311",
@@ -426,7 +426,7 @@
       },
       "holder": "Archivio di Stato di Firenze",
       "page": "https://commons.wikimedia.org/wiki/Category:Pietro_Vesconte",
-      "licence": "public domain work; no open scan above 588 x 490",
+      "licence": "public domain work",
       "bbox": [
         -10,
         42,
