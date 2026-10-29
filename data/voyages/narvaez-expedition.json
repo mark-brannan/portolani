@@ -119,6 +119,10 @@
       "confidence": "inferred",
       "points": [
         [
+          -79.9,
+          21.4
+        ],
+        [
           -80.4,
           21.8
         ],
@@ -166,6 +170,10 @@
       "confidence": "conventional",
       "points": [
         [
+          -83.0,
+          27.7
+        ],
+        [
           -82.75,
           27.79
         ],
@@ -199,7 +207,7 @@
         ],
         [
           -84.2,
-          30.08
+          29.9
         ]
       ],
       "source": "Wikipedia, Narváez expedition; the landing site and the road to Apalachee are both disputed"

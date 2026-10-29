@@ -3,7 +3,6 @@
   "title": "The four survivors’ walk, Malhado to Mexico City, 1528–36",
   "short": "Esteban’s walk",
   "who": [
-    "Pánfilo de Narváez",
     "Álvar Núñez Cabeza de Vaca",
     "Andrés Dorantes de Carranza",
     "Alonso del Castillo Maldonado",
@@ -26,8 +25,8 @@
       "confidence": "conventional",
       "points": [
         [
-          -95.1,
-          29.05
+          -95.15,
+          28.8
         ],
         [
           -96.5,
@@ -105,8 +104,8 @@
   "events": [
     {
       "kind": "landfall",
-      "lon": -95.1,
-      "lat": 29.05,
+      "lon": -95.15,
+      "lat": 28.8,
       "date": "Nov 1528",
       "label": "Malhado: the Isle of Ill Fate",
       "source": "Wikipedia, Cabeza de Vaca",
