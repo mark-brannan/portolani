@@ -261,3 +261,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261029t095623z
 - the row's second pass rewrites the row Feature in place Undo: split the row Feature in two ([#259](https://github.com/mark-brannan/portolani/pull/259))
+
+### 20261029t095644z
+- earlier drawer position cited from #206 body as paraphrase Undo: replace with the user's sentence when found ([#259](https://github.com/mark-brannan/portolani/pull/259))
