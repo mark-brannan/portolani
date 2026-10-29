@@ -8,7 +8,9 @@ import { applyFit, sheetTransform } from './overlays.mjs';
 
 // The Carta Marina, 1539 (#248). Quotations from the 1658 English Historia (public domain) are from the EarlyPrint
 // transcription https://distantreader.org/stacks/earlyprint/txt/B26436.txt, spelling kept. at.lonlat is notional
-// for the stockfish, the barnacle geese and the glutton.
+// for the stockfish, the barnacle geese, the glutton, the bears, the falcons, the Kola banner, the reindeer and the
+// skiers. Labels in capitals are read off the scan at low resolution. The Orkney Museums and Bell Library pages
+// (all rights reserved) were read for facts only; no text is taken from them.
 export const CARTA_MARINA_NOTES = [
   {
     id: 'maelstrom', title: 'The maelstrom',
@@ -79,6 +81,125 @@ export const CARTA_MARINA_NOTES = [
     real: 'The wolverine, mostly a scavenger. "Glutton" partly comes from a mishearing of Norwegian fjellfross as German Vielfraß.',
     source: { label: '1658 Historia Book 18 ch. 5; Wolverine', url: 'https://en.wikipedia.org/wiki/Wolverine' },
     at: { px: [2716, 1045], lonlat: [15.0, 67.0] },
+  },
+  {
+    id: 'polar-bears', title: 'Polar bears on the ice',
+    drawn: '"VRSI ALBI": a white bear riding a floe of drift ice east of Iceland.',
+    real: 'Polar bears do not live in Iceland, but they have been recorded visiting when sea ice carries them there.',
+    source: { label: 'Polar bear, Wikipedia', url: 'https://en.wikipedia.org/wiki/Polar_bear' },
+    at: { px: [1295, 610], lonlat: [-15.0, 66.5] },
+  },
+  {
+    id: 'white-falcons', title: 'White falcons',
+    drawn: '"FALCO ALBI": white falcons perched on the north of Iceland.',
+    real: 'Gyrfalcons, the falconer\'s greatest prize: in European falconry they were kept for kings and nobles, and Scandinavian merchants traded them as far as Egypt and Baghdad.',
+    source: { label: 'Gyrfalcon, Wikipedia', url: 'https://en.wikipedia.org/wiki/Gyrfalcon' },
+    at: { px: [900, 230], lonlat: [-19.0, 65.0] },
+  },
+  {
+    id: 'merchants-at-war', title: 'Merchants at war off Iceland',
+    drawn: 'Ships of Hamburg, Bremen, Lübeck, Scotland and England round Iceland, two of them firing on each other.',
+    real: 'English fishermen and German merchants fought over Iceland\'s fish in the 16th century. At Grindavík in 1532, 280 Germans stormed the English ship of John Breye and 15 died; the English were then put out of Iceland.',
+    source: { label: 'Grindavík, Wikipedia', url: 'https://en.wikipedia.org/wiki/Grindav%C3%ADk' },
+    at: { px: [440, 880], lonlat: [-22.43, 63.84] },
+  },
+  {
+    id: 'greenland-edge', title: 'Greenland\'s edge',
+    drawn: 'Two scraps of "Gruntlandia" along the top edge, north of Iceland and reaching toward Norway, with hooded men, upturned boats and floating logs.',
+    real: 'Greenland lies west and north-west of Iceland, not in strips above Norway. Its Norse settlements had vanished by the late 15th century, a generation before the chart.',
+    source: { label: 'Greenland, Wikipedia', url: 'https://en.wikipedia.org/wiki/Greenland' },
+    at: { px: [190, 215], lonlat: [-37.64, 65.61] },
+  },
+  {
+    id: 'hvitsark', title: 'Hvitsark',
+    drawn: '"HVITSARK": a round rock west of Iceland, which the Historia puts half way to Greenland.',
+    real: 'No island or rock lies there. What Olaus meant by the name is not settled.',
+    source: { label: 'Carta marina, Swedish Wikipedia', url: 'https://sv.wikipedia.org/wiki/Carta_marina' },
+    at: { px: [305, 395], lonlat: null },
+  },
+  {
+    id: 'faroese-whale', title: 'Faroese whale feast',
+    drawn: 'A stranded whale east of "FARE", men cutting it up, a piper beside them.',
+    real: 'The Faroese grindadráp drives pilot whales ashore; the islands\' whaling goes back to the Norse settlement in the 9th century, and the drive is still held.',
+    source: { label: 'Grindadráp, Wikipedia', url: 'https://en.wikipedia.org/wiki/Grindadr%C3%A1p' },
+    at: { px: [1203, 1427], lonlat: [-6.80, 62.01] },
+  },
+  {
+    id: 'whale-island', title: 'Whale mistaken for an island',
+    drawn: 'Danish sailors moored on a whale\'s back, a fire lit, the beast about to dive and drown them.',
+    real: 'A tale far older than the chart: the bestiaries\' aspidochelone, and Jasconius, the whale on which St Brendan\'s monks landed and made camp. No whale lies still long enough.',
+    source: { label: 'Aspidochelone, Wikipedia', url: 'https://en.wikipedia.org/wiki/Aspidochelone' },
+    at: { px: [1918, 665], lonlat: null },
+  },
+  {
+    id: 'vardohus', title: 'Vardøhus',
+    drawn: '"VARDAHVS": a walled house on Norway\'s far north-east shore.',
+    real: 'Vardøhus Fortress. Haakon V built the first fort here in 1306, at Norway\'s edge toward Russia; the oldest surviving record of that border dates from 1326.',
+    source: { label: 'Vardøhus Fortress, Wikipedia', url: 'https://en.wikipedia.org/wiki/Vard%C3%B8hus_Fortress' },
+    at: { px: [3094, 267], lonlat: [31.09, 70.37] },
+  },
+  {
+    id: 'sweden-banner', title: '"Thus far the realm of Sweden"',
+    drawn: 'A red banner on a pole on the Arctic shore, "HVCVSQ EXTEDIT REGNV SVECIE": thus far reaches the kingdom of Sweden.',
+    real: 'A claim, not a border. The Kola shore became Russia\'s, and Sweden has no Arctic coast today.',
+    source: { label: 'Kola Peninsula, Wikipedia', url: 'https://en.wikipedia.org/wiki/Kola_Peninsula' },
+    at: { px: [3785, 108], lonlat: [33.0, 69.0] },
+  },
+  {
+    id: 'magnet-island', title: 'The magnet island',
+    drawn: '"INSVLA MAGNETV" under "POLVS ARTICVS": an island at the pole, thought to draw the compass needle.',
+    real: 'No island. The north magnetic pole was first reached in 1831, when James Clark Ross found it at Cape Adelaide on the Boothia Peninsula, far across the Arctic in what is now Canada.',
+    source: { label: 'North magnetic pole, Wikipedia', url: 'https://en.wikipedia.org/wiki/North_magnetic_pole' },
+    at: { px: [4318, 122], lonlat: null },
+  },
+  {
+    id: 'birkarls', title: 'Birkarl traders',
+    drawn: '"DOMVS BIRCARORVM": the houses of the Birkarls in Lapland, their chiefs drawn below.',
+    real: 'The Birkarls, a small group of traders who held the Sámi trade and its taxes from 1328 until the Swedish crown took it over in the 1550s.',
+    source: { label: 'Birkarls, Wikipedia', url: 'https://en.wikipedia.org/wiki/Birkarls' },
+    at: { px: [2465, 825], lonlat: [24.15, 65.85] },
+  },
+  {
+    id: 'tornio-market', title: 'Tornio market',
+    drawn: '"EMPORIVM MAXIMVM" by Tornia, with bales of goods: a great market at the head of the Gulf of Bothnia.',
+    real: 'Tornio, the Birkarls\' base and the trading place of the far north.',
+    source: { label: 'Birkarls, Wikipedia', url: 'https://en.wikipedia.org/wiki/Birkarls' },
+    at: { px: [3634, 749], lonlat: [24.15, 65.85] },
+  },
+  {
+    id: 'reindeer-sleds', title: 'Reindeer sleds',
+    drawn: 'Reindeer drawing a red-wheeled sled in "LAPPIA", and a herd, "GREX RANGIFERORVM".',
+    real: 'Sámi reindeer herding, real then and now: semi-nomadic herders follow the reindeer, which give meat, fur and transport.',
+    source: { label: 'Sámi people, Wikipedia', url: 'https://en.wikipedia.org/wiki/S%C3%A1mi_people' },
+    at: { px: [2861, 815], lonlat: [23.0, 68.5] },
+  },
+  {
+    id: 'skiers', title: 'Skiers of Scricfinnia',
+    drawn: '"SCRICFINNIA", the land of the ski-running Finns, and a hunter on long skis with his bow.',
+    real: 'The Sámi on skis. Norse speakers called them skridfinn, "skiing Finn", and Saxo still wrote of Skrid-Finns.',
+    source: { label: 'Sámi people, Wikipedia', url: 'https://en.wikipedia.org/wiki/S%C3%A1mi_people' },
+    at: { px: [2641, 1168], lonlat: [23.04, 69.0] },
+  },
+  {
+    id: 'two-kings', title: 'War of the two kings',
+    drawn: '"TENGILVS REX SCRICFINOR" on reindeer against "ARGRIMVS REX HELSINGORVM" on horses.',
+    real: 'Legend, from the old histories Olaus drew on, not an event that can be dated or placed.',
+    source: { label: '1658 Historia Book 5 (EarlyPrint)', url: 'https://distantreader.org/stacks/earlyprint/txt/B26436.txt' },
+    at: { px: [3447, 288], lonlat: null },
+  },
+  {
+    id: 'bothnian-seals', title: 'Seal hunting on the Bothnian ice',
+    drawn: 'Men with spears on the floes of "MARE BOTNICV", among seals and bears.',
+    real: 'The Gulf of Bothnia is nearly fresh and freezes over about five months every year, so the ice the hunters stand on is true; the bears out on it are the chart\'s.',
+    source: { label: 'Gulf of Bothnia, Wikipedia', url: 'https://en.wikipedia.org/wiki/Gulf_of_Bothnia' },
+    at: { px: [3547, 951], lonlat: [20.5, 63.0] },
+  },
+  {
+    id: 'kvarken-ice', title: 'Across the Kvarken ice',
+    drawn: '"QVERKEN": horse and reindeer sleds crossing the frozen gulf.',
+    real: 'The Kvarken, the gulf\'s narrows, about 80 km wide. While Finland was part of Sweden the mail was often carried across when the sea froze from coast to coast.',
+    source: { label: 'Kvarken, Wikipedia', url: 'https://en.wikipedia.org/wiki/Kvarken' },
+    at: { px: [3307, 1438], lonlat: [21.0, 63.6] },
   },
 ];
 

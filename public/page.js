@@ -14,9 +14,9 @@
 // selection those chose, and are written back in the new form.
 // For a while, `debug=sheets[,rings]` and `tune=name:value,...` carry the under-the-hood section
 // (docs/atlas/under-the-hood.md), off by default.
-import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, voyageView, readVoyage, sightMarks, SIGHT_TILES, noteMarks } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, voyageView, readVoyage, chronological, voyageLink, sightMarks, SIGHT_TILES, noteMarks } from './scene.mjs';
 import { ORIGINS } from './atlas.mjs';
-import { OVERLAY_DEFAULTS, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet } from './overlays.mjs';
+import { OVERLAY_DEFAULTS, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
 import { fold, bestPlace } from './placename.mjs';
 
@@ -690,8 +690,11 @@ async function render() {
     hideTile(); // its mark may be gone: another voyage, or none
     cancelAnimationFrame(frame); frame = 0; // a moving frame still queued would paint over the scene
     const t1 = performance.now();
+    const fading = scene.overlay?.mode === 'sheet' && scene.overlay.id === fadeIn;
+    if (fading) { fadeIn = null; scene.overlay.alpha = 0; } // drawn without the sheet, which fades in over it
     ctx.clearRect(0, 0, W, H);
     drawScene(ctx, scene, data, bg, { scale: 1, x: 0, y: 0 });
+    if (fading) fadeSheet(scene.overlay, data.proj, me);
     drawSheetHandles(ctx);
     drawCards();
     placeSheetChips();
@@ -746,6 +749,7 @@ function setDrawer(open, byKeyboard = false) { // the drawer to open, or false f
   for (const [b, d] of drawers) { d.classList.toggle('open', d === open); b.setAttribute('aria-expanded', String(d === open)); }
   document.documentElement.classList.toggle('sheet', !!open && !open.classList.contains('menu')); // on a phone the map makes room above the settings or the charts; a lighter drawer sits over its foot
   if (open?.id === 'voyagesPanel') fillVoyages(); // the list loads on the first open
+  if (open?.id === 'chartsDrawer') chartsFresh = !style.overlay;
   if (open) (open.id === 'goPanel' ? (phone.matches ? null : $('coordsText')) : focusable(open))?.focus({ preventScroll: true });
   else if (byKeyboard) drawers.find(([, d]) => d === was)[0].focus({ preventScroll: true });
   else if (was.contains(document.activeElement)) document.activeElement.blur(); // a phone's keyboard goes with it
@@ -1281,18 +1285,20 @@ const CHARTS = [
 ].map(([name, year, v, [city, made], text, overlay = null]) => ({ name, year, view: { ...v, title: name }, made: { ...made, title: city }, text, overlay }));
 const places = []; // every anchorage and point of interest: { name, view }
 
-// The voyages: any number drawn at once, none by default. The list is data/voyages/index.json in its order, each by
-// its title (a phone shows the short name and the years, so none wraps); the titles load on the first open and stay
+// The voyages: any number drawn at once, none by default. The list is data/voyages/index.json in the order the voyages
+// set out (chronological; the file's order breaks ties), each by its title (a phone shows the short name and the years,
+// so none wraps), and under it the voyage's summary and a link to its first source; they load on the first open and stay
 // cached. A click puts a voyage on or off and leaves the drawer open, so several can be chosen; each one on shows its
 // ink beside it, a swatch to pick another. The first chosen is the chart's red, each further one a colour of its
 // own (voyageColours). Above the list, the line weight for them all and Clear. The choice rides in the link
 // (`voyages=`, `voyagewidth=`) like any style.
 let voyageList = null;
 const escapeHTML = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
-const voyageItem = (id, full, brief, when) => `<li><button type="button" role="checkbox" aria-checked="false" data-voyage="${id}">` +
+const voyageItem = (id, full, brief, when, summary, link) => `<li><button type="button" role="checkbox" aria-checked="false" data-voyage="${id}">` +
   `<svg viewBox="0 0 28 18" aria-hidden="true"><path d="M2 9h24" fill="none" stroke-linecap="round"/></svg>` +
   `<span class="full">${full}</span><span class="brief">${brief}${when ? `<span class="when">${when}</span>` : ''}</span></button>` +
-  `<input type="color" data-ink="${id}" aria-label="Colour of ${full}" title="Colour of ${full}" hidden></li>`;
+  `<input type="color" data-ink="${id}" aria-label="Colour of ${full}" title="Colour of ${full}" hidden>` +
+  (summary || link ? `<p class="vsum">${summary}${link ? ` <a href="${escapeHTML(link.url)}" target="_blank" rel="noopener" title="${escapeHTML(link.label)}">Read more</a>` : ''}</p>` : '') + '</li>';
 const voyagesTools = groupTools('Voyages', {
   all: () => style.voyages, dflt: [], get: () => style.voyages,
   set: () => { style = { ...style, voyages: [] }; showVoyage(); writeHash(); render(); },
@@ -1314,10 +1320,11 @@ function showVoyage() {
   for (const f of toolRefreshers) f();
 }
 function fillVoyages() {
-  voyageList ??= env.readJSON('data/voyages/index.json')
-    .then((ids) => Promise.all(ids.map((id) => env.readJSON(`data/voyages/${id}.json`).then((v) => [id, v], () => [id, { title: id, short: id }]))))
-    .then((voyages) => {
-      $('voyageList').innerHTML = voyages.map(([id, v]) => voyageItem(escapeHTML(id), escapeHTML(v.title ?? id), escapeHTML(v.short ?? v.title ?? id), escapeHTML(v.when))).join('');
+  voyageList ??= Promise.all([env.readJSON('data/voyages/index.json'), env.readJSON('data/voyages/sources.json').catch(() => ({}))])
+    .then(([ids, sources]) => Promise.all(ids.map((id) => env.readJSON(`data/voyages/${id}.json`).then((v) => [id, v], () => [id, { title: id, short: id }])))
+      .then((voyages) => [chronological(voyages), sources]))
+    .then(([voyages, sources]) => {
+      $('voyageList').innerHTML = voyages.map(([id, v]) => voyageItem(escapeHTML(id), escapeHTML(v.title ?? id), escapeHTML(v.short ?? v.title ?? id), escapeHTML(v.when), escapeHTML(v.summary), voyageLink(v, sources))).join('');
       showVoyage();
     }, (e) => { voyageList = null; $('voyageList').innerHTML = `<li>${escapeHTML(e.message)}</li>`; });
   showVoyage();
@@ -1360,23 +1367,38 @@ for (const [list, groups] of [[$('anchorages'), ANCHORAGES], [$('sightsList'), S
   list.addEventListener('click', (e) => { const b = e.target.closest('[data-place]'); if (b) { setDrawer(false); goTo(places[b.dataset.place].view); } });
 }
 
-// Each chart a row: its scan as a thumbnail (the drawer's chart glyph, greyed, until it has one), the button that lays
-// the scan over the map as one sheet and flies to frame it, or takes it off again (without a scan, flies to the chart's
-// frame); beside it the chart's name, and under that the city it was made in, a link that flies to the city, with its year.
+// Each chart a row: its scan as a thumbnail (the drawer's chart glyph, greyed, until it has one) and its name, either
+// of which flies to frame the sheet and shows it, never hides it; the eye beside the name shows or hides the sheet and
+// nothing else; under the name the city it was made in, a link that flies there and takes the sheet off if it would
+// cover the city (docs/spec/design.md, "A chart's row in the Charts drawer").
 const skin = $('charts').querySelector('svg').outerHTML;
+const EYE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="slash" d="M4 4l16 16"/></svg>';
 let OVERLAYS = []; // packs/overlays/overlays.json, once loaded
 const ownSheet = (id) => OVERLAYS.find((v) => v.id === id)?.sheet ?? null;
-$('chartList').innerHTML = CHARTS.map(({ name, year, made, text, overlay }, i) => `<li class="chart"${overlay ? ` data-overlay="${overlay}"` : ''}><button type="button" class="thumb none" data-chart="${i}" data-to="view" aria-pressed="false" title="${overlay ? 'Lay the scan over the map' : 'The chart\'s frame'}">${skin}</button><div class="about"><span class="name">${name}</span><span class="where"><button type="button" class="city" data-chart="${i}" data-to="made">${made.title}</button>, ${year}</span>${caption(text)}</div></li>`).join('');
+let chartsFresh = false; // the Charts drawer opened with no sheet shown, and none shown since: the next shown fades in
+let fadeIn = null; // the overlay id whose sheet fades in when next placed
+$('chartList').innerHTML = CHARTS.map(({ name, year, made, text, overlay }, i) => `<li class="chart"${overlay ? ` data-overlay="${overlay}"` : ''}><button type="button" class="thumb none" data-chart="${i}" data-to="view" title="The chart's frame">${skin}</button><div class="about"><span class="head"><button type="button" class="name" data-chart="${i}" data-to="view">${name}</button>${overlay ? `<button type="button" class="eye" data-chart="${i}" data-to="eye" aria-pressed="false" aria-label="Show ${name}" hidden>${EYE}</button>` : ''}</span><span class="where"><button type="button" class="city" data-chart="${i}" data-to="made">${made.title}</button>, ${year}</span>${caption(text)}</div></li>`).join('');
+function setSheet(id, fade = false) {
+  style = { ...style, overlay: id, sheet: null };
+  fadeIn = id && fade ? id : null;
+  if (id) chartsFresh = false;
+  showOverlay(); writeHash(); render();
+}
 $('chartList').addEventListener('click', (e) => {
   const b = e.target.closest('[data-chart]');
   if (!b) return;
-  const chart = CHARTS[b.dataset.chart], o = OVERLAYS.find((v) => v.id === chart.overlay);
+  const chart = CHARTS[b.dataset.chart], o = OVERLAYS.find((v) => v.id === chart.overlay), shown = !!o && style.overlay === o.id;
+  if (b.dataset.to === 'eye') { if (o) setSheet(shown ? null : o.id); return; }
   setDrawer(false);
-  if (b.dataset.to === 'made' || !o) { goTo(chart[b.dataset.to]); return; }
-  const off = style.overlay === o.id;
-  style = { ...style, overlay: off ? null : o.id, sheet: null };
-  showOverlay(); writeHash(); render();
-  if (!off) goTo({ ...sheetView(o, o.sheet, { w: W, h: H }), title: chart.name }); // the whole sheet framed, 8% clear round it
+  if (b.dataset.to === 'made') {
+    const s = sheetShown(), to = clampView({ ...chart.made, projection: view.projection });
+    if (s) { const proj = viewProjection(to), [x, y] = proj.project(to.lon, to.lat); if (onSheet(s, proj, s.sheet, x, y)) setSheet(null); }
+    goTo(to);
+    return;
+  }
+  if (!o) { goTo(chart.view); return; }
+  if (!shown) setSheet(o.id, chartsFresh);
+  goTo({ ...sheetView(o, o.sheet, { w: W, h: H }), title: chart.name }); // the whole sheet framed, 8% clear round it
 });
 env.readJSON('packs/overlays/overlays.json').then(({ overlays }) => {
   OVERLAYS = overlays;
@@ -1386,13 +1408,36 @@ env.readJSON('packs/overlays/overlays.json').then(({ overlays }) => {
     const b = li.querySelector('.thumb');
     b.classList.remove('none');
     b.replaceChildren(Object.assign(document.createElement('img'), { src: `packs/overlays/${o.file}`, alt: '', loading: 'lazy' }));
-    b.title = `${o.title}, public domain: lay the scan over the map`;
+    b.title = `${o.title}, public domain: its frame, with the scan laid over the map`;
+    li.querySelector('.eye').hidden = false;
   }
   if (style.overlay && !overlays.some((o) => o.id === style.overlay)) console.warn(`overlay ${style.overlay}: not on this site`);
   showOverlay();
 }).catch(() => {}); // no overlays on this site: no thumbnails, and the map unchanged
 function showOverlay() {
-  for (const li of $('chartList').children) li.querySelector('.thumb').setAttribute('aria-pressed', String(!!style.overlay && style.overlay === li.dataset.overlay));
+  for (const eye of $('chartList').querySelectorAll('.eye')) {
+    const li = eye.closest('li'), on = !!style.overlay && style.overlay === li.dataset.overlay;
+    eye.setAttribute('aria-pressed', String(on));
+    eye.setAttribute('aria-label', `${on ? 'Hide' : 'Show'} ${li.querySelector('.name').textContent}`);
+  }
+}
+
+// A sheet fading in over the scene just placed: the scene without it is kept, and the sheet drawn over it at a rising
+// alpha; a move or a newer placement ends the fade with the sheet whole.
+function fadeSheet(o, proj, me) {
+  const base = Object.assign(document.createElement('canvas'), { width: W, height: H });
+  base.getContext('2d').drawImage(canvas, 0, 0);
+  const ms = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 500, t0 = performance.now();
+  const step = (now) => {
+    o.alpha = ms ? Math.min(1, (now - t0) / ms) : 1;
+    if (me !== run) { o.alpha = 1; return; }
+    ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(base, 0, 0);
+    drawSheet(ctx, o, proj, o.sheet);
+    drawSheetHandles(ctx);
+    if (o.alpha < 1) requestAnimationFrame(step);
+  };
+  step(t0);
 }
 
 // A typed position: "36.28, -76" or "36.28N 76W" (latitude first).
