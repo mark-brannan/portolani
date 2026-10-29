@@ -1,10 +1,10 @@
 # Remote islands
 
-Feature: Remote islands  (the astrolabe `#sights`, a group heading "Remote islands" in `SIGHTS`, two rows; a top-level group after the era groups) [verified page.js:1147-1150 at acf745d]
+Feature: Remote islands  (the anchor `#anchor`, two rows in the anchor's "Seas and islands" group) [verified page.js:1147-1150 at acf745d]
   Scenario: the group and its rows
-    Given the astrolabe drawer open
-    When the user scrolls to the heading "Remote islands"
-    Then two buttons follow it, "Pukapuka Atoll" and "Pitcairn Islands", each with the line "notes to come" under it until a caption is written
+    Given the anchor drawer open
+    When the user reads "Seas and islands"
+    Then two buttons are among its rows, "Pukapuka Atoll" and "Pitcairn Islands", each with its date beside the name and its flavour text under it
   Scenario: Pukapuka
     Given the chart at the default view
     When the user clicks "Pukapuka Atoll"
