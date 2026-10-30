@@ -316,7 +316,7 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     await page.mouse.move(pointer.x, pointer.y);
     await page.waitForTimeout(700);
     assert.deepEqual(await openGroups(), ['The medieval Indian Ocean and Asia'], 'resting on the second heading did not open it');
-    assert.equal(await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.closest('.fold')?.firstChild.textContent, pointer), 'The age of discovery', 'the slide did not bring the next heading under the pointer');
+    assert.equal(await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.closest('.fold')?.firstChild.textContent, pointer), "Mali's trade network", 'the slide did not bring the next heading under the pointer');
     await page.mouse.move(pointer.x + 1, pointer.y);
     await page.waitForTimeout(700);
     assert.deepEqual(await openGroups(), ['The medieval Indian Ocean and Asia'], 'a heading the slide brought under the pointer opened on a nudge');
