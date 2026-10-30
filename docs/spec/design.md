@@ -81,11 +81,12 @@ Feature: A chart's scan lies on the map as one sheet
     And a chart that draws a parallel (de la Cosa's equator and Tropic of Cancer, "the first depiction of the equator and the tropic of cancer on a nautical chart") is anchored by those lines first: its turn from their tilt, its scale and latitude from their spacing, the coasts only setting the longitude
     And the placements that fit one coast best (the European coast, the New World coast, a third where it is as good) are offered as snaps on the sheet, as many as fit well, not only two
   Scenario: the user moves the sheet
+    Source: the resize handle's glyph, the user on the icons, in the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "charts resize ⤢ or ⛶"
     Given the sheet shown
     When the user drags inside it
     Then it slides up, down, left and right over the map, and the map does not pan
     When the user drags its corner handle
-    Then it turns about its centre (and, while the user is trying it, resizes by its other handle; resizing may go)
+    Then it turns about its centre (and, while the user is trying it, resizes by its other handle, which shows ⤢, ⛶ the alternative; resizing may go)
     And the link keeps the placement
   Scenario: the map's projection changes under the sheet
     Given the sheet shown and the view at some zoom and centre
@@ -503,11 +504,13 @@ Feature: A person's picture card
     Then the text is larger than at the walk
     And the link to Wikimedia Commons is a small link glyph (⎘, ⧉, ⮺ or 🔗), never the sentence "Its page on Wikimedia Commons"
     And on a wide screen a card opens larger by default than at the walk
-  Scenario: the resize and flip icons (waiting on the user, UI walk 2026-10-30)
-    Source: the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "The resize icon and the flip icon are both confusing.  I feel as though the resize should have arrows or something.  Do you have other examples of a resize icon?  The flip does not look like an arrow.  We could instead put an eye icon or some other view icon and then that would make the image larger, near full size or full size...and then there could be a "flip" or "put away" icon after that point."
+  Scenario: look, then flip and put away
+    Source: the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "The resize icon and the flip icon are both confusing.  I feel as though the resize should have arrows or something.  Do you have other examples of a resize icon?  The flip does not look like an arrow.  We could instead put an eye icon or some other view icon and then that would make the image larger, near full size or full size...and then there could be a "flip" or "put away" icon after that point."; and the user on the icons, in the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "pics in drawer for people, "look" 👁"; "then flip ⟳ and put away (But not ⏏ for put away, I'm not sure which one I like)"
     Given a picture card
-    When the user looks for how to enlarge it or turn it over
-    Then which icons, and whether an eye first opens the picture near full size, the flip and put-away after it, is open
+    When the user looks at its front
+    Then it shows 👁, and a click on it enlarges the card to near full size
+    And the enlarged card shows ⟳ to turn it over, and a put-away control whose glyph is open, any but ⏏
+    And the card's old resize icon goes
 
 Feature: People and voyages share one timeline
   Source: the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "I'm now leaning towards both the people drawer and the voyages drawer being timeline format"; "Perhaps the timelines has a way to expand to earlier human history on the left side?"; "I don't exactly like the break I'm seeing from 300 BC to 1000 CE...realizing that it throws off the scale a bit."; and the user's answers in the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30, to the recorder's questions (paraphrase: one timeline, two lanes, the Sights eras as colour bands; Lapita the left edge, an expander for earlier history; fill the gap rather than compress the axis): "voyages section: yes"; "timeline span, yes lapita default with expander"; "BC to CE break, yes fill it"
