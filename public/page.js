@@ -7,20 +7,19 @@
 // a setting left at its default is left out, `sprites` too (keys with the pack shortened, v: s: p:); `mountains` is `ink`
 // or `off` (colour is the default); the hills are the Catalan sprites in `sprites`. `continents` and `regionszoom` are the zoom
 // they are drawn down from (0 off, the top always); `regionset=catalan-1375` letters the regions in a period's names (REGION_SETS), today's by default. `voyages=columbus,drake:1f4e8c` are the voyages in the order chosen, a picked
-// colour after an id, and `voyagewidth=3.2` their line weight. `overlay=carta-marina` lays that chart's scan over the map as one
+// colour after an id, `voyagewidth=3.2` their line weight and `voyagedraw=4` the seconds the pen takes to draw one on. `overlay=carta-marina` lays that chart's scan over the map as one
 // sheet, `sheet=lon,lat,scale,turn` where it was dragged to; `overlaymode=pieces` the warped pieces instead, `overlayopacity=0.6`
 // how strongly (0 to 1); off by default.
 // Older links naming a `rendering` (or `pack`), `rose`, `monster`, `town` and `kinds` open as the
 // selection those chose, and are written back in the new form.
 // For a while, `debug=sheets[,rings]` and `tune=name:value,...` carry the under-the-hood section
 // (docs/atlas/under-the-hood.md), off by default.
-import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, voyageView, readVoyage, chronological, voyageLink, sightMarks, SIGHT_TILES, noteMarks, pickMark, markClear, tileSpot, ZOOM } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, voyageView, readVoyage, chronological, voyageLink, sightMarks, SIGHT_TILES, noteMarks, pickMark, markClear, tileSpot, ZOOM } from './scene.mjs';
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
-import { PEOPLE_FILE, PICTURES_FILE, lifeSpan, timelineAxis, ticksOf, pictureCredit, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, personFrame, personView, capFlyZoom, peopleOf, whoOf, deathOf } from './people.mjs';
+import { PEOPLE_FILE, PICTURES_FILE, lifeSpan, timelineAxis, ticksOf, pictureCredit, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, viewContaining, withPictures, peopleOf, whoOf, deathOf } from './people.mjs';
 import { fold, bestPlace } from './placename.mjs';
-import { parsePosition, formatPosition } from './position.mjs';
 import { planFlight, ease as flyEase, FLY_KNOBS, flyDefaults } from './flight.mjs';
 
 const memo = new Map();
@@ -55,7 +54,7 @@ const canvas = $('map'), ctx = canvas.getContext('2d');
 // cards beside the map, not on the sea.
 const phone = matchMedia('(max-width: 520px)');
 
-const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: 6, regions: 'latin', regionSet: 'today', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyages: [], voyageWidth: VOYAGE_WIDTH, person: null, pictures: null, ...OVERLAY_DEFAULTS, cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER, overlap: DEFAULT_OVERLAP };
+const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: 6, regions: 'latin', regionSet: 'today', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyages: [], voyageWidth: VOYAGE_WIDTH, voyageDraw: VOYAGE_DRAW.seconds, person: null, pictures: null, ...OVERLAY_DEFAULTS, cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER, overlap: DEFAULT_OVERLAP };
 
 // ---------------------------------------------------------------- the sprites on offer
 
@@ -130,6 +129,7 @@ function styleFromHash() {
     tune: parseTune(q.get('tune')).text,
     voyages: voyagesFromHash(q),
     voyageWidth: VOYAGE_WIDTHS.includes(Number(q.get('voyagewidth'))) ? Number(q.get('voyagewidth')) : DEFAULTS.voyageWidth,
+    voyageDraw: voyageDrawSeconds(q.get('voyagedraw')),
     // the person chosen in the People drawer (data/voyages/people.json), which of their pictures lie on the map, and where
     person: /^[a-z][a-z0-9-]*$/.test(q.get('person') ?? '') ? q.get('person') : DEFAULTS.person,
     pictures: parsePictures(q.get('pictures'), DEFAULTS.pictures),
@@ -139,12 +139,13 @@ function styleFromHash() {
   };
 }
 // The voyages drawn, in the order chosen, by their ids (data/voyages/<id>.json; one the site lacks draws nothing),
-// each with the colour picked for it or null for its own (voyageColours): voyages=columbus,drake:1f4e8c. An older
+// each with the colour picked for it or null for its own (voyageColours): voyages=columbus,drake:1f4e8c. A voyage
+// hidden by its eye keeps its place, and so its colour, and ends in ~: voyages=columbus~,drake. An older
 // link's single voyage=<id> is read as a list of one.
 function voyagesFromHash(q) {
   const list = q.has('voyages') ? q.get('voyages').split(',') : q.has('voyage') ? [q.get('voyage')] : [];
   const seen = new Set();
-  return list.map((t) => { const [id, c] = t.split(':'); return { id, colour: /^[0-9a-f]{6}$/i.test(c ?? '') ? `#${c.toLowerCase()}` : null }; })
+  return list.map((t) => { const hidden = t.endsWith('~'), [id, c] = (hidden ? t.slice(0, -1) : t).split(':'); return { id, colour: /^[0-9a-f]{6}$/i.test(c ?? '') ? `#${c.toLowerCase()}` : null, ...(hidden && { hidden: true }) }; })
     .filter((v) => /^[a-z][a-z0-9-]*$/.test(v.id) && v.id !== 'off' && !seen.has(v.id) && seen.add(v.id));
 }
 // The selection a hash names; an older link's rendering, styles and kinds become the selection they drew.
@@ -186,8 +187,9 @@ function writeHash() {
   if (st.overlap !== DEFAULTS.overlap) q.set('overlap', st.overlap);
   if (st.debug) q.set('debug', st.debug);
   if (st.tune) q.set('tune', st.tune);
-  if (st.voyages.length) q.set('voyages', st.voyages.map((v) => (v.colour ? `${v.id}:${v.colour.slice(1)}` : v.id)).join(','));
+  if (st.voyages.length) q.set('voyages', st.voyages.map((v) => (v.colour ? `${v.id}:${v.colour.slice(1)}` : v.id) + (v.hidden ? '~' : '')).join(','));
   if (st.voyageWidth !== DEFAULTS.voyageWidth) q.set('voyagewidth', st.voyageWidth);
+  if (st.voyageDraw !== DEFAULTS.voyageDraw) q.set('voyagedraw', st.voyageDraw);
   if (st.person) {
     q.set('person', st.person);
     const shown = st.pictures && (st.pictures.length ? st.pictures.join(',') : 'none'), at = pictureAtText(st.pictureAt);
@@ -470,6 +472,7 @@ function showStyle() {
   $('townSize').checked = style.townSize !== 'rank';
   showHood();
   $('voyageWidth').value = String(style.voyageWidth);
+  showVoyageDraw();
   showOverlay();
   showUiNow(); showMoods();
   for (const f of toolRefreshers) f();
@@ -496,7 +499,7 @@ function readControls() {
     overlap: $('overlap').value,
     cartouchePos: style.cartouchePos, scalePos: style.scalePos, // set by dragging the cartouche or the scale bar
     ...readHood(),
-    voyages: style.voyages, voyageWidth: Number($('voyageWidth').value), // chosen in the voyages drawer
+    voyages: style.voyages, voyageWidth: Number($('voyageWidth').value), voyageDraw: style.voyageDraw, // chosen in the voyages drawer
     overlay: style.overlay, sheet: style.sheet, // chosen in the charts drawer, and by dragging the sheet
   };
   // hills are the Catalan sprites: the chip selects all of them or none
@@ -726,12 +729,13 @@ async function render() {
       continents: style.continentsZoom > 0, continentsZoom: style.continentsZoom,
       regions: style.regionsZoom > 0 ? style.regions : 'off', regionSet: style.regionSet, regionsZoom: style.regionsZoom,
       sprites: [...selection], kinds, view, pinned: !phone.matches, pinTitle: style.autoTitle ? pinTitle : null,
-      voyages: style.voyages.map((v) => ({ id: v.id, colour: v.colour ?? undefined, width: style.voyageWidth })), person: style.person, voyageWidth: style.voyageWidth,
+      voyages: style.voyages.filter((v) => !v.hidden).map((v) => ({ id: v.id, colour: voyageInk()[v.id], width: style.voyageWidth })), person: style.person, voyageWidth: style.voyageWidth,
       overlay: style.overlay ? { id: style.overlay, mode: style.overlayMode, sheet: style.sheet, opacity: style.overlayOpacity } : null,
       debug: parseDebug(style.debug).debug, tune: parseTune(style.tune).tune,
     });
     if (me !== run) return; // a newer change or a move superseded this one
     ground = { world, coarse, bg, voyages: scene.voyages, anchored: anchorScene(scene, data), overlay: scene.overlay, cards: { cartouche: kinds.includes('cartouche') ? scene.cartouche : null, scaleSprite: scene.scaleSprite, scale: style.scale, bg } };
+    applyReveal();
     if (style.autoTitle) $('title').value = scene.cartouche.title; // the box shows what the cartouche letters, and cannot be edited
     placed = view;
     hideTile(); // its mark may be gone: another voyage, or none
@@ -806,29 +810,6 @@ function setDrawer(open, byKeyboard = false) { // the drawer to open, or false f
 }
 for (const [b, d] of drawers) b.addEventListener('click', (e) => setDrawer(d === openDrawer() ? false : d, e.detail === 0)); // detail 0: Enter or Space
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && openDrawer()) setDrawer(false, true); });
-// Arrow keys inside a chip group. A group is one tab stop (the chosen chip, else the first), the arrows move along it
-// and choose as they go, as a radio group does; Home and End jump to the ends.
-const radiosOf = (g) => [...g.querySelectorAll('[role=radio]')].filter((c) => !c.closest('[hidden]') && c.getClientRects().length);
-const roveGroup = (g) => {
-  const all = [...g.querySelectorAll('[role=radio]')], at = all.find((c) => c.getAttribute('aria-checked') === 'true') ?? radiosOf(g)[0] ?? all[0]; // a closed drawer has no boxes, so rove over all
-  for (const c of all) c.tabIndex = c === at ? 0 : -1;
-};
-const roveAll = () => document.querySelectorAll('[role=radiogroup]').forEach(roveGroup);
-addEventListener('keydown', (e) => {
-  const c = e.target instanceof Element && e.target.closest('[role=radio]'), g = c?.closest('[role=radiogroup]');
-  const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
-  if (!g || e.altKey || e.ctrlKey || e.metaKey || (!step && e.key !== 'Home' && e.key !== 'End')) return;
-  const rs = radiosOf(g), i = rs.indexOf(c);
-  if (i < 0) return;
-  const to = rs[e.key === 'Home' ? 0 : e.key === 'End' ? rs.length - 1 : (i + step + rs.length) % rs.length];
-  e.preventDefault();
-  to.focus({ preventScroll: false });
-  if (to.getAttribute('aria-checked') !== 'true') to.click();
-  roveGroup(g);
-});
-new MutationObserver((ms) => { for (const m of ms) { const g = m.target.closest?.('[role=radiogroup]'); if (g) roveGroup(g); } })
-  .observe(document.body, { attributes: true, attributeFilter: ['aria-checked', 'hidden'], subtree: true, childList: true });
-roveAll();
 const outside = (t) => { const d = openDrawer(); return d && t instanceof Node && !where.contains(t) && !d.contains(t); };
 // On a phone the settings and the charts stay up while the map is moved; a lighter drawer shuts as on a wide screen.
 addEventListener('pointerdown', (e) => { if (outside(e.target) && !(phone.matches && e.target === canvas && !openDrawer().classList.contains('menu'))) setDrawer(false); });
@@ -1260,7 +1241,7 @@ function sightTiles() {
 // point (its whole hit box, drawn nowhere; the smallest where boxes nest); else a note's centre within reach (notes.mjs pickMark)
 function markAt(at) {
   const proj = viewProjection(placed), rect = { x0: 0, y0: 0, x1: W, y1: H };
-  const marks = [...(ground?.voyages ?? []).flatMap((v) => [...voyageMarks(v.voyage, proj, rect), ...doubtMarks(v, proj, rect)]), ...(placed.zoom >= POI_ZOOM ? sightMarks(sightTiles(), proj, rect) : []), ...noteMarks(ground?.overlay, proj, rect)];
+  const marks = [...(ground?.voyages ?? []).filter((v) => !(v.reveal < 1)).flatMap((v) => [...voyageMarks(v.voyage, proj, rect), ...doubtMarks(v, proj, rect)]), ...(placed.zoom >= POI_ZOOM ? sightMarks(sightTiles(), proj, rect) : []), ...noteMarks(ground?.overlay, proj, rect)];
   return pickMark(marks, at, cssPx(TAP_REACH));
 }
 function showTileAt(at) {
@@ -1380,15 +1361,19 @@ const places = []; // every anchorage and point of interest: { name, view }
 // The voyages: any number drawn at once, none by default. The list is data/voyages/index.json in the order the voyages
 // set out (chronological; the file's order breaks ties), each by its title (a phone shows the short name and the years,
 // so none wraps), and under it the voyage's summary and a link to its first source; they load on the first open and stay
-// cached. A click puts a voyage on or off and leaves the drawer open, so several can be chosen; each one on shows its
-// ink beside it, a swatch to pick another. The first chosen is the chart's red, each further one a colour of its
-// own (voyageColours). Above the list, the line weight for them all and Clear. The choice rides in the link
-// (`voyages=`, `voyagewidth=`) like any style.
+// cached. A voyage's row reads: its name, an eye, then its ink, a swatch to pick another. A click on the name shows that
+// voyage alone (every other one is hidden), flies to frame the whole of it and draws its line on from start to end,
+// every time, in the seconds the slider above the list sets. The eye only shows or hides that one voyage, at once: no
+// flight, no pen, no other voyage touched. A voyage hidden keeps its place in the list, so its colour, and every other
+// voyage's, stays put. The first voyage chosen is the chart's red, each further one a colour of its own (voyageColours).
+// Above the list, the line weight for them all, how long the pen takes, and Clear. The choice rides in the link
+// (`voyages=`, `voyagewidth=`, `voyagedraw=`) like any style.
 let voyageList = null;
 const escapeHTML = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
-const voyageItem = (id, full, brief, when, summary, link) => `<li><button type="button" role="checkbox" aria-checked="false" data-voyage="${id}">` +
+const voyageItem = (id, full, brief, when, summary, link) => `<li><button type="button" class="vname" data-voyage="${id}">` +
   `<svg viewBox="0 0 28 18" aria-hidden="true"><path d="M2 9h24" fill="none" stroke-linecap="round"/></svg>` +
   `<span class="full">${full}</span><span class="brief">${brief}${when ? `<span class="when">${when}</span>` : ''}</span></button>` +
+  `<button type="button" class="eye" data-eye="${id}" aria-pressed="false" aria-label="Show ${full}" title="Show or hide ${full}">${EYE}</button>` +
   `<input type="color" data-ink="${id}" aria-label="Colour of ${full}" title="Colour of ${full}" hidden>` +
   (summary || link ? `<p class="vsum">${summary}${link ? ` <a href="${escapeHTML(link.url)}" target="_blank" rel="noopener" title="${escapeHTML(link.label)}">Read more</a>` : ''}</p>` : '') + '</li>';
 const voyagesTools = groupTools('Voyages', {
@@ -1396,18 +1381,22 @@ const voyagesTools = groupTools('Voyages', {
   set: () => { style = { ...style, voyages: [] }; showVoyage(); writeHash(); render(); },
 });
 $('voyagesPanel').querySelector('.vtools').append(...voyagesTools.children);
+// the ink of every voyage in the list, hidden ones too, so a colour stays with its voyage
 const voyageInk = () => voyageColours(style.voyages.map((v) => v.id), Object.fromEntries(style.voyages.filter((v) => v.colour).map((v) => [v.id, v.colour])));
+const isShown = (id) => style.voyages.some((v) => v.id === id && !v.hidden);
 function showVoyage() {
   const ink = voyageInk();
   for (const b of $('voyageList').querySelectorAll('[data-voyage]')) {
-    const id = b.dataset.voyage, on = id in ink, line = b.querySelector('path'), pick = b.parentElement.querySelector('[data-ink]');
-    b.setAttribute('aria-checked', String(on));
-    line.setAttribute('stroke', on ? ink[id] : 'currentColor');
+    const id = b.dataset.voyage, listed = id in ink, on = isShown(id), line = b.querySelector('path'), li = b.parentElement, pick = li.querySelector('[data-ink]'), eye = li.querySelector('[data-eye]');
+    b.dataset.shown = String(on);
+    line.setAttribute('stroke', listed ? ink[id] : 'currentColor');
     line.setAttribute('stroke-width', String(style.voyageWidth));
     line.setAttribute('stroke-dasharray', on ? '' : '2 3');
     line.setAttribute('opacity', on ? '1' : '0.45');
-    pick.hidden = !on;
-    if (on) pick.value = ink[id];
+    eye.setAttribute('aria-pressed', String(on));
+    eye.setAttribute('aria-label', `${on ? 'Hide' : 'Show'} ${b.querySelector('.full').textContent}`);
+    pick.hidden = !listed;
+    if (listed) pick.value = ink[id];
   }
   for (const f of toolRefreshers) f();
 }
@@ -1421,25 +1410,90 @@ function fillVoyages() {
     }, (e) => { voyageList = null; $('voyageList').innerHTML = `<li>${escapeHTML(e.message)}</li>`; });
   showVoyage();
 }
-$('voyageList').addEventListener('click', (e) => {
-  const b = e.target.closest('[data-voyage]');
-  if (!b) return;
-  const id = b.dataset.voyage, on = style.voyages.some((v) => v.id === id);
-  style = { ...style, voyages: on ? style.voyages.filter((v) => v.id !== id) : [...style.voyages, { id, colour: null }] };
+// Sets which voyages are shown: `show` maps an id to true or false; a voyage not yet listed is added at the end, so it
+// takes the next free colour. A hidden voyage keeps its place and its colour.
+function showVoyages(show, others) {
+  const listed = style.voyages.map((v) => v.id), on = (v) => show[v.id] ?? (others ?? !v.hidden);
+  const voyages = [...style.voyages, ...Object.keys(show).filter((id) => show[id] && !listed.includes(id)).map((id) => ({ id, colour: null }))];
+  style = { ...style, voyages: voyages.map((v) => (on(v) ? { id: v.id, colour: v.colour } : { id: v.id, colour: v.colour, hidden: true })) };
   showVoyage(); writeHash(); render();
-  if (!on) flyToVoyage(id);
+}
+$('voyageList').addEventListener('click', async (e) => {
+  const eye = e.target.closest('[data-eye]'), b = e.target.closest('[data-voyage]');
+  if (eye) { // that voyage on or off, whole and at once; the view stays, and no other voyage changes
+    const id = eye.dataset.eye;
+    if (voyagePen?.id === id) voyagePen = null; // a pen on it stops, and the line is whole
+    showVoyages({ [id]: !isShown(id) });
+    return;
+  }
+  if (!b) return;
+  const id = b.dataset.voyage; // that voyage alone, framed, and drawn on afresh
+  showVoyages({ [id]: true }, false);
+  await flyToVoyage(id);
+  if (isShown(id) && !matchMedia('(prefers-reduced-motion: reduce)').matches) drawOn(id);
 });
+// How long the pen takes, in seconds (VOYAGE_DRAW): the slider shows the seconds, and its sample line draws itself on
+// at that pace each time it moves. Only the next drawing changes, so nothing is drawn again.
+// (showStyle calls showVoyageDraw before this part of the page has run, so it reads the slider afresh)
+function showVoyageDraw() {
+  const slider = Object.assign($('voyageDraw'), { min: VOYAGE_DRAW.min, max: VOYAGE_DRAW.max, step: VOYAGE_DRAW.step });
+  slider.value = String(style.voyageDraw);
+  $('voyageDrawOut').textContent = `${style.voyageDraw} s`;
+}
+const drawSlider = $('voyageDraw');
+let drawSample = null; // the sample line's animation, cancelled when the slider moves again
+drawSlider.addEventListener('input', () => {
+  style = { ...style, voyageDraw: voyageDrawSeconds(drawSlider.value) };
+  showVoyageDraw(); writeHash();
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    drawSample?.cancel();
+    drawSample = $('voyageDrawSample').querySelector('path').animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: style.voyageDraw * 1000, easing: 'linear' });
+  }
+});
+// The pen: a voyage's line drawn from its start to its end in the slider's seconds, at an even pace along the line,
+// once the flight has landed and the scene is placed. The scene's voyage carries `reveal` (scene.mjs drawTrack).
+let voyagePen = null; // { id, since, t0, ms } while drawing, t0 null until it starts
+function applyReveal() {
+  const v = voyagePen && ground?.voyages?.find((x) => x.id === voyagePen.id);
+  if (v) v.reveal = voyagePen.t0 == null ? 0 : Math.min(1, (performance.now() - voyagePen.t0) / voyagePen.ms);
+}
+// every exit of the pen puts the line back whole: a pen that stops early must not leave its voyage hidden
+function finish(id) { const v = ground?.voyages?.find((x) => x.id === id); if (v && 'reveal' in v) { delete v.reveal; render(); } }
+function drawOn(id) {
+  const pen = voyagePen = { id, since: performance.now(), t0: null, ms: style.voyageDraw * 1000 };
+  const step = () => {
+    if (voyagePen !== pen) { // stopped by a later click, which repaints: a new pen (on the same voyage it owns the reveal), or an eye's render
+      const v = ground?.voyages?.find((x) => x.id === id);
+      if (v && voyagePen?.id !== id) delete v.reveal;
+      return;
+    }
+    const now = performance.now();
+    if (pen.t0 == null) { // wait for the flight to land and the scene to be placed with this voyage in it
+      if (flightTo == null && placed === view && ground?.voyages?.some((x) => x.id === id)) pen.t0 = now;
+      else if (now - pen.since > 10000) { voyagePen = null; return finish(id); }
+    }
+    applyReveal();
+    if (pen.t0 != null) paintFrame('drawing');
+    if (pen.t0 != null && now - pen.t0 >= pen.ms) {
+      voyagePen = null;
+      finish(id); // whole again, with its marks
+      return;
+    }
+    requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
 let picking = 0; // a colour is placed when the picker pauses, not on every step of a drag across it
-// A voyage put on stays where it is if any of its track is in view, or where the view is flying to; if none is, the
-// map flies to fit the whole track. The last choice that needs a flight wins, however the loads interleave: an earlier
-// choice is dropped only once a later one has flown, not because a later one stayed put or was taken off.
+// The name always flies to the view that frames the whole voyage, whatever of it is in view. The last choice wins,
+// however the loads interleave: an earlier choice is dropped only once a later one has flown. Resolves once the
+// flight is under way (or not needed).
 let voyageChosen = 0, voyageFlown = 0;
 function flyToVoyage(id) {
   const n = ++voyageChosen;
-  readVoyage(id, (path) => env.readJSON(path)).then((v) => {
-    if (n < voyageFlown || !style.voyages.some((s) => s.id === id)) return;
-    const to = voyageView(v, flightTo ?? view);
-    if (to) { voyageFlown = n; goTo(capFlyZoom(to)); } // never closer than z6
+  return readVoyage(id, (path) => env.readJSON(path)).then((v) => {
+    if (n < voyageFlown || !isShown(id)) return;
+    const to = voyageView(v, flightTo ?? view, undefined, true);
+    if (to) { voyageFlown = n; goTo(to); }
   }, () => {});
 }
 $('voyageList').addEventListener('input', (e) => {
@@ -1545,7 +1599,9 @@ function setOnTable(i, on) {
 // The box round a person's birth, death and voyages, once per person
 async function frameOfPerson(p) {
   if (!frames.has(p.id)) {
-    frames.set(p.id, personFrame(p, peopleData.voyages));
+    const vs = p.voyages.map((id) => peopleData.voyages[id]);
+    const pts = [p.born && [p.born.lon, p.born.lat], deathOf(p) && [deathOf(p).lon, deathOf(p).lat], ...vs.flatMap((v) => (v?.legs ?? []).flatMap((l) => l.points))].filter(Boolean);
+    frames.set(p.id, frameOf(pts.map(([lon, lat]) => [((((lon + 180) % 360) + 360) % 360) - 180, lat])));
   }
   return frames.get(p.id);
 }
@@ -1598,21 +1654,13 @@ async function preparePictures() {
   }));
   return fresh && id === style.person;
 }
-// The canvas px at the map's right edge that the open drawer covers, so a flight can frame what it shows in the rest;
-// none on a phone, where a drawer is a sheet over the map's foot
-function drawerClear() {
-  const d = openDrawer();
-  if (!d || phone.matches) return 0;
-  const m = $('map').getBoundingClientRect(), r = d.getBoundingClientRect();
-  return Math.max(0, Math.min(W, (m.right - r.left) * (W / m.width)));
-}
 // The map flies to frame the person and their pictures, wherever it is
 async function flyToPerson(id) {
   await loadPeople();
   const p = personOf(id), f = p && await frameOfPerson(p);
   if (!f || style.person !== id) return;
   const shown = picturesOf(p).filter((i) => pictureSize(p, i)), sizes = shown.map((i) => pictureSize(p, i));
-  goTo(personView(p, f, sizes, { w: W, h: H, right: drawerClear() })); // never closer than z6 (capFlyZoom)
+  goTo(viewContaining(withPictures(f, picturePlaces(f, sizes), sizes), { w: W, h: H }));
 }
 // A picture on the canvas: its centre, its turn in radians and its size in canvas px, before any deal or flip. The one
 // looked at lies upright in the middle of the part of the canvas in the window, as large as LOOK_FILL of that allows
@@ -1959,6 +2007,14 @@ if (ALL_CHARTS) env.readJSON('data/charts/world.json').then(({ charts }) => {
 }).catch((e) => console.warn(`other traditions: ${e.message}`));
 $('worldList').addEventListener('click', (e) => { const b = e.target.closest('[data-page]'); if (b) window.open(b.dataset.page, '_blank', 'noopener'); });
 
+// A typed position: "36.28, -76" or "36.28N 76W" (latitude first).
+function parseLatLon(text) {
+  const m = /^\s*(-?\d+(?:\.\d+)?)\s*°?\s*([NSns])?\s*[,;\s]\s*(-?\d+(?:\.\d+)?)\s*°?\s*([EWew])?\s*$/.exec(text);
+  if (!m || (m[2] && m[1].startsWith('-')) || (m[4] && m[3].startsWith('-'))) return null; // a sign and a letter disagree, or say it twice
+  const lat = Number(m[1]) * (/s/i.test(m[2] ?? '') ? -1 : 1), lon = Number(m[3]) * (/w/i.test(m[4] ?? '') ? -1 : 1);
+  return Math.abs(lat) <= 90 && Math.abs(lon) <= 180 ? { lon, lat } : null;
+}
+
 // A typed place: the chart views, then the points of interest, then Natural Earth's towns (placename.mjs matches them).
 async function findPlace(text) {
   if (!fold(text)) return null;
@@ -1975,24 +2031,14 @@ async function findPlace(text) {
 
 $('coords').addEventListener('submit', async (e) => {
   e.preventDefault();
-  const text = $('coordsText').value, p = parsePosition(text), miss = $('goMiss');
+  const text = $('coordsText').value, p = parseLatLon(text), miss = $('goMiss');
   const target = p ? { ...p, zoom: Math.max(view.zoom, LOCATE_ZOOM) } : await findPlace(text);
   if (!target) { miss.textContent = text.trim() ? `No place called “${text.trim()}”` : 'Type a place, or latitude, longitude: 36.28, -76'; miss.hidden = false; return; } // the text before the unhide, so a reader announces it
   miss.hidden = true;
   setDrawer(false);
   goTo(target);
 });
-// Under the box, once it holds a position: the same position in the three forms Go reads. Nothing when the
-// box is empty or is not a position (a place name, a half-typed number).
-const goForms = $('goForms');
-function showForms() {
-  const p = parsePosition($('coordsText').value);
-  goForms.hidden = !p;
-  if (!p) return;
-  const f = formatPosition(p);
-  goForms.innerHTML = `<dt>decimal</dt><dd>${f.dd}</dd><dt>minutes</dt><dd>${f.dm}</dd><dt>seconds</dt><dd>${f.dms}</dd>`;
-}
-$('coordsText').addEventListener('input', () => { $('goMiss').hidden = true; showForms(); });
+$('coordsText').addEventListener('input', () => { $('goMiss').hidden = true; });
 
 // A flight from the view to a target, in the view's projection (flight.mjs plans it: a near place eased to
 // straight, a far one in an arc out, across and down, longer for longer): the ground is drawn on the way as
@@ -2067,7 +2113,6 @@ locate.addEventListener('click', () => {
     const { latitude: lat, longitude: lon } = p.coords;
     const full = (x) => (/e/.test(String(x)) ? x.toFixed(20).replace(/\.?0+$/, '') : String(x)); // every digit, never exponent form, which the box would not read
     $('coordsText').value = `${full(lat)}, ${full(lon)}`;
-    showForms();
   }, (e) => {
     done();
     const say = e.code === e.PERMISSION_DENIED ? 'My position: not allowed' : `My position: ${e.message}`;
