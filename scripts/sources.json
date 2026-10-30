@@ -113,7 +113,8 @@
       "page": "https://commons.wikimedia.org/wiki/File:Catalan_Atlas_BNF,_sheet_5.jpg",
       "sha256": "248a7cd681508828238a1e90fef6d2fd34b4a67f84666c0aac622d26e4f79f53",
       "rights": "Public domain; Cresques Abraham, BnF Gallica btv1b55002481n",
-      "note": "(6,454 × 15,862)"
+      "note": "(6,454 × 15,862)",
+      "colorspace": "Adobe98"
     },
     {
       "id": "catalan-atlas-6",
@@ -204,15 +205,6 @@
       "sha256": "351eaa95cbccb142fde0c81d01e40b5253d1f6342f72dab5713e0b0b3ebcb57f",
       "rights": "Public domain; Jorge de Aguiar 1492, Beinecke Library, Yale",
       "note": "(711 × 720)"
-    },
-    {
-      "id": "catalan",
-      "file": "Compass_rose_from_Catalan_Atlas_(1375).jpg",
-      "url": "https://upload.wikimedia.org/wikipedia/commons/d/d2/Compass_rose_from_Catalan_Atlas_%281375%29.jpg",
-      "page": "https://commons.wikimedia.org/wiki/File:Compass_rose_from_Catalan_Atlas_(1375).jpg",
-      "sha256": "70e2fda664c73171c12e8085b152edef8f760d3ecd938f89020baf68c30d558a",
-      "rights": "Public domain; Cresques Abraham, BnF Gallica btv1b55002481n",
-      "note": "(570 × 618)"
     },
     {
       "id": "dewit",
