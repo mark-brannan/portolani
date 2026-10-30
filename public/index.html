@@ -103,19 +103,15 @@
   .pcard { margin-top: 6px; padding-top: 6px; border-top: 1px solid #b89a68; font: 13px/1.4 var(--serif); }
   .pcard p { margin: 0 0 4px; }
   .pcard .chip { display: inline-flex; align-items: center; gap: 3px; padding: 0 7px; border-radius: 10px; border: 1px solid #8a7550; background: #f1e4c6; color: #3b2a1a; font-size: 11px; white-space: nowrap; }
-  .pcard .chip svg { width: 20px; height: 8px; }
-  .pcard .glyph { display: inline-block; width: 15px; height: 15px; vertical-align: -3px; text-align: center; }
-  .pcard .skull { font-size: 14px; line-height: 15px; }
   .pcard .pvoyages { list-style: none; margin: 4px 0; padding: 0; }
-  .pcard .pvoyages li { display: flex; align-items: center; gap: 6px; }
+  .pcard .pvoyages li { margin: 0 0 6px; }
+  .pcard .pvoyages p, .pcard .bio { font-size: 12px; opacity: 0.85; }
+  .pcard .pvoyages a { color: inherit; font-style: italic; }
   .pcard .when { font-size: 11px; font-style: italic; opacity: 0.75; }
-  #where .pcard .info { width: 18px; height: 18px; padding: 0; border-radius: 50%; border: 1px solid currentColor; background: none; box-shadow: none; color: var(--fg); font: italic bold 12px/1 var(--serif); } /* a plain circled i: the voyage's tile */
   .pcard .pics { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; }
   #where .pcard .pic { width: auto; height: 52px; padding: 2px; border-radius: 4px; background: #f1e4c6; border: 1px solid #b89a68; box-shadow: none; opacity: 0.55; }
-  #where .pcard .pic[aria-pressed="true"] { opacity: 1; border-color: #8c2f1e; box-shadow: inset 0 0 0 1px #8c2f1e; } /* on the map */
+  #where .pcard .pic[aria-pressed="true"] { opacity: 1; border-color: #8c2f1e; box-shadow: inset 0 0 0 1px #8c2f1e; } /* on the table */
   .pcard .pic img { display: block; height: 46px; width: auto; }
-  .pcard .credits { list-style: none; margin: 2px 0 0; padding: 0; font-size: 11px; }
-  .pcard .credits a { color: inherit; }
   #goMiss { margin: 0; padding: 2px 8px; font: italic 12px var(--serif); background: var(--panel); border-radius: 8px; }
 
   /* the drawers: on a wide screen each slides in from the right below the row, right-aligned with it and clear

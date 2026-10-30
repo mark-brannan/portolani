@@ -18,7 +18,7 @@ import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorSce
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
-import { PEOPLE_FILE, PICTURES_FILE, PERSON_RED, lifeSpan, timelineAxis, ticksOf, pictureCredit, commonsPage, voyageYears, parsePictures, picturesText, parsePictureAt, pictureAtText, picturePlaces, frameOf, viewContaining, withPictures, DASHES, peopleOf, whoOf, deathOf } from './people.mjs';
+import { PEOPLE_FILE, PICTURES_FILE, lifeSpan, timelineAxis, ticksOf, pictureCredit, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, viewContaining, withPictures, peopleOf, whoOf, deathOf } from './people.mjs';
 import { fold, bestPlace } from './placename.mjs';
 
 const memo = new Map();
@@ -49,7 +49,7 @@ const canvas = $('map'), ctx = canvas.getContext('2d');
 // cards beside the map, not on the sea.
 const phone = matchMedia('(max-width: 520px)');
 
-const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: 6, regions: 'latin', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyages: [], voyageWidth: VOYAGE_WIDTH, person: null, pictures: [0], ...OVERLAY_DEFAULTS, cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER, overlap: DEFAULT_OVERLAP };
+const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: 6, regions: 'latin', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyages: [], voyageWidth: VOYAGE_WIDTH, person: null, pictures: null, ...OVERLAY_DEFAULTS, cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER, overlap: DEFAULT_OVERLAP };
 
 // ---------------------------------------------------------------- the sprites on offer
 
@@ -182,7 +182,7 @@ function writeHash() {
   if (st.voyageWidth !== DEFAULTS.voyageWidth) q.set('voyagewidth', st.voyageWidth);
   if (st.person) {
     q.set('person', st.person);
-    const shown = picturesText(st.pictures, DEFAULTS.pictures), at = pictureAtText(st.pictureAt);
+    const shown = st.pictures && (st.pictures.length ? st.pictures.join(',') : 'none'), at = pictureAtText(st.pictureAt);
     if (shown) q.set('pictures', shown);
     if (at) q.set('pictureat', at);
   }
@@ -680,7 +680,7 @@ if (LEGACY_KEYS.some((k) => hashParams().has(k))) writeHash(); // an older link,
 let ground = null; // { world, coarse, bg, anchored } from the last placement, all a moving frame needs
 // the People drawer's data, once loaded ({ people, pictures, sources, voyages }), the frames of the people chosen, their
 // pictures' images, and the picture held by hand (the section "people" below)
-let peopleData = null, peopleLoad = null, holding = null;
+let peopleData = null, peopleLoad = null, holding = null, dealt = null, flips = new Map();
 const frames = new Map(), pictureImgs = new Map();
 let placed = null; // the view the canvas shows with its ornaments
 let pinTitle = null; // the name of the place last flown to, on the cartouche until the map is moved by hand
@@ -1110,7 +1110,7 @@ canvas.addEventListener('pointermove', (e) => {
   if (holding) { dragPicture(toCanvas(e.clientX, e.clientY)); return; }
   if (held) { const p = toCanvas(e.clientX, e.clientY); if (sheetTap && Math.hypot(p[0] - sheetTap[0], p[1] - sheetTap[1]) > cssPx(TAP_SLOP)) sheetTap = null; if (!sheetTap) dragSheet(p); return; }
   if (carried) { carried.corner = cornerAt(toCanvas(e.clientX, e.clientY)); showSnap(carried.corner, carried.w, carried.h); return; }
-  if (!pointers.size) { const p = toCanvas(e.clientX, e.clientY); canvas.style.cursor = cardAt(p) ? 'grab' : markAt(p) ? 'pointer' : { move: 'grab', turn: 'crosshair', size: 'nwse-resize' }[(pictureHit(p) ?? sheetHit(p))?.kind] ?? ''; return; }
+  if (!pointers.size) { const p = toCanvas(e.clientX, e.clientY); canvas.style.cursor = cardAt(p) ? 'grab' : markAt(p) ? 'pointer' : { move: 'grab', turn: 'crosshair', size: 'nwse-resize', flip: 'pointer', link: 'pointer' }[(pictureHit(p) ?? sheetHit(p))?.kind] ?? ''; return; }
   if (!pointers.has(e.pointerId)) return;
   const p = toCanvas(e.clientX, e.clientY);
   if (tap && Math.hypot(p[0] - tap[0], p[1] - tap[1]) > cssPx(TAP_SLOP)) tap = null;
@@ -1397,10 +1397,10 @@ $('voyageList').addEventListener('input', (e) => {
 // axis broken between the ancient world and the medieval, so who overlapped whom shows; a bar fades where the record
 // leaves a birth or a death undated. A click on a bar chooses that person (a second click lets them go): their bar turns
 // red, their voyages are drawn lit in the chart's red and every other voyage chosen is dimmed (the scene's `person`),
-// their birth is marked, the map flies to frame them, and their first picture lies on the map as a sheet, to drag by
-// hand and resize by its corner, never turned. Under the strip their card: born and died, each with a chip of how it is
-// known in the voyages' line for it; each of their voyages with a circled i that opens its tile; and their pictures as
-// chips, each a thumbnail that lays it on the map or takes it off, with the credit of each one on the map under them.
+// their birth is marked, the map flies to frame them, and all their pictures are dealt onto the map as onto a chart
+// table, a little askew, to drag by hand, resize by a corner and turn over to read what each is and follow it to its
+// page. Under the strip their card: the name and the years, the bio, each voyage with its summary written out, and
+// the pictures as thumbnails, each of which takes it off the table or puts it back.
 // The choice rides in the link (`person=`, `pictures=`, `pictureat=`).
 function loadPeople() {
   peopleLoad ??= Promise.all([env.readJSON(PEOPLE_FILE), env.readJSON(PICTURES_FILE).catch(() => ({ pictures: {} })), env.readJSON('data/voyages/sources.json').catch(() => ({}))])
@@ -1434,60 +1434,48 @@ function drawTimeline() {
   }).join('');
   $('peopleStrip').innerHTML = `<div class="axis">${ticks.join('')}${breaks}</div><ol class="lives">${rows}${breaks}</ol>`;
 }
-// How a birth or a death is known, as a chip with the voyages' line for it beside the word
-const knownChip = (e) => {
-  if (!e) return '<span class="chip known" title="nobody recorded it">unknown</span>';
-  if (!e.confidence) return '<span class="chip known" title="the record does not grade how well this is known">not graded</span>';
-  const dash = (DASHES[e.confidence] ?? [1, 4]).join(' '); // speculative, which no leg is, the faintest
-  return `<span class="chip known" title="${escapeHTML(e.confidence)}: drawn so on a voyage's line"><svg viewBox="0 0 20 8" aria-hidden="true"><path d="M2 4h16" stroke="currentColor" stroke-width="1.6" stroke-dasharray="${dash}" fill="none"/></svg>${escapeHTML(e.confidence)}</span>`;
-};
-const BIRTH_GLYPH = `<svg class="glyph" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="6" fill="none" stroke="${PERSON_RED}" stroke-width="2.2"/><circle cx="9" cy="9" r="2.2" fill="${PERSON_RED}"/></svg>`;
+// The years after a name, as an encyclopedia gives them: "(c. 1460s – 24 Dec 1524)", "(born c. 350 BC)", "(died 1510)",
+// nothing where neither is dated; the places are the bio's and the map's
+function lifeDates(p) {
+  const b = p.born?.date, d = deathOf(p)?.date;
+  return b && d ? `(${b} – ${d})` : b ? `(born ${b})` : d ? `(died ${d})` : '';
+}
 function showPeople() {
   for (const b of document.querySelectorAll('#peopleStrip [data-person]')) b.setAttribute('aria-pressed', String(b.dataset.person === style.person));
   const card = $('personCard'), p = personOf(style.person);
   card.hidden = !p;
   if (!p) { card.replaceChildren(); return; }
-  const line = (glyph, word, e) => `<p class="pline">${glyph} ${word} ${e ? `${e.place ? `${escapeHTML(e.place)}, ` : ''}${escapeHTML(e.date)}` : 'unknown'} ${knownChip(e)}</p>`;
-  const voyages = p.voyages.map((id) => [id, peopleData.voyages[id]]).filter(([, v]) => v).map(([id, v]) =>
-    `<li><span>${escapeHTML(v.short ?? v.title)}</span> <span class="when">${escapeHTML(v.when)}</span> <button type="button" class="info" data-info="${escapeHTML(id)}" aria-label="About ${escapeHTML(v.title)}" title="About this voyage">i</button></li>`).join('');
+  // each voyage by its title (its years with it where the title has none), and its summary in full
+  const voyages = p.voyages.map((id) => peopleData.voyages[id]).filter(Boolean).map((v) => {
+    const link = voyageLink(v, peopleData.sources);
+    return `<li><b>${escapeHTML(v.title)}</b>${/\d/.test(v.title) ? '' : ` <span class="when">${escapeHTML(v.when)}</span>`}` +
+      `<p>${escapeHTML(v.summary ?? '')}${link ? ` <a href="${escapeHTML(link.url)}" target="_blank" rel="noopener">${escapeHTML(link.label)}</a>` : ''}</p></li>`;
+  }).join('');
+  const shown = picturesOf(p);
   const pics = p.images.map((im, i) => { const m = peopleData.pictures[im.file];
-    return m ? `<button type="button" class="pic" data-pic="${i}" aria-pressed="${style.pictures.includes(i)}" title="${escapeHTML(pictureCredit(im))}: lay it on the map, or take it off"><img src="packs/overlays/${escapeHTML(m.src)}" alt="" loading="lazy"></button>` : ''; }).join('');
-  const credits = style.pictures.map((i) => p.images[i]).filter(Boolean).map((im) =>
-    `<li><a href="${escapeHTML(peopleData.pictures[im.file]?.page ?? commonsPage(im.file))}" target="_blank" rel="noopener">${escapeHTML(pictureCredit(im))}</a></li>`).join('');
+    return m ? `<button type="button" class="pic" data-pic="${i}" aria-pressed="${shown.includes(i)}" title="${escapeHTML(pictureCredit(im))}: on the table, or off it"><img src="packs/overlays/${escapeHTML(m.src)}" alt="" loading="lazy"></button>` : ''; }).join('');
   const roles = (Array.isArray(p.role) ? p.role : p.role ? [p.role] : []).map((r) => `<span class="chip role">${escapeHTML(r)}</span>`).join(' ');
-  card.innerHTML = `<p class="pname"><b>${escapeHTML(p.name)}</b> ${roles}</p>` +
-    line(BIRTH_GLYPH, 'born', p.born) + line('<span class="glyph skull" aria-hidden="true">☠</span>', 'died', deathOf(p)) +
+  card.innerHTML = `<p class="pname"><b>${escapeHTML(p.name)}</b> ${escapeHTML(lifeDates(p))} ${roles}</p>` +
+    (p.bio ? `<p class="bio">${escapeHTML(p.bio)}</p>` : '') +
     (voyages ? `<ul class="pvoyages">${voyages}</ul>` : '') +
-    (pics ? `<div class="pics" role="group" aria-label="Pictures, on the map or off">${pics}</div>` : '') + (credits ? `<ul class="credits">${credits}</ul>` : '');
+    (pics ? `<div class="pics" role="group" aria-label="Pictures, on the table or off it">${pics}</div>` : '');
 }
 $('peopleStrip').addEventListener('click', (e) => {
   const b = e.target.closest('[data-person]');
   if (!b) return;
   const id = b.dataset.person === style.person ? null : b.dataset.person;
   style = { ...style, person: id, pictures: DEFAULTS.pictures, pictureAt: {} };
+  flips.clear(); links.clear();
   showPeople(); writeHash(); render();
   if (id) flyToPerson(id);
 });
 $('personCard').addEventListener('click', (e) => {
-  const info = e.target.closest('[data-info]'), pic = e.target.closest('[data-pic]');
-  if (info) { showVoyageTile(info.dataset.info, info); return; }
-  if (!pic) return;
-  const i = Number(pic.dataset.pic), on = style.pictures.includes(i);
-  style = { ...style, pictures: on ? style.pictures.filter((k) => k !== i) : [...style.pictures, i].sort((a, b) => a - b) };
+  const pic = e.target.closest('[data-pic]'), p = personOf(style.person);
+  if (!pic || !p) return;
+  const i = Number(pic.dataset.pic), shown = picturesOf(p), on = shown.includes(i);
+  style = { ...style, pictures: on ? shown.filter((k) => k !== i) : [...shown, i].sort((a, b) => a - b) };
   showPeople(); writeHash(); render();
 });
-// A voyage's tile, opened from its circled i in a person's card: beside the drawer, as a mark's tile is beside the mark
-function showVoyageTile(id, el) {
-  const v = peopleData?.voyages[id];
-  if (!v) return;
-  const link = voyageLink(v, peopleData.sources);
-  fillTile({ title: v.title, date: v.when, text: v.summary, cited: link && { title: link.label, url: link.url } });
-  tileEl.hidden = false;
-  const r = el.getBoundingClientRect(), w = tileEl.offsetWidth, h = tileEl.offsetHeight;
-  const left = r.left - w - 12 >= 8 ? r.left - w - 12 : r.right + 8;
-  tileEl.style.left = `${Math.max(8, Math.min(innerWidth - w - 8, left))}px`;
-  tileEl.style.top = `${Math.max(8, Math.min(innerHeight - h - 8, r.top - 8))}px`;
-}
 // The box round a person's birth, death and voyages, once per person
 async function frameOfPerson(p) {
   if (!frames.has(p.id)) {
@@ -1498,15 +1486,23 @@ async function frameOfPerson(p) {
   return frames.get(p.id);
 }
 const pictureSize = (p, i) => { const m = peopleData.pictures[p.images[i]?.file]; return m ? [m.width, m.height] : null; };
-// The shown pictures with their images loaded: [{ i, o, sheet }], `o` an overlay of one piece (overlays.mjs drawSheet)
-// and `sheet` where it lies: where it was dragged, else its own place under the person's frame (picturePlaces)
+// The pictures on the table: those the link names, else all of them
+const picturesOf = (p) => style.pictures ?? p.images.map((_, i) => i);
+// Each picture lies a little askew, as if dealt onto a chart table: degrees by its place in the record, and a nudge
+// off the row's line as a share of its height
+const ASKEW = [-4, 3, -2, 5, -3, 2], NUDGE = [0.06, -0.05, 0.08, -0.03, 0.04, -0.07];
+const DEAL_MS = 450, DEAL_GAP = 110, FLIP_MS = 320;
+const ease = (t) => 1 - (1 - t) ** 3;
+// The shown pictures with their images loaded: [{ i, o, sheet, im }], `o` an overlay of one piece (overlays.mjs) and
+// `sheet` where it lies: where it was dragged, else its own place under the person's frame (picturePlaces)
 function shownPictures() {
   const p = personOf(style.person), f = p && frames.get(p.id);
   if (!f) return [];
-  const shown = style.pictures.filter((i) => pictureSize(p, i)), places = picturePlaces(f, shown.map((i) => pictureSize(p, i)));
+  const shown = picturesOf(p).filter((i) => pictureSize(p, i)), places = picturePlaces(f, shown.map((i) => pictureSize(p, i)));
   return shown.map((i, k) => {
-    const img = pictureImgs.get(`${p.id}/${i}`);
-    return img && { i, o: { img, width: img.width, height: img.height, scale: 1 }, sheet: { ...places[k], ...style.pictureAt[i], turn: 0 } };
+    const img = pictureImgs.get(`${p.id}/${i}`), [, h] = pictureSize(p, i);
+    const at = style.pictureAt[i] ?? { ...places[k], lat: places[k].lat + NUDGE[i % 6] * h * places[k].scale };
+    return img && { i, k, im: p.images[i], o: { img, width: img.width, height: img.height, scale: 1 }, sheet: { ...at, turn: 0 } };
   }).filter(Boolean);
 }
 // The chosen person's frame and shown pictures loaded; true when anything new came in (the map is then drawn again)
@@ -1518,7 +1514,7 @@ async function preparePictures() {
   if (!p) return false;
   let fresh = !frames.has(id);
   await frameOfPerson(p);
-  await Promise.all(style.pictures.map(async (i) => {
+  await Promise.all(picturesOf(p).map(async (i) => {
     const m = peopleData.pictures[p.images[i]?.file], key = `${id}/${i}`;
     if (!m || pictureImgs.has(key)) return;
     pictureImgs.set(key, await env.loadImage(`packs/overlays/${m.src}`));
@@ -1531,41 +1527,105 @@ async function flyToPerson(id) {
   await loadPeople();
   const p = personOf(id), f = p && await frameOfPerson(p);
   if (!f || style.person !== id) return;
-  const sizes = style.pictures.map((i) => pictureSize(p, i)).filter(Boolean);
+  const shown = picturesOf(p).filter((i) => pictureSize(p, i)), sizes = shown.map((i) => pictureSize(p, i));
   goTo(viewContaining(withPictures(f, picturePlaces(f, sizes), sizes), { w: W, h: H }));
 }
-// The pictures over everything on the map: each on a parchment mount with a soft shadow and an ink rule, the square at
-// its bottom right corner that resizes it (as a chart's sheet has); no handle turns it.
+// A picture on the canvas: its centre, its turn in radians and its size in canvas px, before any deal or flip
+function pictureBox(pic, proj) {
+  const c = sheetCorners(pic.o, proj, pic.sheet);
+  if (!c) return null;
+  return { x: (c[0][0] + c[2][0]) / 2, y: (c[0][1] + c[2][1]) / 2, a: (ASKEW[pic.i % 6] * Math.PI) / 180, w: c[1][0] - c[0][0], h: c[3][1] - c[0][1] };
+}
+// The two squares at a picture's foot, in its own frame: the one at the corner resizes it, the one beside it turns it over
+const handlesOf = (b) => ({ size: [b.w / 2, b.h / 2], flip: [b.w / 2 - 2.6 * HANDLE, b.h / 2] });
+// The back of a picture, in its own frame: what it is, when, by whom, under what licence, its note, and its Commons page
+function drawBack(g, im, w, h) {
+  const pad = Math.max(6, w * 0.06), size = Math.max(11, Math.min(16, w / 13)), lines = [];
+  g.font = `italic ${size}px ${getComputedStyle(document.body).getPropertyValue('--serif') || 'serif'}`;
+  const wrap = (text) => {
+    let line = '';
+    for (const word of String(text).split(/\s+/)) {
+      const next = line ? `${line} ${word}` : word;
+      if (g.measureText(next).width > w - 2 * pad && line) { lines.push(line); line = word; } else line = next;
+    }
+    if (line) lines.push(line);
+  };
+  wrap(pictureCredit(im));
+  if (im.note) { lines.push(''); wrap(im.note); }
+  g.fillStyle = style.ink; g.textBaseline = 'top';
+  lines.forEach((l, n) => g.fillText(l, -w / 2 + pad, -h / 2 + pad + n * size * 1.3));
+  const linkY = -h / 2 + pad + (lines.length + 1) * size * 1.3, label = 'Its page on Wikimedia Commons ↗', lw = g.measureText(label).width;
+  g.fillStyle = PERSON_LINK; g.fillText(label, -w / 2 + pad, linkY);
+  g.fillRect(-w / 2 + pad, linkY + size * 1.05, lw, 1);
+  return [-w / 2 + pad, linkY - 3, lw, size * 1.3 + 6]; // where a tap opens the page
+}
+const PERSON_LINK = '#8c2f1e';
+const links = new Map(); // a turned picture's link, in its own frame, by its index
+// The pictures over everything on the map: each on a parchment mount with a soft shadow and an ink rule, a little
+// askew, dealt in one after another when a person is chosen; at its foot the square that resizes it and, beside it,
+// the one that turns it over to its back.
 function drawPictures(g) {
   const list = shownPictures();
-  if (!list.length) return;
-  const proj = viewProjection(view), m = 5;
+  if (!list.length) { dealt = null; return; }
+  const now = performance.now(), proj = viewProjection(view), m = 5;
+  if (dealt?.person !== style.person) dealt = { person: style.person, start: now };
+  let moving = false;
+  const feet = []; // the squares, drawn over every picture so none hides another's
   g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
-  for (const { o, sheet } of list) {
-    const c = sheetCorners(o, proj, sheet);
-    if (!c) continue;
-    const x = c[0][0] - m, y = c[0][1] - m, w = c[2][0] - c[0][0] + 2 * m, h = c[2][1] - c[0][1] + 2 * m;
-    g.save(); g.shadowColor = 'rgba(59,42,26,0.35)'; g.shadowBlur = 8; g.shadowOffsetY = 2; g.fillStyle = style.parchment; g.fillRect(x, y, w, h); g.restore();
-    drawSheet(g, o, proj, sheet);
-    g.save(); g.strokeStyle = style.ink; g.globalAlpha = 0.7; g.lineWidth = 1; g.strokeRect(x, y, w, h); g.restore();
-    const [bx, by] = c[2], r = HANDLE;
-    g.save(); g.lineWidth = 1.5; g.strokeStyle = style.ink; g.fillStyle = style.parchment;
-    g.beginPath(); g.rect(bx - r, by - r, 2 * r, 2 * r); g.fill(); g.stroke();
-    g.beginPath(); g.moveTo(bx - r * 0.5, by + r * 0.5); g.lineTo(bx + r * 0.5, by - r * 0.5); g.stroke();
+  for (const pic of list) {
+    const b = pictureBox(pic, proj);
+    if (!b) continue;
+    const t = ease(Math.max(0, Math.min(1, (now - dealt.start - pic.k * DEAL_GAP) / DEAL_MS)));
+    if (t <= 0) { moving = true; continue; }
+    const flip = flips.get(pic.i), ft = flip ? Math.min(1, (now - flip.start) / FLIP_MS) : 1;
+    if (t < 1 || ft < 1) moving = true;
+    const back = flip ? (flip.back ? ft >= 0.5 : ft < 0.5) : false, squash = flip ? Math.abs(Math.cos(Math.PI * ft)) : 1;
+    // dealt from the top right, where the drawer is, turning as it lands
+    const x = W + (b.x - W) * t, y = b.y * t, s = 0.35 + 0.65 * t;
+    g.save(); g.translate(x, y); g.rotate(b.a + (1 - t) * 0.6); g.scale(s * Math.max(0.02, squash), s);
+    g.save(); g.shadowColor = 'rgba(59,42,26,0.35)'; g.shadowBlur = 8; g.shadowOffsetY = 2; g.fillStyle = style.parchment; g.fillRect(-b.w / 2 - m, -b.h / 2 - m, b.w + 2 * m, b.h + 2 * m); g.restore();
+    if (back) links.set(pic.i, drawBack(g, pic.im, b.w, b.h));
+    else { links.delete(pic.i); g.drawImage(pic.o.img, -b.w / 2, -b.h / 2, b.w, b.h); }
+    g.save(); g.strokeStyle = style.ink; g.globalAlpha = 0.7; g.lineWidth = 1; g.strokeRect(-b.w / 2 - m, -b.h / 2 - m, b.w + 2 * m, b.h + 2 * m); g.restore();
+    if (t === 1 && ft === 1) feet.push([b, x, y]);
+    g.restore();
+  }
+  for (const [b, x, y] of feet) {
+    const { size: [sx, sy], flip: [fx, fy] } = handlesOf(b), r = HANDLE;
+    g.save(); g.translate(x, y); g.rotate(b.a);
+    g.lineWidth = 1.5; g.strokeStyle = style.ink; g.fillStyle = style.parchment;
+    for (const [hx, hy] of [[sx, sy], [fx, fy]]) { g.beginPath(); g.rect(hx - r, hy - r, 2 * r, 2 * r); g.fill(); g.stroke(); }
+    g.beginPath(); g.moveTo(sx - r * 0.5, sy + r * 0.5); g.lineTo(sx + r * 0.5, sy - r * 0.5); g.stroke();
+    // the turn-over mark: a curved arrow
+    g.beginPath(); g.arc(fx, fy, r * 0.5, Math.PI * 0.15, Math.PI * 1.55); g.stroke();
+    g.beginPath(); g.moveTo(fx + r * 0.55, fy - r * 0.05); g.lineTo(fx + r * 0.42, fy + r * 0.35); g.lineTo(fx + r * 0.1, fy + r * 0.1); g.stroke();
     g.restore();
   }
   g.restore();
+  if (moving && !dealFrame) dealFrame = requestAnimationFrame(() => { dealFrame = 0; if (ground) paintFrame('pictures dealt'); });
 }
-// The picture under canvas px p, the top one first: by its square to resize it, anywhere else on it to move it
+let dealFrame = 0;
+// The picture under canvas px p, the top one first: by its squares to resize or turn it over, by its link when it
+// lies face down, anywhere else on it to move it
 function pictureHit([x, y]) {
   const list = shownPictures();
   if (!list.length) return null;
-  const proj = viewProjection(view);
-  for (const pic of list.reverse()) {
-    const c = sheetCorners(pic.o, proj, pic.sheet);
-    if (!c) continue;
-    if (Math.hypot(c[2][0] - x, c[2][1] - y) <= HANDLE + cssPx(6)) return { kind: 'size', ...pic, proj };
-    if (onSheet(pic.o, proj, pic.sheet, x, y)) return { kind: 'move', ...pic, proj };
+  const proj = viewProjection(view), reach = HANDLE + cssPx(6);
+  const local = list.reverse().map((pic) => {
+    const b = pictureBox(pic, proj);
+    if (!b) return null;
+    const dx = x - b.x, dy = y - b.y, c = Math.cos(-b.a), s = Math.sin(-b.a);
+    return { pic, b, u: dx * c - dy * s, v: dx * s + dy * c };
+  }).filter(Boolean);
+  for (const { pic, b, u, v } of local) { // the squares lie over every picture, so they are found first
+    const hs = handlesOf(b);
+    if (Math.hypot(u - hs.size[0], v - hs.size[1]) <= reach) return { kind: 'size', ...pic, proj };
+    if (Math.hypot(u - hs.flip[0], v - hs.flip[1]) <= reach) return { kind: 'flip', ...pic, proj };
+  }
+  for (const { pic, b, u, v } of local) {
+    const link = links.get(pic.i);
+    if (link && u >= link[0] && u <= link[0] + link[2] && v >= link[1] && v <= link[1] + link[3]) return { kind: 'link', ...pic, proj };
+    if (Math.abs(u) <= b.w / 2 + 5 && Math.abs(v) <= b.h / 2 + 5) return { kind: 'move', ...pic, proj };
   }
   return null;
 }
@@ -1575,6 +1635,7 @@ function holdPicture(hit, p) {
 }
 function dragPicture(p) {
   const { kind, proj, start, sheet, centre, i } = holding;
+  if (kind === 'flip' || kind === 'link') return;
   let next;
   if (kind === 'move') {
     const [lon, lat] = proj.invert(centre[0] + p[0] - start[0], centre[1] + p[1] - start[1]);
@@ -1587,8 +1648,11 @@ function dragPicture(p) {
   if (!sheetFrameId) sheetFrameId = requestAnimationFrame(() => { sheetFrameId = 0; paintFrame('a picture held'); });
 }
 function dropPicture() {
+  const { kind, i, im } = holding;
   holding = null;
   cancelAnimationFrame(sheetFrameId); sheetFrameId = 0;
+  if (kind === 'flip') { flips.set(i, { back: !flips.get(i)?.back, start: performance.now() }); paintFrame('a picture turned over'); return; }
+  if (kind === 'link') { window.open(peopleData.pictures[im.file]?.page ?? commonsPage(im.file), '_blank', 'noopener'); return; }
   writeHash(); render();
 }
 if (style.person) loadPeople().then(showPeople, () => {}); // a link that names a person shows their card when the drawer opens
