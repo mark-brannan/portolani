@@ -369,3 +369,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261030t035231z
 - On a wide screen a click outside the row and the drawer that is not on the map (a tile, a card) still shuts the drawer, as before ([#292](https://github.com/mark-brannan/portolani/pull/292))
+
+### 20261030t035235z
+- Where a month-wide leg end overlaps the next leg, the mockup puts the boundary at the precise side, else mid-month Undo: edit docs/voyage-play/README.md ([#293](https://github.com/mark-brannan/portolani/pull/293))
