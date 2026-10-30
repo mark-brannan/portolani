@@ -363,3 +363,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261030t035224z
 - The spec's phone scenario 'waiting on a UI walk' is left as written in this PR; the user's 2026-10-30 word overtakes it, named in the PR body, for a spec-only change ([#292](https://github.com/mark-brannan/portolani/pull/292))
+
+### 20261030t035227z
+- Play mockups use Magellan at a world view (lon 15, lat -6, zoom 1.45), line at 4.5 px (the Heavy weight item 4 proposes), not the shipped 2.2 Undo: edit docs/voyage-play/README.md ([#293](https://github.com/mark-brannan/portolani/pull/293))
