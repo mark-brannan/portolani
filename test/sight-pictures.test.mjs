@@ -61,3 +61,55 @@ test('a sight\'s pictures are dealt in the bottom third of the window, inside it
   const one = sightDeal([[640, 480]], win, [500, 300]).row[0];
   assert.ok(Math.abs(one.x - 500) < 1e-9 && Math.abs(one.h - 1000 * SIGHT_DEAL.fill) < 1e-9);
 });
+
+// Tyre's two marks: spread apart where they would meet, in their order on the earth, and hit where they are drawn
+const { createScene, spreadMarks, drawnMarks, sightHits, pickMark } = await import('../scripts/scene.mjs');
+const { MEMENTO, mementoNext } = await import('../scripts/people.mjs');
+const { loadImage, createCanvas, GlobalFonts } = await import('@napi-rs/canvas');
+const { coastNames, joinNames } = await import('../scripts/names.mjs');
+const GEO = dirname(fileURLToPath(import.meta.resolve('coastlines/data/ne-land-50m')));
+let seaNames;
+const env = {
+  createCanvas,
+  readJSON: async (p) => (p === 'geo/names-50m.json'
+    ? (seaNames ??= joinNames(read('test/fixtures/sea-names-50m.json'), coastNames(JSON.parse(readFileSync(join(GEO, 'ne-admin-0-countries-50m.geojson'), 'utf8')), JSON.parse(readFileSync(join(GEO, 'ne-coastline-50m.geojson'), 'utf8')))))
+    : JSON.parse(readFileSync(p.startsWith('geo/') ? join(GEO, p.slice(4)) : join(ROOT, p), 'utf8'))),
+  loadImage: (p) => loadImage(p.startsWith('geo/') ? join(GEO, p.slice(4)) : join(ROOT, p)),
+  loadFont: async (family) => { GlobalFonts.registerFromPath(join(ROOT, 'test', 'fixtures', 'IMFeENrm28P.ttf'), family); },
+};
+const TYRE = SIGHT_TILES.Tyre.at.map(([lon, lat], site) => ({ lon, lat, tile: { title: 'Tyre', sight: 'Tyre', site, ruin: true } }));
+
+test('spreadMarks: two marks that would meet stand an icon\'s width clear, along their bearing, about their middle, in their order', () => {
+  const width = 26, out = spreadMarks([[100, 100], [109, 101]], width);
+  assert.ok(Math.hypot(out[1][0] - out[0][0], out[1][1] - out[0][1]) >= 2 * width - 1e-9, 'one width of clear ground between');
+  assert.ok(out[0][0] < out[1][0], 'west stays west');
+  assert.ok(Math.abs((out[1][0] - out[0][0]) * 1 - (out[1][1] - out[0][1]) * 9) < 1e-6, 'along their bearing');
+  assert.deepEqual(out.reduce(([a, b], [x, y]) => [a + x / 2, b + y / 2], [0, 0]).map((v) => +v.toFixed(9)), [104.5, 100.5]);
+  assert.equal(spreadMarks([[0, 0], [60, 0]], width), null, 'far enough apart: left where they are');
+});
+
+test('Tyre at zooms 8, 9.5 and 11: its two marks a width clear, the city site west, each hit where it is drawn', async () => {
+  for (const zoom of [8, 9.5, 11]) {
+    const { scene, data } = await createScene(env, { view: { lon: 35.205, lat: 33.255, zoom }, sights: TYRE.map(({ lon, lat, tile }) => ({ name: 'Tyre', lon, lat, ruin: true, site: tile.site })) });
+    const marks = scene.lesser.filter((l) => l.mark && l.name === 'Tyre').sort((a, b) => a.site - b.site);
+    assert.deepEqual(marks.map((m) => m.site), [0, 1], `z${zoom}: both marks drawn`);
+    const [a, b] = marks, width = 2 * a.label.hw;
+    assert.ok(Math.hypot(b.x - a.x, b.y - a.y) >= 2 * width - 0.5, `z${zoom}: ${Math.hypot(b.x - a.x, b.y - a.y).toFixed(1)} px apart, the icon ${width.toFixed(1)} wide`);
+    assert.ok(a.x < b.x, `z${zoom}: the city site west of Al-Bass`);
+    const hits = sightHits(TYRE, drawnMarks(scene, data), data.proj, { x0: 0, y0: 0, x1: 1600, y1: 1000 });
+    for (const m of marks) {
+      const hit = hits.find((h) => h.tile.site === m.site);
+      assert.ok(hit && Math.hypot(hit.x - m.label.cx, hit.y - m.label.cy) < 0.5, `z${zoom} site ${m.site}: hit where drawn`);
+      assert.equal(pickMark(hits, [m.label.cx, m.label.cy], 20).tile.site, m.site, `z${zoom}: a tap on site ${m.site} opens its own tile`);
+    }
+  }
+});
+
+test('the memento under the skull: every line in order, then back to the first', () => {
+  assert.equal(MEMENTO.length, 11);
+  let k = 0;
+  const seen = [MEMENTO[k]];
+  for (let n = 1; n < MEMENTO.length; n++) seen.push(MEMENTO[k = mementoNext(k)]);
+  assert.deepEqual(seen, MEMENTO);
+  assert.equal(mementoNext(k), 0, 'the last wraps to the first');
+});

@@ -2674,6 +2674,24 @@ export function sightMarks(sights, proj, rect) {
   return out;
 }
 const SIGHT_H = 20; // the reach of a place, canvas px, as a mark's height
+// The marks a scene drew for the places with a tile (its `lesser` with `mark`), where it drew them (a sight's several
+// marks spread apart, a ruin moved clear of a town), held to the earth: { at: [lon, lat], h, name, site }, `at` the
+// icon's middle and `h` its reach, the icon's half-diagonal and MARK_MARGIN, so a tap anywhere on it or just off it takes it
+const MARK_MARGIN = 8;
+export const drawnMarks = (scene, data) => (scene.lesser ?? []).filter((l) => l.mark && l.label)
+  .map((l) => ({ at: data.proj.invert(l.label.cx, l.label.cy), h: 2 * (Math.hypot(l.label.hw, l.label.hh) + MARK_MARGIN), name: l.name, site: l.site ?? null }));
+// The places' marks to hit, { x, y, h, tile } in `proj`'s px, for `spots` [{ lon, lat, tile }] (sightMarks'): the one
+// drawn for each (`drawn`, drawnMarks), by name and mark, where the scene drew one; else where the place is (a place
+// lettered on the chart, or a stand-in left out for want of room)
+export function sightHits(spots, drawn, proj, rect) {
+  return spots.flatMap((spot) => {
+    const m = drawn.find((d) => d.name === spot.tile.title && d.site === (spot.tile.site ?? null));
+    if (!m) return sightMarks([spot], proj, rect);
+    if (proj.visible && !proj.visible(...m.at)) return [];
+    const [x, y] = proj.toPx(m.at);
+    return disc(rect, x, y, 0) ? [{ x, y, h: m.h, tile: spot.tile }] : [];
+  });
+}
 
 // A birth: a ring round a dot in the person's red over a parchment disc, a placeholder the design will come back to
 // (the mockups of #161 tried a star, a sun and this ring); lighter than a skull, so a coast of them is not a field of pins.
