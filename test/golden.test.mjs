@@ -9,6 +9,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import { createScene, drawScene, doubtMarks, SCALE_NAMES, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, RELIEF_STYLES, PROJECTION_NAMES, W, H } from '../scripts/scene.mjs';
+import { VOYAGE_CONTRAST } from '../scripts/voyages.mjs';
 import { plantTrees } from '../scripts/trees.mjs';
 import { compare, CHANNEL } from '../scripts/golden-compare.mjs';
 import { coastNames, joinNames } from '../scripts/names.mjs';
@@ -35,6 +36,7 @@ const VIEWS = {
   'china-z5-doubt': { lon: 117, lat: 35, zoom: 5 }, // a doubted leg: its rings, and its cloud on empty land (Ibn Battuta to Khanbaliq)
   'levant-z6-marks': { lon: 33, lat: 32.5, zoom: 6 }, // a place with a tile and no figure gets a mark: Tyre and Alexandria, living cities, the plain tower
   'ostia-z7-ruin': { lon: 12.29, lat: 41.76, zoom: 7 }, // and a ruin where a sight says so (Ostia)
+  'sheet-z3-voyage': { lon: -30, lat: 15, zoom: 3 }, // de la Cosa's sheet laid over the Atlantic with Columbus's voyage drawn over it, in a colour that reads against the scan
   'old-world-z2.6-1375': { lon: 62, lat: 33, zoom: 2.6 }, // the regions in the Catalan Atlas's names, read in English (docs/period-names)
 };
 // settings a golden draws with beyond the defaults; region-z5 is the README's picture, lettered PORTOLANI
@@ -45,6 +47,7 @@ const OPTS = { 'region-z5': { autoTitle: false }, 'world-z2-voyage': { voyages: 
   'china-z5-doubt': { voyages: [{ id: 'ibn-battuta-6' }] },
   'levant-z6-marks': { sights: [{ name: 'Tyre', lon: 35.2, lat: 33.27 }, { name: 'Alexandria', lon: 29.92, lat: 31.2 }] },
   'ostia-z7-ruin': { sights: [{ name: 'Ostia', lon: 12.29, lat: 41.76, ruin: true }] },
+  'sheet-z3-voyage': { overlays: [{ id: 'de-la-cosa', mode: 'sheet' }], voyages: [{ id: 'columbus', colour: VOYAGE_CONTRAST[0], width: 3.2 }] },
   'old-world-z2.6-1375': { regions: 'english', regionSet: 'catalan-1375' } };
 // and its full-size render is kept for the README, so `npm run golden` refreshes both together
 const README_IMAGE = join(ROOT, 'docs', 'readme.jpg');
