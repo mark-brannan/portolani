@@ -996,7 +996,7 @@
       "Kankan Musa",
       "Kanku Musa"
     ],
-    "bio": "Mansa, or king, of Mali from about 1312 to about 1337. On his pilgrimage to Mecca in 1324–25 he spent three months in Cairo and gave away and spent so much gold that, by al-Umari's report, its price there had not recovered twelve years later. European charts drew him within years: Dulcert's of 1339 names him, and the Catalan Atlas of 1375 sets him on a throne holding up gold. Under him part of the Djinguereber Mosque was built at Timbuktu, and the city grew into a centre of Islamic learning. In Cairo he told how he came to the throne: the mansa before him had sailed west into the Atlantic with a great fleet, leaving Musa to rule in his place, and never came back.",
+    "bio": "Mansa, or king, of Mali from about 1312 to about 1337. On his pilgrimage to Mecca in 1324–25 he spent three months in Cairo and gave away and spent so much gold that, by al-Umari's report, its price there had not recovered twelve years later. European charts drew him within years: Dulcert's of 1339 names him, and the Catalan Atlas of 1375 sets him on a throne holding up gold. Under him part of the Djinguereber Mosque was built at Timbuktu, and the city grew into a centre of Islamic learning. In Cairo he told a story of how he came to the throne: the mansa before him, he said, had sailed west into the Atlantic with a great fleet and never came back. Siphiwe Baleka of the Balanta Society writes that Mali's wealth came from taxes, trade and enslavement, and that peoples such as the Balanta, who refused its taxes and its rule, remember it as an empire that raided them.",
     "images": [
       {
         "file": "Catalan_Atlas_BNF_Sheet_6_Mansa_Musa.jpg",
@@ -1009,7 +1009,8 @@
     ],
     "sources": [
       "mansa-musa",
-      "levtzion-hopkins-corpus"
+      "levtzion-hopkins-corpus",
+      "baleka-balanta-mali"
     ],
     "born": {
       "date": "c. 1280",
