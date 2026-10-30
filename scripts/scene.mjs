@@ -27,6 +27,7 @@ import { legPath, reachPath, isMigration, splitAtSeam, DASHES, VOYAGE_PALETTE, V
 export { VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, readVoyage, chronological, voyageLink };
 import { loadOverlay, drawOverlay, drawSheet } from './overlays.mjs';
 import { PEOPLE_FILE, PERSON_RED, personMarks, withPerson, peopleOf, whoOf } from './people.mjs';
+import { frameBox, fromCentre } from './frame-box.mjs';
 import { noteMarks, pickMark, markClear, tileSpot } from './notes.mjs';
 export { noteMarks, pickMark, markClear, tileSpot };
 const record = (id) => catalogue.find((r) => r.id === id); // a coastlines catalogue record by its id
@@ -178,8 +179,6 @@ const RAD = Math.PI / 180;
 const mercY = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360));
 const mercLat = (y) => (2 * Math.atan(Math.exp(y)) - Math.PI / 2) / RAD;
 const wrapLon = (lon) => ((((lon + 180) % 360) + 360) % 360) - 180;
-// Offset from the centre within +-180 as coast-wright's seam guard takes it: +180 stays on the right.
-const fromCentre = (d) => (d > 180 ? d - 360 : d < -180 ? d + 360 : d);
 const kOf = (zoom) => (512 * 2 ** zoom) / (2 * Math.PI); // px per radian of longitude
 
 // A projection is cylindrical or azimuthal. Cylindrical: x is longitude, the same in each, and y is
@@ -340,33 +339,8 @@ function zoomView(view, factor, px, py) {
   return clampView({ ...view, lon: c[0], lat: c[1], zoom });
 }
 
-// The lon/lat frame a projection paints, widened by `margin` degrees. An azimuthal view whose canvas
-// holds a pole or the rim takes all it can show; otherwise the canvas edge bounds it.
-function frameOf(proj, margin) {
-  if (!proj.rim) {
-    const half = W / 2 / proj.k / RAD;
-    return {
-      lonMin: proj.lonCenter - half - margin, lonMax: proj.lonCenter + half + margin,
-      latMin: proj.invert(0, H)[1] - margin, latMax: proj.invert(0, 0)[1] + margin,
-    };
-  }
-  const onCanvas = ([x, y]) => x >= 0 && x <= W && y >= 0 && y <= H;
-  const pole = [90, -90].some((lat) => proj.visible(0, lat) && onCanvas(proj.project(0, lat)));
-  const rimIn = [[0, 0], [W, 0], [0, H], [W, H]].some(([x, y]) => Math.hypot(x - W / 2, y - H / 2) >= proj.rim);
-  if (pole || rimIn) {
-    const reach = proj.cap / RAD;
-    return { lonMin: proj.lonCenter - 180 - margin, lonMax: proj.lonCenter + 180 + margin, latMin: Math.max(-90, proj.lat - reach) - margin, latMax: Math.min(90, proj.lat + reach) + margin };
-  }
-  let dMin = 0, dMax = 0, latMin = 90, latMax = -90;
-  const STEP = 50;
-  for (let t = 0; t <= Math.max(W, H); t += STEP) {
-    for (const [x, y] of [[Math.min(t, W), 0], [Math.min(t, W), H], [0, Math.min(t, H)], [W, Math.min(t, H)]]) {
-      const [lon, lat] = proj.invert(x, y), d = fromCentre(lon - proj.lonCenter);
-      if (d < dMin) dMin = d; if (d > dMax) dMax = d; if (lat < latMin) latMin = lat; if (lat > latMax) latMax = lat;
-    }
-  }
-  return { lonMin: proj.lonCenter + dMin - margin, lonMax: proj.lonCenter + dMax + margin, latMin: latMin - margin, latMax: latMax + margin };
-}
+// The lon/lat frame a projection paints on the canvas, widened by `margin` degrees (frame-box.mjs).
+const frameOf = (proj, margin) => frameBox(proj, W, H, 0, margin);
 // Whether a projection shows a point: all of them on a cylindrical one, the near side on an azimuthal.
 const shows = (proj, lon, lat) => !proj.visible || proj.visible(lon, lat);
 // At any of a longitude's 360-degree copies, so a frame may run past the antimeridian.

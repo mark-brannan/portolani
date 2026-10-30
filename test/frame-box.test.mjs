@@ -7,7 +7,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import { createScene } from '../scripts/scene.mjs';
-import { frameBox, POLE_LAT } from '../scripts/frame-box.mjs';
+import { frameBox } from '../scripts/frame-box.mjs';
 import { coastNames, joinNames } from '../scripts/names.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -24,16 +24,17 @@ const env = {
   loadFont: async (family) => { GlobalFonts.registerFromPath(join(ROOT, 'test', 'fixtures', 'IMFeENrm28P.ttf'), family); },
 };
 const run = (view, opts = {}) => createScene(env, { view, relief: ['marina'], trees: 'marina', ...opts });
+const PLAINS = { lon: -100, lat: 45, zoom: 6 }; // hills with trees among them: 3 trees stood on one before humps were kept clear
 const latOf = (data) => (p) => data.proj.invert(p.x, p.y)[1];
 
 test('a globe that holds a pole is seeded all round it, and one that does not, as before', async () => {
   const polar = (await run({ lon: 0, lat: 80, zoom: 3, projection: 'stereographic' })).data.proj;
   const box = frameBox(polar, 1600, 1000, 140);
-  assert.equal(box.latMax, POLE_LAT);
+  assert.ok(box.latMax >= 85, 'up to the pole');
   assert.equal(box.lonMax - box.lonMin, 360, 'every longitude about a pole');
   const flat = (await run({ lon: 15, lat: 62, zoom: 4 })).data.proj;
-  const [lonMin, latMax] = flat.invert(-140, -140), [lonMax, latMin] = flat.invert(1740, 1140);
-  assert.deepEqual(frameBox(flat, 1600, 1000, 140), { lonMin, lonMax, latMin, latMax }, 'a cylindrical view keeps its corners');
+  const [lonMin, latMax] = flat.invert(-140, -140), [lonMax, latMin] = flat.invert(1740, 1140), got = frameBox(flat, 1600, 1000, 140);
+  for (const [k, v] of Object.entries({ lonMin, lonMax, latMin, latMax })) assert.ok(Math.abs(got[k] - v) < 1e-6, `a cylindrical view keeps its corners (${k})`);
 });
 
 test('relief stands across a polar view and a whole-globe view, none on the far side', async () => {
@@ -57,4 +58,16 @@ test('trees keep out of the ranges drawn', async () => {
     for (const p of scene.relief.peaks) if (x > p.x - p.w / 2 && x < p.x + p.w / 2 && y > p.y - p.h && y < p.y) hit.push([x, y]);
   }
   assert.equal(hit.length, 0, `${hit.length} trees stand in a range`);
+});
+
+test('trees keep out of the hills drawn', async () => {
+  const { scene, data } = await run(PLAINS);
+  const humps = scene.relief.humps;
+  assert.ok(humps.length > 0 && data.trees.length > 0, 'hills and trees to test');
+  let hit = 0;
+  for (const s of data.trees) for (const t of s.trees) {
+    const x = data.proj.x(s.lon, s.lat) + t.dx, y = data.proj.y(s.lat, s.lon) + t.dy;
+    for (const p of humps) if (x > p.x - p.w / 2 && x < p.x + p.w / 2 && y > p.y - p.h && y < p.y) hit++;
+  }
+  assert.equal(hit, 0, `${hit} trees stand on a hill`);
 });

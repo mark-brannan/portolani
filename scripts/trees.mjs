@@ -207,7 +207,7 @@ function keepOutOf(scene) {
   if (c) box(c.x, c.y, c.x + c.w, c.y + c.h);
   for (const r of scene.roseDraws ?? []) disc(r.x, r.y, r.size / 2);
   for (const m of scene.mountains ?? []) disc(m.x, m.y, m.size / 2);
-  for (const p of scene.relief?.peaks ?? []) box(p.x - p.w / 2, p.y - p.h, p.x + p.w / 2, p.y); // a range keeps its own ground
+  for (const p of [...(scene.relief?.peaks ?? []), ...(scene.relief?.humps ?? [])]) box(p.x - p.w / 2, p.y - p.h, p.x + p.w / 2, p.y); // ranges and hills keep their own ground
   for (const t of scene.towns ?? []) {
     if (t.city) obb(t.box);
     else { const hw = t.h * 0.6; box(t.x - hw, t.y - t.h - 2, t.x + hw, t.y + 3); }
