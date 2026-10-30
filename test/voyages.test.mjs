@@ -435,3 +435,16 @@ test('the pen takes 2.5 s by default; the slider offers 1 s to 5 s in half secon
     assert.equal(voyageDrawSeconds(text), s, `voyagedraw=${text}`);
   }
 });
+
+test('a voyage with no colour picked takes the high-contrast palette when it is in the contrast set, and no blue', async () => {
+  const { voyageColours, VOYAGE_CONTRAST, VOYAGE_PALETTE } = await import('../scripts/voyages.mjs');
+  assert.equal(voyageColours(['columbus']).columbus, VOYAGE_PALETTE[0]);
+  assert.equal(voyageColours(['columbus', 'drake'], {}, new Set(['columbus'])).columbus, VOYAGE_CONTRAST[0]);
+  assert.equal(voyageColours(['columbus', 'drake'], {}, new Set(['columbus'])).drake, VOYAGE_PALETTE[0], 'a voyage clear of the sheet keeps the chart palette');
+  assert.equal(voyageColours(['columbus'], { columbus: '#123456' }, new Set(['columbus'])).columbus, '#123456', 'a picked colour stays');
+  for (const c of VOYAGE_CONTRAST) { // none in the blue hues, 190 to 255 degrees (purple starts at 265)
+    const [r, g, b] = [1, 3, 5].map((k) => parseInt(c.slice(k, k + 2), 16)), max = Math.max(r, g, b), d = max - Math.min(r, g, b);
+    const hue = d === 0 ? 0 : (max === r ? ((g - b) / d + 6) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4) * 60;
+    assert.ok(hue < 190 || hue > 255, `${c} is not blue`);
+  }
+});

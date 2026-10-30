@@ -24,7 +24,7 @@ import { POIS, POI_ZOOM } from './pois.mjs';
 export { SIGHT_TILES } from './sights.mjs'; // the page's tiles for its places; here so the module ships with the scene
 import { BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from './buildings.mjs';
 import { legPath, reachPath, isMigration, splitAtSeam, DASHES, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, readVoyage, chronological, voyageLink } from './voyages.mjs';
-export { VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, readVoyage, chronological, voyageLink };
+export { legPath, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, readVoyage, chronological, voyageLink };
 import { loadOverlay, drawOverlay, drawSheet } from './overlays.mjs';
 import { PEOPLE_FILE, PERSON_RED, personMarks, withPerson, peopleOf, whoOf } from './people.mjs';
 import { noteMarks, pickMark, markClear, tileSpot } from './notes.mjs';
@@ -2754,9 +2754,10 @@ function drawScene(g, scene, data, bg, view) {
   for (const s of show.kinds.has('ship') ? scene.ships : []) if (spriteIn(s.sprite, s.x, s.y, s.size)) drawSprite(g, s.sprite, s.x, s.y, s.size, { flip: s.flip, rot: s.flip ? -s.tilt : s.tilt, anchor: [0.5, 0.6] });
 
   // the voyages over the ornaments, under the cartouche
-  drawVoyages(g, scene.voyages, data.proj, r, viewRect(g, view, 0));
   // 9.1 the charts' sheets, each whole and opaque, over everything on the map, the last laid on top (overlays.mjs); their notes are drawn nowhere, found by the cursor (page.js)
   for (const o of scene.overlays) if (o.mode === 'sheet') drawSheet(g, o, data.proj, o.sheet);
+  // a voyage rides over the sheets, wherever they lie (docs/spec/design.md, "A laid sheet and what the user flies to next")
+  drawVoyages(g, scene.voyages, data.proj, r, viewRect(g, view, 0));
 
   // 10. cartouche, lettered in its cleared panel
   const c = scene.cartouche;
@@ -2986,9 +2987,9 @@ function drawAnchored(g, a, bg, view, layers) {
     const size = s.size * scaled('ship'), p = at(ll, size);
     if (p) drawSprite(g, s.sprite, p[0], p[1], size, { flip: s.flip, rot: s.flip ? -s.tilt : s.tilt, anchor: [0.5, 0.6] });
   }
+  for (const o of a.overlays) if (o.mode === 'sheet') drawSheet(g, o, proj, o.sheet); // the sheets, then the voyages over them, as at a stop
   drawVoyages(g, a.voyages, proj, { x0: 0, y0: 0, x1: W, y1: H }, undefined, true);
   for (const o of a.overlays) drawNotes(g, o, proj, { x0: 0, y0: 0, x1: W, y1: H });
-  for (const o of a.overlays) if (o.mode === 'sheet') drawSheet(g, o, proj, o.sheet); // the sheets last, as at a stop
   g.restore();
   if (show.kinds.has('cartouche')) drawCartouche(g, a.cartouche, (x0, y0, x1, y1) => g.drawImage(bg, x0, y0, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0));
   drawScaleBar(g, { proj }, bg, { scale: 1, x: 0, y: 0 }, W, H, show.scale, a.scaleSprite, scalePlace(a));
