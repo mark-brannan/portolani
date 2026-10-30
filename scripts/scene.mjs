@@ -952,13 +952,24 @@ const REGIONS = [
 ].map(([name, reading, lon, lat]) => ({ name, reading, lon, lat }));
 // The sets of region names a scene can letter: 'today' is REGIONS, any other is data/names/<id>.json.
 export const REGION_SETS = ['today', 'catalan-1375'];
+// The drawer's chip samples, a name of each set in each language (`latin` the set's own spelling, `english` its reading);
+// test/region-sets.test.mjs holds each one to a region its set letters.
+export const REGION_SAMPLES = { today: { latin: 'Hispania', english: 'Iberia' }, 'catalan-1375': { latin: 'Melly', english: 'Mali Empire' } };
+export const regionsOfToday = () => REGIONS;
 const regionSets = new WeakMap(); // environment -> id -> the promise of its names, read once
 function regionNamesOf(id, environment) {
   if (!REGION_SETS.includes(id) || id === 'today') return REGIONS;
   if (!regionSets.has(environment)) regionSets.set(environment, new Map());
   const sets = regionSets.get(environment);
-  // a set the site lacks letters today's names, so a missing file never stops the map
-  if (!sets.has(id)) sets.set(id, environment.readJSON(`data/names/${id}.json`).then((d) => d.names).catch(() => REGIONS));
+  // a set the site lacks letters today's names, so a missing file never stops the map; the failure is said and
+  // forgotten, so the next draw tries the file again rather than keep today's names for the session
+  if (!sets.has(id)) {
+    sets.set(id, environment.readJSON(`data/names/${id}.json`).then((d) => d.names).catch((e) => {
+      sets.delete(id);
+      console.warn(`region names ${id}: ${e?.message ?? e}; lettering today's names`);
+      return REGIONS;
+    }));
+  }
   return sets.get(id);
 }
 const CONTINENT_ZOOM_END = 5.5, REGION_ZOOM_END = 7; // continents: zoom < CONTINENT_ZOOM_END, regions overlap them to there; regions: zoom < REGION_ZOOM_END (they meet a continent's box and make way)

@@ -14,7 +14,7 @@
 // selection those chose, and are written back in the new form.
 // For a while, `debug=sheets[,rings]` and `tune=name:value,...` carry the under-the-hood section
 // (docs/atlas/under-the-hood.md), off by default.
-import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, voyageView, readVoyage, chronological, voyageLink, sightMarks, SIGHT_TILES, noteMarks } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, voyageView, readVoyage, chronological, voyageLink, sightMarks, SIGHT_TILES, noteMarks } from './scene.mjs';
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
@@ -361,8 +361,8 @@ const CHOICES = {
   overlap: [['smallest', 'Smallest', 'only the smallest of the charts that overlap'], ['fit', 'Fit', 'the chart nearest one window wide'], ['cut', 'All, cut', 'every chart, its lines stopping at a smaller chart\'s edge'], ['uncut', 'All, uncut', 'every chart in full']].map(([value, label, note]) => [value, label, note, OVERLAP_GLYPHS[value]]),
   projection: [['mercator', 'Mercator', 'rhumb lines straight'], ['plate-carree', 'Plate carrée', 'equal degrees'], ['miller', 'Miller', 'poles tamed'], ['equal-area', 'Equal-area', 'Gall–Peters'], ['orthographic', 'Globe', 'orthographic'], ['azimuthal-equidistant', 'Azimuthal equidistant', 'true from the centre'], ['stereographic', 'Stereographic', 'the polar chart']].map(([value, label, note = '']) => [value, label, note, PROJECTION_GLYPHS[value]]),
   // each region chip shows a name it letters, in the lettering's italic; showRegionSamples keeps it to the chosen set and language
-  regions: [['latin', 'Latin', 'Hispania', NAME_SAMPLE('Hispania')], ['english', 'English', 'Iberia', NAME_SAMPLE('Iberia')]],
-  regionSet: [['today', 'Today', 'the regions as they are named today', NAME_SAMPLE('Hispania')], ['catalan-1375', '1375 · Catalan Atlas', 'the realms the Catalan Atlas names, c. 1375', NAME_SAMPLE('Melly')]],
+  regions: [['latin', 'Latin', REGION_SAMPLES.today.latin, NAME_SAMPLE(REGION_SAMPLES.today.latin)], ['english', 'English', REGION_SAMPLES.today.english, NAME_SAMPLE(REGION_SAMPLES.today.english)]],
+  regionSet: [['today', 'Today', 'the regions as they are named today', NAME_SAMPLE(REGION_SAMPLES.today.latin)], ['catalan-1375', '1375 · Catalan Atlas', 'the realms the Catalan Atlas names, c. 1375', NAME_SAMPLE(REGION_SAMPLES['catalan-1375'].latin)]],
   titleMode: [['auto', 'Automatic', 'what the view shows'], ['custom', 'Custom']],
   mountains: [['off', 'Off', '', MOUNTAIN_GLYPHS.off], ['ink', 'Ink', 'black and white hatching, as Engraved', MOUNTAIN_GLYPHS.ink], ['colour', 'Colour', 'ochre wash, as the Carta Marina', MOUNTAIN_GLYPHS.colour]],
   hills: [['off', 'Off', '', MOUNTAIN_GLYPHS.off], ['catalan', 'Catalan drawings', 'Catalan Atlas, 1375', HILL_GLYPH]],
@@ -504,8 +504,8 @@ function readControls() {
   changed();
 }
 // The region chips' samples: a language chip shows a name of the chosen set, a set chip a name in the chosen language;
-// under a period's names the Latin chip letters the atlas's own spelling, so it reads "As lettered".
-const REGION_SAMPLES = { today: { latin: 'Hispania', english: 'Iberia' }, 'catalan-1375': { latin: 'Melly', english: 'Mali Empire' } };
+// under a period's names the Latin chip letters the atlas's own spelling, so it reads "As lettered". The samples are
+// scene.mjs's REGION_SAMPLES.
 function showRegionSamples() {
   const set = REGION_SAMPLES[style.regionSet] ? style.regionSet : 'today';
   for (const b of $('regions').children) {

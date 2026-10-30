@@ -214,6 +214,7 @@ scenario('regions: the slider round-trips', 'map=5.48/40.265/7.000', async (page
 // opened at that hash reads it back, its chips showing a name of the set.
 scenario('regionset: the 1375 chip round-trips', 'map=4.00/40.000/16.000', async (page) => {
   assert.equal(await value(page, 'regionSet'), 'today');
+  await openDrawer(page);
   await page.locator('#regionSet [data-value="catalan-1375"]').click();
   const written = (await hash(page)).slice(1);
   assert.equal(new URLSearchParams(written).get('regionset'), 'catalan-1375');
