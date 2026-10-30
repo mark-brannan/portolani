@@ -82,6 +82,8 @@ const ALL_CHARTS = [hashParams(), new URLSearchParams(location.search)].some((q)
 // the drawer's layout (`layout=`), a way of grouping the same controls; Default is written as no key
 const LAYOUT_NAMES = ['default', 'question', 'moods', 'sheet'];
 const layoutFromHash = () => (LAYOUT_NAMES.includes(hashParams().get('layout')) ? hashParams().get('layout') : 'default');
+// whether a grouped list's section opens when a mouse rests on its heading (`hover=`); on is written as no key, `hover=0` is off
+const hoverFromHash = () => hashParams().get('hover') !== '0';
 
 function viewFromHash() {
   const q = hashParams(), m = /^(-?[\d.]+)\/(-?[\d.]+)\/(-?[\d.]+)$/.exec(q.get('map') ?? '');
@@ -166,6 +168,7 @@ function writeHash() {
   q.set('map', `${v.zoom.toFixed(2)}/${v.lat.toFixed(3)}/${v.lon.toFixed(3)}`);
   if (v.projection !== PROJECTION_NAMES[0]) q.set('projection', v.projection);
   if (layout !== 'default') q.set('layout', layout);
+  if (!hoverOpen) q.set('hover', '0');
   if (!sameSet(selection, new Set(DEFAULT_SELECTION))) q.set('sprites', SPRITES.filter((s) => selection.has(s.key)).map((s) => encodeKey(s.key)).join(','));
   if (st.townSize !== DEFAULTS.townSize) q.set('townsize', st.townSize);
   if (!st.names) q.set('names', '0');
@@ -318,6 +321,12 @@ const SCALE_GLYPHS = {
   beads: svg(`<path d="M2 5h24M2 13h24" ${stroke('#8c2f1e', 0.8)}/><circle cx="6" cy="9" r="2.4" ${stroke('#8c2f1e', 0.9)}/><circle cx="14" cy="9" r="2.4" ${stroke('#8c2f1e', 0.9)}/><circle cx="22" cy="9" r="2.4" ${stroke('#8c2f1e', 0.9)}/>`),
   ruled: svg(`<path d="M2 4h24M2 14h24" ${stroke('#8c2f1e', 0.8)}/><path d="M3 3v12M14 3v12M25 3v12" ${stroke('#8c2f1e', 0.8)}/><circle cx="14" cy="9" r="2" fill="#e9d8b4" stroke="#8c2f1e" stroke-width=".8"/>`),
 };
+// a section heading with its rows, and the pointer on the heading: clicking (off), or resting while its rows slide open (on)
+const ARROW = '<path d="M17 3v10l2.4-2.2 1.7 3.8 1.5-.7-1.7-3.7H24Z" fill="currentColor"/>';
+const HOVER_GLYPHS = {
+  off: svg(`<path d="M2 4h13" ${stroke('currentColor', 1.4)}/>${ARROW}<path d="M14.5 1.5l1.2 1.2M13.5 5h1.6M14.5 8.5l1.2-1.2" ${stroke('currentColor', 0.8)}/>`),
+  on: svg(`<path d="M2 4h13" ${stroke('currentColor', 1.4)}/><path d="M5 8.5h9M5 12h7M5 15.5h8" ${stroke('currentColor', 0.7)}/>${ARROW}<path d="M25 2.5a2.6 2.6 0 1 1-2.6-.1" ${stroke('currentColor', 0.8)}/>`),
+};
 const MAP_LINES = '<path d="M0 4q8-3 14 2t14-1M0 13q9 3 15-1t13 2" fill="none" stroke="currentColor" stroke-width=".7" opacity=".6"/>';
 const BORDER_GLYPHS = {
   bordered: svg(`<rect width="28" height="18" fill="none"/>${MAP_LINES}<rect x="4" y="4" width="20" height="10" fill="#e9d8b4" stroke="#8c2f1e" stroke-width="1"/><rect x="6" y="6" width="16" height="6" fill="none" stroke="#8c2f1e" stroke-width=".6"/>`),
@@ -383,6 +392,7 @@ const CHOICES = {
   overlayMode: [['sheet', 'One sheet', 'the whole scan, opaque, laid level and centred, dragged by hand', HOOD_GLYPHS.sheets], ['pieces', 'Warped pieces', 'each piece warped onto today\'s coast, at the opacity below', HOOD_GLYPHS.rings]],
   tuneOrigin: [['rose', `Catalan rose (${ROSE_AT})`, 'every band\'s grid has a corner on the rose', HOOD_GLYPHS.rose], ['zero', '0° 0°', 'NOAA\'s own zero', HOOD_GLYPHS.zero]],
   tuneCurated: [['1', 'On', 'the curated charts take the place of the grid cells they hold', HOOD_GLYPHS.curated], ['0', 'Off', 'grid cells everywhere', HOOD_GLYPHS.grid]],
+  hoverOpen: [['off', 'Off', 'a click opens a section', HOVER_GLYPHS.off], ['on', 'On', 'resting the pointer on a heading opens its section', HOVER_GLYPHS.on]],
   tuneRoselines: [['1', 'On', 'the rose\'s 32 lines as one more hub at every zoom', HOOD_GLYPHS.roselines], ['0', 'Off', 'only the sheet the rose falls in', HOOD_GLYPHS.off]],
   flyShape: [['step', 'Step', 'out about the place left, across at the top, down onto the place; Blend lets the pan run alongside the zoom'], ['hyperbolic', 'Hyperbolic', 'van Wijk & Nuij, as MapLibre flies: pan and zoom together on one curve, Curve setting its height']],
 };
@@ -704,6 +714,7 @@ if (UI) {
 }
 
 let layout = layoutFromHash();
+let hoverOpen = hoverFromHash();
 let view = viewFromHash();
 let style = styleFromHash();
 let selection = selectionFromHash();
@@ -787,10 +798,12 @@ phone.addEventListener('change', () => { drawCards(); if (ground) render(); }); 
 // interest, the compass Go, the dividers and the medallion the timeline (voyages and people on one axis, each button
 // opening it at its own lane), the anchor the anchorages.
 // At most one is open. A click on a button opens its drawer and a second click shuts it; a click on another
-// button shuts it and opens that one (the timeline's other button keeps it open and moves to its lane); a choice in it, Esc, or a click or a focus outside the row and the
-// drawer shuts it. On a wide screen the drawer hangs below the row, which it never covers or moves, and a
-// touch on the map shuts it; on a phone it is a bottom sheet with the map shrunk above it, and it stays up
-// while the map is moved: that is how a control's effect is seen. An open drawer takes the focus (Go its
+// button shuts it and opens that one (the timeline's other button keeps it open and moves to its lane); Esc, or a
+// click or a focus outside the row and the drawer, shuts it. A choice in it leaves it open, and the map does what
+// was asked behind it (docs/spec/design.md, "A drawer stays open on a click or a choice"). On a wide screen the
+// drawer hangs below the row, which it never covers or moves, and a touch on the map shuts it; on a phone it is a
+// bottom sheet, and a tap or a drag on the map leaves it up (the user, 2026-10-30, reversing #262): that is how a
+// control's effect is seen. An open drawer takes the focus (Go its
 // text box, on a wide screen only, so a phone's keyboard does not cover the sheet); shut by the keyboard,
 // the focus goes back to the button that opened it.
 const where = $('where');
@@ -814,16 +827,16 @@ function setDrawer(open, byKeyboard = false, by = drawers.find(([, d]) => d === 
 for (const [b, d] of drawers) b.addEventListener('click', (e) => setDrawer(d === openDrawer() && b === openedBy ? false : d, e.detail === 0, b)); // detail 0: Enter or Space
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && openDrawer()) setDrawer(false, true); });
 const outside = (t) => { const d = openDrawer(); return d && t instanceof Node && !where.contains(t) && !d.contains(t); };
-// On a phone the settings and the charts stay up while the map is moved; a lighter drawer shuts as on a wide screen.
-addEventListener('pointerdown', (e) => { if (outside(e.target) && !(phone.matches && e.target === canvas && !openDrawer().classList.contains('menu'))) setDrawer(false); });
+// On a phone every drawer stays up while the map is tapped or moved.
+addEventListener('pointerdown', (e) => { if (outside(e.target) && !(phone.matches && e.target === canvas)) setDrawer(false); });
 addEventListener('focusout', (e) => { if (e.relatedTarget && outside(e.relatedTarget)) setDrawer(false); }); // tabbed out; a click that focuses nothing has no relatedTarget
 
-// Reset: every control back to its default, the view (place and projection) and the drawer's layout kept. The hash holds the whole
+// Reset: every control back to its default, the view (place and projection), the drawer's layout and hover kept. The hash holds the whole
 // style, so a hash with only the view is the default style; the hashchange handler below redraws from it.
 $('reset').addEventListener('click', () => {
   const m = hashParams().get('map'), p = hashParams().get('projection');
   $('shareUrl').hidden = true; $('shareNote').textContent = '';
-  location.hash = [m && `map=${m}`, p && `projection=${p}`, layout !== 'default' && `layout=${layout}`].filter(Boolean).join('&');
+  location.hash = [m && `map=${m}`, p && `projection=${p}`, layout !== 'default' && `layout=${layout}`, !hoverOpen && 'hover=0'].filter(Boolean).join('&');
 });
 // Copy link: the hash is kept current by writeHash. Where the clipboard is refused (an insecure page,
 // a denied permission) the link is put in a box, selected, to copy by hand.
@@ -1274,7 +1287,8 @@ const around = (lon, lat, r) => viewOfFrame({ lonMin: lon - r, lonMax: lon + r, 
 const at = (lon, lat, zoom) => ({ lon, lat, zoom });
 const both = (a, b) => viewOfFrame({ lonMin: a[0] - a[2], lonMax: b[0] + b[2], latMin: Math.min(a[1] - a[2], b[1] - b[2]), latMax: Math.max(a[1] + a[2], b[1] + b[2]) }); // two centres, west then east, on one sheet
 const CAPTION = 'notes to come'; // the line under an entry until its caption is written
-// A group: [heading, rows, open] (an empty heading for none); a heading folds its rows, shut unless open;
+// A group: [heading, rows, open, span] (an empty heading for none); at most one group open at a time, on load the first marked open,
+// else the first; an era's span of years shows beside its heading with its count;
 // a row: [name, view, title, text], the title the cartouche's when it differs from the name. A row with a tile
 // in SIGHT_TILES takes the line under its name (the tile's date) and its caption (the tile's text) from it.
 const ANCHORAGES = [
@@ -1314,7 +1328,7 @@ const SIGHTS = [
     ['Ostia', port(12.29, 41.76)],
     ['Berenike', port(35.47, 23.91)],
     ['Barygaza', port(72.99, 21.71), 'Barygaza (Bharuch)'],
-  ]],
+  ], null, 'c. 1000 BC – 2nd c. AD'],
   ['The medieval Indian Ocean and Asia', [
     ['Siraf', port(52.33, 27.67)],
     ['Aden', port(45.03, 12.78)],
@@ -1322,7 +1336,7 @@ const SIGHTS = [
     ['Calicut', port(75.78, 11.25), 'Calicut (Kozhikode)'],
     ['Malacca', port(102.25, 2.19), 'Malacca (Melaka)'],
     ['Quanzhou', port(118.68, 24.87)],
-  ]],
+  ], null, '9th–15th c.'],
   ['The age of discovery', [
     ['Lisbon', port(-9.14, 38.72)], // also where charts were made
     ['São Jorge da Mina', port(-1.35, 5.08), 'São Jorge da Mina (Elmina)'],
@@ -1335,7 +1349,7 @@ const SIGHTS = [
     ['Venice', port(12.33, 45.44), null, null, CHARTMAKING],
     ['Majorca', at(3.0, 39.6, 7), null, null, CHARTMAKING],
     ['Dieppe', port(1.08, 49.93), null, null, CHARTMAKING],
-  ], 'open'],
+  ], 'open', '1311–1619'],
   ['The modern world', [
     ['Suez', port(32.55, 29.97)],
     ['Panama', port(-79.53, 8.97)],
@@ -1343,7 +1357,7 @@ const SIGHTS = [
     ['Hong Kong', port(114.20, 22.30)],
     ['Shanghai', port(121.47, 31.23)],
     ['Rotterdam', port(4.48, 51.92)],
-  ]],
+  ], null, '1819–1914'],
 ];
 // name, year, view, [the city it was made in, its view], text, the id of its scan in packs/overlays/overlays.json (none without one)
 const CHARTS = [
@@ -1990,9 +2004,68 @@ const caption = (text) => `<span class="notes">${text ?? CAPTION}</span>`;
 for (const [list, groups] of [[$('anchorages'), ANCHORAGES], [$('sightsList'), SIGHTS]]) {
   const rows = (items) => items.map(([name, v, title, text, tag]) => { const tile = SIGHT_TILES[name];
     return `<li><button type="button" data-place="${places.push({ name, view: { ...v, title: title ?? name } }) - 1}">${title?.startsWith(`${name} (`) ? title : name}${tile?.date ? `<small>${[tile.date, tag].filter(Boolean).join(' · ')}</small>` : ''}</button>${caption(text ?? tile?.text)}</li>`; }).join('');
-  list.innerHTML = groups.map(([group, items, open]) => (group ? `<li class="group"><details${open ? ' open' : ''}><summary>${group}</summary><ul class="places">${rows(items)}</ul></details></li>` : rows(items))).join('');
-  list.addEventListener('click', (e) => { const b = e.target.closest('[data-place]'); if (b) { setDrawer(false); goTo(places[b.dataset.place].view); } });
+  const first = groups.findIndex(([group, , open]) => group && open), opened = first >= 0 ? first : groups.findIndex(([group]) => group);
+  list.innerHTML = groups.map(([group, items, , span], i) => (group ? `<li class="group${i === opened ? ' open' : ''}"><button type="button" class="fold" aria-expanded="${i === opened}">${group}<small>${[items.length, span].filter(Boolean).join(' · ')}</small></button><div class="rows"><div${i === opened ? '' : ' inert'}><ul class="places">${rows(items)}</ul></div></div></li>` : rows(items))).join('');
+  list.addEventListener('click', (e) => { const b = e.target.closest('[data-place]'); if (b) goTo(places[b.dataset.place].view); });
 }
+// Any grouped list in a drawer opens at most one group at a time: a click on a shut group's heading slides the open
+// one shut and this one open, together; a click on the open one slides it shut and leaves none open, so a search can
+// move between groups quickly (docs/spec/design.md, "A grouped list in a drawer opens one group at a time").
+// The rule is the list's, so a group added or moved needs no code.
+function foldTo(group) {
+  const shut = group.classList.contains('open');
+  for (const g of group.parentElement.children) {
+    if (!g.classList.contains('group')) continue;
+    const on = g === group && !shut;
+    g.classList.toggle('open', on);
+    g.querySelector(':scope > .fold').setAttribute('aria-expanded', String(on));
+    g.querySelector(':scope > .rows > div').inert = !on;
+  }
+}
+// With a mouse (a screen that can hover), resting the pointer on a shut group's heading for HOVER_DWELL slides it open and
+// the open one shut, as a click does, while the "Sections open on hover" chips are on; leaving the list shuts nothing.
+// A heading counts only when the pointer moves onto it: one the slide carries under the pointer (an open group above
+// shuts and the list rises) does not open on the next nudge, only once the pointer has left it and come back. A click on
+// the heading the dwell just opened, before the pointer leaves it, is the click that was on its way, so it leaves the
+// section open; the next click shuts it.
+const HOVER_DWELL = 350; // ms
+const HOVER_MEDIA = '(hover: hover) and (pointer: fine)'; // index.html hides the chips where this does not match
+const canHover = matchMedia(HOVER_MEDIA);
+const NO_DWELL = { group: null, timer: 0 };
+let dwell = NO_DWELL, hoverOpened = null, slid = null, last = null; // last: the pointer's position and the group under it
+const groupAt = (t) => t instanceof Element && t.closest('.group > .fold')?.parentElement || null;
+const groupUnder = ([x, y]) => groupAt(document.elementFromPoint(x, y));
+document.addEventListener('pointermove', (e) => {
+  const at = [e.clientX, e.clientY];
+  if (e.pointerType !== 'mouse' || (last && at[0] === last.at[0] && at[1] === last.at[1])) return;
+  const g = groupAt(e.target);
+  // the heading now under the pointer was already under its last position, though that position showed another: it came to the pointer
+  if (g && last && g !== last.g && groupUnder(last.at) === g) slid = g;
+  if (g !== slid) slid = null;
+  if (g !== hoverOpened) hoverOpened = null;
+  last = { at, g };
+  const want = hoverOpen && canHover.matches && g && g !== slid && !g.classList.contains('open') ? g : null;
+  if (want === dwell.group) return;
+  clearTimeout(dwell.timer);
+  dwell = !want ? NO_DWELL : { group: want, timer: setTimeout(() => {
+    dwell = NO_DWELL;
+    if (!want.classList.contains('open') && groupUnder(last.at) === want) { foldTo(want); hoverOpened = want; }
+  }, HOVER_DWELL) };
+});
+document.addEventListener('pointerout', (e) => {
+  const g = groupAt(e.target);
+  if (g && g === dwell.group && groupAt(e.relatedTarget) !== g) { clearTimeout(dwell.timer); dwell = NO_DWELL; }
+});
+document.addEventListener('click', (e) => {
+  const h = e.target.closest('.group > .fold'), g = h?.parentElement;
+  if (!g) return;
+  const swallow = g === hoverOpened && g.classList.contains('open') && e.detail !== 0; // detail 0: Enter or Space
+  hoverOpened = null;
+  if (!swallow) foldTo(g);
+});
+const showHover = () => { $('hoverOpen').value = hoverOpen ? 'on' : 'off'; };
+showHover();
+$('hoverOpen').addEventListener('input', () => { hoverOpen = $('hoverOpen').value === 'on'; writeHash(); });
 
 // Each chart a row: its scan as a thumbnail (the drawer's chart glyph, greyed, until it has one) and its name, either
 // of which flies to frame the sheet and shows it, never hides it; the eye beside the name shows or hides the sheet and
@@ -2016,7 +2089,6 @@ $('chartList').addEventListener('click', (e) => {
   if (!b) return;
   const chart = CHARTS[b.dataset.chart], o = OVERLAYS.find((v) => v.id === chart.overlay), shown = !!o && style.overlay === o.id;
   if (b.dataset.to === 'eye') { if (o) setSheet(shown ? null : o.id); return; }
-  setDrawer(false);
   if (b.dataset.to === 'made') {
     const s = sheetShown(), to = clampView({ ...chart.made, projection: view.projection });
     if (s) { const proj = viewProjection(to), [x, y] = proj.project(to.lon, to.lat); if (onSheet(s, proj, s.sheet, x, y)) setSheet(null); }
@@ -2105,7 +2177,7 @@ $('coords').addEventListener('submit', async (e) => {
   const target = p ? { ...p, zoom: Math.max(view.zoom, LOCATE_ZOOM) } : await findPlace(text);
   if (!target) { miss.textContent = text.trim() ? `No place called “${text.trim()}”` : 'Type a place, or latitude, longitude: 36.28, -76'; miss.hidden = false; return; } // the text before the unhide, so a reader announces it
   miss.hidden = true;
-  setDrawer(false);
+  if (phone.matches) $('coordsText').blur(); // the drawer stays up; a phone's keyboard goes, so the map shows
   goTo(target);
 });
 $('coordsText').addEventListener('input', () => { $('goMiss').hidden = true; });
@@ -2195,7 +2267,7 @@ for (const id of Object.values(KNOB_SLIDERS)) $(id).addEventListener('input', (e
 for (const id of ['debug', 'overlap', 'overlayMode', 'overlayOpacity', ...Object.values(KNOB_CHIPS), ...Object.values(KNOB_SLIDERS), 'projection', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'scaleBorder', 'land', 'islands', 'seaTint', 'rivers', 'lakes', 'trees', 'mountains', 'hills', 'continentsZoom', 'regions', 'regionSet', 'regionsZoom', 'titleMode', 'townSize', 'voyageWidth']) $(id).addEventListener('input', readControls);
 let typing = 0; // a typed title is placed when the typing pauses, not on every key: a placement takes up to a few hundred ms
 $('title').addEventListener('input', () => { clearTimeout(typing); typing = setTimeout(readControls, 400); });
-addEventListener('hashchange', () => { layout = layoutFromHash(); showLayout(); view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); showVoyage(); showPeople(); render(); });
+addEventListener('hashchange', () => { layout = layoutFromHash(); showLayout(); hoverOpen = hoverFromHash(); showHover(); view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); showVoyage(); showPeople(); render(); });
 showPlacement();
 render();
 
