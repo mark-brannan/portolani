@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { legPath, splitAtSeam, problems, checkPerson, distanceKm, STEP_KM, readVoyage, voyageColours, VOYAGE_PALETTE, reachPath, seaSamples, VOYAGE_DRAW, voyageDrawSeconds } from '../scripts/voyages.mjs';
+import { legPath, splitAtSeam, problems, checkPerson, distanceKm, STEP_KM, readVoyage, voyageColours, VOYAGE_PALETTE, reachPath, seaSamples, VOYAGE_DRAW, voyageDrawSeconds, VOYAGE_CONTRAST, VOYAGE_WIDTH, VOYAGE_WIDTHS, isBroken } from '../scripts/voyages.mjs';
 import { viewProjection, voyageMarks, voyageView, CONTINENT_ZOOM_END, W, H } from '../scripts/scene.mjs';
 import { loadLand, checkVoyage, voyageIds, readJSON } from '../scripts/check-voyages.mjs';
 
@@ -371,6 +371,16 @@ test('voyage colours: the first red, the rest distinct and seeded on the id, a p
   assert.equal(Object.keys(voyageColours(VOYAGE_PALETTE.map((_, i) => `v${i}`).concat('extra'))).length, VOYAGE_PALETTE.length + 1);
 });
 
+test('Heavy is the default weight; a voyage with a dashed or dotted leg is broken, and six broken voyages still draw in six inks', () => {
+  assert.equal(VOYAGE_WIDTH, Math.max(...VOYAGE_WIDTHS));
+  assert.ok(isBroken({ legs: [{ confidence: 'attested' }, { confidence: 'inferred' }] }));
+  assert.ok(!isBroken({ legs: [{ confidence: 'attested' }] }));
+  const ids = ['columbus', 'da-gama', 'dias', 'magellan', 'drake', 'polo'], c = voyageColours(ids, {}, new Set(ids));
+  assert.equal(c.columbus, VOYAGE_CONTRAST[0]);
+  assert.equal(new Set(Object.values(c)).size, ids.length, 'two broken voyages share an ink while inks are free');
+  assert.equal(Object.values(c).filter((h) => VOYAGE_CONTRAST.includes(h)).length, VOYAGE_CONTRAST.length, 'the high-contrast inks go first');
+});
+
 // The menu is chronological: the first number of `when` is the start year (BC negative). A voyage's own
 // sub-voyages (columbus, columbus-2..4; zheng-he, zheng-he-1, -4, -5) stay together, ordered by their own
 // dates, and the family sits where its first voyage starts.
@@ -433,5 +443,18 @@ test('the pen takes 2.5 s by default; the slider offers 1 s to 5 s in half secon
   assert.deepEqual(VOYAGE_DRAW, { min: 1, max: 5, step: 0.5, seconds: 2.5 });
   for (const [text, s] of [[null, 2.5], ['', 2.5], ['1', 1], ['1.5', 1.5], ['5', 5], ['4.5', 4.5], ['0.5', 2.5], ['5.5', 2.5], ['1.25', 2.5], ['fast', 2.5]]) {
     assert.equal(voyageDrawSeconds(text), s, `voyagedraw=${text}`);
+  }
+});
+
+test('a voyage with no colour picked takes the high-contrast palette when it is in the contrast set, and no blue', async () => {
+  const { voyageColours, VOYAGE_CONTRAST, VOYAGE_PALETTE } = await import('../scripts/voyages.mjs');
+  assert.equal(voyageColours(['columbus']).columbus, VOYAGE_PALETTE[0]);
+  assert.equal(voyageColours(['columbus', 'drake'], {}, new Set(['columbus'])).columbus, VOYAGE_CONTRAST[0]);
+  assert.equal(voyageColours(['columbus', 'drake'], {}, new Set(['columbus'])).drake, VOYAGE_PALETTE[0], 'a voyage clear of the sheet keeps the chart palette');
+  assert.equal(voyageColours(['columbus'], { columbus: '#123456' }, new Set(['columbus'])).columbus, '#123456', 'a picked colour stays');
+  for (const c of VOYAGE_CONTRAST) { // none in the blue hues, 190 to 255 degrees (purple starts at 265)
+    const [r, g, b] = [1, 3, 5].map((k) => parseInt(c.slice(k, k + 2), 16)), max = Math.max(r, g, b), d = max - Math.min(r, g, b);
+    const hue = d === 0 ? 0 : (max === r ? ((g - b) / d + 6) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4) * 60;
+    assert.ok(hue < 190 || hue > 255, `${c} is not blue`);
   }
 });
