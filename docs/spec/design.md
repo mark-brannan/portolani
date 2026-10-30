@@ -29,13 +29,14 @@ Feature: Drawer controls are chips that show their effect
     And each chip or control shows its effect (a swatch, a line sample or a small example) where it can, not only a label
 
 Feature: A point of interest opens a tile, never lettering
-  Source: docs/decisions.md 2026-10-21, "my preference is as a 'click' or 'tap' on mobile, then a little educational popover tile appears nearby the point of interest"; "a major landing, a death/confrontation, a location where maps were made, whatever we decide is a point of interest should get a tile with flavor text." ([#212](https://github.com/mark-brannan/portolani/pull/212#discussion_r4332019539))
+  Source: docs/decisions.md 2026-10-21, "my preference is as a 'click' or 'tap' on mobile, then a little educational popover tile appears nearby the point of interest"; "a major landing, a death/confrontation, a location where maps were made, whatever we decide is a point of interest should get a tile with flavor text." ([#212](https://github.com/mark-brannan/portolani/pull/212#discussion_r4332019539)); where the tile sits, the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "Tiles popping over for POIs on the charts need to be offset so that they do not cover any part of the hit box.  Ideally there is a small margin between the hitbox of the point and the tile describing that point."
   Scenario: click or tap a point of interest
     Given the chart with a point of interest drawn (a voyage's skull, a landing, a place where maps were made)
     When the user looks at it without touching it
     Then no text is drawn beside the mark, as cities and regions have
     When the user clicks it, or taps it on a phone
     Then a small tile of flavour text opens near it
+    And the tile sits clear of the point's hit box, covering no part of it, with a small margin between the two
 
 Feature: New decorations ship on; headless scene options stay off
   Source: repo CLAUDE.md, "A new visual decoration ships on by default: a sprite kind, a style, a drawn feature. Put it in the page's `DEFAULTS` and in `defaultSprites`, unless the user asks otherwise, for example by raising it as a concern on the PR."; "Headless scene options (`relief`, `trees`, `rivers`, `lakes`) stay off by default, so each golden isolates one thing."
@@ -102,7 +103,7 @@ Feature: The warped pieces are the alternative, behind a setting
     And other comparison controls (a slider wipe, a swipe) are later work, behind the same setting
 
 Feature: A chart's row in the Charts drawer
-  Source: the user's brief on [#266](https://github.com/mark-brannan/portolani/pull/266), 2026-10-29, and the follow-up the same day ("row shape: D", "I would like to use the full name for the chart link on our page: 'Map of Juan de la Cosa'"): "if the only button we need is to jump to the chart's default position and show it, then we really need no button beyond the name of the chart itself"; "put the originating city immediately to the right ... and use it as another button. In that case the button text is still 'Majorca' and no further explanation is needed"; "'Where it was made' is not helpful"; "all charts to have a miniature version of the scan for their icon". The second pass, later that day: "I do want to increase the size of the drawer thumbnails, by at least ~50%, accounting for more vertical space when the notes come in for these entries also. I would like all chart thumbnails for charts that we have to be the full color version all the time (if we have the chart in the project), no fade/gray when unselected. grey when chart not imported is still ok. I would like a show/hide icon (or button?) to the right of each chart name instead of clicking the chart. It might be a simple eye vs closed eye with slash in the usual style, or it might be an eye with an eye patch evocative of a pirate."; "clicking the origin city should hide the chart when zooming to the city, if the chart would result in the obstructing the city from view. Clicking either the map icon, or the map name should zoom to the correct position for the chart...but the show/hide button controls show/hide. The very first time any chart is selected after opening the drawer, when none was selected previously is to fade in the chart when clicking any of these: the chart icon, the chart name; however the show/hide is still a fast show action. Clicking the chart icon or chart name after the chart is already shown does not hide it, only the show/hide icon hides it."
+  Source: the user's brief on [#266](https://github.com/mark-brannan/portolani/pull/266), 2026-10-29, and the follow-up the same day ("row shape: D", "I would like to use the full name for the chart link on our page: 'Map of Juan de la Cosa'"): "if the only button we need is to jump to the chart's default position and show it, then we really need no button beyond the name of the chart itself"; "put the originating city immediately to the right ... and use it as another button. In that case the button text is still 'Majorca' and no further explanation is needed"; "'Where it was made' is not helpful"; "all charts to have a miniature version of the scan for their icon". The second pass, later that day: "I do want to increase the size of the drawer thumbnails, by at least ~50%, accounting for more vertical space when the notes come in for these entries also. I would like all chart thumbnails for charts that we have to be the full color version all the time (if we have the chart in the project), no fade/gray when unselected. grey when chart not imported is still ok. I would like a show/hide icon (or button?) to the right of each chart name instead of clicking the chart. It might be a simple eye vs closed eye with slash in the usual style, or it might be an eye with an eye patch evocative of a pirate."; "clicking the origin city should hide the chart when zooming to the city, if the chart would result in the obstructing the city from view. Clicking either the map icon, or the map name should zoom to the correct position for the chart...but the show/hide button controls show/hide. The very first time any chart is selected after opening the drawer, when none was selected previously is to fade in the chart when clicking any of these: the chart icon, the chart name; however the show/hide is still a fast show action. Clicking the chart icon or chart name after the chart is already shown does not hide it, only the show/hide icon hides it." The icon and the eye, the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "I expect that the chart icon itself shows a chart and resets a chart to default position"; "I expect the show hide icon to ONLY show and hide individual charts.  It does not reset any, it does not clear others, it does [not] change zoom or position."; "Clicking a 'hide' does NOT change the show/hide status for any other charts.  Clicking a show does NOT change the show/hide status for any other charts."
   Scenario: the row
     Given the Charts drawer open
     When the user looks at a chart's row
@@ -121,6 +122,12 @@ Feature: A chart's row in the Charts drawer
     Then the map flies to the frame again and the sheet stays shown
     When the user clicks the show/hide icon
     Then the sheet shows at once, no fade, or hides if it was shown; nothing else in the row hides it
+    And the eye changes that chart alone: no other chart is shown or hidden, no placement is reset, and the map's zoom and position stay where they are
+  Scenario: the icon lays the sheet back where it starts
+    Given a chart's sheet moved, turned or snapped to another placement, or hidden
+    When the user clicks the chart's icon
+    Then the sheet is shown, laid back at its default placement
+    And whether that click also hides every other chart, or the drawer instead gets a button that clears them, waits on the user (UI walk 2026-10-30): "possibly (TBC, not certain) clears other charts.  IF it does not clear, then this drawer needs a clear button."
   Scenario: the city clears the way to itself
     Given a chart's sheet shown
     When the user clicks the chart's city
@@ -402,13 +409,20 @@ Feature: A grouped list in a drawer opens one group at a time
     Given any drawer list arranged in groups (the Sights eras, the anchor's regions and seas, and the charts and voyages once they are grouped)
     When the user looks at it
     Then each group is a heading row with no triangle; the heading carries what the group holds (its count, and its span of years where the group is an era)
-    And exactly one group is open; the one the list opens with is the group the data marks open, else the first
+    And at most one group is open; the one the list opens with is the group the data marks open, else the first
   Scenario: the slide
+    Source: the open heading, the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "Clicking the section headings that divide up groups in the drawers should close a section if it was already open, so that we can move between them more quickly if searching." This overtakes "a click on the open group's heading does nothing".
     Given one group open
     When the user clicks a closed group's heading
     Then the open group slides shut and the clicked one slides open together, in about a quarter of a second, and the list does not jump
-    And a click on the open group's heading does nothing; the list is never left with no group open
-    And with reduced motion the groups swap with no slide
+    When the user clicks the open group's heading
+    Then it slides shut, and the list is left with no group open until a heading is clicked
+    And with reduced motion the groups swap, open or shut, with no slide
+  Scenario: a group opens as the pointer nears it (waiting on the user, UI walk 2026-10-30)
+    Source: the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "alternatively, an animation effect and mousing over the next section would be a nice experience so that the sections automatically show their contents when you get close to the next section.  This will differ between mobile and desktop."
+    Given a grouped list in a drawer
+    When the pointer nears a closed group's heading
+    Then whether it opens on its own, and how a phone differs from a wide screen, is open
   Scenario: the groups are the content's, not the control's
     Given the lists grow and are reorganised, as the user expects
     When a group is added, split or moved to another drawer
@@ -422,3 +436,63 @@ Feature: The atlas's own names over the regions (to explore)
     Then the regions read in the terms and the language of the Catalan Atlas: "Golden Horde", "Mali Empire", "Il-Khanate"
     And today's names stay the default, the period names an alternative to them
     And how it is offered is open: the user asked for it to be explored
+
+Feature: A flight keeps the eye on the ground
+  Source: the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: ""flying" needs to be slower when zooming across the map, and fly roughly to the correct lat/lon before zooming in.  Zooming before flying close to the position is dizzying and causes the viewer to loose the visual sense of position."; "When already zoomed in close, and then flying to a far distant location by click...we should zoom out first to a suitable distance and then back in.  The zoom out should be based roughly on the distance between the two points.  IT is not needed to zoom out if the points are very very close to together, for example on the same screen or just at the edge of the screen."
+  Scenario: over first, then down
+    Given the map at any view
+    When the user clicks something that flies the map (a sight, an anchorage, a chart, a voyage, a person, Go)
+    Then the flight is slower than the 600 ms one of the walk
+    And the map reaches roughly the place's longitude and latitude before it zooms in, never zooming in on the way
+  Scenario: a far place from a close zoom
+    Given the map zoomed in close
+    When the user flies to a place far off
+    Then the map zooms out first, by roughly as much as the distance between the two places asks, then zooms back in on the place
+    And a place on the same screen, or just past its edge, is flown to with no zoom out
+
+Feature: Go reads a position however it is written
+  Source: the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "Position should accept coordinates in other formats besides decimal degrees.  lat/lon with degrees, minutes, and seconds OR decimal degrees...  and optionally the ° symbol or N/S/E/W should all be allowed.  You may use simple arithmetic to convert on the 'Go' box...although it would be a nice-to-have if we converted and showed the three forms of position in the text somewhere to the side of the page (At least for desktop, maybe not mobile)"
+  Scenario: a position typed in Go
+    Given the Go box
+    When the user types a latitude and longitude in degrees, minutes and seconds or in decimal degrees, with or without the ° symbol, with or without N, S, E or W
+    Then Go reads it and flies there: `38.72 -9.14`, `38°43'12"N 9°08'24"W` and `38 43 12 N 9 8 24 W` all land on Lisbon
+  Scenario: the three forms beside the page (waiting on the user, UI walk 2026-10-30)
+    Given a position gone to
+    When the user looks to the side of the page, on a wide screen at least
+    Then the position may show there in the three forms: "a nice-to-have", and "maybe not mobile"
+
+Feature: A person or a voyage lands wide enough to see round it
+  Source: the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "We should not have any people with zooms as clsoe as "7.96".  I think 6 is about the closes zoom we should have for any person or voyage (and maybe other things)."; "Mansa Musa should be at about a zoom of 4 and centered in such a way that we can see all of the west side of northern Africa as well as Jeddah/Mecca without the drawer blocking the view."
+  Scenario: the closest a flight lands
+    Given any person or voyage
+    When the user clicks it and the map flies to it
+    Then it lands at zoom 6 or wider, never closer (the mansa before Mansa Musa landed at 7.96)
+    And whether the same floor holds for other things ("and maybe other things") is open
+  Scenario: Mansa Musa
+    Given the people drawer open
+    When the user flies to Mansa Musa
+    Then the map lands at about zoom 4, centred so all of the west side of northern Africa and Jeddah and Mecca show, none of it under the open drawer
+  Scenario: other people land wider (waiting on the user, UI walk 2026-10-30)
+    Source: the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "Some of the other zooms for other people may also need to be zoomed out a bit more to get context and not feel too "boxed in"."
+    Given a person whose flight lands at zoom 6 or wider
+    When the user flies to them
+    Then which people, and how much wider, is open
+
+Feature: A person's picture card
+  Source: the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "Picture cards for people, need a way to dismiss them.  We can reset by clicking the person again...but to dismiss, either a gutter/trash to drag to, or an X to click, or probably my preference is for a dismiss or "put away" button/icon on the back of the card.  The text on the back of many of the people pictures is too small.  I think I want the default size on desktop for the pictures to be larger.  Whichever one is touched/grabbed last is automatically on top, in front.  I do not want the full, repetative text "Its page on Wikimedia Commons" repeated everywhere.  IT looks dumb.  Just use a small link glyph of some kind...probably one of these: ⎘, ⧉, ⧉, ⮺, but perhaps 🔗"
+  Scenario: put away, and on top
+    Given people's picture cards open on the page
+    When the user turns a card to its back
+    Then a put-away icon there dismisses the card, and a click on the person again brings it back
+    And the card last touched or grabbed is on top, in front of the others
+  Scenario: the card's back and its size
+    Given a picture card
+    When the user reads its back
+    Then the text is larger than at the walk
+    And the link to Wikimedia Commons is a small link glyph (⎘, ⧉, ⮺ or 🔗), never the sentence "Its page on Wikimedia Commons"
+    And on a wide screen a card opens larger by default than at the walk
+  Scenario: the resize and flip icons (waiting on the user, UI walk 2026-10-30)
+    Source: the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "The resize icon and the flip icon are both confusing.  I feel as though the resize should have arrows or something.  Do you have other examples of a resize icon?  The flip does not look like an arrow.  We could instead put an eye icon or some other view icon and then that would make the image larger, near full size or full size...and then there could be a "flip" or "put away" icon after that point."
+    Given a picture card
+    When the user looks for how to enlarge it or turn it over
+    Then which icons, and whether an eye first opens the picture near full size, the flip and put-away after it, is open
