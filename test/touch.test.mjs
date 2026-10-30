@@ -313,7 +313,7 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
   }
 });
 
-test('voyages: several drawn at once, each in its own ink, carried by the link; an older single voyage= link opens; Clear empties the list', { skip, timeout: 240000 }, async () => {
+test('voyages: several drawn at once, each in its own ink, carried by the link; the eye shows or hides one, the name shows it alone and draws it on every time; an older single voyage= link opens; Clear empties the list', { skip, timeout: 240000 }, async () => {
   const server = createServer(async (req, res) => {
     let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
     if (p.endsWith('/')) p = path.join(p, 'index.html');
@@ -331,30 +331,55 @@ test('voyages: several drawn at once, each in its own ink, carried by the link; 
     const on = () => page.$$eval('#voyageList [data-shown=true]', (bs) => bs.map((b) => b.dataset.voyage));
     const inks = () => page.$$eval('#voyageList [data-ink]:not([hidden])', (is) => is.map((i) => i.value));
     const hash = () => page.evaluate(() => decodeURIComponent(location.hash));
-    const viewNow = () => page.evaluate(() => location.hash.match(/map=([^&]+)/)?.[1]);
+    const viewNow = () => page.evaluate(() => location.hash.match(/map=([^&]+)/)?.[1].split('/').map(Number).join('/'));
     const settled = () => page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 60000 });
+    // the pen's frames say "drawing" in the status line; watched as they come, since a poll can miss a short draw
+    const pen = () => page.evaluate(() => { window.drew = false; new MutationObserver((_, o) => { if (document.getElementById('status').textContent.includes(': drawing')) { window.drew = true; o.disconnect(); } }).observe(document.getElementById('status'), { childList: true, characterData: true, subtree: true }); });
+    const drawing = () => page.waitForFunction(() => window.drew, null, { timeout: 30000, polling: 100 });
+    const inkOf = async () => Object.fromEntries(await page.$$eval('#voyageList [data-ink]:not([hidden])', (is) => is.map((i) => [i.dataset.ink, i.value])));
     assert.deepEqual(await on(), ['magellan'], 'the older voyage= link');
-    await page.click('#voyageList [data-voyage="columbus"]');
-    await page.click('#voyageList [data-voyage="drake"]');
+    // the eye: that one voyage on or off, at once, no flight, no pen, no other voyage touched
+    await settled();
+    const where = await viewNow();
+    await pen();
+    await page.click('#voyageList [data-eye="columbus"]');
+    await page.click('#voyageList [data-eye="drake"]');
     assert.equal(await page.$eval('#timelinePanel', (d) => d.classList.contains('open')), true, 'a choice shut the drawer');
     assert.deepEqual(await on(), ['columbus', 'magellan', 'drake']); // the list's order
     assert.equal(new Set(await inks()).size, 3, 'two voyages share an ink');
     assert.match(await hash(), /voyages=magellan,columbus,drake(&|$)/);
-    // the eye hides without moving the view or shifting any colour; the name never hides
-    const before = Object.fromEntries(await page.$$eval('#voyageList [data-ink]:not([hidden])', (is) => is.map((i) => [i.dataset.ink, i.value])));
-    await settled();
-    const where = await viewNow();
+    await page.waitForTimeout(400);
+    assert.equal(await viewNow(), where, 'the eye moved the view');
+    assert.equal(await page.evaluate(() => window.drew), false, 'the eye set the pen going');
+    const before = await inkOf();
     await page.click('#voyageList [data-eye="magellan"]');
     assert.deepEqual(await on(), ['columbus', 'drake'], 'the eye did not hide it');
     assert.match(await hash(), /voyages=magellan~,columbus,drake(&|$)/);
     await page.waitForTimeout(400);
     assert.equal(await viewNow(), where, 'the eye moved the view');
-    const after = Object.fromEntries(await page.$$eval('#voyageList [data-ink]:not([hidden])', (is) => is.map((i) => [i.dataset.ink, i.value])));
-    for (const id of ['columbus', 'drake']) assert.equal(after[id], before[id], `${id} changed ink when another was hidden`);
+    for (const [id, c] of Object.entries(await inkOf())) assert.equal(c, before[id], `${id} changed ink when another was hidden`);
+    // the pen's seconds: 2.5 by default, a slider from 1 to 5 in halves, shown beside it and carried by the link
+    assert.equal(await page.$eval('#voyageDrawOut', (o) => o.textContent), '2.5 s');
+    assert.deepEqual(await page.$eval('#voyageDraw', (i) => [i.min, i.max, i.step, i.value]), ['1', '5', '0.5', '2.5']);
+    await page.$eval('#voyageDraw', (i) => { i.value = '1'; i.dispatchEvent(new Event('input', { bubbles: true })); });
+    assert.equal(await page.$eval('#voyageDrawOut', (o) => o.textContent), '1 s');
+    assert.match(await hash(), /voyagedraw=1(&|$)/);
+    // the name: that voyage alone, framed, and drawn on afresh every time; the others hidden, their colours kept
+    await pen();
     await page.click('#voyageList [data-voyage="magellan"]');
-    assert.deepEqual(await on(), ['columbus', 'magellan', 'drake'], 'the name did not show it');
+    assert.deepEqual(await on(), ['magellan'], 'the name did not show it alone');
+    assert.match(await hash(), /voyages=magellan,columbus~,drake~(&|$)/);
+    await drawing();
+    await settled();
+    for (const [id, c] of Object.entries(await inkOf())) assert.equal(c, before[id], `${id} changed ink when the name hid it`);
+    await pen();
     await page.click('#voyageList [data-voyage="magellan"]');
-    assert.deepEqual(await on(), ['columbus', 'magellan', 'drake'], 'the name hid a shown voyage');
+    assert.deepEqual(await on(), ['magellan'], 'a second click on the name changed what is shown');
+    await drawing(); // a second click draws it on again
+    await settled();
+    await page.click('#voyageList [data-eye="columbus"]');
+    await page.click('#voyageList [data-eye="drake"]');
+    assert.deepEqual(await on(), ['columbus', 'magellan', 'drake'], 'the eyes did not show them again');
     await page.$eval('#voyageList [data-ink="drake"]', (i) => { i.value = '#16727a'; i.dispatchEvent(new Event('input', { bubbles: true })); });
     assert.match(await hash(), /voyages=magellan,columbus,drake:16727a/);
     await page.click('#voyageWidth [data-value="4.5"]');

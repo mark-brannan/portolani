@@ -7,14 +7,14 @@
 // a setting left at its default is left out, `sprites` too (keys with the pack shortened, v: s: p:); `mountains` is `ink`
 // or `off` (colour is the default); the hills are the Catalan sprites in `sprites`. `continents` and `regionszoom` are the zoom
 // they are drawn down from (0 off, the top always); `regionset=catalan-1375` letters the regions in a period's names (REGION_SETS), today's by default. `voyages=columbus,drake:1f4e8c` are the voyages in the order chosen, a picked
-// colour after an id, and `voyagewidth=3.2` their line weight. `overlay=carta-marina` lays that chart's scan over the map as one
+// colour after an id, `voyagewidth=3.2` their line weight and `voyagedraw=4` the seconds the pen takes to draw one on. `overlay=carta-marina` lays that chart's scan over the map as one
 // sheet, `sheet=lon,lat,scale,turn` where it was dragged to; `overlaymode=pieces` the warped pieces instead, `overlayopacity=0.6`
 // how strongly (0 to 1); off by default.
 // Older links naming a `rendering` (or `pack`), `rose`, `monster`, `town` and `kinds` open as the
 // selection those chose, and are written back in the new form.
 // For a while, `debug=sheets[,rings]` and `tune=name:value,...` carry the under-the-hood section
 // (docs/atlas/under-the-hood.md), off by default.
-import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, voyageView, readVoyage, chronological, voyageLink, sightMarks, SIGHT_TILES, noteMarks, pickMark } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, voyageView, readVoyage, chronological, voyageLink, sightMarks, SIGHT_TILES, noteMarks, pickMark } from './scene.mjs';
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
@@ -53,7 +53,7 @@ const canvas = $('map'), ctx = canvas.getContext('2d');
 // cards beside the map, not on the sea.
 const phone = matchMedia('(max-width: 520px)');
 
-const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: 6, regions: 'latin', regionSet: 'today', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyages: [], voyageWidth: VOYAGE_WIDTH, person: null, pictures: null, ...OVERLAY_DEFAULTS, cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER, overlap: DEFAULT_OVERLAP };
+const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: 6, regions: 'latin', regionSet: 'today', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyages: [], voyageWidth: VOYAGE_WIDTH, voyageDraw: VOYAGE_DRAW.seconds, person: null, pictures: null, ...OVERLAY_DEFAULTS, cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER, overlap: DEFAULT_OVERLAP };
 
 // ---------------------------------------------------------------- the sprites on offer
 
@@ -128,6 +128,7 @@ function styleFromHash() {
     tune: parseTune(q.get('tune')).text,
     voyages: voyagesFromHash(q),
     voyageWidth: VOYAGE_WIDTHS.includes(Number(q.get('voyagewidth'))) ? Number(q.get('voyagewidth')) : DEFAULTS.voyageWidth,
+    voyageDraw: voyageDrawSeconds(q.get('voyagedraw')),
     // the person chosen in the People drawer (data/voyages/people.json), which of their pictures lie on the map, and where
     person: /^[a-z][a-z0-9-]*$/.test(q.get('person') ?? '') ? q.get('person') : DEFAULTS.person,
     pictures: parsePictures(q.get('pictures'), DEFAULTS.pictures),
@@ -187,6 +188,7 @@ function writeHash() {
   if (st.tune) q.set('tune', st.tune);
   if (st.voyages.length) q.set('voyages', st.voyages.map((v) => (v.colour ? `${v.id}:${v.colour.slice(1)}` : v.id) + (v.hidden ? '~' : '')).join(','));
   if (st.voyageWidth !== DEFAULTS.voyageWidth) q.set('voyagewidth', st.voyageWidth);
+  if (st.voyageDraw !== DEFAULTS.voyageDraw) q.set('voyagedraw', st.voyageDraw);
   if (st.person) {
     q.set('person', st.person);
     const shown = st.pictures && (st.pictures.length ? st.pictures.join(',') : 'none'), at = pictureAtText(st.pictureAt);
@@ -468,6 +470,7 @@ function showStyle() {
   $('townSize').checked = style.townSize !== 'rank';
   showHood();
   $('voyageWidth').value = String(style.voyageWidth);
+  showVoyageDraw();
   showOverlay();
   showUiNow(); showMoods();
   for (const f of toolRefreshers) f();
@@ -494,7 +497,7 @@ function readControls() {
     overlap: $('overlap').value,
     cartouchePos: style.cartouchePos, scalePos: style.scalePos, // set by dragging the cartouche or the scale bar
     ...readHood(),
-    voyages: style.voyages, voyageWidth: Number($('voyageWidth').value), // chosen in the voyages drawer
+    voyages: style.voyages, voyageWidth: Number($('voyageWidth').value), voyageDraw: style.voyageDraw, // chosen in the voyages drawer
     overlay: style.overlay, sheet: style.sheet, // chosen in the charts drawer, and by dragging the sheet
   };
   // hills are the Catalan sprites: the chip selects all of them or none
@@ -1357,12 +1360,13 @@ const places = []; // every anchorage and point of interest: { name, view }
 // "timeline" below), data/voyages/index.json in the order the voyages set out (chronological; the file's order breaks
 // ties), each on its own line at its years: a bar over them, and beside it the voyage's row, its short name and years
 // (the title is its tooltip), an eye, then its ink, a swatch to pick another. A shown voyage has its summary and a link
-// to its first source under its row. They load on the first open and stay cached. The name always flies to frame
-// the whole voyage and shows it if hidden; the first time a voyage is shown after the drawer opens (and it was not shown
-// when it opened) the line then draws itself from start to end in about a second. The eye only shows or hides, and
-// the view stays. A voyage hidden keeps its place in the list, so its colour, and every other voyage's, stays put. The
-// first voyage chosen is the chart's red, each further one a colour of its own (voyageColours). Above the timeline, the line
-// weight for them all and Clear. The choice rides in the link (`voyages=`, `voyagewidth=`) like any style.
+// to its first source under its row. They load on the first open and stay cached. A click on the name shows that
+// voyage alone (every other one is hidden), flies to frame the whole of it and draws its line on from start to end,
+// every time, in the seconds the slider above the timeline sets. The eye only shows or hides that one voyage, at once: no
+// flight, no pen, no other voyage touched. A voyage hidden keeps its place in the list, so its colour, and every other
+// voyage's, stays put. The first voyage chosen is the chart's red, each further one a colour of its own (voyageColours).
+// Above the timeline, the line weight for them all, how long the pen takes, and Clear. The choice rides in the link
+// (`voyages=`, `voyagewidth=`, `voyagedraw=`) like any style.
 let voyageList = null, voyageRows = null; // the load, and once loaded [[id, voyage]] in order with the sources
 const escapeHTML = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
 // the row at its place on the axis: the bar over its years, and the row to the bar's right where there is room, else to its left
@@ -1402,11 +1406,7 @@ function showVoyage() {
   }
   for (const f of toolRefreshers) f();
 }
-// What this opening of the drawer has shown: the voyages shown when it opened, and those shown since. A voyage draws
-// itself on only the first time it is shown, and not at all if it was already there.
-let voyageSeen = new Set();
 function fillVoyages() {
-  voyageSeen = new Set(style.voyages.filter((v) => !v.hidden).map((v) => v.id));
   voyageList ??= Promise.all([env.readJSON('data/voyages/index.json'), env.readJSON('data/voyages/sources.json').catch(() => ({}))])
     .then(([ids, sources]) => Promise.all(ids.map((id) => env.readJSON(`data/voyages/${id}.json`).then((v) => [id, v], () => [id, { title: id, short: id }])))
       .then((voyages) => [chronological(voyages), sources]))
@@ -1425,41 +1425,55 @@ function drawVoyages() {
   }).join('');
   showVoyage();
 }
-// Shows a voyage (adds it at the end of the list if new, so it takes the next free colour; un-hides it if hidden);
-// true when it is the first time since the drawer opened, so the line should draw itself on.
-function putOnVoyage(id) {
-  const listed = style.voyages.some((v) => v.id === id);
-  style = { ...style, voyages: listed ? style.voyages.map((v) => (v.id === id ? { id: v.id, colour: v.colour } : v)) : [...style.voyages, { id, colour: null }] };
-  const first = !voyageSeen.has(id);
-  voyageSeen.add(id);
+// Sets which voyages are shown: `show` maps an id to true or false; a voyage not yet listed is added at the end, so it
+// takes the next free colour. A hidden voyage keeps its place and its colour.
+function showVoyages(show, others) {
+  const listed = style.voyages.map((v) => v.id), on = (v) => show[v.id] ?? (others ?? !v.hidden);
+  const voyages = [...style.voyages, ...Object.keys(show).filter((id) => show[id] && !listed.includes(id)).map((id) => ({ id, colour: null }))];
+  style = { ...style, voyages: voyages.map((v) => (on(v) ? { id: v.id, colour: v.colour } : { id: v.id, colour: v.colour, hidden: true })) };
   showVoyage(); writeHash(); render();
-  return first;
 }
 $('voyageList').addEventListener('click', async (e) => {
   const eye = e.target.closest('[data-eye]'), b = e.target.closest('[data-voyage]');
-  if (eye) { // only shows or hides; the view stays, and the line is drawn whole
+  if (eye) { // that voyage on or off, whole and at once; the view stays, and no other voyage changes
     const id = eye.dataset.eye;
-    if (isShown(id)) { style = { ...style, voyages: style.voyages.map((v) => (v.id === id ? { ...v, hidden: true } : v)) }; showVoyage(); writeHash(); render(); }
-    else putOnVoyage(id);
+    if (voyagePen?.id === id) voyagePen = null; // a pen on it stops, and the line is whole
+    showVoyages({ [id]: !isShown(id) });
     return;
   }
   if (!b) return;
-  const id = b.dataset.voyage, first = putOnVoyage(id);
+  const id = b.dataset.voyage; // that voyage alone, framed, and drawn on afresh
+  showVoyages({ [id]: true }, false);
   await flyToVoyage(id);
-  if (first && !matchMedia('(prefers-reduced-motion: reduce)').matches) drawOn(id);
+  if (isShown(id) && !matchMedia('(prefers-reduced-motion: reduce)').matches) drawOn(id);
 });
-// The pen: a voyage's line drawn from its start to its end in VOYAGE_DRAW_MS, at an even pace along the line, once the
-// flight has landed and the scene is placed. The scene's voyage carries `reveal` (scene.mjs drawTrack).
-const VOYAGE_DRAW_MS = 1000;
-let voyagePen = null; // { id, since, t0 } while drawing, t0 null until it starts
+// How long the pen takes, in seconds (VOYAGE_DRAW): the slider shows the seconds, and its sample line draws itself on
+// at that pace each time it moves. Only the next drawing changes, so nothing is drawn again.
+// (showStyle calls showVoyageDraw before this part of the page has run, so it reads the slider afresh)
+function showVoyageDraw() {
+  const slider = Object.assign($('voyageDraw'), { min: VOYAGE_DRAW.min, max: VOYAGE_DRAW.max, step: VOYAGE_DRAW.step });
+  slider.value = String(style.voyageDraw);
+  $('voyageDrawOut').textContent = `${style.voyageDraw} s`;
+}
+const drawSlider = $('voyageDraw');
+drawSlider.addEventListener('input', () => {
+  style = { ...style, voyageDraw: voyageDrawSeconds(drawSlider.value) };
+  showVoyageDraw(); writeHash();
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    $('voyageDrawSample').querySelector('path').animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: style.voyageDraw * 1000, easing: 'linear' });
+  }
+});
+// The pen: a voyage's line drawn from its start to its end in the slider's seconds, at an even pace along the line,
+// once the flight has landed and the scene is placed. The scene's voyage carries `reveal` (scene.mjs drawTrack).
+let voyagePen = null; // { id, since, t0, ms } while drawing, t0 null until it starts
 function applyReveal() {
   const v = voyagePen && ground?.voyages?.find((x) => x.id === voyagePen.id);
-  if (v) v.reveal = voyagePen.t0 == null ? 0 : Math.min(1, (performance.now() - voyagePen.t0) / VOYAGE_DRAW_MS);
+  if (v) v.reveal = voyagePen.t0 == null ? 0 : Math.min(1, (performance.now() - voyagePen.t0) / voyagePen.ms);
 }
 // every exit of the pen puts the line back whole: a pen that stops early must not leave its voyage hidden
 function finish(id) { const v = ground?.voyages?.find((x) => x.id === id); if (v && 'reveal' in v) { delete v.reveal; render(); } }
 function drawOn(id) {
-  const pen = voyagePen = { id, since: performance.now(), t0: null };
+  const pen = voyagePen = { id, since: performance.now(), t0: null, ms: style.voyageDraw * 1000 };
   const step = () => {
     if (voyagePen !== pen) return finish(id);
     const now = performance.now();
@@ -1469,7 +1483,7 @@ function drawOn(id) {
     }
     applyReveal();
     if (pen.t0 != null) paintFrame('drawing');
-    if (pen.t0 != null && now - pen.t0 >= VOYAGE_DRAW_MS) {
+    if (pen.t0 != null && now - pen.t0 >= pen.ms) {
       voyagePen = null;
       finish(id); // whole again, with its marks
       return;
