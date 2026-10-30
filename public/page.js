@@ -1793,7 +1793,7 @@ if (style.person) loadPeople().then(showPeople, () => {}); // a link that names 
 // The drawer the Voyages and People buttons share: one timeline on one linear year axis (scripts/people.mjs laneAxis),
 // people above the axis and voyages below it, from the Lapita voyages to this year at true scale throughout, so a stretch
 // with nobody in it reads as empty rather than cut out. Behind both lanes, the eras of the points of interest as faint
-// colour bands, each named once at the top. Each button opens it at its own lane: People at the top, Voyages scrolled
+// colour bands, each named once at the top. The voyages' controls head their lane. Each button opens it at its own lane: People at the top, Voyages scrolled
 // to the axis, its lane's name lit. The Earlier tab at the left end adds the long stretch before Lapita, back to
 // 50,000 BC, at its own scale, with the windows of the peopling of Sahul, Beringia and the Americas marked on it and
 // nothing yet placed there. A phone scrolls the timeline sideways, and opens it at its right end, where most of it is.
@@ -1818,7 +1818,7 @@ function fillTimeline(lane, fresh) {
   $('voyagesCap').classList.toggle('lit', lane === 'voyages');
   if (!$('timeAxis').childElementCount) drawAxis();
   const atEnd = () => { if (fresh && timeAxis.width === 1) $('timeScroll').scrollLeft = $('timeScroll').scrollWidth; }; // a phone: most entries are after AD 1000
-  if (fresh) Promise.allSettled([fillVoyages(), fillPeople()]).then(() => { atEnd(); if (timeLane === lane) toLane(lane); });
+  if (fresh) Promise.allSettled([fillVoyages(), fillPeople()]).then(() => { atEnd(); toLane(timeLane); }); // the lane asked for last, as the lanes now stand
   atEnd(); toLane(lane);
 }
 function toLane(lane) {

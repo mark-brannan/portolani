@@ -66,12 +66,13 @@
   .places .group > details > .places { margin: 2px 0 4px 12px; }
   .notes { display: block; font: italic 13px var(--serif); color: var(--muted); } /* an entry's caption, or "notes to come" */
   .places .notes { margin: -2px 0 2px 10px; }
-  #where .places button { display: block; text-align: left; }
   #where .places button, #goPanel button, #voyageList button { padding: 3px 10px; font: 13px var(--serif); border-radius: 12px; }
+  #where .places button { display: block; text-align: left; }
   #coords { display: flex; gap: 4px; align-self: stretch; }
   #coords input { flex: 1; min-width: 0; max-width: none; padding: 3px 8px; font: 13px var(--serif); border-radius: 12px; background: var(--panel); color: var(--fg); border: 1px solid var(--rule); }
   /* the Voyages and People buttons' drawer: one timeline on one linear year axis, people above it and voyages below,
-     the eras of the points of interest as faint bands behind both, and at its left end the Earlier tab */
+     the eras of the points of interest as faint bands behind both, and at its left end the Earlier tab; the voyages'
+     controls (line weight, Clear, the pen's pace) head the voyages' lane */
   #timelinePanel { width: min(720px, 100vw - 24px); max-width: none; align-items: stretch; }
   #timelinePanel .vtools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 4px; }
   #timelinePanel .chip { display: inline-flex; padding: 3px 8px; border-radius: 14px; box-shadow: none; font: 12px var(--serif); background: var(--sheet); color: var(--sheet-ink); }
@@ -97,6 +98,8 @@
   .eras .mark.edge b { right: auto; left: 4px; }
   .eras .brk { position: absolute; top: 0; bottom: 0; width: 5px; margin-left: -3px; border-left: 1px dashed #8a7550; border-right: 1px dashed #8a7550; } /* where the earlier stretch's scale gives way to the main one */
   .erahead { height: 30px; }
+  .vcontrols { position: sticky; left: 0; z-index: 1; width: max-content; max-width: min(100%, 100vw - 100px); margin: 2px 0 4px; } /* the voyages' own controls, next to their lane, in view however far the track is scrolled */
+  .vcontrols > :last-child { margin-bottom: 0; }
   .lanecap { position: sticky; left: 0; display: inline-block; padding: 0 4px; font: italic 11px/15px var(--serif); opacity: 0.7; }
   .lanecap.lit { opacity: 1; color: #8c2f1e; font-weight: bold; } /* the lane its button opened the drawer to */
   .lane { position: relative; list-style: none; margin: 0; padding: 0; }
@@ -415,8 +418,6 @@
     <ul id="sightsList" class="places"></ul>
   </div>
   <div id="timelinePanel" class="drawer menu">
-    <div class="vtools"><div id="voyageWidth" class="chips" role="radiogroup" aria-label="Line weight"></div></div>
-    <div class="slider vdraw" title="How long the pen takes to draw a voyage on when its name is clicked"><label for="voyageDraw">Drawn in</label><input id="voyageDraw" type="range"><svg id="voyageDrawSample" viewBox="0 0 40 10" aria-hidden="true"><path d="M2 5h36" pathLength="1"/></svg><output id="voyageDrawOut" for="voyageDraw"></output></div>
     <div class="timeline">
       <div class="tleft"><button id="earlier" class="earlier" type="button" aria-pressed="false" aria-controls="track" title="Earlier history: the timeline back to 50,000 BC"><span class="chev">&#9656;</span> Earlier</button></div>
       <div id="timeScroll" class="tscroll">
@@ -427,6 +428,10 @@
           <div id="peopleStrip" class="lane strip" role="group" aria-label="People, each a bar over the years they lived; choose one"></div>
           <div id="timeAxis" aria-hidden="true"></div>
           <div id="voyagesCap" class="lanecap">Voyages</div>
+          <div class="vcontrols">
+            <div class="vtools"><div id="voyageWidth" class="chips" role="radiogroup" aria-label="Line weight"></div></div>
+            <div class="slider vdraw" title="How long the pen takes to draw a voyage on when its name is clicked"><label for="voyageDraw">Drawn in</label><input id="voyageDraw" type="range"><svg id="voyageDrawSample" viewBox="0 0 40 10" aria-hidden="true"><path d="M2 5h36" pathLength="1"/></svg><output id="voyageDrawOut" for="voyageDraw"></output></div>
+          </div>
           <ul id="voyageList" class="lane" role="group" aria-label="Voyages, any number, each at its years"></ul>
         </div>
       </div>

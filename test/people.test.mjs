@@ -53,7 +53,7 @@ test('the timeline runs from Lapita to this year on one linear scale, the empty 
   assert.ok(Math.abs(per(-300, 1000) - per(1300, 1600)) < 1e-12, 'the years from 300 BC to AD 1000 are squeezed or stretched');
   assert.ok(Math.abs(axis.x(-300) - (1200 / 3526)) < 1e-12);
   assert.deepEqual(axis.ticks.map(([y]) => y), [-1500, -1000, -500, 1, 500, 1000, 1500, 2000]);
-  assert.deepEqual(axis.ticks.slice(0, 4).map(([, l]) => l), ['1,500 BC', '1,000 BC', '500 BC', 'AD 1']);
+  assert.deepEqual(axis.ticks.slice(0, 4).map(([, l]) => l), ['1500 BC', '1000 BC', '500 BC', 'AD 1']);
 });
 
 test('Earlier adds the stretch back to 50,000 BC at its own scale, and the main stretch keeps its width', () => {
@@ -68,6 +68,7 @@ test('Earlier adds the stretch back to 50,000 BC at its own scale, and the main 
   assert.ok(Math.abs(span(long, TIMELINE_EARLIEST, TIMELINE_FROM) - EARLIER_SHARE) < 1e-12);
   assert.ok(long.x(-11000) < long.x(TIMELINE_FROM) && long.x(-20000) < long.x(-11000));
   assert.deepEqual(long.ticks.slice(0, 5).map(([y]) => y), [-50000, -40000, -30000, -20000, -10000]);
+  assert.deepEqual(long.ticks.slice(0, 6).map(([, l]) => l), ['50,000 BC', '40,000 BC', '30,000 BC', '20,000 BC', '10,000 BC', '1500 BC']);
   for (const [, y] of EARLIER_MARKS) assert.ok(y >= TIMELINE_EARLIEST && y < TIMELINE_FROM, `${y} is not on the earlier stretch`);
 });
 

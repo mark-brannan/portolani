@@ -72,7 +72,8 @@ export function laneAxis({ earlier = false, to = new Date().getFullYear() } = {}
     .filter((y) => y <= to).map((y) => [y, yearLabel(y)]);
   return { width, stretches, x, ticks };
 }
-export const yearLabel = (y) => (y < 0 ? `${(-y).toLocaleString('en')} BC` : y === 1 ? 'AD 1' : String(y));
+// a year as the axis writes it: 1500 BC, AD 1, 1500, with a thousands comma only from five figures (50,000 BC)
+export const yearLabel = (y) => { const n = Math.abs(y), t = n >= 10000 ? n.toLocaleString('en') : String(n); return y < 0 ? `${t} BC` : y === 1 ? 'AD 1' : t; };
 // The era bands on an axis: [name, from, to], end to end from the main stretch's start to its end.
 export function eraBands(axis) {
   const [from, to] = axis.stretches.at(-1);
