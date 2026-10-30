@@ -37,7 +37,11 @@ Feature: Go box  (button `#go`, input `#coordsText`, form `#coords`) [verified p
     Given the same
     When the user submits `36.28N 76W`
     Then the target is the same; `36.28S 76W` is lat -36.28
-    # a sign and a letter that disagree (`-36 N`), a lat over 90, a lon over 180 are not positions, and fall to the name search
+  Scenario: degrees, minutes and seconds, and the degree sign (unverified: [#297](https://github.com/mark-brannan/portolani/pull/297) builds it; design.md "Go reads a position however it is written")
+    Given the same
+    When the user submits `36°16'48"N 76°W`, `36 16 48 N 76 0 0 W` or `36.28° -76°`
+    Then the target is the same as `36.28, -76`
+    # in every form, a sign and a letter that disagree (`-36 N`), a lat over 90, a lon over 180 are not positions, and fall to the name search
   Scenario: a place name
     Given the same
     When the user submits `Lisbon`
