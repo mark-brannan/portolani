@@ -14,7 +14,7 @@
 // selection those chose, and are written back in the new form.
 // For a while, `debug=sheets[,rings]` and `tune=name:value,...` carry the under-the-hood section
 // (docs/atlas/under-the-hood.md), off by default.
-import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, voyageView, readVoyage, chronological, voyageLink, sightMarks, SIGHT_TILES, noteMarks } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, voyageView, readVoyage, chronological, voyageLink, sightMarks, SIGHT_TILES, noteMarks, pickMark } from './scene.mjs';
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
@@ -1221,12 +1221,15 @@ function fillTile(t) {
   const text = part('tile-text', t.text);
   const doubt = part('tile-text tile-doubt', t.doubt); // a doubted leg or event: who doubts it and why, first under the heading
   doubt?.prepend(Object.assign(document.createElement('strong'), { textContent: 'Scholars doubt this part: ' }));
-  if (t.link) { // a note on a laid chart: what was drawn, what was there, and the source as a link
-    const labelled = (label, body) => { const p = part('tile-text', body); const b = document.createElement('strong'); b.textContent = `${label} `; p.prepend(b); return p; };
-    const a = document.createElement('a');
-    a.href = t.link; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = t.source;
-    const src = document.createElement('p'); src.className = 'tile-source'; src.append('Source: ', a);
-    tileEl.replaceChildren(close, head, labelled('Drawn.', t.drawn), labelled('Really.', t.real), src);
+  if (t.note) { // a note on a laid chart: what was drawn, what was there, and the source as a link; its title alone until it has copy
+    const labelled = (label, body) => { const p = part('tile-text', body); if (!p) return null; const b = document.createElement('strong'); b.textContent = `${label} `; p.prepend(b); return p; };
+    let src = null;
+    if (t.link) {
+      const a = document.createElement('a');
+      a.href = t.link; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = t.source;
+      src = document.createElement('p'); src.className = 'tile-source'; src.append('Source: ', a);
+    }
+    tileEl.replaceChildren(close, ...[head, labelled('Drawn.', t.drawn), labelled('Really.', t.real), src].filter(Boolean));
     tileEl.setAttribute('aria-label', t.title);
     return;
   }
@@ -1247,22 +1250,22 @@ function sightTiles() {
     .filter(([name]) => SIGHT_TILES[name]).map(([name, v]) => { const { at, ...tile } = SIGHT_TILES[name]; return { lon: at?.[0] ?? v.lon, lat: at?.[1] ?? v.lat, tile: { title: name, ...tile } }; });
   return sightList;
 }
-// the mark nearest [x, y] within reach: a voyage's event, a sight, or a note on a laid chart (drawn nowhere)
-function markAt([x, y]) {
+// the mark at [x, y]: a voyage's event or a sight within reach; else the note on a laid chart whose figure holds the
+// point (its whole hit box, drawn nowhere; the smallest where boxes nest); else a note's centre within reach (notes.mjs pickMark)
+function markAt(at) {
   const proj = viewProjection(placed), rect = { x0: 0, y0: 0, x1: W, y1: H };
   const marks = [...(ground?.voyages ?? []).flatMap((v) => [...voyageMarks(v.voyage, proj, rect), ...doubtMarks(v, proj, rect)]), ...(placed.zoom >= POI_ZOOM ? sightMarks(sightTiles(), proj, rect) : []), ...noteMarks(ground?.overlay, proj, rect)];
-  let best = null, bestD = Infinity;
-  for (const m of marks) { const d = Math.hypot(m.x - x, m.y - y); if (d <= Math.max(cssPx(TAP_REACH), m.h / 2) && d < bestD) { best = m; bestD = d; } }
-  return best;
+  return pickMark(marks, at, cssPx(TAP_REACH));
 }
 function showTileAt(at) {
   const best = markAt(at);
   if (!best) return;
   fillTile(best.tile);
-  // beside the mark, in client px: below and to its right, flipped inside the window where that would run off it
-  const r = canvas.getBoundingClientRect(), cx = r.left + best.x * (r.width / W), cy = r.top + best.y * (r.height / H);
+  // beside the mark, or for a figure's hit box beside the touch, in client px: below and to its right, flipped inside the window where that would run off it
+  const [mx, my] = best.hit ? at : [best.x, best.y];
+  const r = canvas.getBoundingClientRect(), cx = r.left + mx * (r.width / W), cy = r.top + my * (r.height / H);
   tileEl.hidden = false;
-  const w = tileEl.offsetWidth, h = tileEl.offsetHeight, gap = best.h / 2 + 8;
+  const w = tileEl.offsetWidth, h = tileEl.offsetHeight, gap = best.hit ? 16 : best.h / 2 + 8;
   const left = cx + gap + w > innerWidth - 8 ? cx - gap - w : cx + gap;
   const top = cy + h > innerHeight - 8 ? cy - h : cy - 8;
   tileEl.style.left = `${Math.max(8, left)}px`; tileEl.style.top = `${Math.max(8, top)}px`;
