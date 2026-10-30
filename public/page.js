@@ -14,7 +14,7 @@
 // selection those chose, and are written back in the new form.
 // For a while, `debug=sheets[,rings]` and `tune=name:value,...` carry the under-the-hood section
 // (docs/atlas/under-the-hood.md), off by default.
-import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, voyageView, readVoyage, chronological, voyageLink, sightMarks, SIGHT_TILES, noteMarks, pickMark, ZOOM } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, voyageView, readVoyage, chronological, voyageLink, sightMarks, SIGHT_TILES, noteMarks, pickMark, markClear, tileSpot, ZOOM } from './scene.mjs';
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
@@ -1241,14 +1241,14 @@ function showTileAt(at) {
   const best = markAt(at);
   if (!best) return;
   fillTile(best.tile);
-  // beside the mark, or for a figure's hit box beside the touch, in client px: below and to its right, flipped inside the window where that would run off it
-  const [mx, my] = best.hit ? at : [best.x, best.y];
-  const r = canvas.getBoundingClientRect(), cx = r.left + mx * (r.width / W), cy = r.top + my * (r.height / H);
+  // beside the mark's hit area (what a tap on it would hit, markClear) and a margin clear of it: to its right, flipped to its left, below or above
+  // where the window has no room (tileSpot), in client px
+  const r = canvas.getBoundingClientRect(), kx = r.width / W, ky = r.height / H;
+  const c = markClear(best, cssPx(TAP_REACH)), near = best.hit ? at : [best.x, best.y];
   tileEl.hidden = false;
-  const w = tileEl.offsetWidth, h = tileEl.offsetHeight, gap = best.hit ? 16 : best.h / 2 + 8;
-  const left = cx + gap + w > innerWidth - 8 ? cx - gap - w : cx + gap;
-  const top = cy + h > innerHeight - 8 ? cy - h : cy - 8;
-  tileEl.style.left = `${Math.max(8, left)}px`; tileEl.style.top = `${Math.max(8, top)}px`;
+  const spot = tileSpot({ x0: r.left + c.x0 * kx, y0: r.top + c.y0 * ky, x1: r.left + c.x1 * kx, y1: r.top + c.y1 * ky },
+    [tileEl.offsetWidth, tileEl.offsetHeight], { w: innerWidth, h: innerHeight }, [r.left + near[0] * kx, r.top + near[1] * ky]);
+  tileEl.style.left = `${spot.left}px`; tileEl.style.top = `${spot.top}px`;
 }
 addEventListener('keydown', (e) => { if (e.key === 'Escape') hideTile(); });
 
