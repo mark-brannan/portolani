@@ -40,6 +40,14 @@
     text-shadow: 0 0 3px var(--margin), 0 0 3px var(--margin);
   }
   #build a { color: inherit; }
+  /* the right margin, above the timing line: the sweep, shown while any picture lies on the table, puts them all away */
+  #sweep {
+    position: fixed; right: 12px; bottom: 52px; z-index: 1; width: 40px; height: 40px; padding: 0; display: grid; place-items: center;
+    cursor: pointer; border-radius: 50%; background: #efe3c6; border: 1px solid #b89a68; box-shadow: 0 1px 6px rgb(0 0 0 / 0.25);
+  }
+  #sweep:hover { background: #e2cd9e; }
+  #sweep[hidden] { display: none; }
+  #sweep svg { width: 28px; height: 28px; }
 
   /* top right, a row of seven instruments, each opening its own drawer: the rose the settings, the chart the charts, the astrolabe the points of interest, the compass Go (a typed place or position, or mine filled in), the dividers and the medallion one timeline, voyages and people (each button opens it at its own lane), the anchor the anchorages (home first). One drawer at a time: a click on its button opens it and a second click shuts it, another button swaps it for its own (the other of the timeline's two stays on the timeline and moves to its lane), and Esc, or on a wide screen a click on the map, shuts it; a choice in it leaves it open, on a phone too. The row never moves */
   #where { position: fixed; top: 12px; right: 12px; z-index: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; pointer-events: none; }
@@ -74,6 +82,17 @@
   @media (prefers-reduced-motion: reduce) { .places .group > .rows { transition: none; } }
   .notes { display: block; font: italic 13px var(--serif); color: var(--muted); } /* an entry's caption, or "notes to come" */
   .places .notes { margin: -2px 0 2px 10px; }
+  /* Points of interest: a place's note shows only while the pointer is on its row (or the keyboard is), laid over the
+     rows below it rather than pushing them down; a click on the row shows its details at the drawer's foot */
+  #sightsList li:not(.group) { position: relative; align-self: stretch; }
+  #sightsList li:not(.group) > .notes {
+    display: none; position: absolute; z-index: 3; top: 100%; left: 10px; right: 0; margin: 0; padding: 4px 8px; pointer-events: none;
+    background: var(--panel); border: 1px solid var(--rule); border-radius: 4px; box-shadow: 0 2px 8px rgb(0 0 0 / 0.2);
+  }
+  #sightsList li:not(.group):is(:hover, :focus-within) > .notes { display: block; }
+  #sightsList .group.open > .rows > div { overflow: visible; transition: overflow 0s 0.25s; transition-behavior: allow-discrete; } /* the last row's note is not clipped */
+  #where #sightsList button[aria-current="true"] { border-color: #8c2f1e; box-shadow: inset 0 0 0 1px #8c2f1e; }
+  #sightCard { position: sticky; bottom: -20px; margin: 4px -16px -20px; padding: 8px 16px 12px; background: var(--panel); align-self: stretch; contain: inline-size; } /* as wide as the list, never widening it */
   #where .places button, #goPanel button, #voyageList button { padding: 3px 10px; font: 13px var(--serif); border-radius: 12px; }
   #where .places button { display: block; text-align: left; }
   #coords { display: flex; gap: 4px; align-self: stretch; }
@@ -379,6 +398,17 @@
 <div id="tile" class="tile" role="dialog" tabindex="-1" hidden></div>
 <p id="status" role="status">Loading…</p>
 <p id="build" hidden></p>
+<button id="sweep" type="button" aria-label="Sweep the pictures off the table" title="Sweep the pictures off the table" hidden>
+  <svg viewBox="-16 -16 32 32" aria-hidden="true" stroke-linejoin="round" stroke-linecap="round"><defs><linearGradient id="brassSweep" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4c2"/><stop offset="0.35" stop-color="#e8b84a"/><stop offset="0.6" stop-color="#b07a1e"/><stop offset="0.8" stop-color="#e9c060"/><stop offset="1" stop-color="#7a5212"/></linearGradient></defs>
+    <path d="M-15.5 4.5q2.5-1.2 4.6-.4M-15.5 8.6q3-1 5.4.2M-14.6 12.4q2.4-.6 4.2.4" fill="none" stroke="#7a5a2a" stroke-width="0.9" opacity="0.8"/>
+    <g transform="rotate(-16 -5 3)"><rect x="-10" y="-1.5" width="10.5" height="8" rx="0.6" fill="#f6ecd0" stroke="#5a3a0c" stroke-width="0.8"/><rect x="-8.8" y="-0.4" width="8.1" height="5.8" fill="#9ab7c9"/><path d="M-8.8 5.4v-1.8l2.6-2 2.2 1.6 1.8-1.2 1.5 1.4v2Z" fill="#6f9a58"/></g>
+    <g transform="rotate(10 -2 8)"><rect x="-7.5" y="4" width="10.5" height="8" rx="0.6" fill="#f6ecd0" stroke="#5a3a0c" stroke-width="0.8"/><rect x="-6.3" y="5.1" width="8.1" height="5.8" fill="#c9b48a"/><path d="M-5 10.9v-3.2h1.2v3.2M-2.4 10.9v-3.2h1.2v3.2M.2 10.9v-3.2h1.2v3.2M-5.4 7.3h7.2" fill="none" stroke="#5a3a0c" stroke-width="0.6"/></g>
+    <path d="M14.5-14.5 5.2-1.2" stroke="#5a3a0c" stroke-width="3.2"/><path d="M14.5-14.5 5.2-1.2" stroke="url(#brassSweep)" stroke-width="1.8"/>
+    <path d="M3.4-3.2 8 .2 7.4 2 3.6 13.2Q1 13.6-1.2 11.6Q1.2 4 2 -.4Z" fill="#c99a3a" stroke="#5a3a0c" stroke-width="0.8"/>
+    <path d="M2.6 1.6 0.2 11.2M4.4 2.2 2 12.4M6.2 2.6 3.4 12.9" stroke="#7a5212" stroke-width="0.6"/>
+    <path d="M2.8-2.4 7.9.9" stroke="#5a3a0c" stroke-width="1.6"/>
+  </svg>
+</button>
 
 <nav id="where" aria-label="Go to">
   <div class="row">
@@ -425,6 +455,7 @@
   </div>
   <div id="sightsPanel" class="drawer menu">
     <ul id="sightsList" class="places"></ul>
+    <div id="sightCard" class="pcard" hidden></div>
   </div>
   <div id="timelinePanel" class="drawer menu">
     <div class="timeline">
