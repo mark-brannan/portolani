@@ -103,7 +103,7 @@ const c4 = page(T4, '4. The ledger', 'Entry is the claim-and-grade table as a ti
 for (const [n, h] of [[1, c1], [2, c2], [3, c3], [4, c4]]) writeFileSync(`c${n}.html`, h);
 
 // overview: the four entry views stacked, to compare at a glance
-import { chromium } from '/home/solace/signalk-noaa-space-weather/scripts/screenshots/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright-core';
 const b = await chromium.launch({executablePath:process.env.CHROME}); const p = await b.newPage({ viewport: { width: 3 * W + 2 * 110 + 64, height: 700 }, deviceScaleFactor: 1 });
 const names = ['the-king-opens-the-door', 'two-portraits', 'the-road', 'the-ledger'];
 for (let i = 1; i <= 4; i++) { await p.goto('file://' + process.cwd() + `/c${i}.html`); await p.waitForTimeout(300); await p.screenshot({ path: `../${i}-${names[i - 1]}.png`, fullPage: true }); }
