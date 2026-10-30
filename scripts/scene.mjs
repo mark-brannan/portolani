@@ -1289,7 +1289,7 @@ function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
     const sites = [c, ...c.nodes];
     const onLand = sites.filter((q, i) => clear(q.lon, q.lat, i ? capSmall(smallSize) : big.sizePx)).length < SHEET_SEA_SITES;
     // what is kept is decided in the frame; the page's projection only says where it falls and whether it is seen
-    const put = (sprite, n) => { held[sh.name] = (held[sh.name] ?? 0) + 1; if (shows(data.proj, n.lon, n.lat)) { const [fx, fy] = fp.project(n.lon, n.lat); roseDraws.push({ sprite, ...at(n), fx, fy, size: sprite.sizePx, sheet: sh.name }); } };
+    const put = (sprite, n) => { held[sh.name] = (held[sh.name] ?? 0) + 1; if (shows(data.proj, n.lon, n.lat)) { const [fx, fy] = fp.project(n.lon, n.lat); roseDraws.push({ sprite, ...at(n), lon: n.lon, lat: n.lat, fx, fy, size: sprite.sizePx, sheet: sh.name }); } };
     if (ownSet(world, sh)) {
       // a chart's own roses are inside the sheet's allotment, like every other ornament of it
       for (const f of ownFigures(sh, 'rose').slice(0, allotment(sh))) { const r = figureSprite(sh, roses, ring, f); put({ ...r, sizePx: capBig(r.sizePx) }, f); }
@@ -1304,6 +1304,16 @@ function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
       const node = c.nodes[i], sprite = ring[n % ring.length];
       if (n < sheetRoseMax(sh) - 1 && (held[sh.name] ?? 0) < quota && clear2(node.lon, node.lat, sprite.sizePx, onLand)) { put(sprite, node); n++; }
     }
+  }
+  // The pinned rose (#138): wherever the Catalan rose's lines run, the rose is drawn at their hub, the one
+  // node of the network every view shares, whichever sheet the overlap rule keeps over it. Where its own
+  // chart already draws it there, that one stands. It is the chart's own sprite where the set holds it,
+  // else the set's big rose, held to the big cap like every chart's own rose; it is no sheet's, so it
+  // takes nothing from any sheet's allotment, and every sheet's beasts keep clear of it.
+  const pin = ATLAS_ROSE, pinned = (r) => Math.abs(r.lon - pin.lon) < 1e-6 && Math.abs(r.lat - pin.lat) < 1e-6;
+  if (world.roseLines && !roseDraws.some(pinned) && shows(data.proj, pin.lon, pin.lat)) {
+    const own = roses.find((s) => s.id === 'rose-catalan') ?? roses.find((s) => s.sizePx === bigSizePx);
+    roseDraws.push({ sprite: { ...own, sizePx: Math.min(own.sizePx, ROSE_CAP.big * W) }, ...at(pin), lon: pin.lon, lat: pin.lat, size: Math.min(own.sizePx, ROSE_CAP.big * W), sheet: null, pinned: true });
   }
   const pts = world.sheets.flatMap((sh) => [sh.circle, ...sh.circle.nodes]).map(at);
   return { roseDraws, held, centre: pts[0], nodes: pts.slice(1) };
@@ -1327,7 +1337,7 @@ function placeSheetBeasts(data, world, sprites, roseDraws, held) {
   for (const sh of world.sheets) {
     // its roses, placed in the sheet's frame, as discs in the beasts' frame; a size is screen px in either
     const rf = sheetFrame(sh), bf = beastFrame(sh);
-    const avoid = roseDraws.filter((r) => r.sheet === sh.name).map((r) => { const [x, y] = bf.project(...rf.invert(r.fx, r.fy)); return { x, y, r: r.size / 2 + (r.size > 200 ? 0 : 10) }; });
+    const avoid = roseDraws.filter((r) => r.sheet === sh.name || r.pinned).map((r) => { const [x, y] = bf.project(...(r.pinned ? [r.lon, r.lat] : rf.invert(r.fx, r.fy))); return { x, y, r: r.size / 2 + (r.size > 200 ? 0 : 10) }; });
     const mine = ownSet(world, sh) ? ownBeastsOf(sh, world, sprites, held[sh.name] ?? 0) : placeBeastsOf(sh, world, sprites, avoid, held[sh.name] ?? 0);
     // the page's projection only says where a beast falls and whether it is seen
     const at = (b) => { const [x, y] = data.proj.project(b.lon, b.lat); return { ...b, x, y }; };
@@ -3139,7 +3149,7 @@ export async function createScene(environment, opts = {}) {
   const sheets = sheetsFor(view, { radius: knobs.radius, curated: knobs.curated === 1 || worldBand, overlap, origin }).map((sh) => ({ ...sh, reach: sheetReach(sh.extent, knobs.reach),
     from: worldBand ? Math.log2(1125 / (sh.extent.east - sh.extent.west)) : ATLAS_BANDS.find((b) => b.band === sh.band).from }));
   const roseReach = sheetReach(roseSheet(view.zoom, { origin, curated: knobs.curated === 1, overlap }).extent, knobs.reach);
-  const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, historical, seaAt: sheets && seaAtOf(coarse), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, regionNames, title, autoTitle, pinTitle,
+  const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, historical, roseLines: knobs.roselines === 1, seaAt: sheets && seaAtOf(coarse), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, regionNames, title, autoTitle, pinTitle,
     continentsEnd: zoomEnd(continentsZoom, CONTINENT_ZOOM_END), regionsEnd: zoomEnd(regionsZoom, REGION_ZOOM_END),
     scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM && pinned, pinned, cartouchePos, scalePos, townSize: townBy, seed: legacy ? null : pickedSeed == null ? castSeed(view) : pickedSeed | 0, salt: legacy || pickedSeed == null ? 0 : pickedSeed | 0 }), show, scaleSprite, voyages, overlay, roseReach, roseLines: knobs.roselines === 1, debug, overlap, scalePos: cornerOf(scalePos, DEFAULT_SCALE_CORNER) };
   scene.voyages = placeDoubts(scene, data);
