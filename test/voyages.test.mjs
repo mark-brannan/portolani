@@ -407,9 +407,11 @@ test('the pen takes 2.5 s by default; the slider offers 1 s to 5 s in half secon
   }
 });
 
-test('a voyage with no colour picked takes a colour that reads against a scan when the contrast palette is asked for', async () => {
+test('a voyage with no colour picked takes the high-contrast palette when it is in the contrast set, and no blue', async () => {
   const { voyageColours, VOYAGE_CONTRAST, VOYAGE_PALETTE } = await import('../scripts/voyages.mjs');
   assert.equal(voyageColours(['columbus']).columbus, VOYAGE_PALETTE[0]);
-  assert.equal(voyageColours(['columbus', 'drake'], {}, VOYAGE_CONTRAST).columbus, VOYAGE_CONTRAST[0]);
-  assert.equal(voyageColours(['columbus'], { columbus: '#123456' }, VOYAGE_CONTRAST).columbus, '#123456', 'a picked colour stays');
+  assert.equal(voyageColours(['columbus', 'drake'], {}, new Set(['columbus'])).columbus, VOYAGE_CONTRAST[0]);
+  assert.equal(voyageColours(['columbus', 'drake'], {}, new Set(['columbus'])).drake, VOYAGE_PALETTE[0], 'a voyage clear of the sheet keeps the chart palette');
+  assert.equal(voyageColours(['columbus'], { columbus: '#123456' }, new Set(['columbus'])).columbus, '#123456', 'a picked colour stays');
+  for (const c of VOYAGE_CONTRAST) { const [r, g, b] = [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16)); assert.ok(!(b > 1.5 * r && b > g), `${c} is not blue`); }
 });

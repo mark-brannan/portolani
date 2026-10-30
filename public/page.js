@@ -14,7 +14,7 @@
 // selection those chose, and are written back in the new form.
 // For a while, `debug=sheets[,rings]` and `tune=name:value,...` carry the under-the-hood section
 // (docs/atlas/under-the-hood.md), off by default.
-import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, VOYAGE_CONTRAST, voyageView, readVoyage, chronological, voyageLink, sightMarks, SIGHT_TILES, noteMarks, pickMark, markClear, tileSpot, ZOOM } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, legPath, voyageView, readVoyage, chronological, voyageLink, sightMarks, SIGHT_TILES, noteMarks, pickMark, markClear, tileSpot, ZOOM } from './scene.mjs';
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
@@ -1397,8 +1397,16 @@ const voyagesTools = groupTools('Voyages', {
 });
 $('voyagesPanel').querySelector('.vtools').append(...voyagesTools.children);
 // the ink of every voyage in the list, hidden ones too, so a colour stays with its voyage
-// (a voyage with no colour picked takes one that reads against a scan while a sheet is shown)
-const voyageInk = () => voyageColours(style.voyages.map((v) => v.id), Object.fromEntries(style.voyages.filter((v) => v.colour).map((v) => [v.id, v.colour])), style.overlay && style.overlayMode === 'sheet' ? VOYAGE_CONTRAST : undefined);
+// (a voyage with no colour picked takes one from the high-contrast palette while any of it crosses a sheet)
+const voyageDots = new Map(); // id -> a thinned sample of its path, [lon, lat], once the list has loaded
+const crossing = () => {
+  const o = sheetShown(), ids = new Set();
+  if (!o) return ids;
+  const proj = viewProjection(view);
+  for (const [id, dots] of voyageDots) if (dots.some(([lon, lat]) => { const p = proj.project(lon, lat); return p && onSheet(o, proj, o.sheet, p[0], p[1]); })) ids.add(id);
+  return ids;
+};
+const voyageInk = () => voyageColours(style.voyages.map((v) => v.id), Object.fromEntries(style.voyages.filter((v) => v.colour).map((v) => [v.id, v.colour])), crossing());
 const isShown = (id) => style.voyages.some((v) => v.id === id && !v.hidden);
 function showVoyage() {
   const ink = voyageInk();
@@ -1421,6 +1429,7 @@ function fillVoyages() {
     .then(([ids, sources]) => Promise.all(ids.map((id) => env.readJSON(`data/voyages/${id}.json`).then((v) => [id, v], () => [id, { title: id, short: id }])))
       .then((voyages) => [chronological(voyages), sources]))
     .then(([voyages, sources]) => {
+      for (const [id, v] of voyages) voyageDots.set(id, (v.legs ?? []).flatMap((leg) => (leg.points?.length > 1 ? legPath(leg) : [])).filter((_, i) => i % 4 === 0));
       $('voyageList').innerHTML = voyages.map(([id, v]) => voyageItem(escapeHTML(id), escapeHTML(v.title ?? id), escapeHTML(v.short ?? v.title ?? id), escapeHTML(v.when), escapeHTML(v.summary), voyageLink(v, sources))).join('');
       showVoyage();
     }, (e) => { voyageList = null; $('voyageList').innerHTML = `<li>${escapeHTML(e.message)}</li>`; });
@@ -2014,7 +2023,7 @@ function setSheet(id, fade = false) {
   style = { ...style, overlay: id, sheet: null };
   fadeIn = id && fade ? id : null;
   if (id) chartsFresh = false;
-  showOverlay(); writeHash(); render();
+  showOverlay(); showVoyage(); writeHash(); render();
 }
 $('chartList').addEventListener('click', (e) => {
   const b = e.target.closest('[data-chart]');
