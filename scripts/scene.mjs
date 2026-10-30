@@ -23,8 +23,8 @@ import { TREES, TREE_STYLES, plantTrees, plantPalms, inLake } from './trees.mjs'
 import { POIS, POI_ZOOM } from './pois.mjs';
 export { SIGHT_TILES } from './sights.mjs'; // the page's tiles for its places; here so the module ships with the scene
 import { BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from './buildings.mjs';
-import { legPath, reachPath, isMigration, splitAtSeam, DASHES, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, readVoyage, chronological, voyageLink } from './voyages.mjs';
-export { legPath, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, readVoyage, chronological, voyageLink };
+import { legPath, reachPath, isMigration, splitAtSeam, DASHES, isBroken, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, readVoyage, chronological, voyageLink } from './voyages.mjs';
+export { isBroken, legPath, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, readVoyage, chronological, voyageLink };
 import { loadOverlay, drawOverlay, drawSheet } from './overlays.mjs';
 import { PEOPLE_FILE, PERSON_RED, personMarks, withPerson, peopleOf, whoOf } from './people.mjs';
 import { noteMarks, pickMark, markClear, tileSpot } from './notes.mjs';
@@ -3180,8 +3180,9 @@ export async function createScene(environment, opts = {}) {
 async function loadVoyages(list) {
   const items = (Array.isArray(list) ? list : []).filter((v) => /^[a-z][a-z0-9-]*$/.test(v?.id ?? '') && v.id !== 'off');
   const hex = (c) => (/^#[0-9a-f]{6}$/i.test(c ?? '') ? c.toLowerCase() : null);
-  const colours = voyageColours(items.map((v) => v.id), Object.fromEntries(items.filter((v) => hex(v.colour)).map((v) => [v.id, hex(v.colour)])));
   const loaded = await Promise.all(items.map((v) => readVoyage(v.id, (path) => env.readJSON(path)).catch(() => null)));
+  const broken = new Set(items.filter((v, i) => isBroken(loaded[i])).map((v) => v.id));
+  const colours = voyageColours(items.map((v) => v.id), Object.fromEntries(items.filter((v) => hex(v.colour)).map((v) => [v.id, hex(v.colour)])), broken);
   return items.map((v, i) => loaded[i] && { id: v.id, voyage: loaded[i], colour: colours[v.id], width: Number.isFinite(v.width) && v.width > 0 && v.width <= 12 ? v.width : VOYAGE_WIDTH,
     ...(Number.isFinite(v.alpha) && v.alpha >= 0 && v.alpha < 1 && { alpha: v.alpha }) }).filter(Boolean);
 }
