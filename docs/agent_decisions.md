@@ -351,3 +351,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261030t035129z
 - Each Sights era's heading carries a span written from its tiles' dates: c. 1000 BC – 2nd c. AD, 9th–15th c., 1311–1619, 1819–1914 ([#292](https://github.com/mark-brannan/portolani/pull/292))
+
+### 20261030t035142z
+- The anchorages mark two groups open; the first marked (Regions) is the one open ([#292](https://github.com/mark-brannan/portolani/pull/292))
