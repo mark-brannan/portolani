@@ -33,9 +33,13 @@ over a second of a still pen.
 
 | A: the button alone | B: the row grows a calendar | C: a log-book band on the map |
 |---|---|---|
-| ![A](variant-a.jpg) | ![B](variant-b.jpg) | ![C](variant-c.jpg) |
-| The row's ▶ turns to ❚❚. The date and the leg ride beside the pen in a small label. Nothing else. | Under the playing row a strip opens: each leg a solid piece, each wait a gap, a tick for each event, a thumb at the pen. Date and leg under it. Nothing on the map but the pen. | A band at the foot of the map: pause and stop, the date large, the leg or the wait, the same strip as B, and the pace ("1082 days in 9 s"). The row's button mirrors the band's. |
-| Least chrome; the eye is already on the pen. No pause target but the row, no scrubbing, and the label wanders and can cover a figure. | The strip is a scrubber where the controls already are. On a phone the drawer is a bottom sheet over the map, so the strip and the map compete for the same screen. | Works with the drawer shut and on a phone, and the date is read where the map is. Costs a band of map at the foot, like the cartouche or scale bar. |
+| ![A](variant-a.jpg) | ![B](variant-b.jpg) | ![C](play-3-winter.jpg) |
+
+| | A | B | C |
+|---|---|---|---|
+| What it adds | date and leg in a label by the pen | a strip under the row: legs, waits, event ticks, a thumb | a band at the map's foot: buttons, date, leg, strip, pace |
+| For | least chrome; the eye is on the pen | a scrubber where the controls already are | works drawer shut and on a phone; date read at the map |
+| Against | no scrubbing; the label can cover a figure | on a phone the strip and the map share the screen | costs a band of map, like the scale bar |
 
 **Pick: C.** The spec asks that the date and leg "show as it goes", and that pause or a scrubber may
 join the button; C is the only one that keeps them in view when the drawer is shut or is a phone's
