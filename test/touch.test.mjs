@@ -605,6 +605,7 @@ test('people: a picture on the map is looked at, put away and dealt back by choo
     assert.equal(await looked(), 'false', 'Esc did not lay the picture back');
     // by the keyboard with the People drawer open, Esc lays the picture back and leaves the drawer open
     await page.click('#people');
+    await page.evaluate(() => document.activeElement.blur()); // the drawer focused its first control; moving focus from there to the map is a focus outside, which shuts it
     await page.focus('#pictureKeys [data-look="0"]');
     await page.keyboard.press('Enter');
     assert.equal(await looked(), 'true');
