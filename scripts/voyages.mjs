@@ -268,7 +268,8 @@ export async function readVoyage(id, readJSON) {
 // paragraph, `sources` ids into sources.json. `born` and `death` are markers (docs/voyages/README.md "The record"):
 // lon and lat together or not at all, `confidence` one of MARKER_CONFIDENCES, `doubt` the optional sentence. `images`
 // are Wikimedia Commons files, { file, kind, author, date, licence, note }: `file` the bare file name, no scheme, no
-// slash; `kind` one of IMAGE_KINDS.
+// slash; `kind` one of IMAGE_KINDS. `fly` (optional) is a lon/lat box and a zoom, { lonMin, lonMax, latMin, latMax, zoom }, that a
+// flight to the person frames as well as their own track, in the part of the window a drawer leaves clear, no closer than `zoom`.
 export const IMAGE_KINDS = ['life', 'near', 'posthumous', 'imaginary', 'modern', 'scene', 'ship', 'map'];
 export const SLUG = /^[a-z][a-z0-9-]*$/;
 // The problems in one person record, as strings; none when it is well formed. `sources` is what a `cite` must name.
@@ -303,6 +304,10 @@ export function checkPerson(id, p, { sources } = {}) {
     }
   };
   for (const k of ['born', 'death']) if (p[k] !== undefined) marker(p[k], k);
+  if (p.fly !== undefined) { // the box a flight to the person frames, clear of the drawer, and the closest zoom it may end at
+    const f = p.fly, ok = f && typeof f === 'object' && !Array.isArray(f) && ['lonMin', 'lonMax', 'latMin', 'latMax', 'zoom'].every((k) => Number.isFinite(f[k]));
+    need(ok && f.lonMin < f.lonMax && f.latMin < f.latMax && Math.abs(f.lonMin) <= 180 && Math.abs(f.lonMax) <= 180 && Math.abs(f.latMin) <= 85 && Math.abs(f.latMax) <= 85, 'fly: { lonMin, lonMax, latMin, latMax, zoom }, west of east and south of north');
+  }
   if (p.images !== undefined) {
     need(Array.isArray(p.images), 'images: a list');
     for (const [j, q] of (Array.isArray(p.images) ? p.images : []).entries()) {

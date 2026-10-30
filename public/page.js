@@ -18,7 +18,7 @@ import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, dra
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
-import { PEOPLE_FILE, PICTURES_FILE, lifeSpan, timelineAxis, ticksOf, pictureCredit, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, viewContaining, withPictures, peopleOf, whoOf, deathOf } from './people.mjs';
+import { PEOPLE_FILE, PICTURES_FILE, lifeSpan, timelineAxis, ticksOf, pictureCredit, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, personFrame, personView, capFlyZoom, peopleOf, whoOf, deathOf } from './people.mjs';
 import { fold, bestPlace } from './placename.mjs';
 
 const memo = new Map();
@@ -1410,7 +1410,7 @@ function flyToVoyage(id) {
   readVoyage(id, (path) => env.readJSON(path)).then((v) => {
     if (n < voyageFlown || !style.voyages.some((s) => s.id === id)) return;
     const to = voyageView(v, flightTo ?? view);
-    if (to) { voyageFlown = n; goTo(to); }
+    if (to) { voyageFlown = n; goTo(capFlyZoom(to)); } // never closer than z6
   }, () => {});
 }
 $('voyageList').addEventListener('input', (e) => {
@@ -1509,9 +1509,7 @@ $('personCard').addEventListener('click', (e) => {
 // The box round a person's birth, death and voyages, once per person
 async function frameOfPerson(p) {
   if (!frames.has(p.id)) {
-    const vs = p.voyages.map((id) => peopleData.voyages[id]);
-    const pts = [p.born && [p.born.lon, p.born.lat], deathOf(p) && [deathOf(p).lon, deathOf(p).lat], ...vs.flatMap((v) => (v?.legs ?? []).flatMap((l) => l.points))].filter(Boolean);
-    frames.set(p.id, frameOf(pts.map(([lon, lat]) => [((((lon + 180) % 360) + 360) % 360) - 180, lat])));
+    frames.set(p.id, personFrame(p, peopleData.voyages));
   }
   return frames.get(p.id);
 }
@@ -1552,13 +1550,21 @@ async function preparePictures() {
   }));
   return fresh && id === style.person;
 }
+// The canvas px at the map's right edge that the open drawer covers, so a flight can frame what it shows in the rest;
+// none on a phone, where a drawer is a sheet over the map's foot
+function drawerClear() {
+  const d = openDrawer();
+  if (!d || phone.matches) return 0;
+  const m = $('map').getBoundingClientRect(), r = d.getBoundingClientRect();
+  return Math.max(0, Math.min(W, (m.right - r.left) * (W / m.width)));
+}
 // The map flies to frame the person and their pictures, wherever it is
 async function flyToPerson(id) {
   await loadPeople();
   const p = personOf(id), f = p && await frameOfPerson(p);
   if (!f || style.person !== id) return;
   const shown = picturesOf(p).filter((i) => pictureSize(p, i)), sizes = shown.map((i) => pictureSize(p, i));
-  goTo(viewContaining(withPictures(f, picturePlaces(f, sizes), sizes), { w: W, h: H }));
+  goTo(personView(p, f, sizes, { w: W, h: H, right: drawerClear() })); // never closer than z6 (capFlyZoom)
 }
 // A picture on the canvas: its centre, its turn in radians and its size in canvas px, before any deal or flip
 function pictureBox(pic, proj) {

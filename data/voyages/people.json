@@ -1012,6 +1012,7 @@
       "levtzion-hopkins-corpus",
       "baleka-balanta-mali"
     ],
+    "fly": { "lonMin": -17.6, "lonMax": 40, "latMin": 13, "latMax": 36, "zoom": 4 },
     "born": {
       "date": "c. 1280",
       "text": "Nobody recorded when or where he was born; c. 1280 is a modern estimate, and the place is given only as the Mali Empire.",
