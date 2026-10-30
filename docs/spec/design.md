@@ -518,14 +518,33 @@ Feature: A person's picture card
     And the card's old resize icon goes
 
 Feature: A sight's pictures on the chart table
-  Source: the user's design for the sights' pictures, 2026-10-30, on [#310](https://github.com/mark-brannan/portolani/pull/310): a sight's tile opened on the map deals its pictures onto the map "as onto a chart table", exactly as a chosen person's pictures are; Tyre first, from the candidates in `docs/ruin-marks/tyre.md`
-  Scenario: a sight's tile opens its pictures
+  Source: the user's design for the sights' pictures, 2026-10-30, on [#310](https://github.com/mark-brannan/portolani/pull/310): a sight's tile opened on the map deals its pictures onto the map "as onto a chart table", exactly as a chosen person's pictures are; Tyre first, from the candidates in `docs/ruin-marks/tyre.md`; where the row lies and the split by mark, the user's review of [#326](https://github.com/mark-brannan/portolani/pull/326), 2026-10-30, as #326's body records it (paraphrase: a sight's cards are dealt in a row along the foot of the window, in its bottom third, clear of the mark, the map flying there first from afar; a sight with several marks splits its pictures by mark, Tyre's city site and Al-Bass). This overtakes the row "just south of its marks, centred under them" and the tile that opened all of a sight's pictures.
+  Scenario: a mark's tile opens its pictures
     Given a sight with pictures in its record (Tyre: the harbour, the dig, the peninsula from orbit, the arch, the road, the hippodrome, Cassas's aqueduct)
-    When the user opens its tile on the map
-    Then its pictures are dealt onto the map in a row just south of its marks, centred under them, each a little askew
+    When the user opens the tile of one of its marks on the map
+    Then that mark's pictures are dealt onto the map in a row along the foot of the window, in its bottom third, clear of the mark, each a little askew
     And they drag, resize, turn over to read their credit and caption, look, put away and follow their link to Commons as a person's do
-    And the tile shows them as thumbnails, each of which takes its picture off the table or puts it back
+    And the tile shows that mark's pictures as thumbnails, each of which takes its picture off the table or puts it back
     And closing the tile leaves the pictures on the table until the user puts them away or chooses another subject
+  Scenario: a sight with several marks splits its pictures by mark
+    Given a sight drawn as more than one mark (Tyre: the city site, the old island port, and Al-Bass on the mainland)
+    When the user opens one mark's tile
+    Then only the pictures of that part of the site are dealt: the city site's harbour, view from orbit and dig, or Al-Bass's arch, road, hippodrome and aqueduct
+    And the sight's one row in the Points of interest drawer shows all of them
+  Scenario: every mark answers where it is drawn
+    Source: the user on [#326](https://github.com/mark-brannan/portolani/pull/326), 2026-10-30, in the session walk: "the northern ruins for Tyre don't do anything. We said we were moving two cards to the norther (port) site but they're just gone. I said the northern site was more important to me than the two...but you left the southern site and didn't build a mouseover/clickpoint for the northern (port) site. I've gotta see that."; "There's also something strange happening with the hit boxes. When I sweep and then click part of the leftmost icon I get the hover text tile, but not always the cards, sometimes if I change the position of the click...then the cards get dealt."; "I see now that at a certain zoom level the north and south sites are both there and have tiles/cards...however I can't figure out why the northern site is not always clickable. To reiterate: something weird is going on with hit boxes and drawing the position of these. It shouldn't be this complicated."
+    Given a sight drawn as more than one mark, at any zoom where its marks are drawn, before or after a sweep
+    When the user points at any part of a mark, or clicks or taps it
+    Then the pointer answers over the whole of that mark, at the spot where it is drawn: where the mark is drawn, there it answers
+    And every click on it opens its tile and deals its own pictures, every time; no part of the mark opens the tile and deals nothing
+    And no mark of a sight is drawn without answering: the city site, the port the user holds the more important, answers as Al-Bass does
+  Scenario: a sight's marks keep their bearing to each other
+    Source: the user on [#326](https://github.com/mark-brannan/portolani/pull/326), 2026-10-30, in the session walk: "The ruins for Tyre are inexplicably trading positions around when zooming. Initially they are north/south of one another but then when clicking or zooming they get rendering beside one another."
+    Given a sight drawn as more than one mark (Tyre's two sites, 1.7 km apart on one latitude)
+    When the user zooms in or out, or clicks
+    Then the marks keep their true bearing to each other at every zoom: Tyre's city site stands west, Al-Bass east
+    And where they lie too close to stand apart at that zoom, they spread along that bearing only as far as they need to stand clear of each other, and come back to their own places as the zoom opens
+    And a click or a zoom never swaps or turns them
   Scenario: one subject at a time
     Given a sight's pictures on the table
     When the user chooses a person in the People drawer
@@ -536,6 +555,50 @@ Feature: A sight's pictures on the chart table
     When the pictures are built (`npm run people`)
     Then each is fetched from Commons, its licence checked against the record, and written into `packs/overlays/sights/` with a manifest of the people manifest's shape
     And its back reads its credit and its caption
+
+Feature: A place's note and details in the Points of interest drawer
+  Source: the user's review of [#326](https://github.com/mark-brannan/portolani/pull/326), 2026-10-30, as #326's body records it (paraphrase: a place's note shows only on hover or focus; a click shows the place's details at the drawer's foot)
+  Scenario: the note on hover
+    Given the Points of interest drawer open
+    When the pointer rests on a place's row, or the keyboard's focus reaches it
+    Then the place's note shows, laid over the rows below so nothing jumps, and goes when the pointer or the focus leaves
+  Scenario: the details on a click
+    Given the Points of interest drawer open
+    When the user clicks a place's row
+    Then the map flies there, and the place's details show at the drawer's foot: its name and date, its tile's text, and its pictures as thumbnails that put a picture on the table or take it off
+    And the click on the row deals nothing; a mark on the map deals
+
+Feature: A flight sweeps the table, then deals on arrival
+  Source: the user on [#326](https://github.com/mark-brannan/portolani/pull/326), 2026-10-30, in the session walk: "cards need to sweep themselves for now whenever we do a fly action. I typically want that for people cards too...so it should be the same action if possible. sweep then fly."; "I notice that cards for people are getting dealt before we fly and so they are mysteriously in place when we get to the outer zoom. We should fly and then deal cards when we are nearing the target zoom levels, or the target field of view."
+  Scenario: sweep, fly, deal
+    Given cards on the table, a person's or a sight's, or none
+    When the user chooses something that flies the map: a person, a sight's mark from afar, a row in a drawer, a voyage, a chart, Go
+    Then every card on the table is put away first, a person's or a sight's alike, as the skull puts them away
+    And then the map flies
+    And the chosen subject's cards, a person's or a sight's alike, are dealt only as the flight nears its target view, never before it sets off or while the map is still far from it
+  Scenario: no flight, no sweep
+    Given a choice that does not move the map (a sight's mark opened where the map already is)
+    When its cards are dealt
+    Then they are dealt at once, in the view the map is in
+
+Feature: The skull in the lower right puts the map back
+  Source: the user on [#326](https://github.com/mark-brannan/portolani/pull/326), 2026-10-30, in the session walk: "I don't like the broom. Use a skull and cross bones and put some latin script text below it. I want us to cycle through a handful of phrases about mortality and death/dust that would have been in common use in the period: "Memento, homo, quia pulvis es, et in pulverem reverteris", "Pulvis et umbra sumus", "Hodie mihi, cras tibi", "Mors certa, hora incerta", "All flesche is grasse", "Erthe out of erthe is wonderly wrought, Erthe hath of erthe a dignite of nought", "Ogni uomo è polvere", "Ricordati che devi morire", "Polvo eres, y en polvo te has de convertir", "Nuestras vidas son los ríos que van a dar en la mar, que es el morir", "Recuerda que eres polvo". You may use an animated broom effect on the map when the skull is clicked and the cards are being swept but then the broom disappears. I want the skull and the flavor text to always appear in the lower right persistently. It can always be used to clear things back to the normal state." That one control puts every card away, a person's or a sight's alike, is the earlier call of the same review, as #326's body records it (paraphrase). The broom supersedes nothing older: the sweep was first drawn as a broom on #326, shown only while a card lay on the table and keeping the subject chosen, and the user replaced it with the skull the same day.
+  Scenario: the skull is always there
+    Given the chart at any view, with cards on the table or none
+    When the user looks at the lower right of the window
+    Then a skull and crossbones is there, with one period phrase on mortality under it, in the phrase's own language, untranslated
+    And it is there at all times, not only while a card lies on the table
+  Scenario: the phrases turn
+    Given the skull shown
+    When the phrase under it changes
+    Then it moves on in turn through the list: "Memento, homo, quia pulvis es, et in pulverem reverteris", "Pulvis et umbra sumus", "Hodie mihi, cras tibi", "Mors certa, hora incerta", "All flesche is grasse", "Erthe out of erthe is wonderly wrought, Erthe hath of erthe a dignite of nought", "Ogni uomo è polvere", "Ricordati che devi morire", "Polvo eres, y en polvo te has de convertir", "Nuestras vidas son los ríos que van a dar en la mar, que es el morir", "Recuerda que eres polvo"
+    And what turns it, a clock or each click, is open
+  Scenario: a click puts the map back to its normal state
+    Given cards on the table, a tile open, a person or a sight chosen, in any mix
+    When the user clicks the skull
+    Then every card is put away, a person's or a sight's alike, every tile closes, and no subject is chosen: the map is in its normal state
+    And a broom sweeps across the map as the cards go, then is gone; with reduced motion the cards go with no broom
+    And a click with nothing on the table does no harm: the map is already in its normal state
 
 Feature: People and voyages share one timeline
   Source: the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "I'm now leaning towards both the people drawer and the voyages drawer being timeline format"; "Perhaps the timelines has a way to expand to earlier human history on the left side?"; "I don't exactly like the break I'm seeing from 300 BC to 1000 CE...realizing that it throws off the scale a bit."; and the user's answers in the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30, to the recorder's questions (paraphrase: one timeline, two lanes, the Sights eras as colour bands; Lapita the left edge, an expander for earlier history; fill the gap rather than compress the axis): "voyages section: yes"; "timeline span, yes lapita default with expander"; "BC to CE break, yes fill it"
