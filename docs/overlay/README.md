@@ -115,6 +115,27 @@ The same chart at 0.6, the strips faint enough to see today's coast through them
 
 The rest of this page is about those strips, which the code and the sections below call pieces.
 
+## How it is placed
+
+The chart is not one similarity: Scandinavia is turned. The two fits of
+[docs/atlas/ornaments.md](../atlas/ornaments.md) ("Carta Marina, 1539") split it at x = 2700 scan px. Each is
+a similarity (scale, turn, shift) from scan px to longitude and Mercator latitude, refitted by least
+squares from that page's figures table, which gives every figure's scan px and the lon, lat its side's fit
+put it at. The refit gives back all 27 rows to 0.07 degree (the table rounds to 0.1); the fits' own
+residual against the landmarks is 47 to 101 km.
+
+| piece | scan px | scale | turn |
+|---|---|---|---|
+| west | x 0 to 2700 | 0.0113 °/px | 48° |
+| Baltic | x 2700 to 5016 | 0.0100 °/px | 3° |
+
+Each piece is drawn with one affine through three of its corners (scan px, through its fit, through the
+view's projection). A similarity onto Mercator coordinates is affine in Mercator, so there the warp is
+exact. In any other projection it is an approximation: true at those three corners and drifting between
+them, the more the further the chart reaches from the view's centre. Where the two pieces meet, at x = 2700,
+a straight seam runs down through Sweden and the west piece's turned corner shows as a diagonal edge north
+of it; that is the two fits disagreeing, not a fault in the drawing.
+
 ## At the Carta Marina view
 
 `npm run render -- --view 19.7,61.7,4.6 --overlay carta-marina:<opacity> --out <file>` (an opacity after the id asks for the pieces), scaled to 1000 px.
