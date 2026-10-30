@@ -2,7 +2,7 @@
 // decimal minutes, or degrees, minutes and seconds; the marks are ° ' " (or ′ ″, or the letters d m s), a
 // hemisphere letter (N S E W, either case) stands before or after its number, or a sign does its work.
 // Halves part at the one comma, semicolon or slash if there is exactly one, else at the hemisphere letters
-// when each half has its own, else the numbers divide evenly (2, 4 or 6 of them). Anything else, or a value out of range, is null.
+// when each half has its own, else the numbers divide evenly (2, 4 or 6 of them). A second separator, or anything else, or a value out of range, is null.
 //
 //   parsePosition('38° 30.5′ N 20° 15′ E')  ->  { lat: 38.50833…, lon: 20.25 }
 //
@@ -56,10 +56,11 @@ export function parsePosition(text) {
   const toks = lex(String(text));
   if (!toks?.length) return null;
   const seps = toks.filter((t) => t.t === 'sep');
+  if (seps.length > 1) return null; // a decimal comma (38,5 20,25) would read as minutes
   let halves;
   if (seps.length === 1) { const i = toks.indexOf(seps[0]); halves = [toks.slice(0, i), toks.slice(i + 1)]; }
   else {
-    const body = toks.filter((t) => t.t !== 'sep'), at = body.flatMap((t, i) => (t.t === 'hemi' ? [i] : []));
+    const body = toks, at = body.flatMap((t, i) => (t.t === 'hemi' ? [i] : []));
     const lone = at.length === 0 || (at.length === 1 && (at[0] === 0 || at[0] === body.length - 1)); // no letter, or one at an end: the numbers divide
     if (lone) {
       const nums = body.flatMap((t, i) => (t.t === 'num' ? [i] : []));
