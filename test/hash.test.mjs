@@ -230,7 +230,7 @@ scenario('regionset: the 1375 chip round-trips', 'map=4.00/40.000/16.000', async
 
 // Every control in the drawer, by its element's id. Each layout shows all of them, each one element.
 const CONTROLS = ['density', 'pick-monster', 'pick-ship', 'pick-rose', 'placement', 'townSize', 'pick-town', 'mountains', 'hills', 'pick-relief', 'trees',
-  'pick-cartouche', 'titleMode', 'title', 'projection', 'names', 'rhumb', 'continentsZoom', 'regionSet', 'regions', 'regionsZoom', 'land', 'islands', 'seaTint',
+  'pick-cartouche', 'titleMode', 'title', 'names', 'rhumb', 'continentsZoom', 'regionSet', 'regions', 'regionsZoom', 'land', 'islands', 'seaTint',
   'rivers', 'lakes', 'scale', 'scaleBorder', 'ink', 'parchment'];
 const HEADINGS = {
   default: ['Sea', 'Roses', 'Placement', 'Towns', 'Land', 'Cartouche', 'Map', 'Colours'],

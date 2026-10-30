@@ -804,7 +804,7 @@ function setDrawer(open, byKeyboard = false) { // the drawer to open, or false f
   if (open?.id === 'voyagesPanel') fillVoyages(); // the list loads on the first open
   if (open?.id === 'peoplePanel') fillPeople();
   if (open?.id === 'chartsDrawer') chartsFresh = !style.overlay;
-  if (open) (open.id === 'goPanel' ? (phone.matches ? null : $('coordsText')) : focusable(open))?.focus({ preventScroll: true });
+  if (open) (open.id === 'goPanel' ? (phone.matches ? null : $('coordsText')) : open.id === 'chartsDrawer' ? focusable($('chartList')) ?? focusable(open) : focusable(open))?.focus({ preventScroll: true });
   else if (byKeyboard) drawers.find(([, d]) => d === was)[0].focus({ preventScroll: true });
   else if (was.contains(document.activeElement)) document.activeElement.blur(); // a phone's keyboard goes with it
 }
