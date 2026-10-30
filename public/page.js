@@ -18,7 +18,7 @@ import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, dra
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
-import { PEOPLE_FILE, PICTURES_FILE, SIGHT_PICTURES_FILE, SIGHT_MANIFEST_FILE, sightDeal, lifeSpan, laneAxis, eraBands, EARLIER_MARKS, pictureCredit, pictureNote, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, sightFrame, viewContaining, withPictures, peopleOf, whoOf, deathOf, sightPicturesOf } from './people.mjs';
+import { PEOPLE_FILE, PICTURES_FILE, SIGHT_PICTURES_FILE, SIGHT_MANIFEST_FILE, sightDeal, lifeSpan, laneAxis, eraBands, EARLIER_MARKS, pictureCredit, pictureNote, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, sightFrame, viewContaining, withPictures, peopleOf, whoOf, deathOf, sightPicturesOf, MEMENTO, mementoNext } from './people.mjs';
 import { fold, bestPlace } from './placename.mjs';
 import { planFlight, ease as flyEase, FLY_KNOBS, flyDefaults } from './flight.mjs';
 
@@ -55,6 +55,10 @@ const canvas = $('map'), ctx = canvas.getContext('2d');
 const phone = matchMedia('(max-width: 520px)');
 
 const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: CONTINENT_ZOOM_END, regions: 'latin', regionSet: 'today', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyages: [], voyageWidth: VOYAGE_WIDTH, voyageDraw: VOYAGE_DRAW.seconds, person: null, sight: null, site: null, pictures: null, ...OVERLAY_DEFAULTS, cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER, overlap: DEFAULT_OVERLAP };
+// The cards of a subject chosen are dealt once the map is there: `dealing` is that subject's key until then (the map
+// flying to it, or its records loading), and no card of it lies on the table nor rides in the link meanwhile (dealNow).
+// `onTable`: the cards drawn on the table when it was last painted.
+let dealing = null, onTable = 0;
 
 // ---------------------------------------------------------------- the sprites on offer
 
@@ -200,8 +204,8 @@ function writeHash() {
     q.set(st.person ? 'person' : 'sight', st.person ?? st.sight);
     if (st.sight && st.site != null) q.set('site', st.site);
     const shown = st.pictures && (st.pictures.length ? st.pictures.join(',') : 'none'), at = pictureAtText(st.pictureAt);
-    if (shown) q.set('pictures', shown);
-    if (at) q.set('pictureat', at);
+    if (shown && !dealing) q.set('pictures', shown); // written once they are dealt, not while the map flies to them
+    if (at && !dealing) q.set('pictureat', at);
   }
   overlayToHash(st, q);
   if (st.seaTint) q.set('seas', '1');
@@ -752,16 +756,17 @@ async function render() {
       sprites: [...selection], kinds, view, pinned: !phone.matches, pinTitle: style.autoTitle ? pinTitle : null,
       voyages: style.voyages.filter((v) => !v.hidden).map((v) => ({ id: v.id, colour: ink[v.id], width: style.voyageWidth })), person: style.person, voyageWidth: style.voyageWidth,
       overlays: style.overlays.map((id) => ({ id, mode: style.overlayMode, sheet: style.sheets[id] ?? null, opacity: style.overlayOpacity })),
-      sights: sightTiles().map(({ lon, lat, tile }) => ({ name: tile.title, lon, lat, ruin: tile.ruin ?? false })),
+      sights: sightTiles().map(({ lon, lat, tile }) => ({ name: tile.title, lon, lat, ruin: tile.ruin ?? false, ...(tile.site != null && { site: tile.site }) })),
       debug: parseDebug(style.debug).debug, tune: parseTune(style.tune).tune,
     });
     if (me !== run) return; // a newer change or a move superseded this one
-    ground = { world, coarse, bg, voyages: scene.voyages, anchored: anchorScene(scene, data), overlays: scene.overlays, cards: { cartouche: kinds.includes('cartouche') ? scene.cartouche : null, scaleSprite: scene.scaleSprite, scale: style.scale, bg } };
+    ground = { world, coarse, bg, voyages: scene.voyages, marks: drawnMarks(scene), anchored: anchorScene(scene, data), overlays: scene.overlays, cards: { cartouche: kinds.includes('cartouche') ? scene.cartouche : null, scaleSprite: scene.scaleSprite, scale: style.scale, bg } };
     if (JSON.stringify(voyageInk()) !== inkKey) { showVoyage(); render(); return; } // the sheet laid or lifted changed which voyages cross it: draw again in their inks
     applyReveal();
     if (style.autoTitle) $('title').value = scene.cartouche.title; // the box shows what the cartouche letters, and cannot be edited
     placed = view;
     if (keepTile) keepTile = false; else hideTile(); // its mark may be gone: another voyage, or none; a sight's tile just opened stays
+    if (reopen && !flightTo) { const t = reopen, m = sightHits(viewProjection(placed), { x0: 0, y0: 0, x1: W, y1: H }).find((h) => h.tile === t); reopen = null; if (m) showTileAt([m.x, m.y]); }
     cancelAnimationFrame(frame); frame = 0; // a moving frame still queued would paint over the scene
     const t1 = performance.now();
     const fading = scene.overlays.find((o) => o.mode === 'sheet' && o.id === fadeIn);
@@ -1165,7 +1170,7 @@ function showSnap(corner, w, h) {
     left: `${r.left + (corner[1] === 'l' ? m : W - m - w) * kx}px`, top: `${r.top + (corner[0] === 't' ? m : H - m - h) * ky}px` });
 }
 canvas.addEventListener('pointerdown', (e) => {
-  cancelAnimationFrame(flight); flightTo = null; // a touch takes over from a flight
+  takeOver(); // a touch takes over from a flight
   if (!pointers.size && e.isPrimary && !held && !holding) {
     const p = toCanvas(e.clientX, e.clientY), pic = pictureHit(p), hit = pic ? null : sheetHit(p);
     if (looking != null && pic?.i !== looking) { endLook(); return; } // a press off the picture looked at lays it back, and only that
@@ -1223,7 +1228,7 @@ canvas.addEventListener('pointerup', (e) => {
 canvas.addEventListener('pointercancel', (e) => { tap = null; lift(e); });
 canvas.addEventListener('wheel', (e) => {
   e.preventDefault();
-  cancelAnimationFrame(flight); flightTo = null; // the wheel takes over from a flight
+  takeOver(); // the wheel takes over from a flight
   const [x, y] = toCanvas(e.clientX, e.clientY);
   const px = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY; // lines to px
   moved(zoomView(view, 2 ** (-px / 300), x, y));
@@ -1300,8 +1305,22 @@ function sightTiles() {
 // point (its whole hit box, drawn nowhere; the smallest where boxes nest); else a note's centre within reach (notes.mjs pickMark)
 function markAt(at) {
   const proj = viewProjection(placed), rect = { x0: 0, y0: 0, x1: W, y1: H };
-  const marks = [...(ground?.voyages ?? []).filter((v) => !(v.reveal < 1)).flatMap((v) => [...voyageMarks(v.voyage, proj, rect), ...doubtMarks(v, proj, rect)]), ...(placed.zoom >= POI_ZOOM ? sightMarks(sightTiles(), proj, rect) : []), ...laidNotes(proj, rect)];
+  const marks = [...(ground?.voyages ?? []).filter((v) => !(v.reveal < 1)).flatMap((v) => [...voyageMarks(v.voyage, proj, rect), ...doubtMarks(v, proj, rect)]), ...(placed.zoom >= POI_ZOOM ? sightHits(proj, rect) : []), ...laidNotes(proj, rect)];
   return pickMark(marks, at, cssPx(TAP_REACH));
+}
+// The marks the scene drew for the places with a tile, where it drew them (a sight's several marks spread apart, a
+// ruin moved clear of a town): { x, y, h, name, site } in canvas px, centred on the icon, `h` its reach, the icon's
+// half-diagonal and a margin, so a tap anywhere on it or just off it takes it
+const MARK_MARGIN = 8;
+const drawnMarks = (scene) => (scene.lesser ?? []).filter((l) => l.mark && l.label).map((l) => ({ x: l.label.cx, y: l.label.cy, h: 2 * (Math.hypot(l.label.hw, l.label.hh) + MARK_MARGIN), name: l.name, site: l.site ?? null }));
+// Each listed place's mark to hit: the one drawn for it, by name and mark, where the scene drew one; else where the place
+// is (a place lettered on the chart, or a stand-in left out for want of room)
+function sightHits(proj, rect) {
+  const drawn = ground?.marks ?? [];
+  return sightTiles().flatMap((spot) => {
+    const m = drawn.find((d) => d.name === spot.tile.title && d.site === (spot.tile.site ?? null));
+    return m ? [{ x: m.x, y: m.y, h: m.h, tile: spot.tile }] : sightMarks([spot], proj, rect);
+  });
 }
 // The laid charts' notes: each sheet's, less those an upper sheet covers, since only the top sheet's figure shows there
 const laidNotes = (proj, rect) => (ground?.overlays ?? []).flatMap((o, i, all) => noteMarks(o, proj, rect)
@@ -1311,7 +1330,7 @@ function showTileAt(at) {
   if (!best) return;
   tileShown = best.tile;
   if (best.tile.sight) { // the sight becomes the subject: its pictures onto the table, and into the tile once their records are read
-    chooseSight(best.tile.sight, DEFAULTS.pictures, best.tile.site ?? null);
+    chooseSight(best.tile.sight, DEFAULTS.pictures, best.tile.site ?? null, best.tile);
     if (!sightData) loadSights().then(() => { if (tileShown === best.tile && !tileEl.hidden) showTileAt(at); }, () => {});
   }
   fillTile(best.tile);
@@ -1669,21 +1688,44 @@ async function loadSubject() { if (style.person) await loadPeople(); else if (st
 // put away it deals them again. A sight with several marks (Tyre's city site and Al-Bass) splits its pictures between
 // them by each record's `site`, the mark's place in its tile's `at`; the link carries it as `site=`.
 let keepTile = false;
-function chooseSight(name, pictures = DEFAULTS.pictures, site = null) {
+function chooseSight(name, pictures = DEFAULTS.pictures, site = null, tile = null) { // `tile`: the mark's tile it was opened from
   if (style.sight === name && style.site === site && !style.person && style.pictures?.length !== 0) return;
-  const hadPerson = Boolean(style.person);
-  style = { ...style, person: null, sight: name, site, pictures, pictureAt: {} };
-  flips.clear(); links.clear(); raised = []; looking = null;
+  const hadPerson = clearTable(false); // whatever lies on the table put away first, as the skull does; the tile just opened stays
+  style = { ...style, sight: name, site, pictures };
   dealViews.delete(sightKey());
+  dealing = sightKey(); // dealt where dealSight says: in place, or as the map arrives
   showPeople(); showSightCard(); writeHash();
-  if (sightData) dealSight(); else loadSights().then(dealSight, () => {});
+  if (sightData) dealSight(tile); else loadSights().then(() => dealSight(tile), () => { dealing = null; });
   if (hadPerson) { keepTile = true; render(); } // the person's voyages back in their own inks
-  else preparePictures().then((fresh) => { if (fresh) repaint('pictures dealt'); }, () => {});
+}
+function dealNow(key = dealing) {
+  if (!dealing || key !== dealing) return;
+  dealing = null; dealt = null;
+  writeHash();
+  if (ground) repaint('pictures dealt');
+  preparePictures().then(() => { if (ground) repaint('pictures dealt'); }, () => {});
+}
+// The table cleared, as the skull in the right margin clears it and as every fly does first: every card put away, the
+// subject let go (no person lit, no sight chosen, no picture kept in the link) and, with `hide`, the tile shut; the
+// broom sweeps across the map where any card lay. Voyages drawn stay. True when a person was chosen, whose voyages the
+// scene drew lit: the caller draws the map again.
+function clearTable(hide = true) {
+  const hadPerson = Boolean(style.person), lay = onTable > 0;
+  dealing = null; reopen = null;
+  if (hide) hideTile();
+  if (style.person || style.sight || style.pictures != null || Object.keys(style.pictureAt ?? {}).length) {
+    style = { ...style, person: null, sight: null, site: null, pictures: DEFAULTS.pictures, pictureAt: {} };
+    flips.clear(); links.clear(); raised = []; looking = null; focusedPic = null;
+    showPeople(); showSightCard(); writeHash();
+  }
+  if (lay) { sweepBroom(); if (ground) repaint('pictures swept'); }
+  return hadPerson;
 }
 // A sight's pictures are dealt along the foot of the view they are dealt in (sightDeal), the place clear above them:
 // the view as it is, or, from afar, the place at SIGHT_ZOOM, flown to; where the row would cover the place, the map
 // moves to put the place in the middle. Once dealt they stay put on the map, as a person's do.
 const SIGHT_ZOOM = 9.5, FLY_WIDER = 1; // the zoom a sight is dealt at from afar; how much wider than it counts as afar
+let reopen = null; // the tile of the mark whose deal the map is flying to, opened again beside the mark once it lands
 const dealViews = new Map(); // the view a sight's pictures were dealt in, by subject
 // where a sight's row is dealt under: the mark opened, else the middle of its marks
 function placeOfSight(s, f) {
@@ -1692,15 +1734,18 @@ function placeOfSight(s, f) {
 }
 // a sight's pictures for one of its marks (`site`), by index; null for all of them
 const siteSet = (s, site) => (site == null || !s.images.some((im) => im.site === site) ? null : s.images.flatMap((im, i) => (im.site === site ? [i] : [])));
-function dealSight() {
+function dealSight(tile = null) {
   const s = subject();
-  if (s?.kind !== 'sight' || dealViews.has(s.key)) return;
+  if (s?.kind !== 'sight') return;
+  if (dealViews.has(s.key)) { dealNow(s.key); return; }
   const f = frameOfSubject(s), at = placeOfSight(s, f), sizes = picturesOf(s).map((i) => pictureSize(s, i)).filter(Boolean);
   const zoom = Math.min(SIGHT_ZOOM, viewContaining(f, { w: W, h: H }).zoom);
   let to = view.zoom < zoom - FLY_WIDER ? { ...view, lon: at[0], lat: at[1], zoom } : view;
   if (!sightDeal(sizes, windowRect(), viewProjection(to).project(...at)).clear) to = { ...to, lon: at[0], lat: at[1] };
   dealViews.set(s.key, clampView({ ...to, projection: view.projection }));
-  if (to !== view) goTo(to);
+  if (to === view) { dealNow(s.key); return; } // dealt here and now
+  goTo(to, s.key); // dealt as the map arrives, and the mark's tile opened again there
+  reopen = tile;
 }
 const mercOf = (lat) => (Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360)) * 180) / Math.PI;
 const latOfMerc = (m) => ((2 * Math.atan(Math.exp((m * Math.PI) / 180)) - Math.PI / 2) * 180) / Math.PI;
@@ -1768,8 +1813,8 @@ $('peopleStrip').addEventListener('click', (e) => {
   const b = e.target.closest('[data-person]');
   if (!b) return;
   const id = b.dataset.person === style.person ? null : b.dataset.person;
-  style = { ...style, person: id, sight: null, site: null, pictures: DEFAULTS.pictures, pictureAt: {} };
-  flips.clear(); links.clear(); raised = []; looking = null;
+  clearTable(); // whatever lies on the table put away first, and a second click lets the person go
+  if (id) { style = { ...style, person: id }; dealing = `person:${id}`; } // their cards dealt as the map arrives
   showPeople(); showSightCard(); writeHash(); render();
   if (id) flyToSubject();
 });
@@ -1790,17 +1835,26 @@ function setOnTable(i, on) {
   repaint('a picture put away');
   preparePictures().then((fresh) => { if (fresh) repaint('a picture dealt'); }, () => {});
 }
-// The sweep, in the right margin while any picture lies on the table: every picture put away at once, a person's or a
-// sight's, as each one's own Put away would; the link then reads `pictures=none`
+// The skull in the right margin, always there, a memento mori under it: a click (or Enter, or Space) clears the table
+// back to how the page opens (clearTable) and moves the line on to the next (MEMENTO, the first at random)
+let memento = Math.floor(Math.random() * MEMENTO.length);
+const showMemento = () => { $('mementoText').textContent = MEMENTO[memento]; };
+showMemento();
 $('sweep').addEventListener('click', () => {
-  const s = subject();
-  if (!s || !picturesOf(s).length) return;
-  style = { ...style, pictures: [] };
-  flips.clear(); links.clear(); raised = []; looking = null; focusedPic = null;
-  showPeople(); showSightCard(); writeHash();
-  for (const b of tileEl.querySelectorAll('[data-pic]')) b.setAttribute('aria-pressed', 'false');
-  repaint('pictures swept');
+  if (clearTable()) render(); // a person's voyages back in their own inks
+  memento = mementoNext(memento); showMemento();
 });
+// The broom (the skull's old icon) sweeps once across the map from the right, about 0.6 s, while the cards go; none
+// under reduced motion
+function sweepBroom() {
+  const el = $('broom');
+  if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const r = canvas.getBoundingClientRect(), left = Math.max(0, r.left), right = Math.min(innerWidth, r.right), tall = Math.min(r.bottom, innerHeight) - Math.max(0, r.top), size = tall * 0.3;
+  Object.assign(el.style, { width: `${size}px`, height: `${size}px`, top: `${Math.max(0, r.top) + (tall - size) * 0.62}px`, left: `${left}px` });
+  el.hidden = false;
+  el.animate([{ transform: `translateX(${right - left}px) rotate(8deg)` }, { transform: `translateX(${(right - left) * 0.5 - size / 2}px) rotate(-10deg)`, offset: 0.5 }, { transform: `translateX(${-size}px) rotate(8deg)` }],
+    { duration: 600, easing: 'ease-in-out' }).finished.then(() => { el.hidden = true; }, () => { el.hidden = true; });
+}
 // The box round a subject, once per subject: a person's birth, death and voyages; a sight's spots, padded (sightFrame)
 function frameOfSubject(s) {
   if (!frames.has(s.key)) {
@@ -1836,6 +1890,7 @@ const raise = (i) => { const was = raised.at(-1); raised = [...raised.filter((k)
 // (placesOf)
 function shownPictures() {
   if (pileFor !== subjectKey()) { pileFor = subjectKey(); raised = []; looking = null; flips.clear(); links.clear(); } // another subject, by any road
+  if (dealing && dealing === subjectKey()) return []; // not dealt until the map is there
   const s = subject(), f = s && frames.get(s.key);
   if (!f) { looking = null; return []; }
   const shown = picturesOf(s).filter((i) => pictureSize(s, i)), places = placesOf(s, f, shown.map((i) => pictureSize(s, i)));
@@ -1866,10 +1921,11 @@ async function preparePictures() {
 }
 // The map flies to frame a person and their pictures, wherever they are
 async function flyToSubject() {
-  const key = subjectKey(), s = await loadSubject(), f = s && frameOfSubject(s);
-  if (!f || key !== subjectKey()) return;
+  const key = subjectKey(), s = await loadSubject().catch(() => null), f = s && frameOfSubject(s);
+  if (key !== subjectKey()) return;
+  if (!f) { dealNow(key); return; }
   const shown = picturesOf(s).filter((i) => pictureSize(s, i)), sizes = shown.map((i) => pictureSize(s, i));
-  goTo(viewContaining(withPictures(f, placesOf(s, f, sizes), sizes), { w: W, h: H }));
+  goTo(viewContaining(withPictures(f, placesOf(s, f, sizes), sizes), { w: W, h: H }), key); // their cards dealt as it arrives
 }
 // A picture on the canvas: its centre, its turn in radians and its size in canvas px, before any deal or flip. The one
 // looked at lies upright in the middle of the part of the canvas in the window, as large as LOOK_FILL of that allows
@@ -1968,7 +2024,7 @@ let focusedPic = null; // the picture whose item in the canvas's fallback has th
 function drawPictures(g) {
   const list = shownPictures();
   mirrorPictures(list);
-  $('sweep').hidden = !list.length;
+  onTable = list.length;
   if (!list.length) { dealt = null; return; }
   const now = performance.now(), proj = viewProjection(view), m = 5;
   if (dealt?.key !== subjectKey()) dealt = { key: subjectKey(), start: now };
@@ -2416,7 +2472,11 @@ function clearSheetFor(target, frame = false) {
 // for a drag, and the ornaments placed when it lands. Every fly on the page comes through here. Reduced motion jumps.
 let flight = 0, flightTo = null; // the view a flight is bound for, while it flies
 let lastFlight = null; // { from, target } of the last flight, for Fly again under the hood
-function goTo(target) {
+// Every fly first clears the table (clearTable); one that carries a subject (`deal`, its key) deals its cards as it
+// nears the target: once the zoom, having been further, comes within DEAL_NEAR levels of the target's, else on landing.
+const DEAL_NEAR = 1;
+function goTo(target, deal = null) {
+  if (deal == null) clearTable();
   cancelAnimationFrame(flight);
   pinTitle = null;
   const from = view, to = clampView({ ...target, projection: view.projection });
@@ -2424,12 +2484,20 @@ function goTo(target) {
   const plan = planFlight(from, to, { w: W, h: H, minZoom: ZOOM.min, ...fly });
   const ms = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : plan.ms, t0 = performance.now();
   $('flyOut').textContent = `${plan.arc ? 'arc' : 'near'}, top z${plan.top.toFixed(2)}, ${(plan.ms / 1000).toFixed(1)} s`;
+  let far = false;
   const step = (now) => {
-    const u = ms ? Math.min(1, (now - t0) / ms) : 1, e = flyEase(u, fly.ease);
-    moved(u < 1 ? clampView({ ...plan.at(e), projection: to.projection }) : to, true);
-    if (u < 1) flight = requestAnimationFrame(step); else { flightTo = null; pinTitle = target.title ?? null; placed = null; stopped(); }
+    const u = ms ? Math.min(1, (now - t0) / ms) : 1, e = flyEase(u, fly.ease), at = u < 1 ? clampView({ ...plan.at(e), projection: to.projection }) : to;
+    moved(at, true);
+    if (deal) { if (Math.abs(at.zoom - to.zoom) > DEAL_NEAR) far = true; else if (far) dealNow(deal); }
+    if (u < 1) flight = requestAnimationFrame(step); else { flightTo = null; pinTitle = target.title ?? null; placed = null; if (deal) dealNow(deal); stopped(); }
   };
   step(t0);
+}
+// A touch or the wheel takes over from a flight: a subject it was carrying is dealt where the map is
+function takeOver() {
+  const flying = flightTo != null;
+  cancelAnimationFrame(flight); flightTo = null;
+  if (flying) { reopen = null; dealNow(); }
 }
 
 // Under the hood, temporary: the flight's knobs (flight.mjs, FLY_KNOBS), kept in this browser rather than the link,
@@ -2496,7 +2564,7 @@ for (const id of Object.values(KNOB_SLIDERS)) $(id).addEventListener('input', (e
 for (const id of ['debug', 'overlap', 'overlayMode', 'sheetHides', 'overlayOpacity', ...Object.values(KNOB_CHIPS), ...Object.values(KNOB_SLIDERS), 'projection', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'scaleBorder', 'land', 'islands', 'seaTint', 'rivers', 'lakes', 'trees', 'mountains', 'hills', 'continentsZoom', 'regions', 'regionSet', 'regionsZoom', 'titleMode', 'townSize', 'voyageWidth']) $(id).addEventListener('input', readControls);
 let typing = 0; // a typed title is placed when the typing pauses, not on every key: a placement takes up to a few hundred ms
 $('title').addEventListener('input', () => { clearTimeout(typing); typing = setTimeout(readControls, 400); });
-addEventListener('hashchange', () => { layout = layoutFromHash(); showLayout(); hoverOpen = hoverFromHash(); showHover(); view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); showVoyage(); showPeople(); render(); });
+addEventListener('hashchange', () => { dealing = null; layout = layoutFromHash(); showLayout(); hoverOpen = hoverFromHash(); showHover(); view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); showVoyage(); showPeople(); render(); });
 showPlacement();
 render();
 

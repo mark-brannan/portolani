@@ -194,6 +194,24 @@ export function sightDeal(sizes, win, at, { fill, overlap, foot, side, gap } = S
   return { clear: at[1] <= y - h / 2 - wh * gap, row };
 }
 
+// The line under the skull that clears the chart table (public/page.js): a memento mori in the hands of the charts'
+// centuries, one shown at a time, the first at random, each clear of the table moving on to the next and the last back
+// to the first.
+export const MEMENTO = [
+  'Memento, homo, quia pulvis es, et in pulverem reverteris',
+  'Pulvis et umbra sumus',
+  'Hodie mihi, cras tibi',
+  'Mors certa, hora incerta',
+  'All flesche is grasse',
+  'Erthe out of erthe is wonderly wrought, Erthe hath of erthe a dignite of nought',
+  'Ogni uomo è polvere',
+  'Ricordati che devi morire',
+  'Polvo eres, y en polvo te has de convertir',
+  'Nuestras vidas son los ríos que van a dar en la mar, que es el morir',
+  'Recuerda que eres polvo',
+];
+export const mementoNext = (k) => (((k + 1) % MEMENTO.length) + MEMENTO.length) % MEMENTO.length;
+
 // Where a person's pictures lie by default, from `frame` (the lon/lat box of their birth, death and voyages): each as tall
 // as two fifths of the frame (in Mercator degrees, 3 to 30), times `grow`, side by side in a row under the frame's south
 // edge, from its west edge eastward, each laid `overlap` of its width over the one before (the page lays them larger
