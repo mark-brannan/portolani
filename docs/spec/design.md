@@ -416,7 +416,9 @@ Feature: A grouped list in a drawer opens one group at a time
     When the user clicks a closed group's heading
     Then the open group slides shut and the clicked one slides open together, in about a quarter of a second, and the list does not jump
     When the user clicks the open group's heading
-    Then it slides shut, and the list is left with no group open until a heading is clicked
+    Then it slides shut, and the list is left with no group open
+    When no group is open and the user clicks a heading
+    Then that group slides open
     And with reduced motion the groups swap, open or shut, with no slide
   Scenario: a group opens as the pointer nears it (waiting on the user, UI walk 2026-10-30)
     Source: the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "alternatively, an animation effect and mousing over the next section would be a nice experience so that the sections automatically show their contents when you get close to the next section.  This will differ between mobile and desktop."
@@ -442,7 +444,7 @@ Feature: A flight keeps the eye on the ground
   Scenario: over first, then down
     Given the map at any view
     When the user clicks something that flies the map (a sight, an anchorage, a chart, a voyage, a person, Go)
-    Then the flight is slower than the 600 ms one of the walk
+    Then a flight across the map is slower than the 600 ms flight of the walk; how much slower is open
     And the map reaches roughly the place's longitude and latitude before it zooms in, never zooming in on the way
   Scenario: a far place from a close zoom
     Given the map zoomed in close
