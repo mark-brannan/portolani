@@ -164,10 +164,10 @@ Feature: A chart's position chips, and the line each was fitted to
     And "Parallels" draws today's equator and Tropic of Cancer; a coast's chip ("New World") draws only the stretch of today's coast that fit used, not the whole coast; the chart's own "Level" draws every coast it is centred between
     And the line is the feature the fit was computed from, carried with the placement in the chart's data, never a stretch drawn by hand to look right
     And with reduced motion the line shows whole, then fades to faint
-  Scenario: a phone (waiting on a UI walk)
+  Scenario: a phone
     Given the Charts drawer open as the bottom sheet, at 520 px and under
     When the user looks for the position chips
-    Then they sit in the chart's row as on a wide screen, until the user has walked the phone's drawers
+    Then they sit in the chart's row as on a wide screen, and a tap on one leaves the sheet open
 
 Feature: The projection chips live in the Charts drawer
   Source: the user on [#266](https://github.com/mark-brannan/portolani/pull/266), 2026-10-29: "The controls for map projections should live under charts now, not the compass rose. I'm not sure about other map settings...they probably stay under the rose but it could change."
@@ -184,10 +184,12 @@ Feature: A drawer stays open on a click or a choice
     When the user clicks a button, a chip, a link or a checkbox inside it, or picks a place in it
     Then the drawer stays open and the map does what was asked behind it
     And the drawer closes only from its own button, another instrument's button, Esc or a click on the map
-  Scenario: a choice in a bottom sheet on a phone (waiting on a UI walk)
+  Scenario: a choice, or a tap on the map, with a bottom sheet open on a phone
+    Source: the user, 2026-10-30: "phone drawers stay open… Later decision is for them to stay open. It reverses my earlier decision." This reverses the shut-on-tap of [#262](https://github.com/mark-brannan/portolani/pull/262).
     Given a drawer open as the bottom sheet, at 520 px and under
-    When the user taps a choice inside it
-    Then the sheet behaves as it does today, until the user has walked the phone's drawers and set this rule
+    When the user taps a button, a chip, a link or a checkbox inside it, picks a place in it, or taps the map
+    Then the sheet stays open and the map does what was asked behind it
+    And the sheet closes only from its own button, another instrument's button or Esc; a tap on the map does not close it
 
 Feature: A voyage's row in the Voyages drawer
   Source: the user on [#259](https://github.com/mark-brannan/portolani/pull/259), 2026-10-29: "Clicking a new voyage button always zooms to that voyages target window."; "The first time any given voyage is selected after opening the drawer, if it was not previously selected, zoom to the window for that voyage and then animate the line from the start to the finish."; "Each voyage has a show/hide button to the right of it, before the color selector. The show hide always does a quick show/hide action for the line without changing the zoom or view."; "The voyages colors should not "jump" or reset when multiple voyages were selected and an earlier one is then de-selected. The colors in the current display should remain 'sticky' to the voyage they were already assigned to." The pace of the first draw, after comparing three: "A but faster, maybe 1s +/- .5s." (A: an even pace along the line; B: the voyage's dates) This replaces the rule that a voyage put on stays where it is if any of its track is in view, and that a click on a shown voyage takes it off (`public/page.js` at `6960f78`).
