@@ -327,3 +327,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261029t231416z
 - Juan de la Cosa goes in Columbus 1492's who, keeping main's every-person-named-by-a-voyage test Undo: remove juan-de-la-cosa from columbus.json who ([#280](https://github.com/mark-brannan/portolani/pull/280))
+
+### 20261030t015635z
+- Mansa Musa's hajj starts and ends at Niani, by convention, with a note that the capital's site is debated Undo: move the first and last points of the hajj legs to another candidate site ([#284](https://github.com/mark-brannan/portolani/pull/284))
