@@ -414,3 +414,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261030t201209z
 - Tyre keeps one list button and one tile with two marks (at as a list), not a seventh ancient-world row Undo: drop the list form of at and add an Al-Bass row ([#310](https://github.com/mark-brannan/portolani/pull/310))
+
+### 20261030t235436z
+- Both Tyre sites keep the 3/4 picture split from data/sights/pictures.json (city site: harbour, orbit, dig; Al-Bass: arch, road, hippodrome, Cassas). ([#326](https://github.com/mark-brannan/portolani/pull/326))
