@@ -88,7 +88,8 @@ test('a note\'s hit area is its outline\'s bounds, joined to the reach of its ce
 });
 
 // Every laid chart's notes, at a wide and a phone window with the view over the sheet's centre: a tile for each
-// mark that a tap can pick clears the mark's whole hit area, where any side has room.
+// mark that a tap can pick is a margin or more off the bounds of its figure's outline (measured from the outline, not
+// from markClear), and no figure at these views is left without a side that has room.
 for (const [id, set] of Object.entries(NOTE_SETS)) {
   test(`${id}: the tile of each of its ${set.notes.length} notes clears its hit box`, () => {
     const o = overlays.find((q) => q.id === id), rect = { x0: -1e6, y0: -1e6, x1: 1e6, y1: 1e6 };
@@ -102,13 +103,13 @@ for (const [id, set] of Object.entries(NOTE_SETS)) {
           const s = tileSpot(px, [Math.min(300, win.w - 16), 220], win, [m.x * kx, m.y * ky]);
           const outline = m.hit.map(([x, y]) => [x * kx, y * ky]);
           const hitRect = { x0: Math.min(...outline.map((p) => p[0])), y0: Math.min(...outline.map((p) => p[1])), x1: Math.max(...outline.map((p) => p[0])), y1: Math.max(...outline.map((p) => p[1])) };
-          if (s.clear) assert.ok(!meets(at(s, [Math.min(300, win.w - 16), 220]), hitRect), `${m.tile.title} at zoom ${zoom} in ${win.w}`);
+          if (s.clear) assert.ok(gap(at(s, [Math.min(300, win.w - 16), 220]), hitRect) >= M - 1e-9, `${m.tile.title} at zoom ${zoom} in ${win.w}: gap to the outline's bounds`);
           else covered++;
           checked++;
         }
       }
     }
     assert.ok(checked > 0);
-    assert.ok(covered < checked, `${covered} of ${checked} have no room`);
+    assert.equal(covered, 0, `${covered} of ${checked} figures have no side with room for a tile (measured: none at these views)`);
   });
 }
