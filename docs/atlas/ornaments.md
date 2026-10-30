@@ -23,7 +23,7 @@ Vesconte's is known. Each has an empty set, so these sheets draw no roses, beast
 | R1 | the rose | -20.7, 42.1 | `rose-catalan` | from centres.md |
 | S1 | ship at the foot, off Cape Bojador | -15.5, 26.1 | stand-in | placed by the cape, not read in pixels; no crop yet |
 
-Sheets 6 to 12 are not read.
+Sheets 6 to 12 have landmarks (below) but no figures read.
 
 ### Landmarks, sheet 5
 
@@ -69,6 +69,109 @@ the Azores but are too far from them to read as any one. The rose at 2000, 7950 
 fit, within centres.md's ±2° of R1.
 
 The fit lays the scan over the map: [docs/overlay/README.md](../overlay/README.md).
+
+## Catalan Atlas, sheets 6 to 12
+
+The other seven map pages, read off the Commons scans at full size (`Catalan_Atlas_BNF,_sheet_N.jpg` in
+scripts/sources.json) on 2026-10-29, by eye on gridded crops at a quarter to a fifth of full size, about ±100
+px; each placed by its own lettering or, for an island, by its gilt shape. Scan px are the page's own; the build
+adds the page's offset in the open atlas (`catalanPieces` in scripts/build-overlays.mjs). Sheets 6 to 8 are the
+portolan part and take a similarity each, turn and all, as sheet 5 does; sheets 9 to 12, the mappa mundi east
+of the Caspian, are laid level at the scale of the atlas as a whole, each centred through its own few places.
+Sheet 10 (Central Asia, the Magi and the caravan to Cathay) has no place read: its lettering is upside down and
+worn, so it is centred through the places of sheets 9 and 11.
+
+| page | shows | landmarks | scale | turn | residual, RMS | worst |
+|---|---|---|---|---|---|---|
+| sheet 5 | Atlantic | L1 to L19 | 0.00331 °/px | 0° | 127 km | El Hierro, 284 km |
+| sheet 6 | Mali | L1 to L9 | 0.00354 °/px | -12° | 130 km | Strait of Gibraltar, 217 km |
+| sheet 7 | Italy | L1 to L7 | 0.00303 °/px | -8° | 72 km | Gulf of Sidra, its deepest point, 142 km |
+| sheet 8 | Black Sea | L1 to L9 | 0.00260 °/px | -12° | 114 km | Gulf of Iskenderun, Ayas, 201 km |
+| sheet 9 | Persia | L1 to L6 | 0.00312 °/px | 0° | 341 km | Shiraz, ciutat de Siras, 576 km |
+| sheet 10 | Central Asia | none: centred through sheets 9 and 11 | 0.00312 °/px | 0° | | |
+| sheet 11 | India | L1 to L3 | 0.00312 °/px | 0° | 605 km | Kollam, colombo, 862 km |
+| sheet 12 | Cathay | L1 to L5 | 0.00312 °/px | 0° | 545 km | Hangzhou, ciutat de Cansay, 796 km |
+
+### Landmarks, sheet 6
+
+Sheet 6: Iberia, the western Mediterranean, England and Mali.
+
+| | landmark | scan px | lon, lat | fit puts it at | off by |
+|---|---|---|---|---|---|
+| L1 | Strait of Gibraltar | 520, 10470 | -5.60, 35.97 | -7.8, 36.8 | 217 km |
+| L2 | Alborán island | 1603, 10521 | -3.03, 35.94 | -4.1, 36.0 | 95 km |
+| L3 | Ibiza | 2925, 8935 | 1.43, 38.98 | 1.7, 39.6 | 71 km |
+| L4 | Majorca | 3355, 8591 | 2.95, 39.62 | 3.4, 40.3 | 81 km |
+| L5 | Minorca | 3677, 8419 | 4.10, 39.97 | 4.6, 40.5 | 78 km |
+| L6 | Corsica | 5220, 7330 | 9.05, 42.15 | 10.8, 42.5 | 148 km |
+| L7 | Sardinia | 5320, 8290 | 9.00, 40.05 | 10.4, 40.0 | 122 km |
+| L8 | London, the city by the Thames | 1343, 4853 | -0.12, 51.51 | -0.8, 50.4 | 137 km |
+| L9 | Thames mouth | 1712, 4853 | 0.90, 51.50 | 0.5, 50.2 | 149 km |
+
+### Landmarks, sheet 7
+
+Sheet 7: the central Mediterranean, Italy, Bohemia and the Baltic.
+
+| | landmark | scan px | lon, lat | fit puts it at | off by |
+|---|---|---|---|---|---|
+| L1 | Corsica, east coast (drawn again) | 690, 7300 | 9.53, 42.20 | 10.0, 41.9 | 45 km |
+| L2 | Sardinia, east coast (drawn again) | 930, 8100 | 9.70, 40.05 | 10.3, 40.1 | 54 km |
+| L3 | Sicily, Marsala | 1873, 8987 | 12.43, 37.80 | 12.8, 37.7 | 34 km |
+| L4 | Sicily, Cape Peloro | 2970, 8664 | 15.65, 38.27 | 16.2, 38.1 | 54 km |
+| L5 | Sicily, Cape Passero | 2820, 9331 | 15.13, 36.69 | 15.5, 36.5 | 35 km |
+| L6 | Gulf of Sidra, its deepest point | 3870, 11570 | 19.10, 30.30 | 17.7, 30.6 | 142 km |
+| L7 | Prague, the city in Bohemia's ring of hills | 1290, 3080 | 14.42, 50.08 | 13.6, 50.5 | 76 km |
+
+### Landmarks, sheet 8
+
+Sheet 8: the eastern Mediterranean, the Black Sea and the Red Sea.
+
+| | landmark | scan px | lon, lat | fit puts it at | off by |
+|---|---|---|---|---|---|
+| L1 | Rhodes | 1506, 8440 | 28.00, 36.20 | 28.2, 36.9 | 83 km |
+| L2 | Cyprus | 3492, 8593 | 33.20, 35.10 | 33.2, 35.8 | 74 km |
+| L3 | Gulf of Iskenderun, Ayas | 4321, 8746 | 35.90, 36.80 | 35.2, 35.1 | 201 km |
+| L4 | Jerusalem | 4670, 9837 | 35.23, 31.78 | 35.5, 32.6 | 98 km |
+| L5 | Alexandria | 2488, 10928 | 29.92, 31.20 | 29.4, 31.3 | 53 km |
+| L6 | Head of the Gulf of Suez | 4540, 11365 | 32.55, 29.97 | 34.3, 29.4 | 186 km |
+| L7 | Danube mouth | 1350, 4230 | 29.65, 45.20 | 30.0, 45.1 | 35 km |
+| L8 | East end of the Black Sea, the Phasis | 5762, 5150 | 41.67, 42.15 | 40.8, 41.6 | 93 km |
+| L9 | Bosporus | 1150, 6000 | 29.05, 41.20 | 28.6, 41.9 | 83 km |
+
+### Landmarks, sheet 9
+
+Sheet 9: Persia, the Caspian and the Persian Gulf.
+
+| | landmark | scan px | lon, lat | fit puts it at | off by |
+|---|---|---|---|---|---|
+| L1 | Tabriz, taurís | 2072, 6582 | 46.29, 38.08 | 46.5, 38.0 | 17 km |
+| L2 | Soltaniyeh, soldania | 3107, 6884 | 48.80, 36.43 | 49.7, 37.3 | 125 km |
+| L3 | Shiraz, ciutat de Siras | 4100, 7877 | 52.53, 29.61 | 52.8, 34.8 | 576 km |
+| L4 | Baghdad, Baldach | 820, 10255 | 44.36, 33.31 | 42.6, 28.5 | 564 km |
+| L5 | Kish, insula de Quis | 4316, 11400 | 53.98, 26.53 | 53.5, 25.3 | 147 km |
+| L6 | Hormuz, hormisdor | 5568, 10795 | 56.45, 27.10 | 57.4, 27.0 | 93 km |
+
+### Landmarks, sheet 11
+
+Sheet 11: India.
+
+| | landmark | scan px | lon, lat | fit puts it at | off by |
+|---|---|---|---|---|---|
+| L1 | Kollam, colombo | 500, 13400 | 76.60, 8.90 | 79.1, 16.3 | 862 km |
+| L2 | Ganges mouth, the river at finis Indie | 3487, 12650 | 88.90, 21.80 | 88.4, 18.5 | 370 km |
+| L3 | ciutat de Cayna, at the end of Cathay | 3960, 12650 | 91.80, 22.30 | 89.9, 18.5 | 468 km |
+
+### Landmarks, sheet 12
+
+Sheet 12: Cathay.
+
+| | landmark | scan px | lon, lat | fit puts it at | off by |
+|---|---|---|---|---|---|
+| L1 | Khanbaliq (Beijing), Chanbaleth | 2590, 7363 | 116.40, 39.90 | 116.8, 36.2 | 418 km |
+| L2 | Yangzhou, Iangio | 4575, 8442 | 119.43, 32.39 | 123.0, 33.4 | 354 km |
+| L3 | Fuzhou, fugio | 4402, 9003 | 119.30, 26.07 | 122.5, 31.9 | 721 km |
+| L4 | Quanzhou, ciutat de Zayton | 2935, 11032 | 118.59, 24.90 | 117.9, 26.4 | 180 km |
+| L5 | Hangzhou, ciutat de Cansay | 1554, 11161 | 120.15, 30.27 | 113.6, 26.0 | 796 km |
 
 ## Carta Marina, 1539
 

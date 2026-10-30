@@ -1,0 +1,438 @@
+{
+  "pictures": {
+    "Christian_Krohg_-_Leiv_Eirikson_discovering_America_-_Google_Art_Project.jpg": {
+      "src": "people/christian-krohg-leiv-eirikson-discovering-america-google-art-project.jpg",
+      "width": 640,
+      "height": 425,
+      "page": "https://commons.wikimedia.org/wiki/File:Christian_Krohg_-_Leiv_Eirikson_discovering_America_-_Google_Art_Project.jpg",
+      "sha1": "e8d6fd3c3cb4f313e9b126593ff3bdd8311549fd"
+    },
+    "Leif_Erikson_Discovers_America_Hans_Dahl.jpg": {
+      "src": "people/leif-erikson-discovers-america-hans-dahl.jpg",
+      "width": 640,
+      "height": 420,
+      "page": "https://commons.wikimedia.org/wiki/File:Leif_Erikson_Discovers_America_Hans_Dahl.jpg",
+      "sha1": "d2955194328c68f73de1a9ff641f638c94622473"
+    },
+    "2022-08-27_05_View_of_L'Anse_aux_Meadows,_NFL_CAN.jpg": {
+      "src": "people/2022-08-27-05-view-of-l-anse-aux-meadows-nfl-can.jpg",
+      "width": 640,
+      "height": 426,
+      "page": "https://commons.wikimedia.org/wiki/File:2022-08-27_05_View_of_L%27Anse_aux_Meadows,_NFL_CAN.jpg",
+      "sha1": "a04aae4f907544f5415cb24402993d89f184e120"
+    },
+    "Leif_Eriksson_statue,_Boston.jpg": {
+      "src": "people/leif-eriksson-statue-boston.jpg",
+      "width": 480,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:Leif_Eriksson_statue,_Boston.jpg",
+      "sha1": "c2e6ea1b29418ea4a893e4d85ff2a263f2406667"
+    },
+    "Christian-krohg-leiv-eriksson.jpg": {
+      "src": "people/christian-krohg-leiv-eriksson.jpg",
+      "width": 640,
+      "height": 417,
+      "page": "https://commons.wikimedia.org/wiki/File:Christian-krohg-leiv-eriksson.jpg",
+      "sha1": "ff5939a706bbc811ce67ea9ddb0eb3b51c4da718"
+    },
+    "Marco_Polo_with_elephants_and_camels_arriving_at_Hormuz_on_the_Gulf_of_Persia_from_India.jpeg": {
+      "src": "people/marco-polo-with-elephants-and-camels-arriving-at-hormuz-on-the-gulf-of-persia-fr.jpg",
+      "width": 640,
+      "height": 424,
+      "page": "https://commons.wikimedia.org/wiki/File:Marco_Polo_with_elephants_and_camels_arriving_at_Hormuz_on_the_Gulf_of_Persia_from_India.jpeg",
+      "sha1": "0469b441a5652a4e28d1bfcba584cc7c3d0893a7"
+    },
+    "Marco_Polo_Kubilai_Khan.jpg": {
+      "src": "people/marco-polo-kubilai-khan.jpg",
+      "width": 640,
+      "height": 337,
+      "page": "https://commons.wikimedia.org/wiki/File:Marco_Polo_Kubilai_Khan.jpg",
+      "sha1": "14e01c241d4cb66f31e518b3be3f0baa6621dfef"
+    },
+    "Marco_Polo_Mosaic_from_Palazzo_Tursi.jpg": {
+      "src": "people/marco-polo-mosaic-from-palazzo-tursi.jpg",
+      "width": 509,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:Marco_Polo_Mosaic_from_Palazzo_Tursi.jpg",
+      "sha1": "e488b3092a7d53c8ee7ed0749289240fff867f89"
+    },
+    "Katalanischer_Atlas_01.jpg": {
+      "src": "people/katalanischer-atlas-01.jpg",
+      "width": 640,
+      "height": 480,
+      "page": "https://commons.wikimedia.org/wiki/File:Katalanischer_Atlas_01.jpg",
+      "sha1": "14c5b17d2ca29dcf3e045db5b382f6081a498b1f"
+    },
+    "Frontispice_édition_de_Nuremberg_1477_(cropped).png": {
+      "src": "people/frontispice-edition-de-nuremberg-1477-cropped.jpg",
+      "width": 363,
+      "height": 623,
+      "page": "https://commons.wikimedia.org/wiki/File:Frontispice_%C3%A9dition_de_Nuremberg_1477_(cropped).png",
+      "sha1": "1e932b6b510c46db052e300cc9f5a8d5df9d2fdd"
+    },
+    "Bust_of_Ibn_Battuta_at_Ibn_Battuta_museum.jpg": {
+      "src": "people/bust-of-ibn-battuta-at-ibn-battuta-museum.jpg",
+      "width": 439,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:Bust_of_Ibn_Battuta_at_Ibn_Battuta_museum.jpg",
+      "sha1": "c1ec0347854ccfe44fdeff92c151df087cb1f732"
+    },
+    "Découverte_de_la_Terre_023.jpg": {
+      "src": "people/decouverte-de-la-terre-023.jpg",
+      "width": 441,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:D%C3%A9couverte_de_la_Terre_023.jpg",
+      "sha1": "0169e7535f9d3e3e1adb6d0bc443e22600ac50b8"
+    },
+    "Yahyâ_ibn_Mahmûd_al-Wâsitî_005.jpg": {
+      "src": "people/yahya-ibn-mahmud-al-wasiti-005.jpg",
+      "width": 640,
+      "height": 635,
+      "page": "https://commons.wikimedia.org/wiki/File:Yahy%C3%A2_ibn_Mahm%C3%BBd_al-W%C3%A2sit%C3%AE_005.jpg",
+      "sha1": "133af00c5dd982913a4606155c43943a4d392ba1"
+    },
+    "Manuscript_of_Ibn_Juzayy_(XIV).png": {
+      "src": "people/manuscript-of-ibn-juzayy-xiv.jpg",
+      "width": 640,
+      "height": 426,
+      "page": "https://commons.wikimedia.org/wiki/File:Manuscript_of_Ibn_Juzayy_(XIV).png",
+      "sha1": "f358da668477560d712ba31b16bd4a94f3bcc660"
+    },
+    "Handmade_oil_painting_reproduction_of_Ibn_Battuta_in_Egypt,_a_painting_by_Hippolyte_Leon_Benett..jpg": {
+      "src": "people/handmade-oil-painting-reproduction-of-ibn-battuta-in-egypt-a-painting-by-hippoly.jpg",
+      "width": 444,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:Handmade_oil_painting_reproduction_of_Ibn_Battuta_in_Egypt,_a_painting_by_Hippolyte_Leon_Benett..jpg",
+      "sha1": "9dc3124a6d6893aa07ba2591b4145a95e43ed9a6"
+    },
+    "Model_of_Zheng_He's_treasure_ship,_Maritime_Experiential_Museum_&_Aquarium_-_20111006.jpg": {
+      "src": "people/model-of-zheng-he-s-treasure-ship-maritime-experiential-museum-aquarium-20111006.jpg",
+      "width": 640,
+      "height": 478,
+      "page": "https://commons.wikimedia.org/wiki/File:Model_of_Zheng_He%27s_treasure_ship,_Maritime_Experiential_Museum_%26_Aquarium_-_20111006.jpg",
+      "sha1": "96dd538b900273972b91abc0f1ae4ff4d3763aee"
+    },
+    "Melaka_Malaysia_Monument-of-Admiral-Zheng-He-01.jpg": {
+      "src": "people/melaka-malaysia-monument-of-admiral-zheng-he-01.jpg",
+      "width": 588,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:Melaka_Malaysia_Monument-of-Admiral-Zheng-He-01.jpg",
+      "sha1": "0da1dd24dd111d93c96a16533735363fe19d82cb"
+    },
+    "Zheng_He_statue_(cropped).jpg": {
+      "src": "people/zheng-he-statue-cropped.jpg",
+      "width": 480,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:Zheng_He_statue_(cropped).jpg",
+      "sha1": "a5152274fdb6206c20294026096a4a6300033c2d"
+    },
+    "Mao_Kun_map_-_Ceylon,_Africa.png": {
+      "src": "people/mao-kun-map-ceylon-africa.jpg",
+      "width": 478,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:Mao_Kun_map_-_Ceylon,_Africa.png",
+      "sha1": "c956d509972d837495764ade32f9b2ab70e7cd70"
+    },
+    "Portrait_of_Zheng_He,_published_about_1600.jpg": {
+      "src": "people/portrait-of-zheng-he-published-about-1600.jpg",
+      "width": 371,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:Portrait_of_Zheng_He,_published_about_1600.jpg",
+      "sha1": "2c5990f22b825a4767cc149f3b6037cb98e96224"
+    },
+    "F._Benda-The_planting_of_cross_by_Bartholomew_Dias_in_1488-0681.jpg": {
+      "src": "people/f-benda-the-planting-of-cross-by-bartholomew-dias-in-1488-0681.jpg",
+      "width": 640,
+      "height": 479,
+      "page": "https://commons.wikimedia.org/wiki/File:F._Benda-The_planting_of_cross_by_Bartholomew_Dias_in_1488-0681.jpg",
+      "sha1": "1bc6639f3dbe71a3eed0a3c2c86ccfb80d97c3f0"
+    },
+    "Diaz_on_his_voyage_to_the_cape.jpg": {
+      "src": "people/diaz-on-his-voyage-to-the-cape.jpg",
+      "width": 640,
+      "height": 517,
+      "page": "https://commons.wikimedia.org/wiki/File:Diaz_on_his_voyage_to_the_cape.jpg",
+      "sha1": "18bcf741936d4bef62b86dfbf92758c08c5e3041"
+    },
+    "Bartolomeu_Dias,_South_Africa_House.JPG": {
+      "src": "people/bartolomeu-dias-south-africa-house.jpg",
+      "width": 640,
+      "height": 480,
+      "page": "https://commons.wikimedia.org/wiki/File:Bartolomeu_Dias,_South_Africa_House.JPG",
+      "sha1": "1d60c5a450feae4b57d41d9a8bd009ec455d99d0"
+    },
+    "Mossel_Bay_-_Bartolomeu_Dias_Ship_Replica.jpg": {
+      "src": "people/mossel-bay-bartolomeu-dias-ship-replica.jpg",
+      "width": 640,
+      "height": 427,
+      "page": "https://commons.wikimedia.org/wiki/File:Mossel_Bay_-_Bartolomeu_Dias_Ship_Replica.jpg",
+      "sha1": "1aaae0dfe1e134fd7d61f7be78c26a9929bc47f8"
+    },
+    "Busto_de_Bartolomeu_Dias,_Ruy_Roque_Gameiro,_Casa_Roque_Gameiro,_Amadora_01.jpg": {
+      "src": "people/busto-de-bartolomeu-dias-ruy-roque-gameiro-casa-roque-gameiro-amadora-01.jpg",
+      "width": 480,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:Busto_de_Bartolomeu_Dias,_Ruy_Roque_Gameiro,_Casa_Roque_Gameiro,_Amadora_01.jpg",
+      "sha1": "24fc95aa4ed1f9851f9e6c3dbc649e4903077957"
+    },
+    "Bartolomeu_Dias,_South_Africa_House_(cut).JPG": {
+      "src": "people/bartolomeu-dias-south-africa-house-cut.jpg",
+      "width": 288,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:Bartolomeu_Dias,_South_Africa_House_(cut).JPG",
+      "sha1": "acab894456dfa937289612c53ca242b6e1951b28"
+    },
+    "Portrait_of_a_Man,_Said_to_be_Christopher_Columbus_2.jpg": {
+      "src": "people/portrait-of-a-man-said-to-be-christopher-columbus-2.jpg",
+      "width": 528,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:Portrait_of_a_Man,_Said_to_be_Christopher_Columbus_2.jpg",
+      "sha1": "3cd74d1772cb9d3330b4b0f31e5d2200f405e150"
+    },
+    "Ridolfo_Ghirlandaio_Columbus.jpg": {
+      "src": "people/ridolfo-ghirlandaio-columbus.jpg",
+      "width": 483,
+      "height": 570,
+      "page": "https://commons.wikimedia.org/wiki/File:Ridolfo_Ghirlandaio_Columbus.jpg",
+      "sha1": "35c402a16846ef2c46f3664a5d124e0c5f37b0d3"
+    },
+    "John_Vanderlyn_-_Columbus_Landing_at_Guanahani,_1492_-_WGA24269.jpg": {
+      "src": "people/john-vanderlyn-columbus-landing-at-guanahani-1492-wga24269.jpg",
+      "width": 640,
+      "height": 415,
+      "page": "https://commons.wikimedia.org/wiki/File:John_Vanderlyn_-_Columbus_Landing_at_Guanahani,_1492_-_WGA24269.jpg",
+      "sha1": "d0ed416d3c1b987be1ab54f8804de6665572474f"
+    },
+    "Václav_Brožík_l_Columbus_and_Isabella.JPG": {
+      "src": "people/vaclav-brozik-l-columbus-and-isabella.jpg",
+      "width": 640,
+      "height": 464,
+      "page": "https://commons.wikimedia.org/wiki/File:V%C3%A1clav_Bro%C5%BE%C3%ADk_l_Columbus_and_Isabella.JPG",
+      "sha1": "fffe435776e62cb3c984364d1dd7dc9a17376358"
+    },
+    "Muelle_de_la_Carabelas_-_Replica_of_Columbus_Ship_Santa_Maria_-_La_Rabida_-_Spain.jpg": {
+      "src": "people/muelle-de-la-carabelas-replica-of-columbus-ship-santa-maria-la-rabida-spain.jpg",
+      "width": 431,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:Muelle_de_la_Carabelas_-_Replica_of_Columbus_Ship_Santa_Maria_-_La_Rabida_-_Spain.jpg",
+      "sha1": "62de2841eeabfd09bcff51e279e92632bb00c284"
+    },
+    "Portrait_of_a_Man,_Said_to_be_Christopher_Columbus.jpg": {
+      "src": "people/portrait-of-a-man-said-to-be-christopher-columbus.jpg",
+      "width": 529,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:Portrait_of_a_Man,_Said_to_be_Christopher_Columbus.jpg",
+      "sha1": "359aefa828c990b6878e49d39007f26e74931eeb"
+    },
+    "Juan_de_la_Cosa,_Juan_Manuel_Núñez_Báñez.jpg": {
+      "src": "people/juan-de-la-cosa-juan-manuel-nunez-banez.jpg",
+      "width": 489,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:Juan_de_la_Cosa,_Juan_Manuel_N%C3%BA%C3%B1ez_B%C3%A1%C3%B1ez.jpg",
+      "sha1": "d0a67a6ecbfceb4f394004ee3f9bf6d7584eb334"
+    },
+    "Juan-de-la-cosa.jpg": {
+      "src": "people/juan-de-la-cosa.jpg",
+      "width": 194,
+      "height": 250,
+      "page": "https://commons.wikimedia.org/wiki/File:Juan-de-la-cosa.jpg",
+      "sha1": "fa97a033287735e4de711930f50833c78eab1496"
+    },
+    "1500_map_by_Juan_de_la_Cosa.jpg": {
+      "src": "people/1500-map-by-juan-de-la-cosa.jpg",
+      "width": 350,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:1500_map_by_Juan_de_la_Cosa.jpg",
+      "sha1": "d97ffb74e726846f0e7564d5ab594545053eebb7"
+    },
+    "Busto-juan-de-la-cosa.jpg": {
+      "src": "people/busto-juan-de-la-cosa.jpg",
+      "width": 426,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:Busto-juan-de-la-cosa.jpg",
+      "sha1": "2067241a59d461a772483357ed60556488aa4f12"
+    },
+    "Paulo_da_Gama_-_Diario_Illustrado_(30Jun1897).png": {
+      "src": "people/paulo-da-gama-diario-illustrado-30jun1897.jpg",
+      "width": 455,
+      "height": 549,
+      "page": "https://commons.wikimedia.org/wiki/File:Paulo_da_Gama_-_Diario_Illustrado_(30Jun1897).png",
+      "sha1": "1c5f554c24fa5b0505868952cb10e0e23f416e9e"
+    },
+    "Gregório_Lopes_-_Vasco_da_Gama_(ca_1524).jpg": {
+      "src": "people/gregorio-lopes-vasco-da-gama-ca-1524.jpg",
+      "width": 511,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:Greg%C3%B3rio_Lopes_-_Vasco_da_Gama_(ca_1524).jpg",
+      "sha1": "11d9e93b890253c001c5423e503fd9b5fdb7aca1"
+    },
+    "Lisboa-Museu_Nacional_de_Arte_Antiga-Retrato_dito_de_Vasco_da_Gama-20140917.jpg": {
+      "src": "people/lisboa-museu-nacional-de-arte-antiga-retrato-dito-de-vasco-da-gama-20140917.jpg",
+      "width": 455,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:Lisboa-Museu_Nacional_de_Arte_Antiga-Retrato_dito_de_Vasco_da_Gama-20140917.jpg",
+      "sha1": "847fe7e4be10bef1d733a2d19e8e35dd71240413"
+    },
+    "A_chegada_de_Vasco_da_Gama_a_Calicute_em_1498.jpg": {
+      "src": "people/a-chegada-de-vasco-da-gama-a-calicute-em-1498.jpg",
+      "width": 640,
+      "height": 421,
+      "page": "https://commons.wikimedia.org/wiki/File:A_chegada_de_Vasco_da_Gama_a_Calicute_em_1498.jpg",
+      "sha1": "57c3c6e7225a3973289958767e11570b5cf87a57"
+    },
+    "Vasco_da_Gama_(Livro_de_Lisuarte_de_Abreu).jpg": {
+      "src": "people/vasco-da-gama-livro-de-lisuarte-de-abreu.jpg",
+      "width": 481,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:Vasco_da_Gama_(Livro_de_Lisuarte_de_Abreu).jpg",
+      "sha1": "f61b25192151aed886973de16aac2c562e101ea7"
+    },
+    "Fernand_de_Magellan_-_Charles-Philippe_Larivière_(Musée_de_l'Histoire_de_France,_Versailles).png": {
+      "src": "people/fernand-de-magellan-charles-philippe-lariviere-musee-de-l-histoire-de-france-ver.jpg",
+      "width": 495,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:Fernand_de_Magellan_-_Charles-Philippe_Larivi%C3%A8re_(Mus%C3%A9e_de_l%27Histoire_de_France,_Versailles).png",
+      "sha1": "86107a742ec7213d489fb6fc618247cdc23fca23"
+    },
+    "Retrato_de_Hernando_de_Magallanes.jpg": {
+      "src": "people/retrato-de-hernando-de-magallanes.jpg",
+      "width": 507,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:Retrato_de_Hernando_de_Magallanes.jpg",
+      "sha1": "e9b6a9379283f3a3461c272402e113e83b354f40"
+    },
+    "Magellan_expedition_by_Stradanus.jpg": {
+      "src": "people/magellan-expedition-by-stradanus.jpg",
+      "width": 640,
+      "height": 480,
+      "page": "https://commons.wikimedia.org/wiki/File:Magellan_expedition_by_Stradanus.jpg",
+      "sha1": "f2e241b6315ce64525cd30a600dcf476a0389495"
+    },
+    "Detail_from_a_map_of_Ortelius_-_Magellan's_ship_Victoria.png": {
+      "src": "people/detail-from-a-map-of-ortelius-magellan-s-ship-victoria.jpg",
+      "width": 640,
+      "height": 390,
+      "page": "https://commons.wikimedia.org/wiki/File:Detail_from_a_map_of_Ortelius_-_Magellan%27s_ship_Victoria.png",
+      "sha1": "9cdc6a76e957a5fabdb3a6ef1593cf5c362aca19"
+    },
+    "Nao_Victoria_moored_in_Sète_01.jpg": {
+      "src": "people/nao-victoria-moored-in-sete-01.jpg",
+      "width": 640,
+      "height": 427,
+      "page": "https://commons.wikimedia.org/wiki/File:Nao_Victoria_moored_in_S%C3%A8te_01.jpg",
+      "sha1": "1dafd02920c1ff4aa96a92dfb099fdbcc35f010f"
+    },
+    "Juan_Sebastián_Elcano,_anonymous_19th_century_painting.jpg": {
+      "src": "people/juan-sebastian-elcano-anonymous-19th-century-painting.jpg",
+      "width": 520,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:Juan_Sebasti%C3%A1n_Elcano,_anonymous_19th_century_painting.jpg",
+      "sha1": "da6475cd96e16ba0fc3eb6f11056df209d9abe32"
+    },
+    "1590_or_later_Marcus_Gheeraerts,_Sir_Francis_Drake_Buckland_Abbey,_Devon.jpg": {
+      "src": "people/1590-or-later-marcus-gheeraerts-sir-francis-drake-buckland-abbey-devon.jpg",
+      "width": 469,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:1590_or_later_Marcus_Gheeraerts,_Sir_Francis_Drake_Buckland_Abbey,_Devon.jpg",
+      "sha1": "8dec1e3cffc29dbf05767d379d6d9df5c8182335"
+    },
+    "Sir_Francis_Drake_Anglo-Dutch_School.jpg": {
+      "src": "people/sir-francis-drake-anglo-dutch-school.jpg",
+      "width": 483,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:Sir_Francis_Drake_Anglo-Dutch_School.jpg",
+      "sha1": "1c58aa836c5abc1a59e95abf41651268ea16d193"
+    },
+    "Hondius_Vera_Totius_Expeditionis_Nauticae_Francis_Drake_colored.jpg": {
+      "src": "people/hondius-vera-totius-expeditionis-nauticae-francis-drake-colored.jpg",
+      "width": 640,
+      "height": 453,
+      "page": "https://commons.wikimedia.org/wiki/File:Hondius_Vera_Totius_Expeditionis_Nauticae_Francis_Drake_colored.jpg",
+      "sha1": "b51fbf9946197727fd8dcfd77d8d08c4cb922fa1"
+    },
+    "Drake's_arrival_at_Ternate.jpg": {
+      "src": "people/drake-s-arrival-at-ternate.jpg",
+      "width": 640,
+      "height": 495,
+      "page": "https://commons.wikimedia.org/wiki/File:Drake%27s_arrival_at_Ternate.jpg",
+      "sha1": "0da3d09eaf02721b7547c062d9f7a5070df83f11"
+    },
+    "Golden_Hind_replica.jpg": {
+      "src": "people/golden-hind-replica.jpg",
+      "width": 640,
+      "height": 422,
+      "page": "https://commons.wikimedia.org/wiki/File:Golden_Hind_replica.jpg",
+      "sha1": "fb94102cc0057d260d7491c12cb605442c3ccd3a"
+    },
+    "Gheeraerts_Francis_Drake_1591.jpg": {
+      "src": "people/gheeraerts-francis-drake-1591.jpg",
+      "width": 495,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:Gheeraerts_Francis_Drake_1591.jpg",
+      "sha1": "70167aced69bfd22010c0ad90376407538b7a356"
+    },
+    "The_Periplus_of_Hanno_-_Mediterranean_Galley_of_the_period_of_Hanno's_Periplus.png": {
+      "src": "people/the-periplus-of-hanno-mediterranean-galley-of-the-period-of-hanno-s-periplus.jpg",
+      "width": 640,
+      "height": 305,
+      "page": "https://commons.wikimedia.org/wiki/File:The_Periplus_of_Hanno_-_Mediterranean_Galley_of_the_period_of_Hanno%27s_Periplus.png",
+      "sha1": "3218dd2fc8f4ec01aac1965742c8a23850dac6fa"
+    },
+    "Bunbury_Vol_1_Map_05_Hanno_p_330.jpg": {
+      "src": "people/bunbury-vol-1-map-05-hanno-p-330.jpg",
+      "width": 378,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:Bunbury_Vol_1_Map_05_Hanno_p_330.jpg",
+      "sha1": "f9d7fac54677d46a68a65e8ac50c4a826aa1209a"
+    },
+    "The_Periplus_of_Hanno_-_Map_to_illustrate_the_Periplus_of_Hanno.png": {
+      "src": "people/the-periplus-of-hanno-map-to-illustrate-the-periplus-of-hanno.jpg",
+      "width": 640,
+      "height": 398,
+      "page": "https://commons.wikimedia.org/wiki/File:The_Periplus_of_Hanno_-_Map_to_illustrate_the_Periplus_of_Hanno.png",
+      "sha1": "d9fce528e0f8dc426ba94eca5b493dd2132c9a14"
+    },
+    "The_Periplus_of_Hanno_-_Mediterranean_Sailing_Vessel.png": {
+      "src": "people/the-periplus-of-hanno-mediterranean-sailing-vessel.jpg",
+      "width": 640,
+      "height": 415,
+      "page": "https://commons.wikimedia.org/wiki/File:The_Periplus_of_Hanno_-_Mediterranean_Sailing_Vessel.png",
+      "sha1": "6c2fd34a1cd7ec10f81df343e078935f8a62f813"
+    },
+    "Pythéas.jpg": {
+      "src": "people/pytheas.jpg",
+      "width": 400,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:Pyth%C3%A9as.jpg",
+      "sha1": "b5863b147e4373645b9b0c8106bb4d1d143054ed"
+    },
+    "Bourse_Marseille_02.jpg": {
+      "src": "people/bourse-marseille-02.jpg",
+      "width": 480,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:Bourse_Marseille_02.jpg",
+      "sha1": "35b9a76bbda57d3e6af54d49ad24a0b67ffe18ac"
+    },
+    "Parisinus_gr_1397_f.162_pytheas_of_massalia_from_Strabo_7.3.1.jpg": {
+      "src": "people/parisinus-gr-1397-f-162-pytheas-of-massalia-from-strabo-7-3-1.jpg",
+      "width": 640,
+      "height": 269,
+      "page": "https://commons.wikimedia.org/wiki/File:Parisinus_gr_1397_f.162_pytheas_of_massalia_from_Strabo_7.3.1.jpg",
+      "sha1": "4dbebd98335c75df261d21c9fdb70924d9287e0e"
+    },
+    "Pytheas_itineraire.png": {
+      "src": "people/pytheas-itineraire.jpg",
+      "width": 533,
+      "height": 640,
+      "page": "https://commons.wikimedia.org/wiki/File:Pytheas_itineraire.png",
+      "sha1": "909cca5f0bed65b53b294641247ce9e83915dcfd"
+    },
+    "The_wounded_Alexander_passing_through_his_fleet_in_India_by_Andre_Castaigne_(1898-1899).jpg": {
+      "src": "people/the-wounded-alexander-passing-through-his-fleet-in-india-by-andre-castaigne-1898.jpg",
+      "width": 640,
+      "height": 397,
+      "page": "https://commons.wikimedia.org/wiki/File:The_wounded_Alexander_passing_through_his_fleet_in_India_by_Andre_Castaigne_(1898-1899).jpg",
+      "sha1": "ae8b4e4ced46432a762663a67f436ea71f555f82"
+    }
+  }
+}

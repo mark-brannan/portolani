@@ -7,6 +7,34 @@
     "bio": "Son of Erik the Red, who founded the first Norse settlement in Greenland, he was raised there. The Icelandic sagas have him reach Vinland, usually read as the coast of North America, about half a millennium before Columbus; the Norse site at L'Anse aux Meadows in Newfoundland may be his. After his father died he led the Greenland settlement.",
     "images": [
       {
+        "file": "Christian_Krohg_-_Leiv_Eirikson_discovering_America_-_Google_Art_Project.jpg",
+        "kind": "scene",
+        "author": "Christian Krohg",
+        "date": "1893",
+        "licence": "Public domain"
+      },
+      {
+        "file": "Leif_Erikson_Discovers_America_Hans_Dahl.jpg",
+        "kind": "scene",
+        "author": "Hans Dahl",
+        "date": "undated",
+        "licence": "Public domain"
+      },
+      {
+        "file": "2022-08-27_05_View_of_L'Anse_aux_Meadows,_NFL_CAN.jpg",
+        "kind": "scene",
+        "author": "Gordon Leggett",
+        "date": "2022",
+        "licence": "CC BY-SA 4.0"
+      },
+      {
+        "file": "Leif_Eriksson_statue,_Boston.jpg",
+        "kind": "modern",
+        "author": "Rob Larsen from Boston, USA",
+        "date": "2016",
+        "licence": "CC BY 2.0"
+      },
+      {
         "file": "Christian-krohg-leiv-eriksson.jpg",
         "kind": "imaginary",
         "author": "Christian Krohg",
@@ -45,6 +73,34 @@
     "bio": "A Venetian merchant who set out with his father Niccolò and uncle Maffeo in 1271 and reached the court of Kublai Khan, who sent him on missions across the empire and beyond. He was back in Venice in 1295. His Travels, written down about 1300, gave Europe its first broad look at China, Persia and India.",
     "images": [
       {
+        "file": "Marco_Polo_with_elephants_and_camels_arriving_at_Hormuz_on_the_Gulf_of_Persia_from_India.jpeg",
+        "kind": "scene",
+        "author": "Boucicaut Master and workshop",
+        "date": "c. 1410–1412",
+        "licence": "Public domain"
+      },
+      {
+        "file": "Marco_Polo_Kubilai_Khan.jpg",
+        "kind": "scene",
+        "author": "Maître de la mazarine et collab.",
+        "date": "c. 1410–1412",
+        "licence": "Public domain"
+      },
+      {
+        "file": "Marco_Polo_Mosaic_from_Palazzo_Tursi.jpg",
+        "kind": "imaginary",
+        "author": "Salviati",
+        "date": "1867",
+        "licence": "Public domain"
+      },
+      {
+        "file": "Katalanischer_Atlas_01.jpg",
+        "kind": "map",
+        "author": "Cresques Abraham",
+        "date": "1375",
+        "licence": "Public domain"
+      },
+      {
         "file": "Frontispice_édition_de_Nuremberg_1477_(cropped).png",
         "kind": "posthumous",
         "author": "Unknown",
@@ -63,7 +119,8 @@
       "date": "c. 1254",
       "place": "Venice",
       "label": "Marco Polo born at Venice, c. 1254",
-      "text": "Born about 1254 in Venice, though the archives give neither the day nor the place; claims for Korčula and Constantinople have not won scholars over.",
+      "text": "Born about 1254 in Venice; no document of the time records the day.",
+      "doubt": "Korčula, an island off the Dalmatian coast, says he was born there and shows visitors a house it calls his; others have put his birth in Constantinople.",
       "source": "Wikipedia, Marco Polo",
       "cite": "marco-polo",
       "confidence": "conventional"
@@ -82,6 +139,34 @@
     "name": "Ibn Battuta",
     "bio": "A scholar and judge from Tangier who spent about thirty years, 1325 to 1354, travelling through much of Africa, Asia and Iberia, by most counts farther than any other traveller before modern times. Near the end of his life he dictated the account known as the Rihla.",
     "images": [
+      {
+        "file": "Bust_of_Ibn_Battuta_at_Ibn_Battuta_museum.jpg",
+        "kind": "modern",
+        "author": "Ideophagous",
+        "date": "2022",
+        "licence": "CC BY-SA 4.0"
+      },
+      {
+        "file": "Découverte_de_la_Terre_023.jpg",
+        "kind": "imaginary",
+        "author": "Léon Benett",
+        "date": "1878",
+        "licence": "Public domain"
+      },
+      {
+        "file": "Yahyâ_ibn_Mahmûd_al-Wâsitî_005.jpg",
+        "kind": "scene",
+        "author": "Yahya ibn Mahmud al-Wasiti",
+        "date": "1237",
+        "licence": "Public domain"
+      },
+      {
+        "file": "Manuscript_of_Ibn_Juzayy_(XIV).png",
+        "kind": "scene",
+        "author": "Ibn Juzayy; Bibliothèque nationale de France",
+        "date": "1354",
+        "licence": "CC BY-SA 4.0"
+      },
       {
         "file": "Handmade_oil_painting_reproduction_of_Ibn_Battuta_in_Egypt,_a_painting_by_Hippolyte_Leon_Benett..jpg",
         "kind": "imaginary",
@@ -134,6 +219,34 @@
     ],
     "bio": "Born Ma He to a Hui Muslim family in Yunnan, he served the Yongle Emperor, who gave him the name Zheng. Between 1405 and 1433 he commanded seven treasure voyages across the Indian Ocean as far as the Swahili coast, and he served as commander of the southern capital, Nanjing.",
     "images": [
+      {
+        "file": "Model_of_Zheng_He's_treasure_ship,_Maritime_Experiential_Museum_&_Aquarium_-_20111006.jpg",
+        "kind": "ship",
+        "author": "Walter Lim",
+        "date": "2011",
+        "licence": "CC BY 2.0"
+      },
+      {
+        "file": "Melaka_Malaysia_Monument-of-Admiral-Zheng-He-01.jpg",
+        "kind": "modern",
+        "author": "CEphoto, Uwe Aranas",
+        "date": "2009",
+        "licence": "CC BY-SA 3.0"
+      },
+      {
+        "file": "Zheng_He_statue_(cropped).jpg",
+        "kind": "modern",
+        "author": "22Kartika",
+        "date": "2013",
+        "licence": "CC BY-SA 3.0"
+      },
+      {
+        "file": "Mao_Kun_map_-_Ceylon,_Africa.png",
+        "kind": "map",
+        "author": "Mao Yuanyi, Wubei Zhi, and an unknown cartographer",
+        "date": "17th century",
+        "licence": "Public domain"
+      },
       {
         "file": "Portrait_of_Zheng_He,_published_about_1600.jpg",
         "kind": "posthumous",
@@ -191,6 +304,41 @@
     "bio": "A Portuguese mariner, in February 1488 he became the first European to round the southern tip of Africa, and showed that the way south lies well out to sea, southwest of the African coast. Vasco da Gama used what he found to reach India.",
     "images": [
       {
+        "file": "F._Benda-The_planting_of_cross_by_Bartholomew_Dias_in_1488-0681.jpg",
+        "kind": "scene",
+        "author": "F. Benda",
+        "date": "18th century",
+        "licence": "Public domain"
+      },
+      {
+        "file": "Diaz_on_his_voyage_to_the_cape.jpg",
+        "kind": "scene",
+        "author": "Frederick Whymper",
+        "date": "1887",
+        "licence": "Public domain"
+      },
+      {
+        "file": "Bartolomeu_Dias,_South_Africa_House.JPG",
+        "kind": "modern",
+        "author": "RedCoat",
+        "date": "2007",
+        "licence": "CC BY-SA 4.0"
+      },
+      {
+        "file": "Mossel_Bay_-_Bartolomeu_Dias_Ship_Replica.jpg",
+        "kind": "ship",
+        "author": "Sumit Surai",
+        "date": "2018",
+        "licence": "CC BY-SA 4.0"
+      },
+      {
+        "file": "Busto_de_Bartolomeu_Dias,_Ruy_Roque_Gameiro,_Casa_Roque_Gameiro,_Amadora_01.jpg",
+        "kind": "modern",
+        "author": "GualdimG",
+        "date": "2022",
+        "licence": "CC BY-SA 4.0"
+      },
+      {
         "file": "Bartolomeu_Dias,_South_Africa_House_(cut).JPG",
         "kind": "modern",
         "author": "RedCoat; cut by Biser Todorov",
@@ -217,6 +365,41 @@
     "bio": "A Genoese navigator who went to sea young, sailed as far as the British Isles and the Gold Coast, and lived some years in Lisbon. Sponsored by the Catholic Monarchs, he left Palos in August 1492 and made landfall in the Americas on 12 October; he made four Spanish crossings in all.",
     "images": [
       {
+        "file": "Portrait_of_a_Man,_Said_to_be_Christopher_Columbus_2.jpg",
+        "kind": "posthumous",
+        "author": "Sebastiano del Piombo",
+        "date": "before 1519",
+        "licence": "Public domain"
+      },
+      {
+        "file": "Ridolfo_Ghirlandaio_Columbus.jpg",
+        "kind": "posthumous",
+        "author": "Ridolfo del Ghirlandaio",
+        "date": "c. 1520",
+        "licence": "Public domain"
+      },
+      {
+        "file": "John_Vanderlyn_-_Columbus_Landing_at_Guanahani,_1492_-_WGA24269.jpg",
+        "kind": "scene",
+        "author": "John Vanderlyn",
+        "date": "1837–1847",
+        "licence": "Public domain"
+      },
+      {
+        "file": "Václav_Brožík_l_Columbus_and_Isabella.JPG",
+        "kind": "scene",
+        "author": "Václav Brožík",
+        "date": "c. 1884",
+        "licence": "Public domain"
+      },
+      {
+        "file": "Muelle_de_la_Carabelas_-_Replica_of_Columbus_Ship_Santa_Maria_-_La_Rabida_-_Spain.jpg",
+        "kind": "ship",
+        "author": "Adam63",
+        "date": "2010",
+        "licence": "CC BY-SA 3.0"
+      },
+      {
         "file": "Portrait_of_a_Man,_Said_to_be_Christopher_Columbus.jpg",
         "kind": "posthumous",
         "author": "Sebastiano del Piombo",
@@ -235,7 +418,8 @@
       "date": "1451",
       "place": "Genoa",
       "label": "Columbus born at Genoa, between Aug and Oct 1451",
-      "text": "Born between 25 August and 31 October 1451 in the Republic of Genoa; Genoa is the majority view among several rival claims.",
+      "text": "Born between 25 August and 31 October 1451 in the Republic of Genoa.",
+      "doubt": "Calvi in Corsica still marks a house as his birthplace, and Catalans, Galicians and Portuguese have each argued he was one of their own.",
       "source": "Wikipedia, Christopher Columbus",
       "confidence": "conventional",
       "cite": "christopher-columbus"
@@ -248,6 +432,63 @@
       "text": "He died in a rented house, ill, still arguing that the Crown owed him the titles and the tenth of the profits it had promised. He is generally said to have held that he had reached the edge of Asia. His bones were carried to Seville, then Santo Domingo, then Havana, then Seville again, and Seville and Santo Domingo both still claim him.",
       "source": "Britannica 1911, Columbus",
       "cite": "britannica-1911-columbus"
+    }
+  },
+  "juan-de-la-cosa": {
+    "name": "Juan de la Cosa",
+    "bio": "Owner and master of the Santa María on the first voyage, pilot on later ones, and maker of the oldest surviving chart to show the New World, in 1500.",
+    "images": [
+      {
+        "file": "Juan_de_la_Cosa,_Juan_Manuel_Núñez_Báñez.jpg",
+        "kind": "imaginary",
+        "author": "Jl FilpoC",
+        "date": "2021",
+        "licence": "CC BY-SA 4.0"
+      },
+      {
+        "file": "Juan-de-la-cosa.jpg",
+        "kind": "imaginary",
+        "author": "unknown artist",
+        "date": "undated",
+        "licence": "Public domain"
+      },
+      {
+        "file": "1500_map_by_Juan_de_la_Cosa.jpg",
+        "kind": "map",
+        "author": "Juan de la Cosa",
+        "date": "1500",
+        "licence": "Public domain"
+      },
+      {
+        "file": "Busto-juan-de-la-cosa.jpg",
+        "kind": "modern",
+        "author": "Panarria",
+        "date": "2007",
+        "licence": "CC BY 2.5"
+      }
+    ],
+    "sources": [
+      "juan-de-la-cosa"
+    ],
+    "born": {
+      "lon": -3.46,
+      "lat": 43.44,
+      "date": "c. 1450–1460",
+      "place": "Santoña, Cantabria",
+      "label": "Juan de la Cosa born at Santoña, c. 1450–1460",
+      "text": "No record of his birth survives; Santoña is the usual account, and the years are read back from his career.",
+      "source": "Wikipedia: Juan de la Cosa",
+      "cite": "juan-de-la-cosa",
+      "confidence": "inferred"
+    },
+    "death": {
+      "lon": -75.33,
+      "lat": 10.33,
+      "date": "1510",
+      "label": "Juan de la Cosa killed near Turbaco, 1510",
+      "text": "Sailing as pilot to Alonso de Ojeda on the coast of what is now Colombia, he went ashore with a raiding party near Turbaco and was killed by the townspeople's poisoned arrows.",
+      "source": "Juan de la Cosa (Wikipedia)",
+      "cite": "juan-de-la-cosa"
     }
   },
   "paulo-da-gama": {
@@ -287,6 +528,27 @@
         "date": "c. 1524",
         "licence": "Public domain",
         "note": "Painted about the year he died."
+      },
+      {
+        "file": "Lisboa-Museu_Nacional_de_Arte_Antiga-Retrato_dito_de_Vasco_da_Gama-20140917.jpg",
+        "kind": "posthumous",
+        "author": "unknown master of the Portuguese School",
+        "date": "1525–1550",
+        "licence": "Public domain"
+      },
+      {
+        "file": "A_chegada_de_Vasco_da_Gama_a_Calicute_em_1498.jpg",
+        "kind": "scene",
+        "author": "Roque Gameiro",
+        "date": "c. 1900",
+        "licence": "Public domain"
+      },
+      {
+        "file": "Vasco_da_Gama_(Livro_de_Lisuarte_de_Abreu).jpg",
+        "kind": "posthumous",
+        "author": "Livro de Lisuarte de Abreu",
+        "date": "c. 1565",
+        "licence": "Public domain"
       }
     ],
     "sources": [
@@ -319,12 +581,40 @@
     "bio": "A Portuguese officer of minor nobility who served the Crown in Asia, then, refused by King Manuel, took his plan to sail west to the Moluccas to Charles I of Spain. He led the 1519 expedition through the strait that bears his name and across the Pacific, and was killed at Mactan in 1521; Elcano brought the Victoria home in 1522.",
     "images": [
       {
+        "file": "Fernand_de_Magellan_-_Charles-Philippe_Larivière_(Musée_de_l'Histoire_de_France,_Versailles).png",
+        "kind": "posthumous",
+        "author": "Charles-Philippe Larivière",
+        "date": "19th century",
+        "licence": "Public domain"
+      },
+      {
         "file": "Retrato_de_Hernando_de_Magallanes.jpg",
         "kind": "posthumous",
         "author": "Unknown",
         "date": "1848",
         "licence": "Public domain",
         "note": "A copy after the portrait in the Naval Museum, Madrid; no authenticated likeness exists."
+      },
+      {
+        "file": "Magellan_expedition_by_Stradanus.jpg",
+        "kind": "scene",
+        "author": "Johannes Stradanus (Jan van der Straet)",
+        "date": "c. 1592",
+        "licence": "Public domain"
+      },
+      {
+        "file": "Detail_from_a_map_of_Ortelius_-_Magellan's_ship_Victoria.png",
+        "kind": "ship",
+        "author": "Abraham Ortelius",
+        "date": "1590",
+        "licence": "Public domain"
+      },
+      {
+        "file": "Nao_Victoria_moored_in_Sète_01.jpg",
+        "kind": "ship",
+        "author": "Christian Ferrer",
+        "date": "2019",
+        "licence": "CC BY 4.0"
       }
     ],
     "sources": [
@@ -395,9 +685,9 @@
     "death": {
       "lon": -135,
       "lat": 1,
-      "date": "4 Aug 1526",
+      "date": "4–6 Aug 1526",
       "label": "Elcano died at sea on the Loaísa expedition, 1526",
-      "text": "He took command when Loaísa died days before, and died himself at sea on 4 August. No position is recorded; the skull is a guess in the middle of the Pacific.",
+      "text": "He took command when Loaísa died days before, and died himself at sea in early August, in mid-Pacific near the equator; accounts give the 4th, 5th or 6th. No position is recorded, so the skull stands on the equator mid-ocean.",
       "source": "Wikipedia: Juan Sebastián Elcano",
       "cite": "juan-sebastian-elcano",
       "confidence": "conventional"
@@ -407,6 +697,41 @@
     "name": "Francis Drake",
     "bio": "Born in Devon and raised in the Plymouth household of William Hawkins, he sailed on his cousin John Hawkins's slaving voyages and raided the Spanish Main. From 1577 to 1580 he made the second voyage round the world, the first English one, and was knighted aboard the Golden Hind. He was vice admiral against the Armada in 1588.",
     "images": [
+      {
+        "file": "1590_or_later_Marcus_Gheeraerts,_Sir_Francis_Drake_Buckland_Abbey,_Devon.jpg",
+        "kind": "life",
+        "author": "Marcus Gheeraerts the Younger",
+        "date": "after 1590",
+        "licence": "Public domain"
+      },
+      {
+        "file": "Sir_Francis_Drake_Anglo-Dutch_School.jpg",
+        "kind": "life",
+        "author": "Unidentified painter",
+        "date": "late 16th century",
+        "licence": "Public domain"
+      },
+      {
+        "file": "Hondius_Vera_Totius_Expeditionis_Nauticae_Francis_Drake_colored.jpg",
+        "kind": "map",
+        "author": "Jodocus Hondius",
+        "date": "c. 1595",
+        "licence": "Public domain"
+      },
+      {
+        "file": "Drake's_arrival_at_Ternate.jpg",
+        "kind": "scene",
+        "author": "Frederick Whymper",
+        "date": "1877",
+        "licence": "Public domain"
+      },
+      {
+        "file": "Golden_Hind_replica.jpg",
+        "kind": "ship",
+        "author": "Murgatroyd49",
+        "date": "1974",
+        "licence": "CC BY-SA 4.0"
+      },
       {
         "file": "Gheeraerts_Francis_Drake_1591.jpg",
         "kind": "life",
@@ -465,7 +790,37 @@
       "source": "Hanno the Navigator (Wikipedia)",
       "cite": "hanno-the-navigator",
       "confidence": "speculative"
-    }
+    },
+    "images": [
+      {
+        "file": "The_Periplus_of_Hanno_-_Mediterranean_Galley_of_the_period_of_Hanno's_Periplus.png",
+        "kind": "ship",
+        "author": "Wilfred Harvey Schoff",
+        "date": "1913",
+        "licence": "Public domain"
+      },
+      {
+        "file": "Bunbury_Vol_1_Map_05_Hanno_p_330.jpg",
+        "kind": "map",
+        "author": "Edward Bunbury",
+        "date": "1879",
+        "licence": "Public domain"
+      },
+      {
+        "file": "The_Periplus_of_Hanno_-_Map_to_illustrate_the_Periplus_of_Hanno.png",
+        "kind": "map",
+        "author": "Wilfred Harvey Schoff",
+        "date": "1913",
+        "licence": "Public domain"
+      },
+      {
+        "file": "The_Periplus_of_Hanno_-_Mediterranean_Sailing_Vessel.png",
+        "kind": "ship",
+        "author": "Wilfred Harvey Schoff",
+        "date": "1913",
+        "licence": "Public domain"
+      }
+    ]
   },
   "pytheas": {
     "name": "Pytheas",
@@ -475,12 +830,33 @@
     "bio": "A Greek of Massalia who sailed to northern Europe about 325 BC, round much of the British Isles, and was the first on record to describe the midnight sun and polar ice. He gave the world Thule, and first tied the tides to the moon. His own book is lost; he survives in quotation by later writers.",
     "images": [
       {
+        "file": "Pythéas.jpg",
+        "kind": "modern",
+        "author": "Rvalette",
+        "date": "2008",
+        "licence": "CC BY-SA 3.0"
+      },
+      {
+        "file": "Bourse_Marseille_02.jpg",
+        "kind": "modern",
+        "author": "Abxbay",
+        "date": "2024",
+        "licence": "CC0"
+      },
+      {
         "file": "Parisinus_gr_1397_f.162_pytheas_of_massalia_from_Strabo_7.3.1.jpg",
         "kind": "scene",
         "author": "Mellangoose",
         "date": "2025",
         "licence": "CC BY-SA 4.0",
         "note": "No likeness exists. The page of the oldest manuscript of Strabo (10th century) that quotes him, the text he survives in."
+      },
+      {
+        "file": "Pytheas_itineraire.png",
+        "kind": "map",
+        "author": "Fschwarzentruber",
+        "date": "2016",
+        "licence": "CC BY-SA 4.0"
       }
     ],
     "sources": [
@@ -545,8 +921,8 @@
   "juan-garrido": {
     "name": "Juan Garrido",
     "death": {
-      "lon": -99.10,
-      "lat": 19.40,
+      "lon": -99.1,
+      "lat": 19.4,
       "date": "between 1547 and 1550",
       "label": "Juan Garrido died in Mexico City, between 1547 and 1550",
       "source": "NPS, Juan Garrido: from legal documents",
@@ -570,7 +946,7 @@
       "source": "Wikipedia, Narváez expedition",
       "cite": "narvaez-expedition",
       "text": "He is believed to have been swept out to sea in a storm while the boats worked west along the Gulf coast; nobody recorded where. The skull stands at the middle of the boat leg, and the place is only inferred.",
-      "confidence": "conventional"
+      "confidence": "inferred"
     }
   },
   "alvar-nunez-cabeza-de-vaca": {
@@ -609,7 +985,8 @@
       "label": "Esteban killed at Hawikuh, 1539",
       "source": "Wikipedia, Esteban de Dorantes",
       "cite": "esteban-de-dorantes",
-      "text": "He went ahead of Fray Marcos de Niza and was held overnight without food or water, then attacked and killed at Cíbola. The Zuni may have thought him a bad man; Castañeda says he asked for turquoise and women; Alarcón says he boasted of armed men behind him; Sancho Dorantes says he was shot through with arrows. In 2002 Juan Francisco Maura argued he was not killed but stayed among the Zuni."
+      "text": "He went ahead of Fray Marcos de Niza and was held overnight without food or water, then attacked and killed at Cíbola. The Zuni may have thought him a bad man; Castañeda says he asked for turquoise and women; Alarcón says he boasted of armed men behind him; Sancho Dorantes says he was shot through with arrows.",
+      "doubt": "In 2002 the historian Juan Francisco Maura argued that Esteban was never killed at all: the story of his death was a ruse that set a slave free, and he lived on among the Zuni."
     }
   }
 }

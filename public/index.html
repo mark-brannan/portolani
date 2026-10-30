@@ -41,7 +41,7 @@
   }
   #build a { color: inherit; }
 
-  /* top right, a row of six instruments, each opening its own drawer: the rose the settings, the chart the charts, the astrolabe the points of interest, the compass Go (a typed place or position, or mine filled in), the dividers the voyages, the anchor the anchorages (home first). One drawer at a time: a click on its button opens it and a second click shuts it, another button swaps it for its own, and a choice, a click elsewhere or Esc shuts it. The row never moves */
+  /* top right, a row of seven instruments, each opening its own drawer: the rose the settings, the chart the charts, the astrolabe the points of interest, the compass Go (a typed place or position, or mine filled in), the dividers the voyages, the medallion the people, the anchor the anchorages (home first). One drawer at a time: a click on its button opens it and a second click shuts it, another button swaps it for its own, and a choice, a click elsewhere or Esc shuts it. The row never moves */
   #where { position: fixed; top: 12px; right: 12px; z-index: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; pointer-events: none; }
   #where :is(button, input, summary) { pointer-events: auto; } /* the box is empty map: a touch there is the map's, to drag or pinch */
   #where .row { display: flex; gap: 6px; align-items: center; }
@@ -84,6 +84,34 @@
   #voyageList .vsum { flex-basis: 100%; max-width: 420px; margin: 0 0 4px 44px; font: 12px/1.35 var(--serif); opacity: 0.8; } /* the voyage in brief, and where to read more */
   #voyageList .vsum a { color: inherit; font-style: italic; }
   @media (max-width: 520px) { #voyageList .full { display: none; } #voyageList .brief { display: inline; } } /* a phone: the short name and the years, so no title wraps */
+  /* the People drawer: a timeline strip of life bars over a broken year axis, and the chosen person's card under it */
+  #peoplePanel { width: min(460px, 100vw - 24px); align-items: stretch; }
+  #peopleStrip { position: relative; }
+  #peopleStrip .axis { position: relative; height: 16px; border-bottom: 1px solid #b89a68; font: italic 10px var(--serif); }
+  #peopleStrip .tick { position: absolute; bottom: 2px; transform: translateX(-50%); white-space: nowrap; opacity: 0.75; }
+  #peopleStrip .brk { position: absolute; top: 0; bottom: 0; width: 7px; margin-left: -1px; border-left: 1px dashed #8a7550; border-right: 1px dashed #8a7550; pointer-events: none; } /* the years left out between the ancient world and the medieval */
+  #peopleStrip .lives { position: relative; list-style: none; margin: 2px 0 0; padding: 0; }
+  #where #peopleStrip .life { position: relative; display: block; width: 100%; height: 17px; padding: 0; border: 0; border-radius: 3px; background: none; box-shadow: none; color: var(--fg); cursor: pointer; }
+  #where #peopleStrip .life:hover { background: rgb(140 47 30 / 0.07); }
+  #peopleStrip .bar { --c: #6b5a44; position: absolute; top: 5px; height: 7px; border-radius: 4px; background: var(--c); }
+  #peopleStrip .bar.open-start { background: linear-gradient(90deg, transparent, var(--c) 45%); } /* a birth nobody dated fades in */
+  #peopleStrip .bar.open-end { background: linear-gradient(90deg, var(--c) 55%, transparent); } /* a death nobody dated fades out */
+  #peopleStrip .bar.open-start.open-end { background: linear-gradient(90deg, transparent, var(--c) 35%, var(--c) 65%, transparent); }
+  #peopleStrip .who { position: absolute; top: 1px; font: 12px/15px var(--serif); white-space: nowrap; }
+  #peopleStrip .life[aria-pressed="true"] .bar { --c: #8c2f1e; } /* the chosen person: the chart's red */
+  #peopleStrip .life[aria-pressed="true"] .who { color: #8c2f1e; font-weight: bold; }
+  .pcard { margin-top: 6px; padding-top: 6px; border-top: 1px solid #b89a68; font: 13px/1.4 var(--serif); }
+  .pcard p { margin: 0 0 4px; }
+  .pcard .chip { display: inline-flex; align-items: center; gap: 3px; padding: 0 7px; border-radius: 10px; border: 1px solid #8a7550; background: #f1e4c6; color: #3b2a1a; font-size: 11px; white-space: nowrap; }
+  .pcard .pvoyages { list-style: none; margin: 4px 0; padding: 0; }
+  .pcard .pvoyages li { margin: 0 0 6px; }
+  .pcard .pvoyages p, .pcard .bio { font-size: 12px; opacity: 0.85; }
+  .pcard .pvoyages a { color: inherit; font-style: italic; }
+  .pcard .when { font-size: 11px; font-style: italic; opacity: 0.75; }
+  .pcard .pics { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; }
+  #where .pcard .pic { width: auto; height: 52px; padding: 2px; border-radius: 4px; background: #f1e4c6; border: 1px solid #b89a68; box-shadow: none; opacity: 0.55; }
+  #where .pcard .pic[aria-pressed="true"] { opacity: 1; border-color: #8c2f1e; box-shadow: inset 0 0 0 1px #8c2f1e; } /* on the table */
+  .pcard .pic img { display: block; height: 46px; width: auto; }
   #goMiss { margin: 0; padding: 2px 8px; font: italic 12px var(--serif); background: var(--panel); border-radius: 8px; }
 
   /* the drawers: on a wide screen each slides in from the right below the row, right-aligned with it and clear
@@ -326,6 +354,12 @@
         <circle cy="-11" r="2.8" fill="url(#brassDividers)" stroke="#5a3a0c" stroke-width="0.9"/><circle cy="-11" r="0.9" fill="#5a3a0c"/>
       </svg>
     </button>
+    <button id="people" type="button" aria-label="People: who sailed, and when they lived" aria-controls="peoplePanel" aria-expanded="false" title="People">
+      <svg viewBox="-16 -16 32 32" aria-hidden="true" stroke-linejoin="round"><defs><linearGradient id="brassPeople" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4c2"/><stop offset="0.35" stop-color="#e8b84a"/><stop offset="0.6" stop-color="#b07a1e"/><stop offset="0.8" stop-color="#e9c060"/><stop offset="1" stop-color="#7a5212"/></linearGradient></defs>
+        <ellipse rx="11.5" ry="14" fill="url(#brassPeople)" stroke="#5a3a0c" stroke-width="1"/><ellipse rx="9" ry="11.4" fill="#f1e4c6" stroke="#5a3a0c" stroke-width="0.6"/>
+        <path d="M-6.6 9.4C-6.4 4.6-3.6 2.6 0 2.6S6.4 4.6 6.6 9.4C4.6 10.8 2.4 11.4 0 11.4S-4.6 10.8-6.6 9.4Z" fill="#5a3a0c"/><circle cy="-2.6" r="4.2" fill="#5a3a0c"/>
+      </svg>
+    </button>
     <button id="anchor" type="button" aria-label="Anchorages: home, the regions, and the seas and islands" aria-controls="anchorPanel" aria-expanded="false" title="Anchorages">
       <svg viewBox="-16 -16 32 32" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round"><defs><linearGradient id="brassAnchor" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4c2"/><stop offset="0.35" stop-color="#e8b84a"/><stop offset="0.6" stop-color="#b07a1e"/><stop offset="0.8" stop-color="#e9c060"/><stop offset="1" stop-color="#7a5212"/></linearGradient></defs>
         <g stroke="#5a3a0c" stroke-width="3.6"><circle cy="-10" r="2.6"/><path d="M0-7.4V13M-6-3h12"/><path d="M-12 2q1 10 12 11 11-1 12-11l-3 2.5M-12 2l3 2.5"/></g>
@@ -347,6 +381,10 @@
   <div id="voyagesPanel" class="drawer menu">
     <div class="vtools"><div id="voyageWidth" class="chips" role="radiogroup" aria-label="Line weight"></div></div>
     <ul id="voyageList" role="group" aria-label="Voyages, any number"></ul>
+  </div>
+  <div id="peoplePanel" class="drawer menu">
+    <div id="peopleStrip" class="strip" role="group" aria-label="People, each a bar over the years they lived; choose one"></div>
+    <div id="personCard" class="pcard" hidden></div>
   </div>
   <div id="anchorPanel" class="drawer menu">
     <ul id="anchorages" class="places"></ul>
