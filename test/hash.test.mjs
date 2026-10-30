@@ -108,6 +108,16 @@ scenario('hashchange: editing the hash redraws without a reload', 'map=5.48/40.2
   assert.equal(await hash(page), '#map=5.48/40.265/7.000&ink=5a1a1a&density=1.5', 'a hash edit is not rewritten');
 });
 
+scenario('projection: the Charts drawer and the settings drawer hold one setting', 'map=2.00/30.000/10.000', async (page) => {
+  await page.evaluate(() => document.getElementById('chartsDrawer').classList.add('open'));
+  await page.locator('#projectionCharts .chip[data-value="miller"]').click();
+  await placed(page);
+  assert.equal(await hash(page), '#map=2.00/30.000/10.000&projection=miller');
+  assert.equal(await value(page, 'projection'), 'miller', 'the settings chips follow');
+  assert.equal(await value(page, 'projectionCharts'), 'miller');
+  assert.equal(await page.evaluate(() => { const d = document.getElementById('chartsDrawer'); return d.lastElementChild.contains(document.getElementById('projectionCharts')); }), true, 'the projection is the last section of the Charts drawer');
+});
+
 scenario('reset: every control back to default, only the view and its projection kept', 'map=7.00/43.700/7.300&ink=5a1a1a&density=1.5&projection=miller', async (page) => {
   assert.equal(await value(page, 'projection'), 'miller');
   await page.evaluate(() => { document.getElementById('status').textContent = ''; });
@@ -230,7 +240,7 @@ scenario('regionset: the 1375 chip round-trips', 'map=4.00/40.000/16.000', async
 
 // Every control in the drawer, by its element's id. Each layout shows all of them, each one element.
 const CONTROLS = ['density', 'pick-monster', 'pick-ship', 'pick-rose', 'placement', 'townSize', 'pick-town', 'mountains', 'hills', 'pick-relief', 'trees',
-  'pick-cartouche', 'titleMode', 'title', 'names', 'rhumb', 'continentsZoom', 'regionSet', 'regions', 'regionsZoom', 'land', 'islands', 'seaTint',
+  'pick-cartouche', 'titleMode', 'title', 'projection', 'names', 'rhumb', 'continentsZoom', 'regionSet', 'regions', 'regionsZoom', 'land', 'islands', 'seaTint',
   'rivers', 'lakes', 'scale', 'scaleBorder', 'ink', 'parchment'];
 const HEADINGS = {
   default: ['Sea', 'Roses', 'Placement', 'Towns', 'Land', 'Cartouche', 'Map', 'Colours'],

@@ -174,16 +174,13 @@ Feature: A chart's position chips, and the line each was fitted to
     When the user looks for the position chips
     Then they sit in the chart's row as on a wide screen, until the user has walked the phone's drawers
 
-Feature: The projection chips live in the Charts drawer
+Feature: The projection chips live in the Charts drawer and the settings drawer
   Source: the user on [#266](https://github.com/mark-brannan/portolani/pull/266), 2026-10-29: "The controls for map projections should live under charts now, not the compass rose. I'm not sure about other map settings...they probably stay under the rose but it could change."
   Scenario: the user looks for the projection
     Given the drawers on main
     When the user opens the Charts drawer
-    Then the projection chips are there, each showing its projection as before
-    And they are no longer in the settings drawer under the rose; the rest of its Map section (continents, regions, the land border, colour, rivers, lakes, the scale bar) stays there, and no section goes
-  Scenario: the link and the layouts
-    Given a link with a projection, or a settings layout other than Default
-    Then the link keeps its projection key and picks the same projection, and the layouts' groups no longer list a projection control, as it is not in the settings drawer
+    Then the projection chips are there, each showing its projection as before, in a Projection section after the charts, at the foot of the drawer
+    And they are also still in the settings drawer under the rose; the two sets are one setting, so a choice in either lights the same chip in both
 
 Feature: A drawer stays open on a click or a choice
   Source: the user on [#266](https://github.com/mark-brannan/portolani/pull/266), 2026-10-29: "I want to change the behavior on all drawer actions. This may reverse an earlier position I took, but it matters more now: do not immediately close the drawer on click/select but leave the drawer open. This is flexible for mobile and should perhaps be treated differently. I need to see a UI walk specifically for that at a later time." The earlier position, as recorded in [#206](https://github.com/mark-brannan/portolani/pull/206)'s body from the UI walk behind [#202](https://github.com/mark-brannan/portolani/pull/202) (paraphrase): "A choice, Esc or a click outside the row and the drawer also closes it."
