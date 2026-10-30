@@ -1229,7 +1229,7 @@ function sightTiles() {
 // the mark nearest [x, y] within reach: a voyage's event, a sight, or a note on a laid chart (drawn nowhere)
 function markAt([x, y]) {
   const proj = viewProjection(placed), rect = { x0: 0, y0: 0, x1: W, y1: H };
-  const marks = [...(ground?.voyages ?? []).flatMap((v) => [...voyageMarks(v.voyage, proj, rect), ...doubtMarks(v, proj, rect)]), ...(placed.zoom >= POI_ZOOM ? sightMarks(sightTiles(), proj, rect) : []), ...noteMarks(ground?.overlay, proj, rect)];
+  const marks = [...(ground?.voyages ?? []).filter((v) => !(v.reveal < 1)).flatMap((v) => [...voyageMarks(v.voyage, proj, rect), ...doubtMarks(v, proj, rect)]), ...(placed.zoom >= POI_ZOOM ? sightMarks(sightTiles(), proj, rect) : []), ...noteMarks(ground?.overlay, proj, rect)];
   let best = null, bestD = Infinity;
   for (const m of marks) { const d = Math.hypot(m.x - x, m.y - y); if (d <= Math.max(cssPx(TAP_REACH), m.h / 2) && d < bestD) { best = m; bestD = d; } }
   return best;
@@ -1433,21 +1433,22 @@ function applyReveal() {
   const v = voyagePen && ground?.voyages?.find((x) => x.id === voyagePen.id);
   if (v) v.reveal = voyagePen.t0 == null ? 0 : Math.min(1, (performance.now() - voyagePen.t0) / VOYAGE_DRAW_MS);
 }
+// every exit of the pen puts the line back whole: a pen that stops early must not leave its voyage hidden
+function finish(id) { const v = ground?.voyages?.find((x) => x.id === id); if (v && 'reveal' in v) { delete v.reveal; render(); } }
 function drawOn(id) {
   const pen = voyagePen = { id, since: performance.now(), t0: null };
   const step = () => {
-    if (voyagePen !== pen) return;
+    if (voyagePen !== pen) return finish(id);
     const now = performance.now();
     if (pen.t0 == null) { // wait for the flight to land and the scene to be placed with this voyage in it
       if (flightTo == null && placed === view && ground?.voyages?.some((x) => x.id === id)) pen.t0 = now;
-      else if (now - pen.since > 10000) { voyagePen = null; return; }
+      else if (now - pen.since > 10000) { voyagePen = null; return finish(id); }
     }
     applyReveal();
     if (pen.t0 != null) paintFrame('drawing');
     if (pen.t0 != null && now - pen.t0 >= VOYAGE_DRAW_MS) {
       voyagePen = null;
-      const v = ground?.voyages?.find((x) => x.id === id);
-      if (v) { delete v.reveal; render(); } // whole again, with its marks
+      finish(id); // whole again, with its marks
       return;
     }
     requestAnimationFrame(step);
