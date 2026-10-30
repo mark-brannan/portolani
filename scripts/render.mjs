@@ -71,6 +71,7 @@ function drawNoteBoxes(g, overlay, proj) {
   g.save();
   g.strokeStyle = g.fillStyle = '#d00'; g.lineWidth = 1.5; g.font = '11px sans-serif'; g.textBaseline = 'top';
   for (const m of noteMarks(overlay, proj, { x0: 0, y0: 0, x1: W, y1: H })) {
+    if (!m.hit) continue; // part of its box is past an azimuthal projection's horizon
     g.setLineDash(m.tile.real ? [] : [5, 3]);
     g.beginPath(); m.hit.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.closePath(); g.stroke();
     const x0 = Math.min(...m.hit.map((p) => p[0])), y0 = Math.min(...m.hit.map((p) => p[1]));

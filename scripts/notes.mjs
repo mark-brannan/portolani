@@ -1174,7 +1174,9 @@ export function noteMarks(overlay, proj, rect) {
     if (x === undefined) continue;
     const hit = noteOutline(n, n.size ?? set.size).map((p) => notePx(overlay, proj, p, sheet, piece));
     const box = hit.every((p) => p.length && p.every(Number.isFinite)) ? hit : null;
-    const seen = box ? box.some(([u, v]) => u >= rect.x0 && u <= rect.x1 && v >= rect.y0 && v <= rect.y1) || inside(box, (rect.x0 + rect.x1) / 2, (rect.y0 + rect.y1) / 2)
+    // in view if the box's bounds overlap the view, so a long box crossing it with no corner inside still counts
+    const us = box?.map((p) => p[0]), vs = box?.map((p) => p[1]);
+    const seen = box ? Math.min(...us) <= rect.x1 && Math.max(...us) >= rect.x0 && Math.min(...vs) <= rect.y1 && Math.max(...vs) >= rect.y0
       : x >= rect.x0 && x <= rect.x1 && y >= rect.y0 && y <= rect.y1;
     if (Number.isFinite(x) && Number.isFinite(y) && seen) {
       const tile = { note: true, title: n.title, drawn: n.drawn, real: n.real, source: n.source?.label, link: n.source?.url };
@@ -1186,11 +1188,12 @@ export function noteMarks(overlay, proj, rect) {
 // The mark a click or tap at [x, y] opens: a small drawn mark (a voyage's event, a sight) within `reach` of it
 // first, nearest wins; else the smallest note hit box holding the point; else the nearest note within reach.
 export function pickMark(marks, [x, y], reach) {
-  let point = null, pointD = Infinity, boxed = null;
+  let pin = null, pinD = Infinity, near = null, nearD = Infinity, boxed = null;
   for (const m of marks) {
     if (m.hit && inside(m.hit, x, y)) { if (!boxed || m.area < boxed.area) boxed = m; continue; }
     const d = Math.hypot(m.x - x, m.y - y);
-    if (d <= Math.max(reach, m.h / 2) && d < pointD) { point = m; pointD = d; }
+    if (d > Math.max(reach, m.h / 2)) continue;
+    if (!m.hit) { if (d < pinD) { pin = m; pinD = d; } } else if (d < nearD) { near = m; nearD = d; }
   }
-  return point && !point.hit ? point : boxed ?? point;
+  return pin ?? boxed ?? near;
 }

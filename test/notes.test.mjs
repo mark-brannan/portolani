@@ -87,6 +87,19 @@ test('a click opens the figure it lands on: anywhere in its box, the smallest bo
   const pin = { x: musa.x + 5, y: musa.y, h: 20, tile: { title: 'a voyage\'s event' } };
   assert.equal(pickMark([...marks, pin], [musa.x, musa.y], 22), pin, 'a small drawn mark within reach wins over a box');
   assert.equal(pickMark(marks, [-1e5, -1e5], 22), null, 'nothing far from every figure');
+  const box = (cx, cy, w) => [[cx - w / 2, cy - w / 2], [cx + w / 2, cy - w / 2], [cx + w / 2, cy + w / 2], [cx - w / 2, cy + w / 2]];
+  const water = { x: 100, y: 100, h: 20, hit: box(100, 100, 400), area: 160000, tile: {} };
+  const stub = { x: 105, y: 100, h: 20, hit: box(105, 92, 6), area: 36, tile: {} }, far = { x: 115, y: 100, h: 20, tile: {} };
+  assert.equal(pickMark([water, stub, far], [100, 100], 22), far, 'a pin within reach wins though a note\'s centre is nearer');
+});
+
+test('a box that crosses the view with no corner in it, off the view\'s centre, is still in view', () => {
+  const o = overlay('catalan-atlas'), proj = viewProjection({ lon: o.sheet.lon, lat: o.sheet.lat, zoom: 5, projection: 'mercator' });
+  const sea = noteMarks(o, proj, rect).find((m) => m.tile.title === 'The Ocean Sea');
+  const xs = sea.hit.map((p) => p[0]), ys = sea.hit.map((p) => p[1]);
+  const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  const strip = { x0: x0 + (x1 - x0) * 0.4, x1: x0 + (x1 - x0) * 0.45, y0: y1 - 2, y1: y1 + 400 }; // a thin view over its bottom edge
+  assert.ok(noteMarks(o, proj, strip).some((m) => m.tile.title === 'The Ocean Sea'));
 });
 
 // The sheet is opaque and drawn once; a second draw hid what lay on it (a merge left one in, #270)
