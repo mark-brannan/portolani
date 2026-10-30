@@ -7,8 +7,8 @@
 // a setting left at its default is left out, `sprites` too (keys with the pack shortened, v: s: p:); `mountains` is `ink`
 // or `off` (colour is the default); the hills are the Catalan sprites in `sprites`. `continents` and `regionszoom` are the zoom
 // they are drawn down from (0 off, the top always); `regionset=catalan-1375` letters the regions in a period's names (REGION_SETS), today's by default. `voyages=columbus,drake:1f4e8c` are the voyages in the order chosen, a picked
-// colour after an id, `voyagewidth=3.2` their line weight and `voyagedraw=4` the seconds the pen takes to draw one on. `overlay=carta-marina` lays that chart's scan over the map as one
-// sheet, `sheet=lon,lat,scale,turn` where it was dragged to; `overlaymode=pieces` the warped pieces instead, `overlayopacity=0.6`
+// colour after an id, `voyagewidth=3.2` their line weight and `voyagedraw=4` the seconds the pen takes to draw one on. `overlay=carta-marina,aguiar` lays those charts' scans over the map,
+// each as one sheet, the last on top; `sheet=;lon,lat,scale,turn` where each was dragged to, a slot per id; `overlaymode=pieces` the warped pieces instead, `overlayopacity=0.6`
 // how strongly (0 to 1); off by default.
 // Older links naming a `rendering` (or `pack`), `rose`, `monster`, `town` and `kinds` open as the
 // selection those chose, and are written back in the new form.
@@ -82,6 +82,8 @@ const ALL_CHARTS = [hashParams(), new URLSearchParams(location.search)].some((q)
 // the drawer's layout (`layout=`), a way of grouping the same controls; Default is written as no key
 const LAYOUT_NAMES = ['default', 'question', 'moods', 'sheet'];
 const layoutFromHash = () => (LAYOUT_NAMES.includes(hashParams().get('layout')) ? hashParams().get('layout') : 'default');
+// whether a grouped list's section opens when a mouse rests on its heading (`hover=`); on is written as no key, `hover=0` is off
+const hoverFromHash = () => hashParams().get('hover') !== '0';
 
 function viewFromHash() {
   const q = hashParams(), m = /^(-?[\d.]+)\/(-?[\d.]+)\/(-?[\d.]+)$/.exec(q.get('map') ?? '');
@@ -166,6 +168,7 @@ function writeHash() {
   q.set('map', `${v.zoom.toFixed(2)}/${v.lat.toFixed(3)}/${v.lon.toFixed(3)}`);
   if (v.projection !== PROJECTION_NAMES[0]) q.set('projection', v.projection);
   if (layout !== 'default') q.set('layout', layout);
+  if (!hoverOpen) q.set('hover', '0');
   if (!sameSet(selection, new Set(DEFAULT_SELECTION))) q.set('sprites', SPRITES.filter((s) => selection.has(s.key)).map((s) => encodeKey(s.key)).join(','));
   if (st.townSize !== DEFAULTS.townSize) q.set('townsize', st.townSize);
   if (!st.names) q.set('names', '0');
@@ -206,7 +209,7 @@ function writeHash() {
   if (st.ink !== DEFAULTS.ink) q.set('ink', st.ink.slice(1));
   if (st.parchment !== DEFAULTS.parchment) q.set('parchment', st.parchment.slice(1));
   if (ALL_CHARTS) q.set('charts', 'all');
-  history.replaceState(null, '', `#${q.toString().replaceAll('%2C', ',').replaceAll('%2F', '/').replaceAll('%3A', ':')}`);
+  history.replaceState(null, '', `#${q.toString().replaceAll('%2C', ',').replaceAll('%2F', '/').replaceAll('%3A', ':').replaceAll('%3B', ';')}`);
 }
 
 // ---------------------------------------------------------------- the pickers
@@ -318,6 +321,12 @@ const SCALE_GLYPHS = {
   beads: svg(`<path d="M2 5h24M2 13h24" ${stroke('#8c2f1e', 0.8)}/><circle cx="6" cy="9" r="2.4" ${stroke('#8c2f1e', 0.9)}/><circle cx="14" cy="9" r="2.4" ${stroke('#8c2f1e', 0.9)}/><circle cx="22" cy="9" r="2.4" ${stroke('#8c2f1e', 0.9)}/>`),
   ruled: svg(`<path d="M2 4h24M2 14h24" ${stroke('#8c2f1e', 0.8)}/><path d="M3 3v12M14 3v12M25 3v12" ${stroke('#8c2f1e', 0.8)}/><circle cx="14" cy="9" r="2" fill="#e9d8b4" stroke="#8c2f1e" stroke-width=".8"/>`),
 };
+// a section heading with its rows, and the pointer on the heading: clicking (off), or resting while its rows slide open (on)
+const ARROW = '<path d="M17 3v10l2.4-2.2 1.7 3.8 1.5-.7-1.7-3.7H24Z" fill="currentColor"/>';
+const HOVER_GLYPHS = {
+  off: svg(`<path d="M2 4h13" ${stroke('currentColor', 1.4)}/>${ARROW}<path d="M14.5 1.5l1.2 1.2M13.5 5h1.6M14.5 8.5l1.2-1.2" ${stroke('currentColor', 0.8)}/>`),
+  on: svg(`<path d="M2 4h13" ${stroke('currentColor', 1.4)}/><path d="M5 8.5h9M5 12h7M5 15.5h8" ${stroke('currentColor', 0.7)}/>${ARROW}<path d="M25 2.5a2.6 2.6 0 1 1-2.6-.1" ${stroke('currentColor', 0.8)}/>`),
+};
 const MAP_LINES = '<path d="M0 4q8-3 14 2t14-1M0 13q9 3 15-1t13 2" fill="none" stroke="currentColor" stroke-width=".7" opacity=".6"/>';
 const BORDER_GLYPHS = {
   bordered: svg(`<rect width="28" height="18" fill="none"/>${MAP_LINES}<rect x="4" y="4" width="20" height="10" fill="#e9d8b4" stroke="#8c2f1e" stroke-width="1"/><rect x="6" y="6" width="16" height="6" fill="none" stroke="#8c2f1e" stroke-width=".6"/>`),
@@ -383,6 +392,7 @@ const CHOICES = {
   overlayMode: [['sheet', 'One sheet', 'the whole scan, opaque, laid level and centred, dragged by hand', HOOD_GLYPHS.sheets], ['pieces', 'Warped pieces', 'each piece warped onto today\'s coast, at the opacity below', HOOD_GLYPHS.rings]],
   tuneOrigin: [['rose', `Catalan rose (${ROSE_AT})`, 'every band\'s grid has a corner on the rose', HOOD_GLYPHS.rose], ['zero', '0° 0°', 'NOAA\'s own zero', HOOD_GLYPHS.zero]],
   tuneCurated: [['1', 'On', 'the curated charts take the place of the grid cells they hold', HOOD_GLYPHS.curated], ['0', 'Off', 'grid cells everywhere', HOOD_GLYPHS.grid]],
+  hoverOpen: [['off', 'Off', 'a click opens a section', HOVER_GLYPHS.off], ['on', 'On', 'resting the pointer on a heading opens its section', HOVER_GLYPHS.on]],
   tuneRoselines: [['1', 'On', 'the rose\'s 32 lines as one more hub at every zoom', HOOD_GLYPHS.roselines], ['0', 'Off', 'only the sheet the rose falls in', HOOD_GLYPHS.off]],
   flyShape: [['step', 'Step', 'out about the place left, across at the top, down onto the place; Blend lets the pan run alongside the zoom'], ['hyperbolic', 'Hyperbolic', 'van Wijk & Nuij, as MapLibre flies: pan and zoom together on one curve, Curve setting its height']],
 };
@@ -500,7 +510,7 @@ function readControls() {
     cartouchePos: style.cartouchePos, scalePos: style.scalePos, // set by dragging the cartouche or the scale bar
     ...readHood(),
     voyages: style.voyages, voyageWidth: Number($('voyageWidth').value), voyageDraw: style.voyageDraw, // chosen in the voyages drawer
-    overlay: style.overlay, sheet: style.sheet, // chosen in the charts drawer, and by dragging the sheet
+    overlays: style.overlays, sheets: style.sheets, // chosen in the charts drawer, and by dragging a sheet
   };
   // hills are the Catalan sprites: the chip selects all of them or none
   const hills = $('hills').value === 'catalan';
@@ -704,6 +714,7 @@ if (UI) {
 }
 
 let layout = layoutFromHash();
+let hoverOpen = hoverFromHash();
 let view = viewFromHash();
 let style = styleFromHash();
 let selection = selectionFromHash();
@@ -730,22 +741,22 @@ async function render() {
       regions: style.regionsZoom > 0 ? style.regions : 'off', regionSet: style.regionSet, regionsZoom: style.regionsZoom,
       sprites: [...selection], kinds, view, pinned: !phone.matches, pinTitle: style.autoTitle ? pinTitle : null,
       voyages: style.voyages.filter((v) => !v.hidden).map((v) => ({ id: v.id, colour: voyageInk()[v.id], width: style.voyageWidth })), person: style.person, voyageWidth: style.voyageWidth,
-      overlay: style.overlay ? { id: style.overlay, mode: style.overlayMode, sheet: style.sheet, opacity: style.overlayOpacity } : null,
+      overlays: style.overlays.map((id) => ({ id, mode: style.overlayMode, sheet: style.sheets[id] ?? null, opacity: style.overlayOpacity })),
       debug: parseDebug(style.debug).debug, tune: parseTune(style.tune).tune,
     });
     if (me !== run) return; // a newer change or a move superseded this one
-    ground = { world, coarse, bg, voyages: scene.voyages, anchored: anchorScene(scene, data), overlay: scene.overlay, cards: { cartouche: kinds.includes('cartouche') ? scene.cartouche : null, scaleSprite: scene.scaleSprite, scale: style.scale, bg } };
+    ground = { world, coarse, bg, voyages: scene.voyages, anchored: anchorScene(scene, data), overlays: scene.overlays, cards: { cartouche: kinds.includes('cartouche') ? scene.cartouche : null, scaleSprite: scene.scaleSprite, scale: style.scale, bg } };
     applyReveal();
     if (style.autoTitle) $('title').value = scene.cartouche.title; // the box shows what the cartouche letters, and cannot be edited
     placed = view;
     hideTile(); // its mark may be gone: another voyage, or none
     cancelAnimationFrame(frame); frame = 0; // a moving frame still queued would paint over the scene
     const t1 = performance.now();
-    const fading = scene.overlay?.mode === 'sheet' && scene.overlay.id === fadeIn;
-    if (fading) { fadeIn = null; scene.overlay.alpha = 0; } // drawn without the sheet, which fades in over it
+    const fading = scene.overlays.find((o) => o.mode === 'sheet' && o.id === fadeIn);
+    if (fading) { fadeIn = null; fading.alpha = 0; } // drawn without the sheet, which fades in over it
     ctx.clearRect(0, 0, W, H);
     drawScene(ctx, scene, data, bg, { scale: 1, x: 0, y: 0 });
-    if (fading) fadeSheet(scene.overlay, data.proj, me);
+    if (fading) fadeSheet(fading, data.proj, me);
     drawPictures(ctx);
     drawSheetHandles(ctx);
     drawCards();
@@ -786,10 +797,11 @@ phone.addEventListener('change', () => { drawCards(); if (ground) render(); }); 
 // Seven buttons in the row, each with its own drawer: the rose the settings, the chart the charts, the
 // astrolabe the points of interest, the compass Go, the dividers the voyages, the medallion the people, the anchor the anchorages.
 // At most one is open. A click on a button opens its drawer and a second click shuts it; a click on another
-// button shuts it and opens that one; a choice in it, Esc, or a click or a focus outside the row and the
-// drawer shuts it. On a wide screen the drawer hangs below the row, which it never covers or moves, and a
-// touch on the map shuts it; on a phone it is a bottom sheet with the map shrunk above it, and it stays up
-// while the map is moved: that is how a control's effect is seen. An open drawer takes the focus (Go its
+// button shuts it and opens that one; Esc, or a click or a focus outside the row and the drawer, shuts it. A
+// choice in it leaves it open, and the map does what was asked behind it (docs/spec/design.md, "A drawer stays
+// open on a click or a choice"). On a wide screen the drawer hangs below the row, which it never covers or
+// moves, and a touch on the map shuts it; on a phone it is a bottom sheet, and a tap or a drag on the map leaves
+// it up (the user, 2026-10-30, reversing #262): that is how a control's effect is seen. An open drawer takes the focus (Go its
 // text box, on a wide screen only, so a phone's keyboard does not cover the sheet); shut by the keyboard,
 // the focus goes back to its button.
 const where = $('where');
@@ -803,7 +815,7 @@ function setDrawer(open, byKeyboard = false) { // the drawer to open, or false f
   document.documentElement.classList.toggle('sheet', !!open && !open.classList.contains('menu')); // on a phone the map makes room above the settings or the charts; a lighter drawer sits over its foot
   if (open?.id === 'voyagesPanel') fillVoyages(); // the list loads on the first open
   if (open?.id === 'peoplePanel') fillPeople();
-  if (open?.id === 'chartsDrawer') chartsFresh = !style.overlay;
+  if (open?.id === 'chartsDrawer') chartsFresh = !style.overlays.length;
   if (open) (open.id === 'goPanel' ? (phone.matches ? null : $('coordsText')) : focusable(open))?.focus({ preventScroll: true });
   else if (byKeyboard) drawers.find(([, d]) => d === was)[0].focus({ preventScroll: true });
   else if (was.contains(document.activeElement)) document.activeElement.blur(); // a phone's keyboard goes with it
@@ -811,16 +823,16 @@ function setDrawer(open, byKeyboard = false) { // the drawer to open, or false f
 for (const [b, d] of drawers) b.addEventListener('click', (e) => setDrawer(d === openDrawer() ? false : d, e.detail === 0)); // detail 0: Enter or Space
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && openDrawer()) setDrawer(false, true); });
 const outside = (t) => { const d = openDrawer(); return d && t instanceof Node && !where.contains(t) && !d.contains(t); };
-// On a phone the settings and the charts stay up while the map is moved; a lighter drawer shuts as on a wide screen.
-addEventListener('pointerdown', (e) => { if (outside(e.target) && !(phone.matches && e.target === canvas && !openDrawer().classList.contains('menu'))) setDrawer(false); });
+// On a phone every drawer stays up while the map is tapped or moved.
+addEventListener('pointerdown', (e) => { if (outside(e.target) && !(phone.matches && e.target === canvas)) setDrawer(false); });
 addEventListener('focusout', (e) => { if (e.relatedTarget && outside(e.relatedTarget)) setDrawer(false); }); // tabbed out; a click that focuses nothing has no relatedTarget
 
-// Reset: every control back to its default, the view (place and projection) and the drawer's layout kept. The hash holds the whole
+// Reset: every control back to its default, the view (place and projection), the drawer's layout and hover kept. The hash holds the whole
 // style, so a hash with only the view is the default style; the hashchange handler below redraws from it.
 $('reset').addEventListener('click', () => {
   const m = hashParams().get('map'), p = hashParams().get('projection');
   $('shareUrl').hidden = true; $('shareNote').textContent = '';
-  location.hash = [m && `map=${m}`, p && `projection=${p}`, layout !== 'default' && `layout=${layout}`].filter(Boolean).join('&');
+  location.hash = [m && `map=${m}`, p && `projection=${p}`, layout !== 'default' && `layout=${layout}`, !hoverOpen && 'hover=0'].filter(Boolean).join('&');
 });
 // Copy link: the hash is kept current by writeHash. Where the clipboard is refused (an insecure page,
 // a denied permission) the link is put in a box, selected, to copy by hand.
@@ -1012,26 +1024,33 @@ const pinch = () => {
   return { d: Math.hypot(bx - ax, by - ay), x: (ax + bx) / 2, y: (ay + by) / 2 };
 };
 
-// The sheet (a chart's scan laid whole over the map) is moved by hand: held anywhere on it, it is dragged;
+// A sheet (a chart's scan laid whole over the map) is moved by hand: held anywhere on it, it is dragged (the top one where they overlap);
 // by the round handle at its bottom left corner it turns about its centre; by the square one at its bottom right
 // it is resized. Where it is let go lands in the link (sheet=). Chips at its top left corner put it at the
 // chart's own placement (Parallels, or Level) or at the fit of one of its coasts (overlays.json `snaps`).
 const HANDLE = 12; // the handles' radius, canvas px
-const sheetShown = () => (ground?.overlay?.mode === 'sheet' && ground.overlay.sheet ? ground.overlay : null);
-function sheetGeometry() {
-  const o = sheetShown();
+const sheetsShown = () => (ground?.overlays ?? []).filter((o) => o.mode === 'sheet' && o.sheet); // bottom to top
+function sheetGeometry(o) {
   if (!o) return null;
   const proj = viewProjection(view), corners = sheetCorners(o, proj, o.sheet);
   return corners && { o, proj, corners };
 }
 function sheetHit([x, y]) {
-  const geo = sheetGeometry();
-  if (!geo) return null;
+  // every handle is drawn over every sheet, so a handle wins first, the top sheet's before a lower one's; then the top sheet under the point
+  const geos = sheetsShown().reverse().map(sheetGeometry).filter(Boolean);
   const near = (c) => Math.hypot(c[0] - x, c[1] - y) <= HANDLE + cssPx(6);
-  if (near(geo.corners[3])) return { kind: 'turn', ...geo };
-  if (near(geo.corners[2])) return { kind: 'size', ...geo };
-  return onSheet(geo.o, geo.proj, geo.o.sheet, x, y) ? { kind: 'move', ...geo } : null;
+  for (const geo of geos) {
+    if (near(geo.corners[3])) return { kind: 'turn', ...geo };
+    if (near(geo.corners[2])) return { kind: 'size', ...geo };
+  }
+  const geo = geos.find((g) => onSheet(g.o, g.proj, g.o.sheet, x, y));
+  return geo ? { kind: 'move', ...geo } : null;
 }
+// The placements by id with `o`'s set to `sheet`; the chart's own placement is the default, left out of the link.
+const withSheet = (o, sheet) => {
+  const { [o.id]: _, ...rest } = style.sheets;
+  return sheet && !sameSheet(sheet, ownSheet(o.id)) ? { ...rest, [o.id]: sheet } : rest;
+};
 let sheetTap = null; // where a press on the sheet began, until it moves far enough to be a drag: a tap there opens a note
 let held = null; // { kind, o, proj, start, sheet (as taken), centre } while the sheet is held
 let sheetFrameId = 0;
@@ -1057,12 +1076,14 @@ function dropSheet() {
   const { o } = held;
   held = null;
   cancelAnimationFrame(sheetFrameId); sheetFrameId = 0;
-  style = { ...style, sheet: sameSheet(o.sheet, ownSheet(o.id)) ? null : o.sheet }; // the chart's own placement is the default, left out of the link
+  style = { ...style, sheets: withSheet(o, o.sheet) };
   writeHash(); render();
 }
-// The handles, drawn over the scene and every moving frame: a ring with an arrow to turn, a square with a diagonal to resize.
+// The handles, drawn over the scene and every moving frame: a ring with an arrow to turn, a square with a ⤢ to resize.
 function drawSheetHandles(g) {
-  const geo = sheetGeometry();
+  for (const o of sheetsShown()) drawHandles(g, sheetGeometry(o));
+}
+function drawHandles(g, geo) {
   if (!geo) return;
   const [, , br, tr] = geo.corners, r = HANDLE; // the ring at the bottom left, the square at the bottom right
   g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
@@ -1072,13 +1093,17 @@ function drawSheetHandles(g) {
   const ax = tr[0] + r * 0.55 * Math.cos(Math.PI * 0.6), ay = tr[1] + r * 0.55 * Math.sin(Math.PI * 0.6);
   g.beginPath(); g.moveTo(ax - 4, ay - 0.5); g.lineTo(ax, ay + 0.5); g.lineTo(ax + 1, ay - 4); g.stroke();
   g.beginPath(); g.rect(br[0] - r, br[1] - r, 2 * r, 2 * r); g.fill(); g.stroke();
-  g.beginPath(); g.moveTo(br[0] - r * 0.5, br[1] + r * 0.5); g.lineTo(br[0] + r * 0.5, br[1] - r * 0.5); g.stroke();
+  const a = r * 0.55, h = r * 0.4; // the ⤢: a diagonal from bottom left to top right, an arrowhead at each end
+  g.beginPath(); g.moveTo(br[0] - a, br[1] + a); g.lineTo(br[0] + a, br[1] - a); g.stroke();
+  g.beginPath(); g.moveTo(br[0] + a - h, br[1] - a); g.lineTo(br[0] + a, br[1] - a); g.lineTo(br[0] + a, br[1] - a + h); g.stroke();
+  g.beginPath(); g.moveTo(br[0] - a + h, br[1] + a); g.lineTo(br[0] - a, br[1] + a); g.lineTo(br[0] - a, br[1] + a - h); g.stroke();
   g.restore();
 }
-// The snap chips, at the sheet's top left corner in the window (kept inside it), lit where the sheet lies now.
+// The snap chips, at the top sheet's top left corner in the window (kept inside it), lit where that sheet lies now; the
+// top sheet in view, where the top one's centre is past the horizon.
 const sheetChips = $('sheetChips');
 function placeSheetChips() {
-  const geo = held ? null : sheetGeometry();
+  const geo = held ? null : sheetsShown().reverse().map(sheetGeometry).find(Boolean);
   if (!geo || geo.o.id !== sheetChips.dataset.id) { sheetChips.hidden = true; if (geo) buildSheetChips(geo.o); else return; }
   const [[x, y]] = geo.corners, rc = canvas.getBoundingClientRect();
   sheetChips.hidden = false;
@@ -1097,10 +1122,10 @@ function buildSheetChips(o) {
   }));
 }
 sheetChips.addEventListener('click', (e) => {
-  const b = e.target.closest('.chip'), o = sheetShown();
+  const b = e.target.closest('.chip'), o = sheetsShown().find((v) => v.id === sheetChips.dataset.id);
   if (!b || !o) return;
   const sn = b.dataset.snap == null ? null : o.snaps[b.dataset.snap];
-  style = { ...style, sheet: sn ? { lon: sn.lon, lat: sn.lat, scale: sn.scale, turn: sn.turn } : null };
+  style = { ...style, sheets: withSheet(o, sn && { lon: sn.lon, lat: sn.lat, scale: sn.scale, turn: sn.turn }) };
   writeHash(); render();
 });
 
@@ -1241,9 +1266,12 @@ function sightTiles() {
 // point (its whole hit box, drawn nowhere; the smallest where boxes nest); else a note's centre within reach (notes.mjs pickMark)
 function markAt(at) {
   const proj = viewProjection(placed), rect = { x0: 0, y0: 0, x1: W, y1: H };
-  const marks = [...(ground?.voyages ?? []).filter((v) => !(v.reveal < 1)).flatMap((v) => [...voyageMarks(v.voyage, proj, rect), ...doubtMarks(v, proj, rect)]), ...(placed.zoom >= POI_ZOOM ? sightMarks(sightTiles(), proj, rect) : []), ...noteMarks(ground?.overlay, proj, rect)];
+  const marks = [...(ground?.voyages ?? []).filter((v) => !(v.reveal < 1)).flatMap((v) => [...voyageMarks(v.voyage, proj, rect), ...doubtMarks(v, proj, rect)]), ...(placed.zoom >= POI_ZOOM ? sightMarks(sightTiles(), proj, rect) : []), ...laidNotes(proj, rect)];
   return pickMark(marks, at, cssPx(TAP_REACH));
 }
+// The laid charts' notes: each sheet's, less those an upper sheet covers, since only the top sheet's figure shows there
+const laidNotes = (proj, rect) => (ground?.overlays ?? []).flatMap((o, i, all) => noteMarks(o, proj, rect)
+  .filter((m) => !all.slice(i + 1).some((u) => u.mode === 'sheet' && u.sheet && onSheet(u, proj, u.sheet, m.x, m.y))));
 function showTileAt(at) {
   const best = markAt(at);
   if (!best) return;
@@ -1271,7 +1299,8 @@ const around = (lon, lat, r) => viewOfFrame({ lonMin: lon - r, lonMax: lon + r, 
 const at = (lon, lat, zoom) => ({ lon, lat, zoom });
 const both = (a, b) => viewOfFrame({ lonMin: a[0] - a[2], lonMax: b[0] + b[2], latMin: Math.min(a[1] - a[2], b[1] - b[2]), latMax: Math.max(a[1] + a[2], b[1] + b[2]) }); // two centres, west then east, on one sheet
 const CAPTION = 'notes to come'; // the line under an entry until its caption is written
-// A group: [heading, rows, open] (an empty heading for none); a heading folds its rows, shut unless open;
+// A group: [heading, rows, open, span] (an empty heading for none); at most one group open at a time, on load the first marked open,
+// else the first; an era's span of years shows beside its heading with its count;
 // a row: [name, view, title, text], the title the cartouche's when it differs from the name. A row with a tile
 // in SIGHT_TILES takes the line under its name (the tile's date) and its caption (the tile's text) from it.
 const ANCHORAGES = [
@@ -1311,7 +1340,7 @@ const SIGHTS = [
     ['Ostia', port(12.29, 41.76)],
     ['Berenike', port(35.47, 23.91)],
     ['Barygaza', port(72.99, 21.71), 'Barygaza (Bharuch)'],
-  ]],
+  ], null, 'c. 1000 BC – 2nd c. AD'],
   ['The medieval Indian Ocean and Asia', [
     ['Siraf', port(52.33, 27.67)],
     ['Aden', port(45.03, 12.78)],
@@ -1319,7 +1348,7 @@ const SIGHTS = [
     ['Calicut', port(75.78, 11.25), 'Calicut (Kozhikode)'],
     ['Malacca', port(102.25, 2.19), 'Malacca (Melaka)'],
     ['Quanzhou', port(118.68, 24.87)],
-  ]],
+  ], null, '9th–15th c.'],
   ['The age of discovery', [
     ['Lisbon', port(-9.14, 38.72)], // also where charts were made
     ['São Jorge da Mina', port(-1.35, 5.08), 'São Jorge da Mina (Elmina)'],
@@ -1332,7 +1361,7 @@ const SIGHTS = [
     ['Venice', port(12.33, 45.44), null, null, CHARTMAKING],
     ['Majorca', at(3.0, 39.6, 7), null, null, CHARTMAKING],
     ['Dieppe', port(1.08, 49.93), null, null, CHARTMAKING],
-  ], 'open'],
+  ], 'open', '1311–1619'],
   ['The modern world', [
     ['Suez', port(32.55, 29.97)],
     ['Panama', port(-79.53, 8.97)],
@@ -1340,7 +1369,7 @@ const SIGHTS = [
     ['Hong Kong', port(114.20, 22.30)],
     ['Shanghai', port(121.47, 31.23)],
     ['Rotterdam', port(4.48, 51.92)],
-  ]],
+  ], null, '1819–1914'],
 ];
 // name, year, view, [the city it was made in, its view], text, the id of its scan in packs/overlays/overlays.json (none without one)
 const CHARTS = [
@@ -1920,14 +1949,74 @@ const caption = (text) => `<span class="notes">${text ?? CAPTION}</span>`;
 for (const [list, groups] of [[$('anchorages'), ANCHORAGES], [$('sightsList'), SIGHTS]]) {
   const rows = (items) => items.map(([name, v, title, text, tag]) => { const tile = SIGHT_TILES[name];
     return `<li><button type="button" data-place="${places.push({ name, view: { ...v, title: title ?? name } }) - 1}">${title?.startsWith(`${name} (`) ? title : name}${tile?.date ? `<small>${[tile.date, tag].filter(Boolean).join(' · ')}</small>` : ''}</button>${caption(text ?? tile?.text)}</li>`; }).join('');
-  list.innerHTML = groups.map(([group, items, open]) => (group ? `<li class="group"><details${open ? ' open' : ''}><summary>${group}</summary><ul class="places">${rows(items)}</ul></details></li>` : rows(items))).join('');
-  list.addEventListener('click', (e) => { const b = e.target.closest('[data-place]'); if (b) { setDrawer(false); goTo(places[b.dataset.place].view); } });
+  const first = groups.findIndex(([group, , open]) => group && open), opened = first >= 0 ? first : groups.findIndex(([group]) => group);
+  list.innerHTML = groups.map(([group, items, , span], i) => (group ? `<li class="group${i === opened ? ' open' : ''}"><button type="button" class="fold" aria-expanded="${i === opened}">${group}<small>${[items.length, span].filter(Boolean).join(' · ')}</small></button><div class="rows"><div${i === opened ? '' : ' inert'}><ul class="places">${rows(items)}</ul></div></div></li>` : rows(items))).join('');
+  list.addEventListener('click', (e) => { const b = e.target.closest('[data-place]'); if (b) goTo(places[b.dataset.place].view); });
 }
+// Any grouped list in a drawer opens at most one group at a time: a click on a shut group's heading slides the open
+// one shut and this one open, together; a click on the open one slides it shut and leaves none open, so a search can
+// move between groups quickly (docs/spec/design.md, "A grouped list in a drawer opens one group at a time").
+// The rule is the list's, so a group added or moved needs no code.
+function foldTo(group) {
+  const shut = group.classList.contains('open');
+  for (const g of group.parentElement.children) {
+    if (!g.classList.contains('group')) continue;
+    const on = g === group && !shut;
+    g.classList.toggle('open', on);
+    g.querySelector(':scope > .fold').setAttribute('aria-expanded', String(on));
+    g.querySelector(':scope > .rows > div').inert = !on;
+  }
+}
+// With a mouse (a screen that can hover), resting the pointer on a shut group's heading for HOVER_DWELL slides it open and
+// the open one shut, as a click does, while the "Sections open on hover" chips are on; leaving the list shuts nothing.
+// A heading counts only when the pointer moves onto it: one the slide carries under the pointer (an open group above
+// shuts and the list rises) does not open on the next nudge, only once the pointer has left it and come back. A click on
+// the heading the dwell just opened, before the pointer leaves it, is the click that was on its way, so it leaves the
+// section open; the next click shuts it.
+const HOVER_DWELL = 350; // ms
+const HOVER_MEDIA = '(hover: hover) and (pointer: fine)'; // index.html hides the chips where this does not match
+const canHover = matchMedia(HOVER_MEDIA);
+const NO_DWELL = { group: null, timer: 0 };
+let dwell = NO_DWELL, hoverOpened = null, slid = null, last = null; // last: the pointer's position and the group under it
+const groupAt = (t) => t instanceof Element && t.closest('.group > .fold')?.parentElement || null;
+const groupUnder = ([x, y]) => groupAt(document.elementFromPoint(x, y));
+document.addEventListener('pointermove', (e) => {
+  const at = [e.clientX, e.clientY];
+  if (e.pointerType !== 'mouse' || (last && at[0] === last.at[0] && at[1] === last.at[1])) return;
+  const g = groupAt(e.target);
+  // the heading now under the pointer was already under its last position, though that position showed another: it came to the pointer
+  if (g && last && g !== last.g && groupUnder(last.at) === g) slid = g;
+  if (g !== slid) slid = null;
+  if (g !== hoverOpened) hoverOpened = null;
+  last = { at, g };
+  const want = hoverOpen && canHover.matches && g && g !== slid && !g.classList.contains('open') ? g : null;
+  if (want === dwell.group) return;
+  clearTimeout(dwell.timer);
+  dwell = !want ? NO_DWELL : { group: want, timer: setTimeout(() => {
+    dwell = NO_DWELL;
+    if (!want.classList.contains('open') && groupUnder(last.at) === want) { foldTo(want); hoverOpened = want; }
+  }, HOVER_DWELL) };
+});
+document.addEventListener('pointerout', (e) => {
+  const g = groupAt(e.target);
+  if (g && g === dwell.group && groupAt(e.relatedTarget) !== g) { clearTimeout(dwell.timer); dwell = NO_DWELL; }
+});
+document.addEventListener('click', (e) => {
+  const h = e.target.closest('.group > .fold'), g = h?.parentElement;
+  if (!g) return;
+  const swallow = g === hoverOpened && g.classList.contains('open') && e.detail !== 0; // detail 0: Enter or Space
+  hoverOpened = null;
+  if (!swallow) foldTo(g);
+});
+const showHover = () => { $('hoverOpen').value = hoverOpen ? 'on' : 'off'; };
+showHover();
+$('hoverOpen').addEventListener('input', () => { hoverOpen = $('hoverOpen').value === 'on'; writeHash(); });
 
 // Each chart a row: its scan as a thumbnail (the drawer's chart glyph, greyed, until it has one) and its name, either
-// of which flies to frame the sheet and shows it, never hides it; the eye beside the name shows or hides the sheet and
-// nothing else; under the name the city it was made in, a link that flies there and takes the sheet off if it would
-// cover the city (docs/spec/design.md, "A chart's row in the Charts drawer").
+// of which shows that chart's sheet alone, at its own placement, and flies to frame it; the eye beside the name shows or
+// hides that one sheet and nothing else: no other sheet, no placement, no move of the map. Under the name the city it
+// was made in, a link that flies there and takes off any sheet that would cover the city (docs/spec/design.md, "A
+// chart's row in the Charts drawer").
 const skin = $('charts').querySelector('svg').outerHTML;
 const EYE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="slash" d="M4 4l16 16"/></svg>';
 let OVERLAYS = []; // packs/overlays/overlays.json, once loaded
@@ -1935,26 +2024,36 @@ const ownSheet = (id) => OVERLAYS.find((v) => v.id === id)?.sheet ?? null;
 let chartsFresh = false; // the Charts drawer opened with no sheet shown, and none shown since: the next shown fades in
 let fadeIn = null; // the overlay id whose sheet fades in when next placed
 $('chartList').innerHTML = CHARTS.map(({ name, year, made, text, overlay }, i) => `<li class="chart"${overlay ? ` data-overlay="${overlay}"` : ''}><button type="button" class="thumb none" data-chart="${i}" data-to="view" title="The chart's frame">${skin}</button><div class="about"><span class="head"><button type="button" class="name" data-chart="${i}" data-to="view">${name}</button>${overlay ? `<button type="button" class="eye" data-chart="${i}" data-to="eye" aria-pressed="false" aria-label="Show ${name}" hidden>${EYE}</button>` : ''}</span><span class="where"><button type="button" class="city" data-chart="${i}" data-to="made">${made.title}</button>, ${year}</span>${caption(text)}</div></li>`).join('');
-function setSheet(id, fade = false) {
-  style = { ...style, overlay: id, sheet: null };
-  fadeIn = id && fade ? id : null;
-  if (id) chartsFresh = false;
-  showOverlay(); writeHash(); render();
+// The sheets laid, bottom to top, and where each lies; `fade` the id of one that fades in as it is placed. `draw` false
+// when a flight follows at once: its landing draws them, and a render now would only be thrown away by its first frame.
+function setSheets(overlays, sheets = style.sheets, fade = null, draw = true) {
+  if (overlays.some((id) => !style.overlays.includes(id))) chartsFresh = false;
+  style = { ...style, overlays, sheets };
+  fadeIn = fade;
+  showOverlay(); writeHash();
+  if (draw) render();
 }
 $('chartList').addEventListener('click', (e) => {
   const b = e.target.closest('[data-chart]');
   if (!b) return;
-  const chart = CHARTS[b.dataset.chart], o = OVERLAYS.find((v) => v.id === chart.overlay), shown = !!o && style.overlay === o.id;
-  if (b.dataset.to === 'eye') { if (o) setSheet(shown ? null : o.id); return; }
-  setDrawer(false);
+  const chart = CHARTS[b.dataset.chart], o = OVERLAYS.find((v) => v.id === chart.overlay), shown = !!o && style.overlays.includes(o.id);
+  if (b.dataset.to === 'eye') { // this sheet on or off, where it last lay; every other sheet and the view as they are
+    if (o) setSheets(shown ? style.overlays.filter((id) => id !== o.id) : [...style.overlays, o.id]);
+    return;
+  }
   if (b.dataset.to === 'made') {
-    const s = sheetShown(), to = clampView({ ...chart.made, projection: view.projection });
-    if (s) { const proj = viewProjection(to), [x, y] = proj.project(to.lon, to.lat); if (onSheet(s, proj, s.sheet, x, y)) setSheet(null); }
+    const to = clampView({ ...chart.made, projection: view.projection }), proj = viewProjection(to), [x, y] = proj.project(to.lon, to.lat);
+    const covering = style.overlayMode !== 'sheet' ? [] : style.overlays.filter((id) => { // as laid now, not as last drawn
+      const s = OVERLAYS.find((v) => v.id === id);
+      return s && onSheet(s, proj, style.sheets[id] ?? s.sheet, x, y);
+    });
+    if (covering.length) setSheets(style.overlays.filter((id) => !covering.includes(id)), style.sheets, null, false);
     goTo(to);
     return;
   }
   if (!o) { goTo(chart.view); return; }
-  if (!shown) setSheet(o.id, chartsFresh);
+  const { [o.id]: _, ...sheets } = style.sheets; // back to its own placement
+  setSheets([o.id], sheets, !shown && chartsFresh ? o.id : null, false); // shown alone: every other sheet hides
   goTo({ ...sheetView(o, o.sheet, { w: W, h: H }), title: chart.name }); // the whole sheet framed, 8% clear round it
 });
 env.readJSON('packs/overlays/overlays.json').then(({ overlays }) => {
@@ -1968,12 +2067,12 @@ env.readJSON('packs/overlays/overlays.json').then(({ overlays }) => {
     b.title = `${o.title} (${o.licence}): its frame, with the scan laid over the map`;
     li.querySelector('.eye').hidden = false;
   }
-  if (style.overlay && !overlays.some((o) => o.id === style.overlay)) console.warn(`overlay ${style.overlay}: not on this site`);
+  for (const id of style.overlays) if (!overlays.some((o) => o.id === id)) console.warn(`overlay ${id}: not on this site`);
   showOverlay();
 }).catch(() => {}); // no overlays on this site: no thumbnails, and the map unchanged
 function showOverlay() {
   for (const eye of $('chartList').querySelectorAll('.eye')) {
-    const li = eye.closest('li'), on = !!style.overlay && style.overlay === li.dataset.overlay;
+    const li = eye.closest('li'), on = style.overlays.includes(li.dataset.overlay);
     eye.setAttribute('aria-pressed', String(on));
     eye.setAttribute('aria-label', `${on ? 'Hide' : 'Show'} ${li.querySelector('.name').textContent}`);
   }
@@ -2035,7 +2134,7 @@ $('coords').addEventListener('submit', async (e) => {
   const target = p ? { ...p, zoom: Math.max(view.zoom, LOCATE_ZOOM) } : await findPlace(text);
   if (!target) { miss.textContent = text.trim() ? `No place called “${text.trim()}”` : 'Type a place, or latitude, longitude: 36.28, -76'; miss.hidden = false; return; } // the text before the unhide, so a reader announces it
   miss.hidden = true;
-  setDrawer(false);
+  if (phone.matches) $('coordsText').blur(); // the drawer stays up; a phone's keyboard goes, so the map shows
   goTo(target);
 });
 $('coordsText').addEventListener('input', () => { $('goMiss').hidden = true; });
@@ -2125,7 +2224,7 @@ for (const id of Object.values(KNOB_SLIDERS)) $(id).addEventListener('input', (e
 for (const id of ['debug', 'overlap', 'overlayMode', 'overlayOpacity', ...Object.values(KNOB_CHIPS), ...Object.values(KNOB_SLIDERS), 'projection', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'scaleBorder', 'land', 'islands', 'seaTint', 'rivers', 'lakes', 'trees', 'mountains', 'hills', 'continentsZoom', 'regions', 'regionSet', 'regionsZoom', 'titleMode', 'townSize', 'voyageWidth']) $(id).addEventListener('input', readControls);
 let typing = 0; // a typed title is placed when the typing pauses, not on every key: a placement takes up to a few hundred ms
 $('title').addEventListener('input', () => { clearTimeout(typing); typing = setTimeout(readControls, 400); });
-addEventListener('hashchange', () => { layout = layoutFromHash(); showLayout(); view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); showVoyage(); showPeople(); render(); });
+addEventListener('hashchange', () => { layout = layoutFromHash(); showLayout(); hoverOpen = hoverFromHash(); showHover(); view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); showVoyage(); showPeople(); render(); });
 showPlacement();
 render();
 
