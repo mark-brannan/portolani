@@ -3,7 +3,7 @@
 // across at that height, then down onto it; a longer flight takes longer, within a floor and a ceiling.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { planFlight, FIT, MIN_MS, MAX_MS } from '../public/flight.mjs';
+import { planFlight, ease, FIT, MIN_MS, MAX_MS } from '../public/flight.mjs';
 
 const W = 1600, H = 1000, opts = { w: W, h: H, minZoom: 1 };
 const RAD = Math.PI / 180, k = (z) => (512 * 2 ** z) / (2 * Math.PI);
@@ -82,4 +82,35 @@ test('a longer flight takes longer, within the floor and the ceiling', () => {
   assert.equal(ms[0], MIN_MS);
   assert.ok(ms[1] < ms[2], ms.join(' < '));
   assert.equal(ms[3], MAX_MS);
+});
+
+// The knobs under the hood (FLY_KNOBS): each default is the flight above; blend widens the pan into the climb
+// and the descent, climb quickens the way out, and the hyperbolic shape moves pan and zoom together.
+test('blend: at 0 the pan waits for the top; past both ends it runs the whole way', () => {
+  const from = { ...genoa, zoom: 9 }, to = { ...havana, zoom: 10 };
+  const step = planFlight(from, to, opts), tri = planFlight(from, to, { ...opts, blend: 16 }), mid = planFlight(from, to, { ...opts, blend: 5 });
+  lonClose(step.at(0.2).lon, genoa.lon); // still climbing, not yet moved
+  assert.ok(tri.at(0.2).lon < genoa.lon - 5, 'moving from the start');
+  lonClose(mid.at(0.1).lon, genoa.lon); // above z5 on the way out: not yet
+  assert.ok(mid.at(0.35).lon < genoa.lon - 5 && mid.at(0.35).zoom > step.top + 0.5, 'moving before the top, once below z5');
+  for (const plan of [tri, mid]) { lonClose(plan.at(1).lon, havana.lon); close(plan.at(1).zoom, 10); }
+});
+
+test('climb: the way out takes its share of the time', () => {
+  const from = { ...genoa, zoom: 9 }, to = { ...havana, zoom: 10 };
+  const slow = planFlight(from, to, opts), quick = planFlight(from, to, { ...opts, climb: 0.5 });
+  assert.ok(quick.at(0.2).zoom < slow.at(0.2).zoom, 'further out at the same point of the way');
+  const near = { ...marseille, zoom: 10 }; // short of the ceiling, so the saving shows
+  assert.ok(planFlight(from, near, { ...opts, climb: 0.5 }).ms < planFlight(from, near, opts).ms);
+});
+
+test('hyperbolic: starts where it is, lands on the place, climbs out between, and the ease is the old quadratic by default', () => {
+  const from = { ...genoa, zoom: 9 }, to = { ...havana, zoom: 10 };
+  const plan = planFlight(from, to, { ...opts, shape: 'hyperbolic' });
+  for (const [v, p] of [[plan.at(0), from], [plan.at(1), to]]) { lonClose(v.lon, p.lon); close(v.lat, p.lat); close(v.zoom, p.zoom, 1e-6); }
+  assert.ok(plan.arc && plan.top < 5 && plan.top > 1, `top z${plan.top}`);
+  let prev = plan.at(0);
+  for (let e = 0.05; e <= 1.0001; e += 0.05) { const v = plan.at(e); assert.ok(v.lon <= prev.lon + 1e-9, 'westward all the way'); prev = v; }
+  assert.ok(planFlight(from, to, { ...opts, shape: 'hyperbolic', curve: 2 }).top < plan.top, 'a higher curve climbs further out');
+  close(ease(0.25), 2 * 0.25 * 0.25); close(ease(0.75), 1 - (2 - 1.5) ** 2 / 2); close(ease(0.25, 1), 0.25);
 });

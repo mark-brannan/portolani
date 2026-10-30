@@ -20,7 +20,7 @@ import { OVERLAY_DEFAULTS, overlayFromHash, overlayToHash, sheetCorners, onSheet
 import { POIS, POI_ZOOM } from './pois.mjs';
 import { PEOPLE_FILE, PICTURES_FILE, lifeSpan, timelineAxis, ticksOf, pictureCredit, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, viewContaining, withPictures, peopleOf, whoOf, deathOf } from './people.mjs';
 import { fold, bestPlace } from './placename.mjs';
-import { planFlight } from './flight.mjs';
+import { planFlight, ease as flyEase, FLY_KNOBS, flyDefaults } from './flight.mjs';
 
 const memo = new Map();
 // a failed load is forgotten, so the next stop tries it again
@@ -381,6 +381,7 @@ const CHOICES = {
   tuneOrigin: [['rose', `Catalan rose (${ROSE_AT})`, 'every band\'s grid has a corner on the rose', HOOD_GLYPHS.rose], ['zero', '0° 0°', 'NOAA\'s own zero', HOOD_GLYPHS.zero]],
   tuneCurated: [['1', 'On', 'the curated charts take the place of the grid cells they hold', HOOD_GLYPHS.curated], ['0', 'Off', 'grid cells everywhere', HOOD_GLYPHS.grid]],
   tuneRoselines: [['1', 'On', 'the rose\'s 32 lines as one more hub at every zoom', HOOD_GLYPHS.roselines], ['0', 'Off', 'only the sheet the rose falls in', HOOD_GLYPHS.off]],
+  flyShape: [['step', 'Step', 'out about the place left, across at the top, down onto the place; Blend lets the pan run alongside the zoom'], ['hyperbolic', 'Hyperbolic', 'van Wijk & Nuij, as MapLibre flies: pan and zoom together on one curve, Curve setting its height']],
 };
 for (const [id, options] of Object.entries(CHOICES)) {
   const el = $(id);
@@ -979,9 +980,9 @@ function paintFrame(doing) {
   const t = performance.now();
   // the 10m cells placed last while they cover the view; 50m otherwise, until it stops and is placed again
   drawGround(ctx, covers(ground.world, view) ? ground.world : ground.coarse, view, ground.bg);
-  // the placed ornaments, held to the earth; a flight leaves them out once it is more than FLY_HOLD zoom levels from
+  // the placed ornaments, held to the earth; a flight leaves them out once it is more than fly.hold zoom levels from
   // where they were placed, since shrunk they crowd into a blot and grown they smear, and the coast keeps the place
-  if (!flightTo || Math.abs(Math.log2(viewProjection(view).k / ground.anchored.k)) <= FLY_HOLD) drawAnchored(ctx, ground.anchored, ground.bg, view);
+  if (!flightTo || Math.abs(Math.log2(viewProjection(view).k / ground.anchored.k)) <= fly.hold) drawAnchored(ctx, ground.anchored, ground.bg, view);
   drawPictures(ctx);
   drawSheetHandles(ctx);
   drawCards(true);
@@ -1819,21 +1820,56 @@ $('coordsText').addEventListener('input', () => { $('goMiss').hidden = true; });
 // straight, a far one in an arc out, across and down, longer for longer): the ground is drawn on the way as
 // for a drag, and the ornaments placed when it lands. Every fly on the page comes through here. Reduced motion jumps.
 let flight = 0, flightTo = null; // the view a flight is bound for, while it flies
-const FLY_HOLD = 1; // zoom levels a flight draws the placed ornaments over, either side of where they were placed
+let lastFlight = null; // { from, target } of the last flight, for Fly again under the hood
 function goTo(target) {
   cancelAnimationFrame(flight);
   pinTitle = null;
   const from = view, to = clampView({ ...target, projection: view.projection });
-  flightTo = to;
-  const plan = planFlight(from, to, { w: W, h: H, minZoom: ZOOM.min });
+  flightTo = to; lastFlight = { from, target };
+  const plan = planFlight(from, to, { w: W, h: H, minZoom: ZOOM.min, ...fly });
   const ms = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : plan.ms, t0 = performance.now();
+  $('flyOut').textContent = `${plan.arc ? 'arc' : 'near'}, top z${plan.top.toFixed(2)}, ${(plan.ms / 1000).toFixed(1)} s`;
   const step = (now) => {
-    const u = ms ? Math.min(1, (now - t0) / ms) : 1, e = u < 0.5 ? 2 * u * u : 1 - (2 - 2 * u) ** 2 / 2;
+    const u = ms ? Math.min(1, (now - t0) / ms) : 1, e = flyEase(u, fly.ease);
     moved(u < 1 ? clampView({ ...plan.at(e), projection: to.projection }) : to, true);
     if (u < 1) flight = requestAnimationFrame(step); else { flightTo = null; pinTitle = target.title ?? null; placed = null; stopped(); }
   };
   step(t0);
 }
+
+// Under the hood, temporary: the flight's knobs (flight.mjs, FLY_KNOBS), kept in this browser rather than the link,
+// with a line that says the settings as `name:value` to pass on, Defaults, and Fly again: back to where the last
+// flight started, then the same flight once more, so a change is felt on the same flight.
+const FLY_STORE = 'portolani.fly';
+const fly = flyDefaults();
+try { Object.assign(fly, Object.fromEntries(Object.entries(JSON.parse(localStorage.getItem(FLY_STORE)) ?? {}).filter(([n]) => n in FLY_KNOBS))); } catch { /* none kept, or storage refused */ }
+const FLY_SLIDERS = Object.entries(FLY_KNOBS).filter(([, knob]) => knob.choices == null).map(([name]) => [name, `fly${name[0].toUpperCase()}${name.slice(1)}`]);
+const FLY_OUT = { msPerUnit: (v) => `${v} ms a unit`, maxMs: (v) => `${(v / 1000).toFixed(2)} s at most`, hold: (v) => (v >= FLY_KNOBS.hold.max ? 'always drawn' : `${v} zoom levels`), ease: (v) => (v == 1 ? 'linear' : `power ${v}`) };
+for (const [name, id] of FLY_SLIDERS) Object.assign($(id), { min: FLY_KNOBS[name].min, max: FLY_KNOBS[name].max, step: FLY_KNOBS[name].step });
+function showFly() {
+  $('flyShape').value = fly.shape;
+  for (const [name, id] of FLY_SLIDERS) { $(id).value = fly[name]; $(`${id}Out`).textContent = (FLY_OUT[name] ?? String)(fly[name]); }
+  for (const id of ['flyFit', 'flyBlend', 'flyClimb']) $(id).closest('.slider').hidden = fly.shape === 'hyperbolic';
+  $('flyCurve').closest('.slider').hidden = fly.shape !== 'hyperbolic';
+  const def = flyDefaults(), set = Object.entries(fly).filter(([n, v]) => v !== def[n]).map(([n, v]) => `${n}:${v}`);
+  $('flySet').textContent = set.length ? set.join(' ') : 'defaults';
+}
+function readFly() {
+  fly.shape = $('flyShape').value;
+  for (const [name, id] of FLY_SLIDERS) fly[name] = Number($(id).value);
+  try { localStorage.setItem(FLY_STORE, JSON.stringify(fly)); } catch { /* storage refused: the knobs hold for this page */ }
+  showFly();
+}
+for (const [, id] of [['shape', 'flyShape'], ...FLY_SLIDERS]) $(id).addEventListener('input', readFly);
+$('flyReset').addEventListener('click', () => { Object.assign(fly, flyDefaults()); readFly(); });
+$('flyAgain').addEventListener('click', () => {
+  if (!lastFlight) return;
+  const { from, target } = lastFlight;
+  cancelAnimationFrame(flight); flightTo = null;
+  moved(from, true); placed = null;
+  goTo(target);
+});
+showFly();
 
 // My position: asked for on the button in Go; the fix is written into its box as latitude, longitude, at
 // the precision the browser gives, and the map stays put: Go is what flies there (at z10 or closer, like any
