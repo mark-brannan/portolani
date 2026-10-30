@@ -856,7 +856,7 @@ for (const c of PLACEMENT_CHIPS) c.addEventListener('click', () => {
 // with the lead paragraph written for it) into groups of their own and back again, so a control is one
 // element and one hash key whichever layout shows it.
 const LAND_GROUP = ['continents', 'regions', 'land', 'colour', 'rivers', 'lakes', 'mountains', 'hills', 'trees', 'towns'];
-const BY_QUESTION = [['The chart', ['cartouche', 'projection', 'names', 'rhumb', 'scale', 'overlap']], ['The land', LAND_GROUP], ['The figures', ['density', 'monsters', 'ships', 'roses', 'placement', 'colours']]];
+const BY_QUESTION = [['The chart', ['cartouche', 'names', 'rhumb', 'scale', 'overlap']], ['The land', LAND_GROUP], ['The figures', ['density', 'monsters', 'ships', 'roses', 'placement', 'colours']]];
 const LAYOUTS = {
   default: { label: 'Default', note: 'the drawer by kind of thing: sea, roses, towns, land, cartouche, map, colours',
     glyph: svg(`<path d="M3 3h22M3 6.5h15M3 10h22M3 13.5h12M3 17h18" ${stroke('currentColor', 1)}/>`) },
@@ -865,7 +865,7 @@ const LAYOUTS = {
   moods: { label: 'Moods', note: 'five looks at a click, every control under Fine controls', groups: BY_QUESTION, moods: true,
     glyph: svg(`<rect x="1.5" y="2" width="4.4" height="7" rx="2.2" fill="currentColor"/>${[6.8, 12.1, 17.4, 22.7].map((x) => `<rect x="${x}" y="2" width="4.4" height="7" rx="2.2" ${stroke('currentColor', 0.8)}/>`).join('')}<path d="M3 12.5l2 2 2-2M9 13.5h16" ${stroke('currentColor', 0.8)}/>`) },
   sheet: { label: 'By the sheet', note: 'where it is drawn: the sea, the land, the margins',
-    groups: [['Sea', ['monsters', 'ships', 'density', 'placement']], ['Land', LAND_GROUP], ['Margins', ['cartouche', 'scale', 'roses', 'overlap', 'rhumb', 'names', 'projection', 'colours']]],
+    groups: [['Sea', ['monsters', 'ships', 'density', 'placement']], ['Land', LAND_GROUP], ['Margins', ['cartouche', 'scale', 'roses', 'overlap', 'rhumb', 'names', 'colours']]],
     glyph: svg(`<rect x="1.5" y="1.5" width="25" height="15" ${stroke('currentColor', 1)}/><rect x="4" y="4" width="20" height="10" ${stroke('currentColor', 0.5)}/><path d="M14 5q5 0 8 3t-3 5h-5q-2-4 0-8Z" fill="#c47f2c" fill-opacity=".75"/><path d="M5.5 8q1.5-1.5 3 0t3 0M5.5 11q1.5-1.5 3 0" ${stroke('#4a7fa0', 0.8)}/>`) },
 };
 const CTLS = new Map([...document.querySelectorAll('#drawer .ctl')].map((el) => [el.dataset.ctl, el]));
