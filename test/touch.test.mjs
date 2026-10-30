@@ -6,7 +6,8 @@
 // sides; the settings are a bottom sheet at half the window's height with the map above it, a lighter
 // drawer a sheet as tall as its lines over the map's foot, and the cartouche and the scale bar sit on cards. With a mouse on a wide screen
 // each of the seven drawers hangs below the row without covering or moving it, one at a time; several voyages
-// are drawn at once, each in its own ink, and the link carries them.
+// are drawn at once, each in its own ink, and the link carries them. With the hover chips on, a mouse resting on a grouped
+// list's shut heading opens its section after the dwell; off (hover=0 in the link), only a click does; a phone has no chips.
 //
 // Needs the built preview (`npm run build:preview` -> _site/), playwright-core and a Chromium
 // (`npx playwright-core install chromium-headless-shell`); without them it skips, since `npm test`
@@ -187,6 +188,7 @@ for (const width of [360, 412]) {
       assert.ok(map.y + map.height <= sheet.y + 1, `the sheet covers the map: map ${JSON.stringify(map)}, sheet ${JSON.stringify(sheet)}`);
       assert.ok(map.y <= 0 && map.x <= 0 && map.x + map.width >= width, `the map does not fill the half above the sheet: ${JSON.stringify(map)}`);
       for (const id of ['#cardCartouche', '#cardScale']) { const c = await box(id); assert.ok(c.y + c.height <= sheet.y + 1, `${id} is under the sheet`); }
+      assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('hoverRow')).display), 'none', 'a touch screen shows the hover chips');
       await shot('open');
 
       // the map is still the map: a drag above the sheet moves it and leaves the sheet up
@@ -287,6 +289,54 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     await page.click('#sightsList button >> text=Goa');
     assert.equal(await opened('sightsPanel'), true, 'a point of interest shut its drawer');
     await page.waitForFunction((x) => location.hash !== x, hs, { timeout: 60000 });
+    // hover, on by default for the demo: the mouse resting on a shut era's heading past the dwell (350 ms) slides it open
+    // and the open one shut; the click that was on its way keeps it open; leaving the list shuts nothing
+    await page.hover('#sightsList .fold >> text=The ancient world');
+    await page.waitForTimeout(150);
+    assert.deepEqual(await openGroups(), ['The age of discovery'], 'a passing pointer opened an era before the dwell');
+    await page.waitForTimeout(450);
+    assert.deepEqual(await openGroups(), ['The ancient world'], 'resting on a heading did not open its era');
+    await page.click('#sightsList .fold >> text=The ancient world');
+    assert.deepEqual(await openGroups(), ['The ancient world'], 'the click after the dwell shut the era it opened');
+    await page.mouse.move(400, 400);
+    await page.waitForTimeout(400);
+    assert.deepEqual(await openGroups(), ['The ancient world'], 'leaving the list shut the era');
+    assert.equal(await opened('sightsPanel'), true, 'a hover shut the drawer');
+    // a heading the slide brings under a still pointer does not open in turn: the open era above shuts, the hovered one
+    // rises, and with its rows cut short here the next heading comes to rest under the pointer; a nudge opens nothing
+    const pointer = await page.evaluate(() => {
+      const [anc, med, aod] = [...document.querySelectorAll('#sightsList .group')], fold = (g) => g.querySelector(':scope > .fold').getBoundingClientRect();
+      const m = fold(med), y = m.top + m.height / 2, rise = anc.querySelector(':scope > .rows').getBoundingClientRect().height;
+      // after the slide the pointer sits (y - m.top + rise) below the medieval heading's top; put the next heading's middle there
+      med.querySelector('.places').style.cssText = `height:${y - m.top + rise - m.height - fold(aod).height / 2 - 6}px;overflow:hidden`;
+      return { x: m.left + 40, y };
+    });
+    await page.mouse.move(pointer.x, pointer.y);
+    await page.waitForTimeout(700);
+    assert.deepEqual(await openGroups(), ['The medieval Indian Ocean and Asia'], 'resting on the second heading did not open it');
+    assert.equal(await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.closest('.fold')?.firstChild.textContent, pointer), 'The age of discovery', 'the slide did not bring the next heading under the pointer');
+    await page.mouse.move(pointer.x + 1, pointer.y);
+    await page.waitForTimeout(700);
+    assert.deepEqual(await openGroups(), ['The medieval Indian Ocean and Asia'], 'a heading the slide brought under the pointer opened on a nudge');
+    await page.evaluate(() => { document.querySelectorAll('#sightsList .group')[1].querySelector('.places').style.cssText = ''; });
+    await page.click('#sightsList .fold >> text=The ancient world');
+    // off, from its chip in the settings, which writes hover=0 into the link: resting on a heading opens nothing
+    await page.click('#open');
+    await page.click('#hoverOpen [data-value="off"]');
+    assert.match(await page.evaluate(() => location.hash), /[#&]hover=0(&|$)/, 'the off chip is not in the link');
+    await page.click('#sights');
+    await page.hover('#sightsList .fold >> text=The medieval Indian Ocean');
+    await page.waitForTimeout(600);
+    assert.deepEqual(await openGroups(), ['The ancient world'], 'with hover off, resting on a heading opened its era');
+    await page.click('#sightsList .fold >> text=The medieval Indian Ocean');
+    assert.deepEqual(await openGroups(), ['The medieval Indian Ocean and Asia'], 'with hover off, a click did not open its era');
+    // back on from the chip, which takes the key out of the link; a link with hover=0 turns it off again
+    await page.click('#open');
+    await page.click('#hoverOpen [data-value="on"]');
+    assert.doesNotMatch(await page.evaluate(() => location.hash), /hover=/, 'on is written into the link');
+    await page.evaluate(() => { location.hash += '&hover=0'; });
+    await page.waitForFunction(() => document.querySelector('#hoverOpen [data-value="off"]').getAttribute('aria-checked') === 'true', null, { timeout: 10000 });
+    await page.click('#hoverOpen [data-value="on"]');
     // Go takes the focus in its box; Esc shuts it and gives the focus back to the compass
     await page.click('#go');
     assert.equal(await page.evaluate(() => document.activeElement.id), 'coordsText');

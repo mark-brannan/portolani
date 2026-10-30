@@ -314,6 +314,7 @@
      so the drawer is as it was; another layout moves the wrappers into its own groups, where each is a block
      and the headings only a moved control needs (.lo) show */
   #layout { margin-top: 10px; }
+  @media not all and (hover: hover) and (pointer: fine) { #hoverRow { display: none; } } /* page.js HOVER_MEDIA, negated: nothing to hover with */
   .ctl { display: contents; }
   .lo { display: none; }
   html[data-layout] .ctl { display: block; }
@@ -425,6 +426,10 @@
   <!-- the layouts: one chip each, the choice kept in the link (`layout=`). Default is the drawer below as it
        stands; the others move these same controls into new groups, so each control is one element -->
   <div id="layout" class="chips" role="radiogroup" aria-label="Drawer layout"></div>
+
+  <!-- with a mouse, a grouped list's section also opens when the pointer rests on its heading (page.js, HOVER_DWELL);
+       off, only a click opens one. Kept in the link (`hover=0` is off). Not shown where nothing can hover -->
+  <div id="hoverRow"><h3>Sections open on hover</h3><div id="hoverOpen" class="chips" role="radiogroup" aria-label="Sections open on hover"></div></div>
 
   <div id="share">
     <button id="reset" type="button" class="chip" title="Every control back to its default; the view stays"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8a5 5 0 1 0 1.6-3.7"/><path d="M3 2.5v3h3"/></svg>Reset</button>
