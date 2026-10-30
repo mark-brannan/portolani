@@ -14,7 +14,7 @@
 // selection those chose, and are written back in the new form.
 // For a while, `debug=sheets[,rings]` and `tune=name:value,...` carry the under-the-hood section
 // (docs/atlas/under-the-hood.md), off by default.
-import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, legPath, voyageView, readVoyage, chronological, voyageLink, sightMarks, SIGHT_TILES, noteMarks, pickMark, markClear, tileSpot, ZOOM } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, legPath, voyageView, CONTINENT_ZOOM_END, readVoyage, chronological, voyageLink, sightMarks, SIGHT_TILES, noteMarks, pickMark, markClear, tileSpot, ZOOM } from './scene.mjs';
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
@@ -54,7 +54,7 @@ const canvas = $('map'), ctx = canvas.getContext('2d');
 // cards beside the map, not on the sea.
 const phone = matchMedia('(max-width: 520px)');
 
-const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: 6, regions: 'latin', regionSet: 'today', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyages: [], voyageWidth: VOYAGE_WIDTH, voyageDraw: VOYAGE_DRAW.seconds, person: null, pictures: null, ...OVERLAY_DEFAULTS, cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER, overlap: DEFAULT_OVERLAP };
+const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: CONTINENT_ZOOM_END, regions: 'latin', regionSet: 'today', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyages: [], voyageWidth: VOYAGE_WIDTH, voyageDraw: VOYAGE_DRAW.seconds, person: null, pictures: null, ...OVERLAY_DEFAULTS, cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER, overlap: DEFAULT_OVERLAP };
 
 // ---------------------------------------------------------------- the sprites on offer
 
@@ -1563,7 +1563,7 @@ function flyToVoyage(id) {
   const n = ++voyageChosen;
   return readVoyage(id, (path) => env.readJSON(path)).then((v) => {
     if (n < voyageFlown || !isShown(id)) return;
-    const to = voyageView(v, flightTo ?? view, undefined, true);
+    const to = voyageView(v, flightTo ?? view, undefined, true, windowRect());
     if (to) { voyageFlown = n; if (style.sheetHides) clearSheetFor(to, true); goTo(to); }
   }, () => {});
 }
@@ -1740,11 +1740,15 @@ async function flyToPerson(id) {
 // looked at lies upright in the middle of the part of the canvas in the window, as large as LOOK_FILL of that allows
 // and never larger than its own pixels shown one to a CSS px.
 const LOOK_FILL = 0.85;
+// The part of the canvas the window shows, in canvas px: a phone crops the canvas to the window.
+function windowRect() {
+  const r = canvas.getBoundingClientRect(), kx = W / r.width, ky = H / r.height;
+  return { x0: Math.max(0, -r.left) * kx, x1: (Math.min(innerWidth, r.right) - r.left) * kx, y0: Math.max(0, -r.top) * ky, y1: (Math.min(innerHeight, r.bottom) - r.top) * ky };
+}
 let looking = null; // the picture looked at, by its index
 function pictureBox(pic, proj) {
   if (pic.i === looking) {
-    const r = canvas.getBoundingClientRect(), kx = W / r.width, ky = H / r.height;
-    const x0 = Math.max(0, -r.left) * kx, x1 = (Math.min(innerWidth, r.right) - r.left) * kx, y0 = Math.max(0, -r.top) * ky, y1 = (Math.min(innerHeight, r.bottom) - r.top) * ky;
+    const { x0, x1, y0, y1 } = windowRect();
     const k = Math.min(((x1 - x0) * LOOK_FILL) / pic.o.width, ((y1 - y0) * LOOK_FILL) / pic.o.height, cssPx(1));
     return { x: (x0 + x1) / 2, y: (y0 + y1) / 2, a: 0, w: pic.o.width * k, h: pic.o.height * k };
   }
