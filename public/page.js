@@ -1015,15 +1015,15 @@ function sheetGeometry(o) {
   return corners && { o, proj, corners };
 }
 function sheetHit([x, y]) {
-  for (const o of sheetsShown().reverse()) { // the top sheet first: a handle, then the sheet itself
-    const geo = sheetGeometry(o);
-    if (!geo) continue;
-    const near = (c) => Math.hypot(c[0] - x, c[1] - y) <= HANDLE + cssPx(6);
+  // every handle is drawn over every sheet, so a handle wins first, the top sheet's before a lower one's; then the top sheet under the point
+  const geos = sheetsShown().reverse().map(sheetGeometry).filter(Boolean);
+  const near = (c) => Math.hypot(c[0] - x, c[1] - y) <= HANDLE + cssPx(6);
+  for (const geo of geos) {
     if (near(geo.corners[3])) return { kind: 'turn', ...geo };
     if (near(geo.corners[2])) return { kind: 'size', ...geo };
-    if (onSheet(geo.o, geo.proj, geo.o.sheet, x, y)) return { kind: 'move', ...geo };
   }
-  return null;
+  const geo = geos.find((g) => onSheet(g.o, g.proj, g.o.sheet, x, y));
+  return geo ? { kind: 'move', ...geo } : null;
 }
 // The placements by id with `o`'s set to `sheet`; the chart's own placement is the default, left out of the link.
 const withSheet = (o, sheet) => {
@@ -1078,10 +1078,11 @@ function drawHandles(g, geo) {
   g.beginPath(); g.moveTo(br[0] - a + h, br[1] + a); g.lineTo(br[0] - a, br[1] + a); g.lineTo(br[0] - a, br[1] + a - h); g.stroke();
   g.restore();
 }
-// The snap chips, at the top sheet's top left corner in the window (kept inside it), lit where that sheet lies now.
+// The snap chips, at the top sheet's top left corner in the window (kept inside it), lit where that sheet lies now; the
+// top sheet in view, where the top one's centre is past the horizon.
 const sheetChips = $('sheetChips');
 function placeSheetChips() {
-  const geo = held ? null : sheetGeometry(sheetsShown().at(-1));
+  const geo = held ? null : sheetsShown().reverse().map(sheetGeometry).find(Boolean);
   if (!geo || geo.o.id !== sheetChips.dataset.id) { sheetChips.hidden = true; if (geo) buildSheetChips(geo.o); else return; }
   const [[x, y]] = geo.corners, rc = canvas.getBoundingClientRect();
   sheetChips.hidden = false;
@@ -1723,12 +1724,14 @@ const ownSheet = (id) => OVERLAYS.find((v) => v.id === id)?.sheet ?? null;
 let chartsFresh = false; // the Charts drawer opened with no sheet shown, and none shown since: the next shown fades in
 let fadeIn = null; // the overlay id whose sheet fades in when next placed
 $('chartList').innerHTML = CHARTS.map(({ name, year, made, text, overlay }, i) => `<li class="chart"${overlay ? ` data-overlay="${overlay}"` : ''}><button type="button" class="thumb none" data-chart="${i}" data-to="view" title="The chart's frame">${skin}</button><div class="about"><span class="head"><button type="button" class="name" data-chart="${i}" data-to="view">${name}</button>${overlay ? `<button type="button" class="eye" data-chart="${i}" data-to="eye" aria-pressed="false" aria-label="Show ${name}" hidden>${EYE}</button>` : ''}</span><span class="where"><button type="button" class="city" data-chart="${i}" data-to="made">${made.title}</button>, ${year}</span>${caption(text)}</div></li>`).join('');
-// The sheets laid, bottom to top, and where each lies; `fade` the id of one that fades in as it is placed.
-function setSheets(overlays, sheets = style.sheets, fade = null) {
+// The sheets laid, bottom to top, and where each lies; `fade` the id of one that fades in as it is placed. `draw` false
+// when a flight follows at once: its landing draws them, and a render now would only be thrown away by its first frame.
+function setSheets(overlays, sheets = style.sheets, fade = null, draw = true) {
   if (overlays.some((id) => !style.overlays.includes(id))) chartsFresh = false;
   style = { ...style, overlays, sheets };
   fadeIn = fade;
-  showOverlay(); writeHash(); render();
+  showOverlay(); writeHash();
+  if (draw) render();
 }
 $('chartList').addEventListener('click', (e) => {
   const b = e.target.closest('[data-chart]');
@@ -1741,14 +1744,17 @@ $('chartList').addEventListener('click', (e) => {
   setDrawer(false);
   if (b.dataset.to === 'made') {
     const to = clampView({ ...chart.made, projection: view.projection }), proj = viewProjection(to), [x, y] = proj.project(to.lon, to.lat);
-    const covering = sheetsShown().filter((s) => onSheet(s, proj, s.sheet, x, y)).map((s) => s.id);
-    if (covering.length) setSheets(style.overlays.filter((id) => !covering.includes(id)));
+    const covering = style.overlayMode !== 'sheet' ? [] : style.overlays.filter((id) => { // as laid now, not as last drawn
+      const s = OVERLAYS.find((v) => v.id === id);
+      return s && onSheet(s, proj, style.sheets[id] ?? s.sheet, x, y);
+    });
+    if (covering.length) setSheets(style.overlays.filter((id) => !covering.includes(id)), style.sheets, null, false);
     goTo(to);
     return;
   }
   if (!o) { goTo(chart.view); return; }
   const { [o.id]: _, ...sheets } = style.sheets; // back to its own placement
-  setSheets([o.id], sheets, !shown && chartsFresh ? o.id : null); // shown alone: every other sheet hides
+  setSheets([o.id], sheets, !shown && chartsFresh ? o.id : null, false); // shown alone: every other sheet hides
   goTo({ ...sheetView(o, o.sheet, { w: W, h: H }), title: chart.name }); // the whole sheet framed, 8% clear round it
 });
 env.readJSON('packs/overlays/overlays.json').then(({ overlays }) => {

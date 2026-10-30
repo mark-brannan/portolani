@@ -368,6 +368,22 @@ test('charts: the eye shows or hides one sheet and leaves the others and the map
     assert.equal(await key('overlay'), 'carta-marina', 'the picture left another sheet laid');
     assert.equal(await key('sheet'), null, 'the picture left the sheet where it was dragged, not at its own placement');
     assert.notEqual(await key('map'), map, 'the picture did not fly to the chart');
+
+    // two sheets laid one on the other: a drag where both lie takes the top one, the last in the link
+    const AT = '2.600,31.300,0.01710,0.0';
+    await page.goto(`http://localhost:${server.address().port}/#map=3.00/31.300/2.600&overlay=catalan-atlas-1959-copy,aguiar&sheet=${AT};${AT}`);
+    await page.reload();
+    await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
+    const c = await page.locator('#map').boundingBox(), [x, y] = [c.x + c.width / 2, c.y + c.height / 2];
+    const h = await page.evaluate(() => location.hash);
+    await page.mouse.move(x, y); await page.mouse.down();
+    for (let i = 1; i <= 8; i++) await page.mouse.move(x + i * 10, y + i * 5);
+    await page.mouse.up();
+    await changed(h);
+    const [under, over] = (await key('sheet')).split(';');
+    assert.equal(under, AT, 'the drag moved the lower sheet');
+    assert.notEqual(over, AT, 'the drag left the top sheet where it was');
+    assert.equal(await key('map'), '3.00/31.300/2.600', 'the drag on a sheet panned the map');
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();
