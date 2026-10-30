@@ -396,3 +396,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261030t060248z
 - hyperbolic flight length counted in zoom levels (S*rho/ln2) so Pace means the same under both shapes Undo: count the hyperbolic path's own length S ([#299](https://github.com/mark-brannan/portolani/pull/299))
+
+### 20261030t080511z
+- touch test blurs the timeline's opening focus before focusing a picture, instead of changing the drawer's focus-outside rule Undo: revert 39fad6d ([#304](https://github.com/mark-brannan/portolani/pull/304))
