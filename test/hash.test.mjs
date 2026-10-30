@@ -210,11 +210,27 @@ scenario('regions: the slider round-trips', 'map=5.48/40.265/7.000', async (page
   assert.equal(await text(page, 'regionsOut'), 'zoom 9 and out');
 });
 
+// The region names' set: Today by default and left out of the hash; 1375 writes regionset=catalan-1375, and a page
+// opened at that hash reads it back, its chips showing a name of the set.
+scenario('regionset: the 1375 chip round-trips', 'map=4.00/40.000/16.000', async (page) => {
+  assert.equal(await value(page, 'regionSet'), 'today');
+  await openDrawer(page);
+  await page.locator('#regionSet [data-value="catalan-1375"]').click();
+  const written = (await hash(page)).slice(1);
+  assert.equal(new URLSearchParams(written).get('regionset'), 'catalan-1375');
+  const again = await open(written);
+  try {
+    assert.equal(await value(again.page, 'regionSet'), 'catalan-1375');
+    assert.equal(await again.page.locator('#regions [data-value="latin"] .nm').textContent(), 'Melly');
+    assert.deepEqual(again.errors, [], 'page errors on the reopened link');
+  } finally { await again.close(); }
+});
+
 // ---------------------------------------------------------------- the drawer's layouts (#225)
 
 // Every control in the drawer, by its element's id. Each layout shows all of them, each one element.
 const CONTROLS = ['density', 'pick-monster', 'pick-ship', 'pick-rose', 'placement', 'townSize', 'pick-town', 'mountains', 'hills', 'pick-relief', 'trees',
-  'pick-cartouche', 'titleMode', 'title', 'projection', 'names', 'rhumb', 'continentsZoom', 'regions', 'regionsZoom', 'land', 'islands', 'seaTint',
+  'pick-cartouche', 'titleMode', 'title', 'projection', 'names', 'rhumb', 'continentsZoom', 'regionSet', 'regions', 'regionsZoom', 'land', 'islands', 'seaTint',
   'rivers', 'lakes', 'scale', 'scaleBorder', 'ink', 'parchment'];
 const HEADINGS = {
   default: ['Sea', 'Roses', 'Placement', 'Towns', 'Land', 'Cartouche', 'Map', 'Colours'],

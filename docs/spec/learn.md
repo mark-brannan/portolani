@@ -33,4 +33,8 @@ Feature: Source captions under chip groups  (`p.caption` after the chip row; tex
     Given the Coloured seas chips, which share a row with Coloured islands
     Then the caption follows that whole row, not the Coloured seas chips alone
   Scenario: groups that carry a caption
-    Then captions follow: Mountains, Hills, Trees, Land border, Coloured seas, Rivers, Lakes and Scale bar border
+    Then captions follow: Mountains, Hills, Regions, Trees, Land border, Coloured seas, Rivers, Lakes and Scale bar border
+  Scenario: the 1375 names name their sources
+    Given the drawer open at Regions
+    Then the caption reads "1375: the realms the Catalan Atlas names, in its own spelling or read in English, from its legends as the Cresques Project translates them." with the Catalan Atlas linking to Wikipedia and the Cresques Project to its translations of the legends
+    And the Learn page "The charts and makers behind the ornaments" says, under the Catalan Atlas, that the region names of 1375 come from it, and lists the Cresques Project and BnF Gallica among its sources
