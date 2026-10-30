@@ -1,0 +1,13 @@
+<!doctype html><meta charset=utf-8><style>
+body{margin:0;background:#e9d8b4;font:13px Georgia,serif;color:#3b2a1a;padding:16px}
+.row{display:flex;gap:40px;align-items:flex-end;margin-bottom:18px}.c{text-align:center;width:180px}
+button{padding:0;display:grid;place-items:center;border-radius:50%;background:#efe3c6;border:1px solid #b89a68;box-shadow:0 1px 6px rgb(0 0 0/.25);margin:6px auto}
+.s button{width:36px;height:36px}.s svg{width:24px;height:24px}
+.b button{width:144px;height:144px;border-width:2px}.b svg{width:96px;height:96px}
+.drawer{background:#e9d8b4;border:3px double #b89a68;padding:10px 14px;border-radius:8px;display:inline-block}
+</style><body><div id=o></div><script type=module>
+import {icons} from './icons.js';
+const q=new URLSearchParams(location.search).get('m');
+o.innerHTML='<div class=drawer>'+icons.map(([n,f],i)=>'').join('')+'</div>';
+o.innerHTML='<div class="drawer '+q+'"><div class=row>'+icons.map(([n,f],i)=>'<div class=c><button>'+f(q+i)+'</button><div>'+n+'</div></div>').join('')+'</div></div>';
+</script>
