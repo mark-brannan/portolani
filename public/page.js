@@ -1262,7 +1262,7 @@ const around = (lon, lat, r) => viewOfFrame({ lonMin: lon - r, lonMax: lon + r, 
 const at = (lon, lat, zoom) => ({ lon, lat, zoom });
 const both = (a, b) => viewOfFrame({ lonMin: a[0] - a[2], lonMax: b[0] + b[2], latMin: Math.min(a[1] - a[2], b[1] - b[2]), latMax: Math.max(a[1] + a[2], b[1] + b[2]) }); // two centres, west then east, on one sheet
 const CAPTION = 'notes to come'; // the line under an entry until its caption is written
-// A group: [heading, rows, open, span] (an empty heading for none); one group open at a time, the first marked open,
+// A group: [heading, rows, open, span] (an empty heading for none); at most one group open at a time, on load the first marked open,
 // else the first; an era's span of years shows beside its heading with its count;
 // a row: [name, view, title, text], the title the cartouche's when it differs from the name. A row with a tile
 // in SIGHT_TILES takes the line under its name (the tile's date) and its caption (the tile's text) from it.
