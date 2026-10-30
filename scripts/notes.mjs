@@ -1198,6 +1198,44 @@ export function pickMark(marks, [x, y], reach) {
   return pin ?? boxed ?? near;
 }
 
+// Points of interest close together (docs/spec/design.md): the marks within `reach` of each other, chained, as groups
+// [{ marks, lead }], each mark in exactly one, in the order given; `lead` the mark nearest the group's centre, which
+// carries the count badge. A group of one is a mark alone.
+export function groupMarks(marks, reach) {
+  const of = marks.map((_, i) => i), root = (i) => (of[i] === i ? i : (of[i] = root(of[i])));
+  for (let i = 0; i < marks.length; i++) for (let j = i + 1; j < marks.length; j++) {
+    if (Math.hypot(marks[i].x - marks[j].x, marks[i].y - marks[j].y) <= reach) of[root(j)] = root(i);
+  }
+  const groups = new Map();
+  marks.forEach((m, i) => { const r = root(i); if (!groups.has(r)) groups.set(r, []); groups.get(r).push(m); });
+  return [...groups.values()].map((ms) => {
+    const cx = ms.reduce((t, m) => t + m.x, 0) / ms.length, cy = ms.reduce((t, m) => t + m.y, 0) / ms.length;
+    const lead = ms.reduce((a, b) => (Math.hypot(b.x - cx, b.y - cy) < Math.hypot(a.x - cx, a.y - cy) ? b : a));
+    return { marks: ms, lead };
+  });
+}
+// A date as written in the record ("27 Apr 1521", "8 Nov – 21 Dec 1521", "c. 1000 BC") to the months it names and its
+// year: [{ y, m }] (m null where no month is named), [] where no year can be read.
+const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+export function readDate(text) {
+  const t = String(text ?? ''), years = [...t.matchAll(/(\d{2,4})\s*(BCE?)?/g)].filter((r) => r[1].length >= 3 || r[2]);
+  if (!years.length) return [];
+  const y = Number(years.at(-1)[1]) * (years.at(-1)[2] ? -1 : 1);
+  const ms = [...t.toLowerCase().matchAll(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b/g)].map((r) => MONTHS.indexOf(r[1]));
+  return ms.length ? ms.map((m) => ({ y, m })) : [{ y, m: null }];
+}
+// The span of a group's dates for its tile's heading: "Apr 1521", "Apr–May 1521", "1519–1521"; '' where none can be read.
+export function dateSpan(dates) {
+  const all = dates.flatMap(readDate);
+  if (!all.length) return '';
+  const key = (d) => d.y * 12 + (d.m ?? 0), lo = all.reduce((a, b) => (key(b) < key(a) ? b : a)), hi = all.reduce((a, b) => (key(b) > key(a) ? b : a));
+  const year = (y) => (y < 0 ? `${-y} BC` : String(y));
+  if (lo.y !== hi.y) return `${year(lo.y)}–${year(hi.y)}`;
+  if (all.some((d) => d.m == null)) return year(lo.y);
+  return lo.m === hi.m ? `${MONTH_NAMES[lo.m]} ${year(lo.y)}` : `${MONTH_NAMES[lo.m]}–${MONTH_NAMES[hi.m]} ${year(lo.y)}`;
+}
+
 // Where a tile sits. The hit area of a mark, in the mark's own px, as a rectangle: the box a click can land in (the
 // bounds of a note's `hit` outline, or of the circle of radius max(reach, h / 2) that pickMark gives a drawn mark),
 // the circle's square joined to the outline for a note taken by a tap just outside its figure. A rotated figure's

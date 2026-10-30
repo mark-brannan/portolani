@@ -27,8 +27,9 @@ import { legPath, reachPath, isMigration, splitAtSeam, DASHES, VOYAGE_PALETTE, V
 export { legPath, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, readVoyage, chronological, voyageLink };
 import { loadOverlay, drawOverlay, drawSheet } from './overlays.mjs';
 import { PEOPLE_FILE, PERSON_RED, personMarks, withPerson, peopleOf, whoOf } from './people.mjs';
-import { noteMarks, pickMark, markClear, tileSpot } from './notes.mjs';
-export { noteMarks, pickMark, markClear, tileSpot };
+import { noteMarks, pickMark, markClear, tileSpot, groupMarks, dateSpan, readDate, NOTE_SETS } from './notes.mjs';
+export { noteMarks, pickMark, markClear, tileSpot, groupMarks, dateSpan, readDate };
+export const noteCount = (id) => NOTE_SETS[id]?.notes.length ?? 0; // how many notes a chart carries, for its Notes chip
 const record = (id) => catalogue.find((r) => r.id === id); // a coastlines catalogue record by its id
 
 let env;
@@ -2269,16 +2270,63 @@ function drawVoyages(g, voyages, proj, rect, eventRect = rect, moving = false) {
   for (const v of voyages ?? []) if (!(v.reveal < 1)) for (const m of doubtMarks(v, proj, eventRect)) drawCloud(g, m, v.colour ?? STYLE.windRed);
   for (const v of voyages ?? []) if (!(v.reveal < 1)) drawEvents(g, v, proj, eventRect); // marks wait for the pen
 }
-// A small ringed mark on each note's figure while its chart is laid over the map; no lettering, a click opens its tile (notes.mjs)
-function drawNotes(g, overlay, proj, rect) {
-  for (const m of noteMarks(overlay, proj, rect)) {
-    g.save();
-    g.fillStyle = STYLE.parchment; g.globalAlpha = 0.85; g.beginPath(); g.arc(m.x, m.y, 7, 0, 2 * Math.PI); g.fill();
-    g.globalAlpha = 1; g.strokeStyle = g.fillStyle = STYLE.ink; g.lineWidth = 1.4;
-    g.beginPath(); g.arc(m.x, m.y, 6, 0, 2 * Math.PI); g.stroke();
-    g.beginPath(); g.arc(m.x, m.y, 2, 0, 2 * Math.PI); g.fill();
-    g.restore();
-  }
+// A note's mark on a laid chart's figure: a small ringed dot in ink over a parchment disc, at `alpha`. Drawn only while
+// the notes announce themselves or the user keeps them shown (page.js), never as part of the scene: the scan is the thing.
+export function drawNoteMark(g, m, alpha = 1) {
+  if (!(alpha > 0)) return;
+  g.save();
+  g.fillStyle = STYLE.parchment; g.globalAlpha = 0.85 * alpha; g.beginPath(); g.arc(m.x, m.y, 7, 0, 2 * Math.PI); g.fill();
+  g.globalAlpha = alpha; g.strokeStyle = g.fillStyle = STYLE.ink; g.lineWidth = 1.4;
+  g.beginPath(); g.arc(m.x, m.y, 6, 0, 2 * Math.PI); g.stroke();
+  g.beginPath(); g.arc(m.x, m.y, 2, 0, 2 * Math.PI); g.fill();
+  g.restore();
+}
+// The notes announcing themselves (docs/spec/design.md, "A chart's notes get their moment"): a ring swells out from each
+// note's spot and fades, `rings` times over `ms`, and the marks fade to nothing with the last ring; with reduced motion
+// the marks show whole for `ms`, then fade over `fade`. The timing waits on the user's look at the PR that built it.
+export const NOTE_PULSE = { ms: 4000, rings: 3, fade: 600, from: 7, reach: 40 };
+// The pulse `t` ms in: { alpha, ring } for the marks, `ring` the swell of the ring now, 0 to 1 (null for none), or
+// null once it is over.
+export function notePulse(t, reduced = false, p = NOTE_PULSE) {
+  t = Math.max(0, t); // a frame's time can fall just before the pulse began
+  if (reduced) return t >= p.ms + p.fade ? null : { alpha: t < p.ms ? 1 : 1 - (t - p.ms) / p.fade, ring: null };
+  if (t >= p.ms) return null;
+  const each = p.ms / p.rings, last = (p.rings - 1) * each;
+  return { alpha: t < last ? 1 : 1 - (t - last) / each, ring: (t % each) / each };
+}
+// One ring of the pulse at swell `u` (0 to 1) round a note's mark: in the chart's red over a parchment halo, so it
+// reads on a dark scan as on a pale one, widening and fading as it goes.
+export function drawNoteRing(g, m, u, p = NOTE_PULSE) {
+  const r = p.from + u * p.reach, a = Math.max(0, 1 - u);
+  g.save();
+  g.globalAlpha = 0.55 * a; g.strokeStyle = STYLE.parchment; g.lineWidth = 5;
+  g.beginPath(); g.arc(m.x, m.y, r, 0, 2 * Math.PI); g.stroke();
+  g.globalAlpha = 0.95 * a; g.strokeStyle = STYLE.windRed; g.lineWidth = 2.4;
+  g.beginPath(); g.arc(m.x, m.y, r, 0, 2 * Math.PI); g.stroke();
+  g.restore();
+}
+// The count badge on the mark nearest a group's centre (notes.mjs groupMarks): a small disc in the chart's red, at the
+// mark's upper right, the count in parchment on it.
+export function drawBadge(g, m, n) {
+  const off = Math.max(6, m.h * 0.45), x = m.x + off, y = m.y - off, text = String(n);
+  g.save();
+  g.font = `bold 11px "${STYLE.font}"`;
+  const r = Math.max(7.5, g.measureText(text).width / 2 + 4);
+  g.fillStyle = STYLE.windRed; g.strokeStyle = STYLE.parchment; g.lineWidth = 1.6;
+  g.beginPath(); g.arc(x, y, r, 0, 2 * Math.PI); g.fill(); g.stroke();
+  g.fillStyle = STYLE.parchment; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillText(text, x, y + 0.5);
+  g.restore();
+}
+// A mark's glyph at [x, y], as the map draws it: a skull, a birth's ring, a waypoint's bead, an event's ring; a place
+// (which draws nothing of its own on the map) as an event's ring. For the lines of a grouped tile.
+export function drawMarkGlyph(g, m, x, y) {
+  g.save();
+  if (m.skull) drawSkull(g, x, y, 15);
+  else if (m.birth) drawBirth(g, x, y);
+  else if (m.bead) { g.beginPath(); g.arc(x, y, 3, 0, 2 * Math.PI); g.fillStyle = STYLE.ink; g.fill(); }
+  else { g.beginPath(); g.arc(x, y, 4, 0, 2 * Math.PI); g.strokeStyle = STYLE.ink; g.lineWidth = 1.6; g.stroke(); }
+  g.restore();
 }
 // A migration (voyages.mjs): under it a light, wide, soft-edged ribbon in its ink, one width all along, no edge
 // line, the long pause fainter; over it a stream of chevrons pointing the way it went, shrinking as the leg's reach
@@ -2988,8 +3036,7 @@ function drawAnchored(g, a, bg, view, layers) {
     if (p) drawSprite(g, s.sprite, p[0], p[1], size, { flip: s.flip, rot: s.flip ? -s.tilt : s.tilt, anchor: [0.5, 0.6] });
   }
   for (const o of a.overlays) if (o.mode === 'sheet') drawSheet(g, o, proj, o.sheet); // the sheets, then the voyages over them, as at a stop
-  drawVoyages(g, a.voyages, proj, { x0: 0, y0: 0, x1: W, y1: H }, undefined, true);
-  for (const o of a.overlays) drawNotes(g, o, proj, { x0: 0, y0: 0, x1: W, y1: H });
+  drawVoyages(g, a.voyages, proj, { x0: 0, y0: 0, x1: W, y1: H }, undefined, true); // the notes' marks are the page's (drawNoteMark), as at a stop
   g.restore();
   if (show.kinds.has('cartouche')) drawCartouche(g, a.cartouche, (x0, y0, x1, y1) => g.drawImage(bg, x0, y0, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0));
   drawScaleBar(g, { proj }, bg, { scale: 1, x: 0, y: 0 }, W, H, show.scale, a.scaleSprite, scalePlace(a));
