@@ -245,7 +245,7 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
 
     // each button opens its own drawer and shuts the one before; the row stays put and the drawer clear of it
     const row0 = await row();
-    for (const [b, d] of [['#open', 'drawer'], ['#charts', 'chartsDrawer'], ['#sights', 'sightsPanel'], ['#go', 'goPanel'], ['#voyages', 'voyagesPanel'], ['#people', 'peoplePanel'], ['#anchor', 'anchorPanel']]) {
+    for (const [b, d] of [['#open', 'drawer'], ['#charts', 'chartsDrawer'], ['#sights', 'sightsPanel'], ['#go', 'goPanel'], ['#voyages', 'timelinePanel'], ['#people', 'timelinePanel'], ['#anchor', 'anchorPanel']]) {
       await page.click(b);
       await page.waitForTimeout(400);
       assert.equal(await opened(d), true, `${b} did not open ${d}`);
@@ -260,9 +260,9 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     assert.equal(await opened('anchorPanel'), false, 'a second click left the anchorages open');
 
     await page.click('#voyages');
-    assert.equal(await opened('voyagesPanel'), true);
-    await page.mouse.click(400, 400);
-    assert.equal(await opened('voyagesPanel'), false, 'a click on the map left the voyages open');
+    assert.equal(await opened('timelinePanel'), true);
+    await page.mouse.click(200, 400);
+    assert.equal(await opened('timelinePanel'), false, 'a click on the map left the timeline open');
     await page.click('#open');
     await page.mouse.click(400, 400);
     assert.equal(await opened('drawer'), false, 'a click on the map left the settings open');
@@ -336,7 +336,7 @@ test('voyages: several drawn at once, each in its own ink, carried by the link; 
     assert.deepEqual(await on(), ['magellan'], 'the older voyage= link');
     await page.click('#voyageList [data-voyage="columbus"]');
     await page.click('#voyageList [data-voyage="drake"]');
-    assert.equal(await page.$eval('#voyagesPanel', (d) => d.classList.contains('open')), true, 'a choice shut the drawer');
+    assert.equal(await page.$eval('#timelinePanel', (d) => d.classList.contains('open')), true, 'a choice shut the drawer');
     assert.deepEqual(await on(), ['columbus', 'magellan', 'drake']); // the list's order
     assert.equal(new Set(await inks()).size, 3, 'two voyages share an ink');
     assert.match(await hash(), /voyages=magellan,columbus,drake(&|$)/);
@@ -359,11 +359,83 @@ test('voyages: several drawn at once, each in its own ink, carried by the link; 
     assert.match(await hash(), /voyages=magellan,columbus,drake:16727a/);
     await page.click('#voyageWidth [data-value="4.5"]');
     assert.match(await hash(), /voyagewidth=4.5/);
-    if (!(await page.$eval('#voyagesPanel', (d) => d.classList.contains('open')))) await page.click('#voyages');
-    await page.click('#voyagesPanel .tool');
+    if (!(await page.$eval('#timelinePanel', (d) => d.classList.contains('open')))) await page.click('#voyages');
+    await page.click('#timelinePanel .tool');
     assert.deepEqual(await on(), []);
     assert.doesNotMatch(await hash(), /voyages=/);
-    assert.equal(await page.$eval('#voyagesPanel .tool', (b) => b.disabled), true, 'Clear still offered with nothing to clear');
+    assert.equal(await page.$eval('#timelinePanel .tool', (b) => b.disabled), true, 'Clear still offered with nothing to clear');
+    assert.deepEqual(errors, []);
+  } finally {
+    await browser.close();
+    server.close();
+  }
+});
+
+test('timeline: people above the axis, voyages below, each once, the era bands across it end to end, Earlier widens it; each button opens it at its own lane', { skip, timeout: 240000 }, async () => {
+  const server = createServer(async (req, res) => {
+    let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
+    if (p.endsWith('/')) p = path.join(p, 'index.html');
+    try { res.writeHead(200, { 'content-type': TYPES[path.extname(p)] ?? 'application/octet-stream' }).end(await readFile(p)); } catch { res.writeHead(404).end(); }
+  }).listen(0);
+  const browser = await chromium.launch();
+  try {
+    const page = await (await browser.newContext({ viewport: { width: 1100, height: 740 } })).newPage();
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await page.goto(`http://localhost:${server.address().port}/#map=2/15/-20`);
+    await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
+    const opened = () => page.evaluate(() => document.getElementById('timelinePanel').classList.contains('open'));
+    const lit = () => page.$$eval('.lanecap.lit', (cs) => cs.map((c) => c.id));
+    const box = (sel) => page.locator(sel).boundingBox();
+    await page.click('#people');
+    await page.waitForSelector('#peopleStrip [data-person]');
+    await page.waitForSelector('#voyageList [data-voyage]');
+    assert.equal(await opened(), true, 'the medallion did not open the timeline');
+    assert.deepEqual([await page.getAttribute('#people', 'aria-expanded'), await page.getAttribute('#voyages', 'aria-expanded')], ['true', 'false']);
+    assert.deepEqual(await lit(), ['peopleCap']);
+    // the two lanes on either side of one axis
+    const [people, axis, voyages] = [await box('#peopleStrip'), await box('#timeAxis'), await box('#voyageList')];
+    assert.ok(people.y + people.height <= axis.y + 1 && voyages.y >= axis.y + axis.height - 1, 'the people are not above the axis and the voyages below it');
+    // every voyage and every person, once each
+    const root = fileURLToPath(new URL('..', import.meta.url));
+    const index = JSON.parse(await readFile(path.join(root, 'data/voyages/index.json'), 'utf8'));
+    const records = JSON.parse(await readFile(path.join(root, 'data/voyages/people.json'), 'utf8'));
+    const persons = Object.entries(records).filter(([, p]) => p && typeof p === 'object').map(([id]) => id);
+    const shownVoyages = await page.$$eval('#voyageList [data-voyage]', (bs) => bs.map((b) => b.dataset.voyage));
+    const shownPeople = await page.$$eval('#peopleStrip [data-person]', (bs) => bs.map((b) => b.dataset.person));
+    assert.deepEqual([...shownVoyages].sort(), [...index].sort(), 'a voyage missing or twice');
+    assert.deepEqual([...shownPeople].sort(), [...persons].sort(), 'a person missing or twice');
+    // the era bands run from the axis's left edge to its right, end to end, each named once
+    const bands = () => page.$$eval('#eras .band', (bs) => bs.map((b) => { const r = b.getBoundingClientRect(); return { name: b.dataset.era, left: r.left, right: r.right, label: b.textContent }; }));
+    const track = () => box('#track');
+    let t = await track(), bs = await bands();
+    assert.deepEqual(bs.map((b) => b.name), ['The ancient world', 'The medieval Indian Ocean and Asia', 'The age of discovery', 'The modern world']);
+    assert.ok(bs.every((b) => b.label === b.name), 'a band not named once');
+    assert.ok(Math.abs(bs[0].left - t.x) < 1 && Math.abs(bs.at(-1).right - (t.x + t.width)) < 1, 'the bands do not cover the axis');
+    bs.forEach((b, i) => { if (i) assert.ok(Math.abs(b.left - bs[i - 1].right) < 1, `a gap before ${b.name}`); });
+    // Earlier: the track half as wide again, the earlier stretch to the left with its windows and no entries, the main stretch unchanged in width
+    const w0 = t.width, mainW = bs.at(-1).right - bs[0].left;
+    await page.click('#earlier');
+    t = await track(); bs = await bands();
+    assert.equal(await page.getAttribute('#earlier', 'aria-pressed'), 'true');
+    assert.ok(Math.abs(t.width - w0 * 1.5) < 1, `Earlier did not widen the axis: ${w0} -> ${t.width}`);
+    assert.ok(Math.abs(bs.at(-1).right - bs[0].left - mainW) < 1, 'the main stretch changed width');
+    assert.ok(bs[0].left - t.x > w0 * 0.49, 'no earlier stretch to the left of Lapita');
+    assert.deepEqual(await page.$$eval('#eras .mark', (ms) => ms.map((m) => m.dataset.mark)), ['Sahul', 'Beringia', 'Clovis']);
+    assert.ok((await page.textContent('#timeAxis')).includes('50,000 BC'));
+    const firstEntry = Math.min(...await page.$$eval('#peopleStrip .bar, #voyageList .vbar', (es) => es.map((e) => e.getBoundingClientRect().left)));
+    assert.ok(firstEntry >= bs[0].left - 1, 'an entry on the earlier stretch');
+    await page.click('#earlier');
+    assert.ok(Math.abs((await track()).width - w0) < 1, 'Earlier again did not bring the axis back');
+    // the dividers: the same drawer, at the voyages' lane; a second click shuts it
+    await page.click('#voyages');
+    assert.equal(await opened(), true, 'the dividers shut the timeline');
+    assert.deepEqual([await page.getAttribute('#people', 'aria-expanded'), await page.getAttribute('#voyages', 'aria-expanded')], ['false', 'true']);
+    assert.deepEqual(await lit(), ['voyagesCap']);
+    const panel = await box('#timelinePanel'), axisNow = await box('#timeAxis');
+    assert.ok(axisNow.y >= panel.y && axisNow.y < panel.y + 60, `the voyages' lane is not in view: axis at ${axisNow.y}, drawer at ${panel.y}`);
+    await page.click('#voyages');
+    assert.equal(await opened(), false, 'a second click on the dividers left the timeline open');
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();

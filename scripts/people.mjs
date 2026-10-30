@@ -46,33 +46,37 @@ export function lifeSpan(person, voyageYears = [], reach = 40) {
   return [fromKnown ? lo : lo - reach, toKnown ? hi : hi + reach, fromKnown, toKnown];
 }
 
-// The timeline's axis for a set of spans [from, to]: spans within `join` years of each other are one stretch, and a
-// gap longer than that is broken out, so the ancient world and the medieval sit side by side, each its own scale share.
-// Returns { stretches: [[from, to, x0, x1]], x(year) } with x in 0..1; `gap` is the share each break takes.
-export function timelineAxis(spans, { join = 300, gap = 0.04, pad = 20 } = {}) {
-  const sorted = spans.filter(([a, b]) => Number.isFinite(a) && Number.isFinite(b)).sort((p, q) => p[0] - q[0]);
-  const runs = [];
-  for (const [a, b] of sorted) {
-    const last = runs.at(-1);
-    if (last && a - last[1] <= join) last[1] = Math.max(last[1], b);
-    else runs.push([a, b]);
-  }
-  const padded = runs.map(([a, b]) => [a - pad, b + pad]), total = padded.reduce((t, [a, b]) => t + (b - a), 0) || 1;
-  const room = 1 - gap * Math.max(0, padded.length - 1);
-  let at = 0;
-  const stretches = padded.map(([a, b]) => { const x0 = at, x1 = at + room * ((b - a) / total); at = x1 + gap; return [a, b, x0, x1]; });
+// The timeline the People and Voyages buttons share: one linear year axis, people above it and voyages below, from the
+// Lapita voyages (TIMELINE_FROM) to this year, at true scale throughout, so an empty stretch reads as empty rather than
+// cut out. "Earlier" adds a stretch before it, back to TIMELINE_EARLIEST, at its own linear scale (a broken axis): the
+// main stretch keeps its width and the earlier one takes EARLIER_SHARE of it again, to its left.
+export const TIMELINE_FROM = -1500;
+export const TIMELINE_EARLIEST = -50000;
+export const EARLIER_SHARE = 0.5;
+// The eras of the points of interest (the Sights groups in public/page.js), as bands behind both lanes: each from its
+// year to the next one's, the last to the axis's end, the first from the axis's start.
+export const TIMELINE_ERAS = [['The ancient world', TIMELINE_FROM], ['The medieval Indian Ocean and Asia', 500], ['The age of discovery', 1450], ['The modern world', 1800]];
+// The windows of the peopling of Sahul, Beringia and the Americas, marked on the earlier stretch: [label, year, title].
+export const EARLIER_MARKS = [['Sahul', -50000, 'Sahul, the first peopling of Australia and New Guinea, c. 50,000 BC or earlier'], ['Beringia', -20000, 'Beringia, the land bridge into the Americas, c. 20,000 BC'], ['Clovis', -11000, 'Clovis, c. 11,000 BC']];
+
+// The axis: { width, stretches: [[from, to, x0, x1]], x(year), ticks: [[year, label]] }, with x in 0..1 of the whole
+// track and `width` the track's width in main stretches (1, or 1 + EARLIER_SHARE with the earlier stretch).
+export function laneAxis({ earlier = false, to = new Date().getFullYear() } = {}) {
+  const width = earlier ? 1 + EARLIER_SHARE : 1, k = 1 / width;
+  const stretches = [...(earlier ? [[TIMELINE_EARLIEST, TIMELINE_FROM, 0, EARLIER_SHARE * k]] : []), [TIMELINE_FROM, to, 1 - k, 1]];
   const x = (year) => {
     for (const [a, b, x0, x1] of stretches) if (year <= b) return year < a ? x0 : x0 + ((year - a) / (b - a)) * (x1 - x0);
     return 1;
   };
-  return { stretches, x };
+  const ticks = [...(earlier ? [-50000, -40000, -30000, -20000, -10000] : []), -1500, -1000, -500, 1, 500, 1000, 1500, 2000]
+    .filter((y) => y <= to).map((y) => [y, yearLabel(y)]);
+  return { width, stretches, x, ticks };
 }
-
-// The ticks of a stretch: round years every `step` (100, or 50 on a short stretch), as [year, label].
-export function ticksOf([a, b]) {
-  const step = b - a > 500 ? 200 : b - a > 220 ? 100 : 50, out = [];
-  for (let y = Math.ceil(a / step) * step; y <= b; y += step) out.push([y, y < 0 ? `${-y} BC` : y === 0 ? 'AD 1' : String(y)]);
-  return out;
+export const yearLabel = (y) => (y < 0 ? `${(-y).toLocaleString('en')} BC` : y === 1 ? 'AD 1' : String(y));
+// The era bands on an axis: [name, from, to], end to end from the main stretch's start to its end.
+export function eraBands(axis) {
+  const [from, to] = axis.stretches.at(-1);
+  return TIMELINE_ERAS.map(([name, a], i) => [name, Math.max(a, from), Math.min(TIMELINE_ERAS[i + 1]?.[1] ?? to, to)]).filter(([, a, b]) => b > a);
 }
 
 // The birth and, for a person with no voyage of their own to carry it, the death, as a voyage of events alone, which
