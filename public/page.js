@@ -1402,8 +1402,9 @@ function placeLayer() {
   layerPlaced = placed;
   if (fresh.length) startPulse(fresh); else drawLayer(ctx, viewProjection(placed), placed.zoom);
 }
-function startPulse(ids) {
-  pulse = { ids: new Set(ids), t0: performance.now() };
+function startPulse(ids) { // charts announcing while another's rings still play join them, all from the start, none cut off
+  const now = performance.now(), live = pulse && notePulse(now - pulse.t0, reducedMotion()) ? pulse.ids : [];
+  pulse = { ids: new Set([...live, ...ids]), t0: now };
   if (!pulseFrame) pulseFrame = requestAnimationFrame(pulseStep);
 }
 function pulseStep(now) {

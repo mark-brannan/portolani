@@ -5,6 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readVoyage } from '../scripts/voyages.mjs';
 import { readJSON } from '../scripts/check-voyages.mjs';
+import { readDate } from '../scripts/notes.mjs';
 import { notePulse, NOTE_PULSE, groupMarks, dateSpan, noteCount, viewProjection, voyageMarks, voyageView, DEFAULT_VIEW } from '../scripts/scene.mjs';
 
 test('the pulse: three rings over about four seconds, the marks fading to nothing with the last, then nothing drawn', () => {
@@ -64,5 +65,16 @@ test('a group\'s span of dates, as its tile heads it', () => {
   assert.equal(dateSpan(['c. 1000 BC']), '1000 BC');
   assert.equal(dateSpan(['1492', '12 Oct 1492']), '1492');
   assert.equal(dateSpan(['undated']), '');
+  // a range across the new year: each month takes the year written after it
+  assert.deepEqual(readDate('28 Dec 1520 – 3 Jan 1521'), [{ y: 1520, m: 11 }, { y: 1521, m: 0 }]);
+  assert.equal(dateSpan(['28 Dec 1520 – 3 Jan 1521']), '1520–1521');
+  assert.equal(dateSpan(['28 Dec 1520 – 3 Jan 1521', '5 Jan 1521']), '1520–1521');
+  assert.deepEqual(readDate('Nov – 29 Nov 1519'), [{ y: 1519, m: 10 }, { y: 1519, m: 10 }]);
+  // years of one or two digits with an era, before or after
+  assert.deepEqual(readDate('AD 79'), [{ y: 79, m: null }]);
+  assert.deepEqual(readDate('79 CE'), [{ y: 79, m: null }]);
+  assert.deepEqual(readDate('44 BC'), [{ y: -44, m: null }]);
+  assert.deepEqual(readDate('15 Mar 44 BC'), [{ y: -44, m: 2 }]);
+  assert.deepEqual(readDate('27 Apr'), []);
   assert.equal(dateSpan([]), '');
 });

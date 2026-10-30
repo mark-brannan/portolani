@@ -1214,16 +1214,22 @@ export function groupMarks(marks, reach) {
     return { marks: ms, lead };
   });
 }
-// A date as written in the record ("27 Apr 1521", "8 Nov – 21 Dec 1521", "c. 1000 BC") to the months it names and its
-// year: [{ y, m }] (m null where no month is named), [] where no year can be read.
+// A date as written in the record ("27 Apr 1521", "8 Nov – 21 Dec 1521", "28 Dec 1520 – 3 Jan 1521", "c. 1000 BC", "AD 79")
+// to the months it names and the year of each: [{ y, m }] (m null where no month is named), [] where no year can be read.
+// A month takes the next year written after it, else the last year in the text. A year is three or four digits, or any
+// digits with an era (BC, BCE; AD, CE, before or after); a bare one or two digits is a day.
 const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 export function readDate(text) {
-  const t = String(text ?? ''), years = [...t.matchAll(/(\d{2,4})\s*(BCE?)?/g)].filter((r) => r[1].length >= 3 || r[2]);
+  const t = String(text ?? '');
+  const years = [...t.matchAll(/(?:\b(AD|CE)\s*)?\b(\d{1,4})\b(?:\s*(BCE?|AD|CE)\b)?/g)]
+    .map((r) => ({ at: r.index, n: r[2], era: r[3] ?? r[1] }))
+    .filter((r) => r.n.length >= 3 || r.era)
+    .map((r) => ({ at: r.at, y: Number(r.n) * (r.era?.startsWith('BC') ? -1 : 1) }));
   if (!years.length) return [];
-  const y = Number(years.at(-1)[1]) * (years.at(-1)[2] ? -1 : 1);
-  const ms = [...t.toLowerCase().matchAll(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b/g)].map((r) => MONTHS.indexOf(r[1]));
-  return ms.length ? ms.map((m) => ({ y, m })) : [{ y, m: null }];
+  const ms = [...t.toLowerCase().matchAll(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b/g)];
+  if (!ms.length) return [{ y: years.at(-1).y, m: null }];
+  return ms.map((r) => ({ y: (years.find((yr) => yr.at > r.index) ?? years.at(-1)).y, m: MONTHS.indexOf(r[1]) }));
 }
 // The span of a group's dates for its tile's heading: "Apr 1521", "Apr–May 1521", "1519–1521"; '' where none can be read.
 export function dateSpan(dates) {
