@@ -14,13 +14,14 @@
 // selection those chose, and are written back in the new form.
 // For a while, `debug=sheets[,rings]` and `tune=name:value,...` carry the under-the-hood section
 // (docs/atlas/under-the-hood.md), off by default.
-import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, voyageView, readVoyage, chronological, voyageLink, sightMarks, SIGHT_TILES, noteMarks, pickMark } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, voyageView, readVoyage, chronological, voyageLink, sightMarks, SIGHT_TILES, noteMarks, pickMark, markClear, tileSpot, ZOOM } from './scene.mjs';
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
 import { PEOPLE_FILE, PICTURES_FILE, lifeSpan, timelineAxis, ticksOf, pictureCredit, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, viewContaining, withPictures, peopleOf, whoOf, deathOf } from './people.mjs';
 import { fold, bestPlace } from './placename.mjs';
 import { parsePosition, formatPosition } from './position.mjs';
+import { planFlight, ease as flyEase, FLY_KNOBS, flyDefaults } from './flight.mjs';
 
 const memo = new Map();
 // a failed load is forgotten, so the next stop tries it again
@@ -381,6 +382,7 @@ const CHOICES = {
   tuneOrigin: [['rose', `Catalan rose (${ROSE_AT})`, 'every band\'s grid has a corner on the rose', HOOD_GLYPHS.rose], ['zero', '0° 0°', 'NOAA\'s own zero', HOOD_GLYPHS.zero]],
   tuneCurated: [['1', 'On', 'the curated charts take the place of the grid cells they hold', HOOD_GLYPHS.curated], ['0', 'Off', 'grid cells everywhere', HOOD_GLYPHS.grid]],
   tuneRoselines: [['1', 'On', 'the rose\'s 32 lines as one more hub at every zoom', HOOD_GLYPHS.roselines], ['0', 'Off', 'only the sheet the rose falls in', HOOD_GLYPHS.off]],
+  flyShape: [['step', 'Step', 'out about the place left, across at the top, down onto the place; Blend lets the pan run alongside the zoom'], ['hyperbolic', 'Hyperbolic', 'van Wijk & Nuij, as MapLibre flies: pan and zoom together on one curve, Curve setting its height']],
 };
 for (const [id, options] of Object.entries(CHOICES)) {
   const el = $(id);
@@ -979,7 +981,9 @@ function paintFrame(doing) {
   const t = performance.now();
   // the 10m cells placed last while they cover the view; 50m otherwise, until it stops and is placed again
   drawGround(ctx, covers(ground.world, view) ? ground.world : ground.coarse, view, ground.bg);
-  drawAnchored(ctx, ground.anchored, ground.bg, view); // the placed ornaments, held to the earth
+  // the placed ornaments, held to the earth; a flight leaves them out once it is more than fly.hold zoom levels from
+  // where they were placed, since shrunk they crowd into a blot and grown they smear, and the coast keeps the place
+  if (!flightTo || Math.abs(Math.log2(viewProjection(view).k / ground.anchored.k)) <= fly.hold) drawAnchored(ctx, ground.anchored, ground.bg, view);
   drawPictures(ctx);
   drawSheetHandles(ctx);
   drawCards(true);
@@ -1239,14 +1243,14 @@ function showTileAt(at) {
   const best = markAt(at);
   if (!best) return;
   fillTile(best.tile);
-  // beside the mark, or for a figure's hit box beside the touch, in client px: below and to its right, flipped inside the window where that would run off it
-  const [mx, my] = best.hit ? at : [best.x, best.y];
-  const r = canvas.getBoundingClientRect(), cx = r.left + mx * (r.width / W), cy = r.top + my * (r.height / H);
+  // beside the mark's hit area (what a tap on it would hit, markClear) and a margin clear of it: to its right, flipped to its left, below or above
+  // where the window has no room (tileSpot), in client px
+  const r = canvas.getBoundingClientRect(), kx = r.width / W, ky = r.height / H;
+  const c = markClear(best, cssPx(TAP_REACH)), near = best.hit ? at : [best.x, best.y];
   tileEl.hidden = false;
-  const w = tileEl.offsetWidth, h = tileEl.offsetHeight, gap = best.hit ? 16 : best.h / 2 + 8;
-  const left = cx + gap + w > innerWidth - 8 ? cx - gap - w : cx + gap;
-  const top = cy + h > innerHeight - 8 ? cy - h : cy - 8;
-  tileEl.style.left = `${Math.max(8, left)}px`; tileEl.style.top = `${Math.max(8, top)}px`;
+  const spot = tileSpot({ x0: r.left + c.x0 * kx, y0: r.top + c.y0 * ky, x1: r.left + c.x1 * kx, y1: r.top + c.y1 * ky },
+    [tileEl.offsetWidth, tileEl.offsetHeight], { w: innerWidth, h: innerHeight }, [r.left + near[0] * kx, r.top + near[1] * ky]);
+  tileEl.style.left = `${spot.left}px`; tileEl.style.top = `${spot.top}px`;
 }
 addEventListener('keydown', (e) => { if (e.key === 'Escape') hideTile(); });
 
@@ -1815,23 +1819,60 @@ function showForms() {
 }
 $('coordsText').addEventListener('input', () => { $('goMiss').hidden = true; showForms(); });
 
-// A short flight from the view to a target, in the view's projection: the ground is drawn on the
-// way as for a drag, and the ornaments placed when it lands. Reduced motion jumps.
+// A flight from the view to a target, in the view's projection (flight.mjs plans it: a near place eased to
+// straight, a far one in an arc out, across and down, longer for longer): the ground is drawn on the way as
+// for a drag, and the ornaments placed when it lands. Every fly on the page comes through here. Reduced motion jumps.
 let flight = 0, flightTo = null; // the view a flight is bound for, while it flies
+let lastFlight = null; // { from, target } of the last flight, for Fly again under the hood
 function goTo(target) {
   cancelAnimationFrame(flight);
   pinTitle = null;
   const from = view, to = clampView({ ...target, projection: view.projection });
-  flightTo = to;
-  const dlon = ((to.lon - from.lon + 540) % 360) - 180; // the short way round
-  const ms = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 600, t0 = performance.now();
+  flightTo = to; lastFlight = { from, target };
+  const plan = planFlight(from, to, { w: W, h: H, minZoom: ZOOM.min, ...fly });
+  const ms = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : plan.ms, t0 = performance.now();
+  $('flyOut').textContent = `${plan.arc ? 'arc' : 'near'}, top z${plan.top.toFixed(2)}, ${(plan.ms / 1000).toFixed(1)} s`;
   const step = (now) => {
-    const u = ms ? Math.min(1, (now - t0) / ms) : 1, e = u < 0.5 ? 2 * u * u : 1 - (2 - 2 * u) ** 2 / 2;
-    moved(u < 1 ? clampView({ lon: from.lon + dlon * e, lat: from.lat + (to.lat - from.lat) * e, zoom: from.zoom + (to.zoom - from.zoom) * e, projection: to.projection }) : to, true);
+    const u = ms ? Math.min(1, (now - t0) / ms) : 1, e = flyEase(u, fly.ease);
+    moved(u < 1 ? clampView({ ...plan.at(e), projection: to.projection }) : to, true);
     if (u < 1) flight = requestAnimationFrame(step); else { flightTo = null; pinTitle = target.title ?? null; placed = null; stopped(); }
   };
   step(t0);
 }
+
+// Under the hood, temporary: the flight's knobs (flight.mjs, FLY_KNOBS), kept in this browser rather than the link,
+// with a line that says the settings as `name:value` to pass on, Defaults, and Fly again: back to where the last
+// flight started, then the same flight once more, so a change is felt on the same flight.
+const FLY_STORE = 'portolani.fly';
+const fly = flyDefaults();
+try { Object.assign(fly, Object.fromEntries(Object.entries(JSON.parse(localStorage.getItem(FLY_STORE)) ?? {}).filter(([n]) => n in FLY_KNOBS))); } catch { /* none kept, or storage refused */ }
+const FLY_SLIDERS = Object.entries(FLY_KNOBS).filter(([, knob]) => knob.choices == null).map(([name]) => [name, `fly${name[0].toUpperCase()}${name.slice(1)}`]);
+const FLY_OUT = { msPerUnit: (v) => `${v} ms a unit`, maxMs: (v) => `${(v / 1000).toFixed(2)} s at most`, hold: (v) => (v >= FLY_KNOBS.hold.max ? 'always drawn' : `${v} zoom levels`), ease: (v) => (v == 1 ? 'linear' : `power ${v}`) };
+for (const [name, id] of FLY_SLIDERS) Object.assign($(id), { min: FLY_KNOBS[name].min, max: FLY_KNOBS[name].max, step: FLY_KNOBS[name].step });
+function showFly() {
+  $('flyShape').value = fly.shape;
+  for (const [name, id] of FLY_SLIDERS) { $(id).value = fly[name]; $(`${id}Out`).textContent = (FLY_OUT[name] ?? String)(fly[name]); }
+  for (const id of ['flyFit', 'flyBlend', 'flyClimb']) $(id).closest('.slider').hidden = fly.shape === 'hyperbolic';
+  $('flyCurve').closest('.slider').hidden = fly.shape !== 'hyperbolic';
+  const def = flyDefaults(), set = Object.entries(fly).filter(([n, v]) => v !== def[n]).map(([n, v]) => `${n}:${v}`);
+  $('flySet').textContent = set.length ? set.join(' ') : 'defaults';
+}
+function readFly() {
+  fly.shape = $('flyShape').value;
+  for (const [name, id] of FLY_SLIDERS) fly[name] = Number($(id).value);
+  try { localStorage.setItem(FLY_STORE, JSON.stringify(fly)); } catch { /* storage refused: the knobs hold for this page */ }
+  showFly();
+}
+for (const [, id] of [['shape', 'flyShape'], ...FLY_SLIDERS]) $(id).addEventListener('input', readFly);
+$('flyReset').addEventListener('click', () => { Object.assign(fly, flyDefaults()); readFly(); });
+$('flyAgain').addEventListener('click', () => {
+  if (!lastFlight) return;
+  const { from, target } = lastFlight;
+  cancelAnimationFrame(flight); flightTo = null;
+  moved(from, true); placed = null;
+  goTo(target);
+});
+showFly();
 
 // My position: asked for on the button in Go; the fix is written into its box as latitude, longitude, at
 // the precision the browser gives, and the map stays put: Go is what flies there (at z10 or closer, like any

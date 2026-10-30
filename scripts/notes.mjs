@@ -1197,3 +1197,33 @@ export function pickMark(marks, [x, y], reach) {
   }
   return pin ?? boxed ?? near;
 }
+
+// Where a tile sits. The hit area of a mark, in the mark's own px, as a rectangle: the box a click can land in (the
+// bounds of a note's `hit` outline, or of the circle of radius max(reach, h / 2) that pickMark gives a drawn mark),
+// the circle's square joined to the outline for a note taken by a tap just outside its figure. A rotated figure's
+// bounds hold the figure, so a tile clear of the bounds is clear of it.
+export function markClear(m, reach) {
+  const r = Math.max(reach, m.h / 2), pts = [[m.x - r, m.y - r], [m.x + r, m.y + r], ...(m.hit ?? [])];
+  const us = pts.map((p) => p[0]), vs = pts.map((p) => p[1]);
+  return { x0: Math.min(...us), y0: Math.min(...vs), x1: Math.max(...us), y1: Math.max(...vs) };
+}
+export const TILE_MARGIN = 8; // between a hit area and the tile that describes it, and between the tile and the window's edge, px
+// The top-left of a tile of [w, h] beside the hit rectangle `clear`, in the window `win` ({ w, h }), all one unit (client
+// px). Never over the rectangle: to its right, else its left, else below, else above, the first side with room for
+// the whole tile (the tile is a margin off the rectangle and a margin off the window); `near` = [x, y], the mark or the
+// touch, sets where along that side it starts. Where no side has room (a hit box wider than the window), the side with
+// the most room: the tile lies against the rectangle's edge where it fits the window and is held inside the window where it
+// does not, which can cover part of the rectangle. -> { left, top, side, clear }
+export function tileSpot(clear, [w, h], win, [nx, ny], margin = TILE_MARGIN) {
+  const room = { right: win.w - margin - (clear.x1 + margin), left: clear.x0 - margin - margin, below: win.h - margin - (clear.y1 + margin), above: clear.y0 - margin - margin };
+  const need = { right: w, left: w, below: h, above: h };
+  const sides = ['right', 'left', 'below', 'above'];
+  const side = sides.find((s) => room[s] >= need[s]) ?? sides.reduce((a, b) => (room[b] > room[a] ? b : a));
+  const hold = (v, size, span) => Math.max(margin, Math.min(v, span - margin - size)); // inside the window, a margin from its edges
+  const across = (v, size, span) => hold(v - margin, size, span); // along the side: starting a margin before the mark
+  const left = side === 'right' ? clear.x1 + margin : side === 'left' ? clear.x0 - margin - w : across(nx, w, win.w);
+  const top = side === 'below' ? clear.y1 + margin : side === 'above' ? clear.y0 - margin - h : across(ny, h, win.h);
+  const spot = { left: hold(left, w, win.w), top: hold(top, h, win.h) };
+  const covers = spot.left < clear.x1 && spot.left + w > clear.x0 && spot.top < clear.y1 && spot.top + h > clear.y0;
+  return { ...spot, side, clear: !covers };
+}
