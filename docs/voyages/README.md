@@ -81,7 +81,7 @@ header. Here is Narváez's death, where nobody recorded the place, so the gap is
 | `lon` and `lat` | a skull | its `confidence` says how the place is known |
 | a date and a sentence, no `lon` and `lat` | nothing | nobody knows where; the record keeps the date |
 
-Births and images are data only for now: nothing draws them.
+The People drawer marks the birth and lays the `images` on the map; `npm run people` builds them for the site.
 
 ### Confidence
 

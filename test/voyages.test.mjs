@@ -190,14 +190,13 @@ test('a shared leg is sameAs the leg its owner names, with its own dates and not
   await assert.rejects(readVoyage('y', files(set)), /only dates/);
 });
 
-test('every person in people.json and every source in sources.json is named by a voyage', async () => {
+test('every source in sources.json is named by a voyage, by a person, or as the cite of a birth or a death', async () => {
+  // a person need not be named by a voyage: people.json holds people of note who sailed on none of ours
   const voyages = await Promise.all(INDEX.map((id) => readJSON(`data/voyages/${id}.json`)));
   const records = readJSON('data/voyages/people.json');
-  const people = Object.keys(records).filter((w) => !voyages.some((v) => v.who.includes(w)));
-  // a source is named by a voyage, by a person, or as the cite of a birth or a death
   const cited = new Set(Object.values(records).flatMap((p) => [...(p.sources ?? []), p.born?.cite, p.death?.cite]));
   const sources = Object.keys(readJSON('data/voyages/sources.json')).filter((s) => !cited.has(s) && !voyages.some((v) => v.sources.includes(s)));
-  assert.deepEqual([people, sources], [[], []]);
+  assert.deepEqual(sources, []);
 });
 
 test('an event and an alternative may carry text for its tile, and it must be a non-empty string', () => {

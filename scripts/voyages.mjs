@@ -332,7 +332,7 @@ export function chronological(pairs) {
 // Where the drawer's "Read more" goes for a raw voyage file: its first source in sources.json, else the Wikipedia
 // page of the first person on it. { label, url }, or null with neither.
 export function voyageLink(v, sources = {}) {
-  const s = sources[v?.sources?.[0]];
+  const first = v?.sources?.[0], s = typeof first === 'string' ? sources[first] : first; // an id, or already resolved by readVoyage
   if (s?.url) return { label: s.title ?? s.url, url: s.url };
   const who = v?.who?.[0];
   return who ? { label: `${who}, Wikipedia`, url: `https://en.wikipedia.org/wiki/${encodeURIComponent(who.replace(/ /g, '_'))}` } : null;
