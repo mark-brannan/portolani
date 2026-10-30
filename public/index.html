@@ -112,6 +112,12 @@
   #where .pcard .pic { width: auto; height: 52px; padding: 2px; border-radius: 4px; background: #f1e4c6; border: 1px solid #b89a68; box-shadow: none; opacity: 0.55; }
   #where .pcard .pic[aria-pressed="true"] { opacity: 1; border-color: #8c2f1e; box-shadow: inset 0 0 0 1px #8c2f1e; } /* on the table */
   .pcard .pic img { display: block; height: 46px; width: auto; }
+  #goForms { margin: 8px 2px 0; display: grid; grid-template-columns: auto 1fr; gap: 1px 10px; font: 13px/1.45 var(--serif); font-variant-numeric: tabular-nums; }
+  #goForms[hidden] { display: none; }
+  #goForms dt { color: var(--muted); font-style: italic; font-size: 12px; align-self: baseline; }
+  #goForms dd { margin: 0; }
+  #goHint { margin: 6px 2px 0; font: 12px/1.4 var(--serif); color: var(--muted); }
+  #goHint span { white-space: nowrap; }
   #goMiss { margin: 0; padding: 2px 8px; font: italic 12px var(--serif); background: var(--panel); border-radius: 8px; }
 
   /* the drawers: on a wide screen each slides in from the right below the row, right-aligned with it and clear
@@ -373,6 +379,8 @@
       <input id="coordsText" type="text" placeholder="a place, or lat, lon" aria-label="A place, or latitude, longitude">
       <button type="submit" aria-label="Go there" title="Go">Go</button>
     </form>
+    <dl id="goForms" aria-label="The same position in three forms" hidden></dl>
+    <p id="goHint">A position, latitude first: <span>38.5, 20.25</span> · <span>38° 30.5′ N 20° 15′ E</span> · <span>38°30′15″N 20°15′30″E</span></p>
     <p id="goMiss" role="status" hidden></p>
   </div>
   <div id="sightsPanel" class="drawer menu">
@@ -600,6 +608,20 @@
         <div class="slider"><input id="tuneRoseshare" type="range" step="0.1" aria-label="Rose share of a sheet's allotment"><output id="tuneRoseshareOut"></output></div>
         <h3>Roses per sheet</h3>
         <div class="slider"><input id="tuneSheetroses" type="range" step="1" aria-label="Roses per sheet, at most"><output id="tuneSheetrosesOut"></output></div>
+        <h3>Flight</h3>
+        <p class="lead">How the map flies to a far place (public/flight.mjs). Kept in this browser, not in the link; the line below says what is set.</p>
+        <div id="flyShape" class="chips" role="radiogroup" aria-label="Flight shape"></div>
+        <div class="slider"><label for="flyFit" title="the share of the canvas both places sit within at the top">Fit</label><input id="flyFit" type="range"><output id="flyFitOut"></output></div>
+        <div class="slider"><label for="flyBlend" title="the zoom at and below which the pan runs alongside the zoom">Blend</label><input id="flyBlend" type="range"><output id="flyBlendOut"></output></div>
+        <div class="slider"><label for="flyClimb" title="the time of the way out, as a share of a zoom level a unit">Climb</label><input id="flyClimb" type="range"><output id="flyClimbOut"></output></div>
+        <div class="slider"><label for="flyCurve" title="van Wijk's rho, higher climbs further out">Curve</label><input id="flyCurve" type="range"><output id="flyCurveOut"></output></div>
+        <div class="slider"><label for="flyMsPerUnit" title="milliseconds a unit">Pace</label><input id="flyMsPerUnit" type="range"><output id="flyMsPerUnitOut"></output></div>
+        <div class="slider"><label for="flyPanUnits" title="units a canvas width of slide costs">Pan weight</label><input id="flyPanUnits" type="range"><output id="flyPanUnitsOut"></output></div>
+        <div class="slider"><label for="flyMaxMs" title="the longest a flight takes">Ceiling</label><input id="flyMaxMs" type="range"><output id="flyMaxMsOut"></output></div>
+        <div class="slider"><label for="flyEase" title="the power of the ease-in-out, 1 linear">Ease</label><input id="flyEase" type="range"><output id="flyEaseOut"></output></div>
+        <div class="slider"><label for="flyHold" title="zoom levels from where they were placed the ornaments stay drawn over">Hold</label><input id="flyHold" type="range"><output id="flyHoldOut"></output></div>
+        <div class="chips"><button id="flyAgain" type="button" class="chip" title="Back to where the last flight started, then the same flight again">Fly again</button><button id="flyReset" type="button" class="chip" title="Every flight knob back to its default">Defaults</button></div>
+        <p class="lead">Set: <output id="flySet"></output><br>Last flight: <output id="flyOut">none yet</output></p>
       </div>
     </details>
   </section>
