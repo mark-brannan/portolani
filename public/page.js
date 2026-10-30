@@ -1153,7 +1153,7 @@ canvas.addEventListener('pointermove', (e) => {
   }
 });
 const lift = (e) => {
-  if (holding) { canvas.style.cursor = ''; dropPicture(); return; }
+  if (holding) { canvas.style.cursor = ''; dropPicture(e); return; }
   if (held) { const at = sheetTap; sheetTap = null; canvas.style.cursor = ''; if (at) { held = null; if (e.type === 'pointerup') showTileAt(at); } else dropSheet(); return; } // a tap moved nothing: no render, which would hide the tile
   if (carried) { // dropped: the corner is kept, the sheet placed again
     const { key, corner } = carried;
@@ -1536,19 +1536,23 @@ const ease = (t) => 1 - (1 - t) ** 3;
 const PICTURE_GROW = 1.6, PICTURE_OVERLAP = 0.25, pictureLay = () => (phone.matches ? [1, 0] : [PICTURE_GROW, PICTURE_OVERLAP]);
 // The pile: the pictures touched, grabbed or focused, the last on top; the rest lie under them in the record's order
 let raised = [];
+let pileFor = null; // the person the pile, the picture looked at and the turned ones are for
 const raise = (i) => { const was = raised.at(-1); raised = [...raised.filter((k) => k !== i), i]; return was !== i; };
 // The shown pictures with their images loaded, bottom of the pile first: [{ i, o, sheet, im }], `o` an overlay of one
 // piece (overlays.mjs) and `sheet` where it lies: where it was dragged, else its own place under the person's frame
 // (picturePlaces)
 function shownPictures() {
+  if (pileFor !== style.person) { pileFor = style.person; raised = []; looking = null; flips.clear(); links.clear(); } // another person, by any road
   const p = personOf(style.person), f = p && frames.get(p.id);
-  if (!f) return [];
+  if (!f) { looking = null; return []; }
   const shown = picturesOf(p).filter((i) => pictureSize(p, i)), places = picturePlaces(f, shown.map((i) => pictureSize(p, i)), ...pictureLay());
-  return shown.map((i, k) => {
+  const list = shown.map((i, k) => {
     const img = pictureImgs.get(`${p.id}/${i}`), [, h] = pictureSize(p, i);
     const at = style.pictureAt[i] ?? { ...places[k], lat: places[k].lat + NUDGE[i % 6] * h * places[k].scale };
     return img && { i, k, im: p.images[i], o: { img, width: img.width, height: img.height, scale: 1 }, sheet: { ...at, turn: 0 } };
-  }).filter(Boolean).sort((a, b) => pileOf(a.i) - pileOf(b.i)); // stable: the untouched keep their order, under the touched
+  }).filter(Boolean);
+  if (looking != null && !list.some((pic) => pic.i === looking)) looking = null; // put away, or gone from the link
+  return list.sort((a, b) => pileOf(a.i) - pileOf(b.i)); // stable: the untouched keep their order, under the touched
 }
 function pileOf(i) { return i === looking ? Infinity : raised.indexOf(i); } // the one looked at over all
 // The chosen person's frame and shown pictures loaded; true when anything new came in (the map is then drawn again)
@@ -1640,14 +1644,17 @@ function drawBack(g, im, w, h) {
   // the glyph after the last word where it fits on that line, else on the next
   const last = lines.at(-1) ?? '', gap = g.measureText(' ').width * 1.6, gw = size * 0.85;
   const inline = left + g.measureText(last).width + gap + gw <= w / 2 - pad;
-  const gx = inline ? left + g.measureText(last).width + gap : left, gy = -h / 2 + pad + (inline ? lines.length - 1 : lines.length) * lead;
-  linkGlyph(g, gx, gy, size);
+  let gx = inline ? left + g.measureText(last).width + gap : left, gy = -h / 2 + pad + (inline ? lines.length - 1 : lines.length) * lead;
+  const fits = gy + size <= by - size * 0.2;
+  if (fits) linkGlyph(g, gx, gy, size);
   g.restore();
-  const link = gy + size <= by ? [gx - size * 0.35, gy - size * 0.35, gw + size * 0.7, size * 1.7] : null; // a tap a little off the glyph still opens it
-  // the button at the foot: the put-away glyph, and its word where the card leaves room left of Turn over
+  // the button at the foot: the put-away glyph, and its word where the card leaves room left of Turn over (and of the
+  // link, when the words leave it no room above)
   g.font = `${size}px ${family}`;
-  const icon = size * 1.1, tw = g.measureText(AWAY_SAYS).width, room = w / 2 - cssPx(FOOT_R) * 1.6 - pad - left;
+  const icon = size * 1.1, tw = g.measureText(AWAY_SAYS).width, room = w / 2 - cssPx(FOOT_R) * 1.6 - pad - left - (fits ? 0 : gw + size * 0.6);
   const bw = size * 0.5 + icon + (size * 0.4 + tw <= room - size * 1.4 - icon ? size * 0.4 + tw : 0) + size * 0.5;
+  if (!fits) { gx = left + bw + size * 0.6; gy = by + (bh - size) / 2; linkGlyph(g, gx, gy, size); }
+  const link = [gx - size * 0.35, gy - size * 0.35, gw + size * 0.7, size * 1.7]; // a tap a little off the glyph still opens it
   g.save(); g.lineWidth = Math.max(1, cssPx(1)); g.strokeStyle = style.ink; g.fillStyle = style.parchment;
   g.beginPath(); g.roundRect(left, by, bw, bh, bh / 2); g.fill(); g.globalAlpha = 0.7; g.stroke(); g.globalAlpha = 1;
   g.fillStyle = style.ink; g.textBaseline = 'middle'; g.textAlign = 'center';
@@ -1750,10 +1757,14 @@ function dragPicture(p) {
   style = { ...style, pictureAt: { ...style.pictureAt, [i]: next } };
   if (!sheetFrameId) sheetFrameId = requestAnimationFrame(() => { sheetFrameId = 0; paintFrame('a picture held'); });
 }
-function dropPicture() {
+function dropPicture(e) {
   const { kind, i, im } = holding;
   holding = null;
   cancelAnimationFrame(sheetFrameId); sheetFrameId = 0;
+  if (kind !== 'move') { // a button acts on a release over it, as a page's button does, and not on a cancel or a drag off it
+    const hit = e.type === 'pointerup' ? pictureHit(toCanvas(e.clientX, e.clientY)) : null;
+    if (hit?.kind !== kind || hit.i !== i) return;
+  }
   if (kind === 'flip') { turnOver(i); return; }
   if (kind === 'link') { window.open(pageOf(im), '_blank', 'noopener'); return; }
   if (kind === 'away') { setOnTable(i, false); return; }
@@ -1775,7 +1786,7 @@ function turnOver(i) {
   flips.set(i, { back: !flips.get(i)?.back, start: performance.now() });
   repaint('a picture turned over');
 }
-addEventListener('keydown', (e) => { if (e.key === 'Escape') endLook(); });
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && looking != null) { endLook(); e.stopImmediatePropagation(); } }, true); // first, and only that: the open drawer stays
 // The pictures on the map again inside the canvas, as its fallback content: what a screen reader reads and the keyboard
 // reaches, one item per picture in the record's order with its back's words, the glyph link to its Commons page
 // (labelled in full) and its Look, Turn over and Put away buttons. `data-z` is its place in the pile, the top one
@@ -1786,11 +1797,13 @@ function mirrorPictures(list) {
   const now = `${style.person}|${list.map((pic) => pic.i).sort((a, b) => a - b)}`;
   if (now !== keysFor) {
     keysFor = now;
+    const at = document.activeElement, li = keys.contains(at) && at.closest('[data-pic]'); // the focus, kept across the rebuild
+    const was = li && (at.tagName === 'A' ? `[data-pic="${li.dataset.pic}"] a` : `[data-${Object.keys(at.dataset)[0]}="${li.dataset.pic}"]`);
     keys.innerHTML = [...list].sort((a, b) => a.i - b.i).map(({ i, im }) => `<li data-pic="${i}"><span>${escapeHTML(pictureCredit(im))}${im.note ? `. ${escapeHTML(im.note)}` : ''}</span> ` +
       `<a href="${escapeHTML(pageOf(im))}" target="_blank" rel="noopener" title="${LINK_SAYS}" aria-label="${LINK_SAYS}">${LINK_GLYPH}</a> ` +
       ['look', 'flip', 'away'].map((k) => { const says = { look: LOOK_SAYS, flip: FLIP_SAYS, away: AWAY_SAYS }[k];
         return `<button type="button" data-${k}="${i}"${k === 'look' ? ' aria-pressed="false"' : ''} aria-label="${says}: ${escapeHTML(pictureCredit(im))}">${says}</button>`; }).join(' ') + '</li>').join('');
-    if (focusNext != null) { keys.querySelector(`[data-away="${focusNext}"]`)?.focus(); focusNext = null; }
+    if (focusNext != null) { keys.querySelector(`[data-away="${focusNext}"]`)?.focus(); focusNext = null; } else if (was) keys.querySelector(was)?.focus();
   }
   list.forEach((pic, n) => {
     const li = keys.querySelector(`[data-pic="${pic.i}"]`);
@@ -1801,10 +1814,13 @@ function mirrorPictures(list) {
 keys.addEventListener('focusin', (e) => {
   const li = e.target.closest('[data-pic]');
   if (!li) return;
-  focusedPic = Number(li.dataset.pic); raise(focusedPic);
-  repaint('a picture lifted');
+  const i = Number(li.dataset.pic), lifted = raise(i);
+  if (lifted || focusedPic !== i) { focusedPic = i; repaint('a picture lifted'); }
 });
-keys.addEventListener('focusout', () => { focusedPic = null; repaint('a picture let go'); });
+keys.addEventListener('focusout', (e) => {
+  if (e.relatedTarget?.closest?.('#pictureKeys [data-pic]')?.dataset.pic === String(focusedPic)) return; // on within the same picture's item
+  focusedPic = null; repaint('a picture let go');
+});
 keys.addEventListener('click', (e) => {
   const look = e.target.closest('[data-look]'), flip = e.target.closest('[data-flip]');
   if (look) { if (looking === Number(look.dataset.look)) endLook(); else lookAt(Number(look.dataset.look)); return; }

@@ -408,6 +408,17 @@ test('people: a picture on the map is looked at, put away and dealt back by choo
     assert.equal(await looked(), 'true');
     await page.keyboard.press('Escape');
     assert.equal(await looked(), 'false', 'Esc did not lay the picture back');
+    // by the keyboard with the People drawer open, Esc lays the picture back and leaves the drawer open
+    await page.click('#people');
+    await page.focus('#pictureKeys [data-look="0"]');
+    await page.keyboard.press('Enter');
+    assert.equal(await looked(), 'true');
+    await page.keyboard.press('Escape');
+    assert.equal(await looked(), 'false');
+    assert.equal(await page.$eval('#peoplePanel', (d) => d.classList.contains('open')), true, 'Esc shut the drawer too');
+    await page.keyboard.press('Escape'); // and the next shuts it
+    assert.equal(await page.$eval('#peoplePanel', (d) => d.classList.contains('open')), false);
+    await page.evaluate(() => document.activeElement.blur());
     await look();
     // looked at, its buttons from the right corner of its lower edge: Put away, Turn over, the link (13 CSS px round)
     const [iw, ih] = await page.evaluate(async () => { const m = (await (await fetch('packs/overlays/people/people.json')).json()).pictures['Portrait_of_a_Man,_Said_to_be_Christopher_Columbus_2.jpg']; return [m.width, m.height]; });
