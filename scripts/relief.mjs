@@ -16,6 +16,7 @@
 // stands in for elevation, the data holding none.
 
 import { hatch, pen } from 'coast-wright';
+import { frameBox } from './frame-box.mjs';
 
 const RAD = Math.PI / 180;
 const CELL = 16; // distance field cell, px
@@ -115,12 +116,13 @@ function cellsOf(proj, w, h, px, pad, salt) {
   const zi = Math.floor(proj.zoom), deg = (px * 360) / (512 * 2 ** zi), row = deg * RAD, n = Math.round(360 / deg);
   // clamped, as Mercator is: a view's top row in another projection can reach past the pole, and the loop below would never end
   const merc = (lat) => Math.log(Math.tan(Math.PI / 4 + (Math.max(-85, Math.min(85, lat)) * RAD) / 2));
-  const [lonA, latA] = proj.invert(-pad, -pad), [lonB, latB] = proj.invert(w + pad, h + pad);
-  const out = [];
-  for (let i = Math.floor(lonA / deg); i <= Math.floor(lonB / deg); i++) {
-    for (let j = Math.floor(merc(latB) / row); j <= Math.floor(merc(latA) / row); j++) {
+  const { lonMin, lonMax, latMin, latMax } = frameBox(proj, w, h, pad);
+  const out = [], i0 = Math.floor(lonMin / deg), i1 = Math.min(Math.floor(lonMax / deg), i0 + n - 1); // never a cell twice round the world
+  for (let i = i0; i <= i1; i++) {
+    for (let j = Math.floor(merc(latMin) / row); j <= Math.floor(merc(latMax) / row); j++) {
       const rnd = mulberry32(hash(salt, zi, mod(i, n), j));
       const lon = (i + 0.1 + 0.8 * rnd()) * deg, lat = (2 * Math.atan(Math.exp((j + 0.1 + 0.8 * rnd()) * row)) - Math.PI / 2) / RAD;
+      if (proj.visible && !proj.visible(lon, lat)) continue; // the far side of a globe
       out.push({ lon, lat, rnd, key: rnd() });
     }
   }

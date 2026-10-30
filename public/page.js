@@ -14,7 +14,7 @@
 // selection those chose, and are written back in the new form.
 // For a while, `debug=sheets[,rings]` and `tune=name:value,...` carry the under-the-hood section
 // (docs/atlas/under-the-hood.md), off by default.
-import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, legPath, voyageView, CONTINENT_ZOOM_END, readVoyage, chronological, voyageLink, sightMarks, SIGHT_TILES, noteMarks, pickMark, markClear, tileSpot, ZOOM } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, isBroken, legPath, voyageView, CONTINENT_ZOOM_END, readVoyage, chronological, voyageLink, sightMarks, SIGHT_TILES, noteMarks, pickMark, markClear, tileSpot, ZOOM } from './scene.mjs';
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
@@ -739,6 +739,7 @@ async function render() {
     const t0 = performance.now();
     // a kind is drawn while any of its sprites is selected
     const kinds = KINDS.filter((k) => SPRITES.some((s) => s.kind === k && selection.has(s.key)));
+    await learnBroken(style.voyages.map((v) => v.id)); // a voyage's ink waits on its file: the first render of a link has them right
     const ink = voyageInk(), inkKey = JSON.stringify(ink); // read from the sheet last drawn; checked again once this one lands
     const { scene, data, bg, world, coarse, timing } = await createScene(env, {
       ...style, ...parsePlacement(style.placement), relief: style.mountains === 'colour' ? ['marina'] : style.mountains === 'ink' ? ['engraved'] : [],
@@ -1359,6 +1360,17 @@ const SIGHTS = [
     ['Malacca', port(102.25, 2.19), 'Malacca (Melaka)'],
     ['Quanzhou', port(118.68, 24.87)],
   ], null, '9th–15th c.'],
+  ["Mali's trade network", [ // the Sahara's roads and the Niger's towns and goldfields (docs/learn/trans-saharan-trade.md); the roads are marked mid-route
+    ['Niani', port(-9.15, 11.43)],
+    ['Timbuktu', port(-3.01, 16.77)],
+    ['Gao', port(-0.04, 16.27)],
+    ['Walata', port(-7.03, 17.30)],
+    ['Taghaza', port(-5.0, 23.6)],
+    ['Bambuk', at(-11.5, 13.5, 7)],
+    ['Bure', at(-10.0, 10.6, 7)],
+    ['The western road', at(-5.8, 21.0, 6)],
+    ['The road to Egypt', at(6.78, 17.52, 6)],
+  ], null, '8th–16th c.'],
   ['The age of discovery', [
     ['Lisbon', port(-9.14, 38.72)], // also where charts were made
     ['São Jorge da Mina', port(-1.35, 5.08), 'São Jorge da Mina (Elmina)'],
@@ -1427,12 +1439,17 @@ const voyagesTools = groupTools('Voyages', {
 });
 $('timelinePanel').querySelector('.vtools').append(...voyagesTools.children);
 // the ink of every voyage in the list, hidden ones too, so a colour stays with its voyage
-// (a voyage with no colour picked takes one from the high-contrast palette while any of it crosses a sheet)
+// (a voyage with no colour picked takes one from the high-contrast palette while any of it crosses a sheet, or if a leg is dashed or dotted)
 // the sheets laid as the style has them now (not as last drawn), each with the placement it lies at; none unless whole sheets
 const laidSheets = () => (style.overlayMode !== 'sheet' ? [] : style.overlays.flatMap((id) => { const o = OVERLAYS.find((v) => v.id === id); return o ? [{ ...o, sheet: style.sheets[id] ?? o.sheet }] : []; }));
+const brokenIds = new Set(); // the listed voyages with a dashed or dotted leg, which take a high-contrast ink
+const brokenSeen = new Set(); // the voyages whose file has been read for that
+// reads the files of voyages not yet seen, so a link's inks are right on the first render, with the drawer closed
+const learnBroken = (ids) => Promise.all(ids.filter((id) => !brokenSeen.has(id)).map((id) => env.readJSON(`data/voyages/${id}.json`)
+  .then((v) => { brokenSeen.add(id); if (isBroken(v)) brokenIds.add(id); }, () => brokenSeen.add(id))));
 const voyageDots = new Map(); // id -> a thinned sample of its path, [lon, lat], once the list has loaded
 const crossing = () => {
-  const ids = new Set();
+  const ids = new Set(brokenIds);
   if (!voyageDots.size) return ids; // before the list has loaded (and before OVERLAYS exists)
   const sheets = laidSheets();
   if (!sheets.length) return ids;
@@ -1465,6 +1482,7 @@ function fillVoyages() {
     .then(([ids, sources]) => Promise.all(ids.map((id) => env.readJSON(`data/voyages/${id}.json`).then((v) => [id, v], () => [id, { title: id, short: id }])))
       .then((voyages) => [chronological(voyages), sources]))
     .then(([voyages, sources]) => {
+      for (const [id, v] of voyages) { brokenSeen.add(id); if (isBroken(v)) brokenIds.add(id); }
       for (const [id, v] of voyages) voyageDots.set(id, (v.legs ?? []).flatMap((leg) => (leg.points?.length > 1 ? legPath(leg) : [])).filter((_, i) => i % 4 === 0));
       voyageRows = { voyages, sources }; drawVoyages();
     }, (e) => { voyageList = null; $('voyageList').innerHTML = `<li>${escapeHTML(e.message)}</li>`; });

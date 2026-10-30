@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { legPath, splitAtSeam, problems, checkPerson, distanceKm, STEP_KM, readVoyage, voyageColours, VOYAGE_PALETTE, reachPath, seaSamples, VOYAGE_DRAW, voyageDrawSeconds } from '../scripts/voyages.mjs';
+import { legPath, splitAtSeam, problems, checkPerson, distanceKm, STEP_KM, readVoyage, voyageColours, VOYAGE_PALETTE, reachPath, seaSamples, VOYAGE_DRAW, voyageDrawSeconds, VOYAGE_CONTRAST, VOYAGE_WIDTH, VOYAGE_WIDTHS, isBroken } from '../scripts/voyages.mjs';
 import { viewProjection, voyageMarks, voyageView, CONTINENT_ZOOM_END, W, H } from '../scripts/scene.mjs';
 import { loadLand, checkVoyage, voyageIds, readJSON } from '../scripts/check-voyages.mjs';
 
@@ -369,6 +369,16 @@ test('voyage colours: the first red, the rest distinct and seeded on the id, a p
   assert.equal(picked.columbus, '#1f4e8c');
   assert.equal(picked.drake, VOYAGE_PALETTE[0], 'red is free, so the next one takes it');
   assert.equal(Object.keys(voyageColours(VOYAGE_PALETTE.map((_, i) => `v${i}`).concat('extra'))).length, VOYAGE_PALETTE.length + 1);
+});
+
+test('Heavy is the default weight; a voyage with a dashed or dotted leg is broken, and six broken voyages still draw in six inks', () => {
+  assert.equal(VOYAGE_WIDTH, Math.max(...VOYAGE_WIDTHS));
+  assert.ok(isBroken({ legs: [{ confidence: 'attested' }, { confidence: 'inferred' }] }));
+  assert.ok(!isBroken({ legs: [{ confidence: 'attested' }] }));
+  const ids = ['columbus', 'da-gama', 'dias', 'magellan', 'drake', 'polo'], c = voyageColours(ids, {}, new Set(ids));
+  assert.equal(c.columbus, VOYAGE_CONTRAST[0]);
+  assert.equal(new Set(Object.values(c)).size, ids.length, 'two broken voyages share an ink while inks are free');
+  assert.equal(Object.values(c).filter((h) => VOYAGE_CONTRAST.includes(h)).length, VOYAGE_CONTRAST.length, 'the high-contrast inks go first');
 });
 
 // The menu is chronological: the first number of `when` is the start year (BC negative). A voyage's own
