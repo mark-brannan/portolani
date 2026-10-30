@@ -613,6 +613,20 @@
         <div class="slider"><input id="tuneRoseshare" type="range" step="0.1" aria-label="Rose share of a sheet's allotment"><output id="tuneRoseshareOut"></output></div>
         <h3>Roses per sheet</h3>
         <div class="slider"><input id="tuneSheetroses" type="range" step="1" aria-label="Roses per sheet, at most"><output id="tuneSheetrosesOut"></output></div>
+        <h3>Flight</h3>
+        <p class="lead">How the map flies to a far place (public/flight.mjs). Kept in this browser, not in the link; the line below says what is set.</p>
+        <div id="flyShape" class="chips" role="radiogroup" aria-label="Flight shape"></div>
+        <div class="slider"><label for="flyFit" title="the share of the canvas both places sit within at the top">Fit</label><input id="flyFit" type="range"><output id="flyFitOut"></output></div>
+        <div class="slider"><label for="flyBlend" title="the zoom at and below which the pan runs alongside the zoom">Blend</label><input id="flyBlend" type="range"><output id="flyBlendOut"></output></div>
+        <div class="slider"><label for="flyClimb" title="the time of the way out, as a share of a zoom level a unit">Climb</label><input id="flyClimb" type="range"><output id="flyClimbOut"></output></div>
+        <div class="slider"><label for="flyCurve" title="van Wijk's rho, higher climbs further out">Curve</label><input id="flyCurve" type="range"><output id="flyCurveOut"></output></div>
+        <div class="slider"><label for="flyMsPerUnit" title="milliseconds a unit">Pace</label><input id="flyMsPerUnit" type="range"><output id="flyMsPerUnitOut"></output></div>
+        <div class="slider"><label for="flyPanUnits" title="units a canvas width of slide costs">Pan weight</label><input id="flyPanUnits" type="range"><output id="flyPanUnitsOut"></output></div>
+        <div class="slider"><label for="flyMaxMs" title="the longest a flight takes">Ceiling</label><input id="flyMaxMs" type="range"><output id="flyMaxMsOut"></output></div>
+        <div class="slider"><label for="flyEase" title="the power of the ease-in-out, 1 linear">Ease</label><input id="flyEase" type="range"><output id="flyEaseOut"></output></div>
+        <div class="slider"><label for="flyHold" title="zoom levels from where they were placed the ornaments stay drawn over">Hold</label><input id="flyHold" type="range"><output id="flyHoldOut"></output></div>
+        <div class="chips"><button id="flyAgain" type="button" class="chip" title="Back to where the last flight started, then the same flight again">Fly again</button><button id="flyReset" type="button" class="chip" title="Every flight knob back to its default">Defaults</button></div>
+        <p class="lead">Set: <output id="flySet"></output><br>Last flight: <output id="flyOut">none yet</output></p>
       </div>
     </details>
   </section>
