@@ -381,3 +381,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261030t035406z
 - Arrow keys choose as they move (radio semantics), not only move focus Undo: revert the handler's to.click() ([#294](https://github.com/mark-brannan/portolani/pull/294))
+
+### 20261030t035411z
+- Up and Down also step along a chip group Undo: drop ArrowUp and ArrowDown from the step map ([#294](https://github.com/mark-brannan/portolani/pull/294))
