@@ -345,3 +345,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261030t023043z
 - Mali Learn material split into a hub and four companion pages Undo: fold the four companion pages back into the hub ([#288](https://github.com/mark-brannan/portolani/pull/288))
+
+### 20261030t023056z
+- Learn renderer gains tables and quotes inside the Mali docs PR Undo: revert scripts/learn.mjs table/quote change ([#288](https://github.com/mark-brannan/portolani/pull/288))
