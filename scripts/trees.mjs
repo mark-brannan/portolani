@@ -224,7 +224,7 @@ const insideRing = (ring, lon, lat) => {
   return inside;
 };
 // Is a lon/lat in one of `lakes` (water.mjs's, each { polys, box })?
-const inLake = (lakes, [lon, lat]) => (lon = ((((lon + 180) % 360) + 360) % 360) - 180, lakes.some((l) => lat > l.box.y0 && lat < l.box.y1 && lon > l.box.x0 && lon < l.box.x1 &&
+export const inLake = (lakes, [lon, lat]) => (lon = ((((lon + 180) % 360) + 360) % 360) - 180, lakes.some((l) => lat > l.box.y0 && lat < l.box.y1 && lon > l.box.x0 && lon < l.box.x1 &&
   l.polys.some((p) => insideRing(p[0], lon, lat) && !p.slice(1).some((hole) => insideRing(hole, lon, lat)))));
 
 // The palms beside the points of interest in view: `pois` are { x, y, palms } in px (the buildings the
