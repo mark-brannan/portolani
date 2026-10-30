@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { planFlight, ease, FIT, MIN_MS, MAX_MS } from '../public/flight.mjs';
 
-const W = 1600, H = 1000, opts = { w: W, h: H, minZoom: 1 };
+const W = 1600, H = 1000, opts = { w: W, h: H, minZoom: 1, shape: 'step' }; // the step shape's tests; the hyperbolic one below names its own
 const RAD = Math.PI / 180, k = (z) => (512 * 2 ** z) / (2 * Math.PI);
 const mercY = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * RAD) / 2));
 // where `p` sits on the canvas of view `v`, in px from the centre (Mercator)

@@ -7,7 +7,7 @@
 // Distances are read on Mercator, the page's default, whatever the projection: near enough for a camera.
 //
 // The shape and the pace are knobs (FLY_KNOBS), exposed under the hood in the settings drawer while the
-// flight is being tuned by eye; each default is the flight as it was before the knobs. Two shapes:
+// flight is being tuned by eye; each default is the flight as tuned by eye (the drawer's Set line). Two shapes:
 //   step        out about the place left, across at the top, down onto the place. `blend` lets the pan run
 //               alongside the zoom once the zoom is at or below it (0: only at the top; past both ends: the
 //               whole way, a triangle). `climb` scales the time of the way out (1: as the way down).
@@ -23,21 +23,21 @@ const mercLat = (y) => (2 * Math.atan(Math.exp(y)) - Math.PI / 2) / RAD;
 export const FIT = 0.6; // at the top of an arc, the two places sit within this share of the canvas
 // A flight's length is counted in units: a zoom level is one, a pan of one canvas width at the zoom it is made at is
 // PAN_UNITS, since the eye follows a slide across the canvas more slowly than a zoom about its centre.
-export const MS_PER_UNIT = 450, PAN_UNITS = 3;
+export const MS_PER_UNIT = 525, PAN_UNITS = 0.5;
 export const MIN_MS = 700, MAX_MS = 5000;
 
 // the knobs: { def, min, max, step } each, or { def, choices }, in the order the drawer shows them
 export const FLY_KNOBS = {
-  shape: { def: 'step', choices: ['step', 'hyperbolic'] },
+  shape: { def: 'hyperbolic', choices: ['step', 'hyperbolic'] },
   fit: { def: FIT, min: 0.2, max: 1.5, step: 0.05 },
   blend: { def: 0, min: 0, max: 16, step: 0.5 },
   climb: { def: 1, min: 0.2, max: 1.5, step: 0.05 },
-  curve: { def: 1.42, min: 0.5, max: 3, step: 0.02 },
+  curve: { def: 1.5, min: 0.5, max: 3, step: 0.02 },
   msPerUnit: { def: MS_PER_UNIT, min: 100, max: 900, step: 25 },
   panUnits: { def: PAN_UNITS, min: 0.5, max: 6, step: 0.25 },
   maxMs: { def: MAX_MS, min: 1000, max: 10000, step: 250 },
-  ease: { def: 2, min: 1, max: 4, step: 0.25 },
-  hold: { def: 1, min: 0, max: 20, step: 0.5 },
+  ease: { def: 1, min: 1, max: 4, step: 0.25 },
+  hold: { def: 20, min: 0, max: 20, step: 0.5 },
 };
 export const flyDefaults = () => Object.fromEntries(Object.entries(FLY_KNOBS).map(([n, knob]) => [n, knob.def]));
 
