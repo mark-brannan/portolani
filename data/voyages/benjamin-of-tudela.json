@@ -6,7 +6,7 @@
     "benjamin-of-tudela"
   ],
   "when": "c. 1165-71",
-  "summary": "A Jew of Tudela in Navarre travelled by Provence, Italy, Greece, Constantinople and the Levant to Baghdad, listing the Jewish communities of about three hundred places and the days between them. He returned to Castile by 1173. Everything east of Baghdad, and the road home by Egypt and Sicily, is told from report or without a course, so it is not drawn as a route: two eastern places are marked as heard of.",
+  "summary": "A Jew of Tudela in Navarre travelled by Provence, Italy, Greece, Constantinople and the Levant to Baghdad, listing the Jewish communities of about three hundred places and the days between them. He returned to Castile by 1173. Everything beyond Baghdad, and the road home by Egypt and Sicily, is told from report or without a course, so it is not drawn as a route: Khaybar and Samarkand, which he only heard of, are marked.",
   "sources": [
     "adler-itinerary-of-benjamin",
     "benjamin-of-tudela"
@@ -351,47 +351,58 @@
     },
     {
       "from": "Salonica",
+      "to": "Christopoli (Kavala)",
+      "dates": "c. 1168",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "attested",
+      "points": [
+        [
+          22.94,
+          40.64
+        ],
+        [
+          23.45,
+          40.72
+        ],
+        [
+          23.85,
+          40.8
+        ],
+        [
+          24.15,
+          41.15
+        ],
+        [
+          24.41,
+          40.94
+        ]
+      ],
+      "source": "Benjamin (Adler): two days from Salonica to Demetrizi, two to Drama and one to Christopoli (Kavala); Demetrizi is not identified, so the line follows the Egnatian Way"
+    },
+    {
+      "from": "Christopoli (Kavala)",
       "to": "Abydos",
       "dates": "c. 1168",
       "mode": "sea",
       "line": "rhumb",
-      "confidence": "inferred",
+      "confidence": "attested",
       "points": [
         [
-          22.89,
-          40.54
+          24.43,
+          40.9
         ],
         [
-          22.85,
-          40.4
-        ],
-        [
-          22.8,
-          40.3
-        ],
-        [
-          22.9,
-          40.2
-        ],
-        [
-          23.0,
-          40.0
-        ],
-        [
-          23.4,
-          39.9
-        ],
-        [
-          23.9,
-          39.7
+          24.4,
+          40.75
         ],
         [
           24.5,
-          39.8
+          40.45
         ],
         [
-          24.7,
-          40.0
+          24.9,
+          40.25
         ],
         [
           25.4,
@@ -410,8 +421,7 @@
           40.15
         ]
       ],
-      "source": "Benjamin: Salonica and then Abydos, with no stage between",
-      "doubt": "The text names Salonica, Abydos and Constantinople but not how he travelled from one to the next; the sea is the usual way."
+      "source": "Benjamin (Adler): a three days' voyage from Christopoli to Abydos"
     },
     {
       "from": "Abydos",
@@ -800,27 +810,54 @@
       "dates": "c. 1170",
       "mode": "land",
       "line": "spline",
-      "confidence": "conventional",
+      "confidence": "inferred",
       "points": [
         [
           43.13,
           36.34
         ],
         [
-          43.68,
-          34.6
+          42.0,
+          35.8
         ],
         [
-          43.87,
-          34.2
+          41.2,
+          35.3
+        ],
+        [
+          40.43,
+          35.01
+        ],
+        [
+          40.43,
+          35.15
+        ],
+        [
+          40.93,
+          34.45
+        ],
+        [
+          41.98,
+          34.37
+        ],
+        [
+          42.82,
+          33.64
+        ],
+        [
+          43.3,
+          33.42
+        ],
+        [
+          43.7,
+          33.4
         ],
         [
           44.37,
           33.31
         ]
       ],
-      "source": "Benjamin: from Mosul to Baghdad, the seat of the Caliph and the exilarch",
-      "doubt": "The text takes him by Rahbah and Karkisiya on the Euphrates and Anbar before Baghdad; the line is the direct road on the Tigris."
+      "source": "Benjamin (Adler): three days from Mosul to Rahbah on the Euphrates, a day to Karkisiya, two to El-Anbar (Pumbedita), then Hadara and Okbara and two days to Baghdad; the line follows the Euphrates to El-Anbar and goes from there straight to Baghdad, because Hadara (taken for Hatra) does not sit on that road"
     },
     {
       "from": "Baghdad",
