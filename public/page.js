@@ -362,6 +362,8 @@ const HOOD_GLYPHS = {
   off: MOUNTAIN_GLYPHS.off,
   sheets: svg(SHEET_GLYPH),
   rings: svg(`${SHEET_GLYPH}<circle cx="14" cy="9" r="4.5" ${stroke(RED, 1)}/><circle cx="14" cy="9" r="1.3" ${stroke(RED, 0.8)}/>${[0, 1, 2, 3, 4, 5, 6, 7].map((i) => `<circle cx="${(14 + 4.5 * Math.sin(i * Math.PI / 4)).toFixed(2)}" cy="${(9 - 4.5 * Math.cos(i * Math.PI / 4)).toFixed(2)}" r=".9" fill="${RED}"/>`).join('')}`),
+  ride: svg(`<rect x="4" y="3" width="20" height="12" ${stroke('currentColor', 1)}/><path d="M2 13C8 3 14 14 26 4" ${stroke(RED, 1.8)}/>`), // a line drawn over a sheet
+  lifted: svg(`<rect x="4" y="3" width="20" height="12" ${stroke('currentColor', 0.8)} stroke-dasharray="2 2"/><path d="M2 13C8 3 14 14 26 4" ${stroke(RED, 1.8)}/>`), // the sheet off, the line alone
   rose: svg(`<path d="M2 9h24M14 2v14M8 2v14M20 2v14M2 5h24M2 13h24" ${stroke('currentColor', 0.5)}/><path d="M14 6l1 3-1 3-1-3Z M11 9l3-1 3 1-3 1Z" fill="${RED}"/>`),
   zero: svg(`<path d="M2 9h24M14 2v14M8 2v14M20 2v14M2 5h24M2 13h24" ${stroke('currentColor', 0.5)}/><circle cx="14" cy="9" r="2.6" ${stroke(RED, 1.2)}/>`),
   curated: svg(`<rect x="3" y="3" width="22" height="12" ${stroke('currentColor', 1)}/><circle cx="14" cy="9" r="4" ${stroke('currentColor', 0.8)}/>`),
@@ -389,7 +391,7 @@ const CHOICES = {
   voyageWidth: VOYAGE_WIDTHS.map((w, i) => [String(w), ['Fine', 'Standard', 'Bold', 'Heavy'][i] ?? `${w} px`, `${w} px`, lineOf('#8c2f1e', w)]),
   scaleBorder: [['bordered', 'Bordered', 'parchment and a double rule'], ['blank', 'Blank', 'parchment, no rule'], ['transparent', 'Transparent', 'drawn over the map']].map(([value, label, note = '']) => [value, label, note, BORDER_GLYPHS[value]]),
   debug: [['off', 'Off', '', HOOD_GLYPHS.off], ['sheets', 'Outlines', 'each sheet of the atlas at this view, in red, with its name', HOOD_GLYPHS.sheets], ['sheets,rings', 'Outlines + rings', 'and each sheet\'s hidden circle: its hub and sixteen nodes', HOOD_GLYPHS.rings]],
-  sheetHides: [['0', 'Voyage rides over', 'a voyage is drawn over the sheet, wherever it lies, and the sheet stays', HOOD_GLYPHS.off], ['1', 'Sheet hides', 'a voyage\'s fly takes the sheet off if it would cover the voyage\'s frame', HOOD_GLYPHS.sheets]],
+  sheetHides: [['0', 'Voyage rides over', 'a voyage is drawn over the sheet, wherever it lies, and the sheet stays', HOOD_GLYPHS.ride], ['1', 'Sheet hides', 'a voyage\'s fly takes the sheet off if it would cover the voyage\'s frame', HOOD_GLYPHS.lifted]],
   overlayMode: [['sheet', 'One sheet', 'the whole scan, opaque, laid level and centred, dragged by hand', HOOD_GLYPHS.sheets], ['pieces', 'Warped pieces', 'each piece warped onto today\'s coast, at the opacity below', HOOD_GLYPHS.rings]],
   tuneOrigin: [['rose', `Catalan rose (${ROSE_AT})`, 'every band\'s grid has a corner on the rose', HOOD_GLYPHS.rose], ['zero', '0° 0°', 'NOAA\'s own zero', HOOD_GLYPHS.zero]],
   tuneCurated: [['1', 'On', 'the curated charts take the place of the grid cells they hold', HOOD_GLYPHS.curated], ['0', 'Off', 'grid cells everywhere', HOOD_GLYPHS.grid]],
@@ -737,17 +739,19 @@ async function render() {
     const t0 = performance.now();
     // a kind is drawn while any of its sprites is selected
     const kinds = KINDS.filter((k) => SPRITES.some((s) => s.kind === k && selection.has(s.key)));
+    const ink = voyageInk(), inkKey = JSON.stringify(ink); // read from the sheet last drawn; checked again once this one lands
     const { scene, data, bg, world, coarse, timing } = await createScene(env, {
       ...style, ...parsePlacement(style.placement), relief: style.mountains === 'colour' ? ['marina'] : style.mountains === 'ink' ? ['engraved'] : [],
       continents: style.continentsZoom > 0, continentsZoom: style.continentsZoom,
       regions: style.regionsZoom > 0 ? style.regions : 'off', regionSet: style.regionSet, regionsZoom: style.regionsZoom,
       sprites: [...selection], kinds, view, pinned: !phone.matches, pinTitle: style.autoTitle ? pinTitle : null,
-      voyages: style.voyages.filter((v) => !v.hidden).map((v) => ({ id: v.id, colour: voyageInk()[v.id], width: style.voyageWidth })), person: style.person, voyageWidth: style.voyageWidth,
+      voyages: style.voyages.filter((v) => !v.hidden).map((v) => ({ id: v.id, colour: ink[v.id], width: style.voyageWidth })), person: style.person, voyageWidth: style.voyageWidth,
       overlay: style.overlay ? { id: style.overlay, mode: style.overlayMode, sheet: style.sheet, opacity: style.overlayOpacity } : null,
       debug: parseDebug(style.debug).debug, tune: parseTune(style.tune).tune,
     });
     if (me !== run) return; // a newer change or a move superseded this one
     ground = { world, coarse, bg, voyages: scene.voyages, anchored: anchorScene(scene, data), overlay: scene.overlay, cards: { cartouche: kinds.includes('cartouche') ? scene.cartouche : null, scaleSprite: scene.scaleSprite, scale: style.scale, bg } };
+    if (JSON.stringify(voyageInk()) !== inkKey) { showVoyage(); render(); return; } // the sheet laid or lifted changed which voyages cross it: draw again in their inks
     applyReveal();
     if (style.autoTitle) $('title').value = scene.cartouche.title; // the box shows what the cartouche letters, and cannot be edited
     placed = view;

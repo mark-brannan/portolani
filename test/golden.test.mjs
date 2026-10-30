@@ -9,6 +9,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import { createScene, drawScene, doubtMarks, SCALE_NAMES, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, RELIEF_STYLES, PROJECTION_NAMES, W, H } from '../scripts/scene.mjs';
+import { VOYAGE_CONTRAST } from '../scripts/voyages.mjs';
 import { plantTrees } from '../scripts/trees.mjs';
 import { compare, CHANNEL } from '../scripts/golden-compare.mjs';
 import { coastNames, joinNames } from '../scripts/names.mjs';
@@ -42,7 +43,7 @@ const OPTS = { 'region-z5': { autoTitle: false }, 'world-z2-voyage': { voyages: 
   'world-z2-person': { person: 'ibn-battuta', voyages: [{ id: 'columbus' }] },
   'pacific-z3-migrations': { voyages: [{ id: 'lapita-expansion' }, { id: 'east-polynesia-settlement', colour: '#1f4e8c' }] } ,
   'china-z5-doubt': { voyages: [{ id: 'ibn-battuta-6' }] },
-  'sheet-z3-voyage': { overlay: { id: 'de-la-cosa', mode: 'sheet' }, voyages: [{ id: 'columbus', colour: '#d6006f', width: 3.2 }] },
+  'sheet-z3-voyage': { overlay: { id: 'de-la-cosa', mode: 'sheet' }, voyages: [{ id: 'columbus', colour: VOYAGE_CONTRAST[0], width: 3.2 }] },
   'old-world-z2.6-1375': { regions: 'english', regionSet: 'catalan-1375' } };
 // and its full-size render is kept for the README, so `npm run golden` refreshes both together
 const README_IMAGE = join(ROOT, 'docs', 'readme.jpg');

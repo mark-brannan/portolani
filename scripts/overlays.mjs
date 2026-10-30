@@ -210,7 +210,7 @@ export function drawOverlay(g, overlay, proj, opacity = 0.6, { w = 1600, h = 160
 
 // The overlay in the link: `overlay=<id>` the chart's sheet laid over the map at its own placement;
 // `sheet=<lon>,<lat>,<scale>,<turn>` where it was dragged to (the chart's own when left out);
-// `overlaymode=pieces` the warped pieces instead, with `overlayopacity=<0..1>` how strongly. Off (no
+// `overlaymode=pieces` the warped pieces instead, with `overlayopacity=<0..1>` how strongly;
 // `sheethides=1` a voyage's fly takes the sheet off if it would cover the frame (otherwise the voyage is drawn over the sheet). Off (no
 // overlay), the sheet, its own placement and 0.6 are the defaults, and a default is left out of the hash.
 // `ids`, when given, are the overlays the site has: any other id reads as off. `q` is a URLSearchParams.
