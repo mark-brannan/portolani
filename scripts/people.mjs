@@ -9,6 +9,10 @@ export { DASHES };
 
 export const PEOPLE_FILE = 'data/voyages/people.json';
 export const PICTURES_FILE = 'packs/overlays/people/people.json';
+// A sight's pictures (data/sights/pictures.json, keyed by the tile's name in sights.mjs SIGHT_TILES, each a list in the
+// people's `images` shape with a one-line `caption` of what it shows), built by the same script into packs/overlays/sights/.
+export const SIGHT_PICTURES_FILE = 'data/sights/pictures.json';
+export const SIGHT_MANIFEST_FILE = 'packs/overlays/sights/sights.json';
 export const PERSON_RED = '#8c2f1e'; // the chosen person's bar and voyages: the chart's red (scene.mjs windRed)
 export const DIMMED = 0.2; // the alpha of every other voyage while a person is chosen
 
@@ -109,8 +113,13 @@ export function pictureName(file) {
 export const commonsPage = (file) => `https://commons.wikimedia.org/wiki/File:${encodeURIComponent(String(file).replace(/^File:/, '').replace(/ /g, '_'))}`;
 
 // The caption a picture carries on the card: what it is, when it was made, by whom, under what licence.
-const KIND_WORDS = { life: 'from life', near: 'near life', posthumous: 'posthumous', imaginary: 'imagined', modern: 'modern', none: 'no likeness', scene: 'scene', ship: 'ship', map: 'map' };
+const KIND_WORDS = { life: 'from life', near: 'near life', posthumous: 'posthumous', imaginary: 'imagined', modern: 'modern', none: 'no likeness', scene: 'scene', ship: 'ship', map: 'map', photo: 'photograph', air: 'from the air', space: 'from orbit', drawing: 'drawing' };
 export const pictureCredit = (im) => [[KIND_WORDS[im.kind] ?? im.kind, im.date].filter(Boolean).join(', '), im.author, im.licence].filter(Boolean).join(' · ');
+// What a picture shows, in a line: a sight's `caption`, a person's `note`
+export const pictureNote = (im) => im.caption ?? im.note ?? null;
+// The sights with pictures, from pictures.json: { [name]: [image record] }, a record without a file dropped
+export const sightPicturesOf = (json) => Object.fromEntries(Object.entries(json ?? {}).filter(([, list]) => Array.isArray(list))
+  .map(([name, list]) => [name, list.filter((im) => im && typeof im.file === 'string')]).filter(([, list]) => list.length));
 
 // The years a voyage's `when` spans, [first, last], negative before Christ: "c. 330–320 BC" [-330, -320]; [NaN, NaN] for none.
 export function voyageYears(when) {
@@ -162,22 +171,38 @@ export function viewContaining(frame, { w = 1600, h = 1000, pad = 0.08 } = {}) {
   return { lon: (frame.lonMin + frame.lonMax) / 2, lat: (2 * Math.atan(Math.exp((y0 + y1) / 2)) - Math.PI / 2) / RAD, zoom: Math.log2((k * 2 * Math.PI) / 512) };
 }
 
+// The box round a sight's spots (`at` [lon, lat], one or several), `pad` degrees clear round them, so a town's pictures
+// lie a little way south of its marks rather than on them; null for none.
+export const SIGHT_PAD = 0.01; // degrees, about 1.1 km: clear of the ruin marks at the zooms a tile opens at
+export function sightFrame(at, pad = SIGHT_PAD) {
+  const f = frameOf(at);
+  return f && { lonMin: f.lonMin - pad, lonMax: f.lonMax + pad, latMin: f.latMin - pad, latMax: f.latMax + pad };
+}
+// How tall a sight's pictures lie, in Mercator degrees: a town's frame is a few kilometres, so the row is sized for the
+// zoom its tile opens at (9 to 10) rather than from the frame, as a person's is
+export const SIGHT_PICTURE_TALL = 0.1;
+
 // Where a person's pictures lie by default, from `frame` (the lon/lat box of their birth, death and voyages): each as tall
 // as two fifths of the frame (in Mercator degrees, 3 to 30), times `grow`, side by side in a row under the frame's south
 // edge, from its west edge eastward, each laid `overlap` of its width over the one before (the page lays them larger
 // and overlapping on a wide screen, so a long row still fits it). `sizes` are the pictures' [width, height] in px.
-// Returns [{ lon, lat, scale, turn: 0 }], scale in Mercator degrees per px, as a chart's sheet (overlays.mjs).
-export function picturePlaces(frame, sizes, grow = 1, overlap = 0) {
+// A sight's row names its own height (`tall`, SIGHT_PICTURE_TALL) and lies centred under the frame (`centred`), since a
+// town's frame is far narrower than its row. Returns [{ lon, lat, scale, turn: 0 }], scale in Mercator degrees per px,
+// as a chart's sheet (overlays.mjs).
+export function picturePlaces(frame, sizes, grow = 1, overlap = 0, { tall: own = null, centred = false } = {}) {
   const merc = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360)) * 180 / Math.PI;
   const latOf = (m) => (2 * Math.atan(Math.exp((m * Math.PI) / 180)) - Math.PI / 2) * 180 / Math.PI;
   const m0 = merc(Math.max(-80, frame.latMin)), m1 = merc(Math.min(80, frame.latMax));
-  const tall = Math.max(3, Math.min(30, (m1 - m0) * 0.4)) * grow, gap = tall * 0.08;
+  const tall = (own ?? Math.max(3, Math.min(30, (m1 - m0) * 0.4))) * grow, gap = tall * 0.08;
   let x = frame.lonMin;
-  return sizes.map(([w, h]) => {
+  const row = sizes.map(([w, h]) => {
     const scale = tall / h, wide = w * scale, at = { lon: x + wide / 2, lat: latOf(Math.max(merc(-80) + tall / 2, m0 - gap - tall / 2)), scale, turn: 0 };
     x += overlap ? wide * (1 - overlap) : wide + gap;
     return at;
   });
+  if (!centred || !row.length) return row;
+  const last = row.at(-1), width = last.lon + (sizes.at(-1)[0] * last.scale) / 2 - frame.lonMin, shift = (frame.lonMin + frame.lonMax) / 2 - frame.lonMin - width / 2;
+  return row.map((s) => ({ ...s, lon: s.lon + shift }));
 }
 // The box of `frame` and the pictures laid at `places` (picturePlaces), each `sizes` [width, height] px: what a view
 // shows to frame a person whole.

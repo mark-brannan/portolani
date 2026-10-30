@@ -512,6 +512,26 @@ Feature: A person's picture card
     And the enlarged card shows ⟳ to turn it over, and a put-away control drawn as an X like the one that marks buried treasure on a map, or a small skull and crossbones
     And the card's old resize icon goes
 
+Feature: A sight's pictures on the chart table
+  Source: the user's design for the sights' pictures, 2026-10-30, on [#310](https://github.com/mark-brannan/portolani/pull/310): a sight's tile opened on the map deals its pictures onto the map "as onto a chart table", exactly as a chosen person's pictures are; Tyre first, from the candidates in `docs/ruin-marks/tyre.md`
+  Scenario: a sight's tile opens its pictures
+    Given a sight with pictures in its record (Tyre: the harbour, the dig, the peninsula from orbit, the arch, the road, the hippodrome, Cassas's aqueduct)
+    When the user opens its tile on the map
+    Then its pictures are dealt onto the map in a row just south of its marks, centred under them, each a little askew
+    And they drag, resize, turn over to read their credit and caption, look, put away and follow their link to Commons as a person's do
+    And the tile shows them as thumbnails, each of which takes its picture off the table or puts it back
+    And closing the tile leaves the pictures on the table until the user puts them away or chooses another subject
+  Scenario: one subject at a time
+    Given a sight's pictures on the table
+    When the user chooses a person in the People drawer
+    Then the sight's pictures are put away and the person's dealt, and the other way round when a sight's tile is opened with a person chosen
+    And the choice rides in the link as `sight=<name>`, with `pictures=` and `pictureat=` as a person's
+  Scenario: built and credited
+    Given the sights' picture records (`data/sights/pictures.json`, keyed by the tile's name, each picture with its kind, author, date, licence and a one-line caption)
+    When the pictures are built (`npm run people`)
+    Then each is fetched from Commons, its licence checked against the record, and written into `packs/overlays/sights/` with a manifest of the people manifest's shape
+    And its back reads its credit and its caption
+
 Feature: People and voyages share one timeline
   Source: the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "I'm now leaning towards both the people drawer and the voyages drawer being timeline format"; "Perhaps the timelines has a way to expand to earlier human history on the left side?"; "I don't exactly like the break I'm seeing from 300 BC to 1000 CE...realizing that it throws off the scale a bit."; and the user's answers in the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30, to the recorder's questions (paraphrase: one timeline, two lanes, the Sights eras as colour bands; Lapita the left edge, an expander for earlier history; fill the gap rather than compress the axis): "voyages section: yes"; "timeline span, yes lapita default with expander"; "BC to CE break, yes fill it"
   Scenario: two lanes

@@ -18,7 +18,7 @@ import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, dra
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
-import { PEOPLE_FILE, PICTURES_FILE, lifeSpan, laneAxis, eraBands, EARLIER_MARKS, pictureCredit, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, viewContaining, withPictures, peopleOf, whoOf, deathOf } from './people.mjs';
+import { PEOPLE_FILE, PICTURES_FILE, SIGHT_PICTURES_FILE, SIGHT_MANIFEST_FILE, SIGHT_PICTURE_TALL, lifeSpan, laneAxis, eraBands, EARLIER_MARKS, pictureCredit, pictureNote, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, sightFrame, viewContaining, withPictures, peopleOf, whoOf, deathOf, sightPicturesOf } from './people.mjs';
 import { fold, bestPlace } from './placename.mjs';
 import { planFlight, ease as flyEase, FLY_KNOBS, flyDefaults } from './flight.mjs';
 
@@ -54,7 +54,7 @@ const canvas = $('map'), ctx = canvas.getContext('2d');
 // cards beside the map, not on the sea.
 const phone = matchMedia('(max-width: 520px)');
 
-const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: CONTINENT_ZOOM_END, regions: 'latin', regionSet: 'today', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyages: [], voyageWidth: VOYAGE_WIDTH, voyageDraw: VOYAGE_DRAW.seconds, person: null, pictures: null, ...OVERLAY_DEFAULTS, cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER, overlap: DEFAULT_OVERLAP };
+const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: CONTINENT_ZOOM_END, regions: 'latin', regionSet: 'today', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyages: [], voyageWidth: VOYAGE_WIDTH, voyageDraw: VOYAGE_DRAW.seconds, person: null, sight: null, pictures: null, ...OVERLAY_DEFAULTS, cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER, overlap: DEFAULT_OVERLAP };
 
 // ---------------------------------------------------------------- the sprites on offer
 
@@ -132,8 +132,10 @@ function styleFromHash() {
     voyages: voyagesFromHash(q),
     voyageWidth: VOYAGE_WIDTHS.includes(Number(q.get('voyagewidth'))) ? Number(q.get('voyagewidth')) : DEFAULTS.voyageWidth,
     voyageDraw: voyageDrawSeconds(q.get('voyagedraw')),
-    // the person chosen in the People drawer (data/voyages/people.json), which of their pictures lie on the map, and where
-    person: /^[a-z][a-z0-9-]*$/.test(q.get('person') ?? '') ? q.get('person') : DEFAULTS.person,
+    // the subject chosen, one of: the person chosen in the People drawer (data/voyages/people.json) or the sight whose tile
+    // was opened (scripts/sights.mjs); which of its pictures lie on the map, and where
+    sight: SIGHT_TILES[q.get('sight')] ? q.get('sight') : DEFAULTS.sight,
+    person: !SIGHT_TILES[q.get('sight')] && /^[a-z][a-z0-9-]*$/.test(q.get('person') ?? '') ? q.get('person') : DEFAULTS.person,
     pictures: parsePictures(q.get('pictures'), DEFAULTS.pictures),
     pictureAt: parsePictureAt(q.get('pictureat')),
     // a chart's scan laid over the map (packs/overlays/overlays.json; an id the site lacks draws nothing), and how strongly
@@ -193,8 +195,8 @@ function writeHash() {
   if (st.voyages.length) q.set('voyages', st.voyages.map((v) => (v.colour ? `${v.id}:${v.colour.slice(1)}` : v.id) + (v.hidden ? '~' : '')).join(','));
   if (st.voyageWidth !== DEFAULTS.voyageWidth) q.set('voyagewidth', st.voyageWidth);
   if (st.voyageDraw !== DEFAULTS.voyageDraw) q.set('voyagedraw', st.voyageDraw);
-  if (st.person) {
-    q.set('person', st.person);
+  if (st.person || st.sight) {
+    q.set(st.person ? 'person' : 'sight', st.person ?? st.sight);
     const shown = st.pictures && (st.pictures.length ? st.pictures.join(',') : 'none'), at = pictureAtText(st.pictureAt);
     if (shown) q.set('pictures', shown);
     if (at) q.set('pictureat', at);
@@ -757,7 +759,7 @@ async function render() {
     applyReveal();
     if (style.autoTitle) $('title').value = scene.cartouche.title; // the box shows what the cartouche letters, and cannot be edited
     placed = view;
-    hideTile(); // its mark may be gone: another voyage, or none
+    if (keepTile) keepTile = false; else hideTile(); // its mark may be gone: another voyage, or none; a sight's tile just opened stays
     cancelAnimationFrame(frame); frame = 0; // a moving frame still queued would paint over the scene
     const t1 = performance.now();
     const fading = scene.overlays.find((o) => o.mode === 'sheet' && o.id === fadeIn);
@@ -769,7 +771,7 @@ async function render() {
     drawSheetHandles(ctx);
     drawCards();
     placeSheetChips();
-    preparePictures().then((fresh) => { if (fresh && me === run) render(); }, () => {}); // the chosen person's pictures, drawn once loaded
+    preparePictures().then((fresh) => { if (fresh && me === run) repaint('pictures dealt'); }, () => {}); // the chosen subject's pictures, drawn once loaded
     const t2 = performance.now();
     $('status').textContent = `z${view.zoom.toFixed(1)}: load ${timing.load.toFixed(0)} ms, placement + parchment ${timing.place.toFixed(0)} ms, draw ${(t2 - t1).toFixed(0)} ms (total ${(t2 - t0).toFixed(0)} ms)`;
   } catch (e) {
@@ -1264,15 +1266,31 @@ function fillTile(t) {
     a.href = t.cited.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = t.cited.title;
     more = document.createElement('p'); more.className = 'tile-source'; more.append('Read: ', a);
   }
-  tileEl.replaceChildren(close, ...[head, doubt, meta, text, source, more].filter(Boolean));
+  const pics = t.sight ? sightPics(t.sight) : null; // a sight's pictures, each on the table or off it
+  tileEl.replaceChildren(close, ...[head, doubt, meta, text, source, more, pics].filter(Boolean));
   tileEl.setAttribute('aria-label', t.title ?? 'Point of interest');
 }
+// A sight's pictures in its tile, as the person card shows a person's (picsHTML): once its records are loaded and it is
+// the subject chosen; null otherwise
+function sightPics(name) {
+  const s = subject();
+  if (!s || s.kind !== 'sight' || s.id !== name) return null;
+  const div = document.createElement('div');
+  div.className = 'pics'; div.setAttribute('role', 'group'); div.setAttribute('aria-label', 'Pictures, on the table or off it');
+  div.innerHTML = picsHTML(s, picturesOf(s));
+  return div;
+}
+tileEl.addEventListener('click', (e) => {
+  const pic = e.target.closest('[data-pic]'), s = subject();
+  if (pic && s?.kind === 'sight') setOnTable(Number(pic.dataset.pic), !picturesOf(s).includes(Number(pic.dataset.pic)));
+});
+let tileShown = null; // the tile open, by its object
 // every listed place with a tile, once by name (or once per spot its tile names), at the view its button flies to
 let sightList = null;
 function sightTiles() {
   sightList ??= [...new Map([...places.map(({ name, view: v }) => [name, v]), ...CHARTS.map(({ made }) => [made.title, made])]).entries()]
     .filter(([name]) => SIGHT_TILES[name]).flatMap(([name, v]) => { const { at, ...tile } = SIGHT_TILES[name], spots = at ? (Array.isArray(at[0]) ? at : [at]) : [[v.lon, v.lat]];
-      return spots.map(([lon, lat]) => ({ lon, lat, tile: { title: name, ...tile } })); });
+      return spots.map(([lon, lat]) => ({ lon, lat, tile: { title: name, sight: name, ...tile } })); });
   return sightList;
 }
 // the mark at [x, y]: a voyage's event or a sight within reach; else the note on a laid chart whose figure holds the
@@ -1288,6 +1306,11 @@ const laidNotes = (proj, rect) => (ground?.overlays ?? []).flatMap((o, i, all) =
 function showTileAt(at) {
   const best = markAt(at);
   if (!best) return;
+  tileShown = best.tile;
+  if (best.tile.sight) { // the sight becomes the subject: its pictures onto the table, and into the tile once their records are read
+    chooseSight(best.tile.sight);
+    if (!sightData) loadSights().then(() => { if (tileShown === best.tile && !tileEl.hidden) showTileAt(at); }, () => {});
+  }
   fillTile(best.tile);
   // beside the mark's hit area (what a tap on it would hit, markClear) and a margin clear of it: to its right, flipped to its left, below or above
   // where the window has no room (tileSpot), in client px
@@ -1606,6 +1629,10 @@ $('voyageList').addEventListener('input', (e) => {
 // page. Under their bar their card: the name and the years, the bio, each voyage with its summary written out, and
 // the pictures as thumbnails, each of which takes it off the table or puts it back.
 // The choice rides in the link (`person=`, `pictures=`, `pictureat=`).
+//
+// A sight whose tile is opened (showTileAt) is chosen the same way: its pictures (data/sights/pictures.json, built into
+// packs/overlays/sights/) are dealt in a row just south of its marks, and its tile shows them as thumbnails. The person
+// or the sight is the subject (subject()); choosing either puts the other's pictures away. A sight rides as `sight=`.
 function loadPeople() {
   peopleLoad ??= Promise.all([env.readJSON(PEOPLE_FILE), env.readJSON(PICTURES_FILE).catch(() => ({ pictures: {} })), env.readJSON('data/voyages/sources.json').catch(() => ({}))])
     .then(async ([records, { pictures }, sources]) => {
@@ -1618,6 +1645,33 @@ function loadPeople() {
   return peopleLoad;
 }
 const personOf = (id) => peopleData?.people.find((p) => p.id === id) ?? null;
+let sightData = null, sightLoad = null; // { images: { [name]: [record] }, pictures: the manifest }
+function loadSights() {
+  sightLoad ??= Promise.all([env.readJSON(SIGHT_PICTURES_FILE).catch(() => ({})), env.readJSON(SIGHT_MANIFEST_FILE).catch(() => ({ pictures: {} }))])
+    .then(([records, { pictures }]) => { sightData = { images: sightPicturesOf(records), pictures }; return sightData; }, (e) => { sightLoad = null; throw e; });
+  return sightLoad;
+}
+// The subject chosen, whose pictures lie on the table: { key, kind, id, images, manifest }, the person chosen or the sight
+// whose tile was opened, once its records are loaded; null for none
+const subjectKey = () => (style.person ? `person:${style.person}` : style.sight ? `sight:${style.sight}` : null);
+function subject() {
+  if (style.person) { const p = personOf(style.person); return p && { key: `person:${p.id}`, kind: 'person', id: p.id, person: p, images: p.images, manifest: peopleData.pictures }; }
+  if (style.sight && sightData?.images[style.sight]) return { key: `sight:${style.sight}`, kind: 'sight', id: style.sight, images: sightData.images[style.sight], manifest: sightData.pictures };
+  return null;
+}
+async function loadSubject() { if (style.person) await loadPeople(); else if (style.sight) await loadSights(); return subject(); }
+// A sight chosen: its pictures onto the table, a person's off it. Opening the same sight's tile again changes nothing.
+let keepTile = false;
+function chooseSight(name) {
+  if (style.sight === name && !style.person) return;
+  const hadPerson = Boolean(style.person);
+  style = { ...style, person: null, sight: name, pictures: DEFAULTS.pictures, pictureAt: {} };
+  flips.clear(); links.clear(); raised = []; looking = null;
+  showPeople(); writeHash();
+  if (hadPerson) { keepTile = true; render(); } // the person's voyages back in their own inks
+  else preparePictures().then((fresh) => { if (fresh) repaint('pictures dealt'); }, () => {});
+  flyToSubject({ onlyWider: true });
+}
 const spanOf = (p) => lifeSpan(p, p.voyages.flatMap((id) => voyageYears(peopleData.voyages[id]?.when)));
 const lifeText = (p) => `${p.born?.date ?? 'birth unknown'} – ${deathOf(p)?.date ?? 'death unknown'}`;
 const pc = (x) => `${(x * 100).toFixed(2)}%`;
@@ -1658,23 +1712,24 @@ function showPeople() {
     return `<li><b>${escapeHTML(v.title)}</b>${/\d/.test(v.title) ? '' : ` <span class="when">${escapeHTML(v.when)}</span>`}` +
       `<p>${escapeHTML(v.summary ?? '')}${link ? ` <a href="${escapeHTML(link.url)}" target="_blank" rel="noopener">${escapeHTML(link.label)}</a>` : ''}</p></li>`;
   }).join('');
-  const shown = picturesOf(p);
-  const pics = p.images.map((im, i) => { const m = peopleData.pictures[im.file];
-    return m ? `<button type="button" class="pic" data-pic="${i}" aria-pressed="${shown.includes(i)}" title="${escapeHTML(pictureCredit(im))}: on the table, or off it"><img src="packs/overlays/${escapeHTML(m.src)}" alt="" loading="lazy"></button>` : ''; }).join('');
+  const pics = picsHTML({ images: p.images, manifest: peopleData.pictures }, picturesOf(p));
   const roles = (Array.isArray(p.role) ? p.role : p.role ? [p.role] : []).map((r) => `<span class="chip role">${escapeHTML(r)}</span>`).join(' ');
   card.innerHTML = `<p class="pname"><b>${escapeHTML(p.name)}</b> ${escapeHTML(lifeDates(p))} ${roles}</p>` +
     (p.bio ? `<p class="bio">${escapeHTML(p.bio)}</p>` : '') +
     (voyages ? `<ul class="pvoyages">${voyages}</ul>` : '') +
     (pics ? `<div class="pics" role="group" aria-label="Pictures, on the table or off it">${pics}</div>` : '');
 }
+// A subject's pictures as thumbnails, each a button that takes it off the table or puts it back (`shown` those on it)
+const picsHTML = (s, shown) => s.images.map((im, i) => { const m = s.manifest[im.file];
+  return m ? `<button type="button" class="pic" data-pic="${i}" aria-pressed="${shown.includes(i)}" title="${escapeHTML(pictureNote(im) ?? pictureCredit(im))}: on the table, or off it"><img src="packs/overlays/${escapeHTML(m.src)}" alt="" loading="lazy"></button>` : ''; }).join('');
 $('peopleStrip').addEventListener('click', (e) => {
   const b = e.target.closest('[data-person]');
   if (!b) return;
   const id = b.dataset.person === style.person ? null : b.dataset.person;
-  style = { ...style, person: id, pictures: DEFAULTS.pictures, pictureAt: {} };
+  style = { ...style, person: id, sight: null, pictures: DEFAULTS.pictures, pictureAt: {} };
   flips.clear(); links.clear(); raised = []; looking = null;
   showPeople(); writeHash(); render();
-  if (id) flyToPerson(id);
+  if (id) flyToSubject();
 });
 $('personCard').addEventListener('click', (e) => {
   const pic = e.target.closest('[data-pic]'), p = personOf(style.person);
@@ -1683,25 +1738,34 @@ $('personCard').addEventListener('click', (e) => {
 // A picture onto the table (on top of the pile, as the last one touched) or off it, put away face up; choosing the
 // person again deals every picture back
 function setOnTable(i, on) {
-  const p = personOf(style.person);
-  if (!p) return;
-  const shown = picturesOf(p).filter((k) => k !== i);
+  const s = subject();
+  if (!s) return;
+  const shown = picturesOf(s).filter((k) => k !== i);
   style = { ...style, pictures: on ? [...shown, i].sort((a, b) => a - b) : shown };
   if (on) raise(i); else { flips.delete(i); links.delete(i); raised = raised.filter((k) => k !== i); if (focusedPic === i) focusedPic = null; if (looking === i) looking = null; }
-  showPeople(); writeHash(); render();
+  showPeople(); writeHash();
+  for (const b of tileEl.querySelectorAll('[data-pic]')) b.setAttribute('aria-pressed', String(picturesOf(s).includes(Number(b.dataset.pic)))); // the open tile's thumbnails
+  repaint('a picture put away');
+  preparePictures().then((fresh) => { if (fresh) repaint('a picture dealt'); }, () => {});
 }
-// The box round a person's birth, death and voyages, once per person
-async function frameOfPerson(p) {
-  if (!frames.has(p.id)) {
-    const vs = p.voyages.map((id) => peopleData.voyages[id]);
-    const pts = [p.born && [p.born.lon, p.born.lat], deathOf(p) && [deathOf(p).lon, deathOf(p).lat], ...vs.flatMap((v) => (v?.legs ?? []).flatMap((l) => l.points))].filter(Boolean);
-    frames.set(p.id, frameOf(pts.map(([lon, lat]) => [((((lon + 180) % 360) + 360) % 360) - 180, lat])));
+// The box round a subject, once per subject: a person's birth, death and voyages; a sight's spots, padded (sightFrame)
+function frameOfSubject(s) {
+  if (!frames.has(s.key)) {
+    if (s.kind === 'sight') frames.set(s.key, sightFrame(sightTiles().filter(({ tile }) => tile.sight === s.id).map(({ lon, lat }) => [lon, lat])));
+    else {
+      const p = s.person, vs = p.voyages.map((id) => peopleData.voyages[id]);
+      const pts = [p.born && [p.born.lon, p.born.lat], deathOf(p) && [deathOf(p).lon, deathOf(p).lat], ...vs.flatMap((v) => (v?.legs ?? []).flatMap((l) => l.points))].filter(Boolean);
+      frames.set(s.key, frameOf(pts.map(([lon, lat]) => [((((lon + 180) % 360) + 360) % 360) - 180, lat])));
+    }
   }
-  return frames.get(p.id);
+  return frames.get(s.key);
 }
-const pictureSize = (p, i) => { const m = peopleData.pictures[p.images[i]?.file]; return m ? [m.width, m.height] : null; };
-// The pictures on the table: those the link names, else all of them
-const picturesOf = (p) => style.pictures ?? p.images.map((_, i) => i);
+const pictureSize = (s, i) => { const m = s.manifest[s.images[i]?.file]; return m ? [m.width, m.height] : null; };
+// The pictures on the table: those the link names, else all of them (`s` a subject, or a person: anything with `images`)
+const picturesOf = (s) => style.pictures ?? s.images.map((_, i) => i);
+// Where a subject's shown pictures lie by default (picturePlaces): a person's under their frame, sized from it; a sight's
+// centred under its marks at a town's size
+const placesOf = (s, f, sizes) => picturePlaces(f, sizes, ...pictureLay(), s.kind === 'sight' ? { tall: SIGHT_PICTURE_TALL, centred: true } : {});
 // Each picture lies a little askew, as if dealt onto a chart table: degrees by its place in the record, and a nudge
 // off the row's line as a share of its height
 const ASKEW = [-4, 3, -2, 5, -3, 2], NUDGE = [0.06, -0.05, 0.08, -0.03, 0.04, -0.07];
@@ -1712,49 +1776,51 @@ const ease = (t) => 1 - (1 - t) ** 3;
 const PICTURE_GROW = 1.6, PICTURE_OVERLAP = 0.25, pictureLay = () => (phone.matches ? [1, 0] : [PICTURE_GROW, PICTURE_OVERLAP]);
 // The pile: the pictures touched, grabbed or focused, the last on top; the rest lie under them in the record's order
 let raised = [];
-let pileFor = null; // the person the pile, the picture looked at and the turned ones are for
+let pileFor = null; // the subject the pile, the picture looked at and the turned ones are for
 const raise = (i) => { const was = raised.at(-1); raised = [...raised.filter((k) => k !== i), i]; return was !== i; };
 // The shown pictures with their images loaded, bottom of the pile first: [{ i, o, sheet, im }], `o` an overlay of one
 // piece (overlays.mjs) and `sheet` where it lies: where it was dragged, else its own place under the person's frame
-// (picturePlaces)
+// (placesOf)
 function shownPictures() {
-  if (pileFor !== style.person) { pileFor = style.person; raised = []; looking = null; flips.clear(); links.clear(); } // another person, by any road
-  const p = personOf(style.person), f = p && frames.get(p.id);
+  if (pileFor !== subjectKey()) { pileFor = subjectKey(); raised = []; looking = null; flips.clear(); links.clear(); } // another subject, by any road
+  const s = subject(), f = s && frames.get(s.key);
   if (!f) { looking = null; return []; }
-  const shown = picturesOf(p).filter((i) => pictureSize(p, i)), places = picturePlaces(f, shown.map((i) => pictureSize(p, i)), ...pictureLay());
+  const shown = picturesOf(s).filter((i) => pictureSize(s, i)), places = placesOf(s, f, shown.map((i) => pictureSize(s, i)));
   const list = shown.map((i, k) => {
-    const img = pictureImgs.get(`${p.id}/${i}`), [, h] = pictureSize(p, i);
+    const img = pictureImgs.get(`${s.key}/${i}`), [, h] = pictureSize(s, i);
     const at = style.pictureAt[i] ?? { ...places[k], lat: places[k].lat + NUDGE[i % 6] * h * places[k].scale };
-    return img && { i, k, im: p.images[i], o: { img, width: img.width, height: img.height, scale: 1 }, sheet: { ...at, turn: 0 } };
+    return img && { i, k, im: s.images[i], o: { img, width: img.width, height: img.height, scale: 1 }, sheet: { ...at, turn: 0 } };
   }).filter(Boolean);
   if (looking != null && !list.some((pic) => pic.i === looking)) looking = null; // put away, or gone from the link
   return list.sort((a, b) => pileOf(a.i) - pileOf(b.i)); // stable: the untouched keep their order, under the touched
 }
 function pileOf(i) { return i === looking ? Infinity : raised.indexOf(i); } // the one looked at over all
-// The chosen person's frame and shown pictures loaded; true when anything new came in (the map is then drawn again)
+// The chosen subject's frame and shown pictures loaded; true when anything new came in (the map is then drawn again)
 async function preparePictures() {
-  const id = style.person;
-  if (!id) return false;
-  await loadPeople();
-  const p = personOf(id);
-  if (!p) return false;
-  let fresh = !frames.has(id);
-  await frameOfPerson(p);
-  await Promise.all(picturesOf(p).map(async (i) => {
-    const m = peopleData.pictures[p.images[i]?.file], key = `${id}/${i}`;
-    if (!m || pictureImgs.has(key)) return;
-    pictureImgs.set(key, await env.loadImage(`packs/overlays/${m.src}`));
+  const key = subjectKey();
+  if (!key) return false;
+  const s = await loadSubject();
+  if (!s) return false;
+  let fresh = !frames.has(s.key);
+  frameOfSubject(s);
+  await Promise.all(picturesOf(s).map(async (i) => {
+    const m = s.manifest[s.images[i]?.file], imgKey = `${s.key}/${i}`;
+    if (!m || pictureImgs.has(imgKey)) return;
+    pictureImgs.set(imgKey, await env.loadImage(`packs/overlays/${m.src}`));
     fresh = true;
   }));
-  return fresh && id === style.person;
+  return fresh && key === subjectKey();
 }
-// The map flies to frame the person and their pictures, wherever it is
-async function flyToPerson(id) {
-  await loadPeople();
-  const p = personOf(id), f = p && await frameOfPerson(p);
-  if (!f || style.person !== id) return;
-  const shown = picturesOf(p).filter((i) => pictureSize(p, i)), sizes = shown.map((i) => pictureSize(p, i));
-  goTo(viewContaining(withPictures(f, picturePlaces(f, sizes), sizes), { w: W, h: H }));
+// The map flies to frame the subject and its pictures, wherever it is; `onlyWider`, only from a view so wide that the
+// pictures would lie too small to see (a sight's tile opened from afar), never from one already close
+const FLY_WIDER = 1; // zoom levels wider than the framing view before a sight's choice flies the map
+async function flyToSubject({ onlyWider = false } = {}) {
+  const key = subjectKey(), s = await loadSubject(), f = s && frameOfSubject(s);
+  if (!f || key !== subjectKey()) return;
+  const shown = picturesOf(s).filter((i) => pictureSize(s, i)), sizes = shown.map((i) => pictureSize(s, i));
+  const to = viewContaining(withPictures(f, placesOf(s, f, sizes), sizes), { w: W, h: H });
+  if (onlyWider && view.zoom >= to.zoom - FLY_WIDER) return;
+  goTo(to);
 }
 // A picture on the canvas: its centre, its turn in radians and its size in canvas px, before any deal or flip. The one
 // looked at lies upright in the middle of the part of the canvas in the window, as large as LOOK_FILL of that allows
@@ -1799,7 +1865,7 @@ function linkGlyph(g, x, y, size) {
 // the same frame, where a tap opens the page and where one puts it away.
 const BACK_TYPE = [20, 18, 16, 15, 14, 13, 12]; // CSS px; the People drawer's own card text is 13 px
 const LINK_GLYPH = '⧉', LINK_SAYS = 'Its page on Wikimedia Commons', AWAY_SAYS = 'Put away', LOOK_SAYS = 'Look', FLIP_SAYS = 'Turn over';
-const pageOf = (im) => peopleData.pictures[im.file]?.page ?? commonsPage(im.file);
+const pageOf = (im) => subject()?.manifest[im.file]?.page ?? commonsPage(im.file);
 function drawBack(g, im, w, h) {
   const pad = Math.max(cssPx(8), w * 0.06), family = getComputedStyle(document.body).getPropertyValue('--serif') || 'serif';
   let size = 0, lines = [];
@@ -1814,7 +1880,7 @@ function drawBack(g, im, w, h) {
       if (line) lines.push(line);
     };
     wrap(pictureCredit(im));
-    if (im.note) { lines.push(''); wrap(im.note); }
+    if (pictureNote(im)) { lines.push(''); wrap(pictureNote(im)); }
     if (2 * pad + (lines.length + 1) * size * 1.3 + size * 1.8 <= h) break; // the words, the glyph's line and the foot fit
   }
   const left = -w / 2 + pad, lead = size * 1.3, bh = size * 1.6, by = h / 2 - pad - bh;
@@ -1848,14 +1914,14 @@ const PERSON_LINK = '#8c2f1e';
 const links = new Map(); // a turned picture's link and put-away button ({ link, away }), in its own frame, by its index
 let focusedPic = null; // the picture whose item in the canvas's fallback has the keyboard's focus, ringed
 // The pictures over everything on the map: each on a parchment mount with a soft shadow and an ink rule, a little
-// askew, dealt in one after another when a person is chosen, the one looked at upright and large over the rest; on
+// askew, dealt in one after another when a subject is chosen, the one looked at upright and large over the rest; on
 // each one's lower edge its round buttons (feetOf).
 function drawPictures(g) {
   const list = shownPictures();
   mirrorPictures(list);
   if (!list.length) { dealt = null; return; }
   const now = performance.now(), proj = viewProjection(view), m = 5;
-  if (dealt?.person !== style.person) dealt = { person: style.person, start: now };
+  if (dealt?.key !== subjectKey()) dealt = { key: subjectKey(), start: now };
   let moving = false;
   // in layers: the table, then the picture looked at; each layer's buttons over its pictures, so none hides another's
   const layers = looking == null ? [list] : [list.filter((pic) => pic.i !== looking), list.filter((pic) => pic.i === looking)];
@@ -1974,12 +2040,12 @@ addEventListener('keydown', (e) => { if (e.key === 'Escape' && looking != null) 
 const keys = $('pictureKeys');
 let keysFor = '', focusNext = null;
 function mirrorPictures(list) {
-  const now = `${style.person}|${list.map((pic) => pic.i).sort((a, b) => a - b)}`;
+  const now = `${subjectKey()}|${list.map((pic) => pic.i).sort((a, b) => a - b)}`;
   if (now !== keysFor) {
     keysFor = now;
     const at = document.activeElement, li = keys.contains(at) && at.closest('[data-pic]'); // the focus, kept across the rebuild
     const was = li && (at.tagName === 'A' ? `[data-pic="${li.dataset.pic}"] a` : `[data-${Object.keys(at.dataset)[0]}="${li.dataset.pic}"]`);
-    keys.innerHTML = [...list].sort((a, b) => a.i - b.i).map(({ i, im }) => `<li data-pic="${i}"><span>${escapeHTML(pictureCredit(im))}${im.note ? `. ${escapeHTML(im.note)}` : ''}</span> ` +
+    keys.innerHTML = [...list].sort((a, b) => a.i - b.i).map(({ i, im }) => `<li data-pic="${i}"><span>${escapeHTML(pictureCredit(im))}${pictureNote(im) ? `. ${escapeHTML(pictureNote(im))}` : ''}</span> ` +
       `<a href="${escapeHTML(pageOf(im))}" target="_blank" rel="noopener" title="${LINK_SAYS}" aria-label="${LINK_SAYS}">${LINK_GLYPH}</a> ` +
       ['look', 'flip', 'away'].map((k) => { const says = { look: LOOK_SAYS, flip: FLIP_SAYS, away: AWAY_SAYS }[k];
         return `<button type="button" data-${k}="${i}"${k === 'look' ? ' aria-pressed="false"' : ''} aria-label="${says}: ${escapeHTML(pictureCredit(im))}">${says}</button>`; }).join(' ') + '</li>').join('');
