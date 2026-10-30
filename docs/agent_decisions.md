@@ -333,3 +333,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261030t015642z
 - The hajj's desert legs run through Ghadames, Awjila and Siwa out, and Awjila, Murzuq, Ghat and Takedda home, as shape only; each leg's note says no source names them for Musa Undo: drop the shape points from tuat-giza and cairo-gao, leaving a plain curve between the ends ([#284](https://github.com/mark-brannan/portolani/pull/284))
+
+### 20261030t015648z
+- Musa's bio carries one sentence attributed to Siphiwe Baleka (Balanta Society, 2020): Mali's wealth from taxes, trade and enslavement, and the Balanta remembering it as an empire that raided them Undo: remove the sentence and the baleka-balanta-mali source from Musa's record ([#284](https://github.com/mark-brannan/portolani/pull/284))
