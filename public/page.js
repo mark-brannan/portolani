@@ -1362,6 +1362,17 @@ const SIGHTS = [
     ['Malacca', port(102.25, 2.19), 'Malacca (Melaka)'],
     ['Quanzhou', port(118.68, 24.87)],
   ], null, '9th–15th c.'],
+  ["Mali's trade network", [ // the Sahara's roads and the Niger's towns and goldfields (docs/learn/trans-saharan-trade.md); the roads are marked mid-route
+    ['Niani', port(-9.15, 11.43)],
+    ['Timbuktu', port(-3.01, 16.77)],
+    ['Gao', port(-0.04, 16.27)],
+    ['Walata', port(-7.03, 17.30)],
+    ['Taghaza', port(-5.0, 23.6)],
+    ['Bambuk', at(-11.5, 13.5, 7)],
+    ['Bure', at(-10.0, 10.6, 7)],
+    ['The western road', at(-5.8, 21.0, 6)],
+    ['The road to Egypt', at(6.78, 17.52, 6)],
+  ], null, '8th–16th c.'],
   ['The age of discovery', [
     ['Lisbon', port(-9.14, 38.72)], // also where charts were made
     ['São Jorge da Mina', port(-1.35, 5.08), 'São Jorge da Mina (Elmina)'],
