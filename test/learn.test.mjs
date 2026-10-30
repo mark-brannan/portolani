@@ -17,13 +17,16 @@ test('the markdown subset renders, and escapes what it must', () => {
   assert.match(render('[C](https://en.wikipedia.org/wiki/Cartouche_(design)) after').html, /<a href="https:\/\/en\.wikipedia\.org\/wiki\/Cartouche_\(design\)">C<\/a> after/); // a parenthesis in a URL stays in it
   assert.match(r.html, /<ul><li>one<\/li><li>two<\/li><\/ul>/);
   assert.match(r.html, /<h2>H<\/h2>\n<ol>/);
+  const t = render('| A | *B* |\n|---|---|\n| 1 | 2 |\n| 3 | 4 |\n\n> said *he*\n> once').html;
+  assert.match(t, /<table><thead><tr><th>A<\/th><th><em>B<\/em><\/th><\/tr><\/thead><tbody><tr><td>1<\/td><td>2<\/td><\/tr><tr><td>3<\/td><td>4<\/td><\/tr><\/tbody><\/table>/);
+  assert.match(t, /<blockquote>said <em>he<\/em> once<\/blockquote>/);
 });
 
 test('every page the drawer links to is built, each with a Sources section of fetched links', async () => {
   const out = await mkdtemp(path.join(tmpdir(), 'learn-'));
   await buildLearn(root, out);
   const built = await readdir(path.join(out, 'learn'));
-  for (const slug of ['index', 'portolan-charts', 'charts-and-makers', 'rhumb-lines', 'scale-ladder', 'sea-monsters-and-ships', 'projections']) {
+  for (const slug of ['index', 'portolan-charts', 'charts-and-makers', 'rhumb-lines', 'scale-ladder', 'sea-monsters-and-ships', 'projections', 'mali-and-mansa-musa', 'trans-saharan-trade', 'royal-pilgrims', 'mali-on-the-charts', 'mali-in-memory']) {
     assert.ok(built.includes(`${slug}.html`), slug);
     if (slug === 'index') continue;
     const html = await readFile(path.join(out, 'learn', `${slug}.html`), 'utf8');
