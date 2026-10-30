@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Builds docs/learn/*.md into <site>/learn/*.html: the Learn pages the drawer links to. The markdown
-// is the small subset those pages use (headings, paragraphs, lists, links, *emphasis*, **strong**,
-// `code`), so no dependency is needed. Run alone (`node scripts/learn.mjs`) it writes _site/learn/.
+// is the small subset those pages use (headings, paragraphs, lists, tables, > quotes, links, *emphasis*,
+// **strong**, `code`), so no dependency is needed. Run alone (`node scripts/learn.mjs`) it writes _site/learn/.
 
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -27,6 +27,12 @@ export function render(md) {
     if (/^## /.test(block)) out.push(`<h2>${inline(block.slice(3).trim())}</h2>`);
     else if (lines.every((l) => /^- /.test(l))) out.push(`<ul>${lines.map((l) => `<li>${inline(l.slice(2))}</li>`).join('')}</ul>`);
     else if (lines.every((l) => /^\d+\. /.test(l))) out.push(`<ol>${lines.map((l) => `<li>${inline(l.replace(/^\d+\. /, ''))}</li>`).join('')}</ol>`);
+    else if (lines.length > 2 && lines.every((l) => /^\|.*\|$/.test(l)) && /^\|[\s:|-]+\|$/.test(lines[1])) {
+      const cells = (l) => l.slice(1, -1).split('|').map((c) => inline(c.trim()));
+      const row = (l, t) => `<tr>${cells(l).map((c) => `<${t}>${c}</${t}>`).join('')}</tr>`;
+      out.push(`<table><thead>${row(lines[0], 'th')}</thead><tbody>${lines.slice(2).map((l) => row(l, 'td')).join('')}</tbody></table>`);
+    }
+    else if (lines.every((l) => /^>/.test(l))) out.push(`<blockquote>${inline(lines.map((l) => l.replace(/^> ?/, '')).join(' '))}</blockquote>`);
     else out.push(`<p>${inline(lines.join(' '))}</p>`);
   }
   return { title, html: out.join('\n') };
@@ -44,6 +50,9 @@ const page = ({ title, html }, index) => `<!doctype html>
   h2 { font-size: 1.2rem; margin: 2rem 0 0.5rem; }
   h2:last-of-type { border-top: 1px solid #b9a27a; padding-top: 1rem; }
   code { font-size: 0.9em; }
+  table { border-collapse: collapse; font-size: 0.85rem; line-height: 1.4; margin: 1rem 0; display: block; overflow-x: auto; }
+  th, td { border-bottom: 1px solid #b9a27a; padding: 0.4rem 0.5rem; text-align: left; vertical-align: top; }
+  blockquote { margin: 1rem 0; padding-left: 1rem; border-left: 3px solid #b9a27a; font-style: italic; }
 </style></head><body><main>
 <nav>${index ? '' : '<a href="index.html">Learn</a> &middot; '}<a href="../">Back to the map</a></nav>
 <h1>${esc(title)}</h1>
