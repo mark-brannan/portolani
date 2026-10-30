@@ -378,3 +378,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261030t035247z
 - The census counts a sameAs leg once in each voyage that has it Undo: edit docs/voyage-play/README.md ([#293](https://github.com/mark-brannan/portolani/pull/293))
+
+### 20261030t035406z
+- Arrow keys choose as they move (radio semantics), not only move focus Undo: revert the handler's to.click() ([#294](https://github.com/mark-brannan/portolani/pull/294))
