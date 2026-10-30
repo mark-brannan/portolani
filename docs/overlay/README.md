@@ -94,17 +94,19 @@ under that the city it was made in (a link that flies there) with its year.
 The older way is kept as a mode, "Warped pieces" under Settings → Under the hood, with its opacity slider
 (`overlaymode=pieces&overlayopacity=0.6` in the link). In four steps:
 
-1. **Cut.** The scan is cut into vertical strips, a few per chart (the Carta Marina two, Juan de la Cosa three,
-   the Catalan Atlas one a page).
-2. **Fit.** Each strip gets its own similarity: a scale, a turn and a shift, fitted by least squares to landmarks
-   read off that strip of the scan (a cape, a town, an island, each with the longitude and latitude it has today).
-3. **Draw.** Each strip is drawn onto the map by its own fit, at layer 2.1: over the land and sea, under the
-   lattice and every ornament, with a plain alpha (the slider) and no other blending.
-4. **Read.** So at opacity 1 the strips are opaque, yet the rhumb lines, names, towns, roses, beasts, ships and
-   voyages still show over them; and where two neighbouring strips' scales disagree, they do not meet: the strips
-   leave a gap, with no scan in it.
+1. **Cut.** The scan is cut into vertical strips, a few per chart.
+2. **Fit.** Each strip gets its own scale, turn and shift, fitted to landmarks read off it.
+3. **Draw.** Each strip is laid on the map by its own fit, with a plain alpha.
+4. **Read.** Where neighbouring strips' fits disagree, they gap or overlap.
 
-The gap is the picture to look for. Juan de la Cosa's New World is drawn larger than its Old, so its west and
+The strips per chart are the Carta Marina two, Juan de la Cosa three and the Catalan Atlas one a page. The
+landmarks are a cape, a town, an island, each with the longitude and latitude it has today; the fit is by least
+squares. The strips are drawn at layer 2.1: over the land and sea, under the lattice and every ornament, with the
+slider's alpha and no other blending. So at opacity 1 the strips are opaque, yet the rhumb lines, names, towns,
+roses, beasts, ships and voyages still show over them. Each strip is drawn on its own and nothing trims or fills
+the seam, so where two fits disagree the strips either part, with no scan between them, or overlap.
+
+The gap is the picture to look for, and Juan de la Cosa is the chart where the strips part. Juan de la Cosa's New World is drawn larger than its Old, so its west and
 Atlantic strips pull apart over the mid-Atlantic. At opacity 1 (the lattice and names still drawn over it):
 
 ![Juan de la Cosa's strips at opacity 1, a band of open ocean between them](de-la-cosa-1.jpg)

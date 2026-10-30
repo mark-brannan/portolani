@@ -276,4 +276,4 @@ Left out of the fit: the large coloured island north-west of Ireland at 925, 215
 the two orange islands at 1070, 442 and 1107, 412, which may be the Balearics or Sardinia and Corsica; and
 the Asian coast east of the Red Sea, whose capes cannot be told apart at this size.
 
-The fits cut the scan into three strips, each drawn by its fit, with a gap where their scales disagree: [docs/overlay/README.md](../overlay/README.md#warped-pieces).
+The fits cut the scan into three strips, each drawn by its fit, parting or overlapping where their scales disagree: [docs/overlay/README.md](../overlay/README.md#warped-pieces).
