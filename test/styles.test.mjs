@@ -33,7 +33,7 @@ test('a kind the rendering lacks is drawn from the other pack; plain draws no pi
   assert.deepEqual(vivid.towns, []); // the tower, drawn in code
 
   const scanned = chooseSprites(manifests, { rendering: 'scanned', town: 'aguiar' });
-  assert.deepEqual(scanned.roses.map((s) => s.id), ['rose-aguiar', 'rose-catalan', 'rose-prunes', 'rose-aguiar-b']);
+  assert.deepEqual(scanned.roses.map((s) => s.id), ['rose-aguiar', 'rose-catalan', 'rose-catalan-small', 'rose-prunes', 'rose-aguiar-b']);
   assert.equal(scanned.cartouche.id, 'cartouche-dewit');
   assert.deepEqual(scanned.towns.map((s) => `${s.pack}/${s.file}`),
     ['venice', 'genoa', 'lisbon', 'lake', 'lake-moat', 'smina', 'jerusalem', 'ceuta', 'avignon'].map((t) => `scanned/town-aguiar-${t}.png`));

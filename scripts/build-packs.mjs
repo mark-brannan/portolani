@@ -74,7 +74,6 @@ const SEA_FIGURE = { sat: 24, close: 7, open: 5, dilate: 4, feather: 2, minArea:
 // The Carta Marina's own paper (the mean of the bright land patch round Svecia), divided out of the sea figures: a crop
 // of open sea holds no paper, so its surroundings would be taken for paper and the sea wash lost with it.
 const CARTA_PAPER = '#ded2af';
-const CATALAN_PAPER = '#cdc2ae'; // the vellum inside the Catalan Atlas rose's ring on BnF sheet 5 (in sRGB): the mean of the 80th to 90th percentile of its pixels by brightness
 const GENOESE_PAPER = '#a48c75'; // the vellum inside the Genoese chart's scale bar: the mean of the 80th to 90th percentile of its pixels by brightness (the brightest are specks)
 const DEWIT_PAPER = '#e3dfc4'; // the paper inside the de Wit cartouche's tablet: the mean of the 80th to 90th percentile of its pixels by brightness (the brightest are specks)
 const AGUIAR_PAPER = '#e9e6d2'; // the vellum inside the Aguiar 1492 rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness
@@ -131,12 +130,16 @@ const PACKS = [
         erase: [[2198, 706, 2212, 738], [2170, 690, 2212, 705], [2168, 808, 2212, 842]] },
       // the Aguiar 1492 rose, a patch (#111): the whole disc inside its ring, wind names and petal inscriptions as drawn
       { id: 'rose-aguiar', kind: 'rose', style: 'aguiar', scan: 'aguiar', key: 'patch', paper: AGUIAR_PAPER, crop: [25, 50, 695, 720], figure: [55, 80, 665, 690], sizePx: 300, circle: [335, 331, 308], circleFeather: 4 },
-      // the Catalan Atlas rose, a patch (#111), cut from BnF sheet 5 at full size (docs/catalan-rose): the whole disc inside
-      // its ring, the lapis, vermilion and gilt and the vellum between the rhumbs kept. The ring's centre is (2060, 7998) on the
-      // sheet and its outer line r 690; the circle is the only outline, 25 px outside that line so its feather falls past the
-      // rhumb tips, and it cuts the sea waves and the wind names round the ring; it is not erased but feathered
-      // (`circleFeather`), so there is no pale hole where a name was
-      { id: 'rose-catalan', kind: 'rose', style: 'aguiar', scan: 'catalan-atlas-5', key: 'patch', paper: CATALAN_PAPER, crop: [1285, 7223, 2835, 8773], sizePx: 110, circle: [775, 775, 715], circleFeather: 18 },
+      // the Catalan Atlas rose, a patch (#111), cut from BnF sheet 5 at full size (docs/catalan-rose), as a pair. The ring's
+      // centre is (2060, 7998) on the sheet, its outer line r 690, and the eight wind names reach r 1320. The full sprite is
+      // the whole rose with its names: its circle only cuts the crop's corners (the trefoil island, the chart's lettering).
+      // The small one is the disc inside the ring, its circle 25 px outside the ring line so its feather falls past the rhumb
+      // tips; it cuts the sea waves and the names round the ring, feathered (`circleFeather`) so there is no pale hole where
+      // a name was. Both divide by the paper the map draws on (PARCHMENT), not the sheet's own vellum (#cdc2ae, darker), so
+      // the renderer's multiply lands the scan's lapis, vermilion and gilt as they are and the vellum inside the ring comes
+      // through as itself, a shade greyer than the parchment; divided by the vellum, every colour drew 14% lighter.
+      { id: 'rose-catalan', kind: 'rose', style: 'aguiar', scan: 'catalan-atlas-5', key: 'patch', paper: PARCHMENT, crop: [660, 6598, 3460, 9398], sizePx: 300, circle: [1400, 1400, 1390], circleFeather: 18 },
+      { id: 'rose-catalan-small', kind: 'rose', style: 'aguiar', scan: 'catalan-atlas-5', key: 'patch', paper: PARCHMENT, crop: [1285, 7223, 2835, 8773], sizePx: 110, circle: [775, 775, 715], circleFeather: 18 },
       // Prunes 1559 (Library of Congress), the best 32-point rose of any chart checked for #52: whole crop with its
       // sea of parchment and the rhumb lines running off, a patch not a keyed ink, so the blue and red washes and the
       // gilt keep their tone. North is to the right on the scan, so the cut is turned a quarter anticlockwise.

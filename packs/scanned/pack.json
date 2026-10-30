@@ -119,6 +119,20 @@
       "style": "aguiar",
       "file": "rose-catalan.png",
       "anchor": [0.5, 0.5],
+      "sizePx": 300,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/4/45/Catalan_Atlas_BNF%2C_sheet_5.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:Catalan_Atlas_BNF,_sheet_5.jpg",
+        "crop": [663, 6601, 3457, 9395]
+      }
+    },
+    {
+      "id": "rose-catalan-small",
+      "kind": "rose",
+      "style": "aguiar",
+      "file": "rose-catalan-small.png",
+      "anchor": [0.5, 0.5],
       "sizePx": 110,
       "bands": [0, 1],
       "source": {
