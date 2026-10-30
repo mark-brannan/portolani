@@ -81,6 +81,8 @@ const ALL_CHARTS = [hashParams(), new URLSearchParams(location.search)].some((q)
 // the drawer's layout (`layout=`), a way of grouping the same controls; Default is written as no key
 const LAYOUT_NAMES = ['default', 'question', 'moods', 'sheet'];
 const layoutFromHash = () => (LAYOUT_NAMES.includes(hashParams().get('layout')) ? hashParams().get('layout') : 'default');
+// whether a grouped list's section opens when a mouse rests on its heading (`hover=`); on is written as no key, `hover=0` is off
+const hoverFromHash = () => hashParams().get('hover') !== '0';
 
 function viewFromHash() {
   const q = hashParams(), m = /^(-?[\d.]+)\/(-?[\d.]+)\/(-?[\d.]+)$/.exec(q.get('map') ?? '');
@@ -163,6 +165,7 @@ function writeHash() {
   q.set('map', `${v.zoom.toFixed(2)}/${v.lat.toFixed(3)}/${v.lon.toFixed(3)}`);
   if (v.projection !== PROJECTION_NAMES[0]) q.set('projection', v.projection);
   if (layout !== 'default') q.set('layout', layout);
+  if (!hoverOpen) q.set('hover', '0');
   if (!sameSet(selection, new Set(DEFAULT_SELECTION))) q.set('sprites', SPRITES.filter((s) => selection.has(s.key)).map((s) => encodeKey(s.key)).join(','));
   if (st.townSize !== DEFAULTS.townSize) q.set('townsize', st.townSize);
   if (!st.names) q.set('names', '0');
@@ -314,6 +317,12 @@ const SCALE_GLYPHS = {
   beads: svg(`<path d="M2 5h24M2 13h24" ${stroke('#8c2f1e', 0.8)}/><circle cx="6" cy="9" r="2.4" ${stroke('#8c2f1e', 0.9)}/><circle cx="14" cy="9" r="2.4" ${stroke('#8c2f1e', 0.9)}/><circle cx="22" cy="9" r="2.4" ${stroke('#8c2f1e', 0.9)}/>`),
   ruled: svg(`<path d="M2 4h24M2 14h24" ${stroke('#8c2f1e', 0.8)}/><path d="M3 3v12M14 3v12M25 3v12" ${stroke('#8c2f1e', 0.8)}/><circle cx="14" cy="9" r="2" fill="#e9d8b4" stroke="#8c2f1e" stroke-width=".8"/>`),
 };
+// a section heading with its rows, and the pointer on the heading: clicking (off), or resting while its rows slide open (on)
+const ARROW = '<path d="M17 3v10l2.4-2.2 1.7 3.8 1.5-.7-1.7-3.7H24Z" fill="currentColor"/>';
+const HOVER_GLYPHS = {
+  off: svg(`<path d="M2 4h13" ${stroke('currentColor', 1.4)}/>${ARROW}<path d="M14.5 1.5l1.2 1.2M13.5 5h1.6M14.5 8.5l1.2-1.2" ${stroke('currentColor', 0.8)}/>`),
+  on: svg(`<path d="M2 4h13" ${stroke('currentColor', 1.4)}/><path d="M5 8.5h9M5 12h7M5 15.5h8" ${stroke('currentColor', 0.7)}/>${ARROW}<path d="M25 2.5a2.6 2.6 0 1 1-2.6-.1" ${stroke('currentColor', 0.8)}/>`),
+};
 const MAP_LINES = '<path d="M0 4q8-3 14 2t14-1M0 13q9 3 15-1t13 2" fill="none" stroke="currentColor" stroke-width=".7" opacity=".6"/>';
 const BORDER_GLYPHS = {
   bordered: svg(`<rect width="28" height="18" fill="none"/>${MAP_LINES}<rect x="4" y="4" width="20" height="10" fill="#e9d8b4" stroke="#8c2f1e" stroke-width="1"/><rect x="6" y="6" width="16" height="6" fill="none" stroke="#8c2f1e" stroke-width=".6"/>`),
@@ -379,6 +388,7 @@ const CHOICES = {
   overlayMode: [['sheet', 'One sheet', 'the whole scan, opaque, laid level and centred, dragged by hand', HOOD_GLYPHS.sheets], ['pieces', 'Warped pieces', 'each piece warped onto today\'s coast, at the opacity below', HOOD_GLYPHS.rings]],
   tuneOrigin: [['rose', `Catalan rose (${ROSE_AT})`, 'every band\'s grid has a corner on the rose', HOOD_GLYPHS.rose], ['zero', '0° 0°', 'NOAA\'s own zero', HOOD_GLYPHS.zero]],
   tuneCurated: [['1', 'On', 'the curated charts take the place of the grid cells they hold', HOOD_GLYPHS.curated], ['0', 'Off', 'grid cells everywhere', HOOD_GLYPHS.grid]],
+  hoverOpen: [['off', 'Off', 'a click opens a section', HOVER_GLYPHS.off], ['on', 'On', 'resting the pointer on a heading opens its section', HOVER_GLYPHS.on]],
   tuneRoselines: [['1', 'On', 'the rose\'s 32 lines as one more hub at every zoom', HOOD_GLYPHS.roselines], ['0', 'Off', 'only the sheet the rose falls in', HOOD_GLYPHS.off]],
 };
 for (const [id, options] of Object.entries(CHOICES)) {
@@ -698,6 +708,7 @@ if (UI) {
 }
 
 let layout = layoutFromHash();
+let hoverOpen = hoverFromHash();
 let view = viewFromHash();
 let style = styleFromHash();
 let selection = selectionFromHash();
@@ -809,12 +820,12 @@ const outside = (t) => { const d = openDrawer(); return d && t instanceof Node &
 addEventListener('pointerdown', (e) => { if (outside(e.target) && !(phone.matches && e.target === canvas)) setDrawer(false); });
 addEventListener('focusout', (e) => { if (e.relatedTarget && outside(e.relatedTarget)) setDrawer(false); }); // tabbed out; a click that focuses nothing has no relatedTarget
 
-// Reset: every control back to its default, the view (place and projection) and the drawer's layout kept. The hash holds the whole
+// Reset: every control back to its default, the view (place and projection), the drawer's layout and hover kept. The hash holds the whole
 // style, so a hash with only the view is the default style; the hashchange handler below redraws from it.
 $('reset').addEventListener('click', () => {
   const m = hashParams().get('map'), p = hashParams().get('projection');
   $('shareUrl').hidden = true; $('shareNote').textContent = '';
-  location.hash = [m && `map=${m}`, p && `projection=${p}`, layout !== 'default' && `layout=${layout}`].filter(Boolean).join('&');
+  location.hash = [m && `map=${m}`, p && `projection=${p}`, layout !== 'default' && `layout=${layout}`, !hoverOpen && 'hover=0'].filter(Boolean).join('&');
 });
 // Copy link: the hash is kept current by writeHash. Where the clipboard is refused (an insecure page,
 // a denied permission) the link is put in a box, selected, to copy by hand.
@@ -1712,7 +1723,38 @@ function foldTo(group) {
     g.querySelector(':scope > .rows > div').inert = !on;
   }
 }
-document.addEventListener('click', (e) => { const h = e.target.closest('.group > .fold'); if (h) foldTo(h.parentElement); });
+// With a mouse (a screen that can hover), resting the pointer on a shut group's heading for HOVER_DWELL slides it open and
+// the open one shut, as a click does, while the "Sections open on hover" chips are on; leaving the list shuts nothing.
+// The dwell starts only when the pointer itself moves onto the heading, so a heading slid under a still pointer by the
+// slide does not open in turn. A click on the heading the dwell just opened, before the pointer leaves it, is the click
+// that was on its way, so it leaves the section open; the next click shuts it.
+const HOVER_DWELL = 350; // ms
+const canHover = matchMedia('(hover: hover) and (pointer: fine)');
+let dwell = { group: null, timer: 0 }, hoverOpened = null, lastAt = '';
+const groupAt = (t) => t instanceof Element && t.closest('.group > .fold')?.parentElement || null;
+document.addEventListener('pointermove', (e) => {
+  const at = `${e.clientX},${e.clientY}`;
+  if (e.pointerType !== 'mouse' || at === lastAt) return;
+  lastAt = at;
+  const g = groupAt(e.target);
+  if (g !== hoverOpened) hoverOpened = null;
+  const want = hoverOpen && canHover.matches && g && !g.classList.contains('open') ? g : null;
+  if (want === dwell.group) return;
+  clearTimeout(dwell.timer);
+  dwell = { group: want, timer: want ? setTimeout(() => { dwell = { group: null, timer: 0 }; if (!want.classList.contains('open')) { foldTo(want); hoverOpened = want; } }, HOVER_DWELL) : 0 };
+});
+document.addEventListener('pointerout', (e) => {
+  const g = groupAt(e.target);
+  if (g && g === dwell.group && groupAt(e.relatedTarget) !== g) { clearTimeout(dwell.timer); dwell = { group: null, timer: 0 }; }
+});
+document.addEventListener('click', (e) => {
+  const h = e.target.closest('.group > .fold');
+  if (!h) return;
+  if (h.parentElement === hoverOpened && e.detail !== 0) { hoverOpened = null; return; } // detail 0: Enter or Space
+  foldTo(h.parentElement);
+});
+$('hoverOpen').value = hoverOpen ? 'on' : 'off';
+$('hoverOpen').addEventListener('input', () => { hoverOpen = $('hoverOpen').value === 'on'; writeHash(); });
 
 // Each chart a row: its scan as a thumbnail (the drawer's chart glyph, greyed, until it has one) and its name, either
 // of which flies to frame the sheet and shows it, never hides it; the eye beside the name shows or hides the sheet and
@@ -1877,7 +1919,7 @@ for (const id of Object.values(KNOB_SLIDERS)) $(id).addEventListener('input', (e
 for (const id of ['debug', 'overlap', 'overlayMode', 'overlayOpacity', ...Object.values(KNOB_CHIPS), ...Object.values(KNOB_SLIDERS), 'projection', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'scaleBorder', 'land', 'islands', 'seaTint', 'rivers', 'lakes', 'trees', 'mountains', 'hills', 'continentsZoom', 'regions', 'regionSet', 'regionsZoom', 'titleMode', 'townSize', 'voyageWidth']) $(id).addEventListener('input', readControls);
 let typing = 0; // a typed title is placed when the typing pauses, not on every key: a placement takes up to a few hundred ms
 $('title').addEventListener('input', () => { clearTimeout(typing); typing = setTimeout(readControls, 400); });
-addEventListener('hashchange', () => { layout = layoutFromHash(); showLayout(); view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); showVoyage(); showPeople(); render(); });
+addEventListener('hashchange', () => { layout = layoutFromHash(); showLayout(); hoverOpen = hoverFromHash(); $('hoverOpen').value = hoverOpen ? 'on' : 'off'; view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); showVoyage(); showPeople(); render(); });
 showPlacement();
 render();
 
