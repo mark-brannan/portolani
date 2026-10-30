@@ -19,7 +19,7 @@ import { cityPlan, drawCity, drawHouses, pxRings, insideRings } from './city.mjs
 import { urbanKey } from './urban.mjs';
 import { RIVERS, LAKES, RIVER_STYLES, LAKE_STYLES, waterOf, shown } from './water.mjs';
 import { RELIEF_STYLES, reliefOf, clearOf, drawRelief } from './relief.mjs';
-import { TREES, TREE_STYLES, plantTrees, plantPalms } from './trees.mjs';
+import { TREES, TREE_STYLES, plantTrees, plantPalms, inLake } from './trees.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
 export { SIGHT_TILES } from './sights.mjs'; // the page's tiles for its places; here so the module ships with the scene
 import { RUIN, BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from './buildings.mjs';
@@ -1233,14 +1233,14 @@ function placeHillSprites(humps, sprites, blocked, field, proj) {
 const placedBox = ({ box: [c0, c1, c2] }) => obb((c0[0] + c2[0]) / 2, (c0[1] + c2[1]) / 2, Math.atan2(c1[1] - c0[1], c1[0] - c0[0]),
   Math.hypot(c1[0] - c0[0], c1[1] - c0[1]) / 2, Math.hypot(c2[0] - c1[0], c2[1] - c1[1]) / 2);
 
-// The stand-ins for the places that have a tile (the page's `sights`: { name, lon, lat }) and nothing of their own
-// drawn: a lesser place with no name, from POI_ZOOM on, where the tile opens on a tap. A ruin where no modern city
-// stands on the spot, else the plain tower; placeLesser drops it where a town or another mark is already drawn there.
-function standIns(sights, data, world, view) {
+// The stand-ins for the places that have a tile (the page's `sights`: { name, lon, lat, ruin }) and nothing of their
+// own drawn: a lesser place with no name, from POI_ZOOM on, where the tile opens on a tap. A ruin where the sight says
+// so (`ruin: true`, a fact about the place that its position cannot give), else the plain tower; placeLesser drops it
+// where a town or another mark is already drawn there.
+function standIns(sights, data, view) {
   if (!Array.isArray(sights) || view.zoom < POI_ZOOM) return [];
-  const modern = (s) => world.places.some((q) => Math.hypot((q.lon - s.lon) * Math.cos(s.lat * RAD), q.lat - s.lat) < 0.3);
   return sights.filter((s) => Number.isFinite(s.lon) && Number.isFinite(s.lat) && !POIS.some((p) => p.name === s.name) && shows(data.proj, s.lon, s.lat))
-    .map((s) => ({ name: s.name, lon: s.lon, lat: s.lat, xy: data.proj.project(s.lon, s.lat), building: modern(s) ? 'tower' : 'ruin', poi: true, mark: true, rank: 0, pop: 0 }))
+    .map((s) => ({ name: s.name, lon: s.lon, lat: s.lat, xy: data.proj.project(s.lon, s.lat), building: s.ruin ? 'ruin' : 'tower', poi: true, mark: true, rank: 0, pop: 0 }))
     .filter((s) => s.xy.every(Number.isFinite));
 }
 
@@ -1643,8 +1643,11 @@ function buildScene(data, sprites, ctx, world = {}) {
   const bar = world.scaleBar ? scaleBox(barCorner, world.pinned !== false && barCorner === cartoucheCorner ? cartouche.h + 10 : 0) : null;
   const blocked = (x0, y0, x1, y1) => {
     const b = obb((x0 + x1) / 2, (y0 + y1) / 2, 0, (x1 - x0) / 2, (y1 - y0) / 2);
-    return boxes.some((o) => obbOverlap(o, b)) || (bar && obbOverlap(bar, b)) || urban.some((u) => meets({ x0, y0, x1, y1 }, u.box));
+    return boxes.some((o) => obbOverlap(o, b)) || (bar && obbOverlap(bar, b)) || urban.some((u) => meets({ x0, y0, x1, y1 }, u.box)) || onLake(x0, y0, x1, y1);
   };
+  // a drawn lake is water: no mountain or hill stands on it, at its box's corners, edge middles or centre
+  const lakes = STYLE.lakes !== 'off' && water ? keptWater(data).lakes : [];
+  const onLake = (x0, y0, x1, y1) => lakes.length > 0 && [x0, (x0 + x1) / 2, x1].some((x) => [y0, (y0 + y1) / 2, y1].some((y) => inLake(lakes, data.proj.invert(x, y))));
   const relief = reliefWanted() ? clearOf(reliefFor(data.proj, data.land), blocked) : null;
   const mountains = relief ? placeHillSprites(relief.humps, sprites.mountains ?? [], blocked, field, data.proj) : [];
 
@@ -2662,7 +2665,7 @@ function drawScene(g, scene, data, bg, view) {
   paintLand(g, data, land, coast, scene.relief && { ...scene.relief, humps: [] });
 
   // 2.1 the warped pieces of a chart's scan laid over the land and sea, under the lattice and every ornament (overlays.mjs)
-  if (scene.overlay?.mode === 'pieces') drawOverlay(g, scene.overlay, data.proj, scene.overlay.opacity, { w: W, h: H });
+  for (const o of scene.overlays) if (o.mode === 'pieces') drawOverlay(g, o, data.proj, o.opacity, { w: W, h: H });
 
   // 3. rhumb lattice: 16 nodes on a circle plus the centre, 32 rhumb lines each, in three inks
   const rays = latticeOf(scene, data);
@@ -2767,8 +2770,8 @@ function drawScene(g, scene, data, bg, view) {
 
   // the voyages over the ornaments, under the cartouche
   drawVoyages(g, scene.voyages, data.proj, r, viewRect(g, view, 0));
-  // 9.1 the chart's sheet, whole and opaque, over everything on the map (overlays.mjs); its notes are drawn nowhere, found by the cursor (page.js)
-  if (scene.overlay?.mode === 'sheet') drawSheet(g, scene.overlay, data.proj, scene.overlay.sheet);
+  // 9.1 the charts' sheets, each whole and opaque, over everything on the map, the last laid on top (overlays.mjs); their notes are drawn nowhere, found by the cursor (page.js)
+  for (const o of scene.overlays) if (o.mode === 'sheet') drawSheet(g, o, data.proj, o.sheet);
 
   // 10. cartouche, lettered in its cleared panel
   const c = scene.cartouche;
@@ -2878,7 +2881,7 @@ function drawScaleCard(g, proj, bg, style, sprite) {
 function anchorScene(scene, data) {
   const ll = (o) => ({ o, at: data.proj.invert(o.x, o.y) });
   return {
-    k: data.proj.k, show: scene.show, scaleSprite: scene.scaleSprite, cartouche: scene.cartouche, cartouchePos: scene.cartouchePos, scalePos: scene.scalePos, voyages: scene.voyages, overlay: scene.overlay,
+    k: data.proj.k, show: scene.show, scaleSprite: scene.scaleSprite, cartouche: scene.cartouche, cartouchePos: scene.cartouchePos, scalePos: scene.scalePos, voyages: scene.voyages, overlays: scene.overlays,
     rays: latticeOf(scene, data), sheets: scene.sheets, debug: scene.debug,
     roses: scene.roseDraws.map(ll), mountains: (scene.mountains ?? []).map(ll),
     towns: [...scene.towns.filter((t) => !t.city), ...(scene.lesser ?? [])].map(ll),
@@ -2959,7 +2962,7 @@ function drawAnchored(g, a, bg, view, layers) {
   const fr = framing(a, view), { proj, at, scaled } = fr, show = a.show;
   g.save();
   g.setTransform(1, 0, 0, 1, 0, 0);
-  if (a.overlay?.mode === 'pieces') drawOverlay(g, a.overlay, proj, a.overlay.opacity, { w: W, h: H }); // the pieces first, as at a stop
+  for (const o of a.overlays) if (o.mode === 'pieces') drawOverlay(g, o, proj, o.opacity, { w: W, h: H }); // the pieces first, as at a stop
   const inks = [STYLE.ink, STYLE.windRed, STYLE.windGreen];
   for (const [kind, ink] of show.rhumb ? inks.entries() : []) {
     limn(g, a.rays.filter((ray) => ray.kind === kind).map((ray) => ray.line), proj.toPx, { color: ink, alpha: STYLE.rhumbAlpha, width: STYLE.rhumbWidth, oneStroke: true, ...proj.seam });
@@ -2999,8 +3002,8 @@ function drawAnchored(g, a, bg, view, layers) {
     if (p) drawSprite(g, s.sprite, p[0], p[1], size, { flip: s.flip, rot: s.flip ? -s.tilt : s.tilt, anchor: [0.5, 0.6] });
   }
   drawVoyages(g, a.voyages, proj, { x0: 0, y0: 0, x1: W, y1: H }, undefined, true);
-  drawNotes(g, a.overlay, proj, { x0: 0, y0: 0, x1: W, y1: H });
-  if (a.overlay?.mode === 'sheet') drawSheet(g, a.overlay, proj, a.overlay.sheet); // the sheet last, as at a stop
+  for (const o of a.overlays) drawNotes(g, o, proj, { x0: 0, y0: 0, x1: W, y1: H });
+  for (const o of a.overlays) if (o.mode === 'sheet') drawSheet(g, o, proj, o.sheet); // the sheets last, as at a stop
   g.restore();
   if (show.kinds.has('cartouche')) drawCartouche(g, a.cartouche, (x0, y0, x1, y1) => g.drawImage(bg, x0, y0, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0));
   drawScaleBar(g, { proj }, bg, { scale: 1, x: 0, y: 0 }, W, H, show.scale, a.scaleSprite, scalePlace(a));
@@ -3033,7 +3036,8 @@ function drawAnchored(g, a, bg, view, layers) {
 // None by default. The older `voyage` (one id, or 'off') still draws that one. A voyage's `alpha` (0 to 1) dims it.
 // `person`: a person's id in data/voyages/people.json (scripts/people.mjs): their voyages drawn in the chart's red, lit, every
 // other voyage dimmed to DIMMED, and their birth marked (their death too, where no voyage of theirs carries it). None by default.
-// `overlay`: { id, mode, sheet, opacity }, a chart's scan laid over the map: `id` names an entry of packs/overlays/overlays.json
+// `overlays`: [{ id, mode, sheet, opacity }], charts' scans laid over the map, bottom to top (the older `overlay`, one of them,
+// still lays that one); each `id` names an entry of packs/overlays/overlays.json
 // (docs/overlay/README.md). `mode` 'sheet' (the default) lays the whole scan, opaque, over everything on the map at
 // `sheet` ({ lon, lat, scale, turn }; the chart's own placement when left out); 'pieces' warps its pieces onto today's
 // coast at `opacity` (0 to 1), over the land and under the lattice and the ornaments. None by default; an id the site
@@ -3155,14 +3159,17 @@ export async function createScene(environment, opts = {}) {
   const world = await loadDetail(coarse, view);
   const person = await loadPerson(opts.person);
   const named = opts.voyages ?? (opts.voyage ? [{ id: opts.voyage }] : []);
-  const [drawn, overlaid] = await Promise.all([loadVoyages(person ? withPerson(named, person.record, opts.voyageWidth ?? named[0]?.width) : named), opts.overlay ? loadOverlay(opts.overlay.id, env) : null]);
+  const asked = opts.overlays ?? (opts.overlay ? [opts.overlay] : []);
+  const [drawn, overlaid] = await Promise.all([loadVoyages(person ? withPerson(named, person.record, opts.voyageWidth ?? named[0]?.width) : named), Promise.all(asked.map((o) => loadOverlay(o.id, env)))]);
   const voyages = person ? [...drawn, { voyage: person.marks, colour: PERSON_RED, width: VOYAGE_WIDTH }] : drawn;
-  const opacity = Number(opts.overlay?.opacity ?? 0.6);
-  const overlay = overlaid && { ...overlaid, mode: opts.overlay.mode === 'pieces' ? 'pieces' : 'sheet', sheet: opts.overlay.sheet ?? overlaid.sheet, opacity: Number.isFinite(opacity) ? Math.max(0, Math.min(1, opacity)) : 0.6 };
+  const overlays = asked.flatMap((o, i) => {
+    const l = overlaid[i], opacity = Number(o.opacity ?? 0.6);
+    return l ? [{ ...l, mode: o.mode === 'pieces' ? 'pieces' : 'sheet', sheet: o.sheet ?? l.sheet, opacity: Number.isFinite(opacity) ? Math.max(0, Math.min(1, opacity)) : 0.6 }] : [];
+  });
   const tLoad = performance.now();
 
   const data = viewData(world, view);
-  data.lesser.push(...standIns(opts.sights, data, world, view));
+  data.lesser.push(...standIns(opts.sights, data, view));
   // the atlas's sheets at every zoom: the curated sheets alone in the world band, then curated and grid sheets.
   // The Catalan rose's lines reach as far as those of the sheet that holds it at this zoom.
   // `from` paces a sheet's beasts: the first zoom of its band, or in the world band, where the earth is one page,
@@ -3175,7 +3182,7 @@ export async function createScene(environment, opts = {}) {
   const roseReach = sheetReach(roseSheet(view.zoom, { origin, curated: knobs.curated === 1, overlap }).extent, knobs.reach);
   const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, historical, roseLines: knobs.roselines === 1, seaAt: sheets && seaAtOf(coarse), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, regionNames, title, autoTitle, pinTitle,
     continentsEnd: zoomEnd(continentsZoom, CONTINENT_ZOOM_END), regionsEnd: zoomEnd(regionsZoom, REGION_ZOOM_END),
-    scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM && pinned, pinned, cartouchePos, scalePos, townSize: townBy, seed: legacy ? null : pickedSeed == null ? castSeed(view) : pickedSeed | 0, salt: legacy || pickedSeed == null ? 0 : pickedSeed | 0 }), show, scaleSprite, voyages, overlay, roseReach, roseLines: knobs.roselines === 1, debug, overlap, scalePos: cornerOf(scalePos, DEFAULT_SCALE_CORNER) };
+    scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM && pinned, pinned, cartouchePos, scalePos, townSize: townBy, seed: legacy ? null : pickedSeed == null ? castSeed(view) : pickedSeed | 0, salt: legacy || pickedSeed == null ? 0 : pickedSeed | 0 }), show, scaleSprite, voyages, overlays, roseReach, roseLines: knobs.roselines === 1, debug, overlap, scalePos: cornerOf(scalePos, DEFAULT_SCALE_CORNER) };
   scene.voyages = placeDoubts(scene, data);
   data.trees = TREES[STYLE.trees] ? plantTrees({ proj: data.proj, isLand: scene.field.isLand, scene, lakes: STYLE.lakes !== 'off' && water ? water.lakes : [], w: W, h: H }) : [];
   data.palms = plantPalms({ proj: data.proj, isLand: scene.field.isLand, scene, w: W, h: H,

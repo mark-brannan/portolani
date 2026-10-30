@@ -2,7 +2,8 @@
 // date when the place made its name (a year, a century or a span), shown under its name in the list and on the
 // tile, and the text, its caption in the list and the tile's body; keyed
 // by the name the page lists it under. The mark stands where the button's view is centred, unless the tile says
-// `at: [lon, lat]` (a view framing several islands is centred on the sea between them). Nothing is lettered beside it.
+// `at: [lon, lat]` (a view framing several islands is centred on the sea between them). `ruin: true` draws a ruin there
+// where nothing else is drawn, no town of today on the site (Ostia); any other place gets the plain tower. Nothing is lettered beside it.
 export const SIGHT_TILES = {
   // where the charts were made
   Genoa: { date: '1311', text: 'Genoese chartmakers drew some of the earliest signed portolan charts. Pietro Vesconte, who signed "de Janua", made a dated atlas, with the coasts in a compass-rose web of rhumb lines rather than in degrees.' },
@@ -17,7 +18,7 @@ export const SIGHT_TILES = {
   Alexandria: { date: '331 BC', text: 'Founded by Alexander in 331 BC. Its lighthouse, the Pharos, was one of the wonders of the world and gave a word for lighthouse in several languages; its library was where Eratosthenes measured the earth.' },
   Tyre: { date: 'c. 1000 BC', text: 'Tyre, an island city off Lebanon, sent out the Phoenician ships that founded Carthage and Gades, and was said to have colonised the whole western Mediterranean. Alexander had to build a causeway to take it.' },
   Carthage: { date: 'c. 814–146 BC', text: 'Founded from Tyre, Carthage ruled the western Mediterranean until Rome destroyed it in 146 BC. Its sailors, Hanno among them, explored the Atlantic coast of Africa.' },
-  Ostia: { date: '1st–2nd c. AD', text: 'Rome\'s port at the Tiber mouth, where grain from Egypt and Africa was landed and carried upriver. Silt has left its ruins inland.' },
+  Ostia: { ruin: true, date: '1st–2nd c. AD', text: 'Rome\'s port at the Tiber mouth, where grain from Egypt and Africa was landed and carried upriver. Silt has left its ruins inland.' },
   Berenike: { date: 'c. 275 BC', text: 'A Ptolemaic port on the Red Sea, from which the monsoon ships sailed to India with Roman gold and came back with pepper, pearls and cloth. Its ruins have been dug from the sand since the 1990s.' },
   Barygaza: { date: '1st c. AD', text: 'Bharuch on the Narmada. The Periplus of the Erythraean Sea, a Greek merchant\'s guide of the first century, warns of its tides, which came in like an army, and tells pilots to wait for the local pilots to take them up the gulf.' },
   // the medieval Indian Ocean and Asia

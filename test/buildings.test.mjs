@@ -113,16 +113,16 @@ test('points of interest are lettered from POI_ZOOM, bigger than the lesser plac
 })
 
 test('a place with a tile and nothing drawn gets an unlettered mark: a ruin, or the plain tower where a city stands', async () => {
-  const tyre = { name: 'Tyre', lon: 35.2, lat: 33.27 }, rome = { name: 'Roma', lon: 12.5, lat: 41.9 }
+  const tyre = { name: 'Tyre', lon: 35.2, lat: 33.27 }, ostia = { name: 'Ostia', lon: 12.29, lat: 41.76, ruin: true }
   const at = (p, zoom, sights) => createScene(env, { view: { lon: p.lon, lat: p.lat, zoom }, sights }).then((r) => r.scene)
   const scene = await at(tyre, 7, [tyre])
-  const ruin = scene.lesser.find((l) => l.name === 'Tyre')
-  assert.ok(ruin?.mark && ruin.tower === 'ruin', 'Tyre has no city on its spot: a ruin')
+  const town = scene.lesser.find((l) => l.name === 'Tyre')
+  assert.ok(town?.mark && town.tower !== 'ruin', 'Tyre is a living city: the plain tower, never a ruin')
   assert.ok(!scene.names.some((n) => n.text === 'Tyre'), 'no lettering beside it')
   assert.ok(!(await at(tyre, 7)).lesser.some((l) => l.name === 'Tyre'), 'no sights, no mark')
   assert.ok(!(await at(tyre, POI_ZOOM - 1, [tyre])).lesser.some((l) => l.mark), 'none below POI_ZOOM')
-  const city = await at(rome, 7, [rome])
-  assert.ok(!city.lesser.some((l) => l.mark && l.tower === 'ruin'), 'a living city is never a ruin')
+  const ruin = (await at(ostia, 7, [ostia])).lesser.find((l) => l.name === 'Ostia')
+  assert.ok(ruin?.mark && ruin.tower === 'ruin', 'a sight that says ruin is a ruin')
   assert.ok(RUIN.layers.every(([, d]) => /^M[-\d. MLHVQZ]*$/.test(d)) && RUIN.w <= 8, 'the ruin is drawn in the towers\' path data')
   assert.ok(!BUILDINGS.some((b) => b.id === 'ruin'), 'not a town to pick at random')
 })
