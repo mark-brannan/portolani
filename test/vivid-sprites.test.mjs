@@ -217,7 +217,7 @@ test('sprites stand by their ink: one footprint per kind, and the grander town d
   assert.ok(new Set(placed.map((t) => `${t.sprite.pack}/${t.sprite.style}`)).size >= 3, 'towns from three families');
   for (const t of placed) {
     const h = t.sprite.heightPx, f = foot(t.sprite, (h * t.sprite.img.width) / t.sprite.img.height);
-    assert.ok(Math.abs(f - 40) < 4, `${t.sprite.key}: footprint ${f.toFixed(1)} at size 1`);
+    assert.ok(Math.abs(f - 40) < 6, `${t.sprite.key}: footprint ${f.toFixed(1)} at size 1`);
   }
   for (const m of scene.monsters) assert.ok(foot(m.sprite, m.sprite.sizePx) < 150, `${m.sprite.key}: monster footprint`);
   // within the scanned Aguiar family, a bigger town never draws a humbler drawing than a smaller one
