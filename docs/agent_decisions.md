@@ -408,3 +408,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261030t192045z
 - The Barygaza rule (a ruin unless a drawn city covers the site) also applies to Calicut and Quanzhou Undo: drop ruin: 'clear' from Calicut and Quanzhou in scripts/sights.mjs ([#310](https://github.com/mark-brannan/portolani/pull/310))
+
+### 20261030t194618z
+- Spec's no-ruin cases generalised as founded-later-and-covered (Manila, Batavia) and still-standing (São Jorge da Mina) Undo: edit the scenario's no-ruin line ([#324](https://github.com/mark-brannan/portolani/pull/324))
