@@ -134,8 +134,8 @@ function styleFromHash() {
     voyageDraw: voyageDrawSeconds(q.get('voyagedraw')),
     // the subject chosen, one of: the person chosen in the People drawer (data/voyages/people.json) or the sight whose tile
     // was opened (scripts/sights.mjs); which of its pictures lie on the map, and where
-    sight: SIGHT_TILES[q.get('sight')] ? q.get('sight') : DEFAULTS.sight,
-    person: !SIGHT_TILES[q.get('sight')] && /^[a-z][a-z0-9-]*$/.test(q.get('person') ?? '') ? q.get('person') : DEFAULTS.person,
+    sight: Object.hasOwn(SIGHT_TILES, q.get('sight') ?? '') ? q.get('sight') : DEFAULTS.sight,
+    person: !Object.hasOwn(SIGHT_TILES, q.get('sight') ?? '') && /^[a-z][a-z0-9-]*$/.test(q.get('person') ?? '') ? q.get('person') : DEFAULTS.person,
     pictures: parsePictures(q.get('pictures'), DEFAULTS.pictures),
     pictureAt: parsePictureAt(q.get('pictureat')),
     // a chart's scan laid over the map (packs/overlays/overlays.json; an id the site lacks draws nothing), and how strongly
@@ -775,6 +775,7 @@ async function render() {
     const t2 = performance.now();
     $('status').textContent = `z${view.zoom.toFixed(1)}: load ${timing.load.toFixed(0)} ms, placement + parchment ${timing.place.toFixed(0)} ms, draw ${(t2 - t1).toFixed(0)} ms (total ${(t2 - t0).toFixed(0)} ms)`;
   } catch (e) {
+    keepTile = false; // a sight's tile kept for this render is not kept for the next
     $('status').textContent = `Failed: ${e.message}`;
     throw e;
   }
@@ -1656,7 +1657,7 @@ function loadSights() {
 const subjectKey = () => (style.person ? `person:${style.person}` : style.sight ? `sight:${style.sight}` : null);
 function subject() {
   if (style.person) { const p = personOf(style.person); return p && { key: `person:${p.id}`, kind: 'person', id: p.id, person: p, images: p.images, manifest: peopleData.pictures }; }
-  if (style.sight && sightData?.images[style.sight]) return { key: `sight:${style.sight}`, kind: 'sight', id: style.sight, images: sightData.images[style.sight], manifest: sightData.pictures };
+  if (style.sight && sightData && Object.hasOwn(sightData.images, style.sight)) return { key: `sight:${style.sight}`, kind: 'sight', id: style.sight, images: sightData.images[style.sight], manifest: sightData.pictures };
   return null;
 }
 async function loadSubject() { if (style.person) await loadPeople(); else if (style.sight) await loadSights(); return subject(); }
