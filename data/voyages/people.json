@@ -1044,5 +1044,45 @@
       "source": "Musa's account, in al-Umari",
       "cite": "atlantic-voyage-of-musa-s-predecessor"
     }
-  }
+  },
+    "erik-the-red": {
+      "name": "Erik the Red",
+      "aka": [
+        "Eiríkr rauði Þorvaldsson"
+      ],
+      "bio": "A Norwegian-born chieftain settled in Iceland, outlawed for killings there about 982. He spent his three years of exile finding and naming Greenland, then came back to Iceland and led the first settlers across. He was the father of Leif Erikson.",
+      "sources": [
+        "erik-the-red",
+        "eiriks-saga-rauda"
+      ],
+      "born": {
+        "lon": 5.7,
+        "lat": 58.8,
+        "date": "c. 950",
+        "place": "Jæren, Norway",
+        "label": "Erik the Red born in Norway, c. 950",
+        "text": "The sagas say he came from Jæren, in south-west Norway, and that his father Thorvald fled to Iceland. The mark stands on that district, and the year is a guess.",
+        "source": "Erik the Red (Wikipedia)",
+        "cite": "erik-the-red",
+        "confidence": "speculative"
+      },
+      "death": {
+        "lon": -45.42,
+        "lat": 61.15,
+        "date": "c. 1003",
+        "label": "Erik the Red died, c. 1003, probably at Brattahlíð",
+        "text": "The saga has him die of an epidemic in Greenland after Leif's return. He was buried in the country he named; the mark stands at his farm.",
+        "source": "Erik the Red (Wikipedia)",
+        "cite": "erik-the-red",
+        "confidence": "inferred"
+      }
+    },
+    "bjarni-herjolfsson": {
+      "name": "Bjarni Herjólfsson",
+      "bio": "An Icelandic merchant whose father had gone with Erik to Greenland. Sailing after him in 986 without chart or compass, he was blown off course and became the first European recorded to see the coast of North America, though he never landed. The Saga of the Greenlanders has Leif Erikson buy his ship and follow his sightings.",
+      "sources": [
+        "bjarni-herjolfsson",
+        "saga-of-the-greenlanders"
+      ]
+    }
 }

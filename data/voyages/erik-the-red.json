@@ -1,0 +1,316 @@
+{
+  "id": "erik-the-red",
+  "title": "Erik the Red to Greenland, c. 982-986",
+  "short": "Erik the Red",
+  "who": [
+    "erik-the-red"
+  ],
+  "when": "c. 982-986",
+  "summary": "Outlawed from Iceland for three years, Erik sailed west to a coast of ice, rounded Cape Farewell and explored the fjords of the south and west; he came home to Iceland and led a fleet of settlers back, 25 ships setting out and 14 arriving. The sagas give the names, not the courses.",
+  "sources": [
+    "eiriks-saga-rauda",
+    "saga-of-the-greenlanders",
+    "erik-the-red"
+  ],
+  "legs": [
+    {
+      "from": "Snæfellsnes (Snæfellsjökull)",
+      "to": "Midjökull (east Greenland glacier coast)",
+      "dates": "c. 982",
+      "mode": "sea",
+      "line": "rhumb",
+      "confidence": "inferred",
+      "points": [
+        [
+          -24.6,
+          64.85
+        ],
+        [
+          -30.0,
+          64.9
+        ],
+        [
+          -37.5,
+          65.6
+        ]
+      ],
+      "source": "Saga of Erik the Red: west from Snæfellsjökull to Midjökull"
+    },
+    {
+      "from": "Midjökull",
+      "to": "Hvarfsgnipa / Cape Farewell (rounded)",
+      "dates": "c. 982",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          -37.5,
+          65.6
+        ],
+        [
+          -41.5,
+          62.5
+        ],
+        [
+          -43.0,
+          60.2
+        ],
+        [
+          -43.2,
+          59.0
+        ],
+        [
+          -45.6,
+          59.4
+        ]
+      ],
+      "source": "Saga of Erik the Red: south along the coast to Hvarfsgnipa",
+      "doubt": "Midjökull is not securely placed; the line stands well off the ice and the coast."
+    },
+    {
+      "from": "Cape Farewell",
+      "to": "Eiriksey (mouth of Eiriksfjord, nr Qaqortoq)",
+      "dates": "c. 982-983",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          -45.6,
+          59.4
+        ],
+        [
+          -46.6,
+          60.2
+        ],
+        [
+          -46.2,
+          60.7
+        ]
+      ],
+      "source": "Saga of Erik the Red: first winter at Eiriksey",
+      "note": "The saga names the islet; it is traditionally taken for one near the mouth of Eiriksfjord."
+    },
+    {
+      "from": "Eiriksey",
+      "to": "Hrafnsfjord / Snæfell (west coast exploration)",
+      "dates": "c. 983-985",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "points": [
+        [
+          -46.2,
+          60.7
+        ],
+        [
+          -46.3,
+          60.65
+        ],
+        [
+          -47.4,
+          60.6
+        ],
+        [
+          -48.6,
+          60.7
+        ],
+        [
+          -49.6,
+          61.3
+        ],
+        [
+          -50.3,
+          61.9
+        ],
+        [
+          -51.5,
+          63.0
+        ],
+        [
+          -52.8,
+          64.0
+        ]
+      ],
+      "source": "Saga of Erik the Red: two summers exploring the west coast",
+      "doubt": "Eiriksholmar, Snæfell and Hrafnsfjord are not securely placed; the line is the way scholars usually draw it."
+    },
+    {
+      "from": "Hrafnsfjord (west coast)",
+      "to": "Snæfellsnes (return to Iceland, c. 985)",
+      "dates": "c. 985",
+      "mode": "sea",
+      "line": "rhumb",
+      "confidence": "inferred",
+      "points": [
+        [
+          -52.8,
+          64.0
+        ],
+        [
+          -48.0,
+          60.5
+        ],
+        [
+          -45.6,
+          59.4
+        ],
+        [
+          -43.2,
+          59.0
+        ],
+        [
+          -36.0,
+          61.0
+        ],
+        [
+          -30.0,
+          63.2
+        ],
+        [
+          -24.6,
+          64.85
+        ]
+      ],
+      "source": "Saga of Erik the Red: home to Iceland at the end of the exile"
+    },
+    {
+      "from": "Breiðafjörður / Borgarfjörður",
+      "to": "Snæfellsjökull offshore (fleet assembles)",
+      "dates": "c. 985-986",
+      "mode": "sea",
+      "line": "rhumb",
+      "confidence": "inferred",
+      "points": [
+        [
+          -22.3,
+          64.45
+        ],
+        [
+          -23.5,
+          64.4
+        ],
+        [
+          -24.6,
+          64.6
+        ],
+        [
+          -24.6,
+          64.85
+        ]
+      ],
+      "source": "Landnámabók: the fleet sails from Breiðafjörður and Borgarfjörður"
+    },
+    {
+      "from": "Snæfellsjökull offshore",
+      "to": "Cape Farewell (rounded)",
+      "dates": "c. 985-986",
+      "mode": "sea",
+      "line": "great-circle",
+      "confidence": "conventional",
+      "points": [
+        [
+          -24.6,
+          64.85
+        ],
+        [
+          -30.0,
+          63.5
+        ],
+        [
+          -36.0,
+          61.0
+        ],
+        [
+          -42.0,
+          59.2
+        ],
+        [
+          -43.2,
+          59.0
+        ],
+        [
+          -45.6,
+          59.4
+        ]
+      ],
+      "source": "Landnámabók; the settlers followed Erik's course, drawn as the direct run",
+      "doubt": "Ice and weather drove ships south; some turned back or were lost."
+    },
+    {
+      "from": "Cape Farewell",
+      "to": "Brattahlíð (Eastern Settlement)",
+      "dates": "c. 985-986",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          -45.6,
+          59.4
+        ],
+        [
+          -46.6,
+          60.2
+        ],
+        [
+          -47.4,
+          60.6
+        ],
+        [
+          -46.3,
+          60.65
+        ],
+        [
+          -46.15,
+          60.85
+        ],
+        [
+          -46.2,
+          61.0
+        ],
+        [
+          -45.95,
+          61.1
+        ]
+      ],
+      "source": "Saga of Erik the Red: Erik settles at Brattahlíð"
+    }
+  ],
+  "events": [
+    {
+      "kind": "landfall",
+      "lon": -37.5,
+      "lat": 65.6,
+      "date": "c. 982",
+      "label": "Midjökull",
+      "text": "The saga says Erik made land under a glacier he called Midjökull, \"Middle Glacier\", on the east coast of Greenland. Pack ice and a southbound current make that coast hard to come near; the mark stands off it, where the saga does not say.",
+      "source": "Saga of Erik the Red",
+      "cite": "eiriks-saga-rauda",
+      "confidence": "speculative"
+    },
+    {
+      "kind": "landfall",
+      "lon": -46.2,
+      "lat": 60.7,
+      "date": "c. 982-983",
+      "label": "Eiriksey",
+      "text": "Erik's first winter in Greenland was spent on an island the saga calls Eiriksey, \"Erik's Island\", and the traditional identification is one near the mouth of Eiriksfjord. He spent three years exploring and naming the country before his exile ended.",
+      "source": "Saga of Erik the Red",
+      "cite": "eiriks-saga-rauda",
+      "confidence": "inferred"
+    },
+    {
+      "kind": "landfall",
+      "lon": -45.42,
+      "lat": 61.15,
+      "date": "c. 985-986",
+      "label": "Brattahlíð",
+      "text": "Erik chose this farm at the head of Eiriksfjord, now Qassiarsuk, for his own and called the country Greenland, the saga says, because a good name would draw settlers. Of the 25 ships that set out with him, Landnámabók says 14 arrived.",
+      "source": "Saga of Erik the Red; Landnámabók",
+      "cite": "eiriks-saga-rauda",
+      "confidence": "inferred"
+    }
+  ]
+}
