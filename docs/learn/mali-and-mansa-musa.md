@@ -23,17 +23,17 @@ The famous figures travel further than their sources.
 | Claim | Where it comes from | How firm |
 |---|---|---|
 | Reign c. 1312 to c. 1337 | Accession dated 25 years before his death | Most accepted; 1332 is also given for his death |
-| In Cairo 19 July to 18 October 1324 | Dated in the Wikipedia article; its source not checked here | Precise |
-| Gold fell from 25 to under 22 dirhams a mithqal for 12 years | Al-Umari | His report; Warren Schultz finds it within normal Mamluk swings |
+| In Cairo 19 July to 18 October 1324 | Wikipedia; no primary source checked | One source; treat the days as approximate |
+| Gold fell from 25 to under 22 dirhams a mithqal for 12 years | Al-Umari | His report; Schultz finds it a normal Mamluk swing |
 | 60,000 men, 12,000 slaves each with a gold bar or staff | Later Arabic accounts, repeated in popular retellings | Literary, not a count |
 | 80 camels each carrying 23 to 136 kg of gold dust | Later Arabic accounts | An upper-bound figure of speech, not a measurement |
 | About 18 tonnes of gold | One chain, al-Umari to Ibn Khaldun | Not independent; one source repeated |
-| Richest person ever, $400 billion | Online articles | Converting these figures to modern money is unsound; Hadrien Collet argues his wealth cannot be calculated |
-| The poet al-Sahili designed the Djinguereber Mosque | Long tradition | Doubted; only a royal audience chamber is firmly his, and the Niger bend's style is a West African and Islamic synthesis |
+| Richest person ever, $400 billion | Online articles | Unsound; Collet argues it cannot be calculated |
+| The poet al-Sahili designed the Djinguereber Mosque | Long tradition | Doubted; only a royal audience chamber is firmly his |
 
 ## The fleet before Musa
 
-In Cairo Musa told the governor, Ibn Amir Hajib, how he came to rule. His predecessor did not believe the far edge of the Atlantic could not be found. He fitted out 200 ships with men and 200 with gold, water and food, and told them not to return until they reached the end of the ocean or ran out of supplies. One ship came back; its captain said that out at sea a river with a strong current had carried the rest away. The king did not believe him. He fitted out 2,000 ships, 1,000 for himself and his men and 1,000 for supplies, left Musa as his deputy, and sailed. None came back, and Musa became king.
+In Cairo Musa told the governor, Ibn Amir Hajib, how he came to rule. His predecessor believed the far edge of the Atlantic could be found. He fitted out 200 ships with men and 200 with gold, water and food, and told them not to return until they reached the end of the ocean or ran out of supplies. One ship came back; its captain said that out at sea a river with a strong current had carried the rest away. The king did not believe him. He fitted out 2,000 ships, 1,000 for himself and his men and 1,000 for supplies, left Musa as his deputy, and sailed. None came back, and Musa became king.
 
 Al-Umari wrote this down from Ibn Amir Hajib. It is the only account: no other medieval Arabic writer and no West African tradition tells it.
 
