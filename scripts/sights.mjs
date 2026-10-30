@@ -2,7 +2,8 @@
 // date when the place made its name (a year, a century or a span), shown under its name in the list and on the
 // tile, and the text, its caption in the list and the tile's body; keyed
 // by the name the page lists it under. The mark stands where the button's view is centred, unless the tile says
-// `at: [lon, lat]` (a view framing several islands is centred on the sea between them, Alexandria's ruin on the Pharos).
+// `at: [lon, lat]` (a view framing several islands is centred on the sea between them, Alexandria's ruin on the Pharos), or
+// `at: [[lon, lat], ...]` for one tile at several marks (Tyre's two sites, 1.7 km apart; at a wide view they stand side by side).
 // `ruin: true` draws a ruin there always, beside a town of today or over it (Tyre, Carthage, Ostia, Old Goa);
 // `ruin: 'clear'` draws one only where no town is drawn on the site, so a city that covers it stands for it at a
 // wide zoom and the ruin shows beside it close up where there is room (Barygaza under Bharuch). Any other place gets
@@ -19,7 +20,7 @@ export const SIGHT_TILES = {
   Frankfurt: { date: '1590', text: 'Theodor de Bry, an engraver from Liège, published his America here in 1590. Its first part copied John White\'s paintings of Virginia, and these prints set the image of the New World for a century of Europeans.' },
   // the ancient world
   Alexandria: { ruin: true, at: [29.886, 31.214], date: '331 BC', text: 'Founded by Alexander in 331 BC. Its lighthouse, the Pharos, was one of the wonders of the world and gave a word for lighthouse in several languages; its library was where Eratosthenes measured the earth.' },
-  Tyre: { ruin: true, date: 'c. 1000 BC', text: 'Tyre, an island city off Lebanon, sent out the Phoenician ships that founded Carthage and Gades, and was said to have colonised the whole western Mediterranean. Alexander had to build a causeway to take it.' },
+  Tyre: { ruin: true, at: [[35.1933, 33.2681], [35.2111, 33.2692]], date: 'c. 1000 BC', text: 'Tyre, an island city off Lebanon, sent out the Phoenician ships that founded Carthage and Gades, and was said to have colonised the whole western Mediterranean. Alexander had to build a causeway to take it. Two sites are dug: on the old island, the colonnaded street, baths and harbour quarter; on the mainland at Al-Bass, the Phoenician cemetery under the Roman road, arch and hippodrome.' },
   Carthage: { ruin: true, date: 'c. 814–146 BC', text: 'Founded from Tyre, Carthage ruled the western Mediterranean until Rome destroyed it in 146 BC. Its sailors, Hanno among them, explored the Atlantic coast of Africa.' },
   Ostia: { ruin: true, date: '1st–2nd c. AD', text: 'Rome\'s port at the Tiber mouth, where grain from Egypt and Africa was landed and carried upriver. Silt has left its ruins inland.' },
   Berenike: { date: 'c. 275 BC', text: 'A Ptolemaic port on the Red Sea, from which the monsoon ships sailed to India with Roman gold and came back with pepper, pearls and cloth. Its ruins have been dug from the sand since the 1990s.' },

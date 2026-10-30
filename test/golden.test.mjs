@@ -45,7 +45,7 @@ const OPTS = { 'region-z5': { autoTitle: false }, 'world-z2-voyage': { voyages: 
   'world-z2-person': { person: 'ibn-battuta', voyages: [{ id: 'columbus' }] },
   'pacific-z3-migrations': { voyages: [{ id: 'lapita-expansion' }, { id: 'east-polynesia-settlement', colour: '#1f4e8c' }] } ,
   'china-z5-doubt': { voyages: [{ id: 'ibn-battuta-6' }] },
-  'levant-z6-marks': { sights: [{ name: 'Tyre', lon: 35.2, lat: 33.27, ruin: true }, { name: 'Alexandria', lon: 29.886, lat: 31.214, ruin: true }] },
+  'levant-z6-marks': { sights: [{ name: 'Tyre', lon: 35.1933, lat: 33.2681, ruin: true }, { name: 'Tyre', lon: 35.2111, lat: 33.2692, ruin: true }, { name: 'Alexandria', lon: 29.886, lat: 31.214, ruin: true }] },
   'ostia-z7-ruin': { sights: [{ name: 'Ostia', lon: 12.29, lat: 41.76, ruin: true }] },
   'sheet-z3-voyage': { overlays: [{ id: 'de-la-cosa', mode: 'sheet' }], voyages: [{ id: 'columbus', colour: VOYAGE_CONTRAST[0], width: 3.2 }] },
   'old-world-z2.6-1375': { regions: 'english', regionSet: 'catalan-1375' } };

@@ -1267,11 +1267,12 @@ function fillTile(t) {
   tileEl.replaceChildren(close, ...[head, doubt, meta, text, source, more].filter(Boolean));
   tileEl.setAttribute('aria-label', t.title ?? 'Point of interest');
 }
-// every listed place with a tile, once by name, at the view its button flies to
+// every listed place with a tile, once by name (or once per spot its tile names), at the view its button flies to
 let sightList = null;
 function sightTiles() {
   sightList ??= [...new Map([...places.map(({ name, view: v }) => [name, v]), ...CHARTS.map(({ made }) => [made.title, made])]).entries()]
-    .filter(([name]) => SIGHT_TILES[name]).map(([name, v]) => { const { at, ...tile } = SIGHT_TILES[name]; return { lon: at?.[0] ?? v.lon, lat: at?.[1] ?? v.lat, tile: { title: name, ...tile } }; });
+    .filter(([name]) => SIGHT_TILES[name]).flatMap(([name, v]) => { const { at, ...tile } = SIGHT_TILES[name], spots = at ? (Array.isArray(at[0]) ? at : [at]) : [[v.lon, v.lat]];
+      return spots.map(([lon, lat]) => ({ lon, lat, tile: { title: name, ...tile } })); });
   return sightList;
 }
 // the mark at [x, y]: a voyage's event or a sight within reach; else the note on a laid chart whose figure holds the
