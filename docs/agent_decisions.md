@@ -357,3 +357,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261030t035208z
 - Play mockups use Magellan at a world view (lon 15, lat -6, zoom 1.45), line at 4.5 px (the Heavy weight item 4 proposes), not the shipped 2.2 Undo: edit docs/voyage-play/README.md ([#293](https://github.com/mark-brannan/portolani/pull/293))
+
+### 20261030t035206z
+- Go on a phone lets go of its text box after a find, so the keyboard goes and the map shows, the drawer still up ([#292](https://github.com/mark-brannan/portolani/pull/292))
