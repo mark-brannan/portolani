@@ -125,7 +125,6 @@ Feature: A chart's row in the Charts drawer
     When the user clicks the show/hide icon
     Then the sheet shows at once, no fade, or hides if it was shown; nothing else in the row hides it
     And the eye is on or off for that chart alone: no other chart is shown or hidden, no placement is reset, no flight; the map's zoom and position stay where they are
-    And the drawer needs no clear button: a click on a chart clears the others
   Scenario: the city clears the way to itself
     Given a chart's sheet shown
     When the user clicks the chart's city
