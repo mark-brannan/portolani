@@ -432,9 +432,14 @@ test('timeline: people above the axis, voyages below, each once, the era bands a
     assert.deepEqual([...shownVoyages].sort(), [...index].sort(), 'a voyage missing or twice');
     assert.deepEqual([...shownPeople].sort(), [...persons].sort(), 'a person missing or twice');
     // the era bands run from the axis's left edge to its right, end to end, each named once
-    const bands = () => page.$$eval('#eras .band', (bs) => bs.map((b) => { const r = b.getBoundingClientRect(); return { name: b.dataset.era, left: r.left, right: r.right, label: b.textContent }; }));
-    const track = () => box('#track');
-    let t = await track(), bs = await bands();
+    // measured in one go, relative to the track, so a drawer still sliding in cannot skew them
+    const measure = () => page.evaluate(() => {
+      const t = document.getElementById('track').getBoundingClientRect();
+      return { t: { x: 0, width: t.width }, bs: [...document.querySelectorAll('#eras .band')].map((b) => { const r = b.getBoundingClientRect(); return { name: b.dataset.era, left: r.left - t.left, right: r.right - t.left, label: b.textContent }; }) };
+    });
+    const track = async () => (await measure()).t;
+    await page.waitForTimeout(400); // the drawer's slide
+    let { t, bs } = await measure();
     assert.deepEqual(bs.map((b) => b.name), ['The ancient world', 'The medieval Indian Ocean and Asia', 'The age of discovery', 'The modern world']);
     assert.ok(bs.every((b) => b.label === b.name), 'a band not named once');
     assert.ok(Math.abs(bs[0].left - t.x) < 1 && Math.abs(bs.at(-1).right - (t.x + t.width)) < 1, 'the bands do not cover the axis');
@@ -442,14 +447,14 @@ test('timeline: people above the axis, voyages below, each once, the era bands a
     // Earlier: the track half as wide again, the earlier stretch to the left with its windows and no entries, the main stretch unchanged in width
     const w0 = t.width, mainW = bs.at(-1).right - bs[0].left;
     await page.click('#earlier');
-    t = await track(); bs = await bands();
+    ({ t, bs } = await measure());
     assert.equal(await page.getAttribute('#earlier', 'aria-pressed'), 'true');
     assert.ok(Math.abs(t.width - w0 * 1.5) < 1, `Earlier did not widen the axis: ${w0} -> ${t.width}`);
     assert.ok(Math.abs(bs.at(-1).right - bs[0].left - mainW) < 1, 'the main stretch changed width');
     assert.ok(bs[0].left - t.x > w0 * 0.49, 'no earlier stretch to the left of Lapita');
     assert.deepEqual(await page.$$eval('#eras .mark', (ms) => ms.map((m) => m.dataset.mark)), ['Sahul', 'Beringia', 'Clovis']);
     assert.ok((await page.textContent('#timeAxis')).includes('50,000 BC'));
-    const firstEntry = Math.min(...await page.$$eval('#peopleStrip .bar, #voyageList .vbar', (es) => es.map((e) => e.getBoundingClientRect().left)));
+    const firstEntry = Math.min(...await page.$$eval('#peopleStrip .bar, #voyageList .vbar', (es) => { const t = document.getElementById('track').getBoundingClientRect().left; return es.map((e) => e.getBoundingClientRect().left - t); }));
     assert.ok(firstEntry >= bs[0].left - 1, 'an entry on the earlier stretch');
     await page.click('#earlier');
     assert.ok(Math.abs((await track()).width - w0) < 1, 'Earlier again did not bring the axis back');
