@@ -163,18 +163,19 @@ export function viewContaining(frame, { w = 1600, h = 1000, pad = 0.08 } = {}) {
 }
 
 // Where a person's pictures lie by default, from `frame` (the lon/lat box of their birth, death and voyages): each as tall
-// as two fifths of the frame (in Mercator degrees, 3 to 30), side by side in a row under the frame's south edge, from its
-// west edge eastward. `sizes` are the pictures' [width, height] in px. Returns [{ lon, lat, scale, turn: 0 }], scale in
-// Mercator degrees per px, as a chart's sheet (overlays.mjs).
-export function picturePlaces(frame, sizes) {
+// as two fifths of the frame (in Mercator degrees, 3 to 30), times `grow`, side by side in a row under the frame's south
+// edge, from its west edge eastward, each laid `overlap` of its width over the one before (the page lays them larger
+// and overlapping on a wide screen, so a long row still fits it). `sizes` are the pictures' [width, height] in px.
+// Returns [{ lon, lat, scale, turn: 0 }], scale in Mercator degrees per px, as a chart's sheet (overlays.mjs).
+export function picturePlaces(frame, sizes, grow = 1, overlap = 0) {
   const merc = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360)) * 180 / Math.PI;
   const latOf = (m) => (2 * Math.atan(Math.exp((m * Math.PI) / 180)) - Math.PI / 2) * 180 / Math.PI;
   const m0 = merc(Math.max(-80, frame.latMin)), m1 = merc(Math.min(80, frame.latMax));
-  const tall = Math.max(3, Math.min(30, (m1 - m0) * 0.4)), gap = tall * 0.08;
+  const tall = Math.max(3, Math.min(30, (m1 - m0) * 0.4)) * grow, gap = tall * 0.08;
   let x = frame.lonMin;
   return sizes.map(([w, h]) => {
     const scale = tall / h, wide = w * scale, at = { lon: x + wide / 2, lat: latOf(Math.max(merc(-80) + tall / 2, m0 - gap - tall / 2)), scale, turn: 0 };
-    x += wide + gap;
+    x += overlap ? wide * (1 - overlap) : wide + gap;
     return at;
   });
 }
