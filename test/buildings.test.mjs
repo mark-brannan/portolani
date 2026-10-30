@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { loadImage, createCanvas, GlobalFonts } from '@napi-rs/canvas'
-import { BUILDINGS, LESSER_PX, lesserBuilding } from '../scripts/buildings.mjs'
+import { BUILDINGS, RUIN, LESSER_PX, lesserBuilding } from '../scripts/buildings.mjs'
 import { POIS, POI_ZOOM } from '../scripts/pois.mjs'
 import { createScene, towerGlyph, DETAIL_ZOOM } from '../scripts/scene.mjs'
 import { coastNames, joinNames } from '../scripts/names.mjs'
@@ -110,4 +110,19 @@ test('points of interest are lettered from POI_ZOOM, bigger than the lesser plac
   const world = { lon: 10, lat: 25, zoom: 0 }
   assert.notEqual((await at(world, 0)).cartouche.title, 'THE WORLD')
   assert.equal((await at(world, 0, { pinTitle: 'The World' })).cartouche.title, 'THE WORLD')
+})
+
+test('a place with a tile and nothing drawn gets an unlettered mark: a ruin, or the plain tower where a city stands', async () => {
+  const tyre = { name: 'Tyre', lon: 35.2, lat: 33.27 }, rome = { name: 'Roma', lon: 12.5, lat: 41.9 }
+  const at = (p, zoom, sights) => createScene(env, { view: { lon: p.lon, lat: p.lat, zoom }, sights }).then((r) => r.scene)
+  const scene = await at(tyre, 7, [tyre])
+  const ruin = scene.lesser.find((l) => l.name === 'Tyre')
+  assert.ok(ruin?.mark && ruin.tower === 'ruin', 'Tyre has no city on its spot: a ruin')
+  assert.ok(!scene.names.some((n) => n.text === 'Tyre'), 'no lettering beside it')
+  assert.ok(!(await at(tyre, 7)).lesser.some((l) => l.name === 'Tyre'), 'no sights, no mark')
+  assert.ok(!(await at(tyre, POI_ZOOM - 1, [tyre])).lesser.some((l) => l.mark), 'none below POI_ZOOM')
+  const city = await at(rome, 7, [rome])
+  assert.ok(!city.lesser.some((l) => l.mark && l.tower === 'ruin'), 'a living city is never a ruin')
+  assert.ok(RUIN.layers.every(([, d]) => /^M[-\d. MLHVQZ]*$/.test(d)) && RUIN.w <= 8, 'the ruin is drawn in the towers\' path data')
+  assert.ok(!BUILDINGS.some((b) => b.id === 'ruin'), 'not a town to pick at random')
 })

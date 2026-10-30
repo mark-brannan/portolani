@@ -64,6 +64,18 @@ const BUILDINGS = [
   ] },
 ];
 
+// A ruin: a broken colonnade, three columns on a step, two of them snapped short, in ink alone (a place with no city
+// on its spot today). Not in BUILDINGS: it is no town to pick at random, only the mark of a place (scene.mjs).
+const RUIN = { id: 'ruin', w: 7, top: 12, layers: [
+  ['p', 'M-7 0V-1.8H7V0Z'],
+  ['p', 'M-5.6 -1.8V-11.2H-3V-1.8Z'],
+  ['p', 'M-6.2 -11.2H-2.4V-12.4H-6.2Z'],
+  ['p', 'M-1.3 -1.8V-4.6L-0.1 -5.4L1.1 -4.4L1.3 -1.8Z'],
+  ['p', 'M3 -1.8V-7.6L4.1 -8.2L5 -7.2L5.6 -7.8V-1.8Z'],
+  ['s', 'M-4.8 -3V-10M-4 -3V-10M-0.4 -2.8V-3.6M4.2 -2.8V-6'],
+  ['s', 'M-7 0H7'],
+] };
+
 // The places too small for the chart's towns (Natural Earth SCALERANK past 4, up to LESSER_RANK) are
 // drawn from DETAIL_ZOOM on as a church or a house, LESSER_PX tall whatever the zoom, and lettered
 // small. The bigger the place, the likelier a church: by rank and the place's own seed, so a place
@@ -71,4 +83,4 @@ const BUILDINGS = [
 const LESSER_RANK = 8, LESSER_PX = 18, LESSER_LETTER = 12;
 const lesserBuilding = (rank, seed) => ((seed >>> 0) % 4 < 7.5 - rank ? 'church' : 'house');
 
-export { BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding };
+export { RUIN, BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding };

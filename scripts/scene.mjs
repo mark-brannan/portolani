@@ -22,7 +22,7 @@ import { RELIEF_STYLES, reliefOf, clearOf, drawRelief } from './relief.mjs';
 import { TREES, TREE_STYLES, plantTrees, plantPalms } from './trees.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
 export { SIGHT_TILES } from './sights.mjs'; // the page's tiles for its places; here so the module ships with the scene
-import { BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from './buildings.mjs';
+import { RUIN, BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from './buildings.mjs';
 import { legPath, reachPath, isMigration, splitAtSeam, DASHES, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, readVoyage, chronological, voyageLink } from './voyages.mjs';
 export { VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, readVoyage, chronological, voyageLink };
 import { loadOverlay, drawOverlay, drawSheet } from './overlays.mjs';
@@ -709,7 +709,7 @@ const TOWERS = [
   ] },
   ...BUILDINGS, // the Carta Marina's house, church, castle, round tower and tent (buildings.mjs)
 ];
-const TOWER_BY_ID = new Map(TOWERS.map((t) => [t.id, t]));
+const TOWER_BY_ID = new Map([...TOWERS, RUIN].map((t) => [t.id, t]));
 
 // Sprites by key, `<pack>/<id>`, since ids repeat across packs (scanned/serpent-a, vivid/serpent-a).
 // The shapes drawn in code are the pseudo-pack `plain`: its rose set, its cartouche frame, the tower.
@@ -1233,6 +1233,17 @@ function placeHillSprites(humps, sprites, blocked, field, proj) {
 const placedBox = ({ box: [c0, c1, c2] }) => obb((c0[0] + c2[0]) / 2, (c0[1] + c2[1]) / 2, Math.atan2(c1[1] - c0[1], c1[0] - c0[0]),
   Math.hypot(c1[0] - c0[0], c1[1] - c0[1]) / 2, Math.hypot(c2[0] - c1[0], c2[1] - c1[1]) / 2);
 
+// The stand-ins for the places that have a tile (the page's `sights`: { name, lon, lat }) and nothing of their own
+// drawn: a lesser place with no name, from POI_ZOOM on, where the tile opens on a tap. A ruin where no modern city
+// stands on the spot, else the plain tower; placeLesser drops it where a town or another mark is already drawn there.
+function standIns(sights, data, world, view) {
+  if (!Array.isArray(sights) || view.zoom < POI_ZOOM) return [];
+  const modern = (s) => world.places.some((q) => Math.hypot((q.lon - s.lon) * Math.cos(s.lat * RAD), q.lat - s.lat) < 0.3);
+  return sights.filter((s) => Number.isFinite(s.lon) && Number.isFinite(s.lat) && !POIS.some((p) => p.name === s.name) && shows(data.proj, s.lon, s.lat))
+    .map((s) => ({ name: s.name, lon: s.lon, lat: s.lat, xy: data.proj.project(s.lon, s.lat), building: modern(s) ? 'tower' : 'ruin', poi: true, mark: true, rank: 0, pop: 0 }))
+    .filter((s) => s.xy.every(Number.isFinite));
+}
+
 // The lesser places (buildings.mjs), after every other name: each a church or a house LESSER_PX tall
 // whatever the zoom, standing on its land (standOf, on the clearance field), its name small above it;
 // kept only where the building and its name both clear the towns, names and ornaments placed before.
@@ -1246,6 +1257,11 @@ function placeLesser(data, field, boxes, ctx, towns, names, poi) {
     const [x, y] = standOf(p, top, hw, field, null, poi);
     const icon = obb(x, y - top / 2, 0, hw, top / 2);
     if (!obbInside(icon) || boxes.some((b) => obbOverlap(b, icon))) continue;
+    if (p.mark) { // a stand-in for a place with a tile: the glyph alone, no lettering
+      boxes.push(icon);
+      out.push({ x, y, h: LESSER_PX * k, tower: shape.id, name: p.name, rank: p.rank, label: icon, poi: true, mark: true });
+      continue;
+    }
     const n = { text: p.name, at: data.proj.invert(x, y - top - 5), size: Math.round(LESSER_LETTER * (poi ? 1.4 : 1)) };
     const [q] = place(ctx, [n], data.proj.toPx, opts);
     const box = q && placedBox(q);
@@ -1497,7 +1513,7 @@ function buildScene(data, sprites, ctx, world = {}) {
   const places = new Set();
   if (landOk) for (const { xy: [x, y] } of data.places) if (x > -LAND_ROSE_TOWN && x < W + LAND_ROSE_TOWN && y > -LAND_ROSE_TOWN && y < H + LAND_ROSE_TOWN) { const o = { x, y, r: LAND_ROSE_TOWN }; places.add(o); occupied.push(o); }
   // a point of interest is lettered whatever the view, so the roses and the beasts keep clear of it, on sea too
-  for (const { xy: [x, y] } of data.lesser.filter((l) => l.poi)) occupied.push({ x, y, r: POI_ROOM });
+  for (const { xy: [x, y] } of data.lesser.filter((l) => l.poi && !l.mark)) occupied.push({ x, y, r: POI_ROOM });
   if (landOk && urban.length) built = distanceTo(data, urban.map((u) => u.poly));
   if (sheetRoses) {
     ({ centre, nodes, roseDraws } = sheetRoses);
@@ -3146,6 +3162,7 @@ export async function createScene(environment, opts = {}) {
   const tLoad = performance.now();
 
   const data = viewData(world, view);
+  data.lesser.push(...standIns(opts.sights, data, world, view));
   // the atlas's sheets at every zoom: the curated sheets alone in the world band, then curated and grid sheets.
   // The Catalan rose's lines reach as far as those of the sheet that holds it at this zoom.
   // `from` paces a sheet's beasts: the first zoom of its band, or in the world band, where the earth is one page,

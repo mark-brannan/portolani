@@ -742,6 +742,7 @@ async function render() {
       sprites: [...selection], kinds, view, pinned: !phone.matches, pinTitle: style.autoTitle ? pinTitle : null,
       voyages: style.voyages.filter((v) => !v.hidden).map((v) => ({ id: v.id, colour: voyageInk()[v.id], width: style.voyageWidth })), person: style.person, voyageWidth: style.voyageWidth,
       overlay: style.overlay ? { id: style.overlay, mode: style.overlayMode, sheet: style.sheet, opacity: style.overlayOpacity } : null,
+      sights: sightTiles().map(({ lon, lat, tile }) => ({ name: tile.title, lon, lat })),
       debug: parseDebug(style.debug).debug, tune: parseTune(style.tune).tune,
     });
     if (me !== run) return; // a newer change or a move superseded this one

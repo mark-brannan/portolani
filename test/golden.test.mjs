@@ -33,6 +33,7 @@ const VIEWS = {
   'world-z2-person': { lon: 40, lat: 25, zoom: 2 }, // a person chosen: Ibn Battuta's journeys lit in red with his birth marked, Columbus dimmed
   'pacific-z3-migrations': { lon: -170, lat: -15, zoom: 3 }, // two migrations, chevrons over a soft ribbon, across the date line
   'china-z5-doubt': { lon: 117, lat: 35, zoom: 5 }, // a doubted leg: its rings, and its cloud on empty land (Ibn Battuta to Khanbaliq)
+  'levant-z6-marks': { lon: 33, lat: 32.5, zoom: 6 }, // a place with a tile and no figure gets a mark: Tyre a ruin, Alexandria the plain tower where a city stands
   'old-world-z2.6-1375': { lon: 62, lat: 33, zoom: 2.6 }, // the regions in the Catalan Atlas's names, read in English (docs/period-names)
 };
 // settings a golden draws with beyond the defaults; region-z5 is the README's picture, lettered PORTOLANI
@@ -41,6 +42,7 @@ const OPTS = { 'region-z5': { autoTitle: false }, 'world-z2-voyage': { voyages: 
   'world-z2-person': { person: 'ibn-battuta', voyages: [{ id: 'columbus' }] },
   'pacific-z3-migrations': { voyages: [{ id: 'lapita-expansion' }, { id: 'east-polynesia-settlement', colour: '#1f4e8c' }] } ,
   'china-z5-doubt': { voyages: [{ id: 'ibn-battuta-6' }] },
+  'levant-z6-marks': { sights: [{ name: 'Tyre', lon: 35.2, lat: 33.27 }, { name: 'Alexandria', lon: 29.92, lat: 31.2 }] },
   'old-world-z2.6-1375': { regions: 'english', regionSet: 'catalan-1375' } };
 // and its full-size render is kept for the README, so `npm run golden` refreshes both together
 const README_IMAGE = join(ROOT, 'docs', 'readme.jpg');
