@@ -41,7 +41,7 @@
   }
   #build a { color: inherit; }
 
-  /* top right, a row of seven instruments, each opening its own drawer: the rose the settings, the chart the charts, the astrolabe the points of interest, the compass Go (a typed place or position, or mine filled in), the dividers the voyages, the medallion the people, the anchor the anchorages (home first). One drawer at a time: a click on its button opens it and a second click shuts it, another button swaps it for its own, and Esc, or on a wide screen a click on the map, shuts it; a choice in it leaves it open, on a phone too. The row never moves */
+  /* top right, a row of seven instruments, each opening its own drawer: the rose the settings, the chart the charts, the astrolabe the points of interest, the compass Go (a typed place or position, or mine filled in), the dividers and the medallion one timeline, voyages and people (each button opens it at its own lane), the anchor the anchorages (home first). One drawer at a time: a click on its button opens it and a second click shuts it, another button swaps it for its own (the other of the timeline's two stays on the timeline and moves to its lane), and Esc, or on a wide screen a click on the map, shuts it; a choice in it leaves it open, on a phone too. The row never moves */
   #where { position: fixed; top: 12px; right: 12px; z-index: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; pointer-events: none; }
   #where :is(button, input, summary) { pointer-events: auto; } /* the box is empty map: a touch there is the map's, to drag or pinch */
   #where .row { display: flex; gap: 6px; align-items: center; }
@@ -78,8 +78,47 @@
   #where .places button { display: block; text-align: left; }
   #coords { display: flex; gap: 4px; align-self: stretch; }
   #coords input { flex: 1; min-width: 0; max-width: none; padding: 3px 8px; font: 13px var(--serif); border-radius: 12px; background: var(--panel); color: var(--fg); border: 1px solid var(--rule); }
-  #voyageList { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
-  #voyageList li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  /* the Voyages and People buttons' drawer: one timeline on one linear year axis, people above it and voyages below,
+     the eras of the points of interest as faint bands behind both, and at its left end the Earlier tab; the voyages'
+     controls (line weight, Clear, the pen's pace) head the voyages' lane */
+  #timelinePanel { width: min(720px, 100vw - 24px); max-width: none; align-items: stretch; }
+  #timelinePanel .vtools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 4px; }
+  #timelinePanel .chip { display: inline-flex; padding: 3px 8px; border-radius: 14px; box-shadow: none; font: 12px var(--serif); background: var(--sheet); color: var(--sheet-ink); }
+  #timelinePanel .chip[aria-checked=true] { box-shadow: inset 0 0 0 1px var(--accent); border-color: var(--accent); }
+  .timeline { display: flex; align-items: stretch; gap: 4px; }
+  .tleft { flex: none; width: 24px; }
+  #where .tleft .earlier { position: sticky; top: 0; width: 24px; height: auto; padding: 8px 0; border-radius: 8px; box-shadow: none; writing-mode: vertical-rl; transform: rotate(180deg); font: italic 12px var(--serif); white-space: nowrap; background: var(--sheet); color: var(--sheet-ink); }
+  #where .tleft .earlier .chev { text-orientation: upright; } /* upright, then turned with the tab: it points left, and right once open */
+  #where .tleft .earlier[aria-pressed="true"] { box-shadow: inset 0 0 0 1px var(--accent); border-color: var(--accent); }
+  .tscroll { flex: 1; min-width: 0; overflow-x: auto; overscroll-behavior-x: contain; }
+  .track { position: relative; width: calc(max(100%, 640px) * var(--w, 1)); padding-bottom: 4px; } /* a phone scrolls it sideways; Earlier widens it */
+  .eras { position: absolute; inset: 0; pointer-events: none; }
+  .eras .band { position: absolute; top: 0; bottom: 0; box-sizing: border-box; border-left: 1px dotted rgb(90 70 40 / 0.5); }
+  .eras .band:nth-child(4n+1) { background: rgb(176 122 30 / 0.10); }
+  .eras .band:nth-child(4n+2) { background: rgb(40 100 110 / 0.08); }
+  .eras .band:nth-child(4n+3) { background: rgb(140 47 30 / 0.07); }
+  .eras .band:nth-child(4n+4) { background: rgb(70 100 50 / 0.09); }
+  .eras .band b, .eras .mark b { position: absolute; top: 1px; left: 4px; font: italic 11px/14px var(--serif); font-weight: normal; white-space: nowrap; opacity: 0.8; }
+  .eras .mark { position: absolute; top: 0; bottom: 0; border-left: 1px dashed rgb(90 70 40 / 0.5); }
+  .eras .band:nth-child(even) b { top: 15px; } /* the names on two rows, so a narrow era's name runs on over the next without meeting it */
+  .eras .band.last b { left: auto; right: 4px; } /* the last era's name ends at the axis's end */
+  .eras .mark b { left: auto; right: 4px; top: 15px; } /* a window's name to the left of its line, so its neighbours keep clear */
+  .eras .mark.edge b { right: auto; left: 4px; }
+  .eras .brk { position: absolute; top: 0; bottom: 0; width: 5px; margin-left: -3px; border-left: 1px dashed #8a7550; border-right: 1px dashed #8a7550; } /* where the earlier stretch's scale gives way to the main one */
+  .erahead { height: 30px; }
+  .vcontrols { position: sticky; left: 0; z-index: 1; width: max-content; max-width: min(100%, 100vw - 100px); margin: 2px 0 4px; } /* the voyages' own controls, next to their lane, in view however far the track is scrolled */
+  .vcontrols > :last-child { margin-bottom: 0; }
+  .lanecap { position: sticky; left: 0; display: inline-block; padding: 0 4px; font: italic 11px/15px var(--serif); opacity: 0.7; }
+  .lanecap.lit { opacity: 1; color: #8c2f1e; font-weight: bold; } /* the lane its button opened the drawer to */
+  .lane { position: relative; list-style: none; margin: 0; padding: 0; }
+  #timeAxis { position: relative; height: 16px; margin: 2px 0; border-bottom: 1px solid #b89a68; font: italic 10px var(--serif); }
+  #timeAxis .tick { position: absolute; bottom: 2px; transform: translateX(-50%); white-space: nowrap; opacity: 0.75; }
+  #timeAxis .tick.edge { transform: none; }
+  #voyageList li { position: relative; display: block; }
+  #voyageList .vline { position: relative; height: 26px; }
+  #voyageList .vbar { --c: #6b5a44; position: absolute; top: 10px; height: 6px; border-radius: 3px; background: var(--c); opacity: 0.55; }
+  #voyageList li.on .vbar { opacity: 1; }
+  #voyageList .vctl { position: absolute; top: 0; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
   #voyageList button { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
   #voyageList button svg { width: 28px; height: 18px; flex: none; }
   #voyageList button[data-shown="true"] { background: #e2cd9e; color: #3b2a1a; border-color: #b89a68; } /* a shown voyage, lit like an open instrument */
@@ -88,25 +127,15 @@
   #voyageList .eye[aria-pressed=true] .slash { display: none; }
   #voyageList .eye[aria-pressed=false] { opacity: 0.7; }
   #voyageList input[type=color] { width: 28px; height: 22px; border-radius: 6px; cursor: pointer; } /* the swatch is the voyage's ink; a click picks another */
-  #voyagesPanel .vtools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 4px; }
-  #voyagesPanel .vdraw { margin: 0 0 6px; font: 13px var(--serif); } /* the pen's seconds, its sample line drawing on at that pace */
-  #voyagesPanel .vdraw output { min-width: 34px; font-size: 13px; color: inherit; }
+  #timelinePanel .vdraw { margin: 0 0 6px; font: 13px var(--serif); } /* the pen's seconds, its sample line drawing on at that pace */
+  #timelinePanel .vdraw output { min-width: 34px; font-size: 13px; color: inherit; }
   #voyageDrawSample { width: 40px; height: 10px; flex: none; }
   #voyageDrawSample path { fill: none; stroke: #8c2f1e; stroke-width: 2.2; stroke-linecap: round; stroke-dasharray: 1; }
-  #voyagesPanel .chip { display: inline-flex; padding: 3px 8px; border-radius: 14px; box-shadow: none; font: 12px var(--serif); background: var(--sheet); color: var(--sheet-ink); }
-  #voyagesPanel .chip[aria-checked=true] { box-shadow: inset 0 0 0 1px var(--accent); border-color: var(--accent); }
   #voyageList .when { font-size: 11px; font-style: italic; opacity: 0.75; margin-left: 6px; }
-  #voyageList .brief { display: none; }
-  #voyageList .vsum { flex-basis: 100%; max-width: 420px; margin: 0 0 4px 44px; font: 12px/1.35 var(--serif); opacity: 0.8; } /* the voyage in brief, and where to read more */
+  #voyageList .full { display: none; } /* on the timeline a voyage goes by its short name and years; the title is its tooltip */
+  #voyageList .vsum { display: none; max-width: 360px; margin: 0 0 4px; font: 12px/1.35 var(--serif); opacity: 0.85; } /* a shown voyage in brief, and where to read more */
+  #voyageList li.on .vsum { display: block; }
   #voyageList .vsum a { color: inherit; font-style: italic; }
-  @media (max-width: 520px) { #voyageList .full { display: none; } #voyageList .brief { display: inline; } } /* a phone: the short name and the years, so no title wraps */
-  /* the People drawer: a timeline strip of life bars over a broken year axis, and the chosen person's card under it */
-  #peoplePanel { width: min(460px, 100vw - 24px); align-items: stretch; }
-  #peopleStrip { position: relative; }
-  #peopleStrip .axis { position: relative; height: 16px; border-bottom: 1px solid #b89a68; font: italic 10px var(--serif); }
-  #peopleStrip .tick { position: absolute; bottom: 2px; transform: translateX(-50%); white-space: nowrap; opacity: 0.75; }
-  #peopleStrip .brk { position: absolute; top: 0; bottom: 0; width: 7px; margin-left: -1px; border-left: 1px dashed #8a7550; border-right: 1px dashed #8a7550; pointer-events: none; } /* the years left out between the ancient world and the medieval */
-  #peopleStrip .lives { position: relative; list-style: none; margin: 2px 0 0; padding: 0; }
   #where #peopleStrip .life { position: relative; display: block; width: 100%; height: 17px; padding: 0; border: 0; border-radius: 3px; background: none; box-shadow: none; color: var(--fg); cursor: pointer; }
   #where #peopleStrip .life:hover { background: rgb(140 47 30 / 0.07); }
   #peopleStrip .bar { --c: #6b5a44; position: absolute; top: 5px; height: 7px; border-radius: 4px; background: var(--c); }
@@ -116,6 +145,8 @@
   #peopleStrip .who { position: absolute; top: 1px; font: 12px/15px var(--serif); white-space: nowrap; }
   #peopleStrip .life[aria-pressed="true"] .bar { --c: #8c2f1e; } /* the chosen person: the chart's red */
   #peopleStrip .life[aria-pressed="true"] .who { color: #8c2f1e; font-weight: bold; }
+  #peopleStrip .cardrow { position: sticky; left: 0; width: min(440px, 100%); margin: 2px 0 6px; } /* the chosen person's card, under their bar, in view however far the track is scrolled */
+  #peopleStrip .pcard { margin: 0; padding: 6px 8px; border: 1px solid #b89a68; border-radius: 6px; background: var(--panel); }
   .pcard { margin-top: 6px; padding-top: 6px; border-top: 1px solid #b89a68; font: 13px/1.4 var(--serif); }
   .pcard p { margin: 0 0 4px; }
   .pcard .chip { display: inline-flex; align-items: center; gap: 3px; padding: 0 7px; border-radius: 10px; border: 1px solid #8a7550; background: #f1e4c6; color: #3b2a1a; font-size: 11px; white-space: nowrap; }
@@ -363,7 +394,7 @@
     <button id="go" type="button" aria-label="Go to a place or my position" aria-controls="goPanel" aria-expanded="false" title="Go to">
       <svg viewBox="-16 -16 32 32" aria-hidden="true" stroke-linejoin="round"><defs><linearGradient id="brassCompass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4c2"/><stop offset="0.35" stop-color="#e8b84a"/><stop offset="0.6" stop-color="#b07a1e"/><stop offset="0.8" stop-color="#e9c060"/><stop offset="1" stop-color="#7a5212"/></linearGradient></defs><rect x="-14" y="-14" width="28" height="28" rx="3" fill="url(#brassCompass)" stroke="#5a3a0c" stroke-width="1"/><rect x="-12.3" y="-12.3" width="24.6" height="24.6" rx="1.8" fill="none" stroke="#5a3a0c" stroke-width="0.4" opacity="0.7"/><circle cx="-11.6" cy="-11.6" r="0.9" fill="#5a3a0c" opacity="0.8"/><circle cx="11.6" cy="-11.6" r="0.9" fill="#5a3a0c" opacity="0.8"/><circle cx="11.6" cy="11.6" r="0.9" fill="#5a3a0c" opacity="0.8"/><circle cx="-11.6" cy="11.6" r="0.9" fill="#5a3a0c" opacity="0.8"/><circle r="11" fill="#5a3a0c"/><circle r="10" fill="#f6ecd0"/><circle r="9" fill="none" stroke="#5a3a0c" stroke-width="0.35"/><path d="M-0.29 -1.37L0 -8.8L0.29 -1.37M0.37 -1.35L2.3 -5.54L0.69 -1.22M0.76 -1.17L5.3 -5.3L1.17 -0.76M1.22 -0.69L5.54 -2.3L1.35 -0.37M1.37 -0.29L8.8 0L1.37 0.29M1.35 0.37L5.54 2.3L1.22 0.69M1.17 0.76L5.3 5.3L0.76 1.17M0.69 1.22L2.3 5.54L0.37 1.35M0.29 1.37L0 8.8L-0.29 1.37M-0.37 1.35L-2.3 5.54L-0.69 1.22M-0.76 1.17L-5.3 5.3L-1.17 0.76M-1.22 0.69L-5.54 2.3L-1.35 0.37M-1.37 0.29L-8.8 0L-1.37 -0.29M-1.35 -0.37L-5.54 -2.3L-1.22 -0.69M-1.17 -0.76L-5.3 -5.3L-0.76 -1.17M-0.69 -1.22L-2.3 -5.54L-0.37 -1.35" fill="none" stroke="#7a5a2a" stroke-width="0.35"/><path transform="translate(0 -5.6) scale(0.62)" d="M0-6.2C1.5-4.8 1.6-2.6 0.55-1.1L-0.55-1.1C-1.6-2.6-1.5-4.8 0-6.2ZM0.6-1.3C1.4-2.4 3.1-2.7 3.5-4.4C4.4-2.5 3.2-0.6 1.2-0.6ZM-0.6-1.3C-1.4-2.4-3.1-2.7-3.5-4.4C-4.4-2.5-3.2-0.6-1.2-0.6ZM-2.1-1.3H2.1V-0.3H-2.1ZM-0.55-0.3H0.55L0.9 1.2H-0.9Z" fill="#a8741c" stroke="#5a3a0c" stroke-width="0.5"/><g transform="rotate(28)"><path d="M0-8.6 1.6 0H-1.6Z" fill="#b8402a" stroke="#3b1a0c" stroke-width="0.4"/><path d="M0 8.6 1.6 0H-1.6Z" fill="#1e2a3a" stroke="#0e141c" stroke-width="0.4"/></g><circle r="1.1" fill="url(#brassCompass)" stroke="#5a3a0c" stroke-width="0.4"/></svg>
     </button>
-    <button id="voyages" type="button" aria-label="Famous voyages" aria-controls="voyagesPanel" aria-expanded="false" title="Famous voyages">
+    <button id="voyages" type="button" aria-label="Famous voyages" aria-controls="timelinePanel" aria-expanded="false" title="Famous voyages">
       <svg viewBox="-16 -16 32 32" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round"><defs><linearGradient id="brassDividers" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4c2"/><stop offset="0.35" stop-color="#e8b84a"/><stop offset="0.6" stop-color="#b07a1e"/><stop offset="0.8" stop-color="#e9c060"/><stop offset="1" stop-color="#7a5212"/></linearGradient></defs>
         <g stroke="#5a3a0c" stroke-width="3.4"><path d="M-1.6-9-7 12.5M1.6-9 7 12.5"/><path d="M-4.6 3h9.2" stroke-width="2.2"/></g>
         <g stroke="url(#brassDividers)" stroke-width="2"><path d="M-1.6-9-7 12.5M1.6-9 7 12.5"/><path d="M-4.6 3h9.2" stroke-width="1"/></g>
@@ -371,7 +402,7 @@
         <circle cy="-11" r="2.8" fill="url(#brassDividers)" stroke="#5a3a0c" stroke-width="0.9"/><circle cy="-11" r="0.9" fill="#5a3a0c"/>
       </svg>
     </button>
-    <button id="people" type="button" aria-label="People: who sailed, and when they lived" aria-controls="peoplePanel" aria-expanded="false" title="People">
+    <button id="people" type="button" aria-label="People: who sailed, and when they lived" aria-controls="timelinePanel" aria-expanded="false" title="People">
       <svg viewBox="-16 -16 32 32" aria-hidden="true" stroke-linejoin="round"><defs><linearGradient id="brassPeople" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4c2"/><stop offset="0.35" stop-color="#e8b84a"/><stop offset="0.6" stop-color="#b07a1e"/><stop offset="0.8" stop-color="#e9c060"/><stop offset="1" stop-color="#7a5212"/></linearGradient></defs>
         <ellipse rx="11.5" ry="14" fill="url(#brassPeople)" stroke="#5a3a0c" stroke-width="1"/><ellipse rx="9" ry="11.4" fill="#f1e4c6" stroke="#5a3a0c" stroke-width="0.6"/>
         <path d="M-6.6 9.4C-6.4 4.6-3.6 2.6 0 2.6S6.4 4.6 6.6 9.4C4.6 10.8 2.4 11.4 0 11.4S-4.6 10.8-6.6 9.4Z" fill="#5a3a0c"/><circle cy="-2.6" r="4.2" fill="#5a3a0c"/>
@@ -395,13 +426,25 @@
   <div id="sightsPanel" class="drawer menu">
     <ul id="sightsList" class="places"></ul>
   </div>
-  <div id="voyagesPanel" class="drawer menu">
-    <div class="vtools"><div id="voyageWidth" class="chips" role="radiogroup" aria-label="Line weight"></div></div>
-    <div class="slider vdraw" title="How long the pen takes to draw a voyage on when its name is clicked"><label for="voyageDraw">Drawn in</label><input id="voyageDraw" type="range"><svg id="voyageDrawSample" viewBox="0 0 40 10" aria-hidden="true"><path d="M2 5h36" pathLength="1"/></svg><output id="voyageDrawOut" for="voyageDraw"></output></div>
-    <ul id="voyageList" role="group" aria-label="Voyages, any number"></ul>
-  </div>
-  <div id="peoplePanel" class="drawer menu">
-    <div id="peopleStrip" class="strip" role="group" aria-label="People, each a bar over the years they lived; choose one"></div>
+  <div id="timelinePanel" class="drawer menu">
+    <div class="timeline">
+      <div class="tleft"><button id="earlier" class="earlier" type="button" aria-pressed="false" aria-controls="track" title="Earlier history: the timeline back to 50,000 BC"><span class="chev">&#9656;</span> Earlier</button></div>
+      <div id="timeScroll" class="tscroll">
+        <div id="track" class="track">
+          <div id="eras" class="eras" aria-hidden="true"></div>
+          <div class="erahead"></div>
+          <div id="peopleCap" class="lanecap">People</div>
+          <div id="peopleStrip" class="lane strip" role="group" aria-label="People, each a bar over the years they lived; choose one"></div>
+          <div id="timeAxis" aria-hidden="true"></div>
+          <div id="voyagesCap" class="lanecap">Voyages</div>
+          <div class="vcontrols">
+            <div class="vtools"><div id="voyageWidth" class="chips" role="radiogroup" aria-label="Line weight"></div></div>
+            <div class="slider vdraw" title="How long the pen takes to draw a voyage on when its name is clicked"><label for="voyageDraw">Drawn in</label><input id="voyageDraw" type="range"><svg id="voyageDrawSample" viewBox="0 0 40 10" aria-hidden="true"><path d="M2 5h36" pathLength="1"/></svg><output id="voyageDrawOut" for="voyageDraw"></output></div>
+          </div>
+          <ul id="voyageList" class="lane" role="group" aria-label="Voyages, any number, each at its years"></ul>
+        </div>
+      </div>
+    </div>
     <div id="personCard" class="pcard" hidden></div>
   </div>
   <div id="anchorPanel" class="drawer menu">
@@ -413,7 +456,7 @@
   <header>
     <div>
       <h1>Charts</h1>
-      <p>A chart's picture or name flies to it and lays its scan over the map as one sheet, to drag, turn and resize by hand; the eye shows or hides the sheet; its city flies there.</p>
+      <p>A chart's picture or name flies to it and lays its scan over the map as one sheet, alone and at its own placement, to drag, turn and resize by hand; the eye shows or hides that one sheet and leaves the others and the map as they are; its city flies there.</p>
       <span class="notes">notes to come</span>
     </div>
   </header>
@@ -605,6 +648,8 @@
       <div class="rows">
         <h3>Sheets</h3>
         <div id="debug" class="chips" role="radiogroup" aria-label="Sheets"></div>
+        <h3>Sheet hides for a voyage</h3>
+        <div id="sheetHides" class="chips" role="radiogroup" aria-label="Sheet hides for a voyage"></div>
         <h3>A chart's scan</h3>
         <div id="overlayMode" class="chips" role="radiogroup" aria-label="A chart's scan"></div>
         <div id="overlayOpacityRow" class="slider" hidden><input id="overlayOpacity" type="range" min="0" max="1" step="0.05" aria-label="Opacity of the warped pieces"><output id="overlayOpacityOut"></output></div>

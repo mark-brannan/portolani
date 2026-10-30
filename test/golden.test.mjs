@@ -9,6 +9,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import { createScene, drawScene, doubtMarks, SCALE_NAMES, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, RELIEF_STYLES, PROJECTION_NAMES, W, H } from '../scripts/scene.mjs';
+import { VOYAGE_CONTRAST } from '../scripts/voyages.mjs';
 import { plantTrees } from '../scripts/trees.mjs';
 import { compare, CHANNEL } from '../scripts/golden-compare.mjs';
 import { coastNames, joinNames } from '../scripts/names.mjs';
@@ -33,6 +34,7 @@ const VIEWS = {
   'world-z2-person': { lon: 40, lat: 25, zoom: 2 }, // a person chosen: Ibn Battuta's journeys lit in red with his birth marked, Columbus dimmed
   'pacific-z3-migrations': { lon: -170, lat: -15, zoom: 3 }, // two migrations, chevrons over a soft ribbon, across the date line
   'china-z5-doubt': { lon: 117, lat: 35, zoom: 5 }, // a doubted leg: its rings, and its cloud on empty land (Ibn Battuta to Khanbaliq)
+  'sheet-z3-voyage': { lon: -30, lat: 15, zoom: 3 }, // de la Cosa's sheet laid over the Atlantic with Columbus's voyage drawn over it, in a colour that reads against the scan
   'old-world-z2.6-1375': { lon: 62, lat: 33, zoom: 2.6 }, // the regions in the Catalan Atlas's names, read in English (docs/period-names)
 };
 // settings a golden draws with beyond the defaults; region-z5 is the README's picture, lettered PORTOLANI
@@ -41,6 +43,7 @@ const OPTS = { 'region-z5': { autoTitle: false }, 'world-z2-voyage': { voyages: 
   'world-z2-person': { person: 'ibn-battuta', voyages: [{ id: 'columbus' }] },
   'pacific-z3-migrations': { voyages: [{ id: 'lapita-expansion' }, { id: 'east-polynesia-settlement', colour: '#1f4e8c' }] } ,
   'china-z5-doubt': { voyages: [{ id: 'ibn-battuta-6' }] },
+  'sheet-z3-voyage': { overlays: [{ id: 'de-la-cosa', mode: 'sheet' }], voyages: [{ id: 'columbus', colour: VOYAGE_CONTRAST[0], width: 3.2 }] },
   'old-world-z2.6-1375': { regions: 'english', regionSet: 'catalan-1375' } };
 // and its full-size render is kept for the README, so `npm run golden` refreshes both together
 const README_IMAGE = join(ROOT, 'docs', 'readme.jpg');
@@ -260,10 +263,10 @@ test('trees: a pan keeps the forest, a zoom in thickens it', () => {
 test('voyages: a list, coloured and sized; an older single voyage; alternatives drawn when a death has them', async () => {
   const of = async (opts) => (await createScene(env, { view: VIEWS['world-z2'], ...opts })).scene.voyages;
   const one = await of({ voyage: 'magellan' });
-  assert.deepEqual(one.map((v) => [v.voyage.id, v.colour, v.width]), [['magellan', '#2e8b3a', 4.5]]);
+  assert.deepEqual(one.map((v) => [v.voyage.id, v.colour, v.width]), [['magellan', VOYAGE_CONTRAST[0], 4.5]]);
   const three = await of({ voyages: [{ id: 'columbus' }, { id: 'nowhere' }, { id: 'drake', colour: '#1F4E8C' }, { id: 'polo', width: 4.5 }] });
   assert.deepEqual(three.map((v) => v.voyage.id), ['columbus', 'drake', 'polo']);
-  assert.equal(three[0].colour, '#2e8b3a');
+  assert.equal(three[0].colour, VOYAGE_CONTRAST[0]);
   assert.equal(three[1].colour, '#1f4e8c');
   assert.equal(new Set(three.map((v) => v.colour)).size, 3, 'two voyages share an ink');
   assert.equal(three[2].width, 4.5);

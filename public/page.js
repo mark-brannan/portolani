@@ -7,18 +7,18 @@
 // a setting left at its default is left out, `sprites` too (keys with the pack shortened, v: s: p:); `mountains` is `ink`
 // or `off` (colour is the default); the hills are the Catalan sprites in `sprites`. `continents` and `regionszoom` are the zoom
 // they are drawn down from (0 off, the top always); `regionset=catalan-1375` letters the regions in a period's names (REGION_SETS), today's by default. `voyages=columbus,drake:1f4e8c` are the voyages in the order chosen, a picked
-// colour after an id, `voyagewidth=3.2` their line weight and `voyagedraw=4` the seconds the pen takes to draw one on. `overlay=carta-marina` lays that chart's scan over the map as one
-// sheet, `sheet=lon,lat,scale,turn` where it was dragged to; `overlaymode=pieces` the warped pieces instead, `overlayopacity=0.6`
+// colour after an id, `voyagewidth=3.2` their line weight and `voyagedraw=4` the seconds the pen takes to draw one on. `overlay=carta-marina,aguiar` lays those charts' scans over the map,
+// each as one sheet, the last on top; `sheet=;lon,lat,scale,turn` where each was dragged to, a slot per id; `overlaymode=pieces` the warped pieces instead, `overlayopacity=0.6`
 // how strongly (0 to 1); off by default.
 // Older links naming a `rendering` (or `pack`), `rose`, `monster`, `town` and `kinds` open as the
 // selection those chose, and are written back in the new form.
 // For a while, `debug=sheets[,rings]` and `tune=name:value,...` carry the under-the-hood section
 // (docs/atlas/under-the-hood.md), off by default.
-import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, isBroken, voyageView, readVoyage, chronological, voyageLink, sightMarks, SIGHT_TILES, noteMarks, pickMark, markClear, tileSpot, ZOOM } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, isBroken, legPath, voyageView, CONTINENT_ZOOM_END, readVoyage, chronological, voyageLink, sightMarks, SIGHT_TILES, noteMarks, pickMark, markClear, tileSpot, ZOOM } from './scene.mjs';
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
-import { PEOPLE_FILE, PICTURES_FILE, lifeSpan, timelineAxis, ticksOf, pictureCredit, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, viewContaining, withPictures, peopleOf, whoOf, deathOf } from './people.mjs';
+import { PEOPLE_FILE, PICTURES_FILE, lifeSpan, laneAxis, eraBands, EARLIER_MARKS, pictureCredit, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, viewContaining, withPictures, peopleOf, whoOf, deathOf } from './people.mjs';
 import { fold, bestPlace } from './placename.mjs';
 import { planFlight, ease as flyEase, FLY_KNOBS, flyDefaults } from './flight.mjs';
 
@@ -54,7 +54,7 @@ const canvas = $('map'), ctx = canvas.getContext('2d');
 // cards beside the map, not on the sea.
 const phone = matchMedia('(max-width: 520px)');
 
-const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: 6, regions: 'latin', regionSet: 'today', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyages: [], voyageWidth: VOYAGE_WIDTH, voyageDraw: VOYAGE_DRAW.seconds, person: null, pictures: null, ...OVERLAY_DEFAULTS, cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER, overlap: DEFAULT_OVERLAP };
+const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: CONTINENT_ZOOM_END, regions: 'latin', regionSet: 'today', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyages: [], voyageWidth: VOYAGE_WIDTH, voyageDraw: VOYAGE_DRAW.seconds, person: null, pictures: null, ...OVERLAY_DEFAULTS, cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER, overlap: DEFAULT_OVERLAP };
 
 // ---------------------------------------------------------------- the sprites on offer
 
@@ -209,7 +209,7 @@ function writeHash() {
   if (st.ink !== DEFAULTS.ink) q.set('ink', st.ink.slice(1));
   if (st.parchment !== DEFAULTS.parchment) q.set('parchment', st.parchment.slice(1));
   if (ALL_CHARTS) q.set('charts', 'all');
-  history.replaceState(null, '', `#${q.toString().replaceAll('%2C', ',').replaceAll('%2F', '/').replaceAll('%3A', ':')}`);
+  history.replaceState(null, '', `#${q.toString().replaceAll('%2C', ',').replaceAll('%2F', '/').replaceAll('%3A', ':').replaceAll('%3B', ';')}`);
 }
 
 // ---------------------------------------------------------------- the pickers
@@ -362,6 +362,8 @@ const HOOD_GLYPHS = {
   off: MOUNTAIN_GLYPHS.off,
   sheets: svg(SHEET_GLYPH),
   rings: svg(`${SHEET_GLYPH}<circle cx="14" cy="9" r="4.5" ${stroke(RED, 1)}/><circle cx="14" cy="9" r="1.3" ${stroke(RED, 0.8)}/>${[0, 1, 2, 3, 4, 5, 6, 7].map((i) => `<circle cx="${(14 + 4.5 * Math.sin(i * Math.PI / 4)).toFixed(2)}" cy="${(9 - 4.5 * Math.cos(i * Math.PI / 4)).toFixed(2)}" r=".9" fill="${RED}"/>`).join('')}`),
+  ride: svg(`<rect x="4" y="3" width="20" height="12" ${stroke('currentColor', 1)}/><path d="M2 13C8 3 14 14 26 4" ${stroke(RED, 1.8)}/>`), // a line drawn over a sheet
+  lifted: svg(`<rect x="4" y="3" width="20" height="12" ${stroke('currentColor', 0.8)} stroke-dasharray="2 2"/><path d="M2 13C8 3 14 14 26 4" ${stroke(RED, 1.8)}/>`), // the sheet off, the line alone
   rose: svg(`<path d="M2 9h24M14 2v14M8 2v14M20 2v14M2 5h24M2 13h24" ${stroke('currentColor', 0.5)}/><path d="M14 6l1 3-1 3-1-3Z M11 9l3-1 3 1-3 1Z" fill="${RED}"/>`),
   zero: svg(`<path d="M2 9h24M14 2v14M8 2v14M20 2v14M2 5h24M2 13h24" ${stroke('currentColor', 0.5)}/><circle cx="14" cy="9" r="2.6" ${stroke(RED, 1.2)}/>`),
   curated: svg(`<rect x="3" y="3" width="22" height="12" ${stroke('currentColor', 1)}/><circle cx="14" cy="9" r="4" ${stroke('currentColor', 0.8)}/>`),
@@ -389,6 +391,7 @@ const CHOICES = {
   voyageWidth: VOYAGE_WIDTHS.map((w, i) => [String(w), ['Fine', 'Standard', 'Bold', 'Heavy'][i] ?? `${w} px`, `${w} px`, lineOf('#8c2f1e', w)]),
   scaleBorder: [['bordered', 'Bordered', 'parchment and a double rule'], ['blank', 'Blank', 'parchment, no rule'], ['transparent', 'Transparent', 'drawn over the map']].map(([value, label, note = '']) => [value, label, note, BORDER_GLYPHS[value]]),
   debug: [['off', 'Off', '', HOOD_GLYPHS.off], ['sheets', 'Outlines', 'each sheet of the atlas at this view, in red, with its name', HOOD_GLYPHS.sheets], ['sheets,rings', 'Outlines + rings', 'and each sheet\'s hidden circle: its hub and sixteen nodes', HOOD_GLYPHS.rings]],
+  sheetHides: [['0', 'Voyage rides over', 'a voyage is drawn over the sheet, wherever it lies, and the sheet stays', HOOD_GLYPHS.ride], ['1', 'Sheet hides', 'a voyage\'s fly takes the sheet off if it would cover the voyage\'s frame', HOOD_GLYPHS.lifted]],
   overlayMode: [['sheet', 'One sheet', 'the whole scan, opaque, laid level and centred, dragged by hand', HOOD_GLYPHS.sheets], ['pieces', 'Warped pieces', 'each piece warped onto today\'s coast, at the opacity below', HOOD_GLYPHS.rings]],
   tuneOrigin: [['rose', `Catalan rose (${ROSE_AT})`, 'every band\'s grid has a corner on the rose', HOOD_GLYPHS.rose], ['zero', '0° 0°', 'NOAA\'s own zero', HOOD_GLYPHS.zero]],
   tuneCurated: [['1', 'On', 'the curated charts take the place of the grid cells they hold', HOOD_GLYPHS.curated], ['0', 'Off', 'grid cells everywhere', HOOD_GLYPHS.grid]],
@@ -510,7 +513,7 @@ function readControls() {
     cartouchePos: style.cartouchePos, scalePos: style.scalePos, // set by dragging the cartouche or the scale bar
     ...readHood(),
     voyages: style.voyages, voyageWidth: Number($('voyageWidth').value), voyageDraw: style.voyageDraw, // chosen in the voyages drawer
-    overlay: style.overlay, sheet: style.sheet, // chosen in the charts drawer, and by dragging the sheet
+    overlays: style.overlays, sheets: style.sheets, // chosen in the charts drawer, and by dragging a sheet
   };
   // hills are the Catalan sprites: the chip selects all of them or none
   const hills = $('hills').value === 'catalan';
@@ -541,6 +544,7 @@ const KNOB_OUT = { radius: (v) => `${v} of sheet height`, reach: (v) => `${v} ×
 for (const [name, id] of Object.entries(KNOB_SLIDERS)) Object.assign($(id), { min: TUNE_KNOBS[name].min, max: TUNE_KNOBS[name].max });
 function showHood() {
   $('debug').value = style.debug || 'off';
+  $('sheetHides').value = style.sheetHides ? '1' : '0';
   $('overlayMode').value = style.overlayMode; $('overlayOpacityRow').hidden = style.overlayMode !== 'pieces';
   $('overlayOpacity').value = String(style.overlayOpacity); $('overlayOpacityOut').textContent = `${Math.round(style.overlayOpacity * 100)}%`;
   const t = parseTune(style.tune).tune, at = (name) => t[name] ?? TUNE_KNOBS[name].def;
@@ -555,7 +559,7 @@ function showHood() {
 function readHood() {
   const pairs = [...Object.entries(KNOB_CHIPS).map(([name, id]) => [name, $(id).value]),
     ...Object.entries(KNOB_SLIDERS).filter(([, id]) => $(id).dataset.set).map(([name, id]) => [name, $(id).value])];
-  return { debug: parseDebug($('debug').value).text, tune: parseTune(pairs.map(([n, v]) => `${n}:${v}`).join(',')).text, overlayMode: $('overlayMode').value, overlayOpacity: Number($('overlayOpacity').value) };
+  return { debug: parseDebug($('debug').value).text, tune: parseTune(pairs.map(([n, v]) => `${n}:${v}`).join(',')).text, overlayMode: $('overlayMode').value, sheetHides: $('sheetHides').value === '1', overlayOpacity: Number($('overlayOpacity').value) };
 }
 function changed() {
   showStyle();
@@ -735,28 +739,31 @@ async function render() {
     const t0 = performance.now();
     // a kind is drawn while any of its sprites is selected
     const kinds = KINDS.filter((k) => SPRITES.some((s) => s.kind === k && selection.has(s.key)));
+    await learnBroken(style.voyages.map((v) => v.id)); // a voyage's ink waits on its file: the first render of a link has them right
+    const ink = voyageInk(), inkKey = JSON.stringify(ink); // read from the sheet last drawn; checked again once this one lands
     const { scene, data, bg, world, coarse, timing } = await createScene(env, {
       ...style, ...parsePlacement(style.placement), relief: style.mountains === 'colour' ? ['marina'] : style.mountains === 'ink' ? ['engraved'] : [],
       continents: style.continentsZoom > 0, continentsZoom: style.continentsZoom,
       regions: style.regionsZoom > 0 ? style.regions : 'off', regionSet: style.regionSet, regionsZoom: style.regionsZoom,
       sprites: [...selection], kinds, view, pinned: !phone.matches, pinTitle: style.autoTitle ? pinTitle : null,
-      voyages: style.voyages.filter((v) => !v.hidden).map((v) => ({ id: v.id, colour: voyageInk()[v.id], width: style.voyageWidth })), person: style.person, voyageWidth: style.voyageWidth,
-      overlay: style.overlay ? { id: style.overlay, mode: style.overlayMode, sheet: style.sheet, opacity: style.overlayOpacity } : null,
+      voyages: style.voyages.filter((v) => !v.hidden).map((v) => ({ id: v.id, colour: ink[v.id], width: style.voyageWidth })), person: style.person, voyageWidth: style.voyageWidth,
+      overlays: style.overlays.map((id) => ({ id, mode: style.overlayMode, sheet: style.sheets[id] ?? null, opacity: style.overlayOpacity })),
       debug: parseDebug(style.debug).debug, tune: parseTune(style.tune).tune,
     });
     if (me !== run) return; // a newer change or a move superseded this one
-    ground = { world, coarse, bg, voyages: scene.voyages, anchored: anchorScene(scene, data), overlay: scene.overlay, cards: { cartouche: kinds.includes('cartouche') ? scene.cartouche : null, scaleSprite: scene.scaleSprite, scale: style.scale, bg } };
+    ground = { world, coarse, bg, voyages: scene.voyages, anchored: anchorScene(scene, data), overlays: scene.overlays, cards: { cartouche: kinds.includes('cartouche') ? scene.cartouche : null, scaleSprite: scene.scaleSprite, scale: style.scale, bg } };
+    if (JSON.stringify(voyageInk()) !== inkKey) { showVoyage(); render(); return; } // the sheet laid or lifted changed which voyages cross it: draw again in their inks
     applyReveal();
     if (style.autoTitle) $('title').value = scene.cartouche.title; // the box shows what the cartouche letters, and cannot be edited
     placed = view;
     hideTile(); // its mark may be gone: another voyage, or none
     cancelAnimationFrame(frame); frame = 0; // a moving frame still queued would paint over the scene
     const t1 = performance.now();
-    const fading = scene.overlay?.mode === 'sheet' && scene.overlay.id === fadeIn;
-    if (fading) { fadeIn = null; scene.overlay.alpha = 0; } // drawn without the sheet, which fades in over it
+    const fading = scene.overlays.find((o) => o.mode === 'sheet' && o.id === fadeIn);
+    if (fading) { fadeIn = null; fading.alpha = 0; } // drawn without the sheet, which fades in over it
     ctx.clearRect(0, 0, W, H);
     drawScene(ctx, scene, data, bg, { scale: 1, x: 0, y: 0 });
-    if (fading) fadeSheet(scene.overlay, data.proj, me);
+    if (fading) fadeSheet(fading, data.proj, me);
     drawPictures(ctx);
     drawSheetHandles(ctx);
     drawCards();
@@ -794,33 +801,37 @@ phone.addEventListener('change', () => { drawCards(); if (ground) render(); }); 
 
 // ---------------------------------------------------------------- the drawers
 
-// Seven buttons in the row, each with its own drawer: the rose the settings, the chart the charts, the
-// astrolabe the points of interest, the compass Go, the dividers the voyages, the medallion the people, the anchor the anchorages.
+// Seven buttons in the row and six drawers: the rose the settings, the chart the charts, the astrolabe the points of
+// interest, the compass Go, the dividers and the medallion the timeline (voyages and people on one axis, each button
+// opening it at its own lane), the anchor the anchorages.
 // At most one is open. A click on a button opens its drawer and a second click shuts it; a click on another
-// button shuts it and opens that one; Esc, or a click or a focus outside the row and the drawer, shuts it. A
-// choice in it leaves it open, and the map does what was asked behind it (docs/spec/design.md, "A drawer stays
-// open on a click or a choice"). On a wide screen the drawer hangs below the row, which it never covers or
-// moves, and a touch on the map shuts it; on a phone it is a bottom sheet, and a tap or a drag on the map leaves
-// it up (the user, 2026-10-30, reversing #262): that is how a control's effect is seen. An open drawer takes the focus (Go its
+// button shuts it and opens that one (the timeline's other button keeps it open and moves to its lane); Esc, or a
+// click or a focus outside the row and the drawer, shuts it. A choice in it leaves it open, and the map does what
+// was asked behind it (docs/spec/design.md, "A drawer stays open on a click or a choice"). On a wide screen the
+// drawer hangs below the row, which it never covers or moves, and a touch on the map shuts it; on a phone it is a
+// bottom sheet, and a tap or a drag on the map leaves it up (the user, 2026-10-30, reversing #262): that is how a
+// control's effect is seen. An open drawer takes the focus (Go its
 // text box, on a wide screen only, so a phone's keyboard does not cover the sheet); shut by the keyboard,
-// the focus goes back to its button.
+// the focus goes back to the button that opened it.
 const where = $('where');
-const drawers = [[$('open'), $('drawer')], [$('charts'), $('chartsDrawer')], [$('sights'), $('sightsPanel')], [$('go'), $('goPanel')], [$('voyages'), $('voyagesPanel')], [$('people'), $('peoplePanel')], [$('anchor'), $('anchorPanel')]];
+const drawers = [[$('open'), $('drawer')], [$('charts'), $('chartsDrawer')], [$('sights'), $('sightsPanel')], [$('go'), $('goPanel')], [$('voyages'), $('timelinePanel')], [$('people'), $('timelinePanel')], [$('anchor'), $('anchorPanel')]];
 const openDrawer = () => drawers.find(([, d]) => d.classList.contains('open'))?.[1] ?? false;
+let openedBy = null; // the button the open drawer was opened by: the timeline has two
 const focusable = (d) => [...d.querySelectorAll('button, input, a[href]')].find((e) => !e.disabled && e.getClientRects().length);
-function setDrawer(open, byKeyboard = false) { // the drawer to open, or false for none
-  const was = openDrawer();
-  if (open === was) return;
-  for (const [b, d] of drawers) { d.classList.toggle('open', d === open); b.setAttribute('aria-expanded', String(d === open)); }
+function setDrawer(open, byKeyboard = false, by = drawers.find(([, d]) => d === open)?.[0] ?? null) { // the drawer to open, or false for none
+  const was = openDrawer(), wasBy = openedBy;
+  if (open === was && (!open || by === openedBy)) return;
+  openedBy = open ? by : null;
+  for (const [b, d] of drawers) { d.classList.toggle('open', d === open); b.setAttribute('aria-expanded', String(d === open && b === openedBy)); }
+  if (open?.id === 'timelinePanel') fillTimeline(by === $('voyages') ? 'voyages' : 'people', open !== was); // the lists load on the first open
+  if (open === was) return; // the timeline's other button: the same drawer, at the other lane
   document.documentElement.classList.toggle('sheet', !!open && !open.classList.contains('menu')); // on a phone the map makes room above the settings or the charts; a lighter drawer sits over its foot
-  if (open?.id === 'voyagesPanel') fillVoyages(); // the list loads on the first open
-  if (open?.id === 'peoplePanel') fillPeople();
-  if (open?.id === 'chartsDrawer') chartsFresh = !style.overlay;
+  if (open?.id === 'chartsDrawer') chartsFresh = !style.overlays.length;
   if (open) (open.id === 'goPanel' ? (phone.matches ? null : $('coordsText')) : focusable(open))?.focus({ preventScroll: true });
-  else if (byKeyboard) drawers.find(([, d]) => d === was)[0].focus({ preventScroll: true });
+  else if (byKeyboard) wasBy?.focus({ preventScroll: true });
   else if (was.contains(document.activeElement)) document.activeElement.blur(); // a phone's keyboard goes with it
 }
-for (const [b, d] of drawers) b.addEventListener('click', (e) => setDrawer(d === openDrawer() ? false : d, e.detail === 0)); // detail 0: Enter or Space
+for (const [b, d] of drawers) b.addEventListener('click', (e) => setDrawer(d === openDrawer() && b === openedBy ? false : d, e.detail === 0, b)); // detail 0: Enter or Space
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && openDrawer()) setDrawer(false, true); });
 const outside = (t) => { const d = openDrawer(); return d && t instanceof Node && !where.contains(t) && !d.contains(t); };
 // On a phone every drawer stays up while the map is tapped or moved.
@@ -1024,26 +1035,33 @@ const pinch = () => {
   return { d: Math.hypot(bx - ax, by - ay), x: (ax + bx) / 2, y: (ay + by) / 2 };
 };
 
-// The sheet (a chart's scan laid whole over the map) is moved by hand: held anywhere on it, it is dragged;
+// A sheet (a chart's scan laid whole over the map) is moved by hand: held anywhere on it, it is dragged (the top one where they overlap);
 // by the round handle at its bottom left corner it turns about its centre; by the square one at its bottom right
 // it is resized. Where it is let go lands in the link (sheet=). Chips at its top left corner put it at the
 // chart's own placement (Parallels, or Level) or at the fit of one of its coasts (overlays.json `snaps`).
 const HANDLE = 12; // the handles' radius, canvas px
-const sheetShown = () => (ground?.overlay?.mode === 'sheet' && ground.overlay.sheet ? ground.overlay : null);
-function sheetGeometry() {
-  const o = sheetShown();
+const sheetsShown = () => (ground?.overlays ?? []).filter((o) => o.mode === 'sheet' && o.sheet); // bottom to top
+function sheetGeometry(o) {
   if (!o) return null;
   const proj = viewProjection(view), corners = sheetCorners(o, proj, o.sheet);
   return corners && { o, proj, corners };
 }
 function sheetHit([x, y]) {
-  const geo = sheetGeometry();
-  if (!geo) return null;
+  // every handle is drawn over every sheet, so a handle wins first, the top sheet's before a lower one's; then the top sheet under the point
+  const geos = sheetsShown().reverse().map(sheetGeometry).filter(Boolean);
   const near = (c) => Math.hypot(c[0] - x, c[1] - y) <= HANDLE + cssPx(6);
-  if (near(geo.corners[3])) return { kind: 'turn', ...geo };
-  if (near(geo.corners[2])) return { kind: 'size', ...geo };
-  return onSheet(geo.o, geo.proj, geo.o.sheet, x, y) ? { kind: 'move', ...geo } : null;
+  for (const geo of geos) {
+    if (near(geo.corners[3])) return { kind: 'turn', ...geo };
+    if (near(geo.corners[2])) return { kind: 'size', ...geo };
+  }
+  const geo = geos.find((g) => onSheet(g.o, g.proj, g.o.sheet, x, y));
+  return geo ? { kind: 'move', ...geo } : null;
 }
+// The placements by id with `o`'s set to `sheet`; the chart's own placement is the default, left out of the link.
+const withSheet = (o, sheet) => {
+  const { [o.id]: _, ...rest } = style.sheets;
+  return sheet && !sameSheet(sheet, ownSheet(o.id)) ? { ...rest, [o.id]: sheet } : rest;
+};
 let sheetTap = null; // where a press on the sheet began, until it moves far enough to be a drag: a tap there opens a note
 let held = null; // { kind, o, proj, start, sheet (as taken), centre } while the sheet is held
 let sheetFrameId = 0;
@@ -1069,12 +1087,14 @@ function dropSheet() {
   const { o } = held;
   held = null;
   cancelAnimationFrame(sheetFrameId); sheetFrameId = 0;
-  style = { ...style, sheet: sameSheet(o.sheet, ownSheet(o.id)) ? null : o.sheet }; // the chart's own placement is the default, left out of the link
+  style = { ...style, sheets: withSheet(o, o.sheet) };
   writeHash(); render();
 }
-// The handles, drawn over the scene and every moving frame: a ring with an arrow to turn, a square with a diagonal to resize.
+// The handles, drawn over the scene and every moving frame: a ring with an arrow to turn, a square with a ⤢ to resize.
 function drawSheetHandles(g) {
-  const geo = sheetGeometry();
+  for (const o of sheetsShown()) drawHandles(g, sheetGeometry(o));
+}
+function drawHandles(g, geo) {
   if (!geo) return;
   const [, , br, tr] = geo.corners, r = HANDLE; // the ring at the bottom left, the square at the bottom right
   g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
@@ -1084,13 +1104,17 @@ function drawSheetHandles(g) {
   const ax = tr[0] + r * 0.55 * Math.cos(Math.PI * 0.6), ay = tr[1] + r * 0.55 * Math.sin(Math.PI * 0.6);
   g.beginPath(); g.moveTo(ax - 4, ay - 0.5); g.lineTo(ax, ay + 0.5); g.lineTo(ax + 1, ay - 4); g.stroke();
   g.beginPath(); g.rect(br[0] - r, br[1] - r, 2 * r, 2 * r); g.fill(); g.stroke();
-  g.beginPath(); g.moveTo(br[0] - r * 0.5, br[1] + r * 0.5); g.lineTo(br[0] + r * 0.5, br[1] - r * 0.5); g.stroke();
+  const a = r * 0.55, h = r * 0.4; // the ⤢: a diagonal from bottom left to top right, an arrowhead at each end
+  g.beginPath(); g.moveTo(br[0] - a, br[1] + a); g.lineTo(br[0] + a, br[1] - a); g.stroke();
+  g.beginPath(); g.moveTo(br[0] + a - h, br[1] - a); g.lineTo(br[0] + a, br[1] - a); g.lineTo(br[0] + a, br[1] - a + h); g.stroke();
+  g.beginPath(); g.moveTo(br[0] - a + h, br[1] + a); g.lineTo(br[0] - a, br[1] + a); g.lineTo(br[0] - a, br[1] + a - h); g.stroke();
   g.restore();
 }
-// The snap chips, at the sheet's top left corner in the window (kept inside it), lit where the sheet lies now.
+// The snap chips, at the top sheet's top left corner in the window (kept inside it), lit where that sheet lies now; the
+// top sheet in view, where the top one's centre is past the horizon.
 const sheetChips = $('sheetChips');
 function placeSheetChips() {
-  const geo = held ? null : sheetGeometry();
+  const geo = held ? null : sheetsShown().reverse().map(sheetGeometry).find(Boolean);
   if (!geo || geo.o.id !== sheetChips.dataset.id) { sheetChips.hidden = true; if (geo) buildSheetChips(geo.o); else return; }
   const [[x, y]] = geo.corners, rc = canvas.getBoundingClientRect();
   sheetChips.hidden = false;
@@ -1109,10 +1133,10 @@ function buildSheetChips(o) {
   }));
 }
 sheetChips.addEventListener('click', (e) => {
-  const b = e.target.closest('.chip'), o = sheetShown();
+  const b = e.target.closest('.chip'), o = sheetsShown().find((v) => v.id === sheetChips.dataset.id);
   if (!b || !o) return;
   const sn = b.dataset.snap == null ? null : o.snaps[b.dataset.snap];
-  style = { ...style, sheet: sn ? { lon: sn.lon, lat: sn.lat, scale: sn.scale, turn: sn.turn } : null };
+  style = { ...style, sheets: withSheet(o, sn && { lon: sn.lon, lat: sn.lat, scale: sn.scale, turn: sn.turn }) };
   writeHash(); render();
 });
 
@@ -1253,9 +1277,12 @@ function sightTiles() {
 // point (its whole hit box, drawn nowhere; the smallest where boxes nest); else a note's centre within reach (notes.mjs pickMark)
 function markAt(at) {
   const proj = viewProjection(placed), rect = { x0: 0, y0: 0, x1: W, y1: H };
-  const marks = [...(ground?.voyages ?? []).filter((v) => !(v.reveal < 1)).flatMap((v) => [...voyageMarks(v.voyage, proj, rect), ...doubtMarks(v, proj, rect)]), ...(placed.zoom >= POI_ZOOM ? sightMarks(sightTiles(), proj, rect) : []), ...noteMarks(ground?.overlay, proj, rect)];
+  const marks = [...(ground?.voyages ?? []).filter((v) => !(v.reveal < 1)).flatMap((v) => [...voyageMarks(v.voyage, proj, rect), ...doubtMarks(v, proj, rect)]), ...(placed.zoom >= POI_ZOOM ? sightMarks(sightTiles(), proj, rect) : []), ...laidNotes(proj, rect)];
   return pickMark(marks, at, cssPx(TAP_REACH));
 }
+// The laid charts' notes: each sheet's, less those an upper sheet covers, since only the top sheet's figure shows there
+const laidNotes = (proj, rect) => (ground?.overlays ?? []).flatMap((o, i, all) => noteMarks(o, proj, rect)
+  .filter((m) => !all.slice(i + 1).some((u) => u.mode === 'sheet' && u.sheet && onSheet(u, proj, u.sheet, m.x, m.y))));
 function showTileAt(at) {
   const best = markAt(at);
   if (!best) return;
@@ -1371,38 +1398,63 @@ const CHARTS = [
 ].map(([name, year, v, [city, made], text, overlay = null]) => ({ name, year, view: { ...v, title: name }, made: { ...made, title: city }, text, overlay }));
 const places = []; // every anchorage and point of interest: { name, view }
 
-// The voyages: any number drawn at once, none by default. The list is data/voyages/index.json in the order the voyages
-// set out (chronological; the file's order breaks ties), each by its title (a phone shows the short name and the years,
-// so none wraps), and under it the voyage's summary and a link to its first source; they load on the first open and stay
-// cached. A voyage's row reads: its name, an eye, then its ink, a swatch to pick another. A click on the name shows that
+// The voyages: any number drawn at once, none by default. They are the lower lane of the timeline (the section
+// "timeline" below), data/voyages/index.json in the order the voyages set out (chronological; the file's order breaks
+// ties), each on its own line at its years: a bar over them, and beside it the voyage's row, its short name and years
+// (the title is its tooltip), an eye, then its ink, a swatch to pick another. A shown voyage has its summary and a link
+// to its first source under its row. They load on the first open and stay cached. A click on the name shows that
 // voyage alone (every other one is hidden), flies to frame the whole of it and draws its line on from start to end,
-// every time, in the seconds the slider above the list sets. The eye only shows or hides that one voyage, at once: no
+// every time, in the seconds the slider above the timeline sets. The eye only shows or hides that one voyage, at once: no
 // flight, no pen, no other voyage touched. A voyage hidden keeps its place in the list, so its colour, and every other
 // voyage's, stays put. The first voyage chosen is the chart's red, each further one a colour of its own (voyageColours).
-// Above the list, the line weight for them all, how long the pen takes, and Clear. The choice rides in the link
+// Above the timeline, the line weight for them all, how long the pen takes, and Clear. The choice rides in the link
 // (`voyages=`, `voyagewidth=`, `voyagedraw=`) like any style.
-let voyageList = null;
+let voyageList = null, voyageRows = null; // the load, and once loaded [[id, voyage]] in order with the sources
 const escapeHTML = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
-const voyageItem = (id, full, brief, when, summary, link) => `<li><button type="button" class="vname" data-voyage="${id}">` +
+// the row at its place on the axis: the bar over its years, and the row to the bar's right where there is room, else to its left
+const voyageItem = (id, full, brief, when, summary, link, [x0, x1]) => {
+  const right = x1 < 0.6, at = right ? `left:calc(${pc(x1)} + 4px)` : `right:calc(${pc(1 - x0)} + 4px)`;
+  return `<li data-row="${id}"><div class="vline"><span class="vbar" style="left:${pc(x0)};width:${pc(Math.max(0.006, x1 - x0))}"></span><span class="vctl" style="${at}">` +
+  `<button type="button" class="vname" data-voyage="${id}" title="${full}${when ? `, ${when}` : ''}">` +
   `<svg viewBox="0 0 28 18" aria-hidden="true"><path d="M2 9h24" fill="none" stroke-linecap="round"/></svg>` +
   `<span class="full">${full}</span><span class="brief">${brief}${when ? `<span class="when">${when}</span>` : ''}</span></button>` +
   `<button type="button" class="eye" data-eye="${id}" aria-pressed="false" aria-label="Show ${full}" title="Show or hide ${full}">${EYE}</button>` +
-  `<input type="color" data-ink="${id}" aria-label="Colour of ${full}" title="Colour of ${full}" hidden>` +
-  (summary || link ? `<p class="vsum">${summary}${link ? ` <a href="${escapeHTML(link.url)}" target="_blank" rel="noopener" title="${escapeHTML(link.label)}">Read more</a>` : ''}</p>` : '') + '</li>';
+  `<input type="color" data-ink="${id}" aria-label="Colour of ${full}" title="Colour of ${full}" hidden></span></div>` +
+  (summary || link ? `<p class="vsum" style="${right ? `margin-left:${pc(x0)}` : `margin-left:auto;margin-right:${pc(1 - x1)}`}"><b>${full}</b>. ${summary}${link ? ` <a href="${escapeHTML(link.url)}" target="_blank" rel="noopener" title="${escapeHTML(link.label)}">Read more</a>` : ''}</p>` : '') + '</li>';
+};
 const voyagesTools = groupTools('Voyages', {
   all: () => style.voyages, dflt: [], get: () => style.voyages,
   set: () => { style = { ...style, voyages: [] }; showVoyage(); writeHash(); render(); },
 });
-$('voyagesPanel').querySelector('.vtools').append(...voyagesTools.children);
+$('timelinePanel').querySelector('.vtools').append(...voyagesTools.children);
 // the ink of every voyage in the list, hidden ones too, so a colour stays with its voyage
+// (a voyage with no colour picked takes one from the high-contrast palette while any of it crosses a sheet, or if a leg is dashed or dotted)
+// the sheets laid as the style has them now (not as last drawn), each with the placement it lies at; none unless whole sheets
+const laidSheets = () => (style.overlayMode !== 'sheet' ? [] : style.overlays.flatMap((id) => { const o = OVERLAYS.find((v) => v.id === id); return o ? [{ ...o, sheet: style.sheets[id] ?? o.sheet }] : []; }));
 const brokenIds = new Set(); // the listed voyages with a dashed or dotted leg, which take a high-contrast ink
-const voyageInk = () => voyageColours(style.voyages.map((v) => v.id), Object.fromEntries(style.voyages.filter((v) => v.colour).map((v) => [v.id, v.colour])), brokenIds);
+const brokenSeen = new Set(); // the voyages whose file has been read for that
+// reads the files of voyages not yet seen, so a link's inks are right on the first render, with the drawer closed
+const learnBroken = (ids) => Promise.all(ids.filter((id) => !brokenSeen.has(id)).map((id) => env.readJSON(`data/voyages/${id}.json`)
+  .then((v) => { brokenSeen.add(id); if (isBroken(v)) brokenIds.add(id); }, () => brokenSeen.add(id))));
+const voyageDots = new Map(); // id -> a thinned sample of its path, [lon, lat], once the list has loaded
+const crossing = () => {
+  const ids = new Set(brokenIds);
+  if (!voyageDots.size) return ids; // before the list has loaded (and before OVERLAYS exists)
+  const sheets = laidSheets();
+  if (!sheets.length) return ids;
+  const proj = viewProjection(view);
+  for (const [id, dots] of voyageDots) if (dots.some(([lon, lat]) => { const p = proj.project(lon, lat); return p && sheets.some((o) => onSheet(o, proj, o.sheet, p[0], p[1])); })) ids.add(id);
+  return ids;
+};
+const voyageInk = () => voyageColours(style.voyages.map((v) => v.id), Object.fromEntries(style.voyages.filter((v) => v.colour).map((v) => [v.id, v.colour])), crossing());
 const isShown = (id) => style.voyages.some((v) => v.id === id && !v.hidden);
 function showVoyage() {
   const ink = voyageInk();
   for (const b of $('voyageList').querySelectorAll('[data-voyage]')) {
-    const id = b.dataset.voyage, listed = id in ink, on = isShown(id), line = b.querySelector('path'), li = b.parentElement, pick = li.querySelector('[data-ink]'), eye = li.querySelector('[data-eye]');
+    const id = b.dataset.voyage, listed = id in ink, on = isShown(id), line = b.querySelector('path'), row = b.closest('li'), pick = row.querySelector('[data-ink]'), eye = row.querySelector('[data-eye]');
     b.dataset.shown = String(on);
+    row.classList.toggle('on', on);
+    row.querySelector('.vbar').style.setProperty('--c', listed ? ink[id] : '#6b5a44');
     line.setAttribute('stroke', listed ? ink[id] : 'currentColor');
     line.setAttribute('stroke-width', String(style.voyageWidth));
     line.setAttribute('stroke-dasharray', on ? '' : '2 3');
@@ -1419,11 +1471,21 @@ function fillVoyages() {
     .then(([ids, sources]) => Promise.all(ids.map((id) => env.readJSON(`data/voyages/${id}.json`).then((v) => [id, v], () => [id, { title: id, short: id }])))
       .then((voyages) => [chronological(voyages), sources]))
     .then(([voyages, sources]) => {
-      for (const [id, v] of voyages) if (isBroken(v)) brokenIds.add(id);
-      $('voyageList').innerHTML = voyages.map(([id, v]) => voyageItem(escapeHTML(id), escapeHTML(v.title ?? id), escapeHTML(v.short ?? v.title ?? id), escapeHTML(v.when), escapeHTML(v.summary), voyageLink(v, sources))).join('');
-      showVoyage();
-      if (brokenIds.size && style.voyages.some((v) => !v.hidden && !v.colour)) render(); // inks may change now the broken ones are known
+      for (const [id, v] of voyages) { brokenSeen.add(id); if (isBroken(v)) brokenIds.add(id); }
+      for (const [id, v] of voyages) voyageDots.set(id, (v.legs ?? []).flatMap((leg) => (leg.points?.length > 1 ? legPath(leg) : [])).filter((_, i) => i % 4 === 0));
+      voyageRows = { voyages, sources }; drawVoyages();
     }, (e) => { voyageList = null; $('voyageList').innerHTML = `<li>${escapeHTML(e.message)}</li>`; });
+  showVoyage();
+  return voyageList;
+}
+// the voyages' lane on the timeline's axis; an undated voyage sits at the axis's right end
+function drawVoyages() {
+  if (!voyageRows) return;
+  const { voyages, sources } = voyageRows;
+  $('voyageList').innerHTML = voyages.map(([id, v]) => {
+    const [a, b] = voyageYears(v.when), x0 = Number.isFinite(a) ? timeAxis.x(a) : 1, x1 = Number.isFinite(b) ? timeAxis.x(b) : 1;
+    return voyageItem(escapeHTML(id), escapeHTML(v.title ?? id), escapeHTML(v.short ?? v.title ?? id), escapeHTML(v.when), escapeHTML(v.summary), voyageLink(v, sources), [x0, x1]);
+  }).join('');
   showVoyage();
 }
 // Sets which voyages are shown: `show` maps an id to true or false; a voyage not yet listed is added at the end, so it
@@ -1508,8 +1570,8 @@ function flyToVoyage(id) {
   const n = ++voyageChosen;
   return readVoyage(id, (path) => env.readJSON(path)).then((v) => {
     if (n < voyageFlown || !isShown(id)) return;
-    const to = voyageView(v, flightTo ?? view, undefined, true);
-    if (to) { voyageFlown = n; goTo(to); }
+    const to = voyageView(v, flightTo ?? view, undefined, true, windowRect());
+    if (to) { voyageFlown = n; if (style.sheetHides) clearSheetFor(to, true); goTo(to); }
   }, () => {});
 }
 $('voyageList').addEventListener('input', (e) => {
@@ -1522,13 +1584,13 @@ $('voyageList').addEventListener('input', (e) => {
 
 // ---------------------------------------------------------------- people
 
-// The People drawer: a timeline strip, one life bar per person (data/voyages/people.json, scripts/people.mjs) on a year
-// axis broken between the ancient world and the medieval, so who overlapped whom shows; a bar fades where the record
-// leaves a birth or a death undated. A click on a bar chooses that person (a second click lets them go): their bar turns
+// The people: the upper lane of the timeline (the section "timeline" below), one life bar per person
+// (data/voyages/people.json, scripts/people.mjs) on the shared year axis, so who overlapped whom shows; a bar fades where
+// the record leaves a birth or a death undated. A click on a bar chooses that person (a second click lets them go): their bar turns
 // red, their voyages are drawn lit in the chart's red and every other voyage chosen is dimmed (the scene's `person`),
 // their birth is marked, the map flies to frame them, and all their pictures are dealt onto the map as onto a chart
 // table, a little askew, to drag by hand, resize by a corner and turn over to read what each is and follow it to its
-// page. Under the strip their card: the name and the years, the bio, each voyage with its summary written out, and
+// page. Under their bar their card: the name and the years, the bio, each voyage with its summary written out, and
 // the pictures as thumbnails, each of which takes it off the table or puts it back.
 // The choice rides in the link (`person=`, `pictures=`, `pictureat=`).
 function loadPeople() {
@@ -1547,21 +1609,20 @@ const spanOf = (p) => lifeSpan(p, p.voyages.flatMap((id) => voyageYears(peopleDa
 const lifeText = (p) => `${p.born?.date ?? 'birth unknown'} – ${deathOf(p)?.date ?? 'death unknown'}`;
 const pc = (x) => `${(x * 100).toFixed(2)}%`;
 function fillPeople() {
-  loadPeople().then(() => { if (!$('peopleStrip').childElementCount) drawTimeline(); showPeople(); }, (e) => { $('peopleStrip').textContent = e.message; });
+  return loadPeople().then(() => { if (!$('peopleStrip').childElementCount) drawPeople(); showPeople(); }, (e) => { $('peopleStrip').textContent = e.message; });
 }
-function drawTimeline() {
+function drawPeople() {
+  if (!peopleData) return;
   const people = [...peopleData.people].map((p) => [p, spanOf(p)]).sort((a, b) => a[1][0] - b[1][0]);
-  const axis = timelineAxis(people.map(([, [a, b]]) => [a, b]));
-  const ticks = axis.stretches.flatMap(([a, b]) => ticksOf([a, b]).map(([y, label]) => `<span class="tick" style="left:${pc(axis.x(y))}">${label}</span>`));
-  const breaks = axis.stretches.slice(1).map(([, , x0]) => `<span class="brk" style="left:${pc(x0 - 0.02)}" aria-hidden="true"></span>`).join('');
   const rows = people.map(([p, [a, b, fromKnown, toKnown]]) => {
-    const x0 = axis.x(a), x1 = axis.x(b), right = x1 < 0.62; // the name to the bar's right where there is room, else to its left
+    const x0 = timeAxis.x(a), x1 = timeAxis.x(b), right = x1 < 0.62; // the name to the bar's right where there is room, else to its left
     const open = `${fromKnown ? '' : ' open-start'}${toKnown ? '' : ' open-end'}`;
     return `<li><button type="button" class="life" data-person="${escapeHTML(p.id)}" aria-pressed="false" title="${escapeHTML(p.name)}, ${escapeHTML(lifeText(p))}">` +
       `<span class="bar${open}" style="left:${pc(x0)};width:${pc(Math.max(0.008, x1 - x0))}"></span>` +
       `<span class="who" style="${right ? `left:calc(${pc(x1)} + 5px)` : `right:calc(${pc(1 - x0)} + 5px)`}">${escapeHTML(p.name)}</span></button></li>`;
   }).join('');
-  $('peopleStrip').innerHTML = `<div class="axis">${ticks.join('')}${breaks}</div><ol class="lives">${rows}${breaks}</ol>`;
+  $('timelinePanel').append($('personCard')); // out of the lane before it is redrawn
+  $('peopleStrip').innerHTML = `<ol class="lives lane">${rows}</ol>`;
 }
 // The years after a name, as an encyclopedia gives them: "(c. 1460s – 24 Dec 1524)", "(born c. 350 BC)", "(died 1510)",
 // nothing where neither is dated; the places are the bio's and the map's
@@ -1573,7 +1634,11 @@ function showPeople() {
   for (const b of document.querySelectorAll('#peopleStrip [data-person]')) b.setAttribute('aria-pressed', String(b.dataset.person === style.person));
   const card = $('personCard'), p = personOf(style.person);
   card.hidden = !p;
-  if (!p) { card.replaceChildren(); return; }
+  $('peopleStrip').querySelector('.cardrow')?.remove();
+  if (!p) { card.replaceChildren(); $('timelinePanel').append(card); return; }
+  const life = $('peopleStrip').querySelector(`[data-person="${CSS.escape(p.id)}"]`);
+  if (life) life.parentElement.after(Object.assign(document.createElement('li'), { className: 'cardrow' }));
+  ($('peopleStrip').querySelector('.cardrow') ?? $('timelinePanel')).append(card);
   // each voyage by its title (its years with it where the title has none), and its summary in full
   const voyages = p.voyages.map((id) => peopleData.voyages[id]).filter(Boolean).map((v) => {
     const link = voyageLink(v, peopleData.sources);
@@ -1682,11 +1747,15 @@ async function flyToPerson(id) {
 // looked at lies upright in the middle of the part of the canvas in the window, as large as LOOK_FILL of that allows
 // and never larger than its own pixels shown one to a CSS px.
 const LOOK_FILL = 0.85;
+// The part of the canvas the window shows, in canvas px: a phone crops the canvas to the window.
+function windowRect() {
+  const r = canvas.getBoundingClientRect(), kx = W / r.width, ky = H / r.height;
+  return { x0: Math.max(0, -r.left) * kx, x1: (Math.min(innerWidth, r.right) - r.left) * kx, y0: Math.max(0, -r.top) * ky, y1: (Math.min(innerHeight, r.bottom) - r.top) * ky };
+}
 let looking = null; // the picture looked at, by its index
 function pictureBox(pic, proj) {
   if (pic.i === looking) {
-    const r = canvas.getBoundingClientRect(), kx = W / r.width, ky = H / r.height;
-    const x0 = Math.max(0, -r.left) * kx, x1 = (Math.min(innerWidth, r.right) - r.left) * kx, y0 = Math.max(0, -r.top) * ky, y1 = (Math.min(innerHeight, r.bottom) - r.top) * ky;
+    const { x0, x1, y0, y1 } = windowRect();
     const k = Math.min(((x1 - x0) * LOOK_FILL) / pic.o.width, ((y1 - y0) * LOOK_FILL) / pic.o.height, cssPx(1));
     return { x: (x0 + x1) / 2, y: (y0 + y1) / 2, a: 0, w: pic.o.width * k, h: pic.o.height * k };
   }
@@ -1931,6 +2000,53 @@ keys.addEventListener('click', (e) => {
 });
 if (style.person) loadPeople().then(showPeople, () => {}); // a link that names a person shows their card when the drawer opens
 
+// ---------------------------------------------------------------- timeline
+
+// The drawer the Voyages and People buttons share: one timeline on one linear year axis (scripts/people.mjs laneAxis),
+// people above the axis and voyages below it, from the Lapita voyages to this year at true scale throughout, so a stretch
+// with nobody in it reads as empty rather than cut out. Behind both lanes, the eras of the points of interest as faint
+// colour bands, each named once at the top. The voyages' controls head their lane. Each button opens it at its own lane: People at the top, Voyages scrolled
+// to the axis, its lane's name lit. The Earlier tab at the left end adds the long stretch before Lapita, back to
+// 50,000 BC, at its own scale, with the windows of the peopling of Sahul, Beringia and the Americas marked on it and
+// nothing yet placed there. A phone scrolls the timeline sideways, and opens it at its right end, where most of it is.
+let timeAxis = laneAxis(), timeLane = 'people';
+function drawAxis() {
+  const tick = ([y, label]) => { const x = timeAxis.x(y); return `<span class="tick${x < 0.01 ? ' edge' : ''}" style="left:${pc(x)}">${label}</span>`; };
+  $('timeAxis').innerHTML = timeAxis.ticks.map(tick).join('');
+  const bands = eraBands(timeAxis).map(([name, a, b], i, all) => `<div class="band${i === all.length - 1 ? ' last' : ''}" data-era="${escapeHTML(name)}" style="left:${pc(timeAxis.x(a))};width:${pc(timeAxis.x(b) - timeAxis.x(a))}"><b>${escapeHTML(name)}</b></div>`);
+  const earlier = timeAxis.stretches.length > 1;
+  const marks = earlier ? EARLIER_MARKS.map(([label, y, title]) => { const x = timeAxis.x(y);
+    return `<div class="mark${x < 0.01 ? ' edge' : ''}" data-mark="${escapeHTML(label)}" title="${escapeHTML(title)}" style="left:${pc(x)}"><b>${escapeHTML(label)}</b></div>`; }) : [];
+  const brk = earlier ? `<span class="brk" style="left:${pc(timeAxis.stretches[1][2])}"></span>` : '';
+  $('eras').innerHTML = bands.join('') + marks.join('') + brk;
+  $('track').style.setProperty('--w', String(timeAxis.width));
+}
+function drawTimeline() { drawAxis(); drawVoyages(); drawPeople(); showPeople(); }
+// The timeline at a lane: opened (`fresh`), both lanes load, then the drawer scrolls to the lane asked for; already
+// open (the other button), it only scrolls there
+function fillTimeline(lane, fresh) {
+  timeLane = lane;
+  $('peopleCap').classList.toggle('lit', lane === 'people');
+  $('voyagesCap').classList.toggle('lit', lane === 'voyages');
+  if (!$('timeAxis').childElementCount) drawAxis();
+  const atEnd = () => { if (fresh && timeAxis.width === 1) $('timeScroll').scrollLeft = $('timeScroll').scrollWidth; }; // a phone: most entries are after AD 1000
+  if (fresh) Promise.allSettled([fillVoyages(), fillPeople()]).then(() => { atEnd(); toLane(timeLane); }); // the lane asked for last, as the lanes now stand
+  atEnd(); toLane(lane);
+}
+function toLane(lane) {
+  const panel = $('timelinePanel'), to = lane === 'voyages' ? $('timeAxis') : null;
+  panel.scrollTop = to ? panel.scrollTop + to.getBoundingClientRect().top - panel.getBoundingClientRect().top - 8 : 0;
+}
+$('earlier').addEventListener('click', () => {
+  const on = $('earlier').getAttribute('aria-pressed') !== 'true';
+  $('earlier').setAttribute('aria-pressed', String(on));
+  $('earlier').title = on ? 'Back to Lapita: the timeline from 1500 BC' : 'Earlier history: the timeline back to 50,000 BC';
+  $('earlier').querySelector('.chev').textContent = on ? '\u25C2' : '\u25B8'; // the tab is turned half round: these read as left, then right
+  timeAxis = laneAxis({ earlier: on });
+  drawTimeline();
+  $('timeScroll').scrollLeft = 0; // the earlier stretch is the one asked to see
+});
+
 // The cartouche names the place flown to (its title, else the button's name), not whatever scores highest in the frame.
 const caption = (text) => `<span class="notes">${text ?? CAPTION}</span>`;
 for (const [list, groups] of [[$('anchorages'), ANCHORAGES], [$('sightsList'), SIGHTS]]) {
@@ -1938,7 +2054,7 @@ for (const [list, groups] of [[$('anchorages'), ANCHORAGES], [$('sightsList'), S
     return `<li><button type="button" data-place="${places.push({ name, view: { ...v, title: title ?? name } }) - 1}">${title?.startsWith(`${name} (`) ? title : name}${tile?.date ? `<small>${[tile.date, tag].filter(Boolean).join(' · ')}</small>` : ''}</button>${caption(text ?? tile?.text)}</li>`; }).join('');
   const first = groups.findIndex(([group, , open]) => group && open), opened = first >= 0 ? first : groups.findIndex(([group]) => group);
   list.innerHTML = groups.map(([group, items, , span], i) => (group ? `<li class="group${i === opened ? ' open' : ''}"><button type="button" class="fold" aria-expanded="${i === opened}">${group}<small>${[items.length, span].filter(Boolean).join(' · ')}</small></button><div class="rows"><div${i === opened ? '' : ' inert'}><ul class="places">${rows(items)}</ul></div></div></li>` : rows(items))).join('');
-  list.addEventListener('click', (e) => { const b = e.target.closest('[data-place]'); if (b) goTo(places[b.dataset.place].view); });
+  list.addEventListener('click', (e) => { const b = e.target.closest('[data-place]'); if (b) { const to = places[b.dataset.place].view; clearSheetFor(to); goTo(to); } });
 }
 // Any grouped list in a drawer opens at most one group at a time: a click on a shut group's heading slides the open
 // one shut and this one open, together; a click on the open one slides it shut and leaves none open, so a search can
@@ -2000,9 +2116,10 @@ showHover();
 $('hoverOpen').addEventListener('input', () => { hoverOpen = $('hoverOpen').value === 'on'; writeHash(); });
 
 // Each chart a row: its scan as a thumbnail (the drawer's chart glyph, greyed, until it has one) and its name, either
-// of which flies to frame the sheet and shows it, never hides it; the eye beside the name shows or hides the sheet and
-// nothing else; under the name the city it was made in, a link that flies there and takes the sheet off if it would
-// cover the city (docs/spec/design.md, "A chart's row in the Charts drawer").
+// of which shows that chart's sheet alone, at its own placement, and flies to frame it; the eye beside the name shows or
+// hides that one sheet and nothing else: no other sheet, no placement, no move of the map. Under the name the city it
+// was made in, a link that flies there and takes off any sheet that would cover the city (docs/spec/design.md, "A
+// chart's row in the Charts drawer").
 const skin = $('charts').querySelector('svg').outerHTML;
 const EYE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="slash" d="M4 4l16 16"/></svg>';
 let OVERLAYS = []; // packs/overlays/overlays.json, once loaded
@@ -2010,25 +2127,32 @@ const ownSheet = (id) => OVERLAYS.find((v) => v.id === id)?.sheet ?? null;
 let chartsFresh = false; // the Charts drawer opened with no sheet shown, and none shown since: the next shown fades in
 let fadeIn = null; // the overlay id whose sheet fades in when next placed
 $('chartList').innerHTML = CHARTS.map(({ name, year, made, text, overlay }, i) => `<li class="chart"${overlay ? ` data-overlay="${overlay}"` : ''}><button type="button" class="thumb none" data-chart="${i}" data-to="view" title="The chart's frame">${skin}</button><div class="about"><span class="head"><button type="button" class="name" data-chart="${i}" data-to="view">${name}</button>${overlay ? `<button type="button" class="eye" data-chart="${i}" data-to="eye" aria-pressed="false" aria-label="Show ${name}" hidden>${EYE}</button>` : ''}</span><span class="where"><button type="button" class="city" data-chart="${i}" data-to="made">${made.title}</button>, ${year}</span>${caption(text)}</div></li>`).join('');
-function setSheet(id, fade = false) {
-  style = { ...style, overlay: id, sheet: null };
-  fadeIn = id && fade ? id : null;
-  if (id) chartsFresh = false;
-  showOverlay(); writeHash(); render();
+// The sheets laid, bottom to top, and where each lies; `fade` the id of one that fades in as it is placed. `draw` false
+// when a flight follows at once: its landing draws them, and a render now would only be thrown away by its first frame.
+function setSheets(overlays, sheets = style.sheets, fade = null, draw = true) {
+  if (overlays.some((id) => !style.overlays.includes(id))) chartsFresh = false;
+  style = { ...style, overlays, sheets };
+  fadeIn = fade;
+  showOverlay(); showVoyage(); writeHash();
+  if (draw) render();
 }
 $('chartList').addEventListener('click', (e) => {
   const b = e.target.closest('[data-chart]');
   if (!b) return;
-  const chart = CHARTS[b.dataset.chart], o = OVERLAYS.find((v) => v.id === chart.overlay), shown = !!o && style.overlay === o.id;
-  if (b.dataset.to === 'eye') { if (o) setSheet(shown ? null : o.id); return; }
+  const chart = CHARTS[b.dataset.chart], o = OVERLAYS.find((v) => v.id === chart.overlay), shown = !!o && style.overlays.includes(o.id);
+  if (b.dataset.to === 'eye') { // this sheet on or off, where it last lay; every other sheet and the view as they are
+    if (o) setSheets(shown ? style.overlays.filter((id) => id !== o.id) : [...style.overlays, o.id]);
+    return;
+  }
   if (b.dataset.to === 'made') {
-    const s = sheetShown(), to = clampView({ ...chart.made, projection: view.projection });
-    if (s) { const proj = viewProjection(to), [x, y] = proj.project(to.lon, to.lat); if (onSheet(s, proj, s.sheet, x, y)) setSheet(null); }
+    const to = clampView({ ...chart.made, projection: view.projection });
+    clearSheetFor(to);
     goTo(to);
     return;
   }
   if (!o) { goTo(chart.view); return; }
-  if (!shown) setSheet(o.id, chartsFresh);
+  const { [o.id]: _, ...sheets } = style.sheets; // back to its own placement
+  setSheets([o.id], sheets, !shown && chartsFresh ? o.id : null, false); // shown alone: every other sheet hides
   goTo({ ...sheetView(o, o.sheet, { w: W, h: H }), title: chart.name }); // the whole sheet framed, 8% clear round it
 });
 env.readJSON('packs/overlays/overlays.json').then(({ overlays }) => {
@@ -2042,12 +2166,12 @@ env.readJSON('packs/overlays/overlays.json').then(({ overlays }) => {
     b.title = `${o.title} (${o.licence}): its frame, with the scan laid over the map`;
     li.querySelector('.eye').hidden = false;
   }
-  if (style.overlay && !overlays.some((o) => o.id === style.overlay)) console.warn(`overlay ${style.overlay}: not on this site`);
+  for (const id of style.overlays) if (!overlays.some((o) => o.id === id)) console.warn(`overlay ${id}: not on this site`);
   showOverlay();
 }).catch(() => {}); // no overlays on this site: no thumbnails, and the map unchanged
 function showOverlay() {
   for (const eye of $('chartList').querySelectorAll('.eye')) {
-    const li = eye.closest('li'), on = !!style.overlay && style.overlay === li.dataset.overlay;
+    const li = eye.closest('li'), on = style.overlays.includes(li.dataset.overlay);
     eye.setAttribute('aria-pressed', String(on));
     eye.setAttribute('aria-label', `${on ? 'Hide' : 'Show'} ${li.querySelector('.name').textContent}`);
   }
@@ -2110,10 +2234,22 @@ $('coords').addEventListener('submit', async (e) => {
   if (!target) { miss.textContent = text.trim() ? `No place called “${text.trim()}”` : 'Type a place, or latitude, longitude: 36.28, -76'; miss.hidden = false; return; } // the text before the unhide, so a reader announces it
   miss.hidden = true;
   if (phone.matches) $('coordsText').blur(); // the drawer stays up; a phone's keyboard goes, so the map shows
+  clearSheetFor(target);
   goTo(target);
 });
 $('coordsText').addEventListener('input', () => { $('goMiss').hidden = true; });
 
+// A sheet in the way: taken off (its eye shows it hidden) if it would cover the place a fly lands on, or with `frame`
+// any of the frame it lands on; a fly that lands clear of the sheet leaves it shown (docs/spec/design.md, "A laid sheet
+// and what the user flies to next").
+function clearSheetFor(target, frame = false) {
+  const sheets = laidSheets();
+  if (!sheets.length) return;
+  const to = clampView({ ...target, projection: view.projection }), proj = viewProjection(to);
+  const spots = frame ? Array.from({ length: 25 }, (_, i) => [W * (0.1 + 0.2 * (i % 5)), H * (0.1 + 0.2 * Math.floor(i / 5))]) : [proj.project(to.lon, to.lat)];
+  const covering = sheets.filter((o) => spots.some(([x, y]) => onSheet(o, proj, o.sheet, x, y)));
+  if (covering.length) setSheets(style.overlays.filter((id) => !covering.some((o) => o.id === id)), style.sheets, null, false); // a fly follows at once, and draws
+}
 // A flight from the view to a target, in the view's projection (flight.mjs plans it: a near place eased to
 // straight, a far one in an arc out, across and down, longer for longer): the ground is drawn on the way as
 // for a drag, and the ornaments placed when it lands. Every fly on the page comes through here. Reduced motion jumps.
@@ -2196,7 +2332,7 @@ locate.addEventListener('click', () => {
 });
 
 for (const id of Object.values(KNOB_SLIDERS)) $(id).addEventListener('input', (e) => { e.target.dataset.set = '1'; }); // moved, so set
-for (const id of ['debug', 'overlap', 'overlayMode', 'overlayOpacity', ...Object.values(KNOB_CHIPS), ...Object.values(KNOB_SLIDERS), 'projection', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'scaleBorder', 'land', 'islands', 'seaTint', 'rivers', 'lakes', 'trees', 'mountains', 'hills', 'continentsZoom', 'regions', 'regionSet', 'regionsZoom', 'titleMode', 'townSize', 'voyageWidth']) $(id).addEventListener('input', readControls);
+for (const id of ['debug', 'overlap', 'overlayMode', 'sheetHides', 'overlayOpacity', ...Object.values(KNOB_CHIPS), ...Object.values(KNOB_SLIDERS), 'projection', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'scaleBorder', 'land', 'islands', 'seaTint', 'rivers', 'lakes', 'trees', 'mountains', 'hills', 'continentsZoom', 'regions', 'regionSet', 'regionsZoom', 'titleMode', 'townSize', 'voyageWidth']) $(id).addEventListener('input', readControls);
 let typing = 0; // a typed title is placed when the typing pauses, not on every key: a placement takes up to a few hundred ms
 $('title').addEventListener('input', () => { clearTimeout(typing); typing = setTimeout(readControls, 400); });
 addEventListener('hashchange', () => { layout = layoutFromHash(); showLayout(); hoverOpen = hoverFromHash(); showHover(); view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); showVoyage(); showPeople(); render(); });

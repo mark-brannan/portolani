@@ -208,28 +208,41 @@ export function drawOverlay(g, overlay, proj, opacity = 0.6, { w = 1600, h = 160
   g.restore();
 }
 
-// The overlay in the link: `overlay=<id>` the chart's sheet laid over the map at its own placement;
-// `sheet=<lon>,<lat>,<scale>,<turn>` where it was dragged to (the chart's own when left out);
-// `overlaymode=pieces` the warped pieces instead, with `overlayopacity=<0..1>` how strongly. Off (no
-// overlay), the sheet, its own placement and 0.6 are the defaults, and a default is left out of the hash.
-// `ids`, when given, are the overlays the site has: any other id reads as off. `q` is a URLSearchParams.
+// The overlays in the link: `overlay=<id>,<id>` the charts' sheets laid over the map, bottom to top, each at its own
+// placement; `sheet=<lon>,<lat>,<scale>,<turn>;...` where each was dragged to, one slot per id in the same order, an
+// empty slot (or none) the chart's own; `overlaymode=pieces` the warped pieces instead, with `overlayopacity=<0..1>` how
+// strongly; `sheethides=1` a voyage's fly takes a sheet off if it would cover the frame (otherwise the voyage is drawn over the sheets). None laid, the sheet, its own placement and 0.6 are the defaults, and a default is left out of the hash.
+// `sheets` holds a placement by id, and may keep one for a chart not laid (hidden by its eye), which the hash leaves out.
+// `ids`, when given, are the overlays the site has: any other id is dropped. `q` is a URLSearchParams.
 export const OVERLAY_MODES = ['sheet', 'pieces'];
-export const OVERLAY_DEFAULTS = { overlay: null, overlayMode: 'sheet', sheet: null, overlayOpacity: 0.6 };
+export const OVERLAY_DEFAULTS = { overlays: [], overlayMode: 'sheet', sheets: {}, overlayOpacity: 0.6, sheetHides: false };
+const placement = (text) => {
+  const at = text.split(',').map(Number);
+  return at.length === 4 && at.every(Number.isFinite) && Math.abs(at[1]) < 85.1 && at[2] > 0 ? { lon: at[0], lat: at[1], scale: at[2], turn: at[3] } : null;
+};
 export function overlayFromHash(q, ids) {
-  const id = q.get('overlay') ?? '', o = Number(q.get('overlayopacity')), mode = q.get('overlaymode');
-  const at = (q.get('sheet') ?? '').split(',').map(Number);
-  const sheet = at.length === 4 && at.every(Number.isFinite) && Math.abs(at[1]) < 85.1 && at[2] > 0 ? { lon: at[0], lat: at[1], scale: at[2], turn: at[3] } : null;
+  const o = Number(q.get('overlayopacity')), mode = q.get('overlaymode'), slots = (q.get('sheet') ?? '').split(';');
+  const overlays = [], sheets = {};
+  (q.get('overlay') ?? '').split(',').forEach((id, i) => {
+    if (!/^[a-z][a-z0-9-]*$/.test(id) || id === 'off' || (ids && !ids.has(id)) || overlays.includes(id)) return;
+    overlays.push(id);
+    const s = placement(slots[i] ?? '');
+    if (s) sheets[id] = s;
+  });
   return {
-    overlay: /^[a-z][a-z0-9-]*$/.test(id) && id !== 'off' && (!ids || ids.has(id)) ? id : OVERLAY_DEFAULTS.overlay,
+    overlays,
     overlayMode: OVERLAY_MODES.includes(mode) ? mode : OVERLAY_DEFAULTS.overlayMode,
-    sheet,
+    sheets,
+    sheetHides: q.get('sheethides') === '1',
     overlayOpacity: q.has('overlayopacity') && o >= 0 && o <= 1 ? o : OVERLAY_DEFAULTS.overlayOpacity,
   };
 }
 export function overlayToHash(st, q) {
-  if (st.overlay) q.set('overlay', st.overlay);
+  if (st.overlays.length) q.set('overlay', st.overlays.join(','));
   if (st.overlayMode && st.overlayMode !== OVERLAY_DEFAULTS.overlayMode) q.set('overlaymode', st.overlayMode);
-  if (st.sheet) q.set('sheet', sheetText(st.sheet));
+  const slots = st.overlays.map((id) => (st.sheets[id] ? sheetText(st.sheets[id]) : ''));
+  if (slots.some(Boolean)) q.set('sheet', slots.join(';').replace(/;+$/, ''));
+  if (st.sheetHides) q.set('sheethides', '1');
   if (st.overlayOpacity !== OVERLAY_DEFAULTS.overlayOpacity) q.set('overlayopacity', st.overlayOpacity);
 }
 // A placement as the hash writes it: the centre to a thousandth of a degree, the scale to five places (a

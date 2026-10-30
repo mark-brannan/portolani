@@ -28,12 +28,10 @@ export const DASHES = { attested: [], inferred: [9, 5], conventional: [2, 4] };
 export const STEP_KM = 25; // the path's sample spacing, close enough that a strait is followed and a curve reads smooth
 
 // The inks a voyage is drawn in, each dark enough to read on parchment and on the land washes. The first is the
-// chart's red (scene.mjs windRed), which the first voyage chosen takes; each further one takes a colour seeded on
-// its id, the next free one along when that is taken, so a link draws the same colours wherever it is opened.
+// chart's red (scene.mjs windRed), which the first voyage chosen takes unless it is in the contrast set (VOYAGE_CONTRAST,
+// below); each further one takes a colour seeded on its id, the next free one along when that is taken, so a link
+// draws the same colours wherever it is opened.
 export const VOYAGE_PALETTE = ['#8c2f1e', '#1f4e8c', '#2e6b34', '#6b2d7a', '#b0601a', '#16727a', '#9c2a5c', '#4a4f9a', '#5c4a1e'];
-// The inks a voyage with a dashed or dotted leg takes, in order: a green, a purple, a brighter red, an orange, a yellow.
-// Never a blue (a river), a grey or a brown (the parchment and the coast), nor the chart's muted red.
-export const BROKEN_PALETTE = ['#2e8b3a', '#7b2fa0', '#d42a1c', '#e8710a', '#d4a800'];
 // the stroke widths on offer, in px on the 1600 px sheet; the default is the heaviest, Heavy
 export const VOYAGE_WIDTHS = [1.4, 2.2, 3.2, 4.5];
 export const VOYAGE_WIDTH = 4.5;
@@ -46,16 +44,20 @@ export function voyageDrawSeconds(text) {
   const s = Number(text), { min, max, step, seconds } = VOYAGE_DRAW;
   return text != null && text !== '' && s >= min && s <= max && Number.isInteger((s - min) / step) ? s : seconds;
 }
+// The high-contrast palette (docs/spec/design.md, "A dashed or dotted voyage is easy to see"): a green, a purple, a brighter red,
+// an orange, a yellow; never a blue (a river) nor a grey or a brown (they sink into a scan). For a voyage with no colour picked
+// while any of it crosses a sheet.
+export const VOYAGE_CONTRAST = ['#008a3e', '#7a1fff', '#c4001a', '#e65c00', '#d9a400'];
 const seedOf = (id) => [...id].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0, 2166136261);
 // The colours of a list of chosen voyages, in the order chosen: `picked` maps an id to a colour picked by hand.
 // Red goes to the first one not picked while no other has it; the rest are seeded on their ids among the free colours.
-// A voyage in `broken` (ids with a dashed or dotted leg) takes instead the first colour of BROKEN_PALETTE that no other has.
-export function voyageColours(ids, picked = {}, broken = new Set()) {
+// `contrast` is the set of ids that take the high-contrast palette instead, until its five inks are all taken: the sixth
+// falls through to VOYAGE_PALETTE, so two voyages share an ink only once all fourteen are in use.
+export function voyageColours(ids, picked = {}, contrast = new Set()) {
   const used = new Set(ids.map((id) => picked[id]).filter(Boolean)), out = {};
-  for (const id of ids) {
+  for (const [i, id] of ids.entries()) {
     if (picked[id]) { out[id] = picked[id]; continue; }
-    if (broken.has(id)) { const c = BROKEN_PALETTE.find((r) => !used.has(r)) ?? BROKEN_PALETTE[0]; used.add(c); out[id] = c; continue; }
-    const red = VOYAGE_PALETTE[0], rest = VOYAGE_PALETTE.slice(1), start = seedOf(id) % rest.length;
+    const palette = contrast.has(id) && VOYAGE_CONTRAST.some((r) => !used.has(r)) ? VOYAGE_CONTRAST : VOYAGE_PALETTE, red = palette[0], rest = palette.slice(1), start = seedOf(id) % rest.length;
     const round = rest.map((_, k) => rest[(start + k) % rest.length]); // from the id's own colour on
     const c = !used.has(red) ? red : round.find((r) => !used.has(r)) ?? round[0];
     used.add(c); out[id] = c;
