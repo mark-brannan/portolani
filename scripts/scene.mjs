@@ -22,7 +22,7 @@ import { RELIEF_STYLES, reliefOf, clearOf, drawRelief } from './relief.mjs';
 import { TREES, TREE_STYLES, plantTrees, plantPalms, inLake } from './trees.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
 export { SIGHT_TILES } from './sights.mjs'; // the page's tiles for its places; here so the module ships with the scene
-import { BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from './buildings.mjs';
+import { RUIN, BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from './buildings.mjs';
 import { legPath, reachPath, isMigration, splitAtSeam, DASHES, isBroken, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, readVoyage, chronological, voyageLink } from './voyages.mjs';
 export { isBroken, legPath, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, readVoyage, chronological, voyageLink };
 import { loadOverlay, drawOverlay, drawSheet } from './overlays.mjs';
@@ -684,7 +684,7 @@ const TOWERS = [
   ] },
   ...BUILDINGS, // the Carta Marina's house, church, castle, round tower and tent (buildings.mjs)
 ];
-const TOWER_BY_ID = new Map(TOWERS.map((t) => [t.id, t]));
+const TOWER_BY_ID = new Map([...TOWERS, RUIN].map((t) => [t.id, t]));
 
 // Sprites by key, `<pack>/<id>`, since ids repeat across packs (scanned/serpent-a, vivid/serpent-a).
 // The shapes drawn in code are the pseudo-pack `plain`: its rose set, its cartouche frame, the tower.
@@ -1209,19 +1209,43 @@ function placeHillSprites(humps, sprites, blocked, field, proj) {
 const placedBox = ({ box: [c0, c1, c2] }) => obb((c0[0] + c2[0]) / 2, (c0[1] + c2[1]) / 2, Math.atan2(c1[1] - c0[1], c1[0] - c0[0]),
   Math.hypot(c1[0] - c0[0], c1[1] - c0[1]) / 2, Math.hypot(c2[0] - c1[0], c2[1] - c1[1]) / 2);
 
+// The stand-ins for the places that have a tile (the page's `sights`: { name, lon, lat, ruin }) and nothing of their
+// own drawn: a lesser place with no name, from POI_ZOOM on, where the tile opens on a tap. A ruin where the sight says
+// so (`ruin`, a fact about the place that its position cannot give), else the plain tower. A `ruin: true` is always drawn
+// (ruinAt); any other placeLesser drops where a town or another mark is already drawn there.
+function standIns(sights, data, view) {
+  if (!Array.isArray(sights) || view.zoom < POI_ZOOM) return [];
+  return sights.filter((s) => Number.isFinite(s.lon) && Number.isFinite(s.lat) && !POIS.some((p) => p.name === s.name) && shows(data.proj, s.lon, s.lat))
+    .map((s) => ({ name: s.name, lon: s.lon, lat: s.lat, xy: data.proj.project(s.lon, s.lat), building: s.ruin ? 'ruin' : 'tower', ...(s.ruin === true && { ruin: true }), poi: true, mark: true, rank: 0, pop: 0 }))
+    .filter((s) => s.xy.every(Number.isFinite));
+}
+
 // The lesser places (buildings.mjs), after every other name: each a church or a house LESSER_PX tall
 // whatever the zoom, standing on its land (standOf, on the clearance field), its name small above it;
 // kept only where the building and its name both clear the towns, names and ornaments placed before.
 // The points of interest (pois.mjs) are placed first of all the names (`poi`), so no sea or country takes their ground.
-function placeLesser(data, field, boxes, ctx, towns, names, poi) {
+function placeLesser(data, field, boxes, ctx, towns, names, poi, cityBoxes = new Set()) {
   const out = [], opts = letterOptions(data), k = poi ? 1.7 : 1, s = (LESSER_PX * k) / TOWER_H; // a point of interest stands bigger
-  for (const p of data.lesser.filter((l) => !!l.poi === poi).sort((a, b) => a.rank - b.rank || b.pop - a.pop)) {
+  for (const p of data.lesser.filter((l) => !!l.poi === poi).sort((a, b) => !!b.ruin - !!a.ruin || a.rank - b.rank || b.pop - a.pop)) {
     const [px, py] = p.xy;
-    if (px < 8 || py < 8 || px > W - 8 || py > H - 8 || towns.some((t) => Math.hypot(t.x - px, t.y - py) < TUNE.townGap / 2)) continue;
+    if (px < 8 || py < 8 || px > W - 8 || py > H - 8) continue;
+    if (!p.ruin && towns.some((t) => Math.hypot(t.x - px, t.y - py) < TUNE.townGap / 2)) continue;
     const shape = TOWER_BY_ID.get(p.building ?? lesserBuilding(p.rank, seedOf(p.name))), top = (shape.top ?? TOWER_H) * s, hw = shape.w * s;
+    // a ruin is drawn beside whatever holds its spot, else on it: always where the sight says `ruin: true`, else
+    // wherever no town stands on the site nor a city's ground covers it (a mark of the plain tower or a lettered place
+    // keeps the rule below)
+    if (p.ruin || (p.mark && shape.id === 'ruin' && !towns.some((t) => t.city && insideRings(pxRings(t.city.rings), px, py)))) {
+      out.push(ruinAt(p, standOf(p, top, hw, field, null, poi), top, hw, boxes, cityBoxes, k));
+      continue;
+    }
     const [x, y] = standOf(p, top, hw, field, null, poi);
     const icon = obb(x, y - top / 2, 0, hw, top / 2);
     if (!obbInside(icon) || boxes.some((b) => obbOverlap(b, icon))) continue;
+    if (p.mark) { // a stand-in for a place with a tile: the glyph alone, no lettering
+      boxes.push(icon);
+      out.push({ x, y, h: LESSER_PX * k, tower: shape.id, name: p.name, rank: p.rank, label: icon, poi: true, mark: true });
+      continue;
+    }
     const n = { text: p.name, at: data.proj.invert(x, y - top - 5), size: Math.round(LESSER_LETTER * (poi ? 1.4 : 1)) };
     const [q] = place(ctx, [n], data.proj.toPx, opts);
     const box = q && placedBox(q);
@@ -1231,6 +1255,20 @@ function placeLesser(data, field, boxes, ctx, towns, names, poi) {
     out.push({ x, y, h: LESSER_PX * k, tower: shape.id, name: p.name, rank: p.rank, label: box, ...(p.poi && { poi: true }) });
   }
   return out;
+}
+
+// A ruin's icon at [x, y], or the nearest spot within two widths of it clear of the boxes placed (a city's plan is no
+// obstacle), else at [x, y] all the same; the box pushed so what comes after keeps clear of it.
+function ruinAt(p, [x0, y0], top, hw, boxes, cityBoxes, k) {
+  const clear = (x, y) => { const b = obb(x, y - top / 2, 0, hw, top / 2); return obbInside(b) && !boxes.some((o) => !cityBoxes.has(o) && obbOverlap(o, b)) && b; };
+  let x = x0, y = y0, icon = clear(x, y);
+  for (let r = hw / 2; !icon && r <= hw * 4; r += hw / 2) for (let a = 0; a < 12 && !icon; a++) {
+    const [dx, dy] = [Math.cos(a * Math.PI / 6) * r, Math.sin(a * Math.PI / 6) * r];
+    if ((icon = clear(x0 + dx, y0 + dy))) [x, y] = [x0 + dx, y0 + dy];
+  }
+  if (!icon) [x, y, icon] = [x0, y0, obb(x0, y0 - top / 2, 0, hw, top / 2)];
+  boxes.push(icon);
+  return { x, y, h: LESSER_PX * k, tower: 'ruin', name: p.name, rank: p.rank, label: icon, poi: true, ...(p.mark && { mark: true }) };
 }
 
 // The roses of the atlas's sheets (docs/atlas/README.md, "An atlas of sheets"): each sheet's big rose on
@@ -1473,7 +1511,7 @@ function buildScene(data, sprites, ctx, world = {}) {
   const places = new Set();
   if (landOk) for (const { xy: [x, y] } of data.places) if (x > -LAND_ROSE_TOWN && x < W + LAND_ROSE_TOWN && y > -LAND_ROSE_TOWN && y < H + LAND_ROSE_TOWN) { const o = { x, y, r: LAND_ROSE_TOWN }; places.add(o); occupied.push(o); }
   // a point of interest is lettered whatever the view, so the roses and the beasts keep clear of it, on sea too
-  for (const { xy: [x, y] } of data.lesser.filter((l) => l.poi)) occupied.push({ x, y, r: POI_ROOM });
+  for (const { xy: [x, y] } of data.lesser.filter((l) => l.poi && !l.mark)) occupied.push({ x, y, r: POI_ROOM });
   if (landOk && urban.length) built = distanceTo(data, urban.map((u) => u.poly));
   if (sheetRoses) {
     ({ centre, nodes, roseDraws } = sheetRoses);
@@ -1583,7 +1621,7 @@ function buildScene(data, sprites, ctx, world = {}) {
   ];
   const opts = letterOptions(data);
   const names = [];
-  const pois = placeLesser(data, field, boxes, ctx, towns, names, true);
+  const pois = placeLesser(data, field, boxes, ctx, towns, names, true, cityBoxes);
   for (const n of lettering) {
     if (n.kind === 'coast' && names.some((m) => m.kind === 'coast' && m.text === n.text)) continue; // once a view
     const [p] = place(ctx, [n], data.proj.toPx, opts);
@@ -3177,6 +3215,7 @@ export async function createScene(environment, opts = {}) {
   const tLoad = performance.now();
 
   const data = viewData(world, view);
+  data.lesser.push(...standIns(opts.sights, data, view));
   // the atlas's sheets at every zoom: the curated sheets alone in the world band, then curated and grid sheets.
   // The Catalan rose's lines reach as far as those of the sheet that holds it at this zoom.
   // `from` paces a sheet's beasts: the first zoom of its band, or in the world band, where the earth is one page,

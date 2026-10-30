@@ -399,6 +399,7 @@ const CHOICES = {
   tuneRoselines: [['1', 'On', 'the rose\'s 32 lines as one more hub at every zoom', HOOD_GLYPHS.roselines], ['0', 'Off', 'only the sheet the rose falls in', HOOD_GLYPHS.off]],
   flyShape: [['step', 'Step', 'out about the place left, across at the top, down onto the place; Blend lets the pan run alongside the zoom'], ['hyperbolic', 'Hyperbolic', 'van Wijk & Nuij, as MapLibre flies: pan and zoom together on one curve, Curve setting its height']],
 };
+CHOICES.projectionCharts = CHOICES.projection; // the same chips in the Charts drawer; the two are one setting
 for (const [id, options] of Object.entries(CHOICES)) {
   const el = $(id);
   for (const [value, label, note, dot] of options) {
@@ -469,7 +470,7 @@ for (const [id, parts] of Object.entries(CAPTIONS)) {
 const CATALAN_KEYS = SPRITES.filter((s) => s.kind === 'mountain').map((s) => s.key);
 const zoomLabel = (n) => (n <= 0 ? 'off' : n >= MAX_ZOOM ? 'always' : `zoom ${n} and out`);
 function showStyle() {
-  $('projection').value = view.projection;
+  $('projection').value = $('projectionCharts').value = view.projection;
   $('ink').value = style.ink; $('parchment').value = style.parchment;
   $('density').value = style.density; $('densityOut').textContent = style.density;
   $('names').checked = style.names; $('rhumb').checked = style.rhumb; $('scale').value = style.scale; $('scaleBorder').value = style.scaleBorder;
@@ -748,6 +749,7 @@ async function render() {
       sprites: [...selection], kinds, view, pinned: !phone.matches, pinTitle: style.autoTitle ? pinTitle : null,
       voyages: style.voyages.filter((v) => !v.hidden).map((v) => ({ id: v.id, colour: ink[v.id], width: style.voyageWidth })), person: style.person, voyageWidth: style.voyageWidth,
       overlays: style.overlays.map((id) => ({ id, mode: style.overlayMode, sheet: style.sheets[id] ?? null, opacity: style.overlayOpacity })),
+      sights: sightTiles().map(({ lon, lat, tile }) => ({ name: tile.title, lon, lat, ruin: tile.ruin ?? false })),
       debug: parseDebug(style.debug).debug, tune: parseTune(style.tune).tune,
     });
     if (me !== run) return; // a newer change or a move superseded this one
@@ -1324,11 +1326,12 @@ function fillGroup(marks) {
   tileEl.replaceChildren(close, head, list);
   tileEl.setAttribute('aria-label', head.textContent);
 }
-// every listed place with a tile, once by name, at the view its button flies to
+// every listed place with a tile, once by name (or once per spot its tile names), at the view its button flies to
 let sightList = null;
 function sightTiles() {
   sightList ??= [...new Map([...places.map(({ name, view: v }) => [name, v]), ...CHARTS.map(({ made }) => [made.title, made])]).entries()]
-    .filter(([name]) => SIGHT_TILES[name]).map(([name, v]) => { const { at, ...tile } = SIGHT_TILES[name]; return { lon: at?.[0] ?? v.lon, lat: at?.[1] ?? v.lat, tile: { title: name, ...tile } }; });
+    .filter(([name]) => SIGHT_TILES[name]).flatMap(([name, v]) => { const { at, ...tile } = SIGHT_TILES[name], spots = at ? (Array.isArray(at[0]) ? at : [at]) : [[v.lon, v.lat]];
+      return spots.map(([lon, lat]) => ({ lon, lat, tile: { title: name, ...tile } })); });
   return sightList;
 }
 // the mark at [x, y]: a voyage's event or a sight within reach; else the note on a laid chart whose figure holds the
@@ -1484,6 +1487,17 @@ const SIGHTS = [
     ['Malacca', port(102.25, 2.19), 'Malacca (Melaka)'],
     ['Quanzhou', port(118.68, 24.87)],
   ], null, '9th–15th c.'],
+  ["Mali's trade network", [ // the Sahara's roads and the Niger's towns and goldfields (docs/learn/trans-saharan-trade.md); the roads are marked mid-route
+    ['Niani', port(-9.15, 11.43)],
+    ['Timbuktu', port(-3.01, 16.77)],
+    ['Gao', port(-0.04, 16.27)],
+    ['Walata', port(-7.03, 17.30)],
+    ['Taghaza', port(-5.0, 23.6)],
+    ['Bambuk', at(-11.5, 13.5, 7)],
+    ['Bure', at(-10.0, 10.6, 7)],
+    ['The western road', at(-5.8, 21.0, 6)],
+    ['The road to Egypt', at(6.78, 17.52, 6)],
+  ], null, '8th–16th c.'],
   ['The age of discovery', [
     ['Lisbon', port(-9.14, 38.72)], // also where charts were made
     ['São Jorge da Mina', port(-1.35, 5.08), 'São Jorge da Mina (Elmina)'],
@@ -2457,7 +2471,9 @@ locate.addEventListener('click', () => {
 });
 
 for (const id of Object.values(KNOB_SLIDERS)) $(id).addEventListener('input', (e) => { e.target.dataset.set = '1'; }); // moved, so set
-for (const id of ['debug', 'overlap', 'overlayMode', 'sheetHides', 'overlayOpacity', ...Object.values(KNOB_CHIPS), ...Object.values(KNOB_SLIDERS), 'projection', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'scaleBorder', 'land', 'islands', 'seaTint', 'rivers', 'lakes', 'trees', 'mountains', 'hills', 'continentsZoom', 'regions', 'regionSet', 'regionsZoom', 'titleMode', 'townSize', 'voyageWidth']) $(id).addEventListener('input', readControls);
+// either set of projection chips drives (first, so readControls sees both agree) the other
+for (const [from, to] of [['projection', 'projectionCharts'], ['projectionCharts', 'projection']]) $(from).addEventListener('input', () => { $(to).value = $(from).value; });
+for (const id of ['debug', 'overlap', 'overlayMode', 'sheetHides', 'overlayOpacity', ...Object.values(KNOB_CHIPS), ...Object.values(KNOB_SLIDERS), 'projection', 'projectionCharts', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'scaleBorder', 'land', 'islands', 'seaTint', 'rivers', 'lakes', 'trees', 'mountains', 'hills', 'continentsZoom', 'regions', 'regionSet', 'regionsZoom', 'titleMode', 'townSize', 'voyageWidth']) $(id).addEventListener('input', readControls);
 let typing = 0; // a typed title is placed when the typing pauses, not on every key: a placement takes up to a few hundred ms
 $('title').addEventListener('input', () => { clearTimeout(typing); typing = setTimeout(readControls, 400); });
 addEventListener('hashchange', () => { layout = layoutFromHash(); showLayout(); hoverOpen = hoverFromHash(); showHover(); view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); showVoyage(); showPeople(); render(); });
