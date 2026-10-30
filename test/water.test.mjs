@@ -108,3 +108,19 @@ test('without the 10m files a close view still draws its 50m rivers and lakes', 
   for (let i = 0; i < wet.px.length; i += 4) if (Math.abs(wet.px[i] - dry.px[i]) + Math.abs(wet.px[i + 2] - dry.px[i + 2]) > 30) changed++;
   assert.ok(changed > 1000, `${changed} px drawn`);
 });
+
+// A drawn lake is water: no mountain or hill stands on it (Dian Chi at Kunming, z10.5, had two). Lake Geneva in 50m is offline.
+test('relief keeps off the lakes drawn, and stands on them where none is drawn', async () => {
+  const { inLake } = await import('../scripts/trees.mjs');
+  const m = await scene('relief-lakes');
+  const run = async (lakes) => {
+    const { scene: s, data } = await m.createScene(base, { ...OPTS, view: LEMAN, rivers: 'off', lakes, relief: ['marina'] });
+    return { s, data };
+  };
+  const wet = await run('marina'), dry = await run('off');
+  const lakes = m.keptWater(wet.data).lakes;
+  assert.ok(lakes.length > 0, 'no lake kept');
+  const on = ({ s, data }) => [...s.relief.peaks, ...s.relief.humps].filter((p) => inLake(lakes, data.proj.invert(p.x, p.y)));
+  assert.equal(on(wet).length, 0, 'a mountain stands on a drawn lake');
+  assert.ok(on(dry).length > 0, 'the view has no mountain on the lake to keep off');
+});

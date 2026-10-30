@@ -334,6 +334,13 @@ test('noteworthy ports: four eras in time order, six ports each, every one with 
   }
 });
 
+// the timeline's bands are the points of interest's eras, by the same names in the same order
+test('the timeline\'s era bands are the Sights eras', async () => {
+  const { TIMELINE_ERAS } = await import('../scripts/people.mjs');
+  const src = readFileSync('public/page.js', 'utf8'), sights = src.slice(src.indexOf('const SIGHTS = ['), src.indexOf('const CHARTS = ['));
+  assert.deepEqual(TIMELINE_ERAS.map(([name]) => name), [...sights.matchAll(/^ {2}\['(The [^']+)', \[$/gm)].map((m) => m[1]));
+});
+
 // every tile carries a date (a year, a century or a span, never a phrase) and its text, shown under its name in the list
 test('every place tile has a date and a text', async () => {
   const { SIGHT_TILES } = await import('../scripts/sights.mjs');
