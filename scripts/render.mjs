@@ -4,7 +4,8 @@
 // Usage: npm run render   -> out/mockup.png, out/mockup-detail.png
 //        npm run render -- --view 19.7,61.7,5.4[,projection] [--overlay carta-marina[:0.6]] [--sheet lon,lat,scale,turn] --out docs/x.jpg
 //          -> one view, optionally with a chart's sheet laid over it, or its warped pieces at an opacity
-//             (docs/overlay/README.md), as .png or .jpg; `--notes` outlines the laid chart's notes (docs/notes)
+//             (docs/overlay/README.md), as .png or .jpg; --voyages magellan,drake:1f4e8c draws those voyages,
+//             a picked colour after an id; `--notes` outlines the laid chart's notes (docs/notes)
 
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
@@ -83,7 +84,8 @@ if (arg('view')) {
   const [lon, lat, zoom, projection] = arg('view').split(',');
   const [id, opacity] = (arg('overlay') ?? '').split(':'); // `id` the sheet; `id:<opacity>` the warped pieces at that opacity
   const at = (arg('sheet') ?? '').split(',').map(Number), sheet = at.length === 4 && at.every(Number.isFinite) ? { lon: at[0], lat: at[1], scale: at[2], turn: at[3] } : null;
-  const one = await createScene(env, { view: { lon: +lon, lat: +lat, zoom: +zoom, projection }, overlay: id ? { id, mode: opacity ? 'pieces' : 'sheet', sheet, opacity: opacity ?? 0.6 } : null });
+  const one = await createScene(env, { view: { lon: +lon, lat: +lat, zoom: +zoom, projection }, overlay: id ? { id, mode: opacity ? 'pieces' : 'sheet', sheet, opacity: opacity ?? 0.6 } : null,
+    voyages: (arg('voyages') ?? '').split(',').filter(Boolean).map((v) => { const [id, c] = v.split(':'); return { id, ...(c && { colour: `#${c}` }) }; }) });
   const canvas = createCanvas(W, H), out = arg('out') ?? join(ROOT, 'out', 'view.png');
   drawScene(canvas.getContext('2d'), one.scene, one.data, one.bg, { scale: 1, x: 0, y: 0 });
   if (process.argv.includes('--notes')) drawNoteBoxes(canvas.getContext('2d'), one.scene.overlay, one.proj);

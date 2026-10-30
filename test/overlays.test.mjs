@@ -303,7 +303,8 @@ test('drawSheet and drawOverlay draw each panel that has arrived at its offset, 
 });
 
 // loadOverlay of a chart with panels: on the page (env.onPanel) it comes back at once and each panel lands as its file
-// arrives, onPanel called for each; headless (no onPanel) it comes back with every panel landed.
+// arrives, onPanel called for each; headless (no onPanel) it comes back with every panel landed. A panel that fails is
+// tried once more; on the page a second failure is warned with its file and the rest draw; headless it throws.
 test('a chart of panels loads page by page on the page, and whole headless', async () => {
   const list = { overlays: [{ id: 'paged-lazy', panels: [{ file: 'a.jpg', x: 0, width: 4, height: 4 }, { file: 'b.jpg', x: 4, width: 4, height: 4 }] },
     { id: 'paged-whole', panels: [{ file: 'a.jpg', x: 0, width: 4, height: 4 }, { file: 'missing.jpg', x: 4, width: 4, height: 4 }] }] };
@@ -314,8 +315,28 @@ test('a chart of panels loads page by page on the page, and whole headless', asy
   release(); await new Promise((ok) => setTimeout(ok, 0));
   assert.deepEqual(lazy.panels.map((p) => p.img?.p), ['packs/overlays/a.jpg', 'packs/overlays/b.jpg']);
   assert.deepEqual(landed, ['paged-lazy', 'paged-lazy']);
-  const whole = await loadOverlay('paged-whole', { readJSON: async () => list, loadImage: async (p) => { if (p.includes('missing')) throw new Error('no'); return { width: 1, height: 1, p }; } });
-  assert.deepEqual(whole.panels.map((p) => p.img?.p ?? null), ['packs/overlays/a.jpg', null], 'every panel landed, a failed one left empty');
+  await assert.rejects(loadOverlay('paged-whole', { readJSON: async () => list, loadImage: async (p) => { if (p.includes('missing')) throw new Error('no'); return { width: 1, height: 1, p }; } }),
+    /panel packs\/overlays\/missing\.jpg failed to load/, 'headless, a missing panel is a build fault');
+});
+
+test('a panel that fails once is retried; one that fails twice is warned on the page and the rest draw', async () => {
+  const list = { overlays: [{ id: 'paged-flaky', panels: [{ file: 'a.jpg', x: 0, width: 4, height: 4 }, { file: 'flaky.jpg', x: 4, width: 4, height: 4 }] },
+    { id: 'paged-gone', panels: [{ file: 'a.jpg', x: 0, width: 4, height: 4 }, { file: 'gone.jpg', x: 4, width: 4, height: 4 }] }] };
+  const tries = {};
+  const loadImage = async (p) => { tries[p] = (tries[p] ?? 0) + 1; if (p.includes('gone') || (p.includes('flaky') && tries[p] === 1)) throw new Error('dropped'); return { width: 1, height: 1, p }; };
+  const flaky = await loadOverlay('paged-flaky', { readJSON: async () => list, loadImage });
+  assert.deepEqual(flaky.panels.map((p) => p.img?.p), ['packs/overlays/a.jpg', 'packs/overlays/flaky.jpg'], 'headless, a dropped request is tried again');
+  assert.equal(tries['packs/overlays/flaky.jpg'], 2);
+  const warned = [], warn = console.warn;
+  console.warn = (m) => warned.push(m);
+  try {
+    const gone = await loadOverlay('paged-gone', { readJSON: async () => list, loadImage, onPanel: () => {} });
+    await new Promise((ok) => setTimeout(ok, 0));
+    assert.deepEqual(gone.panels.map((p) => p.img?.p ?? null), ['packs/overlays/a.jpg', null], 'the rest of the sheet drawn');
+  } finally { console.warn = warn; }
+  assert.equal(tries['packs/overlays/gone.jpg'], 2, 'tried twice');
+  assert.equal(warned.length, 1);
+  assert.match(warned[0], /packs\/overlays\/gone\.jpg/);
 });
 
 // The 1959 copy is its own chart, its rights the CC BY 3.0 attribution the Commons page gives.
