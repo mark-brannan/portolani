@@ -112,12 +112,12 @@ test('an overlay the site lacks loads as null and draws nothing', async () => {
 // warped pieces as `overlaymode=pieces` with their opacity.
 const written = (st) => { const q = new URLSearchParams(); overlayToHash(st, q); return q.toString(); };
 test('the overlay in the hash: the default writes nothing, a link round-trips, an unknown id reads as off', () => {
-  assert.deepEqual(OVERLAY_DEFAULTS, { overlay: null, overlayMode: 'sheet', sheet: null, overlayOpacity: 0.6 });
+  assert.deepEqual(OVERLAY_DEFAULTS, { overlay: null, overlayMode: 'sheet', sheet: null, overlayOpacity: 0.6, sheetHides: false });
   assert.equal(written(OVERLAY_DEFAULTS), '', 'the default writes nothing');
   assert.deepEqual(overlayFromHash(new URLSearchParams('')), OVERLAY_DEFAULTS, 'no keys read as the default');
   const ids = new Set(overlays.map((o) => o.id));
   const read = overlayFromHash(new URLSearchParams('overlay=carta-marina&overlayopacity=0.6'), ids);
-  assert.deepEqual(read, { overlay: 'carta-marina', overlayMode: 'sheet', sheet: null, overlayOpacity: 0.6 });
+  assert.deepEqual(read, { overlay: 'carta-marina', overlayMode: 'sheet', sheet: null, overlayOpacity: 0.6, sheetHides: false });
   assert.equal(written(read), 'overlay=carta-marina', '0.6 and the sheet are the defaults, so only the id is written back');
   const pieces = overlayFromHash(new URLSearchParams('overlay=carta-marina&overlaymode=pieces&overlayopacity=0.3'), ids);
   assert.equal(pieces.overlayMode, 'pieces');
@@ -345,4 +345,11 @@ test('the 1959 copy of the Mediterranean is its own chart, titled as a copy, wit
   assert.match(copy.title, /copy of 1959/);
   assert.match(copy.licence, /^CC BY 3\.0;.*Library of Congress, Geography and Map Division/);
   assert.equal(copy.sheet.turn, 0, 'laid level');
+});
+
+test('the sheet-hides setting rides in the link as sheethides=1, and off writes nothing', () => {
+  const on = overlayFromHash(new URLSearchParams('overlay=carta-marina&sheethides=1'));
+  assert.equal(on.sheetHides, true);
+  assert.equal(written(on), 'overlay=carta-marina&sheethides=1');
+  assert.equal(overlayFromHash(new URLSearchParams('sheethides=0')).sheetHides, false);
 });

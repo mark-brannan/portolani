@@ -406,3 +406,10 @@ test('the pen takes 2.5 s by default; the slider offers 1 s to 5 s in half secon
     assert.equal(voyageDrawSeconds(text), s, `voyagedraw=${text}`);
   }
 });
+
+test('a voyage with no colour picked takes a colour that reads against a scan when the contrast palette is asked for', async () => {
+  const { voyageColours, VOYAGE_CONTRAST, VOYAGE_PALETTE } = await import('../scripts/voyages.mjs');
+  assert.equal(voyageColours(['columbus']).columbus, VOYAGE_PALETTE[0]);
+  assert.equal(voyageColours(['columbus', 'drake'], {}, VOYAGE_CONTRAST).columbus, VOYAGE_CONTRAST[0]);
+  assert.equal(voyageColours(['columbus'], { columbus: '#123456' }, VOYAGE_CONTRAST).columbus, '#123456', 'a picked colour stays');
+});

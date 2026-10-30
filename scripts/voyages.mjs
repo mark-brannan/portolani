@@ -41,14 +41,16 @@ export function voyageDrawSeconds(text) {
   const s = Number(text), { min, max, step, seconds } = VOYAGE_DRAW;
   return text != null && text !== '' && s >= min && s <= max && Number.isInteger((s - min) / step) ? s : seconds;
 }
+// Colours that read against a scan (sepia, brown and blue washes), for a voyage with no colour picked while a sheet is shown.
+export const VOYAGE_CONTRAST = ['#d6006f', '#0057d9', '#008a3e', '#7a1fff', '#e65c00', '#00a3b4', '#c4001a', '#111111'];
 const seedOf = (id) => [...id].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0, 2166136261);
 // The colours of a list of chosen voyages, in the order chosen: `picked` maps an id to a colour picked by hand.
 // Red goes to the first one not picked while no other has it; the rest are seeded on their ids among the free colours.
-export function voyageColours(ids, picked = {}) {
+export function voyageColours(ids, picked = {}, palette = VOYAGE_PALETTE) {
   const used = new Set(ids.map((id) => picked[id]).filter(Boolean)), out = {};
   for (const [i, id] of ids.entries()) {
     if (picked[id]) { out[id] = picked[id]; continue; }
-    const red = VOYAGE_PALETTE[0], rest = VOYAGE_PALETTE.slice(1), start = seedOf(id) % rest.length;
+    const red = palette[0], rest = palette.slice(1), start = seedOf(id) % rest.length;
     const round = rest.map((_, k) => rest[(start + k) % rest.length]); // from the id's own colour on
     const c = !used.has(red) ? red : round.find((r) => !used.has(r)) ?? round[0];
     used.add(c); out[id] = c;

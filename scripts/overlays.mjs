@@ -211,10 +211,11 @@ export function drawOverlay(g, overlay, proj, opacity = 0.6, { w = 1600, h = 160
 // The overlay in the link: `overlay=<id>` the chart's sheet laid over the map at its own placement;
 // `sheet=<lon>,<lat>,<scale>,<turn>` where it was dragged to (the chart's own when left out);
 // `overlaymode=pieces` the warped pieces instead, with `overlayopacity=<0..1>` how strongly. Off (no
+// `sheethides=1` a voyage's fly takes the sheet off if it would cover the frame (otherwise the voyage is drawn over the sheet). Off (no
 // overlay), the sheet, its own placement and 0.6 are the defaults, and a default is left out of the hash.
 // `ids`, when given, are the overlays the site has: any other id reads as off. `q` is a URLSearchParams.
 export const OVERLAY_MODES = ['sheet', 'pieces'];
-export const OVERLAY_DEFAULTS = { overlay: null, overlayMode: 'sheet', sheet: null, overlayOpacity: 0.6 };
+export const OVERLAY_DEFAULTS = { overlay: null, overlayMode: 'sheet', sheet: null, overlayOpacity: 0.6, sheetHides: false };
 export function overlayFromHash(q, ids) {
   const id = q.get('overlay') ?? '', o = Number(q.get('overlayopacity')), mode = q.get('overlaymode');
   const at = (q.get('sheet') ?? '').split(',').map(Number);
@@ -223,6 +224,7 @@ export function overlayFromHash(q, ids) {
     overlay: /^[a-z][a-z0-9-]*$/.test(id) && id !== 'off' && (!ids || ids.has(id)) ? id : OVERLAY_DEFAULTS.overlay,
     overlayMode: OVERLAY_MODES.includes(mode) ? mode : OVERLAY_DEFAULTS.overlayMode,
     sheet,
+    sheetHides: q.get('sheethides') === '1',
     overlayOpacity: q.has('overlayopacity') && o >= 0 && o <= 1 ? o : OVERLAY_DEFAULTS.overlayOpacity,
   };
 }
@@ -230,6 +232,7 @@ export function overlayToHash(st, q) {
   if (st.overlay) q.set('overlay', st.overlay);
   if (st.overlayMode && st.overlayMode !== OVERLAY_DEFAULTS.overlayMode) q.set('overlaymode', st.overlayMode);
   if (st.sheet) q.set('sheet', sheetText(st.sheet));
+  if (st.sheetHides) q.set('sheethides', '1');
   if (st.overlayOpacity !== OVERLAY_DEFAULTS.overlayOpacity) q.set('overlayopacity', st.overlayOpacity);
 }
 // A placement as the hash writes it: the centre to a thousandth of a degree, the scale to five places (a
