@@ -23,12 +23,12 @@ import { TREES, TREE_STYLES, plantTrees, plantPalms } from './trees.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
 export { SIGHT_TILES } from './sights.mjs'; // the page's tiles for its places; here so the module ships with the scene
 import { BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from './buildings.mjs';
-import { legPath, reachPath, isMigration, splitAtSeam, DASHES, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, readVoyage, chronological, voyageLink } from './voyages.mjs';
-export { VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, readVoyage, chronological, voyageLink };
+import { legPath, reachPath, isMigration, splitAtSeam, DASHES, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, readVoyage, chronological, voyageLink } from './voyages.mjs';
+export { VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, readVoyage, chronological, voyageLink };
 import { loadOverlay, drawOverlay, drawSheet } from './overlays.mjs';
 import { PEOPLE_FILE, PERSON_RED, personMarks, withPerson, peopleOf, whoOf } from './people.mjs';
-import { noteMarks, pickMark } from './notes.mjs';
-export { noteMarks, pickMark };
+import { noteMarks, pickMark, markClear, tileSpot } from './notes.mjs';
+export { noteMarks, pickMark, markClear, tileSpot };
 const record = (id) => catalogue.find((r) => r.id === id); // a coastlines catalogue record by its id
 
 let env;
@@ -2262,8 +2262,8 @@ const VOYAGE_HALO = 3.3, VOYAGE_END = 2.8, SKULL_H = 16, SKULL_ALT_H = 13, WAYPO
 function drawVoyages(g, voyages, proj, rect, eventRect = rect, moving = false) {
   for (const v of voyages ?? []) if (isMigration(v.voyage)) drawRibbon(g, v, proj, rect, moving);
   for (const v of voyages ?? []) (isMigration(v.voyage) ? drawStream : drawTrack)(g, v, proj, rect);
-  for (const v of voyages ?? []) for (const m of doubtMarks(v, proj, eventRect)) drawCloud(g, m, v.colour ?? STYLE.windRed);
-  for (const v of voyages ?? []) drawEvents(g, v, proj, eventRect);
+  for (const v of voyages ?? []) if (!(v.reveal < 1)) for (const m of doubtMarks(v, proj, eventRect)) drawCloud(g, m, v.colour ?? STYLE.windRed);
+  for (const v of voyages ?? []) if (!(v.reveal < 1)) drawEvents(g, v, proj, eventRect); // marks wait for the pen
 }
 // A small ringed mark on each note's figure while its chart is laid over the map; no lettering, a click opens its tile (notes.mjs)
 function drawNotes(g, overlay, proj, rect) {
@@ -2373,19 +2373,25 @@ function drawStream(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH },
   }
   g.restore();
 }
-function drawTrack(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH, alpha: dim = 1 }, proj, rect) {
+// `reveal` (0 to 1, unset for the whole line) draws only that share of the track from its start, by samples, which lie
+// STEP_KM apart, so the pen runs at an even pace along the line whatever the legs' lengths.
+function drawTrack(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH, alpha: dim = 1, reveal = 1 }, proj, rect) {
   g.save();
   g.lineCap = 'round'; g.lineJoin = 'round';
   const end = Math.max(VOYAGE_END, width * 1.25);
+  let left = reveal < 1 ? Math.max(0, reveal) * voyage.legs.reduce((n, leg) => n + pathOf(leg).length, 0) : Infinity;
   for (const leg of voyage.legs) {
-    const pieces = splitAtSeam(pathOf(leg), proj.lonCenter, proj.visible).map((p) => p.map(proj.toPx)).filter((px) => meets(rect, bbox(px)));
+    const full = pathOf(leg), k = Math.min(full.length, Math.ceil(left)), whole = k >= full.length;
+    left -= full.length;
+    if (k < 1) break;
+    const pieces = splitAtSeam(whole ? full : full.slice(0, k), proj.lonCenter, proj.visible).map((p) => p.map(proj.toPx)).filter((px) => meets(rect, bbox(px)));
     if (leg.doubt) speculative(g, pieces, colour);
     else for (const [style, w, alpha, dash] of [[STYLE.parchment, width + VOYAGE_HALO, 0.6, []], [colour, width, 0.9, capped(DASHES[leg.confidence] ?? [], width)]]) {
       g.strokeStyle = style; g.lineWidth = w; g.globalAlpha = alpha * dim; g.setLineDash(dash);
       for (const px of pieces) { g.beginPath(); px.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke(); }
     }
     g.setLineDash([]); g.globalAlpha = 0.9 * dim; g.fillStyle = colour;
-    for (const p of [leg.points[0], leg.points.at(-1)]) {
+    for (const p of whole ? [leg.points[0], leg.points.at(-1)] : [leg.points[0]]) {
       if (proj.visible && !proj.visible(...p)) continue;
       const [x, y] = proj.toPx(p);
       if (disc(rect, x, y, end + 1)) { g.beginPath(); g.arc(x, y, end, 0, 2 * Math.PI); g.fill(); }
@@ -3167,7 +3173,7 @@ async function loadVoyages(list) {
   const hex = (c) => (/^#[0-9a-f]{6}$/i.test(c ?? '') ? c.toLowerCase() : null);
   const colours = voyageColours(items.map((v) => v.id), Object.fromEntries(items.filter((v) => hex(v.colour)).map((v) => [v.id, hex(v.colour)])));
   const loaded = await Promise.all(items.map((v) => readVoyage(v.id, (path) => env.readJSON(path)).catch(() => null)));
-  return items.map((v, i) => loaded[i] && { voyage: loaded[i], colour: colours[v.id], width: Number.isFinite(v.width) && v.width > 0 && v.width <= 12 ? v.width : VOYAGE_WIDTH,
+  return items.map((v, i) => loaded[i] && { id: v.id, voyage: loaded[i], colour: colours[v.id], width: Number.isFinite(v.width) && v.width > 0 && v.width <= 12 ? v.width : VOYAGE_WIDTH,
     ...(Number.isFinite(v.alpha) && v.alpha >= 0 && v.alpha < 1 && { alpha: v.alpha }) }).filter(Boolean);
 }
 // The person a link names (an id in data/voyages/people.json), with their birth (and a death no voyage of theirs
@@ -3192,14 +3198,14 @@ export const DEFAULT_KINDS = KINDS;
 export const PROJECTION_NAMES = Object.keys(PROJECTIONS);
 export const viewProjection = (view) => makeProjection(clampView(view));
 
-// Where to go for a voyage just chosen: null while any of its track is on the canvas of `view` (the view stays), else
-// the view that fits its whole track with a margin of `pad` of the track's span on each side, in the view's projection.
+// Where to go for a voyage just chosen: null while any of its track is on the canvas of `view` (the view stays) unless
+// `always`, which frames the whole voyage whatever is in view; else the view that fits its whole track with a margin of `pad` of the track's span on each side, in the view's projection.
 // The track's longitudes are read round the globe, so a track across the date line is framed the short way.
 export const VOYAGE_FIT_PAD = 0.1;
-export function voyageView(voyage, view, pad = VOYAGE_FIT_PAD) {
+export function voyageView(voyage, view, pad = VOYAGE_FIT_PAD, always = false) {
   const proj = viewProjection(view), pts = (voyage?.legs ?? []).flatMap(pathOf);
   if (!pts.length) return null;
-  for (const [lon, lat] of pts) {
+  if (!always) for (const [lon, lat] of pts) {
     if (proj.visible && !proj.visible(lon, lat)) continue;
     const [x, y] = proj.toPx([lon, lat]);
     if (x >= 0 && x <= W && y >= 0 && y <= H) return null;
