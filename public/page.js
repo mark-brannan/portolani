@@ -20,6 +20,7 @@ import { OVERLAY_DEFAULTS, overlayFromHash, overlayToHash, sheetCorners, onSheet
 import { POIS, POI_ZOOM } from './pois.mjs';
 import { PEOPLE_FILE, PICTURES_FILE, lifeSpan, timelineAxis, ticksOf, pictureCredit, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, personFrame, personView, capFlyZoom, peopleOf, whoOf, deathOf } from './people.mjs';
 import { fold, bestPlace } from './placename.mjs';
+import { parsePosition, formatPosition } from './position.mjs';
 import { planFlight, ease as flyEase, FLY_KNOBS, flyDefaults } from './flight.mjs';
 
 const memo = new Map();
@@ -805,6 +806,29 @@ function setDrawer(open, byKeyboard = false) { // the drawer to open, or false f
 }
 for (const [b, d] of drawers) b.addEventListener('click', (e) => setDrawer(d === openDrawer() ? false : d, e.detail === 0)); // detail 0: Enter or Space
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && openDrawer()) setDrawer(false, true); });
+// Arrow keys inside a chip group. A group is one tab stop (the chosen chip, else the first), the arrows move along it
+// and choose as they go, as a radio group does; Home and End jump to the ends.
+const radiosOf = (g) => [...g.querySelectorAll('[role=radio]')].filter((c) => !c.closest('[hidden]') && c.getClientRects().length);
+const roveGroup = (g) => {
+  const all = [...g.querySelectorAll('[role=radio]')], at = all.find((c) => c.getAttribute('aria-checked') === 'true') ?? radiosOf(g)[0] ?? all[0]; // a closed drawer has no boxes, so rove over all
+  for (const c of all) c.tabIndex = c === at ? 0 : -1;
+};
+const roveAll = () => document.querySelectorAll('[role=radiogroup]').forEach(roveGroup);
+addEventListener('keydown', (e) => {
+  const c = e.target instanceof Element && e.target.closest('[role=radio]'), g = c?.closest('[role=radiogroup]');
+  const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+  if (!g || e.altKey || e.ctrlKey || e.metaKey || (!step && e.key !== 'Home' && e.key !== 'End')) return;
+  const rs = radiosOf(g), i = rs.indexOf(c);
+  if (i < 0) return;
+  const to = rs[e.key === 'Home' ? 0 : e.key === 'End' ? rs.length - 1 : (i + step + rs.length) % rs.length];
+  e.preventDefault();
+  to.focus({ preventScroll: false });
+  if (to.getAttribute('aria-checked') !== 'true') to.click();
+  roveGroup(g);
+});
+new MutationObserver((ms) => { for (const m of ms) { const g = m.target.closest?.('[role=radiogroup]'); if (g) roveGroup(g); } })
+  .observe(document.body, { attributes: true, attributeFilter: ['aria-checked', 'hidden'], subtree: true, childList: true });
+roveAll();
 const outside = (t) => { const d = openDrawer(); return d && t instanceof Node && !where.contains(t) && !d.contains(t); };
 // On a phone the settings and the charts stay up while the map is moved; a lighter drawer shuts as on a wide screen.
 addEventListener('pointerdown', (e) => { if (outside(e.target) && !(phone.matches && e.target === canvas && !openDrawer().classList.contains('menu'))) setDrawer(false); });
@@ -1789,14 +1813,6 @@ if (ALL_CHARTS) env.readJSON('data/charts/world.json').then(({ charts }) => {
 }).catch((e) => console.warn(`other traditions: ${e.message}`));
 $('worldList').addEventListener('click', (e) => { const b = e.target.closest('[data-page]'); if (b) window.open(b.dataset.page, '_blank', 'noopener'); });
 
-// A typed position: "36.28, -76" or "36.28N 76W" (latitude first).
-function parseLatLon(text) {
-  const m = /^\s*(-?\d+(?:\.\d+)?)\s*°?\s*([NSns])?\s*[,;\s]\s*(-?\d+(?:\.\d+)?)\s*°?\s*([EWew])?\s*$/.exec(text);
-  if (!m || (m[2] && m[1].startsWith('-')) || (m[4] && m[3].startsWith('-'))) return null; // a sign and a letter disagree, or say it twice
-  const lat = Number(m[1]) * (/s/i.test(m[2] ?? '') ? -1 : 1), lon = Number(m[3]) * (/w/i.test(m[4] ?? '') ? -1 : 1);
-  return Math.abs(lat) <= 90 && Math.abs(lon) <= 180 ? { lon, lat } : null;
-}
-
 // A typed place: the chart views, then the points of interest, then Natural Earth's towns (placename.mjs matches them).
 async function findPlace(text) {
   if (!fold(text)) return null;
@@ -1813,14 +1829,24 @@ async function findPlace(text) {
 
 $('coords').addEventListener('submit', async (e) => {
   e.preventDefault();
-  const text = $('coordsText').value, p = parseLatLon(text), miss = $('goMiss');
+  const text = $('coordsText').value, p = parsePosition(text), miss = $('goMiss');
   const target = p ? { ...p, zoom: Math.max(view.zoom, LOCATE_ZOOM) } : await findPlace(text);
   if (!target) { miss.textContent = text.trim() ? `No place called “${text.trim()}”` : 'Type a place, or latitude, longitude: 36.28, -76'; miss.hidden = false; return; } // the text before the unhide, so a reader announces it
   miss.hidden = true;
   setDrawer(false);
   goTo(target);
 });
-$('coordsText').addEventListener('input', () => { $('goMiss').hidden = true; });
+// Under the box, once it holds a position: the same position in the three forms Go reads. Nothing when the
+// box is empty or is not a position (a place name, a half-typed number).
+const goForms = $('goForms');
+function showForms() {
+  const p = parsePosition($('coordsText').value);
+  goForms.hidden = !p;
+  if (!p) return;
+  const f = formatPosition(p);
+  goForms.innerHTML = `<dt>decimal</dt><dd>${f.dd}</dd><dt>minutes</dt><dd>${f.dm}</dd><dt>seconds</dt><dd>${f.dms}</dd>`;
+}
+$('coordsText').addEventListener('input', () => { $('goMiss').hidden = true; showForms(); });
 
 // A flight from the view to a target, in the view's projection (flight.mjs plans it: a near place eased to
 // straight, a far one in an arc out, across and down, longer for longer): the ground is drawn on the way as
@@ -1895,6 +1921,7 @@ locate.addEventListener('click', () => {
     const { latitude: lat, longitude: lon } = p.coords;
     const full = (x) => (/e/.test(String(x)) ? x.toFixed(20).replace(/\.?0+$/, '') : String(x)); // every digit, never exponent form, which the box would not read
     $('coordsText').value = `${full(lat)}, ${full(lon)}`;
+    showForms();
   }, (e) => {
     done();
     const say = e.code === e.PERMISSION_DENIED ? 'My position: not allowed' : `My position: ${e.message}`;
