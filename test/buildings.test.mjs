@@ -112,17 +112,20 @@ test('points of interest are lettered from POI_ZOOM, bigger than the lesser plac
   assert.equal((await at(world, 0, { pinTitle: 'The World' })).cartouche.title, 'THE WORLD')
 })
 
-test('a place with a tile and nothing drawn gets an unlettered mark: a ruin, or the plain tower where a city stands', async () => {
-  const tyre = { name: 'Tyre', lon: 35.2, lat: 33.27 }, ostia = { name: 'Ostia', lon: 12.29, lat: 41.76, ruin: true }
+test('a place with a tile gets an unlettered mark: a ruin wherever the sight says so, even beside a city, else the plain tower', async () => {
+  const tyre = { name: 'Tyre', lon: 35.2, lat: 33.27, ruin: true }, ostia = { name: 'Ostia', lon: 12.29, lat: 41.76, ruin: true }
+  const carthage = { name: 'Carthage', lon: 10.33, lat: 36.84, ruin: true }, aden = { name: 'Aden', lon: 45.03, lat: 12.78 }
   const at = (p, zoom, sights) => createScene(env, { view: { lon: p.lon, lat: p.lat, zoom }, sights }).then((r) => r.scene)
   const scene = await at(tyre, 7, [tyre])
-  const town = scene.lesser.find((l) => l.name === 'Tyre')
-  assert.ok(town?.mark && town.tower !== 'ruin', 'Tyre is a living city: the plain tower, never a ruin')
+  const mark = scene.lesser.find((l) => l.name === 'Tyre')
+  assert.ok(mark?.mark && mark.tower === 'ruin', 'Tyre is a ruin')
   assert.ok(!scene.names.some((n) => n.text === 'Tyre'), 'no lettering beside it')
   assert.ok(!(await at(tyre, 7)).lesser.some((l) => l.name === 'Tyre'), 'no sights, no mark')
   assert.ok(!(await at(tyre, POI_ZOOM - 1, [tyre])).lesser.some((l) => l.mark), 'none below POI_ZOOM')
-  const ruin = (await at(ostia, 7, [ostia])).lesser.find((l) => l.name === 'Ostia')
-  assert.ok(ruin?.mark && ruin.tower === 'ruin', 'a sight that says ruin is a ruin')
+  for (const zoom of [POI_ZOOM, 6, 8, 10]) assert.equal((await at(carthage, zoom, [carthage])).lesser.find((l) => l.name === 'Carthage')?.tower, 'ruin', `Carthage beside Tunis, z${zoom}`)
+  assert.equal((await at(ostia, 7, [ostia])).lesser.find((l) => l.name === 'Ostia')?.tower, 'ruin')
+  const town = (await at(aden, 7, [aden])).lesser.find((l) => l.name === 'Aden')
+  assert.ok(!town || town.tower !== 'ruin', 'a site under a city is never a ruin')
   assert.ok(RUIN.layers.every(([, d]) => /^M[-\d. MLHVQZ]*$/.test(d)) && RUIN.w <= 8, 'the ruin is drawn in the towers\' path data')
   assert.ok(!BUILDINGS.some((b) => b.id === 'ruin'), 'not a town to pick at random')
 })

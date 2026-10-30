@@ -2,8 +2,9 @@
 // date when the place made its name (a year, a century or a span), shown under its name in the list and on the
 // tile, and the text, its caption in the list and the tile's body; keyed
 // by the name the page lists it under. The mark stands where the button's view is centred, unless the tile says
-// `at: [lon, lat]` (a view framing several islands is centred on the sea between them). `ruin: true` draws a ruin there
-// where nothing else is drawn, no town of today on the site (Ostia); any other place gets the plain tower. Nothing is lettered beside it.
+// `at: [lon, lat]` (a view framing several islands is centred on the sea between them). `ruin: true` draws a ruin there,
+// always, wherever an ancient or medieval site is not built over throughout by a city of today (Tyre, Carthage, Ostia,
+// Old Goa); a site under a dense city gets the plain tower where nothing else is drawn. Nothing is lettered beside it.
 export const SIGHT_TILES = {
   // where the charts were made
   Genoa: { date: '1311', text: 'Genoese chartmakers drew some of the earliest signed portolan charts. Pietro Vesconte, who signed "de Janua", made a dated atlas, with the coasts in a compass-rose web of rhumb lines rather than in degrees.' },
@@ -16,8 +17,8 @@ export const SIGHT_TILES = {
   Frankfurt: { date: '1590', text: 'Theodor de Bry, an engraver from Liège, published his America here in 1590. Its first part copied John White\'s paintings of Virginia, and these prints set the image of the New World for a century of Europeans.' },
   // the ancient world
   Alexandria: { date: '331 BC', text: 'Founded by Alexander in 331 BC. Its lighthouse, the Pharos, was one of the wonders of the world and gave a word for lighthouse in several languages; its library was where Eratosthenes measured the earth.' },
-  Tyre: { date: 'c. 1000 BC', text: 'Tyre, an island city off Lebanon, sent out the Phoenician ships that founded Carthage and Gades, and was said to have colonised the whole western Mediterranean. Alexander had to build a causeway to take it.' },
-  Carthage: { date: 'c. 814–146 BC', text: 'Founded from Tyre, Carthage ruled the western Mediterranean until Rome destroyed it in 146 BC. Its sailors, Hanno among them, explored the Atlantic coast of Africa.' },
+  Tyre: { ruin: true, date: 'c. 1000 BC', text: 'Tyre, an island city off Lebanon, sent out the Phoenician ships that founded Carthage and Gades, and was said to have colonised the whole western Mediterranean. Alexander had to build a causeway to take it.' },
+  Carthage: { ruin: true, date: 'c. 814–146 BC', text: 'Founded from Tyre, Carthage ruled the western Mediterranean until Rome destroyed it in 146 BC. Its sailors, Hanno among them, explored the Atlantic coast of Africa.' },
   Ostia: { ruin: true, date: '1st–2nd c. AD', text: 'Rome\'s port at the Tiber mouth, where grain from Egypt and Africa was landed and carried upriver. Silt has left its ruins inland.' },
   Berenike: { date: 'c. 275 BC', text: 'A Ptolemaic port on the Red Sea, from which the monsoon ships sailed to India with Roman gold and came back with pepper, pearls and cloth. Its ruins have been dug from the sand since the 1990s.' },
   Barygaza: { date: '1st c. AD', text: 'Bharuch on the Narmada. The Periplus of the Erythraean Sea, a Greek merchant\'s guide of the first century, warns of its tides, which came in like an army, and tells pilots to wait for the local pilots to take them up the gulf.' },
@@ -30,7 +31,7 @@ export const SIGHT_TILES = {
   Quanzhou: { date: '11th–14th c.', text: 'Zayton to the Arab and Persian traders, Quanzhou was the greatest port of Song and Yuan China, with a mosque, Hindu temples and an office of maritime trade. Marco Polo sailed from here in 1291, and Ibn Battuta landed here in the 1340s.' },
   // the age of discovery
   'São Jorge da Mina': { date: '1482', text: 'The Portuguese built São Jorge da Mina in 1482 on the Gold Coast to buy gold. From the 1500s the Portuguese, and after 1637 the Dutch who took it from them, shipped enslaved people from here across the Atlantic.' },
-  Goa: { date: '1510', text: 'Taken by Afonso de Albuquerque in 1510, Goa remained Portugal\'s capital in Asia for four and a half centuries, until India took it in 1961. The pepper fleets, and the Inquisition, were based here.' },
+  Goa: { ruin: true, date: '1510', text: 'Taken by Afonso de Albuquerque in 1510, Goa remained Portugal\'s capital in Asia for four and a half centuries, until India took it in 1961. The pepper fleets, and the Inquisition, were based here.' },
   Manila: { date: '1571', text: 'Legazpi took the Muslim town of Maynila in 1571 and made it the west end of the galleon trade: Chinese silk and porcelain went across the Pacific to Acapulco, and Mexican silver came back.' },
   Acapulco: { date: '1565', text: 'After Urdaneta found the way back across the Pacific in 1565, the Manila galleon unloaded here once a year, and the fair of Acapulco sold Asia\'s silk to the Americas.' },
   Batavia: { date: '1619', text: 'Founded in 1619 by the Dutch East India Company on the ruins of Jayakarta, and laid out like a Dutch town with canals. Today it is Jakarta.' },
