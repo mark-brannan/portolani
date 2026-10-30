@@ -113,21 +113,19 @@ Feature: A chart's row in the Charts drawer
     And under the name the city it was made in and its year, "Majorca, 1375", the city a link that flies to the city; no "where it was made" wording, no tooltip-only meaning
     And no other control sits in the row but its Chart position chips (below) and, for a chart whose sheet carries notes, its Notes chip ("A chart's notes get their moment", below; the user asked for it on 2026-10-29: "there should be a way to show/hide them or retrigger the animation"); the pieces mode and its opacity live under Settings, Under the hood
     And a chart without a scan yet shows the glyph greyed, its name flying to its sheet view as before
-  Scenario: the icon or the name shows the chart; only the eye hides it
-    Given a chart in the row
+  Scenario: the icon or the name shows that chart alone; the eye is on or off for one chart
+    Source: the click, the user on the [#295](https://github.com/mark-brannan/portolani/pull/295) demo, 2026-10-30: "when you just click the chart, it zooms to the chart and resets that one, clearing the others." This settles the walk's "possibly (TBC, not certain) clears other charts".
+    Given a chart in the row, other charts' sheets shown or not, its own sheet moved, turned, snapped to another placement or hidden
     When the user clicks its icon or its name
-    Then the map flies to the view that frames the sheet, and the sheet is shown if it was hidden
+    Then the sheet is shown, laid back at its default placement, and the map flies to the view that frames it
+    And every other chart's sheet hides
     And if no chart was shown since the drawer opened, the sheet fades in
-    When the user clicks the icon or the name again, the sheet shown
-    Then the map flies to the frame again and the sheet stays shown
+    When the user clicks the icon or the name again
+    Then the same again: the placement reset, the frame flown to, the others hidden
     When the user clicks the show/hide icon
     Then the sheet shows at once, no fade, or hides if it was shown; nothing else in the row hides it
-    And the eye changes that chart alone: no other chart is shown or hidden, no placement is reset, and the map's zoom and position stay where they are
-  Scenario: the icon lays the sheet back where it starts
-    Given a chart's sheet moved, turned or snapped to another placement, or hidden
-    When the user clicks the chart's icon
-    Then the sheet is shown, laid back at its default placement
-    And whether that click also hides every other chart, or the drawer instead gets a button that clears them, waits on the user (UI walk 2026-10-30): "possibly (TBC, not certain) clears other charts.  IF it does not clear, then this drawer needs a clear button."
+    And the eye is on or off for that chart alone: no other chart is shown or hidden, no placement is reset, no flight; the map's zoom and position stay where they are
+    And the drawer needs no clear button: a click on a chart clears the others
   Scenario: the city clears the way to itself
     Given a chart's sheet shown
     When the user clicks the chart's city
@@ -204,18 +202,22 @@ Feature: A voyage's row in the Voyages drawer
     Given the Voyages drawer open
     When the user looks at a voyage's row
     Then it reads, left to right: the voyage's name, a show/hide icon (the same eye as a chart's row), a play button, then its colour picker
-  Scenario: the name flies; only the eye hides
-    Given a voyage in the list
+  Scenario: the name shows that voyage alone and draws it; the eye is on or off for one voyage
+    Source: the user on the [#295](https://github.com/mark-brannan/portolani/pull/295) demo, 2026-10-30: "When you just click the voyage, it resets to that voyage view and redoes the animation, clearing the others.  The show/hide buttons on the other hand, work with no animations and are on/off for individual voyages."; the pace: "The voyage travel does move too fast.  Let's try 2.5s default but I want a slider from 1s to 5s (on the voyages page) so we can play with it and fine tune." These overtake the draw on the first showing only, and its pace of about a second.
+    Given a voyage in the list, other voyages shown or not
     When the user clicks its name
     Then the map flies to the view that frames the whole voyage, whether or not any of it was already in view
-    And the voyage is shown if it was hidden
-    And if this is the first time since the drawer opened that this voyage is shown, and it was not shown when the drawer opened, the line draws itself from the start of the voyage to its end once the flight lands, in about a second (half a second to a second and a half) whatever the voyage's length, at an even pace along the line
+    And every other voyage hides, and this one is shown
+    And once the flight lands the line draws itself from the start of the voyage to its end, at an even pace along the line, in the slider's time whatever the voyage's length
     When the user clicks its name again
-    Then the map flies to the frame again, the line stays drawn whole, and nothing is hidden
+    Then the same again: the frame flown to, the line drawn from the start, the others hidden
     When the user clicks its eye
-    Then the line shows at once, drawn whole, or hides; the view does not move
-    And a voyage shown by its eye and then clicked by name in the same opening of the drawer flies but does not draw itself again
+    Then the line shows at once, drawn whole, or hides: no drawing, no flight, and no other voyage shown or hidden
     And with reduced motion the line shows whole, no drawing
+  Scenario: a slider sets how long the line takes to draw
+    Given the Voyages drawer open
+    When the user looks for the draw's pace
+    Then a slider in the drawer sets it from 1 to 5 seconds, at 2.5 seconds by default, to try
   Scenario: the play button sails the voyage on its own calendar (may land after the rest of this Feature)
     Source: the user on [#259](https://github.com/mark-brannan/portolani/pull/259), 2026-10-29, after comparing three paces drawn from Magellan's dates: "I want to add scope and put a play button (or maybe other play-style controls) next to each voyage that do the B variant." (B: the voyage's dates, true.)
     Given a voyage whose legs carry their dates
@@ -233,6 +235,12 @@ Feature: A voyage's row in the Voyages drawer
     When the user shows another voyage
     Then it takes the first colour of the palette that no shown voyage has, its own former colour first if that one is free
     And a reload of the link shows every voyage in the colour it had
+    And how choosing a colour behaves waits on the user (the user on the [#295](https://github.com/mark-brannan/portolani/pull/295) demo, 2026-10-30): "The behavior for color selection is still strange and I'm not sure what I want for that."
+  Scenario: the people drawer and the voyages (waiting on the user, UI walk 2026-10-30)
+    Source: the user on the [#295](https://github.com/mark-brannan/portolani/pull/295) demo, 2026-10-30: "I'm also not sure how I want the interplay between the people drawer and the voyages drawer to behave.  They should have a relationship though...and as I hinted earlier, I think I want the voyages of ancient people *Groups* such as the Lapita to be included as a group alongside the people in the people drawer.  Individuals and groups can both be represented alongside one another in that framing."
+    Given the people drawer and the Voyages drawer
+    When the user moves between them
+    Then how the two relate, and ancient groups such as the Lapita listed beside individuals in the people drawer, is open
 
 Feature: A dashed or dotted voyage is easy to see
   Source: the user on [#273](https://github.com/mark-brannan/portolani/pull/273), 2026-10-29, looking at the Narváez and Esteban renders: "The dashed legs are hard to see. Why are we using dashes? Same for dots but even worse than dashes. Hard to see!"; "The dots are a no-go though...you have to find something much better"; "part of the problem is the line and part of the problem is the default color palette. You're using grays and reds and they just blend in too much. Blue is no, because it would be confusing with rivers. Green might work. Purple. A brigher red maybe or yellow/orange. The red...idk, it's nice for the aesthetics but if you are using a dash or a dot, you've got to use a better color and heavier weights"; and, after comparing Heavy with Standard in green and purple: "heavy should be our default. ... IT is supposed to be configurable colors and weights anyway...and the colors are supposed to be sticky to one voyage while it is enabled, even if others are selected and deselected. So let's just make sure that when it is any voyage being toggled on where the lines are dashed/dotted that we pick from the higher contrast palette and with heavier weights, by default."
