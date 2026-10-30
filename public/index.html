@@ -314,7 +314,7 @@
      so the drawer is as it was; another layout moves the wrappers into its own groups, where each is a block
      and the headings only a moved control needs (.lo) show */
   #layout { margin-top: 10px; }
-  @media (hover: none), (pointer: coarse) { #hoverRow { display: none; } } /* a touch screen has no hover */
+  @media not all and (hover: hover) and (pointer: fine) { #hoverRow { display: none; } } /* page.js HOVER_MEDIA, negated: nothing to hover with */
   .ctl { display: contents; }
   .lo { display: none; }
   html[data-layout] .ctl { display: block; }

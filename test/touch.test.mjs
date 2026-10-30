@@ -302,6 +302,24 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     await page.waitForTimeout(400);
     assert.deepEqual(await openGroups(), ['The ancient world'], 'leaving the list shut the era');
     assert.equal(await opened('sightsPanel'), true, 'a hover shut the drawer');
+    // a heading the slide brings under a still pointer does not open in turn: the open era above shuts, the hovered one
+    // rises, and with its rows cut short here the next heading comes to rest under the pointer; a nudge opens nothing
+    const pointer = await page.evaluate(() => {
+      const [anc, med, aod] = [...document.querySelectorAll('#sightsList .group')], fold = (g) => g.querySelector(':scope > .fold').getBoundingClientRect();
+      const m = fold(med), y = m.top + m.height / 2, rise = anc.querySelector(':scope > .rows').getBoundingClientRect().height;
+      // after the slide the pointer sits (y - m.top + rise) below the medieval heading's top; put the next heading's middle there
+      med.querySelector('.places').style.cssText = `height:${y - m.top + rise - m.height - fold(aod).height / 2 - 6}px;overflow:hidden`;
+      return { x: m.left + 40, y };
+    });
+    await page.mouse.move(pointer.x, pointer.y);
+    await page.waitForTimeout(700);
+    assert.deepEqual(await openGroups(), ['The medieval Indian Ocean and Asia'], 'resting on the second heading did not open it');
+    assert.equal(await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.closest('.fold')?.firstChild.textContent, pointer), 'The age of discovery', 'the slide did not bring the next heading under the pointer');
+    await page.mouse.move(pointer.x + 1, pointer.y);
+    await page.waitForTimeout(700);
+    assert.deepEqual(await openGroups(), ['The medieval Indian Ocean and Asia'], 'a heading the slide brought under the pointer opened on a nudge');
+    await page.evaluate(() => { document.querySelectorAll('#sightsList .group')[1].querySelector('.places').style.cssText = ''; });
+    await page.click('#sightsList .fold >> text=The ancient world');
     // off, from its chip in the settings, which writes hover=0 into the link: resting on a heading opens nothing
     await page.click('#open');
     await page.click('#hoverOpen [data-value="off"]');

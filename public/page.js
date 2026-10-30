@@ -1725,35 +1725,47 @@ function foldTo(group) {
 }
 // With a mouse (a screen that can hover), resting the pointer on a shut group's heading for HOVER_DWELL slides it open and
 // the open one shut, as a click does, while the "Sections open on hover" chips are on; leaving the list shuts nothing.
-// The dwell starts only when the pointer itself moves onto the heading, so a heading slid under a still pointer by the
-// slide does not open in turn. A click on the heading the dwell just opened, before the pointer leaves it, is the click
-// that was on its way, so it leaves the section open; the next click shuts it.
+// A heading counts only when the pointer moves onto it: one the slide carries under the pointer (an open group above
+// shuts and the list rises) does not open on the next nudge, only once the pointer has left it and come back. A click on
+// the heading the dwell just opened, before the pointer leaves it, is the click that was on its way, so it leaves the
+// section open; the next click shuts it.
 const HOVER_DWELL = 350; // ms
-const canHover = matchMedia('(hover: hover) and (pointer: fine)');
-let dwell = { group: null, timer: 0 }, hoverOpened = null, lastAt = '';
+const HOVER_MEDIA = '(hover: hover) and (pointer: fine)'; // index.html hides the chips where this does not match
+const canHover = matchMedia(HOVER_MEDIA);
+const NO_DWELL = { group: null, timer: 0 };
+let dwell = NO_DWELL, hoverOpened = null, slid = null, last = null; // last: the pointer's position and the group under it
 const groupAt = (t) => t instanceof Element && t.closest('.group > .fold')?.parentElement || null;
+const groupUnder = ([x, y]) => groupAt(document.elementFromPoint(x, y));
 document.addEventListener('pointermove', (e) => {
-  const at = `${e.clientX},${e.clientY}`;
-  if (e.pointerType !== 'mouse' || at === lastAt) return;
-  lastAt = at;
+  const at = [e.clientX, e.clientY];
+  if (e.pointerType !== 'mouse' || (last && at[0] === last.at[0] && at[1] === last.at[1])) return;
   const g = groupAt(e.target);
+  // the heading now under the pointer was already under its last position, though that position showed another: it came to the pointer
+  if (g && last && g !== last.g && groupUnder(last.at) === g) slid = g;
+  if (g !== slid) slid = null;
   if (g !== hoverOpened) hoverOpened = null;
-  const want = hoverOpen && canHover.matches && g && !g.classList.contains('open') ? g : null;
+  last = { at, g };
+  const want = hoverOpen && canHover.matches && g && g !== slid && !g.classList.contains('open') ? g : null;
   if (want === dwell.group) return;
   clearTimeout(dwell.timer);
-  dwell = { group: want, timer: want ? setTimeout(() => { dwell = { group: null, timer: 0 }; if (!want.classList.contains('open')) { foldTo(want); hoverOpened = want; } }, HOVER_DWELL) : 0 };
+  dwell = !want ? NO_DWELL : { group: want, timer: setTimeout(() => {
+    dwell = NO_DWELL;
+    if (!want.classList.contains('open') && groupUnder(last.at) === want) { foldTo(want); hoverOpened = want; }
+  }, HOVER_DWELL) };
 });
 document.addEventListener('pointerout', (e) => {
   const g = groupAt(e.target);
-  if (g && g === dwell.group && groupAt(e.relatedTarget) !== g) { clearTimeout(dwell.timer); dwell = { group: null, timer: 0 }; }
+  if (g && g === dwell.group && groupAt(e.relatedTarget) !== g) { clearTimeout(dwell.timer); dwell = NO_DWELL; }
 });
 document.addEventListener('click', (e) => {
-  const h = e.target.closest('.group > .fold');
-  if (!h) return;
-  if (h.parentElement === hoverOpened && e.detail !== 0) { hoverOpened = null; return; } // detail 0: Enter or Space
-  foldTo(h.parentElement);
+  const h = e.target.closest('.group > .fold'), g = h?.parentElement;
+  if (!g) return;
+  const swallow = g === hoverOpened && g.classList.contains('open') && e.detail !== 0; // detail 0: Enter or Space
+  hoverOpened = null;
+  if (!swallow) foldTo(g);
 });
-$('hoverOpen').value = hoverOpen ? 'on' : 'off';
+const showHover = () => { $('hoverOpen').value = hoverOpen ? 'on' : 'off'; };
+showHover();
 $('hoverOpen').addEventListener('input', () => { hoverOpen = $('hoverOpen').value === 'on'; writeHash(); });
 
 // Each chart a row: its scan as a thumbnail (the drawer's chart glyph, greyed, until it has one) and its name, either
@@ -1919,7 +1931,7 @@ for (const id of Object.values(KNOB_SLIDERS)) $(id).addEventListener('input', (e
 for (const id of ['debug', 'overlap', 'overlayMode', 'overlayOpacity', ...Object.values(KNOB_CHIPS), ...Object.values(KNOB_SLIDERS), 'projection', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'scaleBorder', 'land', 'islands', 'seaTint', 'rivers', 'lakes', 'trees', 'mountains', 'hills', 'continentsZoom', 'regions', 'regionSet', 'regionsZoom', 'titleMode', 'townSize', 'voyageWidth']) $(id).addEventListener('input', readControls);
 let typing = 0; // a typed title is placed when the typing pauses, not on every key: a placement takes up to a few hundred ms
 $('title').addEventListener('input', () => { clearTimeout(typing); typing = setTimeout(readControls, 400); });
-addEventListener('hashchange', () => { layout = layoutFromHash(); showLayout(); hoverOpen = hoverFromHash(); $('hoverOpen').value = hoverOpen ? 'on' : 'off'; view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); showVoyage(); showPeople(); render(); });
+addEventListener('hashchange', () => { layout = layoutFromHash(); showLayout(); hoverOpen = hoverFromHash(); showHover(); view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); showVoyage(); showPeople(); render(); });
 showPlacement();
 render();
 
