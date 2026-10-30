@@ -1,0 +1,764 @@
+{
+  "id": "bar-sauma",
+  "title": "Rabban Bar Sauma from Khanbaliq to Rome and Paris, c. 1275-88",
+  "short": "Bar Sauma",
+  "who": [
+    "rabban-bar-sauma"
+  ],
+  "when": "c. 1275-88",
+  "summary": "A Church of the East monk from Khanbaliq set out for Jerusalem with his pupil Markos, was stopped by war in Mongol Persia, and stayed. In 1287 the Ilkhan Arghun sent him west to ask the pope and the kings of Europe for an alliance against the Mamluks. He saw Constantinople, the Battle of the Counts off Naples, Rome, Genoa, Paris and Gascony, and returned with promises and no army. His way home is not told, so it is not drawn.",
+  "sources": [
+    "budge-monks-of-kublai-khan",
+    "history-of-yahballaha",
+    "rabban-bar-sauma"
+  ],
+  "legs": [
+    {
+      "from": "Khanbaliq (Beijing)",
+      "to": "Tangut country (Ningxia)",
+      "dates": "c. 1275",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "points": [
+        [
+          116.4,
+          39.9
+        ],
+        [
+          113.3,
+          40.1
+        ],
+        [
+          111.7,
+          40.8
+        ],
+        [
+          106.23,
+          38.49
+        ]
+      ],
+      "source": "Budge: the monks set out from Peking for the west; Tangut (Kansu) lay on the road. The way to it is the usual road",
+      "doubt": "The Syriac life names Tangut, not the road to it, and the sources differ on the year the monks left, c. 1275 or a little earlier; the pin stands at Yinchuan, a guess for the province."
+    },
+    {
+      "from": "Tangut country (Ningxia)",
+      "to": "Khotan",
+      "dates": "c. 1275-76",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          106.23,
+          38.49
+        ],
+        [
+          102.64,
+          37.93
+        ],
+        [
+          100.45,
+          38.93
+        ],
+        [
+          94.66,
+          40.14
+        ],
+        [
+          88.17,
+          39.02
+        ],
+        [
+          85.53,
+          38.14
+        ],
+        [
+          82.7,
+          37.05
+        ],
+        [
+          79.92,
+          37.11
+        ]
+      ],
+      "source": "Budge: two months over waterless desert from Tangut to Khotan, where war kept them six months"
+    },
+    {
+      "from": "Khotan",
+      "to": "Kashgar",
+      "dates": "c. 1276",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          79.92,
+          37.11
+        ],
+        [
+          77.24,
+          38.41
+        ],
+        [
+          75.99,
+          39.47
+        ]
+      ],
+      "source": "Budge: from Khotan to Kashgar, a looted city"
+    },
+    {
+      "from": "Kashgar",
+      "to": "Kaidu's camp on the Talas",
+      "dates": "c. 1276-77",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          75.99,
+          39.47
+        ],
+        [
+          74.6,
+          40.5
+        ],
+        [
+          73.0,
+          41.7
+        ],
+        [
+          71.37,
+          42.9
+        ]
+      ],
+      "source": "Budge: on to King Kaidu, encamped by the river Talas, who gave them a safe-conduct",
+      "doubt": "The Talas is the river the source names; where on it Kaidu's camp stood is not known, and the pin is the town of Taraz."
+    },
+    {
+      "from": "Kaidu's camp on the Talas",
+      "to": "Tus",
+      "dates": "c. 1277-80",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          71.37,
+          42.9
+        ],
+        [
+          69.24,
+          41.3
+        ],
+        [
+          66.96,
+          39.65
+        ],
+        [
+          64.42,
+          39.77
+        ],
+        [
+          62.19,
+          37.66
+        ],
+        [
+          59.53,
+          36.49
+        ]
+      ],
+      "source": "Budge: to the monastery of Mar Sehyon near Tus in Khorasan",
+      "doubt": "The source gives no stops between the Talas and Tus; Samarkand, Bukhara and Merv are where the road ran."
+    },
+    {
+      "from": "Tus",
+      "to": "Maragha",
+      "dates": "c. 1280",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          59.53,
+          36.49
+        ],
+        [
+          54.0,
+          36.17
+        ],
+        [
+          51.43,
+          35.59
+        ],
+        [
+          50.0,
+          36.27
+        ],
+        [
+          48.48,
+          36.68
+        ],
+        [
+          46.24,
+          37.39
+        ]
+      ],
+      "source": "Budge: Sawma and Mark reach the Ilkhanate and the Patriarch Denha at Maragha"
+    },
+    {
+      "from": "Maragha",
+      "to": "Baghdad",
+      "dates": "c. 1280",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          46.24,
+          37.39
+        ],
+        [
+          47.0,
+          35.31
+        ],
+        [
+          47.06,
+          34.31
+        ],
+        [
+          45.57,
+          34.52
+        ],
+        [
+          44.37,
+          33.31
+        ]
+      ],
+      "source": "Budge: war blocked the way to Jerusalem and the monks stayed in Mesopotamia; Baghdad is the Patriarch's seat",
+      "doubt": "Budge gives Baghdad as the Patriarch's seat; the line to it is the usual Persian road."
+    },
+    {
+      "from": "Baghdad",
+      "to": "Ani",
+      "dates": "c. 1280-81",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          44.37,
+          33.31
+        ],
+        [
+          43.13,
+          36.34
+        ],
+        [
+          42.19,
+          37.33
+        ],
+        [
+          43.57,
+          40.51
+        ]
+      ],
+      "source": "Budge: with the roads to Jerusalem shut, the monks went north to Ani and meant to reach the sea through Georgia, but were turned back by reports of robbers",
+      "doubt": "The road to Ani is not described; Mosul and Cizre mark where it could have run."
+    },
+    {
+      "from": "Ani",
+      "to": "Maragha",
+      "dates": "c. 1281",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "points": [
+        [
+          43.57,
+          40.51
+        ],
+        [
+          44.5,
+          39.9
+        ],
+        [
+          45.0,
+          38.5
+        ],
+        [
+          46.24,
+          37.39
+        ]
+      ],
+      "source": "Budge: the monks came back to the Patriarch; the way is not given"
+    },
+    {
+      "from": "Maragha",
+      "to": "Samsun",
+      "dates": "1287",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "points": [
+        [
+          46.24,
+          37.39
+        ],
+        [
+          45.07,
+          37.55
+        ],
+        [
+          42.19,
+          37.33
+        ],
+        [
+          40.22,
+          37.91
+        ],
+        [
+          37.02,
+          39.75
+        ],
+        [
+          35.83,
+          40.65
+        ],
+        [
+          36.33,
+          41.29
+        ]
+      ],
+      "source": "Budge: Sawma, sent by Arghun, went by the caravan road by Mosul and Diyarbakir to Samsun on the Black Sea",
+      "doubt": "Budge's road is his own assumption, and Wikipedia has Trebizond or the Seljuk country of Rum; the source says only that he took ship on the Black Sea."
+    },
+    {
+      "from": "Samsun",
+      "to": "Constantinople",
+      "dates": "1287",
+      "mode": "sea",
+      "line": "rhumb",
+      "confidence": "inferred",
+      "points": [
+        [
+          36.5,
+          41.5
+        ],
+        [
+          35.5,
+          42.4
+        ],
+        [
+          33.5,
+          42.6
+        ],
+        [
+          31.5,
+          41.9
+        ],
+        [
+          30.0,
+          41.5
+        ],
+        [
+          29.25,
+          41.3
+        ],
+        [
+          29.12,
+          41.2
+        ],
+        [
+          29.05,
+          41.05
+        ],
+        [
+          28.98,
+          41.01
+        ]
+      ],
+      "source": "Budge: a ship with 300 passengers, a few days to Constantinople, where he saw Andronikos II"
+    },
+    {
+      "from": "Constantinople",
+      "to": "Naples",
+      "dates": "1287",
+      "mode": "sea",
+      "line": "rhumb",
+      "confidence": "inferred",
+      "points": [
+        [
+          28.98,
+          41.01
+        ],
+        [
+          28.4,
+          40.9
+        ],
+        [
+          27.7,
+          40.78
+        ],
+        [
+          27.1,
+          40.47
+        ],
+        [
+          26.78,
+          40.4
+        ],
+        [
+          26.55,
+          40.28
+        ],
+        [
+          26.4,
+          40.17
+        ],
+        [
+          26.2,
+          40.05
+        ],
+        [
+          25.3,
+          39.6
+        ],
+        [
+          24.8,
+          38.5
+        ],
+        [
+          24.3,
+          37.4
+        ],
+        [
+          23.4,
+          36.4
+        ],
+        [
+          23.0,
+          35.9
+        ],
+        [
+          21.3,
+          36.3
+        ],
+        [
+          19.5,
+          36.9
+        ],
+        [
+          17.5,
+          37.1
+        ],
+        [
+          15.9,
+          37.3
+        ],
+        [
+          15.55,
+          38.05
+        ],
+        [
+          15.63,
+          38.25
+        ],
+        [
+          15.6,
+          38.45
+        ],
+        [
+          15.3,
+          38.7
+        ],
+        [
+          14.9,
+          39.5
+        ],
+        [
+          14.6,
+          40.2
+        ],
+        [
+          14.2,
+          40.7
+        ],
+        [
+          14.25,
+          40.81
+        ]
+      ],
+      "source": "Budge: two months at sea past a volcano in eruption to Naples",
+      "doubt": "The ship's course is not told. Budge names Vesuvius, Etna or Stromboli for the eruption, and the line follows the usual way through the Messina strait."
+    },
+    {
+      "from": "Naples",
+      "to": "Rome",
+      "dates": "1287",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "attested",
+      "points": [
+        [
+          14.27,
+          40.85
+        ],
+        [
+          14.21,
+          41.11
+        ],
+        [
+          13.3,
+          41.45
+        ],
+        [
+          12.5,
+          41.9
+        ]
+      ],
+      "source": "Budge: from Naples he went by land to Rome and heard on the road that Pope Honorius IV was dead"
+    },
+    {
+      "from": "Rome",
+      "to": "Genoa (by Tuscany)",
+      "dates": "1287",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "points": [
+        [
+          12.5,
+          41.9
+        ],
+        [
+          11.3,
+          42.9
+        ],
+        [
+          10.4,
+          43.72
+        ],
+        [
+          9.82,
+          44.1
+        ],
+        [
+          8.93,
+          44.41
+        ]
+      ],
+      "source": "Budge: from Rome through Tuscany, where he was well received, to Genoa",
+      "doubt": "The Tuscan town is not named; Pisa is a guess for it."
+    },
+    {
+      "from": "Genoa",
+      "to": "Paris",
+      "dates": "1288",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          8.93,
+          44.41
+        ],
+        [
+          7.69,
+          45.07
+        ],
+        [
+          6.9,
+          45.25
+        ],
+        [
+          5.92,
+          45.57
+        ],
+        [
+          4.83,
+          45.76
+        ],
+        [
+          5.04,
+          47.32
+        ],
+        [
+          4.08,
+          48.3
+        ],
+        [
+          2.35,
+          48.86
+        ]
+      ],
+      "source": "Budge: through Italy and France, about a month on the road, to Philip IV in Paris",
+      "doubt": "The Syriac names a town, Onbar, that has not been identified; the line is the usual road over the Alps and across Burgundy."
+    },
+    {
+      "from": "Paris",
+      "to": "Gascony (Bordeaux)",
+      "dates": "1288",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          2.35,
+          48.86
+        ],
+        [
+          1.91,
+          47.9
+        ],
+        [
+          0.69,
+          47.39
+        ],
+        [
+          0.34,
+          46.58
+        ],
+        [
+          0.15,
+          45.65
+        ],
+        [
+          -0.58,
+          44.84
+        ]
+      ],
+      "source": "Budge: twenty days' riding to the chief city of Gascony, where Edward I received him",
+      "doubt": "The text says Gascony; Chabot's Bordeaux is the usual identification."
+    },
+    {
+      "from": "Gascony (Bordeaux)",
+      "to": "Genoa",
+      "dates": "1288",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "points": [
+        [
+          -0.58,
+          44.84
+        ],
+        [
+          1.44,
+          43.6
+        ],
+        [
+          3.0,
+          43.18
+        ],
+        [
+          3.88,
+          43.61
+        ],
+        [
+          4.63,
+          43.68
+        ],
+        [
+          5.37,
+          43.3
+        ],
+        [
+          7.27,
+          43.7
+        ],
+        [
+          8.93,
+          44.41
+        ]
+      ],
+      "source": "Budge: he returned to Italy and wintered in Genoa",
+      "doubt": "The road back to Genoa is not told."
+    },
+    {
+      "from": "Genoa",
+      "to": "Rome",
+      "dates": "1288",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          8.93,
+          44.41
+        ],
+        [
+          10.4,
+          43.72
+        ],
+        [
+          11.3,
+          42.9
+        ],
+        [
+          12.5,
+          41.9
+        ]
+      ],
+      "source": "Budge: Nicholas IV, newly elected, sent for him; he kept Easter in Rome with the Pope"
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": 15.0,
+      "lat": 37.75,
+      "date": "1287",
+      "label": "An eruption seen from the sea, 1287",
+      "text": "Sauma's ship passed a volcano in eruption on the way west. Budge reads it as Etna, Vesuvius or Stromboli, and the mark stands offshore of Etna as the likeliest.",
+      "source": "Budge, The Monks of Kublai Khan (1928), introduction and translation of the Syriac Life of Yahballaha",
+      "cite": "budge-monks-of-kublai-khan",
+      "confidence": "speculative",
+      "doubt": "The Syriac says only a mountain in eruption, and Budge cannot tell which one."
+    },
+    {
+      "kind": "event",
+      "lon": 14.27,
+      "lat": 40.82,
+      "date": "June 1287",
+      "label": "A sea battle watched from a roof, Naples, 1287",
+      "text": "At Naples Sauma watched from the roof of a house a naval fight between Charles II's ships and the Aragonese, a battle of the War of the Sicilian Vespers. The result of his audience with the king is not told.",
+      "source": "Budge, The Monks of Kublai Khan (1928), introduction and translation of the Syriac Life of Yahballaha",
+      "cite": "budge-monks-of-kublai-khan",
+      "confidence": "inferred"
+    },
+    {
+      "kind": "event",
+      "lon": 12.5,
+      "lat": 41.9,
+      "date": "summer 1287",
+      "label": "Rome, and a Creed set before the cardinals, 1287",
+      "text": "The Pope was dead and the cardinals governed the Church. They received him courteously, questioned him closely on the Nestorian faith, and asked him to wait for a new Pope. He told them he had not come to dispute doctrine but to be blessed and to settle Arghun's business.",
+      "source": "Budge, The Monks of Kublai Khan (1928), introduction and translation of the Syriac Life of Yahballaha",
+      "cite": "budge-monks-of-kublai-khan",
+      "confidence": "attested"
+    },
+    {
+      "kind": "event",
+      "lon": 2.35,
+      "lat": 48.86,
+      "date": "early 1288",
+      "label": "Paris, and the Crown of Thorns, 1288",
+      "text": "Philip IV received him with honour, accepted Arghun's letter and presents, and promised a force against Jerusalem. During a month in Paris Sauma saw the schools and was shown the Crown of Thorns in the Sainte-Chapelle.",
+      "source": "Budge, The Monks of Kublai Khan (1928), introduction and translation of the Syriac Life of Yahballaha",
+      "cite": "budge-monks-of-kublai-khan",
+      "confidence": "attested"
+    },
+    {
+      "kind": "event",
+      "lon": 12.5,
+      "lat": 41.9,
+      "date": "Palm Sunday 1288",
+      "label": "Palm Sunday with Nicholas IV, Rome, 1288",
+      "text": "The new Pope bade him keep Easter in Rome. Sauma celebrated the Eucharist in the Nestorian rite, received communion from the Pope's hands, and carried home a tiara and a letter for Yahballaha. The alliance came to nothing.",
+      "source": "Budge, The Monks of Kublai Khan (1928), introduction and translation of the Syriac Life of Yahballaha",
+      "cite": "budge-monks-of-kublai-khan",
+      "confidence": "attested"
+    }
+  ]
+}

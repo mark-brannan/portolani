@@ -1,0 +1,767 @@
+{
+  "id": "nikitin",
+  "title": "Afanasy Nikitin from Tver to India and home, 1468-75",
+  "short": "Nikitin",
+  "who": [
+    "afanasy-nikitin"
+  ],
+  "when": "1468-75",
+  "summary": "A Tver merchant went down the Volga to trade, was robbed at its mouth, and went on rather than go home in debt: across the Caspian, through Persia, by sea from Hormuz to Chaul, and into the Bahmani country, where he spent about three years. His diary, the Journey beyond the Three Seas, is the first Russian account of India. The dates are the ones now in use (1468-75); the older reading, which Major followed, has him leave in 1466 and return by 1472. Calicut, Ceylon, Pegu and China are mentioned only from hearsay and are not drawn.",
+  "sources": [
+    "major-india-in-the-fifteenth-century",
+    "journey-beyond-three-seas",
+    "afanasy-nikitin"
+  ],
+  "legs": [
+    {
+      "from": "Tver",
+      "to": "Nizhny Novgorod",
+      "dates": "1468",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "attested",
+      "points": [
+        [
+          35.91,
+          56.86
+        ],
+        [
+          37.17,
+          56.73
+        ],
+        [
+          37.85,
+          57.25
+        ],
+        [
+          38.33,
+          57.53
+        ],
+        [
+          38.87,
+          58.05
+        ],
+        [
+          39.89,
+          57.63
+        ],
+        [
+          40.93,
+          57.77
+        ],
+        [
+          41.5,
+          57.46
+        ],
+        [
+          42.13,
+          57.44
+        ],
+        [
+          43.1,
+          57.31
+        ],
+        [
+          44.0,
+          56.33
+        ]
+      ],
+      "source": "Nikitin: down the Volga by Kalyazin, Uglich, Kostroma and Plyos to Nizhny Novgorod, where he waited a fortnight for the Shirvan ambassador"
+    },
+    {
+      "from": "Nizhny Novgorod",
+      "to": "Astrakhan",
+      "dates": "1468",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "attested",
+      "points": [
+        [
+          44.0,
+          56.33
+        ],
+        [
+          47.25,
+          56.13
+        ],
+        [
+          49.11,
+          55.79
+        ],
+        [
+          48.4,
+          54.33
+        ],
+        [
+          50.1,
+          53.2
+        ],
+        [
+          46.03,
+          51.53
+        ],
+        [
+          44.55,
+          48.7
+        ],
+        [
+          45.9,
+          48.0
+        ],
+        [
+          47.0,
+          47.0
+        ],
+        [
+          48.04,
+          46.35
+        ]
+      ],
+      "source": "Nikitin: with the ambassador by Kazan, the Horde, Uslan, Sarai and Berekezany to the Buzan, and past Astrakhan by moonlight",
+      "doubt": "The Volga is drawn as a broad brush, not a survey."
+    },
+    {
+      "from": "Astrakhan",
+      "to": "Derbent",
+      "dates": "1468",
+      "mode": "sea",
+      "line": "rhumb",
+      "confidence": "attested",
+      "points": [
+        [
+          48.7,
+          45.6
+        ],
+        [
+          48.6,
+          44.8
+        ],
+        [
+          48.0,
+          43.8
+        ],
+        [
+          47.75,
+          43.0
+        ],
+        [
+          48.04,
+          42.4
+        ],
+        [
+          48.3,
+          42.2
+        ],
+        [
+          48.3,
+          42.1
+        ]
+      ],
+      "source": "Nikitin: robbed at the mouth of the Volga, then in two boats down the Caspian shore to a wreck near Tarki and the Kaitaks' prison before Derbent",
+      "doubt": "Where the Volga mouth ended and the sea began is not fixed; the line starts offshore."
+    },
+    {
+      "from": "Derbent",
+      "to": "Baku",
+      "dates": "1468-69",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          48.29,
+          42.06
+        ],
+        [
+          48.8,
+          41.46
+        ],
+        [
+          49.3,
+          40.9
+        ],
+        [
+          49.67,
+          40.59
+        ],
+        [
+          49.87,
+          40.41
+        ]
+      ],
+      "source": "Nikitin: from Derbent to Baku, where the fire burns unextinguished; the Shirvanshah had given him nothing to go home on"
+    },
+    {
+      "from": "Baku",
+      "to": "Chapakur (Gilan)",
+      "dates": "1469",
+      "mode": "sea",
+      "line": "rhumb",
+      "confidence": "attested",
+      "points": [
+        [
+          50.4,
+          40.2
+        ],
+        [
+          50.7,
+          39.2
+        ],
+        [
+          50.8,
+          38.2
+        ],
+        [
+          50.65,
+          37.55
+        ]
+      ],
+      "source": "Nikitin: across the sea from Baku to a Persian shore where he stayed six months",
+      "doubt": "Major reads the Persian shore as Bokhara; Chaboksar, Gilan is the identification in use."
+    },
+    {
+      "from": "Chapakur (Gilan)",
+      "to": "Yazd",
+      "dates": "1469-70",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "attested",
+      "points": [
+        [
+          50.57,
+          37.12
+        ],
+        [
+          53.06,
+          36.56
+        ],
+        [
+          52.35,
+          36.47
+        ],
+        [
+          52.11,
+          35.95
+        ],
+        [
+          51.43,
+          35.59
+        ],
+        [
+          51.43,
+          33.98
+        ],
+        [
+          53.09,
+          32.86
+        ],
+        [
+          54.37,
+          31.9
+        ]
+      ],
+      "source": "Nikitin: a month each at Sari, Amol, Kashan, Nain and Yazd, by Demavend and Rey",
+      "doubt": "He names the places and the months but not the roads between."
+    },
+    {
+      "from": "Yazd",
+      "to": "Hormuz",
+      "dates": "1470-71",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "attested",
+      "points": [
+        [
+          54.37,
+          31.9
+        ],
+        [
+          55.68,
+          29.45
+        ],
+        [
+          54.34,
+          27.68
+        ],
+        [
+          56.27,
+          27.19
+        ],
+        [
+          56.46,
+          27.06
+        ]
+      ],
+      "source": "Nikitin: by Sirjan, Tarom and Lar to Bandar and Hormuz, which he reached four weeks before Easter"
+    },
+    {
+      "from": "Hormuz",
+      "to": "Muscat",
+      "dates": "1471",
+      "mode": "sea",
+      "line": "rhumb",
+      "confidence": "attested",
+      "points": [
+        [
+          56.45,
+          27.0
+        ],
+        [
+          56.6,
+          26.55
+        ],
+        [
+          56.5,
+          26.2
+        ],
+        [
+          57.3,
+          25.4
+        ],
+        [
+          58.2,
+          24.3
+        ],
+        [
+          58.55,
+          23.7
+        ]
+      ],
+      "source": "Nikitin: a week after Easter he shipped his horses and sailed in ten days to Muscat"
+    },
+    {
+      "from": "Muscat",
+      "to": "Chaul",
+      "dates": "1471",
+      "mode": "sea",
+      "line": "great-circle",
+      "confidence": "inferred",
+      "points": [
+        [
+          58.55,
+          23.7
+        ],
+        [
+          61.0,
+          22.2
+        ],
+        [
+          66.0,
+          20.5
+        ],
+        [
+          70.0,
+          19.3
+        ],
+        [
+          72.5,
+          18.6
+        ]
+      ],
+      "source": "Nikitin: in six weeks, by Gujarat and Cambay as the text lists them, to Chaul",
+      "doubt": "Major's list of Degh, Gujarat and Cambay reads as a voyage along the coast; Wikipedia has him sail direct from Muscat to Chaul, and the line follows that."
+    },
+    {
+      "from": "Chaul",
+      "to": "Junnar",
+      "dates": "1471",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          72.93,
+          18.55
+        ],
+        [
+          73.22,
+          18.54
+        ],
+        [
+          73.6,
+          18.9
+        ],
+        [
+          73.88,
+          19.21
+        ]
+      ],
+      "source": "Nikitin: by land to the Indian hills, then Umri, and so to Junnar in six days",
+      "doubt": "Of the places he names between Chaul and Junnar only Pali is placed with any confidence; Umri is not."
+    },
+    {
+      "from": "Junnar",
+      "to": "Bidar",
+      "dates": "1471-72",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          73.88,
+          19.21
+        ],
+        [
+          74.74,
+          19.09
+        ],
+        [
+          75.76,
+          18.99
+        ],
+        [
+          76.57,
+          18.4
+        ],
+        [
+          77.52,
+          17.91
+        ]
+      ],
+      "source": "Nikitin: after the rains, from Junnar to Bidar, the Bahmani capital"
+    },
+    {
+      "from": "Bidar",
+      "to": "Parvat (Srisailam)",
+      "dates": "1473",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "points": [
+        [
+          77.52,
+          17.91
+        ],
+        [
+          78.2,
+          17.3
+        ],
+        [
+          78.87,
+          16.07
+        ]
+      ],
+      "source": "Nikitin: to Parvat, which he calls the Jerusalem of the Hindus, at the great feast",
+      "doubt": "The way is not told, and Parvat is usually read as Srisailam."
+    },
+    {
+      "from": "Parvat (Srisailam)",
+      "to": "Dabhol",
+      "dates": "1473-74",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "points": [
+        [
+          78.87,
+          16.07
+        ],
+        [
+          77.52,
+          17.91
+        ],
+        [
+          76.84,
+          17.33
+        ],
+        [
+          75.9,
+          17.2
+        ],
+        [
+          74.5,
+          17.4
+        ],
+        [
+          73.17,
+          17.59
+        ]
+      ],
+      "source": "Nikitin: back by Bidar and Kalburga and a string of places he names but we cannot place to Dabhol, a port of the Indian sea",
+      "doubt": "Of the places between Kalburga and Dabhol, only Sheikh Aladin (Alland) is placed."
+    },
+    {
+      "from": "Dabhol",
+      "to": "Muscat",
+      "dates": "1474",
+      "mode": "sea",
+      "line": "great-circle",
+      "confidence": "inferred",
+      "points": [
+        [
+          73.1,
+          17.6
+        ],
+        [
+          66.0,
+          19.5
+        ],
+        [
+          61.0,
+          22.0
+        ],
+        [
+          58.55,
+          23.7
+        ]
+      ],
+      "source": "Nikitin: a month at sea out of sight of land, five days on a far coast, and twelve days on to Muscat",
+      "doubt": "The text has the ship driven to the coast of 'Ethiopia' before Muscat; the line does not follow it."
+    },
+    {
+      "from": "Muscat",
+      "to": "Hormuz",
+      "dates": "1474",
+      "mode": "sea",
+      "line": "rhumb",
+      "confidence": "attested",
+      "points": [
+        [
+          58.55,
+          23.7
+        ],
+        [
+          58.2,
+          24.3
+        ],
+        [
+          57.3,
+          25.4
+        ],
+        [
+          56.5,
+          26.2
+        ],
+        [
+          56.6,
+          26.55
+        ],
+        [
+          56.45,
+          27.0
+        ]
+      ],
+      "source": "Nikitin: nine days' sail from Muscat to Hormuz, where he stayed twenty days"
+    },
+    {
+      "from": "Hormuz",
+      "to": "Tabriz",
+      "dates": "1474",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "attested",
+      "points": [
+        [
+          56.46,
+          27.06
+        ],
+        [
+          54.34,
+          27.68
+        ],
+        [
+          52.54,
+          29.59
+        ],
+        [
+          53.28,
+          31.13
+        ],
+        [
+          54.37,
+          31.9
+        ],
+        [
+          51.67,
+          32.65
+        ],
+        [
+          51.43,
+          33.98
+        ],
+        [
+          50.88,
+          34.64
+        ],
+        [
+          50.35,
+          35.02
+        ],
+        [
+          48.8,
+          36.43
+        ],
+        [
+          46.29,
+          38.08
+        ]
+      ],
+      "source": "Nikitin: Lar, Shiraz, Abarkuh, Yazd, Isfahan, Kashan, Qom, Saveh, Sultaniyeh and Tabriz, with days spent at each"
+    },
+    {
+      "from": "Tabriz",
+      "to": "Trebizond",
+      "dates": "autumn 1474",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          46.29,
+          38.08
+        ],
+        [
+          41.27,
+          39.9
+        ],
+        [
+          39.49,
+          39.75
+        ],
+        [
+          39.72,
+          41.0
+        ]
+      ],
+      "source": "Nikitin: ten days at Assanbek's camp, then by Erzincan to Trebizond on the feast of the Protection of the Virgin (1 October)",
+      "doubt": "Assanbek is Uzun Hasan; where his camp stood is not told."
+    },
+    {
+      "from": "Trebizond",
+      "to": "Kaffa",
+      "dates": "Nov 1474",
+      "mode": "sea",
+      "line": "rhumb",
+      "confidence": "attested",
+      "points": [
+        [
+          39.8,
+          41.2
+        ],
+        [
+          38.5,
+          42.1
+        ],
+        [
+          37.0,
+          43.0
+        ],
+        [
+          36.2,
+          44.2
+        ],
+        [
+          35.8,
+          44.8
+        ],
+        [
+          35.45,
+          44.98
+        ]
+      ],
+      "source": "Nikitin: two attempts beaten back by northerly gales to Trebizond, then a crossing to Kaffa",
+      "doubt": "He drove back twice; the line is the crossing that took."
+    },
+    {
+      "from": "Kaffa",
+      "to": "Smolensk",
+      "dates": "winter 1474-75",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "points": [
+        [
+          35.38,
+          45.03
+        ],
+        [
+          33.7,
+          46.1
+        ],
+        [
+          34.99,
+          48.46
+        ],
+        [
+          30.52,
+          50.45
+        ],
+        [
+          32.05,
+          54.78
+        ]
+      ],
+      "source": "Sofia Second Chronicle: he was said to have died before he reached Smolensk",
+      "doubt": "Nothing is recorded of his road home; the line is the usual one from Crimea."
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": 47.9,
+      "lat": 45.75,
+      "date": "1468",
+      "label": "Robbed at the mouth of the Volga, 1468",
+      "text": "Tatars of Astrakhan seized his ships, goods and books at the mouth of the Volga, so the merchant could not go home in debt. He went on to Derbent and, with nothing, across the Caspian to Persia.",
+      "source": "Nikitin, Journey beyond the Three Seas (Major's translation, 1857)",
+      "cite": "major-india-in-the-fifteenth-century",
+      "confidence": "attested"
+    },
+    {
+      "kind": "event",
+      "lon": 56.46,
+      "lat": 27.06,
+      "date": "spring 1471",
+      "label": "A horse for India, Hormuz, 1471",
+      "text": "At Hormuz he kept his first Easter abroad, then shipped his horses in an Indian tava for a six-week passage. A stallion was a good trade in a country that bred none.",
+      "source": "Nikitin, Journey beyond the Three Seas (Major's translation, 1857)",
+      "cite": "major-india-in-the-fifteenth-century",
+      "confidence": "attested"
+    },
+    {
+      "kind": "event",
+      "lon": 73.88,
+      "lat": 19.21,
+      "date": "1471",
+      "label": "Junnar, in the rains, 1471",
+      "text": "He wintered at Junnar and lived there two months, in four months of rain and mud. He brought a stallion to the land of India and reached Junnar with it, at a cost of a hundred roubles.",
+      "source": "Nikitin, Journey beyond the Three Seas (Major's translation, 1857)",
+      "cite": "major-india-in-the-fifteenth-century",
+      "confidence": "attested"
+    },
+    {
+      "kind": "event",
+      "lon": 77.52,
+      "lat": 17.91,
+      "date": "c. 1472-73",
+      "label": "The Bairam procession, Bidar, c. 1472",
+      "text": "He describes the Bahmani court and, on the Muslim feast, the sultan going out with twenty viziers and three hundred elephants in steel armour, each carrying a citadel of armed men.",
+      "source": "Nikitin, Journey beyond the Three Seas (Major's translation, 1857)",
+      "cite": "major-india-in-the-fifteenth-century",
+      "confidence": "attested"
+    },
+    {
+      "kind": "event",
+      "lon": 78.87,
+      "lat": 16.07,
+      "date": "1473-74",
+      "label": "The Jerusalem of the Hindus, Parvat, 1473",
+      "text": "He went with Indians to Parvat, the holy place of the Hindus, and wrote down what he saw of the feast and the worship.",
+      "source": "Nikitin, Journey beyond the Three Seas (Major's translation, 1857)",
+      "cite": "major-india-in-the-fifteenth-century",
+      "confidence": "inferred",
+      "doubt": "Parvat is usually read as Srisailam; older readings differ."
+    },
+    {
+      "kind": "event",
+      "lon": 35.38,
+      "lat": 45.03,
+      "date": "Nov 1474",
+      "label": "Kaffa, November 1474",
+      "text": "He ended his diary at Kaffa with a prayer of thanks, in corrupt Turkish, for his safe return. The chronicle records that he died before he reached Smolensk; his notes reached Moscow and entered the chronicles.",
+      "source": "Sofia Second Chronicle via Major",
+      "cite": "journey-beyond-three-seas",
+      "confidence": "attested"
+    }
+  ]
+}

@@ -1,0 +1,928 @@
+{
+  "id": "benjamin-of-tudela",
+  "title": "Benjamin of Tudela from Navarre to Baghdad, c. 1165-71",
+  "short": "Benjamin of Tudela",
+  "who": [
+    "benjamin-of-tudela"
+  ],
+  "when": "c. 1165-71",
+  "summary": "A Jew of Tudela in Navarre travelled by Provence, Italy, Greece, Constantinople and the Levant to Baghdad, listing the Jewish communities of about three hundred places and the days between them. He returned to Castile by 1173. Everything east of Baghdad, and the road home by Egypt and Sicily, is told from report or without a course, so it is not drawn as a route: two eastern places are marked as heard of.",
+  "sources": [
+    "adler-itinerary-of-benjamin",
+    "benjamin-of-tudela"
+  ],
+  "legs": [
+    {
+      "from": "Tudela",
+      "to": "Barcelona",
+      "dates": "c. 1165",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "attested",
+      "points": [
+        [
+          -1.6,
+          42.06
+        ],
+        [
+          -0.88,
+          41.65
+        ],
+        [
+          0.52,
+          40.81
+        ],
+        [
+          1.25,
+          41.12
+        ],
+        [
+          2.17,
+          41.39
+        ]
+      ],
+      "source": "Benjamin: Saragossa, down the Ebro to Tortosa, two days to Tarragona and two more to Barcelona"
+    },
+    {
+      "from": "Barcelona",
+      "to": "Marseille",
+      "dates": "c. 1165-66",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "attested",
+      "points": [
+        [
+          2.17,
+          41.39
+        ],
+        [
+          2.82,
+          41.98
+        ],
+        [
+          3.0,
+          43.18
+        ],
+        [
+          3.22,
+          43.34
+        ],
+        [
+          3.88,
+          43.61
+        ],
+        [
+          4.14,
+          43.68
+        ],
+        [
+          4.43,
+          43.68
+        ],
+        [
+          4.63,
+          43.68
+        ],
+        [
+          5.37,
+          43.3
+        ]
+      ],
+      "source": "Benjamin: a day and a half to Gerona, three days to Narbonne, then Béziers, Montpellier, Lunel, Saint-Gilles and Arles to Marseille"
+    },
+    {
+      "from": "Marseille",
+      "to": "Genoa",
+      "dates": "c. 1166",
+      "mode": "sea",
+      "line": "rhumb",
+      "confidence": "attested",
+      "points": [
+        [
+          5.3,
+          43.22
+        ],
+        [
+          6.0,
+          42.85
+        ],
+        [
+          6.9,
+          43.1
+        ],
+        [
+          7.5,
+          43.4
+        ],
+        [
+          8.2,
+          43.7
+        ],
+        [
+          8.8,
+          44.2
+        ],
+        [
+          8.92,
+          44.35
+        ]
+      ],
+      "source": "Benjamin: four days by ship from Marseille to Genoa"
+    },
+    {
+      "from": "Genoa",
+      "to": "Rome",
+      "dates": "c. 1166",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "attested",
+      "points": [
+        [
+          8.93,
+          44.41
+        ],
+        [
+          9.82,
+          44.1
+        ],
+        [
+          10.4,
+          43.72
+        ],
+        [
+          10.5,
+          43.84
+        ],
+        [
+          11.33,
+          43.32
+        ],
+        [
+          12.1,
+          42.42
+        ],
+        [
+          12.5,
+          41.9
+        ]
+      ],
+      "source": "Benjamin: Pisa and Lucca, and six days from Lucca to Rome"
+    },
+    {
+      "from": "Rome",
+      "to": "Amalfi",
+      "dates": "c. 1166-67",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "attested",
+      "points": [
+        [
+          12.5,
+          41.9
+        ],
+        [
+          14.21,
+          41.11
+        ],
+        [
+          14.27,
+          40.85
+        ],
+        [
+          14.77,
+          40.68
+        ],
+        [
+          14.6,
+          40.63
+        ]
+      ],
+      "source": "Benjamin: Capua, Naples, Salerno and Amalfi"
+    },
+    {
+      "from": "Amalfi",
+      "to": "Otranto",
+      "dates": "c. 1167",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "attested",
+      "points": [
+        [
+          14.6,
+          40.63
+        ],
+        [
+          14.78,
+          41.13
+        ],
+        [
+          15.65,
+          40.99
+        ],
+        [
+          16.42,
+          41.28
+        ],
+        [
+          16.87,
+          41.12
+        ],
+        [
+          17.23,
+          40.47
+        ],
+        [
+          17.94,
+          40.63
+        ],
+        [
+          18.49,
+          40.15
+        ]
+      ],
+      "source": "Benjamin: Benevento, Melfi, Trani, Taranto and Brindisi, a day or two apart, to Otranto",
+      "doubt": "The text has Ascoli and Taranto in this run; Bari is not named, and the line passes through it."
+    },
+    {
+      "from": "Otranto",
+      "to": "Corfu",
+      "dates": "c. 1167",
+      "mode": "sea",
+      "line": "rhumb",
+      "confidence": "attested",
+      "points": [
+        [
+          18.7,
+          40.0
+        ],
+        [
+          19.3,
+          39.55
+        ],
+        [
+          19.7,
+          39.3
+        ],
+        [
+          20.03,
+          39.39
+        ],
+        [
+          20.1,
+          39.55
+        ],
+        [
+          19.95,
+          39.55
+        ]
+      ],
+      "source": "Benjamin: two days' voyage from Otranto to Corfu, the end of the kingdom of Sicily"
+    },
+    {
+      "from": "Corfu",
+      "to": "Arta",
+      "dates": "c. 1167",
+      "mode": "sea",
+      "line": "rhumb",
+      "confidence": "attested",
+      "points": [
+        [
+          19.95,
+          39.55
+        ],
+        [
+          20.12,
+          39.4
+        ],
+        [
+          20.2,
+          39.1
+        ],
+        [
+          20.6,
+          38.85
+        ]
+      ],
+      "source": "Benjamin: two days' voyage to Arta, the beginning of Manuel's dominions",
+      "doubt": "Arta lies up a river from the gulf; the line stops at its mouth."
+    },
+    {
+      "from": "Arta",
+      "to": "Salonica",
+      "dates": "c. 1167-68",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "attested",
+      "points": [
+        [
+          20.98,
+          39.16
+        ],
+        [
+          21.83,
+          38.39
+        ],
+        [
+          21.73,
+          38.25
+        ],
+        [
+          22.91,
+          37.94
+        ],
+        [
+          23.32,
+          38.32
+        ],
+        [
+          23.6,
+          38.46
+        ],
+        [
+          22.76,
+          39.18
+        ],
+        [
+          22.94,
+          40.64
+        ]
+      ],
+      "source": "Benjamin: Patras, Lepanto, Corinth, Thebes (where the Jews weave silk), Egripo and Armylo to Salonica"
+    },
+    {
+      "from": "Salonica",
+      "to": "Abydos",
+      "dates": "c. 1168",
+      "mode": "sea",
+      "line": "rhumb",
+      "confidence": "inferred",
+      "points": [
+        [
+          22.89,
+          40.54
+        ],
+        [
+          22.85,
+          40.4
+        ],
+        [
+          22.8,
+          40.3
+        ],
+        [
+          22.9,
+          40.2
+        ],
+        [
+          23.0,
+          40.0
+        ],
+        [
+          23.4,
+          39.9
+        ],
+        [
+          23.9,
+          39.7
+        ],
+        [
+          24.5,
+          39.8
+        ],
+        [
+          24.7,
+          40.0
+        ],
+        [
+          25.4,
+          40.1
+        ],
+        [
+          26.0,
+          40.0
+        ],
+        [
+          26.2,
+          40.05
+        ],
+        [
+          26.37,
+          40.15
+        ]
+      ],
+      "source": "Benjamin: Salonica and then Abydos, with no stage between",
+      "doubt": "The text names Salonica, Abydos and Constantinople but not how he travelled from one to the next; the sea is the usual way."
+    },
+    {
+      "from": "Abydos",
+      "to": "Constantinople",
+      "dates": "c. 1168",
+      "mode": "sea",
+      "line": "rhumb",
+      "confidence": "attested",
+      "points": [
+        [
+          26.37,
+          40.15
+        ],
+        [
+          26.55,
+          40.28
+        ],
+        [
+          26.78,
+          40.4
+        ],
+        [
+          27.1,
+          40.47
+        ],
+        [
+          27.7,
+          40.78
+        ],
+        [
+          28.4,
+          40.9
+        ],
+        [
+          28.98,
+          41.01
+        ]
+      ],
+      "source": "Benjamin: five days from Abydos to Constantinople"
+    },
+    {
+      "from": "Constantinople",
+      "to": "Rhodes",
+      "dates": "c. 1168-69",
+      "mode": "sea",
+      "line": "rhumb",
+      "confidence": "inferred",
+      "points": [
+        [
+          28.98,
+          41.01
+        ],
+        [
+          28.4,
+          40.9
+        ],
+        [
+          27.7,
+          40.78
+        ],
+        [
+          27.1,
+          40.47
+        ],
+        [
+          26.78,
+          40.4
+        ],
+        [
+          26.55,
+          40.28
+        ],
+        [
+          26.4,
+          40.17
+        ],
+        [
+          26.2,
+          40.05
+        ],
+        [
+          25.3,
+          39.6
+        ],
+        [
+          25.4,
+          38.6
+        ],
+        [
+          26.0,
+          37.6
+        ],
+        [
+          26.9,
+          36.6
+        ],
+        [
+          27.6,
+          36.35
+        ],
+        [
+          28.35,
+          36.55
+        ]
+      ],
+      "source": "Benjamin: Rhaedestus, Gallipoli, Mytilene, Chios, Samos and Rhodes",
+      "doubt": "The text lists the islands but not the course; the line keeps to the open Aegean."
+    },
+    {
+      "from": "Rhodes",
+      "to": "Cyprus",
+      "dates": "c. 1169",
+      "mode": "sea",
+      "line": "rhumb",
+      "confidence": "inferred",
+      "points": [
+        [
+          28.35,
+          36.55
+        ],
+        [
+          29.6,
+          35.95
+        ],
+        [
+          31.0,
+          35.8
+        ],
+        [
+          32.6,
+          35.6
+        ],
+        [
+          33.3,
+          35.45
+        ]
+      ],
+      "source": "Benjamin: from Rhodes to Cyprus"
+    },
+    {
+      "from": "Cyprus",
+      "to": "Korykos",
+      "dates": "c. 1169",
+      "mode": "sea",
+      "line": "rhumb",
+      "confidence": "attested",
+      "points": [
+        [
+          33.3,
+          35.45
+        ],
+        [
+          33.6,
+          35.8
+        ],
+        [
+          34.0,
+          36.1
+        ],
+        [
+          34.15,
+          36.35
+        ]
+      ],
+      "source": "Benjamin: Cyprus, then Curicus (Korykos) on the Cilician shore"
+    },
+    {
+      "from": "Korykos",
+      "to": "Antioch",
+      "dates": "c. 1169",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "attested",
+      "points": [
+        [
+          34.15,
+          36.46
+        ],
+        [
+          34.9,
+          36.8
+        ],
+        [
+          35.62,
+          37.0
+        ],
+        [
+          36.0,
+          36.6
+        ],
+        [
+          36.16,
+          36.2
+        ]
+      ],
+      "source": "Benjamin: Korykos, Mopsuestia and Antioch"
+    },
+    {
+      "from": "Antioch",
+      "to": "Jerusalem",
+      "dates": "c. 1169-70",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "attested",
+      "points": [
+        [
+          36.16,
+          36.2
+        ],
+        [
+          35.78,
+          35.52
+        ],
+        [
+          35.93,
+          35.36
+        ],
+        [
+          35.84,
+          34.44
+        ],
+        [
+          35.65,
+          34.12
+        ],
+        [
+          35.5,
+          33.89
+        ],
+        [
+          35.37,
+          33.56
+        ],
+        [
+          35.2,
+          33.27
+        ],
+        [
+          35.07,
+          32.92
+        ],
+        [
+          34.99,
+          32.8
+        ],
+        [
+          34.89,
+          32.5
+        ],
+        [
+          35.19,
+          32.28
+        ],
+        [
+          35.26,
+          32.22
+        ],
+        [
+          35.23,
+          31.78
+        ]
+      ],
+      "source": "Benjamin: Latakia, Jebail, Tripoli, Byblos, Beirut, Sidon, Tyre, Acre, Caesarea, Samaria and Nablus to Jerusalem"
+    },
+    {
+      "from": "Jerusalem",
+      "to": "Damascus",
+      "dates": "c. 1170",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "attested",
+      "points": [
+        [
+          35.23,
+          31.78
+        ],
+        [
+          35.1,
+          31.53
+        ],
+        [
+          34.89,
+          31.6
+        ],
+        [
+          34.55,
+          31.66
+        ],
+        [
+          35.28,
+          32.75
+        ],
+        [
+          35.53,
+          32.79
+        ],
+        [
+          35.69,
+          33.25
+        ],
+        [
+          36.29,
+          33.51
+        ]
+      ],
+      "source": "Benjamin: Hebron, Ashkelon, Sepphoris, Tiberias and Banias to Damascus",
+      "doubt": "Banias is Benjamin's Laish, his identification being disputed."
+    },
+    {
+      "from": "Damascus",
+      "to": "Aleppo",
+      "dates": "c. 1170",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "attested",
+      "points": [
+        [
+          36.29,
+          33.51
+        ],
+        [
+          36.2,
+          34.0
+        ],
+        [
+          38.27,
+          34.55
+        ],
+        [
+          36.72,
+          34.73
+        ],
+        [
+          36.75,
+          35.13
+        ],
+        [
+          37.16,
+          36.2
+        ]
+      ],
+      "source": "Benjamin: Baalbek, Tadmor (Palmyra), Homs, Hama and Shaizar to Aleppo"
+    },
+    {
+      "from": "Aleppo",
+      "to": "Mosul",
+      "dates": "c. 1170",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "attested",
+      "points": [
+        [
+          37.16,
+          36.2
+        ],
+        [
+          38.3,
+          35.9
+        ],
+        [
+          39.01,
+          35.95
+        ],
+        [
+          39.03,
+          36.87
+        ],
+        [
+          40.07,
+          36.85
+        ],
+        [
+          42.19,
+          37.33
+        ],
+        [
+          43.13,
+          36.34
+        ]
+      ],
+      "source": "Benjamin: Qal'at Ja'bar, Raqqa, Harran, Ras al-Ayn and Cizre to Mosul, joined by a bridge to Nineveh"
+    },
+    {
+      "from": "Mosul",
+      "to": "Baghdad",
+      "dates": "c. 1170",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "points": [
+        [
+          43.13,
+          36.34
+        ],
+        [
+          43.68,
+          34.6
+        ],
+        [
+          43.87,
+          34.2
+        ],
+        [
+          44.37,
+          33.31
+        ]
+      ],
+      "source": "Benjamin: from Mosul to Baghdad, the seat of the Caliph and the exilarch",
+      "doubt": "The text takes him by Rahbah and Karkisiya on the Euphrates and Anbar before Baghdad; the line is the direct road on the Tigris."
+    },
+    {
+      "from": "Baghdad",
+      "to": "Kufa",
+      "dates": "c. 1170-71",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "attested",
+      "points": [
+        [
+          44.37,
+          33.31
+        ],
+        [
+          44.42,
+          32.48
+        ],
+        [
+          44.4,
+          32.03
+        ]
+      ],
+      "source": "Benjamin: Hillah and the ruins of Babylon, then Kufa and the tomb of Ezekiel"
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": 12.5,
+      "lat": 41.9,
+      "date": "c. 1166",
+      "label": "Rome, c. 1166",
+      "text": "He counted about two hundred Jews in Rome, honourably placed, paying no tribute, and some of them officials of Pope Alexander III. He lists the palaces and churches, among them the one he says is Titus's.",
+      "source": "Benjamin of Tudela, Itinerary (Adler's translation, 1907)",
+      "cite": "adler-itinerary-of-benjamin",
+      "confidence": "attested"
+    },
+    {
+      "kind": "event",
+      "lon": 28.98,
+      "lat": 41.01,
+      "date": "c. 1168",
+      "label": "Constantinople and the Hippodrome, c. 1168",
+      "text": "He describes Manuel's capital, its wealth, the Hagia Sophia and the Blachernae palace, and the Hippodrome, where on Christmas Day men from every nation came before the Emperor to see jugglers and wild beasts fight.",
+      "source": "Benjamin of Tudela, Itinerary (Adler's translation, 1907)",
+      "cite": "adler-itinerary-of-benjamin",
+      "confidence": "attested"
+    },
+    {
+      "kind": "event",
+      "lon": 35.23,
+      "lat": 31.78,
+      "date": "c. 1170",
+      "label": "Jerusalem and the tomb of David, c. 1170",
+      "text": "In Crusader Jerusalem he found a small Jewish community. On Mount Zion he tells how a wall of the church fell fifteen years before, and workmen restoring it came upon the sepulchre of the House of David.",
+      "source": "Benjamin of Tudela, Itinerary (Adler's translation, 1907)",
+      "cite": "adler-itinerary-of-benjamin",
+      "confidence": "attested"
+    },
+    {
+      "kind": "event",
+      "lon": 43.13,
+      "lat": 36.34,
+      "date": "c. 1170",
+      "label": "Nineveh from Mosul, c. 1170",
+      "text": "Across the Tigris from Mosul he saw Nineveh in ruins, with villages among them, and the walls running forty parasangs to Irbil.",
+      "source": "Benjamin of Tudela, Itinerary (Adler's translation, 1907)",
+      "cite": "adler-itinerary-of-benjamin",
+      "confidence": "attested"
+    },
+    {
+      "kind": "event",
+      "lon": 44.37,
+      "lat": 33.31,
+      "date": "c. 1170",
+      "label": "Baghdad, c. 1170",
+      "text": "He counted twenty-eight synagogues, among them the great one of the head of the exile with marble columns overlaid with gold and silver, and describes the exilarch, a prince of the House of David, riding to his installation.",
+      "source": "Benjamin of Tudela, Itinerary (Adler's translation, 1907)",
+      "cite": "adler-itinerary-of-benjamin",
+      "confidence": "attested"
+    },
+    {
+      "kind": "event",
+      "lon": 39.29,
+      "lat": 25.69,
+      "label": "Khaybar, heard of, not visited",
+      "text": "He reports a very large city with 50,000 Jews, who people say belong to the tribes of Reuben, Gad and Manasseh. He had this from others and did not go; nothing east or south of Baghdad is drawn as a route.",
+      "source": "Benjamin of Tudela, Itinerary (Adler's translation, 1907)",
+      "cite": "adler-itinerary-of-benjamin",
+      "confidence": "speculative",
+      "doubt": "Benjamin tells of Khaybar, Teima, Yemen, Persia, India and China on report; whether any of it was seen is disputed."
+    },
+    {
+      "kind": "event",
+      "lon": 66.96,
+      "lat": 39.65,
+      "label": "Samarkand, heard of, not visited",
+      "text": "He reports a community of fifty thousand Jews in Samarkand, on the border of the Persian kingdom. Like the rest of the east, it is told at second hand.",
+      "source": "Benjamin of Tudela, Itinerary (Adler's translation, 1907)",
+      "cite": "adler-itinerary-of-benjamin",
+      "confidence": "speculative",
+      "doubt": "Benjamin tells of Khaybar, Teima, Yemen, Persia, India and China on report; whether any of it was seen is disputed."
+    }
+  ]
+}

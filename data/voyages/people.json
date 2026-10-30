@@ -1084,5 +1084,124 @@
       "bjarni-herjolfsson",
       "saga-of-the-greenlanders"
     ]
+  },
+  "william-of-rubruck": {
+    "name": "William of Rubruck",
+    "aka": [
+      "Willem van Ruysbroeck",
+      "Guillaume de Rubrouck"
+    ],
+    "bio": "A Flemish Franciscan from Rubrouck who had been on Louis IX's crusade. In 1253 he went to the Mongols as a missionary and not, he insisted, as an envoy, across the steppe to Batu on the Volga and on to the court of Mongke at Karakorum. His report to Louis is the best Western account of the Mongols, their customs and the faiths at their court, and Roger Bacon read it.",
+    "sources": [
+      "william-of-rubruck",
+      "rockhill-rubruck-itinerarium"
+    ],
+    "born": {
+      "lon": 2.37,
+      "lat": 50.82,
+      "date": "c. 1215-20",
+      "place": "Rubrouck, Flanders",
+      "label": "William of Rubruck born in Flanders, c. 1215-20",
+      "text": "He is named for Rubrouck, a village in French Flanders. The year is a guess within a decade or two, and sources put it in the 1210s or the 1220s.",
+      "source": "William of Rubruck (Wikipedia)",
+      "cite": "william-of-rubruck",
+      "confidence": "inferred"
+    },
+    "death": {
+      "date": "after 1257",
+      "label": "William of Rubruck, last heard of in 1257",
+      "text": "Nothing is known of when or where he died. Roger Bacon, who had talked with him, is the last to mention him, about 1257.",
+      "source": "William of Rubruck (Wikipedia)",
+      "cite": "william-of-rubruck",
+      "confidence": "speculative"
+    }
+  },
+  "benjamin-of-tudela": {
+    "name": "Benjamin of Tudela",
+    "aka": [
+      "Binyamin mi-Tudela"
+    ],
+    "bio": "A Jew of Tudela in Navarre, the son of Jonah, not reliably called a rabbi. About 1165 he set out for the Holy Land, perhaps on a pilgrimage and with trade in view, and wrote the Book of Travels, the Sefer ha-Massa'ot, listing the Jewish communities of about three hundred places, their households, leaders and trades, with the days between them. Much of the book is what he saw and much is what he was told.",
+    "sources": [
+      "benjamin-of-tudela",
+      "adler-itinerary-of-benjamin"
+    ],
+    "born": {
+      "lon": -1.6,
+      "lat": 42.06,
+      "date": "c. 1130",
+      "place": "Tudela, Navarre",
+      "label": "Benjamin of Tudela born at Tudela, c. 1130",
+      "text": "He gives Tudela as his native town. The year is worked back from his journey and is a guess.",
+      "source": "Benjamin of Tudela (Wikipedia)",
+      "cite": "benjamin-of-tudela",
+      "confidence": "inferred"
+    },
+    "death": {
+      "date": "c. 1173",
+      "label": "Benjamin of Tudela, back in Castile by 1173",
+      "text": "The book says he brought it back to Castile in 1173; nothing is known of his death, and some give 1175.",
+      "source": "Benjamin of Tudela (Wikipedia)",
+      "cite": "benjamin-of-tudela",
+      "confidence": "speculative",
+      "doubt": "His death is given as 1173 in the lead of Wikipedia and as 1175 in its infobox."
+    }
+  },
+  "rabban-bar-sauma": {
+    "name": "Rabban Bar Sauma",
+    "aka": [
+      "Rabban Sawma",
+      "Rabban Sauma"
+    ],
+    "bio": "A Church of the East monk born near Khanbaliq (Beijing), of Uyghur stock, who left for Jerusalem with his pupil Markos and was stopped by war in Mongol Persia. Markos became the Patriarch Yahballaha III. In 1287 the Ilkhan Arghun sent Sauma as his ambassador to the pope and the kings of Europe. His account, preserved in a Syriac life of Yahballaha, is the only medieval description of Latin Europe by an East Asian traveller.",
+    "sources": [
+      "rabban-bar-sauma",
+      "history-of-yahballaha",
+      "budge-monks-of-kublai-khan"
+    ],
+    "born": {
+      "lon": 116.4,
+      "lat": 39.9,
+      "date": "c. 1220",
+      "place": "Khanbaliq (Beijing)",
+      "label": "Bar Sauma born near Khanbaliq, c. 1220",
+      "text": "He is said to have been born in or near the Mongol capital, in a Uyghur family. The year is a guess worked back from his age at death.",
+      "source": "Rabban Bar Sauma (Wikipedia)",
+      "cite": "rabban-bar-sauma",
+      "confidence": "inferred"
+    },
+    "death": {
+      "lon": 44.37,
+      "lat": 33.31,
+      "date": "January 1294",
+      "label": "Bar Sauma died at Baghdad, January 1294",
+      "text": "He returned to the Ilkhanate and died at Baghdad, in the Patriarch's city, aged about seventy-three.",
+      "source": "Rabban Bar Sauma (Wikipedia)",
+      "cite": "rabban-bar-sauma",
+      "confidence": "attested"
+    }
+  },
+  "afanasy-nikitin": {
+    "name": "Afanasy Nikitin",
+    "aka": [
+      "Athanasius Nikitin"
+    ],
+    "bio": "A merchant of Tver who went down the Volga to trade, was robbed at its mouth and went on rather than go home in debt, through Persia and by sea from Hormuz to India. He spent about three years in the Bahmani country and wrote the Journey beyond the Three Seas, a plain, homesick diary in a mixture of Russian, Persian and Turkic, the first Russian account of India. He reached the Black Sea again in 1474 and is said to have died near Smolensk.",
+    "sources": [
+      "afanasy-nikitin",
+      "journey-beyond-three-seas",
+      "major-india-in-the-fifteenth-century"
+    ],
+    "death": {
+      "lon": 32.05,
+      "lat": 54.78,
+      "date": "spring 1475",
+      "label": "Nikitin died near Smolensk, 1475",
+      "text": "The Sofia chronicle says it was reported in 1475 that he had died before he reached Smolensk. The place of his death is unmarked, and the mark stands at the town.",
+      "source": "Afanasy Nikitin (Wikipedia)",
+      "cite": "afanasy-nikitin",
+      "confidence": "inferred",
+      "doubt": "Some give the winter of 1472-73."
+    }
   }
 }
