@@ -2256,22 +2256,23 @@ export function drawNoteMark(g, m, alpha = 1) {
   g.restore();
 }
 // The notes announcing themselves (docs/spec/design.md, "A chart's notes get their moment"): a ring swells out from each
-// note's spot and fades, `rings` times over `ms`, and the marks fade to nothing with the last ring; with reduced motion
-// the marks show whole for `ms`, then fade over `fade`. The timing waits on the user's look at the PR that built it.
-export const NOTE_PULSE = { ms: 4000, rings: 3, fade: 600, from: 7, reach: 40 };
-// The pulse `t` ms in: { alpha, ring } for the marks, `ring` the swell of the ring now, 0 to 1 (null for none), or
-// null once it is over.
+// note's spot and fades, `rings` times over `ms`, the last ring fainter as it goes; no dot or mark is drawn at any
+// moment, only the moving rings, so nothing sits on the art. With reduced motion one still ring shows at each note and
+// fades steadily over `ms`. The timing waits on the user's look at the PR that built it.
+export const NOTE_PULSE = { ms: 4000, rings: 3, from: 2, reach: 40, still: 0.35 };
+// The pulse `t` ms in: { alpha, ring } for the rings, `ring` the swell of the ring now, 0 to 1, or null once it is over.
 export function notePulse(t, reduced = false, p = NOTE_PULSE) {
   t = Math.max(0, t); // a frame's time can fall just before the pulse began
-  if (reduced) return t >= p.ms + p.fade ? null : { alpha: t < p.ms ? 1 : 1 - (t - p.ms) / p.fade, ring: null };
   if (t >= p.ms) return null;
+  if (reduced) return { alpha: 1 - t / p.ms, ring: p.still };
   const each = p.ms / p.rings, last = (p.rings - 1) * each;
   return { alpha: t < last ? 1 : 1 - (t - last) / each, ring: (t % each) / each };
 }
-// One ring of the pulse at swell `u` (0 to 1) round a note's mark: in the chart's red over a parchment halo, so it
-// reads on a dark scan as on a pale one, widening and fading as it goes.
-export function drawNoteRing(g, m, u, p = NOTE_PULSE) {
-  const r = p.from + u * p.reach, a = Math.max(0, 1 - u);
+// One ring of the pulse at swell `u` (0 to 1) round a note's spot: in the chart's red over a parchment halo, so it
+// reads on a dark scan as on a pale one, widening and fading as it goes; `alpha` fades the whole pulse out.
+export function drawNoteRing(g, m, u, alpha = 1, p = NOTE_PULSE) {
+  const r = p.from + u * p.reach, a = Math.max(0, 1 - u) * alpha;
+  if (!(a > 0)) return;
   g.save();
   g.globalAlpha = 0.55 * a; g.strokeStyle = STYLE.parchment; g.lineWidth = 5;
   g.beginPath(); g.arc(m.x, m.y, r, 0, 2 * Math.PI); g.stroke();

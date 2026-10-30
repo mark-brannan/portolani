@@ -1369,8 +1369,8 @@ addEventListener('keydown', (e) => { if (e.key === 'Escape') hideTile(); });
 // ---------------------------------------------------------------- over the map: the badges and the notes' marks
 // Drawn by the page over each placed scene and each moving frame, never part of the scene: the count badge on a group of
 // drawn marks within a tap's reach of each other (gone once the zoom parts them), and a laid chart's notes' marks while
-// they announce themselves (the pulse, docs/spec/design.md, "A chart's notes get their moment") or while their Notes chip
-// keeps them. A chart announces its notes when its sheet arrives (shown by any means, or fading in) and again when its
+// they announce themselves (the pulse, rings alone, docs/spec/design.md, "A chart's notes get their moment") or while
+// their Notes chip keeps them. A chart announces its notes when its sheet arrives (shown by any means, or fading in) and again when its
 // name or icon is clicked; afterwards nothing stays drawn on the scan, though a tap still finds every note.
 const notesKept = new Set(); // the charts whose marks their Notes chip keeps shown; off by default, and not in the link
 const seen = new Set(); // the charts shown that have announced their notes since they were shown
@@ -1384,8 +1384,8 @@ function drawLayer(g, proj, zoom, badges = true, now = performance.now()) {
     const kept = notesKept.has(o.id), on = !!p && pulse.ids.has(o.id);
     if (!kept && !on) return;
     for (const m of notesOf(o, i, all, proj)) {
-      if (on && p.ring != null) drawNoteRing(g, m, p.ring);
-      drawNoteMark(g, m, kept ? 1 : p.alpha);
+      if (on) drawNoteRing(g, m, p.ring, p.alpha); // the pulse is rings alone: no mark sits on the art
+      if (kept) drawNoteMark(g, m);
     }
   });
   if (badges) for (const { marks, lead } of groupMarks(pointMarks(proj, zoom), cssPx(TAP_REACH))) if (marks.length > 1) drawBadge(g, lead, marks.length);

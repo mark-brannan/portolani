@@ -6,9 +6,9 @@ import assert from 'node:assert/strict';
 import { readVoyage } from '../scripts/voyages.mjs';
 import { readJSON } from '../scripts/check-voyages.mjs';
 import { readDate } from '../scripts/notes.mjs';
-import { notePulse, NOTE_PULSE, groupMarks, dateSpan, noteCount, viewProjection, voyageMarks, voyageView, DEFAULT_VIEW } from '../scripts/scene.mjs';
+import { notePulse, NOTE_PULSE, drawNoteRing, groupMarks, dateSpan, noteCount, viewProjection, voyageMarks, voyageView, DEFAULT_VIEW } from '../scripts/scene.mjs';
 
-test('the pulse: three rings over about four seconds, the marks fading to nothing with the last, then nothing drawn', () => {
+test('the pulse: three rings over about four seconds, the last fading as it goes, then nothing drawn', () => {
   const { ms, rings } = NOTE_PULSE, each = ms / rings;
   assert.equal(rings, 3);
   assert.ok(ms >= 3500 && ms <= 4500, 'about four seconds');
@@ -21,12 +21,20 @@ test('the pulse: three rings over about four seconds, the marks fading to nothin
   assert.equal(notePulse(ms), null, 'over: nothing stays drawn on the scan');
 });
 
-test('the pulse with reduced motion: no rings, the marks whole for the same time, then a fade', () => {
-  const { ms, fade } = NOTE_PULSE;
-  assert.deepEqual(notePulse(ms / 2, true), { alpha: 1, ring: null });
-  assert.equal(notePulse(ms - 1, true).alpha, 1);
-  assert.ok(Math.abs(notePulse(ms + fade / 2, true).alpha - 0.5) < 1e-9);
-  assert.equal(notePulse(ms + fade, true), null);
+test('the pulse is rings alone: no dot or mark is drawn at any moment of it', () => {
+  const g = new Proxy({}, { get: (o, k) => (k in o ? o[k] : (o[k] = (...a) => { (o.calls ??= []).push([k, a]); })), set: (o, k, v) => { o[k] = v; return true; } });
+  for (const t of [0, 500, 1400, 2000, 3000, 3900]) {
+    g.calls = [];
+    drawNoteRing(g, { x: 100, y: 100 }, notePulse(t).ring, notePulse(t).alpha);
+    assert.ok(!g.calls.some(([k]) => k === 'fill'), `nothing filled at ${t} ms`);
+  }
+});
+
+test('the pulse with reduced motion: one still ring, fading steadily, then nothing', () => {
+  const { ms, still } = NOTE_PULSE;
+  assert.deepEqual(notePulse(0, true), { alpha: 1, ring: still });
+  assert.ok(Math.abs(notePulse(ms / 2, true).alpha - 0.5) < 1e-9);
+  assert.equal(notePulse(ms, true), null);
 });
 
 test('a chart counts its notes for its Notes chip; a chart with none has no chip', () => {
