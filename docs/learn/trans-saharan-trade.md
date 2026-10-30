@@ -81,6 +81,7 @@ In 1447 Antonio Malfante, an agent of a Genoese bank, reached the oasis of Tamen
 
 ## Sources
 
+- [The Mali Empire, Gabriel Moss, 2016, CC BY-SA 4.0](https://en.wikipedia.org/wiki/File:The_Mali_Empire.jpg), a map of the roads north from Walata, Timbuktu and Gao and of the goldfields of Bambuk, Bure, Lobi and the Akan forest.
 - [Trans-Saharan trade, Wikipedia](https://en.wikipedia.org/wiki/Trans-Saharan_trade) for the goods, routes, caravan sizes, Wright's estimate and the Almoravid dinars.
 - [Ibn Battuta, Travels, Tennessee State University course text](https://faculty.tnstate.edu/tcorse/h120/ibn_battuta.htm) for Taghaza's salt houses, the time from Sijilmasa to Walata, the waterless stretch, the takshif, his fee and the dangers of the road.
 - [Ibn Battuta, Rihla chapter 14, Rolf Gross](https://rolfgross.dreamhosters.com/Battuta-Web/Rihla-14/Rihla-14.html) for the slave miners, the two slabs a camel, salt as money, Takedda and the 600 women in the caravan home.

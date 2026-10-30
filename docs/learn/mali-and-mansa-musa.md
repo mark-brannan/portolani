@@ -96,6 +96,7 @@ Mali outlived him. Ibn Battuta visited in the reign of Musa's brother Sulayman, 
 
 ## Sources
 
+- [The Mali Empire, Gabriel Moss, 2016, CC BY-SA 4.0](https://en.wikipedia.org/wiki/File:The_Mali_Empire.jpg), a map of the kingdom's borders at the end of Musa's reign, its goldfields and its trade roads.
 - [Al-Umari's account of Mansa Musa's visit to Cairo, World History Commons](https://worldhistorycommons.org/al-umaris-account-mansa-musas-visit-cairo) for the Cairo audience, the refusal to kiss the ground, the gifts, the price of gold and the "nothing else" line, in the Levtzion and Hopkins translation.
 - [Ibn Fadlallah al-Umari, Wikipedia](https://en.wikipedia.org/wiki/Ibn_Fadlallah_al-Umari) for the date of his Mali section, about 1337 to 1338.
 - [Ibn Battuta, Travels in Asia and Africa, Internet History Sourcebooks, Fordham](https://sourcebooks.fordham.edu/source/1354-ibnbattuta.asp) for the qadi exiled among the cannibals, Farba Magha, and Sulayman as a miserly king, in Gibb's translation.

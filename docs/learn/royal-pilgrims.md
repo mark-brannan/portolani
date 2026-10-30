@@ -24,6 +24,8 @@ From Cairo the Mamluk pilgrim road ran east through Sinai to Ayla, at the head o
 
 The Sahara half is harder. No source gives Musa's stages between Mali and Cairo. He may well have gone by Walata and the oases, as the trade did, but that is a guess, not a record. The best measure of the desert is Ibn Battuta's, on a different journey in 1352: two months from Sijilmasa to Walata. The road he took is on [the trans-Saharan trade](trans-saharan-trade.md).
 
+Modern maps disagree, which shows how open the question is. One reproduced by [Big Think](https://bigthink.com/the-past/mansa-musa-mali-king-atlantic/) runs Musa north from the capital past Timbuktu to the salt mines of Taghaza, then due east across the open Sahara to Cairo. The line on this chart goes by Walata and the oases of Tuat, and comes home by Gao and Timbuktu. [Gabriel Moss's map of the empire in 1337](https://en.wikipedia.org/wiki/File:The_Mali_Empire.jpg) draws no hajj at all, only the trade roads from Walata, Timbuktu and Gao to Morocco, Tunis and Tripoli. Each follows the trade roads; none records Musa's.
+
 ## Mecca, 1324
 
 Only one writer saw Musa at Mecca. The Meccan scholar al-Yafi'i says he "presented himself for the pilgrimage with thousands of his soldiers", heavily armed. Al-Yafi'i also records a fight inside the sanctuary between Malian and Turkic pilgrims, and says Musa persuaded his men to stand down. The way home went badly: travelling apart from the main caravan, many of the Malians died of hunger or at the hands of bandits before they reached Suez.
@@ -64,6 +66,8 @@ Some of the best-known stories about Musa's pilgrimage have no source anyone has
 
 ## Sources
 
+- [Mansa Musa and the mythical African king who may (or may not) have sailed to the Americas, Tim Brinkhof, Big Think, 2023](https://bigthink.com/the-past/mansa-musa-mali-king-atlantic/) for a modern map that draws the hajj road by Timbuktu and Taghaza.
+- [The Mali Empire, Gabriel Moss, 2016, CC BY-SA 4.0](https://en.wikipedia.org/wiki/File:The_Mali_Empire.jpg) for the empire's borders in 1337 and its trade roads.
 - [Mansa Uli, Wikipedia](https://en.wikipedia.org/wiki/Mansa_Uli) for Uli's hajj under Baybars and Levtzion on the need to hold Timbuktu.
 - [Mansa Sakura, Wikipedia](https://en.wikipedia.org/wiki/Mansa_Sakura) for Sakura's rise, status, hajj and death at Tajura, and the griots' account of his killers.
 - [Dunama I Umemi, Wikipedia](https://en.wikipedia.org/wiki/Dunama_I_Umemi) for Hummay, Dunama's two pilgrimages, the 300 slaves and the sinking at Suez.
