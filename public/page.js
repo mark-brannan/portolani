@@ -979,7 +979,9 @@ function paintFrame(doing) {
   const t = performance.now();
   // the 10m cells placed last while they cover the view; 50m otherwise, until it stops and is placed again
   drawGround(ctx, covers(ground.world, view) ? ground.world : ground.coarse, view, ground.bg);
-  drawAnchored(ctx, ground.anchored, ground.bg, view); // the placed ornaments, held to the earth
+  // the placed ornaments, held to the earth; a flight leaves them out once it is more than FLY_HOLD zoom levels from
+  // where they were placed, since shrunk they crowd into a blot and grown they smear, and the coast keeps the place
+  if (!flightTo || Math.abs(Math.log2(viewProjection(view).k / ground.anchored.k)) <= FLY_HOLD) drawAnchored(ctx, ground.anchored, ground.bg, view);
   drawPictures(ctx);
   drawSheetHandles(ctx);
   drawCards(true);
@@ -1817,6 +1819,7 @@ $('coordsText').addEventListener('input', () => { $('goMiss').hidden = true; });
 // straight, a far one in an arc out, across and down, longer for longer): the ground is drawn on the way as
 // for a drag, and the ornaments placed when it lands. Every fly on the page comes through here. Reduced motion jumps.
 let flight = 0, flightTo = null; // the view a flight is bound for, while it flies
+const FLY_HOLD = 1; // zoom levels a flight draws the placed ornaments over, either side of where they were placed
 function goTo(target) {
   cancelAnimationFrame(flight);
   pinTitle = null;

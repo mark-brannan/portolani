@@ -53,12 +53,13 @@ test('a far place: out to where both fit, across at that height, then down onto 
   assert.equal(phase, 'down');
 });
 
-test('the top of the arc is set by the distance: farther is higher, held at the map\'s widest zoom', () => {
+test('the top of the arc is set by the distance: farther is higher, held at the minimum zoom', () => {
   const from = { ...genoa, zoom: 9 }, tops = [marseille, havana, auckland].map((p) => planFlight(from, { ...p, zoom: 9 }, opts).top);
   close(tops[0], 7.57, 0.01); // Genoa to Marseille, 3.6 degrees of longitude
   close(tops[1], 2.89, 0.01); // to Havana, 91 degrees
   assert.ok(tops[0] > tops[1] && tops[1] > tops[2], tops.join(' > '));
-  assert.ok(tops[2] >= 1);
+  close(tops[2], 2.03, 0.01); // to Auckland, 166 degrees the short way
+  assert.equal(planFlight({ lon: 0, lat: 80, zoom: 9 }, { lon: 0, lat: -80, zoom: 9 }, opts).top, 1); // pole to pole: past the map's widest zoom, held at z1
   assert.equal(planFlight({ ...genoa, zoom: 9 }, { ...auckland, zoom: 9 }, { ...opts, minZoom: 2.5 }).top, 2.5);
 });
 
