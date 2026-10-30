@@ -1436,11 +1436,13 @@ function showVoyageDraw() {
   $('voyageDrawOut').textContent = `${style.voyageDraw} s`;
 }
 const drawSlider = $('voyageDraw');
+let drawSample = null; // the sample line's animation, cancelled when the slider moves again
 drawSlider.addEventListener('input', () => {
   style = { ...style, voyageDraw: voyageDrawSeconds(drawSlider.value) };
   showVoyageDraw(); writeHash();
   if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    $('voyageDrawSample').querySelector('path').animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: style.voyageDraw * 1000, easing: 'linear' });
+    drawSample?.cancel();
+    drawSample = $('voyageDrawSample').querySelector('path').animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: style.voyageDraw * 1000, easing: 'linear' });
   }
 });
 // The pen: a voyage's line drawn from its start to its end in the slider's seconds, at an even pace along the line,
@@ -1455,7 +1457,11 @@ function finish(id) { const v = ground?.voyages?.find((x) => x.id === id); if (v
 function drawOn(id) {
   const pen = voyagePen = { id, since: performance.now(), t0: null, ms: style.voyageDraw * 1000 };
   const step = () => {
-    if (voyagePen !== pen) return finish(id);
+    if (voyagePen !== pen) { // stopped by a later click, which repaints: a new pen (on the same voyage it owns the reveal), or an eye's render
+      const v = ground?.voyages?.find((x) => x.id === id);
+      if (v && voyagePen?.id !== id) delete v.reveal;
+      return;
+    }
     const now = performance.now();
     if (pen.t0 == null) { // wait for the flight to land and the scene to be placed with this voyage in it
       if (flightTo == null && placed === view && ground?.voyages?.some((x) => x.id === id)) pen.t0 = now;

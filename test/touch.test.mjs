@@ -371,6 +371,7 @@ test('voyages: several drawn at once, each in its own ink, carried by the link; 
     assert.match(await hash(), /voyages=magellan,columbus~,drake~(&|$)/);
     await drawing();
     await settled();
+    assert.notEqual(await viewNow(), where, 'the name did not fly to frame the voyage');
     for (const [id, c] of Object.entries(await inkOf())) assert.equal(c, before[id], `${id} changed ink when the name hid it`);
     await pen();
     await page.click('#voyageList [data-voyage="magellan"]');
