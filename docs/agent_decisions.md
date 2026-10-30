@@ -387,3 +387,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261030t035450z
 - A voyage hidden by its eye is written id~ in voyages= (id:colour~), keeping its place and colour in a link The first draw starts only after the flight lands and the placed scene holds the voyage; times out after 10 s A migration voyage's ribbon and stream draw whole; only its marks wait for the pen ([#295](https://github.com/mark-brannan/portolani/pull/295))
+
+### 20261030t035832z
+- Pinned Catalan rose (#138): sprite rose-catalan where the set holds it, else the set's big rose; drawn at the big-rose cap (80 px, so the -small sibling); outside every sheet's allotment, every sheet's beasts keep clear; drawn whatever sheet is kept over the pin (Dulcert at z4); none with roselines off or at density 0 Undo: revert the pinned-rose commits of PR 296 ([#296](https://github.com/mark-brannan/portolani/pull/296))
