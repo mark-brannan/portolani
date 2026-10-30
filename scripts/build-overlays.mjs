@@ -6,8 +6,9 @@
 //
 // The Carta Marina's two fits are refitted from the figures table in docs/atlas/ornaments.md ("Carta
 // Marina, 1539"): every row gives a figure's scan px and the lon, lat its side's fit put it at, so a
-// least-squares similarity through a side's rows gives back that side's fit. The Catalan Atlas's one fit
-// is made from its landmarks table there ("Landmarks, sheet 5"): each row's scan px and real lon, lat. Juan de
+// least-squares similarity through a side's rows gives back that side's fit. The Catalan Atlas is eight pages
+// (BnF sheets 5 to 12), each its own panel cropped to its parchment and butted to the last, and one piece each,
+// fitted to that page's landmarks table there ("Landmarks, sheet N"): each row's page px and real lon, lat. Juan de
 // la Cosa's three are made the same way from "Landmarks, 1500", each from the rows of its piece.
 
 import { createCanvas, loadImage } from '@napi-rs/canvas';
@@ -53,23 +54,61 @@ export function pieceFit(rows, piece) {
 }
 
 // A level similarity (no turn) through `pairs` [[x, y], [lon, lat]] by least squares: a rough centre and scale for a
-// chart laid by a handful of landmarks read off the scan, so the sheet's own placement is truly level.
-export function levelFit(pairs) {
-  const k = similarityFit(pairs).a, n = pairs.length; // with the turn held at 0, the real part is the least-squares scale
+// chart laid by a handful of landmarks read off the scan, so the sheet's own placement is truly level. With `k` the
+// scale is held at it and only the centre is fitted.
+export function levelFit(pairs, k = similarityFit(pairs).a) { // with the turn held at 0, the real part is the least-squares scale
+  const n = pairs.length;
   const mx = pairs.reduce((t, [[x]]) => t + x, 0) / n, my = pairs.reduce((t, [[, y]]) => t + y, 0) / n;
   const mu = pairs.reduce((t, [, [lon]]) => t + lon, 0) / n, mv = pairs.reduce((t, [, [, lat]]) => t + mercDeg(lat), 0) / n;
   return { a: k, b: 0, tx: mu - k * mx, ty: mv + k * my };
 }
 
+// The Catalan Atlas's eight map pages, BnF sheets 5 to 12, west to east, each cropped to its parchment: x0 to x1 of
+// its own scan, measured on 2026-10-29 as the columns where the scanner's paper is under a third of the page's
+// middle 70%. `label` names the page's snap by what it shows. `part` is which half of the atlas the page is: 'portolan'
+// (sheets 5 to 8), fitted by similarity, turn and all; 'mappa mundi' (sheets 9 to 12, east of the Caspian), laid level
+// at the atlas scale. Sheets 1 to 4 are the calendar and cosmography.
+export const CATALAN_PAGES = [
+  [5, 288, 6160, 'Atlantic', 'portolan'], [6, 304, 6144, 'Mali', 'portolan'], [7, 288, 6136, 'Italy', 'portolan'], [8, 352, 6216, 'Black Sea', 'portolan'],
+  [9, 304, 6184, 'Persia', 'mappa mundi'], [10, 272, 6088, 'Central Asia', 'mappa mundi'], [11, 312, 6136, 'India', 'mappa mundi'], [12, 344, 6200, 'Cathay', 'mappa mundi'],
+].map(([n, x0, x1, label, part]) => ({ n, source: `catalan-atlas-${n}`, x0, x1, label, part }));
+
+// Each page's offset in the open atlas: where its parchment starts in the sheet's full-resolution px.
+export function pageOffsets(pages) {
+  let x = 0;
+  return pages.map((p) => { const at = x; x += p.x1 - p.x0; return at; });
+}
+
+// Each page's piece, as [x0, x1, fit] in the sheet's px, from its landmarks table in ornaments.md ("### Landmarks,
+// sheet N", page px; the page's offset added here). A page of the portolan part takes the least-squares
+// similarity through its rows, turn and all. A page of the mappa mundi, east of the Caspian, is level, each
+// centred through its own few named places, at the scale of the atlas as a whole (the least-squares scale through
+// every row of the eight pages at their offsets): too few places, too far from where they lie, to set a scale of
+// their own. Sheet 10 has no place read (its lettering is upside down and worn), so it is centred through the rows
+// of sheets 9 and 11.
+export function catalanPieces(md, pages = CATALAN_PAGES) {
+  const at = pageOffsets(pages);
+  const rows = pages.map((p, i) => (md.includes(`### Landmarks, sheet ${p.n}
+`) ? landmarkRows(md, `### Landmarks, sheet ${p.n}
+`) : [])
+    .map((r) => [[at[i] + r.px[0] - p.x0, r.px[1]], r.ll]));
+  const atlas = similarityFit(rows.flat()).scale;
+  return pages.map((p, i) => {
+    if (p.part === 'portolan') { const { a, b, tx, ty } = similarityFit(rows[i]); return [at[i], at[i] + p.x1 - p.x0, { a, b, tx, ty }]; }
+    if (!rows[i].length && !(rows[i - 1]?.length && rows[i + 1]?.length)) throw new Error(`Catalan Atlas sheet ${p.n} has no landmarks and no neighbour on both sides to centre it by`);
+    const { a, b, tx, ty } = levelFit(rows[i].length ? rows[i] : [...rows[i - 1], ...rows[i + 1]], atlas);
+    return [at[i], at[i] + p.x1 - p.x0, { a, b, tx, ty }];
+  });
+}
+
 // Each chart's pieces from ornaments.md, as [x0, x1, fit]; x1 null for the scan's right edge. `scale` is how
-// far the scan is shrunk for the site.
+// far the scan is shrunk for the site. A chart of `pages` is one panel per page, butted west to east.
 const CHARTS = [
   { id: 'carta-marina', title: 'Carta Marina, Olaus Magnus, 1539', source: 'carta-marina', file: 'carta-marina.jpg', scale: 2,
     pieces: (md) => { const rows = figureRows(md); return [[0, 2700, fitOf(rows, 'west')], [2700, null, fitOf(rows, 'baltic')]]; },
     snaps: ['West', 'Baltic'] },
-  { id: 'catalan-atlas', title: 'Catalan Atlas, sheet 5, 1375', source: 'catalan-atlas-5', file: 'catalan-atlas.jpg', scale: 4,
-    pieces: (md) => { const { a, b, tx, ty } = similarityFit(landmarkRows(md, '### Landmarks, sheet 5').map((r) => [r.px, r.ll])); return [[240, 6080, { a, b, tx, ty }]]; }, // the parchment, not the scan's white margin
-    snaps: [] },
+  { id: 'catalan-atlas', title: 'Catalan Atlas, 1375', source: 'catalan-atlas-5', pages: CATALAN_PAGES, thumb: 'catalan-atlas-thumb.jpg', scale: 4,
+    pieces: (md) => catalanPieces(md), snaps: CATALAN_PAGES.map((p) => p.label) },
   { id: 'de-la-cosa', title: 'Map of Juan de la Cosa, 1500', source: 'de-la-cosa', file: 'de-la-cosa.jpg', scale: 1, // the scan is small: shrunk, the coasts would go; the pieces run from the parchment's west edge to its east
     parallels: [23.44, 0], // the two long red lines across the skin, top first: the Tropic of Cancer and the equator
     pieces: (md) => { const rows = landmarkRows(md, '### Landmarks, 1500'); return [[70, 880, 'west'], [880, 1150, 'atlantic'], [1150, 2060, 'east']].map(([x0, x1, p]) => [x0, x1, pieceFit(rows, p)]); },
@@ -84,6 +123,11 @@ const CHARTS = [
     snaps: [] },
   { id: 'dourado-atlantic', title: 'North Atlantic of Fernão Vaz Dourado, 1580', source: 'dourado-1580-k4', file: 'dourado-atlantic.jpg', scale: 4,
     pieces: () => [[0, null, levelFit([[[7010, 5975], [-9.14, 38.72]], [[6877, 5458], [-9.26, 42.88]], [[7314, 6452], [-5.6, 36.0]], [[7407, 4624], [-4.77, 48.36]], [[6983, 3908], [-8.0, 53.4]], [[8626, 5432], [3.13, 41.85]], [[6532, 2610], [-18.5, 65.0]]])]],
+    snaps: [] },
+  // Not the original: a painted copy of 1959 of the atlas's Mediterranean (sheets 5 to 8, Corsica and Sardinia drawn
+  // once), CC BY 3.0. Ten places: Gibraltar, Lisbon, Finisterre, London, Corsica, Sardinia, Sicily, Venice, Crete, Cyprus.
+  { id: 'catalan-atlas-1959-copy', title: 'Catalan Atlas, Mediterranean, a copy of 1959', source: 'catalan-atlas-1959-copy', file: 'catalan-atlas-1959-copy.jpg', scale: 4,
+    pieces: () => [[0, null, levelFit([[[3748, 5784], [-5.6, 35.97]], [[2961, 4997], [-9.14, 38.72]], [[2915, 4350], [-9.27, 42.88]], [[4072, 2360], [-0.12, 51.51]], [[6136, 3933], [9.05, 42.15]], [[6154, 4535], [9.0, 40.05]], [[7311, 4951], [14.1, 37.55]], [[7403, 3100], [12.33, 45.44]], [[9717, 5090], [24.9, 35.2]], [[11336, 4858], [33.2, 35.1]]])]],
     snaps: [] },
 ];
 
@@ -149,7 +193,8 @@ export function redLines(ctx, w, h, n = 2) {
 // The mask of the scanner's paper round the skin, on the shrunk scan: a flood fill from the image's border
 // through light or grey unsaturated pixels (never the pale sea inside the skin, which is tinted), the outermost px
 // keyed whatever they hold, one px of feather at its edge. Returns { png, keyed }: the mask as an RGBA PNG (alpha 0 where paper) and the share of pixels keyed.
-export function paperMask(ctx, w, h, { dark = false } = {}) {
+// `sides: false` keys no band down the left and right edges: a page cropped to its parchment, butted to the next.
+export function paperMask(ctx, w, h, { dark = false, sides = true } = {}) {
   const d = ctx.getImageData(0, 0, w, h).data, n = w * h;
   // the paper and the scanner's shadow on it are light to mid grey, unsaturated; the skin is tinted even where it is pale
   const paper = (p) => { const i = p * 4, r = d[i], g = d[i + 1], b = d[i + 2], mn = Math.min(r, g, b), mx = Math.max(r, g, b); return (mn > 150 && mx - mn < 30) || (dark && mx < 60 && mx - mn < 25); }; // `dark`: a scan laid on black
@@ -166,7 +211,7 @@ export function paperMask(ctx, w, h, { dark = false } = {}) {
   }
   const out = ctx.createImageData(w, h), o = out.data;
   let keyed = 0;
-  for (let p = 0; p < n; p++) { const x = p % w, y = (p - x) / w; if (x < band || y < band || x >= w - band || y >= h - band) seen[p] = 1; }
+  for (let p = 0; p < n; p++) { const x = p % w, y = (p - x) / w; if ((sides && (x < band || x >= w - band)) || y < band || y >= h - band) seen[p] = 1; }
   for (let p = 0; p < n; p++) {
     const x = p % w, edge = !seen[p] && ((x > 0 && seen[p - 1]) || (x < w - 1 && seen[p + 1]) || (p >= w && seen[p - w]) || (p + w < n && seen[p + w]));
     o[p * 4 + 3] = seen[p] ? 0 : edge ? 128 : 255;
@@ -190,6 +235,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   mkdirSync(OUT, { recursive: true });
   const overlays = [];
   for (const c of CHARTS) {
+    if (c.pages) { overlays.push(await buildPages(c, sources, md)); continue; }
     const src = sources.find((s) => s.id === c.source);
     const img = await loadImage(await scanOf(src));
     const scale = c.scale, fw = Math.round(img.width / scale), fh = Math.round(img.height / scale);
@@ -210,4 +256,37 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     console.log(`${c.id}: ${fw} x ${fh} from ${img.width} x ${img.height}, paper ${(keyed * 100).toFixed(1)}%${parallels ? `, parallels ${parallels.map((l) => `${l.lat}° at y ${l.from[1]} to ${l.to[1]}`).join('; ')}` : ''}, sheet ${sheet.scale.toFixed(4)} °/px turn ${sheet.turn.toFixed(2)}°`);
   }
   writeFileSync(join(OUT, 'overlays.json'), `${JSON.stringify({ overlays }, null, 2)}\n`);
+}
+
+// A chart of pages: each page's scan cropped to its parchment and shrunk, its own JPEG and mask, a panel at its offset;
+// the pieces and snaps from its fits; a thumbnail strip of the pages side by side, THUMB_W px wide.
+async function buildPages(c, sources, md) {
+  const THUMB_W = 480, at = pageOffsets(c.pages), panels = [], thumbs = [], scale = c.scale;
+  for (const [i, p] of c.pages.entries()) {
+    const src = sources.find((s) => s.id === p.source), img = await loadImage(await scanOf(src));
+    const w = p.x1 - p.x0, h = img.height, fw = Math.round(w / scale), fh = Math.round(h / scale);
+    const canvas = createCanvas(fw, fh), g = canvas.getContext('2d');
+    g.drawImage(img, p.x0, 0, w, h, 0, 0, fw, fh);
+    const file = `${c.id}-${p.n}.jpg`, maskFile = `${c.id}-${p.n}-mask.png`;
+    writeFileSync(join(OUT, file), canvas.toBuffer('image/jpeg', 80));
+    const { mask, keyed } = paperMask(g, fw, fh, { sides: false }), mc = createCanvas(fw, fh);
+    mc.getContext('2d').putImageData(mask, 0, 0);
+    writeFileSync(join(OUT, maskFile), mc.toBuffer('image/png'));
+    const tc = createCanvas(Math.max(1, Math.round(fw / 16)), Math.max(1, Math.round(fh / 16)));
+    tc.getContext('2d').drawImage(canvas, 0, 0, tc.width, tc.height);
+    thumbs.push(tc);
+    panels.push({ file, mask: maskFile, x: at[i], width: w, height: h, scanX: p.x0 });
+    console.log(`${c.id} sheet ${p.n}: ${fw} x ${fh} from x ${p.x0} to ${p.x1} of ${img.width} x ${img.height}, at ${at[i]}, paper ${(keyed * 100).toFixed(1)}%`);
+  }
+  const width = at.at(-1) + panels.at(-1).width, height = Math.max(...panels.map((p) => p.height));
+  const strip = createCanvas(THUMB_W, Math.round((THUMB_W * height) / width)), sg = strip.getContext('2d');
+  thumbs.forEach((t, i) => sg.drawImage(t, (panels[i].x / width) * THUMB_W, 0, (panels[i].width / width) * THUMB_W, (panels[i].height / height) * strip.height));
+  writeFileSync(join(OUT, c.thumb), strip.toBuffer('image/jpeg', 80));
+  const pieces = c.pieces(md), { sheet, snaps } = sheetPlacements(pieces, c.snaps, width, height);
+  const src = sources.find((s) => s.id === c.source);
+  console.log(`${c.id}: ${c.pages.length} pages, ${width} x ${height}, sheet ${sheet.scale.toFixed(5)} °/px at ${sheet.lon.toFixed(1)}, ${sheet.lat.toFixed(1)}`);
+  return {
+    id: c.id, title: c.title, source: src.page ?? src.url, licence: src.rights, thumb: c.thumb,
+    width, height, scale, sheet, snaps, panels, pieces: pieces.map(([x0, x1, fit]) => ({ x0, x1, fit })),
+  };
 }

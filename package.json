@@ -7,6 +7,7 @@
     "test": "node --test",
     "packs": "node scripts/build-packs.mjs",
     "overlays": "node scripts/build-overlays.mjs",
+    "people": "node scripts/build-people.mjs",
     "render": "node scripts/render.mjs",
     "build:preview": "node --max-old-space-size=6144 scripts/build-preview.mjs",
     "golden": "UPDATE_GOLDEN=1 node --test test/golden.test.mjs",
