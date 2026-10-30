@@ -19,7 +19,7 @@ import { cityPlan, drawCity, drawHouses, pxRings, insideRings } from './city.mjs
 import { urbanKey } from './urban.mjs';
 import { RIVERS, LAKES, RIVER_STYLES, LAKE_STYLES, waterOf, shown } from './water.mjs';
 import { RELIEF_STYLES, reliefOf, clearOf, drawRelief } from './relief.mjs';
-import { TREES, TREE_STYLES, plantTrees, plantPalms } from './trees.mjs';
+import { TREES, TREE_STYLES, plantTrees, plantPalms, inLake } from './trees.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
 export { SIGHT_TILES } from './sights.mjs'; // the page's tiles for its places; here so the module ships with the scene
 import { BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from './buildings.mjs';
@@ -972,7 +972,8 @@ function regionNamesOf(id, environment) {
   }
   return sets.get(id);
 }
-const CONTINENT_ZOOM_END = 5.5, REGION_ZOOM_END = 7; // continents: zoom < CONTINENT_ZOOM_END, regions overlap them to there; regions: zoom < REGION_ZOOM_END (they meet a continent's box and make way)
+export const CONTINENT_ZOOM_END = 6; // the page's Continents slider default is this too (public/page.js DEFAULTS), so a page with no settings and a headless render draw the same names
+const REGION_ZOOM_END = 7; // continents: zoom < CONTINENT_ZOOM_END, regions overlap them to there; regions: zoom < REGION_ZOOM_END (they meet a continent's box and make way)
 
 // The continent and region names to letter, each with the box it reserves: measured with the font and
 // spacing they are drawn in, so later names and towns make way. A name off the canvas or meeting an
@@ -1627,8 +1628,11 @@ function buildScene(data, sprites, ctx, world = {}) {
   const bar = world.scaleBar ? scaleBox(barCorner, world.pinned !== false && barCorner === cartoucheCorner ? cartouche.h + 10 : 0) : null;
   const blocked = (x0, y0, x1, y1) => {
     const b = obb((x0 + x1) / 2, (y0 + y1) / 2, 0, (x1 - x0) / 2, (y1 - y0) / 2);
-    return boxes.some((o) => obbOverlap(o, b)) || (bar && obbOverlap(bar, b)) || urban.some((u) => meets({ x0, y0, x1, y1 }, u.box));
+    return boxes.some((o) => obbOverlap(o, b)) || (bar && obbOverlap(bar, b)) || urban.some((u) => meets({ x0, y0, x1, y1 }, u.box)) || onLake(x0, y0, x1, y1);
   };
+  // a drawn lake is water: no mountain or hill stands on it, at its box's corners, edge middles or centre
+  const lakes = STYLE.lakes !== 'off' && water ? keptWater(data).lakes : [];
+  const onLake = (x0, y0, x1, y1) => lakes.length > 0 && [x0, (x0 + x1) / 2, x1].some((x) => [y0, (y0 + y1) / 2, y1].some((y) => inLake(lakes, data.proj.invert(x, y))));
   const relief = reliefWanted() ? clearOf(reliefFor(data.proj, data.land), blocked) : null;
   const mountains = relief ? placeHillSprites(relief.humps, sprites.mountains ?? [], blocked, field, data.proj) : [];
 
@@ -3206,13 +3210,15 @@ export const viewProjection = (view) => makeProjection(clampView(view));
 // `always`, which frames the whole voyage whatever is in view; else the view that fits its whole track with a margin of `pad` of the track's span on each side, in the view's projection.
 // The track's longitudes are read round the globe, so a track across the date line is framed the short way.
 export const VOYAGE_FIT_PAD = 0.1;
-export function voyageView(voyage, view, pad = VOYAGE_FIT_PAD, always = false) {
+// `rect` is the part of the canvas the window shows ({ x0, y0, x1, y1 } in canvas px; the whole canvas by default): on a phone the
+// canvas is cropped to the window, so "in view" and the fit both use it, and the track is centred in it.
+export function voyageView(voyage, view, pad = VOYAGE_FIT_PAD, always = false, rect = { x0: 0, y0: 0, x1: W, y1: H }) {
   const proj = viewProjection(view), pts = (voyage?.legs ?? []).flatMap(pathOf);
   if (!pts.length) return null;
   if (!always) for (const [lon, lat] of pts) {
     if (proj.visible && !proj.visible(lon, lat)) continue;
     const [x, y] = proj.toPx([lon, lat]);
-    if (x >= 0 && x <= W && y >= 0 && y <= H) return null;
+    if (x >= rect.x0 && x <= rect.x1 && y >= rect.y0 && y <= rect.y1) return null;
   }
   // the longitudes as an arc: the circle less its widest gap
   const lons = [...new Set(pts.map(([lon]) => ((lon % 360) + 360) % 360))].sort((a, b) => a - b);
@@ -3221,8 +3227,10 @@ export function voyageView(voyage, view, pad = VOYAGE_FIT_PAD, always = false) {
   const span = 360 - gap, lats = pts.map(([, lat]) => lat);
   const latMin = Math.max(-80, Math.min(...lats)), latMax = Math.min(80, Math.max(...lats));
   const dLon = Math.max(span, 0.5) * pad, yMin = mercY(latMin), yMax = mercY(latMax), dY = Math.max(yMax - yMin, 0.01) * pad;
-  const k = Math.min(W / ((Math.max(span, 0.5) + 2 * dLon) * RAD), H / (Math.max(yMax - yMin, 0.01) + 2 * dY));
-  return clampView({ lon: west + span / 2, lat: mercLat((yMin + yMax) / 2), zoom: Math.log2((k * 2 * Math.PI) / 512), projection: view.projection });
+  const rw = rect.x1 - rect.x0, rh = rect.y1 - rect.y0;
+  const k = Math.min(rw / ((Math.max(span, 0.5) + 2 * dLon) * RAD), rh / (Math.max(yMax - yMin, 0.01) + 2 * dY));
+  const dx = (rect.x0 + rect.x1 - W) / 2, dy = (rect.y0 + rect.y1 - H) / 2; // the window's centre off the canvas's, which the view's centre is
+  return clampView({ lon: west + span / 2 - dx / (k * RAD), lat: mercLat((yMin + yMax) / 2 + dy / k), zoom: Math.log2((k * 2 * Math.PI) / 512), projection: view.projection });
 }
 export const TOWN_SIZES = ['area', 'population', 'rank'];
 export { RIVER_STYLES, LAKE_STYLES, TREE_STYLES, RELIEF_STYLES };
