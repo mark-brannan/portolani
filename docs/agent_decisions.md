@@ -384,3 +384,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261030t035411z
 - Up and Down also step along a chip group Undo: drop ArrowUp and ArrowDown from the step map ([#294](https://github.com/mark-brannan/portolani/pull/294))
+
+### 20261030t035450z
+- A voyage hidden by its eye is written id~ in voyages= (id:colour~), keeping its place and colour in a link The first draw starts only after the flight lands and the placed scene holds the voyage; times out after 10 s A migration voyage's ribbon and stream draw whole; only its marks wait for the pen ([#295](https://github.com/mark-brannan/portolani/pull/295))
