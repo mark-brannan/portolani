@@ -336,3 +336,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261030t015648z
 - Musa's bio carries one sentence attributed to Siphiwe Baleka (Balanta Society, 2020): Mali's wealth from taxes, trade and enslavement, and the Balanta remembering it as an empire that raided them Undo: remove the sentence and the baleka-balanta-mali source from Musa's record ([#284](https://github.com/mark-brannan/portolani/pull/284))
+
+### 20261030t015654z
+- The Giza event gives the caravan as the sources' figures by date, and reads al-Qalqashandi's 12,000 enslaved attendants in silk as rhetoric, after Isaac Samuel Undo: edit the Giza event text ([#284](https://github.com/mark-brannan/portolani/pull/284))
