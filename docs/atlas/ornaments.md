@@ -68,7 +68,7 @@ of legend; and the islands between Galicia and Madeira (insule de corvi marini, 
 the Azores but are too far from them to read as any one. The rose at 2000, 7950 lands at 20.4°W 43.6°N by this
 fit, within centres.md's ±2° of R1.
 
-The fit lays the scan over the map: [docs/overlay/README.md](../overlay/README.md).
+The scan is cut into vertical strips and each strip drawn by its own fit, under the lattice and every ornament; how, with pictures: [docs/overlay/README.md](../overlay/README.md#warped-pieces).
 
 ## Catalan Atlas, sheets 6 to 12
 
@@ -223,7 +223,7 @@ Lake Vänern's ships are inland and left out. The sheet's extent (README.md, "Th
 5°W, so 17 of its 27 figures, the four cropped ones among them, lie off it and are not drawn until that
 edge moves west to take in Iceland.
 
-The two fits also lay the whole scan over the map, refitted from this table: [docs/overlay/README.md](../overlay/README.md).
+The two fits cut the scan into two strips, each drawn by its fit, refitted from this table: [docs/overlay/README.md](../overlay/README.md#warped-pieces).
 
 ## Juan de la Cosa, 1500
 
@@ -276,4 +276,4 @@ Left out of the fit: the large coloured island north-west of Ireland at 925, 215
 the two orange islands at 1070, 442 and 1107, 412, which may be the Balearics or Sardinia and Corsica; and
 the Asian coast east of the Red Sea, whose capes cannot be told apart at this size.
 
-The fits lay the scan over the map: [docs/overlay/README.md](../overlay/README.md).
+The fits cut the scan into three strips, each drawn by its fit, with a gap where their scales disagree: [docs/overlay/README.md](../overlay/README.md#warped-pieces).

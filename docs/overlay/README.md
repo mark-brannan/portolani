@@ -92,30 +92,28 @@ under that the city it was made in (a link that flies there) with its year.
 ## Warped pieces
 
 The older way is kept as a mode, "Warped pieces" under Settings → Under the hood, with its opacity slider
-(`overlaymode=pieces&overlayopacity=0.6` in the link). It cuts the scan into pieces and warps each onto
-today's coast, drawn over the land and sea and under the rhumb lines, names, towns, roses, beasts, ships and
-voyages at that opacity. The rest of this page is about those pieces.
+(`overlaymode=pieces&overlayopacity=0.6` in the link). In four steps:
 
-## How it is placed
+1. **Cut.** The scan is cut into vertical strips, a few per chart (the Carta Marina two, Juan de la Cosa three,
+   the Catalan Atlas one a page).
+2. **Fit.** Each strip gets its own similarity: a scale, a turn and a shift, fitted by least squares to landmarks
+   read off that strip of the scan (a cape, a town, an island, each with the longitude and latitude it has today).
+3. **Draw.** Each strip is drawn onto the map by its own fit, at layer 2.1: over the land and sea, under the
+   lattice and every ornament, with a plain alpha (the slider) and no other blending.
+4. **Read.** So at opacity 1 the strips are opaque, yet the rhumb lines, names, towns, roses, beasts, ships and
+   voyages still show over them; and where two neighbouring strips' scales disagree, they do not meet: the strips
+   leave a gap, with no scan in it.
 
-The chart is not one similarity: Scandinavia is turned. The two fits of
-[docs/atlas/ornaments.md](../atlas/ornaments.md) ("Carta Marina, 1539") split it at x = 2700 scan px. Each is
-a similarity (scale, turn, shift) from scan px to longitude and Mercator latitude, refitted by least
-squares from that page's figures table, which gives every figure's scan px and the lon, lat its side's fit
-put it at. The refit gives back all 27 rows to 0.07 degree (the table rounds to 0.1); the fits' own
-residual against the landmarks is 47 to 101 km.
+The gap is the picture to look for. Juan de la Cosa's New World is drawn larger than its Old, so its west and
+Atlantic strips pull apart over the mid-Atlantic. At opacity 1 (the lattice and names still drawn over it):
 
-| piece | scan px | scale | turn |
-|---|---|---|---|
-| west | x 0 to 2700 | 0.0113 °/px | 48° |
-| Baltic | x 2700 to 5016 | 0.0100 °/px | 3° |
+![Juan de la Cosa's strips at opacity 1, a band of open ocean between them](de-la-cosa-1.jpg)
 
-Each piece is drawn with one affine through three of its corners (scan px, through its fit, through the
-view's projection). A similarity onto Mercator coordinates is affine in Mercator, so there the warp is
-exact. In any other projection it is an approximation: true at those three corners and drifting between
-them, the more the further the chart reaches from the view's centre. Where the two pieces meet, at x = 2700,
-a straight seam runs down through Sweden and the west piece's turned corner shows as a diagonal edge north
-of it; that is the two fits disagreeing, not a fault in the drawing.
+The same chart at 0.6, the strips faint enough to see today's coast through them:
+
+![The same view at 0.6](de-la-cosa-0.6.jpg)
+
+The rest of this page is about those strips, which the code and the sections below call pieces.
 
 ## At the Carta Marina view
 
