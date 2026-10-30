@@ -26,14 +26,14 @@ test('every sprite in every pack names its style', () => {
 test('a kind the rendering lacks is drawn from the other pack; plain draws no pictures', () => {
   assert.deepEqual(RENDERINGS, ['vivid', 'scanned', 'plain']);
   const vivid = chooseSprites(manifests, { rendering: 'vivid' });
-  assert.deepEqual(vivid.roses.map((s) => `${s.pack}/${s.id}`), ['vivid/rose-aguiar', 'vivid/rose-catalan']);
+  assert.deepEqual(vivid.roses.map((s) => `${s.pack}/${s.id}`), ['vivid/rose-aguiar', 'vivid/rose-catalan', 'vivid/rose-catalan-small']);
   assert.ok(vivid.monsters.length > 0 && vivid.monsters.every((s) => s.pack === 'vivid' && s.style === 'carta-marina'));
   assert.ok(vivid.ships.length > 0 && vivid.ships.every((s) => s.pack === 'vivid'));
   assert.equal(vivid.cartouche.id, 'cartouche-frame');
   assert.deepEqual(vivid.towns, []); // the tower, drawn in code
 
   const scanned = chooseSprites(manifests, { rendering: 'scanned', town: 'aguiar' });
-  assert.deepEqual(scanned.roses.map((s) => s.id), ['rose-aguiar', 'rose-catalan', 'rose-prunes', 'rose-aguiar-b']);
+  assert.deepEqual(scanned.roses.map((s) => s.id), ['rose-aguiar', 'rose-catalan', 'rose-catalan-small', 'rose-prunes', 'rose-aguiar-b']);
   assert.equal(scanned.cartouche.id, 'cartouche-dewit');
   assert.deepEqual(scanned.towns.map((s) => `${s.pack}/${s.file}`),
     ['venice', 'genoa', 'lisbon', 'lake', 'lake-moat', 'smina', 'jerusalem', 'ceuta', 'avignon'].map((t) => `scanned/town-aguiar-${t}.png`));

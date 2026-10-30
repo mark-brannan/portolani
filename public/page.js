@@ -898,13 +898,13 @@ const MOODS = [
   fixedMood('Pilot’s chart', 'lines, names and a plain rose: the working chart, nothing drawn on it', ['rose'],
     ['p:rose'], { density: 0, land: 'off', rivers: 'off', lakes: 'off', mountains: 'off', trees: 'off' }),
   fixedMood('Tasteful', 'Majorcan: a Catalan rose, coloured islands, tinted seas, hills, a few figures, at half density', ['rose', 'monster', 'mountain'],
-    ['s:rose-catalan', 'v:rose-catalan', 'v:cartouche-frame', 'v:merman', 'v:hippocampus', 'v:galley', 'v:caravel', ...HILLS, ...AGUIAR_SCAN],
+    ['s:rose-catalan', 's:rose-catalan-small', 'v:rose-catalan', 'v:rose-catalan-small', 'v:cartouche-frame', 'v:merman', 'v:hippocampus', 'v:galley', 'v:caravel', ...HILLS, ...AGUIAR_SCAN],
     { density: 0.5, islands: true, seaTint: true, mountains: 'off' }), // the Catalan hills carry the relief
   fixedMood('Woodcut', 'printed: ink on paper, the Carta Marina’s and Paré’s creatures, hatched mountains', ['monster', 'ship'],
     ['p:rose', 's:cartouche-dewit', 's:serpent-a', 's:whale-b', 's:pistrix-c', 's:cete-e', 's:pare-truie', 's:pare-boar', 's:pare-lion', 's:pare-calf', 's:pare-elephant', 's:pare-bear', 's:pare-seaman', 's:pare-bishop', 'd:debry-monster', 's:ship-a', 's:ship-b', 's:ship-w-key', 's:ship-w-buss', 'd:debry-ship-a', 'd:debry-ship-b', 'd:debry-canoe', 'p:tower', 'p:tower-dome', 'p:house', 'p:church', 'p:castle', 'p:round-tower', 'p:tent'],
     { density: 1, land: 'off', rivers: 'marina', lakes: 'marina', mountains: 'ink', trees: 'ink', ink: '#1d1913', parchment: '#efe9dc' }),
   fixedMood('Illuminated', 'gilt land, blue rivers, coloured islands, the scanned roses, every Aguiar town', ['rose', 'monster', 'town'],
-    ['s:rose-aguiar', 's:rose-catalan', 's:rose-prunes', 's:rose-aguiar-b', 'v:rose-fleurs', 'v:rose-fleurs-small', 'v:cartouche-frame', 'v:sea-dragon', 'v:sea-lion', 'v:dolphin', 'v:merman', 'v:hippocampus', 'v:walrus', 'v:galleon', 'v:caravel-heraldic', 'v:carrack', 'v:galley', 'v:caravel', ...HILLS, ...AGUIAR_SCAN, ...AGUIAR_DRAWN],
+    ['s:rose-aguiar', 's:rose-catalan', 's:rose-catalan-small', 's:rose-prunes', 's:rose-aguiar-b', 'v:rose-fleurs', 'v:rose-fleurs-small', 'v:cartouche-frame', 'v:sea-dragon', 'v:sea-lion', 'v:dolphin', 'v:merman', 'v:hippocampus', 'v:walrus', 'v:galleon', 'v:caravel-heraldic', 'v:carrack', 'v:galley', 'v:caravel', ...HILLS, ...AGUIAR_SCAN, ...AGUIAR_DRAWN],
     { density: 1.5, land: 'gilt', islands: true, seaTint: true, rivers: 'aguiar', lakes: 'aguiar', mountains: 'colour', trees: 'marina' }),
   { label: 'All the things', note: 'density 2, re-rolled, every figure on, the styles at their defaults', kinds: FIGURE_KINDS, keys: FIGURES, all: true,
     set: () => {

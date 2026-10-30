@@ -216,7 +216,7 @@ test('with several roses selected the big roses vary by sheet, not always the fi
   const centres = new Set()
   for (let lon = -60; lon < 60; lon += 15) {
     // each sheet picks its rose by its name: the five world-band sheets are too few to show the pair, so the grid's
-    const { scene } = await createScene(env, { view: { lon, lat: 30, zoom: 6 }, sprites: ['vivid/rose-aguiar', 'vivid/rose-catalan'] })
+    const { scene } = await createScene(env, { view: { lon, lat: 30, zoom: 6 }, sprites: ['vivid/rose-aguiar', 'vivid/rose-catalan', 'vivid/rose-catalan-small'] })
     const big = Math.max(...scene.roseDraws.map((r) => r.size))
     for (const r of scene.roseDraws) if (r.size === big) centres.add(r.sprite.id)
   }
