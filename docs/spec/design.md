@@ -505,11 +505,11 @@ Feature: A person's picture card
     And the link to Wikimedia Commons is a small link glyph (⎘, ⧉, ⮺ or 🔗), never the sentence "Its page on Wikimedia Commons"
     And on a wide screen a card opens larger by default than at the walk
   Scenario: look, then flip and put away
-    Source: the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "The resize icon and the flip icon are both confusing.  I feel as though the resize should have arrows or something.  Do you have other examples of a resize icon?  The flip does not look like an arrow.  We could instead put an eye icon or some other view icon and then that would make the image larger, near full size or full size...and then there could be a "flip" or "put away" icon after that point."; and the user on the icons, in the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "pics in drawer for people, "look" 👁"; "then flip ⟳ and put away (But not ⏏ for put away, I'm not sure which one I like)"
+    Source: the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "The resize icon and the flip icon are both confusing.  I feel as though the resize should have arrows or something.  Do you have other examples of a resize icon?  The flip does not look like an arrow.  We could instead put an eye icon or some other view icon and then that would make the image larger, near full size or full size...and then there could be a "flip" or "put away" icon after that point."; and the user on the icons, in the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "pics in drawer for people, "look" 👁"; "then flip ⟳ and put away (But not ⏏ for put away, I'm not sure which one I like)"; and later, on the put-away glyph: "For put away: use an X that is evocative of an X for buried treasure on a map  (unicode Chi?), or possibly an X stylized as a small skull and cross bones"
     Given a picture card
     When the user looks at its front
     Then it shows 👁, and a click on it enlarges the card to near full size
-    And the enlarged card shows ⟳ to turn it over, and a put-away control whose glyph is open, any but ⏏
+    And the enlarged card shows ⟳ to turn it over, and a put-away control drawn as an X like the one that marks buried treasure on a map, or a small skull and crossbones
     And the card's old resize icon goes
 
 Feature: People and voyages share one timeline
