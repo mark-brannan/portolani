@@ -1058,7 +1058,7 @@ function dropSheet() {
   style = { ...style, sheets: withSheet(o, o.sheet) };
   writeHash(); render();
 }
-// The handles, drawn over the scene and every moving frame: a ring with an arrow to turn, a square with a diagonal to resize.
+// The handles, drawn over the scene and every moving frame: a ring with an arrow to turn, a square with a ⤢ to resize.
 function drawSheetHandles(g) {
   for (const o of sheetsShown()) drawHandles(g, sheetGeometry(o));
 }
@@ -1072,7 +1072,10 @@ function drawHandles(g, geo) {
   const ax = tr[0] + r * 0.55 * Math.cos(Math.PI * 0.6), ay = tr[1] + r * 0.55 * Math.sin(Math.PI * 0.6);
   g.beginPath(); g.moveTo(ax - 4, ay - 0.5); g.lineTo(ax, ay + 0.5); g.lineTo(ax + 1, ay - 4); g.stroke();
   g.beginPath(); g.rect(br[0] - r, br[1] - r, 2 * r, 2 * r); g.fill(); g.stroke();
-  g.beginPath(); g.moveTo(br[0] - r * 0.5, br[1] + r * 0.5); g.lineTo(br[0] + r * 0.5, br[1] - r * 0.5); g.stroke();
+  const a = r * 0.55, h = r * 0.4; // the ⤢: a diagonal from bottom left to top right, an arrowhead at each end
+  g.beginPath(); g.moveTo(br[0] - a, br[1] + a); g.lineTo(br[0] + a, br[1] - a); g.stroke();
+  g.beginPath(); g.moveTo(br[0] + a - h, br[1] - a); g.lineTo(br[0] + a, br[1] - a); g.lineTo(br[0] + a, br[1] - a + h); g.stroke();
+  g.beginPath(); g.moveTo(br[0] - a + h, br[1] + a); g.lineTo(br[0] - a, br[1] + a); g.lineTo(br[0] - a, br[1] + a - h); g.stroke();
   g.restore();
 }
 // The snap chips, at the top sheet's top left corner in the window (kept inside it), lit where that sheet lies now.
