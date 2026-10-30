@@ -82,9 +82,17 @@
   #voyageList li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
   #voyageList button { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
   #voyageList button svg { width: 28px; height: 18px; flex: none; }
-  #voyageList button[aria-checked="true"] { background: #e2cd9e; color: #3b2a1a; border-color: #b89a68; } /* a chosen voyage, lit like an open instrument */
+  #voyageList button[data-shown="true"] { background: #e2cd9e; color: #3b2a1a; border-color: #b89a68; } /* a shown voyage, lit like an open instrument */
+  #voyageList .eye { padding: 2px 4px; width: 30px; height: 26px; justify-content: center; } /* the chart rows' eye, between the name and the ink */
+  #voyageList .eye svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+  #voyageList .eye[aria-pressed=true] .slash { display: none; }
+  #voyageList .eye[aria-pressed=false] { opacity: 0.7; }
   #voyageList input[type=color] { width: 28px; height: 22px; border-radius: 6px; cursor: pointer; } /* the swatch is the voyage's ink; a click picks another */
   #voyagesPanel .vtools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 4px; }
+  #voyagesPanel .vdraw { margin: 0 0 6px; font: 13px var(--serif); } /* the pen's seconds, its sample line drawing on at that pace */
+  #voyagesPanel .vdraw output { min-width: 34px; font-size: 13px; color: inherit; }
+  #voyageDrawSample { width: 40px; height: 10px; flex: none; }
+  #voyageDrawSample path { fill: none; stroke: #8c2f1e; stroke-width: 2.2; stroke-linecap: round; stroke-dasharray: 1; }
   #voyagesPanel .chip { display: inline-flex; padding: 3px 8px; border-radius: 14px; box-shadow: none; font: 12px var(--serif); background: var(--sheet); color: var(--sheet-ink); }
   #voyagesPanel .chip[aria-checked=true] { box-shadow: inset 0 0 0 1px var(--accent); border-color: var(--accent); }
   #voyageList .when { font-size: 11px; font-style: italic; opacity: 0.75; margin-left: 6px; }
@@ -332,7 +340,7 @@
 </style>
 </head>
 <body>
-<canvas id="map" width="1600" height="1000" aria-label="Chart: drag to pan, wheel or pinch to zoom"></canvas>
+<canvas id="map" width="1600" height="1000" aria-label="Chart: drag to pan, wheel or pinch to zoom"><ul id="pictureKeys" aria-label="Pictures on the map"></ul></canvas>
 <div id="snap" aria-hidden="true"></div>
 <div id="sheetChips" class="tools" role="radiogroup" aria-label="Where the sheet lies" hidden></div>
 <canvas id="cardCartouche" class="card" aria-hidden="true" hidden></canvas>
@@ -389,6 +397,7 @@
   </div>
   <div id="voyagesPanel" class="drawer menu">
     <div class="vtools"><div id="voyageWidth" class="chips" role="radiogroup" aria-label="Line weight"></div></div>
+    <div class="slider vdraw" title="How long the pen takes to draw a voyage on when its name is clicked"><label for="voyageDraw">Drawn in</label><input id="voyageDraw" type="range"><svg id="voyageDrawSample" viewBox="0 0 40 10" aria-hidden="true"><path d="M2 5h36" pathLength="1"/></svg><output id="voyageDrawOut" for="voyageDraw"></output></div>
     <ul id="voyageList" role="group" aria-label="Voyages, any number"></ul>
   </div>
   <div id="peoplePanel" class="drawer menu">
