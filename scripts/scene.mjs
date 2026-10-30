@@ -1236,12 +1236,12 @@ const placedBox = ({ box: [c0, c1, c2] }) => obb((c0[0] + c2[0]) / 2, (c0[1] + c
 
 // The stand-ins for the places that have a tile (the page's `sights`: { name, lon, lat, ruin }) and nothing of their
 // own drawn: a lesser place with no name, from POI_ZOOM on, where the tile opens on a tap. A ruin where the sight says
-// so (`ruin: true`, a fact about the place that its position cannot give), else the plain tower; placeLesser drops it
-// where a town or another mark is already drawn there.
+// so (`ruin`, a fact about the place that its position cannot give), else the plain tower. A `ruin: true` is always drawn
+// (ruinAt); any other placeLesser drops where a town or another mark is already drawn there.
 function standIns(sights, data, view) {
   if (!Array.isArray(sights) || view.zoom < POI_ZOOM) return [];
   return sights.filter((s) => Number.isFinite(s.lon) && Number.isFinite(s.lat) && !POIS.some((p) => p.name === s.name) && shows(data.proj, s.lon, s.lat))
-    .map((s) => ({ name: s.name, lon: s.lon, lat: s.lat, xy: data.proj.project(s.lon, s.lat), building: s.ruin ? 'ruin' : 'tower', ...(s.ruin && { ruin: true }), poi: true, mark: true, rank: 0, pop: 0 }))
+    .map((s) => ({ name: s.name, lon: s.lon, lat: s.lat, xy: data.proj.project(s.lon, s.lat), building: s.ruin ? 'ruin' : 'tower', ...(s.ruin === true && { ruin: true }), poi: true, mark: true, rank: 0, pop: 0 }))
     .filter((s) => s.xy.every(Number.isFinite));
 }
 
@@ -1256,7 +1256,10 @@ function placeLesser(data, field, boxes, ctx, towns, names, poi, cityBoxes = new
     if (px < 8 || py < 8 || px > W - 8 || py > H - 8) continue;
     if (!p.ruin && towns.some((t) => Math.hypot(t.x - px, t.y - py) < TUNE.townGap / 2)) continue;
     const shape = TOWER_BY_ID.get(p.building ?? lesserBuilding(p.rank, seedOf(p.name))), top = (shape.top ?? TOWER_H) * s, hw = shape.w * s;
-    if (p.ruin) { // a ruin is always drawn: over a city's plan, beside whatever holds its spot, else on it
+    // a ruin is drawn beside whatever holds its spot, else on it: always where the sight says `ruin: true`, else
+    // wherever no town stands on the site nor a city's ground covers it (a mark of the plain tower or a lettered place
+    // keeps the rule below)
+    if (p.ruin || (p.mark && shape.id === 'ruin' && !towns.some((t) => t.city && insideRings(pxRings(t.city.rings), px, py)))) {
       out.push(ruinAt(p, standOf(p, top, hw, field, null, poi), top, hw, boxes, cityBoxes, k));
       continue;
     }

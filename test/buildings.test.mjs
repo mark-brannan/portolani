@@ -124,8 +124,10 @@ test('a place with a tile gets an unlettered mark: a ruin wherever the sight say
   assert.ok(!(await at(tyre, POI_ZOOM - 1, [tyre])).lesser.some((l) => l.mark), 'none below POI_ZOOM')
   for (const zoom of [POI_ZOOM, 6, 8, 10]) assert.equal((await at(carthage, zoom, [carthage])).lesser.find((l) => l.name === 'Carthage')?.tower, 'ruin', `Carthage beside Tunis, z${zoom}`)
   assert.equal((await at(ostia, 7, [ostia])).lesser.find((l) => l.name === 'Ostia')?.tower, 'ruin')
+  const barygaza = { name: 'Barygaza', lon: 72.99, lat: 21.71, ruin: 'clear' }
+  assert.equal((await at(barygaza, 6, [barygaza])).lesser.find((l) => l.name === 'Barygaza')?.tower, 'ruin', 'no town drawn on the site: a ruin')
   const town = (await at(aden, 7, [aden])).lesser.find((l) => l.name === 'Aden')
-  assert.ok(!town || town.tower !== 'ruin', 'a site under a city is never a ruin')
+  assert.ok(!town || town.tower !== 'ruin', 'a sight that does not say ruin is never one')
   assert.ok(RUIN.layers.every(([, d]) => /^M[-\d. MLHVQZ]*$/.test(d)) && RUIN.w <= 8, 'the ruin is drawn in the towers\' path data')
   assert.ok(!BUILDINGS.some((b) => b.id === 'ruin'), 'not a town to pick at random')
 })
