@@ -313,6 +313,68 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
   }
 });
 
+// The Charts drawer's two controls (the user's UI walk of 2026-10-30): the eye shows or hides its own chart's sheet and
+// nothing else, so another sheet stays laid, a dragged sheet keeps where it lies, and the map does not move; the
+// chart's picture shows that chart alone, at its own placement, and flies to it: every other sheet hides.
+test('charts: the eye shows or hides one sheet and leaves the others and the map alone; the picture shows its chart at its own placement', { skip, timeout: 240000 }, async () => {
+  const server = createServer(async (req, res) => {
+    let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
+    if (p.endsWith('/')) p = path.join(p, 'index.html');
+    try { res.writeHead(200, { 'content-type': TYPES[path.extname(p)] ?? 'application/octet-stream' }).end(await readFile(p)); } catch { res.writeHead(404).end(); }
+  }).listen(0);
+  const browser = await chromium.launch();
+  try {
+    const page = await (await browser.newContext({ viewport: { width: 1100, height: 740 } })).newPage();
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    const MOVED = '10.000,62.000,0.01063,5.0'; // the Carta Marina dragged off its own placement
+    await page.goto(`http://localhost:${server.address().port}/#map=3.40/48.000/24.000&overlay=carta-marina&sheet=${MOVED}`);
+    await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
+    const key = async (k) => new URLSearchParams((await page.evaluate(() => location.hash)).slice(1)).get(k);
+    const changed = async (before) => {
+      await page.waitForFunction((h) => location.hash !== h, before, { timeout: 60000 });
+      await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 60000 });
+    };
+    const press = async (b) => { const h = await page.evaluate(() => location.hash); await b.click(); await changed(h); };
+    await page.click('#charts');
+    const marina = page.locator('#chartList .chart', { hasText: 'Carta Marina' }), aguiar = page.locator('#chartList .chart', { hasText: 'Jorge de Aguiar' });
+    await aguiar.locator('.eye').waitFor({ state: 'visible' });
+    const map = await key('map');
+
+    await press(aguiar.locator('.eye'));
+    assert.equal(await key('overlay'), 'carta-marina,aguiar', "the eye's show hid the other sheet");
+    assert.equal(await key('sheet'), MOVED, "the eye's show moved the other sheet");
+    assert.equal(await key('map'), map, "the eye's show moved the map");
+    assert.equal(await marina.locator('.eye').getAttribute('aria-pressed'), 'true');
+    assert.equal(await aguiar.locator('.eye').getAttribute('aria-pressed'), 'true');
+
+    await press(aguiar.locator('.eye'));
+    assert.equal(await key('overlay'), 'carta-marina', "the eye's hide hid the other sheet too");
+    assert.equal(await key('sheet'), MOVED);
+    assert.equal(await key('map'), map, "the eye's hide moved the map");
+    assert.equal(await aguiar.locator('.eye').getAttribute('aria-pressed'), 'false');
+
+    await press(marina.locator('.eye'));
+    assert.equal(await key('overlay'), null);
+    await press(marina.locator('.eye'));
+    assert.equal(await key('overlay'), 'carta-marina');
+    assert.equal(await key('sheet'), MOVED, 'hidden and shown by its eye, the sheet came back at its own placement, not where it was dragged');
+    assert.equal(await key('map'), map, 'the eye moved the map');
+    assert.equal(await page.evaluate(() => document.getElementById('chartsDrawer').classList.contains('open')), true, 'the eye shut the drawer');
+
+    await press(aguiar.locator('.eye'));
+    assert.equal(await key('overlay'), 'carta-marina,aguiar');
+    await press(marina.locator('.thumb'));
+    assert.equal(await key('overlay'), 'carta-marina', 'the picture left another sheet laid');
+    assert.equal(await key('sheet'), null, 'the picture left the sheet where it was dragged, not at its own placement');
+    assert.notEqual(await key('map'), map, 'the picture did not fly to the chart');
+    assert.deepEqual(errors, []);
+  } finally {
+    await browser.close();
+    server.close();
+  }
+});
+
 test('voyages: several drawn at once, each in its own ink, carried by the link; an older single voyage= link opens; Clear empties the list', { skip, timeout: 240000 }, async () => {
   const server = createServer(async (req, res) => {
     let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
