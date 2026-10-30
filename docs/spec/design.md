@@ -114,7 +114,7 @@ Feature: A chart's row in the Charts drawer
     And no other control sits in the row but its Chart position chips (below) and, for a chart whose sheet carries notes, its Notes chip ("A chart's notes get their moment", below; the user asked for it on 2026-10-29: "there should be a way to show/hide them or retrigger the animation"); the pieces mode and its opacity live under Settings, Under the hood
     And a chart without a scan yet shows the glyph greyed, its name flying to its sheet view as before
   Scenario: the icon or the name shows that chart alone; the eye is on or off for one chart
-    Source: the click, the user on the [#295](https://github.com/mark-brannan/portolani/pull/295) demo, 2026-10-30: "when you just click the chart, it zooms to the chart and resets that one, clearing the others." This settles the walk's "possibly (TBC, not certain) clears other charts".
+    Source: the click, the user on the [#295](https://github.com/mark-brannan/portolani/pull/295) demo, 2026-10-30: "when you just click the chart, it zooms to the chart and resets that one, clearing the others." This settles the walk's "possibly (TBC, not certain) clears other charts". Later, in the user's answers in the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "I am leaning more towards auto clear after seeing the voyages new behavior.  I'll entertain a clear button as an alternative but I thinjk it needs to autoclear or it just gets confusing and cluttered."
     Given a chart in the row, other charts' sheets shown or not, its own sheet moved, turned, snapped to another placement or hidden
     When the user clicks its icon or its name
     Then the sheet is shown, laid back at its default placement, and the map flies to the view that frames it
@@ -239,7 +239,7 @@ Feature: A voyage's row in the Voyages drawer
     Source: the user on the [#295](https://github.com/mark-brannan/portolani/pull/295) demo, 2026-10-30: "I'm also not sure how I want the interplay between the people drawer and the voyages drawer to behave.  They should have a relationship though...and as I hinted earlier, I think I want the voyages of ancient people *Groups* such as the Lapita to be included as a group alongside the people in the people drawer.  Individuals and groups can both be represented alongside one another in that framing."
     Given the people drawer and the Voyages drawer
     When the user moves between them
-    Then how the two relate, and ancient groups such as the Lapita listed beside individuals in the people drawer, is open
+    Then how the two relate beyond sharing one timeline ("People and voyages share one timeline", below), and ancient groups such as the Lapita listed beside individuals in the people drawer, is open
 
 Feature: A dashed or dotted voyage is easy to see
   Source: the user on [#273](https://github.com/mark-brannan/portolani/pull/273), 2026-10-29, looking at the Narváez and Esteban renders: "The dashed legs are hard to see. Why are we using dashes? Same for dots but even worse than dashes. Hard to see!"; "The dots are a no-go though...you have to find something much better"; "part of the problem is the line and part of the problem is the default color palette. You're using grays and reds and they just blend in too much. Blue is no, because it would be confusing with rivers. Green might work. Purple. A brigher red maybe or yellow/orange. The red...idk, it's nice for the aesthetics but if you are using a dash or a dot, you've got to use a better color and heavier weights"; and, after comparing Heavy with Standard in green and purple: "heavy should be our default. ... IT is supposed to be configurable colors and weights anyway...and the colors are supposed to be sticky to one voyage while it is enabled, even if others are selected and deselected. So let's just make sure that when it is any voyage being toggled on where the lines are dashed/dotted that we pick from the higher contrast palette and with heavier weights, by default."
@@ -431,7 +431,8 @@ Feature: A grouped list in a drawer opens one group at a time
     Source: the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "alternatively, an animation effect and mousing over the next section would be a nice experience so that the sections automatically show their contents when you get close to the next section.  This will differ between mobile and desktop."
     Given a grouped list in a drawer
     When the pointer nears a closed group's heading
-    Then whether it opens on its own, and how a phone differs from a wide screen, is open
+    Then whether it opens on its own, and how a phone differs from a wide screen, is open until the user has seen it demoed both ways (the user's answers in the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "Hover - I want to see it demoed both ways before I say I'll agree.")
+    And hover sits beside the click that shuts the open group, not in its place: "Click to close the drawer does not conflict with hover to change sections though...those are entirely different and complementary."
   Scenario: the groups are the content's, not the control's
     Given the lists grow and are reorganised, as the user expects
     When a group is added, split or moved to another drawer
@@ -465,10 +466,11 @@ Feature: Go reads a position however it is written
     Given the Go box
     When the user types a latitude and longitude in degrees, minutes and seconds or in decimal degrees, with or without the ° symbol, with or without N, S, E or W
     Then Go reads it and flies there: `38.72 -9.14`, `38°43'12"N 9°08'24"W` and `38 43 12 N 9 8 24 W` all land on Lisbon
-  Scenario: the three forms beside the page (waiting on the user, UI walk 2026-10-30)
-    Given a position gone to
-    When the user looks to the side of the page, on a wide screen at least
-    Then the position may show there in the three forms: "a nice-to-have", and "maybe not mobile"
+  Scenario: the three forms under the box
+    Source: the user's answers in the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30, to the recorder's question (paraphrase: the three-form readout inside the Go drawer): "yes, let's try it"
+    Given the Go drawer open, on a wide screen or a phone
+    When the user types a position in the box
+    Then under the box, as they type, the position shows in three forms: decimal degrees, degrees and decimal minutes, and degrees, minutes and seconds (`38.72 -9.14`, `38°43.2'N 9°08.4'W`, `38°43'12"N 9°08'24"W`)
 
 Feature: A person or a voyage lands wide enough to see round it
   Source: the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "We should not have any people with zooms as clsoe as "7.96".  I think 6 is about the closes zoom we should have for any person or voyage (and maybe other things)."; "Mansa Musa should be at about a zoom of 4 and centered in such a way that we can see all of the west side of northern Africa as well as Jeddah/Mecca without the drawer blocking the view."
@@ -486,6 +488,7 @@ Feature: A person or a voyage lands wide enough to see round it
     Given a person whose flight lands at zoom 6 or wider
     When the user flies to them
     Then which people, and how much wider, is open
+    And a contact sheet of every person's and every voyage's landing, at 1100 px wide, goes to the user to walk ("Sure, go")
 
 Feature: A person's picture card
   Source: the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "Picture cards for people, need a way to dismiss them.  We can reset by clicking the person again...but to dismiss, either a gutter/trash to drag to, or an X to click, or probably my preference is for a dismiss or "put away" button/icon on the back of the card.  The text on the back of many of the people pictures is too small.  I think I want the default size on desktop for the pictures to be larger.  Whichever one is touched/grabbed last is automatically on top, in front.  I do not want the full, repetative text "Its page on Wikimedia Commons" repeated everywhere.  IT looks dumb.  Just use a small link glyph of some kind...probably one of these: ⎘, ⧉, ⧉, ⮺, but perhaps 🔗"
@@ -505,3 +508,20 @@ Feature: A person's picture card
     Given a picture card
     When the user looks for how to enlarge it or turn it over
     Then which icons, and whether an eye first opens the picture near full size, the flip and put-away after it, is open
+
+Feature: People and voyages share one timeline
+  Source: the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "I'm now leaning towards both the people drawer and the voyages drawer being timeline format"; "Perhaps the timelines has a way to expand to earlier human history on the left side?"; "I don't exactly like the break I'm seeing from 300 BC to 1000 CE...realizing that it throws off the scale a bit."; and the user's answers in the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30, to the recorder's questions (paraphrase: one timeline, two lanes, the Sights eras as colour bands; Lapita the left edge, an expander for earlier history; fill the gap rather than compress the axis): "voyages section: yes"; "timeline span, yes lapita default with expander"; "BC to CE break, yes fill it"
+  Scenario: two lanes
+    Given the timeline of people and voyages
+    When the user looks at it
+    Then people sit in a lane above and voyages in a lane below, on one time axis
+    And the Sights eras are drawn across both lanes as subtle colour bands
+  Scenario: the left edge, and earlier history
+    Given the timeline at its default
+    When the user looks at its left edge
+    Then it starts at the Lapita, about 1500 BC
+    And an expander on the left opens earlier history (Sahul, Beringia, Clovis)
+  Scenario: 300 BC to 1000 CE
+    Given the centuries between 300 BC and 1000 CE
+    When the timeline draws them
+    Then the axis keeps its scale there, and the gap is filled with people and voyages of those centuries, not squeezed out
