@@ -405,3 +405,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261030t190824z
 - A ruin whose spot another figure holds steps aside up to four widths, else stands on the spot Undo: revert ruinAt in scripts/scene.mjs ([#310](https://github.com/mark-brannan/portolani/pull/310))
+
+### 20261030t192045z
+- The Barygaza rule (a ruin unless a drawn city covers the site) also applies to Calicut and Quanzhou Undo: drop ruin: 'clear' from Calicut and Quanzhou in scripts/sights.mjs ([#310](https://github.com/mark-brannan/portolani/pull/310))
