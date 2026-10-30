@@ -23,8 +23,8 @@ import { TREES, TREE_STYLES, plantTrees, plantPalms } from './trees.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
 export { SIGHT_TILES } from './sights.mjs'; // the page's tiles for its places; here so the module ships with the scene
 import { BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from './buildings.mjs';
-import { legPath, reachPath, isMigration, splitAtSeam, DASHES, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, readVoyage, chronological, voyageLink } from './voyages.mjs';
-export { VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, readVoyage, chronological, voyageLink };
+import { legPath, reachPath, isMigration, splitAtSeam, DASHES, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, readVoyage, chronological, voyageLink } from './voyages.mjs';
+export { VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, readVoyage, chronological, voyageLink };
 import { loadOverlay, drawOverlay, drawSheet } from './overlays.mjs';
 import { PEOPLE_FILE, PERSON_RED, personMarks, withPerson, peopleOf, whoOf } from './people.mjs';
 import { noteMarks, pickMark } from './notes.mjs';
