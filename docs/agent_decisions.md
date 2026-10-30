@@ -348,3 +348,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261030t023056z
 - Learn renderer gains tables and quotes inside the Mali docs PR Undo: revert scripts/learn.mjs table/quote change ([#288](https://github.com/mark-brannan/portolani/pull/288))
+
+### 20261030t035129z
+- Each Sights era's heading carries a span written from its tiles' dates: c. 1000 BC – 2nd c. AD, 9th–15th c., 1311–1619, 1819–1914 ([#292](https://github.com/mark-brannan/portolani/pull/292))
