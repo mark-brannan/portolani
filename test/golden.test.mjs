@@ -34,6 +34,8 @@ const VIEWS = {
   'world-z2-person': { lon: 40, lat: 25, zoom: 2 }, // a person chosen: Ibn Battuta's journeys lit in red with his birth marked, Columbus dimmed
   'pacific-z3-migrations': { lon: -170, lat: -15, zoom: 3 }, // two migrations, chevrons over a soft ribbon, across the date line
   'china-z5-doubt': { lon: 117, lat: 35, zoom: 5 }, // a doubted leg: its rings, and its cloud on empty land (Ibn Battuta to Khanbaliq)
+  'levant-z6-marks': { lon: 33, lat: 32.5, zoom: 6 }, // a place with a tile and no figure gets a mark: Tyre a ruin, and Alexandria's on the Pharos
+  'ostia-z7-ruin': { lon: 12.29, lat: 41.76, zoom: 7 }, // and a ruin where a sight says so (Ostia)
   'sheet-z3-voyage': { lon: -30, lat: 15, zoom: 3 }, // de la Cosa's sheet laid over the Atlantic with Columbus's voyage drawn over it, in a colour that reads against the scan
   'old-world-z2.6-1375': { lon: 62, lat: 33, zoom: 2.6 }, // the regions in the Catalan Atlas's names, read in English (docs/period-names)
 };
@@ -43,6 +45,8 @@ const OPTS = { 'region-z5': { autoTitle: false }, 'world-z2-voyage': { voyages: 
   'world-z2-person': { person: 'ibn-battuta', voyages: [{ id: 'columbus' }] },
   'pacific-z3-migrations': { voyages: [{ id: 'lapita-expansion' }, { id: 'east-polynesia-settlement', colour: '#1f4e8c' }] } ,
   'china-z5-doubt': { voyages: [{ id: 'ibn-battuta-6' }] },
+  'levant-z6-marks': { sights: [{ name: 'Tyre', lon: 35.1933, lat: 33.2681, ruin: true }, { name: 'Tyre', lon: 35.2111, lat: 33.2692, ruin: true }, { name: 'Alexandria', lon: 29.886, lat: 31.214, ruin: true }] },
+  'ostia-z7-ruin': { sights: [{ name: 'Ostia', lon: 12.29, lat: 41.76, ruin: true }] },
   'sheet-z3-voyage': { overlays: [{ id: 'de-la-cosa', mode: 'sheet' }], voyages: [{ id: 'columbus', colour: VOYAGE_CONTRAST[0], width: 3.2 }] },
   'old-world-z2.6-1375': { regions: 'english', regionSet: 'catalan-1375' } };
 // and its full-size render is kept for the README, so `npm run golden` refreshes both together

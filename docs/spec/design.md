@@ -268,15 +268,20 @@ Feature: Every point of interest has a mark
   Scenario: a place with a tile and nothing drawn there
     Given a point of interest with a tile (a noteworthy port, an ancient city, a place where charts were made) and no town, sprite or mark drawn at its spot (Tyre today)
     When the map is at a zoom where its tile opens on a tap
-    Then a stand-in mark is drawn at its spot, so the user sees where to tap, and no lettering beside it: the ruin glyph below, or the plain town glyph where a modern city stands
-    And a place that already has a town or a sprite drawn there gets no second mark
+    Then a stand-in mark is drawn at its spot, so the user sees where to tap, and no lettering beside it: the ruin glyph below, or the plain town glyph where a place is no ruin
+    And a place that already has a town or a sprite drawn there gets no second mark, except the ruin of an ancient site where there is room beside the town (next scenario)
     And every place listed in the Sights drawer is checked, not only Tyre
-  Scenario: a place with no modern city is a ruin
-    Given a point of interest with no modern city on its spot (Berenike), where a modern city is on its spot when a town of today stands on the same site, as Sour stands on Tyre and a suburb of Tunis on Carthage
-    When its mark is drawn
+  Scenario: an ancient site is a ruin unless the map draws a city over it
+    Source: the user on [#310](https://github.com/mark-brannan/portolani/pull/310), 2026-10-30, in paraphrase: Tyre must show a ruin, on or near the old island port. A town standing there today is not reason enough to drop it; only dense built-up ground over the whole site is. Use what the map already draws as the test: where a small town is not drawn at a wide zoom, show the ruin, not a tower added for it; where the map does draw a city on the site, the ruin can give way at that zoom. Close up, it depends on the room between the two marks.
+    Given a point of interest that was an ancient or medieval city or port (Tyre, Carthage, Berenike)
+    When its mark is drawn at any zoom
     Then it is a small ink glyph of a broken colonnade: three columns on a step, two of them snapped short, about the height of a town glyph
     And it is drawn in code, in ink, like the towers, not cut from a scan
-    And a place with a modern city on its spot but nothing drawn there yet gets the plain town glyph instead, so no living city reads as a ruin
+    And a town of today on or near the site does not suppress it: Sour beside Tyre, a suburb of Tunis on Carthage
+    And the ruin is suppressed only where the map itself draws a city over the site at that zoom, its built-up ground or its town mark; the map never adds a town glyph just to stand for a living town it does not otherwise draw
+    And close up, the ruin stands beside a drawn town where there is room for both marks, and gives way where there is not
+    And where part of the site is open ground with standing remains, the ruin goes there: Tyre's on the old island, Alexandria's on the Pharos point, Malacca's on St Paul's Hill
+    And a place that is no ruin keeps the plain town glyph where nothing else is drawn: a city founded later and covered by it throughout (Manila, Batavia), or a building still standing (São Jorge da Mina)
     And a place's own decoration, link or image laid on later replaces its glyph
 
 Feature: The world turned to the chart (deferred)
