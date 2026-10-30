@@ -108,32 +108,38 @@ test('an overlay the site lacks loads as null and draws nothing', async () => {
   assert.deepEqual(calls, []);
 });
 
-// The overlay in the hash: the sheet at the chart's own placement by default, `sheet=` where it was dragged to, the
-// warped pieces as `overlaymode=pieces` with their opacity.
+// The overlays in the hash: none by default, each sheet at the chart's own placement unless `sheet=` names where it was
+// dragged to (one `;` slot per laid id, in order), the warped pieces as `overlaymode=pieces` with their opacity.
 const written = (st) => { const q = new URLSearchParams(); overlayToHash(st, q); return q.toString(); };
-test('the overlay in the hash: the default writes nothing, a link round-trips, an unknown id reads as off', () => {
-  assert.deepEqual(OVERLAY_DEFAULTS, { overlay: null, overlayMode: 'sheet', sheet: null, overlayOpacity: 0.6, sheetHides: false });
+test('the overlays in the hash: the default writes nothing, a link round-trips, an unknown id is dropped', () => {
+  assert.deepEqual(OVERLAY_DEFAULTS, { overlays: [], overlayMode: 'sheet', sheets: {}, overlayOpacity: 0.6, sheetHides: false });
   assert.equal(written(OVERLAY_DEFAULTS), '', 'the default writes nothing');
   assert.deepEqual(overlayFromHash(new URLSearchParams('')), OVERLAY_DEFAULTS, 'no keys read as the default');
   const ids = new Set(overlays.map((o) => o.id));
   const read = overlayFromHash(new URLSearchParams('overlay=carta-marina&overlayopacity=0.6'), ids);
-  assert.deepEqual(read, { overlay: 'carta-marina', overlayMode: 'sheet', sheet: null, overlayOpacity: 0.6, sheetHides: false });
+  assert.deepEqual(read, { overlays: ['carta-marina'], overlayMode: 'sheet', sheets: {}, overlayOpacity: 0.6, sheetHides: false });
   assert.equal(written(read), 'overlay=carta-marina', '0.6 and the sheet are the defaults, so only the id is written back');
   const pieces = overlayFromHash(new URLSearchParams('overlay=carta-marina&overlaymode=pieces&overlayopacity=0.3'), ids);
   assert.equal(pieces.overlayMode, 'pieces');
   assert.equal(written(pieces), 'overlay=carta-marina&overlaymode=pieces&overlayopacity=0.3');
   const moved = overlayFromHash(new URLSearchParams('overlay=de-la-cosa&sheet=-5.18,9.418,0.10464,12.5'), ids);
-  assert.deepEqual(moved.sheet, { lon: -5.18, lat: 9.418, scale: 0.10464, turn: 12.5 });
+  assert.deepEqual(moved.sheets, { 'de-la-cosa': { lon: -5.18, lat: 9.418, scale: 0.10464, turn: 12.5 } }, 'an older one-sheet link reads as before');
   assert.equal(written(moved), 'overlay=de-la-cosa&sheet=-5.180%2C9.418%2C0.10464%2C12.5');
-  assert.equal(overlayFromHash(new URLSearchParams('sheet=1,2,3')).sheet, null, 'three numbers are no placement');
-  assert.equal(overlayFromHash(new URLSearchParams('sheet=1,2,0,4')).sheet, null, 'a scale of zero is no placement');
+  const two = overlayFromHash(new URLSearchParams('overlay=aguiar,de-la-cosa&sheet=;-5.18,9.418,0.10464,12.5'), ids);
+  assert.deepEqual(two.overlays, ['aguiar', 'de-la-cosa'], 'several sheets, bottom to top');
+  assert.deepEqual(two.sheets, { 'de-la-cosa': { lon: -5.18, lat: 9.418, scale: 0.10464, turn: 12.5 } }, 'an empty slot is the chart\'s own placement');
+  assert.equal(written(two), 'overlay=aguiar%2Cde-la-cosa&sheet=%3B-5.180%2C9.418%2C0.10464%2C12.5');
+  assert.equal(written({ ...two, sheets: { ...two.sheets, 'carta-marina': { lon: 1, lat: 2, scale: 0.1, turn: 0 } } }), written(two), 'a placement kept for a chart not laid is left out');
+  assert.deepEqual(overlayFromHash(new URLSearchParams('overlay=aguiar,aguiar,nowhere'), ids).overlays, ['aguiar'], 'a repeat and an id the site lacks are dropped');
+  assert.deepEqual(overlayFromHash(new URLSearchParams('overlay=aguiar&sheet=1,2,3'), ids).sheets, {}, 'three numbers are no placement');
+  assert.deepEqual(overlayFromHash(new URLSearchParams('overlay=aguiar&sheet=1,2,0,4'), ids).sheets, {}, 'a scale of zero is no placement');
   assert.equal(overlayFromHash(new URLSearchParams('overlaymode=sideways')).overlayMode, 'sheet', 'an unknown mode reads as the sheet');
-  assert.equal(overlayFromHash(new URLSearchParams('overlay=nowhere'), ids).overlay, null, 'an id the site lacks reads as off');
-  assert.equal(overlayFromHash(new URLSearchParams('overlay=off')).overlay, null);
-  assert.equal(overlayFromHash(new URLSearchParams('overlay=../etc')).overlay, null);
+  assert.deepEqual(overlayFromHash(new URLSearchParams('overlay=nowhere'), ids).overlays, [], 'an id the site lacks reads as off');
+  assert.deepEqual(overlayFromHash(new URLSearchParams('overlay=off')).overlays, []);
+  assert.deepEqual(overlayFromHash(new URLSearchParams('overlay=../etc')).overlays, []);
   assert.equal(overlayFromHash(new URLSearchParams('overlayopacity=2')).overlayOpacity, 0.6, 'out of range falls back');
   assert.ok(sameSheet({ lon: -5.18, lat: 9.418, scale: 0.10464, turn: 12.5 }, { lon: -5.1801, lat: 9.4181, scale: 0.104641, turn: 12.51 }), 'the same to the hash\'s rounding');
-  assert.ok(!sameSheet(moved.sheet, null));
+  assert.ok(!sameSheet(moved.sheets['de-la-cosa'], null));
   assert.equal(sheetText({ lon: 1, lat: 2, scale: 0.1, turn: 0 }), '1.000,2.000,0.10000,0.0');
 });
 
