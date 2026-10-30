@@ -74,7 +74,11 @@
   #voyageList li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
   #voyageList button { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
   #voyageList button svg { width: 28px; height: 18px; flex: none; }
-  #voyageList button[aria-checked="true"] { background: #e2cd9e; color: #3b2a1a; border-color: #b89a68; } /* a chosen voyage, lit like an open instrument */
+  #voyageList button[data-shown="true"] { background: #e2cd9e; color: #3b2a1a; border-color: #b89a68; } /* a shown voyage, lit like an open instrument */
+  #voyageList .eye { padding: 2px 4px; width: 30px; height: 26px; justify-content: center; } /* the chart rows' eye, between the name and the ink */
+  #voyageList .eye svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+  #voyageList .eye[aria-pressed=true] .slash { display: none; }
+  #voyageList .eye[aria-pressed=false] { opacity: 0.7; }
   #voyageList input[type=color] { width: 28px; height: 22px; border-radius: 6px; cursor: pointer; } /* the swatch is the voyage's ink; a click picks another */
   #voyagesPanel .vtools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 4px; }
   #voyagesPanel .chip { display: inline-flex; padding: 3px 8px; border-radius: 14px; box-shadow: none; font: 12px var(--serif); background: var(--sheet); color: var(--sheet-ink); }

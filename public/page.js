@@ -137,12 +137,13 @@ function styleFromHash() {
   };
 }
 // The voyages drawn, in the order chosen, by their ids (data/voyages/<id>.json; one the site lacks draws nothing),
-// each with the colour picked for it or null for its own (voyageColours): voyages=columbus,drake:1f4e8c. An older
+// each with the colour picked for it or null for its own (voyageColours): voyages=columbus,drake:1f4e8c. A voyage
+// hidden by its eye keeps its place, and so its colour, and ends in ~: voyages=columbus~,drake. An older
 // link's single voyage=<id> is read as a list of one.
 function voyagesFromHash(q) {
   const list = q.has('voyages') ? q.get('voyages').split(',') : q.has('voyage') ? [q.get('voyage')] : [];
   const seen = new Set();
-  return list.map((t) => { const [id, c] = t.split(':'); return { id, colour: /^[0-9a-f]{6}$/i.test(c ?? '') ? `#${c.toLowerCase()}` : null }; })
+  return list.map((t) => { const hidden = t.endsWith('~'), [id, c] = (hidden ? t.slice(0, -1) : t).split(':'); return { id, colour: /^[0-9a-f]{6}$/i.test(c ?? '') ? `#${c.toLowerCase()}` : null, ...(hidden && { hidden: true }) }; })
     .filter((v) => /^[a-z][a-z0-9-]*$/.test(v.id) && v.id !== 'off' && !seen.has(v.id) && seen.add(v.id));
 }
 // The selection a hash names; an older link's rendering, styles and kinds become the selection they drew.
@@ -184,7 +185,7 @@ function writeHash() {
   if (st.overlap !== DEFAULTS.overlap) q.set('overlap', st.overlap);
   if (st.debug) q.set('debug', st.debug);
   if (st.tune) q.set('tune', st.tune);
-  if (st.voyages.length) q.set('voyages', st.voyages.map((v) => (v.colour ? `${v.id}:${v.colour.slice(1)}` : v.id)).join(','));
+  if (st.voyages.length) q.set('voyages', st.voyages.map((v) => (v.colour ? `${v.id}:${v.colour.slice(1)}` : v.id) + (v.hidden ? '~' : '')).join(','));
   if (st.voyageWidth !== DEFAULTS.voyageWidth) q.set('voyagewidth', st.voyageWidth);
   if (st.person) {
     q.set('person', st.person);
@@ -723,12 +724,13 @@ async function render() {
       continents: style.continentsZoom > 0, continentsZoom: style.continentsZoom,
       regions: style.regionsZoom > 0 ? style.regions : 'off', regionSet: style.regionSet, regionsZoom: style.regionsZoom,
       sprites: [...selection], kinds, view, pinned: !phone.matches, pinTitle: style.autoTitle ? pinTitle : null,
-      voyages: style.voyages.map((v) => ({ id: v.id, colour: v.colour ?? undefined, width: style.voyageWidth })), person: style.person, voyageWidth: style.voyageWidth,
+      voyages: style.voyages.filter((v) => !v.hidden).map((v) => ({ id: v.id, colour: voyageInk()[v.id], width: style.voyageWidth })), person: style.person, voyageWidth: style.voyageWidth,
       overlay: style.overlay ? { id: style.overlay, mode: style.overlayMode, sheet: style.sheet, opacity: style.overlayOpacity } : null,
       debug: parseDebug(style.debug).debug, tune: parseTune(style.tune).tune,
     });
     if (me !== run) return; // a newer change or a move superseded this one
     ground = { world, coarse, bg, voyages: scene.voyages, anchored: anchorScene(scene, data), overlay: scene.overlay, cards: { cartouche: kinds.includes('cartouche') ? scene.cartouche : null, scaleSprite: scene.scaleSprite, scale: style.scale, bg } };
+    applyReveal();
     if (style.autoTitle) $('title').value = scene.cartouche.title; // the box shows what the cartouche letters, and cannot be edited
     placed = view;
     hideTile(); // its mark may be gone: another voyage, or none
@@ -1348,15 +1350,18 @@ const places = []; // every anchorage and point of interest: { name, view }
 // The voyages: any number drawn at once, none by default. The list is data/voyages/index.json in the order the voyages
 // set out (chronological; the file's order breaks ties), each by its title (a phone shows the short name and the years,
 // so none wraps), and under it the voyage's summary and a link to its first source; they load on the first open and stay
-// cached. A click puts a voyage on or off and leaves the drawer open, so several can be chosen; each one on shows its
-// ink beside it, a swatch to pick another. The first chosen is the chart's red, each further one a colour of its
-// own (voyageColours). Above the list, the line weight for them all and Clear. The choice rides in the link
-// (`voyages=`, `voyagewidth=`) like any style.
+// cached. A voyage's row reads: its name, an eye, then its ink, a swatch to pick another. The name always flies to frame
+// the whole voyage and shows it if hidden; the first time a voyage is shown after the drawer opens (and it was not shown
+// when it opened) the line then draws itself from start to end in about a second. The eye only shows or hides, and
+// the view stays. A voyage hidden keeps its place in the list, so its colour, and every other voyage's, stays put. The
+// first voyage chosen is the chart's red, each further one a colour of its own (voyageColours). Above the list, the line
+// weight for them all and Clear. The choice rides in the link (`voyages=`, `voyagewidth=`) like any style.
 let voyageList = null;
 const escapeHTML = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
-const voyageItem = (id, full, brief, when, summary, link) => `<li><button type="button" role="checkbox" aria-checked="false" data-voyage="${id}">` +
+const voyageItem = (id, full, brief, when, summary, link) => `<li><button type="button" class="vname" data-voyage="${id}">` +
   `<svg viewBox="0 0 28 18" aria-hidden="true"><path d="M2 9h24" fill="none" stroke-linecap="round"/></svg>` +
   `<span class="full">${full}</span><span class="brief">${brief}${when ? `<span class="when">${when}</span>` : ''}</span></button>` +
+  `<button type="button" class="eye" data-eye="${id}" aria-pressed="false" aria-label="Show ${full}" title="Show or hide ${full}">${EYE}</button>` +
   `<input type="color" data-ink="${id}" aria-label="Colour of ${full}" title="Colour of ${full}" hidden>` +
   (summary || link ? `<p class="vsum">${summary}${link ? ` <a href="${escapeHTML(link.url)}" target="_blank" rel="noopener" title="${escapeHTML(link.label)}">Read more</a>` : ''}</p>` : '') + '</li>';
 const voyagesTools = groupTools('Voyages', {
@@ -1364,22 +1369,30 @@ const voyagesTools = groupTools('Voyages', {
   set: () => { style = { ...style, voyages: [] }; showVoyage(); writeHash(); render(); },
 });
 $('voyagesPanel').querySelector('.vtools').append(...voyagesTools.children);
+// the ink of every voyage in the list, hidden ones too, so a colour stays with its voyage
 const voyageInk = () => voyageColours(style.voyages.map((v) => v.id), Object.fromEntries(style.voyages.filter((v) => v.colour).map((v) => [v.id, v.colour])));
+const isShown = (id) => style.voyages.some((v) => v.id === id && !v.hidden);
 function showVoyage() {
   const ink = voyageInk();
   for (const b of $('voyageList').querySelectorAll('[data-voyage]')) {
-    const id = b.dataset.voyage, on = id in ink, line = b.querySelector('path'), pick = b.parentElement.querySelector('[data-ink]');
-    b.setAttribute('aria-checked', String(on));
-    line.setAttribute('stroke', on ? ink[id] : 'currentColor');
+    const id = b.dataset.voyage, listed = id in ink, on = isShown(id), line = b.querySelector('path'), li = b.parentElement, pick = li.querySelector('[data-ink]'), eye = li.querySelector('[data-eye]');
+    b.dataset.shown = String(on);
+    line.setAttribute('stroke', listed ? ink[id] : 'currentColor');
     line.setAttribute('stroke-width', String(style.voyageWidth));
     line.setAttribute('stroke-dasharray', on ? '' : '2 3');
     line.setAttribute('opacity', on ? '1' : '0.45');
-    pick.hidden = !on;
-    if (on) pick.value = ink[id];
+    eye.setAttribute('aria-pressed', String(on));
+    eye.setAttribute('aria-label', `${on ? 'Hide' : 'Show'} ${b.querySelector('.full').textContent}`);
+    pick.hidden = !listed;
+    if (listed) pick.value = ink[id];
   }
   for (const f of toolRefreshers) f();
 }
+// What this opening of the drawer has shown: the voyages shown when it opened, and those shown since. A voyage draws
+// itself on only the first time it is shown, and not at all if it was already there.
+let voyageSeen = new Set();
 function fillVoyages() {
+  voyageSeen = new Set(style.voyages.filter((v) => !v.hidden).map((v) => v.id));
   voyageList ??= Promise.all([env.readJSON('data/voyages/index.json'), env.readJSON('data/voyages/sources.json').catch(() => ({}))])
     .then(([ids, sources]) => Promise.all(ids.map((id) => env.readJSON(`data/voyages/${id}.json`).then((v) => [id, v], () => [id, { title: id, short: id }])))
       .then((voyages) => [chronological(voyages), sources]))
@@ -1389,24 +1402,68 @@ function fillVoyages() {
     }, (e) => { voyageList = null; $('voyageList').innerHTML = `<li>${escapeHTML(e.message)}</li>`; });
   showVoyage();
 }
-$('voyageList').addEventListener('click', (e) => {
-  const b = e.target.closest('[data-voyage]');
-  if (!b) return;
-  const id = b.dataset.voyage, on = style.voyages.some((v) => v.id === id);
-  style = { ...style, voyages: on ? style.voyages.filter((v) => v.id !== id) : [...style.voyages, { id, colour: null }] };
+// Shows a voyage (adds it at the end of the list if new, so it takes the next free colour; un-hides it if hidden);
+// true when it is the first time since the drawer opened, so the line should draw itself on.
+function putOnVoyage(id) {
+  const listed = style.voyages.some((v) => v.id === id);
+  style = { ...style, voyages: listed ? style.voyages.map((v) => (v.id === id ? { id: v.id, colour: v.colour } : v)) : [...style.voyages, { id, colour: null }] };
+  const first = !voyageSeen.has(id);
+  voyageSeen.add(id);
   showVoyage(); writeHash(); render();
-  if (!on) flyToVoyage(id);
+  return first;
+}
+$('voyageList').addEventListener('click', async (e) => {
+  const eye = e.target.closest('[data-eye]'), b = e.target.closest('[data-voyage]');
+  if (eye) { // only shows or hides; the view stays, and the line is drawn whole
+    const id = eye.dataset.eye;
+    if (isShown(id)) { style = { ...style, voyages: style.voyages.map((v) => (v.id === id ? { ...v, hidden: true } : v)) }; showVoyage(); writeHash(); render(); }
+    else putOnVoyage(id);
+    return;
+  }
+  if (!b) return;
+  const id = b.dataset.voyage, first = putOnVoyage(id);
+  await flyToVoyage(id);
+  if (first && !matchMedia('(prefers-reduced-motion: reduce)').matches) drawOn(id);
 });
+// The pen: a voyage's line drawn from its start to its end in VOYAGE_DRAW_MS, at an even pace along the line, once the
+// flight has landed and the scene is placed. The scene's voyage carries `reveal` (scene.mjs drawTrack).
+const VOYAGE_DRAW_MS = 1000;
+let voyagePen = null; // { id, since, t0 } while drawing, t0 null until it starts
+function applyReveal() {
+  const v = voyagePen && ground?.voyages?.find((x) => x.id === voyagePen.id);
+  if (v) v.reveal = voyagePen.t0 == null ? 0 : Math.min(1, (performance.now() - voyagePen.t0) / VOYAGE_DRAW_MS);
+}
+function drawOn(id) {
+  const pen = voyagePen = { id, since: performance.now(), t0: null };
+  const step = () => {
+    if (voyagePen !== pen) return;
+    const now = performance.now();
+    if (pen.t0 == null) { // wait for the flight to land and the scene to be placed with this voyage in it
+      if (flightTo == null && placed === view && ground?.voyages?.some((x) => x.id === id)) pen.t0 = now;
+      else if (now - pen.since > 10000) { voyagePen = null; return; }
+    }
+    applyReveal();
+    if (pen.t0 != null) paintFrame('drawing');
+    if (pen.t0 != null && now - pen.t0 >= VOYAGE_DRAW_MS) {
+      voyagePen = null;
+      const v = ground?.voyages?.find((x) => x.id === id);
+      if (v) { delete v.reveal; render(); } // whole again, with its marks
+      return;
+    }
+    requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
 let picking = 0; // a colour is placed when the picker pauses, not on every step of a drag across it
-// A voyage put on stays where it is if any of its track is in view, or where the view is flying to; if none is, the
-// map flies to fit the whole track. The last choice that needs a flight wins, however the loads interleave: an earlier
-// choice is dropped only once a later one has flown, not because a later one stayed put or was taken off.
+// The name always flies to the view that frames the whole voyage, whatever of it is in view. The last choice wins,
+// however the loads interleave: an earlier choice is dropped only once a later one has flown. Resolves once the
+// flight is under way (or not needed).
 let voyageChosen = 0, voyageFlown = 0;
 function flyToVoyage(id) {
   const n = ++voyageChosen;
-  readVoyage(id, (path) => env.readJSON(path)).then((v) => {
-    if (n < voyageFlown || !style.voyages.some((s) => s.id === id)) return;
-    const to = voyageView(v, flightTo ?? view);
+  return readVoyage(id, (path) => env.readJSON(path)).then((v) => {
+    if (n < voyageFlown || !isShown(id)) return;
+    const to = voyageView(v, flightTo ?? view, undefined, true);
     if (to) { voyageFlown = n; goTo(to); }
   }, () => {});
 }

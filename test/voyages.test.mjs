@@ -57,6 +57,7 @@ test('a voyage chosen in view keeps the view; one off screen is fitted, the shor
   const atlantic = { legs: [leg([[-10, 40], [-30, 30]]), leg([[-30, 30], [-60, 15]])] };
   const lisbon = { lon: -9, lat: 38.7, zoom: 7.5, projection: 'mercator' };
   assert.equal(voyageView(atlantic, lisbon), null, 'the track starts in view, so the view should stay');
+  assert.ok(voyageView(atlantic, lisbon, undefined, true), 'a name click frames the whole voyage even with part of it in view');
   const china = { lon: 120, lat: 25, zoom: 6, projection: 'mercator' };
   const to = voyageView(atlantic, china);
   assert.ok(to, 'none of the track is in view, so the view should move');
