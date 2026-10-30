@@ -38,8 +38,7 @@
           38.49
         ]
       ],
-      "source": "Budge: the monks set out from Peking for the west; Tangut (Kansu) lay on the road. The way to it is the usual road",
-      "doubt": "The Syriac life names Tangut, not the road to it, and the sources differ on the year the monks left, c. 1275 or a little earlier; the pin stands at Yinchuan, a guess for the province."
+      "source": "Budge: the monks set out from Peking for the west; Tangut (Kansu) lay on the road. The way to it is the usual road; the sources differ on the year the monks left, c. 1275 or a little earlier, and the pin at Yinchuan stands for the province"
     },
     {
       "from": "Tangut country (Ningxia)",
@@ -132,8 +131,7 @@
           42.9
         ]
       ],
-      "source": "Budge: on to King Kaidu, encamped by the river Talas, who gave them a safe-conduct",
-      "doubt": "The Talas is the river the source names; where on it Kaidu's camp stood is not known, and the pin is the town of Taraz."
+      "source": "Budge: on to King Kaidu, encamped by the river Talas, who gave them a safe-conduct; the pin at Taraz stands for the camp, whose place on the Talas is not known"
     },
     {
       "from": "Kaidu's camp on the Talas",
@@ -168,8 +166,7 @@
           36.49
         ]
       ],
-      "source": "Budge: to the monastery of Mar Sehyon near Tus in Khorasan",
-      "doubt": "The source gives no stops between the Talas and Tus; Samarkand, Bukhara and Merv are where the road ran."
+      "source": "Budge: to the monastery of Mar Sehyon near Tus in Khorasan; the source gives no stops, and the line follows the road by Samarkand, Bukhara and Merv"
     },
     {
       "from": "Tus",
@@ -235,8 +232,7 @@
           33.31
         ]
       ],
-      "source": "Budge: war blocked the way to Jerusalem and the monks stayed in Mesopotamia; Baghdad is the Patriarch's seat",
-      "doubt": "Budge gives Baghdad as the Patriarch's seat; the line to it is the usual Persian road."
+      "source": "Budge: war blocked the way to Jerusalem and the monks stayed in Mesopotamia; Baghdad is the Patriarch's seat"
     },
     {
       "from": "Baghdad",
@@ -263,8 +259,7 @@
           40.51
         ]
       ],
-      "source": "Budge: with the roads to Jerusalem shut, the monks went north to Ani and meant to reach the sea through Georgia, but were turned back by reports of robbers",
-      "doubt": "The road to Ani is not described; Mosul and Cizre mark where it could have run."
+      "source": "Budge: with the roads to Jerusalem shut, the monks went north to Ani and meant to reach the sea through Georgia, but were turned back by reports of robbers; the road is not described, and Mosul and Cizre mark where it could have run"
     },
     {
       "from": "Ani",
@@ -489,8 +484,7 @@
           40.81
         ]
       ],
-      "source": "Budge: two months at sea past a volcano in eruption to Naples",
-      "doubt": "The ship's course is not told. Budge names Vesuvius, Etna or Stromboli for the eruption, and the line follows the usual way through the Messina strait."
+      "source": "Budge: two months at sea past a volcano in eruption to Naples; the ship's course is not told, and the line follows the usual way through the Messina strait"
     },
     {
       "from": "Naples",
@@ -548,8 +542,7 @@
           44.41
         ]
       ],
-      "source": "Budge: from Rome through Tuscany, where he was well received, to Genoa",
-      "doubt": "The Tuscan town is not named; Pisa is a guess for it."
+      "source": "Budge: from Rome through Tuscany, where he was well received, to Genoa; the Tuscan town is not named, and Pisa stands for it"
     },
     {
       "from": "Genoa",
@@ -592,8 +585,7 @@
           48.86
         ]
       ],
-      "source": "Budge: through Italy and France, about a month on the road, to Philip IV in Paris",
-      "doubt": "The Syriac names a town, Onbar, that has not been identified; the line is the usual road over the Alps and across Burgundy."
+      "source": "Budge: through Italy and France, about a month on the road, to Philip IV in Paris; the Syriac names a town, Onbar, not identified, and the line follows the usual road over the Alps and across Burgundy"
     },
     {
       "from": "Paris",
@@ -628,8 +620,7 @@
           44.84
         ]
       ],
-      "source": "Budge: twenty days' riding to the chief city of Gascony, where Edward I received him",
-      "doubt": "The text says Gascony; Chabot's Bordeaux is the usual identification."
+      "source": "Budge: twenty days' riding to the chief city of Gascony, where Edward I received him; Chabot reads the Gascon city as Bordeaux"
     },
     {
       "from": "Gascony (Bordeaux)",
@@ -672,8 +663,7 @@
           44.41
         ]
       ],
-      "source": "Budge: he returned to Italy and wintered in Genoa",
-      "doubt": "The road back to Genoa is not told."
+      "source": "Budge: he returned to Italy and wintered in Genoa; the road back to Genoa is not told"
     },
     {
       "from": "Genoa",
@@ -714,7 +704,7 @@
       "source": "Budge, The Monks of Kublai Khan (1928), introduction and translation of the Syriac Life of Yahballaha",
       "cite": "budge-monks-of-kublai-khan",
       "confidence": "speculative",
-      "doubt": "The Syriac says only a mountain in eruption, and Budge cannot tell which one."
+      "doubt": "The Syriac says only a mountain in eruption; Budge names Vesuvius, Etna or Stromboli."
     },
     {
       "kind": "event",
@@ -733,7 +723,7 @@
       "lat": 41.9,
       "date": "summer 1287",
       "label": "Rome, and a Creed set before the cardinals, 1287",
-      "text": "The Pope was dead and the cardinals governed the Church. They received him courteously, questioned him closely on the Nestorian faith, and asked him to wait for a new Pope. He told them he had not come to dispute doctrine but to be blessed and to settle Arghun's business.",
+      "text": "The Pope was dead and the cardinals governed the Church. They received him courteously, questioned him closely on the faith of the Church of the East, and asked him to wait for a new Pope. He told them he had not come to dispute doctrine but to be blessed and to settle Arghun's business.",
       "source": "Budge, The Monks of Kublai Khan (1928), introduction and translation of the Syriac Life of Yahballaha",
       "cite": "budge-monks-of-kublai-khan",
       "confidence": "attested"
@@ -755,7 +745,7 @@
       "lat": 41.9,
       "date": "Palm Sunday 1288",
       "label": "Palm Sunday with Nicholas IV, Rome, 1288",
-      "text": "The new Pope bade him keep Easter in Rome. Sauma celebrated the Eucharist in the Nestorian rite, received communion from the Pope's hands, and carried home a tiara and a letter for Yahballaha. The alliance came to nothing.",
+      "text": "The new Pope bade him keep Easter in Rome. Sauma celebrated the Eucharist in the rite of the Church of the East, received communion from the Pope's hands, and carried home a tiara and a letter for Yahballaha. The alliance came to nothing.",
       "source": "Budge, The Monks of Kublai Khan (1928), introduction and translation of the Syriac Life of Yahballaha",
       "cite": "budge-monks-of-kublai-khan",
       "confidence": "attested"

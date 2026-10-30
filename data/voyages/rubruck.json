@@ -88,8 +88,7 @@
           47.2
         ]
       ],
-      "source": "Rubruck: left Soldaia about 1 June with carts and oxen, and crossed the Don before 22 June",
-      "doubt": "Where he crossed the Don is not placed; the pin is at its mouth."
+      "source": "Rubruck: left Soldaia about 1 June with carts and oxen, and crossed the Don before 22 June; where he crossed the Don is not placed, and the pin is at its mouth"
     },
     {
       "from": "Don crossing",
@@ -116,8 +115,7 @@
           48.0
         ]
       ],
-      "source": "Rubruck: stage by stage across the steppe to Sartaq, reached on 31 July",
-      "doubt": "Rubruck puts Sartaq's camp three days from the Volga; the pin is one reading of that."
+      "source": "Rubruck: stage by stage across the steppe to Sartaq, reached on 31 July; Rubruck puts Sartaq's camp three days from the Volga, and the pin is one reading of that"
     },
     {
       "from": "Sartaq's camp",
@@ -179,8 +177,7 @@
           45.3
         ]
       ],
-      "source": "Rubruck: from 15 September to 1 November across the Kangly steppe, crossing the Jaik (Ural), and into the Saracen town of Kinchat on 8 November",
-      "doubt": "The route across the steppe is not given stage by stage; Kinchat is Kenjek, on the Syr Darya, and its place is a rough one."
+      "source": "Rubruck: from 15 September to 1 November across the Kangly steppe, crossing the Jaik (Ural), and into 'the Saracen town' of Kinchat on 8 November; the route across the steppe is not given stage by stage, and Kinchat is Kenjek on the Syr Darya, roughly placed"
     },
     {
       "from": "Kinchat",
@@ -215,8 +212,7 @@
           45.1
         ]
       ],
-      "source": "Rubruck: east along the mountains, the Chu valley and the plain by the lake, to the market town of Cailac, where he rested twelve days",
-      "doubt": "Rubruck did not reach Talas, which was six days off his road; the pin at Cailac (Qayaligh) is only roughly placed."
+      "source": "Rubruck: east along the mountains, the Chu valley and the plain by the lake, to the market town of Cailac, where he rested twelve days; Rubruck did not reach Talas, which was six days off his road, and the pin at Cailac (Qayaligh) is roughly placed"
     },
     {
       "from": "Cailac",
@@ -247,8 +243,7 @@
           47.6
         ]
       ],
-      "source": "Rubruck: over mountains and a plain 'vast as a sea', reaching Mongke's court on 27 December 1253",
-      "doubt": "The camp was a tent city that moved; where it stood in winter is not known."
+      "source": "Rubruck: over mountains and a plain 'vast as a sea', reaching Mongke's court on 27 December 1253; the camp was a tent city that moved, and where it stood in winter is not known"
     },
     {
       "from": "Mongke's winter camp",
@@ -314,8 +309,7 @@
           48.6
         ]
       ],
-      "source": "Rubruck: left Mongke's court in July and reached Batu on 16 September 1254",
-      "doubt": "Rubruck does not describe the road home stage by stage; the line is a broad brush across the steppe."
+      "source": "Rubruck: left Mongke's court in July and reached Batu on 16 September 1254; Rubruck does not describe the road home stage by stage, and the line is a broad brush across the steppe"
     },
     {
       "from": "Batu's camp",
@@ -354,8 +348,7 @@
           42.06
         ]
       ],
-      "source": "Rubruck: left Batu on All Saints (1 November) and went south to the Iron Gate",
-      "doubt": "He dates his leaving and arriving but names no stops on the steppe."
+      "source": "Rubruck: left Batu on All Saints (1 November) and went south to the Iron Gate; he dates his leaving and arriving but names no stops on the steppe"
     },
     {
       "from": "Derbent",
@@ -603,8 +596,7 @@
       "text": "Rubruck gave Sartaq Louis IX's letter and was questioned about it, then sent on to Batu, who sent him on again to Mongke.",
       "source": "Rubruck, Itinerarium (Rockhill's translation, 1900)",
       "cite": "rockhill-rubruck-itinerarium",
-      "confidence": "inferred",
-      "doubt": "Rubruck dates the arrival but not the place; the mark stands where one reading puts it."
+      "confidence": "inferred"
     },
     {
       "kind": "event",
@@ -612,11 +604,10 @@
       "lat": 47.6,
       "date": "early Jan 1254",
       "label": "Mongke's court, January 1254",
-      "text": "He reached the Great Khan's tents on 27 December and was taken to court on 3 or 4 January 1254. Nestorian priests there took the clean-shaven friars for Buddhists, and asked which way they prayed.",
+      "text": "He reached the Great Khan's tents on 27 December and was taken to court on 3 or 4 January 1254. Priests of the Church of the East there took the clean-shaven friars for Buddhists, and asked which way they prayed.",
       "source": "Rubruck, Itinerarium (Rockhill's translation, 1900)",
       "cite": "rockhill-rubruck-itinerarium",
-      "confidence": "attested",
-      "doubt": "The winter camp was a moving tent city; the mark is a guess at its place."
+      "confidence": "attested"
     },
     {
       "kind": "event",

@@ -117,8 +117,7 @@
           46.35
         ]
       ],
-      "source": "Nikitin: with the ambassador by Kazan, the Horde, Uslan, Sarai and Berekezany to the Buzan, and past Astrakhan by moonlight",
-      "doubt": "The Volga is drawn as a broad brush, not a survey."
+      "source": "Nikitin: with the ambassador by Kazan, the Horde, Uslan, Sarai and Berekezany to the Buzan, and past Astrakhan by moonlight; the Volga is drawn as a broad brush, not a survey"
     },
     {
       "from": "Astrakhan",
@@ -157,8 +156,7 @@
           42.1
         ]
       ],
-      "source": "Nikitin: robbed at the mouth of the Volga, then in two boats down the Caspian shore to a wreck near Tarki and the Kaitaks' prison before Derbent",
-      "doubt": "Where the Volga mouth ended and the sea began is not fixed; the line starts offshore."
+      "source": "Nikitin: robbed at the mouth of the Volga, then in two boats down the Caspian shore to a wreck near Tarki and the Kaitaks' prison before Derbent; where the Volga mouth ended and the sea began is not fixed, and the line starts offshore"
     },
     {
       "from": "Derbent",
@@ -217,7 +215,7 @@
         ]
       ],
       "source": "Nikitin: across the sea from Baku to a Persian shore where he stayed six months",
-      "doubt": "Major reads the Persian shore as Bokhara; Chaboksar, Gilan is the identification in use."
+      "doubt": "Major reads the Persian shore as Bokhara; Chaboksar in Gilan is the identification now in use."
     },
     {
       "from": "Chapakur (Gilan)",
@@ -260,8 +258,7 @@
           31.9
         ]
       ],
-      "source": "Nikitin: a month each at Sari, Amol, Kashan, Nain and Yazd, by Demavend and Rey",
-      "doubt": "He names the places and the months but not the roads between."
+      "source": "Nikitin: a month each at Sari, Amol, Kashan, Nain and Yazd, by Demavend and Rey; he names the places and the months but not the roads between"
     },
     {
       "from": "Yazd",
@@ -386,8 +383,7 @@
           19.21
         ]
       ],
-      "source": "Nikitin: by land to the Indian hills, then Umri, and so to Junnar in six days",
-      "doubt": "Of the places he names between Chaul and Junnar only Pali is placed with any confidence; Umri is not."
+      "source": "Nikitin: by land to the Indian hills, then Umri, and so to Junnar in six days; of the places named between Chaul and Junnar only Pali is placed with any confidence, and Umri is not"
     },
     {
       "from": "Junnar",
@@ -442,7 +438,7 @@
         ]
       ],
       "source": "Nikitin: to Parvat, which he calls the Jerusalem of the Hindus, at the great feast",
-      "doubt": "The way is not told, and Parvat is usually read as Srisailam."
+      "doubt": "Parvat has been read as Srisailam, as Gokarna and as Ellora, and the pin stands at Srisailam."
     },
     {
       "from": "Parvat (Srisailam)",
@@ -477,8 +473,7 @@
           17.59
         ]
       ],
-      "source": "Nikitin: back by Bidar and Kalburga and a string of places he names but we cannot place to Dabhol, a port of the Indian sea",
-      "doubt": "Of the places between Kalburga and Dabhol, only Sheikh Aladin (Alland) is placed."
+      "source": "Nikitin: back by Bidar and Kalburga and a string of places he names but we cannot place to Dabhol, a port of the Indian sea; of the places between Kalburga and Dabhol only Sheikh Aladin (Alland) is placed"
     },
     {
       "from": "Dabhol",
@@ -505,8 +500,7 @@
           23.7
         ]
       ],
-      "source": "Nikitin: a month at sea out of sight of land, five days on a far coast, and twelve days on to Muscat",
-      "doubt": "The text has the ship driven to the coast of 'Ethiopia' before Muscat; the line does not follow it."
+      "source": "Nikitin: a month at sea out of sight of land, five days on a far coast, and twelve days on to Muscat; the text has the ship driven to the coast of 'Ethiopia' before Muscat, and the line does not follow it"
     },
     {
       "from": "Muscat",
@@ -623,8 +617,7 @@
           41.0
         ]
       ],
-      "source": "Nikitin: ten days at Assanbek's camp, then by Erzincan to Trebizond on the feast of the Protection of the Virgin (1 October)",
-      "doubt": "Assanbek is Uzun Hasan; where his camp stood is not told."
+      "source": "Nikitin: ten days at Assanbek's camp, then by Erzincan to Trebizond on the feast of the Protection of the Virgin (1 October); Assanbek is Uzun Hasan, and where his camp stood is not told"
     },
     {
       "from": "Trebizond",
@@ -659,8 +652,7 @@
           44.98
         ]
       ],
-      "source": "Nikitin: two attempts beaten back by northerly gales to Trebizond, then a crossing to Kaffa",
-      "doubt": "He drove back twice; the line is the crossing that took."
+      "source": "Nikitin: two attempts beaten back by northerly gales to Trebizond, then a crossing to Kaffa; he drove back twice, and the line is the crossing that took"
     },
     {
       "from": "Kaffa",
@@ -691,8 +683,7 @@
           54.78
         ]
       ],
-      "source": "Sofia Second Chronicle: he was said to have died before he reached Smolensk",
-      "doubt": "Nothing is recorded of his road home; the line is the usual one from Crimea."
+      "source": "Sofia Second Chronicle: he was said to have died before he reached Smolensk; nothing is recorded of his road home, and the line is the usual one from Crimea"
     }
   ],
   "events": [
@@ -750,7 +741,7 @@
       "source": "Nikitin, Journey beyond the Three Seas (Major's translation, 1857)",
       "cite": "major-india-in-the-fifteenth-century",
       "confidence": "inferred",
-      "doubt": "Parvat is usually read as Srisailam; older readings differ."
+      "doubt": "Parvat has been read as Srisailam, as Gokarna and as Ellora, and the mark stands at Srisailam."
     },
     {
       "kind": "event",
@@ -759,7 +750,7 @@
       "date": "Nov 1474",
       "label": "Kaffa, November 1474",
       "text": "He ended his diary at Kaffa with a prayer of thanks, in corrupt Turkish, for his safe return. The chronicle records that he died before he reached Smolensk; his notes reached Moscow and entered the chronicles.",
-      "source": "Sofia Second Chronicle via Major",
+      "source": "Sofia Second Chronicle, as told in Wikipedia, A Journey Beyond the Three Seas",
       "cite": "journey-beyond-three-seas",
       "confidence": "attested"
     }

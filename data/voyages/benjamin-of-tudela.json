@@ -240,8 +240,7 @@
           40.15
         ]
       ],
-      "source": "Benjamin: Benevento, Melfi, Trani, Taranto and Brindisi, a day or two apart, to Otranto",
-      "doubt": "The text has Ascoli and Taranto in this run; Bari is not named, and the line passes through it."
+      "source": "Benjamin: Benevento, Melfi, Trani, Taranto and Brindisi, a day or two apart, to Otranto; Bari is not named, and the line passes through it"
     },
     {
       "from": "Otranto",
@@ -303,8 +302,7 @@
           38.85
         ]
       ],
-      "source": "Benjamin: two days' voyage to Arta, the beginning of Manuel's dominions",
-      "doubt": "Arta lies up a river from the gulf; the line stops at its mouth."
+      "source": "Benjamin: two days' voyage to Arta, the beginning of Manuel's dominions; Arta lies up a river from the gulf, and the line stops at its mouth"
     },
     {
       "from": "Arta",
@@ -527,8 +525,7 @@
           36.55
         ]
       ],
-      "source": "Benjamin: Rhaedestus, Gallipoli, Mytilene, Chios, Samos and Rhodes",
-      "doubt": "The text lists the islands but not the course; the line keeps to the open Aegean."
+      "source": "Benjamin: Rhaedestus, Gallipoli, Mytilene, Chios, Samos and Rhodes; the text lists the islands but not the course, and the line keeps to the open Aegean"
     },
     {
       "from": "Rhodes",
@@ -727,8 +724,7 @@
           33.51
         ]
       ],
-      "source": "Benjamin: Hebron, Ashkelon, Sepphoris, Tiberias and Banias to Damascus",
-      "doubt": "Banias is Benjamin's Laish, his identification being disputed."
+      "source": "Benjamin: Hebron, Ashkelon, Sepphoris, Tiberias and Banias to Damascus; Banias is Benjamin's Laish, an identification that has been disputed"
     },
     {
       "from": "Damascus",
@@ -947,8 +943,7 @@
       "text": "He reports a very large city with 50,000 Jews, who people say belong to the tribes of Reuben, Gad and Manasseh. He had this from others and did not go; nothing east or south of Baghdad is drawn as a route.",
       "source": "Benjamin of Tudela, Itinerary (Adler's translation, 1907)",
       "cite": "adler-itinerary-of-benjamin",
-      "confidence": "speculative",
-      "doubt": "Benjamin tells of Khaybar, Teima, Yemen, Persia, India and China on report; whether any of it was seen is disputed."
+      "confidence": "speculative"
     },
     {
       "kind": "event",
@@ -958,8 +953,7 @@
       "text": "He reports a community of fifty thousand Jews in Samarkand, on the border of the Persian kingdom. Like the rest of the east, it is told at second hand.",
       "source": "Benjamin of Tudela, Itinerary (Adler's translation, 1907)",
       "cite": "adler-itinerary-of-benjamin",
-      "confidence": "speculative",
-      "doubt": "Benjamin tells of Khaybar, Teima, Yemen, Persia, India and China on report; whether any of it was seen is disputed."
+      "confidence": "speculative"
     }
   ]
 }
