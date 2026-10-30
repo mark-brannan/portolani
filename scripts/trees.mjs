@@ -14,6 +14,8 @@
 // `data` is { proj, palette } (the view's projection, and the scene's ink and parchment). 'off'
 // maps to null.
 
+import { frameBox } from './frame-box.mjs';
+
 const TREE_H = 13; // a tree's height in px, foot to crown top, at every zoom
 const GRID_PX = 64; // the lattice's cell, in px at a whole zoom
 const COAST_PX = 9; // a tree stands this far inside the coast
@@ -205,6 +207,7 @@ function keepOutOf(scene) {
   if (c) box(c.x, c.y, c.x + c.w, c.y + c.h);
   for (const r of scene.roseDraws ?? []) disc(r.x, r.y, r.size / 2);
   for (const m of scene.mountains ?? []) disc(m.x, m.y, m.size / 2);
+  for (const p of [...(scene.relief?.peaks ?? []), ...(scene.relief?.humps ?? [])]) box(p.x - p.w / 2, p.y - p.h, p.x + p.w / 2, p.y); // ranges and hills keep their own ground
   for (const t of scene.towns ?? []) {
     if (t.city) obb(t.box);
     else { const hw = t.h * 0.6; box(t.x - hw, t.y - t.h - 2, t.x + hw, t.y + 3); }
@@ -224,7 +227,7 @@ const insideRing = (ring, lon, lat) => {
   return inside;
 };
 // Is a lon/lat in one of `lakes` (water.mjs's, each { polys, box })?
-const inLake = (lakes, [lon, lat]) => (lon = ((((lon + 180) % 360) + 360) % 360) - 180, lakes.some((l) => lat > l.box.y0 && lat < l.box.y1 && lon > l.box.x0 && lon < l.box.x1 &&
+export const inLake = (lakes, [lon, lat]) => (lon = ((((lon + 180) % 360) + 360) % 360) - 180, lakes.some((l) => lat > l.box.y0 && lat < l.box.y1 && lon > l.box.x0 && lon < l.box.x1 &&
   l.polys.some((p) => insideRing(p[0], lon, lat) && !p.slice(1).some((hole) => insideRing(hole, lon, lat)))));
 
 // The palms beside the points of interest in view: `pois` are { x, y, palms } in px (the buildings the
@@ -256,7 +259,7 @@ export function plantTrees({ proj, isLand, scene = {}, lakes = [], w, h }) {
   if (z < MIN_ZOOM) return [];
   const chance = byZoom(CHANCE, z), most = byZoom(MOST, z);
   const step = 360 / ((512 * 2 ** z) / GRID_PX), wrap = Math.round(360 / step); // cells round the world
-  const [lonA, latTop] = proj.invert(0, 0), [lonB, latBottom] = proj.invert(w, h);
+  const { lonMin: lonA, lonMax: lonB, latMin: latBottom, latMax: latTop } = frameBox(proj, w, h);
   const margin = 2 * step;
   const keepOut = keepOutOf(scene);
   const ok = (x, y) => {
@@ -272,13 +275,13 @@ export function plantTrees({ proj, isLand, scene = {}, lakes = [], w, h }) {
   };
   const stands = [];
   const j0 = Math.floor((mercY(Math.max(-85, latBottom)) - margin) / step), j1 = Math.floor((mercY(Math.min(85, latTop)) + margin) / step);
-  const i0 = Math.floor((lonA - margin) / step), i1 = Math.floor((lonB + margin) / step);
+  const i0 = Math.floor((lonA - margin) / step), i1 = Math.min(Math.floor((lonB + margin) / step), i0 + wrap - 1); // never a cell twice round the world
   for (let j = j0; j <= j1; j++) {
     for (let i = i0; i <= i1; i++) {
       const rnd = mulberry32(cellSeed(z, ((i % wrap) + wrap) % wrap, j));
       if (rnd() >= chance) continue;
       const lon = (i + 0.2 + 0.6 * rnd()) * step, lat = mercLat((j + 0.2 + 0.6 * rnd()) * step);
-      if (Math.abs(lat) > TREELINE_LAT) continue;
+      if (Math.abs(lat) > TREELINE_LAT || (proj.visible && !proj.visible(lon, lat))) continue; // none north of the treeline, or on a globe's far side
       const x = proj.x(lon, lat), y = proj.y(lat, lon);
       const trees = standOf(rnd, most, lat).filter((t) => ok(x + t.dx, y + t.dy) && !inLake(lakes, proj.invert(x + t.dx, y + t.dy)));
       if (!trees.length) continue;

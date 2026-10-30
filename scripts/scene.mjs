@@ -19,14 +19,15 @@ import { cityPlan, drawCity, drawHouses, pxRings, insideRings } from './city.mjs
 import { urbanKey } from './urban.mjs';
 import { RIVERS, LAKES, RIVER_STYLES, LAKE_STYLES, waterOf, shown } from './water.mjs';
 import { RELIEF_STYLES, reliefOf, clearOf, drawRelief } from './relief.mjs';
-import { TREES, TREE_STYLES, plantTrees, plantPalms } from './trees.mjs';
+import { TREES, TREE_STYLES, plantTrees, plantPalms, inLake } from './trees.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
 export { SIGHT_TILES } from './sights.mjs'; // the page's tiles for its places; here so the module ships with the scene
 import { BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from './buildings.mjs';
-import { legPath, reachPath, isMigration, splitAtSeam, DASHES, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, readVoyage, chronological, voyageLink } from './voyages.mjs';
-export { VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, readVoyage, chronological, voyageLink };
+import { legPath, reachPath, isMigration, splitAtSeam, DASHES, isBroken, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, readVoyage, chronological, voyageLink } from './voyages.mjs';
+export { isBroken, legPath, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, readVoyage, chronological, voyageLink };
 import { loadOverlay, drawOverlay, drawSheet } from './overlays.mjs';
 import { PEOPLE_FILE, PERSON_RED, personMarks, withPerson, peopleOf, whoOf } from './people.mjs';
+import { frameBox, fromCentre } from './frame-box.mjs';
 import { noteMarks, pickMark, markClear, tileSpot } from './notes.mjs';
 export { noteMarks, pickMark, markClear, tileSpot };
 const record = (id) => catalogue.find((r) => r.id === id); // a coastlines catalogue record by its id
@@ -178,8 +179,6 @@ const RAD = Math.PI / 180;
 const mercY = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360));
 const mercLat = (y) => (2 * Math.atan(Math.exp(y)) - Math.PI / 2) / RAD;
 const wrapLon = (lon) => ((((lon + 180) % 360) + 360) % 360) - 180;
-// Offset from the centre within +-180 as coast-wright's seam guard takes it: +180 stays on the right.
-const fromCentre = (d) => (d > 180 ? d - 360 : d < -180 ? d + 360 : d);
 const kOf = (zoom) => (512 * 2 ** zoom) / (2 * Math.PI); // px per radian of longitude
 
 // A projection is cylindrical or azimuthal. Cylindrical: x is longitude, the same in each, and y is
@@ -340,33 +339,8 @@ function zoomView(view, factor, px, py) {
   return clampView({ ...view, lon: c[0], lat: c[1], zoom });
 }
 
-// The lon/lat frame a projection paints, widened by `margin` degrees. An azimuthal view whose canvas
-// holds a pole or the rim takes all it can show; otherwise the canvas edge bounds it.
-function frameOf(proj, margin) {
-  if (!proj.rim) {
-    const half = W / 2 / proj.k / RAD;
-    return {
-      lonMin: proj.lonCenter - half - margin, lonMax: proj.lonCenter + half + margin,
-      latMin: proj.invert(0, H)[1] - margin, latMax: proj.invert(0, 0)[1] + margin,
-    };
-  }
-  const onCanvas = ([x, y]) => x >= 0 && x <= W && y >= 0 && y <= H;
-  const pole = [90, -90].some((lat) => proj.visible(0, lat) && onCanvas(proj.project(0, lat)));
-  const rimIn = [[0, 0], [W, 0], [0, H], [W, H]].some(([x, y]) => Math.hypot(x - W / 2, y - H / 2) >= proj.rim);
-  if (pole || rimIn) {
-    const reach = proj.cap / RAD;
-    return { lonMin: proj.lonCenter - 180 - margin, lonMax: proj.lonCenter + 180 + margin, latMin: Math.max(-90, proj.lat - reach) - margin, latMax: Math.min(90, proj.lat + reach) + margin };
-  }
-  let dMin = 0, dMax = 0, latMin = 90, latMax = -90;
-  const STEP = 50;
-  for (let t = 0; t <= Math.max(W, H); t += STEP) {
-    for (const [x, y] of [[Math.min(t, W), 0], [Math.min(t, W), H], [0, Math.min(t, H)], [W, Math.min(t, H)]]) {
-      const [lon, lat] = proj.invert(x, y), d = fromCentre(lon - proj.lonCenter);
-      if (d < dMin) dMin = d; if (d > dMax) dMax = d; if (lat < latMin) latMin = lat; if (lat > latMax) latMax = lat;
-    }
-  }
-  return { lonMin: proj.lonCenter + dMin - margin, lonMax: proj.lonCenter + dMax + margin, latMin: latMin - margin, latMax: latMax + margin };
-}
+// The lon/lat frame a projection paints on the canvas, widened by `margin` degrees (frame-box.mjs).
+const frameOf = (proj, margin) => frameBox(proj, W, H, 0, margin);
 // Whether a projection shows a point: all of them on a cylindrical one, the near side on an azimuthal.
 const shows = (proj, lon, lat) => !proj.visible || proj.visible(lon, lat);
 // At any of a longitude's 360-degree copies, so a frame may run past the antimeridian.
@@ -972,7 +946,8 @@ function regionNamesOf(id, environment) {
   }
   return sets.get(id);
 }
-const CONTINENT_ZOOM_END = 5.5, REGION_ZOOM_END = 7; // continents: zoom < CONTINENT_ZOOM_END, regions overlap them to there; regions: zoom < REGION_ZOOM_END (they meet a continent's box and make way)
+export const CONTINENT_ZOOM_END = 6; // the page's Continents slider default is this too (public/page.js DEFAULTS), so a page with no settings and a headless render draw the same names
+const REGION_ZOOM_END = 7; // continents: zoom < CONTINENT_ZOOM_END, regions overlap them to there; regions: zoom < REGION_ZOOM_END (they meet a continent's box and make way)
 
 // The continent and region names to letter, each with the box it reserves: measured with the font and
 // spacing they are drawn in, so later names and towns make way. A name off the canvas or meeting an
@@ -1627,8 +1602,11 @@ function buildScene(data, sprites, ctx, world = {}) {
   const bar = world.scaleBar ? scaleBox(barCorner, world.pinned !== false && barCorner === cartoucheCorner ? cartouche.h + 10 : 0) : null;
   const blocked = (x0, y0, x1, y1) => {
     const b = obb((x0 + x1) / 2, (y0 + y1) / 2, 0, (x1 - x0) / 2, (y1 - y0) / 2);
-    return boxes.some((o) => obbOverlap(o, b)) || (bar && obbOverlap(bar, b)) || urban.some((u) => meets({ x0, y0, x1, y1 }, u.box));
+    return boxes.some((o) => obbOverlap(o, b)) || (bar && obbOverlap(bar, b)) || urban.some((u) => meets({ x0, y0, x1, y1 }, u.box)) || onLake(x0, y0, x1, y1);
   };
+  // a drawn lake is water: no mountain or hill stands on it, at its box's corners, edge middles or centre
+  const lakes = STYLE.lakes !== 'off' && water ? keptWater(data).lakes : [];
+  const onLake = (x0, y0, x1, y1) => lakes.length > 0 && [x0, (x0 + x1) / 2, x1].some((x) => [y0, (y0 + y1) / 2, y1].some((y) => inLake(lakes, data.proj.invert(x, y))));
   const relief = reliefWanted() ? clearOf(reliefFor(data.proj, data.land), blocked) : null;
   const mountains = relief ? placeHillSprites(relief.humps, sprites.mountains ?? [], blocked, field, data.proj) : [];
 
@@ -2750,9 +2728,10 @@ function drawScene(g, scene, data, bg, view) {
   for (const s of show.kinds.has('ship') ? scene.ships : []) if (spriteIn(s.sprite, s.x, s.y, s.size)) drawSprite(g, s.sprite, s.x, s.y, s.size, { flip: s.flip, rot: s.flip ? -s.tilt : s.tilt, anchor: [0.5, 0.6] });
 
   // the voyages over the ornaments, under the cartouche
-  drawVoyages(g, scene.voyages, data.proj, r, viewRect(g, view, 0));
   // 9.1 the charts' sheets, each whole and opaque, over everything on the map, the last laid on top (overlays.mjs); their notes are drawn nowhere, found by the cursor (page.js)
   for (const o of scene.overlays) if (o.mode === 'sheet') drawSheet(g, o, data.proj, o.sheet);
+  // a voyage rides over the sheets, wherever they lie (docs/spec/design.md, "A laid sheet and what the user flies to next")
+  drawVoyages(g, scene.voyages, data.proj, r, viewRect(g, view, 0));
 
   // 10. cartouche, lettered in its cleared panel
   const c = scene.cartouche;
@@ -2982,9 +2961,9 @@ function drawAnchored(g, a, bg, view, layers) {
     const size = s.size * scaled('ship'), p = at(ll, size);
     if (p) drawSprite(g, s.sprite, p[0], p[1], size, { flip: s.flip, rot: s.flip ? -s.tilt : s.tilt, anchor: [0.5, 0.6] });
   }
+  for (const o of a.overlays) if (o.mode === 'sheet') drawSheet(g, o, proj, o.sheet); // the sheets, then the voyages over them, as at a stop
   drawVoyages(g, a.voyages, proj, { x0: 0, y0: 0, x1: W, y1: H }, undefined, true);
   for (const o of a.overlays) drawNotes(g, o, proj, { x0: 0, y0: 0, x1: W, y1: H });
-  for (const o of a.overlays) if (o.mode === 'sheet') drawSheet(g, o, proj, o.sheet); // the sheets last, as at a stop
   g.restore();
   if (show.kinds.has('cartouche')) drawCartouche(g, a.cartouche, (x0, y0, x1, y1) => g.drawImage(bg, x0, y0, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0));
   drawScaleBar(g, { proj }, bg, { scale: 1, x: 0, y: 0 }, W, H, show.scale, a.scaleSprite, scalePlace(a));
@@ -3175,8 +3154,9 @@ export async function createScene(environment, opts = {}) {
 async function loadVoyages(list) {
   const items = (Array.isArray(list) ? list : []).filter((v) => /^[a-z][a-z0-9-]*$/.test(v?.id ?? '') && v.id !== 'off');
   const hex = (c) => (/^#[0-9a-f]{6}$/i.test(c ?? '') ? c.toLowerCase() : null);
-  const colours = voyageColours(items.map((v) => v.id), Object.fromEntries(items.filter((v) => hex(v.colour)).map((v) => [v.id, hex(v.colour)])));
   const loaded = await Promise.all(items.map((v) => readVoyage(v.id, (path) => env.readJSON(path)).catch(() => null)));
+  const broken = new Set(items.filter((v, i) => isBroken(loaded[i])).map((v) => v.id));
+  const colours = voyageColours(items.map((v) => v.id), Object.fromEntries(items.filter((v) => hex(v.colour)).map((v) => [v.id, hex(v.colour)])), broken);
   return items.map((v, i) => loaded[i] && { id: v.id, voyage: loaded[i], colour: colours[v.id], width: Number.isFinite(v.width) && v.width > 0 && v.width <= 12 ? v.width : VOYAGE_WIDTH,
     ...(Number.isFinite(v.alpha) && v.alpha >= 0 && v.alpha < 1 && { alpha: v.alpha }) }).filter(Boolean);
 }
@@ -3206,13 +3186,15 @@ export const viewProjection = (view) => makeProjection(clampView(view));
 // `always`, which frames the whole voyage whatever is in view; else the view that fits its whole track with a margin of `pad` of the track's span on each side, in the view's projection.
 // The track's longitudes are read round the globe, so a track across the date line is framed the short way.
 export const VOYAGE_FIT_PAD = 0.1;
-export function voyageView(voyage, view, pad = VOYAGE_FIT_PAD, always = false) {
+// `rect` is the part of the canvas the window shows ({ x0, y0, x1, y1 } in canvas px; the whole canvas by default): on a phone the
+// canvas is cropped to the window, so "in view" and the fit both use it, and the track is centred in it.
+export function voyageView(voyage, view, pad = VOYAGE_FIT_PAD, always = false, rect = { x0: 0, y0: 0, x1: W, y1: H }) {
   const proj = viewProjection(view), pts = (voyage?.legs ?? []).flatMap(pathOf);
   if (!pts.length) return null;
   if (!always) for (const [lon, lat] of pts) {
     if (proj.visible && !proj.visible(lon, lat)) continue;
     const [x, y] = proj.toPx([lon, lat]);
-    if (x >= 0 && x <= W && y >= 0 && y <= H) return null;
+    if (x >= rect.x0 && x <= rect.x1 && y >= rect.y0 && y <= rect.y1) return null;
   }
   // the longitudes as an arc: the circle less its widest gap
   const lons = [...new Set(pts.map(([lon]) => ((lon % 360) + 360) % 360))].sort((a, b) => a - b);
@@ -3221,8 +3203,10 @@ export function voyageView(voyage, view, pad = VOYAGE_FIT_PAD, always = false) {
   const span = 360 - gap, lats = pts.map(([, lat]) => lat);
   const latMin = Math.max(-80, Math.min(...lats)), latMax = Math.min(80, Math.max(...lats));
   const dLon = Math.max(span, 0.5) * pad, yMin = mercY(latMin), yMax = mercY(latMax), dY = Math.max(yMax - yMin, 0.01) * pad;
-  const k = Math.min(W / ((Math.max(span, 0.5) + 2 * dLon) * RAD), H / (Math.max(yMax - yMin, 0.01) + 2 * dY));
-  return clampView({ lon: west + span / 2, lat: mercLat((yMin + yMax) / 2), zoom: Math.log2((k * 2 * Math.PI) / 512), projection: view.projection });
+  const rw = rect.x1 - rect.x0, rh = rect.y1 - rect.y0;
+  const k = Math.min(rw / ((Math.max(span, 0.5) + 2 * dLon) * RAD), rh / (Math.max(yMax - yMin, 0.01) + 2 * dY));
+  const dx = (rect.x0 + rect.x1 - W) / 2, dy = (rect.y0 + rect.y1 - H) / 2; // the window's centre off the canvas's, which the view's centre is
+  return clampView({ lon: west + span / 2 - dx / (k * RAD), lat: mercLat((yMin + yMax) / 2 + dy / k), zoom: Math.log2((k * 2 * Math.PI) / 512), projection: view.projection });
 }
 export const TOWN_SIZES = ['area', 'population', 'rank'];
 export { RIVER_STYLES, LAKE_STYLES, TREE_STYLES, RELIEF_STYLES };
