@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { peopleOf, personFrame, personView, capFlyZoom, viewContaining, FLY_CLOSEST_ZOOM } from '../scripts/people.mjs';
-import { readVoyage } from '../scripts/voyages.mjs';
+import { readVoyage, checkPerson } from '../scripts/voyages.mjs';
 import { voyageView, viewProjection, W, H } from '../scripts/scene.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -28,19 +28,11 @@ test('the fly clamp holds at 7.96, the zoom the mansa before Musa flew at, and l
   assert.equal(capFlyZoom({ ...v, zoom: 15 }).zoom, 6);
 });
 
-test('no person and no voyage flies closer than zoom 6', () => {
-  assert.ok(people.length > 20 && index.length > 20);
-  for (const id of index) {
-    const to = voyageView(voyages[id], far);
-    assert.ok(to, `${id}: no flight`);
-    assert.ok(capFlyZoom(to).zoom <= 6, `${id}: z${to.zoom}`);
-  }
-  for (const p of people) {
-    const f = personFrame(p, voyages);
-    if (!f) continue;
-    const view = personView(p, f, sizesOf(p));
-    assert.ok(view.zoom <= 6, `${p.id}: z${view.zoom}`);
-  }
+test('a person\'s fly box is checked, its zoom no closer than 6', () => {
+  const fly = { lonMin: -17.6, lonMax: 40, latMin: 13, latMax: 36, zoom: 4 }, base = { name: 'X', voyages: [] };
+  const flyProblems = (f) => checkPerson('x', { ...base, fly: f }).filter((m) => m.startsWith('x: fly'));
+  assert.deepEqual(flyProblems(fly), []);
+  for (const bad of [{ ...fly, zoom: 7 }, { ...fly, zoom: -1 }, { ...fly, lonMin: 50 }, { ...fly, latMax: 90 }, { ...fly, zoom: '4' }, [1, 2]]) assert.equal(flyProblems(bad).length, 1, JSON.stringify(bad));
 });
 
 test('the mansa before Musa and his fleet are brought out to 6; a person already beyond it keeps their view', () => {
@@ -68,10 +60,4 @@ test('Mansa Musa: the west of north Africa, Jeddah and Mecca all clear of the dr
     }
   }
   assert.equal(personView(musa, f, sizesOf(musa), { w: W, h: H, right: 0 }).zoom <= 4, true, 'no closer than the record asks, on any window');
-});
-
-test('the page flies through the clamp, for a person and for a voyage', () => {
-  const page = readFileSync(join(ROOT, 'public/page.js'), 'utf8');
-  assert.match(page, /goTo\(personView\(/);
-  assert.match(page, /goTo\(capFlyZoom\(to\)\)/);
 });

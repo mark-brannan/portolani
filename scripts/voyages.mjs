@@ -272,6 +272,9 @@ export async function readVoyage(id, readJSON) {
 // flight to the person frames as well as their own track, in the part of the window a drawer leaves clear, no closer than `zoom`.
 export const IMAGE_KINDS = ['life', 'near', 'posthumous', 'imaginary', 'modern', 'scene', 'ship', 'map'];
 export const SLUG = /^[a-z][a-z0-9-]*$/;
+// No flight to a person or a voyage ends closer than this zoom (the user's word of 2026-10-30: 6 is about the closest
+// for any person or voyage): a floor on how close, so a ceiling on the number. A person's `fly.zoom` is at most this.
+export const FLY_CLOSEST_ZOOM = 6;
 // The problems in one person record, as strings; none when it is well formed. `sources` is what a `cite` must name.
 export function checkPerson(id, p, { sources } = {}) {
   const out = [];
@@ -306,7 +309,8 @@ export function checkPerson(id, p, { sources } = {}) {
   for (const k of ['born', 'death']) if (p[k] !== undefined) marker(p[k], k);
   if (p.fly !== undefined) { // the box a flight to the person frames, clear of the drawer, and the closest zoom it may end at
     const f = p.fly, ok = f && typeof f === 'object' && !Array.isArray(f) && ['lonMin', 'lonMax', 'latMin', 'latMax', 'zoom'].every((k) => Number.isFinite(f[k]));
-    need(ok && f.lonMin < f.lonMax && f.latMin < f.latMax && Math.abs(f.lonMin) <= 180 && Math.abs(f.lonMax) <= 180 && Math.abs(f.latMin) <= 85 && Math.abs(f.latMax) <= 85, 'fly: { lonMin, lonMax, latMin, latMax, zoom }, west of east and south of north');
+    need(ok && f.lonMin < f.lonMax && f.latMin < f.latMax && Math.abs(f.lonMin) <= 180 && Math.abs(f.lonMax) <= 180 && Math.abs(f.latMin) <= 85 && Math.abs(f.latMax) <= 85 && f.zoom >= 0 && f.zoom <= FLY_CLOSEST_ZOOM,
+      `fly: { lonMin, lonMax, latMin, latMax, zoom }, west of east, south of north, zoom 0 to ${FLY_CLOSEST_ZOOM}`);
   }
   if (p.images !== undefined) {
     need(Array.isArray(p.images), 'images: a list');

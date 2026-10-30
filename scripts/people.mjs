@@ -4,8 +4,8 @@
 // lat, date, place, label, text, source, confidence }; a death with no lon and lat is not drawn), and `images` pictures
 // on Wikimedia Commons, best first ({ file, kind, author, date, licence }), shrunk for the site by
 // scripts/build-people.mjs into packs/overlays/people/.
-import { DASHES, VOYAGE_DIR } from './voyages.mjs';
-export { DASHES };
+import { DASHES, VOYAGE_DIR, FLY_CLOSEST_ZOOM } from './voyages.mjs';
+export { DASHES, FLY_CLOSEST_ZOOM };
 
 export const PEOPLE_FILE = 'data/voyages/people.json';
 export const PICTURES_FILE = 'packs/overlays/people/people.json';
@@ -152,6 +152,8 @@ export function frameOf(points) {
 // The view that shows the whole of `frame` on a `w` x `h` canvas with `pad` of its size clear round it: contained, never
 // cropped. `right` canvas px at the right edge are kept clear (a drawer lies over them): the frame is fitted into the
 // rest and centred there, so the view's own centre sits east of the frame's. `maxZoom` is the closest the view may be.
+// The fit is Mercator's, as it always was; the shift east is in longitude, whose px per degree every cylindrical
+// projection here shares (and an azimuthal one matches near its centre), so it holds whatever projection the user keeps.
 export function viewContaining(frame, { w = 1600, h = 1000, pad = 0.08, right = 0, maxZoom = Infinity } = {}) {
   const RAD = Math.PI / 180, mercY = (lat) => Math.log(Math.tan(Math.PI / 4 + (Math.max(-85, Math.min(85, lat)) * RAD) / 2));
   const y0 = mercY(frame.latMin), y1 = mercY(frame.latMax), dlon = Math.max(1, frame.lonMax - frame.lonMin) * RAD, dy = Math.max(0.02, y1 - y0);
@@ -159,10 +161,8 @@ export function viewContaining(frame, { w = 1600, h = 1000, pad = 0.08, right = 
   return { lon: (frame.lonMin + frame.lonMax) / 2 + right / 2 / k / RAD, lat: (2 * Math.atan(Math.exp((y0 + y1) / 2)) - Math.PI / 2) / RAD, zoom: Math.log2((k * 2 * Math.PI) / 512) };
 }
 
-// No flight to a person or a voyage ends closer than this zoom (the user's word of 2026-10-30: 6 is about the closest
-// for any person or voyage), however small the track: a floor on how close, so a ceiling on the number. Every such
-// flight passes through capFlyZoom, so a record added later cannot undercut it.
-export const FLY_CLOSEST_ZOOM = 6;
+// No flight to a person or a voyage ends closer than FLY_CLOSEST_ZOOM (scripts/voyages.mjs), however small the track.
+// Every such flight passes through capFlyZoom, so a record added later cannot undercut it.
 export const capFlyZoom = (view) => (view.zoom > FLY_CLOSEST_ZOOM ? { ...view, zoom: FLY_CLOSEST_ZOOM } : view);
 
 // The lon/lat box round a person's birth, death and voyages (`voyages` the loaded ones by id), longitudes wrapped to
@@ -180,7 +180,7 @@ export function personView(p, frame, sizes, { w = 1600, h = 1000, right = 0 } = 
   const box = withPictures(frame, picturePlaces(frame, sizes), sizes), fly = p.fly;
   if (!fly) return capFlyZoom(viewContaining(box, { w, h }));
   const union = { lonMin: Math.min(box.lonMin, fly.lonMin), lonMax: Math.max(box.lonMax, fly.lonMax), latMin: Math.min(box.latMin, fly.latMin), latMax: Math.max(box.latMax, fly.latMax) };
-  return capFlyZoom(viewContaining(union, { w, h, right, maxZoom: fly.zoom }));
+  return capFlyZoom(viewContaining(union, { w, h, right, maxZoom: Math.min(fly.zoom, FLY_CLOSEST_ZOOM) })); // the shift east is worked at the zoom it lands at
 }
 
 // Where a person's pictures lie by default, from `frame` (the lon/lat box of their birth, death and voyages): each as tall
