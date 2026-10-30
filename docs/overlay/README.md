@@ -7,10 +7,10 @@ keyed off, so the map shows round the skin's ragged edge and nowhere else. The s
 name in the Charts drawer is clicked (the map flies to frame the whole sheet) and off when it is clicked
 again; it is kept in the link as `overlay=de-la-cosa`.
 
-Three charts have a scan so far, each a Commons scan in the public domain (see ASSETS.md): the Carta
-Marina, 1539 (Olaus Magnus), at half size; sheet 5 of the Catalan Atlas, 1375, the Atlantic panel, at a
-quarter; and Juan de la Cosa's chart of 1500 at full size, since its only scan is 2127 px wide. All are in
-`packs/overlays/` with `overlays.json`. `npm run overlays` makes them from the full scans
+Each chart is a Commons scan (see ASSETS.md for its rights): among them the Carta Marina, 1539 (Olaus
+Magnus), at half size; the Catalan Atlas, 1375, its eight map pages side by side, at a quarter; and Juan de la
+Cosa's chart of 1500 at full size, since its only scan is 2127 px wide. All are in `packs/overlays/` with
+`overlays.json`. `npm run overlays` makes them from the full scans
 (`scripts/build-overlays.mjs`): the shrunk JPEG, a mask PNG of the paper round the skin (a flood fill from
 the image's border through light or grey unsaturated pixels, which the tinted skin stops; the outermost
 px keyed whatever they hold; 19 to 38 KB each), and the placements below.
@@ -40,12 +40,44 @@ into the link as `sheet=<lon>,<lat>,<scale>,<turn>`.
 | chart | own placement | snaps |
 |---|---|---|
 | Map of Juan de la Cosa | Parallels: 0.1208 °/px, turned 2.2° anticlockwise so its tropic and equator lie level at 23.44°N and 0°, centred 14.8°W | New World (0.0780 °/px, 7.9° anticlockwise), Atlantic (0.1307, 1.4° clockwise), Europe (0.1403, 4.9° clockwise) |
-| Catalan Atlas, sheet 5 | 0.00331 °/px, level | none |
+| Catalan Atlas | 0.00321 °/px, level, centred 53.2°E 39.3°N (the geometric mean of its Atlantic and Cathay pages' scales) | one per page: Atlantic, Mali, Italy, Black Sea, Persia, Central Asia, India, Cathay |
 | Carta Marina | 0.0106 °/px, level | West (0.0113 °/px, 48° anticlockwise), Baltic (0.0100, 3° anticlockwise) |
 
 `npm run render -- --view -25,22,2 --overlay de-la-cosa [--sheet lon,lat,scale,turn] --out <file>` draws it headless.
 
 ![Juan de la Cosa's sheet, keyed and opaque, its parallels level over the Atlantic](de-la-cosa-sheet.jpg)
+
+## A chart of several pages: panels
+
+The Catalan Atlas is eight map pages, BnF sheets 5 to 12, each a tall half-leaf scanned on its own. It is one
+chart, one row in the Charts drawer and one sheet over the map (`overlay=catalan-atlas`, as before): the pages
+side by side as the open atlas, west to east, each cropped to its parchment (the scanner's white margin dropped)
+and butted to the next. One image of them all would be 46800 x 15870 px at full size, 2.9 megapixels a page
+even shrunk by four, too much for a phone to decode or hold as one canvas, so the sheet is not stitched.
+
+Instead a chart may have `panels`: each page its own shrunk JPEG and mask, with `x`, its offset within the
+sheet's full-resolution px (the sum of the widths of the pages west of it), its `width` and `height` there,
+and `scanX`, where its crop starts in its own scan. The chart's `width` and `height` are the whole sheet's, so
+its placement, frame, drag handles and notes work in the sheet's px exactly as for one scan. The sheet draws
+every panel at its offset through the one transform; the warped pieces draw each panel's part inside a piece
+(a piece is a page). The page loads the panels one by one and redraws as each lands, so the atlas appears page
+by page rather than after the whole 11 MB; a headless render waits for them all. A chart without `panels` is
+one scan file as before. The drawer's thumbnail is a strip of all eight pages, 480 px wide (`thumb`).
+
+Each page is one piece, fitted to landmarks read off that page (docs/atlas/ornaments.md, "Landmarks, sheet 5"
+to "sheet 12", page px; the build adds the page's offset), and one snap, the chip that lays the whole sheet at
+that page's fit. Sheets 5 to 8, the portolan part, take a similarity each: 0.0026 to 0.0035 °/px, sheet 5 level
+and sheets 6 to 8 turned 8° to 12° clockwise, the tilt of a portolan's grid; 72 to 130 km RMS. Sheets 9 to 12 are the
+mappa mundi east of the Caspian, where a fit is rough: each is level at the scale of the atlas as a whole and
+centred through its own few named places (Tabriz, Baghdad, Hormuz; Kollam and the Ganges; Khanbaliq and
+Zayton), 340 to 600 km RMS; sheet 10, whose lettering is upside down and worn, is centred through sheets 9 and
+11's. The atlas draws Corsica and Sardinia on both sides of the join between its second and third leaves
+(sheets 6 and 7), so butted they show twice; the 1959 copy below draws them once.
+
+`npm run render -- --view 53.22,39.30,2.69 --overlay catalan-atlas --out <file>`: the eight pages at their own
+placement, the Atlantic to Cathay.
+
+![The Catalan Atlas's eight map pages laid side by side over the map, the Atlantic to Cathay](catalan-atlas-sheet.jpg)
 
 The same placement over an orthographic view (`&projection=orthographic`): the sheet's size and turn are the
 same, the map under it is the globe.
@@ -113,8 +145,7 @@ The Atlantic panel, Ireland at the top and the Canaries at the foot, is north up
 0.00331 °/px, no turn, fitted to 19 landmarks read off the scan (the Shannon, the Portuguese and Moroccan
 coasts, Madeira and the Canaries) with an RMS residual of 127 km; the table is in
 [docs/atlas/ornaments.md](../atlas/ornaments.md) ("Landmarks, sheet 5"). The piece is the parchment,
-x 240 to 6080 scan px, not the scan's white margin. The panel's east edge is the join with sheet 6, so
-the scan stops at the Iberian coast.
+x 288 to 6160 scan px, not the scan's white margin. East of it, sheet 6's piece takes up at Iberia.
 
 `npm run render -- --view -14,40,4.4 --overlay catalan-atlas:<opacity> --out <file>`, scaled to 1000 px.
 
@@ -129,6 +160,11 @@ Opacity 0.6, the default: the chart's Canaries, strung out further west than the
 Opacity 1: the scan alone, Portugal and Morocco meeting today's coast at the panel's east edge.
 
 ![The same view with the scan opaque](catalan-atlas-1.jpg)
+
+The Mediterranean, `--view 18,38,3.4 --overlay catalan-atlas:0.6`: sheets 5 to 9, each warped by its own fit,
+overlapping where two fits disagree at a seam.
+
+![The Catalan Atlas's pages 5 to 9 warped onto today's Mediterranean, each by its own fit](catalan-atlas-mediterranean-0.6.jpg)
 
 ## At Juan de la Cosa, 1500
 
@@ -165,6 +201,9 @@ the build's `CHARTS`.
 - **Aguiar, 1492** (Beinecke): Lisbon, Gibraltar, Venice, Jerusalem; its black scan keys `dark`.
 - **Agnese, about 1544** (LoC, map 10): six capes and straits; the oval bends, so rough away from the centre.
 - **Dourado, 1580** (BSB, chart 4): seven points, Lisbon to Iceland; its Iceland lies east of today's.
+- **The Catalan Atlas's Mediterranean, a copy of 1959** (Library of Congress, Geography and Map Division; CC BY
+  3.0, "Copia de 1959 del original de 1375"): not the original but a painted copy of sheets 5 to 8, its own
+  chart in the drawer. Ten places, Gibraltar to Cyprus, 245 km RMS (London and Cyprus worst, 428 km each).
 
 `npm run render -- --view <lon,lat,zoom> --overlay <id> --out <file>`, at each sheet's own frame.
 
@@ -173,6 +212,8 @@ the build's `CHARTS`.
 ![Agnese's oval world laid over the whole map](agnese-world-sheet.jpg)
 
 ![Dourado's North Atlantic laid over it](dourado-atlantic-sheet.jpg)
+
+![The 1959 copy of the Catalan Atlas's Mediterranean laid level over it](catalan-atlas-1959-copy-sheet.jpg)
 
 Nothing marks a note on the scan. Over a noted figure the cursor turns to a pointer, and a click opens its
 tile. The notes ride on the sheet where it lies, dragged, turned or resized. Juan de la Cosa has notes too.
