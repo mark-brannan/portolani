@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { loadImage, createCanvas, GlobalFonts } from '@napi-rs/canvas'
-import { BUILDINGS, LESSER_PX, lesserBuilding } from '../scripts/buildings.mjs'
+import { BUILDINGS, RUIN, LESSER_PX, lesserBuilding } from '../scripts/buildings.mjs'
 import { POIS, POI_ZOOM } from '../scripts/pois.mjs'
 import { createScene, towerGlyph, DETAIL_ZOOM } from '../scripts/scene.mjs'
 import { coastNames, joinNames } from '../scripts/names.mjs'
@@ -110,4 +110,24 @@ test('points of interest are lettered from POI_ZOOM, bigger than the lesser plac
   const world = { lon: 10, lat: 25, zoom: 0 }
   assert.notEqual((await at(world, 0)).cartouche.title, 'THE WORLD')
   assert.equal((await at(world, 0, { pinTitle: 'The World' })).cartouche.title, 'THE WORLD')
+})
+
+test('a place with a tile gets an unlettered mark: a ruin wherever the sight says so, even beside a city, else the plain tower', async () => {
+  const tyre = { name: 'Tyre', lon: 35.2, lat: 33.27, ruin: true }, ostia = { name: 'Ostia', lon: 12.29, lat: 41.76, ruin: true }
+  const carthage = { name: 'Carthage', lon: 10.33, lat: 36.84, ruin: true }, aden = { name: 'Aden', lon: 45.03, lat: 12.78 }
+  const at = (p, zoom, sights) => createScene(env, { view: { lon: p.lon, lat: p.lat, zoom }, sights }).then((r) => r.scene)
+  const scene = await at(tyre, 7, [tyre])
+  const mark = scene.lesser.find((l) => l.name === 'Tyre')
+  assert.ok(mark?.mark && mark.tower === 'ruin', 'Tyre is a ruin')
+  assert.ok(!scene.names.some((n) => n.text === 'Tyre'), 'no lettering beside it')
+  assert.ok(!(await at(tyre, 7)).lesser.some((l) => l.name === 'Tyre'), 'no sights, no mark')
+  assert.ok(!(await at(tyre, POI_ZOOM - 1, [tyre])).lesser.some((l) => l.mark), 'none below POI_ZOOM')
+  for (const zoom of [POI_ZOOM, 6, 8, 10]) assert.equal((await at(carthage, zoom, [carthage])).lesser.find((l) => l.name === 'Carthage')?.tower, 'ruin', `Carthage beside Tunis, z${zoom}`)
+  assert.equal((await at(ostia, 7, [ostia])).lesser.find((l) => l.name === 'Ostia')?.tower, 'ruin')
+  const barygaza = { name: 'Barygaza', lon: 72.99, lat: 21.71, ruin: 'clear' }
+  assert.equal((await at(barygaza, 6, [barygaza])).lesser.find((l) => l.name === 'Barygaza')?.tower, 'ruin', 'no town drawn on the site: a ruin')
+  const town = (await at(aden, 7, [aden])).lesser.find((l) => l.name === 'Aden')
+  assert.ok(!town || town.tower !== 'ruin', 'a sight that does not say ruin is never one')
+  assert.ok(RUIN.layers.every(([, d]) => /^M[-\d. MLHVQZ]*$/.test(d)) && RUIN.w <= 8, 'the ruin is drawn in the towers\' path data')
+  assert.ok(!BUILDINGS.some((b) => b.id === 'ruin'), 'not a town to pick at random')
 })
