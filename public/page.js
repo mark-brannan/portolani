@@ -1,8 +1,8 @@
 // Browser host for the shared scene code (scene.mjs): same scene as `npm run render`, drawn live.
 // Drag to pan, wheel or pinch to zoom; while the map moves the land and coast are drawn and the placed
-// ornaments slide with it, held to the earth; they are placed again when it stops. A row of six instruments
+// ornaments slide with it, held to the earth; they are placed again when it stops. A row of seven instruments
 // at the top right opens one drawer each, one at a time: the settings behind the rose, so the map has the
-// window, the charts, the points of interest, Go, the voyages and the anchorages. The view and the style are kept in the URL hash, e.g.
+// window, the charts, the points of interest, Go, the voyages, the people and the anchorages. The view and the style are kept in the URL hash, e.g.
 // #map=zoom/lat/lon&projection=miller&overlap=cut&sprites=s:serpent-a,v:kraken,v:rose-aguiar,p:tower&townsize=rank&names=0&rhumb=0&scale=chevron&scaleborder=blank&continents=5&regions=latin&regionszoom=7&land=green&islands=1&rivers=aguiar&lakes=marina&mountains=ink&trees=ink&seas=1&autotitle=0&title=Mare+Nostrum&ink=5a1a1a&parchment=eee&density=1.5;
 // a setting left at its default is left out, `sprites` too (keys with the pack shortened, v: s: p:); `mountains` is `ink`
 // or `off` (colour is the default); the hills are the Catalan sprites in `sprites`. `continents` and `regionszoom` are the zoom
@@ -18,6 +18,7 @@ import { createScene, towerGlyph, REGION_LANGS, drawScene, drawGround, anchorSce
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
+import { PEOPLE_FILE, PICTURES_FILE, lifeSpan, timelineAxis, ticksOf, pictureCredit, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, viewContaining, withPictures, peopleOf, whoOf, deathOf } from './people.mjs';
 import { fold, bestPlace } from './placename.mjs';
 
 const memo = new Map();
@@ -27,7 +28,11 @@ const once = (key, make) => {
   return memo.get(key);
 };
 
+// A chart of several pages (packs/overlays/overlays.json `panels`) loads page by page: each page that lands redraws
+// the map, a few landings at once in one redraw, so the sheet fills in rather than waiting for the last.
+let panelLanded = 0;
 const env = {
+  onPanel: () => { clearTimeout(panelLanded); panelLanded = setTimeout(() => render(), 120); },
   createCanvas: (w, h) => Object.assign(document.createElement('canvas'), { width: w, height: h }),
   readJSON: (p) => once(p, () => fetch(p).then((r) => { if (!r.ok) throw new Error(`${p}: ${r.status}`); return r.json(); })),
   loadImage: (p) => once(p, () => new Promise((ok, no) => {
@@ -48,7 +53,7 @@ const canvas = $('map'), ctx = canvas.getContext('2d');
 // cards beside the map, not on the sea.
 const phone = matchMedia('(max-width: 520px)');
 
-const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: 6, regions: 'latin', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyages: [], voyageWidth: VOYAGE_WIDTH, ...OVERLAY_DEFAULTS, cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER, overlap: DEFAULT_OVERLAP };
+const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: 6, regions: 'latin', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyages: [], voyageWidth: VOYAGE_WIDTH, person: null, pictures: null, ...OVERLAY_DEFAULTS, cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER, overlap: DEFAULT_OVERLAP };
 
 // ---------------------------------------------------------------- the sprites on offer
 
@@ -122,6 +127,10 @@ function styleFromHash() {
     tune: parseTune(q.get('tune')).text,
     voyages: voyagesFromHash(q),
     voyageWidth: VOYAGE_WIDTHS.includes(Number(q.get('voyagewidth'))) ? Number(q.get('voyagewidth')) : DEFAULTS.voyageWidth,
+    // the person chosen in the People drawer (data/voyages/people.json), which of their pictures lie on the map, and where
+    person: /^[a-z][a-z0-9-]*$/.test(q.get('person') ?? '') ? q.get('person') : DEFAULTS.person,
+    pictures: parsePictures(q.get('pictures'), DEFAULTS.pictures),
+    pictureAt: parsePictureAt(q.get('pictureat')),
     // a chart's scan laid over the map (packs/overlays/overlays.json; an id the site lacks draws nothing), and how strongly
     ...overlayFromHash(q),
   };
@@ -175,6 +184,12 @@ function writeHash() {
   if (st.tune) q.set('tune', st.tune);
   if (st.voyages.length) q.set('voyages', st.voyages.map((v) => (v.colour ? `${v.id}:${v.colour.slice(1)}` : v.id)).join(','));
   if (st.voyageWidth !== DEFAULTS.voyageWidth) q.set('voyagewidth', st.voyageWidth);
+  if (st.person) {
+    q.set('person', st.person);
+    const shown = st.pictures && (st.pictures.length ? st.pictures.join(',') : 'none'), at = pictureAtText(st.pictureAt);
+    if (shown) q.set('pictures', shown);
+    if (at) q.set('pictureat', at);
+  }
   overlayToHash(st, q);
   if (st.seaTint) q.set('seas', '1');
   if (st.scaleBorder !== DEFAULTS.scaleBorder) q.set('scaleborder', st.scaleBorder);
@@ -667,6 +682,10 @@ let selection = selectionFromHash();
 showStyle();
 if (LEGACY_KEYS.some((k) => hashParams().has(k))) writeHash(); // an older link, rewritten in the new form
 let ground = null; // { world, coarse, bg, anchored } from the last placement, all a moving frame needs
+// the People drawer's data, once loaded ({ people, pictures, sources, voyages }), the frames of the people chosen, their
+// pictures' images, and the picture held by hand (the section "people" below)
+let peopleData = null, peopleLoad = null, holding = null, dealt = null, flips = new Map();
+const frames = new Map(), pictureImgs = new Map();
 let placed = null; // the view the canvas shows with its ornaments
 let pinTitle = null; // the name of the place last flown to, on the cartouche until the map is moved by hand
 let run = 0;
@@ -682,7 +701,7 @@ async function render() {
       continents: style.continentsZoom > 0, continentsZoom: style.continentsZoom,
       regions: style.regionsZoom > 0 ? style.regions : 'off', regionsZoom: style.regionsZoom,
       sprites: [...selection], kinds, view, pinned: !phone.matches, pinTitle: style.autoTitle ? pinTitle : null,
-      voyages: style.voyages.map((v) => ({ id: v.id, colour: v.colour ?? undefined, width: style.voyageWidth })),
+      voyages: style.voyages.map((v) => ({ id: v.id, colour: v.colour ?? undefined, width: style.voyageWidth })), person: style.person, voyageWidth: style.voyageWidth,
       overlay: style.overlay ? { id: style.overlay, mode: style.overlayMode, sheet: style.sheet, opacity: style.overlayOpacity } : null,
       debug: parseDebug(style.debug).debug, tune: parseTune(style.tune).tune,
     });
@@ -698,9 +717,11 @@ async function render() {
     ctx.clearRect(0, 0, W, H);
     drawScene(ctx, scene, data, bg, { scale: 1, x: 0, y: 0 });
     if (fading) fadeSheet(scene.overlay, data.proj, me);
+    drawPictures(ctx);
     drawSheetHandles(ctx);
     drawCards();
     placeSheetChips();
+    preparePictures().then((fresh) => { if (fresh && me === run) render(); }, () => {}); // the chosen person's pictures, drawn once loaded
     const t2 = performance.now();
     $('status').textContent = `z${view.zoom.toFixed(1)}: load ${timing.load.toFixed(0)} ms, placement + parchment ${timing.place.toFixed(0)} ms, draw ${(t2 - t1).toFixed(0)} ms (total ${(t2 - t0).toFixed(0)} ms)`;
   } catch (e) {
@@ -733,8 +754,8 @@ phone.addEventListener('change', () => { drawCards(); if (ground) render(); }); 
 
 // ---------------------------------------------------------------- the drawers
 
-// Six buttons in the row, each with its own drawer: the rose the settings, the chart the charts, the
-// astrolabe the points of interest, the compass Go, the dividers the voyages, the anchor the anchorages.
+// Seven buttons in the row, each with its own drawer: the rose the settings, the chart the charts, the
+// astrolabe the points of interest, the compass Go, the dividers the voyages, the medallion the people, the anchor the anchorages.
 // At most one is open. A click on a button opens its drawer and a second click shuts it; a click on another
 // button shuts it and opens that one; a choice in it, Esc, or a click or a focus outside the row and the
 // drawer shuts it. On a wide screen the drawer hangs below the row, which it never covers or moves, and a
@@ -743,7 +764,7 @@ phone.addEventListener('change', () => { drawCards(); if (ground) render(); }); 
 // text box, on a wide screen only, so a phone's keyboard does not cover the sheet); shut by the keyboard,
 // the focus goes back to its button.
 const where = $('where');
-const drawers = [[$('open'), $('drawer')], [$('charts'), $('chartsDrawer')], [$('sights'), $('sightsPanel')], [$('go'), $('goPanel')], [$('voyages'), $('voyagesPanel')], [$('anchor'), $('anchorPanel')]];
+const drawers = [[$('open'), $('drawer')], [$('charts'), $('chartsDrawer')], [$('sights'), $('sightsPanel')], [$('go'), $('goPanel')], [$('voyages'), $('voyagesPanel')], [$('people'), $('peoplePanel')], [$('anchor'), $('anchorPanel')]];
 const openDrawer = () => drawers.find(([, d]) => d.classList.contains('open'))?.[1] ?? false;
 const focusable = (d) => [...d.querySelectorAll('button, input, a[href]')].find((e) => !e.disabled && e.getClientRects().length);
 function setDrawer(open, byKeyboard = false) { // the drawer to open, or false for none
@@ -752,6 +773,7 @@ function setDrawer(open, byKeyboard = false) { // the drawer to open, or false f
   for (const [b, d] of drawers) { d.classList.toggle('open', d === open); b.setAttribute('aria-expanded', String(d === open)); }
   document.documentElement.classList.toggle('sheet', !!open && !open.classList.contains('menu')); // on a phone the map makes room above the settings or the charts; a lighter drawer sits over its foot
   if (open?.id === 'voyagesPanel') fillVoyages(); // the list loads on the first open
+  if (open?.id === 'peoplePanel') fillPeople();
   if (open?.id === 'chartsDrawer') chartsFresh = !style.overlay;
   if (open) (open.id === 'goPanel' ? (phone.matches ? null : $('coordsText')) : focusable(open))?.focus({ preventScroll: true });
   else if (byKeyboard) drawers.find(([, d]) => d === was)[0].focus({ preventScroll: true });
@@ -935,6 +957,7 @@ function paintFrame(doing) {
   // the 10m cells placed last while they cover the view; 50m otherwise, until it stops and is placed again
   drawGround(ctx, covers(ground.world, view) ? ground.world : ground.coarse, view, ground.bg);
   drawAnchored(ctx, ground.anchored, ground.bg, view); // the placed ornaments, held to the earth
+  drawPictures(ctx);
   drawSheetHandles(ctx);
   drawCards(true);
   placeSheetChips();
@@ -1070,9 +1093,10 @@ function showSnap(corner, w, h) {
 }
 canvas.addEventListener('pointerdown', (e) => {
   cancelAnimationFrame(flight); flightTo = null; // a touch takes over from a flight
-  if (!pointers.size && e.isPrimary && !held) {
-    const p = toCanvas(e.clientX, e.clientY), hit = sheetHit(p);
-    if (hit) { hideTile(); holdSheet(hit, p); sheetTap = p; canvas.setPointerCapture(e.pointerId); canvas.style.cursor = 'grabbing'; return; }
+  if (!pointers.size && e.isPrimary && !held && !holding) {
+    const p = toCanvas(e.clientX, e.clientY), pic = pictureHit(p), hit = pic ? null : sheetHit(p);
+    if (pic) holdPicture(pic, p); else if (hit) { hideTile(); holdSheet(hit, p); sheetTap = p; }
+    if (pic || hit) { canvas.setPointerCapture(e.pointerId); canvas.style.cursor = 'grabbing'; return; }
   }
   if (!pointers.size && e.isPrimary && (carried = cardAt(toCanvas(e.clientX, e.clientY)))) {
     carried.corner = style[carried.key];
@@ -1087,9 +1111,10 @@ canvas.addEventListener('pointerdown', (e) => {
   clearTimeout(settle);
 });
 canvas.addEventListener('pointermove', (e) => {
+  if (holding) { dragPicture(toCanvas(e.clientX, e.clientY)); return; }
   if (held) { const p = toCanvas(e.clientX, e.clientY); if (sheetTap && Math.hypot(p[0] - sheetTap[0], p[1] - sheetTap[1]) > cssPx(TAP_SLOP)) sheetTap = null; if (!sheetTap) dragSheet(p); return; }
   if (carried) { carried.corner = cornerAt(toCanvas(e.clientX, e.clientY)); showSnap(carried.corner, carried.w, carried.h); return; }
-  if (!pointers.size) { const p = toCanvas(e.clientX, e.clientY); canvas.style.cursor = cardAt(p) ? 'grab' : markAt(p) ? 'pointer' : { move: 'grab', turn: 'crosshair', size: 'nwse-resize' }[sheetHit(p)?.kind] ?? ''; return; }
+  if (!pointers.size) { const p = toCanvas(e.clientX, e.clientY); canvas.style.cursor = cardAt(p) ? 'grab' : markAt(p) ? 'pointer' : { move: 'grab', turn: 'crosshair', size: 'nwse-resize', flip: 'pointer', link: 'pointer' }[(pictureHit(p) ?? sheetHit(p))?.kind] ?? ''; return; }
   if (!pointers.has(e.pointerId)) return;
   const p = toCanvas(e.clientX, e.clientY);
   if (tap && Math.hypot(p[0] - tap[0], p[1] - tap[1]) > cssPx(TAP_SLOP)) tap = null;
@@ -1105,6 +1130,7 @@ canvas.addEventListener('pointermove', (e) => {
   }
 });
 const lift = (e) => {
+  if (holding) { canvas.style.cursor = ''; dropPicture(); return; }
   if (held) { const at = sheetTap; sheetTap = null; canvas.style.cursor = ''; if (at) { held = null; if (e.type === 'pointerup') showTileAt(at); } else dropSheet(); return; } // a tap moved nothing: no render, which would hide the tile
   if (carried) { // dropped: the corner is kept, the sheet placed again
     const { key, corner } = carried;
@@ -1286,7 +1312,8 @@ const CHARTS = [
   ['Carte Pisane', 'c. 1275', both([7.4, 40.0, 8], [27.4, 36.8, 7.5]), ['Genoa', port(8.93, 44.41)]], // maker unknown; Genoa the usual attribution, Pisa only its owners
   ['Vesconte', '1311', around(25.2, 37.5, 3), ['Genoa', port(8.93, 44.41)]], // signed "de Janua"; he later worked in Venice, and where this sheet was drawn is disputed
   ['Dulcert', '1339', around(14.5, 40.0, 17), ['Majorca', port(2.65, 39.57)]], // signed in the city of Majorca, today's Palma
-  ['Catalan Atlas', '1375', both([-20.7, 42.1, 16], [-5.4, 42.3, 16]), ['Majorca', port(2.65, 39.57)], null, 'catalan-atlas'], // Cresques Abraham's workshop, Palma
+  ['Catalan Atlas', '1375', both([-20.7, 42.1, 16], [-5.4, 42.3, 16]), ['Majorca', port(2.65, 39.57)], null, 'catalan-atlas'], // Cresques Abraham's workshop, Palma; its eight map pages side by side
+  ['Catalan Atlas, Mediterranean, a copy of 1959', '1375, copied 1959', viewOfFrame({ lonMin: -24, lonMax: 42.8, latMin: 22.2, latMax: 55.6 }), ['Majorca', port(2.65, 39.57)], null, 'catalan-atlas-1959-copy'], // a painted copy (Library of Congress, CC BY 3.0), not the original; its view is its own sheet's frame (sheetFrame of its placement), Gibraltar to Cyprus
   ['Chart of Jorge de Aguiar', '1492', at(2.64, 31.29, 3.18), ['Lisbon', port(-9.14, 38.72)], null, 'aguiar'], // the Beinecke Library's chart; Lisbon, Portugal's chartmaking port, the usual attribution
   ['Map of Juan de la Cosa', '1500', both([-45, 23.4, 15], [65, 23.4, 15]), ['El Puerto de Santa María', port(-6.23, 36.60)], null, 'de-la-cosa'], // signed "la fizo en el puerto de S. Mª"
   ['Carta Marina', '1539', viewOfFrame({ lonMin: 0, lonMax: 40, latMin: 54, latMax: 72 }), ['Venice', port(12.33, 45.44)], null, 'carta-marina'], // Olaus Magnus had it printed there
@@ -1369,6 +1396,272 @@ $('voyageList').addEventListener('input', (e) => {
   clearTimeout(picking); picking = setTimeout(render, 150);
 });
 
+// ---------------------------------------------------------------- people
+
+// The People drawer: a timeline strip, one life bar per person (data/voyages/people.json, scripts/people.mjs) on a year
+// axis broken between the ancient world and the medieval, so who overlapped whom shows; a bar fades where the record
+// leaves a birth or a death undated. A click on a bar chooses that person (a second click lets them go): their bar turns
+// red, their voyages are drawn lit in the chart's red and every other voyage chosen is dimmed (the scene's `person`),
+// their birth is marked, the map flies to frame them, and all their pictures are dealt onto the map as onto a chart
+// table, a little askew, to drag by hand, resize by a corner and turn over to read what each is and follow it to its
+// page. Under the strip their card: the name and the years, the bio, each voyage with its summary written out, and
+// the pictures as thumbnails, each of which takes it off the table or puts it back.
+// The choice rides in the link (`person=`, `pictures=`, `pictureat=`).
+function loadPeople() {
+  peopleLoad ??= Promise.all([env.readJSON(PEOPLE_FILE), env.readJSON(PICTURES_FILE).catch(() => ({ pictures: {} })), env.readJSON('data/voyages/sources.json').catch(() => ({}))])
+    .then(async ([records, { pictures }, sources]) => {
+      const people = peopleOf(records, await whoOf(env.readJSON));
+      const ids = [...new Set(people.flatMap((p) => p.voyages))];
+      const vs = await Promise.all(ids.map((id) => readVoyage(id, (path) => env.readJSON(path)).catch(() => null)));
+      peopleData = { people, pictures, sources, voyages: Object.fromEntries(ids.map((id, i) => [id, vs[i]]).filter(([, v]) => v)) };
+      return peopleData;
+    }, (e) => { peopleLoad = null; throw e; });
+  return peopleLoad;
+}
+const personOf = (id) => peopleData?.people.find((p) => p.id === id) ?? null;
+const spanOf = (p) => lifeSpan(p, p.voyages.flatMap((id) => voyageYears(peopleData.voyages[id]?.when)));
+const lifeText = (p) => `${p.born?.date ?? 'birth unknown'} – ${deathOf(p)?.date ?? 'death unknown'}`;
+const pc = (x) => `${(x * 100).toFixed(2)}%`;
+function fillPeople() {
+  loadPeople().then(() => { if (!$('peopleStrip').childElementCount) drawTimeline(); showPeople(); }, (e) => { $('peopleStrip').textContent = e.message; });
+}
+function drawTimeline() {
+  const people = [...peopleData.people].map((p) => [p, spanOf(p)]).sort((a, b) => a[1][0] - b[1][0]);
+  const axis = timelineAxis(people.map(([, [a, b]]) => [a, b]));
+  const ticks = axis.stretches.flatMap(([a, b]) => ticksOf([a, b]).map(([y, label]) => `<span class="tick" style="left:${pc(axis.x(y))}">${label}</span>`));
+  const breaks = axis.stretches.slice(1).map(([, , x0]) => `<span class="brk" style="left:${pc(x0 - 0.02)}" aria-hidden="true"></span>`).join('');
+  const rows = people.map(([p, [a, b, fromKnown, toKnown]]) => {
+    const x0 = axis.x(a), x1 = axis.x(b), right = x1 < 0.62; // the name to the bar's right where there is room, else to its left
+    const open = `${fromKnown ? '' : ' open-start'}${toKnown ? '' : ' open-end'}`;
+    return `<li><button type="button" class="life" data-person="${escapeHTML(p.id)}" aria-pressed="false" title="${escapeHTML(p.name)}, ${escapeHTML(lifeText(p))}">` +
+      `<span class="bar${open}" style="left:${pc(x0)};width:${pc(Math.max(0.008, x1 - x0))}"></span>` +
+      `<span class="who" style="${right ? `left:calc(${pc(x1)} + 5px)` : `right:calc(${pc(1 - x0)} + 5px)`}">${escapeHTML(p.name)}</span></button></li>`;
+  }).join('');
+  $('peopleStrip').innerHTML = `<div class="axis">${ticks.join('')}${breaks}</div><ol class="lives">${rows}${breaks}</ol>`;
+}
+// The years after a name, as an encyclopedia gives them: "(c. 1460s – 24 Dec 1524)", "(born c. 350 BC)", "(died 1510)",
+// nothing where neither is dated; the places are the bio's and the map's
+function lifeDates(p) {
+  const b = p.born?.date, d = deathOf(p)?.date;
+  return b && d ? `(${b} – ${d})` : b ? `(born ${b})` : d ? `(died ${d})` : '';
+}
+function showPeople() {
+  for (const b of document.querySelectorAll('#peopleStrip [data-person]')) b.setAttribute('aria-pressed', String(b.dataset.person === style.person));
+  const card = $('personCard'), p = personOf(style.person);
+  card.hidden = !p;
+  if (!p) { card.replaceChildren(); return; }
+  // each voyage by its title (its years with it where the title has none), and its summary in full
+  const voyages = p.voyages.map((id) => peopleData.voyages[id]).filter(Boolean).map((v) => {
+    const link = voyageLink(v, peopleData.sources);
+    return `<li><b>${escapeHTML(v.title)}</b>${/\d/.test(v.title) ? '' : ` <span class="when">${escapeHTML(v.when)}</span>`}` +
+      `<p>${escapeHTML(v.summary ?? '')}${link ? ` <a href="${escapeHTML(link.url)}" target="_blank" rel="noopener">${escapeHTML(link.label)}</a>` : ''}</p></li>`;
+  }).join('');
+  const shown = picturesOf(p);
+  const pics = p.images.map((im, i) => { const m = peopleData.pictures[im.file];
+    return m ? `<button type="button" class="pic" data-pic="${i}" aria-pressed="${shown.includes(i)}" title="${escapeHTML(pictureCredit(im))}: on the table, or off it"><img src="packs/overlays/${escapeHTML(m.src)}" alt="" loading="lazy"></button>` : ''; }).join('');
+  const roles = (Array.isArray(p.role) ? p.role : p.role ? [p.role] : []).map((r) => `<span class="chip role">${escapeHTML(r)}</span>`).join(' ');
+  card.innerHTML = `<p class="pname"><b>${escapeHTML(p.name)}</b> ${escapeHTML(lifeDates(p))} ${roles}</p>` +
+    (p.bio ? `<p class="bio">${escapeHTML(p.bio)}</p>` : '') +
+    (voyages ? `<ul class="pvoyages">${voyages}</ul>` : '') +
+    (pics ? `<div class="pics" role="group" aria-label="Pictures, on the table or off it">${pics}</div>` : '');
+}
+$('peopleStrip').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-person]');
+  if (!b) return;
+  const id = b.dataset.person === style.person ? null : b.dataset.person;
+  style = { ...style, person: id, pictures: DEFAULTS.pictures, pictureAt: {} };
+  flips.clear(); links.clear();
+  showPeople(); writeHash(); render();
+  if (id) flyToPerson(id);
+});
+$('personCard').addEventListener('click', (e) => {
+  const pic = e.target.closest('[data-pic]'), p = personOf(style.person);
+  if (!pic || !p) return;
+  const i = Number(pic.dataset.pic), shown = picturesOf(p), on = shown.includes(i);
+  style = { ...style, pictures: on ? shown.filter((k) => k !== i) : [...shown, i].sort((a, b) => a - b) };
+  showPeople(); writeHash(); render();
+});
+// The box round a person's birth, death and voyages, once per person
+async function frameOfPerson(p) {
+  if (!frames.has(p.id)) {
+    const vs = p.voyages.map((id) => peopleData.voyages[id]);
+    const pts = [p.born && [p.born.lon, p.born.lat], deathOf(p) && [deathOf(p).lon, deathOf(p).lat], ...vs.flatMap((v) => (v?.legs ?? []).flatMap((l) => l.points))].filter(Boolean);
+    frames.set(p.id, frameOf(pts.map(([lon, lat]) => [((((lon + 180) % 360) + 360) % 360) - 180, lat])));
+  }
+  return frames.get(p.id);
+}
+const pictureSize = (p, i) => { const m = peopleData.pictures[p.images[i]?.file]; return m ? [m.width, m.height] : null; };
+// The pictures on the table: those the link names, else all of them
+const picturesOf = (p) => style.pictures ?? p.images.map((_, i) => i);
+// Each picture lies a little askew, as if dealt onto a chart table: degrees by its place in the record, and a nudge
+// off the row's line as a share of its height
+const ASKEW = [-4, 3, -2, 5, -3, 2], NUDGE = [0.06, -0.05, 0.08, -0.03, 0.04, -0.07];
+const DEAL_MS = 450, DEAL_GAP = 110, FLIP_MS = 320;
+const ease = (t) => 1 - (1 - t) ** 3;
+// The shown pictures with their images loaded: [{ i, o, sheet, im }], `o` an overlay of one piece (overlays.mjs) and
+// `sheet` where it lies: where it was dragged, else its own place under the person's frame (picturePlaces)
+function shownPictures() {
+  const p = personOf(style.person), f = p && frames.get(p.id);
+  if (!f) return [];
+  const shown = picturesOf(p).filter((i) => pictureSize(p, i)), places = picturePlaces(f, shown.map((i) => pictureSize(p, i)));
+  return shown.map((i, k) => {
+    const img = pictureImgs.get(`${p.id}/${i}`), [, h] = pictureSize(p, i);
+    const at = style.pictureAt[i] ?? { ...places[k], lat: places[k].lat + NUDGE[i % 6] * h * places[k].scale };
+    return img && { i, k, im: p.images[i], o: { img, width: img.width, height: img.height, scale: 1 }, sheet: { ...at, turn: 0 } };
+  }).filter(Boolean);
+}
+// The chosen person's frame and shown pictures loaded; true when anything new came in (the map is then drawn again)
+async function preparePictures() {
+  const id = style.person;
+  if (!id) return false;
+  await loadPeople();
+  const p = personOf(id);
+  if (!p) return false;
+  let fresh = !frames.has(id);
+  await frameOfPerson(p);
+  await Promise.all(picturesOf(p).map(async (i) => {
+    const m = peopleData.pictures[p.images[i]?.file], key = `${id}/${i}`;
+    if (!m || pictureImgs.has(key)) return;
+    pictureImgs.set(key, await env.loadImage(`packs/overlays/${m.src}`));
+    fresh = true;
+  }));
+  return fresh && id === style.person;
+}
+// The map flies to frame the person and their pictures, wherever it is
+async function flyToPerson(id) {
+  await loadPeople();
+  const p = personOf(id), f = p && await frameOfPerson(p);
+  if (!f || style.person !== id) return;
+  const shown = picturesOf(p).filter((i) => pictureSize(p, i)), sizes = shown.map((i) => pictureSize(p, i));
+  goTo(viewContaining(withPictures(f, picturePlaces(f, sizes), sizes), { w: W, h: H }));
+}
+// A picture on the canvas: its centre, its turn in radians and its size in canvas px, before any deal or flip
+function pictureBox(pic, proj) {
+  const c = sheetCorners(pic.o, proj, pic.sheet);
+  if (!c) return null;
+  return { x: (c[0][0] + c[2][0]) / 2, y: (c[0][1] + c[2][1]) / 2, a: (ASKEW[pic.i % 6] * Math.PI) / 180, w: c[1][0] - c[0][0], h: c[3][1] - c[0][1] };
+}
+// The two squares at a picture's foot, in its own frame: the one at the corner resizes it, the one beside it turns it over
+const handlesOf = (b) => ({ size: [b.w / 2, b.h / 2], flip: [b.w / 2 - 2.6 * HANDLE, b.h / 2] });
+// The back of a picture, in its own frame: what it is, when, by whom, under what licence, its note, and its Commons page
+function drawBack(g, im, w, h) {
+  const pad = Math.max(6, w * 0.06), size = Math.max(11, Math.min(16, w / 13)), lines = [];
+  g.font = `italic ${size}px ${getComputedStyle(document.body).getPropertyValue('--serif') || 'serif'}`;
+  const wrap = (text) => {
+    let line = '';
+    for (const word of String(text).split(/\s+/)) {
+      const next = line ? `${line} ${word}` : word;
+      if (g.measureText(next).width > w - 2 * pad && line) { lines.push(line); line = word; } else line = next;
+    }
+    if (line) lines.push(line);
+  };
+  wrap(pictureCredit(im));
+  if (im.note) { lines.push(''); wrap(im.note); }
+  g.fillStyle = style.ink; g.textBaseline = 'top';
+  lines.forEach((l, n) => g.fillText(l, -w / 2 + pad, -h / 2 + pad + n * size * 1.3));
+  const linkY = -h / 2 + pad + (lines.length + 1) * size * 1.3, label = 'Its page on Wikimedia Commons ↗', lw = g.measureText(label).width;
+  g.fillStyle = PERSON_LINK; g.fillText(label, -w / 2 + pad, linkY);
+  g.fillRect(-w / 2 + pad, linkY + size * 1.05, lw, 1);
+  return [-w / 2 + pad, linkY - 3, lw, size * 1.3 + 6]; // where a tap opens the page
+}
+const PERSON_LINK = '#8c2f1e';
+const links = new Map(); // a turned picture's link, in its own frame, by its index
+// The pictures over everything on the map: each on a parchment mount with a soft shadow and an ink rule, a little
+// askew, dealt in one after another when a person is chosen; at its foot the square that resizes it and, beside it,
+// the one that turns it over to its back.
+function drawPictures(g) {
+  const list = shownPictures();
+  if (!list.length) { dealt = null; return; }
+  const now = performance.now(), proj = viewProjection(view), m = 5;
+  if (dealt?.person !== style.person) dealt = { person: style.person, start: now };
+  let moving = false;
+  const feet = []; // the squares, drawn over every picture so none hides another's
+  g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+  for (const pic of list) {
+    const b = pictureBox(pic, proj);
+    if (!b) continue;
+    const t = ease(Math.max(0, Math.min(1, (now - dealt.start - pic.k * DEAL_GAP) / DEAL_MS)));
+    if (t <= 0) { moving = true; continue; }
+    const flip = flips.get(pic.i), ft = flip ? Math.min(1, (now - flip.start) / FLIP_MS) : 1;
+    if (t < 1 || ft < 1) moving = true;
+    const back = flip ? (flip.back ? ft >= 0.5 : ft < 0.5) : false, squash = flip ? Math.abs(Math.cos(Math.PI * ft)) : 1;
+    // dealt from the top right, where the drawer is, turning as it lands
+    const x = W + (b.x - W) * t, y = b.y * t, s = 0.35 + 0.65 * t;
+    g.save(); g.translate(x, y); g.rotate(b.a + (1 - t) * 0.6); g.scale(s * Math.max(0.02, squash), s);
+    g.save(); g.shadowColor = 'rgba(59,42,26,0.35)'; g.shadowBlur = 8; g.shadowOffsetY = 2; g.fillStyle = style.parchment; g.fillRect(-b.w / 2 - m, -b.h / 2 - m, b.w + 2 * m, b.h + 2 * m); g.restore();
+    if (back) links.set(pic.i, drawBack(g, pic.im, b.w, b.h));
+    else { links.delete(pic.i); g.drawImage(pic.o.img, -b.w / 2, -b.h / 2, b.w, b.h); }
+    g.save(); g.strokeStyle = style.ink; g.globalAlpha = 0.7; g.lineWidth = 1; g.strokeRect(-b.w / 2 - m, -b.h / 2 - m, b.w + 2 * m, b.h + 2 * m); g.restore();
+    if (t === 1 && ft === 1) feet.push([b, x, y]);
+    g.restore();
+  }
+  for (const [b, x, y] of feet) {
+    const { size: [sx, sy], flip: [fx, fy] } = handlesOf(b), r = HANDLE;
+    g.save(); g.translate(x, y); g.rotate(b.a);
+    g.lineWidth = 1.5; g.strokeStyle = style.ink; g.fillStyle = style.parchment;
+    for (const [hx, hy] of [[sx, sy], [fx, fy]]) { g.beginPath(); g.rect(hx - r, hy - r, 2 * r, 2 * r); g.fill(); g.stroke(); }
+    g.beginPath(); g.moveTo(sx - r * 0.5, sy + r * 0.5); g.lineTo(sx + r * 0.5, sy - r * 0.5); g.stroke();
+    // the turn-over mark: a curved arrow
+    g.beginPath(); g.arc(fx, fy, r * 0.5, Math.PI * 0.15, Math.PI * 1.55); g.stroke();
+    g.beginPath(); g.moveTo(fx + r * 0.55, fy - r * 0.05); g.lineTo(fx + r * 0.42, fy + r * 0.35); g.lineTo(fx + r * 0.1, fy + r * 0.1); g.stroke();
+    g.restore();
+  }
+  g.restore();
+  if (moving && !dealFrame) dealFrame = requestAnimationFrame(() => { dealFrame = 0; if (ground) paintFrame('pictures dealt'); });
+}
+let dealFrame = 0;
+// The picture under canvas px p, the top one first: by its squares to resize or turn it over, by its link when it
+// lies face down, anywhere else on it to move it
+function pictureHit([x, y]) {
+  const list = shownPictures();
+  if (!list.length) return null;
+  const proj = viewProjection(view), reach = HANDLE + cssPx(6);
+  const local = list.reverse().map((pic) => {
+    const b = pictureBox(pic, proj);
+    if (!b) return null;
+    const dx = x - b.x, dy = y - b.y, c = Math.cos(-b.a), s = Math.sin(-b.a);
+    return { pic, b, u: dx * c - dy * s, v: dx * s + dy * c };
+  }).filter(Boolean);
+  for (const { pic, b, u, v } of local) { // the squares lie over every picture, so they are found first
+    const hs = handlesOf(b);
+    if (Math.hypot(u - hs.size[0], v - hs.size[1]) <= reach) return { kind: 'size', ...pic, proj };
+    if (Math.hypot(u - hs.flip[0], v - hs.flip[1]) <= reach) return { kind: 'flip', ...pic, proj };
+  }
+  for (const { pic, b, u, v } of local) {
+    const link = links.get(pic.i);
+    if (link && u >= link[0] && u <= link[0] + link[2] && v >= link[1] && v <= link[1] + link[3]) return { kind: 'link', ...pic, proj };
+    if (Math.abs(u) <= b.w / 2 + 5 && Math.abs(v) <= b.h / 2 + 5) return { kind: 'move', ...pic, proj };
+  }
+  return null;
+}
+function holdPicture(hit, p) {
+  holding = { ...hit, start: p, centre: hit.proj.project(hit.sheet.lon, hit.sheet.lat) };
+  hideTile();
+}
+function dragPicture(p) {
+  const { kind, proj, start, sheet, centre, i } = holding;
+  if (kind === 'flip' || kind === 'link') return;
+  let next;
+  if (kind === 'move') {
+    const [lon, lat] = proj.invert(centre[0] + p[0] - start[0], centre[1] + p[1] - start[1]);
+    next = { lon, lat: Math.max(-85, Math.min(85, lat)), scale: sheet.scale };
+  } else {
+    const r = Math.hypot(p[0] - centre[0], p[1] - centre[1]) / Math.max(1, Math.hypot(start[0] - centre[0], start[1] - centre[1]));
+    next = { lon: sheet.lon, lat: sheet.lat, scale: Math.max(sheet.scale / 8, Math.min(sheet.scale * 8, sheet.scale * r)) };
+  }
+  style = { ...style, pictureAt: { ...style.pictureAt, [i]: next } };
+  if (!sheetFrameId) sheetFrameId = requestAnimationFrame(() => { sheetFrameId = 0; paintFrame('a picture held'); });
+}
+function dropPicture() {
+  const { kind, i, im } = holding;
+  holding = null;
+  cancelAnimationFrame(sheetFrameId); sheetFrameId = 0;
+  if (kind === 'flip') { flips.set(i, { back: !flips.get(i)?.back, start: performance.now() }); paintFrame('a picture turned over'); return; }
+  if (kind === 'link') { window.open(peopleData.pictures[im.file]?.page ?? commonsPage(im.file), '_blank', 'noopener'); return; }
+  writeHash(); render();
+}
+if (style.person) loadPeople().then(showPeople, () => {}); // a link that names a person shows their card when the drawer opens
+
 // The cartouche names the place flown to (its title, else the button's name), not whatever scores highest in the frame.
 const caption = (text) => `<span class="notes">${text ?? CAPTION}</span>`;
 for (const [list, groups] of [[$('anchorages'), ANCHORAGES], [$('sightsList'), SIGHTS]]) {
@@ -1418,8 +1711,8 @@ env.readJSON('packs/overlays/overlays.json').then(({ overlays }) => {
     if (!o) continue;
     const b = li.querySelector('.thumb');
     b.classList.remove('none');
-    b.replaceChildren(Object.assign(document.createElement('img'), { src: `packs/overlays/${o.file}`, alt: '', loading: 'lazy' }));
-    b.title = `${o.title}, public domain: its frame, with the scan laid over the map`;
+    b.replaceChildren(Object.assign(document.createElement('img'), { src: `packs/overlays/${o.thumb ?? o.file}`, alt: '', loading: 'lazy' })); // a chart of pages has a thumbnail strip of them all
+    b.title = `${o.title} (${o.licence}): its frame, with the scan laid over the map`;
     li.querySelector('.eye').hidden = false;
   }
   if (style.overlay && !overlays.some((o) => o.id === style.overlay)) console.warn(`overlay ${style.overlay}: not on this site`);
@@ -1445,6 +1738,7 @@ function fadeSheet(o, proj, me) {
     ctx.clearRect(0, 0, W, H);
     ctx.drawImage(base, 0, 0);
     drawSheet(ctx, o, proj, o.sheet);
+    drawPictures(ctx);
     drawSheetHandles(ctx);
     if (o.alpha < 1) requestAnimationFrame(step);
   };
@@ -1541,7 +1835,7 @@ for (const id of Object.values(KNOB_SLIDERS)) $(id).addEventListener('input', (e
 for (const id of ['debug', 'overlap', 'overlayMode', 'overlayOpacity', ...Object.values(KNOB_CHIPS), ...Object.values(KNOB_SLIDERS), 'projection', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'scaleBorder', 'land', 'islands', 'seaTint', 'rivers', 'lakes', 'trees', 'mountains', 'hills', 'continentsZoom', 'regions', 'regionsZoom', 'titleMode', 'townSize', 'voyageWidth']) $(id).addEventListener('input', readControls);
 let typing = 0; // a typed title is placed when the typing pauses, not on every key: a placement takes up to a few hundred ms
 $('title').addEventListener('input', () => { clearTimeout(typing); typing = setTimeout(readControls, 400); });
-addEventListener('hashchange', () => { layout = layoutFromHash(); showLayout(); view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); showVoyage(); render(); });
+addEventListener('hashchange', () => { layout = layoutFromHash(); showLayout(); view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); showVoyage(); showPeople(); render(); });
 showPlacement();
 render();
 

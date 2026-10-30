@@ -23,9 +23,10 @@ import { TREES, TREE_STYLES, plantTrees, plantPalms } from './trees.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
 export { SIGHT_TILES } from './sights.mjs'; // the page's tiles for its places; here so the module ships with the scene
 import { BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from './buildings.mjs';
-import { legPath, splitAtSeam, DASHES, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, readVoyage, chronological, voyageLink } from './voyages.mjs';
+import { legPath, reachPath, isMigration, splitAtSeam, DASHES, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, readVoyage, chronological, voyageLink } from './voyages.mjs';
 export { VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, readVoyage, chronological, voyageLink };
 import { loadOverlay, drawOverlay, drawSheet } from './overlays.mjs';
+import { PEOPLE_FILE, PERSON_RED, personMarks, withPerson, peopleOf, whoOf } from './people.mjs';
 import { noteMarks } from './notes.mjs';
 export { noteMarks };
 const record = (id) => catalogue.find((r) => r.id === id); // a coastlines catalogue record by its id
@@ -2210,7 +2211,7 @@ const legPaths = new WeakMap();
 const pathOf = (leg) => legPaths.get(leg) ?? legPaths.set(leg, legPath(leg)).get(leg);
 // A round cap grows each dash by the stroke's width, so the pattern gives it back to read as DASHES says
 const capped = (dash, w) => dash.map((d, i) => (i % 2 ? d + w : Math.max(0.01, d - w)));
-const VOYAGE_HALO = 3.3, VOYAGE_END = 2.8, SKULL_H = 16, SKULL_ALT_H = 13;
+const VOYAGE_HALO = 3.3, VOYAGE_END = 2.8, SKULL_H = 16, SKULL_ALT_H = 13, WAYPOINT_H = 14; // a migration's waypoint is a small ink bead, its tile carrying the date
 
 // The voyages, each through any projection: each leg cut at the seam and stroked in its colour (the chart's
 // red by default) at its width over a parchment halo, dashed by its confidence; then its events, a death as a
@@ -2219,12 +2220,121 @@ const VOYAGE_HALO = 3.3, VOYAGE_END = 2.8, SKULL_H = 16, SKULL_ALT_H = 13;
 // `rect` culls the legs (padded, so a stroke at the edge survives); `eventRect` is the view itself: a mark is
 // drawn only when the whole of it is in view, so a tile never opens on half a mark.
 // Every track is drawn before any mark, so no line crosses a skull.
-function drawVoyages(g, voyages, proj, rect, eventRect = rect) {
-  for (const v of voyages ?? []) drawTrack(g, v, proj, rect);
+function drawVoyages(g, voyages, proj, rect, eventRect = rect, moving = false) {
+  for (const v of voyages ?? []) if (isMigration(v.voyage)) drawRibbon(g, v, proj, rect, moving);
+  for (const v of voyages ?? []) (isMigration(v.voyage) ? drawStream : drawTrack)(g, v, proj, rect);
   for (const v of voyages ?? []) for (const m of doubtMarks(v, proj, eventRect)) drawCloud(g, m, v.colour ?? STYLE.windRed);
   for (const v of voyages ?? []) drawEvents(g, v, proj, eventRect);
 }
-function drawTrack(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH }, proj, rect) {
+// A small ringed mark on each note's figure while its chart is laid over the map; no lettering, a click opens its tile (notes.mjs)
+function drawNotes(g, overlay, proj, rect) {
+  for (const m of noteMarks(overlay, proj, rect)) {
+    g.save();
+    g.fillStyle = STYLE.parchment; g.globalAlpha = 0.85; g.beginPath(); g.arc(m.x, m.y, 7, 0, 2 * Math.PI); g.fill();
+    g.globalAlpha = 1; g.strokeStyle = g.fillStyle = STYLE.ink; g.lineWidth = 1.4;
+    g.beginPath(); g.arc(m.x, m.y, 6, 0, 2 * Math.PI); g.stroke();
+    g.beginPath(); g.arc(m.x, m.y, 2, 0, 2 * Math.PI); g.fill();
+    g.restore();
+  }
+}
+// A migration (voyages.mjs): under it a light, wide, soft-edged ribbon in its ink, one width all along, no edge
+// line, the long pause fainter; over it a stream of chevrons pointing the way it went, shrinking as the leg's reach
+// runs toward the front, and an ink chevron at each front (a two-headed leg has one at each end, and its chevrons
+// point out from its middle); the pause has a dotted trail and no chevrons. The chevrons follow the line weight.
+const MIGRATION = { ribbon: 30, blur: 7, alpha: 0.22, pauseAlpha: 0.1, step: 17, first: 8, big: 8, small: 3.5, twoWay: 4.5, head: 8 };
+const reachPaths = new WeakMap();
+const reachOf = (leg) => reachPaths.get(leg) ?? reachPaths.set(leg, reachPath(leg)).get(leg);
+// the leg's pieces in canvas px, [x, y, share of the way along], cut at the seam and culled to rect
+const streamPieces = (leg, proj, rect) => splitAtSeam(reachOf(leg), proj.lonCenter, proj.visible)
+  .map((p) => p.map((q) => [...proj.toPx(q), q[2]])).filter((px) => meets(rect, bbox(px)));
+// The ribbons are drawn once into a canvas the size of their box on the device and blurred onto the map, so the
+// blur is the same at any zoom and costs only what is in view. A moving frame skips the blur and strokes the ribbon
+// straight onto the map, soft-edged again at the stop: measured on the CPU canvas, the blur costs about 12 ms a frame
+// at 1x and 58 ms at 2x for a ribbon across two thirds of the sheet.
+function drawRibbon(g, { voyage, colour = STYLE.windRed }, proj, rect, moving = false) {
+  const m = g.getTransform(), sx = Math.hypot(m.a, m.b) || 1;
+  const cw = g.canvas?.width ?? W * sx, ch = g.canvas?.height ?? H * sx;
+  for (const pause of [false, true]) {
+    const pieces = voyage.legs.filter((leg) => !!leg.pause === pause).flatMap((leg) => streamPieces(leg, proj, rect));
+    if (!pieces.length) continue;
+    if (moving) {
+      g.save(); g.strokeStyle = colour; g.lineWidth = MIGRATION.ribbon; g.lineCap = 'round'; g.lineJoin = 'round'; g.setLineDash([]);
+      g.globalAlpha = pause ? MIGRATION.pauseAlpha : MIGRATION.alpha;
+      for (const px of pieces) { g.beginPath(); px.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke(); }
+      g.restore();
+      continue;
+    }
+    const b = bbox(pieces.flat()), pad = (MIGRATION.ribbon / 2 + 3 * MIGRATION.blur) * sx;
+    const corners = [[b.x0, b.y0], [b.x1, b.y0], [b.x0, b.y1], [b.x1, b.y1]].map(([x, y]) => [m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f]);
+    const x0 = Math.max(0, Math.floor(Math.min(...corners.map((c) => c[0])) - pad)), y0 = Math.max(0, Math.floor(Math.min(...corners.map((c) => c[1])) - pad));
+    const x1 = Math.min(cw, Math.ceil(Math.max(...corners.map((c) => c[0])) + pad)), y1 = Math.min(ch, Math.ceil(Math.max(...corners.map((c) => c[1])) + pad));
+    if (x1 - x0 < 1 || y1 - y0 < 1) continue;
+    const off = createCanvas(x1 - x0, y1 - y0), o = off.getContext('2d');
+    o.setTransform(m.a, m.b, m.c, m.d, m.e - x0, m.f - y0);
+    o.strokeStyle = colour; o.lineWidth = MIGRATION.ribbon; o.lineCap = 'round'; o.lineJoin = 'round';
+    for (const px of pieces) { o.beginPath(); px.forEach(([x, y], i) => (i ? o.lineTo(x, y) : o.moveTo(x, y))); o.stroke(); }
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+    g.filter = `blur(${MIGRATION.blur * sx}px)`; g.globalAlpha = pause ? MIGRATION.pauseAlpha : MIGRATION.alpha;
+    g.drawImage(off, x0, y0);
+    g.restore();
+  }
+}
+// a chevron at x, y pointing along dx, dy, its arms `s` px back, over a parchment halo
+function chevron(g, x, y, dx, dy, s, colour, alpha, width) {
+  const n = Math.hypot(dx, dy) || 1; dx /= n; dy /= n;
+  const pts = [[x - dx * s - dy * s, y - dy * s + dx * s], [x, y], [x - dx * s + dy * s, y - dy * s - dx * s]];
+  for (const [style, w, a] of [[STYLE.parchment, width + 2.8, 0.6], [colour, width, alpha]]) {
+    g.strokeStyle = style; g.lineWidth = w; g.globalAlpha = a;
+    g.beginPath(); pts.forEach(([px, py], i) => (i ? g.lineTo(px, py) : g.moveTo(px, py))); g.stroke();
+  }
+}
+// The point `len` px along a piece, with the way it runs there: [x, y, share, dx, dy]. Returns a walker that
+// resumes from the last segment, so asking for increasing lengths walks the piece once.
+function alongWalker(px) {
+  let i = 1, run = 0;
+  return (len) => {
+    for (; i < px.length; i++) {
+      const [ax, ay, af] = px[i - 1], [bx, by, bf] = px[i], d = Math.hypot(bx - ax, by - ay);
+      if (run + d >= len && d > 0) { const t = (len - run) / d; return [ax + (bx - ax) * t, ay + (by - ay) * t, af + (bf - af) * t, bx - ax, by - ay]; }
+      run += d;
+    }
+    return null;
+  };
+}
+const pieceLength = (px) => px.reduce((sum, p, i) => (i ? sum + Math.hypot(p[0] - px[i - 1][0], p[1] - px[i - 1][1]) : 0), 0);
+// the way into the end of a piece (or out of its start, `atStart`), read over the last few px so a dense path still points true
+function endWay(px, atStart) {
+  const pts = atStart ? px : [...px].reverse(), [x, y] = pts[0];
+  const far = pts.find((p) => Math.hypot(p[0] - x, p[1] - y) >= 6) ?? pts.at(-1);
+  return [x - far[0], y - far[1]];
+}
+function drawStream(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH }, proj, rect) {
+  const k = width / VOYAGE_WIDTH, M = MIGRATION;
+  g.save(); g.lineCap = 'round'; g.lineJoin = 'round'; g.setLineDash([]);
+  for (const leg of voyage.legs) {
+    const [r0, r1] = leg.reach ?? [0, 1], both = leg.heads === 'both';
+    for (const px of streamPieces(leg, proj, rect)) {
+      const L = pieceLength(px), along = alongWalker(px);
+      if (leg.pause) {
+        g.fillStyle = colour; g.globalAlpha = 0.45;
+        for (let len = 6; len < L; len += 9) { const p = along(len); if (p) { g.beginPath(); g.arc(p[0], p[1], 1.3 * Math.sqrt(k), 0, 2 * Math.PI); g.fill(); } }
+        continue;
+      }
+      for (let len = M.first; len < L - 4; len += M.step) {
+        const p = along(len);
+        if (!p) break;
+        const [x, y, f, dx, dy] = p;
+        if (both) chevron(g, x, y, f < 0.5 ? -dx : dx, f < 0.5 ? -dy : dy, M.twoWay * k, colour, 0.55, width);
+        else chevron(g, x, y, dx, dy, (M.big + (M.small - M.big) * (r0 + (r1 - r0) * f)) * k, colour, 0.9, width);
+      }
+      // an ink chevron at a front: the leg's own end (or both ends), not where the seam or the horizon cut it
+      if ((leg.heads === 'end' || both) && px.at(-1)[2] === 1) chevron(g, px.at(-1)[0], px.at(-1)[1], ...endWay(px, false), M.head * k, STYLE.ink, 0.9, width);
+      if (both && px[0][2] === 0) chevron(g, px[0][0], px[0][1], ...endWay(px, true), M.head * k, STYLE.ink, 0.9, width);
+    }
+  }
+  g.restore();
+}
+function drawTrack(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH, alpha: dim = 1 }, proj, rect) {
   g.save();
   g.lineCap = 'round'; g.lineJoin = 'round';
   const end = Math.max(VOYAGE_END, width * 1.25);
@@ -2232,10 +2342,10 @@ function drawTrack(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH }, 
     const pieces = splitAtSeam(pathOf(leg), proj.lonCenter, proj.visible).map((p) => p.map(proj.toPx)).filter((px) => meets(rect, bbox(px)));
     if (leg.doubt) speculative(g, pieces, colour);
     else for (const [style, w, alpha, dash] of [[STYLE.parchment, width + VOYAGE_HALO, 0.6, []], [colour, width, 0.9, capped(DASHES[leg.confidence] ?? [], width)]]) {
-      g.strokeStyle = style; g.lineWidth = w; g.globalAlpha = alpha; g.setLineDash(dash);
+      g.strokeStyle = style; g.lineWidth = w; g.globalAlpha = alpha * dim; g.setLineDash(dash);
       for (const px of pieces) { g.beginPath(); px.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke(); }
     }
-    g.setLineDash([]); g.globalAlpha = 0.9; g.fillStyle = colour;
+    g.setLineDash([]); g.globalAlpha = 0.9 * dim; g.fillStyle = colour;
     for (const p of [leg.points[0], leg.points.at(-1)]) {
       if (proj.visible && !proj.visible(...p)) continue;
       const [x, y] = proj.toPx(p);
@@ -2244,22 +2354,24 @@ function drawTrack(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH }, 
   }
   g.restore();
 }
-function drawEvents(g, { voyage, colour = STYLE.windRed }, proj, eventRect) {
+function drawEvents(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH, alpha: dim = 1 }, proj, eventRect) {
   const at = (lon, lat) => (Number.isFinite(lon) && Number.isFinite(lat) && (!proj.visible || proj.visible(lon, lat)) ? proj.toPx([lon, lat]) : null);
   g.save();
   for (const e of voyage.events ?? []) { // the tie from each alternative to the usual skull first, so both skulls sit on it
-    if (e.kind !== 'death' || !Array.isArray(e.alternatives)) continue;
+    if ((e.kind !== 'death' && e.kind !== 'birth') || !Array.isArray(e.alternatives)) continue;
     const p = at(e.lon, e.lat);
     for (const a of e.alternatives) {
       const q = at(a?.lon, a?.lat);
       if (!p || !q || !meets(eventRect, { x0: Math.min(p[0], q[0]), y0: Math.min(p[1], q[1]), x1: Math.max(p[0], q[0]), y1: Math.max(p[1], q[1]) })) continue;
-      g.save(); g.strokeStyle = colour; g.globalAlpha = 0.75; g.lineWidth = 1.3; g.setLineDash([5, 3]);
+      g.save(); g.strokeStyle = colour; g.globalAlpha = 0.75 * dim; g.lineWidth = 1.3; g.setLineDash([5, 3]);
       g.beginPath(); g.moveTo(...p); g.lineTo(...q); g.stroke(); g.restore();
     }
   }
   for (const m of voyageMarks(voyage, proj, eventRect)) {
-    g.save(); g.globalAlpha = m.alpha;
+    g.save(); g.globalAlpha = m.alpha * dim;
     if (m.skull) drawSkull(g, m.x, m.y, m.h);
+    else if (m.birth) drawBirth(g, m.x, m.y, colour);
+    else if (m.bead) { g.beginPath(); g.arc(m.x, m.y, Math.max(2.2, width), 0, 2 * Math.PI); g.fillStyle = STYLE.ink; g.globalAlpha = 0.85 * dim; g.fill(); }
     else { g.beginPath(); g.arc(m.x, m.y, 3, 0, 2 * Math.PI); g.strokeStyle = STYLE.ink; g.lineWidth = 1.4; g.stroke(); }
     g.restore();
   }
@@ -2267,20 +2379,25 @@ function drawEvents(g, { voyage, colour = STYLE.windRed }, proj, eventRect) {
 }
 
 // The marks of a voyage's events in view, in the order they are drawn (a disputed death's other places first,
-// smaller and fainter, so the usual account sits on top): { x, y, h, alpha, skull, tile } in canvas px.
+// smaller and fainter, so the usual account sits on top): { x, y, h, alpha, skull, tile } in canvas px, and `bead` on a migration's waypoint.
 // A mark is listed only when the whole of it is in view. Its `tile` is what a click or tap on it shows, in
 // the page's popover: the heading, the date, the text, the source and, on a death, the place it is set at.
 // No lettering is drawn beside a mark; the tile carries it.
 export function voyageMarks(voyage, proj, rect) {
   const out = [];
-  const add = (p, h, alpha, skull, tile) => {
+  const add = (p, h, alpha, skull, tile, mark = {}) => {
     if (proj.visible && !proj.visible(p.lon, p.lat)) return;
     const [x, y] = proj.toPx([p.lon, p.lat]);
-    if (disc(rect, x, y, -h / 2)) out.push({ x, y, h, alpha, skull, tile });
+    if (disc(rect, x, y, -h / 2)) out.push({ x, y, h, alpha, skull, tile, ...mark });
   };
   for (const e of voyage?.events ?? []) {
     const tile = { title: e.label, date: e.date, doubt: e.doubt, text: e.text, note: e.note, source: e.source, cited: e.cited, who: e.who };
-    const alpha = e.doubt ? 0.5 : 1; // a doubted event at half its ink
+    const alpha = e.doubt && e.kind !== 'death' ? 0.5 : 1; // a doubted event at half its ink; a death's doubt only opens its tile
+    if (e.kind === 'birth') {
+      for (const a of e.alternatives ?? []) add(a, SKULL_ALT_H, 0.75, false, { title: a.label, date: e.date, text: a.text, source: a.source, cited: a.cited, who: e.who, place: a.place, alternative: true }, { birth: true });
+      add(e, SKULL_H, 1, false, tile, { birth: true }); continue;
+    }
+    if (e.kind === 'waypoint') { add(e, WAYPOINT_H, alpha, false, tile, { bead: true }); continue; }
     if (e.kind !== 'death') { add(e, SKULL_H, alpha, false, tile); continue; }
     for (const a of e.alternatives ?? []) add(a, SKULL_ALT_H, 0.75, true, { title: a.label, date: e.date, text: a.text, source: a.source, cited: a.cited, who: e.who, place: a.place, alternative: true });
     add(e, SKULL_H, alpha, true, tile);
@@ -2414,6 +2531,18 @@ export function sightMarks(sights, proj, rect) {
   return out;
 }
 const SIGHT_H = 20; // the reach of a place, canvas px, as a mark's height
+
+// A birth: a ring round a dot in the person's red over a parchment disc, a placeholder the design will come back to
+// (the mockups of #161 tried a star, a sun and this ring); lighter than a skull, so a coast of them is not a field of pins.
+function drawBirth(g, x, y, colour = PERSON_RED) {
+  const alpha = g.globalAlpha;
+  g.save();
+  g.fillStyle = STYLE.parchment; g.globalAlpha = 0.9 * alpha; g.beginPath(); g.arc(x, y, 9, 0, 2 * Math.PI); g.fill();
+  g.globalAlpha = alpha; g.strokeStyle = g.fillStyle = colour; g.lineWidth = 2.4;
+  g.beginPath(); g.arc(x, y, 6, 0, 2 * Math.PI); g.stroke();
+  g.beginPath(); g.arc(x, y, 2.2, 0, 2 * Math.PI); g.fill();
+  g.restore();
+}
 
 // A skull and crossbones `h` px tall centred on x, y, in ink over a parchment disc so it reads on the lattice
 function drawSkull(g, x, y, h) {
@@ -2808,7 +2937,8 @@ function drawAnchored(g, a, bg, view, layers) {
     const size = s.size * scaled('ship'), p = at(ll, size);
     if (p) drawSprite(g, s.sprite, p[0], p[1], size, { flip: s.flip, rot: s.flip ? -s.tilt : s.tilt, anchor: [0.5, 0.6] });
   }
-  drawVoyages(g, a.voyages, proj, { x0: 0, y0: 0, x1: W, y1: H });
+  drawVoyages(g, a.voyages, proj, { x0: 0, y0: 0, x1: W, y1: H }, undefined, true);
+  drawNotes(g, a.overlay, proj, { x0: 0, y0: 0, x1: W, y1: H });
   if (a.overlay?.mode === 'sheet') drawSheet(g, a.overlay, proj, a.overlay.sheet); // the sheet last, as at a stop
   g.restore();
   if (show.kinds.has('cartouche')) drawCartouche(g, a.cartouche, (x0, y0, x1, y1) => g.drawImage(bg, x0, y0, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0));
@@ -2838,7 +2968,9 @@ function drawAnchored(g, a, bg, view, layers) {
 // the view is about (a place flown to), lettered in capitals whatever the scoring finds.
 // `voyages`: the voyages drawn over the ornaments, in order, as [{ id, colour, width }]: `id` names data/voyages/<id>.json
 // (docs/voyages/README.md); `colour` (hex) defaults by voyageColours, the first the chart's red; `width` (px) to VOYAGE_WIDTH.
-// None by default. The older `voyage` (one id, or 'off') still draws that one.
+// None by default. The older `voyage` (one id, or 'off') still draws that one. A voyage's `alpha` (0 to 1) dims it.
+// `person`: a person's id in data/voyages/people.json (scripts/people.mjs): their voyages drawn in the chart's red, lit, every
+// other voyage dimmed to DIMMED, and their birth marked (their death too, where no voyage of theirs carries it). None by default.
 // `overlay`: { id, mode, sheet, opacity }, a chart's scan laid over the map: `id` names an entry of packs/overlays/overlays.json
 // (docs/overlay/README.md). `mode` 'sheet' (the default) lays the whole scan, opaque, over everything on the map at
 // `sheet` ({ lon, lat, scale, turn }; the chart's own placement when left out); 'pieces' warps its pieces onto today's
@@ -2959,7 +3091,10 @@ export async function createScene(environment, opts = {}) {
   tintPolys = seaTint ? geojsonPolygons(await env.readJSON('geo/seas-50m.json')) : null;
   if (STYLE.rivers !== 'off' || STYLE.lakes !== 'off') water = await loadWater(view, STYLE.lakes !== 'off');
   const world = await loadDetail(coarse, view);
-  const [voyages, overlaid] = await Promise.all([loadVoyages(opts.voyages ?? (opts.voyage ? [{ id: opts.voyage }] : [])), opts.overlay ? loadOverlay(opts.overlay.id, env) : null]);
+  const person = await loadPerson(opts.person);
+  const named = opts.voyages ?? (opts.voyage ? [{ id: opts.voyage }] : []);
+  const [drawn, overlaid] = await Promise.all([loadVoyages(person ? withPerson(named, person.record, opts.voyageWidth ?? named[0]?.width) : named), opts.overlay ? loadOverlay(opts.overlay.id, env) : null]);
+  const voyages = person ? [...drawn, { voyage: person.marks, colour: PERSON_RED, width: VOYAGE_WIDTH }] : drawn;
   const opacity = Number(opts.overlay?.opacity ?? 0.6);
   const overlay = overlaid && { ...overlaid, mode: opts.overlay.mode === 'pieces' ? 'pieces' : 'sheet', sheet: opts.overlay.sheet ?? overlaid.sheet, opacity: Number.isFinite(opacity) ? Math.max(0, Math.min(1, opacity)) : 0.6 };
   const tLoad = performance.now();
@@ -2992,7 +3127,18 @@ async function loadVoyages(list) {
   const hex = (c) => (/^#[0-9a-f]{6}$/i.test(c ?? '') ? c.toLowerCase() : null);
   const colours = voyageColours(items.map((v) => v.id), Object.fromEntries(items.filter((v) => hex(v.colour)).map((v) => [v.id, hex(v.colour)])));
   const loaded = await Promise.all(items.map((v) => readVoyage(v.id, (path) => env.readJSON(path)).catch(() => null)));
-  return items.map((v, i) => loaded[i] && { voyage: loaded[i], colour: colours[v.id], width: Number.isFinite(v.width) && v.width > 0 && v.width <= 12 ? v.width : VOYAGE_WIDTH }).filter(Boolean);
+  return items.map((v, i) => loaded[i] && { voyage: loaded[i], colour: colours[v.id], width: Number.isFinite(v.width) && v.width > 0 && v.width <= 12 ? v.width : VOYAGE_WIDTH,
+    ...(Number.isFinite(v.alpha) && v.alpha >= 0 && v.alpha < 1 && { alpha: v.alpha }) }).filter(Boolean);
+}
+// The person a link names (an id in data/voyages/people.json), with their birth (and a death no voyage of theirs
+// carries) as marks; null for none, or an id the site lacks
+async function loadPerson(id) {
+  if (!/^[a-z][a-z0-9-]*$/.test(id ?? '')) return null;
+  try {
+    const [people, sources, who] = await Promise.all([env.readJSON(PEOPLE_FILE), env.readJSON('data/voyages/sources.json'), whoOf(env.readJSON)]);
+    const record = peopleOf(people, who).find((p) => p.id === id);
+    return record ? { record, marks: personMarks(record, sources) } : null;
+  } catch { return null; }
 }
 // A zoom slider's value as the zoom a name stops at: unset keeps `dflt`, 0 or less is off, the top is always, N draws at zoom N and out
 // (zoom <= N: the layers test zoom < end, so the end sits a hair past N).

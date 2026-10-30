@@ -117,6 +117,78 @@
       "colorspace": "Adobe98"
     },
     {
+      "id": "catalan-atlas-6",
+      "file": "Catalan_Atlas_BNF,_sheet_6.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/d/d2/Catalan_Atlas_BNF%2C_sheet_6.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Catalan_Atlas_BNF,_sheet_6.jpg",
+      "sha256": "9f903c03a221f29b3b5dfdbad85fdd61f7ba814ed645fec30cf7e0c0d1b62cfe",
+      "rights": "Public domain; Cresques Abraham, BnF Gallica btv1b55002481n",
+      "note": "(6,451 × 15,770)"
+    },
+    {
+      "id": "catalan-atlas-7",
+      "file": "Catalan_Atlas_BNF,_sheet_7.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/c/ca/Catalan_Atlas_BNF%2C_sheet_7.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Catalan_Atlas_BNF,_sheet_7.jpg",
+      "sha256": "62d69600ea0db1c478b82bd309b079c781540267bf3c36cd4622b047a9950f21",
+      "rights": "Public domain; Cresques Abraham, BnF Gallica btv1b55002481n",
+      "note": "(6,457 × 15,778)"
+    },
+    {
+      "id": "catalan-atlas-8",
+      "file": "Catalan_Atlas_BNF,_sheet_8.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/0/01/Catalan_Atlas_BNF%2C_sheet_8.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Catalan_Atlas_BNF,_sheet_8.jpg",
+      "sha256": "10e674b3e02fae2ef21c980fc5b7114757eb1fbc3cd55696c802da725895a641",
+      "rights": "Public domain; Cresques Abraham, BnF Gallica btv1b55002481n",
+      "note": "(6,547 × 15,827)"
+    },
+    {
+      "id": "catalan-atlas-9",
+      "file": "Catalan_Atlas_BNF,_sheet_9.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/6/6d/Catalan_Atlas_BNF%2C_sheet_9.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Catalan_Atlas_BNF,_sheet_9.jpg",
+      "sha256": "8fbe226275ac3188282091107586bbf1437f8ae36e664519e055f256cebcf753",
+      "rights": "Public domain; Cresques Abraham, BnF Gallica btv1b55002481n",
+      "note": "(6,474 × 15,870)"
+    },
+    {
+      "id": "catalan-atlas-10",
+      "file": "Catalan_Atlas_BNF,_sheet_10.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/b/b1/Catalan_Atlas_BNF%2C_sheet_10.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Catalan_Atlas_BNF,_sheet_10.jpg",
+      "sha256": "41a44de09fb64e86dd13cb27a0b385b43c1bec1a2145587fb490f4539f005f55",
+      "rights": "Public domain; Cresques Abraham, BnF Gallica btv1b55002481n",
+      "note": "(6,400 × 15,744)"
+    },
+    {
+      "id": "catalan-atlas-11",
+      "file": "Catalan_Atlas_BNF,_sheet_11.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/7/73/Catalan_Atlas_BNF%2C_sheet_11.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Catalan_Atlas_BNF,_sheet_11.jpg",
+      "sha256": "a771cc48270b513bfeefc313b36789619ccde87da05a68b544db5cc95ba89b4b",
+      "rights": "Public domain; Cresques Abraham, BnF Gallica btv1b55002481n",
+      "note": "(6,457 × 15,773)"
+    },
+    {
+      "id": "catalan-atlas-12",
+      "file": "Catalan_Atlas_BNF,_sheet_12.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/7/77/Catalan_Atlas_BNF%2C_sheet_12.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Catalan_Atlas_BNF,_sheet_12.jpg",
+      "sha256": "e0aa2d9d363432bf4c2427b2be815f46cfd43e0e5cfc92b8b2e46621f9e5a0c9",
+      "rights": "Public domain; Cresques Abraham, BnF Gallica btv1b55002481n",
+      "note": "(6,475 × 15,809)"
+    },
+    {
+      "id": "catalan-atlas-1959-copy",
+      "file": "El_mar_Mediterráneo_en_el_Atlas_catalán_de_Cresques_Abraham.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/3/3b/El_mar_Mediterr%C3%A1neo_en_el_Atlas_catal%C3%A1n_de_Cresques_Abraham.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:El_mar_Mediterr%C3%A1neo_en_el_Atlas_catal%C3%A1n_de_Cresques_Abraham.jpg",
+      "sha256": "9ddea702c055ba3d52b1f0f61e6804d727952296862aeeaae2fa682de5bb3d5d",
+      "rights": "CC BY 3.0; El mar Mediterráneo en el Atlas catalán de Cresques Abraham, a 1959 copy of the Mediterranean of the Catalan Atlas of 1375, Library of Congress, Geography and Map Division. Attribution: \"Copia de 1959 del original de 1375; Library of Congress, Geography and Map Division, CC BY 3.0\"",
+      "note": "(12,956 × 8,637); not the original: a painted copy of 1959"
+    },
+    {
       "id": "de-la-cosa",
       "file": "1500_map_by_Juan_de_la_Cosa_rotated.jpg",
       "url": "https://upload.wikimedia.org/wikipedia/commons/4/4a/1500_map_by_Juan_de_la_Cosa_rotated.jpg",
