@@ -18,7 +18,7 @@ import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, dra
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
-import { PEOPLE_FILE, PICTURES_FILE, SIGHT_PICTURES_FILE, SIGHT_MANIFEST_FILE, SIGHT_PICTURE_TALL, lifeSpan, laneAxis, eraBands, EARLIER_MARKS, pictureCredit, pictureNote, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, sightFrame, viewContaining, withPictures, peopleOf, whoOf, deathOf, sightPicturesOf } from './people.mjs';
+import { PEOPLE_FILE, PICTURES_FILE, SIGHT_PICTURES_FILE, SIGHT_MANIFEST_FILE, sightDeal, lifeSpan, laneAxis, eraBands, EARLIER_MARKS, pictureCredit, pictureNote, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, sightFrame, viewContaining, withPictures, peopleOf, whoOf, deathOf, sightPicturesOf } from './people.mjs';
 import { fold, bestPlace } from './placename.mjs';
 import { planFlight, ease as flyEase, FLY_KNOBS, flyDefaults } from './flight.mjs';
 
@@ -54,7 +54,7 @@ const canvas = $('map'), ctx = canvas.getContext('2d');
 // cards beside the map, not on the sea.
 const phone = matchMedia('(max-width: 520px)');
 
-const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: CONTINENT_ZOOM_END, regions: 'latin', regionSet: 'today', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyages: [], voyageWidth: VOYAGE_WIDTH, voyageDraw: VOYAGE_DRAW.seconds, person: null, sight: null, pictures: null, ...OVERLAY_DEFAULTS, cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER, overlap: DEFAULT_OVERLAP };
+const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: CONTINENT_ZOOM_END, regions: 'latin', regionSet: 'today', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyages: [], voyageWidth: VOYAGE_WIDTH, voyageDraw: VOYAGE_DRAW.seconds, person: null, sight: null, site: null, pictures: null, ...OVERLAY_DEFAULTS, cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER, overlap: DEFAULT_OVERLAP };
 
 // ---------------------------------------------------------------- the sprites on offer
 
@@ -135,6 +135,7 @@ function styleFromHash() {
     // the subject chosen, one of: the person chosen in the People drawer (data/voyages/people.json) or the sight whose tile
     // was opened (scripts/sights.mjs); which of its pictures lie on the map, and where
     sight: Object.hasOwn(SIGHT_TILES, q.get('sight') ?? '') ? q.get('sight') : DEFAULTS.sight,
+    site: Object.hasOwn(SIGHT_TILES, q.get('sight') ?? '') && /^\d$/.test(q.get('site') ?? '') ? Number(q.get('site')) : DEFAULTS.site, // which of a sight's marks dealt
     person: !Object.hasOwn(SIGHT_TILES, q.get('sight') ?? '') && /^[a-z][a-z0-9-]*$/.test(q.get('person') ?? '') ? q.get('person') : DEFAULTS.person,
     pictures: parsePictures(q.get('pictures'), DEFAULTS.pictures),
     pictureAt: parsePictureAt(q.get('pictureat')),
@@ -197,6 +198,7 @@ function writeHash() {
   if (st.voyageDraw !== DEFAULTS.voyageDraw) q.set('voyagedraw', st.voyageDraw);
   if (st.person || st.sight) {
     q.set(st.person ? 'person' : 'sight', st.person ?? st.sight);
+    if (st.sight && st.site != null) q.set('site', st.site);
     const shown = st.pictures && (st.pictures.length ? st.pictures.join(',') : 'none'), at = pictureAtText(st.pictureAt);
     if (shown) q.set('pictures', shown);
     if (at) q.set('pictureat', at);
@@ -1267,18 +1269,18 @@ function fillTile(t) {
     a.href = t.cited.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = t.cited.title;
     more = document.createElement('p'); more.className = 'tile-source'; more.append('Read: ', a);
   }
-  const pics = t.sight ? sightPics(t.sight) : null; // a sight's pictures, each on the table or off it
+  const pics = t.sight ? sightPics(t.sight, t.site ?? null) : null; // a sight's pictures, each on the table or off it
   tileEl.replaceChildren(close, ...[head, doubt, meta, text, source, more, pics].filter(Boolean));
   tileEl.setAttribute('aria-label', t.title ?? 'Point of interest');
 }
 // A sight's pictures in its tile, as the person card shows a person's (picsHTML): once its records are loaded and it is
 // the subject chosen; null otherwise
-function sightPics(name) {
+function sightPics(name, site) {
   const s = subject();
   if (!s || s.kind !== 'sight' || s.id !== name) return null;
   const div = document.createElement('div');
   div.className = 'pics'; div.setAttribute('role', 'group'); div.setAttribute('aria-label', 'Pictures, on the table or off it');
-  div.innerHTML = picsHTML(s, picturesOf(s));
+  div.innerHTML = picsHTML(s, picturesOf(s), siteSet(s, site));
   return div;
 }
 tileEl.addEventListener('click', (e) => {
@@ -1291,7 +1293,7 @@ let sightList = null;
 function sightTiles() {
   sightList ??= [...new Map([...places.map(({ name, view: v }) => [name, v]), ...CHARTS.map(({ made }) => [made.title, made])]).entries()]
     .filter(([name]) => SIGHT_TILES[name]).flatMap(([name, v]) => { const { at, ...tile } = SIGHT_TILES[name], spots = at ? (Array.isArray(at[0]) ? at : [at]) : [[v.lon, v.lat]];
-      return spots.map(([lon, lat]) => ({ lon, lat, tile: { title: name, sight: name, ...tile } })); });
+      return spots.map(([lon, lat], k) => ({ lon, lat, tile: { title: name, sight: name, ...(spots.length > 1 ? { site: k } : {}), ...tile } })); });
   return sightList;
 }
 // the mark at [x, y]: a voyage's event or a sight within reach; else the note on a laid chart whose figure holds the
@@ -1309,7 +1311,7 @@ function showTileAt(at) {
   if (!best) return;
   tileShown = best.tile;
   if (best.tile.sight) { // the sight becomes the subject: its pictures onto the table, and into the tile once their records are read
-    chooseSight(best.tile.sight);
+    chooseSight(best.tile.sight, DEFAULTS.pictures, best.tile.site ?? null);
     if (!sightData) loadSights().then(() => { if (tileShown === best.tile && !tileEl.hidden) showTileAt(at); }, () => {});
   }
   fillTile(best.tile);
@@ -1654,24 +1656,63 @@ function loadSights() {
 }
 // The subject chosen, whose pictures lie on the table: { key, kind, id, images, manifest }, the person chosen or the sight
 // whose tile was opened, once its records are loaded; null for none
-const subjectKey = () => (style.person ? `person:${style.person}` : style.sight ? `sight:${style.sight}` : null);
+const sightKey = () => `sight:${style.sight}${style.site == null ? '' : `@${style.site}`}`; // a mark's deal is its own
+const subjectKey = () => (style.person ? `person:${style.person}` : style.sight ? sightKey() : null);
 function subject() {
   if (style.person) { const p = personOf(style.person); return p && { key: `person:${p.id}`, kind: 'person', id: p.id, person: p, images: p.images, manifest: peopleData.pictures }; }
-  if (style.sight && sightData && Object.hasOwn(sightData.images, style.sight)) return { key: `sight:${style.sight}`, kind: 'sight', id: style.sight, images: sightData.images[style.sight], manifest: sightData.pictures };
+  if (style.sight && sightData && Object.hasOwn(sightData.images, style.sight)) return { key: sightKey(), kind: 'sight', id: style.sight, images: sightData.images[style.sight], manifest: sightData.pictures };
   return null;
 }
 async function loadSubject() { if (style.person) await loadPeople(); else if (style.sight) await loadSights(); return subject(); }
-// A sight chosen: its pictures onto the table, a person's off it. Opening the same sight's tile again changes nothing.
+// A sight chosen: its pictures (`pictures`, else those of the mark opened, `site`, else all) onto the table, a person's
+// off it. Opening the same mark's tile again changes nothing while any of its pictures lie on the table; once all are
+// put away it deals them again. A sight with several marks (Tyre's city site and Al-Bass) splits its pictures between
+// them by each record's `site`, the mark's place in its tile's `at`; the link carries it as `site=`.
 let keepTile = false;
-function chooseSight(name) {
-  if (style.sight === name && !style.person) return;
+function chooseSight(name, pictures = DEFAULTS.pictures, site = null) {
+  if (style.sight === name && style.site === site && !style.person && style.pictures?.length !== 0) return;
   const hadPerson = Boolean(style.person);
-  style = { ...style, person: null, sight: name, pictures: DEFAULTS.pictures, pictureAt: {} };
+  style = { ...style, person: null, sight: name, site, pictures, pictureAt: {} };
   flips.clear(); links.clear(); raised = []; looking = null;
-  showPeople(); writeHash();
+  dealViews.delete(sightKey());
+  showPeople(); showSightCard(); writeHash();
+  if (sightData) dealSight(); else loadSights().then(dealSight, () => {});
   if (hadPerson) { keepTile = true; render(); } // the person's voyages back in their own inks
   else preparePictures().then((fresh) => { if (fresh) repaint('pictures dealt'); }, () => {});
-  flyToSubject({ onlyWider: true });
+}
+// A sight's pictures are dealt along the foot of the view they are dealt in (sightDeal), the place clear above them:
+// the view as it is, or, from afar, the place at SIGHT_ZOOM, flown to; where the row would cover the place, the map
+// moves to put the place in the middle. Once dealt they stay put on the map, as a person's do.
+const SIGHT_ZOOM = 9.5, FLY_WIDER = 1; // the zoom a sight is dealt at from afar; how much wider than it counts as afar
+const dealViews = new Map(); // the view a sight's pictures were dealt in, by subject
+// where a sight's row is dealt under: the mark opened, else the middle of its marks
+function placeOfSight(s, f) {
+  const spot = style.site != null && sightTiles().find(({ tile }) => tile.sight === s.id && tile.site === style.site);
+  return spot ? [spot.lon, spot.lat] : [(f.lonMin + f.lonMax) / 2, (f.latMin + f.latMax) / 2];
+}
+// a sight's pictures for one of its marks (`site`), by index; null for all of them
+const siteSet = (s, site) => (site == null || !s.images.some((im) => im.site === site) ? null : s.images.flatMap((im, i) => (im.site === site ? [i] : [])));
+function dealSight() {
+  const s = subject();
+  if (s?.kind !== 'sight' || dealViews.has(s.key)) return;
+  const f = frameOfSubject(s), at = placeOfSight(s, f), sizes = picturesOf(s).map((i) => pictureSize(s, i)).filter(Boolean);
+  const zoom = Math.min(SIGHT_ZOOM, viewContaining(f, { w: W, h: H }).zoom);
+  let to = view.zoom < zoom - FLY_WIDER ? { ...view, lon: at[0], lat: at[1], zoom } : view;
+  if (!sightDeal(sizes, windowRect(), viewProjection(to).project(...at)).clear) to = { ...to, lon: at[0], lat: at[1] };
+  dealViews.set(s.key, clampView({ ...to, projection: view.projection }));
+  if (to !== view) goTo(to);
+}
+const mercOf = (lat) => (Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360)) * 180) / Math.PI;
+const latOfMerc = (m) => ((2 * Math.atan(Math.exp((m * Math.PI) / 180)) - Math.PI / 2) * 180) / Math.PI;
+// A sight's shown pictures on the map, from where sightDeal lays them in the view they were dealt in (the view now, for
+// a sight that came in by the link)
+function sightPlaces(s, f, sizes) {
+  if (!dealViews.has(s.key)) dealViews.set(s.key, view);
+  const proj = viewProjection(dealViews.get(s.key));
+  return sightDeal(sizes, windowRect(), proj.project(...placeOfSight(s, f))).row.map(({ x, y, h }, k) => {
+    const [lon] = proj.invert(x, y), m0 = mercOf(proj.invert(x, y + h / 2)[1]), m1 = mercOf(proj.invert(x, y - h / 2)[1]);
+    return { lon, lat: latOfMerc((m0 + m1) / 2), scale: (m1 - m0) / sizes[k][1], turn: 0 };
+  });
 }
 const spanOf = (p) => lifeSpan(p, p.voyages.flatMap((id) => voyageYears(peopleData.voyages[id]?.when)));
 const lifeText = (p) => `${p.born?.date ?? 'birth unknown'} – ${deathOf(p)?.date ?? 'death unknown'}`;
@@ -1721,15 +1762,15 @@ function showPeople() {
     (pics ? `<div class="pics" role="group" aria-label="Pictures, on the table or off it">${pics}</div>` : '');
 }
 // A subject's pictures as thumbnails, each a button that takes it off the table or puts it back (`shown` those on it)
-const picsHTML = (s, shown) => s.images.map((im, i) => { const m = s.manifest[im.file];
-  return m ? `<button type="button" class="pic" data-pic="${i}" aria-pressed="${shown.includes(i)}" title="${escapeHTML(pictureNote(im) ?? pictureCredit(im))}: on the table, or off it"><img src="packs/overlays/${escapeHTML(m.src)}" alt="" loading="lazy"></button>` : ''; }).join('');
+const picsHTML = (s, shown, only = null) => s.images.map((im, i) => { const m = s.manifest[im.file];
+  return m && (!only || only.includes(i)) ? `<button type="button" class="pic" data-pic="${i}" aria-pressed="${shown.includes(i)}" title="${escapeHTML(pictureNote(im) ?? pictureCredit(im))}: on the table, or off it"><img src="packs/overlays/${escapeHTML(m.src)}" alt="" loading="lazy"></button>` : ''; }).join('');
 $('peopleStrip').addEventListener('click', (e) => {
   const b = e.target.closest('[data-person]');
   if (!b) return;
   const id = b.dataset.person === style.person ? null : b.dataset.person;
-  style = { ...style, person: id, sight: null, pictures: DEFAULTS.pictures, pictureAt: {} };
+  style = { ...style, person: id, sight: null, site: null, pictures: DEFAULTS.pictures, pictureAt: {} };
   flips.clear(); links.clear(); raised = []; looking = null;
-  showPeople(); writeHash(); render();
+  showPeople(); showSightCard(); writeHash(); render();
   if (id) flyToSubject();
 });
 $('personCard').addEventListener('click', (e) => {
@@ -1744,11 +1785,22 @@ function setOnTable(i, on) {
   const shown = picturesOf(s).filter((k) => k !== i);
   style = { ...style, pictures: on ? [...shown, i].sort((a, b) => a - b) : shown };
   if (on) raise(i); else { flips.delete(i); links.delete(i); raised = raised.filter((k) => k !== i); if (focusedPic === i) focusedPic = null; if (looking === i) looking = null; }
-  showPeople(); writeHash();
+  showPeople(); showSightCard(); writeHash();
   for (const b of tileEl.querySelectorAll('[data-pic]')) b.setAttribute('aria-pressed', String(picturesOf(s).includes(Number(b.dataset.pic)))); // the open tile's thumbnails
   repaint('a picture put away');
   preparePictures().then((fresh) => { if (fresh) repaint('a picture dealt'); }, () => {});
 }
+// The sweep, in the right margin while any picture lies on the table: every picture put away at once, a person's or a
+// sight's, as each one's own Put away would; the link then reads `pictures=none`
+$('sweep').addEventListener('click', () => {
+  const s = subject();
+  if (!s || !picturesOf(s).length) return;
+  style = { ...style, pictures: [] };
+  flips.clear(); links.clear(); raised = []; looking = null; focusedPic = null;
+  showPeople(); showSightCard(); writeHash();
+  for (const b of tileEl.querySelectorAll('[data-pic]')) b.setAttribute('aria-pressed', 'false');
+  repaint('pictures swept');
+});
 // The box round a subject, once per subject: a person's birth, death and voyages; a sight's spots, padded (sightFrame)
 function frameOfSubject(s) {
   if (!frames.has(s.key)) {
@@ -1763,10 +1815,10 @@ function frameOfSubject(s) {
 }
 const pictureSize = (s, i) => { const m = s.manifest[s.images[i]?.file]; return m ? [m.width, m.height] : null; };
 // The pictures on the table: those the link names, else all of them (`s` a subject, or a person: anything with `images`)
-const picturesOf = (s) => style.pictures ?? s.images.map((_, i) => i);
-// Where a subject's shown pictures lie by default (picturePlaces): a person's under their frame, sized from it; a sight's
-// centred under its marks at a town's size
-const placesOf = (s, f, sizes) => picturePlaces(f, sizes, ...pictureLay(), s.kind === 'sight' ? { tall: SIGHT_PICTURE_TALL, centred: true } : {});
+const picturesOf = (s) => style.pictures ?? (s.kind === 'sight' ? siteSet(s, style.site) : null) ?? s.images.map((_, i) => i);
+// Where a subject's shown pictures lie by default: a person's under their frame, sized from it (picturePlaces); a
+// sight's along the foot of the view they were dealt in (sightPlaces)
+const placesOf = (s, f, sizes) => (s.kind === 'sight' ? sightPlaces(s, f, sizes) : picturePlaces(f, sizes, ...pictureLay()));
 // Each picture lies a little askew, as if dealt onto a chart table: degrees by its place in the record, and a nudge
 // off the row's line as a share of its height
 const ASKEW = [-4, 3, -2, 5, -3, 2], NUDGE = [0.06, -0.05, 0.08, -0.03, 0.04, -0.07];
@@ -1812,16 +1864,12 @@ async function preparePictures() {
   }));
   return fresh && key === subjectKey();
 }
-// The map flies to frame the subject and its pictures, wherever it is; `onlyWider`, only from a view so wide that the
-// pictures would lie too small to see (a sight's tile opened from afar), never from one already close
-const FLY_WIDER = 1; // zoom levels wider than the framing view before a sight's choice flies the map
-async function flyToSubject({ onlyWider = false } = {}) {
+// The map flies to frame a person and their pictures, wherever they are
+async function flyToSubject() {
   const key = subjectKey(), s = await loadSubject(), f = s && frameOfSubject(s);
   if (!f || key !== subjectKey()) return;
   const shown = picturesOf(s).filter((i) => pictureSize(s, i)), sizes = shown.map((i) => pictureSize(s, i));
-  const to = viewContaining(withPictures(f, placesOf(s, f, sizes), sizes), { w: W, h: H });
-  if (onlyWider && view.zoom >= to.zoom - FLY_WIDER) return;
-  goTo(to);
+  goTo(viewContaining(withPictures(f, placesOf(s, f, sizes), sizes), { w: W, h: H }));
 }
 // A picture on the canvas: its centre, its turn in radians and its size in canvas px, before any deal or flip. The one
 // looked at lies upright in the middle of the part of the canvas in the window, as large as LOOK_FILL of that allows
@@ -1920,6 +1968,7 @@ let focusedPic = null; // the picture whose item in the canvas's fallback has th
 function drawPictures(g) {
   const list = shownPictures();
   mirrorPictures(list);
+  $('sweep').hidden = !list.length;
   if (!list.length) { dealt = null; return; }
   const now = performance.now(), proj = viewProjection(view), m = 5;
   if (dealt?.key !== subjectKey()) dealt = { key: subjectKey(), start: now };
@@ -2129,13 +2178,45 @@ $('earlier').addEventListener('click', () => {
 
 // The cartouche names the place flown to (its title, else the button's name), not whatever scores highest in the frame.
 const caption = (text) => `<span class="notes">${text ?? CAPTION}</span>`;
+const placeInfo = new Map(); // a listed place's details, by name: { title, date, text }
 for (const [list, groups] of [[$('anchorages'), ANCHORAGES], [$('sightsList'), SIGHTS]]) {
   const rows = (items) => items.map(([name, v, title, text, tag]) => { const tile = SIGHT_TILES[name];
+    if (list.id === 'sightsList') placeInfo.set(name, { title: title ?? name, date: [tile?.date, tag].filter(Boolean).join(' · '), text: text ?? tile?.text ?? CAPTION });
     return `<li><button type="button" data-place="${places.push({ name, view: { ...v, title: title ?? name } }) - 1}">${title?.startsWith(`${name} (`) ? title : name}${tile?.date ? `<small>${[tile.date, tag].filter(Boolean).join(' · ')}</small>` : ''}</button>${caption(text ?? tile?.text)}</li>`; }).join('');
   const first = groups.findIndex(([group, , open]) => group && open), opened = first >= 0 ? first : groups.findIndex(([group]) => group);
   list.innerHTML = groups.map(([group, items, , span], i) => (group ? `<li class="group${i === opened ? ' open' : ''}"><button type="button" class="fold" aria-expanded="${i === opened}">${group}<small>${[items.length, span].filter(Boolean).join(' · ')}</small></button><div class="rows"><div${i === opened ? '' : ' inert'}><ul class="places">${rows(items)}</ul></div></div></li>` : rows(items))).join('');
-  list.addEventListener('click', (e) => { const b = e.target.closest('[data-place]'); if (b) { const to = places[b.dataset.place].view; clearSheetFor(to); goTo(to); } });
+  list.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-place]');
+    if (!b) return;
+    const { name, view: to } = places[b.dataset.place];
+    clearSheetFor(to); goTo(to);
+    if (list.id === 'sightsList') { placeShown = name; showSightCard(); $('sightCard').scrollIntoView({ block: 'nearest' }); }
+  });
 }
+// The Points of interest drawer's details of the place last clicked in it, at the drawer's foot, as the person card shows
+// a person: its name and date, its tile's text, and its pictures as thumbnails, each putting its picture on the table or
+// taking it off. Choosing it in the drawer flies there and deals nothing; its mark on the map deals the pictures.
+let placeShown = null;
+function showSightCard() {
+  const card = $('sightCard'), info = placeShown && placeInfo.get(placeShown);
+  for (const b of $('sightsList').querySelectorAll('[data-place]')) {
+    if (info && places[b.dataset.place].name === placeShown) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current');
+  }
+  card.hidden = !info;
+  if (!info) { card.replaceChildren(); return; }
+  if (!sightData) loadSights().then(showSightCard, () => {});
+  const images = sightData?.images[placeShown], s = subject(), on = s?.kind === 'sight' && s.id === placeShown ? picturesOf(s) : [];
+  const pics = images ? picsHTML({ images, manifest: sightData.pictures }, on) : '';
+  card.innerHTML = `<p class="pname"><b>${escapeHTML(info.title)}</b> ${escapeHTML(info.date)}</p><p class="bio">${escapeHTML(info.text)}</p>` +
+    (pics ? `<div class="pics" role="group" aria-label="Pictures, on the table or off it">${pics}</div>` : '');
+}
+$('sightCard').addEventListener('click', (e) => {
+  const pic = e.target.closest('[data-pic]'), s = subject();
+  if (!pic || !placeShown) return;
+  const i = Number(pic.dataset.pic);
+  if (s?.kind === 'sight' && s.id === placeShown) setOnTable(i, !picturesOf(s).includes(i));
+  else chooseSight(placeShown, [i]); // another subject's pictures off the table, this one on it
+});
 // Any grouped list in a drawer opens at most one group at a time: a click on a shut group's heading slides the open
 // one shut and this one open, together; a click on the open one slides it shut and leaves none open, so a search can
 // move between groups quickly (docs/spec/design.md, "A grouped list in a drawer opens one group at a time").
