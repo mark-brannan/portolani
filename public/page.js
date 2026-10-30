@@ -20,7 +20,7 @@ import { OVERLAY_DEFAULTS, overlayFromHash, overlayToHash, sheetCorners, onSheet
 import { POIS, POI_ZOOM } from './pois.mjs';
 import { PEOPLE_FILE, PICTURES_FILE, lifeSpan, timelineAxis, ticksOf, pictureCredit, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, viewContaining, withPictures, peopleOf, whoOf, deathOf } from './people.mjs';
 import { fold, bestPlace } from './placename.mjs';
-import { parsePosition } from './position.mjs';
+import { parsePosition, formatPosition } from './position.mjs';
 
 const memo = new Map();
 // a failed load is forgotten, so the next stop tries it again
@@ -1803,7 +1803,17 @@ $('coords').addEventListener('submit', async (e) => {
   setDrawer(false);
   goTo(target);
 });
-$('coordsText').addEventListener('input', () => { $('goMiss').hidden = true; });
+// Under the box, once it holds a position: the same position in the three forms Go reads. Nothing when the
+// box is empty or is not a position (a place name, a half-typed number).
+const goForms = $('goForms');
+function showForms() {
+  const p = parsePosition($('coordsText').value);
+  goForms.hidden = !p;
+  if (!p) return;
+  const f = formatPosition(p);
+  goForms.innerHTML = `<dt>decimal</dt><dd>${f.dd}</dd><dt>minutes</dt><dd>${f.dm}</dd><dt>seconds</dt><dd>${f.dms}</dd>`;
+}
+$('coordsText').addEventListener('input', () => { $('goMiss').hidden = true; showForms(); });
 
 // A short flight from the view to a target, in the view's projection: the ground is drawn on the
 // way as for a drag, and the ornaments placed when it lands. Reduced motion jumps.
@@ -1841,6 +1851,7 @@ locate.addEventListener('click', () => {
     const { latitude: lat, longitude: lon } = p.coords;
     const full = (x) => (/e/.test(String(x)) ? x.toFixed(20).replace(/\.?0+$/, '') : String(x)); // every digit, never exponent form, which the box would not read
     $('coordsText').value = `${full(lat)}, ${full(lon)}`;
+    showForms();
   }, (e) => {
     done();
     const say = e.code === e.PERMISSION_DENIED ? 'My position: not allowed' : `My position: ${e.message}`;
