@@ -339,3 +339,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261030t015654z
 - The Giza event gives the caravan as the sources' figures by date, and reads al-Qalqashandi's 12,000 enslaved attendants in silk as rhetoric, after Isaac Samuel Undo: edit the Giza event text ([#284](https://github.com/mark-brannan/portolani/pull/284))
+
+### 20261030t015701z
+- The hajj's Giza-Cairo leg is attested (dated by Wikipedia after al-Umari); Cairo-Mecca, Mecca-Cairo, Cairo-Gao and Gao-Timbuktu are inferred; the legs whose stops come only from the usual drawing are conventional Undo: set giza-cairo to inferred ([#284](https://github.com/mark-brannan/portolani/pull/284))
