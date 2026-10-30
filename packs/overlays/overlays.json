@@ -57,30 +57,222 @@
     },
     {
       "id": "catalan-atlas",
-      "title": "Catalan Atlas, sheet 5, 1375",
+      "title": "Catalan Atlas, 1375",
       "source": "https://commons.wikimedia.org/wiki/File:Catalan_Atlas_BNF,_sheet_5.jpg",
       "licence": "Public domain; Cresques Abraham, BnF Gallica btv1b55002481n",
-      "file": "catalan-atlas.jpg",
-      "mask": "catalan-atlas-mask.png",
-      "width": 6454,
-      "height": 15862,
+      "thumb": "catalan-atlas-thumb.jpg",
+      "width": 46800,
+      "height": 15870,
       "scale": 4,
       "sheet": {
-        "lon": -16.31875072352507,
-        "lat": 43.64725918915991,
-        "scale": 0.0033069996187653178,
-        "turn": 0.020209707787023273
+        "lon": 53.21930306134253,
+        "lat": 39.30487099354232,
+        "scale": 0.0032120941319065417,
+        "turn": 0
       },
-      "snaps": [],
+      "snaps": [
+        {
+          "label": "Atlantic",
+          "lon": 51.34575960091347,
+          "lat": 43.62041112550072,
+          "scale": 0.0033069996187653178,
+          "turn": 0.020209707787023273
+        },
+        {
+          "label": "Mali",
+          "lon": 53.992773541318925,
+          "lat": 33.59000078356,
+          "scale": 0.003538374811439859,
+          "turn": 11.977992336446494
+        },
+        {
+          "label": "Italy",
+          "lon": 43.53316669425814,
+          "lat": 36.71194302087518,
+          "scale": 0.003030377655080581,
+          "turn": 8.190156814035612
+        },
+        {
+          "label": "Black Sea",
+          "lon": 40.37809770547195,
+          "lat": 35.95162714425637,
+          "scale": 0.0025974660841605324,
+          "turn": 11.868192370041639
+        },
+        {
+          "label": "Persia",
+          "lon": 40.884374264194705,
+          "lat": 34.63824527435054,
+          "scale": 0.003119912277486303,
+          "turn": 0
+        },
+        {
+          "label": "Central Asia",
+          "lon": 41.22626943681036,
+          "lat": 33.69556543280584,
+          "scale": 0.003119912277486303,
+          "turn": 0
+        },
+        {
+          "label": "India",
+          "lon": 41.910059782041714,
+          "lat": 31.778986962654127,
+          "scale": 0.003119912277486303,
+          "turn": 0
+        },
+        {
+          "label": "Cathay",
+          "lon": 55.09284652177159,
+          "lat": 34.705902624797,
+          "scale": 0.003119912277486303,
+          "turn": 0
+        }
+      ],
+      "panels": [
+        {
+          "file": "catalan-atlas-5.jpg",
+          "mask": "catalan-atlas-5-mask.png",
+          "x": 0,
+          "width": 5872,
+          "height": 15862,
+          "scanX": 288
+        },
+        {
+          "file": "catalan-atlas-6.jpg",
+          "mask": "catalan-atlas-6-mask.png",
+          "x": 5872,
+          "width": 5840,
+          "height": 15770,
+          "scanX": 304
+        },
+        {
+          "file": "catalan-atlas-7.jpg",
+          "mask": "catalan-atlas-7-mask.png",
+          "x": 11712,
+          "width": 5848,
+          "height": 15778,
+          "scanX": 288
+        },
+        {
+          "file": "catalan-atlas-8.jpg",
+          "mask": "catalan-atlas-8-mask.png",
+          "x": 17560,
+          "width": 5864,
+          "height": 15827,
+          "scanX": 352
+        },
+        {
+          "file": "catalan-atlas-9.jpg",
+          "mask": "catalan-atlas-9-mask.png",
+          "x": 23424,
+          "width": 5880,
+          "height": 15870,
+          "scanX": 304
+        },
+        {
+          "file": "catalan-atlas-10.jpg",
+          "mask": "catalan-atlas-10-mask.png",
+          "x": 29304,
+          "width": 5816,
+          "height": 15744,
+          "scanX": 272
+        },
+        {
+          "file": "catalan-atlas-11.jpg",
+          "mask": "catalan-atlas-11-mask.png",
+          "x": 35120,
+          "width": 5824,
+          "height": 15773,
+          "scanX": 312
+        },
+        {
+          "file": "catalan-atlas-12.jpg",
+          "mask": "catalan-atlas-12-mask.png",
+          "x": 40944,
+          "width": 5856,
+          "height": 15809,
+          "scanX": 344
+        }
+      ],
       "pieces": [
         {
-          "x0": 240,
-          "x1": 6080,
+          "x0": 0,
+          "x1": 5872,
           "fit": {
             "a": 0.0033069994130441654,
             "b": -0.000001166464530706482,
-            "tx": -26.98118659922556,
-            "ty": 74.83956042334086
+            "tx": -26.028770768268842,
+            "ty": 74.839224481556
+          }
+        },
+        {
+          "x0": 5872,
+          "x1": 11712,
+          "fit": {
+            "a": 0.003461335152186819,
+            "b": -0.0007343400237409812,
+            "tx": -21.17548093146796,
+            "ty": 80.34723243171864
+          }
+        },
+        {
+          "x0": 11712,
+          "x1": 17560,
+          "fit": {
+            "a": 0.002999469982999312,
+            "b": -0.00043170424308522636,
+            "tx": -23.228857739044482,
+            "ty": 73.41984193813903
+          }
+        },
+        {
+          "x0": 17560,
+          "x1": 23424,
+          "fit": {
+            "a": 0.002541940852029609,
+            "b": -0.0005341973073193418,
+            "tx": -14.864462598441925,
+            "ty": 71.2438829348489
+          }
+        },
+        {
+          "x0": 23424,
+          "x1": 29304,
+          "fit": {
+            "a": 0.003119912277486303,
+            "b": 0,
+            "tx": -32.121573028984784,
+            "ty": 61.72063408774672
+          }
+        },
+        {
+          "x0": 29304,
+          "x1": 35120,
+          "fit": {
+            "a": 0.003119912277486303,
+            "b": 0,
+            "tx": -31.779677856369126,
+            "ty": 60.58128859653871
+          }
+        },
+        {
+          "x0": 35120,
+          "x1": 40944,
+          "fit": {
+            "a": 0.003119912277486303,
+            "b": 0,
+            "tx": -31.095887511137775,
+            "ty": 58.30259761412269
+          }
+        },
+        {
+          "x0": 40944,
+          "x1": 46800,
+          "fit": {
+            "a": 0.003119912277486303,
+            "b": 0,
+            "tx": -17.913100771407898,
+            "ty": 61.80290013435961
           }
         }
       ]
@@ -267,6 +459,36 @@
             "b": 0,
             "tx": -91.40391395927227,
             "ty": 111.22251970724673
+          }
+        }
+      ]
+    },
+    {
+      "id": "catalan-atlas-1959-copy",
+      "title": "Catalan Atlas, Mediterranean, a copy of 1959",
+      "source": "https://commons.wikimedia.org/wiki/File:El_mar_Mediterr%C3%A1neo_en_el_Atlas_catal%C3%A1n_de_Cresques_Abraham.jpg",
+      "licence": "CC BY 3.0; El mar Mediterráneo en el Atlas catalán de Cresques Abraham, a 1959 copy of the Mediterranean of the Catalan Atlas of 1375, Library of Congress, Geography and Map Division. Attribution: \"Copia de 1959 del original de 1375; Library of Congress, Geography and Map Division, CC BY 3.0\"",
+      "file": "catalan-atlas-1959-copy.jpg",
+      "mask": "catalan-atlas-1959-copy-mask.png",
+      "width": 12956,
+      "height": 8637,
+      "scale": 4,
+      "sheet": {
+        "lon": 9.403627509876799,
+        "lat": 40.95652643276838,
+        "scale": 0.005149083283372299,
+        "turn": 0
+      },
+      "snaps": [],
+      "pieces": [
+        {
+          "x0": 0,
+          "x1": 12956,
+          "fit": {
+            "a": 0.005149083283372299,
+            "b": 0,
+            "tx": -23.952133999808957,
+            "ty": 67.20536335938465
           }
         }
       ]

@@ -1,0 +1,21 @@
+{
+  "id": "mali-atlantic",
+  "title": "The Atlantic fleet of the mansa before Musa, c. 1311–1312",
+  "short": "Mali's Atlantic fleet",
+  "who": ["abu-bakr-ii"],
+  "when": "c. 1311–1312",
+  "summary": "As Mansa Musa told it in Cairo in 1324, the king of Mali before him wished to find the far edge of the Atlantic. He sent out 200 ships of men and 200 of gold and supplies; one came back, its captain telling of a river with a powerful current out in the open sea that carried the others away. The king then fitted out 2,000 ships, a thousand for his men and a thousand for supplies, left Musa to rule in his place, sailed west himself and was never seen again. It is the only account of the voyage, and whether it happened is debated.",
+  "sources": ["atlantic-voyage-of-musa-s-predecessor", "mansa-musa", "mali-empire", "levtzion-hopkins-corpus"],
+  "legs": [
+    { "from": "the Senegal mouth (the Senegambia coast)", "to": "the open Atlantic, end unknown", "dates": "c. 1311–1312", "mode": "sea", "line": "spline",
+      "confidence": "conventional", "source": "Musa's account names no port; al-Umari gives Mali's coast at Tura, at the mouth of the Senegal, and the line sets out from there",
+      "note": "Nothing is known of where the fleet went, so the line stops a few hundred kilometres off the coast; its end is not a place anyone has claimed.",
+      "doubt": "The voyage rests on one account, Musa's own, which no other medieval Arab historian and no West African oral tradition repeats; some historians suspect Musa deposed his predecessor and told of the voyage to justify his rise, while others take it seriously (Wikipedia)",
+      "points": [[-16.7,15.95], [-18,15.9], [-19.4,15.8], [-20.6,15.7]] }
+  ],
+  "events": [
+    { "kind": "event", "lon": -16.7, "lat": 15.95, "date": "c. 1311–1312", "label": "The fleet sails west", "source": "al-Umari, Masalik al-absar, from Musa's account", "cite": "atlantic-voyage-of-musa-s-predecessor", "confidence": "speculative",
+      "text": "Musa told the emir Ibn Amir Hajib in Cairo that the king before him had 'wished vehemently' to know where the ocean ended. After the first fleet was lost to the river in the sea, he sailed with two thousand ships and left Musa as his deputy, and was never seen again; so, Musa said, he became king in his own right. Ibn Amir Hajib passed the story to al-Umari, who wrote it down. The account names no port: the mark stands at the mouth of the Senegal, where al-Umari puts Mali's coast.",
+      "doubt": "The only account is Musa's, and it tells how he came to rule; some historians suspect he deposed his predecessor instead, and the predecessor's name itself is uncertain (Wikipedia)" }
+  ]
+}

@@ -26,6 +26,7 @@ import { BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from
 import { legPath, reachPath, isMigration, splitAtSeam, DASHES, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, readVoyage, chronological, voyageLink } from './voyages.mjs';
 export { VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, voyageColours, readVoyage, chronological, voyageLink };
 import { loadOverlay, drawOverlay, drawSheet } from './overlays.mjs';
+import { PEOPLE_FILE, PERSON_RED, personMarks, withPerson, peopleOf, whoOf } from './people.mjs';
 import { noteMarks } from './notes.mjs';
 export { noteMarks };
 const record = (id) => catalogue.find((r) => r.id === id); // a coastlines catalogue record by its id
@@ -2327,7 +2328,7 @@ function drawStream(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH },
   }
   g.restore();
 }
-function drawTrack(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH }, proj, rect) {
+function drawTrack(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH, alpha: dim = 1 }, proj, rect) {
   g.save();
   g.lineCap = 'round'; g.lineJoin = 'round';
   const end = Math.max(VOYAGE_END, width * 1.25);
@@ -2335,10 +2336,10 @@ function drawTrack(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH }, 
     const pieces = splitAtSeam(pathOf(leg), proj.lonCenter, proj.visible).map((p) => p.map(proj.toPx)).filter((px) => meets(rect, bbox(px)));
     if (leg.doubt) speculative(g, pieces, colour);
     else for (const [style, w, alpha, dash] of [[STYLE.parchment, width + VOYAGE_HALO, 0.6, []], [colour, width, 0.9, capped(DASHES[leg.confidence] ?? [], width)]]) {
-      g.strokeStyle = style; g.lineWidth = w; g.globalAlpha = alpha; g.setLineDash(dash);
+      g.strokeStyle = style; g.lineWidth = w; g.globalAlpha = alpha * dim; g.setLineDash(dash);
       for (const px of pieces) { g.beginPath(); px.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke(); }
     }
-    g.setLineDash([]); g.globalAlpha = 0.9; g.fillStyle = colour;
+    g.setLineDash([]); g.globalAlpha = 0.9 * dim; g.fillStyle = colour;
     for (const p of [leg.points[0], leg.points.at(-1)]) {
       if (proj.visible && !proj.visible(...p)) continue;
       const [x, y] = proj.toPx(p);
@@ -2347,23 +2348,24 @@ function drawTrack(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH }, 
   }
   g.restore();
 }
-function drawEvents(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH }, proj, eventRect) {
+function drawEvents(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH, alpha: dim = 1 }, proj, eventRect) {
   const at = (lon, lat) => (Number.isFinite(lon) && Number.isFinite(lat) && (!proj.visible || proj.visible(lon, lat)) ? proj.toPx([lon, lat]) : null);
   g.save();
   for (const e of voyage.events ?? []) { // the tie from each alternative to the usual skull first, so both skulls sit on it
-    if (e.kind !== 'death' || !Array.isArray(e.alternatives)) continue;
+    if ((e.kind !== 'death' && e.kind !== 'birth') || !Array.isArray(e.alternatives)) continue;
     const p = at(e.lon, e.lat);
     for (const a of e.alternatives) {
       const q = at(a?.lon, a?.lat);
       if (!p || !q || !meets(eventRect, { x0: Math.min(p[0], q[0]), y0: Math.min(p[1], q[1]), x1: Math.max(p[0], q[0]), y1: Math.max(p[1], q[1]) })) continue;
-      g.save(); g.strokeStyle = colour; g.globalAlpha = 0.75; g.lineWidth = 1.3; g.setLineDash([5, 3]);
+      g.save(); g.strokeStyle = colour; g.globalAlpha = 0.75 * dim; g.lineWidth = 1.3; g.setLineDash([5, 3]);
       g.beginPath(); g.moveTo(...p); g.lineTo(...q); g.stroke(); g.restore();
     }
   }
   for (const m of voyageMarks(voyage, proj, eventRect)) {
-    g.save(); g.globalAlpha = m.alpha;
+    g.save(); g.globalAlpha = m.alpha * dim;
     if (m.skull) drawSkull(g, m.x, m.y, m.h);
-    else if (m.bead) { g.beginPath(); g.arc(m.x, m.y, Math.max(2.2, width), 0, 2 * Math.PI); g.fillStyle = STYLE.ink; g.globalAlpha = 0.85; g.fill(); }
+    else if (m.birth) drawBirth(g, m.x, m.y, colour);
+    else if (m.bead) { g.beginPath(); g.arc(m.x, m.y, Math.max(2.2, width), 0, 2 * Math.PI); g.fillStyle = STYLE.ink; g.globalAlpha = 0.85 * dim; g.fill(); }
     else { g.beginPath(); g.arc(m.x, m.y, 3, 0, 2 * Math.PI); g.strokeStyle = STYLE.ink; g.lineWidth = 1.4; g.stroke(); }
     g.restore();
   }
@@ -2377,15 +2379,19 @@ function drawEvents(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH },
 // No lettering is drawn beside a mark; the tile carries it.
 export function voyageMarks(voyage, proj, rect) {
   const out = [];
-  const add = (p, h, alpha, skull, tile, bead = false) => {
+  const add = (p, h, alpha, skull, tile, mark = {}) => {
     if (proj.visible && !proj.visible(p.lon, p.lat)) return;
     const [x, y] = proj.toPx([p.lon, p.lat]);
-    if (disc(rect, x, y, -h / 2)) out.push({ x, y, h, alpha, skull, tile, ...(bead && { bead }) });
+    if (disc(rect, x, y, -h / 2)) out.push({ x, y, h, alpha, skull, tile, ...mark });
   };
   for (const e of voyage?.events ?? []) {
     const tile = { title: e.label, date: e.date, doubt: e.doubt, text: e.text, note: e.note, source: e.source, cited: e.cited, who: e.who };
-    const alpha = e.doubt ? 0.5 : 1; // a doubted event at half its ink
-    if (e.kind === 'waypoint') { add(e, WAYPOINT_H, alpha, false, tile, true); continue; }
+    const alpha = e.doubt && e.kind !== 'death' ? 0.5 : 1; // a doubted event at half its ink; a death's doubt only opens its tile
+    if (e.kind === 'birth') {
+      for (const a of e.alternatives ?? []) add(a, SKULL_ALT_H, 0.75, false, { title: a.label, date: e.date, text: a.text, source: a.source, cited: a.cited, who: e.who, place: a.place, alternative: true }, { birth: true });
+      add(e, SKULL_H, 1, false, tile, { birth: true }); continue;
+    }
+    if (e.kind === 'waypoint') { add(e, WAYPOINT_H, alpha, false, tile, { bead: true }); continue; }
     if (e.kind !== 'death') { add(e, SKULL_H, alpha, false, tile); continue; }
     for (const a of e.alternatives ?? []) add(a, SKULL_ALT_H, 0.75, true, { title: a.label, date: e.date, text: a.text, source: a.source, cited: a.cited, who: e.who, place: a.place, alternative: true });
     add(e, SKULL_H, alpha, true, tile);
@@ -2519,6 +2525,18 @@ export function sightMarks(sights, proj, rect) {
   return out;
 }
 const SIGHT_H = 20; // the reach of a place, canvas px, as a mark's height
+
+// A birth: a ring round a dot in the person's red over a parchment disc, a placeholder the design will come back to
+// (the mockups of #161 tried a star, a sun and this ring); lighter than a skull, so a coast of them is not a field of pins.
+function drawBirth(g, x, y, colour = PERSON_RED) {
+  const alpha = g.globalAlpha;
+  g.save();
+  g.fillStyle = STYLE.parchment; g.globalAlpha = 0.9 * alpha; g.beginPath(); g.arc(x, y, 9, 0, 2 * Math.PI); g.fill();
+  g.globalAlpha = alpha; g.strokeStyle = g.fillStyle = colour; g.lineWidth = 2.4;
+  g.beginPath(); g.arc(x, y, 6, 0, 2 * Math.PI); g.stroke();
+  g.beginPath(); g.arc(x, y, 2.2, 0, 2 * Math.PI); g.fill();
+  g.restore();
+}
 
 // A skull and crossbones `h` px tall centred on x, y, in ink over a parchment disc so it reads on the lattice
 function drawSkull(g, x, y, h) {
@@ -2944,7 +2962,9 @@ function drawAnchored(g, a, bg, view, layers) {
 // the view is about (a place flown to), lettered in capitals whatever the scoring finds.
 // `voyages`: the voyages drawn over the ornaments, in order, as [{ id, colour, width }]: `id` names data/voyages/<id>.json
 // (docs/voyages/README.md); `colour` (hex) defaults by voyageColours, the first the chart's red; `width` (px) to VOYAGE_WIDTH.
-// None by default. The older `voyage` (one id, or 'off') still draws that one.
+// None by default. The older `voyage` (one id, or 'off') still draws that one. A voyage's `alpha` (0 to 1) dims it.
+// `person`: a person's id in data/voyages/people.json (scripts/people.mjs): their voyages drawn in the chart's red, lit, every
+// other voyage dimmed to DIMMED, and their birth marked (their death too, where no voyage of theirs carries it). None by default.
 // `overlay`: { id, mode, sheet, opacity }, a chart's scan laid over the map: `id` names an entry of packs/overlays/overlays.json
 // (docs/overlay/README.md). `mode` 'sheet' (the default) lays the whole scan, opaque, over everything on the map at
 // `sheet` ({ lon, lat, scale, turn }; the chart's own placement when left out); 'pieces' warps its pieces onto today's
@@ -3065,7 +3085,10 @@ export async function createScene(environment, opts = {}) {
   tintPolys = seaTint ? geojsonPolygons(await env.readJSON('geo/seas-50m.json')) : null;
   if (STYLE.rivers !== 'off' || STYLE.lakes !== 'off') water = await loadWater(view, STYLE.lakes !== 'off');
   const world = await loadDetail(coarse, view);
-  const [voyages, overlaid] = await Promise.all([loadVoyages(opts.voyages ?? (opts.voyage ? [{ id: opts.voyage }] : [])), opts.overlay ? loadOverlay(opts.overlay.id, env) : null]);
+  const person = await loadPerson(opts.person);
+  const named = opts.voyages ?? (opts.voyage ? [{ id: opts.voyage }] : []);
+  const [drawn, overlaid] = await Promise.all([loadVoyages(person ? withPerson(named, person.record, opts.voyageWidth ?? named[0]?.width) : named), opts.overlay ? loadOverlay(opts.overlay.id, env) : null]);
+  const voyages = person ? [...drawn, { voyage: person.marks, colour: PERSON_RED, width: VOYAGE_WIDTH }] : drawn;
   const opacity = Number(opts.overlay?.opacity ?? 0.6);
   const overlay = overlaid && { ...overlaid, mode: opts.overlay.mode === 'pieces' ? 'pieces' : 'sheet', sheet: opts.overlay.sheet ?? overlaid.sheet, opacity: Number.isFinite(opacity) ? Math.max(0, Math.min(1, opacity)) : 0.6 };
   const tLoad = performance.now();
@@ -3098,7 +3121,18 @@ async function loadVoyages(list) {
   const hex = (c) => (/^#[0-9a-f]{6}$/i.test(c ?? '') ? c.toLowerCase() : null);
   const colours = voyageColours(items.map((v) => v.id), Object.fromEntries(items.filter((v) => hex(v.colour)).map((v) => [v.id, hex(v.colour)])));
   const loaded = await Promise.all(items.map((v) => readVoyage(v.id, (path) => env.readJSON(path)).catch(() => null)));
-  return items.map((v, i) => loaded[i] && { voyage: loaded[i], colour: colours[v.id], width: Number.isFinite(v.width) && v.width > 0 && v.width <= 12 ? v.width : VOYAGE_WIDTH }).filter(Boolean);
+  return items.map((v, i) => loaded[i] && { voyage: loaded[i], colour: colours[v.id], width: Number.isFinite(v.width) && v.width > 0 && v.width <= 12 ? v.width : VOYAGE_WIDTH,
+    ...(Number.isFinite(v.alpha) && v.alpha >= 0 && v.alpha < 1 && { alpha: v.alpha }) }).filter(Boolean);
+}
+// The person a link names (an id in data/voyages/people.json), with their birth (and a death no voyage of theirs
+// carries) as marks; null for none, or an id the site lacks
+async function loadPerson(id) {
+  if (!/^[a-z][a-z0-9-]*$/.test(id ?? '')) return null;
+  try {
+    const [people, sources, who] = await Promise.all([env.readJSON(PEOPLE_FILE), env.readJSON('data/voyages/sources.json'), whoOf(env.readJSON)]);
+    const record = peopleOf(people, who).find((p) => p.id === id);
+    return record ? { record, marks: personMarks(record, sources) } : null;
+  } catch { return null; }
 }
 // A zoom slider's value as the zoom a name stops at: unset keeps `dflt`, 0 or less is off, the top is always, N draws at zoom N and out
 // (zoom <= N: the layers test zoom < end, so the end sits a hair past N).
