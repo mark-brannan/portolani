@@ -1698,19 +1698,21 @@ for (const [list, groups] of [[$('anchorages'), ANCHORAGES], [$('sightsList'), S
   list.innerHTML = groups.map(([group, items, , span], i) => (group ? `<li class="group${i === opened ? ' open' : ''}"><button type="button" class="fold" aria-expanded="${i === opened}">${group}<small>${[items.length, span].filter(Boolean).join(' · ')}</small></button><div class="rows"><div${i === opened ? '' : ' inert'}><ul class="places">${rows(items)}</ul></div></div></li>` : rows(items))).join('');
   list.addEventListener('click', (e) => { const b = e.target.closest('[data-place]'); if (b) goTo(places[b.dataset.place].view); });
 }
-// Any grouped list in a drawer opens one group at a time: a click on a shut group's heading slides the open one shut
-// and this one open, together; a click on the open one does nothing, so one is always open (docs/spec/design.md,
-// "A grouped list in a drawer opens one group at a time"). The rule is the list's, so a group added or moved needs no code.
+// Any grouped list in a drawer opens at most one group at a time: a click on a shut group's heading slides the open
+// one shut and this one open, together; a click on the open one slides it shut and leaves none open, so a search can
+// move between groups quickly (docs/spec/design.md, "A grouped list in a drawer opens one group at a time").
+// The rule is the list's, so a group added or moved needs no code.
 function foldTo(group) {
+  const shut = group.classList.contains('open');
   for (const g of group.parentElement.children) {
     if (!g.classList.contains('group')) continue;
-    const on = g === group;
+    const on = g === group && !shut;
     g.classList.toggle('open', on);
     g.querySelector(':scope > .fold').setAttribute('aria-expanded', String(on));
     g.querySelector(':scope > .rows > div').inert = !on;
   }
 }
-document.addEventListener('click', (e) => { const h = e.target.closest('.group > .fold'); if (h && !h.parentElement.classList.contains('open')) foldTo(h.parentElement); });
+document.addEventListener('click', (e) => { const h = e.target.closest('.group > .fold'); if (h) foldTo(h.parentElement); });
 
 // Each chart a row: its scan as a thumbnail (the drawer's chart glyph, greyed, until it has one) and its name, either
 // of which flies to frame the sheet and shows it, never hides it; the eye beside the name shows or hides the sheet and

@@ -268,7 +268,7 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     await page.click('#open');
     await page.mouse.click(400, 400);
     assert.equal(await opened('drawer'), false, 'a click on the map left the settings open');
-    // the astrolabe's points of interest: one era open at a time; a choice flies there and leaves the drawer open
+    // the astrolabe's points of interest: at most one era open at a time, a second click shuts it; a choice flies there and leaves the drawer open
     await page.click('#sights');
     assert.equal(await opened('sightsPanel'), true, 'the astrolabe did not open the points of interest');
     const openGroups = () => page.$$eval('#sightsList .group.open > .fold', (hs) => hs.map((h) => h.firstChild.textContent));
@@ -277,8 +277,11 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     await page.click('#sightsList .fold >> text=The ancient world');
     assert.deepEqual(await openGroups(), ['The ancient world'], 'a heading did not swap the open era');
     await page.click('#sightsList .fold >> text=The ancient world');
-    assert.deepEqual(await openGroups(), ['The ancient world'], 'a click on the open heading shut it');
+    assert.deepEqual(await openGroups(), [], 'a click on the open heading left it open');
+    assert.deepEqual(await page.$$eval('#sightsList .group', (gs) => gs.map((g) => [g.querySelector(':scope > .fold').getAttribute('aria-expanded'), g.querySelector(':scope > .rows > div').inert])),
+      Array.from({ length: await page.locator('#sightsList .group').count() }, () => ['false', true]), 'a shut group is not shut to the keyboard');
     await page.click('#sightsList .fold >> text=The age of discovery');
+    assert.deepEqual(await openGroups(), ['The age of discovery'], 'a heading did not open its era with none open');
     await page.waitForTimeout(400); // the slide
     const hs = await page.evaluate(() => location.hash);
     await page.click('#sightsList button >> text=Goa');
