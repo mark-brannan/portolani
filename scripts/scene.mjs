@@ -935,7 +935,10 @@ const letterOptions = (data) => ({
 });
 
 // World-view lettering, hand-set: [Latin, English, lon, lat]. Zoom levels are whole: continents are
-// spaced capitals below zoom 5.5, regions italic below zoom 7.
+// spaced capitals below zoom 5.5, regions italic below zoom 7. A set of region names is a list of
+// { name, reading, lon, lat, zoom }: `name` lettered under the Latin chip (the set's own spelling), `reading`
+// under English, `zoom` an optional band [from, to) inside the Regions slider's end. Today's set is REGIONS; a
+// period's is one file, data/names/<id>.json (docs/period-names/README.md), read when it is chosen.
 const CONTINENTS = [
   ['EVROPA', 'EUROPE', 14, 50], ['AFRICA', 'AFRICA', 20, 7], ['ASIA', 'ASIA', 90, 48],
   ['AMERICA SEPTENTRIONALIS', 'NORTH AMERICA', -100, 45], ['AMERICA MERIDIONALIS', 'SOUTH AMERICA', -60, -12],
@@ -946,13 +949,35 @@ const REGIONS = [
   ['Italia', 'Italy', 12.2, 43], ['Grecia', 'Greece', 22, 39.6], ['Natolia', 'Anatolia', 33, 39],
   ['Syria', 'Syria', 38, 35], ['Egiptus', 'Egypt', 29.5, 27], ['Libya', 'Libya', 17, 29],
   ['Barbaria', 'Maghreb', 4, 31], ['Arabia', 'Arabia', 44, 24], ['Thracia', 'Thrace', 26, 42.3],
-];
+].map(([name, reading, lon, lat]) => ({ name, reading, lon, lat }));
+// The sets of region names a scene can letter: 'today' is REGIONS, any other is data/names/<id>.json.
+export const REGION_SETS = ['today', 'catalan-1375'];
+// The drawer's chip samples, a name of each set in each language (`latin` the set's own spelling, `english` its reading);
+// test/region-sets.test.mjs holds each one to a region its set letters.
+export const REGION_SAMPLES = { today: { latin: 'Hispania', english: 'Iberia' }, 'catalan-1375': { latin: 'Melly', english: 'Mali Empire' } };
+export const regionsOfToday = () => REGIONS;
+const regionSets = new WeakMap(); // environment -> id -> the promise of its names, read once
+function regionNamesOf(id, environment) {
+  if (!REGION_SETS.includes(id) || id === 'today') return REGIONS;
+  if (!regionSets.has(environment)) regionSets.set(environment, new Map());
+  const sets = regionSets.get(environment);
+  // a set the site lacks letters today's names, so a missing file never stops the map; the failure is said and
+  // forgotten, so the next draw tries the file again rather than keep today's names for the session
+  if (!sets.has(id)) {
+    sets.set(id, environment.readJSON(`data/names/${id}.json`).then((d) => d.names).catch((e) => {
+      sets.delete(id);
+      console.warn(`region names ${id}: ${e?.message ?? e}; lettering today's names`);
+      return REGIONS;
+    }));
+  }
+  return sets.get(id);
+}
 const CONTINENT_ZOOM_END = 5.5, REGION_ZOOM_END = 7; // continents: zoom < CONTINENT_ZOOM_END, regions overlap them to there; regions: zoom < REGION_ZOOM_END (they meet a continent's box and make way)
 
 // The continent and region names to letter, each with the box it reserves: measured with the font and
 // spacing they are drawn in, so later names and towns make way. A name off the canvas or meeting an
 // earlier box is dropped. `continents` is 'latin', 'english' or false; `regions` 'latin', 'english' or 'off'.
-function placeWorldNames(data, ctx, boxes, { continents, regions, continentsEnd = CONTINENT_ZOOM_END, regionsEnd = REGION_ZOOM_END }) {
+function placeWorldNames(data, ctx, boxes, { continents, regions, regionNames = REGIONS, continentsEnd = CONTINENT_ZOOM_END, regionsEnd = REGION_ZOOM_END }) {
   const z = data.proj.zoom, out = [];
   const lang = regions === 'latin' ? 0 : 1;
   const put = (text, lon, lat, size, spacing, italic) => {
@@ -974,7 +999,10 @@ function placeWorldNames(data, ctx, boxes, { continents, regions, continentsEnd 
     for (const c of CONTINENTS) { const text = c[continents === 'latin' ? 0 : 1], size = text.length > 12 ? 22 : 30; put(text, c[2], c[3], size, size * 0.6, false); }
   }
   if (regions !== 'off' && z < regionsEnd) {
-    for (const r of REGIONS) put(r[lang], r[2], r[3], 22, 1, true);
+    for (const r of regionNames) {
+      const [from = -Infinity, to = Infinity] = r.zoom ?? [];
+      if (z >= from && z < to) put(lang === 0 ? r.name : r.reading, r.lon, r.lat, 22, 1, true);
+    }
   }
   return out;
 }
@@ -1004,14 +1032,14 @@ function coastChunks(n, proj, boxOf) {
 // Earth's min_label, a town from its scalerank), and scores less the farther the view is from it.
 // A point scores more the nearer the frame's centre; a country by how much of its coast is in frame.
 // `lang` 0 Latin, 1 English, for the hand-set names.
-function viewTitle(data, towns, lang, pois = []) {
+function viewTitle(data, towns, lang, pois = [], regionNames = REGIONS) {
   const z = data.proj.zoom, half = Math.hypot(W, H) / 2;
   const fit = (s) => Math.exp(-(((z - s) / 1.6) ** 2));
   const central = ([x, y]) => (x < 0 || y < 0 || x > W || y > H ? 0 : 1 - Math.hypot(x - W / 2, y - H / 2) / half);
   const at = (lon, lat) => (shows(data.proj, lon, lat) ? central(data.proj.project(lon, lat)) : 0);
   const scored = [
     ...CONTINENTS.map((c) => ({ text: c[lang], score: at(c[2], c[3]) * fit(2) })),
-    ...REGIONS.map((r) => ({ text: r[lang], score: at(r[2], r[3]) * fit(4.6) })),
+    ...regionNames.map((r) => ({ text: lang === 0 ? r.name : r.reading, score: at(r.lon, r.lat) * fit(4.6) })),
     ...towns.map((t) => ({ text: t.name, score: central([t.x, t.y]) * fit(7 + t.rank) })),
     ...pois.map((t) => ({ text: t.name, score: 1.5 * central([t.x, t.y]) * fit(7) })), // a curated place outweighs a sea round it
     ...data.names.map((n) => {
@@ -1493,6 +1521,12 @@ function buildScene(data, sprites, ctx, world = {}) {
     }
 
   }
+  // a rose drawn no bigger than its `-small` sibling's own size is drawn as that sibling, when the set has it:
+  // the full drawing's outer work (the Catalan rose's wind names) would leave its star too small to read
+  roseDraws = roseDraws.map((r) => {
+    const sib = roses.find((s) => s.pack === r.sprite.pack && s.id === `${r.sprite.id}-small`);
+    return sib && r.size <= sib.sizePx ? { ...r, sprite: sib } : r;
+  });
 
   if (places.size) occupied.splice(0, occupied.length, ...occupied.filter((o) => !places.has(o)));
   built = null;
@@ -1507,7 +1541,7 @@ function buildScene(data, sprites, ctx, world = {}) {
   // the sheets' beasts were fixed before the lettering, so names and towns give way to them
   for (const m of sheetBeasts?.monsters ?? []) boxes.push(obb(m.x, m.y, 0, m.size * 0.45, m.size * (m.sprite.img.height / m.sprite.img.width) * 0.45));
   for (const sh of sheetBeasts?.ships ?? []) boxes.push(obb(sh.x, sh.y, 0, sh.size / 2, sh.size / 2));
-  const worldNames = placeWorldNames(data, ctx, boxes, { continents: world.continents ?? false, regions: world.regions ?? 'off', continentsEnd: world.continentsEnd, regionsEnd: world.regionsEnd });
+  const worldNames = placeWorldNames(data, ctx, boxes, { continents: world.continents ?? false, regions: world.regions ?? 'off', regionNames: world.regionNames, continentsEnd: world.continentsEnd, regionsEnd: world.regionsEnd });
   const special = new Map((sprites.towns ?? []).flatMap((s) => (s.only ?? []).map((name) => [name, s])));
   const families = [...(sprites.towns ?? []).filter((s) => !s.only).reduce((m, s) => m.set(`${s.pack}/${s.style}`, [...(m.get(`${s.pack}/${s.style}`) ?? []), s]), new Map()).values()];
   if (sprites.tower ?? !families.length) families.push(null); // null: the towers drawn in code
@@ -1632,7 +1666,7 @@ function buildScene(data, sprites, ctx, world = {}) {
   }
 
   // automatic, the typed title stands in where the view has no name in it
-  const title = world.pinTitle?.toUpperCase() || (world.autoTitle && viewTitle(data, towns.filter((t) => names.some((n) => n.text === t.name)), world.regions === 'english' ? 1 : 0, lesser.filter((l) => l.poi)).toUpperCase()) || world.title || 'PORTOLANI';
+  const title = world.pinTitle?.toUpperCase() || (world.autoTitle && viewTitle(data, towns.filter((t) => names.some((n) => n.text === t.name)), world.regions === 'english' ? 1 : 0, lesser.filter((l) => l.poi), world.regionNames).toUpperCase()) || world.title || 'PORTOLANI';
   return { field, boxes, occupied, centre, nodes, sheets: world.sheets, roseDraws, towns, lesser, names, worldNames, monsters, ships, mountains, relief, cartouche: { ...cartouche, sprite: cartoucheSprite, title }, cartouchePos: cartoucheCorner };
 }
 
@@ -2952,6 +2986,7 @@ function drawAnchored(g, a, bg, view, layers) {
 // unshuffled monster and ship order, so old links and callers draw as they did.
 // `kinds` (the ornament kinds drawn, of KINDS), `names` and `rhumb` (booleans), `scale` (a SCALE_NAMES entry, or 'off'),
 // `continents` (boolean) and `regions` ('off', 'latin' or 'english'); the continents follow the regions' language, Latin when those are off.
+// `regionSet`: a REGION_SETS entry, whose names the regions are lettered in: 'today' (the default) or a period's, as 'catalan-1375'.
 // `land`: a LANDS entry, the land treatment ('islands' by default); `seaTint` (boolean) tints the Red Sea, the Persian Gulf and the Black and Caspian Seas red.
 // `rivers` and `lakes`: a RIVER_STYLES and a LAKE_STYLES entry (water.mjs), each 'off' by default; `trees` a TREE_STYLES entry (trees.mjs), 'off' too.
 // `historical` (default true) and `seed` (an integer: keys every seeded placement on it, see parsePlacement).
@@ -3032,7 +3067,7 @@ export function parsePlacement(text) {
 }
 export async function createScene(environment, opts = {}) {
   env = environment;
-  const { ink = '#3b2a1a', continentsZoom, regionsZoom, scaleBorder = 'bordered', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', title = 'PORTOLANI', autoTitle = true, pinTitle, land: landMode = 'islands', islands, seaTint = false, rivers = 'off', lakes = 'off', relief = [], trees = 'off', historical = true, seed: pickedSeed, cartouchePos, scalePos, overlap: overlapPick } = opts;
+  const { ink = '#3b2a1a', continentsZoom, regionsZoom, scaleBorder = 'bordered', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', regionSet = 'today', title = 'PORTOLANI', autoTitle = true, pinTitle, land: landMode = 'islands', islands, seaTint = false, rivers = 'off', lakes = 'off', relief = [], trees = 'off', historical = true, seed: pickedSeed, cartouchePos, scalePos, overlap: overlapPick } = opts;
   const overlap = overlapRule(overlapPick); // how overlapping curated charts are drawn (atlas.mjs, OVERLAP_RULES)
   const legacy = ['rendering', 'rose', 'monster', 'town'].some((k) => opts[k] !== undefined);
   const townBy = townSize ?? (legacy ? 'rank' : 'area');
@@ -3079,7 +3114,7 @@ export async function createScene(environment, opts = {}) {
       monsters, ships, towns, tower: chosen.tower, towers: chosen.towers, mountains, scaleSprite: scaleSprite || null,
     };
   });
-  const [, coarse, chosen] = await Promise.all([env.loadFont(STYLE.font), loadWorld(), sprites]);
+  const [, coarse, chosen, regionNames] = await Promise.all([env.loadFont(STYLE.font), loadWorld(), sprites, regions === 'off' ? REGIONS : regionNamesOf(regionSet, env)]);
   const { scaleSprite, ...placed } = chosen;
   STYLE.mountainSprites = placed.mountains.length > 0;
   tintPolys = seaTint ? geojsonPolygons(await env.readJSON('geo/seas-50m.json')) : null;
@@ -3104,7 +3139,7 @@ export async function createScene(environment, opts = {}) {
   const sheets = sheetsFor(view, { radius: knobs.radius, curated: knobs.curated === 1 || worldBand, overlap, origin }).map((sh) => ({ ...sh, reach: sheetReach(sh.extent, knobs.reach),
     from: worldBand ? Math.log2(1125 / (sh.extent.east - sh.extent.west)) : ATLAS_BANDS.find((b) => b.band === sh.band).from }));
   const roseReach = sheetReach(roseSheet(view.zoom, { origin, curated: knobs.curated === 1, overlap }).extent, knobs.reach);
-  const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, historical, seaAt: sheets && seaAtOf(coarse), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, title, autoTitle, pinTitle,
+  const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, historical, seaAt: sheets && seaAtOf(coarse), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, regionNames, title, autoTitle, pinTitle,
     continentsEnd: zoomEnd(continentsZoom, CONTINENT_ZOOM_END), regionsEnd: zoomEnd(regionsZoom, REGION_ZOOM_END),
     scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM && pinned, pinned, cartouchePos, scalePos, townSize: townBy, seed: legacy ? null : pickedSeed == null ? castSeed(view) : pickedSeed | 0, salt: legacy || pickedSeed == null ? 0 : pickedSeed | 0 }), show, scaleSprite, voyages, overlay, roseReach, roseLines: knobs.roselines === 1, debug, overlap, scalePos: cornerOf(scalePos, DEFAULT_SCALE_CORNER) };
   scene.voyages = placeDoubts(scene, data);

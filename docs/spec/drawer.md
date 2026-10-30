@@ -247,6 +247,33 @@ Feature: Regions language  (chips `#regions`, hash `regions`, default `latin`, v
     Then the Regions slider reads `off` (0), language stays Latin
     # Mismatch: with the Regions slider at 0 the page passes `regions: 'off'` to the scene (page.js:524), and the continents' language is taken from the regions setting (scene.mjs:2615), so Regions at "off" plus English chip draws the continents in Latin.
 
+Feature: Region names of a period  (chips `#regionSet`, hash `regionset`, default `today`, values `today|catalan-1375`; one file per set, `data/names/<id>.json`) [docs/period-names/README.md]
+  Tested by: test/hash.test.mjs — 'regionset: the 1375 chip round-trips'
+  Tested by: test/golden.test.mjs — 'world lettering: continents below z5.5, regions below z7, nothing by default', golden `old-world-z2.6-1375`
+  Scenario: the chips show what they letter
+    Given the drawer open at Regions
+    Then the set chips read "Today" and "1375 · Catalan Atlas", each with a name it letters in the map's italic: "Hispania" and "Melly" under Latin, "Iberia" and "Mali Empire" under English
+    And the language chips show a name of the chosen set
+  Scenario: the 1375 names
+    Given the chart at `#map=2.60/33.000/62.000&regions=english`
+    When the user clicks "1375 · Catalan Atlas"
+    Then the hash gains `regionset=catalan-1375`, and the regions read "Golden Horde", "Cathay", "Chagatai Khanate", "Il-Khanate", "Mali Empire", "Delhi Sultanate", "Mamluk Sultanate" and the rest, in the same italic at the same size as today's names
+  Scenario: the atlas's own spelling
+    Given the chart at `#map=2.60/33.000/62.000&regionset=catalan-1375`
+    Then the Latin chip reads "As lettered" with "Melly", and the regions read "Sarra", "Catayo", "Medeja", "Tauris", "Melly"
+  Scenario: each name in its zoom band
+    Given the 1375 names
+    When the chart is at zoom 2.6
+    Then the great realms are lettered and Lombardy is not; Lombardy comes in at zoom 4.5, Granada, Sicily and the Byzantine Empire at 4
+    And the Regions slider still ends them all
+  Scenario: the link round-trips
+    Given a link with `regionset=catalan-1375`
+    When it is opened
+    Then the 1375 chip is on; Today leaves `regionset` out of the hash
+  Scenario: an unknown set
+    Given the chart at `#regionset=nowhere`
+    Then the page reads Today, and the scene letters today's names
+
 Feature: Regions  (slider `#regionsZoom` 0..15 step 1; hash `regionszoom`, default `7`) [verified page.js:83, 524; scene.mjs:1008, 2626]
   Tested by: test/hash.test.mjs — 'regions: the slider round-trips'
   Tested by: test/hash.test.mjs — 'regions: 1 reads as an older link's checked box'

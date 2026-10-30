@@ -233,6 +233,7 @@
   .chip i { width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--rule); }
   .chip svg { width: 28px; height: 18px; flex: none; }
   .chip svg.wide { width: 34px; }
+  .chip .nm { font: italic 15px var(--serif); padding: 0 5px; border-radius: 3px; background: #e9d8b4; color: #3b2a1a; } /* a region name as the map letters it */
   .slider { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
   .slider[hidden] { display: none; }
   .slider input { flex: 1; }
@@ -529,6 +530,7 @@
       </div>
       <div class="ctl" data-ctl="regions">
       <h3>Regions</h3>
+      <div id="regionSet" class="chips" role="radiogroup" aria-label="Region names of"></div>
       <div id="regions" class="chips" role="radiogroup" aria-label="Regions"></div>
       <div class="slider"><input id="regionsZoom" type="range" min="0" max="15" step="1" value="7" aria-label="Regions, zoom drawn to"><output id="regionsOut"></output></div>
       </div>
