@@ -14,7 +14,7 @@
 // selection those chose, and are written back in the new form.
 // For a while, `debug=sheets[,rings]` and `tune=name:value,...` carry the under-the-hood section
 // (docs/atlas/under-the-hood.md), off by default.
-import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, isBroken, legPath, voyageView, CONTINENT_ZOOM_END, readVoyage, chronological, voyageLink, sightMarks, SIGHT_TILES, noteMarks, pickMark, markClear, tileSpot, ZOOM } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, isBroken, legPath, voyageView, CONTINENT_ZOOM_END, readVoyage, chronological, voyageLink, sightMarks, sightHits, drawnMarks, SIGHT_TILES, noteMarks, pickMark, markClear, tileSpot, groupMarks, dateSpan, readDate, noteCount, drawNoteMark, drawNoteRing, notePulse, drawBadge, drawMarkGlyph, ZOOM } from './scene.mjs';
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
@@ -407,6 +407,7 @@ const CHOICES = {
   tuneRoselines: [['1', 'On', 'the rose\'s 32 lines as one more hub at every zoom', HOOD_GLYPHS.roselines], ['0', 'Off', 'only the sheet the rose falls in', HOOD_GLYPHS.off]],
   flyShape: [['step', 'Step', 'out about the place left, across at the top, down onto the place; Blend lets the pan run alongside the zoom'], ['hyperbolic', 'Hyperbolic', 'van Wijk & Nuij, as MapLibre flies: pan and zoom together on one curve, Curve setting its height']],
 };
+CHOICES.projectionCharts = CHOICES.projection; // the same chips in the Charts drawer; the two are one setting
 for (const [id, options] of Object.entries(CHOICES)) {
   const el = $(id);
   for (const [value, label, note, dot] of options) {
@@ -477,7 +478,7 @@ for (const [id, parts] of Object.entries(CAPTIONS)) {
 const CATALAN_KEYS = SPRITES.filter((s) => s.kind === 'mountain').map((s) => s.key);
 const zoomLabel = (n) => (n <= 0 ? 'off' : n >= MAX_ZOOM ? 'always' : `zoom ${n} and out`);
 function showStyle() {
-  $('projection').value = view.projection;
+  $('projection').value = $('projectionCharts').value = view.projection;
   $('ink').value = style.ink; $('parchment').value = style.parchment;
   $('density').value = style.density; $('densityOut').textContent = style.density;
   $('names').checked = style.names; $('rhumb').checked = style.rhumb; $('scale').value = style.scale; $('scaleBorder').value = style.scaleBorder;
@@ -760,13 +761,13 @@ async function render() {
       debug: parseDebug(style.debug).debug, tune: parseTune(style.tune).tune,
     });
     if (me !== run) return; // a newer change or a move superseded this one
-    ground = { world, coarse, bg, voyages: scene.voyages, marks: drawnMarks(scene), anchored: anchorScene(scene, data), overlays: scene.overlays, cards: { cartouche: kinds.includes('cartouche') ? scene.cartouche : null, scaleSprite: scene.scaleSprite, scale: style.scale, bg } };
+    ground = { world, coarse, bg, voyages: scene.voyages, marks: drawnMarks(scene, data), anchored: anchorScene(scene, data), overlays: scene.overlays, cards: { cartouche: kinds.includes('cartouche') ? scene.cartouche : null, scaleSprite: scene.scaleSprite, scale: style.scale, bg } };
     if (JSON.stringify(voyageInk()) !== inkKey) { showVoyage(); render(); return; } // the sheet laid or lifted changed which voyages cross it: draw again in their inks
     applyReveal();
     if (style.autoTitle) $('title').value = scene.cartouche.title; // the box shows what the cartouche letters, and cannot be edited
     placed = view;
     if (keepTile) keepTile = false; else hideTile(); // its mark may be gone: another voyage, or none; a sight's tile just opened stays
-    if (reopen && !flightTo) { const t = reopen, m = sightHits(viewProjection(placed), { x0: 0, y0: 0, x1: W, y1: H }).find((h) => h.tile === t); reopen = null; if (m) showTileAt([m.x, m.y]); }
+    if (reopen && !flightTo) { const t = reopen, m = sightsHit(viewProjection(placed), FULL).find((h) => h.tile === t); reopen = null; if (m) showTileAt([m.x, m.y]); }
     cancelAnimationFrame(frame); frame = 0; // a moving frame still queued would paint over the scene
     const t1 = performance.now();
     const fading = scene.overlays.find((o) => o.mode === 'sheet' && o.id === fadeIn);
@@ -778,6 +779,7 @@ async function render() {
     drawSheetHandles(ctx);
     drawCards();
     placeSheetChips();
+    if (!fading || fading.alpha >= 1) placeLayer(); // a sheet fading in places it when whole
     preparePictures().then((fresh) => { if (fresh && me === run) repaint('pictures dealt'); }, () => {}); // the chosen subject's pictures, drawn once loaded
     const t2 = performance.now();
     $('status').textContent = `z${view.zoom.toFixed(1)}: load ${timing.load.toFixed(0)} ms, placement + parchment ${timing.place.toFixed(0)} ms, draw ${(t2 - t1).toFixed(0)} ms (total ${(t2 - t0).toFixed(0)} ms)`;
@@ -1021,11 +1023,13 @@ function paintFrame(doing) {
   drawGround(ctx, covers(ground.world, view) ? ground.world : ground.coarse, view, ground.bg);
   // the placed ornaments, held to the earth; a flight leaves them out once it is more than fly.hold zoom levels from
   // where they were placed, since shrunk they crowd into a blot and grown they smear, and the coast keeps the place
-  if (!flightTo || Math.abs(Math.log2(viewProjection(view).k / ground.anchored.k)) <= fly.hold) drawAnchored(ctx, ground.anchored, ground.bg, view);
+  const anchored = !flightTo || Math.abs(Math.log2(viewProjection(view).k / ground.anchored.k)) <= fly.hold;
+  if (anchored) drawAnchored(ctx, ground.anchored, ground.bg, view);
   drawPictures(ctx);
   drawSheetHandles(ctx);
   drawCards(true);
   placeSheetChips();
+  drawLayer(ctx, viewProjection(view), view.zoom, anchored);
   $('status').textContent = `z${view.zoom.toFixed(1)}: ${doing}, frame ${(performance.now() - t).toFixed(1)} ms`;
 }
 function stopped(delay = 0) {
@@ -1132,20 +1136,44 @@ function placeSheetChips() {
   const w = sheetChips.offsetWidth, h = sheetChips.offsetHeight;
   sheetChips.style.left = `${Math.max(8, Math.min(innerWidth - w - 8, rc.left + x * (rc.width / W) + 4))}px`;
   sheetChips.style.top = `${Math.max(8, Math.min(innerHeight - h - 8, rc.top + y * (rc.height / H) - h - 6))}px`;
-  for (const b of sheetChips.children) b.setAttribute('aria-checked', String(sameSheet(geo.o.sheet, b.dataset.snap == null ? ownSheet(geo.o.id) : geo.o.snaps[b.dataset.snap])));
+  const keep = sheetChips.querySelector('[data-notes=keep]');
+  keep?.setAttribute('aria-pressed', String(notesKept.has(geo.o.id)));
+  for (const b of sheetChips.querySelectorAll('[role=radio]')) b.setAttribute('aria-checked', String(sameSheet(geo.o.sheet, b.dataset.snap == null ? ownSheet(geo.o.id) : geo.o.snaps[b.dataset.snap])));
 }
 function buildSheetChips(o) {
   sheetChips.dataset.id = o.id;
   const own = o.parallels ? ['Parallels', null, 'the chart\'s own placement: its drawn equator and tropic laid on today\'s'] : ['Level', null, 'the chart\'s own placement: level, centred between its coasts'];
-  sheetChips.replaceChildren(...[own, ...o.snaps.map((sn, i) => [sn.label, i, `the scan at its ${sn.label} fit`])].map(([label, i, note]) => {
+  const where = Object.assign(document.createElement('span'), { className: 'where' });
+  where.setAttribute('role', 'radiogroup'); where.setAttribute('aria-label', 'Where the sheet lies');
+  where.replaceChildren(...[own, ...o.snaps.map((sn, i) => [sn.label, i, `the scan at its ${sn.label} fit`])].map(([label, i, note]) => {
     const b = Object.assign(document.createElement('button'), { type: 'button', className: 'chip', textContent: label, title: note });
     b.setAttribute('role', 'radio'); b.dataset.label = label; if (i != null) b.dataset.snap = i;
     return b;
   }));
+  sheetChips.replaceChildren(where, ...notesChips(o));
+}
+// Beside them, for a chart with notes: "Notes · N", which keeps its notes' marks shown until clicked again (off after the
+// pulse, and never on by default), and a ring that plays the pulse again (docs/spec/design.md, "the user asks for the notes back")
+const NOTE_GLYPH = '<svg viewBox="0 0 28 18" aria-hidden="true"><circle cx="14" cy="9" r="6" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="14" cy="9" r="2" fill="currentColor"/></svg>';
+const PULSE_GLYPH = '<svg viewBox="0 0 28 18" aria-hidden="true"><circle cx="14" cy="9" r="2" fill="currentColor"/><circle cx="14" cy="9" r="4.5" fill="none" stroke="#8c2f1e" stroke-width="1.4"/><circle cx="14" cy="9" r="7.5" fill="none" stroke="#8c2f1e" stroke-width="1.1" opacity="0.5"/></svg>';
+function notesChips(o) {
+  const n = noteCount(o.id);
+  if (!n) return [];
+  const keep = Object.assign(document.createElement('button'), { type: 'button', className: 'chip', title: `Show the ${n} notes' marks on the chart, and keep them until clicked again` });
+  keep.innerHTML = `${NOTE_GLYPH}Notes · ${n}`; keep.dataset.notes = 'keep'; keep.setAttribute('aria-pressed', String(notesKept.has(o.id)));
+  const again = Object.assign(document.createElement('button'), { type: 'button', className: 'chip', title: 'Play the notes\' rings again' });
+  again.innerHTML = PULSE_GLYPH; again.dataset.notes = 'again'; again.setAttribute('aria-label', 'Play the notes\' rings again');
+  return [keep, again];
 }
 sheetChips.addEventListener('click', (e) => {
   const b = e.target.closest('.chip'), o = sheetsShown().find((v) => v.id === sheetChips.dataset.id);
   if (!b || !o) return;
+  if (b.dataset.notes) {
+    const on = b.dataset.notes === 'again' || !notesKept.has(o.id);
+    if (b.dataset.notes === 'keep') { if (on) notesKept.add(o.id); else notesKept.delete(o.id); b.setAttribute('aria-pressed', String(on)); }
+    if (on) startPulse([o.id]); else repaintLayer();
+    return;
+  }
   const sn = b.dataset.snap == null ? null : o.snaps[b.dataset.snap];
   style = { ...style, sheets: withSheet(o, sn && { lon: sn.lon, lat: sn.lat, scale: sn.scale, turn: sn.turn }) };
   writeHash(); render();
@@ -1245,7 +1273,7 @@ const TAP_SLOP = 8, TAP_REACH = 22; // CSS px, so a finger is as forgiving on a 
 const cssPx = (n) => n * (W / canvas.getBoundingClientRect().width); // CSS px to the canvas px the view moves in
 const tileEl = $('tile');
 function hideTile() { tileEl.hidden = true; }
-function fillTile(t) {
+function fillTile(t, back = null) { // back: { label, go } for a story opened from a group's list
   const part = (cls, text) => { if (!text) return null; const p = document.createElement('p'); p.className = cls; p.textContent = text; return p; };
   const close = document.createElement('button');
   close.type = 'button'; close.className = 'tile-close'; close.setAttribute('aria-label', 'Close'); close.textContent = '×';
@@ -1277,6 +1305,37 @@ function fillTile(t) {
   const pics = t.sight ? sightPics(t.sight, t.site ?? null) : null; // a sight's pictures, each on the table or off it
   tileEl.replaceChildren(close, ...[head, doubt, meta, text, source, more, pics].filter(Boolean));
   tileEl.setAttribute('aria-label', t.title ?? 'Point of interest');
+  if (back) {
+    const b = Object.assign(document.createElement('button'), { type: 'button', className: 'tile-back', textContent: `‹ ${back.label}` });
+    b.addEventListener('click', back.go);
+    close.after(b);
+    b.focus();
+  }
+}
+// One tap, every story (docs/spec/design.md, "Points of interest close together"): a group's tile, headed by the count and
+// the span of their dates, a line for each story (its mark's glyph, its title, its date) in order of date; a line opens that
+// story's tile in the same place, with a way back to the list.
+const dateKey = (d) => { const r = readDate(d)[0]; return r ? r.y * 12 + (r.m ?? 0) : Infinity; };
+function fillGroup(marks) {
+  const close = Object.assign(document.createElement('button'), { type: 'button', className: 'tile-close', textContent: '×' });
+  close.setAttribute('aria-label', 'Close'); close.addEventListener('click', hideTile);
+  const span = dateSpan(marks.map((m) => m.tile.date).filter(Boolean)), label = `${marks.length} here`;
+  const head = Object.assign(document.createElement('p'), { className: 'tile-title', textContent: span ? `${label} · ${span}` : label });
+  const list = Object.assign(document.createElement('ul'), { className: 'tile-list' });
+  const dpr = devicePixelRatio || 1;
+  for (const m of [...marks].sort((a, b) => dateKey(a.tile.date) - dateKey(b.tile.date))) {
+    const b = Object.assign(document.createElement('button'), { type: 'button' });
+    const glyph = Object.assign(document.createElement('canvas'), { width: 22 * dpr, height: 22 * dpr });
+    const g = glyph.getContext('2d'); g.scale(dpr, dpr); drawMarkGlyph(g, m, 11, 11);
+    const words = document.createElement('span');
+    words.append(Object.assign(document.createElement('span'), { className: 'title', textContent: m.tile.title ?? 'Point of interest' }));
+    if (m.tile.date) words.append(Object.assign(document.createElement('small'), { textContent: m.tile.date }));
+    b.append(glyph, words);
+    b.addEventListener('click', () => fillTile(m.tile, { label, go: () => { fillGroup(marks); tileEl.querySelector('.tile-list button')?.focus(); } }));
+    const li = document.createElement('li'); li.append(b); list.append(li);
+  }
+  tileEl.replaceChildren(close, head, list);
+  tileEl.setAttribute('aria-label', head.textContent);
 }
 // A sight's pictures in its tile, as the person card shows a person's (picsHTML): once its records are loaded and it is
 // the subject chosen; null otherwise
@@ -1303,47 +1362,101 @@ function sightTiles() {
 }
 // the mark at [x, y]: a voyage's event or a sight within reach; else the note on a laid chart whose figure holds the
 // point (its whole hit box, drawn nowhere; the smallest where boxes nest); else a note's centre within reach (notes.mjs pickMark)
-function markAt(at) {
-  const proj = viewProjection(placed), rect = { x0: 0, y0: 0, x1: W, y1: H };
-  const marks = [...(ground?.voyages ?? []).filter((v) => !(v.reveal < 1)).flatMap((v) => [...voyageMarks(v.voyage, proj, rect), ...doubtMarks(v, proj, rect)]), ...(placed.zoom >= POI_ZOOM ? sightHits(proj, rect) : []), ...laidNotes(proj, rect)];
-  return pickMark(marks, at, cssPx(TAP_REACH));
+// `group`: the marks within a tap's reach of each other (groupMarks) that the one found is among, when it is a drawn mark
+const FULL = { x0: 0, y0: 0, x1: W, y1: H };
+function markAt(at) { return pickAt(at).best; }
+function pickAt(at) {
+  const proj = viewProjection(placed), reach = cssPx(TAP_REACH), points = pointMarks(proj, placed.zoom);
+  const doubts = (ground?.voyages ?? []).filter((v) => !(v.reveal < 1)).flatMap((v) => doubtMarks(v, proj, FULL));
+  const best = pickMark([...points, ...doubts, ...laidNotes(proj, FULL)], at, reach);
+  return { best, group: best && points.includes(best) ? groupMarks(points, reach).find((g) => g.marks.includes(best)) : null };
 }
-// The marks the scene drew for the places with a tile, where it drew them (a sight's several marks spread apart, a
-// ruin moved clear of a town): { x, y, h, name, site } in canvas px, centred on the icon, `h` its reach, the icon's
-// half-diagonal and a margin, so a tap anywhere on it or just off it takes it
-const MARK_MARGIN = 8;
-const drawnMarks = (scene) => (scene.lesser ?? []).filter((l) => l.mark && l.label).map((l) => ({ x: l.label.cx, y: l.label.cy, h: 2 * (Math.hypot(l.label.hw, l.label.hh) + MARK_MARGIN), name: l.name, site: l.site ?? null }));
-// Each listed place's mark to hit: the one drawn for it, by name and mark, where the scene drew one; else where the place
-// is (a place lettered on the chart, or a stand-in left out for want of room)
-function sightHits(proj, rect) {
-  const drawn = ground?.marks ?? [];
-  return sightTiles().flatMap((spot) => {
-    const m = drawn.find((d) => d.name === spot.tile.title && d.site === (spot.tile.site ?? null));
-    return m ? [{ x: m.x, y: m.y, h: m.h, tile: spot.tile }] : sightMarks([spot], proj, rect);
-  });
-}
+// The drawn marks a tap finds, which group and take a badge: the shown voyages' events, and the sights at POI_ZOOM and in
+const pointMarks = (proj, zoom) => [...(ground?.voyages ?? []).filter((v) => !(v.reveal < 1)).flatMap((v) => voyageMarks(v.voyage, proj, FULL)),
+  ...(zoom >= POI_ZOOM ? sightsHit(proj, FULL) : [])];
+// Each listed place's mark to hit where the scene drew it (scene.mjs sightHits), in `proj`'s px
+const sightsHit = (proj, rect) => sightHits(sightTiles(), ground?.marks ?? [], proj, rect);
 // The laid charts' notes: each sheet's, less those an upper sheet covers, since only the top sheet's figure shows there
-const laidNotes = (proj, rect) => (ground?.overlays ?? []).flatMap((o, i, all) => noteMarks(o, proj, rect)
-  .filter((m) => !all.slice(i + 1).some((u) => u.mode === 'sheet' && u.sheet && onSheet(u, proj, u.sheet, m.x, m.y))));
+const notesOf = (o, i, all, proj, rect = FULL) => noteMarks(o, proj, rect)
+  .filter((m) => !all.slice(i + 1).some((u) => u.mode === 'sheet' && u.sheet && onSheet(u, proj, u.sheet, m.x, m.y)));
+const laidNotes = (proj, rect) => (ground?.overlays ?? []).flatMap((o, i, all) => notesOf(o, i, all, proj, rect));
 function showTileAt(at) {
-  const best = markAt(at);
+  const { best, group } = pickAt(at);
   if (!best) return;
   tileShown = best.tile;
-  if (best.tile.sight) { // the sight becomes the subject: its pictures onto the table, and into the tile once their records are read
+  const many = group?.marks.length > 1 ? group.marks : null; // a group of one is the mark's own tile
+  if (!many && best.tile.sight) { // the sight becomes the subject: its pictures onto the table, and into the tile once their records are read
     chooseSight(best.tile.sight, DEFAULTS.pictures, best.tile.site ?? null, best.tile);
     if (!sightData) loadSights().then(() => { if (tileShown === best.tile && !tileEl.hidden) showTileAt(at); }, () => {});
   }
-  fillTile(best.tile);
-  // beside the mark's hit area (what a tap on it would hit, markClear) and a margin clear of it: to its right, flipped to its left, below or above
-  // where the window has no room (tileSpot), in client px
+  if (many) fillGroup(many); else fillTile(best.tile);
+  // beside the hit area of the mark, or of every mark of its group (what a tap on it would hit, markClear) and a margin clear
+  // of it: to its right, flipped to its left, below or above where the window has no room (tileSpot), in client px
   const r = canvas.getBoundingClientRect(), kx = r.width / W, ky = r.height / H;
-  const c = markClear(best, cssPx(TAP_REACH)), near = best.hit ? at : [best.x, best.y];
+  const cs = (many ?? [best]).map((m) => markClear(m, cssPx(TAP_REACH))), near = best.hit ? at : [best.x, best.y];
+  const c = { x0: Math.min(...cs.map((b) => b.x0)), y0: Math.min(...cs.map((b) => b.y0)), x1: Math.max(...cs.map((b) => b.x1)), y1: Math.max(...cs.map((b) => b.y1)) };
   tileEl.hidden = false;
   const spot = tileSpot({ x0: r.left + c.x0 * kx, y0: r.top + c.y0 * ky, x1: r.left + c.x1 * kx, y1: r.top + c.y1 * ky },
     [tileEl.offsetWidth, tileEl.offsetHeight], { w: innerWidth, h: innerHeight }, [r.left + near[0] * kx, r.top + near[1] * ky]);
   tileEl.style.left = `${spot.left}px`; tileEl.style.top = `${spot.top}px`;
 }
 addEventListener('keydown', (e) => { if (e.key === 'Escape') hideTile(); });
+
+// ---------------------------------------------------------------- over the map: the badges and the notes' marks
+// Drawn by the page over each placed scene and each moving frame, never part of the scene: the count badge on a group of
+// drawn marks within a tap's reach of each other (gone once the zoom parts them), and a laid chart's notes' marks while
+// they announce themselves (the pulse, rings alone, docs/spec/design.md, "A chart's notes get their moment") or while
+// their Notes chip keeps them. A chart announces its notes when its sheet arrives (shown by any means, or fading in) and again when its
+// name or icon is clicked; afterwards nothing stays drawn on the scan, though a tap still finds every note.
+const notesKept = new Set(); // the charts whose marks their Notes chip keeps shown; off by default, and not in the link
+const seen = new Set(); // the charts shown that have announced their notes since they were shown
+let pulse = null, pulseFrame = 0; // { ids, t0 } while the notes of the charts `ids` announce themselves
+let layerBase = null, layerPlaced = null; // the canvas as last placed, before this layer, and the view placed then
+const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+function drawLayer(g, proj, zoom, badges = true, now = performance.now()) {
+  const p = pulse && notePulse(now - pulse.t0, reducedMotion());
+  g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+  (ground?.overlays ?? []).forEach((o, i, all) => {
+    const kept = notesKept.has(o.id), on = !!p && pulse.ids.has(o.id);
+    if (!kept && !on) return;
+    for (const m of notesOf(o, i, all, proj)) {
+      if (on) drawNoteRing(g, m, p.ring, p.alpha); // the pulse is rings alone: no mark sits on the art
+      if (kept) drawNoteMark(g, m);
+    }
+  });
+  if (badges) for (const { marks, lead } of groupMarks(pointMarks(proj, zoom), cssPx(TAP_REACH))) if (marks.length > 1) drawBadge(g, lead, marks.length);
+  g.restore();
+}
+// A scene just placed: kept without the layer, then the layer over it; a chart shown since the last placement announces its notes
+function placeLayer() {
+  if (!ground || !placed) return;
+  const shown = new Set(ground.overlays.filter((o) => noteCount(o.id)).map((o) => o.id));
+  for (const id of seen) if (!shown.has(id)) seen.delete(id);
+  const fresh = [...shown].filter((id) => !seen.has(id));
+  fresh.forEach((id) => seen.add(id));
+  layerBase ??= Object.assign(document.createElement('canvas'), { width: W, height: H });
+  const b = layerBase.getContext('2d'); b.clearRect(0, 0, W, H); b.drawImage(canvas, 0, 0);
+  layerPlaced = placed;
+  if (fresh.length) startPulse(fresh); else drawLayer(ctx, viewProjection(placed), placed.zoom);
+}
+function startPulse(ids) { // charts announcing while another's rings still play join them, all from the start, none cut off
+  const now = performance.now(), live = pulse && notePulse(now - pulse.t0, reducedMotion()) ? pulse.ids : [];
+  pulse = { ids: new Set([...live, ...ids]), t0: now };
+  if (!pulseFrame) pulseFrame = requestAnimationFrame(pulseStep);
+}
+function pulseStep(now) {
+  pulseFrame = 0;
+  if (pulse && !notePulse(now - pulse.t0, reducedMotion())) pulse = null; // over: one last frame without it
+  if (voyagePen?.t0 == null) repaintLayer(now); // a pen paints every frame, this layer with it
+  if (pulse) pulseFrame = requestAnimationFrame(pulseStep);
+}
+// The layer drawn again: over the scene as placed, or, while the map or a sheet moves, in a moving frame
+function repaintLayer(now = performance.now()) {
+  if (!ground) return;
+  if (view !== placed || held || holding || layerPlaced !== placed || !layerBase) { paintFrame('the notes'); return; }
+  ctx.clearRect(0, 0, W, H); ctx.drawImage(layerBase, 0, 0);
+  drawLayer(ctx, viewProjection(placed), placed.zoom, true, now);
+}
 
 // ---------------------------------------------------------------- going somewhere
 
@@ -2369,6 +2482,7 @@ $('chartList').addEventListener('click', (e) => {
   }
   if (!o) { goTo(chart.view); return; }
   const { [o.id]: _, ...sheets } = style.sheets; // back to its own placement
+  seen.delete(o.id); // its notes announce themselves again once it lands
   setSheets([o.id], sheets, !shown && chartsFresh ? o.id : null, false); // shown alone: every other sheet hides
   goTo({ ...sheetView(o, o.sheet, { w: W, h: H }), title: chart.name }); // the whole sheet framed, 8% clear round it
 });
@@ -2400,7 +2514,7 @@ function fadeSheet(o, proj, me) {
   const base = Object.assign(document.createElement('canvas'), { width: W, height: H });
   base.getContext('2d').drawImage(canvas, 0, 0);
   const ms = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 500, t0 = performance.now();
-  const step = (now) => {
+  const step = (now, first = false) => {
     o.alpha = ms ? Math.min(1, (now - t0) / ms) : 1;
     if (me !== run) { o.alpha = 1; return; }
     ctx.clearRect(0, 0, W, H);
@@ -2408,9 +2522,9 @@ function fadeSheet(o, proj, me) {
     drawSheet(ctx, o, proj, o.sheet);
     drawPictures(ctx);
     drawSheetHandles(ctx);
-    if (o.alpha < 1) requestAnimationFrame(step);
+    if (o.alpha < 1) { drawLayer(ctx, proj, placed.zoom); requestAnimationFrame(step); } else if (!first) placeLayer(); // whole: its notes announce themselves
   };
-  step(t0);
+  step(t0, true);
 }
 
 // Other traditions (data/charts/world.json), shown only on a `charts=all` link: a row per chart, its title, culture and date,
@@ -2561,7 +2675,9 @@ locate.addEventListener('click', () => {
 });
 
 for (const id of Object.values(KNOB_SLIDERS)) $(id).addEventListener('input', (e) => { e.target.dataset.set = '1'; }); // moved, so set
-for (const id of ['debug', 'overlap', 'overlayMode', 'sheetHides', 'overlayOpacity', ...Object.values(KNOB_CHIPS), ...Object.values(KNOB_SLIDERS), 'projection', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'scaleBorder', 'land', 'islands', 'seaTint', 'rivers', 'lakes', 'trees', 'mountains', 'hills', 'continentsZoom', 'regions', 'regionSet', 'regionsZoom', 'titleMode', 'townSize', 'voyageWidth']) $(id).addEventListener('input', readControls);
+// either set of projection chips drives (first, so readControls sees both agree) the other
+for (const [from, to] of [['projection', 'projectionCharts'], ['projectionCharts', 'projection']]) $(from).addEventListener('input', () => { $(to).value = $(from).value; });
+for (const id of ['debug', 'overlap', 'overlayMode', 'sheetHides', 'overlayOpacity', ...Object.values(KNOB_CHIPS), ...Object.values(KNOB_SLIDERS), 'projection', 'projectionCharts', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'scaleBorder', 'land', 'islands', 'seaTint', 'rivers', 'lakes', 'trees', 'mountains', 'hills', 'continentsZoom', 'regions', 'regionSet', 'regionsZoom', 'titleMode', 'townSize', 'voyageWidth']) $(id).addEventListener('input', readControls);
 let typing = 0; // a typed title is placed when the typing pauses, not on every key: a placement takes up to a few hundred ms
 $('title').addEventListener('input', () => { clearTimeout(typing); typing = setTimeout(readControls, 400); });
 addEventListener('hashchange', () => { dealing = null; layout = layoutFromHash(); showLayout(); hoverOpen = hoverFromHash(); showHover(); view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); showVoyage(); showPeople(); render(); });
