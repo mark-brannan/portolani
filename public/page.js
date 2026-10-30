@@ -1139,6 +1139,7 @@ canvas.addEventListener('pointerdown', (e) => {
   cancelAnimationFrame(flight); flightTo = null; // a touch takes over from a flight
   if (!pointers.size && e.isPrimary && !held && !holding) {
     const p = toCanvas(e.clientX, e.clientY), pic = pictureHit(p), hit = pic ? null : sheetHit(p);
+    if (looking != null && pic?.i !== looking) { endLook(); return; } // a press off the picture looked at lays it back, and only that
     if (pic) holdPicture(pic, p); else if (hit) { hideTile(); holdSheet(hit, p); sheetTap = p; }
     if (pic || hit) { canvas.setPointerCapture(e.pointerId); canvas.style.cursor = 'grabbing'; return; }
   }
@@ -1158,7 +1159,7 @@ canvas.addEventListener('pointermove', (e) => {
   if (holding) { dragPicture(toCanvas(e.clientX, e.clientY)); return; }
   if (held) { const p = toCanvas(e.clientX, e.clientY); if (sheetTap && Math.hypot(p[0] - sheetTap[0], p[1] - sheetTap[1]) > cssPx(TAP_SLOP)) sheetTap = null; if (!sheetTap) dragSheet(p); return; }
   if (carried) { carried.corner = cornerAt(toCanvas(e.clientX, e.clientY)); showSnap(carried.corner, carried.w, carried.h); return; }
-  if (!pointers.size) { const p = toCanvas(e.clientX, e.clientY); canvas.style.cursor = cardAt(p) ? 'grab' : markAt(p) ? 'pointer' : { move: 'grab', turn: 'crosshair', size: 'nwse-resize', flip: 'pointer', link: 'pointer' }[(pictureHit(p) ?? sheetHit(p))?.kind] ?? ''; return; }
+  if (!pointers.size) { const p = toCanvas(e.clientX, e.clientY); const pic = pictureHit(p)?.kind; canvas.style.cursor = cardAt(p) ? 'grab' : pic ? ({ move: 'grab', look: 'zoom-in', flip: 'pointer', link: 'pointer', away: 'pointer' }[pic] ?? '') : markAt(p) ? 'pointer' : { move: 'grab', turn: 'crosshair', size: 'nwse-resize' }[sheetHit(p)?.kind] ?? ''; return; } // a picture over the marks under it, as a press finds it
   if (!pointers.has(e.pointerId)) return;
   const p = toCanvas(e.clientX, e.clientY);
   if (tap && Math.hypot(p[0] - tap[0], p[1] - tap[1]) > cssPx(TAP_SLOP)) tap = null;
@@ -1174,7 +1175,7 @@ canvas.addEventListener('pointermove', (e) => {
   }
 });
 const lift = (e) => {
-  if (holding) { canvas.style.cursor = ''; dropPicture(); return; }
+  if (holding) { canvas.style.cursor = ''; dropPicture(e); return; }
   if (held) { const at = sheetTap; sheetTap = null; canvas.style.cursor = ''; if (at) { held = null; if (e.type === 'pointerup') showTileAt(at); } else dropSheet(); return; } // a tap moved nothing: no render, which would hide the tile
   if (carried) { // dropped: the corner is kept, the sheet placed again
     const { key, corner } = carried;
@@ -1593,17 +1594,24 @@ $('peopleStrip').addEventListener('click', (e) => {
   if (!b) return;
   const id = b.dataset.person === style.person ? null : b.dataset.person;
   style = { ...style, person: id, pictures: DEFAULTS.pictures, pictureAt: {} };
-  flips.clear(); links.clear();
+  flips.clear(); links.clear(); raised = []; looking = null;
   showPeople(); writeHash(); render();
   if (id) flyToPerson(id);
 });
 $('personCard').addEventListener('click', (e) => {
   const pic = e.target.closest('[data-pic]'), p = personOf(style.person);
-  if (!pic || !p) return;
-  const i = Number(pic.dataset.pic), shown = picturesOf(p), on = shown.includes(i);
-  style = { ...style, pictures: on ? shown.filter((k) => k !== i) : [...shown, i].sort((a, b) => a - b) };
-  showPeople(); writeHash(); render();
+  if (pic && p) setOnTable(Number(pic.dataset.pic), !picturesOf(p).includes(Number(pic.dataset.pic)));
 });
+// A picture onto the table (on top of the pile, as the last one touched) or off it, put away face up; choosing the
+// person again deals every picture back
+function setOnTable(i, on) {
+  const p = personOf(style.person);
+  if (!p) return;
+  const shown = picturesOf(p).filter((k) => k !== i);
+  style = { ...style, pictures: on ? [...shown, i].sort((a, b) => a - b) : shown };
+  if (on) raise(i); else { flips.delete(i); links.delete(i); raised = raised.filter((k) => k !== i); if (focusedPic === i) focusedPic = null; if (looking === i) looking = null; }
+  showPeople(); writeHash(); render();
+}
 // The box round a person's birth, death and voyages, once per person
 async function frameOfPerson(p) {
   if (!frames.has(p.id)) {
@@ -1621,18 +1629,30 @@ const picturesOf = (p) => style.pictures ?? p.images.map((_, i) => i);
 const ASKEW = [-4, 3, -2, 5, -3, 2], NUDGE = [0.06, -0.05, 0.08, -0.03, 0.04, -0.07];
 const DEAL_MS = 450, DEAL_GAP = 110, FLIP_MS = 320;
 const ease = (t) => 1 - (1 - t) ** 3;
-// The shown pictures with their images loaded: [{ i, o, sheet, im }], `o` an overlay of one piece (overlays.mjs) and
-// `sheet` where it lies: where it was dragged, else its own place under the person's frame (picturePlaces)
+// On a wide screen the pictures are dealt larger than on a phone, each laid a quarter over the one before so a long row
+// still fits the window (picturePlaces' `grow` and `overlap`)
+const PICTURE_GROW = 1.6, PICTURE_OVERLAP = 0.25, pictureLay = () => (phone.matches ? [1, 0] : [PICTURE_GROW, PICTURE_OVERLAP]);
+// The pile: the pictures touched, grabbed or focused, the last on top; the rest lie under them in the record's order
+let raised = [];
+let pileFor = null; // the person the pile, the picture looked at and the turned ones are for
+const raise = (i) => { const was = raised.at(-1); raised = [...raised.filter((k) => k !== i), i]; return was !== i; };
+// The shown pictures with their images loaded, bottom of the pile first: [{ i, o, sheet, im }], `o` an overlay of one
+// piece (overlays.mjs) and `sheet` where it lies: where it was dragged, else its own place under the person's frame
+// (picturePlaces)
 function shownPictures() {
+  if (pileFor !== style.person) { pileFor = style.person; raised = []; looking = null; flips.clear(); links.clear(); } // another person, by any road
   const p = personOf(style.person), f = p && frames.get(p.id);
-  if (!f) return [];
-  const shown = picturesOf(p).filter((i) => pictureSize(p, i)), places = picturePlaces(f, shown.map((i) => pictureSize(p, i)));
-  return shown.map((i, k) => {
+  if (!f) { looking = null; return []; }
+  const shown = picturesOf(p).filter((i) => pictureSize(p, i)), places = picturePlaces(f, shown.map((i) => pictureSize(p, i)), ...pictureLay());
+  const list = shown.map((i, k) => {
     const img = pictureImgs.get(`${p.id}/${i}`), [, h] = pictureSize(p, i);
     const at = style.pictureAt[i] ?? { ...places[k], lat: places[k].lat + NUDGE[i % 6] * h * places[k].scale };
     return img && { i, k, im: p.images[i], o: { img, width: img.width, height: img.height, scale: 1 }, sheet: { ...at, turn: 0 } };
   }).filter(Boolean);
+  if (looking != null && !list.some((pic) => pic.i === looking)) looking = null; // put away, or gone from the link
+  return list.sort((a, b) => pileOf(a.i) - pileOf(b.i)); // stable: the untouched keep their order, under the touched
 }
+function pileOf(i) { return i === looking ? Infinity : raised.indexOf(i); } // the one looked at over all
 // The chosen person's frame and shown pictures loaded; true when anything new came in (the map is then drawn again)
 async function preparePictures() {
   const id = style.person;
@@ -1658,131 +1678,257 @@ async function flyToPerson(id) {
   const shown = picturesOf(p).filter((i) => pictureSize(p, i)), sizes = shown.map((i) => pictureSize(p, i));
   goTo(viewContaining(withPictures(f, picturePlaces(f, sizes), sizes), { w: W, h: H }));
 }
-// A picture on the canvas: its centre, its turn in radians and its size in canvas px, before any deal or flip
+// A picture on the canvas: its centre, its turn in radians and its size in canvas px, before any deal or flip. The one
+// looked at lies upright in the middle of the part of the canvas in the window, as large as LOOK_FILL of that allows
+// and never larger than its own pixels shown one to a CSS px.
+const LOOK_FILL = 0.85;
+let looking = null; // the picture looked at, by its index
 function pictureBox(pic, proj) {
+  if (pic.i === looking) {
+    const r = canvas.getBoundingClientRect(), kx = W / r.width, ky = H / r.height;
+    const x0 = Math.max(0, -r.left) * kx, x1 = (Math.min(innerWidth, r.right) - r.left) * kx, y0 = Math.max(0, -r.top) * ky, y1 = (Math.min(innerHeight, r.bottom) - r.top) * ky;
+    const k = Math.min(((x1 - x0) * LOOK_FILL) / pic.o.width, ((y1 - y0) * LOOK_FILL) / pic.o.height, cssPx(1));
+    return { x: (x0 + x1) / 2, y: (y0 + y1) / 2, a: 0, w: pic.o.width * k, h: pic.o.height * k };
+  }
   const c = sheetCorners(pic.o, proj, pic.sheet);
   if (!c) return null;
   return { x: (c[0][0] + c[2][0]) / 2, y: (c[0][1] + c[2][1]) / 2, a: (ASKEW[pic.i % 6] * Math.PI) / 180, w: c[1][0] - c[0][0], h: c[3][1] - c[0][1] };
 }
-// The two squares at a picture's foot, in its own frame: the one at the corner resizes it, the one beside it turns it over
-const handlesOf = (b) => ({ size: [b.w / 2, b.h / 2], flip: [b.w / 2 - 2.6 * HANDLE, b.h / 2] });
-// The back of a picture, in its own frame: what it is, when, by whom, under what licence, its note, and its Commons page
+// The round buttons on a picture's lower edge, in its own frame, from its right corner leftward: on the table Look and
+// its Commons link; looked at face up, Put away, Turn over and the link; looked at face down, Turn over (the back
+// carries its own link and Put away). Each glyph is one constant.
+const FOOT_R = 13; // CSS px, a button's radius
+const LOOK_GLYPH = '👁\uFE0E', FLIP_GLYPH = '⟳', AWAY_GLYPH = '✘'; // put away: an X for buried treasure (☠ the alternative)
+const SYMBOLS = "'IM Fell English', Georgia, 'Segoe UI Symbol', 'Apple Symbols', 'Noto Sans Symbols 2', 'Noto Sans Symbols', 'DejaVu Sans', serif";
+function feetOf(pic, b) {
+  const kinds = pic.i !== looking ? ['look', 'link'] : flips.get(pic.i)?.back ? ['flip'] : ['away', 'flip', 'link'], r = cssPx(FOOT_R);
+  return kinds.map((kind, n) => ({ kind, at: [b.w / 2 - r * 0.4 - n * r * 2.4, b.h / 2] }));
+}
+// ⧉ (in no font of the page's stack, so drawn): two joined squares in the link's red, in an em box of `size` at x, y
+function linkGlyph(g, x, y, size) {
+  const q = size * 0.5;
+  g.save(); g.strokeStyle = PERSON_LINK; g.lineWidth = Math.max(1, size * 0.08);
+  g.strokeRect(x, y + size * 0.42, q, q); g.strokeRect(x + size * 0.3, y + size * 0.12, q, q);
+  g.restore();
+}
+// The back of a picture, in its own frame: what it is, when, by whom, under what licence and its note, in type sized in
+// CSS px so it reads at any zoom (the largest of BACK_TYPE that fits the card, else the smallest, clipped above the
+// foot), then a glyph that opens its Commons page, and at its foot the labelled button that puts it away. Returns, in
+// the same frame, where a tap opens the page and where one puts it away.
+const BACK_TYPE = [20, 18, 16, 15, 14, 13, 12]; // CSS px; the People drawer's own card text is 13 px
+const LINK_GLYPH = '⧉', LINK_SAYS = 'Its page on Wikimedia Commons', AWAY_SAYS = 'Put away', LOOK_SAYS = 'Look', FLIP_SAYS = 'Turn over';
+const pageOf = (im) => peopleData.pictures[im.file]?.page ?? commonsPage(im.file);
 function drawBack(g, im, w, h) {
-  const pad = Math.max(6, w * 0.06), size = Math.max(11, Math.min(16, w / 13)), lines = [];
-  g.font = `italic ${size}px ${getComputedStyle(document.body).getPropertyValue('--serif') || 'serif'}`;
-  const wrap = (text) => {
-    let line = '';
-    for (const word of String(text).split(/\s+/)) {
-      const next = line ? `${line} ${word}` : word;
-      if (g.measureText(next).width > w - 2 * pad && line) { lines.push(line); line = word; } else line = next;
-    }
-    if (line) lines.push(line);
-  };
-  wrap(pictureCredit(im));
-  if (im.note) { lines.push(''); wrap(im.note); }
+  const pad = Math.max(cssPx(8), w * 0.06), family = getComputedStyle(document.body).getPropertyValue('--serif') || 'serif';
+  let size = 0, lines = [];
+  for (const css of BACK_TYPE) {
+    size = cssPx(css); g.font = `italic ${size}px ${family}`; lines = [];
+    const wrap = (text) => {
+      let line = '';
+      for (const word of String(text).split(/\s+/)) {
+        const next = line ? `${line} ${word}` : word;
+        if (g.measureText(next).width > w - 2 * pad && line) { lines.push(line); line = word; } else line = next;
+      }
+      if (line) lines.push(line);
+    };
+    wrap(pictureCredit(im));
+    if (im.note) { lines.push(''); wrap(im.note); }
+    if (2 * pad + (lines.length + 1) * size * 1.3 + size * 1.8 <= h) break; // the words, the glyph's line and the foot fit
+  }
+  const left = -w / 2 + pad, lead = size * 1.3, bh = size * 1.6, by = h / 2 - pad - bh;
+  g.save(); g.beginPath(); g.rect(-w / 2, -h / 2, w, by - size * 0.2 + h / 2); g.clip();
   g.fillStyle = style.ink; g.textBaseline = 'top';
-  lines.forEach((l, n) => g.fillText(l, -w / 2 + pad, -h / 2 + pad + n * size * 1.3));
-  const linkY = -h / 2 + pad + (lines.length + 1) * size * 1.3, label = 'Its page on Wikimedia Commons ↗', lw = g.measureText(label).width;
-  g.fillStyle = PERSON_LINK; g.fillText(label, -w / 2 + pad, linkY);
-  g.fillRect(-w / 2 + pad, linkY + size * 1.05, lw, 1);
-  return [-w / 2 + pad, linkY - 3, lw, size * 1.3 + 6]; // where a tap opens the page
+  lines.forEach((l, n) => g.fillText(l, left, -h / 2 + pad + n * lead));
+  // the glyph after the last word where it fits on that line, else on the next
+  const last = lines.at(-1) ?? '', gap = g.measureText(' ').width * 1.6, gw = size * 0.85;
+  const inline = left + g.measureText(last).width + gap + gw <= w / 2 - pad;
+  let gx = inline ? left + g.measureText(last).width + gap : left, gy = -h / 2 + pad + (inline ? lines.length - 1 : lines.length) * lead;
+  const fits = gy + size <= by - size * 0.2;
+  if (fits) linkGlyph(g, gx, gy, size);
+  g.restore();
+  // the button at the foot: the put-away glyph, and its word where the card leaves room left of Turn over (and of the
+  // link, when the words leave it no room above)
+  g.font = `${size}px ${family}`;
+  const icon = size * 1.1, tw = g.measureText(AWAY_SAYS).width, room = w / 2 - cssPx(FOOT_R) * 1.6 - pad - left - (fits ? 0 : gw + size * 0.6);
+  const bw = size * 0.5 + icon + (size * 0.4 + tw <= room - size * 1.4 - icon ? size * 0.4 + tw : 0) + size * 0.5;
+  if (!fits) { gx = left + bw + size * 0.6; gy = by + (bh - size) / 2; linkGlyph(g, gx, gy, size); }
+  const link = [gx - size * 0.35, gy - size * 0.35, gw + size * 0.7, size * 1.7]; // a tap a little off the glyph still opens it
+  g.save(); g.lineWidth = Math.max(1, cssPx(1)); g.strokeStyle = style.ink; g.fillStyle = style.parchment;
+  g.beginPath(); g.roundRect(left, by, bw, bh, bh / 2); g.fill(); g.globalAlpha = 0.7; g.stroke(); g.globalAlpha = 1;
+  g.fillStyle = style.ink; g.textBaseline = 'middle'; g.textAlign = 'center';
+  g.font = `${icon}px ${SYMBOLS}`; g.fillText(AWAY_GLYPH, left + size * 0.5 + icon / 2, by + bh / 2);
+  g.textAlign = 'left'; g.font = `${size}px ${family}`;
+  if (bw > size * 1.5 + icon) g.fillText(AWAY_SAYS, left + size * 0.9 + icon, by + bh / 2);
+  g.restore();
+  return { link, away: [left, by, bw, bh] };
 }
 const PERSON_LINK = '#8c2f1e';
-const links = new Map(); // a turned picture's link, in its own frame, by its index
+const links = new Map(); // a turned picture's link and put-away button ({ link, away }), in its own frame, by its index
+let focusedPic = null; // the picture whose item in the canvas's fallback has the keyboard's focus, ringed
 // The pictures over everything on the map: each on a parchment mount with a soft shadow and an ink rule, a little
-// askew, dealt in one after another when a person is chosen; at its foot the square that resizes it and, beside it,
-// the one that turns it over to its back.
+// askew, dealt in one after another when a person is chosen, the one looked at upright and large over the rest; on
+// each one's lower edge its round buttons (feetOf).
 function drawPictures(g) {
   const list = shownPictures();
+  mirrorPictures(list);
   if (!list.length) { dealt = null; return; }
   const now = performance.now(), proj = viewProjection(view), m = 5;
   if (dealt?.person !== style.person) dealt = { person: style.person, start: now };
   let moving = false;
-  const feet = []; // the squares, drawn over every picture so none hides another's
+  // in layers: the table, then the picture looked at; each layer's buttons over its pictures, so none hides another's
+  const layers = looking == null ? [list] : [list.filter((pic) => pic.i !== looking), list.filter((pic) => pic.i === looking)];
+  const r = cssPx(FOOT_R), GLYPHS = { look: LOOK_GLYPH, flip: FLIP_GLYPH, away: AWAY_GLYPH };
   g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
-  for (const pic of list) {
-    const b = pictureBox(pic, proj);
-    if (!b) continue;
-    const t = ease(Math.max(0, Math.min(1, (now - dealt.start - pic.k * DEAL_GAP) / DEAL_MS)));
-    if (t <= 0) { moving = true; continue; }
-    const flip = flips.get(pic.i), ft = flip ? Math.min(1, (now - flip.start) / FLIP_MS) : 1;
-    if (t < 1 || ft < 1) moving = true;
-    const back = flip ? (flip.back ? ft >= 0.5 : ft < 0.5) : false, squash = flip ? Math.abs(Math.cos(Math.PI * ft)) : 1;
-    // dealt from the top right, where the drawer is, turning as it lands
-    const x = W + (b.x - W) * t, y = b.y * t, s = 0.35 + 0.65 * t;
-    g.save(); g.translate(x, y); g.rotate(b.a + (1 - t) * 0.6); g.scale(s * Math.max(0.02, squash), s);
-    g.save(); g.shadowColor = 'rgba(59,42,26,0.35)'; g.shadowBlur = 8; g.shadowOffsetY = 2; g.fillStyle = style.parchment; g.fillRect(-b.w / 2 - m, -b.h / 2 - m, b.w + 2 * m, b.h + 2 * m); g.restore();
-    if (back) links.set(pic.i, drawBack(g, pic.im, b.w, b.h));
-    else { links.delete(pic.i); g.drawImage(pic.o.img, -b.w / 2, -b.h / 2, b.w, b.h); }
-    g.save(); g.strokeStyle = style.ink; g.globalAlpha = 0.7; g.lineWidth = 1; g.strokeRect(-b.w / 2 - m, -b.h / 2 - m, b.w + 2 * m, b.h + 2 * m); g.restore();
-    if (t === 1 && ft === 1) feet.push([b, x, y]);
-    g.restore();
-  }
-  for (const [b, x, y] of feet) {
-    const { size: [sx, sy], flip: [fx, fy] } = handlesOf(b), r = HANDLE;
-    g.save(); g.translate(x, y); g.rotate(b.a);
-    g.lineWidth = 1.5; g.strokeStyle = style.ink; g.fillStyle = style.parchment;
-    for (const [hx, hy] of [[sx, sy], [fx, fy]]) { g.beginPath(); g.rect(hx - r, hy - r, 2 * r, 2 * r); g.fill(); g.stroke(); }
-    g.beginPath(); g.moveTo(sx - r * 0.5, sy + r * 0.5); g.lineTo(sx + r * 0.5, sy - r * 0.5); g.stroke();
-    // the turn-over mark: a curved arrow
-    g.beginPath(); g.arc(fx, fy, r * 0.5, Math.PI * 0.15, Math.PI * 1.55); g.stroke();
-    g.beginPath(); g.moveTo(fx + r * 0.55, fy - r * 0.05); g.lineTo(fx + r * 0.42, fy + r * 0.35); g.lineTo(fx + r * 0.1, fy + r * 0.1); g.stroke();
-    g.restore();
+  for (const layer of layers) {
+    const feet = [];
+    for (const pic of layer) {
+      const b = pictureBox(pic, proj);
+      if (!b) continue;
+      const t = ease(Math.max(0, Math.min(1, (now - dealt.start - pic.k * DEAL_GAP) / DEAL_MS)));
+      if (t <= 0) { moving = true; continue; }
+      const flip = flips.get(pic.i), ft = flip ? Math.min(1, (now - flip.start) / FLIP_MS) : 1;
+      if (t < 1 || ft < 1) moving = true;
+      const back = flip ? (flip.back ? ft >= 0.5 : ft < 0.5) : false, squash = flip ? Math.abs(Math.cos(Math.PI * ft)) : 1;
+      // dealt from the top right, where the drawer is, turning as it lands
+      const x = W + (b.x - W) * t, y = b.y * t, s = 0.35 + 0.65 * t;
+      g.save(); g.translate(x, y); g.rotate(b.a + (1 - t) * 0.6); g.scale(s * Math.max(0.02, squash), s);
+      g.save(); g.shadowColor = 'rgba(59,42,26,0.35)'; g.shadowBlur = 8; g.shadowOffsetY = 2; g.fillStyle = style.parchment; g.fillRect(-b.w / 2 - m, -b.h / 2 - m, b.w + 2 * m, b.h + 2 * m); g.restore();
+      if (back) links.set(pic.i, drawBack(g, pic.im, b.w, b.h));
+      else { links.delete(pic.i); g.drawImage(pic.o.img, -b.w / 2, -b.h / 2, b.w, b.h); }
+      g.save(); g.strokeStyle = style.ink; g.globalAlpha = 0.7; g.lineWidth = 1; g.strokeRect(-b.w / 2 - m, -b.h / 2 - m, b.w + 2 * m, b.h + 2 * m); g.restore();
+      if (focusedPic === pic.i) { const f = m + cssPx(3); g.save(); g.strokeStyle = PERSON_LINK; g.lineWidth = cssPx(2.5); g.strokeRect(-b.w / 2 - f, -b.h / 2 - f, b.w + 2 * f, b.h + 2 * f); g.restore(); }
+      if (t === 1 && ft === 1) feet.push([pic, b, x, y]);
+      g.restore();
+    }
+    for (const [pic, b, x, y] of feet) {
+      g.save(); g.translate(x, y); g.rotate(b.a);
+      g.lineWidth = Math.max(1, cssPx(1.2)); g.strokeStyle = style.ink; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = `${r * 1.15}px ${SYMBOLS}`;
+      for (const { kind, at: [fx, fy] } of feetOf(pic, b)) {
+        g.fillStyle = style.parchment; g.beginPath(); g.arc(fx, fy, r, 0, 2 * Math.PI); g.fill(); g.stroke();
+        if (kind === 'link') linkGlyph(g, fx - r * 0.42, fy - r * 0.55, r * 1.1);
+        else { g.fillStyle = style.ink; g.fillText(GLYPHS[kind], fx, fy + r * 0.05); }
+      }
+      g.restore();
+    }
   }
   g.restore();
   if (moving && !dealFrame) dealFrame = requestAnimationFrame(() => { dealFrame = 0; if (ground) paintFrame('pictures dealt'); });
 }
 let dealFrame = 0;
-// The picture under canvas px p, the top one first: by its squares to resize or turn it over, by its link when it
-// lies face down, anywhere else on it to move it
+// The picture under canvas px p, the top one first: by a button on its edge (feetOf), by its link or its put-away
+// button when it lies face down, anywhere else on it to move it (or, the one looked at, to hold it where it is)
 function pictureHit([x, y]) {
   const list = shownPictures();
   if (!list.length) return null;
-  const proj = viewProjection(view), reach = HANDLE + cssPx(6);
+  const proj = viewProjection(view), reach = cssPx(FOOT_R + 3);
   const local = list.reverse().map((pic) => {
     const b = pictureBox(pic, proj);
     if (!b) return null;
     const dx = x - b.x, dy = y - b.y, c = Math.cos(-b.a), s = Math.sin(-b.a);
     return { pic, b, u: dx * c - dy * s, v: dx * s + dy * c };
   }).filter(Boolean);
-  for (const { pic, b, u, v } of local) { // the squares lie over every picture, so they are found first
-    const hs = handlesOf(b);
-    if (Math.hypot(u - hs.size[0], v - hs.size[1]) <= reach) return { kind: 'size', ...pic, proj };
-    if (Math.hypot(u - hs.flip[0], v - hs.flip[1]) <= reach) return { kind: 'flip', ...pic, proj };
-  }
-  for (const { pic, b, u, v } of local) {
-    const link = links.get(pic.i);
-    if (link && u >= link[0] && u <= link[0] + link[2] && v >= link[1] && v <= link[1] + link[3]) return { kind: 'link', ...pic, proj };
-    if (Math.abs(u) <= b.w / 2 + 5 && Math.abs(v) <= b.h / 2 + 5) return { kind: 'move', ...pic, proj };
+  // the layers as drawn (drawPictures), the picture looked at first; in each, the buttons lie over every picture
+  for (const layer of looking == null ? [local] : [local.filter(({ pic }) => pic.i === looking), local.filter(({ pic }) => pic.i !== looking)]) {
+    for (const { pic, b, u, v } of layer) {
+      const foot = feetOf(pic, b).find(({ at }) => Math.hypot(u - at[0], v - at[1]) <= reach);
+      if (foot) return { kind: foot.kind, ...pic, proj };
+    }
+    for (const { pic, b, u, v } of layer) {
+      const back = links.get(pic.i), on = (r) => r && u >= r[0] && u <= r[0] + r[2] && v >= r[1] && v <= r[1] + r[3];
+      if (on(back?.away)) return { kind: 'away', ...pic, proj };
+      if (on(back?.link)) return { kind: 'link', ...pic, proj };
+      if (Math.abs(u) <= b.w / 2 + 5 && Math.abs(v) <= b.h / 2 + 5) return { kind: pic.i === looking ? 'held' : 'move', ...pic, proj };
+    }
   }
   return null;
 }
 function holdPicture(hit, p) {
   holding = { ...hit, start: p, centre: hit.proj.project(hit.sheet.lon, hit.sheet.lat) };
   hideTile();
+  if (raise(hit.i)) repaint('a picture lifted'); // grabbed, so on top
 }
 function dragPicture(p) {
   const { kind, proj, start, sheet, centre, i } = holding;
-  if (kind === 'flip' || kind === 'link') return;
-  let next;
-  if (kind === 'move') {
-    const [lon, lat] = proj.invert(centre[0] + p[0] - start[0], centre[1] + p[1] - start[1]);
-    next = { lon, lat: Math.max(-85, Math.min(85, lat)), scale: sheet.scale };
-  } else {
-    const r = Math.hypot(p[0] - centre[0], p[1] - centre[1]) / Math.max(1, Math.hypot(start[0] - centre[0], start[1] - centre[1]));
-    next = { lon: sheet.lon, lat: sheet.lat, scale: Math.max(sheet.scale / 8, Math.min(sheet.scale * 8, sheet.scale * r)) };
-  }
+  if (kind !== 'move') return;
+  const [lon, lat] = proj.invert(centre[0] + p[0] - start[0], centre[1] + p[1] - start[1]);
+  const next = { lon, lat: Math.max(-85, Math.min(85, lat)), scale: sheet.scale };
   style = { ...style, pictureAt: { ...style.pictureAt, [i]: next } };
   if (!sheetFrameId) sheetFrameId = requestAnimationFrame(() => { sheetFrameId = 0; paintFrame('a picture held'); });
 }
-function dropPicture() {
+function dropPicture(e) {
   const { kind, i, im } = holding;
   holding = null;
   cancelAnimationFrame(sheetFrameId); sheetFrameId = 0;
-  if (kind === 'flip') { flips.set(i, { back: !flips.get(i)?.back, start: performance.now() }); paintFrame('a picture turned over'); return; }
-  if (kind === 'link') { window.open(peopleData.pictures[im.file]?.page ?? commonsPage(im.file), '_blank', 'noopener'); return; }
+  if (kind !== 'move') { // a button acts on a release over it, as a page's button does, and not on a cancel or a drag off it
+    const hit = e.type === 'pointerup' ? pictureHit(toCanvas(e.clientX, e.clientY)) : null;
+    if (hit?.kind !== kind || hit.i !== i) return;
+  }
+  if (kind === 'flip') { turnOver(i); return; }
+  if (kind === 'link') { window.open(pageOf(im), '_blank', 'noopener'); return; }
+  if (kind === 'away') { setOnTable(i, false); return; }
+  if (kind === 'look') { lookAt(i); return; }
+  if (kind === 'held') return;
   writeHash(); render();
 }
+const repaint = (doing) => { if (ground) paintFrame(doing); };
+// Look: the picture upright and large in the middle of the window, over the rest; a press off it, or Esc, lays it back
+// on the table face up
+function lookAt(i) { looking = i; raise(i); hideTile(); repaint('a picture looked at'); }
+function endLook() {
+  if (looking == null) return;
+  flips.delete(looking); links.delete(looking); looking = null;
+  repaint('a picture laid back');
+}
+function turnOver(i) {
+  if (looking !== i) lookAt(i); // only a picture looked at turns over
+  flips.set(i, { back: !flips.get(i)?.back, start: performance.now() });
+  repaint('a picture turned over');
+}
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && looking != null) { endLook(); e.stopImmediatePropagation(); } }, true); // first, and only that: the open drawer stays
+// The pictures on the map again inside the canvas, as its fallback content: what a screen reader reads and the keyboard
+// reaches, one item per picture in the record's order with its back's words, the glyph link to its Commons page
+// (labelled in full) and its Look, Turn over and Put away buttons. `data-z` is its place in the pile, the top one
+// highest. Focus on an item lifts its picture to the top and rings it.
+const keys = $('pictureKeys');
+let keysFor = '', focusNext = null;
+function mirrorPictures(list) {
+  const now = `${style.person}|${list.map((pic) => pic.i).sort((a, b) => a - b)}`;
+  if (now !== keysFor) {
+    keysFor = now;
+    const at = document.activeElement, li = keys.contains(at) && at.closest('[data-pic]'); // the focus, kept across the rebuild
+    const was = li && (at.tagName === 'A' ? `[data-pic="${li.dataset.pic}"] a` : `[data-${Object.keys(at.dataset)[0]}="${li.dataset.pic}"]`);
+    keys.innerHTML = [...list].sort((a, b) => a.i - b.i).map(({ i, im }) => `<li data-pic="${i}"><span>${escapeHTML(pictureCredit(im))}${im.note ? `. ${escapeHTML(im.note)}` : ''}</span> ` +
+      `<a href="${escapeHTML(pageOf(im))}" target="_blank" rel="noopener" title="${LINK_SAYS}" aria-label="${LINK_SAYS}">${LINK_GLYPH}</a> ` +
+      ['look', 'flip', 'away'].map((k) => { const says = { look: LOOK_SAYS, flip: FLIP_SAYS, away: AWAY_SAYS }[k];
+        return `<button type="button" data-${k}="${i}"${k === 'look' ? ' aria-pressed="false"' : ''} aria-label="${says}: ${escapeHTML(pictureCredit(im))}">${says}</button>`; }).join(' ') + '</li>').join('');
+    if (focusNext != null) { keys.querySelector(`[data-away="${focusNext}"]`)?.focus(); focusNext = null; } else if (was) keys.querySelector(was)?.focus();
+  }
+  list.forEach((pic, n) => {
+    const li = keys.querySelector(`[data-pic="${pic.i}"]`);
+    if (li && li.dataset.z !== String(n)) li.dataset.z = String(n);
+    li?.querySelector('[data-look]')?.setAttribute('aria-pressed', String(pic.i === looking));
+  });
+}
+keys.addEventListener('focusin', (e) => {
+  const li = e.target.closest('[data-pic]');
+  if (!li) return;
+  const i = Number(li.dataset.pic), lifted = raise(i);
+  if (lifted || focusedPic !== i) { focusedPic = i; repaint('a picture lifted'); }
+});
+keys.addEventListener('focusout', (e) => {
+  if (e.relatedTarget?.closest?.('#pictureKeys [data-pic]')?.dataset.pic === String(focusedPic)) return; // on within the same picture's item
+  focusedPic = null; repaint('a picture let go');
+});
+keys.addEventListener('click', (e) => {
+  const look = e.target.closest('[data-look]'), flip = e.target.closest('[data-flip]');
+  if (look) { if (looking === Number(look.dataset.look)) endLook(); else lookAt(Number(look.dataset.look)); return; }
+  if (flip) { turnOver(Number(flip.dataset.flip)); return; }
+  const b = e.target.closest('[data-away]');
+  if (!b) return;
+  const li = b.closest('li'), next = li.nextElementSibling ?? li.previousElementSibling; // the focus goes on to a neighbour
+  focusNext = next ? Number(next.dataset.pic) : null;
+  setOnTable(Number(b.dataset.away), false);
+});
 if (style.person) loadPeople().then(showPeople, () => {}); // a link that names a person shows their card when the drawer opens
 
 // The cartouche names the place flown to (its title, else the button's name), not whatever scores highest in the frame.

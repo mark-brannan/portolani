@@ -6,7 +6,9 @@
 // sides; the settings are a bottom sheet at half the window's height with the map above it, a lighter
 // drawer a sheet as tall as its lines over the map's foot, and the cartouche and the scale bar sit on cards. With a mouse on a wide screen
 // each of the seven drawers hangs below the row without covering or moving it, one at a time; several voyages
-// are drawn at once, each in its own ink, and the link carries them.
+// are drawn at once, each in its own ink, and the link carries them. A person's picture on the map is looked at large,
+// put away by the pointer or the keyboard, and dealt back by choosing the person again; the last one touched or
+// focused lies on top; the link to its Commons page is a glyph labelled in full.
 //
 // Needs the built preview (`npm run build:preview` -> _site/), playwright-core and a Chromium
 // (`npx playwright-core install chromium-headless-shell`); without them it skips, since `npm test`
@@ -470,6 +472,96 @@ test('voyages: several drawn at once, each in its own ink, carried by the link; 
     assert.deepEqual(await on(), []);
     assert.doesNotMatch(await hash(), /voyages=/);
     assert.equal(await page.$eval('#voyagesPanel .tool', (b) => b.disabled), true, 'Clear still offered with nothing to clear');
+    assert.deepEqual(errors, []);
+  } finally {
+    await browser.close();
+    server.close();
+  }
+});
+
+test('people: a picture on the map is looked at, put away and dealt back by choosing the person again; the last touched lies on top; its Commons link is a glyph', { skip, timeout: 240000 }, async () => {
+  const server = createServer(async (req, res) => {
+    let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
+    if (p.endsWith('/')) p = path.join(p, 'index.html');
+    try { res.writeHead(200, { 'content-type': TYPES[path.extname(p)] ?? 'application/octet-stream' }).end(await readFile(p)); } catch { res.writeHead(404).end(); }
+  }).listen(0);
+  const browser = await chromium.launch();
+  try {
+    const page = await (await browser.newContext({ viewport: { width: 1100, height: 740 } })).newPage();
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    // two of Columbus's pictures laid apart on open sea, the first at the view's centre
+    await page.goto(`http://localhost:${server.address().port}/#map=4/-50/-30&person=christopher-columbus&pictures=0,1&pictureat=0:-30,-50,0.015_1:-10,-50,0.015`);
+    await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
+    await page.waitForFunction(() => document.querySelectorAll('#pictureKeys li').length === 2, null, { timeout: 60000 });
+    await page.waitForTimeout(1200); // dealt in
+    const z = () => page.$$eval('#pictureKeys li', (ls) => Object.fromEntries(ls.map((l) => [l.dataset.pic, Number(l.dataset.z)])));
+    const hash = () => page.evaluate(() => decodeURIComponent(location.hash));
+
+    // the link to its page is the glyph alone, the sentence its label
+    const link = await page.$eval('#pictureKeys [data-pic="0"] a', (a) => ({ text: a.textContent, label: a.getAttribute('aria-label'), title: a.title, href: a.href }));
+    assert.deepEqual({ text: link.text, label: link.label, title: link.title }, { text: '⧉', label: 'Its page on Wikimedia Commons', title: 'Its page on Wikimedia Commons' });
+    assert.match(link.href, /^https:\/\/commons\.wikimedia\.org\//);
+
+    // the last touched lies on top: by the pointer, then by the keyboard's focus
+    assert.deepEqual(await z(), { 0: 0, 1: 1 }, 'the record\'s order before any touch');
+    const c = await page.locator('#map').boundingBox(), cx = c.x + c.width / 2, cy = c.y + c.height / 2;
+    await page.mouse.move(cx, cy); await page.mouse.down(); await page.mouse.up();
+    assert.deepEqual(await z(), { 0: 1, 1: 0 }, 'the picture grabbed is not on top');
+    await page.focus('#pictureKeys [data-pic="1"] a');
+    assert.deepEqual(await z(), { 0: 0, 1: 1 }, 'the picture focused is not on top');
+    await page.keyboard.press('Tab');
+    assert.equal(await page.evaluate(() => document.activeElement.getAttribute('aria-label')?.startsWith('Look: ')), true, 'Look is not next in the keyboard\'s order');
+    await page.evaluate(() => document.activeElement.blur());
+
+    // Look, by the button on the first picture's edge (the only place the cursor is a magnifier), lays it upright in the
+    // middle of the window, 0.85 of it at most and no more than its own pixels; Esc lays it back
+    const looked = () => page.$eval('#pictureKeys [data-look="0"]', (b) => b.getAttribute('aria-pressed'));
+    const zoomIn = await page.evaluate(({ x0, y0 }) => {
+      const m = document.getElementById('map'), out = [];
+      for (let y = y0; y < y0 + 400; y += 3) for (let x = x0; x < x0 + 400; x += 3) {
+        m.dispatchEvent(new PointerEvent('pointermove', { clientX: x, clientY: y, isPrimary: true, bubbles: true }));
+        if (m.style.cursor === 'zoom-in') out.push([x, y]);
+      }
+      return out;
+    }, { x0: cx - 200, y0: cy - 200 });
+    assert.ok(zoomIn.length, 'no Look button on the first picture');
+    const look = () => page.mouse.click(zoomIn.reduce((s, p) => s + p[0], 0) / zoomIn.length, zoomIn.reduce((s, p) => s + p[1], 0) / zoomIn.length);
+    await look();
+    assert.equal(await looked(), 'true');
+    await page.keyboard.press('Escape');
+    assert.equal(await looked(), 'false', 'Esc did not lay the picture back');
+    // by the keyboard with the People drawer open, Esc lays the picture back and leaves the drawer open
+    await page.click('#people');
+    await page.focus('#pictureKeys [data-look="0"]');
+    await page.keyboard.press('Enter');
+    assert.equal(await looked(), 'true');
+    await page.keyboard.press('Escape');
+    assert.equal(await looked(), 'false');
+    assert.equal(await page.$eval('#peoplePanel', (d) => d.classList.contains('open')), true, 'Esc shut the drawer too');
+    await page.keyboard.press('Escape'); // and the next shuts it
+    assert.equal(await page.$eval('#peoplePanel', (d) => d.classList.contains('open')), false);
+    await page.evaluate(() => document.activeElement.blur());
+    await look();
+    // looked at, its buttons from the right corner of its lower edge: Put away, Turn over, the link (13 CSS px round)
+    const [iw, ih] = await page.evaluate(async () => { const m = (await (await fetch('packs/overlays/people/people.json')).json()).pictures['Portrait_of_a_Man,_Said_to_be_Christopher_Columbus_2.jpg']; return [m.width, m.height]; });
+    const k = Math.min((c.width * 0.85) / iw, (Math.min(740, c.y + c.height) - Math.max(0, c.y)) * 0.85 / ih, 1), my = (Math.max(0, c.y) + Math.min(740, c.y + c.height)) / 2;
+    await page.mouse.click(cx + (iw * k) / 2 - 13 * 0.4, my + (ih * k) / 2);
+    await page.waitForFunction(() => document.querySelectorAll('#pictureKeys li').length === 1, null, { timeout: 10000 });
+    assert.match(await hash(), /pictures=1(&|$)/, 'put away, the picture is still in the link');
+    // the other by the keyboard
+    await page.focus('#pictureKeys [data-away="1"]');
+    await page.keyboard.press('Enter');
+    await page.waitForFunction(() => document.querySelectorAll('#pictureKeys li').length === 0, null, { timeout: 10000 });
+    assert.match(await hash(), /pictures=none(&|$)/);
+
+    // choosing the person again (a click lets them go, the next chooses them) deals every picture back
+    await page.click('#people');
+    await page.click('[data-person="christopher-columbus"]');
+    assert.doesNotMatch(await hash(), /person=/);
+    await page.click('[data-person="christopher-columbus"]');
+    await page.waitForFunction(() => document.querySelector('#pictureKeys [data-pic="0"]') && document.querySelector('#pictureKeys [data-pic="1"]'), null, { timeout: 60000 });
+    assert.doesNotMatch(await hash(), /pictures=/);
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();

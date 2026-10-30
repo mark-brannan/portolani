@@ -84,4 +84,11 @@ test('the pictures lie in a row under the person, each the same height', () => {
   assert.ok(at.every((s) => s.lat < f.latMin));
   assert.ok(Math.abs(at[0].scale * 640 - at[1].scale * 427) < 1e-9);
   assert.ok(at[1].lon > at[0].lon);
+  // grown (a wide screen), each is that much taller and the row still lies clear under the frame
+  const big = picturePlaces(f, [[400, 640], [640, 427]], 1.5);
+  assert.ok(Math.abs(big[0].scale / at[0].scale - 1.5) < 1e-9);
+  assert.ok(big.every((s, k) => s.lat < f.latMin && s.lat < at[k].lat));
+  // laid a quarter over the one before, the second starts three quarters along the first
+  const fan = picturePlaces(f, [[400, 640], [640, 427]], 1.5, 0.25), w0 = 400 * fan[0].scale, w1 = 640 * fan[1].scale;
+  assert.ok(Math.abs(fan[1].lon - w1 / 2 - (fan[0].lon - w0 / 2 + 0.75 * w0)) < 1e-9);
 });
