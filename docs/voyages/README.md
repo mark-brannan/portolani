@@ -83,6 +83,10 @@ header. Here is Narváez's death, where nobody recorded the place, so the gap is
 
 The People drawer marks the birth and lays the `images` on the map; `npm run people` builds them for the site.
 
+A flight to a person frames their birth, death, voyages and pictures, and ends no closer than zoom 6, as does a flight
+to a voyage. A person may carry `"fly": { "lonMin": -17.6, "lonMax": 40, "latMin": 13, "latMax": 36, "zoom": 4 }`: a box the
+flight frames as well, in the part of the window the open drawer leaves clear, and no closer than that `zoom` (6 at most).
+
 ### Confidence
 
 How sure a leg, an event, a birth or a death is: one word, `confidence`, and at most one sentence,
