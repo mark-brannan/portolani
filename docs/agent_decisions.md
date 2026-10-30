@@ -330,3 +330,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261030t015635z
 - Mansa Musa's hajj starts and ends at Niani, by convention, with a note that the capital's site is debated Undo: move the first and last points of the hajj legs to another candidate site ([#284](https://github.com/mark-brannan/portolani/pull/284))
+
+### 20261030t015642z
+- The hajj's desert legs run through Ghadames, Awjila and Siwa out, and Awjila, Murzuq, Ghat and Takedda home, as shape only; each leg's note says no source names them for Musa Undo: drop the shape points from tuat-giza and cairo-gao, leaving a plain curve between the ends ([#284](https://github.com/mark-brannan/portolani/pull/284))
