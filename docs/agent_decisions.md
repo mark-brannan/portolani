@@ -402,3 +402,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261030t190820z
 - Old Goa is a ruin: the view is at the abandoned Portuguese capital, no dense city over it Undo: drop ruin: true from Goa in scripts/sights.mjs ([#310](https://github.com/mark-brannan/portolani/pull/310))
+
+### 20261030t190824z
+- A ruin whose spot another figure holds steps aside up to four widths, else stands on the spot Undo: revert ruinAt in scripts/scene.mjs ([#310](https://github.com/mark-brannan/portolani/pull/310))
