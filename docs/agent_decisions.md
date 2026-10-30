@@ -375,3 +375,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261030t035241z
 - The mockup and census scripts are not committed (research PR, no code); the census table is in the README Undo: commit the scratch scripts under docs/voyage-play/ ([#293](https://github.com/mark-brannan/portolani/pull/293))
+
+### 20261030t035247z
+- The census counts a sameAs leg once in each voyage that has it Undo: edit docs/voyage-play/README.md ([#293](https://github.com/mark-brannan/portolani/pull/293))
