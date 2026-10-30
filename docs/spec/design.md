@@ -164,10 +164,10 @@ Feature: A chart's position chips, and the line each was fitted to
     And "Parallels" draws today's equator and Tropic of Cancer; a coast's chip ("New World") draws only the stretch of today's coast that fit used, not the whole coast; the chart's own "Level" draws every coast it is centred between
     And the line is the feature the fit was computed from, carried with the placement in the chart's data, never a stretch drawn by hand to look right
     And with reduced motion the line shows whole, then fades to faint
-  Scenario: a phone
+  Scenario: a phone (waiting on a UI walk)
     Given the Charts drawer open as the bottom sheet, at 520 px and under
     When the user looks for the position chips
-    Then they sit in the chart's row as on a wide screen, and a tap on one leaves the sheet open
+    Then they sit in the chart's row as on a wide screen, until the user has walked the phone's drawers
 
 Feature: The projection chips live in the Charts drawer
   Source: the user on [#266](https://github.com/mark-brannan/portolani/pull/266), 2026-10-29: "The controls for map projections should live under charts now, not the compass rose. I'm not sure about other map settings...they probably stay under the rose but it could change."
