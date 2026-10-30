@@ -411,3 +411,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261030t194618z
 - Spec's no-ruin cases generalised as founded-later-and-covered (Manila, Batavia) and still-standing (São Jorge da Mina) Undo: edit the scenario's no-ruin line ([#324](https://github.com/mark-brannan/portolani/pull/324))
+
+### 20261030t201209z
+- Tyre keeps one list button and one tile with two marks (at as a list), not a seventh ancient-world row Undo: drop the list form of at and add an Al-Bass row ([#310](https://github.com/mark-brannan/portolani/pull/310))
