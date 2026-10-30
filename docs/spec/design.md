@@ -132,6 +132,18 @@ Feature: A chart's row in the Charts drawer
     Then the zoom shows the whole sheet with a small margin, derived from the sheet's corners, never a hand-typed zoom (de la Cosa lands near zoom 2, not 4.4)
     And a chart brought in later carries its own frame, checked at the chart's size on screen before it ships
 
+Feature: The Catalan Atlas, all eight pages, and the 1959 copy beside it
+  Source: the user in the session of 2026-10-29: "I want all eight pages of the Catalan Atlas available on our charts page. Today we only show the first 1st page, which is the least interesting or useful of the bunch!"; of the 1959 copy on Wikimedia Commons, "El mar Mediterráneo en el Atlas catalán de Cresques Abraham" (CC BY 3.0): "Whatever the relationship, I think we should have it as an alternative in our charts and somehow available."
+  Scenario: every map page of the atlas
+    Given the Charts drawer open
+    When the user looks for the Catalan Atlas
+    Then all eight of its map pages are there to show, the Bibliothèque nationale de France's sheets 5 to 12, not the first alone
+    And sheets 1 to 4, which are text, are not among them
+  Scenario: the 1959 copy is an alternative
+    Given the Charts drawer open
+    When the user looks for the Catalan Atlas
+    Then the 1959 copy is there too, as an alternative chart the user can show
+
 Feature: A chart's position chips, and the line each was fitted to
   Source: the user on [#259](https://github.com/mark-brannan/portolani/pull/259), 2026-10-29: "The chart snap buttons should not disappear, right now they disappear right away after clicking. They should be inside the drawer for the chart on desktop and they should indicate what they are for. Probably, "Chart Position: <a> <b> ..."", and "When clicking any of the given position buttons, it should animate the primary feature that was used for alignment/sizing/position as a simple line over the chart. Then the line should fade out. For example, "parallels" should animate/overlay the Equator and the Tropic of Cancer. New World should animate/overlay the portion of the South/Central American coast which is aligned with the chart at that orientation."
   Scenario: where the chips live
@@ -251,12 +263,20 @@ Feature: Every point of interest has a mark
     And a place's own decoration, link or image laid on later replaces its glyph
 
 Feature: The world turned to the chart (deferred)
-  Source: the user on [#266](https://github.com/mark-brannan/portolani/pull/266), 2026-10-29: "A nice to have, not required for any of the charts would be to rotate the world to match the orientation of the chart, rather than the other way around. De La Cosa's map was originally meant to be read vertical, with the equator running up and down and the new world at the top. You can defer this or add it as a 'future' spec."
+  Source: the user on [#266](https://github.com/mark-brannan/portolani/pull/266), 2026-10-29: "A nice to have, not required for any of the charts would be to rotate the world to match the orientation of the chart, rather than the other way around. De La Cosa's map was originally meant to be read vertical, with the equator running up and down and the new world at the top. You can defer this or add it as a 'future' spec."; and in a decision sitting, 2026-10-29: "some of the charts I want to see in their original drawn orientation which would NOT be "north up" (E.g. De La Cosa is "west up" and the equator running up and down vertically)"
   Scenario: the map takes the chart's orientation
     Given a chart drawn to be read in another orientation (de la Cosa's, vertical, the New World at the top)
     When the user asks for the chart's own orientation
     Then the map turns under the sheet to match it, and the sheet stays as scanned
     And until this lands, the sheet turns and the map stays north-up
+
+Feature: A chart with no up turns for the reader
+  Source: the user in the session of 2026-10-29: "we said earlier that the De La Cosa chart was equator up and down vertical and we wanted a mode to see the chart laid vertical and the world rotated to match. This is somewhat similar with the Catalan Atlas except it has no explicit 'up' or down... rather it is meant to be laid flat on a table and the viewer could walk all around it. So we might want to spin it around for different POIs or play with the UI controls to emphasize that fact. Many of the drawings will be upside down if we pick only one fixed orientation."
+  Scenario: the reader walks round the table
+    Given a page of the Catalan Atlas shown, the world turned to match it as in "The world turned to the chart"
+    When the user turns to a point of interest whose figure is drawn facing another edge of the page
+    Then the chart spins round, the world with it, until that figure reads upright: spun for that point of interest, or by the user at the controls; which of the two, or both, is open
+    And no one fixed orientation is the chart's own, since any one leaves many of its drawings upside down
 
 Feature: The voyage record: people, deaths and what a skull means
   Source: the user on [#275](https://github.com/mark-brannan/portolani/pull/275), 2026-10-29: "the death date and place is either known or unknown. No statement about living = true is necessary (or correct). In fact, nothing should be required at all for the person record besides, perhaps, a name or ID (even a name might be omitted if we wanted to have certain anonymous persons in the project where other details were known but NOT the name). Use a permissive approach and make no assumptions about what is required, or what is present unless strictly required."; "People with a known death location get a skull. Full stop."; "Voyages should have a name or title that we work from, and it will *usually* include the name of the leader (or a singular leader) but there will be a "has" relationship for people and voyages...we could separately have a "leader" relationship but it will get complicated for voyages like Magellan's (maybe Drakes?) where he died before the end and someone else took over leading the remainder."; and in the session that rebuilt the record, 2026-10-29: "we might include a few modern recreation voyages of living people who attempted to recreate polynesian voyages using traditional methods"; "We have some error bars on exact location of death but have chosen to make reasonable judgements about the location. For example, if we know the sea leg where a death took place, we just mark it in the middle of the voyage. ... We have some death locations that might be speculative as well....or deaths that we chose to place in the middle of the ocean in a 'close enough' location on a wide patch of empty sea". The files are `data/voyages/`: a voyage in `<id>.json`, the people in `people.json`, the sources in `sources.json`; `scripts/voyages.mjs` is the schema and `node scripts/check-voyages.mjs` the check.
@@ -333,6 +353,19 @@ Feature: A chart's notes get their moment, then leave the art alone
     When the PR that builds it hands over
     Then its body shows the pulse as a short recording or a strip of frames at map size, and the user says whether it reads or is too subtle before the timing is settled
 
+Feature: The Catalan Atlas's figures are its points of interest
+  Source: the user in the session of 2026-10-29: "the large illustrations from the Atlas are all POIs after their fashion. Many of them represent people (rulers) of the region at that time."; "In a separate UX decisions session I said I didn't like the original points on the world chart because they were too subtle and hard to find... this is different on the Catalan Atlas where the POIs are massive areas covered by larger-than-life rulers, elephants, palm trees, etc."
+  Scenario: a figure is a point of interest
+    Given a page of the Catalan Atlas shown on the map
+    When the user clicks or taps one of its large figures (a ruler, an elephant, a palm tree)
+    Then that figure's tile opens: every large illustration on the page is a point of interest
+    And the place to click is the figure itself, the whole area it covers, not a small spot inside it
+  Scenario: a ruler is a person too
+    Given Mansa Musa, enthroned on sheet 6
+    When the user clicks or taps his figure
+    Then his tile opens as any figure's does
+    And the same figure is his portrait in the people drawer
+
 Feature: Points of interest close together
   Source: the user in the session that captured these requirements for [#274](https://github.com/mark-brannan/portolani/pull/274), 2026-10-29: "There are similar problems as the too-subtle change between grab hand and pointer finger when we have POIs very close to one another. ... a good example is Magellan's death at Mactan being very close to the Massacre at Cebu....there's no indication that more than one POI exists here. Either you accidentally see the tile for the massacre when trying to hover over the X for Magellan's death and are surprised...or you see Magellan's death there at Mactan and think there is no more to the story." The pick, from three drawn: "A: count badge".
   Scenario: a badge says how many
@@ -346,6 +379,20 @@ Feature: Points of interest close together
     Then one tile opens, headed by the count and the span of their dates ("2 here · Apr–May 1521"), and lists each story as a line: its mark glyph, its title, its date
     And a click on a line opens that story's tile in the same place, with a way back to the list
     And a group of one is today's tile, unchanged
+
+Feature: A point of interest is big to hit, and none is left out
+  Source: the user in the session of 2026-10-29, for every chart's points of interest: "big hit box layout for the POI, as big as is reasonable"; "Dense clickable area. We need the inner area of the map to mostly be point/clickable rather than grab/drag-able."; "exhaustive labeling. I would rather see labels and placeholders for every little tree and item on any given chart that we might add a note for, than to leave it out because we could not think of the copy/text for it and deferred it forever. If it could be a POI, bias for inclusion with placeholder or empty text (e.g. 'palm trees') and we'll take it out only if I later deem it useless on a later UI walk."
+  Scenario: the hit box
+    Given any chart's sheet shown, with its points of interest
+    When the user moves the pointer over it, or taps it on a phone
+    Then each point of interest answers over as big an area round what it marks as is reasonable, not a dot at its centre
+    And over the inner area of the map the pointer is mostly the pointing finger, a click there opening a point of interest, and only the rest is the grab hand that drags
+  Scenario: every item that could take a note has one
+    Given any chart in the project
+    When its points of interest are listed
+    Then every figure and item on it that a note could be written for is among them, down to every little tree
+    And one with no copy yet is there all the same, its label or placeholder naming what it shows ("palm trees"), its text a placeholder or empty
+    And one goes only when the user, on a later UI walk, finds it useless
 
 Feature: A grouped list in a drawer opens one group at a time
   Source: the user in the session that captured these requirements for [#274](https://github.com/mark-brannan/portolani/pull/274), 2026-10-29: "Sections for the famous ports should open one at a time with an animated slide instead of the open/closed triangle."; asked whether the anchorages list too: "All such lists, probably. We're going to have a similar problem (I think) for all of these as we add content: charts (expanding to other cultures and non-portolan style charts), voyages, ports/anchorages/POIs (And these may be reorganized or subdivided again anyway...I'm not sure which menus I really want to organize them under)". Today the Sights and anchorages lists are `details` elements with a disclosure triangle, any number open at once (`public/page.js`, the `SIGHTS` and `ANCHORAGES` groups).
@@ -364,3 +411,12 @@ Feature: A grouped list in a drawer opens one group at a time
     Given the lists grow and are reorganised, as the user expects
     When a group is added, split or moved to another drawer
     Then the one-open rule and the slide follow it with no new code: the behaviour belongs to the grouped list, not to the Sights drawer
+
+Feature: The atlas's own names over the regions (to explore)
+  Source: the user in the session of 2026-10-29: "A card for future UX exploration would be to have the terms and the language of this atlas overlaid for the regions, as an alternative to what we use now. In other words the main map (instead of current countries or cities) would show 'Golden Horde', 'Mali Empire', 'Il-Khanate', etc."; later: "That's quite different than what we do now, but of historical and educational interest. So we want to explore that or some way to make it happen."
+  Scenario: the main map in the atlas's terms
+    Given the main map, with its names of today's countries and cities
+    When the user asks for the atlas's names instead
+    Then the regions read in the terms and the language of the Catalan Atlas: "Golden Horde", "Mali Empire", "Il-Khanate"
+    And today's names stay the default, the period names an alternative to them
+    And how it is offered is open: the user asked for it to be explored
