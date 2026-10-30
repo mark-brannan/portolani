@@ -1309,9 +1309,10 @@ function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
   // node of the network every view shares, whichever sheet the overlap rule keeps over it. Where its own
   // chart already draws it there, that one stands. It is the chart's own sprite where the set holds it,
   // else the set's big rose, held to the big cap like every chart's own rose; it is no sheet's, so it
-  // takes nothing from any sheet's allotment, and every sheet's beasts keep clear of it.
+  // takes nothing from any sheet's allotment, and every sheet's beasts keep clear of it. Density 0 draws no
+  // ornament, so no pinned rose either.
   const pin = ATLAS_ROSE, pinned = (r) => Math.abs(r.lon - pin.lon) < 1e-6 && Math.abs(r.lat - pin.lat) < 1e-6;
-  if (world.roseLines && !roseDraws.some(pinned) && shows(data.proj, pin.lon, pin.lat)) {
+  if (world.roseLines && TUNE.budget > 0 && !roseDraws.some(pinned) && shows(data.proj, pin.lon, pin.lat)) {
     const own = roses.find((s) => s.id === 'rose-catalan') ?? roses.find((s) => s.sizePx === bigSizePx);
     roseDraws.push({ sprite: { ...own, sizePx: Math.min(own.sizePx, ROSE_CAP.big * W) }, ...at(pin), lon: pin.lon, lat: pin.lat, size: Math.min(own.sizePx, ROSE_CAP.big * W), sheet: null, pinned: true });
   }
