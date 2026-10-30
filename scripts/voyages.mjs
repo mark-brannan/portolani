@@ -34,6 +34,13 @@ export const VOYAGE_PALETTE = ['#8c2f1e', '#1f4e8c', '#2e6b34', '#6b2d7a', '#b06
 // the stroke widths on offer, in px on the 1600 px sheet; 2.2 is the width a voyage has always had
 export const VOYAGE_WIDTHS = [1.4, 2.2, 3.2, 4.5];
 export const VOYAGE_WIDTH = 2.2;
+// How long the pen takes to draw a voyage's line on, in seconds: a slider in the Voyages drawer, carried by the link
+// as `voyagedraw=`. voyageDrawSeconds reads it back: a value off the slider's steps or outside its range is the default.
+export const VOYAGE_DRAW = { min: 1, max: 5, step: 0.5, seconds: 2.5 };
+export function voyageDrawSeconds(text) {
+  const s = Number(text), { min, max, step, seconds } = VOYAGE_DRAW;
+  return text != null && text !== '' && s >= min && s <= max && Number.isInteger((s - min) / step) ? s : seconds;
+}
 const seedOf = (id) => [...id].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0, 2166136261);
 // The colours of a list of chosen voyages, in the order chosen: `picked` maps an id to a colour picked by hand.
 // Red goes to the first one not picked while no other has it; the rest are seeded on their ids among the free colours.
@@ -268,13 +275,9 @@ export async function readVoyage(id, readJSON) {
 // paragraph, `sources` ids into sources.json. `born` and `death` are markers (docs/voyages/README.md "The record"):
 // lon and lat together or not at all, `confidence` one of MARKER_CONFIDENCES, `doubt` the optional sentence. `images`
 // are Wikimedia Commons files, { file, kind, author, date, licence, note }: `file` the bare file name, no scheme, no
-// slash; `kind` one of IMAGE_KINDS. `fly` (optional) is a lon/lat box and a zoom, { lonMin, lonMax, latMin, latMax, zoom }, that a
-// flight to the person frames as well as their own track, in the part of the window a drawer leaves clear, no closer than `zoom`.
+// slash; `kind` one of IMAGE_KINDS.
 export const IMAGE_KINDS = ['life', 'near', 'posthumous', 'imaginary', 'modern', 'scene', 'ship', 'map'];
 export const SLUG = /^[a-z][a-z0-9-]*$/;
-// No flight to a person or a voyage ends closer than this zoom (the user's word of 2026-10-30: 6 is about the closest
-// for any person or voyage): a floor on how close, so a ceiling on the number. A person's `fly.zoom` is at most this.
-export const FLY_CLOSEST_ZOOM = 6;
 // The problems in one person record, as strings; none when it is well formed. `sources` is what a `cite` must name.
 export function checkPerson(id, p, { sources } = {}) {
   const out = [];
@@ -307,11 +310,6 @@ export function checkPerson(id, p, { sources } = {}) {
     }
   };
   for (const k of ['born', 'death']) if (p[k] !== undefined) marker(p[k], k);
-  if (p.fly !== undefined) { // the box a flight to the person frames, clear of the drawer, and the closest zoom it may end at
-    const f = p.fly, ok = f && typeof f === 'object' && !Array.isArray(f) && ['lonMin', 'lonMax', 'latMin', 'latMax', 'zoom'].every((k) => Number.isFinite(f[k]));
-    need(ok && f.lonMin < f.lonMax && f.latMin < f.latMax && Math.abs(f.lonMin) <= 180 && Math.abs(f.lonMax) <= 180 && Math.abs(f.latMin) <= 85 && Math.abs(f.latMax) <= 85 && f.zoom >= 0 && f.zoom <= FLY_CLOSEST_ZOOM,
-      `fly: { lonMin, lonMax, latMin, latMax, zoom }, west of east, south of north, zoom 0 to ${FLY_CLOSEST_ZOOM}`);
-  }
   if (p.images !== undefined) {
     need(Array.isArray(p.images), 'images: a list');
     for (const [j, q] of (Array.isArray(p.images) ? p.images : []).entries()) {
