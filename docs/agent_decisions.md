@@ -393,3 +393,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261030t060244z
 - flight knobs kept in localStorage, not the hash: tuning scaffolding, and a hash key would outlive them in links Undo: move the knobs into the hash ([#299](https://github.com/mark-brannan/portolani/pull/299))
+
+### 20261030t060248z
+- hyperbolic flight length counted in zoom levels (S*rho/ln2) so Pace means the same under both shapes Undo: count the hyperbolic path's own length S ([#299](https://github.com/mark-brannan/portolani/pull/299))
