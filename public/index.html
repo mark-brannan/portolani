@@ -460,14 +460,14 @@
       <span class="notes">notes to come</span>
     </div>
   </header>
-  <section aria-labelledby="h-projection">
-    <h2 id="h-projection">Projection</h2>
-    <div id="projection" class="chips" role="radiogroup" aria-label="Projection"></div>
-  </section>
   <ul id="chartList"></ul>
   <section id="otherTraditions" hidden>
     <h2>Other traditions</h2>
     <ul id="worldList"></ul>
+  </section>
+  <section aria-labelledby="h-projection">
+    <h2 id="h-projection">Projection</h2>
+    <div id="projectionCharts" class="chips" role="radiogroup" aria-label="Projection"></div>
   </section>
 </aside>
 
@@ -587,6 +587,10 @@
     <h2 id="h-map">Map</h2>
     <p class="lead" data-lead-for="rhumb">Rhumb lines radiate from the wind roses, and a navigator used a parallel rule to carry a line of course over to the rose's nearest line. <a href="learn/rhumb-lines.html">Learn more</a></p>
     <div class="rows">
+      <div class="ctl" data-ctl="projection">
+      <h3>Projection</h3>
+      <div id="projection" class="chips" role="radiogroup" aria-label="Projection"></div>
+      </div>
       <div class="ctl" data-ctl="names"><label class="check"><input type="checkbox" id="names"> Names</label></div>
       <div class="ctl" data-ctl="rhumb"><label class="check"><input type="checkbox" id="rhumb"> Rhumb lines</label></div>
       <div class="ctl" data-ctl="continents">
