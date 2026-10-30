@@ -260,10 +260,10 @@ test('trees: a pan keeps the forest, a zoom in thickens it', () => {
 test('voyages: a list, coloured and sized; an older single voyage; alternatives drawn when a death has them', async () => {
   const of = async (opts) => (await createScene(env, { view: VIEWS['world-z2'], ...opts })).scene.voyages;
   const one = await of({ voyage: 'magellan' });
-  assert.deepEqual(one.map((v) => [v.voyage.id, v.colour, v.width]), [['magellan', '#8c2f1e', 2.2]]);
+  assert.deepEqual(one.map((v) => [v.voyage.id, v.colour, v.width]), [['magellan', '#2e8b3a', 4.5]]);
   const three = await of({ voyages: [{ id: 'columbus' }, { id: 'nowhere' }, { id: 'drake', colour: '#1F4E8C' }, { id: 'polo', width: 4.5 }] });
   assert.deepEqual(three.map((v) => v.voyage.id), ['columbus', 'drake', 'polo']);
-  assert.equal(three[0].colour, '#8c2f1e');
+  assert.equal(three[0].colour, '#2e8b3a');
   assert.equal(three[1].colour, '#1f4e8c');
   assert.equal(new Set(three.map((v) => v.colour)).size, 3, 'two voyages share an ink');
   assert.equal(three[2].width, 4.5);

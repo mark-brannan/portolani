@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { legPath, splitAtSeam, problems, checkPerson, distanceKm, STEP_KM, readVoyage, voyageColours, VOYAGE_PALETTE, reachPath, seaSamples, VOYAGE_DRAW, voyageDrawSeconds } from '../scripts/voyages.mjs';
+import { legPath, splitAtSeam, problems, checkPerson, distanceKm, STEP_KM, readVoyage, voyageColours, VOYAGE_PALETTE, reachPath, seaSamples, VOYAGE_DRAW, voyageDrawSeconds, BROKEN_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, isBroken } from '../scripts/voyages.mjs';
 import { viewProjection, voyageMarks, voyageView, W, H } from '../scripts/scene.mjs';
 import { loadLand, checkVoyage, voyageIds, readJSON } from '../scripts/check-voyages.mjs';
 
@@ -340,6 +340,18 @@ test('voyage colours: the first red, the rest distinct and seeded on the id, a p
   assert.equal(picked.columbus, '#1f4e8c');
   assert.equal(picked.drake, VOYAGE_PALETTE[0], 'red is free, so the next one takes it');
   assert.equal(Object.keys(voyageColours(VOYAGE_PALETTE.map((_, i) => `v${i}`).concat('extra'))).length, VOYAGE_PALETTE.length + 1);
+});
+
+test('a voyage with a dashed or dotted leg takes the first free high-contrast colour, stuck while shown; Heavy is the default weight', () => {
+  assert.equal(VOYAGE_WIDTH, Math.max(...VOYAGE_WIDTHS));
+  assert.ok(isBroken({ legs: [{ confidence: 'attested' }, { confidence: 'inferred' }] }));
+  assert.ok(!isBroken({ legs: [{ confidence: 'attested' }] }));
+  const broken = new Set(['a', 'b']);
+  const c = voyageColours(['x', 'a', 'b'], {}, broken);
+  assert.equal(c.a, BROKEN_PALETTE[0]);
+  assert.equal(c.b, BROKEN_PALETTE[1]);
+  assert.equal(voyageColours(['a', 'b'], { a: '#123456' }, broken).b, BROKEN_PALETTE[0], 'a picked colour still wins; the next takes the first free');
+  for (const h of BROKEN_PALETTE) { const [r, g, b] = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)), hue = (Math.atan2(Math.sqrt(3) * (g - b), 2 * r - g - b) * 180) / Math.PI; assert.ok(!(hue > 170 && hue < 250), `${h} reads as blue`); }
 });
 
 // The menu is chronological: the first number of `when` is the start year (BC negative). A voyage's own
