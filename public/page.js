@@ -1796,7 +1796,7 @@ if (style.person) loadPeople().then(showPeople, () => {}); // a link that names 
 // colour bands, each named once at the top. Each button opens it at its own lane: People at the top, Voyages scrolled
 // to the axis, its lane's name lit. The Earlier tab at the left end adds the long stretch before Lapita, back to
 // 50,000 BC, at its own scale, with the windows of the peopling of Sahul, Beringia and the Americas marked on it and
-// nothing yet placed there. A phone scrolls the timeline sideways.
+// nothing yet placed there. A phone scrolls the timeline sideways, and opens it at its right end, where most of it is.
 let timeAxis = laneAxis(), timeLane = 'people';
 function drawAxis() {
   const tick = ([y, label]) => { const x = timeAxis.x(y); return `<span class="tick${x < 0.01 ? ' edge' : ''}" style="left:${pc(x)}">${label}</span>`; };
@@ -1817,8 +1817,9 @@ function fillTimeline(lane, fresh) {
   $('peopleCap').classList.toggle('lit', lane === 'people');
   $('voyagesCap').classList.toggle('lit', lane === 'voyages');
   if (!$('timeAxis').childElementCount) drawAxis();
-  if (fresh) Promise.allSettled([fillVoyages(), fillPeople()]).then(() => { if (timeLane === lane) toLane(lane); });
-  toLane(lane);
+  const atEnd = () => { if (fresh && timeAxis.width === 1) $('timeScroll').scrollLeft = $('timeScroll').scrollWidth; }; // a phone: most entries are after AD 1000
+  if (fresh) Promise.allSettled([fillVoyages(), fillPeople()]).then(() => { atEnd(); if (timeLane === lane) toLane(lane); });
+  atEnd(); toLane(lane);
 }
 function toLane(lane) {
   const panel = $('timelinePanel'), to = lane === 'voyages' ? $('timeAxis') : null;

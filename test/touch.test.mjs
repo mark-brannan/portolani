@@ -462,6 +462,18 @@ test('timeline: people above the axis, voyages below, each once, the era bands a
     assert.ok(axisNow.y >= panel.y && axisNow.y < panel.y + 60, `the voyages' lane is not in view: axis at ${axisNow.y}, drawer at ${panel.y}`);
     await page.click('#voyages');
     assert.equal(await opened(), false, 'a second click on the dividers left the timeline open');
+    // a phone: the timeline scrolls sideways, opened at its right end, where most of it is
+    const phone = await (await browser.newContext({ viewport: { width: 412, height: 800 }, hasTouch: true, isMobile: true })).newPage();
+    phone.on('pageerror', (e) => errors.push(e.message));
+    await phone.goto(`http://localhost:${server.address().port}/#map=2/15/-20`);
+    await phone.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
+    await phone.tap('#people');
+    await phone.waitForSelector('#peopleStrip [data-person]');
+    await phone.waitForSelector('#voyageList [data-voyage]');
+    const sc = await phone.$eval('#timeScroll', (e) => ({ sw: e.scrollWidth, cw: e.clientWidth, left: e.scrollLeft }));
+    assert.ok(sc.sw > sc.cw, `the phone's timeline does not scroll sideways: ${JSON.stringify(sc)}`);
+    assert.ok(sc.left >= sc.sw - sc.cw - 1, `the phone's timeline did not open at its right end: ${JSON.stringify(sc)}`);
+    assert.equal(await phone.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'the page scrolls sideways');
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();
