@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { legPath, splitAtSeam, problems, checkPerson, distanceKm, STEP_KM, readVoyage, voyageColours, VOYAGE_PALETTE, reachPath, seaSamples } from '../scripts/voyages.mjs';
+import { legPath, splitAtSeam, problems, checkPerson, distanceKm, STEP_KM, readVoyage, voyageColours, VOYAGE_PALETTE, reachPath, seaSamples, VOYAGE_DRAW, voyageDrawSeconds } from '../scripts/voyages.mjs';
 import { viewProjection, voyageMarks, voyageView, W, H } from '../scripts/scene.mjs';
 import { loadLand, checkVoyage, voyageIds, readJSON } from '../scripts/check-voyages.mjs';
 
@@ -57,6 +57,7 @@ test('a voyage chosen in view keeps the view; one off screen is fitted, the shor
   const atlantic = { legs: [leg([[-10, 40], [-30, 30]]), leg([[-30, 30], [-60, 15]])] };
   const lisbon = { lon: -9, lat: 38.7, zoom: 7.5, projection: 'mercator' };
   assert.equal(voyageView(atlantic, lisbon), null, 'the track starts in view, so the view should stay');
+  assert.ok(voyageView(atlantic, lisbon, undefined, true), 'a name click frames the whole voyage even with part of it in view');
   const china = { lon: 120, lat: 25, zoom: 6, projection: 'mercator' };
   const to = voyageView(atlantic, china);
   assert.ok(to, 'none of the track is in view, so the view should move');
@@ -397,4 +398,11 @@ test('a migration\'s waypoints are beads whose tile carries the date', async () 
   const proj = viewProjection({ lon: 170, lat: -12, zoom: 3 });
   const marks = voyageMarks(v, proj, { x0: 0, y0: 0, x1: W, y1: H });
   assert.ok(marks.length >= 5 && marks.every((m) => m.bead && m.tile.date));
+});
+
+test('the pen takes 2.5 s by default; the slider offers 1 s to 5 s in half seconds, and a link with any other value draws at the default', () => {
+  assert.deepEqual(VOYAGE_DRAW, { min: 1, max: 5, step: 0.5, seconds: 2.5 });
+  for (const [text, s] of [[null, 2.5], ['', 2.5], ['1', 1], ['1.5', 1.5], ['5', 5], ['4.5', 4.5], ['0.5', 2.5], ['5.5', 2.5], ['1.25', 2.5], ['fast', 2.5]]) {
+    assert.equal(voyageDrawSeconds(text), s, `voyagedraw=${text}`);
+  }
 });
