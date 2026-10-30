@@ -4,8 +4,8 @@
 // lat, date, place, label, text, source, confidence }; a death with no lon and lat is not drawn), and `images` pictures
 // on Wikimedia Commons, best first ({ file, kind, author, date, licence }), shrunk for the site by
 // scripts/build-people.mjs into packs/overlays/people/.
-import { DASHES, VOYAGE_DIR } from './voyages.mjs';
-export { DASHES };
+import { DASHES, VOYAGE_DIR, FLY_CLOSEST_ZOOM } from './voyages.mjs';
+export { DASHES, FLY_CLOSEST_ZOOM };
 
 export const PEOPLE_FILE = 'data/voyages/people.json';
 export const PICTURES_FILE = 'packs/overlays/people/people.json';
@@ -149,12 +149,38 @@ export function frameOf(points) {
   if (lonMax - lonMin > 200) { lonMin = -180; lonMax = 180; }
   return { lonMin, lonMax, latMin: Math.min(...lats), latMax: Math.max(...lats) };
 }
-// The view that shows the whole of `frame` on a `w` x `h` canvas with `pad` of its size clear round it: contained, never cropped.
-export function viewContaining(frame, { w = 1600, h = 1000, pad = 0.08 } = {}) {
+// The view that shows the whole of `frame` on a `w` x `h` canvas with `pad` of its size clear round it: contained, never
+// cropped. `right` canvas px at the right edge are kept clear (a drawer lies over them): the frame is fitted into the
+// rest and centred there, so the view's own centre sits east of the frame's. `maxZoom` is the closest the view may be.
+// The fit is Mercator's, as it always was; the shift east is in longitude, whose px per degree every cylindrical
+// projection here shares (and an azimuthal one matches near its centre), so it holds whatever projection the user keeps.
+export function viewContaining(frame, { w = 1600, h = 1000, pad = 0.08, right = 0, maxZoom = Infinity } = {}) {
   const RAD = Math.PI / 180, mercY = (lat) => Math.log(Math.tan(Math.PI / 4 + (Math.max(-85, Math.min(85, lat)) * RAD) / 2));
   const y0 = mercY(frame.latMin), y1 = mercY(frame.latMax), dlon = Math.max(1, frame.lonMax - frame.lonMin) * RAD, dy = Math.max(0.02, y1 - y0);
-  const k = Math.min(w / (dlon * (1 + 2 * pad)), h / (dy * (1 + 2 * pad)));
-  return { lon: (frame.lonMin + frame.lonMax) / 2, lat: (2 * Math.atan(Math.exp((y0 + y1) / 2)) - Math.PI / 2) / RAD, zoom: Math.log2((k * 2 * Math.PI) / 512) };
+  const k = Math.min(Math.max(1, w - right) / (dlon * (1 + 2 * pad)), h / (dy * (1 + 2 * pad)), (2 ** maxZoom * 512) / (2 * Math.PI));
+  return { lon: (frame.lonMin + frame.lonMax) / 2 + right / 2 / k / RAD, lat: (2 * Math.atan(Math.exp((y0 + y1) / 2)) - Math.PI / 2) / RAD, zoom: Math.log2((k * 2 * Math.PI) / 512) };
+}
+
+// No flight to a person or a voyage ends closer than FLY_CLOSEST_ZOOM (scripts/voyages.mjs), however small the track.
+// Every such flight passes through capFlyZoom, so a record added later cannot undercut it.
+export const capFlyZoom = (view) => (view.zoom > FLY_CLOSEST_ZOOM ? { ...view, zoom: FLY_CLOSEST_ZOOM } : view);
+
+// The lon/lat box round a person's birth, death and voyages (`voyages` the loaded ones by id), longitudes wrapped to
+// -180..180; null where there is none.
+export function personFrame(p, voyages) {
+  const pts = [p.born && [p.born.lon, p.born.lat], deathOf(p) && [deathOf(p).lon, deathOf(p).lat],
+    ...p.voyages.flatMap((id) => (voyages[id]?.legs ?? []).flatMap((l) => l.points))].filter(Boolean);
+  return frameOf(pts.map(([lon, lat]) => [((((lon + 180) % 360) + 360) % 360) - 180, lat]));
+}
+// The view a person's flight ends in: their `frame` (personFrame) and the pictures laid under it (`sizes`, [width, height]
+// px each) all in view, and never closer than FLY_CLOSEST_ZOOM. A record with `fly` { lonMin, lonMax, latMin, latMax, zoom }
+// is framed on that box too, in the part of the window a drawer leaves clear (`right`, canvas px) and no closer than the
+// record's `zoom`: Mansa Musa's is the Atlantic coast of north-west Africa to Mecca. Other people are framed as ever.
+export function personView(p, frame, sizes, { w = 1600, h = 1000, right = 0 } = {}) {
+  const box = withPictures(frame, picturePlaces(frame, sizes), sizes), fly = p.fly;
+  if (!fly) return capFlyZoom(viewContaining(box, { w, h }));
+  const union = { lonMin: Math.min(box.lonMin, fly.lonMin), lonMax: Math.max(box.lonMax, fly.lonMax), latMin: Math.min(box.latMin, fly.latMin), latMax: Math.max(box.latMax, fly.latMax) };
+  return capFlyZoom(viewContaining(union, { w, h, right, maxZoom: Math.min(fly.zoom, FLY_CLOSEST_ZOOM) })); // the shift east is worked at the zoom it lands at
 }
 
 // Where a person's pictures lie by default, from `frame` (the lon/lat box of their birth, death and voyages): each as tall
