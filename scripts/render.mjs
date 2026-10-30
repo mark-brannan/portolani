@@ -89,9 +89,10 @@ if (arg('view')) {
     voyages: (arg('voyages') ?? '').split(',').filter(Boolean).map((v) => { const [id, c] = v.split(':'); return { id, ...(c && { colour: `#${c}` }) }; }) });
   const canvas = createCanvas(W, H), out = arg('out') ?? join(ROOT, 'out', 'view.png');
   drawScene(canvas.getContext('2d'), one.scene, one.data, one.bg, { scale: 1, x: 0, y: 0 });
-  if (process.argv.includes('--notes')) drawNoteBoxes(canvas.getContext('2d'), one.scene.overlay, one.proj);
+  if (process.argv.includes('--notes')) drawNoteBoxes(canvas.getContext('2d'), one.scene.overlays[0], one.proj);
   writeFileSync(out, out.endsWith('.jpg') ? canvas.toBuffer('image/jpeg', 82) : canvas.toBuffer('image/png'));
-  console.log(`${out}: ${W} x ${H}, overlay ${one.scene.overlay ? `${one.scene.overlay.id} ${one.scene.overlay.mode === 'sheet' ? `sheet at ${JSON.stringify(one.scene.overlay.sheet)}` : `pieces at ${one.scene.overlay.opacity}`}` : 'none'}`);
+  const [ov] = one.scene.overlays;
+  console.log(`${out}: ${W} x ${H}, overlay ${ov ? `${ov.id} ${ov.mode === 'sheet' ? `sheet at ${JSON.stringify(ov.sheet)}` : `pieces at ${ov.opacity}`}` : 'none'}`);
   process.exit(0);
 }
 

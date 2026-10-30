@@ -41,7 +41,7 @@
   }
   #build a { color: inherit; }
 
-  /* top right, a row of seven instruments, each opening its own drawer: the rose the settings, the chart the charts, the astrolabe the points of interest, the compass Go (a typed place or position, or mine filled in), the dividers the voyages, the medallion the people, the anchor the anchorages (home first). One drawer at a time: a click on its button opens it and a second click shuts it, another button swaps it for its own, and a choice, a click elsewhere or Esc shuts it. The row never moves */
+  /* top right, a row of seven instruments, each opening its own drawer: the rose the settings, the chart the charts, the astrolabe the points of interest, the compass Go (a typed place or position, or mine filled in), the dividers the voyages, the medallion the people, the anchor the anchorages (home first). One drawer at a time: a click on its button opens it and a second click shuts it, another button swaps it for its own, and Esc, or on a wide screen a click on the map, shuts it; a choice in it leaves it open, on a phone too. The row never moves */
   #where { position: fixed; top: 12px; right: 12px; z-index: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; pointer-events: none; }
   #where :is(button, input, summary) { pointer-events: auto; } /* the box is empty map: a touch there is the map's, to drag or pinch */
   #where .row { display: flex; gap: 6px; align-items: center; }
@@ -62,8 +62,16 @@
   .places small { display: block; margin-top: -2px; font-size: 11px; font-style: italic; opacity: 0.7; }
   #where .places button small { display: inline; margin: 0 0 0 8px; } /* the date beside the name: a shorter, wider button */
   .places .group { margin-top: 4px; } /* a heading that folds its rows: the port names' size and weight, in italic */
-  .places .group > details > summary { font: italic 13px var(--serif); color: var(--fg); padding: 3px 0; cursor: pointer; }
-  .places .group > details > .places { margin: 2px 0 4px 12px; }
+  /* a grouped list opens at most one group at a time: a heading with no triangle, its count (and an era's years) beside
+     it; a click on a shut group's heading slides the open one shut and this one open together, a click on the open one
+     slides it shut (page.js, foldTo) */
+  #where .places .group > .fold { display: block; padding: 3px 0; border: 0; border-radius: 0; background: none; box-shadow: none; font: italic 13px var(--serif); color: var(--fg); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .places .group { align-self: stretch; }
+  .places .group > .rows { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.25s ease; }
+  .places .group.open > .rows { grid-template-rows: 1fr; }
+  .places .group > .rows > div { overflow: hidden; min-height: 0; }
+  .places .group > .rows .places { margin: 2px 0 4px 12px; }
+  @media (prefers-reduced-motion: reduce) { .places .group > .rows { transition: none; } }
   .notes { display: block; font: italic 13px var(--serif); color: var(--muted); } /* an entry's caption, or "notes to come" */
   .places .notes { margin: -2px 0 2px 10px; }
   #where .places button, #goPanel button, #voyageList button { padding: 3px 10px; font: 13px var(--serif); border-radius: 12px; }
@@ -314,6 +322,7 @@
      so the drawer is as it was; another layout moves the wrappers into its own groups, where each is a block
      and the headings only a moved control needs (.lo) show */
   #layout { margin-top: 10px; }
+  @media not all and (hover: hover) and (pointer: fine) { #hoverRow { display: none; } } /* page.js HOVER_MEDIA, negated: nothing to hover with */
   .ctl { display: contents; }
   .lo { display: none; }
   html[data-layout] .ctl { display: block; }
@@ -404,7 +413,7 @@
   <header>
     <div>
       <h1>Charts</h1>
-      <p>A chart's picture or name flies to it and lays its scan over the map as one sheet, to drag, turn and resize by hand; the eye shows or hides the sheet; its city flies there.</p>
+      <p>A chart's picture or name flies to it and lays its scan over the map as one sheet, alone and at its own placement, to drag, turn and resize by hand; the eye shows or hides that one sheet and leaves the others and the map as they are; its city flies there.</p>
       <span class="notes">notes to come</span>
     </div>
   </header>
@@ -430,6 +439,10 @@
   <!-- the layouts: one chip each, the choice kept in the link (`layout=`). Default is the drawer below as it
        stands; the others move these same controls into new groups, so each control is one element -->
   <div id="layout" class="chips" role="radiogroup" aria-label="Drawer layout"></div>
+
+  <!-- with a mouse, a grouped list's section also opens when the pointer rests on its heading (page.js, HOVER_DWELL);
+       off, only a click opens one. Kept in the link (`hover=0` is off). Not shown where nothing can hover -->
+  <div id="hoverRow"><h3>Sections open on hover</h3><div id="hoverOpen" class="chips" role="radiogroup" aria-label="Sections open on hover"></div></div>
 
   <div id="share">
     <button id="reset" type="button" class="chip" title="Every control back to its default; the view stays"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8a5 5 0 1 0 1.6-3.7"/><path d="M3 2.5v3h3"/></svg>Reset</button>

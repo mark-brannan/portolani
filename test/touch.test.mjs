@@ -1,14 +1,15 @@
 // The page under touch, in headless Chromium with touch emulation at the two common phone widths
 // (360 and 412 px): a two-finger pinch zooms the map about the pinch centre and not the page, anywhere in
-// the window, one finger drags, the anchor's drawer opens on a tap and shuts on a choice, Go shuts on a tap
-// on the map and on a second tap on its compass, and its Find my position button fills in the fix, shuts Go
-// and flies there without bringing up the keyboard. Under 520 px the map fills the window, cropped at its
+// the window, one finger drags, the anchor's drawer opens on a tap and stays up on a choice, Go stays up on a
+// tap on the map and shuts on a second tap on its compass, and its Find my position button fills in the fix and
+// flies there without bringing up the keyboard, Go still up (the user, 2026-10-30). Under 520 px the map fills the window, cropped at its
 // sides; the settings are a bottom sheet at half the window's height with the map above it, a lighter
 // drawer a sheet as tall as its lines over the map's foot, and the cartouche and the scale bar sit on cards. With a mouse on a wide screen
 // each of the seven drawers hangs below the row without covering or moving it, one at a time; several voyages
-// are drawn at once, each in its own ink, and the link carries them. A person's picture on the map is looked at large,
-// put away by the pointer or the keyboard, and dealt back by choosing the person again; the last one touched or
-// focused lies on top; the link to its Commons page is a glyph labelled in full.
+// are drawn at once, each in its own ink, and the link carries them. With the hover chips on, a mouse resting on a grouped
+// list's shut heading opens its section after the dwell; off (hover=0 in the link), only a click does; a phone has no chips.
+// A person's picture on the map is looked at large, put away by the pointer or the keyboard, and dealt back by choosing
+// the person again; the last one touched or focused lies on top; the link to its Commons page is a glyph labelled in full.
 //
 // Needs the built preview (`npm run build:preview` -> _site/), playwright-core and a Chromium
 // (`npx playwright-core install chromium-headless-shell`); without them it skips, since `npm test`
@@ -98,22 +99,24 @@ for (const width of [360, 412]) {
       const v3 = await view();
       assert.ok(v3.lon < v2.lon - 0.0001 && v3.zoom === v2.zoom, `a drag right carries the chart with it, so the centre moves west: ${JSON.stringify(v2)} -> ${JSON.stringify(v3)}`);
 
-      // the anchor's drawer: shut, opened by a tap on the anchor, shut by a choice (the third line, The North)
+      // the anchor's drawer: shut, opened by a tap on the anchor, still up after a choice (the third line, The North)
       assert.equal(await shown('anchorPanel'), false);
       await page.tap('#anchor');
       assert.equal(await shown('anchorPanel'), true);
       assert.equal(await page.getAttribute('#anchor', 'aria-expanded'), 'true');
       const h3 = await hash();
       await page.tap('#anchorages button >> nth=2');
-      assert.equal(await shown('anchorPanel'), false, 'the drawer stayed open after a choice');
+      assert.equal(await shown('anchorPanel'), true, 'a choice shut the drawer');
       await settled(h3);
 
-      // Go: a sheet that shuts on a tap on the map, and on a second tap on the compass
+      // Go: a sheet that stays up on a tap on the map, and shuts on a second tap on the compass
       await page.tap('#go');
       assert.equal(await shown(), true);
       await page.waitForTimeout(400);
       await page.touchscreen.tap(20, 300);
-      assert.equal(await shown(), false, 'a tap on the map left the Go sheet up');
+      assert.equal(await shown(), true, 'a tap on the map shut the Go sheet');
+      await page.tap('#go');
+      assert.equal(await shown(), false, 'a second tap on the compass left Go open');
       await page.tap('#go');
       assert.equal(await shown(), true);
       await page.tap('#go');
@@ -134,12 +137,12 @@ for (const width of [360, 412]) {
       assert.equal(await hash(), h4, 'Find my position moved the map');
       await page.tap('#coords button[type=submit]');
       await settled(h4);
-      assert.equal(await shown(), false, 'Go left the drawer open');
+      assert.equal(await shown(), true, 'Go shut the drawer');
+      assert.notEqual(await page.evaluate(() => document.activeElement.id), 'coordsText', 'Go left the keyboard up');
       const v4 = await view();
       assert.ok(Math.abs(v4.lat - FIX.latitude) < 0.001 && Math.abs(v4.lon - FIX.longitude) < 0.001 && v4.zoom >= 10, JSON.stringify(v4));
 
       if (process.env.TOUCH_SHOTS) {
-        await page.tap('#go');
         await page.waitForTimeout(400);
         await page.screenshot({ path: path.join(process.env.TOUCH_SHOTS, `touch-${width}.png`) });
       }
@@ -187,6 +190,7 @@ for (const width of [360, 412]) {
       assert.ok(map.y + map.height <= sheet.y + 1, `the sheet covers the map: map ${JSON.stringify(map)}, sheet ${JSON.stringify(sheet)}`);
       assert.ok(map.y <= 0 && map.x <= 0 && map.x + map.width >= width, `the map does not fill the half above the sheet: ${JSON.stringify(map)}`);
       for (const id of ['#cardCartouche', '#cardScale']) { const c = await box(id); assert.ok(c.y + c.height <= sheet.y + 1, `${id} is under the sheet`); }
+      assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('hoverRow')).display), 'none', 'a touch screen shows the hover chips');
       await shot('open');
 
       // the map is still the map: a drag above the sheet moves it and leaves the sheet up
@@ -225,7 +229,7 @@ for (const width of [360, 412]) {
   });
 }
 
-test('mouse: the drawers open on a click, not a hover, one at a time below the row without moving it, and shut on a second click, a click elsewhere or Esc', { skip, timeout: 240000 }, async () => {
+test('mouse: the drawers open on a click, not a hover, one at a time below the row without moving it, stay open on a choice, and shut on a second click, a click on the map or Esc', { skip, timeout: 240000 }, async () => {
   const server = createServer(async (req, res) => {
     let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
     if (p.endsWith('/')) p = path.join(p, 'index.html');
@@ -268,31 +272,90 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     await page.click('#open');
     await page.mouse.click(400, 400);
     assert.equal(await opened('drawer'), false, 'a click on the map left the settings open');
-    // the astrolabe's points of interest: a choice flies there and shuts the drawer
+    // the astrolabe's points of interest: at most one era open at a time, a second click shuts it; a choice flies there and leaves the drawer open
     await page.click('#sights');
     assert.equal(await opened('sightsPanel'), true, 'the astrolabe did not open the points of interest');
+    const openGroups = () => page.$$eval('#sightsList .group.open > .fold', (hs) => hs.map((h) => h.firstChild.textContent));
+    assert.deepEqual(await openGroups(), ['The age of discovery'], 'not exactly the marked era open');
+    assert.equal(await page.locator('#sightsList details').count(), 0, 'a disclosure triangle is back');
+    await page.click('#sightsList .fold >> text=The ancient world');
+    assert.deepEqual(await openGroups(), ['The ancient world'], 'a heading did not swap the open era');
+    await page.click('#sightsList .fold >> text=The ancient world');
+    assert.deepEqual(await openGroups(), [], 'a click on the open heading left it open');
+    assert.deepEqual(await page.$$eval('#sightsList .group', (gs) => gs.map((g) => [g.querySelector(':scope > .fold').getAttribute('aria-expanded'), g.querySelector(':scope > .rows > div').inert])),
+      Array.from({ length: await page.locator('#sightsList .group').count() }, () => ['false', true]), 'a shut group is not shut to the keyboard');
+    await page.click('#sightsList .fold >> text=The age of discovery');
+    assert.deepEqual(await openGroups(), ['The age of discovery'], 'a heading did not open its era with none open');
+    await page.waitForTimeout(400); // the slide
     const hs = await page.evaluate(() => location.hash);
-    await page.click('#sightsList button >> text=Goa'); // the age of discovery, the one group open at first
-    assert.equal(await opened('sightsPanel'), false, 'a point of interest left its drawer open');
+    await page.click('#sightsList button >> text=Goa');
+    assert.equal(await opened('sightsPanel'), true, 'a point of interest shut its drawer');
     await page.waitForFunction((x) => location.hash !== x, hs, { timeout: 60000 });
+    // hover, on by default for the demo: the mouse resting on a shut era's heading past the dwell (350 ms) slides it open
+    // and the open one shut; the click that was on its way keeps it open; leaving the list shuts nothing
+    await page.hover('#sightsList .fold >> text=The ancient world');
+    await page.waitForTimeout(150);
+    assert.deepEqual(await openGroups(), ['The age of discovery'], 'a passing pointer opened an era before the dwell');
+    await page.waitForTimeout(450);
+    assert.deepEqual(await openGroups(), ['The ancient world'], 'resting on a heading did not open its era');
+    await page.click('#sightsList .fold >> text=The ancient world');
+    assert.deepEqual(await openGroups(), ['The ancient world'], 'the click after the dwell shut the era it opened');
+    await page.mouse.move(400, 400);
+    await page.waitForTimeout(400);
+    assert.deepEqual(await openGroups(), ['The ancient world'], 'leaving the list shut the era');
+    assert.equal(await opened('sightsPanel'), true, 'a hover shut the drawer');
+    // a heading the slide brings under a still pointer does not open in turn: the open era above shuts, the hovered one
+    // rises, and with its rows cut short here the next heading comes to rest under the pointer; a nudge opens nothing
+    const pointer = await page.evaluate(() => {
+      const [anc, med, aod] = [...document.querySelectorAll('#sightsList .group')], fold = (g) => g.querySelector(':scope > .fold').getBoundingClientRect();
+      const m = fold(med), y = m.top + m.height / 2, rise = anc.querySelector(':scope > .rows').getBoundingClientRect().height;
+      // after the slide the pointer sits (y - m.top + rise) below the medieval heading's top; put the next heading's middle there
+      med.querySelector('.places').style.cssText = `height:${y - m.top + rise - m.height - fold(aod).height / 2 - 6}px;overflow:hidden`;
+      return { x: m.left + 40, y };
+    });
+    await page.mouse.move(pointer.x, pointer.y);
+    await page.waitForTimeout(700);
+    assert.deepEqual(await openGroups(), ['The medieval Indian Ocean and Asia'], 'resting on the second heading did not open it');
+    assert.equal(await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.closest('.fold')?.firstChild.textContent, pointer), 'The age of discovery', 'the slide did not bring the next heading under the pointer');
+    await page.mouse.move(pointer.x + 1, pointer.y);
+    await page.waitForTimeout(700);
+    assert.deepEqual(await openGroups(), ['The medieval Indian Ocean and Asia'], 'a heading the slide brought under the pointer opened on a nudge');
+    await page.evaluate(() => { document.querySelectorAll('#sightsList .group')[1].querySelector('.places').style.cssText = ''; });
+    await page.click('#sightsList .fold >> text=The ancient world');
+    // off, from its chip in the settings, which writes hover=0 into the link: resting on a heading opens nothing
+    await page.click('#open');
+    await page.click('#hoverOpen [data-value="off"]');
+    assert.match(await page.evaluate(() => location.hash), /[#&]hover=0(&|$)/, 'the off chip is not in the link');
+    await page.click('#sights');
+    await page.hover('#sightsList .fold >> text=The medieval Indian Ocean');
+    await page.waitForTimeout(600);
+    assert.deepEqual(await openGroups(), ['The ancient world'], 'with hover off, resting on a heading opened its era');
+    await page.click('#sightsList .fold >> text=The medieval Indian Ocean');
+    assert.deepEqual(await openGroups(), ['The medieval Indian Ocean and Asia'], 'with hover off, a click did not open its era');
+    // back on from the chip, which takes the key out of the link; a link with hover=0 turns it off again
+    await page.click('#open');
+    await page.click('#hoverOpen [data-value="on"]');
+    assert.doesNotMatch(await page.evaluate(() => location.hash), /hover=/, 'on is written into the link');
+    await page.evaluate(() => { location.hash += '&hover=0'; });
+    await page.waitForFunction(() => document.querySelector('#hoverOpen [data-value="off"]').getAttribute('aria-checked') === 'true', null, { timeout: 10000 });
+    await page.click('#hoverOpen [data-value="on"]');
     // Go takes the focus in its box; Esc shuts it and gives the focus back to the compass
     await page.click('#go');
     assert.equal(await page.evaluate(() => document.activeElement.id), 'coordsText');
     await page.keyboard.press('Escape');
     assert.equal(await opened('goPanel'), false, 'Esc left Go open');
     assert.equal(await page.evaluate(() => document.activeElement.id), 'go', 'Esc did not give the focus back to the compass');
-    // a chart is a row: without a scan its thumbnail is the greyed chart glyph, and it flies to the chart's frame and shuts the drawer
+    // a chart is a row: without a scan its thumbnail is the greyed chart glyph, and it flies to the chart's frame, the drawer left open
     await page.click('#charts');
     const h = await page.evaluate(() => location.hash);
     const thumb = page.locator('#chartList .chart', { hasText: 'Vesconte' }).locator('.thumb');
     assert.equal(await thumb.evaluate((b) => b.classList.contains('none')), true, 'Vesconte has a scan thumbnail');
     await thumb.click();
-    assert.equal(await opened('chartsDrawer'), false, "a chart's sheet left its drawer open");
+    assert.equal(await opened('chartsDrawer'), true, "a chart's frame shut its drawer");
     await page.waitForFunction((x) => location.hash !== x, h, { timeout: 60000 });
     const [, lat, lon] = (await page.evaluate(() => location.hash)).replace('#map=', '').split('/').map(Number);
     assert.ok(Math.abs(lat - 37.5) < 1 && Math.abs(lon - 25.2) < 1, `Vesconte's sheet is not round the Cyclades: ${lat}, ${lon}`);
     // the eye shows and hides a chart's sheet and leaves the drawer open
-    await page.click('#charts');
     const cosa = page.locator('#chartList .chart', { hasText: 'Juan de la Cosa' });
     const overlaid = () => page.evaluate(() => /[#&]overlay=de-la-cosa(&|$)/.test(location.hash));
     await cosa.locator('.eye').click();
@@ -308,6 +371,86 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     await cosa.locator('.city').click();
     await page.waitForFunction(() => !/[#&]overlay=/.test(location.hash), null, { timeout: 60000 });
     assert.equal(await overlaid(), false, 'the sheet still covers El Puerto de Santa María');
+    assert.deepEqual(errors, []);
+  } finally {
+    await browser.close();
+    server.close();
+  }
+});
+
+// The Charts drawer's two controls (the user's UI walk of 2026-10-30): the eye shows or hides its own chart's sheet and
+// nothing else, so another sheet stays laid, a dragged sheet keeps where it lies, and the map does not move; the
+// chart's picture shows that chart alone, at its own placement, and flies to it: every other sheet hides.
+test('charts: the eye shows or hides one sheet and leaves the others and the map alone; the picture shows its chart at its own placement', { skip, timeout: 240000 }, async () => {
+  const server = createServer(async (req, res) => {
+    let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
+    if (p.endsWith('/')) p = path.join(p, 'index.html');
+    try { res.writeHead(200, { 'content-type': TYPES[path.extname(p)] ?? 'application/octet-stream' }).end(await readFile(p)); } catch { res.writeHead(404).end(); }
+  }).listen(0);
+  const browser = await chromium.launch();
+  try {
+    const page = await (await browser.newContext({ viewport: { width: 1100, height: 740 } })).newPage();
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    const MOVED = '10.000,62.000,0.01063,5.0'; // the Carta Marina dragged off its own placement
+    await page.goto(`http://localhost:${server.address().port}/#map=3.40/48.000/24.000&overlay=carta-marina&sheet=${MOVED}`);
+    await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
+    const key = async (k) => new URLSearchParams((await page.evaluate(() => location.hash)).slice(1)).get(k);
+    const changed = async (before) => {
+      await page.waitForFunction((h) => location.hash !== h, before, { timeout: 60000 });
+      await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 60000 });
+    };
+    const press = async (b) => { const h = await page.evaluate(() => location.hash); await b.click(); await changed(h); };
+    await page.click('#charts');
+    const marina = page.locator('#chartList .chart', { hasText: 'Carta Marina' }), aguiar = page.locator('#chartList .chart', { hasText: 'Jorge de Aguiar' });
+    await aguiar.locator('.eye').waitFor({ state: 'visible' });
+    const map = await key('map');
+
+    await press(aguiar.locator('.eye'));
+    assert.equal(await key('overlay'), 'carta-marina,aguiar', "the eye's show hid the other sheet");
+    assert.equal(await key('sheet'), MOVED, "the eye's show moved the other sheet");
+    assert.equal(await key('map'), map, "the eye's show moved the map");
+    assert.equal(await marina.locator('.eye').getAttribute('aria-pressed'), 'true');
+    assert.equal(await aguiar.locator('.eye').getAttribute('aria-pressed'), 'true');
+
+    await press(aguiar.locator('.eye'));
+    assert.equal(await key('overlay'), 'carta-marina', "the eye's hide hid the other sheet too");
+    assert.equal(await key('sheet'), MOVED);
+    assert.equal(await key('map'), map, "the eye's hide moved the map");
+    assert.equal(await aguiar.locator('.eye').getAttribute('aria-pressed'), 'false');
+
+    await press(marina.locator('.eye'));
+    assert.equal(await key('overlay'), null);
+    await press(marina.locator('.eye'));
+    assert.equal(await key('overlay'), 'carta-marina');
+    assert.equal(await key('sheet'), MOVED, 'hidden and shown by its eye, the sheet came back at its own placement, not where it was dragged');
+    assert.equal(await key('map'), map, 'the eye moved the map');
+    assert.equal(await page.evaluate(() => document.getElementById('chartsDrawer').classList.contains('open')), true, 'the eye shut the drawer');
+
+    await press(aguiar.locator('.eye'));
+    assert.equal(await key('overlay'), 'carta-marina,aguiar');
+    await press(marina.locator('.thumb'));
+    assert.equal(await key('overlay'), 'carta-marina', 'the picture left another sheet laid');
+    assert.equal(await key('sheet'), null, 'the picture left the sheet where it was dragged, not at its own placement');
+    // the picture writes the link at once and draws at the flight's landing, so wait for the map to move
+    await page.waitForFunction((m) => new URLSearchParams(location.hash.slice(1)).get('map') !== m, map, { timeout: 30000 })
+      .catch(() => assert.fail('the picture did not fly to the chart'));
+
+    // two sheets laid one on the other: a drag where both lie takes the top one, the last in the link
+    const AT = '2.600,31.300,0.01710,0.0';
+    await page.goto(`http://localhost:${server.address().port}/#map=3.00/31.300/2.600&overlay=catalan-atlas-1959-copy,aguiar&sheet=${AT};${AT}`);
+    await page.reload();
+    await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
+    const c = await page.locator('#map').boundingBox(), [x, y] = [c.x + c.width / 2, c.y + c.height / 2];
+    const h = await page.evaluate(() => location.hash);
+    await page.mouse.move(x, y); await page.mouse.down();
+    for (let i = 1; i <= 8; i++) await page.mouse.move(x + i * 10, y + i * 5);
+    await page.mouse.up();
+    await changed(h);
+    const [under, over] = (await key('sheet')).split(';');
+    assert.equal(under, AT, 'the drag moved the lower sheet');
+    assert.notEqual(over, AT, 'the drag left the top sheet where it was');
+    assert.equal(await key('map'), '3.00/31.300/2.600', 'the drag on a sheet panned the map');
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();
