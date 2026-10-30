@@ -803,6 +803,29 @@ function setDrawer(open, byKeyboard = false) { // the drawer to open, or false f
 }
 for (const [b, d] of drawers) b.addEventListener('click', (e) => setDrawer(d === openDrawer() ? false : d, e.detail === 0)); // detail 0: Enter or Space
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && openDrawer()) setDrawer(false, true); });
+// Arrow keys inside a chip group. A group is one tab stop (the chosen chip, else the first), the arrows move along it
+// and choose as they go, as a radio group does; Home and End jump to the ends.
+const radiosOf = (g) => [...g.querySelectorAll('[role=radio]')].filter((c) => !c.closest('[hidden]') && c.getClientRects().length);
+const roveGroup = (g) => {
+  const all = [...g.querySelectorAll('[role=radio]')], at = all.find((c) => c.getAttribute('aria-checked') === 'true') ?? radiosOf(g)[0] ?? all[0]; // a closed drawer has no boxes, so rove over all
+  for (const c of all) c.tabIndex = c === at ? 0 : -1;
+};
+const roveAll = () => document.querySelectorAll('[role=radiogroup]').forEach(roveGroup);
+addEventListener('keydown', (e) => {
+  const c = e.target instanceof Element && e.target.closest('[role=radio]'), g = c?.closest('[role=radiogroup]');
+  const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+  if (!g || e.altKey || e.ctrlKey || e.metaKey || (!step && e.key !== 'Home' && e.key !== 'End')) return;
+  const rs = radiosOf(g), i = rs.indexOf(c);
+  if (i < 0) return;
+  const to = rs[e.key === 'Home' ? 0 : e.key === 'End' ? rs.length - 1 : (i + step + rs.length) % rs.length];
+  e.preventDefault();
+  to.focus({ preventScroll: false });
+  if (to.getAttribute('aria-checked') !== 'true') to.click();
+  roveGroup(g);
+});
+new MutationObserver((ms) => { for (const m of ms) { const g = m.target.closest?.('[role=radiogroup]'); if (g) roveGroup(g); } })
+  .observe(document.body, { attributes: true, attributeFilter: ['aria-checked', 'hidden'], subtree: true, childList: true });
+roveAll();
 const outside = (t) => { const d = openDrawer(); return d && t instanceof Node && !where.contains(t) && !d.contains(t); };
 // On a phone the settings and the charts stay up while the map is moved; a lighter drawer shuts as on a wide screen.
 addEventListener('pointerdown', (e) => { if (outside(e.target) && !(phone.matches && e.target === canvas && !openDrawer().classList.contains('menu'))) setDrawer(false); });
