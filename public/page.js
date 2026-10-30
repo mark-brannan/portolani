@@ -779,10 +779,11 @@ phone.addEventListener('change', () => { drawCards(); if (ground) render(); }); 
 // Seven buttons in the row, each with its own drawer: the rose the settings, the chart the charts, the
 // astrolabe the points of interest, the compass Go, the dividers the voyages, the medallion the people, the anchor the anchorages.
 // At most one is open. A click on a button opens its drawer and a second click shuts it; a click on another
-// button shuts it and opens that one; a choice in it, Esc, or a click or a focus outside the row and the
-// drawer shuts it. On a wide screen the drawer hangs below the row, which it never covers or moves, and a
-// touch on the map shuts it; on a phone it is a bottom sheet with the map shrunk above it, and it stays up
-// while the map is moved: that is how a control's effect is seen. An open drawer takes the focus (Go its
+// button shuts it and opens that one; Esc, or a click or a focus outside the row and the drawer, shuts it. A
+// choice in it leaves it open, and the map does what was asked behind it (docs/spec/design.md, "A drawer stays
+// open on a click or a choice"). On a wide screen the drawer hangs below the row, which it never covers or
+// moves, and a touch on the map shuts it; on a phone it is a bottom sheet, and a tap or a drag on the map leaves
+// it up (the user, 2026-10-30, reversing #262): that is how a control's effect is seen. An open drawer takes the focus (Go its
 // text box, on a wide screen only, so a phone's keyboard does not cover the sheet); shut by the keyboard,
 // the focus goes back to its button.
 const where = $('where');
@@ -804,8 +805,8 @@ function setDrawer(open, byKeyboard = false) { // the drawer to open, or false f
 for (const [b, d] of drawers) b.addEventListener('click', (e) => setDrawer(d === openDrawer() ? false : d, e.detail === 0)); // detail 0: Enter or Space
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && openDrawer()) setDrawer(false, true); });
 const outside = (t) => { const d = openDrawer(); return d && t instanceof Node && !where.contains(t) && !d.contains(t); };
-// On a phone the settings and the charts stay up while the map is moved; a lighter drawer shuts as on a wide screen.
-addEventListener('pointerdown', (e) => { if (outside(e.target) && !(phone.matches && e.target === canvas && !openDrawer().classList.contains('menu'))) setDrawer(false); });
+// On a phone every drawer stays up while the map is tapped or moved.
+addEventListener('pointerdown', (e) => { if (outside(e.target) && !(phone.matches && e.target === canvas)) setDrawer(false); });
 addEventListener('focusout', (e) => { if (e.relatedTarget && outside(e.relatedTarget)) setDrawer(false); }); // tabbed out; a click that focuses nothing has no relatedTarget
 
 // Reset: every control back to its default, the view (place and projection) and the drawer's layout kept. The hash holds the whole
@@ -1258,7 +1259,8 @@ const around = (lon, lat, r) => viewOfFrame({ lonMin: lon - r, lonMax: lon + r, 
 const at = (lon, lat, zoom) => ({ lon, lat, zoom });
 const both = (a, b) => viewOfFrame({ lonMin: a[0] - a[2], lonMax: b[0] + b[2], latMin: Math.min(a[1] - a[2], b[1] - b[2]), latMax: Math.max(a[1] + a[2], b[1] + b[2]) }); // two centres, west then east, on one sheet
 const CAPTION = 'notes to come'; // the line under an entry until its caption is written
-// A group: [heading, rows, open] (an empty heading for none); a heading folds its rows, shut unless open;
+// A group: [heading, rows, open, span] (an empty heading for none); one group open at a time, the first marked open,
+// else the first; an era's span of years shows beside its heading with its count;
 // a row: [name, view, title, text], the title the cartouche's when it differs from the name. A row with a tile
 // in SIGHT_TILES takes the line under its name (the tile's date) and its caption (the tile's text) from it.
 const ANCHORAGES = [
@@ -1298,7 +1300,7 @@ const SIGHTS = [
     ['Ostia', port(12.29, 41.76)],
     ['Berenike', port(35.47, 23.91)],
     ['Barygaza', port(72.99, 21.71), 'Barygaza (Bharuch)'],
-  ]],
+  ], null, 'c. 1000 BC – 2nd c. AD'],
   ['The medieval Indian Ocean and Asia', [
     ['Siraf', port(52.33, 27.67)],
     ['Aden', port(45.03, 12.78)],
@@ -1306,7 +1308,7 @@ const SIGHTS = [
     ['Calicut', port(75.78, 11.25), 'Calicut (Kozhikode)'],
     ['Malacca', port(102.25, 2.19), 'Malacca (Melaka)'],
     ['Quanzhou', port(118.68, 24.87)],
-  ]],
+  ], null, '9th–15th c.'],
   ['The age of discovery', [
     ['Lisbon', port(-9.14, 38.72)], // also where charts were made
     ['São Jorge da Mina', port(-1.35, 5.08), 'São Jorge da Mina (Elmina)'],
@@ -1319,7 +1321,7 @@ const SIGHTS = [
     ['Venice', port(12.33, 45.44), null, null, CHARTMAKING],
     ['Majorca', at(3.0, 39.6, 7), null, null, CHARTMAKING],
     ['Dieppe', port(1.08, 49.93), null, null, CHARTMAKING],
-  ], 'open'],
+  ], 'open', '1311–1619'],
   ['The modern world', [
     ['Suez', port(32.55, 29.97)],
     ['Panama', port(-79.53, 8.97)],
@@ -1327,7 +1329,7 @@ const SIGHTS = [
     ['Hong Kong', port(114.20, 22.30)],
     ['Shanghai', port(121.47, 31.23)],
     ['Rotterdam', port(4.48, 51.92)],
-  ]],
+  ], null, '1819–1914'],
 ];
 // name, year, view, [the city it was made in, its view], text, the id of its scan in packs/overlays/overlays.json (none without one)
 const CHARTS = [
@@ -1689,9 +1691,23 @@ const caption = (text) => `<span class="notes">${text ?? CAPTION}</span>`;
 for (const [list, groups] of [[$('anchorages'), ANCHORAGES], [$('sightsList'), SIGHTS]]) {
   const rows = (items) => items.map(([name, v, title, text, tag]) => { const tile = SIGHT_TILES[name];
     return `<li><button type="button" data-place="${places.push({ name, view: { ...v, title: title ?? name } }) - 1}">${title?.startsWith(`${name} (`) ? title : name}${tile?.date ? `<small>${[tile.date, tag].filter(Boolean).join(' · ')}</small>` : ''}</button>${caption(text ?? tile?.text)}</li>`; }).join('');
-  list.innerHTML = groups.map(([group, items, open]) => (group ? `<li class="group"><details${open ? ' open' : ''}><summary>${group}</summary><ul class="places">${rows(items)}</ul></details></li>` : rows(items))).join('');
-  list.addEventListener('click', (e) => { const b = e.target.closest('[data-place]'); if (b) { setDrawer(false); goTo(places[b.dataset.place].view); } });
+  const first = groups.findIndex(([group, , open]) => group && open), opened = first >= 0 ? first : groups.findIndex(([group]) => group);
+  list.innerHTML = groups.map(([group, items, , span], i) => (group ? `<li class="group${i === opened ? ' open' : ''}"><button type="button" class="fold" aria-expanded="${i === opened}">${group}<small>${[items.length, span].filter(Boolean).join(' · ')}</small></button><div class="rows"><div${i === opened ? '' : ' inert'}><ul class="places">${rows(items)}</ul></div></div></li>` : rows(items))).join('');
+  list.addEventListener('click', (e) => { const b = e.target.closest('[data-place]'); if (b) goTo(places[b.dataset.place].view); });
 }
+// Any grouped list in a drawer opens one group at a time: a click on a shut group's heading slides the open one shut
+// and this one open, together; a click on the open one does nothing, so one is always open (docs/spec/design.md,
+// "A grouped list in a drawer opens one group at a time"). The rule is the list's, so a group added or moved needs no code.
+function foldTo(group) {
+  for (const g of group.parentElement.children) {
+    if (!g.classList.contains('group')) continue;
+    const on = g === group;
+    g.classList.toggle('open', on);
+    g.querySelector(':scope > .fold').setAttribute('aria-expanded', String(on));
+    g.querySelector(':scope > .rows > div').inert = !on;
+  }
+}
+document.addEventListener('click', (e) => { const h = e.target.closest('.group > .fold'); if (h && !h.parentElement.classList.contains('open')) foldTo(h.parentElement); });
 
 // Each chart a row: its scan as a thumbnail (the drawer's chart glyph, greyed, until it has one) and its name, either
 // of which flies to frame the sheet and shows it, never hides it; the eye beside the name shows or hides the sheet and
@@ -1715,7 +1731,6 @@ $('chartList').addEventListener('click', (e) => {
   if (!b) return;
   const chart = CHARTS[b.dataset.chart], o = OVERLAYS.find((v) => v.id === chart.overlay), shown = !!o && style.overlay === o.id;
   if (b.dataset.to === 'eye') { if (o) setSheet(shown ? null : o.id); return; }
-  setDrawer(false);
   if (b.dataset.to === 'made') {
     const s = sheetShown(), to = clampView({ ...chart.made, projection: view.projection });
     if (s) { const proj = viewProjection(to), [x, y] = proj.project(to.lon, to.lat); if (onSheet(s, proj, s.sheet, x, y)) setSheet(null); }
@@ -1804,7 +1819,7 @@ $('coords').addEventListener('submit', async (e) => {
   const target = p ? { ...p, zoom: Math.max(view.zoom, LOCATE_ZOOM) } : await findPlace(text);
   if (!target) { miss.textContent = text.trim() ? `No place called “${text.trim()}”` : 'Type a place, or latitude, longitude: 36.28, -76'; miss.hidden = false; return; } // the text before the unhide, so a reader announces it
   miss.hidden = true;
-  setDrawer(false);
+  if (phone.matches) $('coordsText').blur(); // the drawer stays up; a phone's keyboard goes, so the map shows
   goTo(target);
 });
 $('coordsText').addEventListener('input', () => { $('goMiss').hidden = true; });

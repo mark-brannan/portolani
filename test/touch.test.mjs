@@ -1,8 +1,8 @@
 // The page under touch, in headless Chromium with touch emulation at the two common phone widths
 // (360 and 412 px): a two-finger pinch zooms the map about the pinch centre and not the page, anywhere in
-// the window, one finger drags, the anchor's drawer opens on a tap and shuts on a choice, Go shuts on a tap
-// on the map and on a second tap on its compass, and its Find my position button fills in the fix, shuts Go
-// and flies there without bringing up the keyboard. Under 520 px the map fills the window, cropped at its
+// the window, one finger drags, the anchor's drawer opens on a tap and stays up on a choice, Go stays up on a
+// tap on the map and shuts on a second tap on its compass, and its Find my position button fills in the fix and
+// flies there without bringing up the keyboard, Go still up (the user, 2026-10-30). Under 520 px the map fills the window, cropped at its
 // sides; the settings are a bottom sheet at half the window's height with the map above it, a lighter
 // drawer a sheet as tall as its lines over the map's foot, and the cartouche and the scale bar sit on cards. With a mouse on a wide screen
 // each of the seven drawers hangs below the row without covering or moving it, one at a time; several voyages
@@ -96,22 +96,24 @@ for (const width of [360, 412]) {
       const v3 = await view();
       assert.ok(v3.lon < v2.lon - 0.0001 && v3.zoom === v2.zoom, `a drag right carries the chart with it, so the centre moves west: ${JSON.stringify(v2)} -> ${JSON.stringify(v3)}`);
 
-      // the anchor's drawer: shut, opened by a tap on the anchor, shut by a choice (the third line, The North)
+      // the anchor's drawer: shut, opened by a tap on the anchor, still up after a choice (the third line, The North)
       assert.equal(await shown('anchorPanel'), false);
       await page.tap('#anchor');
       assert.equal(await shown('anchorPanel'), true);
       assert.equal(await page.getAttribute('#anchor', 'aria-expanded'), 'true');
       const h3 = await hash();
       await page.tap('#anchorages button >> nth=2');
-      assert.equal(await shown('anchorPanel'), false, 'the drawer stayed open after a choice');
+      assert.equal(await shown('anchorPanel'), true, 'a choice shut the drawer');
       await settled(h3);
 
-      // Go: a sheet that shuts on a tap on the map, and on a second tap on the compass
+      // Go: a sheet that stays up on a tap on the map, and shuts on a second tap on the compass
       await page.tap('#go');
       assert.equal(await shown(), true);
       await page.waitForTimeout(400);
       await page.touchscreen.tap(20, 300);
-      assert.equal(await shown(), false, 'a tap on the map left the Go sheet up');
+      assert.equal(await shown(), true, 'a tap on the map shut the Go sheet');
+      await page.tap('#go');
+      assert.equal(await shown(), false, 'a second tap on the compass left Go open');
       await page.tap('#go');
       assert.equal(await shown(), true);
       await page.tap('#go');
@@ -132,12 +134,12 @@ for (const width of [360, 412]) {
       assert.equal(await hash(), h4, 'Find my position moved the map');
       await page.tap('#coords button[type=submit]');
       await settled(h4);
-      assert.equal(await shown(), false, 'Go left the drawer open');
+      assert.equal(await shown(), true, 'Go shut the drawer');
+      assert.notEqual(await page.evaluate(() => document.activeElement.id), 'coordsText', 'Go left the keyboard up');
       const v4 = await view();
       assert.ok(Math.abs(v4.lat - FIX.latitude) < 0.001 && Math.abs(v4.lon - FIX.longitude) < 0.001 && v4.zoom >= 10, JSON.stringify(v4));
 
       if (process.env.TOUCH_SHOTS) {
-        await page.tap('#go');
         await page.waitForTimeout(400);
         await page.screenshot({ path: path.join(process.env.TOUCH_SHOTS, `touch-${width}.png`) });
       }
@@ -223,7 +225,7 @@ for (const width of [360, 412]) {
   });
 }
 
-test('mouse: the drawers open on a click, not a hover, one at a time below the row without moving it, and shut on a second click, a click elsewhere or Esc', { skip, timeout: 240000 }, async () => {
+test('mouse: the drawers open on a click, not a hover, one at a time below the row without moving it, stay open on a choice, and shut on a second click, a click on the map or Esc', { skip, timeout: 240000 }, async () => {
   const server = createServer(async (req, res) => {
     let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
     if (p.endsWith('/')) p = path.join(p, 'index.html');
@@ -266,12 +268,21 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     await page.click('#open');
     await page.mouse.click(400, 400);
     assert.equal(await opened('drawer'), false, 'a click on the map left the settings open');
-    // the astrolabe's points of interest: a choice flies there and shuts the drawer
+    // the astrolabe's points of interest: one era open at a time; a choice flies there and leaves the drawer open
     await page.click('#sights');
     assert.equal(await opened('sightsPanel'), true, 'the astrolabe did not open the points of interest');
+    const openGroups = () => page.$$eval('#sightsList .group.open > .fold', (hs) => hs.map((h) => h.firstChild.textContent));
+    assert.deepEqual(await openGroups(), ['The age of discovery'], 'not exactly the marked era open');
+    assert.equal(await page.locator('#sightsList details').count(), 0, 'a disclosure triangle is back');
+    await page.click('#sightsList .fold >> text=The ancient world');
+    assert.deepEqual(await openGroups(), ['The ancient world'], 'a heading did not swap the open era');
+    await page.click('#sightsList .fold >> text=The ancient world');
+    assert.deepEqual(await openGroups(), ['The ancient world'], 'a click on the open heading shut it');
+    await page.click('#sightsList .fold >> text=The age of discovery');
+    await page.waitForTimeout(400); // the slide
     const hs = await page.evaluate(() => location.hash);
-    await page.click('#sightsList button >> text=Goa'); // the age of discovery, the one group open at first
-    assert.equal(await opened('sightsPanel'), false, 'a point of interest left its drawer open');
+    await page.click('#sightsList button >> text=Goa');
+    assert.equal(await opened('sightsPanel'), true, 'a point of interest shut its drawer');
     await page.waitForFunction((x) => location.hash !== x, hs, { timeout: 60000 });
     // Go takes the focus in its box; Esc shuts it and gives the focus back to the compass
     await page.click('#go');
@@ -279,18 +290,17 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     await page.keyboard.press('Escape');
     assert.equal(await opened('goPanel'), false, 'Esc left Go open');
     assert.equal(await page.evaluate(() => document.activeElement.id), 'go', 'Esc did not give the focus back to the compass');
-    // a chart is a row: without a scan its thumbnail is the greyed chart glyph, and it flies to the chart's frame and shuts the drawer
+    // a chart is a row: without a scan its thumbnail is the greyed chart glyph, and it flies to the chart's frame, the drawer left open
     await page.click('#charts');
     const h = await page.evaluate(() => location.hash);
     const thumb = page.locator('#chartList .chart', { hasText: 'Vesconte' }).locator('.thumb');
     assert.equal(await thumb.evaluate((b) => b.classList.contains('none')), true, 'Vesconte has a scan thumbnail');
     await thumb.click();
-    assert.equal(await opened('chartsDrawer'), false, "a chart's sheet left its drawer open");
+    assert.equal(await opened('chartsDrawer'), true, "a chart's frame shut its drawer");
     await page.waitForFunction((x) => location.hash !== x, h, { timeout: 60000 });
     const [, lat, lon] = (await page.evaluate(() => location.hash)).replace('#map=', '').split('/').map(Number);
     assert.ok(Math.abs(lat - 37.5) < 1 && Math.abs(lon - 25.2) < 1, `Vesconte's sheet is not round the Cyclades: ${lat}, ${lon}`);
     // the eye shows and hides a chart's sheet and leaves the drawer open
-    await page.click('#charts');
     const cosa = page.locator('#chartList .chart', { hasText: 'Juan de la Cosa' });
     const overlaid = () => page.evaluate(() => /[#&]overlay=de-la-cosa(&|$)/.test(location.hash));
     await cosa.locator('.eye').click();

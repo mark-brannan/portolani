@@ -302,7 +302,7 @@ test('every place tile is keyed by a name the page lists', async () => {
 test('noteworthy ports: four eras in time order, six ports each, every one with a tile', async () => {
   const { SIGHT_TILES } = await import('../scripts/sights.mjs');
   const src = readFileSync('public/page.js', 'utf8');
-  const eras = [...src.matchAll(/^ {2}\['(The [^']+)', \[\n([\s\S]*?)^ {2}\](?:, 'open')?\],$/gm)]
+  const eras = [...src.matchAll(/^ {2}\['(The [^']+)', \[\n([\s\S]*?)^ {2}\](?:, (?:'open'|null))?(?:, '[^']+')?\],$/gm)]
     .map(([, era, rows]) => [era, [...rows.matchAll(/^ {4}\['([^']+)', port\((?!.*CHARTMAKING)/gm)].map((m) => m[1])]);
   assert.deepEqual(eras.map(([era]) => era), ['The ancient world', 'The medieval Indian Ocean and Asia', 'The age of discovery', 'The modern world']);
   for (const [era, ports] of eras) {
