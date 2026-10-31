@@ -1209,15 +1209,48 @@ function placeHillSprites(humps, sprites, blocked, field, proj) {
 const placedBox = ({ box: [c0, c1, c2] }) => obb((c0[0] + c2[0]) / 2, (c0[1] + c2[1]) / 2, Math.atan2(c1[1] - c0[1], c1[0] - c0[0]),
   Math.hypot(c1[0] - c0[0], c1[1] - c0[1]) / 2, Math.hypot(c2[0] - c1[0], c2[1] - c1[1]) / 2);
 
-// The stand-ins for the places that have a tile (the page's `sights`: { name, lon, lat, ruin }) and nothing of their
+// The stand-ins for the places that have a tile (the page's `sights`: { name, lon, lat, ruin, site }) and nothing of their
 // own drawn: a lesser place with no name, from POI_ZOOM on, where the tile opens on a tap. A ruin where the sight says
 // so (`ruin`, a fact about the place that its position cannot give), else the plain tower. A `ruin: true` is always drawn
-// (ruinAt); any other placeLesser drops where a town or another mark is already drawn there.
+// (ruinAt); any other placeLesser drops where a town or another mark is already drawn there. `site` is the mark's place
+// in its tile's `at`, carried to the drawn mark so a tap on it opens that mark's tile. The marks of one sight that would
+// meet are spread apart first (spreadMarks), so they keep their order on the earth at every zoom; a sight's several marks
+// stand where that puts them (`held`), not nudged onto dry land as a lone mark is.
 function standIns(sights, data, view) {
   if (!Array.isArray(sights) || view.zoom < POI_ZOOM) return [];
-  return sights.filter((s) => Number.isFinite(s.lon) && Number.isFinite(s.lat) && !POIS.some((p) => p.name === s.name) && shows(data.proj, s.lon, s.lat))
-    .map((s) => ({ name: s.name, lon: s.lon, lat: s.lat, xy: data.proj.project(s.lon, s.lat), building: s.ruin ? 'ruin' : 'tower', ...(s.ruin === true && { ruin: true }), poi: true, mark: true, rank: 0, pop: 0 }))
+  const out = sights.filter((s) => Number.isFinite(s.lon) && Number.isFinite(s.lat) && !POIS.some((p) => p.name === s.name))
+    .map((s) => ({ name: s.name, lon: s.lon, lat: s.lat, xy: data.proj.project(s.lon, s.lat), building: s.ruin ? 'ruin' : 'tower', ...(s.ruin === true && { ruin: true }), ...(Number.isInteger(s.site) && { site: s.site }), poi: true, mark: true, rank: 0, pop: 0 }))
     .filter((s) => s.xy.every(Number.isFinite));
+  for (const name of new Set(out.map((s) => s.name))) {
+    const group = out.filter((s) => s.name === name);
+    if (group.length < 2) continue;
+    const width = 2 * markHalfWidth(TOWER_BY_ID.get(group[0].building)), spread = spreadMarks(group.map((s) => s.xy), width);
+    group.forEach((s, k) => { if (spread) s.xy = spread[k]; s.held = true; }); // each where the spread puts it, or on its own spot: never nudged onto land, which could bring two together
+  }
+  return out.filter((s) => shows(data.proj, s.lon, s.lat)); // spread with any off the window, so a pan moves none
+}
+// A point of interest's mark, half its width in canvas px (placeLesser draws it at 1.7 times LESSER_PX)
+const markHalfWidth = (shape) => shape.w * ((LESSER_PX * 1.7) / TOWER_H);
+// The marks of one sight, [[x, y], ...] in canvas px, spread along the line through them (their true bearing: Tyre's
+// two sites lie west and east) about their middle until each stands at least one icon `width` clear of the next, so
+// two marks a few px apart at a wide zoom are drawn side by side in their order on the earth rather than thrown about
+// by the clearance (ruinAt). Null when they already stand that far apart.
+export function spreadMarks(xys, width) {
+  const gap = 2 * width; // centre to centre: one icon, then one icon of clear ground
+  let far = [xys[0], xys[0]], d = 0;
+  for (const a of xys) for (const b of xys) { const e = Math.hypot(b[0] - a[0], b[1] - a[1]); if (e > d) { d = e; far = [a, b]; } }
+  // the axis from the westmost of the farthest pair, so a pair due north and south runs south to north
+  const [a, b] = far[0][0] <= far[1][0] ? far : [far[1], far[0]];
+  const u = d > 1e-9 ? [(b[0] - a[0]) / d, (b[1] - a[1]) / d] : [1, 0];
+  const mid = [xys.reduce((t, p) => t + p[0], 0) / xys.length, xys.reduce((t, p) => t + p[1], 0) / xys.length];
+  const along = xys.map((p, k) => ({ k, t: (p[0] - mid[0]) * u[0] + (p[1] - mid[1]) * u[1] })).sort((p, q) => p.t - q.t || p.k - q.k);
+  if (along.every((p, i) => i === 0 || p.t - along[i - 1].t >= gap)) return null;
+  const ts = along.map((p) => p.t);
+  for (let i = 1; i < ts.length; i++) ts[i] = Math.max(ts[i], ts[i - 1] + gap);
+  const shift = (along.reduce((t, p) => t + p.t, 0) - ts.reduce((t, v) => t + v, 0)) / ts.length; // the middle stays put
+  const out = new Array(xys.length);
+  along.forEach((p, i) => { const t = ts[i] + shift; out[p.k] = [mid[0] + u[0] * t, mid[1] + u[1] * t]; });
+  return out;
 }
 
 // The lesser places (buildings.mjs), after every other name: each a church or a house LESSER_PX tall
@@ -1235,15 +1268,15 @@ function placeLesser(data, field, boxes, ctx, towns, names, poi, cityBoxes = new
     // wherever no town stands on the site nor a city's ground covers it (a mark of the plain tower or a lettered place
     // keeps the rule below)
     if (p.ruin || (p.mark && shape.id === 'ruin' && !towns.some((t) => t.city && insideRings(pxRings(t.city.rings), px, py)))) {
-      out.push(ruinAt(p, standOf(p, top, hw, field, null, poi), top, hw, boxes, cityBoxes, k));
+      out.push(ruinAt(p, p.held ? p.xy : standOf(p, top, hw, field, null, poi), top, hw, boxes, cityBoxes, k));
       continue;
     }
-    const [x, y] = standOf(p, top, hw, field, null, poi);
+    const [x, y] = p.held ? p.xy : standOf(p, top, hw, field, null, poi);
     const icon = obb(x, y - top / 2, 0, hw, top / 2);
     if (!obbInside(icon) || boxes.some((b) => obbOverlap(b, icon))) continue;
     if (p.mark) { // a stand-in for a place with a tile: the glyph alone, no lettering
       boxes.push(icon);
-      out.push({ x, y, h: LESSER_PX * k, tower: shape.id, name: p.name, rank: p.rank, label: icon, poi: true, mark: true });
+      out.push({ x, y, h: LESSER_PX * k, tower: shape.id, name: p.name, rank: p.rank, label: icon, poi: true, mark: true, ...('site' in p && { site: p.site }) });
       continue;
     }
     const n = { text: p.name, at: data.proj.invert(x, y - top - 5), size: Math.round(LESSER_LETTER * (poi ? 1.4 : 1)) };
@@ -1268,7 +1301,7 @@ function ruinAt(p, [x0, y0], top, hw, boxes, cityBoxes, k) {
   }
   if (!icon) [x, y, icon] = [x0, y0, obb(x0, y0 - top / 2, 0, hw, top / 2)];
   boxes.push(icon);
-  return { x, y, h: LESSER_PX * k, tower: 'ruin', name: p.name, rank: p.rank, label: icon, poi: true, ...(p.mark && { mark: true }) };
+  return { x, y, h: LESSER_PX * k, tower: 'ruin', name: p.name, rank: p.rank, label: icon, poi: true, ...(p.mark && { mark: true }), ...('site' in p && { site: p.site }) };
 }
 
 // The roses of the atlas's sheets (docs/atlas/README.md, "An atlas of sheets"): each sheet's big rose on
@@ -2641,6 +2674,24 @@ export function sightMarks(sights, proj, rect) {
   return out;
 }
 const SIGHT_H = 20; // the reach of a place, canvas px, as a mark's height
+// The marks a scene drew for the places with a tile (its `lesser` with `mark`), where it drew them (a sight's several
+// marks spread apart, a ruin moved clear of a town), held to the earth: { at: [lon, lat], h, name, site }, `at` the
+// icon's middle and `h` its reach, the icon's half-diagonal and MARK_MARGIN, so a tap anywhere on it or just off it takes it
+const MARK_MARGIN = 8;
+export const drawnMarks = (scene, data) => (scene.lesser ?? []).filter((l) => l.mark && l.label)
+  .map((l) => ({ at: data.proj.invert(l.label.cx, l.label.cy), h: 2 * (Math.hypot(l.label.hw, l.label.hh) + MARK_MARGIN), name: l.name, site: l.site ?? null }));
+// The places' marks to hit, { x, y, h, tile } in `proj`'s px, for `spots` [{ lon, lat, tile }] (sightMarks'): the one
+// drawn for each (`drawn`, drawnMarks), by name and mark, where the scene drew one; else where the place is (a place
+// lettered on the chart, or a stand-in left out for want of room)
+export function sightHits(spots, drawn, proj, rect) {
+  return spots.flatMap((spot) => {
+    const m = drawn.find((d) => d.name === spot.tile.title && d.site === (spot.tile.site ?? null));
+    if (!m) return sightMarks([spot], proj, rect);
+    if (proj.visible && !proj.visible(...m.at)) return [];
+    const [x, y] = proj.toPx(m.at);
+    return disc(rect, x, y, 0) ? [{ x, y, h: m.h, tile: spot.tile }] : [];
+  });
+}
 
 // A birth: a ring round a dot in the person's red over a parchment disc, a placeholder the design will come back to
 // (the mockups of #161 tried a star, a sun and this ring); lighter than a skull, so a coast of them is not a field of pins.
