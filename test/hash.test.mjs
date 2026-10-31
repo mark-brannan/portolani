@@ -337,6 +337,53 @@ scenario('layout: Moods sets the existing controls at once, a whole look each', 
   assert.equal(await value(page, 'ink'), '#3b2a1a');
 });
 
+// ---------------------------------------------------------------- overlap, person, voyage line and other traditions
+
+scenario('overlap: a rule round-trips, the default is left out, an unknown word is the default', 'map=6.14/40.474/7.400&overlap=cut', async (page) => {
+  assert.equal(await value(page, 'overlap'), 'cut');
+  await slide(page, 'density', 1.5);
+  assert.equal((await params(page)).get('overlap'), 'cut');
+  await page.evaluate(() => { location.hash = 'map=6.14/40.474/7.400&overlap=bogus'; });
+  await placed(page);
+  assert.equal(await value(page, 'overlap'), 'fit');
+  await slide(page, 'density', 1.25);
+  assert.equal((await params(page)).has('overlap'), false);
+});
+
+scenario('person: choosing a life bar writes person=, a link with it chooses that person, a malformed id is dropped', 'map=6.14/40.474/7.400', async (page) => {
+  await page.locator('#people').click();
+  const life = page.locator('#peopleStrip [data-person]').first();
+  const id = await life.getAttribute('data-person');
+  await life.click();
+  assert.equal((await params(page)).get('person'), id);
+  await page.evaluate((h) => { location.hash = h; }, `map=6.14/40.474/7.400&person=${id}`);
+  await placed(page);
+  assert.equal(await page.locator(`#peopleStrip [data-person="${id}"]`).getAttribute('aria-pressed'), 'true');
+  await page.evaluate(() => { location.hash = 'map=6.14/40.474/7.400&person=Not%20An%20Id'; });
+  await placed(page);
+  assert.equal(await page.locator('#peopleStrip [aria-pressed="true"]').count(), 0);
+});
+
+scenario('voyagewidth, voyagedraw: a link\'s line weight and pen time round-trip; others fall back and are not written', 'map=6.14/40.474/7.400&voyagewidth=3.2&voyagedraw=4', async (page) => {
+  await slide(page, 'density', 1.5);
+  const q = await params(page);
+  assert.equal(q.get('voyagewidth'), '3.2');
+  assert.equal(q.get('voyagedraw'), '4');
+  await page.evaluate(() => { location.hash = 'map=6.14/40.474/7.400&voyagewidth=9&voyagedraw=2.2'; });
+  await placed(page);
+  await slide(page, 'density', 1.25);
+  const r = await params(page);
+  assert.equal(r.has('voyagewidth'), false, 'a width off the four is the default');
+  assert.equal(r.has('voyagedraw'), false, 'a time off the slider\'s steps is the default');
+});
+
+scenario('charts: charts=all is kept in the link and lists the other traditions', 'map=6.14/40.474/7.400&charts=all', async (page) => {
+  await slide(page, 'density', 1.5);
+  assert.equal((await params(page)).get('charts'), 'all');
+  await page.waitForFunction(() => !document.getElementById('otherTraditions').hidden);
+  assert.ok(await page.locator('#worldList li').count() > 0, 'a row per chart');
+});
+
 // ---------------------------------------------------------------- under the hood (temporary): debug= and tune=
 
 // the drawer open at its collapsed "Under the hood" section, opened

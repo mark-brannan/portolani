@@ -59,3 +59,26 @@ Feature: Copy link  (button `#copy`) [verified page.js:~600]
     Given clipboard permission denied
     When the user clicks Copy link
     Then `#shareUrl` is visible, selected, holding `location.href`, and `#shareNote` reads "Could not copy automatically: the link is selected, press Ctrl+C"
+
+Feature: Keys the link carries besides the view and the style  (hash keys `overlap`, `person`, `voyagedraw`, `charts`) [read from page.js, the hash reader (~l.127-136, 81) and writer (~l.190-211); `voyagewidth` is in voyages.md]
+  Tested by: test/hash.test.mjs — 'overlap: a rule round-trips, the default is left out, an unknown word is the default'
+  Tested by: test/hash.test.mjs — 'person: choosing a life bar writes person=, a link with it chooses that person, a malformed id is dropped'
+  Tested by: test/hash.test.mjs — 'voyagewidth, voyagedraw: a link\'s line weight and pen time round-trip; others fall back and are not written'
+  Tested by: test/hash.test.mjs — 'charts: charts=all is kept in the link and lists the other traditions'
+  Scenario: overlap=
+    Given a link with `overlap=cut`
+    When the page loads
+    Then the Overlapping charts chips hold `cut`; the keys are `smallest`, `fit`, `cut` and `uncut`; any other word is `fit`, the default, which the hash leaves out
+  Scenario: person=
+    Given a link with `person=<id>`, an id of lowercase letters, digits and hyphens that starts with a letter
+    When the page loads
+    Then that person's life bar in the People lane is pressed; any other text is no person, and the hash omits the key
+  Scenario: voyagedraw=
+    Given a link with `voyagedraw=4`
+    When the page loads
+    Then the pen takes 4 seconds to draw a voyage on; a value off the slider's half-second steps from 1 to 5 is the default 2.5, which the hash leaves out
+  Scenario: charts=all
+    Given a link with `charts=all`, in the hash or in the query
+    When the page loads
+    Then the Charts drawer also lists the charts of other traditions under the portolans, and every hash the page writes keeps `charts=all`
+    # read once, at load: editing the hash afterwards does not add or remove the list
