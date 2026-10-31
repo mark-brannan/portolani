@@ -206,18 +206,20 @@ test('a built-up area is washed over its town\'s footprint and on land only, tho
 
 // A waterfront town's icon stands over its built-up ground, not on its shore (scene.mjs standOf):
 // Seattle's place point is on Elliott Bay, and its icon's box is mostly land through z9.
-// todo: since it first ran only where the download exists (never in CI), z6 reads 26 of 36 on land, under the
-// 0.75 floor, on every run; the test is reported as todo until the floor or the placement is settled.
-test('a waterfront town\'s icon stands on its ground, not on its shore', { skip: noUrban, todo: 'z6 is 26 of 36 on land, under the 0.75 floor' }, async () => {
-  for (const zoom of [6, 7, 8, 9]) {
-    const { scene } = await createScene(env, { view: { lon: -122.33, lat: 47.6, zoom }, scale: 'off' })
-    const t = scene.towns.find((x) => x.name === 'Seattle')
-    assert.ok(t && !t.city && t.sprite, `Seattle is not an icon at z${zoom}`)
-    const w = (t.h * t.sprite.img.width) / t.sprite.img.height
-    let n = 0, dry = 0
-    for (let j = 0; j < 6; j++) for (let i = 0; i < 6; i++, n++) if (scene.field.isLand(t.x + w * ((i + 0.5) / 6 - 0.5), t.y - t.h * (j + 0.5) / 6)) dry++
-    assert.ok(dry / n >= 0.75, `z${zoom}: ${dry} of ${n} of the icon on land`)
-  }
+const standsOnGround = async (zoom) => {
+  const { scene } = await createScene(env, { view: { lon: -122.33, lat: 47.6, zoom }, scale: 'off' })
+  const t = scene.towns.find((x) => x.name === 'Seattle')
+  assert.ok(t && !t.city && t.sprite, `Seattle is not an icon at z${zoom}`)
+  const w = (t.h * t.sprite.img.width) / t.sprite.img.height
+  let n = 0, dry = 0
+  for (let j = 0; j < 6; j++) for (let i = 0; i < 6; i++, n++) if (scene.field.isLand(t.x + w * ((i + 0.5) / 6 - 0.5), t.y - t.h * (j + 0.5) / 6)) dry++
+  assert.ok(dry / n >= 0.75, `z${zoom}: ${dry} of ${n} of the icon on land`)
+}
+// todo: z6 reads 26 of 36 on land, under the 0.75 floor, on every run (it first ran only where the download
+// exists, never in CI); reported as todo until the floor or the placement is settled. Only z6 is todo.
+test('a waterfront town\'s icon stands on its ground at z6, not on its shore', { skip: noUrban, todo: 'z6 is 26 of 36 on land, under the 0.75 floor' }, () => standsOnGround(6))
+test('a waterfront town\'s icon stands on its ground, not on its shore, at z7 to z9', { skip: noUrban }, async () => {
+  for (const zoom of [7, 8, 9]) await standsOnGround(zoom)
 })
 
 test('with several roses selected the big roses vary by sheet, not always the first', async () => {
