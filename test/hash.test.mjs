@@ -384,6 +384,15 @@ scenario('charts: charts=all is kept in the link and lists the other traditions'
   assert.ok(await page.locator('#worldList li').count() > 0, 'a row per chart');
 });
 
+scenario('charts: charts=all in the query, not the hash, lists the other traditions and is then kept in the hash', 'map=6.14/40.474/7.400', async (page) => {
+  await page.goto(`${base}?charts=all#map=6.14/40.474/7.400`);
+  await placed(page);
+  await slide(page, 'density', 1.5);
+  assert.equal((await params(page)).get('charts'), 'all');
+  await page.waitForFunction(() => !document.getElementById('otherTraditions').hidden);
+  assert.ok(await page.locator('#worldList li').count() > 0, 'a row per chart');
+});
+
 // ---------------------------------------------------------------- under the hood (temporary): debug= and tune=
 
 // the drawer open at its collapsed "Under the hood" section, opened
