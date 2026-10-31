@@ -76,6 +76,10 @@ jobs:
       # the URL hash: view, Reset, Copy link and the drawer sliders (test/hash.test.mjs)
       - run: node --test test/hash.test.mjs
         env: { HASH_REQUIRED: '1' }
+      # the urban footprints against the downloaded Natural Earth areas and the built cells (test/urban.test.mjs);
+      # a missing download or cell is a failure here, not a skip
+      - run: node --test test/urban.test.mjs
+        env: { URBAN_REQUIRED: '1' }
 
   # Refuses to call an empty PR green: a branch whose tree equals its base at
   # the merge base (a stray commit reverted it) merges cleanly and lands
