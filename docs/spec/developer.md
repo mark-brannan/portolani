@@ -38,3 +38,15 @@ Feature: Dev server and goldens  [verified package.json scripts; scripts/dev.mjs
     Given `TOUCH_REQUIRED=1`, `TOUCH_SHOTS=<dir>` or `PLAYWRIGHT=<module>`
     When `test/touch.test.mjs` runs
     Then it fails on a missing browser, writes a screenshot per width, or imports the named module (touch.test.mjs header)
+
+Feature: Under the hood hash keys  (`debug=`, `tune=`; temporary, set from the drawer's collapsed "Under the hood" section) [read from page.js ~l.130-131, scene.mjs `parseDebug` and `parseTune`]
+  Tested by: test/hash.test.mjs — 'debug: the sheets chips round-trip'
+  Tested by: test/hash.test.mjs — 'tune: a link\'s knobs round-trip'
+  Scenario: debug=
+    Given a link with `debug=rings,sheets`
+    When the page loads
+    Then the layers `sheets` and `rings` are on and the hash writes them as `debug=sheets,rings`; a word that is not a layer is dropped, and with none left the key is omitted
+  Scenario: tune=
+    Given a link with `tune=radius:0.5,origin:zero`
+    When the page loads
+    Then those knobs take the values given and the rest their defaults; the hash writes only knobs away from their default, as `name:value` pairs in knob order; a pair that is malformed or out of range is dropped

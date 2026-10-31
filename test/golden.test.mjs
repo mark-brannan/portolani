@@ -1,5 +1,5 @@
-// Golden images: three views of the chart (world, region, close) drawn in Node and compared with
-// the committed PNGs in test/golden/. Only data in node_modules and committed fixtures is read, so
+// Golden images: the chart drawn in Node and compared with the committed PNGs in test/golden/, which are the list of views.
+// Only data in node_modules and committed fixtures is read, so
 // it runs offline. Regenerate after a change that is meant to move the pixels:
 //   npm run golden
 import { test } from 'node:test';
