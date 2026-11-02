@@ -42,6 +42,16 @@ test('a landmark inland on a continent is its place; landmarks far apart along a
   assert.equal(parts.length, 2, 'two stretches, not the coast between them that no landmark is near');
 });
 
+test('a mid-size island with an inland and a coastal landmark draws whole, whichever is read first', () => {
+  const mid = landIndex({ features: [{ geometry: { type: 'Polygon', coordinates: [square(30, 30, 3, 0.1)] } }] }); // about 96,000 km2
+  const inland = [31.5, 31.5], cape = [31.5, 30.05];
+  assert.equal(fitLine(mid, [cape]).length, 1);
+  const a = fitLine(mid, [inland, cape]), b = fitLine(mid, [cape, inland]);
+  assert.deepEqual(a, b);
+  assert.equal(a.length, 1);
+  assert.ok(a[0].some(([, y]) => y > 32.9) && a[0].some(([, y]) => y < 30.1), 'the whole coast, north and south');
+});
+
 test('every placement in overlays.json carries the line it was fitted to, and every landmark lies on it', () => {
   for (const o of overlays) {
     assert.ok(o.sheetLine?.length, `${o.id}: its own placement's line`);

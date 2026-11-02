@@ -63,6 +63,7 @@ function locate(land, p) {
 // The ring from `s0` to `s1` km along it (going on past its end and round, where s1 < s0), its ends interpolated.
 function stretch({ ring, at }, s0, s1) {
   const L = at.at(-1), wrap = (s) => ((s % L) + L) % L, a = wrap(s0), b = wrap(s1);
+  if ((s1 < s0 ? s1 + L : s1) - s0 >= L) return ring; // padded past the whole ring: all of it
   const pointAt = (s) => { let i = at.findIndex((v) => v >= s); if (i <= 0) return ring[Math.max(0, i)]; const u = (s - at[i - 1]) / (at[i] - at[i - 1] || 1); return [ring[i - 1][0] + (ring[i][0] - ring[i - 1][0]) * u, ring[i - 1][1] + (ring[i][1] - ring[i - 1][1]) * u]; };
   const out = [pointAt(a)];
   const take = (from, to) => { for (let i = 0; i < ring.length; i++) if (at[i] > from && at[i] < to) out.push(ring[i]); };
@@ -96,7 +97,8 @@ const round = (part) => part.map(([x, y]) => [Math.round(x * 100) / 100, Math.ro
 // order their first landmark comes.
 export function fitLine(land, marks, { tol = 0.05 } = {}) {
   const parts = []; // { key, ring?, at?: [km along], place? }
-  const add = (key, make) => { let p = parts.find((q) => q.key === key); if (!p) parts.push(p = { key, ...make() }); return p; };
+  // a stretch and a whole island can share a key (an island's outer ring): whole wins, whichever landmark comes first
+  const add = (key, make) => { let p = parts.find((q) => q.key === key); const m = make(); if (!p) parts.push(p = { key, ...m }); else if (m.whole) p.whole = m.whole; return p; };
   for (const m of marks) {
     const { home, d, l, r, i } = locate(land, m);
     if (home && home.km2 < ISLAND) add(home.rings[0], () => ({ whole: home.rings[0] }));
