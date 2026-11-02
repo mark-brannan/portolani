@@ -5,8 +5,13 @@
 // the way (a death is drawn as a skull and crossbones). This module turns a leg into a dense path
 // and cuts it at the seam; the drawing is in scene.mjs, the land test in test/voyages.test.mjs.
 export const LINES = ['rhumb', 'great-circle', 'spline'];
-export const CONFIDENCES = ['attested', 'inferred', 'conventional'];
-export const MARKER_CONFIDENCES = [...CONFIDENCES, 'speculative']; // how a marker's place is known: the leg words, and a guess
+// How well a thing's place or course is known, one list for a leg, an event, a birth and a death (docs/spec/design.md,
+// "one word for how sure"): attested, a source records it; inferred, worked out from the sources; conventional, the
+// usual way to draw it or the editorial middle of a leg; speculative, one guess among several. The word sets the ink
+// and reaches the reader in the tile as its fixed phrase.
+export const CONFIDENCES = ['attested', 'inferred', 'conventional', 'speculative'];
+export const MARKER_CONFIDENCES = CONFIDENCES; // the same list, under the name the person and event checks have used
+export const CONFIDENCE_PHRASES = { attested: 'on record', inferred: 'reckoned from the record', conventional: 'the usual account', speculative: 'a guess' };
 export const MODES = ['sea', 'land'];
 export const EVENT_KINDS = ['death', 'landfall', 'event', 'waypoint'];
 // What a record draws: a `voyage` (the default) is a course sailed by named people, each leg a line dashed by its
@@ -28,15 +33,18 @@ export const DASHES = { attested: [], inferred: [9, 5], conventional: [2, 4] };
 export const STEP_KM = 25; // the path's sample spacing, close enough that a strait is followed and a curve reads smooth
 
 // The inks a voyage is drawn in, each dark enough to read on parchment and on the land washes. The first is the
-// chart's red (scene.mjs windRed), which the first voyage chosen takes unless it is in the contrast set (VOYAGE_CONTRAST,
-// below); each further one takes a colour seeded on its id, the next free one along when that is taken, so a link
-// draws the same colours wherever it is opened.
+// chart's red (scene.mjs windRed). A voyage shown takes the first of them no shown voyage has, its own former one first
+// if that is free, and keeps it while it is shown however others are shown and hidden (settleInks, below); a voyage in
+// the contrast set (VOYAGE_CONTRAST, below) takes from that palette instead.
 export const VOYAGE_PALETTE = ['#8c2f1e', '#1f4e8c', '#2e6b34', '#6b2d7a', '#b0601a', '#16727a', '#9c2a5c', '#4a4f9a', '#5c4a1e'];
 // the stroke widths on offer, in px on the 1600 px sheet; the default is the heaviest, Heavy
 export const VOYAGE_WIDTHS = [1.4, 2.2, 3.2, 4.5];
 export const VOYAGE_WIDTH = 4.5;
 // whether any leg of a voyage is drawn broken (dashed or dotted) rather than solid
-export const isBroken = (voyage) => (voyage?.legs ?? []).some((l) => !l.doubt && DASHES[l.confidence]?.length);
+export const isBroken = (voyage) => (voyage?.legs ?? []).some((l) => !ringed(l) && DASHES[l.confidence]?.length);
+// whether a leg is drawn as the speculative stroke, sparse open rings with a cloud to tap (scene.mjs): a leg a source
+// disputes (its `doubt`) or one only guessed at (`speculative`)
+export const ringed = (leg) => Boolean(leg?.doubt) || leg?.confidence === 'speculative';
 // How long the pen takes to draw a voyage's line on, in seconds: a slider in the Voyages drawer, carried by the link
 // as `voyagedraw=`. voyageDrawSeconds reads it back: a value off the slider's steps or outside its range is the default.
 export const VOYAGE_DRAW = { min: 1, max: 5, step: 0.5, seconds: 2.5 };
@@ -48,21 +56,32 @@ export function voyageDrawSeconds(text) {
 // an orange, a yellow; never a blue (a river) nor a grey or a brown (they sink into a scan). For a voyage with no colour picked
 // while any of it crosses a sheet.
 export const VOYAGE_CONTRAST = ['#008a3e', '#7a1fff', '#c4001a', '#e65c00', '#d9a400'];
-const seedOf = (id) => [...id].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0, 2166136261);
-// The colours of a list of chosen voyages, in the order chosen: `picked` maps an id to a colour picked by hand.
-// Red goes to the first one not picked while no other has it; the rest are seeded on their ids among the free colours.
-// `contrast` is the set of ids that take the high-contrast palette instead, until its five inks are all taken: the sixth
-// falls through to VOYAGE_PALETTE, so two voyages share an ink only once all fourteen are in use.
-export function voyageColours(ids, picked = {}, contrast = new Set()) {
-  const used = new Set(ids.map((id) => picked[id]).filter(Boolean)), out = {};
-  for (const [i, id] of ids.entries()) {
-    if (picked[id]) { out[id] = picked[id]; continue; }
-    const palette = contrast.has(id) && VOYAGE_CONTRAST.some((r) => !used.has(r)) ? VOYAGE_CONTRAST : VOYAGE_PALETTE, red = palette[0], rest = palette.slice(1), start = seedOf(id) % rest.length;
-    const round = rest.map((_, k) => rest[(start + k) % rest.length]); // from the id's own colour on
-    const c = !used.has(red) ? red : round.find((r) => !used.has(r)) ?? round[0];
-    used.add(c); out[id] = c;
+// The list of voyages chosen ([{ id, colour, ink, hidden }], in the order chosen) with every shown voyage's `ink` settled
+// (docs/spec/design.md, "colours stay with their voyages"): `colour` is one picked by hand, which always wins, and `ink`
+// the one the voyage was given. A shown voyage keeps its ink while no other shown voyage has it and it suits the voyage's
+// palette; a voyage in `fresh`, just shown, yields to those already shown and takes its own former ink if that is free,
+// else the first of its palette no shown voyage has. `contrast` is the set of ids that take the high-contrast palette, a
+// voyage with a dashed or dotted leg or one over a laid sheet, until its five inks are all taken; then the chart palette,
+// so two voyages share an ink only once all fourteen are in use. A hidden voyage keeps its ink, as its former one, and
+// holds none back. Returns the list unchanged (the same array) when nothing moved.
+export function settleInks(list, contrast = new Set(), fresh = new Set()) {
+  const shown = list.filter((v) => !v.hidden), used = new Set(shown.map((v) => v.colour).filter(Boolean)), out = new Map();
+  const suits = (v, c) => !contrast.has(v.id) || VOYAGE_CONTRAST.includes(c) || VOYAGE_CONTRAST.every((r) => used.has(r));
+  for (const v of shown) if (!v.colour && !fresh.has(v.id) && v.ink && !used.has(v.ink) && suits(v, v.ink)) { used.add(v.ink); out.set(v.id, v.ink); }
+  for (const v of shown) {
+    if (v.colour || out.has(v.id)) continue;
+    const own = contrast.has(v.id) && VOYAGE_CONTRAST.some((r) => !used.has(r)) ? VOYAGE_CONTRAST : VOYAGE_PALETTE;
+    const c = (v.ink && own.includes(v.ink) && !used.has(v.ink) ? v.ink : null) ?? [...own, ...VOYAGE_PALETTE].find((r) => !used.has(r)) ?? own[0];
+    used.add(c); out.set(v.id, c);
   }
-  return out;
+  if (list.every((v) => !out.has(v.id) || out.get(v.id) === v.ink)) return list;
+  return list.map((v) => (out.has(v.id) && out.get(v.id) !== v.ink ? { ...v, ink: out.get(v.id) } : v));
+}
+// The colour each voyage of a list is drawn in, all shown and none given an ink before: `picked` maps an id to a colour
+// picked by hand; the rest are settled in order by settleInks, so the first is the chart's red.
+export function voyageColours(ids, picked = {}, contrast = new Set()) {
+  const list = settleInks(ids.map((id) => ({ id, colour: picked[id] ?? null })), contrast);
+  return Object.fromEntries(list.map((v) => [v.id, v.colour ?? v.ink]));
 }
 
 const RAD = Math.PI / 180, R_KM = 6371.0088;
