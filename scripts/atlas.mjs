@@ -121,7 +121,13 @@ const CARTA_MARINA = figures({
 // The Carte Pisane's two rings are tangent (centres.md): the west reaches 17.8E, the east 18.0E. Its two sheets meet
 // there, edge to edge, so no overlap rule drops one for the other and the chart's two networks stand together.
 const PISANE_SEAM = 18;
-const CATALAN = figures({ rose: [['rose-catalan', -20.7, 42.1]], ship: [[null, -15.5, 26.1]] });
+// The Catalan Atlas's figures, sheets 5 to 12 (ornaments.md): one rose, the beasts and ships of the Caspian and the Indian
+// Ocean. Sheets 6 to 8 draw none at sea; sheet 10's lie on land by its fit, and two fish of sheet 12 east of the extent.
+const CATALAN = figures({
+  rose: [['rose-catalan', -20.7, 42.1]],
+  monster: [['catalan-siren', 113.1, 15.8], [null, 75.0, 50.2], [null, 68.4, 50.5], [null, 124.3, 24.9], [null, 126.7, 26.6]],
+  ship: [[null, -15.5, 26.1], ['catalan-ship', 50.6, 41.1], [null, 73.8, 46.6], [null, 75.2, 49.2], ['catalan-junk', 81.2, 13.2]],
+});
 export const CURATED = [
   { name: 'Mediterranean, west', world: true, source: 'Carte Pisane, western circle', extent: { west: -10, east: PISANE_SEAM, south: 30, north: 48 }, lon: 7.4, lat: 40.0, radius: 8.0 },
   { name: 'Mediterranean, east', world: true, source: 'Carte Pisane, eastern circle', extent: { west: PISANE_SEAM, east: 42, south: 30, north: 48 }, lon: 27.4, lat: 36.8, radius: 7.5 },

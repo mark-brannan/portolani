@@ -247,6 +247,8 @@ test('a curated sheet\'s extent holds its cropped figures', () => {
   }
   const marina = CURATED.find((c) => c.source === 'Carta Marina, 1539').ornaments.filter((f) => f.sprite).map((f) => f.sprite);
   assert.deepEqual(marina.sort(), ['cete-e', 'pistrix-c', 'serpent-a', 'ship-a', 'ship-b', 'whale-b']);
+  const catalan = CURATED.find((c) => c.source === 'Catalan Atlas').ornaments.filter((f) => f.sprite).map((f) => f.sprite);
+  assert.deepEqual(catalan.sort(), ['catalan-junk', 'catalan-ship', 'catalan-siren', 'rose-catalan']);
 });
 
 test('a ray across the antimeridian is cut at the meridian, not swept across a sheet it never crosses', () => {
