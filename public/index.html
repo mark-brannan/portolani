@@ -170,6 +170,41 @@
   #voyageList .eye svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
   #voyageList .eye[aria-pressed=true] .slash { display: none; }
   #voyageList .eye[aria-pressed=false] { opacity: 0.7; }
+  #voyageList .play { padding: 2px 4px; width: 30px; height: 26px; justify-content: center; } /* after the eye: sails the voyage on its own calendar */
+  #voyageList .play svg, #voyageBand button svg { width: 18px; height: 18px; fill: currentColor; stroke: none; }
+  #voyageList .play[aria-pressed=true] { background: var(--accent); color: var(--sheet); border-color: var(--accent); }
+  /* the band at the map's foot while a voyage plays on its calendar: pause or play, stop, the date and leg the pen is on,
+     and the voyage's calendar as a strip (its legs, its waits dotted, its events as ticks) that scrubs */
+  #voyageBand {
+    position: fixed; z-index: 1; left: calc((100vw - min(100vw, 160dvh)) / 2 + 16px); box-sizing: border-box; /* from the map's left edge, so an open drawer at the right leaves it room (page.js placeBand) */
+    bottom: calc((100dvh - min(100dvh, 62.5vw)) / 2 + 14px); width: min(820px, min(100vw, 160dvh) - 32px);
+    display: flex; align-items: center; gap: 10px; padding: 8px 14px;
+    background: var(--panel); color: var(--sheet-ink); border: 1px solid var(--rule); border-radius: 8px;
+    box-shadow: 0 2px 10px rgb(0 0 0 / 0.35); font: 13px/1.25 var(--serif);
+  }
+  #voyageBand[hidden] { display: none; }
+  #voyageBand button { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; padding: 0; border-radius: 50%; border: 1px solid var(--rule); background: var(--sheet); color: var(--sheet-ink); cursor: pointer; }
+  #voyageBand #bandPlay { width: 40px; height: 40px; background: var(--accent); color: var(--sheet); border-color: var(--accent); }
+  #voyageBand #bandStop { border-radius: 6px; }
+  #voyageBand .btext { flex: none; display: flex; flex-direction: column; min-width: 150px; max-width: 240px; }
+  #bandDate { font-size: 22px; line-height: 1.1; white-space: nowrap; }
+  #bandLeg { font-style: italic; font-size: 12px; opacity: 0.85; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #voyageBand .bstrip { flex: 1; min-width: 120px; position: relative; height: 40px; touch-action: none; cursor: pointer; }
+  #bandStrip { position: absolute; left: 0; right: 0; top: 14px; height: 8px; }
+  #bandStrip .wait { position: absolute; top: 3px; height: 0; border-top: 2px dotted var(--c, #8c2f1e); opacity: 0.6; }
+  #bandStrip .leg { position: absolute; top: 0; height: 8px; min-width: 2px; background: var(--c, #8c2f1e); }
+  #bandStrip .ahead { position: absolute; inset: 0; opacity: 0.3; }
+  #bandStrip .sailed { position: absolute; inset: 0; }
+  #bandStrip .tick { position: absolute; top: -9px; width: 0; height: 0; margin-left: -4px; border: 4px solid transparent; border-top: 6px solid var(--sheet-ink); }
+  #bandThumb { position: absolute; top: 9px; width: 14px; height: 14px; margin-left: -9px; border-radius: 50%; border: 2px solid var(--sheet-ink); background: var(--sheet); pointer-events: none; }
+  #voyageBand .bstrip small { position: absolute; bottom: -2px; font: italic 10px var(--serif); opacity: 0.75; white-space: nowrap; }
+  #bandFrom { left: 0; } #bandTo { right: 0; } #bandPace { left: 50%; transform: translateX(-50%); }
+  @media (max-width: 520px) { /* on a phone the bottom sheet takes the foot of the screen: the band sits at the map's head */
+    #voyageBand { bottom: auto; top: calc((100dvh - min(100dvh, 62.5vw)) / 2 + 6px); left: 8px; width: calc(100vw - 16px); gap: 6px; padding: 6px 8px; flex-wrap: wrap; }
+    #voyageBand .btext { min-width: 0; flex: 1; }
+    #bandDate { font-size: 17px; }
+    #voyageBand .bstrip { flex-basis: 100%; }
+  }
   #voyageList input[type=color] { width: 28px; height: 22px; border-radius: 6px; cursor: pointer; } /* the swatch is the voyage's ink; a click picks another */
   #timelinePanel .vdraw { margin: 0 0 6px; font: 13px var(--serif); } /* the pen's seconds, its sample line drawing on at that pace */
   #timelinePanel .vdraw output { min-width: 34px; font-size: 13px; color: inherit; }
@@ -434,6 +469,12 @@
 <canvas id="cardCartouche" class="card" aria-hidden="true" hidden></canvas>
 <canvas id="cardScale" class="card" width="700" height="170" aria-hidden="true" hidden></canvas>
 <div id="tile" class="tile" role="dialog" tabindex="-1" hidden></div>
+<div id="voyageBand" role="group" aria-label="A voyage on its own calendar" hidden>
+  <button id="bandPlay" type="button"></button>
+  <button id="bandStop" type="button" aria-label="Stop, and close the band" title="Stop, and close the band"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="1"/></svg></button>
+  <div class="btext"><span id="bandDate" aria-live="off"></span><span id="bandLeg"></span></div>
+  <div class="bstrip" title="The voyage's calendar: drag or click to go to a day"><div id="bandStrip"></div><span id="bandThumb"></span><small id="bandFrom"></small><small id="bandTo"></small><small id="bandPace"></small></div>
+</div>
 <p id="status" role="status">Loading…</p>
 <p id="build" hidden></p>
 <div id="memento">
