@@ -59,9 +59,10 @@ Feature: Copy link  (button `#copy`) [verified page.js:~600]
     When the user clicks Copy link
     Then `#shareUrl` is visible, selected, holding `location.href`, and `#shareNote` reads "Could not copy automatically: the link is selected, press Ctrl+C"
 
-Feature: Keys the link carries besides the view and the style  (hash keys `overlap`, `person`, `voyagedraw`, `charts`) [read from page.js, the hash reader (~l.127-136, 81) and writer (~l.190-211); `voyagewidth` is in voyages.md]
+Feature: Keys the link carries besides the view and the style  (hash keys `overlap`, `person`, `sight`, `site`, `pictures`, `pictureat`, `voyagedraw`, `charts`) [read from public/page.js, the hash reader (~l.141-145) and writer (~l.196-208); `voyagewidth` is in voyages.md]
   Tested by: test/hash.test.mjs — 'overlap: a rule round-trips, the default is left out, an unknown word is the default'
   Tested by: test/hash.test.mjs — 'person: choosing a life bar writes person=, a link with it chooses that person, a malformed id is dropped'
+  Tested by: test/hash.test.mjs — 'sight, site, pictures, pictureat: a sight\'s deal round-trips; a name no tile has is dropped with its keys'
   Tested by: test/hash.test.mjs — 'voyagewidth, voyagedraw: a link\'s line weight and pen time round-trip; others fall back and are not written'
   Tested by: test/hash.test.mjs — 'charts: charts=all is kept in the link and lists the other traditions'
   Scenario: overlap=
@@ -72,6 +73,17 @@ Feature: Keys the link carries besides the view and the style  (hash keys `overl
     Given a link with `person=<id>`, an id of lowercase letters, digits and hyphens that starts with a letter
     When the page loads
     Then that person's life bar in the People lane is pressed; any other text is no person, and the hash omits the key
+  Scenario: sight=, site=
+    Given a link with `sight=Tyre`, a name in the sights' tiles (`SIGHT_TILES`, scripts/sights.mjs), and for a sight drawn as several marks `site=1`, a single numeral, the mark whose pictures are dealt
+    When the page loads
+    Then that sight is the subject, its tile's pictures lie on the table, and the hash keeps `sight=Tyre&site=1`
+    And a name no tile has is no sight, and a `site=` that is not a single numeral, or comes with no sight, is dropped; the hash omits the keys, `pictures=` and `pictureat=` with them
+  Scenario: pictures=, pictureat=
+    Given a link with `sight=Tyre`, or a `person=`, and `pictures=0,2` and `pictureat=0:35.200,33.270,1.5`
+    When the page loads
+    Then pictures 0 and 2 of the subject's list lie on the map (`pictures=none` puts them all away; left out, a person's first, and a sight's chosen mark's pictures, or all of them when no `site=` is given), picture 0 at that lon, lat and scale
+    And an index of more than two numerals, a repeat, a malformed `pictureat` part or a scale not between 0 and 10, both ends excluded, is dropped
+    And the hash writes both once the pictures are dealt, not while the map flies to them, and only while a person or a sight is the subject
   Scenario: voyagedraw=
     Given a link with `voyagedraw=4`
     When the page loads
