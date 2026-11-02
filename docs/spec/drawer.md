@@ -47,7 +47,6 @@ Feature: Density  (hash `density`, default `1`, slider 0..2 step 0.25) [verified
     When the page loads
     Then density is 1 and the first write omits `density`
     # Mismatch: the hash accepts any real in [0,2] (`density=1.3`), the slider snaps to 1.25 on display while the style stays 1.3 until any control is touched (`readControls` then reads the slider's 1.25). Also `#density=` (empty) reads as 0, because `Number('')` is 0 [page.js:77].
-    # Mismatch: label reads "Density (monsters, ships, towns, hills)"; the same number also sets the ornament budget that roses share (`ROSE_SHARE`, scene.mjs:174 at main).
 
 Feature: Monsters and ships pickers  (hash `sprites`, list of `pack:id`, pack letters `v`=vivid `s`=scanned `p`=plain `d`=debry; omitted when equal to the default selection) [verified page.js:55-60, 107-111, 119-122, 187-197; scene.mjs:775]
   Scenario: one sprite off, by item
