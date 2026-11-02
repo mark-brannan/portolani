@@ -23,8 +23,8 @@ import { TREES, TREE_STYLES, plantTrees, plantPalms, inLake } from './trees.mjs'
 import { POIS, POI_ZOOM } from './pois.mjs';
 export { SIGHT_TILES } from './sights.mjs'; // the page's tiles for its places; here so the module ships with the scene
 import { RUIN, BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from './buildings.mjs';
-import { legPath, reachPath, isMigration, splitAtSeam, DASHES, isBroken, ringed, CONFIDENCE_PHRASES, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, settleInks, readVoyage, chronological, voyageLink } from './voyages.mjs';
-export { CONFIDENCE_PHRASES, isBroken, legPath, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, settleInks, readVoyage, chronological, voyageLink };
+import { legPath, reachPath, isMigration, splitAtSeam, DASHES, isBroken, ringed, CONFIDENCE_PHRASES, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, settleInks, readVoyage, chronological, voyageLink, calendarOf, penOn, dayText, VOYAGE_PLAY, voyagePlaySeconds } from './voyages.mjs';
+export { CONFIDENCE_PHRASES, isBroken, legPath, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, settleInks, readVoyage, chronological, voyageLink, calendarOf, penOn, dayText, VOYAGE_PLAY, voyagePlaySeconds };
 import { loadOverlay, drawOverlay, drawSheet } from './overlays.mjs';
 import { PEOPLE_FILE, PERSON_RED, personMarks, withPerson, peopleOf, whoOf } from './people.mjs';
 import { frameBox, fromCentre } from './frame-box.mjs';
@@ -2408,6 +2408,7 @@ function drawVoyages(g, voyages, proj, rect, eventRect = rect, moving = false) {
   for (const v of voyages ?? []) (isMigration(v.voyage) ? drawStream : drawTrack)(g, v, proj, rect);
   for (const v of voyages ?? []) if (!(v.reveal < 1)) for (const m of doubtMarks(v, proj, eventRect)) drawCloud(g, m, v.colour ?? STYLE.windRed);
   for (const v of voyages ?? []) if (!(v.reveal < 1)) drawEvents(g, v, proj, eventRect); // marks wait for the pen
+    else if (v.played) drawEvents(g, { ...v, voyage: { ...v.voyage, events: v.played } }, proj, eventRect); // played on its calendar: the events the pen has reached
 }
 // A note's mark on a laid chart's figure: a small ringed dot in ink over a parchment disc, at `alpha`. Drawn only while
 // the notes announce themselves or the user keeps them shown (page.js), never as part of the scene: the scan is the thing.
@@ -2567,15 +2568,17 @@ function drawStream(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH },
 }
 // `reveal` (0 to 1, unset for the whole line) draws only that share of the track from its start, by samples, which lie
 // STEP_KM apart, so the pen runs at an even pace along the line whatever the legs' lengths.
-function drawTrack(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH, alpha: dim = 1, reveal = 1 }, proj, rect) {
+// `played` (the play button's pen, page.js) rings the pen where it stands, still or running.
+function drawTrack(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH, alpha: dim = 1, reveal = 1, played }, proj, rect) {
   g.save();
   g.lineCap = 'round'; g.lineJoin = 'round';
   const end = Math.max(VOYAGE_END, width * 1.25);
-  let left = reveal < 1 ? Math.max(0, reveal) * voyage.legs.reduce((n, leg) => n + pathOf(leg).length, 0) : Infinity;
+  let left = reveal < 1 ? Math.max(0, reveal) * voyage.legs.reduce((n, leg) => n + pathOf(leg).length, 0) : Infinity, pen = voyage.legs[0]?.points[0];
   for (const leg of voyage.legs) {
     const full = pathOf(leg), k = Math.min(full.length, Math.ceil(left)), whole = k >= full.length;
     left -= full.length;
     if (k < 1) break;
+    pen = [wrapLon(full[k - 1][0]), full[k - 1][1]];
     const pieces = splitAtSeam(whole ? full : full.slice(0, k), proj.lonCenter, proj.visible).map((p) => p.map(proj.toPx)).filter((px) => meets(rect, bbox(px)));
     if (ringed(leg)) speculative(g, pieces, colour);
     else for (const [style, w, alpha, dash] of [[STYLE.parchment, width + VOYAGE_HALO, 0.6, []], [colour, width, 0.9, capped(DASHES[leg.confidence] ?? [], width)]]) {
@@ -2587,6 +2590,15 @@ function drawTrack(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH, al
       if (proj.visible && !proj.visible(...p)) continue;
       const [x, y] = proj.toPx(p);
       if (disc(rect, x, y, end + 1)) { g.beginPath(); g.arc(x, y, end, 0, 2 * Math.PI); g.fill(); }
+    }
+  }
+  if (played && reveal < 1 && pen && (!proj.visible || proj.visible(...pen))) { // the pen: an open ring in the voyage's ink
+    const [x, y] = proj.toPx(pen), r = end + 6;
+    if (disc(rect, x, y, r + 2)) {
+      g.setLineDash([]); g.globalAlpha = 0.9 * dim;
+      g.fillStyle = STYLE.parchment; g.beginPath(); g.arc(x, y, r, 0, 2 * Math.PI); g.fill();
+      g.strokeStyle = colour; g.lineWidth = 2; g.stroke();
+      g.fillStyle = colour; g.beginPath(); g.arc(x, y, end, 0, 2 * Math.PI); g.fill();
     }
   }
   g.restore();

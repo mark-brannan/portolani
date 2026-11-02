@@ -229,6 +229,7 @@ export function problems(v) {
       need(leg.pause === undefined || typeof leg.pause === 'boolean', `${at}: pause, when given, true or false`);
     }
     need(leg.doubt === undefined || (typeof leg.doubt === 'string' && leg.doubt.length), `${at}: doubt, when given, a string (who doubts it and why)`);
+    for (const k of ['start', 'end']) need(leg[k] === undefined || ISO_DATE.test(leg[k]), `${at}: ${k}, when given, an ISO date cut to its precision (1519, 1519-11, 1519-11-29, -0324-12; ~ or ? after)`);
     need(Array.isArray(leg.points) && leg.points.length >= 2 && leg.points.every((p) => Array.isArray(p) && p.length === 2 && Math.abs(p[0]) <= 180 && Math.abs(p[1]) <= 90), `${at}: points [[lon, lat], ...], two or more`);
   }
   need(Array.isArray(v.events), 'events: an array');
@@ -371,4 +372,175 @@ export function voyageLink(v, sources = {}) {
   if (s?.url) return { label: s.title ?? s.url, url: s.url };
   const who = v?.who?.[0];
   return who ? { label: `${who}, Wikipedia`, url: `https://en.wikipedia.org/wiki/${encodeURIComponent(who.replace(/ /g, '_'))}` } : null;
+}
+
+// ---------------------------------------------------------------- a voyage's own calendar
+// The play button (docs/spec/design.md, "the play button sails the voyage on its own calendar") draws a voyage's line
+// again at the pace of its dates: the pen runs along a leg between the leg's start and end, and sits still between one
+// leg's end and the next's start. A leg gives its dates as `start` and `end`, ISO 8601 cut to the precision known
+// ("1519", "1519-11", "1519-11-29"; a year before Christ negative and astronomical, "-0324-12"; EDTF's `~` and `?` may
+// follow), or else its `dates` words are read ("20–26 Sep 1519", "Nov – 29 Nov 1519", "c. 1165-66", "winter 1332–33",
+// "13th–14th century"). Each end is a span of days, as wide as it is vague; calendarOf below settles a day inside each.
+
+// The day number of y-m-d on the proleptic Gregorian calendar (days since 1970-01-01); y astronomical (1 BC is 0), m from 0,
+// and a month or a day past its end runs on into the next
+export function dayOf(y, m = 0, d = 1) {
+  const t = new Date(0);
+  t.setUTCFullYear(y, m, d);
+  return Math.round(t.getTime() / 864e5);
+}
+const MONTH_KEYS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+const SEASON_MONTH = { spring: 2, summer: 5, autumn: 8, fall: 8, winter: 11 }; // the month each starts, three months long
+// One end of a date's words: what it says, before the other end fills in what it leaves out
+function dateEnd(text) {
+  const t = text.toLowerCase(), out = {};
+  const century = /\b(\d{1,2})(?:st|nd|rd|th)\b/.exec(t);
+  if (century) out.century = Number(century[1]);
+  const era = /\b(bce?|ad|ce)\b/.exec(t);
+  if (era) out.bc = era[1].startsWith('b');
+  const month = /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b/.exec(t);
+  if (month) out.m = MONTH_KEYS.indexOf(month[1]);
+  const season = /\b(spring|summer|autumn|fall|winter)\b/.exec(t);
+  if (season) out.season = SEASON_MONTH[season[1]];
+  const part = /\b(early|mid|late)\b/.exec(t);
+  if (part) out.part = part[1];
+  if (/\bchristmas\b/.test(t)) { out.m = 11; out.d = 25; }
+  if (/\bafter\b/.test(t)) out.after = true;
+  for (const [n] of t.matchAll(/\b\d{1,4}\b/g)) {
+    if (n.length >= 3) out.y = Number(n);
+    else out.small = Number(n); // a day, or a year cut to two digits ("1165-66"), as the other end tells
+  }
+  return out;
+}
+// [first day, the day after the last] that an end means, or null when it names no year
+function endSpan(e) {
+  if (e.century) { const y0 = (e.century - 1) * 100 + 1; return [dayOf(y0), dayOf(y0 + 100)]; }
+  if (e.y == null) return null;
+  const y = e.bc ? 1 - e.y : e.y;
+  let span;
+  if (e.m != null && e.d != null) span = [dayOf(y, e.m, e.d), dayOf(y, e.m, e.d + 1)];
+  else if (e.m != null) span = e.part === 'early' ? [dayOf(y, e.m, 1), dayOf(y, e.m, 11)] : e.part === 'mid' ? [dayOf(y, e.m, 11), dayOf(y, e.m, 21)]
+    : e.part === 'late' ? [dayOf(y, e.m, 21), dayOf(y, e.m + 1)] : [dayOf(y, e.m), dayOf(y, e.m + 1)];
+  else if (e.season != null) span = [dayOf(y, e.season), dayOf(y, e.season + 3)];
+  else if (e.part) span = { early: [dayOf(y, 0), dayOf(y, 4)], mid: [dayOf(y, 4), dayOf(y, 8)], late: [dayOf(y, 8), dayOf(y + 1)] }[e.part];
+  else span = [dayOf(y), dayOf(y + 1)];
+  return e.after ? [span[0], Infinity] : span;
+}
+const PRECISIONS = ['day', 'month', 'year', 'century'];
+// How precise an end is: one of PRECISIONS (a season or a part of a year counts as a year)
+const precisionOf = (e) => (e.century ? 'century' : e.m != null && e.d != null ? 'day' : e.m != null ? 'month' : 'year');
+// A date's words read as its two ends: { start, end }, each { span: [first day, the day after the last], precision },
+// or null when neither names a year. One date is both ends; a range splits at its dash, "to", "or" or "and".
+export function readDates(text) {
+  const t = String(text ?? '').replace(/\([^)]*\)/g, ' ').replace(/\bc\.\s*/gi, ' ').replace(/[?,]/g, ' ').trim();
+  const cut = /\s+[–—-]\s+|[–—]|(?<=\w)-(?=\w)|\s+(?:to|or|and)\s+/.exec(t);
+  const a = dateEnd(cut ? t.slice(0, cut.index) : t), b = cut ? dateEnd(t.slice(cut.index + cut[0].length)) : a;
+  if (cut) {
+    if (b.small != null && b.m == null && b.y == null && a.y != null) { // "1165-66": the year cut short
+      b.y = Math.floor(a.y / 100) * 100 + b.small;
+      if (b.y < a.y) b.y += 100;
+    } else if (b.small != null && b.d == null) b.d = b.small;
+    if (a.small != null && a.d == null) a.d = a.small; // "20–26 Sep 1519": the day, its month and year from the other end
+    if (a.d != null && a.m == null) a.m = b.m;
+    if (a.y == null && a.century == null) { a.y = b.y; a.century = b.century; }
+    if (a.bc == null) a.bc = b.bc;
+    if (b.y == null && b.century == null) { b.y = a.y; b.bc ??= a.bc; } // "1324, to July": the year from the start
+  } else if (a.small != null && a.m != null && a.d == null) a.d = a.small;
+  const s = endSpan(a), e = endSpan(b);
+  if (!s && !e) return null;
+  const end = (span, x) => (span ? { span, precision: precisionOf(x) } : { span: [-Infinity, Infinity], precision: 'year' });
+  return { start: end(s, a), end: end(e, b) };
+}
+// One of a leg's ISO `start` or `end` ("1519-11-29", "-0324-12", "1519~"), as an end; null when it does not read
+export const ISO_DATE = /^(-?\d{1,4})(?:-(\d{2}))?(?:-(\d{2}))?[~?%]?$/;
+function isoEnd(text) {
+  const m = ISO_DATE.exec(String(text ?? ''));
+  if (!m) return null;
+  const y = Number(m[1]), mo = m[2] == null ? null : Number(m[2]) - 1, d = m[3] == null ? null : Number(m[3]);
+  if (d != null) return { span: [dayOf(y, mo, d), dayOf(y, mo, d + 1)], precision: 'day' };
+  if (mo != null) return { span: [dayOf(y, mo), dayOf(y, mo + 1)], precision: 'month' };
+  return { span: [dayOf(y), dayOf(y + 1)], precision: 'year' };
+}
+// A leg's two ends: its ISO `start` and `end` where given, else its `dates` read; null when neither says a year
+export function legDates(leg) {
+  const words = readDates(leg?.dates), s = isoEnd(leg?.start), e = isoEnd(leg?.end);
+  if (!s && !e) return words;
+  return { start: s ?? words?.start ?? e, end: e ?? words?.end ?? s };
+}
+// A voyage's calendar, or null when none of its legs names a year: { t0, t1, n, legs, events }, days as dayOf counts them.
+// Each leg { a, b, n, from, to, precision }: the pen leaves its start on day a and reaches its end on day b, over n of
+// the samples legPath gives it (n in all); precision the vaguer of its ends. Each event's day is the first its date
+// allows, held inside [t0, t1]; one with no date read falls on t1.
+// The ends of the legs in order (a leg's start, its end, the next leg's start, ...) each take a day inside their span,
+// none earlier than the one before. Each takes the day its place in the order gives it, spaced evenly between the ends
+// already settled (at first the voyage's first and last days); the one furthest outside its span is held at that
+// span's edge and settled, and so on until all lie inside their spans. So six legs all dated "1271" share 1271
+// evenly, and a day-precise end lands on its day.
+export function calendarOf(voyage) {
+  const legs = voyage?.legs ?? [];
+  if (!legs.length) return null;
+  const ends = legs.map(legDates), knots = [];
+  for (const d of ends) knots.push([...(d?.start.span ?? [-Infinity, Infinity])], [...(d?.end.span ?? [-Infinity, Infinity])]);
+  for (const k of knots) k[1] = Math.max(k[0], k[1] - 1e-6); // a span's last moment, not the day after it
+  for (let i = 1; i < knots.length; i++) knots[i][0] = Math.max(knots[i][0], knots[i - 1][0]);
+  for (let i = knots.length - 2; i >= 0; i--) knots[i][1] = Math.min(knots[i][1], knots[i + 1][1]);
+  for (const k of knots) if (k[0] > k[1]) k[1] = k[0]; // spans that cannot all hold: the later bound gives way
+  const finite = knots.flat().filter(Number.isFinite);
+  if (!finite.length) return null;
+  const N = knots.length, day = new Array(N).fill(NaN);
+  day[0] = Number.isFinite(knots[0][0]) ? knots[0][0] : Math.min(...finite);
+  day[N - 1] = Math.max(day[0], Number.isFinite(knots[N - 1][1]) ? knots[N - 1][1] : Math.max(...finite));
+  const settled = new Set([0, N - 1]);
+  for (;;) {
+    const guess = day.slice();
+    let lo = 0;
+    for (let i = 1; i < N; i++) {
+      if (!settled.has(i)) continue;
+      for (let j = lo + 1; j < i; j++) guess[j] = day[lo] + ((day[i] - day[lo]) * (j - lo)) / (i - lo);
+      lo = i;
+    }
+    let worst = -1, by = 0, to = 0;
+    for (let j = 0; j < N; j++) {
+      if (settled.has(j)) continue;
+      const under = knots[j][0] - guess[j], over = guess[j] - knots[j][1];
+      if (under > by) { worst = j; by = under; to = knots[j][0]; }
+      if (over > by) { worst = j; by = over; to = knots[j][1]; }
+    }
+    if (worst < 0) { day.splice(0, N, ...guess); break; }
+    day[worst] = to; settled.add(worst);
+  }
+  for (let j = 1; j < N; j++) day[j] = Math.max(day[j], day[j - 1]);
+  const vaguer = (p, q) => (PRECISIONS.indexOf(p) > PRECISIONS.indexOf(q) ? p : q);
+  const out = legs.map((leg, i) => ({ a: day[2 * i], b: day[2 * i + 1], n: leg.points?.length > 1 ? legPath(leg).length : 0, from: leg.from, to: leg.to,
+    precision: ends[i] ? vaguer(ends[i].start.precision, ends[i].end.precision) : 'year' }));
+  const t0 = day[0], t1 = day[N - 1];
+  const events = (voyage.events ?? []).map((e) => { const d = readDates(e.date)?.start.span[0]; return Number.isFinite(d) ? Math.min(t1, Math.max(t0, d)) : t1; });
+  return { t0, t1, n: out.reduce((s, l) => s + l.n, 0), legs: out, events };
+}
+// Where the pen is on `day`: { share, leg, waiting }, the share of the line drawn (as scene.mjs drawTrack's `reveal`
+// counts it, by samples), the leg it is on, and whether it sits still before that leg sets out
+export function penOn(cal, day) {
+  let walked = 0;
+  for (const [i, l] of cal.legs.entries()) {
+    if (day < l.a) return { share: cal.n ? walked / cal.n : 0, leg: i, waiting: i > 0 };
+    if (day < l.b) return { share: cal.n ? (walked + (l.n * (day - l.a)) / (l.b - l.a)) / cal.n : 0, leg: i, waiting: false };
+    walked += l.n;
+  }
+  return { share: 1, leg: cal.legs.length - 1, waiting: false };
+}
+// A day as the band writes it, at a precision: "20 Jun 1520", "Jun 1520", "1520", "325 BC", "c. 1250"
+const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+export function dayText(day, precision = 'day') {
+  const t = new Date(Math.floor(day) * 864e5), y = t.getUTCFullYear(), year = y < 1 ? `${1 - y} BC` : String(y);
+  if (precision === 'century') return `c. ${year}`;
+  if (precision === 'year') return year;
+  if (precision === 'month') return `${MONTH_SHORT[t.getUTCMonth()]} ${year}`;
+  return `${t.getUTCDate()} ${MONTH_SHORT[t.getUTCMonth()]} ${year}`;
+}
+// How long the play takes, the whole voyage however long it was, in seconds; carried by the link as `voyageplay=`.
+// voyagePlaySeconds reads it back: a value outside the range or off its steps is the default.
+export const VOYAGE_PLAY = { min: 3, max: 30, step: 1, seconds: 9 };
+export function voyagePlaySeconds(text) {
+  const s = Number(text), { min, max, step, seconds } = VOYAGE_PLAY;
+  return text != null && text !== '' && s >= min && s <= max && Number.isInteger((s - min) / step) ? s : seconds;
 }
