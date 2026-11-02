@@ -1,6 +1,6 @@
 # The page on a phone
 
-An account of what broke on a phone ([#109](https://github.com/mark-brannan/portolani/issues/109)), what shipped and what is still open. It is written from the PR bodies; the screenshots are the ones in this folder.
+An account of what broke on a phone ([#109](https://github.com/mark-brannan/portolani/issues/109)), what shipped and what is still open.
 
 ## What broke
 
