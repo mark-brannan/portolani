@@ -708,11 +708,10 @@ test('people: a picture on the map is looked at, put away and dealt back by choo
     await page.waitForFunction(() => document.querySelectorAll('#pictureKeys li').length === 0, null, { timeout: 10000 });
     assert.match(await hash(), /pictures=none(&|$)/);
 
-    // choosing the person again (a click lets them go, the next chooses them) deals every picture back
+    // choosing the person again, one click, deals every picture back
     await page.click('#people');
     await page.click('[data-person="christopher-columbus"]');
-    assert.doesNotMatch(await hash(), /person=/);
-    await page.click('[data-person="christopher-columbus"]');
+    assert.match(await hash(), /person=/);
     await page.waitForFunction(() => document.querySelector('#pictureKeys [data-pic="0"]') && document.querySelector('#pictureKeys [data-pic="1"]'), null, { timeout: 60000 });
     assert.doesNotMatch(await hash(), /pictures=/);
     assert.deepEqual(errors, []);
