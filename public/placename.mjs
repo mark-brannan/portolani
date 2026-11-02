@@ -30,3 +30,10 @@ export function bestPlace(text, candidates) {
   for (const c of candidates) { const s = nameScore(q, c.name); if (s < bestScore) { best = c; bestScore = s; } }
   return best;
 }
+
+// Candidates minus a point that is only one spot of a wider frame named for it ("Pitcairn" the point, "Pitcairn
+// Islands" the frame): typing the short name flies to the frame, not to the point.
+export function withoutPartsOfFrames(points, frames) {
+  const heads = frames.map((f) => fold(f.name));
+  return points.filter((p) => { const n = fold(p.name); return !heads.some((h) => h.startsWith(`${n} `)); });
+}

@@ -492,14 +492,14 @@ test('voyages: several drawn at once, each in its own ink, carried by the link; 
     assert.equal(await page.$eval('#timelinePanel', (d) => d.classList.contains('open')), true, 'a choice shut the drawer');
     assert.deepEqual(await on(), ['columbus', 'magellan', 'drake']); // the list's order
     assert.equal(new Set(await inks()).size, 3, 'two voyages share an ink');
-    assert.match(await hash(), /voyages=magellan,columbus,drake(&|$)/);
+    assert.match(await hash(), /voyages=magellan\.[0-9a-f]{6},columbus\.[0-9a-f]{6},drake\.[0-9a-f]{6}(&|$)/);
     await page.waitForTimeout(400);
     assert.equal(await viewNow(), where, 'the eye moved the view');
     assert.equal(await page.evaluate(() => window.drew), false, 'the eye set the pen going');
     const before = await inkOf();
     await page.click('#voyageList [data-eye="magellan"]');
     assert.deepEqual(await on(), ['columbus', 'drake'], 'the eye did not hide it');
-    assert.match(await hash(), /voyages=magellan~,columbus,drake(&|$)/);
+    assert.match(await hash(), /voyages=magellan\.[0-9a-f]{6}~,columbus\.[0-9a-f]{6},drake\.[0-9a-f]{6}(&|$)/);
     await page.waitForTimeout(400);
     assert.equal(await viewNow(), where, 'the eye moved the view');
     for (const [id, c] of Object.entries(await inkOf())) assert.equal(c, before[id], `${id} changed ink when another was hidden`);
@@ -513,7 +513,7 @@ test('voyages: several drawn at once, each in its own ink, carried by the link; 
     await pen();
     await page.click('#voyageList [data-voyage="magellan"]');
     assert.deepEqual(await on(), ['magellan'], 'the name did not show it alone');
-    assert.match(await hash(), /voyages=magellan,columbus~,drake~(&|$)/);
+    assert.match(await hash(), /voyages=magellan\.[0-9a-f]{6},columbus\.[0-9a-f]{6}~,drake\.[0-9a-f]{6}~(&|$)/);
     await drawing();
     await settled();
     assert.notEqual(await viewNow(), where, 'the name did not fly to frame the voyage');
@@ -527,7 +527,7 @@ test('voyages: several drawn at once, each in its own ink, carried by the link; 
     await page.click('#voyageList [data-eye="drake"]');
     assert.deepEqual(await on(), ['columbus', 'magellan', 'drake'], 'the eyes did not show them again');
     await page.$eval('#voyageList [data-ink="drake"]', (i) => { i.value = '#16727a'; i.dispatchEvent(new Event('input', { bubbles: true })); });
-    assert.match(await hash(), /voyages=magellan,columbus,drake:16727a/);
+    assert.match(await hash(), /voyages=magellan\.[0-9a-f]{6},columbus\.[0-9a-f]{6},drake:16727a/);
     await page.click('#voyageWidth [data-value="2.2"]');
     assert.match(await hash(), /voyagewidth=2.2/);
     if (!(await page.$eval('#timelinePanel', (d) => d.classList.contains('open')))) await page.click('#voyages');
@@ -696,10 +696,14 @@ test('people: a picture on the map is looked at, put away and dealt back by choo
     assert.equal(await page.$eval('#timelinePanel', (d) => d.classList.contains('open')), false);
     await page.evaluate(() => document.activeElement.blur());
     await look();
+    assert.equal(await looked(), 'true', 'Look on the picture\'s edge did not look at it again');
     // looked at, its buttons from the right corner of its lower edge: Put away, Turn over, the link (13 CSS px round)
     const [iw, ih] = await page.evaluate(async () => { const m = (await (await fetch('packs/overlays/people/people.json')).json()).pictures['Portrait_of_a_Man,_Said_to_be_Christopher_Columbus_2.jpg']; return [m.width, m.height]; });
     const k = Math.min((c.width * 0.85) / iw, (Math.min(740, c.y + c.height) - Math.max(0, c.y)) * 0.85 / ih, 1), my = (Math.max(0, c.y) + Math.min(740, c.y + c.height)) / 2;
-    await page.mouse.click(cx + (iw * k) / 2 - 13 * 0.4, my + (ih * k) / 2);
+    const away = { x: cx + (iw * k) / 2 - 13 * 0.4, y: my + (ih * k) / 2 };
+    // pressed once the pointer over it finds Put away (its cursor): a press sent at once was lost now and then under load
+    await page.waitForFunction(({ x, y }) => { const m = document.getElementById('map'); m.dispatchEvent(new PointerEvent('pointermove', { clientX: x, clientY: y, isPrimary: true, bubbles: true })); return m.style.cursor === 'pointer'; }, away, { timeout: 10000, polling: 100 });
+    await page.mouse.click(away.x, away.y);
     await page.waitForFunction(() => document.querySelectorAll('#pictureKeys li').length === 1, null, { timeout: 10000 });
     assert.match(await hash(), /pictures=1(&|$)/, 'put away, the picture is still in the link');
     // the other by the keyboard
