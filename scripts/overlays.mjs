@@ -109,14 +109,14 @@ export function sheetView(overlay, sheet, { w = 1600, h = 1000, pad = 0.08 } = {
 // Whether there is anything of the overlay to draw: its image, or a chart of panels (drawn as they arrive).
 const drawable = (overlay) => !!(overlay?.img || overlay?.panels);
 
-// The sheet drawn whole, opaque (or at `overlay.alpha` while it fades in), over whatever the context holds, under its current transform.
+// The sheet drawn whole, opaque (or at `overlay.opacity`, the chart's slider, times `overlay.alpha` while it fades in), over whatever the context holds, under its current transform.
 // A chart of panels draws each panel that has arrived at its offset, in the sheet's drawn px.
 export function drawSheet(g, overlay, proj, sheet) {
   if (!drawable(overlay) || !sheet) return;
   const m = sheetTransform(overlay, proj, sheet);
   if (!m) return;
   g.save();
-  g.globalAlpha = overlay.alpha ?? 1;
+  g.globalAlpha = (overlay.alpha ?? 1) * (overlay.opacity ?? 1);
   g.globalCompositeOperation = 'source-over';
   g.transform(...m);
   if (overlay.panels) {
@@ -211,11 +211,14 @@ export function drawOverlay(g, overlay, proj, opacity = 0.6, { w = 1600, h = 160
 // The overlays in the link: `overlay=<id>,<id>` the charts' sheets laid over the map, bottom to top, each at its own
 // placement; `sheet=<lon>,<lat>,<scale>,<turn>;...` where each was dragged to, one slot per id in the same order, an
 // empty slot (or none) the chart's own; `overlaymode=pieces` the warped pieces instead, with `overlayopacity=<0..1>` how
-// strongly; `sheethides=1` a voyage's fly takes a sheet off if it would cover the frame (otherwise the voyage is drawn over the sheets). None laid, the sheet, its own placement and 0.6 are the defaults, and a default is left out of the hash.
+// strongly, and the sheet too, faded so the map shows through; `sheethides=1` a voyage's fly takes a sheet off if it would cover the frame (otherwise the voyage is drawn over the sheets). None laid, the sheet, its own placement and the mode's own opacity (the sheet 1, the pieces 0.6) are the defaults, and a default is left out of the hash.
 // `sheets` holds a placement by id, and may keep one for a chart not laid (hidden by its eye), which the hash leaves out.
 // `ids`, when given, are the overlays the site has: any other id is dropped. `q` is a URLSearchParams.
 export const OVERLAY_MODES = ['sheet', 'pieces'];
-export const OVERLAY_DEFAULTS = { overlays: [], overlayMode: 'sheet', sheets: {}, overlayOpacity: 0.6, sheetHides: false };
+export const OVERLAY_DEFAULTS = { overlays: [], overlayMode: 'sheet', sheets: {}, overlayOpacity: null, sheetHides: false };
+// `overlayOpacity` null is the mode's own: the whole sheet opaque, the warped pieces at 0.6.
+export const PIECES_OPACITY = 0.6;
+export const effectiveOpacity = (st) => st.overlayOpacity ?? (st.overlayMode === 'pieces' ? PIECES_OPACITY : 1);
 const placement = (text) => {
   const at = text.split(',').map(Number);
   return at.length === 4 && at.every(Number.isFinite) && Math.abs(at[1]) < 85.1 && at[2] > 0 ? { lon: at[0], lat: at[1], scale: at[2], turn: at[3] } : null;
@@ -234,7 +237,7 @@ export function overlayFromHash(q, ids) {
     overlayMode: OVERLAY_MODES.includes(mode) ? mode : OVERLAY_DEFAULTS.overlayMode,
     sheets,
     sheetHides: q.get('sheethides') === '1',
-    overlayOpacity: q.has('overlayopacity') && o >= 0 && o <= 1 ? o : OVERLAY_DEFAULTS.overlayOpacity,
+    overlayOpacity: q.has('overlayopacity') && o >= 0 && o <= 1 ? o : OVERLAY_DEFAULTS.overlayOpacity, // null: the mode's own
   };
 }
 export function overlayToHash(st, q) {
@@ -243,7 +246,7 @@ export function overlayToHash(st, q) {
   const slots = st.overlays.map((id) => (st.sheets[id] ? sheetText(st.sheets[id]) : ''));
   if (slots.some(Boolean)) q.set('sheet', slots.join(';').replace(/;+$/, ''));
   if (st.sheetHides) q.set('sheethides', '1');
-  if (st.overlayOpacity !== OVERLAY_DEFAULTS.overlayOpacity) q.set('overlayopacity', st.overlayOpacity);
+  if (st.overlayOpacity != null) q.set('overlayopacity', st.overlayOpacity);
 }
 // A placement as the hash writes it: the centre to a thousandth of a degree, the scale to five places (a
 // scan px is a few thousandths of a degree), the turn to a tenth.

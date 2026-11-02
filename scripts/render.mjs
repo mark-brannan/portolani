@@ -85,7 +85,7 @@ if (arg('view')) {
   const [lon, lat, zoom, projection] = arg('view').split(',');
   const [id, opacity] = (arg('overlay') ?? '').split(':'); // `id` the sheet; `id:<opacity>` the warped pieces at that opacity
   const at = (arg('sheet') ?? '').split(',').map(Number), sheet = at.length === 4 && at.every(Number.isFinite) ? { lon: at[0], lat: at[1], scale: at[2], turn: at[3] } : null;
-  const one = await createScene(env, { view: { lon: +lon, lat: +lat, zoom: +zoom, projection }, overlay: id ? { id, mode: opacity ? 'pieces' : 'sheet', sheet, opacity: opacity ?? 0.6 } : null,
+  const one = await createScene(env, { view: { lon: +lon, lat: +lat, zoom: +zoom, projection }, overlay: id ? { id, mode: opacity ? 'pieces' : 'sheet', sheet, ...(opacity && { opacity }) } : null,
     voyages: (arg('voyages') ?? '').split(',').filter(Boolean).map((v) => { const [id, c] = v.split(':'); return { id, ...(c && { colour: `#${c}` }) }; }) });
   const canvas = createCanvas(W, H), out = arg('out') ?? join(ROOT, 'out', 'view.png');
   drawScene(canvas.getContext('2d'), one.scene, one.data, one.bg, { scale: 1, x: 0, y: 0 });

@@ -16,7 +16,7 @@
 // (docs/atlas/under-the-hood.md), off by default.
 import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, isBroken, legPath, voyageView, CONTINENT_ZOOM_END, readVoyage, chronological, voyageLink, sightMarks, sightHits, drawnMarks, SIGHT_TILES, noteMarks, pickMark, markClear, tileSpot, groupMarks, dateSpan, readDate, noteCount, drawNoteMark, drawNoteRing, notePulse, drawBadge, drawMarkGlyph, ZOOM } from './scene.mjs';
 import { ORIGINS } from './atlas.mjs';
-import { OVERLAY_DEFAULTS, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
+import { OVERLAY_DEFAULTS, effectiveOpacity, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
 import { PEOPLE_FILE, PICTURES_FILE, SIGHT_PICTURES_FILE, SIGHT_MANIFEST_FILE, sightDeal, lifeSpan, laneAxis, eraBands, EARLIER_MARKS, pictureCredit, pictureNote, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, sightFrame, viewContaining, withPictures, peopleOf, whoOf, deathOf, sightPicturesOf, MEMENTO, mementoNext } from './people.mjs';
 import { fold, bestPlace } from './placename.mjs';
@@ -555,7 +555,7 @@ function showHood() {
   $('debug').value = style.debug || 'off';
   $('sheetHides').value = style.sheetHides ? '1' : '0';
   $('overlayMode').value = style.overlayMode; $('overlayOpacityRow').hidden = style.overlayMode !== 'pieces';
-  $('overlayOpacity').value = String(style.overlayOpacity); $('overlayOpacityOut').textContent = `${Math.round(style.overlayOpacity * 100)}%`;
+  $('overlayOpacity').value = String(effectiveOpacity(style)); $('overlayOpacityOut').textContent = `${Math.round(effectiveOpacity(style) * 100)}%`;
   const t = parseTune(style.tune).tune, at = (name) => t[name] ?? TUNE_KNOBS[name].def;
   for (const [name, id] of Object.entries(KNOB_CHIPS)) $(id).value = String(at(name));
   for (const [name, id] of Object.entries(KNOB_SLIDERS)) {
@@ -568,7 +568,7 @@ function showHood() {
 function readHood() {
   const pairs = [...Object.entries(KNOB_CHIPS).map(([name, id]) => [name, $(id).value]),
     ...Object.entries(KNOB_SLIDERS).filter(([, id]) => $(id).dataset.set).map(([name, id]) => [name, $(id).value])];
-  return { debug: parseDebug($('debug').value).text, tune: parseTune(pairs.map(([n, v]) => `${n}:${v}`).join(',')).text, overlayMode: $('overlayMode').value, sheetHides: $('sheetHides').value === '1', overlayOpacity: Number($('overlayOpacity').value) };
+  return { debug: parseDebug($('debug').value).text, tune: parseTune(pairs.map(([n, v]) => `${n}:${v}`).join(',')).text, overlayMode: $('overlayMode').value, sheetHides: $('sheetHides').value === '1', overlayOpacity: $('overlayOpacityRow').hidden ? style.overlayOpacity : Number($('overlayOpacity').value) };
 }
 function changed() {
   showStyle();
@@ -756,7 +756,7 @@ async function render() {
       regions: style.regionsZoom > 0 ? style.regions : 'off', regionSet: style.regionSet, regionsZoom: style.regionsZoom,
       sprites: [...selection], kinds, view, pinned: !phone.matches, pinTitle: style.autoTitle ? pinTitle : null,
       voyages: style.voyages.filter((v) => !v.hidden).map((v) => ({ id: v.id, colour: ink[v.id], width: style.voyageWidth })), person: style.person, voyageWidth: style.voyageWidth,
-      overlays: style.overlays.map((id) => ({ id, mode: style.overlayMode, sheet: style.sheets[id] ?? null, opacity: style.overlayOpacity })),
+      overlays: style.overlays.map((id) => ({ id, mode: style.overlayMode, sheet: style.sheets[id] ?? null, opacity: effectiveOpacity(style) })),
       sights: sightTiles().map(({ lon, lat, tile }) => ({ name: tile.title, lon, lat, ruin: tile.ruin ?? false, ...(tile.site != null && { site: tile.site }) })),
       debug: parseDebug(style.debug).debug, tune: parseTune(style.tune).tune,
     });
@@ -2456,7 +2456,7 @@ let OVERLAYS = []; // packs/overlays/overlays.json, once loaded
 const ownSheet = (id) => OVERLAYS.find((v) => v.id === id)?.sheet ?? null;
 let chartsFresh = false; // the Charts drawer opened with no sheet shown, and none shown since: the next shown fades in
 let fadeIn = null; // the overlay id whose sheet fades in when next placed
-$('chartList').innerHTML = CHARTS.map(({ name, year, made, text, overlay }, i) => `<li class="chart"${overlay ? ` data-overlay="${overlay}"` : ''}><button type="button" class="thumb none" data-chart="${i}" data-to="view" title="The chart's frame">${skin}</button><div class="about"><span class="head"><button type="button" class="name" data-chart="${i}" data-to="view">${name}</button>${overlay ? `<button type="button" class="eye" data-chart="${i}" data-to="eye" aria-pressed="false" aria-label="Show ${name}" hidden>${EYE}</button>` : ''}</span><span class="where"><button type="button" class="city" data-chart="${i}" data-to="made">${made.title}</button>, ${year}</span>${caption(text)}</div></li>`).join('');
+$('chartList').innerHTML = CHARTS.map(({ name, year, made, text, overlay }, i) => `<li class="chart"${overlay ? ` data-overlay="${overlay}"` : ''}><button type="button" class="thumb none" data-chart="${i}" data-to="view" title="The chart's frame">${skin}</button><div class="about"><span class="head"><button type="button" class="name" data-chart="${i}" data-to="view">${name}</button>${overlay ? `<button type="button" class="eye" data-chart="${i}" data-to="eye" aria-pressed="false" aria-label="Show ${name}" hidden>${EYE}</button>` : ''}</span><span class="where"><button type="button" class="city" data-chart="${i}" data-to="made">${made.title}</button>, ${year}</span>${overlay ? `<div class="slider fade" hidden><input type="range" min="0" max="1" step="0.05" aria-label="Opacity of ${name}'s sheet: lower lets the map show through"><output></output></div>` : ''}${caption(text)}</div></li>`).join('');
 // The sheets laid, bottom to top, and where each lies; `fade` the id of one that fades in as it is placed. `draw` false
 // when a flight follows at once: its landing draws them, and a render now would only be thrown away by its first frame.
 function setSheets(overlays, sheets = style.sheets, fade = null, draw = true) {
@@ -2505,8 +2505,19 @@ function showOverlay() {
     const li = eye.closest('li'), on = style.overlays.includes(li.dataset.overlay);
     eye.setAttribute('aria-pressed', String(on));
     eye.setAttribute('aria-label', `${on ? 'Hide' : 'Show'} ${li.querySelector('.name').textContent}`);
+    const fade = li.querySelector('.fade'), at = effectiveOpacity(style); // the sheet's opacity, while its sheet is shown
+    fade.hidden = !on || style.overlayMode !== 'sheet';
+    if (document.activeElement !== fade.firstChild) fade.firstChild.value = String(at);
+    fade.lastChild.textContent = `${Math.round(at * 100)}%`;
   }
 }
+let fadeTimer = 0;
+$('chartList').addEventListener('input', (e) => {
+  if (!e.target.matches('.fade input')) return;
+  style = { ...style, overlayOpacity: Number(e.target.value) };
+  showOverlay(); showHood(); writeHash();
+  clearTimeout(fadeTimer); fadeTimer = setTimeout(render, 80); // drawn when the slider pauses
+});
 
 // A sheet fading in over the scene just placed: the scene without it is kept, and the sheet drawn over it at a rising
 // alpha; a move or a newer placement ends the fade with the sheet whole.
