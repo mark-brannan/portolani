@@ -1211,15 +1211,15 @@ const placedBox = ({ box: [c0, c1, c2] }) => obb((c0[0] + c2[0]) / 2, (c0[1] + c
 
 // The stand-ins for the places that have a tile (the page's `sights`: { name, lon, lat, ruin, site }) and nothing of their
 // own drawn: a lesser place with no name, from POI_ZOOM on, where the tile opens on a tap. A ruin where the sight says
-// so (`ruin`, a fact about the place that its position cannot give), else the plain tower. A `ruin: true` is always drawn
-// (ruinAt); any other placeLesser drops where a town or another mark is already drawn there. `site` is the mark's place
+// so (`ruin`, a fact about the place that its position cannot give), else the plain tower. A ruin gives way only to a
+// city the map draws over the site (ruinAt); any other placeLesser drops where a town or another mark is already drawn there. `site` is the mark's place
 // in its tile's `at`, carried to the drawn mark so a tap on it opens that mark's tile. The marks of one sight that would
 // meet are spread apart first (spreadMarks), so they keep their order on the earth at every zoom; a sight's several marks
 // stand where that puts them (`held`), not nudged onto dry land as a lone mark is.
 function standIns(sights, data, view) {
   if (!Array.isArray(sights) || view.zoom < POI_ZOOM) return [];
   const out = sights.filter((s) => Number.isFinite(s.lon) && Number.isFinite(s.lat) && !POIS.some((p) => p.name === s.name))
-    .map((s) => ({ name: s.name, lon: s.lon, lat: s.lat, xy: data.proj.project(s.lon, s.lat), building: s.ruin ? 'ruin' : 'tower', ...(s.ruin === true && { ruin: true }), ...(Number.isInteger(s.site) && { site: s.site }), poi: true, mark: true, rank: 0, pop: 0 }))
+    .map((s) => ({ name: s.name, lon: s.lon, lat: s.lat, xy: data.proj.project(s.lon, s.lat), building: s.ruin ? 'ruin' : 'tower', ...(s.ruin && { ruin: true }), ...(Number.isInteger(s.site) && { site: s.site }), poi: true, mark: true, rank: 0, pop: 0 }))
     .filter((s) => s.xy.every(Number.isFinite));
   for (const name of new Set(out.map((s) => s.name))) {
     const group = out.filter((s) => s.name === name);
@@ -1264,11 +1264,14 @@ function placeLesser(data, field, boxes, ctx, towns, names, poi, cityBoxes = new
     if (px < 8 || py < 8 || px > W - 8 || py > H - 8) continue;
     if (!p.ruin && towns.some((t) => Math.hypot(t.x - px, t.y - py) < TUNE.townGap / 2)) continue;
     const shape = TOWER_BY_ID.get(p.building ?? lesserBuilding(p.rank, seedOf(p.name))), top = (shape.top ?? TOWER_H) * s, hw = shape.w * s;
-    // a ruin is drawn beside whatever holds its spot, else on it: always where the sight says `ruin: true`, else
-    // wherever no town stands on the site nor a city's ground covers it (a mark of the plain tower or a lettered place
-    // keeps the rule below)
-    if (p.ruin || (p.mark && shape.id === 'ruin' && !towns.some((t) => t.city && insideRings(pxRings(t.city.rings), px, py)))) {
-      out.push(ruinAt(p, p.held ? p.xy : standOf(p, top, hw, field, null, poi), top, hw, boxes, cityBoxes, k));
+    // a ruin gives way only where the map draws a city over the site at this zoom: its built-up ground, or its town
+    // mark standing on the site; beside a town drawn near it where there is room, else it gives way (ruinAt). A living
+    // town the map does not draw there never hides it (a mark of the plain tower or a lettered place keeps the rule below)
+    if (p.ruin) {
+      const site = obb(px, py, 0, 0.5, 0.5); // the site itself, a point
+      if (towns.some((t) => (t.city ? insideRings(pxRings(t.city.rings), px, py) : t.icon && obbOverlap(t.icon, site)))) continue;
+      const ruin = ruinAt(p, p.held ? p.xy : standOf(p, top, hw, field, null, poi), top, hw, boxes, cityBoxes, k, towns);
+      if (ruin) out.push(ruin);
       continue;
     }
     const [x, y] = p.held ? p.xy : standOf(p, top, hw, field, null, poi);
@@ -1291,15 +1294,20 @@ function placeLesser(data, field, boxes, ctx, towns, names, poi, cityBoxes = new
 }
 
 // A ruin's icon at [x, y], or the nearest spot within two widths of it clear of the boxes placed (a city's plan is no
-// obstacle), else at [x, y] all the same; the box pushed so what comes after keeps clear of it.
-function ruinAt(p, [x0, y0], top, hw, boxes, cityBoxes, k) {
+// obstacle), else at [x, y] all the same, unless a town's mark is what leaves no room, when it gives way (null); the box
+// pushed so what comes after keeps clear of it.
+function ruinAt(p, [x0, y0], top, hw, boxes, cityBoxes, k, towns = []) {
   const clear = (x, y) => { const b = obb(x, y - top / 2, 0, hw, top / 2); return obbInside(b) && !boxes.some((o) => !cityBoxes.has(o) && obbOverlap(o, b)) && b; };
   let x = x0, y = y0, icon = clear(x, y);
   for (let r = hw / 2; !icon && r <= hw * 4; r += hw / 2) for (let a = 0; a < 12 && !icon; a++) {
     const [dx, dy] = [Math.cos(a * Math.PI / 6) * r, Math.sin(a * Math.PI / 6) * r];
     if ((icon = clear(x0 + dx, y0 + dy))) [x, y] = [x0 + dx, y0 + dy];
   }
-  if (!icon) [x, y, icon] = [x0, y0, obb(x0, y0 - top / 2, 0, hw, top / 2)];
+  if (!icon) {
+    icon = obb(x0, y0 - top / 2, 0, hw, top / 2);
+    if (towns.some((t) => t.icon && obbOverlap(t.icon, icon))) return null;
+    [x, y] = [x0, y0];
+  }
   boxes.push(icon);
   return { x, y, h: LESSER_PX * k, tower: 'ruin', name: p.name, rank: p.rank, label: icon, poi: true, ...(p.mark && { mark: true }), ...('site' in p && { site: p.site }) };
 }
@@ -1634,7 +1642,7 @@ function buildScene(data, sprites, ctx, world = {}) {
       ? obb(x, y - th / 2, 0, ((th / 2) * sprite.img.width) / sprite.img.height, th / 2)
       : obb(x, y - th / 2, 0, (th * tower.w) / TOWER_H, th / 2); // the tower, its widest part
     if (boxes.some((b) => obbOverlap(b, icon))) continue;
-    towns.push({ x, y, size, h: th, family, red: p.rank <= 2, name: p.name, rank: p.rank, labelY: y - th - 6, ...(sprite ? { sprite } : { tower: tower.id }) });
+    towns.push({ x, y, size, h: th, family, red: p.rank <= 2, name: p.name, rank: p.rank, labelY: y - th - 6, icon, ...(sprite ? { sprite } : { tower: tower.id }) });
     boxes.push(icon);
   }
 
