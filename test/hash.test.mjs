@@ -365,6 +365,8 @@ scenario('person: choosing a life bar writes person=, a link with it chooses tha
 });
 
 scenario('sight, site, pictures, pictureat: a sight\'s deal round-trips; a name no tile has is dropped with its keys', 'map=6.14/40.474/7.400&sight=Tyre&site=1&pictures=0,2&pictureat=0:35.200,33.270,1.5', async (page) => {
+  await placed(page);
+  await slide(page, 'density', 1.25); // makes the page rewrite the hash, so what is read back is the writer's
   await page.waitForFunction(() => /sight=Tyre/.test(location.hash) && /pictureat=/.test(location.hash), null, { timeout: 90000 });
   const q = await params(page);
   assert.equal(q.get('sight'), 'Tyre');
