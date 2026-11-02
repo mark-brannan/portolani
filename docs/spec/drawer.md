@@ -232,7 +232,7 @@ Feature: Continents  (slider `#continentsZoom` 0..15 step 1; hash `continents`, 
     Given the chart at `#continents=99`
     When the page loads
     Then the slider reads 15 (`zoomOf` clamps to MAX_ZOOM and rounds)
-    # The layer ends at N + 0.5 (`zoomEnd`, scene.mjs:2626; drawn while zoom < N + 0.5): at default 5, the default view (zoom 5.48) still shows continents. That half zoom is deliberate (continents stay visible through 5.5), so only the label "zoom N and out" lags it; not a code mismatch.
+    # The layer ends at N (`zoomEnd`, scene.mjs: drawn while zoom <= N), as the label "zoom N and out" says; test/zoom-end.test.mjs.
     # Mismatch: setting the slider to 1 writes `continents=1`, which the reader treats as an older link's checked box and maps to the default 5 (page.js:74, `v === '1' ? dflt`). The value 1 does not round-trip.
 
 Feature: Regions language  (chips `#regions`, hash `regions`, default `latin`, values `latin|english`; legacy `off`) [verified page.js:81-83, 280]
@@ -283,7 +283,7 @@ Feature: Regions  (slider `#regionsZoom` 0..15 step 1; hash `regionszoom`, defau
   Scenario: the same pop as the continents slider
     Given `#map=7.40/40.000/12.000`
     When Regions is 7
-    Then region names are drawn (zoom < 7.5); no continent name competes, since continents end at 5.5 by default, though a cartouche, rose or beast can still drop a region name
+    Then region names are drawn to zoom 7 and not past it; no continent name competes, since continents end at 6 by default, though a cartouche, rose or beast can still drop a region name
     # Mismatch: as Continents, a slider at 1 does not round-trip (`regionszoom=1` reads as the default 7).
 
 Feature: Land border  (chips `#land`, hash `land`, default `ochre`, values `off|gilt|green|ochre`; legacy `islands`) [verified page.js:86-87, 281; scene.mjs:81, 2566]

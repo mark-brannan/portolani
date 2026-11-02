@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { bestPlace } from '../public/placename.mjs';
+import { bestPlace, withoutPartsOfFrames } from '../public/placename.mjs';
 
 // Go's candidates in its order: chart views, points of interest, then towns, bigger first.
 const candidates = ['The Mediterranean', 'The North', 'Pitcairn', 'London', 'São Paulo', 'Londrina', 'New London', 'Paulo Afonso']
@@ -23,4 +23,11 @@ test('Go finds nothing for an empty box, a short miss or a far slip', () => {
   assert.equal(find('   '), null);
   assert.equal(find('qxz'), null);
   assert.equal(find('zanzibar'), null);
+});
+
+test('Go flies "pitcairn" to the Pitcairn Islands frame, not the Adamstown point', () => {
+  const frames = [{ name: 'Pitcairn Islands', frame: true }];
+  const all = [...frames, ...withoutPartsOfFrames([{ name: 'Pitcairn' }, { name: 'Henderson' }], frames)];
+  assert.equal(bestPlace('pitcairn', all).name, 'Pitcairn Islands');
+  assert.equal(bestPlace('henderson', all).name, 'Henderson');
 });
