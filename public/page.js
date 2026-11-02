@@ -1625,8 +1625,9 @@ const crossing = () => {
   for (const [id, dots] of voyageDots) if (dots.some(([lon, lat]) => { const p = proj.project(lon, lat); return p && sheets.some((o) => onSheet(o, proj, o.sheet, p[0], p[1])); })) ids.add(id);
   return ids;
 };
-// settles the inks of the voyages listed (settleInks): `fresh` the ids just shown, which yield to those already shown
-const settleVoyageInks = (fresh) => { const s = settleInks(style.voyages, crossing(), fresh); if (s !== style.voyages) style = { ...style, voyages: s }; };
+// settles the inks of the voyages listed (settleInks): `fresh` the ids just shown, which yield to those already shown;
+// a settled ink rides in the link at once, so a link copied after a sheet is laid or panned onto reopens in the same colours
+const settleVoyageInks = (fresh) => { const s = settleInks(style.voyages, crossing(), fresh); if (s !== style.voyages) { style = { ...style, voyages: s }; writeHash(); } };
 const voyageInk = () => { settleVoyageInks(); return Object.fromEntries(style.voyages.map((v) => [v.id, v.colour ?? v.ink])); };
 const isShown = (id) => style.voyages.some((v) => v.id === id && !v.hidden);
 function showVoyage() {
