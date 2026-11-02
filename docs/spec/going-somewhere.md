@@ -5,7 +5,7 @@ Feature: Places to fly to  (the astrolabe `#sights`, 38 sights in five sections;
   Scenario: noteworthy ports by era
     Given the astrolabe drawer open
     When the user reads the astrolabe's groups
-    Then the sights come in five sections, each under its own heading, in time order: the ancient world, the medieval Indian Ocean and Asia, Mali's trade network (the Sahara's roads and the Niger's towns and goldfields: Niani, Timbuktu, Gao, Walata, Taghaza, Bambuk, Bure and the two roads, 8th to 16th century), the age of discovery, the modern world; six ports each but for Mali's nine and the age of discovery's eleven, most of them outside Europe
+    Then the sights come in five sections, each under its own heading, in time order: the ancient world, the medieval Indian Ocean and Asia, Mali's trade network, the age of discovery, the modern world; six sights each but for Mali's nine and the age of discovery's eleven, most of them outside Europe
     And each heading is the port names' size and weight, in italic, and folds its group, with its count and span of years beside it: only the age of discovery is open at first, and opening one slides the open one shut
     And the date sits to the right of the name, so the button is short and wide, and under it is the caption; the date (a year, a century or a span); the age of discovery also holds Seville, Genoa, Venice, Majorca and Dieppe, their dates followed by "charts made here"
     And a port whose name has changed lists the historic name first and today's in brackets, "Batavia (Jakarta)", "Calicut (Kozhikode)"

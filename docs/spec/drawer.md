@@ -2,7 +2,7 @@
 
 One Feature per control.
 
-Feature: Drawer open and close  (rose button `#open`, one of seven instrument buttons in `#where`; shut by `#open` again, Esc, a press outside it or focus leaving it; there is no close button) [verified page.js:593-612 at main]
+Feature: Drawer open and close  (rose button `#open`, one of seven instrument buttons in `#where`; shut by `#open` again, Esc, a press outside it or focus leaving it; there is no close button) [verified against main, 2026-11-02]
   Scenario: open, then Esc
     Given the chart with the drawer shut (`#open` has `aria-expanded=false`)
     When the user clicks `#open`, then presses Escape
@@ -215,7 +215,7 @@ Feature: Rhumb lines  (checkbox `#rhumb`, hash `rhumb=0` when off, default on) [
     When the user unticks Rhumb lines
     Then the hash gains `rhumb=0` and the rose-to-rose lines are gone; the roses remain
 
-Feature: Continents  (slider `#continentsZoom` 0..15 step 1; hash `continents`, default `6`; label "zoom N and out") [verified page.js:74, 82-83, 354, 523; scene.mjs:982, 1005, 2626]
+Feature: Continents  (slider `#continentsZoom` 0..15 step 1; hash `continents`, default `6`; label "zoom N and out") [verified page.js:109, 514; scene.mjs:3281, 3313]
   Tested by: test/hash.test.mjs — 'continents: the slider round-trips'
   Tested by: test/hash.test.mjs — 'continents: 0 is off and 15 is always'
   Tested by: test/hash.test.mjs — 'continents: a hash number past the top clamps to 15'
