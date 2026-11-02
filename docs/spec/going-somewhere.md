@@ -1,19 +1,19 @@
 # Going somewhere
 
-Feature: Places to fly to  (the astrolabe `#sights`, 39 rows of sights and sections; the anchor `#anchor`, 14 anchorages; the chart `#charts`, 7 charts with "Where it was made" and "The sheet"; each a drawer in the `#where` row) [verified page.js:585, 786-830 at main]
+Feature: Places to fly to  (the astrolabe `#sights`, 38 sights in five sections; the anchor `#anchor`, 16 anchorages; the chart `#charts`, 11 charts, each a row with its name, its eye and the city it was made in; each a drawer in the `#where` row) [verified against main, 2026-11-02]
   # The audit at ab47ea7 read one anchor button `#places` with a `#flyout` of 24 `ORIGINS`; #206 and #209 split it into these three drawers. Their contents are not yet specified here.
   Scenario: noteworthy ports by era
     Given the astrolabe drawer open
     When the user reads the astrolabe's groups
-    Then the noteworthy ports come in four eras, each under its own heading, in time order: the ancient world, the medieval Indian Ocean and Asia, the age of discovery, the modern world; six ports each, most of them outside Europe
-    And each heading is the port names' size and weight, in italic, and folds its group: only the age of discovery is open at first
+    Then the sights come in five sections, each under its own heading, in time order: the ancient world, the medieval Indian Ocean and Asia, Mali's trade network (the Sahara's roads and the Niger's towns and goldfields: Niani, Timbuktu, Gao, Walata, Taghaza, Bambuk, Bure and the two roads, 8th to 16th century), the age of discovery, the modern world; six ports each but for Mali's nine and the age of discovery's eleven, most of them outside Europe
+    And each heading is the port names' size and weight, in italic, and folds its group, with its count and span of years beside it: only the age of discovery is open at first, and opening one slides the open one shut
     And the date sits to the right of the name, so the button is short and wide, and under it is the caption; the date (a year, a century or a span); the age of discovery also holds Seville, Genoa, Venice, Majorca and Dieppe, their dates followed by "charts made here"
     And a port whose name has changed lists the historic name first and today's in brackets, "Batavia (Jakarta)", "Calicut (Kozhikode)"
     And each port opens a flavour-text tile on a click of its mark, with no lettering beside the mark
   Scenario: pick a sight
     Given the chart at the default view
     When the user clicks `#sights`, then "Lisbon"
-    Then the drawer shuts, and after the 600 ms flight the hash holds `map=7.50/38.720/-9.140`
+    Then the drawer stays open, and after the flight the hash holds `map=7.50/38.720/-9.140`, and the drawer's foot shows Lisbon's card
     And `#title` (automatic) reads the entry's own title in capitals, "LISBON" (`pinTitle?.toUpperCase()`, scene.mjs:1676 at main)
   Scenario: a frame entry
     Given the chart at the default view
@@ -22,7 +22,7 @@ Feature: Places to fly to  (the astrolabe `#sights`, 39 rows of sights and secti
   Scenario: the drawers are click-driven
     Given every drawer shut
     When the user clicks `#sights`, then clicks outside, then reopens and presses Escape
-    Then the drawer opens on each click and shuts on each close; opening another instrument shuts it; hovering opens nothing (touch.test.mjs:214)
+    Then the drawer opens on each click and shuts on each close; a choice in it leaves it open, on a phone too; opening another instrument shuts it; hovering opens nothing (touch.test.mjs:214)
   Scenario: pin ends on a hand move
     Given a flight to "Lisbon" has landed (automatic title)
     When the user drags the map
@@ -76,7 +76,7 @@ Feature: My position  (button `#locate`, inside the Go drawer) [docs/decisions.m
   Scenario: granted, then Go
     Given `#locate` has filled `#coordsText` with the fix
     When the user presses Go
-    Then the Go drawer shuts and the view flies to the fix at zoom `max(current, 10)`
+    Then the Go drawer stays open and the view flies to the fix at zoom `max(current, 10)`
     And the hash ends `map=10.00/43.712/7.299`, the link carrying the position in its usual `map=` form
   Scenario: refused
     Given geolocation permission denied
@@ -90,27 +90,27 @@ Feature: My position  (button `#locate`, inside the Go drawer) [docs/decisions.m
 Feature: Going to a voyage  (the dividers `#voyages`, list `#voyageList`; `voyageView` in scene.mjs) [#242] Tested by: test/voyages.test.mjs (the in-view and fit decision); "several chosen at once" and "putting a voyage off" are verified by hand in a headless browser (PR #261), with no automated test
   Scenario: some of the track is in view
     Given the view `map=5.50/38.000/-8.000`, on Iberia
-    When the user opens `#voyages` and chooses "Magellan and Elcano round the world"
-    Then the track is drawn and the hash still holds `map=5.50/38.000/-8.000`
-    # The default view, centred on 7° E, stops just short of Sanlúcar, so from there Magellan flies.
+    When the user opens `#voyages` and clicks the eye in the row of "Magellan and Elcano round the world"
+    Then the track is drawn and the hash still holds `map=5.50/38.000/-8.000`: an eye never moves the map
+    # A click on the voyage's name instead flies to frame the whole track, even with part of it in view (voyageView with `whole`).
   Scenario: none of the track is in view
     Given the view `map=6.00/25.000/120.000`, on the China Seas, where no part of Columbus's first voyage lies
-    When the user chooses "Columbus's first voyage to the Indies"
-    Then the map flies (the 600 ms flight of a sight) to the view that fits the whole track, with a tenth of its span spare on each side
+    When the user clicks the name of "Columbus's first voyage to the Indies"
+    Then the map flies (the flight of a sight) to the view that fits the whole track, with a tenth of its span spare on each side
     And the drawer stays open, so another can be chosen
   Scenario: a track across the date line
     Given a view far from the Pacific
-    When the user chooses a voyage that crosses the date line
+    When the user clicks the name of a voyage that crosses the date line
     Then the fitted view is centred on the Pacific, the short way round, not on the far side of the globe
   Scenario: several chosen at once
     Given a view where neither voyage lies
-    When the user chooses one voyage and then another before the first flight lands
-    Then the map fits the last one chosen; the first is drawn but not flown to
+    When the user clicks one voyage's name and then another's before the first flight lands
+    Then the map fits the last one clicked; the first is hidden (a name shows its voyage alone) and not flown to
     And a choice is weighed against where a flight is bound, not the frame it is passing through
   Scenario: putting a voyage off
     Given a voyage on
-    When the user clicks it again
-    Then it is taken off the chart and the view does not move
+    When the user clicks its eye again
+    Then it is hidden: its eye reads `aria-pressed=false`, it keeps its place and colour in the list, and the view does not move
 
 Feature: Reduced motion  (OS setting `prefers-reduced-motion`) [verified page.js:796]
   Scenario: a jump, not a flight

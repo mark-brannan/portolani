@@ -1,14 +1,14 @@
 # Remote islands
 
-Feature: Remote islands  (the anchor `#anchor`, two rows in the anchor's "Seas and islands" group) [verified page.js:1147-1150 at acf745d]
+Feature: Remote islands  (the anchor `#anchor`, two of the seven rows in the anchor's "Seas and islands" group, which is folded until its heading is clicked: only the first group marked open, "Regions", is open at first) [verified against main, 2026-11-02]
   Scenario: the group and its rows
     Given the anchor drawer open
-    When the user reads "Seas and islands"
-    Then two buttons are among its rows, "Pukapuka Atoll" and "Pitcairn Islands", each with its date beside the name and its flavour text under it
+    When the user opens the group "Seas and islands"
+    Then two buttons are among its seven rows, "Pukapuka Atoll" and "Pitcairn Islands", each with its date beside the name and its flavour text under it
   Scenario: Pukapuka
     Given the chart at the default view
     When the user clicks "Pukapuka Atoll"
-    Then the drawer shuts and, after the flight, the view is centred on lon -138.8, lat -14.82 at zoom 6.5
+    Then the drawer stays open and, after the flight, the view is centred on lon -138.8, lat -14.82 at zoom 6.5
     And `#title` (automatic) reads "PUKAPUKA", the row's own title, not the button's name
   Scenario: Pitcairn covers all four islands
     Given the same
