@@ -37,7 +37,7 @@ const VIEWS = {
   'levant-z6-marks': { lon: 33, lat: 32.5, zoom: 6 }, // a place with a tile and no figure gets a mark: Tyre a ruin, and Alexandria's on the Pharos
   'ostia-z7-ruin': { lon: 12.29, lat: 41.76, zoom: 7 }, // and a ruin where a sight says so (Ostia)
   'sheet-z3-voyage': { lon: -30, lat: 15, zoom: 3 }, // de la Cosa's sheet laid over the Atlantic with Columbus's voyage drawn over it, in a colour that reads against the scan
-  'pieces-z4-wipe': { lon: -45, lat: 20, zoom: 3.2 }, // de la Cosa's warped pieces left of the compare line, the bare map right (the slider wipe)
+  'pieces-z3.2-wipe': { lon: -45, lat: 20, zoom: 3.2 }, // de la Cosa's warped pieces left of the compare line, the bare map right (the slider wipe)
   'old-world-z2.6-1375': { lon: 62, lat: 33, zoom: 2.6 }, // the regions in the Catalan Atlas's names, read in English (docs/period-names)
 };
 // settings a golden draws with beyond the defaults; region-z5 is the README's picture, lettered PORTOLANI
@@ -49,7 +49,7 @@ const OPTS = { 'region-z5': { autoTitle: false }, 'world-z2-voyage': { voyages: 
   'levant-z6-marks': { sights: [{ name: 'Tyre', lon: 35.1933, lat: 33.2681, ruin: true }, { name: 'Tyre', lon: 35.2111, lat: 33.2692, ruin: true }, { name: 'Alexandria', lon: 29.886, lat: 31.214, ruin: true }] },
   'ostia-z7-ruin': { sights: [{ name: 'Ostia', lon: 12.29, lat: 41.76, ruin: true }] },
   'sheet-z3-voyage': { overlays: [{ id: 'de-la-cosa', mode: 'sheet' }], voyages: [{ id: 'columbus', colour: VOYAGE_CONTRAST[0], width: 3.2 }] },
-  'pieces-z4-wipe': { overlays: [{ id: 'de-la-cosa', mode: 'pieces', opacity: 0.8, clip: 0.5 }] },
+  'pieces-z3.2-wipe': { overlays: [{ id: 'de-la-cosa', mode: 'pieces', opacity: 0.8, clip: 0.5 }] },
   'old-world-z2.6-1375': { regions: 'english', regionSet: 'catalan-1375' } };
 // and its full-size render is kept for the README, so `npm run golden` refreshes both together
 const README_IMAGE = join(ROOT, 'docs', 'readme.jpg');

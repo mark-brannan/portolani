@@ -2692,15 +2692,19 @@ function placeCompareLine() {
   line.style.left = `${r.left + style.comparePos * r.width}px`; line.style.top = `${Math.max(0, r.top)}px`; line.style.height = `${Math.min(innerHeight, r.bottom) - Math.max(0, r.top)}px`;
 }
 addEventListener('resize', placeCompareLine);
+new ResizeObserver(placeCompareLine).observe(canvas); // on a phone a drawer opening or closing resizes the canvas without a window resize
 $('compareLine').addEventListener('pointerdown', (e) => {
   if (style.compare !== 'swipe') return;
   e.preventDefault(); e.stopPropagation();
   const move = (m) => {
     const r = canvas.getBoundingClientRect();
-    $('comparePos').value = String(Math.max(0, Math.min(1, (m.clientX - r.left) / r.width)));
-    readControls();
+    style.comparePos = Math.max(0, Math.min(1, (m.clientX - r.left) / r.width));
+    $('comparePos').value = String(style.comparePos);
+    placeCompareLine(); // the line follows at once; the render is at most one a frame, and one more on release
+    frame ||= requestAnimationFrame(() => { frame = 0; readControls(); });
   };
-  const up = () => { removeEventListener('pointermove', move); removeEventListener('pointerup', up); removeEventListener('pointercancel', up); };
+  let frame = 0;
+  const up = () => { cancelAnimationFrame(frame); readControls(); removeEventListener('pointermove', move); removeEventListener('pointerup', up); removeEventListener('pointercancel', up); };
   addEventListener('pointermove', move); addEventListener('pointerup', up); addEventListener('pointercancel', up);
 });
 let typing = 0; // a typed title is placed when the typing pauses, not on every key: a placement takes up to a few hundred ms
