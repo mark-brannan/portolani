@@ -565,10 +565,16 @@ function showHood() {
     $(`${id}Out`).textContent = v == null ? BAND_OWN[name] : KNOB_OUT[name](v);
   }
 }
+// the slider's value only while its own mode is showing and it was moved off the mode's default; a mode change drops it, so one mode's opacity never lands on the other
+function opacityRead() {
+  if ($('overlayMode').value !== style.overlayMode || $('overlayOpacityRow').hidden) return $('overlayMode').value !== style.overlayMode ? null : style.overlayOpacity;
+  const v = Number($('overlayOpacity').value);
+  return v === effectiveOpacity(style) ? style.overlayOpacity : v;
+}
 function readHood() {
   const pairs = [...Object.entries(KNOB_CHIPS).map(([name, id]) => [name, $(id).value]),
     ...Object.entries(KNOB_SLIDERS).filter(([, id]) => $(id).dataset.set).map(([name, id]) => [name, $(id).value])];
-  return { debug: parseDebug($('debug').value).text, tune: parseTune(pairs.map(([n, v]) => `${n}:${v}`).join(',')).text, overlayMode: $('overlayMode').value, sheetHides: $('sheetHides').value === '1', overlayOpacity: $('overlayOpacityRow').hidden ? style.overlayOpacity : Number($('overlayOpacity').value) };
+  return { debug: parseDebug($('debug').value).text, tune: parseTune(pairs.map(([n, v]) => `${n}:${v}`).join(',')).text, overlayMode: $('overlayMode').value, sheetHides: $('sheetHides').value === '1', overlayOpacity: opacityRead() };
 }
 function changed() {
   showStyle();

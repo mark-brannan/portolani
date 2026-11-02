@@ -122,6 +122,7 @@ test('the overlays in the hash: the default writes nothing, a link round-trips, 
   assert.equal(effectiveOpacity(OVERLAY_DEFAULTS), 1, 'the sheet is opaque by default');
   assert.equal(effectiveOpacity({ ...OVERLAY_DEFAULTS, overlayMode: 'pieces' }), 0.6, 'the pieces keep their 0.6');
   assert.equal(effectiveOpacity(read), 0.6);
+  assert.equal(effectiveOpacity({ ...OVERLAY_DEFAULTS, overlayMode: 'sheet', overlayOpacity: null }), 1, 'pieces to sheet drops the 0.6, so the sheet is opaque');
   const pieces = overlayFromHash(new URLSearchParams('overlay=carta-marina&overlaymode=pieces&overlayopacity=0.3'), ids);
   assert.equal(pieces.overlayMode, 'pieces');
   assert.equal(written(pieces), 'overlay=carta-marina&overlaymode=pieces&overlayopacity=0.3');
