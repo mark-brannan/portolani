@@ -23,8 +23,8 @@ import { TREES, TREE_STYLES, plantTrees, plantPalms, inLake } from './trees.mjs'
 import { POIS, POI_ZOOM } from './pois.mjs';
 export { SIGHT_TILES } from './sights.mjs'; // the page's tiles for its places; here so the module ships with the scene
 import { RUIN, BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from './buildings.mjs';
-import { legPath, reachPath, isMigration, splitAtSeam, DASHES, isBroken, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, readVoyage, chronological, voyageLink } from './voyages.mjs';
-export { isBroken, legPath, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, readVoyage, chronological, voyageLink };
+import { legPath, reachPath, isMigration, splitAtSeam, DASHES, isBroken, ringed, CONFIDENCE_PHRASES, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, settleInks, readVoyage, chronological, voyageLink } from './voyages.mjs';
+export { CONFIDENCE_PHRASES, isBroken, legPath, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, settleInks, readVoyage, chronological, voyageLink };
 import { loadOverlay, drawOverlay, drawSheet } from './overlays.mjs';
 import { PEOPLE_FILE, PERSON_RED, personMarks, withPerson, peopleOf, whoOf } from './people.mjs';
 import { frameBox, fromCentre } from './frame-box.mjs';
@@ -2483,7 +2483,7 @@ function drawTrack(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH, al
     left -= full.length;
     if (k < 1) break;
     const pieces = splitAtSeam(whole ? full : full.slice(0, k), proj.lonCenter, proj.visible).map((p) => p.map(proj.toPx)).filter((px) => meets(rect, bbox(px)));
-    if (leg.doubt) speculative(g, pieces, colour);
+    if (ringed(leg)) speculative(g, pieces, colour);
     else for (const [style, w, alpha, dash] of [[STYLE.parchment, width + VOYAGE_HALO, 0.6, []], [colour, width, 0.9, capped(DASHES[leg.confidence] ?? [], width)]]) {
       g.strokeStyle = style; g.lineWidth = w; g.globalAlpha = alpha * dim; g.setLineDash(dash);
       for (const px of pieces) { g.beginPath(); px.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke(); }
@@ -2534,15 +2534,15 @@ export function voyageMarks(voyage, proj, rect) {
     if (disc(rect, x, y, -h / 2)) out.push({ x, y, h, alpha, skull, tile, ...mark });
   };
   for (const e of voyage?.events ?? []) {
-    const tile = { title: e.label, date: e.date, doubt: e.doubt, text: e.text, note: e.note, source: e.source, cited: e.cited, who: e.who };
+    const tile = { title: e.label, date: e.date, confidence: e.confidence, doubt: e.doubt, text: e.text, note: e.note, source: e.source, cited: e.cited, who: e.who };
     const alpha = e.doubt && e.kind !== 'death' ? 0.5 : 1; // a doubted event at half its ink; a death's doubt only opens its tile
     if (e.kind === 'birth') {
-      for (const a of e.alternatives ?? []) add(a, SKULL_ALT_H, 0.75, false, { title: a.label, date: e.date, text: a.text, source: a.source, cited: a.cited, who: e.who, place: a.place, alternative: true }, { birth: true });
+      for (const a of e.alternatives ?? []) add(a, SKULL_ALT_H, 0.75, false, { title: a.label, date: e.date, confidence: a.confidence, text: a.text, source: a.source, cited: a.cited, who: e.who, place: a.place, alternative: true }, { birth: true });
       add(e, SKULL_H, 1, false, tile, { birth: true }); continue;
     }
     if (e.kind === 'waypoint') { add(e, WAYPOINT_H, alpha, false, tile, { bead: true }); continue; }
     if (e.kind !== 'death') { add(e, SKULL_H, alpha, false, tile); continue; }
-    for (const a of e.alternatives ?? []) add(a, SKULL_ALT_H, 0.75, true, { title: a.label, date: e.date, text: a.text, source: a.source, cited: a.cited, who: e.who, place: a.place, alternative: true });
+    for (const a of e.alternatives ?? []) add(a, SKULL_ALT_H, 0.75, true, { title: a.label, date: e.date, confidence: a.confidence, text: a.text, source: a.source, cited: a.cited, who: e.who, place: a.place, alternative: true });
     add(e, SKULL_H, alpha, true, tile);
   }
   return out;
@@ -2593,8 +2593,8 @@ function drawCloud(g, { x, y, to }, colour) {
   }
   g.restore();
 }
-// The tile a doubted leg opens: its ends, its dates, the doubt first, then its note and source
-const legTile = (leg) => ({ title: `${leg.from} to ${leg.to}`, date: leg.dates, doubt: leg.doubt, text: leg.note, source: leg.source });
+// The tile a doubted or speculative leg opens: its ends, its dates, how sure, the doubt, then its note and source
+const legTile = (leg) => ({ title: `${leg.from} to ${leg.to}`, date: leg.dates, confidence: leg.confidence, doubt: leg.doubt, text: leg.note, source: leg.source });
 // The clouds of a voyage in view, through any projection: { x, y, h, to, tile } in canvas px, `to` the point of
 // the route the trail drifts to. A cloud is listed only when the whole of it is in view.
 export function doubtMarks(v, proj, rect) {
@@ -2615,7 +2615,7 @@ export function doubtMarks(v, proj, rect) {
 // [lon, lat] so a moving frame carries it. Returns the scene's voyages, each doubted one with its `clouds`.
 function placeDoubts(scene, data) {
   const voyages = scene.voyages ?? [], proj = data.proj, field = scene.field;
-  if (!voyages.some((v) => v.voyage.legs.some((l) => l.doubt))) return voyages;
+  if (!voyages.some((v) => v.voyage.legs.some(ringed))) return voyages;
   const pxOf = (leg) => splitAtSeam(pathOf(leg), proj.lonCenter, proj.visible).map((p) => p.map(proj.toPx));
   const track = [];
   for (const v of voyages) {
@@ -2644,7 +2644,7 @@ function placeDoubts(scene, data) {
   return voyages.map((v) => {
     const clouds = [];
     for (const leg of v.voyage.legs) {
-      if (!leg.doubt) continue;
+      if (!ringed(leg)) continue;
       const shown = [];
       for (const px of pxOf(leg)) along(px, 4, (p) => { if (p[0] >= 0 && p[1] >= 0 && p[0] <= W && p[1] <= H) shown.push(p); });
       if (!shown.length) continue;
