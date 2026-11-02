@@ -19,5 +19,5 @@ Feature: Remote islands  (the anchor `#anchor`, two rows in the anchor's "Seas a
   Scenario: Go finds them
     Given the Go box open
     When the user submits `pitcairn`
-    Then the view flies to the Pitcairn Islands frame 
+    Then the view flies to the Pitcairn Islands frame
   Tested by: test/placename.test.mjs — 'Go flies "pitcairn" to the Pitcairn Islands frame, not the Adamstown point'
