@@ -1057,6 +1057,8 @@ const pinch = () => {
 // it is resized. Where it is let go lands in the link (sheet=). Chips at its top left corner put it at the
 // chart's own placement (Parallels, or Level) or at the fit of one of its coasts (overlays.json `snaps`).
 const HANDLE = 12; // the handles' radius, canvas px
+const offBy = (a, b) => Math.abs(((a - b + 540) % 360) - 180); // degrees between two angles, either way round
+const cornerTurns = new Map(); // id -> the quarter turn its corners were last read at
 const sheetsShown = () => (ground?.overlays ?? []).filter((o) => o.mode === 'sheet' && o.sheet); // bottom to top
 // Its corners as the window sees them, top left first then clockwise, however the sheet and the world are turned:
 // the chips sit over the top left one, the handles at the bottom two.
@@ -1064,7 +1066,10 @@ function sheetGeometry(o) {
   if (!o) return null;
   const proj = viewProjection(view), corners = sheetCorners(o, proj, o.sheet);
   if (!corners) return null;
-  const q = (((Math.round((o.sheet.turn - (proj.bearing ?? 0)) / 90) % 4) + 4) % 4); // quarter turns clockwise on the window
+  // quarter turns clockwise on the window, held 5° past a 45° boundary so a drag through it does not flick the chips between corners
+  const a = o.sheet.turn - (proj.bearing ?? 0), held = cornerTurns.get(o.id);
+  const q = held != null && offBy(a, held * 90) < 50 ? held : (((Math.round(a / 90) % 4) + 4) % 4);
+  cornerTurns.set(o.id, q);
   return { o, proj, corners: corners.map((_, j) => corners[(j - q + 4) % 4]) };
 }
 function sheetHit([x, y]) {
@@ -1169,9 +1174,9 @@ const SIZE_GLYPH = '<svg viewBox="0 0 28 18" aria-hidden="true"><rect x="3" y="1
 const UP_GLYPH = '<svg viewBox="0 0 28 18" aria-hidden="true"><rect x="9" y="3" width="10" height="14" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M14 13V1.2M10.8 4.4 14 1.2l3.2 3.2" fill="none" stroke="#8c2f1e" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const COMPASS_WORDS = ['North', 'North-east', 'East', 'South-east', 'South', 'South-west', 'West', 'North-west'];
 const drawnBearing = (o) => (((o.sheet.turn - o.up) % 360) + 360) % 360; // the bearing that stands the scan as drawn on the window
-const offBy = (a, b) => Math.abs(((a - b + 540) % 360) - 180);
 const chosen = new Map(); // id -> the placement last chosen by a chip, which the angle and size chips put back
 const chosenOf = (o) => chosen.get(o.id) ?? ownSheet(o.id) ?? o.sheet;
+const turnedTo = new Map(); // id -> the bearing its up chip last turned the world to, so a nudge of the sheet after keeps the chip pressed
 function mendChips(o) {
   const chip = (key, glyph, text, title) => {
     const b = Object.assign(document.createElement('button'), { type: 'button', className: 'chip', title });
@@ -1191,7 +1196,7 @@ function showMend(o) {
   const set = (key, still) => sheetChips.querySelector(`[data-mend=${key}]`)?.setAttribute('aria-disabled', String(still));
   set('angle', offBy(o.sheet.turn, at.turn) < 0.05);
   set('size', Math.abs(o.sheet.scale / at.scale - 1) < 1e-3);
-  sheetChips.querySelector('[data-mend=up]')?.setAttribute('aria-pressed', String(b !== 0 && offBy(b, drawnBearing(o)) < 0.5));
+  sheetChips.querySelector('[data-mend=up]')?.setAttribute('aria-pressed', String(b !== 0 && [drawnBearing(o), turnedTo.get(o.id)].some((t) => t != null && offBy(b, t) < 0.5)));
 }
 // Beside them, for a chart with notes: "Notes · N", which keeps its notes' marks shown until clicked again (off after the
 // pulse, and never on by default), and a ring that plays the pulse again (docs/spec/design.md, "the user asks for the notes back")
@@ -1211,7 +1216,7 @@ sheetChips.addEventListener('click', (e) => {
   if (!b || !o) return;
   if (b.dataset.mend === 'up') { // as drawn, the sheet framed as it will stand; again, north up where the map is
     if (b.getAttribute('aria-pressed') === 'true') turnWorld(0);
-    else turnWorld(drawnBearing(o), sheetView(o, o.sheet, { w: W, h: H, bearing: drawnBearing(o) }));
+    else { turnedTo.set(o.id, drawnBearing(o)); turnWorld(drawnBearing(o), sheetView(o, o.sheet, { w: W, h: H, bearing: drawnBearing(o) })); }
     return;
   }
   if (b.dataset.mend) {
