@@ -385,19 +385,19 @@ Feature: One mode  (tokens `--panel` #efe3c6, `--fg`, `--margin` #1d1913; no `pr
     Then no colour on the page changes; no stylesheet or script reads `prefers-color-scheme`
     # Tested by: test/drawers.test.mjs (the last line only, offline)
 
-Feature: Scan overlay  (charts drawer `#chartsDrawer`: a chart row `li.chart[data-overlay=<id>]` whose scan is in `packs/overlays/overlays.json` carries an eye `.eye` (`aria-pressed`) that lays that chart's sheet on the map or takes it off, each chart's alone, and, while on, a range input 0..1 step 0.05 with its percentage; hash `overlay=<id>[,<id>...]`, the sheets laid, bottom to top, default none (`null`, in pencil: a config default, adjustable), and `overlayopacity`, default `0.6` (`OVERLAY_DEFAULTS`, overlays.mjs); scene `overlay: { id, opacity }`) [page.js `showOverlay`; scene.mjs drawScene step 2.1, drawAnchored; overlays.mjs]
+Feature: Scan overlay  (charts drawer `#chartsDrawer`: a chart row `li.chart[data-overlay=<id>]` whose scan is in `packs/overlays/overlays.json` carries an eye `.eye` (`aria-pressed`) that lays that chart's sheet on the map or takes it off, each chart's alone, (the opacity slider is in the settings drawer, shown only with `overlaymode=pieces`); hash `overlay=<id>[,<id>...]`, the sheets laid, bottom to top, default none (`[]`, in pencil: a config default, adjustable), and `overlayopacity`, default `0.6` (`OVERLAY_DEFAULTS`, overlays.mjs); scene `overlays: [{ id, mode, sheet, opacity }]` (`page.js:759`)) [page.js `showOverlay`; scene.mjs drawScene step 2.1, drawAnchored; overlays.mjs]
   Scenario: the scan laid over the map
     Given the chart at `#map=4.60/61.700/19.700`
     When the user opens the charts drawer and clicks the eye in Carta Marina's row
-    Then the eye is `aria-pressed=true`, the slider shows 60%, the hash gains `overlay=carta-marina`, and the scan is drawn over the land and under the rhumb lines, its Gotland over today's Gotland; the map does not move
+    Then the eye is `aria-pressed=true`, the hash gains `overlay=carta-marina`, and the scan is drawn over the land and under the rhumb lines, its Gotland over today's Gotland; the map does not move
   Scenario: opacity
-    Given the chart at `#map=4.60/61.700/19.700&overlay=carta-marina`
+    Given the chart at `#map=4.60/61.700/19.700&overlay=carta-marina&overlaymode=pieces`
     When the user moves the slider to 0.3
     Then the hash gains `overlayopacity=0.3` and the scan is drawn fainter when the slider pauses
   Scenario: off, and a chart without a scan
     Given the same
     When the user clicks the eye again
-    Then the eye is `aria-pressed=false`, the slider is hidden and `overlay` leaves the hash; no other chart's sheet changes; a chart without a scan shows no eye
+    Then the eye is `aria-pressed=false`, `overlay` leaves the hash; no other chart's sheet changes; a chart without a scan shows no eye
   Scenario: several sheets at once
     Given the chart at `#overlay=carta-marina`
     When the user clicks the eye in Aguiar's row
