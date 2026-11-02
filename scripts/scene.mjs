@@ -21,6 +21,7 @@ import { RIVERS, LAKES, RIVER_STYLES, LAKE_STYLES, waterOf, shown } from './wate
 import { RELIEF_STYLES, reliefOf, clearOf, drawRelief } from './relief.mjs';
 import { TREES, TREE_STYLES, plantTrees, plantPalms, inLake } from './trees.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
+import { depthOf, hasDepth, paintDepth } from './depth.mjs';
 export { SIGHT_TILES } from './sights.mjs'; // the page's tiles for its places; here so the module ships with the scene
 import { RUIN, BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from './buildings.mjs';
 import { legPath, reachPath, isMigration, splitAtSeam, DASHES, isBroken, ringed, CONFIDENCE_PHRASES, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, settleInks, readVoyage, chronological, voyageLink } from './voyages.mjs';
@@ -66,6 +67,8 @@ const STYLE = {
   islands: false, // the small islands washed in the three pigments, set by createScene
   scaleBorder: 'bordered', // one of SCALE_BORDERS, set by createScene
   trees: 'off', // one of TREE_STYLES, set by createScene
+  depth: true, // the sea's depth drawn where the provider serves it (depth.mjs), set by createScene
+  sea: '#2f4a5a', // the depth wash and contours
   // How much of the map's growth within a band each kind of ornament takes (docs/atlas, "What size an
   // ornament is"): 1 is ink on the map and grows with it, 0 holds a fixed pixel size, 0.5 the square root.
   // A rhumb line's stroke is 0 and its reach 1; the lines are geography. Tuned by eye, a number per kind.
@@ -482,12 +485,17 @@ async function loadWorld() {
 const detailPieces = new WeakMap(); // a piece's coordinates -> what the scene keeps of it
 const piece = (key, make) => detailPieces.get(key) ?? detailPieces.set(key, make()).get(key);
 const featurePolys = (f) => (f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.type === 'MultiPolygon' ? f.geometry.coordinates : []);
+// A provider's `depth` layer (an ENC's, signalk/), sorted by class; null for a provider without one, as coastlines' is
+async function depthLayer(g, cv) {
+  try { const d = depthOf(await collect(g.features(cv, 'depth'))); return hasDepth(d) ? d : null; } catch { return null; }
+}
 async function loadDetail(coarse, view) {
   const g = coast(), cv = coastView(view);
   const band = record((await g.pending(cv, 'land')).band);
   if (!band?.grid) return coarse;
   const [landFeatures, coastFeatures] = await Promise.all([collect(g.features(cv, 'land')), collect(g.features(cv, 'coastline'))]);
   await whole(g, cv, 'land', 'coastline');
+  const depth = STYLE.depth ? await depthLayer(g, cv) : null;
   // each piece carries its island's area and colour from the cut (a cell without them works one out from the piece)
   const land = landFeatures.flatMap((f) => featurePolys(f).map((poly) => piece(poly, () => ({
     poly: Object.assign(poly, { isl: f.properties?.km2 !== undefined ? { km2: f.properties.km2, hue: f.properties.hue } : islandInfo(poly) }), box: bbox(poly[0]) }))));
@@ -495,7 +503,7 @@ async function loadDetail(coarse, view) {
   const f = frameOf(makeProjection(view), band.grid.marginDeg);
   return {
     land, lines: coastPieces.map(({ line, box }) => ({ line, box })), runs: coastPieces.flatMap((p) => p.runs),
-    places: coarse.places, lesser: coarse.lesser, names: coarse.names, urban: coarse.urban, isles: band.zoom.min < MARKS_END ? coarse.isles.filter((i) => nearLL(f, i.lon, i.lat)) : [], detail: { ...f, band: band.id }, // the lon/lat frame the loaded cells cover, and whose
+    ...(depth && { depth }), places: coarse.places, lesser: coarse.lesser, names: coarse.names, urban: coarse.urban, isles: band.zoom.min < MARKS_END ? coarse.isles.filter((i) => nearLL(f, i.lon, i.lat)) : [], detail: { ...f, band: band.id }, // the lon/lat frame the loaded cells cover, and whose
   };
 }
 
@@ -2852,6 +2860,9 @@ function drawScene(g, scene, data, bg, view) {
   // 1. parchment
   bgPart(r.x0, r.y0, r.x1, r.y1);
 
+  // 1.1 the sea's depth, in the parchment, under everything else (depth.mjs)
+  if (data.depth) paintDepth(g, data.depth, data.proj, r, data.mPerPx, { ink: STYLE.ink, sea: STYLE.sea, font: STYLE.font });
+
   // 2. land
   paintLand(g, data, land, coast, scene.relief && { ...scene.relief, humps: [] });
 
@@ -3298,7 +3309,7 @@ export function parsePlacement(text) {
 }
 export async function createScene(environment, opts = {}) {
   env = environment;
-  const { ink = '#3b2a1a', continentsZoom, regionsZoom, scaleBorder = 'bordered', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', regionSet = 'today', title = 'PORTOLANI', autoTitle = true, pinTitle, land: landMode = 'islands', islands, seaTint = false, rivers = 'off', lakes = 'off', relief = [], trees = 'off', historical = true, seed: pickedSeed, cartouchePos, scalePos, overlap: overlapPick } = opts;
+  const { ink = '#3b2a1a', depth = true, continentsZoom, regionsZoom, scaleBorder = 'bordered', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', regionSet = 'today', title = 'PORTOLANI', autoTitle = true, pinTitle, land: landMode = 'islands', islands, seaTint = false, rivers = 'off', lakes = 'off', relief = [], trees = 'off', historical = true, seed: pickedSeed, cartouchePos, scalePos, overlap: overlapPick } = opts;
   const overlap = overlapRule(overlapPick); // how overlapping curated charts are drawn (atlas.mjs, OVERLAP_RULES)
   const legacy = ['rendering', 'rose', 'monster', 'town'].some((k) => opts[k] !== undefined);
   const townBy = townSize ?? (legacy ? 'rank' : 'area');
@@ -3318,6 +3329,7 @@ export async function createScene(environment, opts = {}) {
   STYLE.lakes = LAKE_STYLES.includes(lakes) ? lakes : 'off';
   STYLE.relief = [relief].flat().filter((r) => r !== 'off' && RELIEF_STYLES.includes(r));
   STYLE.trees = TREE_STYLES.includes(trees) ? trees : 'off';
+  STYLE.depth = depth !== false;
   const knobs = tuneOf(opts.tune), debug = DEBUG_LAYERS.filter((d) => [opts.debug ?? []].flat().includes(d));
   TUNE.budget = BUDGET * density;
   TUNE.roseShare = knobs.roseshare; TUNE.sheetRoses = knobs.sheetroses;
@@ -3363,6 +3375,7 @@ export async function createScene(environment, opts = {}) {
   const tLoad = performance.now();
 
   const data = viewData(world, view);
+  if (STYLE.depth && world.depth) Object.assign(data, { depth: world.depth, mPerPx: (2 * Math.PI * WEB_MERCATOR_R * Math.cos(view.lat * RAD)) / (512 * 2 ** view.zoom) });
   data.lesser.push(...standIns(opts.sights, data, view));
   // the atlas's sheets at every zoom: the curated sheets alone in the world band, then curated and grid sheets.
   // The Catalan rose's lines reach as far as those of the sheet that holds it at this zoom.

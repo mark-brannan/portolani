@@ -1,0 +1,27 @@
+{
+  "name": "signalk-portolani",
+  "version": "0.0.1",
+  "description": "ENC cells as GeoJSON over the Signal K Resources API, drawn as a portolan chart in a webapp",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "build": "node build.mjs",
+    "demo": "node demo.mjs"
+  },
+  "keywords": [
+    "signalk-node-server-plugin",
+    "signalk-webapp",
+    "signalk-category-chart-plotters",
+    "enc",
+    "s-57"
+  ],
+  "signalk": {
+    "displayName": "Portolani"
+  },
+  "files": ["index.js", "lib", "public"],
+  "license": "MIT",
+  "dependencies": {
+    "@s57-parser/s57": "^0.3.0"
+  },
+  "private": true
+}
