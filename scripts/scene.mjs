@@ -224,7 +224,28 @@ const wrapAngle = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 // projection, the `visible` predicate that refuses the far side; `rim` is the px radius of what it
 // shows, null on a cylindrical projection. `toPx` is the same projection as coast-wright's
 // `project([lon, lat])` takes it, returning [px, py].
+// A view's `bearing` is the compass direction at the top of the canvas, degrees clockwise from north
+// (270 is west up): the world turned on the canvas about its centre, everything drawn through the
+// projection turning with it (docs/spec/design.md, "The world turned to the chart").
 function makeProjection(view, w = W, h = H) {
+  const p = northUp(view, w, h), b = view.bearing ?? 0;
+  return b ? turned(p, b, w, h) : p;
+}
+// canvas px offsets (dx, dy) of a north-up drawing turned to `bearing`, and back
+const turn = (bearing, dx, dy) => { const c = Math.cos(bearing * RAD), s = Math.sin(bearing * RAD); return [dx * c + dy * s, dy * c - dx * s]; };
+const unturn = (bearing, dx, dy) => { const c = Math.cos(bearing * RAD), s = Math.sin(bearing * RAD); return [dx * c - dy * s, dy * c + dx * s]; };
+function turned(p, bearing, w, h) {
+  const fwd = ([x, y]) => { const [dx, dy] = turn(bearing, x - w / 2, y - h / 2); return [w / 2 + dx, h / 2 + dy]; };
+  return {
+    ...p, bearing,
+    x: (lon, lat) => fwd(p.project(lon, lat))[0],
+    y: (lat, lon) => fwd(p.project(lon, lat))[1],
+    project: (lon, lat) => fwd(p.project(lon, lat)),
+    toPx: (ll) => fwd(p.toPx(ll)),
+    invert: (px, py) => { const [dx, dy] = unturn(bearing, px - w / 2, py - h / 2); return p.invert(w / 2 + dx, h / 2 + dy); },
+  };
+}
+function northUp(view, w, h) {
   const P = projectionOf(view), k = kOf(view.zoom), lonCenter = view.lon;
   if (!P.cap) {
     const y0 = P.f(view.lat);
@@ -279,20 +300,24 @@ const DEFAULT_VIEW = viewOfFrame(FRAME);
 // Zoom within ZOOM, longitude wrapped, projection one of PROJECTIONS, and the centre kept far
 // enough from the poles that the canvas stays on the map, or centred on the equator once the
 // whole map is shorter than the canvas; an azimuthal centre goes anywhere short of the poles.
-function clampView({ lon, lat, zoom, projection }) {
+function clampView({ lon, lat, zoom, projection, bearing }) {
   zoom = Math.min(ZOOM.max, Math.max(ZOOM.min, zoom));
   projection = Object.hasOwn(PROJECTIONS, projection) ? projection : 'mercator';
-  const P = PROJECTIONS[projection];
-  if (P.cap) return { lon: wrapLon(lon), lat: Math.max(-POLE, Math.min(POLE, lat)), zoom, projection };
-  const room = Math.max(0, P.max - H / 2 / kOf(zoom));
-  return { lon: wrapLon(lon), lat: P.inv(Math.max(-room, Math.min(room, P.f(lat)))), zoom, projection };
+  const P = PROJECTIONS[projection], b = wrapBearing(bearing), held = b ? { bearing: b } : {};
+  if (P.cap) return { lon: wrapLon(lon), lat: Math.max(-POLE, Math.min(POLE, lat)), zoom, projection, ...held };
+  const half = (Math.abs(Math.sin(b * RAD)) * W + Math.abs(Math.cos(b * RAD)) * H) / 2; // the canvas's reach north and south, turned
+  const room = Math.max(0, P.max - half / kOf(zoom));
+  return { lon: wrapLon(lon), lat: P.inv(Math.max(-room, Math.min(room, P.f(lat)))), zoom, projection, ...held };
 }
+// a bearing in [0, 360), a hair from north read as north
+const wrapBearing = (b) => { const d = ((Number(b) || 0) % 360 + 360) % 360; return d < 1e-6 || d > 360 - 1e-6 ? 0 : d; };
 
 // The view moved so the map follows a drag of (dx, dy) canvas px. On an azimuthal projection the
 // centre rolls along a great circle, a radian per k px; the move is read in the view centred on the
 // way's midpoint, so that the reverse drag comes back to the same view (north-up bearings converge
 // otherwise). A drag over a pole has no north-up answer, so it stops at the pole.
 function panView(view, dx, dy) {
+  [dx, dy] = unturn(view.bearing ?? 0, dx, dy); // the drag as the north-up drawing takes it
   const P = projectionOf(view), k = kOf(view.zoom);
   if (!P.cap) return clampView({ ...view, lon: view.lon - dx / k / RAD, lat: P.inv(P.f(view.lat) + dy / k) });
   const d = Math.min(Math.PI, Math.hypot(dx, dy) / k), az = Math.atan2(-dx, dy), c = [view.lon, view.lat];
@@ -310,6 +335,8 @@ function panView(view, dx, dy) {
 
 // The view zoomed by `factor` about canvas point (px, py), which keeps its place on the map.
 function zoomView(view, factor, px, py) {
+  [px, py] = unturn(view.bearing ?? 0, px - W / 2, py - H / 2).map((d, i) => d + (i ? H : W) / 2); // the point as the north-up drawing takes it
+  if (view.bearing) return clampView({ ...zoomView({ ...view, bearing: 0 }, factor, px, py), bearing: view.bearing });
   const P = projectionOf(view), k = kOf(view.zoom), ox = px - W / 2, oy = py - H / 2;
   const zoom = Math.min(ZOOM.max, Math.max(ZOOM.min, view.zoom + Math.log2(factor))), k2 = kOf(zoom);
   if (!P.cap) {
@@ -555,7 +582,7 @@ const KM_DEG = 6371.0088 * RAD;
 const MARK_MIN = 1.5, ATOLL_MIN = 2.5;
 function markOf(proj, i) {
   if (!shows(proj, i.lon, i.lat)) return null;
-  const [x, y] = proj.project(i.lon, i.lat), r = Math.abs(proj.y(i.lat + i.km / KM_DEG, i.lon) - y);
+  const [x, y] = proj.project(i.lon, i.lat), r = Math.hypot(...proj.project(i.lon, i.lat + i.km / KM_DEG).map((v, j) => v - [x, y][j]));
   return { x, y, r: Math.max(i.atoll ? ATOLL_MIN : MARK_MIN, r), atoll: i.atoll };
 }
 
@@ -576,7 +603,7 @@ function viewData(world, view) {
       const cur = out[out.length - 1];
       if (!shows(proj, lon, lat)) { if (cur.length) out.push([]); continue; }
       const p = proj.project(lon, lat), prev = cur[cur.length - 1];
-      if (prev && Math.abs(p[0] - prev[0]) > Math.PI * proj.k) out.push([p]); else cur.push(p);
+      if (prev && Math.hypot(p[0] - prev[0], p[1] - prev[1]) > Math.PI * proj.k) out.push([p]); else cur.push(p);
     }
     return out.filter((l) => l.length > 1);
   });
@@ -1943,8 +1970,15 @@ function drawPlainFrame(g, c) {
   g.restore();
 }
 
+// A rose's north points where the world's does: turned with the map's bearing.
+const roseTurn = (proj) => -(proj.bearing ?? 0) * RAD;
 function drawSprite(g, s, x, y, size, { flip = false, rot = 0, anchor = s.anchor } = {}) {
-  if (s.plain) { if (s.kind === 'rose') drawPlainRose(g, x, y, size); return; }
+  if (s.plain) {
+    if (s.kind !== 'rose') return;
+    if (!rot) { drawPlainRose(g, x, y, size); return; }
+    g.save(); g.translate(x, y); g.rotate(rot); drawPlainRose(g, 0, 0, size); g.restore();
+    return;
+  }
   const w = size, h = (size * s.img.height) / s.img.width;
   g.save();
   g.translate(x, y);
@@ -2012,7 +2046,7 @@ function paintShoals(g, data, coast) {
     for (const [lon, lat] of run) {
       if (!shows(data.proj, lon, lat)) { prev = null; left = 0; continue; } // behind the horizon
       const p = [x(lon, lat), y(lat, lon)];
-      if (prev && Math.abs(p[0] - prev[0]) > Math.PI * k) { prev = null; left = 0; } // across the seam
+      if (prev && Math.hypot(p[0] - prev[0], p[1] - prev[1]) > Math.PI * k) { prev = null; left = 0; } // across the seam, in any bearing
       if (prev) {
         const dx = p[0] - prev[0], dy = p[1] - prev[1], len = Math.hypot(dx, dy);
         if (len > 0) {
@@ -2833,7 +2867,7 @@ function drawScene(g, scene, data, bg, view) {
 
   // 5. roses
   const spriteIn = (s, x, y, size) => disc(r, x, y, Math.hypot(size, (size * s.img.height) / s.img.width));
-  for (const d of show.kinds.has('rose') ? scene.roseDraws : []) if (spriteIn(d.sprite, d.x, d.y, d.size)) drawSprite(g, d.sprite, d.x, d.y, d.size, { anchor: [0.5, 0.5] });
+  for (const d of show.kinds.has('rose') ? scene.roseDraws : []) if (spriteIn(d.sprite, d.x, d.y, d.size)) drawSprite(g, d.sprite, d.x, d.y, d.size, { anchor: [0.5, 0.5], rot: roseTurn(data.proj) });
 
   // 5.5 mountains, inland, under the towns and names
   for (const m of show.kinds.has('mountain') ? scene.mountains ?? [] : []) if (spriteIn(m.sprite, m.x, m.y, m.size)) drawSprite(g, m.sprite, m.x, m.y, m.size, { anchor: [0.5, 0.5] });
@@ -3081,7 +3115,7 @@ function drawAnchored(g, a, bg, view, layers) {
   drawLate(g, a, view, layers, fr);
   if (show.kinds.has('rose')) for (const { o, at: ll } of a.roses) {
     const size = o.size * scaled('rose'), p = at(ll, size);
-    if (p) drawSprite(g, o.sprite, p[0], p[1], size, { anchor: [0.5, 0.5] });
+    if (p) drawSprite(g, o.sprite, p[0], p[1], size, { anchor: [0.5, 0.5], rot: roseTurn(proj) });
   }
   if (show.kinds.has('mountain')) for (const { o, at: ll } of a.mountains) {
     const size = o.size * scaled('mountain'), p = at(ll, size);

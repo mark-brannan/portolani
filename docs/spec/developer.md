@@ -23,7 +23,11 @@ Feature: `scripts/render.mjs`  (`npm run render`) [verified scripts/render.mjs:1
   Scenario: no options
     Given `npm run render`
     When it runs
-    Then it calls `createScene(env)` with defaults and writes `out/mockup.png` (full sheet) and `out/mockup-detail.png` (the Genoa window at scale 2, `DETAIL`); nothing is configurable from the command line
+    Then it calls `createScene(env)` with defaults and writes `out/mockup.png` (full sheet) and `out/mockup-detail.png` (the Genoa window at scale 2, `DETAIL`)
+  Scenario: one view
+    Given `npm run render -- --view 19.7,61.7,5.4[,projection] --out docs/x.jpg`
+    When it runs
+    Then it draws that one view, as `.png` or `.jpg` by the name given (default `out/view.png`); the other options act only with `--view`: `--overlay <id>` lays that chart's sheet (`--overlay <id>:<opacity>` its warped pieces at that opacity), `--sheet lon,lat,scale,turn` places the sheet, `--voyages id[:rrggbb],...` draws those voyages in the colour given, and `--notes` outlines the laid chart's notes
 
 Feature: Dev server and goldens  [verified package.json scripts; scripts/dev.mjs:95-113; test/golden.test.mjs:1-60]
   Scenario: dev server port
@@ -33,7 +37,7 @@ Feature: Dev server and goldens  [verified package.json scripts; scripts/dev.mjs
   Scenario: goldens
     Given `npm run golden` (`UPDATE_GOLDEN=1 node --test test/golden.test.mjs`)
     When it runs
-    Then the six golden views (`world-z2`, `region-z5`, `close-z9`, `world-z2-plate-carree`, `world-z2-orthographic`, `world-z2-voyage` with `voyage: 'magellan'`) are redrawn at 400 x 250
+    Then the fourteen golden views, one PNG each in `test/golden/` (the files are the list: `world-z2`, `region-z5`, `close-z9`, `world-z2-plate-carree`, `world-z2-orthographic`, `world-z2-voyage`, `world-z2-voyages`, `sheet-z3-voyage`, `old-world-z2.6-1375`, `levant-z6-marks`, `ostia-z7-ruin`, `china-z5-doubt`, `pacific-z3-migrations`, `world-z2-person`), are redrawn at 400 x 250
   Scenario: touch test environment
     Given `TOUCH_REQUIRED=1`, `TOUCH_SHOTS=<dir>` or `PLAYWRIGHT=<module>`
     When `test/touch.test.mjs` runs

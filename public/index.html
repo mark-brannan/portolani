@@ -53,6 +53,16 @@
     cursor: pointer; border-radius: 50%; background: #efe3c6; border: 1px solid #b89a68; box-shadow: 0 1px 6px rgb(0 0 0 / 0.25);
   }
   #sweep:hover { background: #e2cd9e; }
+  /* the compass over the skull: its needle points north on the window; a click is north up, a drag round it turns the world */
+  #compass {
+    pointer-events: auto; width: 38px; height: 38px; padding: 0; margin-right: 4px; display: grid; place-items: center; touch-action: none;
+    cursor: grab; border-radius: 50%; background: #efe3c6; border: 1px solid #b89a68; box-shadow: 0 1px 6px rgb(0 0 0 / 0.25);
+  }
+  #compass[hidden] { display: none; }
+  #compass:active { cursor: grabbing; }
+  #compass:hover { background: #e2cd9e; }
+  #compass:focus-visible { outline: 2px solid #e8b84a; outline-offset: 2px; }
+  #compass svg { width: 34px; height: 34px; }
   #sweep:focus-visible { outline: 2px solid #e8b84a; outline-offset: 2px; }
   #sweep svg { width: 34px; height: 34px; }
   #mementoText {
@@ -266,6 +276,7 @@
   #sheetChips .chip svg { width: 20px; height: 14px; }
   #sheetChips .chip[aria-pressed=false] { border-style: dashed; border-color: var(--line); }
   #sheetChips .chip[aria-pressed=true] { box-shadow: inset 0 0 0 1px var(--accent); border-color: var(--accent); }
+  #sheetChips .chip[aria-disabled=true] { opacity: 0.45; }
   #otherTraditions h2 { margin: 18px 0 0; font: 18px var(--serif); }
   #worldList { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
   #worldList .chart { display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 12px; background: var(--sheet); color: var(--sheet-ink); border: 1px solid var(--rule); border-radius: 6px; }
@@ -424,6 +435,15 @@
 <p id="status" role="status">Loading…</p>
 <p id="build" hidden></p>
 <div id="memento">
+  <button id="compass" type="button" hidden aria-label="North up: drag round to turn the world and the chart with it">
+  <svg viewBox="-12 -12 24 24" aria-hidden="true">
+    <circle r="10.5" fill="#efe3c6" stroke="#5a3a0c" stroke-width="0.8"/>
+    <path d="M0-9.6 2.4 0H-2.4Z" fill="#8c2f1e" stroke="#3b1a0c" stroke-width="0.4"/>
+    <path d="M0 9.6 2.4 0H-2.4Z" fill="#3b2a1a" stroke="#1e140c" stroke-width="0.4"/>
+    <circle r="1.3" fill="#e8b84a" stroke="#5a3a0c" stroke-width="0.4"/>
+    <text y="-5.2" text-anchor="middle" font-size="4.6" font-family="Georgia, serif" fill="#efe3c6" font-weight="bold">N</text>
+  </svg>
+  </button>
   <button id="sweep" type="button" aria-label="Clear the table: put every picture away and let the chosen person or place go" title="Clear the table">
   <svg viewBox="-10 -10.5 20 20.5" aria-hidden="true">
     <g fill="#3b2a1a" stroke="#3b2a1a" stroke-linecap="round">
