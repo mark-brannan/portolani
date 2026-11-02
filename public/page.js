@@ -371,6 +371,8 @@ const HOOD_GLYPHS = {
   sheets: svg(SHEET_GLYPH),
   rings: svg(`${SHEET_GLYPH}<circle cx="14" cy="9" r="4.5" ${stroke(RED, 1)}/><circle cx="14" cy="9" r="1.3" ${stroke(RED, 0.8)}/>${[0, 1, 2, 3, 4, 5, 6, 7].map((i) => `<circle cx="${(14 + 4.5 * Math.sin(i * Math.PI / 4)).toFixed(2)}" cy="${(9 - 4.5 * Math.cos(i * Math.PI / 4)).toFixed(2)}" r=".9" fill="${RED}"/>`).join('')}`),
   ride: svg(`<rect x="4" y="3" width="20" height="12" ${stroke('currentColor', 1)}/><path d="M2 13C8 3 14 14 26 4" ${stroke(RED, 1.8)}/>`), // a line drawn over a sheet
+  wipe: svg(`<rect x="3" y="3" width="22" height="12" ${stroke('currentColor', 0.8)}/><rect x="3" y="3" width="11" height="12" fill="${RED}" fill-opacity="0.35"/><path d="M14 1v16" ${stroke(RED, 1.5)}/>`), // the chart left of a line, the map right
+  swipe: svg(`<rect x="3" y="3" width="22" height="12" ${stroke('currentColor', 0.8)}/><rect x="3" y="3" width="11" height="12" fill="${RED}" fill-opacity="0.35"/><path d="M14 1v16" ${stroke(RED, 1.5)}/><path d="M10 9l-3-2v4ZM18 9l3-2v4Z" fill="${RED}"/>`), // the same, with a handle to drag
   lifted: svg(`<rect x="4" y="3" width="20" height="12" ${stroke('currentColor', 0.8)} stroke-dasharray="2 2"/><path d="M2 13C8 3 14 14 26 4" ${stroke(RED, 1.8)}/>`), // the sheet off, the line alone
   rose: svg(`<path d="M2 9h24M14 2v14M8 2v14M20 2v14M2 5h24M2 13h24" ${stroke('currentColor', 0.5)}/><path d="M14 6l1 3-1 3-1-3Z M11 9l3-1 3 1-3 1Z" fill="${RED}"/>`),
   zero: svg(`<path d="M2 9h24M14 2v14M8 2v14M20 2v14M2 5h24M2 13h24" ${stroke('currentColor', 0.5)}/><circle cx="14" cy="9" r="2.6" ${stroke(RED, 1.2)}/>`),
@@ -400,6 +402,7 @@ const CHOICES = {
   scaleBorder: [['bordered', 'Bordered', 'parchment and a double rule'], ['blank', 'Blank', 'parchment, no rule'], ['transparent', 'Transparent', 'drawn over the map']].map(([value, label, note = '']) => [value, label, note, BORDER_GLYPHS[value]]),
   debug: [['off', 'Off', '', HOOD_GLYPHS.off], ['sheets', 'Outlines', 'each sheet of the atlas at this view, in red, with its name', HOOD_GLYPHS.sheets], ['sheets,rings', 'Outlines + rings', 'and each sheet\'s hidden circle: its hub and sixteen nodes', HOOD_GLYPHS.rings]],
   sheetHides: [['0', 'Voyage rides over', 'a voyage is drawn over the sheet, wherever it lies, and the sheet stays', HOOD_GLYPHS.ride], ['1', 'Sheet hides', 'a voyage\'s fly takes the sheet off if it would cover the voyage\'s frame', HOOD_GLYPHS.lifted]],
+  compare: [['off', 'Off', 'the pieces over the whole map', HOOD_GLYPHS.off], ['wipe', 'Slider wipe', 'the pieces left of a line, the bare map right; the slider below moves it', HOOD_GLYPHS.wipe], ['swipe', 'Swipe', 'the same, and the line on the map is dragged', HOOD_GLYPHS.swipe]],
   overlayMode: [['sheet', 'One sheet', 'the whole scan, opaque, laid level and centred, dragged by hand', HOOD_GLYPHS.sheets], ['pieces', 'Warped pieces', 'each piece warped onto today\'s coast, at the opacity below', HOOD_GLYPHS.rings]],
   tuneOrigin: [['rose', `Catalan rose (${ROSE_AT})`, 'every band\'s grid has a corner on the rose', HOOD_GLYPHS.rose], ['zero', '0° 0°', 'NOAA\'s own zero', HOOD_GLYPHS.zero]],
   tuneCurated: [['1', 'On', 'the curated charts take the place of the grid cells they hold', HOOD_GLYPHS.curated], ['0', 'Off', 'grid cells everywhere', HOOD_GLYPHS.grid]],
@@ -555,6 +558,8 @@ function showHood() {
   $('debug').value = style.debug || 'off';
   $('sheetHides').value = style.sheetHides ? '1' : '0';
   $('overlayMode').value = style.overlayMode; $('overlayOpacityRow').hidden = style.overlayMode !== 'pieces';
+  $('compare').value = style.compare; $('compareRow').hidden = style.overlayMode !== 'pieces'; $('compare').hidden = style.overlayMode !== 'pieces'; $('comparePosRow').hidden = style.overlayMode !== 'pieces' || style.compare !== 'wipe';
+  $('comparePos').value = String(style.comparePos); $('comparePosOut').textContent = `${Math.round(style.comparePos * 100)}%`; placeCompareLine();
   $('overlayOpacity').value = String(style.overlayOpacity); $('overlayOpacityOut').textContent = `${Math.round(style.overlayOpacity * 100)}%`;
   const t = parseTune(style.tune).tune, at = (name) => t[name] ?? TUNE_KNOBS[name].def;
   for (const [name, id] of Object.entries(KNOB_CHIPS)) $(id).value = String(at(name));
@@ -568,7 +573,7 @@ function showHood() {
 function readHood() {
   const pairs = [...Object.entries(KNOB_CHIPS).map(([name, id]) => [name, $(id).value]),
     ...Object.entries(KNOB_SLIDERS).filter(([, id]) => $(id).dataset.set).map(([name, id]) => [name, $(id).value])];
-  return { debug: parseDebug($('debug').value).text, tune: parseTune(pairs.map(([n, v]) => `${n}:${v}`).join(',')).text, overlayMode: $('overlayMode').value, sheetHides: $('sheetHides').value === '1', overlayOpacity: Number($('overlayOpacity').value) };
+  return { debug: parseDebug($('debug').value).text, tune: parseTune(pairs.map(([n, v]) => `${n}:${v}`).join(',')).text, overlayMode: $('overlayMode').value, compare: $('compare').value, comparePos: Number($('comparePos').value), sheetHides: $('sheetHides').value === '1', overlayOpacity: Number($('overlayOpacity').value) };
 }
 function changed() {
   showStyle();
@@ -756,7 +761,7 @@ async function render() {
       regions: style.regionsZoom > 0 ? style.regions : 'off', regionSet: style.regionSet, regionsZoom: style.regionsZoom,
       sprites: [...selection], kinds, view, pinned: !phone.matches, pinTitle: style.autoTitle ? pinTitle : null,
       voyages: style.voyages.filter((v) => !v.hidden).map((v) => ({ id: v.id, colour: ink[v.id], width: style.voyageWidth })), person: style.person, voyageWidth: style.voyageWidth,
-      overlays: style.overlays.map((id) => ({ id, mode: style.overlayMode, sheet: style.sheets[id] ?? null, opacity: style.overlayOpacity })),
+      overlays: style.overlays.map((id) => ({ id, mode: style.overlayMode, sheet: style.sheets[id] ?? null, opacity: style.overlayOpacity, clip: style.compare === 'off' ? null : style.comparePos })),
       sights: sightTiles().map(({ lon, lat, tile }) => ({ name: tile.title, lon, lat, ruin: tile.ruin ?? false, ...(tile.site != null && { site: tile.site }) })),
       debug: parseDebug(style.debug).debug, tune: parseTune(style.tune).tune,
     });
@@ -2677,7 +2682,27 @@ locate.addEventListener('click', () => {
 for (const id of Object.values(KNOB_SLIDERS)) $(id).addEventListener('input', (e) => { e.target.dataset.set = '1'; }); // moved, so set
 // either set of projection chips drives (first, so readControls sees both agree) the other
 for (const [from, to] of [['projection', 'projectionCharts'], ['projectionCharts', 'projection']]) $(from).addEventListener('input', () => { $(to).value = $(from).value; });
-for (const id of ['debug', 'overlap', 'overlayMode', 'sheetHides', 'overlayOpacity', ...Object.values(KNOB_CHIPS), ...Object.values(KNOB_SLIDERS), 'projection', 'projectionCharts', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'scaleBorder', 'land', 'islands', 'seaTint', 'rivers', 'lakes', 'trees', 'mountains', 'hills', 'continentsZoom', 'regions', 'regionSet', 'regionsZoom', 'titleMode', 'townSize', 'voyageWidth']) $(id).addEventListener('input', readControls);
+for (const id of ['debug', 'overlap', 'overlayMode', 'compare', 'comparePos', 'sheetHides', 'overlayOpacity', ...Object.values(KNOB_CHIPS), ...Object.values(KNOB_SLIDERS), 'projection', 'projectionCharts', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'scaleBorder', 'land', 'islands', 'seaTint', 'rivers', 'lakes', 'trees', 'mountains', 'hills', 'continentsZoom', 'regions', 'regionSet', 'regionsZoom', 'titleMode', 'townSize', 'voyageWidth']) $(id).addEventListener('input', readControls);
+// The compare line: over the map at the wipe's position, pieces mode only. In swipe it is dragged; in wipe the slider moves it.
+function placeCompareLine() {
+  const line = $('compareLine'), on = style.overlayMode === 'pieces' && style.compare !== 'off' && style.overlays.length > 0;
+  line.hidden = !on; line.classList.toggle('drag', style.compare === 'swipe');
+  if (!on) return;
+  const r = canvas.getBoundingClientRect();
+  line.style.left = `${r.left + style.comparePos * r.width}px`; line.style.top = `${Math.max(0, r.top)}px`; line.style.height = `${Math.min(innerHeight, r.bottom) - Math.max(0, r.top)}px`;
+}
+addEventListener('resize', placeCompareLine);
+$('compareLine').addEventListener('pointerdown', (e) => {
+  if (style.compare !== 'swipe') return;
+  e.preventDefault(); e.stopPropagation();
+  const move = (m) => {
+    const r = canvas.getBoundingClientRect();
+    $('comparePos').value = String(Math.max(0, Math.min(1, (m.clientX - r.left) / r.width)));
+    readControls();
+  };
+  const up = () => { removeEventListener('pointermove', move); removeEventListener('pointerup', up); removeEventListener('pointercancel', up); };
+  addEventListener('pointermove', move); addEventListener('pointerup', up); addEventListener('pointercancel', up);
+});
 let typing = 0; // a typed title is placed when the typing pauses, not on every key: a placement takes up to a few hundred ms
 $('title').addEventListener('input', () => { clearTimeout(typing); typing = setTimeout(readControls, 400); });
 addEventListener('hashchange', () => { dealing = null; layout = layoutFromHash(); showLayout(); hoverOpen = hoverFromHash(); showHover(); view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); showVoyage(); showPeople(); render(); });

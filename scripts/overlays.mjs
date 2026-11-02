@@ -179,10 +179,12 @@ export function loadOverlay(id, env) {
 // there; in any other projection it is an approximation, true at those three corners and drifting
 // between them, the more the further the chart reaches from the view's centre. A piece with a corner
 // past an azimuthal projection's horizon, or wholly off the page, is left out.
+// `overlay.clipX`, when a number, is the page x the pieces stop at (the compare wipe): nothing of them is drawn right of it.
 export function drawOverlay(g, overlay, proj, opacity = 0.6, { w = 1600, h = 1600 } = {}) {
   if (!drawable(overlay) || !(opacity > 0)) return;
   const s = overlay.scale ?? 1, H = overlay.height, ih = overlay.img ? overlay.img.height : H / s;
   g.save();
+  if (Number.isFinite(overlay.clipX)) { g.beginPath(); g.rect(0, 0, Math.max(0, overlay.clipX), h); g.clip(); }
   g.globalAlpha = Math.min(1, opacity);
   g.globalCompositeOperation = 'source-over';
   for (const { x0, x1, fit } of overlay.pieces) {
@@ -211,17 +213,18 @@ export function drawOverlay(g, overlay, proj, opacity = 0.6, { w = 1600, h = 160
 // The overlays in the link: `overlay=<id>,<id>` the charts' sheets laid over the map, bottom to top, each at its own
 // placement; `sheet=<lon>,<lat>,<scale>,<turn>;...` where each was dragged to, one slot per id in the same order, an
 // empty slot (or none) the chart's own; `overlaymode=pieces` the warped pieces instead, with `overlayopacity=<0..1>` how
-// strongly; `sheethides=1` a voyage's fly takes a sheet off if it would cover the frame (otherwise the voyage is drawn over the sheets). None laid, the sheet, its own placement and 0.6 are the defaults, and a default is left out of the hash.
+// strongly; `compare=wipe|swipe` (pieces mode only) the pieces drawn only left of a vertical line, at `comparepos=<0..1>` of the width, the map bare to its right; `sheethides=1` a voyage's fly takes a sheet off if it would cover the frame (otherwise the voyage is drawn over the sheets). None laid, the sheet, its own placement and 0.6 are the defaults, and a default is left out of the hash.
 // `sheets` holds a placement by id, and may keep one for a chart not laid (hidden by its eye), which the hash leaves out.
 // `ids`, when given, are the overlays the site has: any other id is dropped. `q` is a URLSearchParams.
 export const OVERLAY_MODES = ['sheet', 'pieces'];
-export const OVERLAY_DEFAULTS = { overlays: [], overlayMode: 'sheet', sheets: {}, overlayOpacity: 0.6, sheetHides: false };
+export const COMPARE_MODES = ['off', 'wipe', 'swipe'];
+export const OVERLAY_DEFAULTS = { overlays: [], overlayMode: 'sheet', sheets: {}, overlayOpacity: 0.6, sheetHides: false, compare: 'off', comparePos: 0.5 };
 const placement = (text) => {
   const at = text.split(',').map(Number);
   return at.length === 4 && at.every(Number.isFinite) && Math.abs(at[1]) < 85.1 && at[2] > 0 ? { lon: at[0], lat: at[1], scale: at[2], turn: at[3] } : null;
 };
 export function overlayFromHash(q, ids) {
-  const o = Number(q.get('overlayopacity')), mode = q.get('overlaymode'), slots = (q.get('sheet') ?? '').split(';');
+  const o = Number(q.get('overlayopacity')), cp = Number(q.get('comparepos')), mode = q.get('overlaymode'), slots = (q.get('sheet') ?? '').split(';');
   const overlays = [], sheets = {};
   (q.get('overlay') ?? '').split(',').forEach((id, i) => {
     if (!/^[a-z][a-z0-9-]*$/.test(id) || id === 'off' || (ids && !ids.has(id)) || overlays.includes(id)) return;
@@ -235,6 +238,8 @@ export function overlayFromHash(q, ids) {
     sheets,
     sheetHides: q.get('sheethides') === '1',
     overlayOpacity: q.has('overlayopacity') && o >= 0 && o <= 1 ? o : OVERLAY_DEFAULTS.overlayOpacity,
+    compare: COMPARE_MODES.includes(q.get('compare')) ? q.get('compare') : OVERLAY_DEFAULTS.compare,
+    comparePos: q.has('comparepos') && cp >= 0 && cp <= 1 ? cp : OVERLAY_DEFAULTS.comparePos,
   };
 }
 export function overlayToHash(st, q) {
@@ -244,6 +249,8 @@ export function overlayToHash(st, q) {
   if (slots.some(Boolean)) q.set('sheet', slots.join(';').replace(/;+$/, ''));
   if (st.sheetHides) q.set('sheethides', '1');
   if (st.overlayOpacity !== OVERLAY_DEFAULTS.overlayOpacity) q.set('overlayopacity', st.overlayOpacity);
+  if (st.compare && st.compare !== OVERLAY_DEFAULTS.compare) q.set('compare', st.compare);
+  if (st.comparePos != null && st.comparePos !== OVERLAY_DEFAULTS.comparePos) q.set('comparepos', +(+st.comparePos).toFixed(3));
 }
 // A placement as the hash writes it: the centre to a thousandth of a degree, the scale to five places (a
 // scan px is a few thousandths of a degree), the turn to a tenth.
