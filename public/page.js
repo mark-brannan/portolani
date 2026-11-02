@@ -1998,7 +1998,8 @@ const picsHTML = (s, shown, only = null) => s.images.map((im, i) => { const m = 
 $('peopleStrip').addEventListener('click', (e) => {
   const b = e.target.closest('[data-person]');
   if (!b) return;
-  const id = b.dataset.person === style.person ? null : b.dataset.person;
+  const away = style.pictures?.length === 0; // every picture put away: the person is still chosen, and one click deals them back
+  const id = b.dataset.person === style.person && !away ? null : b.dataset.person;
   clearTable(); // whatever lies on the table put away first, and a second click lets the person go
   if (id) { style = { ...style, person: id }; dealing = `person:${id}`; } // their cards dealt as the map arrives
   showPeople(); showSightCard(); writeHash(); render();
