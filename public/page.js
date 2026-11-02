@@ -14,7 +14,7 @@
 // selection those chose, and are written back in the new form.
 // For a while, `debug=sheets[,rings]` and `tune=name:value,...` carry the under-the-hood section
 // (docs/atlas/under-the-hood.md), off by default.
-import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, isBroken, legPath, voyageView, CONTINENT_ZOOM_END, readVoyage, chronological, voyageLink, sightMarks, sightHits, drawnMarks, SIGHT_TILES, noteMarks, pickMark, markClear, tileSpot, groupMarks, dateSpan, readDate, noteCount, drawNoteMark, drawNoteRing, notePulse, drawBadge, drawMarkGlyph, ZOOM } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, settleInks, CONFIDENCE_PHRASES, isBroken, legPath, voyageView, CONTINENT_ZOOM_END, readVoyage, chronological, voyageLink, sightMarks, sightHits, drawnMarks, SIGHT_TILES, noteMarks, pickMark, markClear, tileSpot, groupMarks, dateSpan, readDate, noteCount, drawNoteMark, drawNoteRing, notePulse, drawBadge, drawMarkGlyph, ZOOM } from './scene.mjs';
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
@@ -148,13 +148,18 @@ function styleFromHash() {
   };
 }
 // The voyages drawn, in the order chosen, by their ids (data/voyages/<id>.json; one the site lacks draws nothing),
-// each with the colour picked for it or null for its own (voyageColours): voyages=columbus,drake:1f4e8c. A voyage
-// hidden by its eye keeps its place, and so its colour, and ends in ~: voyages=columbus~,drake. An older
-// link's single voyage=<id> is read as a list of one.
+// each with the colour picked for it after a colon, or the ink it was given (settleInks) after a dot:
+// voyages=columbus.8c2f1e,drake:1f4e8c. A voyage hidden by its eye keeps its place and its ink, and ends in ~:
+// voyages=columbus.8c2f1e~,drake. A voyage with neither takes the next free ink. An older link's single voyage=<id> is
+// read as a list of one.
 function voyagesFromHash(q) {
   const list = q.has('voyages') ? q.get('voyages').split(',') : q.has('voyage') ? [q.get('voyage')] : [];
   const seen = new Set();
-  return list.map((t) => { const hidden = t.endsWith('~'), [id, c] = (hidden ? t.slice(0, -1) : t).split(':'); return { id, colour: /^[0-9a-f]{6}$/i.test(c ?? '') ? `#${c.toLowerCase()}` : null, ...(hidden && { hidden: true }) }; })
+  const hex = (c) => (/^[0-9a-f]{6}$/i.test(c ?? '') ? `#${c.toLowerCase()}` : null);
+  return list.map((t) => {
+    const hidden = t.endsWith('~'), [named, c] = (hidden ? t.slice(0, -1) : t).split(':'), [id, ink] = named.split('.');
+    return { id, colour: hex(c), ...(hex(ink) && { ink: hex(ink) }), ...(hidden && { hidden: true }) };
+  })
     .filter((v) => /^[a-z][a-z0-9-]*$/.test(v.id) && v.id !== 'off' && !seen.has(v.id) && seen.add(v.id));
 }
 // The selection a hash names; an older link's rendering, styles and kinds become the selection they drew.
@@ -198,7 +203,7 @@ function writeHash() {
   if (st.overlap !== DEFAULTS.overlap) q.set('overlap', st.overlap);
   if (st.debug) q.set('debug', st.debug);
   if (st.tune) q.set('tune', st.tune);
-  if (st.voyages.length) q.set('voyages', st.voyages.map((v) => (v.colour ? `${v.id}:${v.colour.slice(1)}` : v.id) + (v.hidden ? '~' : '')).join(','));
+  if (st.voyages.length) q.set('voyages', st.voyages.map((v) => (v.colour ? `${v.id}:${v.colour.slice(1)}` : v.ink ? `${v.id}.${v.ink.slice(1)}` : v.id) + (v.hidden ? '~' : '')).join(','));
   if (st.voyageWidth !== DEFAULTS.voyageWidth) q.set('voyagewidth', st.voyageWidth);
   if (st.voyageDraw !== DEFAULTS.voyageDraw) q.set('voyagedraw', st.voyageDraw);
   if (st.person || st.sight) {
@@ -1325,7 +1330,8 @@ canvas.addEventListener('wheel', (e) => {
 
 // A click or tap on a point of interest opens a small tile beside it with what there is to know: its heading,
 // date, text and source, and for a voyage's mark a link to the source it cites. Nothing is lettered beside the mark itself. Today the points of interest are the
-// voyages' events (scripts/scene.mjs voyageMarks) and the clouds by doubted legs (doubtMarks); the tile takes any { title, date, doubt, text, source }.
+// voyages' events (scripts/scene.mjs voyageMarks) and the clouds by doubted legs (doubtMarks); the tile takes any { title, confidence, date, doubt, text, source }.
+// Under the heading, how sure the record is as its fixed phrase (CONFIDENCE_PHRASES), then any doubt under its own heading.
 // It shuts on the next touch of the map, on Esc, on its own close button, or when the map moves.
 const TAP_SLOP = 8, TAP_REACH = 22; // CSS px, so a finger is as forgiving on a phone's small canvas as a mouse on a wide one: a touch that stays within the slop is a tap; a mark takes a tap within the reach
 const cssPx = (n) => n * (W / canvas.getBoundingClientRect().width); // CSS px to the canvas px the view moves in
@@ -1339,7 +1345,8 @@ function fillTile(t, back = null) { // back: { label, go } for a story opened fr
   const head = part('tile-title', t.title);
   const meta = part('tile-date', [t.date, t.alternative ? 'another account' : null].filter(Boolean).join(' · '));
   const text = part('tile-text', t.text);
-  const doubt = part('tile-text tile-doubt', t.doubt); // a doubted leg or event: who doubts it and why, first under the heading
+  const sure = part('tile-sure', CONFIDENCE_PHRASES[t.confidence]); // how sure: "on record", "a guess"
+  const doubt = part('tile-text tile-doubt', t.doubt); // a doubted leg or event: who doubts it and why, after how sure
   doubt?.prepend(Object.assign(document.createElement('strong'), { textContent: 'Scholars doubt this part: ' }));
   if (t.note) { // a note on a laid chart: what was drawn, what was there, and the source as a link; its title alone until it has copy
     const labelled = (label, body) => { const p = part('tile-text', body); if (!p) return null; const b = document.createElement('strong'); b.textContent = `${label} `; p.prepend(b); return p; };
@@ -1361,7 +1368,7 @@ function fillTile(t, back = null) { // back: { label, go } for a story opened fr
     more = document.createElement('p'); more.className = 'tile-source'; more.append('Read: ', a);
   }
   const pics = t.sight ? sightPics(t.sight, t.site ?? null) : null; // a sight's pictures, each on the table or off it
-  tileEl.replaceChildren(close, ...[head, doubt, meta, text, source, more, pics].filter(Boolean));
+  tileEl.replaceChildren(close, ...[head, sure, doubt, meta, text, source, more, pics].filter(Boolean));
   tileEl.setAttribute('aria-label', t.title ?? 'Point of interest');
   if (back) {
     const b = Object.assign(document.createElement('button'), { type: 'button', className: 'tile-back', textContent: `‹ ${back.label}` });
@@ -1635,7 +1642,7 @@ const places = []; // every anchorage and point of interest: { name, view }
 // voyage alone (every other one is hidden), flies to frame the whole of it and draws its line on from start to end,
 // every time, in the seconds the slider above the timeline sets. The eye only shows or hides that one voyage, at once: no
 // flight, no pen, no other voyage touched. A voyage hidden keeps its place in the list, so its colour, and every other
-// voyage's, stays put. The first voyage chosen is the chart's red, each further one a colour of its own (voyageColours).
+// voyage's, stays put. A voyage shown takes the first colour no shown voyage has, the chart's red first (settleInks).
 // Above the timeline, the line weight for them all, how long the pen takes, and Clear. The choice rides in the link
 // (`voyages=`, `voyagewidth=`, `voyagedraw=`) like any style.
 let voyageList = null, voyageRows = null; // the load, and once loaded [[id, voyage]] in order with the sources
@@ -1662,8 +1669,9 @@ $('timelinePanel').querySelector('.vtools').append(...voyagesTools.children);
 const laidSheets = () => (style.overlayMode !== 'sheet' ? [] : style.overlays.flatMap((id) => { const o = OVERLAYS.find((v) => v.id === id); return o ? [{ ...o, sheet: style.sheets[id] ?? o.sheet }] : []; }));
 const brokenIds = new Set(); // the listed voyages with a dashed or dotted leg, which take a high-contrast ink
 const brokenSeen = new Set(); // the voyages whose file has been read for that
-// reads the files of voyages not yet seen, so a link's inks are right on the first render, with the drawer closed
-const learnBroken = (ids) => Promise.all(ids.filter((id) => !brokenSeen.has(id)).map((id) => env.readJSON(`data/voyages/${id}.json`)
+// reads the files of voyages not yet seen, so a link's inks are right on the first render, with the drawer closed; read
+// whole (readVoyage), so a leg shared with another voyage (`sameAs`) counts with its own confidence
+const learnBroken = (ids) => Promise.all(ids.filter((id) => !brokenSeen.has(id)).map((id) => readVoyage(id, (path) => env.readJSON(path))
   .then((v) => { brokenSeen.add(id); if (isBroken(v)) brokenIds.add(id); }, () => brokenSeen.add(id))));
 const voyageDots = new Map(); // id -> a thinned sample of its path, [lon, lat], once the list has loaded
 const crossing = () => {
@@ -1675,7 +1683,10 @@ const crossing = () => {
   for (const [id, dots] of voyageDots) if (dots.some(([lon, lat]) => { const p = proj.project(lon, lat); return p && sheets.some((o) => onSheet(o, proj, o.sheet, p[0], p[1])); })) ids.add(id);
   return ids;
 };
-const voyageInk = () => voyageColours(style.voyages.map((v) => v.id), Object.fromEntries(style.voyages.filter((v) => v.colour).map((v) => [v.id, v.colour])), crossing());
+// settles the inks of the voyages listed (settleInks): `fresh` the ids just shown, which yield to those already shown;
+// a settled ink rides in the link at once, so a link copied after a sheet is laid or panned onto reopens in the same colours
+const settleVoyageInks = (fresh) => { const s = settleInks(style.voyages, crossing(), fresh); if (s !== style.voyages) { style = { ...style, voyages: s }; writeHash(); } };
+const voyageInk = () => { settleVoyageInks(); return Object.fromEntries(style.voyages.map((v) => [v.id, v.colour ?? v.ink])); };
 const isShown = (id) => style.voyages.some((v) => v.id === id && !v.hidden);
 function showVoyage() {
   const ink = voyageInk();
@@ -1699,11 +1710,12 @@ function fillVoyages() {
   voyageList ??= Promise.all([env.readJSON('data/voyages/index.json'), env.readJSON('data/voyages/sources.json').catch(() => ({}))])
     .then(([ids, sources]) => Promise.all(ids.map((id) => env.readJSON(`data/voyages/${id}.json`).then((v) => [id, v], () => [id, { title: id, short: id }])))
       .then((voyages) => [chronological(voyages), sources]))
-    .then(([voyages, sources]) => {
-      for (const [id, v] of voyages) { brokenSeen.add(id); if (isBroken(v)) brokenIds.add(id); }
-      for (const [id, v] of voyages) voyageDots.set(id, (v.legs ?? []).flatMap((leg) => (leg.points?.length > 1 ? legPath(leg) : [])).filter((_, i) => i % 4 === 0));
+    .then(([voyages, sources]) => Promise.all(voyages.map(([id]) => readVoyage(id, (path) => env.readJSON(path)).catch(() => null))).then((whole) => {
+      // each voyage read whole, its shared legs (`sameAs`) resolved, for whether it is broken and where it runs
+      for (const [i, [id]] of voyages.entries()) { brokenSeen.add(id); if (isBroken(whole[i])) brokenIds.add(id); }
+      for (const [i, [id]] of voyages.entries()) voyageDots.set(id, (whole[i]?.legs ?? []).flatMap((leg) => (leg.points?.length > 1 ? legPath(leg) : [])).filter((_, k) => k % 4 === 0));
       voyageRows = { voyages, sources }; drawVoyages();
-    }, (e) => { voyageList = null; $('voyageList').innerHTML = `<li>${escapeHTML(e.message)}</li>`; });
+    }), (e) => { voyageList = null; $('voyageList').innerHTML = `<li>${escapeHTML(e.message)}</li>`; });
   showVoyage();
   return voyageList;
 }
@@ -1718,11 +1730,14 @@ function drawVoyages() {
   showVoyage();
 }
 // Sets which voyages are shown: `show` maps an id to true or false; a voyage not yet listed is added at the end, so it
-// takes the next free colour. A hidden voyage keeps its place and its colour.
+// takes the first free colour. A hidden voyage keeps its place and its ink, which it takes back when shown again if no
+// shown voyage has it meanwhile; the voyages already shown keep theirs.
 function showVoyages(show, others) {
   const listed = style.voyages.map((v) => v.id), on = (v) => show[v.id] ?? (others ?? !v.hidden);
   const voyages = [...style.voyages, ...Object.keys(show).filter((id) => show[id] && !listed.includes(id)).map((id) => ({ id, colour: null }))];
-  style = { ...style, voyages: voyages.map((v) => (on(v) ? { id: v.id, colour: v.colour } : { id: v.id, colour: v.colour, hidden: true })) };
+  const fresh = new Set(voyages.filter((v) => on(v) && (v.hidden || !listed.includes(v.id))).map((v) => v.id));
+  style = { ...style, voyages: voyages.map((v) => { const { hidden, ...kept } = v; return on(v) ? kept : { ...kept, hidden: true }; }) };
+  settleVoyageInks(fresh);
   showVoyage(); writeHash(); render();
 }
 $('voyageList').addEventListener('click', async (e) => {
