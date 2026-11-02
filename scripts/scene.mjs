@@ -1347,7 +1347,10 @@ function heldMarks(group, s, k, boxes, cityBoxes, towns) {
     return { p, top, hw, icon: (x, y) => obb(x, y - top / 2, 0, hw, top / 2) };
   });
   if (!marks.length) return [];
-  const step = Math.max(...marks.map((m) => m.hw)) / 2, clear = (b, ruin) => obbInside(b) && !boxes.some((o) => !(ruin && cityBoxes.has(o)) && obbOverlap(o, b));
+  const step = Math.max(...marks.map((m) => m.hw)) / 2;
+  // a lone mark's rules hold for each: inside the map, clear of the boxes placed, and a plain (not ruin) mark not crowding a town
+  const clear = (b, m, [x, y]) => obbInside(b) && !boxes.some((o) => !(m.p.ruin && cityBoxes.has(o)) && obbOverlap(o, b))
+    && (m.p.ruin || !towns.some((t) => Math.hypot(t.x - x, t.y - y) < TUNE.townGap / 2));
   const drawn = (m, x, y, icon) => ({ x, y, h: LESSER_PX * k, tower: m.p.building, name: m.p.name, rank: m.p.rank, label: icon, poi: true, mark: true, ...('site' in m.p && { site: m.p.site }) });
   // along the line first, nearest first, then any way round within the same reach: every mark by the same step
   const steps = [];
@@ -1356,7 +1359,7 @@ function heldMarks(group, s, k, boxes, cityBoxes, towns) {
   for (const [dx, dy] of steps) {
     const at = marks.map((m) => [m.p.xy[0] + dx, m.p.xy[1] + dy]);
     const icons = marks.map((m, i) => m.icon(...at[i]));
-    if (!icons.every((b, i) => clear(b, marks[i].p.ruin))) continue;
+    if (!icons.every((b, i) => clear(b, marks[i], at[i]))) continue;
     boxes.push(...icons);
     return marks.map((m, i) => drawn(m, ...at[i], icons[i]));
   }
