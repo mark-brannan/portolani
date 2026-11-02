@@ -364,6 +364,21 @@ scenario('person: choosing a life bar writes person=, a link with it chooses tha
   assert.equal(await page.locator('#peopleStrip [aria-pressed="true"]').count(), 0);
 });
 
+scenario('sight, site, pictures, pictureat: a sight\'s deal round-trips; a name no tile has is dropped with its keys', 'map=6.14/40.474/7.400&sight=Tyre&site=1&pictures=0,2&pictureat=0:35.200,33.270,1.5', async (page) => {
+  await page.waitForFunction(() => /sight=Tyre/.test(location.hash) && /pictureat=/.test(location.hash), null, { timeout: 90000 });
+  const q = await params(page);
+  assert.equal(q.get('sight'), 'Tyre');
+  assert.equal(q.get('site'), '1');
+  assert.equal(q.get('pictures'), '0,2');
+  assert.equal(q.get('pictureat'), '0:35.200,33.270,1.5');
+  await page.goto(`${base}#map=6.14/40.474/7.400&sight=Nowhere&site=1&pictures=0`);
+  await page.reload();
+  await placed(page);
+  await slide(page, 'density', 1.25);
+  const s = await params(page);
+  for (const k of ['sight', 'site', 'pictures', 'pictureat']) assert.equal(s.has(k), false, `${k} is not written without a subject`);
+});
+
 scenario('voyagewidth, voyagedraw: a link\'s line weight and pen time round-trip; others fall back and are not written', 'map=6.14/40.474/7.400&voyagewidth=3.2&voyagedraw=4', async (page) => {
   await slide(page, 'density', 1.5);
   const q = await params(page);
