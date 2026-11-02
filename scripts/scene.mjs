@@ -731,13 +731,13 @@ async function listSprites(environment) {
 }
 
 // The selection a scene draws when given none, by rule so sprites added to a pack join their family:
-// the vivid Aguiar roses and cartouche, the monsters of the scanned Carta Marina and Paré families and
+// the vivid Aguiar roses and cartouche, the monsters of the scanned Carta Marina, Paré and Catalan families and
 // the drawn heraldic one, every ship, every town (the towers and the Carta Marina's buildings included),
 // every rose and every mountain. A decoration added to the packs is on unless the rule says otherwise.
 const DEFAULT_RULES = [
   (s) => s.kind === 'rose',
   (s) => s.pack === 'vivid' && s.kind === 'cartouche',
-  (s) => s.kind === 'monster' && ((s.pack === 'scanned' && (s.style === 'carta-marina' || s.style === 'pare')) || s.pack === 'debry' || (s.pack === 'vivid' && s.style === 'heraldic')),
+  (s) => s.kind === 'monster' && ((s.pack === 'scanned' && ['carta-marina', 'pare', 'catalan'].includes(s.style)) || s.pack === 'debry' || (s.pack === 'vivid' && s.style === 'heraldic')),
   (s) => s.kind === 'ship',
   (s) => s.kind === 'town',
   (s) => s.kind === 'mountain',
@@ -3277,9 +3277,12 @@ export function parseDebug(text) {
   const debug = DEBUG_LAYERS.filter((d) => (text ?? '').split(',').includes(d));
   return { debug, text: debug.join(',') };
 }
-// Whether a point of the earth is sea, by the world's land and not the window's.
-function seaAtOf(world) {
-  return (lon, lat) => !world.land.some(({ poly, box }) => lat > box.y0 && lat < box.y1 && SHIFTS.some((s) => lon + s > box.x0 && lon + s < box.x1 && insideRing(poly[0], lon + s, lat)));
+// Whether a point of the earth is sea, by the world's land and not the window's. A hole in the land is water, as it is
+// drawn: the Caspian, where the Catalan Atlas puts a ship (docs/atlas/ornaments.md). The world's 50m land has that one
+// hole and no other (test/sea-at.test.mjs), so no other placement gains water by it.
+export function seaAtOf(world) {
+  const inLand = (poly, lon, lat) => insideRing(poly[0], lon, lat) && !poly.slice(1).some((hole) => insideRing(hole, lon, lat));
+  return (lon, lat) => !world.land.some(({ poly, box }) => lat > box.y0 && lat < box.y1 && SHIFTS.some((s) => lon + s > box.x0 && lon + s < box.x1 && inLand(poly, lon + s, lat)));
 }
 // The ornament placement a link names (`placement=` in the page's hash): none is the default, which draws each
 // curated sheet's own figures where the chart has read them; `historic` says the same outright; `seeded` draws the

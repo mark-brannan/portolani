@@ -142,6 +142,52 @@
       }
     },
     {
+      "id": "catalan-junk",
+      "kind": "ship",
+      "style": "catalan",
+      "file": "catalan-junk.png",
+      "anchor": [0.539, 0.661],
+      "sizePx": 105,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/7/73/Catalan_Atlas_BNF%2C_sheet_11.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:Catalan_Atlas_BNF,_sheet_11.jpg",
+        "crop": [421, 13641, 1847, 15329]
+      },
+      "heading": "left"
+    },
+    {
+      "id": "catalan-ship",
+      "kind": "ship",
+      "style": "catalan",
+      "file": "catalan-ship.png",
+      "anchor": [0.47, 0.686],
+      "sizePx": 103,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/6/6d/Catalan_Atlas_BNF%2C_sheet_9.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:Catalan_Atlas_BNF,_sheet_9.jpg",
+        "crop": [2620, 4625, 4100, 5940],
+        "turn": 180
+      }
+    },
+    {
+      "id": "catalan-siren",
+      "kind": "monster",
+      "style": "catalan",
+      "file": "catalan-siren.png",
+      "anchor": [0.5, 0.757],
+      "sizePx": 182,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/7/77/Catalan_Atlas_BNF%2C_sheet_12.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:Catalan_Atlas_BNF,_sheet_12.jpg",
+        "crop": [812, 14094, 1964, 15152]
+      },
+      "minClearancePx": 140,
+      "weight": 2
+    },
+    {
       "id": "rose-prunes",
       "kind": "rose",
       "style": "aguiar",
