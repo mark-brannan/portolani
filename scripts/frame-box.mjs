@@ -12,9 +12,10 @@ const STEP = 50; // px between edge samples
 // { lonMin, lonMax, latMin, latMax } in degrees; lonMin..lonMax is at most 360 + 2 * margin wide,
 // measured from the projection's centre longitude, so cells are the same under any pan.
 export function frameBox(proj, w, h, pad = 0, margin = 0) {
-  if (!proj.rim) { // x is longitude, y is latitude
-    const [lonMin, latMax] = proj.invert(-pad, -pad), [lonMax, latMin] = proj.invert(w + pad, h + pad);
-    return { lonMin: lonMin - margin, lonMax: lonMax + margin, latMin: latMin - margin, latMax: latMax + margin };
+  if (!proj.rim) { // longitude and latitude run straight across the canvas, turned by any bearing: the corners bound it
+    const c = [[-pad, -pad], [w + pad, -pad], [-pad, h + pad], [w + pad, h + pad]].map(([x, y]) => proj.invert(x, y));
+    const lons = c.map((p) => p[0]), lats = c.map((p) => p[1]);
+    return { lonMin: Math.min(...lons) - margin, lonMax: Math.max(...lons) + margin, latMin: Math.min(...lats) - margin, latMax: Math.max(...lats) + margin };
   }
   const inFrame = ([x, y]) => x >= -pad && x <= w + pad && y >= -pad && y <= h + pad;
   const pole = [90, -90].some((lat) => proj.visible(0, lat) && inFrame(proj.project(0, lat)));
