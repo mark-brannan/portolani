@@ -3278,8 +3278,9 @@ export function parseDebug(text) {
   return { debug, text: debug.join(',') };
 }
 // Whether a point of the earth is sea, by the world's land and not the window's. A hole in the land is water, as it is
-// drawn: the Caspian, where the Catalan Atlas puts a ship (docs/atlas/ornaments.md).
-function seaAtOf(world) {
+// drawn: the Caspian, where the Catalan Atlas puts a ship (docs/atlas/ornaments.md). The world's 50m land has that one
+// hole and no other (test/sea-at.test.mjs), so no other placement gains water by it.
+export function seaAtOf(world) {
   const inLand = (poly, lon, lat) => insideRing(poly[0], lon, lat) && !poly.slice(1).some((hole) => insideRing(hole, lon, lat));
   return (lon, lat) => !world.land.some(({ poly, box }) => lat > box.y0 && lat < box.y1 && SHIFTS.some((s) => lon + s > box.x0 && lon + s < box.x1 && inLand(poly, lon + s, lat)));
 }

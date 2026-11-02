@@ -107,21 +107,23 @@ beasts, and are left out.
 | | figure | sheet | scan px | lon, lat | sprite | on the map |
 |---|---|---|---|---|---|---|
 | S2 | ship in the Caspian, drawn upside down | 9 | 3405, 5325 | 50.6, 41.1 | `catalan-ship` | drawn |
-| S3 | ship by the pearl fishers, drawn upside down | 10 | 4800, 2500 | 73.8, 46.6 | stand-in | lands in Kazakhstan in the fit; left out |
-| S4 | a second hull there, above the lettering | 10 | 5250, 1250 | 75.2, 49.2 | stand-in | lands in Kazakhstan in the fit; left out |
+| S3 | ship by the pearl fishers, drawn upside down | 10 | 4800, 2500 | 73.8, 46.6 | none | lands in Kazakhstan in the fit; not listed |
+| S4 | a second hull there, above the lettering | 10 | 5250, 1250 | 75.2, 49.2 | none | lands in Kazakhstan in the fit; not listed |
 | S5 | the junk off India, at the page's foot | 11 | 1190, 14405 | 81.2, 13.2 | `catalan-junk` | drawn |
 | M1 | the siren holding her two tails | 12 | 1390, 14670 | 113.1, 15.8 | `catalan-siren` | drawn |
-| M2 | green fish by the pearl fishers | 10 | 5180, 760 | 75.0, 50.2 | stand-in | lands in Kazakhstan in the fit; left out |
-| M3 | red fish by the pearl fishers | 10 | 3090, 600 | 68.4, 50.5 | stand-in | lands in Kazakhstan in the fit; left out |
-| M4 | red fish among the islands | 12 | 4970, 11580 | 124.3, 24.9 | stand-in | off the sheet: east of its 120°E edge |
-| M5 | red fish among the islands | 12 | 5760, 10960 | 126.7, 26.6 | stand-in | off the sheet: east of its 120°E edge |
+| M2 | green fish by the pearl fishers | 10 | 5180, 760 | 75.0, 50.2 | none | lands in Kazakhstan in the fit; not listed |
+| M3 | red fish by the pearl fishers | 10 | 3090, 600 | 68.4, 50.5 | none | lands in Kazakhstan in the fit; not listed |
+| M4 | red fish among the islands | 12 | 4970, 11580 | 124.3, 24.9 | none | off the sheet: east of its 120°E edge; not listed |
+| M5 | red fish among the islands | 12 | 5760, 10960 | 126.7, 26.6 | none | off the sheet: east of its 120°E edge; not listed |
 
 Sheet 10's sea, at the page's top, is the Indian Ocean by its own lettering ("En la mar indich en la qual son
 peschadors e perles ..."), but its fit lays the page north up, centred through sheets 9 and 11, and puts that sea on
-the steppe; so its four figures lie on land and are not drawn. Either the page is drawn south up, as its upside-down
+the steppe; so its four figures lie on land and are not listed among the sheet's figures (`scripts/atlas.mjs`), nor are
+sheet 12's two fish east of the extent: the list, not the land or the edge, keeps them off. Either the page is drawn south up, as its upside-down
 lettering suggests, or the chart sets the Indian Ocean there; the fit and this reading disagree, and both stand.
 
-The Caspian ship is drawn because the scene reads a hole in the land (the Caspian is one) as sea, as it draws it.
+The Caspian ship is drawn because the scene reads a hole in the land as sea, as it draws it. The world's 50m land has
+one hole, the Caspian, so no other figure gains water by the rule.
 
 ### Landmarks, sheet 6
 
