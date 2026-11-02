@@ -528,7 +528,7 @@ function readControls() {
   // hills are the Catalan sprites: the chip selects all of them or none
   const hills = $('hills').value === 'catalan';
   if (hills !== CATALAN_KEYS.some((k) => selection.has(k))) for (const k of CATALAN_KEYS) hills ? selection.add(k) : selection.delete(k);
-  view = clampView({ ...view, projection: $('projection').value });
+  view = clampView({ ...view, projection: $('projection').value }, view.lat); // the same centre in any projection: no jump
   showRegionSamples();
   changed();
 }
