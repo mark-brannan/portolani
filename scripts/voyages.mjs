@@ -426,7 +426,9 @@ function endSpan(e) {
   else span = [dayOf(y), dayOf(y + 1)];
   return e.after ? [span[0], Infinity] : span;
 }
-const PRECISIONS = ['day', 'month', 'year', 'century'];
+export const PRECISIONS = ['day', 'month', 'year', 'century'];
+// the vaguer of two precisions
+export const vaguer = (p, q) => (PRECISIONS.indexOf(p) > PRECISIONS.indexOf(q) ? p : q);
 // How precise an end is: one of PRECISIONS (a season or a part of a year counts as a year)
 const precisionOf = (e) => (e.century ? 'century' : e.m != null && e.d != null ? 'day' : e.m != null ? 'month' : 'year');
 // A date's words read as its two ends: { start, end }, each { span: [first day, the day after the last], precision },
@@ -452,7 +454,7 @@ export function readDates(text) {
   return { start: end(s, a), end: end(e, b) };
 }
 // One of a leg's ISO `start` or `end` ("1519-11-29", "-0324-12", "1519~"), as an end; null when it does not read
-export const ISO_DATE = /^(-?\d{1,4})(?:-(\d{2}))?(?:-(\d{2}))?[~?%]?$/;
+export const ISO_DATE = /^(-?\d{1,4})(?:-(0[1-9]|1[0-2])(?:-(0[1-9]|[12]\d|3[01]))?)?[~?]?$/;
 function isoEnd(text) {
   const m = ISO_DATE.exec(String(text ?? ''));
   if (!m) return null;
@@ -510,7 +512,6 @@ export function calendarOf(voyage) {
     day[worst] = to; settled.add(worst);
   }
   for (let j = 1; j < N; j++) day[j] = Math.max(day[j], day[j - 1]);
-  const vaguer = (p, q) => (PRECISIONS.indexOf(p) > PRECISIONS.indexOf(q) ? p : q);
   const out = legs.map((leg, i) => ({ a: day[2 * i], b: day[2 * i + 1], n: leg.points?.length > 1 ? legPath(leg).length : 0, from: leg.from, to: leg.to,
     precision: ends[i] ? vaguer(ends[i].start.precision, ends[i].end.precision) : 'year' }));
   const t0 = day[0], t1 = day[N - 1];

@@ -14,7 +14,7 @@
 // selection those chose, and are written back in the new form.
 // For a while, `debug=sheets[,rings]` and `tune=name:value,...` carry the under-the-hood section
 // (docs/atlas/under-the-hood.md), off by default.
-import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, VOYAGE_PLAY, voyagePlaySeconds, calendarOf, penOn, dayText, voyageColours, settleInks, CONFIDENCE_PHRASES, isBroken, legPath, voyageView, CONTINENT_ZOOM_END, readVoyage, chronological, voyageLink, sightMarks, sightHits, drawnMarks, SIGHT_TILES, noteMarks, pickMark, markClear, tileSpot, groupMarks, dateSpan, readDate, noteCount, drawNoteMark, drawNoteRing, notePulse, drawBadge, drawMarkGlyph, ZOOM } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, VOYAGE_PLAY, voyagePlaySeconds, calendarOf, penOn, dayText, vaguer, voyageColours, settleInks, CONFIDENCE_PHRASES, isBroken, legPath, voyageView, CONTINENT_ZOOM_END, readVoyage, chronological, voyageLink, sightMarks, sightHits, drawnMarks, SIGHT_TILES, noteMarks, pickMark, markClear, tileSpot, groupMarks, dateSpan, readDate, noteCount, drawNoteMark, drawNoteRing, notePulse, drawBadge, drawMarkGlyph, ZOOM } from './scene.mjs';
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, effectiveOpacity, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
@@ -1879,7 +1879,7 @@ function playStep() {
   if (!b || voyagePen?.band !== b || b.state === 'paused' || b.state === 'done') return; // stopped, paused or over: the loop ends
   const now = performance.now();
   if (b.state === 'wait') { // for the flight to land and the scene to be placed with this voyage in it
-    if (flightTo == null && placed === view && ground?.voyages?.some((x) => x.id === b.id)) { b.state = 'run'; b.t0 = now; }
+    if (flightTo == null && placed === view && ground?.voyages?.some((x) => x.id === b.id)) { b.state = 'run'; b.t0 = now - b.at; } // from the day a pause or a seek left it at, else the first
     else if (now - b.since > 10000) { closeBand(); return; }
   }
   if (b.state === 'run') {
@@ -1897,13 +1897,15 @@ function endPlay() {
 }
 function pausePlay() {
   if (band?.state !== 'run' && band?.state !== 'wait') return;
+  band.waited = band.state === 'wait'; // paused before the flight landed: play again waits for it once more
   band.at = band.state === 'run' ? playMs(band) : 0; band.state = 'paused';
   showBand(); showVoyage();
 }
 function resumePlay() {
   if (band?.state === 'done') return playVoyage(band.id);
   if (band?.state !== 'paused') return;
-  band.state = 'run'; band.t0 = performance.now() - band.at;
+  if (band.waited) { band.state = 'wait'; band.since = performance.now(); band.waited = false; }
+  else { band.state = 'run'; band.t0 = performance.now() - band.at; }
   voyagePen = { id: band.id, band };
   showBand(); showVoyage();
   requestAnimationFrame(playStep);
@@ -1928,8 +1930,6 @@ function closeBand() {
   $('voyageBand').hidden = true;
   showVoyage();
 }
-const vaguest = (...ps) => ps.reduce((p, q) => (PRECISIONS.indexOf(q) > PRECISIONS.indexOf(p) ? q : p));
-const PRECISIONS = ['day', 'month', 'year', 'century'];
 // the band's strip for the voyage played: its legs, the waits between them dotted, its events ticked; twice, the copy in
 // full ink cut at the pen's day
 function fillBand() {
@@ -1952,7 +1952,7 @@ function showBand() {
   if (!band) return;
   const { cal } = band, day = playDay(band), pen = penOn(cal, day), leg = cal.legs[pen.leg], f = (day - cal.t0) / (cal.t1 - cal.t0);
   const before = pen.waiting ? cal.legs[pen.leg - 1] : null;
-  $('bandDate').textContent = dayText(Math.min(day, cal.t1 - 1e-3), before ? vaguest(before.precision, leg.precision) : leg.precision);
+  $('bandDate').textContent = dayText(Math.min(day, cal.t1 - 1e-3), before ? vaguer(before.precision, leg.precision) : leg.precision);
   $('bandLeg').textContent = band.state === 'done' ? `the end: ${leg.to}` : before ? `at ${before.to}, waiting` : `${leg.from} to ${leg.to}`;
   $('bandStrip').querySelector('.sailed').style.clipPath = `inset(0 ${(100 * (1 - f)).toFixed(3)}% 0 0)`;
   $('bandThumb').style.left = `${(100 * f).toFixed(3)}%`;
