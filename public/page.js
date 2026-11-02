@@ -93,7 +93,7 @@ function viewFromHash() {
   const q = hashParams(), m = /^(-?[\d.]+)\/(-?[\d.]+)\/(-?[\d.]+)$/.exec(q.get('map') ?? '');
   const v = m && { zoom: Number(m[1]), lat: Number(m[2]), lon: Number(m[3]) };
   const at = v && Object.values(v).every(Number.isFinite) ? v : DEFAULT_VIEW; // e.g. #map=1.2.3/40/5
-  return clampView({ ...at, projection: q.get('projection') });
+  return clampView({ ...at, projection: q.get('projection'), bearing: Number(q.get('bearing')) || 0 }); // bearing=270: west up
 }
 const zoomOf = (v, dflt) => (v !== '' && Number.isFinite(Number(v)) ? Math.max(0, Math.min(MAX_ZOOM, Math.round(Number(v)))) : dflt);
 const hex = (v, fallback) => (/^[0-9a-f]{3}$|^[0-9a-f]{6}$/i.test(v ?? '') ? `#${v.length === 3 ? [...v].map((c) => c + c).join('') : v}`.toLowerCase() : fallback);
@@ -174,6 +174,7 @@ function writeHash() {
   const q = new URLSearchParams(), v = view, st = style;
   q.set('map', `${v.zoom.toFixed(2)}/${v.lat.toFixed(3)}/${v.lon.toFixed(3)}`);
   if (v.projection !== PROJECTION_NAMES[0]) q.set('projection', v.projection);
+  if (v.bearing) q.set('bearing', String(Math.round(v.bearing * 10) / 10)); // the world turned: the compass direction at the top, north up written as no key
   if (layout !== 'default') q.set('layout', layout);
   if (!hoverOpen) q.set('hover', '0');
   if (!sameSet(selection, new Set(DEFAULT_SELECTION))) q.set('sprites', SPRITES.filter((s) => selection.has(s.key)).map((s) => encodeKey(s.key)).join(','));
@@ -778,7 +779,7 @@ async function render() {
     drawPictures(ctx);
     drawSheetHandles(ctx);
     drawCards();
-    placeSheetChips();
+    placeSheetChips(); showCompass();
     if (!fading || fading.alpha >= 1) placeLayer(); // a sheet fading in places it when whole
     preparePictures().then((fresh) => { if (fresh && me === run) repaint('pictures dealt'); }, () => {}); // the chosen subject's pictures, drawn once loaded
     const t2 = performance.now();
@@ -851,12 +852,12 @@ const outside = (t) => { const d = openDrawer(); return d && t instanceof Node &
 addEventListener('pointerdown', (e) => { if (outside(e.target) && !(phone.matches && e.target === canvas)) setDrawer(false); });
 addEventListener('focusout', (e) => { if (e.relatedTarget && outside(e.relatedTarget)) setDrawer(false); }); // tabbed out; a click that focuses nothing has no relatedTarget
 
-// Reset: every control back to its default, the view (place and projection), the drawer's layout and hover kept. The hash holds the whole
+// Reset: every control back to its default, the view (place, projection and bearing), the drawer's layout and hover kept. The hash holds the whole
 // style, so a hash with only the view is the default style; the hashchange handler below redraws from it.
 $('reset').addEventListener('click', () => {
-  const m = hashParams().get('map'), p = hashParams().get('projection');
+  const m = hashParams().get('map'), p = hashParams().get('projection'), b = hashParams().get('bearing');
   $('shareUrl').hidden = true; $('shareNote').textContent = '';
-  location.hash = [m && `map=${m}`, p && `projection=${p}`, layout !== 'default' && `layout=${layout}`, !hoverOpen && 'hover=0'].filter(Boolean).join('&');
+  location.hash = [m && `map=${m}`, p && `projection=${p}`, b && `bearing=${b}`, layout !== 'default' && `layout=${layout}`, !hoverOpen && 'hover=0'].filter(Boolean).join('&');
 });
 // Copy link: the hash is kept current by writeHash. Where the clipboard is refused (an insecure page,
 // a denied permission) the link is put in a box, selected, to copy by hand.
@@ -1008,7 +1009,7 @@ showMoods(); showLayout();
 
 let frame = 0, settle = 0;
 function moved(next, flying = false) {
-  if (next.zoom === view.zoom && next.lon === view.lon && next.lat === view.lat) return; // e.g. wheel at a zoom bound
+  if (next.zoom === view.zoom && next.lon === view.lon && next.lat === view.lat && (next.bearing ?? 0) === (view.bearing ?? 0)) return; // e.g. wheel at a zoom bound
   if (!flying) pinTitle = null; // a drag or a wheel leaves the place flown to
   view = next;
   hideTile();
@@ -1029,6 +1030,7 @@ function paintFrame(doing) {
   drawSheetHandles(ctx);
   drawCards(true);
   placeSheetChips();
+  showCompass();
   drawLayer(ctx, viewProjection(view), view.zoom, anchored);
   $('status').textContent = `z${view.zoom.toFixed(1)}: ${doing}, frame ${(performance.now() - t).toFixed(1)} ms`;
 }
@@ -1055,11 +1057,20 @@ const pinch = () => {
 // it is resized. Where it is let go lands in the link (sheet=). Chips at its top left corner put it at the
 // chart's own placement (Parallels, or Level) or at the fit of one of its coasts (overlays.json `snaps`).
 const HANDLE = 12; // the handles' radius, canvas px
+const offBy = (a, b) => Math.abs(((a - b + 540) % 360) - 180); // degrees between two angles, either way round
+const cornerTurns = new Map(); // id -> the quarter turn its corners were last read at
 const sheetsShown = () => (ground?.overlays ?? []).filter((o) => o.mode === 'sheet' && o.sheet); // bottom to top
+// Its corners as the window sees them, top left first then clockwise, however the sheet and the world are turned:
+// the chips sit over the top left one, the handles at the bottom two.
 function sheetGeometry(o) {
   if (!o) return null;
   const proj = viewProjection(view), corners = sheetCorners(o, proj, o.sheet);
-  return corners && { o, proj, corners };
+  if (!corners) return null;
+  // quarter turns clockwise on the window, held 5° past a 45° boundary so a drag through it does not flick the chips between corners
+  const a = o.sheet.turn - (proj.bearing ?? 0), held = cornerTurns.get(o.id);
+  const q = held != null && offBy(a, held * 90) < 50 ? held : (((Math.round(a / 90) % 4) + 4) % 4);
+  cornerTurns.set(o.id, q);
+  return { o, proj, corners: corners.map((_, j) => corners[(j - q + 4) % 4]) };
 }
 function sheetHit([x, y]) {
   // every handle is drawn over every sheet, so a handle wins first, the top sheet's before a lower one's; then the top sheet under the point
@@ -1133,6 +1144,7 @@ function placeSheetChips() {
   if (!geo || geo.o.id !== sheetChips.dataset.id) { sheetChips.hidden = true; if (geo) buildSheetChips(geo.o); else return; }
   const [[x, y]] = geo.corners, rc = canvas.getBoundingClientRect();
   sheetChips.hidden = false;
+  showMend(geo.o);
   const w = sheetChips.offsetWidth, h = sheetChips.offsetHeight;
   sheetChips.style.left = `${Math.max(8, Math.min(innerWidth - w - 8, rc.left + x * (rc.width / W) + 4))}px`;
   sheetChips.style.top = `${Math.max(8, Math.min(innerHeight - h - 8, rc.top + y * (rc.height / H) - h - 6))}px`;
@@ -1150,7 +1162,41 @@ function buildSheetChips(o) {
     b.setAttribute('role', 'radio'); b.dataset.label = label; if (i != null) b.dataset.snap = i;
     return b;
   }));
-  sheetChips.replaceChildren(where, ...notesChips(o));
+  sheetChips.replaceChildren(where, ...mendChips(o), ...notesChips(o));
+  showMend(o);
+}
+// Beside them, two chips that put back what the handles changed, the place kept: the sheet's angle and its size, as
+// they were at the placement last chosen (the chart's own, or a snap); dimmed where nothing has changed. And, for a
+// chart drawn to be read another way up (overlays.json `up`, de la Cosa's west up), a chip that turns the world under
+// the sheet until the chart reads as drawn, and back to north up (docs/spec/design.md, "The world turned to the chart").
+const ANGLE_GLYPH = '<svg viewBox="0 0 28 18" aria-hidden="true"><rect x="7" y="3.5" width="14" height="11" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2 1.6" transform="rotate(-22 14 9)"/><rect x="7" y="3.5" width="14" height="11" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M3.5 6.5a8 8 0 0 1 3-4.5M2.6 2.6 6.6 1.8 6 5.6" fill="none" stroke="#8c2f1e" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const SIZE_GLYPH = '<svg viewBox="0 0 28 18" aria-hidden="true"><rect x="3" y="1.5" width="22" height="15" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2 1.6"/><rect x="8" y="5" width="12" height="8" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M24 2.5 20.5 5.5M24 2.5h-3M24 2.5v3" fill="none" stroke="#8c2f1e" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const UP_GLYPH = '<svg viewBox="0 0 28 18" aria-hidden="true"><rect x="9" y="3" width="10" height="14" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M14 13V1.2M10.8 4.4 14 1.2l3.2 3.2" fill="none" stroke="#8c2f1e" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const COMPASS_WORDS = ['North', 'North-east', 'East', 'South-east', 'South', 'South-west', 'West', 'North-west'];
+const drawnBearing = (o) => (((o.sheet.turn - o.up) % 360) + 360) % 360; // the bearing that stands the scan as drawn on the window
+const chosen = new Map(); // id -> the placement last chosen by a chip, which the angle and size chips put back
+const chosenOf = (o) => chosen.get(o.id) ?? ownSheet(o.id) ?? o.sheet;
+const turnedTo = new Map(); // id -> the bearing its up chip last turned the world to, so a nudge of the sheet after keeps the chip pressed
+function mendChips(o) {
+  const chip = (key, glyph, text, title) => {
+    const b = Object.assign(document.createElement('button'), { type: 'button', className: 'chip', title });
+    b.innerHTML = `${glyph}${text}`; b.dataset.mend = key;
+    return b;
+  };
+  const chips = [chip('angle', ANGLE_GLYPH, 'Angle', 'Turn the sheet back to its angle, where it lies'), chip('size', SIZE_GLYPH, 'Size', 'Put the sheet back to its size, where it lies')];
+  if (o.up != null) {
+    const up = chip('up', UP_GLYPH, `${COMPASS_WORDS[Math.round(drawnBearing({ ...o, sheet: ownSheet(o.id) ?? o.sheet }) / 45) % 8]} up`, 'Turn the world under the sheet so the chart reads as it was drawn; again for north up');
+    up.setAttribute('aria-pressed', 'false');
+    chips.push(up);
+  }
+  return chips;
+}
+function showMend(o) {
+  const at = chosenOf(o), b = view.bearing ?? 0;
+  const set = (key, still) => sheetChips.querySelector(`[data-mend=${key}]`)?.setAttribute('aria-disabled', String(still));
+  set('angle', offBy(o.sheet.turn, at.turn) < 0.05);
+  set('size', Math.abs(o.sheet.scale / at.scale - 1) < 1e-3);
+  sheetChips.querySelector('[data-mend=up]')?.setAttribute('aria-pressed', String(b !== 0 && [drawnBearing(o), turnedTo.get(o.id)].some((t) => t != null && offBy(b, t) < 0.5)));
 }
 // Beside them, for a chart with notes: "Notes · N", which keeps its notes' marks shown until clicked again (off after the
 // pulse, and never on by default), and a ring that plays the pulse again (docs/spec/design.md, "the user asks for the notes back")
@@ -1168,6 +1214,17 @@ function notesChips(o) {
 sheetChips.addEventListener('click', (e) => {
   const b = e.target.closest('.chip'), o = sheetsShown().find((v) => v.id === sheetChips.dataset.id);
   if (!b || !o) return;
+  if (b.dataset.mend === 'up') { // as drawn, the sheet framed as it will stand; again, north up where the map is
+    if (b.getAttribute('aria-pressed') === 'true') turnWorld(0);
+    else { turnedTo.set(o.id, drawnBearing(o)); turnWorld(drawnBearing(o), sheetView(o, o.sheet, { w: W, h: H, bearing: drawnBearing(o) })); }
+    return;
+  }
+  if (b.dataset.mend) {
+    const at = chosenOf(o), sheet = b.dataset.mend === 'angle' ? { ...o.sheet, turn: at.turn } : { ...o.sheet, scale: at.scale };
+    style = { ...style, sheets: withSheet(o, sheet) };
+    writeHash(); render();
+    return;
+  }
   if (b.dataset.notes) {
     const on = b.dataset.notes === 'again' || !notesKept.has(o.id);
     if (b.dataset.notes === 'keep') { if (on) notesKept.add(o.id); else notesKept.delete(o.id); b.setAttribute('aria-pressed', String(on)); }
@@ -1175,6 +1232,7 @@ sheetChips.addEventListener('click', (e) => {
     return;
   }
   const sn = b.dataset.snap == null ? null : o.snaps[b.dataset.snap];
+  if (sn) chosen.set(o.id, sn); else chosen.delete(o.id);
   style = { ...style, sheets: withSheet(o, sn && { lon: sn.lon, lat: sn.lat, scale: sn.scale, turn: sn.turn }) };
   writeHash(); render();
 });
@@ -1855,7 +1913,7 @@ function dealSight(tile = null) {
   const zoom = Math.min(SIGHT_ZOOM, viewContaining(f, { w: W, h: H }).zoom);
   let to = view.zoom < zoom - FLY_WIDER ? { ...view, lon: at[0], lat: at[1], zoom } : view;
   if (!sightDeal(sizes, windowRect(), viewProjection(to).project(...at)).clear) to = { ...to, lon: at[0], lat: at[1] };
-  dealViews.set(s.key, clampView({ ...to, projection: view.projection }));
+  dealViews.set(s.key, clampView({ ...to, projection: view.projection, bearing: view.bearing }));
   if (to === view) { dealNow(s.key); return; } // dealt here and now
   goTo(to, s.key); // dealt as the map arrives, and the mark's tile opened again there
   reopen = tile;
@@ -2475,7 +2533,7 @@ $('chartList').addEventListener('click', (e) => {
     return;
   }
   if (b.dataset.to === 'made') {
-    const to = clampView({ ...chart.made, projection: view.projection });
+    const to = clampView({ ...chart.made, projection: view.projection, bearing: view.bearing });
     clearSheetFor(to);
     goTo(to);
     return;
@@ -2484,7 +2542,7 @@ $('chartList').addEventListener('click', (e) => {
   const { [o.id]: _, ...sheets } = style.sheets; // back to its own placement
   seen.delete(o.id); // its notes announce themselves again once it lands
   setSheets([o.id], sheets, !shown && chartsFresh ? o.id : null, false); // shown alone: every other sheet hides
-  goTo({ ...sheetView(o, o.sheet, { w: W, h: H }), title: chart.name }); // the whole sheet framed, 8% clear round it
+  goTo({ ...sheetView(o, o.sheet, { w: W, h: H, bearing: view.bearing }), title: chart.name }); // the whole sheet framed, 8% clear round it, the world turned as it is
 });
 env.readJSON('packs/overlays/overlays.json').then(({ overlays }) => {
   OVERLAYS = overlays;
@@ -2575,7 +2633,7 @@ $('coordsText').addEventListener('input', () => { $('goMiss').hidden = true; });
 function clearSheetFor(target, frame = false) {
   const sheets = laidSheets();
   if (!sheets.length) return;
-  const to = clampView({ ...target, projection: view.projection }), proj = viewProjection(to);
+  const to = clampView({ ...target, projection: view.projection, bearing: target.bearing ?? view.bearing }), proj = viewProjection(to);
   const spots = frame ? Array.from({ length: 25 }, (_, i) => [W * (0.1 + 0.2 * (i % 5)), H * (0.1 + 0.2 * Math.floor(i / 5))]) : [proj.project(to.lon, to.lat)];
   const covering = sheets.filter((o) => spots.some(([x, y]) => onSheet(o, proj, o.sheet, x, y)));
   if (covering.length) setSheets(style.overlays.filter((id) => !covering.some((o) => o.id === id)), style.sheets, null, false); // a fly follows at once, and draws
@@ -2592,20 +2650,79 @@ function goTo(target, deal = null) {
   if (deal == null) clearTable();
   cancelAnimationFrame(flight);
   pinTitle = null;
-  const from = view, to = clampView({ ...target, projection: view.projection });
+  const from = view, to = clampView({ ...target, projection: view.projection, bearing: target.bearing ?? view.bearing }); // the world stays turned as it is
   flightTo = to; lastFlight = { from, target };
   const plan = planFlight(from, to, { w: W, h: H, minZoom: ZOOM.min, ...fly });
   const ms = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : plan.ms, t0 = performance.now();
   $('flyOut').textContent = `${plan.arc ? 'arc' : 'near'}, top z${plan.top.toFixed(2)}, ${(plan.ms / 1000).toFixed(1)} s`;
   let far = false;
   const step = (now) => {
-    const u = ms ? Math.min(1, (now - t0) / ms) : 1, e = flyEase(u, fly.ease), at = u < 1 ? clampView({ ...plan.at(e), projection: to.projection }) : to;
+    const u = ms ? Math.min(1, (now - t0) / ms) : 1, e = flyEase(u, fly.ease), at = u < 1 ? clampView({ ...plan.at(e), projection: to.projection, bearing: to.bearing }) : to;
     moved(at, true);
     if (deal) { if (Math.abs(at.zoom - to.zoom) > DEAL_NEAR) far = true; else if (far) dealNow(deal); }
     if (u < 1) flight = requestAnimationFrame(step); else { flightTo = null; pinTitle = target.title ?? null; placed = null; if (deal) dealNow(deal); stopped(); }
   };
   step(t0);
 }
+// The world turned to a bearing, the short way round, in TURN_MS (reduced motion jumps); `frame`, a view to end on
+// (a sheet framed as it will stand), is eased to along the way. The ornaments are placed again when it stops.
+const TURN_MS = 700;
+function turnWorld(bearing, frame = null) {
+  takeOver();
+  const from = view, d = ((bearing - (from.bearing ?? 0) + 540) % 360) - 180, to = frame ? clampView({ ...frame, projection: from.projection, bearing }) : null;
+  const dl = to ? ((to.lon - from.lon + 540) % 360) - 180 : 0;
+  const ms = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : TURN_MS, t0 = performance.now();
+  const step = (now) => {
+    const u = ms ? Math.min(1, (now - t0) / ms) : 1, e = u < 0.5 ? 2 * u * u : 1 - (2 - 2 * u) ** 2 / 2;
+    const at = to ? { lon: from.lon + dl * e, lat: from.lat + (to.lat - from.lat) * e, zoom: from.zoom + (to.zoom - from.zoom) * e } : {};
+    moved(clampView({ ...from, ...at, bearing: (from.bearing ?? 0) + d * e }), true);
+    if (u < 1) flight = requestAnimationFrame(step); else stopped();
+  };
+  flight = requestAnimationFrame(step);
+}
+// The compass in the gutter, shown while a sheet is laid or the world is turned: its needle points north on the
+// window; a click turns the world back to north up, a drag round it turns the world, and every sheet on it, by the
+// angle swept, so a chart with no up (the Catalan Atlas) can be walked round (docs/spec/design.md, "A chart with no up
+// turns for the reader").
+const compass = $('compass');
+let spin = null; // { a, bearing, moved } while the compass is held: the pointer's angle about it and the bearing then
+function showCompass() {
+  const b = view.bearing ?? 0;
+  compass.hidden = !b && !sheetsShown().length;
+  compass.querySelector('svg').style.transform = `rotate(${-b}deg)`;
+  compass.setAttribute('aria-label', b ? `North is ${Math.round(b)}° from the top: click for north up, or drag round to turn the world` : 'North up: drag round to turn the world and the chart with it');
+  compass.title = b ? 'North up (drag round to turn)' : 'Drag round to turn the world';
+}
+const angleAbout = (el, e) => { const r = el.getBoundingClientRect(); return Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2)) * 180 / Math.PI; };
+compass.addEventListener('pointerdown', (e) => {
+  takeOver();
+  compass.setPointerCapture(e.pointerId);
+  spin = { a: angleAbout(compass, e), bearing: view.bearing ?? 0, moved: false };
+});
+compass.addEventListener('pointermove', (e) => {
+  if (!spin) return;
+  const d = ((angleAbout(compass, e) - spin.a + 540) % 360) - 180;
+  if (!spin.moved && Math.abs(d) < 4) return; // a click's wobble
+  spin.moved = true;
+  moved(clampView({ ...view, bearing: spin.bearing - d })); // swept clockwise, the world turns clockwise
+  showCompass();
+});
+const letGo = (e) => {
+  if (!spin) return;
+  const { moved: turned } = spin;
+  spin = null;
+  if (turned) stopped(); else if (e.type === 'pointerup' && view.bearing) turnWorld(0);
+};
+compass.addEventListener('click', (e) => { if (e.detail === 0 && view.bearing) turnWorld(0); }); // Enter or Space: north up
+compass.addEventListener('pointerup', letGo);
+compass.addEventListener('pointercancel', letGo);
+compass.addEventListener('keydown', (e) => { // the arrow keys turn it by 15°, as the drag does
+  const d = { ArrowLeft: 15, ArrowRight: -15 }[e.key];
+  if (d == null) return;
+  e.preventDefault();
+  turnWorld((view.bearing ?? 0) + d);
+});
+
 // A touch or the wheel takes over from a flight: a subject it was carrying is dealt where the map is
 function takeOver() {
   const flying = flightTo != null;
