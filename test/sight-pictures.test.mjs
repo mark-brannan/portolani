@@ -88,14 +88,18 @@ test('spreadMarks: two marks that would meet stand an icon\'s width clear, along
   assert.equal(spreadMarks([[0, 0], [60, 0]], width), null, 'far enough apart: left where they are');
 });
 
-test('Tyre at zooms 8, 9.5 and 11: its two marks a width clear, the city site west, each hit where it is drawn', async () => {
-  for (const zoom of [8, 9.5, 11]) {
-    const { scene, data } = await createScene(env, { view: { lon: 35.205, lat: 33.255, zoom }, sights: TYRE.map(({ lon, lat, tile }) => ({ name: 'Tyre', lon, lat, ruin: true, site: tile.site })) });
+test('Tyre at zooms 5 to 11, centred and panned: its two marks a width clear on their true bearing, the city site west, each hit where it is drawn', async () => {
+  for (const [zoom, pan] of [[5, 0], [8, 0], [8, 0.5], [9.5, 0], [11, 0], [11, -0.7]]) {
+    const s = 2 ** (zoom - 8), view = { lon: 35.205 + pan / s, lat: 33.255 + pan / 2 / s, zoom };
+    const { scene, data } = await createScene(env, { view, sights: TYRE.map(({ lon, lat, tile }) => ({ name: 'Tyre', lon, lat, ruin: true, site: tile.site })) });
     const marks = scene.lesser.filter((l) => l.mark && l.name === 'Tyre').sort((a, b) => a.site - b.site);
     assert.deepEqual(marks.map((m) => m.site), [0, 1], `z${zoom}: both marks drawn`);
     const [a, b] = marks, width = 2 * a.label.hw;
     assert.ok(Math.hypot(b.x - a.x, b.y - a.y) >= 2 * width - 0.5, `z${zoom}: ${Math.hypot(b.x - a.x, b.y - a.y).toFixed(1)} px apart, the icon ${width.toFixed(1)} wide`);
     assert.ok(a.x < b.x, `z${zoom}: the city site west of Al-Bass`);
+    // moved together if at all: the line between them runs at the sites' own bearing on the map, never turned
+    const [p, q] = TYRE.map(({ lon, lat }) => data.proj.project(lon, lat)), deg = (dx, dy) => Math.atan2(dy, dx) * 180 / Math.PI;
+    assert.ok(Math.abs(deg(b.x - a.x, b.y - a.y) - deg(q[0] - p[0], q[1] - p[1])) < 0.5, `z${zoom} pan ${pan}: drawn at ${deg(b.x - a.x, b.y - a.y).toFixed(1)}°, the sites at ${deg(q[0] - p[0], q[1] - p[1]).toFixed(1)}°`);
     const hits = sightHits(TYRE, drawnMarks(scene, data), data.proj, { x0: 0, y0: 0, x1: 1600, y1: 1000 });
     for (const m of marks) {
       const hit = hits.find((h) => h.tile.site === m.site);
