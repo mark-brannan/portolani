@@ -6,18 +6,18 @@ An account of what broke on a phone ([#109](https://github.com/mark-brannan/port
 
 | Bug | Cause | Shipped in |
 |---|---|---|
-| Pinch zoomed the page, not the map | The Go flyout's box stayed laid out when shut and sat over the map's top right, taking the touches there. Also, the map was a band a third of the window high, so a pinch in the margin above it went to the browser. | [#166](https://github.com/mark-brannan/portolani/pull/166), [#262](https://github.com/mark-brannan/portolani/pull/262) |
-| The flyout never closed | It opened on `:hover`, and a tap leaves `:hover` stuck on the last thing touched. | [#166](https://github.com/mark-brannan/portolani/pull/166) |
-| Locate behaved oddly | A tap flew to the fix, popped the flyout open as a side effect and left it over the map; then the keyboard came up over the sheet because the box was focused. | [#166](https://github.com/mark-brannan/portolani/pull/166), [#262](https://github.com/mark-brannan/portolani/pull/262) |
-| The layout was wrong at phone width | The 1600 by 1000 canvas shrank to the window's width: a 225 px band on a 360 px phone, with lettering too small to read. | [#167](https://github.com/mark-brannan/portolani/pull/167), [#262](https://github.com/mark-brannan/portolani/pull/262) |
+| Pinch zoomed the page, not the map | The shut Go flyout's box sat over the map; the map was a third-height band. | [#166](https://github.com/mark-brannan/portolani/pull/166), [#262](https://github.com/mark-brannan/portolani/pull/262) |
+| The flyout never closed | It opened on `:hover`, which a tap leaves stuck. | [#166](https://github.com/mark-brannan/portolani/pull/166) |
+| Locate behaved oddly | It left the flyout open over the map, and focused the box, raising the keyboard. | [#166](https://github.com/mark-brannan/portolani/pull/166), [#262](https://github.com/mark-brannan/portolani/pull/262) |
+| The layout was wrong at phone width | The canvas shrank to a 225 px band at 360 px, with unreadable lettering. | [#167](https://github.com/mark-brannan/portolani/pull/167), [#262](https://github.com/mark-brannan/portolani/pull/262) |
 
 ## What shipped
 
-- **#166**: the flyout takes no touches itself, only its buttons do. A places button opens it by touch; hover opens it only where the device hovers. It shuts after a choice, on a tap on the map and on Esc.
-- **#167**: under 520 px the settings drawer is a bottom sheet at half the window's height, the map shrunk (not cropped) into the half above it. The cartouche and scale bar sit on cards clear of the map.
-- **#262**: the map fills the window, cropped at its sides, so a pinch lands on the map anywhere. Find my position fills the box, shuts Go and flies there, without focusing the box. The lighter drawers became only as tall as their lines.
-- **#292**: a choice in a drawer, or a tap on the map, no longer shuts it, on a phone or a wide screen. This reverses #262's shut-on-a-tap, on the user's word of 2026-10-30. Grouped lists open one group at a time, and a click on the open group's heading shuts it.
-- **#313**: the voyage fit uses the window's rectangle, not the whole canvas, so a chosen voyage's track is framed inside what a phone shows.
+- **#166**: the flyout opens by a places button on touch, by hover only where the device hovers, and shuts after a choice.
+- **#167**: under 520 px the settings drawer is a half-height bottom sheet, with the map shrunk above it.
+- **#262**: the map fills the window, cropped at its sides; Find my position no longer focuses the box.
+- **#292**: a choice or a tap on the map leaves the drawer open; this reverses #262's shut-on-tap.
+- **#313**: the voyage fit uses the window's rectangle, so a voyage's track is framed inside what a phone shows.
 
 Where #167 and #262 differ, #262 holds for the map (it fills the window); the screenshots below are #167's, taken before that, so they show the map shrunk above the sheet.
 
