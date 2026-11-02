@@ -60,13 +60,14 @@ export function sheetOf(fit, width, height) {
 
 // The sheet's affine on the page: [a, b, c, d, e, f] for drawn px (the scan at `overlay.scale`) ->
 // page px, by `proj`: its centre at proj.project(lon, lat), its px size from the view's zoom alone (proj.k is
-// px per radian of longitude, the same in every projection), turned clockwise by `turn`. Null when the centre
+// px per radian of longitude, the same in every projection), turned clockwise by `turn` on the world and with the
+// world by the view's bearing. Null when the centre
 // is past an azimuthal projection's horizon.
 export function sheetTransform(overlay, proj, sheet) {
   if (proj.visible && !proj.visible(sheet.lon, sheet.lat)) return null;
   const [cx, cy] = proj.project(sheet.lon, sheet.lat);
   if (![cx, cy].every(Number.isFinite)) return null;
-  const k = sheet.scale * (overlay.scale ?? 1) * proj.k * RAD, t = sheet.turn * RAD, c = Math.cos(t) * k, s = Math.sin(t) * k;
+  const k = sheet.scale * (overlay.scale ?? 1) * proj.k * RAD, t = (sheet.turn - (proj.bearing ?? 0)) * RAD, c = Math.cos(t) * k, s = Math.sin(t) * k; // the sheet turns with the world
   const w = overlay.img?.width ?? overlay.width / (overlay.scale ?? 1), h = overlay.img?.height ?? overlay.height / (overlay.scale ?? 1);
   return [c, s, -s, c, cx - c * (w / 2) + s * (h / 2), cy - s * (w / 2) - c * (h / 2)];
 }
@@ -100,7 +101,13 @@ export function sheetFrame(overlay, sheet) {
 }
 
 // The view that shows the whole sheet, in Mercator, with `pad` of its size clear round it: contained, never cropped.
-export function sheetView(overlay, sheet, { w = 1600, h = 1000, pad = 0.08 } = {}) {
+// With a `bearing` the view keeps it, and the sheet is framed as it stands turned on the canvas.
+export function sheetView(overlay, sheet, { w = 1600, h = 1000, pad = 0.08, bearing = 0 } = {}) {
+  if (bearing) {
+    const t = (sheet.turn - bearing) * RAD, c = Math.abs(Math.cos(t)), s = Math.abs(Math.sin(t)), sw = overlay.width * sheet.scale, sh = overlay.height * sheet.scale; // degrees
+    const k = Math.min(w / ((sw * c + sh * s) * (1 + 2 * pad) * RAD), h / ((sw * s + sh * c) * (1 + 2 * pad) * RAD));
+    return { lon: sheet.lon, lat: sheet.lat, zoom: Math.log2((k * 2 * Math.PI) / 512), bearing };
+  }
   const f = sheetFrame(overlay, sheet), m0 = mercDeg(f.latMin), m1 = mercDeg(f.latMax);
   const k = Math.min(w / ((f.lonMax - f.lonMin) * (1 + 2 * pad) * RAD), h / ((m1 - m0) * (1 + 2 * pad) * RAD)); // px per radian
   return { lon: (f.lonMin + f.lonMax) / 2, lat: latOf((m0 + m1) / 2), zoom: Math.log2((k * 2 * Math.PI) / 512) };

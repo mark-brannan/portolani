@@ -77,8 +77,8 @@ function depthField({ proj, land, createCanvas, w, h }) {
     ring.forEach(([lon, lat], i) => {
       if (proj.visible && !proj.visible(lon, lat)) { prev = null; return; } // behind an azimuthal horizon
       const px = proj.x(lon, lat), py = proj.y(lat, lon);
-      if (!i || prev === null || Math.abs(px - prev) > Math.PI * k) g.moveTo(px, py); else g.lineTo(px, py);
-      prev = px;
+      if (!i || prev === null || Math.hypot(px - prev[0], py - prev[1]) > Math.PI * k) g.moveTo(px, py); else g.lineTo(px, py); // a jump is the seam, in any bearing
+      prev = [px, py];
     });
     g.closePath();
   }

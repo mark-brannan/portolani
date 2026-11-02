@@ -45,8 +45,7 @@ Feature: Reset  (button `#reset`) [verified page.js:~590, index.html "share"]
   Scenario: every control back to default, place kept
     Given the chart at `#map=7.00/43.700/7.300&ink=5a1a1a&density=1.5&projection=miller`
     When the user clicks Reset
-    Then the hash is exactly `#map=7.00/43.700/7.300`
-    # Mismatch: tooltip says "the view stays", but projection is dropped with the rest (only `map` is kept), so the chart returns to Mercator.
+    Then the hash is exactly `#map=7.00/43.700/7.300&projection=miller`: the view (its place and its projection) is kept, with the drawer's layout and hover setting if they are not the defaults, and everything else is back to default
 
 Feature: Copy link  (button `#copy`) [verified page.js:~600]
   Tested by: test/hash.test.mjs — 'copy link: the clipboard holds the page URL'
