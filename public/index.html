@@ -765,5 +765,6 @@
 </aside>
 <script type="importmap">{ "imports": { "coast-wright": "./coast-wright/index.js", "coastlines/catalogue.json": "./coastlines/catalogue.json", "coastlines/provider": "./coastlines/lib/provider.js" } }</script>
 <script type="module" src="page.js"></script>
+<script type="module">if (/[?&]mock=row/.test(location.search)) import("./mockup-chart-position.mjs"); // the chart position row mockup, not for merge</script>
 </body>
 </html>
