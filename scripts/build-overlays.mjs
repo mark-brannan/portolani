@@ -18,6 +18,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { fetchBytesWithRetry } from './fetch-retry.mjs';
 import { similarityFit, sheetOf } from './overlays.mjs';
+import { landIndex, fitLine, parallelLines } from './fit-lines.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DL = join(ROOT, 'downloads'), OUT = join(ROOT, 'packs', 'overlays');
@@ -86,12 +87,12 @@ export function pageOffsets(pages) {
 // every row of the eight pages at their offsets): too few places, too far from where they lie, to set a scale of
 // their own. Sheet 10 has no place read (its lettering is upside down and worn), so it is centred through the rows
 // of sheets 9 and 11.
+const catalanRows = (md, pages) => pages.map((p) => (md.includes(`### Landmarks, sheet ${p.n}
+`) ? landmarkRows(md, `### Landmarks, sheet ${p.n}
+`) : []));
 export function catalanPieces(md, pages = CATALAN_PAGES) {
   const at = pageOffsets(pages);
-  const rows = pages.map((p, i) => (md.includes(`### Landmarks, sheet ${p.n}
-`) ? landmarkRows(md, `### Landmarks, sheet ${p.n}
-`) : [])
-    .map((r) => [[at[i] + r.px[0] - p.x0, r.px[1]], r.ll]));
+  const rows = catalanRows(md, pages).map((page, i) => page.map((r) => [[at[i] + r.px[0] - pages[i].x0, r.px[1]], r.ll]));
   const atlas = similarityFit(rows.flat()).scale;
   return pages.map((p, i) => {
     if (p.part === 'portolan') { const { a, b, tx, ty } = similarityFit(rows[i]); return [at[i], at[i] + p.x1 - p.x0, { a, b, tx, ty }]; }
@@ -100,35 +101,45 @@ export function catalanPieces(md, pages = CATALAN_PAGES) {
     return [at[i], at[i] + p.x1 - p.x0, { a, b, tx, ty }];
   });
 }
+// Each page's landmarks, as the real [lon, lat] its fit was computed from: sheet 10's are sheets 9's and 11's.
+export function catalanMarks(md, pages = CATALAN_PAGES) {
+  const rows = catalanRows(md, pages).map((page) => page.map((r) => r.ll));
+  return rows.map((r, i) => (r.length ? r : [...(rows[i - 1] ?? []), ...(rows[i + 1] ?? [])]));
+}
 
 // Each chart's pieces from ornaments.md, as [x0, x1, fit]; x1 null for the scan's right edge. `scale` is how
 // far the scan is shrunk for the site. A chart of `pages` is one panel per page, butted west to east.
 const CHARTS = [
   { id: 'carta-marina', title: 'Carta Marina, Olaus Magnus, 1539', source: 'carta-marina', file: 'carta-marina.jpg', scale: 2,
     pieces: (md) => { const rows = figureRows(md); return [[0, 2700, fitOf(rows, 'west')], [2700, null, fitOf(rows, 'baltic')]]; },
+    // the landmarks ornaments.md names for each fit ("Carta Marina, 1539"), where they lie today: the figures table
+    // gives where the fits put the figures, not the landmarks' scan px, so these are their real places alone
+    marks: () => [[[-18.6, 64.9], [-6.9, 62.0], [-1.25, 60.3], [-3.05, 59.0]], // Iceland, the Faroes, Shetland, Orkney
+      [[19.95, 60.2], [18.07, 59.33], [18.5, 57.45], [16.65, 56.75], [22.5, 58.4], [24.1, 56.95], [18.65, 54.35]]], // Åland, Stockholm, Gotland, Öland, Saaremaa, Riga, Danzig
     snaps: ['West', 'Baltic'] },
   { id: 'catalan-atlas', title: 'Catalan Atlas, 1375', source: 'catalan-atlas-5', pages: CATALAN_PAGES, thumb: 'catalan-atlas-thumb.jpg', scale: 4,
-    pieces: (md) => catalanPieces(md), snaps: CATALAN_PAGES.map((p) => p.label) },
+    pieces: (md) => catalanPieces(md), marks: (md) => catalanMarks(md), snaps: CATALAN_PAGES.map((p) => p.label) },
   { id: 'de-la-cosa', title: 'Map of Juan de la Cosa, 1500', source: 'de-la-cosa', file: 'de-la-cosa.jpg', scale: 1, // the scan is small: shrunk, the coasts would go; the pieces run from the parchment's west edge to its east
     parallels: [23.44, 0], // the two long red lines across the skin, top first: the Tropic of Cancer and the equator
     up: 90, // drawn west up, the equator running up and down and the New World at the top: the scan turned 90° clockwise reads as drawn
     pieces: (md) => { const rows = landmarkRows(md, '### Landmarks, 1500'); return [[70, 880, 'west'], [880, 1150, 'atlantic'], [1150, 2060, 'east']].map(([x0, x1, p]) => [x0, x1, pieceFit(rows, p)]); },
+    marks: (md) => { const rows = landmarkRows(md, '### Landmarks, 1500'); return ['west', 'atlantic', 'east'].map((p) => rows.filter((r) => r.piece === p).map((r) => r.ll)); },
     snaps: ['New World', 'Atlantic', 'Europe'] },
   // The charts below are laid level by a few landmarks read off the scan by eye, scan px to real lon, lat (#161 follow-up):
-  // a rough centre and scale, no warped coast fits.
+  // a rough centre and scale, no warped coast fits: `landmarks`, one piece by their levelFit.
   { id: 'aguiar', title: 'Chart of Jorge de Aguiar, 1492', source: 'aguiar-chart', file: 'aguiar.jpg', scale: 2, dark: true, // scanned on black
-    pieces: () => [[0, null, levelFit([[[1895, 1491], [-9.14, 38.72]], [[1992, 1825], [-5.6, 36.0]], [[3093, 738], [12.33, 45.44]], [[4347, 1755], [35.22, 31.78]]])]],
+    landmarks: [[[1895, 1491], [-9.14, 38.72]], [[1992, 1825], [-5.6, 36.0]], [[3093, 738], [12.33, 45.44]], [[4347, 1755], [35.22, 31.78]]], // scan px, real lon, lat
     snaps: [] },
   { id: 'agnese-world', title: 'World map of Battista Agnese, about 1544', source: 'agnese-1544-world', file: 'agnese-world.jpg', scale: 4,
-    pieces: () => [[0, null, levelFit([[[5796, 3432], [-5.6, 36.0]], [[7290, 4867], [18.47, -34.36]], [[4959, 5523], [-70.5, -53.0]], [[5140, 5116], [-57.5, -35.0]], [[5479, 4391], [-35.0, -8.4]], [[8395, 3961], [77.5, 8.1]]])]],
+    landmarks: [[[5796, 3432], [-5.6, 36.0]], [[7290, 4867], [18.47, -34.36]], [[4959, 5523], [-70.5, -53.0]], [[5140, 5116], [-57.5, -35.0]], [[5479, 4391], [-35.0, -8.4]], [[8395, 3961], [77.5, 8.1]]], // scan px, real lon, lat
     snaps: [] },
   { id: 'dourado-atlantic', title: 'North Atlantic of Fernão Vaz Dourado, 1580', source: 'dourado-1580-k4', file: 'dourado-atlantic.jpg', scale: 4,
-    pieces: () => [[0, null, levelFit([[[7010, 5975], [-9.14, 38.72]], [[6877, 5458], [-9.26, 42.88]], [[7314, 6452], [-5.6, 36.0]], [[7407, 4624], [-4.77, 48.36]], [[6983, 3908], [-8.0, 53.4]], [[8626, 5432], [3.13, 41.85]], [[6532, 2610], [-18.5, 65.0]]])]],
+    landmarks: [[[7010, 5975], [-9.14, 38.72]], [[6877, 5458], [-9.26, 42.88]], [[7314, 6452], [-5.6, 36.0]], [[7407, 4624], [-4.77, 48.36]], [[6983, 3908], [-8.0, 53.4]], [[8626, 5432], [3.13, 41.85]], [[6532, 2610], [-18.5, 65.0]]], // scan px, real lon, lat
     snaps: [] },
   // Not the original: a painted copy of 1959 of the atlas's Mediterranean (sheets 5 to 8, Corsica and Sardinia drawn
   // once), CC BY 3.0. Ten places: Gibraltar, Lisbon, Finisterre, London, Corsica, Sardinia, Sicily, Venice, Crete, Cyprus.
   { id: 'catalan-atlas-1959-copy', title: 'Catalan Atlas, Mediterranean, a copy of 1959', source: 'catalan-atlas-1959-copy', file: 'catalan-atlas-1959-copy.jpg', scale: 4,
-    pieces: () => [[0, null, levelFit([[[3748, 5784], [-5.6, 35.97]], [[2961, 4997], [-9.14, 38.72]], [[2915, 4350], [-9.27, 42.88]], [[4072, 2360], [-0.12, 51.51]], [[6136, 3933], [9.05, 42.15]], [[6154, 4535], [9.0, 40.05]], [[7311, 4951], [14.1, 37.55]], [[7403, 3100], [12.33, 45.44]], [[9717, 5090], [24.9, 35.2]], [[11336, 4858], [33.2, 35.1]]])]],
+    landmarks: [[[3748, 5784], [-5.6, 35.97]], [[2961, 4997], [-9.14, 38.72]], [[2915, 4350], [-9.27, 42.88]], [[4072, 2360], [-0.12, 51.51]], [[6136, 3933], [9.05, 42.15]], [[6154, 4535], [9.0, 40.05]], [[7311, 4951], [14.1, 37.55]], [[7403, 3100], [12.33, 45.44]], [[9717, 5090], [24.9, 35.2]], [[11336, 4858], [33.2, 35.1]]], // scan px, real lon, lat
     snaps: [] },
 ];
 
@@ -153,6 +164,17 @@ export function sheetPlacements(pieces, labels, width, height, parallels = null)
   if (sheets.length === 1) return { sheet: sheets[0], snaps };
   return { sheet: { lon, lat: latOf((mercDeg(first.lat) + mercDeg(last.lat)) / 2), scale: Math.sqrt(first.scale * last.scale), turn: 0 }, snaps };
 }
+// The line each placement was fitted to, in today's geography (scripts/fit-lines.mjs): a snap's, the coast its piece's
+// landmarks lie on; the chart's own, with drawn `parallels` today's equator and tropic across the sheet, else the
+// coasts of the first and last pieces it is centred between (one piece: its own). `marks` holds each piece's landmarks
+// as real [lon, lat]. Returns { sheetLine, snaps } with each snap's `line` beside its placement.
+export function placementLines(land, marks, { sheet, snaps }, width, height, parallels = null) {
+  const lines = marks.map((m) => fitLine(land, m));
+  const own = parallels ? parallelLines(parallels, sheet, width, height) : lines.length === 1 ? lines[0] : [...lines[0], ...lines.at(-1)];
+  return { sheetLine: own, snaps: snaps.map((sn, i) => ({ ...sn, line: lines[i] })) };
+}
+const piecesOf = (c, md) => (c.landmarks ? [[0, null, levelFit(c.landmarks)]] : c.pieces(md));
+const marksOf = (c, md) => (c.landmarks ? [c.landmarks.map(([, ll]) => ll)] : c.marks(md));
 const mercDeg = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360)) * 180 / Math.PI;
 const latOf = (m) => (2 * Math.atan(Math.exp((m * Math.PI) / 180)) - Math.PI / 2) * 180 / Math.PI;
 
@@ -233,10 +255,11 @@ async function scanOf(src) {
 if (import.meta.url === `file://${process.argv[1]}`) {
   const sources = JSON.parse(readFileSync(join(ROOT, 'scripts', 'sources.json'), 'utf8')).sources;
   const md = readFileSync(join(ROOT, 'docs', 'atlas', 'ornaments.md'), 'utf8');
+  const land = landIndex(JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.resolve('coastlines/data/ne-land-10m'))), 'ne-land-10m.geojson'), 'utf8')));
   mkdirSync(OUT, { recursive: true });
   const overlays = [];
   for (const c of CHARTS) {
-    if (c.pages) { overlays.push(await buildPages(c, sources, md)); continue; }
+    if (c.pages) { overlays.push(await buildPages(c, sources, md, land)); continue; }
     const src = sources.find((s) => s.id === c.source);
     const img = await loadImage(await scanOf(src));
     const scale = c.scale, fw = Math.round(img.width / scale), fh = Math.round(img.height / scale);
@@ -246,22 +269,25 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const { mask, keyed } = paperMask(g, fw, fh, { dark: !!c.dark }), maskFile = `${c.id}-mask.png`;
     const mc = createCanvas(fw, fh); mc.getContext('2d').putImageData(mask, 0, 0);
     if (keyed > 0) writeFileSync(join(OUT, maskFile), mc.toBuffer('image/png'));
-    const pieces = c.pieces(md).map(([x0, x1, fit]) => [x0, x1 ?? img.width, fit]);
+    const pieces = piecesOf(c, md).map(([x0, x1, fit]) => [x0, x1 ?? img.width, fit]);
     const parallels = c.parallels && redLines(g, fw, fh, c.parallels.length).map((l, i) => ({ lat: c.parallels[i], from: l.from.map((v) => v * scale), to: l.to.map((v) => v * scale) }));
-    const { sheet, snaps } = sheetPlacements(pieces, c.snaps, img.width, img.height, parallels);
+    const placed = sheetPlacements(pieces, c.snaps, img.width, img.height, parallels), { sheet } = placed;
+    const { sheetLine, snaps } = placementLines(land, marksOf(c, md), placed, img.width, img.height, parallels);
     overlays.push({
       id: c.id, title: c.title, source: src.page ?? src.url, licence: src.rights, file: c.file, ...(keyed > 0 && { mask: maskFile }),
-      width: img.width, height: img.height, scale, sheet, snaps, ...(c.up != null && { up: c.up }), ...(parallels && { parallels }),
+      width: img.width, height: img.height, scale, sheet, sheetLine, snaps, ...(c.up != null && { up: c.up }), ...(parallels && { parallels }),
       pieces: pieces.map(([x0, x1, fit]) => ({ x0, x1, fit })),
     });
     console.log(`${c.id}: ${fw} x ${fh} from ${img.width} x ${img.height}, paper ${(keyed * 100).toFixed(1)}%${parallels ? `, parallels ${parallels.map((l) => `${l.lat}° at y ${l.from[1]} to ${l.to[1]}`).join('; ')}` : ''}, sheet ${sheet.scale.toFixed(4)} °/px turn ${sheet.turn.toFixed(2)}°`);
   }
-  writeFileSync(join(OUT, 'overlays.json'), `${JSON.stringify({ overlays }, null, 2)}\n`);
+  // a line's parts one to a row of the file, not a point to three rows
+  const lines = [], json = JSON.stringify({ overlays }, (k, v) => (k === 'line' || k === 'sheetLine' ? `\u0000${lines.push(v) - 1}` : v), 2);
+  writeFileSync(join(OUT, 'overlays.json'), `${json.replace(/"\\u0000(\d+)"/g, (_, i) => `[\n${lines[i].map((part) => `        ${JSON.stringify(part)}`).join(',\n')}\n      ]`)}\n`);
 }
 
 // A chart of pages: each page's scan cropped to its parchment and shrunk, its own JPEG and mask, a panel at its offset;
 // the pieces and snaps from its fits; a thumbnail strip of the pages side by side, THUMB_W px wide.
-async function buildPages(c, sources, md) {
+async function buildPages(c, sources, md, land) {
   const THUMB_W = 480, at = pageOffsets(c.pages), panels = [], thumbs = [], scale = c.scale;
   for (const [i, p] of c.pages.entries()) {
     const src = sources.find((s) => s.id === p.source), img = await loadImage(await scanOf(src));
@@ -283,11 +309,12 @@ async function buildPages(c, sources, md) {
   const strip = createCanvas(THUMB_W, Math.round((THUMB_W * height) / width)), sg = strip.getContext('2d');
   thumbs.forEach((t, i) => sg.drawImage(t, (panels[i].x / width) * THUMB_W, 0, (panels[i].width / width) * THUMB_W, (panels[i].height / height) * strip.height));
   writeFileSync(join(OUT, c.thumb), strip.toBuffer('image/jpeg', 80));
-  const pieces = c.pieces(md), { sheet, snaps } = sheetPlacements(pieces, c.snaps, width, height);
+  const pieces = c.pieces(md), placed = sheetPlacements(pieces, c.snaps, width, height), { sheet } = placed;
+  const { sheetLine, snaps } = placementLines(land, c.marks(md), placed, width, height);
   const src = sources.find((s) => s.id === c.source);
   console.log(`${c.id}: ${c.pages.length} pages, ${width} x ${height}, sheet ${sheet.scale.toFixed(5)} °/px at ${sheet.lon.toFixed(1)}, ${sheet.lat.toFixed(1)}`);
   return {
     id: c.id, title: c.title, source: src.page ?? src.url, licence: src.rights, thumb: c.thumb,
-    width, height, scale, sheet, snaps, panels, pieces: pieces.map(([x0, x1, fit]) => ({ x0, x1, fit })),
+    width, height, scale, sheet, sheetLine, snaps, panels, pieces: pieces.map(([x0, x1, fit]) => ({ x0, x1, fit })),
   };
 }

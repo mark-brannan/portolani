@@ -2445,6 +2445,56 @@ export function drawNoteRing(g, m, u, alpha = 1, p = NOTE_PULSE) {
   g.beginPath(); g.arc(m.x, m.y, r, 0, 2 * Math.PI); g.stroke();
   g.restore();
 }
+// The line a sheet's placement was fitted to (overlays.json `line` on a snap, `sheetLine` for the chart's own; scripts/
+// fit-lines.mjs), drawn by the page over the sheet when the placement's chip is clicked (docs/spec/design.md, "A chip
+// shows what it was fitted to"): it draws itself from one end to the other over `draw` ms, holds `hold` ms, then fades
+// over `fade` ms to `faint` of its strength, and stays so while the sheet lies there. With reduced motion it shows whole,
+// then fades the same. The timing waits on the user's look at the PR that built it.
+export const FIT_LINE = { draw: 1400, hold: 1000, fade: 900, faint: 0.25, width: 3.5, ring: 8, ink: '#1f57a8' }; // azurite: no scan draws its coasts in it
+// The line `t` ms after its chip was clicked: { drawn, alpha }, `drawn` how much of it is drawn, 0 to 1.
+export function fitLineAt(t, reduced = false, p = FIT_LINE) {
+  t = Math.max(0, t);
+  const drawn = reduced ? 1 : Math.min(1, t / p.draw), since = t - (reduced ? 0 : p.draw) - p.hold;
+  return { drawn, alpha: since <= 0 ? 1 : since >= p.fade ? p.faint : 1 - ((1 - p.faint) * since) / p.fade };
+}
+// Whether the line is still moving at `t` (drawing or fading), so the page keeps painting frames.
+export const fitLineMoving = (t, reduced = false, p = FIT_LINE) => t < (reduced ? 0 : p.draw) + p.hold + p.fade;
+// The line through `proj`, `drawn` of each part from its first point, at `alpha`: azurite blue over a parchment halo, so
+// it reads on a dark scan as on a pale one, and apart from the scan's own reds and greens. A part of one point is a place inland: a ring round it, drawn on as a hand
+// would. A part is broken where it passes out of the projection's sight.
+export function drawFitLine(g, line, proj, { drawn = 1, alpha = 1, scale = 1 } = {}, p = FIT_LINE) {
+  if (!(alpha > 0) || !(drawn > 0) || !line?.length) return;
+  const runs = [], rings = [];
+  for (const part of line) {
+    if (part.length === 1) {
+      const [lon, lat] = part[0];
+      if (!proj.visible || proj.visible(lon, lat)) { const q = proj.project(lon, lat); if (q.every(Number.isFinite)) rings.push(q); }
+      continue;
+    }
+    let run = [];
+    for (const [lon, lat] of part) {
+      const q = (!proj.visible || proj.visible(lon, lat)) && proj.project(lon, lat);
+      if (q && q.every(Number.isFinite)) run.push(q); else if (run.length) { runs.push(run); run = []; }
+    }
+    if (run.length > 1) runs.push(run);
+  }
+  g.save(); g.lineCap = 'round'; g.lineJoin = 'round';
+  for (const [colour, width, a] of [[STYLE.parchment, p.width * 2.2, 0.6], [p.ink, p.width, 1]]) {
+    g.strokeStyle = colour; g.lineWidth = width * scale; g.globalAlpha = a * alpha;
+    g.beginPath();
+    for (const pts of runs) {
+      let left = drawn * pts.reduce((s, q, i) => (i ? s + Math.hypot(q[0] - pts[i - 1][0], q[1] - pts[i - 1][1]) : 0), 0);
+      g.moveTo(...pts[0]);
+      for (let i = 1; i < pts.length && left > 0; i++) {
+        const [x0, y0] = pts[i - 1], [x1, y1] = pts[i], d = Math.hypot(x1 - x0, y1 - y0), u = d > left ? left / d : 1;
+        g.lineTo(x0 + (x1 - x0) * u, y0 + (y1 - y0) * u); left -= d;
+      }
+    }
+    for (const [x, y] of rings) { g.moveTo(x, y - p.ring * scale); g.arc(x, y, p.ring * scale, -Math.PI / 2, -Math.PI / 2 + Math.min(drawn, 0.9999) * 2 * Math.PI); } // a whole turn exactly draws nothing in some canvases
+    g.stroke();
+  }
+  g.restore();
+}
 // The count badge on the mark nearest a group's centre (notes.mjs groupMarks): a small disc in the chart's red, at the
 // mark's upper right, the count in parchment on it.
 export function drawBadge(g, m, n) {
