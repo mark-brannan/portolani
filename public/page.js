@@ -14,7 +14,7 @@
 // selection those chose, and are written back in the new form.
 // For a while, `debug=sheets[,rings]` and `tune=name:value,...` carry the under-the-hood section
 // (docs/atlas/under-the-hood.md), off by default.
-import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, VOYAGE_PLAY, voyagePlaySeconds, calendarOf, penOn, dayText, vaguer, voyageColours, settleInks, CONFIDENCE_PHRASES, isBroken, legPath, voyageView, CONTINENT_ZOOM_END, readVoyage, chronological, voyageLink, sightMarks, sightHits, drawnMarks, SIGHT_TILES, noteMarks, pickMark, markClear, tileSpot, groupMarks, dateSpan, readDate, noteCount, drawNoteMark, drawNoteRing, notePulse, drawBadge, drawMarkGlyph, ZOOM } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, VOYAGE_PLAY, voyagePlaySeconds, calendarOf, penOn, dayText, vaguer, voyageColours, settleInks, CONFIDENCE_PHRASES, isBroken, legPath, voyageView, CONTINENT_ZOOM_END, readVoyage, chronological, voyageLink, sightMarks, sightHits, drawnMarks, SIGHT_TILES, noteMarks, pickMark, markClear, tileSpot, groupMarks, dateSpan, readDate, noteCount, drawNoteMark, drawNoteRing, notePulse, drawBadge, fitLineAt, fitLineMoving, drawFitLine, drawMarkGlyph, ZOOM } from './scene.mjs';
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, effectiveOpacity, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
@@ -1246,10 +1246,16 @@ sheetChips.addEventListener('click', (e) => {
     if (on) startPulse([o.id]); else repaintLayer();
     return;
   }
-  const sn = b.dataset.snap == null ? null : o.snaps[b.dataset.snap];
+  // a placement: the sheet laid there and framed as the chart's name frames it, and the line it was fitted to drawn
+  // over it once the map lands, from the start again on every click (docs/spec/design.md, "A chip shows what it was fitted to")
+  const sn = b.dataset.snap == null ? null : o.snaps[b.dataset.snap], at = sn ? { lon: sn.lon, lat: sn.lat, scale: sn.scale, turn: sn.turn } : ownSheet(o.id) ?? o.sheet;
   if (sn) chosen.set(o.id, sn); else chosen.delete(o.id);
-  style = { ...style, sheets: withSheet(o, sn && { lon: sn.lon, lat: sn.lat, scale: sn.scale, turn: sn.turn }) };
-  writeHash(); render();
+  const line = sn ? sn.line : OVERLAYS.find((v) => v.id === o.id)?.sheetLine;
+  if (line?.length) fitLines.set(o.id, { line, sheet: at, t0: null }); else fitLines.delete(o.id);
+  o.sheet = at; // the flight's frames show it there at once; the landing places it from the link
+  style = { ...style, sheets: withSheet(o, at) };
+  writeHash();
+  goTo({ ...sheetView(o, at, { w: W, h: H, bearing: view.bearing }), title: CHARTS.find((c) => c.overlay === o.id)?.name });
 });
 
 // The cartouche and the scale bar are dragged to a corner of the map and stay there (cartouche=, scalepos=
@@ -1491,6 +1497,7 @@ const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').match
 function drawLayer(g, proj, zoom, badges = true, now = performance.now()) {
   const p = pulse && notePulse(now - pulse.t0, reducedMotion());
   g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+  drawFitLines(g, proj, now);
   (ground?.overlays ?? []).forEach((o, i, all) => {
     const kept = notesKept.has(o.id), on = !!p && pulse.ids.has(o.id);
     if (!kept && !on) return;
@@ -1501,6 +1508,31 @@ function drawLayer(g, proj, zoom, badges = true, now = performance.now()) {
   });
   if (badges) for (const { marks, lead } of groupMarks(pointMarks(proj, zoom), cssPx(TAP_REACH))) if (marks.length > 1) drawBadge(g, lead, marks.length);
   g.restore();
+}
+// The line each sheet's placement was fitted to, set by its chip (the sheet's chip click, above): drawn while that sheet is
+// shown and lies at that placement, fading with the sheet; it starts drawing itself once the map has landed (placeLayer).
+// Hidden by its eye, the sheet takes its line off with it.
+const fitLines = new Map(); // id -> { line, sheet (the placement), t0 (when it began drawing; null until the map lands) }
+let fitFrame = 0;
+function drawFitLines(g, proj, now) {
+  const shown = new Map((ground?.overlays ?? []).filter((o) => o.mode === 'sheet' && o.sheet).map((o) => [o.id, o]));
+  for (const [id, f] of fitLines) {
+    const o = shown.get(id);
+    if (!o) { if (ground && !style.overlays.includes(id)) fitLines.delete(id); continue; }
+    if (f.t0 == null || !sameSheet(o.sheet, f.sheet)) continue;
+    const { drawn, alpha } = fitLineAt(now - f.t0, reducedMotion());
+    drawFitLine(g, f.line, proj, { drawn, alpha: alpha * (o.alpha ?? 1), scale: cssPx(1) });
+  }
+}
+function startFitLines() {
+  const now = performance.now();
+  for (const f of fitLines.values()) f.t0 ??= now;
+  if (!fitFrame && [...fitLines.values()].some((f) => fitLineMoving(now - f.t0, reducedMotion()))) fitFrame = requestAnimationFrame(fitStep);
+}
+function fitStep(now) {
+  fitFrame = 0;
+  if (voyagePen?.t0 == null && !pulseFrame) repaintLayer(now); // a pen or the notes' pulse paints every frame, this layer with it
+  if ([...fitLines.values()].some((f) => f.t0 != null && fitLineMoving(now - f.t0, reducedMotion()))) fitFrame = requestAnimationFrame(fitStep);
 }
 // A scene just placed: kept without the layer, then the layer over it; a chart shown since the last placement announces its notes
 function placeLayer() {
@@ -1513,6 +1545,7 @@ function placeLayer() {
   const b = layerBase.getContext('2d'); b.clearRect(0, 0, W, H); b.drawImage(canvas, 0, 0);
   layerPlaced = placed;
   if (fresh.length) startPulse(fresh); else drawLayer(ctx, viewProjection(placed), placed.zoom);
+  startFitLines();
 }
 function startPulse(ids) { // charts announcing while another's rings still play join them, all from the start, none cut off
   const now = performance.now(), live = pulse && notePulse(now - pulse.t0, reducedMotion()) ? pulse.ids : [];
