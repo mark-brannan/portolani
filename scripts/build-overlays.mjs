@@ -111,6 +111,7 @@ const CHARTS = [
     pieces: (md) => catalanPieces(md), snaps: CATALAN_PAGES.map((p) => p.label) },
   { id: 'de-la-cosa', title: 'Map of Juan de la Cosa, 1500', source: 'de-la-cosa', file: 'de-la-cosa.jpg', scale: 1, // the scan is small: shrunk, the coasts would go; the pieces run from the parchment's west edge to its east
     parallels: [23.44, 0], // the two long red lines across the skin, top first: the Tropic of Cancer and the equator
+    up: 90, // drawn west up, the equator running up and down and the New World at the top: the scan turned 90° clockwise reads as drawn
     pieces: (md) => { const rows = landmarkRows(md, '### Landmarks, 1500'); return [[70, 880, 'west'], [880, 1150, 'atlantic'], [1150, 2060, 'east']].map(([x0, x1, p]) => [x0, x1, pieceFit(rows, p)]); },
     snaps: ['New World', 'Atlantic', 'Europe'] },
   // The charts below are laid level by a few landmarks read off the scan by eye, scan px to real lon, lat (#161 follow-up):
@@ -250,7 +251,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const { sheet, snaps } = sheetPlacements(pieces, c.snaps, img.width, img.height, parallels);
     overlays.push({
       id: c.id, title: c.title, source: src.page ?? src.url, licence: src.rights, file: c.file, ...(keyed > 0 && { mask: maskFile }),
-      width: img.width, height: img.height, scale, sheet, snaps, ...(parallels && { parallels }),
+      width: img.width, height: img.height, scale, sheet, snaps, ...(c.up != null && { up: c.up }), ...(parallels && { parallels }),
       pieces: pieces.map(([x0, x1, fit]) => ({ x0, x1, fit })),
     });
     console.log(`${c.id}: ${fw} x ${fh} from ${img.width} x ${img.height}, paper ${(keyed * 100).toFixed(1)}%${parallels ? `, parallels ${parallels.map((l) => `${l.lat}° at y ${l.from[1]} to ${l.to[1]}`).join('; ')}` : ''}, sheet ${sheet.scale.toFixed(4)} °/px turn ${sheet.turn.toFixed(2)}°`);

@@ -2,14 +2,14 @@
 
 One Feature per control.
 
-Feature: Drawer open and close  (rose button `#open`, one of six instrument buttons in `#where`; shut by `#open` again, Esc, a press outside it or focus leaving it; there is no close button) [verified page.js:593-612 at main]
+Feature: Drawer open and close  (rose button `#open`, one of seven instrument buttons in `#where`; shut by `#open` again, Esc, a press outside it or focus leaving it; there is no close button) [verified against main, 2026-11-02]
   Scenario: open, then Esc
     Given the chart with the drawer shut (`#open` has `aria-expanded=false`)
     When the user clicks `#open`, then presses Escape
     Then `#drawer` gains the class `open` and `aria-expanded=true`, then both revert and focus returns to `#open`
   Scenario: one drawer at a time
     Given the settings drawer open
-    When the user clicks another instrument (`#charts`, `#sights`, `#go`, `#voyages`, `#anchor`)
+    When the user clicks another instrument (`#charts`, `#sights`, `#go`, `#voyages`, `#people`, `#anchor`)
     Then the settings drawer shuts and that one opens
   Scenario: a map touch shuts it on a wide screen only
     Given a viewport wider than 520 px and the drawer open
@@ -71,7 +71,7 @@ Feature: Roses picker  (hash `sprites`; kind `rose`) [verified page.js:187-197; 
   Scenario: choose one rose family
     Given the chart at the default view
     When the user ticks off every rose family but "Aguiar · drawn"
-    Then the hash `sprites=` holds only `v:rose-aguiar,v:rose-catalan` among roses
+    Then the hash `sprites=` holds only `v:rose-aguiar,v:rose-catalan,v:rose-catalan-small` among roses (the family's three keys: two sizes of the Catalan rose and the Aguiar one)
   Scenario: no rose selected draws no rose
     Given `sprites=` with no rose keys
     When the page loads
@@ -215,11 +215,12 @@ Feature: Rhumb lines  (checkbox `#rhumb`, hash `rhumb=0` when off, default on) [
     When the user unticks Rhumb lines
     Then the hash gains `rhumb=0` and the rose-to-rose lines are gone; the roses remain
 
-Feature: Continents  (slider `#continentsZoom` 0..15 step 1; hash `continents`, default `5`; label "zoom N and out") [verified page.js:74, 82-83, 354, 523; scene.mjs:982, 1005, 2626]
+Feature: Continents  (slider `#continentsZoom` 0..15 step 1; hash `continents`, default `6`; label "zoom N and out") [verified page.js:109, 514; scene.mjs:3281, 3313]
   Tested by: test/hash.test.mjs — 'continents: the slider round-trips'
   Tested by: test/hash.test.mjs — 'continents: 0 is off and 15 is always'
   Tested by: test/hash.test.mjs — 'continents: a hash number past the top clamps to 15'
-  Tested by: test/hash.test.mjs — 'continents: 1 reads as an older link's checked box'
+  Tested by: test/hash.test.mjs — 'continents: no key is the default 6'
+  Tested by: test/hash.test.mjs — 'continents: 1 round-trips through the hash'
   Scenario: slider round-trips
     Given the chart at the default view
     When the user sets Continents to 3
@@ -232,8 +233,7 @@ Feature: Continents  (slider `#continentsZoom` 0..15 step 1; hash `continents`, 
     Given the chart at `#continents=99`
     When the page loads
     Then the slider reads 15 (`zoomOf` clamps to MAX_ZOOM and rounds)
-    # The layer ends at N + 0.5 (`zoomEnd`, scene.mjs:2626; drawn while zoom < N + 0.5): at default 5, the default view (zoom 5.48) still shows continents. That half zoom is deliberate (continents stay visible through 5.5), so only the label "zoom N and out" lags it; not a code mismatch.
-    # Mismatch: setting the slider to 1 writes `continents=1`, which the reader treats as an older link's checked box and maps to the default 5 (page.js:74, `v === '1' ? dflt`). The value 1 does not round-trip.
+    # The layer ends at N (`zoomEnd`, scene.mjs; drawn while zoom <= N): at the default 6, the default view (zoom 5.48) shows continents. The value 1 round-trips like any other.
 
 Feature: Regions language  (chips `#regions`, hash `regions`, default `latin`, values `latin|english`; legacy `off`) [verified page.js:81-83, 280]
   Scenario: English names
@@ -275,16 +275,15 @@ Feature: Region names of a period  (chips `#regionSet`, hash `regionset`, defaul
 
 Feature: Regions  (slider `#regionsZoom` 0..15 step 1; hash `regionszoom`, default `7`) [verified page.js:83, 524; scene.mjs:1008, 2626]
   Tested by: test/hash.test.mjs — 'regions: the slider round-trips'
-  Tested by: test/hash.test.mjs — 'regions: 1 reads as an older link's checked box'
+  Tested by: test/hash.test.mjs — 'regionszoom: 1 round-trips through the hash'
   Scenario: round-trip
     Given the chart at the default view
     When the user sets Regions to 9
     Then `#regionsOut` reads `zoom 9 and out`, the hash gains `regionszoom=9`
   Scenario: the same pop as the continents slider
-    Given `#map=7.40/40.000/12.000`
+    Given `#map=7.00/40.000/12.000`
     When Regions is 7
-    Then region names are drawn (zoom < 7.5); no continent name competes, since continents end at 5.5 by default, though a cartouche, rose or beast can still drop a region name
-    # Mismatch: as Continents, a slider at 1 does not round-trip (`regionszoom=1` reads as the default 7).
+    Then region names are drawn (zoom <= 7); no continent name competes, since continents end at 6 by default, though a cartouche, rose or beast can still drop a region name
 
 Feature: Land border  (chips `#land`, hash `land`, default `ochre`, values `off|gilt|green|ochre`; legacy `islands`) [verified page.js:86-87, 281; scene.mjs:81, 2566]
   Scenario: green wash
@@ -378,7 +377,7 @@ Feature: Parchment  (colour input `#parchment`, hash `parchment`, default `e9d8b
 Feature: One mode  (tokens `--panel` #efe3c6, `--fg`, `--margin` #1d1913; no `prefers-color-scheme` in `public/`) [verified at main] (#211)
   Scenario: every drawer is parchment inside, on the dark margin
     Given the page with the browser set to dark, then to light
-    When the user opens each drawer (`#open`, `#charts`, `#sights`, `#go`, `#voyages`, `#anchor`) and, for the settings drawer, each layout (default, `question`, `moods`, `sheet`)
+    When the user opens each drawer (`#open`, `#charts`, `#sights`, `#go`, `#voyages`, `#people`, `#anchor`) and, for the settings drawer, each layout (default, `question`, `moods`, `sheet`)
     Then the drawer's background is `--panel` and its ink `--fg`, the margin round the map is `--margin` (`#1d1913`), and nothing visible inside a drawer has a dark background
   Scenario: the browser's light/dark setting changes nothing
     Given the same page
@@ -386,19 +385,23 @@ Feature: One mode  (tokens `--panel` #efe3c6, `--fg`, `--margin` #1d1913; no `pr
     Then no colour on the page changes; no stylesheet or script reads `prefers-color-scheme`
     # Tested by: test/drawers.test.mjs (the last line only, offline)
 
-Feature: Scan overlay  (charts drawer `#chartsDrawer`: under a chart whose scan is in `packs/overlays/overlays.json`, a chip `[data-overlay=<id>] .chip` (role checkbox, the scan as its glyph) "Lay the scan over the map" and, while on, a range input 0..1 step 0.05 with its percentage; hash `overlay=<id>`, default none (`null`, in pencil: a config default, adjustable), and `overlayopacity`, default `0.6` (`OVERLAY_DEFAULTS`, overlays.mjs); scene `overlay: { id, opacity }`) [page.js `showOverlay`; scene.mjs drawScene step 2.1, drawAnchored; overlays.mjs]
+Feature: Scan overlay  (charts drawer `#chartsDrawer`: a chart row `li.chart[data-overlay=<id>]` whose scan is in `packs/overlays/overlays.json` carries an eye `.eye` (`aria-pressed`) that lays that chart's sheet on the map or takes it off, each chart's alone, (the opacity slider is in the settings drawer, shown only with `overlaymode=pieces`); hash `overlay=<id>[,<id>...]`, the sheets laid, bottom to top, default none (`[]`, in pencil: a config default, adjustable), and `overlayopacity`, default `0.6` (`OVERLAY_DEFAULTS`, overlays.mjs); scene `overlays: [{ id, mode, sheet, opacity }]` (`page.js:759`)) [page.js `showOverlay`; scene.mjs drawScene step 2.1, drawAnchored; overlays.mjs]
   Scenario: the scan laid over the map
     Given the chart at `#map=4.60/61.700/19.700`
-    When the user opens the charts drawer and clicks "Lay the scan over the map" under Carta Marina
-    Then the chip is `aria-checked=true`, the slider shows 60%, the hash gains `overlay=carta-marina`, and the scan is drawn over the land and under the rhumb lines, its Gotland over today's Gotland
+    When the user opens the charts drawer and clicks the eye in Carta Marina's row
+    Then the eye is `aria-pressed=true`, the hash gains `overlay=carta-marina`, and the scan is drawn over the land and under the rhumb lines, its Gotland over today's Gotland; the map does not move
   Scenario: opacity
-    Given the chart at `#map=4.60/61.700/19.700&overlay=carta-marina`
+    Given the chart at `#map=4.60/61.700/19.700&overlay=carta-marina&overlaymode=pieces`
     When the user moves the slider to 0.3
     Then the hash gains `overlayopacity=0.3` and the scan is drawn fainter when the slider pauses
   Scenario: off, and a chart without a scan
     Given the same
-    When the user clicks the chip again
-    Then the chip is `aria-checked=false`, the slider is hidden and `overlay` leaves the hash; the other charts show no chip
+    When the user clicks the eye again
+    Then the eye is `aria-pressed=false`, `overlay` leaves the hash; no other chart's sheet changes; a chart without a scan shows no eye
+  Scenario: several sheets at once
+    Given the chart at `#overlay=carta-marina`
+    When the user clicks the eye in Aguiar's row
+    Then the hash holds `overlay=carta-marina,aguiar`, both eyes read `aria-pressed=true`, and the later sheet lies on top; the view does not move
   Scenario: an id the site lacks
     Given the chart at `#overlay=nowhere`
     When the page loads
