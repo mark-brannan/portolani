@@ -300,14 +300,18 @@ const DEFAULT_VIEW = viewOfFrame(FRAME);
 // Zoom within ZOOM, longitude wrapped, projection one of PROJECTIONS, and the centre kept far
 // enough from the poles that the canvas stays on the map, or centred on the equator once the
 // whole map is shorter than the canvas; an azimuthal centre goes anywhere short of the poles.
-function clampView({ lon, lat, zoom, projection, bearing }) {
+// `held`, a latitude the view already stands at, widens that limit to keep it: a view past the limit
+// (a projection change at a far-out zoom, docs/spec/design.md "the map's projection changes under the
+// sheet") stays where it is and may move back toward the map, never further out.
+function clampView({ lon, lat, zoom, projection, bearing }, held = null) {
   zoom = Math.min(ZOOM.max, Math.max(ZOOM.min, zoom));
   projection = Object.hasOwn(PROJECTIONS, projection) ? projection : 'mercator';
-  const P = PROJECTIONS[projection], b = wrapBearing(bearing), held = b ? { bearing: b } : {};
-  if (P.cap) return { lon: wrapLon(lon), lat: Math.max(-POLE, Math.min(POLE, lat)), zoom, projection, ...held };
+  const P = PROJECTIONS[projection], b = wrapBearing(bearing), turnHeld = b ? { bearing: b } : {};
+  if (P.cap) return { lon: wrapLon(lon), lat: Math.max(-POLE, Math.min(POLE, lat)), zoom, projection, ...turnHeld };
   const half = (Math.abs(Math.sin(b * RAD)) * W + Math.abs(Math.cos(b * RAD)) * H) / 2; // the canvas's reach north and south, turned
-  const room = Math.max(0, P.max - half / kOf(zoom));
-  return { lon: wrapLon(lon), lat: P.inv(Math.max(-room, Math.min(room, P.f(lat)))), zoom, projection, ...held };
+  const room = Math.max(0, P.max - half / kOf(zoom)), h = Number.isFinite(held) ? Math.max(-P.max, Math.min(P.max, P.f(Math.max(-POLE, Math.min(POLE, held))))) : 0;
+  const lo = Math.min(-room, h), hi = Math.max(room, h), y = P.f(lat); // a latitude inside the limit is kept as it is, not round-tripped
+  return { lon: wrapLon(lon), lat: y < lo ? P.inv(lo) : y > hi ? P.inv(hi) : lat, zoom, projection, ...turnHeld };
 }
 // a bearing in [0, 360), a hair from north read as north
 const wrapBearing = (b) => { const d = ((Number(b) || 0) % 360 + 360) % 360; return d < 1e-6 || d > 360 - 1e-6 ? 0 : d; };
@@ -319,7 +323,7 @@ const wrapBearing = (b) => { const d = ((Number(b) || 0) % 360 + 360) % 360; ret
 function panView(view, dx, dy) {
   [dx, dy] = unturn(view.bearing ?? 0, dx, dy); // the drag as the north-up drawing takes it
   const P = projectionOf(view), k = kOf(view.zoom);
-  if (!P.cap) return clampView({ ...view, lon: view.lon - dx / k / RAD, lat: P.inv(P.f(view.lat) + dy / k) });
+  if (!P.cap) return clampView({ ...view, lon: view.lon - dx / k / RAD, lat: P.inv(P.f(view.lat) + dy / k) }, view.lat);
   const d = Math.min(Math.PI, Math.hypot(dx, dy) / k), az = Math.atan2(-dx, dy), c = [view.lon, view.lat];
   if (d < 1e-12) return clampView(view);
   let b = az, mid, err = Infinity;
@@ -341,7 +345,7 @@ function zoomView(view, factor, px, py) {
   const zoom = Math.min(ZOOM.max, Math.max(ZOOM.min, view.zoom + Math.log2(factor))), k2 = kOf(zoom);
   if (!P.cap) {
     const lon = view.lon + (ox / k - ox / k2) / RAD;
-    return clampView({ ...view, lon, lat: P.inv(P.f(view.lat) - oy / k + oy / k2), zoom });
+    return clampView({ ...view, lon, lat: P.inv(P.f(view.lat) - oy / k + oy / k2), zoom }, view.lat);
   }
   const proj = makeProjection(view), at = proj.invert(px, py);
   if (Math.hypot(ox, oy) / k >= P.r(P.cap)) return clampView({ ...view, zoom }); // off the map: about the centre
