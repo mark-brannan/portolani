@@ -18,6 +18,8 @@ import { islesOf } from './isles.mjs';
 import { cityPlan, drawCity, drawHouses, pxRings, insideRings } from './city.mjs';
 import { urbanKey } from './urban.mjs';
 import { RIVERS, LAKES, RIVER_STYLES, LAKE_STYLES, waterOf, shown } from './water.mjs';
+import { REEFS, REEF_STYLES, reefsOf } from './reefs.mjs';
+import { PLAYAS, PLAYA_STYLES, playasOf } from './playas.mjs';
 import { RELIEF_STYLES, reliefOf, clearOf, drawRelief } from './relief.mjs';
 import { TREES, TREE_STYLES, plantTrees, plantPalms, inLake } from './trees.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
@@ -61,6 +63,8 @@ const STYLE = {
   landMode: 'islands', // one of LANDS, set by createScene
   rivers: 'off', // one of RIVER_STYLES, set by createScene
   lakes: 'off', // one of LAKE_STYLES, set by createScene
+  reefs: 'off', // one of REEF_STYLES, set by createScene
+  playas: 'off', // one of PLAYA_STYLES, set by createScene
   relief: [], // the drawn styles of RELIEF_STYLES, mixed per range, set by createScene
   mountainSprites: false, // the Catalan sprites are selected, and stand on the hills; set by createScene
   islands: false, // the small islands washed in the three pigments, set by createScene
@@ -133,6 +137,19 @@ async function loadWater(view, lakesOn) {
   }
   for (const f of shoreFeatures) gshhg.get(f.id)?.shore.push(f.geometry.coordinates);
   return { rivers, lakes: [...ne, ...gshhg.values()] };
+}
+
+// Reefs and playas (reefs.mjs, playas.mjs): Natural Earth's 10m files, each whole (460 KB and about
+// 150 KB), read when its style is on. A site or a coastlines without either file (the reefs from the
+// catalogue, the playas at geo/playas-10m.json, which build-preview.mjs writes) draws none of it,
+// and the rest of the map as before.
+let ground = null;
+const GROUND_PX = 16; // a mark at the edge of the view survives
+async function loadGround(reefsOn, playasOn) {
+  const missing = (e) => { if (!/404|ENOENT/.test(String(e?.code ?? e?.message ?? e))) throw e; return null; };
+  const [reefs, playas] = await Promise.all([reefsOn && record('ne-10m-reefs') ? loadGeo('ne-10m-reefs').catch(missing) : null,
+    playasOn ? env.readJSON('geo/playas-10m.json').catch(missing) : null]);
+  return { reefs: reefsOf(reefs), playas: playasOf(playas) };
 }
 
 // Per-run tuning; `density` scales how much ornament is placed (1 = the committed mockup).
@@ -2153,6 +2170,7 @@ function paintLand(g, data, land, coast, relief) {
     }
   }
   paintMarks(g, data);
+  paintGround(g, data);
   paintWater(g, data);
   paintRelief(g, data, relief);
   const palette = { ink: STYLE.ink, parchment: STYLE.parchment };
@@ -2174,6 +2192,23 @@ function paintMarks(g, data) {
   g.fillStyle = STYLE.parchment; g.fill();
   g.strokeStyle = STYLE.ink; g.lineWidth = 1.2; g.stroke();
   g.restore();
+}
+
+// Playas on the land, then reefs, each in its chosen style, under the water and the coast's ink.
+function paintGround(g, data) {
+  const playa = PLAYAS[STYLE.playas], reef = REEFS[STYLE.reefs];
+  if (!(playa || reef) || !ground) return;
+  const paint = { proj: data.proj, palette: { ink: STYLE.ink, red: STYLE.red } };
+  const kept = keptGround(data);
+  if (playa) playa(g, paint, kept.playas);
+  if (reef) reef(g, paint, kept.reefs);
+}
+// The reefs and playas a view draws: those worth showing at its zoom whose box meets it.
+export function keptGround(data) {
+  if (!ground) return { reefs: [], playas: [] };
+  const f = frameOf(data.proj, GROUND_PX / data.proj.k / RAD), zoom = data.proj.zoom;
+  const kept = (list) => list.filter((w) => shown(w, zoom) && meetsLL(f, w.box));
+  return { reefs: kept(ground.reefs), playas: kept(ground.playas) };
 }
 
 // Rivers, then lakes over them, each in its chosen style, on the land and under the coast's ink.
@@ -3281,7 +3316,7 @@ function drawAnchored(g, a, bg, view, layers) {
 // `continents` (boolean) and `regions` ('off', 'latin' or 'english'); the continents follow the regions' language, Latin when those are off.
 // `regionSet`: a REGION_SETS entry, whose names the regions are lettered in: 'today' (the default) or a period's, as 'catalan-1375'.
 // `land`: a LANDS entry, the land treatment ('islands' by default); `seaTint` (boolean) tints the Red Sea, the Persian Gulf and the Black and Caspian Seas red.
-// `rivers` and `lakes`: a RIVER_STYLES and a LAKE_STYLES entry (water.mjs), each 'off' by default; `trees` a TREE_STYLES entry (trees.mjs), 'off' too.
+// `rivers` and `lakes`: a RIVER_STYLES and a LAKE_STYLES entry (water.mjs), each 'off' by default; `reefs` a REEF_STYLES entry (reefs.mjs, 'crosses' by default) and `playas` a PLAYA_STYLES one (playas.mjs, 'salt' by default); `trees` a TREE_STYLES entry (trees.mjs), 'off' by default.
 // `historical` (default true) and `seed` (an integer: keys every seeded placement on it, see parsePlacement).
 // `relief`: a RELIEF_STYLES entry or a list of them (relief.mjs), none by default; with several each range takes one, by its seed.
 // The mountain sprites in the selection join them: one more style, stood along the ranges that take it.
@@ -3364,7 +3399,7 @@ export function parsePlacement(text) {
 }
 export async function createScene(environment, opts = {}) {
   env = environment;
-  const { ink = '#3b2a1a', continentsZoom, regionsZoom, scaleBorder = 'bordered', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', regionSet = 'today', title = 'PORTOLANI', autoTitle = true, pinTitle, land: landMode = 'islands', islands, seaTint = false, rivers = 'off', lakes = 'off', relief = [], trees = 'off', historical = true, seed: pickedSeed, cartouchePos, scalePos, overlap: overlapPick } = opts;
+  const { ink = '#3b2a1a', continentsZoom, regionsZoom, scaleBorder = 'bordered', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', regionSet = 'today', title = 'PORTOLANI', autoTitle = true, pinTitle, land: landMode = 'islands', islands, seaTint = false, rivers = 'off', lakes = 'off', reefs = 'crosses', playas = 'salt', relief = [], trees = 'off', historical = true, seed: pickedSeed, cartouchePos, scalePos, overlap: overlapPick } = opts;
   const overlap = overlapRule(overlapPick); // how overlapping curated charts are drawn (atlas.mjs, OVERLAP_RULES)
   const legacy = ['rendering', 'rose', 'monster', 'town'].some((k) => opts[k] !== undefined);
   const townBy = townSize ?? (legacy ? 'rank' : 'area');
@@ -3382,6 +3417,8 @@ export async function createScene(environment, opts = {}) {
   STYLE.scaleBorder = SCALE_BORDERS.includes(scaleBorder) ? scaleBorder : 'bordered';
   STYLE.rivers = RIVER_STYLES.includes(rivers) ? rivers : 'off';
   STYLE.lakes = LAKE_STYLES.includes(lakes) ? lakes : 'off';
+  STYLE.reefs = REEF_STYLES.includes(reefs) ? reefs : 'off';
+  STYLE.playas = PLAYA_STYLES.includes(playas) ? playas : 'off';
   STYLE.relief = [relief].flat().filter((r) => r !== 'off' && RELIEF_STYLES.includes(r));
   STYLE.trees = TREE_STYLES.includes(trees) ? trees : 'off';
   const knobs = tuneOf(opts.tune), debug = DEBUG_LAYERS.filter((d) => [opts.debug ?? []].flat().includes(d));
@@ -3416,6 +3453,7 @@ export async function createScene(environment, opts = {}) {
   STYLE.mountainSprites = placed.mountains.length > 0;
   tintPolys = seaTint ? geojsonPolygons(await env.readJSON('geo/seas-50m.json')) : null;
   if (STYLE.rivers !== 'off' || STYLE.lakes !== 'off') water = await loadWater(view, STYLE.lakes !== 'off');
+  ground = STYLE.reefs !== 'off' || STYLE.playas !== 'off' ? await loadGround(STYLE.reefs !== 'off', STYLE.playas !== 'off') : null;
   const world = await loadDetail(coarse, view);
   const person = await loadPerson(opts.person);
   const named = opts.voyages ?? (opts.voyage ? [{ id: opts.voyage }] : []);
@@ -3510,7 +3548,7 @@ export function voyageView(voyage, view, pad = VOYAGE_FIT_PAD, always = false, r
   return clampView({ lon: west + span / 2 - dx / (k * RAD), lat: mercLat((yMin + yMax) / 2 + dy / k), zoom: Math.log2((k * 2 * Math.PI) / 512), projection: view.projection });
 }
 export const TOWN_SIZES = ['area', 'population', 'rank'];
-export { RIVER_STYLES, LAKE_STYLES, TREE_STYLES, RELIEF_STYLES };
+export { RIVER_STYLES, LAKE_STYLES, REEF_STYLES, PLAYA_STYLES, TREE_STYLES, RELIEF_STYLES };
 export const MAX_ZOOM = ZOOM.max;
 export { OVERLAP_RULES, DEFAULT_OVERLAP };
 export { CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, anchorScene, drawAnchored, towerGlyph, SCALE_NAMES, readManifests, listStyles, listSprites, defaultSprites, selectSprites, chooseSprites, drawScene, drawGround, drawLate, LATE, IN_DRAG, covers, panView, zoomView, clampView, viewOfFrame, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };

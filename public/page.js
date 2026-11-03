@@ -14,7 +14,7 @@
 // selection those chose, and are written back in the new form.
 // For a while, `debug=sheets[,rings]` and `tune=name:value,...` carry the under-the-hood section
 // (docs/atlas/under-the-hood.md), off by default.
-import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, VOYAGE_PLAY, voyagePlaySeconds, calendarOf, penOn, dayText, vaguer, voyageColours, settleInks, CONFIDENCE_PHRASES, isBroken, legPath, voyageView, CONTINENT_ZOOM_END, readVoyage, chronological, voyageLink, sightMarks, sightHits, drawnMarks, SIGHT_TILES, noteMarks, pickMark, markClear, tileSpot, groupMarks, dateSpan, readDate, noteCount, drawNoteMark, drawNoteRing, notePulse, drawBadge, fitLineAt, fitLineMoving, drawFitLine, drawMarkGlyph, ZOOM } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, REEF_STYLES, PLAYA_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, VOYAGE_PLAY, voyagePlaySeconds, calendarOf, penOn, dayText, vaguer, voyageColours, settleInks, CONFIDENCE_PHRASES, isBroken, legPath, voyageView, CONTINENT_ZOOM_END, readVoyage, chronological, voyageLink, sightMarks, sightHits, drawnMarks, SIGHT_TILES, noteMarks, pickMark, markClear, tileSpot, groupMarks, dateSpan, readDate, noteCount, drawNoteMark, drawNoteRing, notePulse, drawBadge, fitLineAt, fitLineMoving, drawFitLine, drawMarkGlyph, ZOOM } from './scene.mjs';
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, effectiveOpacity, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
@@ -54,7 +54,7 @@ const canvas = $('map'), ctx = canvas.getContext('2d');
 // cards beside the map, not on the sea.
 const phone = matchMedia('(max-width: 520px)');
 
-const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: CONTINENT_ZOOM_END, regions: 'latin', regionSet: 'today', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyages: [], voyageWidth: VOYAGE_WIDTH, voyageDraw: VOYAGE_DRAW.seconds, voyagePlay: VOYAGE_PLAY.seconds, person: null, sight: null, site: null, pictures: null, ...OVERLAY_DEFAULTS, cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER, overlap: DEFAULT_OVERLAP };
+const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: CONTINENT_ZOOM_END, regions: 'latin', regionSet: 'today', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', reefs: 'crosses', playas: 'salt', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyages: [], voyageWidth: VOYAGE_WIDTH, voyageDraw: VOYAGE_DRAW.seconds, voyagePlay: VOYAGE_PLAY.seconds, person: null, sight: null, site: null, pictures: null, ...OVERLAY_DEFAULTS, cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER, overlap: DEFAULT_OVERLAP };
 // The cards of a subject chosen are dealt once the map is there: `dealing` is that subject's key until then (the map
 // flying to it, or its records loading), and no card of it lies on the table nor rides in the link meanwhile (dealNow).
 // `onTable`: the cards drawn on the table when it was last painted.
@@ -117,6 +117,8 @@ function styleFromHash() {
     islands: q.has('islands') ? q.get('islands') === '1' : q.get('land') === 'islands', // older: land=islands was the coloured islands
     rivers: RIVER_STYLES.includes(q.get('rivers')) ? q.get('rivers') : DEFAULTS.rivers,
     lakes: LAKE_STYLES.includes(q.get('lakes')) ? q.get('lakes') : DEFAULTS.lakes,
+    reefs: REEF_STYLES.includes(q.get('reefs')) ? q.get('reefs') : DEFAULTS.reefs,
+    playas: PLAYA_STYLES.includes(q.get('playas')) ? q.get('playas') : DEFAULTS.playas,
     // older links named the drawn styles in `relief`: colour wins where it is listed
     mountains: ['off', 'ink'].includes(q.get('mountains')) ? q.get('mountains')
       : q.has('relief') ? (q.get('relief').split(',').includes('marina') ? 'colour' : q.get('relief').includes('engraved') ? 'ink' : 'off') : DEFAULTS.mountains,
@@ -198,6 +200,8 @@ function writeHash() {
   if (st.islands !== DEFAULTS.islands) q.set('islands', st.islands ? '1' : '0');
   if (st.rivers !== DEFAULTS.rivers) q.set('rivers', st.rivers);
   if (st.lakes !== DEFAULTS.lakes) q.set('lakes', st.lakes);
+  if (st.reefs !== DEFAULTS.reefs) q.set('reefs', st.reefs);
+  if (st.playas !== DEFAULTS.playas) q.set('playas', st.playas);
   if (st.mountains !== DEFAULTS.mountains) q.set('mountains', st.mountains);
   if (st.trees !== DEFAULTS.trees) q.set('trees', st.trees);
   if (st.placement) q.set('placement', st.placement);
@@ -327,6 +331,14 @@ const LAKE_GLYPHS = {
   marina: svg(`<ellipse cx="14" cy="9" rx="9" ry="5" ${stroke('#3b2a1a', 1)}/><path d="M7 7l5 4M10 5l7 6M15 5l5 4" ${stroke('#3b2a1a', 0.6)}/>`),
   plain: svg('<ellipse cx="14" cy="9" rx="9" ry="5" fill="#8fb4c8" stroke="#4a7fa0" stroke-width="1"/>'),
 };
+const REEF_GLYPHS = {
+  crosses: svg(`<path d="M5 6l4 4M9 6l-4 4M13 6l4 4M17 6l-4 4M21 6l4 4M25 6l-4 4" ${stroke('#3b2a1a', 1.1)}/>`),
+  dots: svg('<g fill="#a8432e"><circle cx="4" cy="9" r="1.3"/><circle cx="9" cy="9" r="1.3"/><circle cx="14" cy="9" r="1.3"/><circle cx="19" cy="9" r="1.3"/><circle cx="24" cy="9" r="1.3"/></g>'),
+};
+const PLAYA_GLYPHS = {
+  salt: svg('<path d="M4 11q-2-6 5-7t9 1 7 4-4 6-9 1-8-5Z" fill="#f3eee2" stroke="#8a7f6a" stroke-width="1" stroke-dasharray="1.5 2.5"/>'),
+  ruled: svg(`<path d="M4 11q-2-6 5-7t9 1 7 4-4 6-9 1-8-5Z" fill="#cdbb98" stroke="#3b2a1a" stroke-width="1"/><path d="M6 7h16M5 10h17M8 13h12" ${stroke('#3b2a1a', 0.7)} stroke-dasharray="5 3"/>`),
+};
 const ISLANDS_GLYPH = svg('<circle cx="6" cy="9" r="3.5" fill="#a8432e"/><circle cx="14" cy="6" r="3" fill="#6b8a4a"/><circle cx="21" cy="11" r="3.5" fill="#c9a13b"/>');
 const SEAS_GLYPH = svg('<rect x="2" y="3" width="24" height="12" rx="3" fill="#a8432e" fill-opacity=".5" stroke="#a8432e" stroke-width="1"/>');
 const SCALE_GLYPHS = {
@@ -404,6 +416,8 @@ const CHOICES = {
   seaTint: [['off', 'Plain seas'], ['on', 'Coloured seas', 'Red, Black and Caspian Seas, the Persian Gulf', SEAS_GLYPH]],
   rivers: [['off', 'Off'], ['aguiar', 'Wiggled ink', 'Aguiar, 1492', RIVER_GLYPHS.aguiar], ['marina', 'Double line', 'Carta Marina, 1539', RIVER_GLYPHS.marina], ['plain', 'Plain blue line', '', RIVER_GLYPHS.plain]],
   lakes: [['off', 'Off'], ['aguiar', 'Lozenges', 'Aguiar, 1492', LAKE_GLYPHS.aguiar], ['marina', 'True shapes, hatched', 'Carta Marina, 1539', LAKE_GLYPHS.marina], ['plain', 'True shapes, blue wash', '', LAKE_GLYPHS.plain]],
+  reefs: [['off', 'Off'], ['crosses', 'Crosses', 'the portolan charts’ rocks and reefs', REEF_GLYPHS.crosses], ['dots', 'Red dots', 'as the shoals off an ochre coast', REEF_GLYPHS.dots]],
+  playas: [['off', 'Off'], ['salt', 'Pale salt', 'a crust with a dotted edge', PLAYA_GLYPHS.salt], ['ruled', 'Ruled clay', 'broken lines, as the Carta Marina’s lakes', PLAYA_GLYPHS.ruled]],
   trees: [['off', 'Off', '', MOUNTAIN_GLYPHS.off], ['marina', 'Green crowns', 'Carta Marina, 1539', TREE_GLYPHS.marina], ['ink', 'Ink only', '', TREE_GLYPHS.ink]],
   scale: [['off', 'Off'], ['genoese', 'Genoese', 'drawn as vectors'], ['chequer', 'Chequer'], ['chevron', 'Chevron ladder', 'Genoese'], ['ribbon', 'Ribbon', 'Martines'], ['beads', 'Beads', 'Prunes'], ['ruled', 'Ruled', 'Beccari']].map(([value, label, note = '']) => [value, label, note, SCALE_GLYPHS[value]]),
   voyageWidth: VOYAGE_WIDTHS.map((w, i) => [String(w), ['Fine', 'Standard', 'Bold', 'Heavy'][i] ?? `${w} px`, `${w} px`, lineOf('#8c2f1e', w)]),
@@ -494,7 +508,7 @@ function showStyle() {
   $('density').value = style.density; $('densityOut').textContent = style.density;
   $('names').checked = style.names; $('rhumb').checked = style.rhumb; $('scale').value = style.scale; $('scaleBorder').value = style.scaleBorder;
   $('land').value = style.land; $('islands').value = style.islands ? 'on' : 'off'; $('seaTint').value = style.seaTint ? 'on' : 'off';
-  $('rivers').value = style.rivers; $('lakes').value = style.lakes; $('trees').value = style.trees;
+  $('rivers').value = style.rivers; $('lakes').value = style.lakes; $('reefs').value = style.reefs; $('playas').value = style.playas; $('trees').value = style.trees;
   $('overlap').value = style.overlap;
   $('mountains').value = style.mountains; $('hills').value = CATALAN_KEYS.some((k) => selection.has(k)) ? 'catalan' : 'off';
   $('continentsZoom').value = style.continentsZoom; $('continentsOut').textContent = zoomLabel(style.continentsZoom);
@@ -521,7 +535,7 @@ function readControls() {
     ink: $('ink').value, parchment: $('parchment').value, density: Number($('density').value),
     names: $('names').checked, rhumb: $('rhumb').checked, scale: $('scale').value, scaleBorder: $('scaleBorder').value,
     land: $('land').value, islands: $('islands').value === 'on', seaTint: $('seaTint').value === 'on',
-    rivers: $('rivers').value, lakes: $('lakes').value, mountains: $('mountains').value, trees: $('trees').value,
+    rivers: $('rivers').value, lakes: $('lakes').value, reefs: $('reefs').value, playas: $('playas').value, mountains: $('mountains').value, trees: $('trees').value,
     continentsZoom: Number($('continentsZoom').value), regions: $('regions').value, regionSet: $('regionSet').value, regionsZoom: Number($('regionsZoom').value),
     // automatic shows the view's name in the box, which is not the typed title
     title: $('titleMode').value === 'auto' || style.autoTitle ? style.title : $('title').value, // switching to custom starts from the typed title, not the name shown
@@ -651,6 +665,7 @@ for (const [kind, label] of [['monster', 'Monsters'], ['ship', 'Ships'], ['rose'
 const STYLE_SWITCHES = [
   ['mountains', 'Mountain style', MOUNTAIN_GLYPHS.colour], ['trees', 'Trees', TREE_GLYPHS.marina],
   ['rivers', 'Rivers', RIVER_GLYPHS.plain], ['lakes', 'Lakes', LAKE_GLYPHS.marina],
+  ['reefs', 'Reefs', REEF_GLYPHS.crosses], ['playas', 'Salt flats', PLAYA_GLYPHS.salt],
 ];
 let showUiNow = () => {};
 let showMoods = () => {}; // the layout Moods: its chips show which look is on
@@ -912,7 +927,7 @@ for (const c of PLACEMENT_CHIPS) c.addEventListener('click', () => {
 // is a link to share. Default is the drawer as index.html lays it out. The others move each control (a .ctl,
 // with the lead paragraph written for it) into groups of their own and back again, so a control is one
 // element and one hash key whichever layout shows it.
-const LAND_GROUP = ['continents', 'regions', 'land', 'colour', 'rivers', 'lakes', 'mountains', 'hills', 'trees', 'towns'];
+const LAND_GROUP = ['continents', 'regions', 'land', 'colour', 'rivers', 'lakes', 'reefs', 'playas', 'mountains', 'hills', 'trees', 'towns'];
 const BY_QUESTION = [['The chart', ['cartouche', 'projection', 'names', 'rhumb', 'scale', 'overlap']], ['The land', LAND_GROUP], ['The figures', ['density', 'monsters', 'ships', 'roses', 'placement', 'colours']]];
 const LAYOUTS = {
   default: { label: 'Default', note: 'the drawer by kind of thing: sea, roses, towns, land, cartouche, map, colours',
@@ -947,7 +962,7 @@ for (const [name, { label, note, glyph }] of Object.entries(LAYOUTS)) {
 const FIGURE_KINDS = ['monster', 'ship', 'rose', 'town', 'mountain'];
 const FIGURES = SPRITES.filter((s) => FIGURE_KINDS.includes(s.kind)).map((s) => s.key);
 const DEFAULT_SET = new Set(DEFAULT_SELECTION);
-const MOOD_STYLES = ['land', 'islands', 'seaTint', 'rivers', 'lakes', 'mountains', 'trees', 'ink', 'parchment'];
+const MOOD_STYLES = ['land', 'islands', 'seaTint', 'rivers', 'lakes', 'reefs', 'playas', 'mountains', 'trees', 'ink', 'parchment'];
 const PLAIN_LOOK = Object.fromEntries(MOOD_STYLES.map((k) => [k, DEFAULTS[k]]));
 const HILLS = ['v:mountains-a', 'v:mountains-b', 'v:mountains-c'];
 const AGUIAR_SCAN = ['venice', 'genoa', 'lisbon', 'lake', 'lake-moat', 'smina', 'jerusalem', 'ceuta', 'avignon'].map((t) => `s:town-aguiar-${t}`);
@@ -3032,7 +3047,7 @@ locate.addEventListener('click', () => {
 for (const id of Object.values(KNOB_SLIDERS)) $(id).addEventListener('input', (e) => { e.target.dataset.set = '1'; }); // moved, so set
 // either set of projection chips drives (first, so readControls sees both agree) the other
 for (const [from, to] of [['projection', 'projectionCharts'], ['projectionCharts', 'projection']]) $(from).addEventListener('input', () => { $(to).value = $(from).value; });
-for (const id of ['debug', 'overlap', 'overlayMode', 'compare', 'comparePos', 'sheetHides', 'overlayOpacity', ...Object.values(KNOB_CHIPS), ...Object.values(KNOB_SLIDERS), 'projection', 'projectionCharts', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'scaleBorder', 'land', 'islands', 'seaTint', 'rivers', 'lakes', 'trees', 'mountains', 'hills', 'continentsZoom', 'regions', 'regionSet', 'regionsZoom', 'titleMode', 'townSize', 'voyageWidth']) $(id).addEventListener('input', readControls);
+for (const id of ['debug', 'overlap', 'overlayMode', 'compare', 'comparePos', 'sheetHides', 'overlayOpacity', ...Object.values(KNOB_CHIPS), ...Object.values(KNOB_SLIDERS), 'projection', 'projectionCharts', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'scaleBorder', 'land', 'islands', 'seaTint', 'rivers', 'lakes', 'reefs', 'playas', 'trees', 'mountains', 'hills', 'continentsZoom', 'regions', 'regionSet', 'regionsZoom', 'titleMode', 'townSize', 'voyageWidth']) $(id).addEventListener('input', readControls);
 // The compare line: over the map at the wipe's position, pieces mode only. In swipe it is dragged; in wipe the slider moves it.
 function placeCompareLine() {
   const line = $('compareLine'), on = style.overlayMode === 'pieces' && style.compare !== 'off' && style.overlays.length > 0;
