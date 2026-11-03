@@ -38,6 +38,28 @@ test('the centre stays far enough from the poles to keep the canvas on the map',
   assert.ok(v.lat < 85.06 && v.lat > 0);
 });
 
+// docs/spec/design.md, "the map's projection changes under the sheet": the same zoom and centre, no jump, and
+// the held centre comes back unchanged however many projections it passes through
+test('a projection change keeps the zoom and the centre, even past the new projection\'s limit', () => {
+  for (const at of [{ lon: -15, lat: 21, zoom: 1.5 }, { lon: -15, lat: 21, zoom: 2 }, { lon: 0, lat: 60, zoom: 1.5 }, { lon: 10, lat: 55, zoom: 4 }]) {
+    const v0 = clampView(at); // where the page stands in Mercator
+    let v = v0;
+    for (const projection of [...PROJECTION_NAMES, 'mercator']) {
+      v = clampView({ ...v, projection }, v.lat);
+      assert.deepEqual([v.lon, v.lat, v.zoom], [v0.lon, v0.lat, v0.zoom], `${projection} at ${JSON.stringify(at)}`);
+    }
+  }
+});
+
+test('a view held past its limit moves back toward the map on a drag, never further out, and does not jump', () => {
+  const v = clampView({ lon: -15, lat: 21, zoom: 2, projection: 'plate-carree' }, 21);
+  assert.equal(v.lat, 21);
+  close(panView(v, 0, 10).lat, 21); // a drag down goes north, further out: held at 21
+  const south = panView(v, 0, -10);
+  assert.ok(south.lat < 21 && south.lat > 19, `a drag up goes south from 21, by its own few px: ${south.lat}`);
+  close(zoomView(v, 1 / 2, W / 2, H / 2).lat, 21); // zooming out about the centre keeps it
+});
+
 // a site whose land bands each hold every cell round Genoa, empty, so coastlines' provider has
 // read their indexes when it picks a band, as it has on the page by the time a drag starts
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');

@@ -115,6 +115,23 @@ A traveller whose road splits into journeys has the whole road in one file and e
 so a course is drawn once. Where the traveller's own dates and a modern chronology differ, a leg's `dates`
 are the modern one, and the journey's `summary` or the leg's `note` gives the traveller's.
 
+### A leg's dates, for the play button
+
+A leg's `dates` are the words its tile shows ("Nov – 29 Nov 1519"). The play button sails a voyage on its own
+calendar (`calendarOf` in `scripts/voyages.mjs`), and reads each leg's start and end from those words: a day,
+a month, a season, a year, "early", "late", "after", a two-digit year ("1165-66"), a century, BC. A leg may
+give its ends as data instead, `start` and `end`, ISO 8601 cut to the precision known, which win over the
+words (`docs/voyage-play/README.md`, shape 1):
+
+```json
+{ "from": "Sierra Leone coast", "to": "Cabo de Santo Agostinho", "dates": "Nov – 29 Nov 1519",
+  "start": "1519-11", "end": "1519-11-29" }
+```
+
+A year before Christ is negative and astronomical (`"-0324-12"` is December 325 BC); EDTF's `~` (about) and
+`?` (uncertain) may follow. Each end is a span as wide as it is vague, and the player settles a day inside
+each so no end comes before the one before it: legs that share a vague span share it evenly.
+
 ## What is drawn
 
 Any number of voyages are drawn at once, each in its own ink: the first voyage on is the chart's red,

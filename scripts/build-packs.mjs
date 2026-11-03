@@ -140,6 +140,22 @@ const PACKS = [
       // through as itself, a shade greyer than the parchment; divided by the vellum, every colour drew 14% lighter.
       { id: 'rose-catalan', kind: 'rose', style: 'aguiar', scan: 'catalan-atlas-5', key: 'patch', paper: PARCHMENT, crop: [660, 6598, 3460, 9398], sizePx: 300, circle: [1400, 1400, 1390], circleFeather: 18 },
       { id: 'rose-catalan-small', kind: 'rose', style: 'aguiar', scan: 'catalan-atlas-5', key: 'patch', paper: PARCHMENT, crop: [1285, 7223, 2835, 8773], sizePx: 110, circle: [775, 775, 715], circleFeather: 18 },
+      // The Catalan Atlas's own ships and beast on sheets 6 to 12 (docs/atlas/ornaments.md; docs/catalan-figures), patches
+      // as the rose is, divided by the map's parchment for the same reason. Each is the whole crop with the sea round it;
+      // a polygon or an erased box cuts only a neighbouring figure, lettering or the land.
+      // the junk off India, sheet 11: the polygon cuts the coast and its town at top left and the column of lettering
+      // beside the stern; the sea runs to the foot of the page
+      { id: 'catalan-junk', kind: 'ship', style: 'catalan', scan: 'catalan-atlas-11', key: 'patch', paper: PARCHMENT, crop: [420, 13640, 1850, 15330], figure: [580, 13700, 1800, 15110], sizePx: 90, heading: 'left',
+        mask: [[420, 14260], [905, 13640], [1785, 13640], [1785, 14470], [1840, 14520], [1840, 15330], [420, 15330]], maskFeather: 10 },
+      // the ship in the Caspian, sheet 9, drawn upside down (the sheet is read from the far side), so turned a half turn; the
+      // lettering above its hull, now below it, is past the crop, and the Mongol banner by its mast tips is erased
+      { id: 'catalan-ship', kind: 'ship', style: 'catalan', scan: 'catalan-atlas-9', key: 'patch', paper: PARCHMENT, crop: [2620, 4625, 4100, 5940], figure: [2760, 4750, 4050, 5900], turn: 180, sizePx: 90,
+        erase: [[3930, 5780, 4100, 5940]] },
+      // the siren in the Indian Ocean, sheet 12, holding her two tails: the polygon runs between her and the gilt and
+      // painted islands round her, and under the block of lettering above. Below her tails it stops at the gilt island
+      // there: the sea either side of it, taken down to the foot of the page, left the patch two legs and a bite.
+      { id: 'catalan-siren', kind: 'monster', style: 'catalan', scan: 'catalan-atlas-12', key: 'patch', paper: PARCHMENT, crop: [800, 14090, 1970, 15160], figure: [850, 14220, 1925, 15120], sizePx: 170, minClearancePx: 140, weight: 2,
+        mask: [[822, 14310], [1000, 14190], [1044, 14190], [1044, 14250], [1300, 14250], [1306, 14100], [1910, 14100], [1910, 14400], [1955, 14440], [1955, 15142], [1060, 15142], [1000, 15115], [822, 15060]] },
       // Prunes 1559 (Library of Congress), the best 32-point rose of any chart checked for #52: whole crop with its
       // sea of parchment and the rhumb lines running off, a patch not a keyed ink, so the blue and red washes and the
       // gilt keep their tone. North is to the right on the scan, so the cut is turned a quarter anticlockwise.
@@ -250,16 +266,28 @@ function figureAnchor(sprite, fig, ox, oy, tw, th) {
   return [r(((fig[0] + fig[2]) / 2 - ox) / tw), r((fig[1] + ay * (fig[3] - fig[1]) - oy) / th)];
 }
 
+// A box [x0, y0, x1, y1] in the scan's pixels, in the frame of its crop turned `turn` degrees clockwise (a multiple of
+// 90), as ImageMagick's -rotate turns it: origin at the turned crop's top left.
+function turnBox([bx0, by0, bx1, by1], [x0, y0, x1, y1], turn) {
+  const q = ((turn % 360) + 360) % 360;
+  const at = (x, y) => (q === 90 ? [y1 - y, x - x0] : q === 180 ? [x1 - x, y1 - y] : q === 270 ? [y - y0, x1 - x] : [x - x0, y - y0]);
+  const [[ax, ay], [bx, by]] = [at(bx0, by0), at(bx1, by1)];
+  return [Math.min(ax, bx), Math.min(ay, by), Math.max(ax, bx), Math.max(ay, by)];
+}
+
 function buildSprite(sprite, colour, key, outDir, tmp) {
   const scan = SOURCES[sprite.scan];
   const [x0, y0, x1, y1] = sprite.crop;
   // `turn`: degrees clockwise (a multiple of 90) the cut is rotated by before anything else, for a scan
   // drawn on its side (Prunes 1559 has north to the right). `crop` stays in the scan's own pixels, so it
-  // is what the manifest records; everything after the cut (circle, level, size) is in the turned crop.
+  // is what the manifest records; everything after the cut (circle, level, size) is in the turned crop, but for a
+  // polygon, an erase box and `figure`, which stay in the scan's.
   // The turn is on the cut, not the scan: a 186 MP scan will not turn whole inside ImageMagick's limits.
   const turn = sprite.turn ?? 0, sideways = turn % 180 !== 0;
   if (turn % 90 !== 0) throw new Error(`${sprite.id}: turn must be a multiple of 90`);
-  if (turn && (sprite.mask || sprite.erase || sprite.clean || sprite.rotate)) throw new Error(`${sprite.id}: a turned sprite takes only a circle`);
+  if (turn && (sprite.clean || sprite.rotate)) throw new Error(`${sprite.id}: a turned sprite takes no clean or rotate`);
+  // a polygon or erase box is in the scan's own pixels, so its mask is drawn on the uncut crop and turned with it
+  const cw0 = x1 - x0, ch0 = y1 - y0, turned = turn ? ['-rotate', String(turn)] : [];
   const w = sideways ? y1 - y0 : x1 - x0, h = sideways ? x1 - x0 : y1 - y0;
   const t = (n) => join(tmp, `${sprite.id}.${n}.png`);
 
@@ -312,7 +340,7 @@ function buildSprite(sprite, colour, key, outDir, tmp) {
   if (sprite.mask) {
     // the figure's outline, drawn by eye on the scan, for a figure on sea hatched in its own ink
     const pts = sprite.mask.map(([mx, my]) => `${mx - x0},${my - y0}`).join(' ');
-    magick('-size', `${w}x${h}`, 'xc:black', '-fill', 'white', '-draw', `polygon ${pts}`, '-blur', `0x${sprite.maskFeather ?? MASK_FEATHER}`, t('mask'));
+    magick('-size', `${cw0}x${ch0}`, 'xc:black', '-fill', 'white', '-draw', `polygon ${pts}`, '-blur', `0x${sprite.maskFeather ?? MASK_FEATHER}`, turned, t('mask'));
     masks.push(t('mask'));
   }
   if (sprite.circle) {
@@ -324,8 +352,8 @@ function buildSprite(sprite, colour, key, outDir, tmp) {
     const draws = sprite.erase.flatMap(([ex0, ey0, ex1, ey1]) =>
       ['-draw', `rectangle ${ex0 - x0},${ey0 - y0} ${ex1 - x0},${ey1 - y0}`]);
     // erase boxes are in scan coordinates, so the mask turns with the crop
-    const turn = sprite.rotate ? ['-virtual-pixel', 'Edge', '-distort', 'SRT', String(sprite.rotate)] : [];
-    magick('-size', `${w}x${h}`, 'xc:white', '-fill', 'black', draws, turn, '-blur', '0x3', t('erase'));
+    const deskew = sprite.rotate ? ['-virtual-pixel', 'Edge', '-distort', 'SRT', String(sprite.rotate)] : [];
+    magick('-size', `${cw0}x${ch0}`, 'xc:white', '-fill', 'black', draws, deskew, '-blur', '0x3', turned, t('erase'));
     masks.push(t('erase'));
   }
 
@@ -362,7 +390,8 @@ function buildSprite(sprite, colour, key, outDir, tmp) {
   // renderer draws a sprite sizePx wide), so line work stays crisp and no scan-sized PNG is kept.
   // `figure` is the box round the subject alone, for a sprite whose crop holds water or ground round it: the
   // figure keeps its sizePx and its anchor, so the extra surroundings do not shrink it on the map.
-  const fig = sprite.figure;
+  // a turned sprite's figure box, given in the scan's pixels, is taken into the turned crop's (its origin the crop's corner)
+  const fig = sprite.figure && turn ? turnBox(sprite.figure, sprite.crop, turn) : sprite.figure;
   const sizePx = fig ? Math.round(sprite.sizePx * tw / (fig[2] - fig[0])) : sprite.sizePx;
   const most = MAX_SCALE * sizePx;
   const shrink = tw > most ? ['-filter', 'Lanczos', '-resize', `${most}x`] : [];
@@ -377,7 +406,7 @@ function buildSprite(sprite, colour, key, outDir, tmp) {
 
   const entry = {
     id: sprite.id, kind: sprite.kind, style: sprite.style, file,
-    anchor: fig ? figureAnchor(sprite, fig, x0 + tx, y0 + ty, tw, th) : [0.5, sprite.kind === 'monster' || sprite.kind === 'ship' ? 0.75 : 0.5],
+    anchor: fig ? figureAnchor(sprite, fig, turn ? 0 : x0 + tx, turn ? 0 : y0 + ty, tw, th) : [0.5, sprite.kind === 'monster' || sprite.kind === 'ship' ? 0.75 : 0.5],
     sizePx, bands: [0, 1],
     source: { url: scan.url, page: scan.page, crop: turn ? [x0, y0, x1, y1] : [x0 + tx, y0 + ty, x0 + tx + tw, y0 + ty + th] },
   };

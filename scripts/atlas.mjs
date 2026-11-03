@@ -118,10 +118,20 @@ const CARTA_MARINA = figures({
   monster: [['serpent-a', -5.5, 66.2], ['whale-b', -8.2, 69.0], ['cete-e', -8.4, 67.5], ['pistrix-c', -13.6, 59.7], [null, -9.5, 57.6], [null, -12.7, 58.5], [null, -4.5, 62.5], [null, -9.3, 64.7], [null, -3.1, 64.5], [null, -7.1, 56.3], [null, 8.9, 60.0]],
   ship: [['ship-a', -11.5, 64.5], ['ship-b', -5.9, 67.9], [null, -19.6, 60.6], [null, -17.5, 61.3], [null, -14.1, 62.8], [null, -12.5, 60.5], [null, -20.1, 62.0], [null, -14.5, 64.0], [null, 8.7, 55.1], [null, 19.5, 58.8], [null, 20.1, 57.0], [null, 17.4, 56.0]],
 });
-const CATALAN = figures({ rose: [['rose-catalan', -20.7, 42.1]], ship: [[null, -15.5, 26.1]] });
+// The Carte Pisane's two rings are tangent (centres.md): the west reaches 17.8E, the east 18.0E. Its two sheets meet
+// there, edge to edge, so no overlap rule drops one for the other and the chart's two networks stand together.
+const PISANE_SEAM = 18;
+// The Catalan Atlas's figures, sheets 5 to 12 (ornaments.md): one rose, the beasts and ships of the Caspian and the Indian
+// Ocean. Sheets 6 to 8 draw none at sea. Sheet 10's four, which its fit lays on the steppe, and sheet 12's two fish east of
+// the extent are not listed: ornaments.md keeps them, so leaving them out rests on this list, not on the land or the edge.
+const CATALAN = figures({
+  rose: [['rose-catalan', -20.7, 42.1]],
+  monster: [['catalan-siren', 113.1, 15.8]],
+  ship: [[null, -15.5, 26.1], ['catalan-ship', 50.6, 41.1], ['catalan-junk', 81.2, 13.2]],
+});
 export const CURATED = [
-  { name: 'Mediterranean, west', world: true, source: 'Carte Pisane, western circle', extent: { west: -10, east: 20, south: 30, north: 48 }, lon: 7.4, lat: 40.0, radius: 8.0 },
-  { name: 'Mediterranean, east', world: true, source: 'Carte Pisane, eastern circle', extent: { west: 15, east: 42, south: 30, north: 48 }, lon: 27.4, lat: 36.8, radius: 7.5 },
+  { name: 'Mediterranean, west', world: true, source: 'Carte Pisane, western circle', extent: { west: -10, east: PISANE_SEAM, south: 30, north: 48 }, lon: 7.4, lat: 40.0, radius: 8.0 },
+  { name: 'Mediterranean, east', world: true, source: 'Carte Pisane, eastern circle', extent: { west: PISANE_SEAM, east: 42, south: 30, north: 48 }, lon: 27.4, lat: 36.8, radius: 7.5 },
   { name: 'Levant and Black Sea', source: 'Vesconte, 1311', extent: { west: 20, east: 42, south: 30, north: 48 }, lon: 25.2, lat: 37.5, radius: 3 },
   { name: 'Europe and the Mediterranean', world: true, source: 'Dulcert, 1339', extent: { west: -25, east: 42, south: 28, north: 60 }, lon: 14.5, lat: 40.0, radius: 17 },
   { name: 'The known world of 1375', world: true, source: 'Catalan Atlas', extent: { west: -25, east: 120, south: 10, north: 60 }, lon: -5.4, lat: 42.3, radius: 16, ornaments: CATALAN, style: 'catalan' },

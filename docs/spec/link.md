@@ -7,7 +7,7 @@
 - `#status` text `z<zoom>: load N ms, placement + parchment N ms, draw N ms (total N ms)` after each placement [page.js:540].
 - Canvas pixels of `#map` (1600 x 1000 backing store) for visible effects.
 - Default view when the hash has no valid `map`: `{ zoom 5.48, lat 40.265, lon 7 }` (measured: `DEFAULT_VIEW`, scene.mjs:304, node import).
-- Hash key order as written: `map, projection, sprites, townsize, names, rhumb, continents, regions, regionszoom, autotitle, title, land, islands, rivers, lakes, mountains, trees, placement, voyage, overlay, overlayopacity, seas, scaleborder, scale, cartouche, scalepos, density, ink, parchment` [page.js:119-146; `voyage` from #205, `cartouche` and `scalepos` from #219, none of them specified here yet; `overlay` (default none, `null`) and `overlayopacity` (default `0.6`) from #161, in drawer.md "Scan overlay", tested offline by test/overlays.test.mjs].
+- Hash key order as written: `map, projection, sprites, townsize, names, rhumb, continents, regions, regionszoom, autotitle, title, land, islands, rivers, lakes, mountains, trees, placement, voyage, overlay, overlayopacity, compare, comparepos, seas, scaleborder, scale, cartouche, scalepos, density, ink, parchment` [page.js:119-146; `voyage` from #205, `cartouche` and `scalepos` from #219, none of them specified here yet; `overlay` (default none, `null`) and `overlayopacity` (default `0.6`) from #161, in drawer.md "Scan overlay", tested offline by test/overlays.test.mjs].
 
 ---
 
@@ -45,8 +45,7 @@ Feature: Reset  (button `#reset`) [verified page.js:~590, index.html "share"]
   Scenario: every control back to default, place kept
     Given the chart at `#map=7.00/43.700/7.300&ink=5a1a1a&density=1.5&projection=miller`
     When the user clicks Reset
-    Then the hash is exactly `#map=7.00/43.700/7.300`
-    # Mismatch: tooltip says "the view stays", but projection is dropped with the rest (only `map` is kept), so the chart returns to Mercator.
+    Then the hash is exactly `#map=7.00/43.700/7.300&projection=miller`: the view (its place and its projection) is kept, with the drawer's layout and hover setting if they are not the defaults, and everything else is back to default
 
 Feature: Copy link  (button `#copy`) [verified page.js:~600]
   Tested by: test/hash.test.mjs — 'copy link: the clipboard holds the page URL'
@@ -60,9 +59,10 @@ Feature: Copy link  (button `#copy`) [verified page.js:~600]
     When the user clicks Copy link
     Then `#shareUrl` is visible, selected, holding `location.href`, and `#shareNote` reads "Could not copy automatically: the link is selected, press Ctrl+C"
 
-Feature: Keys the link carries besides the view and the style  (hash keys `overlap`, `person`, `voyagedraw`, `charts`) [read from page.js, the hash reader (~l.127-136, 81) and writer (~l.190-211); `voyagewidth` is in voyages.md]
+Feature: Keys the link carries besides the view and the style  (hash keys `overlap`, `person`, `sight`, `site`, `pictures`, `pictureat`, `voyagedraw`, `charts`) [read from public/page.js, the hash reader (~l.141-145) and writer (~l.196-208); `voyagewidth` is in voyages.md]
   Tested by: test/hash.test.mjs — 'overlap: a rule round-trips, the default is left out, an unknown word is the default'
   Tested by: test/hash.test.mjs — 'person: choosing a life bar writes person=, a link with it chooses that person, a malformed id is dropped'
+  Tested by: test/hash.test.mjs — 'sight, site, pictures, pictureat: a sight\'s deal round-trips; a name no tile has is dropped with its keys'
   Tested by: test/hash.test.mjs — 'voyagewidth, voyagedraw: a link\'s line weight and pen time round-trip; others fall back and are not written'
   Tested by: test/hash.test.mjs — 'charts: charts=all is kept in the link and lists the other traditions'
   Scenario: overlap=
@@ -73,6 +73,17 @@ Feature: Keys the link carries besides the view and the style  (hash keys `overl
     Given a link with `person=<id>`, an id of lowercase letters, digits and hyphens that starts with a letter
     When the page loads
     Then that person's life bar in the People lane is pressed; any other text is no person, and the hash omits the key
+  Scenario: sight=, site=
+    Given a link with `sight=Tyre`, a name in the sights' tiles (`SIGHT_TILES`, scripts/sights.mjs), and for a sight drawn as several marks `site=1`, a single numeral, the mark whose pictures are dealt
+    When the page loads
+    Then that sight is the subject, its tile's pictures lie on the table, and the hash keeps `sight=Tyre&site=1`
+    And a name no tile has is no sight, and a `site=` that is not a single numeral, or comes with no sight, is dropped; the hash omits the keys, `pictures=` and `pictureat=` with them
+  Scenario: pictures=, pictureat=
+    Given a link with `sight=Tyre`, or a `person=`, and `pictures=0,2` and `pictureat=0:35.200,33.270,1.5`
+    When the page loads
+    Then pictures 0 and 2 of the subject's list lie on the map (`pictures=none` puts them all away; left out, a person's first, and a sight's chosen mark's pictures, or all of them when no `site=` is given), picture 0 at that lon, lat and scale
+    And an index of more than two numerals, a repeat, a malformed `pictureat` part or a scale not between 0 and 10, both ends excluded, is dropped
+    And the hash writes both once the pictures are dealt, not while the map flies to them, and only while a person or a sight is the subject
   Scenario: voyagedraw=
     Given a link with `voyagedraw=4`
     When the page loads

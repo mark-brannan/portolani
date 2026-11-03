@@ -364,6 +364,24 @@ scenario('person: choosing a life bar writes person=, a link with it chooses tha
   assert.equal(await page.locator('#peopleStrip [aria-pressed="true"]').count(), 0);
 });
 
+scenario('sight, site, pictures, pictureat: a sight\'s deal round-trips; a name no tile has is dropped with its keys', 'map=6.14/40.474/7.400&sight=Tyre&site=1&pictures=0,2&pictureat=0:35.200,33.270,1.5', async (page) => {
+  await placed(page);
+  // a wheel turn on the map makes the page rewrite the hash, so what is read back is the writer's (a drawer control would drop the sight from it)
+  await page.mouse.move(1180, 760); await page.mouse.wheel(0, -120);
+  await page.waitForFunction(() => /sight=Tyre/.test(location.hash) && /pictureat=/.test(location.hash), null, { timeout: 90000 });
+  const q = await params(page);
+  assert.equal(q.get('sight'), 'Tyre');
+  assert.equal(q.get('site'), '1');
+  assert.equal(q.get('pictures'), '0,2');
+  assert.equal(q.get('pictureat'), '0:35.200,33.270,1.5');
+  await page.goto(`${base}#map=6.14/40.474/7.400&sight=Nowhere&site=1&pictures=0`);
+  await page.reload();
+  await placed(page);
+  await slide(page, 'density', 1.25);
+  const s = await params(page);
+  for (const k of ['sight', 'site', 'pictures', 'pictureat']) assert.equal(s.has(k), false, `${k} is not written without a subject`);
+});
+
 scenario('voyagewidth, voyagedraw: a link\'s line weight and pen time round-trip; others fall back and are not written', 'map=6.14/40.474/7.400&voyagewidth=3.2&voyagedraw=4', async (page) => {
   await slide(page, 'density', 1.5);
   const q = await params(page);
@@ -375,6 +393,16 @@ scenario('voyagewidth, voyagedraw: a link\'s line weight and pen time round-trip
   const r = await params(page);
   assert.equal(r.has('voyagewidth'), false, 'a width off the four is the default');
   assert.equal(r.has('voyagedraw'), false, 'a time off the slider\'s steps is the default');
+});
+
+scenario('bearing: a turned world round-trips in the link, north up is no key, and the compass turns it back', 'map=4.00/22.000/-15.000&bearing=270', async (page) => {
+  await slide(page, 'density', 1.5);
+  assert.equal((await params(page)).get('bearing'), '270');
+  await page.keyboard.press('Escape'); // the open drawer lies over the right gutter's compass
+  await page.locator('#compass').click();
+  await page.waitForFunction(() => !new URLSearchParams(location.hash.slice(1)).has('bearing'));
+  await placed(page);
+  assert.equal(await page.locator('#compass').isHidden(), true, 'north up with no sheet laid: no compass');
 });
 
 scenario('charts: charts=all is kept in the link and lists the other traditions', 'map=6.14/40.474/7.400&charts=all', async (page) => {
