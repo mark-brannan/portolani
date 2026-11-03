@@ -5,6 +5,7 @@
 // and the scene's ink and red), `features` what reefsOf made, already cut to the view; 'off' is null.
 
 import { runs, simplify, geojsonRings } from 'coast-wright';
+import { boxOf } from './water.mjs';
 
 const CROSS_HALF = 3.4, CROSS_GAP = 13; // px: a cross's arm, and the space along the line from one to the next
 const DOT_R = 1.25, DOT_GAP = 5.5;
@@ -14,9 +15,7 @@ const DOT_R = 1.25, DOT_GAP = 5.5;
 export function reefsOf(geo) {
   return (geo?.features ?? []).map((f, i) => {
     const rings = geojsonRings(f.geometry);
-    const box = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
-    for (const [x, y] of rings.flat()) { if (x < box.x0) box.x0 = x; if (x > box.x1) box.x1 = x; if (y < box.y0) box.y0 = y; if (y > box.y1) box.y1 = y; }
-    return { id: f.id ?? i, rings, box, minZoom: f.properties?.min_zoom ?? 0 };
+    return { id: f.id ?? i, rings, box: boxOf(rings.flat()), minZoom: f.properties?.min_zoom ?? 0 };
   });
 }
 

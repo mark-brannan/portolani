@@ -109,7 +109,8 @@ jobs:
         run: echo "hash=$(grep -oE '[0-9a-f]{64}' scripts/build-preview.mjs | sha256sum | cut -c1-16)" >> "$GITHUB_OUTPUT"
       - uses: actions/cache@v6
         # a moved or added pin restores the last downloads and fetches only what is missing or stale, so one
-        # host being down (the GSHHG zip's) does not fail a PR that never touched its pin
+        # host being down (the GSHHG zip's) does not fail a PR that never touched its pin. A file no pin
+        # names any more is kept and carried into each later cache; a renamed download leaves its old file
         with: { path: downloads, key: "downloads-${{ steps.pins.outputs.hash }}", restore-keys: downloads- }
       # Assembles _site/: the browser-rendered mockup, with its data vendored.
       - run: npm run build:preview

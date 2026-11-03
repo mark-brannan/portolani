@@ -5,15 +5,14 @@
 // 256 px tiles) is read as water.mjs's `shown` reads it.
 
 import { fill, limn, hatch, geojsonPolygons } from 'coast-wright';
+import { boxOf } from './water.mjs';
 
 const SALT = '#f3eee2', SALT_EDGE = '#8a7f6a', CLAY = '#cdbb98';
 
 export function playasOf(geo) {
   return (geo?.features ?? []).map((f, i) => {
     const polys = geojsonPolygons(f.geometry);
-    const box = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
-    for (const [x, y] of polys.flatMap((p) => p[0])) { if (x < box.x0) box.x0 = x; if (x > box.x1) box.x1 = x; if (y < box.y0) box.y0 = y; if (y > box.y1) box.y1 = y; }
-    return { id: f.id ?? i, polys, box, minZoom: f.properties?.min_zoom ?? 0 };
+    return { id: f.id ?? i, polys, box: boxOf(polys.flatMap((p) => p[0])), minZoom: f.properties?.min_zoom ?? 0 };
   });
 }
 
