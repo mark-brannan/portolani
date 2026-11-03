@@ -45,6 +45,23 @@ into the link as `sheet=<lon>,<lat>,<scale>,<turn>`.
 
 `npm run render -- --view -25,22,2 --overlay de-la-cosa [--sheet lon,lat,scale,turn] --out <file>` draws it headless.
 
+### The line a placement was fitted to
+
+A click on a placement's chip lays the sheet there, frames it as the chart's name does, and, once the map has
+landed, draws over it the feature that placement was fitted to, in today's geography: a plain azurite line that
+draws itself from one end to the other, holds, then fades to a quarter of its strength and stays while the sheet
+lies there (docs/spec/design.md, "A chip shows what it was fitted to"). The line rides in overlays.json beside its
+placement, `line` on each snap and `sheetLine` for the chart's own, worked out by the build
+(`scripts/fit-lines.mjs`) from Natural Earth's 10m land and the landmarks each fit was computed from: a landmark on
+an island under 30,000 km² gives the island's whole coast; one within 40 km of a longer coast gives the stretch of
+that coast between it and its neighbours on it, 200 km more at each end, cut where two lie more than 4,000 km of
+coast apart; one inland on a larger island (Ireland, Iceland) gives that island; one inland on a continent (Prague,
+Tabriz) is its place, drawn as a small ring. Parallels draws today's Tropic of Cancer and equator from where the
+sheet's drawn lines begin to where they end; a chart's own Level draws the coasts of the first and last pieces it is
+centred between. The Carta Marina's landmarks (Iceland, the Faroes, Shetland and Orkney; Åland, Stockholm,
+Gotland, Öland, Saaremaa, Riga and Danzig) are named in ornaments.md without their scan px, so the build carries
+their real places alone.
+
 ![Juan de la Cosa's sheet, keyed and opaque, its parallels level over the Atlantic](de-la-cosa-sheet.jpg)
 
 ## A chart of several pages: panels
