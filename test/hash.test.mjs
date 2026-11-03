@@ -301,7 +301,8 @@ scenario('layout: a link opens its layout, and a write, Reset and a hash edit ke
 const HILLS = ['v:mountains-a', 'v:mountains-b', 'v:mountains-c'];
 const AGUIAR_SCAN = ['venice', 'genoa', 'lisbon', 'lake', 'lake-moat', 'smina', 'jerusalem', 'ceuta', 'avignon'].map((t) => `s:town-aguiar-${t}`);
 const AGUIAR_DRAWN = ['walled', 'walled-2', 'walled-3', 'hall', 'hall-2', 'hall-3', 'towers', 'towers-2', 'towers-3', 'hill', 'hill-2', 'hill-3', 'church', 'church-2', 'church-3', 'gate', 'gate-2', 'gate-3', 'venice', 'moat'].map((t) => `v:town-aguiar-${t}`);
-const PLAIN = { land: null, islands: null, seas: null, rivers: null, lakes: null, mountains: null, trees: null, ink: null, parchment: null };
+// reefs and playas stay at their default, on, in every mood: none leaves them off (#337)
+const PLAIN = { land: null, islands: null, seas: null, rivers: null, lakes: null, reefs: null, playas: null, mountains: null, trees: null, ink: null, parchment: null };
 const MOODS = [
   ['Pilot’s chart', { ...PLAIN, sprites: ['p:rose'], density: '0', placement: 'historic', land: 'off', rivers: 'off', lakes: 'off', mountains: 'off', trees: 'off' }],
   ['Tasteful', { ...PLAIN, sprites: ['s:rose-catalan', 's:rose-catalan-small', 'v:rose-catalan', 'v:rose-catalan-small', 'v:cartouche-frame', 'v:merman', 'v:hippocampus', 'v:galley', 'v:caravel', ...HILLS, ...AGUIAR_SCAN],

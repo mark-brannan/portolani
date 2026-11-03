@@ -58,9 +58,8 @@ let outlines;
 const islesLand = () => outlines ??= isleLand(geojsonPolygons(read(join(GEO, 'ne-land-10m.geojson'))), geojsonPolygons(read(join(GEO, 'ne-land-50m.geojson'))));
 const names = () => made ??= joinNames(seaNames(read(join(DL, 'ne_50m_geography_marine_polys.geojson'))),
   coastNames(read(join(GEO, 'ne-admin-0-countries-50m.geojson')), read(join(GEO, 'ne-coastline-50m.geojson'))));
-// the playas (scripts/playas.mjs) from their download, as build-preview.mjs slims them; none, without it
-const PLAYAS = join(DL, 'ne_10m_playas.geojson');
-const playas = () => { if (!existsSync(PLAYAS)) throw new Error('no playas'); const g = read(PLAYAS); return { ...g, features: g.features.map((f) => ({ ...f, properties: { name: f.properties.name, min_zoom: f.properties.min_zoom } })) }; };
+// the playas (scripts/playas.mjs), slimmed: the committed fixture, which build-preview.mjs checks against the download
+const playas = () => read(join(ROOT, 'test', 'fixtures', 'playas-10m.json'));
 const env = {
   createCanvas,
   readJSON: async (p) => (p === 'geo/names-50m.json' ? names() : p === 'geo/urban-10m.json' ? footprints() : p === 'geo/seas-50m.json' ? tintedSeas(read(join(DL, 'ne_50m_geography_marine_polys.geojson')))

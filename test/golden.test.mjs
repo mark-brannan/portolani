@@ -52,8 +52,7 @@ const OPTS = { 'region-z5': { autoTitle: false }, 'world-z2-voyage': { voyages: 
   'ostia-z7-ruin': { sights: [{ name: 'Ostia', lon: 12.29, lat: 41.76, ruin: true }] },
   'sheet-z3-voyage': { overlays: [{ id: 'de-la-cosa', mode: 'sheet' }], voyages: [{ id: 'columbus', colour: VOYAGE_CONTRAST[0], width: 3.2 }] },
   'pieces-z3.2-wipe': { overlays: [{ id: 'de-la-cosa', mode: 'pieces', opacity: 0.8, clip: 0.5 }] },
-  'old-world-z2.6-1375': { regions: 'english', regionSet: 'catalan-1375' },
-  'red-sea-z6-reefs': { reefs: 'crosses' }, 'uyuni-z6-playas': { playas: 'salt' } };
+  'old-world-z2.6-1375': { regions: 'english', regionSet: 'catalan-1375' } };
 // and its full-size render is kept for the README, so `npm run golden` refreshes both together
 const README_IMAGE = join(ROOT, 'docs', 'readme.jpg');
 

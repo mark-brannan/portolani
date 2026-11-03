@@ -140,13 +140,15 @@ async function loadWater(view, lakesOn) {
 }
 
 // Reefs and playas (reefs.mjs, playas.mjs): Natural Earth's 10m files, each whole (460 KB and about
-// 150 KB), read when its style is on. A site without the playas file (geo/playas-10m.json, which
-// build-preview.mjs writes) draws none.
+// 150 KB), read when its style is on. A site or a coastlines without either file (the reefs from the
+// catalogue, the playas at geo/playas-10m.json, which build-preview.mjs writes) draws none of it,
+// and the rest of the map as before.
 let ground = null;
 const GROUND_PX = 16; // a mark at the edge of the view survives
 async function loadGround(reefsOn, playasOn) {
-  const missing = (e) => { if (!/404|ENOENT|no playas/.test(String(e?.code ?? e?.message ?? e))) throw e; return null; };
-  const [reefs, playas] = await Promise.all([reefsOn ? loadGeo('ne-10m-reefs') : null, playasOn ? env.readJSON('geo/playas-10m.json').catch(missing) : null]);
+  const missing = (e) => { if (!/404|ENOENT/.test(String(e?.code ?? e?.message ?? e))) throw e; return null; };
+  const [reefs, playas] = await Promise.all([reefsOn && record('ne-10m-reefs') ? loadGeo('ne-10m-reefs').catch(missing) : null,
+    playasOn ? env.readJSON('geo/playas-10m.json').catch(missing) : null]);
   return { reefs: reefsOf(reefs), playas: playasOf(playas) };
 }
 
@@ -3314,7 +3316,7 @@ function drawAnchored(g, a, bg, view, layers) {
 // `continents` (boolean) and `regions` ('off', 'latin' or 'english'); the continents follow the regions' language, Latin when those are off.
 // `regionSet`: a REGION_SETS entry, whose names the regions are lettered in: 'today' (the default) or a period's, as 'catalan-1375'.
 // `land`: a LANDS entry, the land treatment ('islands' by default); `seaTint` (boolean) tints the Red Sea, the Persian Gulf and the Black and Caspian Seas red.
-// `rivers` and `lakes`: a RIVER_STYLES and a LAKE_STYLES entry (water.mjs), each 'off' by default; `reefs` a REEF_STYLES entry (reefs.mjs) and `playas` a PLAYA_STYLES one (playas.mjs), `trees` a TREE_STYLES entry (trees.mjs), all 'off' too.
+// `rivers` and `lakes`: a RIVER_STYLES and a LAKE_STYLES entry (water.mjs), each 'off' by default; `reefs` a REEF_STYLES entry (reefs.mjs, 'crosses' by default) and `playas` a PLAYA_STYLES one (playas.mjs, 'salt' by default); `trees` a TREE_STYLES entry (trees.mjs), 'off' by default.
 // `historical` (default true) and `seed` (an integer: keys every seeded placement on it, see parsePlacement).
 // `relief`: a RELIEF_STYLES entry or a list of them (relief.mjs), none by default; with several each range takes one, by its seed.
 // The mountain sprites in the selection join them: one more style, stood along the ranges that take it.
@@ -3397,7 +3399,7 @@ export function parsePlacement(text) {
 }
 export async function createScene(environment, opts = {}) {
   env = environment;
-  const { ink = '#3b2a1a', continentsZoom, regionsZoom, scaleBorder = 'bordered', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', regionSet = 'today', title = 'PORTOLANI', autoTitle = true, pinTitle, land: landMode = 'islands', islands, seaTint = false, rivers = 'off', lakes = 'off', reefs = 'off', playas = 'off', relief = [], trees = 'off', historical = true, seed: pickedSeed, cartouchePos, scalePos, overlap: overlapPick } = opts;
+  const { ink = '#3b2a1a', continentsZoom, regionsZoom, scaleBorder = 'bordered', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', regionSet = 'today', title = 'PORTOLANI', autoTitle = true, pinTitle, land: landMode = 'islands', islands, seaTint = false, rivers = 'off', lakes = 'off', reefs = 'crosses', playas = 'salt', relief = [], trees = 'off', historical = true, seed: pickedSeed, cartouchePos, scalePos, overlap: overlapPick } = opts;
   const overlap = overlapRule(overlapPick); // how overlapping curated charts are drawn (atlas.mjs, OVERLAP_RULES)
   const legacy = ['rendering', 'rose', 'monster', 'town'].some((k) => opts[k] !== undefined);
   const townBy = townSize ?? (legacy ? 'rank' : 'area');
