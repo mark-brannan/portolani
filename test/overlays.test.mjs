@@ -112,12 +112,12 @@ test('an overlay the site lacks loads as null and draws nothing', async () => {
 // dragged to (one `;` slot per laid id, in order), the warped pieces as `overlaymode=pieces` with their opacity.
 const written = (st) => { const q = new URLSearchParams(); overlayToHash(st, q); return q.toString(); };
 test('the overlays in the hash: the default writes nothing, a link round-trips, an unknown id is dropped', () => {
-  assert.deepEqual(OVERLAY_DEFAULTS, { overlays: [], overlayMode: 'sheet', sheets: {}, overlayOpacity: null, sheetHides: false });
+  assert.deepEqual(OVERLAY_DEFAULTS, { overlays: [], overlayMode: 'sheet', sheets: {}, overlayOpacity: null, sheetHides: false, compare: 'off', comparePos: 0.5 });
   assert.equal(written(OVERLAY_DEFAULTS), '', 'the default writes nothing');
   assert.deepEqual(overlayFromHash(new URLSearchParams('')), OVERLAY_DEFAULTS, 'no keys read as the default');
   const ids = new Set(overlays.map((o) => o.id));
   const read = overlayFromHash(new URLSearchParams('overlay=carta-marina&overlayopacity=0.6'), ids);
-  assert.deepEqual(read, { overlays: ['carta-marina'], overlayMode: 'sheet', sheets: {}, overlayOpacity: 0.6, sheetHides: false });
+  assert.deepEqual(read, { overlays: ['carta-marina'], overlayMode: 'sheet', sheets: {}, overlayOpacity: 0.6, sheetHides: false, compare: 'off', comparePos: 0.5 });
   assert.equal(written(read), 'overlay=carta-marina&overlayopacity=0.6', 'a faded sheet is written back');
   assert.equal(effectiveOpacity(OVERLAY_DEFAULTS), 1, 'the sheet is opaque by default');
   assert.equal(effectiveOpacity({ ...OVERLAY_DEFAULTS, overlayMode: 'pieces' }), 0.6, 'the pieces keep their 0.6');
@@ -362,4 +362,14 @@ test('the sheet-hides setting rides in the link as sheethides=1, and off writes 
   assert.equal(on.sheetHides, true);
   assert.equal(written(on), 'overlay=carta-marina&sheethides=1');
   assert.equal(overlayFromHash(new URLSearchParams('sheethides=0')).sheetHides, false);
+});
+
+test('the compare wipe rides in the link as compare= and comparepos=, off and half write nothing', () => {
+  const on = overlayFromHash(new URLSearchParams('overlay=carta-marina&overlaymode=pieces&compare=swipe&comparepos=0.25'));
+  assert.equal(on.compare, 'swipe');
+  assert.equal(on.comparePos, 0.25);
+  assert.equal(written(on), 'overlay=carta-marina&overlaymode=pieces&compare=swipe&comparepos=0.25');
+  assert.equal(overlayFromHash(new URLSearchParams('compare=bogus&comparepos=3')).compare, 'off', 'a bad mode falls back');
+  assert.equal(overlayFromHash(new URLSearchParams('comparepos=3')).comparePos, 0.5, 'out of range falls back');
+  assert.equal(written({ ...OVERLAY_DEFAULTS, compare: 'wipe' }), 'compare=wipe');
 });

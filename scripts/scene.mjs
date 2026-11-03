@@ -24,8 +24,8 @@ import { POIS, POI_ZOOM } from './pois.mjs';
 import { depthOf, hasDepth, paintDepth } from './depth.mjs';
 export { SIGHT_TILES } from './sights.mjs'; // the page's tiles for its places; here so the module ships with the scene
 import { RUIN, BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from './buildings.mjs';
-import { legPath, reachPath, isMigration, splitAtSeam, DASHES, isBroken, ringed, CONFIDENCE_PHRASES, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, settleInks, readVoyage, chronological, voyageLink } from './voyages.mjs';
-export { CONFIDENCE_PHRASES, isBroken, legPath, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, settleInks, readVoyage, chronological, voyageLink };
+import { legPath, reachPath, isMigration, splitAtSeam, DASHES, isBroken, ringed, CONFIDENCE_PHRASES, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, settleInks, readVoyage, chronological, voyageLink, calendarOf, penOn, dayText, vaguer, VOYAGE_PLAY, voyagePlaySeconds } from './voyages.mjs';
+export { CONFIDENCE_PHRASES, isBroken, legPath, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, settleInks, readVoyage, chronological, voyageLink, calendarOf, penOn, dayText, vaguer, VOYAGE_PLAY, voyagePlaySeconds };
 import { loadOverlay, drawOverlay, drawSheet } from './overlays.mjs';
 import { PEOPLE_FILE, PERSON_RED, personMarks, withPerson, peopleOf, whoOf } from './people.mjs';
 import { frameBox, fromCentre } from './frame-box.mjs';
@@ -303,14 +303,18 @@ const DEFAULT_VIEW = viewOfFrame(FRAME);
 // Zoom within ZOOM, longitude wrapped, projection one of PROJECTIONS, and the centre kept far
 // enough from the poles that the canvas stays on the map, or centred on the equator once the
 // whole map is shorter than the canvas; an azimuthal centre goes anywhere short of the poles.
-function clampView({ lon, lat, zoom, projection, bearing }) {
+// `held`, a latitude the view already stands at, widens that limit to keep it: a view past the limit
+// (a projection change at a far-out zoom, docs/spec/design.md "the map's projection changes under the
+// sheet") stays where it is and may move back toward the map, never further out.
+function clampView({ lon, lat, zoom, projection, bearing }, held = null) {
   zoom = Math.min(ZOOM.max, Math.max(ZOOM.min, zoom));
   projection = Object.hasOwn(PROJECTIONS, projection) ? projection : 'mercator';
-  const P = PROJECTIONS[projection], b = wrapBearing(bearing), held = b ? { bearing: b } : {};
-  if (P.cap) return { lon: wrapLon(lon), lat: Math.max(-POLE, Math.min(POLE, lat)), zoom, projection, ...held };
+  const P = PROJECTIONS[projection], b = wrapBearing(bearing), turnHeld = b ? { bearing: b } : {};
+  if (P.cap) return { lon: wrapLon(lon), lat: Math.max(-POLE, Math.min(POLE, lat)), zoom, projection, ...turnHeld };
   const half = (Math.abs(Math.sin(b * RAD)) * W + Math.abs(Math.cos(b * RAD)) * H) / 2; // the canvas's reach north and south, turned
-  const room = Math.max(0, P.max - half / kOf(zoom));
-  return { lon: wrapLon(lon), lat: P.inv(Math.max(-room, Math.min(room, P.f(lat)))), zoom, projection, ...held };
+  const room = Math.max(0, P.max - half / kOf(zoom)), h = Number.isFinite(held) ? Math.max(-P.max, Math.min(P.max, P.f(Math.max(-POLE, Math.min(POLE, held))))) : 0;
+  const lo = Math.min(-room, h), hi = Math.max(room, h), y = P.f(lat); // a latitude inside the limit is kept as it is, not round-tripped
+  return { lon: wrapLon(lon), lat: y < lo ? P.inv(lo) : y > hi ? P.inv(hi) : lat, zoom, projection, ...turnHeld };
 }
 // a bearing in [0, 360), a hair from north read as north
 const wrapBearing = (b) => { const d = ((Number(b) || 0) % 360 + 360) % 360; return d < 1e-6 || d > 360 - 1e-6 ? 0 : d; };
@@ -322,7 +326,7 @@ const wrapBearing = (b) => { const d = ((Number(b) || 0) % 360 + 360) % 360; ret
 function panView(view, dx, dy) {
   [dx, dy] = unturn(view.bearing ?? 0, dx, dy); // the drag as the north-up drawing takes it
   const P = projectionOf(view), k = kOf(view.zoom);
-  if (!P.cap) return clampView({ ...view, lon: view.lon - dx / k / RAD, lat: P.inv(P.f(view.lat) + dy / k) });
+  if (!P.cap) return clampView({ ...view, lon: view.lon - dx / k / RAD, lat: P.inv(P.f(view.lat) + dy / k) }, view.lat);
   const d = Math.min(Math.PI, Math.hypot(dx, dy) / k), az = Math.atan2(-dx, dy), c = [view.lon, view.lat];
   if (d < 1e-12) return clampView(view);
   let b = az, mid, err = Infinity;
@@ -344,7 +348,7 @@ function zoomView(view, factor, px, py) {
   const zoom = Math.min(ZOOM.max, Math.max(ZOOM.min, view.zoom + Math.log2(factor))), k2 = kOf(zoom);
   if (!P.cap) {
     const lon = view.lon + (ox / k - ox / k2) / RAD;
-    return clampView({ ...view, lon, lat: P.inv(P.f(view.lat) - oy / k + oy / k2), zoom });
+    return clampView({ ...view, lon, lat: P.inv(P.f(view.lat) - oy / k + oy / k2), zoom }, view.lat);
   }
   const proj = makeProjection(view), at = proj.invert(px, py);
   if (Math.hypot(ox, oy) / k >= P.r(P.cap)) return clampView({ ...view, zoom }); // off the map: about the centre
@@ -2416,6 +2420,7 @@ function drawVoyages(g, voyages, proj, rect, eventRect = rect, moving = false) {
   for (const v of voyages ?? []) (isMigration(v.voyage) ? drawStream : drawTrack)(g, v, proj, rect);
   for (const v of voyages ?? []) if (!(v.reveal < 1)) for (const m of doubtMarks(v, proj, eventRect)) drawCloud(g, m, v.colour ?? STYLE.windRed);
   for (const v of voyages ?? []) if (!(v.reveal < 1)) drawEvents(g, v, proj, eventRect); // marks wait for the pen
+    else if (v.played) drawEvents(g, { ...v, voyage: { ...v.voyage, events: v.played } }, proj, eventRect); // played on its calendar: the events the pen has reached
 }
 // A note's mark on a laid chart's figure: a small ringed dot in ink over a parchment disc, at `alpha`. Drawn only while
 // the notes announce themselves or the user keeps them shown (page.js), never as part of the scene: the scan is the thing.
@@ -2451,6 +2456,56 @@ export function drawNoteRing(g, m, u, alpha = 1, p = NOTE_PULSE) {
   g.beginPath(); g.arc(m.x, m.y, r, 0, 2 * Math.PI); g.stroke();
   g.globalAlpha = 0.95 * a; g.strokeStyle = STYLE.windRed; g.lineWidth = 2.4;
   g.beginPath(); g.arc(m.x, m.y, r, 0, 2 * Math.PI); g.stroke();
+  g.restore();
+}
+// The line a sheet's placement was fitted to (overlays.json `line` on a snap, `sheetLine` for the chart's own; scripts/
+// fit-lines.mjs), drawn by the page over the sheet when the placement's chip is clicked (docs/spec/design.md, "A chip
+// shows what it was fitted to"): it draws itself from one end to the other over `draw` ms, holds `hold` ms, then fades
+// over `fade` ms to `faint` of its strength, and stays so while the sheet lies there. With reduced motion it shows whole,
+// then fades the same. The timing waits on the user's look at the PR that built it.
+export const FIT_LINE = { draw: 1400, hold: 1000, fade: 900, faint: 0.25, width: 3.5, ring: 8, ink: '#1f57a8' }; // azurite: no scan draws its coasts in it
+// The line `t` ms after its chip was clicked: { drawn, alpha }, `drawn` how much of it is drawn, 0 to 1.
+export function fitLineAt(t, reduced = false, p = FIT_LINE) {
+  t = Math.max(0, t);
+  const drawn = reduced ? 1 : Math.min(1, t / p.draw), since = t - (reduced ? 0 : p.draw) - p.hold;
+  return { drawn, alpha: since <= 0 ? 1 : since >= p.fade ? p.faint : 1 - ((1 - p.faint) * since) / p.fade };
+}
+// Whether the line is still moving at `t` (drawing or fading), so the page keeps painting frames.
+export const fitLineMoving = (t, reduced = false, p = FIT_LINE) => t < (reduced ? 0 : p.draw) + p.hold + p.fade;
+// The line through `proj`, `drawn` of each part from its first point, at `alpha`: azurite blue over a parchment halo, so
+// it reads on a dark scan as on a pale one, and apart from the scan's own reds and greens. A part of one point is a place inland: a ring round it, drawn on as a hand
+// would. A part is broken where it passes out of the projection's sight.
+export function drawFitLine(g, line, proj, { drawn = 1, alpha = 1, scale = 1 } = {}, p = FIT_LINE) {
+  if (!(alpha > 0) || !(drawn > 0) || !line?.length) return;
+  const runs = [], rings = [];
+  for (const part of line) {
+    if (part.length === 1) {
+      const [lon, lat] = part[0];
+      if (!proj.visible || proj.visible(lon, lat)) { const q = proj.project(lon, lat); if (q.every(Number.isFinite)) rings.push(q); }
+      continue;
+    }
+    let run = [];
+    for (const [lon, lat] of part) {
+      const q = (!proj.visible || proj.visible(lon, lat)) && proj.project(lon, lat);
+      if (q && q.every(Number.isFinite)) run.push(q); else if (run.length) { runs.push(run); run = []; }
+    }
+    if (run.length > 1) runs.push(run);
+  }
+  g.save(); g.lineCap = 'round'; g.lineJoin = 'round';
+  for (const [colour, width, a] of [[STYLE.parchment, p.width * 2.2, 0.6], [p.ink, p.width, 1]]) {
+    g.strokeStyle = colour; g.lineWidth = width * scale; g.globalAlpha = a * alpha;
+    g.beginPath();
+    for (const pts of runs) {
+      let left = drawn * pts.reduce((s, q, i) => (i ? s + Math.hypot(q[0] - pts[i - 1][0], q[1] - pts[i - 1][1]) : 0), 0);
+      g.moveTo(...pts[0]);
+      for (let i = 1; i < pts.length && left > 0; i++) {
+        const [x0, y0] = pts[i - 1], [x1, y1] = pts[i], d = Math.hypot(x1 - x0, y1 - y0), u = d > left ? left / d : 1;
+        g.lineTo(x0 + (x1 - x0) * u, y0 + (y1 - y0) * u); left -= d;
+      }
+    }
+    for (const [x, y] of rings) { g.moveTo(x, y - p.ring * scale); g.arc(x, y, p.ring * scale, -Math.PI / 2, -Math.PI / 2 + Math.min(drawn, 0.9999) * 2 * Math.PI); } // a whole turn exactly draws nothing in some canvases
+    g.stroke();
+  }
   g.restore();
 }
 // The count badge on the mark nearest a group's centre (notes.mjs groupMarks): a small disc in the chart's red, at the
@@ -2575,15 +2630,17 @@ function drawStream(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH },
 }
 // `reveal` (0 to 1, unset for the whole line) draws only that share of the track from its start, by samples, which lie
 // STEP_KM apart, so the pen runs at an even pace along the line whatever the legs' lengths.
-function drawTrack(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH, alpha: dim = 1, reveal = 1 }, proj, rect) {
+// `played` (the play button's pen, page.js) rings the pen where it stands, still or running.
+function drawTrack(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH, alpha: dim = 1, reveal = 1, played }, proj, rect) {
   g.save();
   g.lineCap = 'round'; g.lineJoin = 'round';
   const end = Math.max(VOYAGE_END, width * 1.25);
-  let left = reveal < 1 ? Math.max(0, reveal) * voyage.legs.reduce((n, leg) => n + pathOf(leg).length, 0) : Infinity;
+  let left = reveal < 1 ? Math.max(0, reveal) * voyage.legs.reduce((n, leg) => n + pathOf(leg).length, 0) : Infinity, pen = voyage.legs[0]?.points[0];
   for (const leg of voyage.legs) {
     const full = pathOf(leg), k = Math.min(full.length, Math.ceil(left)), whole = k >= full.length;
     left -= full.length;
     if (k < 1) break;
+    pen = [wrapLon(full[k - 1][0]), full[k - 1][1]];
     const pieces = splitAtSeam(whole ? full : full.slice(0, k), proj.lonCenter, proj.visible).map((p) => p.map(proj.toPx)).filter((px) => meets(rect, bbox(px)));
     if (ringed(leg)) speculative(g, pieces, colour);
     else for (const [style, w, alpha, dash] of [[STYLE.parchment, width + VOYAGE_HALO, 0.6, []], [colour, width, 0.9, capped(DASHES[leg.confidence] ?? [], width)]]) {
@@ -2595,6 +2652,15 @@ function drawTrack(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH, al
       if (proj.visible && !proj.visible(...p)) continue;
       const [x, y] = proj.toPx(p);
       if (disc(rect, x, y, end + 1)) { g.beginPath(); g.arc(x, y, end, 0, 2 * Math.PI); g.fill(); }
+    }
+  }
+  if (played && reveal < 1 && pen && (!proj.visible || proj.visible(...pen))) { // the pen: an open ring in the voyage's ink
+    const [x, y] = proj.toPx(pen), r = end + 6;
+    if (disc(rect, x, y, r + 2)) {
+      g.setLineDash([]); g.globalAlpha = 0.9 * dim;
+      g.fillStyle = STYLE.parchment; g.beginPath(); g.arc(x, y, r, 0, 2 * Math.PI); g.fill();
+      g.strokeStyle = colour; g.lineWidth = 2; g.stroke();
+      g.fillStyle = colour; g.beginPath(); g.arc(x, y, end, 0, 2 * Math.PI); g.fill();
     }
   }
   g.restore();
@@ -3370,7 +3436,7 @@ export async function createScene(environment, opts = {}) {
   const voyages = person ? [...drawn, { voyage: person.marks, colour: PERSON_RED, width: VOYAGE_WIDTH }] : drawn;
   const overlays = asked.flatMap((o, i) => {
     const l = overlaid[i], pieces = o.mode === 'pieces', opacity = Number(o.opacity ?? (pieces ? 0.6 : 1)); // a sheet whole unless faded
-    return l ? [{ ...l, mode: pieces ? 'pieces' : 'sheet', sheet: o.sheet ?? l.sheet, opacity: Number.isFinite(opacity) ? Math.max(0, Math.min(1, opacity)) : pieces ? 0.6 : 1 }] : [];
+    return l ? [{ ...l, mode: pieces ? 'pieces' : 'sheet', sheet: o.sheet ?? l.sheet, clipX: pieces && Number.isFinite(o.clip) ? Math.max(0, Math.min(1, o.clip)) * W : null, opacity: Number.isFinite(opacity) ? Math.max(0, Math.min(1, opacity)) : pieces ? 0.6 : 1 }] : [];
   });
   const tLoad = performance.now();
 
