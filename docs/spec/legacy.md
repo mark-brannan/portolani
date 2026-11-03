@@ -42,7 +42,7 @@ Feature: Legacy hash keys, rewritten on load  (`rendering`, `pack`, `rose`, `mon
   Scenario: an older `pack` link becomes a sprites list
     Given the chart at `#pack=plain`
     When the page loads
-    Then the first rewrite drops `pack` and gains `sprites=p:rose,p:cartouche` (no towers; `LEGACY_PACK`: `all, vivid` -> vivid; `catalan, carta-marina` -> scanned; `plain` -> plain; measured with `chooseSprites`)
+    Then the first rewrite drops `pack` and gains `sprites=p:rose,p:cartouche,p:tower` (the plain pack's rose and cartouche, and the plain `tower` town, which every older link without a `town` draws; `LEGACY_PACK`: `all, vivid` -> vivid; `catalan, carta-marina` -> scanned; `plain` -> plain; measured with `chooseSprites`)
   Scenario: `sprites` wins
     Given the chart at `#sprites=s:serpent-a&pack=plain`
     When the page loads
@@ -52,9 +52,7 @@ Feature: Legacy hash keys, rewritten on load  (`rendering`, `pack`, `rose`, `mon
     When the page loads
     Then the mountain kind is not in the selection (older links never drew mountains, page.js:112)
 
-Feature: Legacy hash keys, read but not rewritten at load  (`relief`, `redsea`, `land=islands`, `regions=off`, `continents=1`, `regionszoom=1`) [verified page.js:82-93, 97]
-  Tested by: test/hash.test.mjs — 'continents: 1 reads as an older link's checked box'
-  Tested by: test/hash.test.mjs — 'regions: 1 reads as an older link's checked box'
+Feature: Legacy hash keys, read but not rewritten at load  (`relief`, `redsea`, `land=islands`, `regions=off`) [verified page.js:82-93, 97]
   Scenario: relief maps to mountains
     Given the chart at `#relief=marina`, then `#relief=engraved`, then `#relief=xyz`
     When each loads
