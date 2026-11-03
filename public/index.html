@@ -26,6 +26,11 @@
     touch-action: none; cursor: grab;
   }
   #map:active { cursor: grabbing; }
+  #compareLine { position: fixed; width: 0; border-left: 2px solid #8c2f1e; box-shadow: 0 0 0 1px rgba(255,255,255,.5); z-index: 1; pointer-events: none; }
+  #compareLine[hidden] { display: none; }
+  #compareLine.drag { pointer-events: auto; cursor: ew-resize; }
+  #compareLine.drag::before { content: ''; position: absolute; left: -22px; top: 0; width: 44px; bottom: 0; }
+  #compareLine.drag::after { content: '\2194'; position: absolute; left: -14px; top: 50%; width: 28px; height: 28px; margin-top: -14px; border-radius: 50%; background: #f1e6c8; border: 2px solid #8c2f1e; color: #8c2f1e; font: 16px/24px sans-serif; text-align: center; }
   #status {
     position: fixed; right: 10px; bottom: 6px; margin: 0; max-width: calc(100vw - 20px);
     font-size: 11px; color: var(--margin-ink); opacity: 0.75; pointer-events: none;
@@ -356,6 +361,7 @@
   .thumb[aria-pressed=false] > * { filter: grayscale(1); opacity: 0.3; }
   .thumb[aria-pressed=true] { box-shadow: inset 0 0 0 1px var(--accent); border-color: var(--accent); }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chips[hidden] { display: none; }
   .chip {
     display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; font: 13px var(--serif); cursor: pointer;
     background: var(--sheet); color: var(--sheet-ink); border: 1px solid var(--rule); border-radius: 14px;
@@ -464,6 +470,7 @@
 </head>
 <body>
 <canvas id="map" width="1600" height="1000" aria-label="Chart: drag to pan, wheel or pinch to zoom"><ul id="pictureKeys" aria-label="Pictures on the map"></ul></canvas>
+<div id="compareLine" aria-hidden="true" hidden></div>
 <div id="snap" aria-hidden="true"></div>
 <div id="sheetChips" class="tools" hidden></div>
 <canvas id="cardCartouche" class="card" aria-hidden="true" hidden></canvas>
@@ -793,6 +800,9 @@
         <div id="sheetHides" class="chips" role="radiogroup" aria-label="Sheet hides for a voyage"></div>
         <h3>A chart's scan</h3>
         <div id="overlayMode" class="chips" role="radiogroup" aria-label="A chart's scan"></div>
+        <h3 id="compareRow" hidden>Compare with the map</h3>
+        <div id="compare" class="chips" role="radiogroup" aria-label="Compare the pieces with the map"></div>
+        <div id="comparePosRow" class="slider" hidden><input id="comparePos" type="range" min="0" max="1" step="0.01" aria-label="Where the wipe line falls, from the left"><output id="comparePosOut"></output></div>
         <div id="overlayOpacityRow" class="slider" hidden><input id="overlayOpacity" type="range" min="0" max="1" step="0.05" aria-label="Opacity of the warped pieces"><output id="overlayOpacityOut"></output></div>
         <h3>Grid counts from</h3>
         <div id="tuneOrigin" class="chips" role="radiogroup" aria-label="Grid counts from"></div>

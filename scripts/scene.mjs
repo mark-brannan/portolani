@@ -3424,7 +3424,7 @@ export async function createScene(environment, opts = {}) {
   const voyages = person ? [...drawn, { voyage: person.marks, colour: PERSON_RED, width: VOYAGE_WIDTH }] : drawn;
   const overlays = asked.flatMap((o, i) => {
     const l = overlaid[i], pieces = o.mode === 'pieces', opacity = Number(o.opacity ?? (pieces ? 0.6 : 1)); // a sheet whole unless faded
-    return l ? [{ ...l, mode: pieces ? 'pieces' : 'sheet', sheet: o.sheet ?? l.sheet, opacity: Number.isFinite(opacity) ? Math.max(0, Math.min(1, opacity)) : pieces ? 0.6 : 1 }] : [];
+    return l ? [{ ...l, mode: pieces ? 'pieces' : 'sheet', sheet: o.sheet ?? l.sheet, clipX: pieces && Number.isFinite(o.clip) ? Math.max(0, Math.min(1, o.clip)) * W : null, opacity: Number.isFinite(opacity) ? Math.max(0, Math.min(1, opacity)) : pieces ? 0.6 : 1 }] : [];
   });
   const tLoad = performance.now();
 
