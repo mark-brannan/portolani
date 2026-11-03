@@ -30,14 +30,16 @@ const fit = ([w, s, e, n]) => clampView({ lon: (w + e) / 2, lat: Math.atan(Math.
 async function render() {
   const n = ++drawing, scale = Math.min(2, devicePixelRatio || 1);
   status('Drawing…');
-  const { scene, data, bg } = await createScene(env, { ...CHART_OPTIONS, view, depth: settings.depth });
-  if (n !== drawing) return;
-  map.width = marks.width = W * scale; map.height = marks.height = H * scale;
-  drawScene(map.getContext('2d'), scene, data, bg, { scale, x: 0, y: 0 });
-  map.style.transform = marks.style.transform = '';
-  drawn = { view, scale };
-  drawVessel();
-  status(data.land.length ? '' : 'No cell covers this view');
+  try {
+    const { scene, data, bg } = await createScene(env, { ...CHART_OPTIONS, view, depth: settings.depth });
+    if (n !== drawing) return;
+    map.width = marks.width = W * scale; map.height = marks.height = H * scale;
+    drawScene(map.getContext('2d'), scene, data, bg, { scale, x: 0, y: 0 });
+    map.style.transform = marks.style.transform = '';
+    drawn = { view, scale };
+    drawVessel();
+    status(data.land.length ? '' : opening ? 'No cell covers this view' : 'No ENC cells yet: give the plugin a folder of .000 cells');
+  } catch (e) { if (n === drawing) status(`Could not draw: ${e.message}`); }
 }
 let timer = 0;
 const later = () => { clearTimeout(timer); timer = setTimeout(render, 150); };
@@ -100,11 +102,22 @@ function stream() {
   ws.onclose = () => setTimeout(stream, 5000);
 }
 
-const cells = Object.values(await readCatalogue());
-if (!cells.length) status('No ENC cells yet: give the plugin a folder of .000 cells');
-view = cells.length ? fit(cells.sort((a, b) => a.band - b.band)[0].bbox) : clampView({ lon: 0, lat: 30, zoom: 2 });
+// the first cell with an extent, coarsest band first, frames the opening view
+const first = (cat) => Object.values(cat).filter((c) => c.bbox).sort((a, b) => a.band - b.band)[0];
+let opening = first(await readCatalogue());
+view = opening ? fit(opening.bbox) : clampView({ lon: 0, lat: 30, zoom: 2 });
 // a link may name the view, #lon,lat,zoom
-const asked = location.hash.slice(1).split(',').map(Number);
-if (asked.length === 3 && asked.every(Number.isFinite)) view = clampView({ lon: asked[0], lat: asked[1], zoom: asked[2] });
+const asked = location.hash.slice(1).split(',').map(Number), named = asked.length === 3 && asked.every(Number.isFinite);
+if (named) view = clampView({ lon: asked[0], lat: asked[1], zoom: asked[2] });
 stream();
 render();
+// no cells yet, perhaps still converting: ask again every 5 s, and draw them when they come
+if (!opening) {
+  const poll = setInterval(async () => {
+    opening = first(await readCatalogue());
+    if (!opening) return;
+    clearInterval(poll);
+    if (!named) view = fit(opening.bbox);
+    render();
+  }, 5000);
+}

@@ -1,7 +1,7 @@
 // The converter: S-57 ENC cells (a .000 base and its .001, .002 ... updates) to gzipped GeoJSON, one
 // file per cell per object class, under a store folder, with a catalogue of what each cell holds. A cell
 // is converted again only when its files change, so a restart reads the catalogue and nothing else.
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, statSync, existsSync, rmSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, statSync, existsSync, rmSync, renameSync } from 'node:fs';
 import { join, basename } from 'node:path';
 import { gzipSync, gunzipSync } from 'node:zlib';
 import { parseS57, applyUpdate, toGeoJSON, S57_ATTRIBUTES, spatialKey } from '@s57-parser/s57';
@@ -83,7 +83,9 @@ export function convertCell({ cell, base, updates }) {
   let lo = Infinity, hi = -Infinity, bo = Infinity, to = -Infinity;
   for (const x of xs) { if (x < lo) lo = x; if (x > hi) hi = x; }
   for (const y of ys) { if (y < bo) bo = y; if (y > to) to = y; }
-  return { cell, band: bandOf(cell), bbox: [lo, bo, hi, to], scale: ds.cscl ?? null, ...info, layers };
+  // a cell with no coverage and nothing kept has no extent: null, and syncStore leaves it out
+  const bbox = xs.length ? [lo, bo, hi, to] : null;
+  return { cell, band: bandOf(cell), bbox, scale: ds.cscl ?? null, ...info, layers };
 }
 
 // The store: `<store>/<cell>/<CLASS>.geojson.gz` and `<store>/catalogue.json`, an entry a cell:
@@ -96,28 +98,43 @@ export function readCatalogue(store) {
 const sourceOf = (c) => [c.base, ...c.updates].map((p) => { const s = statSync(p); return `${basename(p)}:${s.size}:${Math.round(s.mtimeMs)}`; }).join(',');
 
 // Converts every cell under `charts` that is new or changed since the catalogue, drops cells whose files
-// are gone, and returns the catalogue. `log` hears one line a cell converted.
-export function syncStore(charts, store, log = () => {}) {
+// are gone, and resolves to the catalogue. It yields to the event loop between cells, so a server
+// running it keeps serving; `stopped()` true ends it at the next cell, with the catalogue written for
+// what is on disk. `log` hears one line a cell converted; `warn` one a cell skipped, which keeps its old
+// entry when it has one, so one bad cell neither stops the rest nor loses what was there.
+export async function syncStore(charts, store, { log = () => {}, warn = () => {}, stopped = () => false } = {}) {
   mkdirSync(store, { recursive: true });
   const old = readCatalogue(store), next = {};
+  const keepOld = (cell) => { if (old[cell] && existsSync(join(store, cell))) next[cell] = old[cell]; };
+  let done = true;
   for (const c of findCells(charts)) {
+    await new Promise((ok) => setImmediate(ok));
+    if (stopped()) { done = false; break; }
     const source = sourceOf(c);
     if (old[c.cell]?.source === source && existsSync(join(store, c.cell))) { next[c.cell] = old[c.cell]; continue; }
-    const t = performance.now(), { layers, ...entry } = convertCell(c);
-    const dir = join(store, c.cell), sizes = {};
-    rmSync(dir, { recursive: true, force: true }); mkdirSync(dir, { recursive: true });
+    const t = performance.now();
+    let converted;
+    try { converted = convertCell(c); } catch (e) { warn(`${c.cell}: skipped, ${e.message}`); keepOld(c.cell); continue; }
+    const { layers, ...entry } = converted;
+    if (!entry.bbox) { warn(`${c.cell}: skipped, it covers nothing`); keepOld(c.cell); continue; }
+    // the layers go to a temporary folder renamed over the cell's, so a cell is whole or not there
+    const dir = join(store, c.cell), tmp = `${dir}.tmp`, sizes = {};
+    rmSync(tmp, { recursive: true, force: true }); mkdirSync(tmp, { recursive: true });
     for (const [name, features] of Object.entries(layers)) {
       if (!features.length) continue;
       const gz = gzipSync(JSON.stringify({ type: 'FeatureCollection', features }));
-      writeFileSync(join(dir, `${name}.geojson.gz`), gz);
+      writeFileSync(join(tmp, `${name}.geojson.gz`), gz);
       sizes[name] = gz.length;
     }
+    rmSync(dir, { recursive: true, force: true }); renameSync(tmp, dir);
     next[c.cell] = { ...entry, source, layers: sizes, bytes: Object.values(sizes).reduce((a, b) => a + b, 0) };
     log(`${c.cell}: ${Object.keys(sizes).length} layers, ${next[c.cell].bytes} bytes, ${(performance.now() - t).toFixed(0)} ms`);
   }
-  for (const cell of Object.keys(old)) if (!next[cell]) rmSync(join(store, cell), { recursive: true, force: true });
-  writeFileSync(join(store, CATALOGUE), JSON.stringify(next, null, 1));
-  return next;
+  // stopped early, the cells not reached keep their old entries and folders
+  const cat = done ? next : { ...old, ...next };
+  if (done) for (const cell of Object.keys(old)) if (!next[cell]) rmSync(join(store, cell), { recursive: true, force: true });
+  writeFileSync(join(store, CATALOGUE), JSON.stringify(cat, null, 1));
+  return cat;
 }
 
 // A cell's layer as its gzipped bytes, or null when the cell or layer is not in the store

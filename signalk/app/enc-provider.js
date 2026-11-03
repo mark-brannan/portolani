@@ -17,7 +17,9 @@ const UNDERSCALE = 2, PX_M = 0.00028;
 let catalogue = null, catalogueLoad = null;
 const layers = new Map(); // `${cell}/${CLASS}` -> Promise of its features
 export function readCatalogue() {
-  return catalogueLoad ??= source.fetch(source.base).then((r) => (r.ok ? r.json() : {})).catch(() => ({})).then((c) => (catalogue = c));
+  // an empty or failed catalogue is not kept: the plugin may still be converting, so the next call asks again
+  return catalogueLoad ??= source.fetch(source.base).then((r) => (r.ok ? r.json() : {})).catch(() => ({}))
+    .then((c) => { if (!Object.keys(c).length) catalogueLoad = null; return (catalogue = c); });
 }
 export function reset() { catalogue = catalogueLoad = null; layers.clear(); }
 
@@ -26,7 +28,7 @@ const meets = (v, [w, s, e, n]) => w <= v.lonMax && e >= v.lonMin && s <= v.latM
 // The cells a view draws from: those meeting its bbox in the finest band that suits its scale
 export function cellsFor(view, cat = catalogue) {
   if (!cat || isWorld(view)) return [];
-  const met = Object.values(cat).filter((c) => meets(view, c.bbox));
+  const met = Object.values(cat).filter((c) => c.bbox && meets(view, c.bbox));
   if (!met.length) return [];
   const denom = view.resolution / PX_M, bands = [...new Set(met.map((c) => c.band))].sort((a, b) => b - a);
   const band = bands.find((b) => denom <= (BAND_SCALE[b] ?? Infinity) * UNDERSCALE) ?? bands.at(-1);

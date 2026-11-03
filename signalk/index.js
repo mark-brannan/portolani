@@ -5,7 +5,7 @@ import { syncStore } from './lib/cells.mjs';
 import { resourceProvider } from './lib/provider.mjs';
 
 export default function plugin(app) {
-  let store = null, registered = false, timer = null;
+  let store = null, registered = false, timer = null, run = 0;
   // signalk-charts-provider-simple keeps the cells it is given in its data dir's enc-store
   const defaultCharts = () => join(dirname(app.getDataDirPath()), 'signalk-charts-provider-simple', 'enc-store');
   return {
@@ -21,14 +21,18 @@ export default function plugin(app) {
       if (!registered) { app.registerResourceProvider(resourceProvider(() => store)); registered = true; }
       const charts = options.charts || defaultCharts();
       app.setPluginStatus(`Converting the cells in ${charts}`);
-      // after start returns, so the server is not held while the cells convert
-      timer = setTimeout(() => {
+      // after start returns, yielding between cells, so the server is not held while the cells convert;
+      // a stop, or a restart, ends this run at its next cell
+      const mine = ++run, stopped = () => mine !== run;
+      timer = setTimeout(async () => {
         try {
-          const cat = syncStore(charts, store, (line) => app.debug(line));
-          app.setPluginStatus(`${Object.keys(cat).length} cells from ${charts}`);
-        } catch (e) { app.setPluginError(e.message); }
+          const skipped = [];
+          const cat = await syncStore(charts, store, { log: (line) => app.debug(line), warn: (line) => { skipped.push(line); app.error(line); }, stopped });
+          if (stopped()) return;
+          app.setPluginStatus(`${Object.keys(cat).length} cells from ${charts}${skipped.length ? `; ${skipped.length} skipped: ${skipped.join('; ')}` : ''}`);
+        } catch (e) { if (!stopped()) app.setPluginError(e.message); }
       }, 0);
     },
-    stop() { clearTimeout(timer); },
+    stop() { run++; clearTimeout(timer); },
   };
 }

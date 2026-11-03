@@ -3,9 +3,9 @@
 // through scene.mjs, offline: the land, coast and depth all come from the cell.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { registerHooks } from 'node:module';
+import * as nodeModule from 'node:module';
 import { createServer } from 'node:http';
-import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync, rmSync, cpSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -17,13 +17,30 @@ import { packOf, CHART_OPTIONS } from '../app/chart.mjs';
 const HERE = dirname(fileURLToPath(import.meta.url)), ROOT = join(HERE, '..', '..');
 const adapterURL = pathToFileURL(join(HERE, '..', 'app', 'enc-provider.js')).href;
 // the webapp's import map, as hooks: scene.mjs's `coastlines/provider` is the adapter, `portolani/` is scripts/
-registerHooks({
-  resolve(specifier, context, next) {
-    if (specifier === 'coastlines/provider') return { url: adapterURL, shortCircuit: true };
-    if (specifier.startsWith('portolani/')) return { url: pathToFileURL(join(ROOT, 'scripts', specifier.slice(10))).href, shortCircuit: true };
-    return next(specifier, context);
-  },
-});
+const SCRIPTS = pathToFileURL(join(ROOT, 'scripts')).href;
+function resolveMapped(specifier, adapter, scripts) {
+  if (specifier === 'coastlines/provider') return adapter;
+  if (specifier.startsWith('portolani/')) return `${scripts}/${specifier.slice(10)}`;
+  return null;
+}
+if (nodeModule.registerHooks) {
+  nodeModule.registerHooks({
+    resolve(specifier, context, next) {
+      const url = resolveMapped(specifier, adapterURL, SCRIPTS);
+      return url ? { url, shortCircuit: true } : next(specifier, context);
+    },
+  });
+} else {
+  // Node 20 has no registerHooks (22.15+): the same map through module.register, in a loader thread
+  const loader = `const resolveMapped = ${resolveMapped};
+let map;
+export function initialize(data) { map = data; }
+export async function resolve(specifier, context, next) {
+  const url = resolveMapped(specifier, map.adapter, map.scripts);
+  return url ? { url, shortCircuit: true } : next(specifier, context);
+}`;
+  nodeModule.register(`data:text/javascript,${encodeURIComponent(loader)}`, import.meta.url, { data: { adapter: adapterURL, scripts: SCRIPTS } });
+}
 
 // GET /<type>, /<type>/<id> and /<type>/<id>/<property>, as signalk-server routes them to a provider
 function serve(provider) {
@@ -52,7 +69,7 @@ const SEATTLE = { lonMin: -122.52, lonMax: -122.33, latMin: 47.55, latMax: 47.72
 test('US3WA46M through the provider draws the Seattle view, with its depth', async (t) => {
   const store = mkdtempSync(join(tmpdir(), 'enc-store-'));
   t.after(() => rmSync(store, { recursive: true, force: true }));
-  const cat = syncStore(join(HERE, 'fixtures'), store);
+  const cat = await syncStore(join(HERE, 'fixtures'), store);
   assert.deepEqual(Object.keys(cat), ['US3WA46M']);
   const c = cat.US3WA46M;
   assert.equal(c.band, 3);
@@ -89,4 +106,21 @@ test('US3WA46M through the provider draws the Seattle view, with its depth', asy
   for (let i = 0; i < a.length; i += 4) if (a[i] !== z[i] || a[i + 1] !== z[i + 1] || a[i + 2] !== z[i + 2]) differ++;
   assert.ok(differ > 20000, `depth paints the sea: ${differ} px differ`);
   if (process.env.UPDATE_GOLDEN) writeFileSync(join(HERE, 'golden', 'seattle.png'), withDepth.c.toBuffer('image/png'));
+});
+
+test('a cell that will not convert is skipped with a warning, and the rest convert', async (t) => {
+  const charts = mkdtempSync(join(tmpdir(), 'enc-charts-')), store = mkdtempSync(join(tmpdir(), 'enc-store-'));
+  t.after(() => { rmSync(charts, { recursive: true, force: true }); rmSync(store, { recursive: true, force: true }); });
+  cpSync(join(HERE, 'fixtures', 'US3WA46M'), join(charts, 'US3WA46M'), { recursive: true });
+  mkdirSync(join(charts, 'US5XX01M'));
+  writeFileSync(join(charts, 'US5XX01M', 'US5XX01M.000'), 'not an ENC cell');
+  const warned = [];
+  const cat = await syncStore(charts, store, { warn: (line) => warned.push(line) });
+  assert.deepEqual(Object.keys(cat), ['US3WA46M']);
+  assert.equal(warned.length, 1);
+  assert.match(warned[0], /^US5XX01M: skipped, /);
+  assert.deepEqual(Object.keys(JSON.parse(readFileSync(join(store, 'catalogue.json'), 'utf8'))), ['US3WA46M']);
+  // stopped before its first cell, a second run keeps the store as it was
+  const again = await syncStore(charts, store, { stopped: () => true });
+  assert.deepEqual(Object.keys(again), ['US3WA46M']);
 });
