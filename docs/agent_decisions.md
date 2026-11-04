@@ -441,3 +441,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261104t064345z
 - Signal K webapp ships the ranges and peaks files inside the plugin package (+99 KB packed), no download Undo: fetch the two files at first run instead of shipping them ([#356](https://github.com/mark-brannan/portolani/pull/356))
+
+### 20261104t064404z
+- Signal K webapp stands a landmark peak only on land the ENC cells hold, as the page's placePeaks does Undo: stand a peak off the cells' land in the webapp ([#356](https://github.com/mark-brannan/portolani/pull/356))
