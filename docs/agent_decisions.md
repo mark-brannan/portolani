@@ -456,3 +456,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261104t094819z
 - portolani#359: style keys wilderland/lotr and chip labels Wilderland / Middle-earth 1954 — names, one line each to rename ([#359](https://github.com/mark-brannan/portolani/pull/359))
+
+### 20261104t100913z
+- skull PR #364 pencil calls: all drawers capped above the memento; cap follows measured memento height; phone memento lifts to 50dvh+8 while a drawer is open; skull press leaves the drawer open; wipe 0.7 short side, 0.1 peak, 500 ms; design.md broom line now names the wipe ([#364](https://github.com/mark-brannan/portolani/pull/364))
