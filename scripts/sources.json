@@ -591,6 +591,24 @@
       "sha256": "91c5b7f62dbb246915e8ff289b95f45916344b308d66c03a63d508a3835c08a0",
       "rights": "CC BY 2.0; Carte et Vues de l'Isle Pitcairn, Robert Bénard after Carteret, Paris, Biblioteca de la Universidad de Sevilla, Fondo Antiguo. Attribution: \"Biblioteca de la Universidad de Sevilla, CC BY 2.0\"",
       "note": "(4,704 × 3,696; the French plate of the Carteret chart; carries a library stamp)"
+    },
+    {
+      "id": "oliva-chart",
+      "file": "17th-century_Portolan_chart_of_the_Mediterranean_Sea_by_a_member_of_the_Oliva_family.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/e/ee/17th-century_Portolan_chart_of_the_Mediterranean_Sea_by_a_member_of_the_Oliva_family.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:17th-century_Portolan_chart_of_the_Mediterranean_Sea_by_a_member_of_the_Oliva_family.jpg",
+      "sha256": "d8a7dea8ad51caa1d5105297ea776a21465a70f150292ba7ebc9b67cb5cbe086",
+      "rights": "PD-Art | PD-old-100-expired; portolan chart of the Mediterranean by a member of the Oliva family, 1621–1665; scan by Barry Lawrence Ruderman Antique Maps (Raremaps.com), via Wikimedia Commons",
+      "note": "(17,316 × 11,126)"
+    },
+    {
+      "id": "plancius-acts",
+      "file": "plancius-acts-1609.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/a/a4/Petrus_Plancius%2C_Tabula_geographica%2C_in_qua_omnes_regiones%2C_urbes%2C_oppida%2C_et_loca_describuntur%2C_quorum_mentio_fit_in_Actis_et_Epistolis_Apostolorum%2C_et_Apocalypsi_%28FL199985764_2368879%29.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Petrus_Plancius,_Tabula_geographica,_in_qua_omnes_regiones,_urbes,_oppida,_et_loca_describuntur,_quorum_mentio_fit_in_Actis_et_Epistolis_Apostolorum,_et_Apocalypsi_(FL199985764_2368879).jpg",
+      "sha256": "998172507a5f7457c821be0b2f93e9d006e8571c1f6856d9f2a41f4377120b77",
+      "rights": "PD-old-assumed; Petrus Plancius, Tabula geographica … Actis et Epistolis Apostolorum, Amsterdam, Cloppenburgh, 1609 state, engraved by Baptista van Doetecum; National Library of Israel, Eran Laor Cartographic Collection, system no. 990023688790205171, via Wikimedia Commons",
+      "note": "(8,304 × 5,352)"
     }
   ],
   "footer": [
