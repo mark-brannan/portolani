@@ -613,6 +613,59 @@ Feature: The skull in the lower right puts the map back
     And a large, faint skull flashes over the map as the cards go, then is gone (the broom is retired: docs/spec/drawer.md, "The skull stays in reach while a drawer is in use"); with reduced motion the cards go with no wipe
     And a click with nothing on the table does no harm: the map is already in its normal state
 
+Feature: The skull is the one clear  (`#sweep`, page.js `clearMap`)
+  Source: the user, 2026-11-04: "The skull is the universal 'clear' button.  It should work on any drawer or feature where we need clear/reset functionality.  Charts are cleared/reset with the skull.  Voyages are cleared/reset with the skull.  People, of course.  There is an unneeded 'clear' button in voyages.  When in the context view for a POI, it clears cards but does not reset any view position or zoom."; "It does not clear the rose config settings, map projection settings, position, or view." This widens "The skull in the lower right puts the map back" from the table to every drawer's content, and retires the Voyages drawer's own Clear (docs/spec/voyages.md). A settings group's Clear and Defaults (the figures, the hills) are settings, not the map's content, and stay.
+  Tested by: test/touch.test.mjs — 'voyages: several drawn at once, ...' (in a browser: the skull empties the voyages, the drawer stays open, `map=` and the line weight stay); test/drawers.test.mjs — 'the skull is the one clear, and the voyages have no Clear of their own' (offline, source only: the charts' half and the view's are not yet driven in a browser)
+  Scenario: one click clears every drawer's content
+    Given a person chosen with their cards dealt, two voyages shown, and two charts' sheets laid, one dragged from its place
+    When the user clicks the skull
+    Then every card is put away and no person or sight is chosen
+    And no voyage is drawn, `voyages=` leaves the hash, and a voyage playing stops and its band goes
+    And no chart's sheet is laid, `overlay=` and `sheet=` leave the hash, and a chart shown again lies at its own place
+    And the faint skull flashes over the map once, as it does when cards go
+  Scenario: the view and the settings stay
+    Given the map at some place, zoom and bearing (the world turned to a chart), in a projection other than the default, with the rose and the styles as chosen
+    When the user clicks the skull
+    Then `map=`, `projection=` and `bearing=` are as they were, and the map does not move or turn
+    And the rose's settings, every style, every figure, the line weight, the pen's pace and the charts' opacity and mode are as they were
+  Scenario: in a point of interest's view, the cards go and the map stays
+    Given a point of interest's tile opened and its cards dealt, the map flown to frame it
+    When the user clicks the skull
+    Then the cards go and the tile shuts, and the map keeps that place and zoom: nothing flies back
+  Scenario: no Clear of its own in the Voyages drawer
+    Given the Voyages drawer open
+    When the user looks at its tools
+    Then there is no Clear chip; the skull, in reach over the drawer, is how the voyages are cleared
+
+Feature: The skull's clear is shown  (`#sweep`, page.js `skullRise`, `wordsRise`, `vanish`)
+  Source: the user, 2026-11-04, on [#367](https://github.com/mark-brannan/portolani/pull/367): "The skull on the main screen should be more realistic and can be just a skull, not the cross bones.  It should be almost the full height or width depending on which constrains the view.  It should be a slightly slower effect (we can play with timing on this PR with a slider, temporary).  The skull animation effect should also have a slight 'growing' effect where it gets larger to fill the space or even beyond the borders of the space as it fades out. It should have a consistent timing for the clear effect on the objects being cleared also, for example the charts or the photos.  Either they are "swept" away and off screen to the left, or they are faded away into dust and nothingness.  I would like to see a few different effects if possible. Finally the memento mori text should be also drawn in Script/Italics, in the dark red color, in the main view at the bottom of the screen and grow and then fade slightly slower than the fading effect, in order to give the viewer time to read.  This does not replace the existing text that we show near the button, but that text should be sized or placed so that the button does not move for different texts.  The button is in a constant location.  The text can however, appear above/below/beside as appropriate.  I would like that text on a single line if possible.   The hover text for the skull button should be 'Clear the map: <translation>" with the translation of the memento mori text in English (or the users language if we later localize everything). Finally, it should always trigger the effect, even if the screen is already clear." And later the same day, on #367: "Lines on the map for voyages clear only by fading away, never sweeping off screen or pixelating. For the clear effect, for pictures, I want to see the same transition effect as when we place them "on the chart table" but they exit to the left."; "The words should be like a queue. We have words displayed already near the skull button. When clicked, then those are the words that get displayed in red during the animation and a new set of words get queued by the button." And after that: "The speed of the card dealing should not differ significantly between dealing in and dealing out."; "For text that is longer and has a clean split near a comma at about the halfway point, these should be on two lines as if they are verse or a couplet." This overtakes the faint flash of the two Features above for the skull's click; a fly that puts cards away keeps the faint flash.
+  Scenario: the skull fills the map, grows and fades
+    Given the chart at any view, cleared already or not
+    When the user clicks the skull
+    Then a skull alone, drawn as bone, no crossbones, rises over the map, almost as tall as the map or as wide, whichever bounds it
+    And it grows on past the map's edges as it fades, over a little longer than the old flash
+  Scenario: what is cleared leaves, all over one time
+    Given cards, voyages or charts' sheets on the map
+    When the user clicks the skull
+    Then everything cleared leaves together over the same time
+    And each card leaves as it was dealt onto the table, mirrored and at the same pace: off to the left, shrinking and turning, one after another
+    And a voyage's line only fades away, never swept off or broken into dust
+    And with reduced motion it goes at once
+  Scenario: the phrase is read large, then fades last
+    When the user clicks the skull
+    Then the phrase that was beside the skull is drawn large at the foot of the map, in the italic hand, in the chart's red, on one line or, set as a couplet, two
+    And it comes and fades, slower than the skull, so it can be read
+    And a long phrase with a comma near its middle is set as a couplet, on two lines split after the comma
+    And a phrase that is verse in its source, Manrique's, keeps that verse's lines
+    And the next phrase takes its place beside the skull, the one the next click shows
+  Scenario: the phrase beside the skull never moves it
+    Given any phrase beside the skull, the longest included
+    When the user looks at the skull
+    Then the skull is in the same place as with the shortest phrase, and the phrase is on one line where the window allows
+  Scenario: the skull's hover text is the phrase in English
+    When the user hovers over the skull
+    Then it reads "Clear the map: " and the English of the phrase beside it
+
 Feature: People and voyages, each a vertical timeline
   Source: the user on the timeline [#304](https://github.com/mark-brannan/portolani/pull/304) merged, 2026-11-04: "The entire drawer is way too WIDE! It should not be wider than the drawer for charts or settings/config (480px). We should consider whether we need to reorient it to be a vertical timeline instead of horizontal. Somehow we need to fit things more nicely."; "I do not like AT ALL how we treat people groups. The people group migrations MUST be in the people drawer with people. Nevermind that all the European examples are individuals... people are people. Lapita gets a row in people (not merely voyages)."; "When you click on people in the people drawer it should expand their notes and their voyages should appear directly below that. NOT below all the other people, and not as a naive copy/paste from the voyages drawer of all voyages. If I select Ibn Battuta, then I should get a tile with his notes... then each of the voyages below that (with the notes for that voyage)." This overtakes the one horizontal timeline of two lanes, its Earlier tab and its era bands (the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30), which #304 built and the user turned down on sight.
   Scenario: two drawers, no wider than the charts
