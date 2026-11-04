@@ -349,6 +349,23 @@ Feature: Salt flats  (chips `#playas`, hash `playas`, default `salt`, values `of
     Then the hash gains `playas=ruled` and Salar de Uyuni draws as a clay pan ruled with broken lines
     # a site without geo/playas-10m.json draws no salt flats and the rest of the map as before
 
+Feature: Landmark peaks  (chips `#peaks`, hash `peaks`, default `catalan`, values `off|catalan`; peaks.mjs) (#352)
+  Scenario: the peaks seen from the water
+    Given the chart at `#map=6.80/47.800/-122.400`
+    When the page loads
+    Then Mount Rainier and Mount Baker each stand as a lone Catalan mountain, larger than the hills, and no name is lettered beside either
+  Scenario: a click on a peak
+    Given the same view
+    When the user clicks anywhere on Rainier's drawing
+    Then a tile opens beside it, titled "Mount Rainier", reading "4,392 m (14,409 ft)"
+  Scenario: off
+    Given the same view
+    When the user clicks "Off" in Landmark peaks
+    Then the hash gains `peaks=off` and the peaks are gone; the hills stay
+    # which peaks: Natural Earth's 10m named summits, each from its own min_zoom (in 256 px tiles, water.mjs `shown`); the mountain sprites must be selected (the Hills chip), as the peaks are drawn with them
+    # a peak whose sprite finds no ground (a town on the summit) stands smaller, then as a lone mountain in ink, with the same tile; it is never dropped for a town alone
+    # a site without geo/peaks-10m.json stands no peaks and draws the rest of the map as before
+
 Feature: Scale bar  (chips `#scale`, hash `scale`, default `genoese`, values `off|chequer|chevron|ribbon|beads|ruled|genoese`) [verified page.js:96, 286; scene.mjs:2077-2170]
   Scenario: style
     Given the chart at `#map=6.00/43.000/10.000`
@@ -389,7 +406,7 @@ Feature: Parchment  (colour input `#parchment`, hash `parchment`, default `e9d8b
   Scenario: the sheet repaints
     Given the same
     When the page places
-    Then the canvas background pixels read near `#eeeeee`, a little darker and warmer at the centre and much darker at the corners (mottling, grain and a vignette multiply the colour, scene.mjs:1682-1725 at main; the pattern is fixed by seed 1539)
+    Then the canvas background pixels read near `#eeeeee`, a little darker and warmer at the centre and much darker at the corners (mottling, grain and a vignette multiply the colour: scene.mjs `makePaper` and `paintPaper`; the pattern is fixed by seed 1539 and by its place on the earth)
 
 Feature: One mode  (tokens `--panel` #efe3c6, `--fg`, `--margin` #1d1913; no `prefers-color-scheme` in `public/`) [verified at main] (#211)
   Scenario: every drawer is parchment inside, on the dark margin
