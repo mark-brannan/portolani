@@ -17,8 +17,8 @@ say why and attach the new image. Write "no" if the output is identical.
 <!--
 Paste the block `node scripts/try-it.mjs <this PR's number>` prints, as it
 stands: one line that fetches, installs and serves this PR on port 10000 + N.
-No clone of the tooling? The show-dont-tell check's summary prints the same
-block once the PR is open; copy it from there.
+No clone of the tooling? Open the PR with this section empty: the check's red
+summary prints the block; copy it from there and the check re-runs.
 -->
 
 ## Checks

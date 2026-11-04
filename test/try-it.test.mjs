@@ -16,4 +16,5 @@ test('the real show-dont-tell.yml yields the one exact line, in a bash fence', (
   assert.ok(block.startsWith(`## Try it\n\n\`\`\`bash\n${LINE}\n\`\`\`\n`));
   assert.match(block, /head 5a1630a when this was written/);
   assert.match(block, /http:\/\/localhost:10369/);
+  assert.doesNotMatch(tryItBlock({ pr: 369, head: '', ...cfg }), /\(head\s+when/);
 });
