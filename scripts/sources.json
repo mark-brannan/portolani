@@ -490,7 +490,7 @@
       "url": "https://upload.wikimedia.org/wikipedia/commons/e/ee/17th-century_Portolan_chart_of_the_Mediterranean_Sea_by_a_member_of_the_Oliva_family.jpg",
       "page": "https://commons.wikimedia.org/wiki/File:17th-century_Portolan_chart_of_the_Mediterranean_Sea_by_a_member_of_the_Oliva_family.jpg",
       "sha256": "d8a7dea8ad51caa1d5105297ea776a21465a70f150292ba7ebc9b67cb5cbe086",
-      "rights": "PD-Art | PD-old-100-expired; Oliva family, between 1621 and 1665; scan credited to Barry Lawrence Ruderman Antique Maps (Raremaps.com) on Commons",
+      "rights": "PD-Art; PD-old-100-expired; Oliva family, between 1621 and 1665; scan credited to Barry Lawrence Ruderman Antique Maps (Raremaps.com) on Commons",
       "note": "(17,316 × 11,126; the whole Mediterranean, Iberia to the Levant and the Nile, the east edge torn, scanned on black)"
     },
     {
@@ -501,6 +501,15 @@
       "sha256": "b270da450e50d487295590177c4b5a09acc1b7f2ccc9b8a696aa48f48a15a0dd",
       "rights": "PD-old-100-expired; Sebastião Lopes, Atlantic chart, about 1565, Newberry Library, VAULT oversize Ayer MS map 26",
       "note": "(2,232 × 3,100; a photograph, probably of a facsimile; British Isles to the Gambia, the Azores, Madeira, the Canaries and Cape Verde)"
+    },
+    {
+      "id": "olives-1559",
+      "file": "olives-1559.jpg",
+      "url": "https://iiif.bodleian.ox.ac.uk/iiif/image/d79c68a3-d33b-4952-962d-4ebfa1029790/full/max/0/default.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Bodleian_Libraries,_Portolan_chart_of_the_central_and_western_Mediterranean_and_part_of_the_Atlantic.jpg",
+      "sha256": "87c5b68b713af4f3a9e55f6a772049978ae89a008a886689cc891e91c4a7ce60",
+      "rights": "Public domain (Commons: PD-Art, PD-old-100); Digital Bodleian labels the photo CC BY-NC 4.0; Bartolomé Olives, Venice 1559, Bodleian Libraries MS. Canon. Ital. 143, fol. 3r",
+      "note": "(4,000 × 2,652; the central and western Mediterranean and part of the Atlantic, drawn south up; IIIF rendered by the server, so a re-encode on their side would need a re-pin; object page http://digital.bodleian.ox.ac.uk/inquire/p/d79c68a3-d33b-4952-962d-4ebfa1029790)"
     },
     {
       "id": "martines-1587-01",

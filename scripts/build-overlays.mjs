@@ -149,6 +149,10 @@ const CHARTS = [
   { id: 'lopes-atlantic', title: 'Atlantic chart of Sebastião Lopes, about 1565', source: 'lopes-1565', file: 'lopes-atlantic.jpg', scale: 1,
     landmarks: [[[1280, 1170], [-9.27, 42.88]], [[1290, 1400], [-9.14, 38.72]], [[1335, 1535], [-9.0, 37.03]], [[1570, 1560], [-5.35, 36.13]], [[1170, 2040], [-13.6, 29.0]], [[1040, 2080], [-15.6, 28.0]], [[975, 2065], [-16.55, 28.3]]], // scan px, real lon, lat
     snaps: [] },
+  // Bartolomé Olives, Venice 1559 (Bodleian MS. Canon. Ital. 143, fol. 3r): drawn south up, Africa at the top, so the sheet is turned half round (levelFit's scale comes out negative). Gibraltar, Cape St Vincent, Lisbon, Finisterre, Sardinia, Corsica, Sicily.
+  { id: 'olives-1559', title: 'Chart of the central and western Mediterranean, Bartolomé Olives, 1559', source: 'olives-1559', file: 'olives-1559.jpg', scale: 1, dark: true, up: 180,
+    landmarks: [[[2925, 875], [-5.35, 36.13]], [[3165, 960], [-9.0, 37.03]], [[3150, 1105], [-9.14, 38.72]], [[3150, 1435], [-9.27, 42.88]], [[1740, 1360], [9.0, 40.05]], [[1750, 1580], [9.1, 42.2]], [[1250, 1170], [14.1, 37.55]]], // scan px, real lon, lat
+    snaps: [] },
 ];
 
 // The sheet's own placement. With the chart's drawn `parallels` ([{ lat, from, to }], top first, in scan px): the turn
@@ -265,7 +269,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const md = readFileSync(join(ROOT, 'docs', 'atlas', 'ornaments.md'), 'utf8');
   const land = landIndex(JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.resolve('coastlines/data/ne-land-10m'))), 'ne-land-10m.geojson'), 'utf8')));
   mkdirSync(OUT, { recursive: true });
-  const overlays = [], only = process.argv.includes('--only') ? process.argv[process.argv.indexOf('--only') + 1].split(',') : null;
+  const overlays = [], only = process.argv.includes('--only') ? (process.argv[process.argv.indexOf('--only') + 1] ?? '').split(',').filter(Boolean) : null;
+  if (only) { const bad = only.filter((id) => !CHARTS.some((c) => c.id === id)); if (!only.length || bad.length) throw new Error(`--only ${only.length ? `${bad.join(',')}: no such chart` : 'needs chart ids'} (${CHARTS.map((c) => c.id).join(', ')})`); }
   const kept = only ? JSON.parse(readFileSync(join(OUT, 'overlays.json'), 'utf8')).overlays : [];
   for (const c of CHARTS) {
     if (only && !only.includes(c.id)) { const old = kept.find((o) => o.id === c.id); if (old) overlays.push(old); continue; }

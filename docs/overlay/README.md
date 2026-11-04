@@ -256,7 +256,7 @@ the build's `CHARTS`.
 Nothing marks a note on the scan. Over a noted figure the cursor turns to a pointer, and a click opens its
 tile. The notes ride on the sheet where it lies, dragged, turned or resized. Juan de la Cosa has notes too.
 
-## Two more by landmarks: the Oliva Mediterranean, Lopes
+## Three more by landmarks: the Oliva Mediterranean, Lopes, Olives
 
 Each is laid level by landmarks read off the scan by eye, as above (`levelFit`; the numbers below are each landmark's miss, in km, against today's place, after the least-squares scale and centre).
 
@@ -269,4 +269,10 @@ Each is laid level by landmarks read off the scan by eye, as above (`levelFit`; 
 
 ![Lopes's Atlantic sheet over the map](lopes-atlantic-sheet.jpg)
 
-`npm run overlays -- --only oliva-mediterranean,lopes-atlantic` rebuilds just those two and keeps the other rows of overlays.json as they are.
+- **Bartolomé Olives, Venice 1559** (Bodleian Libraries, MS. Canon. Ital. 143, fol. 3r): the central and western Mediterranean and a piece of the Atlantic, **drawn south up** (Africa and its kings at the top, Europe below), so the sheet is turned half round: `levelFit` takes the scale negative and the sheet comes out at a turn of 180 degrees, and the Level chip has nothing more to turn. Seven landmarks (Gibraltar, Cape St Vincent, Lisbon, Finisterre, Sardinia, Corsica, Sicily), 102 km RMS (25 to 172 km): Iberia is drawn small and the middle sea long, so the west coast of Iberia lies about 170 km in. The photograph is 4000 x 2652 px, the largest the Bodleian's IIIF serves, kept at scale 1 and scanned on black (`dark`). Commons tags it PD-Art with PD-old-100, which the project follows; Digital Bodleian labels the photograph CC BY-NC 4.0, and both claims are in the manifest's rights string. The server renders the file, so a re-encode on its side would need a re-pin.
+
+`npm run render -- --view 5.47,40.35,3.6 --overlay olives-1559 --out docs/overlay/olives-1559-sheet.jpg`.
+
+![Olives's 1559 sheet over the map, turned north up](olives-1559-sheet.jpg)
+
+`npm run overlays -- --only oliva-mediterranean,lopes-atlantic,olives-1559` rebuilds just those and keeps the other rows of overlays.json as they are; an id that is no chart, or no id at all, is an error.

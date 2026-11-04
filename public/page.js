@@ -1695,6 +1695,7 @@ const CHARTS = [
   ['Fernão Vaz Dourado, North Atlantic', '1580', at(-31.75, 55.58, 2.78), ['Goa', port(73.83, 15.50)], null, 'dourado-atlantic'], // chart 4 of his atlas, made at Goa (Bayerische Staatsbibliothek)
   ['Oliva family, Mediterranean', '1621–1665', at(16.73, 36.74, 3.7), ['Messina', port(15.55, 38.19)], null, 'oliva-mediterranean'], // a member of the Oliva family of chartmakers, Messina the usual attribution (Commons dates it between 1621 and 1665)
   ['Sebastião Lopes, Atlantic', 'c. 1565', at(-13.6, 36.76, 3.3), ['Lisbon', port(-9.14, 38.72)], null, 'lopes-atlantic'], // a chart of the Atlantic coasts, British Isles to the Gambia (Newberry Library)
+  ['Bartolomé Olives, central and western Mediterranean', '1559', at(5.47, 40.35, 3.6), ['Venice', port(12.33, 45.44)], null, 'olives-1559'], // drawn south up, made at Venice (Bodleian Libraries, MS. Canon. Ital. 143)
   ['De Bry, Virginia', '1590', at(-76, 36.28, 7.47), ['Frankfurt', port(8.68, 50.11)]], // de Bry's America, part I, printed at Frankfurt am Main
 ].map(([name, year, v, [city, made], text, overlay = null]) => ({ name, year, view: { ...v, title: name }, made: { ...made, title: city }, text, overlay }));
 const places = []; // every anchorage and point of interest: { name, view }
