@@ -21,7 +21,7 @@
   "files": ["index.js", "lib", "public"],
   "license": "MIT",
   "dependencies": {
-    "@s57-parser/s57": "^0.3.0"
+    "gdal3.js": "^2.8.1"
   },
   "private": true
 }

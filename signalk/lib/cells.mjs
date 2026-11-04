@@ -1,24 +1,59 @@
 // The converter: S-57 ENC cells (a .000 base and its .001, .002 ... updates) to gzipped GeoJSON, one
 // file per cell per object class, under a store folder, with a catalogue of what each cell holds. A cell
 // is converted again only when its files change, so a restart reads the catalogue and nothing else.
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, statSync, existsSync, rmSync, renameSync } from 'node:fs';
-import { join, basename } from 'node:path';
+// GDAL's S57 driver reads the cells, through gdal3.js (GDAL in WebAssembly), and applies the updates.
+import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, readdirSync, statSync, existsSync, rmSync, renameSync } from 'node:fs';
+import { join, basename, dirname, relative } from 'node:path';
+import { tmpdir } from 'node:os';
+import { createRequire } from 'node:module';
 import { gzipSync, gunzipSync } from 'node:zlib';
-import { parseS57, applyUpdate, toGeoJSON, S57_ATTRIBUTES, spatialKey } from '@s57-parser/s57';
 
 // The object classes kept, by their S-57 code; M_COVR gives the catalogue its bbox and is kept with them.
 export const CLASSES = { LNDARE: 71, COALNE: 30, SLCONS: 122, DEPARE: 42, DEPCNT: 43, SOUNDG: 129, UWTROC: 153, WRECKS: 159, OBSTRN: 86, M_COVR: 302 };
 const NAME = Object.fromEntries(Object.entries(CLASSES).map(([n, c]) => [c, n]));
-const NUMERIC = new Set(['float', 'int']);
+// the record fields GDAL adds to every feature, which the store leaves out (RCID and OBJL stay)
+const RECORD = new Set(['PRIM', 'GRUP', 'RVER', 'AGEN', 'FIDN', 'FIDS', 'LNAM', 'LNAM_REFS', 'FFPT_RIND']);
 const CATALOGUE = 'catalogue.json';
 
 // The usage band is the third character of an ENC's name: 1 overview, 2 general, 3 coastal, 4 approach, 5 harbour, 6 berthing
 export const bandOf = (cell) => Number(cell[2]) || 0;
 
-// A file's bytes as an ArrayBuffer, gunzipped when it ends in .gz (the test's fixtures)
-function bytes(path) {
-  const b = path.endsWith('.gz') ? gunzipSync(readFileSync(path)) : readFileSync(path);
-  return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength);
+// gdal3.js, started once. Its `path` is read relative to the working directory, whatever it is.
+let gdal = null;
+const require = createRequire(import.meta.url);
+const gdalJs = () => (gdal ??= require('gdal3.js/node.js')({ path: relative(process.cwd(), join(dirname(require.resolve('gdal3.js/node.js')), 'dist', 'package')), useWorker: false }));
+
+// One cell at a time through GDAL, whose files and datasets are global: a second sync waits for the first
+let queue = Promise.resolve();
+const serial = (fn) => { const run = queue.then(fn, fn); queue = run.catch(() => {}); return run; };
+
+// A cell opened by GDAL, `fn(Gdal, dataset, layers)` run on it, and closed. Gzipped files (the test's
+// fixtures) are gunzipped to a temporary folder first, as the driver finds the updates by their names
+// beside the base. `layers` is each layer's feature count, by class name.
+export const withCell = ({ cell, base, updates }, fn, options = []) => serial(async () => {
+  const Gdal = await gdalJs();
+  let path = base, tmp = null;
+  if ([base, ...updates].some((p) => p.endsWith('.gz'))) {
+    tmp = mkdtempSync(join(tmpdir(), 'enc-cell-'));
+    for (const p of [base, ...updates]) writeFileSync(join(tmp, basename(p, '.gz')), p.endsWith('.gz') ? gunzipSync(readFileSync(p)) : readFileSync(p));
+    path = join(tmp, `${cell}.000`);
+  }
+  try {
+    const { datasets, errors } = await Gdal.open(path, options);
+    const ds = datasets[0];
+    if (!ds) throw new Error(errors.map((e) => e.message).join('; ') || 'GDAL cannot open it');
+    try {
+      const info = await Gdal.getInfo(ds);
+      return await fn(Gdal, ds, Object.fromEntries((info.layers ?? []).map((l) => [l.name, l.featureCount])));
+    } finally { await Gdal.close(ds); }
+  } finally { if (tmp) rmSync(tmp, { recursive: true, force: true }); }
+});
+
+// One layer of an open cell as GeoJSON features
+async function layer(Gdal, ds, name) {
+  const out = await Gdal.ogr2ogr(ds, ['-f', 'GeoJSON', name]);
+  try { return JSON.parse(Buffer.from(await Gdal.getFileBytes(out)).toString('utf8')).features; }
+  finally { for (const f of out.all ?? [out]) Gdal.Module.FS.unlink(f.local); }
 }
 
 // Every cell under `dir`, at any depth (signalk-charts-provider-simple keeps one folder a cell), with its updates in order
@@ -38,43 +73,29 @@ export function findCells(dir) {
   return [...cells.values()].filter((c) => c.base).map((c) => ({ ...c, updates: c.updates.sort((a, b) => a.n - b.n).map((u) => u.path) }));
 }
 
-// The edition and update number from a file's DSID field: DSNM, then EDTN and UPDN, each ended by a unit terminator
-function dsid(buf, cell) {
-  const m = new RegExp(`${cell}\\.\\d{3}\\x1f(\\d*)\\x1f(\\d*)\\x1f`).exec(Buffer.from(buf).toString('latin1'));
-  return m ? { edition: Number(m[1]), update: Number(m[2]) } : {};
-}
-
-// A feature's attributes by acronym (ATTL_87 -> DRVAL1), numbers as numbers, with its class by name
+// A feature's attributes by acronym, as GDAL names them, numbers as numbers and lists as comma-separated
+// strings, with its class by name and without GDAL's record fields
 function properties(p) {
   const out = { OBJL: NAME[p.OBJL] ?? p.OBJL, RCID: p.RCID };
-  for (const [k, v] of Object.entries(p)) {
-    if (!k.startsWith('ATTL_')) continue;
-    const a = S57_ATTRIBUTES.get(Number(k.slice(5)));
-    out[a?.acronym ?? k] = a && NUMERIC.has(a.valueType) && v !== '' && Number.isFinite(Number(v)) ? Number(v) : v;
-  }
-  if (p._outline) out._outline = p._outline;
+  for (const [k, v] of Object.entries(p)) if (!(k in out) && !RECORD.has(k) && v != null) out[k] = Array.isArray(v) ? v.join(',') : v;
   return out;
 }
 
-// A sounding's points as [lon, lat, depth]: toGeoJSON keeps only the position
-function soundings(ds, rcid) {
-  const f = ds.features.find((r) => r.rcid === rcid), pts = [];
-  for (const ref of f?.spatialRefs ?? []) for (const c of ds.spatialRecords.get(spatialKey(ref.rcnm, ref.rcid))?.coordinates3D ?? []) pts.push([c.lon, c.lat, c.depth]);
-  return pts;
-}
-
-// One cell, its updates applied, as a FeatureCollection a class, and what the catalogue says of it
-export function convertCell({ cell, base, updates }) {
-  const first = bytes(base), ds = parseS57(first);
-  let info = dsid(first, cell);
-  for (const u of updates) { const b = bytes(u); applyUpdate(ds, b); info = { ...info, update: dsid(b, cell).update ?? info.update }; }
-  const layers = Object.fromEntries(Object.keys(CLASSES).map((n) => [n, []]));
-  for (const f of toGeoJSON(ds, Object.values(CLASSES)).features) {
-    if (!f.geometry) continue;
-    const name = NAME[f.properties.OBJL];
-    const geometry = name === 'SOUNDG' ? { type: 'MultiPoint', coordinates: soundings(ds, f.properties.RCID) } : f.geometry;
-    layers[name].push({ type: 'Feature', properties: properties(f.properties), geometry });
-  }
+// One cell, its updates applied, as a FeatureCollection a class, and what the catalogue says of it.
+// A sounding is GDAL's MultiPoint of [lon, lat, depth].
+export async function convertCell(c) {
+  const { layers, dsid } = await withCell(c, async (Gdal, ds, counts) => {
+    const layers = Object.fromEntries(Object.keys(CLASSES).map((n) => [n, []]));
+    for (const name of Object.keys(CLASSES)) {
+      if (!counts[name]) continue;
+      for (const f of await layer(Gdal, ds, name)) if (f.geometry) layers[name].push({ type: 'Feature', properties: properties(f.properties), geometry: f.geometry });
+    }
+    return { layers, dsid: counts.DSID ? (await layer(Gdal, ds, 'DSID'))[0]?.properties ?? {} : {} };
+  });
+  // an update's DSID carries edition 0, so with updates applied the edition is read from the base alone
+  let edition = Number(dsid.DSID_EDTN);
+  if (c.updates.length) edition = Number(await withCell(c, async (Gdal, ds) => (await layer(Gdal, ds, 'DSID'))[0]?.properties.DSID_EDTN, ['UPDATES=IGNORE']));
+  const info = dsid.DSID_UPDN == null ? {} : { edition, update: Number(dsid.DSID_UPDN) };
   // the data coverage (CATCOV 1) bounds the cell; without it, everything kept does
   const cover = layers.M_COVR.filter((f) => f.properties.CATCOV !== 2);
   const xs = [], ys = [];
@@ -85,7 +106,7 @@ export function convertCell({ cell, base, updates }) {
   for (const y of ys) { if (y < bo) bo = y; if (y > to) to = y; }
   // a cell with no coverage and nothing kept has no extent: null, and syncStore leaves it out
   const bbox = xs.length ? [lo, bo, hi, to] : null;
-  return { cell, band: bandOf(cell), bbox, scale: ds.cscl ?? null, ...info, layers };
+  return { cell: c.cell, band: bandOf(c.cell), bbox, scale: dsid.DSPM_CSCL ?? null, ...info, layers };
 }
 
 // The store: `<store>/<cell>/<CLASS>.geojson.gz` and `<store>/catalogue.json`, an entry a cell:
@@ -114,7 +135,7 @@ export async function syncStore(charts, store, { log = () => {}, warn = () => {}
     if (old[c.cell]?.source === source && existsSync(join(store, c.cell))) { next[c.cell] = old[c.cell]; continue; }
     const t = performance.now();
     let converted;
-    try { converted = convertCell(c); } catch (e) { warn(`${c.cell}: skipped, ${e.message}`); keepOld(c.cell); continue; }
+    try { converted = await convertCell(c); } catch (e) { warn(`${c.cell}: skipped, ${e.message}`); keepOld(c.cell); continue; }
     const { layers, ...entry } = converted;
     if (!entry.bbox) { warn(`${c.cell}: skipped, it covers nothing`); keepOld(c.cell); continue; }
     // the layers go to a temporary folder renamed over the cell's, so a cell is whole or not there

@@ -76,7 +76,7 @@ test('US3WA46M through the provider draws the Seattle view, with its depth', asy
   assert.equal(c.edition, 37);
   assert.equal(c.update, 10);
   for (const l of ['LNDARE', 'COALNE', 'SLCONS', 'DEPARE', 'DEPCNT', 'SOUNDG', 'UWTROC', 'WRECKS', 'OBSTRN']) assert.ok(c.layers[l] > 0, l);
-  c.bbox.forEach((v, i) => assert.ok(Math.abs(v - [-123.489, 47.019, -122.131, 48.348][i]) < 1e-3, `bbox ${i}`));
+  c.bbox.forEach((v, i) => assert.ok(Math.abs(v - [-123.468, 47.033, -122.151, 48.342][i]) < 1e-3, `bbox ${i}`));
 
   const server = await serve(resourceProvider(() => store));
   t.after(() => server.close());
