@@ -2332,8 +2332,8 @@ $('sweep').addEventListener('click', () => {
 new ResizeObserver(() => document.documentElement.style.setProperty('--memento-h', `${$('memento').offsetHeight}px`)).observe($('memento'));
 
 // The clear's timing and how what goes leaves: temporary, tuned on #367 in the panel at the top left, kept per browser
-const CLEAR_TUNE = { words: 'quick', goneMs: 4000, skullMs: 400, wordsMs: 5000, ink: 10, skullGrow: 250, wordsGrow: 100, wordsGrowAt: 0, holdMs: 0 };
-const TUNE_KEY = 'portolani.clearTune.5'; // a new key, so the new defaults show in a browser that kept the old ones
+const CLEAR_TUNE = { words: 'quick', goneMs: 4000, skullMs: 400, wordsMs: 5000, ink: 10, skullGrow: 250, wordsGrow: 100, growFrom: 10, growTo: 100, holdMs: 0 };
+const TUNE_KEY = 'portolani.clearTune.6'; // a new key, so the new defaults show in a browser that kept the old ones
 try { Object.assign(CLEAR_TUNE, JSON.parse(localStorage.getItem(TUNE_KEY) ?? '{}')); } catch { /* none kept */ }
 // the panel would sit over the instrument row in the browser tests; it is not part of the page
 if (navigator.webdriver) $('clearTune').hidden = true;
@@ -2345,7 +2345,7 @@ if (navigator.webdriver) $('clearTune').hidden = true;
     chips.forEach((b) => b.addEventListener('click', () => { CLEAR_TUNE[key] = b.dataset[key]; showChips(); keep(); }));
     showChips();
   }
-  for (const [id, key, unit] of [['tuneGone', 'goneMs', 's'], ['tuneSkull', 'skullMs', 's'], ['tuneWords', 'wordsMs', 's'], ['tuneInk', 'ink', '%'], ['tuneSkullGrow', 'skullGrow', 'x'], ['tuneWordsGrow', 'wordsGrow', 'x'], ['tuneWordsGrowAt', 'wordsGrowAt', '%'], ['tuneHold', 'holdMs', 's']]) {
+  for (const [id, key, unit] of [['tuneGone', 'goneMs', 's'], ['tuneSkull', 'skullMs', 's'], ['tuneWords', 'wordsMs', 's'], ['tuneInk', 'ink', '%'], ['tuneSkullGrow', 'skullGrow', 'x'], ['tuneWordsGrow', 'wordsGrow', 'x'], ['tuneGrowFrom', 'growFrom', '%'], ['tuneGrowTo', 'growTo', '%'], ['tuneHold', 'holdMs', 's']]) {
     const input = $(id), out = input.nextElementSibling;
     const show = () => { out.value = unit === 's' ? `${(CLEAR_TUNE[key] / 1000).toFixed(1)} s` : unit === 'x' ? `×${(CLEAR_TUNE[key] / 100).toFixed(2)}` : `${CLEAR_TUNE[key]}%`; };
     input.value = CLEAR_TUNE[key]; show();
@@ -2382,14 +2382,14 @@ function wordsRise(text) {
   if (fit < 1) { size *= fit; el.style.fontSize = `${size}px`; }
   Object.assign(el.style, { left: `${left + (wide - el.offsetWidth) / 2}px`, top: `${top + tall - el.offsetHeight - Math.max(56, tall * 0.12)}px` });
   // In, an optional hold (`holdMs`, 0 for none), then the fade, all one smooth curve: the fade eases in so there is no
-  // kink where the hold ends. The size is its own animation: it holds at 1 until `wordsGrowAt` percent of the way
-  // through the fade, then eases to its end size (×0 shrinks to a point) as the phrase reaches nothing.
+  // kink where the hold ends. The size is its own animation: it holds at 1 until `growFrom` percent of the phrase's
+  // time, then eases to its end size (×0 shrinks to a point) by `growTo` percent of it.
   const inAt = CLEAR_TUNE.words === 'quick' ? 0.06 : 0.18, holdTo = Math.min(0.95, inAt + CLEAR_TUNE.holdMs / CLEAR_TUNE.wordsMs);
-  const end = stillMotion() ? 1 : CLEAR_TUNE.wordsGrow / 100, growFrom = holdTo + (1 - holdTo) * (CLEAR_TUNE.wordsGrowAt / 100);
+  const end = stillMotion() ? 1 : CLEAR_TUNE.wordsGrow / 100, from = CLEAR_TUNE.growFrom / 100, to = Math.max(from + 0.02, CLEAR_TUNE.growTo / 100);
   const smooth = 'cubic-bezier(.35,0,.65,1)', opts = { duration: CLEAR_TUNE.wordsMs, easing: 'linear', fill: 'both' };
   const done = () => { el.hidden = true; };
   el.animate([{ opacity: 0, easing: 'ease-out' }, { opacity: 1, offset: inAt, easing: holdTo > inAt ? 'linear' : smooth }, { opacity: 1, offset: holdTo, easing: smooth }, { opacity: 0 }], opts).finished.then(done, () => {});
-  el.animate([{ transform: 'scale(1)' }, { transform: 'scale(1)', offset: growFrom, easing: smooth }, { transform: `scale(${end})` }], opts);
+  el.animate([{ transform: 'scale(1)' }, { transform: 'scale(1)', offset: from, easing: smooth }, { transform: `scale(${end})`, offset: Math.min(1, to) }, { transform: `scale(${end})` }], opts);
 }
 // What goes: the map as it was is laid over itself before the clear (vanishFrom), so nothing jumps; once the map is
 // drawn again, whatever changed is kept from it and leaves by the chosen effect over the same time, whatever it was
