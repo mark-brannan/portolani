@@ -298,6 +298,11 @@ Feature: The world turned to the chart (deferred)
     When the user asks for the chart's own orientation
     Then the map turns under the sheet to match it, and the sheet stays as scanned
     And until this lands, the sheet turns and the map stays north-up
+  Scenario: the world never stays turned once the chart is gone
+    Given the world turned to a chart's own orientation
+    When the user takes that chart's sheet off the map, or flies to another chart or a place the sheet covers
+    Then the world turns back to north up, and the flight that follows lands north up
+    And whatever the world's bearing, the compass in the gutter turns it back to north up on a click, with or without a sheet shown
 
 Feature: A chart with no up turns for the reader
   Source: the user in the session of 2026-10-29: "we said earlier that the De La Cosa chart was equator up and down vertical and we wanted a mode to see the chart laid vertical and the world rotated to match. This is somewhat similar with the Catalan Atlas except it has no explicit 'up' or down... rather it is meant to be laid flat on a table and the viewer could walk all around it. So we might want to spin it around for different POIs or play with the UI controls to emphasize that fact. Many of the drawings will be upside down if we pick only one fixed orientation."
@@ -374,8 +379,9 @@ Feature: A chart's notes get their moment, then leave the art alone
   Scenario: the user asks for the notes back
     Given a chart's sheet shown, its notes faded
     When the user looks at the chart's row
-    Then a chip beside the position chips reads "Notes" with N, the count, in a badge in lining figures, off after the pulse
-    And a click on the chip shows the marks and keeps them until it is clicked again; a second control, wearing the astrolabe of the points of interest until the user picks it or the compass of Go, or the same chip when the marks are already off, plays the rings again
+    Then a chip beside the position chips reads "Points of interest" with N, their count, in a red dot in the serif's own figures, off after the pulse
+    And the chart's own note, its background, is the caption in its row, apart from the points of interest each with its own tile
+    And a click on the chip shows the marks and keeps them until it is clicked again; a second control, wearing the compass of Go, or the same chip when the marks are already off, plays the rings again
     And the marks are never left on by default; the scan is the thing, the marks are a way to find what is on it
   Scenario: the user sees it first
     Given the pulse built as above
