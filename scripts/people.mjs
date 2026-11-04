@@ -77,7 +77,7 @@ export function firstYear(person, voyageYears = []) {
   const b = yearOf(person.born?.date), vs = voyageYears.filter(Number.isFinite);
   return Number.isFinite(b) ? b : vs.length ? Math.min(...vs) : NaN;
 }
-// The years after a person's name: "24 Feb 1304 – 1368/69", "born c. 350 BC", "died 1510"; for a person the record
+// The years after a person's name: "24 Feb 1304 – c. 1369", "born c. 350 BC", "died 1510"; for a person the record
 // leaves undated (a people, or mariners nobody named), their voyages' years: one voyage's `when` as written, several
 // as "fl. 1492 – 1504" from their first year to their last; nothing where there is none
 export function yearsText(person, voyages = []) {

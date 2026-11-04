@@ -335,7 +335,7 @@ scenario('overlap: a rule round-trips, the default is left out, an unknown word 
   assert.equal((await params(page)).has('overlap'), false);
 });
 
-scenario('person: choosing a life bar writes person=, a link with it chooses that person, a malformed id is dropped', 'map=6.14/40.474/7.400', async (page) => {
+scenario('person: choosing a person\'s row writes person=, a link with it chooses that person, a malformed id is dropped', 'map=6.14/40.474/7.400', async (page) => {
   await page.locator('#people').click();
   const life = page.locator('#peopleList [data-person]').first();
   const id = await life.getAttribute('data-person');
