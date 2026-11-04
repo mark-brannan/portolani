@@ -824,7 +824,7 @@ async function render() {
     drawScene(ctx, scene, data, bg, { scale: 1, x: 0, y: 0 });
     if (fading) fadeSheet(fading, data.proj, me);
     drawPictures(ctx);
-      drawCards();
+    drawCards();
     placeSheetChips(); showCompass();
     if (!fading || fading.alpha >= 1) placeLayer(); // a sheet fading in places it when whole
     preparePictures().then((fresh) => { if (fresh && me === run) repaint('pictures dealt'); }, () => {}); // the chosen subject's pictures, drawn once loaded
@@ -2831,7 +2831,7 @@ function fadeSheet(o, proj, me) {
     ctx.drawImage(base, 0, 0);
     drawSheet(ctx, o, proj, o.sheet);
     drawPictures(ctx);
-      if (o.alpha < 1) { drawLayer(ctx, proj, placed.zoom); requestAnimationFrame(step); } else if (!first) placeLayer(); // whole: its notes announce themselves
+    if (o.alpha < 1) { drawLayer(ctx, proj, placed.zoom); requestAnimationFrame(step); } else if (!first) placeLayer(); // whole: its notes announce themselves
   };
   step(t0, true);
 }
