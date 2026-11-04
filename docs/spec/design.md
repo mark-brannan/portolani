@@ -175,10 +175,11 @@ Feature: A chart's position chips, and the line each was fitted to
     And "Parallels" draws today's equator and Tropic of Cancer; a coast's chip ("New World") draws only the stretch of today's coast that fit used, not the whole coast; the chart's own "Level" draws every coast it is centred between
     And the line is the feature the fit was computed from, carried with the placement in the chart's data, never a stretch drawn by hand to look right
     And with reduced motion the line shows whole, then fades to faint
-  Scenario: a phone (waiting on a UI walk)
+  Scenario: a phone
     Given the Charts drawer open as the bottom sheet, at 520 px and under
     When the user looks for the position chips
-    Then they sit in the chart's row as on a wide screen, until the user has walked the phone's drawers
+    Then they sit in the chart's row as on a wide screen, wrapping onto lines of their own
+    And the unlit chips are solid and dark enough to read as buttons on the parchment, and the lit one wears the accent ring
 
 Feature: The projection chips live in the Charts drawer and the settings drawer
   Source: the user on [#266](https://github.com/mark-brannan/portolani/pull/266), 2026-10-29: "The controls for map projections should live under charts now, not the compass rose. I'm not sure about other map settings...they probably stay under the rose but it could change."
@@ -297,6 +298,11 @@ Feature: The world turned to the chart (deferred)
     When the user asks for the chart's own orientation
     Then the map turns under the sheet to match it, and the sheet stays as scanned
     And until this lands, the sheet turns and the map stays north-up
+  Scenario: the world never stays turned once the chart is gone
+    Given the world turned to a chart's own orientation
+    When the user takes that chart's sheet off the map, or flies to another chart or a place the sheet covers
+    Then the world turns back to north up, and the flight that follows lands north up
+    And whatever the world's bearing, the compass in the gutter turns it back to north up on a click, with or without a sheet shown
 
 Feature: A chart with no up turns for the reader
   Source: the user in the session of 2026-10-29: "we said earlier that the De La Cosa chart was equator up and down vertical and we wanted a mode to see the chart laid vertical and the world rotated to match. This is somewhat similar with the Catalan Atlas except it has no explicit 'up' or down... rather it is meant to be laid flat on a table and the viewer could walk all around it. So we might want to spin it around for different POIs or play with the UI controls to emphasize that fact. Many of the drawings will be upside down if we pick only one fixed orientation."
@@ -373,8 +379,9 @@ Feature: A chart's notes get their moment, then leave the art alone
   Scenario: the user asks for the notes back
     Given a chart's sheet shown, its notes faded
     When the user looks at the chart's row
-    Then a chip beside the position chips reads "Notes · N", N the count, off after the pulse
-    And a click on the chip shows the marks and keeps them until it is clicked again; a second control, or the same chip when the marks are already off, plays the rings again
+    Then a chip beside the position chips reads "Points of interest" with N, their count, in a red dot in the serif's own figures, off after the pulse
+    And the chart's own note, its background, is the caption in its row, apart from the points of interest each with its own tile
+    And a click on the chip shows the marks and keeps them until it is clicked again; a second control, wearing the compass of Go, or the same chip when the marks are already off, plays the rings again
     And the marks are never left on by default; the scan is the thing, the marks are a way to find what is on it
   Scenario: the user sees it first
     Given the pulse built as above

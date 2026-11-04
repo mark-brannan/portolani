@@ -1168,18 +1168,22 @@ function drawHandles(g, geo) {
   g.beginPath(); g.moveTo(br[0] - a + h, br[1] + a); g.lineTo(br[0] - a, br[1] + a); g.lineTo(br[0] - a, br[1] + a - h); g.stroke();
   g.restore();
 }
-// The snap chips, at the top sheet's top left corner in the window (kept inside it), lit where that sheet lies now; the
-// top sheet in view, where the top one's centre is past the horizon.
+// The snap chips live in the Charts drawer, in the row of the chart they belong to, under its city and year after a
+// "Chart position:" line (docs/spec/design.md, "A chart's position chips, and the line each was fitted to"). They follow
+// the top sheet in view (the one whose centre is not past the horizon), lit where that sheet lies now; with no sheet
+// shown the line is hidden.
 const sheetChips = $('sheetChips');
+const posBox = Object.assign(document.createElement('div'), { className: 'pos', hidden: true });
+posBox.append(Object.assign(document.createElement('b'), { textContent: 'Chart position:' }), sheetChips);
 function placeSheetChips() {
   const geo = held ? null : sheetsShown().reverse().map(sheetGeometry).find(Boolean);
-  if (!geo || geo.o.id !== sheetChips.dataset.id) { sheetChips.hidden = true; if (geo) buildSheetChips(geo.o); else return; }
-  const [[x, y]] = geo.corners, rc = canvas.getBoundingClientRect();
-  sheetChips.hidden = false;
+  if (geo && geo.o.id !== sheetChips.dataset.id) buildSheetChips(geo.o);
+  const li = geo && $('chartList').querySelector(`li[data-overlay="${geo.o.id}"]`);
+  if (!li) { posBox.hidden = true; return; }
+  const where = li.querySelector('.about .where');
+  if (posBox.previousElementSibling !== where) where.after(posBox);
+  posBox.hidden = false; sheetChips.hidden = false;
   showMend(geo.o);
-  const w = sheetChips.offsetWidth, h = sheetChips.offsetHeight;
-  sheetChips.style.left = `${Math.max(8, Math.min(innerWidth - w - 8, rc.left + x * (rc.width / W) + 4))}px`;
-  sheetChips.style.top = `${Math.max(8, Math.min(innerHeight - h - 8, rc.top + y * (rc.height / H) - h - 6))}px`;
   const keep = sheetChips.querySelector('[data-notes=keep]');
   keep?.setAttribute('aria-pressed', String(notesKept.has(geo.o.id)));
   for (const b of sheetChips.querySelectorAll('[role=radio]')) b.setAttribute('aria-checked', String(sameSheet(geo.o.sheet, b.dataset.snap == null ? ownSheet(geo.o.id) : geo.o.snaps[b.dataset.snap])));
@@ -1228,19 +1232,24 @@ function showMend(o) {
   const set = (key, still) => sheetChips.querySelector(`[data-mend=${key}]`)?.setAttribute('aria-disabled', String(still));
   set('angle', offBy(o.sheet.turn, at.turn) < 0.05);
   set('size', Math.abs(o.sheet.scale / at.scale - 1) < 1e-3);
-  sheetChips.querySelector('[data-mend=up]')?.setAttribute('aria-pressed', String(b !== 0 && [drawnBearing(o), turnedTo.get(o.id)].some((t) => t != null && offBy(b, t) < 0.5)));
+  sheetChips.querySelector('[data-mend=up]')?.setAttribute('aria-pressed', String(turnedBy(o)));
 }
-// Beside them, for a chart with notes: "Notes · N", which keeps its notes' marks shown until clicked again (off after the
-// pulse, and never on by default), and a ring that plays the pulse again (docs/spec/design.md, "the user asks for the notes back")
+// Whether the world stands turned to this chart's up (its chip pressed): lifting the sheet then turns it back to north up.
+const turnedBy = (o) => { const b = view.bearing ?? 0; return o?.up != null && b !== 0 && [drawnBearing(o), turnedTo.get(o.id)].some((t) => t != null && offBy(b, t) < 0.5); };
+// Beside them, for a chart with points of interest marked on it: "Points of interest" with their count in a red dot, which
+// keeps their marks shown until clicked again (off after the pulse, and never on by default), and the compass of Go, which
+// plays the pulse again (docs/spec/design.md, "the user asks for the notes back"). The chart's own note is its row's caption.
 const NOTE_GLYPH = '<svg viewBox="0 0 28 18" aria-hidden="true"><circle cx="14" cy="9" r="6" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="14" cy="9" r="2" fill="currentColor"/></svg>';
-const PULSE_GLYPH = '<svg viewBox="0 0 28 18" aria-hidden="true"><circle cx="14" cy="9" r="2" fill="currentColor"/><circle cx="14" cy="9" r="4.5" fill="none" stroke="#8c2f1e" stroke-width="1.4"/><circle cx="14" cy="9" r="7.5" fill="none" stroke="#8c2f1e" stroke-width="1.1" opacity="0.5"/></svg>';
+// The replay chip's compass is cloned from the bar, its gradient ids renamed so the clone stands alone.
+const barIcon = (id, tag) => $(id).querySelector('svg').outerHTML.replace(/(brass\w+|hdChart|hcChart)/g, `$1${tag}`).replace('aria-hidden="true"', 'aria-hidden="true" class="icon"');
+const PULSE_GLYPH = () => barIcon('go', 'Replay');
 function notesChips(o) {
   const n = noteCount(o.id);
   if (!n) return [];
-  const keep = Object.assign(document.createElement('button'), { type: 'button', className: 'chip', title: `Show the ${n} notes' marks on the chart, and keep them until clicked again` });
-  keep.innerHTML = `${NOTE_GLYPH}Notes · ${n}`; keep.dataset.notes = 'keep'; keep.setAttribute('aria-pressed', String(notesKept.has(o.id)));
-  const again = Object.assign(document.createElement('button'), { type: 'button', className: 'chip', title: 'Play the notes\' rings again' });
-  again.innerHTML = PULSE_GLYPH; again.dataset.notes = 'again'; again.setAttribute('aria-label', 'Play the notes\' rings again');
+  const keep = Object.assign(document.createElement('button'), { type: 'button', className: 'chip', title: `Show the chart's ${n} points of interest, and keep their marks until clicked again` });
+  keep.innerHTML = `${NOTE_GLYPH}Points of interest<span class="count" aria-label="${n}">${n}</span>`; keep.dataset.notes = 'keep'; keep.setAttribute('aria-pressed', String(notesKept.has(o.id)));
+  const again = Object.assign(document.createElement('button'), { type: 'button', className: 'chip', title: 'Play the rings round the points of interest again' });
+  again.innerHTML = PULSE_GLYPH(); again.dataset.notes = 'again'; again.setAttribute('aria-label', 'Play the rings round the points of interest again');
   return [keep, again];
 }
 sheetChips.addEventListener('click', (e) => {
@@ -2763,8 +2772,18 @@ let fadeIn = null; // the overlay id whose sheet fades in when next placed
 $('chartList').innerHTML = CHARTS.map(({ name, year, made, text, overlay }, i) => `<li class="chart"${overlay ? ` data-overlay="${overlay}"` : ''}><button type="button" class="thumb none" data-chart="${i}" data-to="view" title="The chart's frame">${skin}</button><div class="about"><span class="head"><button type="button" class="name" data-chart="${i}" data-to="view">${name}</button>${overlay ? `<button type="button" class="eye" data-chart="${i}" data-to="eye" aria-pressed="false" aria-label="Show ${name}" hidden>${EYE}</button>` : ''}</span><span class="where"><button type="button" class="city" data-chart="${i}" data-to="made">${made.title}</button>, ${year}</span>${overlay ? `<div class="slider fade" hidden><input type="range" min="0" max="1" step="0.05" aria-label="Opacity of ${name}'s sheet: lower lets the map show through"><output></output></div>` : ''}${caption(text)}</div></li>`).join('');
 // The sheets laid, bottom to top, and where each lies; `fade` the id of one that fades in as it is placed. `draw` false
 // when a flight follows at once: its landing draws them, and a render now would only be thrown away by its first frame.
+// A sheet lifted while the world stands turned to its up turns the world back to north up: at once, or, where a flight
+// follows in the same task (a chart's name, a place under the sheet), as that flight's bearing (docs/spec/design.md,
+// "The world turned to the chart").
+let northNext = false;
 function setSheets(overlays, sheets = style.sheets, fade = null, draw = true) {
   if (overlays.some((id) => !style.overlays.includes(id))) chartsFresh = false;
+  const lifted = sheetsShown().filter((o) => !overlays.includes(o.id));
+  if (lifted.some(turnedBy)) {
+    for (const o of lifted) turnedTo.delete(o.id);
+    northNext = true;
+    queueMicrotask(() => { if (northNext) { northNext = false; turnWorld(0); } });
+  }
   style = { ...style, overlays, sheets };
   fadeIn = fade;
   showOverlay(); showVoyage(); writeHash();
@@ -2907,7 +2926,8 @@ function goTo(target, deal = null) {
   if (deal == null) clearTable();
   cancelAnimationFrame(flight);
   pinTitle = null;
-  const from = view, to = clampView({ ...target, projection: view.projection, bearing: target.bearing ?? view.bearing }); // the world stays turned as it is
+  const from = view, to = clampView({ ...target, projection: view.projection, bearing: northNext ? 0 : target.bearing ?? view.bearing }); // the world stays turned as it is, unless a lifted sheet turned it
+  northNext = false;
   flightTo = to; lastFlight = { from, target };
   const plan = planFlight(from, to, { w: W, h: H, minZoom: ZOOM.min, ...fly });
   const ms = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : plan.ms, t0 = performance.now();
