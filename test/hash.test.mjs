@@ -60,7 +60,9 @@ const value = (page, id) => page.evaluate((i) => String(document.getElementById(
 const text = (page, id) => page.locator(`#${id}`).textContent();
 const openDrawer = (page) => page.locator('#open').click();
 // a slider moved by the user: the page reads it and writes the hash at once
-const slide = async (page, id, v) => { await openDrawer(page); await page.locator(`#${id}`).fill(String(v)); };
+// the control's own tab is shown first: the drawer keeps one tab's pane open at a time
+const reveal = (page, sel) => page.evaluate((q) => { const pane = document.querySelector(q)?.closest('[role=tabpanel]'); if (pane) document.getElementById(pane.getAttribute('aria-labelledby')).click(); }, sel);
+const slide = async (page, id, v) => { await openDrawer(page); await reveal(page, `#${id}`); await page.locator(`#${id}`).fill(String(v)); };
 
 // One page per scenario; a script error on the page fails it.
 const scenario = (name, hashAt, body, opts) => test(name, { skip, timeout: 120000 }, async () => {
@@ -224,6 +226,7 @@ scenario('regions: the slider round-trips', 'map=5.48/40.265/7.000', async (page
 scenario('regionset: the 1375 chip round-trips', 'map=4.00/40.000/16.000', async (page) => {
   assert.equal(await value(page, 'regionSet'), 'today');
   await openDrawer(page);
+  await reveal(page, '#regionSet');
   await page.locator('#regionSet [data-value="catalan-1375"]').click();
   const written = (await hash(page)).slice(1);
   assert.equal(new URLSearchParams(written).get('regionset'), 'catalan-1375');
