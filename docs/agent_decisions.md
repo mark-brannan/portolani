@@ -462,3 +462,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261104t103314z
 - The count chip is labelled 'Points of interest', the drawer's own name, as the user asked it be told apart from the chart's note Undo: rename the chip label in notesChips (public/page.js) Said: https://github.com/mark-brannan/portolani/pull/341#issuecomment-6626590470 ([#341](https://github.com/mark-brannan/portolani/pull/341))
+
+### 20261104t112456z
+- portolani#366: A/B as two builds (main live vs PR), no in-page toggle ([#366](https://github.com/mark-brannan/portolani/pull/366))
