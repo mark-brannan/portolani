@@ -477,3 +477,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261104t185847z
 - tuning panel hidden under navigator.webdriver so browser tests can tap the instrument row Undo: drop the webdriver line ([#367](https://github.com/mark-brannan/portolani/pull/367))
+
+### 20261104t202631z
+- Committed only the 1375 golden; 18 others that moved on this machine left out as noise Undo: commit the other regenerated goldens ([#317](https://github.com/mark-brannan/portolani/pull/317))
