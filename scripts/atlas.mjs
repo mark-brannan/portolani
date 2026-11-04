@@ -19,7 +19,8 @@ export const ROSE = { lon: -20.2, lat: 43.5 };
 export const ORIGINS = { rose: ROSE, zero: { lon: 0, lat: 0 } };
 
 // Page window: the doc's 1125 / 2^z degrees of longitude wide, on a 1600 x 1000 page.
-const WINDOW_DEG = 1125, ASPECT = 1000 / 1600;
+export const WINDOW_DEG = 1125;
+const ASPECT = 1000 / 1600;
 
 // Band 0 extends NOAA's ladder upward (its cell 4x the one below, the window at its first zoom about 9%
 // narrower than the cell), so zooms 4 to 6 have a grid too (#199). Below it is the world band, one sheet.
@@ -33,11 +34,11 @@ export const BANDS = [
 ];
 export const WIDEN_2X = 49.2; // 49 12'
 export const WIDEN_4X = 69.2; // 69 12'
+import { RAD, mercDeg } from './frame-box.mjs';
+
 export const NODES = 16;
 
 const EPS = 1e-9;
-const RAD = Math.PI / 180;
-const mercY = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * RAD) / 2)) / RAD;
 const unMercY = (y) => (2 * Math.atan(Math.exp(y * RAD)) - Math.PI / 2) / RAD;
 const round = (v) => Math.round(v * 1e9) / 1e9; // edges are n * 0.075 and the like; keep them clean
 // Web Mercator's square: the page ends here, and so does a row that would reach a pole.
@@ -64,7 +65,7 @@ export function widening(band, south, h) {
 export function viewBounds(view) {
   if (view.west != null) return { west: view.west, east: view.east, south: view.south, north: view.north };
   const span = WINDOW_DEG / 2 ** view.zoom;
-  const y = mercY(view.lat);
+  const y = mercDeg(view.lat);
   const half = (span * ASPECT) / 2;
   return {
     west: view.lon - span / 2, east: view.lon + span / 2,
@@ -87,10 +88,10 @@ export function sheetName(band, row, col) {
 // Mercator page. `radius` is a fraction of the sheet's height, measured in latitude at the centre.
 export function hiddenCircle(extent, radius = 0.5) {
   const lon = (extent.west + extent.east) / 2;
-  const lat = unMercY((mercY(extent.south) + mercY(extent.north)) / 2);
+  const lat = unMercY((mercDeg(extent.south) + mercDeg(extent.north)) / 2);
   const r = radius * (extent.north - extent.south); // degrees of latitude at the centre
   const R = r / Math.cos(lat * RAD); // the same length on the page, in degrees of longitude
-  const cy = mercY(lat);
+  const cy = mercDeg(lat);
   const nodes = [];
   for (let i = 0; i < NODES; i++) {
     const b = (i * 2 * Math.PI) / NODES; // bearing from north, clockwise
@@ -146,8 +147,8 @@ export const inShadow = (sheet, lon, lat) => !!sheet.shadow?.some((e) => within(
 // over the page window at zoom `from` (1125 / 2^from degrees across, 1000 / 1600 as tall). It is a property of
 // the sheet and its shadow, so it is the same from any view  (#147).
 export function territory(sheet, from) {
-  const e = sheet.extent, y0 = mercY(e.south), y1 = mercY(e.north);
-  const cuts = (sheet.shadow ?? []).filter((o) => overlaps(o, e)).map((o) => ({ x0: Math.max(o.west, e.west), x1: Math.min(o.east, e.east), y0: Math.max(mercY(o.south), y0), y1: Math.min(mercY(o.north), y1) }));
+  const e = sheet.extent, y0 = mercDeg(e.south), y1 = mercDeg(e.north);
+  const cuts = (sheet.shadow ?? []).filter((o) => overlaps(o, e)).map((o) => ({ x0: Math.max(o.west, e.west), x1: Math.min(o.east, e.east), y0: Math.max(mercDeg(o.south), y0), y1: Math.min(mercDeg(o.north), y1) }));
   // the extent's area less the union of the cuts, by the strips between their x edges
   const xs = [...new Set([e.west, e.east, ...cuts.flatMap((c) => [c.x0, c.x1])])].sort((a, b) => a - b);
   let area = 0;
@@ -196,7 +197,7 @@ export function cutOut(line, extents) {
 }
 
 function cutPiece(line, extents) {
-  const yOf = (lat) => mercY(Math.max(-PAGE_LAT, Math.min(PAGE_LAT, lat)));
+  const yOf = (lat) => mercDeg(Math.max(-PAGE_LAT, Math.min(PAGE_LAT, lat)));
   const rects = extents.map((e) => ({ x0: e.west, x1: e.east, y0: yOf(e.south), y1: yOf(e.north) }));
   const runs = [];
   let run = null;
@@ -229,7 +230,7 @@ export function splitAtSeam(line) {
     const a = line[i - 1], b = line[i];
     if (Math.abs(b[0] - a[0]) <= 180) { run.push(b); continue; }
     const east = a[0] > b[0], edge = east ? 180 : -180, bu = b[0] + (east ? 360 : -360);
-    const t = (edge - a[0]) / (bu - a[0]), ay = mercY(Math.max(-PAGE_LAT, Math.min(PAGE_LAT, a[1]))), by = mercY(Math.max(-PAGE_LAT, Math.min(PAGE_LAT, b[1])));
+    const t = (edge - a[0]) / (bu - a[0]), ay = mercDeg(Math.max(-PAGE_LAT, Math.min(PAGE_LAT, a[1]))), by = mercDeg(Math.max(-PAGE_LAT, Math.min(PAGE_LAT, b[1])));
     const lat = unMercY(ay + (by - ay) * t);
     run.push([edge, lat]);
     out.push(run);
@@ -240,7 +241,7 @@ export function splitAtSeam(line) {
 }
 
 function curatedCircle(c) {
-  const cy = mercY(c.lat), R = c.radius / Math.cos(c.lat * RAD), nodes = [];
+  const cy = mercDeg(c.lat), R = c.radius / Math.cos(c.lat * RAD), nodes = [];
   for (let i = 0; i < NODES; i++) {
     const b = (i * 2 * Math.PI) / NODES;
     nodes.push({ lon: c.lon + R * Math.sin(b), lat: unMercY(cy + R * Math.cos(b)) });
@@ -290,7 +291,7 @@ function curatedFor(band, b, zoom, rule) {
 // are replaced in the bands above.
 export const WORLD_BAND = { band: -1, name: 'world', from: 2, to: BANDS[0].from };
 export const WORLD_SHEET = (() => {
-  const R = mercY(ROSE.lat), nodes = []; // the ring's radius on the page, in degrees of longitude
+  const R = mercDeg(ROSE.lat), nodes = []; // the ring's radius on the page, in degrees of longitude
   for (let i = 0; i < NODES; i++) {
     const b = (i * 2 * Math.PI) / NODES;
     nodes.push(i ? { lon: ROSE.lon + R * Math.sin(b), lat: unMercY(R * Math.cos(b)) } : { lon: ROSE.lon, lat: ROSE.lat });

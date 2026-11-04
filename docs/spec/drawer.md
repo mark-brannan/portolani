@@ -16,6 +16,28 @@ Feature: Drawer open and close  (rose button `#open`, one of seven instrument bu
     When the user presses on the map
     Then the drawer shuts; at 520 px or narrower a press on the canvas leaves it open (so a control's effect is seen), though any other outside press or focus-out still shuts it [page.js:607-610 at main]
 
+Feature: The skull stays in reach while a drawer is in use  (`#memento`: the skull `#sweep` and its line `#mementoText`; the drawers that clear the map with it: the timeline `#timelinePanel`, opened by `#people` and `#voyages`)
+  Source: the user, 2026-11-04 (paraphrase): the skull and its memento mori must stay visible and clickable whenever a drawer that uses them to clear the map is open; the broom goes, and a quick, subtle wipe takes its place: a large, almost imperceptible, semi-translucent skull that flashes on the map and fades.
+  Tested by: test/drawers.test.mjs — 'the skull sits over the drawers, and the broom is gone' (offline, source only: the skull's z-index over `.drawer`, the drawer's `--memento-h` ceiling, no broom, the wipe element; the scenarios' hit tests and the panel staying open are not yet driven in a browser)
+  Scenario: the skull and its line stay in sight beside an open drawer
+    Given a viewport 1280 x 800 and the chart at `#person=ibn-battuta`
+    When the user clicks `#people`
+    Then `#timelinePanel` is open and its foot stops above `#memento`, however many lines the phrase takes
+    And `elementFromPoint` at the centre of `#sweep` returns the skull, and `#mementoText` lies wholly in the window, uncovered
+  Scenario: on a phone the skull rides above the sheet
+    Given a viewport 390 x 844 and the timeline open as a bottom sheet
+    When the user looks at the lower right
+    Then the skull and its line sit just above the sheet, clear of it, and a tap on the skull reaches it
+  Scenario: clearing the table leaves the drawer open
+    Given the timeline open with a person chosen and their cards on the table
+    When the user clicks `#sweep`
+    Then every card is put away and the person let go, the line moves on, and `#timelinePanel` stays open, so the next person can be chosen at once
+  Scenario: a faint skull wipes the map instead of a broom
+    Given cards on the table
+    When the user clicks `#sweep`
+    Then the skull itself, drawn large in the middle of the map at about a tenth opacity, fades in and out in about half a second as the cards go, then is gone
+    And no broom crosses the map; with reduced motion there is no wipe, and the cards simply go
+
 Feature: Projection  (hash `projection`, default `mercator`, 7 values: `mercator, plate-carree, miller, equal-area, orthographic, azimuthal-equidistant, stereographic`) [verified page.js:68-71, scene.mjs:222, 312]
   Scenario: chip round-trips
     Given the chart at the default view
@@ -155,11 +177,23 @@ Feature: Placement  (hash `placement`, default empty; values `historic`, `seeded
     # Mismatch: Default and Historic both parse to `historical: true`; they draw the same, differing only in the hash text (`''` vs `historic`). The chip tooltips describe two behaviours.
     # Re-roll is only reachable through the chip; `seed:<n>` is typed in the hash (negative allowed, `seed:-5` parses).
 
-Feature: Mountains  (chips `#mountains`, hash `mountains`, default `colour`, values `off|ink|colour`; scene `relief` `['marina']`/`['engraved']`/`[]`) [verified page.js:90-93, 126, 381, 524; relief.mjs:295-303]
+Feature: Mountains  (chips `#mountains`, hash `mountains`, default `colour`, values `off|ink|colour|shadow|me1937|me1954`; scene `relief` `['marina']`/`['engraved']`/`['shadow']`/`['me1937']`/`['me1954']`/`[]`) [verified page.js:90-93, 126, 381, 524; relief.mjs:295-303]
   Scenario: ink
     Given the chart at `#map=6.00/46.500/8.000`
-    When the user clicks "Ink" in Mountains
+    When the user clicks "Hatched" in Mountains
     Then the hash gains `mountains=ink` and range hatching is ink-only, no ochre wash (`engraved` has `light: land`, `shade: null`, relief.mjs:300 at main)
+  Scenario: shadow
+    Given the chart at `#map=6.00/46.500/8.000`
+    When the user clicks "Shadow" in Mountains
+    Then the hash gains `mountains=shadow` and each range is a flat ink shadow with a narrow lit left flank, a paper halo round every peak, no hatching
+  Scenario: me1937
+    Given the chart at `#map=6.00/46.500/8.000`
+    When the user clicks "M.E. 1937" in Mountains
+    Then the hash gains `mountains=me1937` and each range is pen alone: sharp stacked peaks, the east flank solid ink breaking into strokes at the base, skirt strokes off the west flank and small hatched foothill ridgelets trailing off the range
+  Scenario: me1954
+    Given the chart at `#map=6.00/46.500/8.000`
+    When the user clicks "M.E. 1954" in Mountains
+    Then the hash gains `mountains=me1954` and each range is hairline peaks, a few hatch strokes down the east flank stopping short of the foot, the west flank blank, no halo
   Scenario: off
     Given the chart at the same view
     When the user clicks "Off"

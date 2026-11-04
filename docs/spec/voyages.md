@@ -1,12 +1,18 @@
 # The voyages drawer
 
-Feature: Voyages drawer  (dividers button `#voyages` opens the timeline `#timelinePanel` at its lower lane, "Voyages"; the people button `#people` opens the same drawer at the upper lane; list `#voyageList` from `data/voyages/index.json`; hash `voyages=<id>[:<rrggbb>][~],...` (`~` marks a voyage hidden by its eye), `voyagewidth`, `voyagedraw`; the older `voyage=<id>` is read as a list of one) [verified against main, 2026-11-02]
+Feature: Voyages drawer  (dividers button `#voyages` opens the Voyages drawer `#voyagesPanel`, a vertical timeline `width: min(480px, 100vw - 24px)`, the Charts drawer's width; the people button `#people` opens the People drawer `#peoplePanel`, its own drawer of the same width (docs/spec/design.md, "People and voyages, each a vertical timeline"); list `#voyageList` from `data/voyages/index.json`; hash `voyages=<id>[:<rrggbb>][~],...` (`~` marks a voyage hidden by its eye), `voyagewidth`, `voyagedraw`; the older `voyage=<id>` is read as a list of one) [verified against this branch, 2026-11-04]
   Scenario: the list loads on the first open
     Given the chart with every drawer shut
     When the user clicks `#voyages`
-    Then `#voyageList` holds one row per id in `data/voyages/index.json`, in chronological order (the file's order breaks ties), each a bar over the voyage's years with a name button `[data-voyage]`, an eye `[data-eye]`, and its colour swatch once it is chosen
-    And the name button reads the voyage's `short` name and years, at every width, and its tooltip is the full `title` (the id if its file will not load)
+    Then `#voyageList` holds one row per id in `data/voyages/index.json`, top to bottom in chronological order (the file's order breaks ties), with an era heading `li.era` before the first row of each Sights era ("The ancient world 1500 BC – AD 500", "The medieval Indian Ocean and Asia 500 – 1450", "The age of discovery 1450 – 1800")
+    And each row reads, left to right: the name button `[data-voyage]` with its line sample, an eye `[data-eye]`, a play button `[data-play]`, and its colour swatch `[data-ink]` once it is chosen; a shown voyage's summary and Read more sit under its row
+    And the name button reads the voyage's `short` name and years, and its tooltip is the full `title` (the id if its file will not load)
+    And the drawer's tools head the list: the line-weight chips `#voyageWidth`, Clear, and the Drawn-in slider `#voyageDraw` with its sample line
     And nothing is shown: every eye reads `aria-pressed=false` and `voyages=` is absent from the hash
+  Scenario: no wider than the charts
+    Given the Voyages drawer open on a wide screen
+    When the user measures it against the Charts drawer
+    Then it is no wider, 480 px at most, and nothing in it scrolls sideways: a long name or summary wraps; on a phone it is a bottom sheet like the others
   Scenario: choosing a voyage by its name
     Given the voyages drawer open
     When the user clicks the name "Columbus"
@@ -29,6 +35,14 @@ Feature: Voyages drawer  (dividers button `#voyages` opens the timeline `#timeli
     Given "Columbus" and "Drake" shown
     When the user clicks the name "Columbus"
     Then Drake is hidden and Columbus is shown, the map flies to frame it and its line is drawn on again, every time the name is clicked
+  Scenario: the same eye and play under a person
+    Given a person chosen in the People drawer, their tile open under their row
+    When the user clicks the eye or the play in one of the voyage rows inside the tile
+    Then it is the Voyages drawer's eye and play for that voyage: the eye puts that one voyage off or on while the person stays chosen, the play sails it on its own calendar; the Voyages drawer's row for it shows the same state
+  Scenario: a migration is a voyage, and belongs to a people
+    Given `lapita-expansion` (`kind: migration`) in the index
+    When the user opens either drawer
+    Then it is the first row of the Voyages drawer, "Lapita c. 1500–800 BC", with an eye and a play like any voyage's, and its `who` names `lapita-people`, the first row of the People drawer, whose tile carries it
   Scenario: picking a colour
     Given "Columbus" chosen
     When the user picks `#1f4e8c` in its swatch
@@ -66,3 +80,35 @@ Feature: Voyages drawer  (dividers button `#voyages` opens the timeline `#timeli
     Given a voyage chosen
     When the user clicks one of its event marks on the map
     Then the flavour-text tile opens with the event's title, date, text and source; choosing another voyage, or none, shuts a tile whose mark is gone (page.js:1023, 1059)
+
+Feature: A migration plays on its own calendar  (the row's play button `[data-play]`, page.js `playVoyage`; scripts/voyages.mjs `calendarOf`, `penOn`, `playDateText`, `playPace`; scripts/scene.mjs `drawStream`, `drawCanoe`, `drawPot`; the play itself in design.md, "the play button sails the voyage on its own calendar")
+  Scenario: the Lapita stream sails from the Bismarcks to Samoa
+    Given the Lapita expansion in the voyages list
+    When the user presses its play button
+    Then the map frames the whole stream beside the open drawer, and the stream clears to its start at Mussau
+    And over the play's seconds (`voyageplay=`, 9 by default) its ribbon and chevrons run out from Mussau to Samoa, an outrigger canoe with a crab-claw sail at the front where the ship's ring would be
+    And the canoe reaches each settlement on that settlement's date: Watom c. 1350 BC, the Reef Islands c. 1200 BC, Fiji c. 1100 BC, Tonga c. 900 BC, Samoa c. 800 BC
+    And each settlement's pot appears as the canoe reaches it, and no sooner
+    And the branch to New Caledonia sets out from Efate as the main stream passes it, its own canoe sailing at the same time as the main one
+    And at the end the stream is whole, a chevron at each front, every pot drawn, and the band's button back to play
+  Scenario: every migration plays, branches at once
+    Given a migration (`kind: "migration"`) whose legs carry dates
+    When the user presses its play button
+    Then each leg is a branch on its own dates, under way at the same time as the others, and none sets out before an earlier leg's pen has reached its first point
+    And a leg dated by one date ("c. 1100 BC") arrives on that date, setting out as the earlier pen passes its start
+    And a waypoint at one of a leg's points is a stop the pen reaches on the waypoint's date
+    And the band names the stretch between the two settlements the latest branch is between, or the place every branch has landed at, waiting
+  Scenario: a waypoint is a settlement's pot
+    Given a migration shown, played or whole
+    Then each of its waypoints is a small ink pot with a stamped band at its shoulder, not the ring of a named voyage's event
+    And a click on the pot opens its tile as before
+  Scenario: the band tells a long calendar in years
+    Given a voyage whose calendar runs more than 50 years
+    When it plays
+    Then the band's date is "c." and a year, to the nearest 10 years past 200 years and the nearest 50 past 1,000 ("c. 1210 BC", "c. 1250")
+    And its pace reads "about 80 years a second" (the calendar's years over the play's seconds), and the strip's ends are bare years ("1500 BC", "800 BC")
+    And a calendar of 50 years or fewer keeps its dates as precise as its legs and its pace as "1,083 days in 9 s"
+  Scenario: reduced motion
+    Given the user prefers reduced motion
+    When the user presses a voyage's play button
+    Then the voyage shows whole at once with every mark, the band at its last day, and the strip still scrubs to any day

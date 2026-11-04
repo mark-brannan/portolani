@@ -13,6 +13,7 @@ import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import { syncStore } from '../lib/cells.mjs';
 import { resourceProvider, RESOURCE_TYPE } from '../lib/provider.mjs';
 import { packOf, CHART_OPTIONS } from '../app/chart.mjs';
+import { chartGeo } from '../geo.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url)), ROOT = join(HERE, '..', '..');
 const adapterURL = pathToFileURL(join(HERE, '..', 'app', 'enc-provider.js')).href;
@@ -56,10 +57,11 @@ function serve(provider) {
 }
 
 const empty = { type: 'FeatureCollection', features: [] };
+const shipped = chartGeo(ROOT);
 const env = {
   createCanvas,
-  // no world geo: every geo/ file is empty, as the webapp serves it
-  readJSON: async (p) => (p.startsWith('geo/') ? empty : p.startsWith('packs/') ? packOf(p.split('/')[1], JSON.parse(readFileSync(join(ROOT, p), 'utf8'))) : JSON.parse(readFileSync(join(ROOT, p), 'utf8'))),
+  // of the world geo only the ranges and peaks the build ships; every other geo/ file is empty, as the webapp serves it
+  readJSON: async (p) => (p.startsWith('geo/') ? shipped[p] ?? empty : p.startsWith('packs/') ? packOf(p.split('/')[1], JSON.parse(readFileSync(join(ROOT, p), 'utf8'))) : JSON.parse(readFileSync(join(ROOT, p), 'utf8'))),
   loadImage: (p) => loadImage(join(ROOT, p)),
   loadFont: async (family) => { GlobalFonts.registerFromPath(join(ROOT, 'test', 'fixtures', 'IMFeENrm28P.ttf'), family); },
 };
@@ -89,11 +91,11 @@ test('US3WA46M through the provider draws the Seattle view, with its depth', asy
   const b = SEATTLE;
   const view = { lon: (b.lonMin + b.lonMax) / 2, lat: Math.atan(Math.sinh((merc(b.latMin) + merc(b.latMax)) / 2)) / RAD,
     zoom: Math.log2((2 * Math.PI * H) / (512 * (merc(b.latMax) - merc(b.latMin)) * 1.02)) };
-  const draw = async (depth) => {
-    const { scene, data, bg } = await createScene(env, { ...CHART_OPTIONS, view, depth });
+  const draw = async (depth, at = view) => {
+    const { scene, data, bg } = await createScene(env, { ...CHART_OPTIONS, view: at, depth });
     const c = createCanvas(1600, 1000), g = c.getContext('2d');
     drawScene(g, scene, data, bg, { scale: 1, x: 0, y: 0 });
-    return { c, data };
+    return { c, data, scene };
   };
   const withDepth = await draw(true), without = await draw(false);
   assert.ok(withDepth.data.land.length > 10, `land from the cell: ${withDepth.data.land.length} polygons`);
@@ -106,6 +108,25 @@ test('US3WA46M through the provider draws the Seattle view, with its depth', asy
   for (let i = 0; i < a.length; i += 4) if (a[i] !== z[i] || a[i + 1] !== z[i + 1] || a[i + 2] !== z[i + 2]) differ++;
   assert.ok(differ > 20000, `depth paints the sea: ${differ} px differ`);
   if (process.env.UPDATE_GOLDEN) writeFileSync(join(HERE, 'golden', 'seattle.png'), withDepth.c.toBuffer('image/png'));
+  // the whole cell, as the webapp opens on it: Puget Sound, the Olympics and the Cascades at its edges
+  const [w, s, e, n] = c.bbox, cell = { lon: (w + e) / 2, lat: Math.atan(Math.sinh((merc(s) + merc(n)) / 2)) / RAD,
+    zoom: Math.min(Math.log2((2 * Math.PI * H) / (512 * (merc(n) - merc(s)))), Math.log2((2 * Math.PI * 1600) / (512 * (e - w) * RAD))) };
+  const whole = await draw(true, cell);
+  // the chart's mountains on the cell's land: its style along the ranges the build ships, and the hills
+  assert.ok(whole.scene.relief?.peaks.length > 10, `mountains on the cell's land: ${whole.scene.relief?.peaks.length}`);
+  assert.ok(shipped['geo/ranges-10m.json'].features.length > 100 && shipped['geo/peaks-10m.json'].features.length > 100, 'the build ships the ranges and the peaks');
+  // a landmark peak on the cell's land: the shipped peaks hold none inside this cell, so one is stood on the Olympic
+  // Peninsula, and the scene draws it and a tap on its drawing finds its name and height
+  const stand = { type: 'Feature', properties: { name: 'Test Summit', elevation: 1800, min_zoom: 0 }, geometry: { type: 'Point', coordinates: [-123.2, 47.8] } };
+  const peakEnv = { ...env, readJSON: (p) => (p === 'geo/peaks-10m.json' ? Promise.resolve({ type: 'FeatureCollection', features: [stand] }) : env.readJSON(p)) };
+  const { scene: ps, data: pd } = await createScene(peakEnv, { ...CHART_OPTIONS, view: cell, depth: true });
+  const { drawnPeaks, peakHits, viewProjection } = await import('../../scripts/scene.mjs');
+  const drawn = drawnPeaks(ps, pd);
+  assert.ok(drawn.length >= 1, `the landmark peak is drawn on the cell's land: ${drawn.length}`);
+  const proj = viewProjection(cell), [hit] = peakHits(drawn, proj, { x0: 0, y0: 0, x1: 1600, y1: 1000 });
+  assert.equal(hit?.tile.title, 'Test Summit');
+  assert.match(hit.tile.date, /1,800 m/);
+  if (process.env.UPDATE_GOLDEN) writeFileSync(join(HERE, 'golden', 'puget.png'), whole.c.toBuffer('image/png'));
 });
 
 test('a cell that will not convert is skipped with a warning, and the rest convert', async (t) => {

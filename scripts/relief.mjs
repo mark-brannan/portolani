@@ -2,12 +2,13 @@
 // set, a table of styles (RELIEF), a placement (reliefOf) and a pick by zoom (BANDS). Everything is
 // in pixels after projection, so a pen stays one width at every zoom.
 //
-// There is no elevation in the data, so the land is read for its distance from the sea: a range is
-// seeded in a lon/lat cell, climbs to the inland ridge and runs along it; a far view holds a few
-// long ranges on the great land masses, a close one more and smaller, and from HILL_ZOOM hills
-// between them. A slow seeded noise over lon/lat says which country is mountainous, so the same
-// regions stay mountainous as the view zooms. The distance field is laid on the map's own pixel
-// grid and every seed comes from its cell, so a pan does not reshuffle the land.
+// The mountains stand on Natural Earth's mountain ranges (ranges.mjs): each range's ridges run along
+// its Range/mtn polygon and the peaks heap along them, the great ranges from afar and the rest
+// closer in. A view with no range in frame guesses, as the chart once did everywhere: the land is
+// read for its distance from the sea, a range is seeded in a lon/lat cell, climbs to the inland
+// ridge and runs along it, and a slow seeded noise over lon/lat says which country is mountainous.
+// Hills are seeded on that same noise from HILL_ZOOM. The distance field is laid on the map's own
+// pixel grid and every seed comes from its cell, so a pan does not reshuffle the land.
 //
 // Mountains are the ranges, drawn in the style selected (RELIEF_STYLES; several mix per range by
 // seed). Hills are the clusters between them, which come back as humps for the scene to stand the
@@ -17,6 +18,8 @@
 
 import { hatch, pen } from 'coast-wright';
 import { frameBox } from './frame-box.mjs';
+import { mulberry32 } from './rng.mjs';
+import { chamfer, rangesIn, ridgesOf } from './ranges.mjs';
 
 const RAD = Math.PI / 180;
 const CELL = 16; // distance field cell, px
@@ -38,14 +41,6 @@ export const RELIEF_ZOOM = 2; // from here the land is big enough to hold a rang
 
 // ---------------------------------------------------------------- seeds
 
-function mulberry32(seed) {
-  return () => {
-    seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
 const hash = (...n) => n.reduce((h, v) => Math.imul(h ^ (v | 0), 16777619), 2166136261) | 0;
 const mod = (a, n) => ((a % n) + n) % n;
 
@@ -83,20 +78,9 @@ function depthField({ proj, land, createCanvas, w, h }) {
     g.closePath();
   }
   g.fill('evenodd');
-  const alpha = g.getImageData(0, 0, cols, rows).data;
-  const d = new Float32Array(cols * rows);
-  for (let i = 0; i < d.length; i++) d[i] = alpha[i * 4 + 3] > 40 ? 1e9 : 0;
-  const D = Math.SQRT2, relax = (i, j, wt) => { if (d[j] + wt < d[i]) d[i] = d[j] + wt; };
-  for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
-    const i = y * cols + x;
-    if (x > 0) relax(i, i - 1, 1);
-    if (y > 0) { relax(i, i - cols, 1); if (x > 0) relax(i, i - cols - 1, D); if (x < cols - 1) relax(i, i - cols + 1, D); }
-  }
-  for (let y = rows - 1; y >= 0; y--) for (let x = cols - 1; x >= 0; x--) {
-    const i = y * cols + x;
-    if (x < cols - 1) relax(i, i + 1, 1);
-    if (y < rows - 1) { relax(i, i + cols, 1); if (x < cols - 1) relax(i, i + cols + 1, D); if (x > 0) relax(i, i + cols - 1, D); }
-  }
+  const alpha = g.getImageData(0, 0, cols, rows).data, inside = new Uint8Array(cols * rows);
+  for (let i = 0; i < inside.length; i++) inside[i] = alpha[i * 4 + 3] > 40 ? 1 : 0;
+  const d = chamfer(inside, cols, rows, false); // outside the raster counts as land
   // a cell's distance is to its centre; land cells are at least half a cell deep
   return (px, py) => {
     const cx = Math.floor((px - x0) / CELL), cy = Math.floor((py - y0) / CELL);
@@ -173,11 +157,80 @@ function peakOf(x, y, w, h, rnd) {
   return { x, y, w, h, lean: (rnd() - 0.5) * 0.25, jag: [rnd(), rnd(), rnd(), rnd(), rnd(), rnd()] };
 }
 
+// A ridge's peaks, heaped: one on each point of `kept` ([x, y, swell, rnd], swell 0..1 the tallest,
+// rnd the point's own random stream or none for `rnd`), with peaks behind to either side, more of
+// them where it swells, and there a lower one in front.
+function heap(kept, P, shared) {
+  const mine = [];
+  for (const [x, y, swell, own] of kept) {
+    const rnd = own ?? shared;
+    const ph = P * swell * (0.85 + 0.3 * rnd());
+    mine.push(peakOf(x + (rnd() - 0.5) * P * 0.3, y, ph * (1.7 + 0.4 * rnd()), ph, rnd));
+    for (const side of [-1, 1]) {
+      if (rnd() > swell * 0.85) continue;
+      const bh = ph * (0.7 + 0.25 * rnd());
+      mine.push(peakOf(x + side * ph * (0.7 + 0.3 * rnd()), y - ph * (0.3 + 0.25 * rnd()), bh * 1.8, bh, rnd));
+    }
+    if (swell > 0.9 && rnd() < 0.5) {
+      const fh = ph * (0.55 + 0.15 * rnd());
+      mine.push(peakOf(x + (rnd() - 0.5) * P * 1.2, y + ph * 0.35, fh * 1.7, fh, rnd));
+    }
+  }
+  return mine;
+}
+
+// A great range stands taller than a lesser one, by Natural Earth's scalerank (1 the greatest).
+const rankScale = (rank) => 1 - 0.06 * (Math.min(6, Math.max(1, rank)) - 1);
+
+// The ranges' spines in a view, in px: each ridge of each range shown (ranges.mjs) projected and cut
+// at the seam, then stepped along from its start every `step` px, so a pan moves every point with the
+// map. A side ridge stands only where it is far enough from its neighbours to read as its own ridge.
+// Each spine is { id, pts: [[x, y, swell], ...], scale }.
+function rangeSpines(view, P, step) {
+  const { proj, w, h } = view, k = proj.k, out = [];
+  const box = frameBox(proj, w, h, SEED_PAD);
+  const inFrame = (x, y) => x > -SEED_PAD && x < w + SEED_PAD && y > -SEED_PAD && y < h + SEED_PAD;
+  for (const r of rangesIn(view.ranges, proj.zoom, box)) {
+    ridgesOf(r, view.createCanvas).forEach((ridge, ri) => {
+      if (ri > 0 && ridge.width * k < P * 4) return;
+      const runs = [[]];
+      for (const [lon, lat, depth] of ridge.pts) {
+        if (proj.visible && !proj.visible(lon, lat)) { runs.push([]); continue; }
+        const x = proj.x(lon, lat), y = proj.y(lat, lon), run = runs.at(-1), prev = run.at(-1);
+        if (prev && Math.hypot(x - prev[0], y - prev[1]) > Math.PI * k * 0.5) runs.push([]);
+        runs.at(-1).push([x, y, Math.min(1, depth / ridge.width)]);
+      }
+      runs.filter((run) => run.length).forEach((run, ui) => {
+        const len = [0];
+        for (let i = 1; i < run.length; i++) len.push(len[i - 1] + Math.hypot(run[i][0] - run[i - 1][0], run[i][1] - run[i - 1][1]));
+        const L = len.at(-1), pts = [];
+        // a ridge shorter than a step stands one peak, midway
+        const marks = L < step ? [L / 2] : Array.from({ length: Math.floor(L / step) + 1 }, (_, i) => i * step + (L - Math.floor(L / step) * step) / 2);
+        let j = 0;
+        for (const s of marks) {
+          while (j < run.length - 2 && len[j + 1] < s) j++;
+          const a = run[j], b = run[Math.min(j + 1, run.length - 1)], t = len[j + 1] > len[j] ? (s - len[j]) / (len[j + 1] - len[j]) : 0;
+          const x = a[0] + (b[0] - a[0]) * t, y = a[1] + (b[1] - a[1]) * t, depth = a[2] + (b[2] - a[2]) * t;
+          // each point its own stream, so a point cut at the frame's edge leaves the rest as they were
+          if (inFrame(x, y)) pts.push([x, y, 0.6 + 0.4 * Math.sqrt(Math.max(0, depth)), mulberry32(hash(r.id, ri, ui, Math.round(s / step)))]);
+        }
+        if (pts.length) out.push({ id: hash(r.id, ri, ui), pts, scale: rankScale(r.rank) });
+      });
+    });
+  }
+  return out;
+}
+
 // What a view holds: { peaks, humps }, each { x, y, w, h, style, ... } in screen px, its base at
 // (x, y); a peak's `style` is one of `view.styles`, a hump (a hill, only when `view.hills`) is
-// 'marina'. `view` is { proj, land, createCanvas, w, h, styles, hills }: the projection, the land in
-// lon/lat, a canvas maker, the canvas size, the styles the mountains are drawn in (RELIEF_STYLES; none
-// draws no mountain) and whether hills are wanted.
+// 'marina'. `view` is { proj, land, ranges, createCanvas, w, h, styles, hills }: the projection, the
+// land in lon/lat, the mountain ranges (ranges.mjs's rangesOf; none falls back to the land's
+// distance from the sea), a canvas maker, the canvas size, the styles the mountains are drawn in
+// (RELIEF_STYLES; none draws no mountain) and whether hills are wanted.
+//
+// The mountains run along the ranges in frame. A view with none of them in frame (or no ranges at
+// all) guesses its ranges as it always has: seeded in lon/lat cells on the mountainous ground of the
+// noise, each climbing to the inland ridge and running along it.
 export function reliefOf(view) {
   const { proj, w, h } = view, band = bandOf(proj.zoom);
   const styles = view.styles ?? [];
@@ -186,7 +239,15 @@ export function reliefOf(view) {
   const depth = depthField(view), P = band.peak, min = P * 0.9;
   const peaks = [], spines = [];
   const near = (x, y, r) => spines.some((s) => s.some(([sx, sy]) => Math.hypot(sx - x, sy - y) < r));
-  for (const c of cellsOf(proj, w, h, band.cell, SEED_PAD, 1)) {
+  // the ranges in frame, the greatest first; a point at sea (a polygon past the coast) stands nothing
+  for (const s of view.ranges?.length ? rangeSpines(view, P, P * 0.8) : []) {
+    const kept = s.pts.filter(([x, y]) => depth(x, y) > 0 && !near(x, y, P * 2.2));
+    if (!kept.length) continue;
+    spines.push(kept);
+    const style = styles.length && styleOf(mulberry32(s.id)(), styles), mine = heap(kept, P * s.scale);
+    if (style) peaks.push(...mine.map((p) => ({ ...p, style })));
+  }
+  if (!spines.length) for (const c of cellsOf(proj, w, h, band.cell, SEED_PAD, 1)) {
     if (noise(c.lon, c.lat) < 1 - band.share) continue;
     const sx = proj.x(c.lon, c.lat), sy = proj.y(c.lat, c.lon);
     if (depth(sx, sy) < min) continue;
@@ -196,23 +257,9 @@ export function reliefOf(view) {
     const kept = spine.filter(([x, y]) => !near(x, y, P * 2.2));
     if (kept.length < 2) continue;
     spines.push(kept);
-    const style = styles.length && styleOf(c.key, styles), mine = [];
+    const style = styles.length && styleOf(c.key, styles);
     // tallest midway, lower toward the ends
-    kept.forEach(([x, y], i) => {
-      const t = kept.length > 1 ? i / (kept.length - 1) : 0.5, swell = 0.6 + 0.4 * Math.sin(Math.PI * t);
-      const ph = P * swell * (0.85 + 0.3 * c.rnd());
-      mine.push(peakOf(x + (c.rnd() - 0.5) * P * 0.3, y, ph * (1.7 + 0.4 * c.rnd()), ph, c.rnd));
-      // the heap: peaks behind to either side, more of them midway, and there a lower one in front
-      for (const side of [-1, 1]) {
-        if (c.rnd() > swell * 0.85) continue;
-        const bh = ph * (0.7 + 0.25 * c.rnd());
-        mine.push(peakOf(x + side * ph * (0.7 + 0.3 * c.rnd()), y - ph * (0.3 + 0.25 * c.rnd()), bh * 1.8, bh, c.rnd));
-      }
-      if (swell > 0.9 && c.rnd() < 0.5) {
-        const fh = ph * (0.55 + 0.15 * c.rnd());
-        mine.push(peakOf(x + (c.rnd() - 0.5) * P * 1.2, y + ph * 0.35, fh * 1.7, fh, c.rnd));
-      }
-    });
+    const mine = heap(kept.map(([x, y], i) => [x, y, 0.6 + 0.4 * Math.sin(Math.PI * (kept.length > 1 ? i / (kept.length - 1) : 0.5))]), P, c.rnd);
     if (style) peaks.push(...mine.map((p) => ({ ...p, style })));
   }
   const humps = [];
@@ -255,7 +302,7 @@ function peakShape({ x, y, w, h, lean, jag }) {
   const right = [at(a, 1), at(a + 0.06, 0.95), at(a + 0.12 + j(3, 0.05), 0.68 + j(4, 0.1)), at(0.2 + j(4, 0.05), 0.5),
     at(0.27, 0.46 + j(5, 0.1)), at(0.37 + j(5, 0.05), 0.24), at(0.5, 0)];
   const crest = [at(a, 1), at(a + 0.02 + j(2, 0.04), 0.62), at(0.04 + j(3, 0.06), 0.3), at(0.08, 0)];
-  return { outline: [...left, ...right.slice(1)], flanks: [...left, ...right.slice(1)], shadow: [...right, ...crest.slice().reverse().slice(0, -1)], crest, slope: Math.atan2(h, w * (0.5 - a)) };
+  return { outline: [...left, ...right.slice(1)], lit: left, h, w, flanks: [...left, ...right.slice(1)], shadow: [...right, ...crest.slice().reverse().slice(0, -1)], crest, slope: Math.atan2(h, w * (0.5 - a)) };
 }
 
 // A rounded hump, a little lopsided, its shadow the right shoulder.
@@ -270,13 +317,102 @@ function humpShape({ x, y, w, h, lean }) {
 // its own x so no stroke is taken for a seam.
 const asIs = ([lon, lat]) => [lon, lat];
 
+// After the Middle-earth map (mapeffects.co, "Tolkien mountains"): the shadow a flat ink fill that stops flat
+// at the base, only a narrow strip of the left flank left lit, and a halo of paper round every peak, so one
+// standing in front of another's shadow keeps its edge. The light stays on the left, as the other looks.
+function flatPeak(g, s, { ink, width, paper, halo, lit }) {
+  const path = (pts) => { g.beginPath(); pen(g, [pts], { close: true }); };
+  path(s.outline); g.fillStyle = paper; g.strokeStyle = paper; g.lineWidth = halo * 2; g.stroke(); g.fill();
+  path(s.outline); g.fillStyle = ink; g.fill();
+  if (s.lit) { // the lit strip: the left flank and the same flank drawn in, wide at the base, none at the apex
+    const base = s.lit[0][1];
+    const inner = s.lit.map(([x, y]) => [x + s.w * lit * Math.min(1, Math.max(0, 1 - (base - y) / s.h)), y]).reverse();
+    path([...s.lit, ...inner.slice(1)]); g.fillStyle = paper; g.fill();
+  }
+  g.beginPath(); pen(g, [s.flanks]); g.strokeStyle = ink; g.lineWidth = width; g.stroke();
+}
+
+// After Tolkien's Wilderland map (1937) and Christopher Tolkien's Middle-earth map (1954), pen alone: a sharp apex,
+// flanks that break in two or three straight pitches, no rounded crag. The shadow is the whole
+// right flank, back to a crest line that runs down from the apex.
+function sharpShape({ x, y, w, h, lean, jag }) {
+  const a = lean * 0.6, j = (i, s) => (jag[i] - 0.5) * s, at = (u, v) => [x + u * w, y - v * h];
+  const left = [at(-0.5, 0), at(-0.34 + j(0, 0.08), 0.3 + j(1, 0.12)), at(-0.24 + j(1, 0.04), 0.42), at(-0.1 + a + j(2, 0.06), 0.74 + j(2, 0.08)), at(a, 1)];
+  const right = [at(a, 1), at(a + 0.09 + j(3, 0.04), 0.7 + j(4, 0.1)), at(0.17 + j(4, 0.06), 0.48 + j(5, 0.08)), at(0.3 + j(5, 0.06), 0.26), at(0.5, 0)];
+  const crest = [at(a, 1), at(a + 0.03 + j(3, 0.04), 0.6), at(0.03 + j(4, 0.04), 0.28), at(0.06, 0)];
+  return { outline: [...left, ...right.slice(1)], lit: left, h, w, flanks: [...left, ...right.slice(1)], shadow: [...right, ...crest.slice().reverse().slice(0, -1)], crest, slope: Math.atan2(h, w * (0.5 - a)) };
+}
+
+// The foothill ridgelets Christopher Tolkien trails off a range: short wavy spurs below and beside a
+// peak, each a sawtooth of a few bumps running away from the range, in px. Seeded from the peak's
+// own crags, so they sit still under a pan.
+function spursOf({ x, y, w, h, jag }) {
+  const rnd = mulberry32(hash(...jag.map((v) => v * 1e6)));
+  const spurs = [], n = Math.floor(rnd() * 3); // none, one or two
+  for (let i = 0; i < n; i++) {
+    const side = rnd() < 0.65 ? -1 : 1; // more on the lit side, where the Misty Mountains' western foothills fan out
+    const sx = x + side * w * (0.4 + 0.3 * rnd()), sy = y + h * (0.1 + 0.3 * rnd());
+    const dir = 0.15 + 0.4 * rnd(), len = w * (0.45 + 0.35 * rnd()), bumps = 2 + Math.floor(rnd() * 2), amp = h * (0.11 + 0.07 * rnd());
+    const pts = [];
+    for (let k = 0; k <= bumps * 2; k++) {
+      const t = k / (bumps * 2), up = k % 2 ? amp * (0.7 + 0.6 * rnd()) : 0;
+      pts.push([sx + side * len * t * Math.cos(dir), sy + len * t * Math.sin(dir) * 0.5 - up]);
+    }
+    spurs.push(pts);
+  }
+  return spurs;
+}
+
+// A pen peak: paper under it (it hides what stands behind), the shadow flank hatched densely in
+// strokes running down the slope and darkest under the crest, the flanks inked, then its spurs: each a
+// wavy line with short strokes under its right side.
+function penPeak(g, s, { ink, width, paper, hatching, spur }) {
+  g.beginPath(); pen(g, [s.outline], { close: true }); g.fillStyle = paper; g.fill();
+  g.fillStyle = ink;
+  // solid from the apex down most of the flank, as the Misty Mountains' east wall prints, breaking into
+  // strokes toward the base
+  g.save(); g.beginPath(); pen(g, [s.shadow], { close: true }); g.clip();
+  const top = s.shadow[0][1];
+  if (hatching.solid) g.fillRect(s.outline[0][0] - s.w, top - 2, s.w * 3, s.h * hatching.solid + 2);
+  // the strokes run from the ridge down the flank and stop short of the foot (hatching.foot of the height)
+  g.beginPath(); g.rect(s.outline[0][0] - s.w, top - 2, s.w * 3, s.h * hatching.foot + 2); g.clip();
+  hatch(g, [[s.shadow]], asIs, { angle: s.slope + hatching.turn, gap: hatching.gap, color: ink, width: hatching.width, alpha: hatching.alpha, centralMeridian: s.outline[0][0] });
+  g.restore();
+  g.strokeStyle = ink; g.lineWidth = width;
+  g.beginPath(); pen(g, [s.flanks]); g.stroke();
+  g.lineWidth = width * 0.75;
+  g.beginPath(); pen(g, [s.crest]); g.stroke();
+  if (!spur) return;
+  // the skirt: strokes sloping away from the lit flank's foot, the western foothills' fan
+  g.lineWidth = width * 0.5;
+  g.beginPath();
+  for (const [i, f] of [0.2, 0.42, 0.64].entries()) {
+    const k = 1 + i * 0.5, [bx, by] = s.lit[Math.min(s.lit.length - 2, Math.floor(f * s.lit.length))];
+    g.moveTo(bx - s.w * 0.02, by + s.h * 0.02); g.lineTo(bx - s.w * (0.12 + 0.06 * k), by + s.h * (0.1 + 0.05 * k));
+  }
+  g.stroke();
+  for (const pts of s.spurs) {
+    g.lineWidth = width * 0.7;
+    g.beginPath(); pen(g, [pts]); g.stroke();
+    g.lineWidth = width * 0.55;
+    g.beginPath();
+    for (let i = 1; i < pts.length; i += 2) { // under each bump's right side, two strokes down the slope
+      const [bx, by] = pts[i], [nx, ny] = pts[i + 1] ?? pts[i];
+      for (const f of [0.3, 0.65]) { const px = bx + (nx - bx) * f, py = by + (ny - by) * f; g.moveTo(px, py); g.lineTo(px + spur * 0.5, py + spur); }
+    }
+    g.stroke();
+  }
+}
+
 // Each shape back to front: washed, its shadow side darker and hatched with short ink strokes down
 // the slope, then the flanks and crest inked. `wash` null leaves the paper showing (an engraving).
 function drawShapes(g, shapes, lookOf) {
   g.save();
   g.lineJoin = 'round'; g.lineCap = 'round';
   for (const s of shapes) {
-    const { ink, light, shade, hatching, width } = lookOf(s.style);
+    const { ink, light, shade, hatching, width, flat, penned } = lookOf(s.style);
+    if (flat) { flatPeak(g, s, { ink, width, ...flat }); continue; }
+    if (penned) { penPeak(g, s, { ink, width, hatching, ...penned }); continue; }
     if (light) { g.beginPath(); pen(g, [s.outline], { close: true }); g.fillStyle = light; g.fill(); }
     if (shade) { g.beginPath(); pen(g, [s.shadow], { close: true }); g.fillStyle = shade; g.fill(); }
     hatch(g, [[s.shadow]], asIs, { angle: s.slope + 0.35, gap: hatching.gap, color: ink, width: hatching.width, alpha: hatching.alpha, centralMeridian: s.outline[0][0] });
@@ -289,7 +425,7 @@ function drawShapes(g, shapes, lookOf) {
 }
 
 const byDepth = (relief) => [
-  ...relief.peaks.map((p) => ({ y: p.y, shape: () => ({ ...peakShape(p), style: p.style }) })),
+  ...relief.peaks.map((p) => ({ y: p.y, shape: () => (SHARP.has(p.style) ? { ...sharpShape(p), spurs: spursOf(p), style: p.style } : { ...peakShape(p), style: p.style }) })),
   ...relief.humps.map((p) => ({ y: p.y, shape: () => ({ ...humpShape(p), style: p.style }) })),
 ].sort((a, b) => a.y - b.y).map((s) => s.shape());
 
@@ -300,7 +436,19 @@ const LOOKS = {
   marina: ({ ink }) => ({ ink, light: '#d2965a', shade: 'rgba(150, 70, 32, 0.7)', hatching: { gap: 2.4, width: 0.7, alpha: 0.8 }, width: 1.1 }),
   // the same in ink alone, as the uncoloured prints were
   engraved: ({ ink, land }) => ({ ink, light: land, shade: null, hatching: { gap: 2.2, width: 0.7, alpha: 0.9 }, width: 1.1 }),
+
+  // after the Middle-earth map: flat ink shadows, a narrow lit side, a paper halo round each peak
+  shadow: ({ ink, land, parchment }) => ({ ink, light: null, shade: null, hatching: null, width: 1.1, flat: { paper: parchment ?? land, halo: 2, lit: 0.16 } }),
+  // after Tolkien's own Wilderland map (1937), pen alone: sharp stacked peaks, the east flank hatched
+  // nearly solid, foothill ridgelets trailing off the range
+  me1937: ({ ink, land, parchment }) => ({ ink, width: 0.9, hatching: { gap: 1.7, width: 0.7, alpha: 0.9, solid: 0.8, foot: 1, turn: 0.5 }, penned: { paper: parchment ?? land, spur: 2.2 } }),
+  // after Christopher Tolkien's 1954 map of Middle-earth: a hairline peak, the east flank hatched in a few strokes
+  // from the ridge that stop short of the foot, the west flank blank, no halo, no spurs
+  me1954: ({ ink, land, parchment }) => ({ ink, width: 0.8, hatching: { gap: 1.9, width: 0.75, alpha: 0.95, solid: 0, foot: 0.8, turn: 0.6 }, penned: { paper: parchment ?? land, spur: 0 } }),
 };
+
+// the styles drawn with the sharp pen profile, their peaks trailing spurs
+const SHARP = new Set(['me1937', 'me1954']);
 
 export const RELIEF_STYLES = ['off', ...Object.keys(LOOKS)];
 

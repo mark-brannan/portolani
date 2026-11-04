@@ -3,7 +3,7 @@
   "kind": "migration",
   "title": "The settlement of East Polynesia: the long pause, then the burst, c. 1000–1300",
   "short": "East Polynesia",
-  "who": [],
+  "who": ["east-polynesian-voyagers"],
   "when": "c. 1000–1300",
   "summary": "After nearly two thousand years in West Polynesia, voyagers in double-hulled canoes went east to the Cook and Society Islands about 1000–1100, and from there, in some two centuries, to every corner of the Polynesian Triangle: Hawaiʻi, Rapa Nui and Aotearoa, and on to the Chathams and the subantarctic Auckland Islands. Oral traditions name founding navigators, such as Kupe for Aotearoa and Hotu Matuʻa for Rapa Nui; they are not datable people.",
   "sources": ["wilmshurst-2011-east-polynesia", "polynesian-navigation", "wairau-bar", "enderby-island", "ioannidis-2020-polynesia-americas", "pre-columbian-contact"],
