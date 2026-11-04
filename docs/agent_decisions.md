@@ -471,3 +471,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261104t185815z
 - charts' sheets keep the effect chips; lines fade only, cards exit stage left Undo: apply chips differently ([#367](https://github.com/mark-brannan/portolani/pull/367))
+
+### 20261104t185831z
+- phrase envelope defaults to Even, growth x1.14 as before Undo: default words chip to quick ([#367](https://github.com/mark-brannan/portolani/pull/367))
