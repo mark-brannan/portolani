@@ -510,3 +510,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261104t223924z
 - sights pictures: Pukapuka Puka-Puka.JPG dropped, same built name as Puka_Puka.JPG ([#374](https://github.com/mark-brannan/portolani/pull/374))
+
+### 20261104t224739z
+- pictureName hash only for an empty slug; review asked for any slug with no letter; kept because Siraf builds to 4.jpg on #374 ([#373](https://github.com/mark-brannan/portolani/pull/373))
