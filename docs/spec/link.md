@@ -7,7 +7,7 @@
 - `#status` text `z<zoom>: load N ms, placement + parchment N ms, draw N ms (total N ms)` after each placement [page.js:540].
 - Canvas pixels of `#map` (1600 x 1000 backing store) for visible effects.
 - Default view when the hash has no valid `map`: `{ zoom 5.48, lat 40.265, lon 7 }` (measured: `DEFAULT_VIEW`, scene.mjs:304, node import).
-- Hash key order as written: `map, projection, sprites, townsize, names, rhumb, continents, regions, regionszoom, autotitle, title, land, islands, rivers, lakes, reefs, playas, mountains, trees, placement, voyage, overlay, overlayopacity, compare, comparepos, seas, scaleborder, scale, cartouche, scalepos, density, ink, parchment` [page.js:119-146; `voyage` from #205, `cartouche` and `scalepos` from #219, none of them specified here yet; `overlay` (default none, `null`) and `overlayopacity` (default `0.6`) from #161, in drawer.md "Scan overlay", tested offline by test/overlays.test.mjs].
+- Hash key order as written: `map, projection, sprites, townsize, names, rhumb, continents, regions, regionszoom, autotitle, title, land, islands, rivers, lakes, reefs, playas, peaks, mountains, trees, placement, voyage, overlay, overlayopacity, compare, comparepos, seas, scaleborder, scale, cartouche, scalepos, density, ink, parchment` [page.js:119-146; `voyage` from #205, `cartouche` and `scalepos` from #219, none of them specified here yet; `overlay` (default none, `null`) and `overlayopacity` (default `0.6`) from #161, in drawer.md "Scan overlay", tested offline by test/overlays.test.mjs].
 
 ---
 
@@ -72,7 +72,7 @@ Feature: Keys the link carries besides the view and the style  (hash keys `overl
   Scenario: person=
     Given a link with `person=<id>`, an id of lowercase letters, digits and hyphens that starts with a letter
     When the page loads
-    Then that person's life bar in the People lane is pressed; any other text is no person, and the hash omits the key
+    Then that person's row in the People drawer is pressed and their tile open under it; any other text is no person, and the hash omits the key
   Scenario: sight=, site=
     Given a link with `sight=Tyre`, a name in the sights' tiles (`SIGHT_TILES`, scripts/sights.mjs), and for a sight drawn as several marks `site=1`, a single numeral, the mark whose pictures are dealt
     When the page loads

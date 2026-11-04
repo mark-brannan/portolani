@@ -17,8 +17,10 @@ import os from 'node:os';
 import path from 'node:path';
 import { buildLearn } from './learn.mjs';
 import { relativeImports } from './scene-modules.mjs';
+import { rangesFromRegions } from './ranges-file.mjs';
 import { buildInfo } from './build-info.mjs';
 
+let rangesJson; // the slimmed ranges as served, kept after the first request
 const root = fileURLToPath(new URL('..', import.meta.url));
 export const DATA_URL = 'https://mark-brannan.github.io/portolani/';
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json',
@@ -36,6 +38,7 @@ export function routes({ learn, site }) {
       // the reefs and playas the published site lacks until this build is on it: the package's whole file, and the playas' committed slim copy
       ['geo/ne-reefs-10m.geojson', path.join(root, 'node_modules', 'coastlines', 'data', 'ne-reefs-10m.geojson')],
       ['geo/playas-10m.json', path.join(root, 'test', 'fixtures', 'playas-10m.json')],
+      ['geo/peaks-10m.json', path.join(root, 'test', 'fixtures', 'peaks-10m.json')], // the landmark peaks (scripts/peaks.mjs), likewise
       ['coastlines/catalogue.json', path.join(root, 'node_modules', 'coastlines', 'catalogue.json')],
       ['coastlines/lib/provider.js', path.join(root, 'node_modules', 'coastlines', 'lib', 'provider.js')],
       ['packs/', path.join(root, 'packs')], ['data/', path.join(root, 'data')], ['learn/', path.join(learn, 'learn')], ['font/', path.join(root, 'downloads')],
@@ -81,6 +84,12 @@ export function devServer({ learn, site, data = DATA_URL }) {
       const info = buildInfo(root);
       res.writeHead(info ? 200 : 404, { 'content-type': TYPES['.json'], 'cache-control': 'no-store' });
       return res.end(info ? JSON.stringify(info) : '');
+    }
+    if (rel === 'geo/ranges-10m.json' && !site) { // the mountain ranges the published site lacks until this build is on it, slimmed as the build slims them
+      const src = path.join(root, 'node_modules', 'coastlines', 'data', 'ne-geography-regions-polys-10m.geojson');
+      if (!existsSync(src)) { res.writeHead(404); return res.end(); }
+      res.writeHead(200, { 'content-type': TYPES['.json'], 'cache-control': 'no-store' });
+      return res.end((rangesJson ??= JSON.stringify(rangesFromRegions(src))));
     }
     const file = await localFile(local, rel.endsWith('/') ? `${rel}index.html` : rel);
     if (file) {

@@ -19,7 +19,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -251,7 +251,7 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
 
     // each button opens its own drawer and shuts the one before; the row stays put and the drawer clear of it
     const row0 = await row();
-    for (const [b, d] of [['#open', 'drawer'], ['#charts', 'chartsDrawer'], ['#sights', 'sightsPanel'], ['#go', 'goPanel'], ['#voyages', 'timelinePanel'], ['#people', 'timelinePanel'], ['#anchor', 'anchorPanel']]) {
+    for (const [b, d] of [['#open', 'drawer'], ['#charts', 'chartsDrawer'], ['#sights', 'sightsPanel'], ['#go', 'goPanel'], ['#voyages', 'voyagesPanel'], ['#people', 'peoplePanel'], ['#anchor', 'anchorPanel']]) {
       await page.click(b);
       await page.waitForTimeout(400);
       assert.equal(await opened(d), true, `${b} did not open ${d}`);
@@ -266,9 +266,9 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     assert.equal(await opened('anchorPanel'), false, 'a second click left the anchorages open');
 
     await page.click('#voyages');
-    assert.equal(await opened('timelinePanel'), true);
+    assert.equal(await opened('voyagesPanel'), true);
     await page.mouse.click(200, 400);
-    assert.equal(await opened('timelinePanel'), false, 'a click on the map left the timeline open');
+    assert.equal(await opened('voyagesPanel'), false, 'a click on the map left the timeline open');
     await page.click('#open');
     await page.mouse.click(400, 400);
     assert.equal(await opened('drawer'), false, 'a click on the map left the settings open');
@@ -489,7 +489,7 @@ test('voyages: several drawn at once, each in its own ink, carried by the link; 
     await pen();
     await page.click('#voyageList [data-eye="columbus"]');
     await page.click('#voyageList [data-eye="drake"]');
-    assert.equal(await page.$eval('#timelinePanel', (d) => d.classList.contains('open')), true, 'a choice shut the drawer');
+    assert.equal(await page.$eval('#voyagesPanel', (d) => d.classList.contains('open')), true, 'a choice shut the drawer');
     assert.deepEqual(await on(), ['columbus', 'magellan', 'drake']); // the list's order
     assert.equal(new Set(await inks()).size, 3, 'two voyages share an ink');
     assert.match(await hash(), /voyages=magellan\.[0-9a-f]{6},columbus\.[0-9a-f]{6},drake\.[0-9a-f]{6}(&|$)/);
@@ -530,11 +530,11 @@ test('voyages: several drawn at once, each in its own ink, carried by the link; 
     assert.match(await hash(), /voyages=magellan\.[0-9a-f]{6},columbus\.[0-9a-f]{6},drake:16727a/);
     await page.click('#voyageWidth [data-value="2.2"]');
     assert.match(await hash(), /voyagewidth=2.2/);
-    if (!(await page.$eval('#timelinePanel', (d) => d.classList.contains('open')))) await page.click('#voyages');
-    await page.click('#timelinePanel .tool');
+    if (!(await page.$eval('#voyagesPanel', (d) => d.classList.contains('open')))) await page.click('#voyages');
+    await page.click('#voyagesPanel .tool');
     assert.deepEqual(await on(), []);
     assert.doesNotMatch(await hash(), /voyages=/);
-    assert.equal(await page.$eval('#timelinePanel .tool', (b) => b.disabled), true, 'Clear still offered with nothing to clear');
+    assert.equal(await page.$eval('#voyagesPanel .tool', (b) => b.disabled), true, 'Clear still offered with nothing to clear');
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();
@@ -542,7 +542,7 @@ test('voyages: several drawn at once, each in its own ink, carried by the link; 
   }
 });
 
-test('timeline: people above the axis, voyages below, each once, the era bands across it end to end, Earlier widens it; each button opens it at its own lane', { skip, timeout: 240000 }, async () => {
+test('people and voyages: two vertical drawers no wider than the charts, earliest first under era headings; a chosen person\'s tile and their voyages sit directly under their row; a people has a row', { skip, timeout: 240000 }, async () => {
   const server = createServer(async (req, res) => {
     let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
     if (p.endsWith('/')) p = path.join(p, 'index.html');
@@ -550,80 +550,124 @@ test('timeline: people above the axis, voyages below, each once, the era bands a
   }).listen(0);
   const browser = await chromium.launch();
   try {
-    const page = await (await browser.newContext({ viewport: { width: 1100, height: 740 } })).newPage();
+    const page = await (await browser.newContext({ viewport: { width: 1280, height: 800 } })).newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(`http://localhost:${server.address().port}/#map=2/15/-20`);
     await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
-    const opened = () => page.evaluate(() => document.getElementById('timelinePanel').classList.contains('open'));
-    const lit = () => page.$$eval('.lanecap.lit', (cs) => cs.map((c) => c.id));
+    const opened = (id) => page.evaluate((i) => document.getElementById(i).classList.contains('open'), id);
     const box = (sel) => page.locator(sel).boundingBox();
+    const hash = () => page.evaluate(() => decodeURIComponent(location.hash));
+    const noSideScroll = (id) => page.evaluate((i) => { const d = document.getElementById(i); return d.scrollWidth <= d.clientWidth + 1; }, id);
+    // the Charts drawer's width is the bar
+    await page.click('#charts');
+    await page.waitForTimeout(400);
+    const charts = await box('#chartsDrawer');
+    // the medallion opens the People drawer alone, no wider than the charts, every person once, earliest first
     await page.click('#people');
-    await page.waitForSelector('#peopleStrip [data-person]');
-    await page.waitForSelector('#voyageList [data-voyage]');
-    assert.equal(await opened(), true, 'the medallion did not open the timeline');
+    await page.waitForSelector('#peopleList [data-person]');
+    await page.waitForTimeout(400); // the slide
+    assert.equal(await opened('peoplePanel'), true, 'the medallion did not open the People drawer');
+    assert.equal(await opened('voyagesPanel'), false, 'the Voyages drawer opened with the people');
     assert.deepEqual([await page.getAttribute('#people', 'aria-expanded'), await page.getAttribute('#voyages', 'aria-expanded')], ['true', 'false']);
-    assert.deepEqual(await lit(), ['peopleCap']);
-    // the two lanes on either side of one axis
-    const [people, axis, voyages] = [await box('#peopleStrip'), await box('#timeAxis'), await box('#voyageList')];
-    assert.ok(people.y + people.height <= axis.y + 1 && voyages.y >= axis.y + axis.height - 1, 'the people are not above the axis and the voyages below it');
-    // every voyage and every person, once each
+    const peoplePanel = await box('#peoplePanel');
+    assert.ok(peoplePanel.width <= charts.width + 1 && peoplePanel.width <= 480, `the People drawer is wider than the charts: ${peoplePanel.width} > ${charts.width}`);
+    assert.equal(await noSideScroll('peoplePanel'), true, 'the People drawer scrolls sideways');
     const root = fileURLToPath(new URL('..', import.meta.url));
     const index = JSON.parse(await readFile(path.join(root, 'data/voyages/index.json'), 'utf8'));
     const records = JSON.parse(await readFile(path.join(root, 'data/voyages/people.json'), 'utf8'));
     const persons = Object.entries(records).filter(([, p]) => p && typeof p === 'object').map(([id]) => id);
-    const shownVoyages = await page.$$eval('#voyageList [data-voyage]', (bs) => bs.map((b) => b.dataset.voyage));
-    const shownPeople = await page.$$eval('#peopleStrip [data-person]', (bs) => bs.map((b) => b.dataset.person));
-    assert.deepEqual([...shownVoyages].sort(), [...index].sort(), 'a voyage missing or twice');
+    const shownPeople = await page.$$eval('#peopleList [data-person]', (bs) => bs.map((b) => b.dataset.person));
     assert.deepEqual([...shownPeople].sort(), [...persons].sort(), 'a person missing or twice');
-    // the era bands run from the axis's left edge to its right, end to end, each named once
-    // measured in one go, relative to the track, so a drawer still sliding in cannot skew them
-    const measure = () => page.evaluate(() => {
-      const t = document.getElementById('track').getBoundingClientRect();
-      return { t: { x: 0, width: t.width }, bs: [...document.querySelectorAll('#eras .band')].map((b) => { const r = b.getBoundingClientRect(); return { name: b.dataset.era, left: r.left - t.left, right: r.right - t.left, label: b.textContent }; }) };
+    assert.equal(shownPeople[0], 'lapita-people', 'the Lapita people, 1500 BC, are not the first row');
+    assert.ok(shownPeople.indexOf('east-polynesian-voyagers') > shownPeople.indexOf('leif-erikson') && shownPeople.indexOf('east-polynesian-voyagers') < shownPeople.indexOf('marco-polo'), 'the East Polynesian voyagers are out of order');
+    assert.ok(shownPeople.indexOf('pytheas') < shownPeople.indexOf('ibn-battuta') && shownPeople.indexOf('ibn-battuta') < shownPeople.indexOf('christopher-columbus'), 'not earliest first');
+    assert.deepEqual(await page.$$eval('#peopleList .era', (es) => es.map((e) => e.dataset.era)), ['The ancient world', 'The medieval Indian Ocean and Asia', 'The age of discovery'], 'the era headings');
+    assert.ok(await page.$eval('#peopleList [data-person="lapita-people"]', (b) => b.querySelector('.chip')?.textContent === 'a people' && /1500–800 BC/.test(b.textContent)), 'the Lapita row lacks its chip or its BC years');
+    assert.ok(await page.$eval('#peopleList [data-person="ibn-battuta"]', (b) => /1304/.test(b.textContent) && !b.querySelector('.chip')), 'Ibn Battuta\'s row lacks his years or has a chip');
+    assert.equal(await page.$eval('#peopleList .era', (e) => getComputedStyle(e).fontStyle), 'italic');
+    // the rows read top to bottom, one under the other, each the drawer's width
+    const rows = await page.$$eval('#peopleList [data-person]', (bs) => bs.map((b) => { const r = b.getBoundingClientRect(); return [r.top, r.left, r.width]; }));
+    rows.forEach(([top], i) => { if (i) assert.ok(top > rows[i - 1][0], 'a row not below the one before'); });
+    assert.ok(rows.every(([, left, width]) => Math.abs(left - rows[0][1]) < 1 && width > 300), 'the rows are not one column');
+    // Ibn Battuta chosen: his row lit, his tile slid open directly under it, his nine voyages inside with eyes and play, all drawn
+    await page.click('#peopleList [data-person="ibn-battuta"]');
+    await page.waitForTimeout(400);
+    assert.match(await hash(), /person=ibn-battuta/);
+    assert.equal(await page.getAttribute('#peopleList [data-person="ibn-battuta"]', 'aria-pressed'), 'true');
+    assert.deepEqual(await page.$$eval('#peopleList li.open', (ls) => ls.map((l) => l.dataset.row)), ['ibn-battuta'], 'not exactly his row open');
+    assert.equal(await page.$eval('#personCard', (c) => c.closest('li[data-row]')?.dataset.row), 'ibn-battuta', 'the tile is not in his row');
+    const [row, card, next] = await page.evaluate(() => {
+      const li = document.querySelector('#peopleList li[data-row="ibn-battuta"]'), card = document.getElementById('personCard');
+      let after = li.nextElementSibling; while (after && !after.dataset.row) after = after.nextElementSibling; // past an era heading
+      return [li.querySelector('[data-person]').getBoundingClientRect().toJSON(), card.getBoundingClientRect().toJSON(), after?.getBoundingClientRect().toJSON()];
     });
-    const track = async () => (await measure()).t;
-    await page.waitForTimeout(400); // the drawer's slide
-    let { t, bs } = await measure();
-    assert.deepEqual(bs.map((b) => b.name), ['The ancient world', 'The medieval Indian Ocean and Asia', 'The age of discovery', 'The modern world']);
-    assert.ok(bs.every((b) => b.label === b.name), 'a band not named once');
-    assert.ok(Math.abs(bs[0].left - t.x) < 1 && Math.abs(bs.at(-1).right - (t.x + t.width)) < 1, 'the bands do not cover the axis');
-    bs.forEach((b, i) => { if (i) assert.ok(Math.abs(b.left - bs[i - 1].right) < 1, `a gap before ${b.name}`); });
-    // Earlier: the track half as wide again, the earlier stretch to the left with its windows and no entries, the main stretch unchanged in width
-    const w0 = t.width, mainW = bs.at(-1).right - bs[0].left;
-    await page.click('#earlier');
-    ({ t, bs } = await measure());
-    assert.equal(await page.getAttribute('#earlier', 'aria-pressed'), 'true');
-    assert.ok(Math.abs(t.width - w0 * 1.5) < 1, `Earlier did not widen the axis: ${w0} -> ${t.width}`);
-    assert.ok(Math.abs(bs.at(-1).right - bs[0].left - mainW) < 1, 'the main stretch changed width');
-    assert.ok(bs[0].left - t.x > w0 * 0.49, 'no earlier stretch to the left of Lapita');
-    assert.deepEqual(await page.$$eval('#eras .mark', (ms) => ms.map((m) => m.dataset.mark)), ['Sahul', 'Beringia', 'Clovis']);
-    assert.ok((await page.textContent('#timeAxis')).includes('50,000 BC'));
-    const firstEntry = Math.min(...await page.$$eval('#peopleStrip .bar, #voyageList .vbar', (es) => { const t = document.getElementById('track').getBoundingClientRect().left; return es.map((e) => e.getBoundingClientRect().left - t); }));
-    assert.ok(firstEntry >= bs[0].left - 1, 'an entry on the earlier stretch');
-    await page.click('#earlier');
-    assert.ok(Math.abs((await track()).width - w0) < 1, 'Earlier again did not bring the axis back');
-    // the dividers: the same drawer, at the voyages' lane; a second click shuts it
+    assert.ok(card.top >= row.bottom - 1 && card.height > 100, `the tile is not under his row: row ends ${row.bottom}, tile at ${card.top}`);
+    assert.ok(next && next.top >= card.bottom - 1, 'the next person is not below his tile');
+    const ib = index.filter((id) => JSON.parse(readFileSync(path.join(root, `data/voyages/${id}.json`), 'utf8')).who.includes('ibn-battuta'));
+    assert.deepEqual(await page.$$eval('#personCard .pvoyages li[data-row]', (ls) => ls.map((l) => l.dataset.row)), ib, 'his voyages, in the index\'s order');
+    assert.equal(ib.length, 9);
+    assert.ok(await page.$eval('#personCard .bio', (b) => b.textContent.length > 40), 'no notes in the tile');
+    assert.ok(await page.$$eval('#personCard .pvoyages li', (ls) => ls.every((l) => l.querySelector('[data-eye]') && l.querySelector('[data-play]') && l.querySelector('.vsum').textContent.length > 20 && l.querySelector('.vsum a'))), 'a voyage row without its eye, play, summary or link');
+    assert.ok(await page.$$eval('#personCard [data-eye]', (es) => es.every((e) => e.getAttribute('aria-pressed') === 'true')), 'his voyages are drawn, so their eyes read on');
+    assert.equal(await noSideScroll('peoplePanel'), true, 'the tile made the drawer scroll sideways');
+    // the eye in his tile puts that one voyage off, and the drawer stays open; the hash carries it hidden
+    await page.click('#personCard [data-eye="ibn-battuta-3"]');
+    assert.equal(await page.getAttribute('#personCard [data-eye="ibn-battuta-3"]', 'aria-pressed'), 'false');
+    assert.match(await hash(), /voyages=ibn-battuta-3(\.[0-9a-f]{6})?~/);
+    assert.match(await hash(), /person=ibn-battuta/, 'the eye let the person go');
+    assert.equal(await opened('peoplePanel'), true);
+    // the eye back on leaves nothing behind: letting him go takes the voyage off with him
+    await page.click('#personCard [data-eye="ibn-battuta-3"]');
+    assert.equal(await page.getAttribute('#personCard [data-eye="ibn-battuta-3"]', 'aria-pressed'), 'true');
+    assert.doesNotMatch(await hash(), /voyages=/, 'the eye back on left the voyage chosen');
+    await page.click('#peopleList [data-person="ibn-battuta"]');
+    assert.doesNotMatch(await hash(), /voyages=|person=/, 'letting him go left a voyage of his chosen');
+    await page.click('#peopleList [data-person="ibn-battuta"]');
+    // the people and the voyages carry their spans as bars, on each era's scale under its ruler
+    assert.ok(await page.$$eval('#peopleList .era', (es) => es.every((e) => e.querySelector('.ruler span'))), 'an era heading without its ruler');
+    assert.ok(await page.$eval('#peopleList [data-person="ibn-battuta"] .bar', (b) => b.getBoundingClientRect().width > 8), 'Ibn Battuta\'s life bar is missing or a sliver');
+    // another person chosen: his tile shuts, theirs opens under their own row
+    await page.click('#peopleList [data-person="lapita-people"]');
+    await page.waitForTimeout(400);
+    assert.deepEqual(await page.$$eval('#peopleList li.open', (ls) => ls.map((l) => l.dataset.row)), ['lapita-people']);
+    assert.equal(await page.$eval('#personCard', (c) => c.closest('li[data-row]')?.dataset.row), 'lapita-people');
+    assert.deepEqual(await page.$$eval('#personCard .pvoyages li[data-row]', (ls) => ls.map((l) => l.dataset.row)), ['lapita-expansion']);
+    assert.match(await hash(), /person=lapita-people/);
+    // the dividers swap it for the Voyages drawer: as wide, every voyage once, earliest first under the same headings, nothing sideways
     await page.click('#voyages');
-    assert.equal(await opened(), true, 'the dividers shut the timeline');
+    await page.waitForSelector('#voyageList [data-voyage]');
+    await page.waitForTimeout(400);
+    assert.equal(await opened('voyagesPanel'), true, 'the dividers did not open the Voyages drawer');
+    assert.equal(await opened('peoplePanel'), false, 'the People drawer stayed open with the voyages');
     assert.deepEqual([await page.getAttribute('#people', 'aria-expanded'), await page.getAttribute('#voyages', 'aria-expanded')], ['false', 'true']);
-    assert.deepEqual(await lit(), ['voyagesCap']);
-    const panel = await box('#timelinePanel'), axisNow = await box('#timeAxis');
-    assert.ok(axisNow.y >= panel.y && axisNow.y < panel.y + 60, `the voyages' lane is not in view: axis at ${axisNow.y}, drawer at ${panel.y}`);
+    const voyagesPanel = await box('#voyagesPanel');
+    assert.ok(voyagesPanel.width <= charts.width + 1 && voyagesPanel.width <= 480, `the Voyages drawer is wider than the charts: ${voyagesPanel.width}`);
+    assert.equal(await noSideScroll('voyagesPanel'), true, 'the Voyages drawer scrolls sideways');
+    const shownVoyages = await page.$$eval('#voyageList [data-voyage]', (bs) => bs.map((b) => b.dataset.voyage));
+    assert.deepEqual([...shownVoyages].sort(), [...index].sort(), 'a voyage missing or twice');
+    assert.equal(shownVoyages[0], 'lapita-expansion');
+    assert.deepEqual(await page.$$eval('#voyageList .era', (es) => es.map((e) => e.dataset.era)), ['The ancient world', 'The medieval Indian Ocean and Asia', 'The age of discovery']);
+    assert.ok(await page.$$eval('#voyageList li[data-row]', (ls) => ls.every((l) => l.querySelector('[data-eye]') && l.querySelector('[data-play]') && l.querySelector('[data-ink]') && l.querySelector('path'))), 'a voyage row without its eye, play, swatch or line sample');
+    const tools = await box('#voyagesPanel .vtools'), list = await box('#voyageList');
+    assert.ok(tools.y + tools.height <= list.y + 1, 'the tools do not head the list');
+    assert.equal(await page.$$eval('#voyageWidth [role=radio], #voyageWidth button', (cs) => cs.length > 0), true, 'no line-weight chips');
     await page.click('#voyages');
-    assert.equal(await opened(), false, 'a second click on the dividers left the timeline open');
-    // a phone: the timeline scrolls sideways, opened at its right end, where most of it is
-    const phone = await (await browser.newContext({ viewport: { width: 412, height: 800 }, hasTouch: true, isMobile: true })).newPage();
+    assert.equal(await opened('voyagesPanel'), false, 'a second click on the dividers left the voyages open');
+    // a phone: each a bottom sheet, the page never scrolling sideways, the Lapita row there
+    const phone = await (await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })).newPage();
     phone.on('pageerror', (e) => errors.push(e.message));
     await phone.goto(`http://localhost:${server.address().port}/#map=2/15/-20`);
     await phone.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
     await phone.tap('#people');
-    await phone.waitForSelector('#peopleStrip [data-person]');
+    await phone.waitForSelector('#peopleList [data-person="lapita-people"]');
+    await phone.waitForTimeout(400);
+    const sheet = await phone.locator('#peoplePanel').boundingBox();
+    assert.ok(sheet.width <= 390 && sheet.y + sheet.height >= 844 - 1, `the People drawer is not a bottom sheet: ${JSON.stringify(sheet)}`);
+    assert.equal(await phone.evaluate(() => { const d = document.getElementById('peoplePanel'); return d.scrollWidth <= d.clientWidth + 1 && document.documentElement.scrollWidth <= innerWidth; }), true, 'the phone scrolls sideways');
+    await phone.tap('#voyages');
     await phone.waitForSelector('#voyageList [data-voyage]');
-    const sc = await phone.$eval('#timeScroll', (e) => ({ sw: e.scrollWidth, cw: e.clientWidth, left: e.scrollLeft }));
-    assert.ok(sc.sw > sc.cw, `the phone's timeline does not scroll sideways: ${JSON.stringify(sc)}`);
-    assert.ok(sc.left >= sc.sw - sc.cw - 1, `the phone's timeline did not open at its right end: ${JSON.stringify(sc)}`);
-    assert.equal(await phone.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'the page scrolls sideways');
+    assert.equal(await phone.evaluate(() => { const d = document.getElementById('voyagesPanel'); return d.classList.contains('open') && d.scrollWidth <= d.clientWidth + 1; }), true, 'the Voyages sheet scrolls sideways');
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();
@@ -678,7 +722,12 @@ test('people: a picture on the map is looked at, put away and dealt back by choo
       return out;
     }, { x0: cx - 200, y0: cy - 200 });
     assert.ok(zoomIn.length, 'no Look button on the first picture');
-    const look = () => page.mouse.click(zoomIn.reduce((s, p) => s + p[0], 0) / zoomIn.length, zoomIn.reduce((s, p) => s + p[1], 0) / zoomIn.length);
+    const lookAt = { x: zoomIn.reduce((s, p) => s + p[0], 0) / zoomIn.length, y: zoomIn.reduce((s, p) => s + p[1], 0) / zoomIn.length };
+    // pressed once the pointer over it finds Look (its magnifier): a press sent at once, while a picture laid back is still settling, was lost now and then under load
+    const look = async () => {
+      await page.waitForFunction(({ x, y }) => { const m = document.getElementById('map'); m.dispatchEvent(new PointerEvent('pointermove', { clientX: x, clientY: y, isPrimary: true, bubbles: true })); return m.style.cursor === 'zoom-in'; }, lookAt, { timeout: 10000, polling: 100 });
+      await page.mouse.click(lookAt.x, lookAt.y);
+    };
     await look();
     assert.equal(await looked(), 'true');
     await page.keyboard.press('Escape');
@@ -691,9 +740,9 @@ test('people: a picture on the map is looked at, put away and dealt back by choo
     assert.equal(await looked(), 'true');
     await page.keyboard.press('Escape');
     assert.equal(await looked(), 'false');
-    assert.equal(await page.$eval('#timelinePanel', (d) => d.classList.contains('open')), true, 'Esc shut the drawer too');
+    assert.equal(await page.$eval('#peoplePanel', (d) => d.classList.contains('open')), true, 'Esc shut the drawer too');
     await page.keyboard.press('Escape'); // and the next shuts it
-    assert.equal(await page.$eval('#timelinePanel', (d) => d.classList.contains('open')), false);
+    assert.equal(await page.$eval('#peoplePanel', (d) => d.classList.contains('open')), false);
     await page.evaluate(() => document.activeElement.blur());
     await look();
     assert.equal(await looked(), 'true', 'Look on the picture\'s edge did not look at it again');

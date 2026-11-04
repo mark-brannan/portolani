@@ -5,8 +5,8 @@
 //        npm run render -- --view 19.7,61.7,5.4[,projection] [--overlay carta-marina[:0.6]] [--sheet lon,lat,scale,turn] --out docs/x.jpg
 //          -> one view, optionally with a chart's sheet laid over it, or its warped pieces at an opacity
 //             (docs/overlay/README.md), as .png or .jpg; --voyages magellan,drake:1f4e8c draws those voyages,
-//             a picked colour after an id; `--notes` outlines the laid chart's notes (docs/notes); `--mountains marina,engraved,shadow,me1937,me1954` draws the ranges in those styles; `--debug sheets,rings`
-//             draws the atlas's sheets or rings in red, as the page's `debug=` does
+//             a picked colour after an id; `--notes` outlines the laid chart's notes (docs/notes); `--debug sheets,rings`
+//             draws the atlas's sheets or rings in red, as the page's `debug=` does; `--relief marina[,engraved,shadow,me1937,me1954]` draws the mountains in those styles
 
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
@@ -15,6 +15,7 @@ import { fileURLToPath } from 'node:url';
 import { createScene, drawScene, W, H, DETAIL, noteMarks } from './scene.mjs';
 import { seaNames, coastNames, joinNames, tintedSeas } from './names.mjs';
 import { joinUrban } from './urban.mjs';
+import { rangesFromRegions } from './ranges-file.mjs';
 import { cutWater, joinWater, WATER_FILES } from './detail-cells.mjs';
 import { isleIndex, isleLand } from './isles.mjs';
 import * as coastlines from 'coastlines';
@@ -60,11 +61,12 @@ const names = () => made ??= joinNames(seaNames(read(join(DL, 'ne_50m_geography_
   coastNames(read(join(GEO, 'ne-admin-0-countries-50m.geojson')), read(join(GEO, 'ne-coastline-50m.geojson'))));
 // the playas (scripts/playas.mjs), slimmed: the committed fixture, which build-preview.mjs checks against the download
 const playas = () => read(join(ROOT, 'test', 'fixtures', 'playas-10m.json'));
+const images = new Map();
 const env = {
   createCanvas,
   readJSON: async (p) => (p === 'geo/names-50m.json' ? names() : p === 'geo/urban-10m.json' ? footprints() : p === 'geo/seas-50m.json' ? tintedSeas(read(join(DL, 'ne_50m_geography_marine_polys.geojson')))
-    : p === 'geo/playas-10m.json' ? playas() : p === 'geo/isles.json' ? islesIndex() : p === 'geo/isles-land.json' ? islesLand() : p.startsWith('geo/water-10m/') ? water(p) : read(resolve(p))),
-  loadImage: (p) => loadImage(resolve(p)),
+    : p === 'geo/playas-10m.json' ? playas() : p === 'geo/peaks-10m.json' ? read(join(ROOT, 'test', 'fixtures', 'peaks-10m.json')) : p === 'geo/ranges-10m.json' ? rangesFromRegions(resolve('geo/ne-geography-regions-polys-10m.geojson')) : p === 'geo/isles.json' ? islesIndex() : p === 'geo/isles-land.json' ? islesLand() : p.startsWith('geo/water-10m/') ? water(p) : read(resolve(p))),
+  loadImage: (p) => images.get(p) ?? images.set(p, loadImage(resolve(p))).get(p), // decoded once, as the page's host does
   loadFont: async (family) => { GlobalFonts.registerFromPath(join(DL, 'IMFeENrm28P.ttf'), family); GlobalFonts.registerFromPath(join(DL, 'IMFeENit28P.ttf'), family); },
 };
 
@@ -90,7 +92,7 @@ if (arg('view')) {
   const at = (arg('sheet') ?? '').split(',').map(Number), sheet = at.length === 4 && at.every(Number.isFinite) ? { lon: at[0], lat: at[1], scale: at[2], turn: at[3] } : null;
   const one = await createScene(env, { view: { lon: +lon, lat: +lat, zoom: +zoom, projection }, overlay: id ? { id, mode: opacity ? 'pieces' : 'sheet', sheet, ...(opacity && { opacity }) } : null,
     voyages: (arg('voyages') ?? '').split(',').filter(Boolean).map((v) => { const [id, c] = v.split(':'); return { id, ...(c && { colour: `#${c}` }) }; }),
-    debug: (arg('debug') ?? '').split(',').filter(Boolean), ...(arg('mountains') && { relief: arg('mountains').split(',') }) });
+    debug: (arg('debug') ?? '').split(',').filter(Boolean), relief: (arg('relief') ?? '').split(',').filter(Boolean) });
   const canvas = createCanvas(W, H), out = arg('out') ?? join(ROOT, 'out', 'view.png');
   drawScene(canvas.getContext('2d'), one.scene, one.data, one.bg, { scale: 1, x: 0, y: 0 });
   if (process.argv.includes('--notes')) drawNoteBoxes(canvas.getContext('2d'), one.scene.overlays[0], one.proj);

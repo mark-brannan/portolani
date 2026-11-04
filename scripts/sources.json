@@ -485,6 +485,42 @@
       "note": "(10,302 × 7,611; chart 4, the North Atlantic and western Europe, with arms and a big rose; IIIF, re-pin on a server re-encode)"
     },
     {
+      "id": "oliva-mediterranean",
+      "file": "oliva-mediterranean.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/e/ee/17th-century_Portolan_chart_of_the_Mediterranean_Sea_by_a_member_of_the_Oliva_family.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:17th-century_Portolan_chart_of_the_Mediterranean_Sea_by_a_member_of_the_Oliva_family.jpg",
+      "sha256": "d8a7dea8ad51caa1d5105297ea776a21465a70f150292ba7ebc9b67cb5cbe086",
+      "rights": "PD-Art; PD-old-100-expired; Oliva family, between 1621 and 1665; scan credited to Barry Lawrence Ruderman Antique Maps (Raremaps.com) on Commons",
+      "note": "(17,316 × 11,126; the whole Mediterranean, Iberia to the Levant and the Nile, the east edge torn, scanned on black)"
+    },
+    {
+      "id": "lopes-1565",
+      "file": "lopes-1575.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/1/12/Sebasti%C3%A3o_Lopes_1575.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Sebasti%C3%A3o_Lopes_1575.jpg",
+      "sha256": "b270da450e50d487295590177c4b5a09acc1b7f2ccc9b8a696aa48f48a15a0dd",
+      "rights": "PD-old-100-expired; Sebastião Lopes, Atlantic chart, about 1565, Newberry Library, VAULT oversize Ayer MS map 26",
+      "note": "(2,232 × 3,100; a photograph, probably of a facsimile; British Isles to the Gambia, the Azores, Madeira, the Canaries and Cape Verde)"
+    },
+    {
+      "id": "olives-1559",
+      "file": "olives-1559.jpg",
+      "url": "https://iiif.bodleian.ox.ac.uk/iiif/image/d79c68a3-d33b-4952-962d-4ebfa1029790/full/max/0/default.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Bodleian_Libraries,_Portolan_chart_of_the_central_and_western_Mediterranean_and_part_of_the_Atlantic.jpg",
+      "sha256": "87c5b68b713af4f3a9e55f6a772049978ae89a008a886689cc891e91c4a7ce60",
+      "rights": "Public domain (Commons: PD-Art, PD-old-100); Digital Bodleian labels the photo CC BY-NC 4.0; Bartolomé Olives, Venice 1559, Bodleian Libraries MS. Canon. Ital. 143, fol. 3r",
+      "note": "(4,000 × 2,652; the central and western Mediterranean and part of the Atlantic, drawn south up; IIIF rendered by the server, so a re-encode on their side would need a re-pin; object page http://digital.bodleian.ox.ac.uk/inquire/p/d79c68a3-d33b-4952-962d-4ebfa1029790)"
+    },
+    {
+      "id": "panades-1557",
+      "file": "panades-1557.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/5/51/Banet_Panades_Nautical_chart_Mediterranean_1557.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Banet_Panades_Nautical_chart_Mediterranean_1557.jpg",
+      "sha256": "b378837e96a7ffcd34b9b0c4188d7537d483f23289cd6f35f2399b84b25c52dd",
+      "rights": "CC BY-SA 4.0; photo by Falcodigiada, Wikimedia Commons; Banet Panades, nautical chart of the Mediterranean, Messina 1557, Galata Museo del Mare, Genoa. Attribution: \"Falcodigiada, Wikimedia Commons, CC BY-SA 4.0\". Files built from it (packs/overlays/panades-1557*.jpg/png, docs/overlay/panades-1557-sheet.jpg) are CC BY-SA 4.0.",
+      "note": "(3,008 × 2,000; a handheld museum photograph, lit unevenly and slightly angled; the central Mediterranean, Corsica and Sardinia to Greece, with roses, flags and town views)"
+    },
+    {
       "id": "martines-1587-01",
       "file": "martines-1587-01-world-hemispheres.jpg",
       "url": "https://tile.loc.gov/image-services/iiif/service:gdc:gdcwdl:wd:l_:10:09:1:wdl_10091:VITR_000004_020_MAPA_001/full/pct:100/0/default.jpg",
@@ -555,6 +591,24 @@
       "sha256": "91c5b7f62dbb246915e8ff289b95f45916344b308d66c03a63d508a3835c08a0",
       "rights": "CC BY 2.0; Carte et Vues de l'Isle Pitcairn, Robert Bénard after Carteret, Paris, Biblioteca de la Universidad de Sevilla, Fondo Antiguo. Attribution: \"Biblioteca de la Universidad de Sevilla, CC BY 2.0\"",
       "note": "(4,704 × 3,696; the French plate of the Carteret chart; carries a library stamp)"
+    },
+    {
+      "id": "oliva-chart",
+      "file": "17th-century_Portolan_chart_of_the_Mediterranean_Sea_by_a_member_of_the_Oliva_family.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/e/ee/17th-century_Portolan_chart_of_the_Mediterranean_Sea_by_a_member_of_the_Oliva_family.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:17th-century_Portolan_chart_of_the_Mediterranean_Sea_by_a_member_of_the_Oliva_family.jpg",
+      "sha256": "d8a7dea8ad51caa1d5105297ea776a21465a70f150292ba7ebc9b67cb5cbe086",
+      "rights": "PD-Art | PD-old-100-expired; portolan chart of the Mediterranean by a member of the Oliva family, 1621–1665; scan by Barry Lawrence Ruderman Antique Maps (Raremaps.com), via Wikimedia Commons",
+      "note": "(17,316 × 11,126)"
+    },
+    {
+      "id": "plancius-acts",
+      "file": "plancius-acts-1609.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/a/a4/Petrus_Plancius%2C_Tabula_geographica%2C_in_qua_omnes_regiones%2C_urbes%2C_oppida%2C_et_loca_describuntur%2C_quorum_mentio_fit_in_Actis_et_Epistolis_Apostolorum%2C_et_Apocalypsi_%28FL199985764_2368879%29.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Petrus_Plancius,_Tabula_geographica,_in_qua_omnes_regiones,_urbes,_oppida,_et_loca_describuntur,_quorum_mentio_fit_in_Actis_et_Epistolis_Apostolorum,_et_Apocalypsi_(FL199985764_2368879).jpg",
+      "sha256": "998172507a5f7457c821be0b2f93e9d006e8571c1f6856d9f2a41f4377120b77",
+      "rights": "PD-old-assumed; Petrus Plancius, Tabula geographica … Actis et Epistolis Apostolorum, Amsterdam, Cloppenburgh, 1609 state, engraved by Baptista van Doetecum; National Library of Israel, Eran Laor Cartographic Collection, system no. 990023688790205171, via Wikimedia Commons",
+      "note": "(8,304 × 5,352)"
     }
   ],
   "footer": [
