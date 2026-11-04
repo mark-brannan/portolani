@@ -1522,7 +1522,7 @@ function drawLayer(g, proj, zoom, badges = true, now = performance.now()) {
       if (kept) drawNoteMark(g, m);
     }
   });
-  if (p && pulse.all) for (const m of [...sightsHit(proj, FULL), ...regionMarks(proj, FULL), ...laidNotes(proj, FULL)]) drawNoteRing(g, m, p.ring, p.alpha);
+  if (p && pulse.all) for (const m of [...(zoom >= POI_ZOOM ? sightsHit(proj, FULL) : []), ...regionMarks(proj, FULL), ...laidNotes(proj, FULL)]) drawNoteRing(g, m, p.ring, p.alpha);
   if (badges) for (const { marks, lead } of groupMarks(pointMarks(proj, zoom), cssPx(TAP_REACH))) if (marks.length > 1) drawBadge(g, lead, marks.length);
   g.restore();
 }
@@ -1583,7 +1583,7 @@ function repaintLayer(now = performance.now()) {
   drawLayer(ctx, viewProjection(placed), placed.zoom, true, now);
 }
 
-// Find's Points of interest: the red rings round every point of interest in view, the places, the lettered regions and the laid charts' notes
+// Find's Points of interest: the red rings round every point of interest in view and drawn: the places (at POI_ZOOM, where their marks show), the lettered regions and the laid charts' notes
 $('findPoi').addEventListener('click', () => startPulse([], true));
 
 // ---------------------------------------------------------------- going somewhere
@@ -2934,7 +2934,8 @@ $('timelineVariant').addEventListener('input', () => setTimeline(timelineVariant
 const caption = (text) => `<span class="notes">${text ?? CAPTION}</span>`;
 const placeInfo = new Map(); // a listed place's details, by name: { title, date, text }
 const SIGHT_NAMES = new Set(SIGHTS.flatMap(([, items]) => items.map(([name]) => name))); // the eras' ports, which carry a details card
-for (const [list, groups] of [[$('sightsList'), LOCATIONS]]) {
+{
+  const list = $('sightsList'), groups = LOCATIONS;
   const rows = (items) => items.map(([name, v, title, text, tag]) => { const tile = SIGHT_TILES[name];
     if (SIGHT_NAMES.has(name)) placeInfo.set(name, { title: title ?? name, date: [tile?.date, tag].filter(Boolean).join(' · '), text: text ?? tile?.text ?? CAPTION });
     return `<li><button type="button" data-place="${places.push({ name, view: { ...v, title: title ?? name } }) - 1}">${title?.startsWith(`${name} (`) ? title : name}${tile?.date ? `<small>${[tile.date, tag].filter(Boolean).join(' · ')}</small>` : ''}</button>${caption(text ?? tile?.text)}</li>`; }).join('');
