@@ -2,12 +2,13 @@
 // set, a table of styles (RELIEF), a placement (reliefOf) and a pick by zoom (BANDS). Everything is
 // in pixels after projection, so a pen stays one width at every zoom.
 //
-// There is no elevation in the data, so the land is read for its distance from the sea: a range is
-// seeded in a lon/lat cell, climbs to the inland ridge and runs along it; a far view holds a few
-// long ranges on the great land masses, a close one more and smaller, and from HILL_ZOOM hills
-// between them. A slow seeded noise over lon/lat says which country is mountainous, so the same
-// regions stay mountainous as the view zooms. The distance field is laid on the map's own pixel
-// grid and every seed comes from its cell, so a pan does not reshuffle the land.
+// The mountains stand on Natural Earth's mountain ranges (ranges.mjs): each range's ridges run along
+// its Range/mtn polygon and the peaks heap along them, the great ranges from afar and the rest
+// closer in. A view with no range in frame guesses, as the chart once did everywhere: the land is
+// read for its distance from the sea, a range is seeded in a lon/lat cell, climbs to the inland
+// ridge and runs along it, and a slow seeded noise over lon/lat says which country is mountainous.
+// Hills are seeded on that same noise from HILL_ZOOM. The distance field is laid on the map's own
+// pixel grid and every seed comes from its cell, so a pan does not reshuffle the land.
 //
 // Mountains are the ranges, drawn in the style selected (RELIEF_STYLES; several mix per range by
 // seed). Hills are the clusters between them, which come back as humps for the scene to stand the
@@ -17,6 +18,7 @@
 
 import { hatch, pen } from 'coast-wright';
 import { frameBox } from './frame-box.mjs';
+import { chamfer, rangesIn, ridgesOf } from './ranges.mjs';
 
 const RAD = Math.PI / 180;
 const CELL = 16; // distance field cell, px
@@ -83,20 +85,9 @@ function depthField({ proj, land, createCanvas, w, h }) {
     g.closePath();
   }
   g.fill('evenodd');
-  const alpha = g.getImageData(0, 0, cols, rows).data;
-  const d = new Float32Array(cols * rows);
-  for (let i = 0; i < d.length; i++) d[i] = alpha[i * 4 + 3] > 40 ? 1e9 : 0;
-  const D = Math.SQRT2, relax = (i, j, wt) => { if (d[j] + wt < d[i]) d[i] = d[j] + wt; };
-  for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
-    const i = y * cols + x;
-    if (x > 0) relax(i, i - 1, 1);
-    if (y > 0) { relax(i, i - cols, 1); if (x > 0) relax(i, i - cols - 1, D); if (x < cols - 1) relax(i, i - cols + 1, D); }
-  }
-  for (let y = rows - 1; y >= 0; y--) for (let x = cols - 1; x >= 0; x--) {
-    const i = y * cols + x;
-    if (x < cols - 1) relax(i, i + 1, 1);
-    if (y < rows - 1) { relax(i, i + cols, 1); if (x < cols - 1) relax(i, i + cols + 1, D); if (x > 0) relax(i, i + cols - 1, D); }
-  }
+  const alpha = g.getImageData(0, 0, cols, rows).data, inside = new Uint8Array(cols * rows);
+  for (let i = 0; i < inside.length; i++) inside[i] = alpha[i * 4 + 3] > 40 ? 1 : 0;
+  const d = chamfer(inside, cols, rows, false); // outside the raster counts as land
   // a cell's distance is to its centre; land cells are at least half a cell deep
   return (px, py) => {
     const cx = Math.floor((px - x0) / CELL), cy = Math.floor((py - y0) / CELL);
@@ -173,11 +164,80 @@ function peakOf(x, y, w, h, rnd) {
   return { x, y, w, h, lean: (rnd() - 0.5) * 0.25, jag: [rnd(), rnd(), rnd(), rnd(), rnd(), rnd()] };
 }
 
+// A ridge's peaks, heaped: one on each point of `kept` ([x, y, swell, rnd], swell 0..1 the tallest,
+// rnd the point's own random stream or none for `rnd`), with peaks behind to either side, more of
+// them where it swells, and there a lower one in front.
+function heap(kept, P, shared) {
+  const mine = [];
+  for (const [x, y, swell, own] of kept) {
+    const rnd = own ?? shared;
+    const ph = P * swell * (0.85 + 0.3 * rnd());
+    mine.push(peakOf(x + (rnd() - 0.5) * P * 0.3, y, ph * (1.7 + 0.4 * rnd()), ph, rnd));
+    for (const side of [-1, 1]) {
+      if (rnd() > swell * 0.85) continue;
+      const bh = ph * (0.7 + 0.25 * rnd());
+      mine.push(peakOf(x + side * ph * (0.7 + 0.3 * rnd()), y - ph * (0.3 + 0.25 * rnd()), bh * 1.8, bh, rnd));
+    }
+    if (swell > 0.9 && rnd() < 0.5) {
+      const fh = ph * (0.55 + 0.15 * rnd());
+      mine.push(peakOf(x + (rnd() - 0.5) * P * 1.2, y + ph * 0.35, fh * 1.7, fh, rnd));
+    }
+  }
+  return mine;
+}
+
+// A great range stands taller than a lesser one, by Natural Earth's scalerank (1 the greatest).
+const rankScale = (rank) => 1 - 0.06 * (Math.min(6, Math.max(1, rank)) - 1);
+
+// The ranges' spines in a view, in px: each ridge of each range shown (ranges.mjs) projected and cut
+// at the seam, then stepped along from its start every `step` px, so a pan moves every point with the
+// map. A side ridge stands only where it is far enough from its neighbours to read as its own ridge.
+// Each spine is { id, pts: [[x, y, swell], ...], scale }.
+function rangeSpines(view, P, step) {
+  const { proj, w, h } = view, k = proj.k, out = [];
+  const box = frameBox(proj, w, h, SEED_PAD);
+  const inFrame = (x, y) => x > -SEED_PAD && x < w + SEED_PAD && y > -SEED_PAD && y < h + SEED_PAD;
+  for (const r of rangesIn(view.ranges, proj.zoom, box)) {
+    ridgesOf(r, view.createCanvas).forEach((ridge, ri) => {
+      if (ri > 0 && ridge.width * k < P * 4) return;
+      const runs = [[]];
+      for (const [lon, lat, depth] of ridge.pts) {
+        if (proj.visible && !proj.visible(lon, lat)) { runs.push([]); continue; }
+        const x = proj.x(lon, lat), y = proj.y(lat, lon), run = runs.at(-1), prev = run.at(-1);
+        if (prev && Math.hypot(x - prev[0], y - prev[1]) > Math.PI * k * 0.5) runs.push([]);
+        runs.at(-1).push([x, y, Math.min(1, depth / ridge.width)]);
+      }
+      runs.filter((run) => run.length).forEach((run, ui) => {
+        const len = [0];
+        for (let i = 1; i < run.length; i++) len.push(len[i - 1] + Math.hypot(run[i][0] - run[i - 1][0], run[i][1] - run[i - 1][1]));
+        const L = len.at(-1), pts = [];
+        // a ridge shorter than a step stands one peak, midway
+        const marks = L < step ? [L / 2] : Array.from({ length: Math.floor(L / step) + 1 }, (_, i) => i * step + (L - Math.floor(L / step) * step) / 2);
+        let j = 0;
+        for (const s of marks) {
+          while (j < run.length - 2 && len[j + 1] < s) j++;
+          const a = run[j], b = run[Math.min(j + 1, run.length - 1)], t = len[j + 1] > len[j] ? (s - len[j]) / (len[j + 1] - len[j]) : 0;
+          const x = a[0] + (b[0] - a[0]) * t, y = a[1] + (b[1] - a[1]) * t, depth = a[2] + (b[2] - a[2]) * t;
+          // each point its own stream, so a point cut at the frame's edge leaves the rest as they were
+          if (inFrame(x, y)) pts.push([x, y, 0.6 + 0.4 * Math.sqrt(Math.max(0, depth)), mulberry32(hash(r.id, ri, ui, Math.round(s / step)))]);
+        }
+        if (pts.length) out.push({ id: hash(r.id, ri, ui), pts, scale: rankScale(r.rank) });
+      });
+    });
+  }
+  return out;
+}
+
 // What a view holds: { peaks, humps }, each { x, y, w, h, style, ... } in screen px, its base at
 // (x, y); a peak's `style` is one of `view.styles`, a hump (a hill, only when `view.hills`) is
-// 'marina'. `view` is { proj, land, createCanvas, w, h, styles, hills }: the projection, the land in
-// lon/lat, a canvas maker, the canvas size, the styles the mountains are drawn in (RELIEF_STYLES; none
-// draws no mountain) and whether hills are wanted.
+// 'marina'. `view` is { proj, land, ranges, createCanvas, w, h, styles, hills }: the projection, the
+// land in lon/lat, the mountain ranges (ranges.mjs's rangesOf; none falls back to the land's
+// distance from the sea), a canvas maker, the canvas size, the styles the mountains are drawn in
+// (RELIEF_STYLES; none draws no mountain) and whether hills are wanted.
+//
+// The mountains run along the ranges in frame. A view with none of them in frame (or no ranges at
+// all) guesses its ranges as it always has: seeded in lon/lat cells on the mountainous ground of the
+// noise, each climbing to the inland ridge and running along it.
 export function reliefOf(view) {
   const { proj, w, h } = view, band = bandOf(proj.zoom);
   const styles = view.styles ?? [];
@@ -186,7 +246,15 @@ export function reliefOf(view) {
   const depth = depthField(view), P = band.peak, min = P * 0.9;
   const peaks = [], spines = [];
   const near = (x, y, r) => spines.some((s) => s.some(([sx, sy]) => Math.hypot(sx - x, sy - y) < r));
-  for (const c of cellsOf(proj, w, h, band.cell, SEED_PAD, 1)) {
+  // the ranges in frame, the greatest first; a point at sea (a polygon past the coast) stands nothing
+  for (const s of view.ranges?.length ? rangeSpines(view, P, P * 0.8) : []) {
+    const kept = s.pts.filter(([x, y]) => depth(x, y) > 0 && !near(x, y, P * 2.2));
+    if (!kept.length) continue;
+    spines.push(kept);
+    const style = styles.length && styleOf(mulberry32(s.id)(), styles), mine = heap(kept, P * s.scale);
+    if (style) peaks.push(...mine.map((p) => ({ ...p, style })));
+  }
+  if (!spines.length) for (const c of cellsOf(proj, w, h, band.cell, SEED_PAD, 1)) {
     if (noise(c.lon, c.lat) < 1 - band.share) continue;
     const sx = proj.x(c.lon, c.lat), sy = proj.y(c.lat, c.lon);
     if (depth(sx, sy) < min) continue;
@@ -196,23 +264,9 @@ export function reliefOf(view) {
     const kept = spine.filter(([x, y]) => !near(x, y, P * 2.2));
     if (kept.length < 2) continue;
     spines.push(kept);
-    const style = styles.length && styleOf(c.key, styles), mine = [];
+    const style = styles.length && styleOf(c.key, styles);
     // tallest midway, lower toward the ends
-    kept.forEach(([x, y], i) => {
-      const t = kept.length > 1 ? i / (kept.length - 1) : 0.5, swell = 0.6 + 0.4 * Math.sin(Math.PI * t);
-      const ph = P * swell * (0.85 + 0.3 * c.rnd());
-      mine.push(peakOf(x + (c.rnd() - 0.5) * P * 0.3, y, ph * (1.7 + 0.4 * c.rnd()), ph, c.rnd));
-      // the heap: peaks behind to either side, more of them midway, and there a lower one in front
-      for (const side of [-1, 1]) {
-        if (c.rnd() > swell * 0.85) continue;
-        const bh = ph * (0.7 + 0.25 * c.rnd());
-        mine.push(peakOf(x + side * ph * (0.7 + 0.3 * c.rnd()), y - ph * (0.3 + 0.25 * c.rnd()), bh * 1.8, bh, c.rnd));
-      }
-      if (swell > 0.9 && c.rnd() < 0.5) {
-        const fh = ph * (0.55 + 0.15 * c.rnd());
-        mine.push(peakOf(x + (c.rnd() - 0.5) * P * 1.2, y + ph * 0.35, fh * 1.7, fh, c.rnd));
-      }
-    });
+    const mine = heap(kept.map(([x, y], i) => [x, y, 0.6 + 0.4 * Math.sin(Math.PI * (kept.length > 1 ? i / (kept.length - 1) : 0.5))]), P, c.rnd);
     if (style) peaks.push(...mine.map((p) => ({ ...p, style })));
   }
   const humps = [];

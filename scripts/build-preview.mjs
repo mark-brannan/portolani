@@ -33,6 +33,8 @@ import { isleIndex, isleLand } from './isles.mjs';
 import { ATTEMPTS, fetchBytesWithRetry } from './fetch-retry.mjs';
 import { buildInfo } from './build-info.mjs';
 import { slimPeaks } from './peaks.mjs';
+import { slimRanges } from './ranges.mjs';
+import { gzipSync } from 'node:zlib';
 const { find, localUrl } = coastlines;
 // By catalogue id: the pinned manifest entry a record is read from, the name of its whole file (the
 // catalogue's `data/<file>`, written to geo/<file>, where scene.mjs reads it), and the dir and cell
@@ -130,6 +132,10 @@ const peaks = JSON.stringify(slimPeaks(JSON.parse(await readGeo('ne-10m-geograph
 if (JSON.stringify(JSON.parse(await readFile(path.join(root, 'test', 'fixtures', 'peaks-10m.json'), 'utf8'))) !== peaks) throw new Error('test/fixtures/peaks-10m.json is stale: write slimPeaks() of the coastlines files to it');
 await writeFile(path.join(out, 'geo', 'peaks-10m.json'), peaks);
 console.log(`landmark peaks: ${JSON.parse(peaks).features.length} peaks, ${Buffer.byteLength(peaks)} bytes (geo/peaks-10m.json)`);
+// the mountain ranges (scripts/ranges.mjs): Natural Earth's Range/mtn polygons from coastlines' 10m geography regions, four properties each
+const ranges = JSON.stringify(slimRanges(JSON.parse(await readGeo('ne-10m-geography-regions-polys'))));
+await writeFile(path.join(out, 'geo', 'ranges-10m.json'), ranges);
+console.log(`mountain ranges: ${JSON.parse(ranges).features.length} ranges, ${Buffer.byteLength(ranges)} bytes, ${gzipSync(ranges).length} bytes gzipped (geo/ranges-10m.json)`);
 // A band of detail cells: geo/<dir>/<xi>_<yi>.json and geo/<dir>/index.json.
 async function writeBand(dir, cellDeg, geometry, cells = cutCells(geometry, cellDeg)) {
   await mkdir(path.join(out, 'geo', dir), { recursive: true });

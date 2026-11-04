@@ -22,6 +22,7 @@ import { REEFS, REEF_STYLES, reefsOf } from './reefs.mjs';
 import { PLAYAS, PLAYA_STYLES, playasOf } from './playas.mjs';
 import { peaksOf, peakTile, peakWidth, PEAK_STYLES } from './peaks.mjs';
 import { RELIEF_STYLES, reliefOf, clearOf, drawRelief } from './relief.mjs';
+import { rangesOf } from './ranges.mjs';
 import { TREES, TREE_STYLES, plantTrees, plantPalms, inLake } from './trees.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
 import { depthOf, hasDepth, paintDepth } from './depth.mjs';
@@ -159,6 +160,10 @@ async function loadGround(reefsOn, playasOn) {
 // read when the mountain sprites are selected and `peaks` is on; a site without the file stands none.
 let peaks = null;
 const peaksRead = new WeakMap(); // the file's read, once per environment
+// The mountain ranges (ranges.mjs) at geo/ranges-10m.json, which build-preview.mjs writes, read when a
+// drawn mountain style is selected; a site without the file guesses its ranges from the land.
+let ranges = null;
+const rangesRead = new WeakMap();
 
 // Per-run tuning; `density` scales how much ornament is placed (1 = the committed mockup).
 // `hillShare`: the share of the hill sprites that fit which stand, all of them from density 1.
@@ -2276,7 +2281,7 @@ export function keptWater(data) {
 // Mountains in the style chosen, hills where the Catalan sprites are selected. A drag draws them from
 // the placed scene (drawLate) at the zooms IN_DRAG names, and at the stop they are placed afresh.
 const reliefWanted = () => STYLE.relief.length > 0 || STYLE.mountainSprites;
-const reliefFor = (proj, land) => reliefOf({ proj, land, createCanvas, w: W, h: H, styles: STYLE.relief, hills: STYLE.mountainSprites });
+const reliefFor = (proj, land) => reliefOf({ proj, land, ranges, createCanvas, w: W, h: H, styles: STYLE.relief, hills: STYLE.mountainSprites });
 function paintRelief(g, data, relief) {
   if (relief) drawRelief(g, { proj: data.proj, palette: { ink: STYLE.ink, land: STYLE.land } }, relief);
 }
@@ -3520,6 +3525,8 @@ export async function createScene(environment, opts = {}) {
   const peaksWanted = peaksOn !== false && peaksOn !== 'off' && STYLE.mountainSprites;
   if (peaksWanted && !peaksRead.has(env)) peaksRead.set(env, env.readJSON('geo/peaks-10m.json').catch(missing).then(peaksOf));
   peaks = peaksWanted ? await peaksRead.get(env) : null;
+  if (STYLE.relief.length && !rangesRead.has(env)) rangesRead.set(env, env.readJSON('geo/ranges-10m.json').catch(missing).then(rangesOf));
+  ranges = STYLE.relief.length ? await rangesRead.get(env) : null;
   const world = await loadDetail(coarse, view);
   const person = await loadPerson(opts.person);
   const named = opts.voyages ?? (opts.voyage ? [{ id: opts.voyage }] : []);

@@ -9,7 +9,7 @@
 
 import { createServer } from 'node:http';
 import { spawnSync } from 'node:child_process';
-import { createReadStream, existsSync, statSync } from 'node:fs';
+import { createReadStream, existsSync, readFileSync, statSync } from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { Readable } from 'node:stream';
 import { fileURLToPath } from 'node:url';
@@ -17,6 +17,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { buildLearn } from './learn.mjs';
 import { relativeImports } from './scene-modules.mjs';
+import { slimRanges } from './ranges.mjs';
 import { buildInfo } from './build-info.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
@@ -82,6 +83,11 @@ export function devServer({ learn, site, data = DATA_URL }) {
       const info = buildInfo(root);
       res.writeHead(info ? 200 : 404, { 'content-type': TYPES['.json'], 'cache-control': 'no-store' });
       return res.end(info ? JSON.stringify(info) : '');
+    }
+    if (rel === 'geo/ranges-10m.json' && !site) { // the mountain ranges the published site lacks until this build is on it, slimmed as the build slims them
+      const regions = JSON.parse(readFileSync(path.join(root, 'node_modules', 'coastlines', 'data', 'ne-geography-regions-polys-10m.geojson'), 'utf8'));
+      res.writeHead(200, { 'content-type': TYPES['.json'], 'cache-control': 'no-store' });
+      return res.end(JSON.stringify(slimRanges(regions)));
     }
     const file = await localFile(local, rel.endsWith('/') ? `${rel}index.html` : rel);
     if (file) {
