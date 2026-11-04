@@ -197,6 +197,13 @@ Feature: A chart's position chips, and the line each was fitted to
     And "Parallels" draws today's equator and Tropic of Cancer; a coast's chip ("New World") draws only the stretch of today's coast that fit used, not the whole coast; the chart's own "Default" draws every coast it is centred between
     And the line is the feature the fit was computed from, carried with the placement in the chart's data, never a stretch drawn by hand to look right
     And with reduced motion the line shows whole, then fades to faint
+  Scenario: one zoom per placement
+    Source: the user on [#372](https://github.com/mark-brannan/portolani/pull/372), 2026-11-04: "Charts should always use a consistent, pre-set zoom level when clicking their alignment buttons. If the orientation happens to be diagonal, this may mean a closer zoom that will cut off the corners of the map, but it will be the same default zoom level for a perfectly level orientation."
+    Given a chart's row with its Align to chips
+    When the user clicks a chip, at any turn of the world
+    Then the map zooms to the same level every time for that placement, whatever the world's turn: the zoom that frames the sheet whole, with a little clear round it, when it stands level on the window as the chart is drawn (de la Cosa west up)
+    And a sheet that lies on a slant gets that same zoom, so its corners may run off the window, never a wider view to fit them in
+
   Scenario: a phone
     Given the Charts drawer open as the bottom sheet, at 520 px and under
     When the user looks for the position chips

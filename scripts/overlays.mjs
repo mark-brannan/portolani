@@ -98,17 +98,15 @@ export function sheetFrame(overlay, sheet) {
   return { lonMin: Math.min(...lons), lonMax: Math.max(...lons), latMin: latOf(Math.min(...mercs)), latMax: latOf(Math.max(...mercs)) };
 }
 
-// The view that shows the whole sheet, in Mercator, with `pad` of its size clear round it: contained, never cropped.
-// With a `bearing` the view keeps it, and the sheet is framed as it stands turned on the canvas.
+// The view centred on the sheet at its one zoom: the zoom that contains it, with `pad` of its size clear round it, standing
+// as the chart is drawn (its `up`, else upright). The world's bearing never changes it, so a sheet on a slant is framed
+// closer, its corners off the page (docs/spec/design.md, "one zoom per placement"). With a `bearing` the view keeps it.
 export function sheetView(overlay, sheet, { w = 1600, h = 1000, pad = 0.08, bearing = 0 } = {}) {
-  if (bearing) {
-    const t = (sheet.turn - bearing) * RAD, c = Math.abs(Math.cos(t)), s = Math.abs(Math.sin(t)), sw = overlay.width * sheet.scale, sh = overlay.height * sheet.scale; // degrees
-    const k = Math.min(w / ((sw * c + sh * s) * (1 + 2 * pad) * RAD), h / ((sw * s + sh * c) * (1 + 2 * pad) * RAD));
-    return { lon: sheet.lon, lat: sheet.lat, zoom: Math.log2((k * 2 * Math.PI) / 512), bearing };
-  }
-  const f = sheetFrame(overlay, sheet), m0 = mercDeg(f.latMin), m1 = mercDeg(f.latMax);
-  const k = Math.min(w / ((f.lonMax - f.lonMin) * (1 + 2 * pad) * RAD), h / ((m1 - m0) * (1 + 2 * pad) * RAD)); // px per radian
-  return { lon: (f.lonMin + f.lonMax) / 2, lat: latOf((m0 + m1) / 2), zoom: Math.log2((k * 2 * Math.PI) / 512) };
+  const quarter = Math.round((overlay.up ?? 0) / 90) % 2 !== 0; // drawn on its side, as de la Cosa is west up
+  const sw = overlay.width * sheet.scale, sh = overlay.height * sheet.scale; // degrees of Mercator
+  const [across, down] = quarter ? [sh, sw] : [sw, sh];
+  const k = Math.min(w / (across * (1 + 2 * pad) * RAD), h / (down * (1 + 2 * pad) * RAD)); // px per radian
+  return { lon: sheet.lon, lat: sheet.lat, zoom: Math.log2((k * 2 * Math.PI) / 512), ...(bearing ? { bearing } : {}) };
 }
 
 // Whether there is anything of the overlay to draw: its image, or a chart of panels (drawn as they arrive).

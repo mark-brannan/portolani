@@ -870,7 +870,7 @@ function drawCards(scaleOnly = false) { // scaleOnly: a moving frame, where only
     drawScaleCard(cardScale.getContext('2d'), viewProjection(view), c.bg, c.scale, c.scaleSprite);
   }
 }
-addEventListener('resize', () => { drawCards(); hideTile(); }); // the cards' width follows the window, in rotation too, and the tile was placed in its px
+addEventListener('resize', () => { drawCards(); hideTile(); $('cornerTurn').hidden = true; }); // the cards' width follows the window, in rotation too, and the tile was placed in its px
 phone.addEventListener('change', () => { drawCards(); if (ground) render(); }); // the sheet is placed again with or without them
 
 // ---------------------------------------------------------------- the drawers
@@ -1062,7 +1062,7 @@ function moved(next, flying = false) {
   if (next.zoom === view.zoom && next.lon === view.lon && next.lat === view.lat && (next.bearing ?? 0) === (view.bearing ?? 0)) return; // e.g. wheel at a zoom bound
   if (!flying) pinTitle = null; // a drag or a wheel leaves the place flown to
   view = next;
-  hideTile();
+  hideTile(); $('cornerTurn').hidden = true; // the corner moves out from under a pointer standing still
   run++; // a placement still in flight is for a view already left
   clearTimeout(settle);
   if (!ground || frame) return;
@@ -3073,7 +3073,7 @@ let northNext = false;
 function setSheets(overlays, sheets = style.sheets, fade = null, draw = true, north = true) {
   if (overlays.some((id) => !style.overlays.includes(id))) chartsFresh = false;
   const lifted = sheetsShown().filter((o) => !overlays.includes(o.id));
-  if (north && lifted.some(atUp)) {
+  if (north && lifted.some((o) => o.up != null && atUp(o))) { // a chart with no `up` lifted at north leaves the world be
     northNext = true;
     queueMicrotask(() => { if (northNext) { northNext = false; turnWorld(0); } });
   }
@@ -3113,7 +3113,7 @@ $('chartList').addEventListener('click', (e) => {
   setSheets([o.id], sheets, !shown && chartsFresh ? o.id : null, false); // shown alone: every other sheet hides
   const bearing = northNext ? 0 : view.bearing ?? 0;
   northNext = false;
-  const flyTo = () => goTo({ ...sheetView(o, o.sheet, { w: W, h: H, bearing }), bearing, title: chart.name }); // the whole sheet framed, 8% clear round it, the world turned as it is
+  const flyTo = () => goTo({ ...sheetView(o, o.sheet, { w: W, h: H, bearing }), bearing, title: chart.name }); // the sheet framed at its level zoom (sheetView), the world turned as it is
   if (!others) { flyTo(); return; }
   // another chart's sheet: cleared first as the skull clears the table, then the flight (docs/spec/design.md, "a new chart's icon or name clears the old one, then flies")
   clearTable(true, false); // no skull flash: the clear, the flight and the sheet follow one another with no animation of their own

@@ -217,17 +217,30 @@ test('in Mercator the sheet drawn at a snap lands every scan px where that fit a
   assert.ok(Math.abs(x1 - x0 - (Math.max(...tc.map((c) => c[0])) - Math.min(...tc.map((c) => c[0])))) < 0.05, 'and is tight');
 });
 
-// The view that frames the whole sheet contains it, never crops it: at that view every corner is inside the page,
-// and the sheet keeps its page size and turn in any projection, its centre pinned.
-test('sheetView frames the sheet inside the page, and the sheet keeps its size and turn across projections', () => {
-  const cosa = overlays.find((o) => o.id === 'de-la-cosa'), v = sheetView(cosa, cosa.sheet, { w: 1600, h: 1000, pad: 0.08 });
+test('sheetView frames a level sheet inside the page, and the sheet keeps its size and turn across projections', () => {
+  const cosa = overlays.find((o) => o.id === 'de-la-cosa'), v = sheetView(cosa, cosa.sheet, { w: 1600, h: 1000, pad: 0.08, bearing: cosa.sheet.turn - cosa.up });
   const corners = sheetCorners(cosa, viewProjection(v), cosa.sheet);
   for (const [x, y] of corners) assert.ok(x >= 0 && x <= 1600 && y >= 0 && y <= 1000, `${x},${y}`);
-  const span = Math.max(...corners.map((c) => c[0])) - Math.min(...corners.map((c) => c[0]));
-  assert.ok(span > 1600 / 1.16 - 1 && span < 1600 / 1.16 + 1, `8% clear on each side: ${span}`);
-  const merc = sheetTransform(cosa, viewProjection(v), cosa.sheet), ortho = sheetTransform(cosa, viewProjection({ ...v, projection: 'orthographic' }), cosa.sheet);
+  const span = Math.max(...corners.map((c) => c[1])) - Math.min(...corners.map((c) => c[1])); // drawn west up, on its side: the height fills
+  assert.ok(span > 1000 / 1.16 - 1 && span < 1000 / 1.16 + 1, `8% clear top and bottom: ${span}`);
+  const north = sheetView(cosa, cosa.sheet, { w: 1600, h: 1000, pad: 0.08 });
+  const merc = sheetTransform(cosa, viewProjection(north), cosa.sheet), ortho = sheetTransform(cosa, viewProjection({ ...north, projection: 'orthographic' }), cosa.sheet);
   for (const i of [0, 1, 2, 3]) assert.ok(Math.abs(merc[i] - ortho[i]) < 1e-9, 'the same size and turn');
   assert.ok(Math.abs(merc[4] - ortho[4]) < 1 && Math.abs(merc[5] - ortho[5]) < 1, 'the centre at the view\'s centre in both');
+});
+
+test('sheetView gives a placement one zoom at every turn and bearing, so a slanted sheet runs off the page', () => {
+  const opt = { w: 1600, h: 1000, pad: 0.08 };
+  for (const id of ['de-la-cosa', 'catalan-atlas']) {
+    const o = overlays.find((v) => v.id === id), zoomAt = (turn, bearing) => sheetView(o, { ...o.sheet, turn }, { ...opt, bearing }).zoom;
+    const drawn = zoomAt(o.up ?? 0, 0);
+    for (const [turn, bearing] of [[0, 0], [30, 0], [-48.35, 0], [90, 0], [130, 100], [10, 45], [-3, 270]]) assert.equal(zoomAt(turn, bearing), drawn, `${id} ${turn} at ${bearing}`);
+    const at = { ...o.sheet, turn: (o.up ?? 0) }, level = sheetCorners(o, viewProjection(sheetView(o, at, opt)), at);
+    for (const [x, y] of level) assert.ok(x >= -1e-6 && x <= 1600 && y >= -1e-6 && y <= 1000, `${id} as drawn, contained: ${x},${y}`);
+    const slant = { ...o.sheet, turn: (o.up ?? 0) + 30 }, v = sheetView(o, slant, opt);
+    assert.equal(v.lon, slant.lon); assert.equal(v.lat, slant.lat);
+    if (id === 'catalan-atlas') assert.ok(sheetCorners(o, viewProjection(v), slant).some(([x, y]) => x < 0 || x > 1600 || y < 0 || y > 1000), 'the long Catalan sheet on a slant has corners off the page'); // de la Cosa's diagonal fits inside its pad
+  }
 });
 
 // loadOverlay composes the scan with its mask: the paper round the skin is transparent, the skin is not. drawSheet draws it
