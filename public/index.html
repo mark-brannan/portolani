@@ -630,12 +630,7 @@
 <p id="mementoBig" aria-hidden="true" hidden></p>
 <details id="clearTune" open>
   <summary>The skull's clear (temporary, for tuning)</summary>
-  <p class="tuneNote">Cards leave stage left; lines fade. The charts' sheets:</p>
-  <div class="chips" role="group" aria-label="How the charts' sheets go">
-    <button type="button" data-effect="fade" title="Fades and blurs into nothing"><svg viewBox="0 0 22 14"><defs><linearGradient id="tuneFade"><stop offset="0" stop-color="#b89a68" stop-opacity="0"/><stop offset="1" stop-color="#b89a68"/></linearGradient></defs><rect x="3" y="3" width="16" height="8" fill="url(#tuneFade)"/></svg>Fade</button>
-    <button type="button" data-effect="deal" title="Dealt off to the left, as a card is"><svg viewBox="0 0 22 14"><rect x="13" y="5" width="7" height="6" fill="#b89a68" stroke="currentColor"/><rect x="3" y="1" width="5" height="4" fill="#b89a68" stroke="currentColor" transform="rotate(-20 5 3)"/><path d="M12 6 9 4" stroke="currentColor" stroke-dasharray="1 1"/></svg>Deal</button>
-    <button type="button" data-effect="blow" title="Lifted, tilting and fluttering, blown off up and to the left"><svg viewBox="0 0 22 14"><path d="M12 12 20 9 18 3 10 6Z" fill="#b89a68" stroke="currentColor"/><path d="M8 4C6 3 4 4 2 3M8 8C6 7 4 8 1 7" fill="none" stroke="currentColor"/></svg>Blow away</button>
-  </div>
+  <p class="tuneNote">Cards leave stage left; lines and charts' sheets fade.</p>
   <p class="tuneNote">The phrase:</p>
   <div class="chips" role="group" aria-label="How the phrase comes and goes">
     <button type="button" data-words="even" title="Fades in, holds, fades out"><svg viewBox="0 0 22 14"><path d="M1 13 5 2h11l5 11" fill="none" stroke="currentColor"/></svg>Even</button>
@@ -646,7 +641,8 @@
   <label>The phrase <input type="range" id="tuneWords" min="500" max="8000" step="100"><output for="tuneWords"></output></label>
   <label>Skull's ink <input type="range" id="tuneInk" min="5" max="80" step="1"><output for="tuneInk"></output></label>
   <label>Skull grows <input type="range" id="tuneSkullGrow" min="100" max="250" step="5"><output for="tuneSkullGrow"></output></label>
-  <label>Phrase size <input type="range" id="tuneWordsGrow" min="0" max="200" step="5"><output for="tuneWordsGrow"></output></label>
+  <label>Phrase size, at the end <input type="range" id="tuneWordsGrow" min="0" max="200" step="5"><output for="tuneWordsGrow"></output></label>
+  <label>Size change starts <input type="range" id="tuneWordsGrowAt" min="0" max="90" step="5" title="How far into the fade the size starts to change"><output for="tuneWordsGrowAt"></output></label>
 </details>
 
 <nav id="where" aria-label="Go to">
