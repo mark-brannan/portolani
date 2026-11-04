@@ -52,7 +52,7 @@ export function tryItBlock({ pr, head, checkout, install, serve }) {
     tryItLine({ pr, checkout, install, serve }),
     '```',
     '',
-    `Serves PR #${pr} (head ${String(head).slice(0, 7)} when this was written) on http://localhost:${port} from`,
+    `Serves PR #${pr}${head ? ` (head ${String(head).slice(0, 7)} when this was written)` : ''} on http://localhost:${port} from`,
     'its own worktree. Paste again after a push to the PR: it fetches and moves the',
     `worktree. Remove: \`git -C ${checkout} worktree remove --force ${wt}\``,
     '',
