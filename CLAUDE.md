@@ -1,8 +1,7 @@
 # Portolani
 
 - **A new visual decoration ships on by default**: a sprite kind, a style, a drawn feature. Put it in the page's `DEFAULTS` and in `defaultSprites`, unless the user asks otherwise, for example by raising it as a concern on the PR.
-- **Headless scene options** (`relief`, `trees`, `rivers`, `lakes`) stay off by default, so each golden isolates one thing.
-- **Reefs and playas are always on by default**, in the page, every mood and the headless scene (`reefs: 'crosses'`, `playas: 'salt'`). They are the exception to the line above. Only the icon and whether an off chip stays are open.
+- **A headless golden isolates one thing**: an option it is not testing stays off. Reefs and playas are ground, not an option; they are on everywhere, page and headless.
 - **No dropdowns** in the settings drawer where icons, chips or checkboxes will do.
 - **Option lists are chips**, not dropdowns or plain lists, and each chip shows what it does.
 - **Every control shows its effect** where it can (a swatch, a line sample or a small example), not only a label.
