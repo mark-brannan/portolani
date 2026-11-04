@@ -37,7 +37,10 @@ const VIEWS = {
   'levant-z6-marks': { lon: 33, lat: 32.5, zoom: 6 }, // a place with a tile and no figure gets a mark: Tyre a ruin, and Alexandria's on the Pharos
   'ostia-z7-ruin': { lon: 12.29, lat: 41.76, zoom: 7 }, // and a ruin where a sight says so (Ostia)
   'sheet-z3-voyage': { lon: -30, lat: 15, zoom: 3 }, // de la Cosa's sheet laid over the Atlantic with Columbus's voyage drawn over it, in a colour that reads against the scan
+  'pieces-z3.2-wipe': { lon: -45, lat: 20, zoom: 3.2 }, // de la Cosa's warped pieces left of the compare line, the bare map right (the slider wipe)
   'old-world-z2.6-1375': { lon: 62, lat: 33, zoom: 2.6 }, // the regions in the Catalan Atlas's names, read in English (docs/period-names)
+  'red-sea-z6-reefs': { lon: 38.5, lat: 20, zoom: 6 }, // the Red Sea's reefs, a row of crosses along each (scripts/reefs.mjs)
+  'uyuni-z6-playas': { lon: -67.5, lat: -20.5, zoom: 6 }, // Salar de Uyuni and its neighbours, pale salt on the land (scripts/playas.mjs)
 };
 // settings a golden draws with beyond the defaults; region-z5 is the README's picture, lettered PORTOLANI
 const OPTS = { 'region-z5': { autoTitle: false }, 'world-z2-voyage': { voyages: [{ id: 'magellan' }] },
@@ -48,6 +51,7 @@ const OPTS = { 'region-z5': { autoTitle: false }, 'world-z2-voyage': { voyages: 
   'levant-z6-marks': { sights: [{ name: 'Tyre', lon: 35.1933, lat: 33.2681, ruin: true }, { name: 'Tyre', lon: 35.2111, lat: 33.2692, ruin: true }, { name: 'Alexandria', lon: 29.886, lat: 31.214, ruin: true }] },
   'ostia-z7-ruin': { sights: [{ name: 'Ostia', lon: 12.29, lat: 41.76, ruin: true }] },
   'sheet-z3-voyage': { overlays: [{ id: 'de-la-cosa', mode: 'sheet' }], voyages: [{ id: 'columbus', colour: VOYAGE_CONTRAST[0], width: 3.2 }] },
+  'pieces-z3.2-wipe': { overlays: [{ id: 'de-la-cosa', mode: 'pieces', opacity: 0.8, clip: 0.5 }] },
   'old-world-z2.6-1375': { regions: 'english', regionSet: 'catalan-1375' } };
 // and its full-size render is kept for the README, so `npm run golden` refreshes both together
 const README_IMAGE = join(ROOT, 'docs', 'readme.jpg');
@@ -60,7 +64,7 @@ const names = () => made ??= joinNames(read(join(ROOT, 'test', 'fixtures', 'sea-
   coastNames(read(join(GEO, 'ne-admin-0-countries-50m.geojson')), read(join(GEO, 'ne-coastline-50m.geojson'))));
 const env = {
   createCanvas,
-  readJSON: async (p) => (p === 'geo/names-50m.json' ? names() : p === 'geo/seas-50m.json' ? read(join(ROOT, 'test', 'fixtures', 'seas-50m.json')) : read(resolve(p))),
+  readJSON: async (p) => (p === 'geo/names-50m.json' ? names() : p === 'geo/seas-50m.json' ? read(join(ROOT, 'test', 'fixtures', 'seas-50m.json')) : p === 'geo/playas-10m.json' ? read(join(ROOT, 'test', 'fixtures', 'playas-10m.json')) : read(resolve(p))),
   loadImage: (p) => loadImage(resolve(p)),
   loadFont: async (family) => { GlobalFonts.registerFromPath(join(ROOT, 'test', 'fixtures', 'IMFeENrm28P.ttf'), family); },
 };
@@ -220,7 +224,7 @@ test('hills and mountains: every projection places and ends', async () => {
 // Roses stand in open water; where the water is heavily constrained they stand on open land instead, clear of the places.
 // The Atlantic sheet holds clear sea at all 17 sites; the two Mediterranean sheets hold too little, so theirs stand on land.
 test('roses: open land holds them where the water is too constrained', async () => {
-  const inland = { lon: 45, lat: 52, zoom: 7 }; // the Volga steppe: the sheet's circle holds no clear sea
+  const inland = { lon: 47, lat: 53, zoom: 7 }; // the Volga steppe: the sheet's circle holds no clear sea
   const { scene } = await createScene(env, { view: inland, scale: 'off', sprites: ['vivid/rose-aguiar', 'vivid/rose-catalan', 'vivid/rose-catalan-small'] });
   assert.ok(scene.roseDraws.some((r) => scene.field.isLand(r.x, r.y)), 'no rose on the land');
   for (const r of scene.roseDraws) for (const t of scene.towns) assert.ok(Math.hypot(r.x - t.x, r.y - t.y) > 20, `a rose sits on ${t.name}`);

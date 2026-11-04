@@ -8,8 +8,8 @@ the sheet's extent and out of a smaller sheet's shadow (the frame rule in [READM
 
 A figure with no cropped sprite takes a **stand-in**: a sprite of the same kind in the sheet's style
 (the Carta Marina's crops for the Carta Marina), chosen by the figure's place in its chart's list, so it
-keeps its stand-in from any view. Where the style has none of that kind (the Carta Marina's roses, the
-Catalan Atlas's ship) the stand-in is one of the page's chosen roses or ships.
+keeps its stand-in from any view. Where the style has none of that kind (the Carta Marina's roses) the stand-in
+is one of the page's chosen roses or ships.
 
 ## Carte Pisane, Vesconte 1311, Dulcert 1339
 
@@ -20,10 +20,10 @@ Vesconte's is known. Each has an empty set, so these sheets draw no roses, beast
 
 | | figure | lon, lat | sprite | note |
 |---|---|---|---|---|
-| R1 | the rose | -20.7, 42.1 | `rose-catalan` | from centres.md |
-| S1 | ship at the foot, off Cape Bojador | -15.5, 26.1 | stand-in | placed by the cape, not read in pixels; no crop yet |
+| R1 | the rose | -20.2, 43.5 | `rose-catalan` | from centres.md, through the sheet 5 fit |
+| S1 | ship at the foot, off Cape Bojador | -15.5, 26.1 | stand-in | placed by the cape, not read in pixels; no crop yet, so it stands in a Catalan ship (the junk, S5) |
 
-Sheets 6 to 12 have landmarks (below) but no figures read.
+The figures of sheets 6 to 12 are read below ([Figures, sheets 6 to 12](#figures-sheets-6-to-12)).
 
 ### Landmarks, sheet 5
 
@@ -66,7 +66,7 @@ Left out of the fit: "Illa de Stillanda", Iceland, drawn east of Ireland at 5600
 8.5°W 56.7°N, 1059 km from where it lies; Hy-Brasil, the round island west of Ireland, and the other islands
 of legend; and the islands between Galicia and Madeira (insule de corvi marini, insula de brazi), which may be
 the Azores but are too far from them to read as any one. The rose at 2000, 7950 lands at 20.4°W 43.6°N by this
-fit, within centres.md's ±2° of R1.
+fit, within centres.md's ±1° of R1.
 
 The scan is cut into vertical strips and each strip drawn by its own fit, under the lattice and every ornament; how, with pictures: [docs/overlay/README.md](../overlay/README.md#warped-pieces).
 
@@ -91,6 +91,39 @@ worn, so it is centred through the places of sheets 9 and 11.
 | sheet 10 | Central Asia | none: centred through sheets 9 and 11 | 0.00312 °/px | 0° | | |
 | sheet 11 | India | L1 to L3 | 0.00312 °/px | 0° | 605 km | Kollam, colombo, 862 km |
 | sheet 12 | Cathay | L1 to L5 | 0.00312 °/px | 0° | 545 km | Hangzhou, ciutat de Cansay, 796 km |
+
+### Figures, sheets 6 to 12
+
+Read off the same scans at full size on 2026-11-02, by eye on gridded crops at half size or more; a figure's scan px
+is the middle of its box, about ±50 px, and its lon, lat is where its page's fit (the table above) puts that, as for a
+landmark. The figures are cut as patches in [docs/catalan-figures](../catalan-figures/README.md).
+
+Sheets 6 to 8, the portolan part, draw no figure at sea: their seas hold banners, islands and lettering, and their
+hubs are rhumb centres, not roses, as on Dulcert's chart. Their kings, the camel rider of the Sahara and the elephant of
+Nubia stand on land. No sheet past 5 draws a rose. The mappa mundi draws its ships and beasts in the Caspian and the
+Indian Ocean; the pearl fishers by sheet 10's ship and the two swimmers among sheet 12's islands are people, not
+beasts, and are left out.
+
+| | figure | sheet | scan px | lon, lat | sprite | on the map |
+|---|---|---|---|---|---|---|
+| S2 | ship in the Caspian, drawn upside down | 9 | 3405, 5325 | 50.6, 41.1 | `catalan-ship` | drawn |
+| S3 | ship by the pearl fishers, drawn upside down | 10 | 4800, 2500 | 73.8, 46.6 | none | lands in Kazakhstan in the fit; not listed |
+| S4 | a second hull there, above the lettering | 10 | 5250, 1250 | 75.2, 49.2 | none | lands in Kazakhstan in the fit; not listed |
+| S5 | the junk off India, at the page's foot | 11 | 1190, 14405 | 81.2, 13.2 | `catalan-junk` | drawn |
+| M1 | the siren holding her two tails | 12 | 1390, 14670 | 113.1, 15.8 | `catalan-siren` | drawn |
+| M2 | green fish by the pearl fishers | 10 | 5180, 760 | 75.0, 50.2 | none | lands in Kazakhstan in the fit; not listed |
+| M3 | red fish by the pearl fishers | 10 | 3090, 600 | 68.4, 50.5 | none | lands in Kazakhstan in the fit; not listed |
+| M4 | red fish among the islands | 12 | 4970, 11580 | 124.3, 24.9 | none | off the sheet: east of its 120°E edge; not listed |
+| M5 | red fish among the islands | 12 | 5760, 10960 | 126.7, 26.6 | none | off the sheet: east of its 120°E edge; not listed |
+
+Sheet 10's sea, at the page's top, is the Indian Ocean by its own lettering ("En la mar indich en la qual son
+peschadors e perles ..."), but its fit lays the page north up, centred through sheets 9 and 11, and puts that sea on
+the steppe; so its four figures lie on land and are not listed among the sheet's figures (`scripts/atlas.mjs`), nor are
+sheet 12's two fish east of the extent: the list, not the land or the edge, keeps them off. Either the page is drawn south up, as its upside-down
+lettering suggests, or the chart sets the Indian Ocean there; the fit and this reading disagree, and both stand.
+
+The Caspian ship is drawn because the scene reads a hole in the land as sea, as it draws it. The world's 50m land has
+one hole, the Caspian, so no other figure gains water by the rule.
 
 ### Landmarks, sheet 6
 

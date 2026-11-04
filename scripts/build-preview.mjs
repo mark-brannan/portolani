@@ -43,7 +43,7 @@ const bandOf = (id) => { const r = band(id); return { dir: r.sources.find((s) =>
 const root = fileURLToPath(new URL('..', import.meta.url));
 const out = path.join(root, '_site');
 const GEO = ['ne-50m-land', 'ne-50m-coastline', 'ne-50m-populated-places', ...(entryOf('ne-50m-urban-areas') ? ['ne-50m-urban-areas'] : []),
-  'ne-50m-rivers-lake-centerlines', 'ne-50m-lakes']; // urban areas from coastlines 0.0.5; rivers and lakes for scripts/water.mjs
+  'ne-50m-rivers-lake-centerlines', 'ne-50m-lakes', 'ne-10m-reefs']; // urban areas from coastlines 0.0.5; rivers and lakes for scripts/water.mjs; the 10m reefs, whole, for scripts/reefs.mjs
 const GEO_10M = ['ne-10m-land', 'ne-10m-coastline', 'ne-10m-minor-islands'];
 const LAND_10M = bandOf('ne-10m-land'); // the bands coastlines' provider reads: each is written to its own dir at its own cell size
 
@@ -72,19 +72,21 @@ const SOURCES = [
   ['https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_lakes_north_america.geojson', 'ne_10m_lakes_north_america.geojson', '76f49d4b698f3529e690136a989713bcd3c028ade150346f4b358de9815cfc43', null],
   ['https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_lakes_europe.geojson', 'ne_10m_lakes_europe.geojson', 'b4dd9e7a5edd0d07b54768b5404d1ebe77f80b9d579c85fff65f90cf50369769', null],
   // GSHHG "f" land is read from the zip below; at 65 MB it is too big for the coastlines package
+  // read into geo/playas-10m.json below, slimmed to the names and zooms scripts/playas.mjs reads; coastlines has no playas
+  ['https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_playas.geojson', 'ne_10m_playas.geojson', '3ece2a37f3e87d46869a45b05205bb78e273c83e191cee9ab60936368f4b9cc6', null],
   ['https://www.soest.hawaii.edu/pwessel/gshhg/gshhg-shp-2.3.7.zip', 'gshhg-shp-2.3.7.zip', '8dbbe7e071e77e9e75f2d639239099ebca8d5c16d6a07df8169729d49f15cf41', null],
 ];
 
 await mkdir(path.join(root, 'downloads'), { recursive: true });
 for (const [url, name, sha, dir] of SOURCES) {
   const file = path.join(root, 'downloads', name);
-  if (!existsSync(file)) {
-    const bytes = await fetchBytesWithRetry(url, {
-      onRetry: (error, attempt, wait) => console.error(`${url}: ${error.cause?.code ?? error.message}; attempt ${attempt} of ${ATTEMPTS} failed, retrying in ${wait / 1000} s`),
-    });
-    await writeFile(file, bytes);
-  }
-  const got = createHash('sha256').update(await readFile(file)).digest('hex');
+  const fetchIt = async () => writeFile(file, await fetchBytesWithRetry(url, {
+    onRetry: (error, attempt, wait) => console.error(`${url}: ${error.cause?.code ?? error.message}; attempt ${attempt} of ${ATTEMPTS} failed, retrying in ${wait / 1000} s`),
+  }));
+  const sum = async () => createHash('sha256').update(await readFile(file)).digest('hex');
+  if (!existsSync(file)) await fetchIt();
+  let got = await sum();
+  if (got !== sha) { await fetchIt(); got = await sum(); } // a file kept from an older pin (a restored CI cache) is fetched again
   if (got !== sha) throw new Error(`${name}: sha256 ${got} does not match ASSETS.md (${sha})`);
   if (!dir) continue;
   await mkdir(path.join(out, dir), { recursive: true });
@@ -117,6 +119,10 @@ await writeFile(path.join(out, 'geo', 'seas-50m.json'), JSON.stringify(red));
 await writeFile(path.join(out, 'geo', 'names-50m.json'), JSON.stringify(joinNames(seas, coastNames(countries, coast50))));
 const urban = JSON.stringify(joinUrban(placesGeo, JSON.parse(await readFile(path.join(root, 'downloads', 'ne_10m_urban_areas.geojson'), 'utf8'))));
 await writeFile(path.join(out, 'geo', 'urban-10m.json'), urban);
+// the playas (scripts/playas.mjs), whole: the golden test reads them from this fixture, offline
+const playas = slim(JSON.parse(await readFile(path.join(root, 'downloads', 'ne_10m_playas.geojson'), 'utf8')), ['name', 'min_zoom']);
+if (JSON.stringify(JSON.parse(await readFile(path.join(root, 'test', 'fixtures', 'playas-10m.json'), 'utf8'))) !== JSON.stringify(playas)) throw new Error('test/fixtures/playas-10m.json is stale: write the slimmed playas download to it');
+await writeFile(path.join(out, 'geo', 'playas-10m.json'), JSON.stringify(playas));
 console.log(`urban footprints: ${(urban.length / 1e6).toFixed(2)} MB`);
 // A band of detail cells: geo/<dir>/<xi>_<yi>.json and geo/<dir>/index.json.
 async function writeBand(dir, cellDeg, geometry, cells = cutCells(geometry, cellDeg)) {

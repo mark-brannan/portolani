@@ -119,7 +119,7 @@ above, exactly as NOAA's cells do. The world band is the exception: there the ea
 curated sheet by curated sheet, because at those zooms a grid cell would be most of a hemisphere
 and the famous charts are the better model.
 
-One rose belongs to no band: the Catalan Atlas rose at 20.7°W 42.1°N, the point every band's grid
+One rose belongs to no band: the Catalan Atlas rose at 20.2°W 43.5°N, the point every band's grid
 counts from ("The fallback grid", below). Current thinking: its rhumb lines are drawn at every zoom,
 from the world band to the harbour band, beside the network of whatever sheets the view shows.
 Pinning one rose is what pins the lines: the same lines run through every view and every sheet, and
@@ -204,8 +204,8 @@ meridian, which suits a survey and says nothing about a chart, so the hidden cir
 wherever the cells happened to land.
 
 Current thinking: every band counts its cell edges in whole multiples of the cell height, and of
-the cell width east and west, out from one point, the Catalan Atlas rose at 20.7°W 42.1°N, read off
-the scan in [centres.md](centres.md) to ±2°. It is the first drawn compass rose known on any chart,
+the cell width east and west, out from one point, the Catalan Atlas rose at 20.2°W 43.5°N, read off
+the scan in [centres.md](centres.md) to ±1°. It is the first drawn compass rose known on any chart,
 and it is the point the world band's big rose is pinned to. Because each band's height divides the
 one above, sixteen sheets still nest in one, and the rose sits on a corner every band's grid shares:
 zoom in on it from the overview band to the harbour band and it stays on a sheet corner all the way
