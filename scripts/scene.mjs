@@ -278,7 +278,7 @@ function northUp(view, w, h) {
     const x = (lon) => w / 2 + fromCentre(lon - lonCenter) * RAD * k;
     const y = (lat) => h / 2 - (P.f(lat) - y0) * k;
     return {
-      k, zoom: view.zoom, lonCenter, lat: view.lat, x, y, seam: { centralMeridian: lonCenter }, rim: null,
+      k, zoom: view.zoom, lonCenter, lat: view.lat, y0, x, y, seam: { centralMeridian: lonCenter }, rim: null,
       project: (lon, lat) => [x(lon), y(lat)],
       toPx: ([lon, lat]) => [x(lon), y(lat)],
       // a point past the map's top or bottom edge inverts to the edge's latitude
@@ -1895,48 +1895,82 @@ function buildScene(data, sprites, ctx, world = {}) {
 
 // ---------------------------------------------------------------- drawing
 
-function parchment(seed) {
-  const rnd = mulberry32(seed);
-  const c = createCanvas(W, H), g = c.getContext('2d');
-  g.fillStyle = STYLE.parchment;
-  g.fillRect(0, 0, W, H);
+// The paper under the map. Every mark in it (the mottling, the fibre grain, the foxing) is fixed to the
+// earth, so it travels with the map as it pans, turns and zooms; only the rim's vignette stays on the
+// window, as the frame. On a cylindrical projection the map is the projection's plane, scaled and
+// moved, so the marks are painted in that plane: world tiles PAPER_TILE px wide at zoom level n,
+// each seeded by its place (wrapping round the world with the map), and drawn through the same
+// scale, offset and turn as the land. Between levels the tiles of n and n + 1 are cross-faded, so the
+// spots keep their size on screen as the map zooms. An azimuthal projection has no such plane (a pan
+// turns the globe under the window), so there the paper is plain, with a grain too fine to read as a
+// spot. `paintPaper` paints the window's paper for a view, and `paperSheet` keeps it as a canvas: every
+// repaint of the parchment (the ground, the cartouche's panel, the scale bar's) is one of the two.
+const PAPER_TILE = 512, PAPER_RES = 256, PAPER_SEED = 1539, PAPER_TILES_KEPT = 192;
+const MOTTLE = [[64, 0.22], [16, 0.12]]; // cell, plane px, and how strongly it's multiplied in: the soft blotches and the finer cloud
+const paperHash = (...xs) => {
+  let h = PAPER_SEED;
+  for (const x of xs) { h = Math.imul(h ^ (x | 0), 0x9e3779b1); h ^= h >>> 15; }
+  h = Math.imul(h ^ (h >>> 13), 0x85ebca6b);
+  return (h ^ (h >>> 16)) >>> 0;
+};
+const wrapIndex = (i, n) => ((i % n) + n) % n;
 
-  // mottling: two octaves of smoothed value noise, multiplied in
-  for (const [cols, alpha] of [[24, 0.22], [90, 0.12]]) {
-    const rows = Math.ceil((cols * H) / W);
-    const n = createCanvas(cols, rows), ng = n.getContext('2d'), img = ng.createImageData(cols, rows);
-    for (let i = 0; i < cols * rows; i++) {
-      const v = 200 + rnd() * 55;
-      img.data.set([v, v * 0.97, v * 0.9, 255], i * 4);
-    }
-    ng.putImageData(img, 0, 0);
-    g.save();
-    g.globalCompositeOperation = 'multiply';
-    g.globalAlpha = alpha;
-    g.imageSmoothingEnabled = true;
-    g.imageSmoothingQuality = 'high';
-    g.drawImage(n, 0, 0, W, H);
-    g.restore();
-  }
-
-  // fibre grain
-  const grain = createCanvas(W, H), gg = grain.getContext('2d'), gi = gg.createImageData(W, H);
-  for (let i = 0; i < W * H; i++) { const v = 235 + rnd() * 20; gi.data.set([v, v, v * 0.98, 255], i * 4); }
+function makePaper(tone) {
+  const rnd = mulberry32(PAPER_SEED);
+  const grain = createCanvas(PAPER_RES, PAPER_RES), gg = grain.getContext('2d'), gi = gg.createImageData(PAPER_RES, PAPER_RES);
+  for (let i = 0; i < PAPER_RES * PAPER_RES; i++) { const v = 235 + rnd() * 20; gi.data.set([v, v, v * 0.98, 255], i * 4); }
   gg.putImageData(gi, 0, 0);
-  g.save(); g.globalCompositeOperation = 'multiply'; g.globalAlpha = 0.5; g.drawImage(grain, 0, 0); g.restore();
-
-  // vignette toward the rim
-  const vg = g.createRadialGradient(W / 2, H / 2, H * 0.42, W / 2, H / 2, Math.hypot(W, H) * 0.55);
+  const vignette = createCanvas(W, H), vgc = vignette.getContext('2d');
+  const vg = vgc.createRadialGradient(W / 2, H / 2, H * 0.42, W / 2, H / 2, Math.hypot(W, H) * 0.55);
   vg.addColorStop(0, hexA(STYLE.rim, 0));
   vg.addColorStop(0.7, hexA(STYLE.rim, 0.45));
   vg.addColorStop(1, hexA('#8a6a3a', 0.75));
-  g.save(); g.globalCompositeOperation = 'multiply'; g.fillStyle = vg; g.fillRect(0, 0, W, H); g.restore();
+  vgc.fillStyle = vg; vgc.fillRect(0, 0, W, H);
+  return { tone, grain, vignette, tiles: new Map(), sheet: null, key: null, plain: null };
+}
 
-  // sparse foxing: a few clustered rust spots
-  for (let s = 0; s < 11; s++) {
-    const x = rnd() * W, y = rnd() * H, r = 3 + rnd() * 9;
-    for (let k = 0; k < 3 + Math.floor(rnd() * 4); k++) {
-      const sx = x + (rnd() - 0.5) * r * 2.5, sy = y + (rnd() - 0.5) * r * 2.5, sr = r * (0.3 + rnd() * 0.8);
+// Foxing: the rust spots a world tile's seed puts in it, in plane px from its corner
+function foxing(n, i, j) {
+  const rnd = mulberry32(paperHash(n, wrapIndex(i, 2 ** n), j, 7)), spots = [];
+  for (let s = Math.floor(rnd() * 4); s > 0; s--) {
+    const x = rnd() * PAPER_TILE, y = rnd() * PAPER_TILE, r = 3 + rnd() * 9;
+    for (let k = 3 + Math.floor(rnd() * 4); k > 0; k--) spots.push([x + (rnd() - 0.5) * r * 2.5, y + (rnd() - 0.5) * r * 2.5, r * (0.3 + rnd() * 0.8)]);
+  }
+  return spots;
+}
+
+// One world tile's paper: the tone, the mottling multiplied in, and the foxing over it, the tile's own
+// spots and those of its neighbours that reach over its edge. The mottling's lattice is the world's, so
+// two tiles agree where they meet.
+function paperTile(paper, n, i, j) {
+  const key = `${n}/${wrapIndex(i, 2 ** n)}/${j}`;
+  let c = paper.tiles.get(key);
+  if (c) { paper.tiles.delete(key); paper.tiles.set(key, c); return c; }
+  const R = PAPER_RES, f = R / PAPER_TILE;
+  c = createCanvas(R, R);
+  const g = c.getContext('2d');
+  g.fillStyle = paper.tone; g.fillRect(0, 0, R, R);
+  const PAD = 2; // lattice points past each edge, so a smoothing filter wider than bilinear still agrees at the seam
+  for (const [cell, alpha] of MOTTLE) {
+    const per = PAPER_TILE / cell, across = 2 ** n * per, side = per + 1 + 2 * PAD;
+    const n0 = createCanvas(side, side), ng = n0.getContext('2d'), img = ng.createImageData(side, side);
+    for (let b = 0; b < side; b++) for (let a = 0; a < side; a++) {
+      const v = 200 + (paperHash(n, wrapIndex(i * per + a - PAD, across), j * per + b - PAD, cell) / 4294967296) * 55;
+      img.data.set([v, v * 0.97, v * 0.9, 255], (b * side + a) * 4);
+    }
+    ng.putImageData(img, 0, 0);
+    const px = cell * f; // a lattice cell in tile px; pixel centre a lands on the tile's lattice line a - PAD
+    g.save();
+    g.globalCompositeOperation = 'multiply'; g.globalAlpha = alpha;
+    g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+    g.drawImage(n0, -(PAD + 0.5) * px, -(PAD + 0.5) * px, side * px, side * px);
+    g.restore();
+  }
+  g.save(); g.scale(f, f);
+  for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
+    for (const [sx0, sy0, sr] of foxing(n, i + di, j + dj)) {
+      const sx = sx0 + di * PAPER_TILE, sy = sy0 + dj * PAPER_TILE;
+      if (sx + sr < 0 || sy + sr < 0 || sx - sr > PAPER_TILE || sy - sr > PAPER_TILE) continue;
       const fg = g.createRadialGradient(sx, sy, 0, sx, sy, sr);
       fg.addColorStop(0, 'rgba(150,100,45,0.32)');
       fg.addColorStop(0.6, 'rgba(160,110,50,0.18)');
@@ -1945,6 +1979,73 @@ function parchment(seed) {
       g.beginPath(); g.arc(sx, sy, sr, 0, Math.PI * 2); g.fill();
     }
   }
+  g.restore();
+  paper.tiles.set(key, c);
+  if (paper.tiles.size > PAPER_TILES_KEPT) paper.tiles.delete(paper.tiles.keys().next().value);
+  return c;
+}
+
+// Paint the window's paper for `proj`, the projection the map is drawn through, onto `g` in window px,
+// within `rect` ({ x0, y0, x1, y1 }) or the whole window. A moving frame paints straight onto the map's
+// canvas: a sheet painted and then copied each frame costs a second pass over the window.
+function paintPaper(g, paper, proj, rect = null) {
+  if (!anchoredPaper(proj)) {
+    const c = paperSheet(paper, null), r = rect ?? { x0: 0, y0: 0, x1: W, y1: H };
+    g.drawImage(c, r.x0, r.y0, r.x1 - r.x0, r.y1 - r.y0, r.x0, r.y0, r.x1 - r.x0, r.y1 - r.y0);
+    return;
+  }
+  g.save();
+  if (rect) { g.beginPath(); g.rect(rect.x0, rect.y0, rect.x1 - rect.x0, rect.y1 - rect.y0); g.clip(); }
+  const z = Math.log2((proj.k * 2 * Math.PI) / 512), n = Math.max(0, Math.floor(z)), t = Math.max(0, z - n);
+  const turned = proj.bearing ? Math.hypot(W, H) / 2 : 0, hx = turned || W / 2, hy = turned || H / 2;
+  // level m's frame: plane px of level m (512 * 2^m round the world) onto the window; returns the plane rect it shows
+  const frame = (m) => {
+    const km = (512 * 2 ** m) / (2 * Math.PI), s = proj.k / km, cx = proj.lonCenter * RAD * km, cy = -proj.y0 * km;
+    g.translate(W / 2, H / 2); if (proj.bearing) g.rotate(-proj.bearing * RAD); g.scale(s, s); g.translate(-cx, -cy);
+    return { x0: cx - hx / s, x1: cx + hx / s, y0: cy - hy / s, y1: cy + hy / s };
+  };
+  g.globalCompositeOperation = 'source-over';
+  g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'low'; // bilinear: the tiles are smooth, and a moving frame paints them twice
+  for (const [m, alpha] of [[n, 1], [n + 1, t]]) {
+    if (alpha < 1 / 64) continue; // too faint to see: a pass saved
+    g.save();
+    const r = frame(m);
+    g.globalAlpha = alpha;
+    for (let j = Math.floor(r.y0 / PAPER_TILE); j * PAPER_TILE < r.y1; j++) for (let i = Math.floor(r.x0 / PAPER_TILE); i * PAPER_TILE < r.x1; i++) {
+      g.drawImage(paperTile(paper, m, i, j), i * PAPER_TILE, j * PAPER_TILE, PAPER_TILE + 0.5, PAPER_TILE + 0.5); // half a px over, so no hairline shows between tiles
+    }
+    g.restore();
+  }
+  g.save();
+  const r = frame(n);
+  g.globalAlpha = 0.5; g.globalCompositeOperation = 'multiply';
+  g.fillStyle = g.createPattern(paper.grain, 'repeat'); g.fillRect(r.x0, r.y0, r.x1 - r.x0, r.y1 - r.y0);
+  g.restore();
+  // the vignette toward the rim: the frame, which stays on the window
+  g.globalCompositeOperation = 'multiply';
+  g.drawImage(paper.vignette, 0, 0);
+  g.restore();
+}
+const anchoredPaper = (proj) => proj && !proj.cap && Number.isFinite(proj.y0);
+
+// The window's paper (W x H) as a canvas, for `proj`; with no projection, the plain paper (a phone card's).
+// The last one painted is kept, so a stop's ground, cartouche and scale bar share one.
+function paperSheet(paper, proj) {
+  if (!anchoredPaper(proj)) {
+    if (paper.plain) return paper.plain;
+    const c = createCanvas(W, H), g = c.getContext('2d');
+    g.fillStyle = paper.tone; g.fillRect(0, 0, W, H);
+    g.globalAlpha = 0.5; g.globalCompositeOperation = 'multiply';
+    g.fillStyle = g.createPattern(paper.grain, 'repeat'); g.fillRect(0, 0, W, H);
+    g.globalAlpha = 1; g.drawImage(paper.vignette, 0, 0);
+    return (paper.plain = c);
+  }
+  const key = [proj.k.toPrecision(12), wrapLon(proj.lonCenter).toFixed(9), proj.y0.toFixed(12), proj.bearing ?? 0].join(); // to a hair, so a view wrapped or clamped on its way is the same view
+  if (paper.key === key) return paper.sheet;
+  const c = (paper.sheet ??= createCanvas(W, H)), g = c.getContext('2d');
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  paintPaper(g, paper, proj);
+  paper.key = key;
   return c;
 }
 
@@ -2318,7 +2419,7 @@ function drawGround(g, world, view, bg) {
   const drawn = drawnAt(view.zoom);
   const land = world.land.filter((l) => drawn(l) && meetsLL(f, l.box)).map((l) => l.poly);
   const coast = world.runs.filter((c) => drawn(c) && meetsLL(f, c.box)).map((c) => c.run);
-  g.drawImage(bg, 0, 0);
+  paintPaper(g, bg, proj);
   paintLand(g, data, land, coast, null);
   paintCoast(g, data, coast);
 }
@@ -2463,7 +2564,10 @@ function drawScaleBar(g, data, bg, view, w, h, style = 'genoese', sprite = null,
   scaleHit = { x: px, y: py, w: pw, h: ph };
   const sx = Math.max(0, view.x + px / view.scale), sy = Math.max(0, view.y + py / view.scale);
   const border = STYLE.scaleBorder; // blank: the parchment alone; transparent: the map shows through; bordered: parchment and a double rule
-  if (border !== 'transparent') g.drawImage(bg, sx, sy, Math.min(W - sx, pw / view.scale), Math.min(H - sy, ph / view.scale), px, py, pw, ph);
+  if (border !== 'transparent') {
+    if (typeof bg === 'function') bg(px, py, pw, ph); // a painter of the window's paper, a moving frame's
+    else g.drawImage(bg, sx, sy, Math.min(W - sx, pw / view.scale), Math.min(H - sy, ph / view.scale), px, py, pw, ph);
+  }
   if (border === 'bordered') {
     g.strokeStyle = hexA(STYLE.windRed, 0.7); g.lineWidth = 1; g.strokeRect(px + 0.5, py + 0.5, pw - 1, ph - 1);
     g.strokeRect(px + 3.5, py + 3.5, pw - 7, ph - 7);
@@ -3025,13 +3129,13 @@ function drawScene(g, scene, data, bg, view) {
   g.save();
   g.setTransform(view.scale, 0, 0, view.scale, -view.x * view.scale, -view.y * view.scale);
   // Only what meets the view is traced or drawn; a view skips the rest of the scene.
-  const r = viewRect(g, view), idx = indexOf(data);
+  const r = viewRect(g, view), idx = indexOf(data), paper = paperSheet(bg, data.proj);
   const land = idx.land.filter((l) => meets(r, l.box)).map((l) => l.poly);
   const coast = idx.coast.filter((c) => meets(r, c.box)).map((c) => c.run);
   const bgPart = (x0, y0, x1, y1) => {
     x0 = Math.max(0, Math.floor(x0)); y0 = Math.max(0, Math.floor(y0));
     x1 = Math.min(W, Math.ceil(x1)); y1 = Math.min(H, Math.ceil(y1));
-    if (x1 > x0 && y1 > y0) g.drawImage(bg, x0, y0, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0);
+    if (x1 > x0 && y1 > y0) g.drawImage(paper, x0, y0, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0);
   };
 
   // 1. parchment
@@ -3160,7 +3264,7 @@ function drawScene(g, scene, data, bg, view) {
   const c = scene.cartouche;
   if (show.kinds.has('cartouche') && meets(r, { x0: c.x, y0: c.y, x1: c.x + c.w, y1: c.y + c.h })) drawCartouche(g, c, bgPart);
   g.restore();
-  drawScaleBar(g, data, bg, view, W, H, show.scale, scene.scaleSprite, scalePlace(scene));
+  drawScaleBar(g, data, paper, view, W, H, show.scale, scene.scaleSprite, scalePlace(scene));
   // 11. the atlas's sheets in red, over everything, when asked for
   if (scene.debug?.length) {
     g.save();
@@ -3248,11 +3352,12 @@ function drawSheetsDebug(g, sheets, debug, proj, rect) {
 const SCALE_CARD_W = 700, SCALE_CARD_H = 170;
 function drawCartoucheCard(g, c, bg) {
   g.clearRect(0, 0, c.w, c.h);
-  drawCartouche(g, { ...c, x: 0, y: 0 }, (x0, y0, x1, y1) => g.drawImage(bg, x0 + 22, y0 + 22, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0)); // the parchment from the sheet's corner
+  const paper = paperSheet(bg, null);
+  drawCartouche(g, { ...c, x: 0, y: 0 }, (x0, y0, x1, y1) => g.drawImage(paper, x0 + 22, y0 + 22, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0)); // the parchment from the sheet's corner
 }
 function drawScaleCard(g, proj, bg, style, sprite) {
   g.clearRect(0, 0, SCALE_CARD_W, SCALE_CARD_H);
-  drawScaleBar(g, { proj }, bg, { scale: 1, x: 0, y: (H - SCALE_CARD_H) / 2 }, W, SCALE_CARD_H, style, sprite);
+  drawScaleBar(g, { proj }, paperSheet(bg, null), { scale: 1, x: 0, y: (H - SCALE_CARD_H) / 2 }, W, SCALE_CARD_H, style, sprite);
 }
 
 // ---------------------------------------------------------------- anchored to the earth
@@ -3389,8 +3494,9 @@ function drawAnchored(g, a, bg, view, layers) {
   for (const o of a.overlays) if (o.mode === 'sheet') drawSheet(g, o, proj, o.sheet); // the sheets, then the voyages over them, as at a stop
   drawVoyages(g, a.voyages, proj, { x0: 0, y0: 0, x1: W, y1: H }, undefined, true); // the notes' marks are the page's (drawNoteMark), as at a stop
   g.restore();
-  if (show.kinds.has('cartouche')) drawCartouche(g, a.cartouche, (x0, y0, x1, y1) => g.drawImage(bg, x0, y0, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0));
-  drawScaleBar(g, { proj }, bg, { scale: 1, x: 0, y: 0 }, W, H, show.scale, a.scaleSprite, scalePlace(a));
+  const paper = (x0, y0, x1, y1) => paintPaper(g, bg, proj, { x0, y0, x1, y1 }); // the window's paper, painted where a panel clears it
+  if (show.kinds.has('cartouche')) drawCartouche(g, a.cartouche, paper);
+  drawScaleBar(g, { proj }, (px, py, pw, ph) => paper(px, py, px + pw, py + ph), { scale: 1, x: 0, y: 0 }, W, H, show.scale, a.scaleSprite, scalePlace(a));
   if (a.debug?.length) { g.save(); g.setTransform(1, 0, 0, 1, 0, 0); drawSheetsDebug(g, a.sheets, a.debug, proj, { x0: 0, y0: 0, x1: W, y1: H }); g.restore(); }
 }
 
@@ -3582,7 +3688,7 @@ export async function createScene(environment, opts = {}) {
   data.trees = TREES[STYLE.trees] ? plantTrees({ proj: data.proj, isLand: scene.field.isLand, scene, lakes: STYLE.lakes !== 'off' && water ? water.lakes : [], w: W, h: H }) : [];
   data.palms = plantPalms({ proj: data.proj, isLand: scene.field.isLand, scene, w: W, h: H,
     pois: scene.lesser.filter((l) => l.poi).map((l) => ({ x: l.x, y: l.y, palms: POIS.find((p) => p.name === l.name)?.palms ?? 0 })) });
-  if (!parchments.has(tone)) parchments.set(tone, parchment(1539));
+  if (!parchments.has(tone)) parchments.set(tone, makePaper(tone));
   const bg = parchments.get(tone);
   return { scene, data, bg, proj: data.proj, world, coarse, view, timing: { load: tLoad - t0, place: performance.now() - tLoad } };
 }
@@ -3609,7 +3715,7 @@ async function loadPerson(id) {
 // A zoom slider's value as the zoom a name stops at: unset keeps `dflt`, 0 or less is off, the top is always, N draws at zoom N and out
 // (zoom <= N: the layers test zoom < end, so the end sits a hair past N).
 const zoomEnd = (n, dflt) => (n == null ? dflt : n <= 0 ? -Infinity : n >= ZOOM.max ? Infinity : n + 1e-9);
-const parchments = new Map(); // by tone; the same seed paints the same sheet
+const parchments = new Map(); // by tone, each its paper (makePaper): the same seed paints the same world
 
 export const RENDERINGS = ['vivid', 'scanned', 'plain'];
 export const REGION_LANGS = ['off', 'latin', 'english'];
@@ -3648,4 +3754,4 @@ export const TOWN_SIZES = ['area', 'population', 'rank'];
 export { RIVER_STYLES, LAKE_STYLES, REEF_STYLES, PLAYA_STYLES, TREE_STYLES, RELIEF_STYLES, PEAK_STYLES };
 export const MAX_ZOOM = ZOOM.max;
 export { OVERLAP_RULES, DEFAULT_OVERLAP };
-export { CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, anchorScene, drawAnchored, towerGlyph, SCALE_NAMES, readManifests, listStyles, listSprites, defaultSprites, selectSprites, chooseSprites, drawScene, drawGround, drawLate, LATE, IN_DRAG, covers, panView, zoomView, clampView, viewOfFrame, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };
+export { paperSheet, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, anchorScene, drawAnchored, towerGlyph, SCALE_NAMES, readManifests, listStyles, listSprites, defaultSprites, selectSprites, chooseSprites, drawScene, drawGround, drawLate, LATE, IN_DRAG, covers, panView, zoomView, clampView, viewOfFrame, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };
