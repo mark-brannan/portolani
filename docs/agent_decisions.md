@@ -483,3 +483,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261104t210436z
 - show-dont-tell picture is the generator's output rendered as a terminal PNG Undo: git rm docs/try-it/try-it-370.png and drop the image line ([#370](https://github.com/mark-brannan/portolani/pull/370))
+
+### 20261104t222332z
+- compass always shown, beside the always-shown walk-around buttons ([#372](https://github.com/mark-brannan/portolani/pull/372))
