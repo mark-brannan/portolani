@@ -1,5 +1,5 @@
-// Golden images: three views of the chart (world, region, close) drawn in Node and compared with
-// the committed PNGs in test/golden/. Only data in node_modules and committed fixtures is read, so
+// Golden images: the chart drawn in Node and compared with the committed PNGs in test/golden/, which are the list of views.
+// Only data in node_modules and committed fixtures is read, so
 // it runs offline. Regenerate after a change that is meant to move the pixels:
 //   npm run golden
 import { test } from 'node:test';
@@ -9,6 +9,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import { createScene, drawScene, doubtMarks, SCALE_NAMES, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, RELIEF_STYLES, PROJECTION_NAMES, W, H } from '../scripts/scene.mjs';
+import { VOYAGE_CONTRAST } from '../scripts/voyages.mjs';
 import { plantTrees } from '../scripts/trees.mjs';
 import { compare, CHANNEL } from '../scripts/golden-compare.mjs';
 import { coastNames, joinNames } from '../scripts/names.mjs';
@@ -33,7 +34,14 @@ const VIEWS = {
   'world-z2-person': { lon: 40, lat: 25, zoom: 2 }, // a person chosen: Ibn Battuta's journeys lit in red with his birth marked, Columbus dimmed
   'pacific-z3-migrations': { lon: -170, lat: -15, zoom: 3 }, // two migrations, chevrons over a soft ribbon, across the date line
   'china-z5-doubt': { lon: 117, lat: 35, zoom: 5 }, // a doubted leg: its rings, and its cloud on empty land (Ibn Battuta to Khanbaliq)
+  'levant-z6-marks': { lon: 33, lat: 32.5, zoom: 6 }, // a place with a tile and no figure gets a mark: Tyre a ruin, and Alexandria's on the Pharos
+  'ostia-z7-ruin': { lon: 12.29, lat: 41.76, zoom: 7 }, // and a ruin where a sight says so (Ostia)
+  'sheet-z3-voyage': { lon: -30, lat: 15, zoom: 3 }, // de la Cosa's sheet laid over the Atlantic with Columbus's voyage drawn over it, in a colour that reads against the scan
+  'pieces-z3.2-wipe': { lon: -45, lat: 20, zoom: 3.2 }, // de la Cosa's warped pieces left of the compare line, the bare map right (the slider wipe)
   'old-world-z2.6-1375': { lon: 62, lat: 33, zoom: 2.6 }, // the regions in the Catalan Atlas's names, read in English (docs/period-names)
+  'red-sea-z6-reefs': { lon: 38.5, lat: 20, zoom: 6 }, // the Red Sea's reefs, a row of crosses along each (scripts/reefs.mjs)
+  'uyuni-z6-playas': { lon: -67.5, lat: -20.5, zoom: 6 }, // Salar de Uyuni and its neighbours, pale salt on the land (scripts/playas.mjs)
+  'puget-z6.8-peaks': { lon: -122.4, lat: 47.8, zoom: 6.8 }, // Rainier, Baker and Olympus stood as landmark peaks, each a lone Catalan mountain (scripts/peaks.mjs)
 };
 // settings a golden draws with beyond the defaults; region-z5 is the README's picture, lettered PORTOLANI
 const OPTS = { 'region-z5': { autoTitle: false }, 'world-z2-voyage': { voyages: [{ id: 'magellan' }] },
@@ -41,6 +49,10 @@ const OPTS = { 'region-z5': { autoTitle: false }, 'world-z2-voyage': { voyages: 
   'world-z2-person': { person: 'ibn-battuta', voyages: [{ id: 'columbus' }] },
   'pacific-z3-migrations': { voyages: [{ id: 'lapita-expansion' }, { id: 'east-polynesia-settlement', colour: '#1f4e8c' }] } ,
   'china-z5-doubt': { voyages: [{ id: 'ibn-battuta-6' }] },
+  'levant-z6-marks': { sights: [{ name: 'Tyre', lon: 35.1933, lat: 33.2681, ruin: true }, { name: 'Tyre', lon: 35.2111, lat: 33.2692, ruin: true }, { name: 'Alexandria', lon: 29.886, lat: 31.214, ruin: true }] },
+  'ostia-z7-ruin': { sights: [{ name: 'Ostia', lon: 12.29, lat: 41.76, ruin: true }] },
+  'sheet-z3-voyage': { overlays: [{ id: 'de-la-cosa', mode: 'sheet' }], voyages: [{ id: 'columbus', colour: VOYAGE_CONTRAST[0], width: 3.2 }] },
+  'pieces-z3.2-wipe': { overlays: [{ id: 'de-la-cosa', mode: 'pieces', opacity: 0.8, clip: 0.5 }] },
   'old-world-z2.6-1375': { regions: 'english', regionSet: 'catalan-1375' } };
 // and its full-size render is kept for the README, so `npm run golden` refreshes both together
 const README_IMAGE = join(ROOT, 'docs', 'readme.jpg');
@@ -53,7 +65,7 @@ const names = () => made ??= joinNames(read(join(ROOT, 'test', 'fixtures', 'sea-
   coastNames(read(join(GEO, 'ne-admin-0-countries-50m.geojson')), read(join(GEO, 'ne-coastline-50m.geojson'))));
 const env = {
   createCanvas,
-  readJSON: async (p) => (p === 'geo/names-50m.json' ? names() : p === 'geo/seas-50m.json' ? read(join(ROOT, 'test', 'fixtures', 'seas-50m.json')) : read(resolve(p))),
+  readJSON: async (p) => (p === 'geo/names-50m.json' ? names() : p === 'geo/seas-50m.json' ? read(join(ROOT, 'test', 'fixtures', 'seas-50m.json')) : p === 'geo/playas-10m.json' ? read(join(ROOT, 'test', 'fixtures', 'playas-10m.json')) : p === 'geo/peaks-10m.json' ? read(join(ROOT, 'test', 'fixtures', 'peaks-10m.json')) : read(resolve(p))),
   loadImage: (p) => loadImage(resolve(p)),
   loadFont: async (family) => { GlobalFonts.registerFromPath(join(ROOT, 'test', 'fixtures', 'IMFeENrm28P.ttf'), family); },
 };
@@ -213,7 +225,7 @@ test('hills and mountains: every projection places and ends', async () => {
 // Roses stand in open water; where the water is heavily constrained they stand on open land instead, clear of the places.
 // The Atlantic sheet holds clear sea at all 17 sites; the two Mediterranean sheets hold too little, so theirs stand on land.
 test('roses: open land holds them where the water is too constrained', async () => {
-  const inland = { lon: 45, lat: 52, zoom: 7 }; // the Volga steppe: the sheet's circle holds no clear sea
+  const inland = { lon: 47, lat: 53, zoom: 7 }; // the Volga steppe: the sheet's circle holds no clear sea
   const { scene } = await createScene(env, { view: inland, scale: 'off', sprites: ['vivid/rose-aguiar', 'vivid/rose-catalan', 'vivid/rose-catalan-small'] });
   assert.ok(scene.roseDraws.some((r) => scene.field.isLand(r.x, r.y)), 'no rose on the land');
   for (const r of scene.roseDraws) for (const t of scene.towns) assert.ok(Math.hypot(r.x - t.x, r.y - t.y) > 20, `a rose sits on ${t.name}`);
@@ -260,10 +272,10 @@ test('trees: a pan keeps the forest, a zoom in thickens it', () => {
 test('voyages: a list, coloured and sized; an older single voyage; alternatives drawn when a death has them', async () => {
   const of = async (opts) => (await createScene(env, { view: VIEWS['world-z2'], ...opts })).scene.voyages;
   const one = await of({ voyage: 'magellan' });
-  assert.deepEqual(one.map((v) => [v.voyage.id, v.colour, v.width]), [['magellan', '#8c2f1e', 2.2]]);
+  assert.deepEqual(one.map((v) => [v.voyage.id, v.colour, v.width]), [['magellan', VOYAGE_CONTRAST[0], 4.5]]);
   const three = await of({ voyages: [{ id: 'columbus' }, { id: 'nowhere' }, { id: 'drake', colour: '#1F4E8C' }, { id: 'polo', width: 4.5 }] });
   assert.deepEqual(three.map((v) => v.voyage.id), ['columbus', 'drake', 'polo']);
-  assert.equal(three[0].colour, '#8c2f1e');
+  assert.equal(three[0].colour, VOYAGE_CONTRAST[0]);
   assert.equal(three[1].colour, '#1f4e8c');
   assert.equal(new Set(three.map((v) => v.colour)).size, 3, 'two voyages share an ink');
   assert.equal(three[2].width, 4.5);

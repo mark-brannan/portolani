@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import { createScene, ROSE_CAP, W } from '../scripts/scene.mjs';
 import { coastNames, joinNames } from '../scripts/names.mjs';
+import { ROSE } from '../scripts/atlas.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const GEO = dirname(fileURLToPath(import.meta.resolve('coastlines/data/ne-land-50m')));
@@ -30,7 +31,7 @@ for (const [name, view] of [['default view', { lon: 7, lat: 40, zoom: 5.4 }], ['
 }
 
 test('a shipped sheet that names its own rose is held to the cap too (Catalan Atlas, history on)', async () => {
-  const { scene } = await createScene(env, { view: { lon: -20.7, lat: 42.1, zoom: 3 }, scale: 'off', historical: true });
+  const { scene } = await createScene(env, { view: { ...ROSE, zoom: 3 }, scale: 'off', historical: true });
   assert.ok(scene.roseDraws.some((r) => r.sprite.id.startsWith('rose-catalan')), 'the Catalan Atlas rose is drawn');
   for (const r of scene.roseDraws) assert.ok(r.size <= ROSE_CAP.big * W + 1e-9, `a rose ${r.size} px wide`);
 });
@@ -40,12 +41,12 @@ test('a shipped sheet that names its own rose is held to the cap too (Catalan At
 const atPin = (scene) => scene.roseDraws.filter((r) => Math.hypot(r.x - W / 2, r.y - 500) < 1);
 for (const zoom of [2, 5, 8]) {
   test(`the pinned Catalan rose is drawn at the pin, once (zoom ${zoom})`, async () => {
-    const { scene } = await createScene(env, { view: { lon: -20.7, lat: 42.1, zoom }, scale: 'off' });
+    const { scene } = await createScene(env, { view: { ...ROSE, zoom }, scale: 'off' });
     assert.equal(atPin(scene).length, 1);
     assert.ok(atPin(scene)[0].sprite.id.startsWith('rose-catalan'));
   });
 }
 test('no pinned rose where the rose lines are off (zoom 8)', async () => {
-  const { scene } = await createScene(env, { view: { lon: -20.7, lat: 42.1, zoom: 8 }, scale: 'off', tune: { roselines: 0 } });
+  const { scene } = await createScene(env, { view: { ...ROSE, zoom: 8 }, scale: 'off', tune: { roselines: 0 } });
   assert.equal(atPin(scene).length, 0);
 });
