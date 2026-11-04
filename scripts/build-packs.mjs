@@ -79,6 +79,8 @@ const DEWIT_PAPER = '#e3dfc4'; // the paper inside the de Wit cartouche's tablet
 const AGUIAR_PAPER = '#e9e6d2'; // the vellum inside the Aguiar 1492 rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness
 const AGUIAR_CHART_PAPER = '#d3cfbb'; // the vellum of the whole Aguiar 1492 chart, inside its small rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness; the town sprites of the same scan share it
 const PRUNES_PAPER = '#b4a38d'; // the vellum of Prunes 1559 inside the west rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness (the brightest are specks)
+const OLIVA_PAPER = '#ddd7bf'; // the vellum of the Oliva chart inside its big south-west rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness; every Oliva sprite shares it
+const PLANCIUS_PAPER = '#d5cdb2'; // the paper of the Plancius 1609 plate inside its rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness; the ship shares it
 const PARCHMENT = '#e9d8b4'; // the renderer's default paper, for the kept `.cut.png`
 const argv = process.argv.slice(2), keepAt = argv.indexOf('--keep'), onlyAt = argv.indexOf('--only');
 const keep = keepAt >= 0 ? join(ROOT, argv[keepAt + 1]) : null;
@@ -101,8 +103,8 @@ const MAX_SCALE = 3; // a sprite is stored at most this many px wide per CSS px 
 const PACKS = [
   {
     name: 'scanned',
-    title: 'Sprites cropped from scans: Olaus Magnus, Carta Marina 1539; Jorge de Aguiar 1492; Catalan Atlas 1375; Genoese chart c. 1320-1350; Frederik de Wit; Ambroise Paré, Des monstres; Master W with the Key, two ship engravings c. 1475-1490',
-    licence: 'Public domain (PD-Art); scans via Wikimedia Commons (James Ford Bell Library; Beinecke Library, Yale; BnF Gallica btv1b55002481n; Library of Congress 2003630429; Royal Museums Greenwich). The pare-* sprites: Wellcome Collection, CC BY 4.0. Ships ship-w-*: Art Institute of Chicago 27881 (CC0) and Rijksmuseum RP-P-2014-30 (Public Domain Mark)',
+    title: 'Sprites cropped from scans: Olaus Magnus, Carta Marina 1539; Jorge de Aguiar 1492; Catalan Atlas 1375; Genoese chart c. 1320-1350; Frederik de Wit; Ambroise Paré, Des monstres; Master W with the Key, two ship engravings c. 1475-1490; a member of the Oliva family, portolan chart of the Mediterranean 1621-1665; Petrus Plancius, Tabula geographica (Acts and Epistles) 1609',
+    licence: 'Public domain (PD-Art); scans via Wikimedia Commons (James Ford Bell Library; Beinecke Library, Yale; BnF Gallica btv1b55002481n; Library of Congress 2003630429; Royal Museums Greenwich). The pare-* sprites: Wellcome Collection, CC BY 4.0. Ships ship-w-*: Art Institute of Chicago 27881 (CC0) and Rijksmuseum RP-P-2014-30 (Public Domain Mark). The oliva sprites: Barry Lawrence Ruderman Antique Maps via Commons (PD-Art); the plancius sprites: National Library of Israel, Eran Laor Cartographic Collection (public domain)',
     ink: '#3b2a1a',
     sprites: [
       // Carta Marina figures are patches (#111): the whole crop, sea and swell and all, its edge feathered.
@@ -199,6 +201,30 @@ const PACKS = [
       { id: 'town-aguiar-avignon', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', key: 'patch', paper: AGUIAR_CHART_PAPER, crop: [2330, 1016, 2462, 1104], figure: [2342, 1026, 2452, 1086], sizePx: 48, rotate: -14 },
       // the Genoese scale bar: the old tight box is `figure`, the crop reaches a little past it so the edge feather falls on bare vellum, not on the bar's border
       { id: 'scale-genoese', kind: 'scale', style: 'genoese', scan: 'genoese', key: 'patch', paper: GENOESE_PAPER, crop: [3690, 3797, 4420, 3955], figure: [3708, 3815, 4400, 3940], sizePx: 260 },
+      // The Oliva family chart (1621-1665), hand-painted on vellum: every sprite a patch, the whole crop with its rhumb lines and
+      // lettering as drawn, its edge feathered, the vellum divided out.
+      // the big rose of the south-west: the sixteen points, the fleur-de-lis north and the gilt boss, the circle feathered just outside its outer ring
+      { id: 'rose-oliva', kind: 'rose', style: 'oliva', scan: 'oliva-chart', key: 'patch', paper: OLIVA_PAPER, crop: [2750, 7997, 5150, 10397], sizePx: 300, circle: [1200, 1200, 1170], circleFeather: 20 },
+      // the small rose off Valencia, fleur-de-lis north; the coast name "Valentia" runs through its ring and stays as drawn
+      { id: 'rose-oliva-small', kind: 'rose', style: 'oliva', scan: 'oliva-chart', key: 'patch', paper: OLIVA_PAPER, crop: [2484, 3238, 3284, 4038], sizePx: 110, circle: [400, 400, 392], circleFeather: 8 },
+      // Mount Ararat with Noah's Ark on its summit and "arca de noe" inscribed on it, the rivers beside it; the crop stops short of "ASIA".
+      // The chart draws the Levant and Caucasus figures on their sides, base to the east, so these three cuts are turned a quarter clockwise
+      { id: 'mountain-oliva-ararat', kind: 'mountain', style: 'oliva', scan: 'oliva-chart', key: 'patch', paper: OLIVA_PAPER, crop: [13620, 2600, 15160, 4150], turn: 90, sizePx: 120 },
+      // the Caucasus hills beside it: grey-gilt, green, orange, blue and green washed cones; only the Ark's prow at the right edge is erased
+      { id: 'mountain-oliva-hills', kind: 'mountain', style: 'oliva', scan: 'oliva-chart', key: 'patch', paper: OLIVA_PAPER, crop: [12360, 2850, 13760, 4200], turn: 90, sizePx: 140,
+        erase: [[13690, 3400, 13760, 3530]] },
+      // Jerusalem: the painted (oxidised) city with its blue cross, the orange crosses beside it; "Jerusalem" lettering lies outside the crop
+      { id: 'town-oliva-jerusalem', kind: 'town', style: 'oliva', scan: 'oliva-chart', key: 'patch', paper: OLIVA_PAPER, crop: [15330, 6430, 16170, 7560], turn: 90, sizePx: 64 },
+      // a palm on the Barbary coast with its strip of ground; the chart draws it lying on its side, so the cut is turned a quarter clockwise
+      { id: 'palms-oliva', kind: 'tree', style: 'oliva', scan: 'oliva-chart', key: 'patch', paper: OLIVA_PAPER, crop: [4060, 6930, 5150, 8000], turn: 90, sizePx: 70 },
+      // Petrus Plancius, Tabula geographica ... Actis et Epistolis Apostolorum (1609), an engraving on toned paper: patches, the paper divided out.
+      // the galleon off Crete, bow to the left, with the sea and the parallel round it; the crop reaches well below the hull for its water.
+      // The "R" of "PARS" beside the stern and the top of "Persei Specula" below are erased
+      { id: 'ship-plancius', kind: 'ship', style: 'plancius', scan: 'plancius-acts', key: 'patch', paper: PLANCIUS_PAPER, crop: [4558, 2945, 4905, 3365], figure: [4571, 2966, 4891, 3310], sizePx: 80, heading: 'left',
+        erase: [[4884, 3060, 4905, 3150], [4815, 3292, 4905, 3365]] },
+      // the rose between "Occidens" and "Oriens", fleur-de-lis north and the east ornament; the tail of "Occidens" and the head of "Meridies" erased
+      { id: 'rose-plancius', kind: 'rose', style: 'plancius', scan: 'plancius-acts', key: 'patch', paper: PLANCIUS_PAPER, crop: [2840, 2835, 3250, 3245], sizePx: 110, circle: [205, 205, 203], circleFeather: 4,
+        erase: [[2840, 3015, 2885, 3065], [3026, 3188, 3080, 3245]] },
       // Paré's sea monsters (Des monstres), black line on blank paper, with Master W's ships
       { id: 'pare-truie', kind: 'monster', style: 'pare', scan: 'pare-3289', key: 'ink', crop: [880, 440, 3030, 1640], sizePx: 190, minClearancePx: 150, weight: 3, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
       { id: 'pare-boar', kind: 'monster', style: 'pare', scan: 'pare-3267', key: 'ink', crop: [520, 2100, 2500, 3260], sizePx: 180, minClearancePx: 140, weight: 3, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
