@@ -141,8 +141,9 @@
   #sightCard { position: sticky; bottom: -20px; margin: 4px -16px -20px; padding: 8px 16px 12px; background: var(--panel); align-self: stretch; contain: inline-size; } /* as wide as the list, never widening it */
   #where .places button, #goPanel button, #where .vrow button, #laneVoyages button { padding: 3px 10px; font: 13px var(--serif); border-radius: 12px; }
   #where .places button { display: block; text-align: left; }
-  #where #findPoi { display: inline-flex; align-items: center; gap: 6px; }
-  #where #findPoi svg { width: 16px; height: 16px; }
+  #where #findPoi, #where .dice { display: inline-flex; align-items: center; gap: 6px; }
+  #where #findPoi svg, #where .dice svg { width: 16px; height: 16px; }
+  .gorow { display: flex; flex-wrap: wrap; gap: 4px; }
   #coords { display: flex; gap: 4px; align-self: stretch; }
   #coords input { flex: 1; min-width: 0; max-width: none; padding: 3px 8px; font: 13px var(--serif); border-radius: 12px; background: var(--panel); color: var(--fg); border: 1px solid var(--rule); }
   /* timeline A (timeline=a, the default): the Voyages and People buttons' one drawer: one timeline on one linear year axis, people above it and voyages below,
@@ -729,13 +730,15 @@
     </button>
   </div>
   <div id="goPanel" class="drawer menu">
-    <button id="locate" type="button" title="Fill in my position">Find my position</button>
     <form id="coords" autocomplete="off">
       <input id="coordsText" type="text" placeholder="a place, or lat, lon" aria-label="A place, or latitude, longitude">
       <button type="submit" aria-label="Go there" title="Go">Go</button>
     </form>
     <p id="goMiss" role="status" hidden></p>
-    <button id="findPoi" type="button" title="Ring every point of interest in view in red"><svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="7.5" fill="none" stroke="#a8432e" stroke-width="1" opacity="0.5"/><circle cx="9" cy="9" r="4.5" fill="none" stroke="#a8432e" stroke-width="1.4"/><circle cx="9" cy="9" r="1.4" fill="#a8432e"/></svg>Points of interest</button>
+    <button id="locate" type="button" title="Fill in my position">Find my position</button>
+    <div class="gorow"><button type="button" data-go="Home: the Mediterranean" title="Fly home, to the Mediterranean">Home</button><button type="button" data-go="The world" title="See the whole world">The world</button></div>
+    <div class="gorow"><button id="randomPlace" type="button" class="dice" title="A location with notes into the box; each press the next, until every one has come round"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="2" y="2" width="14" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="6" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="9" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/></svg>Random location</button><button id="randomPerson" type="button" class="dice" title="Choose a person with a story; each press the next, until every one has come round"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="2" y="2" width="14" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="6" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="9" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/></svg>Random person</button></div>
+    <button id="findPoi" type="button" title="Ring every point of interest in view in red"><svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="7.5" fill="none" stroke="#a8432e" stroke-width="1" opacity="0.5"/><circle cx="9" cy="9" r="4.5" fill="none" stroke="#a8432e" stroke-width="1.4"/><circle cx="9" cy="9" r="1.4" fill="#a8432e"/></svg>Find Points of Interest</button>
   </div>
   <div id="sightsPanel" class="drawer menu">
     <ul id="sightsList" class="places"></ul>

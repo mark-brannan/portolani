@@ -9,12 +9,20 @@ Feature: Places to fly to  (the compass `#go`, Find; the astrolabe `#sights`, Lo
     And seven groups follow, each under its own heading, one open at a time: Regions; the sights in time order, the ancient world, the medieval Indian Ocean and Asia, Mali's trade network, the age of discovery, the modern world (six sights each but for Mali's nine and the age of discovery's eleven, most of them outside Europe); and Pacific Islands and Atolls
   Scenario: Find rings the points of interest
     Given the compass's Find drawer open
-    When the user clicks "Points of interest"
+    When the user clicks "Find Points of Interest"
     Then red rings swell round every point of interest in view (the places, the lettered regions with a tile, the laid charts' notes), as round a chart's notes when it arrives
     And each heading is the port names' size and weight, in italic, and folds its group, with its count and span of years beside it: only the age of discovery is open at first, and opening one slides the open one shut
     And the date sits to the right of the name, so the button is short and wide, and under it is the caption; the date (a year, a century or a span); the age of discovery also holds Seville, Genoa, Venice, Majorca and Dieppe, their dates followed by "charts made here"
     And a port whose name has changed lists the historic name first and today's in brackets, "Batavia (Jakarta)", "Calicut (Kozhikode)"
     And each port opens a flavour-text tile on a click of its mark, with no lettering beside the mark
+  Scenario: Find's drawer, top to bottom
+    Given the compass's Find drawer open
+    Then the Go box and its Go button head it, then "Find my position", then "Home" and "The world" (the Locations list's two rows, flown to as they are there), then "Random location" and "Random person", then "Find Points of Interest"
+  Scenario: the dice come round everyone
+    Given the compass's Find drawer open
+    When the user presses "Random location" again and again
+    Then each press puts the next location with notes or pictures in the Go box, in a shuffled order that is the same on every load, and every one comes round before any repeats; Go flies there
+    And "Random person" does the same through the people with a story or pictures, choosing each as a click in People does
   Scenario: pick a sight
     Given the chart at the default view
     When the user clicks `#sights`, then "Lisbon"

@@ -21,6 +21,7 @@ import { OVERLAY_DEFAULTS, effectiveOpacity, overlayFromHash, overlayToHash, she
 import { POIS, POI_ZOOM } from './pois.mjs';
 import { PEOPLE_FILE, PICTURES_FILE, SIGHT_PICTURES_FILE, SIGHT_MANIFEST_FILE, sightDeal, laneAxis, eraBands, EARLIER_MARKS, timelineVariant, eraOf, eraYears, eraScale, barOn, lifeSpan, firstYear, yearsText, PERSON_RED, pictureCredit, pictureNote, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, sightFrame, viewContaining, withPictures, peopleOf, whoOf, deathOf, sightPicturesOf, MEMENTO, MEMENTO_EN, mementoNext, mementoLines } from './people.mjs';
 import { fold, bestPlace, withoutPartsOfFrames } from './placename.mjs';
+import { nextInCycle } from './cycle.mjs';
 import { planFlight, ease as flyEase, FLY_KNOBS, flyDefaults } from './flight.mjs';
 
 const memo = new Map();
@@ -2345,6 +2346,9 @@ function peopleClick(e) {
   const away = style.pictures?.length === 0; // every picture put away: the person is still chosen, and one click deals them back
   const id = b.dataset.person === style.person && !away ? null : b.dataset.person;
   clearTable(); // whatever lies on the table put away first, and a second click lets the person go
+  choosePerson(id);
+}
+function choosePerson(id) {
   if (id) { style = { ...style, person: id }; dealing = `person:${id}`; } // their cards dealt as the map arrives
   showPeople(); showSightCard(); writeHash(); render();
   if (id) flyToSubject();
@@ -3187,6 +3191,30 @@ $('coords').addEventListener('submit', async (e) => {
   goTo(target);
 });
 $('coordsText').addEventListener('input', () => { $('goMiss').hidden = true; });
+// Find's Home and The world: the Locations list's own two rows, flown to as their buttons there fly
+$('goPanel').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-go]'), to = b && places.find((p) => p.name === b.dataset.go)?.view;
+  if (to) { clearSheetFor(to); goTo(to); }
+});
+// Find's dice: the next location with notes or pictures into the box, or the next person with a story or pictures
+// chosen, in one shuffled order that is the same on every load (cycle.mjs); the last one shown kept in this browser
+const lastRolled = (key, name) => { try { if (name) localStorage.setItem(key, name); return localStorage.getItem(key); } catch { return name ?? null; } };
+$('randomPlace').addEventListener('click', async () => {
+  await loadSights().catch(() => {});
+  const names = places.map((p) => p.name).filter((n) => SIGHT_TILES[n]?.text || sightData?.images[n]?.length);
+  const name = nextInCycle(names, lastRolled('portolani.randomPlace'));
+  if (!name) return;
+  lastRolled('portolani.randomPlace', name);
+  $('coordsText').value = name; $('goMiss').hidden = true;
+});
+$('randomPerson').addEventListener('click', async () => {
+  await loadPeople().catch(() => {});
+  const ids = (peopleData?.people ?? []).filter((p) => p.bio || p.images.length).map((p) => p.id);
+  const id = nextInCycle(ids, lastRolled('portolani.randomPerson'));
+  if (!id) return;
+  lastRolled('portolani.randomPerson', id);
+  clearTable(); choosePerson(id);
+});
 
 // A sheet in the way: taken off (its eye shows it hidden) if it would cover the place a fly lands on, or with `frame`
 // any of the frame it lands on; a fly that lands clear of the sheet leaves it shown (docs/spec/design.md, "A laid sheet
