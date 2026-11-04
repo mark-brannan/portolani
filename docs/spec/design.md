@@ -138,10 +138,10 @@ Feature: A chart's row in the Charts drawer
     And the eye is on or off for that chart alone: no other chart is shown or hidden, no placement is reset, no flight; the map's zoom, position and bearing stay where they are
     And the eye never plays the points of interest's rings or lights their marks; only the icon, the name and the row's own chips do
   Scenario: a new chart's icon or name clears the old one, then flies
-    Source: the user in the session of 2026-11-04: "The charts button for show/hide should never change the zoom or the view. It only toggles chart overlays on/off. It does not trigger POI highlighting. This contrasts with clicking the chip for each chart, which focuses a particular position and zoom and overlays only that single chart with highlights for POIs. Immediately upon clicking a map chip the notes, buttons or other controls for that map should appear below it in the drawer, not waiting until after the overlay and animations are fully drawn."; "When clicking a new map chip, first the old one is cleared (As with the skull) effect, prior to 'flying' to the new position."
+    Source: the user in the session of 2026-11-04 (and later that day: "we have a brief skull animation flicker when selecting different charts by chip. That should not be the behavior now, it should only transition from one chart overlay to the next (clear, fly, overlay) without an extra animation."): "The charts button for show/hide should never change the zoom or the view. It only toggles chart overlays on/off. It does not trigger POI highlighting. This contrasts with clicking the chip for each chart, which focuses a particular position and zoom and overlays only that single chart with highlights for POIs. Immediately upon clicking a map chip the notes, buttons or other controls for that map should appear below it in the drawer, not waiting until after the overlay and animations are fully drawn."; "When clicking a new map chip, first the old one is cleared (As with the skull) effect, prior to 'flying' to the new position."
     Given one chart's sheet shown
     When the user clicks another chart's icon or name
-    Then the shown sheet is cleared first, as the skull clears the table, its faint skull flashing over the map, and only then does the map fly to the new chart's frame
+    Then the shown sheet is cleared first, as the skull clears the table but with no skull flash or other animation of its own, and only then does the map fly to the new chart's frame, and the new sheet is laid: clear, fly, overlay
     And the new chart's row shows its Align to chips, its up chip and its Points of interest chip at once, on the click, not once the flight lands or the sheet has faded in
     And once it lands the new sheet alone lies on the map and its points of interest announce themselves
   Scenario: the user restacks the charts shown
@@ -671,6 +671,12 @@ Feature: The skull is the one clear  (`#sweep`, page.js `clearMap`)
     And no voyage is drawn, `voyages=` leaves the hash, and a voyage playing stops and its band goes
     And no chart's sheet is laid, `overlay=` and `sheet=` leave the hash, and a chart shown again lies at its own place
     And the faint skull flashes over the map once, as it does when cards go
+  Scenario: the skull clears every chart, voyage, person, card and point of interest, leaving only the base map
+    Source: the user, 2026-11-04, on a regression in which the skull no longer cleared the charts: "The skull clear is not clearing charts.  It must clear all charts, voyages, people, cars, and POIs (leaving only the base map).  This must be in the spec in addition to fixing it.  It is a firm requirement" ("cars" read as cards).
+    Given any mix of charts' sheets, voyages, a person and their cards, a point of interest's tile and cards, and charts' overlays laid by any route (the eye, a chart's name or icon, the link)
+    When the user clicks the skull
+    Then nothing of them is left on the map: the base map alone is drawn, and no clear stops short for any of them
+    And the clear never fails part-way: the charts go even when no voyage or person was there to go first
   Scenario: the view and the settings stay
     Given the map at some place, zoom and bearing (the world turned to a chart), in a projection other than the default, with the rose and the styles as chosen
     When the user clicks the skull

@@ -533,8 +533,14 @@ test('voyages: several drawn at once, each in its own ink, carried by the link; 
     if (!(await page.$eval('#voyagesPanel', (d) => d.classList.contains('open')))) await page.click('#voyages');
     assert.equal(await page.locator('#voyagesPanel .tool').count(), 0, 'the Voyages drawer has a Clear of its own: the skull is the one clear');
     const mapOf = (h) => new URLSearchParams(h.slice(1)).get('map'), was = mapOf(await hash());
+    // a chart's sheet laid too (its eye, as the page's own handler takes it): the skull must lift it, and throw nothing doing so
+    await page.waitForFunction(() => !document.querySelector('#chartList [data-overlay="carta-marina"] .eye')?.hidden);
+    await page.$eval('#chartList [data-overlay="carta-marina"] .eye', (b) => b.click());
+    await page.waitForFunction(() => /overlay=carta-marina/.test(location.hash));
     await page.click('#sweep');
+    await page.waitForFunction(() => !/overlay=|sheet=/.test(location.hash), null, { timeout: 60000 });
     assert.deepEqual(await on(), []);
+    assert.doesNotMatch(await hash(), /overlay=|sheet=/, 'the skull left a chart on the map');
     assert.equal(mapOf(await hash()), was, 'the skull moved the map');
     assert.doesNotMatch(await hash(), /voyages=/);
     assert.match(await hash(), /voyagewidth=2.2/, 'the skull cleared a setting');
