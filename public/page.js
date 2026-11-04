@@ -892,8 +892,8 @@ function setDrawer(open, byKeyboard = false, by = drawers.find(([, d]) => d === 
 }
 for (const [b, d] of drawers) b.addEventListener('click', (e) => setDrawer(d === openDrawer() && b === openedBy ? false : d, e.detail === 0, b)); // detail 0: Enter or Space
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && openDrawer()) setDrawer(false, true); });
-// the play band is not the map: its buttons and strip leave a drawer open
-const outside = (t) => { const d = openDrawer(); return d && t instanceof Node && !where.contains(t) && !d.contains(t) && !$('voyageBand').contains(t); };
+// the play band is not the map, nor is the skull: their buttons leave a drawer open, so the table is cleared mid-use
+const outside = (t) => { const d = openDrawer(); return d && t instanceof Node && !where.contains(t) && !d.contains(t) && !$('voyageBand').contains(t) && !$('memento').contains(t); };
 // On a phone every drawer stays up while the map is tapped or moved.
 addEventListener('pointerdown', (e) => { if (outside(e.target) && !(phone.matches && e.target === canvas)) setDrawer(false); });
 addEventListener('focusout', (e) => { if (e.relatedTarget && outside(e.relatedTarget)) setDrawer(false); }); // tabbed out; a click that focuses nothing has no relatedTarget
@@ -2158,7 +2158,7 @@ function dealNow(key = dealing) {
 }
 // The table cleared, as the skull in the right margin clears it and as every fly does first: every card put away, the
 // subject let go (no person lit, no sight chosen, no picture kept in the link) and, with `hide`, the tile shut; the
-// broom sweeps across the map where any card lay. Voyages drawn stay. True when a person was chosen, whose voyages the
+// skull flashes faintly over the map where any card lay (wipeSkull). Voyages drawn stay. True when a person was chosen, whose voyages the
 // scene drew lit: the caller draws the map again.
 function clearTable(hide = true) {
   const hadPerson = Boolean(style.person), lay = onTable > 0;
@@ -2169,7 +2169,7 @@ function clearTable(hide = true) {
     flips.clear(); links.clear(); raised = []; looking = null; focusedPic = null;
     showPeople(); showSightCard(); writeHash();
   }
-  if (lay) { sweepBroom(); if (ground) repaint('pictures swept'); }
+  if (lay) { wipeSkull(); if (ground) repaint('pictures swept'); }
   return hadPerson;
 }
 // A sight's pictures are dealt along the foot of the view they are dealt in (sightDeal), the place clear above them:
@@ -2303,16 +2303,21 @@ $('sweep').addEventListener('click', () => {
   if (clearTable()) render(); // a person's voyages back in their own inks
   memento = mementoNext(memento); showMemento();
 });
-// The broom (the skull's old icon) sweeps once across the map from the right, about 0.6 s, while the cards go; none
-// under reduced motion
-function sweepBroom() {
-  const el = $('broom');
+// The open drawer stops above the skull and its line (--memento-h, index.html), however many lines the phrase takes and
+// whether the compass shows over it
+new ResizeObserver(() => document.documentElement.style.setProperty('--memento-h', `${$('memento').offsetHeight}px`)).observe($('memento'));
+// The wipe: the skull itself, large and almost unseen, flashes once over the middle of the map while the cards go,
+// about half a second; none under reduced motion
+function wipeSkull() {
+  const el = $('wipe');
   if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  const r = canvas.getBoundingClientRect(), left = Math.max(0, r.left), right = Math.min(innerWidth, r.right), tall = Math.min(r.bottom, innerHeight) - Math.max(0, r.top), size = tall * 0.3;
-  Object.assign(el.style, { width: `${size}px`, height: `${size}px`, top: `${Math.max(0, r.top) + (tall - size) * 0.62}px`, left: `${left}px` });
+  if (!el.firstChild) el.append($('sweep').querySelector('svg').cloneNode(true));
+  const r = canvas.getBoundingClientRect(), left = Math.max(0, r.left), top = Math.max(0, r.top), wide = Math.min(innerWidth, r.right) - left, tall = Math.min(innerHeight, r.bottom) - top, size = Math.min(wide, tall) * 0.7;
+  Object.assign(el.style, { width: `${size}px`, height: `${size}px`, left: `${left + (wide - size) / 2}px`, top: `${top + (tall - size) / 2}px` });
   el.hidden = false;
-  el.animate([{ transform: `translateX(${right - left}px) rotate(8deg)` }, { transform: `translateX(${(right - left) * 0.5 - size / 2}px) rotate(-10deg)`, offset: 0.5 }, { transform: `translateX(${-size}px) rotate(8deg)` }],
-    { duration: 600, easing: 'ease-in-out' }).finished.then(() => { el.hidden = true; }, () => { el.hidden = true; });
+  el.getAnimations().forEach((x) => x.cancel());
+  el.animate([{ opacity: 0, transform: 'scale(0.94)' }, { opacity: 0.1, transform: 'scale(1)', offset: 0.35 }, { opacity: 0, transform: 'scale(1.04)' }],
+    { duration: 500, easing: 'ease-out' }).finished.then(() => { el.hidden = true; }, () => {});
 }
 // The box round a subject, once per subject: a person's birth, death and voyages; a sight's spots, padded (sightFrame)
 function frameOfSubject(s) {
