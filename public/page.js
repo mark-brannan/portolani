@@ -19,7 +19,7 @@ import { playedOn, playDateText, playPace, isLong } from './scene.mjs'; // the p
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, effectiveOpacity, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
-import { PEOPLE_FILE, PICTURES_FILE, SIGHT_PICTURES_FILE, SIGHT_MANIFEST_FILE, sightDeal, eraOf, eraYears, eraScale, barOn, lifeSpan, firstYear, yearsText, PERSON_RED, pictureCredit, pictureNote, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, sightFrame, viewContaining, withPictures, peopleOf, whoOf, deathOf, sightPicturesOf, MEMENTO, MEMENTO_EN, mementoNext, mementoLines } from './people.mjs';
+import { PEOPLE_FILE, PICTURES_FILE, SIGHT_PICTURES_FILE, SIGHT_MANIFEST_FILE, sightDeal, laneAxis, eraBands, EARLIER_MARKS, timelineVariant, eraOf, eraYears, eraScale, barOn, lifeSpan, firstYear, yearsText, PERSON_RED, pictureCredit, pictureNote, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, sightFrame, viewContaining, withPictures, peopleOf, whoOf, deathOf, sightPicturesOf, MEMENTO, MEMENTO_EN, mementoNext, mementoLines } from './people.mjs';
 import { fold, bestPlace, withoutPartsOfFrames } from './placename.mjs';
 import { planFlight, ease as flyEase, FLY_KNOBS, flyDefaults } from './flight.mjs';
 
@@ -93,6 +93,8 @@ const hashParams = () => new URLSearchParams(location.hash.slice(1));
 const ALL_CHARTS = [hashParams(), new URLSearchParams(location.search)].some((q) => q.get('charts') === 'all');
 // whether a grouped list's section opens when a mouse rests on its heading (`hover=`); on is written as no key, `hover=0` is off
 const hoverFromHash = () => hashParams().get('hover') !== '0';
+// which people and voyages timeline the medallion and the dividers open (people.mjs timelineVariant); A is written as no key
+const timelineFromHash = () => timelineVariant(hashParams().get('timeline'));
 
 function viewFromHash() {
   const q = hashParams(), m = /^(-?[\d.]+)\/(-?[\d.]+)\/(-?[\d.]+)$/.exec(q.get('map') ?? '');
@@ -181,6 +183,7 @@ function writeHash() {
   if (v.projection !== PROJECTION_NAMES[0]) q.set('projection', v.projection);
   if (v.bearing) q.set('bearing', String(Math.round(v.bearing * 10) / 10)); // the world turned: the compass direction at the top, north up written as no key
   if (!hoverOpen) q.set('hover', '0');
+  if (timeline !== 'a') q.set('timeline', timeline);
   if (!sameSet(selection, DEFAULT_SET)) q.set('sprites', SPRITES.filter((s) => selection.has(s.key)).map((s) => encodeKey(s.key)).join(','));
   if (st.townSize !== DEFAULTS.townSize) q.set('townsize', st.townSize);
   if (!st.names) q.set('names', '0');
@@ -374,6 +377,11 @@ const HOVER_GLYPHS = {
   off: svg(`<path d="M2 4h13" ${stroke('currentColor', 1.4)}/>${ARROW}<path d="M14.5 1.5l1.2 1.2M13.5 5h1.6M14.5 8.5l1.2-1.2" ${stroke('currentColor', 0.8)}/>`),
   on: svg(`<path d="M2 4h13" ${stroke('currentColor', 1.4)}/><path d="M5 8.5h9M5 12h7M5 15.5h8" ${stroke('currentColor', 0.7)}/>${ARROW}<path d="M25 2.5a2.6 2.6 0 1 1-2.6-.1" ${stroke('currentColor', 0.8)}/>`),
 };
+// the two people and voyages timelines, by their shape: A one wide bar, B two tall columns
+const TIMELINE_GLYPHS = {
+  a: svg(`<rect x="1.5" y="5" width="25" height="8" rx="1.5" ${stroke('currentColor', 1.3)}/><path d="M4 8h9M9 10.5h12" ${stroke('currentColor', 1.2)}/>`),
+  b: svg(`<rect x="5" y="1.5" width="8" height="15" rx="1.5" ${stroke('currentColor', 1.3)}/><rect x="15" y="1.5" width="8" height="15" rx="1.5" ${stroke('currentColor', 1.3)}/>`),
+};
 const MAP_LINES = '<path d="M0 4q8-3 14 2t14-1M0 13q9 3 15-1t13 2" fill="none" stroke="currentColor" stroke-width=".7" opacity=".6"/>';
 const BORDER_GLYPHS = {
   bordered: svg(`<rect width="28" height="18" fill="none"/>${MAP_LINES}<rect x="4" y="4" width="20" height="10" fill="#e9d8b4" stroke="#8c2f1e" stroke-width="1"/><rect x="6" y="6" width="16" height="6" fill="none" stroke="#8c2f1e" stroke-width=".6"/>`),
@@ -450,6 +458,7 @@ const CHOICES = {
   overlayMode: [['sheet', 'One sheet', 'the whole scan, opaque, laid level and centred, dragged by hand', HOOD_GLYPHS.sheets], ['pieces', 'Warped pieces', 'each piece warped onto today\'s coast, at the opacity below', HOOD_GLYPHS.rings]],
   tuneOrigin: [['rose', `Catalan rose (${ROSE_AT})`, 'every band\'s grid has a corner on the rose', HOOD_GLYPHS.rose], ['zero', '0° 0°', 'NOAA\'s own zero', HOOD_GLYPHS.zero]],
   tuneCurated: [['1', 'On', 'the curated charts take the place of the grid cells they hold', HOOD_GLYPHS.curated], ['0', 'Off', 'grid cells everywhere', HOOD_GLYPHS.grid]],
+  timelineVariant: [['a', 'A · horizontal', 'one wide drawer for people and voyages, their bars on one axis', TIMELINE_GLYPHS.a], ['b', 'B · vertical', 'a People drawer and a Voyages drawer, each a list down the years', TIMELINE_GLYPHS.b]],
   hoverOpen: [['off', 'Off', 'a click opens a section', HOVER_GLYPHS.off], ['on', 'On', 'resting the pointer on a heading opens its section', HOVER_GLYPHS.on]],
   tuneRoselines: [['1', 'On', 'the rose\'s 32 lines as one more hub at every zoom', HOOD_GLYPHS.roselines], ['0', 'Off', 'only the sheet the rose falls in', HOOD_GLYPHS.off]],
   flyShape: [['step', 'Step', 'out about the place left, across at the top, down onto the place; Blend lets the pan run alongside the zoom'], ['hyperbolic', 'Hyperbolic', 'van Wijk & Nuij, as MapLibre flies: pan and zoom together on one curve, Curve setting its height']],
@@ -780,6 +789,7 @@ if (UI) {
 }
 
 let hoverOpen = hoverFromHash();
+let timeline = timelineFromHash(); // 'a' or 'b'
 let view = viewFromHash();
 let style = styleFromHash();
 let selection = selectionFromHash();
@@ -878,6 +888,7 @@ phone.addEventListener('change', () => { drawCards(); if (ground) render(); }); 
 // text box, on a wide screen only, so a phone's keyboard does not cover the sheet); shut by the keyboard,
 // the focus goes back to the button that opened it.
 const where = $('where');
+// The medallion's and the dividers' drawers are the timeline's (placeTimeline): A's one drawer for both, or B's two.
 const drawers = [[$('open'), $('drawer')], [$('charts'), $('chartsDrawer')], [$('sights'), $('sightsPanel')], [$('go'), $('goPanel')], [$('voyages'), $('voyagesPanel')], [$('people'), $('peoplePanel')], [$('anchor'), $('anchorPanel')]];
 const openDrawer = () => drawers.find(([, d]) => d.classList.contains('open'))?.[1] ?? false;
 let openedBy = null; // the button the open drawer was opened by
@@ -888,15 +899,16 @@ function setDrawer(open, byKeyboard = false, by = drawers.find(([, d]) => d === 
   openedBy = open ? by : null;
   for (const [b, d] of drawers) { d.classList.toggle('open', d === open); b.setAttribute('aria-expanded', String(d === open && b === openedBy)); }
   if (open?.id === 'voyagesPanel') fillVoyages(); else if (open?.id === 'peoplePanel') fillPeople(); // the lists load on the first open
+  else if (open?.id === 'timelinePanel') fillTimeline(by === $('voyages') ? 'voyages' : 'people', open !== was); // A: the other button keeps it open and moves to its lane
   placeBand();
-  if (open === was) return; // the same drawer again
+  if (open === was) return; // the same drawer again: A's other button, at its own lane
   document.documentElement.classList.toggle('sheet', !!open && !open.classList.contains('menu')); // on a phone the map makes room above the settings or the charts; a lighter drawer sits over its foot
   if (open?.id === 'chartsDrawer') chartsFresh = !style.overlays.length;
   if (open) (open.id === 'goPanel' ? (phone.matches ? null : $('coordsText')) : focusable(open))?.focus({ preventScroll: true });
   else if (byKeyboard) wasBy?.focus({ preventScroll: true });
   else if (was.contains(document.activeElement)) document.activeElement.blur(); // a phone's keyboard goes with it
 }
-for (const [b, d] of drawers) b.addEventListener('click', (e) => setDrawer(d === openDrawer() && b === openedBy ? false : d, e.detail === 0, b)); // detail 0: Enter or Space
+for (const entry of drawers) { const [b] = entry; b.addEventListener('click', (e) => { const d = entry[1]; setDrawer(d === openDrawer() && b === openedBy ? false : d, e.detail === 0, b); }); } // detail 0: Enter or Space; the drawer read at the click, as the timeline may have swapped it
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && openDrawer()) setDrawer(false, true); });
 // the play band is not the map, nor is the skull: their buttons leave a drawer open, so the table is cleared mid-use
 const outside = (t) => { const d = openDrawer(); return d && t instanceof Node && !where.contains(t) && !d.contains(t) && !$('voyageBand').contains(t) && !$('memento').contains(t); };
@@ -904,12 +916,12 @@ const outside = (t) => { const d = openDrawer(); return d && t instanceof Node &
 addEventListener('pointerdown', (e) => { if (outside(e.target) && !(phone.matches && e.target === canvas)) setDrawer(false); });
 addEventListener('focusout', (e) => { if (e.relatedTarget && outside(e.relatedTarget)) setDrawer(false); }); // tabbed out; a click that focuses nothing has no relatedTarget
 
-// Reset: every control back to its default, the view (place, projection and bearing), the hover kept. The hash holds the whole
+// Reset: every control back to its default, the view (place, projection and bearing), the hover and the timeline kept. The hash holds the whole
 // style, so a hash with only the view is the default style; the hashchange handler below redraws from it.
 $('reset').addEventListener('click', () => {
   const m = hashParams().get('map'), p = hashParams().get('projection'), b = hashParams().get('bearing');
   $('shareUrl').hidden = true; $('shareNote').textContent = '';
-  location.hash = [m && `map=${m}`, p && `projection=${p}`, b && `bearing=${b}`, !hoverOpen && 'hover=0'].filter(Boolean).join('&');
+  location.hash = [m && `map=${m}`, p && `projection=${p}`, b && `bearing=${b}`, !hoverOpen && 'hover=0', timeline !== 'a' && `timeline=${timeline}`].filter(Boolean).join('&');
 });
 // Copy link: the hash is kept current by writeHash. Where the clipboard is refused (an insecure page,
 // a denied permission) the link is put in a box, selected, to copy by hand.
@@ -1720,6 +1732,21 @@ function voyageItem(id, v, sources, { name = true, bar = '' } = {}) {
     (name ? `<input type="color" data-ink="${escapeHTML(id)}" aria-label="Colour of ${full}" title="Colour of ${full}" hidden>` : '') + bar + '</div>' +
     (summary || more ? `<p class="vsum">${name ? `<b>${full}</b>. ` : ''}${summary}${more}</p>` : '') + '</li>';
 }
+// Timeline A's voyage row, at its place on the axis: the bar over its years, and the row to the bar's right where there
+// is room, else to its left: the name button, the eye, the play button and the swatch; its summary under it while on
+function laneItem(id, v, sources, [x0, x1]) {
+  const full = escapeHTML(v.title ?? id), brief = escapeHTML(v.short ?? v.title ?? id), when = escapeHTML(v.when), summary = escapeHTML(v.summary), link = voyageLink(v, sources), eid = escapeHTML(id);
+  const right = x1 < 0.6, at = right ? `left:calc(${pc(x1)} + 4px)` : `right:calc(${pc(1 - x0)} + 4px)`;
+  return `<li data-row="${eid}" data-title="${full}"><div class="vline"><span class="vbar" style="left:${pc(x0)};width:${pc(Math.max(0.006, x1 - x0))}"></span><span class="vctl" style="${at}">` +
+  `<button type="button" class="vname" data-voyage="${eid}" title="${full}${when ? `, ${when}` : ''}">` +
+  `<svg viewBox="0 0 28 18" aria-hidden="true"><path d="M2 9h24" fill="none" stroke-linecap="round"/></svg>` +
+  `<span class="full">${full}</span><span class="brief">${brief}${when ? `<span class="when">${when}</span>` : ''}</span></button>` +
+  `<button type="button" class="eye" data-eye="${eid}" aria-pressed="false" aria-label="Show ${full}" title="Show or hide ${full}">${EYE}</button>` +
+  `<button type="button" class="play" data-play="${eid}" aria-pressed="false" aria-label="Play ${full} on its own calendar" title="Play ${full} on its own calendar">${PLAY_GLYPH}</button>` +
+  `<input type="color" data-ink="${eid}" aria-label="Colour of ${full}" title="Colour of ${full}" hidden></span></div>` +
+  (summary || link ? `<p class="vsum" style="${right ? `margin-left:${pc(x0)}` : `margin-left:auto;margin-right:${pc(1 - x1)}`}"><b>${full}</b>. ${summary}${link ? ` <a href="${escapeHTML(link.url)}" target="_blank" rel="noopener" title="${escapeHTML(link.label)}">Read more</a>` : ''}</p>` : '') + '</li>';
+}
+let timeAxis = laneAxis(), timeLane = 'people'; // timeline A's axis (Earlier widens it) and the lane its drawer was opened at
 // the ink of every voyage in the list, hidden ones too, so a colour stays with its voyage
 // (a voyage with no colour picked takes one from the high-contrast palette while any of it crosses a sheet, or if a leg is dashed or dotted)
 // the sheets laid as the style has them now (not as last drawn), each with the placement it lies at; none unless whole sheets
@@ -1753,10 +1780,11 @@ const isDrawn = (id) => isShown(id) || (litBy(id) && !isHidden(id));
 // its eye, its play button (playing, paused) and its swatch
 function showVoyage() {
   const ink = voyageInk();
-  for (const row of document.querySelectorAll('#voyageList li[data-row], #personCard li[data-row]')) {
+  for (const row of document.querySelectorAll('#voyageList li[data-row], #laneVoyages li[data-row], #personCard li[data-row]')) {
     const id = row.dataset.row, full = row.dataset.title, listed = id in ink, on = isDrawn(id);
     const b = row.querySelector('[data-voyage]'), line = row.querySelector('path'), pick = row.querySelector('[data-ink]'), eye = row.querySelector('[data-eye]'), play = row.querySelector('[data-play]');
     row.classList.toggle('on', on);
+    row.querySelector('.vbar')?.style.setProperty('--c', litBy(id) && on ? PERSON_RED : listed ? ink[id] : '#6b5a44'); // timeline A's bar
     if (b) b.dataset.shown = String(on);
     if (line) {
       line.setAttribute('stroke', litBy(id) && on ? PERSON_RED : listed ? ink[id] : 'currentColor');
@@ -1783,11 +1811,12 @@ function fillVoyages() {
       for (const [i, [id]] of voyages.entries()) { brokenSeen.add(id); if (isBroken(whole[i])) brokenIds.add(id); }
       for (const [i, [id]] of voyages.entries()) voyageDots.set(id, (whole[i]?.legs ?? []).flatMap((leg) => (leg.points?.length > 1 ? legPath(leg) : [])).filter((_, k) => k % 4 === 0));
       voyageRows = { voyages, sources }; drawVoyages();
-    }), (e) => { voyageList = null; $('voyageList').innerHTML = `<li>${escapeHTML(e.message)}</li>`; });
+    }), (e) => { voyageList = null; for (const l of [$('voyageList'), $('laneVoyages')]) l.innerHTML = `<li>${escapeHTML(e.message)}</li>`; });
   showVoyage();
   return voyageList;
 }
-// the Voyages drawer's rows, earliest first, an era's heading before the first row in it; an undated voyage comes last
+// the Voyages drawer's rows (B), earliest first, an era's heading before the first row in it; an undated voyage comes
+// last; and timeline A's voyages' lane on its axis, where an undated voyage sits at the axis's right end
 function drawVoyages() {
   if (!voyageRows) return;
   const { voyages, sources } = voyageRows;
@@ -1795,6 +1824,10 @@ function drawVoyages() {
   $('voyageList').innerHTML = voyages.map(([id, v]) => {
     const ys = voyageYears(v.when), e = eraOf(ys[0]), head = e && e !== era ? eraItem(era = e) : '';
     return head + voyageItem(id, v, sources, { bar: spanBar(e, ys) });
+  }).join('');
+  $('laneVoyages').innerHTML = voyages.map(([id, v]) => {
+    const [a, b] = voyageYears(v.when);
+    return laneItem(id, v, sources, [Number.isFinite(a) ? timeAxis.x(a) : 1, Number.isFinite(b) ? timeAxis.x(b) : 1]);
   }).join('');
   showVoyage();
 }
@@ -1834,7 +1867,8 @@ function voyageControl(e) {
   }
   return false;
 }
-$('voyageList').addEventListener('click', async (e) => {
+// a click in either timeline's voyages
+async function voyageClick(e) {
   if (voyageControl(e)) return;
   const b = e.target.closest('[data-voyage]');
   if (!b) return;
@@ -1843,7 +1877,8 @@ $('voyageList').addEventListener('click', async (e) => {
   showVoyages({ [id]: true }, false);
   await flyToVoyage(id);
   if (isShown(id) && !matchMedia('(prefers-reduced-motion: reduce)').matches) drawOn(id);
-});
+}
+for (const l of [$('voyageList'), $('laneVoyages')]) l.addEventListener('click', voyageClick);
 // How long the pen takes, in seconds (VOYAGE_DRAW): the slider shows the seconds, and its sample line draws itself on
 // at that pace each time it moves. Only the next drawing changes, so nothing is drawn again.
 // (showStyle calls showVoyageDraw before this part of the page has run, so it reads the slider afresh)
@@ -2041,7 +2076,7 @@ function placeBand() {
   const d = !phone.matches && openDrawer(), r = el.getBoundingClientRect(), dr = d && d.getBoundingClientRect();
   if (dr && dr.left > r.left && dr.left < r.right && dr.bottom > r.top) el.style.maxWidth = `${Math.max(280, dr.left - r.left - 12)}px`;
 }
-for (const [, d] of drawers) d.addEventListener('transitionend', placeBand);
+for (const d of new Set([...drawers.map(([, d]) => d), $('timelinePanel'), $('voyagesPanel'), $('peoplePanel')])) d.addEventListener('transitionend', placeBand);
 addEventListener('resize', placeBand);
 $('bandPlay').addEventListener('click', () => (band?.state === 'run' || band?.state === 'wait' ? pausePlay() : resumePlay()));
 $('bandStop').addEventListener('click', closeBand);
@@ -2065,7 +2100,7 @@ function flyToVoyage(id) {
     if (to) { voyageFlown = n; if (style.sheetHides) clearSheetFor(to, true); goTo(to); }
   }, () => {});
 }
-$('voyageList').addEventListener('input', (e) => {
+for (const l of [$('voyageList'), $('laneVoyages')]) l.addEventListener('input', (e) => {
   const id = e.target.dataset?.ink;
   if (!id) return;
   style = { ...style, voyages: style.voyages.map((v) => (v.id === id ? { ...v, colour: e.target.value.toLowerCase() } : v)) };
@@ -2195,21 +2230,45 @@ function sightPlaces(s, f, sizes) {
 const yearsOf = (p) => p.voyages.flatMap((id) => voyageYears(peopleData.voyages[id]?.when));
 const voyagesOf = (p) => p.voyages.map((id) => peopleData.voyages[id]).filter(Boolean);
 function fillPeople() {
-  return loadPeople().then(() => { if (!$('peopleList').childElementCount) drawPeople(); showPeople(); }, (e) => { $('peopleList').textContent = e.message; });
+  return loadPeople().then(() => { if (!$('peopleList').childElementCount) drawPeople(); showPeople(); }, (e) => { $('peopleList').textContent = e.message; $('peopleStrip').textContent = e.message; });
 }
+// where the person card waits while nobody is chosen: the drawer of the timeline on
+const cardHome = () => $(timeline === 'a' ? 'timelinePanel' : 'peoplePanel');
 // The People drawer's rows, earliest first by birth (else by their first voyage), an era's heading before the first row
 // in it; each row the name, the years and, for a people rather than a person, a chip
 function drawPeople() {
   if (!peopleData) return;
   const people = [...peopleData.people].map((p) => [p, firstYear(p, yearsOf(p))]).sort((a, b) => (Number.isFinite(a[1]) ? a[1] : Infinity) - (Number.isFinite(b[1]) ? b[1] : Infinity));
   let era = null;
-  $('peoplePanel').append($('personCard')); // out of the list before it is redrawn
+  cardHome().append($('personCard')); // out of the lists before they are redrawn
+  drawStrip();
   $('peopleList').innerHTML = people.map(([p, year]) => {
     const e = eraOf(year), head = e && e !== era ? eraItem(era = e) : '', years = yearsText(p, voyagesOf(p)), bar = spanBar(e, lifeSpan(p, yearsOf(p)));
     return `${head}<li data-row="${escapeHTML(p.id)}"><button type="button" class="life" data-person="${escapeHTML(p.id)}" aria-pressed="false" aria-expanded="false" title="${escapeHTML(p.name)}${years ? `, ${escapeHTML(years)}` : ''}">` +
       `<span class="who">${escapeHTML(p.name)}</span>${years ? `<span class="when">${escapeHTML(years)}</span>` : ''}${p.group ? '<span class="chip">a people</span>' : ''}${bar}</button>` +
       '<div class="rows"><div inert></div></div></li>';
   }).join('');
+}
+// Timeline A's people's lane: one life bar per person on the shared year axis, so who overlapped whom shows; a bar fades
+// where the record leaves a birth or a death undated, and the name sits to the bar's right where there is room
+const spanOf = (p) => lifeSpan(p, yearsOf(p));
+const lifeText = (p) => `${p.born?.date ?? 'birth unknown'} – ${deathOf(p)?.date ?? 'death unknown'}`;
+function drawStrip() {
+  const people = [...peopleData.people].map((p) => [p, spanOf(p)]).sort((a, b) => a[1][0] - b[1][0]);
+  const rows = people.map(([p, [a, b, fromKnown, toKnown]]) => {
+    const x0 = timeAxis.x(a), x1 = timeAxis.x(b), right = x1 < 0.62;
+    const open = `${fromKnown ? '' : ' open-start'}${toKnown ? '' : ' open-end'}`;
+    return `<li><button type="button" class="life" data-person="${escapeHTML(p.id)}" aria-pressed="false" title="${escapeHTML(p.name)}, ${escapeHTML(lifeText(p))}">` +
+      `<span class="bar${open}" style="left:${pc(x0)};width:${pc(Math.max(0.008, x1 - x0))}"></span>` +
+      `<span class="who" style="${right ? `left:calc(${pc(x1)} + 5px)` : `right:calc(${pc(1 - x0)} + 5px)`}">${escapeHTML(p.name)}</span></button></li>`;
+  }).join('');
+  $('peopleStrip').innerHTML = `<ol class="lives lane">${rows}</ol>`;
+}
+// The years after a name in timeline A's card, as an encyclopedia gives them: "(c. 1460s – 24 Dec 1524)", "(born c.
+// 350 BC)", "(died 1510)", nothing where neither is dated
+function lifeDates(p) {
+  const b = p.born?.date, d = deathOf(p)?.date;
+  return b && d ? `(${b} – ${d})` : b ? `(born ${b})` : d ? `(died ${d})` : '';
 }
 // an era's heading between the rows: its name and its years
 // and under it the ruler of the era's own scale, which the life bars of its rows are drawn on
@@ -2236,8 +2295,11 @@ function showPeople() {
     b.parentElement.classList.toggle('open', on && Boolean(p));
     b.parentElement.querySelector(':scope > .rows > div').inert = !(on && p);
   }
+  for (const b of document.querySelectorAll('#peopleStrip [data-person]')) b.setAttribute('aria-pressed', String(b.dataset.person === style.person));
   card.hidden = !p;
-  if (!p) { card.replaceChildren(); $('peoplePanel').append(card); return; }
+  $('peopleStrip').querySelector('.cardrow')?.remove();
+  if (!p) { card.replaceChildren(); cardHome().append(card); return; }
+  if (timeline === 'a') { stripCard(card, p); return; }
   const row = $('peopleList').querySelector(`li[data-row="${CSS.escape(p.id)}"] > .rows > div`);
   (row ?? $('peoplePanel')).append(card);
   const voyages = p.voyages.map((id) => [id, peopleData.voyages[id]]).filter(([, v]) => v).map(([id, v]) => voyageItem(id, v, peopleData.sources, { name: false })).join('');
@@ -2247,10 +2309,29 @@ function showPeople() {
     (voyages ? `<ul class="pvoyages" role="group" aria-label="${escapeHTML(p.name)}'s voyages">${voyages}</ul>` : '');
   showVoyage(); // the tile's eyes and play buttons as the voyages stand
 }
+// Timeline A's card, under the chosen person's bar: the name and the years, the bio, each voyage with its summary
+// written out, and the pictures as thumbnails
+function stripCard(card, p) {
+  const life = $('peopleStrip').querySelector(`[data-person="${CSS.escape(p.id)}"]`);
+  if (life) life.parentElement.after(Object.assign(document.createElement('li'), { className: 'cardrow' }));
+  ($('peopleStrip').querySelector('.cardrow') ?? $('timelinePanel')).append(card);
+  const voyages = p.voyages.map((id) => peopleData.voyages[id]).filter(Boolean).map((v) => {
+    const link = voyageLink(v, peopleData.sources);
+    return `<li><b>${escapeHTML(v.title)}</b>${/\d/.test(v.title) ? '' : ` <span class="when">${escapeHTML(v.when)}</span>`}` +
+      `<p>${escapeHTML(v.summary ?? '')}${link ? ` <a href="${escapeHTML(link.url)}" target="_blank" rel="noopener">${escapeHTML(link.label)}</a>` : ''}</p></li>`;
+  }).join('');
+  const pics = picsHTML({ images: p.images, manifest: peopleData.pictures }, picturesOf(p));
+  const roles = (Array.isArray(p.role) ? p.role : p.role ? [p.role] : []).map((r) => `<span class="chip role">${escapeHTML(r)}</span>`).join(' ');
+  card.innerHTML = `<p class="pname"><b>${escapeHTML(p.name)}</b> ${escapeHTML(lifeDates(p))} ${roles}</p>` +
+    (p.bio ? `<p class="bio">${escapeHTML(p.bio)}</p>` : '') +
+    (voyages ? `<ul class="pvoyages">${voyages}</ul>` : '') +
+    (pics ? `<div class="pics" role="group" aria-label="Pictures, on the table or off it">${pics}</div>` : '');
+}
 // A subject's pictures as thumbnails, each a button that takes it off the table or puts it back (`shown` those on it)
 const picsHTML = (s, shown, only = null) => s.images.map((im, i) => { const m = s.manifest[im.file];
   return m && (!only || only.includes(i)) ? `<button type="button" class="pic" data-pic="${i}" aria-pressed="${shown.includes(i)}" title="${escapeHTML(pictureNote(im) ?? pictureCredit(im))}: on the table, or off it"><img src="packs/overlays/${escapeHTML(m.src)}" alt="" loading="lazy"></button>` : ''; }).join('');
-$('peopleList').addEventListener('click', (e) => {
+// a click in either timeline's people
+function peopleClick(e) {
   if (voyageControl(e)) return; // an eye or a play in the chosen person's tile
   const pic = e.target.closest('[data-pic]'), chosen = personOf(style.person);
   if (pic && chosen) { setOnTable(Number(pic.dataset.pic), !picturesOf(chosen).includes(Number(pic.dataset.pic))); return; }
@@ -2262,7 +2343,8 @@ $('peopleList').addEventListener('click', (e) => {
   if (id) { style = { ...style, person: id }; dealing = `person:${id}`; } // their cards dealt as the map arrives
   showPeople(); showSightCard(); writeHash(); render();
   if (id) flyToSubject();
-});
+}
+for (const l of [$('peopleList'), $('peopleStrip')]) l.addEventListener('click', peopleClick);
 // A picture onto the table (on top of the pile, as the last one touched) or off it, put away face up; choosing the
 // person again deals every picture back
 function setOnTable(i, on) {
@@ -2769,6 +2851,80 @@ keys.addEventListener('click', (e) => {
 });
 if (style.person) loadPeople().then(showPeople, () => {}); // a link that names a person shows their card when the drawer opens
 
+// ---------------------------------------------------------------- timeline A
+
+// Timeline A: the one drawer the Voyages and People buttons share, one timeline on one linear year axis
+// (scripts/people.mjs laneAxis), people above the axis and voyages below it, from the Lapita voyages to this year at
+// true scale throughout, so a stretch with nobody in it reads as empty rather than cut out. Behind both lanes, the eras
+// of the points of interest as faint colour bands, each named once at the top. The voyages' controls head their lane.
+// Each button opens it at its own lane: People at the top, Voyages scrolled to the axis, its lane's name lit. The
+// Earlier tab at the left end adds the long stretch before Lapita, back to 50,000 BC, at its own scale, with the windows
+// of the peopling of Sahul, Beringia and the Americas marked on it and nothing yet placed there. A phone scrolls the
+// timeline sideways, and opens it at its right end, where most of it is.
+function drawAxis() {
+  const tick = ([y, label]) => { const x = timeAxis.x(y); return `<span class="tick${x < 0.01 ? ' edge' : ''}" style="left:${pc(x)}">${label}</span>`; };
+  $('timeAxis').innerHTML = timeAxis.ticks.map(tick).join('');
+  const bands = eraBands(timeAxis).map(([name, a, b], i, all) => `<div class="band${i === all.length - 1 ? ' last' : ''}" data-era="${escapeHTML(name)}" style="left:${pc(timeAxis.x(a))};width:${pc(timeAxis.x(b) - timeAxis.x(a))}"><b>${escapeHTML(name)}</b></div>`);
+  const earlier = timeAxis.stretches.length > 1;
+  const marks = earlier ? EARLIER_MARKS.map(([label, y, title]) => { const x = timeAxis.x(y);
+    return `<div class="mark${x < 0.01 ? ' edge' : ''}" data-mark="${escapeHTML(label)}" title="${escapeHTML(title)}" style="left:${pc(x)}"><b>${escapeHTML(label)}</b></div>`; }) : [];
+  const brk = earlier ? `<span class="brk" style="left:${pc(timeAxis.stretches[1][2])}"></span>` : '';
+  $('eras').innerHTML = bands.join('') + marks.join('') + brk;
+  $('track').style.setProperty('--w', String(timeAxis.width));
+}
+function drawTimeline() { drawAxis(); drawVoyages(); if (peopleData) drawPeople(); showPeople(); }
+// The timeline at a lane: opened (`fresh`), both lanes load, then the drawer scrolls to the lane asked for; already
+// open (the other button), it only scrolls there
+function fillTimeline(lane, fresh) {
+  timeLane = lane;
+  $('peopleCap').classList.toggle('lit', lane === 'people');
+  $('voyagesCap').classList.toggle('lit', lane === 'voyages');
+  if (!$('timeAxis').childElementCount) drawAxis();
+  const atEnd = () => { if (fresh && timeAxis.width === 1) $('timeScroll').scrollLeft = $('timeScroll').scrollWidth; }; // a phone: most entries are after AD 1000
+  if (fresh) Promise.allSettled([fillVoyages(), fillPeople()]).then(() => { atEnd(); toLane(timeLane); }); // the lane asked for last, as the lanes now stand
+  atEnd(); toLane(lane);
+}
+function toLane(lane) {
+  const panel = $('timelinePanel'), to = lane === 'voyages' ? $('timeAxis') : null;
+  panel.scrollTop = to ? panel.scrollTop + to.getBoundingClientRect().top - panel.getBoundingClientRect().top - 8 : 0;
+}
+$('earlier').addEventListener('click', () => {
+  const on = $('earlier').getAttribute('aria-pressed') !== 'true';
+  $('earlier').setAttribute('aria-pressed', String(on));
+  $('earlier').title = on ? 'Back to Lapita: the timeline from 1500 BC' : 'Earlier history: the timeline back to 50,000 BC';
+  $('earlier').querySelector('.chev').textContent = on ? '◂' : '▸'; // the tab is turned half round: these read as left, then right
+  timeAxis = laneAxis({ earlier: on });
+  drawTimeline();
+  $('timeScroll').scrollLeft = 0; // the earlier stretch is the one asked to see
+});
+
+// ---------------------------------------------------------------- the timeline switch
+
+// Which timeline the medallion and the dividers open, A or B, from the settings' chips or the link (`timeline=`),
+// switched live: a timeline drawer open shuts, the two buttons point at the chosen one's drawers, the voyages' controls
+// move to its head, and the person chosen and the voyages lit show in it as they stand.
+function placeTimeline() {
+  const a = timeline === 'a';
+  for (const entry of drawers) {
+    if (entry[0] === $('voyages')) entry[1] = $(a ? 'timelinePanel' : 'voyagesPanel');
+    else if (entry[0] === $('people')) entry[1] = $(a ? 'timelinePanel' : 'peoplePanel');
+    else continue;
+    entry[0].setAttribute('aria-controls', entry[1].id);
+  }
+  const tools = [$('voyageWidth').closest('.vtools'), $('voyageDraw').closest('.vdraw')];
+  if (a) $('laneTools').append(...tools); else $('voyagesPanel').prepend(...tools);
+  $('timelineVariant').value = timeline;
+}
+function setTimeline(v, write = true) {
+  if (v === timeline) return;
+  if (['timelinePanel', 'voyagesPanel', 'peoplePanel'].includes(openDrawer().id)) setDrawer(false);
+  timeline = v;
+  placeTimeline(); showPeople(); showVoyage();
+  if (write) writeHash();
+}
+placeTimeline();
+$('timelineVariant').addEventListener('input', () => setTimeline(timelineVariant($('timelineVariant').value)));
+
 // The cartouche names the place flown to (its title, else the button's name), not whatever scores highest in the frame.
 const caption = (text) => `<span class="notes">${text ?? CAPTION}</span>`;
 const placeInfo = new Map(); // a listed place's details, by name: { title, date, text }
@@ -3223,7 +3379,7 @@ $('compareLine').addEventListener('pointerdown', (e) => {
 });
 let typing = 0; // a typed title is placed when the typing pauses, not on every key: a placement takes up to a few hundred ms
 $('title').addEventListener('input', () => { clearTimeout(typing); typing = setTimeout(readControls, 400); });
-addEventListener('hashchange', () => { dealing = null; hoverOpen = hoverFromHash(); showHover(); view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); showVoyage(); showPeople(); render(); });
+addEventListener('hashchange', () => { dealing = null; hoverOpen = hoverFromHash(); showHover(); setTimeline(timelineFromHash(), false); view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); showVoyage(); showPeople(); render(); });
 showPlacement();
 render();
 

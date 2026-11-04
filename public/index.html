@@ -139,11 +139,81 @@
   #sightsList .group.open > .rows > div { overflow: visible; transition: overflow 0s 0.25s; transition-behavior: allow-discrete; } /* the last row's note is not clipped */
   #where #sightsList button[aria-current="true"] { border-color: #8c2f1e; box-shadow: inset 0 0 0 1px #8c2f1e; }
   #sightCard { position: sticky; bottom: -20px; margin: 4px -16px -20px; padding: 8px 16px 12px; background: var(--panel); align-self: stretch; contain: inline-size; } /* as wide as the list, never widening it */
-  #where .places button, #goPanel button, #where .vrow button { padding: 3px 10px; font: 13px var(--serif); border-radius: 12px; }
+  #where .places button, #goPanel button, #where .vrow button, #laneVoyages button { padding: 3px 10px; font: 13px var(--serif); border-radius: 12px; }
   #where .places button { display: block; text-align: left; }
   #coords { display: flex; gap: 4px; align-self: stretch; }
   #coords input { flex: 1; min-width: 0; max-width: none; padding: 3px 8px; font: 13px var(--serif); border-radius: 12px; background: var(--panel); color: var(--fg); border: 1px solid var(--rule); }
-  /* the People and the Voyages drawers: each a vertical timeline, as wide as the Charts drawer and never wider,
+  /* timeline A (timeline=a, the default): the Voyages and People buttons' one drawer: one timeline on one linear year axis, people above it and voyages below,
+     the eras of the points of interest as faint bands behind both, and at its left end the Earlier tab; the voyages'
+     controls (line weight, Clear, the pen's pace) head the voyages' lane */
+  #timelinePanel { width: min(720px, 100vw - 24px); max-width: none; align-items: stretch; }
+  #timelinePanel .vtools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 4px; }
+  #timelinePanel .chip { display: inline-flex; padding: 3px 8px; border-radius: 14px; box-shadow: none; font: 12px var(--serif); background: var(--sheet); color: var(--sheet-ink); }
+  #timelinePanel .chip[aria-checked=true] { box-shadow: inset 0 0 0 1px var(--accent); border-color: var(--accent); }
+  .timeline { display: flex; align-items: stretch; gap: 4px; }
+  .tleft { flex: none; width: 24px; }
+  #where .tleft .earlier { position: sticky; top: 0; width: 24px; height: auto; padding: 8px 0; border-radius: 8px; box-shadow: none; writing-mode: vertical-rl; transform: rotate(180deg); font: italic 12px var(--serif); white-space: nowrap; background: var(--sheet); color: var(--sheet-ink); }
+  #where .tleft .earlier .chev { text-orientation: upright; } /* upright, then turned with the tab: it points left, and right once open */
+  #where .tleft .earlier[aria-pressed="true"] { box-shadow: inset 0 0 0 1px var(--accent); border-color: var(--accent); }
+  .tscroll { flex: 1; min-width: 0; overflow-x: auto; overscroll-behavior-x: contain; }
+  .track { position: relative; width: calc(max(100%, 640px) * var(--w, 1)); padding-bottom: 4px; } /* a phone scrolls it sideways; Earlier widens it */
+  .eras { position: absolute; inset: 0; pointer-events: none; }
+  .eras .band { position: absolute; top: 0; bottom: 0; box-sizing: border-box; border-left: 1px dotted rgb(90 70 40 / 0.5); }
+  .eras .band:nth-child(4n+1) { background: rgb(176 122 30 / 0.10); }
+  .eras .band:nth-child(4n+2) { background: rgb(40 100 110 / 0.08); }
+  .eras .band:nth-child(4n+3) { background: rgb(140 47 30 / 0.07); }
+  .eras .band:nth-child(4n+4) { background: rgb(70 100 50 / 0.09); }
+  .eras .band b, .eras .mark b { position: absolute; top: 1px; left: 4px; font: italic 11px/14px var(--serif); font-weight: normal; white-space: nowrap; opacity: 0.8; }
+  .eras .mark { position: absolute; top: 0; bottom: 0; border-left: 1px dashed rgb(90 70 40 / 0.5); }
+  .eras .band:nth-child(even) b { top: 15px; } /* the names on two rows, so a narrow era's name runs on over the next without meeting it */
+  .eras .band.last b { left: auto; right: 4px; } /* the last era's name ends at the axis's end */
+  .eras .mark b { left: auto; right: 4px; top: 15px; } /* a window's name to the left of its line, so its neighbours keep clear */
+  .eras .mark.edge b { right: auto; left: 4px; }
+  .eras .brk { position: absolute; top: 0; bottom: 0; width: 5px; margin-left: -3px; border-left: 1px dashed #8a7550; border-right: 1px dashed #8a7550; } /* where the earlier stretch's scale gives way to the main one */
+  .erahead { height: 30px; }
+  .vcontrols { position: sticky; left: 0; z-index: 1; width: max-content; max-width: min(100%, 100vw - 100px); margin: 2px 0 4px; } /* the voyages' own controls, next to their lane, in view however far the track is scrolled */
+  .vcontrols > :last-child { margin-bottom: 0; }
+  .lanecap { position: sticky; left: 0; display: inline-block; padding: 0 4px; font: italic 11px/15px var(--serif); opacity: 0.7; }
+  .lanecap.lit { opacity: 1; color: #8c2f1e; font-weight: bold; } /* the lane its button opened the drawer to */
+  .lane { position: relative; list-style: none; margin: 0; padding: 0; }
+  #timeAxis { position: relative; height: 16px; margin: 2px 0; border-bottom: 1px solid #b89a68; font: italic 10px var(--serif); }
+  #timeAxis .tick { position: absolute; bottom: 2px; transform: translateX(-50%); white-space: nowrap; opacity: 0.75; }
+  #timeAxis .tick.edge { transform: none; }
+  #laneVoyages li { position: relative; display: block; }
+  #laneVoyages .vline { position: relative; height: 26px; }
+  #laneVoyages .vbar { --c: #6b5a44; position: absolute; top: 10px; height: 6px; border-radius: 3px; background: var(--c); opacity: 0.55; }
+  #laneVoyages li.on .vbar { opacity: 1; }
+  #laneVoyages .vctl { position: absolute; top: 0; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+  #laneVoyages button { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+  #laneVoyages button svg { width: 28px; height: 18px; flex: none; }
+  #laneVoyages button[data-shown="true"] { background: #e2cd9e; color: #3b2a1a; border-color: #b89a68; } /* a shown voyage, lit like an open instrument */
+  #laneVoyages .eye { padding: 2px 4px; width: 30px; height: 26px; justify-content: center; } /* the chart rows' eye, between the name and the ink */
+  #laneVoyages .eye svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+  #laneVoyages .eye[aria-pressed=true] .slash { display: none; }
+  #laneVoyages .eye[aria-pressed=false] { opacity: 0.7; }
+  #laneVoyages .play { padding: 2px 4px; width: 30px; height: 26px; justify-content: center; } /* after the eye: sails the voyage on its own calendar */
+  #laneVoyages .play svg { width: 18px; height: 18px; fill: currentColor; stroke: none; }
+  #laneVoyages .play[aria-pressed=true] { background: var(--accent); color: var(--sheet); border-color: var(--accent); }
+  #laneVoyages input[type=color] { width: 28px; height: 22px; border-radius: 6px; cursor: pointer; } /* the swatch is the voyage's ink; a click picks another */
+  #timelinePanel .vdraw { margin: 0 0 6px; font: 13px var(--serif); } /* the pen's seconds, its sample line drawing on at that pace */
+  #timelinePanel .vdraw output { min-width: 34px; font-size: 13px; color: inherit; }
+  #laneVoyages .when { font-size: 11px; font-style: italic; opacity: 0.75; margin-left: 6px; }
+  #laneVoyages .full { display: none; } /* on the timeline a voyage goes by its short name and years; the title is its tooltip */
+  #laneVoyages .vsum { display: none; max-width: 360px; margin: 0 0 4px; font: 12px/1.35 var(--serif); opacity: 0.85; } /* a shown voyage in brief, and where to read more */
+  #laneVoyages li.on .vsum { display: block; }
+  #laneVoyages .vsum a { color: inherit; font-style: italic; }
+  #where #peopleStrip .life { position: relative; display: block; width: 100%; height: 17px; padding: 0; border: 0; border-radius: 3px; background: none; box-shadow: none; color: var(--fg); cursor: pointer; }
+  #where #peopleStrip .life:hover { background: rgb(140 47 30 / 0.07); }
+  #peopleStrip .bar { --c: #6b5a44; position: absolute; top: 5px; height: 7px; border-radius: 4px; background: var(--c); }
+  #peopleStrip .bar.open-start { background: linear-gradient(90deg, transparent, var(--c) 45%); } /* a birth nobody dated fades in */
+  #peopleStrip .bar.open-end { background: linear-gradient(90deg, var(--c) 55%, transparent); } /* a death nobody dated fades out */
+  #peopleStrip .bar.open-start.open-end { background: linear-gradient(90deg, transparent, var(--c) 35%, var(--c) 65%, transparent); }
+  #peopleStrip .who { position: absolute; top: 1px; font: 12px/15px var(--serif); white-space: nowrap; }
+  #peopleStrip .life[aria-pressed="true"] .bar { --c: #8c2f1e; } /* the chosen person: the chart's red */
+  #peopleStrip .life[aria-pressed="true"] .who { color: #8c2f1e; font-weight: bold; }
+  #peopleStrip .cardrow { position: sticky; left: 0; width: min(440px, 100%); margin: 2px 0 6px; } /* the chosen person's card, under their bar, in view however far the track is scrolled */
+  #peopleStrip .pcard { margin: 0; padding: 6px 8px; border: 1px solid #b89a68; border-radius: 6px; background: var(--panel); }
+  /* timeline B (timeline=b): the People and the Voyages drawers: each a vertical timeline, as wide as the Charts drawer and never wider,
      earliest at the top, down a thin rail; the eras of the points of interest head the rows that fall in them as small
      italic headings with their years. The voyages' controls (line weight, the pen's pace) head the Voyages drawer; the skull clears them */
   #peoplePanel, #voyagesPanel { width: min(480px, 100vw - 24px); max-width: none; align-items: stretch; }
@@ -668,6 +738,26 @@
     <ul id="sightsList" class="places"></ul>
     <div id="sightCard" class="pcard" hidden></div>
   </div>
+  <!-- timeline A (timeline=a): one drawer for both the medallion and the dividers; the voyages' controls are moved into
+       #laneTools from the Voyages drawer while A is on (page.js placeTimeline) -->
+  <div id="timelinePanel" class="drawer menu">
+    <div class="timeline">
+      <div class="tleft"><button id="earlier" class="earlier" type="button" aria-pressed="false" aria-controls="track" title="Earlier history: the timeline back to 50,000 BC"><span class="chev">&#9656;</span> Earlier</button></div>
+      <div id="timeScroll" class="tscroll">
+        <div id="track" class="track">
+          <div id="eras" class="eras" aria-hidden="true"></div>
+          <div class="erahead"></div>
+          <div id="peopleCap" class="lanecap">People</div>
+          <div id="peopleStrip" class="lane strip" role="group" aria-label="People, each a bar over the years they lived; choose one"></div>
+          <div id="timeAxis" aria-hidden="true"></div>
+          <div id="voyagesCap" class="lanecap">Voyages</div>
+          <div id="laneTools" class="vcontrols"></div>
+          <ul id="laneVoyages" class="lane" role="group" aria-label="Voyages, any number, each at its years"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- timeline B (timeline=b): the People and the Voyages drawers -->
   <div id="peoplePanel" class="drawer menu">
     <ol id="peopleList" class="tline" role="group" aria-label="People, earliest first, each with their years; choose one"></ol>
     <div id="personCard" class="pcard" hidden></div>
@@ -712,6 +802,10 @@
   <!-- with a mouse, a grouped list's section also opens when the pointer rests on its heading (page.js, HOVER_DWELL);
        off, only a click opens one. Kept in the link (`hover=0` is off). Not shown where nothing can hover -->
   <div id="hoverRow"><h3>Sections open on hover</h3><div id="hoverOpen" class="chips" role="radiogroup" aria-label="Sections open on hover"></div></div>
+
+  <!-- which people and voyages timeline the medallion and the dividers open: A, one wide drawer with both lanes on one
+       axis, or B, two vertical drawers (page.js TIMELINE_CHOICES). Kept in the link (`timeline=b`; A is no key) -->
+  <div id="timelineRow"><h3>People and voyages timeline</h3><div id="timelineVariant" class="chips" role="radiogroup" aria-label="People and voyages timeline"></div></div>
 
   <div id="share">
     <button id="reset" type="button" class="chip" title="Every control back to its default; the view stays"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8a5 5 0 1 0 1.6-3.7"/><path d="M3 2.5v3h3"/></svg>Reset</button>

@@ -57,6 +57,39 @@ export const TIMELINE_FROM = -1500;
 export const TIMELINE_ERAS = [['The ancient world', TIMELINE_FROM], ['The medieval Indian Ocean and Asia', 500], ['The age of discovery', 1450], ['The modern world', 1800]];
 // a year as the drawers write it: 1500 BC, AD 1, 1500, with a thousands comma only from five figures (50,000 BC)
 export const yearLabel = (y) => { const n = Math.abs(y), t = n >= 10000 ? n.toLocaleString('en') : String(n); return y < 0 ? `${t} BC` : y === 1 ? 'AD 1' : t; };
+
+// Two timelines for people and voyages, to compare in one build (`timeline=a|b` in the link): A, one wide drawer the
+// People and Voyages buttons share, the lives and voyages as bars on one true-scale axis; B, the two vertical drawers
+// above. An unknown or missing value is A.
+export const TIMELINE_VARIANTS = ['a', 'b'];
+export const timelineVariant = (v) => (TIMELINE_VARIANTS.includes(v) ? v : TIMELINE_VARIANTS[0]);
+
+// Timeline A: one linear year axis, people above it and voyages below, from the Lapita voyages (TIMELINE_FROM) to this
+// year, at true scale throughout, so an empty stretch reads as empty rather than cut out. "Earlier" adds a stretch
+// before it, back to TIMELINE_EARLIEST, at its own linear scale (a broken axis): the main stretch keeps its width and
+// the earlier one takes EARLIER_SHARE of it again, to its left.
+export const TIMELINE_EARLIEST = -50000;
+export const EARLIER_SHARE = 0.5;
+// The windows of the peopling of Sahul, Beringia and the Americas, marked on the earlier stretch: [label, year, title].
+export const EARLIER_MARKS = [['Sahul', -50000, 'Sahul, the first peopling of Australia and New Guinea, c. 50,000 BC or earlier'], ['Beringia', -20000, 'Beringia, the land bridge into the Americas, c. 20,000 BC'], ['Clovis', -11000, 'Clovis, c. 11,000 BC']];
+// The axis: { width, stretches: [[from, to, x0, x1]], x(year), ticks: [[year, label]] }, with x in 0..1 of the whole
+// track and `width` the track's width in main stretches (1, or 1 + EARLIER_SHARE with the earlier stretch).
+export function laneAxis({ earlier = false, to = new Date().getFullYear() } = {}) {
+  const width = earlier ? 1 + EARLIER_SHARE : 1, k = 1 / width;
+  const stretches = [...(earlier ? [[TIMELINE_EARLIEST, TIMELINE_FROM, 0, EARLIER_SHARE * k]] : []), [TIMELINE_FROM, to, 1 - k, 1]];
+  const x = (year) => {
+    for (const [a, b, x0, x1] of stretches) if (year <= b) return year < a ? x0 : x0 + ((year - a) / (b - a)) * (x1 - x0);
+    return 1;
+  };
+  const ticks = [...(earlier ? [-50000, -40000, -30000, -20000, -10000] : []), -1500, -1000, -500, 1, 500, 1000, 1500, 2000]
+    .filter((y) => y <= to).map((y) => [y, yearLabel(y)]);
+  return { width, stretches, x, ticks };
+}
+// The era bands on an axis: [name, from, to], end to end from the main stretch's start to its end.
+export function eraBands(axis) {
+  const [from, to] = axis.stretches.at(-1);
+  return TIMELINE_ERAS.map(([name, a], i) => [name, Math.max(a, from), Math.min(TIMELINE_ERAS[i + 1]?.[1] ?? to, to)]).filter(([, a, b]) => b > a);
+}
 // The era a year falls in, by name: the first era for anything before it; null for no year
 export function eraOf(year) {
   if (!Number.isFinite(year)) return null;

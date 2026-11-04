@@ -240,7 +240,7 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     const page = await (await browser.newContext({ viewport: { width: 1100, height: 740 } })).newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
-    await page.goto(`http://localhost:${server.address().port}/#map=7/40/12`);
+    await page.goto(`http://localhost:${server.address().port}/#map=7/40/12&timeline=b`);
     await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
     const opened = (id) => page.evaluate((i) => document.getElementById(i).classList.contains('open') && getComputedStyle(document.getElementById(i)).visibility === 'visible', id);
     const row = () => page.locator('#where .row').boundingBox();
@@ -353,7 +353,7 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     await thumb.click();
     assert.equal(await opened('chartsDrawer'), true, "a chart's frame shut its drawer");
     await page.waitForFunction((x) => location.hash !== x, h, { timeout: 60000 });
-    const [, lat, lon] = (await page.evaluate(() => location.hash)).replace('#map=', '').split('/').map(Number);
+    const [, lat, lon] = (await page.evaluate(() => location.hash)).replace('#map=', '').split('&')[0].split('/').map(Number);
     assert.ok(Math.abs(lat - 37.5) < 1 && Math.abs(lon - 25.2) < 1, `Vesconte's sheet is not round the Cyclades: ${lat}, ${lon}`);
     // the eye shows and hides a chart's sheet and leaves the drawer open
     const cosa = page.locator('#chartList .chart', { hasText: 'Juan de la Cosa' });
@@ -469,7 +469,7 @@ test('voyages: several drawn at once, each in its own ink, carried by the link; 
     const page = await (await browser.newContext({ viewport: { width: 1100, height: 740 } })).newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
-    await page.goto(`http://localhost:${server.address().port}/#map=2/15/-20&voyage=magellan`);
+    await page.goto(`http://localhost:${server.address().port}/#map=2/15/-20&voyage=magellan&timeline=b`);
     await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
     await page.click('#voyages');
     await page.waitForSelector('#voyageList [data-voyage]');
@@ -557,7 +557,7 @@ test('people and voyages: two vertical drawers no wider than the charts, earlies
     const page = await (await browser.newContext({ viewport: { width: 1280, height: 800 } })).newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
-    await page.goto(`http://localhost:${server.address().port}/#map=2/15/-20`);
+    await page.goto(`http://localhost:${server.address().port}/#map=2/15/-20&timeline=b`);
     await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
     const opened = (id) => page.evaluate((i) => document.getElementById(i).classList.contains('open'), id);
     const box = (sel) => page.locator(sel).boundingBox();
@@ -661,7 +661,7 @@ test('people and voyages: two vertical drawers no wider than the charts, earlies
     // a phone: each a bottom sheet, the page never scrolling sideways, the Lapita row there
     const phone = await (await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })).newPage();
     phone.on('pageerror', (e) => errors.push(e.message));
-    await phone.goto(`http://localhost:${server.address().port}/#map=2/15/-20`);
+    await phone.goto(`http://localhost:${server.address().port}/#map=2/15/-20&timeline=b`);
     await phone.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
     await phone.tap('#people');
     await phone.waitForSelector('#peopleList [data-person="lapita-people"]');
@@ -679,6 +679,96 @@ test('people and voyages: two vertical drawers no wider than the charts, earlies
   }
 });
 
+test('timeline A (timeline=a): people above the axis, voyages below, each once, the era bands across it end to end, Earlier widens it; each button opens it at its own lane', { skip, timeout: 240000 }, async () => {
+  const server = createServer(async (req, res) => {
+    let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
+    if (p.endsWith('/')) p = path.join(p, 'index.html');
+    try { res.writeHead(200, { 'content-type': TYPES[path.extname(p)] ?? 'application/octet-stream' }).end(await readFile(p)); } catch { res.writeHead(404).end(); }
+  }).listen(0);
+  const browser = await chromium.launch();
+  try {
+    const page = await (await browser.newContext({ viewport: { width: 1100, height: 740 } })).newPage();
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await page.goto(`http://localhost:${server.address().port}/#map=2/15/-20&timeline=a`);
+    await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
+    const opened = () => page.evaluate(() => document.getElementById('timelinePanel').classList.contains('open'));
+    const lit = () => page.$$eval('.lanecap.lit', (cs) => cs.map((c) => c.id));
+    const box = (sel) => page.locator(sel).boundingBox();
+    await page.click('#people');
+    await page.waitForSelector('#peopleStrip [data-person]');
+    await page.waitForSelector('#laneVoyages [data-voyage]');
+    assert.equal(await opened(), true, 'the medallion did not open the timeline');
+    assert.deepEqual([await page.getAttribute('#people', 'aria-expanded'), await page.getAttribute('#voyages', 'aria-expanded')], ['true', 'false']);
+    assert.deepEqual(await lit(), ['peopleCap']);
+    // the two lanes on either side of one axis
+    const [people, axis, voyages] = [await box('#peopleStrip'), await box('#timeAxis'), await box('#laneVoyages')];
+    assert.ok(people.y + people.height <= axis.y + 1 && voyages.y >= axis.y + axis.height - 1, 'the people are not above the axis and the voyages below it');
+    // every voyage and every person, once each
+    const root = fileURLToPath(new URL('..', import.meta.url));
+    const index = JSON.parse(await readFile(path.join(root, 'data/voyages/index.json'), 'utf8'));
+    const records = JSON.parse(await readFile(path.join(root, 'data/voyages/people.json'), 'utf8'));
+    const persons = Object.entries(records).filter(([, p]) => p && typeof p === 'object').map(([id]) => id);
+    const shownVoyages = await page.$$eval('#laneVoyages [data-voyage]', (bs) => bs.map((b) => b.dataset.voyage));
+    const shownPeople = await page.$$eval('#peopleStrip [data-person]', (bs) => bs.map((b) => b.dataset.person));
+    assert.deepEqual([...shownVoyages].sort(), [...index].sort(), 'a voyage missing or twice');
+    assert.deepEqual([...shownPeople].sort(), [...persons].sort(), 'a person missing or twice');
+    // the era bands run from the axis's left edge to its right, end to end, each named once
+    // measured in one go, relative to the track, so a drawer still sliding in cannot skew them
+    const measure = () => page.evaluate(() => {
+      const t = document.getElementById('track').getBoundingClientRect();
+      return { t: { x: 0, width: t.width }, bs: [...document.querySelectorAll('#eras .band')].map((b) => { const r = b.getBoundingClientRect(); return { name: b.dataset.era, left: r.left - t.left, right: r.right - t.left, label: b.textContent }; }) };
+    });
+    const track = async () => (await measure()).t;
+    await page.waitForTimeout(400); // the drawer's slide
+    let { t, bs } = await measure();
+    assert.deepEqual(bs.map((b) => b.name), ['The ancient world', 'The medieval Indian Ocean and Asia', 'The age of discovery', 'The modern world']);
+    assert.ok(bs.every((b) => b.label === b.name), 'a band not named once');
+    assert.ok(Math.abs(bs[0].left - t.x) < 1 && Math.abs(bs.at(-1).right - (t.x + t.width)) < 1, 'the bands do not cover the axis');
+    bs.forEach((b, i) => { if (i) assert.ok(Math.abs(b.left - bs[i - 1].right) < 1, `a gap before ${b.name}`); });
+    // Earlier: the track half as wide again, the earlier stretch to the left with its windows and no entries, the main stretch unchanged in width
+    const w0 = t.width, mainW = bs.at(-1).right - bs[0].left;
+    await page.click('#earlier');
+    ({ t, bs } = await measure());
+    assert.equal(await page.getAttribute('#earlier', 'aria-pressed'), 'true');
+    assert.ok(Math.abs(t.width - w0 * 1.5) < 1, `Earlier did not widen the axis: ${w0} -> ${t.width}`);
+    assert.ok(Math.abs(bs.at(-1).right - bs[0].left - mainW) < 1, 'the main stretch changed width');
+    assert.ok(bs[0].left - t.x > w0 * 0.49, 'no earlier stretch to the left of Lapita');
+    assert.deepEqual(await page.$$eval('#eras .mark', (ms) => ms.map((m) => m.dataset.mark)), ['Sahul', 'Beringia', 'Clovis']);
+    assert.ok((await page.textContent('#timeAxis')).includes('50,000 BC'));
+    const firstEntry = Math.min(...await page.$$eval('#peopleStrip .bar, #laneVoyages .vbar', (es) => { const t = document.getElementById('track').getBoundingClientRect().left; return es.map((e) => e.getBoundingClientRect().left - t); }));
+    assert.ok(firstEntry >= bs[0].left - 1, 'an entry on the earlier stretch');
+    await page.click('#earlier');
+    assert.ok(Math.abs((await track()).width - w0) < 1, 'Earlier again did not bring the axis back');
+    // the dividers: the same drawer, at the voyages' lane; a second click shuts it
+    await page.click('#voyages');
+    assert.equal(await opened(), true, 'the dividers shut the timeline');
+    assert.deepEqual([await page.getAttribute('#people', 'aria-expanded'), await page.getAttribute('#voyages', 'aria-expanded')], ['false', 'true']);
+    assert.deepEqual(await lit(), ['voyagesCap']);
+    const panel = await box('#timelinePanel'), axisNow = await box('#timeAxis');
+    assert.ok(axisNow.y >= panel.y && axisNow.y < panel.y + 60, `the voyages' lane is not in view: axis at ${axisNow.y}, drawer at ${panel.y}`);
+    await page.click('#voyages');
+    assert.equal(await opened(), false, 'a second click on the dividers left the timeline open');
+    // a phone: the timeline scrolls sideways, opened at its right end, where most of it is
+    const phone = await (await browser.newContext({ viewport: { width: 412, height: 800 }, hasTouch: true, isMobile: true })).newPage();
+    phone.on('pageerror', (e) => errors.push(e.message));
+    await phone.goto(`http://localhost:${server.address().port}/#map=2/15/-20&timeline=a`);
+    await phone.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
+    await phone.tap('#people');
+    await phone.waitForSelector('#peopleStrip [data-person]');
+    await phone.waitForSelector('#laneVoyages [data-voyage]');
+    const sc = await phone.$eval('#timeScroll', (e) => ({ sw: e.scrollWidth, cw: e.clientWidth, left: e.scrollLeft }));
+    assert.ok(sc.sw > sc.cw, `the phone's timeline does not scroll sideways: ${JSON.stringify(sc)}`);
+    assert.ok(sc.left >= sc.sw - sc.cw - 1, `the phone's timeline did not open at its right end: ${JSON.stringify(sc)}`);
+    assert.equal(await phone.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'the page scrolls sideways');
+    assert.deepEqual(errors, []);
+  } finally {
+    await browser.close();
+    server.close();
+  }
+});
+
+
 test('people: a picture on the map is looked at, put away and dealt back by choosing the person again; the last touched lies on top; its Commons link is a glyph', { skip, timeout: 240000 }, async () => {
   const server = createServer(async (req, res) => {
     let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
@@ -691,7 +781,7 @@ test('people: a picture on the map is looked at, put away and dealt back by choo
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     // two of Columbus's pictures laid apart on open sea, the first at the view's centre
-    await page.goto(`http://localhost:${server.address().port}/#map=4/-50/-30&person=christopher-columbus&pictures=0,1&pictureat=0:-30,-50,0.015_1:-10,-50,0.015`);
+    await page.goto(`http://localhost:${server.address().port}/#map=4/-50/-30&person=christopher-columbus&pictures=0,1&pictureat=0:-30,-50,0.015_1:-10,-50,0.015&timeline=b`);
     await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
     await page.waitForFunction(() => document.querySelectorAll('#pictureKeys li').length === 2, null, { timeout: 60000 });
     await page.waitForTimeout(1200); // dealt in
@@ -772,7 +862,7 @@ test('people: a picture on the map is looked at, put away and dealt back by choo
 
     // choosing the person again, one click, deals every picture back
     await page.click('#people');
-    await page.click('[data-person="christopher-columbus"]');
+    await page.click('#peopleList [data-person="christopher-columbus"]');
     assert.match(await hash(), /person=/);
     await page.waitForFunction(() => document.querySelector('#pictureKeys [data-pic="0"]') && document.querySelector('#pictureKeys [data-pic="1"]'), null, { timeout: 60000 });
     assert.doesNotMatch(await hash(), /pictures=/);
