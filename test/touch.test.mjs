@@ -773,3 +773,57 @@ test('people: a picture on the map is looked at, put away and dealt back by choo
     server.close();
   }
 });
+
+// Every chart turns a quarter at a time (docs/spec/design.md, "Every chart turns, a quarter at a time"): the walk-around
+// chips step de la Cosa through its own quarter turns, so West up (its drawn bearing, 270) lights exactly there and the up chip
+// is pressed only then; and the eye shows or hides a sheet without moving the view or turning the world.
+test('charts: the walk-around chips step through the chart\'s quarter turns, West up lighting at its bearing; the eye leaves the view alone', { skip, timeout: 240000 }, async () => {
+  const server = createServer(async (req, res) => {
+    let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
+    if (p.endsWith('/')) p = path.join(p, 'index.html');
+    try { res.writeHead(200, { 'content-type': TYPES[path.extname(p)] ?? 'application/octet-stream' }).end(await readFile(p)); } catch { res.writeHead(404).end(); }
+  }).listen(0);
+  const browser = await chromium.launch();
+  try {
+    const page = await (await browser.newContext({ viewport: { width: 1100, height: 740 } })).newPage();
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await page.goto(`http://localhost:${server.address().port}/#map=3.00/30.000/-20.000&overlay=de-la-cosa`);
+    await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
+    const key = async (k) => new URLSearchParams((await page.evaluate(() => location.hash)).slice(1)).get(k);
+    await page.click('#charts');
+    const cosa = page.locator('#chartList .chart', { hasText: 'Juan de la Cosa' });
+    await cosa.locator('.thumb').click(); // lays the sheet and brings up its chips
+    const walk = page.locator('#sheetChips [data-walk="-1"]'), up = page.locator('#sheetChips [data-up]');
+    await walk.waitFor({ state: 'visible', timeout: 60000 });
+    const bearingAfter = async (was) => {
+      await page.waitForFunction((w) => (new URLSearchParams(location.hash.slice(1)).get('bearing') ?? '0') !== w, was, { timeout: 30000 });
+      await page.waitForTimeout(1500); // the turn is a short animation
+      return Number(await key('bearing') ?? 0);
+    };
+    // anticlockwise from north up: each step is a quarter from the chart's own up, 90 short of the last
+    const seen = [];
+    let was = String(await key('bearing') ?? '0');
+    for (let i = 0; i < 5; i++) {
+      await walk.click();
+      const b = await bearingAfter(was);
+      seen.push(b); was = String(await key('bearing') ?? '0');
+      const lit = (await up.getAttribute('aria-pressed')) === 'true';
+      assert.equal(lit, Math.abs(b - 267.8) < 1 || Math.abs(b - 270) < 1, `West up is ${lit ? 'lit' : 'dark'} at ${b}`);
+    }
+    assert.ok(seen.some((b) => Math.abs(b - 270) < 3), `the walk never reached West up: ${seen}`);
+    for (let i = 1; i < seen.length; i++) assert.ok(Math.abs((((seen[i] - seen[i - 1]) % 360) + 360) % 360 - 270) < 3, `step ${i} was not a quarter turn: ${seen}`);
+    // the eye hides and shows the sheet and leaves the view, bearing included, where it is
+    const view = async () => `${await key('map')}|${await key('bearing')}`, before = await view();
+    await cosa.locator('.eye').click();
+    await page.waitForFunction(() => !/[#&]overlay=/.test(location.hash), null, { timeout: 30000 });
+    assert.equal(await view(), before, 'the eye hid the sheet and moved the view');
+    await cosa.locator('.eye').click();
+    await page.waitForFunction(() => /[#&]overlay=de-la-cosa(&|$)/.test(location.hash), null, { timeout: 30000 });
+    assert.equal(await view(), before, 'the eye showed the sheet and moved the view');
+    assert.deepEqual(errors, []);
+  } finally {
+    await browser.close();
+    server.close();
+  }
+});
