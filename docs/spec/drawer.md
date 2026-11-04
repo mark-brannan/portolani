@@ -18,7 +18,7 @@ Feature: Drawer open and close  (rose button `#open`, one of seven instrument bu
 
 Feature: The skull stays in reach while a drawer is in use  (`#memento`: the skull `#sweep` and its line `#mementoText`; the drawers that clear the map with it: the timeline `#timelinePanel`, opened by `#people` and `#voyages`)
   Source: the user, 2026-11-04 (paraphrase): the skull and its memento mori must stay visible and clickable whenever a drawer that uses them to clear the map is open; the broom goes, and a quick, subtle wipe takes its place: a large, almost imperceptible, semi-translucent skull that flashes on the map and fades.
-  Tested by: test/drawers.test.mjs — 'the skull sits over the drawers, and the broom is gone'
+  Tested by: test/drawers.test.mjs — 'the skull sits over the drawers, and the broom is gone' (offline, source only: the skull's z-index over `.drawer`, the drawer's `--memento-h` ceiling, no broom, the wipe element; the scenarios' hit tests and the panel staying open are not yet driven in a browser)
   Scenario: the skull and its line stay in sight beside an open drawer
     Given a viewport 1280 x 800 and the chart at `#person=ibn-battuta`
     When the user clicks `#people`
