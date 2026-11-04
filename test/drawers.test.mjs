@@ -41,5 +41,9 @@ test('the skull is the one clear, and the voyages have no Clear of their own', (
   assert.match(body, /voyages: \[\]/, 'it takes every voyage off');
   assert.match(body, /overlays: \[\], sheets: \{\}/, 'it lifts every sheet, back to its own place');
   assert.doesNotMatch(body, /turnWorld|goTo/, 'it neither turns nor flies the map');
+  // a name it uses that the page no longer declares throws mid-clear and leaves the charts on the map (#368 removed turnedTo)
+  for (const [, name] of body.matchAll(/\b([a-z]\w*)\.(?:clear|delete|add)\(/gi)) {
+    assert.match(js, new RegExp(`\\n\\s*(?:const|let|var) ${name}\\b`), `clearMap uses ${name}, which the page declares`);
+  }
   assert.doesNotMatch(js, /groupTools\('Voyages'/, 'the Voyages drawer has no Clear');
 });

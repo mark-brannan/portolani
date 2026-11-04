@@ -2291,7 +2291,7 @@ async function clearMap(snap = () => {}) {
   snap('cards');
   if (voyages) { closeBand(); style = { ...style, voyages: [] }; }
   if (voyages || hadPerson) { showVoyage(); writeHash(); await render(); snap('lines'); }
-  if (charts) { turnedTo.clear(); style = { ...style, overlays: [], sheets: {} }; showOverlay(); showVoyage(); writeHash(); await render(); snap('sheets'); }
+  if (charts) { style = { ...style, overlays: [], sheets: {} }; showOverlay(); showVoyage(); writeHash(); await render(); snap('sheets'); }
 }
 // The clear is shown every time, the map already clear or not: the cards leave stage left, as they were dealt but
 // mirrored; the lines fade; the sheets fade; the skull grows over the map and fades; and the phrase
@@ -2880,7 +2880,7 @@ let OVERLAYS = []; // packs/overlays/overlays.json, once loaded
 const ownSheet = (id) => OVERLAYS.find((v) => v.id === id)?.sheet ?? null;
 let chartsFresh = false; // the Charts drawer opened with no sheet shown, and none shown since: the next shown fades in
 let fadeIn = null; // the overlay id whose sheet fades in when next placed
-const CLEAR_MS = 250; // a chart's flight waits this long on the old sheet's clearing, the skull's flash at its height
+const CLEAR_MS = 250; // a chart's flight waits this long on the old sheet's clearing, the cleared frame shows before it flies
 let flyAfterClear = 0;
 $('chartList').innerHTML = CHARTS.map(({ name, year, made, text, overlay }, i) => `<li class="chart"${overlay ? ` data-overlay="${overlay}"` : ''}><button type="button" class="thumb none" data-chart="${i}" data-to="view" title="The chart's frame">${skin}</button><div class="about"><span class="head"><button type="button" class="name" data-chart="${i}" data-to="view">${name}</button>${overlay ? `<button type="button" class="eye" data-chart="${i}" data-to="eye" aria-pressed="false" aria-label="Show ${name}" hidden>${EYE}</button>` : ''}</span><span class="where"><button type="button" class="city" data-chart="${i}" data-to="made">${made.title}</button>, ${year}</span>${overlay ? `<div class="slider fade" hidden><input type="range" min="0" max="1" step="0.05" aria-label="Opacity of ${name}'s sheet: lower lets the map show through"><output></output></div>` : ''}${caption(text)}</div></li>`).join('');
 // The sheets laid, bottom to top, and where each lies; `fade` the id of one that fades in as it is placed. `draw` false
@@ -2927,9 +2927,7 @@ $('chartList').addEventListener('click', (e) => {
   const flyTo = () => goTo({ ...sheetView(o, o.sheet, { w: W, h: H, bearing }), bearing, title: chart.name }); // the whole sheet framed, 8% clear round it, the world turned as it is
   if (!others) { flyTo(); return; }
   // another chart's sheet: cleared first as the skull clears the table, then the flight (docs/spec/design.md, "a new chart's icon or name clears the old one, then flies")
-  const lay = onTable > 0;
-  clearTable();
-  if (!lay) wipeSkull();
+  clearTable(true, false); // no skull flash: the clear, the flight and the sheet follow one another with no animation of their own
   if (ground) { ground = { ...ground, overlays: [], anchored: { ...ground.anchored, overlays: [] } }; paintFrame('a chart cleared'); }
   clearTimeout(flyAfterClear);
   flyAfterClear = setTimeout(flyTo, reducedMotion() ? 0 : CLEAR_MS);
