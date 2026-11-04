@@ -432,3 +432,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261104t063021z
 - portolani ranges: peak height scales down 6% per Natural Earth scalerank step below 1 Undo: rankScale in scripts/relief.mjs (no PR, branch ranges-work)
+
+### 20261104t063024z
+- portolani ranges: geo/ranges-10m.json keeps name, scalerank, min_label, ne_id; coordinates rounded to 0.001 degree Undo: slimRanges in scripts/ranges.mjs (no PR, branch ranges-work)
