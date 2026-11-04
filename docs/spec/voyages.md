@@ -80,3 +80,35 @@ Feature: Voyages drawer  (dividers button `#voyages` opens the Voyages drawer `#
     Given a voyage chosen
     When the user clicks one of its event marks on the map
     Then the flavour-text tile opens with the event's title, date, text and source; choosing another voyage, or none, shuts a tile whose mark is gone (page.js:1023, 1059)
+
+Feature: A migration plays on its own calendar  (the row's play button `[data-play]`, page.js `playVoyage`; scripts/voyages.mjs `calendarOf`, `penOn`, `playDateText`, `playPace`; scripts/scene.mjs `drawStream`, `drawCanoe`, `drawPot`; the play itself in design.md, "the play button sails the voyage on its own calendar")
+  Scenario: the Lapita stream sails from the Bismarcks to Samoa
+    Given the Lapita expansion in the voyages list
+    When the user presses its play button
+    Then the map frames the whole stream beside the open drawer, and the stream clears to its start at Mussau
+    And over the play's seconds (`voyageplay=`, 9 by default) its ribbon and chevrons run out from Mussau to Samoa, an outrigger canoe with a crab-claw sail at the front where the ship's ring would be
+    And the canoe reaches each settlement on that settlement's date: Watom c. 1350 BC, the Reef Islands c. 1200 BC, Fiji c. 1100 BC, Tonga c. 900 BC, Samoa c. 800 BC
+    And each settlement's pot appears as the canoe reaches it, and no sooner
+    And the branch to New Caledonia sets out from Efate as the main stream passes it, its own canoe sailing at the same time as the main one
+    And at the end the stream is whole, a chevron at each front, every pot drawn, and the band's button back to play
+  Scenario: every migration plays, branches at once
+    Given a migration (`kind: "migration"`) whose legs carry dates
+    When the user presses its play button
+    Then each leg is a branch on its own dates, under way at the same time as the others, and none sets out before an earlier leg's pen has reached its first point
+    And a leg dated by one date ("c. 1100 BC") arrives on that date, setting out as the earlier pen passes its start
+    And a waypoint at one of a leg's points is a stop the pen reaches on the waypoint's date
+    And the band names the stretch between the two settlements the latest branch is between, or the place every branch has landed at, waiting
+  Scenario: a waypoint is a settlement's pot
+    Given a migration shown, played or whole
+    Then each of its waypoints is a small ink pot with a stamped band at its shoulder, not the ring of a named voyage's event
+    And a click on the pot opens its tile as before
+  Scenario: the band tells a long calendar in years
+    Given a voyage whose calendar runs more than 50 years
+    When it plays
+    Then the band's date is "c." and a year, to the nearest 10 years past 200 years and the nearest 50 past 1,000 ("c. 1210 BC", "c. 1250")
+    And its pace reads "about 80 years a second" (the calendar's years over the play's seconds), and the strip's ends are bare years ("1500 BC", "800 BC")
+    And a calendar of 50 years or fewer keeps its dates as precise as its legs and its pace as "1,083 days in 9 s"
+  Scenario: reduced motion
+    Given the user prefers reduced motion
+    When the user presses a voyage's play button
+    Then the voyage shows whole at once with every mark, the band at its last day, and the strip still scrubs to any day

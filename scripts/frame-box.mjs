@@ -4,7 +4,13 @@
 // (every longitude, the latitudes the cap reaches); otherwise the padded edge, walked with
 // `proj.invert`, bounds it. A frame wider than it needs to be only costs seeds, which the land, the
 // canvas and `proj.visible` then refuse, so every error here is toward too wide.
-const RAD = Math.PI / 180;
+export const RAD = Math.PI / 180;
+export const wrapLon = (lon) => ((((lon + 180) % 360) + 360) % 360) - 180;
+// Mercator latitude in degrees of longitude and back (a sheet, the atlas, the trees), and the latitude
+// of a projection's y in radians (scene.mjs, voyages.mjs).
+export const mercDeg = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * RAD) / 2)) / RAD;
+export const latOfMerc = (m) => (2 * Math.atan(Math.exp(m * RAD)) - Math.PI / 2) / RAD;
+export const mercLat = (y) => (2 * Math.atan(Math.exp(y)) - Math.PI / 2) / RAD;
 // Offset from the centre within +-180 as coast-wright's seam guard takes it: +180 stays on the right.
 export const fromCentre = (d) => (d > 180 ? d - 360 : d < -180 ? d + 360 : d);
 const STEP = 50; // px between edge samples

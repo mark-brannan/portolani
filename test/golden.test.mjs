@@ -9,10 +9,11 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import { createScene, drawScene, doubtMarks, SCALE_NAMES, RIVER_STYLES, LAKE_STYLES, TREE_STYLES, RELIEF_STYLES, PROJECTION_NAMES, W, H } from '../scripts/scene.mjs';
-import { VOYAGE_CONTRAST } from '../scripts/voyages.mjs';
+import { VOYAGE_CONTRAST, calendarOf, playedOn } from '../scripts/voyages.mjs';
 import { plantTrees } from '../scripts/trees.mjs';
 import { compare, CHANNEL } from '../scripts/golden-compare.mjs';
 import { coastNames, joinNames } from '../scripts/names.mjs';
+import { rangesFromRegions } from '../scripts/ranges-file.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const GOLDEN = join(ROOT, 'test', 'golden');
@@ -33,6 +34,7 @@ const VIEWS = {
   'world-z2-voyages': { lon: -20, lat: 15, zoom: 2 }, // three voyages at once, each in its own ink, at the bold weight
   'world-z2-person': { lon: 40, lat: 25, zoom: 2 }, // a person chosen: Ibn Battuta's journeys lit in red with his birth marked, Columbus dimmed
   'pacific-z3-migrations': { lon: -170, lat: -15, zoom: 3 }, // two migrations, chevrons over a soft ribbon, across the date line
+  'pacific-z3-lapita-play': { lon: 172, lat: -11, zoom: 3 }, // the Lapita stream played to 0.55 of its calendar: the canoe at each front, the settlements passed as pots
   'china-z5-doubt': { lon: 117, lat: 35, zoom: 5 }, // a doubted leg: its rings, and its cloud on empty land (Ibn Battuta to Khanbaliq)
   'levant-z6-marks': { lon: 33, lat: 32.5, zoom: 6 }, // a place with a tile and no figure gets a mark: Tyre a ruin, and Alexandria's on the Pharos
   'ostia-z7-ruin': { lon: 12.29, lat: 41.76, zoom: 7 }, // and a ruin where a sight says so (Ostia)
@@ -48,6 +50,7 @@ const OPTS = { 'region-z5': { autoTitle: false }, 'world-z2-voyage': { voyages: 
   'world-z2-voyages': { voyages: [{ id: 'columbus' }, { id: 'da-gama' }, { id: 'drake' }].map((v) => ({ ...v, width: 3.2 })) },
   'world-z2-person': { person: 'ibn-battuta', voyages: [{ id: 'columbus' }] },
   'pacific-z3-migrations': { voyages: [{ id: 'lapita-expansion' }, { id: 'east-polynesia-settlement', colour: '#1f4e8c' }] } ,
+  'pacific-z3-lapita-play': { voyages: [{ id: 'lapita-expansion' }], play: 0.55 },
   'china-z5-doubt': { voyages: [{ id: 'ibn-battuta-6' }] },
   'levant-z6-marks': { sights: [{ name: 'Tyre', lon: 35.1933, lat: 33.2681, ruin: true }, { name: 'Tyre', lon: 35.2111, lat: 33.2692, ruin: true }, { name: 'Alexandria', lon: 29.886, lat: 31.214, ruin: true }] },
   'ostia-z7-ruin': { sights: [{ name: 'Ostia', lon: 12.29, lat: 41.76, ruin: true }] },
@@ -63,15 +66,18 @@ const read = (file) => JSON.parse(readFileSync(file, 'utf8'));
 let made;
 const names = () => made ??= joinNames(read(join(ROOT, 'test', 'fixtures', 'sea-names-50m.json')),
   coastNames(read(join(GEO, 'ne-admin-0-countries-50m.geojson')), read(join(GEO, 'ne-coastline-50m.geojson'))));
+const images = new Map();
 const env = {
   createCanvas,
-  readJSON: async (p) => (p === 'geo/names-50m.json' ? names() : p === 'geo/seas-50m.json' ? read(join(ROOT, 'test', 'fixtures', 'seas-50m.json')) : p === 'geo/playas-10m.json' ? read(join(ROOT, 'test', 'fixtures', 'playas-10m.json')) : p === 'geo/peaks-10m.json' ? read(join(ROOT, 'test', 'fixtures', 'peaks-10m.json')) : read(resolve(p))),
-  loadImage: (p) => loadImage(resolve(p)),
+  readJSON: async (p) => (p === 'geo/names-50m.json' ? names() : p === 'geo/seas-50m.json' ? read(join(ROOT, 'test', 'fixtures', 'seas-50m.json')) : p === 'geo/playas-10m.json' ? read(join(ROOT, 'test', 'fixtures', 'playas-10m.json')) : p === 'geo/peaks-10m.json' ? read(join(ROOT, 'test', 'fixtures', 'peaks-10m.json')) : p === 'geo/ranges-10m.json' ? rangesFromRegions(resolve('geo/ne-geography-regions-polys-10m.geojson')) : read(resolve(p))),
+  loadImage: (p) => images.get(p) ?? images.set(p, loadImage(resolve(p))).get(p), // decoded once, as the page's host does
   loadFont: async (family) => { GlobalFonts.registerFromPath(join(ROOT, 'test', 'fixtures', 'IMFeENrm28P.ttf'), family); },
 };
 
-async function renderFull(view, scale = 'off', opts = {}) {
+// `play`: each voyage played that share of the way through its calendar, as the play button leaves it (page.js applyReveal)
+async function renderFull(view, scale = 'off', { play, ...opts } = {}) {
   const { scene, data, bg } = await createScene(env, { view, scale, ...opts });
+  if (play != null) for (const v of scene.voyages) { const cal = calendarOf(v.voyage); Object.assign(v, playedOn(v.voyage, cal, cal.t0 + play * (cal.t1 - cal.t0))); }
   const full = createCanvas(W, H);
   drawScene(full.getContext('2d'), scene, data, bg, { scale: 1, x: 0, y: 0 });
   return full;
