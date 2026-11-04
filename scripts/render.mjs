@@ -5,7 +5,7 @@
 //        npm run render -- --view 19.7,61.7,5.4[,projection] [--overlay carta-marina[:0.6]] [--sheet lon,lat,scale,turn] --out docs/x.jpg
 //          -> one view, optionally with a chart's sheet laid over it, or its warped pieces at an opacity
 //             (docs/overlay/README.md), as .png or .jpg; --voyages magellan,drake:1f4e8c draws those voyages,
-//             a picked colour after an id; `--notes` outlines the laid chart's notes (docs/notes); `--mountains marina,engraved,tolkien,wilderland` draws the ranges in those styles; `--debug sheets,rings`
+//             a picked colour after an id; `--notes` outlines the laid chart's notes (docs/notes); `--mountains marina,engraved,tolkien,wilderland,lotr` draws the ranges in those styles; `--debug sheets,rings`
 //             draws the atlas's sheets or rings in red, as the page's `debug=` does
 
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';

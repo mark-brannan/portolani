@@ -326,9 +326,11 @@ function penPeak(g, s, { ink, width, paper, hatching, spur }) {
   // strokes toward the base
   g.save(); g.beginPath(); pen(g, [s.shadow], { close: true }); g.clip();
   const top = s.shadow[0][1];
-  g.fillRect(s.outline[0][0] - s.w, top - 2, s.w * 3, s.h * hatching.solid + 2);
-  g.restore();
+  if (hatching.solid) g.fillRect(s.outline[0][0] - s.w, top - 2, s.w * 3, s.h * hatching.solid + 2);
+  // the strokes run from the ridge down the flank and stop short of the foot (hatching.foot of the height)
+  g.beginPath(); g.rect(s.outline[0][0] - s.w, top - 2, s.w * 3, s.h * hatching.foot + 2); g.clip();
   hatch(g, [[s.shadow]], asIs, { angle: s.slope + hatching.turn, gap: hatching.gap, color: ink, width: hatching.width, alpha: hatching.alpha, centralMeridian: s.outline[0][0] });
+  g.restore();
   g.strokeStyle = ink; g.lineWidth = width;
   g.beginPath(); pen(g, [s.flanks]); g.stroke();
   g.lineWidth = width * 0.75;
@@ -392,11 +394,14 @@ const LOOKS = {
   tolkien: ({ ink, land, parchment }) => ({ ink, light: null, shade: null, hatching: null, width: 1.1, flat: { paper: parchment ?? land, halo: 2, lit: 0.16 } }),
   // after Christopher Tolkien's Wilderland map, pen alone: sharp stacked peaks, the east flank hatched
   // nearly solid, foothill ridgelets trailing off the range
-  wilderland: ({ ink, land, parchment }) => ({ ink, width: 0.9, hatching: { gap: 1.7, width: 0.7, alpha: 0.9, solid: 0.8, turn: 0.5 }, penned: { paper: parchment ?? land, spur: 2.2 } }),
+  wilderland: ({ ink, land, parchment }) => ({ ink, width: 0.9, hatching: { gap: 1.7, width: 0.7, alpha: 0.9, solid: 0.8, foot: 1, turn: 0.5 }, penned: { paper: parchment ?? land, spur: 2.2 } }),
+  // after Christopher Tolkien's 1954 map of Middle-earth: a hairline peak, the east flank hatched in a few strokes
+  // from the ridge that stop short of the foot, the west flank blank, no halo, no spurs
+  lotr: ({ ink, land, parchment }) => ({ ink, width: 0.8, hatching: { gap: 1.9, width: 0.75, alpha: 0.95, solid: 0, foot: 0.8, turn: 0.6 }, penned: { paper: parchment ?? land, spur: 0 } }),
 };
 
 // the styles drawn with the sharp pen profile, their peaks trailing spurs
-const SHARP = new Set(['wilderland']);
+const SHARP = new Set(['wilderland', 'lotr']);
 
 export const RELIEF_STYLES = ['off', ...Object.keys(LOOKS)];
 

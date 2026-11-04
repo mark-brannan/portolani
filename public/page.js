@@ -120,7 +120,7 @@ function styleFromHash() {
     reefs: REEF_STYLES.includes(q.get('reefs')) ? q.get('reefs') : DEFAULTS.reefs,
     playas: PLAYA_STYLES.includes(q.get('playas')) ? q.get('playas') : DEFAULTS.playas,
     // older links named the drawn styles in `relief`: colour wins where it is listed
-    mountains: ['off', 'ink', 'tolkien', 'wilderland'].includes(q.get('mountains')) ? q.get('mountains')
+    mountains: ['off', 'ink', 'tolkien', 'wilderland', 'lotr'].includes(q.get('mountains')) ? q.get('mountains')
       : q.has('relief') ? (q.get('relief').split(',').includes('marina') ? 'colour' : q.get('relief').includes('engraved') ? 'ink' : 'off') : DEFAULTS.mountains,
     trees: TREE_STYLES.includes(q.get('trees')) ? q.get('trees') : DEFAULTS.trees,
     seaTint: q.get('seas') === '1' || q.get('redsea') === '1',
@@ -322,6 +322,7 @@ const MOUNTAIN_GLYPHS = {
   off: svg(`<path d="M3 15h22" ${stroke('currentColor', 0.8)}/>`),
   ink: svg(`<path d="M3 15 10 4l3 5 4-7 8 13Z" ${stroke('currentColor', 1)}/><path d="M17 2l-3 13M19 6l-2 9M10 4 8 15M12 9l-2 6" ${stroke('currentColor', 0.6)}/>`),
   tolkien: svg('<path d="M3 15 10 4l3 5 4-7 8 13Z" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round"/><path d="M3 15 10 4l-.5 3.5L6 15ZM13 9l-1.5 6H10ZM17 2l-1.3 4.5L14 15h-1.5Z" fill="#efe3c4"/>'),
+  lotr: svg(`<path d="M3 15 10 4l3 5 4-7 8 13" ${stroke('currentColor', 0.8)}/><path d="M17 2l1 5M18 4l1.5 5M19.5 6l1.5 5M10 4l.5 4M11 6l1 4" ${stroke('currentColor', 0.7)}/>`),
   wilderland: svg(`<path d="M3 15 10 4l3 5 4-7 8 13" ${stroke('currentColor', 1)}/><path d="M10 4l1 6 2 5h-3ZM17 2l1.5 8 3 5h-4Z" fill="currentColor"/><path d="M21 10l2 5M22.5 11l1.5 4M2 13l-1.5 1.5M4 11l-2 1" ${stroke('currentColor', 0.6)}/>`),
   colour: svg('<path d="M3 15 10 4l3 5 4-7 8 13Z" fill="#d2965a" stroke="currentColor" stroke-width="1" stroke-linejoin="round"/><path d="M17 2l3 13h5ZM10 4l2 11h-3Z" fill="rgba(150,70,32,.7)"/>'),
 };
@@ -411,7 +412,7 @@ const CHOICES = {
   regions: [['latin', 'Latin', REGION_SAMPLES.today.latin, NAME_SAMPLE(REGION_SAMPLES.today.latin)], ['english', 'English', REGION_SAMPLES.today.english, NAME_SAMPLE(REGION_SAMPLES.today.english)]],
   regionSet: [['today', 'Today', 'the regions as they are named today', NAME_SAMPLE(REGION_SAMPLES.today.latin)], ['catalan-1375', '1375 · Catalan Atlas', 'the realms the Catalan Atlas names, c. 1375', NAME_SAMPLE(REGION_SAMPLES['catalan-1375'].latin)]],
   titleMode: [['auto', 'Automatic', 'what the view shows'], ['custom', 'Custom']],
-  mountains: [['off', 'Off', '', MOUNTAIN_GLYPHS.off], ['ink', 'Ink', 'black and white hatching, as Engraved', MOUNTAIN_GLYPHS.ink], ['colour', 'Colour', 'ochre wash, as the Carta Marina', MOUNTAIN_GLYPHS.colour], ['tolkien', 'Tolkien', 'flat ink shadow, narrow lit side, as the Middle-earth map', MOUNTAIN_GLYPHS.tolkien], ['wilderland', 'Wilderland', 'pen alone: sharp stacked peaks, a solid east wall, foothill ridgelets, as the Wilderland map', MOUNTAIN_GLYPHS.wilderland]],
+  mountains: [['off', 'Off', '', MOUNTAIN_GLYPHS.off], ['ink', 'Ink', 'black and white hatching, as Engraved', MOUNTAIN_GLYPHS.ink], ['colour', 'Colour', 'ochre wash, as the Carta Marina', MOUNTAIN_GLYPHS.colour], ['tolkien', 'Tolkien', 'flat ink shadow, narrow lit side, as the Middle-earth map', MOUNTAIN_GLYPHS.tolkien], ['wilderland', 'Wilderland', 'pen alone: sharp stacked peaks, a solid east wall, foothill ridgelets, as the Wilderland map', MOUNTAIN_GLYPHS.wilderland], ['lotr', 'Middle-earth 1954', 'hairline peaks, a few hatch strokes down the east flank, the west blank, as the 1954 map', MOUNTAIN_GLYPHS.lotr]],
   hills: [['off', 'Off', '', MOUNTAIN_GLYPHS.off], ['catalan', 'Catalan drawings', 'Catalan Atlas, 1375', HILL_GLYPH]],
   land: [['off', 'Off', '', MOUNTAIN_GLYPHS.off], ['gilt', 'Gilt wash', '', LAND_GLYPHS.gilt], ['green', 'Green wash', 'Oliva, c.1590', LAND_GLYPHS.green], ['ochre', 'Ochre with shoals', 'Benincasa, 1466', LAND_GLYPHS.ochre]],
   islands: [['off', 'Plain islands'], ['on', 'Coloured islands', 'Beccari, 1403', ISLANDS_GLYPH]],
