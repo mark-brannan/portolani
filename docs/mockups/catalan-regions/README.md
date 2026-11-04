@@ -1,6 +1,6 @@
 # Mockups: the Catalan Atlas's own region names
 
-Four ways to letter the map with the atlas's realms (Sarra, Tauris, Medeja, Delli, Organa, Nubia and the kingdoms of Europe), each at the Old World, zoom 3.4, with BnF sheet 9 beside it. Candidates 1 to 4 are drawn over the live scene and are not wired into the page; candidate 5 is live in the page.
+Four ways to letter the map with the atlas's realms (Sarra, Tauris, Medeja, Delli, Organa, Nubia and the kingdoms of Europe), each at the Old World, zoom 3.4, with BnF sheet 9 beside it. Candidates 1 to 4 are drawn over the live scene and are not wired into the page; candidate 5, the one picked, is live in the page.
 
 1. `candidate-1.png`: the atlas's spelling, italic ink, as today's region names are lettered.
 2. `candidate-2.png`: rubrics, spaced capitals in the atlas's alternating red and blue, realms larger than kingdoms (sheet 9's REY DEL TAURIS and ARABIA SEBBA are lettered so).
