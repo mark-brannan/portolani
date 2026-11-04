@@ -415,7 +415,7 @@ const CHOICES = {
   titleMode: [['auto', 'Automatic', 'what the view shows'], ['custom', 'Custom']],
   mountains: [['off', 'Off', '', MOUNTAIN_GLYPHS.off], ['ink', 'Ink', 'black and white hatching, as Engraved', MOUNTAIN_GLYPHS.ink], ['colour', 'Colour', 'ochre wash, as the Carta Marina', MOUNTAIN_GLYPHS.colour]],
   hills: [['off', 'Off', '', MOUNTAIN_GLYPHS.off], ['catalan', 'Catalan drawings', 'Catalan Atlas, 1375', HILL_GLYPH]],
-  peaks: [['off', 'Off', '', MOUNTAIN_GLYPHS.off], ['catalan', 'Landmark peaks', 'named summits near the sea; a click gives the height', PEAK_GLYPH]],
+  peaks: [['off', 'Off', '', MOUNTAIN_GLYPHS.off], ['catalan', 'Landmark peaks', 'named summits; a click gives the height', PEAK_GLYPH]],
   land: [['off', 'Off', '', MOUNTAIN_GLYPHS.off], ['gilt', 'Gilt wash', '', LAND_GLYPHS.gilt], ['green', 'Green wash', 'Oliva, c.1590', LAND_GLYPHS.green], ['ochre', 'Ochre with shoals', 'Benincasa, 1466', LAND_GLYPHS.ochre]],
   islands: [['off', 'Plain islands'], ['on', 'Coloured islands', 'Beccari, 1403', ISLANDS_GLYPH]],
   seaTint: [['off', 'Plain seas'], ['on', 'Coloured seas', 'Red, Black and Caspian Seas, the Persian Gulf', SEAS_GLYPH]],

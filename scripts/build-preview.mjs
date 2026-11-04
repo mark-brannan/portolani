@@ -125,8 +125,8 @@ const playas = slim(JSON.parse(await readFile(path.join(root, 'downloads', 'ne_1
 if (JSON.stringify(JSON.parse(await readFile(path.join(root, 'test', 'fixtures', 'playas-10m.json'), 'utf8'))) !== JSON.stringify(playas)) throw new Error('test/fixtures/playas-10m.json is stale: write the slimmed playas download to it');
 await writeFile(path.join(out, 'geo', 'playas-10m.json'), JSON.stringify(playas));
 console.log(`urban footprints: ${(urban.length / 1e6).toFixed(2)} MB`);
-// the landmark peaks (scripts/peaks.mjs): the summits near the sea, read off coastlines' elevation points and 10m coast
-const peaks = JSON.stringify(slimPeaks(JSON.parse(await readGeo('ne-10m-geography-regions-elevation-points')), JSON.parse(await readGeo('ne-10m-coastline'))));
+// the landmark peaks (scripts/peaks.mjs): the named summits, read off coastlines' elevation points
+const peaks = JSON.stringify(slimPeaks(JSON.parse(await readGeo('ne-10m-geography-regions-elevation-points'))));
 if (JSON.stringify(JSON.parse(await readFile(path.join(root, 'test', 'fixtures', 'peaks-10m.json'), 'utf8'))) !== peaks) throw new Error('test/fixtures/peaks-10m.json is stale: write slimPeaks() of the coastlines files to it');
 await writeFile(path.join(out, 'geo', 'peaks-10m.json'), peaks);
 console.log(`landmark peaks: ${JSON.parse(peaks).features.length} peaks, ${Buffer.byteLength(peaks)} bytes (geo/peaks-10m.json)`);

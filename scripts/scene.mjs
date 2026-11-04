@@ -20,7 +20,7 @@ import { urbanKey } from './urban.mjs';
 import { RIVERS, LAKES, RIVER_STYLES, LAKE_STYLES, waterOf, shown } from './water.mjs';
 import { REEFS, REEF_STYLES, reefsOf } from './reefs.mjs';
 import { PLAYAS, PLAYA_STYLES, playasOf } from './playas.mjs';
-import { peaksOf, peakTile, peakWidth, PEAK_STYLES } from './peaks.mjs';
+import { peaksOf, peakTile, peakWidth, PEAK_STYLES, PEAK_INK, PEAK_INK_H, PEAK_SHRINK } from './peaks.mjs';
 import { RELIEF_STYLES, reliefOf, clearOf, drawRelief } from './relief.mjs';
 import { TREES, TREE_STYLES, plantTrees, plantPalms, inLake } from './trees.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
@@ -1270,23 +1270,31 @@ function placeHillSprites(humps, sprites, blocked, field, proj) {
 // sprites selected (the narrowest) at peakWidth, on land, inside the frame and clear of `blocked` and of
 // the peaks already stood. It is centred on the summit, or, where a town or a city is there, moved by up
 // to PEAK_SHIFT of its size (the summit still under the drawing) to the first spot of PEAK_SPOTS that is
-// clear. Each keeps its name, height and lon/lat for its tile.
-const PEAK_MARGIN = 8, PEAK_SHIFT = 0.4;
+// clear. A sprite that finds no ground is tried again at PEAK_SHRINK of its width, and then the peak
+// stands as PEAK_INK, a lone mountain in ink PEAK_INK_H tall (`ink`), which `blocked` may let stand on a
+// city's wash and which may move up to PEAK_INK_SHIFTS of its size, beside the town, so a town on the
+// summit (Catania under Etna, Naples by Vesuvius) does not lose the peak. Each keeps its name, height and lon/lat for its
+// tile, and `h`, its drawn height.
+const PEAK_MARGIN = 8, PEAK_SHIFT = 0.4, PEAK_INK_SHIFTS = [PEAK_SHIFT, 1, 1.6]; // the ink mark may stand farther off, beside the town
 const PEAK_SPOTS = [[0, 0], [0, -1], [-1, 0], [1, 0], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]];
 function placePeaks(sprites, blocked, field, proj) {
   if (!sprites.length || !peaks?.length) return [];
   const sprite = sprites.reduce((a, b) => (b.img.width / b.img.height < a.img.width / a.img.height ? b : a));
+  const aspect = sprite.img.height / sprite.img.width;
   const out = [];
   for (const p of peaks.filter((q) => shown(q, proj.zoom) && shows(proj, q.lon, q.lat)).sort((a, b) => b.elevation - a.elevation)) {
     const [px, py] = proj.project(p.lon, p.lat);
     if (!Number.isFinite(px) || !Number.isFinite(py) || !field.isLand(px, py)) continue;
-    const w = peakWidth(p.elevation), h = (w * sprite.img.height) / sprite.img.width;
-    for (const [dx, dy] of PEAK_SPOTS) {
-      const x = px + dx * PEAK_SHIFT * w, y = py + dy * PEAK_SHIFT * h, box = { x0: x - w / 2, y0: y - h / 2, x1: x + w / 2, y1: y + h / 2 };
-      if (box.x0 < PEAK_MARGIN || box.y0 < PEAK_MARGIN || box.x1 > W - PEAK_MARGIN || box.y1 > H - PEAK_MARGIN) continue;
-      if (!field.isLand(x, y) || blocked(box) || out.some((o) => meets(box, o.box))) continue;
-      out.push({ sprite, x, y, size: w, box, peak: { name: p.name, elevation: p.elevation, lon: p.lon, lat: p.lat } });
-      break;
+    const full = peakWidth(p.elevation);
+    const tries = [{ sprite, w: full, h: full * aspect, shifts: [PEAK_SHIFT] }, { sprite, w: full * PEAK_SHRINK, h: full * PEAK_SHRINK * aspect, shifts: [PEAK_SHIFT] }, { ink: true, w: (PEAK_INK_H * 2 * PEAK_INK.w) / PEAK_INK.h, h: PEAK_INK_H, shifts: PEAK_INK_SHIFTS }];
+    placing: for (const { w, h, shifts, ...kind } of tries) {
+      for (const shift of shifts) for (const [dx, dy] of PEAK_SPOTS) {
+        const x = px + dx * shift * w, y = py + dy * shift * h, box = { x0: x - w / 2, y0: y - h / 2, x1: x + w / 2, y1: y + h / 2 };
+        if (box.x0 < PEAK_MARGIN || box.y0 < PEAK_MARGIN || box.x1 > W - PEAK_MARGIN || box.y1 > H - PEAK_MARGIN) continue;
+        if (!field.isLand(x, y) || blocked(box, !!kind.ink) || out.some((o) => meets(box, o.box))) continue;
+        out.push({ ...kind, x, y, size: w, h, box, peak: { name: p.name, elevation: p.elevation, lon: p.lon, lat: p.lat } });
+        break placing;
+      }
     }
   }
   return out;
@@ -1787,11 +1795,12 @@ function buildScene(data, sprites, ctx, world = {}) {
   // the landmark peaks (peaks.mjs), after the towns and before the names, so a name gives way to a peak
   const barCorner = cornerOf(world.scalePos, DEFAULT_SCALE_CORNER);
   const bar = world.scaleBar ? scaleBox(barCorner, world.pinned !== false && barCorner === cartoucheCorner ? cartouche.h + 10 : 0) : null;
-  const peakSprites = placePeaks(sprites.mountains ?? [], ({ x0, y0, x1, y1 }) => {
+  // (the ink mark may stand on a city's wash, as a tower does, but never on a town, a city's plan or a name)
+  const peakSprites = placePeaks(sprites.mountains ?? [], ({ x0, y0, x1, y1 }, ink) => {
     const b = obb((x0 + x1) / 2, (y0 + y1) / 2, 0, (x1 - x0) / 2, (y1 - y0) / 2);
-    return boxes.some((o) => obbOverlap(o, b)) || (bar && obbOverlap(bar, b)) || urban.some((u) => meets({ x0, y0, x1, y1 }, u.box));
+    return boxes.some((o) => obbOverlap(o, b)) || (bar && obbOverlap(bar, b)) || (!ink && urban.some((u) => meets({ x0, y0, x1, y1 }, u.box)));
   }, field, data.proj);
-  for (const p of peakSprites) boxes.push(obb(p.x, p.y, 0, p.size / 2, (p.size * p.sprite.img.height) / p.sprite.img.width / 2));
+  for (const p of peakSprites) boxes.push(obb(p.x, p.y, 0, p.size / 2, p.h / 2));
 
   // Names, lettered by coast-wright: seas, then the metros (a town of size 1 or more, or a city),
   // then countries along their coasts, then the other towns above their towers; a country once, on
@@ -2138,6 +2147,22 @@ function drawTower(g, t) {
     tracePath(g, d);
     if (kind !== 's') { g.fillStyle = fills[kind]; g.fill(); }
     if (kind !== 'k' && kind !== 'f') g.stroke();
+  }
+  g.restore();
+}
+
+// A landmark peak in ink (peaks.mjs PEAK_INK), its middle at x, y and `h` px tall, drawn as a tower is.
+function drawPeakInk(g, x, y, h) {
+  const s = h / PEAK_INK.h;
+  g.save();
+  g.translate(x, y + h / 2);
+  g.scale(s, s);
+  g.lineWidth = 1.1; g.lineJoin = 'round';
+  g.strokeStyle = STYLE.ink;
+  for (const [kind, d] of PEAK_INK.layers) {
+    tracePath(g, d);
+    if (kind === 'p') { g.fillStyle = hexA(STYLE.parchment, 0.9); g.fill(); }
+    g.stroke();
   }
   g.restore();
 }
@@ -2921,9 +2946,9 @@ const MARK_MARGIN = 8;
 export const drawnMarks = (scene, data) => (scene.lesser ?? []).filter((l) => l.mark && l.label)
   .map((l) => ({ at: data.proj.invert(l.label.cx, l.label.cy), h: 2 * (Math.hypot(l.label.hw, l.label.hh) + MARK_MARGIN), name: l.name, site: l.site ?? null }));
 // The landmark peaks a scene stood (its `mountains` with `peak`), held to the earth: { at: [lon, lat], w, h, tile },
-// `at` the sprite's middle, `w` and `h` its drawn size, `tile` its name and height (peaks.mjs peakTile)
+// `at` the drawing's middle (a sprite or the ink mark), `w` and `h` its drawn size, `tile` its name and height (peaks.mjs peakTile)
 export const drawnPeaks = (scene, data) => (scene.mountains ?? []).filter((m) => m.peak)
-  .map((m) => ({ at: data.proj.invert(m.x, m.y), w: m.size, h: (m.size * m.sprite.img.height) / m.sprite.img.width, tile: peakTile(m.peak) }));
+  .map((m) => ({ at: data.proj.invert(m.x, m.y), w: m.size, h: m.h, tile: peakTile(m.peak) }));
 // The peaks' marks to hit in `proj`'s px: the whole drawn sprite and MARK_MARGIN round it (`hit`, a box, so a tap
 // anywhere on the drawing takes it), as a pickMark mark { x, y, h, hit, area, tile }
 export function peakHits(drawn, proj, rect) {
@@ -3085,7 +3110,10 @@ function drawScene(g, scene, data, bg, view) {
   for (const d of show.kinds.has('rose') ? scene.roseDraws : []) if (spriteIn(d.sprite, d.x, d.y, d.size)) drawSprite(g, d.sprite, d.x, d.y, d.size, { anchor: [0.5, 0.5], rot: roseTurn(data.proj) });
 
   // 5.5 mountains, inland, under the towns and names
-  for (const m of show.kinds.has('mountain') ? scene.mountains ?? [] : []) if (spriteIn(m.sprite, m.x, m.y, m.size)) drawSprite(g, m.sprite, m.x, m.y, m.size, { anchor: [0.5, 0.5] });
+  for (const m of show.kinds.has('mountain') ? scene.mountains ?? [] : []) {
+    if (m.ink) { if (disc(r, m.x, m.y, m.h)) drawPeakInk(g, m.x, m.y, m.h); continue; }
+    if (spriteIn(m.sprite, m.x, m.y, m.size)) drawSprite(g, m.sprite, m.x, m.y, m.size, { anchor: [0.5, 0.5] });
+  }
 
   // 6. towns
   for (const t of scene.towns) {
@@ -3334,7 +3362,9 @@ function drawAnchored(g, a, bg, view, layers) {
   }
   if (show.kinds.has('mountain')) for (const { o, at: ll } of a.mountains) {
     const size = o.size * scaled('mountain'), p = at(ll, size);
-    if (p) drawSprite(g, o.sprite, p[0], p[1], size, { anchor: [0.5, 0.5] });
+    if (!p) continue;
+    if (o.ink) drawPeakInk(g, p[0], p[1], o.h * scaled('mountain'));
+    else drawSprite(g, o.sprite, p[0], p[1], size, { anchor: [0.5, 0.5] });
   }
   for (const { o: t, at: ll } of a.towns) {
     const h = t.h * scaled('town'), p = at(ll, h * 2);

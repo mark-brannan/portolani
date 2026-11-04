@@ -362,7 +362,8 @@ Feature: Landmark peaks  (chips `#peaks`, hash `peaks`, default `catalan`, value
     Given the same view
     When the user clicks "Off" in Landmark peaks
     Then the hash gains `peaks=off` and the peaks are gone; the hills stay
-    # which peaks: Natural Earth's 10m summits within 100 km of the sea, each from its own min_zoom (in 256 px tiles, water.mjs `shown`); the mountain sprites must be selected (the Hills chip), as the peaks are drawn with them
+    # which peaks: Natural Earth's 10m named summits, each from its own min_zoom (in 256 px tiles, water.mjs `shown`); the mountain sprites must be selected (the Hills chip), as the peaks are drawn with them
+    # a peak whose sprite finds no ground (a town on the summit) stands smaller, then as a lone mountain in ink, with the same tile; it is never dropped for a town alone
     # a site without geo/peaks-10m.json stands no peaks and draws the rest of the map as before
 
 Feature: Scale bar  (chips `#scale`, hash `scale`, default `genoese`, values `off|chequer|chevron|ribbon|beads|ruled|genoese`) [verified page.js:96, 286; scene.mjs:2077-2170]
