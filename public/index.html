@@ -447,21 +447,40 @@
 
   .about p { color: var(--muted); font-size: 12px; margin: 0; }
 
-  /* the drawer's layouts (layout=): in Default each control's wrapper (.ctl) lays out as if it were not there,
-     so the drawer is as it was; another layout moves the wrappers into its own groups, where each is a block
-     and the headings only a moved control needs (.lo) show */
-  #layout { margin-top: 10px; }
+  /* the drawer: each control's wrapper (.ctl) is a block in its tab; the moods over the tabs Sea · Land · Margins */
   @media not all and (hover: hover) and (pointer: fine) { #hoverRow { display: none; } } /* page.js HOVER_MEDIA, negated: nothing to hover with */
-  .ctl { display: contents; }
-  .lo { display: none; }
-  html[data-layout] .ctl { display: block; }
-  html[data-layout] .ctl + .ctl, html[data-layout] .ctl + .lead { margin-top: 8px; }
-  html[data-layout] .lo { display: block; }
-  .moods { margin-top: 18px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
-  .moods .preset b { font-size: 16px; }
-  .moods .sample img, .moods .sample svg { height: 28px; max-width: 38px; }
-  .fine { margin-top: 14px; }
-  .fine > summary { font: 17px var(--serif); color: var(--accent); letter-spacing: 0.06em; font-variant: small-caps; cursor: pointer; }
+  .ctl { display: block; }
+  .lo { display: block; }
+  .ctl + .ctl, .ctl + .lead { margin-top: 8px; }
+  #layoutGroups > h2 { margin-top: 12px; }
+  .moods { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .moods .preset { flex: 1 1 auto; min-width: 0; align-items: center; text-align: center; padding: 4px 5px; }
+  .moods .preset small { display: none; }
+  .moods .preset b { font-size: 13px; }
+  .moods .sample img, .moods .sample svg { height: 28px; max-width: 22px; }
+  /* All the things: the whole row, one small picture of every figure, edge to edge */
+  .moods .preset.all { flex: 1 0 100%; align-items: stretch; padding: 4px 4px 5px; }
+  .moods .preset.all b { font-size: 15px; }
+  .moods .sample.crammed { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0; padding: 1px; }
+  .moods .sample.crammed img, .moods .sample.crammed svg { height: 17px; width: auto; max-width: 24px; margin: 0; }
+  .tabs { display: flex; margin: 12px 0 4px; border-bottom: 1px solid var(--rule); position: sticky; top: -14px; background: var(--panel); z-index: 1; padding-top: 4px; }
+  .tabs button { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 4px 7px; border: none; background: none; font: 16px var(--serif); color: var(--muted); border-bottom: 3px solid transparent; cursor: pointer; }
+  .tabs button svg { width: 34px; height: 22px; }
+  .tabs button[aria-selected=true] { color: var(--accent); border-bottom-color: var(--accent); }
+  .tabs small { font: 10px system-ui, sans-serif; color: var(--muted); }
+  /* a family is a chip with a count: solid is all on, dashed some, faded none; the one open shows its pictures in the tray */
+  .fam-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 6px; }
+  .fam-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px 3px 4px; border-radius: 8px; font: 13px var(--serif); }
+  .fam-chip .sample img, .fam-chip .sample svg { height: 26px; max-width: 40px; }
+  .fam-chip b { font: 600 10px system-ui, sans-serif; padding: 1px 5px; border-radius: 8px; background: var(--sheet); color: var(--muted); }
+  .fam-chip[data-state=all] { border: 1.5px solid var(--accent); opacity: 1; }
+  .fam-chip[data-state=all] b { background: var(--accent); color: #f4efe4; }
+  .fam-chip[data-state=part] { border: 1.5px dashed var(--accent); opacity: 1; }
+  .fam-chip[data-state=none] { opacity: .55; border: 1px solid var(--rule); }
+  .fam-chip[aria-expanded=true] { box-shadow: 0 0 0 2px var(--panel), 0 0 0 3.5px var(--fg); }
+  .fam-tray { background: var(--sheet); border-radius: 6px; padding: 6px; margin: 2px 0 8px; }
+  .fam-tray:empty { display: none; }
+  .fam-tray .family { padding: 0; border: none; }
 
   /* under the hood: knobs fixed in the code, for a while; collapsed */
   .hood summary { font: 15px var(--serif); color: var(--accent); letter-spacing: 0.06em; font-variant: small-caps; cursor: pointer; }
@@ -623,10 +642,6 @@
     </div>
   </header>
 
-  <!-- the layouts: one chip each, the choice kept in the link (`layout=`). Default is the drawer below as it
-       stands; the others move these same controls into new groups, so each control is one element -->
-  <div id="layout" class="chips" role="radiogroup" aria-label="Drawer layout"></div>
-
   <!-- with a mouse, a grouped list's section also opens when the pointer rests on its heading (page.js, HOVER_DWELL);
        off, only a click opens one. Kept in the link (`hover=0` is off). Not shown where nothing can hover -->
   <div id="hoverRow"><h3>Sections open on hover</h3><div id="hoverOpen" class="chips" role="radiogroup" aria-label="Sections open on hover"></div></div>
@@ -644,7 +659,7 @@
     <div id="ui-body"></div>
   </section>
 
-  <!-- the groups of a layout other than Default, built by page.js from the same controls (each a .ctl) -->
+  <!-- the moods and the tabs Sea · Land · Margins, built by page.js from the controls below (each a .ctl) -->
   <div id="layoutGroups" hidden></div>
 
   <section class="home" aria-labelledby="h-sea">
@@ -846,6 +861,5 @@
 </aside>
 <script type="importmap">{ "imports": { "coast-wright": "./coast-wright/index.js", "coastlines/catalogue.json": "./coastlines/catalogue.json", "coastlines/provider": "./coastlines/lib/provider.js" } }</script>
 <script type="module" src="page.js"></script>
-<script type="module">if (/[?&]mock=/.test(location.search)) import('./mockup-drawers-reorg.mjs'); // the drawers reorg mockup, not for merge</script>
 </body>
 </html>
