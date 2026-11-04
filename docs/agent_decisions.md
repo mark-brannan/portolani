@@ -444,3 +444,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261104t064404z
 - Signal K webapp stands a landmark peak only on land the ENC cells hold, as the page's placePeaks does Undo: stand a peak off the cells' land in the webapp ([#356](https://github.com/mark-brannan/portolani/pull/356))
+
+### 20261104t064427z
+- Signal K webapp's Mountains chip covers the ranges and the hills; with Landmark peaks on, the hills may stand with Mountains off Undo: split the chip, or select the peak sprite alone ([#356](https://github.com/mark-brannan/portolani/pull/356))
