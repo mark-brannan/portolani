@@ -429,3 +429,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261104t063017z
 - portolani ranges: up to 8 ridges per range polygon; a side ridge stands only where its half-width is at least 4 peak heights Undo: MAX_RIDGES in scripts/ranges.mjs, the width test in scripts/relief.mjs (no PR, branch ranges-work)
+
+### 20261104t063021z
+- portolani ranges: peak height scales down 6% per Natural Earth scalerank step below 1 Undo: rankScale in scripts/relief.mjs (no PR, branch ranges-work)
