@@ -1,11 +1,1709 @@
 {
-  "Tyre": [
-    { "file": "SubmergedEgyptianHarbour_TyreSour_Lebanon_RomanDeckert04112019.jpg", "site": 0, "kind": "photo", "author": "Roman Deckert", "date": "2019", "licence": "CC BY-SA 4.0", "caption": "The southern (Egyptian) harbour of the city site, its ancient columns under the water, the modern town behind." },
-    { "file": "ISS006-E-31938_TyreSurLebanon01032003.jpg", "site": 0, "kind": "space", "author": "NASA, International Space Station", "date": "2003", "licence": "Public domain", "caption": "The peninsula from orbit: the old island joined to the shore by Alexander's causeway, silted into a tombolo." },
-    { "file": "TyreCitySite_ArchaeologicalExcavations_UniversityOfLyon_RomanDeckert09102019.jpg", "site": 0, "kind": "photo", "author": "Roman Deckert", "date": "2019", "licence": "CC BY-SA 4.0", "caption": "The University of Lyon's team digging the city site, Al-Mina, in 2019." },
-    { "file": "Tyre_ancient_town_2018_-_21.jpg", "site": 1, "kind": "photo", "author": "Daieuxetdailleurs", "date": "2018", "licence": "CC BY-SA 4.0", "caption": "The Roman triumphal arch at Al-Bass, re-erected over the road into the city." },
-    { "file": "Via_Romana_(4145038796).jpg", "site": 1, "kind": "photo", "author": "Petteri Sulonen", "date": "2003", "licence": "CC BY 2.0", "caption": "The Roman road at Al-Bass, with the necropolis's sarcophagi along it." },
-    { "file": "Tyre_hippodrome_02.jpg", "site": 1, "kind": "photo", "author": "Carole Raddato", "date": "2019", "licence": "CC BY-SA 2.0", "caption": "The hippodrome at Al-Bass, one of the largest of the Roman world, its seats and spina." },
-    { "file": "TyreAlBass_Aquaeduct-Louis-FrançoisCassas-VoyagePittoresque1799.jpg", "site": 1, "kind": "drawing", "author": "Louis-François Cassas", "date": "c. 1786, published 1799", "licence": "Public domain", "caption": "The Roman aqueduct at Al-Bass as Cassas drew it on his visit of about 1786, for his Voyage pittoresque." }
-  ]
+ "Tyre": [
+  {
+   "file": "SubmergedEgyptianHarbour_TyreSour_Lebanon_RomanDeckert04112019.jpg",
+   "site": 0,
+   "kind": "photo",
+   "author": "Roman Deckert",
+   "date": "2019",
+   "licence": "CC BY-SA 4.0",
+   "caption": "The southern (Egyptian) harbour of the city site, its ancient columns under the water, the modern town behind."
+  },
+  {
+   "file": "ISS006-E-31938_TyreSurLebanon01032003.jpg",
+   "site": 0,
+   "kind": "space",
+   "author": "NASA, International Space Station",
+   "date": "2003",
+   "licence": "Public domain",
+   "caption": "The peninsula from orbit: the old island joined to the shore by Alexander's causeway, silted into a tombolo."
+  },
+  {
+   "file": "TyreCitySite_ArchaeologicalExcavations_UniversityOfLyon_RomanDeckert09102019.jpg",
+   "site": 0,
+   "kind": "photo",
+   "author": "Roman Deckert",
+   "date": "2019",
+   "licence": "CC BY-SA 4.0",
+   "caption": "The University of Lyon's team digging the city site, Al-Mina, in 2019."
+  },
+  {
+   "file": "Tyre_ancient_town_2018_-_21.jpg",
+   "site": 1,
+   "kind": "photo",
+   "author": "Daieuxetdailleurs",
+   "date": "2018",
+   "licence": "CC BY-SA 4.0",
+   "caption": "The Roman triumphal arch at Al-Bass, re-erected over the road into the city."
+  },
+  {
+   "file": "Via_Romana_(4145038796).jpg",
+   "site": 1,
+   "kind": "photo",
+   "author": "Petteri Sulonen",
+   "date": "2003",
+   "licence": "CC BY 2.0",
+   "caption": "The Roman road at Al-Bass, with the necropolis's sarcophagi along it."
+  },
+  {
+   "file": "Tyre_hippodrome_02.jpg",
+   "site": 1,
+   "kind": "photo",
+   "author": "Carole Raddato",
+   "date": "2019",
+   "licence": "CC BY-SA 2.0",
+   "caption": "The hippodrome at Al-Bass, one of the largest of the Roman world, its seats and spina."
+  },
+  {
+   "file": "TyreAlBass_Aquaeduct-Louis-FrançoisCassas-VoyagePittoresque1799.jpg",
+   "site": 1,
+   "kind": "drawing",
+   "author": "Louis-François Cassas",
+   "date": "c. 1786, published 1799",
+   "licence": "Public domain",
+   "caption": "The Roman aqueduct at Al-Bass as Cassas drew it on his visit of about 1786, for his Voyage pittoresque."
+  }
+ ],
+ "Niani": [
+  {
+   "file": "The Mali Empire.jpg",
+   "kind": "map",
+   "author": "Gabriel Moss",
+   "date": "2016",
+   "licence": "CC BY-SA 4.0",
+   "caption": "The Mali empire at the end of Mansa Musa's reign in 1337, with its goldfields and trade routes."
+  },
+  {
+   "file": "Río Dion, Sankarani, Kantoumanina, Guinea - panoramio.jpg",
+   "kind": "photo",
+   "author": "Gabriel Rodríguez",
+   "date": "2014",
+   "licence": "CC BY 3.0",
+   "caption": "The Sankarani river in Guinea, the river the usual site of Niani stands on."
+  },
+  {
+   "file": "Lake-Selingue-NASA-Worldwind.jpg",
+   "kind": "space",
+   "author": "NASA",
+   "date": "2008",
+   "licence": "Public domain",
+   "caption": "Lake Sélingué from orbit, where the Sankarani is dammed in Mali, downstream of the Guinean reach."
+  },
+  {
+   "file": "Djenne Terracotta Equestrian (13th-15th cent).jpg",
+   "kind": "photo",
+   "author": "Franko Khoury",
+   "date": "2009",
+   "licence": "Public domain",
+   "caption": "A terracotta horseman from the Jenné region, made between the 13th and 15th centuries, the age of Mali."
+  }
+ ],
+ "Timbuktu": [
+  {
+   "file": "Djinguereber Mosque, Timbuktu.jpg",
+   "kind": "photo",
+   "author": "upyernoz",
+   "date": "2005",
+   "licence": "CC BY 2.0",
+   "caption": "The Djinguereber Mosque, dated to 1327, the oldest mosque in the city."
+  },
+  {
+   "file": "Caillie 1830 Timbuktu view.jpg",
+   "kind": "scene",
+   "author": "René Caillié",
+   "date": "1830",
+   "licence": "Public domain",
+   "caption": "The town as René Caillié drew it in 1828, flat-roofed houses and domed huts packed on a hill."
+  },
+  {
+   "file": "Timbuktu-manuscripts-astronomy-mathematics.jpg",
+   "kind": "photo",
+   "author": "Elias Altmimi",
+   "date": "2007",
+   "licence": "Public domain",
+   "caption": "Two facing pages of a Timbuktu manuscript, with astronomical diagrams in concentric circles."
+  },
+  {
+   "file": "Sankore Mosque in Timbuktu.jpg",
+   "kind": "photo",
+   "author": "upyernoz",
+   "date": "2005",
+   "licence": "CC BY 2.0",
+   "caption": "The Sankoré Mosque, another of the city's mosques that became a centre of learning."
+  },
+  {
+   "file": "Timbuktu, Mali (ASTER).jpg",
+   "kind": "space",
+   "author": "NASA/METI/AIST/Japan Space Systems, and U.S./Japan ASTER Science Team",
+   "date": "2001",
+   "licence": "Public domain",
+   "caption": "Timbuktu from orbit in 2001, on the desert's edge about 15 km north of the Niger."
+  }
+ ],
+ "Gao": [
+  {
+   "file": "Tombeau dAskia in Gao by David Sessoms.jpg",
+   "kind": "photo",
+   "author": "David Sessoms",
+   "date": "2006",
+   "licence": "CC BY-SA 2.0",
+   "caption": "The Tomb of Askia at Gao, the stepped mud pyramid of the Songhai ruler who came after Mali."
+  },
+  {
+   "file": "ETH-BIB-Grabmal von Askia, Gao-Tschadseeflug 1930-31-LBS MH02-08-0548.tif",
+   "kind": "photo",
+   "author": "Walter Mittelholzer",
+   "date": "1930-31",
+   "licence": "Public domain",
+   "caption": "The tomb of Askia in 1930, alone on the sand, photographed during Mittelholzer's Lake Chad flight."
+  },
+  {
+   "file": "ETH-BIB-Gao vom Niger aus gesehen-Tschadseeflug 1930-31-LBS MH02-08-0492.tif",
+   "kind": "photo",
+   "author": "Walter Mittelholzer",
+   "date": "1930-31",
+   "licence": "Public domain",
+   "caption": "Gao from the Niger in 1930, canoes drawn up under the palms with the domed houses behind."
+  },
+  {
+   "file": "GaoPirogeNiger1990.jpg",
+   "kind": "photo",
+   "author": "Albert Backer",
+   "date": "1990",
+   "licence": "CC BY-SA 3.0",
+   "caption": "Pirogues on the bank of the Niger at Gao in 1990."
+  }
+ ],
+ "Walata": [
+  {
+   "file": "Oualata 03.jpg",
+   "kind": "photo",
+   "author": "c.hug",
+   "date": "2005",
+   "licence": "CC BY-SA 2.0",
+   "caption": "Oualata from the heights, its old mud-brick quarters spread across the slope."
+  },
+  {
+   "file": "Oualata Mosque.jpg",
+   "kind": "photo",
+   "author": "Kurt Dundy",
+   "date": "2012",
+   "licence": "CC BY 3.0",
+   "caption": "The mosque at Oualata, red walls and a square minaret."
+  },
+  {
+   "file": "Oualata Decorative Entrance 1.jpg",
+   "kind": "photo",
+   "author": "Kurt Dundy",
+   "date": "2012",
+   "licence": "CC BY 3.0",
+   "caption": "A house front at Oualata, its doorway and wall roundels painted in white and colour."
+  },
+  {
+   "file": "Salt tablet Taoudeni Quai Branly 71.1938.17.28 D.jpg",
+   "kind": "photo",
+   "author": "Marie-Lan Nguyen",
+   "date": "2017",
+   "licence": "Public domain",
+   "caption": "A slab of Taoudenni salt in the Quai Branly museum, the load the road to Walata carried."
+  }
+ ],
+ "Taghaza": [
+  {
+   "file": "Trans-Saharan routes early.svg",
+   "kind": "map",
+   "author": "Aa77zz",
+   "date": "2011",
+   "licence": "CC0",
+   "caption": "The early trans-Saharan routes, with Taghaza on the way between Sijilmasa and the Niger and Walata to its south."
+  },
+  {
+   "file": "Tombouctou-Arrivée d'une caravane de sel (AOF).jpg",
+   "kind": "photo",
+   "author": "François-Edmond Fortier",
+   "date": "early 20th c.",
+   "licence": "Public domain",
+   "caption": "A salt caravan arriving at Timbuktu about 1900, camels strung out across the sand."
+  },
+  {
+   "file": "Mopti sel.jpg",
+   "kind": "photo",
+   "author": "Taguelmoust",
+   "date": "2005",
+   "licence": "CC BY-SA 3.0",
+   "caption": "Slabs of Taoudenni salt just unloaded at the river port of Mopti."
+  },
+  {
+   "file": "Salt tablet Taoudeni Quai Branly 71.1938.17.28 D.jpg",
+   "kind": "photo",
+   "author": "Marie-Lan Nguyen",
+   "date": "2017",
+   "licence": "Public domain",
+   "caption": "A slab of Taoudenni salt in the Quai Branly museum, with the holes worked into its surface."
+  }
+ ],
+ "Bambuk": [
+  {
+   "file": "Carte de Kéniéba et du Terrain Environnant les Mines, Levée pendant l'expédition du Bambouk, Exéctuée en Août 1858... - DPLA - 1c589e498a38f498f5307192004b58a7.jpg",
+   "kind": "map",
+   "author": "H. Vincent",
+   "date": "1859",
+   "licence": "Public domain",
+   "caption": "A French map of Kéniéba and the ground around its mines, drawn on the Bambouk expedition of August 1858."
+  },
+  {
+   "file": "Catalan Atlas BNF Sheet 6 Western Sahara.jpg",
+   "kind": "map",
+   "author": "Abraham Cresques (attributed)",
+   "date": "1375",
+   "licence": "Public domain",
+   "caption": "The Catalan Atlas of 1375: the king of Mali, a gold nugget in his hand, faces a Saharan trader on his camel."
+  },
+  {
+   "file": "Forested island in the Faleme River.jpg",
+   "kind": "photo",
+   "author": "Warren McCleland",
+   "date": "2012",
+   "licence": "CC BY 2.0",
+   "caption": "The Falémé river near Fadougou, the western edge of the goldfield."
+  },
+  {
+   "file": "Le Tour du monde-03-p041.jpg",
+   "kind": "scene",
+   "author": "Jules-Antoine Duvaux",
+   "date": "1861",
+   "licence": "Public domain",
+   "caption": "An 1861 engraving of fishermen on the Falémé and the upper Senegal."
+  },
+  {
+   "file": "Trans-Saharan routes early.svg",
+   "kind": "map",
+   "author": "Aa77zz",
+   "date": "2011",
+   "licence": "CC0",
+   "caption": "The early trans-Saharan routes, with Taghaza, Walata, Timbuktu, Gao, Takedda and the goldfields of Bambuk and Bouré marked."
+  }
+ ],
+ "Bure": [
+  {
+   "file": "Guinea Siguiri miner woman.jpg",
+   "kind": "photo",
+   "author": "Laura Lartigue",
+   "date": "2000",
+   "licence": "Public domain",
+   "caption": "A woman panning gold at Siguiri, on the Bouré field's northern edge."
+  },
+  {
+   "file": "Marché de Siguiri (Guinée).jpg",
+   "kind": "photo",
+   "author": "Unknown",
+   "date": "c. 1900",
+   "licence": "Public domain",
+   "caption": "The market at Siguiri about 1900, the trading town of the field."
+  },
+  {
+   "file": "Tam-tam des environs de Siguiri (Guinée).jpg",
+   "kind": "photo",
+   "author": "François-Edmond Fortier",
+   "date": "early 20th c.",
+   "licence": "Public domain",
+   "caption": "A dance near Siguiri about 1905, the crowd in a ring about the drummers."
+  },
+  {
+   "file": "Fisher women on River Niger in Guinea, Africa.jpg",
+   "kind": "photo",
+   "author": "Julien Harneis",
+   "date": "2012",
+   "licence": "CC BY-SA 2.0",
+   "caption": "Women fishing with nets on the Niger in Guinea."
+  },
+  {
+   "file": "Trans-Saharan routes early.svg",
+   "kind": "map",
+   "author": "Aa77zz",
+   "date": "2011",
+   "licence": "CC0",
+   "caption": "The early trans-Saharan routes, with Taghaza, Walata, Timbuktu, Gao, Takedda and the goldfields of Bambuk and Bouré marked."
+  }
+ ],
+ "The western road": [
+  {
+   "file": "The northern gate of sijilmassa Mansouria.jpg",
+   "kind": "photo",
+   "author": "Hmidanix",
+   "date": "2021",
+   "licence": "CC BY-SA 4.0",
+   "caption": "The ruined northern gate of Sijilmasa, where the western road began."
+  },
+  {
+   "file": "Great Trading Routes of the Sahara WDL100.png",
+   "kind": "map",
+   "author": "E. Blanc",
+   "date": "1889",
+   "licence": "Public domain",
+   "caption": "An 1889 map of the great trading routes of the Sahara, with the caravan roads from Morocco to the Niger."
+  },
+  {
+   "file": "PSM V53 D189 A caravan on its march.jpg",
+   "kind": "photo",
+   "author": "Unknown",
+   "date": "1898",
+   "licence": "Public domain",
+   "caption": "A caravan on its march, camels walking across open ground."
+  },
+  {
+   "file": "Tombouctou-Le sel en barres arrive par caravanes.jpg",
+   "kind": "photo",
+   "author": "François-Edmond Fortier",
+   "date": "early 20th c.",
+   "licence": "Public domain",
+   "caption": "Salt in bars arriving at Timbuktu by caravan, the camels kneeling with their loads."
+  },
+  {
+   "file": "Camel caravan going through sand in the Sahara Desert.jpg",
+   "kind": "photo",
+   "author": "Asfour hamza",
+   "date": "2019",
+   "licence": "CC BY-SA 4.0",
+   "caption": "A camel caravan crossing Saharan dunes."
+  }
+ ],
+ "The road to Egypt": [
+  {
+   "file": "Trans-Saharan routes early.svg",
+   "kind": "map",
+   "author": "Aa77zz",
+   "date": "2011",
+   "licence": "CC0",
+   "caption": "The early trans-Saharan routes, with Takedda marked on the eastern way out of the Niger bend."
+  },
+  {
+   "file": "Bilma-Salzkarawane1.jpg",
+   "kind": "photo",
+   "author": "Holger Reineccius",
+   "date": "1985",
+   "licence": "CC BY-SA 3.0",
+   "caption": "A salt caravan on its way from Agadez to Bilma in Niger, camels loaded in a line."
+  },
+  {
+   "file": "Grande cuvette 'Abatol' à Tegidda n'Tesemt.jpg",
+   "kind": "photo",
+   "author": "IsmaelDa10",
+   "date": "2014",
+   "licence": "CC BY-SA 4.0",
+   "caption": "A salt pan at Tigidda n'Tesemt, 85 km north-west of Ingall in the Agadez region, near the country of Takedda."
+  },
+  {
+   "file": "Niger, Agadez (28), grand mosque, old city.jpg",
+   "kind": "photo",
+   "author": "Vincent van Zeijst",
+   "date": "2018",
+   "licence": "CC BY-SA 4.0",
+   "caption": "Agadez and its Grand Mosque, a caravan city of the Aïr, east of Takedda."
+  }
+ ],
+ "Siraf": [
+  {
+   "file": "Jameh_Mosque_of_Siraf.jpg",
+   "kind": "air",
+   "author": "dehsaeed",
+   "date": "2007",
+   "licence": "CC BY-SA 4.0",
+   "caption": "The excavated footing of the Great Mosque, with its rows of buttressed walls, beside the shore at Siraf."
+  },
+  {
+   "file": "Taheri_port.jpg",
+   "kind": "photo",
+   "author": "dehsaeed",
+   "date": "2007",
+   "licence": "CC BY-SA 4.0",
+   "caption": "The excavated houses of the merchants' quarter at Siraf, from above."
+  },
+  {
+   "file": "Tombstone_-_Marqueur_de_tombe_-_Siraf_(Iran)_-_1133_-_Louvre_-_OA_6702.jpg",
+   "kind": "photo",
+   "author": "Faqscl",
+   "date": "2018",
+   "licence": "CC BY-SA 4.0",
+   "caption": "A carved stone grave marker from Siraf, now in the Louvre, with the dead man's name inside a niche-shaped frame."
+  },
+  {
+   "file": "پیاله_سفالی_لعاب_پاشیده_با_نقش_قالب_زده_مربوط_به_سده_4_هجری_قمری_در_سیراف_بوشهر.jpg",
+   "kind": "photo",
+   "author": "Rohalamin",
+   "date": "2023",
+   "licence": "CC BY-SA 4.0",
+   "caption": "A glazed pottery bowl with a moulded pattern, 4th century AH (10th century AD), found at Siraf."
+  },
+  {
+   "file": "Lord_nassouri’_palace_in_Siraf_port_قلعه_نصوری_در_بندر_سیراف_(طاهری).jpg",
+   "kind": "air",
+   "author": "Dr.lord.arash.nassouri",
+   "date": "2025",
+   "licence": "CC0",
+   "caption": "Siraf today from above: a small town and harbour on the Bushehr shore of the Gulf."
+  }
+ ],
+ "Aden": [
+  {
+   "file": "Cisterns_of_Tawila_-_صهاريج_عدن_-_panoramio.jpg",
+   "kind": "photo",
+   "author": "Tariq Ahmed",
+   "date": "2010",
+   "licence": "CC BY-SA 3.0",
+   "caption": "The Tawila Tanks of Aden, the rock-cut cisterns that hold the rain from the crater's hills."
+  },
+  {
+   "file": "Mountain_side_view_of_the_Terrace-cisterns_at_Aden._Wood_eng_Wellcome_V0012139.jpg",
+   "kind": "drawing",
+   "author": "Wellcome Collection",
+   "date": "19th century",
+   "licence": "CC BY 4.0",
+   "caption": "A wood engraving of the terraced cisterns in the gorge above Aden."
+  },
+  {
+   "file": "ADEN---Aerial-Photo-Crater-town-1964.jpg",
+   "kind": "air",
+   "author": "العمري",
+   "date": "1964",
+   "licence": "Public domain",
+   "caption": "Crater, the old town of Aden, from the air in 1964, sitting in the volcano's mouth."
+  },
+  {
+   "file": "Aden_1920.jpg",
+   "kind": "photo",
+   "author": "العمري",
+   "date": "c. 1900-1920",
+   "licence": "Public domain",
+   "caption": "Camels and their loads in the open ground of Crater, Aden, c. 1900-1920."
+  },
+  {
+   "file": "Map_of_Aden_in_Ottoman_Turkish.jpg",
+   "kind": "map",
+   "author": "Unknown author",
+   "date": "late 19th - early 20th century",
+   "licence": "Public domain",
+   "caption": "A map of Aden in Ottoman Turkish, the crater town in the north-west of the peninsula."
+  }
+ ],
+ "Kilwa": [
+  {
+   "file": "Great_Mosque_of_Kilwa_Kisiwani,_11th_-_18th_cents_(12)_(28447057154).jpg",
+   "kind": "photo",
+   "author": "Richard Mortel",
+   "date": "2016",
+   "licence": "CC BY 2.0",
+   "caption": "The domed prayer hall of the Great Mosque, whose coral-stone vaults were rebuilt in the 15th century."
+  },
+  {
+   "file": "Husuni_Kubwa_-_pool_for_bathing.jpg",
+   "kind": "photo",
+   "author": "Veronika Berdnikova",
+   "date": "2017",
+   "licence": "CC BY-SA 4.0",
+   "caption": "The octagonal bathing pool in the ruins of Husuni Kubwa, the sultan's palace above the shore."
+  },
+  {
+   "file": "Great_Mosque_of_Kilwa_Kisiwani,_11th_-_18th_cents_(24)_(28990538101).jpg",
+   "kind": "photo",
+   "author": "Richard Mortel",
+   "date": "2016",
+   "licence": "CC BY 2.0",
+   "caption": "The Great Mosque from the outside, its row of small domes over the prayer hall."
+  },
+  {
+   "file": "Kilwa_Kisiwani_-_Kolonialatlas.jpg",
+   "kind": "map",
+   "author": "W. Rux",
+   "date": "c. 1901-1915",
+   "licence": "Public domain",
+   "caption": "Kilwa Kisiwani and the Rufiji coast opposite, on a sheet of the German colonial atlas."
+  },
+  {
+   "file": "Kilwa_Kisiwa_View.jpg",
+   "kind": "photo",
+   "author": "Khalidsalewa",
+   "date": "2021",
+   "licence": "CC BY-SA 4.0",
+   "caption": "The island seen from the water, low and wooded, as a ship would raise it."
+  }
+ ],
+ "Calicut": [
+  {
+   "file": "Calicut_1572.jpg",
+   "kind": "scene",
+   "author": "Georg Braun and Frans Hogenberg",
+   "date": "1572",
+   "licence": "Public domain",
+   "caption": "Calicut shown from the sea in Braun and Hogenberg's atlas of 1572, with its ships and the Malabar shore."
+  },
+  {
+   "file": "The_Palace_of_the_Zamorin_of_Calicut.jpg",
+   "kind": "drawing",
+   "author": "Unknown, Dutch",
+   "date": "1604",
+   "licence": "Public domain",
+   "caption": "A Dutch print of 1604 showing the Zamorin's palace and the Zamorin himself."
+  },
+  {
+   "file": "Kappadu_Vasco_Da_Gama_Landing_Memorial.jpg",
+   "kind": "photo",
+   "author": "Amaltaskombu",
+   "date": "2016",
+   "licence": "CC BY-SA 4.0",
+   "caption": "The stone at Kappad, north of the city, marking where Vasco da Gama is said to have landed in 1498."
+  },
+  {
+   "file": "Old_pier_remains_at_Kozhikode_Beach_01.jpg",
+   "kind": "photo",
+   "author": "Saif Arash",
+   "date": "2026",
+   "licence": "CC BY-SA 4.0",
+   "caption": "The posts of the old pier standing in the surf off Kozhikode beach."
+  }
+ ],
+ "Malacca": [
+  {
+   "file": "Malacca_in_1550-1563.png",
+   "kind": "scene",
+   "author": "Gaspar Correia",
+   "date": "1550-1563 (reprint 1858-1863)",
+   "licence": "CC0",
+   "caption": "A view over Malacca shortly after the Portuguese took it, from Gaspar Correia's Lendas da India."
+  },
+  {
+   "file": "Manuel_Godinho_de_Erédia_-_Description_of_Malacca,_Meridional_India_and_Cathay_-_A_Famosa.png",
+   "kind": "drawing",
+   "author": "Manuel Godinho de Erédia",
+   "date": "1613",
+   "licence": "CC0",
+   "caption": "The keep of the Portuguese fortress A Famosa, as drawn by Erédia in 1613."
+  },
+  {
+   "file": "Manuel_Godinho_de_Erédia_-_Description_of_Malacca,_Meridional_India_and_Cathay_-_Malayan_lanchara_and_Chinese_junk.png",
+   "kind": "drawing",
+   "author": "Manuel Godinho de Erédia",
+   "date": "1613",
+   "licence": "CC0",
+   "caption": "A Malay lanchara and a Chinese junk, two of the ships of the strait, drawn by Erédia in 1613."
+  },
+  {
+   "file": "The_Flag_of_the_Malacca_Sultanate_in_1502.jpg",
+   "kind": "map",
+   "author": "Unknown author",
+   "date": "1502",
+   "licence": "CC0",
+   "caption": "Malacca, written Malaqua, on the Cantino planisphere of 1502."
+  },
+  {
+   "file": "Porta_de_Santiago_A_Famosa_1.jpg",
+   "kind": "photo",
+   "author": "Gryffindor",
+   "date": "2011",
+   "licence": "CC BY-SA 3.0",
+   "caption": "The Porta de Santiago, the one gate of A Famosa that still stands in Malacca."
+  }
+ ],
+ "Quanzhou": [
+  {
+   "file": "Quanzhou_Qingjing_Si_20120229-03.jpg",
+   "kind": "photo",
+   "author": "Zhangzhugang",
+   "date": "2012",
+   "licence": "CC BY-SA 4.0",
+   "caption": "The old stone gate of the Qingjing (Ashab) Mosque, founded in the early 11th century for the port's Muslim merchants."
+  },
+  {
+   "file": "Carving_of_Shiva_wife_from_a_Hindu_Temple_at_Quanzhou.jpg",
+   "kind": "photo",
+   "author": "BabelStone",
+   "date": "2005",
+   "licence": "Public domain",
+   "caption": "A carving of the goddess Durga from a Hindu temple of Quanzhou, found in 1987."
+  },
+  {
+   "file": "Kaiyuan_Temple,_Quanzhou_5.jpg",
+   "kind": "photo",
+   "author": "H2v5o68z",
+   "date": "2025",
+   "licence": "CC0",
+   "caption": "A stone pagoda of Kaiyuan Temple, which stood in the city in the Song and Yuan years."
+  },
+  {
+   "file": "La_cite_de_Caitan.jpg",
+   "kind": "scene",
+   "author": "Marco Polo manuscript",
+   "date": "15th century",
+   "licence": "Public domain",
+   "caption": "The city of Zayton as a 15th-century French painter imagined it for a manuscript of Marco Polo, with European ships."
+  },
+  {
+   "file": "20230130_Old_City_of_Quanzhou_01.jpg",
+   "kind": "photo",
+   "author": "Windmemories",
+   "date": "2023",
+   "licence": "CC BY-SA 4.0",
+   "caption": "The old city of Quanzhou today, seen from above."
+  }
+ ],
+ "Berenike": [
+  {
+   "file": "WELLSTED(1838)_p2.829_RUINS_AT_BERENICE.jpg",
+   "kind": "drawing",
+   "author": "James Raymond Wellsted",
+   "date": "1838",
+   "licence": "Public domain",
+   "caption": "Wellsted's lithograph of the ruins at Berenice from 1838, over the bay and low hills."
+  },
+  {
+   "file": "WELLSTED(1838)_p2.827_RUINS_AT_BERENICE.jpg",
+   "kind": "drawing",
+   "author": "James Raymond Wellsted",
+   "date": "1838",
+   "licence": "Public domain",
+   "caption": "Wellsted's plan and elevation of the temple ruins at Berenice, 1838."
+  },
+  {
+   "file": "Baranis.jpg",
+   "kind": "space",
+   "author": "US Government",
+   "date": "2007",
+   "licence": "Public domain",
+   "caption": "A satellite view of the bay of Berenice Troglodytica and the cape of Ras Banas on the Red Sea."
+  },
+  {
+   "file": "Berenike_Buddha_(drawing).jpg",
+   "kind": "drawing",
+   "author": "पाटलिपुत्र",
+   "date": "2023",
+   "licence": "CC BY-SA 4.0",
+   "caption": "A drawing of the Buddha statue found at Berenike, a trace of the Indian trade that ended here."
+  },
+  {
+   "file": "Periplus_Maris_Erythraei_World_Map_b29353051_0335.jpg",
+   "kind": "map",
+   "author": "Wilfred H. Schoff",
+   "date": "1912",
+   "licence": "Public domain",
+   "caption": "Schoff's 1912 map of the world of the Periplus of the Erythraean Sea, the ships' route from the Red Sea ports to India."
+  }
+ ],
+ "Barygaza": [
+  {
+   "file": "Periplus_181_Gulf_of_Cambay.png",
+   "kind": "map",
+   "author": "Elisée Reclus (via Schoff 1912)",
+   "date": "1912",
+   "licence": "Public domain",
+   "caption": "A sketch map of the Gulf of Cambay, its shoals and the Narmada, with Bharuch at the head."
+  },
+  {
+   "file": "PeriplusAncientMap.jpg",
+   "kind": "map",
+   "author": "Abraham Ortelius",
+   "date": "1597",
+   "licence": "Public domain",
+   "caption": "Ortelius's map for the Periplus of the Erythraean Sea, with Barygaza on the Indian coast."
+  },
+  {
+   "file": "Narmada_River_from_NH-8_Bharuch_Bridge_-_panoramio.jpg",
+   "kind": "photo",
+   "author": "Raman Patel",
+   "date": "2011",
+   "licence": "CC BY 3.0",
+   "caption": "The Narmada at Bharuch, wide and tidal, boats along the bank."
+  },
+  {
+   "file": "Bharuch_Interior_of_the_Jami_Masjid.jpg",
+   "kind": "photo",
+   "author": "James Burgess",
+   "date": "1896",
+   "licence": "Public domain",
+   "caption": "The interior of the Jami Masjid at Bharuch in a photograph of 1896."
+  },
+  {
+   "file": "Bharuch_Fort.jpg",
+   "kind": "photo",
+   "author": "BOMBMAN",
+   "date": "2013",
+   "licence": "CC BY 2.0",
+   "caption": "A corner tower and wall of the fort above the Narmada at Bharuch."
+  }
+ ],
+ "São Jorge da Mina": [
+  {
+   "file": "Elmina_Ghana_3.jpg",
+   "kind": "photo",
+   "author": "Philip Nalangan",
+   "date": "2014",
+   "licence": "CC BY 4.0",
+   "caption": "The castle from the Benya river, with fishing canoes in front of it; the Portuguese built it in 1482."
+  },
+  {
+   "file": "Braun_Elmina_SeegefechtHollPort_200dpi.jpg",
+   "kind": "scene",
+   "author": "Samuel Braun (?)",
+   "date": "early 1600s",
+   "licence": "Public domain",
+   "caption": "Dutch and Portuguese ships fighting before the castle of Mina, in an engraving of the early 1600s."
+  },
+  {
+   "file": "ElMina_AtlasBlaeuvanderHem_(excl_page).jpg",
+   "kind": "scene",
+   "author": "Johannes Vingboons",
+   "date": "1665-1668",
+   "licence": "Public domain",
+   "caption": "The castle from the river in a coloured view of the Dutch period, after the Dutch took it in 1637."
+  },
+  {
+   "file": "Elmina_1647.jpg",
+   "kind": "map",
+   "author": "Georg Marcgrave",
+   "date": "1647",
+   "licence": "Public domain",
+   "caption": "A Dutch plan of the castle and the coast round it, 1647."
+  },
+  {
+   "file": "Elmina_Ghana_1.jpg",
+   "kind": "photo",
+   "author": "Philip Nalangan",
+   "date": "2014",
+   "licence": "CC BY 4.0",
+   "caption": "The castle's upper court and the long white buildings round it."
+  }
+ ],
+ "Pukapuka Atoll": [
+  {
+   "file": "Puka_Puka.JPG",
+   "kind": "space",
+   "author": "NASA astronaut",
+   "date": "2002",
+   "licence": "Public domain",
+   "caption": "The atoll from orbit, its lagoon ringed by a low reef rim."
+  },
+  {
+   "file": "Magellan_Elcano_Circumnavigation-en.svg",
+   "kind": "map",
+   "author": "Sémhur (after earlier maps)",
+   "date": "2009",
+   "licence": "CC BY-SA 3.0",
+   "caption": "Magellan's track across the Pacific in January and February 1521, with the Shark Islands (Puka-Puka) marked."
+  },
+  {
+   "file": "Detail_from_a_map_of_Ortelius_-_Magellan's_ship_Victoria.png",
+   "kind": "scene",
+   "author": "Abraham Ortelius",
+   "date": "1590",
+   "licence": "Public domain",
+   "caption": "The Victoria, the one ship of Magellan's fleet to complete the voyage, drawn on Ortelius's map of 1590."
+  },
+  {
+   "file": "Kopra.JPG",
+   "kind": "photo",
+   "author": "Makemake",
+   "date": "2000",
+   "licence": "CC BY-SA 3.0",
+   "caption": "Copra, dried coconut, laid out to dry on Puka Puka."
+  }
+ ],
+ "Pitcairn Islands": [
+  {
+   "file": "Adamstown.jpg",
+   "kind": "photo",
+   "author": "doublecnz",
+   "date": "2012",
+   "licence": "CC BY 2.0",
+   "caption": "Adamstown from Gannet's Ridge, its houses scattered down the slope to the sea."
+  },
+  {
+   "file": "Admiralty_Chart_No_1113_Pitcairn_Island,_Published_1829.jpg",
+   "kind": "map",
+   "author": "United Kingdom Hydrographic Office",
+   "date": "1829",
+   "licence": "Public domain",
+   "caption": "The Admiralty chart of Pitcairn Island, surveyed by Captain Beechey."
+  },
+  {
+   "file": "Pitcairn_Islands_1831.jpg",
+   "kind": "drawing",
+   "author": "Robert Batty",
+   "date": "1831",
+   "licence": "Public domain",
+   "caption": "George Young and his wife Hannah Adams of Pitcairn's Island, etched by Robert Batty from sketches by a lieutenant of HMS Blossom."
+  },
+  {
+   "file": "Pitcairn_Island_by_John_Shillibeer.jpg",
+   "kind": "drawing",
+   "author": "John Shillibeer",
+   "date": "1817",
+   "licence": "CC0",
+   "caption": "The island seen from the sea, from Shillibeer's narrative of HMS Briton's visit in 1814."
+  },
+  {
+   "file": "FMIB_36516_Pitcairn_Island,_South_Pacific.jpeg",
+   "kind": "photo",
+   "author": "Michael John Nicoll",
+   "date": "1908",
+   "licence": "Public domain",
+   "caption": "Pitcairn Island from the sea in 1908."
+  }
+ ],
+ "Alexandria": [
+  {
+   "file": "Alexandria,_Egypt_(4529).jpg",
+   "kind": "space",
+   "author": "NASA astronaut photograph ISS007-E-10960",
+   "date": "2003",
+   "licence": "Public domain",
+   "caption": "The city from orbit, the Eastern Harbour at the top and the long western harbours on the left."
+  },
+  {
+   "file": "Piri_Reis_-_Map_of_the_City_of_Alexandria_-_Walters_W658302A_-_Full_Page.jpg",
+   "kind": "map",
+   "author": "Piri Reis",
+   "date": "1520s (this copy 17th c.)",
+   "licence": "Public domain",
+   "caption": "Piri Reis's plan of Alexandria in his Turkish sailing book, a walled city with Pompey's Pillar beside it."
+  },
+  {
+   "file": "Philip_Galle_-_Lighthouse_of_Alexandria_(Pharos_of_Alexandria)_-_1572.jpg",
+   "kind": "scene",
+   "author": "Philip Galle",
+   "date": "1572",
+   "licence": "Public domain",
+   "caption": "The Pharos as a 16th-century engraver imagined it, among the ships of the harbour."
+  },
+  {
+   "file": "Lighthouse_-_Thiersch.png",
+   "kind": "drawing",
+   "author": "Hermann Thiersch",
+   "date": "1909",
+   "licence": "Public domain",
+   "caption": "Thiersch's reconstruction of the Pharos, from his study of its remains and the ancient descriptions."
+  },
+  {
+   "file": "Citadel_of_Qaitbay_014.JPG",
+   "kind": "photo",
+   "author": "لا روسا",
+   "date": "2014",
+   "licence": "CC BY-SA 3.0",
+   "caption": "The Citadel of Qaitbay, built in 1477 on the Pharos's site."
+  }
+ ],
+ "Carthage": [
+  {
+   "file": "Carthage-1958-PortsPuniques.jpg",
+   "kind": "air",
+   "author": "unknown",
+   "date": "before 1958",
+   "licence": "Public domain",
+   "caption": "The circular naval harbour with the admiral's island at its centre, from the air before 1958."
+  },
+  {
+   "file": "Le_site_archéologique_de_Byrsa_(Carthage,_Tunisie)_(49787855963).jpg",
+   "kind": "photo",
+   "author": "Jean-Pierre Dalbéra",
+   "date": "2003",
+   "licence": "CC BY 2.0",
+   "caption": "The Punic quarter on Byrsa hill, under the Roman foundations laid over it."
+  },
+  {
+   "file": "ISS009-E-9437_-_View_of_Tunisia.jpg",
+   "kind": "space",
+   "author": "NASA, International Space Station",
+   "date": "2004",
+   "licence": "Public domain",
+   "caption": "The Gulf of Tunis from orbit, with the city of Tunis and its lake; Carthage lay on the coast to the east."
+  },
+  {
+   "file": "Turner_Dido_Building_Carthage.jpg",
+   "kind": "scene",
+   "author": "J. M. W. Turner",
+   "date": "1815",
+   "licence": "Public domain",
+   "caption": "Turner's painting of Dido directing the building of Carthage, an imagined scene."
+  },
+  {
+   "file": "Delattre_Bijoux_puniques_Byrsa_1896.jpg",
+   "kind": "photo",
+   "author": "Père Delattre",
+   "date": "1896",
+   "licence": "Public domain",
+   "caption": "Punic jewellery from the tombs of Byrsa, published by Father Delattre in 1896."
+  }
+ ],
+ "Ostia": [
+  {
+   "file": "Ostia_Antica_Aerial_View.jpg",
+   "kind": "air",
+   "author": "ArtDMaster",
+   "date": "2023",
+   "licence": "CC BY-SA 4.0",
+   "caption": "The excavated town from the air, beside the Tiber."
+  },
+  {
+   "file": "Speculum_Romanae_Magnificentiae-_Port_of_Rome_MET_DP870571.jpg",
+   "kind": "scene",
+   "author": "Ambrogio Brambilla, Claude Duchet, Étienne Dupérac",
+   "date": "1581",
+   "licence": "CC0",
+   "caption": "A print of the imperial harbours at the Tiber mouth, with Ostia named at the top, ships at anchor and the lighthouse."
+  },
+  {
+   "file": "Piazzale_delle_corporazioni_-_08.jpg",
+   "kind": "photo",
+   "author": "Rudolfo Kithera",
+   "date": "2018",
+   "licence": "CC0",
+   "caption": "A ship in black-and-white mosaic from the Square of the Corporations, where shippers and merchants had their offices."
+  },
+  {
+   "file": "Theater_(Ostia_Antica).jpg",
+   "kind": "photo",
+   "author": "Rabax63",
+   "date": "2016",
+   "licence": "CC BY-SA 4.0",
+   "caption": "The theatre of Ostia, among the umbrella pines."
+  },
+  {
+   "file": "Piazzale_delle_Corporazioni_(Ostia_Antica).jpg",
+   "kind": "photo",
+   "author": "Radosław Botev",
+   "date": "2014",
+   "licence": "CC BY 3.0 pl",
+   "caption": "The Square of the Corporations, with the offices of the shippers round a garden."
+  }
+ ],
+ "Goa": [
+  {
+   "file": "A_ilha_e_cidade_de_Goa_metropolitana_da_India_e_partes_orientais_que_esta_en_15_graos_da_banda_do_norte.jpg",
+   "kind": "map",
+   "author": "Jan Huyghen van Linschoten",
+   "date": "1595",
+   "licence": "Public domain",
+   "caption": "Linschoten's map of the island and city of Goa, with its walls, churches and the ships in the Mandovi."
+  },
+  {
+   "file": "Rua_Direita_na_Cidade_de_Goa.jpg",
+   "kind": "scene",
+   "author": "Jan Huygen van Linschoten",
+   "date": "1595",
+   "licence": "CC0",
+   "caption": "The Rua Direita, Goa's main street, with its daily auction of goods and enslaved people, drawn by Linschoten."
+  },
+  {
+   "file": "Braun_Goa_UBHD.jpg",
+   "kind": "scene",
+   "author": "Georg Braun and Frans Hogenberg",
+   "date": "1572",
+   "licence": "Public domain",
+   "caption": "Braun and Hogenberg's view of Goa, the walled city and the Portuguese ships off it."
+  },
+  {
+   "file": "Basilica_of_Bom_Jesus,_Old_Goa_(ca._1870).jpg",
+   "kind": "photo",
+   "author": "D'Souza and Paul Studio",
+   "date": "c. 1878",
+   "licence": "Public domain",
+   "caption": "The Basilica of Bom Jesus, completed in 1605, in an old photograph, with open ground round it."
+  },
+  {
+   "file": "Old_Goa,_Church_of_St._Augustine.jpg",
+   "kind": "photo",
+   "author": "Vyacheslav Argenberg",
+   "date": "2011",
+   "licence": "CC BY 4.0",
+   "caption": "The tower of the ruined church of St Augustine, built 1597-1602."
+  }
+ ],
+ "Manila": [
+  {
+   "file": "Walled_City_of_Manila,_detail_from_Carta_Hydrographica_y_Chorographica_de_las_Yslas_Filipinas_(1734).jpg",
+   "kind": "map",
+   "author": "Pedro Murillo Velarde and others",
+   "date": "1734",
+   "licence": "Public domain",
+   "caption": "The walled city and the Parian beside the Pasig, from Murillo Velarde's map of the Philippines."
+  },
+  {
+   "file": "Iss047e099713_lrg_Manila.jpg",
+   "kind": "space",
+   "author": "NASA astronaut photograph ISS047-E-99713",
+   "date": "2016",
+   "licence": "Public domain",
+   "caption": "Manila Bay and the mouth of the Pasig from orbit."
+  },
+  {
+   "file": "Reception_of_the_Manila_Galleon_by_the_Chamorro_in_the_Ladrones_Islands,_ca._1590.jpg",
+   "kind": "scene",
+   "author": "Boxer Codex",
+   "date": "1590",
+   "licence": "Public domain",
+   "caption": "A ship received by the Chamorro people of the Ladrones, from the Boxer Codex."
+  },
+  {
+   "file": "Galleon_after_González_Cabrera_Bueno_1734.png",
+   "kind": "drawing",
+   "author": "José González Cabrera Bueno",
+   "date": "1734",
+   "licence": "Public domain",
+   "caption": "A Spanish galleon, from González Cabrera Bueno's pilot book of 1734."
+  },
+  {
+   "file": "Fuerte_de_Santiago,_Manila,_Filipinas,_2023-08-26,_DD_29.jpg",
+   "kind": "photo",
+   "author": "Diego Delso",
+   "date": "2023",
+   "licence": "CC BY-SA 4.0",
+   "caption": "Fort Santiago, the Spanish fort at the mouth of the Pasig, seen across its moat."
+  }
+ ],
+ "Acapulco": [
+  {
+   "file": "Puerto_de_Acapulco_Boot_1628.png",
+   "kind": "scene",
+   "author": "Adrián Boot",
+   "date": "1628",
+   "licence": "Public domain",
+   "caption": "A view of Acapulco's harbour in 1628, from a lithograph of Boot's plan, with the fort and the town on the shore."
+  },
+  {
+   "file": "1764_Bellin_Map_of_Acapulco,_Mexico_-_Geographicus_-_Acapulco-bellin-1764.jpg",
+   "kind": "map",
+   "author": "Jacques-Nicolas Bellin",
+   "date": "1764",
+   "licence": "Public domain",
+   "caption": "Bellin's plan of the port: Fort San Diego, the town and the two trees where the Manila galleon tied its cable."
+  },
+  {
+   "file": "ISS028-E-7243_-_View_of_Mexico.jpg",
+   "kind": "space",
+   "author": "NASA, International Space Station",
+   "date": "2011",
+   "licence": "Public domain",
+   "caption": "The bay of Acapulco from orbit, the town round its edge."
+  },
+  {
+   "file": "Entrada_al_Museo_Histórico_de_Acapulco_Fuerte_de_San_Diego.jpg",
+   "kind": "photo",
+   "author": "Álvaro de la Paz Franco",
+   "date": "2007",
+   "licence": "CC0",
+   "caption": "The drawbridge and gate of Fort San Diego, now a museum, built in 1615 to guard the galleon port."
+  }
+ ],
+ "Batavia": [
+  {
+   "file": "Andries_Beeckman_-_The_Castle_of_Batavia,_Seen_from_Kali_Besar_West_-_WGA1557.jpg",
+   "kind": "scene",
+   "author": "Andries Beeckman",
+   "date": "1662",
+   "licence": "Public domain",
+   "caption": "The castle of Batavia seen from the Kali Besar, painted by Andries Beeckman about 1656."
+  },
+  {
+   "file": "B26056069A_-_A_plan_of_the_city_and_castle_of_Batavia.jpg",
+   "kind": "map",
+   "author": "Thomas Salmon",
+   "date": "1746",
+   "licence": "CC0",
+   "caption": "A plan of the city and castle of Batavia, its streets and canals in a Dutch grid."
+  },
+  {
+   "file": "The_city_and_castle_of_Batavia_1655_to_1657.jpg",
+   "kind": "scene",
+   "author": "Jacob van Meurs, after Johan Nieuhof",
+   "date": "1693",
+   "licence": "Public domain",
+   "caption": "The city and castle of Batavia as Johan Nieuhof saw them in 1655 to 1657, from the roads."
+  },
+  {
+   "file": "VIS-MARKT-op-BATAVIA-1682.jpg",
+   "kind": "scene",
+   "author": "Widow of Jacob van Meurs",
+   "date": "1682",
+   "licence": "Public domain",
+   "caption": "The fish market of Batavia, a 17th-century engraving, now gone."
+  },
+  {
+   "file": "Batavia_City_Hall_(Jakarta_History_Museum)_Fatahillah_Square_(2025)_-_img_17.jpg",
+   "kind": "photo",
+   "author": "Chainwit.",
+   "date": "2025",
+   "licence": "CC BY 4.0",
+   "caption": "The old city hall of Batavia, now the Jakarta History Museum, on Fatahillah Square."
+  }
+ ],
+ "Lisbon": [
+  {
+   "file": "Armanzens_e_Ribeira_das_Naus_da_Casa_da_India_(cropped).jpg",
+   "kind": "scene",
+   "author": "Unknown artist",
+   "date": "16th century",
+   "licence": "Public domain",
+   "caption": "The Ribeira das Naus on the Tagus: the quays, storehouses and rigged ships of the Casa da Índia's waterfront."
+  },
+  {
+   "file": "Lisbon_in_1572.jpg",
+   "kind": "scene",
+   "author": "Georg Braun and Franz Hogenberg",
+   "date": "c. 1572",
+   "licence": "Public domain",
+   "caption": "The city and its river from the south in Braun and Hogenberg's atlas, with the ships crowded in the Tagus."
+  },
+  {
+   "file": "Lisbon_in_1598.jpg",
+   "kind": "map",
+   "author": "Georg Braun and Franz Hogenberg",
+   "date": "c. 1598",
+   "licence": "Public domain",
+   "caption": "A bird's-eye plan of Lisbon from the same atlas, with the royal palace on the riverfront and the ships along the quays."
+  },
+  {
+   "file": "Paço_da_Ribeira._Lisboa,_1693.jpg",
+   "kind": "scene",
+   "author": "Unknown artist",
+   "date": "1693",
+   "licence": "CC0",
+   "caption": "The Paço da Ribeira, the royal palace on the Tagus whose wing held the Casa da Índia, painted in 1693."
+  },
+  {
+   "file": "Padrão_Descobrimentos_April_2009-3c.jpg",
+   "kind": "photo",
+   "author": "Alvesgaspar",
+   "date": "2009-04",
+   "licence": "CC BY-SA 3.0",
+   "caption": "The Padrão dos Descobrimentos at Belém, built in 1960 on the Tagus bank where the fleets left, with Henry the Navigator in front."
+  }
+ ],
+ "Seville": [
+  {
+   "file": "Map_Diego_Ribero_1529.jpg",
+   "kind": "map",
+   "author": "Diego Ribero",
+   "date": "1529",
+   "licence": "Public domain",
+   "caption": "Diego Ribero's world chart of 1529, drawn at Seville as cosmographer to the Casa de Contratación from the Padrón Real."
+  },
+  {
+   "file": "La_sevilla_del_sigloXVI.jpg",
+   "kind": "scene",
+   "author": "Attributed to Alonso Sánchez Coello",
+   "date": "c. 1576-1600",
+   "licence": "Public domain",
+   "caption": "Seville in the sixteenth century, painted from across the Guadalquivir with the river quay and shipping."
+  },
+  {
+   "file": "Casa_de_Contratación_Alcazar_Seville_Spain.jpg",
+   "kind": "photo",
+   "author": "Iantomferry",
+   "date": "2014-10",
+   "licence": "CC BY-SA 3.0",
+   "caption": "The Patio de la Montería of the Alcázar, the royal palace where the Casa de Contratación was housed."
+  },
+  {
+   "file": "Sevilla_-_Archivo_General_de_Indias_K01.jpg",
+   "kind": "photo",
+   "author": "Kordas",
+   "date": "2015-07-28",
+   "licence": "CC BY-SA 4.0",
+   "caption": "The Archivo General de Indias, built in 1584 as the merchants' exchange and since 1785 the store of Spain's records of the Indies."
+  },
+  {
+   "file": "Torre_del_Oro,_Guadalquivir,_Sevilla.jpg",
+   "kind": "photo",
+   "author": "Martinvl",
+   "date": "2017-11-08 13:27:07",
+   "licence": "CC BY-SA 4.0",
+   "caption": "The Torre del Oro on the Guadalquivir, the riverside tower beside which the Indies fleets loaded and unloaded."
+  }
+ ],
+ "Suez": [
+  {
+   "file": "Opening_of_the_Suez_Canal,_Port_Said,_1869.jpg",
+   "kind": "photo",
+   "author": "Unknown",
+   "date": "17 November 1869",
+   "licence": "Public domain",
+   "caption": "Steamships and sailing vessels dressed with flags in Port Said harbour at the opening of the canal."
+  },
+  {
+   "file": "L'inauguration_du_canal_de_Suez,_17_November_1869_Gal18_riou_001f.jpg",
+   "kind": "scene",
+   "author": "Édouard Riou",
+   "date": "1869",
+   "licence": "Public domain",
+   "caption": "The inauguration ceremony at Port Said on 17 November 1869, drawn for a French illustrated paper."
+  },
+  {
+   "file": "The_Suez_Canal._Map,_and_Notes_of_the_World’s_most_important_waterway._Third_Edition.jpg",
+   "kind": "map",
+   "author": "Oriental Commercial Bureau",
+   "date": "1928",
+   "licence": "Public domain",
+   "caption": "A 1928 map of the canal and its approaches, from Port Said to Suez, published for shippers."
+  },
+  {
+   "file": "Suez_Canal,_Egypt_(31596166706).jpg",
+   "kind": "space",
+   "author": "Pierre Markuse",
+   "date": "2016",
+   "licence": "CC BY 2.0",
+   "caption": "The canal from orbit in a Sentinel-2 image: a straight cut through the desert between the Mediterranean and the Gulf of Suez."
+  },
+  {
+   "file": "Suez_Canal_Bridge_(2008)_04.jpg",
+   "kind": "photo",
+   "author": "Godot13",
+   "date": "2008-05-03 15:27:59",
+   "licence": "CC BY-SA 4.0",
+   "caption": "The Suez Canal Bridge at El Qantara, a cable-stayed span over the canal, with a ship in the channel."
+  }
+ ],
+ "Panama": [
+  {
+   "file": "Panama_Canal_under_construction,_1907.jpg",
+   "kind": "photo",
+   "author": "H.C. White Co.",
+   "date": "1907",
+   "licence": "Public domain",
+   "caption": "Excavation of the Culebra Cut in 1907, with the spoil trains on their tracks."
+  },
+  {
+   "file": "Panama_City_and_Canal.jpg",
+   "kind": "space",
+   "author": "NASA, International Space Station",
+   "date": "January 2009",
+   "licence": "Public domain",
+   "caption": "Panama City and the Pacific entrance of the canal from orbit."
+  },
+  {
+   "file": "Tramo_del_Camino_Real_de_Cruces_-_Panamá.jpg",
+   "kind": "photo",
+   "author": "Ciorraga",
+   "date": "2018-10-21",
+   "licence": "CC BY-SA 4.0",
+   "caption": "A cut stretch of the Camino Real de Cruces, the mule track by which the Spanish carried Peruvian silver and gold across the isthmus."
+  },
+  {
+   "file": "A_Plan_OF_THE_BAY_TOWN_AND_CASTLES_OF_PORTO_BELLO_-_Philip_Durell,_1739-1740_-_BL_Maps_K.Top.124.22_(BLL01018640964).jpg",
+   "kind": "map",
+   "author": "Philip Durell",
+   "date": "1739-1740",
+   "licence": "Public domain",
+   "caption": "A British plan of Portobelo, the Caribbean port where the Spanish treasure fleets took on the gold carried across the isthmus."
+  },
+  {
+   "file": "Torre_de_la_catedral_de_Panama_la_Vieja.jpg",
+   "kind": "photo",
+   "author": "Victor Sanchez Urrutia",
+   "date": "2012-06-01",
+   "licence": "CC BY-SA 3.0",
+   "caption": "The tower of the cathedral of Panamá la Vieja, the Spanish city on the Pacific side that was burned in 1671."
+  }
+ ],
+ "Singapore": [
+  {
+   "file": "Singapore_from_the_Sea_June_1823_-_Lt._Phillip_Jackson.jpg",
+   "kind": "drawing",
+   "author": "Lt. Philip Jackson",
+   "date": "June 1823",
+   "licence": "Public domain",
+   "caption": "The earliest known drawing of the settlement, sketched from the sea four years after Raffles landed."
+  },
+  {
+   "file": "Jules_Itier’s_1844_daguerreotype_of_Boat_Quay_and_Singapore_River_from_Government_Hill,_1844,_12.6_x_15_x_0.3_cm,_National_Museum_of_Singapore.png",
+   "kind": "photo",
+   "author": "Jules Itier",
+   "date": "1844",
+   "licence": "Public domain",
+   "caption": "Boat Quay and the Singapore River in a daguerreotype of 1844, among the earliest photographs of the town."
+  },
+  {
+   "file": "Part_of_Singapore_Island_(British_Library_India_Office_Records,_1825,_detail).jpg",
+   "kind": "map",
+   "author": "Unknown surveyor",
+   "date": "1825",
+   "licence": "Public domain",
+   "caption": "A British survey of 1825 showing the Singapore River and the first lines of the settlement on the harbour shore."
+  },
+  {
+   "file": "Singapore_Roads_Surveyed_by_JW_Reed_Master_Commanding_1864-1892.jpg",
+   "kind": "map",
+   "author": "British Admiralty",
+   "date": "1892",
+   "licence": "CC BY-SA 3.0",
+   "caption": "The Admiralty chart of Singapore Roads, surveyed from 1864, showing the anchorage and the islands to the south."
+  },
+  {
+   "file": "Aerial_panorama_of_the_Singapore_Strait_and_the_Pasir_Panjang_Port_Terminal.jpg",
+   "kind": "air",
+   "author": "Bob Tan",
+   "date": "2016-02-17 15:37:17",
+   "licence": "CC BY-SA 4.0",
+   "caption": "The Singapore Strait and the Pasir Panjang container terminal from the air, with ships at anchor along the channel."
+  }
+ ],
+ "Hong Kong": [
+  {
+   "file": "Hong-kong,_from_Kow-loon.jpg",
+   "kind": "scene",
+   "author": "Thomas Allom",
+   "date": "1841-1842",
+   "licence": "Public domain",
+   "caption": "Hong Kong seen from the Kowloon shore in a British engraving of about the time of the occupation."
+  },
+  {
+   "file": "The_Signing_of_the_Treaty_of_Nanking.jpg",
+   "kind": "scene",
+   "author": "Captain John Platt (painter), John Burnet (engraver)",
+   "date": "1846",
+   "licence": "Public domain",
+   "caption": "The signing of the Treaty of Nanking in 1842, on board HMS Cornwallis, by which China ceded the island."
+  },
+  {
+   "file": "Western_Ships_in_Victoria_Harbor,_Hong_Kong,_circa_1845.jpg",
+   "kind": "scene",
+   "author": "Unknown Chinese artist",
+   "date": "c. 1845",
+   "licence": "Public domain",
+   "caption": "Western ships and Chinese junks in Victoria Harbour about 1845, in the Chinese export style."
+  },
+  {
+   "file": "Happy_Valley_Racecourse.jpg",
+   "kind": "scene",
+   "author": "Chinese school",
+   "date": "late 1840s",
+   "licence": "Public domain",
+   "caption": "The Happy Valley racecourse and the colonial cemetery, painted in the late 1840s."
+  },
+  {
+   "file": "Hong_Kong_Night_view_from_Victoria_Peak.jpg",
+   "kind": "photo",
+   "author": "Yungeditor",
+   "date": "2018-10-18",
+   "licence": "CC BY-SA 4.0",
+   "caption": "Victoria Harbour and the city from Victoria Peak at night, today."
+  }
+ ],
+ "Shanghai": [
+  {
+   "file": "The_Bund_in_front_of_the_British_concession_in_1869,_Shanghai.jpg",
+   "kind": "photo",
+   "author": "John Thomson",
+   "date": "1869",
+   "licence": "Public domain",
+   "caption": "The Bund, the riverfront of the British Settlement on the Huangpu, photographed in 1869."
+  },
+  {
+   "file": "Gezicht_op_de_Bund-havenkade_met_drie_opiumschepen_in_Shanghai,_RP-F-F01197-C.jpg",
+   "kind": "photo",
+   "author": "Unknown photographer",
+   "date": "ca. 1860 - ca. 1900",
+   "licence": "CC0",
+   "caption": "The Bund quay with three opium ships moored in the Huangpu, in the Rijksmuseum's title for the print."
+  },
+  {
+   "file": "Shanghai_Old_City_Shuimen.jpg",
+   "kind": "photo",
+   "author": "Unknown photographer",
+   "date": "1880s",
+   "licence": "Public domain",
+   "caption": "A water gate in the wall of the old walled county town, with boats beside it, in the 1880s."
+  },
+  {
+   "file": "EB9_Shanghai_(no_caption).png",
+   "kind": "map",
+   "author": "Encyclopaedia Britannica, 9th edition",
+   "date": "c. 1886",
+   "licence": "Public domain",
+   "caption": "A map of about 1886 showing the walled Chinese city and the foreign settlements along the Huangpu."
+  },
+  {
+   "file": "Shanghai_Bund-20150516-RM-173803.jpg",
+   "kind": "photo",
+   "author": "Ermell",
+   "date": "2015-05-16 18:03:06",
+   "licence": "CC BY-SA 4.0",
+   "caption": "The Bund seen across the Huangpu from Pudong, today."
+  }
+ ],
+ "Genoa": [
+  {
+   "file": "Nordenskiöld_1897_Plate_06_Petrus_Vesconte_1318_Page232.jpg",
+   "kind": "map",
+   "author": "Pietro Vesconte, in Nordenskiöld's facsimile",
+   "date": "1318",
+   "licence": "Public domain",
+   "caption": "Nine of Pietro Vesconte's charts from his atlas of 1318, in Nordenskiöld's facsimile, each crossed by the web of rhumb lines."
+  },
+  {
+   "file": "Sanudo_1321_World.jpg",
+   "kind": "map",
+   "author": "Pietro Vesconte",
+   "date": "c. 1320",
+   "licence": "Public domain",
+   "caption": "Vesconte's world map for Marino Sanudo's book urging a crusade, drawn about 1320."
+  },
+  {
+   "file": "Carte_Pisane_Portolan.jpg",
+   "kind": "map",
+   "author": "Unknown",
+   "date": "c. 1275-1300",
+   "licence": "Public domain",
+   "caption": "The Carta Pisana, the oldest portolan chart that survives, thought to be Genoese work of the late thirteenth century."
+  },
+  {
+   "file": "Genova_1481_(copy_1597).jpg",
+   "kind": "scene",
+   "author": "Cristoforo Grassi",
+   "date": "1597 (after a drawing of 1481)",
+   "licence": "Public domain",
+   "caption": "Genoa and its harbour, in a copy of 1597 after a drawing of 1481."
+  },
+  {
+   "file": "Genova_Lanterna_11.jpg",
+   "kind": "photo",
+   "author": "Zairon",
+   "date": "2020-10-14 15:43:06",
+   "licence": "CC BY-SA 4.0",
+   "caption": "The Lanterna, the lighthouse at the harbour mouth, which has marked the port since the Middle Ages."
+  }
+ ],
+ "Venice": [
+  {
+   "file": "Jacopo_de'_Barbari_-_View_of_Venice_-_Google_Art_Project.jpg",
+   "kind": "scene",
+   "author": "Jacopo de' Barbari",
+   "date": "1500",
+   "licence": "Public domain",
+   "caption": "Jacopo de' Barbari's bird's-eye view of Venice, printed in 1500, with the Arsenal and the shipping of the lagoon."
+  },
+  {
+   "file": "Pizzigano.jpg",
+   "kind": "map",
+   "author": "Zuane Pizzigano",
+   "date": "1424",
+   "licence": "Public domain",
+   "caption": "A Venetian chart of 1424 signed by Zuane Pizzigano, with the Atlantic islands as well as the Mediterranean."
+  },
+  {
+   "file": "Carta_Marina.jpeg",
+   "kind": "map",
+   "author": "Olaus Magnus",
+   "date": "1539",
+   "licence": "Public domain",
+   "caption": "Olaus Magnus's Carta Marina of the northern lands and seas, printed at Venice in 1539."
+  },
+  {
+   "file": "Fra_Mauro_World_Map,_c.1450_(1806_copy).jpg",
+   "kind": "map",
+   "author": "Fra Mauro, copy of 1806 by W. Frazer",
+   "date": "c. 1450 (copy 1806)",
+   "licence": "Public domain",
+   "caption": "A copy of the world map made about 1450 at Venice by the monk Fra Mauro, with south at the top."
+  },
+  {
+   "file": "Arsenale_Aug_2020_1.jpg",
+   "kind": "air",
+   "author": "Kasa Fue",
+   "date": "2020",
+   "licence": "CC BY-SA 4.0",
+   "caption": "The Arsenal, the state shipyard of Venice, from the air, its basins ringed by the old boathouses."
+  }
+ ],
+ "Majorca": [
+  {
+   "file": "Atlas_Catalan.jpg",
+   "kind": "map",
+   "author": "Cresques Abraham",
+   "date": "1375",
+   "licence": "Public domain",
+   "caption": "Sheets 3 to 6 of the Catalan Atlas of 1375, the Mediterranean and Europe, with the rhumb lines and the painted flags and cities."
+  },
+  {
+   "file": "Détails_de_l'Atlas_Catalan_-_Le_roi_Mansa_Musa_tenant_une_pépite_d'or.png",
+   "kind": "map",
+   "author": "Cresques Abraham",
+   "date": "1375",
+   "licence": "CC BY-SA 4.0",
+   "caption": "Mansa Musa, lord of Mali, enthroned with a nugget of gold, from the Catalan Atlas."
+  },
+  {
+   "file": "Détail_de_l'Atalas_Catalan_-_représentation_de_l'expédition_de_Jacme_Ferrer.png",
+   "kind": "map",
+   "author": "Cresques Abraham",
+   "date": "1375",
+   "licence": "CC BY-SA 4.0",
+   "caption": "A ship flying the Aragonese colours, drawn in the Catalan Atlas for Jaume Ferrer's voyage down the African coast in 1346."
+  },
+  {
+   "file": "Palma_de_Mallorca_Royal_Palace_La_Almudaina_Cathedral.jpg",
+   "kind": "photo",
+   "author": "Wolfgang Moroder",
+   "date": "2016-06-25",
+   "licence": "CC BY-SA 3.0",
+   "caption": "The royal palace of La Almudaina and the cathedral of Palma, seen over the old city wall."
+  }
+ ],
+ "Dieppe": [
+  {
+   "file": "Vallard_Atlas_HM29_f.1_000422A_original.jpg",
+   "kind": "map",
+   "author": "Dieppe School (Nicolas Vallard)",
+   "date": "1547",
+   "licence": "Public domain",
+   "caption": "The title page of the Vallard atlas, inscribed \"Nicholas Vallard de Dieppe, 1547\"."
+  },
+  {
+   "file": "Vallard_Atlas_HM29_f.1_000417A_original.jpg",
+   "kind": "map",
+   "author": "Dieppe School (Nicolas Vallard)",
+   "date": "1547",
+   "licence": "Public domain",
+   "caption": "A spread of the Vallard atlas with the great southern land, \"Terra Java\", its coast drawn with painted forests and figures."
+  },
+  {
+   "file": "Europe_and_northern_Africa._HM_29._PORTOLAN_ATLAS,_anonymous_(Dieppe,_1547).A.jpg",
+   "kind": "map",
+   "author": "Dieppe School (Nicolas Vallard)",
+   "date": "1547",
+   "licence": "Public domain",
+   "caption": "Europe and northern Africa in the Vallard atlas, in the Mediterranean portolan style, the coasts crossed by rhumb lines."
+  },
+  {
+   "file": "CANADA_MAP_1542_HARLEYENNE.jpg",
+   "kind": "map",
+   "author": "Dieppe School",
+   "date": "c. 1542",
+   "licence": "Public domain",
+   "caption": "Canada on the Harleian world map, a Dieppe-school chart of about 1542."
+  },
+  {
+   "file": "Château_(Dieppe)_(2).jpg",
+   "kind": "photo",
+   "author": "Gzen92",
+   "date": "2021-08-08 12:54:30",
+   "licence": "CC BY-SA 4.0",
+   "caption": "The castle above the port of Dieppe, today."
+  }
+ ],
+ "Rotterdam": [
+  {
+   "file": "Nieuwe_waterweg_panorama.jpg",
+   "kind": "photo",
+   "author": "Rijkswaterstaat",
+   "date": "1871",
+   "licence": "CC BY-SA 4.0",
+   "caption": "A panorama of 1871 of the dunes and the cut of the Nieuwe Waterweg under construction."
+  },
+  {
+   "file": "Overzichtsontwerp_Nieuwe_Waterweg_conversie.JPG",
+   "kind": "map",
+   "author": "Dienst Waterstaat",
+   "date": "19th century",
+   "licence": "Public domain",
+   "caption": "The overview plan for the New Waterway, the outline of the new cut between Rotterdam and the sea."
+  },
+  {
+   "file": "Rozenburg_1867.gif",
+   "kind": "map",
+   "author": "J. Kuyper",
+   "date": "1867",
+   "licence": "Public domain",
+   "caption": "J. Kuyper's map of 1867 of Rozenburg, the island on the north bank where the cut was later dug."
+  },
+  {
+   "file": "Gezicht_op_het_Vlaardingse_Hoofd_met_zeilschip_en_sleepboot,_RP-F-2012-96-284.jpg",
+   "kind": "photo",
+   "author": "Unknown photographer",
+   "date": "ca. 1860 - ca. 1880",
+   "licence": "CC0",
+   "caption": "A sailing ship towed by a tug at Vlaardingen Head, on the Maas, between about 1860 and 1880."
+  },
+  {
+   "file": "Nieuwe_Waterweg_the_Netherlands_(2016).jpg",
+   "kind": "photo",
+   "author": "Niels Johannes",
+   "date": "2016",
+   "licence": "CC BY-SA 4.0",
+   "caption": "The New Waterway today, with a fleet of fishing vessels sailing inbound toward Rotterdam."
+  }
+ ],
+ "El Puerto de Santa María": [
+  {
+   "file": "1500_map_by_Juan_de_la_Cosa-North_up.jpg",
+   "kind": "map",
+   "author": "Juan de la Cosa (north-up edit by Kimon Berlin)",
+   "date": "1500",
+   "licence": "Public domain",
+   "caption": "Juan de la Cosa's chart of 1500 turned north-up, the earliest surviving European map to show the New World."
+  },
+  {
+   "file": "1500_map_by_Juan_de_la_Cosa-India.jpg",
+   "kind": "map",
+   "author": "Juan de la Cosa",
+   "date": "1500",
+   "licence": "Public domain",
+   "caption": "A detail of the chart showing Portuguese ships arriving in India."
+  },
+  {
+   "file": "1500_map_by_Juan_de_la_Cosa-Magi.jpg",
+   "kind": "map",
+   "author": "Juan de la Cosa",
+   "date": "1500",
+   "licence": "Public domain",
+   "caption": "A detail of the chart with the three Magi on horseback in the Middle East."
+  },
+  {
+   "file": "Castillo_de_San_Marcos,_El_Puerto_de_Santa_María,_España,_2015-12-08,_DD_05.JPG",
+   "kind": "photo",
+   "author": "Diego Delso",
+   "date": "2015-12-08 16:33:45",
+   "licence": "CC BY-SA 4.0",
+   "caption": "The Castillo de San Marcos, the fortified old mosque at El Puerto de Santa María."
+  },
+  {
+   "file": "Vaporcito_de_El_Puerto.jpg",
+   "kind": "photo",
+   "author": "Emilio J. Rodríguez Posada",
+   "date": "2007-07-16",
+   "licence": "CC BY-SA 3.0",
+   "caption": "The Vaporcito, the passenger boat of El Puerto, at the mouth of the Guadalete."
+  }
+ ],
+ "Frankfurt": [
+  {
+   "file": "De_Bry_-_America_Part_1_-_HLABG.png",
+   "kind": "drawing",
+   "author": "Theodor de Bry (photo by Eric Polk)",
+   "date": "1590",
+   "licence": "CC BY-SA 4.0",
+   "caption": "De Bry's America, Part I, 1590, open at the plate of the palisaded village of Pomeiooc, engraved after John White's drawing."
+  },
+  {
+   "file": "De_Bry_Chief_Virginia.jpg",
+   "kind": "drawing",
+   "author": "Theodor de Bry, after John White",
+   "date": "1590",
+   "licence": "Public domain",
+   "caption": "A chief of Virginia, engraved by de Bry in 1590 after John White's watercolour of 1585."
+  },
+  {
+   "file": "Stadtansicht_frankfurt_am_main_braun_hogenberg_1572.png",
+   "kind": "scene",
+   "author": "Georg Braun and Franz Hogenberg",
+   "date": "1572",
+   "licence": "Public domain",
+   "caption": "Frankfurt am Main on the river Main, in Braun and Hogenberg's view of 1572."
+  },
+  {
+   "file": "Zelfportret_van_Theodor_de_Bry,_RP-P-1904-3653.jpg",
+   "kind": "drawing",
+   "author": "Theodor de Bry",
+   "date": "1597",
+   "licence": "CC0",
+   "caption": "A self-portrait of Theodor de Bry, engraved in 1597."
+  }
+ ]
 }
