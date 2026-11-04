@@ -1132,6 +1132,13 @@ const townPick = (text) => {
   h = Math.imul(h ^ (h >>> 16), 0x85ebca6b); h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
   return (h ^ (h >>> 16)) >>> 0;
 };
+// A town's family by highest random weight: each family scores the name on its own, the best score wins, so
+// a family added to the packs takes only the towns that score it highest and leaves every other town's drawing be
+// (picking by `pick % families.length` reshuffled all of them).
+const familyOf = (name, fit) => fit.reduce((best, f) => {
+  const score = townPick(`${name}|${f ? `${f[0].pack}/${f[0].style}` : 'tower'}`);
+  return !best || score > best.score ? { f, score } : best;
+}, null).f;
 const seedOf = (text) => { let h = 2166136261; for (const ch of text) h = Math.imul(h ^ ch.codePointAt(0), 16777619); return h | 0; };
 // Sutherland-Hodgman: a ring cut to a lon/lat box, so a clip traces only the coast near a city.
 function cutRing(ring, b) {
@@ -1741,7 +1748,7 @@ function buildScene(data, sprites, ctx, world = {}) {
     const fit = townGrandeur(p) < SMALL_TOWN || families.every((f) => !f) ? families : families.filter(Boolean);
     // the town's own drawing, whatever the view: its family and variant follow from its name, so a
     // zoom or a pan never redraws it as another (townVariant)
-    const pick = townPick(p.name), family = fit[pick % fit.length], size = townScale(p, world.townSize);
+    const pick = townPick(p.name), family = familyOf(p.name, fit), size = townScale(p, world.townSize);
     const sprite = special.get(p.name) ?? (family && townVariant(family, p, pick >>> 8)), tower = !sprite && TOWER_BY_ID.get(towerIds[(pick >>> 8) % towerIds.length]);
     const base = (sprite ? townHeight(sprite) : TOWER_H) * size, ground = footprint(p, data.proj);
     const th = Math.max(base, Math.min(ICON_MAX, ICON_GROW * ground.extent));
