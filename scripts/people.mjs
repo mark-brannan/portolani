@@ -141,7 +141,7 @@ export function pictureName(file) {
 export const commonsPage = (file) => `https://commons.wikimedia.org/wiki/File:${encodeURIComponent(String(file).replace(/^File:/, '').replace(/ /g, '_'))}`;
 
 // The caption a picture carries on the card: what it is, when it was made, by whom, under what licence.
-const KIND_WORDS = { life: 'from life', near: 'near life', posthumous: 'posthumous', imaginary: 'imagined', modern: 'modern', none: 'no likeness', scene: 'scene', ship: 'ship', map: 'map', photo: 'photograph', air: 'from the air', space: 'from orbit', drawing: 'drawing' };
+const KIND_WORDS = { life: 'from life', near: 'near life', posthumous: 'posthumous', imaginary: 'imagined', modern: 'modern', none: 'no likeness', scene: 'scene', ship: 'ship', map: 'map', artefact: 'artefact', site: 'the place', source: 'the source', photo: 'photograph', air: 'from the air', space: 'from orbit', drawing: 'drawing' };
 export const pictureCredit = (im) => [[KIND_WORDS[im.kind] ?? im.kind, im.date].filter(Boolean).join(', '), im.author, im.licence].filter(Boolean).join(' · ');
 // What a picture shows, in a line: a sight's `caption`, a person's `note`
 export const pictureNote = (im) => im.caption ?? im.note ?? null;

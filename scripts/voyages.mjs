@@ -304,7 +304,7 @@ export async function readVoyage(id, readJSON) {
 // lon and lat together or not at all, `confidence` one of MARKER_CONFIDENCES, `doubt` the optional sentence. `images`
 // are Wikimedia Commons files, { file, kind, author, date, licence, note }: `file` the bare file name, no scheme, no
 // slash; `kind` one of IMAGE_KINDS.
-export const IMAGE_KINDS = ['life', 'near', 'posthumous', 'imaginary', 'modern', 'scene', 'ship', 'map'];
+export const IMAGE_KINDS = ['life', 'near', 'posthumous', 'imaginary', 'modern', 'scene', 'ship', 'map', 'artefact', 'site', 'source'];
 export const SLUG = /^[a-z][a-z0-9-]*$/;
 // The problems in one person record, as strings; none when it is well formed. `sources` is what a `cite` must name.
 export function checkPerson(id, p, { sources } = {}) {
