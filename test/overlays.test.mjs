@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { similarityFit, applyFit, affineThrough3, loadOverlay, drawOverlay, drawSheet, sheetOf, sheetTransform, sheetCorners, onSheet, sheetFrame, sheetView, OVERLAY_DEFAULTS, effectiveOpacity, overlayFromHash, overlayToHash, sheetText, sameSheet } from '../scripts/overlays.mjs';
-import { figureRows, landmarkRows, sheetPlacements, paperMask, redLines, catalanPieces, CATALAN_PAGES, pageOffsets } from '../scripts/build-overlays.mjs';
+import { figureRows, landmarkRows, sheetPlacements, paperMask, outlineMask, redLines, catalanPieces, CATALAN_PAGES, pageOffsets } from '../scripts/build-overlays.mjs';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { viewProjection } from '../scripts/scene.mjs';
 
@@ -267,6 +267,15 @@ test('paperMask keys the paper from the border and keeps the skin, tinted or enc
   assert.equal(at(2, 2), 0, 'paper'); assert.equal(at(20, 8), 255, 'skin'); assert.equal(at(15, 11), 255, 'tinted sea'); assert.equal(at(23, 15), 255, 'enclosed patch');
   assert.equal(at(8, 15), 128, 'the skin\'s edge px is feathered');
   assert.ok(keyed > 0.5 && keyed < 0.7, `${keyed}`);
+});
+
+// outlineMask: a polygon drawn round the skin by eye; opaque inside, keyed outside, the share keyed is the area outside it.
+test('outlineMask keeps the inside of the outline and keys the rest', () => {
+  const w = 40, h = 30, c = createCanvas(w, h), g = c.getContext('2d');
+  const { mask, keyed } = outlineMask(g, w, h, [[10, 0], [40, 0], [40, 30], [10, 30]]); // the right three quarters
+  const at = (x, y) => mask.data[(y * w + x) * 4 + 3];
+  assert.equal(at(2, 15), 0, 'outside'); assert.equal(at(20, 15), 255, 'inside'); assert.equal(at(39, 29), 255, 'to the far corner');
+  assert.ok(Math.abs(keyed - 0.25) < 0.01, `${keyed}`);
 });
 
 // The Catalan Atlas is one sheet of eight panels, BnF sheets 5 to 12, each page cropped to its parchment and butted to the
