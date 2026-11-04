@@ -9,7 +9,7 @@
 // A view is a centre, zoom and projection, { lon, lat, zoom, projection }, on a W x H canvas; the
 // projection is one of PROJECTIONS, Mercator when left out.
 
-import { sheetsFor, roseSheet, inShadow, territory, cutOut, overlapRule, OVERLAP_RULES, DEFAULT_OVERLAP, WORLD_BAND, BANDS as ATLAS_BANDS, ROSE as ATLAS_ROSE, ORIGINS as ATLAS_ORIGINS } from './atlas.mjs';
+import { sheetsFor, roseSheet, WINDOW_DEG, inShadow, territory, cutOut, overlapRule, OVERLAP_RULES, DEFAULT_OVERLAP, WORLD_BAND, BANDS as ATLAS_BANDS, ROSE as ATLAS_ROSE, ORIGINS as ATLAS_ORIGINS } from './atlas.mjs';
 import { fill, trace, limn, rhumb, place, letter, geojsonPolygons, geojsonRings } from 'coast-wright';
 import { provider } from 'coastlines/provider';
 import catalogue from 'coastlines/catalogue.json' with { type: 'json' };
@@ -17,12 +17,13 @@ import { islandInfo, ISLAND_KM2 } from './island.mjs';
 import { islesOf } from './isles.mjs';
 import { cityPlan, drawCity, drawHouses, pxRings, insideRings } from './city.mjs';
 import { urbanKey } from './urban.mjs';
-import { RIVERS, LAKES, RIVER_STYLES, LAKE_STYLES, waterOf, shown } from './water.mjs';
+import { RIVERS, LAKES, RIVER_STYLES, LAKE_STYLES, waterOf, shown, boxOf } from './water.mjs';
 import { REEFS, REEF_STYLES, reefsOf } from './reefs.mjs';
 import { PLAYAS, PLAYA_STYLES, playasOf } from './playas.mjs';
 import { peaksOf, peakTile, peakWidth, PEAK_STYLES, PEAK_INK, PEAK_INK_H, PEAK_SHRINK } from './peaks.mjs';
 import { RELIEF_STYLES, reliefOf, clearOf, drawRelief } from './relief.mjs';
-import { TREES, TREE_STYLES, plantTrees, plantPalms, inLake } from './trees.mjs';
+import { rangesOf } from './ranges.mjs';
+import { TREES, TREE_STYLES, plantTrees, plantPalms, inLake, tracePath, hexA } from './trees.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
 import { depthOf, hasDepth, paintDepth } from './depth.mjs';
 export { SIGHT_TILES } from './sights.mjs'; // the page's tiles for its places; here so the module ships with the scene
@@ -31,7 +32,10 @@ import { legPath, reachPath, isMigration, splitAtSeam, DASHES, isBroken, ringed,
 export { CONFIDENCE_PHRASES, isBroken, legPath, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, settleInks, readVoyage, chronological, voyageLink, calendarOf, penOn, playedOn, dayText, playDateText, playPace, isLong, vaguer, VOYAGE_PLAY, voyagePlaySeconds };
 import { loadOverlay, drawOverlay, drawSheet } from './overlays.mjs';
 import { PEOPLE_FILE, PERSON_RED, personMarks, withPerson, peopleOf, whoOf } from './people.mjs';
-import { frameBox, fromCentre } from './frame-box.mjs';
+import { frameBox, fromCentre, RAD, wrapLon, mercLat, mercDeg } from './frame-box.mjs';
+import { insideRing } from './ring.mjs';
+import { mulberry32 } from './rng.mjs';
+export { insideRing };
 import { noteMarks, pickMark, markClear, tileSpot, groupMarks, dateSpan, readDate, NOTE_SETS } from './notes.mjs';
 export { noteMarks, pickMark, markClear, tileSpot, groupMarks, dateSpan, readDate };
 export const noteCount = (id) => NOTE_SETS[id]?.notes.length ?? 0; // how many notes a chart carries, for its Notes chip
@@ -159,6 +163,10 @@ async function loadGround(reefsOn, playasOn) {
 // read when the mountain sprites are selected and `peaks` is on; a site without the file stands none.
 let peaks = null;
 const peaksRead = new WeakMap(); // the file's read, once per environment
+// The mountain ranges (ranges.mjs) at geo/ranges-10m.json, which build-preview.mjs writes, read when a
+// drawn mountain style is selected; a site without the file guesses its ranges from the land.
+let ranges = null;
+const rangesRead = new WeakMap();
 
 // Per-run tuning; `density` scales how much ornament is placed (1 = the committed mockup).
 // `hillShare`: the share of the hill sprites that fit which stand, all of them from density 1.
@@ -187,24 +195,7 @@ const RHUMB_RAYS = 32;
 
 // ---------------------------------------------------------------- utilities
 
-function mulberry32(seed) {
-  return () => {
-    seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-const hexA = (hex, a) => {
-  const n = parseInt(hex.slice(1), 16);
-  return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`;
-};
-
-const RAD = Math.PI / 180;
 const mercY = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360));
-const mercLat = (y) => (2 * Math.atan(Math.exp(y)) - Math.PI / 2) / RAD;
-const wrapLon = (lon) => ((((lon + 180) % 360) + 360) % 360) - 180;
 const kOf = (zoom) => (512 * 2 ** zoom) / (2 * Math.PI); // px per radian of longitude
 
 // A projection is cylindrical or azimuthal. Cylindrical: x is longitude, the same in each, and y is
@@ -462,29 +453,28 @@ async function loadWorld() {
   // so are the 50m urban areas, which wash the built-up ground of a town without a footprint
   const missing = (e) => { if (!/404|ENOENT|no urban/.test(String(e?.code ?? e?.message ?? e))) throw e; return null; };
   // the land and coast of the whole world, as the provider serves a world view: the 50m files
-  const [landFeatures, coastFeatures, placesGeo, namesGeo, urban, urbanGeo] = await Promise.all(
+  // the island index (scripts/isles.mjs) is optional too: without it the islands 50m lacks go unmarked; so are
+  // the remote islands 50m drops, drawn from Natural Earth 10m (scripts/isles.mjs isleLand) from ISLE_LAND_ZOOM on:
+  // without them Pitcairn, Ducie and Oeno are marks, not land, until the 10m band
+  const [landFeatures, coastFeatures, placesGeo, namesGeo, urban, urbanGeo, islesIndex, isleLand] = await Promise.all(
     [collect(coast().features(WORLD_VIEW, 'land')), collect(coast().features(WORLD_VIEW, 'coastline')), loadGeo('ne-50m-populated-places'), env.readJSON('geo/names-50m.json'),
-      env.readJSON('geo/urban-10m.json').catch(missing), loadGeo('ne-50m-urban-areas').catch(missing)]);
+      env.readJSON('geo/urban-10m.json').catch(missing), loadGeo('ne-50m-urban-areas').catch(missing),
+      env.readJSON('geo/isles.json').catch(missing), env.readJSON('geo/isles-land.json').catch(missing)]);
   const landGeo = { type: 'FeatureCollection', features: landFeatures }, coastGeo = { type: 'FeatureCollection', features: coastFeatures };
   const worldKey = landFeatures[0] ?? landFeatures; // the provider's own Feature, the same object while it keeps the file
-  // the island index (scripts/isles.mjs) is optional too: without it the islands 50m lacks go unmarked
-  const islesIndex = await env.readJSON('geo/isles.json').catch(missing);
-  // and the remote islands 50m drops, drawn from Natural Earth 10m (scripts/isles.mjs isleLand) from
-  // ISLE_LAND_ZOOM on: without them Pitcairn, Ducie and Oeno are marks, not land, until the 10m band
-  const isleLand = await env.readJSON('geo/isles-land.json').catch(missing);
   let world = worlds.get(worldKey);
   if (world) return world;
   const extra = isleLand?.land ?? [];
-  const land = [...geojsonPolygons(landGeo), ...extra].map((poly, i, all) => ({ poly: Object.assign(poly, { isl: islandInfo(poly) }), box: bbox(poly[0]),
+  const land = [...geojsonPolygons(landGeo), ...extra].map((poly, i, all) => ({ poly: Object.assign(poly, { isl: islandInfo(poly) }), box: boxOf(poly[0]),
     ...(i >= all.length - extra.length && { isle: true }) }));
   const lines = [...geojsonRings(coastGeo).map((line) => ({ line })), ...extra.flat().map((line) => ({ line, isle: true }))]
-    .map((l) => ({ ...l, box: bbox(l.line) }));
-  const runs = lines.flatMap(({ line, isle }) => coastRuns(line).map((run) => ({ run, box: bbox(run), ...(isle && { isle }) })));
+    .map((l) => ({ ...l, box: boxOf(l.line) }));
+  const runs = lines.flatMap(({ line, isle }) => coastRuns(line).map((run) => ({ run, box: boxOf(run), ...(isle && { isle }) })));
   const places = placesGeo.features
     .filter((f) => f.properties.SCALERANK <= 4)
     .map(({ properties: p, geometry: { coordinates: [lon, lat] } }) => {
       const rings = urban?.[urbanKey(p.NAME, lon, lat)];
-      return { name: p.NAME, rank: p.SCALERANK, pop: p.POP_MAX, area: p.MAX_AREAKM, lon, lat, ...(rings && { urban: rings, ubox: bbox(rings.flat()) }) };
+      return { name: p.NAME, rank: p.SCALERANK, pop: p.POP_MAX, area: p.MAX_AREAKM, lon, lat, ...(rings && { urban: rings, ubox: boxOf(rings.flat()) }) };
     });
   // the lesser places, drawn close in as buildings (buildings.mjs)
   const lesser = placesGeo.features.filter((f) => f.properties.SCALERANK > 4 && f.properties.SCALERANK <= LESSER_RANK)
@@ -492,12 +482,12 @@ async function loadWorld() {
   // seas at a point, countries along each stretch of their coast (scripts/names.mjs)
   const names = namesGeo.features.map(({ properties: p, geometry: g }) => {
     const pts = g.type === 'Point' ? [g.coordinates] : g.coordinates;
-    return { text: p.name, at: g.coordinates, land: p.land, kind: p.kind, rank: p.rank, min: p.min, box: bbox(pts) };
+    return { text: p.name, at: g.coordinates, land: p.land, kind: p.kind, rank: p.rank, min: p.min, box: boxOf(pts) };
   });
   // the built-up areas washed under the towns: a town's own 10m footprint, the ground its city plan's lots
   // stand on, and the coarse 50m areas only where no footprint lies
   const footprints = places.filter((p) => p.urban).map((p) => ({ poly: p.urban, box: p.ubox }));
-  const urbanAreas = [...footprints, ...(urbanGeo ? geojsonPolygons(urbanGeo).map((poly) => ({ poly, box: bbox(poly[0]) }))
+  const urbanAreas = [...footprints, ...(urbanGeo ? geojsonPolygons(urbanGeo).map((poly) => ({ poly, box: boxOf(poly[0]) }))
     .filter((u) => !footprints.some((t) => meets(t.box, u.box))) : [])];
   const isles = islesOf(islesIndex).map((i) => ({ ...i, box: { x0: i.lon, x1: i.lon, y0: i.lat, y1: i.lat } }));
   world = { land, lines, runs, places, lesser, names, urban: urbanAreas, isles };
@@ -524,8 +514,8 @@ async function loadDetail(coarse, view) {
   const depth = STYLE.depth ? await depthLayer(g, cv) : null;
   // each piece carries its island's area and colour from the cut (a cell without them works one out from the piece)
   const land = landFeatures.flatMap((f) => featurePolys(f).map((poly) => piece(poly, () => ({
-    poly: Object.assign(poly, { isl: f.properties?.km2 !== undefined ? { km2: f.properties.km2, hue: f.properties.hue } : islandInfo(poly) }), box: bbox(poly[0]) }))));
-  const coastPieces = coastFeatures.flatMap((f) => geojsonRings(f)).map((line) => piece(line, () => ({ line, box: bbox(line), runs: coastRuns(line).map((run) => ({ run, box: bbox(run) })) })));
+    poly: Object.assign(poly, { isl: f.properties?.km2 !== undefined ? { km2: f.properties.km2, hue: f.properties.hue } : islandInfo(poly) }), box: boxOf(poly[0]) }))));
+  const coastPieces = coastFeatures.flatMap((f) => geojsonRings(f)).map((line) => piece(line, () => ({ line, box: boxOf(line), runs: coastRuns(line).map((run) => ({ run, box: boxOf(run) })) })));
   const f = frameOf(makeProjection(view), band.grid.marginDeg);
   return {
     land, lines: coastPieces.map(({ line, box }) => ({ line, box })), runs: coastPieces.flatMap((p) => p.runs),
@@ -544,47 +534,6 @@ function covers(world, view) {
   return f.latMin >= d.latMin && f.latMax <= d.latMax && SHIFTS.some((s) => f.lonMin + s >= d.lonMin && f.lonMax + s <= d.lonMax);
 }
 
-// Even-odd point in ring, [lon, lat]. A long ring (a 10m or GSHHG coast is tens of thousands of points) is read
-// through a latitude index, so a query walks the edges that cross its latitude and not every edge: the same
-// answer, at a few hundred edges a query rather than the whole ring (#177).
-const INDEXED_RING = 64, RING_INDEX = new WeakMap();
-function ringIndex(ring) {
-  let ix = RING_INDEX.get(ring);
-  if (ix) return ix;
-  const n = ring.length;
-  let lo = Infinity, hi = -Infinity;
-  for (const p of ring) { if (p[1] < lo) lo = p[1]; if (p[1] > hi) hi = p[1]; }
-  const bands = Math.max(1, Math.min(2048, n >> 3)), k = (hi - lo) / bands || 1;
-  const band = (y) => Math.min(bands - 1, Math.max(0, Math.floor((y - lo) / k)));
-  const start = new Int32Array(bands + 1);
-  const span = (i) => { const a = ring[i][1], b = ring[(i + n - 1) % n][1]; return a < b ? [band(a), band(b)] : [band(b), band(a)]; };
-  for (let i = 0; i < n; i++) { const [a, b] = span(i); for (let t = a; t <= b; t++) start[t + 1]++; }
-  for (let t = 0; t < bands; t++) start[t + 1] += start[t];
-  const fill = start.slice(0, bands), edges = new Int32Array(start[bands]);
-  for (let i = 0; i < n; i++) { const [a, b] = span(i); for (let t = a; t <= b; t++) edges[fill[t]++] = i; }
-  ix = { lo, hi, band, start, edges };
-  RING_INDEX.set(ring, ix);
-  return ix;
-}
-export function insideRing(ring, lon, lat) {
-  let inside = false;
-  if (ring.length > INDEXED_RING) {
-    const { lo, hi, band, start, edges } = ringIndex(ring);
-    if (!(lat >= lo && lat <= hi)) return false;
-    const t = band(lat), n = ring.length;
-    for (let e = start[t]; e < start[t + 1]; e++) {
-      const i = edges[e], j = i ? i - 1 : n - 1;
-      const [xi, yi] = ring[i], [xj, yj] = ring[j];
-      if ((yi > lat) !== (yj > lat) && lon < xj + ((lat - yj) * (xi - xj)) / (yi - yj)) inside = !inside;
-    }
-    return inside;
-  }
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    const [xi, yi] = ring[i], [xj, yj] = ring[j];
-    if ((yi > lat) !== (yj > lat) && lon < xj + ((lat - yj) * (xi - xj)) / (yi - yj)) inside = !inside;
-  }
-  return inside;
-}
 
 // The islands a world's land lacks (scripts/isles.mjs), worked out once per world: an index record
 // is drawn where no land polygon holds its centre, nor, for an atoll, an islet within its ring. An
@@ -809,7 +758,7 @@ async function listStyles(environment) {
 async function withImage(s) {
   if (s.plain) return s; // drawn in code: no picture
   const img = await env.loadImage(`packs/${s.pack}/${s.file}`);
-  return normalized({ ...s, img, tinted: s.colour === 'source' ? img : tint(img, STYLE.ink) });
+  return normalized({ ...s, img, tinted: s.colour === 'source' ? img : tintOf(img, STYLE.ink) });
 }
 
 // Sizes within a kind are set by the ink, not by the file or the manifest, so drawings cut from
@@ -830,7 +779,12 @@ function normalized(s) {
 
 // The inked box of a picture, its sides in the picture's own px: where it darkens the sheet by
 // more than 0.3 (alpha times darkness), so a scan's pale wash does not count; drawn at most 256 px a side.
+const inkBoxes = new WeakMap(); // by picture: a picture is loaded once and measured once
 function inkBox(img) {
+  if (!inkBoxes.has(img)) inkBoxes.set(img, measureInk(img));
+  return inkBoxes.get(img);
+}
+function measureInk(img) {
   const k = Math.min(1, 256 / Math.max(img.width, img.height)), w = Math.max(1, Math.round(img.width * k)), h = Math.max(1, Math.round(img.height * k));
   const g = createCanvas(w, h).getContext('2d');
   g.drawImage(img, 0, 0, w, h);
@@ -841,7 +795,13 @@ function inkBox(img) {
 }
 const dark = (a, i) => (a[i + 3] / 255) * (1 - (0.3 * a[i] + 0.59 * a[i + 1] + 0.11 * a[i + 2]) / 255);
 
-// An ink mask filled with the pack ink, alpha kept: ready to composite with `multiply`.
+// An ink mask filled with the pack ink, alpha kept: ready to composite with `multiply`. A picture keeps its last
+// tint, so a stop in the same ink draws the sprites tinted at the one before.
+const tints = new WeakMap();
+function tintOf(img, ink) {
+  if (tints.get(img)?.ink !== ink) tints.set(img, { ink, tinted: tint(img, ink) });
+  return tints.get(img).tinted;
+}
 function tint(img, ink) {
   const c = createCanvas(img.width, img.height);
   const g = c.getContext('2d');
@@ -1203,14 +1163,14 @@ function cityOf(p, proj, landPolys) {
   if (!p.urban) return null;
   const { rings, extent } = footprint(p, proj);
   if (extent < CITY_PX) return null;
-  const b = bbox(rings.flat());
+  const b = boxOf(rings.flat());
   if (b.x1 < 0 || b.y1 < 0 || b.x0 > W || b.y0 > H) return null;
   const kmPx = kmPxAt(proj, p.lon, p.lat);
   // the land about it, each ring cut to the footprint's box (a little wider) on its nearest copy
   const u = p.ubox, lb = { x0: u.x0 - 0.02, y0: u.y0 - 0.02, x1: u.x1 + 0.02, y1: u.y1 + 0.02 };
   const land = [];
   for (const poly of landPolys) for (const ring of poly) {
-    const rb = bbox(ring);
+    const rb = boxOf(ring);
     for (const sh of SHIFTS) {
       if (rb.x1 + sh < lb.x0 || rb.x0 + sh > lb.x1 || rb.y1 < lb.y0 || rb.y0 > lb.y1) continue;
       const cut = cutRing(sh ? ring.map(([x, y]) => [x + sh, y]) : ring, lb);
@@ -1482,11 +1442,8 @@ function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
     };
     // a rose is held to a chart's share of the page, never the sprite's own size
     const capBig = (px) => Math.min(px, ROSE_CAP.big * W), capSmall = (px) => Math.min(px, ROSE_CAP.small * W);
-    const picked = world.seed == null ? roses.find((s) => s.sizePx === bigSizePx) : castOrder(roses, seed, () => 1)[0];
-    const big = { ...picked, sizePx: capBig(bigSizePx) };
-    const rest = roses.filter((s) => s !== picked), small = rest.filter((s) => s.sizePx < bigSizePx);
-    const smallRoses = (small.length ? small : rest.length ? rest.map((s) => ({ ...s, sizePx: 110 })) : [{ ...big, sizePx: 110 }]).map((s) => ({ ...s, sizePx: capSmall(s.sizePx) }));
-    const ring = world.seed == null ? smallRoses : castOrder(smallRoses, seed ^ 0x5bd1e995, () => 1);
+    const set = roseSet(roses, world.seed == null ? null : seed), big = { ...set.big, sizePx: capBig(bigSizePx) };
+    const ring = set.ring.map((s) => ({ ...s, sizePx: capSmall(s.sizePx) }));
     const c = sh.circle;
     const sites = [c, ...c.nodes];
     const onLand = sites.filter((q, i) => clear(q.lon, q.lat, i ? capSmall(smallSize) : big.sizePx)).length < SHEET_SEA_SITES;
@@ -1594,7 +1551,7 @@ function placeBeastsOf(sh, world, sprites, avoid, roses) {
   const e = sh.extent, rnd = mulberry32(seedOf(sh.name) ^ (world.salt | 0));
   const [y0, y1] = [e.south, e.north].map((v) => Math.log(Math.tan(Math.PI / 4 + (v * RAD) / 2)) / RAD);
   // sites a monster-gap apart at the sheet's pacing zoom, one window of 360 / 2^z * 3.125 degrees across
-  const win = 1125 / 2 ** sh.from, step = win * (MONSTER_GAP / W);
+  const win = WINDOW_DEG / 2 ** sh.from, step = win * (MONSTER_GAP / W);
   const cols = Math.max(1, Math.round((e.east - e.west) / step)), rows = Math.max(1, Math.round((y1 - y0) / step));
   const sites = [];
   for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
@@ -1653,14 +1610,8 @@ function buildScene(data, sprites, ctx, world = {}) {
   // across the map; drawn at the biggest size in the set, the rest ring it. No seed (an older caller):
   // the biggest, as before
   const bigSizePx = Math.max(...roses.map((s) => s.sizePx));
-  const picked = world.seed == null ? roses.find((s) => s.sizePx === bigSizePx) : castOrder(roses, world.seed, () => 1)[0];
-  const bigRose = { ...picked, sizePx: bigSizePx };
-  const rest = roses.filter((s) => s !== picked), small = rest.filter((s) => s.sizePx < bigSizePx);
-  // taken in set order, one per node; mixed sets ring the smaller roses, a set of big ones rings them at 110 px
-  const smallRoses = small.length ? small : rest.length ? rest.map((s) => ({ ...s, sizePx: 110 })) : [{ ...bigRose, sizePx: 110 }];
+  const { big: bigRose, smallRoses, ring: ringRoses } = roseSet(roses, world.seed);
   const smallSize = Math.max(...smallRoses.map((s) => s.sizePx));
-  // the ring takes its roses in a seeded order too, so a selection of many shows more of itself
-  const ringRoses = world.seed == null ? smallRoses : castOrder(smallRoses, world.seed ^ 0x5bd1e995, () => 1);
   const cartoucheSprite = sprites.cartouche;
   const occupied = []; // discs {x, y, r} that later ornaments keep clear of
   // From the zoom the atlas has sheets for, the roses and the lines belong to the sheets the view overlaps,
@@ -1813,7 +1764,7 @@ function buildScene(data, sprites, ctx, world = {}) {
   const lettering = [
     ...data.names.filter((n) => n.kind === 'sea').map(named),
     ...towns.filter(metro).map(townName),
-    ...data.names.filter((n) => n.kind !== 'sea').flatMap((n) => (n.kind === 'coast' ? coastChunks(n, data.proj, bbox) : [n])).map(named),
+    ...data.names.filter((n) => n.kind !== 'sea').flatMap((n) => (n.kind === 'coast' ? coastChunks(n, data.proj, boxOf) : [n])).map(named),
     ...towns.filter((t) => !metro(t)).map(townName),
   ];
   const opts = letterOptions(data);
@@ -2019,7 +1970,7 @@ function paintPaper(g, paper, proj, rect = null) {
   g.save();
   const r = frame(n);
   g.globalAlpha = 0.5; g.globalCompositeOperation = 'multiply';
-  g.fillStyle = g.createPattern(paper.grain, 'repeat'); g.fillRect(r.x0, r.y0, r.x1 - r.x0, r.y1 - r.y0);
+  g.fillStyle = grainOf(g, paper); g.fillRect(r.x0, r.y0, r.x1 - r.x0, r.y1 - r.y0);
   g.restore();
   // the vignette toward the rim: the frame, which stays on the window
   g.globalCompositeOperation = 'multiply';
@@ -2027,6 +1978,7 @@ function paintPaper(g, paper, proj, rect = null) {
   g.restore();
 }
 const anchoredPaper = (proj) => proj && !proj.cap && Number.isFinite(proj.y0);
+const grainOf = (g, paper) => (paper.grainPattern ??= g.createPattern(paper.grain, 'repeat')); // a pattern serves any context, so one per paper
 
 // The window's paper (W x H) as a canvas, for `proj`; with no projection, the plain paper (a phone card's).
 // The last one painted is kept, so a stop's ground, cartouche and scale bar share one.
@@ -2036,7 +1988,7 @@ function paperSheet(paper, proj) {
     const c = createCanvas(W, H), g = c.getContext('2d');
     g.fillStyle = paper.tone; g.fillRect(0, 0, W, H);
     g.globalAlpha = 0.5; g.globalCompositeOperation = 'multiply';
-    g.fillStyle = g.createPattern(paper.grain, 'repeat'); g.fillRect(0, 0, W, H);
+    g.fillStyle = grainOf(g, paper); g.fillRect(0, 0, W, H);
     g.globalAlpha = 1; g.drawImage(paper.vignette, 0, 0);
     return (paper.plain = c);
   }
@@ -2058,12 +2010,6 @@ function viewRect(g, view, pad = 16) {
 }
 const disc = (r, x, y, rad) => x + rad > r.x0 && x - rad < r.x1 && y + rad > r.y0 && y - rad < r.y1;
 const meets = (r, b) => b.x1 > r.x0 && b.x0 < r.x1 && b.y1 > r.y0 && b.y0 < r.y1;
-
-function bbox(pts) {
-  const b = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
-  for (const [x, y] of pts) { if (x < b.x0) b.x0 = x; if (x > b.x1) b.x1 = x; if (y < b.y0) b.y0 = y; if (y > b.y1) b.y1 = y; }
-  return b;
-}
 
 // Coast split into short runs so a view walks only its own.
 const COAST_RUN = 64;
@@ -2112,9 +2058,9 @@ function indexOf(data) {
   let ix = indexes.get(data);
   if (ix) return ix;
   const px = (ring) => ring.map(([lon, lat]) => data.proj.project(lon, lat));
-  const land = data.land.map((poly) => ({ poly, box: bbox(px(poly[0])) }));
-  const coast = data.coastLL.flatMap(coastRuns).map((run) => ({ run, box: bbox(px(run)) }));
-  const urban = (data.urban ?? []).map((poly) => ({ poly, box: bbox(px(poly.flat())) })); // a footprint's pieces are rings of one poly
+  const land = data.land.map((poly) => ({ poly, box: boxOf(px(poly[0])) }));
+  const coast = data.coastLL.flatMap(coastRuns).map((run) => ({ run, box: boxOf(px(run)) }));
+  const urban = (data.urban ?? []).map((poly) => ({ poly, box: boxOf(px(poly.flat())) })); // a footprint's pieces are rings of one poly
   ix = { land, coast, urban };
   indexes.set(data, ix);
   return ix;
@@ -2146,7 +2092,7 @@ function latticeOf(scene, data) {
     for (let k = 0; k < RHUMB_RAYS; k++) {
       const kind = k % 4 === 0 ? 0 : k % 2 === 1 ? 1 : 2; // wind, quarter (red), half (green)
       const ray = rhumb([lon, lat], 90 + (k * 360) / RHUMB_RAYS, reach * Math.cos(lat * Math.PI / 180));
-      for (const line of cutOut(ray, cut ? shadow : null)) rays.push({ kind, line, box: bbox(line.map(([a, b]) => data.proj.project(a, b))) });
+      for (const line of cutOut(ray, cut ? shadow : null)) rays.push({ kind, line, box: boxOf(line.map(([a, b]) => data.proj.project(a, b))) });
     }
   }
   lattices.set(scene, rays);
@@ -2219,23 +2165,6 @@ function drawSprite(g, s, x, y, size, { flip = false, rot = 0, anchor = s.anchor
 
 const TOWN_H = 30; // px a town sprite stands at size 1, flag to foot, before normalized() sets it from the ink
 const townHeight = (s) => s.heightPx ?? TOWN_H;
-// Path data onto a canvas path, for the commands TOWERS use.
-function tracePath(g, d) {
-  const tok = d.match(/[MLHVQZ]|-?[\d.]+/g);
-  let i = 0, x = 0, y = 0, cmd = '';
-  const num = () => +tok[i++];
-  g.beginPath();
-  while (i < tok.length) {
-    if (/[MLHVQZ]/.test(tok[i])) cmd = tok[i++];
-    if (cmd === 'M') { x = num(); y = num(); g.moveTo(x, y); cmd = 'L'; }
-    else if (cmd === 'L') { x = num(); y = num(); g.lineTo(x, y); }
-    else if (cmd === 'H') { x = num(); g.lineTo(x, y); }
-    else if (cmd === 'V') { y = num(); g.lineTo(x, y); }
-    else if (cmd === 'Q') { const cx = num(), cy = num(); x = num(); y = num(); g.quadraticCurveTo(cx, cy, x, y); }
-    else if (cmd === 'Z') g.closePath();
-  }
-}
-
 function drawTower(g, t) {
   const s = t.h / TOWER_H, shape = TOWER_BY_ID.get(t.tower) ?? TOWERS[0];
   const fills = { p: hexA(STYLE.parchment, 0.9), r: STYLE.windRed, k: STYLE.ink, f: t.red ? STYLE.windRed : STYLE.ink };
@@ -2400,9 +2329,9 @@ export function keptWater(data) {
 }
 // Hills and mountains (relief.mjs) for a view's land, and drawn over the water in the chosen style.
 // Mountains in the style chosen, hills where the Catalan sprites are selected. A drag draws them from
-// the placed scene (drawLate) at the zooms IN_DRAG names, and at the stop they are placed afresh.
+// the placed scene (drawLate), and at the stop they are placed afresh.
 const reliefWanted = () => STYLE.relief.length > 0 || STYLE.mountainSprites;
-const reliefFor = (proj, land) => reliefOf({ proj, land, createCanvas, w: W, h: H, styles: STYLE.relief, hills: STYLE.mountainSprites });
+const reliefFor = (proj, land) => reliefOf({ proj, land, ranges, createCanvas, w: W, h: H, styles: STYLE.relief, hills: STYLE.mountainSprites });
 function paintRelief(g, data, relief) {
   if (relief) drawRelief(g, { proj: data.proj, palette: { ink: STYLE.ink, land: STYLE.land } }, relief);
 }
@@ -2410,8 +2339,7 @@ const paintCoast = (g, data, coast) =>
   limn(g, coast, data.proj.toPx, { color: STYLE.ink, alpha: 1, width: STYLE.coastWidth, oneStroke: true, ...data.proj.seam });
 
 // Parchment, land, water and coast for any view: what a drag draws each frame. The ornaments and the
-// lattice follow (drawAnchored), with the relief, trees, names and city plans where they are fast
-// enough (IN_DRAG); the stop places and draws the scene whole (drawScene).
+// lattice follow (drawAnchored), with the relief, trees, names and city plans (IN_DRAG); the stop places and draws the scene whole (drawScene).
 function drawGround(g, world, view, bg) {
   const proj = makeProjection(view);
   const f = frameOf(proj, 16 / proj.k / RAD); // 16 px, so strokes at the edge survive
@@ -2592,10 +2520,15 @@ function drawCartouche(g, c, bgPart) {
   g.fillStyle = STYLE.ink;
   g.textAlign = 'center';
   g.textBaseline = 'middle';
-  let fpx = ph * 0.62;
-  g.font = `${fpx}px "${STYLE.font}"`;
-  g.letterSpacing = `${fpx * 0.12}px`;
-  while (fpx > 6 && g.measureText(c.title).width > pw * 0.86) { fpx -= 1; g.font = `${fpx}px "${STYLE.font}"`; g.letterSpacing = `${fpx * 0.12}px`; }
+  const font = (fpx) => { g.font = `${fpx}px "${STYLE.font}"`; g.letterSpacing = `${fpx * 0.12}px`; };
+  if (c.fit?.pw !== pw || c.fit.ph !== ph || c.fit.title !== c.title || c.fit.font !== STYLE.font) { // fitted once: the panel, the title and the font hold from frame to frame
+    let fpx = ph * 0.62;
+    font(fpx);
+    while (fpx > 6 && g.measureText(c.title).width > pw * 0.86) { fpx -= 1; font(fpx); }
+    c.fit = { pw, ph, title: c.title, font: STYLE.font, fpx };
+  }
+  const { fpx } = c.fit;
+  font(fpx);
   g.fillText(c.title, c.x + (px0 * c.w) + pw / 2 + fpx * 0.06, c.y + py0 * c.h + ph * 0.54);
   g.restore();
 }
@@ -2625,11 +2558,10 @@ function drawVoyages(g, voyages, proj, rect, eventRect = rect, moving = false) {
 }
 // A note's mark on a laid chart's figure: a small ringed dot in ink over a parchment disc, at `alpha`. Drawn only while
 // the notes announce themselves or the user keeps them shown (page.js), never as part of the scene: the scan is the thing.
-export function drawNoteMark(g, m, alpha = 1) {
-  if (!(alpha > 0)) return;
+export function drawNoteMark(g, m) {
   g.save();
-  g.fillStyle = STYLE.parchment; g.globalAlpha = 0.85 * alpha; g.beginPath(); g.arc(m.x, m.y, 7, 0, 2 * Math.PI); g.fill();
-  g.globalAlpha = alpha; g.strokeStyle = g.fillStyle = STYLE.ink; g.lineWidth = 1.4;
+  g.fillStyle = STYLE.parchment; g.globalAlpha = 0.85; g.beginPath(); g.arc(m.x, m.y, 7, 0, 2 * Math.PI); g.fill();
+  g.globalAlpha = 1; g.strokeStyle = g.fillStyle = STYLE.ink; g.lineWidth = 1.4;
   g.beginPath(); g.arc(m.x, m.y, 6, 0, 2 * Math.PI); g.stroke();
   g.beginPath(); g.arc(m.x, m.y, 2, 0, 2 * Math.PI); g.fill();
   g.restore();
@@ -2640,7 +2572,8 @@ export function drawNoteMark(g, m, alpha = 1) {
 // fades steadily over `ms`. The timing waits on the user's look at the PR that built it.
 export const NOTE_PULSE = { ms: 4000, rings: 3, from: 2, reach: 40, still: 0.35 };
 // The pulse `t` ms in: { alpha, ring } for the rings, `ring` the swell of the ring now, 0 to 1, or null once it is over.
-export function notePulse(t, reduced = false, p = NOTE_PULSE) {
+export function notePulse(t, reduced = false) {
+  const p = NOTE_PULSE;
   t = Math.max(0, t); // a frame's time can fall just before the pulse began
   if (t >= p.ms) return null;
   if (reduced) return { alpha: 1 - t / p.ms, ring: p.still };
@@ -2649,8 +2582,8 @@ export function notePulse(t, reduced = false, p = NOTE_PULSE) {
 }
 // One ring of the pulse at swell `u` (0 to 1) round a note's spot: in the chart's red over a parchment halo, so it
 // reads on a dark scan as on a pale one, widening and fading as it goes; `alpha` fades the whole pulse out.
-export function drawNoteRing(g, m, u, alpha = 1, p = NOTE_PULSE) {
-  const r = p.from + u * p.reach, a = Math.max(0, 1 - u) * alpha;
+export function drawNoteRing(g, m, u, alpha = 1) {
+  const p = NOTE_PULSE, r = p.from + u * p.reach, a = Math.max(0, 1 - u) * alpha;
   if (!(a > 0)) return;
   g.save();
   g.globalAlpha = 0.55 * a; g.strokeStyle = STYLE.parchment; g.lineWidth = 5;
@@ -2666,18 +2599,20 @@ export function drawNoteRing(g, m, u, alpha = 1, p = NOTE_PULSE) {
 // then fades the same. The timing waits on the user's look at the PR that built it.
 export const FIT_LINE = { draw: 1400, hold: 1000, fade: 900, faint: 0.25, width: 3.5, ring: 8, ink: '#1f57a8' }; // azurite: no scan draws its coasts in it
 // The line `t` ms after its chip was clicked: { drawn, alpha }, `drawn` how much of it is drawn, 0 to 1.
-export function fitLineAt(t, reduced = false, p = FIT_LINE) {
+export function fitLineAt(t, reduced = false) {
+  const p = FIT_LINE;
   t = Math.max(0, t);
   const drawn = reduced ? 1 : Math.min(1, t / p.draw), since = t - (reduced ? 0 : p.draw) - p.hold;
   return { drawn, alpha: since <= 0 ? 1 : since >= p.fade ? p.faint : 1 - ((1 - p.faint) * since) / p.fade };
 }
 // Whether the line is still moving at `t` (drawing or fading), so the page keeps painting frames.
-export const fitLineMoving = (t, reduced = false, p = FIT_LINE) => t < (reduced ? 0 : p.draw) + p.hold + p.fade;
+export const fitLineMoving = (t, reduced = false) => t < (reduced ? 0 : FIT_LINE.draw) + FIT_LINE.hold + FIT_LINE.fade;
 // The line through `proj`, `drawn` of each part from its first point, at `alpha`: azurite blue over a parchment halo, so
 // it reads on a dark scan as on a pale one, and apart from the scan's own reds and greens. A part of one point is a place inland: a ring round it, drawn on as a hand
 // would. A part is broken where it passes out of the projection's sight.
-export function drawFitLine(g, line, proj, { drawn = 1, alpha = 1, scale = 1 } = {}, p = FIT_LINE) {
+export function drawFitLine(g, line, proj, { drawn = 1, alpha = 1, scale = 1 } = {}) {
   if (!(alpha > 0) || !(drawn > 0) || !line?.length) return;
+  const p = FIT_LINE;
   const runs = [], rings = [];
   for (const part of line) {
     if (part.length === 1) {
@@ -2759,7 +2694,7 @@ function legShares(voyage, reveal = 1, legReveal) {
 }
 // a path's pieces in canvas px, [x, y, share of the way along], cut at the seam and culled to rect
 const pathPieces = (path, proj, rect) => (path ? splitAtSeam(path, proj.lonCenter, proj.visible)
-  .map((p) => p.map((q) => [...proj.toPx(q), q[2]])).filter((px) => meets(rect, bbox(px))) : []);
+  .map((p) => p.map((q) => [...proj.toPx(q), q[2]])).filter((px) => meets(rect, boxOf(px))) : []);
 const streamPieces = (leg, proj, rect, u = 1) => pathPieces(reachCut(leg, u), proj, rect);
 // The ribbons are drawn once into a canvas the size of their box on the device and blurred onto the map, so the
 // blur is the same at any zoom and costs only what is in view. A moving frame skips the blur and strokes the ribbon
@@ -2778,7 +2713,7 @@ function drawRibbon(g, { voyage, colour = STYLE.windRed, reveal = 1, legReveal }
       g.restore();
       continue;
     }
-    const b = bbox(pieces.flat()), pad = (MIGRATION.ribbon / 2 + 3 * MIGRATION.blur) * sx;
+    const b = boxOf(pieces.flat()), pad = (MIGRATION.ribbon / 2 + 3 * MIGRATION.blur) * sx;
     const corners = [[b.x0, b.y0], [b.x1, b.y0], [b.x0, b.y1], [b.x1, b.y1]].map(([x, y]) => [m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f]);
     const x0 = Math.max(0, Math.floor(Math.min(...corners.map((c) => c[0])) - pad)), y0 = Math.max(0, Math.floor(Math.min(...corners.map((c) => c[1])) - pad));
     const x1 = Math.min(cw, Math.ceil(Math.max(...corners.map((c) => c[0])) + pad)), y1 = Math.min(ch, Math.ceil(Math.max(...corners.map((c) => c[1])) + pad));
@@ -2902,7 +2837,7 @@ function drawTrack(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH, al
     left -= full.length;
     if (k < 1) break;
     pen = [wrapLon(full[k - 1][0]), full[k - 1][1]];
-    const pieces = splitAtSeam(whole ? full : full.slice(0, k), proj.lonCenter, proj.visible).map((p) => p.map(proj.toPx)).filter((px) => meets(rect, bbox(px)));
+    const pieces = splitAtSeam(whole ? full : full.slice(0, k), proj.lonCenter, proj.visible).map((p) => p.map(proj.toPx)).filter((px) => meets(rect, boxOf(px)));
     if (ringed(leg)) speculative(g, pieces, colour);
     else for (const [style, w, alpha, dash] of [[STYLE.parchment, width + VOYAGE_HALO, 0.6, []], [colour, width, 0.9, capped(DASHES[leg.confidence] ?? [], width)]]) {
       g.strokeStyle = style; g.lineWidth = w; g.globalAlpha = alpha * dim; g.setLineDash(dash);
@@ -3349,7 +3284,7 @@ function drawSheetsDebug(g, sheets, debug, proj, rect) {
     g.setLineDash(dash);
     for (const piece of splitAtSeam(path, proj.lonCenter, proj.visible)) {
       const px = piece.map(proj.toPx);
-      if (!meets(pad, bbox(px))) continue;
+      if (!meets(pad, boxOf(px))) continue;
       g.beginPath(); px.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke();
     }
   };
@@ -3379,7 +3314,7 @@ function drawSheetsDebug(g, sheets, debug, proj, rect) {
       for (const e of sh.shadow ?? []) stroke(edges(e), [6, 4]);
       g.setLineDash([]);
       // the name inside the top-left corner, or the top-left of what is seen of the sheet
-      const [nx, ny] = proj.toPx([sh.extent.west, sh.extent.north]), box = bbox(edges(sh.extent).map(proj.toPx));
+      const [nx, ny] = proj.toPx([sh.extent.west, sh.extent.north]), box = boxOf(edges(sh.extent).map(proj.toPx));
       const w = Math.max(...[sh.name, sh.source ?? ''].map((t) => g.measureText(t).width)), h = sh.source ? 28 : 14, x = Math.max(nx, rect.x0) + 4;
       let y = Math.max(ny, rect.y0) + 4;
       while (lettered.some((l) => x < l.x1 && l.x0 < x + w && y < l.y1 && l.y0 < y + h)) y += 16;
@@ -3392,7 +3327,7 @@ function drawSheetsDebug(g, sheets, debug, proj, rect) {
       }
     }
     if (debug.includes('rings')) {
-      const c = sh.circle, cy = mercatorDeg(c.lat), R = mercatorDeg(c.nodes[0].lat) - cy, ring = [];
+      const c = sh.circle, cy = mercDeg(c.lat), R = mercDeg(c.nodes[0].lat) - cy, ring = [];
       for (let i = 0; i <= DEBUG_RING; i++) {
         const b = (i * 2 * Math.PI) / DEBUG_RING;
         ring.push([c.lon + R * Math.sin(b), (2 * Math.atan(Math.exp((cy + R * Math.cos(b)) * RAD)) - Math.PI / 2) / RAD]);
@@ -3426,11 +3361,23 @@ function drawScaleCard(g, proj, bg, style, sprite) {
 // live projection. Placement is unchanged: once a view, at release. The late drawings (lateOf) join
 // them at the zooms IN_DRAG names; the town washes and houses are left out of a moving frame, and the
 // release draws them.
+// The roses a page or a sheet draws from `roses`: the biggest as `big` (the first of a seeded order under a `seed`),
+// the rest as `smallRoses`, taken one per node; mixed sets ring the smaller roses, a set of big ones rings them at
+// 110 px. `ring` takes them in a seeded order too, so a selection of many shows more of itself.
+function roseSet(roses, seed) {
+  const bigSizePx = Math.max(...roses.map((s) => s.sizePx));
+  const picked = seed == null ? roses.find((s) => s.sizePx === bigSizePx) : castOrder(roses, seed, () => 1)[0];
+  const big = { ...picked, sizePx: bigSizePx };
+  const rest = roses.filter((s) => s !== picked), small = rest.filter((s) => s.sizePx < bigSizePx);
+  const smallRoses = small.length ? small : rest.length ? rest.map((s) => ({ ...s, sizePx: 110 })) : [{ ...big, sizePx: 110 }];
+  return { big, smallRoses, ring: seed == null ? smallRoses : castOrder(smallRoses, seed ^ 0x5bd1e995, () => 1) };
+}
+
 function anchorScene(scene, data) {
-  const ll = (o) => ({ o, at: data.proj.invert(o.x, o.y) });
+  const ll = (o) => ({ o, at: data.proj.invert(o.x, o.y) }), rays = latticeOf(scene, data);
   return {
     k: data.proj.k, show: scene.show, scaleSprite: scene.scaleSprite, cartouche: scene.cartouche, cartouchePos: scene.cartouchePos, scalePos: scene.scalePos, voyages: scene.voyages, overlays: scene.overlays,
-    rays: latticeOf(scene, data), sheets: scene.sheets, debug: scene.debug,
+    rays, rayLines: [0, 1, 2].map((kind) => rays.filter((ray) => ray.kind === kind).map((ray) => ray.line)), sheets: scene.sheets, debug: scene.debug, // the lines by ink (black, red, green), as drawAnchored strokes them
     roses: scene.roseDraws.map(ll), mountains: (scene.mountains ?? []).map(ll),
     towns: [...scene.towns.filter((t) => !t.city), ...(scene.lesser ?? [])].map(ll),
     monsters: scene.monsters.map(ll), ships: scene.ships.map(ll),
@@ -3442,11 +3389,12 @@ function anchorScene(scene, data) {
 // The late drawings (those once drawn only at the stop) as a moving frame holds them: kept as
 // longitude and latitude where they stand on the earth, drawn through the live projection like the
 // ornaments. IN_DRAG says at which whole zooms (the view's zoom, rounded down) each is drawn in a drag;
-// a layer left out at a zoom waits for the stop. The sets are read off docs/measurements.md ("A frame
-// while dragging"): a layer is in where the frame with it stays within 16.7 ms at the 90th percentile.
+// a layer left out at a zoom waits for the stop. Every late layer is in at every zoom: mountains and
+// trees that blink out under the hand read as broken, and that is worse than a frame over 16.7 ms
+// (docs/measurements.md, "A frame while dragging", has what each one costs).
 const LATE = ['relief', 'trees', 'worldNames', 'cities'];
 const EVERY_ZOOM = Array.from({ length: 31 }, (_, z) => z);
-const IN_DRAG = { relief: new Set([6, 7, 11, 12]), trees: new Set([6, 7, 9, 12]), worldNames: new Set(EVERY_ZOOM), cities: new Set(EVERY_ZOOM) };
+const IN_DRAG = { relief: new Set(EVERY_ZOOM), trees: new Set(EVERY_ZOOM), worldNames: new Set(EVERY_ZOOM), cities: new Set(EVERY_ZOOM) };
 function lateOf(scene, data, ll) {
   return {
     relief: scene.relief && { peaks: scene.relief.peaks.map(ll), humps: scene.relief.humps.map(ll) },
@@ -3513,7 +3461,7 @@ function drawAnchored(g, a, bg, view, layers) {
   for (const o of a.overlays) if (o.mode === 'pieces') drawOverlay(g, o, proj, o.opacity, { w: W, h: H }); // the pieces first, as at a stop
   const inks = [STYLE.ink, STYLE.windRed, STYLE.windGreen];
   for (const [kind, ink] of show.rhumb ? inks.entries() : []) {
-    limn(g, a.rays.filter((ray) => ray.kind === kind).map((ray) => ray.line), proj.toPx, { color: ink, alpha: STYLE.rhumbAlpha, width: STYLE.rhumbWidth, oneStroke: true, ...proj.seam });
+    limn(g, a.rayLines[kind], proj.toPx, { color: ink, alpha: STYLE.rhumbAlpha, width: STYLE.rhumbWidth, oneStroke: true, ...proj.seam });
   }
   if (proj.rim) {
     g.beginPath(); g.arc(W / 2, H / 2, proj.rim, 0, 2 * Math.PI);
@@ -3600,8 +3548,7 @@ function drawAnchored(g, a, bg, view, layers) {
 // A sheet's hidden circle reaches 0.4 of its height, so a node never lands on the edge a neighbour shares.
 export const SHEET_RADIUS = 0.4;
 // Degrees of rhumb line from a node: the sheet's diagonal on the page, times `k` (the `reach` knob).
-const sheetReach = (e, k = 1) => Math.min(180, k * Math.hypot(e.east - e.west, mercatorDeg(e.north) - mercatorDeg(e.south)));
-const mercatorDeg = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * RAD) / 2)) / RAD;
+const sheetReach = (e, k = 1) => Math.min(180, k * Math.hypot(e.east - e.west, mercDeg(e.north) - mercDeg(e.south)));
 // The knobs (`tune=` in the page's hash, `tune` here), while the roses and rhumb lines are worked on: each its default,
 // the constant it stands in for (null where each band keeps its own, ROSE_SHARE or WIDE.roseShare, SHEET_ROSES or
 // WIDE.sheetRoses), and the values it takes, a range (`int`: whole numbers) or a list.
@@ -3673,12 +3620,8 @@ export async function createScene(environment, opts = {}) {
   STYLE.landMode = LANDS.includes(landMode) ? landMode : 'islands';
   STYLE.islands = islands ?? STYLE.landMode === 'islands'; // the islands are their own choice; left out, 'islands' as the land treatment still means them
   STYLE.scaleBorder = SCALE_BORDERS.includes(scaleBorder) ? scaleBorder : 'bordered';
-  STYLE.rivers = RIVER_STYLES.includes(rivers) ? rivers : 'off';
-  STYLE.lakes = LAKE_STYLES.includes(lakes) ? lakes : 'off';
-  STYLE.reefs = REEF_STYLES.includes(reefs) ? reefs : 'off';
-  STYLE.playas = PLAYA_STYLES.includes(playas) ? playas : 'off';
+  for (const [k, v, of] of [['rivers', rivers, RIVER_STYLES], ['lakes', lakes, LAKE_STYLES], ['reefs', reefs, REEF_STYLES], ['playas', playas, PLAYA_STYLES], ['trees', trees, TREE_STYLES]]) STYLE[k] = of.includes(v) ? v : 'off';
   STYLE.relief = [relief].flat().filter((r) => r !== 'off' && RELIEF_STYLES.includes(r));
-  STYLE.trees = TREE_STYLES.includes(trees) ? trees : 'off';
   STYLE.depth = depth !== false;
   const knobs = tuneOf(opts.tune), debug = DEBUG_LAYERS.filter((d) => [opts.debug ?? []].flat().includes(d));
   TUNE.budget = BUDGET * density;
@@ -3710,17 +3653,27 @@ export async function createScene(environment, opts = {}) {
   const [, coarse, chosen, regionNames] = await Promise.all([env.loadFont(STYLE.font), loadWorld(), sprites, regions === 'off' ? REGIONS : regionNamesOf(regionSet, env)]);
   const { scaleSprite, ...placed } = chosen;
   STYLE.mountainSprites = placed.mountains.length > 0;
-  tintPolys = seaTint ? geojsonPolygons(await env.readJSON('geo/seas-50m.json')) : null;
-  if (STYLE.rivers !== 'off' || STYLE.lakes !== 'off') water = await loadWater(view, STYLE.lakes !== 'off');
-  ground = STYLE.reefs !== 'off' || STYLE.playas !== 'off' ? await loadGround(STYLE.reefs !== 'off', STYLE.playas !== 'off') : null;
   const peaksWanted = peaksOn !== false && peaksOn !== 'off' && STYLE.mountainSprites;
   if (peaksWanted && !peaksRead.has(env)) peaksRead.set(env, env.readJSON('geo/peaks-10m.json').catch(missing).then(peaksOf).catch((e) => { peaksRead.delete(env); throw e; })); // a failed read is not kept
-  peaks = peaksWanted ? await peaksRead.get(env) : null;
-  const world = await loadDetail(coarse, view);
-  const person = await loadPerson(opts.person);
+  const rangesWanted = STYLE.relief.length > 0;
+  if (rangesWanted && !rangesRead.has(env)) rangesRead.set(env, env.readJSON('geo/ranges-10m.json').catch(missing).then(rangesOf));
+  const waterOn = STYLE.rivers !== 'off' || STYLE.lakes !== 'off';
+  const [seas, waterLoaded, groundLoaded, peaksLoaded, rangesLoaded, world, person] = await Promise.all([ // independent reads, side by side
+    seaTint ? env.readJSON('geo/seas-50m.json') : null,
+    waterOn ? loadWater(view, STYLE.lakes !== 'off') : null,
+    STYLE.reefs !== 'off' || STYLE.playas !== 'off' ? loadGround(STYLE.reefs !== 'off', STYLE.playas !== 'off') : null,
+    peaksWanted ? peaksRead.get(env) : null,
+    rangesWanted ? rangesRead.get(env) : null,
+    loadDetail(coarse, view), loadPerson(opts.person),
+  ]);
+  tintPolys = seas ? geojsonPolygons(seas) : null;
+  if (waterOn) water = waterLoaded;
+  ground = groundLoaded;
+  peaks = peaksLoaded;
+  ranges = rangesLoaded;
   const named = opts.voyages ?? (opts.voyage ? [{ id: opts.voyage }] : []);
   const asked = opts.overlays ?? (opts.overlay ? [opts.overlay] : []);
-  const [drawn, overlaid] = await Promise.all([loadVoyages(person ? withPerson(named, person.record, opts.voyageWidth ?? named[0]?.width) : named), Promise.all(asked.map((o) => loadOverlay(o.id, env)))]);
+  const [drawn, overlaid] = await Promise.all([loadVoyages(withPerson(named, person?.record ?? null, opts.voyageWidth ?? named[0]?.width)), Promise.all(asked.map((o) => loadOverlay(o.id, env)))]);
   const voyages = person ? [...drawn, { voyage: person.marks, colour: PERSON_RED, width: VOYAGE_WIDTH }] : drawn;
   const overlays = asked.flatMap((o, i) => {
     const l = overlaid[i], pieces = o.mode === 'pieces', opacity = Number(o.opacity ?? (pieces ? 0.6 : 1)); // a sheet whole unless faded
@@ -3739,7 +3692,7 @@ export async function createScene(environment, opts = {}) {
   // The knobs: `curated` 0 leaves grid cells everywhere but the world band, which is one sheet either way.
   const origin = ATLAS_ORIGINS[knobs.origin];
   const sheets = sheetsFor(view, { radius: knobs.radius, curated: knobs.curated === 1 || worldBand, overlap, origin }).map((sh) => ({ ...sh, reach: sheetReach(sh.extent, knobs.reach),
-    from: worldBand ? Math.log2(1125 / (sh.extent.east - sh.extent.west)) : ATLAS_BANDS.find((b) => b.band === sh.band).from }));
+    from: worldBand ? Math.log2(WINDOW_DEG / (sh.extent.east - sh.extent.west)) : ATLAS_BANDS.find((b) => b.band === sh.band).from }));
   const roseReach = sheetReach(roseSheet(view.zoom, { origin, curated: knobs.curated === 1, overlap }).extent, knobs.reach);
   const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, historical, roseLines: knobs.roselines === 1, seaAt: sheets && seaAtOf(coarse), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, regionNames, title, autoTitle, pinTitle,
     continentsEnd: zoomEnd(continentsZoom, CONTINENT_ZOOM_END), regionsEnd: zoomEnd(regionsZoom, REGION_ZOOM_END),
