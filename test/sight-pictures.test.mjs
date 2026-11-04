@@ -118,3 +118,10 @@ test('the memento under the skull: every line in order, then back to the first',
   assert.deepEqual(seen, MEMENTO);
   assert.equal(mementoNext(k), 0, 'the last wraps to the first');
 });
+
+test('a long phrase with a comma near its middle is set as a couplet; a short one, or one without, on one line', async () => {
+  const { mementoLines } = await import('../scripts/people.mjs');
+  assert.deepEqual(mementoLines('Memento, homo, quia pulvis es, et in pulverem reverteris'), ['Memento, homo, quia pulvis es,', 'et in pulverem reverteris']);
+  assert.deepEqual(mementoLines('Hodie mihi, cras tibi'), ['Hodie mihi, cras tibi']);
+  assert.deepEqual(mementoLines('Polvo eres, y en polvo te has de convertir'), ['Polvo eres, y en polvo te has de convertir']);
+});

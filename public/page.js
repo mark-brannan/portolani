@@ -19,7 +19,7 @@ import { playedOn, playDateText, playPace, isLong } from './scene.mjs'; // the p
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, effectiveOpacity, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
-import { PEOPLE_FILE, PICTURES_FILE, SIGHT_PICTURES_FILE, SIGHT_MANIFEST_FILE, sightDeal, eraOf, eraYears, eraScale, barOn, lifeSpan, firstYear, yearsText, PERSON_RED, pictureCredit, pictureNote, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, sightFrame, viewContaining, withPictures, peopleOf, whoOf, deathOf, sightPicturesOf, MEMENTO, MEMENTO_EN, mementoNext } from './people.mjs';
+import { PEOPLE_FILE, PICTURES_FILE, SIGHT_PICTURES_FILE, SIGHT_MANIFEST_FILE, sightDeal, eraOf, eraYears, eraScale, barOn, lifeSpan, firstYear, yearsText, PERSON_RED, pictureCredit, pictureNote, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, sightFrame, viewContaining, withPictures, peopleOf, whoOf, deathOf, sightPicturesOf, MEMENTO, MEMENTO_EN, mementoNext, mementoLines } from './people.mjs';
 import { fold, bestPlace, withoutPartsOfFrames } from './placename.mjs';
 import { planFlight, ease as flyEase, FLY_KNOBS, flyDefaults } from './flight.mjs';
 
@@ -2332,8 +2332,8 @@ $('sweep').addEventListener('click', () => {
 new ResizeObserver(() => document.documentElement.style.setProperty('--memento-h', `${$('memento').offsetHeight}px`)).observe($('memento'));
 
 // The clear's timing and how what goes leaves: temporary, tuned on #367 in the panel at the top left, kept per browser
-const CLEAR_TUNE = { effect: 'dust', words: 'even', goneMs: 800, skullMs: 800, wordsMs: 4000, ink: 5, skullGrow: 160, wordsGrow: 114 };
-const TUNE_KEY = 'portolani.clearTune.2'; // a new key, so the new defaults show in a browser that kept the old ones
+const CLEAR_TUNE = { effect: 'fade', words: 'quick', goneMs: 800, skullMs: 400, wordsMs: 4000, ink: 10, skullGrow: 160, wordsGrow: 114 };
+const TUNE_KEY = 'portolani.clearTune.3'; // a new key, so the new defaults show in a browser that kept the old ones
 try { Object.assign(CLEAR_TUNE, JSON.parse(localStorage.getItem(TUNE_KEY) ?? '{}')); } catch { /* none kept */ }
 // the panel would sit over the instrument row in the browser tests; it is not part of the page
 if (navigator.webdriver) $('clearTune').hidden = true;
@@ -2374,9 +2374,9 @@ function skullRise() {
 function wordsRise(text) {
   const el = $('mementoBig');
   const { left, top, wide, tall } = mapBox();
-  el.textContent = text; el.hidden = false;
+  el.textContent = mementoLines(text).join('\n'); el.hidden = false;
   el.getAnimations().forEach((x) => x.cancel());
-  let size = Math.min(64, tall * 0.08);
+  let size = Math.min(64, tall * 0.08) / (el.textContent.includes('\n') ? 1.15 : 1);
   el.style.fontSize = `${size}px`;
   const fit = (wide * 0.86) / el.scrollWidth;
   if (fit < 1) { size *= fit; el.style.fontSize = `${size}px`; }
@@ -2422,14 +2422,18 @@ function goneBetween(before, after) {
   src.getContext('2d').putImageData(gone, 0, 0);
   return { src, gone, box: { x0, x1, y0, y1 } };
 }
-// Each card leaves as it was dealt, mirrored: off to the top left, shrinking and turning, one after another
-function drawCardsLeaving(o, cards, t) {
-  const n = cards.length, each = n > 1 ? 0.6 : 1, gap = n > 1 ? (1 - each) / (n - 1) : 0, m = 5;
+// Each card leaves as it was dealt, mirrored and at the deal's own pace (DEAL_MS, DEAL_GAP): off to the top left,
+// shrinking and turning, one after another; `ms` since the exit began
+const cardsLeft = (cards) => (cards.length ? DEAL_MS + (cards.length - 1) * DEAL_GAP : 0);
+// a thing at box `b` dealt off to the top left, `e` 0 where it lies to 1 gone: x, y, scale and its turn
+const dealtOff = (b, e) => [b.x + (-b.w * 0.25 - b.x) * e, b.y * (1 - e), 1 - 0.65 * e, -e * 0.6];
+function drawCardsLeaving(o, cards, ms) {
+  const m = 5;
   cards.forEach(({ img, b }, k) => {
-    const u = Math.max(0, Math.min(1, (t - k * gap) / each)), e = u ** 3; // ease in, the deal's ease out mirrored
+    const u = Math.max(0, Math.min(1, (ms - k * DEAL_GAP) / DEAL_MS)), e = u ** 3; // ease in, the deal's ease out mirrored
     if (u >= 1) return;
-    const x = b.x + (-b.w * 0.25 - b.x) * e, y = b.y * (1 - e), s = 1 - 0.65 * e;
-    o.save(); o.translate(x, y); o.rotate(b.a - e * 0.6); o.scale(s, s);
+    const [x, y, s, turn] = dealtOff(b, e);
+    o.save(); o.translate(x, y); o.rotate(b.a + turn); o.scale(s, s);
     o.save(); o.shadowColor = 'rgba(59,42,26,0.35)'; o.shadowBlur = 8; o.shadowOffsetY = 2; o.fillStyle = style.parchment; o.fillRect(-b.w / 2 - m, -b.h / 2 - m, b.w + 2 * m, b.h + 2 * m); o.restore();
     o.drawImage(img, -b.w / 2, -b.h / 2, b.w, b.h);
     o.strokeStyle = style.ink; o.globalAlpha = 0.7; o.lineWidth = 1; o.strokeRect(-b.w / 2 - m, -b.h / 2 - m, b.w + 2 * m, b.h + 2 * m);
@@ -2442,82 +2446,44 @@ function vanish(shots, cards) {
   const now = ctx.getImageData(0, 0, W, H), cardsShot = shots.cards ?? now, linesShot = shots.lines ?? cardsShot;
   const lines = goneBetween(cardsShot, linesShot), sheets = goneBetween(linesShot, shots.sheets ?? linesShot);
   if (!lines && !sheets && !cards.length) { el.hidden = true; return; } // nothing was there to go
-  const play = sheets && (VANISH[CLEAR_TUNE.effect] ?? VANISH.dust)(o, sheets.src, sheets.gone, sheets.box), t0 = performance.now();
+  const play = sheets && (VANISH[CLEAR_TUNE.effect] ?? VANISH.fade)(o, sheets.src, sheets.gone, sheets.box), t0 = performance.now();
   const tick = (now) => {
-    const t = Math.min(1, (now - t0) / CLEAR_TUNE.goneMs);
+    const ms = now - t0, t = Math.min(1, ms / CLEAR_TUNE.goneMs);
     o.clearRect(0, 0, W, H);
-    if (play) play(t); // first: an effect may draw 'destination-in' over all that is on the canvas
+    if (play) play(t);
     if (lines) { o.globalAlpha = (1 - t) ** 1.5; o.drawImage(lines.src, 0, 0); o.globalAlpha = 1; }
-    drawCardsLeaving(o, cards, t);
-    if (t < 1) vanishFrame = requestAnimationFrame(tick); else el.hidden = true;
+    drawCardsLeaving(o, cards, ms);
+    if (t < 1 || ms < cardsLeft(cards)) vanishFrame = requestAnimationFrame(tick); else el.hidden = true;
   };
   vanishFrame = requestAnimationFrame(tick);
 }
-// Grain: noise in clumps, coarse value noise and fine, one value in [0, 1) per GRAIN-px cell; `lean` (0..1) tips the
-// order the cells go in toward the right going first
-const GRAIN = 4;
-function grainOf(lean) {
-  const gw = Math.ceil(W / GRAIN), gh = Math.ceil(H / GRAIN), coarse = Object.assign(document.createElement('canvas'), { width: Math.ceil(gw / 6), height: Math.ceil(gh / 6) });
-  const c = coarse.getContext('2d'), ci = c.createImageData(coarse.width, coarse.height);
-  for (let i = 0; i < ci.data.length; i += 4) { ci.data[i] = Math.random() * 255; ci.data[i + 3] = 255; }
-  c.putImageData(ci, 0, 0);
-  const big = Object.assign(document.createElement('canvas'), { width: gw, height: gh }), bc = big.getContext('2d');
-  bc.imageSmoothingEnabled = true; bc.drawImage(coarse, 0, 0, gw, gh);
-  const d = bc.getImageData(0, 0, gw, gh).data, n = new Float32Array(gw * gh);
-  for (let k = 0; k < n.length; k++) {
-    const v = 0.6 * (d[k * 4] / 255) + 0.4 * Math.random();
-    n[k] = lean ? (1 - lean) * v + lean * (1 - (k % gw) / gw) : v;
-  }
-  return { gw, gh, n };
-}
-// Motes of what goes, each a few px of its colour, let go as the grain under it goes and blown off by `wind` [dx, dy] px
-function motesOf(gone, grain, count, wind) {
-  const g = gone.data, out = [];
-  for (let tries = 0; out.length < count && tries < count * 40; tries++) {
-    const x = (Math.random() * W) | 0, y = (Math.random() * H) | 0, i = (y * W + x) * 4;
-    if (g[i + 3] < 40) continue;
-    const at = grain.n[((y / GRAIN) | 0) * grain.gw + ((x / GRAIN) | 0)];
-    out.push({ x, y, at, size: 1.2 + Math.random() * 2.4, colour: `rgb(${g[i]},${g[i + 1]},${g[i + 2]})`, dx: wind[0] * (0.5 + Math.random()), dy: wind[1] * (0.4 + Math.random()) - 20 * Math.random() });
-  }
-  return out;
-}
-// The cells still standing at `t`, drawn over what goes ('destination-in') from a small mask, each cell a soft step
-function dissolve(o, src, grain, t, soft = 0.08) {
-  const { gw, gh, n } = grain, m = (grain.mask ??= Object.assign(document.createElement('canvas'), { width: gw, height: gh })), mc = m.getContext('2d');
-  const md = (grain.md ??= mc.createImageData(gw, gh)), cut = t * (1 + soft) - soft;
-  for (let k = 0; k < n.length; k++) md.data[k * 4 + 3] = Math.max(0, Math.min(255, ((n[k] - cut) / soft) * 255));
-  mc.putImageData(md, 0, 0);
-  o.drawImage(src, 0, 0);
-  o.globalCompositeOperation = 'destination-in'; o.imageSmoothingEnabled = false; o.drawImage(m, 0, 0, W, H);
-  o.globalCompositeOperation = 'source-over'; o.imageSmoothingEnabled = true;
-}
-function drawMotes(o, motes, t, life) {
-  for (const p of motes) {
-    const age = (t * (1 + life) - p.at) / life; // 0 when its grain goes, 1 when it is gone
-    if (age <= 0 || age >= 1) continue;
-    const e = age * age;
-    o.globalAlpha = 1 - age; o.fillStyle = p.colour;
-    o.fillRect(p.x + p.dx * e, p.y + p.dy * e, p.size, p.size);
-  }
-  o.globalAlpha = 1;
-}
+// How a chart's sheet goes, `t` 0 to 1 over the clear's time; `box` bounds what goes, in canvas px
 const VANISH = {
-  // swept off to the left, gathering pace, a faint smear behind it
-  sweep: (o, src, gone, box) => (t) => {
-    const e = t * t * (3 - 2 * t) * 0.35 + t * t * t * 0.65, dx = -(box.x1 + 60) * e;
-    for (const [lag, alpha] of [[0.12, 0.18], [0.06, 0.3], [0, 1]]) { o.globalAlpha = alpha * (1 - Math.max(0, t - 0.85) / 0.15); o.drawImage(src, dx * (1 - lag) + (lag ? 0 : 0), 0); }
-    o.globalAlpha = 1;
-  },
-  // crumbles where it lies, in clumps, the motes drifting up and off to the left
-  dust: (o, src, gone) => { const grain = grainOf(0), motes = motesOf(gone, grain, 2600, [-120, -60]); return (t) => { dissolve(o, src, grain, t); drawMotes(o, motes, t, 0.45); }; },
-  // a wind from the right: it goes to dust from its right edge leftward, the motes blown far off to the left
-  wind: (o, src, gone) => { const grain = grainOf(0.65), motes = motesOf(gone, grain, 3200, [-420, -40]); return (t) => { dissolve(o, src, grain, t, 0.12); drawMotes(o, motes, t, 0.5); }; },
   // fades, blurring and swelling a little, into nothing
   fade: (o, src) => (t) => {
     const s = 1 + 0.04 * t;
     o.globalAlpha = (1 - t) ** 1.5; o.filter = `blur(${(t * 10).toFixed(1)}px)`;
     o.setTransform(s, 0, 0, s, (W * (1 - s)) / 2, (H * (1 - s)) / 2); o.drawImage(src, 0, 0);
     o.setTransform(1, 0, 0, 1, 0, 0); o.filter = 'none'; o.globalAlpha = 1;
+  },
+  // dealt off to the top left, as a card is: shrinking and turning as it goes
+  deal: (o, src, gone, box) => {
+    const b = { x: (box.x0 + box.x1) / 2, y: (box.y0 + box.y1) / 2, w: box.x1 - box.x0, h: box.y1 - box.y0 };
+    return (t) => {
+      const [x, y, s, turn] = dealtOff(b, t ** 3);
+      o.save(); o.translate(x, y); o.rotate(turn); o.scale(s, s); o.translate(-b.x, -b.y); o.drawImage(src, 0, 0); o.restore();
+    };
+  },
+  // blown away: lifted by its right edge, it tilts, flutters and flies off up and to the left, gathering pace
+  blow: (o, src, gone, box) => {
+    const px = box.x0, py = box.y1, reach = box.x1 + 80; // it turns about its lower left corner, as paper caught by the wind
+    return (t) => {
+      const e = t * t, flutter = Math.sin(t * Math.PI * 5) * 0.06 * (1 - t);
+      o.save();
+      o.globalAlpha = 1 - Math.max(0, t - 0.8) / 0.2;
+      o.translate(px - reach * e, py - H * 0.35 * e); o.rotate(-0.5 * e + flutter); o.transform(1, -0.25 * e, 0, 1 - 0.3 * e, 0, 0); o.translate(-px, -py);
+      o.drawImage(src, 0, 0); o.restore();
+    };
   },
 };
 // The wipe: the skull itself, large and almost unseen, flashes once over the middle of the map while the cards go,

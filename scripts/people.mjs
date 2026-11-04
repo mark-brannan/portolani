@@ -252,6 +252,13 @@ export const MEMENTO_EN = [
   'Our lives are the rivers that flow into the sea, which is dying',
   'Remember that you are dust',
 ];
+// A long phrase with a comma near its middle is set as a couplet, two lines split after that comma; any other on one line
+export function mementoLines(text) {
+  if (text.length <= 30) return [text];
+  let best = -1;
+  for (let i = text.indexOf(','); i >= 0; i = text.indexOf(',', i + 1)) if (Math.abs(i / text.length - 0.5) < Math.abs(best / text.length - 0.5)) best = i;
+  return best >= 0 && Math.abs(best / text.length - 0.5) <= 0.15 ? [text.slice(0, best + 1), text.slice(best + 1).trim()] : [text];
+}
 export const mementoNext = (k) => (((k + 1) % MEMENTO.length) + MEMENTO.length) % MEMENTO.length;
 
 // Where a person's pictures lie by default, from `frame` (the lon/lat box of their birth, death and voyages): each as tall
