@@ -469,19 +469,40 @@ export function legDates(leg) {
   return { start: s ?? words?.start ?? e, end: e ?? words?.end ?? s };
 }
 // A voyage's calendar, or null when none of its legs names a year: { t0, t1, n, legs, events }, days as dayOf counts them.
-// Each leg { a, b, n, from, to, precision }: the pen leaves its start on day a and reaches its end on day b, over n of
-// the samples legPath gives it (n in all); precision the vaguer of its ends. Each event's day is the first its date
-// allows, held inside [t0, t1]; one with no date read falls on t1.
+// Each leg { a, b, n, from, to, precision, stops }: the pen leaves its start on day a and reaches its end on day b, over
+// n of the samples legPath gives it (n in all); precision the vaguer of its ends; stops the [sample, day, place] it
+// passes, its two ends at least. Each event's day is the first its date allows, held inside [t0, t1]; one with no date
+// read falls on t1, and a migration's waypoint that paces the pen falls on the day the pen reaches it.
 // The ends of the legs in order (a leg's start, its end, the next leg's start, ...) each take a day inside their span,
 // none earlier than the one before. Each takes the day its place in the order gives it, spaced evenly between the ends
 // already settled (at first the voyage's first and last days); the one furthest outside its span is held at that
 // span's edge and settled, and so on until all lie inside their spans. So six legs all dated "1271" share 1271
 // evenly, and a day-precise end lands on its day.
+// A migration (isMigration) is a people spreading, not one pen: its legs are branches under way at once (`concurrent`),
+// each settled on its own dates. A leg sets out no earlier than the pen reaches its first point on a leg before it, and
+// a leg dated by one date ("c. 1100 BC") arrives then, setting out as that earlier pen passes its start. A waypoint (an
+// event of kind `waypoint` at one of a leg's points) is a stop the pen reaches on its date, so the pen is at Fiji as
+// Fiji's settlement appears; the stops are settled as the ends are, spaced by their place along the line.
 export function calendarOf(voyage) {
   const legs = voyage?.legs ?? [];
   if (!legs.length) return null;
+  if (isMigration(voyage)) return streamCalendar(voyage);
   const ends = legs.map(legDates), knots = [];
   for (const d of ends) knots.push([...(d?.start.span ?? [-Infinity, Infinity])], [...(d?.end.span ?? [-Infinity, Infinity])]);
+  const day = settle(knots);
+  if (!day) return null;
+  const out = legs.map((leg, i) => {
+    const n = leg.points?.length > 1 ? legPath(leg).length : 0;
+    return { a: day[2 * i], b: day[2 * i + 1], n, from: leg.from, to: leg.to, stops: [[0, day[2 * i], leg.from], [n, day[2 * i + 1], leg.to]],
+      precision: ends[i] ? vaguer(ends[i].start.precision, ends[i].end.precision) : 'year' };
+  });
+  const t0 = day[0], t1 = day.at(-1);
+  const events = (voyage.events ?? []).map((e) => { const d = readDates(e.date)?.start.span[0]; return Number.isFinite(d) ? Math.min(t1, Math.max(t0, d)) : t1; });
+  return { t0, t1, n: out.reduce((s, l) => s + l.n, 0), legs: out, events };
+}
+// Days for knots in order, each [first, the day after the last] it may fall on, none before the one before (calendarOf).
+// `at` places each knot along the way (its index by default) for the even spacing; null when no knot names a day.
+function settle(knots, at = knots.map((_, i) => i)) {
   for (const k of knots) k[1] = Math.max(k[0], k[1] - 1e-6); // a span's last moment, not the day after it
   for (let i = 1; i < knots.length; i++) knots[i][0] = Math.max(knots[i][0], knots[i - 1][0]);
   for (let i = knots.length - 2; i >= 0; i--) knots[i][1] = Math.min(knots[i][1], knots[i + 1][1]);
@@ -497,7 +518,7 @@ export function calendarOf(voyage) {
     let lo = 0;
     for (let i = 1; i < N; i++) {
       if (!settled.has(i)) continue;
-      for (let j = lo + 1; j < i; j++) guess[j] = day[lo] + ((day[i] - day[lo]) * (j - lo)) / (i - lo);
+      for (let j = lo + 1; j < i; j++) guess[j] = day[lo] + ((day[i] - day[lo]) * (at[j] - at[lo])) / ((at[i] - at[lo]) || 1);
       lo = i;
     }
     let worst = -1, by = 0, to = 0;
@@ -511,22 +532,101 @@ export function calendarOf(voyage) {
     day[worst] = to; settled.add(worst);
   }
   for (let j = 1; j < N; j++) day[j] = Math.max(day[j], day[j - 1]);
-  const out = legs.map((leg, i) => ({ a: day[2 * i], b: day[2 * i + 1], n: leg.points?.length > 1 ? legPath(leg).length : 0, from: leg.from, to: leg.to,
-    precision: ends[i] ? vaguer(ends[i].start.precision, ends[i].end.precision) : 'year' }));
-  const t0 = day[0], t1 = day[N - 1];
-  const events = (voyage.events ?? []).map((e) => { const d = readDates(e.date)?.start.span[0]; return Number.isFinite(d) ? Math.min(t1, Math.max(t0, d)) : t1; });
-  return { t0, t1, n: out.reduce((s, l) => s + l.n, 0), legs: out, events };
+  return day;
 }
-// Where the pen is on `day`: { share, leg, waiting }, the share of the line drawn (as scene.mjs drawTrack's `reveal`
-// counts it, by samples), the leg it is on, and whether it sits still before that leg sets out
+const STOP_KM = 30; // a waypoint, or an earlier leg's stop, this near a leg's point is at it
+// A migration's calendar (calendarOf): each leg settled on its own, its stops its two ends and the waypoints at its points
+function streamCalendar(voyage) {
+  const waypoints = (voyage.events ?? []).map((e, i) => ({ e, i })).filter(({ e }) => e.kind === 'waypoint' && Number.isFinite(e.lon) && Number.isFinite(e.lat));
+  const taken = new Map(), passed = [], out = []; // taken: an event's index to the day the pen reaches it; passed: [lon, lat, day] of every stop
+  const near = (p, q) => distanceKm(p, q) < STOP_KM, span = (end) => [...(end?.span ?? [-Infinity, Infinity])];
+  for (const leg of voyage.legs) {
+    const ends = legDates(leg), pts = leg.points ?? [], path = pts.length > 1 ? legPath(leg) : [], n = path.length, flat = unwrap(pts);
+    let first = span(ends?.start), last = span(ends?.end);
+    const parent = pts.length ? passed.filter((q) => near(q, pts[0])).reduce((d, q) => Math.min(d, q[2]), Infinity) : Infinity;
+    if (Number.isFinite(parent)) first = first[0] === last[0] && first[1] === last[1] ? [parent, parent] : [Math.max(first[0], parent), Math.max(first[1], parent)];
+    const stops = [{ at: 0, span: first, place: leg.from }, { at: n, span: last, place: leg.to }];
+    if (n) for (const [k, p] of pts.entries()) {
+      const w = waypoints.find(({ e, i }) => !taken.has(i) && !stops.some((s) => s.event === i) && near([e.lon, e.lat], p));
+      if (!w) continue;
+      const r = readDates(w.e.date), ws = r ? [r.start.span[0], r.end.span[1]] : [-Infinity, Infinity];
+      const meet = (s) => (Math.max(s[0], ws[0]) < Math.min(s[1], ws[1]) ? [Math.max(s[0], ws[0]), Math.min(s[1], ws[1])] : s);
+      const end = k === 0 ? stops[0] : k === pts.length - 1 ? stops[1] : null;
+      if (end) { // a waypoint at an end dates it more closely than the leg's range does, inside that range
+        const whole = [first[0], last[1]], both = meet(whole);
+        if (both !== whole && (end !== stops[0] || !Number.isFinite(parent))) end.span = both;
+        end.event = w.i; end.place = w.e.label ?? end.place; continue;
+      }
+      const at = path.reduce((best, q, j) => (distanceKm(flat[k], q) < distanceKm(flat[k], path[best]) ? j : best), 0);
+      stops.push({ at, span: ws, place: w.e.label, event: w.i });
+    }
+    stops.sort((s, t) => s.at - t.at);
+    const day = settle(stops.map((s) => s.span), stops.map((s) => s.at));
+    if (!day) { out.push(null); continue; }
+    stops.forEach((s, j) => {
+      if (s.event != null) taken.set(s.event, day[j]);
+      const p = s.at === 0 ? pts[0] : s.at === n ? pts.at(-1) : path[s.at];
+      if (p) passed.push([p[0], p[1], day[j]]);
+    });
+    out.push({ a: day[0], b: day.at(-1), n, from: leg.from, to: leg.to, stops: stops.map((s, j) => [s.at, day[j], s.place]),
+      precision: ends ? vaguer(ends.start.precision, ends.end.precision) : 'year' });
+  }
+  const dated = out.filter(Boolean);
+  if (!dated.length) return null;
+  const t0 = Math.min(...dated.map((l) => l.a)), t1 = Math.max(...dated.map((l) => l.b));
+  const legs = out.map((l, i) => l ?? { a: t1, b: t1, n: 0, from: voyage.legs[i].from, to: voyage.legs[i].to, stops: [], precision: 'year' });
+  const events = (voyage.events ?? []).map((e, i) => {
+    if (taken.has(i)) return taken.get(i);
+    const d = readDates(e.date)?.start.span[0];
+    return Number.isFinite(d) ? Math.min(t1, Math.max(t0, d)) : t1;
+  });
+  return { t0, t1, n: legs.reduce((s, l) => s + l.n, 0), legs, events, concurrent: true };
+}
+// How far the pen on one leg has come on `day`, in samples: between the two stops it lies between
+function drawnOn(l, day) {
+  if (!(day > l.a)) return 0;
+  if (day >= l.b || l.stops.length < 2) return l.n;
+  const s = l.stops, j = Math.max(0, s.findIndex((q, k) => k + 1 < s.length && day < s[k + 1][1]));
+  const [x0, d0] = s[j], [x1, d1] = s[j + 1];
+  return d1 > d0 ? x0 + ((x1 - x0) * (day - d0)) / (d1 - d0) : x1;
+}
+// The stretch of a leg the pen is on at `day`: [from, to], the places of the stops either side of it
+function stretchOn(l, day) {
+  const s = l.stops, j = s.findIndex((q, k) => k + 1 < s.length && day < s[k + 1][1]);
+  return j < 0 ? [l.from, l.to] : [s[j][2] ?? l.from, s[j + 1][2] ?? l.to];
+}
+// Where the pen is on `day`: { share, leg, waiting, before, from, to, legs }: the share of the line drawn (as scene.mjs
+// drawTrack's `reveal` counts it, by samples), the leg it is on, whether it sits still (at the end of leg `before`) before
+// that leg sets out, the stretch it is on, and each leg's share drawn (scene.mjs drawStream's `legReveal`). On a
+// migration's calendar every leg under way draws at once, and the leg named is the one that set out latest.
 export function penOn(cal, day) {
+  const legs = cal.legs.map((l) => (l.n ? drawnOn(l, day) / l.n : day >= l.b ? 1 : 0)), share = (walked) => (cal.n ? walked / cal.n : 0);
+  if (cal.concurrent) {
+    const ids = cal.legs.map((_, i) => i), L = cal.legs, walked = L.reduce((s, l, i) => s + legs[i] * l.n, 0);
+    const going = ids.filter((i) => L[i].a <= day && day < L[i].b);
+    if (going.length) {
+      const i = going.reduce((m, j) => (L[j].a >= L[m].a ? j : m)), [from, to] = stretchOn(L[i], day);
+      return { share: share(walked), leg: i, waiting: false, before: null, from, to, legs };
+    }
+    const last = ids.filter((i) => L[i].b <= day).reduce((m, j) => (m < 0 || L[j].b >= L[m].b ? j : m), -1);
+    const next = ids.filter((i) => L[i].a > day).reduce((m, j) => (m < 0 || L[j].a < L[m].a ? j : m), -1);
+    if (last < 0 || next < 0) { const i = last < 0 ? Math.max(0, next) : last; return { share: next < 0 ? 1 : share(walked), leg: i, waiting: false, before: null, from: L[i].from, to: L[i].to, legs }; }
+    return { share: share(walked), leg: next, waiting: true, before: last, from: L[last].to, to: L[last].to, legs };
+  }
   let walked = 0;
   for (const [i, l] of cal.legs.entries()) {
-    if (day < l.a) return { share: cal.n ? walked / cal.n : 0, leg: i, waiting: i > 0 };
-    if (day < l.b) return { share: cal.n ? (walked + (l.n * (day - l.a)) / (l.b - l.a)) / cal.n : 0, leg: i, waiting: false };
+    if (day < l.a) return { share: share(walked), leg: i, waiting: i > 0, before: i > 0 ? i - 1 : null, from: i > 0 ? cal.legs[i - 1].to : l.from, to: l.to, legs };
+    if (day < l.b) return { share: share(walked + (l.n * (day - l.a)) / (l.b - l.a)), leg: i, waiting: false, before: null, from: l.from, to: l.to, legs };
     walked += l.n;
   }
-  return { share: 1, leg: cal.legs.length - 1, waiting: false };
+  const end = cal.legs.at(-1);
+  return { share: 1, leg: cal.legs.length - 1, waiting: false, before: null, from: end.from, to: end.to, legs };
+}
+// A scene's voyage played to `day` on its calendar: { reveal, legReveal, played }, as scene.mjs drawTrack and drawStream
+// read them; reveal held short of 1, so the pen still shows on the last day of a play under way
+export function playedOn(voyage, cal, day) {
+  const pen = penOn(cal, day);
+  return { reveal: Math.min(0.999999, pen.share), legReveal: pen.legs, played: (voyage.events ?? []).filter((_, i) => cal.events[i] <= day) };
 }
 // A day as the band writes it, at a precision: "20 Jun 1520", "Jun 1520", "1520", "325 BC", "c. 1250"
 const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -536,6 +636,24 @@ export function dayText(day, precision = 'day') {
   if (precision === 'year') return year;
   if (precision === 'month') return `${MONTH_SHORT[t.getUTCMonth()]} ${year}`;
   return `${t.getUTCDate()} ${MONTH_SHORT[t.getUTCMonth()]} ${year}`;
+}
+// The band's time scale. A calendar longer than LONG_YEARS is told in years: its date "c. 1210 BC", rounded to a step
+// that keeps the number legible as it runs (10 years past 200, 50 past 1,000), and its pace "about 80 years a second".
+// A shorter one keeps its leg's precision and "1,083 days in 9 s".
+export const LONG_YEARS = 50;
+const yearsOf = (cal) => (cal.t1 - cal.t0) / 365.25;
+export const isLong = (cal) => yearsOf(cal) > LONG_YEARS;
+export function playDateText(cal, day, precision = 'day') {
+  if (!isLong(cal)) return dayText(day, precision);
+  const span = yearsOf(cal), step = span > 1000 ? 50 : span > 200 ? 10 : 1;
+  const y = new Date(Math.floor(day) * 864e5).getUTCFullYear(), bc = y < 1, n = Math.max(1, Math.round((bc ? 1 - y : y) / step) * step);
+  return `c. ${n}${bc ? ' BC' : ''}`;
+}
+export function playPace(cal, seconds) {
+  const days = Math.round(cal.t1 - cal.t0), years = days / 365.25;
+  if (!isLong(cal)) return `${years >= 3 ? `${Math.round(years)} years` : `${days.toLocaleString('en')} days`} in ${seconds} s`;
+  const each = years / seconds, n = each < 10 ? Math.round(each) : Math.round(each / 10) * 10;
+  return `about ${n.toLocaleString('en')} year${n === 1 ? '' : 's'} a second`;
 }
 // How long the play takes, the whole voyage however long it was, in seconds; carried by the link as `voyageplay=`.
 // voyagePlaySeconds reads it back: a value outside the range or off its steps is the default.
