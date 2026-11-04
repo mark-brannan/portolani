@@ -495,3 +495,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261104t222452z
 - sweep keeps per-chart slider values in state ([#372](https://github.com/mark-brannan/portolani/pull/372))
+
+### 20261104t223634z
+- people pictures: new IMAGE_KINDS artefact, site, source for people with no likeness ([#373](https://github.com/mark-brannan/portolani/pull/373))
