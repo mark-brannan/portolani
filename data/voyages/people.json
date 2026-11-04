@@ -1209,7 +1209,7 @@
    },
    {
     "file": "Conquistador_Negro_Duran.jpg",
-    "kind": "near",
+    "kind": "scene",
     "author": "Diego Durán",
     "date": "16th century",
     "licence": "Public domain",
@@ -1246,7 +1246,7 @@
   "images": [
    {
     "file": "Diceño_de_Mulata_(1711)_Arellano.jpg",
-    "kind": "near",
+    "kind": "imaginary",
     "author": "Manuel de Arellano",
     "date": "1711",
     "licence": "Public domain",
@@ -1589,7 +1589,7 @@
   "images": [
    {
     "file": "Catalan_Atlas_BNF_Sheet_6_Mansa_Musa.jpg",
-    "kind": "near",
+    "kind": "imaginary",
     "author": "Attributed to Abraham Cresques",
     "date": "1375",
     "licence": "Public domain",
@@ -1597,7 +1597,7 @@
    },
    {
     "file": "Mansa_Moussa_on_the_map_of_Angelino_Dulcert.jpg",
-    "kind": "near",
+    "kind": "imaginary",
     "author": "Angelino Dulcert",
     "date": "1339",
     "licence": "Public domain",
@@ -1666,6 +1666,14 @@
    "cite": "atlantic-voyage-of-musa-s-predecessor"
   },
   "images": [
+   {
+    "file": "Catalan_Atlas_BNF_Sheet_6_Mansa_Musa_(cropped).jpg",
+    "kind": "imaginary",
+    "author": "Attributed to Abraham Cresques",
+    "date": "1375",
+    "licence": "Public domain",
+    "note": "The king of Mali on his throne as a Majorcan chartmaker imagined him in 1375, holding up a gold nugget; the label names Musa, the man who took the throne Abu Bakr left. No picture of Abu Bakr himself exists."
+   },
    {
     "file": "The_Mali_Empire.jpg",
     "kind": "map",
@@ -1849,7 +1857,7 @@
   "images": [
    {
     "file": "William_of_Rubruck_Corpus_Christi_MS_066A_fol_67r_detail.jpg",
-    "kind": "near",
+    "kind": "imaginary",
     "author": "Unknown",
     "date": "early 14th century",
     "licence": "Public domain",
