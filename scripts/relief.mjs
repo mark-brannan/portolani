@@ -255,7 +255,7 @@ function peakShape({ x, y, w, h, lean, jag }) {
   const right = [at(a, 1), at(a + 0.06, 0.95), at(a + 0.12 + j(3, 0.05), 0.68 + j(4, 0.1)), at(0.2 + j(4, 0.05), 0.5),
     at(0.27, 0.46 + j(5, 0.1)), at(0.37 + j(5, 0.05), 0.24), at(0.5, 0)];
   const crest = [at(a, 1), at(a + 0.02 + j(2, 0.04), 0.62), at(0.04 + j(3, 0.06), 0.3), at(0.08, 0)];
-  return { outline: [...left, ...right.slice(1)], flanks: [...left, ...right.slice(1)], shadow: [...right, ...crest.slice().reverse().slice(0, -1)], crest, slope: Math.atan2(h, w * (0.5 - a)) };
+  return { outline: [...left, ...right.slice(1)], lit: left, h, w, flanks: [...left, ...right.slice(1)], shadow: [...right, ...crest.slice().reverse().slice(0, -1)], crest, slope: Math.atan2(h, w * (0.5 - a)) };
 }
 
 // A rounded hump, a little lopsided, its shadow the right shoulder.
@@ -270,13 +270,29 @@ function humpShape({ x, y, w, h, lean }) {
 // its own x so no stroke is taken for a seam.
 const asIs = ([lon, lat]) => [lon, lat];
 
+// After the Middle-earth map (mapeffects.co, "Tolkien mountains"): the shadow a flat ink fill that stops flat
+// at the base, only a narrow strip of the left flank left lit, and a halo of paper round every peak, so one
+// standing in front of another's shadow keeps its edge. The light stays on the left, as the other looks.
+function flatPeak(g, s, { ink, width, paper, halo, lit }) {
+  const path = (pts) => { g.beginPath(); pen(g, [pts], { close: true }); };
+  path(s.outline); g.fillStyle = paper; g.strokeStyle = paper; g.lineWidth = halo * 2; g.stroke(); g.fill();
+  path(s.outline); g.fillStyle = ink; g.fill();
+  if (s.lit) { // the lit strip: the left flank and the same flank drawn in, wide at the base, none at the apex
+    const base = s.lit[0][1];
+    const inner = s.lit.map(([x, y]) => [x + s.w * lit * Math.min(1, Math.max(0, 1 - (base - y) / s.h)), y]).reverse();
+    path([...s.lit, ...inner.slice(1)]); g.fillStyle = paper; g.fill();
+  }
+  g.beginPath(); pen(g, [s.flanks]); g.strokeStyle = ink; g.lineWidth = width; g.stroke();
+}
+
 // Each shape back to front: washed, its shadow side darker and hatched with short ink strokes down
 // the slope, then the flanks and crest inked. `wash` null leaves the paper showing (an engraving).
 function drawShapes(g, shapes, lookOf) {
   g.save();
   g.lineJoin = 'round'; g.lineCap = 'round';
   for (const s of shapes) {
-    const { ink, light, shade, hatching, width } = lookOf(s.style);
+    const { ink, light, shade, hatching, width, flat } = lookOf(s.style);
+    if (flat) { flatPeak(g, s, { ink, width, ...flat }); continue; }
     if (light) { g.beginPath(); pen(g, [s.outline], { close: true }); g.fillStyle = light; g.fill(); }
     if (shade) { g.beginPath(); pen(g, [s.shadow], { close: true }); g.fillStyle = shade; g.fill(); }
     hatch(g, [[s.shadow]], asIs, { angle: s.slope + 0.35, gap: hatching.gap, color: ink, width: hatching.width, alpha: hatching.alpha, centralMeridian: s.outline[0][0] });
@@ -300,6 +316,9 @@ const LOOKS = {
   marina: ({ ink }) => ({ ink, light: '#d2965a', shade: 'rgba(150, 70, 32, 0.7)', hatching: { gap: 2.4, width: 0.7, alpha: 0.8 }, width: 1.1 }),
   // the same in ink alone, as the uncoloured prints were
   engraved: ({ ink, land }) => ({ ink, light: land, shade: null, hatching: { gap: 2.2, width: 0.7, alpha: 0.9 }, width: 1.1 }),
+
+  // after the Middle-earth map: flat ink shadows, a narrow lit side, a paper halo round each peak
+  tolkien: ({ ink, land, parchment }) => ({ ink, light: null, shade: null, hatching: null, width: 1.1, flat: { paper: parchment ?? land, halo: 2, lit: 0.16 } }),
 };
 
 export const RELIEF_STYLES = ['off', ...Object.keys(LOOKS)];

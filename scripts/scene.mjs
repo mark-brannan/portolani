@@ -2241,7 +2241,7 @@ export function keptWater(data) {
 const reliefWanted = () => STYLE.relief.length > 0 || STYLE.mountainSprites;
 const reliefFor = (proj, land) => reliefOf({ proj, land, createCanvas, w: W, h: H, styles: STYLE.relief, hills: STYLE.mountainSprites });
 function paintRelief(g, data, relief) {
-  if (relief) drawRelief(g, { proj: data.proj, palette: { ink: STYLE.ink, land: STYLE.land } }, relief);
+  if (relief) drawRelief(g, { proj: data.proj, palette: { ink: STYLE.ink, land: STYLE.land, parchment: STYLE.parchment } }, relief);
 }
 const paintCoast = (g, data, coast) =>
   limn(g, coast, data.proj.toPx, { color: STYLE.ink, alpha: 1, width: STYLE.coastWidth, oneStroke: true, ...data.proj.seam });

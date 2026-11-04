@@ -155,11 +155,15 @@ Feature: Placement  (hash `placement`, default empty; values `historic`, `seeded
     # Mismatch: Default and Historic both parse to `historical: true`; they draw the same, differing only in the hash text (`''` vs `historic`). The chip tooltips describe two behaviours.
     # Re-roll is only reachable through the chip; `seed:<n>` is typed in the hash (negative allowed, `seed:-5` parses).
 
-Feature: Mountains  (chips `#mountains`, hash `mountains`, default `colour`, values `off|ink|colour`; scene `relief` `['marina']`/`['engraved']`/`[]`) [verified page.js:90-93, 126, 381, 524; relief.mjs:295-303]
+Feature: Mountains  (chips `#mountains`, hash `mountains`, default `colour`, values `off|ink|colour|tolkien`; scene `relief` `['marina']`/`['engraved']`/`['tolkien']`/`[]`) [verified page.js:90-93, 126, 381, 524; relief.mjs:295-303]
   Scenario: ink
     Given the chart at `#map=6.00/46.500/8.000`
     When the user clicks "Ink" in Mountains
     Then the hash gains `mountains=ink` and range hatching is ink-only, no ochre wash (`engraved` has `light: land`, `shade: null`, relief.mjs:300 at main)
+  Scenario: tolkien
+    Given the chart at `#map=6.00/46.500/8.000`
+    When the user clicks "Tolkien" in Mountains
+    Then the hash gains `mountains=tolkien` and each range is a flat ink shadow with a narrow lit left flank, a paper halo round every peak, no hatching
   Scenario: off
     Given the chart at the same view
     When the user clicks "Off"
