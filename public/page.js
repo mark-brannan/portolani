@@ -19,7 +19,7 @@ import { playedOn, playDateText, playPace, isLong } from './scene.mjs'; // the p
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, effectiveOpacity, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
-import { PEOPLE_FILE, PICTURES_FILE, SIGHT_PICTURES_FILE, SIGHT_MANIFEST_FILE, sightDeal, eraOf, eraYears, eraScale, barOn, lifeSpan, firstYear, yearsText, PERSON_RED, pictureCredit, pictureNote, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, sightFrame, viewContaining, withPictures, peopleOf, whoOf, deathOf, sightPicturesOf, MEMENTO, mementoNext } from './people.mjs';
+import { PEOPLE_FILE, PICTURES_FILE, SIGHT_PICTURES_FILE, SIGHT_MANIFEST_FILE, sightDeal, eraOf, eraYears, eraScale, barOn, lifeSpan, firstYear, yearsText, PERSON_RED, pictureCredit, pictureNote, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, sightFrame, viewContaining, withPictures, peopleOf, whoOf, deathOf, sightPicturesOf, MEMENTO, MEMENTO_EN, mementoNext } from './people.mjs';
 import { fold, bestPlace, withoutPartsOfFrames } from './placename.mjs';
 import { planFlight, ease as flyEase, FLY_KNOBS, flyDefaults } from './flight.mjs';
 
@@ -2167,7 +2167,7 @@ function dealNow(key = dealing) {
 // subject let go (no person lit, no sight chosen, no picture kept in the link) and, with `hide`, the tile shut; the
 // skull flashes faintly over the map where any card lay (wipeSkull). Voyages drawn stay. True when a person was chosen, whose voyages the
 // scene drew lit: the caller draws the map again.
-function clearTable(hide = true) {
+function clearTable(hide = true, wipe = true) {
   const hadPerson = Boolean(style.person), lay = onTable > 0;
   dealing = null; reopen = null;
   if (hide) hideTile();
@@ -2176,7 +2176,7 @@ function clearTable(hide = true) {
     flips.clear(); links.clear(); raised = []; looking = null; focusedPic = null;
     showPeople(); showSightCard(); writeHash();
   }
-  if (lay) { wipeSkull(); if (ground) repaint('pictures swept'); }
+  if (lay) { if (wipe) wipeSkull(); if (ground) repaint('pictures swept'); }
   return hadPerson;
 }
 // A sight's pictures are dealt along the foot of the view they are dealt in (sightDeal), the place clear above them:
@@ -2307,28 +2307,185 @@ function setOnTable(i, on) {
 // first at random). It leaves the settings (the rose, the projection, every style) and the view (place, zoom, bearing)
 // as they are: a lifted sheet does not turn the world back to north here, as lifting one by its eye does.
 let memento = Math.floor(Math.random() * MEMENTO.length);
-const showMemento = () => { $('mementoText').textContent = MEMENTO[memento]; };
+const showMemento = () => { $('mementoText').textContent = MEMENTO[memento]; $('sweep').title = `Clear the map: ${MEMENTO_EN[memento]}`; };
 showMemento();
-function clearMap() {
-  const hadPerson = clearTable(), voyages = style.voyages.length > 0, charts = style.overlays.length > 0 || Object.keys(style.sheets).length > 0;
+// Returns once the map is drawn without what was cleared, so the clear's effect can tell what went
+async function clearMap() {
+  const hadPerson = clearTable(true, false), voyages = style.voyages.length > 0, charts = style.overlays.length > 0 || Object.keys(style.sheets).length > 0;
   if (voyages) { closeBand(); style = { ...style, voyages: [] }; }
   if (charts) { turnedTo.clear(); style = { ...style, overlays: [], sheets: {} }; showOverlay(); }
-  if (voyages || charts) { showVoyage(); writeHash(); wipeSkull(); }
-  if (hadPerson || voyages || charts) render(); // a person's voyages back in their own inks; the lines and sheets gone
+  if (voyages || charts) { showVoyage(); writeHash(); }
+  if (hadPerson || voyages || charts) await render(); // a person's voyages back in their own inks; the lines and sheets gone
 }
+// The clear is shown every time, the map already clear or not: whatever went leaves (CLEAR_TUNE.effect), the skull grows
+// over the map and fades, and the phrase just cleared to, large and red at the foot of the map, grows and fades last, to be read
 $('sweep').addEventListener('click', () => {
-  clearMap();
+  const before = vanishFrom();
+  const done = clearMap();
   memento = mementoNext(memento); showMemento();
+  skullRise(); wordsRise(MEMENTO[memento]);
+  if (before) Promise.race([done, new Promise((ok) => setTimeout(ok, 4000))]).then(() => new Promise(requestAnimationFrame)).then(() => vanish(before), () => vanish(before));
 });
-// The open drawer stops above the skull and its line (--memento-h, index.html), however many lines the phrase takes and
-// whether the compass shows over it
+// The open drawer stops above the skull (--memento-h, index.html), whether the compass shows over it
 new ResizeObserver(() => document.documentElement.style.setProperty('--memento-h', `${$('memento').offsetHeight}px`)).observe($('memento'));
+
+// The clear's timing and how what goes leaves: temporary, tuned on #367 in the panel at the top left, kept per browser
+const CLEAR_TUNE = { effect: 'dust', goneMs: 1600, skullMs: 1800, wordsMs: 3600, ink: 60 };
+try { Object.assign(CLEAR_TUNE, JSON.parse(localStorage.getItem('portolani.clearTune') ?? '{}')); } catch { /* none kept */ }
+{
+  const keep = () => { try { localStorage.setItem('portolani.clearTune', JSON.stringify(CLEAR_TUNE)); } catch { /* not kept */ } };
+  const chips = [...document.querySelectorAll('#clearTune [data-effect]')];
+  const showChips = () => chips.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.effect === CLEAR_TUNE.effect)));
+  chips.forEach((b) => b.addEventListener('click', () => { CLEAR_TUNE.effect = b.dataset.effect; showChips(); keep(); }));
+  showChips();
+  for (const [id, key, unit] of [['tuneGone', 'goneMs', 's'], ['tuneSkull', 'skullMs', 's'], ['tuneWords', 'wordsMs', 's'], ['tuneInk', 'ink', '%']]) {
+    const input = $(id), out = input.nextElementSibling;
+    const show = () => { out.value = unit === 's' ? `${(CLEAR_TUNE[key] / 1000).toFixed(1)} s` : `${CLEAR_TUNE[key]}%`; };
+    input.value = CLEAR_TUNE[key]; show();
+    input.addEventListener('input', () => { CLEAR_TUNE[key] = Number(input.value); show(); keep(); });
+  }
+}
+const stillMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+// the map's box on the window, cut to the window
+function mapBox() {
+  const r = canvas.getBoundingClientRect(), left = Math.max(0, r.left), top = Math.max(0, r.top);
+  return { r, left, top, wide: Math.min(innerWidth, r.right) - left, tall: Math.min(innerHeight, r.bottom) - top };
+}
+// The skull, almost as tall as the map or as wide, whichever bounds it, rises in and grows on past the map's edges as it fades
+function skullRise() {
+  const el = $('wipe');
+  if (stillMotion()) return;
+  const { left, top, wide, tall } = mapBox(), aspect = 200 / 254, h = Math.min(tall * 0.94, (wide * 0.94) / aspect), w = h * aspect;
+  Object.assign(el.style, { width: `${w}px`, height: `${h}px`, left: `${left + (wide - w) / 2}px`, top: `${top + (tall - h) / 2}px` });
+  el.hidden = false;
+  el.getAnimations().forEach((x) => x.cancel());
+  const ink = CLEAR_TUNE.ink / 100;
+  el.animate([{ opacity: 0, transform: 'scale(0.86)' }, { opacity: ink, transform: 'scale(1)', offset: 0.3 }, { opacity: ink * 0.7, transform: 'scale(1.18)', offset: 0.6 }, { opacity: 0, transform: 'scale(1.6)' }],
+    { duration: CLEAR_TUNE.skullMs, easing: 'cubic-bezier(.3,0,.6,1)' }).finished.then(() => { el.hidden = true; }, () => {});
+}
+// The phrase, on one line at the foot of the map, as large as fits it, grows and fades: slower than the skull, to be read
+function wordsRise(text) {
+  const el = $('mementoBig');
+  const { left, top, wide, tall } = mapBox();
+  el.textContent = text; el.hidden = false;
+  el.getAnimations().forEach((x) => x.cancel());
+  let size = Math.min(64, tall * 0.08);
+  el.style.fontSize = `${size}px`;
+  const fit = (wide * 0.86) / el.scrollWidth;
+  if (fit < 1) { size *= fit; el.style.fontSize = `${size}px`; }
+  Object.assign(el.style, { left: `${left + (wide - el.offsetWidth) / 2}px`, top: `${top + tall - el.offsetHeight - Math.max(56, tall * 0.12)}px` });
+  const frames = stillMotion() ? [{ opacity: 0 }, { opacity: 1, offset: 0.1 }, { opacity: 1, offset: 0.75 }, { opacity: 0 }]
+    : [{ opacity: 0, transform: 'scale(0.9)' }, { opacity: 1, transform: 'scale(1)', offset: 0.18 }, { opacity: 1, transform: 'scale(1.06)', offset: 0.65 }, { opacity: 0, transform: 'scale(1.14)' }];
+  el.animate(frames, { duration: CLEAR_TUNE.wordsMs, easing: 'ease-out' }).finished.then(() => { el.hidden = true; }, () => {});
+}
+// What goes: the map as it was is laid over itself before the clear (vanishFrom), so nothing jumps; once the map is
+// drawn again, whatever changed is kept from it and leaves by the chosen effect over the same time, whatever it was
+function vanishFrom() {
+  if (stillMotion()) return null;
+  const el = $('vanish'), { r } = mapBox();
+  el.width = W; el.height = H;
+  Object.assign(el.style, { left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px` });
+  const o = el.getContext('2d');
+  o.clearRect(0, 0, W, H); o.drawImage(canvas, 0, 0);
+  el.hidden = false;
+  cancelAnimationFrame(vanishFrame);
+  return o.getImageData(0, 0, W, H);
+}
+let vanishFrame = 0;
+function vanish(before) {
+  const el = $('vanish'), o = el.getContext('2d');
+  const after = ctx.getImageData(0, 0, W, H), a = after.data, b = before.data;
+  const gone = new ImageData(W, H), g = gone.data;
+  let x0 = W, x1 = -1, y0 = H, y1 = -1;
+  for (let i = 0, p = 0; i < a.length; i += 4, p++) {
+    if (Math.abs(a[i] - b[i]) + Math.abs(a[i + 1] - b[i + 1]) + Math.abs(a[i + 2] - b[i + 2]) + Math.abs(a[i + 3] - b[i + 3]) <= 24) continue;
+    g[i] = b[i]; g[i + 1] = b[i + 1]; g[i + 2] = b[i + 2]; g[i + 3] = b[i + 3];
+    const x = p % W, y = (p / W) | 0;
+    if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+  }
+  if (x1 < 0) { el.hidden = true; return; } // nothing was there to go
+  const src = Object.assign(document.createElement('canvas'), { width: W, height: H });
+  src.getContext('2d').putImageData(gone, 0, 0);
+  const play = VANISH[CLEAR_TUNE.effect] ?? VANISH.dust, step = play(o, src, gone, { x0, x1, y0, y1 }), t0 = performance.now();
+  const tick = (now) => {
+    const t = Math.min(1, (now - t0) / CLEAR_TUNE.goneMs);
+    o.clearRect(0, 0, W, H); step(t);
+    if (t < 1) vanishFrame = requestAnimationFrame(tick); else el.hidden = true;
+  };
+  vanishFrame = requestAnimationFrame(tick);
+}
+// Grain: noise in clumps, coarse value noise and fine, one value in [0, 1) per GRAIN-px cell; `lean` (0..1) tips the
+// order the cells go in toward the right going first
+const GRAIN = 4;
+function grainOf(lean) {
+  const gw = Math.ceil(W / GRAIN), gh = Math.ceil(H / GRAIN), coarse = Object.assign(document.createElement('canvas'), { width: Math.ceil(gw / 6), height: Math.ceil(gh / 6) });
+  const c = coarse.getContext('2d'), ci = c.createImageData(coarse.width, coarse.height);
+  for (let i = 0; i < ci.data.length; i += 4) { ci.data[i] = Math.random() * 255; ci.data[i + 3] = 255; }
+  c.putImageData(ci, 0, 0);
+  const big = Object.assign(document.createElement('canvas'), { width: gw, height: gh }), bc = big.getContext('2d');
+  bc.imageSmoothingEnabled = true; bc.drawImage(coarse, 0, 0, gw, gh);
+  const d = bc.getImageData(0, 0, gw, gh).data, n = new Float32Array(gw * gh);
+  for (let k = 0; k < n.length; k++) {
+    const v = 0.6 * (d[k * 4] / 255) + 0.4 * Math.random();
+    n[k] = lean ? (1 - lean) * v + lean * (1 - (k % gw) / gw) : v;
+  }
+  return { gw, gh, n };
+}
+// Motes of what goes, each a few px of its colour, let go as the grain under it goes and blown off by `wind` [dx, dy] px
+function motesOf(gone, grain, count, wind) {
+  const g = gone.data, out = [];
+  for (let tries = 0; out.length < count && tries < count * 40; tries++) {
+    const x = (Math.random() * W) | 0, y = (Math.random() * H) | 0, i = (y * W + x) * 4;
+    if (g[i + 3] < 40) continue;
+    const at = grain.n[((y / GRAIN) | 0) * grain.gw + ((x / GRAIN) | 0)];
+    out.push({ x, y, at, size: 1.2 + Math.random() * 2.4, colour: `rgb(${g[i]},${g[i + 1]},${g[i + 2]})`, dx: wind[0] * (0.5 + Math.random()), dy: wind[1] * (0.4 + Math.random()) - 20 * Math.random() });
+  }
+  return out;
+}
+// The cells still standing at `t`, drawn over what goes ('destination-in') from a small mask, each cell a soft step
+function dissolve(o, src, grain, t, soft = 0.08) {
+  const { gw, gh, n } = grain, m = (grain.mask ??= Object.assign(document.createElement('canvas'), { width: gw, height: gh })), mc = m.getContext('2d');
+  const md = (grain.md ??= mc.createImageData(gw, gh)), cut = t * (1 + soft) - soft;
+  for (let k = 0; k < n.length; k++) md.data[k * 4 + 3] = Math.max(0, Math.min(255, ((n[k] - cut) / soft) * 255));
+  mc.putImageData(md, 0, 0);
+  o.drawImage(src, 0, 0);
+  o.globalCompositeOperation = 'destination-in'; o.imageSmoothingEnabled = false; o.drawImage(m, 0, 0, W, H);
+  o.globalCompositeOperation = 'source-over'; o.imageSmoothingEnabled = true;
+}
+function drawMotes(o, motes, t, life) {
+  for (const p of motes) {
+    const age = (t * (1 + life) - p.at) / life; // 0 when its grain goes, 1 when it is gone
+    if (age <= 0 || age >= 1) continue;
+    const e = age * age;
+    o.globalAlpha = 1 - age; o.fillStyle = p.colour;
+    o.fillRect(p.x + p.dx * e, p.y + p.dy * e, p.size, p.size);
+  }
+  o.globalAlpha = 1;
+}
+const VANISH = {
+  // swept off to the left, gathering pace, a faint smear behind it
+  sweep: (o, src, gone, box) => (t) => {
+    const e = t * t * (3 - 2 * t) * 0.35 + t * t * t * 0.65, dx = -(box.x1 + 60) * e;
+    for (const [lag, alpha] of [[0.12, 0.18], [0.06, 0.3], [0, 1]]) { o.globalAlpha = alpha * (1 - Math.max(0, t - 0.85) / 0.15); o.drawImage(src, dx * (1 - lag) + (lag ? 0 : 0), 0); }
+    o.globalAlpha = 1;
+  },
+  // crumbles where it lies, in clumps, the motes drifting up and off to the left
+  dust: (o, src, gone) => { const grain = grainOf(0), motes = motesOf(gone, grain, 2600, [-120, -60]); return (t) => { dissolve(o, src, grain, t); drawMotes(o, motes, t, 0.45); }; },
+  // a wind from the right: it goes to dust from its right edge leftward, the motes blown far off to the left
+  wind: (o, src, gone) => { const grain = grainOf(0.65), motes = motesOf(gone, grain, 3200, [-420, -40]); return (t) => { dissolve(o, src, grain, t, 0.12); drawMotes(o, motes, t, 0.5); }; },
+  // fades, blurring and swelling a little, into nothing
+  fade: (o, src) => (t) => {
+    const s = 1 + 0.04 * t;
+    o.globalAlpha = (1 - t) ** 1.5; o.filter = `blur(${(t * 10).toFixed(1)}px)`;
+    o.setTransform(s, 0, 0, s, (W * (1 - s)) / 2, (H * (1 - s)) / 2); o.drawImage(src, 0, 0);
+    o.setTransform(1, 0, 0, 1, 0, 0); o.filter = 'none'; o.globalAlpha = 1;
+  },
+};
 // The wipe: the skull itself, large and almost unseen, flashes once over the middle of the map while the cards go,
 // about half a second; none under reduced motion
 function wipeSkull() {
   const el = $('wipe');
   if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  if (!el.firstChild) el.append($('sweep').querySelector('svg').cloneNode(true));
   const r = canvas.getBoundingClientRect(), left = Math.max(0, r.left), top = Math.max(0, r.top), wide = Math.min(innerWidth, r.right) - left, tall = Math.min(innerHeight, r.bottom) - top, size = Math.min(wide, tall) * 0.7;
   Object.assign(el.style, { width: `${size}px`, height: `${size}px`, left: `${left + (wide - size) / 2}px`, top: `${top + (tall - size) / 2}px` });
   el.hidden = false;

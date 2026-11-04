@@ -76,14 +76,33 @@
   #compass svg { width: 34px; height: 34px; }
   #sweep:focus-visible { outline: 2px solid #e8b84a; outline-offset: 2px; }
   #sweep svg { width: 34px; height: 34px; }
+  /* the phrase sits beside the skull on one line, out of the column's flow, so the skull never moves whatever its length;
+     a window too narrow for it wraps it, still beside */
   #mementoText {
+    position: absolute; right: 56px; bottom: 6px; width: max-content; max-width: calc(100vw - 90px); box-sizing: border-box;
     margin: 0; padding: 2px 8px 3px; font: italic 12.5px/1.25 var(--serif); color: #3b2a1a; text-align: right;
     background: #efe3c6; border: 1px solid #b89a68; border-radius: 3px; box-shadow: 0 1px 4px rgb(0 0 0 / 0.25);
   }
-  /* the wipe: the skull itself, large and faint, flashes over the map once while the cards go (page.js wipeSkull) */
-  #wipe { position: fixed; z-index: 1; pointer-events: none; opacity: 0; }
-  #wipe[hidden] { display: none; }
-  #wipe svg { width: 100%; height: 100%; display: block; }
+  /* the clear (page.js clearMap): what goes leaves on #vanish, a copy of it over the map; the skull grows over the map
+     and fades (#wipe, inked into the chart by multiply); the phrase, large in red, grows at the foot and fades last */
+  #vanish { position: fixed; z-index: 1; pointer-events: none; }
+  #vanish[hidden], #wipe[hidden], #mementoBig[hidden] { display: none; }
+  #wipe { position: fixed; z-index: 1; pointer-events: none; opacity: 0; mix-blend-mode: multiply; }
+  #wipe svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  #mementoBig {
+    position: fixed; z-index: 1; pointer-events: none; margin: 0; white-space: nowrap; text-align: center; opacity: 0;
+    font-family: var(--serif); font-style: italic; color: #8c2f1e; transform-origin: 50% 100%;
+    text-shadow: 0 0 6px #efe3c6, 0 0 12px #efe3c6, 0 0 2px #efe3c6;
+  }
+  /* temporary, for tuning the clear on #367: the effect and its timings */
+  #clearTune { position: fixed; left: 12px; top: 12px; z-index: 3; max-width: 290px; padding: 4px 10px; font: 12px var(--serif); color: #3b2a1a; background: #efe3c6; border: 1px solid #b89a68; border-radius: 4px; box-shadow: 0 1px 6px rgb(0 0 0 / 0.25); }
+  #clearTune summary { cursor: pointer; font-style: italic; }
+  #clearTune .chips { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
+  #clearTune .chips button { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; font: 12px var(--serif); border-radius: 12px; background: #efe3c6; color: #3b2a1a; border: 1px solid #b89a68; cursor: pointer; }
+  #clearTune .chips button[aria-pressed="true"] { background: #3b2a1a; color: #efe3c6; }
+  #clearTune .chips svg { width: 22px; height: 14px; }
+  #clearTune label { display: grid; grid-template-columns: 7.5em 1fr 3.4em; gap: 6px; align-items: center; margin: 3px 0; }
+  #clearTune output { text-align: right; font-variant-numeric: tabular-nums; }
 
   /* top right, a row of seven instruments, each opening its own drawer: the rose the settings, the chart the charts, the astrolabe the points of interest, the compass Go (a typed place or position, or mine filled in), the dividers the voyages and the medallion the people, each a vertical timeline, the anchor the anchorages (home first). One drawer at a time: a click on its button opens it and a second click shuts it, another button swaps it for its own, and Esc, or on a wide screen a click on the map, shuts it; a choice in it leaves it open, on a phone too. The row never moves */
   #where { position: fixed; top: 12px; right: 12px; z-index: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; pointer-events: none; }
@@ -535,7 +554,91 @@
   </button>
   <p id="mementoText"></p>
 </div>
-<div id="wipe" aria-hidden="true" hidden></div>
+<canvas id="vanish" aria-hidden="true" hidden></canvas>
+<div id="wipe" aria-hidden="true" hidden><svg viewBox="-100 -122 200 254" aria-hidden="true">
+  <defs>
+    <radialGradient id="skBone" cx="-0.18" cy="-0.42" r="1.05" gradientUnits="objectBoundingBox" gradientTransform="translate(0.5 0.5)">
+      <stop offset="0" stop-color="#f6ecd2"/><stop offset="0.45" stop-color="#dcc79c"/><stop offset="0.8" stop-color="#a88a5c"/><stop offset="1" stop-color="#6e5434"/>
+    </radialGradient>
+    <radialGradient id="skHollow" cx="0.5" cy="0.45" r="0.6">
+      <stop offset="0" stop-color="#140c06"/><stop offset="0.6" stop-color="#2a1a0e"/><stop offset="1" stop-color="#5a4128"/>
+    </radialGradient>
+    <radialGradient id="skShade" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#4a3420" stop-opacity="0.75"/><stop offset="1" stop-color="#4a3420" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="skTooth" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#efe2c0"/><stop offset="1" stop-color="#b89c6c"/>
+    </linearGradient>
+    <clipPath id="skClip"><path id="skOutline" d="M0-118C50-118 84-86 84-40C84-18 80-4 76 6C84 12 86 24 80 32C74 38 66 40 60 42L58 86C57 98 50 108 40 115C28 122 14 126 0 126C-14 126-28 122-40 115C-50 108-57 98-58 86L-60 42C-66 40-74 38-80 32C-86 24-84 12-76 6C-80-4-84-18-84-40C-84-86-50-118 0-118Z"/></clipPath>
+  </defs>
+  <use href="#skOutline" fill="url(#skBone)"/>
+  <g clip-path="url(#skClip)">
+    <!-- the shadow side (right, light from the upper left) in engraver's hatching -->
+    <g stroke="#4a3420" stroke-width="0.9" fill="none" opacity="0.55">
+      <path d="M46-104C70-86 82-60 84-30M54-100C76-80 86-56 88-26M62-94C80-74 90-50 90-22M38-108C62-90 74-64 78-36M70-86C86-66 92-44 92-18"/>
+      <path d="M78-6C86 4 88 16 86 28M72-2C80 8 82 20 80 34M66 50C68 70 66 90 58 104M60 54C62 74 60 92 52 106M54 58C56 76 54 94 46 110"/>
+    </g>
+    <g stroke="#4a3420" stroke-width="0.7" fill="none" opacity="0.35">
+      <path d="M-84-40C-86-20-84-4-80 8M-78-50C-80-28-80-10-76 4M-66 52C-68 72-66 90-58 104"/>
+    </g>
+    <!-- temples sunk under the brow, the cheek hollows, the shade under the cheekbones -->
+    <ellipse cx="74" cy="-2" rx="16" ry="28" fill="url(#skShade)"/>
+    <ellipse cx="-74" cy="-2" rx="14" ry="26" fill="url(#skShade)" opacity="0.7"/>
+    <ellipse cx="52" cy="58" rx="16" ry="24" fill="url(#skShade)"/>
+    <ellipse cx="-52" cy="58" rx="14" ry="22" fill="url(#skShade)" opacity="0.7"/>
+    <ellipse cx="0" cy="118" rx="60" ry="16" fill="url(#skShade)" opacity="0.6"/>
+  </g>
+  <!-- the sutures across the crown -->
+  <path d="M-62-72l5 3 3-5 5 4 4-5 5 4 4-4 5 3 4-5 5 4 4-4 5 4 4-5 5 4 4-4 5 3 4-5 5 4 4-4 5 4 3-5 5 3" fill="none" stroke="#5a4128" stroke-width="0.9" opacity="0.55"/>
+  <path d="M0-112l-3 6 4 5-4 5 4 6-4 5 3 6-3 5" fill="none" stroke="#5a4128" stroke-width="0.8" opacity="0.45"/>
+  <!-- the brow ridge, lit -->
+  <path d="M-64-26C-50-36-24-36-6-26M64-26C50-36 24-36 6-26" fill="none" stroke="#fbf3dc" stroke-width="2.4" stroke-linecap="round" opacity="0.7"/>
+  <!-- the eye sockets -->
+  <path d="M-60-16C-56-30-40-32-24-29C-12-26-8-14-9 0C-10 12-18 20-32 20C-48 20-60 8-60-16Z" fill="url(#skHollow)" stroke="#2a1a0e" stroke-width="1.4"/>
+  <path d="M60-16C56-30 40-32 24-29C12-26 8-14 9 0C10 12 18 20 32 20C48 20 60 8 60-16Z" fill="url(#skHollow)" stroke="#2a1a0e" stroke-width="1.4"/>
+  <path d="M-56-4C-52 10-42 16-30 15" fill="none" stroke="#a88a5c" stroke-width="1.2" opacity="0.6"/>
+  <path d="M56-4C52 10 42 16 30 15" fill="none" stroke="#a88a5c" stroke-width="1.2" opacity="0.4"/>
+  <!-- the cheekbones, lit along their ridge -->
+  <path d="M-78 20C-68 28-54 28-42 24M78 20C68 28 54 28 42 24" fill="none" stroke="#f2e6c6" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
+  <!-- the nose -->
+  <path d="M0 14C-5 16-13 30-13 40C-13 47-7 49-1 45L0 44L1 45C7 49 13 47 13 40C13 30 5 16 0 14Z" fill="url(#skHollow)" stroke="#2a1a0e" stroke-width="1.2"/>
+  <path d="M0 22V44" stroke="#8a6e46" stroke-width="1.2"/>
+  <!-- the upper jaw and its teeth -->
+  <path d="M-38 56C-26 52 26 52 38 56L36 64C24 60-24 60-36 64Z" fill="#c9b080" opacity="0.6"/>
+  <g fill="url(#skTooth)" stroke="#3b2a1a" stroke-width="0.9" transform="translate(0 2) scale(0.82 0.8) translate(0 15)">
+    <path d="M-36 62h7.5v13c0 2-7.5 2-7.5 0Z"/><path d="M-28 61h7.5v15c0 2-7.5 2-7.5 0Z"/><path d="M-20 60h6.5v17c0 2-6.5 2-6.5 0Z"/><path d="M-13 60h6v18c0 2-6 2-6 0Z"/>
+    <path d="M-6.5 60h6v18c0 2-6 2-6 0Z"/><path d="M0.5 60h6v18c0 2-6 2-6 0Z"/><path d="M7 60h6v18c0 2-6 2-6 0Z"/><path d="M13.5 60h6.5v17c0 2-6.5 2-6.5 0Z"/>
+    <path d="M20.5 61h7.5v15c0 2-7.5 2-7.5 0Z"/><path d="M28.5 62h7.5v13c0 2-7.5 2-7.5 0Z"/>
+  </g>
+  <!-- the bite: the dark line between the jaws -->
+  <path d="M-40 80C-26 84 26 84 40 80" fill="none" stroke="#1e140c" stroke-width="2.4" stroke-linecap="round"/>
+  <!-- the lower teeth -->
+  <g fill="url(#skTooth)" stroke="#3b2a1a" stroke-width="0.9" transform="translate(0 2) scale(0.82 0.8) translate(0 15)">
+    <path d="M-32 80h7v10c0-1.6-7-1.6-7 0Z" transform="matrix(1 0 0 -1 0 170)"/><path d="M-24.5 81h7v11c0-1.6-7-1.6-7 0Z" transform="matrix(1 0 0 -1 0 172)"/><path d="M-17 81h6v12c0-1.6-6-1.6-6 0Z" transform="matrix(1 0 0 -1 0 173)"/>
+    <path d="M-10.5 81h5v12c0-1.6-5-1.6-5 0Z" transform="matrix(1 0 0 -1 0 173)"/><path d="M-5 81h5v12c0-1.6-5-1.6-5 0Z" transform="matrix(1 0 0 -1 0 173)"/><path d="M0.5 81h5v12c0-1.6-5-1.6-5 0Z" transform="matrix(1 0 0 -1 0 173)"/>
+    <path d="M6 81h5v12c0-1.6-5-1.6-5 0Z" transform="matrix(1 0 0 -1 0 173)"/><path d="M11.5 81h6v12c0-1.6-6-1.6-6 0Z" transform="matrix(1 0 0 -1 0 173)"/><path d="M18 81h7v11c0-1.6-7-1.6-7 0Z" transform="matrix(1 0 0 -1 0 172)"/>
+    <path d="M25.5 80h7v10c0-1.6-7-1.6-7 0Z" transform="matrix(1 0 0 -1 0 170)"/>
+  </g>
+  <!-- where the jaw hinges under the cheekbone, and the chin -->
+  <path d="M-58 44C-52 56-48 70-44 82M58 44C52 56 48 70 44 82" fill="none" stroke="#3b2a1a" stroke-width="1.3" opacity="0.7"/>
+  <path d="M-20 112C-10 118 10 118 20 112" fill="none" stroke="#f2e6c6" stroke-width="1.6" opacity="0.5"/>
+  <circle cx="-30" cy="100" r="2" fill="#3b2a1a" opacity="0.5"/><circle cx="30" cy="100" r="2" fill="#3b2a1a" opacity="0.5"/>
+  <use href="#skOutline" fill="none" stroke="#2a1a0e" stroke-width="1.8"/>
+</svg></div>
+<p id="mementoBig" aria-hidden="true" hidden></p>
+<details id="clearTune" open>
+  <summary>The skull's clear (temporary, for tuning)</summary>
+  <div class="chips" role="group" aria-label="How what is cleared goes">
+    <button type="button" data-effect="sweep" title="Swept off to the left"><svg viewBox="0 0 22 14"><rect x="10" y="3" width="9" height="8" fill="#b89a68" stroke="currentColor"/><path d="M8 5H1M8 9H3" stroke="currentColor"/></svg>Sweep</button>
+    <button type="button" data-effect="dust" title="Crumbles to dust where it lies"><svg viewBox="0 0 22 14"><rect x="7" y="3" width="8" height="8" fill="#b89a68" stroke="currentColor" stroke-dasharray="1.5 1"/><path d="M4 2h1M2 7h1M5 12h1M17 1h1M19 6h1M18 12h1" stroke="currentColor"/></svg>Dust</button>
+    <button type="button" data-effect="wind" title="Blown to dust from the right, off to the left"><svg viewBox="0 0 22 14"><rect x="12" y="3" width="8" height="8" fill="#b89a68" stroke="currentColor"/><path d="M10 4h1M8 7h1M10 10h1M5 5h1M3 9h1M1 6h1" stroke="currentColor"/></svg>Wind</button>
+    <button type="button" data-effect="fade" title="Fades and blurs into nothing"><svg viewBox="0 0 22 14"><defs><linearGradient id="tuneFade"><stop offset="0" stop-color="#b89a68" stop-opacity="0"/><stop offset="1" stop-color="#b89a68"/></linearGradient></defs><rect x="3" y="3" width="16" height="8" fill="url(#tuneFade)"/></svg>Fade</button>
+  </div>
+  <label>What goes <input type="range" id="tuneGone" min="300" max="4000" step="100"><output for="tuneGone"></output></label>
+  <label>The skull <input type="range" id="tuneSkull" min="300" max="5000" step="100"><output for="tuneSkull"></output></label>
+  <label>The phrase <input type="range" id="tuneWords" min="500" max="8000" step="100"><output for="tuneWords"></output></label>
+  <label>Skull's ink <input type="range" id="tuneInk" min="5" max="80" step="1"><output for="tuneInk"></output></label>
+</details>
 
 <nav id="where" aria-label="Go to">
   <div class="row">

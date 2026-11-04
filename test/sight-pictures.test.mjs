@@ -64,7 +64,7 @@ test('a sight\'s pictures are dealt in the bottom third of the window, inside it
 
 // Tyre's two marks: spread apart where they would meet, in their order on the earth, and hit where they are drawn
 const { createScene, spreadMarks, drawnMarks, sightHits, pickMark } = await import('../scripts/scene.mjs');
-const { MEMENTO, mementoNext } = await import('../scripts/people.mjs');
+const { MEMENTO, MEMENTO_EN, mementoNext } = await import('../scripts/people.mjs');
 const { loadImage, createCanvas, GlobalFonts } = await import('@napi-rs/canvas');
 const { coastNames, joinNames } = await import('../scripts/names.mjs');
 const GEO = dirname(fileURLToPath(import.meta.resolve('coastlines/data/ne-land-50m')));
@@ -111,6 +111,7 @@ test('Tyre at zooms 5 to 11, centred and panned: its two marks a width clear on 
 
 test('the memento under the skull: every line in order, then back to the first', () => {
   assert.equal(MEMENTO.length, 11);
+  assert.equal(MEMENTO_EN.length, MEMENTO.length, 'every phrase has its English');
   let k = 0;
   const seen = [MEMENTO[k]];
   for (let n = 1; n < MEMENTO.length; n++) seen.push(MEMENTO[k = mementoNext(k)]);

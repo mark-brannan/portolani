@@ -238,6 +238,20 @@ export const MEMENTO = [
   'Nuestras vidas son los ríos que van a dar en la mar, que es el morir',
   'Recuerda que eres polvo',
 ];
+// Each phrase in English, in MEMENTO's order: the skull's hover text, "Clear the map: " and the one shown beside it
+export const MEMENTO_EN = [
+  'Remember, man, that you are dust, and to dust you shall return',
+  'We are dust and shadow',
+  'Today me, tomorrow you',
+  'Death is certain, its hour uncertain',
+  'All flesh is grass',
+  'Earth out of earth is wondrously wrought; earth has of earth a dignity of nought',
+  'Every man is dust',
+  'Remember that you must die',
+  'Dust you are, and to dust you shall return',
+  'Our lives are the rivers that flow into the sea, which is dying',
+  'Remember that you are dust',
+];
 export const mementoNext = (k) => (((k + 1) % MEMENTO.length) + MEMENTO.length) % MEMENTO.length;
 
 // Where a person's pictures lie by default, from `frame` (the lon/lat box of their birth, death and voyages): each as tall
