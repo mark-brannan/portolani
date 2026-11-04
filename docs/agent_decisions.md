@@ -465,3 +465,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261104t112456z
 - portolani#366: A/B as two builds (main live vs PR), no in-page toggle ([#366](https://github.com/mark-brannan/portolani/pull/366))
+
+### 20261104t185004z
+- timeline switch defaults to A; a link switching variant shuts an open timeline drawer, chips leave settings open; Reset keeps the choice; A adopts B's lit-voyage eye logic; A's card as at cc41da2 Undo: change the default to b in timelineVariant ([#369](https://github.com/mark-brannan/portolani/pull/369))
