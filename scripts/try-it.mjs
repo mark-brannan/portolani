@@ -26,9 +26,9 @@ export function parseConfig(text) {
   return out;
 }
 
-// A copy of tryItLine and tryItBlock in mark-brannan/.github's
-// show-dont-tell.mjs: the check is green only on this exact line, and the
-// tests on both sides pin the same string.
+// tryItLine is a copy of the one in mark-brannan/.github's show-dont-tell.mjs:
+// the check is green only on this exact line, and the tests on both sides pin
+// the same string. tryItBlock differs in one way: it tolerates a blank head.
 export function tryItLine({ pr, checkout, install, serve }) {
   const port = 10000 + Number(pr);
   const wt = `${checkout}/.claude/worktrees/pr-${pr}`;
