@@ -507,3 +507,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261104t223650z
 - people picture kinds: near to imaginary for Musa x2, Isabel de Olvera, Rubruck; Duran soldier to scene ([#373](https://github.com/mark-brannan/portolani/pull/373))
+
+### 20261104t223924z
+- sights pictures: Pukapuka Puka-Puka.JPG dropped, same built name as Puka_Puka.JPG ([#374](https://github.com/mark-brannan/portolani/pull/374))
