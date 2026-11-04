@@ -198,7 +198,7 @@ test('hills and mountains: every drawn style draws, the styles mix per range, an
   const alps = { lon: 9, lat: 46.5, zoom: 7 };
   const off = await renderView(alps, 'off', { relief: [] });
   assert.ok(!differs(await renderView(alps), off), 'no mountain is drawn by default in the scene');
-  assert.deepEqual(RELIEF_STYLES, ['off', 'marina', 'engraved', 'tolkien']);
+  assert.deepEqual(RELIEF_STYLES, ['off', 'marina', 'engraved', 'tolkien', 'wilderland']);
   for (const relief of RELIEF_STYLES.slice(1)) {
     const { scene } = await createScene(env, { view: alps, scale: 'off', relief });
     assert.ok(scene.relief.peaks.length > 0, `relief ${relief}: no peaks placed`);
