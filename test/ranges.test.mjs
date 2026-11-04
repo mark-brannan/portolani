@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { createCanvas } from '@napi-rs/canvas';
 import { geojsonPolygons } from 'coast-wright';
 import { reliefOf } from '../scripts/relief.mjs';
-import { slimRanges, rangesOf } from '../scripts/ranges.mjs';
+import { slimRanges, rangesOf, ridgesOf } from '../scripts/ranges.mjs';
 
 const GEO = dirname(fileURLToPath(import.meta.resolve('coastlines/data/ne-land-50m')));
 const land = geojsonPolygons(JSON.parse(readFileSync(join(GEO, 'ne-land-50m.geojson'), 'utf8')));
@@ -79,4 +79,15 @@ test('a view with no range in frame still guesses its ranges from the land', () 
   const view = { lon: 38, lat: 56, zoom: 6 }; // the Russian plain: no Range/mtn polygon in frame
   assert.ok(place(view).peaks.length > 0, 'the far-view guess');
   assert.deepEqual(place(view).peaks, place(view, { ranges: [] }).peaks, 'as it was without ranges');
+});
+
+test('a ridge that curls back on itself stops where it meets its own path', () => {
+  // a U: two arms joined at the bottom, so a walk round the bend comes back beside its start
+  const ring = [[0, 0], [3, 0], [3, 3], [2, 3], [2, 1], [1, 1], [1, 3], [0, 3], [0, 0]];
+  const [range] = rangesOf({ features: [{ properties: { name: 'U', scalerank: 1, min_label: 1 }, geometry: { type: 'Polygon', coordinates: [ring] } }] });
+  const [main] = ridgesOf(range, createCanvas);
+  const near = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]) < 0.02;
+  let doubled = 0;
+  main.pts.forEach((a, i) => main.pts.forEach((b, j) => { if (j - i > 8 && near(a, b)) doubled++; }));
+  assert.equal(doubled, 0);
 });

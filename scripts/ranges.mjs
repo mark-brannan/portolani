@@ -12,6 +12,7 @@
 // Which ranges: Natural Earth's own MIN_LABEL, counted in 256 px tiles as water.mjs's `shown` reads
 // it, so a far view holds the great ranges (MIN_LABEL 2) and a close one the rest (up to 6).
 
+import { readFileSync } from 'node:fs';
 import { shown } from './water.mjs';
 
 const RAD = Math.PI / 180;
@@ -49,6 +50,25 @@ function unwrap(ring) {
   });
 }
 
+// The box of a ring's points, in one pass (a spread into Math.min overflows the stack on a long ring).
+function extent(pts, a, b) {
+  const o = { lonMin: Infinity, lonMax: -Infinity, latMin: Infinity, latMax: -Infinity };
+  for (const p of pts) {
+    if (p[a] < o.lonMin) o.lonMin = p[a];
+    if (p[a] > o.lonMax) o.lonMax = p[a];
+    if (p[b] < o.latMin) o.latMin = p[b];
+    if (p[b] > o.latMax) o.latMax = p[b];
+  }
+  return o;
+}
+
+// The slimmed ranges of a Natural Earth regions file, read once per path.
+const fromRegions = new Map();
+export function rangesFromRegions(file) {
+  if (!fromRegions.has(file)) fromRegions.set(file, slimRanges(JSON.parse(readFileSync(file, 'utf8'))));
+  return fromRegions.get(file);
+}
+
 // The ranges from slimRanges's file, one per polygon (a MultiPolygon's parts each a range), the
 // greatest first: { id, name, rank, minZoom, rings, box: { lonMin, lonMax, latMin, latMax } }.
 export function rangesOf(geo) {
@@ -57,10 +77,9 @@ export function rangesOf(geo) {
     const g = f.geometry, polys = g.type === 'MultiPolygon' ? g.coordinates : [g.coordinates];
     polys.forEach((rings, part) => {
       const rs = rings.map(unwrap), pts = rs[0];
-      const lons = pts.map((p) => p[0]), lats = pts.map((p) => p[1]);
       out.push({
         id: hash(f.properties.ne_id ?? i, part), name: f.properties.name, rank: f.properties.scalerank ?? 6, minZoom: f.properties.min_label ?? 6, rings: rs,
-        box: { lonMin: Math.min(...lons), lonMax: Math.max(...lons), latMin: Math.min(...lats), latMax: Math.max(...lats) },
+        box: extent(pts, 0, 1),
       });
     });
   });
@@ -100,10 +119,9 @@ export function chamfer(inside, cols, rows, edgeOutside = true) {
 export function ridgesOf(range, createCanvas) {
   if (range.ridges) return range.ridges;
   const P = range.rings.map((ring) => ring.map(([lon, lat]) => [lon * RAD, -merc(lat)]));
-  const xs = P[0].map((p) => p[0]), ys = P[0].map((p) => p[1]);
-  const X0 = Math.min(...xs), Y0 = Math.min(...ys), span = Math.max(Math.max(...xs) - X0, Math.max(...ys) - Y0) || 1e-6;
+  const e = extent(P[0], 0, 1), X0 = e.lonMin, Y0 = e.latMin, span = Math.max(e.lonMax - X0, e.latMax - Y0) || 1e-6;
   const cell = span / GRID, ox = X0 - 2 * cell, oy = Y0 - 2 * cell;
-  const cols = Math.ceil((Math.max(...xs) - ox) / cell) + 3, rows = Math.ceil((Math.max(...ys) - oy) / cell) + 3;
+  const cols = Math.ceil((e.lonMax - ox) / cell) + 3, rows = Math.ceil((e.latMax - oy) / cell) + 3;
   const c = createCanvas(cols, rows), g = c.getContext('2d');
   g.setTransform(1 / cell, 0, 0, 1 / cell, -ox / cell, -oy / cell);
   g.fillStyle = '#000';
@@ -151,11 +169,11 @@ export function ridgesOf(range, createCanvas) {
     const step = 1.5, stopAt = Math.max(0.75, ridges.length ? v0 * 0.35 : 0.75);
     // a ridge never crosses itself: a walk stops at a cell it (or the walk the other way) passed a few steps back
     const seen = new Map([[Math.floor(v) * cols + Math.floor(u), 0]]);
-    let stamp = 0;
+    let base = 0; // each walk's steps count from its own base, so a cell a walk passed is old by the step count
     const walk = (t) => {
       const pts = [];
       let pu = u, pv = v;
-      stamp += 10;
+      base += 2 * GRID;
       for (let n = 0; n < 2 * GRID; n++) {
         let next = null;
         for (const turn of [0, -0.3, 0.3, -0.6, 0.6]) {
@@ -165,8 +183,8 @@ export function ridgesOf(range, createCanvas) {
         // a ridge ends at the polygon's edge, or where it meets one already walked
         if (next[3] < stopAt || freeAt(next[0], next[1]) < clear * 0.6) break;
         const ci = Math.floor(next[1]) * cols + Math.floor(next[0]);
-        if (seen.has(ci) && ++stamp - seen.get(ci) > 4) break;
-        seen.set(ci, stamp);
+        if (seen.has(ci) && base + n - seen.get(ci) > 4) break;
+        if (!seen.has(ci)) seen.set(ci, base + n);
         [pu, pv, t] = next;
         pts.push([pu, pv, next[3]]);
       }

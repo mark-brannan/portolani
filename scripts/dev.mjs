@@ -17,9 +17,10 @@ import os from 'node:os';
 import path from 'node:path';
 import { buildLearn } from './learn.mjs';
 import { relativeImports } from './scene-modules.mjs';
-import { slimRanges } from './ranges.mjs';
+import { rangesFromRegions } from './ranges.mjs';
 import { buildInfo } from './build-info.mjs';
 
+let rangesJson; // the slimmed ranges as served, kept after the first request
 const root = fileURLToPath(new URL('..', import.meta.url));
 export const DATA_URL = 'https://mark-brannan.github.io/portolani/';
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json',
@@ -85,9 +86,10 @@ export function devServer({ learn, site, data = DATA_URL }) {
       return res.end(info ? JSON.stringify(info) : '');
     }
     if (rel === 'geo/ranges-10m.json' && !site) { // the mountain ranges the published site lacks until this build is on it, slimmed as the build slims them
-      const regions = JSON.parse(readFileSync(path.join(root, 'node_modules', 'coastlines', 'data', 'ne-geography-regions-polys-10m.geojson'), 'utf8'));
+      const src = path.join(root, 'node_modules', 'coastlines', 'data', 'ne-geography-regions-polys-10m.geojson');
+      if (!existsSync(src)) { res.writeHead(404); return res.end(); }
       res.writeHead(200, { 'content-type': TYPES['.json'], 'cache-control': 'no-store' });
-      return res.end(JSON.stringify(slimRanges(regions)));
+      return res.end((rangesJson ??= JSON.stringify(rangesFromRegions(src))));
     }
     const file = await localFile(local, rel.endsWith('/') ? `${rel}index.html` : rel);
     if (file) {
