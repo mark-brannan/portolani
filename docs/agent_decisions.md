@@ -447,3 +447,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261104t064427z
 - Signal K webapp's Mountains chip covers the ranges and the hills; with Landmark peaks on, the hills may stand with Mountains off Undo: split the chip, or select the peak sprite alone ([#356](https://github.com/mark-brannan/portolani/pull/356))
+
+### 20261104t064502z
+- boat-ranges-peaks PR leaves the root goldens uncommitted: regenerating them here reverted 19 to their pre-#354 bytes, and the PR touches no scripts/ Undo: commit the regenerated root goldens ([#356](https://github.com/mark-brannan/portolani/pull/356))
