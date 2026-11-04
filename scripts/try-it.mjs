@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // try-it: print the "Try it" block a PR body carries, so a reviewer serves this
-// PR's head from its own worktree with one paste and no edits.
+// PR's head from its own worktree with one paste and no edits. An agent runs
+// this and pastes its output; the command itself is never the demo line.
 //
 //   node scripts/try-it.mjs <pr-number>     (or: npm run try-it -- <pr-number>)
 //
@@ -25,25 +26,37 @@ export function parseConfig(text) {
   return out;
 }
 
-export function tryItBlock({ pr, head, checkout, install, serve }) {
+// A copy of tryItLine and tryItBlock in mark-brannan/.github's
+// show-dont-tell.mjs: the check is green only on this exact line, and the
+// tests on both sides pin the same string.
+export function tryItLine({ pr, checkout, install, serve }) {
   const port = 10000 + Number(pr);
   const wt = `${checkout}/.claude/worktrees/pr-${pr}`;
-  const run = [install, serve.replace(/\{port\}/g, String(port))].filter(Boolean).join(' && ');
-  const cmd = [
+  return [
     `git -C ${checkout} fetch origin +pull/${pr}/head:refs/pr/${pr}`,
     `{ [ -d ${wt} ] || git -C ${checkout} worktree add --detach ${wt} refs/pr/${pr}; }`,
     `git -C ${wt} checkout -q --detach refs/pr/${pr}`,
     `cd ${wt}`,
-    run,
-  ];
-  const code = cmd.map((l, i) => (i ? `      && ${l}` : `    ${l}`)).join(' \\\n');
-  const at = head ? ` (head ${head.slice(0, 7)} when this was written)` : '';
-  return `## Try it
+    install,
+    serve.replace(/\{port\}/g, String(port)),
+  ].filter(Boolean).join(' && ');
+}
 
-${code}
-
-Serves PR #${pr}${at} on http://localhost:${port} from its own worktree. Paste again after a push to the PR: it fetches and moves the worktree. Remove: \`git -C ${checkout} worktree remove --force ${wt}\`
-`;
+export function tryItBlock({ pr, head, checkout, install, serve }) {
+  const port = 10000 + Number(pr);
+  const wt = `${checkout}/.claude/worktrees/pr-${pr}`;
+  return [
+    '## Try it',
+    '',
+    '```bash',
+    tryItLine({ pr, checkout, install, serve }),
+    '```',
+    '',
+    `Serves PR #${pr} (head ${String(head).slice(0, 7)} when this was written) on http://localhost:${port} from`,
+    'its own worktree. Paste again after a push to the PR: it fetches and moves the',
+    `worktree. Remove: \`git -C ${checkout} worktree remove --force ${wt}\``,
+    '',
+  ].join('\n');
 }
 
 function main() {
