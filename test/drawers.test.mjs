@@ -41,5 +41,10 @@ test('the skull is the one clear, and the voyages have no Clear of their own', (
   assert.match(body, /voyages: \[\]/, 'it takes every voyage off');
   assert.match(body, /overlays: \[\], sheets: \{\}/, 'it lifts every sheet, back to its own place');
   assert.doesNotMatch(body, /turnWorld|goTo/, 'it neither turns nor flies the map');
+  // a function it calls that the page no longer declares throws mid-clear and leaves the charts on the map (#368 removed turnedTo)
+  for (const [, name] of body.matchAll(/(?<![.\w])([a-z]\w*)\(/gi)) {
+    if (['if', 'async', 'function', 'await', 'Object', 'Promise', 'Math'].includes(name)) continue;
+    assert.match(js, new RegExp(`(?:function|const|let|var) ${name}\\b`), `clearMap calls ${name}, which the page declares`);
+  }
   assert.doesNotMatch(js, /groupTools\('Voyages'/, 'the Voyages drawer has no Clear');
 });
