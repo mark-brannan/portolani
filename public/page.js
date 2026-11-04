@@ -2309,38 +2309,45 @@ function setOnTable(i, on) {
 let memento = Math.floor(Math.random() * MEMENTO.length);
 const showMemento = () => { $('mementoText').textContent = MEMENTO[memento]; $('sweep').title = `Clear the map: ${MEMENTO_EN[memento]}`; };
 showMemento();
-// Returns once the map is drawn without what was cleared, so the clear's effect can tell what went
-async function clearMap() {
+// In stages, each drawn before the next, so the clear's effect can tell what went: the cards, then the lines (a
+// person's back in their own inks), then the sheets; `snap(stage)` is called after each stage that changed the map
+async function clearMap(snap = () => {}) {
   const hadPerson = clearTable(true, false), voyages = style.voyages.length > 0, charts = style.overlays.length > 0 || Object.keys(style.sheets).length > 0;
+  snap('cards');
   if (voyages) { closeBand(); style = { ...style, voyages: [] }; }
-  if (charts) { turnedTo.clear(); style = { ...style, overlays: [], sheets: {} }; showOverlay(); }
-  if (voyages || charts) { showVoyage(); writeHash(); }
-  if (hadPerson || voyages || charts) await render(); // a person's voyages back in their own inks; the lines and sheets gone
+  if (voyages || hadPerson) { showVoyage(); writeHash(); await render(); snap('lines'); }
+  if (charts) { turnedTo.clear(); style = { ...style, overlays: [], sheets: {} }; showOverlay(); showVoyage(); writeHash(); await render(); snap('sheets'); }
 }
-// The clear is shown every time, the map already clear or not: whatever went leaves (CLEAR_TUNE.effect), the skull grows
-// over the map and fades, and the phrase just cleared to, large and red at the foot of the map, grows and fades last, to be read
+// The clear is shown every time, the map already clear or not: the cards leave stage left, as they were dealt but
+// mirrored; the lines fade; the sheets go by CLEAR_TUNE.effect; the skull grows over the map and fades; and the phrase
+// beside the skull, the one just clicked, is read large and red at the foot of the map, while the next takes its place
 $('sweep').addEventListener('click', () => {
-  const before = vanishFrom();
-  const done = clearMap();
-  memento = mementoNext(memento); showMemento();
+  const cards = cardsOnTable(), before = vanishFrom(), shots = { before };
+  const done = clearMap((stage) => { if (before) shots[stage] = ctx.getImageData(0, 0, W, H); });
   skullRise(); wordsRise(MEMENTO[memento]);
-  if (before) Promise.race([done, new Promise((ok) => setTimeout(ok, 4000))]).then(() => new Promise(requestAnimationFrame)).then(() => vanish(before), () => vanish(before));
+  memento = mementoNext(memento); showMemento();
+  if (before) Promise.race([done, new Promise((ok) => setTimeout(ok, 4000))]).then(() => vanish(shots, cards), () => vanish(shots, cards));
 });
 // The open drawer stops above the skull (--memento-h, index.html), whether the compass shows over it
 new ResizeObserver(() => document.documentElement.style.setProperty('--memento-h', `${$('memento').offsetHeight}px`)).observe($('memento'));
 
 // The clear's timing and how what goes leaves: temporary, tuned on #367 in the panel at the top left, kept per browser
-const CLEAR_TUNE = { effect: 'dust', goneMs: 1600, skullMs: 1800, wordsMs: 3600, ink: 60 };
-try { Object.assign(CLEAR_TUNE, JSON.parse(localStorage.getItem('portolani.clearTune') ?? '{}')); } catch { /* none kept */ }
+const CLEAR_TUNE = { effect: 'dust', words: 'even', goneMs: 800, skullMs: 800, wordsMs: 4000, ink: 5, skullGrow: 160, wordsGrow: 114 };
+const TUNE_KEY = 'portolani.clearTune.2'; // a new key, so the new defaults show in a browser that kept the old ones
+try { Object.assign(CLEAR_TUNE, JSON.parse(localStorage.getItem(TUNE_KEY) ?? '{}')); } catch { /* none kept */ }
+// the panel would sit over the instrument row in the browser tests; it is not part of the page
+if (navigator.webdriver) $('clearTune').hidden = true;
 {
-  const keep = () => { try { localStorage.setItem('portolani.clearTune', JSON.stringify(CLEAR_TUNE)); } catch { /* not kept */ } };
-  const chips = [...document.querySelectorAll('#clearTune [data-effect]')];
-  const showChips = () => chips.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.effect === CLEAR_TUNE.effect)));
-  chips.forEach((b) => b.addEventListener('click', () => { CLEAR_TUNE.effect = b.dataset.effect; showChips(); keep(); }));
-  showChips();
-  for (const [id, key, unit] of [['tuneGone', 'goneMs', 's'], ['tuneSkull', 'skullMs', 's'], ['tuneWords', 'wordsMs', 's'], ['tuneInk', 'ink', '%']]) {
+  const keep = () => { try { localStorage.setItem(TUNE_KEY, JSON.stringify(CLEAR_TUNE)); } catch { /* not kept */ } };
+  for (const key of ['effect', 'words']) {
+    const chips = [...document.querySelectorAll(`#clearTune [data-${key}]`)];
+    const showChips = () => chips.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset[key] === CLEAR_TUNE[key])));
+    chips.forEach((b) => b.addEventListener('click', () => { CLEAR_TUNE[key] = b.dataset[key]; showChips(); keep(); }));
+    showChips();
+  }
+  for (const [id, key, unit] of [['tuneGone', 'goneMs', 's'], ['tuneSkull', 'skullMs', 's'], ['tuneWords', 'wordsMs', 's'], ['tuneInk', 'ink', '%'], ['tuneSkullGrow', 'skullGrow', 'x'], ['tuneWordsGrow', 'wordsGrow', 'x']]) {
     const input = $(id), out = input.nextElementSibling;
-    const show = () => { out.value = unit === 's' ? `${(CLEAR_TUNE[key] / 1000).toFixed(1)} s` : `${CLEAR_TUNE[key]}%`; };
+    const show = () => { out.value = unit === 's' ? `${(CLEAR_TUNE[key] / 1000).toFixed(1)} s` : unit === 'x' ? `×${(CLEAR_TUNE[key] / 100).toFixed(2)}` : `${CLEAR_TUNE[key]}%`; };
     input.value = CLEAR_TUNE[key]; show();
     input.addEventListener('input', () => { CLEAR_TUNE[key] = Number(input.value); show(); keep(); });
   }
@@ -2359,8 +2366,8 @@ function skullRise() {
   Object.assign(el.style, { width: `${w}px`, height: `${h}px`, left: `${left + (wide - w) / 2}px`, top: `${top + (tall - h) / 2}px` });
   el.hidden = false;
   el.getAnimations().forEach((x) => x.cancel());
-  const ink = CLEAR_TUNE.ink / 100;
-  el.animate([{ opacity: 0, transform: 'scale(0.86)' }, { opacity: ink, transform: 'scale(1)', offset: 0.3 }, { opacity: ink * 0.7, transform: 'scale(1.18)', offset: 0.6 }, { opacity: 0, transform: 'scale(1.6)' }],
+  const ink = CLEAR_TUNE.ink / 100, g = CLEAR_TUNE.skullGrow / 100 - 1; // g 0: no change of size; 0.6: from 0.88 to 1.6
+  el.animate([{ opacity: 0, transform: `scale(${1 - g * 0.2})` }, { opacity: ink, transform: 'scale(1)', offset: 0.3 }, { opacity: ink * 0.7, transform: `scale(${1 + g * 0.3})`, offset: 0.6 }, { opacity: 0, transform: `scale(${1 + g})` }],
     { duration: CLEAR_TUNE.skullMs, easing: 'cubic-bezier(.3,0,.6,1)' }).finished.then(() => { el.hidden = true; }, () => {});
 }
 // The phrase, on one line at the foot of the map, as large as fits it, grows and fades: slower than the skull, to be read
@@ -2374,9 +2381,10 @@ function wordsRise(text) {
   const fit = (wide * 0.86) / el.scrollWidth;
   if (fit < 1) { size *= fit; el.style.fontSize = `${size}px`; }
   Object.assign(el.style, { left: `${left + (wide - el.offsetWidth) / 2}px`, top: `${top + tall - el.offsetHeight - Math.max(56, tall * 0.12)}px` });
-  const frames = stillMotion() ? [{ opacity: 0 }, { opacity: 1, offset: 0.1 }, { opacity: 1, offset: 0.75 }, { opacity: 0 }]
-    : [{ opacity: 0, transform: 'scale(0.9)' }, { opacity: 1, transform: 'scale(1)', offset: 0.18 }, { opacity: 1, transform: 'scale(1.06)', offset: 0.65 }, { opacity: 0, transform: 'scale(1.14)' }];
-  el.animate(frames, { duration: CLEAR_TUNE.wordsMs, easing: 'ease-out' }).finished.then(() => { el.hidden = true; }, () => {});
+  // even: in, held, out over about the same; quick: in at once, held, then a long slow fade
+  const g = stillMotion() ? 0 : CLEAR_TUNE.wordsGrow / 100 - 1, [inAt, holdTo] = CLEAR_TUNE.words === 'quick' ? [0.06, 0.4] : [0.18, 0.65];
+  const frames = [{ opacity: 0, transform: `scale(${1 - g * 0.7})` }, { opacity: 1, transform: 'scale(1)', offset: inAt }, { opacity: 1, transform: `scale(${1 + g * 0.43})`, offset: holdTo }, { opacity: 0, transform: `scale(${1 + g})` }];
+  el.animate(frames, { duration: CLEAR_TUNE.wordsMs, easing: CLEAR_TUNE.words === 'quick' ? 'linear' : 'ease-out' }).finished.then(() => { el.hidden = true; }, () => {});
 }
 // What goes: the map as it was is laid over itself before the clear (vanishFrom), so nothing jumps; once the map is
 // drawn again, whatever changed is kept from it and leaves by the chosen effect over the same time, whatever it was
@@ -2392,10 +2400,16 @@ function vanishFrom() {
   return o.getImageData(0, 0, W, H);
 }
 let vanishFrame = 0;
-function vanish(before) {
-  const el = $('vanish'), o = el.getContext('2d');
-  const after = ctx.getImageData(0, 0, W, H), a = after.data, b = before.data;
-  const gone = new ImageData(W, H), g = gone.data;
+// The cards on the table as they lie, bottom of the pile first, for their exit
+function cardsOnTable() {
+  if (stillMotion() || !onTable) return [];
+  const proj = viewProjection(view);
+  return shownPictures().map((pic) => ({ img: pic.o.img, k: pic.k ?? 0, b: pictureBox(pic, proj) })).filter((c) => c.b);
+}
+// What changed between two shots of the map, kept from the first, and the box round it; null when nothing did
+function goneBetween(before, after) {
+  if (!before || !after) return null;
+  const a = after.data, b = before.data, gone = new ImageData(W, H), g = gone.data;
   let x0 = W, x1 = -1, y0 = H, y1 = -1;
   for (let i = 0, p = 0; i < a.length; i += 4, p++) {
     if (Math.abs(a[i] - b[i]) + Math.abs(a[i + 1] - b[i + 1]) + Math.abs(a[i + 2] - b[i + 2]) + Math.abs(a[i + 3] - b[i + 3]) <= 24) continue;
@@ -2403,13 +2417,38 @@ function vanish(before) {
     const x = p % W, y = (p / W) | 0;
     if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
   }
-  if (x1 < 0) { el.hidden = true; return; } // nothing was there to go
+  if (x1 < 0) return null;
   const src = Object.assign(document.createElement('canvas'), { width: W, height: H });
   src.getContext('2d').putImageData(gone, 0, 0);
-  const play = VANISH[CLEAR_TUNE.effect] ?? VANISH.dust, step = play(o, src, gone, { x0, x1, y0, y1 }), t0 = performance.now();
+  return { src, gone, box: { x0, x1, y0, y1 } };
+}
+// Each card leaves as it was dealt, mirrored: off to the top left, shrinking and turning, one after another
+function drawCardsLeaving(o, cards, t) {
+  const n = cards.length, each = n > 1 ? 0.6 : 1, gap = n > 1 ? (1 - each) / (n - 1) : 0, m = 5;
+  cards.forEach(({ img, b }, k) => {
+    const u = Math.max(0, Math.min(1, (t - k * gap) / each)), e = u ** 3; // ease in, the deal's ease out mirrored
+    if (u >= 1) return;
+    const x = b.x + (-b.w * 0.25 - b.x) * e, y = b.y * (1 - e), s = 1 - 0.65 * e;
+    o.save(); o.translate(x, y); o.rotate(b.a - e * 0.6); o.scale(s, s);
+    o.save(); o.shadowColor = 'rgba(59,42,26,0.35)'; o.shadowBlur = 8; o.shadowOffsetY = 2; o.fillStyle = style.parchment; o.fillRect(-b.w / 2 - m, -b.h / 2 - m, b.w + 2 * m, b.h + 2 * m); o.restore();
+    o.drawImage(img, -b.w / 2, -b.h / 2, b.w, b.h);
+    o.strokeStyle = style.ink; o.globalAlpha = 0.7; o.lineWidth = 1; o.strokeRect(-b.w / 2 - m, -b.h / 2 - m, b.w + 2 * m, b.h + 2 * m);
+    o.restore();
+  });
+}
+// What goes, over one time: the sheets by the chosen effect, the lines fading over them, the cards leaving over both
+function vanish(shots, cards) {
+  const el = $('vanish'), o = el.getContext('2d');
+  const now = ctx.getImageData(0, 0, W, H), cardsShot = shots.cards ?? now, linesShot = shots.lines ?? cardsShot;
+  const lines = goneBetween(cardsShot, linesShot), sheets = goneBetween(linesShot, shots.sheets ?? linesShot);
+  if (!lines && !sheets && !cards.length) { el.hidden = true; return; } // nothing was there to go
+  const play = sheets && (VANISH[CLEAR_TUNE.effect] ?? VANISH.dust)(o, sheets.src, sheets.gone, sheets.box), t0 = performance.now();
   const tick = (now) => {
     const t = Math.min(1, (now - t0) / CLEAR_TUNE.goneMs);
-    o.clearRect(0, 0, W, H); step(t);
+    o.clearRect(0, 0, W, H);
+    if (play) play(t); // first: an effect may draw 'destination-in' over all that is on the canvas
+    if (lines) { o.globalAlpha = (1 - t) ** 1.5; o.drawImage(lines.src, 0, 0); o.globalAlpha = 1; }
+    drawCardsLeaving(o, cards, t);
     if (t < 1) vanishFrame = requestAnimationFrame(tick); else el.hidden = true;
   };
   vanishFrame = requestAnimationFrame(tick);

@@ -97,6 +97,8 @@
   /* temporary, for tuning the clear on #367: the effect and its timings */
   #clearTune { position: fixed; left: 12px; top: 12px; z-index: 3; max-width: 290px; padding: 4px 10px; font: 12px var(--serif); color: #3b2a1a; background: #efe3c6; border: 1px solid #b89a68; border-radius: 4px; box-shadow: 0 1px 6px rgb(0 0 0 / 0.25); }
   #clearTune summary { cursor: pointer; font-style: italic; }
+  #clearTune[hidden] { display: none; }
+  #clearTune .tuneNote { margin: 6px 0 0; font-style: italic; }
   #clearTune .chips { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
   #clearTune .chips button { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; font: 12px var(--serif); border-radius: 12px; background: #efe3c6; color: #3b2a1a; border: 1px solid #b89a68; cursor: pointer; }
   #clearTune .chips button[aria-pressed="true"] { background: #3b2a1a; color: #efe3c6; }
@@ -628,16 +630,24 @@
 <p id="mementoBig" aria-hidden="true" hidden></p>
 <details id="clearTune" open>
   <summary>The skull's clear (temporary, for tuning)</summary>
-  <div class="chips" role="group" aria-label="How what is cleared goes">
+  <p class="tuneNote">Cards leave stage left; lines fade. The charts' sheets:</p>
+  <div class="chips" role="group" aria-label="How the charts' sheets go">
     <button type="button" data-effect="sweep" title="Swept off to the left"><svg viewBox="0 0 22 14"><rect x="10" y="3" width="9" height="8" fill="#b89a68" stroke="currentColor"/><path d="M8 5H1M8 9H3" stroke="currentColor"/></svg>Sweep</button>
     <button type="button" data-effect="dust" title="Crumbles to dust where it lies"><svg viewBox="0 0 22 14"><rect x="7" y="3" width="8" height="8" fill="#b89a68" stroke="currentColor" stroke-dasharray="1.5 1"/><path d="M4 2h1M2 7h1M5 12h1M17 1h1M19 6h1M18 12h1" stroke="currentColor"/></svg>Dust</button>
     <button type="button" data-effect="wind" title="Blown to dust from the right, off to the left"><svg viewBox="0 0 22 14"><rect x="12" y="3" width="8" height="8" fill="#b89a68" stroke="currentColor"/><path d="M10 4h1M8 7h1M10 10h1M5 5h1M3 9h1M1 6h1" stroke="currentColor"/></svg>Wind</button>
     <button type="button" data-effect="fade" title="Fades and blurs into nothing"><svg viewBox="0 0 22 14"><defs><linearGradient id="tuneFade"><stop offset="0" stop-color="#b89a68" stop-opacity="0"/><stop offset="1" stop-color="#b89a68"/></linearGradient></defs><rect x="3" y="3" width="16" height="8" fill="url(#tuneFade)"/></svg>Fade</button>
   </div>
+  <p class="tuneNote">The phrase:</p>
+  <div class="chips" role="group" aria-label="How the phrase comes and goes">
+    <button type="button" data-words="even" title="Fades in, holds, fades out"><svg viewBox="0 0 22 14"><path d="M1 13 5 2h11l5 11" fill="none" stroke="currentColor"/></svg>Even</button>
+    <button type="button" data-words="quick" title="In at once, held, then a long slow fade"><svg viewBox="0 0 22 14"><path d="M1 13 2 2h7l12 11" fill="none" stroke="currentColor"/></svg>Quick in, slow out</button>
+  </div>
   <label>What goes <input type="range" id="tuneGone" min="300" max="4000" step="100"><output for="tuneGone"></output></label>
   <label>The skull <input type="range" id="tuneSkull" min="300" max="5000" step="100"><output for="tuneSkull"></output></label>
   <label>The phrase <input type="range" id="tuneWords" min="500" max="8000" step="100"><output for="tuneWords"></output></label>
   <label>Skull's ink <input type="range" id="tuneInk" min="5" max="80" step="1"><output for="tuneInk"></output></label>
+  <label>Skull grows <input type="range" id="tuneSkullGrow" min="100" max="250" step="5"><output for="tuneSkullGrow"></output></label>
+  <label>Phrase grows <input type="range" id="tuneWordsGrow" min="100" max="150" step="1"><output for="tuneWordsGrow"></output></label>
 </details>
 
 <nav id="where" aria-label="Go to">

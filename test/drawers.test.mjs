@@ -34,8 +34,8 @@ test('the skull sits over the drawers, and the broom is gone', () => {
 // behaviour (the skull clicked, the list emptied, the map kept, the drawer open) is driven in test/touch.test.mjs.
 test('the skull is the one clear, and the voyages have no Clear of their own', () => {
   const js = readFileSync(path.join(pub, 'page.js'), 'utf8');
-  const body = js.match(/\nasync function clearMap\(\) \{([\s\S]*?)\n\}/)?.[1] ?? '';
-  assert.match(js, /\$\('sweep'\)\.addEventListener\('click', \(\) => \{[^}]*clearMap\(\);/, 'the skull runs clearMap');
+  const body = js.match(/\nasync function clearMap\(.*\) \{([\s\S]*?)\n\}/)?.[1] ?? '';
+  assert.match(js, /\$\('sweep'\)\.addEventListener\('click', \(\) => \{[\s\S]*?clearMap\(/, 'the skull runs clearMap');
   assert.match(js, /\$\('sweep'\)\.addEventListener\('click', \(\) => \{[\s\S]*?skullRise\(\); wordsRise\(/, 'the skull and the phrase show on every click, the map already clear or not');
   assert.match(body, /clearTable\(true, false\)/, 'it clears the table');
   assert.match(body, /voyages: \[\]/, 'it takes every voyage off');
