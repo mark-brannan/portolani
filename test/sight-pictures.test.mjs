@@ -35,7 +35,7 @@ test('every sight picture is built for the site (npm run people), under its own 
     assert.ok(existsSync(join(ROOT, 'packs', 'overlays', m.src)), m.src);
     assert.ok(m.width > 0 && m.height > 0 && m.page.startsWith('https://commons.wikimedia.org/'), im.file);
     const credit = pictureCredit(im);
-    assert.ok(credit.includes(im.licence) && credit.includes(im.author) && !/QS:|T\d\d:/.test(im.date), `${im.file}: ${credit}`);
+    assert.ok(credit.includes(im.licence) && credit.includes(im.author) && !/QS:|\d\d:\d\d/.test(im.date), `${im.file}: ${credit}`);
     assert.ok(typeof im.caption === 'string' && im.caption.length && !im.caption.includes('\n') && pictureNote(im) === im.caption, `${im.file}: caption`);
   }
 });
