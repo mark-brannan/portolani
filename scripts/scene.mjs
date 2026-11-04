@@ -2400,7 +2400,7 @@ export function keptWater(data) {
 }
 // Hills and mountains (relief.mjs) for a view's land, and drawn over the water in the chosen style.
 // Mountains in the style chosen, hills where the Catalan sprites are selected. A drag draws them from
-// the placed scene (drawLate) at the zooms IN_DRAG names, and at the stop they are placed afresh.
+// the placed scene (drawLate), and at the stop they are placed afresh.
 const reliefWanted = () => STYLE.relief.length > 0 || STYLE.mountainSprites;
 const reliefFor = (proj, land) => reliefOf({ proj, land, createCanvas, w: W, h: H, styles: STYLE.relief, hills: STYLE.mountainSprites });
 function paintRelief(g, data, relief) {
@@ -2410,8 +2410,7 @@ const paintCoast = (g, data, coast) =>
   limn(g, coast, data.proj.toPx, { color: STYLE.ink, alpha: 1, width: STYLE.coastWidth, oneStroke: true, ...data.proj.seam });
 
 // Parchment, land, water and coast for any view: what a drag draws each frame. The ornaments and the
-// lattice follow (drawAnchored), with the relief, trees, names and city plans where they are fast
-// enough (IN_DRAG); the stop places and draws the scene whole (drawScene).
+// lattice follow (drawAnchored), with the relief, trees, names and city plans (IN_DRAG); the stop places and draws the scene whole (drawScene).
 function drawGround(g, world, view, bg) {
   const proj = makeProjection(view);
   const f = frameOf(proj, 16 / proj.k / RAD); // 16 px, so strokes at the edge survive
@@ -3382,11 +3381,12 @@ function anchorScene(scene, data) {
 // The late drawings (those once drawn only at the stop) as a moving frame holds them: kept as
 // longitude and latitude where they stand on the earth, drawn through the live projection like the
 // ornaments. IN_DRAG says at which whole zooms (the view's zoom, rounded down) each is drawn in a drag;
-// a layer left out at a zoom waits for the stop. The sets are read off docs/measurements.md ("A frame
-// while dragging"): a layer is in where the frame with it stays within 16.7 ms at the 90th percentile.
+// a layer left out at a zoom waits for the stop. Every late layer is in at every zoom: mountains and
+// trees that blink out under the hand read as broken, and that is worse than a frame over 16.7 ms
+// (docs/measurements.md, "A frame while dragging", has what each one costs).
 const LATE = ['relief', 'trees', 'worldNames', 'cities'];
 const EVERY_ZOOM = Array.from({ length: 31 }, (_, z) => z);
-const IN_DRAG = { relief: new Set([6, 7, 11, 12]), trees: new Set([6, 7, 9, 12]), worldNames: new Set(EVERY_ZOOM), cities: new Set(EVERY_ZOOM) };
+const IN_DRAG = { relief: new Set(EVERY_ZOOM), trees: new Set(EVERY_ZOOM), worldNames: new Set(EVERY_ZOOM), cities: new Set(EVERY_ZOOM) };
 function lateOf(scene, data, ll) {
   return {
     relief: scene.relief && { peaks: scene.relief.peaks.map(ll), humps: scene.relief.humps.map(ll) },
