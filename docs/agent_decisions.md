@@ -513,3 +513,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261104t224739z
 - pictureName hash only for an empty slug; review asked for any slug with no letter; kept because Siraf builds to 4.jpg on #374 ([#373](https://github.com/mark-brannan/portolani/pull/373))
+
+### 20261104t230510z
+- portolani#372: one zoom per placement = the fit of the sheet standing as drawn (its up), not the nearest level stand (no PR, branch detached)
