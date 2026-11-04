@@ -214,7 +214,7 @@ const PACKS = [
       { id: 'mountain-oliva-hills', kind: 'mountain', style: 'oliva', scan: 'oliva-chart', key: 'patch', paper: OLIVA_PAPER, crop: [12360, 2850, 13760, 4200], turn: 90, sizePx: 140,
         erase: [[13690, 3400, 13760, 3530]] },
       // Jerusalem: the painted (oxidised) city with its blue cross, the orange crosses beside it; "Jerusalem" lettering lies outside the crop
-      { id: 'town-oliva-jerusalem', kind: 'town', style: 'oliva', scan: 'oliva-chart', key: 'patch', paper: OLIVA_PAPER, crop: [15330, 6430, 16170, 7560], turn: 90, sizePx: 64 },
+      { id: 'town-oliva-jerusalem', kind: 'town', style: 'oliva', scan: 'oliva-chart', key: 'patch', paper: OLIVA_PAPER, crop: [15330, 6430, 16170, 7560], turn: 90, sizePx: 64, only: ['Jerusalem'] },
       // a palm on the Barbary coast with its strip of ground; the chart draws it lying on its side, so the cut is turned a quarter clockwise
       { id: 'palms-oliva', kind: 'tree', style: 'oliva', scan: 'oliva-chart', key: 'patch', paper: OLIVA_PAPER, crop: [4060, 6930, 5150, 8000], turn: 90, sizePx: 70 },
       // Petrus Plancius, Tabula geographica ... Actis et Epistolis Apostolorum (1609), an engraving on toned paper: patches, the paper divided out.
@@ -439,6 +439,7 @@ function buildSprite(sprite, colour, key, outDir, tmp) {
   if (turn) entry.source.turn = turn;
   if (sprite.minClearancePx) entry.minClearancePx = sprite.minClearancePx;
   if (sprite.weight) entry.weight = sprite.weight;
+  if (sprite.only) entry.only = sprite.only; // town names this sprite is drawn for alone
   if (sprite.heading) entry.heading = sprite.heading;
   if (sprite.heightPx) entry.heightPx = sprite.heightPx;
   else if (sprite.kind === 'town') entry.heightPx = fig ? Math.round(sprite.sizePx * th / (fig[3] - fig[1])) : sprite.sizePx; // a town stands at sizePx, flag to foot
