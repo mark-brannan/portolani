@@ -71,6 +71,26 @@ export function eraYears(name) {
   const from = TIMELINE_ERAS[i][1], to = TIMELINE_ERAS[i + 1]?.[1];
   return to === undefined ? `from ${yearLabel(from)}` : `${yearLabel(from)} – ${from < 0 && to > 0 ? `AD ${to}` : yearLabel(to)}`;
 }
+// An era's own scale, for the life bars of the rows under its heading: { from, to, x(year) in 0..1 clamped, ticks:
+// [[year, label]] }, from its year to the next era's, the last era to `now`. Each era has its own scale so a life of
+// sixty years reads at any era's width; the ruler under the heading says which. The ticks fall on round years, four
+// or fewer between the ends.
+export function eraScale(name, now = new Date().getFullYear()) {
+  const i = TIMELINE_ERAS.findIndex(([n]) => n === name);
+  if (i < 0) return null;
+  const from = TIMELINE_ERAS[i][1], to = TIMELINE_ERAS[i + 1]?.[1] ?? now;
+  const step = [50, 100, 250, 500, 1000].find((s) => (to - from) / s <= 5) ?? 1000;
+  const ticks = [];
+  for (let y = Math.ceil((from + 1) / step) * step; y < to; y += step) ticks.push([y || 1, yearLabel(y || 1)]);
+  return { from, to, x: (y) => Math.min(1, Math.max(0, (y - from) / (to - from))), ticks };
+}
+// A bar on an era's scale: [x0, x1, openStart, openEnd], an end open where the span runs past the era or the record
+// leaves it undated (`fromKnown`, `toKnown`, as lifeSpan gives them)
+export function barOn(scale, [a, b, fromKnown = true, toKnown = true]) {
+  if (!scale || !Number.isFinite(a)) return null;
+  const hi = Number.isFinite(b) ? b : a;
+  return [scale.x(a), scale.x(hi), !fromKnown || a < scale.from, !toKnown || hi > scale.to];
+}
 // The year a person's row sorts by and takes its era from: their birth where it is dated, else the first year of
 // their voyages (`voyageYears`, numbers); NaN for neither
 export function firstYear(person, voyageYears = []) {

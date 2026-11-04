@@ -19,7 +19,7 @@ import { playedOn, playDateText, playPace, isLong } from './scene.mjs'; // the p
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, effectiveOpacity, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
-import { PEOPLE_FILE, PICTURES_FILE, SIGHT_PICTURES_FILE, SIGHT_MANIFEST_FILE, sightDeal, eraOf, eraYears, firstYear, yearsText, PERSON_RED, pictureCredit, pictureNote, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, sightFrame, viewContaining, withPictures, peopleOf, whoOf, deathOf, sightPicturesOf, MEMENTO, mementoNext } from './people.mjs';
+import { PEOPLE_FILE, PICTURES_FILE, SIGHT_PICTURES_FILE, SIGHT_MANIFEST_FILE, sightDeal, eraOf, eraYears, eraScale, barOn, lifeSpan, firstYear, yearsText, PERSON_RED, pictureCredit, pictureNote, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, sightFrame, viewContaining, withPictures, peopleOf, whoOf, deathOf, sightPicturesOf, MEMENTO, mementoNext } from './people.mjs';
 import { fold, bestPlace, withoutPartsOfFrames } from './placename.mjs';
 import { planFlight, ease as flyEase, FLY_KNOBS, flyDefaults } from './flight.mjs';
 
@@ -1719,7 +1719,7 @@ const escapeHTML = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => `&#${c.charC
 // the years, the full title its tooltip) with its line sample, then the eye, the play button and the swatch (shown once
 // the voyage has an ink), and its summary and where to read more, shown while it is on; without, the title and years as
 // text, the eye and the play, and the summary always, as the person's notes for that voyage
-function voyageItem(id, v, sources, { name = true } = {}) {
+function voyageItem(id, v, sources, { name = true, bar = '' } = {}) {
   const full = escapeHTML(v.title ?? id), brief = escapeHTML(v.short ?? v.title ?? id), when = escapeHTML(v.when), summary = escapeHTML(v.summary), link = voyageLink(v, sources);
   const more = link ? ` <a href="${escapeHTML(link.url)}" target="_blank" rel="noopener" title="${escapeHTML(link.label)}">Read more</a>` : '';
   const years = when && !/\d/.test(v.title ?? '') ? `<span class="when">${when}</span>` : '';
@@ -1730,7 +1730,7 @@ function voyageItem(id, v, sources, { name = true } = {}) {
       : `<b class="vtitle">${full}</b>${years}`) +
     `<button type="button" class="eye" data-eye="${escapeHTML(id)}" aria-pressed="false" aria-label="Show ${full}" title="Show or hide ${full}">${EYE}</button>` +
     `<button type="button" class="play" data-play="${escapeHTML(id)}" aria-pressed="false" aria-label="Play ${full} on its own calendar" title="Play ${full} on its own calendar">${PLAY_GLYPH}</button>` +
-    (name ? `<input type="color" data-ink="${escapeHTML(id)}" aria-label="Colour of ${full}" title="Colour of ${full}" hidden>` : '') + '</div>' +
+    (name ? `<input type="color" data-ink="${escapeHTML(id)}" aria-label="Colour of ${full}" title="Colour of ${full}" hidden>` : '') + bar + '</div>' +
     (summary || more ? `<p class="vsum">${name ? `<b>${full}</b>. ` : ''}${summary}${more}</p>` : '') + '</li>';
 }
 const voyagesTools = groupTools('Voyages', {
@@ -1811,8 +1811,8 @@ function drawVoyages() {
   const { voyages, sources } = voyageRows;
   let era = null;
   $('voyageList').innerHTML = voyages.map(([id, v]) => {
-    const e = eraOf(voyageYears(v.when)[0]), head = e && e !== era ? eraItem(era = e) : '';
-    return head + voyageItem(id, v, sources);
+    const ys = voyageYears(v.when), e = eraOf(ys[0]), head = e && e !== era ? eraItem(era = e) : '';
+    return head + voyageItem(id, v, sources, { bar: spanBar(e, ys) });
   }).join('');
   showVoyage();
 }
@@ -1837,7 +1837,10 @@ function voyageControl(e) {
     const id = eye.dataset.eye;
     if (band?.id === id) closeBand();
     if (voyagePen?.id === id) voyagePen = null; // a pen on it stops, and the line is whole
-    showVoyages({ [id]: !isDrawn(id) });
+    // a chosen person's voyage hidden by its eye and turned back on: its hidden entry goes, rather than staying listed
+    // as shown, so letting the person go takes it off the map with them
+    if (litBy(id) && isHidden(id)) { style = { ...style, voyages: style.voyages.filter((v) => v.id !== id) }; showVoyage(); writeHash(); render(); }
+    else showVoyages({ [id]: !isDrawn(id) });
     return true;
   }
   if (play) {
@@ -1934,7 +1937,7 @@ function playVoyage(id) {
     closeBand();
     band = { id, cal, ms: style.voyagePlay * 1000, state: 'wait', since: performance.now(), t0: 0, at: 0, title: v.title ?? id };
     voyagePen = { id, band };
-    if (!isShown(id)) showVoyages({ [id]: true }); else render(); // the line cleared to its start
+    if (!isDrawn(id)) showVoyages({ [id]: true }); else render(); // the line cleared to its start
     fillBand(); showVoyage();
     const rect = playRect(), to = voyageInView(v, rect) ? null : voyageView(v, flightTo ?? view, undefined, true, rect);
     if (to) { if (style.sheetHides) clearSheetFor(to, true); goTo(to); }
@@ -2220,14 +2223,25 @@ function drawPeople() {
   let era = null;
   $('peoplePanel').append($('personCard')); // out of the list before it is redrawn
   $('peopleList').innerHTML = people.map(([p, year]) => {
-    const e = eraOf(year), head = e && e !== era ? eraItem(era = e) : '', years = yearsText(p, voyagesOf(p));
+    const e = eraOf(year), head = e && e !== era ? eraItem(era = e) : '', years = yearsText(p, voyagesOf(p)), bar = spanBar(e, lifeSpan(p, yearsOf(p)));
     return `${head}<li data-row="${escapeHTML(p.id)}"><button type="button" class="life" data-person="${escapeHTML(p.id)}" aria-pressed="false" aria-expanded="false" title="${escapeHTML(p.name)}${years ? `, ${escapeHTML(years)}` : ''}">` +
-      `<span class="who">${escapeHTML(p.name)}</span>${years ? `<span class="when">${escapeHTML(years)}</span>` : ''}${p.group ? '<span class="chip">a people</span>' : ''}</button>` +
+      `<span class="who">${escapeHTML(p.name)}</span>${years ? `<span class="when">${escapeHTML(years)}</span>` : ''}${p.group ? '<span class="chip">a people</span>' : ''}${bar}</button>` +
       '<div class="rows"><div inert></div></div></li>';
   }).join('');
 }
 // an era's heading between the rows: its name and its years
-const eraItem = (name) => `<li class="era" data-era="${escapeHTML(name)}">${escapeHTML(name)}<small>${escapeHTML(eraYears(name))}</small></li>`;
+// and under it the ruler of the era's own scale, which the life bars of its rows are drawn on
+const eraItem = (name) => `<li class="era" data-era="${escapeHTML(name)}">${escapeHTML(name)}<small>${escapeHTML(eraYears(name))}</small>` +
+  `<span class="ruler" aria-hidden="true">${eraScale(name).ticks.map(([y, label]) => `<span style="left:${pc(eraScale(name).x(y))}">${label}</span>`).join('')}</span></li>`;
+const pc = (x) => `${(x * 100).toFixed(2)}%`;
+// A row's span, a life or a voyage, as a bar on its era's ruler: an end the record leaves open, or that runs past the
+// era, fades
+function spanBar(era, span) {
+  const b = barOn(era && eraScale(era), span);
+  if (!b) return '';
+  const [x0, x1, o0, o1] = b;
+  return `<span class="span" aria-hidden="true"><span class="bar${o0 ? ' open-start' : ''}${o1 ? ' open-end' : ''}" style="left:${pc(x0)};width:${pc(Math.max(0.012, x1 - x0))}"></span></span>`;
+}
 // The chosen person's tile, slid open directly under their row and shut under everyone else's: the bio, the pictures as
 // thumbnails, then one row per voyage of theirs with its title and years, its summary and where to read more, and the
 // eye and play the Voyages drawer's rows have, so a voyage is shown, hidden or played from here

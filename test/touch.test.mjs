@@ -617,6 +617,16 @@ test('people and voyages: two vertical drawers no wider than the charts, earlies
     assert.match(await hash(), /voyages=ibn-battuta-3(\.[0-9a-f]{6})?~/);
     assert.match(await hash(), /person=ibn-battuta/, 'the eye let the person go');
     assert.equal(await opened('peoplePanel'), true);
+    // the eye back on leaves nothing behind: letting him go takes the voyage off with him
+    await page.click('#personCard [data-eye="ibn-battuta-3"]');
+    assert.equal(await page.getAttribute('#personCard [data-eye="ibn-battuta-3"]', 'aria-pressed'), 'true');
+    assert.doesNotMatch(await hash(), /voyages=/, 'the eye back on left the voyage chosen');
+    await page.click('#peopleList [data-person="ibn-battuta"]');
+    assert.doesNotMatch(await hash(), /voyages=|person=/, 'letting him go left a voyage of his chosen');
+    await page.click('#peopleList [data-person="ibn-battuta"]');
+    // the people and the voyages carry their spans as bars, on each era's scale under its ruler
+    assert.ok(await page.$$eval('#peopleList .era', (es) => es.every((e) => e.querySelector('.ruler span'))), 'an era heading without its ruler');
+    assert.ok(await page.$eval('#peopleList [data-person="ibn-battuta"] .bar', (b) => b.getBoundingClientRect().width > 8), 'Ibn Battuta\'s life bar is missing or a sliver');
     // another person chosen: his tile shuts, theirs opens under their own row
     await page.click('#peopleList [data-person="lapita-people"]');
     await page.waitForTimeout(400);

@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { peopleOf, yearOf, lifeSpan, eraOf, eraYears, firstYear, yearsText, TIMELINE_FROM, TIMELINE_ERAS, voyageYears, parsePictures, picturesText, parsePictureAt, pictureAtText, withPerson, personMarks, picturePlaces, frameOf, pictureName, pictureCredit, DIMMED, PERSON_RED } from '../scripts/people.mjs';
+import { peopleOf, yearOf, lifeSpan, eraOf, eraYears, firstYear, yearsText, eraScale, barOn, TIMELINE_FROM, TIMELINE_ERAS, voyageYears, parsePictures, picturesText, parsePictureAt, pictureAtText, withPerson, personMarks, picturePlaces, frameOf, pictureName, pictureCredit, DIMMED, PERSON_RED } from '../scripts/people.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => JSON.parse(readFileSync(join(ROOT, p), 'utf8'));
@@ -51,6 +51,21 @@ test('a row\'s era is the one its year falls in, and the headings carry the eras
   assert.equal(eraOf(NaN), null);
   assert.deepEqual(TIMELINE_ERAS.map(([n]) => eraYears(n)), ['1500 BC – AD 500', '500 – 1450', '1450 – 1800', 'from 1800']);
   assert.equal(TIMELINE_ERAS[0][1], TIMELINE_FROM);
+});
+
+test('each era has its own scale for the life bars, with round ticks between its ends', () => {
+  const ancient = eraScale('The ancient world', 2026), discovery = eraScale('The age of discovery', 2026), modern = eraScale('The modern world', 2026);
+  assert.deepEqual(ancient.ticks.map(([, l]) => l), ['1000 BC', '500 BC', 'AD 1']);
+  assert.deepEqual(eraScale('The medieval Indian Ocean and Asia').ticks.map(([y]) => y), [750, 1000, 1250]);
+  assert.deepEqual(discovery.ticks.map(([y]) => y), [1500, 1600, 1700]);
+  assert.deepEqual([modern.from, modern.to], [1800, 2026]);
+  assert.equal(eraScale('no such era'), null);
+  // Magellan, c. 1480 to 1521, on the age of discovery's scale: a twelfth of the way in, about an eighth wide
+  const [x0, x1, open0, open1] = barOn(discovery, [1480, 1521, true, true]);
+  assert.ok(Math.abs(x0 - 30 / 350) < 1e-9 && Math.abs(x1 - 71 / 350) < 1e-9 && !open0 && !open1);
+  // a life that runs past its era's end is clipped there and left open
+  assert.deepEqual(barOn(eraScale('The medieval Indian Ocean and Asia'), [1420, 1480, true, true]).slice(1), [1, false, true]);
+  assert.equal(barOn(discovery, [NaN, NaN]), null);
 });
 
 test('a person sorts by their birth, else by their first voyage, so a people with no dates takes its voyage\'s years', () => {

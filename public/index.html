@@ -142,6 +142,18 @@
   .tline > li:first-child.era { margin-top: 0; }
   .tline > li.era::before { left: -14px; top: 8px; width: 10px; height: 1px; border-radius: 0; background: #b89a68; }
   .tline > li.era small { margin-left: 6px; font-size: 11px; opacity: 0.8; }
+  /* each era's own scale: a ruler under its heading, and under every row in it the life (or the voyage) as a bar on
+     that scale, so who overlapped whom and how long each lived read down the drawer; an end nobody dated fades */
+  .tline .ruler { position: relative; display: block; height: 13px; margin: 1px 0 0; border-top: 1px solid #b89a68; font: normal 10px/12px var(--serif); }
+  #peopleList .ruler { margin-inline: 9px; }
+  .tline .ruler > span { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
+  .tline .ruler > span::before { content: ''; position: absolute; left: 50%; top: -1px; height: 3px; border-left: 1px solid #b89a68; }
+  .tline .span { position: relative; display: block; flex: 1 0 100%; height: 5px; margin: 1px 0 2px; background: rgb(184 154 104 / 0.18); border-radius: 3px; pointer-events: none; }
+  .tline .span .bar { --c: #6b5a44; position: absolute; top: 0; height: 5px; border-radius: 3px; background: var(--c); }
+  .tline .span .bar.open-start { background: linear-gradient(90deg, transparent, var(--c) 45%); }
+  .tline .span .bar.open-end { background: linear-gradient(90deg, var(--c) 55%, transparent); }
+  .tline .span .bar.open-start.open-end { background: linear-gradient(90deg, transparent, var(--c) 35%, var(--c) 65%, transparent); }
+  .tline li.on .span .bar, .tline li.open .span .bar, #peopleList .life[aria-pressed="true"] .bar { --c: #8c2f1e; }
   /* a voyage's row, in the Voyages drawer and under a chosen person: the name (short, with its years) and line sample,
      the eye, play, and in the Voyages drawer the swatch once it is chosen; the row wraps rather than scrolls */
   .vrow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
