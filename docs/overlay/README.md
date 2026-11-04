@@ -13,7 +13,8 @@ Cosa's chart of 1500 at full size, since its only scan is 2127 px wide. All are 
 `overlays.json`. `npm run overlays` makes them from the full scans
 (`scripts/build-overlays.mjs`): the shrunk JPEG, a mask PNG of the paper round the skin (a flood fill from
 the image's border through light or grey unsaturated pixels, which the tinted skin stops; the outermost
-px keyed whatever they hold; 19 to 38 KB each), and the placements below.
+px keyed where they are background; 19 to 38 KB each; or, on a chart with an `outline`, the polygon drawn
+round the skin by eye, see the mask section below), and the placements below.
 
 ## Where the sheet lies
 
@@ -281,9 +282,16 @@ Each is laid level by landmarks read off the scan by eye, as above (`levelFit`; 
 
 ![Panades's 1557 sheet over the map, turned about 11.5 degrees](panades-1557-sheet.jpg)
 
-The scanner mask keys only the scanner's background, never the skin: a scan laid on black (`dark`) keys only pixels near black, and the outermost band is keyed only where it is background, so a skin that runs to the edge of the scan, damaged border and all, stays whole. Olives's lower right corner, before and after (the keyed background is magenta):
+The scanner mask keys only the scanner's background, never the skin. A flood fill from the border does that on a
+scan laid on light paper; it fails on a scan laid on black, where the skin's own dark edge or binding fades into the
+background and the fill eats a ragged line into it. Such a chart carries an `outline` instead: a polygon in scan px
+drawn round the skin by eye, opaque inside and keyed outside, a crisp edge with a little of the black riding along
+rather than a flood fill's broken one. Oliva's traces the skin's three straight sides and the tear down its east
+edge a few px out; Olives's is four straight(ish) sides, the left and right tangent to the outermost brown of its
+binding (the right a shade convex), the top a line that clips a little dark red by the upper rose, the bottom the
+scan's own edge, so the whole lower edge and the worn binding stay in. The keyed background is magenta:
 
-![Olives's mask before: pale skin keyed](olives-mask-before.jpg)
-![Olives's mask after: the lower edge kept](olives-mask-after.jpg)
+![Oliva's mask: the skin's perimeter traced, the tear followed](oliva-mediterranean-mask.jpg)
+![Olives's mask: four straight sides round the binding](olives-1559-mask.jpg)
 
 `npm run overlays -- --only oliva-mediterranean,lopes-atlantic,olives-1559,panades-1557` rebuilds just those and keeps the other rows of overlays.json as they are; an id that is no chart, or no id at all, is an error.

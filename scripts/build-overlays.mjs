@@ -1,4 +1,4 @@
-// Builds packs/overlays/: each chart's scan shrunk, a mask of the scanner's paper round it, and overlays.json
+// Builds packs/overlays/: each chart's scan shrunk, a mask of the scanner's paper round it (a flood fill, or the chart's `outline`), and overlays.json
 // with the sheet's own placement, its snaps and the warped pieces' fits (scripts/overlays.mjs, docs/overlay/README.md). The scan is downloaded into downloads/ when missing and
 // checked against the sha256 in scripts/sources.json, as build-packs.mjs does.
 //
@@ -142,7 +142,9 @@ const CHARTS = [
     landmarks: [[[3748, 5784], [-5.6, 35.97]], [[2961, 4997], [-9.14, 38.72]], [[2915, 4350], [-9.27, 42.88]], [[4072, 2360], [-0.12, 51.51]], [[6136, 3933], [9.05, 42.15]], [[6154, 4535], [9.0, 40.05]], [[7311, 4951], [14.1, 37.55]], [[7403, 3100], [12.33, 45.44]], [[9717, 5090], [24.9, 35.2]], [[11336, 4858], [33.2, 35.1]]], // scan px, real lon, lat
     snaps: [] },
   // Oliva family, 1621-1665 (Commons dates it "between"): the whole Mediterranean, its east edge torn, scanned on black. Lisbon, Finisterre, Venice, Sicily, Crete, Cyprus, the Nile delta.
-  { id: 'oliva-mediterranean', title: 'Portolan chart of the Mediterranean, Oliva family, 1621-1665', source: 'oliva-mediterranean', file: 'oliva-mediterranean.jpg', scale: 4, dark: true,
+  // The outline traces the skin's perimeter a few px out into the black (its three straight sides and the tear down the east), read off the scan at a quarter.
+  { id: 'oliva-mediterranean', title: 'Portolan chart of the Mediterranean, Oliva family, 1621-1665', source: 'oliva-mediterranean', file: 'oliva-mediterranean.jpg', scale: 4,
+    outline: [[17100, 768], [16392, 48], [612, 116], [492, 756], [588, 980], [448, 1104], [0, 3980], [0, 4396], [168, 4680], [80, 5468], [128, 5972], [360, 6840], [380, 8360], [556, 8620], [276, 10752], [440, 10928], [5440, 11056], [14120, 11040], [15600, 10840], [15612, 10732], [15440, 10620], [16040, 9320], [16164, 8824], [16880, 8260], [17268, 8068], [17244, 4356], [17160, 3204], [16972, 3028], [16988, 2876], [17144, 2776]], // scan px
     landmarks: [[[800, 5580], [-9.14, 38.72]], [[300, 3350], [-9.27, 42.88]], [[7050, 2620], [12.33, 45.44]], [[7250, 5600], [14.0, 37.55]], [[11200, 5700], [24.9, 35.2]], [[13850, 5080], [33.0, 35.0]], [[13750, 7000], [31.0, 31.5]]], // scan px, real lon, lat
     snaps: [] },
   // Sebastião Lopes, about 1565: a photograph of the chart (perhaps of a facsimile), full size. Finisterre, Lisbon, Cape St Vincent, Gibraltar, Lanzarote, Gran Canaria, Tenerife.
@@ -150,7 +152,10 @@ const CHARTS = [
     landmarks: [[[1280, 1170], [-9.27, 42.88]], [[1290, 1400], [-9.14, 38.72]], [[1335, 1535], [-9.0, 37.03]], [[1570, 1560], [-5.35, 36.13]], [[1170, 2040], [-13.6, 29.0]], [[1040, 2080], [-15.6, 28.0]], [[975, 2065], [-16.55, 28.3]]], // scan px, real lon, lat
     snaps: [] },
   // Bartolomé Olives, Venice 1559 (Bodleian MS. Canon. Ital. 143, fol. 3r): drawn south up, Africa at the top, so the sheet is turned half round (levelFit's scale comes out negative). Gibraltar, Cape St Vincent, Lisbon, Finisterre, Sardinia, Corsica, Sicily.
-  { id: 'olives-1559', title: 'Chart of the central and western Mediterranean, Bartolomé Olives, 1559', source: 'olives-1559', file: 'olives-1559.jpg', scale: 1, dark: true, up: 180,
+  // The photograph shows the chart in its dark binding on black, the binding fading into the background: the outline is four straight(ish) sides, the
+  // left and right tangent to the binding's outermost brown (the right a shade convex), the top clipping a little dark red by the upper rose, the bottom the scan's own edge.
+  { id: 'olives-1559', title: 'Chart of the central and western Mediterranean, Bartolomé Olives, 1559', source: 'olives-1559', file: 'olives-1559.jpg', scale: 1, up: 180,
+    outline: [[285, 42], [3755, 78], [3792, 450], [3792, 750], [3782, 1050], [3770, 1350], [3758, 1650], [3750, 1950], [3736, 2250], [3720, 2660], [285, 2660]], // scan px
     landmarks: [[[2925, 875], [-5.35, 36.13]], [[3165, 960], [-9.0, 37.03]], [[3150, 1105], [-9.14, 38.72]], [[3150, 1435], [-9.27, 42.88]], [[1740, 1360], [9.0, 40.05]], [[1750, 1580], [9.1, 42.2]], [[1250, 1170], [14.1, 37.55]]], // scan px, real lon, lat
     snaps: [] },
   // Banet Panades, Messina 1557 (Galata Museo del Mare, Genoa): a handheld museum photograph, north up but lying about 11 degrees off level, and unevenly lit; laid by a similarity with its turn. Cap Corse, Bonifacio, Cape Teulada, Marsala, Cape Passero, Messina, Cape Spartivento.
@@ -260,6 +265,20 @@ export function paperMask(ctx, w, h, { dark = false, sides = true } = {}) {
   return { mask: out, keyed: keyed / n };
 }
 
+// The mask from a chart's `outline`, a polygon in the shrunk scan's px drawn round the skin by eye: opaque inside, keyed
+// outside, the edge antialiased by the canvas. For a scan whose background no key separates from the skin (a dark binding
+// fading into black), where a crisp traced edge with a little background riding along is wanted over a flood fill's ragged one.
+export function outlineMask(ctx, w, h, outline) {
+  const c = createCanvas(w, h), g = c.getContext('2d');
+  g.fillStyle = '#000'; g.beginPath();
+  outline.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
+  g.closePath(); g.fill();
+  const mask = g.getImageData(0, 0, w, h);
+  let keyed = 0;
+  for (let p = 0; p < w * h; p++) if (mask.data[p * 4 + 3] === 0) keyed++;
+  return { mask, keyed: keyed / (w * h) };
+}
+
 async function scanOf(src) {
   const path = join(DL, src.file);
   const bytes = existsSync(path) ? readFileSync(path) : await fetchBytesWithRetry(src.url, { onRetry: (e, n) => console.warn(`retry ${n}: ${e.message}`) });
@@ -286,7 +305,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const canvas = createCanvas(fw, fh), g = canvas.getContext('2d');
     g.drawImage(img, 0, 0, fw, fh);
     writeFileSync(join(OUT, c.file), canvas.toBuffer('image/jpeg', 80));
-    const { mask, keyed } = paperMask(g, fw, fh, { dark: !!c.dark }), maskFile = `${c.id}-mask.png`;
+    const { mask, keyed } = c.outline ? outlineMask(g, fw, fh, c.outline.map(([x, y]) => [x / scale, y / scale])) : paperMask(g, fw, fh, { dark: !!c.dark }), maskFile = `${c.id}-mask.png`;
     const mc = createCanvas(fw, fh); mc.getContext('2d').putImageData(mask, 0, 0);
     if (keyed > 0.001) writeFileSync(join(OUT, maskFile), mc.toBuffer('image/png'));
     const pieces = piecesOf(c, md).map(([x0, x1, fit]) => [x0, x1 ?? img.width, fit]);
