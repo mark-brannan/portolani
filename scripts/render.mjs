@@ -63,7 +63,7 @@ const playas = () => read(join(ROOT, 'test', 'fixtures', 'playas-10m.json'));
 const env = {
   createCanvas,
   readJSON: async (p) => (p === 'geo/names-50m.json' ? names() : p === 'geo/urban-10m.json' ? footprints() : p === 'geo/seas-50m.json' ? tintedSeas(read(join(DL, 'ne_50m_geography_marine_polys.geojson')))
-    : p === 'geo/playas-10m.json' ? playas() : p === 'geo/isles.json' ? islesIndex() : p === 'geo/isles-land.json' ? islesLand() : p.startsWith('geo/water-10m/') ? water(p) : read(resolve(p))),
+    : p === 'geo/playas-10m.json' ? playas() : p === 'geo/peaks-10m.json' ? read(join(ROOT, 'test', 'fixtures', 'peaks-10m.json')) : p === 'geo/isles.json' ? islesIndex() : p === 'geo/isles-land.json' ? islesLand() : p.startsWith('geo/water-10m/') ? water(p) : read(resolve(p))),
   loadImage: (p) => loadImage(resolve(p)),
   loadFont: async (family) => { GlobalFonts.registerFromPath(join(DL, 'IMFeENrm28P.ttf'), family); GlobalFonts.registerFromPath(join(DL, 'IMFeENit28P.ttf'), family); },
 };
