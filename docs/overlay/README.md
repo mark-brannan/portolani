@@ -13,7 +13,8 @@ Cosa's chart of 1500 at full size, since its only scan is 2127 px wide. All are 
 `overlays.json`. `npm run overlays` makes them from the full scans
 (`scripts/build-overlays.mjs`): the shrunk JPEG, a mask PNG of the paper round the skin (a flood fill from
 the image's border through light or grey unsaturated pixels, which the tinted skin stops; the outermost
-px keyed whatever they hold; 19 to 38 KB each), and the placements below.
+px keyed where they are background; 19 to 38 KB each; or, on a chart with an `outline`, the polygon drawn
+round the skin by eye, see the mask section below), and the placements below.
 
 ## Where the sheet lies
 
@@ -44,6 +45,23 @@ into the link as `sheet=<lon>,<lat>,<scale>,<turn>`.
 | Carta Marina | 0.0106 °/px, level | West (0.0113 °/px, 48° anticlockwise), Baltic (0.0100, 3° anticlockwise) |
 
 `npm run render -- --view -25,22,2 --overlay de-la-cosa [--sheet lon,lat,scale,turn] --out <file>` draws it headless.
+
+### The line a placement was fitted to
+
+A click on a placement's chip lays the sheet there, frames it as the chart's name does, and, once the map has
+landed, draws over it the feature that placement was fitted to, in today's geography: a plain azurite line that
+draws itself from one end to the other, holds, then fades to a quarter of its strength and stays while the sheet
+lies there (docs/spec/design.md, "A chip shows what it was fitted to"). The line rides in overlays.json beside its
+placement, `line` on each snap and `sheetLine` for the chart's own, worked out by the build
+(`scripts/fit-lines.mjs`) from Natural Earth's 10m land and the landmarks each fit was computed from: a landmark on
+an island under 30,000 km² gives the island's whole coast; one within 40 km of a longer coast gives the stretch of
+that coast between it and its neighbours on it, 200 km more at each end, cut where two lie more than 4,000 km of
+coast apart; one inland on a larger island (Ireland, Iceland) gives that island; one inland on a continent (Prague,
+Tabriz) is its place, drawn as a small ring. Parallels draws today's Tropic of Cancer and equator from where the
+sheet's drawn lines begin to where they end; a chart's own Level draws the coasts of the first and last pieces it is
+centred between. The Carta Marina's landmarks (Iceland, the Faroes, Shetland and Orkney; Åland, Stockholm,
+Gotland, Öland, Saaremaa, Riga and Danzig) are named in ornaments.md without their scan px, so the build carries
+their real places alone.
 
 ![Juan de la Cosa's sheet, keyed and opaque, its parallels level over the Atlantic](de-la-cosa-sheet.jpg)
 
@@ -92,9 +110,30 @@ under that the city it was made in (a link that flies there) with its year.
 ## Warped pieces
 
 The older way is kept as a mode, "Warped pieces" under Settings → Under the hood, with its opacity slider
-(`overlaymode=pieces&overlayopacity=0.6` in the link). It cuts the scan into pieces and warps each onto
-today's coast, drawn over the land and sea and under the rhumb lines, names, towns, roses, beasts, ships and
-voyages at that opacity. The rest of this page is about those pieces.
+(`overlaymode=pieces&overlayopacity=0.6` in the link). In four steps:
+
+1. **Cut.** The scan is cut into vertical strips, a few per chart.
+2. **Fit.** Each strip gets its own scale, turn and shift, fitted to landmarks read off it.
+3. **Draw.** Each strip is laid on the map by its own fit, with a plain alpha.
+4. **Read.** Where neighbouring strips' fits disagree, they gap or overlap.
+
+The strips per chart are the Carta Marina two, Juan de la Cosa three and the Catalan Atlas one a page. The
+landmarks are a cape, a town, an island, each with the longitude and latitude it has today; the fit is by least
+squares. The strips are drawn at layer 2.1: over the land and sea, under the lattice and every ornament, with the
+slider's alpha and no other blending. So at opacity 1 the strips are opaque, yet the rhumb lines, names, towns,
+roses, beasts, ships and voyages still show over them. Each strip is drawn on its own and nothing trims or fills
+the seam, so where two fits disagree the strips either part, with no scan between them, or overlap.
+
+The gap is the picture to look for, and Juan de la Cosa is the chart where the strips part. Juan de la Cosa's New World is drawn larger than its Old, so its west and
+Atlantic strips pull apart over the mid-Atlantic. At opacity 1 (the lattice and names still drawn over it):
+
+![Juan de la Cosa's strips at opacity 1, a band of open ocean between them](de-la-cosa-1.jpg)
+
+The same chart at 0.6, the strips faint enough to see today's coast through them:
+
+![The same view at 0.6](de-la-cosa-0.6.jpg)
+
+The rest of this page is about those strips, which the code and the sections below call pieces.
 
 ## How it is placed
 
@@ -217,3 +256,42 @@ the build's `CHARTS`.
 
 Nothing marks a note on the scan. Over a noted figure the cursor turns to a pointer, and a click opens its
 tile. The notes ride on the sheet where it lies, dragged, turned or resized. Juan de la Cosa has notes too.
+
+## Four more by landmarks: the Oliva Mediterranean, Lopes, Olives, Panades
+
+Each is laid level by landmarks read off the scan by eye, as above (`levelFit`; the numbers below are each landmark's miss, in km, against today's place, after the least-squares scale and centre).
+
+- **Oliva family, Mediterranean, 1621 to 1665** (Commons, scan credited to Barry Lawrence Ruderman Antique Maps): the whole sea, Iberia to the Levant and the Nile, the east edge torn, its scan on black (`dark`). Commons dates it "between 1621 and 1665", so the row says 1621–1665. Seven landmarks (Lisbon, Finisterre, Venice, Sicily, Crete, Cyprus, the Nile delta), 214 km RMS (misses of 90 to 329 km): a hand-drawn Mediterranean that is stretched east to west, so a sheet this size cannot lie true everywhere. Built at a quarter, 4329 x 2782 px.
+- **Sebastião Lopes, about 1565** (Newberry Library, Ayer MS map 26): the British Isles, France, Iberia, north-west Africa to the Gambia, the Azores, Madeira, the Canaries and Cape Verde. The scan is a photograph, probably of a facsimile, at its only size, 2232 x 3100 px (scale 1). Seven landmarks (Finisterre, Lisbon, Cape St Vincent, Gibraltar, Lanzarote, Gran Canaria, Tenerife), 77 km RMS (19 to 110 km). The photograph is not visibly skewed: its drawn parallel and border lie level in the scan, and the Level chip has no turn to apply.
+
+`npm run render -- --view 16.73,36.74,3.7 --overlay oliva-mediterranean --out docs/overlay/oliva-mediterranean-sheet.jpg` and `npm run render -- --view -13.6,36.76,3.3 --overlay lopes-atlantic --out docs/overlay/lopes-atlantic-sheet.jpg`.
+
+![The Oliva Mediterranean's sheet over the map](oliva-mediterranean-sheet.jpg)
+
+![Lopes's Atlantic sheet over the map](lopes-atlantic-sheet.jpg)
+
+- **Bartolomé Olives, Venice 1559** (Bodleian Libraries, MS. Canon. Ital. 143, fol. 3r): the central and western Mediterranean and a piece of the Atlantic, **drawn south up** (Africa and its kings at the top, Europe below), so the sheet is turned half round: `levelFit` takes the scale negative and the sheet comes out at a turn of 180 degrees, and the Level chip has nothing more to turn. Seven landmarks (Gibraltar, Cape St Vincent, Lisbon, Finisterre, Sardinia, Corsica, Sicily), 102 km RMS (25 to 172 km): Iberia is drawn small and the middle sea long, so the west coast of Iberia lies about 170 km in. The photograph is 4000 x 2652 px, the largest the Bodleian's IIIF serves, kept at scale 1 and scanned on black (`dark`). Commons tags it PD-Art with PD-old-100, which the project follows; Digital Bodleian labels the photograph CC BY-NC 4.0, and both claims are in the manifest's rights string. The server renders the file, so a re-encode on its side would need a re-pin.
+
+`npm run render -- --view 5.47,40.35,3.6 --overlay olives-1559 --out docs/overlay/olives-1559-sheet.jpg`.
+
+![Olives's 1559 sheet over the map, turned north up](olives-1559-sheet.jpg)
+
+- **Banet Panades, Messina 1557** (Galata Museo del Mare, Genoa): the central Mediterranean from Corsica and Sardinia to Greece, north up, with roses, flags and town views. The scan is a handheld museum photograph (3008 x 2000 px, Nikon D70s) taken at a slant and lit unevenly: a glare washes out the middle of the sheet and the edges fall into shade, and the sheet lies about 11.5 degrees off level in the frame, so it is laid by a similarity with its turn (`turned: true` on the chart, `similarityFit`) rather than `levelFit`. Seven landmarks (Cap Corse, Bonifacio, Cape Teulada, Marsala, Cape Passero, Messina, Cape Spartivento), 23 km RMS with the turn (6 to 33 km); held level they miss by 73 km RMS, which is the turn's evidence. The frame crops the chart: Iberia and the Levant lie off it, and the photograph has no scanner background, so nothing is keyed. **Rights: CC BY-SA 4.0**, photo by Falcodigiada, Wikimedia Commons. Attribution: "Falcodigiada, Wikimedia Commons, CC BY-SA 4.0". The share-alike holds for what is built from it: `packs/overlays/panades-1557*.jpg` and `.png` and `docs/overlay/panades-1557-sheet.jpg` are CC BY-SA 4.0.
+
+`npm run render -- --view 12.5,40.5,4.2 --overlay panades-1557 --out docs/overlay/panades-1557-sheet.jpg`.
+
+![Panades's 1557 sheet over the map, turned about 11.5 degrees](panades-1557-sheet.jpg)
+
+The scanner mask keys only the scanner's background, never the skin. A flood fill from the border does that on a
+scan laid on light paper; it fails on a scan laid on black, where the skin's own dark edge or binding fades into the
+background and the fill eats a ragged line into it. Such a chart carries an `outline` instead: a polygon in scan px
+drawn round the skin by eye, opaque inside and keyed outside, a crisp edge with a little of the black riding along
+rather than a flood fill's broken one. Oliva's traces the skin's three straight sides and the tear down its east
+edge a few px out; Olives's is four straight(ish) sides, the left and right tangent to the outermost brown of its
+binding (the right a shade convex), the top a line that clips a little dark red by the upper rose, the bottom the
+scan's own edge, so the whole lower edge and the worn binding stay in. The keyed background is magenta:
+
+![Oliva's mask: the skin's perimeter traced, the tear followed](oliva-mediterranean-mask.jpg)
+![Olives's mask: four straight sides round the binding](olives-1559-mask.jpg)
+
+`npm run overlays -- --only oliva-mediterranean,lopes-atlantic,olives-1559,panades-1557` rebuilds just those and keeps the other rows of overlays.json as they are; an id that is no chart, or no id at all, is an error.

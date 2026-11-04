@@ -108,6 +108,16 @@ scenario('hashchange: editing the hash redraws without a reload', 'map=5.48/40.2
   assert.equal(await hash(page), '#map=5.48/40.265/7.000&ink=5a1a1a&density=1.5', 'a hash edit is not rewritten');
 });
 
+scenario('projection: the Charts drawer and the settings drawer hold one setting', 'map=2.00/30.000/10.000', async (page) => {
+  await page.evaluate(() => document.getElementById('chartsDrawer').classList.add('open'));
+  await page.locator('#projectionCharts .chip[data-value="miller"]').click();
+  await placed(page);
+  assert.equal(await hash(page), '#map=2.00/30.000/10.000&projection=miller');
+  assert.equal(await value(page, 'projection'), 'miller', 'the settings chips follow');
+  assert.equal(await value(page, 'projectionCharts'), 'miller');
+  assert.equal(await page.evaluate(() => { const d = document.getElementById('chartsDrawer'); return d.lastElementChild.contains(document.getElementById('projectionCharts')); }), true, 'the projection is the last section of the Charts drawer');
+});
+
 scenario('reset: every control back to default, only the view and its projection kept', 'map=7.00/43.700/7.300&ink=5a1a1a&density=1.5&projection=miller', async (page) => {
   assert.equal(await value(page, 'projection'), 'miller');
   await page.evaluate(() => { document.getElementById('status').textContent = ''; });
@@ -231,7 +241,7 @@ scenario('regionset: the 1375 chip round-trips', 'map=4.00/40.000/16.000', async
 // Every control in the drawer, by its element's id. Each layout shows all of them, each one element.
 const CONTROLS = ['density', 'pick-monster', 'pick-ship', 'pick-rose', 'placement', 'townSize', 'pick-town', 'mountains', 'hills', 'pick-relief', 'trees',
   'pick-cartouche', 'titleMode', 'title', 'projection', 'names', 'rhumb', 'continentsZoom', 'regionSet', 'regions', 'regionsZoom', 'land', 'islands', 'seaTint',
-  'rivers', 'lakes', 'scale', 'scaleBorder', 'ink', 'parchment'];
+  'rivers', 'lakes', 'reefs', 'playas', 'scale', 'scaleBorder', 'ink', 'parchment'];
 const HEADINGS = {
   default: ['Sea', 'Roses', 'Placement', 'Towns', 'Land', 'Cartouche', 'Map', 'Colours'],
   question: ['The chart', 'The land', 'The figures'],
@@ -291,7 +301,8 @@ scenario('layout: a link opens its layout, and a write, Reset and a hash edit ke
 const HILLS = ['v:mountains-a', 'v:mountains-b', 'v:mountains-c'];
 const AGUIAR_SCAN = ['venice', 'genoa', 'lisbon', 'lake', 'lake-moat', 'smina', 'jerusalem', 'ceuta', 'avignon'].map((t) => `s:town-aguiar-${t}`);
 const AGUIAR_DRAWN = ['walled', 'walled-2', 'walled-3', 'hall', 'hall-2', 'hall-3', 'towers', 'towers-2', 'towers-3', 'hill', 'hill-2', 'hill-3', 'church', 'church-2', 'church-3', 'gate', 'gate-2', 'gate-3', 'venice', 'moat'].map((t) => `v:town-aguiar-${t}`);
-const PLAIN = { land: null, islands: null, seas: null, rivers: null, lakes: null, mountains: null, trees: null, ink: null, parchment: null };
+// reefs and playas stay at their default, on, in every mood: none leaves them off (#337)
+const PLAIN = { land: null, islands: null, seas: null, rivers: null, lakes: null, reefs: null, playas: null, mountains: null, trees: null, ink: null, parchment: null };
 const MOODS = [
   ['Pilot’s chart', { ...PLAIN, sprites: ['p:rose'], density: '0', placement: 'historic', land: 'off', rivers: 'off', lakes: 'off', mountains: 'off', trees: 'off' }],
   ['Tasteful', { ...PLAIN, sprites: ['s:rose-catalan', 's:rose-catalan-small', 'v:rose-catalan', 'v:rose-catalan-small', 'v:cartouche-frame', 'v:merman', 'v:hippocampus', 'v:galley', 'v:caravel', ...HILLS, ...AGUIAR_SCAN],
@@ -325,6 +336,90 @@ scenario('layout: Moods sets the existing controls at once, a whole look each', 
   assert.ok(q.get('sprites').split(',').length > 10, 'every figure on');
   assert.equal(await value(page, 'land'), 'ochre', 'the controls show the default styles again');
   assert.equal(await value(page, 'ink'), '#3b2a1a');
+});
+
+// ---------------------------------------------------------------- overlap, person, voyage line and other traditions
+
+scenario('overlap: a rule round-trips, the default is left out, an unknown word is the default', 'map=6.14/40.474/7.400&overlap=cut', async (page) => {
+  assert.equal(await value(page, 'overlap'), 'cut');
+  await slide(page, 'density', 1.5);
+  assert.equal((await params(page)).get('overlap'), 'cut');
+  await page.evaluate(() => { location.hash = 'map=6.14/40.474/7.400&overlap=bogus'; });
+  await placed(page);
+  assert.equal(await value(page, 'overlap'), 'fit');
+  await slide(page, 'density', 1.25);
+  assert.equal((await params(page)).has('overlap'), false);
+});
+
+scenario('person: choosing a life bar writes person=, a link with it chooses that person, a malformed id is dropped', 'map=6.14/40.474/7.400', async (page) => {
+  await page.locator('#people').click();
+  const life = page.locator('#peopleStrip [data-person]').first();
+  const id = await life.getAttribute('data-person');
+  await life.click();
+  assert.equal((await params(page)).get('person'), id);
+  await page.evaluate((h) => { location.hash = h; }, `map=6.14/40.474/7.400&person=${id}`);
+  await placed(page);
+  assert.equal(await page.locator(`#peopleStrip [data-person="${id}"]`).getAttribute('aria-pressed'), 'true');
+  await page.evaluate(() => { location.hash = 'map=6.14/40.474/7.400&person=Not%20An%20Id'; });
+  await placed(page);
+  assert.equal(await page.locator('#peopleStrip [aria-pressed="true"]').count(), 0);
+});
+
+scenario('sight, site, pictures, pictureat: a sight\'s deal round-trips; a name no tile has is dropped with its keys', 'map=6.14/40.474/7.400&sight=Tyre&site=1&pictures=0,2&pictureat=0:35.200,33.270,1.5', async (page) => {
+  await placed(page);
+  // a wheel turn on the map makes the page rewrite the hash, so what is read back is the writer's (a drawer control would drop the sight from it)
+  await page.mouse.move(1180, 760); await page.mouse.wheel(0, -120);
+  await page.waitForFunction(() => /sight=Tyre/.test(location.hash) && /pictureat=/.test(location.hash), null, { timeout: 90000 });
+  const q = await params(page);
+  assert.equal(q.get('sight'), 'Tyre');
+  assert.equal(q.get('site'), '1');
+  assert.equal(q.get('pictures'), '0,2');
+  assert.equal(q.get('pictureat'), '0:35.200,33.270,1.5');
+  await page.goto(`${base}#map=6.14/40.474/7.400&sight=Nowhere&site=1&pictures=0`);
+  await page.reload();
+  await placed(page);
+  await slide(page, 'density', 1.25);
+  const s = await params(page);
+  for (const k of ['sight', 'site', 'pictures', 'pictureat']) assert.equal(s.has(k), false, `${k} is not written without a subject`);
+});
+
+scenario('voyagewidth, voyagedraw: a link\'s line weight and pen time round-trip; others fall back and are not written', 'map=6.14/40.474/7.400&voyagewidth=3.2&voyagedraw=4', async (page) => {
+  await slide(page, 'density', 1.5);
+  const q = await params(page);
+  assert.equal(q.get('voyagewidth'), '3.2');
+  assert.equal(q.get('voyagedraw'), '4');
+  await page.evaluate(() => { location.hash = 'map=6.14/40.474/7.400&voyagewidth=9&voyagedraw=2.2'; });
+  await placed(page);
+  await slide(page, 'density', 1.25);
+  const r = await params(page);
+  assert.equal(r.has('voyagewidth'), false, 'a width off the four is the default');
+  assert.equal(r.has('voyagedraw'), false, 'a time off the slider\'s steps is the default');
+});
+
+scenario('bearing: a turned world round-trips in the link, north up is no key, and the compass turns it back', 'map=4.00/22.000/-15.000&bearing=270', async (page) => {
+  await slide(page, 'density', 1.5);
+  assert.equal((await params(page)).get('bearing'), '270');
+  await page.keyboard.press('Escape'); // the open drawer lies over the right gutter's compass
+  await page.locator('#compass').click();
+  await page.waitForFunction(() => !new URLSearchParams(location.hash.slice(1)).has('bearing'));
+  await placed(page);
+  assert.equal(await page.locator('#compass').isHidden(), true, 'north up with no sheet laid: no compass');
+});
+
+scenario('charts: charts=all is kept in the link and lists the other traditions', 'map=6.14/40.474/7.400&charts=all', async (page) => {
+  await slide(page, 'density', 1.5);
+  assert.equal((await params(page)).get('charts'), 'all');
+  await page.waitForFunction(() => !document.getElementById('otherTraditions').hidden);
+  assert.ok(await page.locator('#worldList li').count() > 0, 'a row per chart');
+});
+
+scenario('charts: charts=all in the query, not the hash, lists the other traditions and is then kept in the hash', 'map=6.14/40.474/7.400', async (page) => {
+  await page.goto(`${base}?charts=all#map=6.14/40.474/7.400`);
+  await placed(page);
+  await slide(page, 'density', 1.5);
+  assert.equal((await params(page)).get('charts'), 'all');
+  await page.waitForFunction(() => !document.getElementById('otherTraditions').hidden);
+  assert.ok(await page.locator('#worldList li').count() > 0, 'a row per chart');
 });
 
 // ---------------------------------------------------------------- under the hood (temporary): debug= and tune=

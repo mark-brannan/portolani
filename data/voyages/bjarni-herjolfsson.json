@@ -1,0 +1,195 @@
+{
+  "id": "bjarni-herjolfsson",
+  "title": "Bjarni Herjólfsson sights America, c. 986",
+  "short": "Bjarni Herjólfsson",
+  "who": [
+    "bjarni-herjolfsson"
+  ],
+  "when": "c. 986",
+  "summary": "Bound from Iceland for his father's farm in Greenland, Bjarni was driven off course by northerly gales and fog. He raised three unknown coasts, a wooded one, a flat one and a glaciated one, and would not let his crew land on any, before reaching Herjólfsnes. By the saga, no European had seen North America before.",
+  "sources": [
+    "saga-of-the-greenlanders",
+    "bjarni-herjolfsson"
+  ],
+  "legs": [
+    {
+      "from": "Eyrar (Iceland)",
+      "to": "Open Atlantic, 3 days west",
+      "dates": "c. 986",
+      "mode": "sea",
+      "line": "rhumb",
+      "confidence": "inferred",
+      "points": [
+        [
+          -21.15,
+          63.5
+        ],
+        [
+          -24.0,
+          63.0
+        ],
+        [
+          -28.0,
+          62.5
+        ]
+      ],
+      "source": "Saga of the Greenlanders: three days out of sight of Iceland, bound west"
+    },
+    {
+      "from": "Open Atlantic",
+      "to": "First land sighted (wooded, low hills)",
+      "dates": "c. 986",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "points": [
+        [
+          -28.0,
+          62.5
+        ],
+        [
+          -37.0,
+          58.5
+        ],
+        [
+          -46.0,
+          54.5
+        ],
+        [
+          -53.5,
+          50.3
+        ]
+      ],
+      "source": "Saga of the Greenlanders: many days in fog under a north wind",
+      "doubt": "The saga gives days, not a course; the line is a broad brush for the drift, and reading the first coast as Newfoundland is Tryggvi Oleson's."
+    },
+    {
+      "from": "First land",
+      "to": "Second land (flat, wooded)",
+      "dates": "c. 986",
+      "mode": "sea",
+      "line": "rhumb",
+      "confidence": "inferred",
+      "points": [
+        [
+          -53.5,
+          50.3
+        ],
+        [
+          -53.2,
+          52.0
+        ],
+        [
+          -53.2,
+          53.5
+        ]
+      ],
+      "source": "Saga of the Greenlanders: two days north to a flat, wooded land"
+    },
+    {
+      "from": "Second land",
+      "to": "Third land (high, glaciated, island-like)",
+      "dates": "c. 986",
+      "mode": "sea",
+      "line": "rhumb",
+      "confidence": "inferred",
+      "points": [
+        [
+          -53.2,
+          53.5
+        ],
+        [
+          -56.0,
+          56.0
+        ],
+        [
+          -59.5,
+          58.5
+        ],
+        [
+          -62.0,
+          59.5
+        ]
+      ],
+      "source": "Saga of the Greenlanders: three days to a high, glaciated land",
+      "doubt": "The saga gives days and a high, glaciated, island-like land, not a place. The mark stands off the Torngat Mountains, which its three days fit better; Tryggvi Oleson reads the coast as Baffin Island."
+    },
+    {
+      "from": "Third land",
+      "to": "Herjólfsnes (Greenland)",
+      "dates": "c. 986",
+      "mode": "sea",
+      "line": "rhumb",
+      "confidence": "inferred",
+      "points": [
+        [
+          -62.0,
+          59.5
+        ],
+        [
+          -55.0,
+          60.6
+        ],
+        [
+          -50.0,
+          60.8
+        ],
+        [
+          -46.8,
+          59.8
+        ],
+        [
+          -45.0,
+          59.6
+        ]
+      ],
+      "source": "Saga of the Greenlanders: four days before a south-west wind to Herjólfsnes"
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": -53.5,
+      "lat": 50.3,
+      "date": "c. 986",
+      "label": "First land sighted",
+      "text": "A low, wooded country with hills. Bjarni knew it did not fit what he had been told of Greenland, and he turned away north. Where it lay is argued: Newfoundland, southern Labrador or Nova Scotia.",
+      "source": "Saga of the Greenlanders",
+      "cite": "saga-of-the-greenlanders",
+      "confidence": "speculative"
+    },
+    {
+      "kind": "event",
+      "lon": -53.2,
+      "lat": 53.5,
+      "date": "c. 986",
+      "label": "Second land sighted",
+      "text": "A flat land, thick with woods, taken for Labrador. His crew asked to land for wood and water, and Bjarni refused.",
+      "source": "Saga of the Greenlanders",
+      "cite": "saga-of-the-greenlanders",
+      "confidence": "speculative"
+    },
+    {
+      "kind": "event",
+      "lon": -62.0,
+      "lat": 59.5,
+      "date": "c. 986",
+      "label": "Third land sighted",
+      "text": "A high land of glaciers that Bjarni judged an island with nothing to offer. The mark stands off the Torngat Mountains of northern Labrador, the reading the three days fit best; Tryggvi Oleson read it as Baffin Island. Leif Erikson later bought his ship and sailed to find these coasts.",
+      "source": "Saga of the Greenlanders",
+      "cite": "saga-of-the-greenlanders",
+      "confidence": "speculative"
+    },
+    {
+      "kind": "landfall",
+      "lon": -45.0,
+      "lat": 59.6,
+      "date": "c. 986",
+      "label": "Herjólfsnes",
+      "text": "Bjarni raised his father's farm on the south-west coast of Greenland after four days before a strong wind. He never set foot on the new coasts: they were seen, not landed on.",
+      "source": "Saga of the Greenlanders",
+      "cite": "saga-of-the-greenlanders",
+      "confidence": "inferred"
+    }
+  ]
+}

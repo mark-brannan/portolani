@@ -60,13 +60,14 @@ export function sheetOf(fit, width, height) {
 
 // The sheet's affine on the page: [a, b, c, d, e, f] for drawn px (the scan at `overlay.scale`) ->
 // page px, by `proj`: its centre at proj.project(lon, lat), its px size from the view's zoom alone (proj.k is
-// px per radian of longitude, the same in every projection), turned clockwise by `turn`. Null when the centre
+// px per radian of longitude, the same in every projection), turned clockwise by `turn` on the world and with the
+// world by the view's bearing. Null when the centre
 // is past an azimuthal projection's horizon.
 export function sheetTransform(overlay, proj, sheet) {
   if (proj.visible && !proj.visible(sheet.lon, sheet.lat)) return null;
   const [cx, cy] = proj.project(sheet.lon, sheet.lat);
   if (![cx, cy].every(Number.isFinite)) return null;
-  const k = sheet.scale * (overlay.scale ?? 1) * proj.k * RAD, t = sheet.turn * RAD, c = Math.cos(t) * k, s = Math.sin(t) * k;
+  const k = sheet.scale * (overlay.scale ?? 1) * proj.k * RAD, t = (sheet.turn - (proj.bearing ?? 0)) * RAD, c = Math.cos(t) * k, s = Math.sin(t) * k; // the sheet turns with the world
   const w = overlay.img?.width ?? overlay.width / (overlay.scale ?? 1), h = overlay.img?.height ?? overlay.height / (overlay.scale ?? 1);
   return [c, s, -s, c, cx - c * (w / 2) + s * (h / 2), cy - s * (w / 2) - c * (h / 2)];
 }
@@ -100,7 +101,13 @@ export function sheetFrame(overlay, sheet) {
 }
 
 // The view that shows the whole sheet, in Mercator, with `pad` of its size clear round it: contained, never cropped.
-export function sheetView(overlay, sheet, { w = 1600, h = 1000, pad = 0.08 } = {}) {
+// With a `bearing` the view keeps it, and the sheet is framed as it stands turned on the canvas.
+export function sheetView(overlay, sheet, { w = 1600, h = 1000, pad = 0.08, bearing = 0 } = {}) {
+  if (bearing) {
+    const t = (sheet.turn - bearing) * RAD, c = Math.abs(Math.cos(t)), s = Math.abs(Math.sin(t)), sw = overlay.width * sheet.scale, sh = overlay.height * sheet.scale; // degrees
+    const k = Math.min(w / ((sw * c + sh * s) * (1 + 2 * pad) * RAD), h / ((sw * s + sh * c) * (1 + 2 * pad) * RAD));
+    return { lon: sheet.lon, lat: sheet.lat, zoom: Math.log2((k * 2 * Math.PI) / 512), bearing };
+  }
   const f = sheetFrame(overlay, sheet), m0 = mercDeg(f.latMin), m1 = mercDeg(f.latMax);
   const k = Math.min(w / ((f.lonMax - f.lonMin) * (1 + 2 * pad) * RAD), h / ((m1 - m0) * (1 + 2 * pad) * RAD)); // px per radian
   return { lon: (f.lonMin + f.lonMax) / 2, lat: latOf((m0 + m1) / 2), zoom: Math.log2((k * 2 * Math.PI) / 512) };
@@ -109,14 +116,14 @@ export function sheetView(overlay, sheet, { w = 1600, h = 1000, pad = 0.08 } = {
 // Whether there is anything of the overlay to draw: its image, or a chart of panels (drawn as they arrive).
 const drawable = (overlay) => !!(overlay?.img || overlay?.panels);
 
-// The sheet drawn whole, opaque (or at `overlay.alpha` while it fades in), over whatever the context holds, under its current transform.
+// The sheet drawn whole, opaque (or at `overlay.opacity`, the chart's slider, times `overlay.alpha` while it fades in), over whatever the context holds, under its current transform.
 // A chart of panels draws each panel that has arrived at its offset, in the sheet's drawn px.
 export function drawSheet(g, overlay, proj, sheet) {
   if (!drawable(overlay) || !sheet) return;
   const m = sheetTransform(overlay, proj, sheet);
   if (!m) return;
   g.save();
-  g.globalAlpha = overlay.alpha ?? 1;
+  g.globalAlpha = (overlay.alpha ?? 1) * (overlay.opacity ?? 1);
   g.globalCompositeOperation = 'source-over';
   g.transform(...m);
   if (overlay.panels) {
@@ -179,10 +186,12 @@ export function loadOverlay(id, env) {
 // there; in any other projection it is an approximation, true at those three corners and drifting
 // between them, the more the further the chart reaches from the view's centre. A piece with a corner
 // past an azimuthal projection's horizon, or wholly off the page, is left out.
+// `overlay.clipX`, when a number, is the page x the pieces stop at (the compare wipe): nothing of them is drawn right of it.
 export function drawOverlay(g, overlay, proj, opacity = 0.6, { w = 1600, h = 1600 } = {}) {
   if (!drawable(overlay) || !(opacity > 0)) return;
   const s = overlay.scale ?? 1, H = overlay.height, ih = overlay.img ? overlay.img.height : H / s;
   g.save();
+  if (Number.isFinite(overlay.clipX)) { g.beginPath(); g.rect(0, 0, Math.max(0, overlay.clipX), h); g.clip(); }
   g.globalAlpha = Math.min(1, opacity);
   g.globalCompositeOperation = 'source-over';
   for (const { x0, x1, fit } of overlay.pieces) {
@@ -211,17 +220,21 @@ export function drawOverlay(g, overlay, proj, opacity = 0.6, { w = 1600, h = 160
 // The overlays in the link: `overlay=<id>,<id>` the charts' sheets laid over the map, bottom to top, each at its own
 // placement; `sheet=<lon>,<lat>,<scale>,<turn>;...` where each was dragged to, one slot per id in the same order, an
 // empty slot (or none) the chart's own; `overlaymode=pieces` the warped pieces instead, with `overlayopacity=<0..1>` how
-// strongly. None laid, the sheet, its own placement and 0.6 are the defaults, and a default is left out of the hash.
+// strongly, and the sheet too, faded so the map shows through; `compare=wipe|swipe` (pieces mode only) the pieces drawn only left of a vertical line, at `comparepos=<0..1>` of the width, the map bare to its right; `sheethides=1` a voyage's fly takes a sheet off if it would cover the frame (otherwise the voyage is drawn over the sheets). None laid, the sheet, its own placement and the mode's own opacity (the sheet 1, the pieces 0.6) are the defaults, and a default is left out of the hash.
 // `sheets` holds a placement by id, and may keep one for a chart not laid (hidden by its eye), which the hash leaves out.
 // `ids`, when given, are the overlays the site has: any other id is dropped. `q` is a URLSearchParams.
 export const OVERLAY_MODES = ['sheet', 'pieces'];
-export const OVERLAY_DEFAULTS = { overlays: [], overlayMode: 'sheet', sheets: {}, overlayOpacity: 0.6 };
+export const COMPARE_MODES = ['off', 'wipe', 'swipe'];
+export const OVERLAY_DEFAULTS = { overlays: [], overlayMode: 'sheet', sheets: {}, overlayOpacity: null, sheetHides: false, compare: 'off', comparePos: 0.5 };
+// `overlayOpacity` null is the mode's own: the whole sheet opaque, the warped pieces at 0.6.
+export const PIECES_OPACITY = 0.6;
+export const effectiveOpacity = (st) => st.overlayOpacity ?? (st.overlayMode === 'pieces' ? PIECES_OPACITY : 1);
 const placement = (text) => {
   const at = text.split(',').map(Number);
   return at.length === 4 && at.every(Number.isFinite) && Math.abs(at[1]) < 85.1 && at[2] > 0 ? { lon: at[0], lat: at[1], scale: at[2], turn: at[3] } : null;
 };
 export function overlayFromHash(q, ids) {
-  const o = Number(q.get('overlayopacity')), mode = q.get('overlaymode'), slots = (q.get('sheet') ?? '').split(';');
+  const o = Number(q.get('overlayopacity')), cp = Number(q.get('comparepos')), mode = q.get('overlaymode'), slots = (q.get('sheet') ?? '').split(';');
   const overlays = [], sheets = {};
   (q.get('overlay') ?? '').split(',').forEach((id, i) => {
     if (!/^[a-z][a-z0-9-]*$/.test(id) || id === 'off' || (ids && !ids.has(id)) || overlays.includes(id)) return;
@@ -233,7 +246,10 @@ export function overlayFromHash(q, ids) {
     overlays,
     overlayMode: OVERLAY_MODES.includes(mode) ? mode : OVERLAY_DEFAULTS.overlayMode,
     sheets,
-    overlayOpacity: q.has('overlayopacity') && o >= 0 && o <= 1 ? o : OVERLAY_DEFAULTS.overlayOpacity,
+    sheetHides: q.get('sheethides') === '1',
+    overlayOpacity: q.has('overlayopacity') && o >= 0 && o <= 1 ? o : OVERLAY_DEFAULTS.overlayOpacity, // null: the mode's own
+    compare: COMPARE_MODES.includes(q.get('compare')) ? q.get('compare') : OVERLAY_DEFAULTS.compare,
+    comparePos: q.has('comparepos') && cp >= 0 && cp <= 1 ? cp : OVERLAY_DEFAULTS.comparePos,
   };
 }
 export function overlayToHash(st, q) {
@@ -241,7 +257,10 @@ export function overlayToHash(st, q) {
   if (st.overlayMode && st.overlayMode !== OVERLAY_DEFAULTS.overlayMode) q.set('overlaymode', st.overlayMode);
   const slots = st.overlays.map((id) => (st.sheets[id] ? sheetText(st.sheets[id]) : ''));
   if (slots.some(Boolean)) q.set('sheet', slots.join(';').replace(/;+$/, ''));
-  if (st.overlayOpacity !== OVERLAY_DEFAULTS.overlayOpacity) q.set('overlayopacity', st.overlayOpacity);
+  if (st.sheetHides) q.set('sheethides', '1');
+  if (st.overlayOpacity != null) q.set('overlayopacity', st.overlayOpacity);
+  if (st.compare && st.compare !== OVERLAY_DEFAULTS.compare) q.set('compare', st.compare);
+  if (st.comparePos != null && st.comparePos !== OVERLAY_DEFAULTS.comparePos) q.set('comparepos', +(+st.comparePos).toFixed(3));
 }
 // A placement as the hash writes it: the centre to a thousandth of a degree, the scale to five places (a
 // scan px is a few thousandths of a degree), the turn to a tenth.

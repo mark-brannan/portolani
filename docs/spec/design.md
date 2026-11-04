@@ -101,7 +101,13 @@ Feature: The warped pieces are the alternative, behind a setting
     When the user looks for it
     Then it is off by default and lives under Settings, Under the hood, with its opacity slider beside it, not in the Charts drawer
     And on, it draws exactly as before: each piece under the lattice and the ornaments, at the slider's opacity
-    And other comparison controls (a slider wipe, a swipe) are later work, behind the same setting
+  Scenario: comparing the pieces with the map (a slider wipe, a swipe)
+    Given the pieces mode on, and a chart laid
+    When the user picks Slider wipe or Swipe in Compare with the map, beside the pieces chip under Settings, Under the hood
+    Then the pieces are drawn only left of a vertical line, at the slider's share of the map's width (`comparepos`, half by default), and the bare map shows right of it
+    And in Slider wipe the slider moves the line; in Swipe the line itself, with a handle, is dragged across the map
+    And Off (the default) draws the pieces over the whole map, and the controls show only in the pieces mode
+    And the choice rides in the link as `compare=wipe` or `compare=swipe` and `comparepos=<0..1>`; the defaults write nothing
 
 Feature: A chart's row in the Charts drawer
   Source: the user's brief on [#266](https://github.com/mark-brannan/portolani/pull/266), 2026-10-29, and the follow-up the same day ("row shape: D", "I would like to use the full name for the chart link on our page: 'Map of Juan de la Cosa'"): "if the only button we need is to jump to the chart's default position and show it, then we really need no button beyond the name of the chart itself"; "put the originating city immediately to the right ... and use it as another button. In that case the button text is still 'Majorca' and no further explanation is needed"; "'Where it was made' is not helpful"; "all charts to have a miniature version of the scan for their icon". The second pass, later that day: "I do want to increase the size of the drawer thumbnails, by at least ~50%, accounting for more vertical space when the notes come in for these entries also. I would like all chart thumbnails for charts that we have to be the full color version all the time (if we have the chart in the project), no fade/gray when unselected. grey when chart not imported is still ok. I would like a show/hide icon (or button?) to the right of each chart name instead of clicking the chart. It might be a simple eye vs closed eye with slash in the usual style, or it might be an eye with an eye patch evocative of a pirate."; "clicking the origin city should hide the chart when zooming to the city, if the chart would result in the obstructing the city from view. Clicking either the map icon, or the map name should zoom to the correct position for the chart...but the show/hide button controls show/hide. The very first time any chart is selected after opening the drawer, when none was selected previously is to fade in the chart when clicking any of these: the chart icon, the chart name; however the show/hide is still a fast show action. Clicking the chart icon or chart name after the chart is already shown does not hide it, only the show/hide icon hides it." The icon and the eye, the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "I expect that the chart icon itself shows a chart and resets a chart to default position"; "I expect the show hide icon to ONLY show and hide individual charts.  It does not reset any, it does not clear others, it does [not] change zoom or position."; "Clicking a 'hide' does NOT change the show/hide status for any other charts.  Clicking a show does NOT change the show/hide status for any other charts."
@@ -174,13 +180,13 @@ Feature: A chart's position chips, and the line each was fitted to
     When the user looks for the position chips
     Then they sit in the chart's row as on a wide screen, until the user has walked the phone's drawers
 
-Feature: The projection chips live in the Charts drawer
+Feature: The projection chips live in the Charts drawer and the settings drawer
   Source: the user on [#266](https://github.com/mark-brannan/portolani/pull/266), 2026-10-29: "The controls for map projections should live under charts now, not the compass rose. I'm not sure about other map settings...they probably stay under the rose but it could change."
   Scenario: the user looks for the projection
     Given the drawers on main
     When the user opens the Charts drawer
-    Then the projection chips are there, each showing its projection as before
-    And they are no longer in the settings drawer under the rose; the rest of its Map section (continents, regions, the land border, colour, rivers, lakes, the scale bar) stays there, and no section goes
+    Then the projection chips are there, each showing its projection as before, in a Projection section after the charts, at the foot of the drawer
+    And they are also still in the settings drawer under the rose; the two sets are one setting, so a choice in either lights the same chip in both
 
 Feature: A drawer stays open on a click or a choice
   Source: the user on [#266](https://github.com/mark-brannan/portolani/pull/266), 2026-10-29: "I want to change the behavior on all drawer actions. This may reverse an earlier position I took, but it matters more now: do not immediately close the drawer on click/select but leave the drawer open. This is flexible for mobile and should perhaps be treated differently. I need to see a UI walk specifically for that at a later time." The earlier position, as recorded in [#206](https://github.com/mark-brannan/portolani/pull/206)'s body from the UI walk behind [#202](https://github.com/mark-brannan/portolani/pull/202) (paraphrase): "A choice, Esc or a click outside the row and the drawer also closes it."
@@ -268,15 +274,20 @@ Feature: Every point of interest has a mark
   Scenario: a place with a tile and nothing drawn there
     Given a point of interest with a tile (a noteworthy port, an ancient city, a place where charts were made) and no town, sprite or mark drawn at its spot (Tyre today)
     When the map is at a zoom where its tile opens on a tap
-    Then a stand-in mark is drawn at its spot, so the user sees where to tap, and no lettering beside it: the ruin glyph below, or the plain town glyph where a modern city stands
-    And a place that already has a town or a sprite drawn there gets no second mark
+    Then a stand-in mark is drawn at its spot, so the user sees where to tap, and no lettering beside it: the ruin glyph below, or the plain town glyph where a place is no ruin
+    And a place that already has a town or a sprite drawn there gets no second mark, except the ruin of an ancient site where there is room beside the town (next scenario)
     And every place listed in the Sights drawer is checked, not only Tyre
-  Scenario: a place with no modern city is a ruin
-    Given a point of interest with no modern city on its spot (Berenike), where a modern city is on its spot when a town of today stands on the same site, as Sour stands on Tyre and a suburb of Tunis on Carthage
-    When its mark is drawn
+  Scenario: an ancient site is a ruin unless the map draws a city over it
+    Source: the user on [#310](https://github.com/mark-brannan/portolani/pull/310), 2026-10-30, in paraphrase: Tyre must show a ruin, on or near the old island port. A town standing there today is not reason enough to drop it; only dense built-up ground over the whole site is. Use what the map already draws as the test: where a small town is not drawn at a wide zoom, show the ruin, not a tower added for it; where the map does draw a city on the site, the ruin can give way at that zoom. Close up, it depends on the room between the two marks.
+    Given a point of interest that was an ancient or medieval city or port (Tyre, Carthage, Berenike)
+    When its mark is drawn at any zoom
     Then it is a small ink glyph of a broken colonnade: three columns on a step, two of them snapped short, about the height of a town glyph
     And it is drawn in code, in ink, like the towers, not cut from a scan
-    And a place with a modern city on its spot but nothing drawn there yet gets the plain town glyph instead, so no living city reads as a ruin
+    And a town of today on or near the site does not suppress it: Sour beside Tyre, a suburb of Tunis on Carthage
+    And the ruin is suppressed only where the map itself draws a city over the site at that zoom, its built-up ground or its town mark; the map never adds a town glyph just to stand for a living town it does not otherwise draw
+    And close up, the ruin stands beside a drawn town where there is room for both marks, and gives way where there is not
+    And where part of the site is open ground with standing remains, the ruin goes there: Tyre's on the old island, Alexandria's on the Pharos point, Malacca's on St Paul's Hill
+    And a place that is no ruin keeps the plain town glyph where nothing else is drawn: a city founded later and covered by it throughout (Manila, Batavia), or a building still standing (São Jorge da Mina)
     And a place's own decoration, link or image laid on later replaces its glyph
 
 Feature: The world turned to the chart (deferred)
@@ -511,6 +522,89 @@ Feature: A person's picture card
     Then it shows 👁, and a click on it enlarges the card to near full size
     And the enlarged card shows ⟳ to turn it over, and a put-away control drawn as an X like the one that marks buried treasure on a map, or a small skull and crossbones
     And the card's old resize icon goes
+
+Feature: A sight's pictures on the chart table
+  Source: the user's design for the sights' pictures, 2026-10-30, on [#310](https://github.com/mark-brannan/portolani/pull/310): a sight's tile opened on the map deals its pictures onto the map "as onto a chart table", exactly as a chosen person's pictures are; Tyre first, from the candidates in `docs/ruin-marks/tyre.md`; where the row lies and the split by mark, the user's review of [#326](https://github.com/mark-brannan/portolani/pull/326), 2026-10-30, as #326's body records it (paraphrase: a sight's cards are dealt in a row along the foot of the window, in its bottom third, clear of the mark, the map flying there first from afar; a sight with several marks splits its pictures by mark, Tyre's city site and Al-Bass). This overtakes the row "just south of its marks, centred under them" and the tile that opened all of a sight's pictures.
+  Scenario: a mark's tile opens its pictures
+    Given a sight with pictures in its record (Tyre: the harbour, the dig, the peninsula from orbit, the arch, the road, the hippodrome, Cassas's aqueduct)
+    When the user opens the tile of one of its marks on the map
+    Then that mark's pictures are dealt onto the map in a row along the foot of the window, in its bottom third, clear of the mark, each a little askew
+    And they drag, resize, turn over to read their credit and caption, look, put away and follow their link to Commons as a person's do
+    And the tile shows that mark's pictures as thumbnails, each of which takes its picture off the table or puts it back
+    And closing the tile leaves the pictures on the table until the user puts them away or chooses another subject
+  Scenario: a sight with several marks splits its pictures by mark
+    Given a sight drawn as more than one mark (Tyre: the city site, the old island port, and Al-Bass on the mainland)
+    When the user opens one mark's tile
+    Then only the pictures of that part of the site are dealt: the city site's harbour, view from orbit and dig, or Al-Bass's arch, road, hippodrome and aqueduct
+    And the sight's one row in the Points of interest drawer shows all of them
+  Scenario: every mark answers where it is drawn
+    Source: the user on [#326](https://github.com/mark-brannan/portolani/pull/326), 2026-10-30, in the session walk: "the northern ruins for Tyre don't do anything. We said we were moving two cards to the norther (port) site but they're just gone. I said the northern site was more important to me than the two...but you left the southern site and didn't build a mouseover/clickpoint for the northern (port) site. I've gotta see that."; "There's also something strange happening with the hit boxes. When I sweep and then click part of the leftmost icon I get the hover text tile, but not always the cards, sometimes if I change the position of the click...then the cards get dealt."; "I see now that at a certain zoom level the north and south sites are both there and have tiles/cards...however I can't figure out why the northern site is not always clickable. To reiterate: something weird is going on with hit boxes and drawing the position of these. It shouldn't be this complicated."
+    Given a sight drawn as more than one mark, at any zoom where its marks are drawn, before or after a sweep
+    When the user points at any part of a mark, or clicks or taps it
+    Then the pointer answers over the whole of that mark, at the spot where it is drawn: where the mark is drawn, there it answers
+    And every click on it opens its tile and deals its own pictures, every time; no part of the mark opens the tile and deals nothing
+    And no mark of a sight is drawn without answering: the city site, the port the user holds the more important, answers as Al-Bass does
+  Scenario: a sight's marks keep their bearing to each other
+    Source: the user on [#326](https://github.com/mark-brannan/portolani/pull/326), 2026-10-30, in the session walk: "The ruins for Tyre are inexplicably trading positions around when zooming. Initially they are north/south of one another but then when clicking or zooming they get rendering beside one another."
+    Given a sight drawn as more than one mark (Tyre's two sites, 1.7 km apart on one latitude)
+    When the user zooms in or out, or clicks
+    Then the marks keep their true bearing to each other at every zoom: Tyre's city site stands west, Al-Bass east
+    And where they lie too close to stand apart at that zoom, they spread along that bearing only as far as they need to stand clear of each other, and come back to their own places as the zoom opens
+    And a click or a zoom never swaps or turns them
+  Scenario: one subject at a time
+    Given a sight's pictures on the table
+    When the user chooses a person in the People drawer
+    Then the sight's pictures are put away and the person's dealt, and the other way round when a sight's tile is opened with a person chosen
+    And the choice rides in the link as `sight=<name>`, with `pictures=` and `pictureat=` as a person's
+  Scenario: built and credited
+    Given the sights' picture records (`data/sights/pictures.json`, keyed by the tile's name, each picture with its kind, author, date, licence and a one-line caption)
+    When the pictures are built (`npm run people`)
+    Then each is fetched from Commons, its licence checked against the record, and written into `packs/overlays/sights/` with a manifest of the people manifest's shape
+    And its back reads its credit and its caption
+
+Feature: A place's note and details in the Points of interest drawer
+  Source: the user's review of [#326](https://github.com/mark-brannan/portolani/pull/326), 2026-10-30, as #326's body records it (paraphrase: a place's note shows only on hover or focus; a click shows the place's details at the drawer's foot)
+  Scenario: the note on hover
+    Given the Points of interest drawer open
+    When the pointer rests on a place's row, or the keyboard's focus reaches it
+    Then the place's note shows, laid over the rows below so nothing jumps, and goes when the pointer or the focus leaves
+  Scenario: the details on a click
+    Given the Points of interest drawer open
+    When the user clicks a place's row
+    Then the map flies there, and the place's details show at the drawer's foot: its name and date, its tile's text, and its pictures as thumbnails that put a picture on the table or take it off
+    And the click on the row deals nothing; a mark on the map deals
+
+Feature: A flight sweeps the table, then deals on arrival
+  Source: the user on [#326](https://github.com/mark-brannan/portolani/pull/326), 2026-10-30, in the session walk: "cards need to sweep themselves for now whenever we do a fly action. I typically want that for people cards too...so it should be the same action if possible. sweep then fly."; "I notice that cards for people are getting dealt before we fly and so they are mysteriously in place when we get to the outer zoom. We should fly and then deal cards when we are nearing the target zoom levels, or the target field of view."
+  Scenario: sweep, fly, deal
+    Given cards on the table, a person's or a sight's, or none
+    When the user chooses something that flies the map: a person, a sight's mark from afar, a row in a drawer, a voyage, a chart, Go
+    Then every card on the table is put away first, a person's or a sight's alike, as the skull puts them away
+    And then the map flies
+    And the chosen subject's cards, a person's or a sight's alike, are dealt only as the flight nears its target view, never before it sets off or while the map is still far from it
+  Scenario: no flight, no sweep
+    Given a choice that does not move the map (a sight's mark opened where the map already is)
+    When its cards are dealt
+    Then they are dealt at once, in the view the map is in
+
+Feature: The skull in the lower right puts the map back
+  Source: the user on [#326](https://github.com/mark-brannan/portolani/pull/326), 2026-10-30, in the session walk: "I don't like the broom. Use a skull and cross bones and put some latin script text below it. I want us to cycle through a handful of phrases about mortality and death/dust that would have been in common use in the period: "Memento, homo, quia pulvis es, et in pulverem reverteris", "Pulvis et umbra sumus", "Hodie mihi, cras tibi", "Mors certa, hora incerta", "All flesche is grasse", "Erthe out of erthe is wonderly wrought, Erthe hath of erthe a dignite of nought", "Ogni uomo è polvere", "Ricordati che devi morire", "Polvo eres, y en polvo te has de convertir", "Nuestras vidas son los ríos que van a dar en la mar, que es el morir", "Recuerda que eres polvo". You may use an animated broom effect on the map when the skull is clicked and the cards are being swept but then the broom disappears. I want the skull and the flavor text to always appear in the lower right persistently. It can always be used to clear things back to the normal state." That one control puts every card away, a person's or a sight's alike, is the earlier call of the same review, as #326's body records it (paraphrase). The broom supersedes nothing older: the sweep was first drawn as a broom on #326, shown only while a card lay on the table and keeping the subject chosen, and the user replaced it with the skull the same day.
+  Scenario: the skull is always there
+    Given the chart at any view, with cards on the table or none
+    When the user looks at the lower right of the window
+    Then a skull and crossbones is there, with one period phrase on mortality under it, in the phrase's own language, untranslated
+    And it is there at all times, not only while a card lies on the table
+  Scenario: the phrases turn
+    Given the skull shown
+    When the phrase under it changes
+    Then it moves on in turn through the list: "Memento, homo, quia pulvis es, et in pulverem reverteris", "Pulvis et umbra sumus", "Hodie mihi, cras tibi", "Mors certa, hora incerta", "All flesche is grasse", "Erthe out of erthe is wonderly wrought, Erthe hath of erthe a dignite of nought", "Ogni uomo è polvere", "Ricordati che devi morire", "Polvo eres, y en polvo te has de convertir", "Nuestras vidas son los ríos que van a dar en la mar, que es el morir", "Recuerda que eres polvo"
+    And what turns it, a clock or each click, is open
+  Scenario: a click puts the map back to its normal state
+    Given cards on the table, a tile open, a person or a sight chosen, in any mix
+    When the user clicks the skull
+    Then every card is put away, a person's or a sight's alike, every tile closes, and no subject is chosen: the map is in its normal state
+    And a broom sweeps across the map as the cards go, then is gone; with reduced motion the cards go with no broom
+    And a click with nothing on the table does no harm: the map is already in its normal state
 
 Feature: People and voyages share one timeline
   Source: the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "I'm now leaning towards both the people drawer and the voyages drawer being timeline format"; "Perhaps the timelines has a way to expand to earlier human history on the left side?"; "I don't exactly like the break I'm seeing from 300 BC to 1000 CE...realizing that it throws off the scale a bit."; and the user's answers in the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30, to the recorder's questions (paraphrase: one timeline, two lanes, the Sights eras as colour bands; Lapita the left edge, an expander for earlier history; fill the gap rather than compress the axis): "voyages section: yes"; "timeline span, yes lapita default with expander"; "BC to CE break, yes fill it"

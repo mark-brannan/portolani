@@ -5,7 +5,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 // Every catalogue in data/charts/ (the portolans, the other traditions, any added later) holds to the same checks.
 const dir = new URL('../data/charts/', import.meta.url);
 const files = readdirSync(dir).filter((f) => f.endsWith('.json'));
-const COMMONS = /^https:\/\/upload\.wikimedia\.org\/wikipedia\/commons\//;
+const COMMONS = /^https:\/\/(upload\.wikimedia\.org\/wikipedia\/commons\/|iiif\.bodleian\.ox\.ac\.uk\/iiif\/image\/)/; // the Bodleian's IIIF serves the full 4000 px of Olives 1559; Commons holds it at 1000 px
 
 test('data/charts/ holds at least the portolans and the other traditions', () => {
   for (const f of ['portolans.json', 'world.json']) assert.ok(files.includes(f), f);
@@ -36,6 +36,7 @@ for (const file of files) {
       assert.match(c.display, COMMONS, c.id);
       if (c.thumb) assert.match(c.thumb, COMMONS, c.id);
       assert.ok(c.width > 0 && c.height > 0, `${c.id}: dimensions`);
+      if (!c.original.includes('/commons/')) { assert.equal(c.display, c.original, `${c.id}: a holder's IIIF scan is its own display`); continue; }
       const at = c.original.split('/commons/')[1].split('/').slice(0, 2).join('/');
       if (Math.max(c.width, c.height) > 3840) assert.ok(c.display.includes(`/thumb/${at}/`) && c.display.includes('/3840px-'), `${c.id}: display is a 3840 px rendering of original`);
       else assert.equal(c.display, c.original, `${c.id}: a scan within 3840 px is its own display`);
