@@ -63,10 +63,11 @@ const read = (file) => JSON.parse(readFileSync(file, 'utf8'));
 let made;
 const names = () => made ??= joinNames(read(join(ROOT, 'test', 'fixtures', 'sea-names-50m.json')),
   coastNames(read(join(GEO, 'ne-admin-0-countries-50m.geojson')), read(join(GEO, 'ne-coastline-50m.geojson'))));
+const images = new Map();
 const env = {
   createCanvas,
   readJSON: async (p) => (p === 'geo/names-50m.json' ? names() : p === 'geo/seas-50m.json' ? read(join(ROOT, 'test', 'fixtures', 'seas-50m.json')) : p === 'geo/playas-10m.json' ? read(join(ROOT, 'test', 'fixtures', 'playas-10m.json')) : p === 'geo/peaks-10m.json' ? read(join(ROOT, 'test', 'fixtures', 'peaks-10m.json')) : read(resolve(p))),
-  loadImage: (p) => loadImage(resolve(p)),
+  loadImage: (p) => images.get(p) ?? images.set(p, loadImage(resolve(p))).get(p), // decoded once, as the page's host does
   loadFont: async (family) => { GlobalFonts.registerFromPath(join(ROOT, 'test', 'fixtures', 'IMFeENrm28P.ttf'), family); },
 };
 

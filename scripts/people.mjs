@@ -218,9 +218,10 @@ export const mementoNext = (k) => (((k + 1) % MEMENTO.length) + MEMENTO.length) 
 // and overlapping on a wide screen, so a long row still fits it). `sizes` are the pictures' [width, height] in px.
 // Returns [{ lon, lat, scale, turn: 0 }], scale in Mercator degrees per px,
 // as a chart's sheet (overlays.mjs).
+// Mercator latitude in degrees and back, for laying pictures along a frame
+const merc = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360)) * 180 / Math.PI;
+const latOf = (m) => (2 * Math.atan(Math.exp((m * Math.PI) / 180)) - Math.PI / 2) * 180 / Math.PI;
 export function picturePlaces(frame, sizes, grow = 1, overlap = 0) {
-  const merc = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360)) * 180 / Math.PI;
-  const latOf = (m) => (2 * Math.atan(Math.exp((m * Math.PI) / 180)) - Math.PI / 2) * 180 / Math.PI;
   const m0 = merc(Math.max(-80, frame.latMin)), m1 = merc(Math.min(80, frame.latMax));
   const tall = Math.max(3, Math.min(30, (m1 - m0) * 0.4)) * grow, gap = tall * 0.08;
   let x = frame.lonMin;
@@ -233,8 +234,6 @@ export function picturePlaces(frame, sizes, grow = 1, overlap = 0) {
 // The box of `frame` and the pictures laid at `places` (picturePlaces), each `sizes` [width, height] px: what a view
 // shows to frame a person whole.
 export function withPictures(frame, places, sizes) {
-  const merc = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360)) * 180 / Math.PI;
-  const latOf = (m) => (2 * Math.atan(Math.exp((m * Math.PI) / 180)) - Math.PI / 2) * 180 / Math.PI;
   const box = { ...frame };
   places.forEach((s, k) => {
     const [w, h] = sizes[k], m = merc(s.lat);

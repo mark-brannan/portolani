@@ -4,6 +4,8 @@
 // [lon, lat], each leg joined by one of LINES and graded by one of CONFIDENCES, plus events along
 // the way (a death is drawn as a skull and crossbones). This module turns a leg into a dense path
 // and cuts it at the seam; the drawing is in scene.mjs, the land test in test/voyages.test.mjs.
+import { RAD, fromCentre, wrapLon, mercLat } from './frame-box.mjs';
+
 export const LINES = ['rhumb', 'great-circle', 'spline'];
 // How well a thing's place or course is known, one list for a leg, an event, a birth and a death (docs/spec/design.md,
 // "one word for how sure"): attested, a source records it; inferred, worked out from the sources; conventional, the
@@ -84,11 +86,8 @@ export function voyageColours(ids, picked = {}, contrast = new Set()) {
   return Object.fromEntries(list.map((v) => [v.id, v.colour ?? v.ink]));
 }
 
-const RAD = Math.PI / 180, R_KM = 6371.0088;
-const fromCentre = (d) => (d > 180 ? d - 360 : d < -180 ? d + 360 : d);
-export const wrapLon = (lon) => ((((lon + 180) % 360) + 360) % 360) - 180;
+const R_KM = 6371.0088;
 const mercY = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * RAD) / 2));
-const mercLat = (y) => (2 * Math.atan(Math.exp(y)) - Math.PI / 2) / RAD;
 
 // great-circle distance in km
 export function distanceKm([lon1, lat1], [lon2, lat2]) {
