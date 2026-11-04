@@ -10,8 +10,8 @@
 // No sheet crosses the date line, and a row that would reach a pole ends at the page's edge. Nothing here
 // reads land or draws.
 
-// The Catalan Atlas rose, read off the scan through its sheet 5 fit to +-1 degree (docs/atlas/centres.md): the point the grids
-// count from and the origin of the lines drawn at every zoom.
+// The Catalan Atlas rose, read off the scan through its sheet 5 fit to +-1 degree (docs/atlas/centres.md):
+// the point the grids count from and the origin of the lines drawn at every zoom.
 export const ROSE = { lon: -20.2, lat: 43.5 };
 
 // The points a grid may count from (`origin` of sheetsFor): the Catalan rose, the default, or 0E 0N, NOAA's own
