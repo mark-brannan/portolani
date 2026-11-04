@@ -2,14 +2,14 @@
 import { writeFileSync } from 'node:fs';
 const W = 700, H = 440;
 const rows = [
-  ['Reign c. 1312 to c. 1337', 'Accession dated 25 years before his death', 'firm', 'Most accepted'],
+  ['Reign c. 1312 to c. 1337', 'Accession dated 25 years before his death', 'attested', 'Most accepted'],
   ['In Cairo 19 July to 18 October 1324', 'One secondary source', 'reported', 'Days approximate'],
   ['Gold fell 25 to under 22 dirhams, 12 years', 'Al-Umari', 'reported', 'His report'],
   ['60,000 men, 12,000 slaves with gold bars', 'Later Arabic accounts', 'legend', 'Literary, not a count'],
   ['About 18 tonnes of gold', 'One chain, al-Umari to Ibn Khaldun', 'legend', 'One source repeated'],
   ['Richest person ever, $400 billion', 'Online articles', 'legend', 'Cannot be calculated'],
 ];
-const mark = { firm: ['#3f6b3a', '●', 'firm'], reported: ['#b07a1c', '◐', 'one source'], legend: ['#8e3a2a', '○', 'retelling'] };
+const mark = { attested: ['#3f6b3a', '●', 'attested'], reported: ['#b07a1c', '◐', 'one source'], legend: ['#8e3a2a', '○', 'retelling'] };
 const tbl = (cls = '', hi = -1) => `<table class="tbl ${cls}">${rows.map((r, i) => `<tr class="${i === hi ? 'hi' : ''}"><td class="m" style="color:${mark[r[2]][0]}">${mark[r[2]][1]}</td><td>${r[0]}<small>${r[1]}</small></td><td class="f" style="color:${mark[r[2]][0]}">${mark[r[2]][2]}</td></tr>`).join('')}</table>`;
 const css = (t) => `
 *{box-sizing:border-box;margin:0}
@@ -49,9 +49,9 @@ const c1 = page(T1, '1. The king opens the door', 'Entry is the Catalan Atlas Mu
   <div class="ring" style="left:112px;top:244px;width:110px;height:92px"></div>`, 'View 1. Continent zoom. A gold-ringed Musa where Mali sits; nothing else announces the story.'),
  frame(`<div class="map" style="left:-200px;top:-260px;width:2400px;height:1500px;background-size:2400px 1500px"></div>
   <div class="fig" style="left:90px;top:130px;width:330px;height:236px;background-image:url(musa.jpg);border-radius:14px;box-shadow:0 6px 20px #0008"></div>
-  <div class="tile" style="left:432px;top:0;width:268px;height:100%;border-width:0 0 0 1px"><h3>The richest lord of the land</h3>The atlas says so beside him: <i>Musse Melly</i>, sovereign of the land of the black people of Gineva, rich in gold. He holds up a nugget.<br><br><span class="chip on">The king</span><span class="chip">Rex Melly, 1339</span><span class="chip">The hajj</span><span class="chip">How firm</span></div>`, 'View 2. Zoomed in, the raw crop of the scan at map size; the tile slides in from the right.'),
+  <div class="tile" style="left:432px;top:0;width:268px;height:100%;border-width:0 0 0 1px"><h3>The richest lord of the land</h3>The atlas says so beside him: <i>Musse Melly</i>, sovereign of the land of the black people of Gineva, rich in gold. He holds up a nugget.<br><br><span class="chip on">The king</span><span class="chip">Rex Melly, 1339</span><span class="chip">The hajj</span><span class="chip">Fact or Fiction?</span></div>`, 'View 2. Zoomed in, the raw crop of the scan at map size; the tile slides in from the right.'),
  frame(`<div class="map" style="left:-200px;top:-260px;width:2400px;height:1500px;background-size:2400px 1500px;opacity:.55"></div>
-  <div class="tile" style="left:40px;top:28px;width:620px;height:384px;overflow:hidden"><h3>How firm are the famous numbers?</h3>${tbl()}</div>`, 'View 3. Chip "How firm" swaps the tile for the numbers table; the map dims behind it.')],
+  <div class="tile" style="left:40px;top:28px;width:620px;height:384px;overflow:hidden"><h3>Fact or Fiction?</h3>${tbl()}</div>`, 'View 3. Chip "Fact or Fiction?" swaps the tile for the numbers table; the map dims behind it.')],
 ['Tap the figure: map flies in (900 ms), tile slides from the right', 'Chip: tile body cross-fades; the map stays put']);
 
 // ---- 2: two portraits (cool archival)
@@ -64,10 +64,10 @@ const c2 = page(T2, '2. Thirty-six years, two portraits', 'Entry is a comparison
  frame(`<div class="fig" style="left:20px;top:56px;width:330px;height:189px;background-image:url(rex-melly.jpg)"></div>
   <div class="fig" style="left:360px;top:56px;width:320px;height:229px;background-image:url(musa.jpg)"></div>
   <div class="lbl" style="left:22px;top:8px">Rex Melly, 1339: seated, crowned, a staff</div><div class="lbl" style="left:362px;top:8px">Musse Melly, c. 1375: a gold nugget raised</div>
-  <div style="position:absolute;left:24px;top:300px;width:652px;font-size:14.5px;line-height:1.4">Between the two plates the gold arrives. The hajj of 1324 is why Mali is on a European chart at all; the second drawing says what the first only implies.<br><span class="chip on">Compare</span><span class="chip">The hajj</span><span class="chip">How firm</span></div>`, 'View 2. Open a plate: the two figures side by side at plate size, a one-line caption each.'),
- frame(`<div style="position:absolute;inset:0;background:#fff;padding:20px 24px"><h3 style="font-size:19px;margin-bottom:6px">The numbers, and how firm they are</h3>${tbl('', 3)}</div>
+  <div style="position:absolute;left:24px;top:300px;width:652px;font-size:14.5px;line-height:1.4">Between the two plates the gold arrives. The hajj of 1324 is why Mali is on a European chart at all; the second drawing says what the first only implies.<br><span class="chip on">Compare</span><span class="chip">The hajj</span><span class="chip">Fact or Fiction?</span></div>`, 'View 2. Open a plate: the two figures side by side at plate size, a one-line caption each.'),
+ frame(`<div style="position:absolute;inset:0;background:#fff;padding:20px 24px"><h3 style="font-size:19px;margin-bottom:6px">Fact or Fiction?</h3>${tbl('', 3)}</div>
   <div class="lbl" style="right:12px;bottom:10px">source and grade appear on the line you touch</div>`, 'View 3. The table as a plain sheet; a touched line names its source.')],
-['Open a plate: the other plate slides in beside it (500 ms)', 'Chip "How firm": the plates fold away, the sheet rises']);
+['Open a plate: the other plate slides in beside it (500 ms)', 'Chip "Fact or Fiction?": the plates fold away, the sheet rises']);
 
 // ---- 3: the road (dark ink-and-gold, scroll-driven)
 const T3 = { page: '#14172b', ink: '#efe4c4', edge: '#c9a24a', stage: '#0f1222', accent: '#e0b84e', tile: '#1c2040', tileInk: '#efe4c4', chip: '#14172b', filter: 'brightness(.55) sepia(.3) hue-rotate(185deg) saturate(1.3)' };
@@ -82,14 +82,14 @@ const c3 = page(T3, '3. The road, told by scrolling', 'Entry is the hajj, 1324 t
   <div class="tile" style="left:24px;top:230px;width:420px;font-size:14px"><h3>19 July 1324. Cairo</h3>Three days by the pyramids, three months in the city, gold given away freely. Al-Umari: a mithqal fell from 25 dirhams to under 22.<br><span class="chip on">attested</span> <span class="chip">the fall: his report</span></div>${rail(50, '19 July 1324')}`, 'View 2. Mid-rail, Cairo: the Atlas Musa appears pinned to the stop; the numbers carry their grade as chips.'),
  frame(`<div class="map" style="left:-20px;top:-300px;width:1600px;height:1000px"></div>
   <svg style="position:absolute;inset:0" width="700" height="440"><path d="M100 300 C 40 300 0 250 -20 200" stroke="#efe4c4" stroke-width="3" fill="none" stroke-dasharray="3 7"/></svg>
-  <div class="tile" style="left:200px;top:36px;width:470px;font-size:14px"><h3>Before the king: the fleet that did not return</h3>Told once, by al-Umari, from Musa's own mouth: 2,000 ships west into the Atlantic, none back. Drawn dotted, where it ends no one knows.<br><span class="chip on">doubted</span><span class="chip">Rex Melly, 1339</span><span class="chip">How firm</span></div>${rail(100, 'The coda')}`, 'View 3. End of the rail: the fleet (doubted, dotted), and chips onward to Dulcert and the table.')],
+  <div class="tile" style="left:200px;top:36px;width:470px;font-size:14px"><h3>Before the king: the fleet that did not return</h3>Told once, by al-Umari, from Musa's own account: 2,000 ships west into the Atlantic, none back. Drawn dotted, where it ends no one knows.<br><span class="chip on">doubted</span><span class="chip">Rex Melly, 1339</span><span class="chip">Fact or Fiction?</span></div>${rail(100, 'The coda')}`, 'View 3. End of the rail: the fleet (doubted, dotted), and chips onward to Dulcert and the table.')],
 ['Scroll: the map pans east, the line draws on (1.2 s ease)', 'Scroll on: the map swings to the Atlantic, the gold line gives way to a dotted one']);
 
 // ---- 4: the ledger (plain, numbers first)
 const T4 = { page: '#e6ebe0', ink: '#1e2a1c', edge: '#7b8c74', stage: '#f4f6ef', accent: '#2f5d3a', tile: '#fbfcf7', tileInk: '#1e2a1c', chip: '#fff' };
 const c4 = page(T4, '4. The ledger', 'Entry is the claim-and-grade table as a tile, open over the map. Every number the internet repeats is a line; touching one lights its place on the map and names its source. The portraits are footnotes.', 'ledger-paper green and grey, plain type, no ornament; the table is the spine',
 [frame(`<div class="map" style="left:-120px;top:-90px;width:1600px;height:1000px;filter:grayscale(.5)"></div>
-  <div class="tile" style="left:30px;top:20px;width:640px;height:400px;overflow:hidden"><h3>Mansa Musa: what is known, and how firmly</h3>${tbl()}<div style="margin-top:6px;font:11.5px 'DejaVu Sans'">● firm &nbsp; ◐ one source &nbsp; ○ a retelling, not a count</div></div>`, 'View 1. The tile opens from a map chip; six lines, one mark each, the mark also spelled out at the right.'),
+  <div class="tile" style="left:30px;top:20px;width:640px;height:400px;overflow:hidden"><h3>Fact or Fiction?</h3>${tbl()}<div style="margin-top:6px;font:11.5px 'DejaVu Sans'">● attested &nbsp; ◐ one source &nbsp; ○ a retelling, not a count</div></div>`, 'View 1. The tile opens from a map chip; six lines, one mark each, the mark also spelled out at the right.'),
  frame(`<div class="map" style="left:-120px;top:-90px;width:1600px;height:1000px;filter:grayscale(.5)"></div>
   <svg style="position:absolute;inset:0" width="700" height="440"><path d="M135 330 C 200 160 520 130 580 118" stroke="#2f5d3a" stroke-width="4" fill="none"/><circle cx="580" cy="118" r="8" fill="#2f5d3a"/></svg>
   <div class="tile" style="left:20px;top:170px;width:360px;height:250px;overflow:hidden;font-size:13px">${tbl('', 1)}</div>
