@@ -240,7 +240,7 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     const page = await (await browser.newContext({ viewport: { width: 1100, height: 740 } })).newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
-    await page.goto(`http://localhost:${server.address().port}/#map=7/40/12`);
+    await page.goto(`http://localhost:${server.address().port}/#map=7/40/12&timeline=b`);
     await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
     const opened = (id) => page.evaluate((i) => document.getElementById(i).classList.contains('open') && getComputedStyle(document.getElementById(i)).visibility === 'visible', id);
     const row = () => page.locator('#where .row').boundingBox();
@@ -353,7 +353,7 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     await thumb.click();
     assert.equal(await opened('chartsDrawer'), true, "a chart's frame shut its drawer");
     await page.waitForFunction((x) => location.hash !== x, h, { timeout: 60000 });
-    const [, lat, lon] = (await page.evaluate(() => location.hash)).replace('#map=', '').split('/').map(Number);
+    const [, lat, lon] = (await page.evaluate(() => location.hash)).replace('#map=', '').split('&')[0].split('/').map(Number);
     assert.ok(Math.abs(lat - 37.5) < 1 && Math.abs(lon - 25.2) < 1, `Vesconte's sheet is not round the Cyclades: ${lat}, ${lon}`);
     // the eye shows and hides a chart's sheet and leaves the drawer open
     const cosa = page.locator('#chartList .chart', { hasText: 'Juan de la Cosa' });
@@ -458,7 +458,7 @@ test('charts: the eye shows or hides one sheet and leaves the others and the map
   }
 });
 
-test('voyages: several drawn at once, each in its own ink, carried by the link; the eye shows or hides one, the name shows it alone and draws it on every time; an older single voyage= link opens; Clear empties the list', { skip, timeout: 240000 }, async () => {
+test('voyages: several drawn at once, each in its own ink, carried by the link; the eye shows or hides one, the name shows it alone and draws it on every time; an older single voyage= link opens; the skull empties the list, the drawer open and no Clear of its own', { skip, timeout: 240000 }, async () => {
   const server = createServer(async (req, res) => {
     let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
     if (p.endsWith('/')) p = path.join(p, 'index.html');
@@ -469,7 +469,7 @@ test('voyages: several drawn at once, each in its own ink, carried by the link; 
     const page = await (await browser.newContext({ viewport: { width: 1100, height: 740 } })).newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
-    await page.goto(`http://localhost:${server.address().port}/#map=2/15/-20&voyage=magellan`);
+    await page.goto(`http://localhost:${server.address().port}/#map=2/15/-20&voyage=magellan&timeline=b`);
     await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
     await page.click('#voyages');
     await page.waitForSelector('#voyageList [data-voyage]');
@@ -531,10 +531,20 @@ test('voyages: several drawn at once, each in its own ink, carried by the link; 
     await page.click('#voyageWidth [data-value="2.2"]');
     assert.match(await hash(), /voyagewidth=2.2/);
     if (!(await page.$eval('#voyagesPanel', (d) => d.classList.contains('open')))) await page.click('#voyages');
-    await page.click('#voyagesPanel .tool');
+    assert.equal(await page.locator('#voyagesPanel .tool').count(), 0, 'the Voyages drawer has a Clear of its own: the skull is the one clear');
+    const mapOf = (h) => new URLSearchParams(h.slice(1)).get('map'), was = mapOf(await hash());
+    // a chart's sheet laid too (its eye, as the page's own handler takes it): the skull must lift it, and throw nothing doing so
+    await page.waitForFunction(() => !document.querySelector('#chartList [data-overlay="carta-marina"] .eye')?.hidden);
+    await page.$eval('#chartList [data-overlay="carta-marina"] .eye', (b) => b.click());
+    await page.waitForFunction(() => /overlay=carta-marina/.test(location.hash));
+    await page.click('#sweep');
+    await page.waitForFunction(() => !/overlay=|sheet=/.test(location.hash), null, { timeout: 60000 });
     assert.deepEqual(await on(), []);
+    assert.doesNotMatch(await hash(), /overlay=|sheet=/, 'the skull left a chart on the map');
+    assert.equal(mapOf(await hash()), was, 'the skull moved the map');
     assert.doesNotMatch(await hash(), /voyages=/);
-    assert.equal(await page.$eval('#voyagesPanel .tool', (b) => b.disabled), true, 'Clear still offered with nothing to clear');
+    assert.match(await hash(), /voyagewidth=2.2/, 'the skull cleared a setting');
+    assert.equal(await page.$eval('#voyagesPanel', (d) => d.classList.contains('open')), true, 'the skull shut the drawer');
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();
@@ -553,7 +563,7 @@ test('people and voyages: two vertical drawers no wider than the charts, earlies
     const page = await (await browser.newContext({ viewport: { width: 1280, height: 800 } })).newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
-    await page.goto(`http://localhost:${server.address().port}/#map=2/15/-20`);
+    await page.goto(`http://localhost:${server.address().port}/#map=2/15/-20&timeline=b`);
     await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
     const opened = (id) => page.evaluate((i) => document.getElementById(i).classList.contains('open'), id);
     const box = (sel) => page.locator(sel).boundingBox();
@@ -657,7 +667,7 @@ test('people and voyages: two vertical drawers no wider than the charts, earlies
     // a phone: each a bottom sheet, the page never scrolling sideways, the Lapita row there
     const phone = await (await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })).newPage();
     phone.on('pageerror', (e) => errors.push(e.message));
-    await phone.goto(`http://localhost:${server.address().port}/#map=2/15/-20`);
+    await phone.goto(`http://localhost:${server.address().port}/#map=2/15/-20&timeline=b`);
     await phone.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
     await phone.tap('#people');
     await phone.waitForSelector('#peopleList [data-person="lapita-people"]');
@@ -675,6 +685,96 @@ test('people and voyages: two vertical drawers no wider than the charts, earlies
   }
 });
 
+test('timeline A (timeline=a): people above the axis, voyages below, each once, the era bands across it end to end, Earlier widens it; each button opens it at its own lane', { skip, timeout: 240000 }, async () => {
+  const server = createServer(async (req, res) => {
+    let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
+    if (p.endsWith('/')) p = path.join(p, 'index.html');
+    try { res.writeHead(200, { 'content-type': TYPES[path.extname(p)] ?? 'application/octet-stream' }).end(await readFile(p)); } catch { res.writeHead(404).end(); }
+  }).listen(0);
+  const browser = await chromium.launch();
+  try {
+    const page = await (await browser.newContext({ viewport: { width: 1100, height: 740 } })).newPage();
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await page.goto(`http://localhost:${server.address().port}/#map=2/15/-20&timeline=a`);
+    await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
+    const opened = () => page.evaluate(() => document.getElementById('timelinePanel').classList.contains('open'));
+    const lit = () => page.$$eval('.lanecap.lit', (cs) => cs.map((c) => c.id));
+    const box = (sel) => page.locator(sel).boundingBox();
+    await page.click('#people');
+    await page.waitForSelector('#peopleStrip [data-person]');
+    await page.waitForSelector('#laneVoyages [data-voyage]');
+    assert.equal(await opened(), true, 'the medallion did not open the timeline');
+    assert.deepEqual([await page.getAttribute('#people', 'aria-expanded'), await page.getAttribute('#voyages', 'aria-expanded')], ['true', 'false']);
+    assert.deepEqual(await lit(), ['peopleCap']);
+    // the two lanes on either side of one axis
+    const [people, axis, voyages] = [await box('#peopleStrip'), await box('#timeAxis'), await box('#laneVoyages')];
+    assert.ok(people.y + people.height <= axis.y + 1 && voyages.y >= axis.y + axis.height - 1, 'the people are not above the axis and the voyages below it');
+    // every voyage and every person, once each
+    const root = fileURLToPath(new URL('..', import.meta.url));
+    const index = JSON.parse(await readFile(path.join(root, 'data/voyages/index.json'), 'utf8'));
+    const records = JSON.parse(await readFile(path.join(root, 'data/voyages/people.json'), 'utf8'));
+    const persons = Object.entries(records).filter(([, p]) => p && typeof p === 'object').map(([id]) => id);
+    const shownVoyages = await page.$$eval('#laneVoyages [data-voyage]', (bs) => bs.map((b) => b.dataset.voyage));
+    const shownPeople = await page.$$eval('#peopleStrip [data-person]', (bs) => bs.map((b) => b.dataset.person));
+    assert.deepEqual([...shownVoyages].sort(), [...index].sort(), 'a voyage missing or twice');
+    assert.deepEqual([...shownPeople].sort(), [...persons].sort(), 'a person missing or twice');
+    // the era bands run from the axis's left edge to its right, end to end, each named once
+    // measured in one go, relative to the track, so a drawer still sliding in cannot skew them
+    const measure = () => page.evaluate(() => {
+      const t = document.getElementById('track').getBoundingClientRect();
+      return { t: { x: 0, width: t.width }, bs: [...document.querySelectorAll('#eras .band')].map((b) => { const r = b.getBoundingClientRect(); return { name: b.dataset.era, left: r.left - t.left, right: r.right - t.left, label: b.textContent }; }) };
+    });
+    const track = async () => (await measure()).t;
+    await page.waitForTimeout(400); // the drawer's slide
+    let { t, bs } = await measure();
+    assert.deepEqual(bs.map((b) => b.name), ['The ancient world', 'The medieval Indian Ocean and Asia', 'The age of discovery', 'The modern world']);
+    assert.ok(bs.every((b) => b.label === b.name), 'a band not named once');
+    assert.ok(Math.abs(bs[0].left - t.x) < 1 && Math.abs(bs.at(-1).right - (t.x + t.width)) < 1, 'the bands do not cover the axis');
+    bs.forEach((b, i) => { if (i) assert.ok(Math.abs(b.left - bs[i - 1].right) < 1, `a gap before ${b.name}`); });
+    // Earlier: the track half as wide again, the earlier stretch to the left with its windows and no entries, the main stretch unchanged in width
+    const w0 = t.width, mainW = bs.at(-1).right - bs[0].left;
+    await page.click('#earlier');
+    ({ t, bs } = await measure());
+    assert.equal(await page.getAttribute('#earlier', 'aria-pressed'), 'true');
+    assert.ok(Math.abs(t.width - w0 * 1.5) < 1, `Earlier did not widen the axis: ${w0} -> ${t.width}`);
+    assert.ok(Math.abs(bs.at(-1).right - bs[0].left - mainW) < 1, 'the main stretch changed width');
+    assert.ok(bs[0].left - t.x > w0 * 0.49, 'no earlier stretch to the left of Lapita');
+    assert.deepEqual(await page.$$eval('#eras .mark', (ms) => ms.map((m) => m.dataset.mark)), ['Sahul', 'Beringia', 'Clovis']);
+    assert.ok((await page.textContent('#timeAxis')).includes('50,000 BC'));
+    const firstEntry = Math.min(...await page.$$eval('#peopleStrip .bar, #laneVoyages .vbar', (es) => { const t = document.getElementById('track').getBoundingClientRect().left; return es.map((e) => e.getBoundingClientRect().left - t); }));
+    assert.ok(firstEntry >= bs[0].left - 1, 'an entry on the earlier stretch');
+    await page.click('#earlier');
+    assert.ok(Math.abs((await track()).width - w0) < 1, 'Earlier again did not bring the axis back');
+    // the dividers: the same drawer, at the voyages' lane; a second click shuts it
+    await page.click('#voyages');
+    assert.equal(await opened(), true, 'the dividers shut the timeline');
+    assert.deepEqual([await page.getAttribute('#people', 'aria-expanded'), await page.getAttribute('#voyages', 'aria-expanded')], ['false', 'true']);
+    assert.deepEqual(await lit(), ['voyagesCap']);
+    const panel = await box('#timelinePanel'), axisNow = await box('#timeAxis');
+    assert.ok(axisNow.y >= panel.y && axisNow.y < panel.y + 60, `the voyages' lane is not in view: axis at ${axisNow.y}, drawer at ${panel.y}`);
+    await page.click('#voyages');
+    assert.equal(await opened(), false, 'a second click on the dividers left the timeline open');
+    // a phone: the timeline scrolls sideways, opened at its right end, where most of it is
+    const phone = await (await browser.newContext({ viewport: { width: 412, height: 800 }, hasTouch: true, isMobile: true })).newPage();
+    phone.on('pageerror', (e) => errors.push(e.message));
+    await phone.goto(`http://localhost:${server.address().port}/#map=2/15/-20&timeline=a`);
+    await phone.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
+    await phone.tap('#people');
+    await phone.waitForSelector('#peopleStrip [data-person]');
+    await phone.waitForSelector('#laneVoyages [data-voyage]');
+    const sc = await phone.$eval('#timeScroll', (e) => ({ sw: e.scrollWidth, cw: e.clientWidth, left: e.scrollLeft }));
+    assert.ok(sc.sw > sc.cw, `the phone's timeline does not scroll sideways: ${JSON.stringify(sc)}`);
+    assert.ok(sc.left >= sc.sw - sc.cw - 1, `the phone's timeline did not open at its right end: ${JSON.stringify(sc)}`);
+    assert.equal(await phone.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'the page scrolls sideways');
+    assert.deepEqual(errors, []);
+  } finally {
+    await browser.close();
+    server.close();
+  }
+});
+
+
 test('people: a picture on the map is looked at, put away and dealt back by choosing the person again; the last touched lies on top; its Commons link is a glyph', { skip, timeout: 240000 }, async () => {
   const server = createServer(async (req, res) => {
     let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
@@ -687,7 +787,7 @@ test('people: a picture on the map is looked at, put away and dealt back by choo
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     // two of Columbus's pictures laid apart on open sea, the first at the view's centre
-    await page.goto(`http://localhost:${server.address().port}/#map=4/-50/-30&person=christopher-columbus&pictures=0,1&pictureat=0:-30,-50,0.015_1:-10,-50,0.015`);
+    await page.goto(`http://localhost:${server.address().port}/#map=4/-50/-30&person=christopher-columbus&pictures=0,1&pictureat=0:-30,-50,0.015_1:-10,-50,0.015&timeline=b`);
     await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
     await page.waitForFunction(() => document.querySelectorAll('#pictureKeys li').length === 2, null, { timeout: 60000 });
     await page.waitForTimeout(1200); // dealt in
@@ -724,9 +824,14 @@ test('people: a picture on the map is looked at, put away and dealt back by choo
     assert.ok(zoomIn.length, 'no Look button on the first picture');
     const lookAt = { x: zoomIn.reduce((s, p) => s + p[0], 0) / zoomIn.length, y: zoomIn.reduce((s, p) => s + p[1], 0) / zoomIn.length };
     // pressed once the pointer over it finds Look (its magnifier): a press sent at once, while a picture laid back is still settling, was lost now and then under load
+    // and pressed again, up to three times, until the picture is looked at: on CI a press right after a drawer shuts was
+    // lost about one run in three (the 'did not look at it again' failure), as a hand would press again
     const look = async () => {
-      await page.waitForFunction(({ x, y }) => { const m = document.getElementById('map'); m.dispatchEvent(new PointerEvent('pointermove', { clientX: x, clientY: y, isPrimary: true, bubbles: true })); return m.style.cursor === 'zoom-in'; }, lookAt, { timeout: 10000, polling: 100 });
-      await page.mouse.click(lookAt.x, lookAt.y);
+      for (let tries = 0; tries < 3; tries++) {
+        await page.waitForFunction(({ x, y }) => { const m = document.getElementById('map'); m.dispatchEvent(new PointerEvent('pointermove', { clientX: x, clientY: y, isPrimary: true, bubbles: true })); return m.style.cursor === 'zoom-in'; }, lookAt, { timeout: 10000, polling: 100 });
+        await page.mouse.click(lookAt.x, lookAt.y);
+        if (await page.waitForFunction(() => document.querySelector('#pictureKeys [data-look="0"]')?.getAttribute('aria-pressed') === 'true', null, { timeout: 2000, polling: 100 }).then(() => true, () => false)) return;
+      }
     };
     await look();
     assert.equal(await looked(), 'true');
@@ -763,10 +868,64 @@ test('people: a picture on the map is looked at, put away and dealt back by choo
 
     // choosing the person again, one click, deals every picture back
     await page.click('#people');
-    await page.click('[data-person="christopher-columbus"]');
+    await page.click('#peopleList [data-person="christopher-columbus"]');
     assert.match(await hash(), /person=/);
     await page.waitForFunction(() => document.querySelector('#pictureKeys [data-pic="0"]') && document.querySelector('#pictureKeys [data-pic="1"]'), null, { timeout: 60000 });
     assert.doesNotMatch(await hash(), /pictures=/);
+    assert.deepEqual(errors, []);
+  } finally {
+    await browser.close();
+    server.close();
+  }
+});
+
+// Every chart turns a quarter at a time (docs/spec/design.md, "Every chart turns, a quarter at a time"): the walk-around
+// chips step de la Cosa through its own quarter turns, so West up (its drawn bearing, 270) lights exactly there and the up chip
+// is pressed only then; and the eye shows or hides a sheet without moving the view or turning the world.
+test('charts: the walk-around chips step through the chart\'s quarter turns, West up lighting at its bearing; the eye leaves the view alone', { skip, timeout: 240000 }, async () => {
+  const server = createServer(async (req, res) => {
+    let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
+    if (p.endsWith('/')) p = path.join(p, 'index.html');
+    try { res.writeHead(200, { 'content-type': TYPES[path.extname(p)] ?? 'application/octet-stream' }).end(await readFile(p)); } catch { res.writeHead(404).end(); }
+  }).listen(0);
+  const browser = await chromium.launch();
+  try {
+    const page = await (await browser.newContext({ viewport: { width: 1100, height: 740 } })).newPage();
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await page.goto(`http://localhost:${server.address().port}/#map=3.00/30.000/-20.000&overlay=de-la-cosa`);
+    await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
+    const key = async (k) => new URLSearchParams((await page.evaluate(() => location.hash)).slice(1)).get(k);
+    await page.click('#charts');
+    const cosa = page.locator('#chartList .chart', { hasText: 'Juan de la Cosa' });
+    await cosa.locator('.thumb').click(); // lays the sheet and brings up its chips
+    const walk = page.locator('#sheetChips [data-walk="-1"]'), up = page.locator('#sheetChips [data-up]');
+    await walk.waitFor({ state: 'visible', timeout: 60000 });
+    const bearingAfter = async (was) => {
+      await page.waitForFunction((w) => (new URLSearchParams(location.hash.slice(1)).get('bearing') ?? '0') !== w, was, { timeout: 30000 });
+      await page.waitForTimeout(1500); // the turn is a short animation
+      return Number(await key('bearing') ?? 0);
+    };
+    // anticlockwise from north up: each step a quarter from the chart's own up, so 87.8, 177.8, 267.8 (West up), 357.8, 87.8
+    const seen = [];
+    let was = String(await key('bearing') ?? '0');
+    for (let i = 0; i < 5; i++) {
+      await walk.click();
+      const b = await bearingAfter(was);
+      seen.push(b); was = String(await key('bearing') ?? '0');
+      const lit = (await up.getAttribute('aria-pressed')) === 'true';
+      assert.equal(lit, Math.abs(b - 267.8) < 1 || Math.abs(b - 270) < 1, `West up is ${lit ? 'lit' : 'dark'} at ${b}`);
+    }
+    assert.ok(seen.some((b) => Math.abs(b - 270) < 3), `the walk never reached West up: ${seen}`);
+    for (let i = 1; i < seen.length; i++) assert.ok(Math.abs((((seen[i] - seen[i - 1]) % 360) + 360) % 360 - 90) < 3, `step ${i} was not a quarter turn: ${seen}`);
+    // the eye hides and shows the sheet and leaves the view, bearing included, where it is
+    const view = async () => `${await key('map')}|${await key('bearing')}`, before = await view();
+    await cosa.locator('.eye').click();
+    await page.waitForFunction(() => !/[#&]overlay=/.test(location.hash), null, { timeout: 30000 });
+    assert.equal(await view(), before, 'the eye hid the sheet and moved the view');
+    await cosa.locator('.eye').click();
+    await page.waitForFunction(() => /[#&]overlay=de-la-cosa(&|$)/.test(location.hash), null, { timeout: 30000 });
+    assert.equal(await view(), before, 'the eye showed the sheet and moved the view');
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();
