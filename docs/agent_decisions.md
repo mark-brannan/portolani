@@ -468,3 +468,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261104t185004z
 - timeline switch defaults to A; a link switching variant shuts an open timeline drawer, chips leave settings open; Reset keeps the choice; A adopts B's lit-voyage eye logic; A's card as at cc41da2 Undo: change the default to b in timelineVariant ([#369](https://github.com/mark-brannan/portolani/pull/369))
+
+### 20261104t185815z
+- charts' sheets keep the effect chips; lines fade only, cards exit stage left Undo: apply chips differently ([#367](https://github.com/mark-brannan/portolani/pull/367))
