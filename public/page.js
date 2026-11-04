@@ -15,6 +15,7 @@
 // For a while, `debug=sheets[,rings]` and `tune=name:value,...` carry the under-the-hood section
 // (docs/atlas/under-the-hood.md), off by default.
 import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, REEF_STYLES, PLAYA_STYLES, PEAK_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, VOYAGE_PLAY, voyagePlaySeconds, calendarOf, penOn, dayText, vaguer, voyageColours, settleInks, CONFIDENCE_PHRASES, isBroken, legPath, voyageView, CONTINENT_ZOOM_END, readVoyage, chronological, voyageLink, sightMarks, sightHits, drawnMarks, drawnPeaks, peakHits, SIGHT_TILES, noteMarks, pickMark, markClear, tileSpot, groupMarks, dateSpan, readDate, noteCount, drawNoteMark, drawNoteRing, notePulse, drawBadge, fitLineAt, fitLineMoving, drawFitLine, drawMarkGlyph, ZOOM } from './scene.mjs';
+import { playedOn, playDateText, playPace, isLong } from './scene.mjs'; // the play's band and pen (scripts/voyages.mjs)
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, effectiveOpacity, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
@@ -54,6 +55,9 @@ const canvas = $('map'), ctx = canvas.getContext('2d');
 // cards beside the map, not on the sea.
 const phone = matchMedia('(max-width: 520px)');
 
+// The styles chosen from a list, each by the id of its chips, the hash key it rides under and the list it is drawn from:
+// read from the hash, shown and read back from the drawer by one loop each (writeHash keeps its own order, which links carry).
+const ENUMS = { rivers: ['rivers', RIVER_STYLES], lakes: ['lakes', LAKE_STYLES], reefs: ['reefs', REEF_STYLES], playas: ['playas', PLAYA_STYLES], peaks: ['peaks', PEAK_STYLES], trees: ['trees', TREE_STYLES], overlap: ['overlap', OVERLAP_RULES], scaleBorder: ['scaleborder', SCALE_BORDERS], regionSet: ['regionset', REGION_SETS] };
 const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: CONTINENT_ZOOM_END, regions: 'latin', regionSet: 'today', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', reefs: 'crosses', playas: 'salt', peaks: 'catalan', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyages: [], voyageWidth: VOYAGE_WIDTH, voyageDraw: VOYAGE_DRAW.seconds, voyagePlay: VOYAGE_PLAY.seconds, person: null, sight: null, site: null, pictures: null, ...OVERLAY_DEFAULTS, cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER, overlap: DEFAULT_OVERLAP };
 // The cards of a subject chosen are dealt once the map is there: `dealing` is that subject's key until then (the map
 // flying to it, or its records loading), and no card of it lies on the table nor rides in the link meanwhile (dealNow).
@@ -67,7 +71,11 @@ const MANIFESTS = await readManifests(env);
 const SPRITES = (await listSprites(env)).filter((s) => KINDS.includes(s.kind) || s.kind === 'town');
 const BY_KEY = new Map(SPRITES.map((s) => [s.key, s]));
 // the scene's default selection
-const DEFAULT_SELECTION = defaultSprites(SPRITES);
+const DEFAULT_SELECTION = defaultSprites(SPRITES), DEFAULT_SET = new Set(DEFAULT_SELECTION);
+// the kinds a drawer lists, each with its heading; the mountain kind is the Catalan sprites, which stand on the hills, in the relief picker
+const KIND_UI = [['monster', 'Monsters'], ['ship', 'Ships'], ['rose', 'Roses'], ['town', 'Towns'], ['mountain', 'Hill drawings'], ['cartouche', 'Cartouche']];
+const FIGURE_KINDS = KIND_UI.map(([k]) => k).filter((k) => k !== 'cartouche');
+const pickerOf = (kind) => $(kind === 'mountain' ? 'pick-relief' : `pick-${kind}`);
 const sameSet = (a, b) => a.size === b.size && [...a].every((k) => b.has(k));
 
 // keys in the hash: the pack shortened (v:rose-aguiar); a pack with no short name is written whole
@@ -105,31 +113,22 @@ function styleFromHash() {
     // older links: continents=0, and regions=off
     continentsZoom: q.has('continents') ? zoomOf(q.get('continents'), DEFAULTS.continentsZoom) : DEFAULTS.continentsZoom,
     regions: ['latin', 'english'].includes(q.get('regions')) ? q.get('regions') : DEFAULTS.regions,
-    regionSet: REGION_SETS.includes(q.get('regionset')) ? q.get('regionset') : DEFAULTS.regionSet,
     regionsZoom: q.get('regions') === 'off' ? 0 : q.has('regionszoom') ? zoomOf(q.get('regionszoom'), DEFAULTS.regionsZoom) : DEFAULTS.regionsZoom,
     title: q.get('title') ?? DEFAULTS.title,
     // a link from before automatic was the default, with a title and no autotitle, keeps its title
     autoTitle: q.has('autotitle') ? q.get('autotitle') === '1' : !q.has('title') && DEFAULTS.autoTitle,
     land: LANDS.includes(q.get('land')) && q.get('land') !== 'islands' ? q.get('land') : DEFAULTS.land,
     islands: q.has('islands') ? q.get('islands') === '1' : q.get('land') === 'islands', // older: land=islands was the coloured islands
-    rivers: RIVER_STYLES.includes(q.get('rivers')) ? q.get('rivers') : DEFAULTS.rivers,
-    lakes: LAKE_STYLES.includes(q.get('lakes')) ? q.get('lakes') : DEFAULTS.lakes,
-    reefs: REEF_STYLES.includes(q.get('reefs')) ? q.get('reefs') : DEFAULTS.reefs,
-    playas: PLAYA_STYLES.includes(q.get('playas')) ? q.get('playas') : DEFAULTS.playas,
-    peaks: PEAK_STYLES.includes(q.get('peaks')) ? q.get('peaks') : DEFAULTS.peaks,
+    ...Object.fromEntries(Object.entries(ENUMS).map(([k, [key, of]]) => [k, of.includes(q.get(key)) ? q.get(key) : DEFAULTS[k]])),
     // older links named the drawn styles in `relief`: colour wins where it is listed
     mountains: ['off', 'ink'].includes(q.get('mountains')) ? q.get('mountains')
       : q.has('relief') ? (q.get('relief').split(',').includes('marina') ? 'colour' : q.get('relief').includes('engraved') ? 'ink' : 'off') : DEFAULTS.mountains,
-    trees: TREE_STYLES.includes(q.get('trees')) ? q.get('trees') : DEFAULTS.trees,
     seaTint: q.get('seas') === '1' || q.get('redsea') === '1',
-    scaleBorder: SCALE_BORDERS.includes(q.get('scaleborder')) ? q.get('scaleborder') : DEFAULTS.scaleBorder,
     scale: q.get('scale') === 'off' || SCALE_NAMES.includes(q.get('scale')) ? q.get('scale') : DEFAULTS.scale,
     cartouchePos: CORNERS.includes(q.get('cartouche')) ? q.get('cartouche') : DEFAULTS.cartouchePos, // dragged to a corner of the map
     scalePos: CORNERS.includes(q.get('scalepos')) ? q.get('scalepos') : DEFAULTS.scalePos,
     townSize: TOWN_SIZES.includes(q.get('townsize')) ? q.get('townsize') : DEFAULTS.townSize,
     placement: parsePlacement(q.get('placement')).text,
-    // how curated charts that overlap are drawn: one of OVERLAP_RULES (atlas.mjs)
-    overlap: OVERLAP_RULES.includes(q.get('overlap')) ? q.get('overlap') : DEFAULTS.overlap,
     // under the hood, for a while: the sheets in red and the knobs fixed in the code, each as its canonical text
     debug: parseDebug(q.get('debug')).text,
     tune: parseTune(q.get('tune')).text,
@@ -167,7 +166,7 @@ function voyagesFromHash(q) {
 function selectionFromHash() {
   const q = hashParams();
   if (q.has('sprites')) return new Set(q.get('sprites').split(',').filter(Boolean).map(decodeKey).filter((k) => BY_KEY.has(k)));
-  if (!LEGACY_KEYS.some((k) => q.has(k))) return new Set(DEFAULT_SELECTION);
+  if (!LEGACY_KEYS.some((k) => q.has(k))) return new Set(DEFAULT_SET);
   const rendering = RENDERINGS.includes(q.get('rendering')) ? q.get('rendering') : LEGACY_PACK[q.get('pack')] ?? 'vivid';
   const chosen = chooseSprites(MANIFESTS, { rendering, rose: q.get('rose') || undefined, monster: q.get('monster') || undefined, town: q.get('town') || undefined });
   const kinds = q.has('kinds') ? q.get('kinds').split(',') : DEFAULT_KINDS.filter((k) => k !== 'mountain'); // older links never drew mountains
@@ -182,7 +181,7 @@ function writeHash() {
   if (v.projection !== PROJECTION_NAMES[0]) q.set('projection', v.projection);
   if (v.bearing) q.set('bearing', String(Math.round(v.bearing * 10) / 10)); // the world turned: the compass direction at the top, north up written as no key
   if (!hoverOpen) q.set('hover', '0');
-  if (!sameSet(selection, new Set(DEFAULT_SELECTION))) q.set('sprites', SPRITES.filter((s) => selection.has(s.key)).map((s) => encodeKey(s.key)).join(','));
+  if (!sameSet(selection, DEFAULT_SET)) q.set('sprites', SPRITES.filter((s) => selection.has(s.key)).map((s) => encodeKey(s.key)).join(','));
   if (st.townSize !== DEFAULTS.townSize) q.set('townsize', st.townSize);
   if (!st.names) q.set('names', '0');
   if (!st.rhumb) q.set('rhumb', '0');
@@ -270,7 +269,7 @@ function thumb(s, label) {
 
 // Each family: a checkbox for the whole family (indeterminate when part of it is on) over its sprites, each its own toggle.
 const familyBoxes = [];
-for (const kind of ['monster', 'ship', 'rose', 'town', 'mountain']) { // the mountain kind is the Catalan sprites, which stand on the hills
+for (const kind of FIGURE_KINDS) {
   for (const fam of familiesOf(kind)) {
     const row = document.createElement('div'), head = document.createElement('label'), box = document.createElement('input'), count = document.createElement('span'), thumbs = document.createElement('div');
     row.className = 'family'; head.className = 'fam'; count.className = 'count'; thumbs.className = 'thumbs';
@@ -278,7 +277,7 @@ for (const kind of ['monster', 'ship', 'rose', 'town', 'mountain']) { // the mou
     head.append(box, fam.label, count);
     thumbs.append(...fam.sprites.map((s) => thumb(s, fam.label)));
     row.append(head, thumbs);
-    const pick = $(kind === 'mountain' ? 'pick-relief' : `pick-${kind}`);
+    const pick = pickerOf(kind);
     // a family is a chip with its picture, its name and how many of it are on; the one open shows its pictures in the tray below the chips
     if (!pick.firstChild) pick.append(Object.assign(document.createElement('div'), { className: 'fam-chips' }), Object.assign(document.createElement('div'), { className: 'fam-tray' }));
     const chips = pick.firstChild, tray = pick.lastChild;
@@ -523,14 +522,13 @@ function showStyle() {
   $('projection').value = $('projectionCharts').value = view.projection;
   $('ink').value = style.ink; $('parchment').value = style.parchment;
   $('density').value = style.density; $('densityOut').textContent = style.density;
-  $('names').checked = style.names; $('rhumb').checked = style.rhumb; $('scale').value = style.scale; $('scaleBorder').value = style.scaleBorder;
+  $('names').checked = style.names; $('rhumb').checked = style.rhumb; $('scale').value = style.scale;
   $('land').value = style.land; $('islands').value = style.islands ? 'on' : 'off'; $('seaTint').value = style.seaTint ? 'on' : 'off';
-  $('rivers').value = style.rivers; $('lakes').value = style.lakes; $('reefs').value = style.reefs; $('playas').value = style.playas; $('peaks').value = style.peaks; $('trees').value = style.trees;
-  $('overlap').value = style.overlap;
+  for (const k of Object.keys(ENUMS)) $(k).value = style[k];
   $('mountains').value = style.mountains; $('hills').value = CATALAN_KEYS.some((k) => selection.has(k)) ? 'catalan' : 'off';
   $('continentsZoom').value = style.continentsZoom; $('continentsOut').textContent = zoomLabel(style.continentsZoom);
   $('regions').value = style.regions; $('regionsZoom').value = style.regionsZoom; $('regionsOut').textContent = zoomLabel(style.regionsZoom);
-  $('regionSet').value = style.regionSet; showRegionSamples();
+  showRegionSamples();
   $('titleMode').value = style.autoTitle ? 'auto' : 'custom'; $('title').disabled = style.autoTitle;
   if (!style.autoTitle) $('title').value = style.title; // automatic shows the view's own name, once placed (render)
   $('townSize').checked = style.townSize !== 'rank';
@@ -552,17 +550,16 @@ function showStyle() {
 function readControls() {
   style = {
     ink: $('ink').value, parchment: $('parchment').value, density: Number($('density').value),
-    names: $('names').checked, rhumb: $('rhumb').checked, scale: $('scale').value, scaleBorder: $('scaleBorder').value,
-    land: $('land').value, islands: $('islands').value === 'on', seaTint: $('seaTint').value === 'on',
-    rivers: $('rivers').value, lakes: $('lakes').value, reefs: $('reefs').value, playas: $('playas').value, peaks: $('peaks').value, mountains: $('mountains').value, trees: $('trees').value,
-    continentsZoom: Number($('continentsZoom').value), regions: $('regions').value, regionSet: $('regionSet').value, regionsZoom: Number($('regionsZoom').value),
+    names: $('names').checked, rhumb: $('rhumb').checked, scale: $('scale').value,
+    land: $('land').value, islands: $('islands').value === 'on', seaTint: $('seaTint').value === 'on', mountains: $('mountains').value,
+    ...Object.fromEntries(Object.keys(ENUMS).map((k) => [k, $(k).value])),
+    continentsZoom: Number($('continentsZoom').value), regions: $('regions').value, regionsZoom: Number($('regionsZoom').value),
     // automatic shows the view's name in the box, which is not the typed title
     title: $('titleMode').value === 'auto' || style.autoTitle ? style.title : $('title').value, // switching to custom starts from the typed title, not the name shown
     autoTitle: $('titleMode').value === 'auto',
     // checked, by metro area; a link's townsize=population is kept until the box is touched
     townSize: $('townSize').checked ? (style.townSize === 'rank' ? 'area' : style.townSize) : 'rank',
     placement: style.placement, // chosen by the placement chips below
-    overlap: $('overlap').value,
     cartouchePos: style.cartouchePos, scalePos: style.scalePos, // set by dragging the cartouche or the scale bar
     ...readHood(),
     voyages: style.voyages, voyageWidth: Number($('voyageWidth').value), voyageDraw: style.voyageDraw, voyagePlay: style.voyagePlay, // chosen in the voyages drawer, and the link
@@ -635,7 +632,6 @@ function changed() {
 // and write the same selection and style as the default drawer, so the link carries the same hash. The flag
 // is in the query, which the hash writes, Reset and Copy link leave alone, and the phone's bottom sheet shows.
 const UI = ['presets', 'grid'].find((u) => u === new URLSearchParams(location.search).get('ui')) ?? null;
-const KIND_UI = [['monster', 'Monsters'], ['ship', 'Ships'], ['rose', 'Roses'], ['town', 'Towns'], ['mountain', 'Hill drawings'], ['cartouche', 'Cartouche']];
 const kindKeys = (kind) => SPRITES.filter((s) => s.kind === kind).map((s) => s.key);
 const sampleOf = (s) => {
   const el = document.createElement('span');
@@ -656,7 +652,6 @@ const chipButton = (role, ...kids) => {
 // `set` puts a list of keys on in their place.
 const CLEAR_GLYPH = svg(`<rect x="4" y="3" width="20" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2 2"/><path d="M10 6l8 6M18 6l-8 6" ${stroke('currentColor', 1.2)}/>`);
 const RESET_GLYPH = svg(`<path d="M9 5.5a5 5 0 1 1-1.6 4" ${stroke('currentColor', 1.3)}/><path d="M9 2v3.5H5.5" ${stroke('currentColor', 1.3)}/>`);
-const DEFAULT_KEYS = new Set(DEFAULT_SELECTION);
 const toolRefreshers = [];
 function groupTools(label, { all, dflt, get, set }) {
   const row = document.createElement('div');
@@ -673,12 +668,10 @@ function groupTools(label, { all, dflt, get, set }) {
 }
 // the figures of a kind, by their sprite keys
 const spriteTools = (label, keys) => groupTools(label, {
-  all: () => keys, dflt: keys.filter((k) => DEFAULT_KEYS.has(k)), get: () => keys.filter((k) => selection.has(k)),
+  all: () => keys, dflt: keys.filter((k) => DEFAULT_SET.has(k)), get: () => keys.filter((k) => selection.has(k)),
   set: (on) => { for (const k of keys) selection.delete(k); for (const k of on) selection.add(k); changed(); },
 });
-for (const [kind, label] of [['monster', 'Monsters'], ['ship', 'Ships'], ['rose', 'Roses'], ['town', 'Towns'], ['mountain', 'Hill drawings']]) {
-  $(kind === 'mountain' ? 'pick-relief' : `pick-${kind}`).prepend(spriteTools(label, SPRITES.filter((s) => s.kind === kind).map((s) => s.key)));
-}
+for (const [kind, label] of KIND_UI) if (kind !== 'cartouche') pickerOf(kind).prepend(spriteTools(label, kindKeys(kind)));
 
 // the style switches: off, or the default (the first drawn style where the default is off)
 const STYLE_SWITCHES = [
@@ -691,7 +684,7 @@ let showMoods = () => {}; // the Moods: its chips show which look is on
 if (UI) {
   document.documentElement.dataset.ui = UI;
   $('ui').hidden = false;
-  const body = $('ui-body'), refreshers = [], DEFAULT_SET = new Set(DEFAULT_SELECTION);
+  const body = $('ui-body'), refreshers = [];
   const sample = (kinds, set) => kinds.map((k) => SPRITES.find((s) => s.kind === k && set.has(s.key))).filter(Boolean);
   const kindOn = (kind) => kindKeys(kind).some((k) => selection.has(k));
   const setKind = (kind, on) => {
@@ -961,9 +954,7 @@ const LEADS = new Map([...document.querySelectorAll('#drawer [data-lead-for]')].
 // where the mood does not depart from it, so a mood replaces the whole look another left. Figures are named as the
 // hash names them (v:merman). All the things: every figure of every kind (the cartouche as chosen), the density at
 // the top, a new seed.
-const FIGURE_KINDS = ['monster', 'ship', 'rose', 'town', 'mountain'];
 const FIGURES = SPRITES.filter((s) => FIGURE_KINDS.includes(s.kind)).map((s) => s.key);
-const DEFAULT_SET = new Set(DEFAULT_SELECTION);
 const MOOD_STYLES = ['land', 'islands', 'seaTint', 'rivers', 'lakes', 'reefs', 'playas', 'peaks', 'mountains', 'trees', 'ink', 'parchment'];
 const PLAIN_LOOK = Object.fromEntries(MOOD_STYLES.map((k) => [k, DEFAULTS[k]]));
 const HILLS = ['v:mountains-a', 'v:mountains-b', 'v:mountains-c'];
@@ -1869,14 +1860,13 @@ let voyagePen = null; // { id, since, t0, ms } while drawing, t0 null until it s
 function applyReveal() {
   const v = voyagePen && ground?.voyages?.find((x) => x.id === voyagePen.id);
   if (!v) return;
-  if (voyagePen.band) { // a play: the line as far as the pen has come on the voyage's calendar, and the events it has passed
-    const b = voyagePen.band, day = playDay(b);
-    v.reveal = Math.min(0.999999, penOn(b.cal, day).share);
-    v.played = (v.voyage.events ?? []).filter((_, i) => b.cal.events[i] <= day);
+  if (voyagePen.band) { // a play: the line as far as the pen has come on the voyage's calendar (each branch of a migration on its own), and the events it has passed
+    const b = voyagePen.band;
+    Object.assign(v, playedOn(v.voyage, b.cal, playDay(b)));
   } else v.reveal = voyagePen.t0 == null ? 0 : Math.min(1, (performance.now() - voyagePen.t0) / voyagePen.ms);
 }
 // every exit of the pen puts the line back whole: a pen that stops early must not leave its voyage hidden
-function finish(id) { const v = ground?.voyages?.find((x) => x.id === id); if (v && ('reveal' in v || 'played' in v)) { delete v.reveal; delete v.played; render(); } }
+function finish(id) { const v = ground?.voyages?.find((x) => x.id === id); if (v && ('reveal' in v || 'played' in v)) { delete v.reveal; delete v.played; delete v.legReveal; render(); } }
 function drawOn(id) {
   closeBand();
   const pen = voyagePen = { id, since: performance.now(), t0: null, ms: style.voyageDraw * 1000 };
@@ -1923,14 +1913,22 @@ function playVoyage(id) {
     voyagePen = { id, band };
     if (!isShown(id)) showVoyages({ [id]: true }); else render(); // the line cleared to its start
     fillBand(); showVoyage();
-    const to = voyageInView(v) ? null : voyageView(v, flightTo ?? view, undefined, true, windowRect());
+    const rect = playRect(), to = voyageInView(v, rect) ? null : voyageView(v, flightTo ?? view, undefined, true, rect);
     if (to) { if (style.sheetHides) clearSheetFor(to, true); goTo(to); }
     requestAnimationFrame(playStep);
   }, () => {});
 }
-// whether the whole of a voyage's line is in the window, so the play needs no flight
-function voyageInView(v) {
-  const proj = viewProjection(flightTo ?? view), r = windowRect(), wrap = (lon) => ((((lon + 180) % 360) + 360) % 360) - 180;
+// the map a play is framed in, in canvas px: the window, short of an open drawer's left edge on a wide screen, so the
+// whole voyage sails in sight beside the drawer it was played from
+function playRect() {
+  const r = windowRect(), d = !phone.matches && openDrawer();
+  if (!d) return r;
+  const c = canvas.getBoundingClientRect(), x = ((d.getBoundingClientRect().left - c.left) * W) / c.width;
+  return x > r.x0 + (r.x1 - r.x0) / 3 && x < r.x1 ? { ...r, x1: x } : r;
+}
+// whether the whole of a voyage's line is in `r` (the window), so the play needs no flight
+function voyageInView(v, r = windowRect()) {
+  const proj = viewProjection(flightTo ?? view), wrap = (lon) => ((((lon + 180) % 360) + 360) % 360) - 180;
   return v.legs.every((leg) => (leg.points?.length > 1 ? legPath(leg) : []).every(([lon, lat]) => {
     if (proj.visible && !proj.visible(wrap(lon), lat)) return false;
     const [x, y] = proj.toPx([wrap(lon), lat]);
@@ -1944,6 +1942,7 @@ function playStep() {
   if (b.state === 'wait') { // for the flight to land and the scene to be placed with this voyage in it
     if (flightTo == null && placed === view && ground?.voyages?.some((x) => x.id === b.id)) { b.state = 'run'; b.t0 = now - b.at; } // from the day a pause or a seek left it at, else the first
     else if (now - b.since > 10000) { closeBand(); return; }
+    if (b.state === 'run' && reducedMotion()) return endPlay(); // reduced motion: the voyage whole at once, the band at its last day
   }
   if (b.state === 'run') {
     if (now - b.t0 >= b.ms) return endPlay();
@@ -1997,26 +1996,29 @@ function closeBand() {
 // full ink cut at the pen's day
 function fillBand() {
   const { cal } = band, span = cal.t1 - cal.t0, x = (d) => `${((100 * (d - cal.t0)) / span).toFixed(3)}%`, w = (a, b) => `${((100 * (b - a)) / span).toFixed(3)}%`;
-  const legs = cal.legs.map((l, i) => (i && l.a > cal.legs[i - 1].b ? `<span class="wait" style="left:${x(cal.legs[i - 1].b)};width:${w(cal.legs[i - 1].b, l.a)}"></span>` : '') +
-    `<span class="leg" style="left:${x(l.a)};width:${w(l.a, l.b)}"></span>`).join('');
+  let reached = -Infinity; // a wait is a gap no leg is under way in: between legs in turn, or a migration's branches all landed
+  const legs = cal.legs.map((l) => [l.a, l.b]).sort((p, q) => p[0] - q[0]).map(([a, b]) => {
+    const wait = reached > -Infinity && a > reached ? `<span class="wait" style="left:${x(reached)};width:${w(reached, a)}"></span>` : '';
+    reached = Math.max(reached, b);
+    return `${wait}<span class="leg" style="left:${x(a)};width:${w(a, b)}"></span>`;
+  }).join('');
   $('bandStrip').innerHTML = `<div class="ahead">${legs}</div><div class="sailed">${legs}</div>` + cal.events.map((d) => `<span class="tick" style="left:${x(d)}"></span>`).join('');
   $('bandStrip').style.setProperty('--c', voyageInk()[band.id] ?? '#8c2f1e');
-  const ends = (p) => (p === 'day' ? 'month' : p);
+  const ends = (p) => (isLong(cal) ? 'year' : p === 'day' ? 'month' : p); // a long calendar's ends as bare years, room left for its pace
   $('bandFrom').textContent = dayText(cal.t0, ends(cal.legs[0].precision));
   $('bandTo').textContent = dayText(cal.t1 - 1e-3, ends(cal.legs.at(-1).precision));
-  const days = Math.round(span), years = days / 365.25;
-  $('bandPace').textContent = `${years >= 3 ? `${Math.round(years)} years` : `${days.toLocaleString('en')} days`} in ${style.voyagePlay} s`;
+  $('bandPace').textContent = playPace(cal, style.voyagePlay); // a long calendar in years a second (scripts/voyages.mjs playPace)
   $('voyageBand').setAttribute('aria-label', `${band.title}, on its own calendar`);
   $('voyageBand').hidden = false;
   placeBand(); showBand();
 }
-// the band at the pen's day: the date, the leg or the wait, the strip cut there and its thumb, and the button
+// the band at the pen's day: the date, the stretch it is on or the place it waits at, the strip cut there and its thumb, and the button
 function showBand() {
   if (!band) return;
   const { cal } = band, day = playDay(band), pen = penOn(cal, day), leg = cal.legs[pen.leg], f = (day - cal.t0) / (cal.t1 - cal.t0);
-  const before = pen.waiting ? cal.legs[pen.leg - 1] : null;
-  $('bandDate').textContent = dayText(Math.min(day, cal.t1 - 1e-3), before ? vaguer(before.precision, leg.precision) : leg.precision);
-  $('bandLeg').textContent = band.state === 'done' ? `the end: ${leg.to}` : before ? `at ${before.to}, waiting` : `${leg.from} to ${leg.to}`;
+  const before = pen.waiting ? cal.legs[pen.before] : null;
+  $('bandDate').textContent = playDateText(cal, Math.min(day, cal.t1 - 1e-3), before ? vaguer(before.precision, leg.precision) : leg.precision);
+  $('bandLeg').textContent = band.state === 'done' ? `the end: ${leg.to}` : before ? `at ${before.to}, waiting` : `${pen.from} to ${pen.to}`;
   $('bandStrip').querySelector('.sailed').style.clipPath = `inset(0 ${(100 * (1 - f)).toFixed(3)}% 0 0)`;
   $('bandThumb').style.left = `${(100 * f).toFixed(3)}%`;
   const going = band.state === 'run' || band.state === 'wait', what = going ? 'Pause' : band.state === 'done' ? 'Play again' : 'Play on';
