@@ -1223,7 +1223,7 @@ function notesChips(o) {
 sheetChips.addEventListener('click', (e) => {
   const b = e.target.closest('.chip'), id = sheetChips.dataset.id, o = sheetsShown().find((v) => v.id === id) ?? laidSheets().find((v) => v.id === id);
   if (!b || !o) return;
-  if (b.dataset.walk) { turnWorld((turningTo ?? view.bearing ?? 0) - 90 * Number(b.dataset.walk)); return; } // clockwise lowers the bearing, as the compass turns it
+  if (b.dataset.walk) { turnWorld(nearestQuarter(o, (turningTo ?? view.bearing ?? 0) - 90 * Number(b.dataset.walk))); return; } // to the chart's next quarter turn; clockwise lowers the bearing, as the compass turns it
   if (b.dataset.up != null) { // as drawn, the sheet framed as it will stand; again, north up where the map is
     if (atUp(o)) turnWorld(0);
     else turnWorld(drawnBearing(o), sheetView(o, o.sheet, { w: W, h: H, bearing: drawnBearing(o) }));

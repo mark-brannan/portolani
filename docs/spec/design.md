@@ -328,8 +328,8 @@ Feature: Every chart turns, a quarter at a time
     When the user looks at the row
     Then beside its Chart position chips are two curved-arrow chips, one each way round, on every chart that has a scan
     When the user clicks one
-    Then the world and every sheet on it turn a quarter, that way round, about the middle of the window: the place in the middle stays in the middle, the zoom stays, the sheet keeps its place on the world
-    And four clicks the same way come back to where they began
+    Then the world and every sheet on it turn about the middle of the window, that way round, to the chart's next quarter turn (its own up and the three quarters from it): the place in the middle stays in the middle, the zoom stays, the sheet keeps its place on the world
+    And from one of those quarter turns, four clicks the same way come back to where they began
   Scenario: the chart's own up
     Given a chart drawn to be read another way up (de la Cosa's west up)
     When the user looks at its row
