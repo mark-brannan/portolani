@@ -16,13 +16,13 @@ writes the full-size raw, key and cut.
 The chart draws the Levant and Caucasus figures and the Barbary palm on their sides, base to the east; those four cuts are
 turned a quarter clockwise (`turn: 90`) so they stand upright.
 
-| Sprite | Kind | Crop (scan px) | Edge | Absent from the sprite, and why |
-|---|---|---|---|---|
-| `rose-oliva` | rose | (2750,7997)-(5150,10397) | circle r 1170, 20 px feather, just outside the outer ring | rhumb lines and the green hill outside the ring: surround. A sliver of the scale cartouche's blue wave sits inside the circle at the east tip, kept: trimming it would cut the tip. |
-| `rose-oliva-small` | rose | (2484,3238)-(3284,4038) | circle r 392, 8 px feather | the rest of the coast name "Valentia" outside the ring: surround; the part inside stays as drawn. |
-| `mountain-oliva-ararat` | mountain | (13620,2600)-(15160,4150), turned 90 | crop edge only | the "A" of "ASIA" and the hills west of the Ark: neighbours, outside the crop. "arca de noe", "Caum" and the rivers stay. |
-| `mountain-oliva-hills` | mountain | (12360,2850)-(13760,4200), turned 90 | crop edge, one erase box | the Ark's prow (13690,3400)-(13760,3530): the next sprite's figure, erased; it leaves a small notch at the foot. Place-name lettering stays. |
-| `town-oliva-jerusalem` | town | (15330,6430)-(16170,7560), turned 90 | crop edge only | the "Jerusalem" lettering: outside the crop. The orange crosses beside the city stay. |
+| Sprite | Kind | Absent from the sprite, and why |
+|---|---|---|
+| `rose-oliva` | rose | rhumbs and hill outside the ring: surround; a blue wave sliver at the east tip stays. |
+| `rose-oliva-small` | rose | the rest of "Valentia" outside the ring: surround. |
+| `mountain-oliva-ararat` | mountain | the "A" of "ASIA" and the hills west of the Ark: neighbours. |
+| `mountain-oliva-hills` | mountain | the Ark's prow: the next figure, erased; a small notch at the foot. |
+| `town-oliva-jerusalem` | town | the "Jerusalem" lettering: outside the crop. |
 | `palms-oliva` | tree | (4060,6930)-(5150,8000), turned 90 | crop edge only | nothing; the strip of ground and the rhumb lines stay. |
 
 Not cut: the second big rose (top left) and the third (bottom right) repeat `rose-oliva`'s design, and the top-left one
