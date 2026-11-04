@@ -155,23 +155,23 @@ Feature: Placement  (hash `placement`, default empty; values `historic`, `seeded
     # Mismatch: Default and Historic both parse to `historical: true`; they draw the same, differing only in the hash text (`''` vs `historic`). The chip tooltips describe two behaviours.
     # Re-roll is only reachable through the chip; `seed:<n>` is typed in the hash (negative allowed, `seed:-5` parses).
 
-Feature: Mountains  (chips `#mountains`, hash `mountains`, default `colour`, values `off|ink|colour|tolkien|wilderland|lotr`; scene `relief` `['marina']`/`['engraved']`/`['tolkien']`/`['wilderland']`/`['lotr']`/`[]`) [verified page.js:90-93, 126, 381, 524; relief.mjs:295-303]
+Feature: Mountains  (chips `#mountains`, hash `mountains`, default `colour`, values `off|ink|colour|shadow|me1937|me1954`; scene `relief` `['marina']`/`['engraved']`/`['shadow']`/`['me1937']`/`['me1954']`/`[]`) [verified page.js:90-93, 126, 381, 524; relief.mjs:295-303]
   Scenario: ink
     Given the chart at `#map=6.00/46.500/8.000`
-    When the user clicks "Ink" in Mountains
+    When the user clicks "Hatched" in Mountains
     Then the hash gains `mountains=ink` and range hatching is ink-only, no ochre wash (`engraved` has `light: land`, `shade: null`, relief.mjs:300 at main)
-  Scenario: tolkien
+  Scenario: shadow
     Given the chart at `#map=6.00/46.500/8.000`
-    When the user clicks "Tolkien" in Mountains
-    Then the hash gains `mountains=tolkien` and each range is a flat ink shadow with a narrow lit left flank, a paper halo round every peak, no hatching
-  Scenario: wilderland
+    When the user clicks "Shadow" in Mountains
+    Then the hash gains `mountains=shadow` and each range is a flat ink shadow with a narrow lit left flank, a paper halo round every peak, no hatching
+  Scenario: me1937
     Given the chart at `#map=6.00/46.500/8.000`
-    When the user clicks "Wilderland" in Mountains
-    Then the hash gains `mountains=wilderland` and each range is pen alone: sharp stacked peaks, the east flank solid ink breaking into strokes at the base, skirt strokes off the west flank and small hatched foothill ridgelets trailing off the range
-  Scenario: lotr
+    When the user clicks "M.E. 1937" in Mountains
+    Then the hash gains `mountains=me1937` and each range is pen alone: sharp stacked peaks, the east flank solid ink breaking into strokes at the base, skirt strokes off the west flank and small hatched foothill ridgelets trailing off the range
+  Scenario: me1954
     Given the chart at `#map=6.00/46.500/8.000`
-    When the user clicks "Middle-earth 1954" in Mountains
-    Then the hash gains `mountains=lotr` and each range is hairline peaks, a few hatch strokes down the east flank stopping short of the foot, the west flank blank, no halo
+    When the user clicks "M.E. 1954" in Mountains
+    Then the hash gains `mountains=me1954` and each range is hairline peaks, a few hatch strokes down the east flank stopping short of the foot, the west flank blank, no halo
   Scenario: off
     Given the chart at the same view
     When the user clicks "Off"

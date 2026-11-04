@@ -7,4 +7,4 @@ export const packOf = (name, manifest) => ({ ...manifest, sprites: manifest.spri
 
 // The scene's options for a chart: the land in one colour, no names (the world's names would spill
 // over an ENC's water), and the sea's depth drawn
-export const CHART_OPTIONS = { kinds: CHART_KINDS, names: false, land: 'off', islands: false, depth: true, autoTitle: false, relief: ['tolkien'], title: 'PORTOLANI' };
+export const CHART_OPTIONS = { kinds: CHART_KINDS, names: false, land: 'off', islands: false, depth: true, autoTitle: false, relief: ['me1954'], title: 'PORTOLANI' };

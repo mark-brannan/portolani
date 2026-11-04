@@ -285,7 +285,7 @@ function flatPeak(g, s, { ink, width, paper, halo, lit }) {
   g.beginPath(); pen(g, [s.flanks]); g.strokeStyle = ink; g.lineWidth = width; g.stroke();
 }
 
-// After Christopher Tolkien's Wilderland and Middle-earth maps (1937, 1954), pen alone: a sharp apex,
+// After Tolkien's Wilderland map (1937) and Christopher Tolkien's Middle-earth map (1954), pen alone: a sharp apex,
 // flanks that break in two or three straight pitches, no rounded crag. The shadow is the whole
 // right flank, back to a crest line that runs down from the apex.
 function sharpShape({ x, y, w, h, lean, jag }) {
@@ -391,17 +391,17 @@ const LOOKS = {
   engraved: ({ ink, land }) => ({ ink, light: land, shade: null, hatching: { gap: 2.2, width: 0.7, alpha: 0.9 }, width: 1.1 }),
 
   // after the Middle-earth map: flat ink shadows, a narrow lit side, a paper halo round each peak
-  tolkien: ({ ink, land, parchment }) => ({ ink, light: null, shade: null, hatching: null, width: 1.1, flat: { paper: parchment ?? land, halo: 2, lit: 0.16 } }),
-  // after Christopher Tolkien's Wilderland map, pen alone: sharp stacked peaks, the east flank hatched
+  shadow: ({ ink, land, parchment }) => ({ ink, light: null, shade: null, hatching: null, width: 1.1, flat: { paper: parchment ?? land, halo: 2, lit: 0.16 } }),
+  // after Tolkien's own Wilderland map (1937), pen alone: sharp stacked peaks, the east flank hatched
   // nearly solid, foothill ridgelets trailing off the range
-  wilderland: ({ ink, land, parchment }) => ({ ink, width: 0.9, hatching: { gap: 1.7, width: 0.7, alpha: 0.9, solid: 0.8, foot: 1, turn: 0.5 }, penned: { paper: parchment ?? land, spur: 2.2 } }),
+  me1937: ({ ink, land, parchment }) => ({ ink, width: 0.9, hatching: { gap: 1.7, width: 0.7, alpha: 0.9, solid: 0.8, foot: 1, turn: 0.5 }, penned: { paper: parchment ?? land, spur: 2.2 } }),
   // after Christopher Tolkien's 1954 map of Middle-earth: a hairline peak, the east flank hatched in a few strokes
   // from the ridge that stop short of the foot, the west flank blank, no halo, no spurs
-  lotr: ({ ink, land, parchment }) => ({ ink, width: 0.8, hatching: { gap: 1.9, width: 0.75, alpha: 0.95, solid: 0, foot: 0.8, turn: 0.6 }, penned: { paper: parchment ?? land, spur: 0 } }),
+  me1954: ({ ink, land, parchment }) => ({ ink, width: 0.8, hatching: { gap: 1.9, width: 0.75, alpha: 0.95, solid: 0, foot: 0.8, turn: 0.6 }, penned: { paper: parchment ?? land, spur: 0 } }),
 };
 
 // the styles drawn with the sharp pen profile, their peaks trailing spurs
-const SHARP = new Set(['wilderland', 'lotr']);
+const SHARP = new Set(['me1937', 'me1954']);
 
 export const RELIEF_STYLES = ['off', ...Object.keys(LOOKS)];
 
