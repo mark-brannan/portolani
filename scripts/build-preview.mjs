@@ -32,6 +32,7 @@ import { joinUrban } from './urban.mjs';
 import { isleIndex, isleLand } from './isles.mjs';
 import { ATTEMPTS, fetchBytesWithRetry } from './fetch-retry.mjs';
 import { buildInfo } from './build-info.mjs';
+import { slimPeaks } from './peaks.mjs';
 const { find, localUrl } = coastlines;
 // By catalogue id: the pinned manifest entry a record is read from, the name of its whole file (the
 // catalogue's `data/<file>`, written to geo/<file>, where scene.mjs reads it), and the dir and cell
@@ -124,6 +125,11 @@ const playas = slim(JSON.parse(await readFile(path.join(root, 'downloads', 'ne_1
 if (JSON.stringify(JSON.parse(await readFile(path.join(root, 'test', 'fixtures', 'playas-10m.json'), 'utf8'))) !== JSON.stringify(playas)) throw new Error('test/fixtures/playas-10m.json is stale: write the slimmed playas download to it');
 await writeFile(path.join(out, 'geo', 'playas-10m.json'), JSON.stringify(playas));
 console.log(`urban footprints: ${(urban.length / 1e6).toFixed(2)} MB`);
+// the landmark peaks (scripts/peaks.mjs): the named summits, read off coastlines' elevation points
+const peaks = JSON.stringify(slimPeaks(JSON.parse(await readGeo('ne-10m-geography-regions-elevation-points'))));
+if (JSON.stringify(JSON.parse(await readFile(path.join(root, 'test', 'fixtures', 'peaks-10m.json'), 'utf8'))) !== peaks) throw new Error('test/fixtures/peaks-10m.json is stale: write slimPeaks() of the coastlines files to it');
+await writeFile(path.join(out, 'geo', 'peaks-10m.json'), peaks);
+console.log(`landmark peaks: ${JSON.parse(peaks).features.length} peaks, ${Buffer.byteLength(peaks)} bytes (geo/peaks-10m.json)`);
 // A band of detail cells: geo/<dir>/<xi>_<yi>.json and geo/<dir>/index.json.
 async function writeBand(dir, cellDeg, geometry, cells = cutCells(geometry, cellDeg)) {
   await mkdir(path.join(out, 'geo', dir), { recursive: true });
