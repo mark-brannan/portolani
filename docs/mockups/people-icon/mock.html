@@ -7,7 +7,6 @@ button{padding:0;display:grid;place-items:center;border-radius:50%;background:#e
 .drawer{background:#e9d8b4;border:3px double #b89a68;padding:10px 14px;border-radius:8px;display:inline-block}
 </style><body><div id=o></div><script type=module>
 import {icons} from './icons.js';
-const q=new URLSearchParams(location.search).get('m');
-o.innerHTML='<div class=drawer>'+icons.map(([n,f],i)=>'').join('')+'</div>';
+const q=new URLSearchParams(location.search).get('m')||'s';
 o.innerHTML='<div class="drawer '+q+'"><div class=row>'+icons.map(([n,f],i)=>'<div class=c><button>'+f(q+i)+'</button><div>'+n+'</div></div>').join('')+'</div></div>';
 </script>
