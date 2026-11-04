@@ -90,9 +90,6 @@ const LEGACY_KEYS = ['rendering', 'pack', 'rose', 'monster', 'town', 'kinds'];
 const hashParams = () => new URLSearchParams(location.hash.slice(1));
 // `charts=all` (in the hash or the query) also lists the charts of other traditions under the portolans; read once, and kept in the link
 const ALL_CHARTS = [hashParams(), new URLSearchParams(location.search)].some((q) => q.get('charts') === 'all');
-// the drawer's layout (`layout=`), a way of grouping the same controls; Default is written as no key
-const LAYOUT_NAMES = ['default', 'question', 'moods', 'sheet'];
-const layoutFromHash = () => (LAYOUT_NAMES.includes(hashParams().get('layout')) ? hashParams().get('layout') : 'default');
 // whether a grouped list's section opens when a mouse rests on its heading (`hover=`); on is written as no key, `hover=0` is off
 const hoverFromHash = () => hashParams().get('hover') !== '0';
 
@@ -182,7 +179,6 @@ function writeHash() {
   q.set('map', `${v.zoom.toFixed(2)}/${v.lat.toFixed(3)}/${v.lon.toFixed(3)}`);
   if (v.projection !== PROJECTION_NAMES[0]) q.set('projection', v.projection);
   if (v.bearing) q.set('bearing', String(Math.round(v.bearing * 10) / 10)); // the world turned: the compass direction at the top, north up written as no key
-  if (layout !== 'default') q.set('layout', layout);
   if (!hoverOpen) q.set('hover', '0');
   if (!sameSet(selection, DEFAULT_SET)) q.set('sprites', SPRITES.filter((s) => selection.has(s.key)).map((s) => encodeKey(s.key)).join(','));
   if (st.townSize !== DEFAULTS.townSize) q.set('townsize', st.townSize);
@@ -280,9 +276,25 @@ for (const kind of FIGURE_KINDS) {
     head.append(box, fam.label, count);
     thumbs.append(...fam.sprites.map((s) => thumb(s, fam.label)));
     row.append(head, thumbs);
-    pickerOf(kind).append(row);
+    const pick = pickerOf(kind);
+    // a family is a chip with its picture, its name and how many of it are on; the one open shows its pictures in the tray below the chips
+    if (!pick.firstChild) pick.append(Object.assign(document.createElement('div'), { className: 'fam-chips' }), Object.assign(document.createElement('div'), { className: 'fam-tray' }));
+    const chips = pick.firstChild, tray = pick.lastChild;
+    const chip = Object.assign(document.createElement('button'), { type: 'button', className: 'chip fam-chip' }), tally = document.createElement('b');
+    const pic = Object.assign(document.createElement('span'), { className: 'sample' });
+    pic.append(thumbs.firstChild.firstChild.cloneNode(true));
+    chip.append(pic, Object.assign(document.createElement('span'), { textContent: fam.label }), tally);
+    chip.setAttribute('aria-expanded', 'false');
+    chip.addEventListener('click', () => {
+      const opening = chip.getAttribute('aria-expanded') !== 'true';
+      for (const c of chips.children) c.setAttribute('aria-expanded', 'false');
+      tray.replaceChildren();
+      if (opening) { chip.setAttribute('aria-expanded', 'true'); tray.append(row); }
+    });
+    chips.append(chip);
+    if (chips.children.length === 1) chip.click(); // the first family starts open
     const keys = fam.sprites.map((s) => s.key);
-    familyBoxes.push({ box, count, keys });
+    familyBoxes.push({ box, count, keys, chip, tally });
     box.addEventListener('change', () => { const all = keys.every((k) => selection.has(k)); for (const k of keys) all ? selection.delete(k) : selection.add(k); changed(); });
   }
 }
@@ -526,10 +538,12 @@ function showStyle() {
   showUiNow(); showMoods();
   for (const f of toolRefreshers) f();
   for (const b of document.querySelectorAll('#drawer .thumb')) b.setAttribute('aria-pressed', b === none ? !CARTOUCHES.some((k) => selection.has(k)) : selection.has(b.dataset.key));
-  for (const { box, count, keys } of familyBoxes) {
+  for (const { box, count, keys, chip, tally } of familyBoxes) {
     const on = keys.filter((k) => selection.has(k)).length;
     box.checked = on === keys.length; box.indeterminate = on > 0 && on < keys.length;
     count.textContent = `${on} of ${keys.length}`;
+    tally.textContent = `${on}/${keys.length}`;
+    chip.dataset.state = on === 0 ? 'none' : on === keys.length ? 'all' : 'part';
   }
 }
 function readControls() {
@@ -665,7 +679,7 @@ const STYLE_SWITCHES = [
   ['reefs', 'Reefs', REEF_GLYPHS.crosses], ['playas', 'Salt flats', PLAYA_GLYPHS.salt], ['peaks', 'Landmark peaks', PEAK_GLYPH],
 ];
 let showUiNow = () => {};
-let showMoods = () => {}; // the layout Moods: its chips show which look is on
+let showMoods = () => {}; // the Moods: its chips show which look is on
 if (UI) {
   document.documentElement.dataset.ui = UI;
   $('ui').hidden = false;
@@ -708,7 +722,7 @@ if (UI) {
       strip.className = 'sample';
       for (const s of sample(['monster', 'ship', 'rose', 'town', 'cartouche'], set).slice(0, 4)) strip.append(...sampleOf(s).children);
       const b = chipButton('radio', strip, Object.assign(document.createElement('b'), { textContent: label }), Object.assign(document.createElement('small'), { textContent: `${note}` }));
-      b.classList.add('preset'); b.title = `${label}: ${note}`;
+      b.classList.add('preset'); if (m.all) b.classList.add('all'); b.title = `${label}: ${note}`;
       b.addEventListener('click', () => { selection = make(); changed(); });
       presets.append(b);
       refreshers.push(() => b.setAttribute('aria-checked', String(sameSet(selection, make()))));
@@ -757,7 +771,6 @@ if (UI) {
   showUiNow = () => { for (const f of refreshers) f(); };
 }
 
-let layout = layoutFromHash();
 let hoverOpen = hoverFromHash();
 let view = viewFromHash();
 let style = styleFromHash();
@@ -884,12 +897,12 @@ const outside = (t) => { const d = openDrawer(); return d && t instanceof Node &
 addEventListener('pointerdown', (e) => { if (outside(e.target) && !(phone.matches && e.target === canvas)) setDrawer(false); });
 addEventListener('focusout', (e) => { if (e.relatedTarget && outside(e.relatedTarget)) setDrawer(false); }); // tabbed out; a click that focuses nothing has no relatedTarget
 
-// Reset: every control back to its default, the view (place, projection and bearing), the drawer's layout and hover kept. The hash holds the whole
+// Reset: every control back to its default, the view (place, projection and bearing), the hover kept. The hash holds the whole
 // style, so a hash with only the view is the default style; the hashchange handler below redraws from it.
 $('reset').addEventListener('click', () => {
   const m = hashParams().get('map'), p = hashParams().get('projection'), b = hashParams().get('bearing');
   $('shareUrl').hidden = true; $('shareNote').textContent = '';
-  location.hash = [m && `map=${m}`, p && `projection=${p}`, b && `bearing=${b}`, layout !== 'default' && `layout=${layout}`, !hoverOpen && 'hover=0'].filter(Boolean).join('&');
+  location.hash = [m && `map=${m}`, p && `projection=${p}`, b && `bearing=${b}`, !hoverOpen && 'hover=0'].filter(Boolean).join('&');
 });
 // Copy link: the hash is kept current by writeHash. Where the clipboard is refused (an insecure page,
 // a denied permission) the link is put in a box, selected, to copy by hand.
@@ -918,40 +931,24 @@ for (const c of PLACEMENT_CHIPS) c.addEventListener('click', () => {
   showPlacement(); changed();
 });
 
-// ---------------------------------------------------------------- the layouts (layout=)
+// ---------------------------------------------------------------- the drawer: moods, then Sea · Land · Margins
 
-// Four arrangements of the same controls, chosen by a chip at the drawer's top and kept in the link, so each
-// is a link to share. Default is the drawer as index.html lays it out. The others move each control (a .ctl,
-// with the lead paragraph written for it) into groups of their own and back again, so a control is one
-// element and one hash key whichever layout shows it.
+// Under the moods, the controls in three tabs by where the thing is drawn. Each control (a .ctl, with the lead
+// paragraph written for it) is one element, moved from index.html's own sections into its tab's pane.
 const LAND_GROUP = ['continents', 'regions', 'land', 'colour', 'rivers', 'lakes', 'reefs', 'playas', 'mountains', 'hills', 'peaks', 'trees', 'towns'];
-const BY_QUESTION = [['The chart', ['cartouche', 'projection', 'names', 'rhumb', 'scale', 'overlap']], ['The land', LAND_GROUP], ['The figures', ['density', 'monsters', 'ships', 'roses', 'placement', 'colours']]];
-const LAYOUTS = {
-  default: { label: 'Default', note: 'the drawer by kind of thing: sea, roses, towns, land, cartouche, map, colours',
-    glyph: svg(`<path d="M3 3h22M3 6.5h15M3 10h22M3 13.5h12M3 17h18" ${stroke('currentColor', 1)}/>`) },
-  question: { label: 'By question', note: 'three groups: the chart, the land, the figures', groups: BY_QUESTION,
-    glyph: svg(`<rect x="2" y="1.5" width="24" height="4" rx="1.5" ${stroke('currentColor', 1)}/><rect x="2" y="7" width="24" height="4" rx="1.5" ${stroke('currentColor', 1)}/><rect x="2" y="12.5" width="24" height="4" rx="1.5" ${stroke('currentColor', 1)}/>`) },
-  moods: { label: 'Moods', note: 'five looks at a click, every control under Fine controls', groups: BY_QUESTION, moods: true,
-    glyph: svg(`<rect x="1.5" y="2" width="4.4" height="7" rx="2.2" fill="currentColor"/>${[6.8, 12.1, 17.4, 22.7].map((x) => `<rect x="${x}" y="2" width="4.4" height="7" rx="2.2" ${stroke('currentColor', 0.8)}/>`).join('')}<path d="M3 12.5l2 2 2-2M9 13.5h16" ${stroke('currentColor', 0.8)}/>`) },
-  sheet: { label: 'By the sheet', note: 'where it is drawn: the sea, the land, the margins',
-    groups: [['Sea', ['monsters', 'ships', 'density', 'placement']], ['Land', LAND_GROUP], ['Margins', ['cartouche', 'scale', 'roses', 'overlap', 'rhumb', 'names', 'projection', 'colours']]],
-    glyph: svg(`<rect x="1.5" y="1.5" width="25" height="15" ${stroke('currentColor', 1)}/><rect x="4" y="4" width="20" height="10" ${stroke('currentColor', 0.5)}/><path d="M14 5q5 0 8 3t-3 5h-5q-2-4 0-8Z" fill="#c47f2c" fill-opacity=".75"/><path d="M5.5 8q1.5-1.5 3 0t3 0M5.5 11q1.5-1.5 3 0" ${stroke('#4a7fa0', 0.8)}/>`) },
-};
+const g = (d) => `<svg viewBox="0 0 34 22" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" aria-hidden="true">${d}</svg>`;
+const TABS = [
+  { label: 'Sea', sub: 'figures in the water', ids: ['density', 'monsters', 'ships', 'placement'],
+    glyph: g('<path d="M3 14q3-3 6 0t6 0 6 0 6 0 6 0M3 18q3-3 6 0t6 0 6 0"/><path d="M12 11q2-7 9-6-3 2-2 6Z" fill="currentColor" fill-opacity=".4"/>') },
+  { label: 'Land', sub: 'coast, relief, towns', ids: LAND_GROUP,
+    glyph: g('<path d="M2 18l7-9 5 5 6-9 12 13Z" fill="currentColor" fill-opacity=".25"/><path d="M14 18v-4h3v4"/>') },
+  { label: 'Margins', sub: 'roses, lines, frame', ids: ['cartouche', 'scale', 'roses', 'overlap', 'rhumb', 'names', 'projection', 'colours'],
+    glyph: g('<rect x="2" y="2" width="30" height="18"/><rect x="5" y="5" width="24" height="12" stroke-width=".6"/><circle cx="25" cy="9" r="3"/><path d="M25 4v10M20 9h10"/>') },
+];
 const CTLS = new Map([...document.querySelectorAll('#drawer .ctl')].map((el) => [el.dataset.ctl, el]));
 const LEADS = new Map([...document.querySelectorAll('#drawer [data-lead-for]')].map((el) => [el.dataset.leadFor, el]));
-// each moved node's place in Default, marked by an empty comment before it
-const HOMES = new Map([...CTLS.values(), ...LEADS.values()].map((el) => { const at = document.createComment(''); el.before(at); return [el, at]; }));
-for (const [name, { label, note, glyph }] of Object.entries(LAYOUTS)) {
-  const b = Object.assign(document.createElement('button'), { type: 'button', className: 'chip', title: `${label}: ${note}` });
-  b.dataset.layout = name;
-  b.setAttribute('role', 'radio');
-  b.insertAdjacentHTML('beforeend', glyph);
-  b.append(label);
-  b.addEventListener('click', () => { if (layout !== name) { layout = name; showLayout(); writeHash(); } });
-  $('layout').append(b);
-}
 
-// Moods: five whole looks at a click, sparse to dense, and every control under Fine controls. A mood sets the
+// Moods: five whole looks at a click, sparse to dense, and every control in the tabs below. A mood sets the
 // density, the placement, the figures and every style of the land, the water and the colours, each at its default
 // where the mood does not depart from it, so a mood replaces the whole look another left. Figures are named as the
 // hash names them (v:merman). All the things: every figure of every kind (the cartouche as chosen), the density at
@@ -991,14 +988,16 @@ const moods = Object.assign(document.createElement('div'), { className: 'presets
 moods.setAttribute('role', 'radiogroup'); moods.setAttribute('aria-label', 'Mood');
 for (const m of MOODS) {
   const strip = document.createElement('span');
-  strip.className = 'sample';
+  strip.className = m.all ? 'sample crammed' : 'sample';
+  // All the things: one small picture of every figure there is, edge to edge
+  if (m.all) for (const k of m.keys) strip.append(...sampleOf(BY_KEY.get(k)).children);
   // a figure of each kind it shows, the first of its own; for All the things one from outside the default set
-  for (const kind of m.kinds) {
+  for (const kind of m.all ? [] : m.kinds) {
     const of = m.keys.map((k) => BY_KEY.get(k)).filter((s) => s.kind === kind), pick = (m.all ? of.filter((s) => !DEFAULT_SET.has(s.key)) : []).concat(of)[0];
     if (pick) strip.append(...sampleOf(pick).children);
   }
   const b = chipButton('radio', strip, Object.assign(document.createElement('b'), { textContent: m.label }), Object.assign(document.createElement('small'), { textContent: m.note }));
-  b.classList.add('preset'); b.title = `${m.label}: ${m.note}`;
+  b.classList.add('preset'); if (m.all) b.classList.add('all'); b.title = `${m.label}: ${m.note}`;
   b.addEventListener('click', () => {
     const { selection: next, ...look } = m.set();
     style = { ...style, ...look };
@@ -1008,32 +1007,34 @@ for (const m of MOODS) {
   moods.append(b);
 }
 showMoods = () => { MOODS.forEach((m, i) => moods.children[i].setAttribute('aria-checked', String(m.is()))); };
-const fine = document.createElement('details'); // closed until opened, and kept as it was across a switch
-fine.className = 'fine';
-fine.append(Object.assign(document.createElement('summary'), { textContent: 'Fine controls' }));
-
-function showLayout() {
-  const { groups, moods: withMoods } = LAYOUTS[layout];
-  if (groups) document.documentElement.dataset.layout = layout; else delete document.documentElement.dataset.layout;
-  for (const c of $('layout').children) c.setAttribute('aria-checked', String(c.dataset.layout === layout));
-  for (const [el, at] of HOMES) at.after(el); // every control home first
-  for (const s of document.querySelectorAll('#drawer section.home')) s.hidden = !!groups;
-  const box = $('layoutGroups');
-  for (const s of fine.querySelectorAll('section')) s.remove();
-  box.replaceChildren();
-  box.hidden = !groups;
-  if (!groups) return;
-  const into = withMoods ? fine : box;
-  if (withMoods) box.append(moods, fine);
-  groups.forEach(([title, ids], i) => {
-    const sec = document.createElement('section'), h = Object.assign(document.createElement('h2'), { id: `h-layout-${i}`, textContent: title });
-    sec.setAttribute('aria-labelledby', h.id);
-    sec.append(h);
-    for (const id of ids) sec.append(...[LEADS.get(id), CTLS.get(id)].filter(Boolean));
-    into.append(sec);
+let tab = 0;
+function buildDrawer() {
+  const box = $('layoutGroups'), tabs = document.createElement('div');
+  tabs.className = 'tabs'; tabs.setAttribute('role', 'tablist');
+  const panes = TABS.map((t, i) => {
+    const b = Object.assign(document.createElement('button'), { type: 'button', id: `tab-${i}` });
+    b.setAttribute('role', 'tab');
+    b.insertAdjacentHTML('beforeend', t.glyph);
+    b.append(Object.assign(document.createElement('span'), { textContent: t.label }), Object.assign(document.createElement('small'), { textContent: t.sub }));
+    tabs.append(b);
+    const pane = document.createElement('section');
+    pane.setAttribute('role', 'tabpanel'); pane.setAttribute('aria-labelledby', b.id);
+    for (const id of t.ids) pane.append(...[LEADS.get(id), CTLS.get(id)].filter(Boolean));
+    return pane;
   });
+  const show = (n) => {
+    tab = n;
+    [...tabs.children].forEach((b, i) => { b.setAttribute('aria-selected', String(i === n)); b.tabIndex = i === n ? 0 : -1; });
+    panes.forEach((p, i) => { p.hidden = i !== n; });
+  };
+  [...tabs.children].forEach((b, i) => b.addEventListener('click', () => show(i)));
+  const heading = Object.assign(document.createElement('h2'), { id: 'h-mood', textContent: 'Mood' });
+  box.append(heading, Object.assign(document.createElement('p'), { className: 'lead', textContent: 'None lit is Default. A mood sets the whole look; every control below still moves.' }), moods, tabs, ...panes);
+  for (const s of document.querySelectorAll('#drawer section.home')) s.hidden = true;
+  box.hidden = false;
+  show(tab);
 }
-showMoods(); showLayout();
+showMoods(); buildDrawer();
 
 // ---------------------------------------------------------------- moving
 
@@ -3073,7 +3074,7 @@ $('compareLine').addEventListener('pointerdown', (e) => {
 });
 let typing = 0; // a typed title is placed when the typing pauses, not on every key: a placement takes up to a few hundred ms
 $('title').addEventListener('input', () => { clearTimeout(typing); typing = setTimeout(readControls, 400); });
-addEventListener('hashchange', () => { dealing = null; layout = layoutFromHash(); showLayout(); hoverOpen = hoverFromHash(); showHover(); view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); showVoyage(); showPeople(); render(); });
+addEventListener('hashchange', () => { dealing = null; hoverOpen = hoverFromHash(); showHover(); view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); showVoyage(); showPeople(); render(); });
 showPlacement();
 render();
 
