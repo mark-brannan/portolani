@@ -120,7 +120,7 @@ export function ridgesOf(range, createCanvas) {
     return (q(i, j) * (1 - fu) + q(i + 1, j) * fu) * (1 - fv) + (q(i, j + 1) * (1 - fu) + q(i + 1, j + 1) * fu) * fv;
   };
   // each cell's distance, in cells, from the nearest point of a ridge walked so far
-  let free = new Float32Array(cols * rows).fill(1e9);
+  const free = new Float32Array(cols * rows).fill(1e9);
   const claim = (pts) => {
     const taken = new Uint8Array(cols * rows).fill(1);
     for (const [pu, pv] of pts) {
