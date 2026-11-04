@@ -14,7 +14,8 @@
 // `data` is { proj, palette } (the view's projection, and the scene's ink and parchment). 'off'
 // maps to null.
 
-import { frameBox } from './frame-box.mjs';
+import { frameBox, RAD, mercDeg, latOfMerc } from './frame-box.mjs';
+import { mulberry32 } from './rng.mjs';
 
 const TREE_H = 13; // a tree's height in px, foot to crown top, at every zoom
 const GRID_PX = 64; // the lattice's cell, in px at a whole zoom
@@ -82,8 +83,8 @@ const SHAPES = {
 };
 export const TREE_SHAPES = Object.keys(SHAPES);
 
-// Path data onto a canvas path, for the commands SHAPES use.
-function tracePath(g, d) {
+// Path data onto a canvas path, for the commands SHAPES and scene.mjs's TOWERS use.
+export function tracePath(g, d) {
   const tok = d.match(/[MLHVQZ]|-?[\d.]+/g);
   let i = 0, x = 0, y = 0, cmd = '';
   const num = () => +tok[i++];
@@ -132,7 +133,7 @@ function drawStands(g, data, stands, pigments) {
 }
 
 const GREEN = '#3d7a58', GREEN_SHADE = '#24563d', FIR = '#2f6248', FIR_SHADE = '#1c3f2d';
-const hexA = (hex, a) => {
+export const hexA = (hex, a) => {
   const n = parseInt(hex.slice(1), 16);
   return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
 };
@@ -152,19 +153,8 @@ export const TREE_STYLES = Object.keys(TREES);
 
 // ---------------------------------------------------------------- planting
 
-function mulberry32(seed) {
-  return () => {
-    seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
 const cellSeed = (z, i, j) => (Math.imul(z + 1, 73856093) ^ Math.imul(i, 19349663) ^ Math.imul(j, 83492791) ^ 0x7ee5) | 0;
 
-const RAD = Math.PI / 180;
-const mercY = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * RAD) / 2)) / RAD; // in degrees of longitude
-const mercLat = (y) => (2 * Math.atan(Math.exp(y * RAD)) - Math.PI / 2) / RAD;
 
 // A stand's trees, in px about its site: a single tree or a pair, a row along the ground, or a
 // clump packed in a disc; each tree's shape from its latitude and the cell's hash.
@@ -274,13 +264,13 @@ export function plantTrees({ proj, isLand, scene = {}, lakes = [], w, h }) {
     return !keepOut.some((b) => x + 5 > b.x0 && x - 5 < b.x1 && y > b.y0 && y - TREE_H < b.y1);
   };
   const stands = [];
-  const j0 = Math.floor((mercY(Math.max(-85, latBottom)) - margin) / step), j1 = Math.floor((mercY(Math.min(85, latTop)) + margin) / step);
+  const j0 = Math.floor((mercDeg(Math.max(-85, latBottom)) - margin) / step), j1 = Math.floor((mercDeg(Math.min(85, latTop)) + margin) / step);
   const i0 = Math.floor((lonA - margin) / step), i1 = Math.min(Math.floor((lonB + margin) / step), i0 + wrap - 1); // never a cell twice round the world
   for (let j = j0; j <= j1; j++) {
     for (let i = i0; i <= i1; i++) {
       const rnd = mulberry32(cellSeed(z, ((i % wrap) + wrap) % wrap, j));
       if (rnd() >= chance) continue;
-      const lon = (i + 0.2 + 0.6 * rnd()) * step, lat = mercLat((j + 0.2 + 0.6 * rnd()) * step);
+      const lon = (i + 0.2 + 0.6 * rnd()) * step, lat = latOfMerc((j + 0.2 + 0.6 * rnd()) * step);
       if (Math.abs(lat) > TREELINE_LAT || (proj.visible && !proj.visible(lon, lat))) continue; // none north of the treeline, or on a globe's far side
       const x = proj.x(lon, lat), y = proj.y(lat, lon);
       const trees = standOf(rnd, most, lat).filter((t) => ok(x + t.dx, y + t.dy) && !inLake(lakes, proj.invert(x + t.dx, y + t.dy)));
