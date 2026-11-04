@@ -519,3 +519,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261104t234358z
 - Random person chooses the person at once (fly and deal); Random location only fills the Go box Undo: make the person die fill a search instead ([#375](https://github.com/mark-brannan/portolani/pull/375))
+
+### 20261104t234413z
+- The dice draw only from locations and people that have notes or pictures Undo: widen the filter in page.js ([#375](https://github.com/mark-brannan/portolani/pull/375))
