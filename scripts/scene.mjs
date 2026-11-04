@@ -3673,7 +3673,7 @@ export async function createScene(environment, opts = {}) {
   ranges = rangesLoaded;
   const named = opts.voyages ?? (opts.voyage ? [{ id: opts.voyage }] : []);
   const asked = opts.overlays ?? (opts.overlay ? [opts.overlay] : []);
-  const [drawn, overlaid] = await Promise.all([loadVoyages(person ? withPerson(named, person.record, opts.voyageWidth ?? named[0]?.width) : named), Promise.all(asked.map((o) => loadOverlay(o.id, env)))]);
+  const [drawn, overlaid] = await Promise.all([loadVoyages(withPerson(named, person?.record ?? null, opts.voyageWidth ?? named[0]?.width)), Promise.all(asked.map((o) => loadOverlay(o.id, env)))]);
   const voyages = person ? [...drawn, { voyage: person.marks, colour: PERSON_RED, width: VOYAGE_WIDTH }] : drawn;
   const overlays = asked.flatMap((o, i) => {
     const l = overlaid[i], pieces = o.mode === 'pieces', opacity = Number(o.opacity ?? (pieces ? 0.6 : 1)); // a sheet whole unless faded
