@@ -66,6 +66,14 @@
       "note": "(1,008,063 bytes; Europe lakes the world file leaves out (Como), cut with it)"
     },
     {
+      "id": "ne_10m_playas",
+      "file": "ne_10m_playas.geojson",
+      "url": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_playas.geojson",
+      "sha256": "3ece2a37f3e87d46869a45b05205bb78e273c83e191cee9ab60936368f4b9cc6",
+      "rights": "Natural Earth, public domain",
+      "note": "(196,035 bytes; the playas, salt flats and pans, drawn on the land past z4)"
+    },
+    {
       "id": "gshhg-shp",
       "file": "gshhg-shp-2.3.7.zip",
       "url": "https://www.soest.hawaii.edu/pwessel/gshhg/gshhg-shp-2.3.7.zip",

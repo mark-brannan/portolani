@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
-import { createScene, panView, zoomView, clampView, covers, viewProjection, DEFAULT_VIEW, ZOOM, PROJECTION_NAMES, W, H } from '../scripts/scene.mjs';
+import { createScene, keptGround, panView, zoomView, clampView, covers, viewProjection, DEFAULT_VIEW, ZOOM, PROJECTION_NAMES, W, H } from '../scripts/scene.mjs';
 
 const close = (a, b, eps = 1e-9) => assert.ok(Math.abs(a - b) < eps, `${a} vs ${b}`);
 
@@ -101,6 +101,15 @@ test('a view whose band has a cell that cannot be read is not made from the band
   // view from the 10m band, and the scene rejects so the page makes it again at the next stop
   const broken = { ...site, readJSON: async (p) => (/^geo\/h\/(?!index)/.test(p) ? Promise.reject(new Error(`no ${p}`)) : site.readJSON(p)) };
   await assert.rejects(createScene(broken, { view: { zoom: 10.5, lat: 44.4, lon: 8.9 }, scale: 'off', kinds: [], names: false, rhumb: false }), /could not be read/);
+});
+
+test('a site without the reefs or the playas file draws the map without them, whether the read fails as ENOENT or as a 404', async () => {
+  const redSea = { view: { zoom: 6, lat: 20, lon: 38.5 }, reefs: 'crosses', playas: 'salt', scale: 'off', kinds: [], names: false, rhumb: false };
+  const ground = /^geo\/(ne-reefs-10m\.geojson|playas-10m\.json)$/;
+  assert.ok(keptGround((await createScene(site, redSea)).data).reefs.length > 0, 'the view has reefs to lose');
+  const enoent = { ...site, readJSON: async (p) => (ground.test(p) ? Promise.reject(Object.assign(new Error(`no ${p}`), { code: 'ENOENT' })) : site.readJSON(p)) };
+  const notFound = { ...site, readJSON: async (p) => (ground.test(p) ? Promise.reject(new Error(`${p}: 404`)) : site.readJSON(p)) }; // page.js's readJSON
+  for (const broken of [enoent, notFound]) assert.deepEqual(keptGround((await createScene(broken, redSea)).data), { reefs: [], playas: [] });
 });
 
 test('in every projection a drag, a zoom and their reverses return to the same view', () => {

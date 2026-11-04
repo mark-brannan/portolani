@@ -58,10 +58,12 @@ let outlines;
 const islesLand = () => outlines ??= isleLand(geojsonPolygons(read(join(GEO, 'ne-land-10m.geojson'))), geojsonPolygons(read(join(GEO, 'ne-land-50m.geojson'))));
 const names = () => made ??= joinNames(seaNames(read(join(DL, 'ne_50m_geography_marine_polys.geojson'))),
   coastNames(read(join(GEO, 'ne-admin-0-countries-50m.geojson')), read(join(GEO, 'ne-coastline-50m.geojson'))));
+// the playas (scripts/playas.mjs), slimmed: the committed fixture, which build-preview.mjs checks against the download
+const playas = () => read(join(ROOT, 'test', 'fixtures', 'playas-10m.json'));
 const env = {
   createCanvas,
   readJSON: async (p) => (p === 'geo/names-50m.json' ? names() : p === 'geo/urban-10m.json' ? footprints() : p === 'geo/seas-50m.json' ? tintedSeas(read(join(DL, 'ne_50m_geography_marine_polys.geojson')))
-    : p === 'geo/isles.json' ? islesIndex() : p === 'geo/isles-land.json' ? islesLand() : p.startsWith('geo/water-10m/') ? water(p) : read(resolve(p))),
+    : p === 'geo/playas-10m.json' ? playas() : p === 'geo/isles.json' ? islesIndex() : p === 'geo/isles-land.json' ? islesLand() : p.startsWith('geo/water-10m/') ? water(p) : read(resolve(p))),
   loadImage: (p) => loadImage(resolve(p)),
   loadFont: async (family) => { GlobalFonts.registerFromPath(join(DL, 'IMFeENrm28P.ttf'), family); GlobalFonts.registerFromPath(join(DL, 'IMFeENit28P.ttf'), family); },
 };

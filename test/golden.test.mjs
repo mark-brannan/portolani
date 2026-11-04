@@ -39,6 +39,8 @@ const VIEWS = {
   'sheet-z3-voyage': { lon: -30, lat: 15, zoom: 3 }, // de la Cosa's sheet laid over the Atlantic with Columbus's voyage drawn over it, in a colour that reads against the scan
   'pieces-z3.2-wipe': { lon: -45, lat: 20, zoom: 3.2 }, // de la Cosa's warped pieces left of the compare line, the bare map right (the slider wipe)
   'old-world-z2.6-1375': { lon: 62, lat: 33, zoom: 2.6 }, // the regions in the Catalan Atlas's names, read in English (docs/period-names)
+  'red-sea-z6-reefs': { lon: 38.5, lat: 20, zoom: 6 }, // the Red Sea's reefs, a row of crosses along each (scripts/reefs.mjs)
+  'uyuni-z6-playas': { lon: -67.5, lat: -20.5, zoom: 6 }, // Salar de Uyuni and its neighbours, pale salt on the land (scripts/playas.mjs)
 };
 // settings a golden draws with beyond the defaults; region-z5 is the README's picture, lettered PORTOLANI
 const OPTS = { 'region-z5': { autoTitle: false }, 'world-z2-voyage': { voyages: [{ id: 'magellan' }] },
@@ -62,7 +64,7 @@ const names = () => made ??= joinNames(read(join(ROOT, 'test', 'fixtures', 'sea-
   coastNames(read(join(GEO, 'ne-admin-0-countries-50m.geojson')), read(join(GEO, 'ne-coastline-50m.geojson'))));
 const env = {
   createCanvas,
-  readJSON: async (p) => (p === 'geo/names-50m.json' ? names() : p === 'geo/seas-50m.json' ? read(join(ROOT, 'test', 'fixtures', 'seas-50m.json')) : read(resolve(p))),
+  readJSON: async (p) => (p === 'geo/names-50m.json' ? names() : p === 'geo/seas-50m.json' ? read(join(ROOT, 'test', 'fixtures', 'seas-50m.json')) : p === 'geo/playas-10m.json' ? read(join(ROOT, 'test', 'fixtures', 'playas-10m.json')) : read(resolve(p))),
   loadImage: (p) => loadImage(resolve(p)),
   loadFont: async (family) => { GlobalFonts.registerFromPath(join(ROOT, 'test', 'fixtures', 'IMFeENrm28P.ttf'), family); },
 };
