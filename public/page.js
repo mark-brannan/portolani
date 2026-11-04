@@ -17,7 +17,7 @@
 import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_STYLES, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, REEF_STYLES, PLAYA_STYLES, PEAK_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, VOYAGE_PLAY, voyagePlaySeconds, calendarOf, penOn, dayText, vaguer, voyageColours, settleInks, CONFIDENCE_PHRASES, isBroken, legPath, voyageView, CONTINENT_ZOOM_END, readVoyage, chronological, voyageLink, sightMarks, sightHits, drawnMarks, drawnPeaks, peakHits, SIGHT_TILES, noteMarks, pickMark, markClear, tileSpot, groupMarks, dateSpan, readDate, noteCount, drawNoteMark, drawNoteRing, notePulse, drawBadge, fitLineAt, fitLineMoving, drawFitLine, drawMarkGlyph, ZOOM } from './scene.mjs';
 import { playedOn, playDateText, playPace, isLong } from './scene.mjs'; // the play's band and pen (scripts/voyages.mjs)
 import { ORIGINS } from './atlas.mjs';
-import { OVERLAY_DEFAULTS, effectiveOpacity, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
+import { OVERLAY_DEFAULTS, effectiveOpacity, sheetOpacity, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
 import { PEOPLE_FILE, PICTURES_FILE, SIGHT_PICTURES_FILE, SIGHT_MANIFEST_FILE, sightDeal, laneAxis, eraBands, EARLIER_MARKS, timelineVariant, eraOf, eraYears, eraScale, barOn, lifeSpan, firstYear, yearsText, PERSON_RED, pictureCredit, pictureNote, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, sightFrame, viewContaining, withPictures, peopleOf, whoOf, deathOf, sightPicturesOf, MEMENTO, MEMENTO_EN, mementoNext, mementoLines } from './people.mjs';
 import { fold, bestPlace, withoutPartsOfFrames } from './placename.mjs';
@@ -578,7 +578,7 @@ function readControls() {
     cartouchePos: style.cartouchePos, scalePos: style.scalePos, // set by dragging the cartouche or the scale bar
     ...readHood(),
     voyages: style.voyages, voyageWidth: Number($('voyageWidth').value), voyageDraw: style.voyageDraw, voyagePlay: style.voyagePlay, // chosen in the voyages drawer, and the link
-    overlays: style.overlays, sheets: style.sheets, // chosen in the charts drawer, and by dragging a sheet
+    overlays: style.overlays, sheets: style.sheets, opacities: style.opacities, // chosen in the charts drawer, and by dragging a sheet
   };
   // hills are the Catalan sprites: the chip selects all of them or none
   const hills = $('hills').value === 'catalan';
@@ -818,7 +818,7 @@ async function render() {
       regions: style.regionsZoom > 0 ? style.regions : 'off', regionSet: style.regionSet, regionStyle: style.regionStyle, regionsZoom: style.regionsZoom,
       sprites: [...selection], kinds, view, pinned: !phone.matches, pinTitle: style.autoTitle ? pinTitle : null,
       voyages: style.voyages.filter((v) => !v.hidden || litBy(v.id)).map((v) => ({ id: v.id, colour: ink[v.id], width: style.voyageWidth, ...(v.hidden && { hidden: true }) })), person: style.person, voyageWidth: style.voyageWidth,
-      overlays: style.overlays.map((id) => ({ id, mode: style.overlayMode, sheet: style.sheets[id] ?? null, opacity: effectiveOpacity(style), clip: style.compare === 'off' ? null : style.comparePos })),
+      overlays: style.overlays.map((id) => ({ id, mode: style.overlayMode, sheet: style.sheets[id] ?? null, opacity: sheetOpacity(style, id), clip: style.compare === 'off' ? null : style.comparePos })),
       sights: sightTiles().map(({ lon, lat, tile }) => ({ name: tile.title, lon, lat, ruin: tile.ruin ?? false, ...(tile.site != null && { site: tile.site }) })),
       debug: parseDebug(style.debug).debug, tune: parseTune(style.tune).tune,
     });
@@ -1103,8 +1103,9 @@ const pinch = () => {
 
 // A sheet (a chart's scan laid whole over the map) is moved by hand: held anywhere on it, it is dragged (the top one where
 // they overlap), and where it is let go lands in the link (sheet=). Held by any of its four corners, the world turns and
-// every sheet with it, about the middle of the window, and settles at the nearest of the chart's quarter turns (docs/spec/
-// design.md, "the user moves the sheet"). Nothing is drawn at the corners.
+// every sheet with it, about the middle of the window, by the angle swept, as the compass turns it, and stays where it is let
+// go; a double click there turns it to the nearest of the chart's quarter turns (docs/spec/design.md, "the user moves the
+// sheet"). A turn icon shows at a corner while the pointer is over it.
 const CORNER = 12; // how near a corner a press takes it, canvas px, a touch's slop beyond
 const TURN_CURSOR = `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M5 14a7 7 0 1 1 3.5 6" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/><path d="M5 14a7 7 0 1 1 3.5 6M2 11l3 3 3-3" fill="none" stroke="#1d1913" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>')}") 12 12, alias`;
 const offBy = (a, b) => Math.abs(((a - b + 540) % 360) - 180); // degrees between two angles, either way round
@@ -1115,7 +1116,7 @@ function sheetHit([x, y]) {
   const geos = sheetsShown().reverse().map(sheetGeometry).filter(Boolean);
   const near = (c) => Math.hypot(c[0] - x, c[1] - y) <= CORNER + cssPx(6);
   const corner = geos.find((g) => g.corners.some(near));
-  if (corner) return { kind: 'turn', ...corner };
+  if (corner) return { kind: 'turn', ...corner, at: corner.corners.find(near) };
   const geo = geos.find((g) => onSheet(g.o, g.proj, g.o.sheet, x, y));
   return geo ? { kind: 'move', ...geo } : null;
 }
@@ -1147,107 +1148,122 @@ function dragSheet(p) {
   o.sheet = { ...sheet, lon, lat: Math.max(-85, Math.min(85, lat)) };
   if (!sheetFrameId) sheetFrameId = requestAnimationFrame(() => { sheetFrameId = 0; paintFrame('the sheet held'); });
 }
+const cornerIcon = $('cornerTurn');
+function showCornerIcon(hit) {
+  cornerIcon.hidden = !hit;
+  if (!hit) return;
+  const r = canvas.getBoundingClientRect();
+  Object.assign(cornerIcon.style, { left: `${r.left + (hit.at[0] * r.width) / W}px`, top: `${r.top + (hit.at[1] * r.height) / H}px` });
+}
+canvas.addEventListener('pointerleave', () => showCornerIcon(null));
+canvas.addEventListener('dblclick', (e) => {
+  const hit = sheetHit(toCanvas(e.clientX, e.clientY));
+  if (hit?.kind !== 'turn') return;
+  e.preventDefault();
+  turnWorld(nearestQuarter(hit.o, view.bearing ?? 0));
+});
 function dropSheet() {
   const { o, kind } = held;
   held = null;
   cancelAnimationFrame(sheetFrameId); sheetFrameId = 0;
-  if (kind === 'turn') { turnWorld(nearestQuarter(o, view.bearing ?? 0)); return; }
+  if (kind === 'turn') { stopped(); return; }
   style = { ...style, sheets: withSheet(o, o.sheet) };
   writeHash(); render();
 }
-// The snap chips live in the Charts drawer, in the row of the chart they belong to, under its city and year after a
-// "Chart position:" line (docs/spec/design.md, "A chart's position chips, and the line each was fitted to"). They follow
-// the top sheet laid (the one in view first), lit where that sheet lies now, from the moment it is laid, before it is
-// drawn; with no sheet laid the line is hidden.
-const sheetChips = $('sheetChips');
-const posBox = Object.assign(document.createElement('div'), { className: 'pos', hidden: true });
-posBox.append(Object.assign(document.createElement('b'), { textContent: 'Chart position:' }), sheetChips);
+// Every chart shown (its eye on) has its controls in its own row of the Charts drawer, under its city and year, in three
+// lines (docs/spec/design.md, "A chart's position chips, and the line each was fitted to"): "Align to:" and the
+// placements, lit where its sheet lies now, from the moment it is laid, before it is drawn; its up chip; and its points of
+// interest, where it has any. A chart hidden has none.
 function placeSheetChips() {
-  const laid = held ? [] : laidSheets().reverse(), proj = viewProjection(view);
-  const o = laid.find((v) => sheetCorners(v, proj, v.sheet)) ?? laid[0];
-  if (o && o.id !== sheetChips.dataset.id) buildSheetChips(o);
-  const li = o && $('chartList').querySelector(`li[data-overlay="${o.id}"]`);
-  if (!li) { posBox.hidden = true; return; }
-  const where = li.querySelector('.about .where');
-  if (posBox.previousElementSibling !== where) where.after(posBox);
-  posBox.hidden = false; sheetChips.hidden = false;
-  showUp(o);
-  const keep = sheetChips.querySelector('[data-notes=keep]');
-  keep?.setAttribute('aria-pressed', String(notesKept.has(o.id)));
-  for (const b of sheetChips.querySelectorAll('[role=radio]')) b.setAttribute('aria-checked', String(sameSheet(o.sheet, b.dataset.snap == null ? ownSheet(o.id) : o.snaps[b.dataset.snap])));
+  if (held) return;
+  const laid = laidSheets();
+  for (const li of $('chartList').querySelectorAll('li[data-overlay]')) {
+    const o = laid.find((v) => v.id === li.dataset.overlay);
+    let box = li.querySelector('.pos');
+    if (!o) { box?.remove(); continue; }
+    if (!box || box.dataset.n !== String(noteCount(o.id))) {
+      box?.remove();
+      box = buildSheetChips(o);
+      li.querySelector('.about .where').after(box);
+    }
+    showUp(box, o);
+    box.querySelector('[data-notes=keep]')?.setAttribute('aria-pressed', String(notesKept.has(o.id)));
+    for (const b of box.querySelectorAll('[role=radio]')) b.setAttribute('aria-checked', String(sameSheet(o.sheet, b.dataset.snap == null ? ownSheet(o.id) : o.snaps[b.dataset.snap])));
+  }
 }
+const chip = (glyph, text, title) => {
+  const b = Object.assign(document.createElement('button'), { type: 'button', className: 'chip', title });
+  b.innerHTML = `${glyph}${text}`;
+  if (!text) b.setAttribute('aria-label', title);
+  return b;
+};
 function buildSheetChips(o) {
-  sheetChips.dataset.id = o.id;
-  const own = o.parallels ? ['Parallels', null, 'the chart\'s own placement: its drawn equator and tropic laid on today\'s'] : ['Level', null, 'the chart\'s own placement: level, centred between its coasts'];
-  const where = Object.assign(document.createElement('span'), { className: 'where' });
+  const box = Object.assign(document.createElement('div'), { className: 'pos' });
+  box.dataset.id = o.id; box.dataset.n = String(noteCount(o.id));
+  const own = o.parallels ? ['Parallels', null, 'the chart\'s own placement: its drawn equator and tropic laid on today\'s'] : ['Default', null, 'the chart\'s own placement: level, centred between its coasts'];
+  const where = Object.assign(document.createElement('div'), { className: 'line' });
   where.setAttribute('role', 'radiogroup'); where.setAttribute('aria-label', 'Where the sheet lies');
-  where.replaceChildren(...[own, ...o.snaps.map((sn, i) => [sn.label, i, `the scan at its ${sn.label} fit`])].map(([label, i, note]) => {
+  where.replaceChildren(Object.assign(document.createElement('b'), { textContent: 'Align to:' }), ...[own, ...o.snaps.map((sn, i) => [sn.label, i, `the scan at its ${sn.label} fit`])].map(([label, i, note]) => {
     const b = Object.assign(document.createElement('button'), { type: 'button', className: 'chip', textContent: label, title: note });
     b.setAttribute('role', 'radio'); b.dataset.label = label; if (i != null) b.dataset.snap = i;
     return b;
   }));
-  sheetChips.replaceChildren(where, ...turnChips(o), ...notesChips(o));
-  showUp(o);
+  const up = chip(UP_GLYPH, upWord(o), 'Turn the world under the sheet so the chart reads as it was drawn; again for north up');
+  up.dataset.up = ''; up.setAttribute('aria-pressed', 'false');
+  const notes = notesChips(o), line = (...kids) => { const d = Object.assign(document.createElement('div'), { className: 'line' }); d.append(...kids); return d; };
+  box.replaceChildren(where, line(up), ...(notes.length ? [line(...notes)] : []));
+  return box;
 }
-// Beside them, the walk-around chips, a quarter turn of the world and every sheet each way round about the middle of
-// the window; and, for a chart drawn to be read another way up (overlays.json `up`, de la Cosa's west up), its up chip,
-// lit while the world stands at that up however it got there, which turns the world to it and back to north up
-// (docs/spec/design.md, "Every chart turns, a quarter at a time").
+// The up chip: the bearing that stands the chart as drawn (overlays.json `up`, de la Cosa's west up; north for the
+// rest), lit while the world stands there however it got there; it turns the world to it and back to north up
+// (docs/spec/design.md, "Every chart turns, a quarter at a time"). The walk-around buttons beside the compass turn the
+// world a quarter at a time.
 const WALK_GLYPH = (cw) => `<svg viewBox="0 0 28 18" aria-hidden="true"><rect x="11.5" y="6.5" width="5" height="5" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="${cw ? 'M9.4 13.6A6.5 6.5 0 1 1 18.6 13.6M21.4 13.6H18.6V10.8' : 'M18.6 13.6A6.5 6.5 0 1 0 9.4 13.6M6.6 13.6H9.4V10.8'}" fill="none" stroke="#8c2f1e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const UP_GLYPH = '<svg viewBox="0 0 28 18" aria-hidden="true"><rect x="9" y="3" width="10" height="14" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M14 13V1.2M10.8 4.4 14 1.2l3.2 3.2" fill="none" stroke="#8c2f1e" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const COMPASS_WORDS = ['North', 'North-east', 'East', 'South-east', 'South', 'South-west', 'West', 'North-west'];
 const upWord = (o) => `${COMPASS_WORDS[Math.round(drawnBearing(o) / 45) % 8]} up`;
 // Whether the world stands at this chart's up (its chip lit): lifting the sheet then turns it back to north up.
-const atUp = (o) => o?.up != null && offBy(view.bearing ?? 0, drawnBearing(o)) < 0.5;
-function turnChips(o) {
-  const chip = (glyph, text, title) => {
-    const b = Object.assign(document.createElement('button'), { type: 'button', className: 'chip', title });
-    b.innerHTML = `${glyph}${text}`;
-    if (!text) b.setAttribute('aria-label', title);
-    return b;
-  };
-  const left = chip(WALK_GLYPH(false), '', 'Walk round the chart: the world and the sheet a quarter turn anticlockwise');
-  const right = chip(WALK_GLYPH(true), '', 'Walk round the chart: the world and the sheet a quarter turn clockwise');
-  left.dataset.walk = '-1'; right.dataset.walk = '1';
-  if (o.up == null) return [left, right];
-  const up = chip(UP_GLYPH, upWord(o), 'Turn the world under the sheet so the chart reads as it was drawn; again for north up');
-  up.dataset.up = ''; up.setAttribute('aria-pressed', 'false');
-  return [left, right, up];
-}
-function showUp(o) {
-  const b = sheetChips.querySelector('[data-up]');
-  if (!b) return;
+const atUp = (o) => !!o && offBy(view.bearing ?? 0, drawnBearing(o)) < 0.5;
+function showUp(box, o) {
+  const b = box.querySelector('[data-up]');
   b.setAttribute('aria-pressed', String(atUp(o)));
   if (b.lastChild.textContent !== upWord(o)) b.lastChild.textContent = upWord(o);
 }
-// Beside them, for a chart with points of interest marked on it: "Points of interest" with their count in a red dot, which
-// keeps their marks shown until clicked again (off after the pulse, and never on by default), and the compass of Go, which
-// plays the pulse again (docs/spec/design.md, "the user asks for the notes back"). The chart's own note is its row's caption.
+// For a chart with points of interest marked on it: "Points of interest" with their count in a red dot, which keeps their
+// marks shown until clicked again (off after the pulse, and never on by default); Go's compass plays the pulse again
+// (docs/spec/design.md, "the user asks for the notes back"). The chart's own note is its row's caption.
 const NOTE_GLYPH = '<svg viewBox="0 0 28 18" aria-hidden="true"><circle cx="14" cy="9" r="6" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="14" cy="9" r="2" fill="currentColor"/></svg>';
-// The replay chip's compass is cloned from the bar, its gradient ids renamed so the clone stands alone.
-const barIcon = (id, tag) => $(id).querySelector('svg').outerHTML.replace(/(brass\w+|hdChart|hcChart)/g, `$1${tag}`).replace('aria-hidden="true"', 'aria-hidden="true" class="icon"');
-const PULSE_GLYPH = () => barIcon('go', 'Replay');
 function notesChips(o) {
   const n = noteCount(o.id);
   if (!n) return [];
   const keep = Object.assign(document.createElement('button'), { type: 'button', className: 'chip', title: `Show the chart's ${n} points of interest, and keep their marks until clicked again` });
   keep.innerHTML = `${NOTE_GLYPH}Points of interest<span class="count" aria-label="${n}">${n}</span>`; keep.dataset.notes = 'keep'; keep.setAttribute('aria-pressed', String(notesKept.has(o.id)));
-  const again = Object.assign(document.createElement('button'), { type: 'button', className: 'chip', title: 'Play the rings round the points of interest again' });
-  again.innerHTML = PULSE_GLYPH(); again.dataset.notes = 'again'; again.setAttribute('aria-label', 'Play the rings round the points of interest again');
-  return [keep, again];
+  return [keep];
 }
-sheetChips.addEventListener('click', (e) => {
-  const b = e.target.closest('.chip'), id = sheetChips.dataset.id, o = sheetsShown().find((v) => v.id === id) ?? laidSheets().find((v) => v.id === id);
+// The walk-around buttons beside the compass: a quarter turn of the world, and every sheet with it, each way round about
+// the middle of the window; with a sheet laid, to the top one's next quarter turn, else to the next of north, east,
+// south and west up. Clockwise lowers the bearing, as the compass turns it.
+const topSheet = () => { const laid = laidSheets().reverse(), proj = viewProjection(view); return laid.find((v) => sheetCorners(v, proj, v.sheet)) ?? laid[0]; };
+function walkRound(dir) {
+  const b = turningTo ?? view.bearing ?? 0, o = topSheet(), q = o ? drawnBearing(o) : 0, k = (b - q) / 90;
+  turnWorld(q + 90 * (dir > 0 ? Math.ceil(k - 1e-6) - 1 : Math.floor(k + 1e-6) + 1));
+}
+for (const [id, dir] of [['walkLeft', -1], ['walkRight', 1]]) {
+  $(id).innerHTML = WALK_GLYPH(dir > 0);
+  $(id).addEventListener('click', () => walkRound(dir));
+}
+$('chartList').addEventListener('click', (e) => {
+  const b = e.target.closest('.pos .chip'), id = b?.closest('.pos').dataset.id, o = b && (sheetsShown().find((v) => v.id === id) ?? laidSheets().find((v) => v.id === id));
   if (!b || !o) return;
-  if (b.dataset.walk) { turnWorld(nearestQuarter(o, (turningTo ?? view.bearing ?? 0) - 90 * Number(b.dataset.walk))); return; } // to the chart's next quarter turn; clockwise lowers the bearing, as the compass turns it
   if (b.dataset.up != null) { // as drawn, the sheet framed as it will stand; again, north up where the map is
-    if (atUp(o)) turnWorld(0);
+    if (atUp(o) && view.bearing) turnWorld(0);
     else turnWorld(drawnBearing(o), sheetView(o, o.sheet, { w: W, h: H, bearing: drawnBearing(o) }));
     return;
   }
   if (b.dataset.notes) {
-    const on = b.dataset.notes === 'again' || !notesKept.has(o.id);
-    if (b.dataset.notes === 'keep') { if (on) notesKept.add(o.id); else notesKept.delete(o.id); b.setAttribute('aria-pressed', String(on)); }
+    const on = !notesKept.has(o.id);
+    if (on) notesKept.add(o.id); else notesKept.delete(o.id);
+    b.setAttribute('aria-pressed', String(on));
     if (on) startPulse([o.id]); else repaintLayer();
     return;
   }
@@ -1285,6 +1301,7 @@ canvas.addEventListener('pointerdown', (e) => {
   if (!pointers.size && e.isPrimary && !held && !holding) {
     const p = toCanvas(e.clientX, e.clientY), pic = pictureHit(p), hit = pic ? null : sheetHit(p);
     if (looking != null && pic?.i !== looking) { endLook(); return; } // a press off the picture looked at lays it back, and only that
+    showCornerIcon(null);
     if (pic) holdPicture(pic, p); else if (hit) { hideTile(); holdSheet(hit, p); sheetTap = p; }
     if (pic || hit) { canvas.setPointerCapture(e.pointerId); canvas.style.cursor = 'grabbing'; return; }
   }
@@ -1304,7 +1321,12 @@ canvas.addEventListener('pointermove', (e) => {
   if (holding) { dragPicture(toCanvas(e.clientX, e.clientY)); return; }
   if (held) { const p = toCanvas(e.clientX, e.clientY); if (sheetTap && Math.hypot(p[0] - sheetTap[0], p[1] - sheetTap[1]) > cssPx(TAP_SLOP)) sheetTap = null; if (!sheetTap) dragSheet(p); return; }
   if (carried) { carried.corner = cornerAt(toCanvas(e.clientX, e.clientY)); showSnap(carried.corner, carried.w, carried.h); return; }
-  if (!pointers.size) { const p = toCanvas(e.clientX, e.clientY); const pic = pictureHit(p)?.kind; canvas.style.cursor = cardAt(p) ? 'grab' : pic ? ({ move: 'grab', look: 'zoom-in', flip: 'pointer', link: 'pointer', away: 'pointer' }[pic] ?? '') : markAt(p) ? 'pointer' : { move: 'grab', turn: TURN_CURSOR }[sheetHit(p)?.kind] ?? ''; return; } // a picture over the marks under it, as a press finds it
+  if (!pointers.size) { // a picture over the marks under it, as a press finds it
+    const p = toCanvas(e.clientX, e.clientY), pic = pictureHit(p)?.kind, card = cardAt(p), mark = !card && !pic && markAt(p), hit = card || pic || mark ? null : sheetHit(p);
+    canvas.style.cursor = card ? 'grab' : pic ? ({ move: 'grab', look: 'zoom-in', flip: 'pointer', link: 'pointer', away: 'pointer' }[pic] ?? '') : mark ? 'pointer' : { move: 'grab', turn: TURN_CURSOR }[hit?.kind] ?? '';
+    showCornerIcon(hit?.kind === 'turn' ? hit : null);
+    return;
+  }
   if (!pointers.has(e.pointerId)) return;
   const p = toCanvas(e.clientX, e.clientY);
   if (tap && Math.hypot(p[0] - tap[0], p[1] - tap[1]) > cssPx(TAP_SLOP)) tap = null;
@@ -1321,7 +1343,7 @@ canvas.addEventListener('pointermove', (e) => {
 });
 const lift = (e) => {
   if (holding) { canvas.style.cursor = ''; dropPicture(e); return; }
-  if (held) { const at = sheetTap; sheetTap = null; canvas.style.cursor = ''; if (at) { held = null; if (e.type === 'pointerup') showTileAt(at); } else dropSheet(); return; } // a tap moved nothing: no render, which would hide the tile
+  if (held) { const at = sheetTap; sheetTap = null; canvas.style.cursor = ''; if (at) { const turn = held.kind === 'turn'; held = null; if (e.type === 'pointerup' && !turn) showTileAt(at); } else dropSheet(); return; } // a tap moved nothing: no render, which would hide the tile
   if (carried) { // dropped: the corner is kept, the sheet placed again
     const { key, corner } = carried;
     carried = null; snap.style.display = 'none';
@@ -3031,6 +3053,9 @@ $('hoverOpen').addEventListener('input', () => { hoverOpen = $('hoverOpen').valu
 // was made in, a link that flies there and takes off any sheet that would cover the city (docs/spec/design.md, "A
 // chart's row in the Charts drawer").
 const skin = $('charts').querySelector('svg').outerHTML;
+// Beside the eye, while two sheets or more are shown, a pair of arrows that raise the sheet over the one above it or lower
+// it under the one below, the order kept in the link (docs/spec/design.md, "A chart's row in the Charts drawer").
+const RAISE = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 8.5 6 3.5l4 5"/></svg>', LOWER = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 3.5 6 8.5l4-5"/></svg>';
 const EYE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="slash" d="M4 4l16 16"/></svg>';
 let OVERLAYS = []; // packs/overlays/overlays.json, once loaded
 const ownSheet = (id) => OVERLAYS.find((v) => v.id === id)?.sheet ?? null;
@@ -3038,7 +3063,7 @@ let chartsFresh = false; // the Charts drawer opened with no sheet shown, and no
 let fadeIn = null; // the overlay id whose sheet fades in when next placed
 const CLEAR_MS = 250; // a chart's flight waits this long on the old sheet's clearing, the skull's flash at its height
 let flyAfterClear = 0;
-$('chartList').innerHTML = CHARTS.map(({ name, year, made, text, overlay }, i) => `<li class="chart"${overlay ? ` data-overlay="${overlay}"` : ''}><button type="button" class="thumb none" data-chart="${i}" data-to="view" title="The chart's frame">${skin}</button><div class="about"><span class="head"><button type="button" class="name" data-chart="${i}" data-to="view">${name}</button>${overlay ? `<button type="button" class="eye" data-chart="${i}" data-to="eye" aria-pressed="false" aria-label="Show ${name}" hidden>${EYE}</button>` : ''}</span><span class="where"><button type="button" class="city" data-chart="${i}" data-to="made">${made.title}</button>, ${year}</span>${overlay ? `<div class="slider fade" hidden><input type="range" min="0" max="1" step="0.05" aria-label="Opacity of ${name}'s sheet: lower lets the map show through"><output></output></div>` : ''}${caption(text)}</div></li>`).join('');
+$('chartList').innerHTML = CHARTS.map(({ name, year, made, text, overlay }, i) => `<li class="chart"${overlay ? ` data-overlay="${overlay}"` : ''}><button type="button" class="thumb none" data-chart="${i}" data-to="view" title="The chart's frame">${skin}</button><div class="about"><span class="head"><button type="button" class="name" data-chart="${i}" data-to="view">${name}</button>${overlay ? `<span class="stack" hidden><button type="button" class="lift" data-chart="${i}" data-to="raise" aria-label="Raise ${name} over the sheet above it" title="Raise over the sheet above">${RAISE}</button><button type="button" class="lift" data-chart="${i}" data-to="lower" aria-label="Lower ${name} under the sheet below it" title="Lower under the sheet below">${LOWER}</button></span><button type="button" class="eye" data-chart="${i}" data-to="eye" aria-pressed="false" aria-label="Show ${name}" hidden>${EYE}</button>` : ''}</span><span class="where"><button type="button" class="city" data-chart="${i}" data-to="made">${made.title}</button>, ${year}</span>${overlay ? `<div class="slider fade" hidden><input type="range" min="0" max="1" step="0.05" aria-label="Opacity of ${name}'s sheet: lower lets the map show through"><output></output></div>` : ''}${caption(text)}</div></li>`).join('');
 // The sheets laid, bottom to top, and where each lies; `fade` the id of one that fades in as it is placed. `draw` false
 // when a flight follows at once: its landing draws them, and a render now would only be thrown away by its first frame.
 // A sheet lifted while the world stands turned to its up turns the world back to north up: at once, or, where a flight
@@ -3065,6 +3090,14 @@ $('chartList').addEventListener('click', (e) => {
     if (!o) return;
     if (!shown) seen.add(o.id);
     setSheets(shown ? style.overlays.filter((id) => id !== o.id) : [...style.overlays, o.id], style.sheets, null, true, false);
+    return;
+  }
+  if (b.dataset.to === 'raise' || b.dataset.to === 'lower') { // swapped with its neighbour in the stack, bottom to top
+    const at = style.overlays.indexOf(o?.id), to = at + (b.dataset.to === 'raise' ? 1 : -1);
+    if (at < 0 || to < 0 || to >= style.overlays.length) return;
+    const order = [...style.overlays];
+    [order[at], order[to]] = [order[to], order[at]];
+    setSheets(order, style.sheets, null, true, false);
     return;
   }
   if (b.dataset.to === 'made') {
@@ -3109,16 +3142,19 @@ function showOverlay() {
     const li = eye.closest('li'), on = style.overlays.includes(li.dataset.overlay);
     eye.setAttribute('aria-pressed', String(on));
     eye.setAttribute('aria-label', `${on ? 'Hide' : 'Show'} ${li.querySelector('.name').textContent}`);
-    const fade = li.querySelector('.fade'), at = effectiveOpacity(style); // the sheet's opacity, while its sheet is shown
+    const at = style.overlays.indexOf(li.dataset.overlay), stack = li.querySelector('.stack'), lifts = stack.querySelectorAll('.lift');
+    stack.hidden = !on || style.overlayMode !== 'sheet' || style.overlays.length < 2;
+    lifts[0].disabled = at === style.overlays.length - 1; lifts[1].disabled = at === 0; // the top can't rise, the bottom can't sink
+    const fade = li.querySelector('.fade'), a = sheetOpacity(style, li.dataset.overlay); // the sheet's own opacity, while its sheet is shown
     fade.hidden = !on || style.overlayMode !== 'sheet';
-    if (document.activeElement !== fade.firstChild) fade.firstChild.value = String(at);
-    fade.lastChild.textContent = `${Math.round(at * 100)}%`;
+    if (document.activeElement !== fade.firstChild) fade.firstChild.value = String(a);
+    fade.lastChild.textContent = `${Math.round(a * 100)}%`;
   }
 }
 let fadeTimer = 0;
 $('chartList').addEventListener('input', (e) => {
   if (!e.target.matches('.fade input')) return;
-  style = { ...style, overlayOpacity: Number(e.target.value) };
+  style = { ...style, opacities: { ...style.opacities, [e.target.closest('li').dataset.overlay]: Number(e.target.value) } };
   showOverlay(); showHood(); writeHash();
   clearTimeout(fadeTimer); fadeTimer = setTimeout(render, 80); // drawn when the slider pauses
 });
@@ -3239,7 +3275,7 @@ function turnWorld(bearing, frame = null) {
   };
   flight = requestAnimationFrame(step);
 }
-// The compass in the gutter, shown while a sheet is laid or the world is turned: its needle points north on the
+// The compass in the gutter, always shown, between the walk-around buttons: its needle points north on the
 // window; a click turns the world back to north up, a drag round it turns the world, and every sheet on it, by the
 // angle swept, so a chart with no up (the Catalan Atlas) can be walked round (docs/spec/design.md, "A chart with no up
 // turns for the reader").
@@ -3247,7 +3283,6 @@ const compass = $('compass');
 let spin = null; // { a, bearing, moved } while the compass is held: the pointer's angle about it and the bearing then
 function showCompass() {
   const b = view.bearing ?? 0;
-  compass.hidden = !b && !sheetsShown().length;
   compass.querySelector('svg').style.transform = `rotate(${-b}deg)`;
   compass.setAttribute('aria-label', b ? `North is ${Math.round(b)}° from the top: click for north up, or drag round to turn the world` : 'North up: drag round to turn the world and the chart with it');
   compass.title = b ? 'North up (drag round to turn)' : 'Drag round to turn the world';

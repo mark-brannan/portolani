@@ -81,13 +81,16 @@ Feature: A chart's scan lies on the map as one sheet
     And a chart that draws a parallel (de la Cosa's equator and Tropic of Cancer, "the first depiction of the equator and the tropic of cancer on a nautical chart") is anchored by those lines first: its turn from their tilt, its scale and latitude from their spacing, the coasts only setting the longitude
     And the placements that fit one coast best (the European coast, the New World coast, a third where it is as good) are offered as snaps on the sheet, as many as fit well, not only two
   Scenario: the user moves the sheet
-    Source: the user in the session of 2026-11-04: "The resize and manually rotate button on the corners of the charts inside the main map should be removed and instead, dragging any map corner should rotate the map in place through it's allowed orientations (it is not a free form rotate) with the globe/main-map also rotating with it." This overtakes the turn and resize handles of the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292).
+    Source: the user in the session of 2026-11-04: "The resize and manually rotate button on the corners of the charts inside the main map should be removed and instead, dragging any map corner should rotate the map in place through it's allowed orientations (it is not a free form rotate) with the globe/main-map also rotating with it." This overtakes the turn and resize handles of the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292). Later, the user in the session of 2026-11-04, as relayed to the session that built it: the corner drag is "FREE rotation of the whole world/table, exactly like the compass drag"; "Double-clicking a corner ... turns to the nearest snap position"; "a rotate icon appears at a corner only on mouse-over of that corner". This overtakes the quarter-turn settle above.
     Given the sheet shown
     When the user drags inside it
     Then it slides up, down, left and right over the map, and the map does not pan
     When the user drags any of its four corners
-    Then the sheet and the world turn together about the middle of the window, following the pointer, and on release settle at the nearest of the chart's quarter turns ("Every chart turns, a quarter at a time", below); never a free angle
+    Then the sheet and the world turn together about the middle of the window, following the pointer, and stay at the angle where they are let go, as the compass's drag leaves them
+    When the user double-clicks a corner
+    Then the sheet and the world turn to the nearest of the chart's quarter turns ("Every chart turns, a quarter at a time", below)
     And no handle is drawn on the sheet: no turn ring, no resize square; the sheet is not resized by hand
+    And while the pointer is over a corner, and only then, a small turn icon shows at that corner; it hides while the corner is dragged
     And the link keeps the placement and the bearing
   Scenario: the map's projection changes under the sheet
     Given the sheet shown and the view at some zoom and centre
@@ -119,7 +122,7 @@ Feature: A chart's row in the Charts drawer
     And a chart whose scan is in the project shows its miniature in full colour, shown or not: no fade, no grey
     And beside the icon the chart's full name as text ("Map of Juan de la Cosa"), and to the right of the name a show/hide icon (an eye and an eye struck through, or an eye with a pirate's patch)
     And under the name the city it was made in and its year, "Majorca, 1375", the city a link that flies to the city; no "where it was made" wording, no tooltip-only meaning
-    And no other control sits in the row but its Chart position chips (below) and, for a chart whose sheet carries notes, its Notes chip ("A chart's notes get their moment", below; the user asked for it on 2026-10-29: "there should be a way to show/hide them or retrigger the animation"); the pieces mode and its opacity live under Settings, Under the hood
+    And no other control sits in the row but its eye, its raise and lower arrows, its opacity slider, its Align to and up chips (below) and, for a chart whose sheet carries notes, its Notes chip ("A chart's notes get their moment", below; the user asked for it on 2026-10-29: "there should be a way to show/hide them or retrigger the animation"); the pieces mode and its opacity live under Settings, Under the hood
     And a chart without a scan yet shows the glyph greyed, its name flying to its sheet view as before
   Scenario: the icon or the name shows that chart alone; the eye is on or off for one chart
     Source: the click, the user on the [#295](https://github.com/mark-brannan/portolani/pull/295) demo, 2026-10-30: "when you just click the chart, it zooms to the chart and resets that one, clearing the others." This settles the walk's "possibly (TBC, not certain) clears other charts". Later, in the user's answers in the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "I am leaning more towards auto clear after seeing the voyages new behavior.  I'll entertain a clear button as an alternative but I thinjk it needs to autoclear or it just gets confusing and cluttered."
@@ -139,8 +142,16 @@ Feature: A chart's row in the Charts drawer
     Given one chart's sheet shown
     When the user clicks another chart's icon or name
     Then the shown sheet is cleared first, as the skull clears the table, its faint skull flashing over the map, and only then does the map fly to the new chart's frame
-    And the new chart's row shows its Chart position chips, its turn chips and its Points of interest chip at once, on the click, not once the flight lands or the sheet has faded in
+    And the new chart's row shows its Align to chips, its up chip and its Points of interest chip at once, on the click, not once the flight lands or the sheet has faded in
     And once it lands the new sheet alone lies on the map and its points of interest announce themselves
+  Scenario: the user restacks the charts shown
+    Source: the user in the session of 2026-11-04, as relayed to the session that built it: "Stacking order of shown charts can be changed without re-toggling."; "The transparency (opacity) sliders are per chart, not one setting shared by all charts."
+    Given two charts' sheets shown or more
+    When the user looks at a shown chart's row
+    Then beside its eye are two small arrows, raise and lower, the raise dark on the top sheet and the lower dark on the bottom one; with one sheet shown there are none
+    When the user clicks one
+    Then that sheet swaps places with its neighbour in the stack, every sheet stays where it lies, and the link keeps the order
+    And each shown chart's opacity slider fades that chart's sheet alone, kept in the link per chart
   Scenario: the city clears the way to itself
     Given a chart's sheet shown
     When the user clicks the chart's city
@@ -165,11 +176,13 @@ Feature: The Catalan Atlas, all eight pages, and the 1959 copy beside it
     Then the 1959 copy is there too, as an alternative chart the user can show
 
 Feature: A chart's position chips, and the line each was fitted to
-  Source: the user on [#259](https://github.com/mark-brannan/portolani/pull/259), 2026-10-29: "The chart snap buttons should not disappear, right now they disappear right away after clicking. They should be inside the drawer for the chart on desktop and they should indicate what they are for. Probably, "Chart Position: <a> <b> ..."", and "When clicking any of the given position buttons, it should animate the primary feature that was used for alignment/sizing/position as a simple line over the chart. Then the line should fade out. For example, "parallels" should animate/overlay the Equator and the Tropic of Cancer. New World should animate/overlay the portion of the South/Central American coast which is aligned with the chart at that orientation."
+  Source: the three lines, the user in the session of 2026-11-04, as relayed to the session that built it: "Every shown (visible, eye on) chart's controls appear in the drawer just under that chart's row"; "'Align to:' label followed by the placement chips on the same line"; the own placement "renamed 'Default'"; "the up chip, on a line of its own with no label. Every chart gets it". Earlier, the user on [#259](https://github.com/mark-brannan/portolani/pull/259), 2026-10-29: "The chart snap buttons should not disappear, right now they disappear right away after clicking. They should be inside the drawer for the chart on desktop and they should indicate what they are for. Probably, "Chart Position: <a> <b> ..."", and "When clicking any of the given position buttons, it should animate the primary feature that was used for alignment/sizing/position as a simple line over the chart. Then the line should fade out. For example, "parallels" should animate/overlay the Equator and the Tropic of Cancer. New World should animate/overlay the portion of the South/Central American coast which is aligned with the chart at that orientation."
   Scenario: where the chips live
     Given the Charts drawer open on a wide screen, and a chart whose scan is in the project
     When the user looks at that chart's row
-    Then under the city and year a line reads "Chart position:" and then one chip per placement (the chart's own, "Parallels" or "Level", then each coast's fit: "Europe", "New World" and so on)
+    Then under the city and year a line reads "Align to:" and then, on the same line, one chip per placement (the chart's own, "Parallels" or "Default", then each coast's fit: "Europe", "New World" and so on)
+    And under it, on a line of its own with no label, the chart's up chip ("Every chart turns, a quarter at a time"), and under that, where the chart has any, its Points of interest chip
+    And every chart shown has these three lines in its own row, the same on every chart, whichever of them are shown and in whatever order; a chart hidden has none
     And the chip for the placement the sheet lies at is lit
     And no chip floats on the map over the sheet
     When the user clicks a chip
@@ -181,7 +194,7 @@ Feature: A chart's position chips, and the line each was fitted to
     And over the sheet, in today's geography, the feature that placement was fitted to draws itself as a plain line, from one end to the other, holds, then fades to a faint line (about a quarter of its strength) that stays while the sheet lies at that placement
     And the faint line may lighten later to a ghost (about a tenth) or go entirely; the user chose faint for now, after comparing all three (the user on [#259](https://github.com/mark-brannan/portolani/pull/259), 2026-10-29: "C for now, may lighten to B or A later", where C was faint, B ghost and A gone)
     And the faint line is the lit chip's: a click on another chip replaces it with that chip's line, drawn from the start; a click on the lit chip draws it again; hiding the chart with its eye takes the line off with the sheet; and as the sheet fades in or out, the line fades with it
-    And "Parallels" draws today's equator and Tropic of Cancer; a coast's chip ("New World") draws only the stretch of today's coast that fit used, not the whole coast; the chart's own "Level" draws every coast it is centred between
+    And "Parallels" draws today's equator and Tropic of Cancer; a coast's chip ("New World") draws only the stretch of today's coast that fit used, not the whole coast; the chart's own "Default" draws every coast it is centred between
     And the line is the feature the fit was computed from, carried with the placement in the chart's data, never a stretch drawn by hand to look right
     And with reduced motion the line shows whole, then fades to faint
   Scenario: a phone
@@ -323,17 +336,20 @@ Feature: A chart with no up turns for the reader
 
 Feature: Every chart turns, a quarter at a time
   Source: the user in the session of 2026-11-04: "The chart for de la Cosa has a 'west up' button. I want to keep this, but the behavior is inconsistent right now. All maps should have a function to view different sides 'up', alternatively it can be a 'rotate' button that does 90 degrees....in fact I want to see that at minimum with a "walk around" curved button in either direction that effectively rotates everything around the current position."; "We have dead buttons for angle and size in the drawer for several maps."
-  Scenario: the walk-around chips
-    Given any chart's sheet shown, its row in the Charts drawer
-    When the user looks at the row
-    Then beside its Chart position chips are two curved-arrow chips, one each way round, on every chart that has a scan
-    When the user clicks one
-    Then the world and every sheet on it turn about the middle of the window, that way round, to the chart's next quarter turn (its own up and the three quarters from it): the place in the middle stays in the middle, the zoom stays, the sheet keeps its place on the world
+  Scenario: the walk-around buttons
+    Source: the user in the session of 2026-11-04, as relayed to the session that built it: "Move the walk-around quarter-turn buttons ... out of the drawer to sit beside the compass"; "They are always available and rotate the entire view, with or without a chart."
+    Given the map, with or without a chart's sheet shown
+    When the user looks at the right gutter
+    Then either side of the compass is a curved-arrow button, one each way round, always shown, and the compass is always shown with them
+    When the user clicks one with a sheet shown
+    Then the world and every sheet on it turn about the middle of the window, that way round, to the top sheet's next quarter turn (its own up and the three quarters from it): the place in the middle stays in the middle, the zoom stays, the sheet keeps its place on the world
+    When the user clicks one with no sheet shown
+    Then the world turns that way round to the next of north, east, south and west up
     And from one of those quarter turns, four clicks the same way come back to where they began
   Scenario: the chart's own up
-    Given a chart drawn to be read another way up (de la Cosa's west up)
+    Given any chart shown, drawn to be read another way up (de la Cosa's west up) or north up (every chart with no other up)
     When the user looks at its row
-    Then its up chip ("West up") is there beside the walk-around chips, and lit exactly while the world stands at that chart's up, however the user got there: the up chip, the walk-around chips, a corner drag or the compass
+    Then its up chip ("West up", "North up") is there on a line of its own, and lit exactly while the world stands at that chart's up, however the user got there: the up chip, the walk-around buttons, a corner drag or the compass
     When the user clicks the up chip unlit
     Then the world turns to the chart's up, framing the sheet as it will stand
     When the user clicks it lit
@@ -341,7 +357,7 @@ Feature: Every chart turns, a quarter at a time
   Scenario: no dead controls in the row
     Given any chart's row
     When the user looks at its chips
-    Then every chip in it does something when clicked; there are no Angle or Size chips, since the sheet is no longer turned freely or resized by hand
+    Then every chip in it does something when clicked; there are no Angle or Size chips, since the sheet is turned only with the world and never resized by hand
 
 Feature: The voyage record: people, deaths and what a skull means
   Source: the user on [#275](https://github.com/mark-brannan/portolani/pull/275), 2026-10-29: "the death date and place is either known or unknown. No statement about living = true is necessary (or correct). In fact, nothing should be required at all for the person record besides, perhaps, a name or ID (even a name might be omitted if we wanted to have certain anonymous persons in the project where other details were known but NOT the name). Use a permissive approach and make no assumptions about what is required, or what is present unless strictly required."; "People with a known death location get a skull. Full stop."; "Voyages should have a name or title that we work from, and it will *usually* include the name of the leader (or a singular leader) but there will be a "has" relationship for people and voyages...we could separately have a "leader" relationship but it will get complicated for voyages like Magellan's (maybe Drakes?) where he died before the end and someone else took over leading the remainder."; and in the session that rebuilt the record, 2026-10-29: "we might include a few modern recreation voyages of living people who attempted to recreate polynesian voyages using traditional methods"; "We have some error bars on exact location of death but have chosen to make reasonable judgements about the location. For example, if we know the sea leg where a death took place, we just mark it in the middle of the voyage. ... We have some death locations that might be speculative as well....or deaths that we chose to place in the middle of the ocean in a 'close enough' location on a wide patch of empty sea". The files are `data/voyages/`: a voyage in `<id>.json`, the people in `people.json`, the sources in `sources.json`; `scripts/voyages.mjs` is the schema and `node scripts/check-voyages.mjs` the check.
@@ -410,9 +426,10 @@ Feature: A chart's notes get their moment, then leave the art alone
   Scenario: the user asks for the notes back
     Given a chart's sheet shown, its notes faded
     When the user looks at the chart's row
-    Then a chip beside the position chips reads "Points of interest" with N, their count, in a red dot in the serif's own figures, off after the pulse
+    Then a chip on its own line under the up chip reads "Points of interest" with N, their count, in a red dot in the serif's own figures, off after the pulse
     And the chart's own note, its background, is the caption in its row, apart from the points of interest each with its own tile
-    And a click on the chip shows the marks and keeps them until it is clicked again; a second control, wearing the compass of Go, or the same chip when the marks are already off, plays the rings again
+    And a click on the chip shows the marks and keeps them until it is clicked again, playing the rings as they come on; Go's own compass plays them again, so the row has no second control for it
+    Source: the one chip, the user in the session of 2026-11-04, as relayed to the session that built it: "Remove the duplicate compass 'play the rings again' chip from chart rows ... The Go button already does that."
     And the marks are never left on by default; the scan is the thing, the marks are a way to find what is on it
   Scenario: the user sees it first
     Given the pulse built as above

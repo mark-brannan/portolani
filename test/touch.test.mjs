@@ -874,9 +874,9 @@ test('people: a picture on the map is looked at, put away and dealt back by choo
 });
 
 // Every chart turns a quarter at a time (docs/spec/design.md, "Every chart turns, a quarter at a time"): the walk-around
-// chips step de la Cosa through its own quarter turns, so West up (its drawn bearing, 270) lights exactly there and the up chip
+// buttons beside the compass step de la Cosa through its own quarter turns, so West up (its drawn bearing, 270) lights exactly there and the up chip
 // is pressed only then; and the eye shows or hides a sheet without moving the view or turning the world.
-test('charts: the walk-around chips step through the chart\'s quarter turns, West up lighting at its bearing; the eye leaves the view alone', { skip, timeout: 240000 }, async () => {
+test('charts: the walk-around buttons step through the chart\'s quarter turns, West up lighting at its bearing; the eye leaves the view alone', { skip, timeout: 240000 }, async () => {
   const server = createServer(async (req, res) => {
     let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
     if (p.endsWith('/')) p = path.join(p, 'index.html');
@@ -893,8 +893,8 @@ test('charts: the walk-around chips step through the chart\'s quarter turns, Wes
     await page.click('#charts');
     const cosa = page.locator('#chartList .chart', { hasText: 'Juan de la Cosa' });
     await cosa.locator('.thumb').click(); // lays the sheet and brings up its chips
-    const walk = page.locator('#sheetChips [data-walk="-1"]'), up = page.locator('#sheetChips [data-up]');
-    await walk.waitFor({ state: 'visible', timeout: 60000 });
+    const walk = page.locator('#walkLeft'), up = cosa.locator('.pos [data-up]');
+    await up.waitFor({ state: 'visible', timeout: 60000 });
     const bearingAfter = async (was) => {
       await page.waitForFunction((w) => (new URLSearchParams(location.hash.slice(1)).get('bearing') ?? '0') !== w, was, { timeout: 30000 });
       await page.waitForTimeout(1500); // the turn is a short animation

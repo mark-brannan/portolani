@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { similarityFit, applyFit, affineThrough3, loadOverlay, drawOverlay, drawSheet, sheetOf, sheetTransform, sheetCorners, onSheet, sheetFrame, sheetView, OVERLAY_DEFAULTS, effectiveOpacity, overlayFromHash, overlayToHash, sheetText, sameSheet } from '../scripts/overlays.mjs';
+import { similarityFit, applyFit, affineThrough3, loadOverlay, drawOverlay, drawSheet, sheetOf, sheetTransform, sheetCorners, onSheet, sheetFrame, sheetView, OVERLAY_DEFAULTS, effectiveOpacity, sheetOpacity, overlayFromHash, overlayToHash, sheetText, sameSheet } from '../scripts/overlays.mjs';
 import { figureRows, landmarkRows, sheetPlacements, paperMask, outlineMask, redLines, catalanPieces, CATALAN_PAGES, pageOffsets } from '../scripts/build-overlays.mjs';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { viewProjection } from '../scripts/scene.mjs';
@@ -112,12 +112,12 @@ test('an overlay the site lacks loads as null and draws nothing', async () => {
 // dragged to (one `;` slot per laid id, in order), the warped pieces as `overlaymode=pieces` with their opacity.
 const written = (st) => { const q = new URLSearchParams(); overlayToHash(st, q); return q.toString(); };
 test('the overlays in the hash: the default writes nothing, a link round-trips, an unknown id is dropped', () => {
-  assert.deepEqual(OVERLAY_DEFAULTS, { overlays: [], overlayMode: 'sheet', sheets: {}, overlayOpacity: null, sheetHides: false, compare: 'off', comparePos: 0.5 });
+  assert.deepEqual(OVERLAY_DEFAULTS, { overlays: [], overlayMode: 'sheet', sheets: {}, opacities: {}, overlayOpacity: null, sheetHides: false, compare: 'off', comparePos: 0.5 });
   assert.equal(written(OVERLAY_DEFAULTS), '', 'the default writes nothing');
   assert.deepEqual(overlayFromHash(new URLSearchParams('')), OVERLAY_DEFAULTS, 'no keys read as the default');
   const ids = new Set(overlays.map((o) => o.id));
   const read = overlayFromHash(new URLSearchParams('overlay=carta-marina&overlayopacity=0.6'), ids);
-  assert.deepEqual(read, { overlays: ['carta-marina'], overlayMode: 'sheet', sheets: {}, overlayOpacity: 0.6, sheetHides: false, compare: 'off', comparePos: 0.5 });
+  assert.deepEqual(read, { overlays: ['carta-marina'], overlayMode: 'sheet', sheets: {}, opacities: {}, overlayOpacity: 0.6, sheetHides: false, compare: 'off', comparePos: 0.5 });
   assert.equal(written(read), 'overlay=carta-marina&overlayopacity=0.6', 'a faded sheet is written back');
   assert.equal(effectiveOpacity(OVERLAY_DEFAULTS), 1, 'the sheet is opaque by default');
   assert.equal(effectiveOpacity({ ...OVERLAY_DEFAULTS, overlayMode: 'pieces' }), 0.6, 'the pieces keep their 0.6');
@@ -142,6 +142,15 @@ test('the overlays in the hash: the default writes nothing, a link round-trips, 
   assert.deepEqual(overlayFromHash(new URLSearchParams('overlay=off')).overlays, []);
   assert.deepEqual(overlayFromHash(new URLSearchParams('overlay=../etc')).overlays, []);
   assert.equal(overlayFromHash(new URLSearchParams('overlayopacity=2')).overlayOpacity, null, 'out of range falls back');
+  // each sheet its own opacity, one slot per laid id; an empty slot is the mode's own, and an older overlayopacity link still fades them all
+  const faded = overlayFromHash(new URLSearchParams('overlay=aguiar,de-la-cosa,carta-marina&sheetopacity=,0.4,2'), ids);
+  assert.deepEqual(faded.opacities, { 'de-la-cosa': 0.4 }, 'an empty slot and an out-of-range one are the mode\'s own');
+  assert.equal(written(faded), 'overlay=aguiar%2Cde-la-cosa%2Ccarta-marina&sheetopacity=%2C0.4');
+  assert.equal(sheetOpacity(faded, 'de-la-cosa'), 0.4);
+  assert.equal(sheetOpacity(faded, 'aguiar'), 1, 'a sheet with no slider of its own is opaque');
+  assert.equal(sheetOpacity({ ...faded, overlayOpacity: 0.7 }, 'aguiar'), 0.7, 'an older overlayopacity link fades the rest');
+  assert.equal(sheetOpacity({ ...faded, overlayMode: 'pieces' }, 'de-la-cosa'), 0.6, 'the warped pieces share one opacity');
+  assert.equal(written({ ...faded, overlays: ['aguiar'] }), 'overlay=aguiar', 'an opacity kept for a chart not laid is left out');
   assert.ok(sameSheet({ lon: -5.18, lat: 9.418, scale: 0.10464, turn: 12.5 }, { lon: -5.1801, lat: 9.4181, scale: 0.104641, turn: 12.51 }), 'the same to the hash\'s rounding');
   assert.ok(!sameSheet(moved.sheets['de-la-cosa'], null));
   assert.equal(sheetText({ lon: 1, lat: 2, scale: 0.1, turn: 0 }), '1.000,2.000,0.10000,0.0');
