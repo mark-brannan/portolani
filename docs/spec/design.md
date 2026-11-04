@@ -242,11 +242,11 @@ Feature: A voyage's row in the Voyages drawer
     Then it takes the first colour of the palette that no shown voyage has, its own former colour first if that one is free
     And a reload of the link shows every voyage in the colour it had
     And how choosing a colour behaves waits on the user (the user on the [#295](https://github.com/mark-brannan/portolani/pull/295) demo, 2026-10-30): "The behavior for color selection is still strange and I'm not sure what I want for that."
-  Scenario: the people drawer and the voyages (waiting on the user, UI walk 2026-10-30)
-    Source: the user on the [#295](https://github.com/mark-brannan/portolani/pull/295) demo, 2026-10-30: "I'm also not sure how I want the interplay between the people drawer and the voyages drawer to behave.  They should have a relationship though...and as I hinted earlier, I think I want the voyages of ancient people *Groups* such as the Lapita to be included as a group alongside the people in the people drawer.  Individuals and groups can both be represented alongside one another in that framing."
+  Scenario: the people drawer and the voyages
+    Source: the user on the [#295](https://github.com/mark-brannan/portolani/pull/295) demo, 2026-10-30: "I'm also not sure how I want the interplay between the people drawer and the voyages drawer to behave.  They should have a relationship though...and as I hinted earlier, I think I want the voyages of ancient people *Groups* such as the Lapita to be included as a group alongside the people in the people drawer.  Individuals and groups can both be represented alongside one another in that framing."; and the user on [#304](https://github.com/mark-brannan/portolani/pull/304)'s timeline, 2026-11-04, quoted under "People and voyages, each a vertical timeline" below.
     Given the people drawer and the Voyages drawer
     When the user moves between them
-    Then how the two relate beyond sharing one timeline ("People and voyages share one timeline", below), and ancient groups such as the Lapita listed beside individuals in the people drawer, is open
+    Then each is its own vertical timeline of the same years and eras: every voyage is in the Voyages drawer; a person's voyages live in their tile in the People drawer, directly under their row; and a people such as the Lapita is listed beside the individuals, with their migration as their voyage ("People and voyages, each a vertical timeline", below)
 
 Feature: A dashed or dotted voyage is easy to see
   Source: the user on [#273](https://github.com/mark-brannan/portolani/pull/273), 2026-10-29, looking at the Narváez and Esteban renders: "The dashed legs are hard to see. Why are we using dashes? Same for dots but even worse than dashes. Hard to see!"; "The dots are a no-go though...you have to find something much better"; "part of the problem is the line and part of the problem is the default color palette. You're using grays and reds and they just blend in too much. Blue is no, because it would be confusing with rivers. Green might work. Purple. A brigher red maybe or yellow/orange. The red...idk, it's nice for the aesthetics but if you are using a dash or a dot, you've got to use a better color and heavier weights"; and, after comparing Heavy with Standard in green and purple: "heavy should be our default. ... IT is supposed to be configurable colors and weights anyway...and the colors are supposed to be sticky to one voyage while it is enabled, even if others are selected and deselected. So let's just make sure that when it is any voyage being toggled on where the lines are dashed/dotted that we pick from the higher contrast palette and with heavier weights, by default."
@@ -606,19 +606,27 @@ Feature: The skull in the lower right puts the map back
     And a large, faint skull flashes over the map as the cards go, then is gone (the broom is retired: docs/spec/drawer.md, "The skull stays in reach while a drawer is in use"); with reduced motion the cards go with no wipe
     And a click with nothing on the table does no harm: the map is already in its normal state
 
-Feature: People and voyages share one timeline
-  Source: the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "I'm now leaning towards both the people drawer and the voyages drawer being timeline format"; "Perhaps the timelines has a way to expand to earlier human history on the left side?"; "I don't exactly like the break I'm seeing from 300 BC to 1000 CE...realizing that it throws off the scale a bit."; and the user's answers in the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30, to the recorder's questions (paraphrase: one timeline, two lanes, the Sights eras as colour bands; Lapita the left edge, an expander for earlier history; fill the gap rather than compress the axis): "voyages section: yes"; "timeline span, yes lapita default with expander"; "BC to CE break, yes fill it"
-  Scenario: two lanes
-    Given the timeline of people and voyages
-    When the user looks at it
-    Then people sit in a lane above and voyages in a lane below, on one time axis
-    And the Sights eras are drawn across both lanes as subtle colour bands
-  Scenario: the left edge, and earlier history
-    Given the timeline at its default
-    When the user looks at its left edge
-    Then it starts at the Lapita, about 1500 BC
-    And an expander on the left opens earlier history (Sahul, Beringia, Clovis)
-  Scenario: 300 BC to 1000 CE
-    Given the centuries between 300 BC and 1000 CE
-    When the timeline draws them
-    Then the axis keeps its scale there, and the gap is filled with people and voyages of those centuries, not squeezed out
+Feature: People and voyages, each a vertical timeline
+  Source: the user on the timeline [#304](https://github.com/mark-brannan/portolani/pull/304) merged, 2026-11-04: "The entire drawer is way too WIDE! It should not be wider than the drawer for charts or settings/config (480px). We should consider whether we need to reorient it to be a vertical timeline instead of horizontal. Somehow we need to fit things more nicely."; "I do not like AT ALL how we treat people groups. The people group migrations MUST be in the people drawer with people. Nevermind that all the European examples are individuals... people are people. Lapita gets a row in people (not merely voyages)."; "When you click on people in the people drawer it should expand their notes and their voyages should appear directly below that. NOT below all the other people, and not as a naive copy/paste from the voyages drawer of all voyages. If I select Ibn Battuta, then I should get a tile with his notes... then each of the voyages below that (with the notes for that voyage)." This overtakes the one horizontal timeline of two lanes, its Earlier tab and its era bands (the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30), which #304 built and the user turned down on sight.
+  Scenario: two drawers, no wider than the charts
+    Given the instrument row
+    When the user clicks the medallion `#people` or the dividers `#voyages`
+    Then the People drawer `#peoplePanel` or the Voyages drawer `#voyagesPanel` opens alone, each `width: min(480px, 100vw - 24px)`, the Charts drawer's width, never wider on any screen; on a phone each is a bottom sheet like the others
+    And nothing in either scrolls sideways: a row, a tile and a voyage's notes wrap
+  Scenario: time reads top to bottom
+    Given either drawer
+    When the user looks down it
+    Then the rows run earliest first down a thin rail, from the Lapita voyages, about 1500 BC: a person by their birth, else by their first voyage; a voyage by the year it set out
+    And the Sights eras head the rows that fall in them, as small italic headings with the era's years (`1500 BC – AD 500`, `500 – 1450`, `1450 – 1800`, `from 1800`); a year before Christ reads `BC`
+    And a person's row is the name and the years as the record writes them (`24 Feb 1304 – c. 1369`, `born c. 350 BC`, `died 1510`); a people's row carries the years of their voyage (`c. 1500–800 BC`)
+  Scenario: a people is a person
+    Given a migration, or a voyage whose crew nobody named: the Lapita expansion, the settlement of East Polynesia, Necho's Phoenicians
+    When the People drawer lists people
+    Then it has a row like anyone else's, `The Lapita people`, `The East Polynesian voyagers`, `Phoenician mariners of Necho II`, each a record in `people.json` with `group: true`, a bio and its sources, marked by a small chip "a people"
+    And the voyage's `who` names it, so every voyage, a migration too, belongs to someone in the People drawer, and choosing the people lights their voyage and flies to frame it as choosing a person does
+  Scenario: a chosen person's tile and their voyages sit directly under their row
+    Given the People drawer open
+    When the user clicks a person's name
+    Then the person is chosen as before (their pictures dealt, their voyages lit in red, the map flown to frame them, `person=` in the hash) and a tile slides open directly under their row, before the next person's: their notes, their pictures as thumbnails, then one row per voyage of theirs in the index's order, each with its title and years, its notes, Read more, and the same eye and play as the Voyages drawer's rows, so a voyage is shown, hidden or played from here
+    And only the chosen person's tile is open; choosing another shuts it and opens theirs under their own row; clicking the chosen person again lets them go and shuts the tile
+    And the eye reads on for every voyage of theirs drawn lit; put off, it hides that one voyage while the person stays chosen, and the hash carries it as `voyages=<id>~`

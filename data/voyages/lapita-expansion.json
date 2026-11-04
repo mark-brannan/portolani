@@ -3,7 +3,7 @@
   "kind": "migration",
   "title": "The Lapita expansion, the Bismarcks to Samoa, c. 1500–800 BC",
   "short": "Lapita",
-  "who": [],
+  "who": ["lapita-people"],
   "when": "c. 1500–800 BC",
   "summary": "The makers of dentate-stamped Lapita pottery spread from the Bismarck Archipelago through the Solomons, Vanuatu and New Caledonia to Fiji, Tonga and Samoa in some six or seven centuries: the first people anywhere to settle islands beyond sight of land, sailing upwind into the trade winds.",
   "sources": ["lapita-culture", "denham-lapita-dating", "teouma"],
