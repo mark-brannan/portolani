@@ -53,6 +53,7 @@ const STYLE = {
   ink: '#3b2a1a',
   windGreen: '#4f6b3a',
   windRed: '#8c2f1e',
+  rubricBlue: '#2f4a86', // the atlas's blue rubric, alternating with the red in its lettered realms
   gilt: '#b58a3c',
   // period pigments for the land treatments (LANDS)
   red: '#a8432e',
@@ -968,16 +969,27 @@ function regionNamesOf(id, environment) {
   }
   return sets.get(id);
 }
+// The combination lettering of a period's region names: sizes in px (the plain lettering is 22, the capitals of the
+// rubric candidate 30), the reading's size, its letter spacing and the gap between it and the name.
+const REGION_LETTERING = { realm: 26, kingdom: 21, sub: 10, subSpacing: 1.6, gap: 1 };
+// The tile a click on a lettered region opens: the atlas's legend where it has one, else a placeholder; always the reading
+// and the sheet the realm is on, and our note where there is one.
+const regionTile = (r) => ({
+  title: `${r.name} · ${r.reading}`,
+  date: r.sheet ? `Catalan Atlas, sheet ${r.sheet}` : 'Catalan Atlas',
+  text: r.legend ? `The atlas's legend: \u201c${r.legend}\u201d` : `The atlas letters ${r.name}, which we read as ${r.reading}. Its own words for this realm are not yet written up.`,
+  about: r.note,
+});
 export const CONTINENT_ZOOM_END = 6; // the page's Continents slider default is this too (public/page.js DEFAULTS), so a page with no settings and a headless render draw the same names
 const REGION_ZOOM_END = 7; // continents: zoom < CONTINENT_ZOOM_END, regions overlap them to there; regions: zoom < REGION_ZOOM_END (they meet a continent's box and make way)
 
 // The continent and region names to letter, each with the box it reserves: measured with the font and
 // spacing they are drawn in, so later names and towns make way. A name off the canvas or meeting an
 // earlier box is dropped. `continents` is 'latin', 'english' or false; `regions` 'latin', 'english' or 'off'.
-function placeWorldNames(data, ctx, boxes, { continents, regions, regionNames = REGIONS, continentsEnd = CONTINENT_ZOOM_END, regionsEnd = REGION_ZOOM_END }) {
+function placeWorldNames(data, ctx, boxes, { continents, regions, regionNames = REGIONS, regionStyle = 'plain', continentsEnd = CONTINENT_ZOOM_END, regionsEnd = REGION_ZOOM_END }) {
   const z = data.proj.zoom, out = [];
   const lang = regions === 'latin' ? 0 : 1;
-  const put = (text, lon, lat, size, spacing, italic) => {
+  const put = (text, lon, lat, size, spacing, italic, under = null) => {
     if (!shows(data.proj, lon, lat)) return;
     const [x, y] = data.proj.project(lon, lat);
     ctx.font = `${italic ? 'italic ' : ''}${size}px "${STYLE.font}"`;
@@ -985,20 +997,35 @@ function placeWorldNames(data, ctx, boxes, { continents, regions, regionNames = 
     const w = ctx.measureText(text).width;
     ctx.letterSpacing = '0px'; // left set, every later name would measure too wide
     // a name whose anchor is in frame but whose letters run past the edge slides in; one whose anchor is out stays out
-    const hw = w / 2, hh = size * 0.5, m = 4;
+    // a reading under the name makes the box taller, and the name sits in its upper part
+    let sw = 0;
+    if (under?.sub) { ctx.font = `${under.subSize}px "${STYLE.font}"`; ctx.letterSpacing = `${REGION_LETTERING.subSpacing}px`; sw = ctx.measureText(under.sub).width; ctx.letterSpacing = '0px'; }
+    const lift = under?.sub ? (under.subSize + under.gap) / 2 : 0;
+    const hw = Math.max(w, sw) / 2, hh = size * 0.5 + lift, m = 4;
     if (x < m || x > W - m || y < m || y > H - m || 2 * hw > W - 2 * m) return;
     const box = obb(Math.min(W - m - hw, Math.max(m + hw, x)), Math.min(H - m - hh, Math.max(m + hh, y)), 0, hw, hh);
     if (boxes.some((b) => obbOverlap(b, box))) return;
     boxes.push(box);
-    out.push({ text, x: box.cx, y: box.cy, size, spacing, italic, r: Math.max(box.hw, box.hh), box });
+    const rec = { text, x: box.cx, y: box.cy - lift, size, spacing, italic, r: Math.max(box.hw, box.hh) + 2, box };
+    if (under?.sub) Object.assign(rec, { sub: under.sub, subSize: under.subSize, subDy: size * 0.5 + under.gap + under.subSize * 0.5 });
+    out.push(rec);
+    return rec;
   };
   if (continents && z < continentsEnd) {
     for (const c of CONTINENTS) { const text = c[continents === 'latin' ? 0 : 1], size = text.length > 12 ? 22 : 30; put(text, c[2], c[3], size, size * 0.6, false); }
   }
   if (regions !== 'off' && z < regionsEnd) {
-    for (const r of regionNames) {
+    // 'combination' (a period's names only): the atlas's italic spelling, in its alternating red and blue, a realm
+    // larger than a kingdom and both between the plain lettering's size and the rubric capitals', a small English
+    // reading under the spelling, and a tile with the region's text on a click (REGION_LETTERING)
+    const rubric = regionStyle === 'combination' && regionNames !== REGIONS;
+    for (const [i, r] of regionNames.entries()) {
       const [from = -Infinity, to = Infinity] = r.zoom ?? [];
-      if (z >= from && z < to) put(lang === 0 ? r.name : r.reading, r.lon, r.lat, 22, 1, true);
+      if (z < from || z >= to) continue;
+      if (!rubric) { put(lang === 0 ? r.name : r.reading, r.lon, r.lat, 22, 1, true); continue; }
+      const { realm, kingdom, sub: subSize, gap } = REGION_LETTERING, size = from === 0 ? realm : kingdom;
+      const placed = put(lang === 0 ? r.name : r.reading, r.lon, r.lat, size, 0.8, true, lang === 0 ? { sub: r.reading.toUpperCase(), subSize, gap } : { gap: 0 });
+      if (placed) Object.assign(placed, { color: i % 2 ? STYLE.rubricBlue : STYLE.windRed, tile: regionTile(r) });
     }
   }
   return out;
@@ -1705,7 +1732,7 @@ function buildScene(data, sprites, ctx, world = {}) {
   // the sheets' beasts were fixed before the lettering, so names and towns give way to them
   for (const m of sheetBeasts?.monsters ?? []) boxes.push(obb(m.x, m.y, 0, m.size * 0.45, m.size * (m.sprite.img.height / m.sprite.img.width) * 0.45));
   for (const sh of sheetBeasts?.ships ?? []) boxes.push(obb(sh.x, sh.y, 0, sh.size / 2, sh.size / 2));
-  const worldNames = placeWorldNames(data, ctx, boxes, { continents: world.continents ?? false, regions: world.regions ?? 'off', regionNames: world.regionNames, continentsEnd: world.continentsEnd, regionsEnd: world.regionsEnd });
+  const worldNames = placeWorldNames(data, ctx, boxes, { continents: world.continents ?? false, regions: world.regions ?? 'off', regionNames: world.regionNames, regionStyle: world.regionStyle, continentsEnd: world.continentsEnd, regionsEnd: world.regionsEnd });
   const special = new Map((sprites.towns ?? []).flatMap((s) => (s.only ?? []).map((name) => [name, s])));
   const families = [...(sprites.towns ?? []).filter((s) => !s.only).reduce((m, s) => m.set(`${s.pack}/${s.style}`, [...(m.get(`${s.pack}/${s.style}`) ?? []), s]), new Map()).values()];
   if (sprites.tower ?? !families.length) families.push(null); // null: the towers drawn in code
@@ -3229,9 +3256,7 @@ function drawScene(g, scene, data, bg, view) {
   g.fillStyle = STYLE.ink; g.textAlign = 'center'; g.textBaseline = 'middle';
   for (const w of scene.worldNames) {
     if (!disc(r, w.x, w.y, w.r)) continue;
-    g.font = `${w.italic ? 'italic ' : ''}${w.size}px "${STYLE.font}"`;
-    g.letterSpacing = `${w.spacing}px`;
-    g.fillText(w.text, w.x + w.spacing / 2, w.y); // the trailing space of the last letter, taken back
+    letterWorldName(g, w, w.x, w.y);
   }
   g.restore();
   const shown = show.names ? scene.names.filter((n) => disc(r, n.x, n.y, n.r)) : [];
@@ -3386,6 +3411,19 @@ function anchorScene(scene, data) {
   };
 }
 
+// A continent's or region's name at [x, y]: in ink, or its own colour, and the small reading under it where it has one.
+function letterWorldName(g, w, x, y) {
+  g.fillStyle = w.color ?? STYLE.ink;
+  g.font = `${w.italic ? 'italic ' : ''}${w.size}px "${STYLE.font}"`;
+  g.letterSpacing = `${w.spacing}px`;
+  g.fillText(w.text, x + w.spacing / 2, y); // the trailing space of the last letter, taken back
+  if (!w.sub) return;
+  g.fillStyle = hexA(STYLE.ink, 0.72);
+  g.font = `${w.subSize}px "${STYLE.font}"`;
+  g.letterSpacing = `${REGION_LETTERING.subSpacing}px`;
+  g.fillText(w.sub, x + REGION_LETTERING.subSpacing / 2, y + w.subDy);
+}
+
 // The late drawings (those once drawn only at the stop) as a moving frame holds them: kept as
 // longitude and latitude where they stand on the earth, drawn through the live projection like the
 // ornaments. IN_DRAG says at which whole zooms (the view's zoom, rounded down) each is drawn in a drag;
@@ -3444,9 +3482,7 @@ function drawLate(g, a, view, layers = LATE.filter((l) => IN_DRAG[l].has(Math.fl
     for (const { o: w, at: ll } of late.worldNames) {
       const p = at(ll, 200);
       if (!p) continue;
-      g.font = `${w.italic ? 'italic ' : ''}${w.size}px "${STYLE.font}"`;
-      g.letterSpacing = `${w.spacing}px`;
-      g.fillText(w.text, p[0] + w.spacing / 2, p[1]);
+      letterWorldName(g, w, p[0], p[1]);
     }
     g.restore();
   }
@@ -3521,6 +3557,7 @@ function drawAnchored(g, a, bg, view, layers) {
 // `kinds` (the ornament kinds drawn, of KINDS), `names` and `rhumb` (booleans), `scale` (a SCALE_NAMES entry, or 'off'),
 // `continents` (boolean) and `regions` ('off', 'latin' or 'english'); the continents follow the regions' language, Latin when those are off.
 // `regionSet`: a REGION_SETS entry, whose names the regions are lettered in: 'today' (the default) or a period's, as 'catalan-1375'.
+// `regionStyle` ('combination' or 'plain'): a period's names in the atlas's italic, alternating red and blue, with an English reading under each and a tile on click, or in plain ink; today's names are always plain.
 // `land`: a LANDS entry, the land treatment ('islands' by default); `seaTint` (boolean) tints the Red Sea, the Persian Gulf and the Black and Caspian Seas red.
 // `rivers` and `lakes`: a RIVER_STYLES and a LAKE_STYLES entry (water.mjs), each 'off' by default; `reefs` a REEF_STYLES entry (reefs.mjs, 'crosses' by default) and `playas` a PLAYA_STYLES one (playas.mjs, 'salt' by default); `trees` a TREE_STYLES entry (trees.mjs), 'off' by default.
 // `historical` (default true) and `seed` (an integer: keys every seeded placement on it, see parsePlacement).
@@ -3604,7 +3641,7 @@ export function parsePlacement(text) {
 }
 export async function createScene(environment, opts = {}) {
   env = environment;
-  const { ink = '#3b2a1a', depth = true, continentsZoom, regionsZoom, scaleBorder = 'bordered', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', regionSet = 'today', title = 'PORTOLANI', autoTitle = true, pinTitle, land: landMode = 'islands', islands, seaTint = false, rivers = 'off', lakes = 'off', reefs = 'crosses', playas = 'salt', peaks: peaksOn = true, relief = [], trees = 'off', historical = true, seed: pickedSeed, cartouchePos, scalePos, overlap: overlapPick } = opts;
+  const { ink = '#3b2a1a', depth = true, continentsZoom, regionsZoom, scaleBorder = 'bordered', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', regionSet = 'today', regionStyle = 'combination', title = 'PORTOLANI', autoTitle = true, pinTitle, land: landMode = 'islands', islands, seaTint = false, rivers = 'off', lakes = 'off', reefs = 'crosses', playas = 'salt', peaks: peaksOn = true, relief = [], trees = 'off', historical = true, seed: pickedSeed, cartouchePos, scalePos, overlap: overlapPick } = opts;
   const overlap = overlapRule(overlapPick); // how overlapping curated charts are drawn (atlas.mjs, OVERLAP_RULES)
   const legacy = ['rendering', 'rose', 'monster', 'town'].some((k) => opts[k] !== undefined);
   const townBy = townSize ?? (legacy ? 'rank' : 'area');
@@ -3694,7 +3731,7 @@ export async function createScene(environment, opts = {}) {
   const sheets = sheetsFor(view, { radius: knobs.radius, curated: knobs.curated === 1 || worldBand, overlap, origin }).map((sh) => ({ ...sh, reach: sheetReach(sh.extent, knobs.reach),
     from: worldBand ? Math.log2(WINDOW_DEG / (sh.extent.east - sh.extent.west)) : ATLAS_BANDS.find((b) => b.band === sh.band).from }));
   const roseReach = sheetReach(roseSheet(view.zoom, { origin, curated: knobs.curated === 1, overlap }).extent, knobs.reach);
-  const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, historical, roseLines: knobs.roselines === 1, seaAt: sheets && seaAtOf(coarse), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, regionNames, title, autoTitle, pinTitle,
+  const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, historical, roseLines: knobs.roselines === 1, seaAt: sheets && seaAtOf(coarse), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, regionNames, regionStyle, title, autoTitle, pinTitle,
     continentsEnd: zoomEnd(continentsZoom, CONTINENT_ZOOM_END), regionsEnd: zoomEnd(regionsZoom, REGION_ZOOM_END),
     scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM && pinned, pinned, cartouchePos, scalePos, townSize: townBy, seed: legacy ? null : pickedSeed == null ? castSeed(view) : pickedSeed | 0, salt: legacy || pickedSeed == null ? 0 : pickedSeed | 0 }), show, scaleSprite, voyages, overlays, roseReach, roseLines: knobs.roselines === 1, debug, overlap, scalePos: cornerOf(scalePos, DEFAULT_SCALE_CORNER) };
   scene.voyages = placeDoubts(scene, data);
@@ -3732,6 +3769,7 @@ const parchments = new Map(); // by tone, each its paper (makePaper): the same s
 
 export const RENDERINGS = ['vivid', 'scanned', 'plain'];
 export const REGION_LANGS = ['off', 'latin', 'english'];
+export const REGION_STYLES = ['plain', 'combination']; // a period's region names in plain ink, or as the atlas letters them
 export const KINDS = ['rose', 'ship', 'monster', 'cartouche', 'mountain'];
 export const DEFAULT_KINDS = KINDS;
 export const PROJECTION_NAMES = Object.keys(PROJECTIONS);

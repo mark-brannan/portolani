@@ -14,12 +14,12 @@
 // selection those chose, and are written back in the new form.
 // For a while, `debug=sheets[,rings]` and `tune=name:value,...` carry the under-the-hood section
 // (docs/atlas/under-the-hood.md), off by default.
-import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, REEF_STYLES, PLAYA_STYLES, PEAK_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, VOYAGE_PLAY, voyagePlaySeconds, calendarOf, penOn, dayText, vaguer, voyageColours, settleInks, CONFIDENCE_PHRASES, isBroken, legPath, voyageView, CONTINENT_ZOOM_END, readVoyage, chronological, voyageLink, sightMarks, sightHits, drawnMarks, drawnPeaks, peakHits, SIGHT_TILES, noteMarks, pickMark, markClear, tileSpot, groupMarks, dateSpan, readDate, noteCount, drawNoteMark, drawNoteRing, notePulse, drawBadge, fitLineAt, fitLineMoving, drawFitLine, drawMarkGlyph, ZOOM } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_STYLES, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, REEF_STYLES, PLAYA_STYLES, PEAK_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, VOYAGE_PLAY, voyagePlaySeconds, calendarOf, penOn, dayText, vaguer, voyageColours, settleInks, CONFIDENCE_PHRASES, isBroken, legPath, voyageView, CONTINENT_ZOOM_END, readVoyage, chronological, voyageLink, sightMarks, sightHits, drawnMarks, drawnPeaks, peakHits, SIGHT_TILES, noteMarks, pickMark, markClear, tileSpot, groupMarks, dateSpan, readDate, noteCount, drawNoteMark, drawNoteRing, notePulse, drawBadge, fitLineAt, fitLineMoving, drawFitLine, drawMarkGlyph, ZOOM } from './scene.mjs';
 import { playedOn, playDateText, playPace, isLong } from './scene.mjs'; // the play's band and pen (scripts/voyages.mjs)
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, effectiveOpacity, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
-import { PEOPLE_FILE, PICTURES_FILE, SIGHT_PICTURES_FILE, SIGHT_MANIFEST_FILE, sightDeal, laneAxis, eraBands, EARLIER_MARKS, timelineVariant, eraOf, eraYears, eraScale, barOn, lifeSpan, firstYear, yearsText, PERSON_RED, pictureCredit, pictureNote, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, sightFrame, viewContaining, withPictures, peopleOf, whoOf, deathOf, sightPicturesOf, MEMENTO, mementoNext } from './people.mjs';
+import { PEOPLE_FILE, PICTURES_FILE, SIGHT_PICTURES_FILE, SIGHT_MANIFEST_FILE, sightDeal, laneAxis, eraBands, EARLIER_MARKS, timelineVariant, eraOf, eraYears, eraScale, barOn, lifeSpan, firstYear, yearsText, PERSON_RED, pictureCredit, pictureNote, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, sightFrame, viewContaining, withPictures, peopleOf, whoOf, deathOf, sightPicturesOf, MEMENTO, MEMENTO_EN, mementoNext, mementoLines } from './people.mjs';
 import { fold, bestPlace, withoutPartsOfFrames } from './placename.mjs';
 import { planFlight, ease as flyEase, FLY_KNOBS, flyDefaults } from './flight.mjs';
 
@@ -57,8 +57,8 @@ const phone = matchMedia('(max-width: 520px)');
 
 // The styles chosen from a list, each by the id of its chips, the hash key it rides under and the list it is drawn from:
 // read from the hash, shown and read back from the drawer by one loop each (writeHash keeps its own order, which links carry).
-const ENUMS = { rivers: ['rivers', RIVER_STYLES], lakes: ['lakes', LAKE_STYLES], reefs: ['reefs', REEF_STYLES], playas: ['playas', PLAYA_STYLES], peaks: ['peaks', PEAK_STYLES], trees: ['trees', TREE_STYLES], overlap: ['overlap', OVERLAP_RULES], scaleBorder: ['scaleborder', SCALE_BORDERS], regionSet: ['regionset', REGION_SETS] };
-const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: CONTINENT_ZOOM_END, regions: 'latin', regionSet: 'today', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', reefs: 'crosses', playas: 'salt', peaks: 'catalan', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyages: [], voyageWidth: VOYAGE_WIDTH, voyageDraw: VOYAGE_DRAW.seconds, voyagePlay: VOYAGE_PLAY.seconds, person: null, sight: null, site: null, pictures: null, ...OVERLAY_DEFAULTS, cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER, overlap: DEFAULT_OVERLAP };
+const ENUMS = { rivers: ['rivers', RIVER_STYLES], lakes: ['lakes', LAKE_STYLES], reefs: ['reefs', REEF_STYLES], playas: ['playas', PLAYA_STYLES], peaks: ['peaks', PEAK_STYLES], trees: ['trees', TREE_STYLES], overlap: ['overlap', OVERLAP_RULES], scaleBorder: ['scaleborder', SCALE_BORDERS], regionSet: ['regionset', REGION_SETS], regionStyle: ['regionstyle', REGION_STYLES] };
+const DEFAULTS = { ink: '#3b2a1a', parchment: '#e9d8b4', density: 1, names: true, rhumb: true, scale: 'genoese', continentsZoom: CONTINENT_ZOOM_END, regions: 'latin', regionSet: 'today', regionStyle: 'combination', regionsZoom: 7, title: 'PORTOLANI', autoTitle: true, land: 'ochre', islands: false, rivers: 'plain', lakes: 'marina', reefs: 'crosses', playas: 'salt', peaks: 'catalan', mountains: 'colour', trees: 'marina', seaTint: false, scaleBorder: 'bordered', townSize: TOWN_SIZES[0], voyages: [], voyageWidth: VOYAGE_WIDTH, voyageDraw: VOYAGE_DRAW.seconds, voyagePlay: VOYAGE_PLAY.seconds, person: null, sight: null, site: null, pictures: null, ...OVERLAY_DEFAULTS, cartouchePos: DEFAULT_CARTOUCHE_CORNER, scalePos: DEFAULT_SCALE_CORNER, overlap: DEFAULT_OVERLAP };
 // The cards of a subject chosen are dealt once the map is there: `dealing` is that subject's key until then (the map
 // flying to it, or its records loading), and no card of it lies on the table nor rides in the link meanwhile (dealNow).
 // `onTable`: the cards drawn on the table when it was last painted.
@@ -191,6 +191,7 @@ function writeHash() {
   if (st.continentsZoom !== DEFAULTS.continentsZoom) q.set('continents', st.continentsZoom);
   if (st.regions !== DEFAULTS.regions) q.set('regions', st.regions);
   if (st.regionSet !== DEFAULTS.regionSet) q.set('regionset', st.regionSet);
+  if (st.regionStyle !== DEFAULTS.regionStyle) q.set('regionstyle', st.regionStyle);
   if (st.regionsZoom !== DEFAULTS.regionsZoom) q.set('regionszoom', st.regionsZoom);
   // a title without autotitle reads as custom (styleFromHash), so a typed title carries the mode with it
   if (st.autoTitle !== DEFAULTS.autoTitle || st.title !== DEFAULTS.title) q.set('autotitle', st.autoTitle ? '1' : '0');
@@ -434,6 +435,8 @@ const CHOICES = {
   // each region chip shows a name it letters, in the lettering's italic; showRegionSamples keeps it to the chosen set and language
   regions: [['latin', 'Latin', REGION_SAMPLES.today.latin, NAME_SAMPLE(REGION_SAMPLES.today.latin)], ['english', 'English', REGION_SAMPLES.today.english, NAME_SAMPLE(REGION_SAMPLES.today.english)]],
   regionSet: [['today', 'Today', 'the regions as they are named today', NAME_SAMPLE(REGION_SAMPLES.today.latin)], ['catalan-1375', '1375 · Catalan Atlas', 'the realms the Catalan Atlas names, c. 1375', NAME_SAMPLE(REGION_SAMPLES['catalan-1375'].latin)]],
+  // a period's names: plain ink, or as the atlas letters them (its italic in red and blue, a reading under each, a click opens its text)
+  regionStyle: [['plain', 'Plain ink', 'the names in ink, as today\'s', NAME_SAMPLE('Turquia')], ['combination', 'Red and blue, with readings', 'italic in the atlas\'s alternating red and blue, an English reading under each name; click a name for its text', '<span class="rub"><em style="color:#8c2f1e">Turquia</em><small>ANATOLIA</small></span><span class="rub"><em style="color:#2f4a86">Rossia</em><small>RUS\'</small></span>']],
   titleMode: [['auto', 'Automatic', 'what the view shows'], ['custom', 'Custom']],
   mountains: [['off', 'Off', '', MOUNTAIN_GLYPHS.off], ['ink', 'Hatched', 'black and white hatching, as Engraved', MOUNTAIN_GLYPHS.ink], ['colour', 'Colour', 'ochre wash, as the Carta Marina', MOUNTAIN_GLYPHS.colour], ['shadow', 'Shadow', 'a flat ink shadow with a narrow lit side and a paper halo, after a Middle-earth tutorial', MOUNTAIN_GLYPHS.shadow], ['me1937', 'M.E. 1937', 'Middle-earth, the Hobbit map: sharp pen peaks, a solid east flank, foothill ridgelets', MOUNTAIN_GLYPHS.me1937], ['me1954', 'M.E. 1954', 'Middle-earth, the Lord of the Rings map: hairline peaks, a few hatch strokes down the east flank, the west blank', MOUNTAIN_GLYPHS.me1954]],
   hills: [['off', 'Off', '', MOUNTAIN_GLYPHS.off], ['catalan', 'Catalan drawings', 'Catalan Atlas, 1375', HILL_GLYPH]],
@@ -588,6 +591,7 @@ function readControls() {
 // under a period's names the Latin chip letters the atlas's own spelling, so it reads "As lettered". The samples are
 // scene.mjs's REGION_SAMPLES.
 function showRegionSamples() {
+  $('regionStyle').hidden = style.regionSet === 'today'; // today's names are always plain
   const set = REGION_SAMPLES[style.regionSet] ? style.regionSet : 'today';
   for (const b of $('regions').children) {
     const label = b.dataset.value === 'latin' && set !== 'today' ? 'As lettered' : b.dataset.value === 'latin' ? 'Latin' : 'English';
@@ -811,7 +815,7 @@ async function render() {
     const { scene, data, bg, world, coarse, timing } = await createScene(env, {
       ...style, ...parsePlacement(style.placement), relief: style.mountains === 'colour' ? ['marina'] : style.mountains === 'ink' ? ['engraved'] : style.mountains === 'off' ? [] : [style.mountains],
       continents: style.continentsZoom > 0, continentsZoom: style.continentsZoom,
-      regions: style.regionsZoom > 0 ? style.regions : 'off', regionSet: style.regionSet, regionsZoom: style.regionsZoom,
+      regions: style.regionsZoom > 0 ? style.regions : 'off', regionSet: style.regionSet, regionStyle: style.regionStyle, regionsZoom: style.regionsZoom,
       sprites: [...selection], kinds, view, pinned: !phone.matches, pinTitle: style.autoTitle ? pinTitle : null,
       voyages: style.voyages.filter((v) => !v.hidden || litBy(v.id)).map((v) => ({ id: v.id, colour: ink[v.id], width: style.voyageWidth, ...(v.hidden && { hidden: true }) })), person: style.person, voyageWidth: style.voyageWidth,
       overlays: style.overlays.map((id) => ({ id, mode: style.overlayMode, sheet: style.sheets[id] ?? null, opacity: effectiveOpacity(style), clip: style.compare === 'off' ? null : style.comparePos })),
@@ -1402,6 +1406,7 @@ function fillTile(t, back = null) { // back: { label, go } for a story opened fr
   const head = part('tile-title', t.title);
   const meta = part('tile-date', [t.date, t.alternative ? 'another account' : null].filter(Boolean).join(' · '));
   const text = part('tile-text', t.text);
+  const about = part('tile-text tile-about', t.about); // a note of ours under the text: who a ruler was, what a place is now
   const sure = part('tile-sure', CONFIDENCE_PHRASES[t.confidence]); // how sure: "on record", "a guess"
   const doubt = part('tile-text tile-doubt', t.doubt); // a doubted leg or event: who doubts it and why, after how sure
   doubt?.prepend(Object.assign(document.createElement('strong'), { textContent: 'Scholars doubt this part: ' }));
@@ -1425,7 +1430,7 @@ function fillTile(t, back = null) { // back: { label, go } for a story opened fr
     more = document.createElement('p'); more.className = 'tile-source'; more.append('Read: ', a);
   }
   const pics = t.sight ? sightPics(t.sight, t.site ?? null) : null; // a sight's pictures, each on the table or off it
-  tileEl.replaceChildren(close, ...[head, sure, doubt, meta, text, source, more, pics].filter(Boolean));
+  tileEl.replaceChildren(close, ...[head, sure, doubt, meta, text, about, source, more, pics].filter(Boolean));
   tileEl.setAttribute('aria-label', t.title ?? 'Point of interest');
   if (back) {
     const b = Object.assign(document.createElement('button'), { type: 'button', className: 'tile-back', textContent: `‹ ${back.label}` });
@@ -1484,13 +1489,24 @@ function sightTiles() {
 }
 // the mark at [x, y]: a voyage's event or a sight within reach; else the note on a laid chart whose figure holds the
 // point (its whole hit box, drawn nowhere; the smallest where boxes nest); else a note's centre within reach (notes.mjs pickMark)
+// The lettered regions that carry a tile (a period's names in the combination lettering): the whole of the lettering, the name
+// and the reading under it, is the hit area. The tile reads the same for every click inside it.
+function regionMarks(proj, rect) {
+  return (ground?.anchored?.late.worldNames ?? []).filter(({ o }) => o.tile).flatMap(({ o, at: ll }) => {
+    if (proj.visible && !proj.visible(ll[0], ll[1])) return [];
+    const [x, y] = proj.toPx(ll), { hw, hh } = o.box;
+    if (x < rect.x0 || x > rect.x1 || y < rect.y0 || y > rect.y1) return [];
+    const hit = [[x - hw, y - hh], [x + hw, y - hh], [x + hw, y + hh], [x - hw, y + hh]];
+    return [{ x, y, h: 2 * hh, hit, area: 4 * hw * hh, up: 0, tile: o.tile }];
+  });
+}
 // `group`: the marks within a tap's reach of each other (groupMarks) that the one found is among, when it is a drawn mark
 const FULL = { x0: 0, y0: 0, x1: W, y1: H };
 function markAt(at) { return pickAt(at).best; }
 function pickAt(at) {
   const proj = viewProjection(placed), reach = cssPx(TAP_REACH), points = pointMarks(proj, placed.zoom);
   const doubts = (ground?.voyages ?? []).filter((v) => !(v.reveal < 1)).flatMap((v) => doubtMarks(v, proj, FULL));
-  const best = pickMark([...points, ...doubts, ...peakHits(ground?.peaks ?? [], proj, FULL), ...laidNotes(proj, FULL)], at, reach);
+  const best = pickMark([...regionMarks(proj, FULL), ...points, ...doubts, ...peakHits(ground?.peaks ?? [], proj, FULL), ...laidNotes(proj, FULL)], at, reach);
   return { best, group: best && points.includes(best) ? groupMarks(points, reach).find((g) => g.marks.includes(best)) : null };
 }
 // The drawn marks a tap finds, which group and take a badge: the shown voyages' events, and the sights at POI_ZOOM and in
@@ -1732,8 +1748,8 @@ const places = []; // every anchorage and point of interest: { name, view }
 // flight, no pen, no other voyage touched. A voyage hidden keeps its place in the list, so its colour, and every other
 // voyage's, stays put. A voyage shown takes the first colour no shown voyage has, the chart's red first (settleInks).
 // The play button sails the voyage again on its own calendar (playVoyage, below), with a band at the map's foot.
-// At the drawer's head, the line weight for them all, how long the pen takes, and Clear. The choice rides in the link
-// (`voyages=`, `voyagewidth=`, `voyagedraw=`) like any style.
+// At the drawer's head, the line weight for them all and how long the pen takes; the skull clears them (clearMap). The
+// choice rides in the link (`voyages=`, `voyagewidth=`, `voyagedraw=`) like any style.
 let band = null; // the voyage the play button plays, { id, cal, ms, state: wait | run | paused | done, since, t0, at, title } (playVoyage)
 const PLAY_GLYPH = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>';
 const PAUSE_GLYPH = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="5.5" width="4" height="13" rx="1"/><rect x="13.5" y="5.5" width="4" height="13" rx="1"/></svg>';
@@ -1772,11 +1788,6 @@ function laneItem(id, v, sources, [x0, x1]) {
   (summary || link ? `<p class="vsum" style="${right ? `margin-left:${pc(x0)}` : `margin-left:auto;margin-right:${pc(1 - x1)}`}"><b>${full}</b>. ${summary}${link ? ` <a href="${escapeHTML(link.url)}" target="_blank" rel="noopener" title="${escapeHTML(link.label)}">Read more</a>` : ''}</p>` : '') + '</li>';
 }
 let timeAxis = laneAxis(), timeLane = 'people'; // timeline A's axis (Earlier widens it) and the lane its drawer was opened at
-const voyagesTools = groupTools('Voyages', {
-  all: () => style.voyages, dflt: [], get: () => style.voyages,
-  set: () => { closeBand(); style = { ...style, voyages: [] }; showVoyage(); writeHash(); render(); },
-});
-$('voyagesPanel').querySelector('.vtools').append(...voyagesTools.children);
 // the ink of every voyage in the list, hidden ones too, so a colour stays with its voyage
 // (a voyage with no colour picked takes one from the high-contrast palette while any of it crosses a sheet, or if a leg is dashed or dotted)
 // the sheets laid as the style has them now (not as last drawn), each with the placement it lies at; none unless whole sheets
@@ -2207,7 +2218,7 @@ function dealNow(key = dealing) {
 // subject let go (no person lit, no sight chosen, no picture kept in the link) and, with `hide`, the tile shut; the
 // skull flashes faintly over the map where any card lay (wipeSkull). Voyages drawn stay. True when a person was chosen, whose voyages the
 // scene drew lit: the caller draws the map again.
-function clearTable(hide = true) {
+function clearTable(hide = true, wipe = true) {
   const hadPerson = Boolean(style.person), lay = onTable > 0;
   dealing = null; reopen = null;
   if (hide) hideTile();
@@ -2216,7 +2227,7 @@ function clearTable(hide = true) {
     flips.clear(); links.clear(); raised = []; looking = null; focusedPic = null;
     showPeople(); showSightCard(); writeHash();
   }
-  if (lay) { wipeSkull(); if (ground) repaint('pictures swept'); }
+  if (lay) { if (wipe) wipeSkull(); if (ground) repaint('pictures swept'); }
   return hadPerson;
 }
 // A sight's pictures are dealt along the foot of the view they are dealt in (sightDeal), the place clear above them:
@@ -2388,24 +2399,162 @@ function setOnTable(i, on) {
   repaint('a picture put away');
   preparePictures().then((fresh) => { if (fresh) repaint('a picture dealt'); }, () => {});
 }
-// The skull in the right margin, always there, a memento mori under it: a click (or Enter, or Space) clears the table
-// back to how the page opens (clearTable) and moves the line on to the next (MEMENTO, the first at random)
+// The skull in the right margin, always there, a memento mori under it, is the one clear for the whole map
+// (docs/spec/design.md, "The skull is the one clear"): a click (or Enter, or Space) clears the table (clearTable), lifts
+// every chart's sheet back to its own place and takes every voyage off, and moves the line on to the next (MEMENTO, the
+// first at random). It leaves the settings (the rose, the projection, every style) and the view (place, zoom, bearing)
+// as they are: a lifted sheet does not turn the world back to north here, as lifting one by its eye does.
 let memento = Math.floor(Math.random() * MEMENTO.length);
-const showMemento = () => { $('mementoText').textContent = MEMENTO[memento]; };
+const showMemento = () => { $('mementoText').textContent = MEMENTO[memento]; $('sweep').title = `Clear the map: ${MEMENTO_EN[memento]}`; };
 showMemento();
+// In stages, each drawn before the next, so the clear's effect can tell what went: the cards, then the lines (a
+// person's back in their own inks), then the sheets; `snap(stage)` is called after each stage that changed the map
+async function clearMap(snap = () => {}) {
+  const hadPerson = clearTable(true, false), voyages = style.voyages.length > 0, charts = style.overlays.length > 0 || Object.keys(style.sheets).length > 0;
+  snap('cards');
+  if (voyages) { closeBand(); style = { ...style, voyages: [] }; }
+  if (voyages || hadPerson) { showVoyage(); writeHash(); await render(); snap('lines'); }
+  if (charts) { turnedTo.clear(); style = { ...style, overlays: [], sheets: {} }; showOverlay(); showVoyage(); writeHash(); await render(); snap('sheets'); }
+}
+// The clear is shown every time, the map already clear or not: the cards leave stage left, as they were dealt but
+// mirrored; the lines fade; the sheets fade; the skull grows over the map and fades; and the phrase
+// beside the skull, the one just clicked, is read large and red at the foot of the map, while the next takes its place
 $('sweep').addEventListener('click', () => {
-  if (clearTable()) render(); // a person's voyages back in their own inks
+  const cards = cardsOnTable(), before = vanishFrom(), shots = { before };
+  const done = clearMap((stage) => { if (before) shots[stage] = ctx.getImageData(0, 0, W, H); });
+  skullRise(); wordsRise(MEMENTO[memento]);
   memento = mementoNext(memento); showMemento();
+  if (before) Promise.race([done, new Promise((ok) => setTimeout(ok, 4000))]).then(() => vanish(shots, cards), () => vanish(shots, cards));
 });
-// The open drawer stops above the skull and its line (--memento-h, index.html), however many lines the phrase takes and
-// whether the compass shows over it
+// The open drawer stops above the skull (--memento-h, index.html), whether the compass shows over it
 new ResizeObserver(() => document.documentElement.style.setProperty('--memento-h', `${$('memento').offsetHeight}px`)).observe($('memento'));
+
+// The clear's timing, chosen on #367: what goes (the lines and the charts' sheets) fades over 4 s; the skull is 0.4 s at
+// 8% ink and grows to ×2.5; the phrase is 6 s, in at once and straight into a slow fade, and its size changes from
+// 5% to 100% of that time, to ×1.05
+const CLEAR_TUNE = { goneMs: 4000, skullMs: 400, wordsMs: 6000, ink: 8, skullGrow: 250, wordsGrow: 105, growFrom: 5, growTo: 100 };
+const stillMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+// the map's box on the window, cut to the window
+function mapBox() {
+  const r = canvas.getBoundingClientRect(), left = Math.max(0, r.left), top = Math.max(0, r.top);
+  return { r, left, top, wide: Math.min(innerWidth, r.right) - left, tall: Math.min(innerHeight, r.bottom) - top };
+}
+// The skull, almost as tall as the map or as wide, whichever bounds it, rises in and grows on past the map's edges as it fades
+function skullRise() {
+  const el = $('wipe');
+  if (stillMotion()) return;
+  const { left, top, wide, tall } = mapBox(), aspect = 200 / 254, h = Math.min(tall * 0.94, (wide * 0.94) / aspect), w = h * aspect;
+  Object.assign(el.style, { width: `${w}px`, height: `${h}px`, left: `${left + (wide - w) / 2}px`, top: `${top + (tall - h) / 2}px` });
+  el.hidden = false;
+  el.getAnimations().forEach((x) => x.cancel());
+  const ink = CLEAR_TUNE.ink / 100, g = CLEAR_TUNE.skullGrow / 100 - 1; // g 0: no change of size; 0.6: from 0.88 to 1.6
+  el.animate([{ opacity: 0, transform: `scale(${1 - g * 0.2})` }, { opacity: ink, transform: 'scale(1)', offset: 0.3 }, { opacity: ink * 0.7, transform: `scale(${1 + g * 0.3})`, offset: 0.6 }, { opacity: 0, transform: `scale(${1 + g})` }],
+    { duration: CLEAR_TUNE.skullMs, easing: 'cubic-bezier(.3,0,.6,1)' }).finished.then(() => { el.hidden = true; }, () => {});
+}
+// The phrase, on one line at the foot of the map, as large as fits it, grows and fades: slower than the skull, to be read
+function wordsRise(text) {
+  const el = $('mementoBig');
+  const { left, top, wide, tall } = mapBox();
+  el.textContent = mementoLines(text).join('\n'); el.hidden = false;
+  el.getAnimations().forEach((x) => x.cancel());
+  let size = Math.min(64, tall * 0.08) / (1 + 0.15 * (el.textContent.split('\n').length - 1));
+  el.style.fontSize = `${size}px`;
+  const fit = (wide * 0.86) / el.scrollWidth;
+  if (fit < 1) { size *= fit; el.style.fontSize = `${size}px`; }
+  Object.assign(el.style, { left: `${left + (wide - el.offsetWidth) / 2}px`, top: `${top + tall - el.offsetHeight - Math.max(56, tall * 0.12)}px` });
+  // In, then straight into the fade, all one smooth curve: the fade eases in, so there is no
+  // corner at the top. The size is its own animation: it holds at 1 until `growFrom` percent of the phrase's
+  // time, then eases to its end size by `growTo` percent of it.
+  const inAt = 0.06;
+  const end = stillMotion() ? 1 : CLEAR_TUNE.wordsGrow / 100, from = CLEAR_TUNE.growFrom / 100, to = Math.max(from + 0.02, CLEAR_TUNE.growTo / 100);
+  const smooth = 'cubic-bezier(.35,0,.65,1)', opts = { duration: CLEAR_TUNE.wordsMs, easing: 'linear', fill: 'both' };
+  const done = () => { el.hidden = true; };
+  el.animate([{ opacity: 0, easing: 'ease-out' }, { opacity: 1, offset: inAt, easing: smooth }, { opacity: 0 }], opts).finished.then(done, () => {});
+  el.animate([{ transform: 'scale(1)' }, { transform: 'scale(1)', offset: from, easing: smooth }, { transform: `scale(${end})`, offset: Math.min(1, to) }, { transform: `scale(${end})` }], opts);
+}
+// What goes: the map as it was is laid over itself before the clear (vanishFrom), so nothing jumps; once the map is
+// drawn again, whatever changed is kept from it and leaves by the chosen effect over the same time, whatever it was
+function vanishFrom() {
+  if (stillMotion()) return null;
+  const el = $('vanish'), { r } = mapBox();
+  el.width = W; el.height = H;
+  Object.assign(el.style, { left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px` });
+  const o = el.getContext('2d');
+  o.clearRect(0, 0, W, H); o.drawImage(canvas, 0, 0);
+  el.hidden = false;
+  cancelAnimationFrame(vanishFrame);
+  return o.getImageData(0, 0, W, H);
+}
+let vanishFrame = 0;
+// The cards on the table as they lie, bottom of the pile first, for their exit
+function cardsOnTable() {
+  if (stillMotion() || !onTable) return [];
+  const proj = viewProjection(view);
+  return shownPictures().map((pic) => ({ img: pic.o.img, k: pic.k ?? 0, b: pictureBox(pic, proj) })).filter((c) => c.b);
+}
+// What changed between two shots of the map, kept from the first, and the box round it; null when nothing did
+function goneBetween(before, after) {
+  if (!before || !after) return null;
+  const a = after.data, b = before.data, gone = new ImageData(W, H), g = gone.data;
+  let x0 = W, x1 = -1, y0 = H, y1 = -1;
+  for (let i = 0, p = 0; i < a.length; i += 4, p++) {
+    if (Math.abs(a[i] - b[i]) + Math.abs(a[i + 1] - b[i + 1]) + Math.abs(a[i + 2] - b[i + 2]) + Math.abs(a[i + 3] - b[i + 3]) <= 24) continue;
+    g[i] = b[i]; g[i + 1] = b[i + 1]; g[i + 2] = b[i + 2]; g[i + 3] = b[i + 3];
+    const x = p % W, y = (p / W) | 0;
+    if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+  }
+  if (x1 < 0) return null;
+  const src = Object.assign(document.createElement('canvas'), { width: W, height: H });
+  src.getContext('2d').putImageData(gone, 0, 0);
+  return { src, gone, box: { x0, x1, y0, y1 } };
+}
+// Each card leaves as it was dealt, mirrored and at the deal's own pace (DEAL_MS, DEAL_GAP): off to the top left,
+// shrinking and turning, one after another; `ms` since the exit began
+const cardsLeft = (cards) => (cards.length ? DEAL_MS + (cards.length - 1) * DEAL_GAP : 0);
+// a thing at box `b` dealt off to the top left, `e` 0 where it lies to 1 gone: x, y, scale and its turn
+const dealtOff = (b, e) => [b.x + (-b.w * 0.25 - b.x) * e, b.y * (1 - e), 1 - 0.65 * e, -e * 0.6];
+function drawCardsLeaving(o, cards, ms) {
+  const m = 5;
+  cards.forEach(({ img, b }, k) => {
+    const u = Math.max(0, Math.min(1, (ms - k * DEAL_GAP) / DEAL_MS)), e = u ** 3; // ease in, the deal's ease out mirrored
+    if (u >= 1) return;
+    const [x, y, s, turn] = dealtOff(b, e);
+    o.save(); o.translate(x, y); o.rotate(b.a + turn); o.scale(s, s);
+    o.save(); o.shadowColor = 'rgba(59,42,26,0.35)'; o.shadowBlur = 8; o.shadowOffsetY = 2; o.fillStyle = style.parchment; o.fillRect(-b.w / 2 - m, -b.h / 2 - m, b.w + 2 * m, b.h + 2 * m); o.restore();
+    o.drawImage(img, -b.w / 2, -b.h / 2, b.w, b.h);
+    o.strokeStyle = style.ink; o.globalAlpha = 0.7; o.lineWidth = 1; o.strokeRect(-b.w / 2 - m, -b.h / 2 - m, b.w + 2 * m, b.h + 2 * m);
+    o.restore();
+  });
+}
+// What goes, over one time: the sheets by the chosen effect, the lines fading over them, the cards leaving over both
+function vanish(shots, cards) {
+  const el = $('vanish'), o = el.getContext('2d');
+  const now = ctx.getImageData(0, 0, W, H), cardsShot = shots.cards ?? now, linesShot = shots.lines ?? cardsShot;
+  const lines = goneBetween(cardsShot, linesShot), sheets = goneBetween(linesShot, shots.sheets ?? linesShot);
+  if (!lines && !sheets && !cards.length) { el.hidden = true; return; } // nothing was there to go
+  const play = sheets && sheetFades(o, sheets.src), t0 = performance.now();
+  const tick = (now) => {
+    const ms = now - t0, t = Math.min(1, ms / CLEAR_TUNE.goneMs);
+    o.clearRect(0, 0, W, H);
+    if (play) play(t);
+    if (lines) { o.globalAlpha = (1 - t) ** 1.5; o.drawImage(lines.src, 0, 0); o.globalAlpha = 1; }
+    drawCardsLeaving(o, cards, ms);
+    if (t < 1 || ms < cardsLeft(cards)) vanishFrame = requestAnimationFrame(tick); else el.hidden = true;
+  };
+  vanishFrame = requestAnimationFrame(tick);
+}
+// A chart's sheet fades, `t` 0 to 1 over the clear's time, blurring and swelling a little into nothing
+const sheetFades = (o, src) => (t) => {
+  const s = 1 + 0.04 * t;
+  o.globalAlpha = (1 - t) ** 1.5; o.filter = `blur(${(t * 10).toFixed(1)}px)`;
+  o.setTransform(s, 0, 0, s, (W * (1 - s)) / 2, (H * (1 - s)) / 2); o.drawImage(src, 0, 0);
+  o.setTransform(1, 0, 0, 1, 0, 0); o.filter = 'none'; o.globalAlpha = 1;
+};
 // The wipe: the skull itself, large and almost unseen, flashes once over the middle of the map while the cards go,
 // about half a second; none under reduced motion
 function wipeSkull() {
   const el = $('wipe');
   if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  if (!el.firstChild) el.append($('sweep').querySelector('svg').cloneNode(true));
   const r = canvas.getBoundingClientRect(), left = Math.max(0, r.left), top = Math.max(0, r.top), wide = Math.min(innerWidth, r.right) - left, tall = Math.min(innerHeight, r.bottom) - top, size = Math.min(wide, tall) * 0.7;
   Object.assign(el.style, { width: `${size}px`, height: `${size}px`, left: `${left + (wide - size) / 2}px`, top: `${top + (tall - size) / 2}px` });
   el.hidden = false;
@@ -3229,7 +3378,7 @@ locate.addEventListener('click', () => {
 for (const id of Object.values(KNOB_SLIDERS)) $(id).addEventListener('input', (e) => { e.target.dataset.set = '1'; }); // moved, so set
 // either set of projection chips drives (first, so readControls sees both agree) the other
 for (const [from, to] of [['projection', 'projectionCharts'], ['projectionCharts', 'projection']]) $(from).addEventListener('input', () => { $(to).value = $(from).value; });
-for (const id of ['debug', 'overlap', 'overlayMode', 'compare', 'comparePos', 'sheetHides', 'overlayOpacity', ...Object.values(KNOB_CHIPS), ...Object.values(KNOB_SLIDERS), 'projection', 'projectionCharts', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'scaleBorder', 'land', 'islands', 'seaTint', 'rivers', 'lakes', 'reefs', 'playas', 'peaks', 'trees', 'mountains', 'hills', 'continentsZoom', 'regions', 'regionSet', 'regionsZoom', 'titleMode', 'townSize', 'voyageWidth']) $(id).addEventListener('input', readControls);
+for (const id of ['debug', 'overlap', 'overlayMode', 'compare', 'comparePos', 'sheetHides', 'overlayOpacity', ...Object.values(KNOB_CHIPS), ...Object.values(KNOB_SLIDERS), 'projection', 'projectionCharts', 'ink', 'parchment', 'density', 'names', 'rhumb', 'scale', 'scaleBorder', 'land', 'islands', 'seaTint', 'rivers', 'lakes', 'reefs', 'playas', 'peaks', 'trees', 'mountains', 'hills', 'continentsZoom', 'regions', 'regionSet', 'regionStyle', 'regionsZoom', 'titleMode', 'townSize', 'voyageWidth']) $(id).addEventListener('input', readControls);
 // The compare line: over the map at the wipe's position, pieces mode only. In swipe it is dragged; in wipe the slider moves it.
 function placeCompareLine() {
   const line = $('compareLine'), on = style.overlayMode === 'pieces' && style.compare !== 'off' && style.overlays.length > 0;

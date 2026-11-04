@@ -271,6 +271,30 @@ export const MEMENTO = [
   'Nuestras vidas son los ríos que van a dar en la mar, que es el morir',
   'Recuerda que eres polvo',
 ];
+// Each phrase in English, in MEMENTO's order: the skull's hover text, "Clear the map: " and the one shown beside it
+export const MEMENTO_EN = [
+  'Remember, man, that you are dust, and to dust you shall return',
+  'We are dust and shadow',
+  'Today me, tomorrow you',
+  'Death is certain, its hour uncertain',
+  'All flesh is grass',
+  'Earth out of earth is wondrously wrought; earth has of earth a dignity of nought',
+  'Every man is dust',
+  'Remember that you must die',
+  'Dust you are, and to dust you shall return',
+  'Our lives are the rivers that flow into the sea, which is dying',
+  'Remember that you are dust',
+];
+// A phrase that is verse in its source keeps its own lines
+const MEMENTO_VERSE = { 'Nuestras vidas son los ríos que van a dar en la mar, que es el morir': ['Nuestras vidas son los ríos', 'que van a dar en la mar,', 'que es el morir'] }; // Jorge Manrique, Coplas, III
+// A long phrase with a comma near its middle is set as a couplet, two lines split after that comma; any other on one line
+export function mementoLines(text) {
+  if (Object.hasOwn(MEMENTO_VERSE, text)) return MEMENTO_VERSE[text];
+  if (text.length <= 30) return [text];
+  let best = -1;
+  for (let i = text.indexOf(','); i >= 0; i = text.indexOf(',', i + 1)) if (Math.abs(i / text.length - 0.5) < Math.abs(best / text.length - 0.5)) best = i;
+  return best >= 0 && Math.abs(best / text.length - 0.5) <= 0.15 ? [text.slice(0, best + 1), text.slice(best + 1).trim()] : [text];
+}
 export const mementoNext = (k) => (((k + 1) % MEMENTO.length) + MEMENTO.length) % MEMENTO.length;
 
 // Where a person's pictures lie by default, from `frame` (the lon/lat box of their birth, death and voyages): each as tall
