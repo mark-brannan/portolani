@@ -10,9 +10,9 @@
 // No sheet crosses the date line, and a row that would reach a pole ends at the page's edge. Nothing here
 // reads land or draws.
 
-// The Catalan Atlas rose, read off the scan to +-2 degrees (docs/atlas/centres.md): the point the grids
+// The Catalan Atlas rose, read off the scan through its sheet 5 fit to +-1 degree (docs/atlas/centres.md): the point the grids
 // count from and the origin of the lines drawn at every zoom.
-export const ROSE = { lon: -20.7, lat: 42.1 };
+export const ROSE = { lon: -20.2, lat: 43.5 };
 
 // The points a grid may count from (`origin` of sheetsFor): the Catalan rose, the default, or 0E 0N, NOAA's own
 // zero. Exposed for a while as a knob (docs/atlas/under-the-hood.md).
@@ -125,7 +125,7 @@ const PISANE_SEAM = 18;
 // Ocean. Sheets 6 to 8 draw none at sea. Sheet 10's four, which its fit lays on the steppe, and sheet 12's two fish east of
 // the extent are not listed: ornaments.md keeps them, so leaving them out rests on this list, not on the land or the edge.
 const CATALAN = figures({
-  rose: [['rose-catalan', -20.7, 42.1]],
+  rose: [['rose-catalan', -20.2, 43.5]],
   monster: [['catalan-siren', 113.1, 15.8]],
   ship: [[null, -15.5, 26.1], ['catalan-ship', 50.6, 41.1], ['catalan-junk', 81.2, 13.2]],
 });

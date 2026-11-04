@@ -20,7 +20,7 @@ Vesconte's is known. Each has an empty set, so these sheets draw no roses, beast
 
 | | figure | lon, lat | sprite | note |
 |---|---|---|---|---|
-| R1 | the rose | -20.7, 42.1 | `rose-catalan` | from centres.md |
+| R1 | the rose | -20.2, 43.5 | `rose-catalan` | from centres.md, through the sheet 5 fit |
 | S1 | ship at the foot, off Cape Bojador | -15.5, 26.1 | stand-in | placed by the cape, not read in pixels; no crop yet, so it stands in a Catalan ship (the junk, S5) |
 
 The figures of sheets 6 to 12 are read below ([Figures, sheets 6 to 12](#figures-sheets-6-to-12)).

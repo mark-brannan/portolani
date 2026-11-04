@@ -37,7 +37,7 @@ named in each section; reading at a library's full resolution would tighten ever
 | Mediterranean, east (Carte Pisane) | 26°E 36°N | 27.4°E 36.8°N, the Dodecanese by Kos | 7.5° | ±0.5° |
 | Levant and Black Sea (Vesconte 1311) | 30°E 40°N | 25.2°E 37.5°N, the Cyclades | 3° | ±0.7°, from a tracing |
 | Europe and the Mediterranean (Dulcert 1339) | 5°E 40°N | 14.5°E 40.0°N, the south Tyrrhenian | 17° | ±1.5° |
-| The known world of 1375 (Catalan Atlas) | 20°W 37°N | rose 20.7°W 42.1°N; network centre 5.4°W 42.3°N | 16° | ±2° |
+| The known world of 1375 (Catalan Atlas) | 20°W 37°N | rose 20.2°W 43.5°N; network centre 5.4°W 42.3°N | 16° | rose ±1°; centre ±2° |
 | Scandinavia and the Baltic (Carta Marina) | 22°E 60°N | 19.7°E 61.7°N, the Bothnian Sea | no ring | ±1° |
 | The Atlantic and the Americas (de la Cosa) | 35°W 30°N | 45°W 23.4°N, on the Tropic of Cancer | 360 px, not in degrees | latitude ±0.5°, longitude ±10° |
 
@@ -116,7 +116,7 @@ way out. The transfer is fitted to the Canaries, Ireland and the Portuguese coas
   [btv1b55002481n](https://gallica.bnf.fr/ark:/12148/btv1b55002481n), sheet 5, via
   [Commons](https://commons.wikimedia.org/wiki/File:Catalan_Atlas_BNF,_sheet_5.jpg),
   960 px wide.
-- **Rose.** **20.7°W 42.1°N**, open Atlantic west of Galicia.
+- **Rose.** **20.2°W 43.5°N**, open Atlantic north-west of Galicia: the hub of the drawn rose, scan px (2050, 8006), carried through the warped overlay's sheet 5 fit (ornaments.md, "Landmarks, sheet 5"; 127 km rms), re-read 2026-11-03 ([the three marks](../catalan-rose-pin/three-marks.jpg)). It was 20.7°W 42.1°N through the older five-landmark transfer, about 570 px south of the hub.
 - **Network centre.** **5.4°W 42.3°N**, over northern Iberia; radius 16°.
 - **Error.** ±2°.
 
