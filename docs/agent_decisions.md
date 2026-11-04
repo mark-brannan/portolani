@@ -486,3 +486,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261104t222332z
 - compass always shown, beside the always-shown walk-around buttons ([#372](https://github.com/mark-brannan/portolani/pull/372))
+
+### 20261104t222418z
+- a tap on a sheet corner no longer opens a POI tile ([#372](https://github.com/mark-brannan/portolani/pull/372))
