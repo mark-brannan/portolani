@@ -462,8 +462,13 @@ Feature: Scan overlay  (charts drawer `#chartsDrawer`: a chart row `li.chart[dat
     Given the chart at `#map=4.60/61.700/19.700&overlay=carta-marina&overlaymode=pieces`
     When the user moves the slider to 0.3
     Then the hash gains `overlayopacity=0.3` and the scan is drawn fainter when the slider pauses
+  Scenario: a sheet's own opacity
+    Given the chart at `#overlay=aguiar,de-la-cosa`
+    When the user moves the slider in de la Cosa's row to 0.4
+    Then the hash gains `sheetopacity=,0.4` (one slot per id in `overlay=`, an empty slot the mode's own) and only de la Cosa's sheet is drawn fainter
+    # Tested by: test/overlays.test.mjs (offline, `sheetOpacity` and the `sheetopacity` round-trip)
   Scenario: off, and a chart without a scan
-    Given the same
+    Given the chart at `#map=4.60/61.700/19.700&overlay=carta-marina&overlaymode=pieces`
     When the user clicks the eye again
     Then the eye is `aria-pressed=false`, `overlay` leaves the hash; no other chart's sheet changes; a chart without a scan shows no eye
   Scenario: several sheets at once

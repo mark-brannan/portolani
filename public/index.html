@@ -65,8 +65,21 @@
   }
   #sweep:hover { background: #e2cd9e; }
   /* the compass over the skull: its needle points north on the window; a click is north up, a drag round it turns the world */
+  #turns { display: flex; align-items: center; gap: 4px; margin-right: 4px; }
+  /* either side of it, the walk-around buttons: a quarter turn of the world each way round */
+  #turns .walk {
+    pointer-events: auto; width: 32px; height: 32px; padding: 0; display: grid; place-items: center; color: #3b2a1a;
+    cursor: pointer; border-radius: 50%; background: #efe3c6; border: 1px solid #b89a68; box-shadow: 0 1px 6px rgb(0 0 0 / 0.25);
+  }
+  #turns .walk:hover { background: #e2cd9e; }
+  #turns .walk:focus-visible { outline: 2px solid #e8b84a; outline-offset: 2px; }
+  #turns .walk svg { width: 30px; height: 19px; }
+  /* at a sheet's corner under the pointer, the turn it takes there: drag to turn, double click for the nearest quarter */
+  #cornerTurn { position: fixed; z-index: 2; width: 26px; height: 26px; margin: -13px 0 0 -13px; pointer-events: none; filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.4)); }
+  #cornerTurn[hidden] { display: none; }
+  #cornerTurn svg { width: 100%; height: 100%; display: block; }
   #compass {
-    pointer-events: auto; width: 38px; height: 38px; padding: 0; margin-right: 4px; display: grid; place-items: center; touch-action: none;
+    pointer-events: auto; width: 38px; height: 38px; padding: 0; display: grid; place-items: center; touch-action: none;
     cursor: grab; border-radius: 50%; background: #efe3c6; border: 1px solid #b89a68; box-shadow: 0 1px 6px rgb(0 0 0 / 0.25);
   }
   #compass[hidden] { display: none; }
@@ -385,27 +398,33 @@
   #chartList .eye svg { width: 20px; height: 20px; display: block; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
   #chartList .eye[aria-pressed=true] .slash { display: none; }
   #chartList .eye[aria-pressed=false] { opacity: 0.7; }
+  /* the raise and lower arrows beside the eye, while two sheets or more are shown */
+  #chartList .stack { flex: none; margin-left: auto; display: flex; gap: 2px; }
+  #chartList .stack[hidden] { display: none; }
+  #chartList .stack:not([hidden]) + .eye { margin-left: 0; }
+  #chartList .lift { width: 22px; height: 24px; padding: 0; color: var(--sheet-ink); background: none; border: 1px solid transparent; border-radius: 2px; cursor: pointer; }
+  #chartList .lift:hover:not(:disabled) { border-color: var(--rule); color: var(--accent); }
+  #chartList .lift:disabled { opacity: 0.3; cursor: default; }
+  #chartList .lift svg { width: 14px; height: 14px; display: block; margin: 0 auto; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
   #chartList .where { font: 13px var(--serif); opacity: 0.85; }
   #chartList .city { padding: 0; font: inherit; color: inherit; background: none; border: 0; cursor: pointer; text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 2px; }
   #chartList .city:hover { color: var(--accent); text-decoration-color: var(--accent); }
   #chartList .fade { margin-top: 4px; } #chartList .fade output { min-width: 40px; }
   #chartList .notes { margin: 1px 0 0; }
-  /* a chart's position chips, in its row under the city and year, after "Chart position:" (the chips are built in page.js) */
-  #chartList .pos { margin: 6px 0 2px; padding-top: 6px; border-top: 1px dotted var(--rule); }
-  #chartList .pos[hidden] { display: none; }
-  #chartList .pos > b { display: block; font: 13px var(--serif); font-weight: normal; opacity: 0.85; margin: 0 0 4px; }
-  #sheetChips { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; margin: 0; }
-  #sheetChips[hidden] { display: none; }
-  #sheetChips .where { display: contents; }
-  #sheetChips .chip { padding: 2px 8px; font-size: 12px; }
-  #sheetChips .chip svg { width: 20px; height: 14px; }
-  #sheetChips .chip svg.icon { width: 18px; height: 18px; }
+  /* a shown chart's controls, in its row under the city and year, three lines: "Align to:" and the placements, its up, its
+     points of interest (built in page.js) */
+  #chartList .pos { margin: 6px 0 2px; padding-top: 6px; border-top: 1px dotted var(--rule); display: grid; gap: 5px; }
+  #chartList .pos .line { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+  #chartList .pos .line > b { font: 13px var(--serif); font-weight: normal; opacity: 0.85; margin-right: 2px; }
+  #chartList .pos .chip { padding: 2px 8px; font-size: 12px; }
+  #chartList .pos .chip svg { width: 20px; height: 14px; }
+  #chartList .pos .chip svg.icon { width: 18px; height: 18px; }
   /* unlit: solid, dark ink on the parchment, so it reads as a button; lit: the accent ring */
-  #sheetChips .chip[aria-checked=false], #sheetChips .chip[aria-pressed=false] { border-style: solid; border-color: #7a5d34; opacity: 1; background: #e3cf9f; }
-  #sheetChips .chip[aria-checked=true], #sheetChips .chip[aria-pressed=true] { box-shadow: inset 0 0 0 1px var(--accent); border-color: var(--accent); background: #f4e8c8; }
-  #sheetChips .chip[aria-disabled=true] { opacity: 0.55; }
+  #chartList .pos .chip[aria-checked=false], #chartList .pos .chip[aria-pressed=false] { border-style: solid; border-color: #7a5d34; opacity: 1; background: #e3cf9f; }
+  #chartList .pos .chip[aria-checked=true], #chartList .pos .chip[aria-pressed=true] { box-shadow: inset 0 0 0 1px var(--accent); border-color: var(--accent); background: #f4e8c8; }
+  #chartList .pos .chip[aria-disabled=true] { opacity: 0.55; }
   /* the points of interest's count, in the serif's own figures, in a red dot */
-  #sheetChips .count { font: 13px/1 var(--serif); min-width: 18px; height: 18px; padding: 2px 4px 0; box-sizing: border-box; text-align: center; border-radius: 9px; background: var(--accent); color: #f4e8c8; }
+  #chartList .pos .count { font: 13px/1 var(--serif); min-width: 18px; height: 18px; padding: 2px 4px 0; box-sizing: border-box; text-align: center; border-radius: 9px; background: var(--accent); color: #f4e8c8; }
   #otherTraditions h2 { margin: 18px 0 0; font: 18px var(--serif); }
   #worldList { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
   #worldList .chart { display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 12px; background: var(--sheet); color: var(--sheet-ink); border: 1px solid var(--rule); border-radius: 6px; }
@@ -583,7 +602,7 @@
 <canvas id="map" width="1600" height="1000" aria-label="Chart: drag to pan, wheel or pinch to zoom"><ul id="pictureKeys" aria-label="Pictures on the map"></ul></canvas>
 <div id="compareLine" aria-hidden="true" hidden></div>
 <div id="snap" aria-hidden="true"></div>
-<div id="sheetChips" class="tools" hidden></div>
+<div id="cornerTurn" aria-hidden="true" hidden><svg viewBox="0 0 24 24"><path d="M5 14a7 7 0 1 1 3.5 6" fill="none" stroke="#efe3c6" stroke-width="4.5" stroke-linecap="round"/><path d="M5 14a7 7 0 1 1 3.5 6M2 11l3 3 3-3" fill="none" stroke="#8c2f1e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
 <canvas id="cardCartouche" class="card" aria-hidden="true" hidden></canvas>
 <canvas id="cardScale" class="card" width="700" height="170" aria-hidden="true" hidden></canvas>
 <div id="tile" class="tile" role="dialog" tabindex="-1" hidden></div>
@@ -596,7 +615,9 @@
 <p id="status" role="status">Loading…</p>
 <p id="build" hidden></p>
 <div id="memento">
-  <button id="compass" type="button" hidden aria-label="North up: drag round to turn the world and the chart with it">
+  <div id="turns">
+  <button id="walkLeft" class="walk" type="button" aria-label="Turn the world a quarter turn anticlockwise" title="A quarter turn anticlockwise"></button>
+  <button id="compass" type="button" aria-label="North up: drag round to turn the world and the chart with it">
   <svg viewBox="-12 -12 24 24" aria-hidden="true">
     <circle r="10.5" fill="#efe3c6" stroke="#5a3a0c" stroke-width="0.8"/>
     <path d="M0-9.6 2.4 0H-2.4Z" fill="#8c2f1e" stroke="#3b1a0c" stroke-width="0.4"/>
@@ -605,6 +626,8 @@
     <text y="-5.2" text-anchor="middle" font-size="4.6" font-family="Georgia, serif" fill="#efe3c6" font-weight="bold">N</text>
   </svg>
   </button>
+  <button id="walkRight" class="walk" type="button" aria-label="Turn the world a quarter turn clockwise" title="A quarter turn clockwise"></button>
+  </div>
   <button id="sweep" type="button" aria-label="Clear the map: put every picture away, let the chosen person or place go, and lift every chart and voyage; the view and the settings stay" title="Clear the map">
   <svg viewBox="-10 -10.5 20 20.5" aria-hidden="true">
     <g fill="#3b2a1a" stroke="#3b2a1a" stroke-linecap="round">

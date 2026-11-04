@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { similarityFit, applyFit, affineThrough3, loadOverlay, drawOverlay, drawSheet, sheetOf, sheetTransform, sheetCorners, onSheet, sheetFrame, sheetView, OVERLAY_DEFAULTS, effectiveOpacity, overlayFromHash, overlayToHash, sheetText, sameSheet } from '../scripts/overlays.mjs';
+import { similarityFit, applyFit, affineThrough3, loadOverlay, drawOverlay, drawSheet, sheetOf, sheetTransform, sheetCorners, onSheet, sheetFrame, sheetView, OVERLAY_DEFAULTS, effectiveOpacity, sheetOpacity, overlayFromHash, overlayToHash, sheetText, sameSheet } from '../scripts/overlays.mjs';
 import { figureRows, landmarkRows, sheetPlacements, paperMask, outlineMask, redLines, catalanPieces, CATALAN_PAGES, pageOffsets } from '../scripts/build-overlays.mjs';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { viewProjection } from '../scripts/scene.mjs';
@@ -112,12 +112,12 @@ test('an overlay the site lacks loads as null and draws nothing', async () => {
 // dragged to (one `;` slot per laid id, in order), the warped pieces as `overlaymode=pieces` with their opacity.
 const written = (st) => { const q = new URLSearchParams(); overlayToHash(st, q); return q.toString(); };
 test('the overlays in the hash: the default writes nothing, a link round-trips, an unknown id is dropped', () => {
-  assert.deepEqual(OVERLAY_DEFAULTS, { overlays: [], overlayMode: 'sheet', sheets: {}, overlayOpacity: null, sheetHides: false, compare: 'off', comparePos: 0.5 });
+  assert.deepEqual(OVERLAY_DEFAULTS, { overlays: [], overlayMode: 'sheet', sheets: {}, opacities: {}, overlayOpacity: null, sheetHides: false, compare: 'off', comparePos: 0.5 });
   assert.equal(written(OVERLAY_DEFAULTS), '', 'the default writes nothing');
   assert.deepEqual(overlayFromHash(new URLSearchParams('')), OVERLAY_DEFAULTS, 'no keys read as the default');
   const ids = new Set(overlays.map((o) => o.id));
   const read = overlayFromHash(new URLSearchParams('overlay=carta-marina&overlayopacity=0.6'), ids);
-  assert.deepEqual(read, { overlays: ['carta-marina'], overlayMode: 'sheet', sheets: {}, overlayOpacity: 0.6, sheetHides: false, compare: 'off', comparePos: 0.5 });
+  assert.deepEqual(read, { overlays: ['carta-marina'], overlayMode: 'sheet', sheets: {}, opacities: {}, overlayOpacity: 0.6, sheetHides: false, compare: 'off', comparePos: 0.5 });
   assert.equal(written(read), 'overlay=carta-marina&overlayopacity=0.6', 'a faded sheet is written back');
   assert.equal(effectiveOpacity(OVERLAY_DEFAULTS), 1, 'the sheet is opaque by default');
   assert.equal(effectiveOpacity({ ...OVERLAY_DEFAULTS, overlayMode: 'pieces' }), 0.6, 'the pieces keep their 0.6');
@@ -142,6 +142,15 @@ test('the overlays in the hash: the default writes nothing, a link round-trips, 
   assert.deepEqual(overlayFromHash(new URLSearchParams('overlay=off')).overlays, []);
   assert.deepEqual(overlayFromHash(new URLSearchParams('overlay=../etc')).overlays, []);
   assert.equal(overlayFromHash(new URLSearchParams('overlayopacity=2')).overlayOpacity, null, 'out of range falls back');
+  // each sheet its own opacity, one slot per laid id; an empty slot is the mode's own, and an older overlayopacity link still fades them all
+  const faded = overlayFromHash(new URLSearchParams('overlay=aguiar,de-la-cosa,carta-marina&sheetopacity=,0.4,2'), ids);
+  assert.deepEqual(faded.opacities, { 'de-la-cosa': 0.4 }, 'an empty slot and an out-of-range one are the mode\'s own');
+  assert.equal(written(faded), 'overlay=aguiar%2Cde-la-cosa%2Ccarta-marina&sheetopacity=%2C0.4');
+  assert.equal(sheetOpacity(faded, 'de-la-cosa'), 0.4);
+  assert.equal(sheetOpacity(faded, 'aguiar'), 1, 'a sheet with no slider of its own is opaque');
+  assert.equal(sheetOpacity({ ...faded, overlayOpacity: 0.7 }, 'aguiar'), 0.7, 'an older overlayopacity link fades the rest');
+  assert.equal(sheetOpacity({ ...faded, overlayMode: 'pieces' }, 'de-la-cosa'), 0.6, 'the warped pieces share one opacity');
+  assert.equal(written({ ...faded, overlays: ['aguiar'] }), 'overlay=aguiar', 'an opacity kept for a chart not laid is left out');
   assert.ok(sameSheet({ lon: -5.18, lat: 9.418, scale: 0.10464, turn: 12.5 }, { lon: -5.1801, lat: 9.4181, scale: 0.104641, turn: 12.51 }), 'the same to the hash\'s rounding');
   assert.ok(!sameSheet(moved.sheets['de-la-cosa'], null));
   assert.equal(sheetText({ lon: 1, lat: 2, scale: 0.1, turn: 0 }), '1.000,2.000,0.10000,0.0');
@@ -208,17 +217,30 @@ test('in Mercator the sheet drawn at a snap lands every scan px where that fit a
   assert.ok(Math.abs(x1 - x0 - (Math.max(...tc.map((c) => c[0])) - Math.min(...tc.map((c) => c[0])))) < 0.05, 'and is tight');
 });
 
-// The view that frames the whole sheet contains it, never crops it: at that view every corner is inside the page,
-// and the sheet keeps its page size and turn in any projection, its centre pinned.
-test('sheetView frames the sheet inside the page, and the sheet keeps its size and turn across projections', () => {
-  const cosa = overlays.find((o) => o.id === 'de-la-cosa'), v = sheetView(cosa, cosa.sheet, { w: 1600, h: 1000, pad: 0.08 });
+test('sheetView frames a level sheet inside the page, and the sheet keeps its size and turn across projections', () => {
+  const cosa = overlays.find((o) => o.id === 'de-la-cosa'), v = sheetView(cosa, cosa.sheet, { w: 1600, h: 1000, pad: 0.08, bearing: cosa.sheet.turn - cosa.up });
   const corners = sheetCorners(cosa, viewProjection(v), cosa.sheet);
   for (const [x, y] of corners) assert.ok(x >= 0 && x <= 1600 && y >= 0 && y <= 1000, `${x},${y}`);
-  const span = Math.max(...corners.map((c) => c[0])) - Math.min(...corners.map((c) => c[0]));
-  assert.ok(span > 1600 / 1.16 - 1 && span < 1600 / 1.16 + 1, `8% clear on each side: ${span}`);
-  const merc = sheetTransform(cosa, viewProjection(v), cosa.sheet), ortho = sheetTransform(cosa, viewProjection({ ...v, projection: 'orthographic' }), cosa.sheet);
+  const span = Math.max(...corners.map((c) => c[1])) - Math.min(...corners.map((c) => c[1])); // drawn west up, on its side: the height fills
+  assert.ok(span > 1000 / 1.16 - 1 && span < 1000 / 1.16 + 1, `8% clear top and bottom: ${span}`);
+  const north = sheetView(cosa, cosa.sheet, { w: 1600, h: 1000, pad: 0.08 });
+  const merc = sheetTransform(cosa, viewProjection(north), cosa.sheet), ortho = sheetTransform(cosa, viewProjection({ ...north, projection: 'orthographic' }), cosa.sheet);
   for (const i of [0, 1, 2, 3]) assert.ok(Math.abs(merc[i] - ortho[i]) < 1e-9, 'the same size and turn');
   assert.ok(Math.abs(merc[4] - ortho[4]) < 1 && Math.abs(merc[5] - ortho[5]) < 1, 'the centre at the view\'s centre in both');
+});
+
+test('sheetView gives a placement one zoom at every turn and bearing, so a slanted sheet runs off the page', () => {
+  const opt = { w: 1600, h: 1000, pad: 0.08 };
+  for (const id of ['de-la-cosa', 'catalan-atlas']) {
+    const o = overlays.find((v) => v.id === id), zoomAt = (turn, bearing) => sheetView(o, { ...o.sheet, turn }, { ...opt, bearing }).zoom;
+    const drawn = zoomAt(o.up ?? 0, 0);
+    for (const [turn, bearing] of [[0, 0], [30, 0], [-48.35, 0], [90, 0], [130, 100], [10, 45], [-3, 270]]) assert.equal(zoomAt(turn, bearing), drawn, `${id} ${turn} at ${bearing}`);
+    const at = { ...o.sheet, turn: (o.up ?? 0) }, level = sheetCorners(o, viewProjection(sheetView(o, at, opt)), at);
+    for (const [x, y] of level) assert.ok(x >= -1e-6 && x <= 1600 && y >= -1e-6 && y <= 1000, `${id} as drawn, contained: ${x},${y}`);
+    const slant = { ...o.sheet, turn: (o.up ?? 0) + 30 }, v = sheetView(o, slant, opt);
+    assert.equal(v.lon, slant.lon); assert.equal(v.lat, slant.lat);
+    if (id === 'catalan-atlas') assert.ok(sheetCorners(o, viewProjection(v), slant).some(([x, y]) => x < 0 || x > 1600 || y < 0 || y > 1000), 'the long Catalan sheet on a slant has corners off the page'); // de la Cosa's diagonal fits inside its pad
+  }
 });
 
 // loadOverlay composes the scan with its mask: the paper round the skin is transparent, the skin is not. drawSheet draws it
