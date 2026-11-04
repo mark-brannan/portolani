@@ -115,6 +115,17 @@ test('US3WA46M through the provider draws the Seattle view, with its depth', asy
   // the page's mountains on the cell's land: the colour style along the ranges the build ships, and the hills
   assert.ok(whole.scene.relief?.peaks.length > 10, `mountains on the cell's land: ${whole.scene.relief?.peaks.length}`);
   assert.ok(shipped['geo/ranges-10m.json'].features.length > 100 && shipped['geo/peaks-10m.json'].features.length > 100, 'the build ships the ranges and the peaks');
+  // a landmark peak on the cell's land: the shipped peaks hold none inside this cell, so one is stood on the Olympic
+  // Peninsula, and the scene draws it and a tap on its drawing finds its name and height
+  const stand = { type: 'Feature', properties: { name: 'Test Summit', elevation: 1800, min_zoom: 0 }, geometry: { type: 'Point', coordinates: [-123.2, 47.8] } };
+  const peakEnv = { ...env, readJSON: (p) => (p === 'geo/peaks-10m.json' ? Promise.resolve({ type: 'FeatureCollection', features: [stand] }) : env.readJSON(p)) };
+  const { scene: ps, data: pd } = await createScene(peakEnv, { ...CHART_OPTIONS, view: cell, depth: true });
+  const { drawnPeaks, peakHits, viewProjection } = await import('../../scripts/scene.mjs');
+  const drawn = drawnPeaks(ps, pd);
+  assert.ok(drawn.length >= 1, `the landmark peak is drawn on the cell's land: ${drawn.length}`);
+  const proj = viewProjection(cell), [hit] = peakHits(drawn, proj, { x0: 0, y0: 0, x1: 1600, y1: 1000 });
+  assert.equal(hit?.tile.title, 'Test Summit');
+  assert.match(hit.tile.date, /1,800 m/);
   if (process.env.UPDATE_GOLDEN) writeFileSync(join(HERE, 'golden', 'puget.png'), whole.c.toBuffer('image/png'));
 });
 
