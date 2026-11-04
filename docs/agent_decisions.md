@@ -501,3 +501,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261104t223639z
 - pictureName: FNV-1a hashed name for a Commons title with no ascii letters ([#373](https://github.com/mark-brannan/portolani/pull/373))
+
+### 20261104t223645z
+- Abu Bakr II stand-in likeness: 1375 Catalan Atlas king of Mali, kind imaginary ([#373](https://github.com/mark-brannan/portolani/pull/373))
