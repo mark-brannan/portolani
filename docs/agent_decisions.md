@@ -438,3 +438,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261104t063028z
 - portolani ranges: a range peak whose base is off the 50m land is dropped Undo: the depth(x, y) > 0 filter in reliefOf (no PR, branch ranges-work)
+
+### 20261104t064345z
+- Signal K webapp ships the ranges and peaks files inside the plugin package (+99 KB packed), no download Undo: fetch the two files at first run instead of shipping them ([#356](https://github.com/mark-brannan/portolani/pull/356))
