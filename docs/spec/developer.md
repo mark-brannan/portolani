@@ -6,9 +6,9 @@ Feature: `createScene(env, opts)`  [verified scene.mjs:2553-2578]
   Scenario: defaults differ from the page's DEFAULTS
     Given `createScene(env)` with no options
     When it places
-    Then `land` is `islands`, `rivers`, `lakes`, `trees` are `off`, `relief` is none, `continents` false, `regions` `off`, `historical` true, `scale` `genoese`, `view` is `DEFAULT_VIEW`, `autoTitle` true, `reefs` `crosses`, `playas` `salt` (page: `land` ochre, rivers `plain`, lakes `marina`, reefs `crosses`, playas `salt`, trees `marina`, mountains colour)
+    Then `land` is `islands`, `rivers`, `lakes`, `trees` are `off`, `relief` is none, `continents` false, `regions` `off`, `historical` true, `scale` `genoese`, `view` is `DEFAULT_VIEW`, `autoTitle` true, `reefs` `crosses`, `playas` `salt`, `peaks` on (page: `land` ochre, rivers `plain`, lakes `marina`, reefs `crosses`, playas `salt`, peaks `catalan`, trees `marina`, mountains colour)
     # per CLAUDE.md the headless scene keeps relief, trees, rivers and lakes off so each golden isolates one thing; reefs and playas are on there as in the page (#337)
-  Options read: `ink, parchment, density, names, rhumb, scale, scaleBorder, land, islands, seaTint, rivers, lakes, reefs, playas, relief (a style or a list), trees, continents, continentsZoom, regions, regionsZoom, title, autoTitle, pinTitle, townSize, historical, seed, view, sprites, kinds, pinned, voyage`, and the legacy `rendering, rose, monster, town` (any one set turns on legacy mode: `rank` town sizing, no seed, unshuffled order, scene.mjs:2556-2557).
+  Options read: `ink, parchment, density, names, rhumb, scale, scaleBorder, land, islands, seaTint, rivers, lakes, reefs, playas, peaks (false or `off` stands none), relief (a style or a list), trees, continents, continentsZoom, regions, regionsZoom, title, autoTitle, pinTitle, townSize, historical, seed, view, sprites, kinds, pinned, voyage`, and the legacy `rendering, rose, monster, town` (any one set turns on legacy mode: `rank` town sizing, no seed, unshuffled order, scene.mjs:2556-2557).
   Scenario: a mix of relief styles
     Given `createScene(env, { relief: ['marina', 'engraved'] })`
     When the Alps are placed
