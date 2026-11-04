@@ -603,7 +603,7 @@ Feature: The skull in the lower right puts the map back
     Given cards on the table, a tile open, a person or a sight chosen, in any mix
     When the user clicks the skull
     Then every card is put away, a person's or a sight's alike, every tile closes, and no subject is chosen: the map is in its normal state
-    And a broom sweeps across the map as the cards go, then is gone; with reduced motion the cards go with no broom
+    And a large, faint skull flashes over the map as the cards go, then is gone (the broom is retired: docs/spec/drawer.md, "The skull stays in reach while a drawer is in use"); with reduced motion the cards go with no wipe
     And a click with nothing on the table does no harm: the map is already in its normal state
 
 Feature: People and voyages, each a vertical timeline
