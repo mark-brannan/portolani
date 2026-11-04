@@ -2517,11 +2517,11 @@ function drawCartouche(g, c, bgPart) {
   g.textAlign = 'center';
   g.textBaseline = 'middle';
   const font = (fpx) => { g.font = `${fpx}px "${STYLE.font}"`; g.letterSpacing = `${fpx * 0.12}px`; };
-  if (c.fit?.pw !== pw || c.fit.ph !== ph || c.fit.title !== c.title) { // fitted once: the panel and the title hold from frame to frame
+  if (c.fit?.pw !== pw || c.fit.ph !== ph || c.fit.title !== c.title || c.fit.font !== STYLE.font) { // fitted once: the panel, the title and the font hold from frame to frame
     let fpx = ph * 0.62;
     font(fpx);
     while (fpx > 6 && g.measureText(c.title).width > pw * 0.86) { fpx -= 1; font(fpx); }
-    c.fit = { pw, ph, title: c.title, fpx };
+    c.fit = { pw, ph, title: c.title, font: STYLE.font, fpx };
   }
   const { fpx } = c.fit;
   font(fpx);

@@ -19,7 +19,8 @@ export const ROSE = { lon: -20.2, lat: 43.5 };
 export const ORIGINS = { rose: ROSE, zero: { lon: 0, lat: 0 } };
 
 // Page window: the doc's 1125 / 2^z degrees of longitude wide, on a 1600 x 1000 page.
-export const WINDOW_DEG = 1125, ASPECT = 1000 / 1600;
+export const WINDOW_DEG = 1125;
+const ASPECT = 1000 / 1600;
 
 // Band 0 extends NOAA's ladder upward (its cell 4x the one below, the window at its first zoom about 9%
 // narrower than the cell), so zooms 4 to 6 have a grid too (#199). Below it is the world band, one sheet.
