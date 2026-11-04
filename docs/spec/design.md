@@ -175,10 +175,11 @@ Feature: A chart's position chips, and the line each was fitted to
     And "Parallels" draws today's equator and Tropic of Cancer; a coast's chip ("New World") draws only the stretch of today's coast that fit used, not the whole coast; the chart's own "Level" draws every coast it is centred between
     And the line is the feature the fit was computed from, carried with the placement in the chart's data, never a stretch drawn by hand to look right
     And with reduced motion the line shows whole, then fades to faint
-  Scenario: a phone (waiting on a UI walk)
+  Scenario: a phone
     Given the Charts drawer open as the bottom sheet, at 520 px and under
     When the user looks for the position chips
-    Then they sit in the chart's row as on a wide screen, until the user has walked the phone's drawers
+    Then they sit in the chart's row as on a wide screen, wrapping onto lines of their own
+    And the unlit chips are solid and dark enough to read as buttons on the parchment, and the lit one wears the accent ring
 
 Feature: The projection chips live in the Charts drawer and the settings drawer
   Source: the user on [#266](https://github.com/mark-brannan/portolani/pull/266), 2026-10-29: "The controls for map projections should live under charts now, not the compass rose. I'm not sure about other map settings...they probably stay under the rose but it could change."
@@ -373,8 +374,8 @@ Feature: A chart's notes get their moment, then leave the art alone
   Scenario: the user asks for the notes back
     Given a chart's sheet shown, its notes faded
     When the user looks at the chart's row
-    Then a chip beside the position chips reads "Notes · N", N the count, off after the pulse
-    And a click on the chip shows the marks and keeps them until it is clicked again; a second control, or the same chip when the marks are already off, plays the rings again
+    Then a chip beside the position chips reads "Notes" with N, the count, in a badge in lining figures, off after the pulse
+    And a click on the chip shows the marks and keeps them until it is clicked again; a second control, wearing the astrolabe of the points of interest until the user picks it or the compass of Go, or the same chip when the marks are already off, plays the rings again
     And the marks are never left on by default; the scan is the thing, the marks are a way to find what is on it
   Scenario: the user sees it first
     Given the pulse built as above

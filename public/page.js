@@ -1171,18 +1171,22 @@ function drawHandles(g, geo) {
   g.beginPath(); g.moveTo(br[0] - a + h, br[1] + a); g.lineTo(br[0] - a, br[1] + a); g.lineTo(br[0] - a, br[1] + a - h); g.stroke();
   g.restore();
 }
-// The snap chips, at the top sheet's top left corner in the window (kept inside it), lit where that sheet lies now; the
-// top sheet in view, where the top one's centre is past the horizon.
+// The snap chips live in the Charts drawer, in the row of the chart they belong to, under its city and year after a
+// "Chart position:" line (docs/spec/design.md, "A chart's position chips, and the line each was fitted to"). They follow
+// the top sheet in view (the one whose centre is not past the horizon), lit where that sheet lies now; with no sheet
+// shown the line is hidden.
 const sheetChips = $('sheetChips');
+const posBox = Object.assign(document.createElement('div'), { className: 'pos', hidden: true });
+posBox.append(Object.assign(document.createElement('b'), { textContent: 'Chart position:' }), sheetChips);
 function placeSheetChips() {
   const geo = held ? null : sheetsShown().reverse().map(sheetGeometry).find(Boolean);
-  if (!geo || geo.o.id !== sheetChips.dataset.id) { sheetChips.hidden = true; if (geo) buildSheetChips(geo.o); else return; }
-  const [[x, y]] = geo.corners, rc = canvas.getBoundingClientRect();
-  sheetChips.hidden = false;
+  if (geo && geo.o.id !== sheetChips.dataset.id) buildSheetChips(geo.o);
+  const li = geo && $('chartList').querySelector(`li[data-overlay="${geo.o.id}"]`);
+  if (!li) { posBox.hidden = true; return; }
+  const where = li.querySelector('.about .where');
+  if (posBox.previousElementSibling !== where) where.after(posBox);
+  posBox.hidden = false; sheetChips.hidden = false;
   showMend(geo.o);
-  const w = sheetChips.offsetWidth, h = sheetChips.offsetHeight;
-  sheetChips.style.left = `${Math.max(8, Math.min(innerWidth - w - 8, rc.left + x * (rc.width / W) + 4))}px`;
-  sheetChips.style.top = `${Math.max(8, Math.min(innerHeight - h - 8, rc.top + y * (rc.height / H) - h - 6))}px`;
   const keep = sheetChips.querySelector('[data-notes=keep]');
   keep?.setAttribute('aria-pressed', String(notesKept.has(geo.o.id)));
   for (const b of sheetChips.querySelectorAll('[role=radio]')) b.setAttribute('aria-checked', String(sameSheet(geo.o.sheet, b.dataset.snap == null ? ownSheet(geo.o.id) : geo.o.snaps[b.dataset.snap])));
@@ -1236,14 +1240,17 @@ function showMend(o) {
 // Beside them, for a chart with notes: "Notes · N", which keeps its notes' marks shown until clicked again (off after the
 // pulse, and never on by default), and a ring that plays the pulse again (docs/spec/design.md, "the user asks for the notes back")
 const NOTE_GLYPH = '<svg viewBox="0 0 28 18" aria-hidden="true"><circle cx="14" cy="9" r="6" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="14" cy="9" r="2" fill="currentColor"/></svg>';
-const PULSE_GLYPH = '<svg viewBox="0 0 28 18" aria-hidden="true"><circle cx="14" cy="9" r="2" fill="currentColor"/><circle cx="14" cy="9" r="4.5" fill="none" stroke="#8c2f1e" stroke-width="1.4"/><circle cx="14" cy="9" r="7.5" fill="none" stroke="#8c2f1e" stroke-width="1.1" opacity="0.5"/></svg>';
+// The replay chip wears one of the main drawers' own icons (the astrolabe of the points of interest, or the compass of Go),
+// cloned from the bar with its gradient ids renamed so the clone stands alone. The astrolabe is a placeholder until the user picks.
+const barIcon = (id, tag) => $(id).querySelector('svg').outerHTML.replace(/(brass\w+|hdChart|hcChart)/g, `$1${tag}`).replace('aria-hidden="true"', 'aria-hidden="true" class="icon"');
+const PULSE_GLYPH = () => barIcon('sights', 'Replay'); // or barIcon('go', 'Replay') for the compass
 function notesChips(o) {
   const n = noteCount(o.id);
   if (!n) return [];
   const keep = Object.assign(document.createElement('button'), { type: 'button', className: 'chip', title: `Show the ${n} notes' marks on the chart, and keep them until clicked again` });
-  keep.innerHTML = `${NOTE_GLYPH}Notes · ${n}`; keep.dataset.notes = 'keep'; keep.setAttribute('aria-pressed', String(notesKept.has(o.id)));
+  keep.innerHTML = `${NOTE_GLYPH}Notes<span class="count" aria-label="${n} notes">${n}</span>`; keep.dataset.notes = 'keep'; keep.setAttribute('aria-pressed', String(notesKept.has(o.id)));
   const again = Object.assign(document.createElement('button'), { type: 'button', className: 'chip', title: 'Play the notes\' rings again' });
-  again.innerHTML = PULSE_GLYPH; again.dataset.notes = 'again'; again.setAttribute('aria-label', 'Play the notes\' rings again');
+  again.innerHTML = PULSE_GLYPH(); again.dataset.notes = 'again'; again.setAttribute('aria-label', 'Play the notes\' rings again');
   return [keep, again];
 }
 sheetChips.addEventListener('click', (e) => {
