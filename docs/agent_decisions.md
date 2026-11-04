@@ -504,3 +504,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261104t223645z
 - Abu Bakr II stand-in likeness: 1375 Catalan Atlas king of Mali, kind imaginary ([#373](https://github.com/mark-brannan/portolani/pull/373))
+
+### 20261104t223650z
+- people picture kinds: near to imaginary for Musa x2, Isabel de Olvera, Rubruck; Duran soldier to scene ([#373](https://github.com/mark-brannan/portolani/pull/373))
