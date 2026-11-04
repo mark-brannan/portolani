@@ -15,6 +15,7 @@
 // geo/isles-land.json for the coarse land to draw before the 10m band takes over.
 
 import { ISLAND_KM2 } from './island.mjs';
+import { insideRing } from './ring.mjs';
 
 export const JOIN_KM = 3;   // islets this close are one island or one atoll
 export const NEAR_KM = 25;  // a group this close to a large coast is left to that coast
@@ -52,16 +53,6 @@ function gapKm(a, b) {
   const shift = wrap(b[0] - a[0]) - (b[0] - a[0]); // b moved next to a across the antimeridian
   const dx = Math.max(0, a[0] - (b[2] + shift), b[0] + shift - a[2]) * c, dy = Math.max(0, a[1] - b[3], b[1] - a[3]);
   return Math.hypot(dx, dy) * KM_DEG;
-}
-
-// Even-odd point in ring, [lon, lat].
-function insideRing(ring, lon, lat) {
-  let inside = false;
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    const [xi, yi] = ring[i], [xj, yj] = ring[j];
-    if ((yi > lat) !== (yj > lat) && lon < xj + ((lat - yj) * (xi - xj)) / (yi - yj)) inside = !inside;
-  }
-  return inside;
 }
 
 // Buckets of `deg` degrees: put(item, box) files an item under every bucket its box meets, near(box)

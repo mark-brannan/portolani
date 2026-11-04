@@ -678,7 +678,12 @@ test('people: a picture on the map is looked at, put away and dealt back by choo
       return out;
     }, { x0: cx - 200, y0: cy - 200 });
     assert.ok(zoomIn.length, 'no Look button on the first picture');
-    const look = () => page.mouse.click(zoomIn.reduce((s, p) => s + p[0], 0) / zoomIn.length, zoomIn.reduce((s, p) => s + p[1], 0) / zoomIn.length);
+    const lookAt = { x: zoomIn.reduce((s, p) => s + p[0], 0) / zoomIn.length, y: zoomIn.reduce((s, p) => s + p[1], 0) / zoomIn.length };
+    // pressed once the pointer over it finds Look (its magnifier): a press sent at once, while a picture laid back is still settling, was lost now and then under load
+    const look = async () => {
+      await page.waitForFunction(({ x, y }) => { const m = document.getElementById('map'); m.dispatchEvent(new PointerEvent('pointermove', { clientX: x, clientY: y, isPrimary: true, bubbles: true })); return m.style.cursor === 'zoom-in'; }, lookAt, { timeout: 10000, polling: 100 });
+      await page.mouse.click(lookAt.x, lookAt.y);
+    };
     await look();
     assert.equal(await looked(), 'true');
     await page.keyboard.press('Escape');

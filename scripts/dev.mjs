@@ -9,7 +9,7 @@
 
 import { createServer } from 'node:http';
 import { spawnSync } from 'node:child_process';
-import { createReadStream, existsSync, readFileSync, statSync } from 'node:fs';
+import { createReadStream, existsSync, statSync } from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { Readable } from 'node:stream';
 import { fileURLToPath } from 'node:url';
@@ -17,7 +17,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { buildLearn } from './learn.mjs';
 import { relativeImports } from './scene-modules.mjs';
-import { rangesFromRegions } from './ranges.mjs';
+import { rangesFromRegions } from './ranges-file.mjs';
 import { buildInfo } from './build-info.mjs';
 
 let rangesJson; // the slimmed ranges as served, kept after the first request

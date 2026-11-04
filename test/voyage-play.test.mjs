@@ -3,7 +3,7 @@
 // voyage in VOYAGE_PLAY's seconds.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readDates, legDates, calendarOf, penOn, dayText, dayOf, problems, VOYAGE_PLAY, voyagePlaySeconds, readVoyage } from '../scripts/voyages.mjs';
+import { readDates, legDates, calendarOf, penOn, dayText, dayOf, problems, VOYAGE_PLAY, voyagePlaySeconds, readVoyage, playDateText, playPace, isLong, LONG_YEARS } from '../scripts/voyages.mjs';
 import { readJSON } from '../scripts/check-voyages.mjs';
 
 const ends = (text) => { const r = readDates(text); return r && [dayText(r.start.span[0], r.start.precision), dayText(r.end.span[1] - 1, r.end.precision)]; };
@@ -71,9 +71,61 @@ test('every voyage has a calendar that runs forward, and its events fall inside 
   for (const id of readJSON('data/voyages/index.json')) {
     const cal = calendarOf(await readVoyage(id, readJSON));
     assert.ok(cal && cal.t1 > cal.t0, `${id}: a calendar`);
-    assert.ok(cal.legs.every((l, i) => Number.isFinite(l.a) && l.b >= l.a && (!i || l.a >= cal.legs[i - 1].b)), `${id}: forward`);
+    // a migration's legs are branches under way at once, so only each on its own runs forward
+    assert.ok(cal.legs.every((l, i) => Number.isFinite(l.a) && l.b >= l.a && (cal.concurrent || !i || l.a >= cal.legs[i - 1].b)), `${id}: forward`);
+    assert.ok(cal.legs.every((l) => l.stops.every((s, j) => !j || (s[0] >= l.stops[j - 1][0] && s[1] >= l.stops[j - 1][1]))), `${id}: stops in order`);
     assert.ok(cal.events.every((d) => d >= cal.t0 && d <= cal.t1), `${id}: events inside`);
   }
+});
+
+test('the Lapita stream plays on its own calendar: the pen at each settlement on its date, the New Caledonia branch beside it', async () => {
+  const v = await readVoyage('lapita-expansion', readJSON), cal = calendarOf(v), year = (d) => dayText(d, 'year');
+  assert.equal(cal.concurrent, true);
+  assert.deepEqual([year(cal.t0), year(cal.t1)], ['1500 BC', '800 BC']);
+  const at = (label) => cal.events[v.events.findIndex((e) => e.label.startsWith(label))];
+  assert.deepEqual(['Watom', 'Nenumbo', 'Natunuku', 'Nukuleka', 'Mulifanua'].map((l) => year(at(l))), ['1350 BC', '1200 BC', '1100 BC', '900 BC', '800 BC']);
+  const teouma = at('Teouma');
+  assert.ok(teouma > at('Nenumbo') && teouma < at('Natunuku'), 'Teouma, "c. 1200–1000 BC", between the Reef Islands and Fiji');
+  const [main, branch] = cal.legs;
+  for (const [sample, day, place] of main.stops.slice(1, -1)) {
+    const pen = penOn(cal, day);
+    assert.ok(Math.abs(pen.legs[0] * main.n - sample) < 1e-6, `the pen at ${place} on its day`);
+  }
+  assert.equal(branch.a, teouma, 'the branch to New Caledonia sets out as the stream passes Efate');
+  assert.equal(year(branch.b), '1100 BC');
+  const mid = penOn(cal, (branch.a + branch.b) / 2);
+  assert.ok(mid.legs[0] > 0 && mid.legs[0] < 1 && mid.legs[1] > 0 && mid.legs[1] < 1, 'both under way at once');
+  assert.equal(mid.leg, 1, 'the band names the branch set out latest');
+  assert.ok(penOn(cal, at('Watom') + 1).from.startsWith('Watom'), 'the band names the stretch between settlements');
+  const half = penOn(cal, cal.t0 + 0.55 * (cal.t1 - cal.t0));
+  assert.ok(half.share > 0 && half.share < 1);
+});
+
+test('the East Polynesian settlement plays too: its branches each from where an earlier one landed', async () => {
+  const v = await readVoyage('east-polynesia-settlement', readJSON), cal = calendarOf(v), year = (d) => dayText(d, 'year');
+  assert.deepEqual([year(cal.t0), year(cal.t1)], ['800 BC', '1500']);
+  const leg = (to) => cal.legs[v.legs.findIndex((l) => l.to.startsWith(to))];
+  assert.ok(leg('Hawai').a >= leg('Tahiti').b && leg('Rapa Nui').a >= leg('Tahiti').b, 'out of Tahiti once Tahiti is reached');
+  assert.equal(leg('the coast').a, leg('Rapa Nui').b, 'to South America from Rapa Nui as it is reached');
+  const gap = penOn(cal, (leg('Tahiti').b + leg('Rapa Nui').a) / 2);
+  assert.equal(gap.waiting, true);
+  assert.equal(cal.legs[gap.before].to, 'Tahiti');
+});
+
+test('a long calendar is told in years: "c. 1210 BC" and "about 80 years a second"; a short one as before', async () => {
+  const lapita = calendarOf(await readVoyage('lapita-expansion', readJSON)), magellan = calendarOf(await readVoyage('magellan', readJSON));
+  assert.equal(isLong(lapita), true); assert.equal(isLong(magellan), false);
+  assert.equal(playDateText(lapita, dayOf(-1211, 5, 1), 'day'), 'c. 1210 BC', '1212 BC to the nearest ten years');
+  assert.equal(playDateText(lapita, lapita.t0, 'year'), 'c. 1500 BC');
+  assert.equal(playPace(lapita, 9), 'about 80 years a second');
+  assert.equal(playPace(lapita, 30), 'about 20 years a second');
+  const polynesia = calendarOf(await readVoyage('east-polynesia-settlement', readJSON));
+  assert.equal(playDateText(polynesia, dayOf(1234), 'year'), 'c. 1250', 'past 1,000 years, to the nearest fifty');
+  assert.equal(playDateText(magellan, dayOf(1520, 5, 20), 'day'), dayText(dayOf(1520, 5, 20), 'day'), 'a short calendar keeps its days');
+  assert.equal(playPace(magellan, 9), '1,083 days in 9 s');
+  const short = { t0: dayOf(1300), t1: dayOf(1349) }, long = { t0: dayOf(1300), t1: dayOf(1352) };
+  assert.equal(isLong(short), false, '49 years'); assert.equal(isLong(long), true, '52 years');
+  assert.equal(LONG_YEARS, 50);
 });
 
 test('a link\'s voyageplay= is the seconds a play takes, 3 to 30; any other value plays at the default', () => {

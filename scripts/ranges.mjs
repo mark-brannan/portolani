@@ -12,15 +12,13 @@
 // Which ranges: Natural Earth's own MIN_LABEL, counted in 256 px tiles as water.mjs's `shown` reads
 // it, so a far view holds the great ranges (MIN_LABEL 2) and a close one the rest (up to 6).
 
-import { readFileSync } from 'node:fs';
-import { shown } from './water.mjs';
+import { boxOf, shown } from './water.mjs';
+import { RAD, mercLat } from './frame-box.mjs';
 
-const RAD = Math.PI / 180;
 export const RANGE_CLASS = 'Range/mtn';
 const GRID = 128; // cells along a polygon's longer side
 const MAX_RIDGES = 8; // per polygon
 const merc = (lat) => Math.log(Math.tan(Math.PI / 4 + (Math.max(-85, Math.min(85, lat)) * RAD) / 2));
-const unmerc = (y) => (2 * Math.atan(Math.exp(y)) - Math.PI / 2) / RAD;
 const round = (c) => (typeof c[0] === 'number' ? c.map((v) => Math.round(v * 1e3) / 1e3) : c.map(round));
 
 // The ranges the site ships, from Natural Earth's geography regions (GeoJSON): the Range/mtn
@@ -50,25 +48,6 @@ function unwrap(ring) {
   });
 }
 
-// The box of a ring's points, in one pass (a spread into Math.min overflows the stack on a long ring).
-function extent(pts, a, b) {
-  const o = { lonMin: Infinity, lonMax: -Infinity, latMin: Infinity, latMax: -Infinity };
-  for (const p of pts) {
-    if (p[a] < o.lonMin) o.lonMin = p[a];
-    if (p[a] > o.lonMax) o.lonMax = p[a];
-    if (p[b] < o.latMin) o.latMin = p[b];
-    if (p[b] > o.latMax) o.latMax = p[b];
-  }
-  return o;
-}
-
-// The slimmed ranges of a Natural Earth regions file, read once per path.
-const fromRegions = new Map();
-export function rangesFromRegions(file) {
-  if (!fromRegions.has(file)) fromRegions.set(file, slimRanges(JSON.parse(readFileSync(file, 'utf8'))));
-  return fromRegions.get(file);
-}
-
 // The ranges from slimRanges's file, one per polygon (a MultiPolygon's parts each a range), the
 // greatest first: { id, name, rank, minZoom, rings, box: { lonMin, lonMax, latMin, latMax } }.
 export function rangesOf(geo) {
@@ -76,10 +55,10 @@ export function rangesOf(geo) {
   (geo?.features ?? []).forEach((f, i) => {
     const g = f.geometry, polys = g.type === 'MultiPolygon' ? g.coordinates : [g.coordinates];
     polys.forEach((rings, part) => {
-      const rs = rings.map(unwrap), pts = rs[0];
+      const rs = rings.map(unwrap), b = boxOf(rs[0]);
       out.push({
         id: hash(f.properties.ne_id ?? i, part), name: f.properties.name, rank: f.properties.scalerank ?? 6, minZoom: f.properties.min_label ?? 6, rings: rs,
-        box: extent(pts, 0, 1),
+        box: { lonMin: b.x0, lonMax: b.x1, latMin: b.y0, latMax: b.y1 },
       });
     });
   });
@@ -119,9 +98,9 @@ export function chamfer(inside, cols, rows, edgeOutside = true) {
 export function ridgesOf(range, createCanvas) {
   if (range.ridges) return range.ridges;
   const P = range.rings.map((ring) => ring.map(([lon, lat]) => [lon * RAD, -merc(lat)]));
-  const e = extent(P[0], 0, 1), X0 = e.lonMin, Y0 = e.latMin, span = Math.max(e.lonMax - X0, e.latMax - Y0) || 1e-6;
+  const e = boxOf(P[0]), X0 = e.x0, Y0 = e.y0, span = Math.max(e.x1 - X0, e.y1 - Y0) || 1e-6;
   const cell = span / GRID, ox = X0 - 2 * cell, oy = Y0 - 2 * cell;
-  const cols = Math.ceil((e.lonMax - ox) / cell) + 3, rows = Math.ceil((e.latMax - oy) / cell) + 3;
+  const cols = Math.ceil((e.x1 - ox) / cell) + 3, rows = Math.ceil((e.y1 - oy) / cell) + 3;
   const c = createCanvas(cols, rows), g = c.getContext('2d');
   g.setTransform(1 / cell, 0, 0, 1 / cell, -ox / cell, -oy / cell);
   g.fillStyle = '#000';
@@ -194,7 +173,7 @@ export function ridgesOf(range, createCanvas) {
     claim(cells);
     ridges.push({
       width: v0 * cell,
-      pts: cells.map(([cu, cv, dv]) => [(ox + cu * cell) / RAD, unmerc(-(oy + cv * cell)), dv * cell]),
+      pts: cells.map(([cu, cv, dv]) => [(ox + cu * cell) / RAD, mercLat(-(oy + cv * cell)), dv * cell]),
     });
   }
   range.ridges = ridges;

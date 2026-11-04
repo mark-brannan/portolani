@@ -5,9 +5,7 @@
 // A chart of several pages (the Catalan Atlas's eight) is one sheet of `panels`: each page its own image and
 // mask at an x offset within the sheet's full-resolution px, loaded one by one and drawn as each arrives.
 
-const RAD = Math.PI / 180;
-const mercDeg = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * RAD) / 2)) / RAD; // Mercator latitude, in degrees
-const latOf = (m) => (2 * Math.atan(Math.exp(m * RAD)) - Math.PI / 2) / RAD;
+import { RAD, mercDeg, latOfMerc as latOf } from './frame-box.mjs';
 
 // A similarity (scale, turn, shift; no mirror) from scan px to (longitude, Mercator latitude), fitted by
 // least squares to `pairs` [[x, y], [lon, lat]]. The scan's y runs down, so it is z = x - iy and the

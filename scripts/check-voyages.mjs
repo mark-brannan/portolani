@@ -8,6 +8,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { geojsonPolygons } from 'coast-wright';
+import { boxOf } from './water.mjs';
 import { seaSamples, problems, checkPerson, readVoyage as resolve } from './voyages.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -15,11 +16,7 @@ const GEO = dirname(fileURLToPath(import.meta.resolve('coastlines/data/ne-land-5
 const DIR = join(ROOT, 'data', 'voyages');
 
 export function loadLand() {
-  return geojsonPolygons(JSON.parse(readFileSync(join(GEO, 'ne-land-50m.geojson'), 'utf8'))).map((poly) => {
-    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-    for (const [x, y] of poly[0]) { if (x < x0) x0 = x; if (y < y0) y0 = y; if (x > x1) x1 = x; if (y > y1) y1 = y; }
-    return { poly, box: { x0, y0, x1, y1 } };
-  });
+  return geojsonPolygons(JSON.parse(readFileSync(join(GEO, 'ne-land-50m.geojson'), 'utf8'))).map((poly) => ({ poly, box: boxOf(poly[0]) }));
 }
 const insideRing = (ring, lon, lat) => {
   let c = false;

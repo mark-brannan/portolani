@@ -362,7 +362,8 @@ Feature: Landmark peaks  (chips `#peaks`, hash `peaks`, default `catalan`, value
     Given the same view
     When the user clicks "Off" in Landmark peaks
     Then the hash gains `peaks=off` and the peaks are gone; the hills stay
-    # which peaks: Natural Earth's 10m summits within 100 km of the sea, each from its own min_zoom (in 256 px tiles, water.mjs `shown`); the mountain sprites must be selected (the Hills chip), as the peaks are drawn with them
+    # which peaks: Natural Earth's 10m named summits, each from its own min_zoom (in 256 px tiles, water.mjs `shown`); the mountain sprites must be selected (the Hills chip), as the peaks are drawn with them
+    # a peak whose sprite finds no ground (a town on the summit) stands smaller, then as a lone mountain in ink, with the same tile; it is never dropped for a town alone
     # a site without geo/peaks-10m.json stands no peaks and draws the rest of the map as before
 
 Feature: Scale bar  (chips `#scale`, hash `scale`, default `genoese`, values `off|chequer|chevron|ribbon|beads|ruled|genoese`) [verified page.js:96, 286; scene.mjs:2077-2170]
@@ -405,7 +406,7 @@ Feature: Parchment  (colour input `#parchment`, hash `parchment`, default `e9d8b
   Scenario: the sheet repaints
     Given the same
     When the page places
-    Then the canvas background pixels read near `#eeeeee`, a little darker and warmer at the centre and much darker at the corners (mottling, grain and a vignette multiply the colour, scene.mjs:1682-1725 at main; the pattern is fixed by seed 1539)
+    Then the canvas background pixels read near `#eeeeee`, a little darker and warmer at the centre and much darker at the corners (mottling, grain and a vignette multiply the colour: scene.mjs `makePaper` and `paintPaper`; the pattern is fixed by seed 1539 and by its place on the earth)
 
 Feature: One mode  (tokens `--panel` #efe3c6, `--fg`, `--margin` #1d1913; no `prefers-color-scheme` in `public/`) [verified at main] (#211)
   Scenario: every drawer is parchment inside, on the dark margin

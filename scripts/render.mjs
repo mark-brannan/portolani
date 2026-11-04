@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url';
 import { createScene, drawScene, W, H, DETAIL, noteMarks } from './scene.mjs';
 import { seaNames, coastNames, joinNames, tintedSeas } from './names.mjs';
 import { joinUrban } from './urban.mjs';
-import { rangesFromRegions } from './ranges.mjs';
+import { rangesFromRegions } from './ranges-file.mjs';
 import { cutWater, joinWater, WATER_FILES } from './detail-cells.mjs';
 import { isleIndex, isleLand } from './isles.mjs';
 import * as coastlines from 'coastlines';
@@ -61,11 +61,12 @@ const names = () => made ??= joinNames(seaNames(read(join(DL, 'ne_50m_geography_
   coastNames(read(join(GEO, 'ne-admin-0-countries-50m.geojson')), read(join(GEO, 'ne-coastline-50m.geojson'))));
 // the playas (scripts/playas.mjs), slimmed: the committed fixture, which build-preview.mjs checks against the download
 const playas = () => read(join(ROOT, 'test', 'fixtures', 'playas-10m.json'));
+const images = new Map();
 const env = {
   createCanvas,
   readJSON: async (p) => (p === 'geo/names-50m.json' ? names() : p === 'geo/urban-10m.json' ? footprints() : p === 'geo/seas-50m.json' ? tintedSeas(read(join(DL, 'ne_50m_geography_marine_polys.geojson')))
     : p === 'geo/playas-10m.json' ? playas() : p === 'geo/peaks-10m.json' ? read(join(ROOT, 'test', 'fixtures', 'peaks-10m.json')) : p === 'geo/ranges-10m.json' ? rangesFromRegions(resolve('geo/ne-geography-regions-polys-10m.geojson')) : p === 'geo/isles.json' ? islesIndex() : p === 'geo/isles-land.json' ? islesLand() : p.startsWith('geo/water-10m/') ? water(p) : read(resolve(p))),
-  loadImage: (p) => loadImage(resolve(p)),
+  loadImage: (p) => images.get(p) ?? images.set(p, loadImage(resolve(p))).get(p), // decoded once, as the page's host does
   loadFont: async (family) => { GlobalFonts.registerFromPath(join(DL, 'IMFeENrm28P.ttf'), family); GlobalFonts.registerFromPath(join(DL, 'IMFeENit28P.ttf'), family); },
 };
 
