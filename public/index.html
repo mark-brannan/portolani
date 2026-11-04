@@ -45,8 +45,8 @@
     text-shadow: 0 0 3px var(--margin), 0 0 3px var(--margin);
   }
   #build a { color: inherit; }
-  /* the right margin, above the timing line: the skull, always there, clears the table (every picture away, the subject
-     let go); under it a memento mori on a slip of parchment, in the italic hand, the next one at each clearing */
+  /* the right margin, above the timing line: the skull, always there, is the one clear for the map (every picture away,
+     the subject let go, every chart and voyage lifted; the view and the settings stay); under it a memento mori on a slip of parchment, in the italic hand, the next one at each clearing */
   /* it sits over the drawers (z-index 3), and an open drawer stops above it (--memento-h, page.js), so the skull and its
      line stay in sight and in reach while a drawer is in use; on a phone it rides just above the open sheet */
   :root { --memento-foot: 30px; --memento-h: 110px; }
@@ -135,7 +135,7 @@
   #coords input { flex: 1; min-width: 0; max-width: none; padding: 3px 8px; font: 13px var(--serif); border-radius: 12px; background: var(--panel); color: var(--fg); border: 1px solid var(--rule); }
   /* the People and the Voyages drawers: each a vertical timeline, as wide as the Charts drawer and never wider,
      earliest at the top, down a thin rail; the eras of the points of interest head the rows that fall in them as small
-     italic headings with their years. The voyages' controls (line weight, Clear, the pen's pace) head the Voyages drawer */
+     italic headings with their years. The voyages' controls (line weight, the pen's pace) head the Voyages drawer; the skull clears them */
   #peoplePanel, #voyagesPanel { width: min(480px, 100vw - 24px); max-width: none; align-items: stretch; }
   #voyagesPanel .vtools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 4px; }
   #voyagesPanel .chip { display: inline-flex; padding: 3px 8px; border-radius: 14px; box-shadow: none; font: 12px var(--serif); background: var(--sheet); color: var(--sheet-ink); }
@@ -518,7 +518,7 @@
     <text y="-5.2" text-anchor="middle" font-size="4.6" font-family="Georgia, serif" fill="#efe3c6" font-weight="bold">N</text>
   </svg>
   </button>
-  <button id="sweep" type="button" aria-label="Clear the table: put every picture away and let the chosen person or place go" title="Clear the table">
+  <button id="sweep" type="button" aria-label="Clear the map: put every picture away, let the chosen person or place go, and lift every chart and voyage; the view and the settings stay" title="Clear the map">
   <svg viewBox="-10 -10.5 20 20.5" aria-hidden="true">
     <g fill="#3b2a1a" stroke="#3b2a1a" stroke-linecap="round">
       <path d="M-6.5 3.5 6.5 8.5M6.5 3.5-6.5 8.5" stroke-width="2" fill="none"/>

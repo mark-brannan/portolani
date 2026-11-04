@@ -613,6 +613,30 @@ Feature: The skull in the lower right puts the map back
     And a large, faint skull flashes over the map as the cards go, then is gone (the broom is retired: docs/spec/drawer.md, "The skull stays in reach while a drawer is in use"); with reduced motion the cards go with no wipe
     And a click with nothing on the table does no harm: the map is already in its normal state
 
+Feature: The skull is the one clear  (`#sweep`, page.js `clearMap`)
+  Source: the user, 2026-11-04: "The skull is the universal 'clear' button.  It should work on any drawer or feature where we need clear/reset functionality.  Charts are cleared/reset with the skull.  Voyages are cleared/reset with the skull.  People, of course.  There is an unneeded 'clear' button in voyages.  When in the context view for a POI, it clears cards but does not reset any view position or zoom."; "It does not clear the rose config settings, map projection settings, position, or view." This widens "The skull in the lower right puts the map back" from the table to every drawer's content, and retires the Voyages drawer's own Clear (docs/spec/voyages.md). A settings group's Clear and Defaults (the figures, the hills) are settings, not the map's content, and stay.
+  Tested by: test/drawers.test.mjs — 'the skull is the one clear, and the voyages have no Clear of their own' (offline, source only; the scenarios are not yet driven in a browser)
+  Scenario: one click clears every drawer's content
+    Given a person chosen with their cards dealt, two voyages shown, and two charts' sheets laid, one dragged from its place
+    When the user clicks the skull
+    Then every card is put away and no person or sight is chosen
+    And no voyage is drawn, `voyages=` leaves the hash, and a voyage playing stops and its band goes
+    And no chart's sheet is laid, `overlay=` and `sheet=` leave the hash, and a chart shown again lies at its own place
+    And the faint skull flashes over the map once, as it does when cards go
+  Scenario: the view and the settings stay
+    Given the map at some place, zoom and bearing (the world turned to a chart), in a projection other than the default, with the rose and the styles as chosen
+    When the user clicks the skull
+    Then `map=`, `projection=` and `bearing=` are as they were, and the map does not move or turn
+    And the rose's settings, every style, every figure, the line weight, the pen's pace and the charts' opacity and mode are as they were
+  Scenario: in a point of interest's view, the cards go and the map stays
+    Given a point of interest's tile opened and its cards dealt, the map flown to frame it
+    When the user clicks the skull
+    Then the cards go and the tile shuts, and the map keeps that place and zoom: nothing flies back
+  Scenario: no Clear of its own in the Voyages drawer
+    Given the Voyages drawer open
+    When the user looks at its tools
+    Then there is no Clear chip; the skull, in reach over the drawer, is how the voyages are cleared
+
 Feature: People and voyages, each a vertical timeline
   Source: the user on the timeline [#304](https://github.com/mark-brannan/portolani/pull/304) merged, 2026-11-04: "The entire drawer is way too WIDE! It should not be wider than the drawer for charts or settings/config (480px). We should consider whether we need to reorient it to be a vertical timeline instead of horizontal. Somehow we need to fit things more nicely."; "I do not like AT ALL how we treat people groups. The people group migrations MUST be in the people drawer with people. Nevermind that all the European examples are individuals... people are people. Lapita gets a row in people (not merely voyages)."; "When you click on people in the people drawer it should expand their notes and their voyages should appear directly below that. NOT below all the other people, and not as a naive copy/paste from the voyages drawer of all voyages. If I select Ibn Battuta, then I should get a tile with his notes... then each of the voyages below that (with the notes for that voyage)." This overtakes the one horizontal timeline of two lanes, its Earlier tab and its era bands (the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30), which #304 built and the user turned down on sight.
   Scenario: two drawers, no wider than the charts

@@ -28,3 +28,16 @@ test('the skull sits over the drawers, and the broom is gone', () => {
   assert.doesNotMatch(html + js, /broom/i, 'the broom is retired');
   assert.match(html, /<div id="wipe"/, 'the wipe is there');
 });
+
+// The skull is the one clear (docs/spec/design.md, 'The skull is the one clear'): it lifts the voyages and the charts as
+// well as the table, leaves the view alone, and the Voyages drawer has no Clear of its own.
+test('the skull is the one clear, and the voyages have no Clear of their own', () => {
+  const js = readFileSync(path.join(pub, 'page.js'), 'utf8');
+  const body = js.match(/\nfunction clearMap\(\) \{([\s\S]*?)\n\}/)?.[1] ?? '';
+  assert.match(js, /\$\('sweep'\)\.addEventListener\('click', \(\) => \{\s*clearMap\(\);/, 'the skull runs clearMap');
+  assert.match(body, /clearTable\(\)/, 'it clears the table');
+  assert.match(body, /voyages: \[\]/, 'it takes every voyage off');
+  assert.match(body, /overlays: \[\], sheets: \{\}/, 'it lifts every sheet, back to its own place');
+  assert.doesNotMatch(body, /\bview\b|turnWorld|goTo|projection/, 'it leaves the view and the projection alone');
+  assert.doesNotMatch(js, /groupTools\('Voyages'/, 'the Voyages drawer has no Clear');
+});

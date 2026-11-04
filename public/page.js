@@ -1720,8 +1720,8 @@ const places = []; // every anchorage and point of interest: { name, view }
 // flight, no pen, no other voyage touched. A voyage hidden keeps its place in the list, so its colour, and every other
 // voyage's, stays put. A voyage shown takes the first colour no shown voyage has, the chart's red first (settleInks).
 // The play button sails the voyage again on its own calendar (playVoyage, below), with a band at the map's foot.
-// At the drawer's head, the line weight for them all, how long the pen takes, and Clear. The choice rides in the link
-// (`voyages=`, `voyagewidth=`, `voyagedraw=`) like any style.
+// At the drawer's head, the line weight for them all and how long the pen takes; the skull clears them (clearMap). The
+// choice rides in the link (`voyages=`, `voyagewidth=`, `voyagedraw=`) like any style.
 let band = null; // the voyage the play button plays, { id, cal, ms, state: wait | run | paused | done, since, t0, at, title } (playVoyage)
 const PLAY_GLYPH = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>';
 const PAUSE_GLYPH = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="5.5" width="4" height="13" rx="1"/><rect x="13.5" y="5.5" width="4" height="13" rx="1"/></svg>';
@@ -1745,11 +1745,6 @@ function voyageItem(id, v, sources, { name = true, bar = '' } = {}) {
     (name ? `<input type="color" data-ink="${escapeHTML(id)}" aria-label="Colour of ${full}" title="Colour of ${full}" hidden>` : '') + bar + '</div>' +
     (summary || more ? `<p class="vsum">${name ? `<b>${full}</b>. ` : ''}${summary}${more}</p>` : '') + '</li>';
 }
-const voyagesTools = groupTools('Voyages', {
-  all: () => style.voyages, dflt: [], get: () => style.voyages,
-  set: () => { closeBand(); style = { ...style, voyages: [] }; showVoyage(); writeHash(); render(); },
-});
-$('voyagesPanel').querySelector('.vtools').append(...voyagesTools.children);
 // the ink of every voyage in the list, hidden ones too, so a colour stays with its voyage
 // (a voyage with no colour picked takes one from the high-contrast palette while any of it crosses a sheet, or if a leg is dashed or dotted)
 // the sheets laid as the style has them now (not as last drawn), each with the placement it lies at; none unless whole sheets
@@ -2306,13 +2301,23 @@ function setOnTable(i, on) {
   repaint('a picture put away');
   preparePictures().then((fresh) => { if (fresh) repaint('a picture dealt'); }, () => {});
 }
-// The skull in the right margin, always there, a memento mori under it: a click (or Enter, or Space) clears the table
-// back to how the page opens (clearTable) and moves the line on to the next (MEMENTO, the first at random)
+// The skull in the right margin, always there, a memento mori under it, is the one clear for the whole map
+// (docs/spec/design.md, "The skull is the one clear"): a click (or Enter, or Space) clears the table (clearTable), lifts
+// every chart's sheet back to its own place and takes every voyage off, and moves the line on to the next (MEMENTO, the
+// first at random). It leaves the settings (the rose, the projection, every style) and the view (place, zoom, bearing)
+// as they are: a lifted sheet does not turn the world back to north here, as lifting one by its eye does.
 let memento = Math.floor(Math.random() * MEMENTO.length);
 const showMemento = () => { $('mementoText').textContent = MEMENTO[memento]; };
 showMemento();
+function clearMap() {
+  const hadPerson = clearTable(), voyages = style.voyages.length > 0, charts = style.overlays.length > 0 || Object.keys(style.sheets).length > 0;
+  if (voyages) { closeBand(); style = { ...style, voyages: [] }; }
+  if (charts) { turnedTo.clear(); style = { ...style, overlays: [], sheets: {} }; showOverlay(); }
+  if (voyages || charts) { showVoyage(); writeHash(); wipeSkull(); }
+  if (hadPerson || voyages || charts) render(); // a person's voyages back in their own inks; the lines and sheets gone
+}
 $('sweep').addEventListener('click', () => {
-  if (clearTable()) render(); // a person's voyages back in their own inks
+  clearMap();
   memento = mementoNext(memento); showMemento();
 });
 // The open drawer stops above the skull and its line (--memento-h, index.html), however many lines the phrase takes and
