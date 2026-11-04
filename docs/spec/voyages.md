@@ -7,7 +7,7 @@ Feature: Voyages drawer  (dividers button `#voyages` opens the Voyages drawer `#
     Then `#voyageList` holds one row per id in `data/voyages/index.json`, top to bottom in chronological order (the file's order breaks ties), with an era heading `li.era` before the first row of each Sights era ("The ancient world 1500 BC – AD 500", "The medieval Indian Ocean and Asia 500 – 1450", "The age of discovery 1450 – 1800")
     And each row reads, left to right: the name button `[data-voyage]` with its line sample, an eye `[data-eye]`, a play button `[data-play]`, and its colour swatch `[data-ink]` once it is chosen; a shown voyage's summary and Read more sit under its row
     And the name button reads the voyage's `short` name and years, and its tooltip is the full `title` (the id if its file will not load)
-    And the drawer's tools head the list: the line-weight chips `#voyageWidth`, Clear, and the Drawn-in slider `#voyageDraw` with its sample line
+    And the drawer's tools head the list: the line-weight chips `#voyageWidth` and the Drawn-in slider `#voyageDraw` with its sample line
     And nothing is shown: every eye reads `aria-pressed=false` and `voyages=` is absent from the hash
   Scenario: no wider than the charts
     Given the Voyages drawer open on a wide screen
@@ -52,10 +52,10 @@ Feature: Voyages drawer  (dividers button `#voyages` opens the Voyages drawer `#
     When the user clicks a weight chip in `#voyageWidth` (Fine 1.4, Standard 2.2, Bold 3.2, Heavy 4.5, the default)
     Then every voyage's line, and every line sample in the list, takes that width
     And the hash holds `voyagewidth=3.2` for Bold, and omits it for Heavy, the default
-  Scenario: Clear
-    Given two voyages chosen
-    When the user presses Clear in the drawer's tools
-    Then `voyages=` leaves the hash and no voyage is drawn; Clear is disabled while none is chosen
+  Scenario: the skull clears them
+    Given two voyages chosen, the Voyages drawer open
+    When the user clicks the skull, in reach over the drawer
+    Then `voyages=` leaves the hash and no voyage is drawn, and the drawer stays open; the drawer has no Clear of its own (docs/spec/design.md, "The skull is the one clear")
   Scenario: a link restores the choice
     Given the link `#voyages=columbus:1f4e8c,drake`
     When the page loads and the drawer is opened

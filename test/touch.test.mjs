@@ -458,7 +458,7 @@ test('charts: the eye shows or hides one sheet and leaves the others and the map
   }
 });
 
-test('voyages: several drawn at once, each in its own ink, carried by the link; the eye shows or hides one, the name shows it alone and draws it on every time; an older single voyage= link opens; Clear empties the list', { skip, timeout: 240000 }, async () => {
+test('voyages: several drawn at once, each in its own ink, carried by the link; the eye shows or hides one, the name shows it alone and draws it on every time; an older single voyage= link opens; the skull empties the list, the drawer open and no Clear of its own', { skip, timeout: 240000 }, async () => {
   const server = createServer(async (req, res) => {
     let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
     if (p.endsWith('/')) p = path.join(p, 'index.html');
@@ -531,10 +531,14 @@ test('voyages: several drawn at once, each in its own ink, carried by the link; 
     await page.click('#voyageWidth [data-value="2.2"]');
     assert.match(await hash(), /voyagewidth=2.2/);
     if (!(await page.$eval('#voyagesPanel', (d) => d.classList.contains('open')))) await page.click('#voyages');
-    await page.click('#voyagesPanel .tool');
+    assert.equal(await page.locator('#voyagesPanel .tool').count(), 0, 'the Voyages drawer has a Clear of its own: the skull is the one clear');
+    const mapOf = (h) => new URLSearchParams(h.slice(1)).get('map'), was = mapOf(await hash());
+    await page.click('#sweep');
     assert.deepEqual(await on(), []);
+    assert.equal(mapOf(await hash()), was, 'the skull moved the map');
     assert.doesNotMatch(await hash(), /voyages=/);
-    assert.equal(await page.$eval('#voyagesPanel .tool', (b) => b.disabled), true, 'Clear still offered with nothing to clear');
+    assert.match(await hash(), /voyagewidth=2.2/, 'the skull cleared a setting');
+    assert.equal(await page.$eval('#voyagesPanel', (d) => d.classList.contains('open')), true, 'the skull shut the drawer');
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();
@@ -724,9 +728,14 @@ test('people: a picture on the map is looked at, put away and dealt back by choo
     assert.ok(zoomIn.length, 'no Look button on the first picture');
     const lookAt = { x: zoomIn.reduce((s, p) => s + p[0], 0) / zoomIn.length, y: zoomIn.reduce((s, p) => s + p[1], 0) / zoomIn.length };
     // pressed once the pointer over it finds Look (its magnifier): a press sent at once, while a picture laid back is still settling, was lost now and then under load
+    // and pressed again, up to three times, until the picture is looked at: on CI a press right after a drawer shuts was
+    // lost about one run in three (the 'did not look at it again' failure), as a hand would press again
     const look = async () => {
-      await page.waitForFunction(({ x, y }) => { const m = document.getElementById('map'); m.dispatchEvent(new PointerEvent('pointermove', { clientX: x, clientY: y, isPrimary: true, bubbles: true })); return m.style.cursor === 'zoom-in'; }, lookAt, { timeout: 10000, polling: 100 });
-      await page.mouse.click(lookAt.x, lookAt.y);
+      for (let tries = 0; tries < 3; tries++) {
+        await page.waitForFunction(({ x, y }) => { const m = document.getElementById('map'); m.dispatchEvent(new PointerEvent('pointermove', { clientX: x, clientY: y, isPrimary: true, bubbles: true })); return m.style.cursor === 'zoom-in'; }, lookAt, { timeout: 10000, polling: 100 });
+        await page.mouse.click(lookAt.x, lookAt.y);
+        if (await page.waitForFunction(() => document.querySelector('#pictureKeys [data-look="0"]')?.getAttribute('aria-pressed') === 'true', null, { timeout: 2000, polling: 100 }).then(() => true, () => false)) return;
+      }
     };
     await look();
     assert.equal(await looked(), 'true');
