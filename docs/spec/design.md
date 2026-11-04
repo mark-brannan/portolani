@@ -81,13 +81,14 @@ Feature: A chart's scan lies on the map as one sheet
     And a chart that draws a parallel (de la Cosa's equator and Tropic of Cancer, "the first depiction of the equator and the tropic of cancer on a nautical chart") is anchored by those lines first: its turn from their tilt, its scale and latitude from their spacing, the coasts only setting the longitude
     And the placements that fit one coast best (the European coast, the New World coast, a third where it is as good) are offered as snaps on the sheet, as many as fit well, not only two
   Scenario: the user moves the sheet
-    Source: the resize handle's glyph, the user on the icons, in the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "charts resize ⤢ or ⛶"
+    Source: the user in the session of 2026-11-04: "The resize and manually rotate button on the corners of the charts inside the main map should be removed and instead, dragging any map corner should rotate the map in place through it's allowed orientations (it is not a free form rotate) with the globe/main-map also rotating with it." This overtakes the turn and resize handles of the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292).
     Given the sheet shown
     When the user drags inside it
     Then it slides up, down, left and right over the map, and the map does not pan
-    When the user drags its corner handle
-    Then it turns about its centre (and, while the user is trying it, resizes by its other handle, which shows ⤢, ⛶ the alternative; resizing may go)
-    And the link keeps the placement
+    When the user drags any of its four corners
+    Then the sheet and the world turn together about the middle of the window, following the pointer, and on release settle at the nearest of the chart's quarter turns ("Every chart turns, a quarter at a time", below); never a free angle
+    And no handle is drawn on the sheet: no turn ring, no resize square; the sheet is not resized by hand
+    And the link keeps the placement and the bearing
   Scenario: the map's projection changes under the sheet
     Given the sheet shown and the view at some zoom and centre
     When the user picks another projection
@@ -131,7 +132,15 @@ Feature: A chart's row in the Charts drawer
     Then the same again: the placement reset, the frame flown to, the others hidden
     When the user clicks the show/hide icon
     Then the sheet shows at once, no fade, or hides if it was shown; nothing else in the row hides it
-    And the eye is on or off for that chart alone: no other chart is shown or hidden, no placement is reset, no flight; the map's zoom and position stay where they are
+    And the eye is on or off for that chart alone: no other chart is shown or hidden, no placement is reset, no flight; the map's zoom, position and bearing stay where they are
+    And the eye never plays the points of interest's rings or lights their marks; only the icon, the name and the row's own chips do
+  Scenario: a new chart's icon or name clears the old one, then flies
+    Source: the user in the session of 2026-11-04: "The charts button for show/hide should never change the zoom or the view. It only toggles chart overlays on/off. It does not trigger POI highlighting. This contrasts with clicking the chip for each chart, which focuses a particular position and zoom and overlays only that single chart with highlights for POIs. Immediately upon clicking a map chip the notes, buttons or other controls for that map should appear below it in the drawer, not waiting until after the overlay and animations are fully drawn."; "When clicking a new map chip, first the old one is cleared (As with the skull) effect, prior to 'flying' to the new position."
+    Given one chart's sheet shown
+    When the user clicks another chart's icon or name
+    Then the shown sheet is cleared first, as the skull clears the table, its faint skull flashing over the map, and only then does the map fly to the new chart's frame
+    And the new chart's row shows its Chart position chips, its turn chips and its Points of interest chip at once, on the click, not once the flight lands or the sheet has faded in
+    And once it lands the new sheet alone lies on the map and its points of interest announce themselves
   Scenario: the city clears the way to itself
     Given a chart's sheet shown
     When the user clicks the chart's city
@@ -311,6 +320,28 @@ Feature: A chart with no up turns for the reader
     When the user turns to a point of interest whose figure is drawn facing another edge of the page
     Then the chart spins round, the world with it, until that figure reads upright: spun for that point of interest, or by the user at the controls; which of the two, or both, is open
     And no one fixed orientation is the chart's own, since any one leaves many of its drawings upside down
+
+Feature: Every chart turns, a quarter at a time
+  Source: the user in the session of 2026-11-04: "The chart for de la Cosa has a 'west up' button. I want to keep this, but the behavior is inconsistent right now. All maps should have a function to view different sides 'up', alternatively it can be a 'rotate' button that does 90 degrees....in fact I want to see that at minimum with a "walk around" curved button in either direction that effectively rotates everything around the current position."; "We have dead buttons for angle and size in the drawer for several maps."
+  Scenario: the walk-around chips
+    Given any chart's sheet shown, its row in the Charts drawer
+    When the user looks at the row
+    Then beside its Chart position chips are two curved-arrow chips, one each way round, on every chart that has a scan
+    When the user clicks one
+    Then the world and every sheet on it turn about the middle of the window, that way round, to the chart's next quarter turn (its own up and the three quarters from it): the place in the middle stays in the middle, the zoom stays, the sheet keeps its place on the world
+    And from one of those quarter turns, four clicks the same way come back to where they began
+  Scenario: the chart's own up
+    Given a chart drawn to be read another way up (de la Cosa's west up)
+    When the user looks at its row
+    Then its up chip ("West up") is there beside the walk-around chips, and lit exactly while the world stands at that chart's up, however the user got there: the up chip, the walk-around chips, a corner drag or the compass
+    When the user clicks the up chip unlit
+    Then the world turns to the chart's up, framing the sheet as it will stand
+    When the user clicks it lit
+    Then the world turns back to north up, where the map is
+  Scenario: no dead controls in the row
+    Given any chart's row
+    When the user looks at its chips
+    Then every chip in it does something when clicked; there are no Angle or Size chips, since the sheet is no longer turned freely or resized by hand
 
 Feature: The voyage record: people, deaths and what a skull means
   Source: the user on [#275](https://github.com/mark-brannan/portolani/pull/275), 2026-10-29: "the death date and place is either known or unknown. No statement about living = true is necessary (or correct). In fact, nothing should be required at all for the person record besides, perhaps, a name or ID (even a name might be omitted if we wanted to have certain anonymous persons in the project where other details were known but NOT the name). Use a permissive approach and make no assumptions about what is required, or what is present unless strictly required."; "People with a known death location get a skull. Full stop."; "Voyages should have a name or title that we work from, and it will *usually* include the name of the leader (or a singular leader) but there will be a "has" relationship for people and voyages...we could separately have a "leader" relationship but it will get complicated for voyages like Magellan's (maybe Drakes?) where he died before the end and someone else took over leading the remainder."; and in the session that rebuilt the record, 2026-10-29: "we might include a few modern recreation voyages of living people who attempted to recreate polynesian voyages using traditional methods"; "We have some error bars on exact location of death but have chosen to make reasonable judgements about the location. For example, if we know the sea leg where a death took place, we just mark it in the middle of the voyage. ... We have some death locations that might be speculative as well....or deaths that we chose to place in the middle of the ocean in a 'close enough' location on a wide patch of empty sea". The files are `data/voyages/`: a voyage in `<id>.json`, the people in `people.json`, the sources in `sources.json`; `scripts/voyages.mjs` is the schema and `node scripts/check-voyages.mjs` the check.
