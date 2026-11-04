@@ -118,7 +118,7 @@ way out. The transfer is fitted to the Canaries, Ireland and the Portuguese coas
   960 px wide.
 - **Rose.** **20.2°W 43.5°N**, open Atlantic north-west of Galicia: the hub of the drawn rose, scan px (2050, 8006), carried through the warped overlay's sheet 5 fit (ornaments.md, "Landmarks, sheet 5"; 127 km rms), re-read 2026-11-03 ([the three marks](../catalan-rose-pin/three-marks.jpg)). It was 20.7°W 42.1°N through the older five-landmark transfer, about 570 px south of the hub.
 - **Network centre.** **5.4°W 42.3°N**, over northern Iberia; radius 16°.
-- **Error.** ±2°.
+- **Error.** Rose ±1°; network centre ±2°.
 
 ## Olaus Magnus, Carta Marina, 1539
 

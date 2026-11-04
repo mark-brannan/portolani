@@ -205,7 +205,7 @@ wherever the cells happened to land.
 
 Current thinking: every band counts its cell edges in whole multiples of the cell height, and of
 the cell width east and west, out from one point, the Catalan Atlas rose at 20.2°W 43.5°N, read off
-the scan in [centres.md](centres.md) to ±2°. It is the first drawn compass rose known on any chart,
+the scan in [centres.md](centres.md) to ±1°. It is the first drawn compass rose known on any chart,
 and it is the point the world band's big rose is pinned to. Because each band's height divides the
 one above, sixteen sheets still nest in one, and the rose sits on a corner every band's grid shares:
 zoom in on it from the overview band to the harbour band and it stays on a sheet corner all the way

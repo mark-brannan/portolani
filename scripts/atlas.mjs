@@ -125,7 +125,7 @@ const PISANE_SEAM = 18;
 // Ocean. Sheets 6 to 8 draw none at sea. Sheet 10's four, which its fit lays on the steppe, and sheet 12's two fish east of
 // the extent are not listed: ornaments.md keeps them, so leaving them out rests on this list, not on the land or the edge.
 const CATALAN = figures({
-  rose: [['rose-catalan', -20.2, 43.5]],
+  rose: [['rose-catalan', ROSE.lon, ROSE.lat]],
   monster: [['catalan-siren', 113.1, 15.8]],
   ship: [[null, -15.5, 26.1], ['catalan-ship', 50.6, 41.1], ['catalan-junk', 81.2, 13.2]],
 });
