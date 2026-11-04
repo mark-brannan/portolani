@@ -18,7 +18,7 @@ A temporary developer view, there while the roses and rhumb lines are being work
 
 The overlay is drawn over everything, in the same pass as the rhumb lines, so it moves with a drag as they do; it places nothing and clears nothing.
 
-[View 4 of #199](https://mark-brannan.github.io/portolani/#map=6.14/40.474/7.400&debug=sheets,rings) (`#map=6.14/40.474/7.400&debug=sheets,rings`): the Carte Pisane's western sheet holds the view, and the overview cell north of it still reaches down to 42.1°N, the rose's row.
+[View 4 of #199](https://mark-brannan.github.io/portolani/#map=6.14/40.474/6.000&debug=sheets,rings) (`#map=6.14/40.474/6.000&debug=sheets,rings`): the Carte Pisane's western sheet holds the view, and the overview cell north of it still reaches down to 43.5°N, the rose's row.
 
 ![View 4, sheets and rings](under-the-hood/view4-sheets-rings.jpg)
 

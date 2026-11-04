@@ -21,7 +21,7 @@ const env = {
   loadImage: (p) => loadImage(resolve(p)),
   loadFont: async (family) => { GlobalFonts.registerFromPath(join(ROOT, 'test', 'fixtures', 'IMFeENrm28P.ttf'), family); },
 };
-const VIEW = { lon: 7.4, lat: 40.474, zoom: 6.14 }; // view 4 of #199: a curated sheet and grid cells
+const VIEW = { lon: 6, lat: 40.474, zoom: 6.14 }; // near view 4 of #199, a little west so grid cells still border the curated sheet now the rose sits at 43.5N
 const placed = (scene) => JSON.stringify([scene.roseDraws, scene.monsters, scene.ships, scene.towns].map((l) => l.map((o) => [o.sprite?.id, Math.round(o.x), Math.round(o.y)])));
 const reds = (canvas) => { const d = canvas.getContext('2d').getImageData(0, 0, W, H).data; let n = 0; for (let i = 0; i < d.length; i += 4) if (d[i] > 190 && d[i + 1] < 70 && d[i + 2] < 70) n++; return n; };
 const draw = ({ scene, data, bg }) => { const c = createCanvas(W, H); drawScene(c.getContext('2d'), scene, data, bg, { scale: 1, x: 0, y: 0 }); return c; };
