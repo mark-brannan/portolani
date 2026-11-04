@@ -3518,7 +3518,7 @@ export async function createScene(environment, opts = {}) {
   if (STYLE.rivers !== 'off' || STYLE.lakes !== 'off') water = await loadWater(view, STYLE.lakes !== 'off');
   ground = STYLE.reefs !== 'off' || STYLE.playas !== 'off' ? await loadGround(STYLE.reefs !== 'off', STYLE.playas !== 'off') : null;
   const peaksWanted = peaksOn !== false && peaksOn !== 'off' && STYLE.mountainSprites;
-  if (peaksWanted && !peaksRead.has(env)) peaksRead.set(env, env.readJSON('geo/peaks-10m.json').catch(missing).then(peaksOf));
+  if (peaksWanted && !peaksRead.has(env)) peaksRead.set(env, env.readJSON('geo/peaks-10m.json').catch(missing).then(peaksOf).catch((e) => { peaksRead.delete(env); throw e; })); // a failed read is not kept
   peaks = peaksWanted ? await peaksRead.get(env) : null;
   const world = await loadDetail(coarse, view);
   const person = await loadPerson(opts.person);
