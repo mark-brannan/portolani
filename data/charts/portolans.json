@@ -436,6 +436,58 @@
       "why": "The oldest signed and dated portolan chart",
       "status": "link",
       "reason": "no scan larger than 588 x 490 is open"
+    },
+    {
+      "id": "oliva-mediterranean",
+      "title": "Portolan chart of the Mediterranean",
+      "maker": "a member of the Oliva family",
+      "year": "1621-1665",
+      "made": {
+        "city": "Messina",
+        "lon": 15.55,
+        "lat": 38.19
+      },
+      "holder": "Barry Lawrence Ruderman Antique Maps (Raremaps.com), scan on Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:17th-century_Portolan_chart_of_the_Mediterranean_Sea_by_a_member_of_the_Oliva_family.jpg",
+      "licence": "PD-Art; PD-old-100-expired",
+      "bbox": [
+        -10,
+        30,
+        38,
+        46
+      ],
+      "why": "The Olivas, a family of chartmakers at Messina, Naples, Livorno and Marseille, drew Mediterranean charts for a century",
+      "status": "ship",
+      "original": "https://upload.wikimedia.org/wikipedia/commons/e/ee/17th-century_Portolan_chart_of_the_Mediterranean_Sea_by_a_member_of_the_Oliva_family.jpg",
+      "width": 17316,
+      "height": 11126,
+      "display": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/17th-century_Portolan_chart_of_the_Mediterranean_Sea_by_a_member_of_the_Oliva_family.jpg/3840px-17th-century_Portolan_chart_of_the_Mediterranean_Sea_by_a_member_of_the_Oliva_family.jpg"
+    },
+    {
+      "id": "lopes-atlantic",
+      "title": "Atlantic chart of Sebastião Lopes",
+      "maker": "Sebastião Lopes",
+      "year": 1565,
+      "made": {
+        "city": "Lisbon",
+        "lon": -9.14,
+        "lat": 38.72
+      },
+      "holder": "Newberry Library, VAULT oversize Ayer MS map 26",
+      "page": "https://commons.wikimedia.org/wiki/File:Sebasti%C3%A3o_Lopes_1575.jpg",
+      "licence": "PD-old-100-expired",
+      "bbox": [
+        -30,
+        10,
+        5,
+        60
+      ],
+      "why": "A Portuguese chart of the Atlantic coasts from the British Isles to the Gambia, with the islands",
+      "status": "ship",
+      "original": "https://upload.wikimedia.org/wikipedia/commons/1/12/Sebasti%C3%A3o_Lopes_1575.jpg",
+      "width": 2232,
+      "height": 3100,
+      "display": "https://upload.wikimedia.org/wikipedia/commons/1/12/Sebasti%C3%A3o_Lopes_1575.jpg"
     }
   ]
 }

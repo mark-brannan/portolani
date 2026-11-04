@@ -485,6 +485,24 @@
       "note": "(10,302 × 7,611; chart 4, the North Atlantic and western Europe, with arms and a big rose; IIIF, re-pin on a server re-encode)"
     },
     {
+      "id": "oliva-mediterranean",
+      "file": "oliva-mediterranean.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/e/ee/17th-century_Portolan_chart_of_the_Mediterranean_Sea_by_a_member_of_the_Oliva_family.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:17th-century_Portolan_chart_of_the_Mediterranean_Sea_by_a_member_of_the_Oliva_family.jpg",
+      "sha256": "d8a7dea8ad51caa1d5105297ea776a21465a70f150292ba7ebc9b67cb5cbe086",
+      "rights": "PD-Art | PD-old-100-expired; Oliva family, between 1621 and 1665; scan credited to Barry Lawrence Ruderman Antique Maps (Raremaps.com) on Commons",
+      "note": "(17,316 × 11,126; the whole Mediterranean, Iberia to the Levant and the Nile, the east edge torn, scanned on black)"
+    },
+    {
+      "id": "lopes-1565",
+      "file": "lopes-1575.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/1/12/Sebasti%C3%A3o_Lopes_1575.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Sebasti%C3%A3o_Lopes_1575.jpg",
+      "sha256": "b270da450e50d487295590177c4b5a09acc1b7f2ccc9b8a696aa48f48a15a0dd",
+      "rights": "PD-old-100-expired; Sebastião Lopes, Atlantic chart, about 1565, Newberry Library, VAULT oversize Ayer MS map 26",
+      "note": "(2,232 × 3,100; a photograph, probably of a facsimile; British Isles to the Gambia, the Azores, Madeira, the Canaries and Cape Verde)"
+    },
+    {
       "id": "martines-1587-01",
       "file": "martines-1587-01-world-hemispheres.jpg",
       "url": "https://tile.loc.gov/image-services/iiif/service:gdc:gdcwdl:wd:l_:10:09:1:wdl_10091:VITR_000004_020_MAPA_001/full/pct:100/0/default.jpg",

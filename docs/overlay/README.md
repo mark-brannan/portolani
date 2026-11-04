@@ -255,3 +255,18 @@ the build's `CHARTS`.
 
 Nothing marks a note on the scan. Over a noted figure the cursor turns to a pointer, and a click opens its
 tile. The notes ride on the sheet where it lies, dragged, turned or resized. Juan de la Cosa has notes too.
+
+## Two more by landmarks: the Oliva Mediterranean, Lopes
+
+Each is laid level by landmarks read off the scan by eye, as above (`levelFit`; the numbers below are each landmark's miss, in km, against today's place, after the least-squares scale and centre).
+
+- **Oliva family, Mediterranean, 1621 to 1665** (Commons, scan credited to Barry Lawrence Ruderman Antique Maps): the whole sea, Iberia to the Levant and the Nile, the east edge torn, its scan on black (`dark`). Commons dates it "between 1621 and 1665", so the row says 1621–1665. Seven landmarks (Lisbon, Finisterre, Venice, Sicily, Crete, Cyprus, the Nile delta), 214 km RMS (misses of 90 to 329 km): a hand-drawn Mediterranean that is stretched east to west, so a sheet this size cannot lie true everywhere. Built at a quarter, 4329 x 2782 px.
+- **Sebastião Lopes, about 1565** (Newberry Library, Ayer MS map 26): the British Isles, France, Iberia, north-west Africa to the Gambia, the Azores, Madeira, the Canaries and Cape Verde. The scan is a photograph, probably of a facsimile, at its only size, 2232 x 3100 px (scale 1). Seven landmarks (Finisterre, Lisbon, Cape St Vincent, Gibraltar, Lanzarote, Gran Canaria, Tenerife), 77 km RMS (19 to 110 km). The photograph is not visibly skewed: its drawn parallel and border lie level in the scan, and the Level chip has no turn to apply.
+
+`npm run render -- --view 16.73,36.74,3.7 --overlay oliva-mediterranean --out docs/overlay/oliva-mediterranean-sheet.jpg` and `npm run render -- --view -13.6,36.76,3.3 --overlay lopes-atlantic --out docs/overlay/lopes-atlantic-sheet.jpg`.
+
+![The Oliva Mediterranean's sheet over the map](oliva-mediterranean-sheet.jpg)
+
+![Lopes's Atlantic sheet over the map](lopes-atlantic-sheet.jpg)
+
+`npm run overlays -- --only oliva-mediterranean,lopes-atlantic` rebuilds just those two and keeps the other rows of overlays.json as they are.

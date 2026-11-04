@@ -2,7 +2,7 @@
 // with the sheet's own placement, its snaps and the warped pieces' fits (scripts/overlays.mjs, docs/overlay/README.md). The scan is downloaded into downloads/ when missing and
 // checked against the sha256 in scripts/sources.json, as build-packs.mjs does.
 //
-// Usage: npm run overlays
+// Usage: npm run overlays [-- --only id,id]   (--only rebuilds just those charts and keeps the others' rows of overlays.json as they are)
 //
 // The Carta Marina's two fits are refitted from the figures table in docs/atlas/ornaments.md ("Carta
 // Marina, 1539"): every row gives a figure's scan px and the lon, lat its side's fit put it at, so a
@@ -141,6 +141,14 @@ const CHARTS = [
   { id: 'catalan-atlas-1959-copy', title: 'Catalan Atlas, Mediterranean, a copy of 1959', source: 'catalan-atlas-1959-copy', file: 'catalan-atlas-1959-copy.jpg', scale: 4,
     landmarks: [[[3748, 5784], [-5.6, 35.97]], [[2961, 4997], [-9.14, 38.72]], [[2915, 4350], [-9.27, 42.88]], [[4072, 2360], [-0.12, 51.51]], [[6136, 3933], [9.05, 42.15]], [[6154, 4535], [9.0, 40.05]], [[7311, 4951], [14.1, 37.55]], [[7403, 3100], [12.33, 45.44]], [[9717, 5090], [24.9, 35.2]], [[11336, 4858], [33.2, 35.1]]], // scan px, real lon, lat
     snaps: [] },
+  // Oliva family, 1621-1665 (Commons dates it "between"): the whole Mediterranean, its east edge torn, scanned on black. Lisbon, Finisterre, Venice, Sicily, Crete, Cyprus, the Nile delta.
+  { id: 'oliva-mediterranean', title: 'Portolan chart of the Mediterranean, Oliva family, 1621-1665', source: 'oliva-mediterranean', file: 'oliva-mediterranean.jpg', scale: 4, dark: true,
+    landmarks: [[[800, 5580], [-9.14, 38.72]], [[300, 3350], [-9.27, 42.88]], [[7050, 2620], [12.33, 45.44]], [[7250, 5600], [14.0, 37.55]], [[11200, 5700], [24.9, 35.2]], [[13850, 5080], [33.0, 35.0]], [[13750, 7000], [31.0, 31.5]]], // scan px, real lon, lat
+    snaps: [] },
+  // Sebastião Lopes, about 1565: a photograph of the chart (perhaps of a facsimile), full size. Finisterre, Lisbon, Cape St Vincent, Gibraltar, Lanzarote, Gran Canaria, Tenerife.
+  { id: 'lopes-atlantic', title: 'Atlantic chart of Sebastião Lopes, about 1565', source: 'lopes-1565', file: 'lopes-atlantic.jpg', scale: 1,
+    landmarks: [[[1280, 1170], [-9.27, 42.88]], [[1290, 1400], [-9.14, 38.72]], [[1335, 1535], [-9.0, 37.03]], [[1570, 1560], [-5.35, 36.13]], [[1170, 2040], [-13.6, 29.0]], [[1040, 2080], [-15.6, 28.0]], [[975, 2065], [-16.55, 28.3]]], // scan px, real lon, lat
+    snaps: [] },
 ];
 
 // The sheet's own placement. With the chart's drawn `parallels` ([{ lat, from, to }], top first, in scan px): the turn
@@ -257,8 +265,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const md = readFileSync(join(ROOT, 'docs', 'atlas', 'ornaments.md'), 'utf8');
   const land = landIndex(JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.resolve('coastlines/data/ne-land-10m'))), 'ne-land-10m.geojson'), 'utf8')));
   mkdirSync(OUT, { recursive: true });
-  const overlays = [];
+  const overlays = [], only = process.argv.includes('--only') ? process.argv[process.argv.indexOf('--only') + 1].split(',') : null;
+  const kept = only ? JSON.parse(readFileSync(join(OUT, 'overlays.json'), 'utf8')).overlays : [];
   for (const c of CHARTS) {
+    if (only && !only.includes(c.id)) { const old = kept.find((o) => o.id === c.id); if (old) overlays.push(old); continue; }
     if (c.pages) { overlays.push(await buildPages(c, sources, md, land)); continue; }
     const src = sources.find((s) => s.id === c.source);
     const img = await loadImage(await scanOf(src));
