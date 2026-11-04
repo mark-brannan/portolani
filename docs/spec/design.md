@@ -615,7 +615,7 @@ Feature: The skull in the lower right puts the map back
 
 Feature: The skull is the one clear  (`#sweep`, page.js `clearMap`)
   Source: the user, 2026-11-04: "The skull is the universal 'clear' button.  It should work on any drawer or feature where we need clear/reset functionality.  Charts are cleared/reset with the skull.  Voyages are cleared/reset with the skull.  People, of course.  There is an unneeded 'clear' button in voyages.  When in the context view for a POI, it clears cards but does not reset any view position or zoom."; "It does not clear the rose config settings, map projection settings, position, or view." This widens "The skull in the lower right puts the map back" from the table to every drawer's content, and retires the Voyages drawer's own Clear (docs/spec/voyages.md). A settings group's Clear and Defaults (the figures, the hills) are settings, not the map's content, and stay.
-  Tested by: test/drawers.test.mjs — 'the skull is the one clear, and the voyages have no Clear of their own' (offline, source only; the scenarios are not yet driven in a browser)
+  Tested by: test/touch.test.mjs — 'voyages: several drawn at once, ...' (in a browser: the skull empties the voyages, the drawer stays open, `map=` and the line weight stay); test/drawers.test.mjs — 'the skull is the one clear, and the voyages have no Clear of their own' (offline, source only: the charts' half and the view's are not yet driven in a browser)
   Scenario: one click clears every drawer's content
     Given a person chosen with their cards dealt, two voyages shown, and two charts' sheets laid, one dragged from its place
     When the user clicks the skull

@@ -30,7 +30,8 @@ test('the skull sits over the drawers, and the broom is gone', () => {
 });
 
 // The skull is the one clear (docs/spec/design.md, 'The skull is the one clear'): it lifts the voyages and the charts as
-// well as the table, leaves the view alone, and the Voyages drawer has no Clear of its own.
+// well as the table, leaves the view alone, and the Voyages drawer has no Clear of its own. Offline, source only; the
+// behaviour (the skull clicked, the list emptied, the map kept, the drawer open) is driven in test/touch.test.mjs.
 test('the skull is the one clear, and the voyages have no Clear of their own', () => {
   const js = readFileSync(path.join(pub, 'page.js'), 'utf8');
   const body = js.match(/\nfunction clearMap\(\) \{([\s\S]*?)\n\}/)?.[1] ?? '';
@@ -38,6 +39,6 @@ test('the skull is the one clear, and the voyages have no Clear of their own', (
   assert.match(body, /clearTable\(\)/, 'it clears the table');
   assert.match(body, /voyages: \[\]/, 'it takes every voyage off');
   assert.match(body, /overlays: \[\], sheets: \{\}/, 'it lifts every sheet, back to its own place');
-  assert.doesNotMatch(body, /\bview\b|turnWorld|goTo|projection/, 'it leaves the view and the projection alone');
+  assert.doesNotMatch(body, /turnWorld|goTo/, 'it neither turns nor flies the map');
   assert.doesNotMatch(js, /groupTools\('Voyages'/, 'the Voyages drawer has no Clear');
 });
