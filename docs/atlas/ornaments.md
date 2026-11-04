@@ -20,7 +20,7 @@ Vesconte's is known. Each has an empty set, so these sheets draw no roses, beast
 
 | | figure | lon, lat | sprite | note |
 |---|---|---|---|---|
-| R1 | the rose | -20.7, 42.1 | `rose-catalan` | from centres.md |
+| R1 | the rose | -20.2, 43.5 | `rose-catalan` | from centres.md, through the sheet 5 fit |
 | S1 | ship at the foot, off Cape Bojador | -15.5, 26.1 | stand-in | placed by the cape, not read in pixels; no crop yet, so it stands in a Catalan ship (the junk, S5) |
 
 The figures of sheets 6 to 12 are read below ([Figures, sheets 6 to 12](#figures-sheets-6-to-12)).
@@ -66,7 +66,7 @@ Left out of the fit: "Illa de Stillanda", Iceland, drawn east of Ireland at 5600
 8.5°W 56.7°N, 1059 km from where it lies; Hy-Brasil, the round island west of Ireland, and the other islands
 of legend; and the islands between Galicia and Madeira (insule de corvi marini, insula de brazi), which may be
 the Azores but are too far from them to read as any one. The rose at 2000, 7950 lands at 20.4°W 43.6°N by this
-fit, within centres.md's ±2° of R1.
+fit, within centres.md's ±1° of R1.
 
 The scan is cut into vertical strips and each strip drawn by its own fit, under the lattice and every ornament; how, with pictures: [docs/overlay/README.md](../overlay/README.md#warped-pieces).
 

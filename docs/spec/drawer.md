@@ -332,6 +332,40 @@ Feature: Lakes  (chips `#lakes`, hash `lakes`, default `marina`, values `off|agu
     Then the hash gains `lakes=aguiar` and Como draws as a diamond, while Maggiore, about 150 px long at this zoom, keeps its true shape (estimated from `LOZENGE_PX = 120`, water.mjs:14; not rendered)
     # lozenge vs true shape switches at 120 px, not a control
 
+Feature: Reefs  (chips `#reefs`, hash `reefs`, default `crosses`, values `off|crosses|dots`) [verified page.js:120, 203, 419; reefs.mjs] (#337)
+  Scenario: red dots
+    Given the chart at `#map=7.20/21.000/38.300`
+    When the user clicks "Red dots"
+    Then the hash gains `reefs=dots` and the Red Sea's reefs draw as rows of red dots instead of crosses
+  Scenario: off
+    Given the same view
+    When the user clicks "Off"
+    Then the hash gains `reefs=off` and no reefs are drawn
+
+Feature: Salt flats  (chips `#playas`, hash `playas`, default `salt`, values `off|salt|ruled`) [verified page.js:121, 204, 420; playas.mjs] (#337)
+  Scenario: ruled clay
+    Given the chart at `#map=6.50/-20.400/-67.600`
+    When the user clicks "Ruled clay"
+    Then the hash gains `playas=ruled` and Salar de Uyuni draws as a clay pan ruled with broken lines
+    # a site without geo/playas-10m.json draws no salt flats and the rest of the map as before
+
+Feature: Landmark peaks  (chips `#peaks`, hash `peaks`, default `catalan`, values `off|catalan`; peaks.mjs) (#352)
+  Scenario: the peaks seen from the water
+    Given the chart at `#map=6.80/47.800/-122.400`
+    When the page loads
+    Then Mount Rainier and Mount Baker each stand as a lone Catalan mountain, larger than the hills, and no name is lettered beside either
+  Scenario: a click on a peak
+    Given the same view
+    When the user clicks anywhere on Rainier's drawing
+    Then a tile opens beside it, titled "Mount Rainier", reading "4,392 m (14,409 ft)"
+  Scenario: off
+    Given the same view
+    When the user clicks "Off" in Landmark peaks
+    Then the hash gains `peaks=off` and the peaks are gone; the hills stay
+    # which peaks: Natural Earth's 10m named summits, each from its own min_zoom (in 256 px tiles, water.mjs `shown`); the mountain sprites must be selected (the Hills chip), as the peaks are drawn with them
+    # a peak whose sprite finds no ground (a town on the summit) stands smaller, then as a lone mountain in ink, with the same tile; it is never dropped for a town alone
+    # a site without geo/peaks-10m.json stands no peaks and draws the rest of the map as before
+
 Feature: Scale bar  (chips `#scale`, hash `scale`, default `genoese`, values `off|chequer|chevron|ribbon|beads|ruled|genoese`) [verified page.js:96, 286; scene.mjs:2077-2170]
   Scenario: style
     Given the chart at `#map=6.00/43.000/10.000`

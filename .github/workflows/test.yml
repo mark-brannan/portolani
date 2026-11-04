@@ -67,7 +67,10 @@ jobs:
       - id: pins
         run: echo "hash=$(grep -oE '[0-9a-f]{64}' scripts/build-preview.mjs | sha256sum | cut -c1-16)" >> "$GITHUB_OUTPUT"
       - uses: actions/cache@v6
-        with: { path: downloads, key: "downloads-${{ steps.pins.outputs.hash }}" }
+        # a moved or added pin restores the last downloads and fetches only what is missing or stale, so one
+        # host being down (the GSHHG zip's) does not fail a PR that never touched its pin. A file no pin
+        # names any more is kept and carried into each later cache; a renamed download leaves its old file
+        with: { path: downloads, key: "downloads-${{ steps.pins.outputs.hash }}", restore-keys: downloads- }
       - run: npm run build:preview
       # the page under touch emulation at phone widths (test/touch.test.mjs); needs the built _site/
       - run: npx playwright-core install chromium-headless-shell

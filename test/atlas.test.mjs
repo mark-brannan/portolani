@@ -83,12 +83,12 @@ test('no sheet crosses the date line', () => {
 
 test('a row that would reach a pole ends at the page edge', () => {
   const north = sheetsFor(bounds(6, -10, 60, 10, 90));
-  assert.ok(north.some((s) => s.extent.south === 80.5 && s.extent.north === PAGE_EDGE)); // 42.1 + 2 * 19.2 = 80.5; the row would reach 99.7
+  assert.ok(north.some((s) => s.extent.south === 81.9 && s.extent.north === PAGE_EDGE)); // 43.5 + 2 * 19.2 = 81.9; the row would reach 101.1
   const south = sheetsFor(bounds(6, -10, -90, 10, -60));
-  assert.ok(south.some((s) => s.extent.south === -PAGE_EDGE && s.extent.north === -73.1)); // 42.1 - 6 * 19.2 = -73.1; the row would reach -92.3
+  assert.ok(south.some((s) => s.extent.south === -PAGE_EDGE && s.extent.north === -71.7)); // 43.5 - 6 * 19.2 = -71.7; the row would reach -90.9
   for (const z of [4, 6, 8, 10, 12, 14]) for (const s of sheetsFor(bounds(z, 0, -90, 1, 90))) assert.ok(s.extent.north <= PAGE_EDGE && s.extent.south >= -PAGE_EDGE && s.extent.north > s.extent.south, `${z} ${s.name}`);
   // the 76.8 band: one whole row through the tropics, and one each side of it to the page edge
-  assert.deepEqual([...new Set(sheetsFor(bounds(4, -180, -90, 180, 90)).map((s) => `${s.extent.south}..${s.extent.north}`))], [`${-PAGE_EDGE}..-34.7`, '-34.7..42.1', `42.1..${PAGE_EDGE}`]);
+  assert.deepEqual([...new Set(sheetsFor(bounds(4, -180, -90, 180, 90)).map((s) => `${s.extent.south}..${s.extent.north}`))], [`${-PAGE_EDGE}..-33.3`, '-33.3..43.5', `43.5..${PAGE_EDGE}`]);
 });
 
 test('names are ENC-style, unique, and the same wherever the view is', () => {
@@ -323,7 +323,7 @@ test('origin zero: the rose\'s sheet still holds the rose, in a cell no longer c
 });
 
 test('radius: a grid sheet\'s hidden circle takes the radius given; a curated sheet keeps its read one', () => {
-  const view = { lon: 7.4, lat: 40.5, zoom: 6.2 };
+  const view = { lon: 5, lat: 40.5, zoom: 6.2 };
   for (const radius of [0.25, 0.5, 0.8]) {
     const got = sheetsFor(view, { radius, curated: true });
     const grid = got.filter((s) => !s.curated), cur = got.filter((s) => s.curated);
