@@ -1,10 +1,10 @@
 // The webapp: the plugin's ENC cells drawn by portolani's scene, panned and zoomed, with the vessel's
 // position from the Signal K stream. The settings drawer stays open; its chips say what they draw.
-import { createScene, drawScene, panView, zoomView, clampView, viewProjection, W, H } from 'portolani/scene.mjs';
+import { createScene, drawScene, panView, zoomView, clampView, viewProjection, drawnPeaks, peakHits, W, H } from 'portolani/scene.mjs';
 import { readCatalogue } from './enc-provider.js';
-import { CHART_OPTIONS } from './chart.mjs';
+import { CHART_OPTIONS, CHART_GEO, MOUNTAINS } from './chart.mjs';
 
-const DEFAULTS = { depth: true };
+const DEFAULTS = { depth: true, mountains: true, peaks: true };
 const settings = (() => { try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem('portolani-signalk') ?? '{}') }; } catch { return { ...DEFAULTS }; } })();
 const save = () => { try { localStorage.setItem('portolani-signalk', JSON.stringify(settings)); } catch {} };
 
@@ -12,8 +12,8 @@ const empty = { type: 'FeatureCollection', features: [] };
 const cache = new Map(), once = (k, f) => cache.get(k) ?? cache.set(k, f()).get(k);
 const env = {
   createCanvas: (w, h) => Object.assign(document.createElement('canvas'), { width: w, height: h }),
-  // no world geo is shipped: the land, coast and depth are the cells', through the adapter
-  readJSON: (p) => (p.startsWith('geo/') ? Promise.resolve(empty) : once(p, () => fetch(p).then((r) => { if (!r.ok) throw new Error(`${p}: ${r.status}`); return r.json(); }))),
+  // of the world geo only the ranges and peaks are shipped: the land, coast and depth are the cells', through the adapter
+  readJSON: (p) => (p.startsWith('geo/') && !CHART_GEO.includes(p) ? Promise.resolve(empty) : once(p, () => fetch(p).then((r) => { if (!r.ok) throw new Error(`${p}: ${r.status}`); return r.json(); }))),
   loadImage: (p) => once(p, () => new Promise((ok, no) => { const img = new Image(); img.onload = () => ok(img); img.onerror = () => no(new Error(`${p}: image failed`)); img.src = p; })),
   loadFont: (family) => once('font', async () => document.fonts.add(await new FontFace(family, 'url(font/IMFeENrm28P.ttf)').load())),
 };
@@ -31,12 +31,15 @@ async function render() {
   const n = ++drawing, scale = Math.min(2, devicePixelRatio || 1);
   status('Drawing…');
   try {
-    const { scene, data, bg } = await createScene(env, { ...CHART_OPTIONS, view, depth: settings.depth });
+    // the mountains chip is the ranges and the hills; the peaks stand the mountain sprites too
+    const kinds = CHART_OPTIONS.kinds.filter((k) => k !== 'mountain' || settings.mountains || settings.peaks);
+    const { scene, data, bg } = await createScene(env, { ...CHART_OPTIONS, kinds, view, depth: settings.depth, relief: settings.mountains ? MOUNTAINS : [], peaks: settings.peaks });
     if (n !== drawing) return;
     map.width = marks.width = W * scale; map.height = marks.height = H * scale;
     drawScene(map.getContext('2d'), scene, data, bg, { scale, x: 0, y: 0 });
     map.style.transform = marks.style.transform = '';
-    drawn = { view, scale };
+    drawn = { view, scale, peaks: drawnPeaks(scene, data) };
+    hideTile();
     drawVessel();
     status(data.land.length ? '' : opening ? 'No cell covers this view' : 'No ENC cells yet: give the plugin a folder of .000 cells');
   } catch (e) { if (n === drawing) status(`Could not draw: ${e.message}`); }
@@ -68,8 +71,25 @@ stage.addEventListener('pointerup', (e) => {
   if (!drag) return;
   const [dx, dy] = toCanvas(e.clientX - drag.x, e.clientY - drag.y);
   drag = null;
-  if (Math.hypot(dx, dy) > 2) { view = panView(view, dx, dy); later(); }
+  if (Math.hypot(dx, dy) > 2) { view = panView(view, dx, dy); later(); } else peakAt(e);
 });
+
+// a tap on a landmark peak's drawing opens its tile, the name and the height, as on the page
+const tile = document.getElementById('tile');
+function hideTile() { tile.hidden = true; }
+function peakAt(e) {
+  hideTile();
+  if (!drawn?.peaks.length) return;
+  const r = map.getBoundingClientRect(), [x, y] = toCanvas(e.clientX - r.left, e.clientY - r.top);
+  const hit = peakHits(drawn.peaks, viewProjection(drawn.view), { x0: 0, y0: 0, x1: W, y1: H })
+    .filter((m) => x >= m.hit[0][0] && x <= m.hit[1][0] && y >= m.hit[0][1] && y <= m.hit[2][1]).sort((a, b) => a.area - b.area)[0];
+  if (!hit) return;
+  tile.querySelector('b').textContent = hit.tile.title;
+  tile.querySelector('span').textContent = hit.tile.date;
+  const s = stage.getBoundingClientRect();
+  tile.style.left = `${r.left - s.left + (hit.x * r.width) / W + 12}px`; tile.style.top = `${r.top - s.top + (hit.y * r.height) / H - 12}px`;
+  tile.hidden = false;
+}
 stage.addEventListener('wheel', (e) => {
   e.preventDefault();
   const r = map.getBoundingClientRect(), [px, py] = toCanvas(e.clientX - r.left, e.clientY - r.top);
@@ -84,6 +104,8 @@ const chip = (id, key) => {
   set();
 };
 chip('depth', 'depth');
+chip('mountains', 'mountains');
+chip('peaks', 'peaks');
 const layers = document.getElementById('layers');
 layers.addEventListener('click', () => { const d = document.getElementById('drawer'); d.hidden = !d.hidden; layers.setAttribute('aria-pressed', String(!d.hidden)); });
 document.getElementById('vessel').addEventListener('click', () => { if (vessel) { view = clampView({ ...view, lon: vessel.lon, lat: vessel.lat }); render(); } });
