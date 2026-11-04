@@ -15,6 +15,7 @@
 // For a while, `debug=sheets[,rings]` and `tune=name:value,...` carry the under-the-hood section
 // (docs/atlas/under-the-hood.md), off by default.
 import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, REEF_STYLES, PLAYA_STYLES, PEAK_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, VOYAGE_PLAY, voyagePlaySeconds, calendarOf, penOn, dayText, vaguer, voyageColours, settleInks, CONFIDENCE_PHRASES, isBroken, legPath, voyageView, CONTINENT_ZOOM_END, readVoyage, chronological, voyageLink, sightMarks, sightHits, drawnMarks, drawnPeaks, peakHits, SIGHT_TILES, noteMarks, pickMark, markClear, tileSpot, groupMarks, dateSpan, readDate, noteCount, drawNoteMark, drawNoteRing, notePulse, drawBadge, fitLineAt, fitLineMoving, drawFitLine, drawMarkGlyph, ZOOM } from './scene.mjs';
+import { playedOn, playDateText, playPace, isLong } from './scene.mjs'; // the play's band and pen (scripts/voyages.mjs)
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, effectiveOpacity, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
@@ -1869,14 +1870,13 @@ let voyagePen = null; // { id, since, t0, ms } while drawing, t0 null until it s
 function applyReveal() {
   const v = voyagePen && ground?.voyages?.find((x) => x.id === voyagePen.id);
   if (!v) return;
-  if (voyagePen.band) { // a play: the line as far as the pen has come on the voyage's calendar, and the events it has passed
-    const b = voyagePen.band, day = playDay(b);
-    v.reveal = Math.min(0.999999, penOn(b.cal, day).share);
-    v.played = (v.voyage.events ?? []).filter((_, i) => b.cal.events[i] <= day);
+  if (voyagePen.band) { // a play: the line as far as the pen has come on the voyage's calendar (each branch of a migration on its own), and the events it has passed
+    const b = voyagePen.band;
+    Object.assign(v, playedOn(v.voyage, b.cal, playDay(b)));
   } else v.reveal = voyagePen.t0 == null ? 0 : Math.min(1, (performance.now() - voyagePen.t0) / voyagePen.ms);
 }
 // every exit of the pen puts the line back whole: a pen that stops early must not leave its voyage hidden
-function finish(id) { const v = ground?.voyages?.find((x) => x.id === id); if (v && ('reveal' in v || 'played' in v)) { delete v.reveal; delete v.played; render(); } }
+function finish(id) { const v = ground?.voyages?.find((x) => x.id === id); if (v && ('reveal' in v || 'played' in v)) { delete v.reveal; delete v.played; delete v.legReveal; render(); } }
 function drawOn(id) {
   closeBand();
   const pen = voyagePen = { id, since: performance.now(), t0: null, ms: style.voyageDraw * 1000 };
@@ -1923,14 +1923,22 @@ function playVoyage(id) {
     voyagePen = { id, band };
     if (!isShown(id)) showVoyages({ [id]: true }); else render(); // the line cleared to its start
     fillBand(); showVoyage();
-    const to = voyageInView(v) ? null : voyageView(v, flightTo ?? view, undefined, true, windowRect());
+    const rect = playRect(), to = voyageInView(v, rect) ? null : voyageView(v, flightTo ?? view, undefined, true, rect);
     if (to) { if (style.sheetHides) clearSheetFor(to, true); goTo(to); }
     requestAnimationFrame(playStep);
   }, () => {});
 }
-// whether the whole of a voyage's line is in the window, so the play needs no flight
-function voyageInView(v) {
-  const proj = viewProjection(flightTo ?? view), r = windowRect(), wrap = (lon) => ((((lon + 180) % 360) + 360) % 360) - 180;
+// the map a play is framed in, in canvas px: the window, short of an open drawer's left edge on a wide screen, so the
+// whole voyage sails in sight beside the drawer it was played from
+function playRect() {
+  const r = windowRect(), d = !phone.matches && openDrawer();
+  if (!d) return r;
+  const c = canvas.getBoundingClientRect(), x = ((d.getBoundingClientRect().left - c.left) * W) / c.width;
+  return x > r.x0 + (r.x1 - r.x0) / 3 && x < r.x1 ? { ...r, x1: x } : r;
+}
+// whether the whole of a voyage's line is in `r` (the window), so the play needs no flight
+function voyageInView(v, r = windowRect()) {
+  const proj = viewProjection(flightTo ?? view), wrap = (lon) => ((((lon + 180) % 360) + 360) % 360) - 180;
   return v.legs.every((leg) => (leg.points?.length > 1 ? legPath(leg) : []).every(([lon, lat]) => {
     if (proj.visible && !proj.visible(wrap(lon), lat)) return false;
     const [x, y] = proj.toPx([wrap(lon), lat]);
@@ -1944,6 +1952,7 @@ function playStep() {
   if (b.state === 'wait') { // for the flight to land and the scene to be placed with this voyage in it
     if (flightTo == null && placed === view && ground?.voyages?.some((x) => x.id === b.id)) { b.state = 'run'; b.t0 = now - b.at; } // from the day a pause or a seek left it at, else the first
     else if (now - b.since > 10000) { closeBand(); return; }
+    if (b.state === 'run' && reducedMotion()) return endPlay(); // reduced motion: the voyage whole at once, the band at its last day
   }
   if (b.state === 'run') {
     if (now - b.t0 >= b.ms) return endPlay();
@@ -1997,26 +2006,29 @@ function closeBand() {
 // full ink cut at the pen's day
 function fillBand() {
   const { cal } = band, span = cal.t1 - cal.t0, x = (d) => `${((100 * (d - cal.t0)) / span).toFixed(3)}%`, w = (a, b) => `${((100 * (b - a)) / span).toFixed(3)}%`;
-  const legs = cal.legs.map((l, i) => (i && l.a > cal.legs[i - 1].b ? `<span class="wait" style="left:${x(cal.legs[i - 1].b)};width:${w(cal.legs[i - 1].b, l.a)}"></span>` : '') +
-    `<span class="leg" style="left:${x(l.a)};width:${w(l.a, l.b)}"></span>`).join('');
+  let reached = -Infinity; // a wait is a gap no leg is under way in: between legs in turn, or a migration's branches all landed
+  const legs = cal.legs.map((l) => [l.a, l.b]).sort((p, q) => p[0] - q[0]).map(([a, b]) => {
+    const wait = reached > -Infinity && a > reached ? `<span class="wait" style="left:${x(reached)};width:${w(reached, a)}"></span>` : '';
+    reached = Math.max(reached, b);
+    return `${wait}<span class="leg" style="left:${x(a)};width:${w(a, b)}"></span>`;
+  }).join('');
   $('bandStrip').innerHTML = `<div class="ahead">${legs}</div><div class="sailed">${legs}</div>` + cal.events.map((d) => `<span class="tick" style="left:${x(d)}"></span>`).join('');
   $('bandStrip').style.setProperty('--c', voyageInk()[band.id] ?? '#8c2f1e');
-  const ends = (p) => (p === 'day' ? 'month' : p);
+  const ends = (p) => (isLong(cal) ? 'year' : p === 'day' ? 'month' : p); // a long calendar's ends as bare years, room left for its pace
   $('bandFrom').textContent = dayText(cal.t0, ends(cal.legs[0].precision));
   $('bandTo').textContent = dayText(cal.t1 - 1e-3, ends(cal.legs.at(-1).precision));
-  const days = Math.round(span), years = days / 365.25;
-  $('bandPace').textContent = `${years >= 3 ? `${Math.round(years)} years` : `${days.toLocaleString('en')} days`} in ${style.voyagePlay} s`;
+  $('bandPace').textContent = playPace(cal, style.voyagePlay); // a long calendar in years a second (scripts/voyages.mjs playPace)
   $('voyageBand').setAttribute('aria-label', `${band.title}, on its own calendar`);
   $('voyageBand').hidden = false;
   placeBand(); showBand();
 }
-// the band at the pen's day: the date, the leg or the wait, the strip cut there and its thumb, and the button
+// the band at the pen's day: the date, the stretch it is on or the place it waits at, the strip cut there and its thumb, and the button
 function showBand() {
   if (!band) return;
   const { cal } = band, day = playDay(band), pen = penOn(cal, day), leg = cal.legs[pen.leg], f = (day - cal.t0) / (cal.t1 - cal.t0);
-  const before = pen.waiting ? cal.legs[pen.leg - 1] : null;
-  $('bandDate').textContent = dayText(Math.min(day, cal.t1 - 1e-3), before ? vaguer(before.precision, leg.precision) : leg.precision);
-  $('bandLeg').textContent = band.state === 'done' ? `the end: ${leg.to}` : before ? `at ${before.to}, waiting` : `${leg.from} to ${leg.to}`;
+  const before = pen.waiting ? cal.legs[pen.before] : null;
+  $('bandDate').textContent = playDateText(cal, Math.min(day, cal.t1 - 1e-3), before ? vaguer(before.precision, leg.precision) : leg.precision);
+  $('bandLeg').textContent = band.state === 'done' ? `the end: ${leg.to}` : before ? `at ${before.to}, waiting` : `${pen.from} to ${pen.to}`;
   $('bandStrip').querySelector('.sailed').style.clipPath = `inset(0 ${(100 * (1 - f)).toFixed(3)}% 0 0)`;
   $('bandThumb').style.left = `${(100 * f).toFixed(3)}%`;
   const going = band.state === 'run' || band.state === 'wait', what = going ? 'Pause' : band.state === 'done' ? 'Play again' : 'Play on';
