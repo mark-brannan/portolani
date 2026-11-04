@@ -414,7 +414,7 @@ scenario('bearing: a turned world round-trips in the link, north up is no key, a
   await page.locator('#compass').click();
   await page.waitForFunction(() => !new URLSearchParams(location.hash.slice(1)).has('bearing'));
   await placed(page);
-  assert.equal(await page.locator('#compass').isHidden(), true, 'north up with no sheet laid: no compass');
+  assert.equal(await page.locator('#compass').isVisible(), true, 'north up with no sheet laid: the compass still shows, beside the walk-around buttons');
 });
 
 scenario('charts: charts=all is kept in the link and lists the other traditions', 'map=6.14/40.474/7.400&charts=all', async (page) => {
