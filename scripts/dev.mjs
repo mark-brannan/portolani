@@ -36,6 +36,7 @@ export function routes({ learn, site }) {
       // the reefs and playas the published site lacks until this build is on it: the package's whole file, and the playas' committed slim copy
       ['geo/ne-reefs-10m.geojson', path.join(root, 'node_modules', 'coastlines', 'data', 'ne-reefs-10m.geojson')],
       ['geo/playas-10m.json', path.join(root, 'test', 'fixtures', 'playas-10m.json')],
+      ['geo/peaks-10m.json', path.join(root, 'test', 'fixtures', 'peaks-10m.json')], // the landmark peaks (scripts/peaks.mjs), likewise
       ['coastlines/catalogue.json', path.join(root, 'node_modules', 'coastlines', 'catalogue.json')],
       ['coastlines/lib/provider.js', path.join(root, 'node_modules', 'coastlines', 'lib', 'provider.js')],
       ['packs/', path.join(root, 'packs')], ['data/', path.join(root, 'data')], ['learn/', path.join(learn, 'learn')], ['font/', path.join(root, 'downloads')],
