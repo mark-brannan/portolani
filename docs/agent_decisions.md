@@ -453,3 +453,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261104t064523z
 - Signal K webapp opens a peak's tile on tap with its own small card markup rather than page.js's tile code Undo: reuse page.js's tile code ([#356](https://github.com/mark-brannan/portolani/pull/356))
+
+### 20261104t094819z
+- portolani#359: style keys wilderland/lotr and chip labels Wilderland / Middle-earth 1954 — names, one line each to rename ([#359](https://github.com/mark-brannan/portolani/pull/359))
