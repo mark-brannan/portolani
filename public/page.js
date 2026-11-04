@@ -824,8 +824,7 @@ async function render() {
     drawScene(ctx, scene, data, bg, { scale: 1, x: 0, y: 0 });
     if (fading) fadeSheet(fading, data.proj, me);
     drawPictures(ctx);
-    drawSheetHandles(ctx);
-    drawCards();
+      drawCards();
     placeSheetChips(); showCompass();
     if (!fading || fading.alpha >= 1) placeLayer(); // a sheet fading in places it when whole
     preparePictures().then((fresh) => { if (fresh && me === run) repaint('pictures dealt'); }, () => {}); // the chosen subject's pictures, drawn once loaded
@@ -1062,7 +1061,6 @@ function paintFrame(doing) {
   const anchored = !flightTo || Math.abs(Math.log2(viewProjection(view).k / ground.anchored.k)) <= fly.hold;
   if (anchored) drawAnchored(ctx, ground.anchored, ground.bg, view);
   drawPictures(ctx);
-  drawSheetHandles(ctx);
   drawCards(true);
   placeSheetChips();
   showCompass();
@@ -1087,34 +1085,21 @@ const pinch = () => {
   return { d: Math.hypot(bx - ax, by - ay), x: (ax + bx) / 2, y: (ay + by) / 2 };
 };
 
-// A sheet (a chart's scan laid whole over the map) is moved by hand: held anywhere on it, it is dragged (the top one where they overlap);
-// by the round handle at its bottom left corner it turns about its centre; by the square one at its bottom right
-// it is resized. Where it is let go lands in the link (sheet=). Chips at its top left corner put it at the
-// chart's own placement (Parallels, or Level) or at the fit of one of its coasts (overlays.json `snaps`).
-const HANDLE = 12; // the handles' radius, canvas px
+// A sheet (a chart's scan laid whole over the map) is moved by hand: held anywhere on it, it is dragged (the top one where
+// they overlap), and where it is let go lands in the link (sheet=). Held by any of its four corners, the world turns and
+// every sheet with it, about the middle of the window, and settles at the nearest of the chart's quarter turns (docs/spec/
+// design.md, "the user moves the sheet"). Nothing is drawn at the corners.
+const CORNER = 12; // how near a corner a press takes it, canvas px, a touch's slop beyond
+const TURN_CURSOR = `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M5 14a7 7 0 1 1 3.5 6" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/><path d="M5 14a7 7 0 1 1 3.5 6M2 11l3 3 3-3" fill="none" stroke="#1d1913" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>')}") 12 12, alias`;
 const offBy = (a, b) => Math.abs(((a - b + 540) % 360) - 180); // degrees between two angles, either way round
-const cornerTurns = new Map(); // id -> the quarter turn its corners were last read at
 const sheetsShown = () => (ground?.overlays ?? []).filter((o) => o.mode === 'sheet' && o.sheet); // bottom to top
-// Its corners as the window sees them, top left first then clockwise, however the sheet and the world are turned:
-// the chips sit over the top left one, the handles at the bottom two.
-function sheetGeometry(o) {
-  if (!o) return null;
-  const proj = viewProjection(view), corners = sheetCorners(o, proj, o.sheet);
-  if (!corners) return null;
-  // quarter turns clockwise on the window, held 5° past a 45° boundary so a drag through it does not flick the chips between corners
-  const a = o.sheet.turn - (proj.bearing ?? 0), held = cornerTurns.get(o.id);
-  const q = held != null && offBy(a, held * 90) < 50 ? held : (((Math.round(a / 90) % 4) + 4) % 4);
-  cornerTurns.set(o.id, q);
-  return { o, proj, corners: corners.map((_, j) => corners[(j - q + 4) % 4]) };
-}
+const sheetGeometry = (o) => { const proj = viewProjection(view), corners = o && sheetCorners(o, proj, o.sheet); return corners ? { o, proj, corners } : null; };
 function sheetHit([x, y]) {
-  // every handle is drawn over every sheet, so a handle wins first, the top sheet's before a lower one's; then the top sheet under the point
+  // a corner wins first, the top sheet's before a lower one's; then the top sheet under the point
   const geos = sheetsShown().reverse().map(sheetGeometry).filter(Boolean);
-  const near = (c) => Math.hypot(c[0] - x, c[1] - y) <= HANDLE + cssPx(6);
-  for (const geo of geos) {
-    if (near(geo.corners[3])) return { kind: 'turn', ...geo };
-    if (near(geo.corners[2])) return { kind: 'size', ...geo };
-  }
+  const near = (c) => Math.hypot(c[0] - x, c[1] - y) <= CORNER + cssPx(6);
+  const corner = geos.find((g) => g.corners.some(near));
+  if (corner) return { kind: 'turn', ...corner };
   const geo = geos.find((g) => onSheet(g.o, g.proj, g.o.sheet, x, y));
   return geo ? { kind: 'move', ...geo } : null;
 }
@@ -1123,73 +1108,57 @@ const withSheet = (o, sheet) => {
   const { [o.id]: _, ...rest } = style.sheets;
   return sheet && !sameSheet(sheet, ownSheet(o.id)) ? { ...rest, [o.id]: sheet } : rest;
 };
+// The bearing that stands the scan as drawn on the window (its `up`, de la Cosa's west up), else level; a quarter turn
+// from it reads the chart on another of its sides.
+const drawnBearing = (o) => (((o.sheet.turn - (o.up ?? 0)) % 360) + 360) % 360;
+const nearestQuarter = (o, b) => { const q = drawnBearing(o); return q + 90 * Math.round((b - q) / 90); };
+const angleOnWindow = ([x, y]) => (Math.atan2(y - H / 2, x - W / 2) * 180) / Math.PI;
 let sheetTap = null; // where a press on the sheet began, until it moves far enough to be a drag: a tap there opens a note
-let held = null; // { kind, o, proj, start, sheet (as taken), centre } while the sheet is held
+let held = null; // { kind, o, proj, start, sheet (as taken), centre, bearing } while the sheet is held
 let sheetFrameId = 0;
 function holdSheet(hit, p) {
-  held = { ...hit, start: p, sheet: { ...hit.o.sheet }, centre: hit.proj.project(hit.o.sheet.lon, hit.o.sheet.lat) };
+  held = { ...hit, start: p, sheet: { ...hit.o.sheet }, centre: hit.proj.project(hit.o.sheet.lon, hit.o.sheet.lat), bearing: view.bearing ?? 0 };
   hideTile();
 }
 function dragSheet(p) {
   const { kind, proj, start, sheet, centre, o } = held;
-  if (kind === 'move') {
-    const [lon, lat] = proj.invert(centre[0] + p[0] - start[0], centre[1] + p[1] - start[1]);
-    o.sheet = { ...sheet, lon, lat: Math.max(-85, Math.min(85, lat)) };
-  } else if (kind === 'turn') {
-    const a = Math.atan2(p[1] - centre[1], p[0] - centre[0]) - Math.atan2(start[1] - centre[1], start[0] - centre[0]);
-    o.sheet = { ...sheet, turn: ((sheet.turn + (a * 180) / Math.PI + 540) % 360) - 180 };
-  } else {
-    const r = Math.hypot(p[0] - centre[0], p[1] - centre[1]) / Math.max(1, Math.hypot(start[0] - centre[0], start[1] - centre[1]));
-    o.sheet = { ...sheet, scale: Math.max(sheet.scale / 8, Math.min(sheet.scale * 8, sheet.scale * r)) };
+  if (kind === 'turn') { // swept clockwise, the world turns clockwise, as the compass turns it
+    const d = ((angleOnWindow(p) - angleOnWindow(start) + 540) % 360) - 180;
+    moved(clampView({ ...view, bearing: held.bearing - d }));
+    return;
   }
+  const [lon, lat] = proj.invert(centre[0] + p[0] - start[0], centre[1] + p[1] - start[1]);
+  o.sheet = { ...sheet, lon, lat: Math.max(-85, Math.min(85, lat)) };
   if (!sheetFrameId) sheetFrameId = requestAnimationFrame(() => { sheetFrameId = 0; paintFrame('the sheet held'); });
 }
 function dropSheet() {
-  const { o } = held;
+  const { o, kind } = held;
   held = null;
   cancelAnimationFrame(sheetFrameId); sheetFrameId = 0;
+  if (kind === 'turn') { turnWorld(nearestQuarter(o, view.bearing ?? 0)); return; }
   style = { ...style, sheets: withSheet(o, o.sheet) };
   writeHash(); render();
 }
-// The handles, drawn over the scene and every moving frame: a ring with an arrow to turn, a square with a ⤢ to resize.
-function drawSheetHandles(g) {
-  for (const o of sheetsShown()) drawHandles(g, sheetGeometry(o));
-}
-function drawHandles(g, geo) {
-  if (!geo) return;
-  const [, , br, tr] = geo.corners, r = HANDLE; // the ring at the bottom left, the square at the bottom right
-  g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
-  g.lineWidth = 1.5; g.strokeStyle = style.ink; g.fillStyle = style.parchment; g.lineCap = 'round';
-  g.beginPath(); g.arc(tr[0], tr[1], r, 0, 2 * Math.PI); g.fill(); g.stroke();
-  g.beginPath(); g.arc(tr[0], tr[1], r * 0.55, -Math.PI * 0.75, Math.PI * 0.6); g.stroke();
-  const ax = tr[0] + r * 0.55 * Math.cos(Math.PI * 0.6), ay = tr[1] + r * 0.55 * Math.sin(Math.PI * 0.6);
-  g.beginPath(); g.moveTo(ax - 4, ay - 0.5); g.lineTo(ax, ay + 0.5); g.lineTo(ax + 1, ay - 4); g.stroke();
-  g.beginPath(); g.rect(br[0] - r, br[1] - r, 2 * r, 2 * r); g.fill(); g.stroke();
-  const a = r * 0.55, h = r * 0.4; // the ⤢: a diagonal from bottom left to top right, an arrowhead at each end
-  g.beginPath(); g.moveTo(br[0] - a, br[1] + a); g.lineTo(br[0] + a, br[1] - a); g.stroke();
-  g.beginPath(); g.moveTo(br[0] + a - h, br[1] - a); g.lineTo(br[0] + a, br[1] - a); g.lineTo(br[0] + a, br[1] - a + h); g.stroke();
-  g.beginPath(); g.moveTo(br[0] - a + h, br[1] + a); g.lineTo(br[0] - a, br[1] + a); g.lineTo(br[0] - a, br[1] + a - h); g.stroke();
-  g.restore();
-}
 // The snap chips live in the Charts drawer, in the row of the chart they belong to, under its city and year after a
 // "Chart position:" line (docs/spec/design.md, "A chart's position chips, and the line each was fitted to"). They follow
-// the top sheet in view (the one whose centre is not past the horizon), lit where that sheet lies now; with no sheet
-// shown the line is hidden.
+// the top sheet laid (the one in view first), lit where that sheet lies now, from the moment it is laid, before it is
+// drawn; with no sheet laid the line is hidden.
 const sheetChips = $('sheetChips');
 const posBox = Object.assign(document.createElement('div'), { className: 'pos', hidden: true });
 posBox.append(Object.assign(document.createElement('b'), { textContent: 'Chart position:' }), sheetChips);
 function placeSheetChips() {
-  const geo = held ? null : sheetsShown().reverse().map(sheetGeometry).find(Boolean);
-  if (geo && geo.o.id !== sheetChips.dataset.id) buildSheetChips(geo.o);
-  const li = geo && $('chartList').querySelector(`li[data-overlay="${geo.o.id}"]`);
+  const laid = held ? [] : laidSheets().reverse(), proj = viewProjection(view);
+  const o = laid.find((v) => sheetCorners(v, proj, v.sheet)) ?? laid[0];
+  if (o && o.id !== sheetChips.dataset.id) buildSheetChips(o);
+  const li = o && $('chartList').querySelector(`li[data-overlay="${o.id}"]`);
   if (!li) { posBox.hidden = true; return; }
   const where = li.querySelector('.about .where');
   if (posBox.previousElementSibling !== where) where.after(posBox);
   posBox.hidden = false; sheetChips.hidden = false;
-  showMend(geo.o);
+  showUp(o);
   const keep = sheetChips.querySelector('[data-notes=keep]');
-  keep?.setAttribute('aria-pressed', String(notesKept.has(geo.o.id)));
-  for (const b of sheetChips.querySelectorAll('[role=radio]')) b.setAttribute('aria-checked', String(sameSheet(geo.o.sheet, b.dataset.snap == null ? ownSheet(geo.o.id) : geo.o.snaps[b.dataset.snap])));
+  keep?.setAttribute('aria-pressed', String(notesKept.has(o.id)));
+  for (const b of sheetChips.querySelectorAll('[role=radio]')) b.setAttribute('aria-checked', String(sameSheet(o.sheet, b.dataset.snap == null ? ownSheet(o.id) : o.snaps[b.dataset.snap])));
 }
 function buildSheetChips(o) {
   sheetChips.dataset.id = o.id;
@@ -1201,44 +1170,40 @@ function buildSheetChips(o) {
     b.setAttribute('role', 'radio'); b.dataset.label = label; if (i != null) b.dataset.snap = i;
     return b;
   }));
-  sheetChips.replaceChildren(where, ...mendChips(o), ...notesChips(o));
-  showMend(o);
+  sheetChips.replaceChildren(where, ...turnChips(o), ...notesChips(o));
+  showUp(o);
 }
-// Beside them, two chips that put back what the handles changed, the place kept: the sheet's angle and its size, as
-// they were at the placement last chosen (the chart's own, or a snap); dimmed where nothing has changed. And, for a
-// chart drawn to be read another way up (overlays.json `up`, de la Cosa's west up), a chip that turns the world under
-// the sheet until the chart reads as drawn, and back to north up (docs/spec/design.md, "The world turned to the chart").
-const ANGLE_GLYPH = '<svg viewBox="0 0 28 18" aria-hidden="true"><rect x="7" y="3.5" width="14" height="11" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2 1.6" transform="rotate(-22 14 9)"/><rect x="7" y="3.5" width="14" height="11" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M3.5 6.5a8 8 0 0 1 3-4.5M2.6 2.6 6.6 1.8 6 5.6" fill="none" stroke="#8c2f1e" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-const SIZE_GLYPH = '<svg viewBox="0 0 28 18" aria-hidden="true"><rect x="3" y="1.5" width="22" height="15" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2 1.6"/><rect x="8" y="5" width="12" height="8" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M24 2.5 20.5 5.5M24 2.5h-3M24 2.5v3" fill="none" stroke="#8c2f1e" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+// Beside them, the walk-around chips, a quarter turn of the world and every sheet each way round about the middle of
+// the window; and, for a chart drawn to be read another way up (overlays.json `up`, de la Cosa's west up), its up chip,
+// lit while the world stands at that up however it got there, which turns the world to it and back to north up
+// (docs/spec/design.md, "Every chart turns, a quarter at a time").
+const WALK_GLYPH = (cw) => `<svg viewBox="0 0 28 18" aria-hidden="true"><rect x="11.5" y="6.5" width="5" height="5" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="${cw ? 'M9.4 13.6A6.5 6.5 0 1 1 18.6 13.6M21.4 13.6H18.6V10.8' : 'M18.6 13.6A6.5 6.5 0 1 0 9.4 13.6M6.6 13.6H9.4V10.8'}" fill="none" stroke="#8c2f1e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const UP_GLYPH = '<svg viewBox="0 0 28 18" aria-hidden="true"><rect x="9" y="3" width="10" height="14" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M14 13V1.2M10.8 4.4 14 1.2l3.2 3.2" fill="none" stroke="#8c2f1e" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const COMPASS_WORDS = ['North', 'North-east', 'East', 'South-east', 'South', 'South-west', 'West', 'North-west'];
-const drawnBearing = (o) => (((o.sheet.turn - o.up) % 360) + 360) % 360; // the bearing that stands the scan as drawn on the window
-const chosen = new Map(); // id -> the placement last chosen by a chip, which the angle and size chips put back
-const chosenOf = (o) => chosen.get(o.id) ?? ownSheet(o.id) ?? o.sheet;
-const turnedTo = new Map(); // id -> the bearing its up chip last turned the world to, so a nudge of the sheet after keeps the chip pressed
-function mendChips(o) {
-  const chip = (key, glyph, text, title) => {
+const upWord = (o) => `${COMPASS_WORDS[Math.round(drawnBearing(o) / 45) % 8]} up`;
+// Whether the world stands at this chart's up (its chip lit): lifting the sheet then turns it back to north up.
+const atUp = (o) => o?.up != null && offBy(view.bearing ?? 0, drawnBearing(o)) < 0.5;
+function turnChips(o) {
+  const chip = (glyph, text, title) => {
     const b = Object.assign(document.createElement('button'), { type: 'button', className: 'chip', title });
-    b.innerHTML = `${glyph}${text}`; b.dataset.mend = key;
+    b.innerHTML = `${glyph}${text}`;
+    if (!text) b.setAttribute('aria-label', title);
     return b;
   };
-  const chips = [chip('angle', ANGLE_GLYPH, 'Angle', 'Turn the sheet back to its angle, where it lies'), chip('size', SIZE_GLYPH, 'Size', 'Put the sheet back to its size, where it lies')];
-  if (o.up != null) {
-    const up = chip('up', UP_GLYPH, `${COMPASS_WORDS[Math.round(drawnBearing({ ...o, sheet: ownSheet(o.id) ?? o.sheet }) / 45) % 8]} up`, 'Turn the world under the sheet so the chart reads as it was drawn; again for north up');
-    up.setAttribute('aria-pressed', 'false');
-    chips.push(up);
-  }
-  return chips;
+  const left = chip(WALK_GLYPH(false), '', 'Walk round the chart: the world and the sheet a quarter turn anticlockwise');
+  const right = chip(WALK_GLYPH(true), '', 'Walk round the chart: the world and the sheet a quarter turn clockwise');
+  left.dataset.walk = '-1'; right.dataset.walk = '1';
+  if (o.up == null) return [left, right];
+  const up = chip(UP_GLYPH, upWord(o), 'Turn the world under the sheet so the chart reads as it was drawn; again for north up');
+  up.dataset.up = ''; up.setAttribute('aria-pressed', 'false');
+  return [left, right, up];
 }
-function showMend(o) {
-  const at = chosenOf(o), b = view.bearing ?? 0;
-  const set = (key, still) => sheetChips.querySelector(`[data-mend=${key}]`)?.setAttribute('aria-disabled', String(still));
-  set('angle', offBy(o.sheet.turn, at.turn) < 0.05);
-  set('size', Math.abs(o.sheet.scale / at.scale - 1) < 1e-3);
-  sheetChips.querySelector('[data-mend=up]')?.setAttribute('aria-pressed', String(turnedBy(o)));
+function showUp(o) {
+  const b = sheetChips.querySelector('[data-up]');
+  if (!b) return;
+  b.setAttribute('aria-pressed', String(atUp(o)));
+  if (b.lastChild.textContent !== upWord(o)) b.lastChild.textContent = upWord(o);
 }
-// Whether the world stands turned to this chart's up (its chip pressed): lifting the sheet then turns it back to north up.
-const turnedBy = (o) => { const b = view.bearing ?? 0; return o?.up != null && b !== 0 && [drawnBearing(o), turnedTo.get(o.id)].some((t) => t != null && offBy(b, t) < 0.5); };
 // Beside them, for a chart with points of interest marked on it: "Points of interest" with their count in a red dot, which
 // keeps their marks shown until clicked again (off after the pulse, and never on by default), and the compass of Go, which
 // plays the pulse again (docs/spec/design.md, "the user asks for the notes back"). The chart's own note is its row's caption.
@@ -1256,17 +1221,12 @@ function notesChips(o) {
   return [keep, again];
 }
 sheetChips.addEventListener('click', (e) => {
-  const b = e.target.closest('.chip'), o = sheetsShown().find((v) => v.id === sheetChips.dataset.id);
+  const b = e.target.closest('.chip'), id = sheetChips.dataset.id, o = sheetsShown().find((v) => v.id === id) ?? laidSheets().find((v) => v.id === id);
   if (!b || !o) return;
-  if (b.dataset.mend === 'up') { // as drawn, the sheet framed as it will stand; again, north up where the map is
-    if (b.getAttribute('aria-pressed') === 'true') turnWorld(0);
-    else { turnedTo.set(o.id, drawnBearing(o)); turnWorld(drawnBearing(o), sheetView(o, o.sheet, { w: W, h: H, bearing: drawnBearing(o) })); }
-    return;
-  }
-  if (b.dataset.mend) {
-    const at = chosenOf(o), sheet = b.dataset.mend === 'angle' ? { ...o.sheet, turn: at.turn } : { ...o.sheet, scale: at.scale };
-    style = { ...style, sheets: withSheet(o, sheet) };
-    writeHash(); render();
+  if (b.dataset.walk) { turnWorld((turningTo ?? view.bearing ?? 0) - 90 * Number(b.dataset.walk)); return; } // clockwise lowers the bearing, as the compass turns it
+  if (b.dataset.up != null) { // as drawn, the sheet framed as it will stand; again, north up where the map is
+    if (atUp(o)) turnWorld(0);
+    else turnWorld(drawnBearing(o), sheetView(o, o.sheet, { w: W, h: H, bearing: drawnBearing(o) }));
     return;
   }
   if (b.dataset.notes) {
@@ -1278,7 +1238,6 @@ sheetChips.addEventListener('click', (e) => {
   // a placement: the sheet laid there and framed as the chart's name frames it, and the line it was fitted to drawn
   // over it once the map lands, from the start again on every click (docs/spec/design.md, "A chip shows what it was fitted to")
   const sn = b.dataset.snap == null ? null : o.snaps[b.dataset.snap], at = sn ? { lon: sn.lon, lat: sn.lat, scale: sn.scale, turn: sn.turn } : ownSheet(o.id) ?? o.sheet;
-  if (sn) chosen.set(o.id, sn); else chosen.delete(o.id);
   const line = sn ? sn.line : OVERLAYS.find((v) => v.id === o.id)?.sheetLine;
   if (line?.length) fitLines.set(o.id, { line, sheet: at, t0: null }); else fitLines.delete(o.id);
   o.sheet = at; // the flight's frames show it there at once; the landing places it from the link
@@ -1329,7 +1288,7 @@ canvas.addEventListener('pointermove', (e) => {
   if (holding) { dragPicture(toCanvas(e.clientX, e.clientY)); return; }
   if (held) { const p = toCanvas(e.clientX, e.clientY); if (sheetTap && Math.hypot(p[0] - sheetTap[0], p[1] - sheetTap[1]) > cssPx(TAP_SLOP)) sheetTap = null; if (!sheetTap) dragSheet(p); return; }
   if (carried) { carried.corner = cornerAt(toCanvas(e.clientX, e.clientY)); showSnap(carried.corner, carried.w, carried.h); return; }
-  if (!pointers.size) { const p = toCanvas(e.clientX, e.clientY); const pic = pictureHit(p)?.kind; canvas.style.cursor = cardAt(p) ? 'grab' : pic ? ({ move: 'grab', look: 'zoom-in', flip: 'pointer', link: 'pointer', away: 'pointer' }[pic] ?? '') : markAt(p) ? 'pointer' : { move: 'grab', turn: 'crosshair', size: 'nwse-resize' }[sheetHit(p)?.kind] ?? ''; return; } // a picture over the marks under it, as a press finds it
+  if (!pointers.size) { const p = toCanvas(e.clientX, e.clientY); const pic = pictureHit(p)?.kind; canvas.style.cursor = cardAt(p) ? 'grab' : pic ? ({ move: 'grab', look: 'zoom-in', flip: 'pointer', link: 'pointer', away: 'pointer' }[pic] ?? '') : markAt(p) ? 'pointer' : { move: 'grab', turn: TURN_CURSOR }[sheetHit(p)?.kind] ?? ''; return; } // a picture over the marks under it, as a press finds it
   if (!pointers.has(e.pointerId)) return;
   const p = toCanvas(e.clientX, e.clientY);
   if (tap && Math.hypot(p[0] - tap[0], p[1] - tap[1]) > cssPx(TAP_SLOP)) tap = null;
@@ -1516,8 +1475,8 @@ addEventListener('keydown', (e) => { if (e.key === 'Escape') hideTile(); });
 // Drawn by the page over each placed scene and each moving frame, never part of the scene: the count badge on a group of
 // drawn marks within a tap's reach of each other (gone once the zoom parts them), and a laid chart's notes' marks while
 // they announce themselves (the pulse, rings alone, docs/spec/design.md, "A chart's notes get their moment") or while
-// their Notes chip keeps them. A chart announces its notes when its sheet arrives (shown by any means, or fading in) and again when its
-// name or icon is clicked; afterwards nothing stays drawn on the scan, though a tap still finds every note.
+// their Notes chip keeps them. A chart announces its notes when its sheet arrives by its name or icon (or fading in), never by
+// its eye, and again from its row's chips; afterwards nothing stays drawn on the scan, though a tap still finds every note.
 const notesKept = new Set(); // the charts whose marks their Notes chip keeps shown; off by default, and not in the link
 const seen = new Set(); // the charts shown that have announced their notes since they were shown
 let pulse = null, pulseFrame = 0; // { ids, t0 } while the notes of the charts `ids` announce themselves
@@ -2772,32 +2731,35 @@ let OVERLAYS = []; // packs/overlays/overlays.json, once loaded
 const ownSheet = (id) => OVERLAYS.find((v) => v.id === id)?.sheet ?? null;
 let chartsFresh = false; // the Charts drawer opened with no sheet shown, and none shown since: the next shown fades in
 let fadeIn = null; // the overlay id whose sheet fades in when next placed
+const CLEAR_MS = 250; // a chart's flight waits this long on the old sheet's clearing, the skull's flash at its height
+let flyAfterClear = 0;
 $('chartList').innerHTML = CHARTS.map(({ name, year, made, text, overlay }, i) => `<li class="chart"${overlay ? ` data-overlay="${overlay}"` : ''}><button type="button" class="thumb none" data-chart="${i}" data-to="view" title="The chart's frame">${skin}</button><div class="about"><span class="head"><button type="button" class="name" data-chart="${i}" data-to="view">${name}</button>${overlay ? `<button type="button" class="eye" data-chart="${i}" data-to="eye" aria-pressed="false" aria-label="Show ${name}" hidden>${EYE}</button>` : ''}</span><span class="where"><button type="button" class="city" data-chart="${i}" data-to="made">${made.title}</button>, ${year}</span>${overlay ? `<div class="slider fade" hidden><input type="range" min="0" max="1" step="0.05" aria-label="Opacity of ${name}'s sheet: lower lets the map show through"><output></output></div>` : ''}${caption(text)}</div></li>`).join('');
 // The sheets laid, bottom to top, and where each lies; `fade` the id of one that fades in as it is placed. `draw` false
 // when a flight follows at once: its landing draws them, and a render now would only be thrown away by its first frame.
 // A sheet lifted while the world stands turned to its up turns the world back to north up: at once, or, where a flight
 // follows in the same task (a chart's name, a place under the sheet), as that flight's bearing (docs/spec/design.md,
-// "The world turned to the chart").
+// "The world turned to the chart"); the eye's `north` false leaves the world as it stands. The row's chips follow at once.
 let northNext = false;
-function setSheets(overlays, sheets = style.sheets, fade = null, draw = true) {
+function setSheets(overlays, sheets = style.sheets, fade = null, draw = true, north = true) {
   if (overlays.some((id) => !style.overlays.includes(id))) chartsFresh = false;
   const lifted = sheetsShown().filter((o) => !overlays.includes(o.id));
-  if (lifted.some(turnedBy)) {
-    for (const o of lifted) turnedTo.delete(o.id);
+  if (north && lifted.some(atUp)) {
     northNext = true;
     queueMicrotask(() => { if (northNext) { northNext = false; turnWorld(0); } });
   }
   style = { ...style, overlays, sheets };
   fadeIn = fade;
-  showOverlay(); showVoyage(); writeHash();
+  showOverlay(); showVoyage(); writeHash(); placeSheetChips();
   if (draw) render();
 }
 $('chartList').addEventListener('click', (e) => {
   const b = e.target.closest('[data-chart]');
   if (!b) return;
   const chart = CHARTS[b.dataset.chart], o = OVERLAYS.find((v) => v.id === chart.overlay), shown = !!o && style.overlays.includes(o.id);
-  if (b.dataset.to === 'eye') { // this sheet on or off, where it last lay; every other sheet and the view as they are
-    if (o) setSheets(shown ? style.overlays.filter((id) => id !== o.id) : [...style.overlays, o.id]);
+  if (b.dataset.to === 'eye') { // this sheet on or off, where it last lay; every other sheet and the view as they are, its notes quiet
+    if (!o) return;
+    if (!shown) seen.add(o.id);
+    setSheets(shown ? style.overlays.filter((id) => id !== o.id) : [...style.overlays, o.id], style.sheets, null, true, false);
     return;
   }
   if (b.dataset.to === 'made') {
@@ -2808,9 +2770,20 @@ $('chartList').addEventListener('click', (e) => {
   }
   if (!o) { goTo(chart.view); return; }
   const { [o.id]: _, ...sheets } = style.sheets; // back to its own placement
+  const others = laidSheets().some((v) => v.id !== o.id);
   seen.delete(o.id); // its notes announce themselves again once it lands
   setSheets([o.id], sheets, !shown && chartsFresh ? o.id : null, false); // shown alone: every other sheet hides
-  goTo({ ...sheetView(o, o.sheet, { w: W, h: H, bearing: view.bearing }), title: chart.name }); // the whole sheet framed, 8% clear round it, the world turned as it is
+  const bearing = northNext ? 0 : view.bearing ?? 0;
+  northNext = false;
+  const flyTo = () => goTo({ ...sheetView(o, o.sheet, { w: W, h: H, bearing }), bearing, title: chart.name }); // the whole sheet framed, 8% clear round it, the world turned as it is
+  if (!others) { flyTo(); return; }
+  // another chart's sheet: cleared first as the skull clears the table, then the flight (docs/spec/design.md, "a new chart's icon or name clears the old one, then flies")
+  const lay = onTable > 0;
+  clearTable();
+  if (!lay) wipeSkull();
+  if (ground) { ground = { ...ground, overlays: [], anchored: { ...ground.anchored, overlays: [] } }; paintFrame('a chart cleared'); }
+  clearTimeout(flyAfterClear);
+  flyAfterClear = setTimeout(flyTo, reducedMotion() ? 0 : CLEAR_MS);
 });
 env.readJSON('packs/overlays/overlays.json').then(({ overlays }) => {
   OVERLAYS = overlays;
@@ -2858,8 +2831,7 @@ function fadeSheet(o, proj, me) {
     ctx.drawImage(base, 0, 0);
     drawSheet(ctx, o, proj, o.sheet);
     drawPictures(ctx);
-    drawSheetHandles(ctx);
-    if (o.alpha < 1) { drawLayer(ctx, proj, placed.zoom); requestAnimationFrame(step); } else if (!first) placeLayer(); // whole: its notes announce themselves
+      if (o.alpha < 1) { drawLayer(ctx, proj, placed.zoom); requestAnimationFrame(step); } else if (!first) placeLayer(); // whole: its notes announce themselves
   };
   step(t0, true);
 }
@@ -2921,13 +2893,14 @@ function clearSheetFor(target, frame = false) {
 // straight, a far one in an arc out, across and down, longer for longer): the ground is drawn on the way as
 // for a drag, and the ornaments placed when it lands. Every fly on the page comes through here. Reduced motion jumps.
 let flight = 0, flightTo = null; // the view a flight is bound for, while it flies
+let turningTo = null; // the bearing a turn is bound for, while it turns, so a second quarter turn adds to the first
 let lastFlight = null; // { from, target } of the last flight, for Fly again under the hood
 // Every fly first clears the table (clearTable); one that carries a subject (`deal`, its key) deals its cards as it
 // nears the target: once the zoom, having been further, comes within DEAL_NEAR levels of the target's, else on landing.
 const DEAL_NEAR = 1;
 function goTo(target, deal = null) {
   if (deal == null) clearTable();
-  cancelAnimationFrame(flight);
+  cancelAnimationFrame(flight); turningTo = null;
   pinTitle = null;
   const from = view, to = clampView({ ...target, projection: view.projection, bearing: northNext ? 0 : target.bearing ?? view.bearing }); // the world stays turned as it is, unless a lifted sheet turned it
   northNext = false;
@@ -2949,6 +2922,7 @@ function goTo(target, deal = null) {
 const TURN_MS = 700;
 function turnWorld(bearing, frame = null) {
   takeOver();
+  turningTo = bearing;
   const from = view, d = ((bearing - (from.bearing ?? 0) + 540) % 360) - 180, to = frame ? clampView({ ...frame, projection: from.projection, bearing }) : null;
   const dl = to ? ((to.lon - from.lon + 540) % 360) - 180 : 0;
   const ms = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : TURN_MS, t0 = performance.now();
@@ -2956,7 +2930,7 @@ function turnWorld(bearing, frame = null) {
     const u = ms ? Math.min(1, (now - t0) / ms) : 1, e = u < 0.5 ? 2 * u * u : 1 - (2 - 2 * u) ** 2 / 2;
     const at = to ? { lon: from.lon + dl * e, lat: from.lat + (to.lat - from.lat) * e, zoom: from.zoom + (to.zoom - from.zoom) * e } : {};
     moved(clampView({ ...from, ...at, bearing: (from.bearing ?? 0) + d * e }), true);
-    if (u < 1) flight = requestAnimationFrame(step); else stopped();
+    if (u < 1) flight = requestAnimationFrame(step); else { turningTo = null; stopped(); }
   };
   flight = requestAnimationFrame(step);
 }
@@ -3006,7 +2980,7 @@ compass.addEventListener('keydown', (e) => { // the arrow keys turn it by 15°, 
 // A touch or the wheel takes over from a flight: a subject it was carrying is dealt where the map is
 function takeOver() {
   const flying = flightTo != null;
-  cancelAnimationFrame(flight); flightTo = null;
+  cancelAnimationFrame(flight); flightTo = null; turningTo = null; clearTimeout(flyAfterClear);
   if (flying) { reopen = null; dealNow(); }
 }
 
