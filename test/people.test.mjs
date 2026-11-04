@@ -1,12 +1,12 @@
 // The people as the People drawer reads them (data/voyages/people.json, scripts/people.mjs): every picture built for
-// the site, and the timeline, the link keys, the marks and the lit and dimmed voyages. The records' schema is
+// the site, and the vertical timelines' eras and years, the link keys, the marks and the lit and dimmed voyages. The records' schema is
 // checkPerson (test/voyages.test.mjs). Offline and fast.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { peopleOf, yearOf, lifeSpan, laneAxis, eraBands, TIMELINE_FROM, TIMELINE_EARLIEST, EARLIER_SHARE, TIMELINE_ERAS, EARLIER_MARKS, voyageYears, parsePictures, picturesText, parsePictureAt, pictureAtText, withPerson, personMarks, picturePlaces, frameOf, pictureName, pictureCredit, DIMMED, PERSON_RED } from '../scripts/people.mjs';
+import { peopleOf, yearOf, lifeSpan, eraOf, eraYears, firstYear, yearsText, TIMELINE_FROM, TIMELINE_ERAS, voyageYears, parsePictures, picturesText, parsePictureAt, pictureAtText, withPerson, personMarks, picturePlaces, frameOf, pictureName, pictureCredit, DIMMED, PERSON_RED } from '../scripts/people.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => JSON.parse(readFileSync(join(ROOT, p), 'utf8'));
@@ -44,42 +44,34 @@ test('a life open at an end runs from the voyages and fades there', () => {
   assert.deepEqual(lifeSpan(who('marco-polo'), [1271, 1295]), [1254, 1324, true, true]);
 });
 
-test('the timeline runs from Lapita to this year on one linear scale, the empty centuries at true width', () => {
-  const axis = laneAxis({ to: 2026 });
-  assert.equal(axis.width, 1);
-  assert.equal(axis.x(TIMELINE_FROM), 0);
-  assert.equal(axis.x(2026), 1);
-  const per = (a, b) => (axis.x(b) - axis.x(a)) / (b - a);
-  assert.ok(Math.abs(per(-300, 1000) - per(1300, 1600)) < 1e-12, 'the years from 300 BC to AD 1000 are squeezed or stretched');
-  assert.ok(Math.abs(axis.x(-300) - (1200 / 3526)) < 1e-12);
-  assert.deepEqual(axis.ticks.map(([y]) => y), [-1500, -1000, -500, 1, 500, 1000, 1500, 2000]);
-  assert.deepEqual(axis.ticks.slice(0, 4).map(([, l]) => l), ['1500 BC', '1000 BC', '500 BC', 'AD 1']);
+test('a row\'s era is the one its year falls in, and the headings carry the eras\' years, BC and AD alike', () => {
+  assert.deepEqual([-1500, -600, 499, 500, 1325, 1449, 1450, 1799, 1800, 2026].map(eraOf),
+    ['The ancient world', 'The ancient world', 'The ancient world', 'The medieval Indian Ocean and Asia', 'The medieval Indian Ocean and Asia', 'The medieval Indian Ocean and Asia', 'The age of discovery', 'The age of discovery', 'The modern world', 'The modern world']);
+  assert.equal(eraOf(-50000), 'The ancient world', 'anything before Lapita is the first era');
+  assert.equal(eraOf(NaN), null);
+  assert.deepEqual(TIMELINE_ERAS.map(([n]) => eraYears(n)), ['1500 BC – AD 500', '500 – 1450', '1450 – 1800', 'from 1800']);
+  assert.equal(TIMELINE_ERAS[0][1], TIMELINE_FROM);
 });
 
-test('Earlier adds the stretch back to 50,000 BC at its own scale, and the main stretch keeps its width', () => {
-  const short = laneAxis({ to: 2026 }), long = laneAxis({ earlier: true, to: 2026 });
-  assert.equal(long.width, 1 + EARLIER_SHARE);
-  assert.equal(long.stretches.length, 2);
-  assert.equal(long.x(TIMELINE_EARLIEST), 0);
-  assert.equal(long.x(2026), 1);
-  const span = (axis, a, b) => (axis.x(b) - axis.x(a)) * axis.width; // in main-stretch widths
-  assert.ok(Math.abs(span(long, TIMELINE_FROM, 2026) - span(short, TIMELINE_FROM, 2026)) < 1e-12, 'the main stretch changed width');
-  assert.ok(Math.abs(span(long, 1300, 1600) - span(short, 1300, 1600)) < 1e-12, 'the main stretch changed scale');
-  assert.ok(Math.abs(span(long, TIMELINE_EARLIEST, TIMELINE_FROM) - EARLIER_SHARE) < 1e-12);
-  assert.ok(long.x(-11000) < long.x(TIMELINE_FROM) && long.x(-20000) < long.x(-11000));
-  assert.deepEqual(long.ticks.slice(0, 5).map(([y]) => y), [-50000, -40000, -30000, -20000, -10000]);
-  assert.deepEqual(long.ticks.slice(0, 6).map(([, l]) => l), ['50,000 BC', '40,000 BC', '30,000 BC', '20,000 BC', '10,000 BC', '1500 BC']);
-  for (const [, y] of EARLIER_MARKS) assert.ok(y >= TIMELINE_EARLIEST && y < TIMELINE_FROM, `${y} is not on the earlier stretch`);
+test('a person sorts by their birth, else by their first voyage, so a people with no dates takes its voyage\'s years', () => {
+  assert.equal(firstYear(who('pytheas'), [-330, -320]), -350);
+  assert.equal(firstYear(who('lapita-people'), [-1500, -800]), -1500);
+  assert.ok(Number.isNaN(firstYear({ name: 'nobody' }, [])));
+  assert.equal(yearsText(who('marco-polo')), 'c. 1254 – 8 Jan 1324');
+  assert.equal(yearsText(who('pytheas')), 'born c. 350 BC');
+  assert.equal(yearsText(who('lapita-people'), [{ when: 'c. 1500–800 BC' }]), 'c. 1500–800 BC');
+  assert.equal(yearsText({ name: 'x' }, [{ when: '1492' }, { when: '1502–1504' }]), 'fl. 1492 – 1504');
+  assert.equal(yearsText({ name: 'x' }), '');
 });
 
-test('the era bands run end to end across the main stretch, one per era', () => {
-  for (const earlier of [false, true]) {
-    const axis = laneAxis({ earlier, to: 2026 }), bands = eraBands(axis);
-    assert.deepEqual(bands.map(([name]) => name), TIMELINE_ERAS.map(([name]) => name));
-    assert.equal(bands[0][1], TIMELINE_FROM);
-    assert.equal(bands.at(-1)[2], 2026);
-    bands.forEach(([, a, b], i) => { assert.ok(b > a); if (i) assert.equal(a, bands[i - 1][2], 'a gap or an overlap between eras'); });
+test('a people is listed as a person: the Lapita and the East Polynesian voyagers have rows, flagged as a group, and their migrations name them', () => {
+  for (const [id, voyage] of [['lapita-people', 'lapita-expansion'], ['east-polynesian-voyagers', 'east-polynesia-settlement'], ['phoenician-mariners-of-necho-ii', 'phoenician-africa']]) {
+    const p = who(id);
+    assert.ok(p && p.group === true && p.bio, `${id}: a group record with a bio`);
+    assert.deepEqual(p.voyages, [voyage]);
   }
+  assert.equal(who('ibn-battuta').group, undefined);
+  for (const [id, w] of Object.entries(whoMap)) assert.ok(w.length, `${id} names nobody: every voyage, a migration too, belongs to someone in the People drawer`);
 });
 
 test('the picture keys round-trip through the link, the default left out', () => {
@@ -98,6 +90,10 @@ test('a person chosen lights their voyages in red and dims the others', () => {
   const drawn = withPerson([{ id: 'columbus', colour: null, width: 2.2 }, { id: 'ibn-battuta-3', colour: '#1f4e8c', width: 2.2 }], ib, 2.2);
   assert.ok(drawn.filter((v) => ib.voyages.includes(v.id)).every((v) => v.colour === PERSON_RED && v.alpha === undefined));
   assert.deepEqual(drawn.filter((v) => v.alpha === DIMMED).map((v) => v.id), ['columbus']);
+  // one of theirs put off by its eye (listed hidden) is left out, lit or not; without a person a hidden voyage is left out too
+  const off = withPerson([{ id: 'ibn-battuta-3', colour: null, width: 2.2, hidden: true }], ib, 2.2);
+  assert.ok(!off.some((v) => v.id === 'ibn-battuta-3') && off.length === ib.voyages.length - 1);
+  assert.deepEqual(withPerson([{ id: 'columbus', colour: null, width: 2.2, hidden: true }, { id: 'drake', colour: null, width: 2.2 }], null, 2.2).map((v) => v.id), ['drake']);
 });
 
 test('a birth is a mark, and a death no voyage carries is marked too', () => {

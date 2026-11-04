@@ -317,6 +317,7 @@ export function checkPerson(id, p, { sources } = {}) {
   if (!p || typeof p !== 'object' || Array.isArray(p)) return [...out, `${id}: a record`];
   for (const k of ['name', 'bio']) if (p[k] !== undefined) need(str(p[k]), `${k}: a string`);
   for (const k of ['aka', 'sources']) if (p[k] !== undefined) need(strs(p[k]), `${k}: strings`);
+  if (p.group !== undefined) need(p.group === true, 'group: true, for a people or a crew rather than one person'); // a people (the Lapita), or mariners nobody named
   if (sources && Array.isArray(p.sources)) for (const s of p.sources) need(s in sources, `sources: ${s} is not in sources.json`);
   const place = (m, at) => {
     if (m.lon === undefined && m.lat === undefined) return;

@@ -337,16 +337,16 @@ scenario('overlap: a rule round-trips, the default is left out, an unknown word 
 
 scenario('person: choosing a life bar writes person=, a link with it chooses that person, a malformed id is dropped', 'map=6.14/40.474/7.400', async (page) => {
   await page.locator('#people').click();
-  const life = page.locator('#peopleStrip [data-person]').first();
+  const life = page.locator('#peopleList [data-person]').first();
   const id = await life.getAttribute('data-person');
   await life.click();
   assert.equal((await params(page)).get('person'), id);
   await page.evaluate((h) => { location.hash = h; }, `map=6.14/40.474/7.400&person=${id}`);
   await placed(page);
-  assert.equal(await page.locator(`#peopleStrip [data-person="${id}"]`).getAttribute('aria-pressed'), 'true');
+  assert.equal(await page.locator(`#peopleList [data-person="${id}"]`).getAttribute('aria-pressed'), 'true');
   await page.evaluate(() => { location.hash = 'map=6.14/40.474/7.400&person=Not%20An%20Id'; });
   await placed(page);
-  assert.equal(await page.locator('#peopleStrip [aria-pressed="true"]').count(), 0);
+  assert.equal(await page.locator('#peopleList [aria-pressed="true"]').count(), 0);
 });
 
 scenario('sight, site, pictures, pictureat: a sight\'s deal round-trips; a name no tile has is dropped with its keys', 'map=6.14/40.474/7.400&sight=Tyre&site=1&pictures=0,2&pictureat=0:35.200,33.270,1.5', async (page) => {
