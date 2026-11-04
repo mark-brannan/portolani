@@ -129,7 +129,7 @@ console.log(`urban footprints: ${(urban.length / 1e6).toFixed(2)} MB`);
 const peaks = JSON.stringify(slimPeaks(JSON.parse(await readGeo('ne-10m-geography-regions-elevation-points')), JSON.parse(await readGeo('ne-10m-coastline'))));
 if (JSON.stringify(JSON.parse(await readFile(path.join(root, 'test', 'fixtures', 'peaks-10m.json'), 'utf8'))) !== peaks) throw new Error('test/fixtures/peaks-10m.json is stale: write slimPeaks() of the coastlines files to it');
 await writeFile(path.join(out, 'geo', 'peaks-10m.json'), peaks);
-console.log(`landmark peaks: ${JSON.parse(peaks).features.length} peaks, ${peaks.length} bytes (geo/peaks-10m.json)`);
+console.log(`landmark peaks: ${JSON.parse(peaks).features.length} peaks, ${Buffer.byteLength(peaks)} bytes (geo/peaks-10m.json)`);
 // A band of detail cells: geo/<dir>/<xi>_<yi>.json and geo/<dir>/index.json.
 async function writeBand(dir, cellDeg, geometry, cells = cutCells(geometry, cellDeg)) {
   await mkdir(path.join(out, 'geo', dir), { recursive: true });
