@@ -498,3 +498,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261104t223634z
 - people pictures: new IMAGE_KINDS artefact, site, source for people with no likeness ([#373](https://github.com/mark-brannan/portolani/pull/373))
+
+### 20261104t223639z
+- pictureName: FNV-1a hashed name for a Commons title with no ascii letters ([#373](https://github.com/mark-brannan/portolani/pull/373))
