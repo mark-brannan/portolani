@@ -6,9 +6,9 @@ Feature: `createScene(env, opts)`  [verified scene.mjs:2553-2578]
   Scenario: defaults differ from the page's DEFAULTS
     Given `createScene(env)` with no options
     When it places
-    Then `land` is `islands`, `rivers`, `lakes`, `trees` are `off`, `relief` is none, `continents` false, `regions` `off`, `historical` true, `scale` `genoese`, `view` is `DEFAULT_VIEW`, `autoTitle` true (page: `land` ochre, rivers `plain`, lakes `marina`, trees `marina`, mountains colour)
-    # per CLAUDE.md the headless scene keeps relief, trees, rivers and lakes off so each golden isolates one thing
-  Options read: `ink, parchment, density, names, rhumb, scale, scaleBorder, land, islands, seaTint, rivers, lakes, relief (a style or a list), trees, continents, continentsZoom, regions, regionsZoom, title, autoTitle, pinTitle, townSize, historical, seed, view, sprites, kinds, pinned, voyage`, and the legacy `rendering, rose, monster, town` (any one set turns on legacy mode: `rank` town sizing, no seed, unshuffled order, scene.mjs:2556-2557).
+    Then `land` is `islands`, `rivers`, `lakes`, `trees` are `off`, `relief` is none, `continents` false, `regions` `off`, `historical` true, `scale` `genoese`, `view` is `DEFAULT_VIEW`, `autoTitle` true, `reefs` `crosses`, `playas` `salt`, `peaks` on (page: `land` ochre, rivers `plain`, lakes `marina`, reefs `crosses`, playas `salt`, peaks `catalan`, trees `marina`, mountains colour)
+    # per CLAUDE.md the headless scene keeps relief, trees, rivers and lakes off so each golden isolates one thing; reefs and playas are on there as in the page (#337)
+  Options read: `ink, parchment, density, names, rhumb, scale, scaleBorder, land, islands, seaTint, rivers, lakes, reefs, playas, peaks (false or `off` stands none), relief (a style or a list), trees, continents, continentsZoom, regions, regionsZoom, title, autoTitle, pinTitle, townSize, historical, seed, view, sprites, kinds, pinned, voyage`, and the legacy `rendering, rose, monster, town` (any one set turns on legacy mode: `rank` town sizing, no seed, unshuffled order, scene.mjs:2556-2557).
   Scenario: a mix of relief styles
     Given `createScene(env, { relief: ['marina', 'engraved'] })`
     When the Alps are placed
@@ -23,7 +23,11 @@ Feature: `scripts/render.mjs`  (`npm run render`) [verified scripts/render.mjs:1
   Scenario: no options
     Given `npm run render`
     When it runs
-    Then it calls `createScene(env)` with defaults and writes `out/mockup.png` (full sheet) and `out/mockup-detail.png` (the Genoa window at scale 2, `DETAIL`); nothing is configurable from the command line
+    Then it calls `createScene(env)` with defaults and writes `out/mockup.png` (full sheet) and `out/mockup-detail.png` (the Genoa window at scale 2, `DETAIL`)
+  Scenario: one view
+    Given `npm run render -- --view 19.7,61.7,5.4[,projection] --out docs/x.jpg`
+    When it runs
+    Then it draws that one view, as `.png` or `.jpg` by the name given (default `out/view.png`); the other options act only with `--view`: `--overlay <id>` lays that chart's sheet (`--overlay <id>:<opacity>` its warped pieces at that opacity), `--sheet lon,lat,scale,turn` places the sheet, `--voyages id[:rrggbb],...` draws those voyages in the colour given, and `--notes` outlines the laid chart's notes
 
 Feature: Dev server and goldens  [verified package.json scripts; scripts/dev.mjs:95-113; test/golden.test.mjs:1-60]
   Scenario: dev server port
@@ -33,8 +37,20 @@ Feature: Dev server and goldens  [verified package.json scripts; scripts/dev.mjs
   Scenario: goldens
     Given `npm run golden` (`UPDATE_GOLDEN=1 node --test test/golden.test.mjs`)
     When it runs
-    Then the six golden views (`world-z2`, `region-z5`, `close-z9`, `world-z2-plate-carree`, `world-z2-orthographic`, `world-z2-voyage` with `voyage: 'magellan'`) are redrawn at 400 x 250
+    Then the fourteen golden views, one PNG each in `test/golden/` (the files are the list: `world-z2`, `region-z5`, `close-z9`, `world-z2-plate-carree`, `world-z2-orthographic`, `world-z2-voyage`, `world-z2-voyages`, `sheet-z3-voyage`, `old-world-z2.6-1375`, `levant-z6-marks`, `ostia-z7-ruin`, `china-z5-doubt`, `pacific-z3-migrations`, `world-z2-person`), are redrawn at 400 x 250
   Scenario: touch test environment
     Given `TOUCH_REQUIRED=1`, `TOUCH_SHOTS=<dir>` or `PLAYWRIGHT=<module>`
     When `test/touch.test.mjs` runs
     Then it fails on a missing browser, writes a screenshot per width, or imports the named module (touch.test.mjs header)
+
+Feature: Under the hood hash keys  (`debug=`, `tune=`; temporary, set from the drawer's collapsed "Under the hood" section) [read from page.js ~l.130-131, scene.mjs `parseDebug` and `parseTune`]
+  Tested by: test/hash.test.mjs — 'debug: the sheets chips round-trip'
+  Tested by: test/hash.test.mjs — 'tune: a link\'s knobs round-trip'
+  Scenario: debug=
+    Given a link with `debug=rings,sheets`
+    When the page loads
+    Then the layers `sheets` and `rings` are on and the hash writes them as `debug=sheets,rings`; a word that is not a layer is dropped, and with none left the key is omitted
+  Scenario: tune=
+    Given a link with `tune=radius:0.5,origin:zero`
+    When the page loads
+    Then those knobs take the values given and the rest their defaults; the hash writes only knobs away from their default, as `name:value` pairs in knob order; a pair that is malformed or out of range is dropped

@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { similarityFit, applyFit, affineThrough3, loadOverlay, drawOverlay, drawSheet, sheetOf, sheetTransform, sheetCorners, onSheet, sheetFrame, sheetView, OVERLAY_DEFAULTS, overlayFromHash, overlayToHash, sheetText, sameSheet } from '../scripts/overlays.mjs';
-import { figureRows, landmarkRows, sheetPlacements, paperMask, redLines, catalanPieces, CATALAN_PAGES, pageOffsets } from '../scripts/build-overlays.mjs';
+import { similarityFit, applyFit, affineThrough3, loadOverlay, drawOverlay, drawSheet, sheetOf, sheetTransform, sheetCorners, onSheet, sheetFrame, sheetView, OVERLAY_DEFAULTS, effectiveOpacity, overlayFromHash, overlayToHash, sheetText, sameSheet } from '../scripts/overlays.mjs';
+import { figureRows, landmarkRows, sheetPlacements, paperMask, outlineMask, redLines, catalanPieces, CATALAN_PAGES, pageOffsets } from '../scripts/build-overlays.mjs';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { viewProjection } from '../scripts/scene.mjs';
 
@@ -112,13 +112,17 @@ test('an overlay the site lacks loads as null and draws nothing', async () => {
 // dragged to (one `;` slot per laid id, in order), the warped pieces as `overlaymode=pieces` with their opacity.
 const written = (st) => { const q = new URLSearchParams(); overlayToHash(st, q); return q.toString(); };
 test('the overlays in the hash: the default writes nothing, a link round-trips, an unknown id is dropped', () => {
-  assert.deepEqual(OVERLAY_DEFAULTS, { overlays: [], overlayMode: 'sheet', sheets: {}, overlayOpacity: 0.6 });
+  assert.deepEqual(OVERLAY_DEFAULTS, { overlays: [], overlayMode: 'sheet', sheets: {}, overlayOpacity: null, sheetHides: false, compare: 'off', comparePos: 0.5 });
   assert.equal(written(OVERLAY_DEFAULTS), '', 'the default writes nothing');
   assert.deepEqual(overlayFromHash(new URLSearchParams('')), OVERLAY_DEFAULTS, 'no keys read as the default');
   const ids = new Set(overlays.map((o) => o.id));
   const read = overlayFromHash(new URLSearchParams('overlay=carta-marina&overlayopacity=0.6'), ids);
-  assert.deepEqual(read, { overlays: ['carta-marina'], overlayMode: 'sheet', sheets: {}, overlayOpacity: 0.6 });
-  assert.equal(written(read), 'overlay=carta-marina', '0.6 and the sheet are the defaults, so only the id is written back');
+  assert.deepEqual(read, { overlays: ['carta-marina'], overlayMode: 'sheet', sheets: {}, overlayOpacity: 0.6, sheetHides: false, compare: 'off', comparePos: 0.5 });
+  assert.equal(written(read), 'overlay=carta-marina&overlayopacity=0.6', 'a faded sheet is written back');
+  assert.equal(effectiveOpacity(OVERLAY_DEFAULTS), 1, 'the sheet is opaque by default');
+  assert.equal(effectiveOpacity({ ...OVERLAY_DEFAULTS, overlayMode: 'pieces' }), 0.6, 'the pieces keep their 0.6');
+  assert.equal(effectiveOpacity(read), 0.6);
+  assert.equal(effectiveOpacity({ ...OVERLAY_DEFAULTS, overlayMode: 'sheet', overlayOpacity: null }), 1, 'pieces to sheet drops the 0.6, so the sheet is opaque');
   const pieces = overlayFromHash(new URLSearchParams('overlay=carta-marina&overlaymode=pieces&overlayopacity=0.3'), ids);
   assert.equal(pieces.overlayMode, 'pieces');
   assert.equal(written(pieces), 'overlay=carta-marina&overlaymode=pieces&overlayopacity=0.3');
@@ -137,7 +141,7 @@ test('the overlays in the hash: the default writes nothing, a link round-trips, 
   assert.deepEqual(overlayFromHash(new URLSearchParams('overlay=nowhere'), ids).overlays, [], 'an id the site lacks reads as off');
   assert.deepEqual(overlayFromHash(new URLSearchParams('overlay=off')).overlays, []);
   assert.deepEqual(overlayFromHash(new URLSearchParams('overlay=../etc')).overlays, []);
-  assert.equal(overlayFromHash(new URLSearchParams('overlayopacity=2')).overlayOpacity, 0.6, 'out of range falls back');
+  assert.equal(overlayFromHash(new URLSearchParams('overlayopacity=2')).overlayOpacity, null, 'out of range falls back');
   assert.ok(sameSheet({ lon: -5.18, lat: 9.418, scale: 0.10464, turn: 12.5 }, { lon: -5.1801, lat: 9.4181, scale: 0.104641, turn: 12.51 }), 'the same to the hash\'s rounding');
   assert.ok(!sameSheet(moved.sheets['de-la-cosa'], null));
   assert.equal(sheetText({ lon: 1, lat: 2, scale: 0.1, turn: 0 }), '1.000,2.000,0.10000,0.0');
@@ -265,6 +269,15 @@ test('paperMask keys the paper from the border and keeps the skin, tinted or enc
   assert.ok(keyed > 0.5 && keyed < 0.7, `${keyed}`);
 });
 
+// outlineMask: a polygon drawn round the skin by eye; opaque inside, keyed outside, the share keyed is the area outside it.
+test('outlineMask keeps the inside of the outline and keys the rest', () => {
+  const w = 40, h = 30, c = createCanvas(w, h), g = c.getContext('2d');
+  const { mask, keyed } = outlineMask(g, w, h, [[10, 0], [40, 0], [40, 30], [10, 30]]); // the right three quarters
+  const at = (x, y) => mask.data[(y * w + x) * 4 + 3];
+  assert.equal(at(2, 15), 0, 'outside'); assert.equal(at(20, 15), 255, 'inside'); assert.equal(at(39, 29), 255, 'to the far corner');
+  assert.ok(Math.abs(keyed - 0.25) < 0.01, `${keyed}`);
+});
+
 // The Catalan Atlas is one sheet of eight panels, BnF sheets 5 to 12, each page cropped to its parchment and butted to the
 // last: each panel at its offset, a piece per page over exactly its panel, each piece the fit of its page's landmarks.
 test('the Catalan Atlas is eight panels butted west to east, a piece and a snap per page', () => {
@@ -351,4 +364,21 @@ test('the 1959 copy of the Mediterranean is its own chart, titled as a copy, wit
   assert.match(copy.title, /copy of 1959/);
   assert.match(copy.licence, /^CC BY 3\.0;.*Library of Congress, Geography and Map Division/);
   assert.equal(copy.sheet.turn, 0, 'laid level');
+});
+
+test('the sheet-hides setting rides in the link as sheethides=1, and off writes nothing', () => {
+  const on = overlayFromHash(new URLSearchParams('overlay=carta-marina&sheethides=1'));
+  assert.equal(on.sheetHides, true);
+  assert.equal(written(on), 'overlay=carta-marina&sheethides=1');
+  assert.equal(overlayFromHash(new URLSearchParams('sheethides=0')).sheetHides, false);
+});
+
+test('the compare wipe rides in the link as compare= and comparepos=, off and half write nothing', () => {
+  const on = overlayFromHash(new URLSearchParams('overlay=carta-marina&overlaymode=pieces&compare=swipe&comparepos=0.25'));
+  assert.equal(on.compare, 'swipe');
+  assert.equal(on.comparePos, 0.25);
+  assert.equal(written(on), 'overlay=carta-marina&overlaymode=pieces&compare=swipe&comparepos=0.25');
+  assert.equal(overlayFromHash(new URLSearchParams('compare=bogus&comparepos=3')).compare, 'off', 'a bad mode falls back');
+  assert.equal(overlayFromHash(new URLSearchParams('comparepos=3')).comparePos, 0.5, 'out of range falls back');
+  assert.equal(written({ ...OVERLAY_DEFAULTS, compare: 'wipe' }), 'compare=wipe');
 });

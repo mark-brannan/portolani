@@ -6,8 +6,8 @@ import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { legPath, splitAtSeam, problems, checkPerson, distanceKm, STEP_KM, readVoyage, voyageColours, VOYAGE_PALETTE, reachPath, seaSamples, VOYAGE_DRAW, voyageDrawSeconds } from '../scripts/voyages.mjs';
-import { viewProjection, voyageMarks, voyageView, W, H } from '../scripts/scene.mjs';
+import { legPath, splitAtSeam, problems, checkPerson, distanceKm, STEP_KM, readVoyage, voyageColours, settleInks, CONFIDENCES, MARKER_CONFIDENCES, CONFIDENCE_PHRASES, VOYAGE_PALETTE, reachPath, seaSamples, VOYAGE_DRAW, voyageDrawSeconds, VOYAGE_CONTRAST, VOYAGE_WIDTH, VOYAGE_WIDTHS, isBroken } from '../scripts/voyages.mjs';
+import { viewProjection, voyageMarks, voyageView, CONTINENT_ZOOM_END, W, H } from '../scripts/scene.mjs';
 import { loadLand, checkVoyage, voyageIds, readJSON } from '../scripts/check-voyages.mjs';
 
 const DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'data', 'voyages');
@@ -75,6 +75,28 @@ test('a voyage chosen in view keeps the view; one off screen is fitted, the shor
   const magellan = await voyage('magellan');
   assert.equal(voyageView(magellan, { lon: -6, lat: 37, zoom: 7, projection: 'mercator' }), null);
   assert.ok(voyageView(magellan, { lon: 0, lat: 60, zoom: 9, projection: 'mercator' }));
+});
+
+test('on a phone a voyage is in view, and fitted, against the window, not the whole canvas', () => {
+  const leg = (points) => ({ line: 'rhumb', points });
+  const voy = { legs: [leg([[-10, 40], [-30, 30]]), leg([[-30, 30], [-60, 15]])] };
+  const view = { lon: -9, lat: 38.7, zoom: 7.5, projection: 'mercator' };
+  const right = { x0: W - 300, y0: 0, x1: W, y1: H }; // a phone shows a strip at the canvas's right edge
+  assert.equal(voyageView(voy, view), null, 'the start is on the canvas');
+  const to = voyageView(voy, view, undefined, false, right);
+  assert.ok(to, 'the start is on the canvas but not in the window, so the view moves');
+  const proj = viewProjection(to);
+  for (const p of voy.legs.flatMap((l) => l.points)) {
+    const [x, y] = proj.toPx(p);
+    assert.ok(x >= right.x0 && x <= right.x1 && y >= 0 && y <= H, `${p} is outside the window at ${x.toFixed(0)}, ${y.toFixed(0)}`);
+  }
+});
+
+test('the page and a headless render draw continent names to the same zoom', () => {
+  const root = join(DIR, '..', '..');
+  assert.match(readFileSync(join(root, 'public', 'page.js'), 'utf8'), /continentsZoom: CONTINENT_ZOOM_END,/, 'the page default is the shared constant');
+  const html = readFileSync(join(root, 'public', 'index.html'), 'utf8');
+  assert.equal(Number(html.match(/id="continentsZoom"[^>]*\bvalue="(\d+)"/)[1]), CONTINENT_ZOOM_END, "the slider's value is the shared constant");
 });
 
 // A minimal well-formed record to bend in the schema tests below.
@@ -312,6 +334,13 @@ test('noteworthy ports: four eras in time order, six ports each, every one with 
   }
 });
 
+// the timeline's bands are the points of interest's eras, by the same names in the same order
+test('the timeline\'s era bands are the Sights eras', async () => {
+  const { TIMELINE_ERAS } = await import('../scripts/people.mjs');
+  const src = readFileSync('public/page.js', 'utf8'), sights = src.slice(src.indexOf('const SIGHTS = ['), src.indexOf('const CHARTS = ['));
+  assert.deepEqual(TIMELINE_ERAS.map(([name]) => name), [...sights.matchAll(/^ {2}\['(The [^']+)', \[$/gm)].map((m) => m[1]));
+});
+
 // every tile carries a date (a year, a century or a span, never a phrase) and its text, shown under its name in the list
 test('every place tile has a date and a text', async () => {
   const { SIGHT_TILES } = await import('../scripts/sights.mjs');
@@ -329,17 +358,46 @@ test('the alternatives fixture is well formed, and a bad alternative is named fo
   assert.deepEqual(problems(bad), ['event 0 alternative 2: lon and lat', 'event 0 alternative 2: a place', 'event 0 alternative 2: a source']);
 });
 
-test('voyage colours: the first red, the rest distinct and seeded on the id, a picked one kept', () => {
+test('voyage colours: the first red, each next the first free, a picked one kept', () => {
   const ids = ['columbus', 'drake', 'magellan', 'polo'];
   const c = voyageColours(ids);
-  assert.equal(c.columbus, VOYAGE_PALETTE[0]);
-  assert.equal(new Set(Object.values(c)).size, ids.length);
-  assert.deepEqual(voyageColours(ids), c, 'the same list drew other colours');
-  assert.equal(voyageColours(['magellan', 'drake']).drake, voyageColours(['polo', 'drake']).drake, 'a voyage changed ink with its neighbour');
+  assert.deepEqual(ids.map((id) => c[id]), VOYAGE_PALETTE.slice(0, 4));
   const picked = voyageColours(ids, { columbus: '#1f4e8c' });
   assert.equal(picked.columbus, '#1f4e8c');
   assert.equal(picked.drake, VOYAGE_PALETTE[0], 'red is free, so the next one takes it');
+  assert.equal(picked.magellan, VOYAGE_PALETTE[2], 'blue is picked, so it is skipped');
   assert.equal(Object.keys(voyageColours(VOYAGE_PALETTE.map((_, i) => `v${i}`).concat('extra'))).length, VOYAGE_PALETTE.length + 1);
+});
+
+// docs/spec/design.md, "colours stay with their voyages": the steps of the scenario, through settleInks as the page drives it
+test('colours stay with their voyages: hiding one moves no other, a new one takes the first free, a former ink comes back when free', () => {
+  const inks = (l) => Object.fromEntries(l.filter((v) => !v.hidden).map((v) => [v.id, v.colour ?? v.ink]));
+  const [red, blue, green, purple] = VOYAGE_PALETTE;
+  let list = settleInks([{ id: 'a' }, { id: 'b' }, { id: 'c' }]);
+  assert.deepEqual(inks(list), { a: red, b: blue, c: green });
+  list = settleInks(list.map((v) => (v.id === 'a' ? { ...v, hidden: true } : v)));
+  assert.deepEqual(inks(list), { b: blue, c: green }, 'hiding the first moved another');
+  list = settleInks([...list, { id: 'd' }], new Set(), new Set(['d']));
+  assert.equal(inks(list).d, red, 'a voyage shown takes the first colour no shown voyage has');
+  list = settleInks(list.map((v) => (v.id === 'a' ? { ...v, hidden: false } : v)), new Set(), new Set(['a']));
+  assert.deepEqual(inks(list), { a: purple, b: blue, c: green, d: red }, 'its former red is taken, so it takes the first free');
+  list = settleInks(list.map((v) => (v.id === 'd' ? { ...v, hidden: true } : v)));
+  list = settleInks(list.map((v) => (v.id === 'a' ? { ...v, hidden: true } : v)));
+  list = settleInks(list.map((v) => (v.id === 'a' ? { ...v, hidden: false } : v)), new Set(), new Set(['a']));
+  assert.equal(inks(list).a, purple, 'its own former colour first while it is free');
+  assert.equal(settleInks(list), list, 'a settled list settles to itself');
+  const kept = settleInks([{ id: 'x', ink: green }, { id: 'y', ink: red }]);
+  assert.deepEqual(inks(kept), { x: green, y: red }, 'a reload keeps every ink the link carries');
+});
+
+test('Heavy is the default weight; a voyage with a dashed or dotted leg is broken, and six broken voyages still draw in six inks', () => {
+  assert.equal(VOYAGE_WIDTH, Math.max(...VOYAGE_WIDTHS));
+  assert.ok(isBroken({ legs: [{ confidence: 'attested' }, { confidence: 'inferred' }] }));
+  assert.ok(!isBroken({ legs: [{ confidence: 'attested' }] }));
+  const ids = ['columbus', 'da-gama', 'dias', 'magellan', 'drake', 'polo'], c = voyageColours(ids, {}, new Set(ids));
+  assert.equal(c.columbus, VOYAGE_CONTRAST[0]);
+  assert.equal(new Set(Object.values(c)).size, ids.length, 'two broken voyages share an ink while inks are free');
+  assert.equal(Object.values(c).filter((h) => VOYAGE_CONTRAST.includes(h)).length, VOYAGE_CONTRAST.length, 'the high-contrast inks go first');
 });
 
 // The menu is chronological: the first number of `when` is the start year (BC negative). A voyage's own
@@ -404,5 +462,36 @@ test('the pen takes 2.5 s by default; the slider offers 1 s to 5 s in half secon
   assert.deepEqual(VOYAGE_DRAW, { min: 1, max: 5, step: 0.5, seconds: 2.5 });
   for (const [text, s] of [[null, 2.5], ['', 2.5], ['1', 1], ['1.5', 1.5], ['5', 5], ['4.5', 4.5], ['0.5', 2.5], ['5.5', 2.5], ['1.25', 2.5], ['fast', 2.5]]) {
     assert.equal(voyageDrawSeconds(text), s, `voyagedraw=${text}`);
+  }
+});
+
+test('a voyage with a dashed or dotted leg, shown, takes the first free high-contrast ink and keeps it', () => {
+  const list = settleInks([{ id: 'plain', ink: VOYAGE_PALETTE[0] }, { id: 'one', ink: VOYAGE_CONTRAST[0] }, { id: 'two' }], new Set(['one', 'two']), new Set(['two']));
+  assert.equal(list[2].ink, VOYAGE_CONTRAST[1], 'not the first free of the chart palette, and not one a shown voyage has');
+  assert.equal(list[1].ink, VOYAGE_CONTRAST[0]);
+  const old = settleInks([{ id: 'one', ink: VOYAGE_PALETTE[1] }], new Set(['one']));
+  assert.equal(old[0].ink, VOYAGE_CONTRAST[0], 'an ink from an older link in blue gives way to the high-contrast palette');
+});
+
+test('one word for how sure: one list for legs, events, births and deaths, each with its fixed phrase', () => {
+  assert.deepEqual(CONFIDENCES, ['attested', 'inferred', 'conventional', 'speculative']);
+  assert.equal(MARKER_CONFIDENCES, CONFIDENCES);
+  assert.deepEqual(CONFIDENCE_PHRASES, { attested: 'on record', inferred: 'reckoned from the record', conventional: 'the usual account', speculative: 'a guess' });
+  const v = { id: 'x', title: 'X', short: 'X', when: '1500', summary: 'S', who: ['nobody'], sources: [{ title: 't', url: 'https://e.org' }], events: [],
+    legs: [{ from: 'a', to: 'b', mode: 'sea', line: 'rhumb', confidence: 'speculative', source: 's', points: [[0, 0], [1, 1]] }] };
+  assert.deepEqual(problems(v).filter((p) => /confidence/.test(p)), [], 'a speculative leg is well formed');
+  assert.ok(!isBroken(v), 'a speculative leg is drawn as rings, not dashes');
+});
+
+test('a voyage with no colour picked takes the high-contrast palette when it is in the contrast set, and no blue', async () => {
+  const { voyageColours, VOYAGE_CONTRAST, VOYAGE_PALETTE } = await import('../scripts/voyages.mjs');
+  assert.equal(voyageColours(['columbus']).columbus, VOYAGE_PALETTE[0]);
+  assert.equal(voyageColours(['columbus', 'drake'], {}, new Set(['columbus'])).columbus, VOYAGE_CONTRAST[0]);
+  assert.equal(voyageColours(['columbus', 'drake'], {}, new Set(['columbus'])).drake, VOYAGE_PALETTE[0], 'a voyage clear of the sheet keeps the chart palette');
+  assert.equal(voyageColours(['columbus'], { columbus: '#123456' }, new Set(['columbus'])).columbus, '#123456', 'a picked colour stays');
+  for (const c of VOYAGE_CONTRAST) { // none in the blue hues, 190 to 255 degrees (purple starts at 265)
+    const [r, g, b] = [1, 3, 5].map((k) => parseInt(c.slice(k, k + 2), 16)), max = Math.max(r, g, b), d = max - Math.min(r, g, b);
+    const hue = d === 0 ? 0 : (max === r ? ((g - b) / d + 6) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4) * 60;
+    assert.ok(hue < 190 || hue > 255, `${c} is not blue`);
   }
 });

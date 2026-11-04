@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portolani</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #1d1913; overflow: hidden; font-family: "IM Fell English", Georgia, serif; }
+  #stage { position: absolute; inset: 0 48px 0 0; display: grid; place-items: center; touch-action: none; cursor: grab; }
+  #stage canvas { grid-area: 1 / 1; max-width: 100%; max-height: 100%; aspect-ratio: 1600 / 1000; }
+  #gutter { position: absolute; top: 0; right: 0; bottom: 0; width: 48px; display: flex; flex-direction: column; gap: 8px; padding-top: 12px; align-items: center; }
+  #gutter button { width: 36px; height: 36px; border: 1px solid #8a7350; border-radius: 6px; background: #e9d8b4; color: #3b2a1a; cursor: pointer; padding: 0; }
+  #gutter button[aria-pressed="true"] { background: #c9ad7a; }
+  #drawer { position: absolute; top: 12px; right: 56px; width: 220px; background: #e9d8b4; color: #3b2a1a; border: 1px solid #8a7350; border-radius: 8px; padding: 10px 12px; box-shadow: 0 4px 16px #0008; }
+  #drawer[hidden] { display: none; }
+  #drawer h2 { font-size: 15px; margin: 0 0 8px; font-weight: normal; letter-spacing: 1px; }
+  .chip { display: flex; align-items: center; gap: 8px; border: 1px solid #8a7350; border-radius: 16px; padding: 4px 10px 4px 4px; background: #f3e7cc; cursor: pointer; user-select: none; }
+  .chip[aria-pressed="false"] { opacity: 0.55; background: transparent; }
+  .chip svg { flex: none; border-radius: 12px; background: #e9d8b4; }
+  #status { position: absolute; left: 8px; bottom: 6px; color: #c9ad7a; font-size: 12px; }
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="map" width="1600" height="1000"></canvas><canvas id="marks" width="1600" height="1000"></canvas></div>
+<div id="gutter">
+  <button id="layers" title="Layers" aria-label="Layers" aria-pressed="true"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M10 3 2 7l8 4 8-4-8-4ZM2 11l8 4 8-4"/></svg></button>
+  <button id="vessel" title="Centre on the vessel" aria-label="Centre on the vessel"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M10 2 14 16 10 13 6 16Z"/></svg></button>
+</div>
+<div id="drawer">
+  <h2>Layers</h2>
+  <div class="chip" id="depth" role="switch" tabindex="0" aria-pressed="true" title="The sea's depth: shoals washed, contours dotted, soundings and hazards">
+    <svg width="44" height="24" viewBox="0 0 44 24"><path d="M0 24V14q10-6 22-2t22-4v16Z" fill="#2f4a5a" fill-opacity=".12"/><path d="M0 14q10-6 22-2t22-4" stroke="#2f4a5a" stroke-width="1.2" stroke-dasharray="0.1 3" stroke-linecap="round" fill="none"/><text x="11" y="21" font-size="8" font-style="italic" fill="#3b2a1a">4</text><text x="28" y="21" font-size="8" font-style="italic" fill="#3b2a1a">12</text><path d="M33 4h4M35 2v4" stroke="#3b2a1a" stroke-width=".8"/></svg>
+    <span>Depth</span>
+  </div>
+</div>
+<div id="status"></div>
+<script type="importmap">{ "imports": { "coast-wright": "./coast-wright/index.js", "coastlines/catalogue.json": "./coastlines/catalogue.json", "coastlines/provider": "./enc-provider.js", "portolani/": "./scripts/" } }</script>
+<script type="module" src="app.js"></script>
+</body>
+</html>

@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
-import { createScene, panView, zoomView, clampView, covers, viewProjection, DEFAULT_VIEW, ZOOM, PROJECTION_NAMES, W, H } from '../scripts/scene.mjs';
+import { createScene, keptGround, panView, zoomView, clampView, covers, viewProjection, DEFAULT_VIEW, ZOOM, PROJECTION_NAMES, W, H } from '../scripts/scene.mjs';
 
 const close = (a, b, eps = 1e-9) => assert.ok(Math.abs(a - b) < eps, `${a} vs ${b}`);
 
@@ -36,6 +36,28 @@ test('panning past the antimeridian wraps the longitude', () => {
 test('the centre stays far enough from the poles to keep the canvas on the map', () => {
   const v = clampView({ lon: 0, lat: 89, zoom: ZOOM.min });
   assert.ok(v.lat < 85.06 && v.lat > 0);
+});
+
+// docs/spec/design.md, "the map's projection changes under the sheet": the same zoom and centre, no jump, and
+// the held centre comes back unchanged however many projections it passes through
+test('a projection change keeps the zoom and the centre, even past the new projection\'s limit', () => {
+  for (const at of [{ lon: -15, lat: 21, zoom: 1.5 }, { lon: -15, lat: 21, zoom: 2 }, { lon: 0, lat: 60, zoom: 1.5 }, { lon: 10, lat: 55, zoom: 4 }]) {
+    const v0 = clampView(at); // where the page stands in Mercator
+    let v = v0;
+    for (const projection of [...PROJECTION_NAMES, 'mercator']) {
+      v = clampView({ ...v, projection }, v.lat);
+      assert.deepEqual([v.lon, v.lat, v.zoom], [v0.lon, v0.lat, v0.zoom], `${projection} at ${JSON.stringify(at)}`);
+    }
+  }
+});
+
+test('a view held past its limit moves back toward the map on a drag, never further out, and does not jump', () => {
+  const v = clampView({ lon: -15, lat: 21, zoom: 2, projection: 'plate-carree' }, 21);
+  assert.equal(v.lat, 21);
+  close(panView(v, 0, 10).lat, 21); // a drag down goes north, further out: held at 21
+  const south = panView(v, 0, -10);
+  assert.ok(south.lat < 21 && south.lat > 19, `a drag up goes south from 21, by its own few px: ${south.lat}`);
+  close(zoomView(v, 1 / 2, W / 2, H / 2).lat, 21); // zooming out about the centre keeps it
 });
 
 // a site whose land bands each hold every cell round Genoa, empty, so coastlines' provider has
@@ -79,6 +101,15 @@ test('a view whose band has a cell that cannot be read is not made from the band
   // view from the 10m band, and the scene rejects so the page makes it again at the next stop
   const broken = { ...site, readJSON: async (p) => (/^geo\/h\/(?!index)/.test(p) ? Promise.reject(new Error(`no ${p}`)) : site.readJSON(p)) };
   await assert.rejects(createScene(broken, { view: { zoom: 10.5, lat: 44.4, lon: 8.9 }, scale: 'off', kinds: [], names: false, rhumb: false }), /could not be read/);
+});
+
+test('a site without the reefs or the playas file draws the map without them, whether the read fails as ENOENT or as a 404', async () => {
+  const redSea = { view: { zoom: 6, lat: 20, lon: 38.5 }, reefs: 'crosses', playas: 'salt', scale: 'off', kinds: [], names: false, rhumb: false };
+  const ground = /^geo\/(ne-reefs-10m\.geojson|playas-10m\.json)$/;
+  assert.ok(keptGround((await createScene(site, redSea)).data).reefs.length > 0, 'the view has reefs to lose');
+  const enoent = { ...site, readJSON: async (p) => (ground.test(p) ? Promise.reject(Object.assign(new Error(`no ${p}`), { code: 'ENOENT' })) : site.readJSON(p)) };
+  const notFound = { ...site, readJSON: async (p) => (ground.test(p) ? Promise.reject(new Error(`${p}: 404`)) : site.readJSON(p)) }; // page.js's readJSON
+  for (const broken of [enoent, notFound]) assert.deepEqual(keptGround((await createScene(broken, redSea)).data), { reefs: [], playas: [] });
 });
 
 test('in every projection a drag, a zoom and their reverses return to the same view', () => {

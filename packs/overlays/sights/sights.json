@@ -1,0 +1,53 @@
+{
+  "pictures": {
+    "SubmergedEgyptianHarbour_TyreSour_Lebanon_RomanDeckert04112019.jpg": {
+      "src": "sights/submergedegyptianharbour-tyresour-lebanon-romandeckert04112019.jpg",
+      "width": 640,
+      "height": 480,
+      "page": "https://commons.wikimedia.org/wiki/File:SubmergedEgyptianHarbour_TyreSour_Lebanon_RomanDeckert04112019.jpg",
+      "sha1": "de8eb1fa4432d6609c0175b77b87c1f72157515f"
+    },
+    "ISS006-E-31938_TyreSurLebanon01032003.jpg": {
+      "src": "sights/iss006-e-31938-tyresurlebanon01032003.jpg",
+      "width": 640,
+      "height": 488,
+      "page": "https://commons.wikimedia.org/wiki/File:ISS006-E-31938_TyreSurLebanon01032003.jpg",
+      "sha1": "6ecec224e53091c00e036a70dc2586422f2e5e32"
+    },
+    "TyreCitySite_ArchaeologicalExcavations_UniversityOfLyon_RomanDeckert09102019.jpg": {
+      "src": "sights/tyrecitysite-archaeologicalexcavations-universityoflyon-romandeckert09102019.jpg",
+      "width": 640,
+      "height": 480,
+      "page": "https://commons.wikimedia.org/wiki/File:TyreCitySite_ArchaeologicalExcavations_UniversityOfLyon_RomanDeckert09102019.jpg",
+      "sha1": "273aa5ce15658413cb8ff0ae4ecc4b195aa003ff"
+    },
+    "Tyre_ancient_town_2018_-_21.jpg": {
+      "src": "sights/tyre-ancient-town-2018-21.jpg",
+      "width": 640,
+      "height": 480,
+      "page": "https://commons.wikimedia.org/wiki/File:Tyre_ancient_town_2018_-_21.jpg",
+      "sha1": "a02331e8aa6a98b89094e3d70615dfce4bdc53a3"
+    },
+    "Via_Romana_(4145038796).jpg": {
+      "src": "sights/via-romana-4145038796.jpg",
+      "width": 640,
+      "height": 427,
+      "page": "https://commons.wikimedia.org/wiki/File:Via_Romana_(4145038796).jpg",
+      "sha1": "02f63793512c2a47f5fdcc67e80ae9394baae7c8"
+    },
+    "Tyre_hippodrome_02.jpg": {
+      "src": "sights/tyre-hippodrome-02.jpg",
+      "width": 640,
+      "height": 424,
+      "page": "https://commons.wikimedia.org/wiki/File:Tyre_hippodrome_02.jpg",
+      "sha1": "c50de3d318f30965197a5a79298863149ba64ba2"
+    },
+    "TyreAlBass_Aquaeduct-Louis-FrançoisCassas-VoyagePittoresque1799.jpg": {
+      "src": "sights/tyrealbass-aquaeduct-louis-francoiscassas-voyagepittoresque1799.jpg",
+      "width": 640,
+      "height": 369,
+      "page": "https://commons.wikimedia.org/wiki/File:TyreAlBass_Aquaeduct-Louis-Fran%C3%A7oisCassas-VoyagePittoresque1799.jpg",
+      "sha1": "b645e36023f6d3f3d6c61d712bd18c0eba6de59d"
+    }
+  }
+}
