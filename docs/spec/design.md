@@ -654,6 +654,12 @@ Feature: The skull is the one clear  (`#sweep`, page.js `clearMap`)
     And no voyage is drawn, `voyages=` leaves the hash, and a voyage playing stops and its band goes
     And no chart's sheet is laid, `overlay=` and `sheet=` leave the hash, and a chart shown again lies at its own place
     And the faint skull flashes over the map once, as it does when cards go
+  Scenario: the skull clears every chart, voyage, person, card and point of interest, leaving only the base map
+    Source: the user, 2026-11-04, on a regression in which the skull no longer cleared the charts: "The skull clear is not clearing charts.  It must clear all charts, voyages, people, cars, and POIs (leaving only the base map).  This must be in the spec in addition to fixing it.  It is a firm requirement" ("cars" read as cards).
+    Given any mix of charts' sheets, voyages, a person and their cards, a point of interest's tile and cards, and charts' overlays laid by any route (the eye, a chart's name or icon, the link)
+    When the user clicks the skull
+    Then nothing of them is left on the map: the base map alone is drawn, and no clear stops short for any of them
+    And the clear never fails part-way: the charts go even when no voyage or person was there to go first
   Scenario: the view and the settings stay
     Given the map at some place, zoom and bearing (the world turned to a chart), in a projection other than the default, with the rose and the styles as chosen
     When the user clicks the skull

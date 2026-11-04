@@ -2291,7 +2291,7 @@ async function clearMap(snap = () => {}) {
   snap('cards');
   if (voyages) { closeBand(); style = { ...style, voyages: [] }; }
   if (voyages || hadPerson) { showVoyage(); writeHash(); await render(); snap('lines'); }
-  if (charts) { turnedTo.clear(); style = { ...style, overlays: [], sheets: {} }; showOverlay(); showVoyage(); writeHash(); await render(); snap('sheets'); }
+  if (charts) { style = { ...style, overlays: [], sheets: {} }; showOverlay(); showVoyage(); writeHash(); await render(); snap('sheets'); }
 }
 // The clear is shown every time, the map already clear or not: the cards leave stage left, as they were dealt but
 // mirrored; the lines fade; the sheets fade; the skull grows over the map and fades; and the phrase
