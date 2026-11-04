@@ -27,8 +27,8 @@ import { POIS, POI_ZOOM } from './pois.mjs';
 import { depthOf, hasDepth, paintDepth } from './depth.mjs';
 export { SIGHT_TILES } from './sights.mjs'; // the page's tiles for its places; here so the module ships with the scene
 import { RUIN, BUILDINGS, LESSER_RANK, LESSER_PX, LESSER_LETTER, lesserBuilding } from './buildings.mjs';
-import { legPath, reachPath, isMigration, splitAtSeam, DASHES, isBroken, ringed, CONFIDENCE_PHRASES, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, settleInks, readVoyage, chronological, voyageLink, calendarOf, penOn, dayText, vaguer, VOYAGE_PLAY, voyagePlaySeconds } from './voyages.mjs';
-export { CONFIDENCE_PHRASES, isBroken, legPath, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, settleInks, readVoyage, chronological, voyageLink, calendarOf, penOn, dayText, vaguer, VOYAGE_PLAY, voyagePlaySeconds };
+import { legPath, reachPath, isMigration, splitAtSeam, DASHES, isBroken, ringed, CONFIDENCE_PHRASES, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, settleInks, readVoyage, chronological, voyageLink, calendarOf, penOn, playedOn, dayText, playDateText, playPace, isLong, vaguer, VOYAGE_PLAY, voyagePlaySeconds } from './voyages.mjs';
+export { CONFIDENCE_PHRASES, isBroken, legPath, VOYAGE_PALETTE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, voyageColours, settleInks, readVoyage, chronological, voyageLink, calendarOf, penOn, playedOn, dayText, playDateText, playPace, isLong, vaguer, VOYAGE_PLAY, voyagePlaySeconds };
 import { loadOverlay, drawOverlay, drawSheet } from './overlays.mjs';
 import { PEOPLE_FILE, PERSON_RED, personMarks, withPerson, peopleOf, whoOf } from './people.mjs';
 import { frameBox, fromCentre } from './frame-box.mjs';
@@ -2607,7 +2607,7 @@ const legPaths = new WeakMap();
 const pathOf = (leg) => legPaths.get(leg) ?? legPaths.set(leg, legPath(leg)).get(leg);
 // A round cap grows each dash by the stroke's width, so the pattern gives it back to read as DASHES says
 const capped = (dash, w) => dash.map((d, i) => (i % 2 ? d + w : Math.max(0.01, d - w)));
-const VOYAGE_HALO = 3.3, VOYAGE_END = 2.8, SKULL_H = 16, SKULL_ALT_H = 13, WAYPOINT_H = 14; // a migration's waypoint is a small ink bead, its tile carrying the date
+const VOYAGE_HALO = 3.3, VOYAGE_END = 2.8, SKULL_H = 16, SKULL_ALT_H = 13, WAYPOINT_H = 14, POT_H = 12; // a migration's waypoint is a small ink pot (drawPot), its tile carrying the date
 
 // The voyages, each through any projection: each leg cut at the seam and stroked in its colour (the chart's
 // red by default) at its width over a parchment halo, dashed by its confidence; then its events, a death as a
@@ -2722,13 +2722,13 @@ export function drawBadge(g, m, n) {
   g.fillText(text, x, y + 0.5);
   g.restore();
 }
-// A mark's glyph at [x, y], as the map draws it: a skull, a birth's ring, a waypoint's bead, an event's ring; a place
+// A mark's glyph at [x, y], as the map draws it: a skull, a birth's ring, a waypoint's pot, an event's ring; a place
 // (which draws nothing of its own on the map) as an event's ring. For the lines of a grouped tile.
 export function drawMarkGlyph(g, m, x, y) {
   g.save();
   if (m.skull) drawSkull(g, x, y, 15);
   else if (m.birth) drawBirth(g, x, y);
-  else if (m.bead) { g.beginPath(); g.arc(x, y, 3, 0, 2 * Math.PI); g.fillStyle = STYLE.ink; g.fill(); }
+  else if (m.bead) drawPot(g, x, y);
   else { g.beginPath(); g.arc(x, y, 4, 0, 2 * Math.PI); g.strokeStyle = STYLE.ink; g.lineWidth = 1.6; g.stroke(); }
   g.restore();
 }
@@ -2736,21 +2736,40 @@ export function drawMarkGlyph(g, m, x, y) {
 // line, the long pause fainter; over it a stream of chevrons pointing the way it went, shrinking as the leg's reach
 // runs toward the front, and an ink chevron at each front (a two-headed leg has one at each end, and its chevrons
 // point out from its middle); the pause has a dotted trail and no chevrons. The chevrons follow the line weight.
-const MIGRATION = { ribbon: 30, blur: 7, alpha: 0.22, pauseAlpha: 0.1, step: 17, first: 8, big: 8, small: 3.5, twoWay: 4.5, head: 8 };
+// Played (`reveal`, `legReveal`, `played`, as drawTrack reads them), the ribbon and the stream run only as far as the
+// pen on each leg, and where a leg's pen stands an outrigger canoe sails in place of its front chevron.
+const MIGRATION = { ribbon: 30, blur: 7, alpha: 0.22, pauseAlpha: 0.1, step: 17, first: 8, big: 8, small: 3.5, twoWay: 4.5, head: 8, canoe: 16 };
 const reachPaths = new WeakMap();
 const reachOf = (leg) => reachPaths.get(leg) ?? reachPaths.set(leg, reachPath(leg)).get(leg);
-// the leg's pieces in canvas px, [x, y, share of the way along], cut at the seam and culled to rect
-const streamPieces = (leg, proj, rect) => splitAtSeam(reachOf(leg), proj.lonCenter, proj.visible)
-  .map((p) => p.map((q) => [...proj.toPx(q), q[2]])).filter((px) => meets(rect, bbox(px)));
+// A leg's reach path cut at `u`, the share of its samples the pen has drawn (1, the whole), the cut's last point where the
+// pen stands, between two samples; null when the pen has not set out on it
+function reachCut(leg, u = 1) {
+  const full = reachOf(leg);
+  if (!(u < 1)) return full;
+  if (!(u > 0) || full.length < 2) return null;
+  const x = Math.min(full.length - 1, u * full.length), i = Math.floor(x), t = x - i, p = full[i], q = full[i + 1];
+  return q && t > 0 ? [...full.slice(0, i + 1), p.map((c, k) => c + (q[k] - c) * t)] : full.slice(0, i + 1);
+}
+// Each leg's share drawn: legReveal where the play gives it (page.js), else `reveal` counted along the legs in order
+function legShares(voyage, reveal = 1, legReveal) {
+  if (legReveal) return voyage.legs.map((_, i) => legReveal[i] ?? 1);
+  if (!(reveal < 1)) return voyage.legs.map(() => 1);
+  let left = Math.max(0, reveal) * voyage.legs.reduce((n, leg) => n + reachOf(leg).length, 0);
+  return voyage.legs.map((leg) => { const n = reachOf(leg).length, u = n ? Math.min(1, Math.max(0, left / n)) : 1; left -= n; return u; });
+}
+// a path's pieces in canvas px, [x, y, share of the way along], cut at the seam and culled to rect
+const pathPieces = (path, proj, rect) => (path ? splitAtSeam(path, proj.lonCenter, proj.visible)
+  .map((p) => p.map((q) => [...proj.toPx(q), q[2]])).filter((px) => meets(rect, bbox(px))) : []);
+const streamPieces = (leg, proj, rect, u = 1) => pathPieces(reachCut(leg, u), proj, rect);
 // The ribbons are drawn once into a canvas the size of their box on the device and blurred onto the map, so the
 // blur is the same at any zoom and costs only what is in view. A moving frame skips the blur and strokes the ribbon
 // straight onto the map, soft-edged again at the stop: measured on the CPU canvas, the blur costs about 12 ms a frame
 // at 1x and 58 ms at 2x for a ribbon across two thirds of the sheet.
-function drawRibbon(g, { voyage, colour = STYLE.windRed }, proj, rect, moving = false) {
+function drawRibbon(g, { voyage, colour = STYLE.windRed, reveal = 1, legReveal }, proj, rect, moving = false) {
   const m = g.getTransform(), sx = Math.hypot(m.a, m.b) || 1;
-  const cw = g.canvas?.width ?? W * sx, ch = g.canvas?.height ?? H * sx;
+  const cw = g.canvas?.width ?? W * sx, ch = g.canvas?.height ?? H * sx, u = legShares(voyage, reveal, legReveal);
   for (const pause of [false, true]) {
-    const pieces = voyage.legs.filter((leg) => !!leg.pause === pause).flatMap((leg) => streamPieces(leg, proj, rect));
+    const pieces = voyage.legs.flatMap((leg, i) => (!!leg.pause === pause ? streamPieces(leg, proj, rect, u[i]) : []));
     if (!pieces.length) continue;
     if (moving) {
       g.save(); g.strokeStyle = colour; g.lineWidth = MIGRATION.ribbon; g.lineCap = 'round'; g.lineJoin = 'round'; g.setLineDash([]);
@@ -2803,12 +2822,17 @@ function endWay(px, atStart) {
   const far = pts.find((p) => Math.hypot(p[0] - x, p[1] - y) >= 6) ?? pts.at(-1);
   return [x - far[0], y - far[1]];
 }
-function drawStream(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH }, proj, rect) {
-  const k = width / VOYAGE_WIDTH, M = MIGRATION;
+function drawStream(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH, reveal = 1, legReveal, played }, proj, rect) {
+  const k = width / VOYAGE_WIDTH, M = MIGRATION, u = legShares(voyage, reveal, legReveal), heads = [];
   g.save(); g.lineCap = 'round'; g.lineJoin = 'round'; g.setLineDash([]);
-  for (const leg of voyage.legs) {
-    const [r0, r1] = leg.reach ?? [0, 1], both = leg.heads === 'both';
-    for (const px of streamPieces(leg, proj, rect)) {
+  for (const [i, leg] of voyage.legs.entries()) {
+    const [r0, r1] = leg.reach ?? [0, 1], both = leg.heads === 'both', pieces = streamPieces(leg, proj, rect, u[i]);
+    // the pen on a leg under way, where drawTrack rings its pen: the end of the cut, when that end is in view
+    if (played && reveal < 1 && u[i] > 0 && u[i] < 1 && pieces.length) {
+      const px = pieces.at(-1), cut = reachCut(leg, u[i]).at(-1);
+      if (px.at(-1)[2] === cut[2]) heads.push([px.at(-1)[0], px.at(-1)[1], ...endWay(px, false)]);
+    }
+    for (const px of pieces) {
       const L = pieceLength(px), along = alongWalker(px);
       if (leg.pause) {
         g.fillStyle = colour; g.globalAlpha = 0.45;
@@ -2827,6 +2851,42 @@ function drawStream(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH },
       if (both && px[0][2] === 0) chevron(g, px[0][0], px[0][1], ...endWay(px, true), M.head * k, STYLE.ink, 0.9, width);
     }
   }
+  for (const [x, y, dx, dy] of heads) if (disc(rect, x, y, 2 * M.canoe)) drawCanoe(g, x, y, dx, dy, M.canoe, colour);
+  g.restore();
+}
+// An outrigger canoe at [x, y], `s` px from its middle to bow or stern, sailing along dx, dy and kept upright whichever
+// way it goes: an ink hull with upswept ends, the float below it on two booms, and a crab-claw sail, its two spars rising
+// from a foot on the hull and the edge between their tips hollowed, filled in the voyage's ink over parchment. Over a
+// parchment halo, as the chevrons are, so it reads over the ribbon and a scan alike.
+export function drawCanoe(g, x, y, dx, dy, s = MIGRATION.canoe, colour = STYLE.windRed) {
+  const a = Math.atan2(dy, dx);
+  g.save();
+  g.translate(x, y); g.rotate(a); if (Math.cos(a) < 0) g.scale(1, -1);
+  g.lineCap = 'round'; g.lineJoin = 'round'; g.setLineDash([]);
+  const hull = () => { g.beginPath(); g.moveTo(-s, -0.42 * s); g.quadraticCurveTo(-0.62 * s, 0.32 * s, 0, 0.3 * s); g.quadraticCurveTo(0.62 * s, 0.32 * s, s, -0.42 * s); g.quadraticCurveTo(0, 0.02 * s, -s, -0.42 * s); g.closePath(); };
+  const rig = () => { g.beginPath(); g.moveTo(-0.35 * s, 0.22 * s); g.lineTo(-0.42 * s, 0.68 * s); g.moveTo(0.3 * s, 0.22 * s); g.lineTo(0.26 * s, 0.68 * s); g.moveTo(-0.7 * s, 0.7 * s); g.lineTo(0.55 * s, 0.7 * s); };
+  const sail = () => { g.beginPath(); g.moveTo(0.12 * s, 0.02 * s); g.quadraticCurveTo(-0.55 * s, -0.55 * s, -0.78 * s, -1.75 * s); g.quadraticCurveTo(-0.08 * s, -1.05 * s, 0.62 * s, -1.6 * s); g.quadraticCurveTo(0.52 * s, -0.62 * s, 0.12 * s, 0.02 * s); g.closePath(); };
+  g.strokeStyle = STYLE.parchment; g.globalAlpha = 0.7; g.lineWidth = 4.2;
+  hull(); g.stroke(); rig(); g.stroke(); sail(); g.stroke();
+  g.globalAlpha = 1; g.fillStyle = STYLE.parchment; sail(); g.fill();
+  g.globalAlpha = 0.55; g.fillStyle = colour; g.fill();
+  g.globalAlpha = 0.95; g.strokeStyle = STYLE.ink; g.lineWidth = 1.3; g.stroke();
+  g.lineWidth = 1.4; rig(); g.stroke();
+  g.fillStyle = STYLE.ink; hull(); g.fill();
+  g.restore();
+}
+// A settlement's mark, where a migration's waypoint stands: a small Lapita-like pot at [x, y], `h` px across, in ink over
+// a parchment halo, its rim straight, its shoulder sharp, and a band of stamped zigzag round the shoulder in parchment.
+export function drawPot(g, x, y, h = POT_H, alpha = 1) {
+  g.save(); g.translate(x, y); g.lineJoin = 'round'; g.lineCap = 'round'; g.setLineDash([]);
+  g.beginPath(); g.moveTo(-0.3 * h, -0.4 * h); g.lineTo(0.3 * h, -0.4 * h); g.quadraticCurveTo(0.32 * h, -0.16 * h, 0.5 * h, -0.04 * h);
+  g.quadraticCurveTo(0.4 * h, 0.4 * h, 0, 0.4 * h); g.quadraticCurveTo(-0.4 * h, 0.4 * h, -0.5 * h, -0.04 * h); g.quadraticCurveTo(-0.32 * h, -0.16 * h, -0.3 * h, -0.4 * h); g.closePath();
+  g.globalAlpha = 0.65 * alpha; g.strokeStyle = STYLE.parchment; g.lineWidth = 2.6; g.stroke();
+  g.globalAlpha = 0.9 * alpha; g.fillStyle = STYLE.ink; g.fill();
+  g.globalAlpha = 0.85 * alpha; g.strokeStyle = STYLE.parchment; g.lineWidth = Math.max(0.8, h / 14);
+  g.beginPath();
+  for (let j = 0; j <= 6; j++) { const px = -0.36 * h + (0.72 * h * j) / 6, py = j % 2 ? 0.13 * h : 0.02 * h; if (j) g.lineTo(px, py); else g.moveTo(px, py); }
+  g.stroke();
   g.restore();
 }
 // `reveal` (0 to 1, unset for the whole line) draws only that share of the track from its start, by samples, which lie
@@ -2883,7 +2943,7 @@ function drawEvents(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH, a
     g.save(); g.globalAlpha = m.alpha * dim;
     if (m.skull) drawSkull(g, m.x, m.y, m.h);
     else if (m.birth) drawBirth(g, m.x, m.y, colour);
-    else if (m.bead) { g.beginPath(); g.arc(m.x, m.y, Math.max(2.2, width), 0, 2 * Math.PI); g.fillStyle = STYLE.ink; g.globalAlpha = 0.85 * dim; g.fill(); }
+    else if (m.bead) drawPot(g, m.x, m.y, Math.max(9, (POT_H * width) / VOYAGE_WIDTH), m.alpha * dim);
     else { g.beginPath(); g.arc(m.x, m.y, 3, 0, 2 * Math.PI); g.strokeStyle = STYLE.ink; g.lineWidth = 1.4; g.stroke(); }
     g.restore();
   }
@@ -2891,7 +2951,7 @@ function drawEvents(g, { voyage, colour = STYLE.windRed, width = VOYAGE_WIDTH, a
 }
 
 // The marks of a voyage's events in view, in the order they are drawn (a disputed death's other places first,
-// smaller and fainter, so the usual account sits on top): { x, y, h, alpha, skull, tile } in canvas px, and `bead` on a migration's waypoint.
+// smaller and fainter, so the usual account sits on top): { x, y, h, alpha, skull, tile } in canvas px, and `bead` on a migration's waypoint (drawn as a settlement's pot, drawPot).
 // A mark is listed only when the whole of it is in view. Its `tile` is what a click or tap on it shows, in
 // the page's popover: the heading, the date, the text, the source and, on a death, the place it is set at.
 // No lettering is drawn beside a mark; the tile carries it.
