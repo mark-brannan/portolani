@@ -512,6 +512,15 @@
       "note": "(4,000 × 2,652; the central and western Mediterranean and part of the Atlantic, drawn south up; IIIF rendered by the server, so a re-encode on their side would need a re-pin; object page http://digital.bodleian.ox.ac.uk/inquire/p/d79c68a3-d33b-4952-962d-4ebfa1029790)"
     },
     {
+      "id": "panades-1557",
+      "file": "panades-1557.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/5/51/Banet_Panades_Nautical_chart_Mediterranean_1557.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Banet_Panades_Nautical_chart_Mediterranean_1557.jpg",
+      "sha256": "b378837e96a7ffcd34b9b0c4188d7537d483f23289cd6f35f2399b84b25c52dd",
+      "rights": "CC BY-SA 4.0; photo by Falcodigiada, Wikimedia Commons; Banet Panades, nautical chart of the Mediterranean, Messina 1557, Galata Museo del Mare, Genoa. Attribution: \"Falcodigiada, Wikimedia Commons, CC BY-SA 4.0\". Files built from it (packs/overlays/panades-1557*.jpg/png, docs/overlay/panades-1557-sheet.jpg) are CC BY-SA 4.0.",
+      "note": "(3,008 × 2,000; a handheld museum photograph, lit unevenly and slightly angled; the central Mediterranean, Corsica and Sardinia to Greece, with roses, flags and town views)"
+    },
+    {
       "id": "martines-1587-01",
       "file": "martines-1587-01-world-hemispheres.jpg",
       "url": "https://tile.loc.gov/image-services/iiif/service:gdc:gdcwdl:wd:l_:10:09:1:wdl_10091:VITR_000004_020_MAPA_001/full/pct:100/0/default.jpg",

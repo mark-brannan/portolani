@@ -256,7 +256,7 @@ the build's `CHARTS`.
 Nothing marks a note on the scan. Over a noted figure the cursor turns to a pointer, and a click opens its
 tile. The notes ride on the sheet where it lies, dragged, turned or resized. Juan de la Cosa has notes too.
 
-## Three more by landmarks: the Oliva Mediterranean, Lopes, Olives
+## Four more by landmarks: the Oliva Mediterranean, Lopes, Olives, Panades
 
 Each is laid level by landmarks read off the scan by eye, as above (`levelFit`; the numbers below are each landmark's miss, in km, against today's place, after the least-squares scale and centre).
 
@@ -275,4 +275,15 @@ Each is laid level by landmarks read off the scan by eye, as above (`levelFit`; 
 
 ![Olives's 1559 sheet over the map, turned north up](olives-1559-sheet.jpg)
 
-`npm run overlays -- --only oliva-mediterranean,lopes-atlantic,olives-1559` rebuilds just those and keeps the other rows of overlays.json as they are; an id that is no chart, or no id at all, is an error.
+- **Banet Panades, Messina 1557** (Galata Museo del Mare, Genoa): the central Mediterranean from Corsica and Sardinia to Greece, north up, with roses, flags and town views. The scan is a handheld museum photograph (3008 x 2000 px, Nikon D70s) taken at a slant and lit unevenly: a glare washes out the middle of the sheet and the edges fall into shade, and the sheet lies about 11.5 degrees off level in the frame, so it is laid by a similarity with its turn (`turned: true` on the chart, `similarityFit`) rather than `levelFit`. Seven landmarks (Cap Corse, Bonifacio, Cape Teulada, Marsala, Cape Passero, Messina, Cape Spartivento), 23 km RMS with the turn (6 to 33 km); held level they miss by 73 km RMS, which is the turn's evidence. The frame crops the chart: Iberia and the Levant lie off it, and the photograph has no scanner background, so nothing is keyed. **Rights: CC BY-SA 4.0**, photo by Falcodigiada, Wikimedia Commons. Attribution: "Falcodigiada, Wikimedia Commons, CC BY-SA 4.0". The share-alike holds for what is built from it: `packs/overlays/panades-1557*.jpg` and `.png` and `docs/overlay/panades-1557-sheet.jpg` are CC BY-SA 4.0.
+
+`npm run render -- --view 12.5,40.5,4.2 --overlay panades-1557 --out docs/overlay/panades-1557-sheet.jpg`.
+
+![Panades's 1557 sheet over the map, turned about 11.5 degrees](panades-1557-sheet.jpg)
+
+The scanner mask keys only the scanner's background, never the skin: a scan laid on black (`dark`) keys only pixels near black, and the outermost band is keyed only where it is background, so a skin that runs to the edge of the scan, damaged border and all, stays whole. Olives's lower right corner, before and after (the keyed background is magenta):
+
+![Olives's mask before: pale skin keyed](olives-mask-before.jpg)
+![Olives's mask after: the lower edge kept](olives-mask-after.jpg)
+
+`npm run overlays -- --only oliva-mediterranean,lopes-atlantic,olives-1559,panades-1557` rebuilds just those and keeps the other rows of overlays.json as they are; an id that is no chart, or no id at all, is an error.

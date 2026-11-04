@@ -514,6 +514,33 @@
       "width": 4000,
       "height": 2652,
       "display": "https://iiif.bodleian.ox.ac.uk/iiif/image/d79c68a3-d33b-4952-962d-4ebfa1029790/full/max/0/default.jpg"
+    },
+    {
+      "id": "panades-1557",
+      "title": "Chart of the Mediterranean",
+      "maker": "Banet Panades",
+      "year": 1557,
+      "made": {
+        "city": "Messina",
+        "lon": 15.55,
+        "lat": 38.19
+      },
+      "holder": "Galata Museo del Mare, Genoa",
+      "page": "https://commons.wikimedia.org/wiki/File:Banet_Panades_Nautical_chart_Mediterranean_1557.jpg",
+      "licence": "CC BY-SA 4.0",
+      "credit": "Falcodigiada, Wikimedia Commons, CC BY-SA 4.0",
+      "bbox": [
+        4,
+        26,
+        34,
+        46
+      ],
+      "why": "A Messina chart of the central Mediterranean with roses, flags and town views, photographed by hand in its museum case",
+      "status": "ship",
+      "original": "https://upload.wikimedia.org/wikipedia/commons/5/51/Banet_Panades_Nautical_chart_Mediterranean_1557.jpg",
+      "width": 3008,
+      "height": 2000,
+      "display": "https://upload.wikimedia.org/wikipedia/commons/5/51/Banet_Panades_Nautical_chart_Mediterranean_1557.jpg"
     }
   ]
 }

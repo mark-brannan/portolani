@@ -153,6 +153,10 @@ const CHARTS = [
   { id: 'olives-1559', title: 'Chart of the central and western Mediterranean, Bartolomé Olives, 1559', source: 'olives-1559', file: 'olives-1559.jpg', scale: 1, dark: true, up: 180,
     landmarks: [[[2925, 875], [-5.35, 36.13]], [[3165, 960], [-9.0, 37.03]], [[3150, 1105], [-9.14, 38.72]], [[3150, 1435], [-9.27, 42.88]], [[1740, 1360], [9.0, 40.05]], [[1750, 1580], [9.1, 42.2]], [[1250, 1170], [14.1, 37.55]]], // scan px, real lon, lat
     snaps: [] },
+  // Banet Panades, Messina 1557 (Galata Museo del Mare, Genoa): a handheld museum photograph, north up but lying about 11 degrees off level, and unevenly lit; laid by a similarity with its turn. Cap Corse, Bonifacio, Cape Teulada, Marsala, Cape Passero, Messina, Cape Spartivento.
+  { id: 'panades-1557', title: 'Chart of the Mediterranean, Banet Panades, Messina, 1557', source: 'panades-1557', file: 'panades-1557.jpg', scale: 1, turned: true,
+    landmarks: [[[1010, 970], [9.4, 43.0]], [[1000, 1200], [9.15, 41.38]], [[1040, 1605], [8.65, 38.87]], [[1500, 1625], [12.43, 37.8]], [[1830, 1735], [15.15, 36.69]], [[1880, 1535], [15.65, 38.27]], [[1960, 1590], [16.05, 37.92]]], // scan px, real lon, lat
+    snaps: [] },
 ];
 
 // The sheet's own placement. With the chart's drawn `parallels` ([{ lat, from, to }], top first, in scan px): the turn
@@ -185,7 +189,7 @@ export function placementLines(land, marks, { sheet, snaps }, width, height, par
   const own = parallels ? parallelLines(parallels, sheet, width, height) : lines.length === 1 ? lines[0] : [...lines[0], ...lines.at(-1)];
   return { sheetLine: own, snaps: snaps.map((sn, i) => ({ ...sn, line: lines[i] })) };
 }
-const piecesOf = (c, md) => (c.landmarks ? [[0, null, levelFit(c.landmarks)]] : c.pieces(md));
+const piecesOf = (c, md) => (c.landmarks ? [[0, null, c.turned ? similarityFit(c.landmarks) : levelFit(c.landmarks)]] : c.pieces(md)); // `turned`: a photographed chart lying at an angle, fitted with its turn
 const marksOf = (c, md) => (c.landmarks ? [c.landmarks.map(([, ll]) => ll)] : c.marks(md));
 const mercDeg = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360)) * 180 / Math.PI;
 const latOf = (m) => (2 * Math.atan(Math.exp((m * Math.PI) / 180)) - Math.PI / 2) * 180 / Math.PI;
@@ -227,12 +231,13 @@ export function redLines(ctx, w, h, n = 2) {
 
 // The mask of the scanner's paper round the skin, on the shrunk scan: a flood fill from the image's border
 // through light or grey unsaturated pixels (never the pale sea inside the skin, which is tinted), the outermost px
-// keyed whatever they hold, one px of feather at its edge. Returns { png, keyed }: the mask as an RGBA PNG (alpha 0 where paper) and the share of pixels keyed.
+// keyed where they are background (a skin that runs to the edge of the scan stays whole, worn border and all), one px of feather at its edge. Returns { png, keyed }: the mask as an RGBA PNG (alpha 0 where paper) and the share of pixels keyed.
 // `sides: false` keys no band down the left and right edges: a page cropped to its parchment, butted to the next.
 export function paperMask(ctx, w, h, { dark = false, sides = true } = {}) {
   const d = ctx.getImageData(0, 0, w, h).data, n = w * h;
   // the paper and the scanner's shadow on it are light to mid grey, unsaturated; the skin is tinted even where it is pale
-  const paper = (p) => { const i = p * 4, r = d[i], g = d[i + 1], b = d[i + 2], mn = Math.min(r, g, b), mx = Math.max(r, g, b); return (mn > 150 && mx - mn < 30) || (dark && mx < 60 && mx - mn < 25); }; // `dark`: a scan laid on black
+  // `dark`: a scan laid on black, where nothing light is background: the pale skin is unsaturated too, and a light test would flood into it
+  const paper = (p) => { const i = p * 4, r = d[i], g = d[i + 1], b = d[i + 2], mn = Math.min(r, g, b), mx = Math.max(r, g, b); return dark ? mx < 40 && mx - mn < 25 : mn > 150 && mx - mn < 30; };
   const band = Math.max(2, Math.round(Math.min(w, h) * 0.006)); // the scan's outermost px are the scanner's edge, never the skin
   const seen = new Uint8Array(n), stack = [];
   for (let x = 0; x < w; x++) stack.push(x, (h - 1) * w + x);
@@ -246,7 +251,7 @@ export function paperMask(ctx, w, h, { dark = false, sides = true } = {}) {
   }
   const out = ctx.createImageData(w, h), o = out.data;
   let keyed = 0;
-  for (let p = 0; p < n; p++) { const x = p % w, y = (p - x) / w; if ((sides && (x < band || x >= w - band)) || y < band || y >= h - band) seen[p] = 1; }
+  for (let p = 0; p < n; p++) { const x = p % w, y = (p - x) / w; if (((sides && (x < band || x >= w - band)) || y < band || y >= h - band) && paper(p)) seen[p] = 1; }
   for (let p = 0; p < n; p++) {
     const x = p % w, edge = !seen[p] && ((x > 0 && seen[p - 1]) || (x < w - 1 && seen[p + 1]) || (p >= w && seen[p - w]) || (p + w < n && seen[p + w]));
     o[p * 4 + 3] = seen[p] ? 0 : edge ? 128 : 255;
@@ -283,13 +288,13 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     writeFileSync(join(OUT, c.file), canvas.toBuffer('image/jpeg', 80));
     const { mask, keyed } = paperMask(g, fw, fh, { dark: !!c.dark }), maskFile = `${c.id}-mask.png`;
     const mc = createCanvas(fw, fh); mc.getContext('2d').putImageData(mask, 0, 0);
-    if (keyed > 0) writeFileSync(join(OUT, maskFile), mc.toBuffer('image/png'));
+    if (keyed > 0.001) writeFileSync(join(OUT, maskFile), mc.toBuffer('image/png'));
     const pieces = piecesOf(c, md).map(([x0, x1, fit]) => [x0, x1 ?? img.width, fit]);
     const parallels = c.parallels && redLines(g, fw, fh, c.parallels.length).map((l, i) => ({ lat: c.parallels[i], from: l.from.map((v) => v * scale), to: l.to.map((v) => v * scale) }));
     const placed = sheetPlacements(pieces, c.snaps, img.width, img.height, parallels), { sheet } = placed;
     const { sheetLine, snaps } = placementLines(land, marksOf(c, md), placed, img.width, img.height, parallels);
     overlays.push({
-      id: c.id, title: c.title, source: src.page ?? src.url, licence: src.rights, file: c.file, ...(keyed > 0 && { mask: maskFile }),
+      id: c.id, title: c.title, source: src.page ?? src.url, licence: src.rights, file: c.file, ...(keyed > 0.001 && { mask: maskFile }),
       width: img.width, height: img.height, scale, sheet, sheetLine, snaps, ...(c.up != null && { up: c.up }), ...(parallels && { parallels }),
       pieces: pieces.map(([x0, x1, fit]) => ({ x0, x1, fit })),
     });
