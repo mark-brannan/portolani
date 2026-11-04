@@ -435,3 +435,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261104t063024z
 - portolani ranges: geo/ranges-10m.json keeps name, scalerank, min_label, ne_id; coordinates rounded to 0.001 degree Undo: slimRanges in scripts/ranges.mjs (no PR, branch ranges-work)
+
+### 20261104t063028z
+- portolani ranges: a range peak whose base is off the 50m land is dropped Undo: the depth(x, y) > 0 filter in reliefOf (no PR, branch ranges-work)
