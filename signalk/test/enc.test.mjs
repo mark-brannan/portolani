@@ -112,7 +112,7 @@ test('US3WA46M through the provider draws the Seattle view, with its depth', asy
   const [w, s, e, n] = c.bbox, cell = { lon: (w + e) / 2, lat: Math.atan(Math.sinh((merc(s) + merc(n)) / 2)) / RAD,
     zoom: Math.min(Math.log2((2 * Math.PI * H) / (512 * (merc(n) - merc(s)))), Math.log2((2 * Math.PI * 1600) / (512 * (e - w) * RAD))) };
   const whole = await draw(true, cell);
-  // the page's mountains on the cell's land: the colour style along the ranges the build ships, and the hills
+  // the chart's mountains on the cell's land: its style along the ranges the build ships, and the hills
   assert.ok(whole.scene.relief?.peaks.length > 10, `mountains on the cell's land: ${whole.scene.relief?.peaks.length}`);
   assert.ok(shipped['geo/ranges-10m.json'].features.length > 100 && shipped['geo/peaks-10m.json'].features.length > 100, 'the build ships the ranges and the peaks');
   // a landmark peak on the cell's land: the shipped peaks hold none inside this cell, so one is stood on the Olympic
