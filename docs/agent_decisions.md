@@ -423,3 +423,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261104t061138z
 - Landmark peaks qualify when named mountain/spot-elevation, within 100 km of the 10m coastline, and NE min_zoom <= view zoom + 1 (256 px tiles vs 512, water.mjs shown); towns and cities win over a peak, so Etna and Vesuvius drop at z6 Undo: set PEAK_SEA_KM / the shown() test in scripts/peaks.mjs and scene.mjs placePeaks ([#353](https://github.com/mark-brannan/portolani/pull/353))
+
+### 20261104t063012z
+- portolani ranges: a range is drawn when its Natural Earth MIN_LABEL <= zoom + 1, the rule water.mjs uses Undo: edit shown() use in scripts/ranges.mjs (no PR, branch ranges-work)
