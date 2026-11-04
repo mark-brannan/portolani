@@ -764,8 +764,29 @@
       "cite": "francis-drake"
     }
   },
+  "lapita-people": {
+    "name": "The Lapita people",
+    "group": true,
+    "bio": "The makers of dentate-stamped Lapita pottery, who spread from the Bismarck Archipelago through the Solomons, Vanuatu and New Caledonia to Fiji, Tonga and Samoa between about 1500 and 800 BC: the first people anywhere to settle islands beyond sight of land, sailing upwind into the trade winds. No name of theirs survives; the name is the archaeologists', from a site in New Caledonia.",
+    "sources": [
+      "lapita-culture",
+      "denham-lapita-dating",
+      "teouma"
+    ]
+  },
+  "east-polynesian-voyagers": {
+    "name": "The East Polynesian voyagers",
+    "group": true,
+    "bio": "The people who, after nearly two thousand years in West Polynesia, went east in double-hulled canoes to the Cook and Society Islands about 1000–1100 and from there, in some two centuries, to every corner of the Polynesian Triangle: Hawaiʻi, Rapa Nui and Aotearoa, and on to the Chathams and the subantarctic Auckland Islands. Oral traditions name founding navigators, such as Kupe for Aotearoa and Hotu Matuʻa for Rapa Nui; they are not datable people.",
+    "sources": [
+      "wilmshurst-2011-east-polynesia",
+      "polynesian-navigation",
+      "wairau-bar"
+    ]
+  },
   "phoenician-mariners-of-necho-ii": {
     "name": "Phoenician mariners of Necho II",
+    "group": true,
     "bio": "Herodotus tells that Necho II of Egypt (610–595 BC) sent out Phoenicians who sailed from the Red Sea round Africa to the Strait of Gibraltar and back to Egypt in three years. Nobody named them.",
     "sources": [
       "necho-ii"
