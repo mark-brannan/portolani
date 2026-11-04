@@ -132,16 +132,21 @@ export function withPerson(list, person, width) {
   return [...[...own].map((id) => ({ id, colour: PERSON_RED, width })), ...list.filter((v) => !own.has(v.id) && !v.hidden).map((v) => ({ ...v, alpha: DIMMED }))];
 }
 
-// A picture's file on the site, from its Commons title: lower case, ascii, dashes; the extension the build writes.
+// A picture's file on the site, from its Commons title: lower case, ascii, dashes; the extension the build writes. A
+// title with no ascii letter or digit in it (Cyrillic, Hebrew, Arabic) takes a short stable hash of the title instead.
 export function pictureName(file) {
-  return String(file).replace(/^File:/, '').replace(/\.[a-z]+$/i, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80) + '.jpg';
+  const title = String(file).replace(/^File:/, '').replace(/\.[a-z]+$/i, '');
+  const slug = title.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80);
+  if (slug) return `${slug}.jpg`;
+  let h = 0x811c9dc5; // FNV-1a, 32 bits
+  for (const c of title) h = Math.imul(h ^ c.codePointAt(0), 0x01000193) >>> 0;
+  return `commons-${h.toString(16).padStart(8, '0')}.jpg`;
 }
 // A picture's page on Commons
 export const commonsPage = (file) => `https://commons.wikimedia.org/wiki/File:${encodeURIComponent(String(file).replace(/^File:/, '').replace(/ /g, '_'))}`;
 
 // The caption a picture carries on the card: what it is, when it was made, by whom, under what licence.
-const KIND_WORDS = { life: 'from life', near: 'near life', posthumous: 'posthumous', imaginary: 'imagined', modern: 'modern', none: 'no likeness', scene: 'scene', ship: 'ship', map: 'map', photo: 'photograph', air: 'from the air', space: 'from orbit', drawing: 'drawing' };
+const KIND_WORDS = { life: 'from life', near: 'near life', posthumous: 'posthumous', imaginary: 'imagined', modern: 'modern', none: 'no likeness', scene: 'scene', ship: 'ship', map: 'map', artefact: 'artefact', site: 'the place', source: 'the source', photo: 'photograph', air: 'from the air', space: 'from orbit', drawing: 'drawing' };
 export const pictureCredit = (im) => [[KIND_WORDS[im.kind] ?? im.kind, im.date].filter(Boolean).join(', '), im.author, im.licence].filter(Boolean).join(' · ');
 // What a picture shows, in a line: a sight's `caption`, a person's `note`
 export const pictureNote = (im) => im.caption ?? im.note ?? null;
