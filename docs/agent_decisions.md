@@ -480,3 +480,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261104t202631z
 - Committed only the 1375 golden; 18 others that moved on this machine left out as noise Undo: commit the other regenerated goldens ([#317](https://github.com/mark-brannan/portolani/pull/317))
+
+### 20261104t210436z
+- show-dont-tell picture is the generator's output rendered as a terminal PNG Undo: git rm docs/try-it/try-it-370.png and drop the image line ([#370](https://github.com/mark-brannan/portolani/pull/370))
