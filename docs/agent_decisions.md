@@ -474,3 +474,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261104t185831z
 - phrase envelope defaults to Even, growth x1.14 as before Undo: default words chip to quick ([#367](https://github.com/mark-brannan/portolani/pull/367))
+
+### 20261104t185847z
+- tuning panel hidden under navigator.webdriver so browser tests can tap the instrument row Undo: drop the webdriver line ([#367](https://github.com/mark-brannan/portolani/pull/367))
