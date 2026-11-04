@@ -133,3 +133,8 @@ test('the pictures lie in a row under the person, each the same height', () => {
   const fan = picturePlaces(f, [[400, 640], [640, 427]], 1.5, 0.25), w0 = 400 * fan[0].scale, w1 = 640 * fan[1].scale;
   assert.ok(Math.abs(fan[1].lon - w1 / 2 - (fan[0].lon - w0 / 2 + 0.75 * w0)) < 1e-9);
 });
+
+test('a Commons title with no ascii letter or digit takes a stable hashed name', () => {
+  assert.equal(pictureName('File:Туд.png'), 'commons-bb4577d2.jpg');
+  assert.equal(pictureName('Туд.png'), 'commons-bb4577d2.jpg');
+});
