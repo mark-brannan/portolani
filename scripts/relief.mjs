@@ -302,7 +302,7 @@ function peakShape({ x, y, w, h, lean, jag }) {
   const right = [at(a, 1), at(a + 0.06, 0.95), at(a + 0.12 + j(3, 0.05), 0.68 + j(4, 0.1)), at(0.2 + j(4, 0.05), 0.5),
     at(0.27, 0.46 + j(5, 0.1)), at(0.37 + j(5, 0.05), 0.24), at(0.5, 0)];
   const crest = [at(a, 1), at(a + 0.02 + j(2, 0.04), 0.62), at(0.04 + j(3, 0.06), 0.3), at(0.08, 0)];
-  return { outline: [...left, ...right.slice(1)], flanks: [...left, ...right.slice(1)], shadow: [...right, ...crest.slice().reverse().slice(0, -1)], crest, slope: Math.atan2(h, w * (0.5 - a)) };
+  return { outline: [...left, ...right.slice(1)], lit: left, h, w, flanks: [...left, ...right.slice(1)], shadow: [...right, ...crest.slice().reverse().slice(0, -1)], crest, slope: Math.atan2(h, w * (0.5 - a)) };
 }
 
 // A rounded hump, a little lopsided, its shadow the right shoulder.
@@ -317,13 +317,102 @@ function humpShape({ x, y, w, h, lean }) {
 // its own x so no stroke is taken for a seam.
 const asIs = ([lon, lat]) => [lon, lat];
 
+// After the Middle-earth map (mapeffects.co, "Tolkien mountains"): the shadow a flat ink fill that stops flat
+// at the base, only a narrow strip of the left flank left lit, and a halo of paper round every peak, so one
+// standing in front of another's shadow keeps its edge. The light stays on the left, as the other looks.
+function flatPeak(g, s, { ink, width, paper, halo, lit }) {
+  const path = (pts) => { g.beginPath(); pen(g, [pts], { close: true }); };
+  path(s.outline); g.fillStyle = paper; g.strokeStyle = paper; g.lineWidth = halo * 2; g.stroke(); g.fill();
+  path(s.outline); g.fillStyle = ink; g.fill();
+  if (s.lit) { // the lit strip: the left flank and the same flank drawn in, wide at the base, none at the apex
+    const base = s.lit[0][1];
+    const inner = s.lit.map(([x, y]) => [x + s.w * lit * Math.min(1, Math.max(0, 1 - (base - y) / s.h)), y]).reverse();
+    path([...s.lit, ...inner.slice(1)]); g.fillStyle = paper; g.fill();
+  }
+  g.beginPath(); pen(g, [s.flanks]); g.strokeStyle = ink; g.lineWidth = width; g.stroke();
+}
+
+// After Tolkien's Wilderland map (1937) and Christopher Tolkien's Middle-earth map (1954), pen alone: a sharp apex,
+// flanks that break in two or three straight pitches, no rounded crag. The shadow is the whole
+// right flank, back to a crest line that runs down from the apex.
+function sharpShape({ x, y, w, h, lean, jag }) {
+  const a = lean * 0.6, j = (i, s) => (jag[i] - 0.5) * s, at = (u, v) => [x + u * w, y - v * h];
+  const left = [at(-0.5, 0), at(-0.34 + j(0, 0.08), 0.3 + j(1, 0.12)), at(-0.24 + j(1, 0.04), 0.42), at(-0.1 + a + j(2, 0.06), 0.74 + j(2, 0.08)), at(a, 1)];
+  const right = [at(a, 1), at(a + 0.09 + j(3, 0.04), 0.7 + j(4, 0.1)), at(0.17 + j(4, 0.06), 0.48 + j(5, 0.08)), at(0.3 + j(5, 0.06), 0.26), at(0.5, 0)];
+  const crest = [at(a, 1), at(a + 0.03 + j(3, 0.04), 0.6), at(0.03 + j(4, 0.04), 0.28), at(0.06, 0)];
+  return { outline: [...left, ...right.slice(1)], lit: left, h, w, flanks: [...left, ...right.slice(1)], shadow: [...right, ...crest.slice().reverse().slice(0, -1)], crest, slope: Math.atan2(h, w * (0.5 - a)) };
+}
+
+// The foothill ridgelets Christopher Tolkien trails off a range: short wavy spurs below and beside a
+// peak, each a sawtooth of a few bumps running away from the range, in px. Seeded from the peak's
+// own crags, so they sit still under a pan.
+function spursOf({ x, y, w, h, jag }) {
+  const rnd = mulberry32(hash(...jag.map((v) => v * 1e6)));
+  const spurs = [], n = Math.floor(rnd() * 3); // none, one or two
+  for (let i = 0; i < n; i++) {
+    const side = rnd() < 0.65 ? -1 : 1; // more on the lit side, where the Misty Mountains' western foothills fan out
+    const sx = x + side * w * (0.4 + 0.3 * rnd()), sy = y + h * (0.1 + 0.3 * rnd());
+    const dir = 0.15 + 0.4 * rnd(), len = w * (0.45 + 0.35 * rnd()), bumps = 2 + Math.floor(rnd() * 2), amp = h * (0.11 + 0.07 * rnd());
+    const pts = [];
+    for (let k = 0; k <= bumps * 2; k++) {
+      const t = k / (bumps * 2), up = k % 2 ? amp * (0.7 + 0.6 * rnd()) : 0;
+      pts.push([sx + side * len * t * Math.cos(dir), sy + len * t * Math.sin(dir) * 0.5 - up]);
+    }
+    spurs.push(pts);
+  }
+  return spurs;
+}
+
+// A pen peak: paper under it (it hides what stands behind), the shadow flank hatched densely in
+// strokes running down the slope and darkest under the crest, the flanks inked, then its spurs: each a
+// wavy line with short strokes under its right side.
+function penPeak(g, s, { ink, width, paper, hatching, spur }) {
+  g.beginPath(); pen(g, [s.outline], { close: true }); g.fillStyle = paper; g.fill();
+  g.fillStyle = ink;
+  // solid from the apex down most of the flank, as the Misty Mountains' east wall prints, breaking into
+  // strokes toward the base
+  g.save(); g.beginPath(); pen(g, [s.shadow], { close: true }); g.clip();
+  const top = s.shadow[0][1];
+  if (hatching.solid) g.fillRect(s.outline[0][0] - s.w, top - 2, s.w * 3, s.h * hatching.solid + 2);
+  // the strokes run from the ridge down the flank and stop short of the foot (hatching.foot of the height)
+  g.beginPath(); g.rect(s.outline[0][0] - s.w, top - 2, s.w * 3, s.h * hatching.foot + 2); g.clip();
+  hatch(g, [[s.shadow]], asIs, { angle: s.slope + hatching.turn, gap: hatching.gap, color: ink, width: hatching.width, alpha: hatching.alpha, centralMeridian: s.outline[0][0] });
+  g.restore();
+  g.strokeStyle = ink; g.lineWidth = width;
+  g.beginPath(); pen(g, [s.flanks]); g.stroke();
+  g.lineWidth = width * 0.75;
+  g.beginPath(); pen(g, [s.crest]); g.stroke();
+  if (!spur) return;
+  // the skirt: strokes sloping away from the lit flank's foot, the western foothills' fan
+  g.lineWidth = width * 0.5;
+  g.beginPath();
+  for (const [i, f] of [0.2, 0.42, 0.64].entries()) {
+    const k = 1 + i * 0.5, [bx, by] = s.lit[Math.min(s.lit.length - 2, Math.floor(f * s.lit.length))];
+    g.moveTo(bx - s.w * 0.02, by + s.h * 0.02); g.lineTo(bx - s.w * (0.12 + 0.06 * k), by + s.h * (0.1 + 0.05 * k));
+  }
+  g.stroke();
+  for (const pts of s.spurs) {
+    g.lineWidth = width * 0.7;
+    g.beginPath(); pen(g, [pts]); g.stroke();
+    g.lineWidth = width * 0.55;
+    g.beginPath();
+    for (let i = 1; i < pts.length; i += 2) { // under each bump's right side, two strokes down the slope
+      const [bx, by] = pts[i], [nx, ny] = pts[i + 1] ?? pts[i];
+      for (const f of [0.3, 0.65]) { const px = bx + (nx - bx) * f, py = by + (ny - by) * f; g.moveTo(px, py); g.lineTo(px + spur * 0.5, py + spur); }
+    }
+    g.stroke();
+  }
+}
+
 // Each shape back to front: washed, its shadow side darker and hatched with short ink strokes down
 // the slope, then the flanks and crest inked. `wash` null leaves the paper showing (an engraving).
 function drawShapes(g, shapes, lookOf) {
   g.save();
   g.lineJoin = 'round'; g.lineCap = 'round';
   for (const s of shapes) {
-    const { ink, light, shade, hatching, width } = lookOf(s.style);
+    const { ink, light, shade, hatching, width, flat, penned } = lookOf(s.style);
+    if (flat) { flatPeak(g, s, { ink, width, ...flat }); continue; }
+    if (penned) { penPeak(g, s, { ink, width, hatching, ...penned }); continue; }
     if (light) { g.beginPath(); pen(g, [s.outline], { close: true }); g.fillStyle = light; g.fill(); }
     if (shade) { g.beginPath(); pen(g, [s.shadow], { close: true }); g.fillStyle = shade; g.fill(); }
     hatch(g, [[s.shadow]], asIs, { angle: s.slope + 0.35, gap: hatching.gap, color: ink, width: hatching.width, alpha: hatching.alpha, centralMeridian: s.outline[0][0] });
@@ -336,7 +425,7 @@ function drawShapes(g, shapes, lookOf) {
 }
 
 const byDepth = (relief) => [
-  ...relief.peaks.map((p) => ({ y: p.y, shape: () => ({ ...peakShape(p), style: p.style }) })),
+  ...relief.peaks.map((p) => ({ y: p.y, shape: () => (SHARP.has(p.style) ? { ...sharpShape(p), spurs: spursOf(p), style: p.style } : { ...peakShape(p), style: p.style }) })),
   ...relief.humps.map((p) => ({ y: p.y, shape: () => ({ ...humpShape(p), style: p.style }) })),
 ].sort((a, b) => a.y - b.y).map((s) => s.shape());
 
@@ -347,7 +436,19 @@ const LOOKS = {
   marina: ({ ink }) => ({ ink, light: '#d2965a', shade: 'rgba(150, 70, 32, 0.7)', hatching: { gap: 2.4, width: 0.7, alpha: 0.8 }, width: 1.1 }),
   // the same in ink alone, as the uncoloured prints were
   engraved: ({ ink, land }) => ({ ink, light: land, shade: null, hatching: { gap: 2.2, width: 0.7, alpha: 0.9 }, width: 1.1 }),
+
+  // after the Middle-earth map: flat ink shadows, a narrow lit side, a paper halo round each peak
+  shadow: ({ ink, land, parchment }) => ({ ink, light: null, shade: null, hatching: null, width: 1.1, flat: { paper: parchment ?? land, halo: 2, lit: 0.16 } }),
+  // after Tolkien's own Wilderland map (1937), pen alone: sharp stacked peaks, the east flank hatched
+  // nearly solid, foothill ridgelets trailing off the range
+  me1937: ({ ink, land, parchment }) => ({ ink, width: 0.9, hatching: { gap: 1.7, width: 0.7, alpha: 0.9, solid: 0.8, foot: 1, turn: 0.5 }, penned: { paper: parchment ?? land, spur: 2.2 } }),
+  // after Christopher Tolkien's 1954 map of Middle-earth: a hairline peak, the east flank hatched in a few strokes
+  // from the ridge that stop short of the foot, the west flank blank, no halo, no spurs
+  me1954: ({ ink, land, parchment }) => ({ ink, width: 0.8, hatching: { gap: 1.9, width: 0.75, alpha: 0.95, solid: 0, foot: 0.8, turn: 0.6 }, penned: { paper: parchment ?? land, spur: 0 } }),
 };
+
+// the styles drawn with the sharp pen profile, their peaks trailing spurs
+const SHARP = new Set(['me1937', 'me1954']);
 
 export const RELIEF_STYLES = ['off', ...Object.keys(LOOKS)];
 

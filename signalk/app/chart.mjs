@@ -12,7 +12,7 @@ export const packOf = (name, manifest) => ({ ...manifest, sprites: manifest.spri
 export const CHART_GEO = ['geo/ranges-10m.json', 'geo/peaks-10m.json'];
 
 // The scene's options for a chart: the land in one colour, no names (the world's names would spill
-// over an ENC's water), the sea's depth drawn, and the mountains as the page draws them by default
-// (the colour style along the ranges, the landmark peaks); `mountains` and `peaks` are the drawer's chips
-export const MOUNTAINS = ['marina'];
+// over an ENC's water), the sea's depth drawn, and the mountains along the ranges in the M.E. 1937 pen
+// style, with the landmark peaks; `mountains` and `peaks` are the drawer's chips
+export const MOUNTAINS = ['me1937'];
 export const CHART_OPTIONS = { kinds: CHART_KINDS, names: false, land: 'off', islands: false, depth: true, relief: MOUNTAINS, peaks: true, autoTitle: false, title: 'PORTOLANI' };

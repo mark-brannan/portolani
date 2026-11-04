@@ -6,7 +6,7 @@
 //          -> one view, optionally with a chart's sheet laid over it, or its warped pieces at an opacity
 //             (docs/overlay/README.md), as .png or .jpg; --voyages magellan,drake:1f4e8c draws those voyages,
 //             a picked colour after an id; `--notes` outlines the laid chart's notes (docs/notes); `--debug sheets,rings`
-//             draws the atlas's sheets or rings in red, as the page's `debug=` does; `--relief marina[,engraved]` draws the mountains
+//             draws the atlas's sheets or rings in red, as the page's `debug=` does; `--relief marina[,engraved,shadow,me1937,me1954]` draws the mountains in those styles
 
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';

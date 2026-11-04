@@ -121,7 +121,7 @@ function styleFromHash() {
     islands: q.has('islands') ? q.get('islands') === '1' : q.get('land') === 'islands', // older: land=islands was the coloured islands
     ...Object.fromEntries(Object.entries(ENUMS).map(([k, [key, of]]) => [k, of.includes(q.get(key)) ? q.get(key) : DEFAULTS[k]])),
     // older links named the drawn styles in `relief`: colour wins where it is listed
-    mountains: ['off', 'ink'].includes(q.get('mountains')) ? q.get('mountains')
+    mountains: ['off', 'ink', 'shadow', 'me1937', 'me1954'].includes(q.get('mountains')) ? q.get('mountains')
       : q.has('relief') ? (q.get('relief').split(',').includes('marina') ? 'colour' : q.get('relief').includes('engraved') ? 'ink' : 'off') : DEFAULTS.mountains,
     seaTint: q.get('seas') === '1' || q.get('redsea') === '1',
     scale: q.get('scale') === 'off' || SCALE_NAMES.includes(q.get('scale')) ? q.get('scale') : DEFAULTS.scale,
@@ -334,6 +334,9 @@ const PROJECTION_GLYPHS = {
 const MOUNTAIN_GLYPHS = {
   off: svg(`<path d="M3 15h22" ${stroke('currentColor', 0.8)}/>`),
   ink: svg(`<path d="M3 15 10 4l3 5 4-7 8 13Z" ${stroke('currentColor', 1)}/><path d="M17 2l-3 13M19 6l-2 9M10 4 8 15M12 9l-2 6" ${stroke('currentColor', 0.6)}/>`),
+  shadow: svg('<path d="M3 15 10 4l3 5 4-7 8 13Z" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round"/><path d="M3 15 10 4l-.5 3.5L6 15ZM13 9l-1.5 6H10ZM17 2l-1.3 4.5L14 15h-1.5Z" fill="#efe3c4"/>'),
+  me1954: svg(`<path d="M3 15 10 4l3 5 4-7 8 13" ${stroke('currentColor', 0.8)}/><path d="M17 2l1 5M18 4l1.5 5M19.5 6l1.5 5M10 4l.5 4M11 6l1 4" ${stroke('currentColor', 0.7)}/>`),
+  me1937: svg(`<path d="M3 15 10 4l3 5 4-7 8 13" ${stroke('currentColor', 1)}/><path d="M10 4l1 6 2 5h-3ZM17 2l1.5 8 3 5h-4Z" fill="currentColor"/><path d="M21 10l2 5M22.5 11l1.5 4M2 13l-1.5 1.5M4 11l-2 1" ${stroke('currentColor', 0.6)}/>`),
   colour: svg('<path d="M3 15 10 4l3 5 4-7 8 13Z" fill="#d2965a" stroke="currentColor" stroke-width="1" stroke-linejoin="round"/><path d="M17 2l3 13h5ZM10 4l2 11h-3Z" fill="rgba(150,70,32,.7)"/>'),
 };
 const HILL_GLYPH = svg('<path d="M3 15c3-9 8-9 11 0M12 15c3-7 7-7 10 0" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"/><path d="M6 11l1 2M9 11l1 2M16 11l1 2M19 11l1 2" stroke="currentColor" stroke-width=".6"/>');
@@ -424,7 +427,7 @@ const CHOICES = {
   regions: [['latin', 'Latin', REGION_SAMPLES.today.latin, NAME_SAMPLE(REGION_SAMPLES.today.latin)], ['english', 'English', REGION_SAMPLES.today.english, NAME_SAMPLE(REGION_SAMPLES.today.english)]],
   regionSet: [['today', 'Today', 'the regions as they are named today', NAME_SAMPLE(REGION_SAMPLES.today.latin)], ['catalan-1375', '1375 · Catalan Atlas', 'the realms the Catalan Atlas names, c. 1375', NAME_SAMPLE(REGION_SAMPLES['catalan-1375'].latin)]],
   titleMode: [['auto', 'Automatic', 'what the view shows'], ['custom', 'Custom']],
-  mountains: [['off', 'Off', '', MOUNTAIN_GLYPHS.off], ['ink', 'Ink', 'black and white hatching, as Engraved', MOUNTAIN_GLYPHS.ink], ['colour', 'Colour', 'ochre wash, as the Carta Marina', MOUNTAIN_GLYPHS.colour]],
+  mountains: [['off', 'Off', '', MOUNTAIN_GLYPHS.off], ['ink', 'Hatched', 'black and white hatching, as Engraved', MOUNTAIN_GLYPHS.ink], ['colour', 'Colour', 'ochre wash, as the Carta Marina', MOUNTAIN_GLYPHS.colour], ['shadow', 'Shadow', 'a flat ink shadow with a narrow lit side and a paper halo, after a Middle-earth tutorial', MOUNTAIN_GLYPHS.shadow], ['me1937', 'M.E. 1937', 'Middle-earth, the Hobbit map: sharp pen peaks, a solid east flank, foothill ridgelets', MOUNTAIN_GLYPHS.me1937], ['me1954', 'M.E. 1954', 'Middle-earth, the Lord of the Rings map: hairline peaks, a few hatch strokes down the east flank, the west blank', MOUNTAIN_GLYPHS.me1954]],
   hills: [['off', 'Off', '', MOUNTAIN_GLYPHS.off], ['catalan', 'Catalan drawings', 'Catalan Atlas, 1375', HILL_GLYPH]],
   peaks: [['off', 'Off', '', MOUNTAIN_GLYPHS.off], ['catalan', 'Landmark peaks', 'named summits; a click gives the height', PEAK_GLYPH]],
   land: [['off', 'Off', '', MOUNTAIN_GLYPHS.off], ['gilt', 'Gilt wash', '', LAND_GLYPHS.gilt], ['green', 'Green wash', 'Oliva, c.1590', LAND_GLYPHS.green], ['ochre', 'Ochre with shoals', 'Benincasa, 1466', LAND_GLYPHS.ochre]],
@@ -796,7 +799,7 @@ async function render() {
     await learnBroken(style.voyages.map((v) => v.id)); // a voyage's ink waits on its file: the first render of a link has them right
     const ink = voyageInk(), inkKey = JSON.stringify(ink); // read from the sheet last drawn; checked again once this one lands
     const { scene, data, bg, world, coarse, timing } = await createScene(env, {
-      ...style, ...parsePlacement(style.placement), relief: style.mountains === 'colour' ? ['marina'] : style.mountains === 'ink' ? ['engraved'] : [],
+      ...style, ...parsePlacement(style.placement), relief: style.mountains === 'colour' ? ['marina'] : style.mountains === 'ink' ? ['engraved'] : style.mountains === 'off' ? [] : [style.mountains],
       continents: style.continentsZoom > 0, continentsZoom: style.continentsZoom,
       regions: style.regionsZoom > 0 ? style.regions : 'off', regionSet: style.regionSet, regionsZoom: style.regionsZoom,
       sprites: [...selection], kinds, view, pinned: !phone.matches, pinTitle: style.autoTitle ? pinTitle : null,
