@@ -2376,7 +2376,7 @@ function wordsRise(text) {
   const { left, top, wide, tall } = mapBox();
   el.textContent = mementoLines(text).join('\n'); el.hidden = false;
   el.getAnimations().forEach((x) => x.cancel());
-  let size = Math.min(64, tall * 0.08) / (el.textContent.includes('\n') ? 1.15 : 1);
+  let size = Math.min(64, tall * 0.08) / (1 + 0.15 * (el.textContent.split('\n').length - 1));
   el.style.fontSize = `${size}px`;
   const fit = (wide * 0.86) / el.scrollWidth;
   if (fit < 1) { size *= fit; el.style.fontSize = `${size}px`; }

@@ -123,5 +123,6 @@ test('a long phrase with a comma near its middle is set as a couplet; a short on
   const { mementoLines } = await import('../scripts/people.mjs');
   assert.deepEqual(mementoLines('Memento, homo, quia pulvis es, et in pulverem reverteris'), ['Memento, homo, quia pulvis es,', 'et in pulverem reverteris']);
   assert.deepEqual(mementoLines('Hodie mihi, cras tibi'), ['Hodie mihi, cras tibi']);
+  for (const p of MEMENTO) assert.equal(mementoLines(p).join(' '), p, `${p}: the lines keep every word`);
   assert.deepEqual(mementoLines('Polvo eres, y en polvo te has de convertir'), ['Polvo eres, y en polvo te has de convertir']);
 });

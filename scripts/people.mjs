@@ -252,8 +252,11 @@ export const MEMENTO_EN = [
   'Our lives are the rivers that flow into the sea, which is dying',
   'Remember that you are dust',
 ];
+// A phrase that is verse in its source keeps its own lines
+const MEMENTO_VERSE = { 'Nuestras vidas son los ríos que van a dar en la mar, que es el morir': ['Nuestras vidas son los ríos', 'que van a dar en la mar,', 'que es el morir'] }; // Jorge Manrique, Coplas, III
 // A long phrase with a comma near its middle is set as a couplet, two lines split after that comma; any other on one line
 export function mementoLines(text) {
+  if (Object.hasOwn(MEMENTO_VERSE, text)) return MEMENTO_VERSE[text];
   if (text.length <= 30) return [text];
   let best = -1;
   for (let i = text.indexOf(','); i >= 0; i = text.indexOf(',', i + 1)) if (Math.abs(i / text.length - 0.5) < Math.abs(best / text.length - 0.5)) best = i;

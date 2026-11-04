@@ -656,6 +656,7 @@ Feature: The skull's clear is shown  (`#sweep`, page.js `skullRise`, `wordsRise`
     Then the phrase that was beside the skull is drawn large at the foot of the map, in the italic hand, in the chart's red, on one line or, set as a couplet, two
     And it comes and fades, slower than the skull, so it can be read
     And a long phrase with a comma near its middle is set as a couplet, on two lines split after the comma
+    And a phrase that is verse in its source, Manrique's, keeps that verse's lines
     And the next phrase takes its place beside the skull, the one the next click shows
   Scenario: the phrase beside the skull never moves it
     Given any phrase beside the skull, the longest included
