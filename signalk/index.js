@@ -9,7 +9,7 @@ export default function plugin(app) {
   // signalk-charts-provider-simple keeps the cells it is given in its data dir's enc-store
   const defaultCharts = () => join(dirname(app.getDataDirPath()), 'signalk-charts-provider-simple', 'enc-store');
   return {
-    id: 'signalk-portolani',
+    id: 'signalk-portolan',
     name: 'Portolani',
     description: 'ENC cells drawn as a portolan chart',
     schema: {

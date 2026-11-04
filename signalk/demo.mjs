@@ -15,13 +15,13 @@ await import('./build.mjs');
 const config = join(HERE, '.demo');
 rmSync(config, { recursive: true, force: true });
 mkdirSync(join(config, 'node_modules'), { recursive: true });
-symlinkSync(HERE, join(config, 'node_modules', 'signalk-portolani'), 'dir');
+symlinkSync(HERE, join(config, 'node_modules', 'signalk-portolan'), 'dir');
 mkdirSync(join(config, 'plugin-config-data'));
-writeFileSync(join(config, 'plugin-config-data', 'signalk-portolani.json'), JSON.stringify({ enabled: true, configuration: { charts: join(HERE, 'test', 'fixtures') } }));
+writeFileSync(join(config, 'plugin-config-data', 'signalk-portolan.json'), JSON.stringify({ enabled: true, configuration: { charts: join(HERE, 'test', 'fixtures') } }));
 writeFileSync(join(config, 'package.json'), JSON.stringify({ name: 'signalk-server-config', version: '0.0.1', private: true }));
 writeFileSync(join(config, 'settings.json'), JSON.stringify({ interfaces: {}, pipedProviders: [] }));
 
-const url = `http://localhost:${port}/signalk-portolani/#-122.425,47.635,11.7`;
+const url = `http://localhost:${port}/signalk-portolan/#-122.425,47.635,11.7`;
 console.log(`config ${config}\nstarting ${SERVER}; the webapp will be at ${url}`);
 const server = spawn('npx', ['--yes', SERVER, '-c', config, '--sample-nmea0183-data'], { stdio: ['ignore', 'pipe', 'inherit'], env: { ...process.env, PORT: String(port) }, detached: true });
 let opened = false;

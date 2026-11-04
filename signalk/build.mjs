@@ -1,4 +1,4 @@
-// Builds the webapp into public/, which signalk-server serves at /signalk-portolani/: the page and its
+// Builds the webapp into public/, which signalk-server serves at /signalk-portolan/: the page and its
 // adapter (app/), the scene modules scene.mjs reaches (scripts/), coast-wright, the coastlines catalogue,
 // the font, and of the packs only what a chart draws (app/chart.mjs). No world geo, no voyages.
 //   node signalk/build.mjs
