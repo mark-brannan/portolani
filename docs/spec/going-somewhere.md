@@ -1,11 +1,16 @@
 # Going somewhere
 
-Feature: Places to fly to  (the astrolabe `#sights`, 38 sights in five sections; the anchor `#anchor`, 16 anchorages; the chart `#charts`, 11 charts, each a row with its name, its eye and the city it was made in; each a drawer in the `#where` row) [verified against main, 2026-11-02]
+Feature: Places to fly to  (the compass `#go`, Find; the astrolabe `#sights`, Locations: Home and The world, then seven groups; the anchor `#anchor`, hidden for now, its anchorages among the Locations; the chart `#charts`, 11 charts, each a row with its name, its eye and the city it was made in; each a drawer in the `#where` row) [verified against main, 2026-11-02]
   # The audit at ab47ea7 read one anchor button `#places` with a `#flyout` of 24 `ORIGINS`; #206 and #209 split it into these three drawers. Their contents are not yet specified here.
   Scenario: noteworthy ports by era
     Given the astrolabe drawer open
-    When the user reads the astrolabe's groups
-    Then the sights come in five sections, each under its own heading, in time order: the ancient world, the medieval Indian Ocean and Asia, Mali's trade network, the age of discovery, the modern world; six sights each but for Mali's nine and the age of discovery's eleven, most of them outside Europe
+    When the user reads the astrolabe's list
+    Then two buttons head it with no group, "Home: the Mediterranean" and "The world"
+    And seven groups follow, each under its own heading, one open at a time: Regions; the sights in time order, the ancient world, the medieval Indian Ocean and Asia, Mali's trade network, the age of discovery, the modern world (six sights each but for Mali's nine and the age of discovery's eleven, most of them outside Europe); and Pacific Islands and Atolls
+  Scenario: Find rings the points of interest
+    Given the compass's Find drawer open
+    When the user clicks "Points of interest"
+    Then red rings swell round every point of interest in view (the places, the lettered regions with a tile, the laid charts' notes), as round a chart's notes when it arrives
     And each heading is the port names' size and weight, in italic, and folds its group, with its count and span of years beside it: only the age of discovery is open at first, and opening one slides the open one shut
     And the date sits to the right of the name, so the button is short and wide, and under it is the caption; the date (a year, a century or a span); the age of discovery also holds Seville, Genoa, Venice, Majorca and Dieppe, their dates followed by "charts made here"
     And a port whose name has changed lists the historic name first and today's in brackets, "Batavia (Jakarta)", "Calicut (Kozhikode)"
@@ -15,10 +20,6 @@ Feature: Places to fly to  (the astrolabe `#sights`, 38 sights in five sections;
     When the user clicks `#sights`, then "Lisbon"
     Then the drawer stays open, and after the flight the hash holds `map=7.50/38.720/-9.140`, and the drawer's foot shows Lisbon's card
     And `#title` (automatic) reads the entry's own title in capitals, "LISBON" (`pinTitle?.toUpperCase()`, scene.mjs:1676 at main)
-  Scenario: a frame entry
-    Given the chart at the default view
-    When the user picks "The North"
-    Then the view is the frame lon 0..40, lat 54..72, via `viewOfFrame` (unverified: the entry's drawer and bounds at main)
   Scenario: the drawers are click-driven
     Given every drawer shut
     When the user clicks `#sights`, then clicks outside, then reopens and presses Escape
