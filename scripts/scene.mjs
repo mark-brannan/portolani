@@ -3430,8 +3430,8 @@ function anchorScene(scene, data) {
   const ll = (o) => ({ o, at: data.proj.invert(o.x, o.y) }), rays = latticeOf(scene, data);
   return {
     k: data.proj.k, show: scene.show, scaleSprite: scene.scaleSprite, cartouche: scene.cartouche, cartouchePos: scene.cartouchePos, scalePos: scene.scalePos, voyages: scene.voyages, overlays: scene.overlays,
-    rays, rayLines: [0, 1, 2].map((kind) => rays.filter((ray) => ray.kind === kind).map((ray) => ray.line)), sheets: scene.sheets, debug: scene.debug, // the lines by ink (black, red, green), as drawAnchored strokes them
-    // the same by band, for a page turn's two networks (bandInk); the pinned rose's lines are band undefined
+    rays, sheets: scene.sheets, debug: scene.debug,
+    // the lines by band and ink (black, red, green), for a page turn's two networks (bandInk); the pinned rose's lines are band undefined
     rayBands: [...new Set(rays.map((ray) => ray.band))].map((band) => ({ band, lines: [0, 1, 2].map((kind) => rays.filter((ray) => ray.band === band && ray.kind === kind).map((ray) => ray.line)) })),
     bands: scene.bands, turn: scene.turn,
     roses: scene.roseDraws.map(ll), mountains: (scene.mountains ?? []).map(ll),
