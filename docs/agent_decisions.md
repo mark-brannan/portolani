@@ -537,3 +537,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261105t042823z
 - Carte Pisane carries no up: as drawn stands it as the BnF photographed it, south up Undo: add up: 180 to the carte-pisane chart ([#392](https://github.com/mark-brannan/portolani/pull/392))
+
+### 20261105t062353z
+- rig build stamp at public/build.json, served at /signalk-portolan/build.json Undo: move the stamp file ([#397](https://github.com/mark-brannan/portolani/pull/397))
