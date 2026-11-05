@@ -11,7 +11,8 @@
   "main": "index.js",
   "scripts": {
     "build": "node build.mjs",
-    "demo": "node demo.mjs"
+    "demo": "node demo.mjs",
+    "rig": "node rig.mjs"
   },
   "keywords": [
     "signalk-node-server-plugin",
