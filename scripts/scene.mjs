@@ -3584,7 +3584,8 @@ function drawAnchored(g, a, bg, view, layers) {
 // `debug`: a list of DEBUG_LAYERS ('sheets', 'rings'), the atlas's sheets drawn in red over everything; none by default.
 // `tune`: { name: value } of TUNE_KNOBS, knobs fixed in the code exposed for a while (docs/atlas/under-the-hood.md);
 // a knob left out, out of range or malformed keeps its default, which is the code's own.
-// A sheet's hidden circle reaches 0.4 of its height, so a node never lands on the edge a neighbour shares.
+// A grid sheet's hidden circle is 0.8 of its height across, 0.4 a radius (docs/atlas/README.md, "The fallback grid"),
+// so every node is inside the sheet and inside the window at the band's first zoom.
 export const SHEET_RADIUS = 0.4;
 // Degrees of rhumb line from a node: the sheet's diagonal on the page, times `k` (the `reach` knob).
 const sheetReach = (e, k = 1) => Math.min(180, k * Math.hypot(e.east - e.west, mercDeg(e.north) - mercDeg(e.south)));
@@ -3731,7 +3732,7 @@ export async function createScene(environment, opts = {}) {
   // The knobs: `curated` 0 leaves grid cells everywhere but the world band, which is one sheet either way.
   const origin = ATLAS_ORIGINS[knobs.origin];
   const sheets = sheetsFor(view, { radius: knobs.radius, curated: knobs.curated === 1 || worldBand, overlap, origin }).map((sh) => ({ ...sh, reach: sheetReach(sh.extent, knobs.reach),
-    from: worldBand ? Math.log2(WINDOW_DEG / (sh.extent.east - sh.extent.west)) : ATLAS_BANDS.find((b) => b.band === sh.band).from }));
+    from: sh.band === WORLD_BAND.band ? Math.log2(WINDOW_DEG / (sh.extent.east - sh.extent.west)) : ATLAS_BANDS.find((b) => b.band === sh.band).from }));
   const roseReach = sheetReach(roseSheet(view.zoom, { origin, curated: knobs.curated === 1, overlap }).extent, knobs.reach);
   const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, historical, roseLines: knobs.roselines === 1, seaAt: sheets && seaAtOf(coarse), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, regionNames, regionStyle, title, autoTitle, pinTitle,
     continentsEnd: zoomEnd(continentsZoom, CONTINENT_ZOOM_END), regionsEnd: zoomEnd(regionsZoom, REGION_ZOOM_END),

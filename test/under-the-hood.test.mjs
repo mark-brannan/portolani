@@ -21,7 +21,7 @@ const env = {
   loadImage: (p) => loadImage(resolve(p)),
   loadFont: async (family) => { GlobalFonts.registerFromPath(join(ROOT, 'test', 'fixtures', 'IMFeENrm28P.ttf'), family); },
 };
-const VIEW = { lon: 6, lat: 40.474, zoom: 6.14 }; // near view 4 of #199, a little west so grid cells still border the curated sheet now the rose sits at 43.5N
+const VIEW = { lon: -10, lat: 40.474, zoom: 6.14 }; // on the western edge of the Carte Pisane's western sheet (band 6), so grid sheets border the curated one in view
 const placed = (scene) => JSON.stringify([scene.roseDraws, scene.monsters, scene.ships, scene.towns].map((l) => l.map((o) => [o.sprite?.id, Math.round(o.x), Math.round(o.y)])));
 const reds = (canvas) => { const d = canvas.getContext('2d').getImageData(0, 0, W, H).data; let n = 0; for (let i = 0; i < d.length; i += 4) if (d[i] > 190 && d[i + 1] < 70 && d[i + 2] < 70) n++; return n; };
 const draw = ({ scene, data, bg }) => { const c = createCanvas(W, H); drawScene(c.getContext('2d'), scene, data, bg, { scale: 1, x: 0, y: 0 }); return c; };
@@ -65,7 +65,8 @@ test('tune: the knobs move what they name', async () => {
   const sheets = async (tune) => (await createScene(env, { view: VIEW, tune })).scene;
   const zero = await sheets({ origin: 'zero', curated: 0 });
   assert.ok(zero.sheets.every((s) => !s.curated), 'curated 0: grid cells only');
-  assert.ok(zero.sheets.every((s) => Math.abs(s.extent.south / 19.2 - Math.round(s.extent.south / 19.2)) < 1e-9 || s.extent.south === -85.0511287798), 'origin zero: rows from the equator');
+  const my = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360)) * 180 / Math.PI, h = (1125 / 2 ** 6) * 1000 / 1600;
+  assert.ok(zero.sheets.every((s) => Math.abs(my(s.extent.south) / h - Math.round(my(s.extent.south) / h)) < 1e-6 || s.extent.south === -85.0511287798), 'origin zero: rows from the equator');
   const wide = await sheets({ reach: 2, radius: 0.8, curated: 0 });
   const grid = (await sheets({ curated: 0 })).sheets;
   wide.sheets.forEach((s, i) => { assert.ok(s.reach > grid[i].reach || s.reach === 180); assert.equal(s.circle.radius, 0.8); });
