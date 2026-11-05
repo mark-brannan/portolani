@@ -19,7 +19,9 @@ const HERE = dirname(fileURLToPath(import.meta.url)), ROOT = join(HERE, '..', '.
 const adapterURL = pathToFileURL(join(HERE, '..', 'app', 'enc-provider.js')).href;
 // the webapp's import map, as hooks: scene.mjs's `coastlines/provider` is the adapter, `portolani/` is scripts/
 const SCRIPTS = pathToFileURL(join(ROOT, 'scripts')).href;
-function resolveMapped(specifier, adapter, scripts) {
+const WORLD = import.meta.resolve('coastlines/provider'); // the adapter's own coastlines, as the build copies it
+function resolveMapped(specifier, adapter, scripts, world) {
+  if (specifier === 'coastlines/world-provider') return world;
   if (specifier === 'coastlines/provider') return adapter;
   if (specifier.startsWith('portolani/')) return `${scripts}/${specifier.slice(10)}`;
   return null;
@@ -27,7 +29,7 @@ function resolveMapped(specifier, adapter, scripts) {
 if (nodeModule.registerHooks) {
   nodeModule.registerHooks({
     resolve(specifier, context, next) {
-      const url = resolveMapped(specifier, adapterURL, SCRIPTS);
+      const url = resolveMapped(specifier, adapterURL, SCRIPTS, WORLD);
       return url ? { url, shortCircuit: true } : next(specifier, context);
     },
   });
@@ -37,10 +39,10 @@ if (nodeModule.registerHooks) {
 let map;
 export function initialize(data) { map = data; }
 export async function resolve(specifier, context, next) {
-  const url = resolveMapped(specifier, map.adapter, map.scripts);
+  const url = resolveMapped(specifier, map.adapter, map.scripts, map.world);
   return url ? { url, shortCircuit: true } : next(specifier, context);
 }`;
-  nodeModule.register(`data:text/javascript,${encodeURIComponent(loader)}`, import.meta.url, { data: { adapter: adapterURL, scripts: SCRIPTS } });
+  nodeModule.register(`data:text/javascript,${encodeURIComponent(loader)}`, import.meta.url, { data: { adapter: adapterURL, scripts: SCRIPTS, world: WORLD } });
 }
 
 // GET /<type>, /<type>/<id> and /<type>/<id>/<property>, as signalk-server routes them to a provider
@@ -127,6 +129,15 @@ test('US3WA46M through the provider draws the Seattle view, with its depth', asy
   assert.equal(hit?.tile.title, 'Test Summit');
   assert.match(hit.tile.date, /1,800 m/);
   if (process.env.UPDATE_GOLDEN) writeFileSync(join(HERE, 'golden', 'puget.png'), whole.c.toBuffer('image/png'));
+  // away from the cell, the world: Natural Earth's 50m land and coast, through coastlines' own provider
+  const away = await draw(true, { lon: -130, lat: 53, zoom: 7 }); // Haida Gwaii, clear of the cell
+  assert.ok(away.data.land.length > 0 && away.data.coastLL.length > 0, `the world's land away from the cell: ${away.data.land.length} polygons`);
+  // past the cell's edge, the world under it: land beyond the box, none of the world's inside it
+  const wider = await draw(true, { ...cell, zoom: cell.zoom - 1.5 });
+  const pts = wider.data.land.flatMap((poly) => poly[0]);
+  assert.ok(pts.some(([lon, lat]) => lon < w - 0.05 || lon > e + 0.05 || lat < s - 0.05 || lat > n + 0.05), 'the world drawn past the cell');
+  assert.ok(wider.data.land.length > whole.data.land.length, `more land past the cell: ${wider.data.land.length} > ${whole.data.land.length}`);
+  if (process.env.RENDER_DIR) for (const [k, v] of Object.entries({ away, wider, whole })) writeFileSync(join(process.env.RENDER_DIR, `${k}.png`), v.c.toBuffer('image/png'));
 });
 
 test('a cell that will not convert is skipped with a warning, and the rest convert', async (t) => {
