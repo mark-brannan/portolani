@@ -528,3 +528,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261105t021448z
 - The kitab pack is the big rose alone: the corner roses are cut to a quarter by the frame, and Venice is a lagoon lobe, not a town drawing Undo: add sprites to the kitab pack in scripts/build-packs.mjs ([#382](https://github.com/mark-brannan/portolani/pull/382))
+
+### 20261105t032511z
+- re-tag signalk-portolan-v0.0.1 at the merge commit and re-dispatch publish.yml, instead of releasing 0.0.2 build commit type so release-please proposes no 0.0.2 Undo: git tag -f back to 423ceba ([#389](https://github.com/mark-brannan/portolani/pull/389))
