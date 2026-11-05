@@ -21,8 +21,9 @@ Recorded verbatim before the spec was written; the Features below are their spec
 
 Answers to the questions (the user, 2026-11-04): the inked 1937 ranges stay; the plugin letters names
 on the map, unlike the page's tap-only tiles; every drawn town style is on at first; the peak icon is a
-choice of the drawer chip's triangle or the 1954 pen peak; the monsters are a choice of Paré or heraldic.
-`docs/signalk/peak-choices.png`: the chip as drawn, then the 1937 and 1954 ranges.
+the monsters are a choice of Paré or heraldic. The peak icon (nit 5) is the lone ink peak, `PEAK_INK` in
+`scripts/peaks.mjs`. The triangle was rejected as gross, and the main page's peaks change to the same
+drawing.
 
 ## Features
 
@@ -53,14 +54,12 @@ Feature: No Catalan mountain sprites
     Then no sprite of style `catalan` (vivid `mountains-a`, `-b`, `-c`) stands anywhere, alone or in a cluster
     And the 1937 inked ranges are drawn along the mountain ranges
 
-Feature: The landmark peak icon is a choice
-  Scenario: the chips
-    Given the drawer open
-    Then a Peaks group offers chips None, Triangle (the chip's drawing: ochre west flank, red-brown east flank, green foot) and 1954 (a lone hairline peak, the east flank hatched), each showing its drawing
-    And Triangle is chosen at first
-  Scenario: chosen
-    When the user picks 1954
-    Then each landmark peak is drawn as the 1954 pen peak, and a tap still opens its tile
+Feature: The landmark peak is the lone ink peak
+  Scenario: plugin and page
+    Given Peaks on, in the plugin or on the main page
+    When the chart is drawn
+    Then every landmark peak is the lone ink peak (`PEAK_INK`): a parchment-filled pointed mountain outlined and hatched in ink
+    And no Catalan peak sprite stands, and a tap still opens the peak's tile
 
 Feature: Peaks and water are lettered
   Scenario: a peak
