@@ -171,6 +171,33 @@ const CHARTS = [
     outline: [[32, 36], [1208, 36], [1208, 1756], [32, 1756]], // scan px
     landmarks: [[[555, 268], [12.33, 45.44]], [[645, 470], [13.91, 44.77]], [[575, 1030], [16.19, 41.89]], [[645, 1390], [18.36, 39.80]], [[715, 1500], [19.85, 39.62]], [[850, 1120], [18.69, 42.43]], [[770, 1395], [19.45, 40.45]]], // scan px, real lon, lat
     snaps: [] },
+  // The Carte Pisane, about 1275 (BnF, GE B-1118): the oldest surviving portolan chart, photographed south up (England at the
+  // foot, Africa along the top), so its similarity turns it half round. Cape Passero, Messina, Trapani, Genoa, Marseille,
+  // Barcelona, Valencia, Almería, Acre, Cyprus, Crete. The Black Sea end is stained past reading and holds no landmark.
+  { id: 'carte-pisane', title: 'Carte Pisane, about 1275', source: 'carte-pisane', file: 'carte-pisane.jpg', scale: 4, dark: true, turned: true,
+    landmarks: [[[9500, 2690], [15.13, 36.69]], [[9440, 3220], [15.55, 38.19]], [[10580, 3020], [12.5, 38.02]], [[11900, 5650], [8.93, 44.41]], [[12550, 4900], [5.37, 43.3]], [[13700, 4320], [2.17, 41.38]], [[14220, 3150], [-0.33, 39.47]], [[14680, 2200], [-2.46, 36.83]], [[3180, 2350], [35.07, 32.93]], [[3900, 2900], [33.3, 35.1]], [[6400, 2500], [24.9, 35.25]]], // scan px, real lon, lat
+    snaps: [] },
+  // Pietro Vesconte, 1311 (Archivio di Stato, Florence): Nordenskiöld's photographic plate of 1897 (Periplus, plate V), the
+  // only copy of this chart found at a usable size and free to lay. The outline is the skin on the book's page. The
+  // Bosporus, the tip of Crimea, Kerch, Trebizond, the two ends of Crete, Jaffa, Tripoli, Alexandria.
+  { id: 'vesconte-1311', title: 'Chart of Pietro Vesconte, 1311 (a plate of 1897)', source: 'vesconte-1311-periplus', file: 'vesconte-1311.jpg', scale: 3, turned: true,
+    outline: [[1630, 770], [5300, 780], [5450, 920], [5700, 820], [6080, 830], [6250, 1000], [6300, 1500], [6420, 2050], [6500, 2400], [6880, 2650], [6900, 3150], [6620, 3450], [6560, 3900], [6560, 4500], [6450, 4760], [1700, 4900], [1640, 3000]], // scan px
+    landmarks: [[[4515, 2345], [29.05, 41.2]], [[5290, 1600], [33.5, 44.4]], [[5770, 1400], [36.5, 45.3]], [[6080, 2280], [39.72, 41.0]], [[4030, 3640], [23.6, 35.6]], [[4330, 3620], [26.3, 35.3]], [[5755, 3950], [34.75, 32.05]], [[5790, 3555], [35.84, 34.45]], [[5160, 4270], [29.9, 31.2]]], // scan px, real lon, lat
+    snaps: [] },
+  // Angelino Dulcert, Majorca 1339 (BnF, GE B-696): the Mediterranean, the Black Sea and Europe's Atlantic coasts, north up,
+  // scanned on a dark cloth that no key separates from the skin's shadowed edge, so the outline is the skin's four sides.
+  // Finisterre, Porto, Lisbon, Cap Corse, Cape Teulada, Trapani, Crete, Cyprus, Jaffa, Alexandria.
+  { id: 'dulcert-1339', title: 'Chart of Angelino Dulcert, Majorca, 1339', source: 'dulcert-1339', file: 'dulcert-1339.jpg', scale: 4, turned: true,
+    outline: [[290, 160], [4092, 130], [8184, 95], [12276, 200], [16200, 340], [16210, 6000], [16210, 9100], [16060, 11770], [12276, 11830], [8184, 11970], [4092, 11900], [290, 12010], [260, 6000]], // scan px
+    landmarks: [[[1960, 6260], [-9.27, 42.88]], [[1990, 6770], [-8.67, 41.15]], [[2000, 7250], [-9.14, 38.72]], [[6150, 5430], [9.4, 43.0]], [[6100, 6790], [8.65, 38.87]], [[7110, 6830], [12.5, 38.02]], [[10150, 7050], [24.9, 35.25]], [[12250, 6620], [33.3, 35.1]], [[12720, 7640], [34.75, 32.05]], [[11580, 8020], [29.9, 31.2]]], // scan px, real lon, lat
+    snaps: [] },
+  // De Bry after John White, the arrival of the Englishmen in Virginia (Briefe and True Report, 1590): the Outer Banks
+  // and Roanoke drawn west up, the ocean at the foot, so its similarity turns it a quarter round. Roanoke's two ends and
+  // middle, Dasamonquepeuc, the Albemarle Sound, Hatorask, the inlet south of Roanoke, Trinety harbor, Pasquenoke. A
+  // picture more than a survey: the banks are drawn close in, so it lies true only near Roanoke.
+  { id: 'debry-virginia', title: 'The arrival of the Englishmen in Virginia, de Bry after John White, 1590', source: 'debry-virginia', file: 'debry-virginia.jpg', scale: 1, turned: true,
+    landmarks: [[[620, 680], [-75.68, 35.88]], [[920, 610], [-75.71, 35.95]], [[345, 795], [-75.64, 35.79]], [[650, 300], [-75.78, 35.9]], [[1200, 400], [-75.85, 36.03]], [[250, 1150], [-75.53, 35.55]], [[470, 1030], [-75.56, 35.8]], [[1400, 1010], [-75.73, 36.15]], [[1500, 150], [-76.15, 36.25]]], // scan px, real lon, lat
+    snaps: [] },
 ];
 
 // The sheet's own placement. With the chart's drawn `parallels` ([{ lat, from, to }], top first, in scan px): the turn
