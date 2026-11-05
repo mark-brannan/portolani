@@ -157,7 +157,7 @@ test('a town keeps its drawing and its icon is floored at ICON_GROW of its metro
 })
 
 test('the metro-area floor takes the north-south scale from the projection, so plate-carree does not overstate it', async () => {
-  const lon = -123.37, lat = 48.43, zoom = 9
+  const lon = -123.37, lat = 48.43, zoom = 8.5 // a zoom whose band's ornaments leave Victoria room in both projections
   const at = async (projection) => {
     const { scene, data } = await createScene(areaEnv, { view: { lon, lat, zoom, projection }, scale: 'off' })
     return { h: scene.towns.find((x) => x.name === 'Victoria').h, lat: data.places.find((x) => x.name === 'Victoria').lat }
