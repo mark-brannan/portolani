@@ -5,8 +5,8 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
-import { createScene, anchorScene, bandInk, viewProjection, panView, zoomView, BUDGET } from '../scripts/scene.mjs';
-import { territory, BANDS } from '../scripts/atlas.mjs';
+import { createScene, anchorScene, bandInk, placedSheets, tuneOf, viewProjection, panView, zoomView, BUDGET } from '../scripts/scene.mjs';
+import { territory, BANDS, bandsAt, WORLD_BAND } from '../scripts/atlas.mjs';
 import { coastNames, joinNames } from '../scripts/names.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -167,6 +167,26 @@ test('a sheet draws the same figures under another numbering of the bands', asyn
 
 // docs/atlas/README.md, "The page turn": a stop inside the span places both bands' sheets, each whole; a pan inside the
 // span places each sheet as it was; the outgoing band's ornaments fade as the incoming band's come in, and nothing moves.
+// A curated chart both placed bands carry (de la Cosa at the turn at 4: the world band sees it at 1.7 windows and band 4
+// serves it; under `fit` the world band keeps the Carta Marina over it, under `cut` both bands place it) is placed once
+// and inked whole: two copies would draw the same figures over each other at 1 - t and t.
+test('a curated chart in both bands of a turn is placed once, from the incoming band, at full ink', () => {
+  const view = { lon: -40, lat: 20, zoom: 4 }, knobs = tuneOf();
+  const fit = placedSheets(view, bandsAt(view.zoom, knobs.turn), knobs, 'fit');
+  assert.ok(fit.every((s) => s.inked === s.band), 'under fit no chart is carried twice here, and every sheet fades with its band');
+  const sheets = placedSheets(view, bandsAt(view.zoom, knobs.turn), knobs, 'cut');
+  const cosa = sheets.filter((s) => s.name === 'The Atlantic and the Americas');
+  assert.equal(cosa.length, 1);
+  assert.equal(cosa[0].band, 4, 'the incoming band\'s copy');
+  assert.equal(cosa[0].inked, undefined, 'inked like the pinned rose, whole through the turn');
+  assert.equal(bandInk([WORLD_BAND.band, 4], 4, knobs.turn)(cosa[0].inked), 1);
+  for (const s of sheets) if (s !== cosa[0]) assert.equal(s.inked, s.band, `${s.id} fades with its band`);
+  assert.ok(sheets.some((s) => s.band === WORLD_BAND.band) && sheets.some((s) => s.band === 4), 'both bands are still placed');
+  // outside the span, one band, every sheet inked by it
+  const alone = placedSheets({ ...view, zoom: 4.3 }, bandsAt(4.3, knobs.turn), knobs, 'cut');
+  assert.ok(alone.every((s) => s.inked === 4));
+});
+
 test('inside a page turn both bands are placed, a pan re-places nothing, and the inks cross', async () => {
   const at = async (view, tune) => {
     const { scene, data } = await createScene(env, { view, scale: 'off', ...(tune && { tune }) });

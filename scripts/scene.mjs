@@ -1481,7 +1481,7 @@ function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
     const sites = [c, ...c.nodes];
     const onLand = sites.filter((q, i) => clear(q.lon, q.lat, i ? capSmall(smallSize) : big.sizePx)).length < SHEET_SEA_SITES;
     // what is kept is decided in the frame; the page's projection only says where it falls and whether it is seen
-    const put = (sprite, n) => { held[sh.id] = (held[sh.id] ?? 0) + 1; if (shows(data.proj, n.lon, n.lat)) { const [fx, fy] = fp.project(n.lon, n.lat); roseDraws.push({ sprite, ...at(n), lon: n.lon, lat: n.lat, fx, fy, size: sprite.sizePx, sheet: sh.name, sheetId: sh.id, band: sh.band }); } };
+    const put = (sprite, n) => { held[sh.id] = (held[sh.id] ?? 0) + 1; if (shows(data.proj, n.lon, n.lat)) { const [fx, fy] = fp.project(n.lon, n.lat); roseDraws.push({ sprite, ...at(n), lon: n.lon, lat: n.lat, fx, fy, size: sprite.sizePx, sheet: sh.name, sheetId: sh.id, band: sh.inked }); } };
     if (ownSet(world, sh)) {
       // a chart's own roses are inside the sheet's allotment, like every other ornament of it
       for (const f of ownFigures(sh, 'rose').slice(0, allotment(sh))) { const r = figureSprite(sh, roses, ring, f); put({ ...r, sizePx: capBig(r.sizePx) }, f); }
@@ -1563,7 +1563,7 @@ function ownBeastsOf(sh, world, sprites, roses) {
   // the chart's own figures count against the sheet's allotment, roses first, then monsters, then ships
   let room = Math.max(0, allotment(sh) - roses);
   const take = (kind, set) => !set.length ? [] : ownFigures(sh, kind).map((f) => ({ f, sprite: figureSprite(sh, set, set, f) })).filter(({ f }) => world.seaAt(f.lon, f.lat))
-    .slice(0, room).map(({ f, sprite }) => ({ sprite, lon: f.lon, lat: f.lat, size: sprite.sizePx, flip: false, ...(kind === 'ship' && { tilt: 0 }), sheet: sh.name, band: sh.band }));
+    .slice(0, room).map(({ f, sprite }) => ({ sprite, lon: f.lon, lat: f.lat, size: sprite.sizePx, flip: false, ...(kind === 'ship' && { tilt: 0 }), sheet: sh.name, band: sh.inked }));
   const monsters = take('monster', sprites.monsters);
   room -= monsters.length;
   return { monsters, ships: take('ship', sprites.ships) };
@@ -1609,7 +1609,7 @@ function placeBeastsOf(sh, world, sprites, avoid, roses) {
       const size = Math.min(sprite.sizePx, s.c * 2 * 0.85);
       if (size < sprite.sizePx * 0.65) break;
       if (!free(s.x, s.y, size * 0.5) || !ringClear(s.x, s.y, size * 0.46, size * 0.46, size * aspect * 0.46)) continue;
-      monsters.push({ sprite, lon: s.lon, lat: s.lat, size, flip: mine.length % 2 === 1, sheet: sh.name, band: sh.band }); mine.push(s);
+      monsters.push({ sprite, lon: s.lon, lat: s.lat, size, flip: mine.length % 2 === 1, sheet: sh.name, band: sh.inked }); mine.push(s);
       taken.push({ x: s.x, y: s.y, r: size * 0.5 }); sites.splice(sites.indexOf(s), 1);
       break;
     }
@@ -1631,7 +1631,7 @@ function placeBeastsOf(sh, world, sprites, avoid, roses) {
     const back = tx < 0;
     if (back) { tx = -tx; ty = -ty; }
     const flip = back !== (sprite.heading === 'left');
-    ships.push({ sprite, lon: s.lon, lat: s.lat, size: sprite.sizePx, flip, tilt: Math.max(-0.26, Math.min(0.26, Math.atan2(ty, tx))), sheet: sh.name, band: sh.band });
+    ships.push({ sprite, lon: s.lon, lat: s.lat, size: sprite.sizePx, flip, tilt: Math.max(-0.26, Math.min(0.26, Math.atan2(ty, tx))), sheet: sh.name, band: sh.inked });
     taken.push({ x: s.x, y: s.y, r: half }); sites.splice(sites.indexOf(s), 1); shipsHere++;
   }
   return { monsters, ships };
@@ -2113,7 +2113,7 @@ function latticeOf(scene, data) {
   const reach = Math.min(180, (Math.hypot(W, H) * 1.5 / data.proj.k) * 180 / Math.PI);
   // a sheet's lines reach its page diagonal; a window's, past the scene's far corner
   const origins = scene.sheets
-    ? scene.sheets.flatMap((sh) => [sh.circle, ...sh.circle.nodes].filter((n) => !inShadow(sh, n.lon, n.lat)).map((n) => ({ lon: n.lon, lat: n.lat, reach: sh.reach, shadow: sh.shadow, band: sh.band })))
+    ? scene.sheets.flatMap((sh) => [sh.circle, ...sh.circle.nodes].filter((n) => !inShadow(sh, n.lon, n.lat)).map((n) => ({ lon: n.lon, lat: n.lat, reach: sh.reach, shadow: sh.shadow, band: sh.inked })))
     : [scene.centre, ...scene.nodes].map((n) => { const [lon, lat] = data.proj.invert(n.x, n.y); return { lon, lat, reach }; });
   // The Catalan Atlas rose's lines run at every zoom, beside the network of the sheets or the window
   // (docs/atlas/README.md, "Zoom bands"), as one more hub of the view's band: the reach of the sheet that
@@ -3763,10 +3763,8 @@ export async function createScene(environment, opts = {}) {
   // the zoom at which the sheet is one window wide.
   // Inside a page turn's span both bands' sheets are placed, each whole, and drawn at the ink of the turn (bandInk).
   const turned = bandsAt(view.zoom, knobs.turn);
-  // The knobs: `curated` 0 leaves grid cells everywhere but the world band, which is one sheet either way.
   const origin = ATLAS_ORIGINS[knobs.origin];
-  const sheets = turned.flatMap(({ band }) => sheetsFor(view, { radius: knobs.radius, curated: knobs.curated === 1 || band === WORLD_BAND, overlap, origin, band })).map((sh) => ({ ...sh, id: `${sh.band}/${sh.name}`, reach: sheetReach(sh.extent, knobs.reach),
-    from: sh.band === WORLD_BAND.band ? Math.log2(WINDOW_DEG / (sh.extent.east - sh.extent.west)) : ATLAS_BANDS.find((b) => b.band === sh.band).from }));
+  const sheets = placedSheets(view, turned, knobs, overlap);
   const roseReach = sheetReach(roseSheet(view.zoom, { origin, curated: knobs.curated === 1, overlap }).extent, knobs.reach);
   const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, historical, roseLines: knobs.roselines === 1, seaAt: sheets && seaAtOf(coarse), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, regionNames, regionStyle, title, autoTitle, pinTitle,
     continentsEnd: zoomEnd(continentsZoom, CONTINENT_ZOOM_END), regionsEnd: zoomEnd(regionsZoom, REGION_ZOOM_END),
@@ -3778,6 +3776,21 @@ export async function createScene(environment, opts = {}) {
   if (!parchments.has(tone)) parchments.set(tone, makePaper(tone));
   const bg = parchments.get(tone);
   return { scene, data, bg, proj: data.proj, world, coarse, view, timing: { load: tLoad - t0, place: performance.now() - tLoad } };
+}
+// The sheets a stop places (docs/atlas/README.md, "The page turn"): those of every band `turned` (bandsAt) over the view,
+// each with `id`, `reach`, `from` and `inked`, the band whose ink its figures and lines take (bandInk). Outside a span
+// that is its own band; inside one, the two bands' sheets each fade with their band, except a curated chart both bands
+// carry (de la Cosa at the turn at 4, the world band's and band 4's): placed once, from the incoming band, and inked
+// whole, `inked` undefined like the pinned rose, since its two copies would draw the same figures over each other at
+// 1 - t and t and dip to 3/4 ink at the midpoint, where the spec's crossfade sums to 1.
+// The knobs: `curated` 0 leaves grid cells everywhere but the world band, which is one sheet either way.
+export function placedSheets(view, turned, knobs, overlap) {
+  const origin = ATLAS_ORIGINS[knobs.origin];
+  const all = turned.flatMap(({ band }) => sheetsFor(view, { radius: knobs.radius, curated: knobs.curated === 1 || band === WORLD_BAND, overlap, origin, band })).map((sh) => ({ ...sh, id: `${sh.band}/${sh.name}`, inked: sh.band, reach: sheetReach(sh.extent, knobs.reach),
+    from: sh.band === WORLD_BAND.band ? Math.log2(WINDOW_DEG / (sh.extent.east - sh.extent.west)) : ATLAS_BANDS.find((b) => b.band === sh.band).from }));
+  const last = new Map(all.filter((sh) => sh.curated).map((sh) => [sh.name, sh]));
+  const twice = new Set(all.filter((sh) => sh.curated && last.get(sh.name) !== sh).map((sh) => sh.name));
+  return all.filter((sh) => !sh.curated || !twice.has(sh.name) || last.get(sh.name) === sh).map((sh) => (twice.has(sh.name) ? { ...sh, inked: undefined } : sh));
 }
 // The voyages a link names, loaded, coloured and sized: one the site lacks, or 'off', is left out, so a missing overlay never stops the map
 async function loadVoyages(list) {
