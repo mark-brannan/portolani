@@ -58,7 +58,7 @@ test('a chart\'s marks show while it is laid and not otherwise; a bare title is 
     assert.ok(marks.every((m) => m.tile.note && m.tile.title && m.hit?.length >= 4 && m.area > 0), id);
     assert.ok(marks.filter((m) => m.tile.real).every((m) => m.tile.drawn && m.tile.link), id);
   }
-  const bare = noteMarks(overlay('catalan-atlas'), viewProjection({ ...VIEWS['catalan-atlas'], zoom: 3, projection: 'mercator' }), rect).find((m) => m.tile.title === 'A palm tree');
+  const bare = noteMarks(overlay('catalan-atlas'), viewProjection({ ...VIEWS['catalan-atlas'], zoom: 3, projection: 'mercator' }), rect).find((m) => m.tile.title === 'A faded figure');
   assert.deepEqual([bare.tile.drawn, bare.tile.real, bare.tile.link], ['', '', undefined]);
 });
 
