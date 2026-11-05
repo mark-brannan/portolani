@@ -1,9 +1,9 @@
 # Remote islands
 
-Feature: Remote islands  (the anchor `#anchor`, two of the seven rows in the anchor's "Seas and islands" group, which is folded until its heading is clicked: only the first group marked open, "Regions", is open at first) [verified against main, 2026-11-02]
+Feature: Remote islands  (the astrolabe `#sights`, two of the seven rows in its "Pacific Islands and Atolls" group, which is folded until its heading is clicked: only the group marked open, "The age of discovery", is open at first) [verified against main, 2026-11-02]
   Scenario: the group and its rows
-    Given the anchor drawer open
-    When the user opens the group "Seas and islands"
+    Given the astrolabe drawer open
+    When the user opens the group "Pacific Islands and Atolls"
     Then two buttons are among its seven rows, "Pukapuka Atoll" and "Pitcairn Islands", each with its date beside the name and its flavour text under it
   Scenario: Pukapuka
     Given the chart at the default view
