@@ -1,24 +1,75 @@
 # The atlas: where the ornaments go, and why
 
-Design doc, draft. Status: proposed, not yet built. It governs how the chart decides where its
+Design doc, draft. Status: proposed, partly built; the bands, the grid sheet and the page turn
+were revised 2026-11-04 (the line in [decisions.md](../decisions.md)). It governs how the chart decides where its
 roses, rhumb lines, monsters, ships, town drawings and names sit, and what happens to them when
 the map moves. It is written for people, not only for the code: the chart borrows a construction
 from the medieval chartmakers, and the borrowing is the point.
 
 ## What the reader sees
 
-Today, dragging or zooming the map in the browser draws only the paper, the land and the coast.
-Every ornament disappears, and when the map stops the ornaments are worked out again for the
-exact new view. The clearest patch of open sea near the middle of the window is a different patch
-after a small drag, so the big rose, its ring of small roses, the lines, the monsters and the
-ships all land somewhere else. It reads as a flicker and a jump, and it makes the chart feel like
-a window onto a generator rather than a map.
+The ornaments belong to the earth. The rhumb lines, the roses, the beasts and the ships are laid on
+the map like printed ink on one sheet of an atlas, and they stay where they were printed until the
+reader turns to the next sheet. Before this design, every move of the map threw them away and
+worked them out again for the new view: the clearest patch of sea near the middle of the window was
+a different patch after a small drag, so everything landed somewhere else, and the chart read as a
+window onto a generator rather than a map ([#107](https://github.com/mark-brannan/portolani/issues/107)).
 
-After this design, the ornaments belong to the earth. A rose sits over a fixed point of sea and
-slides with the coast when you drag. Zoom in and it grows with the coast, or by a chosen fraction
-of that. Nothing jumps when you let go. The only moment the ornaments are rearranged is when you
-zoom far enough to cross from one zoom band to the next, and that moment is predictable: it is a
-page turn, from one sheet of an atlas to the sheet below it.
+**On a pan, nothing is re-dealt.** The rose off Genoa slides with the coast, its lines slide with
+it, and the beast in the Tyrrhenian is the same beast in the same water when the drag ends. Pan
+back, and exactly what was there comes back. Why: a chart is a thing you look across, and if
+looking across it changes it, it is not a chart.
+
+**On a zoom inside a band, the ink scales and nothing moves.** A line keeps its course across the
+coast. A rose stays on its node and grows by a set fraction of the zoom ("What size an ornament
+is"), so it neither looks pasted on nor swallows the sea. Why: a band is one sheet's worth of zoom,
+and a sheet does not change while you hold it closer.
+
+**Through a page turn, a crossfade.** At each whole zoom level from 4 up, the chart turns to the
+sheet below. Over a short span of zoom centred on the whole number, the outgoing sheet's lines,
+roses, beasts and ships fade out while the incoming sheet's fade in. This is the only moment the
+roses and beasts change, and it comes once per zoom level, at a place the reader learns to expect.
+Why a crossfade and not a swap: the turn is where the chart still felt re-dealt ([#107](https://github.com/mark-brannan/portolani/issues/107)'s table),
+and a fade makes the jump a change of sheet. It also fills the emptiest end of the outgoing band
+with the incoming sheet's nodes, which stand closer together.
+
+**How often a window shows a rose.** A rose stands only on a node or the centre of the sheet's
+hidden circle, at sea and clear of land ("The fallback grid"), so not every window holds one:
+nearly every window at a band's start, about two in three at its end, before the crossfade adds the
+next band's. Measured 2026-11-04 on a mockup branch, headless render of the scene, 1600 x 1000,
+default settings:
+
+| views | zoom | where in the band | windows with a rose |
+|---|---|---|---|
+| 35 off Genoa (lon 3° to 18° E step 2.5°, lat 36° to 43° N step 1.75°) | 8.1 | start | 32 of 35 |
+| | 8.5 | middle | 28 of 35 |
+| | 8.9 | end | 26 of 35 |
+| | 9.1 | start | 35 of 35 |
+| | 9.5 | middle | 29 of 35 |
+| | 9.9 | end | 23 of 35 |
+| 15 around 9°S 140°W, the open Pacific | 5.1 / 5.5 / 5.9 | start / middle / end | 15 / 15 / 14 of 15 |
+
+Before this design the same Genoa views at 9.9 had a rose in 6 of 35, and the Pacific views in none
+("Zoom bands" has the comparison).
+
+**A curated chart's window.** Where the window matches a real chart's extent, one to two windows
+wide (1600 px across) at its band's first zoom, the sheet is that chart: its roses stand where the chartmaker drew
+them, its lines run from its own ring's sixteen nodes and its centre, its own beasts and ships ride
+its sea, and nothing from any other chart is drawn on it. Zoom past its band and the page turns to
+the grid below, as anywhere else. Why: a reader who zooms to Sardinia at the right scale should
+meet the Carte Pisane's western circle, not a grid's guess beside it.
+
+**The trade-offs taken.** Five things pull against each other: roses placed correctly, roses
+standing where lines meet, a density of lines that makes a usable network at every zoom, lines and
+roses that stay still while the map moves, and smooth transitions when they must be redrawn.
+
+| wanted | against | taken | why |
+|---|---|---|---|
+| a usable density of lines at every zoom | lines and roses that stay still | networks fixed to the earth, in bands one zoom level wide | an earth-fixed network thins fourfold per zoom level; one-level bands stop that at fourfold, where two-level bands let it thin sixteenfold and left the late windows empty ([#199](https://github.com/mark-brannan/portolani/issues/199), [#135](https://github.com/mark-brannan/portolani/pull/135)) |
+| a rose where the lines meet | a rose in every window | a rose only on a node or the centre; a late window may hold lines and no rose | a rose off its node is a rose where no lines meet ([#135](https://github.com/mark-brannan/portolani/pull/135)); the crossfade fills most of the gap |
+| a chart's roses where it drew them | a ring placed to suit the window | on a curated chart the ring is fitted through its roses; on a grid sheet the rose takes a node | a curated chart's roses are the evidence, so the lines go to them; a grid's ring is ours to place, so the rose goes to it |
+| few page turns | a network dense enough late in a band | one turn per zoom level, each a crossfade | twice the turns of two-level bands, each one soft; the stillness inside a band is what the reader holds on to |
+| fresh beasts | beasts that stay put | beasts belong to the sheet and change only at a turn | a beast that changes on a pan is the re-dealt feeling again |
 
 ## The historical construction
 
@@ -65,7 +116,8 @@ it. A sheet is:
 | field | what it is |
 |---|---|
 | `extent` | a rectangle in longitude and latitude, rectangular on the Mercator page |
-| `circle` | the hidden circle: a centre in longitude and latitude, a radius in degrees of the sheet's extent, sixteen nodes at equal bearings from it |
+| `circle` | the hidden circle: a centre in longitude and latitude, a ring, sixteen nodes at equal bearings from it. On a grid sheet the ring's diameter is 0.8 of the sheet's height ("The fallback grid"); on a curated sheet it is fitted through the chart's drawn roses |
+| `ornaments` | the beasts, ships and rose styles the sheet carries: a curated chart's own, or for a grid sheet a pick by a hash of the sheet's place on the earth ("Which beasts, which ships") |
 | `name` | what the drawer shows for it |
 | `source` | for a curated sheet, the chart it is modelled on and where that chart is held; for a grid sheet, the cell it is |
 
@@ -76,7 +128,8 @@ towns and names at their places. Every placed ornament is remembered by the poin
 sits on, not by a pixel. Each frame then asks the live projection where those points are now and
 draws there, through whatever projection the page is in. Pan, and everything slides with the
 coast. Zoom inside the band, and everything grows with the coast, scaled by its kind's factor
-(below). Cross a band boundary, and the next atlas's sheets are placed and drawn: the page turn.
+(below). Cross a band boundary, and the outgoing atlas fades out as the next one fades in: the page
+turn ("The page turn").
 
 This stays inside the ruling of 2026-10-14 in [decisions.md](../decisions.md): geometry is vector
 at every zoom and drawn through coast-wright; a sheet is a placement region, not a tile, and no
@@ -96,35 +149,94 @@ not to decide here.
 
 ### Zoom bands
 
-Portolani's page is 1600 px wide, so at zoom *z* the window spans 1125 / 2^*z* degrees of
-longitude at the equator. NOAA's reschemed ENC cells (next section) have heights of 19.2°, 4.8°,
-1.2°, 0.3°, 0.075° and 0.0375°, each a quarter of the one before, the last a half. The first five
-fall within 10% of one window width at zooms 6, 8, 10, 12 and 14 (the window is about 9% narrower
-than the cell at each). That is a happy accident, and the design takes it. The chart stops at zoom
-15, so the 0.0375° cell has no zoom to match until the chart goes further:
+Networks are fixed to the earth and come in zoom bands, one zoom level wide: 4 to 5, 5 to 6, and so
+on up to 14 to 15, where the chart's zoom ends. Inside a band nothing moves. Below zoom 4 is the
+world band, where the earth is one page and the famous charts are the better model ("The curated
+sheets").
 
-| band | zooms | sheet height | modelled on |
+Why one level and not two. A network fixed to the earth thins as the reader zooms in: each zoom
+level doubles the map's scale, so a window holds a quarter of the nodes it held one level up. Across
+a band of two levels the network thins sixteenfold, and the windows late in such a band held no
+node at all. At zoom 9.9, 27 of the 35 windows off Genoa held no meeting point of the lines on the
+build of 2026-10-15 ([#107](https://github.com/mark-brannan/portolani/issues/107), [#135](https://github.com/mark-brannan/portolani/pull/135)), and 18 of 35 on main of 2026-11-04 (the
+"before" column below; the build moved between the two counts), and a rose that filled them from the next band's sheets stood where no lines meet ([#135](https://github.com/mark-brannan/portolani/pull/135)). One
+level holds the thinning to fourfold, and the crossfade at the turn carries the rest.
+
+Measured 2026-11-04 on a mockup branch, headless render of the scene, 1600 x 1000, default
+settings, the same 35 views off Genoa as above. Each cell is windows with no node / windows with no
+rose, of 35. "Window rings" is the grid sheet of "The fallback grid", one circle per sheet sized to
+the window:
+
+| zoom | before (main, 2026-11-04) | two-level bands, window rings | one-level bands, window rings |
 |---|---|---|---|
-| world | 1 to 6 | the whole earth, a few curated sheets | the world charts (Juan de la Cosa, the Catalan Atlas's span) |
-| overview | 6 to 8 | 19.2° | ENC band 1, Overview, 1:10,000,000 and 1:3,500,000 |
-| general | 8 to 10 | 4.8° | ENC band 2, General, 1:1,500,000 and 1:700,000 |
-| coastal | 10 to 12 | 1.2° | ENC band 3, Coastal, 1:350,000 and 1:180,000 |
-| approach | 12 to 14 | 0.3° | ENC band 4, Approach, 1:90,000 and 1:45,000 |
-| harbour | 14 to 15 | 0.075° | ENC band 5, Harbor, 1:22,000 and 1:12,000 |
+| 8.1 | 0 / 10 | 0 / 3 | 0 / 3 |
+| 8.5 | 0 / 15 | 0 / 7 | 0 / 7 |
+| 8.9 | 0 / 15 | 1 / 9 | 1 / 9 |
+| 9.1 | 1 / 15 | 5 / 15 | 0 / 0 |
+| 9.5 | 5 / 19 | 7 / 22 | 0 / 6 |
+| 9.9 | 18 / 29 | 11 / 26 | 0 / 12 |
 
-A band is two zoom steps, so inside a band the map scales by up to 4x and a sheet is between one
-and four windows wide; the harbour band is one step, one to two windows, because the chart's zoom
-ends at 15. Sixteen sheets of a band nest inside one sheet of the band
-above, exactly as NOAA's cells do. The world band is the exception: there the earth is one page,
-curated sheet by curated sheet, because at those zooms a grid cell would be most of a hemisphere
-and the famous charts are the better model.
+The window rings fill the early windows (8.1 to 8.9); the one-level bands fill the late ones (9.1 to
+9.9), where a two-level band was still thinning. In the open
+Pacific, 15 views around 9°S 140°W at zooms 5.1, 5.5 and 5.9 had no rose in 15, 15 and 15 windows
+before, and in 0, 0 and 1 with one-level bands.
+
+A sheet of a band is one window at the band's first zoom. Portolani's page is 1600 px wide, so at
+zoom *z* the window spans 1125 / 2^*z* degrees of longitude, and a sheet is that wide and 1000 / 1600
+of that tall on the Mercator page:
+
+| band | zooms | sheet width | sheet height on the page |
+|---|---|---|---|
+| world | below 4 | the whole earth, a few curated sheets | |
+| 4 | 4 to 5 | 70.3° | 43.9 page-degrees |
+| 5 | 5 to 6 | 35.2° | 22.0 |
+| 6 | 6 to 7 | 17.6° | 11.0 |
+| 7 | 7 to 8 | 8.8° | 5.5 |
+| 8 | 8 to 9 | 4.39° | 2.75 |
+| ... | | halving each band | |
+| 14 | 14 to 15 | 0.069° | 0.043 |
+
+A page-degree is a degree on the Mercator page: longitude across, Mercator y down. Inside a band the
+map scales by up to 2x, so at the band's end a sheet is two windows wide. Each band's sheet is half
+the width and half the height of the band above, so four sheets of a band nest inside one sheet of
+the band above. Why the window and not a survey cell: a sheet sized to the window is a chart the
+reader can frame whole at the band's first zoom, ring and all, as a portolan's reader saw the whole
+chart; a survey cell's ring never fitted any window ("The fallback grid").
 
 One rose belongs to no band: the Catalan Atlas rose at 20.2°W 43.5°N, the point every band's grid
 counts from ("The fallback grid", below). Current thinking: its rhumb lines are drawn at every zoom,
-from the world band to the harbour band, beside the network of whatever sheets the view shows.
+from the world band to the last band, beside the network of whatever sheets the view shows.
 Pinning one rose is what pins the lines: the same lines run through every view and every sheet, and
 a page turn between bands leaves them where they were. How far they reach, and how they sit beside
 a band's own lines, is a thing to look at on screen, as the sheet margin is.
+
+### The page turn
+
+The page turn between two bands is a crossfade, not a swap. Over a short span of zoom centred on
+the band edge, the outgoing network and everything on it (its lines, roses, beasts and ships) fade
+out as the incoming network and everything on it fade in. The span is a pencil default of 0.3 zoom
+levels, from *x* − 0.15 to *x* + 0.15 for a band edge at zoom *x*, and a knob in the link
+(`tune=turn:`) so it can be set by eye. Outside the span exactly one band is drawn, at full ink.
+
+Why. The turn is the one moment the ornaments change, and so it is where the "re-dealt" feeling
+lives ([#107](https://github.com/mark-brannan/portolani/issues/107)'s table): a swap at a whole number replaced every rose and beast between two frames.
+A fade reads as one sheet laid over another. And it does a second job: the last 0.15 of a band is
+its emptiest stretch, and the fade lays the incoming band's network over it, whose nodes stand twice
+as close.
+
+Ornaments drawn on the window and not on a sheet (the cartouche, the scale bar) and those that
+belong to the land rather than to a network (towns, names, relief) do not fade; they are the same on
+both sheets.
+
+### Which beasts, which ships
+
+The ornaments a sheet carries (its beasts, ships and rose styles) are a property of the sheet. On a
+curated sheet they are the chart's own. On a grid sheet they are picked by a hash of the sheet's
+identity on the earth, its place in the grid counted from the origin, never by the band number. So
+they change only at a page turn and never on a pan, and two views of the same sheet always carry the
+same beasts. Why the identity and not the band number: a pick by band number reshuffles every beast
+on the earth whenever the bands are renumbered, which is the re-dealt feeling coming back by a side
+door.
 
 ### The curated sheets
 
@@ -151,22 +263,39 @@ doc says "late 13th century" and leaves the argument to them.
 
 The sheets:
 
-| sheet | after | bands | extent | centre (a guess) | why this centre |
+| sheet | after | band | extent | centre (a guess) | why this centre |
 |---|---|---|---|---|---|
-| Mediterranean, west | Carte Pisane, western circle | world, overview | 10°W to 20°E, 30°N to 48°N | 8°E 39°N, off Sardinia | the earliest chart splits the sea into two circles; this is the western |
-| Mediterranean, east | Carte Pisane, eastern circle | world, overview | 15°E to 42°E, 30°N to 48°N | 26°E 36°N, the Aegean | the eastern circle of the same chart |
-| Levant and Black Sea | Vesconte 1311 | overview | 20°E to 42°E, 30°N to 48°N | 30°E 40°N, between the Aegean and the Black Sea | the chart covers the eastern Mediterranean and the Black Sea alone |
-| Europe and the Mediterranean | Dulcert 1339 | world, overview | 25°W to 42°E, 28°N to 60°N | 5°E 40°N, the Balearic sea | the first Majorcan chart; the Atlantic and the Baltic added to the frame |
+| Mediterranean, west | Carte Pisane, western circle | 6 | 10°W to 20°E, 30°N to 48°N | 8°E 39°N, off Sardinia | the earliest chart splits the sea into two circles; this is the western |
+| Mediterranean, east | Carte Pisane, eastern circle | 6 | 15°E to 42°E, 30°N to 48°N | 26°E 36°N, the Aegean | the eastern circle of the same chart |
+| Levant and Black Sea | Vesconte 1311 | 6 | 20°E to 42°E, 30°N to 48°N | 30°E 40°N, between the Aegean and the Black Sea | the chart covers the eastern Mediterranean and the Black Sea alone |
+| Europe and the Mediterranean | Dulcert 1339 | 5 | 25°W to 42°E, 28°N to 60°N | 5°E 40°N, the Balearic sea | the first Majorcan chart; the Atlantic and the Baltic added to the frame |
 | The known world of 1375 | Catalan Atlas | world | 25°W to 120°E, 10°N to 60°N | 20°W 37°N, off Morocco | the first drawn compass rose, on folio 5v; the big rose goes there |
-| Scandinavia and the Baltic | Carta Marina 1539 | overview | 25°W to 45°E, 53°N to 72°N | 22°E 60°N, the Baltic off Stockholm | its roses are already the chart's ornament pack; the big rose follows its central one |
-| The Atlantic and the Americas | Juan de la Cosa 1500 | world | 100°W to 20°E, 20°S to 65°N | 35°W 30°N, the open Atlantic | its rose with the Virgin and Child sits in mid-Atlantic on the equator; the big rose stands for it |
+| Scandinavia and the Baltic | Carta Marina 1539 | 5 | 25°W to 45°E, 53°N to 72°N | 22°E 60°N, the Baltic off Stockholm | its roses are already the chart's ornament pack; the big rose follows its central one |
+| The Atlantic and the Americas | Juan de la Cosa 1500 | 4 | 100°W to 20°E, 20°S to 65°N | 35°W 30°N, the open Atlantic | its rose with the Virgin and Child sits in mid-Atlantic on the equator; the big rose stands for it |
 
-Three notes on the table. A curated sheet serves the bands in which its extent is one to four
-windows wide at the band's first zoom, the range a grid sheet spans; wider than that, it is a page
-of the band above. Where a sheet serves two bands the same circle serves both, and the page turn
-between them keeps the roses still. The world band is the exception again: at those zooms the earth
-is one page, so it takes every curated sheet from the planispheres down to the Carte Pisane's two
-circles.
+Four notes on the table. A curated sheet's network replaces the grid's in the band whose window
+matches the chart's own extent: one to two windows wide at the band's first zoom, measured across
+(the chart's span of longitude against the window's 1600 px; its height is not counted), the range a grid
+sheet spans now that a band is one level. The `band` column is that rule applied to the extent
+column, and moves with it when an extent is read off a scan; wider than that, a chart is a page of
+the band above. In its band it carries the chart's own roses on its own nodes, and nothing from any
+other chart.
+
+On a curated sheet the lines go to the roses, not the roses to the lines. Its ring is read off the
+scan together with its roses in one pass: the centre, the ring and all sixteen nodes, one
+similarity fit per ring ([centres.md](centres.md) has the method). The drawn roses are nodes of the
+ring, and the ring is fitted through them. Why: the chartmaker's roses are the evidence of where
+the network stood, and a ring placed by any other rule would put a historical rose where no lines
+meet. Juan de la Cosa's chart is reread in its own session before its roses are drawn: its readings
+in [centres.md](centres.md) and [ornaments.md](ornaments.md) disagree with each other (node roses at
+bearings 57°, 136° and 264° from the read centre, where multiples of 22.5° were expected, and at 306
+to 429 px from it, where the ring is 360 px).
+
+The world band is the exception again: at those zooms the earth is one page, so it takes every
+curated sheet from the planispheres down to the Carte Pisane's two circles.
+
+Where two curated sheets match the same band (the Carte Pisane's two circles and Vesconte all fall
+in band 6), the overlap rule below says which are drawn.
 
 Where curated sheets overlap, a rule in the settings drawer (`overlap=` in the link) says which are drawn (#199):
 
@@ -197,39 +326,53 @@ quarter the height of the band above (the last a half), so sixteen cells nest in
 down, above 49° 12' N a cell is twice as wide as it is high, above 69° 12' N four times, so a cell
 on the ground does not become a sliver as the meridians converge.
 
-The chart's grid takes all of that: the ladder of heights in the band table, the nesting, and the
-widening at the same two latitudes, applied north and south to every row that lies wholly beyond
-them. What it does not take is NOAA's zero. NOAA counts its cells from the equator and the prime
-meridian, which suits a survey and says nothing about a chart, so the hidden circles would fall
-wherever the cells happened to land.
+The chart's grid takes the form of that scheme: rectangular sheets on lines of longitude, nested
+band inside band, each named by its band and cell. It does not take NOAA's ladder of heights, its
+widening, or its zero. The ladder steps by four, which made two-level bands; a sheet here halves
+each band, one window at the band's first zoom ("Zoom bands"). The widening keeps a survey cell from
+becoming a sliver as the meridians converge; a sheet here is counted in Mercator y, so it keeps the
+window's shape at every latitude and needs none. And NOAA counts its cells from the equator and the
+prime meridian, which suits a survey and says nothing about a chart, so the hidden circles would
+fall wherever the cells happened to land.
 
-Current thinking: every band counts its cell edges in whole multiples of the cell height, and of
-the cell width east and west, out from one point, the Catalan Atlas rose at 20.2°W 43.5°N, read off
+Current thinking: every band counts its sheet edges in whole multiples of the sheet's height in
+Mercator y, north and south, and of its width east and west, out from one point, the Catalan Atlas rose at 20.2°W 43.5°N, read off
 the scan in [centres.md](centres.md) to ±1°. It is the first drawn compass rose known on any chart,
 and it is the point the world band's big rose is pinned to. Because each band's height divides the
-one above, sixteen sheets still nest in one, and the rose sits on a corner every band's grid shares:
-zoom in on it from the overview band to the harbour band and it stays on a sheet corner all the way
+one above, four sheets still nest in one, and the rose sits on a corner every band's grid shares:
+zoom in on it from band 4 to band 14 and it stays on a sheet corner all the way
 down. Where a column reaches the date line or a row a pole, the sheet ends there. If a sharper
 reading of the scan moves the rose, every grid moves with it.
 
 Open: the rose is the centre of no grid sheet's circle. It is carried by its own lines, drawn at
 every zoom (see "Zoom bands"), not by any sheet's.
 
-A grid sheet's circle sits at the cell's
-centre with a radius of 0.36 to 0.62 of the cell's height, chosen as today's placement chooses it:
-the radius that puts the most nodes in water clear enough for a small rose. If the centre is on
-land, the big rose is not drawn; the lines still run from it, as they did from a node on land on a
-real chart. A grid sheet's name in the drawer is its band and cell, in the manner of an ENC name.
+A grid sheet has one hidden circle: its centre on the sheet's centre, its ring 0.8 of the sheet's
+height across (800 px at the band's first zoom, every node inside the window), sixteen nodes on it.
+That is the Carte Pisane's proportion: its two rings are each about 0.8 of the chart's height, and
+every node is on the page ([the scan with the fitted circles](centres/carte-pisane.jpg)). Why: the
+ring this replaces was 0.4 of a survey cell's height in radius, 1.4 to 2.4 window heights tall on
+the page, so no view in any band ever framed a ring ([#199](https://github.com/mark-brannan/portolani/issues/199), the diagnosis of 2026-10-18). The 0.8
+is a pencil default, to be looked at on screen.
+
+The rose snaps to the network, never the network to the window. A rose stands only on a node or
+the centre of the current band's network, at sea and clear of land, and it never leaves its node to
+fill a window. A window late in a band may hold lines and no rose, and that is accepted: the
+measured cost is in "What the reader sees", and the crossfade at the turn fills most of it. Why: a
+rose is where the lines meet, and a rose moved off its node to fill a window stands where no lines
+meet ([#135](https://github.com/mark-brannan/portolani/pull/135)). If the centre is on land, the big rose is not drawn; the lines still run from it, as
+they did from a node on land on a real chart. A grid sheet's name in the drawer is its band and
+cell, in the manner of an ENC name.
 
 ### What size an ornament is
 
-Within a band the map scales by up to 4x. Each kind of ornament scales by a factor of that: at
+Within a band the map scales by up to 2x. Each kind of ornament scales by a factor of that: at
 factor 1 it is ink on the map and grows with it; at 0 it is held at a fixed pixel size; at 0.5 it
-grows by the square root, twice across a band. Proposed first settings:
+grows by the square root, about 1.4x across a band. Proposed first settings:
 
 | kind | factor | why |
 |---|---|---|
-| rose | 0.5 | a rose that held still would look pasted on; one that grew 4x would swallow the sheet |
+| rose | 0.5 | a rose that held still would look pasted on; one that grew 2x with the map would crowd its ring by the band's end |
 | rhumb lines | stroke 0, reach 1 | a line's width is ink, its length is geography |
 | monster, ship | 0 | a ship is a ship whatever the scale; it is placed once at a size that fits |
 | town, city | 0.5 | the town drawings already grow with grandeur, this adds a little with the zoom |
@@ -264,16 +407,16 @@ wait on it.
 
 ## Risks and the measurement
 
-- **Two networks in one view.** Lines from neighbouring sheets cross, and the world rose's lines
-  cross every band's. The reach margin is the control; it must be looked at, at a band boundary and at a sheet corner, before the design is
+- **Two networks in one view.** Lines from neighbouring sheets cross, the world rose's lines
+  cross every band's, and through a page turn two bands' networks are drawn at once, one fading. The reach margin is the control; it must be looked at, at a band boundary and at a sheet corner, before the design is
   trusted.
 - **Projection.** The circle is drawn through the projection, so it is round only on the
   cylindrical pages. On the orthographic globe and the azimuthal views it is an ellipse or an egg,
   and that is consistent with how the lines already bow. A sheet whose centre is beyond the globe's
   horizon keeps its placement; its ornaments fall behind the globe and are not drawn.
 - **Poles and the date line.** Sheets are longitude and latitude rectangles, so a sheet never
-  crosses the date line; it ends at 180° and the next begins. There is no sheet above the last
-  widened row near the poles, so the polar caps carry no roses. Today's chart stops a hair short
+  crosses the date line; it ends at 180° and the next begins. There is no sheet beyond the last
+  row the Mercator page reaches, so the polar caps carry no roses. Today's chart stops a hair short
   of the pole for the same reason.
 - **Magnetic tilt.** The originals' networks are turned about 8° to 10° anticlockwise from north.
   Drawing the curated circles with that tilt would be more faithful and would confuse the modern
@@ -285,16 +428,23 @@ wait on it.
   median of a few hundred milliseconds at zoom 5 is acceptable while the chart is in development,
   and about 50 ms is the bar to aim at later; the ruling is in [decisions.md](../decisions.md).
   Above the acceptable bar, the ornaments are drawn every other frame during a move, which is still
-  no flicker.
+  no flicker. The per-frame figures on [#107](https://github.com/mark-brannan/portolani/issues/107) (ornaments projected each frame) stand. The crossfade
+  draws two networks for 0.3 of a zoom level, so its frame is measured against the same two bars,
+  on the same moves, before it ships.
 
 ## Not decided here
 
-- The exact centres and extents of the curated sheets: a scan of each chart, the circle's centre
-  read off it, and the position transferred to the modern earth. One chart at a time, with the
-  crop kept in this folder as the town and Carta Marina folders keep theirs.
+- The exact centres and extents of the curated sheets: a scan of each chart, the ring and its
+  roses read off it in one pass, and the position transferred to the modern earth. One chart at a
+  time, with the crop kept in this folder as the town and Carta Marina folders keep theirs.
+- Juan de la Cosa's ring and roses, reread in their own session: its readings in centres.md and
+  ornaments.md disagree ("The curated sheets"), and its roses wait on the rereading.
+- The crossfade's cost per frame, measured against the bars in "Risks and the measurement" before it
+  ships.
 - Whether a child sheet's circle should sit on a node of its parent's, so zooming in descends into
-  the same geometry. Sixteen nodes on a ring do not tile a plane, so it would be approximate; nice
-  if it works, not required.
+  the same geometry. Sixteen nodes on a ring do not tile a plane, and four child sheets nest in a
+  parent with their centres off its nodes, so it would be approximate; nice if it works, not
+  required.
 - The size factors' values, and whether a pack may override them.
 
 ## Sources
