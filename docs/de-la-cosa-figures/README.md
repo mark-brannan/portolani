@@ -25,7 +25,7 @@ Ceylon, is drawn north up and is kept as drawn.
 The ships are new decorations, so they are on by default: every ship is in the default selection. The fleet lies east
 of the de la Cosa sheet's extent (20°E), so none of the four is drawn where the chart puts it. The sheet now has its own
 set (historical accuracy, the default): four roses of its west ring and one ship in the South Atlantic, which stands in
-`cosa-ship-a`, and no beasts, since the chart draws none at sea. The roses stand in the page's ring roses.
+one of the four, and no beasts, since the chart draws none at sea. The roses stand in the page's ring roses.
 
 ![Each ship's raw crop beside the sprite multiplied onto parchment, at twice the width the map draws it and at that width](steps.png)
 
