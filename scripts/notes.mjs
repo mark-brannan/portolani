@@ -595,7 +595,7 @@ export const CATALAN_NOTES = [
   },
   {
     id: 'queen-of-sheba', title: 'The Queen of Sheba',
-    drawn: 'A crowned queen in a grey gown on a green throne, a gold ball in her raised hand, by "ARABIA SEBBA". The legend (V.11): "The province that had queen Sebba; now it belongs to the Arab Saracens, and in it there are very good aromas, as well as myrrh and frankincense", and a bird named Phoenix.',
+    drawn: 'A crowned queen in a grey gown on a green throne, a gold ball in her raised hand, by "ARABIA SEBBA". The legend (V.11): "The province that had queen Sebba; now it belongs to the Arab Saracens, and in it there [are] very good aromas, as well as myrrh and frankincense", and a bird named Phoenix.',
     real: 'Saba, in Yemen, on the incense road; whether its queen ever went to Solomon is not known. In 1375 Yemen was ruled by the Rasulid sultans.',
     source: { label: 'Cresques Project V.11; Queen of Sheba', url: WIKI('Queen_of_Sheba') },
     at: { px: page(9, 3500, 13900), lonlat: [45.33, 15.42] }, size: [1300, 2000], up: 0,
@@ -686,7 +686,7 @@ export const CATALAN_NOTES = [
   // Sheet 11: the Chagatai khan, King Stephen, the pygmies, Alexander's trumpeters and the islands of the Indies
   {
     id: 'falcon-islands', title: 'The islands of falcons',
-    drawn: 'Islands in a northern sea, drawn upside down, and the legend (VI.7): "In these islands are born very good gyrfalcons and falcons that the inhabitants do not dare to capture except at the service of the Great Khan."',
+    drawn: 'Islands in a northern sea, drawn upside down, and the legend (VI.7): "In these islands are born very good gyrfalcons and falcons that the inhabitants do not [dare] to capture except at the service of the Great Khan."',
     real: 'Gyrfalcons breed on Arctic coasts. Marco Polo tells of the Great Khan hunting with ten thousand falconers.',
     source: { label: 'Cresques Project VI.7; Gyrfalcon', url: WIKI('Gyrfalcon') },
     at: { px: page(11, 2000, 1000), lonlat: null }, size: [3400, 1600], up: 180,
@@ -742,7 +742,7 @@ export const CATALAN_NOTES = [
   },
   {
     id: 'pygmies', title: 'The pygmies and the cranes',
-    drawn: 'Little men fighting cranes. The legend (VI.9): "Here are born men so small that they do not reach more than five palmos in height", who weave and tend cattle, "defend themselves from herons", and live to forty. "Here ends the land of the Lord of Catayo."',
+    drawn: 'Little men fighting cranes. The legend (VI.9): "Here are born men so small that they [do] not reach more than five palmos in height", who weave and tend cattle, "defend themselves from herons", and live to forty. "Here ends the land of the Lord of Catayo."',
     real: 'The pygmies and cranes of Homer and Pliny, a tale from antiquity set at the end of Cathay.',
     source: { label: 'Cresques Project VI.9; Pygmies', url: WIKI('Pygmies_(Greek_mythology)') },
     at: { px: page(11, 4700, 8700), lonlat: null }, size: [2300, 2300], up: 0,
