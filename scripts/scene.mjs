@@ -9,7 +9,7 @@
 // A view is a centre, zoom and projection, { lon, lat, zoom, projection }, on a W x H canvas; the
 // projection is one of PROJECTIONS, Mercator when left out.
 
-import { sheetsFor, roseSheet, WINDOW_DEG, inShadow, territory, cutOut, overlapRule, OVERLAP_RULES, DEFAULT_OVERLAP, WORLD_BAND, BANDS as ATLAS_BANDS, ROSE as ATLAS_ROSE, ORIGINS as ATLAS_ORIGINS } from './atlas.mjs';
+import { sheetsFor, bandFor, viewBounds, hiddenCircle, roseSheet, WINDOW_DEG, inShadow, territory, cutOut, overlapRule, OVERLAP_RULES, DEFAULT_OVERLAP, WORLD_BAND, BANDS as ATLAS_BANDS, ROSE as ATLAS_ROSE, ORIGINS as ATLAS_ORIGINS } from './atlas.mjs';
 import { fill, trace, limn, rhumb, place, letter, geojsonPolygons, geojsonRings } from 'coast-wright';
 import { provider } from 'coastlines/provider';
 import catalogue from 'coastlines/catalogue.json' with { type: 'json' };
@@ -1506,6 +1506,55 @@ function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
   return { roseDraws, held, centre: pts[0], nodes: pts.slice(1) };
 }
 
+// MOCKUP (#107, not for merge): the extra networks of the `meet` knob, each a sheet-like { name, band, extent,
+// circle, reach, from, extra } with `extra` its alpha. 'fade' takes the next band's sheets past the middle of a grid
+// band (none in the world band or the last band); 'circles' takes four quarter circles of every grid sheet.
+function meetExtras(view, knobs, sheets, { overlap, origin }) {
+  if (knobs.meet === 'today' || view.zoom < ATLAS_BANDS[0].from) return [];
+  if (knobs.meet === 'fade') {
+    const band = bandFor(view.zoom), next = ATLAS_BANDS.find((b) => b.band === band.band + 1);
+    const p = (view.zoom - band.from) / (band.to - band.from);
+    if (!next || p <= 0.5) return [];
+    const alpha = Math.round(Math.min(1, (p - 0.5) / 0.5) * 20) / 20, have = new Set(sheets.map((sh) => sh.name));
+    return sheetsFor({ ...viewBounds(view), zoom: next.from }, { radius: knobs.radius, curated: knobs.curated === 1, overlap, origin })
+      .filter((sh) => !have.has(sh.name))
+      .map((sh) => ({ ...sh, reach: sheetReach(sh.extent, knobs.reach), from: next.from, extra: alpha }));
+  }
+  return sheets.filter((sh) => !sh.curated && sh.row != null).flatMap((sh) => {
+    const e = sh.extent, mlon = sh.circle.lon, mlat = sh.circle.lat;
+    return [[e.west, mlon, e.south, mlat], [mlon, e.east, e.south, mlat], [e.west, mlon, mlat, e.north], [mlon, e.east, mlat, e.north]].map(([west, east, south, north], q) => {
+      const extent = { west, east, south, north };
+      return { name: `${sh.name}q${q}`, band: sh.band, extent, circle: hiddenCircle(extent, knobs.radius), reach: sheetReach(extent, knobs.reach), from: sh.from, extra: 1 };
+    });
+  });
+}
+// MOCKUP (#107): the extra networks' roses. A small rose of the ring on an extra circle's centre or a node, cardinals first,
+// one per circle at most, in clear sea only (never on land), clear of every rose and beast already placed, at the
+// circle's alpha. They take nothing from any sheet's allotment.
+function placeExtraRoses(data, world, roses, roseDraws, beasts, smallSize) {
+  const ring = roseSet(roses, world.seed).ring.map((s) => ({ ...s, sizePx: Math.min(s.sizePx, ROSE_CAP.small * W) }));
+  const taken = [...roseDraws.map((r) => ({ x: r.x, y: r.y, r: r.size / 2 })), ...[...(beasts?.monsters ?? []), ...(beasts?.ships ?? [])].map((b) => ({ x: b.x, y: b.y, r: (b.size ?? b.sizePx ?? b.sprite?.sizePx ?? 80) / 2 }))];
+  for (const sh of world.extras) {
+    const fp = sheetFrame(sh), sprite = ring[Math.abs(seedOf(sh.name)) % ring.length], size = Math.min(sprite.sizePx, smallSize);
+    const clear = (lon, lat) => {
+      if (!world.seaAt(lon, lat) || POIS.some((p) => Math.hypot(...fp.project(p.lon, p.lat).map((v, i) => v - fp.project(lon, lat)[i])) < POI_ROOM)) return false;
+      const [x, y] = fp.project(lon, lat), r = size * 0.46;
+      for (let i = 0; i < 8; i++) { const [a, b] = fp.invert(x + r * Math.cos((i * Math.PI) / 4), y + r * Math.sin((i * Math.PI) / 4)); if (!world.seaAt(a, b)) return false; }
+      return true;
+    };
+    const c = sh.circle;
+    for (const n of [c, ...SHEET_NODE_ORDER.map((i) => c.nodes[i])]) {
+      if (!shows(data.proj, n.lon, n.lat) || inShadow(sh, n.lon, n.lat)) continue;
+      const [x, y] = data.proj.project(n.lon, n.lat);
+      if (taken.some((t) => Math.hypot(t.x - x, t.y - y) < t.r + size / 2 + 10) || !clear(n.lon, n.lat)) continue;
+      const [fx, fy] = fp.project(n.lon, n.lat);
+      roseDraws.push({ sprite: { ...sprite, sizePx: size }, x, y, lon: n.lon, lat: n.lat, fx, fy, size, sheet: sh.name, alpha: sh.extra });
+      taken.push({ x, y, r: size / 2 });
+      break;
+    }
+  }
+}
+
 // Where a sheet is placed: Mercator at its band's first zoom, centred on the sheet, whatever the page's
 // projection, zoom or window. Placement is a function of the sheet and the land alone.
 const sheetFrame = (sh) => makeProjection({ lon: sh.circle.lon, lat: sh.circle.lat, zoom: [WORLD_BAND, ...ATLAS_BANDS].find((b) => b.band === sh.band).from });
@@ -1646,6 +1695,7 @@ function buildScene(data, sprites, ctx, world = {}) {
   // the window is. A site is kept or dropped by the sea round it, never by what the window shows.
   const sheetRoses = world.sheets ? placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) : null;
   const sheetBeasts = sheetRoses ? placeSheetBeasts(data, world, sprites, sheetRoses.roseDraws, sheetRoses.held) : null;
+  if (sheetRoses && world.extras?.length) placeExtraRoses(data, world, roses, sheetRoses.roseDraws, sheetBeasts, smallSize);
   const edge = (x, y) => Math.min(x, y, W - x, H - y);
   // Roses stand in open water. Where the water is heavily constrained (no clear sea in the middle of the
   // frame to hold half a big rose) they may stand on open land, clear of the coast by the same measure.
@@ -1868,7 +1918,7 @@ function buildScene(data, sprites, ctx, world = {}) {
 
   // automatic, the typed title stands in where the view has no name in it
   const title = world.pinTitle?.toUpperCase() || (world.autoTitle && viewTitle(data, towns.filter((t) => names.some((n) => n.text === t.name)), world.regions === 'english' ? 1 : 0, lesser.filter((l) => l.poi), world.regionNames).toUpperCase()) || world.title || 'PORTOLANI';
-  return { field, boxes, occupied, centre, nodes, sheets: world.sheets, roseDraws, towns, lesser, names, worldNames, monsters, ships, mountains, relief, cartouche: { ...cartouche, sprite: cartoucheSprite, title }, cartouchePos: cartoucheCorner };
+  return { field, boxes, occupied, centre, nodes, sheets: world.sheets, extras: world.extras, roseDraws, towns, lesser, names, worldNames, monsters, ships, mountains, relief, cartouche: { ...cartouche, sprite: cartoucheSprite, title }, cartouchePos: cartoucheCorner };
 }
 
 // ---------------------------------------------------------------- drawing
@@ -2104,7 +2154,7 @@ function latticeOf(scene, data) {
   const reach = Math.min(180, (Math.hypot(W, H) * 1.5 / data.proj.k) * 180 / Math.PI);
   // a sheet's lines reach its page diagonal; a window's, past the scene's far corner
   const origins = scene.sheets
-    ? scene.sheets.flatMap((sh) => [sh.circle, ...sh.circle.nodes].filter((n) => !inShadow(sh, n.lon, n.lat)).map((n) => ({ lon: n.lon, lat: n.lat, reach: sh.reach, shadow: sh.shadow })))
+    ? [...scene.sheets, ...(scene.extras ?? [])].flatMap((sh) => [sh.circle, ...sh.circle.nodes].filter((n) => !inShadow(sh, n.lon, n.lat)).map((n) => ({ lon: n.lon, lat: n.lat, reach: sh.reach, shadow: sh.shadow, alpha: sh.extra ?? 1 })))
     : [scene.centre, ...scene.nodes].map((n) => { const [lon, lat] = data.proj.invert(n.x, n.y); return { lon, lat, reach }; });
   // The Catalan Atlas rose's lines run at every zoom, beside the network of the sheets or the window
   // (docs/atlas/README.md, "Zoom bands"), as one more hub of the view's band: the reach of the sheet that
@@ -2115,11 +2165,11 @@ function latticeOf(scene, data) {
   // A line runs its whole reach: it is never cut where another sheet lies (#199), except under the `cut`
   // overlap rule, where it stops at the edge of a smaller chart over its sheet (the sheet's shadow).
   const cut = scene.overlap === 'cut';
-  for (const { lon, lat, reach, shadow } of origins) {
+  for (const { lon, lat, reach, shadow, alpha = 1 } of origins) {
     for (let k = 0; k < RHUMB_RAYS; k++) {
       const kind = k % 4 === 0 ? 0 : k % 2 === 1 ? 1 : 2; // wind, quarter (red), half (green)
       const ray = rhumb([lon, lat], 90 + (k * 360) / RHUMB_RAYS, reach * Math.cos(lat * Math.PI / 180));
-      for (const line of cutOut(ray, cut ? shadow : null)) rays.push({ kind, line, box: boxOf(line.map(([a, b]) => data.proj.project(a, b))) });
+      for (const line of cutOut(ray, cut ? shadow : null)) rays.push({ kind, line, alpha, box: boxOf(line.map(([a, b]) => data.proj.project(a, b))) });
     }
   }
   lattices.set(scene, rays);
@@ -3177,8 +3227,10 @@ function drawScene(g, scene, data, bg, view) {
   const inks = [STYLE.ink, STYLE.windRed, STYLE.windGreen]; // by kind: wind, quarter-wind, half-wind
   const show = scene.show ?? { kinds: new Set(KINDS), names: true, rhumb: true };
   for (const [kind, ink] of show.rhumb ? inks.entries() : []) {
-    const lines = rays.filter((ray) => ray.kind === kind && meets(r, ray.box)).map((ray) => ray.line);
-    limn(g, lines, data.proj.toPx, { color: ink, alpha: STYLE.rhumbAlpha, width: STYLE.rhumbWidth, oneStroke: true, ...data.proj.seam });
+    for (const a of new Set(rays.map((ray) => ray.alpha))) {
+      const lines = rays.filter((ray) => ray.kind === kind && ray.alpha === a && meets(r, ray.box)).map((ray) => ray.line);
+      limn(g, lines, data.proj.toPx, { color: ink, alpha: STYLE.rhumbAlpha * a, width: STYLE.rhumbWidth, oneStroke: true, ...data.proj.seam });
+    }
   }
 
   // 3.2 an azimuthal projection's rim: the horizon, or where the chart stops
@@ -3233,7 +3285,11 @@ function drawScene(g, scene, data, bg, view) {
 
   // 5. roses
   const spriteIn = (s, x, y, size) => disc(r, x, y, Math.hypot(size, (size * s.img.height) / s.img.width));
-  for (const d of show.kinds.has('rose') ? scene.roseDraws : []) if (spriteIn(d.sprite, d.x, d.y, d.size)) drawSprite(g, d.sprite, d.x, d.y, d.size, { anchor: [0.5, 0.5], rot: roseTurn(data.proj) });
+  for (const d of show.kinds.has('rose') ? scene.roseDraws : []) if (spriteIn(d.sprite, d.x, d.y, d.size)) {
+    g.save(); g.globalAlpha *= d.alpha ?? 1;
+    drawSprite(g, d.sprite, d.x, d.y, d.size, { anchor: [0.5, 0.5], rot: roseTurn(data.proj) });
+    g.restore();
+  }
 
   // 5.5 mountains, inland, under the towns and names
   for (const m of show.kinds.has('mountain') ? scene.mountains ?? [] : []) {
@@ -3402,7 +3458,8 @@ function anchorScene(scene, data) {
   const ll = (o) => ({ o, at: data.proj.invert(o.x, o.y) }), rays = latticeOf(scene, data);
   return {
     k: data.proj.k, show: scene.show, scaleSprite: scene.scaleSprite, cartouche: scene.cartouche, cartouchePos: scene.cartouchePos, scalePos: scene.scalePos, voyages: scene.voyages, overlays: scene.overlays,
-    rays, rayLines: [0, 1, 2].map((kind) => rays.filter((ray) => ray.kind === kind).map((ray) => ray.line)), sheets: scene.sheets, debug: scene.debug, // the lines by ink (black, red, green), as drawAnchored strokes them
+    rays, rayLines: [0, 1, 2].map((kind) => rays.filter((ray) => ray.kind === kind && ray.alpha === 1).map((ray) => ray.line)),
+    rayFaint: [...new Set(rays.map((ray) => ray.alpha))].filter((a) => a !== 1).flatMap((alpha) => [0, 1, 2].map((kind) => ({ kind, alpha, lines: rays.filter((ray) => ray.kind === kind && ray.alpha === alpha).map((ray) => ray.line) }))), sheets: scene.sheets, debug: scene.debug, // the lines by ink (black, red, green), as drawAnchored strokes them
     roses: scene.roseDraws.map(ll), mountains: (scene.mountains ?? []).map(ll),
     towns: [...scene.towns.filter((t) => !t.city), ...(scene.lesser ?? [])].map(ll),
     monsters: scene.monsters.map(ll), ships: scene.ships.map(ll),
@@ -3499,6 +3556,7 @@ function drawAnchored(g, a, bg, view, layers) {
   for (const [kind, ink] of show.rhumb ? inks.entries() : []) {
     limn(g, a.rayLines[kind], proj.toPx, { color: ink, alpha: STYLE.rhumbAlpha, width: STYLE.rhumbWidth, oneStroke: true, ...proj.seam });
   }
+  for (const { kind, alpha, lines } of show.rhumb ? a.rayFaint ?? [] : []) limn(g, lines, proj.toPx, { color: inks[kind], alpha: STYLE.rhumbAlpha * alpha, width: STYLE.rhumbWidth, oneStroke: true, ...proj.seam });
   if (proj.rim) {
     g.beginPath(); g.arc(W / 2, H / 2, proj.rim, 0, 2 * Math.PI);
     g.strokeStyle = STYLE.ink; g.lineWidth = 2; g.stroke();
@@ -3597,6 +3655,10 @@ export const TUNE_KNOBS = {
   roselines: { def: 1, of: [0, 1] }, // the Catalan rose's lines at every zoom
   roseshare: { def: null, min: 0, max: 1 }, // of a sheet's allotment, to roses
   sheetroses: { def: null, min: 1, max: 8, int: true }, // the most roses a sheet holds
+  // MOCKUP (#107, not for merge): more meeting points through a band. 'fade': past a band's middle the next band's
+  // network fades in, lines and roses at one alpha, 0 at the middle to 1 at the band's end; 'circles': each grid
+  // sheet adds four circles, one per quarter of the sheet, at full ink through the band; 'today': neither.
+  meet: { def: 'today', of: ['today', 'fade', 'circles'] },
 };
 // A knob's value from text or a number, or undefined where it is out of range or malformed.
 function knobValue(name, v) {
@@ -3730,8 +3792,9 @@ export async function createScene(environment, opts = {}) {
   const origin = ATLAS_ORIGINS[knobs.origin];
   const sheets = sheetsFor(view, { radius: knobs.radius, curated: knobs.curated === 1 || worldBand, overlap, origin }).map((sh) => ({ ...sh, reach: sheetReach(sh.extent, knobs.reach),
     from: worldBand ? Math.log2(WINDOW_DEG / (sh.extent.east - sh.extent.west)) : ATLAS_BANDS.find((b) => b.band === sh.band).from }));
+  const extras = meetExtras(view, knobs, sheets, { overlap, origin });
   const roseReach = sheetReach(roseSheet(view.zoom, { origin, curated: knobs.curated === 1, overlap }).extent, knobs.reach);
-  const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, historical, roseLines: knobs.roselines === 1, seaAt: sheets && seaAtOf(coarse), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, regionNames, regionStyle, title, autoTitle, pinTitle,
+  const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, extras, historical, roseLines: knobs.roselines === 1, seaAt: sheets && seaAtOf(coarse), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, regionNames, regionStyle, title, autoTitle, pinTitle,
     continentsEnd: zoomEnd(continentsZoom, CONTINENT_ZOOM_END), regionsEnd: zoomEnd(regionsZoom, REGION_ZOOM_END),
     scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM && pinned, pinned, cartouchePos, scalePos, townSize: townBy, seed: legacy ? null : pickedSeed == null ? castSeed(view) : pickedSeed | 0, salt: legacy || pickedSeed == null ? 0 : pickedSeed | 0 }), show, scaleSprite, voyages, overlays, roseReach, roseLines: knobs.roselines === 1, debug, overlap, scalePos: cornerOf(scalePos, DEFAULT_SCALE_CORNER) };
   scene.voyages = placeDoubts(scene, data);
