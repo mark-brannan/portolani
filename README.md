@@ -14,7 +14,8 @@ A small project climbed one rung at a time, in the sense of *arete*: each step s
 
 ## Reading a portolan chart
 
-- Rhumb lines run from each wind rose: black for the eight winds, green for the half-winds, red for the quarter-winds. To read a course, find the line parallel to the track and follow it back to a rose.
+- Rhumb lines run from each wind rose: black for the eight winds, green for the half-winds, red for the quarter-winds.
+- To read a course, find the line parallel to the track and follow it back to a rose.
 - Ports are lettered inland, at right angles to the coast; important ones in red, lesser ones in black.
 - More: [Trinity College Library](https://trinitycollegelibrarycambridge.wordpress.com/2015/08/14/portolan-chart-of-the-mediterranean/) and [Cartography Unchained](https://www.cartographyunchained.com/chug1/).
 
@@ -30,4 +31,4 @@ Node 20 or newer. Sources, licences and checksums are in [ASSETS.md](ASSETS.md).
 
 ## Licence
 
-MIT for the code, `MIT AND LGPL-3.0-or-later` for the package as a whole ([LICENSE](LICENSE)). Natural Earth is public domain. GSHHG shorelines are by Wessel and Smith, LGPL-3.0-or-later, shipped with their notice. The scans are public domain, credited to their holding institutions in [ASSETS.md](ASSETS.md). IM Fell English is under the SIL OFL 1.1, shipped with its licence text.
+MIT for the code, `MIT AND LGPL-3.0-or-later` for the package as a whole ([LICENSE](LICENSE)). Natural Earth is public domain. GSHHG shorelines are by Wessel and Smith, LGPL-3.0-or-later; they ship unchanged, with their copyright and permission notice at `geo/gshhg-licence.txt`. The scans are public domain, credited to their holding institutions in [ASSETS.md](ASSETS.md). IM Fell English is under the SIL OFL 1.1, shipped with its licence text.
