@@ -525,3 +525,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261105t021434z
 - The kitab rose joins the Illuminated mood's list of scanned roses, so the mood's note stays true Undo: drop 'k:rose-kitab' from the Illuminated mood in public/page.js ([#382](https://github.com/mark-brannan/portolani/pull/382))
+
+### 20261105t021448z
+- The kitab pack is the big rose alone: the corner roses are cut to a quarter by the frame, and Venice is a lagoon lobe, not a town drawing Undo: add sprites to the kitab pack in scripts/build-packs.mjs ([#382](https://github.com/mark-brannan/portolani/pull/382))
