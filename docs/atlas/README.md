@@ -53,7 +53,7 @@ Before this design the same Genoa views at 9.9 had a rose in 6 of 35, and the Pa
 ("Zoom bands" has the comparison).
 
 **A curated chart's window.** Where the window matches a real chart's extent, one to two windows
-wide at its band's first zoom, the sheet is that chart: its roses stand where the chartmaker drew
+wide (1600 px across) at its band's first zoom, the sheet is that chart: its roses stand where the chartmaker drew
 them, its lines run from its own ring's sixteen nodes and its centre, its own beasts and ships ride
 its sea, and nothing from any other chart is drawn on it. Zoom past its band and the page turns to
 the grid below, as anywhere else. Why: a reader who zooms to Sardinia at the right scale should
@@ -157,8 +157,9 @@ sheets").
 Why one level and not two. A network fixed to the earth thins as the reader zooms in: each zoom
 level doubles the map's scale, so a window holds a quarter of the nodes it held one level up. Across
 a band of two levels the network thins sixteenfold, and the windows late in such a band held no
-node at all: at zoom 9.9, 27 of 35 windows off Genoa held no meeting point of the lines ([#107](https://github.com/mark-brannan/portolani/issues/107)),
-and a rose that filled them from the next band's sheets stood where no lines meet ([#135](https://github.com/mark-brannan/portolani/pull/135)). One
+node at all. At zoom 9.9, 27 of the 35 windows off Genoa held no meeting point of the lines on the
+build of 2026-10-15 ([#107](https://github.com/mark-brannan/portolani/issues/107), [#135](https://github.com/mark-brannan/portolani/pull/135)), and 18 of 35 on main of 2026-11-04 (the
+"before" column below; the build moved between the two counts), and a rose that filled them from the next band's sheets stood where no lines meet ([#135](https://github.com/mark-brannan/portolani/pull/135)). One
 level holds the thinning to fourfold, and the crossfade at the turn carries the rest.
 
 Measured 2026-11-04 on a mockup branch, headless render of the scene, 1600 x 1000, default
@@ -235,7 +236,7 @@ identity on the earth, its place in the grid counted from the origin, never by t
 they change only at a page turn and never on a pan, and two views of the same sheet always carry the
 same beasts. Why the identity and not the band number: a pick by band number reshuffles every beast
 on the earth whenever the bands are renumbered, which is the re-dealt feeling coming back by a side
-door (found 2026-11-04 on the mockup branch, where renumbering the bands did exactly that).
+door.
 
 ### The curated sheets
 
@@ -273,7 +274,8 @@ The sheets:
 | The Atlantic and the Americas | Juan de la Cosa 1500 | 4 | 100°W to 20°E, 20°S to 65°N | 35°W 30°N, the open Atlantic | its rose with the Virgin and Child sits in mid-Atlantic on the equator; the big rose stands for it |
 
 Four notes on the table. A curated sheet's network replaces the grid's in the band whose window
-matches the chart's own extent: one to two windows wide at the band's first zoom, the range a grid
+matches the chart's own extent: one to two windows wide at the band's first zoom, measured across
+(the chart's span of longitude against the window's 1600 px; its height is not counted), the range a grid
 sheet spans now that a band is one level. The `band` column is that rule applied to the extent
 column, and moves with it when an extent is read off a scan; wider than that, a chart is a page of
 the band above. In its band it carries the chart's own roses on its own nodes, and nothing from any
@@ -350,7 +352,7 @@ height across (800 px at the band's first zoom, every node inside the window), s
 That is the Carte Pisane's proportion: its two rings are each about 0.8 of the chart's height, and
 every node is on the page ([the scan with the fitted circles](centres/carte-pisane.jpg)). Why: the
 ring this replaces was 0.4 of a survey cell's height in radius, 1.4 to 2.4 window heights tall on
-the page, so no view in any band ever framed a ring ({I199}, the diagnosis of 2026-10-18). The 0.8
+the page, so no view in any band ever framed a ring ([#199](https://github.com/mark-brannan/portolani/issues/199), the diagnosis of 2026-10-18). The 0.8
 is a pencil default, to be looked at on screen.
 
 The rose snaps to the network, never the network to the window. A rose stands only on a node or
@@ -358,7 +360,7 @@ the centre of the current band's network, at sea and clear of land, and it never
 fill a window. A window late in a band may hold lines and no rose, and that is accepted: the
 measured cost is in "What the reader sees", and the crossfade at the turn fills most of it. Why: a
 rose is where the lines meet, and a rose moved off its node to fill a window stands where no lines
-meet ({P135}). If the centre is on land, the big rose is not drawn; the lines still run from it, as
+meet ([#135](https://github.com/mark-brannan/portolani/pull/135)). If the centre is on land, the big rose is not drawn; the lines still run from it, as
 they did from a node on land on a real chart. A grid sheet's name in the drawer is its band and
 cell, in the manner of an ENC name.
 
