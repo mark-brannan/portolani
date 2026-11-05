@@ -6,7 +6,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import { createScene, viewProjection, panView, BUDGET } from '../scripts/scene.mjs';
-import { territory } from '../scripts/atlas.mjs';
+import { territory, BANDS } from '../scripts/atlas.mjs';
 import { coastNames, joinNames } from '../scripts/names.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -92,7 +92,7 @@ const held = async (view) => {
 };
 
 test('a sheet holds the same roses, monsters and ships at every zoom of its band and after a drag', async () => {
-  const views = [8.1, 9, 9.9].map((zoom) => ({ lon: 8.93, lat: 44.41, zoom })).concat([{ lon: 8.93 + 1125 / 2 ** 9 * 0.01, lat: 44.41, zoom: 9 }]);
+  const views = [9.2, 9.5, 9.8].map((zoom) => ({ lon: 8.93, lat: 44.41, zoom })).concat([{ lon: 8.93 + 1125 / 2 ** 9 * 0.01, lat: 44.41, zoom: 9.5 }]);
   const all = await Promise.all(views.map(held));
   const common = [...all[0].keys()].filter((k) => all.every((m) => m.has(k)));
   assert.ok(common.length > 0, 'the views share a sheet');
@@ -145,4 +145,22 @@ test('the density slider scales the one budget', async () => {
   const [half, one, two] = [await heldAt(view, 0.5), await heldAt(view, 1), await heldAt(view, 2)];
   assert.ok(half.total < one.total && one.total < two.total, `${half.total} < ${one.total} < ${two.total}`);
   assert.equal((await heldAt(view, 0)).total, 0);
+});
+
+// docs/atlas/README.md, "Which beasts, which ships": a grid sheet's figures are picked by its place on the earth, never by
+// its band's number, so numbering the bands another way leaves every rose, beast and ship where it was, the same figure.
+test('a sheet draws the same figures under another numbering of the bands', async () => {
+  const view = { lon: 8.93, lat: 44.41, zoom: 9.5 };
+  const figures = async () => {
+    const { scene, data } = await createScene(env, { view, scale: 'off' });
+    const at = (o) => data.proj.invert(o.x, o.y).map((v) => v.toFixed(6)).join(' ');
+    return { names: scene.sheets.map((s) => s.name).sort(), figures: [['rose', scene.roseDraws], ['monster', scene.monsters], ['ship', scene.ships]].flatMap(([kind, l]) => l.map((o) => `${kind} ${o.sprite.id} ${at(o)}`)).sort() };
+  };
+  const before = await figures();
+  for (const b of BANDS) b.band += 100;
+  let after;
+  try { after = await figures(); } finally { for (const b of BANDS) b.band -= 100; }
+  assert.ok(before.names.every((n) => !after.names.includes(n)), `the sheets are renamed: ${before.names} / ${after.names}`);
+  assert.ok(before.figures.some((f) => !f.startsWith('rose')), 'beasts or ships are placed');
+  assert.deepEqual(after.figures, before.figures);
 });

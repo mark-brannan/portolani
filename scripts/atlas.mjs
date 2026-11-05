@@ -288,6 +288,12 @@ export const WORLD_SHEET = (() => {
   };
 })();
 
+// A sheet's place on the earth, which its ornaments are picked by (docs/atlas/README.md, "Which beasts, which ships"):
+// a grid sheet's extent, to a millionth of a degree, which the band's number and the sheet's name do not enter; a
+// curated sheet's or the world sheet's own name, the chart it is.
+const fix6 = (v) => v.toFixed(6);
+export const sheetPlace = (sh) => (sh.curated || sh.band === WORLD_BAND.band ? sh.name : [sh.extent.west, sh.extent.south, sh.extent.east, sh.extent.north].map(fix6).join(','));
+
 // Every grid sheet the view overlaps: [{ name, band, bandName, row, col, extent, circle }], counted out from `origin`
 // (ORIGINS; the rose by default). With `curated`, each band takes the curated sheets that serve it under the `overlap`
 // rule (curatedFor), and a grid cell whose centre lies in one is left out, so a curated sheet replaces the cells it

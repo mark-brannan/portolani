@@ -9,7 +9,7 @@
 // A view is a centre, zoom and projection, { lon, lat, zoom, projection }, on a W x H canvas; the
 // projection is one of PROJECTIONS, Mercator when left out.
 
-import { sheetsFor, roseSheet, WINDOW_DEG, inShadow, territory, cutOut, overlapRule, OVERLAP_RULES, DEFAULT_OVERLAP, WORLD_BAND, BANDS as ATLAS_BANDS, ROSE as ATLAS_ROSE, ORIGINS as ATLAS_ORIGINS } from './atlas.mjs';
+import { sheetsFor, sheetPlace, roseSheet, WINDOW_DEG, inShadow, territory, cutOut, overlapRule, OVERLAP_RULES, DEFAULT_OVERLAP, WORLD_BAND, BANDS as ATLAS_BANDS, ROSE as ATLAS_ROSE, ORIGINS as ATLAS_ORIGINS } from './atlas.mjs';
 import { fill, trace, limn, rhumb, place, letter, geojsonPolygons, geojsonRings } from 'coast-wright';
 import { provider } from 'coastlines/provider';
 import catalogue from 'coastlines/catalogue.json' with { type: 'json' };
@@ -1450,14 +1450,18 @@ function ruinAt(p, [x0, y0], top, hw, boxes, cityBoxes, k, towns = []) {
 
 // The roses of the atlas's sheets (docs/atlas/README.md, "An atlas of sheets"): each sheet's big rose on
 // its circle's centre, then small roses on its nodes, the cardinal ones first, up to three, each where
-// the sea round it is clear. Which sprite a sheet takes is picked by the sheet's name, so a sheet draws
-// the same roses from any view. Returns what buildScene's window placement does: roseDraws, centre, nodes.
+// the sea round it is clear. Which sprite a sheet takes is picked by the sheet's place on the earth (sheetSeed), so a
+// sheet draws the same roses from any view. Returns what buildScene's window placement does: roseDraws, centre, nodes.
 // a sheet with fewer than this many of its 17 sites in clear sea is land's, and its roses may stand on land
+// A sheet's seed: a hash of its place on the earth (atlas.mjs sheetPlace), never of its band number or name, so the same
+// sheet draws the same roses, beasts and ships in any run and a renumbering of the bands changes none of them
+// (docs/atlas/README.md, "Which beasts, which ships"); a `seed:` placement salts it.
+const sheetSeed = (sh, world) => seedOf(sheetPlace(sh)) ^ (world.salt | 0);
 const SHEET_SEA_SITES = 4, SHEET_NODE_ORDER = [0, 4, 8, 12, 2, 6, 10, 14, 1, 3, 5, 7, 9, 11, 13, 15];
 function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
   const roseDraws = [], held = {}, at = (n) => { const [x, y] = data.proj.project(n.lon, n.lat); return { x, y }; };
   for (const sh of world.sheets) {
-    const fp = sheetFrame(sh), seed = seedOf(sh.name) ^ (world.salt | 0);
+    const fp = sheetFrame(sh), seed = sheetSeed(sh, world);
     // `onLand`: a sheet with no clear sea to hold its big rose lets its roses stand on land, clear of the places
     const clear = (lon, lat, size, onLand = false) => {
       const [x, y] = fp.project(lon, lat), r = size * 0.46;
@@ -1477,7 +1481,7 @@ function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
     const sites = [c, ...c.nodes];
     const onLand = sites.filter((q, i) => clear(q.lon, q.lat, i ? capSmall(smallSize) : big.sizePx)).length < SHEET_SEA_SITES;
     // what is kept is decided in the frame; the page's projection only says where it falls and whether it is seen
-    const put = (sprite, n) => { held[sh.name] = (held[sh.name] ?? 0) + 1; if (shows(data.proj, n.lon, n.lat)) { const [fx, fy] = fp.project(n.lon, n.lat); roseDraws.push({ sprite, ...at(n), lon: n.lon, lat: n.lat, fx, fy, size: sprite.sizePx, sheet: sh.name }); } };
+    const put = (sprite, n) => { held[sh.id] = (held[sh.id] ?? 0) + 1; if (shows(data.proj, n.lon, n.lat)) { const [fx, fy] = fp.project(n.lon, n.lat); roseDraws.push({ sprite, ...at(n), lon: n.lon, lat: n.lat, fx, fy, size: sprite.sizePx, sheet: sh.name, sheetId: sh.id, band: sh.band }); } };
     if (ownSet(world, sh)) {
       // a chart's own roses are inside the sheet's allotment, like every other ornament of it
       for (const f of ownFigures(sh, 'rose').slice(0, allotment(sh))) { const r = figureSprite(sh, roses, ring, f); put({ ...r, sizePx: capBig(r.sizePx) }, f); }
@@ -1490,7 +1494,7 @@ function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
     let n = 0;
     for (const i of SHEET_NODE_ORDER) {
       const node = c.nodes[i], sprite = ring[n % ring.length];
-      if (n < sheetRoseMax(sh) - 1 && (held[sh.name] ?? 0) < quota && clear2(node.lon, node.lat, sprite.sizePx, onLand)) { put(sprite, node); n++; }
+      if (n < sheetRoseMax(sh) - 1 && (held[sh.id] ?? 0) < quota && clear2(node.lon, node.lat, sprite.sizePx, onLand)) { put(sprite, node); n++; }
     }
   }
   // The pinned rose (#138): wherever the Catalan rose's lines run, the rose is drawn at their hub, the one
@@ -1517,7 +1521,7 @@ const beastFrame = (sh) => makeProjection({ lon: sh.circle.lon, lat: sh.circle.l
 
 // The monsters and ships of the atlas's sheets (docs/atlas/README.md): each sheet seeds a jittered grid of
 // sites over its own extent, ranks them by the open sea round them, and takes its beasts from the top,
-// the cast picked by the sheet's name, so a sheet draws the same beasts from any view. Monsters stand in
+// the cast picked by the sheet's place on the earth (sheetSeed), so a sheet draws the same beasts from any view. Monsters stand in
 // the clearest water; ships in coastal water, heading along the coast. The sea they are placed against is the 50m land, whatever the view has loaded.
 const SHEET_BEAST_PROBE = 24; // px between the rings a site's clearance is read at
 function placeSheetBeasts(data, world, sprites, roseDraws, held) {
@@ -1526,8 +1530,8 @@ function placeSheetBeasts(data, world, sprites, roseDraws, held) {
   for (const sh of world.sheets) {
     // its roses, placed in the sheet's frame, as discs in the beasts' frame; a size is screen px in either
     const rf = sheetFrame(sh), bf = beastFrame(sh);
-    const avoid = roseDraws.filter((r) => r.sheet === sh.name || r.pinned).map((r) => { const [x, y] = bf.project(...(r.pinned ? [r.lon, r.lat] : rf.invert(r.fx, r.fy))); return { x, y, r: r.size / 2 + (r.size > 200 ? 0 : 10) }; });
-    const mine = ownSet(world, sh) ? ownBeastsOf(sh, world, sprites, held[sh.name] ?? 0) : placeBeastsOf(sh, world, sprites, avoid, held[sh.name] ?? 0);
+    const avoid = roseDraws.filter((r) => r.sheetId === sh.id || r.pinned).map((r) => { const [x, y] = bf.project(...(r.pinned ? [r.lon, r.lat] : rf.invert(r.fx, r.fy))); return { x, y, r: r.size / 2 + (r.size > 200 ? 0 : 10) }; });
+    const mine = ownSet(world, sh) ? ownBeastsOf(sh, world, sprites, held[sh.id] ?? 0) : placeBeastsOf(sh, world, sprites, avoid, held[sh.id] ?? 0);
     // the page's projection only says where a beast falls and whether it is seen
     const at = (b) => { const [x, y] = data.proj.project(b.lon, b.lat); return { ...b, x, y }; };
     for (const m of mine.monsters) if (shows(data.proj, m.lon, m.lat)) monsters.push(at(m));
@@ -1556,7 +1560,7 @@ function ownBeastsOf(sh, world, sprites, roses) {
   // the chart's own figures count against the sheet's allotment, roses first, then monsters, then ships
   let room = Math.max(0, allotment(sh) - roses);
   const take = (kind, set) => !set.length ? [] : ownFigures(sh, kind).map((f) => ({ f, sprite: figureSprite(sh, set, set, f) })).filter(({ f }) => world.seaAt(f.lon, f.lat))
-    .slice(0, room).map(({ f, sprite }) => ({ sprite, lon: f.lon, lat: f.lat, size: sprite.sizePx, flip: false, ...(kind === 'ship' && { tilt: 0 }), sheet: sh.name }));
+    .slice(0, room).map(({ f, sprite }) => ({ sprite, lon: f.lon, lat: f.lat, size: sprite.sizePx, flip: false, ...(kind === 'ship' && { tilt: 0 }), sheet: sh.name, band: sh.band }));
   const monsters = take('monster', sprites.monsters);
   room -= monsters.length;
   return { monsters, ships: take('ship', sprites.ships) };
@@ -1577,7 +1581,7 @@ function placeBeastsOf(sh, world, sprites, avoid, roses) {
   };
   const taken = [...avoid];
   const free = (x, y, r) => taken.every((o) => Math.hypot(o.x - x, o.y - y) >= o.r + r) && !POIS.some((p) => Math.hypot(...fp.project(p.lon, p.lat).map((v, i) => v - [x, y][i])) < POI_ROOM);
-  const e = sh.extent, rnd = mulberry32(seedOf(sh.name) ^ (world.salt | 0));
+  const e = sh.extent, rnd = mulberry32(sheetSeed(sh, world));
   const [y0, y1] = [e.south, e.north].map((v) => Math.log(Math.tan(Math.PI / 4 + (v * RAD) / 2)) / RAD);
   // sites a monster-gap apart at the sheet's pacing zoom, one window of 360 / 2^z * 3.125 degrees across
   const win = WINDOW_DEG / 2 ** sh.from, step = win * (MONSTER_GAP / W);
@@ -1593,7 +1597,7 @@ function placeBeastsOf(sh, world, sprites, avoid, roses) {
   }
   sites.sort((a, b) => b.c - a.c);
   // what the roses leave of the sheet's allotment: a third of it ships, the rest monsters
-  const beasts = Math.max(0, allotment(sh) - roses), monsterQuota = wide(sh) ? Math.floor(WIDE.monsterShare * beasts) : beasts - Math.floor(beasts / 3), shipQuota = beasts - monsterQuota, seed = world.seed == null ? null : seedOf(sh.name) ^ (world.salt | 0);
+  const beasts = Math.max(0, allotment(sh) - roses), monsterQuota = wide(sh) ? Math.floor(WIDE.monsterShare * beasts) : beasts - Math.floor(beasts / 3), shipQuota = beasts - monsterQuota, seed = world.seed == null ? null : sheetSeed(sh, world);
   const mine = [];
   for (const sprite of castOrder(sprites.monsters, seed)) {
     if (mine.length >= monsterQuota) break;
@@ -1602,7 +1606,7 @@ function placeBeastsOf(sh, world, sprites, avoid, roses) {
       const size = Math.min(sprite.sizePx, s.c * 2 * 0.85);
       if (size < sprite.sizePx * 0.65) break;
       if (!free(s.x, s.y, size * 0.5) || !ringClear(s.x, s.y, size * 0.46, size * 0.46, size * aspect * 0.46)) continue;
-      monsters.push({ sprite, lon: s.lon, lat: s.lat, size, flip: mine.length % 2 === 1, sheet: sh.name }); mine.push(s);
+      monsters.push({ sprite, lon: s.lon, lat: s.lat, size, flip: mine.length % 2 === 1, sheet: sh.name, band: sh.band }); mine.push(s);
       taken.push({ x: s.x, y: s.y, r: size * 0.5 }); sites.splice(sites.indexOf(s), 1);
       break;
     }
@@ -1624,7 +1628,7 @@ function placeBeastsOf(sh, world, sprites, avoid, roses) {
     const back = tx < 0;
     if (back) { tx = -tx; ty = -ty; }
     const flip = back !== (sprite.heading === 'left');
-    ships.push({ sprite, lon: s.lon, lat: s.lat, size: sprite.sizePx, flip, tilt: Math.max(-0.26, Math.min(0.26, Math.atan2(ty, tx))), sheet: sh.name });
+    ships.push({ sprite, lon: s.lon, lat: s.lat, size: sprite.sizePx, flip, tilt: Math.max(-0.26, Math.min(0.26, Math.atan2(ty, tx))), sheet: sh.name, band: sh.band });
     taken.push({ x: s.x, y: s.y, r: half }); sites.splice(sites.indexOf(s), 1); shipsHere++;
   }
   return { monsters, ships };
@@ -3731,7 +3735,7 @@ export async function createScene(environment, opts = {}) {
   const worldBand = view.zoom < ATLAS_BANDS[0].from;
   // The knobs: `curated` 0 leaves grid cells everywhere but the world band, which is one sheet either way.
   const origin = ATLAS_ORIGINS[knobs.origin];
-  const sheets = sheetsFor(view, { radius: knobs.radius, curated: knobs.curated === 1 || worldBand, overlap, origin }).map((sh) => ({ ...sh, reach: sheetReach(sh.extent, knobs.reach),
+  const sheets = sheetsFor(view, { radius: knobs.radius, curated: knobs.curated === 1 || worldBand, overlap, origin }).map((sh) => ({ ...sh, id: `${sh.band}/${sh.name}`, reach: sheetReach(sh.extent, knobs.reach),
     from: sh.band === WORLD_BAND.band ? Math.log2(WINDOW_DEG / (sh.extent.east - sh.extent.west)) : ATLAS_BANDS.find((b) => b.band === sh.band).from }));
   const roseReach = sheetReach(roseSheet(view.zoom, { origin, curated: knobs.curated === 1, overlap }).extent, knobs.reach);
   const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, historical, roseLines: knobs.roselines === 1, seaAt: sheets && seaAtOf(coarse), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, regionNames, regionStyle, title, autoTitle, pinTitle,
