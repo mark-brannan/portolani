@@ -21,7 +21,7 @@ cpSync(join(ROOT, 'node_modules', 'coastlines', 'catalogue.json'), out('coastlin
 cpSync(join(ROOT, 'test', 'fixtures', 'IMFeENrm28P.ttf'), out('font/IMFeENrm28P.ttf'));
 cpSync(join(ROOT, 'test', 'fixtures', 'OFL-IMFellEnglish.txt'), out('font/OFL-IMFellEnglish.txt'));
 let files = 0;
-for (const pack of ['vivid', 'scanned', 'debry']) {
+for (const pack of ['vivid', 'scanned', 'debry', 'kitab']) {
   const kept = packOf(pack, JSON.parse(readFileSync(join(ROOT, 'packs', pack, 'pack.json'), 'utf8')));
   writeFileSync(out(`packs/${pack}/pack.json`), JSON.stringify(kept));
   for (const s of kept.sprites) { cpSync(join(ROOT, 'packs', pack, s.file), out(`packs/${pack}/${s.file}`)); files++; }
