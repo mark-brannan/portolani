@@ -1135,6 +1135,7 @@
   },
   "juan-ponce-de-leon": {
     "name": "Juan Ponce de León",
+    "bio": "A Castilian who probably came to the Caribbean on Columbus's second voyage of 1493, he fought the Taíno of Higüey on Hispaniola, then from 1508 took Puerto Rico from its Taíno, put down their revolt of 1511 and was the island's first governor. In 1513 he led three ships north-west through the Bahamas and named La Florida. He came back in 1521 to settle it, and a Calusa arrow ended the attempt and his life. The fountain of youth was tied to his name only after his death.",
     "death": {
       "lon": -82.37,
       "lat": 23.14,
@@ -1189,6 +1190,7 @@
   },
   "juan-garrido": {
     "name": "Juan Garrido",
+    "bio": "Born in West Central Africa about 1480, he was taken to Lisbon as a boy and was in Santo Domingo by 1502–03. He fought in Puerto Rico and Cuba, sailed with Ponce de León to Florida in 1513, one of two free Africans aboard, and went on to Mexico with Cortés. In Mexico City he sowed the first wheat harvested in New Spain, and in 1538 he asked the Crown for a pension for thirty years of service.",
     "death": {
       "lon": -99.1,
       "lat": 19.4,
@@ -1243,6 +1245,7 @@
   },
   "isabel-de-olvera": {
     "name": "Isabel de Olvera",
+    "bio": "A free woman of Querétaro in New Spain, the daughter of Hernando, an African man, and Magdalena, an Indigenous woman. In 1600, before she went north as a servant with Juan Guerra de Resa's expedition to New Mexico, she swore before the town's magistrate that she was free and unmarried, because as a mulatta she feared she might be troubled on the road. The affidavit is nearly all that is known of her.",
     "images": [
       {
         "file": "Diceño_de_Mulata_(1711)_Arellano.jpg",
@@ -1280,6 +1283,7 @@
   },
   "pedro-alonso-nino": {
     "name": "Pedro Alonso Niño",
+    "bio": "A pilot from Moguer, near Palos, he sailed with Columbus in 1492, by most accounts as pilot of the Santa María, and again on the later voyages. In 1499 he and Cristóbal Guerra took a small ship to the coast of Venezuela and came home in 1500 with a great load of pearls from Margarita and Cubagua. Accused of keeping back the Crown's share, he was arrested, and died before his trial ended.",
     "images": [
       {
         "file": "Pedro_Alonso_Niño_(cropped).jpg",
@@ -1325,6 +1329,7 @@
   },
   "panfilo-de-narvaez": {
     "name": "Pánfilo de Narváez",
+    "bio": "A Castilian who served in the taking of Jamaica and then of Cuba, where in 1513 his men massacred the Taíno at Caonao, as Bartolomé de las Casas, who was with him, recorded. In 1520 the governor of Cuba sent him to Mexico to bring Cortés to heel; Cortés beat him at Cempoala by night, and he lost an eye and was held prisoner. The Crown later granted him La Florida, and in 1527 he sailed from Sanlúcar with six hundred to settle it. He was lost at sea in 1528, and four of the expedition lived.",
     "death": {
       "lon": -89.31,
       "lat": 28.61,
@@ -1380,6 +1385,7 @@
   },
   "alvar-nunez-cabeza-de-vaca": {
     "name": "Álvar Núñez Cabeza de Vaca",
+    "bio": "From Jerez de la Frontera, he was treasurer of the Narváez expedition and one of its four survivors. Wrecked on the Texas coast in 1528, he lived for years among the peoples there as a trader and a healer, then walked with Dorantes, Castillo and Esteban to Mexico City in 1536. His account, the Relación, was printed in 1542. Made governor of the Río de la Plata, he marched overland from the coast of Brazil to Asunción in 1541–42, was deposed by the colonists and sent back to Spain in chains, and was tried and sentenced there.",
     "death": {
       "lon": -6.14,
       "lat": 36.69,
@@ -1435,6 +1441,7 @@
   },
   "andres-dorantes-de-carranza": {
     "name": "Andrés Dorantes de Carranza",
+    "bio": "A captain on the Narváez expedition and one of its four survivors, from Béjar in Castile. Esteban, the enslaved man who walked with them from Texas to Mexico City, was his. In Mexico City in 1536 he sold Esteban to the viceroy, gave up a plan to go home to Spain, married there and stayed in New Spain.",
     "images": [
       {
         "file": "Houghton_US_2415.3_-_title,_La_relacion.jpg",
@@ -1480,6 +1487,7 @@
   },
   "alonso-del-castillo-maldonado": {
     "name": "Alonso del Castillo Maldonado",
+    "bio": "A captain on the Narváez expedition from Salamanca, and one of its four survivors. With Cabeza de Vaca and Dorantes he signed the joint report of the journey that Gonzalo Fernández de Oviedo copied into his history. He married in New Spain and settled there.",
     "images": [
       {
         "file": "Houghton_US_2415.3_-_title,_La_relacion.jpg",
@@ -1525,6 +1533,7 @@
   },
   "esteban-de-dorantes": {
     "name": "Esteban de Dorantes",
+    "bio": "Born at Azemmour on the Atlantic coast of Morocco, he was sold into slavery there in 1522 and came to the Americas as Andrés Dorantes's slave. He was one of the four who lived through the Narváez expedition and walked across Texas and northern Mexico, and Cabeza de Vaca says he went ahead and spoke with the peoples they met. Sold to the viceroy, he was sent north in 1539 ahead of Fray Marcos de Niza to look for the cities of Cíbola, and is said to have been killed at the Zuni town of Hawikuh.",
     "death": {
       "lon": -108.98,
       "lat": 34.93,

@@ -977,8 +977,9 @@ const REGION_LETTERING = { realm: 26, kingdom: 21, sub: 10, subSpacing: 1.6, gap
 const regionTile = (r) => ({
   title: `${r.name} · ${r.reading}`,
   date: r.sheet ? `Catalan Atlas, sheet ${r.sheet}` : 'Catalan Atlas',
-  text: r.legend ? `The atlas's legend: \u201c${r.legend}\u201d` : `The atlas letters ${r.name}, which we read as ${r.reading}. Its own words for this realm are not yet written up.`,
-  about: r.note,
+  // a realm the atlas gives no legend reads our note in its place; the placeholder is for one with neither
+  text: r.legend ? `The atlas's legend: \u201c${r.legend}\u201d` : r.note ?? `The atlas letters ${r.name}, which we read as ${r.reading}. Its own words for this realm are not yet written up.`,
+  about: r.legend ? r.note : undefined,
 });
 export const CONTINENT_ZOOM_END = 6; // the page's Continents slider default is this too (public/page.js DEFAULTS), so a page with no settings and a headless render draw the same names
 const REGION_ZOOM_END = 7; // continents: zoom < CONTINENT_ZOOM_END, regions overlap them to there; regions: zoom < REGION_ZOOM_END (they meet a continent's box and make way)
