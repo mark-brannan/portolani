@@ -1,6 +1,6 @@
 {
   "name": "signalk-portolan",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "description": "ENC cells as GeoJSON over the Signal K Resources API, drawn as a portolan chart in a webapp",
   "type": "module",
   "main": "index.js",
@@ -22,6 +22,5 @@
   "license": "MIT",
   "dependencies": {
     "gdal3.js": "^2.8.1"
-  },
-  "private": true
+  }
 }
