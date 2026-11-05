@@ -14,7 +14,8 @@ A small project climbed one rung at a time, in the sense of *arete*: each step s
 
 ## Reading a portolan chart
 
-- Rhumb lines run from each wind rose: black for the eight winds, green for the half-winds, red for the quarter-winds. To read a course, find the line parallel to the track and follow it back to a rose.
+- Rhumb lines run from each wind rose: black for the eight winds, green for the half-winds, red for the quarter-winds.
+- To read a course, follow the line parallel to the track back to a rose.
 - Ports are lettered inland, at right angles to the coast; important ones in red, lesser ones in black.
 - More: [Trinity College Library](https://trinitycollegelibrarycambridge.wordpress.com/2015/08/14/portolan-chart-of-the-mediterranean/) and [Cartography Unchained](https://www.cartographyunchained.com/chug1/).
 
