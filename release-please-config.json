@@ -1,13 +1,15 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
   "packages": {
-    ".": {
+    "signalk": {
       "release-type": "node",
-      "package-name": "portolani",
+      "package-name": "signalk-portolan",
+      "component": "signalk-portolan",
       "changelog-path": "CHANGELOG.md",
       "versioning": "always-bump-patch",
+      "initial-version": "0.0.1",
       "include-v-in-tag": true,
-      "include-component-in-tag": false,
+      "include-component-in-tag": true,
       "draft": false,
       "prerelease": false,
       "changelog-sections": [
@@ -47,6 +49,13 @@
           "type": "chore",
           "section": "Changed",
           "hidden": true
+        }
+      ],
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "/package-lock.json",
+          "jsonpath": "$.packages.signalk.version"
         }
       ]
     }
