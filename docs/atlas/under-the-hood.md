@@ -13,6 +13,7 @@ A temporary developer view, there while the roses and rhumb lines are being work
 | `tune=roselines:` | 1 | 0: drops the Catalan rose's extra hub of 32 lines | `latticeOf` | #138, #199 |
 | `tune=roseshare:` | band's own (0.4; 0.6 wide) | Rose share of a sheet's allotment, every band (0 to 1) | `ROSE_SHARE`, `WIDE.roseShare` | #162 |
 | `tune=sheetroses:` | band's own (4; 6 wide) | Most roses a sheet holds, every band (1 to 8) | `SHEET_ROSES`, `WIDE.sheetRoses` | #162 |
+| `tune=turn:` | 0.3 | The page turn's crossfade, in zoom levels centred on each band edge (0 to 1); 0 swaps the bands at the edge | `TURN`, `bandsAt` | #107 |
 
 `zero` is where NOAA counts its own cells from (docs/atlas/README.md, "The fallback grid"). Knobs go in one `tune=` as comma-separated `name:value`, e.g. `#tune=radius:0.5,reach:1.5,origin:zero`. A value out of range or malformed falls back to the default; a knob at its default is left out of the link. Headless, `createScene(env, { debug: ['sheets', 'rings'], tune: { radius: 0.5 } })`; the knobs and their ranges are `TUNE_KNOBS` in scripts/scene.mjs, whose header comment says how each works.
 

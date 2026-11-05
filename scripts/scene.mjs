@@ -9,7 +9,7 @@
 // A view is a centre, zoom and projection, { lon, lat, zoom, projection }, on a W x H canvas; the
 // projection is one of PROJECTIONS, Mercator when left out.
 
-import { sheetsFor, sheetPlace, roseSheet, WINDOW_DEG, inShadow, territory, cutOut, overlapRule, OVERLAP_RULES, DEFAULT_OVERLAP, WORLD_BAND, BANDS as ATLAS_BANDS, ROSE as ATLAS_ROSE, ORIGINS as ATLAS_ORIGINS } from './atlas.mjs';
+import { sheetsFor, sheetPlace, bandsAt, roseSheet, WINDOW_DEG, inShadow, territory, cutOut, overlapRule, OVERLAP_RULES, DEFAULT_OVERLAP, WORLD_BAND, TURN as ATLAS_TURN, BANDS as ATLAS_BANDS, ROSE as ATLAS_ROSE, ORIGINS as ATLAS_ORIGINS } from './atlas.mjs';
 import { fill, trace, limn, rhumb, place, letter, geojsonPolygons, geojsonRings } from 'coast-wright';
 import { provider } from 'coastlines/provider';
 import catalogue from 'coastlines/catalogue.json' with { type: 'json' };
@@ -1504,6 +1504,9 @@ function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
   // takes nothing from any sheet's allotment, and every sheet's generated beasts keep clear of it (a chart's own drawn figures stay where the chart puts them). Density 0 draws no
   // ornament, so no pinned rose either.
   const pin = ATLAS_ROSE, pinned = (r) => Math.abs(r.lon - pin.lon) < 1e-6 && Math.abs(r.lat - pin.lat) < 1e-6;
+  // a chart's own rose at the hub is the pinned rose: it belongs to no band, so a page turn neither fades it nor draws it twice
+  const own = world.roseLines ? roseDraws.filter(pinned) : [];
+  if (own.length) { for (const r of own.slice(1)) roseDraws.splice(roseDraws.indexOf(r), 1); own[0].pinned = true; delete own[0].band; }
   if (world.roseLines && TUNE.budget > 0 && !roseDraws.some(pinned) && shows(data.proj, pin.lon, pin.lat)) {
     const own = roses.find((s) => s.id === 'rose-catalan') ?? roses.find((s) => s.sizePx === bigSizePx);
     roseDraws.push({ sprite: { ...own, sizePx: Math.min(own.sizePx, ROSE_CAP.big * W) }, ...at(pin), lon: pin.lon, lat: pin.lat, size: Math.min(own.sizePx, ROSE_CAP.big * W), sheet: null, pinned: true });
@@ -2110,7 +2113,7 @@ function latticeOf(scene, data) {
   const reach = Math.min(180, (Math.hypot(W, H) * 1.5 / data.proj.k) * 180 / Math.PI);
   // a sheet's lines reach its page diagonal; a window's, past the scene's far corner
   const origins = scene.sheets
-    ? scene.sheets.flatMap((sh) => [sh.circle, ...sh.circle.nodes].filter((n) => !inShadow(sh, n.lon, n.lat)).map((n) => ({ lon: n.lon, lat: n.lat, reach: sh.reach, shadow: sh.shadow })))
+    ? scene.sheets.flatMap((sh) => [sh.circle, ...sh.circle.nodes].filter((n) => !inShadow(sh, n.lon, n.lat)).map((n) => ({ lon: n.lon, lat: n.lat, reach: sh.reach, shadow: sh.shadow, band: sh.band })))
     : [scene.centre, ...scene.nodes].map((n) => { const [lon, lat] = data.proj.invert(n.x, n.y); return { lon, lat, reach }; });
   // The Catalan Atlas rose's lines run at every zoom, beside the network of the sheets or the window
   // (docs/atlas/README.md, "Zoom bands"), as one more hub of the view's band: the reach of the sheet that
@@ -2121,11 +2124,11 @@ function latticeOf(scene, data) {
   // A line runs its whole reach: it is never cut where another sheet lies (#199), except under the `cut`
   // overlap rule, where it stops at the edge of a smaller chart over its sheet (the sheet's shadow).
   const cut = scene.overlap === 'cut';
-  for (const { lon, lat, reach, shadow } of origins) {
+  for (const { lon, lat, reach, shadow, band } of origins) {
     for (let k = 0; k < RHUMB_RAYS; k++) {
       const kind = k % 4 === 0 ? 0 : k % 2 === 1 ? 1 : 2; // wind, quarter (red), half (green)
       const ray = rhumb([lon, lat], 90 + (k * 360) / RHUMB_RAYS, reach * Math.cos(lat * Math.PI / 180));
-      for (const line of cutOut(ray, cut ? shadow : null)) rays.push({ kind, line, box: boxOf(line.map(([a, b]) => data.proj.project(a, b))) });
+      for (const line of cutOut(ray, cut ? shadow : null)) rays.push({ kind, line, band, box: boxOf(line.map(([a, b]) => data.proj.project(a, b))) });
     }
   }
   lattices.set(scene, rays);
@@ -3153,6 +3156,19 @@ const cityClip = (t, data) => (cg) => {
   traceLand(cg, data, t.city.land);
   cg.clip('evenodd');
 };
+// The ink each placed band's ornaments are drawn at, as a function of a band number (docs/atlas/README.md, "The page
+// turn"): `bands` the bands placed, `zoom` the zoom drawn at. One band placed is at full ink whatever the zoom, so a move
+// that leaves its band draws it until the stop places the next. Two placed (the stop fell inside a turn's span) take
+// the turn's inks at `zoom`, so a zoom inside the span fades one into the other; past both, the nearer stays whole.
+// Whatever belongs to no band (the pinned rose and its lines, `band` undefined) is at full ink.
+export function bandInk(bands, zoom, turn) {
+  if (!bands || bands.length < 2) return () => 1;
+  // past both bands' zooms, the nearer whole; the incoming band, bands[1], is numbered by the edge's zoom
+  const at = new Map(bandsAt(zoom, turn).map(({ band, alpha }) => [band.band, alpha]));
+  if (!bands.some((b) => at.get(b) > 0)) { const near = zoom < bands[1] ? bands[0] : bands[1]; return (b) => (b == null || b === near ? 1 : 0); }
+  return (b) => (b == null ? 1 : at.get(b) ?? 0);
+}
+
 function drawScene(g, scene, data, bg, view) {
   g.save();
   g.setTransform(view.scale, 0, 0, view.scale, -view.x * view.scale, -view.y * view.scale);
@@ -3182,9 +3198,14 @@ function drawScene(g, scene, data, bg, view) {
   const rays = latticeOf(scene, data);
   const inks = [STYLE.ink, STYLE.windRed, STYLE.windGreen]; // by kind: wind, quarter-wind, half-wind
   const show = scene.show ?? { kinds: new Set(KINDS), names: true, rhumb: true };
-  for (const [kind, ink] of show.rhumb ? inks.entries() : []) {
-    const lines = rays.filter((ray) => ray.kind === kind && meets(r, ray.box)).map((ray) => ray.line);
-    limn(g, lines, data.proj.toPx, { color: ink, alpha: STYLE.rhumbAlpha, width: STYLE.rhumbWidth, oneStroke: true, ...data.proj.seam });
+  const inkOf = bandInk(scene.bands, scene.zoom, scene.turn), faded = (o) => inkOf(o.band);
+  for (const band of show.rhumb ? [...new Set(rays.map((ray) => ray.band))] : []) {
+    const a = inkOf(band);
+    if (a <= 0) continue;
+    for (const [kind, ink] of inks.entries()) {
+      const lines = rays.filter((ray) => ray.band === band && ray.kind === kind && meets(r, ray.box)).map((ray) => ray.line);
+      limn(g, lines, data.proj.toPx, { color: ink, alpha: STYLE.rhumbAlpha * a, width: STYLE.rhumbWidth, oneStroke: true, ...data.proj.seam });
+    }
   }
 
   // 3.2 an azimuthal projection's rim: the horizon, or where the chart stops
@@ -3239,7 +3260,8 @@ function drawScene(g, scene, data, bg, view) {
 
   // 5. roses
   const spriteIn = (s, x, y, size) => disc(r, x, y, Math.hypot(size, (size * s.img.height) / s.img.width));
-  for (const d of show.kinds.has('rose') ? scene.roseDraws : []) if (spriteIn(d.sprite, d.x, d.y, d.size)) drawSprite(g, d.sprite, d.x, d.y, d.size, { anchor: [0.5, 0.5], rot: roseTurn(data.proj) });
+  const inked = (o, draw) => { const a = faded(o); if (a <= 0) return; g.globalAlpha = a; draw(); g.globalAlpha = 1; };
+  for (const d of show.kinds.has('rose') ? scene.roseDraws : []) if (spriteIn(d.sprite, d.x, d.y, d.size)) inked(d, () => drawSprite(g, d.sprite, d.x, d.y, d.size, { anchor: [0.5, 0.5], rot: roseTurn(data.proj) }));
 
   // 5.5 mountains, inland, under the towns and names
   for (const m of show.kinds.has('mountain') ? scene.mountains ?? [] : []) {
@@ -3277,8 +3299,8 @@ function drawScene(g, scene, data, bg, view) {
   letter(g, shown.filter((n) => n.red), data.proj.toPx, { ...opts, color: STYLE.windRed });
 
   // 8. monsters, 9. ships
-  for (const m of show.kinds.has('monster') ? scene.monsters : []) if (spriteIn(m.sprite, m.x, m.y, m.size)) drawSprite(g, m.sprite, m.x, m.y, m.size, { flip: m.flip, anchor: [0.5, 0.5] });
-  for (const s of show.kinds.has('ship') ? scene.ships : []) if (spriteIn(s.sprite, s.x, s.y, s.size)) drawSprite(g, s.sprite, s.x, s.y, s.size, { flip: s.flip, rot: s.flip ? -s.tilt : s.tilt, anchor: [0.5, 0.6] });
+  for (const m of show.kinds.has('monster') ? scene.monsters : []) if (spriteIn(m.sprite, m.x, m.y, m.size)) inked(m, () => drawSprite(g, m.sprite, m.x, m.y, m.size, { flip: m.flip, anchor: [0.5, 0.5] }));
+  for (const s of show.kinds.has('ship') ? scene.ships : []) if (spriteIn(s.sprite, s.x, s.y, s.size)) inked(s, () => drawSprite(g, s.sprite, s.x, s.y, s.size, { flip: s.flip, rot: s.flip ? -s.tilt : s.tilt, anchor: [0.5, 0.6] }));
 
   // the voyages over the ornaments, under the cartouche
   // 9.1 the charts' sheets, each whole and opaque, over everything on the map, the last laid on top (overlays.mjs); their notes are drawn nowhere, found by the cursor (page.js)
@@ -3409,6 +3431,9 @@ function anchorScene(scene, data) {
   return {
     k: data.proj.k, show: scene.show, scaleSprite: scene.scaleSprite, cartouche: scene.cartouche, cartouchePos: scene.cartouchePos, scalePos: scene.scalePos, voyages: scene.voyages, overlays: scene.overlays,
     rays, rayLines: [0, 1, 2].map((kind) => rays.filter((ray) => ray.kind === kind).map((ray) => ray.line)), sheets: scene.sheets, debug: scene.debug, // the lines by ink (black, red, green), as drawAnchored strokes them
+    // the same by band, for a page turn's two networks (bandInk); the pinned rose's lines are band undefined
+    rayBands: [...new Set(rays.map((ray) => ray.band))].map((band) => ({ band, lines: [0, 1, 2].map((kind) => rays.filter((ray) => ray.band === band && ray.kind === kind).map((ray) => ray.line)) })),
+    bands: scene.bands, turn: scene.turn,
     roses: scene.roseDraws.map(ll), mountains: (scene.mountains ?? []).map(ll),
     towns: [...scene.towns.filter((t) => !t.city), ...(scene.lesser ?? [])].map(ll),
     monsters: scene.monsters.map(ll), ships: scene.ships.map(ll),
@@ -3502,8 +3527,11 @@ function drawAnchored(g, a, bg, view, layers) {
   g.setTransform(1, 0, 0, 1, 0, 0);
   for (const o of a.overlays) if (o.mode === 'pieces') drawOverlay(g, o, proj, o.opacity, { w: W, h: H }); // the pieces first, as at a stop
   const inks = [STYLE.ink, STYLE.windRed, STYLE.windGreen];
-  for (const [kind, ink] of show.rhumb ? inks.entries() : []) {
-    limn(g, a.rayLines[kind], proj.toPx, { color: ink, alpha: STYLE.rhumbAlpha, width: STYLE.rhumbWidth, oneStroke: true, ...proj.seam });
+  const inkOf = bandInk(a.bands, view.zoom, a.turn);
+  const inked = (o, draw) => { const k = inkOf(o.band); if (k <= 0) return; g.globalAlpha = k; draw(); g.globalAlpha = 1; };
+  for (const { band, lines } of show.rhumb ? a.rayBands : []) {
+    const k = inkOf(band);
+    if (k > 0) for (const [kind, ink] of inks.entries()) limn(g, lines[kind], proj.toPx, { color: ink, alpha: STYLE.rhumbAlpha * k, width: STYLE.rhumbWidth, oneStroke: true, ...proj.seam });
   }
   if (proj.rim) {
     g.beginPath(); g.arc(W / 2, H / 2, proj.rim, 0, 2 * Math.PI);
@@ -3513,7 +3541,7 @@ function drawAnchored(g, a, bg, view, layers) {
   drawLate(g, a, view, layers, fr);
   if (show.kinds.has('rose')) for (const { o, at: ll } of a.roses) {
     const size = o.size * scaled('rose'), p = at(ll, size);
-    if (p) drawSprite(g, o.sprite, p[0], p[1], size, { anchor: [0.5, 0.5], rot: roseTurn(proj) });
+    if (p) inked(o, () => drawSprite(g, o.sprite, p[0], p[1], size, { anchor: [0.5, 0.5], rot: roseTurn(proj) }));
   }
   if (show.kinds.has('mountain')) for (const { o, at: ll } of a.mountains) {
     const size = o.size * scaled('mountain'), p = at(ll, size);
@@ -3535,11 +3563,11 @@ function drawAnchored(g, a, bg, view, layers) {
   }
   if (show.kinds.has('monster')) for (const { o: m, at: ll } of a.monsters) {
     const size = m.size * scaled('monster'), p = at(ll, size);
-    if (p) drawSprite(g, m.sprite, p[0], p[1], size, { flip: m.flip, anchor: [0.5, 0.5] });
+    if (p) inked(m, () => drawSprite(g, m.sprite, p[0], p[1], size, { flip: m.flip, anchor: [0.5, 0.5] }));
   }
   if (show.kinds.has('ship')) for (const { o: s, at: ll } of a.ships) {
     const size = s.size * scaled('ship'), p = at(ll, size);
-    if (p) drawSprite(g, s.sprite, p[0], p[1], size, { flip: s.flip, rot: s.flip ? -s.tilt : s.tilt, anchor: [0.5, 0.6] });
+    if (p) inked(s, () => drawSprite(g, s.sprite, p[0], p[1], size, { flip: s.flip, rot: s.flip ? -s.tilt : s.tilt, anchor: [0.5, 0.6] }));
   }
   for (const o of a.overlays) if (o.mode === 'sheet') drawSheet(g, o, proj, o.sheet); // the sheets, then the voyages over them, as at a stop
   drawVoyages(g, a.voyages, proj, { x0: 0, y0: 0, x1: W, y1: H }, undefined, true); // the notes' marks are the page's (drawNoteMark), as at a stop
@@ -3604,6 +3632,7 @@ export const TUNE_KNOBS = {
   roselines: { def: 1, of: [0, 1] }, // the Catalan rose's lines at every zoom
   roseshare: { def: null, min: 0, max: 1 }, // of a sheet's allotment, to roses
   sheetroses: { def: null, min: 1, max: 8, int: true }, // the most roses a sheet holds
+  turn: { def: ATLAS_TURN, min: 0, max: 1 }, // the page turn's span in zoom levels, centred on a band edge; 0 a hard swap
 };
 // A knob's value from text or a number, or undefined where it is out of range or malformed.
 function knobValue(name, v) {
@@ -3732,15 +3761,16 @@ export async function createScene(environment, opts = {}) {
   // The Catalan rose's lines reach as far as those of the sheet that holds it at this zoom.
   // `from` paces a sheet's beasts: the first zoom of its band, or in the world band, where the earth is one page,
   // the zoom at which the sheet is one window wide.
-  const worldBand = view.zoom < ATLAS_BANDS[0].from;
+  // Inside a page turn's span both bands' sheets are placed, each whole, and drawn at the ink of the turn (bandInk).
+  const turned = bandsAt(view.zoom, knobs.turn);
   // The knobs: `curated` 0 leaves grid cells everywhere but the world band, which is one sheet either way.
   const origin = ATLAS_ORIGINS[knobs.origin];
-  const sheets = sheetsFor(view, { radius: knobs.radius, curated: knobs.curated === 1 || worldBand, overlap, origin }).map((sh) => ({ ...sh, id: `${sh.band}/${sh.name}`, reach: sheetReach(sh.extent, knobs.reach),
+  const sheets = turned.flatMap(({ band }) => sheetsFor(view, { radius: knobs.radius, curated: knobs.curated === 1 || band === WORLD_BAND, overlap, origin, band })).map((sh) => ({ ...sh, id: `${sh.band}/${sh.name}`, reach: sheetReach(sh.extent, knobs.reach),
     from: sh.band === WORLD_BAND.band ? Math.log2(WINDOW_DEG / (sh.extent.east - sh.extent.west)) : ATLAS_BANDS.find((b) => b.band === sh.band).from }));
   const roseReach = sheetReach(roseSheet(view.zoom, { origin, curated: knobs.curated === 1, overlap }).extent, knobs.reach);
   const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, historical, roseLines: knobs.roselines === 1, seaAt: sheets && seaAtOf(coarse), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, regionNames, regionStyle, title, autoTitle, pinTitle,
     continentsEnd: zoomEnd(continentsZoom, CONTINENT_ZOOM_END), regionsEnd: zoomEnd(regionsZoom, REGION_ZOOM_END),
-    scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM && pinned, pinned, cartouchePos, scalePos, townSize: townBy, seed: legacy ? null : pickedSeed == null ? castSeed(view) : pickedSeed | 0, salt: legacy || pickedSeed == null ? 0 : pickedSeed | 0 }), show, scaleSprite, voyages, overlays, roseReach, roseLines: knobs.roselines === 1, debug, overlap, scalePos: cornerOf(scalePos, DEFAULT_SCALE_CORNER) };
+    scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM && pinned, pinned, cartouchePos, scalePos, townSize: townBy, seed: legacy ? null : pickedSeed == null ? castSeed(view) : pickedSeed | 0, salt: legacy || pickedSeed == null ? 0 : pickedSeed | 0 }), show, scaleSprite, voyages, overlays, roseReach, roseLines: knobs.roselines === 1, debug, overlap, scalePos: cornerOf(scalePos, DEFAULT_SCALE_CORNER), zoom: view.zoom, turn: knobs.turn, bands: turned.map(({ band }) => band.band) };
   scene.voyages = placeDoubts(scene, data);
   data.trees = TREES[STYLE.trees] ? plantTrees({ proj: data.proj, isLand: scene.field.isLand, scene, lakes: STYLE.lakes !== 'off' && water ? water.lakes : [], w: W, h: H }) : [];
   data.palms = plantPalms({ proj: data.proj, isLand: scene.field.isLand, scene, w: W, h: H,

@@ -604,10 +604,10 @@ function showRegionSamples() {
 }
 // Under the hood: the sheets chips and the knobs. A knob whose default is each band's own (rose share, roses per
 // sheet) is unset until its slider is moved; its slider then rests at the narrow bands' value.
-const KNOB_SLIDERS = { radius: 'tuneRadius', reach: 'tuneReach', roseshare: 'tuneRoseshare', sheetroses: 'tuneSheetroses' };
+const KNOB_SLIDERS = { radius: 'tuneRadius', reach: 'tuneReach', roseshare: 'tuneRoseshare', sheetroses: 'tuneSheetroses', turn: 'tuneTurn' };
 const KNOB_CHIPS = { origin: 'tuneOrigin', curated: 'tuneCurated', roselines: 'tuneRoselines' };
 const BAND_OWN = { roseshare: `band's own: ${ROSE_SHARE}, ${WIDE.roseShare} wide`, sheetroses: `band's own: ${SHEET_ROSES}, ${WIDE.sheetRoses} wide` };
-const KNOB_OUT = { radius: (v) => `${v} of sheet height`, reach: (v) => `${v} × diagonal`, roseshare: String, sheetroses: String };
+const KNOB_OUT = { radius: (v) => `${v} of sheet height`, reach: (v) => `${v} × diagonal`, roseshare: String, sheetroses: String, turn: (v) => (Number(v) ? `${v} zoom levels` : 'a hard swap') };
 for (const [name, id] of Object.entries(KNOB_SLIDERS)) Object.assign($(id), { min: TUNE_KNOBS[name].min, max: TUNE_KNOBS[name].max });
 function showHood() {
   $('debug').value = style.debug || 'off';

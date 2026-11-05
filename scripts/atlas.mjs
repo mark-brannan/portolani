@@ -294,14 +294,32 @@ export const WORLD_SHEET = (() => {
 const fix6 = (v) => v.toFixed(6);
 export const sheetPlace = (sh) => (sh.curated || sh.band === WORLD_BAND.band ? sh.name : [sh.extent.west, sh.extent.south, sh.extent.east, sh.extent.north].map(fix6).join(','));
 
+// The page turn (docs/atlas/README.md, "The page turn"): over a span of `turn` zoom levels centred on each band edge
+// from 4 up, the outgoing band's sheets fade out as the incoming band's fade in. The bands a zoom draws, each with
+// its ink from 0 to 1: one at full ink outside a span, two inside it, their inks summing to 1. A turn of 0 is a hard
+// swap at the edge. The outgoing band at 4 is the world band.
+export const TURN = 0.3;
+export function bandsAt(zoom, turn = TURN) {
+  const half = turn / 2;
+  if (half > 0) for (let i = 0; i < BANDS.length; i++) {
+    const x = BANDS[i].from;
+    if (zoom > x - half && zoom < x + half) {
+      const t = (zoom - (x - half)) / turn;
+      return [{ band: i ? BANDS[i - 1] : WORLD_BAND, alpha: 1 - t }, { band: BANDS[i], alpha: t }];
+    }
+  }
+  return [{ band: zoom < BANDS[0].from ? WORLD_BAND : bandFor(zoom), alpha: 1 }];
+}
+
 // Every grid sheet the view overlaps: [{ name, band, bandName, row, col, extent, circle }], counted out from `origin`
 // (ORIGINS; the rose by default). With `curated`, each band takes the curated sheets that serve it under the `overlap`
 // rule (curatedFor), and a grid cell whose centre lies in one is left out, so a curated sheet replaces the cells it
 // holds (#199); the world band (below the first band's zoom) is the world sheet, under the charts the rule keeps there.
-export function sheetsFor(view, { radius = 0.4, curated = false, overlap = DEFAULT_OVERLAP, origin = ROSE } = {}) {
-  const band = bandFor(view.zoom), rule = overlapRule(overlap);
+// `band` (a BANDS entry or WORLD_BAND) asks for that band's sheets over the view, whatever its zoom: a page turn draws two.
+export function sheetsFor(view, { radius = 0.4, curated = false, overlap = DEFAULT_OVERLAP, origin = ROSE, band: asked = null } = {}) {
+  const world = asked ? asked === WORLD_BAND : view.zoom < BANDS[0].from;
+  const band = asked && !world ? asked : bandFor(view.zoom), rule = overlapRule(overlap);
   const b = viewBounds(view);
-  const world = view.zoom < BANDS[0].from;
   const all = { west: -180, east: 180, south: -90, north: 90 };
   if (curated && world) {
     const shadow = rule === 'uncut' ? [] : keptIn(WORLD_BAND, view.zoom, rule).map((c) => c.extent);

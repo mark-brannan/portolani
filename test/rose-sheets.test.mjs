@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
-import { createScene, viewProjection, panView, BUDGET } from '../scripts/scene.mjs';
+import { createScene, anchorScene, bandInk, viewProjection, panView, zoomView, BUDGET } from '../scripts/scene.mjs';
 import { territory, BANDS } from '../scripts/atlas.mjs';
 import { coastNames, joinNames } from '../scripts/names.mjs';
 
@@ -163,4 +163,43 @@ test('a sheet draws the same figures under another numbering of the bands', asyn
   assert.ok(before.names.every((n) => !after.names.includes(n)), `the sheets are renamed: ${before.names} / ${after.names}`);
   assert.ok(before.figures.some((f) => !f.startsWith('rose')), 'beasts or ships are placed');
   assert.deepEqual(after.figures, before.figures);
+});
+
+// docs/atlas/README.md, "The page turn": a stop inside the span places both bands' sheets, each whole; a pan inside the
+// span places each sheet as it was; the outgoing band's ornaments fade as the incoming band's come in, and nothing moves.
+test('inside a page turn both bands are placed, a pan re-places nothing, and the inks cross', async () => {
+  const at = async (view, tune) => {
+    const { scene, data } = await createScene(env, { view, scale: 'off', ...(tune && { tune }) });
+    const ll = (o) => data.proj.invert(o.x, o.y).map((v) => v.toFixed(6)).join(' ');
+    return { scene, data, figures: [['rose', scene.roseDraws], ['monster', scene.monsters], ['ship', scene.ships]].flatMap(([kind, l]) => l.map((o) => `${o.band} ${o.sheet} ${kind} ${o.sprite.id} ${ll(o)}`)).sort() };
+  };
+  const view = { lon: 8.93, lat: 44.41, zoom: 8.95 };
+  const turn = await at(view);
+  assert.deepEqual(turn.scene.bands, [8, 9]);
+  assert.deepEqual([...new Set(turn.scene.sheets.map((s) => s.band))].sort(), [8, 9]);
+  assert.ok([8, 9].every((b) => turn.figures.some((f) => f.startsWith(`${b} `))), 'both bands hold figures');
+  // each band's figures are its own band's, as placed outside the span
+  const before = await at({ ...view, zoom: 8.6 }), after = await at({ ...view, zoom: 9.3 });
+  const mine = (list, b) => list.filter((f) => f.startsWith(`${b} `));
+  const sheetsIn = (r) => new Set(r.scene.sheets.map((s) => s.name));
+  const common = (a, b, band) => mine(a.figures, band).filter((f) => sheetsIn(b).has(f.split(' ')[1]));
+  assert.deepEqual(common(turn, before, 8), common(before, turn, 8).filter((f) => sheetsIn(turn).has(f.split(' ')[1])));
+  assert.deepEqual(common(turn, after, 9), common(after, turn, 9).filter((f) => sheetsIn(turn).has(f.split(' ')[1])));
+  // a pan inside the span: a sheet in both views holds the same figures
+  const panned = await at(panView(view, 16, 0));
+  const shared = [...sheetsIn(turn)].filter((n) => sheetsIn(panned).has(n));
+  for (const n of shared) assert.deepEqual(turn.figures.filter((f) => f.split(' ')[1] === n), panned.figures.filter((f) => f.split(' ')[1] === n), n);
+  // the inks: 8 fades from 1 to 0 across 8.85 to 9.15 as 9 rises; the pinned rose's (band undefined) stays whole
+  const ink = bandInk(turn.scene.bands, 0, turn.scene.turn);
+  assert.equal(ink(undefined), 1);
+  for (const [z, a8] of [[8.9, 5 / 6], [9, 0.5], [9.1, 1 / 6]]) { const k = bandInk([8, 9], z, 0.3); assert.ok(Math.abs(k(8) - a8) < 1e-9 && Math.abs(k(9) - (1 - a8)) < 1e-9, `${z}`); }
+  assert.deepEqual([bandInk([8, 9], 8.5, 0.3)(8), bandInk([8, 9], 8.5, 0.3)(9), bandInk([8, 9], 9.5, 0.3)(8), bandInk([8, 9], 9.5, 0.3)(9)], [1, 0, 0, 1]);
+  assert.deepEqual([bandInk([8, 9], 10.5, 0.3)(9), bandInk([8, 9], 7.5, 0.3)(8)], [1, 1], 'past both, the nearer stays whole');
+  assert.equal(bandInk([9], 8.95, 0.3)(9), 1, 'one band placed is whole');
+  // anchored for the moving frames, the lines by band
+  const a = anchorScene(turn.scene, turn.data);
+  assert.deepEqual(a.bands, [8, 9]);
+  assert.ok([8, 9].every((b) => a.rayBands.some((r) => r.band === b && r.lines[0].length)));
+  // turn 0: today's hard swap, one band
+  assert.deepEqual((await at(view, { turn: 0 })).scene.bands, [8]);
 });

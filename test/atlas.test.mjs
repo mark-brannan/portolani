@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { sheetsFor, roseSheet, cutOut, bandFor, BANDS, hiddenCircle, ROSE, ORIGINS, CURATED, PAGE_EDGE, WORLD_SHEET, OVERLAP_RULES } from '../scripts/atlas.mjs';
+import { sheetsFor, roseSheet, cutOut, bandFor, bandsAt, TURN, WORLD_BAND, BANDS, hiddenCircle, ROSE, ORIGINS, CURATED, PAGE_EDGE, WORLD_SHEET, OVERLAP_RULES } from '../scripts/atlas.mjs';
 import { readFileSync } from 'node:fs';
 
 const bounds = (zoom, west, south, east, north) => ({ zoom, west, south, east, north });
@@ -346,4 +346,26 @@ test('the Carte Pisane\'s two sheets meet at the seam, each ring whole on its ow
   assert.ok(!e.shadow.some((x) => x === w.extent) && !w.shadow.some((x) => x === e.extent), 'neither shadows the other');
   for (const s of [w, e]) for (const n of s.circle.nodes) assert.ok(n.lon >= s.extent.west && n.lon <= s.extent.east, `${s.source} node at ${n.lon.toFixed(2)}E`);
   assert.deepEqual(pisane(6.2, 'fit').map((s) => s.source), ['Carte Pisane, western circle']);
+});
+
+// docs/atlas/README.md, "The page turn": over 0.3 of a zoom level centred on each band edge from 4 up, the outgoing band
+// fades out as the incoming fades in; outside the span one band, at full ink; a turn of 0 is a hard swap.
+test('the page turn: two bands inside the span, their inks summing to one, one band outside it', () => {
+  assert.equal(TURN, 0.3);
+  const ink = (z, turn) => bandsAt(z, turn).map(({ band, alpha }) => [band.band, +alpha.toFixed(6)]);
+  assert.deepEqual(ink(8.5), [[8, 1]]);
+  assert.deepEqual(ink(8.85), [[8, 1]], 'the span is open at its ends');
+  assert.deepEqual(ink(8.9), [[8, 0.833333], [9, 0.166667]]);
+  assert.deepEqual(ink(9), [[8, 0.5], [9, 0.5]]);
+  assert.deepEqual(ink(9.1), [[8, 0.166667], [9, 0.833333]]);
+  assert.deepEqual(ink(9.15), [[9, 1]]);
+  assert.deepEqual(ink(4), [[WORLD_BAND.band, 0.5], [4, 0.5]], 'the turn at 4 is from the world band');
+  assert.deepEqual(ink(3.5), [[WORLD_BAND.band, 1]]);
+  assert.deepEqual(ink(15), [[14, 1]], 'no band above the last, no turn');
+  assert.deepEqual([8.95, 9, 9.05].map((z) => ink(z, 0)), [[[8, 1]], [[9, 1]], [[9, 1]]], 'turn 0: the swap at the edge');
+  assert.deepEqual(ink(9.2, 0.5), [[8, 0.1], [9, 0.9]], 'the span is the knob\'s');
+  // a band asked for by name: the outgoing band's sheets over a view in the span are its own
+  const out = sheetsFor({ zoom: 9, lon: 8.93, lat: 44.41 }, { band: bandFor(8.5) });
+  assert.ok(out.length && out.every((s) => s.band === 8));
+  assert.deepEqual(sheetsFor({ zoom: 3.95, lon: 0, lat: 30 }, { band: WORLD_BAND, curated: true }).at(-1), sheetsFor({ zoom: 3.95, lon: 0, lat: 30 }, { curated: true }).at(-1));
 });
