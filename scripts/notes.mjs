@@ -728,7 +728,7 @@ export const CATALAN_NOTES = [
   },
   {
     id: 'king-chabech', title: 'King Chabech of the Chagatai',
-    drawn: 'A crowned king in red on a round blue throne. The legend (VI.8): "Here reigns the King Chabech, lord of the empire of Medeja. He resides at Emalech."',
+    drawn: 'A crowned king in red on a round blue throne. The legend (VI.8) says that here reigns King Chabech, lord of the empire of Medeja, who resides at Emalech.',
     real: 'Kebek, khan of the Chagatai Khanate, died in 1326. In 1375 Timur was master of its western half, and Almaliq, its old capital in the Ili valley, was in decline.',
     source: { label: 'Cresques Project VI.8; Kebek', url: WIKI('Kebek') },
     at: { px: page(11, 1250, 8800), lonlat: [80.87, 44.05] }, size: [1300, 1900], up: 0,

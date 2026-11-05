@@ -205,7 +205,7 @@
           "lat": 31.63,
           "place": "Marrakesh",
           "label": "Died at Marrakesh, by one modern account",
-          "text": "Some modern summaries put his death at Marrakesh; the Rihla ends in 1355 and no chronicle of his death survives. The tomb shown at Tangier, his birthplace, is traditional and unproven: it marks a burial tradition, not a place of death.",
+          "text": "Some modern summaries put his death at Marrakesh; the Rihla ends in 1355 and no chronicle of his death survives. The tomb shown at Tangier, his birthplace, is unproven: it marks a burial tradition, not a place of death.",
           "source": "Wikipedia, Ibn Battuta (infobox); the Tangier tomb is captioned \"purported\""
         }
       ]
@@ -551,7 +551,7 @@
   },
   "vasco-da-gama": {
     "name": "Vasco da Gama",
-    "bio": "A Portuguese nobleman from Sines, on his first voyage, 1497 to 1499, he made the first voyage from Europe to India by sea, round the Cape of Good Hope and, with a pilot taken on at Malindi, across the Indian Ocean to Calicut, the longest ocean voyage made until then. He went back to India as viceroy and died there in 1524.",
+    "bio": "A Portuguese nobleman from Sines, in 1497 to 1499 he led the first voyage from Europe to India by sea, round the Cape of Good Hope and, with a pilot taken on at Malindi, across the Indian Ocean to Calicut, the longest ocean voyage made until then. He went back to India as viceroy and died there in 1524.",
     "images": [
       {
         "file": "Gregório_Lopes_-_Vasco_da_Gama_(ca_1524).jpg",
@@ -1532,7 +1532,7 @@
       "label": "Esteban killed at Hawikuh, 1539",
       "source": "Wikipedia, Esteban de Dorantes",
       "cite": "esteban-de-dorantes",
-      "text": "He went ahead of Fray Marcos de Niza and was held overnight without food or water, then attacked and killed at Cíbola. Accounts differ on why: Castañeda says he demanded turquoise and women, Alarcón that he boasted of armed men behind him, and the Zuni may simply have judged him a bad man. Sancho Dorantes says he was shot through with arrows.",
+      "text": "He went ahead of Fray Marcos de Niza and was held overnight without food or water, then attacked and killed at Cíbola. Accounts differ on why: Castañeda says he demanded turquoise and women, Alarcón that he boasted of armed men behind him, and Zuni tradition that he was a bad man. Sancho Dorantes says he was shot through with arrows.",
       "doubt": "In 2002 the historian Juan Francisco Maura argued that Esteban was never killed at all: the story of his death was a ruse that set a slave free, and he lived on among the Zuni."
     },
     "images": [

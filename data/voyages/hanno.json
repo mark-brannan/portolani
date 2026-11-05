@@ -4,7 +4,7 @@
   "short": "Hanno",
   "who": ["hanno-the-navigator"],
   "when": "c. 500 BC",
-  "summary": "Sixty fifty-oared ships and thirty thousand settlers leave Carthage for the Atlantic coast of Africa, found cities beyond the Pillars of Heracles, and sail on past the river Lixos to a fiery mountain and an island of hairy, wild people, as the text calls them, the Gorillai.",
+  "summary": "Sixty fifty-oared ships and thirty thousand settlers leave Carthage for the Atlantic coast of Africa, found cities beyond the Pillars of Heracles, and sail on past the river Lixos to a fiery mountain and an island of what the text calls wild, hairy people, the Gorillai.",
   "sources": ["hanno-the-navigator"],
   "legs": [
     { "from": "Carthage", "to": "Pillars of Heracles (Strait of Gibraltar)", "dates": "c. 500 BC", "mode": "sea", "line": "spline",

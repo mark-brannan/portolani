@@ -10,7 +10,7 @@
 // Any other place gets the plain tower where nothing else is drawn. Nothing is lettered beside it.
 export const SIGHT_TILES = {
   // where the charts were made
-  Genoa: { date: '1311', text: 'Genoese chartmakers drew some of the earliest signed portolan charts. Pietro Vesconte, who signed "de Janua", made the earliest dated chart, in 1311, its coasts laid in a web of rhumb lines from compass points, not on a grid of degrees.' },
+  Genoa: { date: '1311', text: 'Genoese chartmakers drew some of the earliest signed portolan charts. Pietro Vesconte, who signed "de Janua", made the earliest dated one that survives, in 1311, its coasts laid in a web of rhumb lines from compass points, not on a grid of degrees.' },
   Venice: { date: '1367', text: 'Venice was where a captain bought charts and where mapmakers like the Pizzigani brothers worked. Its galleys sailed to Flanders and the Levant on charts like theirs, and Olaus Magnus had his Carta Marina printed here in 1539.' },
   Majorca: { date: '1375', text: 'The Jewish chartmakers of Palma, Cresques Abraham among them, drew the Catalan Atlas for the heir to the Aragonese throne. It shows Mansa Musa, lord of Mali, holding up gold, and rhumb lines reaching out to the edge of the world its makers knew.' },
   Lisbon: { date: '1500s', text: 'The Armazém da Guiné e Índia kept the secret master chart on which every coast the Portuguese reached was entered, and ships\' pilots drew their copies from it. From here each year\'s fleet set out round Africa to India.' },
