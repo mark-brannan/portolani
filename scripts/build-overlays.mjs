@@ -116,7 +116,7 @@ const CHARTS = [
     // the landmarks ornaments.md names for each fit ("Carta Marina, 1539"), where they lie today: the figures table
     // gives where the fits put the figures, not the landmarks' scan px, so these are their real places alone
     marks: () => [[[-18.6, 64.9], [-6.9, 62.0], [-1.25, 60.3], [-3.05, 59.0]], // Iceland, the Faroes, Shetland, Orkney
-      [[7.05, 57.98], [10.40, 63.43], [5.15, 62.19], [13.0, 67.9], [25.97, 70.98]], // Lindesnes, Trondheim, Stad, Lofoten, Nordkapp
+      [[7.05, 57.98], [10.40, 63.43], [5.15, 62.19], [13.0, 67.9]], // Lindesnes, Trondheim, Stad, Lofoten
       [[19.95, 60.2], [18.07, 59.33], [18.5, 57.45], [16.65, 56.75], [22.5, 58.4], [24.1, 56.95], [18.65, 54.35]]], // Åland, Stockholm, Gotland, Öland, Saaremaa, Riga, Danzig
     snaps: ['West', 'Norway', 'Baltic'] },
   { id: 'catalan-atlas', title: 'Catalan Atlas, 1375', source: 'catalan-atlas-5', pages: CATALAN_PAGES, thumb: 'catalan-atlas-thumb.jpg', scale: 4,

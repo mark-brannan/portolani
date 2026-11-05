@@ -36,9 +36,9 @@ test('the committed fits give back every figure of ornaments.md to within 0.1 de
   const b = similarityFit(rows.filter((r) => r.fit === 'baltic').map((r) => [r.px, r.ll]));
   assert.equal(w.scale.toFixed(4), '0.0113'); assert.equal(Math.round(w.turn), 48);
   assert.equal(b.scale.toFixed(4), '0.0100'); assert.equal(Math.round(b.turn), 3);
-  // Norway: its own five coast landmarks, 0.0140 deg/px at -8 degrees
+  // Norway: its own four coast landmarks, 0.0107 deg/px at -7 degrees
   const n = similarityFit(landmarkRows(readFileSync(new URL('docs/atlas/ornaments.md', ROOT), 'utf8'), '### Landmarks, Norway').map((r) => [r.px, r.ll]));
-  assert.equal(n.scale.toFixed(4), '0.0140'); assert.equal(Math.round(n.turn), -8);
+  assert.equal(n.scale.toFixed(4), '0.0107'); assert.equal(Math.round(n.turn), -7);
 });
 
 // ornaments.md, "Landmarks, sheet 5": one similarity, 0.00331 deg/px, no turn, 127 km RMS, El Hierro worst at 284.

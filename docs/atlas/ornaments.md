@@ -215,27 +215,27 @@ by least squares, from scan pixels to longitude and Mercator latitude, and each 
 | fit | landmarks | scale | turn | residual, RMS | worst |
 |---|---|---|---|---|---|
 | west | Iceland, Faroes, Shetland, Orkney | 0.0113 °/px | 48° | 101 km | Shetland, 125 km |
-| Norway | Lindesnes, Trondheim, Stad, Lofoten, Nordkapp | 0.0140 °/px | -8° | 252 km | Nordkapp, 387 km |
+| Norway | Lindesnes, Trondheim, Stad, Lofoten | 0.0107 °/px | -7° | 104 km | Stad, 143 km |
 | Baltic | Åland, Stockholm, Gotland, Öland, Saaremaa, Riga, Danzig | 0.0100 °/px | 3° | 47 km | Åland and Danzig, 59 km |
 
 The west fit's four landmarks lie in one narrow column of the scan, and the chart draws Iceland well east of
 where it lies, so that fit is the weaker one. Figures at x < 1700 px take the west fit, x 1700 to 2700 the Norway fit and x > 2700 the Baltic fit.
 
-The Norway fit is the Norwegian coast, which lies inside the west strip (the west fit is turned 48° to hold Iceland, the
-Faroes, Shetland and Orkney, none of them Norway), 11° from the Baltic fit. Read off the full-size scan on 2026-11-04, by
-eye, about ±40 px; each point is the coast where the chart's lettering stands, not the lettering. It is the weakest fit:
-the chart swings Finnmark east, so Nordkapp lies 387 km off and Lofoten 295 km, and the points the other three tell of
-are 151 to 182 km out.
+The Norway fit is the Norwegian coast from Lindesnes to Lofoten, which lies inside the west strip (the west fit is turned
+48° to hold Iceland, the Faroes, Shetland and Orkney, none of them Norway), 10° from the Baltic fit. Read off the
+full-size scan on 2026-11-04, by eye, about ±40 px; each point is the coast where the chart's lettering stands, not the
+lettering. Nordkapp (x 2780, past the strip's edge) is not a landmark: with it the fit's scale jumps from 0.0107 to
+0.0140 °/px and its residual from 104 to 252 km, because the chart bends Finnmark east. The north of Norway beyond
+Lofoten is drawn by the Baltic fit. See [the coast under each fit](carta-marina-norway-coast-by-fit.jpg).
 
 ### Landmarks, Norway
 
 | | landmark | scan px | lon, lat | piece | fit puts it at | off by |
 |---|---|---|---|---|---|---|
-| L1 | Lindesnes, the south tip | 1975, 2660 | 7.05, 57.98 | norway | 6.4, 56.7 | 151 km |
-| L2 | Trondheim, Nidrosia | 2085, 1395 | 10.40, 63.43 | norway | 10.5, 65.1 | 182 km |
-| L3 | Stad | 1890, 1950 | 5.15, 62.19 | norway | 6.7, 61.8 | 154 km |
-| L4 | Lofoten | 2350, 590 | 13.00, 67.90 | norway | 15.8, 69.2 | 295 km |
-| L5 | Nordkapp, Honavif | 2780, 440 | 25.97, 70.98 | norway | 22.1, 69.6 | 387 km |
+| L1 | Lindesnes, the south tip | 1975, 2660 | 7.05, 57.98 | norway | 6.5, 57.9 | 51 km |
+| L2 | Trondheim, Nidrosia | 2085, 1395 | 10.40, 63.43 | norway | 9.3, 64.3 | 138 km |
+| L3 | Stad | 1890, 1950 | 5.15, 62.19 | norway | 6.6, 61.7 | 143 km |
+| L4 | Lofoten | 2350, 590 | 13.00, 67.90 | norway | 13.2, 67.6 | 36 km |
 
 ![The Carta Marina with its figures ringed: roses red, beasts blue, ships green; a thick ring has a cropped sprite](ornaments-carta-marina.jpg)
 
@@ -245,19 +245,19 @@ are 151 to 182 km out.
 | R2 | "D", west of the Faroes | 1098, 1826 | west | -4.7, 60.7 | stand-in | drawn |
 | R3 | North Sea | 1530, 2931 | west | 7.8, 58.3 | stand-in | lands on southern Norway in the fit; drawn, as a rose may stand on land |
 | R4 | Bothnian Sea | 3361, 2006 | baltic | 20.6, 62.4 | stand-in | drawn |
-| M1 | serpent-a | 1882, 1042 | norway | 8.4, 67.2 | `serpent-a` | drawn |
-| M2 | whale-b | 2200, 436 | norway | 14.1, 70.0 | `whale-b` | drawn |
-| M3 | cete-e | 1926, 654 | norway | 9.8, 69.2 | `cete-e` | drawn |
+| M1 | serpent-a | 1882, 1042 | norway | 7.6, 66.0 | `serpent-a` | drawn |
+| M2 | whale-b | 2200, 436 | norway | 11.8, 68.3 | `whale-b` | drawn |
+| M3 | cete-e | 1926, 654 | norway | 8.6, 67.6 | `cete-e` | drawn |
 | M4 | pistrix-c | 455, 1350 | west | -13.6, 59.7 | `pistrix-c` | off the sheet: west of its 5°W edge |
 | M5 | Balena and Orcha | 429, 1859 | west | -9.5, 57.6 | stand-in | off the sheet: west of its 5°W edge |
 | M6 | spiny fish (K) | 351, 1547 | west | -12.7, 58.5 | stand-in | off the sheet: west of its 5°W edge |
 | M7 | Ziphius | 1378, 1612 | west | -4.5, 62.5 | stand-in | drawn |
 | M8 | whale by the Mare Glaciale rose | 1417, 1001 | west | -9.3, 64.7 | stand-in | off the sheet: west of its 5°W edge |
-| M9 | spotted serpent | 1755, 1443 | norway | 5.9, 65.1 | stand-in | drawn |
+| M9 | spotted serpent | 1755, 1443 | norway | 5.8, 64.2 | stand-in | drawn |
 | M10 | lobster | 408, 2163 | west | -7.1, 56.3 | stand-in | off the sheet: west of its 5°W edge |
-| M11 | Vermis 40 pe lo | 1807, 2808 | norway | 3.8, 55.8 | stand-in | lands on Norway or Jutland in the fit; left out |
+| M11 | Vermis 40 pe lo | 1807, 2808 | norway | 4.6, 57.2 | stand-in | drawn |
 | S1 | ship-a | 1260, 881 | west | -11.5, 64.5 | `ship-a` | off the sheet: west of its 5°W edge |
-| S2 | ship-b | 2150, 758 | norway | 12.7, 68.5 | `ship-b` | drawn |
+| S2 | ship-b | 2150, 758 | norway | 10.8, 67.0 | `ship-b` | drawn |
 | S3 | ship | 214, 858 | west | -19.6, 60.6 | stand-in | off the sheet: west of its 5°W edge |
 | S4 | ship | 429, 910 | west | -17.5, 61.3 | stand-in | off the sheet: west of its 5°W edge |
 | S5 | ship | 845, 949 | west | -14.1, 62.8 | stand-in | off the sheet: west of its 5°W edge |
