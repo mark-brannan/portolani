@@ -19,7 +19,9 @@ const HERE = dirname(fileURLToPath(import.meta.url)), ROOT = join(HERE, '..', '.
 const adapterURL = pathToFileURL(join(HERE, '..', 'app', 'enc-provider.js')).href;
 // the webapp's import map, as hooks: scene.mjs's `coastlines/provider` is the adapter, `portolani/` is scripts/
 const SCRIPTS = pathToFileURL(join(ROOT, 'scripts')).href;
-function resolveMapped(specifier, adapter, scripts) {
+const WORLD = import.meta.resolve('coastlines/provider'); // the adapter's own coastlines, as the build copies it
+function resolveMapped(specifier, adapter, scripts, world) {
+  if (specifier === 'coastlines/world-provider') return world;
   if (specifier === 'coastlines/provider') return adapter;
   if (specifier.startsWith('portolani/')) return `${scripts}/${specifier.slice(10)}`;
   return null;
@@ -27,7 +29,7 @@ function resolveMapped(specifier, adapter, scripts) {
 if (nodeModule.registerHooks) {
   nodeModule.registerHooks({
     resolve(specifier, context, next) {
-      const url = resolveMapped(specifier, adapterURL, SCRIPTS);
+      const url = resolveMapped(specifier, adapterURL, SCRIPTS, WORLD);
       return url ? { url, shortCircuit: true } : next(specifier, context);
     },
   });
@@ -37,10 +39,10 @@ if (nodeModule.registerHooks) {
 let map;
 export function initialize(data) { map = data; }
 export async function resolve(specifier, context, next) {
-  const url = resolveMapped(specifier, map.adapter, map.scripts);
+  const url = resolveMapped(specifier, map.adapter, map.scripts, map.world);
   return url ? { url, shortCircuit: true } : next(specifier, context);
 }`;
-  nodeModule.register(`data:text/javascript,${encodeURIComponent(loader)}`, import.meta.url, { data: { adapter: adapterURL, scripts: SCRIPTS } });
+  nodeModule.register(`data:text/javascript,${encodeURIComponent(loader)}`, import.meta.url, { data: { adapter: adapterURL, scripts: SCRIPTS, world: WORLD } });
 }
 
 // GET /<type>, /<type>/<id> and /<type>/<id>/<property>, as signalk-server routes them to a provider
@@ -93,7 +95,7 @@ test('US3WA46M through the provider draws the Seattle view, with its depth', asy
   const view = { lon: (b.lonMin + b.lonMax) / 2, lat: Math.atan(Math.sinh((merc(b.latMin) + merc(b.latMax)) / 2)) / RAD,
     zoom: Math.log2((2 * Math.PI * H) / (512 * (merc(b.latMax) - merc(b.latMin)) * 1.02)) };
   // the webapp's draw: the drawer's settings as scene options, with the cells' towns and water names
-  const optionsAt = async (at, set = settings) => ({ ...chartOptions(set, list), ...(await cellData(frameView(at, viewProjection(at).invert, W, H))), view: at });
+  const optionsAt = async (at, set = settings) => ({ ...chartOptions(set, list, await cellData(frameView(at, viewProjection(at).invert, W, H))), view: at });
   const draw = async (depth, at = view, set = settings) => {
     const { scene, data, bg } = await createScene(env, { ...(await optionsAt(at, set)), depth });
     const c = createCanvas(1600, 1000), g = c.getContext('2d');
@@ -121,8 +123,12 @@ test('US3WA46M through the provider draws the Seattle view, with its depth', asy
   for (const n of water) assert.ok(apart(n.box, barBox), `${n.text} clear of the scale bar`);
   assert.ok(withDepth.scene.towns.length > 0, 'the cells\' built-up areas stand towns');
   assert.ok(withDepth.scene.towns.every((t) => !t.sprite || (t.sprite.pack === 'vivid' && TOWNS.includes(t.sprite.style))), 'the drawn town styles');
-  // the scale bar in the bottom-left corner, no farther from the edges than the cartouche's margin (22 px)
-  assert.ok(bar.x <= 22 && H - (bar.y + bar.h) <= 22, `scale bar at ${bar.x}, ${H - bar.y - bar.h} from the corner`);
+  // the scale bar in the bottom-left corner, its gap to the bottom edge its gap to the left edge
+  assert.ok(Math.abs(bar.x - (H - (bar.y + bar.h))) <= 1, `scale bar ${bar.x} px from the left, ${H - bar.y - bar.h} px from the bottom`);
+  // the Towns chips all off is no town: the cells' built-up areas reach no scene
+  const place = { name: 'Here', lon: -122.3, lat: 47.6, area: 1 };
+  assert.deepEqual(chartOptions(settings, list, { places: [place] }).places, [place]);
+  assert.deepEqual(chartOptions({ ...settings, towns: [] }, list, { places: [place] }).places, []);
   // the cartouche off at first, a chip turns it on
   assert.equal(settings.cartouche, false);
   assert.ok(!chartOptions(settings, list).kinds.includes('cartouche'));
@@ -160,6 +166,20 @@ test('US3WA46M through the provider draws the Seattle view, with its depth', asy
   // drawn as the lone ink peak, its name lettered beside it
   assert.ok(ps.mountains.filter((m) => m.peak).every((m) => m.ink), 'the lone ink peak');
   assert.ok(ps.peakNames.some((n) => n.text === 'Test Summit'), 'the peak lettered');
+  // away from the cell, the world: Natural Earth's 50m land and coast, through coastlines' own provider
+  const away = await draw(true, { lon: -130, lat: 53, zoom: 7 }); // Haida Gwaii, clear of the cell
+  assert.ok(away.data.land.length > 0 && away.data.coastLL.length > 0, `the world's land away from the cell: ${away.data.land.length} polygons`);
+  // past the cell's edge, the world under it: land beyond the box, none of the world's inside it
+  const wider = await draw(true, { ...cell, zoom: cell.zoom - 1.5 });
+  const pts = wider.data.land.flatMap((poly) => poly[0]);
+  assert.ok(pts.some(([lon, lat]) => lon < w - 0.05 || lon > e + 0.05 || lat < s - 0.05 || lat > n + 0.05), 'the world drawn past the cell');
+  assert.ok(wider.data.land.length > whole.data.land.length, `more land past the cell: ${wider.data.land.length} > ${whole.data.land.length}`);
+  // the monsters in the cell's water only, though the world's sea is drawn past it: the cells' extents
+  // (`coverage`) keep them off it, where without them they stand on the world's Pacific
+  const offCell = ({ scene: sc, data: d }) => sc.monsters.filter((m) => { const [lon, lat] = d.proj.invert(m.x, m.y); return lon < w || lon > e || lat < s || lat > n; }).length;
+  assert.equal(offCell(wider), 0, 'no monster off the cell');
+  assert.ok(offCell(await createScene(env, { ...(await optionsAt({ ...cell, zoom: cell.zoom - 1.5 })), coverage: null })) > 0, 'without the cells\' extents, monsters off the cell');
+  if (process.env.RENDER_DIR) for (const [k, v] of Object.entries({ away, wider, whole })) writeFileSync(join(process.env.RENDER_DIR, `${k}.png`), v.c.toBuffer('image/png'));
 });
 
 test('a cell that will not convert is skipped with a warning, and the rest convert', async (t) => {

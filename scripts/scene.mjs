@@ -869,8 +869,9 @@ function traceMarks(g, data, min) {
 }
 
 // Land rasterised at CELL px, the island marks with it; chamfer distance (1, sqrt2) from every sea cell to land, in px.
-// Outside the cells a caller charts (`coverage`, [[w, s, e, n], ...]: an ENC's, signalk/), the scene has no land to
-// go by, so nothing may stand at sea there: it counts as land in the clearance field, painted onto `g` (in canvas px)
+// Outside the cells a caller charts (`coverage`, [[w, s, e, n], ...]: an ENC's, signalk/), the sea is not charted
+// water, whatever coarser world is drawn there, so nothing may stand at sea there: it counts as land in the
+// clearance field, painted onto `g` (in canvas px)
 function uncharted(g, data) {
   if (!data.coverage?.length) return;
   const m = createCanvas(Math.ceil(W / 4), Math.ceil(H / 4)), mg = m.getContext('2d');
@@ -2514,12 +2515,14 @@ SCALE_STYLES.genoese.height = (n, seg, sprite) => ((n * seg) / (sprite.bar[1] - 
 const SCALE_PICTURES = { genoese: 'scale-genoese' }; // style -> sprite id in the vivid pack
 const SCALE_NAMES = Object.keys(SCALE_STYLES);
 
-// Where the scale bar stands: its corner, and how far it is lifted off the edge to clear a cartouche in the same corner.
+// Where the scale bar stands: its corner, how far it is lifted off the edge to clear a cartouche in the same corner,
+// and its gap to both edges of its corner when a caller asks for one (`scaleGap`, px), else SCALE_GAP's
 const scalePlace = (o) => {
   const pos = cornerOf(o.scalePos, DEFAULT_SCALE_CORNER);
   const shared = o.show.kinds.has('cartouche') && o.cartouche && (o.cartouchePos ?? DEFAULT_CARTOUCHE_CORNER) === pos;
-  return { pos, lift: shared ? o.cartouche.h + 10 : 0 };
+  return { pos, lift: shared ? o.cartouche.h + 10 : 0, gap: o.scaleGap };
 };
+const SCALE_GAP = { side: 14, end: 22 }; // px from the left or right edge, and from the top or bottom
 let scaleHit = null; // the rectangle the scale bar was last drawn in, in canvas px, for the page to pick it up
 const scaleRect = () => scaleHit;
 function drawScaleBar(g, data, bg, view, w, h, style = 'genoese', sprite = null, place = { pos: 'bl', lift: 0 }) {
@@ -2541,7 +2544,8 @@ function drawScaleBar(g, data, bg, view, w, h, style = 'genoese', sprite = null,
   // the chart is blank where a scale sits: the parchment is repainted over the map beneath it
   const pad = 14;
   const pw = n * seg + 24 + g.measureText('nautical miles').width + 2 * pad + 20, ph = barH + 22 + 5 + 2 * pad;
-  const px = place.pos[1] === 'r' ? w - 14 - pw : 14, py = place.pos[0] === 'b' ? h - 22 - ph - place.lift : 22 + place.lift;
+  const gx = place.gap ?? SCALE_GAP.side, gy = place.gap ?? SCALE_GAP.end;
+  const px = place.pos[1] === 'r' ? w - gx - pw : gx, py = place.pos[0] === 'b' ? h - gy - ph - place.lift : gy + place.lift;
   const x0 = px + pad + 20, top = py + 22 + 5 + pad, y0 = top + barH - SCALE_BAR_H;
   scaleHit = { x: px, y: py, w: pw, h: ph };
   const sx = Math.max(0, view.x + px / view.scale), sy = Math.max(0, view.y + py / view.scale);
@@ -3434,7 +3438,7 @@ function roseSet(roses, seed) {
 function anchorScene(scene, data) {
   const ll = (o) => ({ o, at: data.proj.invert(o.x, o.y) }), rays = latticeOf(scene, data);
   return {
-    k: data.proj.k, show: scene.show, scaleSprite: scene.scaleSprite, cartouche: scene.cartouche, cartouchePos: scene.cartouchePos, scalePos: scene.scalePos, voyages: scene.voyages, overlays: scene.overlays,
+    k: data.proj.k, show: scene.show, scaleSprite: scene.scaleSprite, cartouche: scene.cartouche, cartouchePos: scene.cartouchePos, scalePos: scene.scalePos, scaleGap: scene.scaleGap, voyages: scene.voyages, overlays: scene.overlays,
     rays, rayLines: [0, 1, 2].map((kind) => rays.filter((ray) => ray.kind === kind).map((ray) => ray.line)), sheets: scene.sheets, debug: scene.debug, // the lines by ink (black, red, green), as drawAnchored strokes them
     roses: scene.roseDraws.map(ll), mountains: (scene.mountains ?? []).map(ll),
     towns: [...scene.towns.filter((t) => !t.city), ...(scene.lesser ?? [])].map(ll),
@@ -3674,7 +3678,7 @@ export function parsePlacement(text) {
 }
 export async function createScene(environment, opts = {}) {
   env = environment;
-  const { ink = '#3b2a1a', depth = true, continentsZoom, regionsZoom, scaleBorder = 'bordered', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', regionSet = 'today', regionStyle = 'combination', title = 'PORTOLANI', autoTitle = true, pinTitle, land: landMode = 'islands', islands, seaTint = false, rivers = 'off', lakes = 'off', reefs = 'crosses', playas = 'salt', peaks: peaksOn = true, relief = [], trees = 'off', historical = true, seed: pickedSeed, cartouchePos, scalePos, overlap: overlapPick, peakNames = false, waterNames = [], places: cellPlaces = [], atlas = true, coverage = null } = opts;
+  const { ink = '#3b2a1a', depth = true, continentsZoom, regionsZoom, scaleBorder = 'bordered', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', regionSet = 'today', regionStyle = 'combination', title = 'PORTOLANI', autoTitle = true, pinTitle, land: landMode = 'islands', islands, seaTint = false, rivers = 'off', lakes = 'off', reefs = 'crosses', playas = 'salt', peaks: peaksOn = true, relief = [], trees = 'off', historical = true, seed: pickedSeed, cartouchePos, scalePos, overlap: overlapPick, scaleGap, peakNames = false, waterNames = [], places: cellPlaces = [], atlas = true, coverage = null } = opts;
   const overlap = overlapRule(overlapPick); // how overlapping curated charts are drawn (atlas.mjs, OVERLAP_RULES)
   const legacy = ['rendering', 'rose', 'monster', 'town'].some((k) => opts[k] !== undefined);
   const townBy = townSize ?? (legacy ? 'rank' : 'area');
@@ -3770,7 +3774,7 @@ export async function createScene(environment, opts = {}) {
   const roseReach = sheetReach(roseSheet(view.zoom, { origin, curated: knobs.curated === 1, overlap }).extent, knobs.reach);
   const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, historical, roseLines: knobs.roselines === 1, seaAt: sheets && seaAtOf(coarse), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, regionNames, regionStyle, title, autoTitle, pinTitle,
     continentsEnd: zoomEnd(continentsZoom, CONTINENT_ZOOM_END), regionsEnd: zoomEnd(regionsZoom, REGION_ZOOM_END),
-    scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM && pinned, pinned, cartouchePos, scalePos, peaks: peaksWanted, peakNames, townSize: townBy, seed: legacy ? null : pickedSeed == null ? castSeed(view) : pickedSeed | 0, salt: legacy || pickedSeed == null ? 0 : pickedSeed | 0 }), show, scaleSprite, voyages, overlays, roseReach, roseLines: knobs.roselines === 1, debug, overlap, scalePos: cornerOf(scalePos, DEFAULT_SCALE_CORNER) };
+    scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM && pinned, pinned, cartouchePos, scalePos, peaks: peaksWanted, peakNames, townSize: townBy, seed: legacy ? null : pickedSeed == null ? castSeed(view) : pickedSeed | 0, salt: legacy || pickedSeed == null ? 0 : pickedSeed | 0 }), show, scaleSprite, voyages, overlays, roseReach, roseLines: knobs.roselines === 1, debug, overlap, scalePos: cornerOf(scalePos, DEFAULT_SCALE_CORNER), scaleGap };
   scene.voyages = placeDoubts(scene, data);
   data.trees = TREES[STYLE.trees] ? plantTrees({ proj: data.proj, isLand: scene.field.isLand, scene, lakes: STYLE.lakes !== 'off' && water ? water.lakes : [], w: W, h: H }) : [];
   data.palms = plantPalms({ proj: data.proj, isLand: scene.field.isLand, scene, w: W, h: H,

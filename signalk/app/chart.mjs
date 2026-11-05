@@ -27,10 +27,12 @@ export function spritesFor({ rose, towns, monster, cartouche }, list) {
 // The sprite a chip shows for a choice: the first of its kind and style
 export const chipSprite = (list, kind, style, pack = 'vivid') => list.find((s) => s.pack === pack && s.kind === kind && s.style === style && (kind !== 'rose' || roseOf(style)(s)));
 
-// The world geo the webapp does ship: the page's mountain ranges and landmark peaks, which the build
-// (signalk/geo.mjs) slims from the same pinned coastlines files the page's build does. Every other
-// geo/ file reads as empty: the land, coast, depth, towns and water names are the cells'.
-export const CHART_GEO = ['geo/ranges-10m.json', 'geo/peaks-10m.json'];
+// The world geo the webapp does ship: Natural Earth's 50m land and coast, byte for byte, the base the
+// cells are drawn over and all a view without a cell draws (app/enc-provider.js); and the page's
+// mountain ranges and landmark peaks, which the build (signalk/geo.mjs) slims from the same pinned
+// coastlines files the page's build does. Every other geo/ file reads as empty: the depth, towns and
+// water names are the cells'.
+export const CHART_GEO = ['geo/ne-land-50m.geojson', 'geo/ne-coastline-50m.geojson', 'geo/ranges-10m.json', 'geo/peaks-10m.json'];
 
 // The drawer's settings before any are saved: the drawer's layers on, the cartouche off, the Aguiar rose,
 // every drawn town style, the heraldic monsters, north up
@@ -39,16 +41,18 @@ export const DEFAULTS = { depth: true, mountains: true, peaks: true, cartouche: 
 // The scene's options for a chart: the land in one colour, the sea's depth drawn, the mountains along the
 // ranges in the M.E. 1937 pen style, the landmark peaks (scene.mjs draws each as the lone ink peak) and the
 // cells' water lettered on the map, and no mountain sprite (kind `mountain` stays, as it draws the peaks). No
-// `atlas`: its sheets place the beasts on the world's sea, which the webapp does not ship, not on the cells' water
+// `atlas`: its sheets place the beasts on the world's sea, not on the cells' water. The scale bar stands as far
+// from the bottom edge as from the left (`scaleGap`), the cartouche's corner margin
 export const MOUNTAINS = ['me1937'];
-export const CHART_OPTIONS = { kinds: ['rose', 'cartouche', 'monster', 'mountain'], names: true, land: 'off', islands: false, depth: true, relief: MOUNTAINS, peaks: true, peakNames: true, atlas: false, autoTitle: false, title: 'PORTOLANI' };
+export const CHART_OPTIONS = { kinds: ['rose', 'cartouche', 'monster', 'mountain'], names: true, land: 'off', islands: false, depth: true, relief: MOUNTAINS, peaks: true, peakNames: true, atlas: false, scaleGap: 22, autoTitle: false, title: 'PORTOLANI' };
 
-// The scene options for the drawer's settings, `list` the scene's sprite list
-export function chartOptions(settings, list) {
+// The scene options for the drawer's settings, `list` the scene's sprite list, `cells` the cells' own options
+// (enc-provider.js cellData): their built-up areas stand towns only while a Towns chip is on, so all off is none
+export function chartOptions(settings, list, cells = {}) {
   // a kind turned off is left out, so the scene draws none (no rose sprite chosen would draw its plain rose)
   const on = { rose: ROSES.includes(settings.rose), cartouche: settings.cartouche, monster: settings.monster in MONSTERS, mountain: true };
   const kinds = CHART_OPTIONS.kinds.filter((k) => on[k]);
-  return { ...CHART_OPTIONS, kinds, sprites: spritesFor(settings, list), depth: settings.depth, relief: settings.mountains ? MOUNTAINS : [], peaks: settings.peaks === true };
+  return { ...CHART_OPTIONS, ...cells, places: settings.towns.length ? cells.places ?? [] : [], kinds, sprites: spritesFor(settings, list), depth: settings.depth, relief: settings.mountains ? MOUNTAINS : [], peaks: settings.peaks === true };
 }
 // Saved settings read over the defaults
 export function readSettings(saved) {

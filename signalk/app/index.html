@@ -33,7 +33,7 @@
 <div id="stage"><canvas id="map" width="1600" height="1000"></canvas><canvas id="marks" width="1600" height="1000"></canvas></div>
 <div id="gutter">
   <button id="layers" title="Layers" aria-label="Layers" aria-pressed="true"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M10 3 2 7l8 4 8-4-8-4ZM2 11l8 4 8-4"/></svg></button>
-  <button id="north" title="North up (tap for course up)" aria-label="Course up" aria-pressed="false"></button>
+  <button id="north" title="North up (tap for course up)" aria-label="North up (tap for course up)" aria-pressed="false"></button>
   <button id="vessel" title="Centre on the vessel" aria-label="Centre on the vessel"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M10 2 14 16 10 13 6 16Z"/></svg></button>
 </div>
 <div id="drawer">
@@ -60,7 +60,7 @@
 </div>
 <div id="tile" hidden><b></b><span></span></div>
 <div id="status"></div>
-<script type="importmap">{ "imports": { "coast-wright": "./coast-wright/index.js", "coastlines/catalogue.json": "./coastlines/catalogue.json", "coastlines/provider": "./enc-provider.js", "portolani/": "./scripts/" } }</script>
+<script type="importmap">{ "imports": { "coast-wright": "./coast-wright/index.js", "coastlines/catalogue.json": "./coastlines/catalogue.json", "coastlines/provider": "./enc-provider.js", "coastlines/world-provider": "./coastlines/lib/provider.js", "portolani/": "./scripts/" } }</script>
 <script type="module" src="app.js"></script>
 </body>
 </html>

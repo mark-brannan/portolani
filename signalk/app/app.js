@@ -1,7 +1,7 @@
 // The webapp: the plugin's ENC cells drawn by portolani's scene, panned and zoomed, with the vessel's
 // position from the Signal K stream. The settings drawer is open at start; its chips show what they draw.
 import { createScene, drawScene, panView, zoomView, clampView, viewProjection, drawnPeaks, peakHits, listSprites, peakInkSvg, W, H } from 'portolani/scene.mjs';
-import { readCatalogue, cellData, frameView } from './enc-provider.js';
+import { readCatalogue, cellData, frameView, drawnFrom } from './enc-provider.js';
 import { CHART_GEO, ROSES, TOWNS, MONSTERS, chartOptions, readSettings, chipSprite } from './chart.mjs';
 
 const settings = (() => { try { return readSettings(JSON.parse(localStorage.getItem('portolani-signalk') ?? '{}')); } catch { return readSettings({}); } })();
@@ -11,7 +11,7 @@ const empty = { type: 'FeatureCollection', features: [] };
 const cache = new Map(), once = (k, f) => cache.get(k) ?? cache.set(k, f()).get(k);
 const env = {
   createCanvas: (w, h) => Object.assign(document.createElement('canvas'), { width: w, height: h }),
-  // of the world geo only the ranges and peaks are shipped: the land, coast, depth, towns and water names are the cells', through the adapter
+  // of the world geo only the 50m land and coast, the ranges and the peaks are shipped: the depth, towns and water names are the cells', through the adapter
   readJSON: (p) => (p.startsWith('geo/') && !CHART_GEO.includes(p) ? Promise.resolve(empty) : once(p, () => fetch(p).then((r) => { if (!r.ok) throw new Error(`${p}: ${r.status}`); return r.json(); }))),
   loadImage: (p) => once(p, () => new Promise((ok, no) => { const img = new Image(); img.onload = () => ok(img); img.onerror = () => no(new Error(`${p}: image failed`)); img.src = p; })),
   loadFont: (family) => once('font', async () => document.fonts.add(await new FontFace(family, 'url(font/IMFeENrm28P.ttf)').load())),
@@ -21,7 +21,7 @@ const sprites = listSprites(env); // the shipped packs' sprites, for the drawer'
 const map = document.getElementById('map'), marks = document.getElementById('marks'), stage = document.getElementById('stage');
 const status = (t) => { document.getElementById('status').textContent = t; };
 const RAD = Math.PI / 180, merc = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * RAD) / 2));
-let view = null, vessel = null, drawn = null, drawing = 0;
+let view = null, vessel = null, drawn = null, drawing = 0, aim = 0; // `aim`: the bearing the latest render draws
 
 // the view that holds a bbox [w, s, e, n]
 const fit = ([w, s, e, n]) => clampView({ lon: (w + e) / 2, lat: Math.atan(Math.sinh((merc(s) + merc(n)) / 2)) / RAD,
@@ -35,9 +35,9 @@ async function render() {
   const n = ++drawing, scale = Math.min(2, devicePixelRatio || 1);
   status('Drawing…');
   try {
-    view = oriented(view);
+    view = oriented(view); aim = view.bearing ?? 0;
     const cells = await cellData(frameView(view, viewProjection(view).invert, W, H));
-    const { scene, data, bg } = await createScene(env, { ...chartOptions(settings, await sprites), ...cells, view });
+    const { scene, data, bg } = await createScene(env, { ...chartOptions(settings, await sprites, cells), view });
     if (n !== drawing) return;
     map.width = marks.width = W * scale; map.height = marks.height = H * scale;
     drawScene(map.getContext('2d'), scene, data, bg, { scale, x: 0, y: 0 });
@@ -46,7 +46,7 @@ async function render() {
     hideTile();
     drawVessel();
     if (swung()) later(); // the course came while drawing
-    status(data.land.length ? '' : opening ? 'No cell covers this view' : 'No ENC cells yet: give the plugin a folder of .000 cells');
+    status(!opening ? 'No ENC cells yet: give the plugin a folder of .000 cells' : drawnFrom.cells ? '' : 'No cell covers this view: the coast is Natural Earth 50m');
   } catch (e) { if (n === drawing) status(`Could not draw: ${e.message}`); }
 }
 let timer = 0;
@@ -155,15 +155,17 @@ painters.push(() => {
   north.innerHTML = settings.courseUp ? ROTATE : COMPASS;
   north.setAttribute('aria-pressed', String(settings.courseUp));
   north.title = settings.courseUp ? 'Course up (tap for north up)' : 'North up (tap for course up)';
+  north.setAttribute('aria-label', north.title);
 });
 north.addEventListener('click', () => { settings.courseUp = !settings.courseUp; changed(); });
 paint();
 document.getElementById('vessel').addEventListener('click', () => { if (vessel) { view = clampView({ ...view, lon: vessel.lon, lat: vessel.lat }); render(); } });
 
 // navigation.position and the course from the Signal K stream, the vessel redrawn as they come; course up
-// turns the chart again once the course has swung TURN degrees from the drawn bearing
+// turns the chart again once the course has swung TURN degrees from the bearing being drawn (`aim`, the
+// latest render's), so a slow draw in flight is not thrown away by each message of a turn
 const TURN = 5;
-const swung = () => settings.courseUp && Math.abs((((cogDeg() - (drawn?.view.bearing ?? 0)) % 360) + 540) % 360 - 180) > TURN;
+const swung = () => settings.courseUp && Math.abs((((cogDeg() - aim) % 360) + 540) % 360 - 180) > TURN;
 function stream() {
   const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/signalk/v1/stream?subscribe=none`);
   ws.onopen = () => ws.send(JSON.stringify({ context: 'vessels.self', subscribe: [{ path: 'navigation.position', period: 1000 }, { path: 'navigation.courseOverGroundTrue', period: 1000 }] }));

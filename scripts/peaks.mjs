@@ -7,7 +7,7 @@
 // water.mjs's `shown` reads it. Where a town is on the summit, scene.mjs placePeaks stands it beside
 // the town; a peak is never dropped for a town alone.
 
-export const PEAK_STYLES = ['off', 'catalan']; // the page's chip: none, or the ink peak on each ('catalan', the name links keep)
+export const PEAK_STYLES = ['off', 'catalan']; // the page's chip: none, or a peak on each; 'catalan' stays only so saved links keep parsing, and the peak drawn is PEAK_INK
 const SUMMITS = new Set(['mountain', 'spot elevation']);
 
 // The peaks the site ships, from Natural Earth's elevation points (GeoJSON): the named summits, as a
