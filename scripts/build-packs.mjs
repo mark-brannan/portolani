@@ -80,6 +80,7 @@ const AGUIAR_PAPER = '#e9e6d2'; // the vellum inside the Aguiar 1492 rose's ring
 const AGUIAR_CHART_PAPER = '#d3cfbb'; // the vellum of the whole Aguiar 1492 chart, inside its small rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness; the town sprites of the same scan share it
 const PRUNES_PAPER = '#b4a38d'; // the vellum of Prunes 1559 inside the west rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness (the brightest are specks)
 const OLIVA_PAPER = '#ddd7bf'; // the vellum of the Oliva chart inside its big south-west rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness; every Oliva sprite shares it
+const KITAB_PAPER = '#c6c1b0'; // the paper of the Kitab-ı Bahriye Adriatic folio round its rose, east of it between the ring and 150 px out: the mean of the 80th to 90th percentile of its pixels by brightness
 const PLANCIUS_PAPER = '#d5cdb2'; // the paper of the Plancius 1609 plate inside its rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness; the ship shares it
 const PARCHMENT = '#e9d8b4'; // the renderer's default paper, for the kept `.cut.png`
 const argv = process.argv.slice(2), keepAt = argv.indexOf('--keep'), onlyAt = argv.indexOf('--only');
@@ -276,6 +277,26 @@ const PACKS = [
       { id: 'debry-village-dasamonguepeuc', kind: 'town', style: 'debry', scan: 'debry-virginia', crop: [585, 296, 695, 385], sizePx: 44 },
       { id: 'debry-village-pasquenoke', kind: 'town', style: 'debry', scan: 'debry-virginia', crop: [1288, 150, 1406, 228], sizePx: 44 },
       { id: 'debry-village-roanoac', kind: 'town', style: 'debry', scan: 'debry-virginia', crop: [755, 602, 925, 702], sizePx: 48, erase: [[785, 693, 835, 702]] },
+    ],
+  },
+  {
+    // Piri Reis, Kitab-ı Bahriye (a later copy, Walters W.658, fol. 208a): the Adriatic, painted in colour and gilt,
+    // so the pack keeps the scan's colour. The sheet's one whole rose; it has no town vignettes (docs/kitab-i-bahriye).
+    name: 'kitab',
+    key: 'patch',
+    title: 'Sprites cropped from Piri Reis, Kitab-ı Bahriye, the Adriatic (Walters Art Museum W.658, fol. 208a; a later copy, painted and gilt)',
+    licence: 'Public domain; Walters Art Museum, Baltimore, W.658 (Walters Art Museum license, type=2D), via Wikimedia Commons',
+    colour: 'source',
+    ink: '#3b2a1a',
+    sprites: [
+      // the thirty-two-point rose with its gilt boss, the rhumb lines round it and the fleur-de-lis north on its stem,
+      // turned so the fleur points up (the page has Venice at the top, so north sits 45 degrees right of it). The circle
+      // reaches past the fleur's tip; the erase boxes cut only the coast, its blue streams and the lettering to the west.
+      { id: 'rose-kitab', kind: 'rose', style: 'kitab', scan: 'kitab-i-bahriye-adriatic', paper: KITAB_PAPER, crop: [788, 720, 1128, 1060], rotate: -45,
+        // `figure` is the ring, centred on the crop, so the anchor sits on the rose's centre whatever the erase trims; drawn 100 px across, the whole sprite is about 220
+        figure: [885, 817, 1031, 963], sizePx: 100,
+        circle: [170, 170, 160], circleFeather: 6,
+        erase: [[780, 712, 890, 845], [780, 845, 880, 940], [780, 940, 895, 1068]] },
     ],
   },
 ];

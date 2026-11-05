@@ -604,9 +604,10 @@ function viewData(world, view) {
 }
 
 // Two packs draw the same designs two ways: `vivid` as vectors, `scanned` as crops of the scans.
-// A third, `debry`, is one hand-coloured plate's own ships, monster, trees and villages. A
-// sprite's `style` names its design family; a scene picks a rendering, then a style for each kind.
-const PACK_NAMES = ['vivid', 'scanned', 'debry'];
+// A third, `debry`, is one hand-coloured plate's own ships, monster, trees and villages; a fourth,
+// `kitab`, the rose of a Kitab-ı Bahriye folio. A sprite's `style` names its design family; a scene
+// picks a rendering, then a style for each kind.
+const PACK_NAMES = ['vivid', 'scanned', 'debry', 'kitab'];
 async function readManifests(environment = env) {
   const ms = await Promise.all(PACK_NAMES.map((n) => environment.readJSON(`packs/${n}/pack.json`)));
   return Object.fromEntries(PACK_NAMES.map((n, i) => [n, ms[i]]));

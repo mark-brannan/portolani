@@ -282,6 +282,12 @@ Each is laid level by landmarks read off the scan by eye, as above (`levelFit`; 
 
 ![Panades's 1557 sheet over the map, turned about 11.5 degrees](panades-1557-sheet.jpg)
 
+- **Piri Reis, Kitab-ı Bahriye, the Adriatic** (Walters Art Museum, W.658, fol. 208a; a later copy of the 1521 to 1526 sailing manual; public domain): the first chart on the map from outside the Latin tradition. The Adriatic runs up the page, Venice at the top and Corfu at the foot, so north lies to the upper right and the sheet is laid by a similarity with its turn (`turned: true`), 35.5 degrees anticlockwise. Seven landmarks (Venice, the tip of Istria, the Gargano, Leuca, Corfu, the Bay of Kotor, Vlorë), 19 km RMS (3 to 29 km); held level they miss by 188 km RMS. The scan is the whole folio at its only size, 1226 x 1800 px (scale 1); the `outline` is the folio's four sides a few px out into the scanner's grey, so the margins stay in.
+
+`npm run render -- --view 15.87,42.5,4.6 --overlay kitab-i-bahriye-adriatic --out docs/overlay/kitab-i-bahriye-adriatic-sheet.jpg`.
+
+![The Kitab-ı Bahriye's Adriatic folio over the map, turned so its coasts lie on today's](kitab-i-bahriye-adriatic-sheet.jpg)
+
 The scanner mask keys only the scanner's background, never the skin. A flood fill from the border does that on a
 scan laid on light paper; it fails on a scan laid on black, where the skin's own dark edge or binding fades into the
 background and the fill eats a ragged line into it. Such a chart carries an `outline` instead: a polygon in scan px
@@ -294,4 +300,4 @@ scan's own edge, so the whole lower edge and the worn binding stay in. The keyed
 ![Oliva's mask: the skin's perimeter traced, the tear followed](oliva-mediterranean-mask.jpg)
 ![Olives's mask: four straight sides round the binding](olives-1559-mask.jpg)
 
-`npm run overlays -- --only oliva-mediterranean,lopes-atlantic,olives-1559,panades-1557` rebuilds just those and keeps the other rows of overlays.json as they are; an id that is no chart, or no id at all, is an error.
+`npm run overlays -- --only oliva-mediterranean,lopes-atlantic,olives-1559,panades-1557,kitab-i-bahriye-adriatic` rebuilds just those and keeps the other rows of overlays.json as they are; an id that is no chart, or no id at all, is an error.
