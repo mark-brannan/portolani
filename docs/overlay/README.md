@@ -300,22 +300,22 @@ scan's own edge, so the whole lower edge and the worn binding stay in. The keyed
 ![Oliva's mask: the skin's perimeter traced, the tear followed](oliva-mediterranean-mask.jpg)
 ![Olives's mask: four straight sides round the binding](olives-1559-mask.jpg)
 
-`npm run overlays -- --only oliva-mediterranean,lopes-atlantic,olives-1559,panades-1557,kitab-i-bahriye-adriatic,carte-pisane,vesconte-1311,dulcert-1339,debry-virginia` rebuilds just those and keeps the other rows of overlays.json as they are; an id that is no chart, or no id at all, is an error.
+`npm run overlays -- --only oliva-mediterranean,lopes-atlantic,olives-1559,panades-1557,kitab-i-bahriye-adriatic,carte-pisane,vesconte-1313,dulcert-1339,debry-virginia` rebuilds just those and keeps the other rows of overlays.json as they are; an id that is no chart, or no id at all, is an error.
 
 ## The four that had no scan: the Carte Pisane, Vesconte, Dulcert and de Bry's Virginia
 
 Each laid by landmarks read off the scan by eye, fitted with its turn (`turned: true`); `scripts/build-overlays.mjs` lists the landmarks. RMS is the miss against today's places, held level in brackets.
 
 - **Carte Pisane, about 1275** (BnF GE B-1118; public domain): 49 km (160); photographed south up, so turned half round.
-- **Vesconte, 1311** (Florence): 62 km (121); laid from Nordenskiöld's photographic plate of 1897, not the original.
+- **Vesconte, 1313** (BnF, the 1313 atlas; public domain): 20 km (155); drawn south up; every landmark on Italy's shore, the faded western leaf has none.
 - **Dulcert, Majorca, 1339** (BnF GE B-696; public domain): 46 km (273); an `outline` of four sides off its dark cloth.
 - **De Bry, Virginia, 1590** (the `debry-virginia` scan): 11 km (27); drawn west up; an `outline` of straight sides keeps the margin.
 
-`npm run render -- --view 19.08,39.59,3.6 --overlay carte-pisane --out docs/overlay/carte-pisane-sheet.jpg`, `npm run render -- --view 29,38.5,4.3 --overlay vesconte-1311 --out docs/overlay/vesconte-1311-sheet.jpg`, `npm run render -- --view 17.27,39.68,3.2 --overlay dulcert-1339 --out docs/overlay/dulcert-1339-sheet.jpg` and `npm run render -- --view -75.67,36.06,9.3 --overlay debry-virginia --out docs/overlay/debry-virginia-sheet.jpg`.
+`npm run render -- --view 19.08,39.59,3.6 --overlay carte-pisane --out docs/overlay/carte-pisane-sheet.jpg`, `npm run render -- --view 13.2,38.4,4.4 --overlay vesconte-1313 --out docs/overlay/vesconte-1313-sheet.jpg`, `npm run render -- --view 17.27,39.68,3.2 --overlay dulcert-1339 --out docs/overlay/dulcert-1339-sheet.jpg` and `npm run render -- --view -75.67,36.06,9.3 --overlay debry-virginia --out docs/overlay/debry-virginia-sheet.jpg`.
 
 ![The Carte Pisane over the map, turned north up](carte-pisane-sheet.jpg)
 
-![Vesconte's 1311 chart, from Nordenskiöld's plate, over the map](vesconte-1311-sheet.jpg)
+![A chart from Vesconte's 1313 atlas over the map, turned to lie on Italy](vesconte-1313-sheet.jpg)
 
 ![Dulcert's 1339 chart over the map, turned 10 degrees](dulcert-1339-sheet.jpg)
 

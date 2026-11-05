@@ -177,12 +177,13 @@ const CHARTS = [
   { id: 'carte-pisane', title: 'Carte Pisane, about 1275', source: 'carte-pisane', file: 'carte-pisane.jpg', scale: 4, dark: true, turned: true,
     landmarks: [[[9500, 2690], [15.13, 36.69]], [[9440, 3220], [15.55, 38.19]], [[10580, 3020], [12.5, 38.02]], [[11900, 5650], [8.93, 44.41]], [[12550, 4900], [5.37, 43.3]], [[13700, 4320], [2.17, 41.38]], [[14220, 3150], [-0.33, 39.47]], [[14680, 2200], [-2.46, 36.83]], [[3180, 2350], [35.07, 32.93]], [[3900, 2900], [33.3, 35.1]], [[6400, 2500], [24.9, 35.25]]], // scan px, real lon, lat
     snaps: [] },
-  // Pietro Vesconte, 1311 (Archivio di Stato, Florence): Nordenskiöld's photographic plate of 1897 (Periplus, plate V), the
-  // only copy of this chart found at a usable size and free to lay. The outline is the skin on the book's page. The
-  // Bosporus, the tip of Crimea, Kerch, Trebizond, the two ends of Crete, Jaffa, Tripoli, Alexandria.
-  { id: 'vesconte-1311', title: 'Chart of Pietro Vesconte, 1311 (a plate of 1897)', source: 'vesconte-1311-periplus', file: 'vesconte-1311.jpg', scale: 3, turned: true,
-    outline: [[1630, 770], [5300, 780], [5450, 920], [5700, 820], [6080, 830], [6250, 1000], [6300, 1500], [6420, 2050], [6500, 2400], [6880, 2650], [6900, 3150], [6620, 3450], [6560, 3900], [6560, 4500], [6450, 4760], [1700, 4900], [1640, 3000]], // scan px
-    landmarks: [[[4515, 2345], [29.05, 41.2]], [[5290, 1600], [33.5, 44.4]], [[5770, 1400], [36.5, 45.3]], [[6080, 2280], [39.72, 41.0]], [[4030, 3640], [23.6, 35.6]], [[4330, 3620], [26.3, 35.3]], [[5755, 3950], [34.75, 32.05]], [[5790, 3555], [35.84, 34.45]], [[5160, 4270], [29.9, 31.2]]], // scan px, real lon, lat
+  // Pietro Vesconte, the atlas of 1313 (BnF, btv1b5901108m): one chart of it across two leaves, the Tyrrhenian coast of Italy
+  // and the sea west of it, drawn south up, so its similarity turns it half round. The left leaf's coasts are faded past
+  // reading, so the landmarks all lie on the Italian shore: Elba, Piombino, Corneto, Santa Severa, Rome's shore, Terracina,
+  // Gaeta, Palinuro. The skin fills the scan but for a thin black rim, so the outline is four straight sides on its edge.
+  { id: 'vesconte-1313', title: 'Chart from the atlas of Pietro Vesconte, 1313', source: 'vesconte-1313', file: 'vesconte-1313.jpg', scale: 1, turned: true,
+    outline: [[11, 11], [2620, 16], [2620, 2236], [22, 2272]], // scan px: straight sides, the skin's worn edge kept and a sliver of black riding along
+    landmarks: [[[546, 1811], [10.27, 42.78]], [[536, 1736], [10.5, 42.93]], [[586, 1581], [11.7, 42.23]], [[671, 1509], [11.96, 42.02]], [[636, 1476], [12.25, 41.74]], [[716, 1359], [13.25, 41.28]], [[709, 1276], [13.57, 41.21]], [[803, 1044], [15.27, 40.03]]], // scan px, real lon, lat
     snaps: [] },
   // Angelino Dulcert, Majorca 1339 (BnF, GE B-696): the Mediterranean, the Black Sea and Europe's Atlantic coasts, north up,
   // scanned on a dark cloth that no key separates from the skin's shadowed edge, so the outline is the skin's four sides.
