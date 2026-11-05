@@ -225,7 +225,7 @@ The Norway fit is the Norwegian coast, which lies inside the west strip (the wes
 Faroes, Shetland and Orkney, none of them Norway), 11° from the Baltic fit. Read off the full-size scan on 2026-11-04, by
 eye, about ±40 px; each point is the coast where the chart's lettering stands, not the lettering. It is the weakest fit:
 the chart swings Finnmark east, so Nordkapp lies 387 km off and Lofoten 295 km, and the points the other three tell of
-are only 150 km out.
+are 151 to 182 km out.
 
 ### Landmarks, Norway
 
