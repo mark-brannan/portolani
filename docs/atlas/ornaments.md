@@ -277,8 +277,33 @@ The three fits cut the scan into three strips, each drawn by its fit, refitted f
 
 ## Juan de la Cosa, 1500
 
-Not read in place: two rings of roses (the west centre's Virgin and Child, small node roses; the east
-ring's node roses), its beasts and ships not read at 1400 px. With no set, the sheet keeps the seeded figures.
+Read off the Commons scan (2127 x 1163, `1500_map_by_Juan_de_la_Cosa_rotated.jpg`) on 2026-11-04, by eye at 2 to 5
+times, about ±8 px, and placed through the three fits below, each figure by the strip it lies in. The chart draws no
+beast at sea; its figures at sea are roses, ships and the four wind heads of the Atlantic, which are not a kind the page
+draws. Only the figures inside the sheet's extent (README.md, "The curated sheets": 100°W to 20°E, 20°S to 65°N) are listed in
+`scripts/atlas.mjs`; the rest are kept here and not drawn.
+
+| | figure | scan px | piece | lon, lat | sprite | note |
+|---|---|---|---|---|---|---|
+| R1 | the west centre's rose, the Virgin and Child | 615, 520 | west | -57.4, 19.7 | stand-in | drawn |
+| R2 | node rose of the west ring, north | 934, 315 | atlantic | -16.0, 49.0 | stand-in | drawn |
+| R3 | node rose of the west ring, south | 914, 827 | atlantic | -20.3, -10.5 | stand-in | drawn |
+| R4 | node rose, the Caribbean | 310, 550 | west | -80.6, 14.3 | stand-in | drawn |
+| S1 | ship with a red banner, South Atlantic | 1092, 880 | atlantic | 2.8, -17.8 | stand-in | drawn; a sketch about 40 px tall at this size, too faint to cut, so it stands in one of the fleet off India |
+| S2 | ship off the Cape of Good Hope | 1354, 1057 | east | 27.4, -43.8 | none | east and south of the extent |
+| S3 | ship by a red banner, south of Madagascar | 1553, 1012 | east | 55.7, -40.9 | none | east and south of the extent |
+| S4 | the fleet off India, north ship | 1672, 651 | east | 76.7, 4.1 | `cosa-ship-a` | east of the extent |
+| S5 | the fleet off India, middle ship | 1695, 689 | east | 79.5, -1.5 | `cosa-ship-b` | east of the extent |
+| S6 | the fleet off India, south ship | 1645, 714 | east | 72.2, -4.4 | `cosa-ship-c` | east of the extent |
+| S7 | the fleet off India, the upright ship by Ceylon | 1734, 672 | east | 85.1, 0.4 | `cosa-ship-d` | east of the extent |
+
+The east ring's node roses (at 1316, 590 and 1406, 844 and further east) lie east of the extent. The four ships off
+India are cut from the Museo Galileo's detail of the chart (`1500_map_by_Juan_de_la_Cosa-India.jpg`, 1287 x 1073, about
+seven times the full scan's pixels there), so their places in the full scan are read through that detail's rose and
+seated king. Three of the four are drawn west up, masts to the west, as the chart is read: their cuts are turned a
+quarter clockwise so they stand upright, and the upright ship is kept as drawn
+([docs/de-la-cosa-figures](../de-la-cosa-figures/README.md)). They are drawn on the map as the chart's own ships
+wherever a stand-in of the de la Cosa style is wanted, and as seeded ships on every sheet.
 
 ### Landmarks, 1500
 

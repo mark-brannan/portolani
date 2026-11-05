@@ -81,6 +81,7 @@ const AGUIAR_CHART_PAPER = '#d3cfbb'; // the vellum of the whole Aguiar 1492 cha
 const PRUNES_PAPER = '#b4a38d'; // the vellum of Prunes 1559 inside the west rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness (the brightest are specks)
 const OLIVA_PAPER = '#ddd7bf'; // the vellum of the Oliva chart inside its big south-west rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness; every Oliva sprite shares it
 const PLANCIUS_PAPER = '#d5cdb2'; // the paper of the Plancius 1609 plate inside its rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness; the ship shares it
+const COSA_PAPER = '#d0d5b2'; // the vellum of the de la Cosa India detail (Museo Galileo's facsimile): the mean of the 80th to 90th percentile of its pixels by brightness; every de la Cosa ship shares it
 const PARCHMENT = '#e9d8b4'; // the renderer's default paper, for the kept `.cut.png`
 const argv = process.argv.slice(2), keepAt = argv.indexOf('--keep'), onlyAt = argv.indexOf('--only');
 const keep = keepAt >= 0 ? join(ROOT, argv[keepAt + 1]) : null;
@@ -103,8 +104,8 @@ const MAX_SCALE = 3; // a sprite is stored at most this many px wide per CSS px 
 const PACKS = [
   {
     name: 'scanned',
-    title: 'Sprites cropped from scans: Olaus Magnus, Carta Marina 1539; Jorge de Aguiar 1492; Catalan Atlas 1375; Genoese chart c. 1320-1350; Frederik de Wit; Ambroise Paré, Des monstres; Master W with the Key, two ship engravings c. 1475-1490; a member of the Oliva family, portolan chart of the Mediterranean 1621-1665; Petrus Plancius, Tabula geographica (Acts and Epistles) 1609',
-    licence: 'Public domain (PD-Art); scans via Wikimedia Commons (James Ford Bell Library; Beinecke Library, Yale; BnF Gallica btv1b55002481n; Library of Congress 2003630429; Royal Museums Greenwich). The pare-* sprites: Wellcome Collection, CC BY 4.0. Ships ship-w-*: Art Institute of Chicago 27881 (CC0) and Rijksmuseum RP-P-2014-30 (Public Domain Mark). The oliva sprites: Barry Lawrence Ruderman Antique Maps via Commons (PD-Art); the plancius sprites: National Library of Israel, Eran Laor Cartographic Collection (public domain)',
+    title: 'Sprites cropped from scans: Olaus Magnus, Carta Marina 1539; Jorge de Aguiar 1492; Catalan Atlas 1375; Genoese chart c. 1320-1350; Frederik de Wit; Ambroise Paré, Des monstres; Master W with the Key, two ship engravings c. 1475-1490; a member of the Oliva family, portolan chart of the Mediterranean 1621-1665; Petrus Plancius, Tabula geographica (Acts and Epistles) 1609; Juan de la Cosa 1500',
+    licence: 'Public domain (PD-Art); scans via Wikimedia Commons (James Ford Bell Library; Beinecke Library, Yale; BnF Gallica btv1b55002481n; Library of Congress 2003630429; Royal Museums Greenwich). The pare-* sprites: Wellcome Collection, CC BY 4.0. Ships ship-w-*: Art Institute of Chicago 27881 (CC0) and Rijksmuseum RP-P-2014-30 (Public Domain Mark). The oliva sprites: Barry Lawrence Ruderman Antique Maps via Commons (PD-Art); the plancius sprites: National Library of Israel, Eran Laor Cartographic Collection (public domain); the cosa sprites: Museo Naval, Madrid, through the Museo Galileo facsimile (PD-Art)',
     ink: '#3b2a1a',
     sprites: [
       // Carta Marina figures are patches (#111): the whole crop, sea and swell and all, its edge feathered.
@@ -158,6 +159,25 @@ const PACKS = [
       // there: the sea either side of it, taken down to the foot of the page, left the patch two legs and a bite.
       { id: 'catalan-siren', kind: 'monster', style: 'catalan', scan: 'catalan-atlas-12', key: 'patch', paper: PARCHMENT, crop: [800, 14090, 1970, 15160], figure: [850, 14220, 1925, 15120], sizePx: 170, minClearancePx: 140, weight: 2,
         mask: [[822, 14310], [1000, 14190], [1044, 14190], [1044, 14250], [1300, 14250], [1306, 14100], [1910, 14100], [1910, 14400], [1955, 14440], [1955, 15142], [1060, 15142], [1000, 15115], [822, 15060]] },
+      // Juan de la Cosa's own ships, 1500 (docs/atlas/ornaments.md; docs/de-la-cosa-figures): the Portuguese fleet off India,
+      // cut from the Museo Galileo detail, about seven times the full chart scan's pixels there. Patches as the Catalan ones
+      // are, but divided by the detail's own vellum, which is greener than the map's parchment. Three of the four ships are
+      // drawn west up, masts to the west, as the chart is read; so those cuts are turned a quarter clockwise and stand
+      // upright. Their sea is to the east of the hull in the scan, under it once turned, so each crop reaches furthest east.
+      // the north ship: the polygon cuts the coast of India and its lettering at top right and the islet at bottom right
+      { id: 'cosa-ship-a', kind: 'ship', style: 'de-la-cosa', scan: 'de-la-cosa-india', key: 'patch', paper: COSA_PAPER, crop: [290, 392, 650, 615], figure: [315, 398, 565, 600], turn: 90, sizePx: 72, heading: 'right',
+        mask: [[290, 392], [572, 392], [572, 497], [650, 497], [650, 555], [622, 555], [622, 615], [290, 615]], maskFeather: 8 },
+      // the middle ship with its long blue streamer: the polygon cuts the islet at top right and the south ship's masts at bottom left
+      { id: 'cosa-ship-b', kind: 'ship', style: 'de-la-cosa', scan: 'de-la-cosa-india', key: 'patch', paper: COSA_PAPER, crop: [300, 600, 748, 965], figure: [320, 612, 660, 940], turn: 90, sizePx: 80, heading: 'right',
+        mask: [[300, 600], [620, 600], [620, 632], [748, 632], [748, 965], [505, 965], [440, 875], [300, 822]], maskFeather: 8 },
+      // the south ship, the largest: the polygon cuts the middle ship above it and the red square by its masts. The red islet
+      // among its masts stays: an erase box there left a pale hole in the rigging
+      { id: 'cosa-ship-c', kind: 'ship', style: 'de-la-cosa', scan: 'de-la-cosa-india', key: 'patch', paper: COSA_PAPER, crop: [40, 800, 540, 1073], figure: [55, 830, 425, 1035], turn: 90, sizePx: 80, heading: 'right',
+        mask: [[40, 832], [300, 822], [440, 875], [505, 965], [540, 965], [540, 1073], [40, 1073]], maskFeather: 8 },
+      // the ship drawn upright, north up, by Ceylon: kept as drawn; the polygon cuts the islet at top left and Ceylon at right
+      { id: 'cosa-ship-d', kind: 'ship', style: 'de-la-cosa', scan: 'de-la-cosa-india', key: 'patch', paper: COSA_PAPER, crop: [735, 500, 995, 900], figure: [750, 525, 985, 760], sizePx: 72, heading: 'right',
+        mask: [[805, 500], [958, 500], [958, 690], [995, 690], [995, 900], [735, 900], [735, 635], [805, 635]], maskFeather: 8,
+        erase: [[972, 700, 995, 760]] },
       // Prunes 1559 (Library of Congress), the best 32-point rose of any chart checked for #52: whole crop with its
       // sea of parchment and the rhumb lines running off, a patch not a keyed ink, so the blue and red washes and the
       // gilt keep their tone. North is to the right on the scan, so the cut is turned a quarter anticlockwise.

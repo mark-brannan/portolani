@@ -130,6 +130,13 @@ const CATALAN = figures({
   monster: [['catalan-siren', 113.1, 15.8]],
   ship: [[null, -15.5, 26.1], ['catalan-ship', 50.6, 41.1], ['catalan-junk', 81.2, 13.2]],
 });
+// Juan de la Cosa's figures on the sheet's extent (ornaments.md): four roses of the west ring, and one ship in the South
+// Atlantic too faint at the scan's size to cut, which stands in one of the chart's own ships off India. The chart draws no
+// beast at sea. Its fleet off India and the ship off the Cape lie east of the extent and are not listed: ornaments.md keeps them.
+const DE_LA_COSA = figures({
+  rose: [[null, -57.4, 19.7], [null, -16.0, 49.0], [null, -20.3, -10.5], [null, -80.6, 14.3]],
+  ship: [[null, 2.8, -17.8]],
+});
 export const CURATED = [
   { name: 'Mediterranean, west', world: true, source: 'Carte Pisane, western circle', extent: { west: -10, east: PISANE_SEAM, south: 30, north: 48 }, lon: 7.4, lat: 40.0, radius: 8.0 },
   { name: 'Mediterranean, east', world: true, source: 'Carte Pisane, eastern circle', extent: { west: PISANE_SEAM, east: 42, south: 30, north: 48 }, lon: 27.4, lat: 36.8, radius: 7.5 },
@@ -137,7 +144,7 @@ export const CURATED = [
   { name: 'Europe and the Mediterranean', world: true, source: 'Dulcert, 1339', extent: { west: -25, east: 42, south: 28, north: 60 }, lon: 14.5, lat: 40.0, radius: 17 },
   { name: 'The known world of 1375', world: true, source: 'Catalan Atlas', extent: { west: -25, east: 120, south: 10, north: 60 }, lon: -5.4, lat: 42.3, radius: 16, ornaments: CATALAN, style: 'catalan' },
   { name: 'Scandinavia and the Baltic', source: 'Carta Marina, 1539', extent: { west: -25, east: 45, south: 53, north: 72 }, lon: 19.7, lat: 61.7, radius: RULE, ornaments: CARTA_MARINA, style: 'carta-marina' },
-  { name: 'The Atlantic and the Americas', world: true, source: 'Juan de la Cosa, 1500', extent: { west: -100, east: 20, south: -20, north: 65 }, lon: -45, lat: 23.4, radius: RULE },
+  { name: 'The Atlantic and the Americas', world: true, source: 'Juan de la Cosa, 1500', extent: { west: -100, east: 20, south: -20, north: 65 }, lon: -45, lat: 23.4, radius: RULE, ornaments: DE_LA_COSA, style: 'de-la-cosa' },
 ].map((c) => ({ ...c, bands: servedBands(c.extent), area: (c.extent.east - c.extent.west) * (c.extent.north - c.extent.south) }));
 const within = (e, lon, lat) => lon >= e.west && lon <= e.east && lat >= e.south && lat <= e.north;
 const overlaps = (a, b) => a.west < b.east && b.west < a.east && a.south < b.north && b.south < a.north;
