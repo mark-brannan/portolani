@@ -29,7 +29,7 @@ export function figureRows(markdown, heading = '## Carta Marina, 1539') {
   const section = markdown.slice(at, next < 0 ? undefined : next);
   const num = (t) => t.split(',').map(Number);
   return section.split('\n').map((l) => l.split('|').map((c) => c.trim()))
-    .filter((c) => c.length > 6 && /^[RMS]\d+$/.test(c[1]) && /^(west|baltic)$/.test(c[4]))
+    .filter((c) => c.length > 6 && /^[RMS]\d+$/.test(c[1]) && /^(west|norway|baltic)$/.test(c[4]))
     .map((c) => ({ id: c[1], px: num(c[3]), fit: c[4], ll: num(c[5]) }));
 }
 // The rows of a landmarks table under a heading of ornaments.md, as { id, px: [x, y], ll: [lon, lat] }: the
@@ -111,12 +111,14 @@ export function catalanMarks(md, pages = CATALAN_PAGES) {
 // far the scan is shrunk for the site. A chart of `pages` is one panel per page, butted west to east.
 const CHARTS = [
   { id: 'carta-marina', title: 'Carta Marina, Olaus Magnus, 1539', source: 'carta-marina', file: 'carta-marina.jpg', scale: 2,
-    pieces: (md) => { const rows = figureRows(md); return [[0, 2700, fitOf(rows, 'west')], [2700, null, fitOf(rows, 'baltic')]]; },
+    pieces: (md) => { const rows = figureRows(md); const lm = pieceFit(landmarkRows(md, '### Landmarks, Norway'), 'norway'); // the coast's own landmarks, not the figures: the strip's figures take its fit
+      return [[0, 1700, fitOf(rows, 'west')], [1700, 2700, lm], [2700, null, fitOf(rows, 'baltic')]]; },
     // the landmarks ornaments.md names for each fit ("Carta Marina, 1539"), where they lie today: the figures table
     // gives where the fits put the figures, not the landmarks' scan px, so these are their real places alone
     marks: () => [[[-18.6, 64.9], [-6.9, 62.0], [-1.25, 60.3], [-3.05, 59.0]], // Iceland, the Faroes, Shetland, Orkney
+      [[7.05, 57.98], [10.40, 63.43], [5.15, 62.19], [13.0, 67.9], [25.97, 70.98]], // Lindesnes, Trondheim, Stad, Lofoten, Nordkapp
       [[19.95, 60.2], [18.07, 59.33], [18.5, 57.45], [16.65, 56.75], [22.5, 58.4], [24.1, 56.95], [18.65, 54.35]]], // Åland, Stockholm, Gotland, Öland, Saaremaa, Riga, Danzig
-    snaps: ['West', 'Baltic'] },
+    snaps: ['West', 'Norway', 'Baltic'] },
   { id: 'catalan-atlas', title: 'Catalan Atlas, 1375', source: 'catalan-atlas-5', pages: CATALAN_PAGES, thumb: 'catalan-atlas-thumb.jpg', scale: 4,
     pieces: (md) => catalanPieces(md), marks: (md) => catalanMarks(md), snaps: CATALAN_PAGES.map((p) => p.label) },
   { id: 'de-la-cosa', title: 'Map of Juan de la Cosa, 1500', source: 'de-la-cosa', file: 'de-la-cosa.jpg', scale: 1, // the scan is small: shrunk, the coasts would go; the pieces run from the parchment's west edge to its east

@@ -13,19 +13,20 @@ const carta = overlays.find((o) => o.id === 'carta-marina');
 const catalan = overlays.find((o) => o.id === 'catalan-atlas');
 const landmarks = landmarkRows(readFileSync(new URL('docs/atlas/ornaments.md', ROOT), 'utf8'), '### Landmarks, sheet 5');
 
-test('the figures table of the Carta Marina has its 27 rows, 23 west and 4 Baltic', () => {
+test('the figures table of the Carta Marina has its 27 rows, 17 west, 6 Norway and 4 Baltic', () => {
   assert.equal(rows.length, 27);
-  assert.equal(rows.filter((r) => r.fit === 'west').length, 23);
+  assert.equal(rows.filter((r) => r.fit === 'west').length, 17);
+  assert.equal(rows.filter((r) => r.fit === 'norway').length, 6);
 });
 
 // The table's lon, lat were produced by the fits, to 0.1 degree, so the refit gives them back to
 // about that rounding (ornaments.md's own residual is 47 to 101 km against the landmarks).
 test('the committed fits give back every figure of ornaments.md to within 0.1 degree', () => {
-  const [west, baltic] = carta.pieces;
+  const [west, norway, baltic] = carta.pieces;
   let worst = 0;
   for (const r of rows) {
-    const piece = r.px[0] <= west.x1 ? west : baltic;
-    assert.equal(piece === west ? 'west' : 'baltic', r.fit, `${r.id} takes its side's fit`);
+    const piece = r.px[0] <= west.x1 ? west : r.px[0] <= norway.x1 ? norway : baltic;
+    assert.equal(piece === west ? 'west' : piece === norway ? 'norway' : 'baltic', r.fit, `${r.id} takes its side's fit`);
     const [lon, lat] = applyFit(piece.fit, ...r.px);
     worst = Math.max(worst, Math.abs(lon - r.ll[0]), Math.abs(lat - r.ll[1]));
   }
@@ -35,6 +36,9 @@ test('the committed fits give back every figure of ornaments.md to within 0.1 de
   const b = similarityFit(rows.filter((r) => r.fit === 'baltic').map((r) => [r.px, r.ll]));
   assert.equal(w.scale.toFixed(4), '0.0113'); assert.equal(Math.round(w.turn), 48);
   assert.equal(b.scale.toFixed(4), '0.0100'); assert.equal(Math.round(b.turn), 3);
+  // Norway: its own five coast landmarks, 0.0140 deg/px at -8 degrees
+  const n = similarityFit(landmarkRows(readFileSync(new URL('docs/atlas/ornaments.md', ROOT), 'utf8'), '### Landmarks, Norway').map((r) => [r.px, r.ll]));
+  assert.equal(n.scale.toFixed(4), '0.0140'); assert.equal(Math.round(n.turn), -8);
 });
 
 // ornaments.md, "Landmarks, sheet 5": one similarity, 0.00331 deg/px, no turn, 127 km RMS, El Hierro worst at 284.
@@ -179,7 +183,7 @@ test('each chart\'s sheet and snaps in overlays.json are made from its pieces, o
     assert.ok(Math.abs((ys[0] + ys[1]) / 2 - want) < 1.5, `${l.lat}: at its page y ${want}, not ${ys}`);
   }
   // the Carta Marina, without parallels: level at the mean of its fits
-  const carta2 = overlays.find((o) => o.id === 'carta-marina'), [w2, b2] = carta2.pieces.map((p) => p.fit);
+  const carta2 = overlays.find((o) => o.id === 'carta-marina'), [w2, b2] = [carta2.pieces[0], carta2.pieces.at(-1)].map((p) => p.fit);
   assert.equal(carta2.sheet.turn, 0);
   assert.ok(Math.abs(carta2.sheet.scale - Math.sqrt(Math.hypot(w2.a, w2.b) * Math.hypot(b2.a, b2.b))) < 1e-12);
   assert.deepEqual(catalan.snaps.map((s) => s.label), ['Atlantic', 'Mali', 'Italy', 'Black Sea', 'Persia', 'Central Asia', 'India', 'Cathay'], 'a snap per page');
