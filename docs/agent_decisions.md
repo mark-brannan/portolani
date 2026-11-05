@@ -531,3 +531,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261105t032511z
 - re-tag signalk-portolan-v0.0.1 at the merge commit and re-dispatch publish.yml, instead of releasing 0.0.2 build commit type so release-please proposes no 0.0.2 Undo: git tag -f back to 423ceba ([#389](https://github.com/mark-brannan/portolani/pull/389))
+
+### 20261105t042809z
+- Vesconte 1311 laid from Nordenskiold's 1897 photographic plate, not a later Vesconte chart Undo: swap the vesconte-1311-periplus source row and landmarks for a later Vesconte ([#392](https://github.com/mark-brannan/portolani/pull/392))
