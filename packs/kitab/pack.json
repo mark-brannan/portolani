@@ -1,0 +1,23 @@
+{
+  "name": "kitab",
+  "title": "Sprites cropped from Piri Reis, Kitab-ı Bahriye, the Adriatic (Walters Art Museum W.658, fol. 208a; a later copy, painted and gilt)",
+  "licence": "Public domain; Walters Art Museum, Baltimore, W.658 (Walters Art Museum license, type=2D), via Wikimedia Commons",
+  "colour": "source",
+  "ink": "#3b2a1a",
+  "sprites": [
+    {
+      "id": "rose-kitab",
+      "kind": "rose",
+      "style": "kitab",
+      "file": "rose-kitab.png",
+      "anchor": [0.484, 0.517],
+      "sizePx": 221,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/e/e8/Piri_Reis_-_Map_of_the_Coastlines_and_the_Islands_of_the_Adriatic_Sea_-_Walters_W658208A_-_Full_Page.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:Piri_Reis_-_Map_of_the_Coastlines_and_the_Islands_of_the_Adriatic_Sea_-_Walters_W658208A_-_Full_Page.jpg",
+        "crop": [802, 724, 1124, 1045]
+      }
+    }
+  ]
+}

@@ -164,6 +164,13 @@ const CHARTS = [
   { id: 'panades-1557', title: 'Chart of the Mediterranean, Banet Panades, Messina, 1557', source: 'panades-1557', file: 'panades-1557.jpg', scale: 1, turned: true,
     landmarks: [[[1010, 970], [9.4, 43.0]], [[1000, 1200], [9.15, 41.38]], [[1040, 1605], [8.65, 38.87]], [[1500, 1625], [12.43, 37.8]], [[1830, 1735], [15.15, 36.69]], [[1880, 1535], [15.65, 38.27]], [[1960, 1590], [16.05, 37.92]]], // scan px, real lon, lat
     snaps: [] },
+  // Piri Reis, Kitab-ı Bahriye (Walters W.658, fol. 208a): the Adriatic drawn up the page, north to the upper right, so laid by a
+  // similarity with its turn. Venice, the tip of Istria, the Gargano, Leuca, Corfu, the Bay of Kotor, Vlorë. The outline is the folio,
+  // a few px out into the scanner's grey; the neighbouring folio's edge at the right is keyed with it.
+  { id: 'kitab-i-bahriye-adriatic', title: 'Kitab-ı Bahriye: the Adriatic, Piri Reis', source: 'kitab-i-bahriye-adriatic', file: 'kitab-i-bahriye-adriatic.jpg', scale: 1, turned: true,
+    outline: [[32, 36], [1208, 36], [1208, 1756], [32, 1756]], // scan px
+    landmarks: [[[555, 268], [12.33, 45.44]], [[645, 470], [13.91, 44.77]], [[575, 1030], [16.19, 41.89]], [[645, 1390], [18.36, 39.80]], [[715, 1500], [19.85, 39.62]], [[850, 1120], [18.69, 42.43]], [[770, 1395], [19.45, 40.45]]], // scan px, real lon, lat
+    snaps: [] },
 ];
 
 // The sheet's own placement. With the chart's drawn `parallels` ([{ lat, from, to }], top first, in scan px): the turn
