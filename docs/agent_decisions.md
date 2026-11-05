@@ -540,3 +540,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261105t062353z
 - rig build stamp at public/build.json, served at /signalk-portolan/build.json Undo: move the stamp file ([#397](https://github.com/mark-brannan/portolani/pull/397))
+
+### 20261105t070330z
+- De Bry's Virginia laid by the barrier islands, not the mainland (the thread asked for one or the other) Undo: refit on mainland landmarks in scripts/build-overlays.mjs and rebuild the row ([#392](https://github.com/mark-brannan/portolani/pull/392#discussion_r4477523883)) ([#392](https://github.com/mark-brannan/portolani/pull/392))
