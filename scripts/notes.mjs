@@ -895,7 +895,7 @@ export const CATALAN_COPY_NOTES = [
 // The map of Juan de la Cosa, 1500 (Museo Naval, Madrid). at.px in the Commons "rotated" scan (2127 x 1163).
 export const DE_LA_COSA_NOTES = [
   {
-    id: 'cosa-new-world', title: 'The New World',
+    id: 'cosa-new-world', title: 'The Americas',
     drawn: 'A long green coast down the west of the sheet, flagged where each crown had sailed.',
     real: 'The Caribbean and the coasts of the Americas as Spanish, Portuguese and English voyages had charted them by 1500. It is the oldest known European map that shows the Americas.',
     source: { label: 'Juan de la Cosa, Wikipedia', url: 'https://en.wikipedia.org/wiki/Juan_de_la_Cosa' },
@@ -924,7 +924,7 @@ export const DE_LA_COSA_NOTES = [
   },
   {
     id: 'cosa-english-flags', title: 'Flags in the north',
-    drawn: 'Small flags along the northern coast of the New World.',
+    drawn: 'Small flags along the northern coast of the Americas.',
     real: 'The flags give each region to the crown whose ships had reached it; the northern coast takes in John Cabot\'s English voyage of 1497.',
     source: { label: 'Map of Juan de la Cosa, Wikipedia', url: 'https://en.wikipedia.org/wiki/Map_of_Juan_de_la_Cosa' },
     at: { px: [580, 307], lonlat: null },
@@ -938,7 +938,7 @@ export const DE_LA_COSA_NOTES = [
   },
   {
     id: 'cosa-rediscovery', title: 'Found in a junk shop',
-    drawn: 'The whole skin: Europe, Africa and Asia east of the ocean, the New World west of it.',
+    drawn: 'The whole skin: Europe, Africa and Asia east of the ocean, the Americas west of it.',
     real: 'Baron Walckenaer bought the map from a Paris junk dealer early in the 1800s; Humboldt recognised it as important in 1832. It is now in the Museo Naval, Madrid.',
     source: { label: 'Map of Juan de la Cosa, Wikipedia', url: 'https://en.wikipedia.org/wiki/Map_of_Juan_de_la_Cosa' },
     at: { px: [1700, 300], lonlat: null },
