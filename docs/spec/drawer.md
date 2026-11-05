@@ -9,7 +9,7 @@ Feature: Drawer open and close  (rose button `#open`, one of seven instrument bu
     Then `#drawer` gains the class `open` and `aria-expanded=true`, then both revert and focus returns to `#open`
   Scenario: one drawer at a time
     Given the settings drawer open
-    When the user clicks another instrument (`#charts`, `#sights`, `#go`, `#voyages`, `#people`, `#anchor`)
+    When the user clicks another instrument (`#go`, `#sights`, `#voyages`, `#people`, `#charts`)
     Then the settings drawer shuts and that one opens
   Scenario: a map touch shuts it on a wide screen only
     Given a viewport wider than 520 px and the drawer open
@@ -445,7 +445,7 @@ Feature: Parchment  (colour input `#parchment`, hash `parchment`, default `e9d8b
 Feature: One mode  (tokens `--panel` #efe3c6, `--fg`, `--margin` #1d1913; no `prefers-color-scheme` in `public/`) [verified at main] (#211)
   Scenario: every drawer is parchment inside, on the dark margin
     Given the page with the browser set to dark, then to light
-    When the user opens each drawer (`#open`, `#charts`, `#sights`, `#go`, `#voyages`, `#people`, `#anchor`) and, for the settings drawer, each layout (default, `question`, `moods`, `sheet`)
+    When the user opens each drawer (`#open`, `#go`, `#sights`, `#voyages`, `#people`, `#charts`) and, for the settings drawer, each layout (default, `question`, `moods`, `sheet`)
     Then the drawer's background is `--panel` and its ink `--fg`, the margin round the map is `--margin` (`#1d1913`), and nothing visible inside a drawer has a dark background
   Scenario: the browser's light/dark setting changes nothing
     Given the same page

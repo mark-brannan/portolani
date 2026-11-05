@@ -21,6 +21,7 @@ import { OVERLAY_DEFAULTS, effectiveOpacity, sheetOpacity, overlayFromHash, over
 import { POIS, POI_ZOOM } from './pois.mjs';
 import { PEOPLE_FILE, PICTURES_FILE, SIGHT_PICTURES_FILE, SIGHT_MANIFEST_FILE, sightDeal, laneAxis, eraBands, EARLIER_MARKS, timelineVariant, eraOf, eraYears, eraScale, barOn, lifeSpan, firstYear, yearsText, PERSON_RED, pictureCredit, pictureNote, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, sightFrame, viewContaining, withPictures, peopleOf, whoOf, deathOf, sightPicturesOf, MEMENTO, MEMENTO_EN, mementoNext, mementoLines } from './people.mjs';
 import { fold, bestPlace, withoutPartsOfFrames } from './placename.mjs';
+import { nextInCycle } from './cycle.mjs';
 import { planFlight, ease as flyEase, FLY_KNOBS, flyDefaults } from './flight.mjs';
 
 const memo = new Map();
@@ -875,9 +876,9 @@ phone.addEventListener('change', () => { drawCards(); if (ground) render(); }); 
 
 // ---------------------------------------------------------------- the drawers
 
-// Seven buttons in the row and seven drawers: the rose the settings, the chart the charts, the astrolabe the points of
-// interest, the compass Go, the dividers the voyages and the medallion the people (each a vertical timeline), the
-// anchor the anchorages.
+// Six buttons in the row, left to right, and their drawers: the rose the configuration, the compass Find, the astrolabe
+// the locations, the dividers the voyages and the medallion the people (each a vertical timeline), the chart the charts.
+// The anchor's button is hidden for now, its anchorages among the locations.
 // At most one is open. A click on a button opens its drawer and a second click shuts it; a click on another
 // button shuts it and opens that one; Esc, or a
 // click or a focus outside the row and the drawer, shuts it. A choice in it leaves it open, and the map does what
@@ -889,7 +890,7 @@ phone.addEventListener('change', () => { drawCards(); if (ground) render(); }); 
 // the focus goes back to the button that opened it.
 const where = $('where');
 // The medallion's and the dividers' drawers are the timeline's (placeTimeline): A's one drawer for both, or B's two.
-const drawers = [[$('open'), $('drawer')], [$('charts'), $('chartsDrawer')], [$('sights'), $('sightsPanel')], [$('go'), $('goPanel')], [$('voyages'), $('voyagesPanel')], [$('people'), $('peoplePanel')], [$('anchor'), $('anchorPanel')]];
+const drawers = [[$('open'), $('drawer')], [$('go'), $('goPanel')], [$('sights'), $('sightsPanel')], [$('voyages'), $('voyagesPanel')], [$('people'), $('peoplePanel')], [$('charts'), $('chartsDrawer')], [$('anchor'), $('anchorPanel')]];
 const openDrawer = () => drawers.find(([, d]) => d.classList.contains('open'))?.[1] ?? false;
 let openedBy = null; // the button the open drawer was opened by
 const focusable = (d) => [...d.querySelectorAll('button, input, a[href]')].find((e) => !e.disabled && e.getClientRects().length);
@@ -1529,7 +1530,7 @@ addEventListener('keydown', (e) => { if (e.key === 'Escape') hideTile(); });
 // its eye, and again from its row's chips; afterwards nothing stays drawn on the scan, though a tap still finds every note.
 const notesKept = new Set(); // the charts whose marks their Notes chip keeps shown; off by default, and not in the link
 const seen = new Set(); // the charts shown that have announced their notes since they were shown
-let pulse = null, pulseFrame = 0; // { ids, t0 } while the notes of the charts `ids` announce themselves
+let pulse = null, pulseFrame = 0; // { ids, all, t0 } while the notes of the charts `ids` announce themselves; `all`, Find's: every point of interest in view
 let layerBase = null, layerPlaced = null; // the canvas as last placed, before this layer, and the view placed then
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 function drawLayer(g, proj, zoom, badges = true, now = performance.now()) {
@@ -1540,10 +1541,11 @@ function drawLayer(g, proj, zoom, badges = true, now = performance.now()) {
     const kept = notesKept.has(o.id), on = !!p && pulse.ids.has(o.id);
     if (!kept && !on) return;
     for (const m of notesOf(o, i, all, proj)) {
-      if (on) drawNoteRing(g, m, p.ring, p.alpha); // the pulse is rings alone: no mark sits on the art
+      if (on && !pulse.all) drawNoteRing(g, m, p.ring, p.alpha); // the pulse is rings alone: no mark sits on the art
       if (kept) drawNoteMark(g, m);
     }
   });
+  if (p && pulse.all) for (const m of [...(zoom >= POI_ZOOM ? sightsHit(proj, FULL) : []), ...regionMarks(proj, FULL), ...laidNotes(proj, FULL)]) drawNoteRing(g, m, p.ring, p.alpha);
   if (badges) for (const { marks, lead } of groupMarks(pointMarks(proj, zoom), cssPx(TAP_REACH))) if (marks.length > 1) drawBadge(g, lead, marks.length);
   g.restore();
 }
@@ -1585,9 +1587,9 @@ function placeLayer() {
   if (fresh.length) startPulse(fresh); else drawLayer(ctx, viewProjection(placed), placed.zoom);
   startFitLines();
 }
-function startPulse(ids) { // charts announcing while another's rings still play join them, all from the start, none cut off
-  const now = performance.now(), live = pulse && notePulse(now - pulse.t0, reducedMotion()) ? pulse.ids : [];
-  pulse = { ids: new Set([...live, ...ids]), t0: now };
+function startPulse(ids, all = false) { // charts announcing while another's rings still play join them, all from the start, none cut off
+  const now = performance.now(), going = pulse && notePulse(now - pulse.t0, reducedMotion()), live = going ? pulse.ids : [];
+  pulse = { ids: new Set([...live, ...ids]), all: all || (!!going && pulse.all), t0: now };
   if (!pulseFrame) pulseFrame = requestAnimationFrame(pulseStep);
 }
 function pulseStep(now) {
@@ -1603,6 +1605,9 @@ function repaintLayer(now = performance.now()) {
   ctx.clearRect(0, 0, W, H); ctx.drawImage(layerBase, 0, 0);
   drawLayer(ctx, viewProjection(placed), placed.zoom, true, now);
 }
+
+// Find's Points of interest: the red rings round every point of interest in view and drawn: the places (at POI_ZOOM, where their marks show), the lettered regions and the laid charts' notes
+$('findPoi').addEventListener('click', () => startPulse([], true));
 
 // ---------------------------------------------------------------- going somewhere
 
@@ -1620,11 +1625,10 @@ const CAPTION = 'notes to come'; // the line under an entry until its caption is
 // else the first; an era's span of years shows beside its heading with its count;
 // a row: [name, view, title, text], the title the cartouche's when it differs from the name. A row with a tile
 // in SIGHT_TILES takes the line under its name (the tile's date) and its caption (the tile's text) from it.
-const ANCHORAGES = [
+const ANCHORAGES = [ // the anchor's drawer is hidden for now; its home rows and groups head and close the Locations list (LOCATIONS)
   ['', [
     ['Home: the Mediterranean', DEFAULT_VIEW, 'The Mediterranean'],
     ['The world', at(10, 25, 0), 'The World'],
-    ['The North', viewOfFrame({ lonMin: 0, lonMax: 40, latMin: 54, latMax: 72 })], // the Carta Marina's frame
   ]],
   ['Regions', [ // a view covers its whole frame and crops what overflows the window, so each frame is about the window's shape
     ['Europe and the Atlantic', viewOfFrame({ lonMin: -35, lonMax: 45, latMin: 25, latMax: 70 })],
@@ -1633,8 +1637,8 @@ const ANCHORAGES = [
     ['The Malay archipelago', viewOfFrame({ lonMin: 95, lonMax: 135, latMin: -11, latMax: 8 })],
     ['The Caribbean', viewOfFrame({ lonMin: -90, lonMax: -58, latMin: 8, latMax: 28 })],
     ['The Pacific', viewOfFrame({ lonMin: 150, lonMax: 280, latMin: -47, latMax: 30 })], // Hawai'i, Aotearoa and Rapa Nui, across the date line: 280 is 80°W
-  ], 'open'],
-  ['Seas and islands', [
+  ]],
+  ['Pacific Islands and Atolls', [
     ['Guam', at(144.79, 13.44, 7)], // Islas de los Ladrones
     ['Cebu', at(123.89, 10.32, 7)],
     ['Maluku Islands', at(128, -3, 5)],
@@ -1642,7 +1646,7 @@ const ANCHORAGES = [
     ['Marquesas Islands', at(-140, -9, 6)],
     ['Pukapuka Atoll', at(-138.8, -14.82, 6.5), 'Pukapuka'], // Magellan's San Pablo, 1521 (the Tuamotu one)
     ['Pitcairn Islands', viewOfFrame({ lonMin: -131.3, lonMax: -124.2, latMin: -26.6, latMax: -22.4 })], // all four; the latitudes padded so the longitudes bind
-  ], 'open'],
+  ]],
 ];
 // the places that are lettered on the chart whatever the city data holds are in scripts/pois.mjs
 const port = (lon, lat) => at(lon, lat, 7.5);
@@ -1718,6 +1722,8 @@ const CHARTS = [
   ['De Bry, Virginia', '1590', at(-76, 36.28, 7.47), ['Frankfurt', port(8.68, 50.11)]], // de Bry's America, part I, printed at Frankfurt am Main
 ].map(([name, year, v, [city, made], text, overlay = null]) => ({ name, year, view: { ...v, title: name }, made: { ...made, title: city }, text, overlay }));
 const places = []; // every anchorage and point of interest: { name, view }
+// The astrolabe's Locations: home and the world, the regions, the eras' ports, then the Pacific's islands and atolls
+const LOCATIONS = [...ANCHORAGES.slice(0, 2), ...SIGHTS, ...ANCHORAGES.slice(2)];
 
 // The voyages: any number drawn at once, none by default. The Voyages drawer lists them as a vertical timeline, earliest
 // at the top: data/voyages/index.json in the order the voyages set out (chronological; the file's order breaks ties),
@@ -2362,6 +2368,9 @@ function peopleClick(e) {
   const away = style.pictures?.length === 0; // every picture put away: the person is still chosen, and one click deals them back
   const id = b.dataset.person === style.person && !away ? null : b.dataset.person;
   clearTable(); // whatever lies on the table put away first, and a second click lets the person go
+  choosePerson(id);
+}
+function choosePerson(id) {
   if (id) { style = { ...style, person: id }; dealing = `person:${id}`; } // their cards dealt as the map arrives
   showPeople(); showSightCard(); writeHash(); render();
   if (id) flyToSubject();
@@ -2950,9 +2959,11 @@ $('timelineVariant').addEventListener('input', () => setTimeline(timelineVariant
 // The cartouche names the place flown to (its title, else the button's name), not whatever scores highest in the frame.
 const caption = (text) => `<span class="notes">${text ?? CAPTION}</span>`;
 const placeInfo = new Map(); // a listed place's details, by name: { title, date, text }
-for (const [list, groups] of [[$('anchorages'), ANCHORAGES], [$('sightsList'), SIGHTS]]) {
+const SIGHT_NAMES = new Set(SIGHTS.flatMap(([, items]) => items.map(([name]) => name))); // the eras' ports, which carry a details card
+{
+  const list = $('sightsList'), groups = LOCATIONS;
   const rows = (items) => items.map(([name, v, title, text, tag]) => { const tile = SIGHT_TILES[name];
-    if (list.id === 'sightsList') placeInfo.set(name, { title: title ?? name, date: [tile?.date, tag].filter(Boolean).join(' · '), text: text ?? tile?.text ?? CAPTION });
+    if (SIGHT_NAMES.has(name)) placeInfo.set(name, { title: title ?? name, date: [tile?.date, tag].filter(Boolean).join(' · '), text: text ?? tile?.text ?? CAPTION });
     return `<li><button type="button" data-place="${places.push({ name, view: { ...v, title: title ?? name } }) - 1}">${title?.startsWith(`${name} (`) ? title : name}${tile?.date ? `<small>${[tile.date, tag].filter(Boolean).join(' · ')}</small>` : ''}</button>${caption(text ?? tile?.text)}</li>`; }).join('');
   const first = groups.findIndex(([group, , open]) => group && open), opened = first >= 0 ? first : groups.findIndex(([group]) => group);
   list.innerHTML = groups.map(([group, items, , span], i) => (group ? `<li class="group${i === opened ? ' open' : ''}"><button type="button" class="fold" aria-expanded="${i === opened}">${group}<small>${[items.length, span].filter(Boolean).join(' · ')}</small></button><div class="rows"><div${i === opened ? '' : ' inert'}><ul class="places">${rows(items)}</ul></div></div></li>` : rows(items))).join('');
@@ -2961,7 +2972,7 @@ for (const [list, groups] of [[$('anchorages'), ANCHORAGES], [$('sightsList'), S
     if (!b) return;
     const { name, view: to } = places[b.dataset.place];
     clearSheetFor(to); goTo(to);
-    if (list.id === 'sightsList') { placeShown = name; showSightCard(); $('sightCard').scrollIntoView({ block: 'nearest' }); }
+    if (placeInfo.has(name)) { placeShown = name; showSightCard(); $('sightCard').scrollIntoView({ block: 'nearest' }); }
   });
 }
 // The Points of interest drawer's details of the place last clicked in it, at the drawer's foot, as the person card shows
@@ -3216,6 +3227,30 @@ $('coords').addEventListener('submit', async (e) => {
   goTo(target);
 });
 $('coordsText').addEventListener('input', () => { $('goMiss').hidden = true; });
+// Find's Home and The world: the Locations list's own two rows, flown to as their buttons there fly
+$('goPanel').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-go]'), to = b && places.find((p) => p.name === b.dataset.go)?.view;
+  if (to) { clearSheetFor(to); goTo(to); }
+});
+// Find's dice: the next location with notes or pictures into the box, or the next person with a story or pictures
+// chosen, in one shuffled order that is the same on every load (cycle.mjs); the last one shown kept in this browser
+const lastRolled = (key, name) => { try { if (name) localStorage.setItem(key, name); return localStorage.getItem(key); } catch { return name ?? null; } };
+$('randomPlace').addEventListener('click', async () => {
+  await loadSights().catch(() => {});
+  const names = places.map((p) => p.name).filter((n) => SIGHT_TILES[n]?.text || sightData?.images[n]?.length);
+  const name = nextInCycle(names, lastRolled('portolani.randomPlace'));
+  if (!name) return;
+  lastRolled('portolani.randomPlace', name);
+  $('coordsText').value = name; $('goMiss').hidden = true;
+});
+$('randomPerson').addEventListener('click', async () => {
+  await loadPeople().catch(() => {});
+  const ids = (peopleData?.people ?? []).filter((p) => p.bio || p.images.length).map((p) => p.id);
+  const id = nextInCycle(ids, lastRolled('portolani.randomPerson'));
+  if (!id) return;
+  lastRolled('portolani.randomPerson', id);
+  clearTable(); choosePerson(id);
+});
 
 // A sheet in the way: taken off (its eye shows it hidden) if it would cover the place a fly lands on, or with `frame`
 // any of the frame it lands on; a fly that lands clear of the sheet leaves it shown (docs/spec/design.md, "A laid sheet

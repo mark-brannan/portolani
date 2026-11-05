@@ -1,6 +1,6 @@
 // The page under touch, in headless Chromium with touch emulation at the two common phone widths
 // (360 and 412 px): a two-finger pinch zooms the map about the pinch centre and not the page, anywhere in
-// the window, one finger drags, the anchor's drawer opens on a tap and stays up on a choice, Go stays up on a
+// the window, one finger drags, the astrolabe's drawer opens on a tap and stays up on a choice, Go stays up on a
 // tap on the map and shuts on a second tap on its compass, and its Find my position button fills in the fix and
 // flies there without bringing up the keyboard, Go still up (the user, 2026-10-30). Under 520 px the map fills the window, cropped at its
 // sides; the settings are a bottom sheet at half the window's height with the map above it, a lighter
@@ -99,14 +99,14 @@ for (const width of [360, 412]) {
       const v3 = await view();
       assert.ok(v3.lon < v2.lon - 0.0001 && v3.zoom === v2.zoom, `a drag right carries the chart with it, so the centre moves west: ${JSON.stringify(v2)} -> ${JSON.stringify(v3)}`);
 
-      // the anchor's drawer: shut, opened by a tap on the anchor, still up after a choice (the third line, The North)
-      assert.equal(await shown('anchorPanel'), false);
-      await page.tap('#anchor');
-      assert.equal(await shown('anchorPanel'), true);
-      assert.equal(await page.getAttribute('#anchor', 'aria-expanded'), 'true');
+      // the astrolabe's drawer: shut, opened by a tap on the astrolabe, still up after a choice (the second line, The world)
+      assert.equal(await shown('sightsPanel'), false);
+      await page.tap('#sights');
+      assert.equal(await shown('sightsPanel'), true);
+      assert.equal(await page.getAttribute('#sights', 'aria-expanded'), 'true');
       const h3 = await hash();
-      await page.tap('#anchorages button >> nth=2');
-      assert.equal(await shown('anchorPanel'), true, 'a choice shut the drawer');
+      await page.tap('#sightsList button >> nth=1');
+      assert.equal(await shown('sightsPanel'), true, 'a choice shut the drawer');
       await settled(h3);
 
       // Go: a sheet that stays up on a tap on the map, and shuts on a second tap on the compass
@@ -204,20 +204,20 @@ for (const width of [360, 412]) {
       await page.waitForFunction((h) => location.hash !== h, h0, { timeout: 60000 });
       assert.equal(await page.evaluate(() => document.getElementById('drawer').classList.contains('open')), true, 'a drag on the map shut the sheet');
 
-      // its controls are the same chips; the anchor swaps it for the anchorages, the same sheet at the foot
+      // its controls are the same chips; the astrolabe swaps it for the locations, the same sheet at the foot
       assert.ok(await page.locator('#drawer .chip').count() > 10);
-      await page.tap('#anchor');
+      await page.tap('#sights');
       await page.waitForTimeout(400);
-      assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('drawer')).visibility), 'hidden', 'the anchor left the settings open');
-      const light = await box('#anchorPanel');
+      assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('drawer')).visibility), 'hidden', 'the astrolabe left the settings open');
+      const light = await box('#sightsPanel');
       assert.ok(light.height <= height / 2 + 2 && Math.abs(light.width - width) <= 1 && Math.abs(light.y + light.height - height) <= 1, JSON.stringify(light));
       map = await box('#map');
-      assert.ok(map.y <= 0 && map.y + map.height >= height, `the map does not stay full behind the anchorages: ${JSON.stringify(map)}`);
+      assert.ok(map.y <= 0 && map.y + map.height >= height, `the map does not stay full behind the locations: ${JSON.stringify(map)}`);
 
-      // a second tap on the anchor shuts the sheet, and the map has the window again
-      await page.tap('#anchor');
+      // a second tap on the astrolabe shuts the sheet, and the map has the window again
+      await page.tap('#sights');
       await page.waitForTimeout(400);
-      assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('anchorPanel')).visibility), 'hidden');
+      assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('sightsPanel')).visibility), 'hidden');
       map = await box('#map');
       assert.ok(Math.abs(map.y + map.height / 2 - height / 2) <= 2, 'the map did not come back to the middle of the window');
       assert.ok(map.y <= 0 && map.y + map.height >= height, `the map does not fill the window again: ${JSON.stringify(map)}`);
@@ -251,7 +251,7 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
 
     // each button opens its own drawer and shuts the one before; the row stays put and the drawer clear of it
     const row0 = await row();
-    for (const [b, d] of [['#open', 'drawer'], ['#charts', 'chartsDrawer'], ['#sights', 'sightsPanel'], ['#go', 'goPanel'], ['#voyages', 'voyagesPanel'], ['#people', 'peoplePanel'], ['#anchor', 'anchorPanel']]) {
+    for (const [b, d] of [['#open', 'drawer'], ['#go', 'goPanel'], ['#sights', 'sightsPanel'], ['#voyages', 'voyagesPanel'], ['#people', 'peoplePanel'], ['#charts', 'chartsDrawer']]) {
       await page.click(b);
       await page.waitForTimeout(400);
       assert.equal(await opened(d), true, `${b} did not open ${d}`);
@@ -262,8 +262,8 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
       assert.ok(apart(box, row0), `${d} covers the row: ${JSON.stringify(box)}, row ${JSON.stringify(row0)}`);
     }
     assert.equal(await page.locator('.drawer .close, #close').count(), 0, 'a close button is back');
-    await page.click('#anchor');
-    assert.equal(await opened('anchorPanel'), false, 'a second click left the anchorages open');
+    await page.click('#charts');
+    assert.equal(await opened('chartsDrawer'), false, 'a second click left the charts open');
 
     await page.click('#voyages');
     assert.equal(await opened('voyagesPanel'), true);
@@ -305,9 +305,11 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     assert.deepEqual(await openGroups(), ['The ancient world'], 'leaving the list shut the era');
     assert.equal(await opened('sightsPanel'), true, 'a hover shut the drawer');
     // a heading the slide brings under a still pointer does not open in turn: the open era above shuts, the hovered one
-    // rises, and with its rows cut short here the next heading comes to rest under the pointer; a nudge opens nothing
+    // rises, and with its rows cut short here the next heading comes to rest under the pointer; a nudge opens nothing.
+    // Goa's tile, at the drawer's foot, is put by for this so the headings it would cover stay in reach, however many pictures it has
     const pointer = await page.evaluate(() => {
-      const [anc, med, aod] = [...document.querySelectorAll('#sightsList .group')], fold = (g) => g.querySelector(':scope > .fold').getBoundingClientRect();
+      document.getElementById('sightCard').hidden = true;
+      const [, anc, med, aod] = [...document.querySelectorAll('#sightsList .group')], fold = (g) => g.querySelector(':scope > .fold').getBoundingClientRect();
       const m = fold(med), y = m.top + m.height / 2, rise = anc.querySelector(':scope > .rows').getBoundingClientRect().height;
       // after the slide the pointer sits (y - m.top + rise) below the medieval heading's top; put the next heading's middle there
       med.querySelector('.places').style.cssText = `height:${y - m.top + rise - m.height - fold(aod).height / 2 - 6}px;overflow:hidden`;
@@ -320,7 +322,7 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     await page.mouse.move(pointer.x + 1, pointer.y);
     await page.waitForTimeout(700);
     assert.deepEqual(await openGroups(), ['The medieval Indian Ocean and Asia'], 'a heading the slide brought under the pointer opened on a nudge');
-    await page.evaluate(() => { document.querySelectorAll('#sightsList .group')[1].querySelector('.places').style.cssText = ''; });
+    await page.evaluate(() => { document.querySelectorAll('#sightsList .group')[2].querySelector('.places').style.cssText = ''; document.getElementById('sightCard').hidden = false; });
     await page.click('#sightsList .fold >> text=The ancient world');
     // off, from its chip in the settings, which writes hover=0 into the link: resting on a heading opens nothing
     await page.click('#open');
