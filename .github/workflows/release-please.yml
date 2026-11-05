@@ -10,9 +10,11 @@ name: Release
 # main queue rather than race; this caller needs no concurrency block of
 # its own.
 #
-# This repo has a publish.yml, so the shared workflow's default
-# `publish: true` applies: on a release it dispatches publish.yml and
-# waits for it to succeed.
+# This repo has a publish.yml, so `publish: true` applies. Two
+# release-please packages: the private root (tags vX.Y.Z, publishes
+# nothing) and the plugin in signalk/ (tags signalk-portolan-vX.Y.Z,
+# first release 0.0.1 by `initial-version`). Only a plugin release
+# dispatches publish.yml, by `publish-path: signalk`.
 
 on:
   push:
@@ -29,6 +31,8 @@ permissions:
 jobs:
   release:
     uses: mark-brannan/.github/.github/workflows/release-please.yml@main
+    with:
+      publish-path: signalk # the plugin publishes; the private root only tags
     secrets:
       RELEASE_PLEASE_APP_CLIENT_ID: ${{ secrets.RELEASE_PLEASE_APP_CLIENT_ID }}
       RELEASE_PLEASE_APP_PRIVATE_KEY: ${{ secrets.RELEASE_PLEASE_APP_PRIVATE_KEY }}
