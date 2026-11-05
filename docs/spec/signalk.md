@@ -37,6 +37,16 @@ at a time, every drawn rose of that style used; the rose meant is the drawn Cata
 file under the Aguiar style; the towns are every drawn town sprite, Aguiar, Martines, the Carta Marina's
 buildings and the towers drawn in code.
 
+## The gutter's buttons, as given (the user, 2026-11-04)
+
+The navigation buttons still do not function as expected. I expect the arrow to toggle follow vessel and when
+enabling it, to center on the vessel. I expect the compass to toggle north up, but to allow free rotation of the
+map. I expect if there are rotation buttons for there to be two, and to allow any cardinal direction to be 'up'.
+
+Answers to the questions (the user, 2026-11-04): "the follow button controls follow. The rotate buttons should
+never have had anything to do with follow"; free rotation is by gesture, to any angle; the compass locks and
+unlocks north up; "I want TWO rotate buttons, not one. Rotate clockwise and counter clockwise".
+
 ## Features
 
 Feature: The drawer is closed at start, and closes itself
@@ -120,21 +130,38 @@ Feature: Monsters are a choice of Paré or heraldic
     When the user picks Heraldic
     Then heraldic monsters are drawn in the cells' open water only
 
-Feature: Follow, course up and the compass are three buttons
+Feature: Follow, the compass and two rotate buttons
   Scenario: the gutter
     Given the gutter
-    Then under Layers stand a follow button (a vessel arrow), a course up button (the rotate icon) and a compass, each its own
-  Scenario: follow
+    Then under Layers stand follow (a vessel arrow), rotate counter-clockwise, the compass and rotate clockwise, each its own button
+    And none of the three turning controls reads the vessel or its course
+  Scenario: follow on
+    Given follow off
     When the user presses follow
-    Then the arrow fills, the chart centres on the vessel and keeps it centred as it moves, and a zoom keeps it at the centre
-    And a pan by hand stops following, and the arrow empties
-  Scenario: course up
-    Given the vessel's course over ground from the stream
-    When the user presses course up
-    Then the button shows pressed, and the chart turns so the course points to the top of the window, and turns again as the course changes
-  Scenario: back to north up
-    When the user presses course up again, or the compass
-    Then north is at the top
-  Scenario: the compass
+    Then the arrow fills and the chart centres on the vessel at once, and keeps it centred as it moves
+    And a zoom or a turn keeps the vessel at the centre
+    And with no position yet the arrow fills and the chart centres on the first fix
+  Scenario: follow off
+    Given follow on
+    When the user presses follow, or pans by hand
+    Then the arrow empties and the chart stays where it is
+  Scenario: rotate
+    When the user presses rotate clockwise
+    Then the chart turns clockwise to the next cardinal direction up: north up, then west, south, east
+    And rotate counter-clockwise turns it the other way: north, east, south, west
+    And from a bearing between two cardinals it turns to the nearer one in that direction
+    And the compass unlocks
+  Scenario: free rotation
+    Given a touch screen, or a mouse
+    When the user twists two fingers, or drags with the right button or with Ctrl held
+    Then the chart turns with them to any angle, and the compass needle follows
+    And a twist under 10 degrees while north up is locked is a pinch alone, and does not turn the chart
+  Scenario: the compass locks north up
+    Given the chart turned to any bearing
+    When the user presses the compass
+    Then it shows pressed and north is at the top
+    When the user presses it again
+    Then it shows unpressed and the chart turns back to the bearing it had
+  Scenario: the compass needle
     Given any bearing
     Then the compass needle points to north on the chart as drawn

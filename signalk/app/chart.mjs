@@ -38,8 +38,8 @@ export const chipSprite = (list, kind, style, pack = 'vivid') => list.find((s) =
 export const CHART_GEO = ['geo/ne-land-50m.geojson', 'geo/ne-coastline-50m.geojson', 'geo/ranges-10m.json', 'geo/peaks-10m.json'];
 
 // The drawer's settings before any are saved: the drawer's layers on, the cartouche off, the drawn Catalan
-// roses, no towns, the heraldic monsters, north up
-export const DEFAULTS = { depth: true, mountains: true, peaks: true, cartouche: false, rose: 'catalan', towns: [], monster: 'heraldic', courseUp: false };
+// roses, no towns, the heraldic monsters, north up (the compass locked; `bearing` is the chart's turn once unlocked)
+export const DEFAULTS = { depth: true, mountains: true, peaks: true, cartouche: false, rose: 'catalan', towns: [], monster: 'heraldic', northUp: true, bearing: 0 };
 
 // The scene's options for a chart: the land in one colour, the sea's depth drawn, the mountains along the
 // ranges in the M.E. 1937 pen style, the landmark peaks (scene.mjs draws each as the lone ink peak) and the
@@ -63,6 +63,9 @@ export function readSettings(saved) {
   const s = { ...DEFAULTS, ...saved };
   if (!Array.isArray(s.towns)) s.towns = [...DEFAULTS.towns];
   s.towns = s.towns.filter((t) => t in TOWNS);
+  s.northUp = s.northUp !== false;
+  s.bearing = Number.isFinite(s.bearing) ? ((s.bearing % 360) + 360) % 360 : 0;
+  delete s.courseUp;
   if (s.rose !== 'off' && !ROSES.includes(s.rose)) s.rose = DEFAULTS.rose;
   return s;
 }
