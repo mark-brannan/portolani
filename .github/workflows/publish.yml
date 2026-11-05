@@ -9,7 +9,7 @@ name: Publish
 # workflow file `publish.yml`. The first publish of a new package name cannot
 # come from CI; see the npm-first-publish skill.
 #
-# Dispatched by release-please.yml on a release (--ref <tag>). No `push: tags`
+# Dispatched by release-please.yml on a signalk-portolan release (--ref <tag>). No `push: tags`
 # trigger, so a tag alone cannot start a second, racing publish.
 
 on:
@@ -37,8 +37,14 @@ jobs:
 
       - name: Refuse to publish a tag that disagrees with signalk/package.json
         run: |
+          # The plugin is its own release-please component: tags are
+          # signalk-portolan-vX.Y.Z. A root vX.Y.Z tag is never published.
+          case "$GITHUB_REF_NAME" in
+            signalk-portolan-v*) ;;
+            *) echo "tag $GITHUB_REF_NAME is not a signalk-portolan release" >&2; exit 1 ;;
+          esac
           PKG=$(node -p "require('./signalk/package.json').version")
-          if [ "${GITHUB_REF_NAME#v}" != "$PKG" ]; then
+          if [ "${GITHUB_REF_NAME#signalk-portolan-v}" != "$PKG" ]; then
             echo "tag $GITHUB_REF_NAME does not match signalk/package.json version $PKG" >&2
             exit 1
           fi
