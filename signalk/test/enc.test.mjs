@@ -121,20 +121,26 @@ test('US3WA46M through the provider draws the Seattle view, with its depth', asy
   for (const [i, a] of water.entries()) for (const b of water.slice(i + 1)) assert.ok(apart(a.box, b.box), `${a.text} and ${b.text} apart`);
   const { bar } = withDepth, barBox = { cx: bar.x + bar.w / 2, cy: bar.y + bar.h / 2, hw: bar.w / 2, hh: bar.h / 2 };
   for (const n of water) assert.ok(apart(n.box, barBox), `${n.text} clear of the scale bar`);
-  assert.ok(withDepth.scene.towns.length > 0, 'the cells\' built-up areas stand towns');
-  assert.ok(withDepth.scene.towns.every((t) => !t.sprite || (t.sprite.pack === 'vivid' && TOWNS.includes(t.sprite.style))), 'the drawn town styles');
+  // every drawn town style, the towers and the Carta Marina's buildings drawn in code among them, stands on the cells' built-up areas
+  const towned = await draw(true, view, { ...settings, towns: Object.keys(TOWNS) });
+  assert.ok(towned.scene.towns.length > 0, 'the cells\' built-up areas stand towns');
+  assert.ok(towned.scene.towns.every((t) => !t.sprite || TOWNS[t.sprite.style] === t.sprite.pack), 'the drawn town styles');
+  for (const t of Object.keys(TOWNS)) assert.ok(chartOptions({ ...settings, towns: [t] }, list).sprites.length > 0, `${t} towns chosen`);
+  assert.ok(chartOptions({ ...settings, towns: ['carta-marina'] }, list).sprites.includes('plain/church'), 'the Carta Marina church');
   // the scale bar in the bottom-left corner, its gap to the bottom edge its gap to the left edge
   assert.ok(Math.abs(bar.x - (H - (bar.y + bar.h))) <= 1, `scale bar ${bar.x} px from the left, ${H - bar.y - bar.h} px from the bottom`);
   // the Towns chips all off is no town: the cells' built-up areas reach no scene
   const place = { name: 'Here', lon: -122.3, lat: 47.6, area: 1 };
-  assert.deepEqual(chartOptions(settings, list, { places: [place] }).places, [place]);
+  assert.deepEqual(chartOptions({ ...settings, towns: ['tower'] }, list, { places: [place] }).places, [place]);
   assert.deepEqual(chartOptions({ ...settings, towns: [] }, list, { places: [place] }).places, []);
   // the cartouche off at first, a chip turns it on
   assert.equal(settings.cartouche, false);
   assert.ok(!chartOptions(settings, list).kinds.includes('cartouche'));
   assert.ok(chartOptions({ ...settings, cartouche: true }, list).sprites.includes('vivid/cartouche-frame'));
-  // the roses the drawn styles alone, Aguiar's own rose at first; the monsters Paré or heraldic, heraldic at first
-  assert.deepEqual(chartOptions(settings, list).sprites.filter((k) => /rose/.test(k)), ['vivid/rose-aguiar']);
+  // the roses the drawn styles alone, the drawn Catalan roses at first, Aguiar's its own; the monsters Paré or heraldic, heraldic at first
+  assert.deepEqual(chartOptions(settings, list).sprites.filter((k) => /rose/.test(k)), ['vivid/rose-catalan', 'vivid/rose-catalan-small']);
+  assert.deepEqual(chartOptions({ ...settings, rose: 'aguiar' }, list).sprites.filter((k) => /rose/.test(k)), ['vivid/rose-aguiar']);
+  assert.deepEqual(settings.towns, [], 'no town at first');
   for (const r of ROSES) assert.ok(chartOptions({ ...settings, rose: r }, list).sprites.some((k) => k.startsWith(`vivid/rose-${r}`)), r);
   assert.ok(withDepth.scene.monsters.every((m) => m.sprite.style === 'heraldic'), 'heraldic monsters');
   assert.ok(chartOptions({ ...settings, monster: 'pare' }, list).sprites.every((k) => !/monster|heraldic/.test(k) || k.startsWith('scanned/pare-')));

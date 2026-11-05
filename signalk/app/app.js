@@ -1,6 +1,7 @@
 // The webapp: the plugin's ENC cells drawn by portolani's scene, panned and zoomed, with the vessel's
-// position from the Signal K stream. The settings drawer is open at start; its chips show what they draw.
-import { createScene, drawScene, panView, zoomView, clampView, viewProjection, drawnPeaks, peakHits, listSprites, peakInkSvg, W, H } from 'portolani/scene.mjs';
+// position from the Signal K stream. The settings drawer is closed at start and closes itself once the pointer
+// leaves it, or on a tap on the chart; its chips show what they draw.
+import { createScene, drawScene, panView, zoomView, clampView, viewProjection, drawnPeaks, peakHits, listSprites, peakInkSvg, towerGlyph, W, H } from 'portolani/scene.mjs';
 import { readCatalogue, cellData, frameView, drawnFrom } from './enc-provider.js';
 import { CHART_GEO, ROSES, TOWNS, MONSTERS, chartOptions, readSettings, chipSprite } from './chart.mjs';
 
@@ -21,7 +22,7 @@ const sprites = listSprites(env); // the shipped packs' sprites, for the drawer'
 const map = document.getElementById('map'), marks = document.getElementById('marks'), stage = document.getElementById('stage');
 const status = (t) => { document.getElementById('status').textContent = t; };
 const RAD = Math.PI / 180, merc = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * RAD) / 2));
-let view = null, vessel = null, drawn = null, drawing = 0, aim = 0; // `aim`: the bearing the latest render draws
+let view = null, vessel = null, drawn = null, drawing = 0, aim = 0, following = false; // `aim`: the bearing the latest render draws
 
 // the view that holds a bbox [w, s, e, n]
 const fit = ([w, s, e, n]) => clampView({ lon: (w + e) / 2, lat: Math.atan(Math.sinh((merc(s) + merc(n)) / 2)) / RAD,
@@ -45,7 +46,8 @@ async function render() {
     drawn = { view, scale, peaks: drawnPeaks(scene, data) };
     hideTile();
     drawVessel();
-    if (swung()) later(); // the course came while drawing
+    paintCompass();
+    if (swung() || strayed()) later(); // the course or the vessel moved while drawing
     status(!opening ? 'No ENC cells yet: give the plugin a folder of .000 cells' : drawnFrom.cells ? '' : 'No cell covers this view: the coast is Natural Earth 50m');
   } catch (e) { if (n === drawing) status(`Could not draw: ${e.message}`); }
 }
@@ -76,7 +78,7 @@ stage.addEventListener('pointerup', (e) => {
   if (!drag) return;
   const [dx, dy] = toCanvas(e.clientX - drag.x, e.clientY - drag.y);
   drag = null;
-  if (Math.hypot(dx, dy) > 2) { view = panView(view, dx, dy); later(); } else peakAt(e);
+  if (Math.hypot(dx, dy) > 2) { follow(false); view = panView(view, dx, dy); later(); } else if (!drawer.hidden) closeDrawer(); else peakAt(e);
 });
 
 // a tap on a landmark peak's drawing opens its tile, the name and the height, as on the page
@@ -98,7 +100,8 @@ function peakAt(e) {
 stage.addEventListener('wheel', (e) => {
   e.preventDefault();
   const r = map.getBoundingClientRect(), [px, py] = toCanvas(e.clientX - r.left, e.clientY - r.top);
-  view = zoomView(view, e.deltaY < 0 ? 1.5 : 1 / 1.5, px, py); later();
+  // while following, the zoom is about the vessel, which stays at the centre
+  view = following ? clampView({ ...view, zoom: view.zoom + Math.log2(e.deltaY < 0 ? 1.5 : 1 / 1.5) }) : zoomView(view, e.deltaY < 0 ? 1.5 : 1 / 1.5, px, py); later();
 }, { passive: false });
 
 // The drawer's chips: a switch flips a setting; a choice in a group (`radio`) sets it; a town style toggles in its list
@@ -120,7 +123,9 @@ chip('peaks', 'peaks');
 chip('cartouche', 'cartouche');
 document.getElementById('peak-glyph').innerHTML = peakInkSvg();
 const NONE = '<svg width="30" height="24" viewBox="0 0 30 24"><circle cx="15" cy="12" r="7" fill="none" stroke="#3b2a1a" stroke-width="1.2"/><path d="M10 17l10-10" stroke="#3b2a1a" stroke-width="1.2"/></svg>';
-const picture = (s) => (s ? `<img alt="" src="packs/${s.pack}/${s.file}">` : NONE);
+// a sprite's chip picture: a pack's file, or a shape drawn in code (the towers, the Carta Marina's buildings) as its glyph
+const picture = (s) => (!s ? NONE : s.pack === 'plain' ? `<span class="glyph">${towerGlyph(s.id)}</span>` : `<img alt="" src="packs/${s.pack}/${s.file}">`);
+const TOWN_NAMES = { aguiar: 'Aguiar', martines: 'Martines', 'carta-marina': 'Carta Marina', tower: 'Towers' };
 const title = (t) => t[0].toUpperCase() + t.slice(1);
 // one chip of a group: `on()` says whether it is pressed, `act` what a press does
 function groupChip(row, label, pic, tip, on, act, role = 'radio') {
@@ -135,7 +140,7 @@ sprites.then((list) => {
   const roses = document.getElementById('roses'), towns = document.getElementById('towns'), monsters = document.getElementById('monsters');
   groupChip(roses, 'None', NONE, 'No rose', () => settings.rose === 'off', () => { settings.rose = 'off'; changed(); });
   for (const r of ROSES) groupChip(roses, title(r), picture(chipSprite(list, 'rose', r)), `The ${title(r)} rose`, () => settings.rose === r, () => { settings.rose = r; changed(); });
-  for (const t of TOWNS) groupChip(towns, title(t), picture(chipSprite(list, 'town', t)), `${title(t)}'s towns on the built-up areas`, () => settings.towns.includes(t),
+  for (const [t, pack] of Object.entries(TOWNS)) groupChip(towns, TOWN_NAMES[t], picture(chipSprite(list, 'town', t, pack)), `${TOWN_NAMES[t]}: towns on the built-up areas`, () => settings.towns.includes(t),
     () => { settings.towns = settings.towns.includes(t) ? settings.towns.filter((x) => x !== t) : [...settings.towns, t]; changed(); }, 'switch');
   groupChip(monsters, 'None', NONE, 'No monster', () => settings.monster === 'off', () => { settings.monster = 'off'; changed(); });
   for (const [m, pack] of Object.entries(MONSTERS)) groupChip(monsters, m === 'pare' ? 'Paré' : title(m), picture(chipSprite(list, 'monster', m, pack)),
@@ -144,22 +149,48 @@ sprites.then((list) => {
 });
 paint();
 
-// the gutter: the drawer, north up or course up, and the vessel
+// the gutter: the drawer; follow the vessel; course up; the compass, which shows north and turns the chart north up.
+// The drawer is closed at start. It closes itself DRAWER_LINGER ms after the pointer leaves it and its button
+// (a mouse or pen), or on a tap on the chart (a finger), or on Escape.
 const layers = document.getElementById('layers'), drawer = document.getElementById('drawer');
-drawer.hidden = false; layers.setAttribute('aria-pressed', 'true'); // the drawer is open at start
-layers.addEventListener('click', () => { drawer.hidden = !drawer.hidden; layers.setAttribute('aria-pressed', String(!drawer.hidden)); });
-const COMPASS = '<svg width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M10 3l2.4 7h-4.8Z" fill="#8c2f1e"/><path d="M10 17l2.4-7h-4.8Z" fill="none" stroke="currentColor" stroke-width="1"/></svg>';
-const ROTATE = '<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M16 10a6 6 0 1 1-2-4.5"/><path d="M14.5 2.5v3.5H11"/><path d="M10 7l2 5-2-1.2L8 12Z" fill="#8c2f1e" stroke="none"/></svg>';
-const north = document.getElementById('north');
+const DRAWER_LINGER = 500;
+let linger = 0;
+const showDrawer = (open) => { clearTimeout(linger); drawer.hidden = !open; layers.setAttribute('aria-pressed', String(open)); };
+const closeDrawer = () => showDrawer(false);
+layers.addEventListener('click', () => showDrawer(drawer.hidden));
+for (const el of [drawer, layers]) {
+  el.addEventListener('pointerleave', (e) => { if (e.pointerType !== 'touch' && !drawer.hidden) { clearTimeout(linger); linger = setTimeout(closeDrawer, DRAWER_LINGER); } });
+  el.addEventListener('pointerenter', () => clearTimeout(linger));
+}
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !drawer.hidden) closeDrawer(); });
+
+// follow: the view kept centred on the vessel as it moves; a pan by hand stops it
+const followBtn = document.getElementById('follow');
+const centred = (v) => clampView({ ...v, lon: vessel.lon, lat: vessel.lat });
+function follow(on) {
+  following = on && !!vessel;
+  followBtn.setAttribute('aria-pressed', String(following));
+  followBtn.title = following ? 'Following the vessel (a pan stops it)' : 'Follow the vessel';
+  followBtn.setAttribute('aria-label', followBtn.title);
+}
+followBtn.addEventListener('click', () => { follow(!following); if (following) { view = centred(view); render(); } });
+// the vessel has strayed STRAY px from the centre of the view drawn, while following
+const STRAY = 40;
+const strayed = () => { if (!following || !vessel || !drawn) return false; const [x, y] = viewProjection(drawn.view).toPx([vessel.lon, vessel.lat]); return Math.hypot(x - W / 2, y - H / 2) > STRAY; };
+
+// course up: the course over ground at the top of the window; a press again is north up
+const courseBtn = document.getElementById('courseup');
 painters.push(() => {
-  north.innerHTML = settings.courseUp ? ROTATE : COMPASS;
-  north.setAttribute('aria-pressed', String(settings.courseUp));
-  north.title = settings.courseUp ? 'Course up (tap for north up)' : 'North up (tap for course up)';
-  north.setAttribute('aria-label', north.title);
+  courseBtn.setAttribute('aria-pressed', String(settings.courseUp));
+  courseBtn.title = settings.courseUp ? 'Course up (tap for north up)' : 'Course up';
+  courseBtn.setAttribute('aria-label', courseBtn.title);
 });
-north.addEventListener('click', () => { settings.courseUp = !settings.courseUp; changed(); });
+courseBtn.addEventListener('click', () => { settings.courseUp = !settings.courseUp; changed(); });
+// the compass: its needle points to north on the chart as drawn; a press turns the chart north up
+const needle = document.getElementById('needle');
+function paintCompass() { needle.style.transform = `rotate(${-(drawn?.view.bearing ?? 0)}deg)`; }
+document.getElementById('compass').addEventListener('click', () => { if (settings.courseUp || (drawn?.view.bearing ?? 0)) { settings.courseUp = false; changed(); } });
 paint();
-document.getElementById('vessel').addEventListener('click', () => { if (vessel) { view = clampView({ ...view, lon: vessel.lon, lat: vessel.lat }); render(); } });
 
 // navigation.position and the course from the Signal K stream, the vessel redrawn as they come; course up
 // turns the chart again once the course has swung TURN degrees from the bearing being drawn (`aim`, the
@@ -174,8 +205,9 @@ function stream() {
       if (path === 'navigation.position' && Number.isFinite(value?.latitude)) vessel = { ...vessel, lat: value.latitude, lon: value.longitude };
       if (path === 'navigation.courseOverGroundTrue' && vessel) vessel.cog = value;
     }
+    if (following && strayed()) view = centred(view);
     drawVessel();
-    if (drawn && swung()) later();
+    if (drawn && (swung() || strayed())) later();
   };
   ws.onclose = () => setTimeout(stream, 5000);
 }

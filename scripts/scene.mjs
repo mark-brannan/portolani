@@ -1663,7 +1663,8 @@ function buildScene(data, sprites, ctx, world = {}) {
   // not to the window: a sheet's big rose stands on its circle's centre, small roses on its nodes, wherever
   // the window is. A site is kept or dropped by the sea round it, never by what the window shows.
   const sheetRoses = world.sheets ? placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) : null;
-  const sheetBeasts = sheetRoses ? placeSheetBeasts(data, world, sprites, sheetRoses.roseDraws, sheetRoses.held) : null;
+  // `viewBeasts`: the roses and lines are the sheets', the beasts the view's own, on the water the view charts (signalk/)
+  const sheetBeasts = sheetRoses && !world.viewBeasts ? placeSheetBeasts(data, world, sprites, sheetRoses.roseDraws, sheetRoses.held) : null;
   const edge = (x, y) => Math.min(x, y, W - x, H - y);
   // Roses stand in open water. Where the water is heavily constrained (no clear sea in the middle of the
   // frame to hold half a big rose) they may stand on open land, clear of the coast by the same measure.
@@ -3802,10 +3803,11 @@ export async function createScene(environment, opts = {}) {
   // Inside a page turn's span both bands' sheets are placed, each whole, and drawn at the ink of the turn (bandInk).
   const turned = bandsAt(view.zoom, knobs.turn);
   const origin = ATLAS_ORIGINS[knobs.origin];
-  // `atlas: false` lays no sheet: the roses, monsters and ships are placed on the view's own water, as a chart with no world beneath it needs
+  // `atlas: false` lays no sheet: the roses, monsters and ships are placed on the view's own water. `atlas: 'roses'` lays the
+  // sheets for the roses and rhumb lines alone, the beasts on the view's own water, as a chart whose sea is its cells' needs
   const sheets = atlas === false ? null : placedSheets(view, turned, knobs, overlap);
   const roseReach = sheetReach(roseSheet(view.zoom, { origin, curated: knobs.curated === 1, overlap }).extent, knobs.reach);
-  const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, historical, roseLines: knobs.roselines === 1, seaAt: sheets && seaAtOf(coarse), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, regionNames, regionStyle, title, autoTitle, pinTitle,
+  const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, viewBeasts: atlas === 'roses', historical, roseLines: knobs.roselines === 1, seaAt: sheets && seaAtOf(coarse), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, regionNames, regionStyle, title, autoTitle, pinTitle,
     continentsEnd: zoomEnd(continentsZoom, CONTINENT_ZOOM_END), regionsEnd: zoomEnd(regionsZoom, REGION_ZOOM_END),
     scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM && pinned, pinned, cartouchePos, scalePos, peaks: peaksWanted, peakNames, townSize: townBy, seed: legacy ? null : pickedSeed == null ? castSeed(view) : pickedSeed | 0, salt: legacy || pickedSeed == null ? 0 : pickedSeed | 0 }), show, scaleSprite, voyages, overlays, roseReach, roseLines: knobs.roselines === 1, debug, overlap, scalePos: cornerOf(scalePos, DEFAULT_SCALE_CORNER), scaleGap, zoom: view.zoom, turn: knobs.turn, bands: turned.map(({ band }) => band.band) };
   scene.voyages = placeDoubts(scene, data);
