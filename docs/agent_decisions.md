@@ -534,3 +534,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261105t042809z
 - Vesconte 1311 laid from Nordenskiold's 1897 photographic plate, not a later Vesconte chart Undo: swap the vesconte-1311-periplus source row and landmarks for a later Vesconte ([#392](https://github.com/mark-brannan/portolani/pull/392))
+
+### 20261105t042823z
+- Carte Pisane carries no up: as drawn stands it as the BnF photographed it, south up Undo: add up: 180 to the carte-pisane chart ([#392](https://github.com/mark-brannan/portolani/pull/392))
