@@ -18,10 +18,13 @@
   "signalk": {
     "displayName": "Portolani"
   },
-  "files": ["index.js", "lib", "public"],
+  "files": [
+    "index.js",
+    "lib",
+    "public"
+  ],
   "license": "MIT",
   "dependencies": {
     "gdal3.js": "^2.8.1"
-  },
-  "private": true
+  }
 }
