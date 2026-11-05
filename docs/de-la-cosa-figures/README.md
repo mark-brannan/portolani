@@ -24,8 +24,8 @@ Ceylon, is drawn north up and is kept as drawn.
 
 The ships are new decorations, so they are on by default: every ship is in the default selection. The fleet lies east
 of the de la Cosa sheet's extent (20°E), so none of the four is drawn where the chart puts it. The sheet now has its own
-set (historical accuracy, the default): four roses of its west ring and one ship in the South Atlantic, which stands in
-one of the four, and no beasts, since the chart draws none at sea. The roses stand in the page's ring roses.
+set (historical accuracy, the default): one ship in the South Atlantic, which stands in one of the four ships (the sprite is null), and no beasts, since the chart
+draws none at sea. Its four roses are listed in ornaments.md and not drawn until the ring is reread.
 
 ![Each ship's raw crop beside the sprite multiplied onto parchment, at twice the width the map draws it and at that width](steps.png)
 
@@ -62,8 +62,8 @@ Lettering on the chart is out of scope here.
 ![The South Atlantic at zoom 3.5: main above, this branch below](window-z3.5.jpg)
 
 `window-z3.5.jpg` is the de la Cosa sheet at map size (zoom 3.5, 20°W 2°S, scaled to 1000 px), main above and this
-branch below: the seeded beast, ship and roses give way to the chart's own node roses and its South Atlantic ship, off
-Namibia, drawn as `cosa-ship-a`.
+branch below: the seeded beast, ship and roses give way to the chart's South Atlantic ship, off Namibia, which stands in
+one of the four ships (the sheet has no sprite for it). The picture was cut when the chart's roses were still drawn; they are not drawn now (ornaments.md).
 
 ![Each golden that changes, main beside this branch](goldens.jpg)
 

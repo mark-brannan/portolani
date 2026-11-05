@@ -130,11 +130,10 @@ const CATALAN = figures({
   monster: [['catalan-siren', 113.1, 15.8]],
   ship: [[null, -15.5, 26.1], ['catalan-ship', 50.6, 41.1], ['catalan-junk', 81.2, 13.2]],
 });
-// Juan de la Cosa's figures on the sheet's extent (ornaments.md): four roses of the west ring, and one ship in the South
-// Atlantic too faint at the scan's size to cut, which stands in one of the chart's own ships off India. The chart draws no
-// beast at sea. Its fleet off India and the ship off the Cape lie east of the extent and are not listed: ornaments.md keeps them.
+// Juan de la Cosa's figures on the sheet's extent (ornaments.md): one ship in the South Atlantic, too faint at the scan's
+// size to cut, which stands in one of the chart's own ships off India. The chart draws no beast at sea. Its four roses are
+// listed in ornaments.md and not drawn until the ring is reread; its fleet off India and the ship off the Cape lie east of the extent.
 const DE_LA_COSA = figures({
-  rose: [[null, -57.4, 19.7], [null, -16.0, 49.0], [null, -20.3, -10.5], [null, -80.6, 14.3]],
   ship: [[null, 2.8, -17.8]],
 });
 export const CURATED = [
