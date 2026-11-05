@@ -48,6 +48,13 @@
           "section": "Changed",
           "hidden": true
         }
+      ],
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "signalk/package.json",
+          "jsonpath": "$.version"
+        }
       ]
     }
   }

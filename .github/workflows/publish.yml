@@ -1,0 +1,51 @@
+name: Publish
+
+# Publishes the Signal K plugin (signalk-portolan, in signalk/) to npm by OIDC
+# trusted publishing: no npm token is stored. The root `portolani` package is
+# private and deprecated; it is never published.
+#
+# Prerequisite, done once on npmjs.com: signalk-portolan -> Settings ->
+# Trusted publishers -> GitHub Actions, repository mark-brannan/portolani,
+# workflow file `publish.yml`. The first publish of a new package name cannot
+# come from CI; see the npm-first-publish skill.
+#
+# Dispatched by release-please.yml on a release (--ref <tag>). No `push: tags`
+# trigger, so a tag alone cannot start a second, racing publish.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # mints the OIDC token
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    # Refuse a branch named like a version: only a real tag publishes.
+    if: github.ref_type == 'tag'
+    steps:
+      - uses: actions/checkout@v7
+        with: { persist-credentials: false }
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - run: npm install -g npm@11 # trusted publishing needs >= 11.5.1; 12 refuses git deps (EALLOWGIT)
+
+      - name: Refuse to publish a tag that disagrees with signalk/package.json
+        run: |
+          PKG=$(node -p "require('./signalk/package.json').version")
+          if [ "${GITHUB_REF_NAME#v}" != "$PKG" ]; then
+            echo "tag $GITHUB_REF_NAME does not match signalk/package.json version $PKG" >&2
+            exit 1
+          fi
+
+      - run: npm ci
+      - run: npm test
+      - run: npm run build -w signalk # fills signalk/public, which the package ships
+
+      # No NODE_AUTH_TOKEN: authentication is the OIDC identity.
+      - run: npm publish -w signalk

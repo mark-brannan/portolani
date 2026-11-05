@@ -10,7 +10,7 @@ name: Release
 # main queue rather than race; this caller needs no concurrency block of
 # its own.
 #
-# This repo has a publish.yml, so the shared workflow's default
+# This repo has a publish.yml (it publishes signalk/, never the private root package), so the shared workflow's default
 # `publish: true` applies: on a release it dispatches publish.yml and
 # waits for it to succeed.
 
