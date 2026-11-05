@@ -1,6 +1,6 @@
 {
   "name": "portolani",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "An antique-chart base map: ink on parchment, rhumb lines, roses, ships and sea monsters under today's geometry",
   "type": "module",
   "scripts": {
