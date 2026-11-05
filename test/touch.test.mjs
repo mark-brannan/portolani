@@ -347,16 +347,21 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     await page.keyboard.press('Escape');
     assert.equal(await opened('goPanel'), false, 'Esc left Go open');
     assert.equal(await page.evaluate(() => document.activeElement.id), 'go', 'Esc did not give the focus back to the compass');
-    // a chart is a row: without a scan its thumbnail is the greyed chart glyph, and it flies to the chart's frame, the drawer left open
+    // a chart is a row: its thumbnail is its scan, and it lays the sheet and flies to its frame, the drawer left open
     await page.click('#charts');
-    const h = await page.evaluate(() => location.hash);
-    const thumb = page.locator('#chartList .chart', { hasText: 'Vesconte' }).locator('.thumb');
-    assert.equal(await thumb.evaluate((b) => b.classList.contains('none')), true, 'Vesconte has a scan thumbnail');
+    const map0 = await page.evaluate(() => new URLSearchParams(location.hash.slice(1)).get('map'));
+    const vesconte = page.locator('#chartList .chart', { hasText: 'Vesconte' }), thumb = vesconte.locator('.thumb');
+    assert.equal(await thumb.evaluate((b) => b.classList.contains('none')), false, 'Vesconte has no scan thumbnail');
     await thumb.click();
     assert.equal(await opened('chartsDrawer'), true, "a chart's frame shut its drawer");
-    await page.waitForFunction((x) => location.hash !== x, h, { timeout: 60000 });
+    await page.waitForFunction(() => /[#&]overlay=vesconte-1313(&|$)/.test(location.hash), null, { timeout: 60000 });
+    await page.waitForFunction((m) => new URLSearchParams(location.hash.slice(1)).get('map') !== m, map0, { timeout: 60000 });
     const [, lat, lon] = (await page.evaluate(() => location.hash)).replace('#map=', '').split('&')[0].split('/').map(Number);
-    assert.ok(Math.abs(lat - 37.5) < 1 && Math.abs(lon - 25.2) < 1, `Vesconte's sheet is not round the Cyclades: ${lat}, ${lon}`);
+    assert.ok(Math.abs(lat - 37.4) < 1.5 && Math.abs(lon - 13.3) < 1.5, `Vesconte's sheet is not framed on Italy's shore: ${lat}, ${lon}`);
+    // its eye takes the sheet off again and leaves the drawer open
+    await vesconte.locator('.eye').click();
+    await page.waitForFunction(() => !/[#&]overlay=/.test(location.hash), null, { timeout: 60000 });
+    assert.equal(await opened('chartsDrawer'), true, 'the eye shut the drawer');
     // the eye shows and hides a chart's sheet and leaves the drawer open
     const cosa = page.locator('#chartList .chart', { hasText: 'Juan de la Cosa' });
     const overlaid = () => page.evaluate(() => /[#&]overlay=de-la-cosa(&|$)/.test(location.hash));

@@ -193,12 +193,15 @@ const CHARTS = [
     landmarks: [[[1960, 6260], [-9.27, 42.88]], [[1990, 6770], [-8.67, 41.15]], [[2000, 7250], [-9.14, 38.72]], [[6150, 5430], [9.4, 43.0]], [[6100, 6790], [8.65, 38.87]], [[7110, 6830], [12.5, 38.02]], [[10150, 7050], [24.9, 35.25]], [[12250, 6620], [33.3, 35.1]], [[12720, 7640], [34.75, 32.05]], [[11580, 8020], [29.9, 31.2]]], // scan px, real lon, lat
     snaps: [] },
   // De Bry after John White, the arrival of the Englishmen in Virginia (Briefe and True Report, 1590): the Outer Banks
-  // and Roanoke drawn west up, the ocean at the foot, so its similarity turns it a quarter round. Roanoke's two ends and
-  // middle, Dasamonquepeuc, the Albemarle Sound, Hatorask, the inlet south of Roanoke, Trinety harbor, Pasquenoke. A
-  // picture more than a survey: the banks are drawn close in, so it lies true only near Roanoke.
+  // and Roanoke drawn west up, the ocean at the foot, so its similarity turns it a quarter round. Fitted to the barrier
+  // islands alone: Hatorask, the island north of the inlet south of Roanoke, Trinety harbor and the banks north of it. A
+  // picture more than a survey: the sounds are drawn far too narrow, so a fit that also took Roanoke and the mainland
+  // (Dasamonquepeuc, the Albemarle, Pasquenoke) laid the drawn banks over the real sounds and its line along the real
+  // banks ran through the drawn sea. Laid by the banks, the drawn coast faces the real ocean; Roanoke and the mainland
+  // fall inland of their places, as the drawing has them.
   { id: 'debry-virginia', title: 'The arrival of the Englishmen in Virginia, de Bry after John White, 1590', source: 'debry-virginia', file: 'debry-virginia.jpg', scale: 1, turned: true,
     outline: [[34, 0], [2304, 0], [2304, 1672], [80, 1672]], // scan px: straight sides, the margin and the red border kept; the left the leaf's own edge at the gutter, slanting a little
-    landmarks: [[[620, 680], [-75.68, 35.88]], [[920, 610], [-75.71, 35.95]], [[345, 795], [-75.64, 35.79]], [[650, 300], [-75.78, 35.9]], [[1200, 400], [-75.85, 36.03]], [[250, 1150], [-75.53, 35.55]], [[470, 1030], [-75.56, 35.8]], [[1400, 1010], [-75.73, 36.15]], [[1500, 150], [-76.15, 36.25]]], // scan px, real lon, lat
+    landmarks: [[[250, 1150], [-75.49, 35.57]], [[470, 1030], [-75.55, 35.8]], [[1400, 1010], [-75.75, 36.16]], [[1900, 960], [-75.82, 36.33]]], // scan px, real lon, lat: Hatorask, the island north of the inlet south of Roanoke, Trinety harbor, the banks off Corolla
     snaps: [] },
 ];
 
