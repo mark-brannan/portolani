@@ -196,6 +196,7 @@ const CHARTS = [
   // middle, Dasamonquepeuc, the Albemarle Sound, Hatorask, the inlet south of Roanoke, Trinety harbor, Pasquenoke. A
   // picture more than a survey: the banks are drawn close in, so it lies true only near Roanoke.
   { id: 'debry-virginia', title: 'The arrival of the Englishmen in Virginia, de Bry after John White, 1590', source: 'debry-virginia', file: 'debry-virginia.jpg', scale: 1, turned: true,
+    outline: [[34, 0], [2304, 0], [2304, 1672], [80, 1672]], // scan px: straight sides, the margin and the red border kept; the left the leaf's own edge at the gutter, slanting a little
     landmarks: [[[620, 680], [-75.68, 35.88]], [[920, 610], [-75.71, 35.95]], [[345, 795], [-75.64, 35.79]], [[650, 300], [-75.78, 35.9]], [[1200, 400], [-75.85, 36.03]], [[250, 1150], [-75.53, 35.55]], [[470, 1030], [-75.56, 35.8]], [[1400, 1010], [-75.73, 36.15]], [[1500, 150], [-76.15, 36.25]]], // scan px, real lon, lat
     snaps: [] },
 ];

@@ -288,25 +288,6 @@ Each is laid level by landmarks read off the scan by eye, as above (`levelFit`; 
 
 ![The Kitab-ı Bahriye's Adriatic folio over the map, turned so its coasts lie on today's](kitab-i-bahriye-adriatic-sheet.jpg)
 
-## Four more: the Carte Pisane, Vesconte, Dulcert and de Bry's Virginia
-
-The four Charts drawer rows that had no scan, each laid by landmarks read off the scan by eye and fitted by a similarity with its turn (`turned: true`); the misses are in km against today's place.
-
-- **The Carte Pisane, about 1275** (Bibliothèque nationale de France, GE B-1118; public domain): the oldest portolan chart to survive, the whole skin photographed on black. The BnF photographed it south up (England and Flanders at the foot, Africa along the top, the neck to the east), so the fit turns it half round, less 7.5 degrees for the chart's own north. Eleven landmarks (Cape Passero, Messina, Trapani, Genoa, Marseille, Barcelona, Valencia, Almería, Acre, Cyprus, Crete), 49 km RMS (3 to 82 km); held level, 160 km. The Black Sea end is stained past reading and carries none. Built at a quarter, 4211 x 2017 px, keyed on black (`dark`). It has no `up`: as drawn, the skin stands as the BnF photographed it.
-- **Pietro Vesconte, 1311** (Archivio di Stato, Florence): the oldest signed and dated portolan chart, the eastern Mediterranean and the Black Sea. No photograph of the original was found at a usable size and free to lay, so the scan is A. E. Nordenskiöld's photographic facsimile in *Periplus* (Stockholm 1897), plate V (Library of Congress, via Commons; public domain): black and white, the skin on the book's open page. The `outline` traces the skin, neck and torn edge, so the page and the book's binding are keyed. Nine landmarks (the Bosporus, the tip of Crimea, Kerch, Trebizond, the two ends of Crete, Jaffa, Tripoli, Alexandria), 62 km RMS (33 to 102 km), turned 8.3 degrees clockwise; held level, 121 km. Built at a third, 2805 x 2038 px.
-- **Angelino Dulcert, Majorca, 1339** (Bibliothèque nationale de France, GE B-696; public domain): the Mediterranean, the Black Sea, the Atlantic coasts to the Baltic, and the lands behind them with their kings and flags, north up. The skin lies on a dark cloth that no key separates from its shadowed edge, so the `outline` is its four sides, read from where the scan's brightness rises. Ten landmarks (Finisterre, Porto, Lisbon, Cap Corse, Cape Teulada, Trapani, Crete, Cyprus, Jaffa, Alexandria), 46 km RMS (6 to 83 km), turned 10 degrees clockwise; held level, 273 km. Built at a quarter, 4092 x 3044 px.
-- **De Bry after John White, the arrival of the Englishmen in Virginia, 1590** (the `debry-virginia` scan the debry sprites are cut from, Harvard via the Public Domain Image Archive): Roanoke Island, the sounds and the Outer Banks, drawn west up, so the fit turns it 94.6 degrees anticlockwise. Nine landmarks (Roanoke's two ends and middle, Dasamonquepeuc, the Albemarle Sound, Hatorask, the inlet south of Roanoke, Trinety harbor, Pasquenoke), 11 km RMS (1 to 18 km); held level, 27 km. It is a picture more than a survey: the banks are drawn close in, and Hatorask and Trinety harbor are placed by the usual readings of the names, so it lies true only round Roanoke. At its only size, 2304 x 1672 px (scale 1); the flood fill keys the margin.
-
-`npm run render -- --view 19.08,39.59,3.6 --overlay carte-pisane --out docs/overlay/carte-pisane-sheet.jpg`, `npm run render -- --view 29,38.5,4.3 --overlay vesconte-1311 --out docs/overlay/vesconte-1311-sheet.jpg`, `npm run render -- --view 17.27,39.68,3.2 --overlay dulcert-1339 --out docs/overlay/dulcert-1339-sheet.jpg` and `npm run render -- --view -75.67,36.06,9.3 --overlay debry-virginia --out docs/overlay/debry-virginia-sheet.jpg`.
-
-![The Carte Pisane over the map, turned north up](carte-pisane-sheet.jpg)
-
-![Vesconte's 1311 chart, from Nordenskiöld's plate, over the map](vesconte-1311-sheet.jpg)
-
-![Dulcert's 1339 chart over the map, turned 10 degrees](dulcert-1339-sheet.jpg)
-
-![De Bry's Virginia over the Outer Banks, turned north up](debry-virginia-sheet.jpg)
-
 The scanner mask keys only the scanner's background, never the skin. A flood fill from the border does that on a
 scan laid on light paper; it fails on a scan laid on black, where the skin's own dark edge or binding fades into the
 background and the fill eats a ragged line into it. Such a chart carries an `outline` instead: a polygon in scan px
@@ -320,3 +301,22 @@ scan's own edge, so the whole lower edge and the worn binding stay in. The keyed
 ![Olives's mask: four straight sides round the binding](olives-1559-mask.jpg)
 
 `npm run overlays -- --only oliva-mediterranean,lopes-atlantic,olives-1559,panades-1557,kitab-i-bahriye-adriatic,carte-pisane,vesconte-1311,dulcert-1339,debry-virginia` rebuilds just those and keeps the other rows of overlays.json as they are; an id that is no chart, or no id at all, is an error.
+
+## The four that had no scan: the Carte Pisane, Vesconte, Dulcert and de Bry's Virginia
+
+Each laid by landmarks read off the scan by eye, fitted with its turn (`turned: true`); `scripts/build-overlays.mjs` lists the landmarks. RMS is the miss against today's places, held level in brackets.
+
+- **Carte Pisane, about 1275** (BnF GE B-1118; public domain): 49 km (160); photographed south up, so turned half round.
+- **Vesconte, 1311** (Florence): 62 km (121); laid from Nordenskiöld's photographic plate of 1897, not the original.
+- **Dulcert, Majorca, 1339** (BnF GE B-696; public domain): 46 km (273); an `outline` of four sides off its dark cloth.
+- **De Bry, Virginia, 1590** (the `debry-virginia` scan): 11 km (27); drawn west up; an `outline` of straight sides keeps the margin.
+
+`npm run render -- --view 19.08,39.59,3.6 --overlay carte-pisane --out docs/overlay/carte-pisane-sheet.jpg`, `npm run render -- --view 29,38.5,4.3 --overlay vesconte-1311 --out docs/overlay/vesconte-1311-sheet.jpg`, `npm run render -- --view 17.27,39.68,3.2 --overlay dulcert-1339 --out docs/overlay/dulcert-1339-sheet.jpg` and `npm run render -- --view -75.67,36.06,9.3 --overlay debry-virginia --out docs/overlay/debry-virginia-sheet.jpg`.
+
+![The Carte Pisane over the map, turned north up](carte-pisane-sheet.jpg)
+
+![Vesconte's 1311 chart, from Nordenskiöld's plate, over the map](vesconte-1311-sheet.jpg)
+
+![Dulcert's 1339 chart over the map, turned 10 degrees](dulcert-1339-sheet.jpg)
+
+![De Bry's Virginia over the Outer Banks, turned north up](debry-virginia-sheet.jpg)
