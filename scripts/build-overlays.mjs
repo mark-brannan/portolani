@@ -178,8 +178,8 @@ const CHARTS = [
     landmarks: [[[9500, 2690], [15.13, 36.69]], [[9440, 3220], [15.55, 38.19]], [[10580, 3020], [12.5, 38.02]], [[11900, 5650], [8.93, 44.41]], [[12550, 4900], [5.37, 43.3]], [[13700, 4320], [2.17, 41.38]], [[14220, 3150], [-0.33, 39.47]], [[14680, 2200], [-2.46, 36.83]], [[3180, 2350], [35.07, 32.93]], [[3900, 2900], [33.3, 35.1]], [[6400, 2500], [24.9, 35.25]]], // scan px, real lon, lat
     snaps: [] },
   // Pietro Vesconte, the atlas of 1313 (BnF, btv1b5901108m): one chart of it across two leaves, the Tyrrhenian coast of Italy
-  // and the sea west of it, drawn south up, so its similarity turns it half round. The left leaf's coasts are faded past
-  // reading, so the landmarks all lie on the Italian shore: Elba, Piombino, Corneto, Santa Severa, Rome's shore, Terracina,
+  // up the left leaf and the sea south-west of it on the right, drawn east up, so its similarity turns it 107°. The right
+  // leaf's coasts are faded past reading, so the landmarks all lie on the Italian shore: Elba, Piombino, Corneto, Santa Severa, Rome's shore, Terracina,
   // Gaeta, Palinuro. The skin fills the scan but for a thin black rim, so the outline is four straight sides on its edge.
   { id: 'vesconte-1313', title: 'Chart from the atlas of Pietro Vesconte, 1313', source: 'vesconte-1313', file: 'vesconte-1313.jpg', scale: 1, turned: true,
     outline: [[11, 11], [2620, 16], [2620, 2236], [22, 2272]], // scan px: straight sides, the skin's worn edge kept and a sliver of black riding along

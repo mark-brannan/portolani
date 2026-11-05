@@ -307,7 +307,7 @@ scan's own edge, so the whole lower edge and the worn binding stay in. The keyed
 Each laid by landmarks read off the scan by eye, fitted with its turn (`turned: true`); `scripts/build-overlays.mjs` lists the landmarks. RMS is the miss against today's places, held level in brackets.
 
 - **Carte Pisane, about 1275** (BnF GE B-1118; public domain): 49 km (160); photographed south up, so turned half round.
-- **Vesconte, 1313** (BnF, the 1313 atlas; public domain): 20 km (155); drawn south up; every landmark on Italy's shore, the faded western leaf has none.
+- **Vesconte, 1313** (BnF, the 1313 atlas; public domain): 20 km (155); drawn east up; every landmark on Italy's shore, the faded second leaf has none.
 - **Dulcert, Majorca, 1339** (BnF GE B-696; public domain): 46 km (273); an `outline` of four sides off its dark cloth.
 - **De Bry, Virginia, 1590** (the `debry-virginia` scan): 11 km (27); drawn west up; an `outline` of straight sides keeps the margin.
 
