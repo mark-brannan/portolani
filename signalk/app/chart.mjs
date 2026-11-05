@@ -6,10 +6,11 @@ export const CHART_KINDS = ['rose', 'cartouche', 'mountain'];
 const KEPT = { vivid: (s) => ['rose', 'cartouche', 'scale', 'mountain'].includes(s.kind) };
 export const packOf = (name, manifest) => ({ ...manifest, sprites: manifest.sprites.filter((s) => KEPT[name]?.(s) ?? false) });
 
-// The world geo the webapp does ship: the page's mountain ranges and landmark peaks, which the build
-// (signalk/geo.mjs) slims from the same pinned coastlines files the page's build does. Every other
-// geo/ file reads as empty: the land, coast and depth are the cells'.
-export const CHART_GEO = ['geo/ranges-10m.json', 'geo/peaks-10m.json'];
+// The world geo the webapp does ship: Natural Earth's 50m land and coast, byte for byte, the base the
+// cells are drawn over and all a view without a cell draws (app/enc-provider.js); and the page's
+// mountain ranges and landmark peaks, which the build (signalk/geo.mjs) slims from the same pinned
+// coastlines files the page's build does. Every other geo/ file reads as empty.
+export const CHART_GEO = ['geo/ne-land-50m.geojson', 'geo/ne-coastline-50m.geojson', 'geo/ranges-10m.json', 'geo/peaks-10m.json'];
 
 // The scene's options for a chart: the land in one colour, no names (the world's names would spill
 // over an ENC's water), the sea's depth drawn, and the mountains along the ranges in the M.E. 1937 pen

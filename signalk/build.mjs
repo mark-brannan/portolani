@@ -1,7 +1,7 @@
 // Builds the webapp into public/, which signalk-server serves at /signalk-portolan/: the page and its
 // adapter (app/), the scene modules scene.mjs reaches (scripts/), coast-wright, the coastlines catalogue,
-// the font, of the packs only what a chart draws (app/chart.mjs), and of the world geo only the mountain
-// ranges and landmark peaks (geo.mjs). No voyages.
+// the font, of the packs only what a chart draws (app/chart.mjs), and of the world geo only the 50m land
+// and coast, the mountain ranges and the landmark peaks (geo.mjs). No voyages.
 //   node signalk/build.mjs
 import { cpSync, mkdirSync, rmSync, writeFileSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
@@ -18,6 +18,7 @@ cpSync(join(HERE, 'app'), OUT, { recursive: true });
 for (const f of await relativeImports(ROOT)) cpSync(join(ROOT, 'scripts', f), out(`scripts/${f}`));
 cpSync(join(ROOT, 'node_modules', 'coast-wright', 'lib'), out('coast-wright'), { recursive: true });
 cpSync(join(ROOT, 'node_modules', 'coastlines', 'catalogue.json'), out('coastlines/catalogue.json'));
+cpSync(join(ROOT, 'node_modules', 'coastlines', 'lib', 'provider.js'), out('coastlines/lib/provider.js'));
 cpSync(join(ROOT, 'test', 'fixtures', 'IMFeENrm28P.ttf'), out('font/IMFeENrm28P.ttf'));
 cpSync(join(ROOT, 'test', 'fixtures', 'OFL-IMFellEnglish.txt'), out('font/OFL-IMFellEnglish.txt'));
 let files = 0;
@@ -28,4 +29,4 @@ for (const pack of ['vivid', 'scanned', 'debry', 'kitab']) {
 }
 let geoBytes = 0;
 for (const [p, geo] of Object.entries(chartGeo(ROOT))) { const s = JSON.stringify(geo); writeFileSync(out(p), s); geoBytes += Buffer.byteLength(s); }
-console.log(`public/: ${(await relativeImports(ROOT)).size} scene modules, ${files} sprites, ${geoBytes} bytes of geo (ranges and peaks)`);
+console.log(`public/: ${(await relativeImports(ROOT)).size} scene modules, ${files} sprites, ${geoBytes} bytes of geo (50m land and coast, ranges and peaks)`);
