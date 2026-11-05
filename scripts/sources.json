@@ -206,6 +206,24 @@
       "note": "(2,127 × 1,163)"
     },
     {
+      "id": "de-la-cosa-india",
+      "file": "1500_map_by_Juan_de_la_Cosa-India.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/d/d2/1500_map_by_Juan_de_la_Cosa-India.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:1500_map_by_Juan_de_la_Cosa-India.jpg",
+      "sha256": "146e63ed5f3975d361c0d57584b21870258d2fbc00a105cc9aa808c1bebe34ad",
+      "rights": "Public domain; Juan de la Cosa 1500, Museo Naval, Madrid; detail of the Museo Galileo's digital facsimile",
+      "note": "(1,287 × 1,073); a detail of the original, north up: the Portuguese ships off India"
+    },
+    {
+      "id": "de-la-cosa-rose-facsimile",
+      "file": "1500_map_by_Juan_de_la_Cosa_Compass_rose.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/f/fb/1500_map_by_Juan_de_la_Cosa_Compass_rose.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:1500_map_by_Juan_de_la_Cosa_Compass_rose.jpg",
+      "sha256": "15ab7193e11fef09e43d7130caa3f4600332b0ab81f9b7eb9f6db91a0e20e322",
+      "rights": "Public domain; Juan de la Cosa 1500, Museo Naval, Madrid; a printed colour facsimile, its maker and date not given",
+      "note": "(2,022 × 2,022); not the original: a printed facsimile of the New World half, west up as the chart is drawn"
+    },
+    {
       "id": "aguiar",
       "file": "Jorge_Aguiar_Wind_rose.jpg",
       "url": "https://upload.wikimedia.org/wikipedia/commons/8/8f/Jorge_Aguiar_Wind_rose.jpg",
