@@ -281,7 +281,8 @@ Read off the Commons scan (2127 x 1163, `1500_map_by_Juan_de_la_Cosa_rotated.jpg
 times, about ±8 px, and placed through the three fits below, each figure by the strip it lies in. The chart draws no
 beast at sea; its figures at sea are roses, ships and the four wind heads of the Atlantic, which are not a kind the page
 draws. Only the ship inside the sheet's extent (README.md, "The curated sheets": 100°W to 20°E, 20°S to 65°N) is listed in
-`scripts/atlas.mjs`; the roses and the rest are kept here and not drawn.
+`scripts/atlas.mjs`; the roses and the rest are kept here and not drawn. Until the ring is read, the sheet draws the
+roses of the network it does draw, at that ring's hub and nodes, so every rose stands where its lines meet.
 
 | | figure | scan px | piece | lon, lat | sprite | note |
 |---|---|---|---|---|---|---|

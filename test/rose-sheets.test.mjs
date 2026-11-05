@@ -223,3 +223,14 @@ test('inside a page turn both bands are placed, a pan re-places nothing, and the
   // turn 0: today's hard swap, one band
   assert.deepEqual((await at(view, { turn: 0 })).scene.bands, [8]);
 });
+
+test('a chart whose own set lists no rose keeps roses where its drawn lines meet', async () => {
+  // de la Cosa's roses wait on the ring reading (ornaments.md); its sheet still draws the roses of the ring it draws
+  const { scene } = await createScene(env, { view: { lon: -20, lat: -2, zoom: 3.5 }, scale: 'off' });
+  const sheet = scene.sheets.find((s) => s.source === 'Juan de la Cosa, 1500');
+  assert.ok(sheet?.circle, 'the de la Cosa sheet is drawn, with its ring');
+  const roses = scene.roseDraws.filter((r) => r.sheet === sheet.name);
+  assert.ok(roses.length > 0, 'the sheet draws a rose');
+  const sites = [sheet.circle, ...sheet.circle.nodes];
+  for (const r of roses) assert.ok(sites.some((q) => Math.abs(q.lon - r.lon) < 1e-9 && Math.abs(q.lat - r.lat) < 1e-9), `${r.sprite.id} at ${r.lon}, ${r.lat} sits at the ring's hub or a node`);
+});

@@ -118,7 +118,8 @@ const CATALAN = figures({
 });
 // Juan de la Cosa's figures on the sheet's extent (ornaments.md): one ship in the South Atlantic, too faint at the scan's
 // size to cut, which stands in one of the chart's own ships off India. The chart draws no beast at sea. Its four roses are
-// listed in ornaments.md and not drawn until the ring is reread; its fleet off India and the ship off the Cape lie east of the extent.
+// listed in ornaments.md and not drawn until the ring is reread, so the sheet keeps the roses at the hub and nodes of the
+// ring it draws (scene.mjs); its fleet off India and the ship off the Cape lie east of the extent.
 const DE_LA_COSA = figures({
   ship: [[null, 2.8, -17.8]],
 });

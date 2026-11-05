@@ -1482,7 +1482,9 @@ function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
     const onLand = sites.filter((q, i) => clear(q.lon, q.lat, i ? capSmall(smallSize) : big.sizePx)).length < SHEET_SEA_SITES;
     // what is kept is decided in the frame; the page's projection only says where it falls and whether it is seen
     const put = (sprite, n) => { held[sh.id] = (held[sh.id] ?? 0) + 1; if (shows(data.proj, n.lon, n.lat)) { const [fx, fy] = fp.project(n.lon, n.lat); roseDraws.push({ sprite, ...at(n), lon: n.lon, lat: n.lat, fx, fy, size: sprite.sizePx, sheet: sh.name, sheetId: sh.id, band: sh.inked }); } };
-    if (ownSet(world, sh)) {
+    // a rose is the hub of the lines drawn, so a chart's own roses replace the network's only where its set lists
+    // them; a set with no rose (de la Cosa's, whose ring is not yet read) keeps the roses of the network it draws
+    if (ownSet(world, sh) && ownFigures(sh, 'rose').length) {
       // a chart's own roses are inside the sheet's allotment, like every other ornament of it
       for (const f of ownFigures(sh, 'rose').slice(0, allotment(sh))) { const r = figureSprite(sh, roses, ring, f); put({ ...r, sizePx: capBig(r.sizePx) }, f); }
       continue;
