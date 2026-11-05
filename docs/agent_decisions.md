@@ -522,3 +522,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261104t234413z
 - The dice draw only from locations and people that have notes or pictures Undo: widen the filter in page.js ([#375](https://github.com/mark-brannan/portolani/pull/375))
+
+### 20261105t021434z
+- The kitab rose joins the Illuminated mood's list of scanned roses, so the mood's note stays true Undo: drop 'k:rose-kitab' from the Illuminated mood in public/page.js ([#382](https://github.com/mark-brannan/portolani/pull/382))
