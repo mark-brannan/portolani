@@ -27,6 +27,7 @@ the Catalan rose's pin (20.7W 42.1N) at zoom 2, 4, 6 and 8. Nothing was fixed or
 Views that still read wrong: 1, 4 (as a Carte Pisane), 5, 6, 8, and the rose at zoom 8 (and
 perhaps 6).
 
-The left panels are cropped from `rerender-2026-10-30/view*.jpg` (their second panel). The grey
-rectangles in 2, 5 and 6 and in the rose strip at zoom 2 are scan patches as drawn at main; they
+The left panels are cropped from `rerender-2026-10-30/view*.jpg` (their second panel), whose caption
+still reads "now: main 55ef356"; that "now" is 10-30. The grey
+rectangles in 2, 5 and 6 and in the rose strip at zoom 2 and 4 are scan patches as drawn at main; they
 are reported, not judged.
