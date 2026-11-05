@@ -12,7 +12,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import { syncStore } from '../lib/cells.mjs';
 import { resourceProvider, RESOURCE_TYPE } from '../lib/provider.mjs';
-import { packOf, chartOptions, readSettings, DEFAULTS, ROSES, TOWNS } from '../app/chart.mjs';
+import { packOf, chartOptions, readSettings, DEFAULTS, ROSES, TOWNS, zoomRange, fitZoom, scaleZoom } from '../app/chart.mjs';
 import { chartGeo } from '../geo.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url)), ROOT = join(HERE, '..', '..');
@@ -203,4 +203,21 @@ test('a cell that will not convert is skipped with a warning, and the rest conve
   // stopped before its first cell, a second run keeps the store as it was
   const again = await syncStore(charts, store, { stopped: () => true });
   assert.deepEqual(Object.keys(again), ['US3WA46M']);
+});
+
+test("Constrain View's range: out to where every cell fits, in to the finest cell's compilation scale", () => {
+  const cat = { A: { bbox: [-123, 47, -122, 48], scale: 90000 }, B: { bbox: [-122.5, 47.5, -122.3, 47.7], scale: 22000 }, C: { bbox: null, scale: 1000 } };
+  const r = zoomRange(cat, 1600, 1000);
+  assert.equal(r.min, fitZoom([-123, 47, -122, 48], 1600, 1000));
+  assert.equal(r.max, scaleZoom(22000, 47.6));
+  assert.ok(r.max > r.min);
+  // 1:22000 at 47.6 N is 6.16 m of ground a 0.28 mm pixel: zoom 13.06
+  assert.ok(Math.abs(r.max - 13.06) < 0.01, `max zoom ${r.max}`);
+  assert.equal(zoomRange({}, 1600, 1000), null);
+  // one cell finer in fit than in scale: the range is never narrower than the fit
+  const one = zoomRange({ A: { bbox: [-122.31, 47.6, -122.3, 47.61], scale: 90000 } }, 1600, 1000);
+  assert.equal(one.max, one.min);
+  assert.equal(readSettings({}).constrain, false);
+  assert.equal(readSettings({}).bare, false);
+  assert.equal(readSettings({ constrain: 'yes', bare: 1 }).constrain, false);
 });

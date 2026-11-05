@@ -3,7 +3,8 @@
 // leaves it, or on a tap on the chart; its chips show what they draw.
 import { createScene, drawScene, panView, zoomView, clampView, viewProjection, drawnPeaks, peakHits, listSprites, peakInkSvg, towerGlyph, W, H } from 'portolani/scene.mjs';
 import { readCatalogue, cellData, frameView, drawnFrom } from './enc-provider.js';
-import { CHART_GEO, ROSES, TOWNS, MONSTERS, chartOptions, readSettings, chipSprite } from './chart.mjs';
+import { compassTurn } from 'portolani/compass-turn.mjs';
+import { CHART_GEO, ROSES, TOWNS, MONSTERS, chartOptions, readSettings, chipSprite, fitZoom, zoomRange } from './chart.mjs';
 
 const settings = (() => { try { return readSettings(JSON.parse(localStorage.getItem('portolani-signalk') ?? '{}')); } catch { return readSettings({}); } })();
 const save = () => { try { localStorage.setItem('portolani-signalk', JSON.stringify(settings)); } catch {} };
@@ -23,17 +24,25 @@ const map = document.getElementById('map'), marks = document.getElementById('mar
 const status = (t) => { document.getElementById('status').textContent = t; };
 const RAD = Math.PI / 180, merc = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * RAD) / 2));
 let view = null, vessel = null, drawn = null, drawing = 0, following = false;
+let cat = {}; // the cells' catalogue, for Constrain View's zoom range
 
 // the view that holds a bbox [w, s, e, n]
-const fit = ([w, s, e, n]) => clampView({ lon: (w + e) / 2, lat: Math.atan(Math.sinh((merc(s) + merc(n)) / 2)) / RAD,
-  zoom: Math.min(Math.log2((2 * Math.PI * H) / (512 * (merc(n) - merc(s)))), Math.log2((2 * Math.PI * W) / (512 * (e - w) * RAD))) });
+const fit = ([w, s, e, n]) => clampView({ lon: (w + e) / 2, lat: Math.atan(Math.sinh((merc(s) + merc(n)) / 2)) / RAD, zoom: fitZoom([w, s, e, n], W, H) });
 
-// north up while the compass is locked, else the bearing the user turned the chart to
+// north up while the compass is locked, else the bearing the user turned the chart to; the zoom held in the
+// cells' range while Constrain View is on; following, the vessel at the centre of the window
 const wrap = (b) => ((b % 360) + 360) % 360;
-const oriented = (v) => clampView({ ...v, bearing: settings.northUp ? 0 : settings.bearing });
+// the range: out to where every cell fits the window's part of the drawing, in to the finest cell's scale
+const held = (z) => {
+  const range = settings.constrain && zoomRange(cat, ...toCanvas(stage.clientWidth, stage.clientHeight));
+  return range ? Math.min(range.max, Math.max(range.min, z)) : z;
+};
+const oriented = (v) => { const o = clampView({ ...v, zoom: held(v.zoom), bearing: settings.northUp ? 0 : settings.bearing }); return following && vessel ? centred(o) : o; };
+// the zoom factor a gesture may have, held to the range
+const allowed = (f) => 2 ** (held(view.zoom + Math.log2(f)) - view.zoom);
 
 async function render() {
-  const n = ++drawing, scale = Math.min(2, devicePixelRatio || 1);
+  const n = ++drawing, scale = Math.max(1, Math.min(2, ((devicePixelRatio || 1) * map.offsetWidth) / W)); // the canvas's own pixels, once to twice the drawing's
   status('Drawing…');
   try {
     view = oriented(view);
@@ -65,8 +74,8 @@ function drawVessel() {
   g.fillStyle = '#8c2f1e'; g.strokeStyle = '#3b2a1a'; g.lineWidth = 1; g.fill(); g.stroke();
 }
 
-// One finger or the mouse drags to pan; two fingers pinch, twist and pan; the right button or Ctrl held turns the
-// chart about its centre. A gesture is drawn as a CSS similarity of the canvases about canvas point m0, carried to m1,
+// One finger or the mouse drags to pan; two fingers pinch, twist and pan (a mouse turns the chart by the compass).
+// A gesture is drawn as a CSS similarity of the canvases about canvas point m0, carried to m1,
 // scaled by `s` and turned by `a` radians, and on release becomes the view that drawing shows. Canvas px are the
 // drawing's, whatever the CSS size.
 // measured on the canvas's layout box, which a gesture's transform does not move
@@ -76,9 +85,18 @@ const atCanvas = (e) => { const r = box(); return toCanvas(e.clientX - r.left, e
 const TWIST = 10; // degrees a twist must pass to turn a chart locked north up
 const pointers = new Map();
 let pending = ''; // the CSS of gestures settled since the last draw, which the canvases show until it lands
-let g = null; // the gesture: { kind: 'pan' | 'pinch' | 'turn', m0, m1, s, a, at, a0 }
-const centre = [W / 2, H / 2];
-const angleOf = ([x, y], [cx, cy]) => Math.atan2(y - cy, x - cx);
+let g = null; // the gesture: { kind: 'pan' | 'pinch', m0, m1, s, a }
+const centre = [W / 2, H / 2]; // the drawing's centre, the view's lon/lat
+// The canvases cover the stage, their bottom-left corner on its bottom-left (where the scale bar stands), cropped
+// at the top and right when the window is not the drawing's shape
+function layout() {
+  const sw = stage.clientWidth, sh = stage.clientHeight, cw = Math.max(sw, (sh * W) / H);
+  for (const c of [map, marks]) { c.style.width = `${cw}px`; c.style.height = `${(cw * H) / W}px`; }
+}
+addEventListener('resize', layout);
+layout();
+// the canvas point at the centre of the window's chart, which a crop moves off the drawing's centre
+const sight = () => toCanvas(stage.clientWidth / 2 - map.offsetLeft, stage.clientHeight / 2 - map.offsetTop);
 function twoFinger() {
   const [p, q] = [...pointers.values()];
   return { mid: [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2], d: Math.hypot(q[0] - p[0], q[1] - p[1]), ang: Math.atan2(q[1] - p[1], q[0] - p[0]) };
@@ -89,13 +107,12 @@ function begin(e) {
     const t = twoFinger(), d = g?.kind === 'pan' ? [g.m1[0] - g.m0[0], g.m1[1] - g.m0[1]] : [0, 0];
     g = { kind: 'pinch', m0: [t.mid[0] - d[0], t.mid[1] - d[1]], m1: t.mid, s: 1, a: 0, d0: t.d, ang0: t.ang, panned: Math.hypot(...d) > 2 };
   }
-  else if (e.button === 2 || e.ctrlKey) g = { kind: 'turn', m0: centre, m1: centre, s: 1, a: 0, a0: angleOf(atCanvas(e), centre) };
   else g = { kind: 'pan', m0: atCanvas(e), m1: atCanvas(e), s: 1, a: 0, moved: false };
 }
 // the twist that counts: none under TWIST degrees while locked north up
 const twist = () => (settings.northUp && Math.abs(g.a) < TWIST * RAD ? 0 : g.a);
-// following, a pinch keeps the vessel at the centre: it scales and turns about the centre and does not move it
-const ends = () => (following && g.kind !== 'pan' ? [centre, centre] : [g.m0, g.m1]);
+// following, a pinch keeps the vessel at the centre: it scales and turns about the vessel and does not move it
+const ends = () => (following && g.kind !== 'pan' ? [sight(), sight()] : [g.m0, g.m1]);
 function css([m0, m1], s, a) {
   const k = map.offsetWidth / W;
   return `translate(${m1[0] * k}px, ${m1[1] * k}px) rotate(${a}rad) scale(${s}) translate(${-m0[0] * k}px, ${-m0[1] * k}px)`;
@@ -120,7 +137,6 @@ function settle() {
   later();
   return true;
 }
-stage.addEventListener('contextmenu', (e) => e.preventDefault());
 stage.addEventListener('pointerdown', (e) => {
   try { stage.setPointerCapture(e.pointerId); } catch {} // a synthetic pointer has none to capture
   pointers.set(e.pointerId, atCanvas(e));
@@ -130,8 +146,7 @@ stage.addEventListener('pointerdown', (e) => {
 stage.addEventListener('pointermove', (e) => {
   if (!pointers.has(e.pointerId) || !g) return;
   pointers.set(e.pointerId, atCanvas(e));
-  if (g.kind === 'pinch' && pointers.size === 2) { const t = twoFinger(); g.m1 = t.mid; g.s = t.d / g.d0; g.a = t.ang - g.ang0; }
-  else if (g.kind === 'turn') g.a = angleOf(atCanvas(e), centre) - g.a0;
+  if (g.kind === 'pinch' && pointers.size === 2) { const t = twoFinger(); g.m1 = t.mid; g.s = allowed(t.d / g.d0); g.a = t.ang - g.ang0; }
   else if (g.kind === 'pan') g.m1 = atCanvas(e);
   show();
 });
@@ -167,8 +182,9 @@ stage.addEventListener('wheel', (e) => {
   e.preventDefault();
   const [px, py] = atCanvas(e);
   // while following, the zoom is about the vessel, which stays at the centre
-  const f = e.deltaY < 0 ? 1.5 : 1 / 1.5, p = following ? centre : [px, py];
-  view = following ? clampView({ ...view, zoom: view.zoom + Math.log2(f) }) : zoomView(view, f, px, py);
+  const f = allowed(e.deltaY < 0 ? 1.5 : 1 / 1.5), p = following ? sight() : [px, py];
+  if (Math.abs(Math.log2(f)) < 1e-9) return; // held at the end of the range
+  view = zoomView(view, f, ...p);
   pending = `${css([p, p], f, 0)} ${pending}`; map.style.transform = marks.style.transform = pending;
   later();
 }, { passive: false });
@@ -236,7 +252,12 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !drawer.
 // follow: the arrow toggles it. On, the view centres on the vessel at once (on the first fix, if none has come yet)
 // and keeps it centred as it moves; a pan by hand turns it off
 const followBtn = document.getElementById('follow');
-const centred = (v) => clampView({ ...v, lon: vessel.lon, lat: vessel.lat });
+// the view with the vessel at the window's centre (sight), which a cropped canvas moves off the drawing's
+function centred(v) {
+  const on = clampView({ ...v, lon: vessel.lon, lat: vessel.lat }), [sx, sy] = sight();
+  const [lon, lat] = viewProjection(on).invert(2 * centre[0] - sx, 2 * centre[1] - sy);
+  return clampView({ ...on, lon, lat });
+}
 function follow(on) {
   following = on;
   followBtn.setAttribute('aria-pressed', String(following));
@@ -246,18 +267,33 @@ function follow(on) {
 followBtn.addEventListener('click', () => { follow(!following); if (following && vessel) { view = centred(view); render(); } });
 // the vessel has strayed STRAY px from the centre of the view drawn, while following
 const STRAY = 40;
-const strayed = () => { if (!following || !vessel || !drawn) return false; const [x, y] = viewProjection(drawn.view).toPx([vessel.lon, vessel.lat]); return Math.hypot(x - W / 2, y - H / 2) > STRAY; };
+const strayed = () => { if (!following || !vessel || !drawn) return false; const [x, y] = viewProjection(drawn.view).toPx([vessel.lon, vessel.lat]), [sx, sy] = sight(); return Math.hypot(x - sx, y - sy) > STRAY; };
 
 // The compass toggles north up: pressed, north is at the top and stays there; unpressed, the chart is back at the
-// bearing it was turned to and turns freely. Its needle points to north on the chart as drawn.
+// bearing it was turned to and turns freely. A drag round it turns the chart by the angle swept, live, and unlocks
+// it; the arrow keys turn it by 15 degrees; the page's own gesture (compass-turn.mjs). Its needle points to north
+// on the chart as drawn.
 const compass = document.getElementById('compass'), needle = document.getElementById('needle');
 function paintCompass() { needle.style.transform = `rotate(${-(drawn?.view.bearing ?? 0)}deg)`; }
 painters.push(() => {
   compass.setAttribute('aria-pressed', String(settings.northUp));
-  compass.title = settings.northUp ? 'North up, locked (press to turn freely)' : 'North up';
+  compass.title = settings.northUp ? 'North up, locked: click to turn freely, or drag round to turn the chart' : 'North up: click to lock, or drag round to turn the chart';
   compass.setAttribute('aria-label', compass.title);
 });
-compass.addEventListener('click', () => { settings.northUp = !settings.northUp; changed(); });
+let spun = ''; // the CSS turn of a compass drag, about the vessel while following, else the drawing's centre
+compassTurn(compass, {
+  bearing: () => (settings.northUp ? 0 : settings.bearing),
+  turn: (b) => {
+    settings.northUp = false; settings.bearing = wrap(b);
+    const p = following && vessel ? sight() : centre;
+    spun = css([p, p], 1, ((view.bearing ?? 0) - b) * RAD);
+    map.style.transform = marks.style.transform = `${spun} ${pending}`;
+    needle.style.transform = `rotate(${-b}deg)`;
+  },
+  release: () => { pending = `${spun} ${pending}`; spun = ''; save(); paint(); later(); },
+  click: () => { settings.northUp = !settings.northUp; changed(); },
+  step: (b) => { settings.northUp = false; settings.bearing = wrap(b); changed(); },
+});
 // The two rotate buttons turn the chart a quarter turn to the next cardinal direction: clockwise brings west up after
 // north, counter-clockwise east. From between two cardinals they go to the nearer one that way. Either unlocks the compass.
 function quarter(dir) {
@@ -268,6 +304,32 @@ function quarter(dir) {
 }
 document.getElementById('rotr').addEventListener('click', () => quarter(1));
 document.getElementById('rotl').addEventListener('click', () => quarter(-1));
+
+// Hide Toolbars: pressed, every other gutter button and the status line hide and the drawer closes, so only the
+// chart stays; pressed again, they come back
+const bare = document.getElementById('bare'), gutter = document.getElementById('gutter');
+painters.push(() => {
+  bare.setAttribute('aria-pressed', String(settings.bare));
+  gutter.toggleAttribute('data-bare', settings.bare); document.body.toggleAttribute('data-bare', settings.bare);
+  bare.title = settings.bare ? 'Show the toolbars' : 'Hide the toolbars';
+  bare.setAttribute('aria-label', bare.title);
+});
+bare.addEventListener('click', () => { settings.bare = !settings.bare; if (settings.bare) closeDrawer(); save(); paint(); });
+// Constrain View: on, the zoom stays in the cells' range (chart.mjs zoomRange), clamped into it at once; panning is free
+const constrain = document.getElementById('constrain');
+painters.push(() => {
+  constrain.setAttribute('aria-pressed', String(settings.constrain));
+  constrain.title = settings.constrain ? "Zoom held to the cells' range (press to free it)" : "Constrain the zoom to the cells' range";
+  constrain.setAttribute('aria-label', constrain.title);
+});
+constrain.addEventListener('click', () => { settings.constrain = !settings.constrain; changed(); });
+// Go Fullscreen: the whole document; pressed while fullscreen, however it was left. Hidden where the API is not
+const full = document.getElementById('fullscreen');
+full.hidden = !document.fullscreenEnabled;
+const paintFull = () => { const on = !!document.fullscreenElement; full.setAttribute('aria-pressed', String(on)); full.title = on ? 'Leave fullscreen' : 'Go fullscreen'; full.setAttribute('aria-label', full.title); };
+document.addEventListener('fullscreenchange', () => { paintFull(); layout(); });
+full.addEventListener('click', () => (document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()).catch((e) => status(`Fullscreen: ${e.message}`)));
+paintFull();
 paint();
 
 // navigation.position and the course from the Signal K stream, the vessel redrawn as they come
@@ -289,7 +351,8 @@ function stream() {
 
 // the first cell with an extent, coarsest band first, frames the opening view
 const first = (cat) => Object.values(cat).filter((c) => c.bbox).sort((a, b) => a.band - b.band)[0];
-let opening = first(await readCatalogue());
+cat = await readCatalogue();
+let opening = first(cat);
 view = opening ? fit(opening.bbox) : clampView({ lon: 0, lat: 30, zoom: 2 });
 // a link may name the view, #lon,lat,zoom
 const asked = location.hash.slice(1).split(',').map(Number), named = asked.length === 3 && asked.every(Number.isFinite);
@@ -299,7 +362,8 @@ render();
 // no cells yet, perhaps still converting: ask again every 5 s, and draw them when they come
 if (!opening) {
   const poll = setInterval(async () => {
-    opening = first(await readCatalogue());
+    cat = await readCatalogue();
+    opening = first(cat);
     if (!opening) return;
     clearInterval(poll);
     if (!named) view = fit(opening.bbox);

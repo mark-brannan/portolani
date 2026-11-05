@@ -38,8 +38,29 @@ export const chipSprite = (list, kind, style, pack = 'vivid') => list.find((s) =
 export const CHART_GEO = ['geo/ne-land-50m.geojson', 'geo/ne-coastline-50m.geojson', 'geo/ranges-10m.json', 'geo/peaks-10m.json'];
 
 // The drawer's settings before any are saved: the drawer's layers on, the cartouche off, the drawn Catalan
-// roses, no towns, the heraldic monsters, north up (the compass locked; `bearing` is the chart's turn once unlocked)
-export const DEFAULTS = { depth: true, mountains: true, peaks: true, cartouche: false, rose: 'catalan', towns: [], monster: 'heraldic', northUp: true, bearing: 0 };
+// roses, no towns, the heraldic monsters, north up (the compass locked; `bearing` is the chart's turn once unlocked),
+// the toolbars shown (`bare` hides them) and the zoom free (`constrain` holds it to the cells' range, zoomRange)
+export const DEFAULTS = { depth: true, mountains: true, peaks: true, cartouche: false, rose: 'catalan', towns: [], monster: 'heraldic', northUp: true, bearing: 0, bare: false, constrain: false };
+
+// The zoom at which a bbox [w, s, e, n] just fits a w x h drawing, north up
+const RAD = Math.PI / 180, merc = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * RAD) / 2));
+export const fitZoom = ([w, s, e, n], width, height) => Math.min(Math.log2((2 * Math.PI * height) / (512 * (merc(n) - merc(s)))), Math.log2((2 * Math.PI * width) / (512 * (e - w) * RAD)));
+// The zoom at which a chart is drawn at a scale of 1:denom at a latitude: a drawing pixel is PX_M metres of
+// paper (0.28 mm, as the adapter reckons a view's scale, enc-provider.js), so 1:denom puts PX_M * denom metres
+// of ground under it
+const R = 6378137, PX_M = 0.00028;
+export const scaleZoom = (denom, lat) => Math.log2((2 * Math.PI * R * Math.cos(lat * RAD)) / (512 * PX_M * denom));
+// Constrain View's zoom range for a catalogue: out to where every cell fits the drawing, in to the finest cell's
+// compilation scale (DSPM_CSCL) at its own latitude; never narrower than the fit. Null with no cell
+export function zoomRange(cat, width, height) {
+  const cells = Object.values(cat ?? {}).filter((c) => c.bbox);
+  if (!cells.length) return null;
+  const all = cells.reduce(([w, s, e, n], { bbox: b }) => [Math.min(w, b[0]), Math.min(s, b[1]), Math.max(e, b[2]), Math.max(n, b[3])], [Infinity, Infinity, -Infinity, -Infinity]);
+  const min = fitZoom(all, width, height), scaled = cells.filter((c) => c.scale > 0);
+  const finest = scaled.sort((a, b) => a.scale - b.scale)[0];
+  const max = finest ? scaleZoom(finest.scale, (finest.bbox[1] + finest.bbox[3]) / 2) : min;
+  return { min, max: Math.max(min, max) };
+}
 
 // The scene's options for a chart: the land in one colour, the sea's depth drawn, the mountains along the
 // ranges in the M.E. 1937 pen style, the landmark peaks (scene.mjs draws each as the lone ink peak) and the
@@ -64,6 +85,7 @@ export function readSettings(saved) {
   if (!Array.isArray(s.towns)) s.towns = [...DEFAULTS.towns];
   s.towns = s.towns.filter((t) => t in TOWNS);
   s.northUp = s.northUp !== false;
+  s.bare = s.bare === true; s.constrain = s.constrain === true;
   s.bearing = Number.isFinite(s.bearing) ? ((s.bearing % 360) + 360) % 360 : 0;
   delete s.courseUp;
   if (s.rose !== 'off' && !ROSES.includes(s.rose)) s.rose = DEFAULTS.rose;
