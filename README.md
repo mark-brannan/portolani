@@ -2,7 +2,7 @@
 
 [![Italy and the western Mediterranean as a portolan chart: rhumb lines, wind roses, a sea monster and a cartouche lettered PORTOLANI, on parchment](docs/readme.jpg)](https://mark-brannan.github.io/portolani/)
 
-A base map drawn the way a 15th-century portolan chart would have drawn it: ink on parchment, rhumb lines radiating from wind roses, names lettered along the coast, ships and sea monsters where the ocean is empty. The geometry under the ornament is today's.
+A base map with modern geometry, but drawn the way a 15th-century portolan chart would have drawn it: ink on parchment, rhumb lines radiating from wind roses, names lettered along the coast, ships and sea monsters where the ocean is empty.
 
 **[Open the demo →](https://mark-brannan.github.io/portolani/)**
 
@@ -10,7 +10,7 @@ Drag to pan, wheel or pinch to zoom, anywhere in the world. The ornaments follow
 
 ## Why
 
-A small project climbed one rung at a time, in the sense of *arete*: each step should leave something a person can use, learn from or simply enjoy, and the whole should be good for the people who meet it. So the chart is for looking at, not only for navigating by. It carries the voyages, people and places of several traditions, not one, with their sources shown, and it keeps the hand-drawn quality of the originals rather than flattening them into a tileset.
+Simply, because it is beautiful, interesting, and fun. To experience the joy of looking at maps. It carries the voyages, people and places of several traditions, not one, with their sources shown, and it keeps the hand-drawn quality of the originals rather than flattening them into a tileset.
 
 ## Reading a portolan chart
 
@@ -23,8 +23,8 @@ A small project climbed one rung at a time, in the sense of *arete*: each step s
 
 ```shell
 npm ci
-npm run build:preview   # assembles _site/
-npm run render          # draws the same scene in Node to out/
+npm run build:preview  # assembles _site/
+npm run render     # draws the same scene in Node to out/
 ```
 
 Node 20 or newer. Sources, licences and checksums are in [ASSETS.md](ASSETS.md).
