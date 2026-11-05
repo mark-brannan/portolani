@@ -129,7 +129,10 @@ function clipLine(line, [x0, y0, x1, y1]) {
   return runs.filter((r) => r.length > 1);
 }
 const boxMeets = (a, b) => a[0] <= b[2] && a[2] >= b[0] && a[1] <= b[3] && a[3] >= b[1];
-const extent = (pts) => pts.reduce((b, [x, y]) => [Math.min(b[0], x), Math.min(b[1], y), Math.max(b[2], x), Math.max(b[3], y)], [Infinity, Infinity, -Infinity, -Infinity]);
+// a ring's extent and a polygon's island, worked out once per ring: the world is the same arrays every redraw
+const extents = new WeakMap(), islands = new WeakMap();
+const extent = (pts) => extents.get(pts) ?? extents.set(pts, pts.reduce((b, [x, y]) => [Math.min(b[0], x), Math.min(b[1], y), Math.max(b[2], x), Math.max(b[3], y)], [Infinity, Infinity, -Infinity, -Infinity])).get(pts);
+const islandOf = (poly) => islands.get(poly[0]) ?? islands.set(poly[0], islandInfo(poly)).get(poly[0]);
 const polysOf = (g) => (g.type === 'Polygon' ? [g.coordinates] : g.type === 'MultiPolygon' ? g.coordinates : []);
 const linesOf = (g) => (g.type === 'LineString' ? [g.coordinates] : g.type === 'MultiLineString' ? g.coordinates : []);
 // The world's features of a layer near a view, cut out of the cells' boxes: a polygon keeps the area and
@@ -140,7 +143,7 @@ function* worldBeside(features, layer, view, boxes) {
   for (const f of features) {
     if (layer === 'land') for (const poly of polysOf(f.geometry)) {
       if (!boxMeets(extent(poly[0]), frame)) continue;
-      const isl = islandInfo(poly);
+      const isl = islandOf(poly);
       for (const r of rects) {
         const outer = clipRing(poly[0], r);
         if (!outer) continue;
@@ -160,6 +163,8 @@ export function provider({ read } = {}) {
   const world = coastlines({ read: (p) => (WORLD_FILES.includes(p) && read ? read(p) : Promise.reject(new Error(`${p}: 404, not shipped`))) });
   const worldsOwn = (view, layer) => WORLD_LAYERS.includes(layer) && !cellsFor(view).length;
   const collect = async (it) => { const out = []; for await (const f of it) out.push(f); return out; };
+  const whole = new Map(); // layer -> the world's whole file, read once (a failed read is not kept)
+  const wholeOf = (layer) => whole.get(layer) ?? whole.set(layer, collect(world.features(WORLD_VIEW, layer)).catch((e) => { whole.delete(layer); throw e; })).get(layer);
   return {
     bandFor: (view, layer) => (worldsOwn(view, layer) ? world.bandFor(view, layer) : layer in CLASSES && cellsFor(view).length ? ENC_BAND : NO_BAND),
     async pending(view, layer) {
@@ -180,7 +185,7 @@ export function provider({ read } = {}) {
       if (layer === 'land') drawnFrom.cells = cells.length;
       if (worldsOwn(view, layer)) { yield* world.features(view, layer); return; }
       // the world beneath, cut out of the boxes: the whole 50m file, as coastlines vends it to a zoomed-out view
-      if (WORLD_LAYERS.includes(layer)) yield* worldBeside(await collect(world.features(WORLD_VIEW, layer)), layer, view, cells.map((c) => c.bbox));
+      if (WORLD_LAYERS.includes(layer)) yield* worldBeside(await wholeOf(layer), layer, view, cells.map((c) => c.bbox));
       const parts = await Promise.all(wanted(view, layer).map(([c, cls]) => classOf(c, cls).catch(() => (failed.add(`${c.cell}/${cls}`), []))));
       for (const fs of parts) yield* fs;
     },
