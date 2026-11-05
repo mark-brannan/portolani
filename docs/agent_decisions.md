@@ -546,3 +546,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261105t070443z
 - follow off at start, not saved (portolani#396) (no PR, branch detached)
+
+### 20261105t070445z
+- zoom while following is about the vessel (portolani#396) (no PR, branch detached)
