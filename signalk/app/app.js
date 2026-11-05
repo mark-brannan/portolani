@@ -1,7 +1,7 @@
 // The webapp: the plugin's ENC cells drawn by portolani's scene, panned and zoomed, with the vessel's
 // position from the Signal K stream. The settings drawer stays open; its chips say what they draw.
 import { createScene, drawScene, panView, zoomView, clampView, viewProjection, drawnPeaks, peakHits, W, H } from 'portolani/scene.mjs';
-import { readCatalogue } from './enc-provider.js';
+import { readCatalogue, drawnFrom } from './enc-provider.js';
 import { CHART_OPTIONS, CHART_GEO, MOUNTAINS } from './chart.mjs';
 
 const DEFAULTS = { depth: true, mountains: true, peaks: true };
@@ -12,7 +12,7 @@ const empty = { type: 'FeatureCollection', features: [] };
 const cache = new Map(), once = (k, f) => cache.get(k) ?? cache.set(k, f()).get(k);
 const env = {
   createCanvas: (w, h) => Object.assign(document.createElement('canvas'), { width: w, height: h }),
-  // of the world geo only the ranges and peaks are shipped: the land, coast and depth are the cells', through the adapter
+  // of the world geo only the 50m land and coast, the ranges and the peaks are shipped: the depth is the cells', through the adapter
   readJSON: (p) => (p.startsWith('geo/') && !CHART_GEO.includes(p) ? Promise.resolve(empty) : once(p, () => fetch(p).then((r) => { if (!r.ok) throw new Error(`${p}: ${r.status}`); return r.json(); }))),
   loadImage: (p) => once(p, () => new Promise((ok, no) => { const img = new Image(); img.onload = () => ok(img); img.onerror = () => no(new Error(`${p}: image failed`)); img.src = p; })),
   loadFont: (family) => once('font', async () => document.fonts.add(await new FontFace(family, 'url(font/IMFeENrm28P.ttf)').load())),
@@ -41,7 +41,7 @@ async function render() {
     drawn = { view, scale, peaks: drawnPeaks(scene, data) };
     hideTile();
     drawVessel();
-    status(data.land.length ? '' : opening ? 'No cell covers this view' : 'No ENC cells yet: give the plugin a folder of .000 cells');
+    status(!opening ? 'No ENC cells yet: give the plugin a folder of .000 cells' : drawnFrom.cells ? '' : 'No cell covers this view: the coast is Natural Earth 50m');
   } catch (e) { if (n === drawing) status(`Could not draw: ${e.message}`); }
 }
 let timer = 0;
