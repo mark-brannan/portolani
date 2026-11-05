@@ -46,7 +46,7 @@ Feature: The cartouche is a chip, off at first
 Feature: The scale bar sits in the bottom-left corner
   Scenario: any view
     When the chart is drawn
-    Then the scale bar's left and bottom edges sit at the canvas's left and bottom margins, with no gap above them larger than the cartouche's corner margin
+    Then the scale bar sits in the bottom-left corner, and its gap to the canvas's bottom edge equals its gap to the left edge
 
 Feature: No Catalan mountain sprites
   Scenario: mountains and peaks on
