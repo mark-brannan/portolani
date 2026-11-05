@@ -4,7 +4,7 @@
     "aka": [
       "Leif the Lucky"
     ],
-    "bio": "Son of Erik the Red, who founded the first Norse settlement in Greenland, he was raised there. The Icelandic sagas have him reach Vinland, usually read as the coast of North America, about half a millennium before Columbus; the Norse site at L'Anse aux Meadows in Newfoundland may be his. After his father died he led the Greenland settlement.",
+    "bio": "The son of Erik the Red, he grew up in the Norse settlement his father founded in Greenland. The Icelandic sagas have him reach Vinland, usually read as the coast of North America, about half a millennium before Columbus; the Norse site at L'Anse aux Meadows in Newfoundland may be his. After his father died he led the Greenland settlement.",
     "images": [
       {
         "file": "Christian_Krohg_-_Leiv_Eirikson_discovering_America_-_Google_Art_Project.jpg",
@@ -205,7 +205,7 @@
           "lat": 31.63,
           "place": "Marrakesh",
           "label": "Died at Marrakesh, by one modern account",
-          "text": "Some modern summaries put his death at Marrakesh; the Rihla ends in 1355 and no chronicle of his death survives. The tomb shown at Tangier, his birthplace, is purported, and marks a burial tradition, not a place of death.",
+          "text": "Some modern summaries put his death at Marrakesh; the Rihla ends in 1355 and no chronicle of his death survives. The tomb shown at Tangier, his birthplace, is unproven: it marks a burial tradition, not a place of death.",
           "source": "Wikipedia, Ibn Battuta (infobox); the Tangier tomb is captioned \"purported\""
         }
       ]
@@ -436,7 +436,7 @@
   },
   "juan-de-la-cosa": {
     "name": "Juan de la Cosa",
-    "bio": "Owner and master of the Santa María on the first voyage, pilot on later ones, and maker of the oldest surviving chart to show the New World, in 1500.",
+    "bio": "Owner and master of the Santa María on the first voyage, pilot on later ones, and maker of the oldest surviving chart to show the Americas, in 1500.",
     "images": [
       {
         "file": "Juan_de_la_Cosa,_Juan_Manuel_Núñez_Báñez.jpg",
@@ -493,7 +493,7 @@
   },
   "paulo-da-gama": {
     "name": "Paulo da Gama",
-    "bio": "Vasco da Gama's elder brother, a son of Estêvão da Gama and Isabel Sodré, he commanded the São Rafael on the first voyage to India. She was scuttled on the way home and he went over to the São Gabriel. He fell ill; his brother took him to Terceira in the Azores and stayed with him until he died. He is buried at Angra do Heroísmo.",
+    "bio": "Vasco da Gama's elder brother, a son of Estêvão da Gama and Isabel Sodré, he commanded the São Rafael on the first voyage to India. She was burned on the way home, with too few men left to sail her, and he went over to the São Gabriel. He fell ill; his brother took him to Terceira in the Azores and stayed with him until he died. He is buried at Angra do Heroísmo.",
     "images": [
       {
         "file": "Paulo_da_Gama_-_Diario_Illustrado_(30Jun1897).png",
@@ -544,14 +544,14 @@
       "lat": 38.65,
       "date": "1499",
       "label": "Paulo da Gama died at Angra, Terceira",
-      "text": "Paulo commanded the São Rafael, burned on the East African coast when there were too few men left to sail her. He fell ill on the way home; Vasco sailed on ahead in a fast caravel, to hurry him to the Azores, and stayed with his brother until he died.",
+      "text": "Paulo commanded the São Rafael, burned on the East African coast when there were too few men left to sail her. He fell ill on the way home; Vasco left the fleet and took him in a fast caravel to the Azores, and stayed with his brother until he died.",
       "source": "Barros; Correia",
       "cite": "paulo-da-gama"
     }
   },
   "vasco-da-gama": {
     "name": "Vasco da Gama",
-    "bio": "A Portuguese nobleman from Sines, on his first voyage, 1497 to 1499, he found the sea road from Europe to India, round the Cape of Good Hope and across the Indian Ocean from Malindi to Calicut, the longest ocean voyage made until then. He went back to India as viceroy and died there in 1524.",
+    "bio": "A Portuguese nobleman from Sines, in 1497 to 1499 he led the first voyage from Europe to India by sea, round the Cape of Good Hope and, with a pilot taken on at Malindi, across the Indian Ocean to Calicut, the longest ocean voyage made until then. He went back to India as viceroy and died there in 1524.",
     "images": [
       {
         "file": "Gregório_Lopes_-_Vasco_da_Gama_(ca_1524).jpg",
@@ -678,7 +678,7 @@
       "lat": 10.29,
       "date": "27 Apr 1521",
       "label": "Magellan killed at Mactan",
-      "text": "Magellan took sides in a local quarrel, for the Cebu king against Lapulapu of Mactan, and went ashore with about fifty men. The ships' guns could not reach the beach, the Mactan fighters came on in waves, and the captain-general was killed in the water. Pigafetta, who was there, called him \"our mirror, our light, our comfort and our true guide\".",
+      "text": "Magellan took sides in a local quarrel, for Rajah Humabon of Cebu against Lapulapu of Mactan, and went ashore with about fifty men. The ships' guns could not reach the beach, the Mactan fighters came on in waves, and the captain-general was killed in the water. Pigafetta, who was there, called him \"our mirror, our light, our comfort and our true guide\".",
       "source": "Pigafetta",
       "cite": "battle-of-mactan"
     }
@@ -928,7 +928,7 @@
         "author": "Phil Uhl",
         "date": "1976",
         "licence": "CC BY-SA 3.0",
-        "note": "The double canoe Hokule'a arriving at Honolulu from Tahiti in 1976, a modern voyage made without instruments to show the old crossings could be sailed."
+        "note": "The double canoe Hōkūleʻa arriving at Honolulu from Tahiti in 1976, a modern voyage made without instruments to show the old crossings could be sailed."
       }
     ]
   },
@@ -1143,7 +1143,7 @@
       "label": "Ponce de León died in Cuba, July 1521",
       "source": "Wikipedia, Juan Ponce de León",
       "cite": "juan-ponce-de-leon",
-      "text": "A Calusa arrow struck his thigh on his 1521 attempt to colonise south-west Florida, and he died in the first week of July, probably of infection, soon after the expedition sailed to Cuba; he was buried in Puerto Rico. The page names no town, so the mark stands at Havana, the port the expedition made for, an editorial guess."
+      "text": "A Calusa arrow struck his thigh on his 1521 attempt to colonise south-west Florida, and he died in the first week of July, probably of infection, soon after the expedition sailed to Cuba; he was buried in Puerto Rico. No source read names the town, so the mark stands at Havana, the port the expedition made for; the place is a guess."
     },
     "images": [
       {
@@ -1541,7 +1541,7 @@
       "label": "Esteban killed at Hawikuh, 1539",
       "source": "Wikipedia, Esteban de Dorantes",
       "cite": "esteban-de-dorantes",
-      "text": "He went ahead of Fray Marcos de Niza and was held overnight without food or water, then attacked and killed at Cíbola. The Zuni may have thought him a bad man; Castañeda says he asked for turquoise and women; Alarcón says he boasted of armed men behind him; Sancho Dorantes says he was shot through with arrows.",
+      "text": "He went ahead of Fray Marcos de Niza and was held overnight without food or water, then attacked and killed at Cíbola. Accounts differ on why: Castañeda says the people of Cíbola thought it hard of him to ask for turquoise and women, Alarcón that he boasted of armed men behind him, and Coronado that they had been told he was a bad man. Sancho Dorantes says he was shot through with arrows.",
       "doubt": "In 2002 the historian Juan Francisco Maura argued that Esteban was never killed at all: the story of his death was a ruse that set a slave free, and he lived on among the Zuni."
     },
     "images": [
@@ -1575,7 +1575,7 @@
         "author": "Georg Braun and Frans Hogenberg",
         "date": "1572",
         "licence": "Public domain",
-        "note": "Azemmour on the Oum Er-Rbia, where he was born and sold in 1522, in a city view printed in 1572."
+        "note": "Azemmour on the Oum Er-Rbia, where he was born and, in 1522, sold into slavery, in a city view printed in 1572."
       },
       {
         "file": "Zuni_Pueblo,_looking_southeast_-_NARA_-_523769.jpg",
@@ -1903,7 +1903,7 @@
     "aka": [
       "Binyamin mi-Tudela"
     ],
-    "bio": "A Jew of Tudela in Navarre, the son of Jonah, not reliably called a rabbi. About 1165 he set out for the Holy Land, perhaps on a pilgrimage and with trade in view, and wrote the Book of Travels, the Sefer ha-Massa'ot, listing the Jewish communities of about three hundred places, their households, leaders and trades, with the days between them. Much of the book is what he saw and much is what he was told.",
+    "bio": "A Jew of Tudela in Navarre, the son of Jonah; the title of rabbi often given him is not well attested. About 1165 he set out for the Holy Land, perhaps on a pilgrimage and with trade in view, and wrote the Book of Travels, the Sefer ha-Massa'ot, listing the Jewish communities of about three hundred places, their households, leaders and trades, with the days between them. Much of the book is what he saw and much is what he was told.",
     "sources": [
       "benjamin-of-tudela",
       "adler-itinerary-of-benjamin"
@@ -1976,7 +1976,7 @@
       "Rabban Sawma",
       "Rabban Sauma"
     ],
-    "bio": "A Church of the East monk born near Khanbaliq (Beijing), of Uyghur stock, who left for Jerusalem with his pupil Markos and was stopped by war in Mongol Persia. Markos became the Patriarch Yahballaha III. In 1287 the Ilkhan Arghun sent Sauma as his ambassador to the pope and the kings of Europe. His account, preserved in a Syriac life of Yahballaha, is the only medieval description of Latin Europe by an East Asian traveller.",
+    "bio": "A Church of the East monk born near Khanbaliq (Beijing), of a Turkic family, Uyghur or Öngüt, who left for Jerusalem with his pupil Markos and was stopped by war in Mongol Persia. Markos became the Patriarch Yahballaha III. In 1287 the Ilkhan Arghun sent Sauma as his ambassador to the pope and the kings of Europe. His account, preserved in a Syriac life of Yahballaha, is the only medieval description of Latin Europe by an East Asian traveller.",
     "sources": [
       "rabban-bar-sauma",
       "history-of-yahballaha",
@@ -1988,7 +1988,7 @@
       "date": "c. 1220",
       "place": "Khanbaliq (Beijing)",
       "label": "Bar Sauma born near Khanbaliq, c. 1220",
-      "text": "He is said to have been born in or near the Mongol capital, in a Uyghur family. The year is a guess worked back from his age at death.",
+      "text": "He is said to have been born in or near the Mongol capital, in a Turkic family, Uyghur or Öngüt. The year is a guess worked back from his age at death.",
       "source": "Rabban Bar Sauma (Wikipedia)",
       "cite": "rabban-bar-sauma",
       "confidence": "inferred"
@@ -2034,7 +2034,7 @@
         "author": "Master of the Mazarine",
         "date": "c. 1410",
         "licence": "Public domain",
-        "note": "The Dominican Ricoldo of Montecroce with Nestorian clergy, painted about 1410; Ricoldo preached among them in the Ilkhanate in Sauma's last years."
+        "note": "The Dominican Ricoldo of Montecroce with clergy of the Church of the East, painted about 1410; Ricoldo preached among them in the Ilkhanate in Sauma's last years."
       }
     ]
   },
@@ -2054,7 +2054,7 @@
       "lat": 54.78,
       "date": "spring 1475",
       "label": "Nikitin died near Smolensk, 1475",
-      "text": "The Sofia chronicle says it was reported in 1475 that he had died before he reached Smolensk. The place of his death is unmarked, and the mark stands at the town. Some give the winter of 1472-73.",
+      "text": "The Sofia chronicle says it was reported in 1475 that he had died before he reached Smolensk. No source places his death more closely, so the mark stands at the town. Some give the winter of 1472-73.",
       "source": "Afanasy Nikitin (Wikipedia)",
       "cite": "afanasy-nikitin",
       "confidence": "inferred"

@@ -608,7 +608,7 @@ export const CATALAN_NOTES = [
   },
   {
     id: 'queen-of-sheba', title: 'The Queen of Sheba',
-    drawn: 'A crowned queen in a grey gown on a green throne, a gold ball in her raised hand, by "ARABIA SEBBA". The legend (V.11): "The province that had queen Sebba; now it belongs to the Arabs Saracens, and in it there very good aromas, as well as myrrh and frankincense", and a bird named Phoenix.',
+    drawn: 'A crowned queen in a grey gown on a green throne, a gold ball in her raised hand, by "ARABIA SEBBA". The legend (V.11): "The province that had queen Sebba; now it belongs to the Arab Saracens, and in it there [are] very good aromas, as well as myrrh and frankincense", and a bird named Phoenix.',
     real: 'Saba, in Yemen, on the incense road; whether its queen ever went to Solomon is not known. In 1375 Yemen was ruled by the Rasulid sultans.',
     source: { label: 'Cresques Project V.11; Queen of Sheba', url: WIKI('Queen_of_Sheba') },
     at: { px: page(9, 3500, 13900), lonlat: [45.33, 15.42] }, size: [1300, 2000], up: 0,
@@ -646,7 +646,7 @@ export const CATALAN_NOTES = [
   },
   {
     id: 'junk', title: 'The junk',
-    drawn: 'A great black-hulled ship drawn upside down, its sail of woven reeds. The legend (V.17): "these ships are named nichi, and measure sixty cubits in depth and thirty-four cubits in length; there are few with less than four masts and some even have ten. The sails are made of reed and palm leafs."',
+    drawn: 'A great black-hulled ship drawn upside down, its sail of woven reeds. The legend (V.17): "these ships are named nichi, and measure sixty cubits in depth and thirty-four cubits in length; there are few with less than four masts and some even have ten. The sails are made of reed and palm leaves."',
     real: 'Chinese junks, with watertight bulkheads and stiff sails of matting on battens, the largest ships of their age; Ibn Battuta saw them at Calicut in the 1340s.',
     source: { label: 'Cresques Project V.17; Junk (ship)', url: WIKI('Junk_(ship)') },
     at: { px: page(10, 4750, 2750), lonlat: null }, size: [1600, 1700], up: 180,
@@ -699,7 +699,7 @@ export const CATALAN_NOTES = [
   // Sheet 11: the Chagatai khan, King Stephen, the pygmies, Alexander's trumpeters and the islands of the Indies
   {
     id: 'falcon-islands', title: 'The islands of falcons',
-    drawn: 'Islands in a northern sea, drawn upside down, and the legend (VI.7): "In these islands are born very good gyrfalcons and falcons that the inhabitants do not there to capture except at the service of the Great Khan."',
+    drawn: 'Islands in a northern sea, drawn upside down, and the legend (VI.7): "In these islands are born very good gyrfalcons and falcons that the inhabitants do not [dare] to capture except at the service of the Great Khan."',
     real: 'Gyrfalcons breed on Arctic coasts. Marco Polo tells of the Great Khan hunting with ten thousand falconers.',
     source: { label: 'Cresques Project VI.7; Gyrfalcon', url: WIKI('Gyrfalcon') },
     at: { px: page(11, 2000, 1000), lonlat: null }, size: [3400, 1600], up: 180,
@@ -741,7 +741,7 @@ export const CATALAN_NOTES = [
   },
   {
     id: 'king-chabech', title: 'King Chabech of the Chagatai',
-    drawn: 'A crowned king in red on a round blue throne. The legend (VI.8): "Here reigns the King Chabech, lord that is the Medeja Empire. This is located is at Emalech."',
+    drawn: 'A crowned king in red on a round blue throne. The legend (VI.8): "Here reigns the King Chabech, lord of the empire of Medeja. He resides at Emalech."',
     real: 'Kebek, khan of the Chagatai Khanate, died in 1326. In 1375 Timur was master of its western half, and Almaliq, its old capital in the Ili valley, was in decline.',
     source: { label: 'Cresques Project VI.8; Kebek', url: WIKI('Kebek') },
     at: { px: page(11, 1250, 8800), lonlat: [80.87, 44.05] }, size: [1300, 1900], up: 0,
@@ -755,7 +755,7 @@ export const CATALAN_NOTES = [
   },
   {
     id: 'pygmies', title: 'The pygmies and the cranes',
-    drawn: 'Little men fighting cranes. The legend (VI.9): "Here are born men so small that they no reach more than five palmos in height", who weave and tend cattle, "defend themselves from herons", and live to forty. "Here ends the land of the Lord of Catayo."',
+    drawn: 'Little men fighting cranes. The legend (VI.9): "Here are born men so small that they [do] not reach more than five palmos in height", who weave and tend cattle, "defend themselves from herons", and live to forty. "Here ends the land of the Lord of Catayo."',
     real: 'The pygmies and cranes of Homer and Pliny, a tale from antiquity set at the end of Cathay.',
     source: { label: 'Cresques Project VI.9; Pygmies', url: WIKI('Pygmies_(Greek_mythology)') },
     at: { px: page(11, 4700, 8700), lonlat: null }, size: [2300, 2300], up: 0,
@@ -831,7 +831,7 @@ export const CATALAN_NOTES = [
   },
   {
     id: 'siren', title: 'The siren',
-    drawn: 'A woman with a red fish\'s tail in the sea of the islands. The legend (VI.22): "Sea of the islands of the Indies where one finds spices. Many ships from many nations cross this sea. Here, one finds three kids of fish named sirens."',
+    drawn: 'A woman with a red fish\'s tail in the sea of the islands. The legend (VI.22): "Sea of the islands of the Indies where one finds spices. Many ships from many nations cross this sea. Here, one finds three kinds of fish named sirens."',
     real: 'Dugongs, which suckle their young at the surface, are the usual guess for the sirens of the eastern seas.',
     source: { label: 'Cresques Project VI.22; Dugong', url: WIKI('Dugong') },
     at: { px: page(12, 1500, 14600), lonlat: null }, size: [1300, 1300], up: 0,
@@ -908,9 +908,9 @@ export const CATALAN_COPY_NOTES = [
 // The map of Juan de la Cosa, 1500 (Museo Naval, Madrid). at.px in the Commons "rotated" scan (2127 x 1163).
 export const DE_LA_COSA_NOTES = [
   {
-    id: 'cosa-new-world', title: 'The New World',
+    id: 'cosa-new-world', title: 'The Americas',
     drawn: 'A long green coast down the west of the sheet, flagged where each crown had sailed.',
-    real: 'The Caribbean and the coasts of the Americas as Spanish, Portuguese and English voyages had found them by 1500. It is the oldest known European map that shows the New World.',
+    real: 'The Caribbean and the coasts of the Americas as Spanish, Portuguese and English voyages had charted them by 1500. It is the oldest known European map that shows the Americas.',
     source: { label: 'Juan de la Cosa, Wikipedia', url: 'https://en.wikipedia.org/wiki/Juan_de_la_Cosa' },
     at: { px: [420, 260], lonlat: null },
   },
@@ -931,14 +931,14 @@ export const DE_LA_COSA_NOTES = [
   {
     id: 'cosa-st-christopher', title: 'St Christopher',
     drawn: 'A panel of St Christopher bearing the infant Christ across the water, where the land should run on to the west.',
-    real: 'Central America, unknown in 1500. The panel may stand for Columbus carrying Christianity over the Atlantic, and it leaves open a passage on to the Indian Ocean.',
+    real: 'Central America, not yet charted by Europeans in 1500. The panel may stand for Columbus carrying Christianity over the Atlantic, and it leaves open a passage on to the Indian Ocean.',
     source: { label: 'Map of Juan de la Cosa, Wikipedia', url: 'https://en.wikipedia.org/wiki/Map_of_Juan_de_la_Cosa' },
     at: { px: [190, 545], lonlat: [-80.0, 9.0] },
   },
   {
     id: 'cosa-english-flags', title: 'Flags in the north',
-    drawn: 'Small flags along the northern coast of the New World.',
-    real: 'The flags give each region to the crown whose ships found it; the northern coast takes in John Cabot\'s English voyage of 1497.',
+    drawn: 'Small flags along the northern coast of the Americas.',
+    real: 'The flags give each region to the crown whose ships had reached it; the northern coast takes in John Cabot\'s English voyage of 1497.',
     source: { label: 'Map of Juan de la Cosa, Wikipedia', url: 'https://en.wikipedia.org/wiki/Map_of_Juan_de_la_Cosa' },
     at: { px: [580, 307], lonlat: null },
   },
@@ -951,7 +951,7 @@ export const DE_LA_COSA_NOTES = [
   },
   {
     id: 'cosa-rediscovery', title: 'Found in a junk shop',
-    drawn: 'The whole skin: Europe, Africa and Asia east of the ocean, the New World west of it.',
+    drawn: 'The whole skin: Europe, Africa and Asia east of the ocean, the Americas west of it.',
     real: 'Baron Walckenaer bought the map from a Paris junk dealer early in the 1800s; Humboldt recognised it as important in 1832. It is now in the Museo Naval, Madrid.',
     source: { label: 'Map of Juan de la Cosa, Wikipedia', url: 'https://en.wikipedia.org/wiki/Map_of_Juan_de_la_Cosa' },
     at: { px: [1700, 300], lonlat: null },
@@ -1005,7 +1005,7 @@ export const AGUIAR_NOTES = [
   {
     id: 'aguiar-mina', title: 'The Mina',
     drawn: 'A castle under the Portuguese flag on the Guinea coast.',
-    real: 'São Jorge da Mina (Elmina), the fort Portugal built in 1482 to trade for West African gold, and later for slaves.',
+    real: 'São Jorge da Mina (Elmina), the fort Portugal built in 1482 to trade for West African gold, and later for enslaved people.',
     source: { label: 'Elmina Castle, Wikipedia', url: 'https://en.wikipedia.org/wiki/Elmina_Castle' },
     at: { px: [3023, 3037], lonlat: [-1.35, 5.08] },
   },
@@ -1024,7 +1024,7 @@ export const AGNESE_NOTES = [
   {
     id: 'agnese-strait', title: 'The strait',
     drawn: 'The track squeezing between South America and a southern land, lettered for Magellan\'s strait.',
-    real: 'The Strait of Magellan, found in 1520. The land south of it is Tierra del Fuego, an island, not the edge of a southern continent.',
+    real: 'The Strait of Magellan, first sailed by Europeans in 1520. The land south of it is Tierra del Fuego, an island, not the edge of a southern continent.',
     source: { label: 'Strait of Magellan, Wikipedia', url: 'https://en.wikipedia.org/wiki/Strait_of_Magellan' },
     at: { px: [4959, 5523], lonlat: [-70.9, -53.5] },
   },

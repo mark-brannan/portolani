@@ -10,11 +10,11 @@ name: Release
 # main queue rather than race; this caller needs no concurrency block of
 # its own.
 #
-# This repo has a publish.yml, so `publish: true` applies. Two
-# release-please packages: the private root (tags vX.Y.Z, publishes
-# nothing) and the plugin in signalk/ (tags signalk-portolan-vX.Y.Z,
-# first release 0.0.1 by `initial-version`). Only a plugin release
-# dispatches publish.yml, by `publish-path: signalk`.
+# One release-please package: the Signal K plugin in signalk/ (tags
+# signalk-portolan-vX.Y.Z, first release 0.0.1 by `initial-version`). The
+# root `portolani` package is private and withdrawn from npm (0.1.1 is
+# deprecated there with a pointer), so it is not released at all.
+# `publish-path: signalk` dispatches publish.yml on each plugin release.
 
 on:
   push:
@@ -32,7 +32,7 @@ jobs:
   release:
     uses: mark-brannan/.github/.github/workflows/release-please.yml@main
     with:
-      publish-path: signalk # the plugin publishes; the private root only tags
+      publish-path: signalk # the only package release-please releases
     secrets:
       RELEASE_PLEASE_APP_CLIENT_ID: ${{ secrets.RELEASE_PLEASE_APP_CLIENT_ID }}
       RELEASE_PLEASE_APP_PRIVATE_KEY: ${{ secrets.RELEASE_PLEASE_APP_PRIVATE_KEY }}
