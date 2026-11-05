@@ -552,3 +552,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261105t070448z
 - ruins not offered as a town style; tent is the camp (portolani#396) (no PR, branch detached)
+
+### 20261105t074741z
+- The compass stands between the two rotate buttons ([#396](https://github.com/mark-brannan/portolani/pull/396))
