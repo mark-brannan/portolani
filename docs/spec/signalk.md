@@ -89,6 +89,7 @@ Feature: Monsters are a choice of Paré or heraldic
   Scenario: the chips
     Given the drawer open
     Then a Monsters group offers None, Paré (scanned) and Heraldic (drawn), each chip showing a monster, one chosen at a time
+    And Heraldic is chosen at first
   Scenario: chosen
     When the user picks Heraldic
     Then heraldic monsters are drawn in the cells' open water only
