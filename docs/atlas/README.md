@@ -218,7 +218,7 @@ levels, from *x* − 0.15 to *x* + 0.15 for a band edge at zoom *x*, and a knob 
 (`tune=turn:`) so it can be set by eye. Outside the span exactly one band is drawn, at full ink.
 
 Why. The turn is the one moment the ornaments change, and so it is where the "re-dealt" feeling
-lives ({I107}'s table): a swap at a whole number replaced every rose and beast between two frames.
+lives ([#107](https://github.com/mark-brannan/portolani/issues/107)'s table): a swap at a whole number replaced every rose and beast between two frames.
 A fade reads as one sheet laid over another. And it does a second job: the last 0.15 of a band is
 its emptiest stretch, and the fade lays the incoming band's network over it, whose nodes stand twice
 as close.
