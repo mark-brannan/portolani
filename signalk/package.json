@@ -2,6 +2,11 @@
   "name": "signalk-portolan",
   "version": "0.0.1",
   "description": "ENC cells as GeoJSON over the Signal K Resources API, drawn as a portolan chart in a webapp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mark-brannan/portolani.git",
+    "directory": "signalk"
+  },
   "type": "module",
   "main": "index.js",
   "scripts": {
