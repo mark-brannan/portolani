@@ -23,6 +23,7 @@ import { PEOPLE_FILE, PICTURES_FILE, SIGHT_PICTURES_FILE, SIGHT_MANIFEST_FILE, s
 import { fold, bestPlace, withoutPartsOfFrames } from './placename.mjs';
 import { nextInCycle } from './cycle.mjs';
 import { planFlight, ease as flyEase, FLY_KNOBS, flyDefaults } from './flight.mjs';
+import { compassTurn } from './compass-turn.mjs';
 
 const memo = new Map();
 // a failed load is forgotten, so the next stop tries it again
@@ -3314,41 +3315,19 @@ function turnWorld(bearing, frame = null) {
 // angle swept, so a chart with no up (the Catalan Atlas) can be walked round (docs/spec/design.md, "A chart with no up
 // turns for the reader").
 const compass = $('compass');
-let spin = null; // { a, bearing, moved } while the compass is held: the pointer's angle about it and the bearing then
 function showCompass() {
   const b = view.bearing ?? 0;
   compass.querySelector('svg').style.transform = `rotate(${-b}deg)`;
   compass.setAttribute('aria-label', b ? `North is ${Math.round(b)}° from the top: click for north up, or drag round to turn the world` : 'North up: drag round to turn the world and the chart with it');
   compass.title = b ? 'North up (drag round to turn)' : 'Drag round to turn the world';
 }
-const angleAbout = (el, e) => { const r = el.getBoundingClientRect(); return Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2)) * 180 / Math.PI; };
-compass.addEventListener('pointerdown', (e) => {
-  takeOver();
-  compass.setPointerCapture(e.pointerId);
-  spin = { a: angleAbout(compass, e), bearing: view.bearing ?? 0, moved: false };
-});
-compass.addEventListener('pointermove', (e) => {
-  if (!spin) return;
-  const d = ((angleAbout(compass, e) - spin.a + 540) % 360) - 180;
-  if (!spin.moved && Math.abs(d) < 4) return; // a click's wobble
-  spin.moved = true;
-  moved(clampView({ ...view, bearing: spin.bearing - d })); // swept clockwise, the world turns clockwise
-  showCompass();
-});
-const letGo = (e) => {
-  if (!spin) return;
-  const { moved: turned } = spin;
-  spin = null;
-  if (turned) stopped(); else if (e.type === 'pointerup' && view.bearing) turnWorld(0);
-};
-compass.addEventListener('click', (e) => { if (e.detail === 0 && view.bearing) turnWorld(0); }); // Enter or Space: north up
-compass.addEventListener('pointerup', letGo);
-compass.addEventListener('pointercancel', letGo);
-compass.addEventListener('keydown', (e) => { // the arrow keys turn it by 15°, as the drag does
-  const d = { ArrowLeft: 15, ArrowRight: -15 }[e.key];
-  if (d == null) return;
-  e.preventDefault();
-  turnWorld((view.bearing ?? 0) + d);
+compassTurn(compass, { // the arrow keys turn it by 15°, as the drag does
+  bearing: () => view.bearing ?? 0,
+  grab: takeOver,
+  turn: (b) => { moved(clampView({ ...view, bearing: b })); showCompass(); },
+  release: stopped,
+  click: () => { if (view.bearing) turnWorld(0); },
+  step: turnWorld,
 });
 
 // A touch or the wheel takes over from a flight: a subject it was carrying is dealt where the map is

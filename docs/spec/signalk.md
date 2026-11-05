@@ -80,6 +80,10 @@ Feature: The scale bar sits in the bottom-left corner
   Scenario: any view
     When the chart is drawn
     Then the scale bar sits in the bottom-left corner, and its gap to the canvas's bottom edge equals its gap to the left edge
+  Scenario: any window
+    Given a window of any size and shape
+    Then the chart fills the window, cropped at its top and right where the shapes differ
+    And the scale bar sits in the window's bottom-left corner, its gaps to the bottom and left edges equal
 
 Feature: No Catalan mountain sprites
   Scenario: mountains and peaks on
@@ -165,3 +169,32 @@ Feature: Follow, the compass and two rotate buttons
   Scenario: the compass needle
     Given any bearing
     Then the compass needle points to north on the chart as drawn
+
+Feature: Hide Toolbars, the compass drag, Constrain View and Go Fullscreen
+  Scenario: the gutter
+    Given the gutter
+    Then from the top stand Hide Toolbars, Layers, follow, rotate counter-clockwise, the compass, rotate clockwise, Constrain View and Go Fullscreen
+  Scenario: hide toolbars
+    When the user presses Hide Toolbars
+    Then every other gutter button and the status line hide and the drawer closes; only that button and the chart stay
+    When the user presses it again
+    Then they come back
+    And the choice is kept across loads
+  Scenario: free rotation on a desktop
+    Given a mouse
+    When the user drags round the compass
+    Then the chart turns live by the angle swept, clockwise for a clockwise sweep, and the needle follows
+    And the compass unlocks
+    And a click on the compass still toggles north up, and the arrow keys turn the chart by 15 degrees
+    And this overtakes the right-drag and Ctrl-drag of the round-three scenario "free rotation"; two fingers still twist on a touch screen
+  Scenario: constrain view
+    Given Constrain View off at first
+    When the user presses Constrain View
+    Then the zoom is held at once to the cells' range: out to where every cell fits the window, in to the finest cell's compilation scale
+    And panning stays free
+    And the choice is kept across loads
+  Scenario: go fullscreen
+    Given a browser with the Fullscreen API
+    When the user presses Go Fullscreen
+    Then the page fills the screen and the button shows pressed; pressed again, or on leaving fullscreen any other way, it shows unpressed
+    And without the API the button is not shown
