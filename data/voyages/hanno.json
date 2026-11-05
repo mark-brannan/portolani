@@ -4,7 +4,7 @@
   "short": "Hanno",
   "who": ["hanno-the-navigator"],
   "when": "c. 500 BC",
-  "summary": "Sixty fifty-oared ships and thirty thousand settlers leave Carthage for the Atlantic coast of Africa, found cities beyond the Pillars of Heracles, and sail on past the river Lixos to a fiery mountain and an island of hairy people, the Gorillai.",
+  "summary": "Sixty fifty-oared ships and thirty thousand settlers leave Carthage for the Atlantic coast of Africa, found cities beyond the Pillars of Heracles, and sail on past the river Lixos to a fiery mountain and an island of hairy, wild people, as the text calls them, the Gorillai.",
   "sources": ["hanno-the-navigator"],
   "legs": [
     { "from": "Carthage", "to": "Pillars of Heracles (Strait of Gibraltar)", "dates": "c. 500 BC", "mode": "sea", "line": "spline",
@@ -25,6 +25,6 @@
   ],
   "events": [
     { "kind": "event", "lon": -16.1, "lat": 23.8, "date": "c. 500 BC", "label": "Cerne, Hanno’s base on the Atlantic coast", "source": "Periplus of Hanno", "cite": "hanno-the-navigator", "text": "The Periplus says Hanno of Carthage sailed with sixty ships of fifty oars and 30,000 settlers to found colonies on the coast of Libya, as Africa was then called. Cerne was the island where they settled. Where it was, from Morocco to Senegal, is still debated." },
-    { "kind": "landfall", "lon": 9.3, "lat": 4.1, "date": "c. 500 BC", "label": "The Chariot of the Gods and the Gorillai", "source": "Periplus of Hanno", "cite": "hanno-the-navigator", "text": "Fire in the sea, streams of it running down a mountain, and the \"Chariot of the Gods\":  a volcano, perhaps Mount Cameroon. Beyond it, a bay of hairy creatures the interpreters called Gorillai; the Carthaginians caught three females, who fought until they were killed, and took their skins home. Whether these were apes or people has been argued ever since; the gorilla took its name from them in 1847." }
+    { "kind": "landfall", "lon": 9.3, "lat": 4.1, "date": "c. 500 BC", "label": "The Chariot of the Gods and the Gorillai", "source": "Periplus of Hanno", "cite": "hanno-the-navigator", "text": "Fire in the sea, streams of it running down a mountain, and the \"Chariot of the Gods\": a volcano, perhaps Mount Cameroon. Beyond it, a bay of hairy creatures the interpreters called Gorillai; the Carthaginians caught three females, who fought until they were killed, and took their skins home. Whether these were apes or people has been argued ever since; the gorilla took its name from them in 1847." }
   ]
 }

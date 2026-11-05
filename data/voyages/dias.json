@@ -42,7 +42,7 @@
       "source": "by Mina and the Guinea coast, the ordinary homeward run; Lisbon in Dec 1488" }
   ],
   "events": [
-    { "kind": "landfall", "lon": 22.15, "lat": -34.18, "date": "3 Feb 1488", "label": "Mossel Bay: the first Europeans ashore in southern Africa", "source": "Mossel Bay (Wikipedia); Barros", "cite": "mossel-bay", "text": "After a month out of sight of land, the ships turned north and found a coast running east: they had rounded the Cape without seeing it. At the watering place they called São Brás, Khoikhoi herders drove the landing party off with stones, and one of them was killed by a crossbow bolt." },
+    { "kind": "landfall", "lon": 22.15, "lat": -34.18, "date": "3 Feb 1488", "label": "Mossel Bay: the first Europeans ashore in southern Africa", "source": "Mossel Bay (Wikipedia); Barros", "cite": "mossel-bay", "text": "After a month out of sight of land, the ships turned north and found a coast running east: they had rounded the Cape without seeing it. At the watering place they called São Brás, Khoikhoi herders drove the landing party off with stones, and one of the herders was shot dead with a crossbow." },
     { "kind": "event", "lon": 26.64, "lat": -33.72, "date": "12 Mar 1488", "label": "Padrão de São Gregório at Kwaaihoek, the farthest point", "source": "Barros", "cite": "britannica-1911-dias", "text": "Having been blown round the Cape without seeing it, Dias sailed on east along the coast, until his tired crew begged him to turn. He raised a stone pillar, a padrão, to St Gregory here and went home, seeing the Cape on the way. Its fragments were found at Kwaaihoek in 1938." }
   ]
 }
