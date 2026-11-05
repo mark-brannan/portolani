@@ -54,6 +54,11 @@
           "type": "json",
           "path": "signalk/package.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "package-lock.json",
+          "jsonpath": "$.packages.signalk.version"
         }
       ]
     }
