@@ -110,6 +110,10 @@ Two conventions the checks cannot see. Where a source says a person died at sea 
 no place, the skull stands at the middle of the leg it must have happened on, and the death's `text` says
 so. An `alternative` is another place of death, never of burial.
 
+A first meeting between a ship and the people already on the shore is told from both sides in the one tile: what the ship's
+journal records, then what the shore's own account says, each marked by who is speaking, with a `doubt` where the two disagree
+about the day or the deed (`cook-1`'s Tūranganui-a-Kiwa, Kamay and Waalumbaal Birri).
+
 A traveller whose road splits into journeys has the whole road in one file and each journey in its own
 (`ibn-battuta` and `ibn-battuta-1` to `ibn-battuta-8`): the parts name the whole road's legs by `sameAs`,
 so a course is drawn once. Where the traveller's own dates and a modern chronology differ, a leg's `dates`
