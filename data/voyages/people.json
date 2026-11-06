@@ -1025,6 +1025,13 @@
       }
     ]
   },
+  "himilco": {
+    "name": "Himilco",
+    "bio": "A Carthaginian navigator of the early fifth century BC, sent to explore the Atlantic coast of Europe while Hanno went south. His own account is lost; it survives in brief notices by Pliny and the poet Avienus. Of his family, one scholar makes him Hanno's brother.",
+    "sources": [
+      "himilco"
+    ]
+  },
   "pytheas": {
     "name": "Pytheas",
     "aka": [
