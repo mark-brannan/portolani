@@ -14,7 +14,7 @@
 // selection those chose, and are written back in the new form.
 // For a while, `debug=sheets[,rings]` and `tune=name:value,...` carry the under-the-hood section
 // (docs/atlas/under-the-hood.md), off by default.
-import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_STYLES, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, REEF_STYLES, PLAYA_STYLES, PEAK_STYLES, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, VOYAGE_PLAY, voyagePlaySeconds, calendarOf, penOn, dayText, vaguer, voyageColours, settleInks, CONFIDENCE_PHRASES, isBroken, legPath, voyageView, CONTINENT_ZOOM_END, readVoyage, chronological, voyageLink, sightMarks, sightHits, drawnMarks, drawnPeaks, peakHits, SIGHT_TILES, noteMarks, pickMark, markClear, tileSpot, groupMarks, dateSpan, readDate, noteCount, drawNoteMark, drawNoteRing, notePulse, drawBadge, fitLineAt, fitLineMoving, drawFitLine, drawMarkGlyph, ZOOM } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_STYLES, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, REEF_STYLES, PLAYA_STYLES, PEAK_STYLES, peakInkSvg, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, VOYAGE_PLAY, voyagePlaySeconds, calendarOf, penOn, dayText, vaguer, voyageColours, settleInks, CONFIDENCE_PHRASES, isBroken, legPath, voyageView, CONTINENT_ZOOM_END, readVoyage, chronological, voyageLink, sightMarks, sightHits, drawnMarks, drawnPeaks, peakHits, SIGHT_TILES, noteMarks, pickMark, markClear, tileSpot, groupMarks, dateSpan, readDate, noteCount, drawNoteMark, drawNoteRing, notePulse, drawBadge, fitLineAt, fitLineMoving, drawFitLine, drawMarkGlyph, ZOOM } from './scene.mjs';
 import { playedOn, playDateText, playPace, isLong } from './scene.mjs'; // the play's band and pen (scripts/voyages.mjs)
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, effectiveOpacity, sheetOpacity, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
@@ -23,6 +23,7 @@ import { PEOPLE_FILE, PICTURES_FILE, SIGHT_PICTURES_FILE, SIGHT_MANIFEST_FILE, s
 import { fold, bestPlace, withoutPartsOfFrames } from './placename.mjs';
 import { nextInCycle } from './cycle.mjs';
 import { planFlight, ease as flyEase, FLY_KNOBS, flyDefaults } from './flight.mjs';
+import { compassTurn } from './compass-turn.mjs';
 
 const memo = new Map();
 // a failed load is forgotten, so the next stop tries it again
@@ -345,8 +346,8 @@ const MOUNTAIN_GLYPHS = {
   colour: svg('<path d="M3 15 10 4l3 5 4-7 8 13Z" fill="#d2965a" stroke="currentColor" stroke-width="1" stroke-linejoin="round"/><path d="M17 2l3 13h5ZM10 4l2 11h-3Z" fill="rgba(150,70,32,.7)"/>'),
 };
 const HILL_GLYPH = svg('<path d="M3 15c3-9 8-9 11 0M12 15c3-7 7-7 10 0" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"/><path d="M6 11l1 2M9 11l1 2M16 11l1 2M19 11l1 2" stroke="currentColor" stroke-width=".6"/>');
-// a lone peak, as the Catalan sprite that stands on each landmark summit
-const PEAK_GLYPH = svg('<path d="M7 15.5 14 2.5l7 13Z" fill="#d6a368" stroke="currentColor" stroke-width="1" stroke-linejoin="round"/><path d="M14 2.5l2.5 13H21Z" fill="rgba(150,70,32,.7)"/><path d="M4 16h20" stroke="#8fa86a" stroke-width="1.4"/>');
+// the lone ink peak (peaks.mjs PEAK_INK) the chart stands on each landmark summit
+const PEAK_GLYPH = svg(peakInkSvg());
 const WIGGLE = (c) => svg(`<path d="M2 9q3-6 6 0t6 0 6 0 6 0" ${stroke(c, 1.2)}/>`);
 const RIVER_GLYPHS = { aguiar: WIGGLE('#3b2a1a'), marina: svg(`<path d="M2 7h24M2 11h24" ${stroke('#3b2a1a', 1)}/>`), plain: lineOf('#4a7fa0', 2) };
 const LAKE_GLYPHS = {
@@ -3314,41 +3315,19 @@ function turnWorld(bearing, frame = null) {
 // angle swept, so a chart with no up (the Catalan Atlas) can be walked round (docs/spec/design.md, "A chart with no up
 // turns for the reader").
 const compass = $('compass');
-let spin = null; // { a, bearing, moved } while the compass is held: the pointer's angle about it and the bearing then
 function showCompass() {
   const b = view.bearing ?? 0;
   compass.querySelector('svg').style.transform = `rotate(${-b}deg)`;
   compass.setAttribute('aria-label', b ? `North is ${Math.round(b)}° from the top: click for north up, or drag round to turn the world` : 'North up: drag round to turn the world and the chart with it');
   compass.title = b ? 'North up (drag round to turn)' : 'Drag round to turn the world';
 }
-const angleAbout = (el, e) => { const r = el.getBoundingClientRect(); return Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2)) * 180 / Math.PI; };
-compass.addEventListener('pointerdown', (e) => {
-  takeOver();
-  compass.setPointerCapture(e.pointerId);
-  spin = { a: angleAbout(compass, e), bearing: view.bearing ?? 0, moved: false };
-});
-compass.addEventListener('pointermove', (e) => {
-  if (!spin) return;
-  const d = ((angleAbout(compass, e) - spin.a + 540) % 360) - 180;
-  if (!spin.moved && Math.abs(d) < 4) return; // a click's wobble
-  spin.moved = true;
-  moved(clampView({ ...view, bearing: spin.bearing - d })); // swept clockwise, the world turns clockwise
-  showCompass();
-});
-const letGo = (e) => {
-  if (!spin) return;
-  const { moved: turned } = spin;
-  spin = null;
-  if (turned) stopped(); else if (e.type === 'pointerup' && view.bearing) turnWorld(0);
-};
-compass.addEventListener('click', (e) => { if (e.detail === 0 && view.bearing) turnWorld(0); }); // Enter or Space: north up
-compass.addEventListener('pointerup', letGo);
-compass.addEventListener('pointercancel', letGo);
-compass.addEventListener('keydown', (e) => { // the arrow keys turn it by 15°, as the drag does
-  const d = { ArrowLeft: 15, ArrowRight: -15 }[e.key];
-  if (d == null) return;
-  e.preventDefault();
-  turnWorld((view.bearing ?? 0) + d);
+compassTurn(compass, { // the arrow keys turn it by 15°, as the drag does
+  bearing: () => view.bearing ?? 0,
+  grab: takeOver,
+  turn: (b) => { moved(clampView({ ...view, bearing: b })); showCompass(); },
+  release: stopped,
+  click: () => { if (view.bearing) turnWorld(0); },
+  step: turnWorld,
 });
 
 // A touch or the wheel takes over from a flight: a subject it was carrying is dealt where the map is

@@ -1,19 +1,93 @@
-// What the webapp ships of portolani's packs and what it asks the scene for: a chart's roses, its
-// cartouche and its scale bar, and the mountains, from the vivid pack, and nothing of the others. The
-// build (build.mjs) trims each pack.json with packOf and copies only the files it keeps; the test reads
-// the same trim.
-export const CHART_KINDS = ['rose', 'cartouche', 'mountain'];
-const KEPT = { vivid: (s) => ['rose', 'cartouche', 'scale', 'mountain'].includes(s.kind) };
+// What the webapp ships of portolani's packs and what it asks the scene for. The build (build.mjs) trims
+// each pack.json with packOf and copies only the files it keeps; the test reads the same trim. A chart
+// draws the drawn (vivid) roses, cartouche, scale bar and towns, the towns and buildings drawn in code, the drawn
+// heraldic monsters and the scanned Paré ones, and no mountain sprite: its mountains are the inked ranges and its
+// peaks the lone ink peak.
+export const ROSES = ['catalan', 'aguiar', 'martines', 'oliva', 'brouscon', 'fleurs', 'dieppe'];
+// a town style and the pack it is drawn from: `plain` is the scene's shapes drawn in code, the towers and the Carta Marina's buildings
+export const TOWNS = { aguiar: 'vivid', martines: 'vivid', 'carta-marina': 'plain', tower: 'plain' };
+export const MONSTERS = { pare: 'scanned', heraldic: 'vivid' }; // a monster family and the pack it is drawn from
+const KEPT = {
+  vivid: (s) => ['rose', 'cartouche', 'scale', 'town'].includes(s.kind) || (s.kind === 'monster' && s.style === 'heraldic'),
+  scanned: (s) => s.kind === 'monster' && s.style === 'pare',
+};
 export const packOf = (name, manifest) => ({ ...manifest, sprites: manifest.sprites.filter((s) => KEPT[name]?.(s) ?? false) });
+
+// A rose style is the drawn roses named for it, each with its small sibling, by id: the pack files the drawn
+// Catalan roses under the Aguiar style, and here they are their own
+const roseOf = (style) => (s) => s.pack === 'vivid' && s.kind === 'rose' && (s.id === `rose-${style}` || s.id.startsWith(`rose-${style}-`));
+// The sprite keys (scene.mjs selectSprites) the drawer's settings choose, from the scene's sprite list (listSprites):
+// `rose` a style of ROSES or 'off', `towns` styles of TOWNS, `monster` a family of MONSTERS or 'off', `cartouche` on or off
+export function spritesFor({ rose, towns, monster, cartouche }, list) {
+  const want = [
+    (s) => ROSES.includes(rose) && roseOf(rose)(s),
+    (s) => cartouche && s.pack === 'vivid' && s.kind === 'cartouche',
+    (s) => s.kind === 'town' && towns.includes(s.style) && TOWNS[s.style] === s.pack,
+    (s) => s.kind === 'monster' && MONSTERS[monster] === s.pack && s.style === monster,
+  ];
+  return list.filter((s) => want.some((w) => w(s))).map((s) => s.key);
+}
+// The sprite a chip shows for a choice: the first of its kind and style
+export const chipSprite = (list, kind, style, pack = 'vivid') => list.find((s) => s.pack === pack && s.kind === kind && (kind === 'rose' ? roseOf(style)(s) : s.style === style));
 
 // The world geo the webapp does ship: Natural Earth's 50m land and coast, byte for byte, the base the
 // cells are drawn over and all a view without a cell draws (app/enc-provider.js); and the page's
 // mountain ranges and landmark peaks, which the build (signalk/geo.mjs) slims from the same pinned
-// coastlines files the page's build does. Every other geo/ file reads as empty.
+// coastlines files the page's build does. Every other geo/ file reads as empty: the depth, towns and
+// water names are the cells'.
 export const CHART_GEO = ['geo/ne-land-50m.geojson', 'geo/ne-coastline-50m.geojson', 'geo/ranges-10m.json', 'geo/peaks-10m.json'];
 
-// The scene's options for a chart: the land in one colour, no names (the world's names would spill
-// over an ENC's water), the sea's depth drawn, and the mountains along the ranges in the M.E. 1937 pen
-// style, with the landmark peaks; `mountains` and `peaks` are the drawer's chips
+// The drawer's settings before any are saved: the drawer's layers on, the cartouche off, the drawn Catalan
+// roses, no towns, the heraldic monsters, north up (the compass locked; `bearing` is the chart's turn once unlocked),
+// the toolbars shown (`bare` hides them) and the zoom free (`constrain` holds it to the cells' range, zoomRange)
+export const DEFAULTS = { depth: true, mountains: true, peaks: true, cartouche: false, rose: 'catalan', towns: [], monster: 'heraldic', northUp: true, bearing: 0, bare: false, constrain: false };
+
+// The zoom at which a bbox [w, s, e, n] just fits a w x h drawing, north up
+const RAD = Math.PI / 180, merc = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * RAD) / 2));
+export const fitZoom = ([w, s, e, n], width, height) => Math.min(Math.log2((2 * Math.PI * height) / (512 * (merc(n) - merc(s)))), Math.log2((2 * Math.PI * width) / (512 * (e - w) * RAD)));
+// The zoom at which a chart is drawn at a scale of 1:denom at a latitude: a drawing pixel is PX_M metres of
+// paper (0.28 mm, as the adapter reckons a view's scale, enc-provider.js), so 1:denom puts PX_M * denom metres
+// of ground under it
+const R = 6378137, PX_M = 0.00028;
+export const scaleZoom = (denom, lat) => Math.log2((2 * Math.PI * R * Math.cos(lat * RAD)) / (512 * PX_M * denom));
+// Constrain View's zoom range for a catalogue: out to where every cell fits the drawing, in to the finest cell's
+// compilation scale (DSPM_CSCL) at its own latitude; never narrower than the fit. Null with no cell
+export function zoomRange(cat, width, height) {
+  const cells = Object.values(cat ?? {}).filter((c) => c.bbox);
+  if (!cells.length) return null;
+  const all = cells.reduce(([w, s, e, n], { bbox: b }) => [Math.min(w, b[0]), Math.min(s, b[1]), Math.max(e, b[2]), Math.max(n, b[3])], [Infinity, Infinity, -Infinity, -Infinity]);
+  const min = fitZoom(all, width, height), scaled = cells.filter((c) => c.scale > 0);
+  const finest = scaled.sort((a, b) => a.scale - b.scale)[0];
+  const max = finest ? scaleZoom(finest.scale, (finest.bbox[1] + finest.bbox[3]) / 2) : min;
+  return { min, max: Math.max(min, max) };
+}
+
+// The scene's options for a chart: the land in one colour, the sea's depth drawn, the mountains along the
+// ranges in the M.E. 1937 pen style, the landmark peaks (scene.mjs draws each as the lone ink peak) and the
+// cells' water lettered on the map, and no mountain sprite (kind `mountain` stays, as it draws the peaks). The
+// atlas's sheets place the roses and rhumb lines, as on the page (docs/atlas/README.md); the beasts stand on the
+// view's own water (`atlas: 'roses'`), since the sheets' sea is the world's, not the cells'. The scale bar stands as far
+// from the bottom edge as from the left (`scaleGap`), the cartouche's corner margin
 export const MOUNTAINS = ['me1937'];
-export const CHART_OPTIONS = { kinds: CHART_KINDS, names: false, land: 'off', islands: false, depth: true, relief: MOUNTAINS, peaks: true, autoTitle: false, title: 'PORTOLANI' };
+export const CHART_OPTIONS = { kinds: ['rose', 'cartouche', 'monster', 'mountain'], names: true, land: 'off', islands: false, depth: true, relief: MOUNTAINS, peaks: true, peakNames: true, atlas: 'roses', scaleGap: 22, autoTitle: false, title: 'PORTOLANI' };
+
+// The scene options for the drawer's settings, `list` the scene's sprite list, `cells` the cells' own options
+// (enc-provider.js cellData): their built-up areas stand towns only while a Towns chip is on, so all off is none
+export function chartOptions(settings, list, cells = {}) {
+  // a kind turned off is left out, so the scene draws none (no rose sprite chosen would draw its plain rose)
+  const on = { rose: ROSES.includes(settings.rose), cartouche: settings.cartouche, monster: settings.monster in MONSTERS, mountain: true };
+  const kinds = CHART_OPTIONS.kinds.filter((k) => on[k]);
+  return { ...CHART_OPTIONS, ...cells, places: settings.towns.length ? cells.places ?? [] : [], kinds, sprites: spritesFor(settings, list), depth: settings.depth, relief: settings.mountains ? MOUNTAINS : [], peaks: settings.peaks === true };
+}
+// Saved settings read over the defaults
+export function readSettings(saved) {
+  const s = { ...DEFAULTS, ...saved };
+  if (!Array.isArray(s.towns)) s.towns = [...DEFAULTS.towns];
+  s.towns = s.towns.filter((t) => t in TOWNS);
+  s.northUp = s.northUp !== false;
+  s.bare = s.bare === true; s.constrain = s.constrain === true;
+  s.bearing = Number.isFinite(s.bearing) ? ((s.bearing % 360) + 360) % 360 : 0;
+  delete s.courseUp;
+  if (s.rose !== 'off' && !ROSES.includes(s.rose)) s.rose = DEFAULTS.rose;
+  return s;
+}
