@@ -1,11 +1,11 @@
 // Builds the four storyboards as HTML, then shoots them. Run from this folder: node build.mjs
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, unlinkSync } from 'node:fs';
 const W = 700, H = 440;
 const rows = [
   ['Reign c. 1312 to c. 1337', 'Accession dated 25 years before his death', 'attested', 'Most accepted'],
   ['In Cairo 19 July to 18 October 1324', 'One secondary source', 'reported', 'Days approximate'],
-  ['Gold fell 25 to under 22 dirhams, 12 years', 'Al-Umari', 'reported', 'His report'],
-  ['60,000 men, 12,000 slaves with gold bars', 'Later Arabic accounts', 'legend', 'Literary, not a count'],
+  ['Gold fell 25 to at most 22 dirhams, 12 years', 'Al-Umari', 'reported', 'His report'],
+  ['The party\'s size', 'Seven writers over three centuries', 'legend', 'Grows with distance; no eyewitness count'],
   ['About 18 tonnes of gold', 'One chain, al-Umari to Ibn Khaldun', 'legend', 'One source repeated'],
   ['Richest person ever, $400 billion', 'Online articles', 'legend', 'Cannot be calculated'],
 ];
@@ -79,7 +79,7 @@ const c3 = page(T3, '3. The road, told by scrolling', 'Entry is the hajj, 1324 t
  frame(`<div class="map" style="left:-760px;top:-120px;width:1600px;height:1000px"></div>
   <svg style="position:absolute;inset:0" width="700" height="440"><path d="M-30 340 C 140 150 330 110 520 118" stroke="#e0b84e" stroke-width="4" fill="none"/><circle cx="520" cy="118" r="8" fill="#e0b84e"/></svg>
   <div class="fig" style="left:420px;top:150px;width:110px;height:79px;background-image:url(musa.jpg);border:2px solid #e0b84e;border-radius:6px"></div>
-  <div class="tile" style="left:24px;top:230px;width:420px;font-size:14px"><h3>19 July 1324. Cairo</h3>Three days by the pyramids, three months in the city, gold given away freely. Al-Umari: a mithqal fell from 25 dirhams to under 22.<br><span class="chip on">attested</span> <span class="chip">the fall: his report</span></div>${rail(50, '19 July 1324')}`, 'View 2. Mid-rail, Cairo: the Atlas Musa appears pinned to the stop; the numbers carry their grade as chips.'),
+  <div class="tile" style="left:24px;top:230px;width:420px;font-size:14px"><h3>19 July 1324. Cairo</h3>Three days by the pyramids, three months in the city, gold given away freely. Al-Umari: a mithqal fell from 25 dirhams to at most 22.<br><span class="chip on">attested</span> <span class="chip">the fall: his report</span></div>${rail(50, '19 July 1324')}`, 'View 2. Mid-rail, Cairo: the Atlas Musa appears pinned to the stop; the numbers carry their grade as chips.'),
  frame(`<div class="map" style="left:-20px;top:-300px;width:1600px;height:1000px"></div>
   <svg style="position:absolute;inset:0" width="700" height="440"><path d="M100 300 C 40 300 0 250 -20 200" stroke="#efe4c4" stroke-width="3" fill="none" stroke-dasharray="3 7"/></svg>
   <div class="tile" style="left:200px;top:36px;width:470px;font-size:14px"><h3>Before the king: the fleet that did not return</h3>Told once, by al-Umari, from Musa's own account: 2,000 ships west into the Atlantic, none back. Drawn dotted, where it ends no one knows.<br><span class="chip on">doubted</span><span class="chip">Rex Melly, 1339</span><span class="chip">Fact or Fiction?</span></div>${rail(100, 'The coda')}`, 'View 3. End of the rail: the fleet (doubted, dotted), and chips onward to Dulcert and the table.')],
@@ -102,9 +102,10 @@ const c4 = page(T4, '4. The ledger', 'Entry is the claim-and-grade table as a ti
 
 for (const [n, h] of [[1, c1], [2, c2], [3, c3], [4, c4]]) writeFileSync(`c${n}.html`, h);
 
-// overview: the four entry views stacked, to compare at a glance
+// shoot each storyboard to its own PNG, then remove the scratch HTML
 import { chromium } from 'playwright-core';
 const b = await chromium.launch({executablePath:process.env.CHROME}); const p = await b.newPage({ viewport: { width: 3 * W + 2 * 110 + 64, height: 700 }, deviceScaleFactor: 1 });
 const names = ['the-king-opens-the-door', 'two-portraits', 'the-road', 'the-ledger'];
 for (let i = 1; i <= 4; i++) { await p.goto('file://' + process.cwd() + `/c${i}.html`); await p.waitForTimeout(300); await p.screenshot({ path: `../${i}-${names[i - 1]}.png`, fullPage: true }); }
 await b.close();
+for (let i = 1; i <= 4; i++) unlinkSync(`c${i}.html`);
