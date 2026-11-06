@@ -2163,7 +2163,7 @@
     "aka": [
       "Tayeto"
     ],
-    "bio": "Tupaia's young attendant, whom Cook's journal calls 'our poor Indian boy Tayeto'. He died at Batavia in early November 1770, some weeks before Tupaia.",
+    "bio": "Tupaia's young attendant, whom Cook's journal calls \"our poor Indian boy Tayeto\", Cook's words, not ours. He died at Batavia in early November 1770, some weeks before Tupaia.",
     "sources": [
       "tupaia-navigator"
     ],
@@ -2172,7 +2172,7 @@
       "lat": -6.08,
       "date": "c. 9 Nov 1770",
       "label": "Taiata dies at Batavia, 1770",
-      "text": "Cook's journal records the loss of his poor Indian boy on 9 November 1770, at Batavia.",
+      "text": "Cook's journal records the loss of \"his poor Indian boy\" on 9 November 1770, at Batavia.",
       "source": "Wikipedia, Tupaia (navigator); Cook's journal",
       "cite": "tupaia-navigator",
       "confidence": "inferred",
@@ -2181,7 +2181,7 @@
   },
   "thomas-richmond": {
     "name": "Thomas Richmond",
-    "bio": "One of two Black servants of Joseph Banks aboard the Endeavour, listed in the crew as a Negro servant. He froze to death on 16 January 1769 when Banks's party, collecting plants inland from the Bay of Good Success in Tierra del Fuego, was caught by snow and cold. Banks wrote that Richmond was upon his legs but not able to walk.",
+    "bio": "One of two Black servants of Joseph Banks aboard the Endeavour, listed in the crew as \"a Negro servant\" (the crew list's words). He froze to death on 16 January 1769 when Banks's party, collecting plants inland from the Bay of Good Success in Tierra del Fuego, was caught by snow and cold. Banks wrote that Richmond was upon his legs but not able to walk.",
     "sources": [
       "banks-servants-1769"
     ],
@@ -2198,7 +2198,7 @@
   },
   "george-dorlton": {
     "name": "George Dorlton",
-    "bio": "One of two Black servants of Joseph Banks aboard the Endeavour, listed in the crew as a Negro servant. He froze to death on 16 January 1769 when Banks's party, collecting plants inland from the Bay of Good Success in Tierra del Fuego, was caught by snow and cold. One researcher reads the records as showing that Dorlton was Banks's slave, the man called George 'Rupee'.",
+    "bio": "One of two Black servants of Joseph Banks aboard the Endeavour, listed in the crew as \"a Negro servant\" (the crew list's words). He froze to death on 16 January 1769 when Banks's party, collecting plants inland from the Bay of Good Success in Tierra del Fuego, was caught by snow and cold. One researcher reads the records as showing that Dorlton was Banks's slave, the man called George 'Rupee'.",
     "sources": [
       "banks-servants-1769"
     ],
@@ -2260,7 +2260,7 @@
   },
   "kalaniopuu": {
     "name": "Kalaniʻōpuʻu",
-    "bio": "The ruling chief of Hawaiʻi Island whom Cook tried to take hostage at Kaʻawaloa on 14 February 1779, until the Discovery's stolen cutter was returned.",
+    "bio": "The ruling chief (aliʻi nui) of Hawaiʻi Island. He was at Kaʻawaloa, on Kealakekua Bay, on 14 February 1779, when Cook came ashore to take him hostage until the Discovery's stolen cutter was returned.",
     "sources": [
       "death-of-james-cook"
     ]
