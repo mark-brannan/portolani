@@ -573,3 +573,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261106t224543z
 - Marcos de Niza's death is a date with no mark: one source gives 25 Mar 1558, no place is recorded ([#400](https://github.com/mark-brannan/portolani/pull/400))
+
+### 20261106t224547z
+- Marcos's way home is drawn as a dotted leg to Compostela, 2 Sep 1539 (Winship); Wikipedia's Mexico City is in the leg note ([#400](https://github.com/mark-brannan/portolani/pull/400))
