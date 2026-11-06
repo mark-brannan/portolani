@@ -588,3 +588,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261106t225247z
 - Left out the dossier's claim that Hitihiti was the first Polynesian in Antarctic waters, the Rurutu stop, and every Commons portrait filename, none of which I could check ([#401](https://github.com/mark-brannan/portolani/pull/401))
+
+### 20261106t225254z
+- Added one README convention: a first meeting is told from both sides in one tile ([#401](https://github.com/mark-brannan/portolani/pull/401))
