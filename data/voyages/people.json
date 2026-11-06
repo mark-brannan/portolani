@@ -1544,12 +1544,13 @@
     "death": {
       "lon": -108.98,
       "lat": 34.93,
-      "date": "1539",
-      "label": "Esteban killed at Hawikuh, 1539",
-      "source": "Wikipedia, Esteban de Dorantes",
-      "cite": "esteban-de-dorantes",
-      "text": "He went ahead of Fray Marcos de Niza and was held overnight without food or water, then attacked and killed at Cíbola. Accounts differ on why: Castañeda says the people of Cíbola thought it hard of him to ask for turquoise and women, Alarcón that he boasted of armed men behind him, and Coronado that they had been told he was a bad man. Sancho Dorantes says he was shot through with arrows.",
-      "doubt": "In 2002 the historian Juan Francisco Maura argued that Esteban was never killed at all: the story of his death was a ruse that set a slave free, and he lived on among the Zuni."
+      "date": "May 1539",
+      "label": "Esteban killed at Hawikuh, May 1539",
+      "confidence": "inferred",
+      "text": "Every account of his death here is a Spanish one or a Spanish record of a report; none was written by the Zuni, and the Zuni story comes down through Cushing, a 19th-century ethnographer, as quoted in the National Park Service study. Esteban sent ahead a gourd hung with rattles and two feathers; the chief of the first Zuni town threw it down and said that anyone who came would be killed. He came on, and was lodged outside the town. Fray Marcos had it from a survivor that nothing was given to eat or drink that night, and that next morning, as people came out of the town, he fled, and the wounded survivor saw no more of him. Castañeda, writing years later, has it that he was held three days while the elders questioned him, took him for a spy, found it hard of him to ask for turquoise and women, and killed him, sending about sixty of his followers home. Coronado, 3 August 1540: the death was certain, since things he wore had been found; Coronado wrote that the Zuni said they killed him because the Indians of Chichilticale had called him a bad man who killed and assaulted women. Alarcón, on the Colorado a year later, reporting what the people there told him: the chief asked if he had brothers, and he answered that he had an infinite number, not far off, so the chiefs resolved to kill him. Sancho Dorantes de Carranza: he was shot through with arrows like a Saint Sebastian. The Zuni story as Cushing wrote it down has the Black Mexican killed at Kya-ki-me; another says their wise men kicked him back south. In 2002 Juan Francisco Maura argued that the Zuni helped him fake his death and he lived on among them.",
+      "doubt": "The accounts differ on how and why he died, Zuni tradition puts the killing at Kya-ki-me rather than Hawikuh, and Maura (2002) holds that he was not killed at all.",
+      "source": "Marcos de Niza, Coronado, Castañeda and Alarcón, as translated in Winship; Cushing's Zuni account (Kya-ki-me) as quoted in the National Park Service study, hawikuh-historical-background-study",
+      "cite": "winship-coronado-expedition"
     },
     "images": [
       {
@@ -2099,6 +2100,26 @@
         "licence": "CC BY 3.0",
         "note": "The memorial to Nikitin at Feodosia, the old Kaffa, where he landed on the Black Sea on his way home in 1474."
       }
+    ]
+  },
+  "marcos-de-niza": {
+    "name": "Marcos de Niza",
+    "aka": [
+      "Fray Marcos de Niza",
+      "Marcos of Nice"
+    ],
+    "bio": "A Franciscan born at Nice, then in Savoy, who had been with Pizarro in Peru and was a vice-commissary of his order in New Spain. Viceroy Mendoza chose him in 1539 to lead the party that went north to learn of the cities of Cíbola, and Esteban was sent ahead of him. His report, that he had seen Cíbola from a hill and that it looked larger than Mexico City, started the Coronado expedition of 1540, which he guided; Coronado found only Zuni towns, blamed him and sent him back to Mexico. Whether he came near Cíbola at all is still argued.",
+    "death": {
+      "date": "25 Mar 1558",
+      "label": "Marcos de Niza died, 25 Mar 1558",
+      "text": "One source gives his death as 25 March 1558; the Handbook of Texas says only that it comes from one source. Wikipedia says he died in Mexico; the place is not recorded in the pages read, so no mark is drawn.",
+      "source": "Wikipedia, Marcos de Niza; Handbook of Texas",
+      "cite": "marcos-de-niza"
+    },
+    "sources": [
+      "marcos-de-niza",
+      "tsha-marcos-de-niza",
+      "winship-coronado-expedition"
     ]
   }
 }
