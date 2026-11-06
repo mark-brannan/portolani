@@ -555,3 +555,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261105t074741z
 - The compass stands between the two rotate buttons ([#396](https://github.com/mark-brannan/portolani/pull/396))
+
+### 20261106t224026z
+- Biscay hazards mark drawn at 46N 6W as a speculative guess, since Avienus names no place ([#398](https://github.com/mark-brannan/portolani/pull/398))
