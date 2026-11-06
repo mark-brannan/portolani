@@ -72,7 +72,7 @@ Feature: Keys the link carries besides the view and the style  (hash keys `overl
   Scenario: person=
     Given a link with `person=<id>`, an id of lowercase letters, digits and hyphens that starts with a letter
     When the page loads
-    Then that person's life bar in the People lane is pressed; any other text is no person, and the hash omits the key
+    Then that person's row in the People drawer is pressed and their tile open under it; any other text is no person, and the hash omits the key
   Scenario: sight=, site=
     Given a link with `sight=Tyre`, a name in the sights' tiles (`SIGHT_TILES`, scripts/sights.mjs), and for a sight drawn as several marks `site=1`, a single numeral, the mark whose pictures are dealt
     When the page loads

@@ -5,9 +5,7 @@
 // A chart of several pages (the Catalan Atlas's eight) is one sheet of `panels`: each page its own image and
 // mask at an x offset within the sheet's full-resolution px, loaded one by one and drawn as each arrives.
 
-const RAD = Math.PI / 180;
-const mercDeg = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * RAD) / 2)) / RAD; // Mercator latitude, in degrees
-const latOf = (m) => (2 * Math.atan(Math.exp(m * RAD)) - Math.PI / 2) / RAD;
+import { RAD, mercDeg, latOfMerc as latOf } from './frame-box.mjs';
 
 // A similarity (scale, turn, shift; no mirror) from scan px to (longitude, Mercator latitude), fitted by
 // least squares to `pairs` [[x, y], [lon, lat]]. The scan's y runs down, so it is z = x - iy and the
@@ -100,17 +98,15 @@ export function sheetFrame(overlay, sheet) {
   return { lonMin: Math.min(...lons), lonMax: Math.max(...lons), latMin: latOf(Math.min(...mercs)), latMax: latOf(Math.max(...mercs)) };
 }
 
-// The view that shows the whole sheet, in Mercator, with `pad` of its size clear round it: contained, never cropped.
-// With a `bearing` the view keeps it, and the sheet is framed as it stands turned on the canvas.
+// The view centred on the sheet at its one zoom: the zoom that contains it, with `pad` of its size clear round it, standing
+// as the chart is drawn (its `up`, else upright). The world's bearing never changes it, so a sheet on a slant is framed
+// closer, its corners off the page (docs/spec/design.md, "one zoom per placement"). With a `bearing` the view keeps it.
 export function sheetView(overlay, sheet, { w = 1600, h = 1000, pad = 0.08, bearing = 0 } = {}) {
-  if (bearing) {
-    const t = (sheet.turn - bearing) * RAD, c = Math.abs(Math.cos(t)), s = Math.abs(Math.sin(t)), sw = overlay.width * sheet.scale, sh = overlay.height * sheet.scale; // degrees
-    const k = Math.min(w / ((sw * c + sh * s) * (1 + 2 * pad) * RAD), h / ((sw * s + sh * c) * (1 + 2 * pad) * RAD));
-    return { lon: sheet.lon, lat: sheet.lat, zoom: Math.log2((k * 2 * Math.PI) / 512), bearing };
-  }
-  const f = sheetFrame(overlay, sheet), m0 = mercDeg(f.latMin), m1 = mercDeg(f.latMax);
-  const k = Math.min(w / ((f.lonMax - f.lonMin) * (1 + 2 * pad) * RAD), h / ((m1 - m0) * (1 + 2 * pad) * RAD)); // px per radian
-  return { lon: (f.lonMin + f.lonMax) / 2, lat: latOf((m0 + m1) / 2), zoom: Math.log2((k * 2 * Math.PI) / 512) };
+  const quarter = Math.round((overlay.up ?? 0) / 90) % 2 !== 0; // drawn on its side, as de la Cosa is west up
+  const sw = overlay.width * sheet.scale, sh = overlay.height * sheet.scale; // degrees of Mercator
+  const [across, down] = quarter ? [sh, sw] : [sw, sh];
+  const k = Math.min(w / (across * (1 + 2 * pad) * RAD), h / (down * (1 + 2 * pad) * RAD)); // px per radian
+  return { lon: sheet.lon, lat: sheet.lat, zoom: Math.log2((k * 2 * Math.PI) / 512), ...(bearing ? { bearing } : {}) };
 }
 
 // Whether there is anything of the overlay to draw: its image, or a chart of panels (drawn as they arrive).
@@ -219,33 +215,39 @@ export function drawOverlay(g, overlay, proj, opacity = 0.6, { w = 1600, h = 160
 
 // The overlays in the link: `overlay=<id>,<id>` the charts' sheets laid over the map, bottom to top, each at its own
 // placement; `sheet=<lon>,<lat>,<scale>,<turn>;...` where each was dragged to, one slot per id in the same order, an
-// empty slot (or none) the chart's own; `overlaymode=pieces` the warped pieces instead, with `overlayopacity=<0..1>` how
+// empty slot (or none) the chart's own; `sheetopacity=<0..1>,...` each sheet's own opacity, one slot per id in the same order, an empty slot (or none) the mode's own; `overlaymode=pieces` the warped pieces instead, with `overlayopacity=<0..1>` how
 // strongly, and the sheet too, faded so the map shows through; `compare=wipe|swipe` (pieces mode only) the pieces drawn only left of a vertical line, at `comparepos=<0..1>` of the width, the map bare to its right; `sheethides=1` a voyage's fly takes a sheet off if it would cover the frame (otherwise the voyage is drawn over the sheets). None laid, the sheet, its own placement and the mode's own opacity (the sheet 1, the pieces 0.6) are the defaults, and a default is left out of the hash.
 // `sheets` holds a placement by id, and may keep one for a chart not laid (hidden by its eye), which the hash leaves out.
 // `ids`, when given, are the overlays the site has: any other id is dropped. `q` is a URLSearchParams.
 export const OVERLAY_MODES = ['sheet', 'pieces'];
 export const COMPARE_MODES = ['off', 'wipe', 'swipe'];
-export const OVERLAY_DEFAULTS = { overlays: [], overlayMode: 'sheet', sheets: {}, overlayOpacity: null, sheetHides: false, compare: 'off', comparePos: 0.5 };
+export const OVERLAY_DEFAULTS = { overlays: [], overlayMode: 'sheet', sheets: {}, opacities: {}, overlayOpacity: null, sheetHides: false, compare: 'off', comparePos: 0.5 };
 // `overlayOpacity` null is the mode's own: the whole sheet opaque, the warped pieces at 0.6.
 export const PIECES_OPACITY = 0.6;
 export const effectiveOpacity = (st) => st.overlayOpacity ?? (st.overlayMode === 'pieces' ? PIECES_OPACITY : 1);
+// One sheet's opacity: its own slider's, else the mode's; the warped pieces share one.
+export const sheetOpacity = (st, id) => (st.overlayMode === 'sheet' ? st.opacities?.[id] : null) ?? effectiveOpacity(st);
+const unit = (text) => { const v = Number(text); return text !== '' && v >= 0 && v <= 1 ? v : null; };
 const placement = (text) => {
   const at = text.split(',').map(Number);
   return at.length === 4 && at.every(Number.isFinite) && Math.abs(at[1]) < 85.1 && at[2] > 0 ? { lon: at[0], lat: at[1], scale: at[2], turn: at[3] } : null;
 };
 export function overlayFromHash(q, ids) {
-  const o = Number(q.get('overlayopacity')), cp = Number(q.get('comparepos')), mode = q.get('overlaymode'), slots = (q.get('sheet') ?? '').split(';');
-  const overlays = [], sheets = {};
+  const o = Number(q.get('overlayopacity')), cp = Number(q.get('comparepos')), mode = q.get('overlaymode'), slots = (q.get('sheet') ?? '').split(';'), fades = (q.get('sheetopacity') ?? '').split(',');
+  const overlays = [], sheets = {}, opacities = {};
   (q.get('overlay') ?? '').split(',').forEach((id, i) => {
     if (!/^[a-z][a-z0-9-]*$/.test(id) || id === 'off' || (ids && !ids.has(id)) || overlays.includes(id)) return;
     overlays.push(id);
     const s = placement(slots[i] ?? '');
     if (s) sheets[id] = s;
+    const a = unit(fades[i] ?? '');
+    if (a != null) opacities[id] = a;
   });
   return {
     overlays,
     overlayMode: OVERLAY_MODES.includes(mode) ? mode : OVERLAY_DEFAULTS.overlayMode,
     sheets,
+    opacities,
     sheetHides: q.get('sheethides') === '1',
     overlayOpacity: q.has('overlayopacity') && o >= 0 && o <= 1 ? o : OVERLAY_DEFAULTS.overlayOpacity, // null: the mode's own
     compare: COMPARE_MODES.includes(q.get('compare')) ? q.get('compare') : OVERLAY_DEFAULTS.compare,
@@ -257,6 +259,8 @@ export function overlayToHash(st, q) {
   if (st.overlayMode && st.overlayMode !== OVERLAY_DEFAULTS.overlayMode) q.set('overlaymode', st.overlayMode);
   const slots = st.overlays.map((id) => (st.sheets[id] ? sheetText(st.sheets[id]) : ''));
   if (slots.some(Boolean)) q.set('sheet', slots.join(';').replace(/;+$/, ''));
+  const fades = st.overlays.map((id) => (st.opacities?.[id] != null ? String(+(+st.opacities[id]).toFixed(2)) : ''));
+  if (fades.some(Boolean)) q.set('sheetopacity', fades.join(',').replace(/,+$/, ''));
   if (st.sheetHides) q.set('sheethides', '1');
   if (st.overlayOpacity != null) q.set('overlayopacity', st.overlayOpacity);
   if (st.compare && st.compare !== OVERLAY_DEFAULTS.compare) q.set('compare', st.compare);

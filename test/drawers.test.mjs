@@ -17,3 +17,34 @@ test('no prefers-color-scheme rule anywhere in public/', () => {
     assert.doesNotMatch(readFileSync(p, 'utf8'), /prefers-color-scheme/, `${f} follows the browser's light/dark setting`);
   }
 });
+
+// The skull clears the map while a drawer is in use (docs/spec/drawer.md, 'The skull stays in reach while a drawer is
+// in use'): it sits over the drawers, an open drawer stops above it, and the faint skull wipe replaces the broom.
+test('the skull sits over the drawers, and the broom is gone', () => {
+  const html = readFileSync(path.join(pub, 'index.html'), 'utf8'), js = readFileSync(path.join(pub, 'page.js'), 'utf8');
+  const z = (sel) => Number(html.match(new RegExp(`\\n  ${sel} \\{[^}]*z-index: (\\d+)`))?.[1]);
+  assert.ok(z('#memento') > z('\\.drawer'), 'the skull is drawn over the drawers');
+  assert.match(html, /\.drawer \{[^}]*max-height: calc\(100dvh[^;}]*var\(--memento-h\)/, 'an open drawer stops above the skull');
+  assert.doesNotMatch(html + js, /broom/i, 'the broom is retired');
+  assert.match(html, /<div id="wipe"/, 'the wipe is there');
+});
+
+// The skull is the one clear (docs/spec/design.md, 'The skull is the one clear'): it lifts the voyages and the charts as
+// well as the table, leaves the view alone, and the Voyages drawer has no Clear of its own. Offline, source only; the
+// behaviour (the skull clicked, the list emptied, the map kept, the drawer open) is driven in test/touch.test.mjs.
+test('the skull is the one clear, and the voyages have no Clear of their own', () => {
+  const js = readFileSync(path.join(pub, 'page.js'), 'utf8');
+  const body = js.match(/\nasync function clearMap\(.*\) \{([\s\S]*?)\n\}/)?.[1] ?? '';
+  assert.match(js, /\$\('sweep'\)\.addEventListener\('click', \(\) => \{[\s\S]*?clearMap\(/, 'the skull runs clearMap');
+  assert.match(js, /\$\('sweep'\)\.addEventListener\('click', \(\) => \{[\s\S]*?skullRise\(\); wordsRise\(/, 'the skull and the phrase show on every click, the map already clear or not');
+  assert.match(body, /clearTable\(true, false\)/, 'it clears the table');
+  assert.match(body, /voyages: \[\]/, 'it takes every voyage off');
+  assert.match(body, /overlays: \[\], sheets: \{\}/, 'it lifts every sheet, back to its own place');
+  assert.doesNotMatch(body, /turnWorld|goTo/, 'it neither turns nor flies the map');
+  // a function it calls that the page no longer declares throws mid-clear and leaves the charts on the map (#368 removed turnedTo)
+  for (const [, name] of body.matchAll(/(?<![.\w])([a-z]\w*)\(/gi)) {
+    if (['if', 'async', 'function', 'await', 'Object', 'Promise', 'Math'].includes(name)) continue;
+    assert.match(js, new RegExp(`(?:function|const|let|var) ${name}\\b`), `clearMap calls ${name}, which the page declares`);
+  }
+  assert.doesNotMatch(js, /groupTools\('Voyages'/, 'the Voyages drawer has no Clear');
+});

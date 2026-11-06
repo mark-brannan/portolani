@@ -4,7 +4,7 @@
     "aka": [
       "Leif the Lucky"
     ],
-    "bio": "Son of Erik the Red, who founded the first Norse settlement in Greenland, he was raised there. The Icelandic sagas have him reach Vinland, usually read as the coast of North America, about half a millennium before Columbus; the Norse site at L'Anse aux Meadows in Newfoundland may be his. After his father died he led the Greenland settlement.",
+    "bio": "The son of Erik the Red, he grew up in the Norse settlement his father founded in Greenland. The Icelandic sagas have him reach Vinland, usually read as the coast of North America, about half a millennium before Columbus; the Norse site at L'Anse aux Meadows in Newfoundland may be his. After his father died he led the Greenland settlement.",
     "images": [
       {
         "file": "Christian_Krohg_-_Leiv_Eirikson_discovering_America_-_Google_Art_Project.jpg",
@@ -205,7 +205,7 @@
           "lat": 31.63,
           "place": "Marrakesh",
           "label": "Died at Marrakesh, by one modern account",
-          "text": "Some modern summaries put his death at Marrakesh; the Rihla ends in 1355 and no chronicle of his death survives. The tomb shown at Tangier, his birthplace, is purported, and marks a burial tradition, not a place of death.",
+          "text": "Some modern summaries put his death at Marrakesh; the Rihla ends in 1355 and no chronicle of his death survives. The tomb shown at Tangier, his birthplace, is unproven: it marks a burial tradition, not a place of death.",
           "source": "Wikipedia, Ibn Battuta (infobox); the Tangier tomb is captioned \"purported\""
         }
       ]
@@ -436,7 +436,7 @@
   },
   "juan-de-la-cosa": {
     "name": "Juan de la Cosa",
-    "bio": "Owner and master of the Santa María on the first voyage, pilot on later ones, and maker of the oldest surviving chart to show the New World, in 1500.",
+    "bio": "Owner and master of the Santa María on the first voyage, pilot on later ones, and maker of the oldest surviving chart to show the Americas, in 1500.",
     "images": [
       {
         "file": "Juan_de_la_Cosa,_Juan_Manuel_Núñez_Báñez.jpg",
@@ -493,7 +493,7 @@
   },
   "paulo-da-gama": {
     "name": "Paulo da Gama",
-    "bio": "Vasco da Gama's elder brother, a son of Estêvão da Gama and Isabel Sodré, he commanded the São Rafael on the first voyage to India. She was scuttled on the way home and he went over to the São Gabriel. He fell ill; his brother took him to Terceira in the Azores and stayed with him until he died. He is buried at Angra do Heroísmo.",
+    "bio": "Vasco da Gama's elder brother, a son of Estêvão da Gama and Isabel Sodré, he commanded the São Rafael on the first voyage to India. She was burned on the way home, with too few men left to sail her, and he went over to the São Gabriel. He fell ill; his brother took him to Terceira in the Azores and stayed with him until he died. He is buried at Angra do Heroísmo.",
     "images": [
       {
         "file": "Paulo_da_Gama_-_Diario_Illustrado_(30Jun1897).png",
@@ -501,7 +501,39 @@
         "author": "Francisco Pastor Muntó",
         "date": "1897",
         "licence": "Public domain",
-        "note": "A newspaper portrait four centuries after his death."
+        "note": "A portrait engraving printed in the Diario Illustrado on 30 June 1897, four centuries after his death."
+      },
+      {
+        "file": "Roteiro_da_primeira_viagem_de_Vasco_da_Gama.jpg",
+        "kind": "source",
+        "author": "Álvaro Velho (attributed; Commons credits Vasco da Gama)",
+        "date": "between 1497 and 1499",
+        "licence": "Public domain",
+        "note": "The first page of the Roteiro, the journal of the first voyage, naming Vasco da Gama as captain-major and Paulo da Gama, his brother, as captain of another ship."
+      },
+      {
+        "file": "Gama_armada_of_1497_(Livro_de_Lisuarte_de_Abreu).jpg",
+        "kind": "ship",
+        "author": "Unknown (Livro de Lisuarte de Abreu)",
+        "date": "c. 1565",
+        "licence": "Public domain",
+        "note": "A 16th-century drawing of the 1497 armada from Lisuarte de Abreu's book of fleets, with the ships labelled for Paulo da Gama, Vasco da Gama and Nicolau Coelho."
+      },
+      {
+        "file": "Igreja_de_Nossa_Senhora_da_Guia_-_Paulo_da_Gama.jpg",
+        "kind": "site",
+        "author": "Concierge.2C",
+        "date": "2010",
+        "licence": "CC BY-SA 3.0",
+        "note": "The left transept of the Igreja de Nossa Senhora da Guia in the Convento de São Francisco, Angra do Heroísmo, with the plaque to Paulo da Gama, who is buried there."
+      },
+      {
+        "file": "Plans_of_Nau_Sao_Gabriel_(1).jpg",
+        "kind": "ship",
+        "author": "Anonymous",
+        "date": "1892",
+        "licence": "Public domain",
+        "note": "A scaled sail plan of the São Gabriel, Vasco da Gama's ship, in a drawing dated 1892; Paulo joined her after his own São Rafael was burned."
       }
     ],
     "sources": [
@@ -512,14 +544,14 @@
       "lat": 38.65,
       "date": "1499",
       "label": "Paulo da Gama died at Angra, Terceira",
-      "text": "Paulo commanded the São Rafael, burned on the East African coast when there were too few men left to sail her. He fell ill on the way home; Vasco sailed on ahead in a fast caravel, to hurry him to the Azores, and stayed with his brother until he died.",
+      "text": "Paulo commanded the São Rafael, burned on the East African coast when there were too few men left to sail her. He fell ill on the way home; Vasco left the fleet and took him in a fast caravel to the Azores, and stayed with his brother until he died.",
       "source": "Barros; Correia",
       "cite": "paulo-da-gama"
     }
   },
   "vasco-da-gama": {
     "name": "Vasco da Gama",
-    "bio": "A Portuguese nobleman from Sines, on his first voyage, 1497 to 1499, he found the sea road from Europe to India, round the Cape of Good Hope and across the Indian Ocean from Malindi to Calicut, the longest ocean voyage made until then. He went back to India as viceroy and died there in 1524.",
+    "bio": "A Portuguese nobleman from Sines, in 1497 to 1499 he led the first voyage from Europe to India by sea, round the Cape of Good Hope and, with a pilot taken on at Malindi, across the Indian Ocean to Calicut, the longest ocean voyage made until then. He went back to India as viceroy and died there in 1524.",
     "images": [
       {
         "file": "Gregório_Lopes_-_Vasco_da_Gama_(ca_1524).jpg",
@@ -646,7 +678,7 @@
       "lat": 10.29,
       "date": "27 Apr 1521",
       "label": "Magellan killed at Mactan",
-      "text": "Magellan took sides in a local quarrel, for the Cebu king against Lapulapu of Mactan, and went ashore with about fifty men. The ships' guns could not reach the beach, the Mactan fighters came on in waves, and the captain-general was killed in the water. Pigafetta, who was there, called him \"our mirror, our light, our comfort and our true guide\".",
+      "text": "Magellan took sides in a local quarrel, for Rajah Humabon of Cebu against Lapulapu of Mactan, and went ashore with about fifty men. The ships' guns could not reach the beach, the Mactan fighters came on in waves, and the captain-general was killed in the water. Pigafetta, who was there, called him \"our mirror, our light, our comfort and our true guide\".",
       "source": "Pigafetta",
       "cite": "battle-of-mactan"
     }
@@ -665,7 +697,39 @@
         "author": "Unknown",
         "date": "19th century",
         "licence": "Public domain",
-        "note": "Museo Naval, Madrid; painted three centuries after him."
+        "note": "A Spanish portrait of Elcano painted in the 19th century, three centuries after his death; it hangs in the Museo Naval, Madrid."
+      },
+      {
+        "file": "Juan_Sebastian_Elkanoren_testamentuaren_azken_orrialdea.png",
+        "kind": "source",
+        "author": "Juan Sebastián Elcano",
+        "date": "26 July 1526",
+        "licence": "Public domain",
+        "note": "The last page of Elcano's will, made in the Pacific on 26 July 1526, days before he died, with the signatures of its witnesses."
+      },
+      {
+        "file": "Ortelius_-_Maris_Pacifici_1589.jpg",
+        "kind": "map",
+        "author": "Abraham Ortelius",
+        "date": "1589",
+        "licence": "Public domain",
+        "note": "Ortelius's 1589 map of the Pacific, the ocean's first printed map, with the Victoria sailing it under the motto Prima ego velivolis ambivi cursibus orbem."
+      },
+      {
+        "file": "Statue_of_Juan_Sebastián_Elcano,_Getaria_(Carlos_Palao)_2024_-_1.jpg",
+        "kind": "modern",
+        "author": "Artistosteles",
+        "date": "2024",
+        "licence": "CC BY 4.0",
+        "note": "A bronze statue of Elcano in Getaria, the Basque port where he was born."
+      },
+      {
+        "file": "Nao_Victoria_(ship,_1992),_Sète_cf04.jpg",
+        "kind": "ship",
+        "author": "Christian Ferrer",
+        "date": "2016",
+        "licence": "CC BY 4.0",
+        "note": "A replica of the Victoria, the Nao Victoria built in 1992, at Sète in France in 2016."
       }
     ],
     "sources": [
@@ -764,11 +828,150 @@
       "cite": "francis-drake"
     }
   },
+  "lapita-people": {
+    "name": "The Lapita people",
+    "group": true,
+    "bio": "The makers of dentate-stamped Lapita pottery, who spread from the Bismarck Archipelago through the Solomons, Vanuatu and New Caledonia to Fiji, Tonga and Samoa between about 1500 and 800 BC: the first people anywhere to settle islands beyond sight of land, sailing upwind into the trade winds. No name of theirs survives; the name is the archaeologists', from a site in New Caledonia.",
+    "sources": [
+      "lapita-culture",
+      "denham-lapita-dating",
+      "teouma"
+    ],
+    "images": [
+      {
+        "file": "Reconstructed_head_of_Mana.jpg",
+        "kind": "imaginary",
+        "author": "Patrick Nunn",
+        "date": "2005",
+        "licence": "CC BY-SA 4.0",
+        "note": "A reconstructed head of Mana, a Lapita-era person, in the Fiji Museum; the hair type was guessed."
+      },
+      {
+        "file": "Decorated_piece_of_Lapita_pottery_from_the_Bourewa_site_in_Fiji.jpg",
+        "kind": "artefact",
+        "author": "Patrick Nunn",
+        "date": "2008",
+        "licence": "CC BY-SA 4.0",
+        "note": "Part of a pot rim from Bourewa in Fiji, dentate-stamped and filled with lime, about 3000 years old."
+      },
+      {
+        "file": "PortVilaLapita.jpg",
+        "kind": "artefact",
+        "author": "Torbenbrinker",
+        "date": "2013",
+        "licence": "CC BY-SA 3.0",
+        "note": "Lapita pottery in the Vanuatu Cultural Centre at Port Vila."
+      },
+      {
+        "file": "Shell_jewellery_from_the_Bourewa_Lapita_site,_Fiji.jpg",
+        "kind": "artefact",
+        "author": "Patrick Nunn",
+        "date": "2008",
+        "licence": "CC BY-SA 4.0",
+        "note": "Shell rings and cones from the Bourewa Lapita site in Fiji: the people wore shell jewellery."
+      },
+      {
+        "file": "Double_Canoe_of_New_Caledonia.jpg",
+        "kind": "ship",
+        "author": "Unknown author (plate from Labillardiere)",
+        "date": "1800",
+        "licence": "Public domain",
+        "note": "A double canoe of New Caledonia, engraved for a French expedition of 1791 to 1794; no Lapita canoe survives, and this is a craft of the same islands."
+      }
+    ]
+  },
+  "east-polynesian-voyagers": {
+    "name": "The East Polynesian voyagers",
+    "group": true,
+    "bio": "The people who, after nearly two thousand years in West Polynesia, went east in double-hulled canoes to the Cook and Society Islands about 1000–1100 and from there, in some two centuries, to every corner of the Polynesian Triangle: Hawaiʻi, Rapa Nui and Aotearoa, and on to the Chathams and the subantarctic Auckland Islands. Oral traditions name founding navigators, such as Kupe for Aotearoa and Hotu Matuʻa for Rapa Nui; they are not datable people.",
+    "sources": [
+      "wilmshurst-2011-east-polynesia",
+      "polynesian-navigation",
+      "wairau-bar"
+    ],
+    "images": [
+      {
+        "file": "Canoe_of_Ulietea,_Raiatea,_Society_Islands,_1769-71.jpg",
+        "kind": "ship",
+        "author": "A. Buchan, S. Parkinson or J. F. Miller",
+        "date": "1768-1771",
+        "licence": "Public domain",
+        "note": "A sailing canoe of Raiatea in the Society Islands, drawn on Cook's first voyage, 1769."
+      },
+      {
+        "file": "Canoes_near_Tahiti._Drawing_by_Tupaia,_c._1769.jpg",
+        "kind": "scene",
+        "author": "Tupaia",
+        "date": "c. 1769",
+        "licence": "Public domain",
+        "note": "Canoes and a long house on a Tahitian shore, drawn by Tupaia, the navigator-priest of Raiatea who sailed with Cook."
+      },
+      {
+        "file": "Taputapuatea_marae_Raiatea.jpg",
+        "kind": "site",
+        "author": "Sur la route",
+        "date": "2002",
+        "licence": "CC BY 2.0",
+        "note": "The marae of Taputapuatea on Raiatea, the sacred meeting ground from which, in the traditions, voyagers set out for other islands."
+      },
+      {
+        "file": "Early_Maori_objects_from_Wairau_Bar,_Canterbury_Museum,_2016-01-27.jpg",
+        "kind": "artefact",
+        "author": "Szilas",
+        "date": "2016",
+        "licence": "Public domain",
+        "note": "Objects from Wairau Bar in Marlborough, one of the earliest Polynesian settlements in Aotearoa, in Canterbury Museum."
+      },
+      {
+        "file": "Hokule'a.jpg",
+        "kind": "ship",
+        "author": "Phil Uhl",
+        "date": "1976",
+        "licence": "CC BY-SA 3.0",
+        "note": "The double canoe Hōkūleʻa arriving at Honolulu from Tahiti in 1976, a modern voyage made without instruments to show the old crossings could be sailed."
+      }
+    ]
+  },
   "phoenician-mariners-of-necho-ii": {
     "name": "Phoenician mariners of Necho II",
+    "group": true,
     "bio": "Herodotus tells that Necho II of Egypt (610–595 BC) sent out Phoenicians who sailed from the Red Sea round Africa to the Strait of Gibraltar and back to Egypt in three years. Nobody named them.",
     "sources": [
       "necho-ii"
+    ],
+    "images": [
+      {
+        "file": "Relief_depicting_thin_gypsum_wall_panel_shows_a_Phoenician_war_galley_sailing_down_the_Euphrates_River.jpg",
+        "kind": "ship",
+        "author": "SpeakingArch",
+        "date": "705-681 BC (relief)",
+        "licence": "CC BY-SA 4.0",
+        "note": "A Phoenician war galley under oars on a relief from Nineveh, 705 to 681 BC; the ship was probably built and crewed by Phoenicians in Assyrian service."
+      },
+      {
+        "file": "Necho_II_hires_a_Phoenician_navigator”_from_Africa_and_its_exploration,_as_told_by_its_explorers_(ca_1891),_Vol._I,_p._3.jpg",
+        "kind": "scene",
+        "author": "Africa and Its Exploration (wood engraving)",
+        "date": "c. 1891",
+        "licence": "Public domain",
+        "note": "A wood engraving of 1891 imagines Necho II commissioning the Phoenician crew."
+      },
+      {
+        "file": "Balawat_gate,_detail_of_one_of_the_bands,_from_Balawat.jpg",
+        "kind": "ship",
+        "author": "Osama Shukir Muhammed Amin FRCP(Glasg)",
+        "date": "2016",
+        "licence": "CC BY-SA 4.0",
+        "note": "A band of the Balawat gates, an electrotype replica in the British Museum, showing boats of Tyre in the ninth century BC."
+      },
+      {
+        "file": "Egyptian_-_Relief_with_Hathor_and_King_Necho_II_-_Walters_22135.jpg",
+        "kind": "artefact",
+        "author": "Anonymous (Egypt)",
+        "date": "c. 600 BC",
+        "licence": "Public domain",
+        "note": "A relief of Necho II facing the goddess Hathor, made about 600 BC, in the Walters Art Museum."
+      }
     ]
   },
   "hanno-the-navigator": {
@@ -883,11 +1086,35 @@
     "images": [
       {
         "file": "The_wounded_Alexander_passing_through_his_fleet_in_India_by_Andre_Castaigne_(1898-1899).jpg",
-        "kind": "imaginary",
+        "kind": "scene",
         "author": "André Castaigne",
-        "date": "c. 1898–1899",
+        "date": "c. 1898-1899",
         "licence": "Public domain",
-        "note": "Alexander's fleet on the Indus as a 19th-century illustrator saw it; not a likeness of Nearchus."
+        "note": "André Castaigne's painting of the wounded Alexander passing through his fleet on the Indus; an artist's idea of the fleet Nearchus commanded, not a likeness of him."
+      },
+      {
+        "file": "Porus_Decdrachm.jpg",
+        "kind": "artefact",
+        "author": "ILCNA",
+        "date": "2023",
+        "licence": "CC BY-SA 4.0",
+        "note": "A silver decadrachm struck for Alexander, thought to mark his Indian campaign, during which the fleet Nearchus later led was built."
+      },
+      {
+        "file": "Hingol_National_Park,_Balochistan,_Pakistan.jpg",
+        "kind": "site",
+        "author": "Furqanlw",
+        "date": "2017",
+        "licence": "CC BY-SA 4.0",
+        "note": "Eroded badlands at Hingol on the Makran coast of Balochistan, part of the desert shore the fleet followed west from the Indus."
+      },
+      {
+        "file": "STS004-37-716_-_Strait_of_Hormuz.jpg",
+        "kind": "site",
+        "author": "NASA",
+        "date": "1982",
+        "licence": "Public domain",
+        "note": "The Strait of Hormuz from the Space Shuttle in 1982, the narrows at the mouth of the Persian Gulf that the fleet passed on its way to the Tigris."
       }
     ],
     "sources": [
@@ -908,6 +1135,7 @@
   },
   "juan-ponce-de-leon": {
     "name": "Juan Ponce de León",
+    "bio": "A Castilian who probably came to the Caribbean on Columbus's second voyage of 1493, he fought the Taíno of Higüey on Hispaniola, then from 1508 took Puerto Rico from its Taíno, put down their revolt of 1511 and was the island's first governor. In 1513 he led three ships north-west through the Bahamas and named La Florida, where the Calusa drove his ships off. He came back in 1521 to settle it, and a Calusa arrow ended the attempt and his life. The fountain of youth was tied to his name only after his death.",
     "death": {
       "lon": -82.37,
       "lat": 23.14,
@@ -915,11 +1143,54 @@
       "label": "Ponce de León died in Cuba, July 1521",
       "source": "Wikipedia, Juan Ponce de León",
       "cite": "juan-ponce-de-leon",
-      "text": "A Calusa arrow struck his thigh on his 1521 attempt to colonise south-west Florida, and he died in the first week of July, probably of infection, soon after the expedition sailed to Cuba; he was buried in Puerto Rico. The page names no town, so the mark stands at Havana, the port the expedition made for, an editorial guess."
-    }
+      "text": "A Calusa arrow struck his thigh on his 1521 attempt to colonise south-west Florida, and he died in the first week of July, probably of infection, soon after the expedition sailed to Cuba; he was buried in Puerto Rico. No source read names the town, so the mark stands at Havana, the port the expedition made for; the place is a guess."
+    },
+    "images": [
+      {
+        "file": "Herrera_-_Juan_Ponce_de_Leon.jpg",
+        "kind": "imaginary",
+        "author": "Antonio de Herrera",
+        "date": "1728",
+        "licence": "Public domain",
+        "note": "An engraved portrait of Ponce de León from the 1728 edition of Herrera's history, ringed by figures and a fight with Native Americans; no portrait from life is known."
+      },
+      {
+        "file": "Handwritten_Letter_from_Ponce_de_León_to_Ochoa_de_Isásaga.png",
+        "kind": "source",
+        "author": "Juan Ponce de León",
+        "date": "16th century",
+        "licence": "Public domain",
+        "note": "A 16th-century letter from Ponce de León to Ochoa de Isásaga, with his signature enlarged beside it."
+      },
+      {
+        "file": "Scisco_1913_Ponce_de_Leon_track_map.png",
+        "kind": "map",
+        "author": "L. D. Scisco",
+        "date": "1913",
+        "licence": "Public domain",
+        "note": "Scisco's 1913 reconstruction of the track of Ponce de León's 1513 voyage from Puerto Rico through the Bahamas and round Florida."
+      },
+      {
+        "file": "Ruins_at_Caparra_Archaeological_Site,_Puerto_Rico.jpg",
+        "kind": "site",
+        "author": "Frederic Gleach",
+        "date": "2003",
+        "licence": "CC BY-SA 2.0",
+        "note": "Ruins at the Caparra archaeological site in Puerto Rico, the settlement he founded in 1508-09."
+      },
+      {
+        "file": "Ponce_de_Leon_mortally_wounded,_July_1521_(Frost's_pictorial_history_of_Indian_wars).jpg",
+        "kind": "scene",
+        "author": "Unknown",
+        "date": "c. 1872",
+        "licence": "Public domain",
+        "note": "A 19th-century engraving of Ponce de León struck down in the fight with the Calusa in July 1521."
+      }
+    ]
   },
   "juan-garrido": {
     "name": "Juan Garrido",
+    "bio": "Born in West Central Africa about 1480, he went to Portugal as a young man and was in Santo Domingo by 1502–03. He fought in Puerto Rico and Cuba, sailed with Ponce de León to Florida in 1513, one of two free Africans aboard, and went on to Mexico with Cortés. In Mexico City he sowed what he said was the first wheat in New Spain, and in 1538 he asked the Crown for a pension for thirty years of service.",
     "death": {
       "lon": -99.1,
       "lat": 19.4,
@@ -928,16 +1199,137 @@
       "source": "NPS, Juan Garrido: from legal documents",
       "cite": "juan-garrido-nps",
       "text": "NPS dates his death between 1547 and 1550 from legal documents; Wikipedia says about 1550, in New Spain. His burial place is unknown."
-    }
+    },
+    "images": [
+      {
+        "file": "Juan_Garrido_Azcatitlan.jpg",
+        "kind": "near",
+        "author": "Codex Azcatitlan (anonymous Mexica artists)",
+        "date": "16th century",
+        "licence": "CC BY-SA 4.0",
+        "note": "A Black soldier in Cortés's company in the Codex Azcatitlan, a sixteenth-century Mexica manuscript; he is often taken for Garrido, but the codex does not name him."
+      },
+      {
+        "file": "Conquistador_Negro_Duran.jpg",
+        "kind": "scene",
+        "author": "Diego Durán",
+        "date": "16th century",
+        "licence": "Public domain",
+        "note": "A Black soldier holding a horse in Cortés's party in the Durán codex; some read him as Garrido, others as Juan Cortés."
+      },
+      {
+        "file": "Map_of_Tenochtitlan_and_Gulf_of_Mexico,_1524.jpg",
+        "kind": "map",
+        "author": "Hernán Cortés (Nuremberg edition)",
+        "date": "1524",
+        "licence": "Public domain",
+        "note": "Tenochtitlan as printed at Nuremberg in 1524 with Cortés's letters, the city Garrido fought in during 1520-21 and later lived in."
+      },
+      {
+        "file": "The_Sad_Night_(Noche_Triste)_(Conquest_of_Mexico)_Painting.jpg",
+        "kind": "scene",
+        "author": "Unknown",
+        "date": "second half of the 17th century",
+        "licence": "Public domain",
+        "note": "An anonymous seventeenth-century painting of the Noche Triste, the night of 30 June 1520 when the Spaniards fled Tenochtitlan, which Garrido survived."
+      },
+      {
+        "file": "Scisco_1913_Ponce_de_Leon_track_map.png",
+        "kind": "map",
+        "author": "L. D. Scisco",
+        "date": "1913",
+        "licence": "Public domain",
+        "note": "A 1913 reconstruction of Ponce de León's route round Florida in 1513, the voyage on which Garrido is thought to have sailed."
+      }
+    ]
   },
   "isabel-de-olvera": {
-    "name": "Isabel de Olvera"
+    "name": "Isabel de Olvera",
+    "bio": "A free woman of Querétaro in New Spain, the daughter of Hernando, an African man, and Magdalena, an Indigenous woman. In 1600, before she went north as a servant with Juan Guerra de Resa's expedition to New Mexico, she swore before the town's governor that she was free and unmarried, because as a mulatta she feared someone might annoy her on the journey. The affidavit is nearly all that is known of her.",
+    "images": [
+      {
+        "file": "Diceño_de_Mulata_(1711)_Arellano.jpg",
+        "kind": "imaginary",
+        "author": "Manuel de Arellano",
+        "date": "1711",
+        "licence": "Public domain",
+        "note": "A portrait of an unnamed woman called a mulata, painted in New Spain in 1711; no likeness of Isabel de Olvera survives."
+      },
+      {
+        "file": "Rasguño_de_las_provincias_de_la_Nueva_México_LOC_2010585450.jpg",
+        "kind": "map",
+        "author": "Enrico Martínez",
+        "date": "c. 1602",
+        "licence": "Public domain",
+        "note": "A manuscript map of the provinces of New Mexico and the colony's journeys of 1598-1602, the colony she went north to join; this is a 1906 photograph of the original in Seville."
+      },
+      {
+        "file": "1605_\"graffiti\"_on_Inscription_Rock,_by_Juan_de_Oñate.jpg",
+        "kind": "site",
+        "author": "George A. Grant",
+        "date": "1934",
+        "licence": "Public domain",
+        "note": "Juan de Oñate's inscription of 1605 at El Morro, cut by the governor of the colony she travelled to join; photographed in 1934."
+      },
+      {
+        "file": "El_Camino_Real_de_Tierra_Adentro_NHT_(9445536658).jpg",
+        "kind": "site",
+        "author": "Bureau of Land Management",
+        "date": "2012",
+        "licence": "Public domain",
+        "note": "A view along El Camino Real de Tierra Adentro, the royal road from Mexico City to New Mexico that the colonists of 1600 followed."
+      }
+    ]
   },
   "pedro-alonso-nino": {
-    "name": "Pedro Alonso Niño"
+    "name": "Pedro Alonso Niño",
+    "bio": "A pilot from Moguer, near Palos, he sailed with Columbus in 1492, by most accounts as pilot of the Santa María, and again on the later voyages. In 1499 he and Cristóbal Guerra took a small ship to the coast of Venezuela and came home in 1500 with a great load of pearls from Margarita and Cubagua. Accused of keeping back the Crown's share, he was arrested, and died before his trial ended.",
+    "images": [
+      {
+        "file": "Pedro_Alonso_Niño_(cropped).jpg",
+        "kind": "imaginary",
+        "author": "unknown",
+        "date": "undated",
+        "licence": "CC0",
+        "note": "A painting of Pedro Alonso Niño seated at a table, held at the Monasterio de La Rábida; its painter and date are not recorded."
+      },
+      {
+        "file": "20250316_104800_Monumento_PAN.jpg",
+        "kind": "modern",
+        "author": "Angle52sales",
+        "date": "2025",
+        "licence": "CC0",
+        "note": "A bronze statue of Pedro Alonso Niño at a table in his home town, Moguer, its base reading 'Moguer, América y yo'."
+      },
+      {
+        "file": "07_-_Viajes_de_Pedro_Alonso_Niño.jpg",
+        "kind": "map",
+        "author": "Editorial Miguel A. Salvatella",
+        "date": "1943",
+        "licence": "Public domain",
+        "note": "A 1943 map from the Biblioteca Nacional de España of Niño's voyages along the Venezuelan coast, with the 1499 crossing from Sanlúcar and the 1500 return to Galicia as the map labels them."
+      },
+      {
+        "file": "Pearl_Fishing,_Margarita_Island,_Venezuela,_1560s-1570s.jpg",
+        "kind": "scene",
+        "author": "Unknown (Drake Manuscript, Histoire naturelle des Indes)",
+        "date": "1560s–1570s",
+        "licence": "Public domain",
+        "note": "A Drake Manuscript drawing of a pearling boat off Margarita Island, labelled 'Canau pour pecher les perles', with divers going down with baskets."
+      },
+      {
+        "file": "Ruinas,_Cubagua_Island_(7).jpg",
+        "kind": "site",
+        "author": "Wilfredor",
+        "date": "2008",
+        "licence": "CC BY-SA 4.0",
+        "note": "The ruins of Nueva Cádiz on Cubagua, the pearl-fishing town later built on one of the islands his 1499 voyage visited."
+      }
+    ]
   },
   "panfilo-de-narvaez": {
     "name": "Pánfilo de Narváez",
+    "bio": "A Castilian who served in the taking of Jamaica and then of Cuba, where in 1513 his men massacred the Taíno at Caonao, as Bartolomé de las Casas, who was with him, recorded. In 1520 the governor of Cuba sent him to Mexico to bring Cortés to heel; Cortés beat him at Cempoala by night, and he lost an eye and was held prisoner. The Crown later granted him La Florida, and in 1527 he sailed from Sanlúcar with six hundred to settle it. In 1528 he marched them inland from Tampa Bay to the land of the Apalachee, who fought them off, and was lost at sea that year; four of the expedition lived.",
     "death": {
       "lon": -89.31,
       "lat": 28.61,
@@ -947,10 +1339,53 @@
       "cite": "narvaez-expedition",
       "text": "He is believed to have been swept out to sea in a storm while the boats worked west along the Gulf coast; nobody recorded where. The skull stands at the middle of the boat leg, and the place is only inferred.",
       "confidence": "inferred"
-    }
+    },
+    "images": [
+      {
+        "file": "Panfilo_de_Narvaez.jpg",
+        "kind": "imaginary",
+        "author": "Unknown (scan uploaded by historicair)",
+        "date": "undated",
+        "licence": "Public domain",
+        "note": "An undated engraved portrait of Narváez in an ornamental frame; the engraver is not recorded and it is not known to be from life."
+      },
+      {
+        "file": "St_Petersburg_FL_Jungle_Prada_sign02.jpg",
+        "kind": "site",
+        "author": "Ebyabe",
+        "date": "2011",
+        "licence": "CC BY-SA 3.0",
+        "note": "The marker at the Jungle Prada site in St. Petersburg, Florida, which says Narváez landed there on 15 April 1528."
+      },
+      {
+        "file": "Houghton_US_2415.3_-_title,_La_relacion.jpg",
+        "kind": "source",
+        "author": "Álvar Núñez Cabeza de Vaca",
+        "date": "1555",
+        "licence": "Public domain",
+        "note": "The title page of the Relación in the 1555 Valladolid edition, Cabeza de Vaca's account of the armada that sailed under Narváez as governor."
+      },
+      {
+        "file": "26_-_Viaje_de_Narváez_y_Cabeza_de_Vaca.jpg",
+        "kind": "map",
+        "author": "Editorial Miguel A. Salvatella",
+        "date": "1943",
+        "licence": "Public domain",
+        "note": "A 1943 map from the Biblioteca Nacional de España of the voyage of Narváez and of Cabeza de Vaca from Florida along the Gulf coast to Mexico."
+      },
+      {
+        "file": "Batalla_de_Cempoala,_en_el_folio_258r.jpg",
+        "kind": "scene",
+        "author": "Diego Muñoz Camargo (manuscript copy of the Lienzo de Tlaxcala)",
+        "date": "c. 1580",
+        "licence": "Public domain",
+        "note": "A Tlaxcalan manuscript drawing of about 1580, labelled Cempoala and Veracruz, whose caption names Cortés and Narváez: the 1520 fight in which Narváez was taken."
+      }
+    ]
   },
   "alvar-nunez-cabeza-de-vaca": {
     "name": "Álvar Núñez Cabeza de Vaca",
+    "bio": "From Jerez de la Frontera, he was treasurer of the Narváez expedition and one of its four survivors. Wrecked on the Texas coast in 1528, he lived for years among the Karankawa and other peoples of the coast as a trader and a healer, then walked with Dorantes, Castillo and Esteban to Mexico City in 1536. His account, the Relación, was printed in 1542. Made governor of the Río de la Plata, he marched overland from the coast of Brazil to Asunción in 1541–42, was deposed by the colonists and sent back to Spain in chains, and was tried and sentenced there.",
     "death": {
       "lon": -6.14,
       "lat": 36.69,
@@ -968,16 +1403,137 @@
           "source": "Wikipedia, Álvar Núñez Cabeza de Vaca"
         }
       ]
-    }
+    },
+    "images": [
+      {
+        "file": "Jerez_de_la_Frontera_-_Monumento_a_Álvar_Núñez_Cabeza_de_Vaca_2.jpg",
+        "kind": "modern",
+        "author": "Zarateman",
+        "date": "2025",
+        "licence": "CC0",
+        "note": "The monument to Cabeza de Vaca at Jerez de la Frontera, his home town, by a fountain below the old walls."
+      },
+      {
+        "file": "Houghton_US_2415.3_-_title,_La_relacion.jpg",
+        "kind": "source",
+        "author": "Álvar Núñez Cabeza de Vaca",
+        "date": "1555",
+        "licence": "Public domain",
+        "note": "The title page of La relación y comentarios, the 1555 edition of his account of the Narváez expedition and of his time on the Río de la Plata."
+      },
+      {
+        "file": "26_-_Viaje_de_Narváez_y_Cabeza_de_Vaca.jpg",
+        "kind": "map",
+        "author": "Editorial Miguel A. Salvatella",
+        "date": "1943",
+        "licence": "Public domain",
+        "note": "A 1943 Spanish map of the Narváez expedition's route round the Gulf of Mexico and of Cabeza de Vaca's later march across Texas and northern Mexico."
+      },
+      {
+        "file": "Praça_Rio_Iguaçu_Relato_de_Alvar_Nuñez_Cabeza_de_Vaca_02.JPG",
+        "kind": "modern",
+        "author": "DAR7 e Eloy Olindo Setti",
+        "date": "2015",
+        "licence": "CC BY-SA 4.0",
+        "note": "A wall in Curitiba, Brazil, carrying his account of the march overland through southern Brazil in 1541-42."
+      }
+    ]
   },
   "andres-dorantes-de-carranza": {
-    "name": "Andrés Dorantes de Carranza"
+    "name": "Andrés Dorantes de Carranza",
+    "bio": "A captain on the Narváez expedition and one of its four survivors, from Béjar in Castile. Esteban, the enslaved man who walked with them from Texas to Mexico City, was his. In Mexico City in 1536 he sold Esteban to the viceroy; his voyage home to Spain fell through when his ship was found unfit, and he married and stayed in New Spain.",
+    "images": [
+      {
+        "file": "Houghton_US_2415.3_-_title,_La_relacion.jpg",
+        "kind": "source",
+        "author": "Álvar Núñez Cabeza de Vaca",
+        "date": "1555",
+        "licence": "Public domain",
+        "note": "The title page of the Relación in the 1555 Valladolid edition, Cabeza de Vaca's account of the expedition in which Dorantes served as a captain and one of the four survivors."
+      },
+      {
+        "file": "Expedition_Cabeza_de_Vaca_Karte.png",
+        "kind": "map",
+        "author": "Lencer",
+        "date": "2008",
+        "licence": "CC BY-SA 3.0",
+        "note": "A modern relief map of the expedition's route from Santo Domingo through Florida and Galveston to Mexico City in 1536; the labels are in German."
+      },
+      {
+        "file": "A055a161_0204.jpg",
+        "kind": "scene",
+        "author": "Carlos Múgica y Pérez (engraver), in Ferrer de Couto, Historia de la Marina Real Española",
+        "date": "1854",
+        "licence": "Public domain",
+        "note": "An 1854 engraving of the expedition at Apalachee Bay in 1528, where the men built the boats that took them along the Gulf coast."
+      },
+      {
+        "file": "Map_of_Tenochtitlan_and_Gulf_of_Mexico,_1524.jpg",
+        "kind": "map",
+        "author": "Hernán Cortés",
+        "date": "1524",
+        "licence": "Public domain",
+        "note": "The 1524 Nuremberg map of Tenochtitlan with the Gulf of Mexico beside it; the four survivors reached the city, by then Mexico City, in 1536."
+      },
+      {
+        "file": "Karankawa_Indian_Campsite_Marker_in_Jamaica_Beach,_Texas.jpg",
+        "kind": "site",
+        "author": "nsaum75",
+        "date": "2009",
+        "licence": "CC BY-SA 3.0",
+        "note": "A Texas Historical Commission marker for a Karankawa campsite on Galveston Island, whose text says the Karankawa aided Cabeza de Vaca in 1528."
+      }
+    ]
   },
   "alonso-del-castillo-maldonado": {
-    "name": "Alonso del Castillo Maldonado"
+    "name": "Alonso del Castillo Maldonado",
+    "bio": "A captain on the Narváez expedition from Salamanca, and one of its four survivors. With Cabeza de Vaca and Dorantes he signed the joint report of the journey that Gonzalo Fernández de Oviedo copied into his history. He married in New Spain and settled there.",
+    "images": [
+      {
+        "file": "Houghton_US_2415.3_-_title,_La_relacion.jpg",
+        "kind": "source",
+        "author": "Álvar Núñez Cabeza de Vaca",
+        "date": "1555",
+        "licence": "Public domain",
+        "note": "The title page of the Relación in the 1555 Valladolid edition, Cabeza de Vaca's account of the expedition in which Castillo served as a captain and one of the four survivors."
+      },
+      {
+        "file": "Expedition_Cabeza_de_Vaca_Karte.png",
+        "kind": "map",
+        "author": "Lencer",
+        "date": "2008",
+        "licence": "CC BY-SA 3.0",
+        "note": "A modern relief map of the expedition's route from Santo Domingo through Florida and Galveston to Mexico City in 1536; the labels are in German."
+      },
+      {
+        "file": "A055a161_0204.jpg",
+        "kind": "scene",
+        "author": "Carlos Múgica y Pérez (engraver), in Ferrer de Couto, Historia de la Marina Real Española",
+        "date": "1854",
+        "licence": "Public domain",
+        "note": "An 1854 engraving of the expedition at Apalachee Bay in 1528, where the men built the boats that took them along the Gulf coast."
+      },
+      {
+        "file": "Map_of_Tenochtitlan_and_Gulf_of_Mexico,_1524.jpg",
+        "kind": "map",
+        "author": "Hernán Cortés",
+        "date": "1524",
+        "licence": "Public domain",
+        "note": "The 1524 Nuremberg map of Tenochtitlan with the Gulf of Mexico beside it; the four survivors reached the city, by then Mexico City, in 1536."
+      },
+      {
+        "file": "Karankawa_Indian_Campsite_Marker_in_Jamaica_Beach,_Texas.jpg",
+        "kind": "site",
+        "author": "nsaum75",
+        "date": "2009",
+        "licence": "CC BY-SA 3.0",
+        "note": "A Texas Historical Commission marker for a Karankawa campsite on Galveston Island, whose text says the Karankawa aided Cabeza de Vaca in 1528."
+      }
+    ]
   },
   "esteban-de-dorantes": {
     "name": "Esteban de Dorantes",
+    "bio": "Born at Azemmour on the Atlantic coast of Morocco, he was sold into slavery there in 1522 and came to the Americas as Andrés Dorantes's slave. He was one of the four who lived through the Narváez expedition and walked across Texas and northern Mexico, and Cabeza de Vaca says he went ahead and spoke with the peoples they met. Sold to the viceroy, he was sent north in 1539 ahead of Fray Marcos de Niza to look for the cities of Cíbola, and is said to have been killed at the Zuni town of Hawikuh.",
     "death": {
       "lon": -108.98,
       "lat": 34.93,
@@ -985,9 +1541,51 @@
       "label": "Esteban killed at Hawikuh, 1539",
       "source": "Wikipedia, Esteban de Dorantes",
       "cite": "esteban-de-dorantes",
-      "text": "He went ahead of Fray Marcos de Niza and was held overnight without food or water, then attacked and killed at Cíbola. The Zuni may have thought him a bad man; Castañeda says he asked for turquoise and women; Alarcón says he boasted of armed men behind him; Sancho Dorantes says he was shot through with arrows.",
+      "text": "He went ahead of Fray Marcos de Niza and was held overnight without food or water, then attacked and killed at Cíbola. Accounts differ on why: Castañeda says the people of Cíbola thought it hard of him to ask for turquoise and women, Alarcón that he boasted of armed men behind him, and Coronado that they had been told he was a bad man. Sancho Dorantes says he was shot through with arrows.",
       "doubt": "In 2002 the historian Juan Francisco Maura argued that Esteban was never killed at all: the story of his death was a ruse that set a slave free, and he lived on among the Zuni."
-    }
+    },
+    "images": [
+      {
+        "file": "Esteban_de_Dorantes_the_Explorer.jpg",
+        "kind": "modern",
+        "author": "Affricoll9",
+        "date": "2019",
+        "licence": "CC BY-SA 4.0",
+        "note": "A 2019 drawing of Esteban with the plumed gourd rattle he carried in 1539; no likeness made in his lifetime is known."
+      },
+      {
+        "file": "Expedition_Cabeza_de_Vaca_Karte.png",
+        "kind": "map",
+        "author": "Lencer",
+        "date": "2008",
+        "licence": "CC BY-SA 3.0",
+        "note": "The route of Cabeza de Vaca, Esteban and their two companions, 1528-36, by sea to Florida and on foot from Galveston to Mexico City (labels in German)."
+      },
+      {
+        "file": "Houghton_US_2415.3_-_title,_La_relacion.jpg",
+        "kind": "source",
+        "author": "Álvar Núñez Cabeza de Vaca",
+        "date": "1555",
+        "licence": "Public domain",
+        "note": "The title page of the 1555 Valladolid edition of Cabeza de Vaca's Relación, the account in which Esteban is named as native of Azamor."
+      },
+      {
+        "file": "Braun_Azemmour_UBHD.jpg",
+        "kind": "site",
+        "author": "Georg Braun and Frans Hogenberg",
+        "date": "1572",
+        "licence": "Public domain",
+        "note": "Azemmour on the Oum Er-Rbia, where he was born and, in 1522, sold into slavery, in a city view printed in 1572."
+      },
+      {
+        "file": "Zuni_Pueblo,_looking_southeast_-_NARA_-_523769.jpg",
+        "kind": "site",
+        "author": "John K. Hillers",
+        "date": "c. 1871-1907",
+        "licence": "Public domain",
+        "note": "Zuni Pueblo photographed in the late nineteenth century; Hawikuh, where Esteban died, lies about twenty kilometres to the south-west and was abandoned in the seventeenth century."
+      }
+    ]
   },
   "mansa-musa": {
     "name": "Mansa Musa",
@@ -1000,11 +1598,43 @@
     "images": [
       {
         "file": "Catalan_Atlas_BNF_Sheet_6_Mansa_Musa.jpg",
-        "kind": "near",
+        "kind": "imaginary",
         "author": "Attributed to Abraham Cresques",
         "date": "1375",
         "licence": "Public domain",
-        "note": "Sheet 6 of the Catalan Atlas: Musa on a throne, holding a gold coin. Drawn about forty years after his death, from report rather than sight, it is the only medieval picture of him."
+        "note": "Musa on a throne holding a gold coin, Sheet 6 of the Catalan Atlas, drawn about forty years after his death from report rather than sight."
+      },
+      {
+        "file": "Mansa_Moussa_on_the_map_of_Angelino_Dulcert.jpg",
+        "kind": "imaginary",
+        "author": "Angelino Dulcert",
+        "date": "1339",
+        "licence": "Public domain",
+        "note": "The king of Mali, labelled Rex Melly, seated on Angelino Dulcert's chart of 1339, drawn fifteen years after the pilgrimage."
+      },
+      {
+        "file": "The_Mali_Empire.jpg",
+        "kind": "map",
+        "author": "Gabriel Moss",
+        "date": "2016",
+        "licence": "CC BY-SA 4.0",
+        "note": "Mali at the end of his reign in 1337, with the gold fields and the caravan roads north to the Mediterranean."
+      },
+      {
+        "file": "Gold_dinar_of_an-Nasir_Muhammad.jpg",
+        "kind": "artefact",
+        "author": "American Numismatic Society",
+        "date": "1340",
+        "licence": "CC0",
+        "note": "A gold dinar of Sultan an-Nasir Muhammad, ruler of Egypt when Musa spent three months in Cairo in 1324; this coin was struck at Damascus in 1340."
+      },
+      {
+        "file": "La_plus_grande_Mosquée_de_la_ville_de_Tombouctou.jpg",
+        "kind": "site",
+        "author": "Ousmane Garba Kounta",
+        "date": "2014",
+        "licence": "CC BY-SA 4.0",
+        "note": "The east wall of the Djinguereber Mosque in Timbuktu, part of which was built in his reign."
       }
     ],
     "sources": [
@@ -1043,7 +1673,41 @@
       "text": "No death is recorded. In Musa's telling he sailed west with his fleet and was never seen again; where, or whether he sailed at all, nobody knows, so no skull is drawn.",
       "source": "Musa's account, in al-Umari",
       "cite": "atlantic-voyage-of-musa-s-predecessor"
-    }
+    },
+    "images": [
+      {
+        "file": "Catalan_Atlas_BNF_Sheet_6_Mansa_Musa_(cropped).jpg",
+        "kind": "imaginary",
+        "author": "Attributed to Abraham Cresques",
+        "date": "1375",
+        "licence": "Public domain",
+        "note": "The king of Mali on his throne as a Majorcan chartmaker imagined him in 1375, holding up a gold coin; the label names Musa, the man who took the throne Abu Bakr left. No picture of Abu Bakr himself exists."
+      },
+      {
+        "file": "The_Mali_Empire.jpg",
+        "kind": "map",
+        "author": "Gabriel Moss",
+        "date": "2016",
+        "licence": "CC BY-SA 4.0",
+        "note": "Mali at the end of Musa's reign in 1337, the realm Musa took over from the king who sailed west; the Atlantic lies off its western edge."
+      },
+      {
+        "file": "Djenne_Terracotta_Equestrian_(13th-15th_cent).jpg",
+        "kind": "artefact",
+        "author": "Franko Khoury",
+        "date": "2009",
+        "licence": "Public domain",
+        "note": "A terracotta rider from the Inland Niger Delta, made between the thirteenth and fifteenth centuries in the lands of the Mali kings; it is not a likeness of him."
+      },
+      {
+        "file": "Archer_Figure,_Inland_Niger_Delta_Style,_Inland_Niger_Delta_region,_Mali,_13th-15th_century,_Ceramic_(2922764607).jpg",
+        "kind": "artefact",
+        "author": "Cliff from Arlington, Virginia, USA",
+        "date": "2008",
+        "licence": "CC BY 2.0",
+        "note": "A terracotta archer from the same Inland Niger Delta tradition, thirteenth to fifteenth century."
+      }
+    ]
   },
   "erik-the-red": {
     "name": "Erik the Red",
@@ -1075,7 +1739,49 @@
       "source": "Erik the Red (Wikipedia)",
       "cite": "erik-the-red",
       "confidence": "inferred"
-    }
+    },
+    "images": [
+      {
+        "file": "Erik_le_rouge.jpg",
+        "kind": "imaginary",
+        "author": "Unknown",
+        "date": "17th century",
+        "licence": "Public domain",
+        "note": "A 17th-century Icelandic pen drawing of Erik in armour, labelled Effigies Erici Rauderi; no likeness from his own time survives."
+      },
+      {
+        "file": "Eiríksstaðir_-_Gehöft_außen_1.jpg",
+        "kind": "site",
+        "author": "Wolfgang Sauber",
+        "date": "2009",
+        "licence": "CC BY-SA 3.0",
+        "note": "The reconstructed longhouse at Eiríksstaðir in Haukadalur, Iceland, on the site of the farm where Erik lived before his outlawry."
+      },
+      {
+        "file": "Ruiner_Brattahlid.JPG",
+        "kind": "site",
+        "author": "PederM",
+        "date": "2008",
+        "licence": "CC BY-SA 2.5",
+        "note": "The ruins of Brattahlíð in Greenland, Erik's farm, now Qassiarsuk."
+      },
+      {
+        "file": "Tunulliarfik-qassiarsuk.jpg",
+        "kind": "site",
+        "author": "Algkalv",
+        "date": "2009",
+        "licence": "CC BY 3.0",
+        "note": "The farms of Qassiarsuk on Tunulliarfik fjord, seen from a helicopter; the Norse settlement of Brattahlíð stood here."
+      },
+      {
+        "file": "Reproduction_of_brattahlíð_viking_church_(6141364662).jpg",
+        "kind": "site",
+        "author": "Claire Rowland",
+        "date": "2011",
+        "licence": "CC BY 2.0",
+        "note": "The modern reproduction of Thjodhild's church at Brattahlíð, with the fjord behind; Thjodhild was Erik's wife."
+      }
+    ]
   },
   "bjarni-herjolfsson": {
     "name": "Bjarni Herjólfsson",
@@ -1083,6 +1789,48 @@
     "sources": [
       "bjarni-herjolfsson",
       "saga-of-the-greenlanders"
+    ],
+    "images": [
+      {
+        "file": "I._E._C._Rasmussen_-_Sommernat_under_den_Grønlandske_Kyst_circa_Aar_1000.jpg",
+        "kind": "scene",
+        "author": "Carl Rasmussen",
+        "date": "1875",
+        "licence": "Public domain",
+        "note": "A Norse ship among icebergs and whales off Greenland about the year 1000, painted by Carl Rasmussen in 1875."
+      },
+      {
+        "file": "Skálholt_Map.jpg",
+        "kind": "map",
+        "author": "Sigurd Stefánsson (original), Biørn Jonsen (this copy)",
+        "date": "1570",
+        "licence": "Public domain",
+        "note": "A copy of the Skálholt map, drawn from Icelandic sources, marking Greenland, Helluland, Markland and Vinland."
+      },
+      {
+        "file": "Herjolfsnes_Panoramio_-_site_archéo.jpg",
+        "kind": "site",
+        "author": "David Stanley",
+        "date": "2018",
+        "licence": "CC BY 2.0",
+        "note": "The site of Herjólfsnes on the south coast of Greenland, the settlement the saga names for Bjarni's father and where Bjarni comes ashore at the end of his voyage."
+      },
+      {
+        "file": "Vinland-travel.jpg",
+        "kind": "map",
+        "author": "Finn Bjørklid",
+        "date": "undated",
+        "licence": "CC BY-SA 2.5",
+        "note": "A modern map setting the saga's Helluland, Markland and Vinland on the Baffin, Labrador and Newfoundland coasts, the lands Bjarni sighted and Leif later explored."
+      },
+      {
+        "file": "Knarr_1.jpg",
+        "kind": "ship",
+        "author": "Andreasv",
+        "date": "2007",
+        "licence": "CC BY-SA 4.0",
+        "note": "The Borgundknarren, a reconstruction of the Skuldelev 1 cargo ship, the type of vessel Norse traders crossed the north Atlantic in."
+      }
     ]
   },
   "william-of-rubruck": {
@@ -1114,14 +1862,48 @@
       "source": "William of Rubruck (Wikipedia)",
       "cite": "william-of-rubruck",
       "confidence": "speculative"
-    }
+    },
+    "images": [
+      {
+        "file": "William_of_Rubruck_Corpus_Christi_MS_066A_fol_67r_detail.jpg",
+        "kind": "imaginary",
+        "author": "Unknown",
+        "date": "early 14th century",
+        "licence": "Public domain",
+        "note": "An illuminated initial from an early 14th-century copy of his Itinerarium: above, William and a companion before Louis IX; below, the two friars on the road."
+      },
+      {
+        "file": "Möngke_enthroned._Tarikh-i_Jahangushay-i_Juvaini,_1438,_Shiraz.jpg",
+        "kind": "scene",
+        "author": "Unknown",
+        "date": "1438",
+        "licence": "Public domain",
+        "note": "Möngke Khan enthroned, in a Persian manuscript of Juvaini's history copied at Shiraz in 1438; William reached his camp in the winter of 1253-54."
+      },
+      {
+        "file": "Karakorum_Modell_2.jpg",
+        "kind": "site",
+        "author": "Brücke-Osteuropa",
+        "date": "2009",
+        "licence": "Public domain",
+        "note": "A museum model of the khan's palace at Karakorum, in the National Museum of Mongolian History in Ulan Bator; William reached the Mongol capital in 1254."
+      },
+      {
+        "file": "Silver_Dirham_of_Mongke,_Tiflis,_1252-1257.jpg",
+        "kind": "artefact",
+        "author": "American Numismatic Society",
+        "date": "1252-1257",
+        "licence": "CC0",
+        "note": "A silver dirham struck at Tiflis in the name of Möngke Khan, the ruler William visited."
+      }
+    ]
   },
   "benjamin-of-tudela": {
     "name": "Benjamin of Tudela",
     "aka": [
       "Binyamin mi-Tudela"
     ],
-    "bio": "A Jew of Tudela in Navarre, the son of Jonah, not reliably called a rabbi. About 1165 he set out for the Holy Land, perhaps on a pilgrimage and with trade in view, and wrote the Book of Travels, the Sefer ha-Massa'ot, listing the Jewish communities of about three hundred places, their households, leaders and trades, with the days between them. Much of the book is what he saw and much is what he was told.",
+    "bio": "A Jew of Tudela in Navarre, the son of Jonah; the title of rabbi often given him is not well attested. About 1165 he set out for the Holy Land, perhaps on a pilgrimage and with trade in view, and wrote the Book of Travels, the Sefer ha-Massa'ot, listing the Jewish communities of about three hundred places, their households, leaders and trades, with the days between them. Much of the book is what he saw and much is what he was told.",
     "sources": [
       "benjamin-of-tudela",
       "adler-itinerary-of-benjamin"
@@ -1144,7 +1926,49 @@
       "source": "Benjamin of Tudela (Wikipedia)",
       "cite": "benjamin-of-tudela",
       "confidence": "speculative"
-    }
+    },
+    "images": [
+      {
+        "file": "Benjamín_de_Tudela_(cropped).jpg",
+        "kind": "modern",
+        "author": "Jialxv",
+        "date": "2021",
+        "licence": "CC BY-SA 4.0",
+        "note": "A bust of Benjamin of Tudela by Ricardo Varela Andrés, in his home town; no likeness from his own time survives."
+      },
+      {
+        "file": "Benjamin_of_Tudela_ms._Bodleian_Opp.Add._8o_58_f._1r.jpg",
+        "kind": "source",
+        "author": "Benjamin of Tudela",
+        "date": "16th or 17th century",
+        "licence": "Public domain",
+        "note": "The first leaf of a Hebrew manuscript of his Book of Travels, in the Bodleian Library."
+      },
+      {
+        "file": "Benjamin_of_Tudela_1633_ed_tp.jpg",
+        "kind": "source",
+        "author": "Benjamin of Tudela",
+        "date": "1633",
+        "licence": "Public domain",
+        "note": "The title page of the Leiden edition of 1633, Hebrew and Latin, translated by Constantijn L'Empereur."
+      },
+      {
+        "file": "Туд.png",
+        "kind": "map",
+        "author": "Pierre Bergeron",
+        "date": "1735",
+        "licence": "Public domain",
+        "note": "An eighteenth-century printed map of Benjamin's journey, from a French edition."
+      },
+      {
+        "file": "Benjamin_of_Tudela_route_-_es.svg",
+        "kind": "map",
+        "author": "Kaidor",
+        "date": "2015",
+        "licence": "CC BY-SA 4.0",
+        "note": "A modern map of his journeys from Tudela to Baghdad and beyond, with the Jewish communities he names (in Spanish)."
+      }
+    ]
   },
   "rabban-bar-sauma": {
     "name": "Rabban Bar Sauma",
@@ -1152,7 +1976,7 @@
       "Rabban Sawma",
       "Rabban Sauma"
     ],
-    "bio": "A Church of the East monk born near Khanbaliq (Beijing), of Uyghur stock, who left for Jerusalem with his pupil Markos and was stopped by war in Mongol Persia. Markos became the Patriarch Yahballaha III. In 1287 the Ilkhan Arghun sent Sauma as his ambassador to the pope and the kings of Europe. His account, preserved in a Syriac life of Yahballaha, is the only medieval description of Latin Europe by an East Asian traveller.",
+    "bio": "A Church of the East monk born near Khanbaliq (Beijing), of a Turkic family, Uyghur or Öngüt, who left for Jerusalem with his pupil Markos and was stopped by war in Mongol Persia. Markos became the Patriarch Yahballaha III. In 1287 the Ilkhan Arghun sent Sauma as his ambassador to the pope and the kings of Europe. His account, preserved in a Syriac life of Yahballaha, is the only medieval description of Latin Europe by an East Asian traveller.",
     "sources": [
       "rabban-bar-sauma",
       "history-of-yahballaha",
@@ -1164,7 +1988,7 @@
       "date": "c. 1220",
       "place": "Khanbaliq (Beijing)",
       "label": "Bar Sauma born near Khanbaliq, c. 1220",
-      "text": "He is said to have been born in or near the Mongol capital, in a Uyghur family. The year is a guess worked back from his age at death.",
+      "text": "He is said to have been born in or near the Mongol capital, in a Turkic family, Uyghur or Öngüt. The year is a guess worked back from his age at death.",
       "source": "Rabban Bar Sauma (Wikipedia)",
       "cite": "rabban-bar-sauma",
       "confidence": "inferred"
@@ -1178,7 +2002,41 @@
       "source": "Rabban Bar Sauma (Wikipedia)",
       "cite": "rabban-bar-sauma",
       "confidence": "attested"
-    }
+    },
+    "images": [
+      {
+        "file": "ArghunLetterToPhilippeLeBelExtract1289.jpg",
+        "kind": "source",
+        "author": "Arghun",
+        "date": "1289",
+        "licence": "Public domain",
+        "note": "Part of the Ilkhan Arghun's letter of 1289 to Philip IV of France, in Mongolian script with Chinese seals: the alliance Sauma's embassy had sought."
+      },
+      {
+        "file": "VoyagesOfRabbanBarSauma.jpg",
+        "kind": "map",
+        "author": "PHGCOM",
+        "date": "2007",
+        "licence": "CC BY-SA 3.0",
+        "note": "A map of Sauma's journeys, from Khanbaliq across Asia to Baghdad and on to Rome, Paris and Gascony."
+      },
+      {
+        "file": "Alimali_Nestorian_steles,_Yuan_dynasty_(1206-1368).jpg",
+        "kind": "artefact",
+        "author": "HaziiDozen",
+        "date": "2024",
+        "licence": "CC BY-SA 4.0",
+        "note": "Stones carved with crosses from Alimali in the Yuan dynasty: the Church of the East he belonged to lived across Mongol Asia."
+      },
+      {
+        "file": "Ricoldo_de_Montecroce_et_les_Nestoriens.jpeg",
+        "kind": "scene",
+        "author": "Master of the Mazarine",
+        "date": "c. 1410",
+        "licence": "Public domain",
+        "note": "The Dominican Ricoldo of Montecroce with clergy of the Church of the East, painted about 1410; Ricoldo preached among them in the Ilkhanate in Sauma's last years."
+      }
+    ]
   },
   "afanasy-nikitin": {
     "name": "Afanasy Nikitin",
@@ -1196,10 +2054,44 @@
       "lat": 54.78,
       "date": "spring 1475",
       "label": "Nikitin died near Smolensk, 1475",
-      "text": "The Sofia chronicle says it was reported in 1475 that he had died before he reached Smolensk. The place of his death is unmarked, and the mark stands at the town. Some give the winter of 1472-73.",
+      "text": "The Sofia chronicle says it was reported in 1475 that he had died before he reached Smolensk. No source places his death more closely, so the mark stands at the town. Some give the winter of 1472-73.",
       "source": "Afanasy Nikitin (Wikipedia)",
       "cite": "afanasy-nikitin",
       "confidence": "inferred"
-    }
+    },
+    "images": [
+      {
+        "file": "Af_nik_za_3_mor_fax.JPG",
+        "kind": "source",
+        "author": "Valerikpunk",
+        "date": "2012",
+        "licence": "CC BY-SA 3.0",
+        "note": "A facsimile of the first page of the Trinity manuscript of his Journey beyond the Three Seas, from a 1988 edition."
+      },
+      {
+        "file": "Tver._Monument_to_Afanasy_Nikitin_P7221267_2350.jpg",
+        "kind": "modern",
+        "author": "Alexxx1979",
+        "date": "2020",
+        "licence": "CC BY-SA 4.0",
+        "note": "The monument to Afanasy Nikitin at Tver, the Volga town he set out from."
+      },
+      {
+        "file": "Bidar_fort_complex_from_Solah_Khambha_Masjid.jpg",
+        "kind": "site",
+        "author": "iMahesh",
+        "date": "2022",
+        "licence": "CC BY-SA 4.0",
+        "note": "The fort at Bidar in Karnataka, the Bahmani capital where Nikitin stayed."
+      },
+      {
+        "file": "Afansiy_Nikitin_memorial_theodosia.JPG",
+        "kind": "modern",
+        "author": "Скампецкий",
+        "date": "2009",
+        "licence": "CC BY 3.0",
+        "note": "The memorial to Nikitin at Feodosia, the old Kaffa, where he landed on the Black Sea on his way home in 1474."
+      }
+    ]
   }
 }

@@ -1,6 +1,6 @@
 // The page under touch, in headless Chromium with touch emulation at the two common phone widths
 // (360 and 412 px): a two-finger pinch zooms the map about the pinch centre and not the page, anywhere in
-// the window, one finger drags, the anchor's drawer opens on a tap and stays up on a choice, Go stays up on a
+// the window, one finger drags, the astrolabe's drawer opens on a tap and stays up on a choice, Go stays up on a
 // tap on the map and shuts on a second tap on its compass, and its Find my position button fills in the fix and
 // flies there without bringing up the keyboard, Go still up (the user, 2026-10-30). Under 520 px the map fills the window, cropped at its
 // sides; the settings are a bottom sheet at half the window's height with the map above it, a lighter
@@ -19,7 +19,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -99,14 +99,14 @@ for (const width of [360, 412]) {
       const v3 = await view();
       assert.ok(v3.lon < v2.lon - 0.0001 && v3.zoom === v2.zoom, `a drag right carries the chart with it, so the centre moves west: ${JSON.stringify(v2)} -> ${JSON.stringify(v3)}`);
 
-      // the anchor's drawer: shut, opened by a tap on the anchor, still up after a choice (the third line, The North)
-      assert.equal(await shown('anchorPanel'), false);
-      await page.tap('#anchor');
-      assert.equal(await shown('anchorPanel'), true);
-      assert.equal(await page.getAttribute('#anchor', 'aria-expanded'), 'true');
+      // the astrolabe's drawer: shut, opened by a tap on the astrolabe, still up after a choice (the second line, The world)
+      assert.equal(await shown('sightsPanel'), false);
+      await page.tap('#sights');
+      assert.equal(await shown('sightsPanel'), true);
+      assert.equal(await page.getAttribute('#sights', 'aria-expanded'), 'true');
       const h3 = await hash();
-      await page.tap('#anchorages button >> nth=2');
-      assert.equal(await shown('anchorPanel'), true, 'a choice shut the drawer');
+      await page.tap('#sightsList button >> nth=1');
+      assert.equal(await shown('sightsPanel'), true, 'a choice shut the drawer');
       await settled(h3);
 
       // Go: a sheet that stays up on a tap on the map, and shuts on a second tap on the compass
@@ -204,20 +204,20 @@ for (const width of [360, 412]) {
       await page.waitForFunction((h) => location.hash !== h, h0, { timeout: 60000 });
       assert.equal(await page.evaluate(() => document.getElementById('drawer').classList.contains('open')), true, 'a drag on the map shut the sheet');
 
-      // its controls are the same chips; the anchor swaps it for the anchorages, the same sheet at the foot
+      // its controls are the same chips; the astrolabe swaps it for the locations, the same sheet at the foot
       assert.ok(await page.locator('#drawer .chip').count() > 10);
-      await page.tap('#anchor');
+      await page.tap('#sights');
       await page.waitForTimeout(400);
-      assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('drawer')).visibility), 'hidden', 'the anchor left the settings open');
-      const light = await box('#anchorPanel');
+      assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('drawer')).visibility), 'hidden', 'the astrolabe left the settings open');
+      const light = await box('#sightsPanel');
       assert.ok(light.height <= height / 2 + 2 && Math.abs(light.width - width) <= 1 && Math.abs(light.y + light.height - height) <= 1, JSON.stringify(light));
       map = await box('#map');
-      assert.ok(map.y <= 0 && map.y + map.height >= height, `the map does not stay full behind the anchorages: ${JSON.stringify(map)}`);
+      assert.ok(map.y <= 0 && map.y + map.height >= height, `the map does not stay full behind the locations: ${JSON.stringify(map)}`);
 
-      // a second tap on the anchor shuts the sheet, and the map has the window again
-      await page.tap('#anchor');
+      // a second tap on the astrolabe shuts the sheet, and the map has the window again
+      await page.tap('#sights');
       await page.waitForTimeout(400);
-      assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('anchorPanel')).visibility), 'hidden');
+      assert.equal(await page.evaluate(() => getComputedStyle(document.getElementById('sightsPanel')).visibility), 'hidden');
       map = await box('#map');
       assert.ok(Math.abs(map.y + map.height / 2 - height / 2) <= 2, 'the map did not come back to the middle of the window');
       assert.ok(map.y <= 0 && map.y + map.height >= height, `the map does not fill the window again: ${JSON.stringify(map)}`);
@@ -240,7 +240,7 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     const page = await (await browser.newContext({ viewport: { width: 1100, height: 740 } })).newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
-    await page.goto(`http://localhost:${server.address().port}/#map=7/40/12`);
+    await page.goto(`http://localhost:${server.address().port}/#map=7/40/12&timeline=b`);
     await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
     const opened = (id) => page.evaluate((i) => document.getElementById(i).classList.contains('open') && getComputedStyle(document.getElementById(i)).visibility === 'visible', id);
     const row = () => page.locator('#where .row').boundingBox();
@@ -251,7 +251,7 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
 
     // each button opens its own drawer and shuts the one before; the row stays put and the drawer clear of it
     const row0 = await row();
-    for (const [b, d] of [['#open', 'drawer'], ['#charts', 'chartsDrawer'], ['#sights', 'sightsPanel'], ['#go', 'goPanel'], ['#voyages', 'timelinePanel'], ['#people', 'timelinePanel'], ['#anchor', 'anchorPanel']]) {
+    for (const [b, d] of [['#open', 'drawer'], ['#go', 'goPanel'], ['#sights', 'sightsPanel'], ['#voyages', 'voyagesPanel'], ['#people', 'peoplePanel'], ['#charts', 'chartsDrawer']]) {
       await page.click(b);
       await page.waitForTimeout(400);
       assert.equal(await opened(d), true, `${b} did not open ${d}`);
@@ -262,13 +262,13 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
       assert.ok(apart(box, row0), `${d} covers the row: ${JSON.stringify(box)}, row ${JSON.stringify(row0)}`);
     }
     assert.equal(await page.locator('.drawer .close, #close').count(), 0, 'a close button is back');
-    await page.click('#anchor');
-    assert.equal(await opened('anchorPanel'), false, 'a second click left the anchorages open');
+    await page.click('#charts');
+    assert.equal(await opened('chartsDrawer'), false, 'a second click left the charts open');
 
     await page.click('#voyages');
-    assert.equal(await opened('timelinePanel'), true);
+    assert.equal(await opened('voyagesPanel'), true);
     await page.mouse.click(200, 400);
-    assert.equal(await opened('timelinePanel'), false, 'a click on the map left the timeline open');
+    assert.equal(await opened('voyagesPanel'), false, 'a click on the map left the timeline open');
     await page.click('#open');
     await page.mouse.click(400, 400);
     assert.equal(await opened('drawer'), false, 'a click on the map left the settings open');
@@ -305,9 +305,11 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     assert.deepEqual(await openGroups(), ['The ancient world'], 'leaving the list shut the era');
     assert.equal(await opened('sightsPanel'), true, 'a hover shut the drawer');
     // a heading the slide brings under a still pointer does not open in turn: the open era above shuts, the hovered one
-    // rises, and with its rows cut short here the next heading comes to rest under the pointer; a nudge opens nothing
+    // rises, and with its rows cut short here the next heading comes to rest under the pointer; a nudge opens nothing.
+    // Goa's tile, at the drawer's foot, is put by for this so the headings it would cover stay in reach, however many pictures it has
     const pointer = await page.evaluate(() => {
-      const [anc, med, aod] = [...document.querySelectorAll('#sightsList .group')], fold = (g) => g.querySelector(':scope > .fold').getBoundingClientRect();
+      document.getElementById('sightCard').hidden = true;
+      const [, anc, med, aod] = [...document.querySelectorAll('#sightsList .group')], fold = (g) => g.querySelector(':scope > .fold').getBoundingClientRect();
       const m = fold(med), y = m.top + m.height / 2, rise = anc.querySelector(':scope > .rows').getBoundingClientRect().height;
       // after the slide the pointer sits (y - m.top + rise) below the medieval heading's top; put the next heading's middle there
       med.querySelector('.places').style.cssText = `height:${y - m.top + rise - m.height - fold(aod).height / 2 - 6}px;overflow:hidden`;
@@ -320,7 +322,7 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     await page.mouse.move(pointer.x + 1, pointer.y);
     await page.waitForTimeout(700);
     assert.deepEqual(await openGroups(), ['The medieval Indian Ocean and Asia'], 'a heading the slide brought under the pointer opened on a nudge');
-    await page.evaluate(() => { document.querySelectorAll('#sightsList .group')[1].querySelector('.places').style.cssText = ''; });
+    await page.evaluate(() => { document.querySelectorAll('#sightsList .group')[2].querySelector('.places').style.cssText = ''; document.getElementById('sightCard').hidden = false; });
     await page.click('#sightsList .fold >> text=The ancient world');
     // off, from its chip in the settings, which writes hover=0 into the link: resting on a heading opens nothing
     await page.click('#open');
@@ -345,16 +347,21 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     await page.keyboard.press('Escape');
     assert.equal(await opened('goPanel'), false, 'Esc left Go open');
     assert.equal(await page.evaluate(() => document.activeElement.id), 'go', 'Esc did not give the focus back to the compass');
-    // a chart is a row: without a scan its thumbnail is the greyed chart glyph, and it flies to the chart's frame, the drawer left open
+    // a chart is a row: its thumbnail is its scan, and it lays the sheet and flies to its frame, the drawer left open
     await page.click('#charts');
-    const h = await page.evaluate(() => location.hash);
-    const thumb = page.locator('#chartList .chart', { hasText: 'Vesconte' }).locator('.thumb');
-    assert.equal(await thumb.evaluate((b) => b.classList.contains('none')), true, 'Vesconte has a scan thumbnail');
+    const map0 = await page.evaluate(() => new URLSearchParams(location.hash.slice(1)).get('map'));
+    const vesconte = page.locator('#chartList .chart', { hasText: 'Vesconte' }), thumb = vesconte.locator('.thumb');
+    assert.equal(await thumb.evaluate((b) => b.classList.contains('none')), false, 'Vesconte has no scan thumbnail');
     await thumb.click();
     assert.equal(await opened('chartsDrawer'), true, "a chart's frame shut its drawer");
-    await page.waitForFunction((x) => location.hash !== x, h, { timeout: 60000 });
-    const [, lat, lon] = (await page.evaluate(() => location.hash)).replace('#map=', '').split('/').map(Number);
-    assert.ok(Math.abs(lat - 37.5) < 1 && Math.abs(lon - 25.2) < 1, `Vesconte's sheet is not round the Cyclades: ${lat}, ${lon}`);
+    await page.waitForFunction(() => /[#&]overlay=vesconte-1313(&|$)/.test(location.hash), null, { timeout: 60000 });
+    await page.waitForFunction((m) => new URLSearchParams(location.hash.slice(1)).get('map') !== m, map0, { timeout: 60000 });
+    const [, lat, lon] = (await page.evaluate(() => location.hash)).replace('#map=', '').split('&')[0].split('/').map(Number);
+    assert.ok(Math.abs(lat - 37.4) < 1.5 && Math.abs(lon - 13.3) < 1.5, `Vesconte's sheet is not framed on Italy's shore: ${lat}, ${lon}`);
+    // its eye takes the sheet off again and leaves the drawer open
+    await vesconte.locator('.eye').click();
+    await page.waitForFunction(() => !/[#&]overlay=/.test(location.hash), null, { timeout: 60000 });
+    assert.equal(await opened('chartsDrawer'), true, 'the eye shut the drawer');
     // the eye shows and hides a chart's sheet and leaves the drawer open
     const cosa = page.locator('#chartList .chart', { hasText: 'Juan de la Cosa' });
     const overlaid = () => page.evaluate(() => /[#&]overlay=de-la-cosa(&|$)/.test(location.hash));
@@ -458,7 +465,7 @@ test('charts: the eye shows or hides one sheet and leaves the others and the map
   }
 });
 
-test('voyages: several drawn at once, each in its own ink, carried by the link; the eye shows or hides one, the name shows it alone and draws it on every time; an older single voyage= link opens; Clear empties the list', { skip, timeout: 240000 }, async () => {
+test('voyages: several drawn at once, each in its own ink, carried by the link; the eye shows or hides one, the name shows it alone and draws it on every time; an older single voyage= link opens; the skull empties the list, the drawer open and no Clear of its own', { skip, timeout: 240000 }, async () => {
   const server = createServer(async (req, res) => {
     let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
     if (p.endsWith('/')) p = path.join(p, 'index.html');
@@ -469,7 +476,7 @@ test('voyages: several drawn at once, each in its own ink, carried by the link; 
     const page = await (await browser.newContext({ viewport: { width: 1100, height: 740 } })).newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
-    await page.goto(`http://localhost:${server.address().port}/#map=2/15/-20&voyage=magellan`);
+    await page.goto(`http://localhost:${server.address().port}/#map=2/15/-20&voyage=magellan&timeline=b`);
     await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
     await page.click('#voyages');
     await page.waitForSelector('#voyageList [data-voyage]');
@@ -489,7 +496,7 @@ test('voyages: several drawn at once, each in its own ink, carried by the link; 
     await pen();
     await page.click('#voyageList [data-eye="columbus"]');
     await page.click('#voyageList [data-eye="drake"]');
-    assert.equal(await page.$eval('#timelinePanel', (d) => d.classList.contains('open')), true, 'a choice shut the drawer');
+    assert.equal(await page.$eval('#voyagesPanel', (d) => d.classList.contains('open')), true, 'a choice shut the drawer');
     assert.deepEqual(await on(), ['columbus', 'magellan', 'drake']); // the list's order
     assert.equal(new Set(await inks()).size, 3, 'two voyages share an ink');
     assert.match(await hash(), /voyages=magellan\.[0-9a-f]{6},columbus\.[0-9a-f]{6},drake\.[0-9a-f]{6}(&|$)/);
@@ -530,11 +537,21 @@ test('voyages: several drawn at once, each in its own ink, carried by the link; 
     assert.match(await hash(), /voyages=magellan\.[0-9a-f]{6},columbus\.[0-9a-f]{6},drake:16727a/);
     await page.click('#voyageWidth [data-value="2.2"]');
     assert.match(await hash(), /voyagewidth=2.2/);
-    if (!(await page.$eval('#timelinePanel', (d) => d.classList.contains('open')))) await page.click('#voyages');
-    await page.click('#timelinePanel .tool');
+    if (!(await page.$eval('#voyagesPanel', (d) => d.classList.contains('open')))) await page.click('#voyages');
+    assert.equal(await page.locator('#voyagesPanel .tool').count(), 0, 'the Voyages drawer has a Clear of its own: the skull is the one clear');
+    const mapOf = (h) => new URLSearchParams(h.slice(1)).get('map'), was = mapOf(await hash());
+    // a chart's sheet laid too (its eye, as the page's own handler takes it): the skull must lift it, and throw nothing doing so
+    await page.waitForFunction(() => !document.querySelector('#chartList [data-overlay="carta-marina"] .eye')?.hidden);
+    await page.$eval('#chartList [data-overlay="carta-marina"] .eye', (b) => b.click());
+    await page.waitForFunction(() => /overlay=carta-marina/.test(location.hash));
+    await page.click('#sweep');
+    await page.waitForFunction(() => !/overlay=|sheet=/.test(location.hash), null, { timeout: 60000 });
     assert.deepEqual(await on(), []);
+    assert.doesNotMatch(await hash(), /overlay=|sheet=/, 'the skull left a chart on the map');
+    assert.equal(mapOf(await hash()), was, 'the skull moved the map');
     assert.doesNotMatch(await hash(), /voyages=/);
-    assert.equal(await page.$eval('#timelinePanel .tool', (b) => b.disabled), true, 'Clear still offered with nothing to clear');
+    assert.match(await hash(), /voyagewidth=2.2/, 'the skull cleared a setting');
+    assert.equal(await page.$eval('#voyagesPanel', (d) => d.classList.contains('open')), true, 'the skull shut the drawer');
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();
@@ -542,7 +559,140 @@ test('voyages: several drawn at once, each in its own ink, carried by the link; 
   }
 });
 
-test('timeline: people above the axis, voyages below, each once, the era bands across it end to end, Earlier widens it; each button opens it at its own lane', { skip, timeout: 240000 }, async () => {
+test('people and voyages: two vertical drawers no wider than the charts, earliest first under era headings; a chosen person\'s tile and their voyages sit directly under their row; a people has a row', { skip, timeout: 240000 }, async () => {
+  const server = createServer(async (req, res) => {
+    let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
+    if (p.endsWith('/')) p = path.join(p, 'index.html');
+    try { res.writeHead(200, { 'content-type': TYPES[path.extname(p)] ?? 'application/octet-stream' }).end(await readFile(p)); } catch { res.writeHead(404).end(); }
+  }).listen(0);
+  const browser = await chromium.launch();
+  try {
+    const page = await (await browser.newContext({ viewport: { width: 1280, height: 800 } })).newPage();
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await page.goto(`http://localhost:${server.address().port}/#map=2/15/-20&timeline=b`);
+    await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
+    const opened = (id) => page.evaluate((i) => document.getElementById(i).classList.contains('open'), id);
+    const box = (sel) => page.locator(sel).boundingBox();
+    const hash = () => page.evaluate(() => decodeURIComponent(location.hash));
+    const noSideScroll = (id) => page.evaluate((i) => { const d = document.getElementById(i); return d.scrollWidth <= d.clientWidth + 1; }, id);
+    // the Charts drawer's width is the bar
+    await page.click('#charts');
+    await page.waitForTimeout(400);
+    const charts = await box('#chartsDrawer');
+    // the medallion opens the People drawer alone, no wider than the charts, every person once, earliest first
+    await page.click('#people');
+    await page.waitForSelector('#peopleList [data-person]');
+    await page.waitForTimeout(400); // the slide
+    assert.equal(await opened('peoplePanel'), true, 'the medallion did not open the People drawer');
+    assert.equal(await opened('voyagesPanel'), false, 'the Voyages drawer opened with the people');
+    assert.deepEqual([await page.getAttribute('#people', 'aria-expanded'), await page.getAttribute('#voyages', 'aria-expanded')], ['true', 'false']);
+    const peoplePanel = await box('#peoplePanel');
+    assert.ok(peoplePanel.width <= charts.width + 1 && peoplePanel.width <= 480, `the People drawer is wider than the charts: ${peoplePanel.width} > ${charts.width}`);
+    assert.equal(await noSideScroll('peoplePanel'), true, 'the People drawer scrolls sideways');
+    const root = fileURLToPath(new URL('..', import.meta.url));
+    const index = JSON.parse(await readFile(path.join(root, 'data/voyages/index.json'), 'utf8'));
+    const records = JSON.parse(await readFile(path.join(root, 'data/voyages/people.json'), 'utf8'));
+    const persons = Object.entries(records).filter(([, p]) => p && typeof p === 'object').map(([id]) => id);
+    const shownPeople = await page.$$eval('#peopleList [data-person]', (bs) => bs.map((b) => b.dataset.person));
+    assert.deepEqual([...shownPeople].sort(), [...persons].sort(), 'a person missing or twice');
+    assert.equal(shownPeople[0], 'lapita-people', 'the Lapita people, 1500 BC, are not the first row');
+    assert.ok(shownPeople.indexOf('east-polynesian-voyagers') > shownPeople.indexOf('leif-erikson') && shownPeople.indexOf('east-polynesian-voyagers') < shownPeople.indexOf('marco-polo'), 'the East Polynesian voyagers are out of order');
+    assert.ok(shownPeople.indexOf('pytheas') < shownPeople.indexOf('ibn-battuta') && shownPeople.indexOf('ibn-battuta') < shownPeople.indexOf('christopher-columbus'), 'not earliest first');
+    assert.deepEqual(await page.$$eval('#peopleList .era', (es) => es.map((e) => e.dataset.era)), ['The ancient world', 'The medieval Indian Ocean and Asia', 'The age of discovery'], 'the era headings');
+    assert.ok(await page.$eval('#peopleList [data-person="lapita-people"]', (b) => b.querySelector('.chip')?.textContent === 'a people' && /1500–800 BC/.test(b.textContent)), 'the Lapita row lacks its chip or its BC years');
+    assert.ok(await page.$eval('#peopleList [data-person="ibn-battuta"]', (b) => /1304/.test(b.textContent) && !b.querySelector('.chip')), 'Ibn Battuta\'s row lacks his years or has a chip');
+    assert.equal(await page.$eval('#peopleList .era', (e) => getComputedStyle(e).fontStyle), 'italic');
+    // the rows read top to bottom, one under the other, each the drawer's width
+    const rows = await page.$$eval('#peopleList [data-person]', (bs) => bs.map((b) => { const r = b.getBoundingClientRect(); return [r.top, r.left, r.width]; }));
+    rows.forEach(([top], i) => { if (i) assert.ok(top > rows[i - 1][0], 'a row not below the one before'); });
+    assert.ok(rows.every(([, left, width]) => Math.abs(left - rows[0][1]) < 1 && width > 300), 'the rows are not one column');
+    // Ibn Battuta chosen: his row lit, his tile slid open directly under it, his nine voyages inside with eyes and play, all drawn
+    await page.click('#peopleList [data-person="ibn-battuta"]');
+    await page.waitForTimeout(400);
+    assert.match(await hash(), /person=ibn-battuta/);
+    assert.equal(await page.getAttribute('#peopleList [data-person="ibn-battuta"]', 'aria-pressed'), 'true');
+    assert.deepEqual(await page.$$eval('#peopleList li.open', (ls) => ls.map((l) => l.dataset.row)), ['ibn-battuta'], 'not exactly his row open');
+    assert.equal(await page.$eval('#personCard', (c) => c.closest('li[data-row]')?.dataset.row), 'ibn-battuta', 'the tile is not in his row');
+    const [row, card, next] = await page.evaluate(() => {
+      const li = document.querySelector('#peopleList li[data-row="ibn-battuta"]'), card = document.getElementById('personCard');
+      let after = li.nextElementSibling; while (after && !after.dataset.row) after = after.nextElementSibling; // past an era heading
+      return [li.querySelector('[data-person]').getBoundingClientRect().toJSON(), card.getBoundingClientRect().toJSON(), after?.getBoundingClientRect().toJSON()];
+    });
+    assert.ok(card.top >= row.bottom - 1 && card.height > 100, `the tile is not under his row: row ends ${row.bottom}, tile at ${card.top}`);
+    assert.ok(next && next.top >= card.bottom - 1, 'the next person is not below his tile');
+    const ib = index.filter((id) => JSON.parse(readFileSync(path.join(root, `data/voyages/${id}.json`), 'utf8')).who.includes('ibn-battuta'));
+    assert.deepEqual(await page.$$eval('#personCard .pvoyages li[data-row]', (ls) => ls.map((l) => l.dataset.row)), ib, 'his voyages, in the index\'s order');
+    assert.equal(ib.length, 9);
+    assert.ok(await page.$eval('#personCard .bio', (b) => b.textContent.length > 40), 'no notes in the tile');
+    assert.ok(await page.$$eval('#personCard .pvoyages li', (ls) => ls.every((l) => l.querySelector('[data-eye]') && l.querySelector('[data-play]') && l.querySelector('.vsum').textContent.length > 20 && l.querySelector('.vsum a'))), 'a voyage row without its eye, play, summary or link');
+    assert.ok(await page.$$eval('#personCard [data-eye]', (es) => es.every((e) => e.getAttribute('aria-pressed') === 'true')), 'his voyages are drawn, so their eyes read on');
+    assert.equal(await noSideScroll('peoplePanel'), true, 'the tile made the drawer scroll sideways');
+    // the eye in his tile puts that one voyage off, and the drawer stays open; the hash carries it hidden
+    await page.click('#personCard [data-eye="ibn-battuta-3"]');
+    assert.equal(await page.getAttribute('#personCard [data-eye="ibn-battuta-3"]', 'aria-pressed'), 'false');
+    assert.match(await hash(), /voyages=ibn-battuta-3(\.[0-9a-f]{6})?~/);
+    assert.match(await hash(), /person=ibn-battuta/, 'the eye let the person go');
+    assert.equal(await opened('peoplePanel'), true);
+    // the eye back on leaves nothing behind: letting him go takes the voyage off with him
+    await page.click('#personCard [data-eye="ibn-battuta-3"]');
+    assert.equal(await page.getAttribute('#personCard [data-eye="ibn-battuta-3"]', 'aria-pressed'), 'true');
+    assert.doesNotMatch(await hash(), /voyages=/, 'the eye back on left the voyage chosen');
+    await page.click('#peopleList [data-person="ibn-battuta"]');
+    assert.doesNotMatch(await hash(), /voyages=|person=/, 'letting him go left a voyage of his chosen');
+    await page.click('#peopleList [data-person="ibn-battuta"]');
+    // the people and the voyages carry their spans as bars, on each era's scale under its ruler
+    assert.ok(await page.$$eval('#peopleList .era', (es) => es.every((e) => e.querySelector('.ruler span'))), 'an era heading without its ruler');
+    assert.ok(await page.$eval('#peopleList [data-person="ibn-battuta"] .bar', (b) => b.getBoundingClientRect().width > 8), 'Ibn Battuta\'s life bar is missing or a sliver');
+    // another person chosen: his tile shuts, theirs opens under their own row
+    await page.click('#peopleList [data-person="lapita-people"]');
+    await page.waitForTimeout(400);
+    assert.deepEqual(await page.$$eval('#peopleList li.open', (ls) => ls.map((l) => l.dataset.row)), ['lapita-people']);
+    assert.equal(await page.$eval('#personCard', (c) => c.closest('li[data-row]')?.dataset.row), 'lapita-people');
+    assert.deepEqual(await page.$$eval('#personCard .pvoyages li[data-row]', (ls) => ls.map((l) => l.dataset.row)), ['lapita-expansion']);
+    assert.match(await hash(), /person=lapita-people/);
+    // the dividers swap it for the Voyages drawer: as wide, every voyage once, earliest first under the same headings, nothing sideways
+    await page.click('#voyages');
+    await page.waitForSelector('#voyageList [data-voyage]');
+    await page.waitForTimeout(400);
+    assert.equal(await opened('voyagesPanel'), true, 'the dividers did not open the Voyages drawer');
+    assert.equal(await opened('peoplePanel'), false, 'the People drawer stayed open with the voyages');
+    assert.deepEqual([await page.getAttribute('#people', 'aria-expanded'), await page.getAttribute('#voyages', 'aria-expanded')], ['false', 'true']);
+    const voyagesPanel = await box('#voyagesPanel');
+    assert.ok(voyagesPanel.width <= charts.width + 1 && voyagesPanel.width <= 480, `the Voyages drawer is wider than the charts: ${voyagesPanel.width}`);
+    assert.equal(await noSideScroll('voyagesPanel'), true, 'the Voyages drawer scrolls sideways');
+    const shownVoyages = await page.$$eval('#voyageList [data-voyage]', (bs) => bs.map((b) => b.dataset.voyage));
+    assert.deepEqual([...shownVoyages].sort(), [...index].sort(), 'a voyage missing or twice');
+    assert.equal(shownVoyages[0], 'lapita-expansion');
+    assert.deepEqual(await page.$$eval('#voyageList .era', (es) => es.map((e) => e.dataset.era)), ['The ancient world', 'The medieval Indian Ocean and Asia', 'The age of discovery']);
+    assert.ok(await page.$$eval('#voyageList li[data-row]', (ls) => ls.every((l) => l.querySelector('[data-eye]') && l.querySelector('[data-play]') && l.querySelector('[data-ink]') && l.querySelector('path'))), 'a voyage row without its eye, play, swatch or line sample');
+    const tools = await box('#voyagesPanel .vtools'), list = await box('#voyageList');
+    assert.ok(tools.y + tools.height <= list.y + 1, 'the tools do not head the list');
+    assert.equal(await page.$$eval('#voyageWidth [role=radio], #voyageWidth button', (cs) => cs.length > 0), true, 'no line-weight chips');
+    await page.click('#voyages');
+    assert.equal(await opened('voyagesPanel'), false, 'a second click on the dividers left the voyages open');
+    // a phone: each a bottom sheet, the page never scrolling sideways, the Lapita row there
+    const phone = await (await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })).newPage();
+    phone.on('pageerror', (e) => errors.push(e.message));
+    await phone.goto(`http://localhost:${server.address().port}/#map=2/15/-20&timeline=b`);
+    await phone.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
+    await phone.tap('#people');
+    await phone.waitForSelector('#peopleList [data-person="lapita-people"]');
+    await phone.waitForTimeout(400);
+    const sheet = await phone.locator('#peoplePanel').boundingBox();
+    assert.ok(sheet.width <= 390 && sheet.y + sheet.height >= 844 - 1, `the People drawer is not a bottom sheet: ${JSON.stringify(sheet)}`);
+    assert.equal(await phone.evaluate(() => { const d = document.getElementById('peoplePanel'); return d.scrollWidth <= d.clientWidth + 1 && document.documentElement.scrollWidth <= innerWidth; }), true, 'the phone scrolls sideways');
+    await phone.tap('#voyages');
+    await phone.waitForSelector('#voyageList [data-voyage]');
+    assert.equal(await phone.evaluate(() => { const d = document.getElementById('voyagesPanel'); return d.classList.contains('open') && d.scrollWidth <= d.clientWidth + 1; }), true, 'the Voyages sheet scrolls sideways');
+    assert.deepEqual(errors, []);
+  } finally {
+    await browser.close();
+    server.close();
+  }
+});
+
+test('timeline A (timeline=a): people above the axis, voyages below, each once, the era bands across it end to end, Earlier widens it; each button opens it at its own lane', { skip, timeout: 240000 }, async () => {
   const server = createServer(async (req, res) => {
     let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
     if (p.endsWith('/')) p = path.join(p, 'index.html');
@@ -553,26 +703,26 @@ test('timeline: people above the axis, voyages below, each once, the era bands a
     const page = await (await browser.newContext({ viewport: { width: 1100, height: 740 } })).newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
-    await page.goto(`http://localhost:${server.address().port}/#map=2/15/-20`);
+    await page.goto(`http://localhost:${server.address().port}/#map=2/15/-20&timeline=a`);
     await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
     const opened = () => page.evaluate(() => document.getElementById('timelinePanel').classList.contains('open'));
     const lit = () => page.$$eval('.lanecap.lit', (cs) => cs.map((c) => c.id));
     const box = (sel) => page.locator(sel).boundingBox();
     await page.click('#people');
     await page.waitForSelector('#peopleStrip [data-person]');
-    await page.waitForSelector('#voyageList [data-voyage]');
+    await page.waitForSelector('#laneVoyages [data-voyage]');
     assert.equal(await opened(), true, 'the medallion did not open the timeline');
     assert.deepEqual([await page.getAttribute('#people', 'aria-expanded'), await page.getAttribute('#voyages', 'aria-expanded')], ['true', 'false']);
     assert.deepEqual(await lit(), ['peopleCap']);
     // the two lanes on either side of one axis
-    const [people, axis, voyages] = [await box('#peopleStrip'), await box('#timeAxis'), await box('#voyageList')];
+    const [people, axis, voyages] = [await box('#peopleStrip'), await box('#timeAxis'), await box('#laneVoyages')];
     assert.ok(people.y + people.height <= axis.y + 1 && voyages.y >= axis.y + axis.height - 1, 'the people are not above the axis and the voyages below it');
     // every voyage and every person, once each
     const root = fileURLToPath(new URL('..', import.meta.url));
     const index = JSON.parse(await readFile(path.join(root, 'data/voyages/index.json'), 'utf8'));
     const records = JSON.parse(await readFile(path.join(root, 'data/voyages/people.json'), 'utf8'));
     const persons = Object.entries(records).filter(([, p]) => p && typeof p === 'object').map(([id]) => id);
-    const shownVoyages = await page.$$eval('#voyageList [data-voyage]', (bs) => bs.map((b) => b.dataset.voyage));
+    const shownVoyages = await page.$$eval('#laneVoyages [data-voyage]', (bs) => bs.map((b) => b.dataset.voyage));
     const shownPeople = await page.$$eval('#peopleStrip [data-person]', (bs) => bs.map((b) => b.dataset.person));
     assert.deepEqual([...shownVoyages].sort(), [...index].sort(), 'a voyage missing or twice');
     assert.deepEqual([...shownPeople].sort(), [...persons].sort(), 'a person missing or twice');
@@ -599,7 +749,7 @@ test('timeline: people above the axis, voyages below, each once, the era bands a
     assert.ok(bs[0].left - t.x > w0 * 0.49, 'no earlier stretch to the left of Lapita');
     assert.deepEqual(await page.$$eval('#eras .mark', (ms) => ms.map((m) => m.dataset.mark)), ['Sahul', 'Beringia', 'Clovis']);
     assert.ok((await page.textContent('#timeAxis')).includes('50,000 BC'));
-    const firstEntry = Math.min(...await page.$$eval('#peopleStrip .bar, #voyageList .vbar', (es) => { const t = document.getElementById('track').getBoundingClientRect().left; return es.map((e) => e.getBoundingClientRect().left - t); }));
+    const firstEntry = Math.min(...await page.$$eval('#peopleStrip .bar, #laneVoyages .vbar', (es) => { const t = document.getElementById('track').getBoundingClientRect().left; return es.map((e) => e.getBoundingClientRect().left - t); }));
     assert.ok(firstEntry >= bs[0].left - 1, 'an entry on the earlier stretch');
     await page.click('#earlier');
     assert.ok(Math.abs((await track()).width - w0) < 1, 'Earlier again did not bring the axis back');
@@ -615,11 +765,11 @@ test('timeline: people above the axis, voyages below, each once, the era bands a
     // a phone: the timeline scrolls sideways, opened at its right end, where most of it is
     const phone = await (await browser.newContext({ viewport: { width: 412, height: 800 }, hasTouch: true, isMobile: true })).newPage();
     phone.on('pageerror', (e) => errors.push(e.message));
-    await phone.goto(`http://localhost:${server.address().port}/#map=2/15/-20`);
+    await phone.goto(`http://localhost:${server.address().port}/#map=2/15/-20&timeline=a`);
     await phone.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
     await phone.tap('#people');
     await phone.waitForSelector('#peopleStrip [data-person]');
-    await phone.waitForSelector('#voyageList [data-voyage]');
+    await phone.waitForSelector('#laneVoyages [data-voyage]');
     const sc = await phone.$eval('#timeScroll', (e) => ({ sw: e.scrollWidth, cw: e.clientWidth, left: e.scrollLeft }));
     assert.ok(sc.sw > sc.cw, `the phone's timeline does not scroll sideways: ${JSON.stringify(sc)}`);
     assert.ok(sc.left >= sc.sw - sc.cw - 1, `the phone's timeline did not open at its right end: ${JSON.stringify(sc)}`);
@@ -630,6 +780,7 @@ test('timeline: people above the axis, voyages below, each once, the era bands a
     server.close();
   }
 });
+
 
 test('people: a picture on the map is looked at, put away and dealt back by choosing the person again; the last touched lies on top; its Commons link is a glyph', { skip, timeout: 240000 }, async () => {
   const server = createServer(async (req, res) => {
@@ -643,7 +794,7 @@ test('people: a picture on the map is looked at, put away and dealt back by choo
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     // two of Columbus's pictures laid apart on open sea, the first at the view's centre
-    await page.goto(`http://localhost:${server.address().port}/#map=4/-50/-30&person=christopher-columbus&pictures=0,1&pictureat=0:-30,-50,0.015_1:-10,-50,0.015`);
+    await page.goto(`http://localhost:${server.address().port}/#map=4/-50/-30&person=christopher-columbus&pictures=0,1&pictureat=0:-30,-50,0.015_1:-10,-50,0.015&timeline=b`);
     await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
     await page.waitForFunction(() => document.querySelectorAll('#pictureKeys li').length === 2, null, { timeout: 60000 });
     await page.waitForTimeout(1200); // dealt in
@@ -678,7 +829,17 @@ test('people: a picture on the map is looked at, put away and dealt back by choo
       return out;
     }, { x0: cx - 200, y0: cy - 200 });
     assert.ok(zoomIn.length, 'no Look button on the first picture');
-    const look = () => page.mouse.click(zoomIn.reduce((s, p) => s + p[0], 0) / zoomIn.length, zoomIn.reduce((s, p) => s + p[1], 0) / zoomIn.length);
+    const lookAt = { x: zoomIn.reduce((s, p) => s + p[0], 0) / zoomIn.length, y: zoomIn.reduce((s, p) => s + p[1], 0) / zoomIn.length };
+    // pressed once the pointer over it finds Look (its magnifier): a press sent at once, while a picture laid back is still settling, was lost now and then under load
+    // and pressed again, up to three times, until the picture is looked at: on CI a press right after a drawer shuts was
+    // lost about one run in three (the 'did not look at it again' failure), as a hand would press again
+    const look = async () => {
+      for (let tries = 0; tries < 3; tries++) {
+        await page.waitForFunction(({ x, y }) => { const m = document.getElementById('map'); m.dispatchEvent(new PointerEvent('pointermove', { clientX: x, clientY: y, isPrimary: true, bubbles: true })); return m.style.cursor === 'zoom-in'; }, lookAt, { timeout: 10000, polling: 100 });
+        await page.mouse.click(lookAt.x, lookAt.y);
+        if (await page.waitForFunction(() => document.querySelector('#pictureKeys [data-look="0"]')?.getAttribute('aria-pressed') === 'true', null, { timeout: 2000, polling: 100 }).then(() => true, () => false)) return;
+      }
+    };
     await look();
     assert.equal(await looked(), 'true');
     await page.keyboard.press('Escape');
@@ -691,9 +852,9 @@ test('people: a picture on the map is looked at, put away and dealt back by choo
     assert.equal(await looked(), 'true');
     await page.keyboard.press('Escape');
     assert.equal(await looked(), 'false');
-    assert.equal(await page.$eval('#timelinePanel', (d) => d.classList.contains('open')), true, 'Esc shut the drawer too');
+    assert.equal(await page.$eval('#peoplePanel', (d) => d.classList.contains('open')), true, 'Esc shut the drawer too');
     await page.keyboard.press('Escape'); // and the next shuts it
-    assert.equal(await page.$eval('#timelinePanel', (d) => d.classList.contains('open')), false);
+    assert.equal(await page.$eval('#peoplePanel', (d) => d.classList.contains('open')), false);
     await page.evaluate(() => document.activeElement.blur());
     await look();
     assert.equal(await looked(), 'true', 'Look on the picture\'s edge did not look at it again');
@@ -714,10 +875,64 @@ test('people: a picture on the map is looked at, put away and dealt back by choo
 
     // choosing the person again, one click, deals every picture back
     await page.click('#people');
-    await page.click('[data-person="christopher-columbus"]');
+    await page.click('#peopleList [data-person="christopher-columbus"]');
     assert.match(await hash(), /person=/);
     await page.waitForFunction(() => document.querySelector('#pictureKeys [data-pic="0"]') && document.querySelector('#pictureKeys [data-pic="1"]'), null, { timeout: 60000 });
     assert.doesNotMatch(await hash(), /pictures=/);
+    assert.deepEqual(errors, []);
+  } finally {
+    await browser.close();
+    server.close();
+  }
+});
+
+// Every chart turns a quarter at a time (docs/spec/design.md, "Every chart turns, a quarter at a time"): the walk-around
+// buttons beside the compass step de la Cosa through its own quarter turns, so West up (its drawn bearing, 270) lights exactly there and the up chip
+// is pressed only then; and the eye shows or hides a sheet without moving the view or turning the world.
+test('charts: the walk-around buttons step through the chart\'s quarter turns, West up lighting at its bearing; the eye leaves the view alone', { skip, timeout: 240000 }, async () => {
+  const server = createServer(async (req, res) => {
+    let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
+    if (p.endsWith('/')) p = path.join(p, 'index.html');
+    try { res.writeHead(200, { 'content-type': TYPES[path.extname(p)] ?? 'application/octet-stream' }).end(await readFile(p)); } catch { res.writeHead(404).end(); }
+  }).listen(0);
+  const browser = await chromium.launch();
+  try {
+    const page = await (await browser.newContext({ viewport: { width: 1100, height: 740 } })).newPage();
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await page.goto(`http://localhost:${server.address().port}/#map=3.00/30.000/-20.000&overlay=de-la-cosa`);
+    await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
+    const key = async (k) => new URLSearchParams((await page.evaluate(() => location.hash)).slice(1)).get(k);
+    await page.click('#charts');
+    const cosa = page.locator('#chartList .chart', { hasText: 'Juan de la Cosa' });
+    await cosa.locator('.thumb').click(); // lays the sheet and brings up its chips
+    const walk = page.locator('#walkLeft'), up = cosa.locator('.pos [data-up]');
+    await up.waitFor({ state: 'visible', timeout: 60000 });
+    const bearingAfter = async (was) => {
+      await page.waitForFunction((w) => (new URLSearchParams(location.hash.slice(1)).get('bearing') ?? '0') !== w, was, { timeout: 30000 });
+      await page.waitForTimeout(1500); // the turn is a short animation
+      return Number(await key('bearing') ?? 0);
+    };
+    // anticlockwise from north up: each step a quarter from the chart's own up, so 87.8, 177.8, 267.8 (West up), 357.8, 87.8
+    const seen = [];
+    let was = String(await key('bearing') ?? '0');
+    for (let i = 0; i < 5; i++) {
+      await walk.click();
+      const b = await bearingAfter(was);
+      seen.push(b); was = String(await key('bearing') ?? '0');
+      const lit = (await up.getAttribute('aria-pressed')) === 'true';
+      assert.equal(lit, Math.abs(b - 267.8) < 1 || Math.abs(b - 270) < 1, `West up is ${lit ? 'lit' : 'dark'} at ${b}`);
+    }
+    assert.ok(seen.some((b) => Math.abs(b - 270) < 3), `the walk never reached West up: ${seen}`);
+    for (let i = 1; i < seen.length; i++) assert.ok(Math.abs((((seen[i] - seen[i - 1]) % 360) + 360) % 360 - 90) < 3, `step ${i} was not a quarter turn: ${seen}`);
+    // the eye hides and shows the sheet and leaves the view, bearing included, where it is
+    const view = async () => `${await key('map')}|${await key('bearing')}`, before = await view();
+    await cosa.locator('.eye').click();
+    await page.waitForFunction(() => !/[#&]overlay=/.test(location.hash), null, { timeout: 30000 });
+    assert.equal(await view(), before, 'the eye hid the sheet and moved the view');
+    await cosa.locator('.eye').click();
+    await page.waitForFunction(() => /[#&]overlay=de-la-cosa(&|$)/.test(location.hash), null, { timeout: 30000 });
+    assert.equal(await view(), before, 'the eye showed the sheet and moved the view');
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();

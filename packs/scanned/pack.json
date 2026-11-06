@@ -1,7 +1,7 @@
 {
   "name": "scanned",
-  "title": "Sprites cropped from scans: Olaus Magnus, Carta Marina 1539; Jorge de Aguiar 1492; Catalan Atlas 1375; Genoese chart c. 1320-1350; Frederik de Wit; Ambroise Paré, Des monstres; Master W with the Key, two ship engravings c. 1475-1490",
-  "licence": "Public domain (PD-Art); scans via Wikimedia Commons (James Ford Bell Library; Beinecke Library, Yale; BnF Gallica btv1b55002481n; Library of Congress 2003630429; Royal Museums Greenwich). The pare-* sprites: Wellcome Collection, CC BY 4.0. Ships ship-w-*: Art Institute of Chicago 27881 (CC0) and Rijksmuseum RP-P-2014-30 (Public Domain Mark)",
+  "title": "Sprites cropped from scans: Olaus Magnus, Carta Marina 1539; Jorge de Aguiar 1492; Catalan Atlas 1375; Genoese chart c. 1320-1350; Frederik de Wit; Ambroise Paré, Des monstres; Master W with the Key, two ship engravings c. 1475-1490; a member of the Oliva family, portolan chart of the Mediterranean 1621-1665; Petrus Plancius, Tabula geographica (Acts and Epistles) 1609; Juan de la Cosa 1500",
+  "licence": "Public domain (PD-Art); scans via Wikimedia Commons (James Ford Bell Library; Beinecke Library, Yale; BnF Gallica btv1b55002481n; Library of Congress 2003630429; Royal Museums Greenwich). The pare-* sprites: Wellcome Collection, CC BY 4.0. Ships ship-w-*: Art Institute of Chicago 27881 (CC0) and Rijksmuseum RP-P-2014-30 (Public Domain Mark). The oliva sprites: Barry Lawrence Ruderman Antique Maps via Commons (PD-Art); the plancius sprites: National Library of Israel, Eran Laor Cartographic Collection (public domain); the cosa sprites: Museo Naval, Madrid, through the Museo Galileo facsimile (PD-Art)",
   "colour": "source",
   "ink": "#3b2a1a",
   "sprites": [
@@ -186,6 +186,69 @@
       },
       "minClearancePx": 140,
       "weight": 2
+    },
+    {
+      "id": "cosa-ship-a",
+      "kind": "ship",
+      "style": "de-la-cosa",
+      "file": "cosa-ship-a.png",
+      "anchor": [0.52, 0.59],
+      "sizePx": 79,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/d/d2/1500_map_by_Juan_de_la_Cosa-India.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:1500_map_by_Juan_de_la_Cosa-India.jpg",
+        "crop": [290, 392, 650, 615],
+        "turn": 90
+      },
+      "heading": "right"
+    },
+    {
+      "id": "cosa-ship-b",
+      "kind": "ship",
+      "style": "de-la-cosa",
+      "file": "cosa-ship-b.png",
+      "anchor": [0.518, 0.614],
+      "sizePx": 89,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/d/d2/1500_map_by_Juan_de_la_Cosa-India.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:1500_map_by_Juan_de_la_Cosa-India.jpg",
+        "crop": [300, 600, 748, 965],
+        "turn": 90
+      },
+      "heading": "right"
+    },
+    {
+      "id": "cosa-ship-c",
+      "kind": "ship",
+      "style": "de-la-cosa",
+      "file": "cosa-ship-c.png",
+      "anchor": [0.515, 0.585],
+      "sizePx": 107,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/d/d2/1500_map_by_Juan_de_la_Cosa-India.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:1500_map_by_Juan_de_la_Cosa-India.jpg",
+        "crop": [40, 800, 540, 1073],
+        "turn": 90
+      },
+      "heading": "right"
+    },
+    {
+      "id": "cosa-ship-d",
+      "kind": "ship",
+      "style": "de-la-cosa",
+      "file": "cosa-ship-d.png",
+      "anchor": [0.51, 0.503],
+      "sizePx": 79,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/d/d2/1500_map_by_Juan_de_la_Cosa-India.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:1500_map_by_Juan_de_la_Cosa-India.jpg",
+        "crop": [736, 501, 994, 899]
+      },
+      "heading": "right"
     },
     {
       "id": "rose-prunes",
@@ -392,6 +455,127 @@
         "url": "https://upload.wikimedia.org/wikipedia/commons/5/5c/Mediterranean_chart_fourteenth_century2.jpg",
         "page": "https://commons.wikimedia.org/wiki/File:Mediterranean_chart_fourteenth_century2.jpg",
         "crop": [3691, 3798, 4419, 3954]
+      }
+    },
+    {
+      "id": "rose-oliva",
+      "kind": "rose",
+      "style": "oliva",
+      "file": "rose-oliva.png",
+      "anchor": [0.5, 0.5],
+      "sizePx": 300,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/e/ee/17th-century_Portolan_chart_of_the_Mediterranean_Sea_by_a_member_of_the_Oliva_family.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:17th-century_Portolan_chart_of_the_Mediterranean_Sea_by_a_member_of_the_Oliva_family.jpg",
+        "crop": [2755, 8002, 5145, 10392]
+      }
+    },
+    {
+      "id": "rose-oliva-small",
+      "kind": "rose",
+      "style": "oliva",
+      "file": "rose-oliva-small.png",
+      "anchor": [0.5, 0.5],
+      "sizePx": 110,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/e/ee/17th-century_Portolan_chart_of_the_Mediterranean_Sea_by_a_member_of_the_Oliva_family.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:17th-century_Portolan_chart_of_the_Mediterranean_Sea_by_a_member_of_the_Oliva_family.jpg",
+        "crop": [2487, 3241, 3281, 4035]
+      }
+    },
+    {
+      "id": "mountain-oliva-ararat",
+      "kind": "mountain",
+      "style": "oliva",
+      "file": "mountain-oliva-ararat.png",
+      "anchor": [0.5, 0.5],
+      "sizePx": 120,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/e/ee/17th-century_Portolan_chart_of_the_Mediterranean_Sea_by_a_member_of_the_Oliva_family.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:17th-century_Portolan_chart_of_the_Mediterranean_Sea_by_a_member_of_the_Oliva_family.jpg",
+        "crop": [13620, 2600, 15160, 4150],
+        "turn": 90
+      }
+    },
+    {
+      "id": "mountain-oliva-hills",
+      "kind": "mountain",
+      "style": "oliva",
+      "file": "mountain-oliva-hills.png",
+      "anchor": [0.5, 0.5],
+      "sizePx": 140,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/e/ee/17th-century_Portolan_chart_of_the_Mediterranean_Sea_by_a_member_of_the_Oliva_family.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:17th-century_Portolan_chart_of_the_Mediterranean_Sea_by_a_member_of_the_Oliva_family.jpg",
+        "crop": [12360, 2850, 13760, 4200],
+        "turn": 90
+      }
+    },
+    {
+      "id": "town-oliva-jerusalem",
+      "kind": "town",
+      "style": "oliva",
+      "file": "town-oliva-jerusalem.png",
+      "anchor": [0.5, 0.5],
+      "sizePx": 64,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/e/ee/17th-century_Portolan_chart_of_the_Mediterranean_Sea_by_a_member_of_the_Oliva_family.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:17th-century_Portolan_chart_of_the_Mediterranean_Sea_by_a_member_of_the_Oliva_family.jpg",
+        "crop": [15330, 6430, 16170, 7560],
+        "turn": 90
+      },
+      "only": [
+        "Jerusalem"
+      ],
+      "heightPx": 64
+    },
+    {
+      "id": "palms-oliva",
+      "kind": "tree",
+      "style": "oliva",
+      "file": "palms-oliva.png",
+      "anchor": [0.5, 0.5],
+      "sizePx": 70,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/e/ee/17th-century_Portolan_chart_of_the_Mediterranean_Sea_by_a_member_of_the_Oliva_family.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:17th-century_Portolan_chart_of_the_Mediterranean_Sea_by_a_member_of_the_Oliva_family.jpg",
+        "crop": [4060, 6930, 5150, 8000],
+        "turn": 90
+      }
+    },
+    {
+      "id": "ship-plancius",
+      "kind": "ship",
+      "style": "plancius",
+      "file": "ship-plancius.png",
+      "anchor": [0.499, 0.665],
+      "sizePx": 86,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/a/a4/Petrus_Plancius%2C_Tabula_geographica%2C_in_qua_omnes_regiones%2C_urbes%2C_oppida%2C_et_loca_describuntur%2C_quorum_mentio_fit_in_Actis_et_Epistolis_Apostolorum%2C_et_Apocalypsi_%28FL199985764_2368879%29.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:Petrus_Plancius,_Tabula_geographica,_in_qua_omnes_regiones,_urbes,_oppida,_et_loca_describuntur,_quorum_mentio_fit_in_Actis_et_Epistolis_Apostolorum,_et_Apocalypsi_(FL199985764_2368879).jpg",
+        "crop": [4559, 2946, 4904, 3364]
+      },
+      "heading": "left"
+    },
+    {
+      "id": "rose-plancius",
+      "kind": "rose",
+      "style": "plancius",
+      "file": "rose-plancius.png",
+      "anchor": [0.5, 0.5],
+      "sizePx": 110,
+      "bands": [0, 1],
+      "source": {
+        "url": "https://upload.wikimedia.org/wikipedia/commons/a/a4/Petrus_Plancius%2C_Tabula_geographica%2C_in_qua_omnes_regiones%2C_urbes%2C_oppida%2C_et_loca_describuntur%2C_quorum_mentio_fit_in_Actis_et_Epistolis_Apostolorum%2C_et_Apocalypsi_%28FL199985764_2368879%29.jpg",
+        "page": "https://commons.wikimedia.org/wiki/File:Petrus_Plancius,_Tabula_geographica,_in_qua_omnes_regiones,_urbes,_oppida,_et_loca_describuntur,_quorum_mentio_fit_in_Actis_et_Epistolis_Apostolorum,_et_Apocalypsi_(FL199985764_2368879).jpg",
+        "crop": [2843, 2837, 3248, 3243]
       }
     },
     {

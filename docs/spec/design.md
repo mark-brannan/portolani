@@ -81,13 +81,17 @@ Feature: A chart's scan lies on the map as one sheet
     And a chart that draws a parallel (de la Cosa's equator and Tropic of Cancer, "the first depiction of the equator and the tropic of cancer on a nautical chart") is anchored by those lines first: its turn from their tilt, its scale and latitude from their spacing, the coasts only setting the longitude
     And the placements that fit one coast best (the European coast, the New World coast, a third where it is as good) are offered as snaps on the sheet, as many as fit well, not only two
   Scenario: the user moves the sheet
-    Source: the resize handle's glyph, the user on the icons, in the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "charts resize ⤢ or ⛶"
+    Source: the user in the session of 2026-11-04: "The resize and manually rotate button on the corners of the charts inside the main map should be removed and instead, dragging any map corner should rotate the map in place through it's allowed orientations (it is not a free form rotate) with the globe/main-map also rotating with it." This overtakes the turn and resize handles of the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292). Later, the user in the session of 2026-11-04, as relayed to the session that built it: the corner drag is "FREE rotation of the whole world/table, exactly like the compass drag"; "Double-clicking a corner ... turns to the nearest snap position"; "a rotate icon appears at a corner only on mouse-over of that corner". This overtakes the quarter-turn settle above.
     Given the sheet shown
     When the user drags inside it
     Then it slides up, down, left and right over the map, and the map does not pan
-    When the user drags its corner handle
-    Then it turns about its centre (and, while the user is trying it, resizes by its other handle, which shows ⤢, ⛶ the alternative; resizing may go)
-    And the link keeps the placement
+    When the user drags any of its four corners
+    Then the sheet and the world turn together about the middle of the window, following the pointer, and stay at the angle where they are let go, as the compass's drag leaves them
+    When the user double-clicks a corner
+    Then the sheet and the world turn to the nearest of the chart's quarter turns ("Every chart turns, a quarter at a time", below)
+    And no handle is drawn on the sheet: no turn ring, no resize square; the sheet is not resized by hand
+    And while the pointer is over a corner, and only then, a small turn icon shows at that corner; it hides while the corner is dragged
+    And the link keeps the placement and the bearing
   Scenario: the map's projection changes under the sheet
     Given the sheet shown and the view at some zoom and centre
     When the user picks another projection
@@ -118,7 +122,7 @@ Feature: A chart's row in the Charts drawer
     And a chart whose scan is in the project shows its miniature in full colour, shown or not: no fade, no grey
     And beside the icon the chart's full name as text ("Map of Juan de la Cosa"), and to the right of the name a show/hide icon (an eye and an eye struck through, or an eye with a pirate's patch)
     And under the name the city it was made in and its year, "Majorca, 1375", the city a link that flies to the city; no "where it was made" wording, no tooltip-only meaning
-    And no other control sits in the row but its Chart position chips (below) and, for a chart whose sheet carries notes, its Notes chip ("A chart's notes get their moment", below; the user asked for it on 2026-10-29: "there should be a way to show/hide them or retrigger the animation"); the pieces mode and its opacity live under Settings, Under the hood
+    And no other control sits in the row but its eye, its raise and lower arrows, its opacity slider, its Align to and up chips (below) and, for a chart whose sheet carries notes, its Notes chip ("A chart's notes get their moment", below; the user asked for it on 2026-10-29: "there should be a way to show/hide them or retrigger the animation"); the pieces mode and its opacity live under Settings, Under the hood
     And a chart without a scan yet shows the glyph greyed, its name flying to its sheet view as before
   Scenario: the icon or the name shows that chart alone; the eye is on or off for one chart
     Source: the click, the user on the [#295](https://github.com/mark-brannan/portolani/pull/295) demo, 2026-10-30: "when you just click the chart, it zooms to the chart and resets that one, clearing the others." This settles the walk's "possibly (TBC, not certain) clears other charts". Later, in the user's answers in the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "I am leaning more towards auto clear after seeing the voyages new behavior.  I'll entertain a clear button as an alternative but I thinjk it needs to autoclear or it just gets confusing and cluttered."
@@ -131,7 +135,23 @@ Feature: A chart's row in the Charts drawer
     Then the same again: the placement reset, the frame flown to, the others hidden
     When the user clicks the show/hide icon
     Then the sheet shows at once, no fade, or hides if it was shown; nothing else in the row hides it
-    And the eye is on or off for that chart alone: no other chart is shown or hidden, no placement is reset, no flight; the map's zoom and position stay where they are
+    And the eye is on or off for that chart alone: no other chart is shown or hidden, no placement is reset, no flight; the map's zoom, position and bearing stay where they are
+    And the eye never plays the points of interest's rings or lights their marks; only the icon, the name and the row's own chips do
+  Scenario: a new chart's icon or name clears the old one, then flies
+    Source: the user in the session of 2026-11-04 (and later that day: "we have a brief skull animation flicker when selecting different charts by chip. That should not be the behavior now, it should only transition from one chart overlay to the next (clear, fly, overlay) without an extra animation."): "The charts button for show/hide should never change the zoom or the view. It only toggles chart overlays on/off. It does not trigger POI highlighting. This contrasts with clicking the chip for each chart, which focuses a particular position and zoom and overlays only that single chart with highlights for POIs. Immediately upon clicking a map chip the notes, buttons or other controls for that map should appear below it in the drawer, not waiting until after the overlay and animations are fully drawn."; "When clicking a new map chip, first the old one is cleared (As with the skull) effect, prior to 'flying' to the new position."
+    Given one chart's sheet shown
+    When the user clicks another chart's icon or name
+    Then the shown sheet is cleared first, as the skull clears the table but with no skull flash or other animation of its own, and only then does the map fly to the new chart's frame, and the new sheet is laid: clear, fly, overlay
+    And the new chart's row shows its Align to chips, its up chip and its Points of interest chip at once, on the click, not once the flight lands or the sheet has faded in
+    And once it lands the new sheet alone lies on the map and its points of interest announce themselves
+  Scenario: the user restacks the charts shown
+    Source: the user in the session of 2026-11-04, as relayed to the session that built it: "Stacking order of shown charts can be changed without re-toggling."; "The transparency (opacity) sliders are per chart, not one setting shared by all charts."
+    Given two charts' sheets shown or more
+    When the user looks at a shown chart's row
+    Then beside its eye are two small arrows, raise and lower, the raise dark on the top sheet and the lower dark on the bottom one; with one sheet shown there are none
+    When the user clicks one
+    Then that sheet swaps places with its neighbour in the stack, every sheet stays where it lies, and the link keeps the order
+    And each shown chart's opacity slider fades that chart's sheet alone, kept in the link per chart
   Scenario: the city clears the way to itself
     Given a chart's sheet shown
     When the user clicks the chart's city
@@ -156,11 +176,13 @@ Feature: The Catalan Atlas, all eight pages, and the 1959 copy beside it
     Then the 1959 copy is there too, as an alternative chart the user can show
 
 Feature: A chart's position chips, and the line each was fitted to
-  Source: the user on [#259](https://github.com/mark-brannan/portolani/pull/259), 2026-10-29: "The chart snap buttons should not disappear, right now they disappear right away after clicking. They should be inside the drawer for the chart on desktop and they should indicate what they are for. Probably, "Chart Position: <a> <b> ..."", and "When clicking any of the given position buttons, it should animate the primary feature that was used for alignment/sizing/position as a simple line over the chart. Then the line should fade out. For example, "parallels" should animate/overlay the Equator and the Tropic of Cancer. New World should animate/overlay the portion of the South/Central American coast which is aligned with the chart at that orientation."
+  Source: the three lines, the user in the session of 2026-11-04, as relayed to the session that built it: "Every shown (visible, eye on) chart's controls appear in the drawer just under that chart's row"; "'Align to:' label followed by the placement chips on the same line"; the own placement "renamed 'Default'"; "the up chip, on a line of its own with no label. Every chart gets it". Earlier, the user on [#259](https://github.com/mark-brannan/portolani/pull/259), 2026-10-29: "The chart snap buttons should not disappear, right now they disappear right away after clicking. They should be inside the drawer for the chart on desktop and they should indicate what they are for. Probably, "Chart Position: <a> <b> ..."", and "When clicking any of the given position buttons, it should animate the primary feature that was used for alignment/sizing/position as a simple line over the chart. Then the line should fade out. For example, "parallels" should animate/overlay the Equator and the Tropic of Cancer. New World should animate/overlay the portion of the South/Central American coast which is aligned with the chart at that orientation."
   Scenario: where the chips live
     Given the Charts drawer open on a wide screen, and a chart whose scan is in the project
     When the user looks at that chart's row
-    Then under the city and year a line reads "Chart position:" and then one chip per placement (the chart's own, "Parallels" or "Level", then each coast's fit: "Europe", "New World" and so on)
+    Then under the city and year a line reads "Align to:" and then, on the same line, one chip per placement (the chart's own, "Parallels" or "Default", then each coast's fit: "Europe", "New World" and so on)
+    And under it, on a line of its own with no label, the chart's up chip ("Every chart turns, a quarter at a time"), and under that, where the chart has any, its Points of interest chip
+    And every chart shown has these three lines in its own row, the same on every chart, whichever of them are shown and in whatever order; a chart hidden has none
     And the chip for the placement the sheet lies at is lit
     And no chip floats on the map over the sheet
     When the user clicks a chip
@@ -172,13 +194,21 @@ Feature: A chart's position chips, and the line each was fitted to
     And over the sheet, in today's geography, the feature that placement was fitted to draws itself as a plain line, from one end to the other, holds, then fades to a faint line (about a quarter of its strength) that stays while the sheet lies at that placement
     And the faint line may lighten later to a ghost (about a tenth) or go entirely; the user chose faint for now, after comparing all three (the user on [#259](https://github.com/mark-brannan/portolani/pull/259), 2026-10-29: "C for now, may lighten to B or A later", where C was faint, B ghost and A gone)
     And the faint line is the lit chip's: a click on another chip replaces it with that chip's line, drawn from the start; a click on the lit chip draws it again; hiding the chart with its eye takes the line off with the sheet; and as the sheet fades in or out, the line fades with it
-    And "Parallels" draws today's equator and Tropic of Cancer; a coast's chip ("New World") draws only the stretch of today's coast that fit used, not the whole coast; the chart's own "Level" draws every coast it is centred between
+    And "Parallels" draws today's equator and Tropic of Cancer; a coast's chip ("New World") draws only the stretch of today's coast that fit used, not the whole coast; the chart's own "Default" draws every coast it is centred between
     And the line is the feature the fit was computed from, carried with the placement in the chart's data, never a stretch drawn by hand to look right
     And with reduced motion the line shows whole, then fades to faint
-  Scenario: a phone (waiting on a UI walk)
+  Scenario: one zoom per placement
+    Source: the user on [#372](https://github.com/mark-brannan/portolani/pull/372), 2026-11-04: "Charts should always use a consistent, pre-set zoom level when clicking their alignment buttons. If the orientation happens to be diagonal, this may mean a closer zoom that will cut off the corners of the map, but it will be the same default zoom level for a perfectly level orientation."
+    Given a chart's row with its Align to chips
+    When the user clicks a chip, at any turn of the world
+    Then the map zooms to the same level every time for that placement, whatever the world's turn: the zoom that frames the sheet whole, with a little clear round it, when it stands level on the window as the chart is drawn (de la Cosa west up)
+    And a sheet that lies on a slant gets that same zoom, so its corners may run off the window, never a wider view to fit them in
+
+  Scenario: a phone
     Given the Charts drawer open as the bottom sheet, at 520 px and under
     When the user looks for the position chips
-    Then they sit in the chart's row as on a wide screen, until the user has walked the phone's drawers
+    Then they sit in the chart's row as on a wide screen, wrapping onto lines of their own
+    And the unlit chips are solid and dark enough to read as buttons on the parchment, and the lit one wears the accent ring
 
 Feature: The projection chips live in the Charts drawer and the settings drawer
   Source: the user on [#266](https://github.com/mark-brannan/portolani/pull/266), 2026-10-29: "The controls for map projections should live under charts now, not the compass rose. I'm not sure about other map settings...they probably stay under the rose but it could change."
@@ -242,11 +272,11 @@ Feature: A voyage's row in the Voyages drawer
     Then it takes the first colour of the palette that no shown voyage has, its own former colour first if that one is free
     And a reload of the link shows every voyage in the colour it had
     And how choosing a colour behaves waits on the user (the user on the [#295](https://github.com/mark-brannan/portolani/pull/295) demo, 2026-10-30): "The behavior for color selection is still strange and I'm not sure what I want for that."
-  Scenario: the people drawer and the voyages (waiting on the user, UI walk 2026-10-30)
-    Source: the user on the [#295](https://github.com/mark-brannan/portolani/pull/295) demo, 2026-10-30: "I'm also not sure how I want the interplay between the people drawer and the voyages drawer to behave.  They should have a relationship though...and as I hinted earlier, I think I want the voyages of ancient people *Groups* such as the Lapita to be included as a group alongside the people in the people drawer.  Individuals and groups can both be represented alongside one another in that framing."
+  Scenario: the people drawer and the voyages
+    Source: the user on the [#295](https://github.com/mark-brannan/portolani/pull/295) demo, 2026-10-30: "I'm also not sure how I want the interplay between the people drawer and the voyages drawer to behave.  They should have a relationship though...and as I hinted earlier, I think I want the voyages of ancient people *Groups* such as the Lapita to be included as a group alongside the people in the people drawer.  Individuals and groups can both be represented alongside one another in that framing."; and the user on [#304](https://github.com/mark-brannan/portolani/pull/304)'s timeline, 2026-11-04, quoted under "People and voyages, each a vertical timeline" below.
     Given the people drawer and the Voyages drawer
     When the user moves between them
-    Then how the two relate beyond sharing one timeline ("People and voyages share one timeline", below), and ancient groups such as the Lapita listed beside individuals in the people drawer, is open
+    Then each is its own vertical timeline of the same years and eras: every voyage is in the Voyages drawer; a person's voyages live in their tile in the People drawer, directly under their row; and a people such as the Lapita is listed beside the individuals, with their migration as their voyage ("People and voyages, each a vertical timeline", below)
 
 Feature: A dashed or dotted voyage is easy to see
   Source: the user on [#273](https://github.com/mark-brannan/portolani/pull/273), 2026-10-29, looking at the Narváez and Esteban renders: "The dashed legs are hard to see. Why are we using dashes? Same for dots but even worse than dashes. Hard to see!"; "The dots are a no-go though...you have to find something much better"; "part of the problem is the line and part of the problem is the default color palette. You're using grays and reds and they just blend in too much. Blue is no, because it would be confusing with rivers. Green might work. Purple. A brigher red maybe or yellow/orange. The red...idk, it's nice for the aesthetics but if you are using a dash or a dot, you've got to use a better color and heavier weights"; and, after comparing Heavy with Standard in green and purple: "heavy should be our default. ... IT is supposed to be configurable colors and weights anyway...and the colors are supposed to be sticky to one voyage while it is enabled, even if others are selected and deselected. So let's just make sure that when it is any voyage being toggled on where the lines are dashed/dotted that we pick from the higher contrast palette and with heavier weights, by default."
@@ -297,6 +327,11 @@ Feature: The world turned to the chart (deferred)
     When the user asks for the chart's own orientation
     Then the map turns under the sheet to match it, and the sheet stays as scanned
     And until this lands, the sheet turns and the map stays north-up
+  Scenario: the world never stays turned once the chart is gone
+    Given the world turned to a chart's own orientation
+    When the user takes that chart's sheet off the map, or flies to another chart or a place the sheet covers
+    Then the world turns back to north up, and the flight that follows lands north up
+    And whatever the world's bearing, the compass in the gutter turns it back to north up on a click, with or without a sheet shown
 
 Feature: A chart with no up turns for the reader
   Source: the user in the session of 2026-10-29: "we said earlier that the De La Cosa chart was equator up and down vertical and we wanted a mode to see the chart laid vertical and the world rotated to match. This is somewhat similar with the Catalan Atlas except it has no explicit 'up' or down... rather it is meant to be laid flat on a table and the viewer could walk all around it. So we might want to spin it around for different POIs or play with the UI controls to emphasize that fact. Many of the drawings will be upside down if we pick only one fixed orientation."
@@ -305,6 +340,31 @@ Feature: A chart with no up turns for the reader
     When the user turns to a point of interest whose figure is drawn facing another edge of the page
     Then the chart spins round, the world with it, until that figure reads upright: spun for that point of interest, or by the user at the controls; which of the two, or both, is open
     And no one fixed orientation is the chart's own, since any one leaves many of its drawings upside down
+
+Feature: Every chart turns, a quarter at a time
+  Source: the user in the session of 2026-11-04: "The chart for de la Cosa has a 'west up' button. I want to keep this, but the behavior is inconsistent right now. All maps should have a function to view different sides 'up', alternatively it can be a 'rotate' button that does 90 degrees....in fact I want to see that at minimum with a "walk around" curved button in either direction that effectively rotates everything around the current position."; "We have dead buttons for angle and size in the drawer for several maps."
+  Scenario: the walk-around buttons
+    Source: the user in the session of 2026-11-04, as relayed to the session that built it: "Move the walk-around quarter-turn buttons ... out of the drawer to sit beside the compass"; "They are always available and rotate the entire view, with or without a chart."
+    Given the map, with or without a chart's sheet shown
+    When the user looks at the right gutter
+    Then either side of the compass is a curved-arrow button, one each way round, always shown, and the compass is always shown with them
+    When the user clicks one with a sheet shown
+    Then the world and every sheet on it turn about the middle of the window, that way round, to the top sheet's next quarter turn (its own up and the three quarters from it): the place in the middle stays in the middle, the zoom stays, the sheet keeps its place on the world
+    When the user clicks one with no sheet shown
+    Then the world turns that way round to the next of north, east, south and west up
+    And from one of those quarter turns, four clicks the same way come back to where they began
+  Scenario: the chart's own up
+    Given any chart shown, drawn to be read another way up (de la Cosa's west up) or north up (every chart with no other up)
+    When the user looks at its row
+    Then its up chip ("West up", "North up") is there on a line of its own, and lit exactly while the world stands at that chart's up, however the user got there: the up chip, the walk-around buttons, a corner drag or the compass
+    When the user clicks the up chip unlit
+    Then the world turns to the chart's up, framing the sheet as it will stand
+    When the user clicks it lit
+    Then the world turns back to north up, where the map is
+  Scenario: no dead controls in the row
+    Given any chart's row
+    When the user looks at its chips
+    Then every chip in it does something when clicked; there are no Angle or Size chips, since the sheet is turned only with the world and never resized by hand
 
 Feature: The voyage record: people, deaths and what a skull means
   Source: the user on [#275](https://github.com/mark-brannan/portolani/pull/275), 2026-10-29: "the death date and place is either known or unknown. No statement about living = true is necessary (or correct). In fact, nothing should be required at all for the person record besides, perhaps, a name or ID (even a name might be omitted if we wanted to have certain anonymous persons in the project where other details were known but NOT the name). Use a permissive approach and make no assumptions about what is required, or what is present unless strictly required."; "People with a known death location get a skull. Full stop."; "Voyages should have a name or title that we work from, and it will *usually* include the name of the leader (or a singular leader) but there will be a "has" relationship for people and voyages...we could separately have a "leader" relationship but it will get complicated for voyages like Magellan's (maybe Drakes?) where he died before the end and someone else took over leading the remainder."; and in the session that rebuilt the record, 2026-10-29: "we might include a few modern recreation voyages of living people who attempted to recreate polynesian voyages using traditional methods"; "We have some error bars on exact location of death but have chosen to make reasonable judgements about the location. For example, if we know the sea leg where a death took place, we just mark it in the middle of the voyage. ... We have some death locations that might be speculative as well....or deaths that we chose to place in the middle of the ocean in a 'close enough' location on a wide patch of empty sea". The files are `data/voyages/`: a voyage in `<id>.json`, the people in `people.json`, the sources in `sources.json`; `scripts/voyages.mjs` is the schema and `node scripts/check-voyages.mjs` the check.
@@ -373,8 +433,10 @@ Feature: A chart's notes get their moment, then leave the art alone
   Scenario: the user asks for the notes back
     Given a chart's sheet shown, its notes faded
     When the user looks at the chart's row
-    Then a chip beside the position chips reads "Notes · N", N the count, off after the pulse
-    And a click on the chip shows the marks and keeps them until it is clicked again; a second control, or the same chip when the marks are already off, plays the rings again
+    Then a chip on its own line under the up chip reads "Points of interest" with N, their count, in a red dot in the serif's own figures, off after the pulse
+    And the chart's own note, its background, is the caption in its row, apart from the points of interest each with its own tile
+    And a click on the chip shows the marks and keeps them until it is clicked again, playing the rings as they come on; Go's own compass plays them again, so the row has no second control for it
+    Source: the one chip, the user in the session of 2026-11-04, as relayed to the session that built it: "Remove the duplicate compass 'play the rings again' chip from chart rows ... The Go button already does that."
     And the marks are never left on by default; the scan is the thing, the marks are a way to find what is on it
   Scenario: the user sees it first
     Given the pulse built as above
@@ -603,22 +665,89 @@ Feature: The skull in the lower right puts the map back
     Given cards on the table, a tile open, a person or a sight chosen, in any mix
     When the user clicks the skull
     Then every card is put away, a person's or a sight's alike, every tile closes, and no subject is chosen: the map is in its normal state
-    And a broom sweeps across the map as the cards go, then is gone; with reduced motion the cards go with no broom
+    And a large, faint skull flashes over the map as the cards go, then is gone (the broom is retired: docs/spec/drawer.md, "The skull stays in reach while a drawer is in use"); with reduced motion the cards go with no wipe
     And a click with nothing on the table does no harm: the map is already in its normal state
 
-Feature: People and voyages share one timeline
-  Source: the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30: "I'm now leaning towards both the people drawer and the voyages drawer being timeline format"; "Perhaps the timelines has a way to expand to earlier human history on the left side?"; "I don't exactly like the break I'm seeing from 300 BC to 1000 CE...realizing that it throws off the scale a bit."; and the user's answers in the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30, to the recorder's questions (paraphrase: one timeline, two lanes, the Sights eras as colour bands; Lapita the left edge, an expander for earlier history; fill the gap rather than compress the axis): "voyages section: yes"; "timeline span, yes lapita default with expander"; "BC to CE break, yes fill it"
-  Scenario: two lanes
-    Given the timeline of people and voyages
-    When the user looks at it
-    Then people sit in a lane above and voyages in a lane below, on one time axis
-    And the Sights eras are drawn across both lanes as subtle colour bands
-  Scenario: the left edge, and earlier history
-    Given the timeline at its default
-    When the user looks at its left edge
-    Then it starts at the Lapita, about 1500 BC
-    And an expander on the left opens earlier history (Sahul, Beringia, Clovis)
-  Scenario: 300 BC to 1000 CE
-    Given the centuries between 300 BC and 1000 CE
-    When the timeline draws them
-    Then the axis keeps its scale there, and the gap is filled with people and voyages of those centuries, not squeezed out
+Feature: The skull is the one clear  (`#sweep`, page.js `clearMap`)
+  Source: the user, 2026-11-04: "The skull is the universal 'clear' button.  It should work on any drawer or feature where we need clear/reset functionality.  Charts are cleared/reset with the skull.  Voyages are cleared/reset with the skull.  People, of course.  There is an unneeded 'clear' button in voyages.  When in the context view for a POI, it clears cards but does not reset any view position or zoom."; "It does not clear the rose config settings, map projection settings, position, or view." This widens "The skull in the lower right puts the map back" from the table to every drawer's content, and retires the Voyages drawer's own Clear (docs/spec/voyages.md). A settings group's Clear and Defaults (the figures, the hills) are settings, not the map's content, and stay.
+  Tested by: test/touch.test.mjs — 'voyages: several drawn at once, ...' (in a browser: the skull empties the voyages, the drawer stays open, `map=` and the line weight stay); test/drawers.test.mjs — 'the skull is the one clear, and the voyages have no Clear of their own' (offline, source only: the charts' half and the view's are not yet driven in a browser)
+  Scenario: one click clears every drawer's content
+    Given a person chosen with their cards dealt, two voyages shown, and two charts' sheets laid, one dragged from its place
+    When the user clicks the skull
+    Then every card is put away and no person or sight is chosen
+    And no voyage is drawn, `voyages=` leaves the hash, and a voyage playing stops and its band goes
+    And no chart's sheet is laid, `overlay=` and `sheet=` leave the hash, and a chart shown again lies at its own place
+    And the faint skull flashes over the map once, as it does when cards go
+  Scenario: the skull clears every chart, voyage, person, card and point of interest, leaving only the base map
+    Source: the user, 2026-11-04, on a regression in which the skull no longer cleared the charts: "The skull clear is not clearing charts.  It must clear all charts, voyages, people, cars, and POIs (leaving only the base map).  This must be in the spec in addition to fixing it.  It is a firm requirement" ("cars" read as cards).
+    Given any mix of charts' sheets, voyages, a person and their cards, a point of interest's tile and cards, and charts' overlays laid by any route (the eye, a chart's name or icon, the link)
+    When the user clicks the skull
+    Then nothing of them is left on the map: the base map alone is drawn, and no clear stops short for any of them
+    And the clear never fails part-way: the charts go even when no voyage or person was there to go first
+  Scenario: the view and the settings stay
+    Given the map at some place, zoom and bearing (the world turned to a chart), in a projection other than the default, with the rose and the styles as chosen
+    When the user clicks the skull
+    Then `map=`, `projection=` and `bearing=` are as they were, and the map does not move or turn
+    And the rose's settings, every style, every figure, the line weight, the pen's pace and the charts' opacity and mode are as they were
+  Scenario: in a point of interest's view, the cards go and the map stays
+    Given a point of interest's tile opened and its cards dealt, the map flown to frame it
+    When the user clicks the skull
+    Then the cards go and the tile shuts, and the map keeps that place and zoom: nothing flies back
+  Scenario: no Clear of its own in the Voyages drawer
+    Given the Voyages drawer open
+    When the user looks at its tools
+    Then there is no Clear chip; the skull, in reach over the drawer, is how the voyages are cleared
+
+Feature: The skull's clear is shown  (`#sweep`, page.js `skullRise`, `wordsRise`, `vanish`)
+  Source: the user, 2026-11-04, on [#367](https://github.com/mark-brannan/portolani/pull/367): "The skull on the main screen should be more realistic and can be just a skull, not the cross bones.  It should be almost the full height or width depending on which constrains the view.  It should be a slightly slower effect (we can play with timing on this PR with a slider, temporary).  The skull animation effect should also have a slight 'growing' effect where it gets larger to fill the space or even beyond the borders of the space as it fades out. It should have a consistent timing for the clear effect on the objects being cleared also, for example the charts or the photos.  Either they are "swept" away and off screen to the left, or they are faded away into dust and nothingness.  I would like to see a few different effects if possible. Finally the memento mori text should be also drawn in Script/Italics, in the dark red color, in the main view at the bottom of the screen and grow and then fade slightly slower than the fading effect, in order to give the viewer time to read.  This does not replace the existing text that we show near the button, but that text should be sized or placed so that the button does not move for different texts.  The button is in a constant location.  The text can however, appear above/below/beside as appropriate.  I would like that text on a single line if possible.   The hover text for the skull button should be 'Clear the map: <translation>" with the translation of the memento mori text in English (or the users language if we later localize everything). Finally, it should always trigger the effect, even if the screen is already clear." And later the same day, on #367: "Lines on the map for voyages clear only by fading away, never sweeping off screen or pixelating. For the clear effect, for pictures, I want to see the same transition effect as when we place them "on the chart table" but they exit to the left."; "The words should be like a queue. We have words displayed already near the skull button. When clicked, then those are the words that get displayed in red during the animation and a new set of words get queued by the button." And after that: "The speed of the card dealing should not differ significantly between dealing in and dealing out."; "For text that is longer and has a clean split near a comma at about the halfway point, these should be on two lines as if they are verse or a couplet." This overtakes the faint flash of the two Features above for the skull's click; a fly that puts cards away keeps the faint flash.
+  Scenario: the skull fills the map, grows and fades
+    Given the chart at any view, cleared already or not
+    When the user clicks the skull
+    Then a skull alone, drawn as bone, no crossbones, rises over the map, almost as tall as the map or as wide, whichever bounds it
+    And it grows on past the map's edges as it fades, over a little longer than the old flash
+  Scenario: what is cleared leaves, all over one time
+    Given cards, voyages or charts' sheets on the map
+    When the user clicks the skull
+    Then everything cleared leaves together over the same time
+    And each card leaves as it was dealt onto the table, mirrored and at the same pace: off to the left, shrinking and turning, one after another
+    And a voyage's line only fades away, never swept off or broken into dust
+    And with reduced motion it goes at once
+  Scenario: the phrase is read large, then fades last
+    When the user clicks the skull
+    Then the phrase that was beside the skull is drawn large at the foot of the map, in the italic hand, in the chart's red, on one line or, set as a couplet, two
+    And it comes and fades, slower than the skull, so it can be read
+    And a long phrase with a comma near its middle is set as a couplet, on two lines split after the comma
+    And a phrase that is verse in its source, Manrique's, keeps that verse's lines
+    And the next phrase takes its place beside the skull, the one the next click shows
+  Scenario: the phrase beside the skull never moves it
+    Given any phrase beside the skull, the longest included
+    When the user looks at the skull
+    Then the skull is in the same place as with the shortest phrase, and the phrase is on one line where the window allows
+  Scenario: the skull's hover text is the phrase in English
+    When the user hovers over the skull
+    Then it reads "Clear the map: " and the English of the phrase beside it
+
+Feature: People and voyages, each a vertical timeline
+  Source: the user on the timeline [#304](https://github.com/mark-brannan/portolani/pull/304) merged, 2026-11-04: "The entire drawer is way too WIDE! It should not be wider than the drawer for charts or settings/config (480px). We should consider whether we need to reorient it to be a vertical timeline instead of horizontal. Somehow we need to fit things more nicely."; "I do not like AT ALL how we treat people groups. The people group migrations MUST be in the people drawer with people. Nevermind that all the European examples are individuals... people are people. Lapita gets a row in people (not merely voyages)."; "When you click on people in the people drawer it should expand their notes and their voyages should appear directly below that. NOT below all the other people, and not as a naive copy/paste from the voyages drawer of all voyages. If I select Ibn Battuta, then I should get a tile with his notes... then each of the voyages below that (with the notes for that voyage)." This overtakes the one horizontal timeline of two lanes, its Earlier tab and its era bands (the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30), which #304 built and the user turned down on sight.
+  Scenario: two drawers, no wider than the charts
+    Given the instrument row
+    When the user clicks the medallion `#people` or the dividers `#voyages`
+    Then the People drawer `#peoplePanel` or the Voyages drawer `#voyagesPanel` opens alone, each `width: min(480px, 100vw - 24px)`, the Charts drawer's width, never wider on any screen; on a phone each is a bottom sheet like the others
+    And nothing in either scrolls sideways: a row, a tile and a voyage's notes wrap
+  Scenario: time reads top to bottom
+    Given either drawer
+    When the user looks down it
+    Then the rows run earliest first down a thin rail, from the Lapita voyages, about 1500 BC: a person by their birth, else by their first voyage; a voyage by the year it set out
+    And the Sights eras head the rows that fall in them, as small italic headings with the era's years (`1500 BC – AD 500`, `500 – 1450`, `1450 – 1800`, `from 1800`); a year before Christ reads `BC`
+    And a person's row is the name and the years as the record writes them (`24 Feb 1304 – c. 1369`, `born c. 350 BC`, `died 1510`); a people's row carries the years of their voyage (`c. 1500–800 BC`)
+  Scenario: a people is a person
+    Given a migration, or a voyage whose crew nobody named: the Lapita expansion, the settlement of East Polynesia, Necho's Phoenicians
+    When the People drawer lists people
+    Then it has a row like anyone else's, `The Lapita people`, `The East Polynesian voyagers`, `Phoenician mariners of Necho II`, each a record in `people.json` with `group: true`, a bio and its sources, marked by a small chip "a people"
+    And the voyage's `who` names it, so every voyage, a migration too, belongs to someone in the People drawer, and choosing the people lights their voyage and flies to frame it as choosing a person does
+  Scenario: a chosen person's tile and their voyages sit directly under their row
+    Given the People drawer open
+    When the user clicks a person's name
+    Then the person is chosen as before (their pictures dealt, their voyages lit in red, the map flown to frame them, `person=` in the hash) and a tile slides open directly under their row, before the next person's: their notes, their pictures as thumbnails, then one row per voyage of theirs in the index's order, each with its title and years, its notes, Read more, and the same eye and play as the Voyages drawer's rows, so a voyage is shown, hidden or played from here
+    And only the chosen person's tile is open; choosing another shuts it and opens theirs under their own row; clicking the chosen person again lets them go and shuts the tile
+    And the eye reads on for every voyage of theirs drawn lit; put off, it hides that one voyage while the person stays chosen, and the hash carries it as `voyages=<id>~`

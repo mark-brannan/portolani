@@ -10,6 +10,7 @@
 import { writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { mulberry32 } from './rng.mjs';
 
 const AFTER = 'https://trinitycollegelibrarycambridge.wordpress.com/2015/08/14/portolan-chart-of-the-mediterranean/';
 const INK = '#2a1d12', WALL = '#f1e6c8', SHADE = '#e6d6b0', MADDER = '#a3332a', RED = '#c23a28', LEAD = '#7d7a72',
@@ -26,15 +27,6 @@ export const VARIANTS = {
   small: { seed: 37, towers: 1, tall: 16, width: 24, tiers: 1, dome: false, ground: 'green', gate: true, flag: { ground: RED } },
   fort: { seed: 41, towers: 2, tall: 12, width: 40, tiers: 1, dome: false, keep: true, ground: 'green', gate: true, flag: { ground: WHITE, device: 'cross' } },
 };
-
-function mulberry32(seed) {
-  return () => {
-    seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
 
 const n = (v) => String(Math.round(v * 10) / 10);
 

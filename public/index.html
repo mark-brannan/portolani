@@ -45,22 +45,41 @@
     text-shadow: 0 0 3px var(--margin), 0 0 3px var(--margin);
   }
   #build a { color: inherit; }
-  /* the right margin, above the timing line: the skull, always there, clears the table (every picture away, the subject
-     let go); under it a memento mori on a slip of parchment, in the italic hand, the next one at each clearing */
+  /* the right margin, above the timing line: the skull, always there, is the one clear for the map (every picture away,
+     the subject let go, every chart and voyage lifted; the view and the settings stay); under it a memento mori on a slip of parchment, in the italic hand, the next one at each clearing */
+  /* it sits over the drawers (z-index 3), and an open drawer stops above it (--memento-h, page.js), so the skull and its
+     line stay in sight and in reach while a drawer is in use; on a phone it rides just above the open sheet */
+  :root { --memento-foot: 30px; --memento-h: 110px; }
+  html.built { --memento-foot: 44px; }
   #memento {
-    position: fixed; right: 12px; bottom: 30px; z-index: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+    position: fixed; right: 12px; bottom: var(--memento-foot); z-index: 3; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
     max-width: min(230px, 100vw - 24px); pointer-events: none;
   }
-  html.built #memento { bottom: 44px; }
-  @media (max-width: 520px) { #memento { max-width: calc(100vw - 150px); } } /* clear of the scale card at the left foot */
+  @media (max-width: 520px) {
+    #memento { max-width: calc(100vw - 150px); } /* clear of the scale card at the left foot */
+    html:has(.drawer.open) #memento { bottom: calc(50vh + 8px); bottom: calc(50dvh + 8px); } /* above the sheet, which is at most half the window */
+  }
   #sweep {
     pointer-events: auto; width: 46px; height: 46px; padding: 0; display: grid; place-items: center;
     cursor: pointer; border-radius: 50%; background: #efe3c6; border: 1px solid #b89a68; box-shadow: 0 1px 6px rgb(0 0 0 / 0.25);
   }
   #sweep:hover { background: #e2cd9e; }
   /* the compass over the skull: its needle points north on the window; a click is north up, a drag round it turns the world */
+  #turns { display: flex; align-items: center; gap: 4px; margin-right: 4px; }
+  /* either side of it, the walk-around buttons: a quarter turn of the world each way round */
+  #turns .walk {
+    pointer-events: auto; width: 32px; height: 32px; padding: 0; display: grid; place-items: center; color: #3b2a1a;
+    cursor: pointer; border-radius: 50%; background: #efe3c6; border: 1px solid #b89a68; box-shadow: 0 1px 6px rgb(0 0 0 / 0.25);
+  }
+  #turns .walk:hover { background: #e2cd9e; }
+  #turns .walk:focus-visible { outline: 2px solid #e8b84a; outline-offset: 2px; }
+  #turns .walk svg { width: 30px; height: 19px; }
+  /* at a sheet's corner under the pointer, the turn it takes there: drag to turn, double click for the nearest quarter */
+  #cornerTurn { position: fixed; z-index: 2; width: 26px; height: 26px; margin: -13px 0 0 -13px; pointer-events: none; filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.4)); }
+  #cornerTurn[hidden] { display: none; }
+  #cornerTurn svg { width: 100%; height: 100%; display: block; }
   #compass {
-    pointer-events: auto; width: 38px; height: 38px; padding: 0; margin-right: 4px; display: grid; place-items: center; touch-action: none;
+    pointer-events: auto; width: 38px; height: 38px; padding: 0; display: grid; place-items: center; touch-action: none;
     cursor: grab; border-radius: 50%; background: #efe3c6; border: 1px solid #b89a68; box-shadow: 0 1px 6px rgb(0 0 0 / 0.25);
   }
   #compass[hidden] { display: none; }
@@ -70,16 +89,26 @@
   #compass svg { width: 34px; height: 34px; }
   #sweep:focus-visible { outline: 2px solid #e8b84a; outline-offset: 2px; }
   #sweep svg { width: 34px; height: 34px; }
+  /* the phrase sits beside the skull on one line, out of the column's flow, so the skull never moves whatever its length;
+     a window too narrow for it wraps it, still beside */
   #mementoText {
+    position: absolute; right: 56px; bottom: 6px; width: max-content; max-width: calc(100vw - 90px); box-sizing: border-box;
     margin: 0; padding: 2px 8px 3px; font: italic 12.5px/1.25 var(--serif); color: #3b2a1a; text-align: right;
     background: #efe3c6; border: 1px solid #b89a68; border-radius: 3px; box-shadow: 0 1px 4px rgb(0 0 0 / 0.25);
   }
-  /* the broom that sweeps across the map once while the cards go (page.js sweepBroom) */
-  #broom { position: fixed; z-index: 2; pointer-events: none; transform-origin: 50% 80%; filter: drop-shadow(0 2px 4px rgb(0 0 0 / 0.35)); }
-  #broom[hidden] { display: none; }
-  #broom svg { width: 100%; height: 100%; display: block; }
+  /* the clear (page.js clearMap): what goes leaves on #vanish, a copy of it over the map; the skull grows over the map
+     and fades (#wipe, inked into the chart by multiply); the phrase, large in red, grows at the foot and fades last */
+  #vanish { position: fixed; z-index: 1; pointer-events: none; }
+  #vanish[hidden], #wipe[hidden], #mementoBig[hidden] { display: none; }
+  #wipe { position: fixed; z-index: 1; pointer-events: none; opacity: 0; mix-blend-mode: multiply; }
+  #wipe svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  #mementoBig {
+    position: fixed; z-index: 1; pointer-events: none; margin: 0; white-space: pre; line-height: 1.15; text-align: center; opacity: 0;
+    font-family: var(--serif); font-style: italic; color: #8c2f1e; transform-origin: 50% 100%;
+    text-shadow: 0 0 6px #efe3c6, 0 0 12px #efe3c6, 0 0 2px #efe3c6;
+  }
 
-  /* top right, a row of seven instruments, each opening its own drawer: the rose the settings, the chart the charts, the astrolabe the points of interest, the compass Go (a typed place or position, or mine filled in), the dividers and the medallion one timeline, voyages and people (each button opens it at its own lane), the anchor the anchorages (home first). One drawer at a time: a click on its button opens it and a second click shuts it, another button swaps it for its own (the other of the timeline's two stays on the timeline and moves to its lane), and Esc, or on a wide screen a click on the map, shuts it; a choice in it leaves it open, on a phone too. The row never moves */
+  /* top right, a row of six instruments, each opening its own drawer, left to right: the rose the configuration, the compass Find (a typed place or position, mine filled in, or the points of interest ringed), the astrolabe the locations (home and the world, then the regions, the eras' ports and the Pacific islands), the dividers the voyages, the medallion the people, and the chart the charts. The anchor is hidden for now, its anchorages in the astrolabe's. One drawer at a time: a click on its button opens it and a second click shuts it, another button swaps it for its own, and Esc, or on a wide screen a click on the map, shuts it; a choice in it leaves it open, on a phone too. The row never moves */
   #where { position: fixed; top: 12px; right: 12px; z-index: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; pointer-events: none; }
   #where :is(button, input, summary) { pointer-events: auto; } /* the box is empty map: a touch there is the map's, to drag or pinch */
   #where .row { display: flex; gap: 6px; align-items: center; }
@@ -123,11 +152,14 @@
   #sightsList .group.open > .rows > div { overflow: visible; transition: overflow 0s 0.25s; transition-behavior: allow-discrete; } /* the last row's note is not clipped */
   #where #sightsList button[aria-current="true"] { border-color: #8c2f1e; box-shadow: inset 0 0 0 1px #8c2f1e; }
   #sightCard { position: sticky; bottom: -20px; margin: 4px -16px -20px; padding: 8px 16px 12px; background: var(--panel); align-self: stretch; contain: inline-size; } /* as wide as the list, never widening it */
-  #where .places button, #goPanel button, #voyageList button { padding: 3px 10px; font: 13px var(--serif); border-radius: 12px; }
+  #where .places button, #goPanel button, #where .vrow button, #laneVoyages button { padding: 3px 10px; font: 13px var(--serif); border-radius: 12px; }
   #where .places button { display: block; text-align: left; }
+  #where #findPoi, #where .dice { display: inline-flex; align-items: center; gap: 6px; }
+  #where #findPoi svg, #where .dice svg { width: 16px; height: 16px; }
+  .gorow { display: flex; flex-wrap: wrap; gap: 4px; }
   #coords { display: flex; gap: 4px; align-self: stretch; }
   #coords input { flex: 1; min-width: 0; max-width: none; padding: 3px 8px; font: 13px var(--serif); border-radius: 12px; background: var(--panel); color: var(--fg); border: 1px solid var(--rule); }
-  /* the Voyages and People buttons' drawer: one timeline on one linear year axis, people above it and voyages below,
+  /* timeline A (timeline=a, the default): the Voyages and People buttons' one drawer: one timeline on one linear year axis, people above it and voyages below,
      the eras of the points of interest as faint bands behind both, and at its left end the Earlier tab; the voyages'
      controls (line weight, Clear, the pen's pace) head the voyages' lane */
   #timelinePanel { width: min(720px, 100vw - 24px); max-width: none; align-items: stretch; }
@@ -163,22 +195,82 @@
   #timeAxis { position: relative; height: 16px; margin: 2px 0; border-bottom: 1px solid #b89a68; font: italic 10px var(--serif); }
   #timeAxis .tick { position: absolute; bottom: 2px; transform: translateX(-50%); white-space: nowrap; opacity: 0.75; }
   #timeAxis .tick.edge { transform: none; }
-  #voyageList li { position: relative; display: block; }
-  #voyageList .vline { position: relative; height: 26px; }
-  #voyageList .vbar { --c: #6b5a44; position: absolute; top: 10px; height: 6px; border-radius: 3px; background: var(--c); opacity: 0.55; }
-  #voyageList li.on .vbar { opacity: 1; }
-  #voyageList .vctl { position: absolute; top: 0; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
-  #voyageList button { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
-  #voyageList button svg { width: 28px; height: 18px; flex: none; }
-  #voyageList button[data-shown="true"] { background: #e2cd9e; color: #3b2a1a; border-color: #b89a68; } /* a shown voyage, lit like an open instrument */
-  #voyageList .eye { padding: 2px 4px; width: 30px; height: 26px; justify-content: center; } /* the chart rows' eye, between the name and the ink */
-  #voyageList .eye svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
-  #voyageList .eye[aria-pressed=true] .slash { display: none; }
-  #voyageList .eye[aria-pressed=false] { opacity: 0.7; }
-  #voyageList .play { padding: 2px 4px; width: 30px; height: 26px; justify-content: center; } /* after the eye: sails the voyage on its own calendar */
-  #voyageList .play svg, #voyageBand button svg { width: 18px; height: 18px; fill: currentColor; stroke: none; }
-  #voyageList .play[aria-pressed=true] { background: var(--accent); color: var(--sheet); border-color: var(--accent); }
-  /* the band at the map's foot while a voyage plays on its calendar: pause or play, stop, the date and leg the pen is on,
+  #laneVoyages li { position: relative; display: block; }
+  #laneVoyages .vline { position: relative; height: 26px; }
+  #laneVoyages .vbar { --c: #6b5a44; position: absolute; top: 10px; height: 6px; border-radius: 3px; background: var(--c); opacity: 0.55; }
+  #laneVoyages li.on .vbar { opacity: 1; }
+  #laneVoyages .vctl { position: absolute; top: 0; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+  #laneVoyages button { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+  #laneVoyages button svg { width: 28px; height: 18px; flex: none; }
+  #laneVoyages button[data-shown="true"] { background: #e2cd9e; color: #3b2a1a; border-color: #b89a68; } /* a shown voyage, lit like an open instrument */
+  #laneVoyages .eye { padding: 2px 4px; width: 30px; height: 26px; justify-content: center; } /* the chart rows' eye, between the name and the ink */
+  #laneVoyages .eye svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+  #laneVoyages .eye[aria-pressed=true] .slash { display: none; }
+  #laneVoyages .eye[aria-pressed=false] { opacity: 0.7; }
+  #laneVoyages .play { padding: 2px 4px; width: 30px; height: 26px; justify-content: center; } /* after the eye: sails the voyage on its own calendar */
+  #laneVoyages .play svg { width: 18px; height: 18px; fill: currentColor; stroke: none; }
+  #laneVoyages .play[aria-pressed=true] { background: var(--accent); color: var(--sheet); border-color: var(--accent); }
+  #laneVoyages input[type=color] { width: 28px; height: 22px; border-radius: 6px; cursor: pointer; } /* the swatch is the voyage's ink; a click picks another */
+  #timelinePanel .vdraw { margin: 0 0 6px; font: 13px var(--serif); } /* the pen's seconds, its sample line drawing on at that pace */
+  #timelinePanel .vdraw output { min-width: 34px; font-size: 13px; color: inherit; }
+  #laneVoyages .when { font-size: 11px; font-style: italic; opacity: 0.75; margin-left: 6px; }
+  #laneVoyages .full { display: none; } /* on the timeline a voyage goes by its short name and years; the title is its tooltip */
+  #laneVoyages .vsum { display: none; max-width: 360px; margin: 0 0 4px; font: 12px/1.35 var(--serif); opacity: 0.85; } /* a shown voyage in brief, and where to read more */
+  #laneVoyages li.on .vsum { display: block; }
+  #laneVoyages .vsum a { color: inherit; font-style: italic; }
+  #where #peopleStrip .life { position: relative; display: block; width: 100%; height: 17px; padding: 0; border: 0; border-radius: 3px; background: none; box-shadow: none; color: var(--fg); cursor: pointer; }
+  #where #peopleStrip .life:hover { background: rgb(140 47 30 / 0.07); }
+  #peopleStrip .bar { --c: #6b5a44; position: absolute; top: 5px; height: 7px; border-radius: 4px; background: var(--c); }
+  #peopleStrip .bar.open-start { background: linear-gradient(90deg, transparent, var(--c) 45%); } /* a birth nobody dated fades in */
+  #peopleStrip .bar.open-end { background: linear-gradient(90deg, var(--c) 55%, transparent); } /* a death nobody dated fades out */
+  #peopleStrip .bar.open-start.open-end { background: linear-gradient(90deg, transparent, var(--c) 35%, var(--c) 65%, transparent); }
+  #peopleStrip .who { position: absolute; top: 1px; font: 12px/15px var(--serif); white-space: nowrap; }
+  #peopleStrip .life[aria-pressed="true"] .bar { --c: #8c2f1e; } /* the chosen person: the chart's red */
+  #peopleStrip .life[aria-pressed="true"] .who { color: #8c2f1e; font-weight: bold; }
+  #peopleStrip .cardrow { position: sticky; left: 0; width: min(440px, 100%); margin: 2px 0 6px; } /* the chosen person's card, under their bar, in view however far the track is scrolled */
+  #peopleStrip .pcard { margin: 0; padding: 6px 8px; border: 1px solid #b89a68; border-radius: 6px; background: var(--panel); }
+  /* timeline B (timeline=b): the People and the Voyages drawers: each a vertical timeline, as wide as the Charts drawer and never wider,
+     earliest at the top, down a thin rail; the eras of the points of interest head the rows that fall in them as small
+     italic headings with their years. The voyages' controls (line weight, the pen's pace) head the Voyages drawer; the skull clears them */
+  #peoplePanel, #voyagesPanel { width: min(480px, 100vw - 24px); max-width: none; align-items: stretch; }
+  #voyagesPanel .vtools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 4px; }
+  #voyagesPanel .chip { display: inline-flex; padding: 3px 8px; border-radius: 14px; box-shadow: none; font: 12px var(--serif); background: var(--sheet); color: var(--sheet-ink); }
+  #voyagesPanel .chip[aria-checked=true] { box-shadow: inset 0 0 0 1px var(--accent); border-color: var(--accent); }
+  .tline { position: relative; list-style: none; margin: 0; padding: 0 0 0 14px; border-left: 1px solid #b89a68; } /* the rail */
+  .tline > li { position: relative; padding: 2px 0; }
+  .tline > li::before { content: ''; position: absolute; left: -17px; top: 13px; width: 5px; height: 5px; border-radius: 50%; background: #8a7550; } /* each row's point on the rail */
+  .tline > li.on::before, .tline > li.open::before { background: #8c2f1e; }
+  .tline > li.era { margin: 10px 0 2px; padding: 0; font: italic 12px/16px var(--serif); color: var(--muted); }
+  .tline > li:first-child.era { margin-top: 0; }
+  .tline > li.era::before { left: -14px; top: 8px; width: 10px; height: 1px; border-radius: 0; background: #b89a68; }
+  .tline > li.era small { margin-left: 6px; font-size: 11px; opacity: 0.8; }
+  /* each era's own scale: a ruler under its heading, and under every row in it the life (or the voyage) as a bar on
+     that scale, so who overlapped whom and how long each lived read down the drawer; an end nobody dated fades */
+  .tline .ruler { position: relative; display: block; height: 13px; margin: 1px 0 0; border-top: 1px solid #b89a68; font: normal 10px/12px var(--serif); }
+  #peopleList .ruler { margin-inline: 9px; }
+  .tline .ruler > span { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
+  .tline .ruler > span::before { content: ''; position: absolute; left: 50%; top: -1px; height: 3px; border-left: 1px solid #b89a68; }
+  .tline .span { position: relative; display: block; flex: 1 0 100%; height: 5px; margin: 1px 0 2px; background: rgb(184 154 104 / 0.18); border-radius: 3px; pointer-events: none; }
+  .tline .span .bar { --c: #6b5a44; position: absolute; top: 0; height: 5px; border-radius: 3px; background: var(--c); }
+  .tline .span .bar.open-start { background: linear-gradient(90deg, transparent, var(--c) 45%); }
+  .tline .span .bar.open-end { background: linear-gradient(90deg, var(--c) 55%, transparent); }
+  .tline .span .bar.open-start.open-end { background: linear-gradient(90deg, transparent, var(--c) 35%, var(--c) 65%, transparent); }
+  .tline li.on .span .bar, .tline li.open .span .bar, #peopleList .life[aria-pressed="true"] .bar { --c: #8c2f1e; }
+  /* a voyage's row, in the Voyages drawer and under a chosen person: the name (short, with its years) and line sample,
+     the eye, play, and in the Voyages drawer the swatch once it is chosen; the row wraps rather than scrolls */
+  .vrow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+  #where .vrow button { display: inline-flex; align-items: center; gap: 6px; }
+  #where .vrow .vname { flex: 1 1 auto; min-width: 0; max-width: 100%; white-space: normal; text-align: left; }
+  .pcard .vrow .vtitle { flex: 1 1 220px; }
+  .vrow .vname svg { width: 28px; height: 18px; flex: none; }
+  .vrow .vname[data-shown="true"] { background: #e2cd9e; color: #3b2a1a; border-color: #b89a68; } /* a shown voyage, lit like an open instrument */
+  #where .vrow .eye { padding: 2px 4px; width: 30px; height: 26px; justify-content: center; border-radius: 12px; } /* the chart rows' eye, between the name and the ink */
+  .vrow .eye svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+  .vrow .eye[aria-pressed=true] .slash { display: none; }
+  .vrow .eye[aria-pressed=false] { opacity: 0.7; }
+  #where .vrow .play { padding: 2px 4px; width: 30px; height: 26px; justify-content: center; border-radius: 12px; } /* after the eye: sails the voyage on its own calendar */
+  .vrow .play svg, #voyageBand button svg { width: 18px; height: 18px; fill: currentColor; stroke: none; }
+  .vrow .play[aria-pressed=true] { background: var(--accent); color: var(--sheet); border-color: var(--accent); }
      and the voyage's calendar as a strip (its legs, its waits dotted, its events as ticks) that scrubs */
   #voyageBand {
     position: fixed; z-index: 1; left: calc((100vw - min(100vw, 160dvh)) / 2 + 16px); box-sizing: border-box; /* from the map's left edge, so an open drawer at the right leaves it room (page.js placeBand) */
@@ -210,27 +302,28 @@
     #bandDate { font-size: 17px; }
     #voyageBand .bstrip { flex-basis: 100%; }
   }
-  #voyageList input[type=color] { width: 28px; height: 22px; border-radius: 6px; cursor: pointer; } /* the swatch is the voyage's ink; a click picks another */
-  #timelinePanel .vdraw { margin: 0 0 6px; font: 13px var(--serif); } /* the pen's seconds, its sample line drawing on at that pace */
-  #timelinePanel .vdraw output { min-width: 34px; font-size: 13px; color: inherit; }
+  .vrow input[type=color] { width: 28px; height: 22px; border-radius: 6px; cursor: pointer; } /* the swatch is the voyage's ink; a click picks another */
+  #voyagesPanel .vdraw { margin: 0 0 6px; font: 13px var(--serif); } /* the pen's seconds, its sample line drawing on at that pace */
+  #voyagesPanel .vdraw output { min-width: 34px; font-size: 13px; color: inherit; }
   #voyageDrawSample { width: 40px; height: 10px; flex: none; }
   #voyageDrawSample path { fill: none; stroke: #8c2f1e; stroke-width: 2.2; stroke-linecap: round; stroke-dasharray: 1; }
-  #voyageList .when { font-size: 11px; font-style: italic; opacity: 0.75; margin-left: 6px; }
-  #voyageList .full { display: none; } /* on the timeline a voyage goes by its short name and years; the title is its tooltip */
-  #voyageList .vsum { display: none; max-width: 360px; margin: 0 0 4px; font: 12px/1.35 var(--serif); opacity: 0.85; } /* a shown voyage in brief, and where to read more */
+  .vrow .when, #peopleList .when { font-size: 11px; font-style: italic; opacity: 0.75; margin-left: 6px; }
+  #voyageList .vsum { display: none; margin: 2px 0 4px; font: 12px/1.35 var(--serif); opacity: 0.85; } /* a shown voyage in brief, and where to read more */
   #voyageList li.on .vsum { display: block; }
-  #voyageList .vsum a { color: inherit; font-style: italic; }
-  #where #peopleStrip .life { position: relative; display: block; width: 100%; height: 17px; padding: 0; border: 0; border-radius: 3px; background: none; box-shadow: none; color: var(--fg); cursor: pointer; }
-  #where #peopleStrip .life:hover { background: rgb(140 47 30 / 0.07); }
-  #peopleStrip .bar { --c: #6b5a44; position: absolute; top: 5px; height: 7px; border-radius: 4px; background: var(--c); }
-  #peopleStrip .bar.open-start { background: linear-gradient(90deg, transparent, var(--c) 45%); } /* a birth nobody dated fades in */
-  #peopleStrip .bar.open-end { background: linear-gradient(90deg, var(--c) 55%, transparent); } /* a death nobody dated fades out */
-  #peopleStrip .bar.open-start.open-end { background: linear-gradient(90deg, transparent, var(--c) 35%, var(--c) 65%, transparent); }
-  #peopleStrip .who { position: absolute; top: 1px; font: 12px/15px var(--serif); white-space: nowrap; }
-  #peopleStrip .life[aria-pressed="true"] .bar { --c: #8c2f1e; } /* the chosen person: the chart's red */
-  #peopleStrip .life[aria-pressed="true"] .who { color: #8c2f1e; font-weight: bold; }
-  #peopleStrip .cardrow { position: sticky; left: 0; width: min(440px, 100%); margin: 2px 0 6px; } /* the chosen person's card, under their bar, in view however far the track is scrolled */
-  #peopleStrip .pcard { margin: 0; padding: 6px 8px; border: 1px solid #b89a68; border-radius: 6px; background: var(--panel); }
+  #voyageList .vsum a, .pcard .pvoyages a { color: inherit; font-style: italic; }
+  /* a person's row: the name, the years, a chip for a people; chosen, it is lit and its tile slides open under it, with
+     their voyages' rows inside; choosing another slides this one shut */
+  #where #peopleList .life { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; width: 100%; padding: 3px 8px; border: 1px solid transparent; border-radius: 10px; background: none; box-shadow: none; font: 13px var(--serif); color: var(--fg); text-align: left; cursor: pointer; }
+  #where #peopleList .life:hover { background: rgb(140 47 30 / 0.07); }
+  #where #peopleList .life[aria-pressed="true"] { background: #e2cd9e; border-color: #b89a68; }
+  #peopleList .life[aria-pressed="true"] .who { color: #8c2f1e; font-weight: bold; } /* the chosen person: the chart's red */
+  #peopleList .life .when { margin-left: 0; }
+  #peopleList .chip { display: inline-flex; align-items: center; padding: 0 7px; border-radius: 10px; border: 1px solid #8a7550; background: #f1e4c6; color: #3b2a1a; font-size: 11px; white-space: nowrap; }
+  #peopleList li > .rows { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.25s ease; }
+  #peopleList li.open > .rows { grid-template-rows: 1fr; }
+  #peopleList li > .rows > div { overflow: hidden; min-height: 0; }
+  @media (prefers-reduced-motion: reduce) { #peopleList li > .rows { transition: none; } }
+  #peopleList .pcard { margin: 4px 0 6px; padding: 6px 8px; border: 1px solid #b89a68; border-radius: 6px; background: var(--panel); contain: inline-size; }
   .pcard { margin-top: 6px; padding-top: 6px; border-top: 1px solid #b89a68; font: 13px/1.4 var(--serif); }
   .pcard p { margin: 0 0 4px; }
   .pcard .chip { display: inline-flex; align-items: center; gap: 3px; padding: 0 7px; border-radius: 10px; border: 1px solid #8a7550; background: #f1e4c6; color: #3b2a1a; font-size: 11px; white-space: nowrap; }
@@ -249,7 +342,7 @@
      of it, scrolling inside; hidden (and out of the tab order) when shut */
   .drawer {
     position: fixed; top: 64px; right: 12px; z-index: 2; box-sizing: border-box; pointer-events: auto;
-    width: min(480px, 100vw - 24px); max-height: calc(100vh - 76px); max-height: calc(100dvh - 76px); overflow-y: auto; overscroll-behavior: contain;
+    width: min(480px, 100vw - 24px); max-height: calc(100vh - 84px - var(--memento-foot) - var(--memento-h)); max-height: calc(100dvh - 84px - var(--memento-foot) - var(--memento-h)); overflow-y: auto; overscroll-behavior: contain;
     padding: 14px 16px 20px; background: var(--panel); color: var(--fg);
     border: 1px solid var(--rule); outline: 1px solid var(--rule); outline-offset: -5px;
     box-shadow: -4px 4px 24px rgb(0 0 0 / 0.3);
@@ -305,19 +398,33 @@
   #chartList .eye svg { width: 20px; height: 20px; display: block; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
   #chartList .eye[aria-pressed=true] .slash { display: none; }
   #chartList .eye[aria-pressed=false] { opacity: 0.7; }
+  /* the raise and lower arrows beside the eye, while two sheets or more are shown */
+  #chartList .stack { flex: none; margin-left: auto; display: flex; gap: 2px; }
+  #chartList .stack[hidden] { display: none; }
+  #chartList .stack:not([hidden]) + .eye { margin-left: 0; }
+  #chartList .lift { width: 22px; height: 24px; padding: 0; color: var(--sheet-ink); background: none; border: 1px solid transparent; border-radius: 2px; cursor: pointer; }
+  #chartList .lift:hover:not(:disabled) { border-color: var(--rule); color: var(--accent); }
+  #chartList .lift:disabled { opacity: 0.3; cursor: default; }
+  #chartList .lift svg { width: 14px; height: 14px; display: block; margin: 0 auto; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
   #chartList .where { font: 13px var(--serif); opacity: 0.85; }
   #chartList .city { padding: 0; font: inherit; color: inherit; background: none; border: 0; cursor: pointer; text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 2px; }
   #chartList .city:hover { color: var(--accent); text-decoration-color: var(--accent); }
   #chartList .fade { margin-top: 4px; } #chartList .fade output { min-width: 40px; }
   #chartList .notes { margin: 1px 0 0; }
-  /* the snap chips at the sheet's top left corner, over the map */
-  #sheetChips { position: fixed; z-index: 2; margin: 0; }
-  #sheetChips[hidden] { display: none; }
-  #sheetChips .where { display: contents; }
-  #sheetChips .chip svg { width: 20px; height: 14px; }
-  #sheetChips .chip[aria-pressed=false] { border-style: dashed; border-color: var(--line); }
-  #sheetChips .chip[aria-pressed=true] { box-shadow: inset 0 0 0 1px var(--accent); border-color: var(--accent); }
-  #sheetChips .chip[aria-disabled=true] { opacity: 0.45; }
+  /* a shown chart's controls, in its row under the city and year, three lines: "Align to:" and the placements, its up, its
+     points of interest (built in page.js) */
+  #chartList .pos { margin: 6px 0 2px; padding-top: 6px; border-top: 1px dotted var(--rule); display: grid; gap: 5px; }
+  #chartList .pos .line { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+  #chartList .pos .line > b { font: 13px var(--serif); font-weight: normal; opacity: 0.85; margin-right: 2px; }
+  #chartList .pos .chip { padding: 2px 8px; font-size: 12px; }
+  #chartList .pos .chip svg { width: 20px; height: 14px; }
+  #chartList .pos .chip svg.icon { width: 18px; height: 18px; }
+  /* unlit: solid, dark ink on the parchment, so it reads as a button; lit: the accent ring */
+  #chartList .pos .chip[aria-checked=false], #chartList .pos .chip[aria-pressed=false] { border-style: solid; border-color: #7a5d34; opacity: 1; background: #e3cf9f; }
+  #chartList .pos .chip[aria-checked=true], #chartList .pos .chip[aria-pressed=true] { box-shadow: inset 0 0 0 1px var(--accent); border-color: var(--accent); background: #f4e8c8; }
+  #chartList .pos .chip[aria-disabled=true] { opacity: 0.55; }
+  /* the points of interest's count, in the serif's own figures, in a red dot */
+  #chartList .pos .count { font: 13px/1 var(--serif); min-width: 18px; height: 18px; padding: 2px 4px 0; box-sizing: border-box; text-align: center; border-radius: 9px; background: var(--accent); color: #f4e8c8; }
   #otherTraditions h2 { margin: 18px 0 0; font: 18px var(--serif); }
   #worldList { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
   #worldList .chart { display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 12px; background: var(--sheet); color: var(--sheet-ink); border: 1px solid var(--rule); border-radius: 6px; }
@@ -372,6 +479,10 @@
   .chip svg { width: 28px; height: 18px; flex: none; }
   .chip svg.wide { width: 34px; }
   .chip .nm { font: italic 15px var(--serif); padding: 0 5px; border-radius: 3px; background: #e9d8b4; color: #3b2a1a; } /* a region name as the map letters it */
+  .chip .rub { display: inline-flex; flex-direction: column; align-items: center; line-height: 1; padding: 1px 5px; border-radius: 3px; background: #e9d8b4; }
+  .chip .rub em { font: italic 15px var(--serif); }
+  .chip .rub small { font: 7px var(--serif); letter-spacing: 1.4px; color: #6a5a42; }
+  .chips[hidden] { display: none; }
   .slider { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
   .slider[hidden] { display: none; }
   .slider input { flex: 1; }
@@ -447,21 +558,40 @@
 
   .about p { color: var(--muted); font-size: 12px; margin: 0; }
 
-  /* the drawer's layouts (layout=): in Default each control's wrapper (.ctl) lays out as if it were not there,
-     so the drawer is as it was; another layout moves the wrappers into its own groups, where each is a block
-     and the headings only a moved control needs (.lo) show */
-  #layout { margin-top: 10px; }
+  /* the drawer: each control's wrapper (.ctl) is a block in its tab; the moods over the tabs Sea · Land · Margins */
   @media not all and (hover: hover) and (pointer: fine) { #hoverRow { display: none; } } /* page.js HOVER_MEDIA, negated: nothing to hover with */
-  .ctl { display: contents; }
-  .lo { display: none; }
-  html[data-layout] .ctl { display: block; }
-  html[data-layout] .ctl + .ctl, html[data-layout] .ctl + .lead { margin-top: 8px; }
-  html[data-layout] .lo { display: block; }
-  .moods { margin-top: 18px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
-  .moods .preset b { font-size: 16px; }
-  .moods .sample img, .moods .sample svg { height: 28px; max-width: 38px; }
-  .fine { margin-top: 14px; }
-  .fine > summary { font: 17px var(--serif); color: var(--accent); letter-spacing: 0.06em; font-variant: small-caps; cursor: pointer; }
+  .ctl { display: block; }
+  .lo { display: block; }
+  .ctl + .ctl, .ctl + .lead { margin-top: 8px; }
+  #layoutGroups > h2 { margin-top: 12px; }
+  .moods { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .moods .preset { flex: 1 1 auto; min-width: 0; align-items: center; text-align: center; padding: 4px 5px; }
+  .moods .preset small { display: none; }
+  .moods .preset b { font-size: 13px; }
+  .moods .sample img, .moods .sample svg { height: 28px; max-width: 22px; }
+  /* All the things: the whole row, one small picture of every figure, edge to edge */
+  .moods .preset.all { flex: 1 0 100%; align-items: stretch; padding: 4px 4px 5px; }
+  .moods .preset.all b { font-size: 15px; }
+  .moods .sample.crammed { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0; padding: 1px; }
+  .moods .sample.crammed img, .moods .sample.crammed svg { height: 17px; width: auto; max-width: 24px; margin: 0; }
+  .tabs { display: flex; margin: 12px 0 4px; border-bottom: 1px solid var(--rule); position: sticky; top: -14px; background: var(--panel); z-index: 1; padding-top: 4px; }
+  .tabs button { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 4px 7px; border: none; background: none; font: 16px var(--serif); color: var(--muted); border-bottom: 3px solid transparent; cursor: pointer; }
+  .tabs button svg { width: 34px; height: 22px; }
+  .tabs button[aria-selected=true] { color: var(--accent); border-bottom-color: var(--accent); }
+  .tabs small { font: 10px system-ui, sans-serif; color: var(--muted); }
+  /* a family is a chip with a count: solid is all on, dashed some, faded none; the one open shows its pictures in the tray */
+  .fam-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 6px; }
+  .fam-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px 3px 4px; border-radius: 8px; font: 13px var(--serif); }
+  .fam-chip .sample img, .fam-chip .sample svg { height: 26px; max-width: 40px; }
+  .fam-chip b { font: 600 10px system-ui, sans-serif; padding: 1px 5px; border-radius: 8px; background: var(--sheet); color: var(--muted); }
+  .fam-chip[data-state=all] { border: 1.5px solid var(--accent); opacity: 1; }
+  .fam-chip[data-state=all] b { background: var(--accent); color: #f4efe4; }
+  .fam-chip[data-state=part] { border: 1.5px dashed var(--accent); opacity: 1; }
+  .fam-chip[data-state=none] { opacity: .55; border: 1px solid var(--rule); }
+  .fam-chip[aria-expanded=true] { box-shadow: 0 0 0 2px var(--panel), 0 0 0 3.5px var(--fg); }
+  .fam-tray { background: var(--sheet); border-radius: 6px; padding: 6px; margin: 2px 0 8px; }
+  .fam-tray:empty { display: none; }
+  .fam-tray .family { padding: 0; border: none; }
 
   /* under the hood: knobs fixed in the code, for a while; collapsed */
   .hood summary { font: 15px var(--serif); color: var(--accent); letter-spacing: 0.06em; font-variant: small-caps; cursor: pointer; }
@@ -472,7 +602,7 @@
 <canvas id="map" width="1600" height="1000" aria-label="Chart: drag to pan, wheel or pinch to zoom"><ul id="pictureKeys" aria-label="Pictures on the map"></ul></canvas>
 <div id="compareLine" aria-hidden="true" hidden></div>
 <div id="snap" aria-hidden="true"></div>
-<div id="sheetChips" class="tools" hidden></div>
+<div id="cornerTurn" aria-hidden="true" hidden><svg viewBox="0 0 24 24"><path d="M5 14a7 7 0 1 1 3.5 6" fill="none" stroke="#efe3c6" stroke-width="4.5" stroke-linecap="round"/><path d="M5 14a7 7 0 1 1 3.5 6M2 11l3 3 3-3" fill="none" stroke="#8c2f1e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
 <canvas id="cardCartouche" class="card" aria-hidden="true" hidden></canvas>
 <canvas id="cardScale" class="card" width="700" height="170" aria-hidden="true" hidden></canvas>
 <div id="tile" class="tile" role="dialog" tabindex="-1" hidden></div>
@@ -485,7 +615,9 @@
 <p id="status" role="status">Loading…</p>
 <p id="build" hidden></p>
 <div id="memento">
-  <button id="compass" type="button" hidden aria-label="North up: drag round to turn the world and the chart with it">
+  <div id="turns">
+  <button id="walkLeft" class="walk" type="button" aria-label="Turn the world a quarter turn anticlockwise" title="A quarter turn anticlockwise"></button>
+  <button id="compass" type="button" aria-label="North up: drag round to turn the world and the chart with it">
   <svg viewBox="-12 -12 24 24" aria-hidden="true">
     <circle r="10.5" fill="#efe3c6" stroke="#5a3a0c" stroke-width="0.8"/>
     <path d="M0-9.6 2.4 0H-2.4Z" fill="#8c2f1e" stroke="#3b1a0c" stroke-width="0.4"/>
@@ -494,7 +626,9 @@
     <text y="-5.2" text-anchor="middle" font-size="4.6" font-family="Georgia, serif" fill="#efe3c6" font-weight="bold">N</text>
   </svg>
   </button>
-  <button id="sweep" type="button" aria-label="Clear the table: put every picture away and let the chosen person or place go" title="Clear the table">
+  <button id="walkRight" class="walk" type="button" aria-label="Turn the world a quarter turn clockwise" title="A quarter turn clockwise"></button>
+  </div>
+  <button id="sweep" type="button" aria-label="Clear the map: put every picture away, let the chosen person or place go, and lift every chart and voyage; the view and the settings stay" title="Clear the map">
   <svg viewBox="-10 -10.5 20 20.5" aria-hidden="true">
     <g fill="#3b2a1a" stroke="#3b2a1a" stroke-linecap="round">
       <path d="M-6.5 3.5 6.5 8.5M6.5 3.5-6.5 8.5" stroke-width="2" fill="none"/>
@@ -511,33 +645,91 @@
   </button>
   <p id="mementoText"></p>
 </div>
-<div id="broom" aria-hidden="true" hidden>
-  <svg viewBox="-16 -16 32 32" aria-hidden="true" stroke-linejoin="round" stroke-linecap="round"><defs><linearGradient id="brassBroom" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4c2"/><stop offset="0.35" stop-color="#e8b84a"/><stop offset="0.6" stop-color="#b07a1e"/><stop offset="0.8" stop-color="#e9c060"/><stop offset="1" stop-color="#7a5212"/></linearGradient></defs>
-    <path d="M-15.5 4.5q2.5-1.2 4.6-.4M-15.5 8.6q3-1 5.4.2M-14.6 12.4q2.4-.6 4.2.4" fill="none" stroke="#7a5a2a" stroke-width="0.9" opacity="0.8"/>
-    <g transform="rotate(-16 -5 3)"><rect x="-10" y="-1.5" width="10.5" height="8" rx="0.6" fill="#f6ecd0" stroke="#5a3a0c" stroke-width="0.8"/><rect x="-8.8" y="-0.4" width="8.1" height="5.8" fill="#9ab7c9"/><path d="M-8.8 5.4v-1.8l2.6-2 2.2 1.6 1.8-1.2 1.5 1.4v2Z" fill="#6f9a58"/></g>
-    <g transform="rotate(10 -2 8)"><rect x="-7.5" y="4" width="10.5" height="8" rx="0.6" fill="#f6ecd0" stroke="#5a3a0c" stroke-width="0.8"/><rect x="-6.3" y="5.1" width="8.1" height="5.8" fill="#c9b48a"/><path d="M-5 10.9v-3.2h1.2v3.2M-2.4 10.9v-3.2h1.2v3.2M.2 10.9v-3.2h1.2v3.2M-5.4 7.3h7.2" fill="none" stroke="#5a3a0c" stroke-width="0.6"/></g>
-    <path d="M14.5-14.5 5.2-1.2" stroke="#5a3a0c" stroke-width="3.2"/><path d="M14.5-14.5 5.2-1.2" stroke="url(#brassBroom)" stroke-width="1.8"/>
-    <path d="M3.4-3.2 8 .2 7.4 2 3.6 13.2Q1 13.6-1.2 11.6Q1.2 4 2 -.4Z" fill="#c99a3a" stroke="#5a3a0c" stroke-width="0.8"/>
-    <path d="M2.6 1.6 0.2 11.2M4.4 2.2 2 12.4M6.2 2.6 3.4 12.9" stroke="#7a5212" stroke-width="0.6"/>
-    <path d="M2.8-2.4 7.9.9" stroke="#5a3a0c" stroke-width="1.6"/>
-  </svg>
-</div>
+<canvas id="vanish" aria-hidden="true" hidden></canvas>
+<div id="wipe" aria-hidden="true" hidden><svg viewBox="-100 -122 200 254" aria-hidden="true">
+  <defs>
+    <radialGradient id="skBone" cx="-0.18" cy="-0.42" r="1.05" gradientUnits="objectBoundingBox" gradientTransform="translate(0.5 0.5)">
+      <stop offset="0" stop-color="#f6ecd2"/><stop offset="0.45" stop-color="#dcc79c"/><stop offset="0.8" stop-color="#a88a5c"/><stop offset="1" stop-color="#6e5434"/>
+    </radialGradient>
+    <radialGradient id="skHollow" cx="0.5" cy="0.45" r="0.6">
+      <stop offset="0" stop-color="#140c06"/><stop offset="0.6" stop-color="#2a1a0e"/><stop offset="1" stop-color="#5a4128"/>
+    </radialGradient>
+    <radialGradient id="skShade" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#4a3420" stop-opacity="0.75"/><stop offset="1" stop-color="#4a3420" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="skTooth" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#efe2c0"/><stop offset="1" stop-color="#b89c6c"/>
+    </linearGradient>
+    <clipPath id="skClip"><path id="skOutline" d="M0-118C50-118 84-86 84-40C84-18 80-4 76 6C84 12 86 24 80 32C74 38 66 40 60 42L58 86C57 98 50 108 40 115C28 122 14 126 0 126C-14 126-28 122-40 115C-50 108-57 98-58 86L-60 42C-66 40-74 38-80 32C-86 24-84 12-76 6C-80-4-84-18-84-40C-84-86-50-118 0-118Z"/></clipPath>
+  </defs>
+  <use href="#skOutline" fill="url(#skBone)"/>
+  <g clip-path="url(#skClip)">
+    <!-- the shadow side (right, light from the upper left) in engraver's hatching -->
+    <g stroke="#4a3420" stroke-width="0.9" fill="none" opacity="0.55">
+      <path d="M46-104C70-86 82-60 84-30M54-100C76-80 86-56 88-26M62-94C80-74 90-50 90-22M38-108C62-90 74-64 78-36M70-86C86-66 92-44 92-18"/>
+      <path d="M78-6C86 4 88 16 86 28M72-2C80 8 82 20 80 34M66 50C68 70 66 90 58 104M60 54C62 74 60 92 52 106M54 58C56 76 54 94 46 110"/>
+    </g>
+    <g stroke="#4a3420" stroke-width="0.7" fill="none" opacity="0.35">
+      <path d="M-84-40C-86-20-84-4-80 8M-78-50C-80-28-80-10-76 4M-66 52C-68 72-66 90-58 104"/>
+    </g>
+    <!-- temples sunk under the brow, the cheek hollows, the shade under the cheekbones -->
+    <ellipse cx="74" cy="-2" rx="16" ry="28" fill="url(#skShade)"/>
+    <ellipse cx="-74" cy="-2" rx="14" ry="26" fill="url(#skShade)" opacity="0.7"/>
+    <ellipse cx="52" cy="58" rx="16" ry="24" fill="url(#skShade)"/>
+    <ellipse cx="-52" cy="58" rx="14" ry="22" fill="url(#skShade)" opacity="0.7"/>
+    <ellipse cx="0" cy="118" rx="60" ry="16" fill="url(#skShade)" opacity="0.6"/>
+  </g>
+  <!-- the sutures across the crown -->
+  <path d="M-62-72l5 3 3-5 5 4 4-5 5 4 4-4 5 3 4-5 5 4 4-4 5 4 4-5 5 4 4-4 5 3 4-5 5 4 4-4 5 4 3-5 5 3" fill="none" stroke="#5a4128" stroke-width="0.9" opacity="0.55"/>
+  <path d="M0-112l-3 6 4 5-4 5 4 6-4 5 3 6-3 5" fill="none" stroke="#5a4128" stroke-width="0.8" opacity="0.45"/>
+  <!-- the brow ridge, lit -->
+  <path d="M-64-26C-50-36-24-36-6-26M64-26C50-36 24-36 6-26" fill="none" stroke="#fbf3dc" stroke-width="2.4" stroke-linecap="round" opacity="0.7"/>
+  <!-- the eye sockets -->
+  <path d="M-60-16C-56-30-40-32-24-29C-12-26-8-14-9 0C-10 12-18 20-32 20C-48 20-60 8-60-16Z" fill="url(#skHollow)" stroke="#2a1a0e" stroke-width="1.4"/>
+  <path d="M60-16C56-30 40-32 24-29C12-26 8-14 9 0C10 12 18 20 32 20C48 20 60 8 60-16Z" fill="url(#skHollow)" stroke="#2a1a0e" stroke-width="1.4"/>
+  <path d="M-56-4C-52 10-42 16-30 15" fill="none" stroke="#a88a5c" stroke-width="1.2" opacity="0.6"/>
+  <path d="M56-4C52 10 42 16 30 15" fill="none" stroke="#a88a5c" stroke-width="1.2" opacity="0.4"/>
+  <!-- the cheekbones, lit along their ridge -->
+  <path d="M-78 20C-68 28-54 28-42 24M78 20C68 28 54 28 42 24" fill="none" stroke="#f2e6c6" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
+  <!-- the nose -->
+  <path d="M0 14C-5 16-13 30-13 40C-13 47-7 49-1 45L0 44L1 45C7 49 13 47 13 40C13 30 5 16 0 14Z" fill="url(#skHollow)" stroke="#2a1a0e" stroke-width="1.2"/>
+  <path d="M0 22V44" stroke="#8a6e46" stroke-width="1.2"/>
+  <!-- the upper jaw and its teeth -->
+  <path d="M-38 56C-26 52 26 52 38 56L36 64C24 60-24 60-36 64Z" fill="#c9b080" opacity="0.6"/>
+  <g fill="url(#skTooth)" stroke="#3b2a1a" stroke-width="0.9" transform="translate(0 2) scale(0.82 0.8) translate(0 15)">
+    <path d="M-36 62h7.5v13c0 2-7.5 2-7.5 0Z"/><path d="M-28 61h7.5v15c0 2-7.5 2-7.5 0Z"/><path d="M-20 60h6.5v17c0 2-6.5 2-6.5 0Z"/><path d="M-13 60h6v18c0 2-6 2-6 0Z"/>
+    <path d="M-6.5 60h6v18c0 2-6 2-6 0Z"/><path d="M0.5 60h6v18c0 2-6 2-6 0Z"/><path d="M7 60h6v18c0 2-6 2-6 0Z"/><path d="M13.5 60h6.5v17c0 2-6.5 2-6.5 0Z"/>
+    <path d="M20.5 61h7.5v15c0 2-7.5 2-7.5 0Z"/><path d="M28.5 62h7.5v13c0 2-7.5 2-7.5 0Z"/>
+  </g>
+  <!-- the bite: the dark line between the jaws -->
+  <path d="M-40 80C-26 84 26 84 40 80" fill="none" stroke="#1e140c" stroke-width="2.4" stroke-linecap="round"/>
+  <!-- the lower teeth -->
+  <g fill="url(#skTooth)" stroke="#3b2a1a" stroke-width="0.9" transform="translate(0 2) scale(0.82 0.8) translate(0 15)">
+    <path d="M-32 80h7v10c0-1.6-7-1.6-7 0Z" transform="matrix(1 0 0 -1 0 170)"/><path d="M-24.5 81h7v11c0-1.6-7-1.6-7 0Z" transform="matrix(1 0 0 -1 0 172)"/><path d="M-17 81h6v12c0-1.6-6-1.6-6 0Z" transform="matrix(1 0 0 -1 0 173)"/>
+    <path d="M-10.5 81h5v12c0-1.6-5-1.6-5 0Z" transform="matrix(1 0 0 -1 0 173)"/><path d="M-5 81h5v12c0-1.6-5-1.6-5 0Z" transform="matrix(1 0 0 -1 0 173)"/><path d="M0.5 81h5v12c0-1.6-5-1.6-5 0Z" transform="matrix(1 0 0 -1 0 173)"/>
+    <path d="M6 81h5v12c0-1.6-5-1.6-5 0Z" transform="matrix(1 0 0 -1 0 173)"/><path d="M11.5 81h6v12c0-1.6-6-1.6-6 0Z" transform="matrix(1 0 0 -1 0 173)"/><path d="M18 81h7v11c0-1.6-7-1.6-7 0Z" transform="matrix(1 0 0 -1 0 172)"/>
+    <path d="M25.5 80h7v10c0-1.6-7-1.6-7 0Z" transform="matrix(1 0 0 -1 0 170)"/>
+  </g>
+  <!-- where the jaw hinges under the cheekbone, and the chin -->
+  <path d="M-58 44C-52 56-48 70-44 82M58 44C52 56 48 70 44 82" fill="none" stroke="#3b2a1a" stroke-width="1.3" opacity="0.7"/>
+  <path d="M-20 112C-10 118 10 118 20 112" fill="none" stroke="#f2e6c6" stroke-width="1.6" opacity="0.5"/>
+  <circle cx="-30" cy="100" r="2" fill="#3b2a1a" opacity="0.5"/><circle cx="30" cy="100" r="2" fill="#3b2a1a" opacity="0.5"/>
+  <use href="#skOutline" fill="none" stroke="#2a1a0e" stroke-width="1.8"/>
+</svg></div>
+<p id="mementoBig" aria-hidden="true" hidden></p>
 
-<nav id="where" aria-label="Go to">
+<nav id="where" aria-label="Find">
   <div class="row">
-    <button id="open" type="button" aria-label="Settings" aria-controls="drawer" aria-expanded="false">
+    <button id="open" type="button" aria-label="Configuration" aria-controls="drawer" aria-expanded="false" title="Configuration">
       <svg viewBox="-16 -16 32 32" aria-hidden="true"><defs><linearGradient id="brassRose" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4c2"/><stop offset="0.35" stop-color="#e8b84a"/><stop offset="0.6" stop-color="#b07a1e"/><stop offset="0.8" stop-color="#e9c060"/><stop offset="1" stop-color="#7a5212"/></linearGradient></defs><circle r="11.4" fill="none" stroke="#5a3a0c" stroke-width="2.4"/><circle r="11.4" fill="none" stroke="url(#brassRose)" stroke-width="1.4"/><path d="M0 0L2.03 -10.2L-0.06 -1.9Z" fill="#6f9a58"/><path d="M0 0L2.03 -10.2L0.78 -1.73Z" fill="#4f7a3a"/><path d="M-0.06 -1.9L2.03 -10.2L0.78 -1.73" fill="none" stroke="#5a3a0c" stroke-width="0.2" stroke-linejoin="miter"/><path d="M0 0L5.78 -8.65L0.67 -1.78Z" fill="#c0614a"/><path d="M0 0L5.78 -8.65L1.38 -1.3Z" fill="#a8432e"/><path d="M0.67 -1.78L5.78 -8.65L1.38 -1.3" fill="none" stroke="#5a3a0c" stroke-width="0.2" stroke-linejoin="miter"/><path d="M0 0L8.65 -5.78L1.3 -1.38Z" fill="#6f9a58"/><path d="M0 0L8.65 -5.78L1.78 -0.67Z" fill="#4f7a3a"/><path d="M1.3 -1.38L8.65 -5.78L1.78 -0.67" fill="none" stroke="#5a3a0c" stroke-width="0.2" stroke-linejoin="miter"/><path d="M0 0L10.2 -2.03L1.73 -0.78Z" fill="#c0614a"/><path d="M0 0L10.2 -2.03L1.9 0.06Z" fill="#a8432e"/><path d="M1.73 -0.78L10.2 -2.03L1.9 0.06" fill="none" stroke="#5a3a0c" stroke-width="0.2" stroke-linejoin="miter"/><path d="M0 0L10.2 2.03L1.9 -0.06Z" fill="#6f9a58"/><path d="M0 0L10.2 2.03L1.73 0.78Z" fill="#4f7a3a"/><path d="M1.9 -0.06L10.2 2.03L1.73 0.78" fill="none" stroke="#5a3a0c" stroke-width="0.2" stroke-linejoin="miter"/><path d="M0 0L8.65 5.78L1.78 0.67Z" fill="#c0614a"/><path d="M0 0L8.65 5.78L1.3 1.38Z" fill="#a8432e"/><path d="M1.78 0.67L8.65 5.78L1.3 1.38" fill="none" stroke="#5a3a0c" stroke-width="0.2" stroke-linejoin="miter"/><path d="M0 0L5.78 8.65L1.38 1.3Z" fill="#6f9a58"/><path d="M0 0L5.78 8.65L0.67 1.78Z" fill="#4f7a3a"/><path d="M1.38 1.3L5.78 8.65L0.67 1.78" fill="none" stroke="#5a3a0c" stroke-width="0.2" stroke-linejoin="miter"/><path d="M0 0L2.03 10.2L0.78 1.73Z" fill="#c0614a"/><path d="M0 0L2.03 10.2L-0.06 1.9Z" fill="#a8432e"/><path d="M0.78 1.73L2.03 10.2L-0.06 1.9" fill="none" stroke="#5a3a0c" stroke-width="0.2" stroke-linejoin="miter"/><path d="M0 0L-2.03 10.2L0.06 1.9Z" fill="#6f9a58"/><path d="M0 0L-2.03 10.2L-0.78 1.73Z" fill="#4f7a3a"/><path d="M0.06 1.9L-2.03 10.2L-0.78 1.73" fill="none" stroke="#5a3a0c" stroke-width="0.2" stroke-linejoin="miter"/><path d="M0 0L-5.78 8.65L-0.67 1.78Z" fill="#c0614a"/><path d="M0 0L-5.78 8.65L-1.38 1.3Z" fill="#a8432e"/><path d="M-0.67 1.78L-5.78 8.65L-1.38 1.3" fill="none" stroke="#5a3a0c" stroke-width="0.2" stroke-linejoin="miter"/><path d="M0 0L-8.65 5.78L-1.3 1.38Z" fill="#6f9a58"/><path d="M0 0L-8.65 5.78L-1.78 0.67Z" fill="#4f7a3a"/><path d="M-1.3 1.38L-8.65 5.78L-1.78 0.67" fill="none" stroke="#5a3a0c" stroke-width="0.2" stroke-linejoin="miter"/><path d="M0 0L-10.2 2.03L-1.73 0.78Z" fill="#c0614a"/><path d="M0 0L-10.2 2.03L-1.9 -0.06Z" fill="#a8432e"/><path d="M-1.73 0.78L-10.2 2.03L-1.9 -0.06" fill="none" stroke="#5a3a0c" stroke-width="0.2" stroke-linejoin="miter"/><path d="M0 0L-10.2 -2.03L-1.9 0.06Z" fill="#6f9a58"/><path d="M0 0L-10.2 -2.03L-1.73 -0.78Z" fill="#4f7a3a"/><path d="M-1.9 0.06L-10.2 -2.03L-1.73 -0.78" fill="none" stroke="#5a3a0c" stroke-width="0.2" stroke-linejoin="miter"/><path d="M0 0L-8.65 -5.78L-1.78 -0.67Z" fill="#c0614a"/><path d="M0 0L-8.65 -5.78L-1.3 -1.38Z" fill="#a8432e"/><path d="M-1.78 -0.67L-8.65 -5.78L-1.3 -1.38" fill="none" stroke="#5a3a0c" stroke-width="0.2" stroke-linejoin="miter"/><path d="M0 0L-5.78 -8.65L-1.38 -1.3Z" fill="#6f9a58"/><path d="M0 0L-5.78 -8.65L-0.67 -1.78Z" fill="#4f7a3a"/><path d="M-1.38 -1.3L-5.78 -8.65L-0.67 -1.78" fill="none" stroke="#5a3a0c" stroke-width="0.2" stroke-linejoin="miter"/><path d="M0 0L-2.03 -10.2L-0.78 -1.73Z" fill="#c0614a"/><path d="M0 0L-2.03 -10.2L0.06 -1.9Z" fill="#a8432e"/><path d="M-0.78 -1.73L-2.03 -10.2L0.06 -1.9" fill="none" stroke="#5a3a0c" stroke-width="0.2" stroke-linejoin="miter"/><path d="M0 0L4.97 -12.01L-0.06 -2.4Z" fill="#9a6fb0"/><path d="M0 0L4.97 -12.01L1.74 -1.65Z" fill="#4e2a66"/><path d="M-0.06 -2.4L4.97 -12.01L1.74 -1.65" fill="none" stroke="#5a3a0c" stroke-width="0.22" stroke-linejoin="miter"/><path d="M0 0L12.01 -4.97L1.65 -1.74Z" fill="#9a6fb0"/><path d="M0 0L12.01 -4.97L2.4 0.06Z" fill="#4e2a66"/><path d="M1.65 -1.74L12.01 -4.97L2.4 0.06" fill="none" stroke="#5a3a0c" stroke-width="0.22" stroke-linejoin="miter"/><path d="M0 0L12.01 4.97L2.4 -0.06Z" fill="#9a6fb0"/><path d="M0 0L12.01 4.97L1.65 1.74Z" fill="#4e2a66"/><path d="M2.4 -0.06L12.01 4.97L1.65 1.74" fill="none" stroke="#5a3a0c" stroke-width="0.22" stroke-linejoin="miter"/><path d="M0 0L4.97 12.01L1.74 1.65Z" fill="#9a6fb0"/><path d="M0 0L4.97 12.01L-0.06 2.4Z" fill="#4e2a66"/><path d="M1.74 1.65L4.97 12.01L-0.06 2.4" fill="none" stroke="#5a3a0c" stroke-width="0.22" stroke-linejoin="miter"/><path d="M0 0L-4.97 12.01L0.06 2.4Z" fill="#9a6fb0"/><path d="M0 0L-4.97 12.01L-1.74 1.65Z" fill="#4e2a66"/><path d="M0.06 2.4L-4.97 12.01L-1.74 1.65" fill="none" stroke="#5a3a0c" stroke-width="0.22" stroke-linejoin="miter"/><path d="M0 0L-12.01 4.97L-1.65 1.74Z" fill="#9a6fb0"/><path d="M0 0L-12.01 4.97L-2.4 -0.06Z" fill="#4e2a66"/><path d="M-1.65 1.74L-12.01 4.97L-2.4 -0.06" fill="none" stroke="#5a3a0c" stroke-width="0.22" stroke-linejoin="miter"/><path d="M0 0L-12.01 -4.97L-2.4 0.06Z" fill="#9a6fb0"/><path d="M0 0L-12.01 -4.97L-1.65 -1.74Z" fill="#4e2a66"/><path d="M-2.4 0.06L-12.01 -4.97L-1.65 -1.74" fill="none" stroke="#5a3a0c" stroke-width="0.22" stroke-linejoin="miter"/><path d="M0 0L-4.97 -12.01L-1.74 -1.65Z" fill="#9a6fb0"/><path d="M0 0L-4.97 -12.01L0.06 -2.4Z" fill="#4e2a66"/><path d="M-1.74 -1.65L-4.97 -12.01L0.06 -2.4" fill="none" stroke="#5a3a0c" stroke-width="0.22" stroke-linejoin="miter"/><path d="M0 0L0 -10.2L-1.47 -2.26Z" fill="#f3d27a"/><path d="M0 0L0 -10.2L1.47 -2.26Z" fill="#a8741c"/><path d="M-1.47 -2.26L0 -10.2L1.47 -2.26" fill="none" stroke="#5a3a0c" stroke-width="0.28" stroke-linejoin="miter"/><path d="M0 0L10.32 -10.32L0.56 -2.64Z" fill="#f3d27a"/><path d="M0 0L10.32 -10.32L2.64 -0.56Z" fill="#a8741c"/><path d="M0.56 -2.64L10.32 -10.32L2.64 -0.56" fill="none" stroke="#5a3a0c" stroke-width="0.28" stroke-linejoin="miter"/><path d="M0 0L11.6 0L2.26 -1.47Z" fill="#f3d27a"/><path d="M0 0L11.6 0L2.26 1.47Z" fill="#a8741c"/><path d="M2.26 -1.47L11.6 0L2.26 1.47" fill="none" stroke="#5a3a0c" stroke-width="0.28" stroke-linejoin="miter"/><path d="M0 0L10.32 10.32L2.64 0.56Z" fill="#f3d27a"/><path d="M0 0L10.32 10.32L0.56 2.64Z" fill="#a8741c"/><path d="M2.64 0.56L10.32 10.32L0.56 2.64" fill="none" stroke="#5a3a0c" stroke-width="0.28" stroke-linejoin="miter"/><path d="M0 0L0 14.6L1.47 2.26Z" fill="#f3d27a"/><path d="M0 0L0 14.6L-1.47 2.26Z" fill="#a8741c"/><path d="M1.47 2.26L0 14.6L-1.47 2.26" fill="none" stroke="#5a3a0c" stroke-width="0.28" stroke-linejoin="miter"/><path d="M0 0L-10.32 10.32L-0.56 2.64Z" fill="#f3d27a"/><path d="M0 0L-10.32 10.32L-2.64 0.56Z" fill="#a8741c"/><path d="M-0.56 2.64L-10.32 10.32L-2.64 0.56" fill="none" stroke="#5a3a0c" stroke-width="0.28" stroke-linejoin="miter"/><path d="M0 0L-14.6 0L-2.26 1.47Z" fill="#f3d27a"/><path d="M0 0L-14.6 0L-2.26 -1.47Z" fill="#a8741c"/><path d="M-2.26 1.47L-14.6 0L-2.26 -1.47" fill="none" stroke="#5a3a0c" stroke-width="0.28" stroke-linejoin="miter"/><path d="M0 0L-10.32 -10.32L-2.64 -0.56Z" fill="#f3d27a"/><path d="M0 0L-10.32 -10.32L-0.56 -2.64Z" fill="#a8741c"/><path d="M-2.64 -0.56L-10.32 -10.32L-0.56 -2.64" fill="none" stroke="#5a3a0c" stroke-width="0.28" stroke-linejoin="miter"/><path transform="translate(0 -9.6)" d="M0-6.2C1.5-4.8 1.6-2.6 0.55-1.1L-0.55-1.1C-1.6-2.6-1.5-4.8 0-6.2ZM0.6-1.3C1.4-2.4 3.1-2.7 3.5-4.4C4.4-2.5 3.2-0.6 1.2-0.6ZM-0.6-1.3C-1.4-2.4-3.1-2.7-3.5-4.4C-4.4-2.5-3.2-0.6-1.2-0.6ZM-2.1-1.3H2.1V-0.3H-2.1ZM-0.55-0.3H0.55L0.9 1.2H-0.9Z" fill="url(#brassRose)" stroke="#5a3a0c" stroke-width="0.45" stroke-linejoin="round"/><path d="M11.2-0.6H13V-2.4H14.2V-0.6H16V0.6H14.2V2.4H13V0.6H11.2Z" fill="#a8432e" stroke="#5a3a0c" stroke-width="0.35"/><circle r="1.5" fill="url(#brassRose)" stroke="#5a3a0c" stroke-width="0.5"/></svg>
     </button>
-    <button id="charts" type="button" aria-label="Charts" aria-controls="chartsDrawer" aria-expanded="false" title="Charts">
-      <svg viewBox="-16 -16 32 32" aria-hidden="true" stroke-linecap="round" stroke-linejoin="round"><defs><radialGradient id="hdChart" cx="0.5" cy="0.5" r="0.62"><stop offset="0" stop-color="#f3e6c6"/><stop offset="0.68" stop-color="#ead8b0"/><stop offset="0.9" stop-color="#d2b27a"/><stop offset="1" stop-color="#b08f58"/></radialGradient><clipPath id="hcChart"><path d="M-15.2 -1.2C-15.27 -0.26 -15.14 0.92 -14.6 1.6C-14.06 2.28 -12.56 1.81 -12.2 2.6C-11.84 3.39 -12.1 4.6 -12.6 6C-13.1 7.4 -15.04 9.46 -15 10.4C-14.96 11.34 -13.37 11.31 -12.4 11.2C-11.43 11.09 -10.93 9.84 -9.6 9.8C-8.27 9.76 -6.62 10.93 -5 11C-3.38 11.07 -2.26 10.13 -0.6 10.2C1.06 10.27 2.65 11.36 4.2 11.4C5.75 11.44 6.74 10.04 8 10.4C9.26 10.76 10.23 13 11.2 13.4C12.17 13.8 13.15 13.39 13.4 12.6C13.65 11.81 12.46 10.33 12.6 9C12.74 7.67 14.09 6.64 14.2 5.2C14.31 3.76 13.09 2.58 13.2 1C13.31 -0.58 14.73 -1.94 14.8 -3.6C14.87 -5.26 13.56 -6.54 13.6 -8.2C13.64 -9.86 15.32 -12.04 15 -12.8C14.68 -13.56 12.95 -12.8 11.8 -12.4C10.65 -12 10 -10.71 8.6 -10.6C7.2 -10.49 5.69 -11.84 4 -11.8C2.31 -11.76 0.93 -10.44 -0.8 -10.4C-2.53 -10.36 -4.02 -11.64 -5.6 -11.6C-7.18 -11.56 -8.2 -9.95 -9.6 -10.2C-11 -10.45 -12.61 -12.93 -13.4 -13C-14.19 -13.07 -14.25 -11.61 -14 -10.6C-13.75 -9.59 -12.29 -8.62 -12 -7.4C-11.71 -6.18 -12 -4.48 -12.4 -3.8C-12.8 -3.12 -13.7 -4.07 -14.2 -3.6C-14.7 -3.13 -15.13 -2.14 -15.2 -1.2Z"/></clipPath></defs><path d="M-15.2 -1.2C-15.27 -0.26 -15.14 0.92 -14.6 1.6C-14.06 2.28 -12.56 1.81 -12.2 2.6C-11.84 3.39 -12.1 4.6 -12.6 6C-13.1 7.4 -15.04 9.46 -15 10.4C-14.96 11.34 -13.37 11.31 -12.4 11.2C-11.43 11.09 -10.93 9.84 -9.6 9.8C-8.27 9.76 -6.62 10.93 -5 11C-3.38 11.07 -2.26 10.13 -0.6 10.2C1.06 10.27 2.65 11.36 4.2 11.4C5.75 11.44 6.74 10.04 8 10.4C9.26 10.76 10.23 13 11.2 13.4C12.17 13.8 13.15 13.39 13.4 12.6C13.65 11.81 12.46 10.33 12.6 9C12.74 7.67 14.09 6.64 14.2 5.2C14.31 3.76 13.09 2.58 13.2 1C13.31 -0.58 14.73 -1.94 14.8 -3.6C14.87 -5.26 13.56 -6.54 13.6 -8.2C13.64 -9.86 15.32 -12.04 15 -12.8C14.68 -13.56 12.95 -12.8 11.8 -12.4C10.65 -12 10 -10.71 8.6 -10.6C7.2 -10.49 5.69 -11.84 4 -11.8C2.31 -11.76 0.93 -10.44 -0.8 -10.4C-2.53 -10.36 -4.02 -11.64 -5.6 -11.6C-7.18 -11.56 -8.2 -9.95 -9.6 -10.2C-11 -10.45 -12.61 -12.93 -13.4 -13C-14.19 -13.07 -14.25 -11.61 -14 -10.6C-13.75 -9.59 -12.29 -8.62 -12 -7.4C-11.71 -6.18 -12 -4.48 -12.4 -3.8C-12.8 -3.12 -13.7 -4.07 -14.2 -3.6C-14.7 -3.13 -15.13 -2.14 -15.2 -1.2Z" fill="url(#hdChart)" stroke="#7a5a2a" stroke-width="0.8"/><g clip-path="url(#hcChart)" stroke-width="0.32" opacity="0.85"><path d="M0 0L0 -30" stroke="#2a2018"/><path d="M0 0L11.48 -27.72" stroke="#a8432e"/><path d="M0 0L21.21 -21.21" stroke="#4f7a3a"/><path d="M0 0L27.72 -11.48" stroke="#a8432e"/><path d="M0 0L30 0" stroke="#2a2018"/><path d="M0 0L27.72 11.48" stroke="#a8432e"/><path d="M0 0L21.21 21.21" stroke="#4f7a3a"/><path d="M0 0L11.48 27.72" stroke="#a8432e"/><path d="M0 0L0 30" stroke="#2a2018"/><path d="M0 0L-11.48 27.72" stroke="#a8432e"/><path d="M0 0L-21.21 21.21" stroke="#4f7a3a"/><path d="M0 0L-27.72 11.48" stroke="#a8432e"/><path d="M0 0L-30 0" stroke="#2a2018"/><path d="M0 0L-27.72 -11.48" stroke="#a8432e"/><path d="M0 0L-21.21 -21.21" stroke="#4f7a3a"/><path d="M0 0L-11.48 -27.72" stroke="#a8432e"/></g><path d="M-11.2-7.6C-9.4-6.6-8.6-8.4-6.8-7.4S-5-5.2-3.4-6.6-1-8 0.4-7S2.6-4.4 4-5.6 6-8 8.2-7.2 11.4-7.4 12.8-8.6" fill="none" stroke="#5a3a1a" stroke-width="0.6"/><circle cx="7.4" cy="6.4" r="0.9" fill="#a8432e"/><circle cx="-7.6" cy="6.8" r="0.8" fill="#c99a3a"/><circle cx="10" cy="3" r="0.6" fill="#c99a3a"/><path d="M0 0L0 -4.8L0.48 -0.99Z" fill="#e0b04a"/><path d="M0 0L0 -4.8L-0.48 -0.99Z" fill="#8a6418"/><path d="M0 0L2.12 -2.12L1.04 -0.36Z" fill="#4f7a3a"/><path d="M0 0L2.12 -2.12L0.36 -1.04Z" fill="#2f5a22"/><path d="M0 0L4.8 0L0.99 0.48Z" fill="#e0b04a"/><path d="M0 0L4.8 0L0.99 -0.48Z" fill="#8a6418"/><path d="M0 0L2.12 2.12L0.36 1.04Z" fill="#4f7a3a"/><path d="M0 0L2.12 2.12L1.04 0.36Z" fill="#2f5a22"/><path d="M0 0L0 4.8L-0.48 0.99Z" fill="#e0b04a"/><path d="M0 0L0 4.8L0.48 0.99Z" fill="#8a6418"/><path d="M0 0L-2.12 2.12L-1.04 0.36Z" fill="#4f7a3a"/><path d="M0 0L-2.12 2.12L-0.36 1.04Z" fill="#2f5a22"/><path d="M0 0L-4.8 0L-0.99 -0.48Z" fill="#e0b04a"/><path d="M0 0L-4.8 0L-0.99 0.48Z" fill="#8a6418"/><path d="M0 0L-2.12 -2.12L-0.36 -1.04Z" fill="#4f7a3a"/><path d="M0 0L-2.12 -2.12L-1.04 -0.36Z" fill="#2f5a22"/><circle cx="0" cy="0" r="5" fill="none" stroke="#2a2018" stroke-width="0.3"/></svg>
-    </button>
-    <button id="sights" type="button" aria-label="Points of interest" aria-controls="sightsPanel" aria-expanded="false" title="Points of interest">
-      <svg viewBox="-16 -16 32 32" aria-hidden="true" stroke-linejoin="round" stroke-linecap="round"><defs><linearGradient id="brassAstro" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4c2"/><stop offset="0.35" stop-color="#e8b84a"/><stop offset="0.6" stop-color="#b07a1e"/><stop offset="0.8" stop-color="#e9c060"/><stop offset="1" stop-color="#7a5212"/></linearGradient></defs><g stroke="#5a3a0c" stroke-width="1.6" fill="#5a3a0c"><path d="M-6.2 -8.100000000000001C-5.4-11.2-4-11.6-3.2-12.8L3.2-12.8C4-11.6 5.4-11.2 6.2 -8.100000000000001Z"/><circle cy="-13.4" r="2.3"/><circle cx="-3.6" cy="-12" r="1.6"/><circle cx="3.6" cy="-12" r="1.6"/></g><g fill="url(#brassAstro)"><path d="M-6.2 -8.100000000000001C-5.4-11.2-4-11.6-3.2-12.8L3.2-12.8C4-11.6 5.4-11.2 6.2 -8.100000000000001Z"/><circle cy="-13.4" r="2.3"/><circle cx="-3.6" cy="-12" r="1.6"/><circle cx="3.6" cy="-12" r="1.6"/></g><circle cy="-13.4" r="0.85" fill="#5a3a0c"/><path d="M-2.6-11.2h5.2" stroke="#5a3a0c" stroke-width="0.4"/><circle cy="2.6" r="12.9" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.9"/><circle cy="2.6" r="10.1" fill="#6e4710" stroke="#5a3a0c" stroke-width="0.6"/><path d="M0 -7.5L0 -9.5M1.75 -7.35L1.94 -8.43M3.45 -6.89L3.83 -7.92M5.05 -6.15L6.05 -7.88M6.49 -5.14L7.2 -5.98M7.74 -3.89L8.58 -4.6M8.75 -2.45L10.48 -3.45M9.49 -0.85L10.52 -1.23M9.95 0.85L11.03 0.66M10.1 2.6L12.1 2.6M9.95 4.35L11.03 4.54M9.49 6.05L10.52 6.43M8.75 7.65L10.48 8.65M7.74 9.09L8.58 9.8M6.49 10.34L7.2 11.18M5.05 11.35L6.05 13.08M3.45 12.09L3.83 13.12M1.75 12.55L1.94 13.63M0 12.7L0 14.7M-1.75 12.55L-1.94 13.63M-3.45 12.09L-3.83 13.12M-5.05 11.35L-6.05 13.08M-6.49 10.34L-7.2 11.18M-7.74 9.09L-8.58 9.8M-8.75 7.65L-10.48 8.65M-9.49 6.05L-10.52 6.43M-9.95 4.35L-11.03 4.54M-10.1 2.6L-12.1 2.6M-9.95 0.85L-11.03 0.66M-9.49 -0.85L-10.52 -1.23M-8.75 -2.45L-10.48 -3.45M-7.74 -3.89L-8.58 -4.6M-6.49 -5.14L-7.2 -5.98M-5.05 -6.15L-6.05 -7.88M-3.45 -6.89L-3.83 -7.92M-1.75 -7.35L-1.94 -8.43" stroke="#5a3a0c" stroke-width="0.45"/><path d="M-9.7 4.1Q0 -3.4 9.7 4.1M-7 7.4Q0 1.4000000000000001 7 7.4" fill="none" stroke="#a87a2a" stroke-width="0.4"/><g stroke="#5a3a0c" stroke-width="2.3"><circle cy="2.6" r="8.6" fill="none"/><circle cx="0" cy="0" r="6" fill="none"/></g><g stroke="url(#brassAstro)" stroke-width="1.2"><circle cy="2.6" r="8.6" fill="none"/><circle cx="0" cy="0" r="6" fill="none"/></g><path d="M-1.2 11.12Q-1.68 8.46 -1.58 5.84Q-3.05 7.88 -4.56 9.89Z" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.4"/><path d="M6.78 7.89Q4.52 7.28 2.46 6.25Q3.25 8.23 4.04 10.19Z" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.4"/><path d="M-7.29 7.16Q-5.85 5.2 -4.08 3.62Q-6.3 3.71 -8.52 3.8Z" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.4"/><path d="M8.54 1.55Q6.7 2.72 4.71 3.52Q6.47 4.33 8.22 5.11Z" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.4"/><path d="M-7.92 -0.76Q-5.66 -0.8 -3.47 -0.42Q-4.67 -2.07 -5.87 -3.69Z" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.4"/><path d="M2.66 -5.58Q3.29 -4.14 3.76 -2.58Q4.82 -3.15 5.75 -3.79Z" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.4"/><g transform="translate(0 2.6) rotate(-58)"><path d="M-11.8 0-8.6-0.8H8.6L11.8 0 8.6 0.8H-8.6Z" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.6"/><path d="M0-1.1V1.1" stroke="#5a3a0c" stroke-width="0.4"/></g><circle cy="2.6" r="1.4" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.6"/><circle cy="2.6" r="0.4" fill="#5a3a0c"/></svg>
-    </button>
-    <button id="go" type="button" aria-label="Go to a place or my position" aria-controls="goPanel" aria-expanded="false" title="Go to">
+    <button id="go" type="button" aria-label="Find a place, my position or the points of interest" aria-controls="goPanel" aria-expanded="false" title="Find">
       <svg viewBox="-16 -16 32 32" aria-hidden="true" stroke-linejoin="round"><defs><linearGradient id="brassCompass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4c2"/><stop offset="0.35" stop-color="#e8b84a"/><stop offset="0.6" stop-color="#b07a1e"/><stop offset="0.8" stop-color="#e9c060"/><stop offset="1" stop-color="#7a5212"/></linearGradient></defs><rect x="-14" y="-14" width="28" height="28" rx="3" fill="url(#brassCompass)" stroke="#5a3a0c" stroke-width="1"/><rect x="-12.3" y="-12.3" width="24.6" height="24.6" rx="1.8" fill="none" stroke="#5a3a0c" stroke-width="0.4" opacity="0.7"/><circle cx="-11.6" cy="-11.6" r="0.9" fill="#5a3a0c" opacity="0.8"/><circle cx="11.6" cy="-11.6" r="0.9" fill="#5a3a0c" opacity="0.8"/><circle cx="11.6" cy="11.6" r="0.9" fill="#5a3a0c" opacity="0.8"/><circle cx="-11.6" cy="11.6" r="0.9" fill="#5a3a0c" opacity="0.8"/><circle r="11" fill="#5a3a0c"/><circle r="10" fill="#f6ecd0"/><circle r="9" fill="none" stroke="#5a3a0c" stroke-width="0.35"/><path d="M-0.29 -1.37L0 -8.8L0.29 -1.37M0.37 -1.35L2.3 -5.54L0.69 -1.22M0.76 -1.17L5.3 -5.3L1.17 -0.76M1.22 -0.69L5.54 -2.3L1.35 -0.37M1.37 -0.29L8.8 0L1.37 0.29M1.35 0.37L5.54 2.3L1.22 0.69M1.17 0.76L5.3 5.3L0.76 1.17M0.69 1.22L2.3 5.54L0.37 1.35M0.29 1.37L0 8.8L-0.29 1.37M-0.37 1.35L-2.3 5.54L-0.69 1.22M-0.76 1.17L-5.3 5.3L-1.17 0.76M-1.22 0.69L-5.54 2.3L-1.35 0.37M-1.37 0.29L-8.8 0L-1.37 -0.29M-1.35 -0.37L-5.54 -2.3L-1.22 -0.69M-1.17 -0.76L-5.3 -5.3L-0.76 -1.17M-0.69 -1.22L-2.3 -5.54L-0.37 -1.35" fill="none" stroke="#7a5a2a" stroke-width="0.35"/><path transform="translate(0 -5.6) scale(0.62)" d="M0-6.2C1.5-4.8 1.6-2.6 0.55-1.1L-0.55-1.1C-1.6-2.6-1.5-4.8 0-6.2ZM0.6-1.3C1.4-2.4 3.1-2.7 3.5-4.4C4.4-2.5 3.2-0.6 1.2-0.6ZM-0.6-1.3C-1.4-2.4-3.1-2.7-3.5-4.4C-4.4-2.5-3.2-0.6-1.2-0.6ZM-2.1-1.3H2.1V-0.3H-2.1ZM-0.55-0.3H0.55L0.9 1.2H-0.9Z" fill="#a8741c" stroke="#5a3a0c" stroke-width="0.5"/><g transform="rotate(28)"><path d="M0-8.6 1.6 0H-1.6Z" fill="#b8402a" stroke="#3b1a0c" stroke-width="0.4"/><path d="M0 8.6 1.6 0H-1.6Z" fill="#1e2a3a" stroke="#0e141c" stroke-width="0.4"/></g><circle r="1.1" fill="url(#brassCompass)" stroke="#5a3a0c" stroke-width="0.4"/></svg>
     </button>
-    <button id="voyages" type="button" aria-label="Famous voyages" aria-controls="timelinePanel" aria-expanded="false" title="Famous voyages">
+    <button id="sights" type="button" aria-label="Locations" aria-controls="sightsPanel" aria-expanded="false" title="Locations">
+      <svg viewBox="-16 -16 32 32" aria-hidden="true" stroke-linejoin="round" stroke-linecap="round"><defs><linearGradient id="brassAstro" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4c2"/><stop offset="0.35" stop-color="#e8b84a"/><stop offset="0.6" stop-color="#b07a1e"/><stop offset="0.8" stop-color="#e9c060"/><stop offset="1" stop-color="#7a5212"/></linearGradient></defs><g stroke="#5a3a0c" stroke-width="1.6" fill="#5a3a0c"><path d="M-6.2 -8.100000000000001C-5.4-11.2-4-11.6-3.2-12.8L3.2-12.8C4-11.6 5.4-11.2 6.2 -8.100000000000001Z"/><circle cy="-13.4" r="2.3"/><circle cx="-3.6" cy="-12" r="1.6"/><circle cx="3.6" cy="-12" r="1.6"/></g><g fill="url(#brassAstro)"><path d="M-6.2 -8.100000000000001C-5.4-11.2-4-11.6-3.2-12.8L3.2-12.8C4-11.6 5.4-11.2 6.2 -8.100000000000001Z"/><circle cy="-13.4" r="2.3"/><circle cx="-3.6" cy="-12" r="1.6"/><circle cx="3.6" cy="-12" r="1.6"/></g><circle cy="-13.4" r="0.85" fill="#5a3a0c"/><path d="M-2.6-11.2h5.2" stroke="#5a3a0c" stroke-width="0.4"/><circle cy="2.6" r="12.9" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.9"/><circle cy="2.6" r="10.1" fill="#6e4710" stroke="#5a3a0c" stroke-width="0.6"/><path d="M0 -7.5L0 -9.5M1.75 -7.35L1.94 -8.43M3.45 -6.89L3.83 -7.92M5.05 -6.15L6.05 -7.88M6.49 -5.14L7.2 -5.98M7.74 -3.89L8.58 -4.6M8.75 -2.45L10.48 -3.45M9.49 -0.85L10.52 -1.23M9.95 0.85L11.03 0.66M10.1 2.6L12.1 2.6M9.95 4.35L11.03 4.54M9.49 6.05L10.52 6.43M8.75 7.65L10.48 8.65M7.74 9.09L8.58 9.8M6.49 10.34L7.2 11.18M5.05 11.35L6.05 13.08M3.45 12.09L3.83 13.12M1.75 12.55L1.94 13.63M0 12.7L0 14.7M-1.75 12.55L-1.94 13.63M-3.45 12.09L-3.83 13.12M-5.05 11.35L-6.05 13.08M-6.49 10.34L-7.2 11.18M-7.74 9.09L-8.58 9.8M-8.75 7.65L-10.48 8.65M-9.49 6.05L-10.52 6.43M-9.95 4.35L-11.03 4.54M-10.1 2.6L-12.1 2.6M-9.95 0.85L-11.03 0.66M-9.49 -0.85L-10.52 -1.23M-8.75 -2.45L-10.48 -3.45M-7.74 -3.89L-8.58 -4.6M-6.49 -5.14L-7.2 -5.98M-5.05 -6.15L-6.05 -7.88M-3.45 -6.89L-3.83 -7.92M-1.75 -7.35L-1.94 -8.43" stroke="#5a3a0c" stroke-width="0.45"/><path d="M-9.7 4.1Q0 -3.4 9.7 4.1M-7 7.4Q0 1.4000000000000001 7 7.4" fill="none" stroke="#a87a2a" stroke-width="0.4"/><g stroke="#5a3a0c" stroke-width="2.3"><circle cy="2.6" r="8.6" fill="none"/><circle cx="0" cy="0" r="6" fill="none"/></g><g stroke="url(#brassAstro)" stroke-width="1.2"><circle cy="2.6" r="8.6" fill="none"/><circle cx="0" cy="0" r="6" fill="none"/></g><path d="M-1.2 11.12Q-1.68 8.46 -1.58 5.84Q-3.05 7.88 -4.56 9.89Z" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.4"/><path d="M6.78 7.89Q4.52 7.28 2.46 6.25Q3.25 8.23 4.04 10.19Z" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.4"/><path d="M-7.29 7.16Q-5.85 5.2 -4.08 3.62Q-6.3 3.71 -8.52 3.8Z" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.4"/><path d="M8.54 1.55Q6.7 2.72 4.71 3.52Q6.47 4.33 8.22 5.11Z" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.4"/><path d="M-7.92 -0.76Q-5.66 -0.8 -3.47 -0.42Q-4.67 -2.07 -5.87 -3.69Z" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.4"/><path d="M2.66 -5.58Q3.29 -4.14 3.76 -2.58Q4.82 -3.15 5.75 -3.79Z" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.4"/><g transform="translate(0 2.6) rotate(-58)"><path d="M-11.8 0-8.6-0.8H8.6L11.8 0 8.6 0.8H-8.6Z" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.6"/><path d="M0-1.1V1.1" stroke="#5a3a0c" stroke-width="0.4"/></g><circle cy="2.6" r="1.4" fill="url(#brassAstro)" stroke="#5a3a0c" stroke-width="0.6"/><circle cy="2.6" r="0.4" fill="#5a3a0c"/></svg>
+    </button>
+    <button id="voyages" type="button" aria-label="Famous voyages" aria-controls="voyagesPanel" aria-expanded="false" title="Famous voyages">
       <svg viewBox="-16 -16 32 32" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round"><defs><linearGradient id="brassDividers" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4c2"/><stop offset="0.35" stop-color="#e8b84a"/><stop offset="0.6" stop-color="#b07a1e"/><stop offset="0.8" stop-color="#e9c060"/><stop offset="1" stop-color="#7a5212"/></linearGradient></defs>
         <g stroke="#5a3a0c" stroke-width="3.4"><path d="M-1.6-9-7 12.5M1.6-9 7 12.5"/><path d="M-4.6 3h9.2" stroke-width="2.2"/></g>
         <g stroke="url(#brassDividers)" stroke-width="2"><path d="M-1.6-9-7 12.5M1.6-9 7 12.5"/><path d="M-4.6 3h9.2" stroke-width="1"/></g>
@@ -545,13 +737,15 @@
         <circle cy="-11" r="2.8" fill="url(#brassDividers)" stroke="#5a3a0c" stroke-width="0.9"/><circle cy="-11" r="0.9" fill="#5a3a0c"/>
       </svg>
     </button>
-    <button id="people" type="button" aria-label="People: who sailed, and when they lived" aria-controls="timelinePanel" aria-expanded="false" title="People">
+    <button id="people" type="button" aria-label="People: who sailed, and when they lived" aria-controls="peoplePanel" aria-expanded="false" title="People">
       <svg viewBox="-16 -16 32 32" aria-hidden="true" stroke-linejoin="round"><defs><linearGradient id="brassPeople" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4c2"/><stop offset="0.35" stop-color="#e8b84a"/><stop offset="0.6" stop-color="#b07a1e"/><stop offset="0.8" stop-color="#e9c060"/><stop offset="1" stop-color="#7a5212"/></linearGradient></defs>
-        <ellipse rx="11.5" ry="14" fill="url(#brassPeople)" stroke="#5a3a0c" stroke-width="1"/><ellipse rx="9" ry="11.4" fill="#f1e4c6" stroke="#5a3a0c" stroke-width="0.6"/>
-        <path d="M-6.6 9.4C-6.4 4.6-3.6 2.6 0 2.6S6.4 4.6 6.6 9.4C4.6 10.8 2.4 11.4 0 11.4S-4.6 10.8-6.6 9.4Z" fill="#5a3a0c"/><circle cy="-2.6" r="4.2" fill="#5a3a0c"/>
+        <g fill="url(#brassPeople)" stroke="#5a3a0c" stroke-width="1.1"><circle cy="-9.4" r="4.6"/><path d="M-3-4.2H3C4-2 9-2.6 12.2-1 12.6 1 10 3 7 4.2 8 7.5 10 10.5 12 13.6H3C2.4 10.6 1.2 9.2 0 9.2S-2.4 10.6-3 13.6H-12C-10 10.5-8 7.5-7 4.2-10 3-12.6 1-12.2-1-9-2.6-4-2-3-4.2Z"/></g>
       </svg>
     </button>
-    <button id="anchor" type="button" aria-label="Anchorages: home, the regions, and the seas and islands" aria-controls="anchorPanel" aria-expanded="false" title="Anchorages">
+    <button id="charts" type="button" aria-label="Charts" aria-controls="chartsDrawer" aria-expanded="false" title="Charts">
+      <svg viewBox="-16 -16 32 32" aria-hidden="true" stroke-linecap="round" stroke-linejoin="round"><defs><radialGradient id="hdChart" cx="0.5" cy="0.5" r="0.62"><stop offset="0" stop-color="#f3e6c6"/><stop offset="0.68" stop-color="#ead8b0"/><stop offset="0.9" stop-color="#d2b27a"/><stop offset="1" stop-color="#b08f58"/></radialGradient><clipPath id="hcChart"><path d="M-15.2 -1.2C-15.27 -0.26 -15.14 0.92 -14.6 1.6C-14.06 2.28 -12.56 1.81 -12.2 2.6C-11.84 3.39 -12.1 4.6 -12.6 6C-13.1 7.4 -15.04 9.46 -15 10.4C-14.96 11.34 -13.37 11.31 -12.4 11.2C-11.43 11.09 -10.93 9.84 -9.6 9.8C-8.27 9.76 -6.62 10.93 -5 11C-3.38 11.07 -2.26 10.13 -0.6 10.2C1.06 10.27 2.65 11.36 4.2 11.4C5.75 11.44 6.74 10.04 8 10.4C9.26 10.76 10.23 13 11.2 13.4C12.17 13.8 13.15 13.39 13.4 12.6C13.65 11.81 12.46 10.33 12.6 9C12.74 7.67 14.09 6.64 14.2 5.2C14.31 3.76 13.09 2.58 13.2 1C13.31 -0.58 14.73 -1.94 14.8 -3.6C14.87 -5.26 13.56 -6.54 13.6 -8.2C13.64 -9.86 15.32 -12.04 15 -12.8C14.68 -13.56 12.95 -12.8 11.8 -12.4C10.65 -12 10 -10.71 8.6 -10.6C7.2 -10.49 5.69 -11.84 4 -11.8C2.31 -11.76 0.93 -10.44 -0.8 -10.4C-2.53 -10.36 -4.02 -11.64 -5.6 -11.6C-7.18 -11.56 -8.2 -9.95 -9.6 -10.2C-11 -10.45 -12.61 -12.93 -13.4 -13C-14.19 -13.07 -14.25 -11.61 -14 -10.6C-13.75 -9.59 -12.29 -8.62 -12 -7.4C-11.71 -6.18 -12 -4.48 -12.4 -3.8C-12.8 -3.12 -13.7 -4.07 -14.2 -3.6C-14.7 -3.13 -15.13 -2.14 -15.2 -1.2Z"/></clipPath></defs><path d="M-15.2 -1.2C-15.27 -0.26 -15.14 0.92 -14.6 1.6C-14.06 2.28 -12.56 1.81 -12.2 2.6C-11.84 3.39 -12.1 4.6 -12.6 6C-13.1 7.4 -15.04 9.46 -15 10.4C-14.96 11.34 -13.37 11.31 -12.4 11.2C-11.43 11.09 -10.93 9.84 -9.6 9.8C-8.27 9.76 -6.62 10.93 -5 11C-3.38 11.07 -2.26 10.13 -0.6 10.2C1.06 10.27 2.65 11.36 4.2 11.4C5.75 11.44 6.74 10.04 8 10.4C9.26 10.76 10.23 13 11.2 13.4C12.17 13.8 13.15 13.39 13.4 12.6C13.65 11.81 12.46 10.33 12.6 9C12.74 7.67 14.09 6.64 14.2 5.2C14.31 3.76 13.09 2.58 13.2 1C13.31 -0.58 14.73 -1.94 14.8 -3.6C14.87 -5.26 13.56 -6.54 13.6 -8.2C13.64 -9.86 15.32 -12.04 15 -12.8C14.68 -13.56 12.95 -12.8 11.8 -12.4C10.65 -12 10 -10.71 8.6 -10.6C7.2 -10.49 5.69 -11.84 4 -11.8C2.31 -11.76 0.93 -10.44 -0.8 -10.4C-2.53 -10.36 -4.02 -11.64 -5.6 -11.6C-7.18 -11.56 -8.2 -9.95 -9.6 -10.2C-11 -10.45 -12.61 -12.93 -13.4 -13C-14.19 -13.07 -14.25 -11.61 -14 -10.6C-13.75 -9.59 -12.29 -8.62 -12 -7.4C-11.71 -6.18 -12 -4.48 -12.4 -3.8C-12.8 -3.12 -13.7 -4.07 -14.2 -3.6C-14.7 -3.13 -15.13 -2.14 -15.2 -1.2Z" fill="url(#hdChart)" stroke="#7a5a2a" stroke-width="0.8"/><g clip-path="url(#hcChart)" stroke-width="0.32" opacity="0.85"><path d="M0 0L0 -30" stroke="#2a2018"/><path d="M0 0L11.48 -27.72" stroke="#a8432e"/><path d="M0 0L21.21 -21.21" stroke="#4f7a3a"/><path d="M0 0L27.72 -11.48" stroke="#a8432e"/><path d="M0 0L30 0" stroke="#2a2018"/><path d="M0 0L27.72 11.48" stroke="#a8432e"/><path d="M0 0L21.21 21.21" stroke="#4f7a3a"/><path d="M0 0L11.48 27.72" stroke="#a8432e"/><path d="M0 0L0 30" stroke="#2a2018"/><path d="M0 0L-11.48 27.72" stroke="#a8432e"/><path d="M0 0L-21.21 21.21" stroke="#4f7a3a"/><path d="M0 0L-27.72 11.48" stroke="#a8432e"/><path d="M0 0L-30 0" stroke="#2a2018"/><path d="M0 0L-27.72 -11.48" stroke="#a8432e"/><path d="M0 0L-21.21 -21.21" stroke="#4f7a3a"/><path d="M0 0L-11.48 -27.72" stroke="#a8432e"/></g><path d="M-11.2-7.6C-9.4-6.6-8.6-8.4-6.8-7.4S-5-5.2-3.4-6.6-1-8 0.4-7S2.6-4.4 4-5.6 6-8 8.2-7.2 11.4-7.4 12.8-8.6" fill="none" stroke="#5a3a1a" stroke-width="0.6"/><circle cx="7.4" cy="6.4" r="0.9" fill="#a8432e"/><circle cx="-7.6" cy="6.8" r="0.8" fill="#c99a3a"/><circle cx="10" cy="3" r="0.6" fill="#c99a3a"/><path d="M0 0L0 -4.8L0.48 -0.99Z" fill="#e0b04a"/><path d="M0 0L0 -4.8L-0.48 -0.99Z" fill="#8a6418"/><path d="M0 0L2.12 -2.12L1.04 -0.36Z" fill="#4f7a3a"/><path d="M0 0L2.12 -2.12L0.36 -1.04Z" fill="#2f5a22"/><path d="M0 0L4.8 0L0.99 0.48Z" fill="#e0b04a"/><path d="M0 0L4.8 0L0.99 -0.48Z" fill="#8a6418"/><path d="M0 0L2.12 2.12L0.36 1.04Z" fill="#4f7a3a"/><path d="M0 0L2.12 2.12L1.04 0.36Z" fill="#2f5a22"/><path d="M0 0L0 4.8L-0.48 0.99Z" fill="#e0b04a"/><path d="M0 0L0 4.8L0.48 0.99Z" fill="#8a6418"/><path d="M0 0L-2.12 2.12L-1.04 0.36Z" fill="#4f7a3a"/><path d="M0 0L-2.12 2.12L-0.36 1.04Z" fill="#2f5a22"/><path d="M0 0L-4.8 0L-0.99 -0.48Z" fill="#e0b04a"/><path d="M0 0L-4.8 0L-0.99 0.48Z" fill="#8a6418"/><path d="M0 0L-2.12 -2.12L-0.36 -1.04Z" fill="#4f7a3a"/><path d="M0 0L-2.12 -2.12L-1.04 -0.36Z" fill="#2f5a22"/><circle cx="0" cy="0" r="5" fill="none" stroke="#2a2018" stroke-width="0.3"/></svg>
+    </button>
+    <button id="anchor" type="button" hidden aria-label="Anchorages: home, the regions, and the seas and islands" aria-controls="anchorPanel" aria-expanded="false" title="Anchorages">
       <svg viewBox="-16 -16 32 32" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round"><defs><linearGradient id="brassAnchor" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff4c2"/><stop offset="0.35" stop-color="#e8b84a"/><stop offset="0.6" stop-color="#b07a1e"/><stop offset="0.8" stop-color="#e9c060"/><stop offset="1" stop-color="#7a5212"/></linearGradient></defs>
         <g stroke="#5a3a0c" stroke-width="3.6"><circle cy="-10" r="2.6"/><path d="M0-7.4V13M-6-3h12"/><path d="M-12 2q1 10 12 11 11-1 12-11l-3 2.5M-12 2l3 2.5"/></g>
         <g stroke="url(#brassAnchor)" stroke-width="2.2"><circle cy="-10" r="2.6"/><path d="M0-7.4V13M-6-3h12"/><path d="M-12 2q1 10 12 11 11-1 12-11l-3 2.5M-12 2l3 2.5"/></g>
@@ -559,17 +753,22 @@
     </button>
   </div>
   <div id="goPanel" class="drawer menu">
-    <button id="locate" type="button" title="Fill in my position">Find my position</button>
     <form id="coords" autocomplete="off">
       <input id="coordsText" type="text" placeholder="a place, or lat, lon" aria-label="A place, or latitude, longitude">
       <button type="submit" aria-label="Go there" title="Go">Go</button>
     </form>
     <p id="goMiss" role="status" hidden></p>
+    <button id="locate" type="button" title="Fill in my position">Find my position</button>
+    <div class="gorow"><button type="button" data-go="Home: the Mediterranean" title="Fly home, to the Mediterranean">Home</button><button type="button" data-go="The world" title="See the whole world">The world</button></div>
+    <div class="gorow"><button id="randomPlace" type="button" class="dice" title="A location with notes into the box; each press the next, until every one has come round"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="2" y="2" width="14" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="6" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="9" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/></svg>Random location</button><button id="randomPerson" type="button" class="dice" title="Choose a person with a story; each press the next, until every one has come round"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="2" y="2" width="14" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="6" cy="6" r="1.3" fill="currentColor"/><circle cx="9" cy="9" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/></svg>Random person</button></div>
+    <button id="findPoi" type="button" title="Ring every point of interest in view in red"><svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="7.5" fill="none" stroke="#a8432e" stroke-width="1" opacity="0.5"/><circle cx="9" cy="9" r="4.5" fill="none" stroke="#a8432e" stroke-width="1.4"/><circle cx="9" cy="9" r="1.4" fill="#a8432e"/></svg>Find Points of Interest</button>
   </div>
   <div id="sightsPanel" class="drawer menu">
     <ul id="sightsList" class="places"></ul>
     <div id="sightCard" class="pcard" hidden></div>
   </div>
+  <!-- timeline A (timeline=a): one drawer for both the medallion and the dividers; the voyages' controls are moved into
+       #laneTools from the Voyages drawer while A is on (page.js placeTimeline) -->
   <div id="timelinePanel" class="drawer menu">
     <div class="timeline">
       <div class="tleft"><button id="earlier" class="earlier" type="button" aria-pressed="false" aria-controls="track" title="Earlier history: the timeline back to 50,000 BC"><span class="chev">&#9656;</span> Earlier</button></div>
@@ -581,15 +780,21 @@
           <div id="peopleStrip" class="lane strip" role="group" aria-label="People, each a bar over the years they lived; choose one"></div>
           <div id="timeAxis" aria-hidden="true"></div>
           <div id="voyagesCap" class="lanecap">Voyages</div>
-          <div class="vcontrols">
-            <div class="vtools"><div id="voyageWidth" class="chips" role="radiogroup" aria-label="Line weight"></div></div>
-            <div class="slider vdraw" title="How long the pen takes to draw a voyage on when its name is clicked"><label for="voyageDraw">Drawn in</label><input id="voyageDraw" type="range"><svg id="voyageDrawSample" viewBox="0 0 40 10" aria-hidden="true"><path d="M2 5h36" pathLength="1"/></svg><output id="voyageDrawOut" for="voyageDraw"></output></div>
-          </div>
-          <ul id="voyageList" class="lane" role="group" aria-label="Voyages, any number, each at its years"></ul>
+          <div id="laneTools" class="vcontrols"></div>
+          <ul id="laneVoyages" class="lane" role="group" aria-label="Voyages, any number, each at its years"></ul>
         </div>
       </div>
     </div>
+  </div>
+  <!-- timeline B (timeline=b): the People and the Voyages drawers -->
+  <div id="peoplePanel" class="drawer menu">
+    <ol id="peopleList" class="tline" role="group" aria-label="People, earliest first, each with their years; choose one"></ol>
     <div id="personCard" class="pcard" hidden></div>
+  </div>
+  <div id="voyagesPanel" class="drawer menu">
+    <div class="vtools"><div id="voyageWidth" class="chips" role="radiogroup" aria-label="Line weight"></div></div>
+    <div class="slider vdraw" title="How long the pen takes to draw a voyage on when its name is clicked"><label for="voyageDraw">Drawn in</label><input id="voyageDraw" type="range"><svg id="voyageDrawSample" viewBox="0 0 40 10" aria-hidden="true"><path d="M2 5h36" pathLength="1"/></svg><output id="voyageDrawOut" for="voyageDraw"></output></div>
+    <ul id="voyageList" class="tline" role="group" aria-label="Voyages, any number, earliest first"></ul>
   </div>
   <div id="anchorPanel" class="drawer menu">
     <ul id="anchorages" class="places"></ul>
@@ -601,7 +806,6 @@
     <div>
       <h1>Charts</h1>
       <p>A chart's picture or name flies to it and lays its scan over the map as one sheet, alone and at its own placement, to drag, turn and resize by hand; the eye shows or hides that one sheet and leaves the others and the map as they are; its city flies there.</p>
-      <span class="notes">notes to come</span>
     </div>
   </header>
   <ul id="chartList"></ul>
@@ -615,21 +819,21 @@
   </section>
 </aside>
 
-<aside id="drawer" class="drawer" role="dialog" aria-label="Settings" aria-modal="false">
+<aside id="drawer" class="drawer" role="dialog" aria-label="Configuration" aria-modal="false">
   <header>
     <div>
-      <h1>Portolani</h1>
+      <h1>Portolani Configuration</h1>
       <p>Drag to pan, wheel or pinch to zoom.</p>
     </div>
   </header>
 
-  <!-- the layouts: one chip each, the choice kept in the link (`layout=`). Default is the drawer below as it
-       stands; the others move these same controls into new groups, so each control is one element -->
-  <div id="layout" class="chips" role="radiogroup" aria-label="Drawer layout"></div>
-
   <!-- with a mouse, a grouped list's section also opens when the pointer rests on its heading (page.js, HOVER_DWELL);
        off, only a click opens one. Kept in the link (`hover=0` is off). Not shown where nothing can hover -->
   <div id="hoverRow"><h3>Sections open on hover</h3><div id="hoverOpen" class="chips" role="radiogroup" aria-label="Sections open on hover"></div></div>
+
+  <!-- which people and voyages timeline the medallion and the dividers open: A, one wide drawer with both lanes on one
+       axis, or B, two vertical drawers (page.js TIMELINE_CHOICES). Kept in the link (`timeline=b`; A is no key) -->
+  <div id="timelineRow"><h3>People and voyages timeline</h3><div id="timelineVariant" class="chips" role="radiogroup" aria-label="People and voyages timeline"></div></div>
 
   <div id="share">
     <button id="reset" type="button" class="chip" title="Every control back to its default; the view stays"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8a5 5 0 1 0 1.6-3.7"/><path d="M3 2.5v3h3"/></svg>Reset</button>
@@ -644,7 +848,7 @@
     <div id="ui-body"></div>
   </section>
 
-  <!-- the groups of a layout other than Default, built by page.js from the same controls (each a .ctl) -->
+  <!-- the moods and the tabs Sea · Land · Margins, built by page.js from the controls below (each a .ctl) -->
   <div id="layoutGroups" hidden></div>
 
   <section class="home" aria-labelledby="h-sea">
@@ -748,6 +952,7 @@
       <div class="ctl" data-ctl="regions">
       <h3>Regions</h3>
       <div id="regionSet" class="chips" role="radiogroup" aria-label="Region names of"></div>
+      <div id="regionStyle" class="chips" role="radiogroup" aria-label="Lettering of a period's region names"></div>
       <div id="regions" class="chips" role="radiogroup" aria-label="Regions"></div>
       <div class="slider"><input id="regionsZoom" type="range" min="0" max="15" step="1" value="7" aria-label="Regions, zoom drawn to"><output id="regionsOut"></output></div>
       </div>
@@ -830,6 +1035,8 @@
         <div class="slider"><input id="tuneRoseshare" type="range" step="0.1" aria-label="Rose share of a sheet's allotment"><output id="tuneRoseshareOut"></output></div>
         <h3>Roses per sheet</h3>
         <div class="slider"><input id="tuneSheetroses" type="range" step="1" aria-label="Roses per sheet, at most"><output id="tuneSheetrosesOut"></output></div>
+        <h3>Page turn</h3>
+        <div class="slider"><input id="tuneTurn" type="range" step="0.05" aria-label="Page turn, the crossfade's span in zoom levels"><output id="tuneTurnOut"></output></div>
         <h3>Flight</h3>
         <p class="lead">How the map flies to a far place (public/flight.mjs). Kept in this browser, not in the link; the line below says what is set.</p>
         <div id="flyShape" class="chips" role="radiogroup" aria-label="Flight shape"></div>

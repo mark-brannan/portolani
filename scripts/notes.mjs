@@ -222,6 +222,19 @@ const stub = (id, title, px, size, up = 0, drawn = '') => ({ id, title, drawn, r
 const CRESQUES = (panel) => `https://www.cresquesproject.net/catalan-atlas-legends/panel-${panel}`;
 const WIKI = (page) => `https://en.wikipedia.org/wiki/${page}`;
 
+// One line for each kind of figure the atlas repeats, shared by every figure of that kind.
+const TENT = { drawn: 'A black tent in the desert, one of several on the Saharan pages.', real: 'The tents of the Sahara\'s peoples, the Sanhaja Berbers and the Tuareg among them, who ran and guided the caravans between the Maghrib and Mali; the Gazula of the tents of Gozola are one of them.', source: { label: 'Trans-Saharan trade, Wikipedia', url: WIKI('Trans-Saharan_trade') } };
+const HILL_TOWN = { drawn: 'A walled town on a hill painted in one colour, one of five such towns across the desert on this page.' };
+const PALM = { drawn: 'A palm tree in the desert, one of two on this page.', real: 'The date palm, the tree of the oases, whose dates fed the caravans and the towns along their roads.', source: { label: 'Date palm, Wikipedia', url: WIKI('Phoenix_dactylifera') } };
+const TREE = { drawn: 'A tree, one of a dozen the atlas stands in the far north-east of its eastern pages.' };
+const GILT_TREE = { drawn: 'A tree in gold, one of two beside Satan and Alexander.', real: 'Most likely the trees of legend VI.4, in the Caspian Mountains, "so tall that their canopies touch the clouds", where Alexander almost died.', source: { label: 'Cresques Project VI.4', url: CRESQUES('vi') } };
+const RED_FISH = { drawn: 'A red fish in the sea, one of several the atlas sets in its eastern waters.' };
+const GREEN_BIRD = { drawn: 'A green bird, one of two on this page.' };
+const ELEPHANT = { drawn: 'An elephant, one of the beasts the atlas sets in the far south and the far east.' };
+const ROUND_LAKE = { drawn: 'A round lake, one of two side by side.' };
+const CANARY = { drawn: 'One of the Canary Islands, each painted its own colour.', real: 'An island of the Canaries, home of the Guanches, which the atlas calls the Fortunate Isles (III.4). Castile\'s conquest of the islands began in 1402.', source: { label: 'Canary Islands, Wikipedia', url: WIKI('Canary_Islands') } };
+const MEDITERRANEAN = { drawn: 'The sea crossed by rhumb lines, the web of bearings a pilot laid his course along.', real: 'The Mediterranean, the sea the portolan charts were made for: its coasts are the atlas\'s most exact.', source: { label: 'Portolan chart, Wikipedia', url: WIKI('Portolan_chart') } };
+
 export const CATALAN_NOTES = [
   // Sheet 5: the Atlantic, Ireland to the Canaries
   {
@@ -310,11 +323,11 @@ export const CATALAN_NOTES = [
   },
   stub('atlantic-gilt-lettering', 'Gilt lettering in the Atlantic', page(5, 2400, 5600), [2000, 320], 180),
   stub('ireland-flag', 'A flag in Ireland', page(5, 5550, 4250), 260),
-  stub('canary-purple', 'A purple island', page(5, 3150, 13950), [500, 350]),
-  stub('canary-green', 'A green island', page(5, 3650, 13800), [500, 350]),
-  stub('canary-blue', 'A blue island', page(5, 1950, 14200), [400, 350]),
+  { ...stub('canary-purple', 'A purple island', page(5, 3150, 13950), [500, 350]), ...CANARY },
+  { ...stub('canary-green', 'A green island', page(5, 3650, 13800), [500, 350]), ...CANARY },
+  { ...stub('canary-blue', 'A blue island', page(5, 1950, 14200), [400, 350]), ...CANARY },
   stub('gozola-town', 'A town on the African coast', page(5, 4300, 14350), [700, 600]),
-  stub('ocean-sea', 'The Ocean Sea', page(5, 2600, 6500), [4600, 5000]),
+  { ...stub('ocean-sea', 'The Ocean Sea', page(5, 2600, 6500), [4600, 5000]), drawn: 'The open Atlantic west of Europe and Africa, crossed by the atlas\'s rhumb lines.', real: 'The Atlantic, the Ocean Sea of the period, which was thought to ring the world. In 1375 European ships kept to its coasts and sailed out as far as the Canaries and Madeira.', source: { label: 'Atlantic Ocean, Wikipedia', url: WIKI('Atlantic_Ocean') } },
 
   // Sheet 6: Iberia, England, Norway, the western Mediterranean and Mali
   {
@@ -366,27 +379,27 @@ export const CATALAN_NOTES = [
     source: { label: 'Cresques Abraham, Wikipedia', url: WIKI('Cresques_Abraham') },
     at: { px: page(6, 3450, 8700), lonlat: [2.65, 39.57] }, size: [1000, 800], up: 0,
   },
-  stub('sijilmasa', 'Sijilmasa', page(6, 2200, 12300), 380),
-  stub('ciutat-de-melli', 'The city of Mali', page(6, 2000, 15050), [800, 500]),
-  stub('tent-6-a', 'A black tent', page(6, 2350, 13800), [500, 350]),
-  stub('tent-6-b', 'A black tent', page(6, 4550, 12000), [600, 350]),
-  stub('tent-6-c', 'A black tent', page(6, 5750, 12000), [600, 350]),
-  stub('tent-6-d', 'A black tent', page(6, 5800, 14000), [600, 350]),
-  stub('hill-town-6-a', 'A town on a purple hill', page(6, 1300, 12850), [900, 450]),
-  stub('hill-town-6-b', 'A town on a yellow hill', page(6, 3200, 12950), [800, 450]),
-  stub('hill-town-6-c', 'A town on a green hill', page(6, 4900, 14050), [900, 450]),
-  stub('hill-town-6-d', 'A town on a green hill', page(6, 5850, 12750), [700, 450]),
-  stub('hill-town-6-e', 'A town on a purple hill', page(6, 2200, 14450), [800, 450]),
+  { ...stub('sijilmasa', 'Sijilmasa', page(6, 2200, 12300), 380), drawn: 'The town of Sijilmasa, on the desert side of the Atlas.', real: 'An oasis city of the Tafilalt, in today\'s Morocco, the northern end of the western caravan road; its mint struck the Sahara\'s gold into coin. Its ruins stand by Rissani.', source: { label: 'Sijilmasa, Wikipedia', url: WIKI('Sijilmasa') } },
+  { ...stub('ciutat-de-melli', 'The city of Mali', page(6, 2000, 15050), [800, 500]), drawn: 'Ciutat de Melly, the city of Mali, drawn beside Mansa Musa.', real: 'The capital of the Mali Empire, which Ibn Battuta reached in 1352. Where it stood is still argued, and no site is proven.', source: { label: 'Mali Empire, Wikipedia', url: WIKI('Mali_Empire') } },
+  { ...stub('tent-6-a', 'A black tent', page(6, 2350, 13800), [500, 350]), ...TENT },
+  { ...stub('tent-6-b', 'A black tent', page(6, 4550, 12000), [600, 350]), ...TENT },
+  { ...stub('tent-6-c', 'A black tent', page(6, 5750, 12000), [600, 350]), ...TENT },
+  { ...stub('tent-6-d', 'A black tent', page(6, 5800, 14000), [600, 350]), ...TENT },
+  { ...stub('hill-town-6-a', 'A town on a purple hill', page(6, 1300, 12850), [900, 450]), ...HILL_TOWN },
+  { ...stub('hill-town-6-b', 'A town on a yellow hill', page(6, 3200, 12950), [800, 450]), ...HILL_TOWN },
+  { ...stub('hill-town-6-c', 'A town on a green hill', page(6, 4900, 14050), [900, 450]), ...HILL_TOWN },
+  { ...stub('hill-town-6-d', 'A town on a green hill', page(6, 5850, 12750), [700, 450]), ...HILL_TOWN },
+  { ...stub('hill-town-6-e', 'A town on a purple hill', page(6, 2200, 14450), [800, 450]), ...HILL_TOWN },
   stub('mali-water', 'Water at the foot of the page', page(6, 2950, 15150), [1300, 350]),
   stub('gilt-round-island', 'A gilt round island', page(6, 3400, 1700), 320),
   stub('green-disc', 'A green disc by Scotland', page(6, 1000, 2500), 260),
-  stub('flanders-flag', 'A flag over Flanders', page(6, 2450, 3300), 280),
-  stub('france-flags', 'The flags of France', page(6, 2900, 5350), [1300, 450]),
-  stub('alps', 'The Alps', page(6, 4400, 5300), [1900, 1100]),
-  stub('pyrenees', 'The Pyrenees', page(6, 2600, 7600), [2000, 500]),
-  stub('corsica-sardinia', 'Corsica and Sardinia', page(6, 5250, 7800), [800, 1900]),
-  stub('iberian-flags', 'The flags of Iberia', page(6, 1000, 9400), [1300, 700]),
-  stub('western-sea', 'The western Mediterranean', page(6, 3600, 9600), [3800, 1600]),
+  { ...stub('flanders-flag', 'A flag over Flanders', page(6, 2450, 3300), 280), drawn: 'A flag over the towns of Flanders.', real: 'Flanders, the cloth country of the north, where Venetian and Genoese galleys came for its wool cloth and Bruges was the great market.', source: { label: 'County of Flanders, Wikipedia', url: WIKI('County_of_Flanders') } },
+  { ...stub('france-flags', 'The flags of France', page(6, 2900, 5350), [1300, 450]), drawn: 'The lilies of France flying over its towns, the realm itself not lettered.', real: 'The arms of the kings of France, gold lilies on blue. In 1375 the king was Charles V, and the atlas was in his library by 1380.', source: { label: 'Catalan Atlas, Wikipedia', url: WIKI('Catalan_Atlas') } },
+  { ...stub('alps', 'The Alps', page(6, 4400, 5300), [1900, 1100]), drawn: 'The Alps, drawn as a long range between Italy and the north.', real: 'The Alps, which merchants between Italy and the north crossed by passes such as the Great St Bernard, the Gotthard and the Brenner.', source: { label: 'Alps, Wikipedia', url: WIKI('Alps') } },
+  { ...stub('pyrenees', 'The Pyrenees', page(6, 2600, 7600), [2000, 500]), drawn: 'The Pyrenees, drawn as a range between France and Iberia.', real: 'The Pyrenees, between France and the Iberian kingdoms; the Crown of Aragon held lands on both sides of them, Roussillon among them.', source: { label: 'Pyrenees, Wikipedia', url: WIKI('Pyrenees') } },
+  { ...stub('corsica-sardinia', 'Corsica and Sardinia', page(6, 5250, 7800), [800, 1900]), drawn: 'Corsica and Sardinia, one above the other.', real: 'Corsica, then under Genoa, and Sardinia, which the Crown of Aragon was fighting the judges of Arborea to hold.', source: { label: 'Kingdom of Sardinia, Wikipedia', url: WIKI('Kingdom_of_Sardinia') } },
+  { ...stub('iberian-flags', 'The flags of Iberia', page(6, 1000, 9400), [1300, 700]), drawn: 'The flags of the Iberian kingdoms over their towns.', real: 'Castile, Portugal, Aragon and Nasrid Granada each fly their own; the red and gold pales of Aragon mark the Crown the atlas was made under.', source: { label: 'Catalan Atlas, Wikipedia', url: WIKI('Catalan_Atlas') } },
+  { ...stub('western-sea', 'The western Mediterranean', page(6, 3600, 9600), [3800, 1600]), ...MEDITERRANEAN },
 
   // Sheet 7: Italy, Bohemia, the Baltic and the Sahara
   {
@@ -431,19 +444,19 @@ export const CATALAN_NOTES = [
     source: { label: 'Catalan Atlas, Wikipedia', url: WIKI('Catalan_Atlas') },
     at: { px: page(7, 600, 7800), lonlat: [9.0, 41.0] }, size: [900, 2000], up: 0,
   },
-  stub('elephant-7', 'An elephant', page(7, 4300, 14750), [1200, 1100]),
-  stub('camel-and-driver', 'A camel and its driver', page(7, 1300, 13950), [1300, 1300]),
-  stub('palm-7-a', 'A palm tree', page(7, 1900, 13200), [450, 550]),
-  stub('palm-7-b', 'A palm tree', page(7, 1900, 14450), [450, 550]),
+  { ...stub('elephant-7', 'An elephant', page(7, 4300, 14750), [1200, 1100]), ...ELEPHANT },
+  { ...stub('camel-and-driver', 'A camel and its driver', page(7, 1300, 13950), [1300, 1300]), drawn: 'A camel led by its driver across the desert.', real: 'The camel made the Sahara crossable and the caravan trade possible: one carried two slabs of Taghaza salt south to Mali.', source: { label: 'Trans-Saharan trade, Wikipedia', url: WIKI('Trans-Saharan_trade') } },
+  { ...stub('palm-7-a', 'A palm tree', page(7, 1900, 13200), [450, 550]), ...PALM },
+  { ...stub('palm-7-b', 'A palm tree', page(7, 1900, 14450), [450, 550]), ...PALM },
   stub('tree-7', 'A tree in a frame', page(7, 2650, 12050), [450, 500]),
-  stub('sahara-range', 'The mountains of the Sahara', page(7, 3500, 12400), [5200, 1300]),
-  stub('ciutat-organa', 'The city of Organa', page(7, 2300, 13900), 400),
-  stub('tent-7', 'A black tent', page(7, 400, 14200), [500, 450]),
+  { ...stub('sahara-range', 'The mountains of the Sahara', page(7, 3500, 12400), [5200, 1300]), drawn: 'A long range across the desert, south of the Atlas.', real: 'The atlas draws the mountains of the Sahara as one range; the real highlands are the Ahaggar and the Tibesti, far apart.', source: { label: 'Tibesti Mountains, Wikipedia', url: WIKI('Tibesti_Mountains') } },
+  { ...stub('ciutat-organa', 'The city of Organa', page(7, 2300, 13900), 400), drawn: 'The city of Organa, below its king.', real: 'The capital of Organa, which most read as Kanem–Bornu, round Lake Chad. Kanem\'s capital was Njimi, and where Njimi stood is not known.', source: { label: 'Kanem–Bornu Empire, Wikipedia', url: WIKI('Kanem%E2%80%93Bornu_Empire') } },
+  { ...stub('tent-7', 'A black tent', page(7, 400, 14200), [500, 450]), ...TENT },
   stub('faded-figure', 'A faded figure', page(7, 5700, 11200), [700, 900]),
   stub('baltic-island', 'An island in the Baltic', page(7, 3200, 650), [900, 700]),
   stub('gilt-coast', 'A gilt-brown coast', page(7, 4600, 6500), [900, 900]),
   stub('mare-lettering', 'Gilt lettering on the sea', page(7, 4800, 10000), [2100, 350]),
-  stub('central-sea', 'The central Mediterranean', page(7, 3600, 8000), [3800, 2600]),
+  { ...stub('central-sea', 'The central Mediterranean', page(7, 3600, 8000), [3800, 2600]), ...MEDITERRANEAN },
 
   // Sheet 8: the eastern Mediterranean, the Black Sea, Egypt and the Red Sea
   {
@@ -516,18 +529,18 @@ export const CATALAN_NOTES = [
     source: { label: 'Kingdom of Candia, Wikipedia', url: WIKI('Kingdom_of_Candia') },
     at: { px: page(8, 700, 9200), lonlat: [24.9, 35.2] }, size: [900, 450], up: 0,
   },
-  stub('ciutat-nubia', 'The city of Nubia', page(8, 1000, 14250), [900, 700]),
-  stub('nubia-legend', 'A legend by the city of Nubia', page(8, 950, 14800), [1000, 900]),
-  stub('green-bird-a', 'A green bird', page(8, 3500, 12450), [400, 800]),
-  stub('green-bird-b', 'A green bird', page(8, 4500, 14700), [800, 500]),
-  stub('cross-flags', 'Gold flags with a red cross', page(8, 3250, 15100), [1800, 450]),
-  stub('jerusalem', 'Jerusalem', page(8, 4600, 9800), 420),
-  stub('jordan-lakes', 'The lakes of the Jordan', page(8, 4950, 9950), [450, 1100]),
-  stub('lebanon-range', 'A range by the coast of Syria', page(8, 5500, 9600), [600, 1600]),
+  { ...stub('ciutat-nubia', 'The city of Nubia', page(8, 1000, 14250), [900, 700]), drawn: 'The city of Nubia, its legend below it.', real: 'Most likely Dongola on the Nile, the capital of the Nubian kingdom of Makuria, whose throne hall was made a mosque in 1317.', source: { label: 'Old Dongola, Wikipedia', url: WIKI('Old_Dongola') } },
+  { ...stub('nubia-legend', 'A legend by the city of Nubia', page(8, 950, 14800), [1000, 900]), drawn: 'The legend of Nubia: "(…) city of Nubia. The king of Nubia is always at war with the Christians of Nubia who are under the dominion of the emperor of Ethiopia and the land of Prester John."', real: 'The Christians are those of Makuria and Dotawo on the Nile, and of Ethiopia, where Europeans by then placed Prester John, the Christian king of their legends.', source: { label: 'Cresques Project, panel IV', url: CRESQUES('iv') } },
+  { ...stub('green-bird-a', 'A green bird', page(8, 3500, 12450), [400, 800]), ...GREEN_BIRD },
+  { ...stub('green-bird-b', 'A green bird', page(8, 4500, 14700), [800, 500]), ...GREEN_BIRD },
+  { ...stub('cross-flags', 'Gold flags with a red cross', page(8, 3250, 15100), [1800, 450]), drawn: 'Gold flags with a red cross over the towns at the foot of the page.', real: 'Most likely the Christians of the legend of Nubia, "under the dominion of the emperor of Ethiopia and the land of Prester John".', source: { label: 'Cresques Project, panel IV', url: CRESQUES('iv') } },
+  { ...stub('jerusalem', 'Jerusalem', page(8, 4600, 9800), 420), drawn: 'The city of Jerusalem, in the Holy Land, with no legend of its own.', real: 'In 1375 Jerusalem was a Mamluk town ruled from Cairo; Christian pilgrims reached it by Venetian galley through Jaffa.', source: { label: 'Jerusalem, Wikipedia', url: WIKI('Jerusalem') } },
+  { ...stub('jordan-lakes', 'The lakes of the Jordan', page(8, 4950, 9950), [450, 1100]), drawn: 'Two lakes on the river Jordan.', real: 'The Sea of Galilee, which the Jordan runs through, and the Dead Sea, where it ends, the lowest water on earth.', source: { label: 'Jordan River, Wikipedia', url: WIKI('Jordan_River') } },
+  { ...stub('lebanon-range', 'A range by the coast of Syria', page(8, 5500, 9600), [600, 1600]), drawn: 'A range running along the coast of Syria.', real: 'Most likely Mount Lebanon, behind Beirut and Tripoli.', source: { label: 'Mount Lebanon, Wikipedia', url: WIKI('Mount_Lebanon') } },
   stub('river-mountain', 'A mountain at a river\'s head', page(8, 2000, 1350), [800, 550]),
   stub('six-pointed-star', 'A six-pointed star', page(8, 4100, 6150), 220),
-  stub('black-sea', 'The Black Sea', page(8, 3900, 4200), [3800, 2000]),
-  stub('eastern-sea', 'The eastern Mediterranean', page(8, 2400, 9600), [3800, 1600]),
+  { ...stub('black-sea', 'The Black Sea', page(8, 3900, 4200), [3800, 2000]), drawn: 'The Black Sea, crossed by rhumb lines like the Mediterranean.', real: 'The Black Sea, where Genoa held Caffa in the Crimea and Venice traded at Tana on the Don, the western ends of the roads to Sarai and Cathay.', source: { label: 'Caffa, Wikipedia', url: WIKI('Caffa') } },
+  { ...stub('eastern-sea', 'The eastern Mediterranean', page(8, 2400, 9600), [3800, 1600]), ...MEDITERRANEAN },
 
   // Sheet 9: the Golden Horde, Persia, the Gulf and Arabia
   {
@@ -595,7 +608,7 @@ export const CATALAN_NOTES = [
   },
   {
     id: 'queen-of-sheba', title: 'The Queen of Sheba',
-    drawn: 'A crowned queen in a grey gown on a green throne, a gold ball in her raised hand, by "ARABIA SEBBA". The legend (V.11): "The province that had queen Sebba; now it belongs to the Arabs Saracens, and in it there very good aromas, as well as myrrh and frankincense", and a bird named Phoenix.',
+    drawn: 'A crowned queen in a grey gown on a green throne, a gold ball in her raised hand, by "ARABIA SEBBA". The legend (V.11): "The province that had queen Sebba; now it belongs to the Arab Saracens, and in it there [are] very good aromas, as well as myrrh and frankincense", and a bird named Phoenix.',
     real: 'Saba, in Yemen, on the incense road; whether its queen ever went to Solomon is not known. In 1375 Yemen was ruled by the Rasulid sultans.',
     source: { label: 'Cresques Project V.11; Queen of Sheba', url: WIKI('Queen_of_Sheba') },
     at: { px: page(9, 3500, 13900), lonlat: [45.33, 15.42] }, size: [1300, 2000], up: 0,
@@ -607,21 +620,21 @@ export const CATALAN_NOTES = [
     source: { label: 'Cresques Project V.10; Kaaba', url: WIKI('Kaaba') },
     at: { px: page(9, 1300, 13300), lonlat: [39.83, 21.42] }, size: [2200, 1000], up: 0,
   },
-  stub('pilgrim', 'A kneeling pilgrim', page(9, 1450, 14200), [700, 1100], 0, 'A pilgrim in blue kneeling below the legend of Mecca.'),
-  stub('caspian-ship', 'A ship on the Caspian', page(9, 3400, 5150), [1400, 1000], 180, 'A black-hulled ship drawn upside down, its sail of woven reeds.'),
+  { ...stub('pilgrim', 'A kneeling pilgrim', page(9, 1450, 14200), [700, 1100], 0, 'A pilgrim in blue kneeling below the legend of Mecca.'), real: 'A pilgrim on the hajj, which every Muslim who is able is to make once. The legend above him (V.10) says pilgrims who have seen the "arch of Mohamed" "empty their eyes"; the hajj asks nothing of the kind.', source: { label: 'Cresques Project V.10; Hajj', url: WIKI('Hajj') } },
+  { ...stub('caspian-ship', 'A ship on the Caspian', page(9, 3400, 5150), [1400, 1000], 180, 'A black-hulled ship drawn upside down, its sail of woven reeds.'), real: 'Ships plied the Caspian, which the atlas names for Sarai and Baku (V.2), between the mouth of the Volga and the ports of Persia. The reed sail is the one the atlas gives the ships that come to Hormuz (V.8).', source: { label: 'Cresques Project V.2, V.8', url: CRESQUES('v') } },
   stub('patchwork-mountain', 'A patchwork mountain', page(9, 1250, 3000), [700, 700]),
   stub('horde-flag', 'A flag of the Golden Horde', page(9, 3600, 1450), 300, 180),
   stub('range-9', 'A mountain range', page(9, 5000, 1250), [2100, 600], 180),
-  stub('round-lake-a', 'A round lake', page(9, 1300, 7300), [700, 800]),
-  stub('round-lake-b', 'A round lake', page(9, 2300, 7150), [700, 800]),
+  { ...stub('round-lake-a', 'A round lake', page(9, 1300, 7300), [700, 800]), ...ROUND_LAKE },
+  { ...stub('round-lake-b', 'A round lake', page(9, 2300, 7150), [700, 800]), ...ROUND_LAKE },
   stub('fan-hill', 'A fan-shaped hill', page(9, 1500, 6150), [600, 600]),
   stub('brown-mountains', 'Mountains by Tabriz', page(9, 1000, 6250), [700, 1000]),
-  stub('kish', 'The island of Kish', page(9, 4300, 11400), 360),
+  { ...stub('kish', 'The island of Kish', page(9, 4300, 11400), 360), drawn: 'The island of Kish, in the Gulf.', real: 'Kish, the island port that led the Gulf trade in the 12th and 13th centuries, until Hormuz drew it away.', source: { label: 'Kish Island, Wikipedia', url: WIKI('Kish_Island') } },
   stub('gilt-shape-gulf', 'A gilt shape in the Gulf', page(9, 4900, 12200), [550, 300]),
   stub('gilt-star', 'A gilt star', page(9, 5750, 7200), 300),
   stub('purple-island', 'A purple island', page(9, 5800, 12700), 300),
   stub('gilt-island-9', 'A gilt island', page(9, 5900, 14800), 300),
-  stub('persian-gulf', 'The Persian Gulf', page(9, 3000, 11500), [5800, 1400]),
+  { ...stub('persian-gulf', 'The Persian Gulf', page(9, 3000, 11500), [5800, 1400]), drawn: 'The Gulf, from the river of Baghdad to Hormuz, with its islands.', real: 'The Persian Gulf, the sea road from Basra to Hormuz and India. The legend of its pearl fishers (V.9) calls it "the sea of the Indies and Persian".', source: { label: 'Cresques Project V.9', url: CRESQUES('v') } },
 
   // Sheet 10: India's west coast and the Indian Ocean (drawn upside down), Tarsia and the caravan to Cathay
   {
@@ -633,7 +646,7 @@ export const CATALAN_NOTES = [
   },
   {
     id: 'junk', title: 'The junk',
-    drawn: 'A great black-hulled ship drawn upside down, its sail of woven reeds. The legend (V.17): "these ships are named nichi, and measure sixty cubits in depth and thirty-four cubits in length; there are few with less than four masts and some even have ten. The sails are made of reed and palm leafs."',
+    drawn: 'A great black-hulled ship drawn upside down, its sail of woven reeds. The legend (V.17): "these ships are named nichi, and measure sixty cubits in depth and thirty-four cubits in length; there are few with less than four masts and some even have ten. The sails are made of reed and palm leaves."',
     real: 'Chinese junks, with watertight bulkheads and stiff sails of matting on battens, the largest ships of their age; Ibn Battuta saw them at Calicut in the 1340s.',
     source: { label: 'Cresques Project V.17; Junk (ship)', url: WIKI('Junk_(ship)') },
     at: { px: page(10, 4750, 2750), lonlat: null }, size: [1600, 1700], up: 180,
@@ -673,10 +686,10 @@ export const CATALAN_NOTES = [
     source: { label: 'Cresques Project V.14; Volga', url: WIKI('Volga') },
     at: { px: page(10, 2600, 14700), lonlat: [32.6, 57.25] }, size: [1100, 1000], up: 0,
   },
-  stub('caravan-camels', 'The caravan\'s camels', page(10, 2400, 13100), [2600, 1800], 0, 'Camels in a line, the first saddled in red.'),
-  stub('elephant-rider', 'An elephant and its rider', page(10, 1500, 5300), [2000, 1500], 180, 'An elephant with a rider on its back and a man standing at its head, drawn upside down.'),
+  { ...stub('caravan-camels', 'The caravan\'s camels', page(10, 2400, 13100), [2600, 1800], 0, 'Camels in a line, the first saddled in red.'), real: 'The camels of the caravan to Cathay (V.13), the beasts that carried the Silk Road\'s goods across the steppe and the desert of Lop.', source: { label: 'Cresques Project V.13', url: CRESQUES('v') } },
+  { ...stub('elephant-rider', 'An elephant and its rider', page(10, 1500, 5300), [2000, 1500], 180, 'An elephant with a rider on its back and a man standing at its head, drawn upside down.'), real: 'Most likely Delhi\'s elephants: the sultan of legend V.16 "has seven hundred elephants".', source: { label: 'Cresques Project V.16', url: CRESQUES('v') } },
   stub('second-ship', 'A second ship', page(10, 4950, 1100), [1100, 600], 180),
-  stub('red-fish', 'A red fish', page(10, 2800, 650), [800, 450], 180),
+  { ...stub('red-fish', 'A red fish', page(10, 2800, 650), [800, 450], 180), ...RED_FISH },
   stub('green-fish', 'A green fish', page(10, 5000, 650), [800, 450], 180),
   stub('cross-flags-10', 'Flags with a red cross', page(10, 2000, 2600), [1300, 1000], 180),
   stub('two-mountains', 'Two mountains', page(10, 2300, 8800), [1400, 900], 180),
@@ -686,7 +699,7 @@ export const CATALAN_NOTES = [
   // Sheet 11: the Chagatai khan, King Stephen, the pygmies, Alexander's trumpeters and the islands of the Indies
   {
     id: 'falcon-islands', title: 'The islands of falcons',
-    drawn: 'Islands in a northern sea, drawn upside down, and the legend (VI.7): "In these islands are born very good gyrfalcons and falcons that the inhabitants do not there to capture except at the service of the Great Khan."',
+    drawn: 'Islands in a northern sea, drawn upside down, and the legend (VI.7): "In these islands are born very good gyrfalcons and falcons that the inhabitants do not [dare] to capture except at the service of the Great Khan."',
     real: 'Gyrfalcons breed on Arctic coasts. Marco Polo tells of the Great Khan hunting with ten thousand falconers.',
     source: { label: 'Cresques Project VI.7; Gyrfalcon', url: WIKI('Gyrfalcon') },
     at: { px: page(11, 2000, 1000), lonlat: null }, size: [3400, 1600], up: 180,
@@ -728,7 +741,7 @@ export const CATALAN_NOTES = [
   },
   {
     id: 'king-chabech', title: 'King Chabech of the Chagatai',
-    drawn: 'A crowned king in red on a round blue throne. The legend (VI.8): "Here reigns the King Chabech, lord that is the Medeja Empire. This is located is at Emalech."',
+    drawn: 'A crowned king in red on a round blue throne. The legend (VI.8): "Here reigns the King Chabech, lord of the empire of Medeja. He resides at Emalech."',
     real: 'Kebek, khan of the Chagatai Khanate, died in 1326. In 1375 Timur was master of its western half, and Almaliq, its old capital in the Ili valley, was in decline.',
     source: { label: 'Cresques Project VI.8; Kebek', url: WIKI('Kebek') },
     at: { px: page(11, 1250, 8800), lonlat: [80.87, 44.05] }, size: [1300, 1900], up: 0,
@@ -742,7 +755,7 @@ export const CATALAN_NOTES = [
   },
   {
     id: 'pygmies', title: 'The pygmies and the cranes',
-    drawn: 'Little men fighting cranes. The legend (VI.9): "Here are born men so small that they no reach more than five palmos in height", who weave and tend cattle, "defend themselves from herons", and live to forty. "Here ends the land of the Lord of Catayo."',
+    drawn: 'Little men fighting cranes. The legend (VI.9): "Here are born men so small that they [do] not reach more than five palmos in height", who weave and tend cattle, "defend themselves from herons", and live to forty. "Here ends the land of the Lord of Catayo."',
     real: 'The pygmies and cranes of Homer and Pliny, a tale from antiquity set at the end of Cathay.',
     source: { label: 'Cresques Project VI.9; Pygmies', url: WIKI('Pygmies_(Greek_mythology)') },
     at: { px: page(11, 4700, 8700), lonlat: null }, size: [2300, 2300], up: 0,
@@ -762,13 +775,13 @@ export const CATALAN_NOTES = [
     at: { px: page(11, 4300, 14750), lonlat: [93.8, 8.0] }, size: [900, 600], up: 0,
   },
   stub('canopy-figure', 'A figure under a blue canopy', page(11, 1000, 3300), [1400, 1500], 180),
-  stub('diamond-mountains', 'The diamond mountains', page(11, 3100, 6950), [1700, 1300], 180),
+  { ...stub('diamond-mountains', 'The diamond mountains', page(11, 3100, 6950), [1700, 1300], 180), drawn: 'The mountains the diamond pickers of legend VI.3 cannot climb, drawn upside down.', real: 'Mountains of the tale, not a range on the ground: India\'s diamonds came from river gravels.', source: { label: 'Cresques Project VI.3', url: CRESQUES('vi') } },
   stub('riders-11', 'Riders and a standing man', page(11, 4900, 1900), [2100, 1900], 180, 'Horsemen and a man in blue among tall staffs, drawn upside down.'),
   stub('great-bowl', 'A great bowl on a stand', page(11, 4900, 3300), [1000, 900], 180),
-  stub('tree-11-a', 'A tree', page(11, 4500, 1100), 300),
-  stub('tree-11-b', 'A tree', page(11, 5850, 1100), 300),
+  { ...stub('tree-11-a', 'A tree', page(11, 4500, 1100), 300), ...TREE },
+  { ...stub('tree-11-b', 'A tree', page(11, 5850, 1100), 300), ...TREE },
   stub('small-beast', 'A small beast', page(11, 4200, 2700), 220, 180),
-  stub('covered-cart', 'A covered cart', page(11, 700, 6900), [900, 900], 180),
+  { ...stub('covered-cart', 'A covered cart', page(11, 700, 6900), [900, 900], 180), drawn: 'A covered cart, drawn upside down.', real: 'Most likely the carts of legend VI.5: "At this city of Lop arrive merchants from the Empire of Sarra on their way to Cathay taking the direct route; they carry oxen, carts, and camels."', source: { label: 'Cresques Project VI.5', url: CRESQUES('vi') } },
   stub('ship-11', 'A ship', page(11, 1100, 14600), [1400, 1200]),
   stub('islands-of-india', 'The islands of the Indies', page(11, 4600, 13600), [3200, 2600]),
   stub('cities-of-india', 'The cities of India', page(11, 3300, 11000), [2000, 2400]),
@@ -818,7 +831,7 @@ export const CATALAN_NOTES = [
   },
   {
     id: 'siren', title: 'The siren',
-    drawn: 'A woman with a red fish\'s tail in the sea of the islands. The legend (VI.22): "Sea of the islands of the Indies where one finds spices. Many ships from many nations cross this sea. Here, one finds three kids of fish named sirens."',
+    drawn: 'A woman with a red fish\'s tail in the sea of the islands. The legend (VI.22): "Sea of the islands of the Indies where one finds spices. Many ships from many nations cross this sea. Here, one finds three kinds of fish named sirens."',
     real: 'Dugongs, which suckle their young at the surface, are the usual guess for the sirens of the eastern seas.',
     source: { label: 'Cresques Project VI.22; Dugong', url: WIKI('Dugong') },
     at: { px: page(12, 1500, 14600), lonlat: null }, size: [1300, 1300], up: 0,
@@ -844,31 +857,31 @@ export const CATALAN_NOTES = [
     source: { label: 'Hangzhou, Wikipedia', url: WIKI('Hangzhou') },
     at: { px: page(12, 1554, 11161), lonlat: [120.15, 30.27] }, size: 450, up: 0,
   },
-  { ...stub('isaiah', 'Isaiah\'s prophecy', page(12, 5400, 2700), [600, 1700], 90, 'A legend in the eastern sea (VI.15): "The prophet Isaiah LXVII: I will send those that have survived to the overseas people", to the far islands that have never heard of his glory.'), source: { label: 'Cresques Project VI.15', url: CRESQUES('vi') } },
-  { ...stub('savages', 'The savages of the islands', page(12, 4600, 10500), [1800, 1700], 0, 'Two naked men by the shore, and the legend (VI.19): "These people are savages; they live on raw fish, they drink sea water and go around naked."'), source: { label: 'Cresques Project VI.19', url: CRESQUES('vi') } },
-  { ...stub('snake-city', 'The city of snakes', page(12, 3600, 14400), [800, 700], 0, 'A city and its legend (VI.23): "This city is deserted due to snakes."'), source: { label: 'Cresques Project VI.23', url: CRESQUES('vi') } },
-  stub('satan', 'Satan', page(12, 1150, 5700), [1100, 1000], 0, 'A winged black devil by Alexander.'),
+  { ...stub('isaiah', 'Isaiah\'s prophecy', page(12, 5400, 2700), [600, 1700], 90, 'A legend in the eastern sea (VI.15): "The prophet Isaiah LXVII: I will send those that have survived to the overseas people", to the far islands that have never heard of his glory.'), real: 'The verse is Isaiah 66:19, "the isles afar off, that have not heard my fame, neither have seen my glory" in the King James words; the atlas numbers the chapter 67. Set at the world\'s eastern edge, it makes these the islands at the end of the earth.', source: { label: 'Cresques Project VI.15', url: CRESQUES('vi') } },
+  { ...stub('savages', 'The savages of the islands', page(12, 4600, 10500), [1800, 1700], 0, 'Two naked men by the shore, and the legend (VI.19): "These people are savages; they live on raw fish, they drink sea water and go around naked."'), real: 'No people is identified: the naked islanders who live on raw fish are a stock wonder of the travel writers, and the legend is the atlas speaking, not a record of anyone.', source: { label: 'Cresques Project VI.19', url: CRESQUES('vi') } },
+  { ...stub('snake-city', 'The city of snakes', page(12, 3600, 14400), [800, 700], 0, 'A city and its legend (VI.23): "This city is deserted due to snakes."'), real: 'No such city is identified; it is one of the wonders of the east that the atlas gathered from travel writers.', source: { label: 'Cresques Project VI.23', url: CRESQUES('vi') } },
+  { ...stub('satan', 'Satan', page(12, 1150, 5700), [1100, 1000], 0, 'A winged black devil by Alexander.'), real: 'In legend VI.4 Alexander "almost died had it not been for Satan who took him out of there using his arts": a tale of the Alexander romances, set in the Caspian Mountains.', source: { label: 'Cresques Project VI.4', url: CRESQUES('vi') } },
   stub('cathay-flag', 'The crescent flag of Cathay', page(12, 1700, 7700), 320),
-  stub('elephant-12', 'An elephant', page(12, 5650, 14600), [1000, 900]),
-  stub('gilt-tree-a', 'A gilt tree', page(12, 1500, 4700), [900, 900], 225),
-  stub('gilt-tree-b', 'A gilt tree', page(12, 2000, 5600), [800, 800], 225),
-  stub('tree-12-a', 'A tree', page(12, 450, 1300), 300),
-  stub('tree-12-b', 'A tree', page(12, 950, 1650), 300),
-  stub('tree-12-c', 'A tree', page(12, 2050, 2350), 300),
-  stub('tree-12-d', 'A tree', page(12, 450, 4100), 300),
-  stub('tree-12-e', 'A tree', page(12, 3800, 3700), 300),
-  stub('tree-12-f', 'A tree', page(12, 3600, 4500), 300),
-  stub('tree-12-g', 'A tree', page(12, 3550, 6300), 300),
-  stub('tree-12-h', 'A tree', page(12, 4250, 6200), 300),
-  stub('tree-12-i', 'A tree', page(12, 4750, 6250), 300),
-  stub('red-fish-12-a', 'A red fish', page(12, 5900, 10900), 300),
-  stub('red-fish-12-b', 'A red fish', page(12, 5000, 11500), [600, 300]),
+  { ...stub('elephant-12', 'An elephant', page(12, 5650, 14600), [1000, 900]), ...ELEPHANT },
+  { ...stub('gilt-tree-a', 'A gilt tree', page(12, 1500, 4700), [900, 900], 225), ...GILT_TREE },
+  { ...stub('gilt-tree-b', 'A gilt tree', page(12, 2000, 5600), [800, 800], 225), ...GILT_TREE },
+  { ...stub('tree-12-a', 'A tree', page(12, 450, 1300), 300), ...TREE },
+  { ...stub('tree-12-b', 'A tree', page(12, 950, 1650), 300), ...TREE },
+  { ...stub('tree-12-c', 'A tree', page(12, 2050, 2350), 300), ...TREE },
+  { ...stub('tree-12-d', 'A tree', page(12, 450, 4100), 300), ...TREE },
+  { ...stub('tree-12-e', 'A tree', page(12, 3800, 3700), 300), ...TREE },
+  { ...stub('tree-12-f', 'A tree', page(12, 3600, 4500), 300), ...TREE },
+  { ...stub('tree-12-g', 'A tree', page(12, 3550, 6300), 300), ...TREE },
+  { ...stub('tree-12-h', 'A tree', page(12, 4250, 6200), 300), ...TREE },
+  { ...stub('tree-12-i', 'A tree', page(12, 4750, 6250), 300), ...TREE },
+  { ...stub('red-fish-12-a', 'A red fish', page(12, 5900, 10900), 300), ...RED_FISH },
+  { ...stub('red-fish-12-b', 'A red fish', page(12, 5000, 11500), [600, 300]), ...RED_FISH },
   stub('gilt-disc-beast', 'A gilt disc with a beast', page(12, 3100, 11700), 260),
-  stub('gog-lettering', 'GOG I MAGOG', page(12, 1000, 2500), [1300, 900], 180),
+  { ...stub('gog-lettering', 'GOG I MAGOG', page(12, 1000, 2500), [1300, 900], 180), drawn: 'GOG I MAGOG, lettered in gold and drawn upside down.', real: 'The land the atlas shuts in behind Alexander\'s Caspian Mountains (VI.4), as medieval world maps did; its prince rides nearby (VI.17).', source: { label: 'Cresques Project VI.4, VI.17', url: CRESQUES('vi') } },
   stub('eastern-sea-lettering', 'Gilt name of the eastern sea', page(12, 3300, 700), [2100, 700], 180),
   stub('eastern-islands', 'The islands of the eastern sea', page(12, 5300, 5000), [1500, 6000]),
-  stub('islands-of-the-indies', 'The islands of the Indies', page(12, 2600, 12900), [4200, 2200]),
-  stub('cathay-cities', 'The cities of Cathay', page(12, 2600, 9500), [2800, 2400]),
+  { ...stub('islands-of-the-indies', 'The islands of the Indies', page(12, 2600, 12900), [4200, 2200]), drawn: 'The islands in the sea south of Cathay.', real: 'The islands of Southeast Asia, Java and Sumatra among them, where the pepper, cloves, nutmeg and mace of the spice trade came from.', source: { label: 'Spice trade, Wikipedia', url: WIKI('Spice_trade') } },
+  { ...stub('cathay-cities', 'The cities of Cathay', page(12, 2600, 9500), [2800, 2400]), drawn: 'The walled cities of Cathay.', real: 'The cities of China under the Yuan, whose last emperor fled Khanbaliq for the steppe in 1368, when the Ming took it.', source: { label: 'Yuan dynasty, Wikipedia', url: WIKI('Yuan_dynasty') } },
 ];
 
 // The 1959 painted copy of the atlas's Mediterranean (Library of Congress): its figures, legible, at.px in its own
@@ -895,9 +908,9 @@ export const CATALAN_COPY_NOTES = [
 // The map of Juan de la Cosa, 1500 (Museo Naval, Madrid). at.px in the Commons "rotated" scan (2127 x 1163).
 export const DE_LA_COSA_NOTES = [
   {
-    id: 'cosa-new-world', title: 'The New World',
+    id: 'cosa-new-world', title: 'The Americas',
     drawn: 'A long green coast down the west of the sheet, flagged where each crown had sailed.',
-    real: 'The Caribbean and the coasts of the Americas as Spanish, Portuguese and English voyages had found them by 1500. It is the oldest known European map that shows the New World.',
+    real: 'The Caribbean and the coasts of the Americas as Spanish, Portuguese and English voyages had charted them by 1500. It is the oldest known European map that shows the Americas.',
     source: { label: 'Juan de la Cosa, Wikipedia', url: 'https://en.wikipedia.org/wiki/Juan_de_la_Cosa' },
     at: { px: [420, 260], lonlat: null },
   },
@@ -918,14 +931,14 @@ export const DE_LA_COSA_NOTES = [
   {
     id: 'cosa-st-christopher', title: 'St Christopher',
     drawn: 'A panel of St Christopher bearing the infant Christ across the water, where the land should run on to the west.',
-    real: 'Central America, unknown in 1500. The panel may stand for Columbus carrying Christianity over the Atlantic, and it leaves open a passage on to the Indian Ocean.',
+    real: 'Central America, not yet charted by Europeans in 1500. The panel may stand for Columbus carrying Christianity over the Atlantic, and it leaves open a passage on to the Indian Ocean.',
     source: { label: 'Map of Juan de la Cosa, Wikipedia', url: 'https://en.wikipedia.org/wiki/Map_of_Juan_de_la_Cosa' },
     at: { px: [190, 545], lonlat: [-80.0, 9.0] },
   },
   {
     id: 'cosa-english-flags', title: 'Flags in the north',
-    drawn: 'Small flags along the northern coast of the New World.',
-    real: 'The flags give each region to the crown whose ships found it; the northern coast takes in John Cabot\'s English voyage of 1497.',
+    drawn: 'Small flags along the northern coast of the Americas.',
+    real: 'The flags give each region to the crown whose ships had reached it; the northern coast takes in John Cabot\'s English voyage of 1497.',
     source: { label: 'Map of Juan de la Cosa, Wikipedia', url: 'https://en.wikipedia.org/wiki/Map_of_Juan_de_la_Cosa' },
     at: { px: [580, 307], lonlat: null },
   },
@@ -938,7 +951,7 @@ export const DE_LA_COSA_NOTES = [
   },
   {
     id: 'cosa-rediscovery', title: 'Found in a junk shop',
-    drawn: 'The whole skin: Europe, Africa and Asia east of the ocean, the New World west of it.',
+    drawn: 'The whole skin: Europe, Africa and Asia east of the ocean, the Americas west of it.',
     real: 'Baron Walckenaer bought the map from a Paris junk dealer early in the 1800s; Humboldt recognised it as important in 1832. It is now in the Museo Naval, Madrid.',
     source: { label: 'Map of Juan de la Cosa, Wikipedia', url: 'https://en.wikipedia.org/wiki/Map_of_Juan_de_la_Cosa' },
     at: { px: [1700, 300], lonlat: null },
@@ -992,7 +1005,7 @@ export const AGUIAR_NOTES = [
   {
     id: 'aguiar-mina', title: 'The Mina',
     drawn: 'A castle under the Portuguese flag on the Guinea coast.',
-    real: 'São Jorge da Mina (Elmina), the fort Portugal built in 1482 to trade for West African gold, and later for slaves.',
+    real: 'São Jorge da Mina (Elmina), the fort Portugal built in 1482 to trade for West African gold, and later for enslaved people.',
     source: { label: 'Elmina Castle, Wikipedia', url: 'https://en.wikipedia.org/wiki/Elmina_Castle' },
     at: { px: [3023, 3037], lonlat: [-1.35, 5.08] },
   },
@@ -1011,7 +1024,7 @@ export const AGNESE_NOTES = [
   {
     id: 'agnese-strait', title: 'The strait',
     drawn: 'The track squeezing between South America and a southern land, lettered for Magellan\'s strait.',
-    real: 'The Strait of Magellan, found in 1520. The land south of it is Tierra del Fuego, an island, not the edge of a southern continent.',
+    real: 'The Strait of Magellan, first sailed by Europeans in 1520. The land south of it is Tierra del Fuego, an island, not the edge of a southern continent.',
     source: { label: 'Strait of Magellan, Wikipedia', url: 'https://en.wikipedia.org/wiki/Strait_of_Magellan' },
     at: { px: [4959, 5523], lonlat: [-70.9, -53.5] },
   },

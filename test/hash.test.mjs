@@ -1,9 +1,8 @@
 // The URL hash as the page reads and writes it, in headless Chromium: the view round-trips, clamps and
-// wraps; editing the hash redraws without a reload; Reset keeps only the view, its projection with it (and the drawer's layout);
+// wraps; editing the hash redraws without a reload; Reset keeps only the view, its projection with it ;
 // Copy link copies the URL, or selects it in a box when the clipboard is refused; the three drawer sliders
 // (density, continents, regions) read from and write to the hash, as do the temporary sheets overlay and
-// knobs (debug=, tune=); and the drawer's four layouts each show every control and ride in the hash
-// (`layout=`). Each scenario opens a fresh page at a hash.
+// knobs (debug=, tune=); and the drawer's moods and tabs show every control. Each scenario opens a fresh page at a hash.
 //
 // Needs the built preview (`npm run build:preview` -> _site/), playwright-core and a Chromium
 // (`npx playwright-core install chromium-headless-shell`); without them it skips, since `npm test`
@@ -61,7 +60,9 @@ const value = (page, id) => page.evaluate((i) => String(document.getElementById(
 const text = (page, id) => page.locator(`#${id}`).textContent();
 const openDrawer = (page) => page.locator('#open').click();
 // a slider moved by the user: the page reads it and writes the hash at once
-const slide = async (page, id, v) => { await openDrawer(page); await page.locator(`#${id}`).fill(String(v)); };
+// the control's own tab is shown first: the drawer keeps one tab's pane open at a time
+const reveal = (page, sel) => page.evaluate((q) => { const pane = document.querySelector(q)?.closest('[role=tabpanel]'); if (pane) document.getElementById(pane.getAttribute('aria-labelledby')).click(); }, sel);
+const slide = async (page, id, v) => { await openDrawer(page); await reveal(page, `#${id}`); await page.locator(`#${id}`).fill(String(v)); };
 
 // One page per scenario; a script error on the page fails it.
 const scenario = (name, hashAt, body, opts) => test(name, { skip, timeout: 120000 }, async () => {
@@ -225,6 +226,7 @@ scenario('regions: the slider round-trips', 'map=5.48/40.265/7.000', async (page
 scenario('regionset: the 1375 chip round-trips', 'map=4.00/40.000/16.000', async (page) => {
   assert.equal(await value(page, 'regionSet'), 'today');
   await openDrawer(page);
+  await reveal(page, '#regionSet');
   await page.locator('#regionSet [data-value="catalan-1375"]').click();
   const written = (await hash(page)).slice(1);
   assert.equal(new URLSearchParams(written).get('regionset'), 'catalan-1375');
@@ -242,57 +244,39 @@ scenario('regionset: the 1375 chip round-trips', 'map=4.00/40.000/16.000', async
 const CONTROLS = ['density', 'pick-monster', 'pick-ship', 'pick-rose', 'placement', 'townSize', 'pick-town', 'mountains', 'hills', 'pick-relief', 'trees',
   'pick-cartouche', 'titleMode', 'title', 'projection', 'names', 'rhumb', 'continentsZoom', 'regionSet', 'regions', 'regionsZoom', 'land', 'islands', 'seaTint',
   'rivers', 'lakes', 'reefs', 'playas', 'scale', 'scaleBorder', 'ink', 'parchment'];
-const HEADINGS = {
-  default: ['Sea', 'Roses', 'Placement', 'Towns', 'Land', 'Cartouche', 'Map', 'Colours'],
-  question: ['The chart', 'The land', 'The figures'],
-  moods: ['The chart', 'The land', 'The figures'], // under Fine controls, once it is opened
-  sheet: ['Sea', 'Land', 'Margins'],
-};
-// the drawer's headings as shown, less the ?ui= figures and About, which no layout moves
-const headings = (page) => page.evaluate(() => [...document.querySelectorAll('#drawer h2')].filter((h) => h.getClientRects().length && !['h-ui', 'h-about'].includes(h.id)).map((h) => h.textContent));
+const TAB_NAMES = ['Sea', 'Land', 'Margins'];
 async function showsEveryControl(page, name) {
   for (const id of CONTROLS) {
     assert.equal(await page.locator(`#drawer [id="${id}"]`).count(), 1, `${name}: #${id} is one element`);
-    assert.equal(await page.locator(`#${id}`).isVisible(), true, `${name}: #${id} shown`);
   }
 }
-const layoutChip = (page, name) => page.locator(`#layout [data-layout="${name}"]`);
 
-scenario('layout: each of the four shows every control once, under its own headings', 'map=5.48/40.265/7.000', async (page) => {
+scenario('drawer: moods over the tabs Sea · Land · Margins; each control is one element in a tab, and a family is a chip with its count', 'map=5.48/40.265/7.000', async (page) => {
   await openDrawer(page);
-  assert.deepEqual(await headings(page), HEADINGS.default);
-  await showsEveryControl(page, 'default');
-  for (const name of ['question', 'moods', 'sheet', 'default']) {
-    await layoutChip(page, name).click();
-    assert.equal(await layoutChip(page, name).getAttribute('aria-checked'), 'true');
-    assert.equal((await params(page)).get('layout'), name === 'default' ? null : name, 'the layout rides in the hash; Default is no key');
-    if (name === 'moods') {
-      assert.equal(await page.locator('#drawer details.fine').evaluate((d) => d.open), false, 'Fine controls starts closed');
-      assert.deepEqual(await page.locator('.moods .preset b').allTextContents(), ['Pilot’s chart', 'Tasteful', 'Woodcut', 'Illuminated', 'All the things']);
-      await page.locator('#drawer details.fine > summary').click();
-    }
-    assert.deepEqual(await headings(page), HEADINGS[name]);
-    await showsEveryControl(page, name);
+  assert.equal(await page.locator('#layout').count(), 0, 'the layout chips are retired');
+  assert.deepEqual(await page.locator('#drawer .tabs [role=tab] > span').allTextContents(), TAB_NAMES);
+  assert.equal(await page.locator('#drawer .moods .preset.all').count(), 1, 'All the things is its own full-width chip');
+  assert.ok(await page.locator('#drawer .moods .preset.all .sample.crammed > *').count() > 50, 'crammed with small figures');
+  await showsEveryControl(page, 'drawer');
+  for (const [i, name] of TAB_NAMES.entries()) {
+    await page.locator(`#tab-${i}`).click();
+    assert.equal(await page.locator(`#tab-${i}`).getAttribute('aria-selected'), 'true');
+    assert.equal(await page.locator('#drawer [role=tabpanel]:not([hidden])').count(), 1, `${name}: one pane shows`);
   }
+  await page.locator('#tab-0').click();
+  const chips = page.locator('#pick-monster .fam-chip');
+  assert.ok(await chips.count() > 3, 'a chip per family');
+  assert.match(await chips.first().locator('b').textContent(), /^\d+\/\d+$/, 'each shows its count');
+  assert.equal(await page.locator('#pick-monster .fam-tray .thumb').first().isVisible(), true, 'the open family shows its pictures');
 });
 
-scenario('layout: a link opens its layout, and a write, Reset and a hash edit keep or change it', 'map=7.00/43.700/7.300&layout=sheet', async (page) => {
-  assert.equal(await layoutChip(page, 'sheet').getAttribute('aria-checked'), 'true');
+scenario('drawer: Reset keeps the view, and an old layout= link opens the same drawer', 'map=7.00/43.700/7.300&layout=sheet', async (page) => {
   await slide(page, 'density', 1.5);
-  assert.deepEqual(await headings(page), HEADINGS.sheet);
-  assert.equal((await params(page)).get('layout'), 'sheet', 'a write from another control keeps it');
-  assert.equal((await params(page)).get('density'), '1.5');
+  assert.equal((await params(page)).has('layout'), false, 'no layout key is written');
   await page.evaluate(() => { document.getElementById('status').textContent = ''; });
   await page.locator('#reset').click();
   await placed(page);
-  assert.equal(await hash(page), '#map=7.00/43.700/7.300&layout=sheet', 'Reset keeps the view and the layout');
-  await page.evaluate(() => { location.hash = 'map=7.00/43.700/7.300&layout=question'; });
-  await placed(page);
-  assert.equal(await layoutChip(page, 'question').getAttribute('aria-checked'), 'true');
-  assert.deepEqual(await headings(page), HEADINGS.question);
-  await page.evaluate(() => { location.hash = 'map=7.00/43.700/7.300&layout=nonsense'; });
-  await placed(page);
-  assert.deepEqual(await headings(page), HEADINGS.default, 'an unknown layout opens Default');
+  assert.equal(await hash(page), '#map=7.00/43.700/7.300', 'Reset keeps the view');
 });
 
 // The five moods, sparse to dense, and what each writes to the hash: its figures as a set, and every other key a
@@ -309,11 +293,11 @@ const MOODS = [
     density: '0.5', placement: 'historic', islands: '1', seas: '1', mountains: 'off' }],
   ['Woodcut', { ...PLAIN, sprites: ['p:rose', 's:cartouche-dewit', 's:serpent-a', 's:whale-b', 's:pistrix-c', 's:cete-e', 's:pare-truie', 's:pare-boar', 's:pare-lion', 's:pare-calf', 's:pare-elephant', 's:pare-bear', 's:pare-seaman', 's:pare-bishop', 'd:debry-monster', 's:ship-a', 's:ship-b', 's:ship-w-key', 's:ship-w-buss', 'd:debry-ship-a', 'd:debry-ship-b', 'd:debry-canoe', 'p:tower', 'p:tower-dome', 'p:house', 'p:church', 'p:castle', 'p:round-tower', 'p:tent'],
     density: null, placement: 'historic', land: 'off', rivers: 'marina', mountains: 'ink', trees: 'ink', ink: '1d1913', parchment: 'efe9dc' }], // density 1 and lakes marina are the defaults
-  ['Illuminated', { ...PLAIN, sprites: ['s:rose-aguiar', 's:rose-catalan', 's:rose-catalan-small', 's:rose-prunes', 's:rose-aguiar-b', 'v:rose-fleurs', 'v:rose-fleurs-small', 'v:cartouche-frame', 'v:sea-dragon', 'v:sea-lion', 'v:dolphin', 'v:merman', 'v:hippocampus', 'v:walrus', 'v:galleon', 'v:caravel-heraldic', 'v:carrack', 'v:galley', 'v:caravel', ...HILLS, ...AGUIAR_SCAN, ...AGUIAR_DRAWN],
+  ['Illuminated', { ...PLAIN, sprites: ['s:rose-aguiar', 's:rose-catalan', 's:rose-catalan-small', 's:rose-prunes', 's:rose-aguiar-b', 'k:rose-kitab', 'v:rose-fleurs', 'v:rose-fleurs-small', 'v:cartouche-frame', 'v:sea-dragon', 'v:sea-lion', 'v:dolphin', 'v:merman', 'v:hippocampus', 'v:walrus', 'v:galleon', 'v:caravel-heraldic', 'v:carrack', 'v:galley', 'v:caravel', ...HILLS, ...AGUIAR_SCAN, ...AGUIAR_DRAWN],
     density: '1.5', placement: 'historic', land: 'gilt', islands: '1', seas: '1', rivers: 'aguiar', lakes: 'aguiar' }],
   ['All the things', { ...PLAIN, density: '2' }],
 ];
-scenario('layout: Moods sets the existing controls at once, a whole look each', 'map=5.48/40.265/7.000&layout=moods', async (page) => {
+scenario('drawer: Moods sets the existing controls at once, a whole look each', 'map=5.48/40.265/7.000', async (page) => {
   await openDrawer(page);
   const mood = (label) => page.locator('.moods .preset', { hasText: label });
   const checked = () => page.locator('.moods .preset').evaluateAll((bs) => bs.map((b) => b.getAttribute('aria-checked')));
@@ -351,18 +335,45 @@ scenario('overlap: a rule round-trips, the default is left out, an unknown word 
   assert.equal((await params(page)).has('overlap'), false);
 });
 
-scenario('person: choosing a life bar writes person=, a link with it chooses that person, a malformed id is dropped', 'map=6.14/40.474/7.400', async (page) => {
+scenario('person: choosing a person\'s row writes person=, a link with it chooses that person, a malformed id is dropped', 'map=6.14/40.474/7.400&timeline=b', async (page) => {
   await page.locator('#people').click();
-  const life = page.locator('#peopleStrip [data-person]').first();
+  const life = page.locator('#peopleList [data-person]').first();
   const id = await life.getAttribute('data-person');
   await life.click();
   assert.equal((await params(page)).get('person'), id);
-  await page.evaluate((h) => { location.hash = h; }, `map=6.14/40.474/7.400&person=${id}`);
+  await page.evaluate((h) => { location.hash = h; }, `map=6.14/40.474/7.400&timeline=b&person=${id}`);
   await placed(page);
-  assert.equal(await page.locator(`#peopleStrip [data-person="${id}"]`).getAttribute('aria-pressed'), 'true');
-  await page.evaluate(() => { location.hash = 'map=6.14/40.474/7.400&person=Not%20An%20Id'; });
+  assert.equal(await page.locator(`#peopleList [data-person="${id}"]`).getAttribute('aria-pressed'), 'true');
+  await page.evaluate(() => { location.hash = 'map=6.14/40.474/7.400&timeline=b&person=Not%20An%20Id'; });
   await placed(page);
-  assert.equal(await page.locator('#peopleStrip [aria-pressed="true"]').count(), 0);
+  assert.equal(await page.locator('#peopleList [aria-pressed="true"]').count(), 0);
+});
+
+scenario('timeline: A with no key, b in the link opens B; the settings chips switch it live and write it, the person chosen showing in either', 'map=6.14/40.474/7.400&person=ibn-battuta', async (page) => {
+  const isOpen = (id) => page.evaluate((i) => document.getElementById(i).classList.contains('open'), id);
+  assert.equal((await params(page)).has('timeline'), false);
+  await page.locator('#people').click();
+  assert.equal(await isOpen('timelinePanel'), true, 'A: the medallion did not open the one timeline drawer');
+  await page.locator('#peopleStrip .cardrow #personCard').waitFor();
+  assert.equal(await page.getAttribute('#peopleStrip [data-person="ibn-battuta"]', 'aria-pressed'), 'true');
+  await openDrawer(page);
+  await page.locator('#timelineVariant [data-value="b"]').click();
+  assert.equal((await params(page)).get('timeline'), 'b');
+  assert.equal(await isOpen('drawer'), true, 'the chip shut the settings');
+  await page.locator('#people').click();
+  assert.equal(await isOpen('peoplePanel'), true, 'B: the medallion did not open the People drawer');
+  await page.locator('#peopleList li.open[data-row="ibn-battuta"] #personCard').waitFor();
+  await page.locator('#voyages').click();
+  assert.equal(await isOpen('voyagesPanel'), true, 'B: the dividers did not open the Voyages drawer');
+  assert.equal(await page.locator('#voyagesPanel #voyageWidth').count(), 1, 'the line weight did not follow to B');
+  // a link switches it back, shutting the drawer open; an unknown value is A
+  await page.evaluate(() => { location.hash = 'map=6.14/40.474/7.400&person=ibn-battuta&timeline=zz'; });
+  await placed(page);
+  assert.equal(await isOpen('voyagesPanel'), false, 'a switch left B\'s drawer open');
+  assert.equal(await value(page, 'timelineVariant'), 'a');
+  await page.locator('#voyages').click();
+  assert.equal(await isOpen('timelinePanel'), true);
+  assert.equal(await page.locator('#timelinePanel #voyageWidth').count(), 1, 'the line weight did not follow to A');
 });
 
 scenario('sight, site, pictures, pictureat: a sight\'s deal round-trips; a name no tile has is dropped with its keys', 'map=6.14/40.474/7.400&sight=Tyre&site=1&pictures=0,2&pictureat=0:35.200,33.270,1.5', async (page) => {
@@ -403,7 +414,7 @@ scenario('bearing: a turned world round-trips in the link, north up is no key, a
   await page.locator('#compass').click();
   await page.waitForFunction(() => !new URLSearchParams(location.hash.slice(1)).has('bearing'));
   await placed(page);
-  assert.equal(await page.locator('#compass').isHidden(), true, 'north up with no sheet laid: no compass');
+  assert.equal(await page.locator('#compass').isVisible(), true, 'north up with no sheet laid: the compass still shows, beside the walk-around buttons');
 });
 
 scenario('charts: charts=all is kept in the link and lists the other traditions', 'map=6.14/40.474/7.400&charts=all', async (page) => {

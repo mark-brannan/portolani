@@ -209,38 +209,55 @@ Sheet 12: Cathay.
 ## Carta Marina, 1539
 
 Read off the Commons scan at full size (5016 x 3715, `Carta_Marina.jpeg` in scripts/sources.json) on
-2026-10-15, by eye, about ±30 px. The chart is not one similarity (Scandinavia is turned), so two are fitted
+2026-10-15, by eye, about ±30 px. The chart is not one similarity (Scandinavia is turned), so three are fitted
 by least squares, from scan pixels to longitude and Mercator latitude, and each figure takes its own side's:
 
 | fit | landmarks | scale | turn | residual, RMS | worst |
 |---|---|---|---|---|---|
 | west | Iceland, Faroes, Shetland, Orkney | 0.0113 °/px | 48° | 101 km | Shetland, 125 km |
+| Norway | Lindesnes, Trondheim, Stad, Lofoten | 0.0107 °/px | -7° | 104 km | Stad, 143 km |
 | Baltic | Åland, Stockholm, Gotland, Öland, Saaremaa, Riga, Danzig | 0.0100 °/px | 3° | 47 km | Åland and Danzig, 59 km |
 
 The west fit's four landmarks lie in one narrow column of the scan, and the chart draws Iceland well east of
-where it lies, so that fit is the weaker one. Figures at x > 2700 px take the Baltic fit.
+where it lies, so that fit is the weaker one. Figures at x < 1700 px take the west fit, x 1700 to 2700 the Norway fit and x > 2700 the Baltic fit.
+
+The Norway fit is the Norwegian coast from Lindesnes to Lofoten, which lies inside the west strip (the west fit is turned
+48° to hold Iceland, the Faroes, Shetland and Orkney, none of them Norway), 10° from the Baltic fit. Read off the
+full-size scan on 2026-11-04, by eye, about ±40 px; each point is the coast where the chart's lettering stands, not the
+lettering. Nordkapp (x 2780, past the strip's edge) is not a landmark: with it the fit's scale jumps from 0.0107 to
+0.0140 °/px and its residual from 104 to 252 km, because the chart bends Finnmark east. The north of Norway beyond
+Lofoten is drawn by the Baltic fit. See [the coast under each fit](carta-marina-norway-coast-by-fit.jpg).
+
+### Landmarks, Norway
+
+| | landmark | scan px | lon, lat | piece | fit puts it at | off by |
+|---|---|---|---|---|---|---|
+| L1 | Lindesnes, the south tip | 1975, 2660 | 7.05, 57.98 | norway | 6.5, 57.9 | 51 km |
+| L2 | Trondheim, Nidrosia | 2085, 1395 | 10.40, 63.43 | norway | 9.3, 64.3 | 138 km |
+| L3 | Stad | 1890, 1950 | 5.15, 62.19 | norway | 6.6, 61.7 | 143 km |
+| L4 | Lofoten | 2350, 590 | 13.00, 67.90 | norway | 13.2, 67.6 | 36 km |
 
 ![The Carta Marina with its figures ringed: roses red, beasts blue, ships green; a thick ring has a cropped sprite](ornaments-carta-marina.jpg)
 
 | | figure | scan px | fit | lon, lat | sprite | on the map |
 |---|---|---|---|---|---|---|
 | R1 | Mare Glaciale | 1521, 767 | west | -10.5, 65.8 | stand-in | off the sheet: west of its 5°W edge |
-| R2 | "D", west of the Faroes | 1098, 1826 | west | -4.7, 60.7 | stand-in | drawn |
+| R2 | "D", west of the Faroes | 1098, 1826 | west | -4.7, 60.7 | stand-in | not drawn: waits on the ring reading |
 | R3 | North Sea | 1530, 2931 | west | 7.8, 58.3 | stand-in | lands on southern Norway in the fit; drawn, as a rose may stand on land |
-| R4 | Bothnian Sea | 3361, 2006 | baltic | 20.6, 62.4 | stand-in | drawn |
-| M1 | serpent-a | 1882, 1042 | west | -5.5, 66.2 | `serpent-a` | off the sheet: west of its 5°W edge |
-| M2 | whale-b | 2200, 436 | west | -8.2, 69.0 | `whale-b` | off the sheet: west of its 5°W edge |
-| M3 | cete-e | 1926, 654 | west | -8.4, 67.5 | `cete-e` | off the sheet: west of its 5°W edge |
+| R4 | Bothnian Sea | 3361, 2006 | baltic | 20.6, 62.4 | stand-in | not drawn: waits on the ring reading |
+| M1 | serpent-a | 1882, 1042 | norway | 7.6, 66.0 | `serpent-a` | drawn |
+| M2 | whale-b | 2200, 436 | norway | 11.8, 68.3 | `whale-b` | drawn |
+| M3 | cete-e | 1926, 654 | norway | 8.6, 67.6 | `cete-e` | drawn |
 | M4 | pistrix-c | 455, 1350 | west | -13.6, 59.7 | `pistrix-c` | off the sheet: west of its 5°W edge |
 | M5 | Balena and Orcha | 429, 1859 | west | -9.5, 57.6 | stand-in | off the sheet: west of its 5°W edge |
 | M6 | spiny fish (K) | 351, 1547 | west | -12.7, 58.5 | stand-in | off the sheet: west of its 5°W edge |
 | M7 | Ziphius | 1378, 1612 | west | -4.5, 62.5 | stand-in | drawn |
 | M8 | whale by the Mare Glaciale rose | 1417, 1001 | west | -9.3, 64.7 | stand-in | off the sheet: west of its 5°W edge |
-| M9 | spotted serpent | 1755, 1443 | west | -3.1, 64.5 | stand-in | drawn |
+| M9 | spotted serpent | 1755, 1443 | norway | 5.8, 64.2 | stand-in | drawn |
 | M10 | lobster | 408, 2163 | west | -7.1, 56.3 | stand-in | off the sheet: west of its 5°W edge |
-| M11 | Vermis 40 pe lo | 1807, 2808 | west | 8.9, 60.0 | stand-in | lands on Norway or Jutland in the fit; left out |
+| M11 | Vermis 40 pe lo | 1807, 2808 | norway | 4.6, 57.2 | stand-in | drawn |
 | S1 | ship-a | 1260, 881 | west | -11.5, 64.5 | `ship-a` | off the sheet: west of its 5°W edge |
-| S2 | ship-b | 2150, 758 | west | -5.9, 67.9 | `ship-b` | off the sheet: west of its 5°W edge |
+| S2 | ship-b | 2150, 758 | norway | 10.8, 67.0 | `ship-b` | drawn |
 | S3 | ship | 214, 858 | west | -19.6, 60.6 | stand-in | off the sheet: west of its 5°W edge |
 | S4 | ship | 429, 910 | west | -17.5, 61.3 | stand-in | off the sheet: west of its 5°W edge |
 | S5 | ship | 845, 949 | west | -14.1, 62.8 | stand-in | off the sheet: west of its 5°W edge |
@@ -253,15 +270,43 @@ where it lies, so that fit is the weaker one. Figures at x > 2700 px take the Ba
 | S12 | ship, Baltic | 2974, 3234 | baltic | 17.4, 56.0 | stand-in | drawn |
 
 Lake Vänern's ships are inland and left out. The sheet's extent (README.md, "The curated sheets") stops at
-5°W, so 17 of its 27 figures, the four cropped ones among them, lie off it and are not drawn until that
+5°W, so 13 of its 27 figures lie off it and are not drawn until that
 edge moves west to take in Iceland.
 
-The two fits cut the scan into two strips, each drawn by its fit, refitted from this table: [docs/overlay/README.md](../overlay/README.md#warped-pieces).
+The three fits cut the scan into three strips, each drawn by its fit, refitted from this table: [docs/overlay/README.md](../overlay/README.md#warped-pieces).
 
 ## Juan de la Cosa, 1500
 
-Not read in place: two rings of roses (the west centre's Virgin and Child, small node roses; the east
-ring's node roses), its beasts and ships not read at 1400 px. With no set, the sheet keeps the seeded figures.
+Read off the Commons scan (2127 x 1163, `1500_map_by_Juan_de_la_Cosa_rotated.jpg`) on 2026-11-04, by eye at 2 to 5
+times, about ±8 px, and placed through the three fits below, each figure by the strip it lies in. The chart draws no
+beast at sea; its figures at sea are roses, ships and the four wind heads of the Atlantic, which are not a kind the page
+draws. Only the ship inside the sheet's extent (README.md, "The curated sheets": 100°W to 20°E, 20°S to 65°N) is listed in
+`scripts/atlas.mjs`; the roses and the rest are kept here and not drawn. Until the ring is read, the sheet draws the
+roses of the network it does draw, at that ring's hub and nodes, so every rose stands where its lines meet.
+
+| | figure | scan px | piece | lon, lat | sprite | note |
+|---|---|---|---|---|---|---|
+| R1 | the west centre's rose, the Virgin and Child | 615, 520 | west | -57.4, 19.7 | stand-in | not drawn: waits on the ring reading |
+| R2 | node rose of the west ring, north | 934, 315 | atlantic | -16.0, 49.0 | stand-in | not drawn: waits on the ring reading |
+| R3 | node rose of the west ring, south | 914, 827 | atlantic | -20.3, -10.5 | stand-in | not drawn: waits on the ring reading |
+| R4 | node rose, the Caribbean | 310, 550 | west | -80.6, 14.3 | stand-in | not drawn: waits on the ring reading |
+| S1 | ship with a red banner, South Atlantic | 1092, 880 | atlantic | 2.8, -17.8 | stand-in | drawn; a sketch about 40 px tall at this size, too faint to cut, so it stands in one of the fleet off India |
+| S2 | ship off the Cape of Good Hope | 1354, 1057 | east | 27.4, -43.8 | none | east and south of the extent |
+| S3 | ship by a red banner, south of Madagascar | 1553, 1012 | east | 55.7, -40.9 | none | east and south of the extent |
+| S4 | the fleet off India, north ship | 1672, 651 | east | 76.7, 4.1 | `cosa-ship-a` | east of the extent |
+| S5 | the fleet off India, middle ship | 1695, 689 | east | 79.5, -1.5 | `cosa-ship-b` | east of the extent |
+| S6 | the fleet off India, south ship | 1645, 714 | east | 72.2, -4.4 | `cosa-ship-c` | east of the extent |
+| S7 | the fleet off India, the upright ship by Ceylon | 1734, 672 | east | 85.1, 0.4 | `cosa-ship-d` | east of the extent |
+
+The roses wait because the table's own numbers do not sit on one ring: computed from them, the node roses R2, R3 and R4 lie at bearings 57°, 136° and 264° from R1, at 379, 429 and 306 px, where a 360 px ring with nodes every 22.5° was expected.
+
+The east ring's node roses (at 1316, 590 and 1406, 844 and further east) lie east of the extent. The four ships off
+India are cut from the Museo Galileo's detail of the chart (`1500_map_by_Juan_de_la_Cosa-India.jpg`, 1287 x 1073, about
+seven times the full scan's pixels there), so their places in the full scan are read through that detail's rose and
+seated king. Three of the four are drawn west up, masts to the west, as the chart is read: their cuts are turned a
+quarter clockwise so they stand upright, and the upright ship is kept as drawn
+([docs/de-la-cosa-figures](../de-la-cosa-figures/README.md)). They are drawn on the map as the chart's own ships
+wherever a stand-in of the de la Cosa style is wanted, and as seeded ships on every sheet.
 
 ### Landmarks, 1500
 

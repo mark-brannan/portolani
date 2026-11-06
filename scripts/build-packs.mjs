@@ -79,6 +79,10 @@ const DEWIT_PAPER = '#e3dfc4'; // the paper inside the de Wit cartouche's tablet
 const AGUIAR_PAPER = '#e9e6d2'; // the vellum inside the Aguiar 1492 rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness
 const AGUIAR_CHART_PAPER = '#d3cfbb'; // the vellum of the whole Aguiar 1492 chart, inside its small rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness; the town sprites of the same scan share it
 const PRUNES_PAPER = '#b4a38d'; // the vellum of Prunes 1559 inside the west rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness (the brightest are specks)
+const OLIVA_PAPER = '#ddd7bf'; // the vellum of the Oliva chart inside its big south-west rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness; every Oliva sprite shares it
+const KITAB_PAPER = '#c6c1b0'; // the paper of the Kitab-ı Bahriye Adriatic folio round its rose, east of it between the ring and 150 px out: the mean of the 80th to 90th percentile of its pixels by brightness
+const PLANCIUS_PAPER = '#d5cdb2'; // the paper of the Plancius 1609 plate inside its rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness; the ship shares it
+const COSA_PAPER = '#d0d5b2'; // the vellum of the de la Cosa India detail (Museo Galileo's facsimile): the mean of the 80th to 90th percentile of its pixels by brightness; every de la Cosa ship shares it
 const PARCHMENT = '#e9d8b4'; // the renderer's default paper, for the kept `.cut.png`
 const argv = process.argv.slice(2), keepAt = argv.indexOf('--keep'), onlyAt = argv.indexOf('--only');
 const keep = keepAt >= 0 ? join(ROOT, argv[keepAt + 1]) : null;
@@ -101,8 +105,8 @@ const MAX_SCALE = 3; // a sprite is stored at most this many px wide per CSS px 
 const PACKS = [
   {
     name: 'scanned',
-    title: 'Sprites cropped from scans: Olaus Magnus, Carta Marina 1539; Jorge de Aguiar 1492; Catalan Atlas 1375; Genoese chart c. 1320-1350; Frederik de Wit; Ambroise Paré, Des monstres; Master W with the Key, two ship engravings c. 1475-1490',
-    licence: 'Public domain (PD-Art); scans via Wikimedia Commons (James Ford Bell Library; Beinecke Library, Yale; BnF Gallica btv1b55002481n; Library of Congress 2003630429; Royal Museums Greenwich). The pare-* sprites: Wellcome Collection, CC BY 4.0. Ships ship-w-*: Art Institute of Chicago 27881 (CC0) and Rijksmuseum RP-P-2014-30 (Public Domain Mark)',
+    title: 'Sprites cropped from scans: Olaus Magnus, Carta Marina 1539; Jorge de Aguiar 1492; Catalan Atlas 1375; Genoese chart c. 1320-1350; Frederik de Wit; Ambroise Paré, Des monstres; Master W with the Key, two ship engravings c. 1475-1490; a member of the Oliva family, portolan chart of the Mediterranean 1621-1665; Petrus Plancius, Tabula geographica (Acts and Epistles) 1609; Juan de la Cosa 1500',
+    licence: 'Public domain (PD-Art); scans via Wikimedia Commons (James Ford Bell Library; Beinecke Library, Yale; BnF Gallica btv1b55002481n; Library of Congress 2003630429; Royal Museums Greenwich). The pare-* sprites: Wellcome Collection, CC BY 4.0. Ships ship-w-*: Art Institute of Chicago 27881 (CC0) and Rijksmuseum RP-P-2014-30 (Public Domain Mark). The oliva sprites: Barry Lawrence Ruderman Antique Maps via Commons (PD-Art); the plancius sprites: National Library of Israel, Eran Laor Cartographic Collection (public domain); the cosa sprites: Museo Naval, Madrid, through the Museo Galileo facsimile (PD-Art)',
     ink: '#3b2a1a',
     sprites: [
       // Carta Marina figures are patches (#111): the whole crop, sea and swell and all, its edge feathered.
@@ -156,6 +160,25 @@ const PACKS = [
       // there: the sea either side of it, taken down to the foot of the page, left the patch two legs and a bite.
       { id: 'catalan-siren', kind: 'monster', style: 'catalan', scan: 'catalan-atlas-12', key: 'patch', paper: PARCHMENT, crop: [800, 14090, 1970, 15160], figure: [850, 14220, 1925, 15120], sizePx: 170, minClearancePx: 140, weight: 2,
         mask: [[822, 14310], [1000, 14190], [1044, 14190], [1044, 14250], [1300, 14250], [1306, 14100], [1910, 14100], [1910, 14400], [1955, 14440], [1955, 15142], [1060, 15142], [1000, 15115], [822, 15060]] },
+      // Juan de la Cosa's own ships, 1500 (docs/atlas/ornaments.md; docs/de-la-cosa-figures): the Portuguese fleet off India,
+      // cut from the Museo Galileo detail, about seven times the full chart scan's pixels there. Patches as the Catalan ones
+      // are, but divided by the detail's own vellum, which is greener than the map's parchment. Three of the four ships are
+      // drawn west up, masts to the west, as the chart is read; so those cuts are turned a quarter clockwise and stand
+      // upright. Their sea is to the east of the hull in the scan, under it once turned, so each crop reaches furthest east.
+      // the north ship: the polygon cuts the coast of India and its lettering at top right and the islet at bottom right
+      { id: 'cosa-ship-a', kind: 'ship', style: 'de-la-cosa', scan: 'de-la-cosa-india', key: 'patch', paper: COSA_PAPER, crop: [290, 392, 650, 615], figure: [315, 398, 565, 600], turn: 90, sizePx: 72, heading: 'right',
+        mask: [[290, 392], [572, 392], [572, 497], [650, 497], [650, 555], [622, 555], [622, 615], [290, 615]], maskFeather: 8 },
+      // the middle ship with its long blue streamer: the polygon cuts the islet at top right and the south ship's masts at bottom left
+      { id: 'cosa-ship-b', kind: 'ship', style: 'de-la-cosa', scan: 'de-la-cosa-india', key: 'patch', paper: COSA_PAPER, crop: [300, 600, 748, 965], figure: [320, 612, 660, 940], turn: 90, sizePx: 80, heading: 'right',
+        mask: [[300, 600], [620, 600], [620, 632], [748, 632], [748, 965], [505, 965], [440, 875], [300, 822]], maskFeather: 8 },
+      // the south ship, the largest: the polygon cuts the middle ship above it and the red square by its masts. The red islet
+      // among its masts stays: an erase box there left a pale hole in the rigging
+      { id: 'cosa-ship-c', kind: 'ship', style: 'de-la-cosa', scan: 'de-la-cosa-india', key: 'patch', paper: COSA_PAPER, crop: [40, 800, 540, 1073], figure: [55, 830, 425, 1035], turn: 90, sizePx: 80, heading: 'right',
+        mask: [[40, 832], [300, 822], [440, 875], [505, 965], [540, 965], [540, 1073], [40, 1073]], maskFeather: 8 },
+      // the ship drawn upright, north up, by Ceylon: kept as drawn; the polygon cuts the islet at top left and Ceylon at right
+      { id: 'cosa-ship-d', kind: 'ship', style: 'de-la-cosa', scan: 'de-la-cosa-india', key: 'patch', paper: COSA_PAPER, crop: [735, 500, 995, 900], figure: [750, 525, 985, 760], sizePx: 72, heading: 'right',
+        mask: [[805, 500], [958, 500], [958, 690], [995, 690], [995, 900], [735, 900], [735, 635], [805, 635]], maskFeather: 8,
+        erase: [[972, 700, 995, 760]] },
       // Prunes 1559 (Library of Congress), the best 32-point rose of any chart checked for #52: whole crop with its
       // sea of parchment and the rhumb lines running off, a patch not a keyed ink, so the blue and red washes and the
       // gilt keep their tone. North is to the right on the scan, so the cut is turned a quarter anticlockwise.
@@ -199,6 +222,30 @@ const PACKS = [
       { id: 'town-aguiar-avignon', kind: 'town', style: 'aguiar', scan: 'aguiar-chart', key: 'patch', paper: AGUIAR_CHART_PAPER, crop: [2330, 1016, 2462, 1104], figure: [2342, 1026, 2452, 1086], sizePx: 48, rotate: -14 },
       // the Genoese scale bar: the old tight box is `figure`, the crop reaches a little past it so the edge feather falls on bare vellum, not on the bar's border
       { id: 'scale-genoese', kind: 'scale', style: 'genoese', scan: 'genoese', key: 'patch', paper: GENOESE_PAPER, crop: [3690, 3797, 4420, 3955], figure: [3708, 3815, 4400, 3940], sizePx: 260 },
+      // The Oliva family chart (1621-1665), hand-painted on vellum: every sprite a patch, the whole crop with its rhumb lines and
+      // lettering as drawn, its edge feathered, the vellum divided out.
+      // the big rose of the south-west: the sixteen points, the fleur-de-lis north and the gilt boss, the circle feathered just outside its outer ring
+      { id: 'rose-oliva', kind: 'rose', style: 'oliva', scan: 'oliva-chart', key: 'patch', paper: OLIVA_PAPER, crop: [2750, 7997, 5150, 10397], sizePx: 300, circle: [1200, 1200, 1170], circleFeather: 20 },
+      // the small rose off Valencia, fleur-de-lis north; the coast name "Valentia" runs through its ring and stays as drawn
+      { id: 'rose-oliva-small', kind: 'rose', style: 'oliva', scan: 'oliva-chart', key: 'patch', paper: OLIVA_PAPER, crop: [2484, 3238, 3284, 4038], sizePx: 110, circle: [400, 400, 392], circleFeather: 8 },
+      // Mount Ararat with Noah's Ark on its summit and "arca de noe" inscribed on it, the rivers beside it; the crop stops short of "ASIA".
+      // The chart draws the Levant and Caucasus figures on their sides, base to the east, so these three cuts are turned a quarter clockwise
+      { id: 'mountain-oliva-ararat', kind: 'mountain', style: 'oliva', scan: 'oliva-chart', key: 'patch', paper: OLIVA_PAPER, crop: [13620, 2600, 15160, 4150], turn: 90, sizePx: 120 },
+      // the Caucasus hills beside it: grey-gilt, green, orange, blue and green washed cones; only the Ark's prow at the right edge is erased
+      { id: 'mountain-oliva-hills', kind: 'mountain', style: 'oliva', scan: 'oliva-chart', key: 'patch', paper: OLIVA_PAPER, crop: [12360, 2850, 13760, 4200], turn: 90, sizePx: 140,
+        erase: [[13690, 3400, 13760, 3530]] },
+      // Jerusalem: the painted (oxidised) city with its blue cross, the orange crosses beside it; "Jerusalem" lettering lies outside the crop
+      { id: 'town-oliva-jerusalem', kind: 'town', style: 'oliva', scan: 'oliva-chart', key: 'patch', paper: OLIVA_PAPER, crop: [15330, 6430, 16170, 7560], turn: 90, sizePx: 64, only: ['Jerusalem'] },
+      // a palm on the Barbary coast with its strip of ground; the chart draws it lying on its side, so the cut is turned a quarter clockwise
+      { id: 'palms-oliva', kind: 'tree', style: 'oliva', scan: 'oliva-chart', key: 'patch', paper: OLIVA_PAPER, crop: [4060, 6930, 5150, 8000], turn: 90, sizePx: 70 },
+      // Petrus Plancius, Tabula geographica ... Actis et Epistolis Apostolorum (1609), an engraving on toned paper: patches, the paper divided out.
+      // the galleon off Crete, bow to the left, with the sea and the parallel round it; the crop reaches well below the hull for its water.
+      // The "R" of "PARS" beside the stern and the top of "Persei Specula" below are erased
+      { id: 'ship-plancius', kind: 'ship', style: 'plancius', scan: 'plancius-acts', key: 'patch', paper: PLANCIUS_PAPER, crop: [4558, 2945, 4905, 3365], figure: [4571, 2966, 4891, 3310], sizePx: 80, heading: 'left',
+        erase: [[4884, 3060, 4905, 3150], [4815, 3292, 4905, 3365]] },
+      // the rose between "Occidens" and "Oriens", fleur-de-lis north and the east ornament; the tail of "Occidens" and the head of "Meridies" erased
+      { id: 'rose-plancius', kind: 'rose', style: 'plancius', scan: 'plancius-acts', key: 'patch', paper: PLANCIUS_PAPER, crop: [2840, 2835, 3250, 3245], sizePx: 110, circle: [205, 205, 203], circleFeather: 4,
+        erase: [[2840, 3015, 2885, 3065], [3026, 3188, 3080, 3245]] },
       // Paré's sea monsters (Des monstres), black line on blank paper, with Master W's ships
       { id: 'pare-truie', kind: 'monster', style: 'pare', scan: 'pare-3289', key: 'ink', crop: [880, 440, 3030, 1640], sizePx: 190, minClearancePx: 150, weight: 3, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
       { id: 'pare-boar', kind: 'monster', style: 'pare', scan: 'pare-3267', key: 'ink', crop: [520, 2100, 2500, 3260], sizePx: 180, minClearancePx: 140, weight: 3, level: PAPER_LEVEL, denoise: 3, silhouette: PAPER_FIGURE },
@@ -250,6 +297,26 @@ const PACKS = [
       { id: 'debry-village-dasamonguepeuc', kind: 'town', style: 'debry', scan: 'debry-virginia', crop: [585, 296, 695, 385], sizePx: 44 },
       { id: 'debry-village-pasquenoke', kind: 'town', style: 'debry', scan: 'debry-virginia', crop: [1288, 150, 1406, 228], sizePx: 44 },
       { id: 'debry-village-roanoac', kind: 'town', style: 'debry', scan: 'debry-virginia', crop: [755, 602, 925, 702], sizePx: 48, erase: [[785, 693, 835, 702]] },
+    ],
+  },
+  {
+    // Piri Reis, Kitab-ı Bahriye (a later copy, Walters W.658, fol. 208a): the Adriatic, painted in colour and gilt,
+    // so the pack keeps the scan's colour. The sheet's one whole rose; it has no town vignettes (docs/kitab-i-bahriye).
+    name: 'kitab',
+    key: 'patch',
+    title: 'Sprites cropped from Piri Reis, Kitab-ı Bahriye, the Adriatic (Walters Art Museum W.658, fol. 208a; a later copy, painted and gilt)',
+    licence: 'Public domain; Walters Art Museum, Baltimore, W.658 (Walters Art Museum license, type=2D), via Wikimedia Commons',
+    colour: 'source',
+    ink: '#3b2a1a',
+    sprites: [
+      // the thirty-two-point rose with its gilt boss, the rhumb lines round it and the fleur-de-lis north on its stem,
+      // turned so the fleur points up (the page has Venice at the top, so north sits 45 degrees right of it). The circle
+      // reaches past the fleur's tip; the erase boxes cut only the coast, its blue streams and the lettering to the west.
+      { id: 'rose-kitab', kind: 'rose', style: 'kitab', scan: 'kitab-i-bahriye-adriatic', paper: KITAB_PAPER, crop: [788, 720, 1128, 1060], rotate: -45,
+        // `figure` is the ring, centred on the crop, so the anchor sits on the rose's centre whatever the erase trims; drawn 100 px across, the whole sprite is about 220
+        figure: [885, 817, 1031, 963], sizePx: 100,
+        circle: [170, 170, 160], circleFeather: 6,
+        erase: [[780, 712, 890, 845], [780, 845, 880, 940], [780, 940, 895, 1068]] },
     ],
   },
 ];
@@ -413,6 +480,7 @@ function buildSprite(sprite, colour, key, outDir, tmp) {
   if (turn) entry.source.turn = turn;
   if (sprite.minClearancePx) entry.minClearancePx = sprite.minClearancePx;
   if (sprite.weight) entry.weight = sprite.weight;
+  if (sprite.only) entry.only = sprite.only; // town names this sprite is drawn for alone
   if (sprite.heading) entry.heading = sprite.heading;
   if (sprite.heightPx) entry.heightPx = sprite.heightPx;
   else if (sprite.kind === 'town') entry.heightPx = fig ? Math.round(sprite.sizePx * th / (fig[3] - fig[1])) : sprite.sizePx; // a town stands at sizePx, flag to foot

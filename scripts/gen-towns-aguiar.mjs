@@ -23,6 +23,7 @@
 import { writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { mulberry32 } from './rng.mjs';
 
 const AFTER = 'https://commons.wikimedia.org/wiki/File:Jorge_Aguiar_1492_MR.jpg';
 const INK = '#3a2415';
@@ -47,15 +48,6 @@ const KINDS = {
 };
 export const SEEDS = 3; // drawings of each general kind: `walled`, `walled-2`, `walled-3`
 export const VARIANTS = Object.fromEntries(Object.entries(KINDS).flatMap(([k, p]) => (p.only ? [[k, p]] : Array.from({ length: SEEDS }, (_, i) => [i ? `${k}-${i + 1}` : k, { ...p, kind: k, seed: p.seed + i * 101 }]))));
-
-function mulberry32(seed) {
-  return () => {
-    seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
 
 const n = (v) => String(Math.round(v * 10) / 10);
 const LW = 0.85; // the ink line, in scan px

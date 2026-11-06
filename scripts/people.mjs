@@ -50,19 +50,28 @@ export function lifeSpan(person, voyageYears = [], reach = 40) {
   return [fromKnown ? lo : lo - reach, toKnown ? hi : hi + reach, fromKnown, toKnown];
 }
 
-// The timeline the People and Voyages buttons share: one linear year axis, people above it and voyages below, from the
-// Lapita voyages (TIMELINE_FROM) to this year, at true scale throughout, so an empty stretch reads as empty rather than
-// cut out. "Earlier" adds a stretch before it, back to TIMELINE_EARLIEST, at its own linear scale (a broken axis): the
-// main stretch keeps its width and the earlier one takes EARLIER_SHARE of it again, to its left.
+// The People and the Voyages drawers are each a vertical timeline, earliest at the top, from the Lapita voyages
+// (TIMELINE_FROM) on. The eras of the points of interest (the Sights groups in public/page.js) head the rows that fall
+// in them, as small italic headings: each era runs from its year to the next one's, the last on to today.
 export const TIMELINE_FROM = -1500;
+export const TIMELINE_ERAS = [['The ancient world', TIMELINE_FROM], ['The medieval Indian Ocean and Asia', 500], ['The age of discovery', 1450], ['The modern world', 1800]];
+// a year as the drawers write it: 1500 BC, AD 1, 1500, with a thousands comma only from five figures (50,000 BC)
+export const yearLabel = (y) => { const n = Math.abs(y), t = n >= 10000 ? n.toLocaleString('en') : String(n); return y < 0 ? `${t} BC` : y === 1 ? 'AD 1' : t; };
+
+// Two timelines for people and voyages, to compare in one build (`timeline=a|b` in the link): A, one wide drawer the
+// People and Voyages buttons share, the lives and voyages as bars on one true-scale axis; B, the two vertical drawers
+// above. An unknown or missing value is A.
+export const TIMELINE_VARIANTS = ['a', 'b'];
+export const timelineVariant = (v) => (TIMELINE_VARIANTS.includes(v) ? v : TIMELINE_VARIANTS[0]);
+
+// Timeline A: one linear year axis, people above it and voyages below, from the Lapita voyages (TIMELINE_FROM) to this
+// year, at true scale throughout, so an empty stretch reads as empty rather than cut out. "Earlier" adds a stretch
+// before it, back to TIMELINE_EARLIEST, at its own linear scale (a broken axis): the main stretch keeps its width and
+// the earlier one takes EARLIER_SHARE of it again, to its left.
 export const TIMELINE_EARLIEST = -50000;
 export const EARLIER_SHARE = 0.5;
-// The eras of the points of interest (the Sights groups in public/page.js), as bands behind both lanes: each from its
-// year to the next one's, the last to the axis's end, the first from the axis's start.
-export const TIMELINE_ERAS = [['The ancient world', TIMELINE_FROM], ['The medieval Indian Ocean and Asia', 500], ['The age of discovery', 1450], ['The modern world', 1800]];
 // The windows of the peopling of Sahul, Beringia and the Americas, marked on the earlier stretch: [label, year, title].
 export const EARLIER_MARKS = [['Sahul', -50000, 'Sahul, the first peopling of Australia and New Guinea, c. 50,000 BC or earlier'], ['Beringia', -20000, 'Beringia, the land bridge into the Americas, c. 20,000 BC'], ['Clovis', -11000, 'Clovis, c. 11,000 BC']];
-
 // The axis: { width, stretches: [[from, to, x0, x1]], x(year), ticks: [[year, label]] }, with x in 0..1 of the whole
 // track and `width` the track's width in main stretches (1, or 1 + EARLIER_SHARE with the earlier stretch).
 export function laneAxis({ earlier = false, to = new Date().getFullYear() } = {}) {
@@ -76,12 +85,63 @@ export function laneAxis({ earlier = false, to = new Date().getFullYear() } = {}
     .filter((y) => y <= to).map((y) => [y, yearLabel(y)]);
   return { width, stretches, x, ticks };
 }
-// a year as the axis writes it: 1500 BC, AD 1, 1500, with a thousands comma only from five figures (50,000 BC)
-export const yearLabel = (y) => { const n = Math.abs(y), t = n >= 10000 ? n.toLocaleString('en') : String(n); return y < 0 ? `${t} BC` : y === 1 ? 'AD 1' : t; };
 // The era bands on an axis: [name, from, to], end to end from the main stretch's start to its end.
 export function eraBands(axis) {
   const [from, to] = axis.stretches.at(-1);
   return TIMELINE_ERAS.map(([name, a], i) => [name, Math.max(a, from), Math.min(TIMELINE_ERAS[i + 1]?.[1] ?? to, to)]).filter(([, a, b]) => b > a);
+}
+// The era a year falls in, by name: the first era for anything before it; null for no year
+export function eraOf(year) {
+  if (!Number.isFinite(year)) return null;
+  let name = TIMELINE_ERAS[0][0];
+  for (const [n, from] of TIMELINE_ERAS) if (year >= from) name = n;
+  return name;
+}
+// An era's years as its heading writes them: "1500 BC – AD 500", "500 – 1450", "from 1800"
+export function eraYears(name) {
+  const i = TIMELINE_ERAS.findIndex(([n]) => n === name);
+  if (i < 0) return '';
+  const from = TIMELINE_ERAS[i][1], to = TIMELINE_ERAS[i + 1]?.[1];
+  return to === undefined ? `from ${yearLabel(from)}` : `${yearLabel(from)} – ${from < 0 && to > 0 ? `AD ${to}` : yearLabel(to)}`;
+}
+// An era's own scale, for the life bars of the rows under its heading: { from, to, x(year) in 0..1 clamped, ticks:
+// [[year, label]] }, from its year to the next era's, the last era to `now`. Each era has its own scale so a life of
+// sixty years reads at any era's width; the ruler under the heading says which. The ticks fall on round years, four
+// or fewer between the ends.
+export function eraScale(name, now = new Date().getFullYear()) {
+  const i = TIMELINE_ERAS.findIndex(([n]) => n === name);
+  if (i < 0) return null;
+  const from = TIMELINE_ERAS[i][1], to = TIMELINE_ERAS[i + 1]?.[1] ?? now;
+  const step = [50, 100, 250, 500, 1000].find((s) => (to - from) / s <= 5) ?? 1000;
+  const ticks = [];
+  for (let y = Math.ceil((from + 1) / step) * step; y < to; y += step) ticks.push([y || 1, yearLabel(y || 1)]);
+  return { from, to, x: (y) => Math.min(1, Math.max(0, (y - from) / (to - from))), ticks };
+}
+// A bar on an era's scale: [x0, x1, openStart, openEnd], an end open where the span runs past the era or the record
+// leaves it undated (`fromKnown`, `toKnown`, as lifeSpan gives them)
+export function barOn(scale, [a, b, fromKnown = true, toKnown = true]) {
+  if (!scale || !Number.isFinite(a)) return null;
+  const hi = Number.isFinite(b) ? b : a;
+  return [scale.x(a), scale.x(hi), !fromKnown || a < scale.from, !toKnown || hi > scale.to];
+}
+// The year a person's row sorts by and takes its era from: their birth where it is dated, else the first year of
+// their voyages (`voyageYears`, numbers); NaN for neither
+export function firstYear(person, voyageYears = []) {
+  const b = yearOf(person.born?.date), vs = voyageYears.filter(Number.isFinite);
+  return Number.isFinite(b) ? b : vs.length ? Math.min(...vs) : NaN;
+}
+// The years after a person's name: "24 Feb 1304 – c. 1369", "born c. 350 BC", "died 1510"; for a person the record
+// leaves undated (a people, or mariners nobody named), their voyages' years: one voyage's `when` as written, several
+// as "fl. 1492 – 1504" from their first year to their last; nothing where there is none
+export function yearsText(person, voyages = []) {
+  const b = person.born?.date, d = deathOf(person)?.date;
+  if (b && d) return `${b} – ${d}`;
+  if (b) return `born ${b}`;
+  if (d) return `died ${d}`;
+  const whens = voyages.map((v) => v?.when).filter(Boolean);
+  if (whens.length === 1) return whens[0];
+  const ys = whens.flatMap((w) => voyageYears(w)).filter(Number.isFinite);
+  return ys.length ? `fl. ${yearLabel(Math.min(...ys))} – ${yearLabel(Math.max(...ys))}` : '';
 }
 
 // The birth and, for a person with no voyage of their own to carry it, the death, as a voyage of events alone, which
@@ -96,24 +156,30 @@ export function personMarks(person, sources = {}) {
   return { id: `person-${person.id}`, title: person.name, legs: [], events };
 }
 
-// The voyages to draw with a person chosen: theirs first, lit in the person's red, then every other voyage chosen,
-// dimmed. `list` is the scene's voyages option ([{ id, colour, width }]).
+// The voyages to draw with a person chosen: theirs first, lit in the person's red, but for any of theirs the list
+// carries hidden (its eye put it off), then every other voyage chosen, dimmed. `list` is the scene's voyages option
+// ([{ id, colour, width, hidden }]); a voyage flagged hidden is left out of what is drawn.
 export function withPerson(list, person, width) {
-  const own = new Set(person?.voyages ?? []);
-  if (!person) return list;
-  return [...[...own].map((id) => ({ id, colour: PERSON_RED, width })), ...list.filter((v) => !own.has(v.id)).map((v) => ({ ...v, alpha: DIMMED }))];
+  if (!person) return list.filter((v) => !v.hidden);
+  const hidden = new Set(list.filter((v) => v.hidden).map((v) => v.id)), own = new Set((person.voyages ?? []).filter((id) => !hidden.has(id)));
+  return [...[...own].map((id) => ({ id, colour: PERSON_RED, width })), ...list.filter((v) => !own.has(v.id) && !v.hidden).map((v) => ({ ...v, alpha: DIMMED }))];
 }
 
-// A picture's file on the site, from its Commons title: lower case, ascii, dashes; the extension the build writes.
+// A picture's file on the site, from its Commons title: lower case, ascii, dashes; the extension the build writes. A
+// title with no ascii letter or digit in it (Cyrillic, Hebrew, Arabic) takes a short stable hash of the title instead.
 export function pictureName(file) {
-  return String(file).replace(/^File:/, '').replace(/\.[a-z]+$/i, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80) + '.jpg';
+  const title = String(file).replace(/^File:/, '').replace(/\.[a-z]+$/i, '');
+  const slug = title.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80);
+  if (slug) return `${slug}.jpg`;
+  let h = 0x811c9dc5; // FNV-1a, 32 bits
+  for (const c of title) h = Math.imul(h ^ c.codePointAt(0), 0x01000193) >>> 0;
+  return `commons-${h.toString(16).padStart(8, '0')}.jpg`;
 }
 // A picture's page on Commons
 export const commonsPage = (file) => `https://commons.wikimedia.org/wiki/File:${encodeURIComponent(String(file).replace(/^File:/, '').replace(/ /g, '_'))}`;
 
 // The caption a picture carries on the card: what it is, when it was made, by whom, under what licence.
-const KIND_WORDS = { life: 'from life', near: 'near life', posthumous: 'posthumous', imaginary: 'imagined', modern: 'modern', none: 'no likeness', scene: 'scene', ship: 'ship', map: 'map', photo: 'photograph', air: 'from the air', space: 'from orbit', drawing: 'drawing' };
+const KIND_WORDS = { life: 'from life', near: 'near life', posthumous: 'posthumous', imaginary: 'imagined', modern: 'modern', none: 'no likeness', scene: 'scene', ship: 'ship', map: 'map', artefact: 'artefact', site: 'the place', source: 'the source', photo: 'photograph', air: 'from the air', space: 'from orbit', drawing: 'drawing' };
 export const pictureCredit = (im) => [[KIND_WORDS[im.kind] ?? im.kind, im.date].filter(Boolean).join(', '), im.author, im.licence].filter(Boolean).join(' · ');
 // What a picture shows, in a line: a sight's `caption`, a person's `note`
 export const pictureNote = (im) => im.caption ?? im.note ?? null;
@@ -210,6 +276,30 @@ export const MEMENTO = [
   'Nuestras vidas son los ríos que van a dar en la mar, que es el morir',
   'Recuerda que eres polvo',
 ];
+// Each phrase in English, in MEMENTO's order: the skull's hover text, "Clear the map: " and the one shown beside it
+export const MEMENTO_EN = [
+  'Remember, man, that you are dust, and to dust you shall return',
+  'We are dust and shadow',
+  'Today me, tomorrow you',
+  'Death is certain, its hour uncertain',
+  'All flesh is grass',
+  'Earth out of earth is wondrously wrought; earth has of earth a dignity of nought',
+  'Every man is dust',
+  'Remember that you must die',
+  'Dust you are, and to dust you shall return',
+  'Our lives are the rivers that flow into the sea, which is dying',
+  'Remember that you are dust',
+];
+// A phrase that is verse in its source keeps its own lines
+const MEMENTO_VERSE = { 'Nuestras vidas son los ríos que van a dar en la mar, que es el morir': ['Nuestras vidas son los ríos', 'que van a dar en la mar,', 'que es el morir'] }; // Jorge Manrique, Coplas, III
+// A long phrase with a comma near its middle is set as a couplet, two lines split after that comma; any other on one line
+export function mementoLines(text) {
+  if (Object.hasOwn(MEMENTO_VERSE, text)) return MEMENTO_VERSE[text];
+  if (text.length <= 30) return [text];
+  let best = -1;
+  for (let i = text.indexOf(','); i >= 0; i = text.indexOf(',', i + 1)) if (Math.abs(i / text.length - 0.5) < Math.abs(best / text.length - 0.5)) best = i;
+  return best >= 0 && Math.abs(best / text.length - 0.5) <= 0.15 ? [text.slice(0, best + 1), text.slice(best + 1).trim()] : [text];
+}
 export const mementoNext = (k) => (((k + 1) % MEMENTO.length) + MEMENTO.length) % MEMENTO.length;
 
 // Where a person's pictures lie by default, from `frame` (the lon/lat box of their birth, death and voyages): each as tall
@@ -218,9 +308,10 @@ export const mementoNext = (k) => (((k + 1) % MEMENTO.length) + MEMENTO.length) 
 // and overlapping on a wide screen, so a long row still fits it). `sizes` are the pictures' [width, height] in px.
 // Returns [{ lon, lat, scale, turn: 0 }], scale in Mercator degrees per px,
 // as a chart's sheet (overlays.mjs).
+// Mercator latitude in degrees and back, for laying pictures along a frame
+const merc = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360)) * 180 / Math.PI;
+const latOf = (m) => (2 * Math.atan(Math.exp((m * Math.PI) / 180)) - Math.PI / 2) * 180 / Math.PI;
 export function picturePlaces(frame, sizes, grow = 1, overlap = 0) {
-  const merc = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360)) * 180 / Math.PI;
-  const latOf = (m) => (2 * Math.atan(Math.exp((m * Math.PI) / 180)) - Math.PI / 2) * 180 / Math.PI;
   const m0 = merc(Math.max(-80, frame.latMin)), m1 = merc(Math.min(80, frame.latMax));
   const tall = Math.max(3, Math.min(30, (m1 - m0) * 0.4)) * grow, gap = tall * 0.08;
   let x = frame.lonMin;
@@ -233,8 +324,6 @@ export function picturePlaces(frame, sizes, grow = 1, overlap = 0) {
 // The box of `frame` and the pictures laid at `places` (picturePlaces), each `sizes` [width, height] px: what a view
 // shows to frame a person whole.
 export function withPictures(frame, places, sizes) {
-  const merc = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360)) * 180 / Math.PI;
-  const latOf = (m) => (2 * Math.atan(Math.exp((m * Math.PI) / 180)) - Math.PI / 2) * 180 / Math.PI;
   const box = { ...frame };
   places.forEach((s, k) => {
     const [w, h] = sizes[k], m = merc(s.lat);

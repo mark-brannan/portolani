@@ -9,12 +9,34 @@ Feature: Drawer open and close  (rose button `#open`, one of seven instrument bu
     Then `#drawer` gains the class `open` and `aria-expanded=true`, then both revert and focus returns to `#open`
   Scenario: one drawer at a time
     Given the settings drawer open
-    When the user clicks another instrument (`#charts`, `#sights`, `#go`, `#voyages`, `#people`, `#anchor`)
+    When the user clicks another instrument (`#go`, `#sights`, `#voyages`, `#people`, `#charts`)
     Then the settings drawer shuts and that one opens
   Scenario: a map touch shuts it on a wide screen only
     Given a viewport wider than 520 px and the drawer open
     When the user presses on the map
     Then the drawer shuts; at 520 px or narrower a press on the canvas leaves it open (so a control's effect is seen), though any other outside press or focus-out still shuts it [page.js:607-610 at main]
+
+Feature: The skull stays in reach while a drawer is in use  (`#memento`: the skull `#sweep` and its line `#mementoText`; the drawers that clear the map with it: the timeline `#timelinePanel`, opened by `#people` and `#voyages`)
+  Source: the user, 2026-11-04 (paraphrase): the skull and its memento mori must stay visible and clickable whenever a drawer that uses them to clear the map is open; the broom goes, and a quick, subtle wipe takes its place: a large, almost imperceptible, semi-translucent skull that flashes on the map and fades.
+  Tested by: test/drawers.test.mjs — 'the skull sits over the drawers, and the broom is gone' (offline, source only: the skull's z-index over `.drawer`, the drawer's `--memento-h` ceiling, no broom, the wipe element; the scenarios' hit tests and the panel staying open are not yet driven in a browser)
+  Scenario: the skull and its line stay in sight beside an open drawer
+    Given a viewport 1280 x 800 and the chart at `#person=ibn-battuta`
+    When the user clicks `#people`
+    Then `#timelinePanel` is open and its foot stops above `#memento`, however many lines the phrase takes
+    And `elementFromPoint` at the centre of `#sweep` returns the skull, and `#mementoText` lies wholly in the window, uncovered
+  Scenario: on a phone the skull rides above the sheet
+    Given a viewport 390 x 844 and the timeline open as a bottom sheet
+    When the user looks at the lower right
+    Then the skull and its line sit just above the sheet, clear of it, and a tap on the skull reaches it
+  Scenario: clearing the table leaves the drawer open
+    Given the timeline open with a person chosen and their cards on the table
+    When the user clicks `#sweep`
+    Then every card is put away and the person let go, the line moves on, and `#timelinePanel` stays open, so the next person can be chosen at once
+  Scenario: a faint skull wipes the map instead of a broom
+    Given cards on the table
+    When the user clicks `#sweep`
+    Then the skull itself, drawn large in the middle of the map at about a tenth opacity, fades in and out in about half a second as the cards go, then is gone
+    And no broom crosses the map; with reduced motion there is no wipe, and the cards simply go
 
 Feature: Projection  (hash `projection`, default `mercator`, 7 values: `mercator, plate-carree, miller, equal-area, orthographic, azimuthal-equidistant, stereographic`) [verified page.js:68-71, scene.mjs:222, 312]
   Scenario: chip round-trips
@@ -155,11 +177,23 @@ Feature: Placement  (hash `placement`, default empty; values `historic`, `seeded
     # Mismatch: Default and Historic both parse to `historical: true`; they draw the same, differing only in the hash text (`''` vs `historic`). The chip tooltips describe two behaviours.
     # Re-roll is only reachable through the chip; `seed:<n>` is typed in the hash (negative allowed, `seed:-5` parses).
 
-Feature: Mountains  (chips `#mountains`, hash `mountains`, default `colour`, values `off|ink|colour`; scene `relief` `['marina']`/`['engraved']`/`[]`) [verified page.js:90-93, 126, 381, 524; relief.mjs:295-303]
+Feature: Mountains  (chips `#mountains`, hash `mountains`, default `colour`, values `off|ink|colour|shadow|me1937|me1954`; scene `relief` `['marina']`/`['engraved']`/`['shadow']`/`['me1937']`/`['me1954']`/`[]`) [verified page.js:90-93, 126, 381, 524; relief.mjs:295-303]
   Scenario: ink
     Given the chart at `#map=6.00/46.500/8.000`
-    When the user clicks "Ink" in Mountains
+    When the user clicks "Hatched" in Mountains
     Then the hash gains `mountains=ink` and range hatching is ink-only, no ochre wash (`engraved` has `light: land`, `shade: null`, relief.mjs:300 at main)
+  Scenario: shadow
+    Given the chart at `#map=6.00/46.500/8.000`
+    When the user clicks "Shadow" in Mountains
+    Then the hash gains `mountains=shadow` and each range is a flat ink shadow with a narrow lit left flank, a paper halo round every peak, no hatching
+  Scenario: me1937
+    Given the chart at `#map=6.00/46.500/8.000`
+    When the user clicks "M.E. 1937" in Mountains
+    Then the hash gains `mountains=me1937` and each range is pen alone: sharp stacked peaks, the east flank solid ink breaking into strokes at the base, skirt strokes off the west flank and small hatched foothill ridgelets trailing off the range
+  Scenario: me1954
+    Given the chart at `#map=6.00/46.500/8.000`
+    When the user clicks "M.E. 1954" in Mountains
+    Then the hash gains `mountains=me1954` and each range is hairline peaks, a few hatch strokes down the east flank stopping short of the foot, the west flank blank, no halo
   Scenario: off
     Given the chart at the same view
     When the user clicks "Off"
@@ -406,12 +440,12 @@ Feature: Parchment  (colour input `#parchment`, hash `parchment`, default `e9d8b
   Scenario: the sheet repaints
     Given the same
     When the page places
-    Then the canvas background pixels read near `#eeeeee`, a little darker and warmer at the centre and much darker at the corners (mottling, grain and a vignette multiply the colour, scene.mjs:1682-1725 at main; the pattern is fixed by seed 1539)
+    Then the canvas background pixels read near `#eeeeee`, a little darker and warmer at the centre and much darker at the corners (mottling, grain and a vignette multiply the colour: scene.mjs `makePaper` and `paintPaper`; the pattern is fixed by seed 1539 and by its place on the earth)
 
 Feature: One mode  (tokens `--panel` #efe3c6, `--fg`, `--margin` #1d1913; no `prefers-color-scheme` in `public/`) [verified at main] (#211)
   Scenario: every drawer is parchment inside, on the dark margin
     Given the page with the browser set to dark, then to light
-    When the user opens each drawer (`#open`, `#charts`, `#sights`, `#go`, `#voyages`, `#people`, `#anchor`) and, for the settings drawer, each layout (default, `question`, `moods`, `sheet`)
+    When the user opens each drawer (`#open`, `#go`, `#sights`, `#voyages`, `#people`, `#charts`) and, for the settings drawer, each layout (default, `question`, `moods`, `sheet`)
     Then the drawer's background is `--panel` and its ink `--fg`, the margin round the map is `--margin` (`#1d1913`), and nothing visible inside a drawer has a dark background
   Scenario: the browser's light/dark setting changes nothing
     Given the same page
@@ -428,8 +462,13 @@ Feature: Scan overlay  (charts drawer `#chartsDrawer`: a chart row `li.chart[dat
     Given the chart at `#map=4.60/61.700/19.700&overlay=carta-marina&overlaymode=pieces`
     When the user moves the slider to 0.3
     Then the hash gains `overlayopacity=0.3` and the scan is drawn fainter when the slider pauses
+  Scenario: a sheet's own opacity
+    Given the chart at `#overlay=aguiar,de-la-cosa`
+    When the user moves the slider in de la Cosa's row to 0.4
+    Then the hash gains `sheetopacity=,0.4` (one slot per id in `overlay=`, an empty slot the mode's own) and only de la Cosa's sheet is drawn fainter
+    # Tested by: test/overlays.test.mjs (offline, `sheetOpacity` and the `sheetopacity` round-trip)
   Scenario: off, and a chart without a scan
-    Given the same
+    Given the chart at `#map=4.60/61.700/19.700&overlay=carta-marina&overlaymode=pieces`
     When the user clicks the eye again
     Then the eye is `aria-pressed=false`, `overlay` leaves the hash; no other chart's sheet changes; a chart without a scan shows no eye
   Scenario: several sheets at once
