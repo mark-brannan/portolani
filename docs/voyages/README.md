@@ -112,7 +112,7 @@ so. An `alternative` is another place of death, never of burial.
 
 A first meeting between a ship and the people already on the shore is told from both sides in the one tile: what the ship's
 journal records, then what the shore's own account says, each marked by who is speaking, with a `doubt` where the two disagree
-about the day or the deed (`cook-1`'s Tūranganui-a-Kiwa, Kamay and Waalumbaal Birri).
+about the day or the deed (`cook-1`'s Tūranganui-a-Kiwa, `cook-3`'s Waimea and Yuquot).
 
 A traveller whose road splits into journeys has the whole road in one file and each journey in its own
 (`ibn-battuta` and `ibn-battuta-1` to `ibn-battuta-8`): the parts name the whole road's legs by `sameAs`,
