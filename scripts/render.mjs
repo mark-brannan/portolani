@@ -86,17 +86,35 @@ function drawNoteBoxes(g, overlay, proj) {
 }
 
 const arg = (name) => { const i = process.argv.indexOf(`--${name}`); return i > 0 ? process.argv[i + 1] : undefined; };
+// MOCKUP (#107, not for merge): `--batch list.json`, many views in one process, each [lon, lat, zoom, meet, out?]; prints
+// per view the roses and the meeting points (centre or node, sea or land) inside the window, and draws it where `out` is given.
+if (arg('batch')) {
+  const inW = ([x, y]) => x >= 0 && x <= W && y >= 0 && y <= H;
+  for (const [lon, lat, zoom, meet, out] of JSON.parse(readFileSync(arg('batch'), 'utf8'))) {
+    const one = await createScene(env, { view: { lon, lat, zoom }, tune: { meet } }), sc = one.scene;
+    const pts = [...(sc.sheets ?? []), ...(sc.extras ?? [])].flatMap((sh) => [sh.circle, ...sh.circle.nodes]).filter((n) => inW(one.proj.project(n.lon, n.lat)));
+    console.log(JSON.stringify({ lon, lat, zoom, meet, roses: sc.roseDraws.filter((r) => inW([r.x, r.y])).length, meets: pts.length }));
+    if (out) { const canvas = createCanvas(W, H); drawScene(canvas.getContext('2d'), sc, one.data, one.bg, { scale: 1, x: 0, y: 0 }); writeFileSync(out, canvas.toBuffer('image/jpeg', 82)); }
+  }
+  process.exit(0);
+}
 if (arg('view')) {
   const [lon, lat, zoom, projection] = arg('view').split(',');
   const [id, opacity] = (arg('overlay') ?? '').split(':'); // `id` the sheet; `id:<opacity>` the warped pieces at that opacity
   const at = (arg('sheet') ?? '').split(',').map(Number), sheet = at.length === 4 && at.every(Number.isFinite) ? { lon: at[0], lat: at[1], scale: at[2], turn: at[3] } : null;
   const one = await createScene(env, { view: { lon: +lon, lat: +lat, zoom: +zoom, projection }, overlay: id ? { id, mode: opacity ? 'pieces' : 'sheet', sheet, ...(opacity && { opacity }) } : null,
     voyages: (arg('voyages') ?? '').split(',').filter(Boolean).map((v) => { const [id, c] = v.split(':'); return { id, ...(c && { colour: `#${c}` }) }; }),
-    debug: (arg('debug') ?? '').split(',').filter(Boolean), relief: (arg('relief') ?? '').split(',').filter(Boolean) });
+    debug: (arg('debug') ?? '').split(',').filter(Boolean), relief: (arg('relief') ?? '').split(',').filter(Boolean),
+    tune: Object.fromEntries((arg('tune') ?? '').split(',').filter(Boolean).map((p) => p.split(':'))) });
   const canvas = createCanvas(W, H), out = arg('out') ?? join(ROOT, 'out', 'view.png');
   drawScene(canvas.getContext('2d'), one.scene, one.data, one.bg, { scale: 1, x: 0, y: 0 });
   if (process.argv.includes('--notes')) drawNoteBoxes(canvas.getContext('2d'), one.scene.overlays[0], one.proj);
   writeFileSync(out, out.endsWith('.jpg') ? canvas.toBuffer('image/jpeg', 82) : canvas.toBuffer('image/png'));
+  if (arg('tune')) { // MOCKUP (#107): roses and meeting points (centre or node, sea or land) inside the window
+    const inW = ([x, y]) => x >= 0 && x <= W && y >= 0 && y <= H, sc = one.scene;
+    const pts = [...(sc.sheets ?? []), ...(sc.extras ?? [])].flatMap((sh) => [sh.circle, ...sh.circle.nodes]).filter((n) => inW(one.proj.project(n.lon, n.lat)));
+    console.log(JSON.stringify({ roses: sc.roseDraws.filter((r) => inW([r.x, r.y])).length, meets: pts.length, extras: (sc.extras ?? []).length }));
+  }
   const [ov] = one.scene.overlays;
   console.log(`${out}: ${W} x ${H}, overlay ${ov ? `${ov.id} ${ov.mode === 'sheet' ? `sheet at ${JSON.stringify(ov.sheet)}` : `pieces at ${ov.opacity}`}` : 'none'}`);
   process.exit(0);
