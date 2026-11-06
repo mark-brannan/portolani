@@ -1,0 +1,27 @@
+{
+  "id": "himilco",
+  "title": "Himilco to the tin islands, c. 500 BC",
+  "short": "Himilco",
+  "who": ["himilco"],
+  "when": "c. 500 BC",
+  "summary": "A Carthaginian sails out through the Pillars of Heracles and north up the Atlantic coast of Europe to the Oestrymnides, the tin islands. His own account is lost; the poet Avienus, a thousand years later, passes on its windless, weed-choked sea and a Sacred Isle beyond.",
+  "sources": ["himilco"],
+  "legs": [
+    { "from": "Carthage", "to": "Gades (Cádiz)", "dates": "c. 500 BC", "mode": "sea", "line": "spline",
+      "confidence": "conventional", "source": "the Mediterranean way is not recorded; shown along the African shore to the Pillars",
+      "points": [[10.6,37.2], [9.5,37.6], [7,37.5], [4,37.3], [1,36.7], [-1.5,36], [-3,35.9], [-5.4,35.95], [-6.4,36.4]] },
+    { "from": "Gades", "to": "the Oestrymnides (Ushant)", "dates": "c. 500 BC", "mode": "sea", "line": "spline",
+      "confidence": "conventional", "source": "Avienus, Ora Maritima, as read by scholars; the coast-wise way past Cape St Vincent and Finisterre",
+      "points": [[-6.4,36.4], [-9.5,37], [-9.8,38.7], [-9.8,40.5], [-9.8,42.9], [-8.2,44.3], [-6,46], [-5.3,48.4]] },
+    { "from": "the Oestrymnides", "to": "the Sacred Isle", "dates": "c. 500 BC", "mode": "sea", "line": "spline",
+      "confidence": "conventional", "source": "Avienus: two days from the Oestrymnides to the Sacred Isle of the Hierni, near the isle of the Albiones",
+      "note": "this end rests on two names in Avienus, read as Ireland and Britain; no one can say Himilco went",
+      "points": [[-5.1,48.46], [-6.3,49.93], [-8.3,51.8]] }
+  ],
+  "events": [
+    { "kind": "event", "lon": -6.29, "lat": 36.53, "date": "c. 500 BC", "label": "Himilco sets out from Gades", "source": "Himilco (Wikipedia)", "cite": "himilco", "confidence": "conventional", "text": "Pliny the Elder says Himilco was sent to find out what lay beyond the extremities of Europe, in the same years Hanno was sent down the African coast. Avienus puts the start of his run in the waters four days beyond the Pillars of Heracles, fished by the men of Gades." },
+    { "kind": "landfall", "lon": -5.1, "lat": 48.46, "date": "c. 500 BC", "label": "The Oestrymnides, islands of tin and lead", "source": "Himilco (Wikipedia)", "cite": "himilco", "confidence": "conventional", "text": "Avienus names the Oestrymnides as islands rich in tin and lead. The mark stands on Ushant, off western Brittany, a reading and not a certainty." },
+    { "kind": "event", "lon": -6.0, "lat": 46.0, "date": "c. 500 BC", "label": "A sea with no wind, weed and monsters", "source": "Himilco (Wikipedia)", "cite": "himilco", "confidence": "speculative", "text": "Avienus has Himilco report a sluggish sea without wind, choked with weed, with shoals, fog and sea monsters, and a passage that took four months instead of two days. The poem names no place; the mark stands in the Bay of Biscay by a guess. Some think the dangers were made up to scare off Greek rivals." },
+    { "kind": "event", "lon": -8.3, "lat": 52.5, "date": "c. 500 BC", "label": "The Sacred Isle of the Hierni", "source": "Himilco (Wikipedia)", "cite": "himilco", "confidence": "speculative", "text": "Two days from the Oestrymnides, says Avienus, lies the Sacred Isle, home of the Hierni, near the island of the Albiones. These two names are read as Ireland and Britain, which is all that places Himilco there." }
+  ]
+}
