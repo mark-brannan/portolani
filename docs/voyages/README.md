@@ -156,7 +156,8 @@ not Standard. An older `voyage=<id>` link still opens, as a list of one.
 
 A record with `"kind": "migration"` is the spread of a people rather than a course sailed by named ones:
 `lapita-expansion` (the Bismarcks to Samoa, c. 1500–800 BC) and `east-polynesia-settlement` (the long pause,
-then the burst across the Polynesian Triangle, c. 1000–1300). `who` may be empty, and each settled place is a
+then the burst across the Polynesian Triangle, c. 1000–1300), with `austronesian-expansion` out of Taiwan, `marianas-settlement` and
+`madagascar-austronesian`. `who` may be empty, and each settled place is a
 `waypoint` event whose tile carries its date and story. How it is drawn is in the header of `scripts/voyages.mjs`.
 
 A migration's legs add three fields to the usual ones:

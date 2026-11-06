@@ -1,0 +1,28 @@
+{
+  "id": "marianas-settlement",
+  "kind": "migration",
+  "title": "The settlement of the Marianas and Micronesia, c. 1500 BC onward",
+  "short": "Marianas",
+  "who": ["marianas-micronesia-settlers"],
+  "when": "c. 1500 BC – c. 1200",
+  "summary": "Two separate crossings settled Micronesia. Voyagers sailing east from the Philippines reached the Marianas about 1500 BC, the first islands of Remote Oceania. Central and eastern Micronesia, far to the southeast, were settled from Island Melanesia about 200 BC, by people of the Lapita world.",
+  "sources": ["hung-2011-marianas", "micronesia", "austronesian-expansion", "nan-madol"],
+  "legs": [
+    { "from": "the Philippines (Luzon)", "to": "Saipan and Guam, the Marianas", "dates": "c. 1500 BC", "mode": "sea", "line": "spline",
+      "confidence": "conventional", "source": "Hung et al. 2011, the earliest Marianas pottery matched to Philippine wares, 1500–1000 BC",
+      "note": "where in the Philippines the voyagers left from is a drawing choice",
+      "reach": [0, 0.7], "heads": "end",
+      "points": [[121.0,15.0], [133.0,15.0], [145.72,15.13], [144.85,13.65]] },
+    { "from": "Island Melanesia (the Solomon Islands)", "to": "the Marshalls and Kiribati", "dates": "c. 200 BC", "mode": "sea", "line": "spline",
+      "confidence": "conventional", "source": "Micronesia (Wikipedia): Lapita colonists from Island Melanesia settled eastern Micronesia about 200 BC",
+      "note": "the starting island and the stops between are a drawing choice; the sources say the people came from Island Melanesia",
+      "reach": [0.1, 0.8], "heads": "end",
+      "points": [[160.0,-9.4], [173.0,1.4], [171.4,7.1]] }
+  ],
+  "events": [
+    { "kind": "waypoint", "lon": 145.72, "lat": 15.13, "date": "c. 1500 BC", "label": "Unai Bapot, Saipan", "source": "Hung et al. 2011", "cite": "hung-2011-marianas", "text": "With Ritidian on Guam, the key early site. The red-slipped Marianas pottery found at both is matched by Hung and colleagues to Philippine wares; they place the first settlement between 1500 and 1000 BC. Where in the Philippines the voyagers came from is argued." },
+    { "kind": "waypoint", "lon": 144.85, "lat": 13.65, "date": "c. 1500–1000 BC", "label": "Ritidian, Guam", "source": "Hung et al. 2011", "cite": "hung-2011-marianas", "text": "The earliest Marianas settlement is the first in Remote Oceania: islands out of sight of any mainland, reached across open sea. The ancestors of the CHamoru." },
+    { "kind": "waypoint", "lon": 171.4, "lat": 7.1, "date": "c. 200 BC", "label": "The Marshall Islands", "source": "Micronesia (Wikipedia)", "cite": "micronesia", "text": "Central and eastern Micronesia were settled from the south, by people from Island Melanesia, not from the Marianas. The Marshalls and Kiribati are low atolls; the stops on the way here are not recorded." },
+    { "kind": "waypoint", "lon": 158.33, "lat": 6.84, "date": "from c. 1180", "label": "Nan Madol, Pohnpei", "source": "Nan Madol", "cite": "nan-madol", "text": "A city of artificial islets built of basalt, begun about 1180. It stands on the far side of the story from the first landings, more than a thousand years after them." }
+  ]
+}
