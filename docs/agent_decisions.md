@@ -585,3 +585,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261106t225236z
 - Corrected the dossier where a source disagreed: Taiata died in early November 1770, the 2019 regret came from the British High Commissioner not the Crown, and the Gweagal shield now in the British Museum is doubted ([#401](https://github.com/mark-brannan/portolani/pull/401))
+
+### 20261106t225247z
+- Left out the dossier's claim that Hitihiti was the first Polynesian in Antarctic waters, the Rurutu stop, and every Commons portrait filename, none of which I could check ([#401](https://github.com/mark-brannan/portolani/pull/401))
