@@ -1,6 +1,6 @@
 {
   "name": "signalk-portolan",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "ENC cells as GeoJSON over the Signal K Resources API, drawn as a portolan chart in a webapp",
   "repository": {
     "type": "git",

@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2](https://github.com/mark-brannan/portolani/compare/signalk-portolan-v0.0.1...signalk-portolan-v0.0.2) (2026-11-06)
+
+
+### Added
+
+* **signalk:** draw the coastlines world under the ENC cells ([#394](https://github.com/mark-brannan/portolani/issues/394)) ([617b547](https://github.com/mark-brannan/portolani/commit/617b5478aea5469c0f7b2db326667db6c28084d1))
+* **signalk:** the webapp's nits: drawer chips, lettered peaks and water, towns, monsters, course up ([#396](https://github.com/mark-brannan/portolani/issues/396)) ([9f0a499](https://github.com/mark-brannan/portolani/commit/9f0a499a6d769ab0159063b1282167475396a76d))
+
 ## 0.0.1 (2026-11-05)
 
 
