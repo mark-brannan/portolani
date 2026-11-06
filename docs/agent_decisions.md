@@ -558,3 +558,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261106t224026z
 - Biscay hazards mark drawn at 46N 6W as a speculative guess, since Avienus names no place ([#398](https://github.com/mark-brannan/portolani/pull/398))
+
+### 20261106t224030z
+- East Polynesia branches already on main, left as they are, not redrawn (no PR, branch claude/voyage-austronesian-arrows)
