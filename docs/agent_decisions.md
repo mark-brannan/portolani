@@ -582,3 +582,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261106t225229z
 - Drew each track between the landfalls and dates the Wikipedia voyage articles give, marked inferred, not point by point from the journals, which I did not read ([#401](https://github.com/mark-brannan/portolani/pull/401))
+
+### 20261106t225236z
+- Corrected the dossier where a source disagreed: Taiata died in early November 1770, the 2019 regret came from the British High Commissioner not the Crown, and the Gweagal shield now in the British Museum is doubted ([#401](https://github.com/mark-brannan/portolani/pull/401))
