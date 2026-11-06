@@ -282,6 +282,12 @@ Each is laid level by landmarks read off the scan by eye, as above (`levelFit`; 
 
 ![Panades's 1557 sheet over the map, turned about 11.5 degrees](panades-1557-sheet.jpg)
 
+- **Piri Reis, Kitab-ı Bahriye, the Adriatic** (Walters Art Museum, W.658, fol. 208a; a later copy of the 1521 to 1526 sailing manual; public domain): the first chart on the map from outside the Latin tradition. The Adriatic runs up the page, Venice at the top and Corfu at the foot, so north lies to the upper right and the sheet is laid by a similarity with its turn (`turned: true`), 35.5 degrees anticlockwise. Seven landmarks (Venice, the tip of Istria, the Gargano, Leuca, Corfu, the Bay of Kotor, Vlorë), 19 km RMS (3 to 29 km); held level they miss by 188 km RMS. The scan is the whole folio at its only size, 1226 x 1800 px (scale 1); the `outline` is the folio's four sides a few px out into the scanner's grey, so the margins stay in.
+
+`npm run render -- --view 15.87,42.5,4.6 --overlay kitab-i-bahriye-adriatic --out docs/overlay/kitab-i-bahriye-adriatic-sheet.jpg`.
+
+![The Kitab-ı Bahriye's Adriatic folio over the map, turned so its coasts lie on today's](kitab-i-bahriye-adriatic-sheet.jpg)
+
 The scanner mask keys only the scanner's background, never the skin. A flood fill from the border does that on a
 scan laid on light paper; it fails on a scan laid on black, where the skin's own dark edge or binding fades into the
 background and the fill eats a ragged line into it. Such a chart carries an `outline` instead: a polygon in scan px
@@ -294,4 +300,23 @@ scan's own edge, so the whole lower edge and the worn binding stay in. The keyed
 ![Oliva's mask: the skin's perimeter traced, the tear followed](oliva-mediterranean-mask.jpg)
 ![Olives's mask: four straight sides round the binding](olives-1559-mask.jpg)
 
-`npm run overlays -- --only oliva-mediterranean,lopes-atlantic,olives-1559,panades-1557` rebuilds just those and keeps the other rows of overlays.json as they are; an id that is no chart, or no id at all, is an error.
+`npm run overlays -- --only oliva-mediterranean,lopes-atlantic,olives-1559,panades-1557,kitab-i-bahriye-adriatic,carte-pisane,vesconte-1313,dulcert-1339,debry-virginia` rebuilds just those and keeps the other rows of overlays.json as they are; an id that is no chart, or no id at all, is an error.
+
+## The four that had no scan: the Carte Pisane, Vesconte, Dulcert and de Bry's Virginia
+
+Each laid by landmarks read off the scan by eye, fitted with its turn (`turned: true`); `scripts/build-overlays.mjs` lists the landmarks. RMS is the miss against today's places, held level in brackets.
+
+- **Carte Pisane, about 1275** (BnF GE B-1118; public domain): 49 km (160); photographed south up, so turned half round.
+- **Vesconte, 1313** (BnF, the 1313 atlas; public domain): 20 km (155); drawn east up; every landmark on Italy's shore, the faded second leaf has none.
+- **Dulcert, Majorca, 1339** (BnF GE B-696; public domain): 46 km (273); an `outline` of four sides off its dark cloth.
+- **De Bry, Virginia, 1590** (the `debry-virginia` scan): 6 km (34); drawn west up; an `outline` of straight sides keeps the margin. Fitted to the barrier islands alone (Hatorask, the island north of the inlet south of Roanoke, Trinety harbor, the banks off Corolla): the drawing has the sounds far too narrow, so a fit that also took Roanoke and the mainland laid the drawn banks over the real sounds, and its line along the real banks ran through the drawn sea. Laid by the banks the drawn coast faces the real ocean; Roanoke and the mainland fall inland of their places, as the drawing has them. `fit-lines/debry-virginia-banks.jpg` draws today's coast over the scan at this fit, the landmarks ringed.
+
+`npm run render -- --view 19.08,39.59,3.6 --overlay carte-pisane --out docs/overlay/carte-pisane-sheet.jpg`, `npm run render -- --view 13.2,38.4,4.4 --overlay vesconte-1313 --out docs/overlay/vesconte-1313-sheet.jpg`, `npm run render -- --view 17.27,39.68,3.2 --overlay dulcert-1339 --out docs/overlay/dulcert-1339-sheet.jpg` and `npm run render -- --view -75.79,36.01,9.0 --overlay debry-virginia --out docs/overlay/debry-virginia-sheet.jpg`.
+
+![The Carte Pisane over the map, turned north up](carte-pisane-sheet.jpg)
+
+![A chart from Vesconte's 1313 atlas over the map, turned to lie on Italy](vesconte-1313-sheet.jpg)
+
+![Dulcert's 1339 chart over the map, turned 10 degrees](dulcert-1339-sheet.jpg)
+
+![De Bry's Virginia over the Outer Banks, turned north up](debry-virginia-sheet.jpg)

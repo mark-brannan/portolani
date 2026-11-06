@@ -11,10 +11,10 @@ import { listStyles, chooseSprites, listSprites, defaultSprites, selectSprites, 
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const env = { readJSON: async (p) => JSON.parse(readFileSync(join(ROOT, p), 'utf8')) };
-const manifests = { vivid: await env.readJSON('packs/vivid/pack.json'), scanned: await env.readJSON('packs/scanned/pack.json'), debry: await env.readJSON('packs/debry/pack.json') };
+const manifests = { vivid: await env.readJSON('packs/vivid/pack.json'), scanned: await env.readJSON('packs/scanned/pack.json'), debry: await env.readJSON('packs/debry/pack.json'), kitab: await env.readJSON('packs/kitab/pack.json') };
 
 test('listStyles offers the styles in the packs, the tower first among towns', async () => {
-  assert.deepEqual(await listStyles(env), { rose: ['aguiar', 'martines', 'oliva', 'brouscon', 'fleurs', 'dieppe', 'plancius'], monster: ['carta-marina', 'bestiary', 'heraldic', 'catalan', 'plancius', 'pare', 'debry'], town: ['tower', 'aguiar', 'martines', 'oliva', 'debry'] });
+  assert.deepEqual(await listStyles(env), { rose: ['aguiar', 'martines', 'oliva', 'brouscon', 'fleurs', 'dieppe', 'plancius', 'kitab'], monster: ['carta-marina', 'bestiary', 'heraldic', 'catalan', 'de-la-cosa', 'plancius', 'pare', 'debry'], town: ['tower', 'aguiar', 'martines', 'oliva', 'debry'] });
 });
 
 test('every sprite in every pack names its style', () => {
@@ -59,7 +59,7 @@ test('listSprites keys every sprite by pack, ids that repeat across packs apart,
   assert.equal(new Set(keys).size, keys.length, 'a key repeats');
   for (const s of list) assert.equal(s.key, `${s.pack}/${s.id}`);
   for (const k of ['vivid/serpent-a', 'scanned/serpent-a', 'plain/rose', 'plain/cartouche', 'plain/tower']) assert.ok(keys.includes(k), k);
-  assert.equal(list.length, manifests.vivid.sprites.length + manifests.scanned.sprites.length + manifests.debry.sprites.length + 12);
+  assert.equal(list.length, manifests.vivid.sprites.length + manifests.scanned.sprites.length + manifests.debry.sprites.length + manifests.kitab.sprites.length + 12);
   assert.deepEqual(list.filter((s) => s.pack === 'plain').map((s) => [s.id, s.kind, s.style, s.file]), [['rose', 'rose', 'plain', null], ['cartouche', 'cartouche', 'plain', null],
     ...['tower', 'tower-round', 'tower-gate', 'tower-spire', 'tower-dome'].map((id) => [id, 'town', 'tower', null]),
     ...['house', 'church', 'castle', 'round-tower', 'tent'].map((id) => [id, 'town', 'carta-marina', null])]);

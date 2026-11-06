@@ -164,6 +164,45 @@ const CHARTS = [
   { id: 'panades-1557', title: 'Chart of the Mediterranean, Banet Panades, Messina, 1557', source: 'panades-1557', file: 'panades-1557.jpg', scale: 1, turned: true,
     landmarks: [[[1010, 970], [9.4, 43.0]], [[1000, 1200], [9.15, 41.38]], [[1040, 1605], [8.65, 38.87]], [[1500, 1625], [12.43, 37.8]], [[1830, 1735], [15.15, 36.69]], [[1880, 1535], [15.65, 38.27]], [[1960, 1590], [16.05, 37.92]]], // scan px, real lon, lat
     snaps: [] },
+  // Piri Reis, Kitab-ı Bahriye (Walters W.658, fol. 208a): the Adriatic drawn up the page, north to the upper right, so laid by a
+  // similarity with its turn. Venice, the tip of Istria, the Gargano, Leuca, Corfu, the Bay of Kotor, Vlorë. The outline is the folio,
+  // a few px out into the scanner's grey; the neighbouring folio's edge at the right is keyed with it.
+  { id: 'kitab-i-bahriye-adriatic', title: 'Kitab-ı Bahriye: the Adriatic, Piri Reis', source: 'kitab-i-bahriye-adriatic', file: 'kitab-i-bahriye-adriatic.jpg', scale: 1, turned: true,
+    outline: [[32, 36], [1208, 36], [1208, 1756], [32, 1756]], // scan px
+    landmarks: [[[555, 268], [12.33, 45.44]], [[645, 470], [13.91, 44.77]], [[575, 1030], [16.19, 41.89]], [[645, 1390], [18.36, 39.80]], [[715, 1500], [19.85, 39.62]], [[850, 1120], [18.69, 42.43]], [[770, 1395], [19.45, 40.45]]], // scan px, real lon, lat
+    snaps: [] },
+  // The Carte Pisane, about 1275 (BnF, GE B-1118): the oldest surviving portolan chart, photographed south up (England at the
+  // foot, Africa along the top), so its similarity turns it half round. Cape Passero, Messina, Trapani, Genoa, Marseille,
+  // Barcelona, Valencia, Almería, Acre, Cyprus, Crete. The Black Sea end is stained past reading and holds no landmark.
+  { id: 'carte-pisane', title: 'Carte Pisane, about 1275', source: 'carte-pisane', file: 'carte-pisane.jpg', scale: 4, dark: true, turned: true,
+    landmarks: [[[9500, 2690], [15.13, 36.69]], [[9440, 3220], [15.55, 38.19]], [[10580, 3020], [12.5, 38.02]], [[11900, 5650], [8.93, 44.41]], [[12550, 4900], [5.37, 43.3]], [[13700, 4320], [2.17, 41.38]], [[14220, 3150], [-0.33, 39.47]], [[14680, 2200], [-2.46, 36.83]], [[3180, 2350], [35.07, 32.93]], [[3900, 2900], [33.3, 35.1]], [[6400, 2500], [24.9, 35.25]]], // scan px, real lon, lat
+    snaps: [] },
+  // Pietro Vesconte, the atlas of 1313 (BnF, btv1b5901108m): one chart of it across two leaves, the Tyrrhenian coast of Italy
+  // up the left leaf and the sea south-west of it on the right, drawn east up, so its similarity turns it 107°. The right
+  // leaf's coasts are faded past reading, so the landmarks all lie on the Italian shore: Elba, Piombino, Corneto, Santa Severa, Rome's shore, Terracina,
+  // Gaeta, Palinuro. The skin fills the scan but for a thin black rim, so the outline is four straight sides on its edge.
+  { id: 'vesconte-1313', title: 'Chart from the atlas of Pietro Vesconte, 1313', source: 'vesconte-1313', file: 'vesconte-1313.jpg', scale: 1, turned: true,
+    outline: [[11, 11], [2620, 16], [2620, 2236], [22, 2272]], // scan px: straight sides, the skin's worn edge kept and a sliver of black riding along
+    landmarks: [[[546, 1811], [10.27, 42.78]], [[536, 1736], [10.5, 42.93]], [[586, 1581], [11.7, 42.23]], [[671, 1509], [11.96, 42.02]], [[636, 1476], [12.25, 41.74]], [[716, 1359], [13.25, 41.28]], [[709, 1276], [13.57, 41.21]], [[803, 1044], [15.27, 40.03]]], // scan px, real lon, lat
+    snaps: [] },
+  // Angelino Dulcert, Majorca 1339 (BnF, GE B-696): the Mediterranean, the Black Sea and Europe's Atlantic coasts, north up,
+  // scanned on a dark cloth that no key separates from the skin's shadowed edge, so the outline is the skin's four sides.
+  // Finisterre, Porto, Lisbon, Cap Corse, Cape Teulada, Trapani, Crete, Cyprus, Jaffa, Alexandria.
+  { id: 'dulcert-1339', title: 'Chart of Angelino Dulcert, Majorca, 1339', source: 'dulcert-1339', file: 'dulcert-1339.jpg', scale: 4, turned: true,
+    outline: [[290, 160], [4092, 130], [8184, 95], [12276, 200], [16200, 340], [16210, 6000], [16210, 9100], [16060, 11770], [12276, 11830], [8184, 11970], [4092, 11900], [290, 12010], [260, 6000]], // scan px
+    landmarks: [[[1960, 6260], [-9.27, 42.88]], [[1990, 6770], [-8.67, 41.15]], [[2000, 7250], [-9.14, 38.72]], [[6150, 5430], [9.4, 43.0]], [[6100, 6790], [8.65, 38.87]], [[7110, 6830], [12.5, 38.02]], [[10150, 7050], [24.9, 35.25]], [[12250, 6620], [33.3, 35.1]], [[12720, 7640], [34.75, 32.05]], [[11580, 8020], [29.9, 31.2]]], // scan px, real lon, lat
+    snaps: [] },
+  // De Bry after John White, the arrival of the Englishmen in Virginia (Briefe and True Report, 1590): the Outer Banks
+  // and Roanoke drawn west up, the ocean at the foot, so its similarity turns it a quarter round. Fitted to the barrier
+  // islands alone: Hatorask, the island north of the inlet south of Roanoke, Trinety harbor and the banks north of it. A
+  // picture more than a survey: the sounds are drawn far too narrow, so a fit that also took Roanoke and the mainland
+  // (Dasamonquepeuc, the Albemarle, Pasquenoke) laid the drawn banks over the real sounds and its line along the real
+  // banks ran through the drawn sea. Laid by the banks, the drawn coast faces the real ocean; Roanoke and the mainland
+  // fall inland of their places, as the drawing has them.
+  { id: 'debry-virginia', title: 'The arrival of the Englishmen in Virginia, de Bry after John White, 1590', source: 'debry-virginia', file: 'debry-virginia.jpg', scale: 1, turned: true,
+    outline: [[34, 0], [2304, 0], [2304, 1672], [80, 1672]], // scan px: straight sides, the margin and the red border kept; the left the leaf's own edge at the gutter, slanting a little
+    landmarks: [[[250, 1150], [-75.49, 35.57]], [[470, 1030], [-75.55, 35.8]], [[1400, 1010], [-75.75, 36.16]], [[1900, 960], [-75.82, 36.33]]], // scan px, real lon, lat: Hatorask, the island north of the inlet south of Roanoke, Trinety harbor, the banks off Corolla
+    snaps: [] },
 ];
 
 // The sheet's own placement. With the chart's drawn `parallels` ([{ lat, from, to }], top first, in scan px): the turn

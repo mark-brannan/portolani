@@ -9,7 +9,10 @@ import { createRequire } from 'node:module';
 import { gzipSync, gunzipSync } from 'node:zlib';
 
 // The object classes kept, by their S-57 code; M_COVR gives the catalogue its bbox and is kept with them.
-export const CLASSES = { LNDARE: 71, COALNE: 30, SLCONS: 122, DEPARE: 42, DEPCNT: 43, SOUNDG: 129, UWTROC: 153, WRECKS: 159, OBSTRN: 86, M_COVR: 302 };
+// SEAARE (named sea areas) letters the water and BUAARE (built-up areas) stands the towns.
+export const CLASSES = { LNDARE: 71, COALNE: 30, SLCONS: 122, DEPARE: 42, DEPCNT: 43, SOUNDG: 129, UWTROC: 153, WRECKS: 159, OBSTRN: 86, SEAARE: 119, BUAARE: 13, M_COVR: 302 };
+// what a catalogue entry was converted for: a store converted before a class was added converts again
+const KEPT = Object.keys(CLASSES).join();
 const NAME = Object.fromEntries(Object.entries(CLASSES).map(([n, c]) => [c, n]));
 // the record fields GDAL adds to every feature, which the store leaves out (RCID and OBJL stay)
 const RECORD = new Set(['PRIM', 'GRUP', 'RVER', 'AGEN', 'FIDN', 'FIDS', 'LNAM', 'LNAM_REFS', 'FFPT_RIND']);
@@ -110,7 +113,7 @@ export async function convertCell(c) {
 }
 
 // The store: `<store>/<cell>/<CLASS>.geojson.gz` and `<store>/catalogue.json`, an entry a cell:
-// { cell, band, bbox: [w, s, e, n], scale, edition, update, source, layers: { LNDARE: bytes, ... }, bytes }
+// { cell, band, bbox: [w, s, e, n], scale, edition, update, source, classes, layers: { LNDARE: bytes, ... }, bytes }
 export function readCatalogue(store) {
   try { return JSON.parse(readFileSync(join(store, CATALOGUE), 'utf8')); } catch { return {}; }
 }
@@ -132,7 +135,7 @@ export async function syncStore(charts, store, { log = () => {}, warn = () => {}
     await new Promise((ok) => setImmediate(ok));
     if (stopped()) { done = false; break; }
     const source = sourceOf(c);
-    if (old[c.cell]?.source === source && existsSync(join(store, c.cell))) { next[c.cell] = old[c.cell]; continue; }
+    if (old[c.cell]?.source === source && old[c.cell].classes === KEPT && existsSync(join(store, c.cell))) { next[c.cell] = old[c.cell]; continue; }
     const t = performance.now();
     let converted;
     try { converted = await convertCell(c); } catch (e) { warn(`${c.cell}: skipped, ${e.message}`); keepOld(c.cell); continue; }
@@ -148,7 +151,7 @@ export async function syncStore(charts, store, { log = () => {}, warn = () => {}
       sizes[name] = gz.length;
     }
     rmSync(dir, { recursive: true, force: true }); renameSync(tmp, dir);
-    next[c.cell] = { ...entry, source, layers: sizes, bytes: Object.values(sizes).reduce((a, b) => a + b, 0) };
+    next[c.cell] = { ...entry, source, classes: KEPT, layers: sizes, bytes: Object.values(sizes).reduce((a, b) => a + b, 0) };
     log(`${c.cell}: ${Object.keys(sizes).length} layers, ${next[c.cell].bytes} bytes, ${(performance.now() - t).toFixed(0)} ms`);
   }
   // stopped early, the cells not reached keep their old entries and folders

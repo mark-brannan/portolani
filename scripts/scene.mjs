@@ -9,7 +9,7 @@
 // A view is a centre, zoom and projection, { lon, lat, zoom, projection }, on a W x H canvas; the
 // projection is one of PROJECTIONS, Mercator when left out.
 
-import { sheetsFor, bandFor, viewBounds, hiddenCircle, roseSheet, WINDOW_DEG, inShadow, territory, cutOut, overlapRule, OVERLAP_RULES, DEFAULT_OVERLAP, WORLD_BAND, BANDS as ATLAS_BANDS, ROSE as ATLAS_ROSE, ORIGINS as ATLAS_ORIGINS } from './atlas.mjs';
+import { sheetsFor, sheetPlace, bandsAt, roseSheet, WINDOW_DEG, inShadow, territory, cutOut, overlapRule, OVERLAP_RULES, DEFAULT_OVERLAP, WORLD_BAND, TURN as ATLAS_TURN, BANDS as ATLAS_BANDS, ROSE as ATLAS_ROSE, ORIGINS as ATLAS_ORIGINS } from './atlas.mjs';
 import { fill, trace, limn, rhumb, place, letter, geojsonPolygons, geojsonRings } from 'coast-wright';
 import { provider } from 'coastlines/provider';
 import catalogue from 'coastlines/catalogue.json' with { type: 'json' };
@@ -20,7 +20,7 @@ import { urbanKey } from './urban.mjs';
 import { RIVERS, LAKES, RIVER_STYLES, LAKE_STYLES, waterOf, shown, boxOf } from './water.mjs';
 import { REEFS, REEF_STYLES, reefsOf } from './reefs.mjs';
 import { PLAYAS, PLAYA_STYLES, playasOf } from './playas.mjs';
-import { peaksOf, peakTile, peakWidth, PEAK_STYLES, PEAK_INK, PEAK_INK_H, PEAK_SHRINK } from './peaks.mjs';
+import { peaksOf, peakTile, peakInkSvg, PEAK_STYLES, PEAK_INK, PEAK_INK_H } from './peaks.mjs';
 import { RELIEF_STYLES, reliefOf, clearOf, drawRelief } from './relief.mjs';
 import { rangesOf } from './ranges.mjs';
 import { TREES, TREE_STYLES, plantTrees, plantPalms, inLake, tracePath, hexA } from './trees.mjs';
@@ -604,9 +604,10 @@ function viewData(world, view) {
 }
 
 // Two packs draw the same designs two ways: `vivid` as vectors, `scanned` as crops of the scans.
-// A third, `debry`, is one hand-coloured plate's own ships, monster, trees and villages. A
-// sprite's `style` names its design family; a scene picks a rendering, then a style for each kind.
-const PACK_NAMES = ['vivid', 'scanned', 'debry'];
+// A third, `debry`, is one hand-coloured plate's own ships, monster, trees and villages; a fourth,
+// `kitab`, the rose of a Kitab-ı Bahriye folio. A sprite's `style` names its design family; a scene
+// picks a rendering, then a style for each kind.
+const PACK_NAMES = ['vivid', 'scanned', 'debry', 'kitab'];
 async function readManifests(environment = env) {
   const ms = await Promise.all(PACK_NAMES.map((n) => environment.readJSON(`packs/${n}/pack.json`)));
   return Object.fromEntries(PACK_NAMES.map((n, i) => [n, ms[i]]));
@@ -868,6 +869,22 @@ function traceMarks(g, data, min) {
 }
 
 // Land rasterised at CELL px, the island marks with it; chamfer distance (1, sqrt2) from every sea cell to land, in px.
+// Outside the cells a caller charts (`coverage`, [[w, s, e, n], ...]: an ENC's, signalk/), the sea is not charted
+// water, whatever coarser world is drawn there, so nothing may stand at sea there: it counts as land in the
+// clearance field, painted onto `g` (in canvas px)
+function uncharted(g, data) {
+  if (!data.coverage?.length) return;
+  const m = createCanvas(Math.ceil(W / 4), Math.ceil(H / 4)), mg = m.getContext('2d');
+  mg.scale(1 / 4, 1 / 4);
+  mg.fillStyle = '#000'; mg.fillRect(0, 0, W, H);
+  mg.globalCompositeOperation = 'destination-out';
+  const N = 16, edge = (a, b, t) => a + (b - a) * t;
+  for (const [w, s, e, n] of data.coverage) {
+    const ring = [[w, s, e, s], [e, s, e, n], [e, n, w, n], [w, n, w, s]].flatMap(([x0, y0, x1, y1]) => Array.from({ length: N }, (_, i) => data.proj.project(edge(x0, x1, i / N), edge(y0, y1, i / N))));
+    mg.beginPath(); ring.forEach(([x, y], i) => (i ? mg.lineTo(x, y) : mg.moveTo(x, y))); mg.closePath(); mg.fill();
+  }
+  g.drawImage(m, 0, 0, W, H);
+}
 function clearanceField(data) {
   const cols = Math.ceil(W / CELL), rows = Math.ceil(H / CELL);
   const c = createCanvas(cols, rows);
@@ -881,6 +898,7 @@ function clearanceField(data) {
   g.lineWidth = CELL; // keeps islands smaller than a cell
   for (const line of data.coast) { g.beginPath(); line.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke(); }
   traceMarks(g, data, CELL * 0.6); g.fill(); // an island mark is land too, kept like an island smaller than a cell
+  uncharted(g, data);
   const px = g.getImageData(0, 0, cols, rows).data;
 
   const d = chamfer(cols, rows, (i) => px[i * 4 + 3] > 40);
@@ -905,6 +923,7 @@ function clearanceField(data) {
   fg.fill('evenodd');
   beyondRim(fg, data.proj); fg.fill('evenodd');
   traceMarks(fg, data, 0); fg.fill();
+  uncharted(fg, data);
   const fpx = fg.getImageData(0, 0, fc, fr).data;
   const isLand = (x, y) => {
     const cx = Math.floor(x / FINE), cy = Math.floor(y / FINE);
@@ -977,8 +996,9 @@ const REGION_LETTERING = { realm: 26, kingdom: 21, sub: 10, subSpacing: 1.6, gap
 const regionTile = (r) => ({
   title: `${r.name} · ${r.reading}`,
   date: r.sheet ? `Catalan Atlas, sheet ${r.sheet}` : 'Catalan Atlas',
-  text: r.legend ? `The atlas's legend: \u201c${r.legend}\u201d` : `The atlas letters ${r.name}, which we read as ${r.reading}. Its own words for this realm are not yet written up.`,
-  about: r.note,
+  // a realm the atlas gives no legend reads our note in its place; the placeholder is for one with neither
+  text: r.legend ? `The atlas's legend: \u201c${r.legend}\u201d` : r.note ?? `The atlas letters ${r.name}, which we read as ${r.reading}. Its own words for this realm are not yet written up.`,
+  about: r.legend ? r.note : undefined,
 });
 export const CONTINENT_ZOOM_END = 6; // the page's Continents slider default is this too (public/page.js DEFAULTS), so a page with no settings and a headless render draw the same names
 const REGION_ZOOM_END = 7; // continents: zoom < CONTINENT_ZOOM_END, regions overlap them to there; regions: zoom < REGION_ZOOM_END (they meet a continent's box and make way)
@@ -1253,35 +1273,26 @@ function placeHillSprites(humps, sprites, blocked, field, proj) {
   return out.slice(0, Math.round(out.length * TUNE.hillShare)).map(({ box, ...m }) => m);
 }
 
-// The landmark peaks (peaks.mjs) a view stands, highest first, each the lone-peak sprite of the mountain
-// sprites selected (the narrowest) at peakWidth, on land, inside the frame and clear of `blocked` and of
-// the peaks already stood. It is centred on the summit, or, where a town or a city is there, moved by up
-// to PEAK_SHIFT of its size (the summit still under the drawing) to the first spot of PEAK_SPOTS that is
-// clear. A sprite that finds no ground is tried again at PEAK_SHRINK of its width, and then the peak
-// stands as PEAK_INK, a lone mountain in ink PEAK_INK_H tall (`ink`), which `blocked` may let stand on a
-// city's wash and which may move up to PEAK_INK_SHIFTS of its size, beside the town, so a town on the
-// summit (Catania under Etna, Naples by Vesuvius) does not lose the peak. Each keeps its name, height and lon/lat for its
-// tile, and `h`, its drawn height.
-const PEAK_MARGIN = 8, PEAK_SHIFT = 0.4, PEAK_INK_SHIFTS = [PEAK_SHIFT, 1, 1.6]; // the ink mark may stand farther off, beside the town
+// The landmark peaks (peaks.mjs) a view stands, highest first, each as PEAK_INK, a lone mountain in ink PEAK_INK_H
+// tall, on land, inside the frame and clear of `blocked` (which may let it stand on a city's wash) and of the peaks
+// already stood. It is centred on the summit, or, where a town or a city is there, moved by up to PEAK_SHIFTS of its
+// size (the summit near the drawing) to the first spot of PEAK_SPOTS that is clear, so a town on the summit (Catania
+// under Etna, Naples by Vesuvius) does not lose the peak. Each keeps its name, height and lon/lat for its tile, and
+// `h`, its drawn height.
+const PEAK_MARGIN = 8, PEAK_SHIFTS = [0.4, 1, 1.6];
 const PEAK_SPOTS = [[0, 0], [0, -1], [-1, 0], [1, 0], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]];
-function placePeaks(sprites, blocked, field, proj) {
-  if (!sprites.length || !peaks?.length) return [];
-  const sprite = sprites.reduce((a, b) => (b.img.width / b.img.height < a.img.width / a.img.height ? b : a));
-  const aspect = sprite.img.height / sprite.img.width;
-  const out = [];
+function placePeaks(blocked, field, proj) {
+  if (!peaks?.length) return [];
+  const w = (PEAK_INK_H * 2 * PEAK_INK.w) / PEAK_INK.h, h = PEAK_INK_H, out = [];
   for (const p of peaks.filter((q) => shown(q, proj.zoom) && shows(proj, q.lon, q.lat)).sort((a, b) => b.elevation - a.elevation)) {
     const [px, py] = proj.project(p.lon, p.lat);
     if (!Number.isFinite(px) || !Number.isFinite(py) || !field.isLand(px, py)) continue;
-    const full = peakWidth(p.elevation);
-    const tries = [{ sprite, w: full, h: full * aspect, shifts: [PEAK_SHIFT] }, { sprite, w: full * PEAK_SHRINK, h: full * PEAK_SHRINK * aspect, shifts: [PEAK_SHIFT] }, { ink: true, w: (PEAK_INK_H * 2 * PEAK_INK.w) / PEAK_INK.h, h: PEAK_INK_H, shifts: PEAK_INK_SHIFTS }];
-    placing: for (const { w, h, shifts, ...kind } of tries) {
-      for (const shift of shifts) for (const [dx, dy] of PEAK_SPOTS) {
-        const x = px + dx * shift * w, y = py + dy * shift * h, box = { x0: x - w / 2, y0: y - h / 2, x1: x + w / 2, y1: y + h / 2 };
-        if (box.x0 < PEAK_MARGIN || box.y0 < PEAK_MARGIN || box.x1 > W - PEAK_MARGIN || box.y1 > H - PEAK_MARGIN) continue;
-        if (!field.isLand(x, y) || blocked(box, !!kind.ink) || out.some((o) => meets(box, o.box))) continue;
-        out.push({ ...kind, x, y, size: w, h, box, peak: { name: p.name, elevation: p.elevation, lon: p.lon, lat: p.lat } });
-        break placing;
-      }
+    placing: for (const shift of PEAK_SHIFTS) for (const [dx, dy] of PEAK_SPOTS) {
+      const x = px + dx * shift * w, y = py + dy * shift * h, box = { x0: x - w / 2, y0: y - h / 2, x1: x + w / 2, y1: y + h / 2 };
+      if (box.x0 < PEAK_MARGIN || box.y0 < PEAK_MARGIN || box.x1 > W - PEAK_MARGIN || box.y1 > H - PEAK_MARGIN) continue;
+      if (!field.isLand(x, y) || blocked(box) || out.some((o) => meets(box, o.box))) continue;
+      out.push({ ink: true, x, y, size: w, h, box, peak: { name: p.name, elevation: p.elevation, lon: p.lon, lat: p.lat } });
+      break placing;
     }
   }
   return out;
@@ -1448,14 +1459,18 @@ function ruinAt(p, [x0, y0], top, hw, boxes, cityBoxes, k, towns = []) {
 
 // The roses of the atlas's sheets (docs/atlas/README.md, "An atlas of sheets"): each sheet's big rose on
 // its circle's centre, then small roses on its nodes, the cardinal ones first, up to three, each where
-// the sea round it is clear. Which sprite a sheet takes is picked by the sheet's name, so a sheet draws
-// the same roses from any view. Returns what buildScene's window placement does: roseDraws, centre, nodes.
+// the sea round it is clear. Which sprite a sheet takes is picked by the sheet's place on the earth (sheetSeed), so a
+// sheet draws the same roses from any view. Returns what buildScene's window placement does: roseDraws, centre, nodes.
 // a sheet with fewer than this many of its 17 sites in clear sea is land's, and its roses may stand on land
+// A sheet's seed: a hash of its place on the earth (atlas.mjs sheetPlace), never of its band number or name, so the same
+// sheet draws the same roses, beasts and ships in any run and a renumbering of the bands changes none of them
+// (docs/atlas/README.md, "Which beasts, which ships"); a `seed:` placement salts it.
+const sheetSeed = (sh, world) => seedOf(sheetPlace(sh)) ^ (world.salt | 0);
 const SHEET_SEA_SITES = 4, SHEET_NODE_ORDER = [0, 4, 8, 12, 2, 6, 10, 14, 1, 3, 5, 7, 9, 11, 13, 15];
 function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
   const roseDraws = [], held = {}, at = (n) => { const [x, y] = data.proj.project(n.lon, n.lat); return { x, y }; };
   for (const sh of world.sheets) {
-    const fp = sheetFrame(sh), seed = seedOf(sh.name) ^ (world.salt | 0);
+    const fp = sheetFrame(sh), seed = sheetSeed(sh, world);
     // `onLand`: a sheet with no clear sea to hold its big rose lets its roses stand on land, clear of the places
     const clear = (lon, lat, size, onLand = false) => {
       const [x, y] = fp.project(lon, lat), r = size * 0.46;
@@ -1475,8 +1490,10 @@ function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
     const sites = [c, ...c.nodes];
     const onLand = sites.filter((q, i) => clear(q.lon, q.lat, i ? capSmall(smallSize) : big.sizePx)).length < SHEET_SEA_SITES;
     // what is kept is decided in the frame; the page's projection only says where it falls and whether it is seen
-    const put = (sprite, n) => { held[sh.name] = (held[sh.name] ?? 0) + 1; if (shows(data.proj, n.lon, n.lat)) { const [fx, fy] = fp.project(n.lon, n.lat); roseDraws.push({ sprite, ...at(n), lon: n.lon, lat: n.lat, fx, fy, size: sprite.sizePx, sheet: sh.name }); } };
-    if (ownSet(world, sh)) {
+    const put = (sprite, n) => { held[sh.id] = (held[sh.id] ?? 0) + 1; if (shows(data.proj, n.lon, n.lat)) { const [fx, fy] = fp.project(n.lon, n.lat); roseDraws.push({ sprite, ...at(n), lon: n.lon, lat: n.lat, fx, fy, size: sprite.sizePx, sheet: sh.name, sheetId: sh.id, band: sh.inked }); } };
+    // a rose is the hub of the lines drawn, so a chart's own roses replace the network's only where its set lists
+    // them; a set with no rose (de la Cosa's, whose ring is not yet read) keeps the roses of the network it draws
+    if (ownSet(world, sh) && ownFigures(sh, 'rose').length) {
       // a chart's own roses are inside the sheet's allotment, like every other ornament of it
       for (const f of ownFigures(sh, 'rose').slice(0, allotment(sh))) { const r = figureSprite(sh, roses, ring, f); put({ ...r, sizePx: capBig(r.sizePx) }, f); }
       continue;
@@ -1488,7 +1505,7 @@ function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
     let n = 0;
     for (const i of SHEET_NODE_ORDER) {
       const node = c.nodes[i], sprite = ring[n % ring.length];
-      if (n < sheetRoseMax(sh) - 1 && (held[sh.name] ?? 0) < quota && clear2(node.lon, node.lat, sprite.sizePx, onLand)) { put(sprite, node); n++; }
+      if (n < sheetRoseMax(sh) - 1 && (held[sh.id] ?? 0) < quota && clear2(node.lon, node.lat, sprite.sizePx, onLand)) { put(sprite, node); n++; }
     }
   }
   // The pinned rose (#138): wherever the Catalan rose's lines run, the rose is drawn at their hub, the one
@@ -1498,61 +1515,15 @@ function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
   // takes nothing from any sheet's allotment, and every sheet's generated beasts keep clear of it (a chart's own drawn figures stay where the chart puts them). Density 0 draws no
   // ornament, so no pinned rose either.
   const pin = ATLAS_ROSE, pinned = (r) => Math.abs(r.lon - pin.lon) < 1e-6 && Math.abs(r.lat - pin.lat) < 1e-6;
+  // a chart's own rose at the hub is the pinned rose: it belongs to no band, so a page turn neither fades it nor draws it twice
+  const own = world.roseLines ? roseDraws.filter(pinned) : [];
+  if (own.length) { for (const r of own.slice(1)) roseDraws.splice(roseDraws.indexOf(r), 1); own[0].pinned = true; delete own[0].band; }
   if (world.roseLines && TUNE.budget > 0 && !roseDraws.some(pinned) && shows(data.proj, pin.lon, pin.lat)) {
     const own = roses.find((s) => s.id === 'rose-catalan') ?? roses.find((s) => s.sizePx === bigSizePx);
     roseDraws.push({ sprite: { ...own, sizePx: Math.min(own.sizePx, ROSE_CAP.big * W) }, ...at(pin), lon: pin.lon, lat: pin.lat, size: Math.min(own.sizePx, ROSE_CAP.big * W), sheet: null, pinned: true });
   }
   const pts = world.sheets.flatMap((sh) => [sh.circle, ...sh.circle.nodes]).map(at);
   return { roseDraws, held, centre: pts[0], nodes: pts.slice(1) };
-}
-
-// MOCKUP (#107, not for merge): the extra networks of the `meet` knob, each a sheet-like { name, band, extent,
-// circle, reach, from, extra } with `extra` its alpha. 'fade' takes the next band's sheets past the middle of a grid
-// band (none in the world band or the last band); 'circles' takes four quarter circles of every grid sheet.
-function meetExtras(view, knobs, sheets, { overlap, origin }) {
-  if (knobs.meet === 'today' || view.zoom < ATLAS_BANDS[0].from) return [];
-  if (knobs.meet === 'fade') {
-    const band = bandFor(view.zoom), next = ATLAS_BANDS.find((b) => b.band === band.band + 1);
-    const p = (view.zoom - band.from) / (band.to - band.from);
-    if (!next || p <= 0.5) return [];
-    const alpha = Math.round(Math.min(1, (p - 0.5) / 0.5) * 20) / 20, have = new Set(sheets.map((sh) => sh.name));
-    return sheetsFor({ ...viewBounds(view), zoom: next.from }, { radius: knobs.radius, curated: knobs.curated === 1, overlap, origin })
-      .filter((sh) => !have.has(sh.name))
-      .map((sh) => ({ ...sh, reach: sheetReach(sh.extent, knobs.reach), from: next.from, extra: alpha }));
-  }
-  return sheets.filter((sh) => !sh.curated && sh.row != null).flatMap((sh) => {
-    const e = sh.extent, mlon = sh.circle.lon, mlat = sh.circle.lat;
-    return [[e.west, mlon, e.south, mlat], [mlon, e.east, e.south, mlat], [e.west, mlon, mlat, e.north], [mlon, e.east, mlat, e.north]].map(([west, east, south, north], q) => {
-      const extent = { west, east, south, north };
-      return { name: `${sh.name}q${q}`, band: sh.band, extent, circle: hiddenCircle(extent, knobs.radius), reach: sheetReach(extent, knobs.reach), from: sh.from, extra: 1 };
-    });
-  });
-}
-// MOCKUP (#107): the extra networks' roses. A small rose of the ring on an extra circle's centre or a node, cardinals first,
-// one per circle at most, in clear sea only (never on land), clear of every rose and beast already placed, at the
-// circle's alpha. They take nothing from any sheet's allotment.
-function placeExtraRoses(data, world, roses, roseDraws, beasts, smallSize) {
-  const ring = roseSet(roses, world.seed).ring.map((s) => ({ ...s, sizePx: Math.min(s.sizePx, ROSE_CAP.small * W) }));
-  const taken = [...roseDraws.map((r) => ({ x: r.x, y: r.y, r: r.size / 2 })), ...[...(beasts?.monsters ?? []), ...(beasts?.ships ?? [])].map((b) => ({ x: b.x, y: b.y, r: (b.size ?? b.sizePx ?? b.sprite?.sizePx ?? 80) / 2 }))];
-  for (const sh of world.extras) {
-    const fp = sheetFrame(sh), sprite = ring[Math.abs(seedOf(sh.name)) % ring.length], size = Math.min(sprite.sizePx, smallSize);
-    const clear = (lon, lat) => {
-      if (!world.seaAt(lon, lat) || POIS.some((p) => Math.hypot(...fp.project(p.lon, p.lat).map((v, i) => v - fp.project(lon, lat)[i])) < POI_ROOM)) return false;
-      const [x, y] = fp.project(lon, lat), r = size * 0.46;
-      for (let i = 0; i < 8; i++) { const [a, b] = fp.invert(x + r * Math.cos((i * Math.PI) / 4), y + r * Math.sin((i * Math.PI) / 4)); if (!world.seaAt(a, b)) return false; }
-      return true;
-    };
-    const c = sh.circle;
-    for (const n of [c, ...SHEET_NODE_ORDER.map((i) => c.nodes[i])]) {
-      if (!shows(data.proj, n.lon, n.lat) || inShadow(sh, n.lon, n.lat)) continue;
-      const [x, y] = data.proj.project(n.lon, n.lat);
-      if (taken.some((t) => Math.hypot(t.x - x, t.y - y) < t.r + size / 2 + 10) || !clear(n.lon, n.lat)) continue;
-      const [fx, fy] = fp.project(n.lon, n.lat);
-      roseDraws.push({ sprite: { ...sprite, sizePx: size }, x, y, lon: n.lon, lat: n.lat, fx, fy, size, sheet: sh.name, alpha: sh.extra });
-      taken.push({ x, y, r: size / 2 });
-      break;
-    }
-  }
 }
 
 // Where a sheet is placed: Mercator at its band's first zoom, centred on the sheet, whatever the page's
@@ -1564,7 +1535,7 @@ const beastFrame = (sh) => makeProjection({ lon: sh.circle.lon, lat: sh.circle.l
 
 // The monsters and ships of the atlas's sheets (docs/atlas/README.md): each sheet seeds a jittered grid of
 // sites over its own extent, ranks them by the open sea round them, and takes its beasts from the top,
-// the cast picked by the sheet's name, so a sheet draws the same beasts from any view. Monsters stand in
+// the cast picked by the sheet's place on the earth (sheetSeed), so a sheet draws the same beasts from any view. Monsters stand in
 // the clearest water; ships in coastal water, heading along the coast. The sea they are placed against is the 50m land, whatever the view has loaded.
 const SHEET_BEAST_PROBE = 24; // px between the rings a site's clearance is read at
 function placeSheetBeasts(data, world, sprites, roseDraws, held) {
@@ -1573,8 +1544,8 @@ function placeSheetBeasts(data, world, sprites, roseDraws, held) {
   for (const sh of world.sheets) {
     // its roses, placed in the sheet's frame, as discs in the beasts' frame; a size is screen px in either
     const rf = sheetFrame(sh), bf = beastFrame(sh);
-    const avoid = roseDraws.filter((r) => r.sheet === sh.name || r.pinned).map((r) => { const [x, y] = bf.project(...(r.pinned ? [r.lon, r.lat] : rf.invert(r.fx, r.fy))); return { x, y, r: r.size / 2 + (r.size > 200 ? 0 : 10) }; });
-    const mine = ownSet(world, sh) ? ownBeastsOf(sh, world, sprites, held[sh.name] ?? 0) : placeBeastsOf(sh, world, sprites, avoid, held[sh.name] ?? 0);
+    const avoid = roseDraws.filter((r) => r.sheetId === sh.id || r.pinned).map((r) => { const [x, y] = bf.project(...(r.pinned ? [r.lon, r.lat] : rf.invert(r.fx, r.fy))); return { x, y, r: r.size / 2 + (r.size > 200 ? 0 : 10) }; });
+    const mine = ownSet(world, sh) ? ownBeastsOf(sh, world, sprites, held[sh.id] ?? 0) : placeBeastsOf(sh, world, sprites, avoid, held[sh.id] ?? 0);
     // the page's projection only says where a beast falls and whether it is seen
     const at = (b) => { const [x, y] = data.proj.project(b.lon, b.lat); return { ...b, x, y }; };
     for (const m of mine.monsters) if (shows(data.proj, m.lon, m.lat)) monsters.push(at(m));
@@ -1603,7 +1574,7 @@ function ownBeastsOf(sh, world, sprites, roses) {
   // the chart's own figures count against the sheet's allotment, roses first, then monsters, then ships
   let room = Math.max(0, allotment(sh) - roses);
   const take = (kind, set) => !set.length ? [] : ownFigures(sh, kind).map((f) => ({ f, sprite: figureSprite(sh, set, set, f) })).filter(({ f }) => world.seaAt(f.lon, f.lat))
-    .slice(0, room).map(({ f, sprite }) => ({ sprite, lon: f.lon, lat: f.lat, size: sprite.sizePx, flip: false, ...(kind === 'ship' && { tilt: 0 }), sheet: sh.name }));
+    .slice(0, room).map(({ f, sprite }) => ({ sprite, lon: f.lon, lat: f.lat, size: sprite.sizePx, flip: false, ...(kind === 'ship' && { tilt: 0 }), sheet: sh.name, band: sh.inked }));
   const monsters = take('monster', sprites.monsters);
   room -= monsters.length;
   return { monsters, ships: take('ship', sprites.ships) };
@@ -1624,7 +1595,7 @@ function placeBeastsOf(sh, world, sprites, avoid, roses) {
   };
   const taken = [...avoid];
   const free = (x, y, r) => taken.every((o) => Math.hypot(o.x - x, o.y - y) >= o.r + r) && !POIS.some((p) => Math.hypot(...fp.project(p.lon, p.lat).map((v, i) => v - [x, y][i])) < POI_ROOM);
-  const e = sh.extent, rnd = mulberry32(seedOf(sh.name) ^ (world.salt | 0));
+  const e = sh.extent, rnd = mulberry32(sheetSeed(sh, world));
   const [y0, y1] = [e.south, e.north].map((v) => Math.log(Math.tan(Math.PI / 4 + (v * RAD) / 2)) / RAD);
   // sites a monster-gap apart at the sheet's pacing zoom, one window of 360 / 2^z * 3.125 degrees across
   const win = WINDOW_DEG / 2 ** sh.from, step = win * (MONSTER_GAP / W);
@@ -1640,7 +1611,7 @@ function placeBeastsOf(sh, world, sprites, avoid, roses) {
   }
   sites.sort((a, b) => b.c - a.c);
   // what the roses leave of the sheet's allotment: a third of it ships, the rest monsters
-  const beasts = Math.max(0, allotment(sh) - roses), monsterQuota = wide(sh) ? Math.floor(WIDE.monsterShare * beasts) : beasts - Math.floor(beasts / 3), shipQuota = beasts - monsterQuota, seed = world.seed == null ? null : seedOf(sh.name) ^ (world.salt | 0);
+  const beasts = Math.max(0, allotment(sh) - roses), monsterQuota = wide(sh) ? Math.floor(WIDE.monsterShare * beasts) : beasts - Math.floor(beasts / 3), shipQuota = beasts - monsterQuota, seed = world.seed == null ? null : sheetSeed(sh, world);
   const mine = [];
   for (const sprite of castOrder(sprites.monsters, seed)) {
     if (mine.length >= monsterQuota) break;
@@ -1649,7 +1620,7 @@ function placeBeastsOf(sh, world, sprites, avoid, roses) {
       const size = Math.min(sprite.sizePx, s.c * 2 * 0.85);
       if (size < sprite.sizePx * 0.65) break;
       if (!free(s.x, s.y, size * 0.5) || !ringClear(s.x, s.y, size * 0.46, size * 0.46, size * aspect * 0.46)) continue;
-      monsters.push({ sprite, lon: s.lon, lat: s.lat, size, flip: mine.length % 2 === 1, sheet: sh.name }); mine.push(s);
+      monsters.push({ sprite, lon: s.lon, lat: s.lat, size, flip: mine.length % 2 === 1, sheet: sh.name, band: sh.inked }); mine.push(s);
       taken.push({ x: s.x, y: s.y, r: size * 0.5 }); sites.splice(sites.indexOf(s), 1);
       break;
     }
@@ -1671,7 +1642,7 @@ function placeBeastsOf(sh, world, sprites, avoid, roses) {
     const back = tx < 0;
     if (back) { tx = -tx; ty = -ty; }
     const flip = back !== (sprite.heading === 'left');
-    ships.push({ sprite, lon: s.lon, lat: s.lat, size: sprite.sizePx, flip, tilt: Math.max(-0.26, Math.min(0.26, Math.atan2(ty, tx))), sheet: sh.name });
+    ships.push({ sprite, lon: s.lon, lat: s.lat, size: sprite.sizePx, flip, tilt: Math.max(-0.26, Math.min(0.26, Math.atan2(ty, tx))), sheet: sh.name, band: sh.inked });
     taken.push({ x: s.x, y: s.y, r: half }); sites.splice(sites.indexOf(s), 1); shipsHere++;
   }
   return { monsters, ships };
@@ -1694,8 +1665,8 @@ function buildScene(data, sprites, ctx, world = {}) {
   // not to the window: a sheet's big rose stands on its circle's centre, small roses on its nodes, wherever
   // the window is. A site is kept or dropped by the sea round it, never by what the window shows.
   const sheetRoses = world.sheets ? placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) : null;
-  const sheetBeasts = sheetRoses ? placeSheetBeasts(data, world, sprites, sheetRoses.roseDraws, sheetRoses.held) : null;
-  if (sheetRoses && world.extras?.length) placeExtraRoses(data, world, roses, sheetRoses.roseDraws, sheetBeasts, smallSize);
+  // `viewBeasts`: the roses and lines are the sheets', the beasts the view's own, on the water the view charts (signalk/)
+  const sheetBeasts = sheetRoses && !world.viewBeasts ? placeSheetBeasts(data, world, sprites, sheetRoses.roseDraws, sheetRoses.held) : null;
   const edge = (x, y) => Math.min(x, y, W - x, H - y);
   // Roses stand in open water. Where the water is heavily constrained (no clear sea in the middle of the
   // frame to hold half a big rose) they may stand on open land, clear of the coast by the same measure.
@@ -1817,18 +1788,31 @@ function buildScene(data, sprites, ctx, world = {}) {
       ? obb(x, y - th / 2, 0, ((th / 2) * sprite.img.width) / sprite.img.height, th / 2)
       : obb(x, y - th / 2, 0, (th * tower.w) / TOWER_H, th / 2); // the tower, its widest part
     if (boxes.some((b) => obbOverlap(b, icon))) continue;
-    towns.push({ x, y, size, h: th, family, red: p.rank <= 2, name: p.name, rank: p.rank, labelY: y - th - 6, icon, ...(sprite ? { sprite } : { tower: tower.id }) });
+    towns.push({ x, y, size, h: th, family, red: p.rank <= 2, name: p.name, rank: p.rank, labelY: y - th - 6, icon, ...(p.quiet && { quiet: true }), ...(sprite ? { sprite } : { tower: tower.id }) });
     boxes.push(icon);
   }
   // the landmark peaks (peaks.mjs), after the towns and before the names, so a name gives way to a peak
   const barCorner = cornerOf(world.scalePos, DEFAULT_SCALE_CORNER);
   const bar = world.scaleBar ? scaleBox(barCorner, world.pinned !== false && barCorner === cartoucheCorner ? cartouche.h + 10 : 0) : null;
   // (the ink mark may stand on a city's wash, as a tower does, but never on a town, a city's plan or a name)
-  const peakSprites = placePeaks(sprites.mountains ?? [], ({ x0, y0, x1, y1 }, ink) => {
+  const peakSprites = world.peaks ? placePeaks(({ x0, y0, x1, y1 }) => {
     const b = obb((x0 + x1) / 2, (y0 + y1) / 2, 0, (x1 - x0) / 2, (y1 - y0) / 2);
-    return boxes.some((o) => obbOverlap(o, b)) || (bar && obbOverlap(bar, b)) || (!ink && urban.some((u) => meets({ x0, y0, x1, y1 }, u.box)));
-  }, field, data.proj);
+    return boxes.some((o) => obbOverlap(o, b)) || (bar && obbOverlap(bar, b));
+  }, field, data.proj) : [];
   for (const p of peakSprites) boxes.push(obb(p.x, p.y, 0, p.size / 2, p.h / 2));
+  // each peak's name beside it, right or else left, in the chart's italic, when asked for (`peakNames`), clear of
+  // what is placed and of the scale bar; the names after give way to it
+  const peakNames = [];
+  if (world.peakNames) for (const p of peakSprites) {
+    ctx.font = `italic ${PEAK_NAME_SIZE}px "${STYLE.font}"`;
+    const tw = ctx.measureText(p.peak.name).width;
+    for (const side of [1, -1]) {
+      const x = p.x + side * (p.size / 2 + 4 + tw / 2), y = p.y + p.h * 0.2, box = obb(x, y, 0, tw / 2 + 2, PEAK_NAME_SIZE / 2 + 1);
+      if (!obbInside(box) || boxes.some((b) => obbOverlap(b, box)) || (bar && obbOverlap(bar, box))) continue;
+      boxes.push(box); peakNames.push({ text: p.peak.name, x, y, box });
+      break;
+    }
+  }
 
   // Names, lettered by coast-wright: seas, then the metros (a town of size 1 or more, or a city),
   // then countries along their coasts, then the other towns above their towers; a country once, on
@@ -1840,20 +1824,22 @@ function buildScene(data, sprites, ctx, world = {}) {
   const metro = (t) => t.city || t.size >= 1;
   const lettering = [
     ...data.names.filter((n) => n.kind === 'sea').map(named),
-    ...towns.filter(metro).map(townName),
+    ...towns.filter((t) => metro(t) && !t.quiet).map(townName),
     ...data.names.filter((n) => n.kind !== 'sea').flatMap((n) => (n.kind === 'coast' ? coastChunks(n, data.proj, boxOf) : [n])).map(named),
-    ...towns.filter((t) => !metro(t)).map(townName),
+    ...towns.filter((t) => !metro(t) && !t.quiet).map(townName),
   ];
   const opts = letterOptions(data);
   const names = [];
   const pois = placeLesser(data, field, boxes, ctx, towns, names, true, cityBoxes);
   for (const n of lettering) {
     if (n.kind === 'coast' && names.some((m) => m.kind === 'coast' && m.text === n.text)) continue; // once a view
+    if (n.water && names.some((m) => m.water && m.text === n.text)) continue; // a cell's water, once a view
     const [p] = place(ctx, [n], data.proj.toPx, opts);
     if (!p) continue;
     const box = placedBox(p); // coast-wright's corners, as an oriented box
     // a city's name sits on its own plan; seas and coasts are lettered over any city's water
     if (!obbInside(box) || boxes.some((b) => b !== n.own && !(n.kind && cityBoxes.has(b)) && obbOverlap(b, box))) continue;
+    if (n.water && bar && obbOverlap(bar, box)) continue; // a cell's water is lettered clear of the scale bar
     boxes.push(box);
     names.push({ ...n, x: box.cx, y: box.cy, r: Math.max(box.hw, box.hh), box });
   }
@@ -1918,7 +1904,7 @@ function buildScene(data, sprites, ctx, world = {}) {
 
   // automatic, the typed title stands in where the view has no name in it
   const title = world.pinTitle?.toUpperCase() || (world.autoTitle && viewTitle(data, towns.filter((t) => names.some((n) => n.text === t.name)), world.regions === 'english' ? 1 : 0, lesser.filter((l) => l.poi), world.regionNames).toUpperCase()) || world.title || 'PORTOLANI';
-  return { field, boxes, occupied, centre, nodes, sheets: world.sheets, extras: world.extras, roseDraws, towns, lesser, names, worldNames, monsters, ships, mountains, relief, cartouche: { ...cartouche, sprite: cartoucheSprite, title }, cartouchePos: cartoucheCorner };
+  return { field, boxes, occupied, centre, nodes, sheets: world.sheets, roseDraws, towns, lesser, names, peakNames, worldNames, monsters, ships, mountains, relief, cartouche: { ...cartouche, sprite: cartoucheSprite, title }, cartouchePos: cartoucheCorner };
 }
 
 // ---------------------------------------------------------------- drawing
@@ -2154,7 +2140,7 @@ function latticeOf(scene, data) {
   const reach = Math.min(180, (Math.hypot(W, H) * 1.5 / data.proj.k) * 180 / Math.PI);
   // a sheet's lines reach its page diagonal; a window's, past the scene's far corner
   const origins = scene.sheets
-    ? [...scene.sheets, ...(scene.extras ?? [])].flatMap((sh) => [sh.circle, ...sh.circle.nodes].filter((n) => !inShadow(sh, n.lon, n.lat)).map((n) => ({ lon: n.lon, lat: n.lat, reach: sh.reach, shadow: sh.shadow, alpha: sh.extra ?? 1 })))
+    ? scene.sheets.flatMap((sh) => [sh.circle, ...sh.circle.nodes].filter((n) => !inShadow(sh, n.lon, n.lat)).map((n) => ({ lon: n.lon, lat: n.lat, reach: sh.reach, shadow: sh.shadow, band: sh.inked })))
     : [scene.centre, ...scene.nodes].map((n) => { const [lon, lat] = data.proj.invert(n.x, n.y); return { lon, lat, reach }; });
   // The Catalan Atlas rose's lines run at every zoom, beside the network of the sheets or the window
   // (docs/atlas/README.md, "Zoom bands"), as one more hub of the view's band: the reach of the sheet that
@@ -2165,11 +2151,11 @@ function latticeOf(scene, data) {
   // A line runs its whole reach: it is never cut where another sheet lies (#199), except under the `cut`
   // overlap rule, where it stops at the edge of a smaller chart over its sheet (the sheet's shadow).
   const cut = scene.overlap === 'cut';
-  for (const { lon, lat, reach, shadow, alpha = 1 } of origins) {
+  for (const { lon, lat, reach, shadow, band } of origins) {
     for (let k = 0; k < RHUMB_RAYS; k++) {
       const kind = k % 4 === 0 ? 0 : k % 2 === 1 ? 1 : 2; // wind, quarter (red), half (green)
       const ray = rhumb([lon, lat], 90 + (k * 360) / RHUMB_RAYS, reach * Math.cos(lat * Math.PI / 180));
-      for (const line of cutOut(ray, cut ? shadow : null)) rays.push({ kind, line, alpha, box: boxOf(line.map(([a, b]) => data.proj.project(a, b))) });
+      for (const line of cutOut(ray, cut ? shadow : null)) rays.push({ kind, line, band, box: boxOf(line.map(([a, b]) => data.proj.project(a, b))) });
     }
   }
   lattices.set(scene, rays);
@@ -2257,6 +2243,8 @@ function drawTower(g, t) {
   }
   g.restore();
 }
+
+const PEAK_NAME_SIZE = 15; // px, a landmark peak's lettered name (`peakNames`)
 
 // A landmark peak in ink (peaks.mjs PEAK_INK), its middle at x, y and `h` px tall, drawn as a tower is.
 function drawPeakInk(g, x, y, h) {
@@ -2537,12 +2525,14 @@ SCALE_STYLES.genoese.height = (n, seg, sprite) => ((n * seg) / (sprite.bar[1] - 
 const SCALE_PICTURES = { genoese: 'scale-genoese' }; // style -> sprite id in the vivid pack
 const SCALE_NAMES = Object.keys(SCALE_STYLES);
 
-// Where the scale bar stands: its corner, and how far it is lifted off the edge to clear a cartouche in the same corner.
+// Where the scale bar stands: its corner, how far it is lifted off the edge to clear a cartouche in the same corner,
+// and its gap to both edges of its corner when a caller asks for one (`scaleGap`, px), else SCALE_GAP's
 const scalePlace = (o) => {
   const pos = cornerOf(o.scalePos, DEFAULT_SCALE_CORNER);
   const shared = o.show.kinds.has('cartouche') && o.cartouche && (o.cartouchePos ?? DEFAULT_CARTOUCHE_CORNER) === pos;
-  return { pos, lift: shared ? o.cartouche.h + 10 : 0 };
+  return { pos, lift: shared ? o.cartouche.h + 10 : 0, gap: o.scaleGap };
 };
+const SCALE_GAP = { side: 14, end: 22 }; // px from the left or right edge, and from the top or bottom
 let scaleHit = null; // the rectangle the scale bar was last drawn in, in canvas px, for the page to pick it up
 const scaleRect = () => scaleHit;
 function drawScaleBar(g, data, bg, view, w, h, style = 'genoese', sprite = null, place = { pos: 'bl', lift: 0 }) {
@@ -2564,7 +2554,8 @@ function drawScaleBar(g, data, bg, view, w, h, style = 'genoese', sprite = null,
   // the chart is blank where a scale sits: the parchment is repainted over the map beneath it
   const pad = 14;
   const pw = n * seg + 24 + g.measureText('nautical miles').width + 2 * pad + 20, ph = barH + 22 + 5 + 2 * pad;
-  const px = place.pos[1] === 'r' ? w - 14 - pw : 14, py = place.pos[0] === 'b' ? h - 22 - ph - place.lift : 22 + place.lift;
+  const gx = place.gap ?? SCALE_GAP.side, gy = place.gap ?? SCALE_GAP.end;
+  const px = place.pos[1] === 'r' ? w - gx - pw : gx, py = place.pos[0] === 'b' ? h - gy - ph - place.lift : gy + place.lift;
   const x0 = px + pad + 20, top = py + 22 + 5 + pad, y0 = top + barH - SCALE_BAR_H;
   scaleHit = { x: px, y: py, w: pw, h: ph };
   const sx = Math.max(0, view.x + px / view.scale), sy = Math.max(0, view.y + py / view.scale);
@@ -3197,6 +3188,19 @@ const cityClip = (t, data) => (cg) => {
   traceLand(cg, data, t.city.land);
   cg.clip('evenodd');
 };
+// The ink each placed band's ornaments are drawn at, as a function of a band number (docs/atlas/README.md, "The page
+// turn"): `bands` the bands placed, `zoom` the zoom drawn at. One band placed is at full ink whatever the zoom, so a move
+// that leaves its band draws it until the stop places the next. Two placed (the stop fell inside a turn's span) take
+// the turn's inks at `zoom`, so a zoom inside the span fades one into the other; past both, the nearer stays whole.
+// Whatever belongs to no band (the pinned rose and its lines, `band` undefined) is at full ink.
+export function bandInk(bands, zoom, turn) {
+  if (!bands || bands.length < 2) return () => 1;
+  // past both bands' zooms, the nearer whole; the incoming band, bands[1], is numbered by the edge's zoom
+  const at = new Map(bandsAt(zoom, turn).map(({ band, alpha }) => [band.band, alpha]));
+  if (!bands.some((b) => at.get(b) > 0)) { const near = zoom < bands[1] ? bands[0] : bands[1]; return (b) => (b == null || b === near ? 1 : 0); }
+  return (b) => (b == null ? 1 : at.get(b) ?? 0);
+}
+
 function drawScene(g, scene, data, bg, view) {
   g.save();
   g.setTransform(view.scale, 0, 0, view.scale, -view.x * view.scale, -view.y * view.scale);
@@ -3226,9 +3230,12 @@ function drawScene(g, scene, data, bg, view) {
   const rays = latticeOf(scene, data);
   const inks = [STYLE.ink, STYLE.windRed, STYLE.windGreen]; // by kind: wind, quarter-wind, half-wind
   const show = scene.show ?? { kinds: new Set(KINDS), names: true, rhumb: true };
-  for (const [kind, ink] of show.rhumb ? inks.entries() : []) {
-    for (const a of new Set(rays.map((ray) => ray.alpha))) {
-      const lines = rays.filter((ray) => ray.kind === kind && ray.alpha === a && meets(r, ray.box)).map((ray) => ray.line);
+  const inkOf = bandInk(scene.bands, scene.zoom, scene.turn), faded = (o) => inkOf(o.band);
+  for (const band of show.rhumb ? [...new Set(rays.map((ray) => ray.band))] : []) {
+    const a = inkOf(band);
+    if (a <= 0) continue;
+    for (const [kind, ink] of inks.entries()) {
+      const lines = rays.filter((ray) => ray.band === band && ray.kind === kind && meets(r, ray.box)).map((ray) => ray.line);
       limn(g, lines, data.proj.toPx, { color: ink, alpha: STYLE.rhumbAlpha * a, width: STYLE.rhumbWidth, oneStroke: true, ...data.proj.seam });
     }
   }
@@ -3285,11 +3292,8 @@ function drawScene(g, scene, data, bg, view) {
 
   // 5. roses
   const spriteIn = (s, x, y, size) => disc(r, x, y, Math.hypot(size, (size * s.img.height) / s.img.width));
-  for (const d of show.kinds.has('rose') ? scene.roseDraws : []) if (spriteIn(d.sprite, d.x, d.y, d.size)) {
-    g.save(); g.globalAlpha *= d.alpha ?? 1;
-    drawSprite(g, d.sprite, d.x, d.y, d.size, { anchor: [0.5, 0.5], rot: roseTurn(data.proj) });
-    g.restore();
-  }
+  const inked = (o, draw) => { const a = faded(o); if (a <= 0) return; g.globalAlpha = a; draw(); g.globalAlpha = 1; };
+  for (const d of show.kinds.has('rose') ? scene.roseDraws : []) if (spriteIn(d.sprite, d.x, d.y, d.size)) inked(d, () => drawSprite(g, d.sprite, d.x, d.y, d.size, { anchor: [0.5, 0.5], rot: roseTurn(data.proj) }));
 
   // 5.5 mountains, inland, under the towns and names
   for (const m of show.kinds.has('mountain') ? scene.mountains ?? [] : []) {
@@ -3325,10 +3329,16 @@ function drawScene(g, scene, data, bg, view) {
   const opts = letterOptions(data);
   letter(g, shown.filter((n) => !n.red), data.proj.toPx, { ...opts, color: STYLE.ink });
   letter(g, shown.filter((n) => n.red), data.proj.toPx, { ...opts, color: STYLE.windRed });
+  if (show.kinds.has('mountain') && scene.peakNames?.length) {
+    g.save();
+    g.font = `italic ${PEAK_NAME_SIZE}px "${STYLE.font}"`; g.fillStyle = STYLE.ink; g.textAlign = 'center'; g.textBaseline = 'middle';
+    for (const n of scene.peakNames) if (disc(r, n.x, n.y, n.box.hw)) g.fillText(n.text, n.x, n.y);
+    g.restore();
+  }
 
   // 8. monsters, 9. ships
-  for (const m of show.kinds.has('monster') ? scene.monsters : []) if (spriteIn(m.sprite, m.x, m.y, m.size)) drawSprite(g, m.sprite, m.x, m.y, m.size, { flip: m.flip, anchor: [0.5, 0.5] });
-  for (const s of show.kinds.has('ship') ? scene.ships : []) if (spriteIn(s.sprite, s.x, s.y, s.size)) drawSprite(g, s.sprite, s.x, s.y, s.size, { flip: s.flip, rot: s.flip ? -s.tilt : s.tilt, anchor: [0.5, 0.6] });
+  for (const m of show.kinds.has('monster') ? scene.monsters : []) if (spriteIn(m.sprite, m.x, m.y, m.size)) inked(m, () => drawSprite(g, m.sprite, m.x, m.y, m.size, { flip: m.flip, anchor: [0.5, 0.5] }));
+  for (const s of show.kinds.has('ship') ? scene.ships : []) if (spriteIn(s.sprite, s.x, s.y, s.size)) inked(s, () => drawSprite(g, s.sprite, s.x, s.y, s.size, { flip: s.flip, rot: s.flip ? -s.tilt : s.tilt, anchor: [0.5, 0.6] }));
 
   // the voyages over the ornaments, under the cartouche
   // 9.1 the charts' sheets, each whole and opaque, over everything on the map, the last laid on top (overlays.mjs); their notes are drawn nowhere, found by the cursor (page.js)
@@ -3457,9 +3467,11 @@ function roseSet(roses, seed) {
 function anchorScene(scene, data) {
   const ll = (o) => ({ o, at: data.proj.invert(o.x, o.y) }), rays = latticeOf(scene, data);
   return {
-    k: data.proj.k, show: scene.show, scaleSprite: scene.scaleSprite, cartouche: scene.cartouche, cartouchePos: scene.cartouchePos, scalePos: scene.scalePos, voyages: scene.voyages, overlays: scene.overlays,
-    rays, rayLines: [0, 1, 2].map((kind) => rays.filter((ray) => ray.kind === kind && ray.alpha === 1).map((ray) => ray.line)),
-    rayFaint: [...new Set(rays.map((ray) => ray.alpha))].filter((a) => a !== 1).flatMap((alpha) => [0, 1, 2].map((kind) => ({ kind, alpha, lines: rays.filter((ray) => ray.kind === kind && ray.alpha === alpha).map((ray) => ray.line) }))), sheets: scene.sheets, debug: scene.debug, // the lines by ink (black, red, green), as drawAnchored strokes them
+    k: data.proj.k, show: scene.show, scaleSprite: scene.scaleSprite, cartouche: scene.cartouche, cartouchePos: scene.cartouchePos, scalePos: scene.scalePos, scaleGap: scene.scaleGap, voyages: scene.voyages, overlays: scene.overlays,
+    rays, sheets: scene.sheets, debug: scene.debug,
+    // the lines by band and ink (black, red, green), for a page turn's two networks (bandInk); the pinned rose's lines are band undefined
+    rayBands: [...new Set(rays.map((ray) => ray.band))].map((band) => ({ band, lines: [0, 1, 2].map((kind) => rays.filter((ray) => ray.band === band && ray.kind === kind).map((ray) => ray.line)) })),
+    bands: scene.bands, turn: scene.turn,
     roses: scene.roseDraws.map(ll), mountains: (scene.mountains ?? []).map(ll),
     towns: [...scene.towns.filter((t) => !t.city), ...(scene.lesser ?? [])].map(ll),
     monsters: scene.monsters.map(ll), ships: scene.ships.map(ll),
@@ -3553,10 +3565,12 @@ function drawAnchored(g, a, bg, view, layers) {
   g.setTransform(1, 0, 0, 1, 0, 0);
   for (const o of a.overlays) if (o.mode === 'pieces') drawOverlay(g, o, proj, o.opacity, { w: W, h: H }); // the pieces first, as at a stop
   const inks = [STYLE.ink, STYLE.windRed, STYLE.windGreen];
-  for (const [kind, ink] of show.rhumb ? inks.entries() : []) {
-    limn(g, a.rayLines[kind], proj.toPx, { color: ink, alpha: STYLE.rhumbAlpha, width: STYLE.rhumbWidth, oneStroke: true, ...proj.seam });
+  const inkOf = bandInk(a.bands, view.zoom, a.turn);
+  const inked = (o, draw) => { const k = inkOf(o.band); if (k <= 0) return; g.globalAlpha = k; draw(); g.globalAlpha = 1; };
+  for (const { band, lines } of show.rhumb ? a.rayBands : []) {
+    const k = inkOf(band);
+    if (k > 0) for (const [kind, ink] of inks.entries()) limn(g, lines[kind], proj.toPx, { color: ink, alpha: STYLE.rhumbAlpha * k, width: STYLE.rhumbWidth, oneStroke: true, ...proj.seam });
   }
-  for (const { kind, alpha, lines } of show.rhumb ? a.rayFaint ?? [] : []) limn(g, lines, proj.toPx, { color: inks[kind], alpha: STYLE.rhumbAlpha * alpha, width: STYLE.rhumbWidth, oneStroke: true, ...proj.seam });
   if (proj.rim) {
     g.beginPath(); g.arc(W / 2, H / 2, proj.rim, 0, 2 * Math.PI);
     g.strokeStyle = STYLE.ink; g.lineWidth = 2; g.stroke();
@@ -3565,7 +3579,7 @@ function drawAnchored(g, a, bg, view, layers) {
   drawLate(g, a, view, layers, fr);
   if (show.kinds.has('rose')) for (const { o, at: ll } of a.roses) {
     const size = o.size * scaled('rose'), p = at(ll, size);
-    if (p) drawSprite(g, o.sprite, p[0], p[1], size, { anchor: [0.5, 0.5], rot: roseTurn(proj) });
+    if (p) inked(o, () => drawSprite(g, o.sprite, p[0], p[1], size, { anchor: [0.5, 0.5], rot: roseTurn(proj) }));
   }
   if (show.kinds.has('mountain')) for (const { o, at: ll } of a.mountains) {
     const size = o.size * scaled('mountain'), p = at(ll, size);
@@ -3587,11 +3601,11 @@ function drawAnchored(g, a, bg, view, layers) {
   }
   if (show.kinds.has('monster')) for (const { o: m, at: ll } of a.monsters) {
     const size = m.size * scaled('monster'), p = at(ll, size);
-    if (p) drawSprite(g, m.sprite, p[0], p[1], size, { flip: m.flip, anchor: [0.5, 0.5] });
+    if (p) inked(m, () => drawSprite(g, m.sprite, p[0], p[1], size, { flip: m.flip, anchor: [0.5, 0.5] }));
   }
   if (show.kinds.has('ship')) for (const { o: s, at: ll } of a.ships) {
     const size = s.size * scaled('ship'), p = at(ll, size);
-    if (p) drawSprite(g, s.sprite, p[0], p[1], size, { flip: s.flip, rot: s.flip ? -s.tilt : s.tilt, anchor: [0.5, 0.6] });
+    if (p) inked(s, () => drawSprite(g, s.sprite, p[0], p[1], size, { flip: s.flip, rot: s.flip ? -s.tilt : s.tilt, anchor: [0.5, 0.6] }));
   }
   for (const o of a.overlays) if (o.mode === 'sheet') drawSheet(g, o, proj, o.sheet); // the sheets, then the voyages over them, as at a stop
   drawVoyages(g, a.voyages, proj, { x0: 0, y0: 0, x1: W, y1: H }, undefined, true); // the notes' marks are the page's (drawNoteMark), as at a stop
@@ -3640,7 +3654,8 @@ function drawAnchored(g, a, bg, view, layers) {
 // `debug`: a list of DEBUG_LAYERS ('sheets', 'rings'), the atlas's sheets drawn in red over everything; none by default.
 // `tune`: { name: value } of TUNE_KNOBS, knobs fixed in the code exposed for a while (docs/atlas/under-the-hood.md);
 // a knob left out, out of range or malformed keeps its default, which is the code's own.
-// A sheet's hidden circle reaches 0.4 of its height, so a node never lands on the edge a neighbour shares.
+// A grid sheet's hidden circle is 0.8 of its height across, 0.4 a radius (docs/atlas/README.md, "The fallback grid"),
+// so every node is inside the sheet and inside the window at the band's first zoom.
 export const SHEET_RADIUS = 0.4;
 // Degrees of rhumb line from a node: the sheet's diagonal on the page, times `k` (the `reach` knob).
 const sheetReach = (e, k = 1) => Math.min(180, k * Math.hypot(e.east - e.west, mercDeg(e.north) - mercDeg(e.south)));
@@ -3655,10 +3670,7 @@ export const TUNE_KNOBS = {
   roselines: { def: 1, of: [0, 1] }, // the Catalan rose's lines at every zoom
   roseshare: { def: null, min: 0, max: 1 }, // of a sheet's allotment, to roses
   sheetroses: { def: null, min: 1, max: 8, int: true }, // the most roses a sheet holds
-  // MOCKUP (#107, not for merge): more meeting points through a band. 'fade': past a band's middle the next band's
-  // network fades in, lines and roses at one alpha, 0 at the middle to 1 at the band's end; 'circles': each grid
-  // sheet adds four circles, one per quarter of the sheet, at full ink through the band; 'today': neither.
-  meet: { def: 'today', of: ['today', 'fade', 'circles'] },
+  turn: { def: ATLAS_TURN, min: 0, max: 1 }, // the page turn's span in zoom levels, centred on a band edge; 0 a hard swap
 };
 // A knob's value from text or a number, or undefined where it is out of range or malformed.
 function knobValue(name, v) {
@@ -3703,7 +3715,7 @@ export function parsePlacement(text) {
 }
 export async function createScene(environment, opts = {}) {
   env = environment;
-  const { ink = '#3b2a1a', depth = true, continentsZoom, regionsZoom, scaleBorder = 'bordered', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', regionSet = 'today', regionStyle = 'combination', title = 'PORTOLANI', autoTitle = true, pinTitle, land: landMode = 'islands', islands, seaTint = false, rivers = 'off', lakes = 'off', reefs = 'crosses', playas = 'salt', peaks: peaksOn = true, relief = [], trees = 'off', historical = true, seed: pickedSeed, cartouchePos, scalePos, overlap: overlapPick } = opts;
+  const { ink = '#3b2a1a', depth = true, continentsZoom, regionsZoom, scaleBorder = 'bordered', parchment: tone = '#e9d8b4', density = 1, rendering = 'vivid', rose = 'aguiar', monster = 'carta-marina', town = 'tower', townSize, names = true, rhumb: rhumbOn = true, scale = 'genoese', continents = false, regions = 'off', regionSet = 'today', regionStyle = 'combination', title = 'PORTOLANI', autoTitle = true, pinTitle, land: landMode = 'islands', islands, seaTint = false, rivers = 'off', lakes = 'off', reefs = 'crosses', playas = 'salt', peaks: peaksOn = true, relief = [], trees = 'off', historical = true, seed: pickedSeed, cartouchePos, scalePos, overlap: overlapPick, scaleGap, peakNames = false, waterNames = [], places: cellPlaces = [], atlas = true, coverage = null } = opts;
   const overlap = overlapRule(overlapPick); // how overlapping curated charts are drawn (atlas.mjs, OVERLAP_RULES)
   const legacy = ['rendering', 'rose', 'monster', 'town'].some((k) => opts[k] !== undefined);
   const townBy = townSize ?? (legacy ? 'rank' : 'area');
@@ -3752,7 +3764,8 @@ export async function createScene(environment, opts = {}) {
   const [, coarse, chosen, regionNames] = await Promise.all([env.loadFont(STYLE.font), loadWorld(), sprites, regions === 'off' ? REGIONS : regionNamesOf(regionSet, env)]);
   const { scaleSprite, ...placed } = chosen;
   STYLE.mountainSprites = placed.mountains.length > 0;
-  const peaksWanted = peaksOn !== false && peaksOn !== 'off' && STYLE.mountainSprites;
+  // the landmark peaks are drawn in ink (PEAK_INK), with the mountains' kind; they need no mountain sprite
+  const peaksWanted = peaksOn !== false && peaksOn !== 'off' && show.kinds.has('mountain');
   if (peaksWanted && !peaksRead.has(env)) peaksRead.set(env, env.readJSON('geo/peaks-10m.json').catch(missing).then(peaksOf).catch((e) => { peaksRead.delete(env); throw e; })); // a failed read is not kept
   const rangesWanted = STYLE.relief.length > 0;
   if (rangesWanted && !rangesRead.has(env)) rangesRead.set(env, env.readJSON('geo/ranges-10m.json').catch(missing).then(rangesOf));
@@ -3781,22 +3794,24 @@ export async function createScene(environment, opts = {}) {
   const tLoad = performance.now();
 
   const data = viewData(world, view);
+  withCellData(data, view, cellPlaces, waterNames);
+  if (coverage) data.coverage = coverage;
   if (STYLE.depth && world.depth) Object.assign(data, { depth: world.depth, mPerPx: (2 * Math.PI * WEB_MERCATOR_R * Math.cos(view.lat * RAD)) / (512 * 2 ** view.zoom) });
   data.lesser.push(...standIns(opts.sights, data, view));
   // the atlas's sheets at every zoom: the curated sheets alone in the world band, then curated and grid sheets.
   // The Catalan rose's lines reach as far as those of the sheet that holds it at this zoom.
   // `from` paces a sheet's beasts: the first zoom of its band, or in the world band, where the earth is one page,
   // the zoom at which the sheet is one window wide.
-  const worldBand = view.zoom < ATLAS_BANDS[0].from;
-  // The knobs: `curated` 0 leaves grid cells everywhere but the world band, which is one sheet either way.
+  // Inside a page turn's span both bands' sheets are placed, each whole, and drawn at the ink of the turn (bandInk).
+  const turned = bandsAt(view.zoom, knobs.turn);
   const origin = ATLAS_ORIGINS[knobs.origin];
-  const sheets = sheetsFor(view, { radius: knobs.radius, curated: knobs.curated === 1 || worldBand, overlap, origin }).map((sh) => ({ ...sh, reach: sheetReach(sh.extent, knobs.reach),
-    from: worldBand ? Math.log2(WINDOW_DEG / (sh.extent.east - sh.extent.west)) : ATLAS_BANDS.find((b) => b.band === sh.band).from }));
-  const extras = meetExtras(view, knobs, sheets, { overlap, origin });
+  // `atlas: false` lays no sheet: the roses, monsters and ships are placed on the view's own water. `atlas: 'roses'` lays the
+  // sheets for the roses and rhumb lines alone, the beasts on the view's own water, as a chart whose sea is its cells' needs
+  const sheets = atlas === false ? null : placedSheets(view, turned, knobs, overlap);
   const roseReach = sheetReach(roseSheet(view.zoom, { origin, curated: knobs.curated === 1, overlap }).extent, knobs.reach);
-  const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, extras, historical, roseLines: knobs.roselines === 1, seaAt: sheets && seaAtOf(coarse), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, regionNames, regionStyle, title, autoTitle, pinTitle,
+  const scene = { ...buildScene(data, placed, createCanvas(10, 10).getContext('2d'), { sheets, viewBeasts: atlas === 'roses', historical, roseLines: knobs.roselines === 1, seaAt: sheets && seaAtOf(coarse), placesLL: world.places, continents: continents && (regions === 'english' ? 'english' : 'latin'), regions, regionNames, regionStyle, title, autoTitle, pinTitle,
     continentsEnd: zoomEnd(continentsZoom, CONTINENT_ZOOM_END), regionsEnd: zoomEnd(regionsZoom, REGION_ZOOM_END),
-    scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM && pinned, pinned, cartouchePos, scalePos, townSize: townBy, seed: legacy ? null : pickedSeed == null ? castSeed(view) : pickedSeed | 0, salt: legacy || pickedSeed == null ? 0 : pickedSeed | 0 }), show, scaleSprite, voyages, overlays, roseReach, roseLines: knobs.roselines === 1, debug, overlap, scalePos: cornerOf(scalePos, DEFAULT_SCALE_CORNER) };
+    scaleBar: scale in SCALE_STYLES && view.zoom >= SCALE_MIN_ZOOM && pinned, pinned, cartouchePos, scalePos, peaks: peaksWanted, peakNames, townSize: townBy, seed: legacy ? null : pickedSeed == null ? castSeed(view) : pickedSeed | 0, salt: legacy || pickedSeed == null ? 0 : pickedSeed | 0 }), show, scaleSprite, voyages, overlays, roseReach, roseLines: knobs.roselines === 1, debug, overlap, scalePos: cornerOf(scalePos, DEFAULT_SCALE_CORNER), scaleGap, zoom: view.zoom, turn: knobs.turn, bands: turned.map(({ band }) => band.band) };
   scene.voyages = placeDoubts(scene, data);
   data.trees = TREES[STYLE.trees] ? plantTrees({ proj: data.proj, isLand: scene.field.isLand, scene, lakes: STYLE.lakes !== 'off' && water ? water.lakes : [], w: W, h: H }) : [];
   data.palms = plantPalms({ proj: data.proj, isLand: scene.field.isLand, scene, w: W, h: H,
@@ -3804,6 +3819,40 @@ export async function createScene(environment, opts = {}) {
   if (!parchments.has(tone)) parchments.set(tone, makePaper(tone));
   const bg = parchments.get(tone);
   return { scene, data, bg, proj: data.proj, world, coarse, view, timing: { load: tLoad - t0, place: performance.now() - tLoad } };
+}
+// A caller's own places and water names (`places`, `waterNames`: an ENC's built-up and sea areas, signalk/), joined
+// to the view's: a place { name, lon, lat, area } stands a town and is not lettered (`quiet`); a water name
+// { text, at: [lon, lat], km2, box } is lettered as a sea is, the larger first, once a view, where its area is
+// at least WATER_NAME_PX across on the canvas.
+const WATER_NAME_PX = 60;
+function withCellData(data, view, places, waterNames) {
+  if (!places.length && !waterNames.length) return;
+  const proj = data.proj, f = frameOf(proj, MARGIN), shown = (lon, lat) => nearLL(f, lon, lat) && shows(proj, lon, lat);
+  data.places.push(...places.filter((p) => shown(p.lon, p.lat)).map((p) => ({ rank: 3, pop: 0, area: 0, ...p, quiet: true, xy: proj.project(p.lon, p.lat) })));
+  const across = ({ x0, y0, x1, y1 }) => { const a = proj.project(x0, y0), b = proj.project(x1, y1); return Math.max(Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1])); };
+  const water = waterNames.filter((n) => meetsLL(f, n.box) && shown(...n.at) && across(n.box) >= WATER_NAME_PX).sort((a, b) => b.km2 - a.km2)
+    .map((n) => {
+      // coast-wright sets a point's name above it: the point is moved down so the name's middle is on it
+      const rank = n.km2 >= 1000 ? 1 : n.km2 >= 100 ? 3 : 5, size = rank <= 1 ? 22 : rank <= 3 ? 18 : 15, [x, y] = proj.project(...n.at);
+      return { text: n.text, at: proj.invert(x, y + size * 0.45), kind: 'sea', rank, min: 0, box: n.box, water: true };
+    });
+  data.names = [...data.names.filter((n) => n.kind === 'sea'), ...water, ...data.names.filter((n) => n.kind !== 'sea')];
+}
+
+// The sheets a stop places (docs/atlas/README.md, "The page turn"): those of every band `turned` (bandsAt) over the view,
+// each with `id`, `reach`, `from` and `inked`, the band whose ink its figures and lines take (bandInk). Outside a span
+// that is its own band; inside one, the two bands' sheets each fade with their band, except a curated chart both bands
+// carry (de la Cosa at the turn at 4, the world band's and band 4's): placed once, from the incoming band, and inked
+// whole, `inked` undefined like the pinned rose, since its two copies would draw the same figures over each other at
+// 1 - t and t and dip to 3/4 ink at the midpoint, where the spec's crossfade sums to 1.
+// The knobs: `curated` 0 leaves grid cells everywhere but the world band, which is one sheet either way.
+export function placedSheets(view, turned, knobs, overlap) {
+  const origin = ATLAS_ORIGINS[knobs.origin];
+  const all = turned.flatMap(({ band }) => sheetsFor(view, { radius: knobs.radius, curated: knobs.curated === 1 || band === WORLD_BAND, overlap, origin, band })).map((sh) => ({ ...sh, id: `${sh.band}/${sh.name}`, inked: sh.band, reach: sheetReach(sh.extent, knobs.reach),
+    from: sh.band === WORLD_BAND.band ? Math.log2(WINDOW_DEG / (sh.extent.east - sh.extent.west)) : ATLAS_BANDS.find((b) => b.band === sh.band).from }));
+  const last = new Map(all.filter((sh) => sh.curated).map((sh) => [sh.name, sh]));
+  const twice = new Set(all.filter((sh) => sh.curated && last.get(sh.name) !== sh).map((sh) => sh.name));
+  return all.filter((sh) => !sh.curated || !twice.has(sh.name) || last.get(sh.name) === sh).map((sh) => (twice.has(sh.name) ? { ...sh, inked: undefined } : sh));
 }
 // The voyages a link names, loaded, coloured and sized: one the site lacks, or 'off', is left out, so a missing overlay never stops the map
 async function loadVoyages(list) {
@@ -3865,7 +3914,7 @@ export function voyageView(voyage, view, pad = VOYAGE_FIT_PAD, always = false, r
   return clampView({ lon: west + span / 2 - dx / (k * RAD), lat: mercLat((yMin + yMax) / 2 + dy / k), zoom: Math.log2((k * 2 * Math.PI) / 512), projection: view.projection });
 }
 export const TOWN_SIZES = ['area', 'population', 'rank'];
-export { RIVER_STYLES, LAKE_STYLES, REEF_STYLES, PLAYA_STYLES, TREE_STYLES, RELIEF_STYLES, PEAK_STYLES };
+export { RIVER_STYLES, LAKE_STYLES, REEF_STYLES, PLAYA_STYLES, TREE_STYLES, RELIEF_STYLES, PEAK_STYLES, peakInkSvg };
 export const MAX_ZOOM = ZOOM.max;
 export { OVERLAP_RULES, DEFAULT_OVERLAP };
 export { paperSheet, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, anchorScene, drawAnchored, towerGlyph, SCALE_NAMES, readManifests, listStyles, listSprites, defaultSprites, selectSprites, chooseSprites, drawScene, drawGround, drawLate, LATE, IN_DRAG, covers, panView, zoomView, clampView, viewOfFrame, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };

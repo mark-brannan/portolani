@@ -12,14 +12,16 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import { syncStore } from '../lib/cells.mjs';
 import { resourceProvider, RESOURCE_TYPE } from '../lib/provider.mjs';
-import { packOf, CHART_OPTIONS } from '../app/chart.mjs';
+import { packOf, chartOptions, readSettings, DEFAULTS, ROSES, TOWNS, zoomRange, fitZoom, scaleZoom } from '../app/chart.mjs';
 import { chartGeo } from '../geo.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url)), ROOT = join(HERE, '..', '..');
 const adapterURL = pathToFileURL(join(HERE, '..', 'app', 'enc-provider.js')).href;
 // the webapp's import map, as hooks: scene.mjs's `coastlines/provider` is the adapter, `portolani/` is scripts/
 const SCRIPTS = pathToFileURL(join(ROOT, 'scripts')).href;
-function resolveMapped(specifier, adapter, scripts) {
+const WORLD = import.meta.resolve('coastlines/provider'); // the adapter's own coastlines, as the build copies it
+function resolveMapped(specifier, adapter, scripts, world) {
+  if (specifier === 'coastlines/world-provider') return world;
   if (specifier === 'coastlines/provider') return adapter;
   if (specifier.startsWith('portolani/')) return `${scripts}/${specifier.slice(10)}`;
   return null;
@@ -27,7 +29,7 @@ function resolveMapped(specifier, adapter, scripts) {
 if (nodeModule.registerHooks) {
   nodeModule.registerHooks({
     resolve(specifier, context, next) {
-      const url = resolveMapped(specifier, adapterURL, SCRIPTS);
+      const url = resolveMapped(specifier, adapterURL, SCRIPTS, WORLD);
       return url ? { url, shortCircuit: true } : next(specifier, context);
     },
   });
@@ -37,10 +39,10 @@ if (nodeModule.registerHooks) {
 let map;
 export function initialize(data) { map = data; }
 export async function resolve(specifier, context, next) {
-  const url = resolveMapped(specifier, map.adapter, map.scripts);
+  const url = resolveMapped(specifier, map.adapter, map.scripts, map.world);
   return url ? { url, shortCircuit: true } : next(specifier, context);
 }`;
-  nodeModule.register(`data:text/javascript,${encodeURIComponent(loader)}`, import.meta.url, { data: { adapter: adapterURL, scripts: SCRIPTS } });
+  nodeModule.register(`data:text/javascript,${encodeURIComponent(loader)}`, import.meta.url, { data: { adapter: adapterURL, scripts: SCRIPTS, world: WORLD } });
 }
 
 // GET /<type>, /<type>/<id> and /<type>/<id>/<property>, as signalk-server routes them to a provider
@@ -77,25 +79,28 @@ test('US3WA46M through the provider draws the Seattle view, with its depth', asy
   assert.equal(c.band, 3);
   assert.equal(c.edition, 37);
   assert.equal(c.update, 10);
-  for (const l of ['LNDARE', 'COALNE', 'SLCONS', 'DEPARE', 'DEPCNT', 'SOUNDG', 'UWTROC', 'WRECKS', 'OBSTRN']) assert.ok(c.layers[l] > 0, l);
+  for (const l of ['LNDARE', 'COALNE', 'SLCONS', 'DEPARE', 'DEPCNT', 'SOUNDG', 'UWTROC', 'WRECKS', 'OBSTRN', 'SEAARE', 'BUAARE']) assert.ok(c.layers[l] > 0, l);
   c.bbox.forEach((v, i) => assert.ok(Math.abs(v - [-123.468, 47.033, -122.151, 48.342][i]) < 1e-3, `bbox ${i}`));
 
   const server = await serve(resourceProvider(() => store));
   t.after(() => server.close());
-  const { source } = await import(adapterURL);
+  const { source, cellData, frameView } = await import(adapterURL);
   source.base = `http://127.0.0.1:${server.address().port}/${RESOURCE_TYPE}`;
   const depare = await (await source.fetch(`${source.base}/US3WA46M/DEPARE`)).json();
   assert.ok(depare.features.every((f) => typeof f.properties.DRVAL1 === 'number'), 'DRVAL1 is a number');
 
-  const { createScene, drawScene, H } = await import('../../scripts/scene.mjs');
+  const { createScene, drawScene, listSprites, scaleRect, viewProjection, W, H } = await import('../../scripts/scene.mjs');
+  const list = await listSprites(env), settings = readSettings({});
   const b = SEATTLE;
   const view = { lon: (b.lonMin + b.lonMax) / 2, lat: Math.atan(Math.sinh((merc(b.latMin) + merc(b.latMax)) / 2)) / RAD,
     zoom: Math.log2((2 * Math.PI * H) / (512 * (merc(b.latMax) - merc(b.latMin)) * 1.02)) };
-  const draw = async (depth, at = view) => {
-    const { scene, data, bg } = await createScene(env, { ...CHART_OPTIONS, view: at, depth });
+  // the webapp's draw: the drawer's settings as scene options, with the cells' towns and water names
+  const optionsAt = async (at, set = settings) => ({ ...chartOptions(set, list, await cellData(frameView(at, viewProjection(at).invert, W, H))), view: at });
+  const draw = async (depth, at = view, set = settings) => {
+    const { scene, data, bg } = await createScene(env, { ...(await optionsAt(at, set)), depth });
     const c = createCanvas(1600, 1000), g = c.getContext('2d');
     drawScene(g, scene, data, bg, { scale: 1, x: 0, y: 0 });
-    return { c, data, scene };
+    return { c, data, scene, bar: scaleRect() };
   };
   const withDepth = await draw(true), without = await draw(false);
   assert.ok(withDepth.data.land.length > 10, `land from the cell: ${withDepth.data.land.length} polygons`);
@@ -108,25 +113,79 @@ test('US3WA46M through the provider draws the Seattle view, with its depth', asy
   for (let i = 0; i < a.length; i += 4) if (a[i] !== z[i] || a[i + 1] !== z[i + 1] || a[i + 2] !== z[i + 2]) differ++;
   assert.ok(differ > 20000, `depth paints the sea: ${differ} px differ`);
   if (process.env.UPDATE_GOLDEN) writeFileSync(join(HERE, 'golden', 'seattle.png'), withDepth.c.toBuffer('image/png'));
+  // the cells' water lettered once each, clear of each other and of the scale bar; the cells' towns stood
+  const water = withDepth.scene.names.filter((n) => n.water);
+  assert.ok(water.some((n) => n.text === 'Elliott Bay'), `Elliott Bay lettered: ${water.map((n) => n.text)}`);
+  assert.equal(new Set(water.map((n) => n.text)).size, water.length, 'each name once');
+  const apart = (a, b) => Math.abs(a.cx - b.cx) >= a.hw + b.hw || Math.abs(a.cy - b.cy) >= a.hh + b.hh;
+  for (const [i, a] of water.entries()) for (const b of water.slice(i + 1)) assert.ok(apart(a.box, b.box), `${a.text} and ${b.text} apart`);
+  const { bar } = withDepth, barBox = { cx: bar.x + bar.w / 2, cy: bar.y + bar.h / 2, hw: bar.w / 2, hh: bar.h / 2 };
+  for (const n of water) assert.ok(apart(n.box, barBox), `${n.text} clear of the scale bar`);
+  // every drawn town style, the towers and the Carta Marina's buildings drawn in code among them, stands on the cells' built-up areas
+  const towned = await draw(true, view, { ...settings, towns: Object.keys(TOWNS) });
+  assert.ok(towned.scene.towns.length > 0, 'the cells\' built-up areas stand towns');
+  assert.ok(towned.scene.towns.every((t) => !t.sprite || TOWNS[t.sprite.style] === t.sprite.pack), 'the drawn town styles');
+  for (const t of Object.keys(TOWNS)) assert.ok(chartOptions({ ...settings, towns: [t] }, list).sprites.length > 0, `${t} towns chosen`);
+  assert.ok(chartOptions({ ...settings, towns: ['carta-marina'] }, list).sprites.includes('plain/church'), 'the Carta Marina church');
+  // the scale bar in the bottom-left corner, its gap to the bottom edge its gap to the left edge
+  assert.ok(Math.abs(bar.x - (H - (bar.y + bar.h))) <= 1, `scale bar ${bar.x} px from the left, ${H - bar.y - bar.h} px from the bottom`);
+  // the Towns chips all off is no town: the cells' built-up areas reach no scene
+  const place = { name: 'Here', lon: -122.3, lat: 47.6, area: 1 };
+  assert.deepEqual(chartOptions({ ...settings, towns: ['tower'] }, list, { places: [place] }).places, [place]);
+  assert.deepEqual(chartOptions({ ...settings, towns: [] }, list, { places: [place] }).places, []);
+  // the cartouche off at first, a chip turns it on
+  assert.equal(settings.cartouche, false);
+  assert.ok(!chartOptions(settings, list).kinds.includes('cartouche'));
+  assert.ok(chartOptions({ ...settings, cartouche: true }, list).sprites.includes('vivid/cartouche-frame'));
+  // the roses the drawn styles alone, the drawn Catalan roses at first, Aguiar's its own; the monsters Paré or heraldic, heraldic at first
+  assert.deepEqual(chartOptions(settings, list).sprites.filter((k) => /rose/.test(k)), ['vivid/rose-catalan', 'vivid/rose-catalan-small']);
+  assert.deepEqual(chartOptions({ ...settings, rose: 'aguiar' }, list).sprites.filter((k) => /rose/.test(k)), ['vivid/rose-aguiar']);
+  assert.deepEqual(settings.towns, [], 'no town at first');
+  for (const r of ROSES) assert.ok(chartOptions({ ...settings, rose: r }, list).sprites.some((k) => k.startsWith(`vivid/rose-${r}`)), r);
+  assert.ok(withDepth.scene.monsters.every((m) => m.sprite.style === 'heraldic'), 'heraldic monsters');
+  assert.ok(chartOptions({ ...settings, monster: 'pare' }, list).sprites.every((k) => !/monster|heraldic/.test(k) || k.startsWith('scanned/pare-')));
+  assert.ok(!chartOptions({ ...settings, monster: 'off' }, list).kinds.includes('monster'));
+  // course up: the chart turned so the course is at the top
+  const turned = await createScene(env, { ...(await optionsAt({ ...view, bearing: 45 })) });
+  assert.equal(turned.data.proj.bearing, 45);
   // the whole cell, as the webapp opens on it: Puget Sound, the Olympics and the Cascades at its edges
   const [w, s, e, n] = c.bbox, cell = { lon: (w + e) / 2, lat: Math.atan(Math.sinh((merc(s) + merc(n)) / 2)) / RAD,
     zoom: Math.min(Math.log2((2 * Math.PI * H) / (512 * (merc(n) - merc(s)))), Math.log2((2 * Math.PI * 1600) / (512 * (e - w) * RAD))) };
   const whole = await draw(true, cell);
-  // the chart's mountains on the cell's land: its style along the ranges the build ships, and the hills
+  if (process.env.UPDATE_GOLDEN) writeFileSync(join(HERE, 'golden', 'puget.png'), whole.c.toBuffer('image/png'));
+  // the chart's mountains on the cell's land: its style along the ranges the build ships, and no Catalan sprite
   assert.ok(whole.scene.relief?.peaks.length > 10, `mountains on the cell's land: ${whole.scene.relief?.peaks.length}`);
+  assert.ok(whole.scene.mountains.every((m) => !m.sprite), 'no mountain sprite stands');
+  assert.equal(DEFAULTS.depth && DEFAULTS.mountains && DEFAULTS.peaks, true, 'depth, mountains and peaks on at first');
   assert.ok(shipped['geo/ranges-10m.json'].features.length > 100 && shipped['geo/peaks-10m.json'].features.length > 100, 'the build ships the ranges and the peaks');
   // a landmark peak on the cell's land: the shipped peaks hold none inside this cell, so one is stood on the Olympic
   // Peninsula, and the scene draws it and a tap on its drawing finds its name and height
   const stand = { type: 'Feature', properties: { name: 'Test Summit', elevation: 1800, min_zoom: 0 }, geometry: { type: 'Point', coordinates: [-123.2, 47.8] } };
   const peakEnv = { ...env, readJSON: (p) => (p === 'geo/peaks-10m.json' ? Promise.resolve({ type: 'FeatureCollection', features: [stand] }) : env.readJSON(p)) };
-  const { scene: ps, data: pd } = await createScene(peakEnv, { ...CHART_OPTIONS, view: cell, depth: true });
-  const { drawnPeaks, peakHits, viewProjection } = await import('../../scripts/scene.mjs');
+  const { scene: ps, data: pd } = await createScene(peakEnv, await optionsAt(cell));
+  const { drawnPeaks, peakHits } = await import('../../scripts/scene.mjs');
   const drawn = drawnPeaks(ps, pd);
   assert.ok(drawn.length >= 1, `the landmark peak is drawn on the cell's land: ${drawn.length}`);
   const proj = viewProjection(cell), [hit] = peakHits(drawn, proj, { x0: 0, y0: 0, x1: 1600, y1: 1000 });
   assert.equal(hit?.tile.title, 'Test Summit');
   assert.match(hit.tile.date, /1,800 m/);
-  if (process.env.UPDATE_GOLDEN) writeFileSync(join(HERE, 'golden', 'puget.png'), whole.c.toBuffer('image/png'));
+  // drawn as the lone ink peak, its name lettered beside it
+  assert.ok(ps.mountains.filter((m) => m.peak).every((m) => m.ink), 'the lone ink peak');
+  assert.ok(ps.peakNames.some((n) => n.text === 'Test Summit'), 'the peak lettered');
+  // away from the cell, the world: Natural Earth's 50m land and coast, through coastlines' own provider
+  const away = await draw(true, { lon: -130, lat: 53, zoom: 7 }); // Haida Gwaii, clear of the cell
+  assert.ok(away.data.land.length > 0 && away.data.coastLL.length > 0, `the world's land away from the cell: ${away.data.land.length} polygons`);
+  // past the cell's edge, the world under it: land beyond the box, none of the world's inside it
+  const wider = await draw(true, { ...cell, zoom: cell.zoom - 1.5 });
+  const pts = wider.data.land.flatMap((poly) => poly[0]);
+  assert.ok(pts.some(([lon, lat]) => lon < w - 0.05 || lon > e + 0.05 || lat < s - 0.05 || lat > n + 0.05), 'the world drawn past the cell');
+  assert.ok(wider.data.land.length > whole.data.land.length, `more land past the cell: ${wider.data.land.length} > ${whole.data.land.length}`);
+  // the monsters in the cell's water only, though the world's sea is drawn past it: the cells' extents
+  // (`coverage`) keep them off it, where without them they stand on the world's Pacific
+  const offCell = ({ scene: sc, data: d }) => sc.monsters.filter((m) => { const [lon, lat] = d.proj.invert(m.x, m.y); return lon < w || lon > e || lat < s || lat > n; }).length;
+  assert.equal(offCell(wider), 0, 'no monster off the cell');
+  assert.ok(offCell(await createScene(env, { ...(await optionsAt({ ...cell, zoom: cell.zoom - 1.5 })), coverage: null })) > 0, 'without the cells\' extents, monsters off the cell');
+  if (process.env.RENDER_DIR) for (const [k, v] of Object.entries({ away, wider, whole })) writeFileSync(join(process.env.RENDER_DIR, `${k}.png`), v.c.toBuffer('image/png'));
 });
 
 test('a cell that will not convert is skipped with a warning, and the rest convert', async (t) => {
@@ -144,4 +203,21 @@ test('a cell that will not convert is skipped with a warning, and the rest conve
   // stopped before its first cell, a second run keeps the store as it was
   const again = await syncStore(charts, store, { stopped: () => true });
   assert.deepEqual(Object.keys(again), ['US3WA46M']);
+});
+
+test("Constrain View's range: out to where every cell fits, in to the finest cell's compilation scale", () => {
+  const cat = { A: { bbox: [-123, 47, -122, 48], scale: 90000 }, B: { bbox: [-122.5, 47.5, -122.3, 47.7], scale: 22000 }, C: { bbox: null, scale: 1000 } };
+  const r = zoomRange(cat, 1600, 1000);
+  assert.equal(r.min, fitZoom([-123, 47, -122, 48], 1600, 1000));
+  assert.equal(r.max, scaleZoom(22000, 47.6));
+  assert.ok(r.max > r.min);
+  // 1:22000 at 47.6 N is 6.16 m of ground a 0.28 mm pixel: zoom 13.06
+  assert.ok(Math.abs(r.max - 13.06) < 0.01, `max zoom ${r.max}`);
+  assert.equal(zoomRange({}, 1600, 1000), null);
+  // one cell finer in fit than in scale: the range is never narrower than the fit
+  const one = zoomRange({ A: { bbox: [-122.31, 47.6, -122.3, 47.61], scale: 90000 } }, 1600, 1000);
+  assert.equal(one.max, one.min);
+  assert.equal(readSettings({}).constrain, false);
+  assert.equal(readSettings({}).bare, false);
+  assert.equal(readSettings({ constrain: 'yes', bare: 1 }).constrain, false);
 });

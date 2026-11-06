@@ -1,12 +1,18 @@
 {
   "name": "signalk-portolan",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "ENC cells as GeoJSON over the Signal K Resources API, drawn as a portolan chart in a webapp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mark-brannan/portolani.git",
+    "directory": "signalk"
+  },
   "type": "module",
   "main": "index.js",
   "scripts": {
     "build": "node build.mjs",
-    "demo": "node demo.mjs"
+    "demo": "node demo.mjs",
+    "rig": "node rig.mjs"
   },
   "keywords": [
     "signalk-node-server-plugin",
@@ -18,10 +24,13 @@
   "signalk": {
     "displayName": "Portolani"
   },
-  "files": ["index.js", "lib", "public"],
+  "files": [
+    "index.js",
+    "lib",
+    "public"
+  ],
   "license": "MIT",
   "dependencies": {
     "gdal3.js": "^2.8.1"
-  },
-  "private": true
+  }
 }

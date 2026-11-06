@@ -206,6 +206,15 @@
       "note": "(2,127 × 1,163)"
     },
     {
+      "id": "de-la-cosa-india",
+      "file": "1500_map_by_Juan_de_la_Cosa-India.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/d/d2/1500_map_by_Juan_de_la_Cosa-India.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:1500_map_by_Juan_de_la_Cosa-India.jpg",
+      "sha256": "146e63ed5f3975d361c0d57584b21870258d2fbc00a105cc9aa808c1bebe34ad",
+      "rights": "Public domain; Juan de la Cosa 1500, Museo Naval, Madrid; detail of the Museo Galileo's digital facsimile",
+      "note": "(1,287 × 1,073); a detail of the original, north up: the Portuguese ships off India"
+    },
+    {
       "id": "aguiar",
       "file": "Jorge_Aguiar_Wind_rose.jpg",
       "url": "https://upload.wikimedia.org/wikipedia/commons/8/8f/Jorge_Aguiar_Wind_rose.jpg",
@@ -519,6 +528,42 @@
       "sha256": "b378837e96a7ffcd34b9b0c4188d7537d483f23289cd6f35f2399b84b25c52dd",
       "rights": "CC BY-SA 4.0; photo by Falcodigiada, Wikimedia Commons; Banet Panades, nautical chart of the Mediterranean, Messina 1557, Galata Museo del Mare, Genoa. Attribution: \"Falcodigiada, Wikimedia Commons, CC BY-SA 4.0\". Files built from it (packs/overlays/panades-1557*.jpg/png, docs/overlay/panades-1557-sheet.jpg) are CC BY-SA 4.0.",
       "note": "(3,008 × 2,000; a handheld museum photograph, lit unevenly and slightly angled; the central Mediterranean, Corsica and Sardinia to Greece, with roses, flags and town views)"
+    },
+    {
+      "id": "kitab-i-bahriye-adriatic",
+      "file": "kitab-i-bahriye-adriatic.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/e/e8/Piri_Reis_-_Map_of_the_Coastlines_and_the_Islands_of_the_Adriatic_Sea_-_Walters_W658208A_-_Full_Page.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Piri_Reis_-_Map_of_the_Coastlines_and_the_Islands_of_the_Adriatic_Sea_-_Walters_W658208A_-_Full_Page.jpg",
+      "sha256": "bd91944976f0b1748afb44dcb2b547377cf8d531deca9c553dbc4d973b75f813",
+      "rights": "Public domain; Walters Art Museum, Baltimore, W.658, fol. 208a (Walters Art Museum license, type=2D), via Wikimedia Commons; Piri Reis, Kitab-ı Bahriye, a later copy.",
+      "note": "(1,226 × 1,800; one folio of the Kitab-ı Bahriye: the Adriatic, its coasts and islands, Venice at the top and Corfu at the foot, drawn with its long axis up the page)"
+    },
+    {
+      "id": "carte-pisane",
+      "file": "carte-pisane.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/0/06/Carte_marine_de_l%27oc%C3%A9an_Atlantique_Est%2C_de_la_mer_M%C3%A9diterran%C3%A9e_et_d%27une_partie_de_la_mer_Noire%2C_connue_sous_le_nom_de_Carte_Pisane_-_btv1b52503226n_%281_of_2%29.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Carte_marine_de_l%27oc%C3%A9an_Atlantique_Est,_de_la_mer_M%C3%A9diterran%C3%A9e_et_d%27une_partie_de_la_mer_Noire,_connue_sous_le_nom_de_Carte_Pisane_-_btv1b52503226n_(1_of_2).jpg",
+      "sha256": "19d8fb1fd534c7e00304cd1b13158276a4559db2fb5e4282e8ae05520030cd7c",
+      "rights": "Public domain; Bibliothèque nationale de France, Cartes et plans, GE B-1118 (Gallica ark:/12148/btv1b52503226n), via Wikimedia Commons; the Carte Pisane, maker unknown, about 1275.",
+      "note": "(16,842 × 8,069; the whole skin on black, photographed south up: England and Flanders at the foot, Africa along the top, the neck to the left; the Black Sea end badly stained)"
+    },
+    {
+      "id": "vesconte-1313",
+      "file": "vesconte-1313.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/d/d4/Map_from_Pietro_Vesconte_1313_atlas.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Map_from_Pietro_Vesconte_1313_atlas.jpg",
+      "sha256": "15feca71df9efb3ac008b06f6ac14511a6020d651a9db8c9c6d3046de4a34c6a",
+      "rights": "Public domain (Commons: PD-old, Public Domain Mark); Bibliothèque nationale de France (Gallica ark:/12148/btv1b5901108m), via Wikimedia Commons; Pietro Vesconte, atlas signed at Genoa and dated 1313.",
+      "note": "(2,622 × 2,282; one chart of the atlas across two leaves in colour, drawn east up: the Tyrrhenian coast of Italy up the left leaf, Elba to Palinuro, and the sea south-west of it on the right leaf, its coasts faded)"
+    },
+    {
+      "id": "dulcert-1339",
+      "file": "dulcert-1339.jpg",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/1/18/Carte_marine_de_la_mer_Baltique%2C_de_la_mer_du_Nord%2C_de_l%27oc%C3%A9an_Atlantique_Est%2C_de_la_mer_M%C3%A9diterran%C3%A9e%2C_de_la_mer_Noire_et_de_la_mer_Rouge_-_Hoc_opus_fecit_angelino_dulcert-_ano_M_CCC_XXX_VIIII_de_mense..._-_btv1b52503220z_%281_of_2%29.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Carte_marine_de_la_mer_Baltique,_de_la_mer_du_Nord,_de_l%27oc%C3%A9an_Atlantique_Est,_de_la_mer_M%C3%A9diterran%C3%A9e,_de_la_mer_Noire_et_de_la_mer_Rouge_-_Hoc_opus_fecit_angelino_dulcert-_ano_M_CCC_XXX_VIIII_de_mense..._-_btv1b52503220z_(1_of_2).jpg",
+      "sha256": "170797395b1f7b8d9d6d1a6750ac4e65ec081fb58522f5b66b37a09505edfc8f",
+      "rights": "Public domain; Bibliothèque nationale de France, Cartes et plans, GE B-696 (Gallica ark:/12148/btv1b52503220z), via Wikimedia Commons; Angelino Dulcert, Majorca, 1339.",
+      "note": "(16,368 × 12,176; the whole sheet on black, north up: the Baltic, the North Sea, the Atlantic coasts, the Mediterranean, the Black Sea and the Red Sea)"
     },
     {
       "id": "martines-1587-01",
