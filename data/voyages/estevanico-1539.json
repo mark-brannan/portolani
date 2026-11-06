@@ -1,0 +1,179 @@
+{
+  "id": "estevanico-1539",
+  "title": "Esteban and Fray Marcos de Niza to Cíbola, 1539",
+  "short": "Cíbola, 1539",
+  "who": [
+    "esteban-de-dorantes",
+    "marcos-de-niza"
+  ],
+  "when": "1539",
+  "summary": "Viceroy Mendoza sent Fray Marcos de Niza north from Culiacán to learn of the Seven Cities of Cíbola, and Esteban, who had walked out of the Narváez wreck, ahead of him. Esteban reached the Zuni town of Hawikuh and was killed there; Marcos, told of it in the desert, turned back. The way past the Sonora valley is the usual reconstruction; no one knows it.",
+  "sources": [
+    "winship-coronado-expedition",
+    "marcos-de-niza",
+    "hawikuh-historical-background-study"
+  ],
+  "legs": [
+    {
+      "from": "Culiacán",
+      "to": "Vacapa",
+      "dates": "7 – 21 Mar 1539",
+      "start": "1539-03-07",
+      "end": "1539-03-21",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          -107.39,
+          24.8
+        ],
+        [
+          -108.2,
+          25.8
+        ],
+        [
+          -109.2,
+          27.0
+        ]
+      ],
+      "source": "Marcos de Niza's Relación as Winship summarises it: Culiacán, Petatlán, where Fray Onorato was left sick, then Vacapa",
+      "note": "Vacapa has not been found; the line runs to a guessed place in Sonora"
+    },
+    {
+      "from": "Vacapa",
+      "to": "Hawikuh",
+      "dates": "23 Mar – May 1539",
+      "start": "1539-03-23",
+      "end": "1539-05",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "points": [
+        [
+          -109.2,
+          27.0
+        ],
+        [
+          -110.3,
+          29.4
+        ],
+        [
+          -110.2,
+          30.6
+        ],
+        [
+          -110.1,
+          31.4
+        ],
+        [
+          -109.8,
+          32.6
+        ],
+        [
+          -109.4,
+          33.7
+        ],
+        [
+          -109.1,
+          34.5
+        ],
+        [
+          -108.98,
+          34.93
+        ]
+      ],
+      "source": "Winship: Esteban went up the Sonora valley ahead of Marcos; the way beyond it is the scholars' reconstruction",
+      "note": "Esteban's way; Marcos followed days behind, and where either crossed Arizona is argued"
+    },
+    {
+      "from": "Cíbola, in sight",
+      "to": "Compostela",
+      "dates": "Early Jun – 2 Sep 1539",
+      "start": "1539-06",
+      "end": "1539-09-02",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "points": [
+        [
+          -109.0,
+          34.85
+        ],
+        [
+          -109.4,
+          33.7
+        ],
+        [
+          -109.8,
+          32.6
+        ],
+        [
+          -110.1,
+          31.4
+        ],
+        [
+          -110.2,
+          30.6
+        ],
+        [
+          -110.3,
+          29.4
+        ],
+        [
+          -109.2,
+          27.0
+        ],
+        [
+          -108.2,
+          25.8
+        ],
+        [
+          -107.39,
+          24.8
+        ],
+        [
+          -104.9,
+          21.25
+        ]
+      ],
+      "source": "Marcos de Niza as Winship summarises it: back by hasty marches and down the coast",
+      "note": "Winship has Marcos swearing to his report before Mendoza and Coronado at Compostela on 2 September; Wikipedia has him in Mexico City in August"
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": -107.39,
+      "lat": 24.8,
+      "date": "7 Mar 1539",
+      "label": "Culiacán: Marcos sets out",
+      "source": "Winship",
+      "cite": "winship-coronado-expedition",
+      "text": "Fray Marcos, Fray Onorato and Esteban left the last Spanish town in Nueva Galicia. Coronado, its governor, had come with them this far, and had sent ahead six Indians who had learned Spanish at Mexico."
+    },
+    {
+      "kind": "event",
+      "lon": -109.2,
+      "lat": 27.0,
+      "date": "23 Mar 1539",
+      "label": "Vacapa: Esteban sent ahead",
+      "confidence": "speculative",
+      "source": "Winship",
+      "cite": "winship-coronado-expedition",
+      "text": "Marcos waited here until Easter, 6 April. On Passion Sunday, 23 March, he sent Esteban 50 or 60 leagues north, to send back a white cross the size of a hand if the news was fair, a larger one if it was good, and a still larger one if the land was better than New Spain. Four days later came “a very large cross, as tall as a man”. Castañeda heard that Esteban was sent ahead partly because Marcos disliked his collecting turquoises and his women. Where Vacapa was is not known."
+    },
+    {
+      "kind": "event",
+      "lon": -109.0,
+      "lat": 34.85,
+      "date": "Early Jun 1539",
+      "label": "Marcos sees Cíbola from a hill and turns back",
+      "confidence": "inferred",
+      "source": "Marcos de Niza, quoted in the National Park Service study",
+      "cite": "hawikuh-historical-background-study",
+      "doubt": "Historians dispute whether Marcos came near enough to see Cíbola at all; some say he turned back well short of it.",
+      "text": "Told of Esteban's death by survivors, Marcos was nearly killed by his own Indian followers, who blamed him. He went on with two chiefs to a hill, and wrote that the town was larger than Mexico City. He piled a cairn, set a small slender cross on it for lack of material, and hurried back, he said, with much more fear than food."
+    }
+  ]
+}
