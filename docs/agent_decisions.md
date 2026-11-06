@@ -579,3 +579,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261106t224551z
 - Maura's claim sits in Esteban's death text and doubt line, no second skull ([#400](https://github.com/mark-brannan/portolani/pull/400))
+
+### 20261106t225229z
+- Drew each track between the landfalls and dates the Wikipedia voyage articles give, marked inferred, not point by point from the journals, which I did not read ([#401](https://github.com/mark-brannan/portolani/pull/401))
