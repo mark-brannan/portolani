@@ -244,6 +244,9 @@ test('a curated sheet\'s extent holds its cropped figures', () => {
   assert.deepEqual(marina.sort(), ['cete-e', 'pistrix-c', 'serpent-a', 'ship-a', 'ship-b', 'whale-b']);
   const catalan = CURATED.find((c) => c.source === 'Catalan Atlas').ornaments.filter((f) => f.sprite).map((f) => f.sprite);
   assert.deepEqual(catalan.sort(), ['catalan-junk', 'catalan-ship', 'catalan-siren', 'rose-catalan']);
+  // de la Cosa's cropped ships lie off India, east of the sheet: on it, its one ship takes a stand-in, its roses wait on the ring reading, and it draws no beast
+  const cosa = CURATED.find((c) => c.source === 'Juan de la Cosa, 1500').ornaments;
+  assert.deepEqual([...new Set(cosa.map((f) => f.kind))].sort(), ['ship']);
 });
 
 test('a ray across the antimeridian is cut at the meridian, not swept across a sheet it never crosses', () => {
