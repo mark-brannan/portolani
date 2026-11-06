@@ -564,3 +564,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261106t224034z
 - Madagascar drawn as one direct Java crossing dated c. 500-1000, the Maldives route named in the note (no PR, branch claude/voyage-austronesian-arrows)
+
+### 20261106t224038z
+- Eastern Micronesia leg drawn from the Solomons, the stops being an editorial choice (no PR, branch claude/voyage-austronesian-arrows)
