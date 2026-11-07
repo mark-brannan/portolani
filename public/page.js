@@ -792,6 +792,7 @@ let selection = selectionFromHash();
 showStyle();
 if (LEGACY_KEYS.some((k) => hashParams().has(k))) writeHash(); // an older link, rewritten in the new form
 let ground = null; // { world, coarse, bg, anchored } from the last placement, all a moving frame needs
+let voyagePulse = null; // { ids, ready, since, t0 } while a chosen person's voyages pulse and fade (startVoyagePulse)
 // the People drawer's data, once loaded ({ people, pictures, sources, voyages }), the frames of the people chosen, their
 // pictures' images, and the picture held by hand (the section "people" below)
 let peopleData = null, peopleLoad = null, holding = null, dealt = null, flips = new Map();
@@ -813,7 +814,8 @@ async function render() {
       continents: style.continentsZoom > 0, continentsZoom: style.continentsZoom,
       regions: style.regionsZoom > 0 ? style.regions : 'off', regionSet: style.regionSet, regionStyle: style.regionStyle, regionsZoom: style.regionsZoom,
       sprites: [...selection], kinds, view, pinned: !phone.matches, pinTitle: style.autoTitle ? pinTitle : null,
-      voyages: style.voyages.filter((v) => !v.hidden || litBy(v.id)).map((v) => ({ id: v.id, colour: ink[v.id], width: style.voyageWidth, ...(v.hidden && { hidden: true }) })), person: style.person, voyageWidth: style.voyageWidth,
+      voyages: [...style.voyages.filter((v) => !v.hidden).map((v) => ({ id: v.id, colour: ink[v.id], width: style.voyageWidth })), ...pulsing().map((id) => ({ id, colour: PERSON_RED, width: style.voyageWidth }))],
+      person: style.person, personLit: false, voyageWidth: style.voyageWidth,
       overlays: style.overlays.map((id) => ({ id, mode: style.overlayMode, sheet: style.sheets[id] ?? null, opacity: sheetOpacity(style, id), clip: style.compare === 'off' ? null : style.comparePos })),
       sights: sightTiles().map(({ lon, lat, tile }) => ({ name: tile.title, lon, lat, ruin: tile.ruin ?? false, ...(tile.site != null && { site: tile.site }) })),
       debug: parseDebug(style.debug).debug, tune: parseTune(style.tune).tune,
@@ -821,7 +823,7 @@ async function render() {
     if (me !== run) return; // a newer change or a move superseded this one
     ground = { world, coarse, bg, voyages: scene.voyages, marks: drawnMarks(scene, data), peaks: drawnPeaks(scene, data), anchored: anchorScene(scene, data), overlays: scene.overlays, cards: { cartouche: kinds.includes('cartouche') ? scene.cartouche : null, scaleSprite: scene.scaleSprite, scale: style.scale, bg } };
     if (JSON.stringify(voyageInk()) !== inkKey) { showVoyage(); render(); return; } // the sheet laid or lifted changed which voyages cross it: draw again in their inks
-    applyReveal();
+    applyReveal(); applyPulse();
     if (style.autoTitle) $('title').value = scene.cartouche.title; // the box shows what the cartouche letters, and cannot be edited
     placed = view;
     if (keepTile) keepTile = false; else hideTile(); // its mark may be gone: another voyage, or none; a sight's tile just opened stays
@@ -1753,14 +1755,15 @@ const LOCATIONS = [...ANCHORAGES.slice(0, 2), ...SIGHTS, ...ANCHORAGES.slice(2)]
 // at the top: data/voyages/index.json in the order the voyages set out (chronological; the file's order breaks ties),
 // an era's heading before the first row in it, each row the voyage's short name and years
 // (the title is its tooltip), an eye, a play button, then its ink, a swatch to pick another. A shown voyage has its summary and a link
-// to its first source under its row. They load on the first open and stay cached. A click on the name shows that
-// voyage alone (every other one is hidden), flies to frame the whole of it and draws its line on from start to end,
-// every time, in the seconds the Drawn-in slider at the drawer's head sets. The eye only shows or hides that one voyage, at once: no
+// to its first source under its row. They load on the first open and stay cached. A click on the name adds that
+// voyage to those shown, flies to frame the whole of it and draws its line on from start to end,
+// every time, in the draw's seconds (chooseVoyage). The eye only shows or hides that one voyage, at once: no
 // flight, no pen, no other voyage touched. A voyage hidden keeps its place in the list, so its colour, and every other
 // voyage's, stays put. A voyage shown takes the first colour no shown voyage has, the chart's red first (settleInks).
 // The play button sails the voyage again on its own calendar (playVoyage, below), with a band at the map's foot.
 // At the drawer's head, the line weight for them all and how long the pen takes; the skull clears them (clearMap). The
 // choice rides in the link (`voyages=`, `voyagewidth=`, `voyagedraw=`) like any style.
+const VOYAGE_PLAY_ON = false; // the play buttons, the calendar band and the Drawn-in slider, suppressed for now: docs/spec/voyages.md, "no play, one speed"
 let band = null; // the voyage the play button plays, { id, cal, ms, state: wait | run | paused | done, since, t0, at, title } (playVoyage)
 const PLAY_GLYPH = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>';
 const PAUSE_GLYPH = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="5.5" width="4" height="13" rx="1"/><rect x="13.5" y="5.5" width="4" height="13" rx="1"/></svg>';
@@ -1778,9 +1781,10 @@ function voyageItem(id, v, sources, { name = true, bar = '' } = {}) {
     (name ? `<button type="button" class="vname" data-voyage="${escapeHTML(id)}" title="${full}${when ? `, ${when}` : ''}">` +
       `<svg viewBox="0 0 28 18" aria-hidden="true"><path d="M2 9h24" fill="none" stroke-linecap="round"/></svg>` +
       `<span class="brief">${brief}${when ? `<span class="when">${when}</span>` : ''}</span></button>`
-      : `<b class="vtitle">${full}</b>${years}`) +
+      : `<button type="button" class="vname vtitle" data-voyage="${escapeHTML(id)}" title="${full}${when ? `, ${when}` : ''}">` +
+        `<svg viewBox="0 0 28 18" aria-hidden="true"><path d="M2 9h24" fill="none" stroke-linecap="round"/></svg><b>${full}</b>${years}</button>`) +
     `<button type="button" class="eye" data-eye="${escapeHTML(id)}" aria-pressed="false" aria-label="Show ${full}" title="Show or hide ${full}">${EYE}</button>` +
-    `<button type="button" class="play" data-play="${escapeHTML(id)}" aria-pressed="false" aria-label="Play ${full} on its own calendar" title="Play ${full} on its own calendar">${PLAY_GLYPH}</button>` +
+    `<button type="button" class="play" data-play="${escapeHTML(id)}" aria-pressed="false" aria-label="Play ${full} on its own calendar" title="Play ${full} on its own calendar"${VOYAGE_PLAY_ON ? '' : ' hidden'}>${PLAY_GLYPH}</button>` +
     (name ? `<input type="color" data-ink="${escapeHTML(id)}" aria-label="Colour of ${full}" title="Colour of ${full}" hidden>` : '') + bar + '</div>' +
     (summary || more ? `<p class="vsum">${name ? `<b>${full}</b>. ` : ''}${summary}${more}</p>` : '') + '</li>';
 }
@@ -1809,10 +1813,8 @@ const crossing = () => {
 const settleVoyageInks = (fresh) => { const s = settleInks(style.voyages, crossing(), fresh); if (s !== style.voyages) { style = { ...style, voyages: s }; writeHash(); } };
 const voyageInk = () => { settleVoyageInks(); return Object.fromEntries(style.voyages.map((v) => [v.id, v.colour ?? v.ink])); };
 const isShown = (id) => style.voyages.some((v) => v.id === id && !v.hidden);
-const isHidden = (id) => style.voyages.some((v) => v.id === id && v.hidden);
-// the chosen person's voyages are drawn lit (the scene's `person`, people.mjs withPerson) unless an eye has hidden them
-function litBy(id) { return Boolean(peopleData?.people.find((p) => p.id === style.person)?.voyages.includes(id)); }
-const isDrawn = (id) => isShown(id) || (litBy(id) && !isHidden(id));
+// a voyage is drawn while it is shown: a chosen person lights none for good, their voyages only pulse (voyagePulse)
+const isDrawn = isShown;
 // Every voyage row, in the Voyages drawer and in the chosen person's tile, as the voyages stand: on or off, its ink,
 // its eye, its play button (playing, paused) and its swatch
 function showVoyage() {
@@ -1823,7 +1825,7 @@ function showVoyage() {
     row.classList.toggle('on', on);
     if (b) b.dataset.shown = String(on);
     if (line) {
-      line.setAttribute('stroke', litBy(id) && on ? PERSON_RED : listed ? ink[id] : 'currentColor');
+      line.setAttribute('stroke', listed ? ink[id] : 'currentColor');
       line.setAttribute('stroke-width', String(style.voyageWidth));
       line.setAttribute('stroke-dasharray', on ? '' : '2 3');
       line.setAttribute('opacity', on ? '1' : '0.45');
@@ -1883,10 +1885,7 @@ function voyageControl(e) {
     const id = eye.dataset.eye;
     if (band?.id === id) closeBand();
     if (voyagePen?.id === id || voyagePen?.ids?.includes(id)) voyagePen = null; // a pen on it stops, and the line is whole
-    // a chosen person's voyage hidden by its eye and turned back on: its hidden entry goes, rather than staying listed
-    // as shown, so letting the person go takes it off the map with them
-    if (litBy(id) && isHidden(id)) { style = { ...style, voyages: style.voyages.filter((v) => v.id !== id) }; showVoyage(); writeHash(); render(); }
-    else showVoyages({ [id]: !isDrawn(id) });
+    showVoyages({ [id]: !isShown(id) });
     return true;
   }
   if (play) {
@@ -1898,18 +1897,23 @@ function voyageControl(e) {
   }
   return false;
 }
-// a click in the Voyages drawer's rows
-async function voyageClick(e) {
-  if (voyageControl(e)) return;
-  const b = e.target.closest('[data-voyage]');
-  if (!b) return;
-  const id = b.dataset.voyage; // that voyage alone, framed, and drawn on afresh
+// A voyage's name, in the Voyages drawer or a person's tile (docs/spec/voyages.md, "choosing a voyage by its name adds
+// it"): that voyage shown beside those already shown, in a colour none of them has, framed and drawn on afresh
+// (from a person's tile the map stays: it frames the person already, and a flight would put their cards away)
+async function chooseVoyage(id, fly = true) {
   closeBand();
-  showVoyages({ [id]: true }, false);
-  await flyToVoyage(id);
+  showVoyages({ [id]: true });
+  if (fly) await flyToVoyage(id);
   if (isShown(id) && !matchMedia('(prefers-reduced-motion: reduce)').matches) drawOn([id]);
 }
+// a click in the Voyages drawer's rows
+function voyageClick(e) {
+  if (voyageControl(e)) return;
+  const b = e.target.closest('[data-voyage]');
+  if (b) chooseVoyage(b.dataset.voyage);
+}
 $('voyageList').addEventListener('click', voyageClick);
+if (!VOYAGE_PLAY_ON) $('voyageDraw').closest('.vdraw').hidden = true;
 // How long the pen takes, in seconds (VOYAGE_DRAW): the slider shows the seconds, and its sample line draws itself on
 // at that pace each time it moves. Only the next drawing changes, so nothing is drawn again.
 // (showStyle calls showVoyageDraw before this part of the page has run, so it reads the slider afresh)
@@ -1947,7 +1951,7 @@ function finish(id) { const v = ground?.voyages?.find((x) => x.id === id); if (v
 const landed = () => flightTo == null && placed === view;
 function drawOn(ids, ready = landed, wait = 10000) {
   closeBand();
-  const pen = voyagePen = { ids, since: performance.now(), t0: null, ms: style.voyageDraw * 1000 };
+  const pen = voyagePen = { ids, since: performance.now(), t0: null, ms: (VOYAGE_PLAY_ON ? style.voyageDraw : VOYAGE_DRAW.seconds) * 1000 };
   const done = () => { // every exit puts the lines back whole, drawn again once
     let any = false;
     for (const v of ground?.voyages ?? []) if (ids.includes(v.id) && ('reveal' in v || 'played' in v)) { delete v.reveal; delete v.played; delete v.legReveal; any = true; }
@@ -1973,6 +1977,32 @@ function drawOn(ids, ready = landed, wait = 10000) {
     requestAnimationFrame(step);
   };
   requestAnimationFrame(step);
+}
+// A chosen person's travels (docs/spec/design.md, "a chosen person's travels pulse, then fade"): those of their voyages
+// not shown are drawn in the chart's red for the length of a chart's notes' pulse (notePulse), beating with its rings
+// and fading with it, once `ready` says (the cards dealt) and the map has landed; then drawn no more.
+const pulsing = () => (voyagePulse && style.person ? voyagePulse.ids.filter((id) => !isShown(id)) : []);
+function startVoyagePulse(ids, ready) {
+  voyagePulse = ids.length ? { ids, ready, since: performance.now(), t0: null } : null;
+  if (voyagePulse) requestAnimationFrame(voyagePulseStep);
+}
+function applyPulse(now = performance.now()) {
+  if (!voyagePulse || !ground?.voyages) return;
+  const p = voyagePulse.t0 == null ? { alpha: 1, ring: 0 } : notePulse(now - voyagePulse.t0, reducedMotion()), on = pulsing();
+  for (const v of ground.voyages) if (on.includes(v.id)) v.alpha = p ? p.alpha * (1 - 0.6 * p.ring) : 0;
+}
+function voyagePulseStep(now) {
+  const vp = voyagePulse;
+  if (!vp || voyagePulse !== vp) return;
+  if (!style.person) { voyagePulse = null; return; }
+  if (vp.t0 == null) {
+    if (vp.ready() && landed() && ground?.voyages?.some((v) => vp.ids.includes(v.id))) vp.t0 = now;
+    else if (now - vp.since > 20000) vp.t0 = -Infinity; // never ready: over at once
+  }
+  if (vp.t0 != null && !notePulse(now - vp.t0, reducedMotion())) { voyagePulse = null; render(); return; } // over: drawn without them
+  applyPulse(now);
+  if (vp.t0 != null) paintFrame('pulsing');
+  requestAnimationFrame(voyagePulseStep);
 }
 // The play button (docs/spec/design.md, "the play button sails the voyage on its own calendar"): the voyage shown if it
 // was hidden (no other voyage hidden), the map flown to its frame unless the whole of it is in view, and its line drawn
@@ -2152,11 +2182,11 @@ $('voyageList').addEventListener('input', (e) => {
 // The people: the People drawer, a vertical timeline of one row per person (data/voyages/people.json,
 // scripts/people.mjs), earliest first with the eras as headings: the name and the years the record gives, a chip for a
 // people (the Lapita) rather than one person. A click on a row chooses that person (a second click lets them go): their
-// row is lit, their voyages are drawn lit in the chart's red and every other voyage chosen is dimmed (the scene's
-// `person`), their birth is marked, the map flies to frame them, and all their pictures are dealt onto the map as onto
+// row is lit, their voyages not shown pulse once in the chart's red and fade (startVoyagePulse), their birth is
+// marked, the map flies to frame them, and all their pictures are dealt onto the map as onto
 // a chart table, a little askew, to drag by hand, resize by a corner and turn over to read what each is and follow it
 // to its page. Directly under their row their tile slides open: the bio, the pictures as thumbnails, each of which takes
-// it off the table or puts it back, and then a row per voyage of theirs with its notes and the Voyages drawer's eye and play.
+// it off the table or puts it back, and then a row per voyage of theirs with its notes and the Voyages drawer's name and eye.
 // The choice rides in the link (`person=`, `pictures=`, `pictureat=`).
 //
 // A sight whose tile is opened (showTileAt) is chosen the same way: its pictures (data/sights/pictures.json, built into
@@ -2338,6 +2368,8 @@ const picsHTML = (s, shown, only = null) => s.images.map((im, i) => { const m = 
 // a click in the People drawer's rows
 function peopleClick(e) {
   if (voyageControl(e)) return; // an eye or a play in the chosen person's tile
+  const name = e.target.closest('[data-voyage]');
+  if (name) { chooseVoyage(name.dataset.voyage, false); return; } // a voyage's name in the tile, as in the Voyages drawer, but where the map stands
   const pic = e.target.closest('[data-pic]'), chosen = personOf(style.person);
   if (pic && chosen) { setOnTable(Number(pic.dataset.pic), !picturesOf(chosen).includes(Number(pic.dataset.pic))); return; }
   const b = e.target.closest('[data-person]');
@@ -2349,8 +2381,8 @@ function peopleClick(e) {
 }
 function choosePerson(id) {
   if (id) { style = { ...style, person: id }; dealing = `person:${id}`; } // their cards dealt as the map arrives
-  const ids = id ? (personOf(id)?.voyages ?? []).filter(isDrawn) : [];
-  if (ids.length && !stillMotion()) { const key = dealing; drawOn(ids, () => dealing !== key, 20000); } // every shown voyage of theirs drawn on together as the cards are dealt
+  const key = dealing;
+  startVoyagePulse(id ? (personOf(id)?.voyages ?? []).filter((v) => !isShown(v)) : [], () => dealing !== key); // their travels pulse as the cards are dealt, then fade
   showPeople(); showSightCard(); writeHash(); render();
   if (id) flyToSubject();
 }

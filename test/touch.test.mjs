@@ -466,7 +466,7 @@ test('charts: the eye shows or hides one sheet and leaves the others and the map
   }
 });
 
-test('voyages: several drawn at once, each in its own ink, carried by the link; the eye shows or hides one, the name shows it alone and draws it on every time; an older single voyage= link opens; the skull empties the list, the drawer open and no Clear of its own', { skip, timeout: 240000 }, async () => {
+test('voyages: several drawn at once, each in its own ink, carried by the link; the eye shows or hides one, really off the map; the name adds it and draws it on every time; no play and no slider; an older single voyage= link opens; the skull empties the list, the drawer open and no Clear of its own', { skip, timeout: 240000 }, async () => {
   const server = createServer(async (req, res) => {
     let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
     if (p.endsWith('/')) p = path.join(p, 'index.html');
@@ -511,29 +511,42 @@ test('voyages: several drawn at once, each in its own ink, carried by the link; 
     await page.waitForTimeout(400);
     assert.equal(await viewNow(), where, 'the eye moved the view');
     for (const [id, c] of Object.entries(await inkOf())) assert.equal(c, before[id], `${id} changed ink when another was hidden`);
-    // the pen's seconds: 2.5 by default, a slider from 1 to 5 in halves, shown beside it and carried by the link
-    assert.equal(await page.$eval('#voyageDrawOut', (o) => o.textContent), '2.5 s');
-    assert.deepEqual(await page.$eval('#voyageDraw', (i) => [i.min, i.max, i.step, i.value]), ['1', '5', '0.5', '2.5']);
-    await page.$eval('#voyageDraw', (i) => { i.value = '1'; i.dispatchEvent(new Event('input', { bubbles: true })); });
-    assert.equal(await page.$eval('#voyageDrawOut', (o) => o.textContent), '1 s');
-    assert.match(await hash(), /voyagedraw=1(&|$)/);
-    // the name: that voyage alone, framed, and drawn on afresh every time; the others hidden, their colours kept
+    // no play: no play button shown, no calendar band, no Drawn-in slider (docs/spec/voyages.md, "no play, one speed")
+    assert.equal(await page.$$eval('#voyageList [data-play]', (bs) => bs.filter((b) => b.offsetParent).length), 0, 'a play button shows');
+    assert.equal(await page.$eval('#voyageDraw', (i) => Boolean(i.offsetParent)), false, 'the Drawn-in slider shows');
+    // the name: that voyage added to those shown, framed, and drawn on afresh every time; the others kept, their colours too
     await pen();
     await page.click('#voyageList [data-voyage="magellan"]');
-    assert.deepEqual(await on(), ['magellan'], 'the name did not show it alone');
-    assert.match(await hash(), /voyages=magellan\.[0-9a-f]{6},columbus\.[0-9a-f]{6}~,drake\.[0-9a-f]{6}~(&|$)/);
+    assert.deepEqual(await on(), ['columbus', 'magellan', 'drake'], 'the name hid another, or did not show it');
+    assert.match(await hash(), /voyages=magellan\.[0-9a-f]{6},columbus\.[0-9a-f]{6},drake\.[0-9a-f]{6}(&|$)/);
     await drawing();
     await settled();
     assert.notEqual(await viewNow(), where, 'the name did not fly to frame the voyage');
-    for (const [id, c] of Object.entries(await inkOf())) assert.equal(c, before[id], `${id} changed ink when the name hid it`);
+    for (const [id, c] of Object.entries(await inkOf())) assert.equal(c, before[id], `${id} changed ink when the name added another`);
+    assert.equal(new Set(Object.values(await inkOf())).size, 3, 'two voyages shown share an ink');
     await pen();
     await page.click('#voyageList [data-voyage="magellan"]');
-    assert.deepEqual(await on(), ['magellan'], 'a second click on the name changed what is shown');
+    assert.deepEqual(await on(), ['columbus', 'magellan', 'drake'], 'a second click on the name changed what is shown');
     await drawing(); // a second click draws it on again
     await settled();
-    await page.click('#voyageList [data-eye="columbus"]');
-    await page.click('#voyageList [data-eye="drake"]');
-    assert.deepEqual(await on(), ['columbus', 'magellan', 'drake'], 'the eyes did not show them again');
+    // the eye off takes the line off the map: the pixels in Magellan's ink go
+    const inkPixels = (hex) => page.evaluate((hex) => {
+      const c = document.querySelector('canvas'), d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data, [r, g, b] = [1, 3, 5].map((k) => parseInt(hex.slice(k, k + 2), 16));
+      let n = 0;
+      for (let i = 0; i < d.length; i += 4) if (Math.abs(d[i] - r) + Math.abs(d[i + 1] - g) + Math.abs(d[i + 2] - b) < 60) n++;
+      return n;
+    }, hex);
+    // the voyage shown in a high-contrast ink with most of it in view (the chart's red is also the rhumbs' and the names')
+    const counts = await Promise.all(Object.entries(await inkOf()).filter(([, c]) => c !== '#8c2f1e').map(async ([id, c]) => [id, c, await inkPixels(c)]));
+    const [offId, offInk, drawn] = counts.sort((a, b) => b[2] - a[2])[0];
+    assert.ok(drawn > 200, `${offId} is not drawn: ${drawn} px in its ink`);
+    const status = await page.$eval('#status', (s) => s.textContent);
+    await page.click(`#voyageList [data-eye="${offId}"]`);
+    await page.waitForFunction((was) => { const t = document.getElementById('status').textContent; return t !== was && t.includes('total'); }, status, { timeout: 60000 });
+    const left = await inkPixels(offInk);
+    assert.ok(left < drawn / 10, `the eye off left ${offId} on the map: ${left} of ${drawn} px in its ink`);
+    await page.click(`#voyageList [data-eye="${offId}"]`);
+    assert.deepEqual(await on(), ['columbus', 'magellan', 'drake'], 'the eye did not show it again');
     await page.$eval('#voyageList [data-ink="drake"]', (i) => { i.value = '#16727a'; i.dispatchEvent(new Event('input', { bubbles: true })); });
     assert.match(await hash(), /voyages=magellan\.[0-9a-f]{6},columbus\.[0-9a-f]{6},drake:16727a/);
     await page.click('#voyageWidth [data-value="2.2"]');
@@ -608,7 +621,7 @@ test('people and voyages: two vertical drawers no wider than the charts, earlies
     const rows = await page.$$eval('#peopleList [data-person]', (bs) => bs.map((b) => { const r = b.getBoundingClientRect(); return [r.top, r.left, r.width]; }));
     rows.forEach(([top], i) => { if (i) assert.ok(top > rows[i - 1][0], 'a row not below the one before'); });
     assert.ok(rows.every(([, left, width]) => Math.abs(left - rows[0][1]) < 1 && width > 300), 'the rows are not one column');
-    // Ibn Battuta chosen: his row lit, his tile slid open directly under it, his nine voyages inside with eyes and play, all drawn
+    // Ibn Battuta chosen: his row lit, his tile slid open directly under it, his nine voyages inside, each its own row with its name and eye, every eye off
     await page.click('#peopleList [data-person="ibn-battuta"]');
     await page.waitForTimeout(400);
     assert.match(await hash(), /person=ibn-battuta/);
@@ -626,21 +639,27 @@ test('people and voyages: two vertical drawers no wider than the charts, earlies
     assert.deepEqual(await page.$$eval('#personCard .pvoyages li[data-row]', (ls) => ls.map((l) => l.dataset.row)), ib, 'his voyages, in the index\'s order');
     assert.equal(ib.length, 9);
     assert.ok(await page.$eval('#personCard .bio', (b) => b.textContent.length > 40), 'no notes in the tile');
-    assert.ok(await page.$$eval('#personCard .pvoyages li', (ls) => ls.every((l) => l.querySelector('[data-eye]') && l.querySelector('[data-play]') && l.querySelector('.vsum').textContent.length > 20 && l.querySelector('.vsum a'))), 'a voyage row without its eye, play, summary or link');
-    assert.ok(await page.$$eval('#personCard [data-eye]', (es) => es.every((e) => e.getAttribute('aria-pressed') === 'true')), 'his voyages are drawn, so their eyes read on');
+    assert.ok(await page.$$eval('#personCard .pvoyages li', (ls) => ls.every((l) => l.querySelector('[data-voyage]') && l.querySelector('[data-eye]') && l.querySelector('.vsum').textContent.length > 20 && l.querySelector('.vsum a'))), 'a voyage row without its name, eye, summary or link');
+    assert.equal(await page.$$eval('#personCard [data-play]', (bs) => bs.filter((b) => b.offsetParent).length), 0, 'a play button shows in his tile');
+    assert.ok(await page.$$eval('#personCard [data-eye]', (es) => es.every((e) => e.getAttribute('aria-pressed') === 'false')), 'an eye in his tile starts on');
     assert.equal(await noSideScroll('peoplePanel'), true, 'the tile made the drawer scroll sideways');
-    // the eye in his tile puts that one voyage off, and the drawer stays open; the hash carries it hidden
-    await page.click('#personCard [data-eye="ibn-battuta-3"]');
-    assert.equal(await page.getAttribute('#personCard [data-eye="ibn-battuta-3"]', 'aria-pressed'), 'false');
-    assert.match(await hash(), /voyages=ibn-battuta-3(\.[0-9a-f]{6})?~/);
-    assert.match(await hash(), /person=ibn-battuta/, 'the eye let the person go');
-    assert.equal(await opened('peoplePanel'), true);
-    // the eye back on leaves nothing behind: letting him go takes the voyage off with him
+    // the eye in his tile puts that one voyage on, then off, and the drawer stays open; the hash carries it
     await page.click('#personCard [data-eye="ibn-battuta-3"]');
     assert.equal(await page.getAttribute('#personCard [data-eye="ibn-battuta-3"]', 'aria-pressed'), 'true');
-    assert.doesNotMatch(await hash(), /voyages=/, 'the eye back on left the voyage chosen');
+    assert.match(await hash(), /voyages=ibn-battuta-3\.[0-9a-f]{6}(&|$)/);
+    assert.match(await hash(), /person=ibn-battuta/, 'the eye let the person go');
+    assert.equal(await opened('peoplePanel'), true);
+    await page.click('#personCard [data-eye="ibn-battuta-3"]');
+    assert.equal(await page.getAttribute('#personCard [data-eye="ibn-battuta-3"]', 'aria-pressed'), 'false');
+    assert.match(await hash(), /voyages=ibn-battuta-3\.[0-9a-f]{6}~/);
+    // a name in his tile adds that voyage in a colour of its own, the person kept; letting him go leaves it shown
+    await page.click('#personCard [data-voyage="ibn-battuta-4"]');
+    await page.click('#personCard [data-voyage="ibn-battuta-5"]');
+    assert.match(await hash(), /voyages=ibn-battuta-3\.[0-9a-f]{6}~,ibn-battuta-4\.([0-9a-f]{6}),ibn-battuta-5\.(?!\1)[0-9a-f]{6}(&|$)/, 'the names did not add two voyages in two colours');
+    assert.match(await hash(), /person=ibn-battuta/, 'a voyage\'s name let the person go');
     await page.click('#peopleList [data-person="ibn-battuta"]');
-    assert.doesNotMatch(await hash(), /voyages=|person=/, 'letting him go left a voyage of his chosen');
+    assert.doesNotMatch(await hash(), /person=/);
+    assert.match(await hash(), /voyages=/, 'letting him go took the voyages chosen from his tile');
     await page.click('#peopleList [data-person="ibn-battuta"]');
     // the people and the voyages carry their spans as bars, on each era's scale under its ruler
     assert.ok(await page.$$eval('#peopleList .era', (es) => es.every((e) => e.querySelector('.ruler span'))), 'an era heading without its ruler');
@@ -666,7 +685,7 @@ test('people and voyages: two vertical drawers no wider than the charts, earlies
     assert.deepEqual([...shownVoyages].sort(), [...index].sort(), 'a voyage missing or twice');
     assert.equal(shownVoyages[0], 'lapita-expansion');
     assert.deepEqual(await page.$$eval('#voyageList .era', (es) => es.map((e) => e.dataset.era)), ['The ancient world', 'The medieval Indian Ocean and Asia', 'The age of discovery']);
-    assert.ok(await page.$$eval('#voyageList li[data-row]', (ls) => ls.every((l) => l.querySelector('[data-eye]') && l.querySelector('[data-play]') && l.querySelector('[data-ink]') && l.querySelector('path'))), 'a voyage row without its eye, play, swatch or line sample');
+    assert.ok(await page.$$eval('#voyageList li[data-row]', (ls) => ls.every((l) => l.querySelector('[data-eye]') && l.querySelector('[data-ink]') && l.querySelector('path'))), 'a voyage row without its eye, swatch or line sample');
     const tools = await box('#voyagesPanel .vtools'), list = await box('#voyageList');
     assert.ok(tools.y + tools.height <= list.y + 1, 'the tools do not head the list');
     assert.equal(await page.$$eval('#voyageWidth [role=radio], #voyageWidth button', (cs) => cs.length > 0), true, 'no line-weight chips');
