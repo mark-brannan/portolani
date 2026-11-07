@@ -793,7 +793,9 @@ Feature: The skull's clear is shown  (`#sweep`, page.js `skullRise`, `wordsRise`
     Given cards, voyages or charts' sheets on the map
     When the user clicks the skull
     Then everything cleared leaves together over the same time
-    And each card leaves as it was dealt onto the table, mirrored and at the same pace: off to the left, shrinking and turning, one after another
+    And each card leaves as it was dealt onto the table, mirrored: off to the left, shrinking and turning, one after another, and turns to fine dust as it goes, to nothing; the grains are dust-sized, never large pixels
+    And ✘ *Pulverum* takes its one card off the table the same way
+    Source, for the dust: the user, 2026-11-07, on #404: "The clear effect is to "Deal" the card out to the left ("exit stage left") but also to do a fade "to dust" effect where it fades into nothingness or small pixelated nothingness (not large pixels, 'dust' sized pixels)."
     And a voyage's line only fades away, never swept off or broken into dust
     And with reduced motion it goes at once
   Scenario: the phrase is read large, then fades last

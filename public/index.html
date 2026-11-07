@@ -123,6 +123,8 @@
   #clearTune label { display: grid; grid-template-columns: 7.5em 1fr 3.4em; gap: 6px; align-items: center; margin: 3px 0; }
   #clearTune output { text-align: right; font-variant-numeric: tabular-nums; }
   #clearTune button { margin: 4px 0; font: 12px var(--serif); }
+  #clearTune b { display: block; margin: 8px 0 2px; font-weight: normal; font-style: italic; }
+  #clearTune[open] { max-height: calc(100dvh - 80px); overflow-y: auto; }
 
   /* top right, a row of six instruments, each opening its own drawer, left to right: the rose the configuration, the compass Find (a typed place or position, mine filled in, or the points of interest ringed), the astrolabe the locations (home and the world, then the regions, the eras' ports and the Pacific islands), the dividers the voyages, the medallion the people, and the chart the charts. The anchor is hidden for now, its anchorages in the astrolabe's. One drawer at a time: a click on its button opens it and a second click shuts it, another button swaps it for its own, and Esc, or on a wide screen a click on the map, shuts it; a choice in it leaves it open, on a phone too. The row never moves */
   #where { position: fixed; top: 12px; right: 12px; z-index: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; pointer-events: none; }
@@ -673,6 +675,16 @@
   <label>Phrase size, at the end <input type="range" id="tuneWordsGrow" min="0" max="200" step="5"><output for="tuneWordsGrow"></output></label>
   <label>Size change from <input type="range" id="tuneGrowFrom" min="0" max="95" step="5"><output for="tuneGrowFrom"></output></label>
   <label>Size change to <input type="range" id="tuneGrowTo" min="5" max="100" step="5"><output for="tuneGrowTo"></output></label>
+  <b>A card to dust (Pulverum, and the skull)</b>
+  <label>A card's exit <input type="range" id="tuneCard" min="300" max="5000" step="50"><output for="tuneCard"></output></label>
+  <label>Between cards <input type="range" id="tuneCardGap" min="0" max="1000" step="10"><output for="tuneCardGap"></output></label>
+  <label>How far left it goes <input type="range" id="tuneTravel" min="0" max="100" step="5"><output for="tuneTravel"></output></label>
+  <label>Dust begins at <input type="range" id="tuneDustFrom" min="0" max="90" step="5"><output for="tuneDustFrom"></output></label>
+  <label>Crumbles from its edge <input type="range" id="tuneSweep" min="0" max="100" step="5"><output for="tuneSweep"></output></label>
+  <label>Grain <input type="range" id="tuneGrain" min="1" max="8" step="1"><output for="tuneGrain"></output></label>
+  <label>Dust drifts <input type="range" id="tuneDrift" min="0" max="200" step="5"><output for="tuneDrift"></output></label>
+  <label>Dust seen <input type="range" id="tuneDustKept" min="0" max="100" step="5"><output for="tuneDustKept"></output></label>
+  <label>Dust lingers <input type="range" id="tuneDustLife" min="10" max="200" step="5"><output for="tuneDustLife"></output></label>
   <button type="button" id="tuneReset">Back to the merged timings</button>
 </details>
 

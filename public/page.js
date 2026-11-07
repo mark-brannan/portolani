@@ -2383,7 +2383,11 @@ new ResizeObserver(() => document.documentElement.style.setProperty('--memento-h
 // The clear's timing, chosen on #367: what goes (the lines and the charts' sheets) fades over 4 s; the skull is 0.4 s at
 // 8% ink and grows to ×2.5; the phrase is 6 s, in at once and straight into a slow fade, and its size changes from
 // 5% to 100% of that time, to ×1.05
-const CLEAR_TUNE = { goneMs: 4000, skullMs: 800, wordsMs: 6000, ink: 10, skullGrow: 250, wordsGrow: 115, growFrom: 5, growTo: 100 };
+const CLEAR_TUNE = { goneMs: 4000, skullMs: 800, wordsMs: 6000, ink: 10, skullGrow: 250, wordsGrow: 115, growFrom: 5, growTo: 100,
+  // a card's exit (Pulverum, and each card in the skull's clear): its time and the gap between cards; how far along the
+  // deal-off path it travels; when in its exit the dust begins; how much the crumbling runs from the trailing edge
+  // (0 scattered); a grain's size and drift, CSS px; the share of grains seen as dust; a grain's life, of the exit's time
+  cardMs: 1400, cardGap: 110, travel: 60, dustFrom: 15, sweep: 60, grain: 2, drift: 40, dustKept: 60, dustLife: 50 };
 // Temporary, for tuning on this PR (#272): the panel at the top left (#clearTune) changes these, kept per browser
 {
   const merged = { ...CLEAR_TUNE }, TUNE_KEY = 'portolani.clearTune.8';
@@ -2391,9 +2395,11 @@ const CLEAR_TUNE = { goneMs: 4000, skullMs: 800, wordsMs: 6000, ink: 10, skullGr
   if (navigator.webdriver) $('clearTune').hidden = true; // not part of the page; it would sit over the browser tests
   const keep = () => { try { localStorage.setItem(TUNE_KEY, JSON.stringify(CLEAR_TUNE)); } catch { /* not kept */ } };
   const shows = [];
-  for (const [id, key, unit] of [['tuneSkull', 'skullMs', 's'], ['tuneInk', 'ink', '%'], ['tuneSkullGrow', 'skullGrow', 'x'], ['tuneGone', 'goneMs', 's'], ['tuneWords', 'wordsMs', 's'], ['tuneWordsGrow', 'wordsGrow', 'x'], ['tuneGrowFrom', 'growFrom', '%'], ['tuneGrowTo', 'growTo', '%']]) {
+  for (const [id, key, unit] of [['tuneSkull', 'skullMs', 's'], ['tuneInk', 'ink', '%'], ['tuneSkullGrow', 'skullGrow', 'x'], ['tuneGone', 'goneMs', 's'], ['tuneWords', 'wordsMs', 's'], ['tuneWordsGrow', 'wordsGrow', 'x'], ['tuneGrowFrom', 'growFrom', '%'], ['tuneGrowTo', 'growTo', '%'],
+    ['tuneCard', 'cardMs', 's'], ['tuneCardGap', 'cardGap', 's'], ['tuneTravel', 'travel', '%'], ['tuneDustFrom', 'dustFrom', '%'], ['tuneSweep', 'sweep', '%'],
+    ['tuneGrain', 'grain', 'px'], ['tuneDrift', 'drift', 'px'], ['tuneDustKept', 'dustKept', '%'], ['tuneDustLife', 'dustLife', '%']]) {
     const input = $(id), out = input.nextElementSibling;
-    const show = () => { input.value = CLEAR_TUNE[key]; out.value = unit === 's' ? `${(CLEAR_TUNE[key] / 1000).toFixed(2)} s` : unit === 'x' ? `×${(CLEAR_TUNE[key] / 100).toFixed(2)}` : `${CLEAR_TUNE[key]}%`; };
+    const show = () => { input.value = CLEAR_TUNE[key]; out.value = unit === 's' ? `${(CLEAR_TUNE[key] / 1000).toFixed(2)} s` : unit === 'x' ? `×${(CLEAR_TUNE[key] / 100).toFixed(2)}` : `${CLEAR_TUNE[key]}${unit === 'px' ? ' px' : '%'}`; };
     show(); shows.push(show);
     input.addEventListener('input', () => { CLEAR_TUNE[key] = Number(input.value); show(); keep(); });
   }
@@ -2442,21 +2448,26 @@ function wordsRise(text) {
 // drawn again, whatever changed is kept from it and leaves by the chosen effect over the same time, whatever it was
 function vanishFrom() {
   if (stillMotion()) return null;
+  const o = vanishCanvas().getContext('2d');
+  o.drawImage(canvas, 0, 0);
+  return o.getImageData(0, 0, W, H);
+}
+// the clear's own canvas over the map, empty, shown, and whatever it was playing stopped
+function vanishCanvas() {
   const el = $('vanish'), { r } = mapBox();
   el.width = W; el.height = H;
   Object.assign(el.style, { left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px` });
-  const o = el.getContext('2d');
-  o.clearRect(0, 0, W, H); o.drawImage(canvas, 0, 0);
+  el.getContext('2d').clearRect(0, 0, W, H);
   el.hidden = false;
   cancelAnimationFrame(vanishFrame);
-  return o.getImageData(0, 0, W, H);
+  return el;
 }
 let vanishFrame = 0;
 // The cards on the table as they lie, bottom of the pile first, for their exit
 function cardsOnTable() {
   if (stillMotion() || !onTable) return [];
   const proj = viewProjection(view);
-  return shownPictures().map((pic) => ({ img: pic.o.img, k: pic.k ?? 0, b: pictureBox(pic, proj) })).filter((c) => c.b);
+  return shownPictures().map((pic) => ({ i: pic.i, b: pictureBox(pic, proj) })).filter((c) => c.b).map((c) => ({ ...c, dust: cardDust(c.b) }));
 }
 // What changed between two shots of the map, kept from the first, and the box round it; null when nothing did
 function goneBetween(before, after) {
@@ -2474,23 +2485,72 @@ function goneBetween(before, after) {
   src.getContext('2d').putImageData(gone, 0, 0);
   return { src, gone, box: { x0, x1, y0, y1 } };
 }
-// Each card leaves as it was dealt, mirrored and at the deal's own pace (DEAL_MS, DEAL_GAP): off to the top left,
-// shrinking and turning, one after another; `ms` since the exit began
-const cardsLeft = (cards) => (cards.length ? DEAL_MS + (cards.length - 1) * DEAL_GAP : 0);
+// Each card leaves as it was dealt, mirrored: off to the top left, shrinking and turning, one after another, and
+// turns to fine dust as it goes, to nothing (docs/spec/design.md, "The skull's clear is shown"); Pulverum takes one
+// card the same way. The dust is the card as it is drawn, cut into grains that crumble from its trailing edge and
+// drift off. Its timings are CLEAR_TUNE's card keys.
+const cardTotal = () => CLEAR_TUNE.cardMs * (1 + CLEAR_TUNE.dustLife / 100);
+const cardsLeft = (cards) => (cards.length ? cardTotal() + (cards.length - 1) * CLEAR_TUNE.cardGap : 0);
 // a thing at box `b` dealt off to the top left, `e` 0 where it lies to 1 gone: x, y, scale and its turn
 const dealtOff = (b, e) => [b.x + (-b.w * 0.25 - b.x) * e, b.y * (1 - e), 1 - 0.65 * e, -e * 0.6];
+// a card at box `b` as the map draws it now, copied off the canvas and cut into grains, each with the moment it crumbles
+function cardDust(b) {
+  const w = Math.ceil(b.w + 2 * MOUNT), h = Math.ceil(b.h + 2 * MOUNT), body = Object.assign(document.createElement('canvas'), { width: w, height: h });
+  const s = body.getContext('2d', { willReadFrequently: true });
+  s.translate(w / 2, h / 2); s.rotate(-b.a); s.translate(-b.x, -b.y); s.drawImage(canvas, 0, 0); s.setTransform(1, 0, 0, 1, 0, 0);
+  const px = s.getImageData(0, 0, w, h).data, g = Math.max(1, Math.round(cssPx(CLEAR_TUNE.grain))), sweep = CLEAR_TUNE.sweep / 100;
+  const drift = cssPx(CLEAR_TUNE.drift), kept = CLEAR_TUNE.dustKept / 100, grains = [];
+  for (let y = 0; y < h; y += g) for (let x = 0; x < w; x += g) {
+    const p = (Math.min(h - 1, y + (g >> 1)) * w + Math.min(w - 1, x + (g >> 1))) * 4;
+    const th = Math.min(0.999, Math.max(0, sweep * (1 - x / w) + (1 - sweep) * Math.random() + (Math.random() - 0.5) * 0.12 * sweep));
+    const show = px[p + 3] > 0 && Math.random() < kept, ang = -Math.PI / 2 + (Math.random() - 0.3) * 1.6, d = drift * (0.3 + 0.7 * Math.random());
+    grains.push({ x, y, th, show, fill: show ? `rgb(${px[p]},${px[p + 1]},${px[p + 2]})` : '', dx: Math.cos(ang) * d, dy: Math.sin(ang) * d, gone: false, ox: 0, oy: 0 });
+  }
+  grains.sort((a, c) => a.th - c.th);
+  return { body, s, g, w, h, grains, next: 0 };
+}
 function drawCardsLeaving(o, cards, ms) {
-  const m = 5;
-  cards.forEach(({ img, b }, k) => {
-    const u = Math.max(0, Math.min(1, (ms - k * DEAL_GAP) / DEAL_MS)), e = u ** 3; // ease in, the deal's ease out mirrored
-    if (u >= 1) return;
-    const [x, y, s, turn] = dealtOff(b, e);
-    o.save(); o.translate(x, y); o.rotate(b.a + turn); o.scale(s, s);
-    o.save(); o.shadowColor = 'rgba(59,42,26,0.35)'; o.shadowBlur = 8; o.shadowOffsetY = 2; o.fillStyle = style.parchment; o.fillRect(-b.w / 2 - m, -b.h / 2 - m, b.w + 2 * m, b.h + 2 * m); o.restore();
-    o.drawImage(img, -b.w / 2, -b.h / 2, b.w, b.h);
-    o.strokeStyle = style.ink; o.globalAlpha = 0.7; o.lineWidth = 1; o.strokeRect(-b.w / 2 - m, -b.h / 2 - m, b.w + 2 * m, b.h + 2 * m);
-    o.restore();
+  const { cardMs, cardGap, travel, dustFrom, dustLife } = CLEAR_TUNE, from = dustFrom / 100, life = (dustLife / 100) * cardMs;
+  cards.forEach(({ b, dust }, k) => {
+    const t = ms - k * cardGap, u = Math.max(0, Math.min(1, t / cardMs));
+    if (t < 0 || t > cardTotal()) return;
+    const at = (v) => { const [x, y, s, turn] = dealtOff(b, (v ** 2) * (travel / 100)), a = b.a + turn; return { x, y, s, c: Math.cos(a) * s, n: Math.sin(a) * s, a }; };
+    const T = at(u), d = (u - from) / Math.max(0.001, 1 - from);
+    for (; dust.next < dust.grains.length && dust.grains[dust.next].th <= d; dust.next++) { // crumbled this frame: off the body, into the air
+      const gr = dust.grains[dust.next], lx = gr.x + dust.g / 2 - dust.w / 2, ly = gr.y + dust.g / 2 - dust.h / 2;
+      dust.s.clearRect(gr.x, gr.y, dust.g, dust.g);
+      gr.gone = t; gr.ox = T.x + T.c * lx - T.n * ly; gr.oy = T.y + T.n * lx + T.c * ly;
+    }
+    if (dust.next < dust.grains.length) {
+      o.save(); o.translate(T.x, T.y); o.rotate(T.a); o.scale(T.s, T.s);
+      o.shadowColor = 'rgba(59,42,26,0.35)'; o.shadowBlur = 8; o.shadowOffsetY = 2;
+      o.drawImage(dust.body, -dust.w / 2, -dust.h / 2); o.restore();
+    }
+    const size = dust.g * T.s;
+    for (let j = 0; j < dust.next; j++) {
+      const gr = dust.grains[j];
+      if (!gr.show) continue;
+      const age = (t - gr.gone) / life;
+      if (age >= 1) continue;
+      const e = 1 - (1 - age) ** 2;
+      o.globalAlpha = (1 - age) ** 1.5; o.fillStyle = gr.fill;
+      o.fillRect(gr.ox + gr.dx * e, gr.oy + gr.dy * e, size, size);
+    }
+    o.globalAlpha = 1;
   });
+}
+// Pulverum: one card off the table, as the skull's clear takes a card
+function pulverum(i) {
+  const cards = cardsOnTable().filter((c) => c.i === i);
+  setOnTable(i, false);
+  if (!cards.length) return;
+  const el = vanishCanvas(), o = el.getContext('2d'), t0 = performance.now();
+  const tick = (now) => {
+    const ms = now - t0;
+    o.clearRect(0, 0, W, H); drawCardsLeaving(o, cards, ms);
+    if (ms < cardsLeft(cards)) vanishFrame = requestAnimationFrame(tick); else el.hidden = true;
+  };
+  vanishFrame = requestAnimationFrame(tick);
 }
 // What goes, over one time: the sheets by the chosen effect, the lines fading over them, the cards leaving over both
 function vanish(shots, cards) {
@@ -2922,7 +2982,7 @@ function dropPicture(e) {
   if (kind === 'link') { const to = readMoreOf(); if (to) window.open(to, '_blank', 'noopener'); return; }
   if (kind === 'out') { window.open(url, '_blank', 'noopener'); return; }
   if (kind === 'away') { endLook(); return; }
-  if (kind === 'dust') { setOnTable(i, false); return; }
+  if (kind === 'dust') { pulverum(i); return; }
   if (kind === 'held') return;
   writeHash(); render();
 }
@@ -2998,7 +3058,7 @@ keys.addEventListener('click', (e) => {
   if (k !== 'dust') return;
   const li = b.closest('li'), next = li.nextElementSibling ?? li.previousElementSibling; // the focus goes on to a neighbour
   focusNext = next ? Number(next.dataset.pic) : null;
-  setOnTable(i, false);
+  pulverum(i);
 });
 if (style.person) loadPeople().then(showPeople, () => {}); // a link that names a person shows their card when the drawer opens
 
