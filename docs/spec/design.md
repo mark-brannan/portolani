@@ -820,16 +820,17 @@ Feature: People and voyages, each a vertical timeline
     Then the People drawer `#peoplePanel` or the Voyages drawer `#voyagesPanel` opens alone, each `width: min(480px, 100vw - 24px)`, the Charts drawer's width, never wider on any screen; on a phone each is a bottom sheet like the others
     And nothing in either scrolls sideways: a row, a tile and a voyage's notes wrap
   Scenario: time reads top to bottom
+    Source: the user, 2026-11-07, on #399: separate the Bronze Age from prehistory and the ancient world; end the age of discovery in the 1600s and give Cook's era its own label; "The medieval Indian Ocean and Asia" held Viking explorers and is not a clear category.
     Given either drawer
     When the user looks down it
     Then the rows run earliest first down a thin rail: a person by their birth, else by their first voyage; a voyage by the year it set out
-    And the eras head the rows that fall in them, as small italic headings with the era's years: Prehistory (`1,000,000 – 1500 BC`), then the Sights eras (`1500 BC – AD 500`, `500 – 1450`, `1450 – 1800`, `from 1800`); a year before Christ reads `BC`
+    And the eras head the rows that fall in them, as small italic headings with the era's years, slices of time apart from the Sights groups: deep history (`1,000,000 – 3300 BC`), the Bronze Age (`3300 – 1200 BC`), the ancient world (`1200 BC – AD 500`), the medieval world (`500 – 1450`), the age of discovery (`1450 – 1650`), the age of Enlightenment (`1650 – 1800`) and the modern world (`from 1800`); a year before Christ reads `BC`
     And a person's row is the name and the years as the record writes them (`24 Feb 1304 – c. 1369`, `born c. 350 BC`, `died 1510`); a people's row carries the years of their voyage (`c. 1500–800 BC`)
   Scenario: the People drawer's eras start shut, each over a bar of all time
     Given the People drawer just opened
-    Then every era heading is shut, Prehistory first, and no row shows; a click or a tap on a heading, or Enter on it, opens it and shows its rows, and again shuts it
+    Then every era heading is shut, deep history first, and no row shows; a click or a tap on a heading, or Enter on it, opens it and shows its rows, and again shuts it
     And under each heading runs a faded grey bar from 1,000,000 BC to today, every era a pale grey band on it and the heading's own era darker; while the heading is open its rows are thin ticks on the bar at their years
-    And the bar's scale is log10(years ago + 500), so prehistory takes about 73% of it, the ancient world 9%, the medieval Indian Ocean and Asia 8%, the age of discovery 5% and the modern world 5%
+    And the bar's scale is log10(years ago + 500), so deep history takes about 68% of it, the Bronze Age 6%, the ancient world 8%, the medieval world 8%, the age of discovery 3%, the age of Enlightenment 2% and the modern world 5%
     And an open heading's rows keep their life bars, on that era's own scale under its ruler
     And a person chosen from the link or the map opens the headings over their row
     And the Voyages drawer's headings are the same eras, open always
@@ -838,6 +839,7 @@ Feature: People and voyages, each a vertical timeline
     Given the People drawer
     Then each row sits under the heading of its own era, and no heading sits under another
     And the peoples whose record in `people.json` has `family: "austronesian"` sit by their own years; where two share a year they go in the family's order: the Austronesian-speaking voyagers, the first settlers of the Marianas and Micronesia, the Lapita
+    And the mansa before Musa sits right before Mansa Musa, whatever their years
   Scenario: a people is a person
     Given a migration, or a voyage whose crew nobody named: the Lapita expansion, the settlement of East Polynesia, Necho's Phoenicians
     When the People drawer lists people

@@ -50,21 +50,24 @@ export function lifeSpan(person, voyageYears = [], reach = 40) {
   return [fromKnown ? lo : lo - reach, toKnown ? hi : hi + reach, fromKnown, toKnown];
 }
 
-// The People and the Voyages drawers are each a vertical timeline, earliest at the top. The eras of the points of
-// interest (the Sights groups in public/page.js), from the Lapita voyages (TIMELINE_FROM) on, and Prehistory before
-// them (DRAWER_ERAS below), head the rows that fall in them, as small italic headings: each era runs from its year to
-// the next one's, the last on to today.
-export const TIMELINE_FROM = -1500;
-export const TIMELINE_ERAS = [['The ancient world', TIMELINE_FROM], ['The medieval Indian Ocean and Asia', 500], ['The age of discovery', 1450], ['The modern world', 1800]];
+// The People and the Voyages drawers are each a vertical timeline, earliest at the top. Their eras head the rows that
+// fall in them, as small italic headings: each era runs from its year to the next one's, the last on to today. They are
+// slices of time, named for it, apart from the Sights groups in public/page.js, which group places by theme.
 // a year as the drawers write it: 1500 BC, AD 1, 1500, with a thousands comma only from five figures (50,000 BC)
 export const yearLabel = (y) => { const n = Math.abs(y), t = n >= 10000 ? n.toLocaleString('en') : String(n); return y < 0 ? `${t} BC` : y === 1 ? 'AD 1' : t; };
 
-// The first crossing into Wallacea, c. 1,000,000 BC: the start of Prehistory and of the People drawer's heading bar
+// The first crossing into Wallacea, c. 1,000,000 BC: the start of deep history and of the People drawer's heading bar
 export const TIMELINE_EARLIEST = -1000000;
-// The People and Voyages drawers' eras: Prehistory, from the first crossing into Wallacea (TIMELINE_EARLIEST) to the Lapita
-// voyages, then the Sights eras (TIMELINE_ERAS)
-export const DRAWER_ERAS = [['Prehistory', TIMELINE_EARLIEST], ...TIMELINE_ERAS];
-// The era a year falls in, by name: Prehistory for anything before the Sights eras; null for no year
+export const DRAWER_ERAS = [
+  ['Deep history', TIMELINE_EARLIEST],
+  ['The Bronze Age', -3300],
+  ['The ancient world', -1200],
+  ['The medieval world', 500],
+  ['The age of discovery', 1450],
+  ['The age of Enlightenment', 1650],
+  ['The modern world', 1800],
+];
+// The era a year falls in, by name: the first era for anything before it; null for no year
 export function eraOf(year) {
   if (!Number.isFinite(year)) return null;
   let name = DRAWER_ERAS[0][0];
@@ -103,7 +106,7 @@ export function eraScale(name, now = new Date().getFullYear()) {
 
 // The People drawer's heading bar: one faded bar under every heading, from 1,000,000 BC (TIMELINE_EARLIEST) to today,
 // on which each era is a band and the rows under an open heading are ticks. Its scale is log10(years ago + 500), which
-// gives prehistory about 73% of the bar and the modern world about 5%; x in 0..1, clamped.
+// gives deep history about 72% of the bar and the modern world about 5%; x in 0..1, clamped.
 export const DEEP_OFFSET = 500;
 export function deepX(year, now = new Date().getFullYear()) {
   const l = (y) => Math.log10(Math.max(0, now - y) + DEEP_OFFSET), top = l(TIMELINE_EARLIEST), end = l(now);
@@ -142,6 +145,18 @@ export function lensX(year, open, now = new Date().getFullYear()) {
 // order here, the user's on #399: the Austronesian-speaking voyagers, the first settlers of the Marianas and
 // Micronesia, the Lapita. FAMILIES in voyages.mjs is the list checkPerson accepts.
 export const FAMILY_ORDER = { austronesian: ['austronesian-voyagers', 'marianas-micronesia-settlers', 'lapita-people'] };
+// A record that sits right before another in the People drawer, whatever its own year: the mansa before Musa, whose
+// voyage is the reason Musa came to the throne (the user's on #399)
+export const RIGHT_BEFORE = { 'abu-bakr-ii': 'mansa-musa' };
+// A sorted list of [person, year] with each RIGHT_BEFORE record moved to just before its partner
+export function withRightBefore(rows) {
+  const out = rows.filter(([p]) => !RIGHT_BEFORE[p.id]);
+  for (const row of rows.filter(([p]) => RIGHT_BEFORE[p.id])) {
+    const i = out.findIndex(([q]) => q.id === RIGHT_BEFORE[row[0].id]);
+    out.splice(i < 0 ? out.length : i, 0, row);
+  }
+  return out;
+}
 // A sort's tie-break for two people of one year: by their family's order where both are in it, else level (0)
 export function familyOrder(a, b) {
   const list = a.family && a.family === b.family ? FAMILY_ORDER[a.family] : null, i = list?.indexOf(a.id) ?? -1, j = list?.indexOf(b.id) ?? -1;

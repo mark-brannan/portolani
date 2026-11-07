@@ -361,9 +361,10 @@ export function checkPerson(id, p, { sources } = {}) {
 // negative before Christ; NaN when there is none. The voyages drawer lists them by it, earliest first (#242).
 // Years only: a century ("5th century BC") would read as year 5, so it would sort wrong.
 export function voyageStart(when) {
-  const m = /(\d+)/.exec(String(when ?? ''));
+  const m = /\d{1,3}(?:,\d{3})+|\d+/.exec(String(when ?? '')); // 1,000,000 BC is one year, not 1
   if (!m) return NaN;
-  return /\bBCE?\b/.test(when) ? -Number(m[1]) : Number(m[1]);
+  const y = Number(m[0].replaceAll(',', ''));
+  return /\bBCE?\b/.test(when) ? -y : y;
 }
 // [id, voyage] pairs in the order they set out; the given order breaks ties and puts an undated one last.
 export function chronological(pairs) {

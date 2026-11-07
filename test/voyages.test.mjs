@@ -334,13 +334,6 @@ test('noteworthy ports: four eras in time order, six ports each, every one with 
   }
 });
 
-// the timeline's bands are the points of interest's eras, by the same names in the same order
-test('the timeline\'s era bands are the Sights eras', async () => {
-  const { TIMELINE_ERAS } = await import('../scripts/people.mjs');
-  const src = readFileSync('public/page.js', 'utf8'), sights = src.slice(src.indexOf('const SIGHTS = ['), src.indexOf('const CHARTS = ['));
-  assert.deepEqual(TIMELINE_ERAS.map(([name]) => name), [...sights.matchAll(/^ {2}\['(The [^']+)', \[$/gm)].map((m) => m[1]));
-});
-
 // every tile carries a date (a year, a century or a span, never a phrase) and its text, shown under its name in the list
 test('every place tile has a date and a text', async () => {
   const { SIGHT_TILES } = await import('../scripts/sights.mjs');
@@ -494,4 +487,9 @@ test('a voyage with no colour picked takes the high-contrast palette when it is 
     const hue = d === 0 ? 0 : (max === r ? ((g - b) / d + 6) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4) * 60;
     assert.ok(hue < 190 || hue > 255, `${c} is not blue`);
   }
+});
+
+test('a voyage\'s start year reads thousands commas: 1,000,000 BC is a million years ago, not one', async () => {
+  const { voyageStart } = await import('../scripts/voyages.mjs');
+  assert.deepEqual(['c. 1,000,000–700,000 BC', 'c. 63,000–48,000 BC', 'c. 8040–7510 BC', '1492', 'c. 1500 BC – c. 1200'].map(voyageStart), [-1000000, -63000, -8040, 1492, -1500]);
 });
