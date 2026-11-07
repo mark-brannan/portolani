@@ -8,8 +8,9 @@
 // each of the seven drawers hangs below the row without covering or moving it, one at a time; several voyages
 // are drawn at once, each in its own ink, and the link carries them. With the hover chips on, a mouse resting on a grouped
 // list's shut heading opens its section after the dwell; off (hover=0 in the link), only a click does; a phone has no chips.
-// A person's picture on the map is looked at large, put away by the pointer or the keyboard, and dealt back by choosing
-// the person again; the last one touched or focused lies on top; the link to its Commons page is a glyph labelled in full.
+// A person's card on the map is grabbed by its frame and looked at by a click or a tap on its body, put away by the
+// pointer or the keyboard, taken off by Pulverum and dealt back by choosing the person again; two fingers twisted on the
+// map turn the world; a flight deals only once the map is there.
 //
 // Needs the built preview (`npm run build:preview` -> _site/), playwright-core and a Chromium
 // (`npx playwright-core install chromium-headless-shell`); without them it skips, since `npm test`
@@ -240,7 +241,7 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     const page = await (await browser.newContext({ viewport: { width: 1100, height: 740 } })).newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
-    await page.goto(`http://localhost:${server.address().port}/#map=7/40/12&timeline=b`);
+    await page.goto(`http://localhost:${server.address().port}/#map=7/40/12`);
     await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
     const opened = (id) => page.evaluate((i) => document.getElementById(i).classList.contains('open') && getComputedStyle(document.getElementById(i)).visibility === 'visible', id);
     const row = () => page.locator('#where .row').boundingBox();
@@ -476,7 +477,7 @@ test('voyages: several drawn at once, each in its own ink, carried by the link; 
     const page = await (await browser.newContext({ viewport: { width: 1100, height: 740 } })).newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
-    await page.goto(`http://localhost:${server.address().port}/#map=2/15/-20&voyage=magellan&timeline=b`);
+    await page.goto(`http://localhost:${server.address().port}/#map=2/15/-20&voyage=magellan`);
     await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
     await page.click('#voyages');
     await page.waitForSelector('#voyageList [data-voyage]');
@@ -570,7 +571,7 @@ test('people and voyages: two vertical drawers no wider than the charts, earlies
     const page = await (await browser.newContext({ viewport: { width: 1280, height: 800 } })).newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
-    await page.goto(`http://localhost:${server.address().port}/#map=2/15/-20&timeline=b`);
+    await page.goto(`http://localhost:${server.address().port}/#map=2/15/-20`);
     await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
     const opened = (id) => page.evaluate((i) => document.getElementById(i).classList.contains('open'), id);
     const box = (sel) => page.locator(sel).boundingBox();
@@ -674,7 +675,7 @@ test('people and voyages: two vertical drawers no wider than the charts, earlies
     // a phone: each a bottom sheet, the page never scrolling sideways, the Lapita row there
     const phone = await (await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })).newPage();
     phone.on('pageerror', (e) => errors.push(e.message));
-    await phone.goto(`http://localhost:${server.address().port}/#map=2/15/-20&timeline=b`);
+    await phone.goto(`http://localhost:${server.address().port}/#map=2/15/-20`);
     await phone.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
     await phone.tap('#people');
     await phone.waitForSelector('#peopleList [data-person="lapita-people"]');
@@ -692,161 +693,77 @@ test('people and voyages: two vertical drawers no wider than the charts, earlies
   }
 });
 
-test('timeline A (timeline=a): people above the axis, voyages below, each once, the era bands across it end to end, Earlier widens it; each button opens it at its own lane', { skip, timeout: 240000 }, async () => {
-  const server = createServer(async (req, res) => {
-    let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
-    if (p.endsWith('/')) p = path.join(p, 'index.html');
-    try { res.writeHead(200, { 'content-type': TYPES[path.extname(p)] ?? 'application/octet-stream' }).end(await readFile(p)); } catch { res.writeHead(404).end(); }
-  }).listen(0);
-  const browser = await chromium.launch();
-  try {
-    const page = await (await browser.newContext({ viewport: { width: 1100, height: 740 } })).newPage();
-    const errors = [];
-    page.on('pageerror', (e) => errors.push(e.message));
-    await page.goto(`http://localhost:${server.address().port}/#map=2/15/-20&timeline=a`);
-    await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
-    const opened = () => page.evaluate(() => document.getElementById('timelinePanel').classList.contains('open'));
-    const lit = () => page.$$eval('.lanecap.lit', (cs) => cs.map((c) => c.id));
-    const box = (sel) => page.locator(sel).boundingBox();
-    await page.click('#people');
-    await page.waitForSelector('#peopleStrip [data-person]');
-    await page.waitForSelector('#laneVoyages [data-voyage]');
-    assert.equal(await opened(), true, 'the medallion did not open the timeline');
-    assert.deepEqual([await page.getAttribute('#people', 'aria-expanded'), await page.getAttribute('#voyages', 'aria-expanded')], ['true', 'false']);
-    assert.deepEqual(await lit(), ['peopleCap']);
-    // the two lanes on either side of one axis
-    const [people, axis, voyages] = [await box('#peopleStrip'), await box('#timeAxis'), await box('#laneVoyages')];
-    assert.ok(people.y + people.height <= axis.y + 1 && voyages.y >= axis.y + axis.height - 1, 'the people are not above the axis and the voyages below it');
-    // every voyage and every person, once each
-    const root = fileURLToPath(new URL('..', import.meta.url));
-    const index = JSON.parse(await readFile(path.join(root, 'data/voyages/index.json'), 'utf8'));
-    const records = JSON.parse(await readFile(path.join(root, 'data/voyages/people.json'), 'utf8'));
-    const persons = Object.entries(records).filter(([, p]) => p && typeof p === 'object').map(([id]) => id);
-    const shownVoyages = await page.$$eval('#laneVoyages [data-voyage]', (bs) => bs.map((b) => b.dataset.voyage));
-    const shownPeople = await page.$$eval('#peopleStrip [data-person]', (bs) => bs.map((b) => b.dataset.person));
-    assert.deepEqual([...shownVoyages].sort(), [...index].sort(), 'a voyage missing or twice');
-    assert.deepEqual([...shownPeople].sort(), [...persons].sort(), 'a person missing or twice');
-    // the era bands run from the axis's left edge to its right, end to end, each named once
-    // measured in one go, relative to the track, so a drawer still sliding in cannot skew them
-    const measure = () => page.evaluate(() => {
-      const t = document.getElementById('track').getBoundingClientRect();
-      return { t: { x: 0, width: t.width }, bs: [...document.querySelectorAll('#eras .band')].map((b) => { const r = b.getBoundingClientRect(); return { name: b.dataset.era, left: r.left - t.left, right: r.right - t.left, label: b.textContent }; }) };
-    });
-    const track = async () => (await measure()).t;
-    await page.waitForTimeout(400); // the drawer's slide
-    let { t, bs } = await measure();
-    assert.deepEqual(bs.map((b) => b.name), ['The ancient world', 'The medieval Indian Ocean and Asia', 'The age of discovery', 'The modern world']);
-    assert.ok(bs.every((b) => b.label === b.name), 'a band not named once');
-    assert.ok(Math.abs(bs[0].left - t.x) < 1 && Math.abs(bs.at(-1).right - (t.x + t.width)) < 1, 'the bands do not cover the axis');
-    bs.forEach((b, i) => { if (i) assert.ok(Math.abs(b.left - bs[i - 1].right) < 1, `a gap before ${b.name}`); });
-    // Earlier: the track half as wide again, the earlier stretch to the left with its windows and no entries, the main stretch unchanged in width
-    const w0 = t.width, mainW = bs.at(-1).right - bs[0].left;
-    await page.click('#earlier');
-    ({ t, bs } = await measure());
-    assert.equal(await page.getAttribute('#earlier', 'aria-pressed'), 'true');
-    assert.ok(Math.abs(t.width - w0 * 1.5) < 1, `Earlier did not widen the axis: ${w0} -> ${t.width}`);
-    assert.ok(Math.abs(bs.at(-1).right - bs[0].left - mainW) < 1, 'the main stretch changed width');
-    assert.ok(bs[0].left - t.x > w0 * 0.49, 'no earlier stretch to the left of Lapita');
-    assert.deepEqual(await page.$$eval('#eras .mark', (ms) => ms.map((m) => m.dataset.mark)), ['Sahul', 'Beringia', 'Clovis']);
-    assert.ok((await page.textContent('#timeAxis')).includes('50,000 BC'));
-    const firstEntry = Math.min(...await page.$$eval('#peopleStrip .bar, #laneVoyages .vbar', (es) => { const t = document.getElementById('track').getBoundingClientRect().left; return es.map((e) => e.getBoundingClientRect().left - t); }));
-    assert.ok(firstEntry >= bs[0].left - 1, 'an entry on the earlier stretch');
-    await page.click('#earlier');
-    assert.ok(Math.abs((await track()).width - w0) < 1, 'Earlier again did not bring the axis back');
-    // the dividers: the same drawer, at the voyages' lane; a second click shuts it
-    await page.click('#voyages');
-    assert.equal(await opened(), true, 'the dividers shut the timeline');
-    assert.deepEqual([await page.getAttribute('#people', 'aria-expanded'), await page.getAttribute('#voyages', 'aria-expanded')], ['false', 'true']);
-    assert.deepEqual(await lit(), ['voyagesCap']);
-    const panel = await box('#timelinePanel'), axisNow = await box('#timeAxis');
-    assert.ok(axisNow.y >= panel.y && axisNow.y < panel.y + 60, `the voyages' lane is not in view: axis at ${axisNow.y}, drawer at ${panel.y}`);
-    await page.click('#voyages');
-    assert.equal(await opened(), false, 'a second click on the dividers left the timeline open');
-    // a phone: the timeline scrolls sideways, opened at its right end, where most of it is
-    const phone = await (await browser.newContext({ viewport: { width: 412, height: 800 }, hasTouch: true, isMobile: true })).newPage();
-    phone.on('pageerror', (e) => errors.push(e.message));
-    await phone.goto(`http://localhost:${server.address().port}/#map=2/15/-20&timeline=a`);
-    await phone.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
-    await phone.tap('#people');
-    await phone.waitForSelector('#peopleStrip [data-person]');
-    await phone.waitForSelector('#laneVoyages [data-voyage]');
-    const sc = await phone.$eval('#timeScroll', (e) => ({ sw: e.scrollWidth, cw: e.clientWidth, left: e.scrollLeft }));
-    assert.ok(sc.sw > sc.cw, `the phone's timeline does not scroll sideways: ${JSON.stringify(sc)}`);
-    assert.ok(sc.left >= sc.sw - sc.cw - 1, `the phone's timeline did not open at its right end: ${JSON.stringify(sc)}`);
-    assert.equal(await phone.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'the page scrolls sideways');
-    assert.deepEqual(errors, []);
-  } finally {
-    await browser.close();
-    server.close();
+// A card on the table (docs/spec/design.md, "A card on the table: a click looks, three buttons, Pulverum"): dealt, it
+// carries no controls; its frame grabs it without looking, its body looks; looked at, the map holds still under the
+// wheel; Put away sends it home and it stays dealt; Pulverum takes it off the table; choosing the person again deals it
+// back. And a flight deals only once the map's middle has reached the place (docs/spec/design.md, "the map is there
+// before the deal").
+const serve = () => createServer(async (req, res) => {
+  let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
+  if (p.endsWith('/')) p = path.join(p, 'index.html');
+  try { res.writeHead(200, { 'content-type': TYPES[path.extname(p)] ?? 'application/octet-stream' }).end(await readFile(p)); } catch { res.writeHead(404).end(); }
+}).listen(0);
+const COLUMBUS = '#map=4/-50/-30&person=christopher-columbus&pictures=0,1&pictureat=0:-30,-50,0.015_1:-10,-50,0.015'; // two of his pictures apart on open sea, the first at the view's centre
+const mapOf = (h) => /map=([^&]+)/.exec(h)?.[1].split('/').map(Number).join('/'); // as numbers: the page rewrites 4 as 4.00
+// the cursor a pointer resting at (x, y) on the map finds, as a press there would find what lies under it
+const cursorAt = (page, x, y) => page.evaluate(({ x, y }) => { const m = document.getElementById('map'); m.dispatchEvent(new PointerEvent('pointermove', { clientX: x, clientY: y, isPrimary: true, bubbles: true })); return m.style.cursor; }, { x, y });
+// from the middle rightward, where the first card's body ends and its frame's band ends
+async function frameOf(page, cx, cy) {
+  let body = null, frame = null;
+  for (let x = cx; x < cx + 400; x += 2) {
+    const c = await cursorAt(page, x, cy);
+    if (c === 'zoom-in') body = x; else if (c === 'grab') frame = x; else if (body != null) break;
   }
-});
+  return { body, frame };
+}
 
-
-test('people: a picture on the map is looked at, put away and dealt back by choosing the person again; the last touched lies on top; its Commons link is a glyph', { skip, timeout: 240000 }, async () => {
-  const server = createServer(async (req, res) => {
-    let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
-    if (p.endsWith('/')) p = path.join(p, 'index.html');
-    try { res.writeHead(200, { 'content-type': TYPES[path.extname(p)] ?? 'application/octet-stream' }).end(await readFile(p)); } catch { res.writeHead(404).end(); }
-  }).listen(0);
+test('people: a dealt card carries no controls; its frame grabs it, its body looks; looked at, the map holds still; Put away sends it home, Pulverum takes it off; the deal waits for the map', { skip, timeout: 240000 }, async () => {
+  const server = serve();
   const browser = await chromium.launch();
   try {
     const page = await (await browser.newContext({ viewport: { width: 1100, height: 740 } })).newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
-    // two of Columbus's pictures laid apart on open sea, the first at the view's centre
-    await page.goto(`http://localhost:${server.address().port}/#map=4/-50/-30&person=christopher-columbus&pictures=0,1&pictureat=0:-30,-50,0.015_1:-10,-50,0.015&timeline=b`);
+    await page.goto(`http://localhost:${server.address().port}/${COLUMBUS}`);
     await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
     await page.waitForFunction(() => document.querySelectorAll('#pictureKeys li').length === 2, null, { timeout: 60000 });
     await page.waitForTimeout(1200); // dealt in
     const z = () => page.$$eval('#pictureKeys li', (ls) => Object.fromEntries(ls.map((l) => [l.dataset.pic, Number(l.dataset.z)])));
     const hash = () => page.evaluate(() => decodeURIComponent(location.hash));
-
-    // the link to its page is the glyph alone, the sentence its label
-    const link = await page.$eval('#pictureKeys [data-pic="0"] a', (a) => ({ text: a.textContent, label: a.getAttribute('aria-label'), title: a.title, href: a.href }));
-    assert.deepEqual({ text: link.text, label: link.label, title: link.title }, { text: '⧉', label: 'Its page on Wikimedia Commons', title: 'Its page on Wikimedia Commons' });
-    assert.match(link.href, /^https:\/\/commons\.wikimedia\.org\//);
-
-    // the last touched lies on top: by the pointer, then by the keyboard's focus
-    assert.deepEqual(await z(), { 0: 0, 1: 1 }, 'the record\'s order before any touch');
-    const c = await page.locator('#map').boundingBox(), cx = c.x + c.width / 2, cy = c.y + c.height / 2;
-    await page.mouse.move(cx, cy); await page.mouse.down(); await page.mouse.up();
-    assert.deepEqual(await z(), { 0: 1, 1: 0 }, 'the picture grabbed is not on top');
-    await page.focus('#pictureKeys [data-pic="1"] a');
-    assert.deepEqual(await z(), { 0: 0, 1: 1 }, 'the picture focused is not on top');
-    await page.keyboard.press('Tab');
-    assert.equal(await page.evaluate(() => document.activeElement.getAttribute('aria-label')?.startsWith('Look: ')), true, 'Look is not next in the keyboard\'s order');
-    await page.evaluate(() => document.activeElement.blur());
-
-    // Look, by the button on the first picture's edge (the only place the cursor is a magnifier), lays it upright in the
-    // middle of the window, 0.85 of it at most and no more than its own pixels; Esc lays it back
     const looked = () => page.$eval('#pictureKeys [data-look="0"]', (b) => b.getAttribute('aria-pressed'));
-    const zoomIn = await page.evaluate(({ x0, y0 }) => {
-      const m = document.getElementById('map'), out = [];
-      for (let y = y0; y < y0 + 400; y += 3) for (let x = x0; x < x0 + 400; x += 3) {
-        m.dispatchEvent(new PointerEvent('pointermove', { clientX: x, clientY: y, isPrimary: true, bubbles: true }));
-        if (m.style.cursor === 'zoom-in') out.push([x, y]);
-      }
-      return out;
-    }, { x0: cx - 200, y0: cy - 200 });
-    assert.ok(zoomIn.length, 'no Look button on the first picture');
-    const lookAt = { x: zoomIn.reduce((s, p) => s + p[0], 0) / zoomIn.length, y: zoomIn.reduce((s, p) => s + p[1], 0) / zoomIn.length };
-    // pressed once the pointer over it finds Look (its magnifier): a press sent at once, while a picture laid back is still settling, was lost now and then under load
-    // and pressed again, up to three times, until the picture is looked at: on CI a press right after a drawer shuts was
-    // lost about one run in three (the 'did not look at it again' failure), as a hand would press again
-    const look = async () => {
-      for (let tries = 0; tries < 3; tries++) {
-        await page.waitForFunction(({ x, y }) => { const m = document.getElementById('map'); m.dispatchEvent(new PointerEvent('pointermove', { clientX: x, clientY: y, isPrimary: true, bubbles: true })); return m.style.cursor === 'zoom-in'; }, lookAt, { timeout: 10000, polling: 100 });
-        await page.mouse.click(lookAt.x, lookAt.y);
-        if (await page.waitForFunction(() => document.querySelector('#pictureKeys [data-look="0"]')?.getAttribute('aria-pressed') === 'true', null, { timeout: 2000, polling: 100 }).then(() => true, () => false)) return;
-      }
-    };
-    await look();
-    assert.equal(await looked(), 'true');
+    const c = await page.locator('#map').boundingBox(), cx = c.x + c.width / 2, cy = c.y + c.height / 2;
+
+    // the body under the pointer is a magnifier, the frame round it a hand, a band wider than the drawn margin
+    const { body, frame } = await frameOf(page, cx, cy);
+    assert.ok(body != null && frame != null && frame - body >= 8, `no body then frame across the card: ${JSON.stringify({ body, frame })}`);
+
+    // a drag from the frame raises the card and moves it, without looking; the map stays
+    assert.deepEqual(await z(), { 0: 0, 1: 1 }, 'the record\'s order before any touch');
+    const before = await hash();
+    await page.mouse.move(frame - 2, cy); await page.mouse.down();
+    for (let i = 1; i <= 6; i++) await page.mouse.move(frame - 2 - i * 10, cy + i * 5);
+    await page.mouse.up();
+    await page.waitForFunction((h) => location.hash !== h, before, { timeout: 10000 });
+    assert.deepEqual(await z(), { 0: 1, 1: 0 }, 'the card dragged by its frame is not on top');
+    assert.equal(await looked(), 'false', 'a drag from the frame looked at the card');
+    assert.equal(mapOf(await hash()), mapOf(before), 'a drag from the frame moved the map');
+    assert.notEqual(/pictureat=([^&]+)/.exec(await hash())[1], /pictureat=([^&]+)/.exec(before)[1], 'the card did not move');
+
+    // a click on the body looks; the wheel over it zooms the card alone, the map never moves; Esc puts it away, still dealt
+    const { body: body2 } = await frameOf(page, cx - 60, cy + 30);
+    await page.mouse.click(body2 - 30, cy + 30);
+    await page.waitForFunction(() => document.querySelector('#pictureKeys [data-look="0"]')?.getAttribute('aria-pressed') === 'true', null, { timeout: 5000 });
+    const still = await hash();
+    await page.mouse.move(cx, cy); await page.mouse.wheel(0, -300); await page.mouse.wheel(0, -300);
+    await page.waitForTimeout(600);
+    assert.equal(mapOf(await hash()), mapOf(still), 'the wheel on a card looked at moved the map');
     await page.keyboard.press('Escape');
-    assert.equal(await looked(), 'false', 'Esc did not lay the picture back');
-    // by the keyboard with the People drawer open, Esc lays the picture back and leaves the drawer open
+    assert.equal(await looked(), 'false', 'Esc did not put the card away');
+    assert.equal(await page.$$eval('#pictureKeys li', (ls) => ls.length), 2, 'put away, the card left the table');
+
+    // by the keyboard with the People drawer open, Esc puts the card away and leaves the drawer open
     await page.click('#people');
-    await page.evaluate(() => document.activeElement.blur()); // the drawer focused its first control; moving focus from there to the map is a focus outside, which shuts it
+    await page.evaluate(() => document.activeElement.blur()); // moving focus from the drawer to the map is a focus outside, which shuts it
     await page.focus('#pictureKeys [data-look="0"]');
     await page.keyboard.press('Enter');
     assert.equal(await looked(), 'true');
@@ -854,31 +771,95 @@ test('people: a picture on the map is looked at, put away and dealt back by choo
     assert.equal(await looked(), 'false');
     assert.equal(await page.$eval('#peoplePanel', (d) => d.classList.contains('open')), true, 'Esc shut the drawer too');
     await page.keyboard.press('Escape'); // and the next shuts it
-    assert.equal(await page.$eval('#peoplePanel', (d) => d.classList.contains('open')), false);
     await page.evaluate(() => document.activeElement.blur());
-    await look();
-    assert.equal(await looked(), 'true', 'Look on the picture\'s edge did not look at it again');
-    // looked at, its buttons from the right corner of its lower edge: Put away, Turn over, the link (13 CSS px round)
+
+    // looked at, Put away is the lowest of three round buttons straddling the card's right edge; it sends the card home
+    await page.focus('#pictureKeys [data-look="0"]'); await page.keyboard.press('Enter'); await page.evaluate(() => document.activeElement.blur());
     const [iw, ih] = await page.evaluate(async () => { const m = (await (await fetch('packs/overlays/people/people.json')).json()).pictures['Portrait_of_a_Man,_Said_to_be_Christopher_Columbus_2.jpg']; return [m.width, m.height]; });
-    const k = Math.min((c.width * 0.85) / iw, (Math.min(740, c.y + c.height) - Math.max(0, c.y)) * 0.85 / ih, 1), my = (Math.max(0, c.y) + Math.min(740, c.y + c.height)) / 2;
-    const away = { x: cx + (iw * k) / 2 - 13 * 0.4, y: my + (ih * k) / 2 };
-    // pressed once the pointer over it finds Put away (its cursor): a press sent at once was lost now and then under load
+    const x0 = Math.max(0, c.x), x1 = Math.min(1100, c.x + c.width), y0 = Math.max(0, c.y), y1 = Math.min(740, c.y + c.height); // the map in the window
+    const k = Math.min((0.75 * Math.min(x1 - x0, y1 - y0)) / Math.max(iw, ih), 1), away = { x: (x0 + x1) / 2 + (iw * k) / 2, y: (y0 + y1) / 2 + (ih * k) / 2 - 15 * 1.5 };
     await page.waitForFunction(({ x, y }) => { const m = document.getElementById('map'); m.dispatchEvent(new PointerEvent('pointermove', { clientX: x, clientY: y, isPrimary: true, bubbles: true })); return m.style.cursor === 'pointer'; }, away, { timeout: 10000, polling: 100 });
     await page.mouse.click(away.x, away.y);
-    await page.waitForFunction(() => document.querySelectorAll('#pictureKeys li').length === 1, null, { timeout: 10000 });
-    assert.match(await hash(), /pictures=1(&|$)/, 'put away, the picture is still in the link');
-    // the other by the keyboard
-    await page.focus('#pictureKeys [data-away="1"]');
-    await page.keyboard.press('Enter');
-    await page.waitForFunction(() => document.querySelectorAll('#pictureKeys li').length === 0, null, { timeout: 10000 });
-    assert.match(await hash(), /pictures=none(&|$)/);
+    assert.equal(await looked(), 'false', 'Put away did not put the card away');
+    assert.equal(await page.$$eval('#pictureKeys li', (ls) => ls.length), 2, 'Put away took the card off the table');
 
-    // choosing the person again, one click, deals every picture back
+    // Pulverum takes that card alone off the table, and a click on the person deals it back
+    await page.focus('#pictureKeys [data-dust="1"]');
+    await page.keyboard.press('Enter');
+    await page.waitForFunction(() => document.querySelectorAll('#pictureKeys li').length === 1, null, { timeout: 10000 });
+    assert.match(await hash(), /pictures=0(&|$)/);
     await page.click('#people');
     await page.click('#peopleList [data-person="christopher-columbus"]');
-    assert.match(await hash(), /person=/);
     await page.waitForFunction(() => document.querySelector('#pictureKeys [data-pic="0"]') && document.querySelector('#pictureKeys [data-pic="1"]'), null, { timeout: 60000 });
-    assert.doesNotMatch(await hash(), /pictures=/);
+    assert.match(await hash(), /person=christopher-columbus/, 'the click let the person go');
+
+    // the map is there before the deal: a flight across the world deals once the window's middle is at the place
+    await page.click('#peopleList [data-person="zheng-he"]');
+    await page.evaluate(() => { window.dealtAt = null; const look = () => { if (document.querySelectorAll('#pictureKeys li').length) window.dealtAt = location.hash; else requestAnimationFrame(look); }; requestAnimationFrame(look); });
+    await page.waitForFunction(() => window.dealtAt, null, { timeout: 60000 });
+    await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 60000 });
+    const [, dlat, dlon] = mapOf(await page.evaluate(() => window.dealtAt)).split('/').map(Number), [, lat, lon] = mapOf(await hash()).split('/').map(Number);
+    assert.ok(Math.abs(dlat - lat) < 0.5 && Math.abs(dlon - lon) < 0.5, `dealt before the map reached the place: ${dlat},${dlon} for ${lat},${lon}`);
+    assert.deepEqual(errors, []);
+  } finally {
+    await browser.close();
+    server.close();
+  }
+});
+
+test('phone: a tap looks, a pinch on the card leaves the map; a finger drags a card by its frame; two fingers twisted turn the world; the compass tapped sets north up', { skip, timeout: 240000 }, async () => {
+  const server = serve();
+  const browser = await chromium.launch();
+  try {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 740 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
+    const page = await ctx.newPage();
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await page.goto(`http://localhost:${server.address().port}/${COLUMBUS}`);
+    await page.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
+    await page.waitForFunction(() => document.querySelectorAll('#pictureKeys li').length === 2, null, { timeout: 60000 });
+    await page.waitForTimeout(1200);
+    const cdp = await ctx.newCDPSession(page);
+    const touch = (type, pts) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: pts.map(([x, y], id) => ({ x, y, id })) });
+    const hash = () => page.evaluate(() => decodeURIComponent(location.hash));
+    const looked = () => page.$eval('#pictureKeys [data-look="0"]', (b) => b.getAttribute('aria-pressed'));
+    const cx = 195, cy = 370; // the window's middle, where the first card lies
+
+    // a finger on the frame's band (wider than the drawn margin, for a finger) drags the card without looking
+    const { body, frame } = await frameOf(page, cx, cy);
+    assert.ok(body != null && frame != null && frame - body >= 14, `the frame's band is too narrow for a finger: ${JSON.stringify({ body, frame })}`);
+    const before = await hash();
+    await touch('touchStart', [[frame - 2, cy]]);
+    for (let i = 1; i <= 6; i++) await touch('touchMove', [[frame - 2, cy - i * 12]]);
+    await touch('touchEnd', []);
+    await page.waitForFunction((h) => location.hash !== h, before, { timeout: 10000 });
+    assert.equal(await looked(), 'false', 'a drag from the frame looked at the card');
+    assert.equal(mapOf(await hash()), mapOf(before), 'a drag from the frame moved the map');
+
+    // a tap on the body looks; a pinch on the card looked at leaves the map where it is
+    await page.touchscreen.tap(cx - 20, cy - 60);
+    await page.waitForFunction(() => document.querySelector('#pictureKeys [data-look="0"]')?.getAttribute('aria-pressed') === 'true', null, { timeout: 5000 });
+    const still = await hash();
+    await touch('touchStart', [[cx - 30, cy], [cx + 30, cy]]);
+    for (let i = 1; i <= 8; i++) await touch('touchMove', [[cx - 30 - i * 8, cy + i * 3], [cx + 30 + i * 8, cy - i * 3]]);
+    await touch('touchEnd', []);
+    await page.waitForTimeout(600);
+    assert.equal(mapOf(await hash()), mapOf(still), 'a pinch on the card looked at moved the map');
+    assert.doesNotMatch(await hash(), /bearing=/, 'a twist on the card turned the map');
+    await page.evaluate(() => document.querySelector('#pictureKeys [data-away="0"]').click());
+    assert.equal(await looked(), 'false');
+
+    // two fingers twisted a quarter clockwise on open map turn the world a quarter clockwise, bearing 270
+    const h0 = await hash(), [mx, my] = [195, 160];
+    await touch('touchStart', [[mx - 50, my], [mx + 50, my]]);
+    for (let i = 1; i <= 15; i++) { const a = (i / 15) * (Math.PI / 2); await touch('touchMove', [[mx - 50 * Math.cos(a), my - 50 * Math.sin(a)], [mx + 50 * Math.cos(a), my + 50 * Math.sin(a)]]); }
+    await touch('touchEnd', []);
+    await page.waitForFunction((h) => location.hash !== h && /bearing=/.test(location.hash), h0, { timeout: 10000 });
+    const bearing = Number(/bearing=([^&]+)/.exec(await hash())[1]);
+    assert.ok(Math.abs(bearing - 270) < 3, `twisted a quarter clockwise, bearing ${bearing}`);
+    assert.equal(await page.$eval('#walkLeft', (b) => getComputedStyle(b).display), 'none', 'a phone shows the walk-around buttons');
+    await page.tap('#compass');
+    await page.waitForFunction(() => !/bearing=/.test(location.hash), null, { timeout: 10000 });
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();

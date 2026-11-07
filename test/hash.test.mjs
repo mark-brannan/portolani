@@ -335,45 +335,31 @@ scenario('overlap: a rule round-trips, the default is left out, an unknown word 
   assert.equal((await params(page)).has('overlap'), false);
 });
 
-scenario('person: choosing a person\'s row writes person=, a link with it chooses that person, a malformed id is dropped', 'map=6.14/40.474/7.400&timeline=b', async (page) => {
+scenario('person: choosing a person\'s row writes person=, a link with it chooses that person, a malformed id is dropped', 'map=6.14/40.474/7.400', async (page) => {
   await page.locator('#people').click();
   const life = page.locator('#peopleList [data-person]').first();
   const id = await life.getAttribute('data-person');
   await life.click();
   assert.equal((await params(page)).get('person'), id);
-  await page.evaluate((h) => { location.hash = h; }, `map=6.14/40.474/7.400&timeline=b&person=${id}`);
+  await page.evaluate((h) => { location.hash = h; }, `map=6.14/40.474/7.400&person=${id}`);
   await placed(page);
   assert.equal(await page.locator(`#peopleList [data-person="${id}"]`).getAttribute('aria-pressed'), 'true');
-  await page.evaluate(() => { location.hash = 'map=6.14/40.474/7.400&timeline=b&person=Not%20An%20Id'; });
+  await page.evaluate(() => { location.hash = 'map=6.14/40.474/7.400&person=Not%20An%20Id'; });
   await placed(page);
   assert.equal(await page.locator('#peopleList [aria-pressed="true"]').count(), 0);
 });
 
-scenario('timeline: A with no key, b in the link opens B; the settings chips switch it live and write it, the person chosen showing in either', 'map=6.14/40.474/7.400&person=ibn-battuta', async (page) => {
+scenario('people and voyages: the medallion and the dividers open their own drawers, the person chosen in theirs; an older timeline= link opens the same and writes no key', 'map=6.14/40.474/7.400&person=ibn-battuta&timeline=a', async (page) => {
   const isOpen = (id) => page.evaluate((i) => document.getElementById(i).classList.contains('open'), id);
-  assert.equal((await params(page)).has('timeline'), false);
+  assert.equal(await page.locator('#timelinePanel').count(), 0, 'the one wide timeline is still on the page');
   await page.locator('#people').click();
-  assert.equal(await isOpen('timelinePanel'), true, 'A: the medallion did not open the one timeline drawer');
-  await page.locator('#peopleStrip .cardrow #personCard').waitFor();
-  assert.equal(await page.getAttribute('#peopleStrip [data-person="ibn-battuta"]', 'aria-pressed'), 'true');
-  await openDrawer(page);
-  await page.locator('#timelineVariant [data-value="b"]').click();
-  assert.equal((await params(page)).get('timeline'), 'b');
-  assert.equal(await isOpen('drawer'), true, 'the chip shut the settings');
-  await page.locator('#people').click();
-  assert.equal(await isOpen('peoplePanel'), true, 'B: the medallion did not open the People drawer');
+  assert.equal(await isOpen('peoplePanel'), true, 'the medallion did not open the People drawer');
   await page.locator('#peopleList li.open[data-row="ibn-battuta"] #personCard').waitFor();
   await page.locator('#voyages').click();
-  assert.equal(await isOpen('voyagesPanel'), true, 'B: the dividers did not open the Voyages drawer');
-  assert.equal(await page.locator('#voyagesPanel #voyageWidth').count(), 1, 'the line weight did not follow to B');
-  // a link switches it back, shutting the drawer open; an unknown value is A
-  await page.evaluate(() => { location.hash = 'map=6.14/40.474/7.400&person=ibn-battuta&timeline=zz'; });
-  await placed(page);
-  assert.equal(await isOpen('voyagesPanel'), false, 'a switch left B\'s drawer open');
-  assert.equal(await value(page, 'timelineVariant'), 'a');
-  await page.locator('#voyages').click();
-  assert.equal(await isOpen('timelinePanel'), true);
-  assert.equal(await page.locator('#timelinePanel #voyageWidth').count(), 1, 'the line weight did not follow to A');
+  assert.equal(await isOpen('voyagesPanel'), true, 'the dividers did not open the Voyages drawer');
+  assert.equal(await page.locator('#voyagesPanel #voyageWidth').count(), 1, 'the line weight is not in the Voyages drawer');
+  await page.mouse.move(400, 400); await page.mouse.wheel(0, -120); // the page rewrites the hash
+  await page.waitForFunction(() => !/timeline=/.test(location.hash), null, { timeout: 60000 });
 });
 
 scenario('sight, site, pictures, pictureat: a sight\'s deal round-trips; a name no tile has is dropped with its keys', 'map=6.14/40.474/7.400&sight=Tyre&site=1&pictures=0,2&pictureat=0:35.200,33.270,1.5', async (page) => {
