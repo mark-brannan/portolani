@@ -642,3 +642,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261107t201511z
 - Drawer lip: wide-screen drawers slide in from the right, so the lip sits at the drawer's top-left corner pointing right; phone turned (docked left) top-right pointing left; upright top centre pointing down Undo: rotate the .lip svg per media query in index.html ([#404](https://github.com/mark-brannan/portolani/pull/404))
+
+### 20261107t201605z
+- Random person opens People at once with the flight, not on landing; Go also chooses a person typed by name or aka Undo: move setDrawer into dealNow; drop the Go name lookup ([#404](https://github.com/mark-brannan/portolani/pull/404))
