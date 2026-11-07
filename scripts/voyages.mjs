@@ -214,7 +214,9 @@ export function problems(v) {
   const migration = isMigration(v);
   need(Array.isArray(v.who) && (v.who.length || migration) && v.who.every((w) => typeof w === 'string' && SLUG.test(w)) && new Set(v.who).size === v.who.length, 'who: distinct slugs into people.json');
   need(Array.isArray(v.sources) && v.sources.length && v.sources.every((s) => s.title && s.url), 'sources: [{ title, url }]');
-  need(Array.isArray(v.legs) && v.legs.length, 'legs: at least one');
+  // a migration known only from a find in one place (the Pesse canoe) is a waypoint and no legs
+  const found = migration && (v.events ?? []).some((e) => e.kind === 'waypoint');
+  need(Array.isArray(v.legs) && (v.legs.length || found), 'legs: at least one, or none for a migration with a waypoint');
   for (const [i, leg] of (v.legs ?? []).entries()) {
     const at = `leg ${i} (${leg.from} → ${leg.to})`;
     need(typeof leg.from === 'string' && typeof leg.to === 'string', `${at}: from and to`);

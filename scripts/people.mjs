@@ -30,10 +30,10 @@ export const peopleOf = (json, who = {}) => Object.entries(json ?? {}).filter(([
 export const deathOf = (p) => (p.death && typeof p.death === 'object' ? p.death : null);
 
 // A year text as a number, negative before Christ: "c. 350 BC" -350, "c. 970s" 970, "24 Feb 1304" 1304, "5th century
-// BC" -450 (its middle); NaN for none. A day of the month is skipped: the year is the first number of three digits or
-// more, else the last one.
+// BC" -450 (its middle), "c. 1,000,000–700,000 BC" -1000000; NaN for none. A thousands comma is read through. A day of
+// the month is skipped: the year is the first number of three digits or more, else the last one.
 export function yearOf(text) {
-  const s = String(text ?? ''), bc = /\bBCE?\b/.test(s) ? -1 : 1, c = /(\d+)(?:st|nd|rd|th) century/.exec(s);
+  const s = String(text ?? '').replace(/(\d),(?=\d{3}\b)/g, '$1'), bc = /\bBCE?\b/.test(s) ? -1 : 1, c = /(\d+)(?:st|nd|rd|th) century/.exec(s);
   if (c) return bc * ((Number(c[1]) - 1) * 100 + 50);
   const nums = [...s.matchAll(/\d+/g)].map((m) => Number(m[0]));
   if (!nums.length) return NaN;
@@ -59,9 +59,9 @@ export const TIMELINE_ERAS = [['The ancient world', TIMELINE_FROM], ['The mediev
 // a year as the drawers write it: 1500 BC, AD 1, 1500, with a thousands comma only from five figures (50,000 BC)
 export const yearLabel = (y) => { const n = Math.abs(y), t = n >= 10000 ? n.toLocaleString('en') : String(n); return y < 0 ? `${t} BC` : y === 1 ? 'AD 1' : t; };
 
-// The first peopling of Sahul, c. 50,000 BC: the start of Prehistory and of the People drawer's heading bar
-export const TIMELINE_EARLIEST = -50000;
-// The People and Voyages drawers' eras: Prehistory, from the first peopling of Sahul (TIMELINE_EARLIEST) to the Lapita
+// The first crossing into Wallacea, c. 1,000,000 BC: the start of Prehistory and of the People drawer's heading bar
+export const TIMELINE_EARLIEST = -1000000;
+// The People and Voyages drawers' eras: Prehistory, from the first crossing into Wallacea (TIMELINE_EARLIEST) to the Lapita
 // voyages, then the Sights eras (TIMELINE_ERAS)
 export const DRAWER_ERAS = [['Prehistory', TIMELINE_EARLIEST], ...TIMELINE_ERAS];
 // The era a year falls in, by name: Prehistory for anything before the Sights eras; null for no year
@@ -75,7 +75,7 @@ const eraEnds = (name, now) => {
   const i = DRAWER_ERAS.findIndex(([n]) => n === name);
   return i < 0 ? null : [DRAWER_ERAS[i][1], DRAWER_ERAS[i + 1]?.[1] ?? now];
 };
-// A span's years as a heading writes them: "1500 BC – AD 500", "50,000 – 1500 BC", "500 – 1450", "from 1800"
+// A span's years as a heading writes them: "1500 BC – AD 500", "1,000,000 – 1500 BC", "500 – 1450", "from 1800"
 export function spanYears(from, to) {
   if (to === undefined) return `from ${yearLabel(from)}`;
   if (to < 0) return `${yearLabel(-from)} – ${yearLabel(to)}`;
@@ -89,7 +89,7 @@ export function eraYears(name) {
 // A linear scale from `from` to `to`, for the life bars of the rows under a heading: { from, to, x(year) in 0..1
 // clamped, ticks: [[year, label]] }, the ticks on round years, four or fewer between the ends
 export function spanScale(from, to) {
-  const step = [50, 100, 250, 500, 1000, 2500, 5000, 10000].find((s) => (to - from) / s <= 5) ?? 10000;
+  const step = [50, 100, 250, 500, 1000, 2500, 5000, 10000, 25000, 50000, 100000, 250000].find((s) => (to - from) / s <= 5) ?? 250000;
   const ticks = [];
   for (let y = Math.ceil((from + 1) / step) * step; y < to; y += step) ticks.push([y || 1, yearLabel(y || 1)]);
   return { from, to, x: (y) => Math.min(1, Math.max(0, (y - from) / (to - from))), ticks };
@@ -101,9 +101,9 @@ export function eraScale(name, now = new Date().getFullYear()) {
   return ends ? spanScale(...ends) : null;
 }
 
-// The People drawer's heading bar: one faded bar under every heading, from 50,000 BC (TIMELINE_EARLIEST) to today, on
-// which each era is a band and the rows under an open heading are ticks. Its scale is log10(years ago + 500), which
-// gives prehistory about 55% of the bar and the modern world about 8%; x in 0..1, clamped.
+// The People drawer's heading bar: one faded bar under every heading, from 1,000,000 BC (TIMELINE_EARLIEST) to today,
+// on which each era is a band and the rows under an open heading are ticks. Its scale is log10(years ago + 500), which
+// gives prehistory about 73% of the bar and the modern world about 5%; x in 0..1, clamped.
 export const DEEP_OFFSET = 500;
 export function deepX(year, now = new Date().getFullYear()) {
   const l = (y) => Math.log10(Math.max(0, now - y) + DEEP_OFFSET), top = l(TIMELINE_EARLIEST), end = l(now);

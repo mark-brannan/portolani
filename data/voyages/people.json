@@ -1,4 +1,22 @@
 {
+  "wallacea-crossers": {
+    "name": "The first crossers of Wallacea",
+    "group": true,
+    "bio": "Hominins who crossed the sea from Bali or Java into the islands east of the Wallace Line between about a million and 700,000 years ago, and reached Flores, where their fossils lie at Mata Menge. They were probably descended from Homo erectus, grown small on the island, and probably ancestral to Homo floresiensis. Whether they crossed on purpose, on rafts, or were carried off by storms and floods, nobody knows.",
+    "sources": ["ancient-maritime-history", "mata-menge"]
+  },
+  "sahul-first-peoples": {
+    "name": "The first peoples of Sahul",
+    "group": true,
+    "bio": "The ancestors of Aboriginal Australians and of the first peoples of New Guinea, who crossed from the islands of Wallacea to Sahul, the one continent of Australia and New Guinea, between about 65,000 and 50,000 years ago. The sea stood more than 100 metres lower than today, and still every way across meant open water.",
+    "sources": ["prehistory-of-australia", "madjedbebe"]
+  },
+  "pesse-canoe-makers": {
+    "name": "The makers of the Pesse canoe",
+    "group": true,
+    "bio": "Mesolithic people of the north European plain who, between about 8040 and 7510 BC, hollowed a Scots pine log into the oldest boat yet found. Nothing else of theirs is known from the find; the canoe stands for them.",
+    "sources": ["pesse-canoe"]
+  },
   "leif-erikson": {
     "name": "Leif Erikson",
     "aka": [

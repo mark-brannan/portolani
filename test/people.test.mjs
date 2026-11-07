@@ -33,7 +33,7 @@ test('every picture is built for the site (npm run people), under its own name, 
 });
 
 test('years read off their texts, before Christ negative', () => {
-  assert.deepEqual(['c. 350 BC', '24 Feb 1304', 'c. 970s', '5th century BC', '1486 or 1487', 'nothing'].map(yearOf), [-350, 1304, 970, -450, 1486, NaN]);
+  assert.deepEqual(['c. 350 BC', '24 Feb 1304', 'c. 970s', '5th century BC', '1486 or 1487', 'c. 1,000,000–700,000 BC', 'nothing'].map(yearOf), [-350, 1304, 970, -450, 1486, -1000000, NaN]);
   assert.deepEqual(voyageYears('c. 330–320 BC'), [-330, -320]);
   assert.deepEqual(voyageYears('1325–1354'), [1325, 1354]);
 });
@@ -47,22 +47,22 @@ test('a life open at an end runs from the voyages and fades there', () => {
 test('a row\'s era is the one its year falls in, and the headings carry the eras\' years, BC and AD alike', () => {
   assert.deepEqual([-1500, -600, 499, 500, 1325, 1449, 1450, 1799, 1800, 2026].map(eraOf),
     ['The ancient world', 'The ancient world', 'The ancient world', 'The medieval Indian Ocean and Asia', 'The medieval Indian Ocean and Asia', 'The medieval Indian Ocean and Asia', 'The age of discovery', 'The age of discovery', 'The modern world', 'The modern world']);
-  assert.deepEqual([-50000, -3000, -1501].map(eraOf), ['Prehistory', 'Prehistory', 'Prehistory'], 'anything before Lapita is Prehistory');
-  assert.equal(eraOf(-60000), 'Prehistory');
+  assert.deepEqual([-1000000, -50000, -3000, -1501].map(eraOf), ['Prehistory', 'Prehistory', 'Prehistory', 'Prehistory'], 'anything before Lapita is Prehistory');
+  assert.equal(eraOf(-2000000), 'Prehistory');
   assert.equal(eraOf(NaN), null);
-  assert.deepEqual(DRAWER_ERAS.map(([n]) => eraYears(n)), ['50,000 – 1500 BC', '1500 BC – AD 500', '500 – 1450', '1450 – 1800', 'from 1800']);
+  assert.deepEqual(DRAWER_ERAS.map(([n]) => eraYears(n)), ['1,000,000 – 1500 BC', '1500 BC – AD 500', '500 – 1450', '1450 – 1800', 'from 1800']);
   assert.deepEqual(DRAWER_ERAS.slice(1), TIMELINE_ERAS, 'the drawers\' eras are Prehistory and then the Sights eras');
   assert.equal(TIMELINE_ERAS[0][1], TIMELINE_FROM);
 });
 
-test('the heading bar runs from 50,000 BC to today on log10(years ago + 500): prehistory about 55% of it, the modern world about 8%', () => {
-  assert.equal(deepX(-50000, 2026), 0);
+test('the heading bar runs from 1,000,000 BC to today on log10(years ago + 500): prehistory about 73% of it, the modern world about 5%', () => {
+  assert.equal(deepX(-1000000, 2026), 0);
   assert.equal(deepX(2026, 2026), 1);
-  const years = [-50000, -20000, -3000, -1500, 1, 500, 1450, 1800, 1950, 2026];
+  const years = [-1000000, -700000, -50000, -20000, -3000, -1500, 1, 500, 1450, 1800, 1950, 2026];
   years.forEach((y, i) => { if (i) assert.ok(deepX(y, 2026) > deepX(years[i - 1], 2026), `not monotonic at ${y}`); });
   const share = Object.fromEntries(deepBands(2026).map(([n, a, b]) => [n, b - a]));
-  assert.ok(Math.abs(share.Prehistory - 0.55) < 0.02, `prehistory takes ${share.Prehistory}`);
-  assert.ok(Math.abs(share['The modern world'] - 0.08) < 0.01, `the modern world takes ${share['The modern world']}`);
+  assert.ok(Math.abs(share.Prehistory - 0.73) < 0.02, `prehistory takes ${share.Prehistory}`);
+  assert.ok(Math.abs(share['The modern world'] - 0.05) < 0.01, `the modern world takes ${share['The modern world']}`);
   const bands = deepBands(2026);
   assert.equal(bands[0][1], 0);
   assert.equal(bands.at(-1)[2], 1);
@@ -98,7 +98,7 @@ test('each era has its own scale for the life bars, with round ticks between its
   assert.deepEqual(discovery.ticks.map(([y]) => y), [1500, 1600, 1700]);
   assert.deepEqual([modern.from, modern.to], [1800, 2026]);
   assert.equal(eraScale('no such era'), null);
-  assert.deepEqual(eraScale('Prehistory').ticks.map(([y]) => y), [-40000, -30000, -20000, -10000]);
+  assert.deepEqual(eraScale('Prehistory').ticks.map(([y]) => y), [-750000, -500000, -250000]);
   assert.deepEqual(spanScale(-3000, 1300).ticks.map(([, l]) => l), ['2000 BC', '1000 BC', 'AD 1', '1000']);
   // Magellan, c. 1480 to 1521, on the age of discovery's scale: a twelfth of the way in, about an eighth wide
   const [x0, x1, open0, open1] = barOn(discovery, [1480, 1521, true, true]);
