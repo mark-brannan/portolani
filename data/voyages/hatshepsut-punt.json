@@ -9,11 +9,11 @@
   "legs": [
     { "from": "Thebes", "to": "Mersa Gawasis (Saww)", "dates": "c. 1470 BC", "mode": "land", "line": "spline",
       "confidence": "conventional", "source": "the way from the Nile to the Red Sea is not described in the sources; shown as a plain line across the Eastern Desert",
-      "points": [[32.64,25.7], [33.2,26.0], [33.7,26.3], [34.04,26.56]] },
+      "points": [[32.64,25.7], [33.2,26.0], [33.7,26.3], [34.04,26.56], [34.12,26.5]] },
     { "from": "Mersa Gawasis (Saww)", "to": "Punt", "dates": "c. 1470 BC", "mode": "sea", "line": "spline",
       "confidence": "conventional", "source": "the sea way is not recorded; shown down the middle of the Red Sea to the Eritrean coast",
       "note": "Mersa Gawasis was a Red Sea harbour for Punt expeditions, and cedar planks from Hatshepsut's expedition were found there in 2005; the reliefs do not name the port. The far end is one reading of Punt, which scholars place in the Horn of Africa, on the Eritrean and Sudanese coast, or in Arabia.",
-      "points": [[34.12,26.5], [34.5,26.2], [35.3,25.0], [36.2,23.5], [37.5,21.5], [38.2,19.5], [39.3,17.5], [39.6,16.2]] }
+      "points": [[34.12,26.5], [34.5,26.2], [35.3,25.0], [36.2,23.5], [37.5,21.5], [38.2,19.5], [39.3,17.5], [39.7,15.8]] }
   ],
   "events": [
     { "kind": "event", "lon": 34.04, "lat": 26.56, "date": "c. 1470 BC", "label": "Five ships fitted out at Mersa Gawasis", "source": "Mersa Gawasis (Wikipedia)", "cite": "mersa-gawasis", "confidence": "inferred", "text": "Mersa Gawasis, ancient Saww, was a small Red Sea harbour from which Egyptian ships set out for Punt, taken apart for the road from the Nile and put together again on the shore. In 2005 an excavation there found cedar planks from Hatshepsut's expedition. The temple texts speak of five ships, with at least five shiploads of marines sailing under Nehsi." },
