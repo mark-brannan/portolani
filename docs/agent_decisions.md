@@ -621,3 +621,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261107t031215z
 - The Pesse canoe is a migration with one waypoint and no legs, not a new kind or a made-up route; its Commons photo is left out until its licence is checked Undo: give the canoe its own kind or drop the record ([#399](https://github.com/mark-brannan/portolani/pull/399))
+
+### 20261107t041148z
+- Nit 6: the phone drawer stays a bottom sheet; cards are dealt in the part of the window above it, or beside the left-docked drawer turned Undo: deal into the whole window and move the sheet to the top ([#404](https://github.com/mark-brannan/portolani/pull/404))
