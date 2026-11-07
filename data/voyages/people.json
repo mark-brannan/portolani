@@ -1025,6 +1025,30 @@
       }
     ]
   },
+  "hatshepsut": {
+    "name": "Hatshepsut",
+    "bio": "A pharaoh of Egypt's Eighteenth Dynasty, the eldest daughter of Thutmose I and Ahmose. She began as regent for the young Thutmose III, took the pharaoh's titles by about the seventh year of his reign and ruled with him as senior coregent, c. 1479 to 1458 BC. Her ninth year saw the expedition to Punt, which her temple at Deir el-Bahari commemorates.",
+    "images": [
+      {
+        "file": "Relief_of_Hatshepsut's_expedition_to_the_Land_of_Punt_by_Σταύρος.jpg",
+        "kind": "scene",
+        "author": "Σταύρος",
+        "date": "2008",
+        "licence": "CC BY 2.0",
+        "note": "Egyptian soldiers of the expedition bearing branches and axes, from the temple at Deir el-Bahari."
+      }
+    ],
+    "sources": [
+      "hatshepsut"
+    ]
+  },
+  "nehsi": {
+    "name": "Nehsi",
+    "bio": "An official at Hatshepsut's court, Wearer of the Royal Seal and chief treasurer, who may have been of Nubian descent, going by his name. The Punt reliefs at Deir el-Bahari show him as responsible for dispatching the expedition; some read that as his having led it from beginning to end. He was buried in a rock-cut tomb at Saqqara.",
+    "sources": [
+      "nehsi"
+    ]
+  },
   "himilco": {
     "name": "Himilco",
     "bio": "A Carthaginian navigator of the early fifth century BC, sent to explore the Atlantic coast of Europe while Hanno went south. His own account is lost; it survives in brief notices by Pliny and the poet Avienus. Of his family, one scholar makes him Hanno's brother.",
