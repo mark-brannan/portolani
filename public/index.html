@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- the page itself never zooms: a pinch is the map's, and a page left zoomed after a turn to landscape and back cut the buttons off at the window's edge -->
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
 <title>Portolani preview</title>
 <style>
   /* one mode: dark margins round the map, parchment drawers. The browser's light/dark setting is not followed. */
@@ -15,7 +16,8 @@
   }
   /* a low-light mode (red-heavy) is reserved here, set by data-light="low" on the root; no control and no tokens yet */
   :root[data-light="low"] { }
-  html, body { height: 100%; }
+  html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+  body { touch-action: pan-x pan-y; } /* a pinch on the margins or a drawer does not zoom the page; the map takes its own (#map) */
   body { margin: 0; overflow: hidden; background: var(--margin); color: var(--margin-ink); font: 14px/1.4 system-ui, sans-serif; }
 
   /* the map fills the window, its 1600 x 1000 canvas scaled to fit and centred */
@@ -38,6 +40,9 @@
   }
   /* under the timing line, the commit the site was built from and when (build.json, written by the build) */
   html.built #status { bottom: 20px; }
+  /* the English of the memento mori just read, a line above the timings, in the same small type */
+  #mementoEnglish { position: fixed; right: 10px; bottom: 20px; margin: 0; max-width: calc(100vw - 20px); font-size: 11px; color: var(--margin-ink); opacity: 0.75; pointer-events: none; text-shadow: 0 0 3px var(--margin), 0 0 3px var(--margin); }
+  html.built #mementoEnglish { bottom: 34px; }
   #build {
     position: fixed; right: 10px; bottom: 6px; margin: 0; max-width: min(calc(100vw - 20px), 520px);
     font-size: 10px; color: var(--margin-ink); opacity: 0.6;
@@ -46,11 +51,11 @@
   }
   #build a { color: inherit; }
   /* the right margin, above the timing line: the skull, always there, is the one clear for the map (every picture away,
-     the subject let go, every chart and voyage lifted; the view and the settings stay); under it a memento mori on a slip of parchment, in the italic hand, the next one at each clearing */
+     the subject let go, every chart and voyage lifted; the view and the settings stay); its memento mori, the next one at each clearing, in its hover text alone */
   /* it sits over the drawers (z-index 3), and an open drawer stops above it (--memento-h, page.js), so the skull and its
      line stay in sight and in reach while a drawer is in use; on a phone it rides just above the open sheet */
-  :root { --memento-foot: 30px; --memento-h: 110px; }
-  html.built { --memento-foot: 44px; }
+  :root { --memento-foot: 44px; --memento-h: 110px; }
+  html.built { --memento-foot: 58px; }
   #memento {
     position: fixed; right: 12px; bottom: var(--memento-foot); z-index: 3; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
     max-width: min(230px, 100vw - 24px); pointer-events: none;
@@ -65,7 +70,7 @@
   }
   #sweep:hover { background: #e2cd9e; }
   /* the compass directly over the skull, the skull's diameter: its needle points north on the window; a click is north up,
-     a drag round it turns the world. On a phone it only reads and sets north up: a twist of two fingers on the map turns it */
+     a drag round it turns the world, on a phone too, where a twist of two fingers on the map also turns it */
   #turns { display: flex; align-items: center; gap: 4px; }
   /* to its left, side by side and a little smaller, the walk-around buttons: a quarter turn of the world each way round */
   #turns .walk {
@@ -90,20 +95,12 @@
   #compass svg { width: 42px; height: 42px; }
   #sweep:focus-visible { outline: 2px solid #e8b84a; outline-offset: 2px; }
   #sweep svg { width: 34px; height: 34px; }
-  @media (max-width: 520px) { /* a phone: the skull alone, smaller, its phrase raised only large on a press; the compass as small, no walk-around */
-    #turns .walk, #mementoText { display: none; }
+  @media (max-width: 520px) { /* a phone: the skull and the compass smaller, no walk-around */
+    #turns .walk { display: none; }
     #sweep, #compass { width: 38px; height: 38px; }
     #sweep svg { width: 28px; height: 28px; }
     #compass svg { width: 34px; height: 34px; }
-    #compass { cursor: pointer; }
     html.looking .card { visibility: hidden; } /* the corner cards step aside for a card looked at; the skull stays */
-  }
-  /* the phrase sits beside the skull on one line, out of the column's flow, so the skull never moves whatever its length;
-     a window too narrow for it wraps it, still beside */
-  #mementoText {
-    position: absolute; right: 56px; bottom: 6px; width: max-content; max-width: calc(100vw - 90px); box-sizing: border-box;
-    margin: 0; padding: 2px 8px 3px; font: italic 12.5px/1.25 var(--serif); color: #3b2a1a; text-align: right;
-    background: #efe3c6; border: 1px solid #b89a68; border-radius: 3px; box-shadow: 0 1px 4px rgb(0 0 0 / 0.25);
   }
   /* the clear (page.js clearMap): what goes leaves on #vanish, a copy of it over the map; the skull grows over the map
      and fades (#wipe, inked into the chart by multiply); the phrase, large in red, grows at the foot and fades last */
@@ -116,6 +113,15 @@
     font-family: var(--serif); font-style: italic; color: #8c2f1e; transform-origin: 50% 100%;
     text-shadow: 0 0 6px #efe3c6, 0 0 12px #efe3c6, 0 0 2px #efe3c6;
   }
+  /* temporary, for tuning the skull's clear on this PR (#272): its timings, kept per browser */
+  #clearTune { position: fixed; left: 12px; top: 64px; z-index: 3; max-width: 290px; padding: 4px 10px; font: 12px var(--serif); color: #3b2a1a; background: #efe3c6; border: 1px solid #b89a68; border-radius: 4px; box-shadow: 0 1px 6px rgb(0 0 0 / 0.25); }
+  #clearTune summary { cursor: pointer; font-style: italic; }
+  #clearTune[hidden] { display: none; }
+  #clearTune label { display: grid; grid-template-columns: 7.5em 1fr 3.4em; gap: 6px; align-items: center; margin: 3px 0; }
+  #clearTune output { text-align: right; font-variant-numeric: tabular-nums; }
+  #clearTune button { margin: 4px 0; font: 12px var(--serif); }
+  #clearTune b { display: block; margin: 8px 0 2px; font-weight: normal; font-style: italic; }
+  #clearTune[open] { max-height: calc(100dvh - 80px); overflow-y: auto; }
 
   /* top right, a row of six instruments, each opening its own drawer, left to right: the rose the configuration, the compass Find (a typed place or position, mine filled in, or the points of interest ringed), the astrolabe the locations (home and the world, then the regions, the eras' ports and the Pacific islands), the dividers the voyages, the medallion the people, and the chart the charts. The anchor is hidden for now, its anchorages in the astrolabe's. One drawer at a time: a click on its button opens it and a second click shuts it, another button swaps it for its own, and Esc, or on a wide screen a click on the map, shuts it; a choice in it leaves it open, on a phone too. The row never moves */
   #where { position: fixed; top: 12px; right: 12px; z-index: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; pointer-events: none; }
@@ -231,7 +237,7 @@
   .vrow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
   #where .vrow button { display: inline-flex; align-items: center; gap: 6px; }
   #where .vrow .vname { flex: 1 1 auto; min-width: 0; max-width: 100%; white-space: normal; text-align: left; }
-  .pcard .vrow .vtitle { flex: 1 1 220px; }
+  #where .pcard .vrow .vtitle { flex: 1 1 0; min-width: 0; text-align: left; }
   .vrow .vname svg { width: 28px; height: 18px; flex: none; }
   .vrow .vname[data-shown="true"] { background: #e2cd9e; color: #3b2a1a; border-color: #b89a68; } /* a shown voyage, lit like an open instrument */
   #where .vrow .eye { padding: 2px 4px; width: 30px; height: 26px; justify-content: center; border-radius: 12px; } /* the chart rows' eye, between the name and the ink */
@@ -240,6 +246,7 @@
   .vrow .eye[aria-pressed=false] { opacity: 0.7; }
   #where .vrow .play { padding: 2px 4px; width: 30px; height: 26px; justify-content: center; border-radius: 12px; } /* after the eye: sails the voyage on its own calendar */
   .vrow .play svg, #voyageBand button svg { width: 18px; height: 18px; fill: currentColor; stroke: none; }
+  #where .vrow .play[hidden], .slider.vdraw[hidden] { display: none; } /* the play and the Drawn-in slider, suppressed for now (page.js VOYAGE_PLAY_ON) */
   .vrow .play[aria-pressed=true] { background: var(--accent); color: var(--sheet); border-color: var(--accent); }
      and the voyage's calendar as a strip (its legs, its waits dotted, its events as ticks) that scrubs */
   #voyageBand {
@@ -320,6 +327,16 @@
     transition: transform 0.25s ease, visibility 0s linear 0.25s;
   }
   .drawer.open { transform: none; visibility: visible; transition: transform 0.25s ease; }
+  /* the lip: a small tab on the drawer's edge, held there as the drawer scrolls, its arrow the way the drawer shuts:
+     toward the right edge here, down on a phone's sheet, toward the left edge on a phone turned (page.js adds it) */
+  .lip { position: sticky; top: -14px; z-index: 1; height: 0; margin: -14px -16px 14px; align-self: stretch; display: flex; justify-content: flex-start; }
+  .lip button {
+    width: 34px; height: 16px; padding: 0; display: grid; place-items: center; cursor: pointer; color: var(--fg);
+    background: var(--panel); border: 1px solid var(--rule); border-top: none; border-left: none; border-radius: 0 0 8px 0;
+  }
+  .lip button:hover { background: #e2cd9e; }
+  .lip button:focus-visible { outline: 2px solid #e8b84a; outline-offset: -2px; }
+  .lip svg { width: 14px; height: 9px; transform: rotate(-90deg); }
   @media (prefers-reduced-motion: reduce) { .drawer, .drawer.open { transition: none; } }
   @media (min-width: 521px) { /* the lighter drawers as wide as their lines, Go as wide as a position needs */
     .drawer.menu { width: max-content; min-width: min(240px, 100vw - 24px); max-width: min(480px, 100vw - 24px); }
@@ -343,6 +360,10 @@
       transform: translateY(102%);
     }
     .drawer.open { transform: none; }
+    .lip { justify-content: center; }
+    .lip button { width: 52px; border-left: 1px solid var(--rule); border-radius: 0 0 10px 10px; }
+    .lip svg { transform: none; }
+    #sightsList #sightCard { position: static; box-sizing: border-box; width: calc(100vw - 72px); margin: 4px 0 6px; padding: 6px 8px; border: 1px solid #b89a68; border-radius: 6px; } /* under its row (page.js showSightCard) */
     /* the lighter drawers (Go, the places, the voyages, the anchorages) as tall as their lines, up to half
        the window, over the foot of the map; the scale card stays put and goes under a tall one, as the
        sheet is brief and shuts on a touch on the map */
@@ -350,6 +371,25 @@
     /* the settings or the charts open: the map fills the half above the sheet, cropped as above, the cards on it */
     html.sheet #map { top: 25vh; top: 25dvh; width: max(100vw, 80vh); height: max(50vh, 62.5vw); width: max(100vw, 80dvh); height: max(50dvh, 62.5vw); }
     html.sheet #cardScale { bottom: calc(50vh + 8px); bottom: calc(50dvh + 8px); }
+  }
+
+  /* a phone turned to landscape (wider than a phone's 520 px, but short and touched): the skull and the compass as upright,
+     and each drawer docks at the left, the window's whole height, clear of the instruments and the skull at the right */
+  @media (min-width: 521px) and (max-height: 520px) and (pointer: coarse) {
+    #turns .walk { display: none; }
+    #sweep, #compass { width: 38px; height: 38px; }
+    #sweep svg { width: 28px; height: 28px; }
+    #compass svg { width: 34px; height: 34px; }
+    .drawer, .drawer.menu, #goPanel {
+      top: 8px; bottom: 8px; left: 8px; right: auto; width: min(420px, 55vw); min-width: 0; max-width: none; height: auto; max-height: none;
+      transform: translateX(calc(-100% - 24px));
+    }
+    .drawer.open { transform: none; }
+    .lip { justify-content: flex-end; }
+    .lip button { border-right: none; border-left: 1px solid var(--rule); border-radius: 0 0 0 8px; }
+    .lip svg { transform: rotate(90deg); }
+    #sightsList #sightCard { position: static; box-sizing: border-box; width: 100%; margin: 4px 0 6px; padding: 6px 8px; border: 1px solid #b89a68; border-radius: 6px; }
+    #clearTune { left: auto; right: 12px; }
   }
 
   #chartList { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 8px; }
@@ -583,6 +623,7 @@
   <div class="bstrip" title="The voyage's calendar: drag or click to go to a day"><div id="bandStrip"></div><span id="bandThumb"></span><small id="bandFrom"></small><small id="bandTo"></small><small id="bandPace"></small></div>
 </div>
 <p id="status" role="status">Loading…</p>
+<p id="mementoEnglish" aria-hidden="true"></p>
 <p id="build" hidden></p>
 <div id="memento">
   <div id="turns">
@@ -613,7 +654,6 @@
     </g>
   </svg>
   </button>
-  <p id="mementoText"></p>
 </div>
 <canvas id="vanish" aria-hidden="true" hidden></canvas>
 <div id="wipe" aria-hidden="true" hidden><svg viewBox="-100 -122 200 254" aria-hidden="true">
@@ -687,6 +727,28 @@
   <use href="#skOutline" fill="none" stroke="#2a1a0e" stroke-width="1.8"/>
 </svg></div>
 <p id="mementoBig" aria-hidden="true" hidden></p>
+<details id="clearTune" hidden>
+  <summary>The skull's clear, tuning</summary>
+  <label>The skull <input type="range" id="tuneSkull" min="200" max="3000" step="50"><output for="tuneSkull"></output></label>
+  <label>Skull's ink <input type="range" id="tuneInk" min="2" max="60" step="1"><output for="tuneInk"></output></label>
+  <label>Skull grows <input type="range" id="tuneSkullGrow" min="100" max="300" step="5"><output for="tuneSkullGrow"></output></label>
+  <label>What goes <input type="range" id="tuneGone" min="300" max="6000" step="100"><output for="tuneGone"></output></label>
+  <label>The phrase <input type="range" id="tuneWords" min="500" max="10000" step="100"><output for="tuneWords"></output></label>
+  <label>Phrase size, at the end <input type="range" id="tuneWordsGrow" min="0" max="200" step="5"><output for="tuneWordsGrow"></output></label>
+  <label>Size change from <input type="range" id="tuneGrowFrom" min="0" max="95" step="5"><output for="tuneGrowFrom"></output></label>
+  <label>Size change to <input type="range" id="tuneGrowTo" min="5" max="100" step="5"><output for="tuneGrowTo"></output></label>
+  <b>A card to dust (Pulverum, and the skull)</b>
+  <label>A card's exit <input type="range" id="tuneCard" min="300" max="5000" step="50"><output for="tuneCard"></output></label>
+  <label>Between cards <input type="range" id="tuneCardGap" min="0" max="1000" step="10"><output for="tuneCardGap"></output></label>
+  <label>How far left it goes <input type="range" id="tuneTravel" min="0" max="100" step="5"><output for="tuneTravel"></output></label>
+  <label>Dust begins at <input type="range" id="tuneDustFrom" min="0" max="90" step="5"><output for="tuneDustFrom"></output></label>
+  <label>Crumbles from its edge <input type="range" id="tuneSweep" min="0" max="100" step="5"><output for="tuneSweep"></output></label>
+  <label>Grain <input type="range" id="tuneGrain" min="1" max="8" step="1"><output for="tuneGrain"></output></label>
+  <label>Dust drifts <input type="range" id="tuneDrift" min="0" max="200" step="5"><output for="tuneDrift"></output></label>
+  <label>Dust seen <input type="range" id="tuneDustKept" min="0" max="100" step="5"><output for="tuneDustKept"></output></label>
+  <label>Dust lingers <input type="range" id="tuneDustLife" min="10" max="200" step="5"><output for="tuneDustLife"></output></label>
+  <button type="button" id="tuneReset">Back to the defaults</button>
+</details>
 
 <nav id="where" aria-label="Find">
   <div class="row">

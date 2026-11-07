@@ -466,7 +466,7 @@ test('charts: the eye shows or hides one sheet and leaves the others and the map
   }
 });
 
-test('voyages: several drawn at once, each in its own ink, carried by the link; the eye shows or hides one, the name shows it alone and draws it on every time; an older single voyage= link opens; the skull empties the list, the drawer open and no Clear of its own', { skip, timeout: 240000 }, async () => {
+test('voyages: several drawn at once, each in its own ink, carried by the link; the eye shows or hides one, really off the map; the name adds it and draws it on every time; no play and no slider; an older single voyage= link opens; the skull empties the list, the drawer open and no Clear of its own', { skip, timeout: 240000 }, async () => {
   const server = createServer(async (req, res) => {
     let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
     if (p.endsWith('/')) p = path.join(p, 'index.html');
@@ -511,29 +511,42 @@ test('voyages: several drawn at once, each in its own ink, carried by the link; 
     await page.waitForTimeout(400);
     assert.equal(await viewNow(), where, 'the eye moved the view');
     for (const [id, c] of Object.entries(await inkOf())) assert.equal(c, before[id], `${id} changed ink when another was hidden`);
-    // the pen's seconds: 2.5 by default, a slider from 1 to 5 in halves, shown beside it and carried by the link
-    assert.equal(await page.$eval('#voyageDrawOut', (o) => o.textContent), '2.5 s');
-    assert.deepEqual(await page.$eval('#voyageDraw', (i) => [i.min, i.max, i.step, i.value]), ['1', '5', '0.5', '2.5']);
-    await page.$eval('#voyageDraw', (i) => { i.value = '1'; i.dispatchEvent(new Event('input', { bubbles: true })); });
-    assert.equal(await page.$eval('#voyageDrawOut', (o) => o.textContent), '1 s');
-    assert.match(await hash(), /voyagedraw=1(&|$)/);
-    // the name: that voyage alone, framed, and drawn on afresh every time; the others hidden, their colours kept
+    // no play: no play button shown, no calendar band, no Drawn-in slider (docs/spec/voyages.md, "no play, one speed")
+    assert.equal(await page.$$eval('#voyageList [data-play]', (bs) => bs.filter((b) => b.offsetParent).length), 0, 'a play button shows');
+    assert.equal(await page.$eval('#voyageDraw', (i) => Boolean(i.offsetParent)), false, 'the Drawn-in slider shows');
+    // the name: that voyage added to those shown, framed, and drawn on afresh every time; the others kept, their colours too
     await pen();
     await page.click('#voyageList [data-voyage="magellan"]');
-    assert.deepEqual(await on(), ['magellan'], 'the name did not show it alone');
-    assert.match(await hash(), /voyages=magellan\.[0-9a-f]{6},columbus\.[0-9a-f]{6}~,drake\.[0-9a-f]{6}~(&|$)/);
+    assert.deepEqual(await on(), ['columbus', 'magellan', 'drake'], 'the name hid another, or did not show it');
+    assert.match(await hash(), /voyages=magellan\.[0-9a-f]{6},columbus\.[0-9a-f]{6},drake\.[0-9a-f]{6}(&|$)/);
     await drawing();
     await settled();
     assert.notEqual(await viewNow(), where, 'the name did not fly to frame the voyage');
-    for (const [id, c] of Object.entries(await inkOf())) assert.equal(c, before[id], `${id} changed ink when the name hid it`);
+    for (const [id, c] of Object.entries(await inkOf())) assert.equal(c, before[id], `${id} changed ink when the name added another`);
+    assert.equal(new Set(Object.values(await inkOf())).size, 3, 'two voyages shown share an ink');
     await pen();
     await page.click('#voyageList [data-voyage="magellan"]');
-    assert.deepEqual(await on(), ['magellan'], 'a second click on the name changed what is shown');
+    assert.deepEqual(await on(), ['columbus', 'magellan', 'drake'], 'a second click on the name changed what is shown');
     await drawing(); // a second click draws it on again
     await settled();
-    await page.click('#voyageList [data-eye="columbus"]');
-    await page.click('#voyageList [data-eye="drake"]');
-    assert.deepEqual(await on(), ['columbus', 'magellan', 'drake'], 'the eyes did not show them again');
+    // the eye off takes the line off the map: the pixels in Magellan's ink go
+    const inkPixels = (hex) => page.evaluate((hex) => {
+      const c = document.querySelector('canvas'), d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data, [r, g, b] = [1, 3, 5].map((k) => parseInt(hex.slice(k, k + 2), 16));
+      let n = 0;
+      for (let i = 0; i < d.length; i += 4) if (Math.abs(d[i] - r) + Math.abs(d[i + 1] - g) + Math.abs(d[i + 2] - b) < 60) n++;
+      return n;
+    }, hex);
+    // the voyage shown in a high-contrast ink with most of it in view (the chart's red is also the rhumbs' and the names')
+    const counts = await Promise.all(Object.entries(await inkOf()).filter(([, c]) => c !== '#8c2f1e').map(async ([id, c]) => [id, c, await inkPixels(c)]));
+    const [offId, offInk, drawn] = counts.sort((a, b) => b[2] - a[2])[0];
+    assert.ok(drawn > 200, `${offId} is not drawn: ${drawn} px in its ink`);
+    const status = await page.$eval('#status', (s) => s.textContent);
+    await page.click(`#voyageList [data-eye="${offId}"]`);
+    await page.waitForFunction((was) => { const t = document.getElementById('status').textContent; return t !== was && t.includes('total'); }, status, { timeout: 60000 });
+    const left = await inkPixels(offInk);
+    assert.ok(left < drawn / 10, `the eye off left ${offId} on the map: ${left} of ${drawn} px in its ink`);
+    await page.click(`#voyageList [data-eye="${offId}"]`);
+    assert.deepEqual(await on(), ['columbus', 'magellan', 'drake'], 'the eye did not show it again');
     await page.$eval('#voyageList [data-ink="drake"]', (i) => { i.value = '#16727a'; i.dispatchEvent(new Event('input', { bubbles: true })); });
     assert.match(await hash(), /voyages=magellan\.[0-9a-f]{6},columbus\.[0-9a-f]{6},drake:16727a/);
     await page.click('#voyageWidth [data-value="2.2"]');
@@ -635,7 +648,7 @@ test('people and voyages: two vertical drawers no wider than the charts, earlies
     const rows = await page.$$eval('#peopleList li[data-row]:not([data-in]):not([hidden]) > [data-person]', (bs) => bs.map((b) => { const r = b.getBoundingClientRect(); return [r.top, r.left, r.width]; }));
     rows.forEach(([top], i) => { if (i) assert.ok(top > rows[i - 1][0], 'a row not below the one before'); });
     assert.ok(rows.every(([, left, width]) => Math.abs(left - rows[0][1]) < 1 && width > 300), 'the rows are not one column');
-    // Ibn Battuta chosen: his row lit, his tile slid open directly under it, his nine voyages inside with eyes and play, all drawn
+    // Ibn Battuta chosen: his row lit, his tile slid open directly under it, his nine voyages inside, each its own row with its name and eye, every eye off
     await page.click(head('The medieval world'));
     await page.click('#peopleList [data-person="ibn-battuta"]');
     await page.waitForTimeout(400);
@@ -654,21 +667,27 @@ test('people and voyages: two vertical drawers no wider than the charts, earlies
     assert.deepEqual(await page.$$eval('#personCard .pvoyages li[data-row]', (ls) => ls.map((l) => l.dataset.row)), ib, 'his voyages, in the index\'s order');
     assert.equal(ib.length, 9);
     assert.ok(await page.$eval('#personCard .bio', (b) => b.textContent.length > 40), 'no notes in the tile');
-    assert.ok(await page.$$eval('#personCard .pvoyages li', (ls) => ls.every((l) => l.querySelector('[data-eye]') && l.querySelector('[data-play]') && l.querySelector('.vsum').textContent.length > 20 && l.querySelector('.vsum a'))), 'a voyage row without its eye, play, summary or link');
-    assert.ok(await page.$$eval('#personCard [data-eye]', (es) => es.every((e) => e.getAttribute('aria-pressed') === 'true')), 'his voyages are drawn, so their eyes read on');
+    assert.ok(await page.$$eval('#personCard .pvoyages li', (ls) => ls.every((l) => l.querySelector('[data-voyage]') && l.querySelector('[data-eye]') && l.querySelector('.vsum').textContent.length > 20 && l.querySelector('.vsum a'))), 'a voyage row without its name, eye, summary or link');
+    assert.equal(await page.$$eval('#personCard [data-play]', (bs) => bs.filter((b) => b.offsetParent).length), 0, 'a play button shows in his tile');
+    assert.ok(await page.$$eval('#personCard [data-eye]', (es) => es.every((e) => e.getAttribute('aria-pressed') === 'false')), 'an eye in his tile starts on');
     assert.equal(await noSideScroll('peoplePanel'), true, 'the tile made the drawer scroll sideways');
-    // the eye in his tile puts that one voyage off, and the drawer stays open; the hash carries it hidden
-    await page.click('#personCard [data-eye="ibn-battuta-3"]');
-    assert.equal(await page.getAttribute('#personCard [data-eye="ibn-battuta-3"]', 'aria-pressed'), 'false');
-    assert.match(await hash(), /voyages=ibn-battuta-3(\.[0-9a-f]{6})?~/);
-    assert.match(await hash(), /person=ibn-battuta/, 'the eye let the person go');
-    assert.equal(await opened('peoplePanel'), true);
-    // the eye back on leaves nothing behind: letting him go takes the voyage off with him
+    // the eye in his tile puts that one voyage on, then off, and the drawer stays open; the hash carries it
     await page.click('#personCard [data-eye="ibn-battuta-3"]');
     assert.equal(await page.getAttribute('#personCard [data-eye="ibn-battuta-3"]', 'aria-pressed'), 'true');
-    assert.doesNotMatch(await hash(), /voyages=/, 'the eye back on left the voyage chosen');
+    assert.match(await hash(), /voyages=ibn-battuta-3\.[0-9a-f]{6}(&|$)/);
+    assert.match(await hash(), /person=ibn-battuta/, 'the eye let the person go');
+    assert.equal(await opened('peoplePanel'), true);
+    await page.click('#personCard [data-eye="ibn-battuta-3"]');
+    assert.equal(await page.getAttribute('#personCard [data-eye="ibn-battuta-3"]', 'aria-pressed'), 'false');
+    assert.match(await hash(), /voyages=ibn-battuta-3\.[0-9a-f]{6}~/);
+    // a name in his tile adds that voyage in a colour of its own, the person kept; letting him go leaves it shown
+    await page.click('#personCard [data-voyage="ibn-battuta-4"]');
+    await page.click('#personCard [data-voyage="ibn-battuta-5"]');
+    assert.match(await hash(), /voyages=ibn-battuta-3\.[0-9a-f]{6}~,ibn-battuta-4\.([0-9a-f]{6}),ibn-battuta-5\.(?!\1)[0-9a-f]{6}(&|$)/, 'the names did not add two voyages in two colours');
+    assert.match(await hash(), /person=ibn-battuta/, 'a voyage\'s name let the person go');
     await page.click('#peopleList [data-person="ibn-battuta"]');
-    assert.doesNotMatch(await hash(), /voyages=|person=/, 'letting him go left a voyage of his chosen');
+    assert.doesNotMatch(await hash(), /person=/);
+    assert.match(await hash(), /voyages=/, 'letting him go took the voyages chosen from his tile');
     await page.click('#peopleList [data-person="ibn-battuta"]');
     // the people and the voyages carry their spans as bars, on each era's scale under its ruler
     assert.ok(await page.$$eval('#peopleList > li.era:not([data-era="Deep history"])', (es) => es.every((e) => e.querySelector('.ruler span'))), 'a heading over life bars without its ruler');
@@ -699,7 +718,7 @@ test('people and voyages: two vertical drawers no wider than the charts, earlies
     assert.deepEqual([...shownVoyages].sort(), [...index].sort(), 'a voyage missing or twice');
     assert.equal(shownVoyages[0], 'wallacea-crossing');
     assert.deepEqual(await page.$$eval('#voyageList .era', (es) => es.map((e) => e.dataset.era)), ['Deep history', 'The Bronze Age', 'The ancient world', 'The medieval world', 'The age of discovery', 'The age of Enlightenment']);
-    assert.ok(await page.$$eval('#voyageList li[data-row]', (ls) => ls.every((l) => l.querySelector('[data-eye]') && l.querySelector('[data-play]') && l.querySelector('[data-ink]') && l.querySelector('path'))), 'a voyage row without its eye, play, swatch or line sample');
+    assert.ok(await page.$$eval('#voyageList li[data-row]', (ls) => ls.every((l) => l.querySelector('[data-eye]') && l.querySelector('[data-ink]') && l.querySelector('path'))), 'a voyage row without its eye, swatch or line sample');
     const tools = await box('#voyagesPanel .vtools'), list = await box('#voyageList');
     assert.ok(tools.y + tools.height <= list.y + 1, 'the tools do not head the list');
     assert.equal(await page.$$eval('#voyageWidth [role=radio], #voyageWidth button', (cs) => cs.length > 0), true, 'no line-weight chips');
@@ -728,9 +747,9 @@ test('people and voyages: two vertical drawers no wider than the charts, earlies
 });
 
 // A card on the table (docs/spec/design.md, "A card on the table: a click looks, three buttons, Pulverum"): dealt, it
-// carries no controls; its frame grabs it without looking, its body looks; looked at, the map holds still under the
-// wheel; Put away sends it home and it stays dealt; Pulverum takes it off the table; choosing the person again deals it
-// back. And a flight deals only once the map's middle has reached the place (docs/spec/design.md, "the map is there
+// carries no controls; its frame grabs it without looking, its body looks; looked at, it is a hand that drags it and
+// the map together, the wheel zooms both, and off it no hand; Esc sends it home and it stays dealt; Pulverum, the third
+// button right of the card, takes it off the table; choosing the person again deals it back. And a flight deals only once the map's middle has reached the place (docs/spec/design.md, "the map is there
 // before the deal").
 const serve = () => createServer(async (req, res) => {
   let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
@@ -751,7 +770,7 @@ async function frameOf(page, cx, cy) {
   return { body, frame };
 }
 
-test('people: a dealt card carries no controls; its frame grabs it, its body looks; looked at, the map holds still; Put away sends it home, Pulverum takes it off; the deal waits for the map', { skip, timeout: 240000 }, async () => {
+test('people: a dealt card carries no controls; its frame grabs it, its body looks; looked at, a drag or the wheel moves it with the map; Esc sends it home, Pulverum takes it off; the deal waits for the map', { skip, timeout: 240000 }, async () => {
   const server = serve();
   const browser = await chromium.launch();
   try {
@@ -783,14 +802,25 @@ test('people: a dealt card carries no controls; its frame grabs it, its body loo
     assert.equal(mapOf(await hash()), mapOf(before), 'a drag from the frame moved the map');
     assert.notEqual(/pictureat=([^&]+)/.exec(await hash())[1], /pictureat=([^&]+)/.exec(before)[1], 'the card did not move');
 
-    // a click on the body looks; the wheel over it zooms the card alone, the map never moves; Esc puts it away, still dealt
+    // a click on the body looks; over it the pointer is a hand, off it not; a drag on it pans the map with it, the wheel
+    // zooms both (design.md, "the looked-at card is held where it can be dragged"); Esc puts it away, still dealt
     const { body: body2 } = await frameOf(page, cx - 60, cy + 30);
     await page.mouse.click(body2 - 30, cy + 30);
     await page.waitForFunction(() => document.querySelector('#pictureKeys [data-look="0"]')?.getAttribute('aria-pressed') === 'true', null, { timeout: 5000 });
+    await page.waitForTimeout(500);
+    assert.equal(await cursorAt(page, cx, cy), 'grab', 'no hand over the card looked at');
+    assert.equal(await cursorAt(page, c.x + 4, c.y + c.height - 4), 'default', 'a hand off the card looked at, where a press only puts it away');
     const still = await hash();
+    await page.mouse.move(cx, cy); await page.mouse.down();
+    for (let i = 1; i <= 6; i++) await page.mouse.move(cx + i * 10, cy);
+    await page.mouse.up();
+    await page.waitForFunction((h) => location.hash !== h, still, { timeout: 10000 });
+    assert.notEqual(mapOf(await hash()), mapOf(still), 'a drag on the card looked at left the map still');
+    assert.equal(await looked(), 'true', 'a drag on the card looked at put it away');
+    const dragged = await hash();
     await page.mouse.move(cx, cy); await page.mouse.wheel(0, -300); await page.mouse.wheel(0, -300);
     await page.waitForTimeout(600);
-    assert.equal(mapOf(await hash()), mapOf(still), 'the wheel on a card looked at moved the map');
+    assert.ok(Number(mapOf(await hash()).split('/')[0]) > Number(mapOf(dragged).split('/')[0]), 'the wheel on a card looked at left the map\'s zoom');
     await page.keyboard.press('Escape');
     assert.equal(await looked(), 'false', 'Esc did not put the card away');
     assert.equal(await page.$$eval('#pictureKeys li', (ls) => ls.length), 2, 'put away, the card left the table');
@@ -807,21 +837,18 @@ test('people: a dealt card carries no controls; its frame grabs it, its body loo
     await page.keyboard.press('Escape'); // and the next shuts it
     await page.evaluate(() => document.activeElement.blur());
 
-    // looked at, Put away is the lowest of three round buttons straddling the card's right edge; it sends the card home
+    // looked at, Pulverum is the lowest of three round buttons just right of the card; it takes that card alone off the
+    // table, and a click on the person deals it back
     await page.focus('#pictureKeys [data-look="0"]'); await page.keyboard.press('Enter'); await page.evaluate(() => document.activeElement.blur());
     const [iw, ih] = await page.evaluate(async () => { const m = (await (await fetch('packs/overlays/people/people.json')).json()).pictures['Portrait_of_a_Man,_Said_to_be_Christopher_Columbus_2.jpg']; return [m.width, m.height]; });
     const x0 = Math.max(0, c.x), x1 = Math.min(1100, c.x + c.width), y0 = Math.max(0, c.y), y1 = Math.min(740, c.y + c.height); // the map in the window
-    const k = Math.min((0.75 * Math.min(x1 - x0, y1 - y0)) / Math.max(iw, ih), 1), away = { x: (x0 + x1) / 2 + (iw * k) / 2, y: (y0 + y1) / 2 + (ih * k) / 2 - 15 * 1.5 };
-    await page.waitForFunction(({ x, y }) => { const m = document.getElementById('map'); m.dispatchEvent(new PointerEvent('pointermove', { clientX: x, clientY: y, isPrimary: true, bubbles: true })); return m.style.cursor === 'pointer'; }, away, { timeout: 10000, polling: 100 });
-    await page.mouse.click(away.x, away.y);
-    assert.equal(await looked(), 'false', 'Put away did not put the card away');
-    assert.equal(await page.$$eval('#pictureKeys li', (ls) => ls.length), 2, 'Put away took the card off the table');
-
-    // Pulverum takes that card alone off the table, and a click on the person deals it back
-    await page.focus('#pictureKeys [data-dust="1"]');
-    await page.keyboard.press('Enter');
+    const ww = x1 - x0, k = Math.min(Math.min(0.75 * ww, ww - 2 * (5 + 15 * 2.7 + 110)) / iw, (0.85 * (y1 - y0)) / ih, Math.max(iw, ih) >= 400 ? Infinity : 2);
+    const dust = { x: (x0 + x1) / 2 + (iw * k) / 2 + 5 + 15 * 1.4, y: (y0 + y1) / 2 + (ih * k) / 2 - 15 * 1.5 };
+    await page.waitForFunction(({ x, y }) => { const m = document.getElementById('map'); m.dispatchEvent(new PointerEvent('pointermove', { clientX: x, clientY: y, isPrimary: true, bubbles: true })); return m.style.cursor === 'pointer'; }, dust, { timeout: 10000, polling: 100 });
+    await page.mouse.click(dust.x, dust.y);
     await page.waitForFunction(() => document.querySelectorAll('#pictureKeys li').length === 1, null, { timeout: 10000 });
-    assert.match(await hash(), /pictures=0(&|$)/);
+    assert.match(await hash(), /pictures=1(&|$)/);
+    assert.equal(await page.$('#pictureKeys [data-away]'), null, 'a Put away button is left');
     await page.click('#people');
     await page.click('#peopleList [data-person="christopher-columbus"]');
     await page.waitForFunction(() => document.querySelector('#pictureKeys [data-pic="0"]') && document.querySelector('#pictureKeys [data-pic="1"]'), null, { timeout: 60000 });
@@ -842,7 +869,7 @@ test('people: a dealt card carries no controls; its frame grabs it, its body loo
   }
 });
 
-test('phone: a tap looks, a pinch on the card leaves the map; a finger drags a card by its frame; two fingers twisted turn the world; the compass tapped sets north up', { skip, timeout: 240000 }, async () => {
+test('phone: a tap looks, a pinch on the card zooms the map with it; a finger drags a card by its frame; two fingers twisted turn the world; the compass tapped sets north up and dragged turns it; the lip shuts a drawer', { skip, timeout: 240000 }, async () => {
   const server = serve();
   const browser = await chromium.launch();
   try {
@@ -871,7 +898,7 @@ test('phone: a tap looks, a pinch on the card leaves the map; a finger drags a c
     assert.equal(await looked(), 'false', 'a drag from the frame looked at the card');
     assert.equal(mapOf(await hash()), mapOf(before), 'a drag from the frame moved the map');
 
-    // a tap on the body looks; a pinch on the card looked at leaves the map where it is
+    // a tap on the body looks; a pinch on the card looked at zooms the map with it about the same point (design.md, "on a phone, a pinch zooms the card and the map together")
     await page.touchscreen.tap(cx - 20, cy - 60);
     await page.waitForFunction(() => document.querySelector('#pictureKeys [data-look="0"]')?.getAttribute('aria-pressed') === 'true', null, { timeout: 5000 });
     const still = await hash();
@@ -879,13 +906,15 @@ test('phone: a tap looks, a pinch on the card leaves the map; a finger drags a c
     for (let i = 1; i <= 8; i++) await touch('touchMove', [[cx - 30 - i * 8, cy + i * 3], [cx + 30 + i * 8, cy - i * 3]]);
     await touch('touchEnd', []);
     await page.waitForTimeout(600);
-    assert.equal(mapOf(await hash()), mapOf(still), 'a pinch on the card looked at moved the map');
+    const [z0] = mapOf(still).split('/').map(Number), [z1] = mapOf(await hash()).split('/').map(Number);
+    assert.ok(z1 > z0, `a pinch out on the card looked at left the map at zoom ${z1} (was ${z0})`);
     assert.doesNotMatch(await hash(), /bearing=/, 'a twist on the card turned the map');
-    await page.evaluate(() => document.querySelector('#pictureKeys [data-away="0"]').click());
+    await page.keyboard.press('Escape');
     assert.equal(await looked(), 'false');
+    await page.waitForTimeout(600); // flown home, off the open map the twist is on
 
     // two fingers twisted a quarter clockwise on open map turn the world a quarter clockwise, bearing 270
-    const h0 = await hash(), [mx, my] = [195, 160];
+    const h0 = await hash(), [mx, my] = [195, 560]; // below the card, which the pinch left lying larger
     await touch('touchStart', [[mx - 50, my], [mx + 50, my]]);
     for (let i = 1; i <= 15; i++) { const a = (i / 15) * (Math.PI / 2); await touch('touchMove', [[mx - 50 * Math.cos(a), my - 50 * Math.sin(a)], [mx + 50 * Math.cos(a), my + 50 * Math.sin(a)]]); }
     await touch('touchEnd', []);
@@ -895,6 +924,18 @@ test('phone: a tap looks, a pinch on the card leaves the map; a finger drags a c
     assert.equal(await page.$eval('#walkLeft', (b) => getComputedStyle(b).display), 'none', 'a phone shows the walk-around buttons');
     await page.tap('#compass');
     await page.waitForFunction(() => !/bearing=/.test(location.hash), null, { timeout: 10000 });
+    // a finger dragged round the compass turns the world, as a mouse does on a wide screen (design.md, the compass)
+    const c = await page.$eval('#compass', (b) => { const r = b.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; });
+    await touch('touchStart', [[c[0], c[1] - 18]]);
+    for (let i = 1; i <= 8; i++) { const a = -Math.PI / 2 + (i / 8) * (Math.PI / 2); await touch('touchMove', [[c[0] + 18 * Math.cos(a), c[1] + 18 * Math.sin(a)]]); }
+    await touch('touchEnd', []);
+    await page.waitForFunction(() => /bearing=/.test(location.hash), null, { timeout: 10000 });
+    // the lip on a drawer's edge shuts it (design.md, "a lip on every drawer shuts it")
+    await page.tap('#sights');
+    await page.waitForFunction(() => document.getElementById('sightsPanel').classList.contains('open'));
+    await page.waitForTimeout(400);
+    await page.tap('#sightsPanel .lip button');
+    await page.waitForFunction(() => !document.getElementById('sightsPanel').classList.contains('open'), null, { timeout: 5000 });
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();

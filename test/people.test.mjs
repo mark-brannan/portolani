@@ -78,8 +78,8 @@ test('a family\'s records tie-break in the family\'s order, and checkPerson acce
   assert.deepEqual(['lapita-people', 'marianas-micronesia-settlers', 'austronesian-voyagers'].map(rec).sort(familyOrder).map((p) => p.id),
     ['austronesian-voyagers', 'marianas-micronesia-settlers', 'lapita-people'], 'the user\'s order on #399');
   assert.equal(familyOrder({ id: 'lapita-people', family: 'austronesian' }, { id: 'james-cook' }), 0, 'no family, no tie-break');
-  assert.deepEqual(checkPerson('lapita-people', { group: true, family: 'austronesian' }), []);
-  assert.equal(checkPerson('x', { family: 'atlantean' }).length, 1);
+  assert.deepEqual(checkPerson('lapita-people', { group: true, family: 'austronesian', view: { lat: -11.46, lon: 168.79, zoom: 4.66 } }), []);
+  assert.equal(checkPerson('x', { family: 'atlantean', view: { lat: 0, lon: 0, zoom: 4 } }).length, 1);
 });
 
 test('a frame across the date line is the short way round, not the whole world (the Lapita, #399)', () => {

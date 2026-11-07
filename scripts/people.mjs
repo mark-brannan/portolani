@@ -203,9 +203,10 @@ export function personMarks(person, sources = {}) {
 
 // The voyages to draw with a person chosen: theirs first, lit in the person's red, but for any of theirs the list
 // carries hidden (its eye put it off), then every other voyage chosen, dimmed. `list` is the scene's voyages option
-// ([{ id, colour, width, hidden }]); a voyage flagged hidden is left out of what is drawn.
-export function withPerson(list, person, width) {
-  if (!person) return list.filter((v) => !v.hidden);
+// ([{ id, colour, width, hidden }]); a voyage flagged hidden is left out of what is drawn. With `lit` false (the page's
+// way, docs/spec/design.md, "a chosen person's travels pulse, then fade") the person changes nothing: the list as given.
+export function withPerson(list, person, width, lit = true) {
+  if (!person || !lit) return list.filter((v) => !v.hidden);
   const hidden = new Set(list.filter((v) => v.hidden).map((v) => v.id)), own = new Set((person.voyages ?? []).filter((id) => !hidden.has(id)));
   return [...[...own].map((id) => ({ id, colour: PERSON_RED, width })), ...list.filter((v) => !own.has(v.id) && !v.hidden).map((v) => ({ ...v, alpha: DIMMED }))];
 }
@@ -297,16 +298,27 @@ export function sightFrame(at, pad = SIGHT_PAD) {
 // as tall as `fill` of the window's height or less so the row fits its width, each laid `overlap` of its width over the
 // one before, centred under the place (`at` [x, y]) and slid inside the window. `clear` says whether the place stands
 // clear above the row (`gap` of the window's height or more); where it does not, the page moves the map to the place.
+// Up to `rows` rows (a phone's narrow window), whichever count lays the pictures largest, each row a little over the one
+// above it (`stack` of a row's height), the block's foot where the one row's would be and `fill` its height at most.
 // Returns { clear, row: [{ x, y, h }] }, each picture's centre and height in canvas px, for `sizes` [width, height] px.
-export const SIGHT_DEAL = { fill: 0.27, overlap: 0.35, foot: 0.05, side: 0.02, gap: 0.06 };
-export function sightDeal(sizes, win, at, { fill, overlap, foot, side, gap } = SIGHT_DEAL) {
+export const SIGHT_DEAL = { fill: 0.27, overlap: 0.35, foot: 0.05, side: 0.02, gap: 0.06, rows: 1, stack: 0.12 };
+export function sightDeal(sizes, win, at, { fill, overlap, foot, side, gap, rows = 1, stack = 0.12 } = SIGHT_DEAL) {
   const ww = win.x1 - win.x0, wh = win.y1 - win.y0;
   if (!sizes.length) return { clear: true, row: [] };
-  const ratios = sizes.map(([w, h]) => w / h), span = ratios.reduce((a, r, k) => a + (k < ratios.length - 1 ? r * (1 - overlap) : r), 0);
-  const h = Math.min(wh * fill, (ww * (1 - 2 * side)) / span), width = span * h, y = win.y1 - wh * foot - h / 2;
-  let x = Math.max(win.x0 + ww * side, Math.min(win.x1 - ww * side - width, at[0] - width / 2));
-  const row = ratios.map((r) => { const c = { x: x + (r * h) / 2, y, h }; x += r * h * (1 - overlap); return c; });
-  return { clear: at[1] <= y - h / 2 - wh * gap, row };
+  const ratios = sizes.map(([w, h]) => w / h), spanOf = (rs) => rs.reduce((a, r, k) => a + (k < rs.length - 1 ? r * (1 - overlap) : r), 0);
+  let best = null;
+  for (let n = 1; n <= Math.max(1, Math.min(rows, ratios.length)); n++) {
+    const per = Math.ceil(ratios.length / n), lines = Array.from({ length: Math.ceil(ratios.length / per) }, (_, k) => ratios.slice(k * per, (k + 1) * per));
+    const tall = lines.length - (lines.length - 1) * stack, h = Math.min((wh * fill) / tall, (ww * (1 - 2 * side)) / Math.max(...lines.map(spanOf)));
+    if (!best || h > best.h * 1.001) best = { h, lines, tall };
+  }
+  const { h, lines, tall } = best, top = win.y1 - wh * foot - h * tall, row = [];
+  lines.forEach((rs, k) => {
+    const width = spanOf(rs) * h, y = top + h / 2 + k * h * (1 - stack);
+    let x = Math.max(win.x0 + ww * side, Math.min(win.x1 - ww * side - width, at[0] - width / 2));
+    for (const r of rs) { row.push({ x: x + (r * h) / 2, y, h }); x += r * h * (1 - overlap); }
+  });
+  return { clear: at[1] <= top - wh * gap, top, row };
 }
 
 // The line under the skull that clears the chart table (public/page.js): a memento mori in the hands of the charts'
