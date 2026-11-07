@@ -634,11 +634,20 @@ Feature: A card on the table: a click looks, three buttons, Pulverum
     And on a phone, upright or turned, it is the picture fitted whole in the part of the window clear of the row of instruments, an open drawer, the compass and the skull, on a slight card margin, with room at its right for its buttons; the map round it is neither dimmed nor covered, and the skull stays
     And a dealt card is in the Tab order, and Enter or Space on it looks, as the click does; Escape puts it away as below
   Scenario: a looked-at card zooms and pans, the map stays
-    Given a card looked at
+    Given a card looked at on a wide screen
     When the user scrolls the wheel over it or pinches it, then drags it
     Then the picture zooms about the pointer or the fingers' midpoint, up to its full resolution and never smaller than its look size, and a drag pans it inside its frame
     And the map under it neither pans, zooms nor turns, whatever the gesture; the card's view alone moves
     And a double-click or a double-tap toggles between the look size and full resolution at that point; on a dealt card a double-click is one look, the second click doing nothing more
+  Scenario: on a phone, a pinch zooms the card and the map together
+    Source: the user, 2026-11-06, on #272: "The pinch to zoom on mobile is unexpected. It zooms a card's image inside the boarder which makes it look artificially like a 'window' rather than as a physical card. Instead, just keep the card and the base map together and pinch to zoom, zooms them both. It should be easy to do a close up view of the card on mobile." This overtakes the scenario above on a phone.
+    Given a card looked at on a phone, upright or turned
+    When the user pinches it, then drags it
+    Then the whole card grows or shrinks, frame and all, about the fingers' midpoint, and the map under it zooms by the same amount about the same point, so the two stay together as a card lying on the chart would; a drag moves both
+    And the picture always fills its frame; it is never zoomed or panned inside it
+    And the card grows up to its picture's full resolution and never below its look size; a double-tap toggles between the two, the map with it
+    And its three buttons stay where they stood beside it at its look size, so they are in reach however close the card is
+    And put away, the card flies home from where it stands to its place on the table, which the map has carried with it
   Scenario: three buttons at the lower right, the same on both faces
     Given a card looked at, face up or face down
     When the user looks at its lower right

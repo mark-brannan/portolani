@@ -2748,22 +2748,31 @@ const lookT = (i, now = performance.now()) => {
   const go = (t0) => (stillMotion() ? 1 : ease(Math.min(1, (now - t0) / LOOK_MS)));
   return i === looking ? go(lookFrom) : homing?.i === i ? 1 - go(homing.start) : 0;
 };
+// On a phone the card looked at zooms and pans with the map, as one (lookZoom: its size over its look size, and how far
+// its middle has moved); elsewhere it stands at its look size and its picture zooms inside it
+function lookedBox(pic) {
+  const b = lookBox(pic);
+  const { z, x, y } = !handheld() ? NO_ZOOM : pic.i === looking ? lookZoom : pic.i === homing?.i ? homing.zoom ?? NO_ZOOM : NO_ZOOM; // put away, it flies home from where it stood
+  return { ...b, x: b.x + x, y: b.y + y, w: b.w * z, h: b.h * z };
+}
 function pictureBox(pic, proj) {
   const t = lookT(pic.i), on = tableBox(pic, proj);
   if (t <= 0) return on;
-  const at = lookBox(pic);
+  const at = lookedBox(pic);
   if (t >= 1 || !on) return at;
   const mix = (a, b) => a + (b - a) * t;
   return { x: mix(on.x, at.x), y: mix(on.y, at.y), a: mix(on.a, 0), w: mix(on.w, at.w), h: mix(on.h, at.h) };
 }
 // where the picture is drawn inside its card `b`, in the card's own frame: fitted whole, then zoomed and panned while looked at
 function imageRect(pic, b) {
-  const k = Math.min(b.w / pic.o.width, b.h / pic.o.height), { z, x, y } = pic.i === looking ? lookZoom : NO_ZOOM;
+  const k = Math.min(b.w / pic.o.width, b.h / pic.o.height), { z, x, y } = pic.i === looking && !handheld() ? lookZoom : NO_ZOOM;
   const w = pic.o.width * k * z, h = pic.o.height * k * z;
   return { x: x - w / 2, y: y - h / 2, w, h };
 }
 // The picture looked at zooms about a point up to its full resolution (one of its pixels to a CSS px), never below its
 // look size, and pans only as far as it covers its card; the map under it never moves. The back neither zooms nor pans.
+// On a phone, upright or turned, the card and the map zoom and pan together instead, as a card lying on the chart would:
+// the whole card grows, frame and all, never the picture inside its frame, so a pinch brings both close.
 const lookedPicture = () => (looking == null || flips.get(looking)?.back ? null : shownPictures().find((pic) => pic.i === looking) ?? null);
 const fullZoom = (pic, b) => Math.max(1, cssPx(1) / Math.min(b.w / pic.o.width, b.h / pic.o.height));
 function clampLook(pic, b, { z, x, y }) {
@@ -2774,12 +2783,20 @@ function zoomLook(f, x, y, to = null) {
   const pic = lookedPicture();
   if (!pic) return;
   const b = lookBox(pic), z0 = lookZoom.z, z = to ?? Math.min(fullZoom(pic, b), Math.max(1, z0 * f)), dx = x - b.x, dy = y - b.y;
+  if (handheld()) { // the map by the same factor about the same point, and the card with it as the map allows
+    const next = zoomView(view, z / z0, x, y), k = 2 ** (next.zoom - view.zoom), cx = b.x + lookZoom.x, cy = b.y + lookZoom.y;
+    lookZoom = { z: z0 * k, x: x + (cx - x) * k - b.x, y: y + (cy - y) * k - b.y };
+    moved(next); stopped(300);
+    repaint('a picture zoomed');
+    return;
+  }
   lookZoom = clampLook(pic, b, { z, x: dx - (dx - lookZoom.x) * (z / z0), y: dy - (dy - lookZoom.y) * (z / z0) }); // the point under the pointer stays
   repaint('a picture zoomed');
 }
 function panLook(dx, dy) {
   const pic = lookedPicture();
   if (!pic) return;
+  if (handheld()) { lookZoom = { ...lookZoom, x: lookZoom.x + dx, y: lookZoom.y + dy }; moved(panView(view, dx, dy)); stopped(300); repaint('a picture panned'); return; }
   lookZoom = clampLook(pic, lookBox(pic), { ...lookZoom, x: lookZoom.x + dx, y: lookZoom.y + dy });
   repaint('a picture panned');
 }
@@ -2787,7 +2804,7 @@ function panLook(dx, dy) {
 function toggleLook([x, y]) {
   const pic = lookedPicture();
   if (!pic) return;
-  if (lookZoom.z > 1.001) { lookZoom = NO_ZOOM; repaint('a picture zoomed'); } else zoomLook(1, x, y, fullZoom(pic, lookBox(pic)));
+  if (lookZoom.z > 1.001) { if (handheld()) zoomLook(1 / lookZoom.z, x, y, 1); else { lookZoom = NO_ZOOM; repaint('a picture zoomed'); } } else zoomLook(1, x, y, fullZoom(pic, lookBox(pic)));
 }
 // The pointers on the picture looked at: one pans it, two pinch it, a tap twice in quick succession toggles its zoom.
 // A press on the dimmed map round it puts it away, and only that; a press on one of its buttons acts on the release.
@@ -2839,7 +2856,8 @@ const SYMBOLS = "'IM Fell English', Georgia, 'Segoe UI Symbol', 'Apple Symbols',
 const footX = (b) => (handheld() ? b.w / 2 + MOUNT + cssPx(FOOT_R) * 1.2 : b.w / 2);
 function feetOf(pic, b) {
   if (pic.i !== looking) return [];
-  const r = cssPx(FOOT_R), x = footX(b), y = b.h / 2 - r * 1.5;
+  const at = handheld() ? lookBox(pic) : b; // on a phone they stay put beside the card's look place while it zooms with the map
+  const r = cssPx(FOOT_R), x = at.x - b.x + footX(at), y = at.y - b.y + at.h / 2 - r * 1.5;
   return ['link', 'flip', 'away'].map((kind, n) => ({ kind, at: [x, y - (2 - n) * r * 2.5] }));
 }
 // ⧉ (in no font of the page's stack, so drawn): two joined squares in the link's red, in an em box of `size` at x, y
@@ -3048,7 +3066,7 @@ function lookAt(i) {
 function endLook() {
   if (looking == null) return;
   flips.delete(looking); links.delete(looking);
-  homing = { i: looking, start: performance.now() };
+  homing = { i: looking, start: performance.now(), zoom: lookZoom };
   looking = null; lookZoom = NO_ZOOM; cardPointers.clear(); cardTap = null;
   repaint('a picture put away');
 }
