@@ -645,3 +645,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261107t201605z
 - Random person opens People at once with the flight, not on landing; Go also chooses a person typed by name or aka Undo: move setDrawer into dealNow; drop the Go name lookup ([#404](https://github.com/mark-brannan/portolani/pull/404))
+
+### 20261107t201728z
+- Person presets: frame of born, death and voyage legs (narrower longitude wrapping), zoom between 1.5 and 6; a world-wide frame centred on the home where recorded Undo: edit view in data/voyages/people.json ([#404](https://github.com/mark-brannan/portolani/pull/404))
