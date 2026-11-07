@@ -2383,10 +2383,10 @@ new ResizeObserver(() => document.documentElement.style.setProperty('--memento-h
 // The clear's timing, chosen on #367: what goes (the lines and the charts' sheets) fades over 4 s; the skull is 0.4 s at
 // 8% ink and grows to ×2.5; the phrase is 6 s, in at once and straight into a slow fade, and its size changes from
 // 5% to 100% of that time, to ×1.05
-const CLEAR_TUNE = { goneMs: 4000, skullMs: 400, wordsMs: 6000, ink: 8, skullGrow: 250, wordsGrow: 105, growFrom: 5, growTo: 100 };
+const CLEAR_TUNE = { goneMs: 4000, skullMs: 800, wordsMs: 6000, ink: 10, skullGrow: 250, wordsGrow: 115, growFrom: 5, growTo: 100 };
 // Temporary, for tuning on this PR (#272): the panel at the top left (#clearTune) changes these, kept per browser
 {
-  const merged = { ...CLEAR_TUNE }, TUNE_KEY = 'portolani.clearTune.7';
+  const merged = { ...CLEAR_TUNE }, TUNE_KEY = 'portolani.clearTune.8';
   try { Object.assign(CLEAR_TUNE, JSON.parse(localStorage.getItem(TUNE_KEY) ?? '{}')); } catch { /* none kept */ }
   if (navigator.webdriver) $('clearTune').hidden = true; // not part of the page; it would sit over the browser tests
   const keep = () => { try { localStorage.setItem(TUNE_KEY, JSON.stringify(CLEAR_TUNE)); } catch { /* not kept */ } };
