@@ -113,6 +113,30 @@ export function deepX(year, now = new Date().getFullYear()) {
 export const deepBands = (now = new Date().getFullYear()) =>
   DRAWER_ERAS.map(([name, a], i) => [name, deepX(a, now), deepX(DRAWER_ERAS[i + 1]?.[1] ?? now, now)]);
 
+// The heading bar as a lens on one era (`open`, a name in DRAWER_ERAS): the open era takes LENS_SHARE of the bar and
+// runs on its own straight scale (eraScale), so the people in it spread out, and the other eras are squeezed into the
+// rest in their deepX proportion; [name, x0, x1] per era, end to end. With no era open, the bar is deepBands.
+export const LENS_SHARE = 0.62;
+export function lensBands(open, now = new Date().getFullYear(), share = LENS_SHARE) {
+  const deep = deepBands(now);
+  if (!deep.some(([n]) => n === open)) return deep;
+  const rest = deep.filter(([n]) => n !== open).reduce((sum, [, a, b]) => sum + (b - a), 0);
+  let x = 0;
+  return deep.map(([n, a, b]) => {
+    const w = n === open ? share : ((1 - share) * (b - a)) / rest, band = [n, x, x + w];
+    x += w;
+    return band;
+  });
+}
+// A year's place on the lens bar (lensBands), 0..1
+export function lensX(year, open, now = new Date().getFullYear()) {
+  const era = eraOf(year);
+  if (!era) return NaN;
+  const band = lensBands(open, now).find(([n]) => n === era), [, a, b] = deepBands(now).find(([n]) => n === era);
+  const t = era === open ? eraScale(era, now).x(year) : b > a ? (deepX(year, now) - a) / (b - a) : 0;
+  return band[1] + (band[2] - band[1]) * Math.min(1, Math.max(0, t));
+}
+
 // A family of peoples: the records whose `family` names it sit, like every row, under the heading of their own era (one
 // level of headings, no heading of the family's own); where two of a family share a year, they go in the family's
 // order here, the user's on #399: the Austronesian-speaking voyagers, the first settlers of the Marianas and

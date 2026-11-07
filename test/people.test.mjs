@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { peopleOf, yearOf, lifeSpan, eraOf, eraYears, firstYear, yearsText, eraScale, barOn, TIMELINE_FROM, TIMELINE_ERAS, DRAWER_ERAS, deepX, deepBands, FAMILY_ORDER, familyOrder, spanScale, voyageYears, parsePictures, picturesText, parsePictureAt, pictureAtText, withPerson, personMarks, picturePlaces, frameOf, pictureName, pictureCredit, DIMMED, PERSON_RED } from '../scripts/people.mjs';
+import { peopleOf, yearOf, lifeSpan, eraOf, eraYears, firstYear, yearsText, eraScale, barOn, TIMELINE_FROM, TIMELINE_ERAS, DRAWER_ERAS, deepX, deepBands, lensBands, lensX, LENS_SHARE, FAMILY_ORDER, familyOrder, spanScale, voyageYears, parsePictures, picturesText, parsePictureAt, pictureAtText, withPerson, personMarks, picturePlaces, frameOf, pictureName, pictureCredit, DIMMED, PERSON_RED } from '../scripts/people.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => JSON.parse(readFileSync(join(ROOT, p), 'utf8'));
@@ -179,4 +179,29 @@ test('the pictures lie in a row under the person, each the same height', () => {
 test('a Commons title with no ascii letter or digit takes a stable hashed name', () => {
   assert.equal(pictureName('File:Туд.png'), 'commons-bb4577d2.jpg');
   assert.equal(pictureName('Туд.png'), 'commons-bb4577d2.jpg');
+});
+
+test('the lens bar gives the open era LENS_SHARE on a straight scale and squeezes the rest in deepX proportion', () => {
+  const medieval = 'The medieval Indian Ocean and Asia', bands = lensBands(medieval, 2026);
+  assert.deepEqual(bands.map(([n]) => n), DRAWER_ERAS.map(([n]) => n));
+  assert.equal(bands[0][1], 0);
+  assert.ok(Math.abs(bands.at(-1)[2] - 1) < 1e-9);
+  for (let i = 1; i < bands.length; i++) assert.ok(Math.abs(bands[i][1] - bands[i - 1][2]) < 1e-9, 'end to end');
+  const own = bands.find(([n]) => n === medieval);
+  assert.ok(Math.abs(own[2] - own[1] - LENS_SHARE) < 1e-9);
+  const deep = Object.fromEntries(deepBands(2026).map(([n, a, b]) => [n, b - a])), lens = Object.fromEntries(bands.map(([n, a, b]) => [n, b - a]));
+  const ratio = (m) => lens[m] / deep[m];
+  assert.ok(Math.abs(ratio('Prehistory') - ratio('The modern world')) < 1e-9, 'the closed eras keep their proportions');
+  // straight inside the open era: equal years, equal widths
+  assert.ok(Math.abs((lensX(1000, medieval, 2026) - lensX(700, medieval, 2026)) - (lensX(1300, medieval, 2026) - lensX(1000, medieval, 2026))) < 1e-9);
+  assert.ok(Math.abs(lensX(500, medieval, 2026) - own[1]) < 1e-9);
+  // rising across the whole bar
+  const ys = [-500000, -40000, -1500, 0, 500, 1000, 1449, 1450, 1800, 2000];
+  for (let i = 1; i < ys.length; i++) assert.ok(lensX(ys[i], medieval, 2026) > lensX(ys[i - 1], medieval, 2026), `${ys[i]} after ${ys[i - 1]}`);
+});
+
+test('with no era open the lens bar is the heading bar', () => {
+  assert.deepEqual(lensBands(null, 2026), deepBands(2026));
+  for (const y of [-40000, 0, 1300, 1900]) assert.ok(Math.abs(lensX(y, null, 2026) - deepX(y, 2026)) < 1e-9);
+  assert.ok(Number.isNaN(lensX(NaN, null, 2026)));
 });

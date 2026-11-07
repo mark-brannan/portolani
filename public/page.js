@@ -19,7 +19,7 @@ import { playedOn, playDateText, playPace, isLong } from './scene.mjs'; // the p
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, effectiveOpacity, sheetOpacity, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
-import { PEOPLE_FILE, PICTURES_FILE, SIGHT_PICTURES_FILE, SIGHT_MANIFEST_FILE, sightDeal, eraOf, eraYears, eraScale, DRAWER_ERAS, deepX, deepBands, familyOrder, barOn, lifeSpan, firstYear, yearsText, PERSON_RED, pictureCredit, pictureNote, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, sightFrame, viewContaining, withPictures, peopleOf, whoOf, deathOf, sightPicturesOf, MEMENTO, MEMENTO_EN, mementoNext, mementoLines } from './people.mjs';
+import { PEOPLE_FILE, PICTURES_FILE, SIGHT_PICTURES_FILE, SIGHT_MANIFEST_FILE, sightDeal, eraOf, eraYears, eraScale, DRAWER_ERAS, lensBands, lensX, familyOrder, barOn, lifeSpan, firstYear, yearsText, PERSON_RED, pictureCredit, pictureNote, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, sightFrame, viewContaining, withPictures, peopleOf, whoOf, deathOf, sightPicturesOf, MEMENTO, MEMENTO_EN, mementoNext, mementoLines } from './people.mjs';
 import { fold, bestPlace, withoutPartsOfFrames } from './placename.mjs';
 import { nextInCycle } from './cycle.mjs';
 import { planFlight, ease as flyEase, FLY_KNOBS, flyDefaults } from './flight.mjs';
@@ -2266,7 +2266,7 @@ function fillPeople() {
 }
 // The People drawer: earliest first by birth (else by first voyage), under era headings that start shut and open on a
 // click, one level only: each row under the heading of its own era, and a family's records (familyOrder) in the
-// family's order where their years tie. Each heading carries the heading bar (deepX), its rows as ticks on it while
+// family's order where their years tie. Each heading carries the heading bar (lensBar), a lens on the one era open, its rows as ticks on it while
 // open; each row the name, the years, a chip for a people rather than a person, and its life bar on its era's scale.
 // `openHeads` holds the open headings, by era name.
 const openHeads = new Set();
@@ -2292,23 +2292,27 @@ function drawPeople() {
   $('peopleList').innerHTML = html + loose.map(([p, y]) => row(p, y, '')).join('');
   showHeads();
 }
-// an era's stretch on the heading bar, [x0, x1]
-const deepSpan = (era) => deepBands().find(([n]) => n === era)?.slice(1) ?? [0, 0];
 // A People heading: a button that opens and shuts its era, its name and years; under it the heading bar, every era a
 // pale band and this era's own stretch darker, the years of the rows under it (`ticks`) as ticks; and the ruler of the
 // era's scale, which its rows' life bars are drawn on.
-const headItem = ({ name, ticks }) => {
-  const own = deepSpan(name), ruler = eraScale(name);
-  return `<li class="era" data-era="${escapeHTML(name)}">` +
-    `<button type="button" class="head" data-head="${escapeHTML(name)}" aria-expanded="false">${escapeHTML(name)}<small>${escapeHTML(eraYears(name))}</small></button>` +
-    `<span class="deep" aria-hidden="true">${deepBands().map(([n, a, b]) => `<span class="band" data-band="${escapeHTML(n)}" style="left:${pc(a)};width:${pc(b - a)}"></span>`).join('')}` +
-    `<span class="band own" style="left:${pc(own[0])};width:${pc(Math.max(0.004, own[1] - own[0]))}"></span>` +
-    `${ticks.filter(Number.isFinite).map((y) => `<span class="tick" style="left:${pc(deepX(y))}"></span>`).join('')}</span>` +
-    (ruler ? `<span class="ruler" aria-hidden="true">${ruler.ticks.map(([y, label]) => `<span style="left:${pc(ruler.x(y))}">${label}</span>`).join('')}</span>` : '') + '</li>';
-};
+const headItem = ({ name, ticks }) => `<li class="era" data-era="${escapeHTML(name)}" data-ticks="${ticks.filter(Number.isFinite).join(' ')}">` +
+  `<button type="button" class="head" data-head="${escapeHTML(name)}" aria-expanded="false">${escapeHTML(name)}<small>${escapeHTML(eraYears(name))}</small></button>` +
+  `<span class="deep" aria-hidden="true">${lensBar(null, name, ticks)}</span>${rulerOf(name)}</li>`;
+// The heading bar's insides as a lens on the era open (`open`, lensBands): every era a pale band, `own` darker, the
+// years `ticks` as ticks and `red`, the chosen person's year, as a red one
+const lensBar = (open, own, ticks, red = null) => lensBands(open).map(([n, a, b]) => `<span class="band${n === own ? ' own' : ''}" style="left:${pc(a)};width:${pc(Math.max(0.004, b - a))}"></span>`).join('') +
+  ticks.filter(Number.isFinite).map((y) => `<span class="tick" style="left:${pc(lensX(y, open))}"></span>`).join('') +
+  (Number.isFinite(red) ? `<span class="tick red" style="left:${pc(lensX(red, open))}"></span>` : '');
+// the ruler of an era's own scale, which its rows' life bars are drawn on
+const rulerOf = (era) => { const r = eraScale(era); return r ? `<span class="ruler" aria-hidden="true">${r.ticks.map(([y, label]) => `<span style="left:${pc(r.x(y))}">${label}</span>`).join('')}</span>` : ''; };
+// The open era's stretch of the lens bar, as the CSS the ruler and the life bars under it sit in (--lens-l, --lens-w)
+const lensVars = (el, era) => { const [, a, b] = lensBands(era).find(([n]) => n === era) ?? [null, 0, 1]; el.style.setProperty('--lens-l', a); el.style.setProperty('--lens-w', b - a); };
 // Shows the rows of the open headings and hides the rest
 function showHeads() {
+  const open = [...openHeads][0] ?? null; // one at a time
+  lensVars($('peopleList'), open);
   for (const li of $('peopleList').children) {
+    if (li.dataset.ticks != null) li.querySelector(':scope > .deep').innerHTML = lensBar(open, li.dataset.era, li.dataset.ticks.split(' ').map(Number));
     const key = li.dataset.under;
     li.hidden = Boolean(key) && !openHeads.has(key);
     const head = li.querySelector(':scope > .head');
@@ -2321,7 +2325,7 @@ function revealPerson(id) {
   const li = $('peopleList').querySelector(`li[data-row="${CSS.escape(id)}"]`);
   if (!li) return; // not drawn yet: opened when it is
   revealed = id;
-  if (li.dataset.under) openHeads.add(li.dataset.under);
+  if (li.dataset.under) { openHeads.clear(); openHeads.add(li.dataset.under); }
   showHeads();
 }
 // a Voyages heading between the rows: its name and its years
@@ -2351,15 +2355,30 @@ function showPeople() {
     b.parentElement.querySelector(':scope > .rows > div').inert = !(on && p);
   }
   card.hidden = !p;
-  if (!p) { card.replaceChildren(); $('peoplePanel').append(card); return; }
-  const row = $('peopleList').querySelector(`li[data-row="${CSS.escape(p.id)}"] > .rows > div`);
-  (row ?? $('peoplePanel')).append(card);
+  const li = p && $('peopleList').querySelector(`li[data-row="${CSS.escape(p.id)}"]`), pin = $('personPin');
+  $('peoplePanel').classList.toggle('chosen', Boolean(li)); // the list folded to the pin; wider on a wide screen
+  pin.hidden = !li;
+  if (!p) { card.replaceChildren(); pin.replaceChildren(); $('peoplePanel').append(card); return; }
+  if (li) { pin.innerHTML = pinHTML(p, li.dataset.under); lensVars(pin, li.dataset.under); }
+  pin.after(card);
   const voyages = p.voyages.map((id) => [id, peopleData.voyages[id]]).filter(([, v]) => v).map(([id, v]) => voyageItem(id, v, peopleData.sources, { name: false })).join('');
   const pics = picsHTML({ images: p.images, manifest: peopleData.pictures }, picturesOf(p));
   card.innerHTML = (p.bio ? `<p class="bio">${escapeHTML(p.bio)}</p>` : '') +
     (pics ? `<div class="pics" role="group" aria-label="Pictures, on the table or off it">${pics}</div>` : '') +
     (voyages ? `<ul class="pvoyages" role="group" aria-label="${escapeHTML(p.name)}'s voyages">${voyages}</ul>` : '');
   showVoyage(); // the tile's eyes and play buttons as the voyages stand
+}
+// The chosen person's pin, which the People list folds to: their era's heading and a ✕ that lets them go, the heading bar
+// as a lens on that era with its people's years as ticks and theirs red, their life as a red bar on the era's ruler, and
+// the people either side of them in the era, a tap away
+function pinHTML(p, era) {
+  const ids = [...$('peopleList').querySelectorAll(`li[data-under="${CSS.escape(era)}"]`)].map((r) => r.dataset.row), i = ids.indexOf(p.id);
+  const ticks = ids.map((id) => personOf(id)).filter(Boolean).map((q) => firstYear(q, yearsOf(q)));
+  const near = (q, text) => (q ? `<button type="button" class="near" data-person="${escapeHTML(q.id)}" title="${escapeHTML(q.name)}">${text(escapeHTML(q.name))}</button>` : '<span></span>');
+  return `<div class="pinhead"><span class="name">${escapeHTML(era)}<small>${escapeHTML(eraYears(era))}</small></span><button type="button" class="unchoose" data-unchoose aria-label="Let ${escapeHTML(p.name)} go" title="Let ${escapeHTML(p.name)} go, as the skull does">✕</button></div>` +
+    `<span class="deep" aria-hidden="true">${lensBar(era, era, ticks, firstYear(p, yearsOf(p)))}</span>` +
+    `${spanBarOn(eraScale(era), lifeSpan(p, yearsOf(p)))}${rulerOf(era)}` +
+    `<div class="nearby">${near(personOf(ids[i - 1]), (n) => `‹ ${n}`)}<span class="me">${escapeHTML(p.name)}<small>${escapeHTML(yearsText(p, voyagesOf(p)))}</small></span>${near(personOf(ids[i + 1]), (n) => `${n} ›`)}</div>`;
 }
 // A subject's pictures as thumbnails, each a button that takes it off the table or puts it back (`shown` those on it)
 const picsHTML = (s, shown, only = null) => s.images.map((im, i) => { const m = s.manifest[im.file];
@@ -2368,7 +2387,8 @@ const picsHTML = (s, shown, only = null) => s.images.map((im, i) => { const m = 
 function peopleClick(e) {
   if (voyageControl(e)) return; // an eye or a play in the chosen person's tile
   const head = e.target.closest('#peopleList .head');
-  if (head) { const k = head.dataset.head; if (!openHeads.delete(k)) openHeads.add(k); showHeads(); return; }
+  if (head) { const k = head.dataset.head; if (!openHeads.delete(k)) { openHeads.clear(); openHeads.add(k); } showHeads(); return; } // one era open at a time
+  if (e.target.closest('[data-unchoose]')) { const hadPerson = clearTable(); if (hadPerson) render(); return; } // the pin's ✕, as the skull
   const pic = e.target.closest('[data-pic]'), chosen = personOf(style.person);
   if (pic && chosen) { setOnTable(Number(pic.dataset.pic), !picturesOf(chosen).includes(Number(pic.dataset.pic))); return; }
   const b = e.target.closest('[data-person]');
@@ -2385,7 +2405,7 @@ function choosePerson(id) {
   showPeople(); showSightCard(); writeHash(); render();
   if (id) flyToSubject();
 }
-$('peopleList').addEventListener('click', peopleClick);
+$('peoplePanel').addEventListener('click', peopleClick); // the list, the pin and the tile under it
 // A picture onto the table (on top of the pile, as the last one touched) or off it, put away face up; choosing the
 // person again deals every picture back
 function setOnTable(i, on) {
