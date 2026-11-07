@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { peopleOf, yearOf, lifeSpan, eraOf, eraYears, firstYear, yearsText, eraScale, barOn, TIMELINE_FROM, TIMELINE_ERAS, voyageYears, parsePictures, picturesText, parsePictureAt, pictureAtText, withPerson, personMarks, picturePlaces, frameOf, pictureName, pictureCredit, DIMMED, PERSON_RED } from '../scripts/people.mjs';
+import { peopleOf, yearOf, lifeSpan, eraOf, eraYears, firstYear, yearsText, eraScale, barOn, TIMELINE_FROM, TIMELINE_ERAS, DRAWER_ERAS, deepX, deepBands, lensBands, lensX, LENS_SHARE, FAMILY_ORDER, familyOrder, spanScale, voyageYears, parsePictures, picturesText, parsePictureAt, pictureAtText, withPerson, personMarks, picturePlaces, frameOf, pictureName, pictureCredit, DIMMED, PERSON_RED } from '../scripts/people.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => JSON.parse(readFileSync(join(ROOT, p), 'utf8'));
@@ -33,9 +33,11 @@ test('every picture is built for the site (npm run people), under its own name, 
 });
 
 test('years read off their texts, before Christ negative', () => {
-  assert.deepEqual(['c. 350 BC', '24 Feb 1304', 'c. 970s', '5th century BC', '1486 or 1487', 'nothing'].map(yearOf), [-350, 1304, 970, -450, 1486, NaN]);
+  assert.deepEqual(['c. 350 BC', '24 Feb 1304', 'c. 970s', '5th century BC', '1486 or 1487', 'c. 1,000,000–700,000 BC', 'nothing'].map(yearOf), [-350, 1304, 970, -450, 1486, -1000000, NaN]);
   assert.deepEqual(voyageYears('c. 330–320 BC'), [-330, -320]);
   assert.deepEqual(voyageYears('1325–1354'), [1325, 1354]);
+  assert.deepEqual(voyageYears('c. 1,000,000–700,000 BC'), [-1000000, -700000]);
+  assert.deepEqual(voyageYears('c. 63,000–48,000 BC'), [-63000, -48000]);
 });
 
 test('a life open at an end runs from the voyages and fades there', () => {
@@ -47,10 +49,48 @@ test('a life open at an end runs from the voyages and fades there', () => {
 test('a row\'s era is the one its year falls in, and the headings carry the eras\' years, BC and AD alike', () => {
   assert.deepEqual([-1500, -600, 499, 500, 1325, 1449, 1450, 1799, 1800, 2026].map(eraOf),
     ['The ancient world', 'The ancient world', 'The ancient world', 'The medieval Indian Ocean and Asia', 'The medieval Indian Ocean and Asia', 'The medieval Indian Ocean and Asia', 'The age of discovery', 'The age of discovery', 'The modern world', 'The modern world']);
-  assert.equal(eraOf(-50000), 'The ancient world', 'anything before Lapita is the first era');
+  assert.deepEqual([-1000000, -50000, -3000, -1501].map(eraOf), ['Prehistory', 'Prehistory', 'Prehistory', 'Prehistory'], 'anything before Lapita is Prehistory');
+  assert.equal(eraOf(-2000000), 'Prehistory');
   assert.equal(eraOf(NaN), null);
-  assert.deepEqual(TIMELINE_ERAS.map(([n]) => eraYears(n)), ['1500 BC – AD 500', '500 – 1450', '1450 – 1800', 'from 1800']);
+  assert.deepEqual(DRAWER_ERAS.map(([n]) => eraYears(n)), ['1,000,000 – 1500 BC', '1500 BC – AD 500', '500 – 1450', '1450 – 1800', 'from 1800']);
+  assert.deepEqual(DRAWER_ERAS.slice(1), TIMELINE_ERAS, 'the drawers\' eras are Prehistory and then the Sights eras');
   assert.equal(TIMELINE_ERAS[0][1], TIMELINE_FROM);
+});
+
+test('the heading bar runs from 1,000,000 BC to today on log10(years ago + 500): prehistory about 73% of it, the modern world about 5%', () => {
+  assert.equal(deepX(-1000000, 2026), 0);
+  assert.equal(deepX(2026, 2026), 1);
+  const years = [-1000000, -700000, -50000, -20000, -3000, -1500, 1, 500, 1450, 1800, 1950, 2026];
+  years.forEach((y, i) => { if (i) assert.ok(deepX(y, 2026) > deepX(years[i - 1], 2026), `not monotonic at ${y}`); });
+  const share = Object.fromEntries(deepBands(2026).map(([n, a, b]) => [n, b - a]));
+  assert.ok(Math.abs(share.Prehistory - 0.73) < 0.02, `prehistory takes ${share.Prehistory}`);
+  assert.ok(Math.abs(share['The modern world'] - 0.05) < 0.01, `the modern world takes ${share['The modern world']}`);
+  const bands = deepBands(2026);
+  assert.equal(bands[0][1], 0);
+  assert.equal(bands.at(-1)[2], 1);
+  bands.forEach(([, a], i) => { if (i) assert.equal(a, bands[i - 1][2], 'a gap or an overlap between eras'); });
+});
+
+test('a family\'s records tie-break in the family\'s order, and checkPerson accepts exactly the families ordered', async () => {
+  const { FAMILIES, checkPerson } = await import('../scripts/voyages.mjs');
+  assert.deepEqual(Object.keys(FAMILY_ORDER), FAMILIES);
+  const people = read('data/voyages/people.json');
+  for (const [f, ids] of Object.entries(FAMILY_ORDER)) for (const id of ids) assert.equal(people[id]?.family, f, `${id} is not of ${f}`);
+  const rec = (id) => ({ id, family: 'austronesian' });
+  assert.deepEqual(['lapita-people', 'marianas-micronesia-settlers', 'austronesian-voyagers'].map(rec).sort(familyOrder).map((p) => p.id),
+    ['austronesian-voyagers', 'marianas-micronesia-settlers', 'lapita-people'], 'the user\'s order on #399');
+  assert.equal(familyOrder({ id: 'lapita-people', family: 'austronesian' }, { id: 'james-cook' }), 0, 'no family, no tie-break');
+  assert.deepEqual(checkPerson('lapita-people', { group: true, family: 'austronesian' }), []);
+  assert.equal(checkPerson('x', { family: 'atlantean' }).length, 1);
+});
+
+test('a frame across the date line is the short way round, not the whole world (the Lapita, #399)', () => {
+  const lapita = frameOf([[147.5, -3], [166.5, -15.5], [178, -18], [-175.2, -21.1], [-171.8, -13.8]]);
+  assert.equal(lapita.lonMin, 147.5);
+  assert.ok(Math.abs(lapita.lonMax - 188.2) < 1e-9, `lonMax ${lapita.lonMax}`);
+  assert.deepEqual([lapita.latMin, lapita.latMax], [-21.1, -3]);
+  assert.deepEqual(frameOf([[-10, 30], [120, 40]]), { lonMin: -10, lonMax: 120, latMin: 30, latMax: 40 }, 'one side of the date line: as before');
+  assert.deepEqual([frameOf([[-120, 0], [0, 0], [120, 0]]).lonMin, frameOf([[-120, 0], [0, 0], [120, 0]]).lonMax], [-180, 180], 'wider than 200 degrees: the world');
 });
 
 test('each era has its own scale for the life bars, with round ticks between its ends', () => {
@@ -60,6 +100,8 @@ test('each era has its own scale for the life bars, with round ticks between its
   assert.deepEqual(discovery.ticks.map(([y]) => y), [1500, 1600, 1700]);
   assert.deepEqual([modern.from, modern.to], [1800, 2026]);
   assert.equal(eraScale('no such era'), null);
+  assert.deepEqual(eraScale('Prehistory').ticks.map(([y]) => y), [-750000, -500000, -250000]);
+  assert.deepEqual(spanScale(-3000, 1300).ticks.map(([, l]) => l), ['2000 BC', '1000 BC', 'AD 1', '1000']);
   // Magellan, c. 1480 to 1521, on the age of discovery's scale: a twelfth of the way in, about an eighth wide
   const [x0, x1, open0, open1] = barOn(discovery, [1480, 1521, true, true]);
   assert.ok(Math.abs(x0 - 30 / 350) < 1e-9 && Math.abs(x1 - 71 / 350) < 1e-9 && !open0 && !open1);
@@ -137,4 +179,29 @@ test('the pictures lie in a row under the person, each the same height', () => {
 test('a Commons title with no ascii letter or digit takes a stable hashed name', () => {
   assert.equal(pictureName('File:Туд.png'), 'commons-bb4577d2.jpg');
   assert.equal(pictureName('Туд.png'), 'commons-bb4577d2.jpg');
+});
+
+test('the lens bar gives the open era LENS_SHARE on a straight scale and squeezes the rest in deepX proportion', () => {
+  const medieval = 'The medieval Indian Ocean and Asia', bands = lensBands(medieval, 2026);
+  assert.deepEqual(bands.map(([n]) => n), DRAWER_ERAS.map(([n]) => n));
+  assert.equal(bands[0][1], 0);
+  assert.ok(Math.abs(bands.at(-1)[2] - 1) < 1e-9);
+  for (let i = 1; i < bands.length; i++) assert.ok(Math.abs(bands[i][1] - bands[i - 1][2]) < 1e-9, 'end to end');
+  const own = bands.find(([n]) => n === medieval);
+  assert.ok(Math.abs(own[2] - own[1] - LENS_SHARE) < 1e-9);
+  const deep = Object.fromEntries(deepBands(2026).map(([n, a, b]) => [n, b - a])), lens = Object.fromEntries(bands.map(([n, a, b]) => [n, b - a]));
+  const ratio = (m) => lens[m] / deep[m];
+  assert.ok(Math.abs(ratio('Prehistory') - ratio('The modern world')) < 1e-9, 'the closed eras keep their proportions');
+  // straight inside the open era: equal years, equal widths
+  assert.ok(Math.abs((lensX(1000, medieval, 2026) - lensX(700, medieval, 2026)) - (lensX(1300, medieval, 2026) - lensX(1000, medieval, 2026))) < 1e-9);
+  assert.ok(Math.abs(lensX(500, medieval, 2026) - own[1]) < 1e-9);
+  // rising across the whole bar
+  const ys = [-500000, -40000, -1500, 0, 500, 1000, 1449, 1450, 1800, 2000];
+  for (let i = 1; i < ys.length; i++) assert.ok(lensX(ys[i], medieval, 2026) > lensX(ys[i - 1], medieval, 2026), `${ys[i]} after ${ys[i - 1]}`);
+});
+
+test('with no era open the lens bar is the heading bar', () => {
+  assert.deepEqual(lensBands(null, 2026), deepBands(2026));
+  for (const y of [-40000, 0, 1300, 1900]) assert.ok(Math.abs(lensX(y, null, 2026) - deepX(y, 2026)) < 1e-9);
+  assert.ok(Number.isNaN(lensX(NaN, null, 2026)));
 });

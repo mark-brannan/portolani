@@ -405,7 +405,7 @@ test('Heavy is the default weight; a voyage with a dashed or dotted leg is broke
 // dates, and the family sits where its first voyage starts.
 test('the index is in chronological order of start year, sub-voyages together', () => {
   const year = (id) => {
-    const when = JSON.parse(readFileSync(join(DIR, `${id}.json`), 'utf8')).when;
+    const when = JSON.parse(readFileSync(join(DIR, `${id}.json`), 'utf8')).when.replace(/(\d),(?=\d{3})/g, '$1');
     const n = Number(/\d+/.exec(when)[0]);
     return /\bBC\b/.test(when) ? -n : n;
   };

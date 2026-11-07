@@ -1,0 +1,25 @@
+{
+  "id": "sahul-peopling",
+  "kind": "migration",
+  "title": "The first peopling of Sahul, c. 65,000–50,000 years ago",
+  "short": "Sahul",
+  "who": ["sahul-first-peoples"],
+  "when": "c. 63,000–48,000 BC",
+  "summary": "With the sea more than 100 metres lower than today, Australia and New Guinea were one continent, Sahul, but the islands of Wallacea still lay between it and Asia. People crossed between 50,000 and 65,000 years ago. Two routes are proposed: an island chain between Sulawesi and New Guinea, and a way to north-western Australia by Timor. Both are drawn; neither is recorded.",
+  "sources": ["prehistory-of-australia", "madjedbebe"],
+  "legs": [
+    { "from": "Sulawesi", "to": "New Guinea, by the Moluccas", "dates": "c. 65,000–50,000 years ago", "mode": "sea", "line": "spline",
+      "confidence": "conventional", "source": "Prehistory of Australia (Wikipedia): one proposed route, an island chain between Sulawesi and New Guinea",
+      "note": "one of two proposed routes; the islands between are a drawing choice",
+      "reach": [0, 1], "heads": "end",
+      "points": [[120.4,-2.0], [124.0,-1.8], [127.6,-3.2], [131.3,-1.5]] },
+    { "from": "Timor", "to": "north-western Australia and Arnhem Land", "dates": "c. 65,000–50,000 years ago", "mode": "sea", "line": "spline",
+      "confidence": "conventional", "source": "Prehistory of Australia (Wikipedia): the other proposed route, to north-western Australia by Timor",
+      "note": "one of two proposed routes; the landfall on the drowned shelf and the way on to Madjedbebe are a drawing choice",
+      "reach": [0, 1], "heads": "end",
+      "points": [[124.6,-9.4], [127.0,-11.6], [130.0,-12.4], [132.883,-12.5]] }
+  ],
+  "events": [
+    { "kind": "waypoint", "lon": 132.883, "lat": -12.5, "date": "by c. 65,000–50,000 years ago", "label": "Madjedbebe, Arnhem Land", "source": "Madjedbebe (Wikipedia)", "cite": "madjedbebe", "text": "A rock shelter with the oldest dated signs of people in Australia: possibly by 65,000 ± 6,000 years ago, and at least by 50,000. A 2020 study argued termites had moved the dated layers and questioned the older date; Clarkson's team stands by it." }
+  ]
+}

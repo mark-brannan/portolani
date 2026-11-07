@@ -560,7 +560,7 @@ test('voyages: several drawn at once, each in its own ink, carried by the link; 
   }
 });
 
-test('people and voyages: two vertical drawers no wider than the charts, earliest first under era headings; a chosen person\'s tile and their voyages sit directly under their row; a people has a row', { skip, timeout: 240000 }, async () => {
+test('people and voyages: two vertical drawers no wider than the charts, earliest first under era headings, the People headings shut until opened, each with its heading bar, one level of them; a chosen person\'s tile and their voyages sit directly under their row; a people has a row', { skip, timeout: 240000 }, async () => {
   const server = createServer(async (req, res) => {
     let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
     if (p.endsWith('/')) p = path.join(p, 'index.html');
@@ -583,7 +583,7 @@ test('people and voyages: two vertical drawers no wider than the charts, earlies
     const charts = await box('#chartsDrawer');
     // the medallion opens the People drawer alone, no wider than the charts, every person once, earliest first
     await page.click('#people');
-    await page.waitForSelector('#peopleList [data-person]');
+    await page.waitForSelector('#peopleList .head');
     await page.waitForTimeout(400); // the slide
     assert.equal(await opened('peoplePanel'), true, 'the medallion did not open the People drawer');
     assert.equal(await opened('voyagesPanel'), false, 'the Voyages drawer opened with the people');
@@ -595,17 +595,41 @@ test('people and voyages: two vertical drawers no wider than the charts, earlies
     const index = JSON.parse(await readFile(path.join(root, 'data/voyages/index.json'), 'utf8'));
     const records = JSON.parse(await readFile(path.join(root, 'data/voyages/people.json'), 'utf8'));
     const persons = Object.entries(records).filter(([, p]) => p && typeof p === 'object').map(([id]) => id);
-    const shownPeople = await page.$$eval('#peopleList [data-person]', (bs) => bs.map((b) => b.dataset.person));
-    assert.deepEqual([...shownPeople].sort(), [...persons].sort(), 'a person missing or twice');
-    assert.equal(shownPeople[0], 'lapita-people', 'the Lapita people, 1500 BC, are not the first row');
-    assert.ok(shownPeople.indexOf('east-polynesian-voyagers') > shownPeople.indexOf('leif-erikson') && shownPeople.indexOf('east-polynesian-voyagers') < shownPeople.indexOf('marco-polo'), 'the East Polynesian voyagers are out of order');
+    const allPeople = await page.$$eval('#peopleList [data-person]', (bs) => bs.map((b) => b.dataset.person));
+    assert.deepEqual([...allPeople].sort(), [...persons].sort(), 'a person missing or twice');
+    // every heading shut on opening, no row shown; Prehistory the first heading; each heading with its bar, its own stretch darker
+    const visibleRows = () => page.$$eval('#peopleList li[data-row]:not([hidden]) > [data-person]', (bs) => bs.map((b) => b.dataset.person));
+    const head = (key) => `#peopleList .head[data-head="${key}"]`;
+    assert.deepEqual(await visibleRows(), [], 'a row shown before its heading was opened');
+    assert.deepEqual(await page.$$eval('#peopleList > li.era:not([hidden])', (es) => es.map((e) => e.dataset.era)), ['Prehistory', 'The ancient world', 'The medieval Indian Ocean and Asia', 'The age of discovery'], 'the era headings');
+    assert.ok(await page.$$eval('#peopleList .head', (hs) => hs.every((h) => h.getAttribute('aria-expanded') === 'false')), 'a heading open on opening');
+    assert.ok(await page.$$eval('#peopleList > li.era:not([hidden])', (es) => es.every((e) => e.querySelectorAll('.deep .band').length === 6 && e.querySelector('.deep .band.own').getBoundingClientRect().width > 0)), 'a heading without its bar or its own stretch');
+    assert.equal(await page.$$eval('#peopleList .deep .tick', (ts) => ts.filter((t) => t.getBoundingClientRect().width > 0).length), 0, 'ticks on a shut heading\'s bar');
+    // one level of headings: no family heading. Prehistory opened: the Austronesian-speaking voyagers, a tick on its bar;
+    // the ancient world opened: the Marianas and Micronesia, then the Lapita (the user's order on #399)
+    assert.equal(await page.$$eval('#peopleList li.family, #peopleList .head[data-head^="family:"]', (es) => es.length), 0, 'a family heading: one level of headings only');
+    await page.click(head('Prehistory'));
+    assert.equal(await page.getAttribute(head('Prehistory'), 'aria-expanded'), 'true');
+    assert.deepEqual(await visibleRows(), ['austronesian-voyagers'], 'Prehistory\'s rows');
+    assert.equal(await page.$eval('#peopleList li.era[data-era="Prehistory"]', (e) => [...e.querySelectorAll('.deep .tick')].filter((t) => t.getBoundingClientRect().width > 0).length), 1, 'Prehistory\'s row is not a tick on its bar');
+    await page.click(head('The ancient world'));
+    const ancient = (await visibleRows()).slice(1);
+    assert.deepEqual(ancient.slice(0, 2), ['marianas-micronesia-settlers', 'lapita-people'], `the ancient world out of the user's order: ${ancient}`);
+    await page.click(head('The ancient world'));
+    // the rest opened: every person shown, earliest first
+    for (const era of ['The ancient world', 'The medieval Indian Ocean and Asia', 'The age of discovery']) await page.click(head(era));
+    const shownPeople = await visibleRows();
+    assert.deepEqual([...shownPeople].sort(), [...persons].sort(), 'a person not shown with every heading open');
     assert.ok(shownPeople.indexOf('pytheas') < shownPeople.indexOf('ibn-battuta') && shownPeople.indexOf('ibn-battuta') < shownPeople.indexOf('christopher-columbus'), 'not earliest first');
-    assert.deepEqual(await page.$$eval('#peopleList .era', (es) => es.map((e) => e.dataset.era)), ['The ancient world', 'The medieval Indian Ocean and Asia', 'The age of discovery'], 'the era headings');
+    // a shut heading hides its rows again
+    await page.click(head('The age of discovery'));
+    assert.equal(await page.isVisible('#peopleList [data-person="christopher-columbus"]'), false, 'shutting a heading left its rows shown');
+    await page.click(head('The age of discovery'));
     assert.ok(await page.$eval('#peopleList [data-person="lapita-people"]', (b) => b.querySelector('.chip')?.textContent === 'a people' && /1500–800 BC/.test(b.textContent)), 'the Lapita row lacks its chip or its BC years');
     assert.ok(await page.$eval('#peopleList [data-person="ibn-battuta"]', (b) => /1304/.test(b.textContent) && !b.querySelector('.chip')), 'Ibn Battuta\'s row lacks his years or has a chip');
     assert.equal(await page.$eval('#peopleList .era', (e) => getComputedStyle(e).fontStyle), 'italic');
     // the rows read top to bottom, one under the other, each the drawer's width
-    const rows = await page.$$eval('#peopleList [data-person]', (bs) => bs.map((b) => { const r = b.getBoundingClientRect(); return [r.top, r.left, r.width]; }));
+    const rows = await page.$$eval('#peopleList li[data-row]:not([data-in]) > [data-person]', (bs) => bs.map((b) => { const r = b.getBoundingClientRect(); return [r.top, r.left, r.width]; }));
     rows.forEach(([top], i) => { if (i) assert.ok(top > rows[i - 1][0], 'a row not below the one before'); });
     assert.ok(rows.every(([, left, width]) => Math.abs(left - rows[0][1]) < 1 && width > 300), 'the rows are not one column');
     // Ibn Battuta chosen: his row lit, his tile slid open directly under it, his nine voyages inside with eyes and play, all drawn
@@ -643,7 +667,7 @@ test('people and voyages: two vertical drawers no wider than the charts, earlies
     assert.doesNotMatch(await hash(), /voyages=|person=/, 'letting him go left a voyage of his chosen');
     await page.click('#peopleList [data-person="ibn-battuta"]');
     // the people and the voyages carry their spans as bars, on each era's scale under its ruler
-    assert.ok(await page.$$eval('#peopleList .era', (es) => es.every((e) => e.querySelector('.ruler span'))), 'an era heading without its ruler');
+    assert.ok(await page.$$eval('#peopleList > li.era:not([data-era="Prehistory"])', (es) => es.every((e) => e.querySelector('.ruler span'))), 'a heading over life bars without its ruler');
     assert.ok(await page.$eval('#peopleList [data-person="ibn-battuta"] .bar', (b) => b.getBoundingClientRect().width > 8), 'Ibn Battuta\'s life bar is missing or a sliver');
     // another person chosen: his tile shuts, theirs opens under their own row
     await page.click('#peopleList [data-person="lapita-people"]');
@@ -652,6 +676,10 @@ test('people and voyages: two vertical drawers no wider than the charts, earlies
     assert.equal(await page.$eval('#personCard', (c) => c.closest('li[data-row]')?.dataset.row), 'lapita-people');
     assert.deepEqual(await page.$$eval('#personCard .pvoyages li[data-row]', (ls) => ls.map((l) => l.dataset.row)), ['lapita-expansion']);
     assert.match(await hash(), /person=lapita-people/);
+    // the map flies to the Lapita's Pacific, across the date line, not out to the whole world (#399)
+    await page.waitForFunction(() => Number(/map=([\d.]+)/.exec(location.hash)?.[1]) > 2.5, null, { timeout: 10000 }).catch(() => {});
+    const lapitaZoom = Number(/map=([\d.]+)/.exec(await hash())?.[1]);
+    assert.ok(lapitaZoom > 2.5, `choosing the Lapita zoomed out to ${lapitaZoom}`);
     // the dividers swap it for the Voyages drawer: as wide, every voyage once, earliest first under the same headings, nothing sideways
     await page.click('#voyages');
     await page.waitForSelector('#voyageList [data-voyage]');
@@ -664,8 +692,8 @@ test('people and voyages: two vertical drawers no wider than the charts, earlies
     assert.equal(await noSideScroll('voyagesPanel'), true, 'the Voyages drawer scrolls sideways');
     const shownVoyages = await page.$$eval('#voyageList [data-voyage]', (bs) => bs.map((b) => b.dataset.voyage));
     assert.deepEqual([...shownVoyages].sort(), [...index].sort(), 'a voyage missing or twice');
-    assert.equal(shownVoyages[0], 'lapita-expansion');
-    assert.deepEqual(await page.$$eval('#voyageList .era', (es) => es.map((e) => e.dataset.era)), ['The ancient world', 'The medieval Indian Ocean and Asia', 'The age of discovery']);
+    assert.equal(shownVoyages[0], 'austronesian-expansion');
+    assert.deepEqual(await page.$$eval('#voyageList .era', (es) => es.map((e) => e.dataset.era)), ['Prehistory', 'The ancient world', 'The medieval Indian Ocean and Asia', 'The age of discovery']);
     assert.ok(await page.$$eval('#voyageList li[data-row]', (ls) => ls.every((l) => l.querySelector('[data-eye]') && l.querySelector('[data-play]') && l.querySelector('[data-ink]') && l.querySelector('path'))), 'a voyage row without its eye, play, swatch or line sample');
     const tools = await box('#voyagesPanel .vtools'), list = await box('#voyageList');
     assert.ok(tools.y + tools.height <= list.y + 1, 'the tools do not head the list');
@@ -678,6 +706,7 @@ test('people and voyages: two vertical drawers no wider than the charts, earlies
     await phone.goto(`http://localhost:${server.address().port}/#map=2/15/-20`);
     await phone.waitForFunction(() => document.getElementById('status').textContent.includes('total'), null, { timeout: 90000 });
     await phone.tap('#people');
+    await phone.tap('#peopleList .head[data-head="The ancient world"]');
     await phone.waitForSelector('#peopleList [data-person="lapita-people"]');
     await phone.waitForTimeout(400);
     const sheet = await phone.locator('#peoplePanel').boundingBox();
@@ -794,6 +823,7 @@ test('people: a dealt card carries no controls; its frame grabs it, its body loo
     assert.match(await hash(), /person=christopher-columbus/, 'the click let the person go');
 
     // the map is there before the deal: a flight across the world deals once the window's middle is at the place
+    await page.click('#peopleList .head[data-head="The medieval Indian Ocean and Asia"]'); // the People headings start shut
     await page.click('#peopleList [data-person="zheng-he"]');
     await page.evaluate(() => { window.dealtAt = null; const look = () => { if (document.querySelectorAll('#pictureKeys li').length) window.dealtAt = location.hash; else requestAnimationFrame(look); }; requestAnimationFrame(look); });
     await page.waitForFunction(() => window.dealtAt, null, { timeout: 60000 });
