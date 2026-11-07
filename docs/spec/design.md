@@ -354,7 +354,7 @@ Feature: Every chart turns, a quarter at a time
     Then the world turns that way round to the next of north, east, south and west up
     And from one of those quarter turns, four clicks the same way come back to where they began
   Scenario: the compass over the skull on a wide screen; a twist on a phone
-    Source: the user, 2026-11-06: "On mobile the compass icon on the lower ride size is not draggable, and the two rotate buttons are removed. For mobile, the usual 2 finger pinch and twist gesture for rotating maps is used to rotate the map orientation only. On desktop the compass is larger, the same diameter as the skull, and appears directly over the skull at the far right, while the two 90 degree rotate buttons appear to the left of the compass and are slightly smaller." This overtakes "either side of the compass" above for both screens.
+    Source: the user, 2026-11-06: "On mobile the compass icon on the lower ride size is not draggable, and the two rotate buttons are removed. For mobile, the usual 2 finger pinch and twist gesture for rotating maps is used to rotate the map orientation only. On desktop the compass is larger, the same diameter as the skull, and appears directly over the skull at the far right, while the two 90 degree rotate buttons appear to the left of the compass and are slightly smaller." This overtakes "either side of the compass" and "always shown" above for both screens.
     Given a wide screen
     When the user looks at the right gutter's foot
     Then the compass stands directly above the skull at the far right, the skull's diameter, and the two walk-around buttons stand side by side to its left, a little smaller
@@ -367,7 +367,7 @@ Feature: Every chart turns, a quarter at a time
   Scenario: the chart's own up
     Given any chart shown, drawn to be read another way up (de la Cosa's west up) or north up (every chart with no other up)
     When the user looks at its row
-    Then its up chip ("West up", "North up") is there on a line of its own, and lit exactly while the world stands at that chart's up, however the user got there: the up chip, the walk-around buttons, a corner drag or the compass
+    Then its up chip ("West up", "North up") is there on a line of its own, and lit exactly while the world stands at that chart's up, however the user got there: the up chip, the walk-around buttons, a corner drag, the compass or a two-finger twist on a phone
     When the user clicks the up chip unlit
     Then the world turns to the chart's up, framing the sheet as it will stand
     When the user clicks it lit
@@ -618,12 +618,13 @@ Feature: A card on the table: a click looks, three buttons, Pulverum
     Then the card flies from its place on the table to the middle of the window, face up, and the map behind it dims and holds still
     And on a wide screen it stands moderately large: its longer side about three quarters of the window's shorter side, never past the picture's own pixels
     And on a phone it fills the screen, the picture fitted whole inside it with the buttons over its lower right
+    And a dealt card is in the Tab order, and Enter or Space on it looks, as the click does; Escape puts it away as below
   Scenario: a looked-at card zooms and pans, the map stays
     Given a card looked at
     When the user scrolls the wheel over it or pinches it, then drags it
     Then the picture zooms about the pointer or the fingers' midpoint, up to its full resolution and never smaller than its look size, and a drag pans it inside its frame
     And the map under it neither pans, zooms nor turns, whatever the gesture; the card's view alone moves
-    And a double-click or a double-tap toggles between the look size and full resolution at that point
+    And a double-click or a double-tap toggles between the look size and full resolution at that point; on a dealt card a double-click is one look, the second click doing nothing more
   Scenario: three buttons at the lower right, the same on both faces
     Given a card looked at, face up or face down
     When the user looks at its lower right
@@ -711,7 +712,7 @@ Feature: A flight sweeps the table, then deals on arrival
     Source: the user, 2026-11-06: "Whenever flying to a new location with cards, the flying occurs first and then the cards are dealt after arriving at the target position (dealing is allowed to happen before the final zoom is reached, while the lat/lon position should be reached before dealing.)"
     Given a flight to a subject with cards
     When the flight is under way
-    Then no card is dealt until the middle of the window has reached the target's latitude and longitude
+    Then no card is dealt until the middle of the window has reached the latitude and longitude the flight is bound for, its own centre rather than the subject's mark
     And the deal may begin while the zoom is still settling into the target view
   Scenario: a person's voyages draw on as the map arrives
     Source: the user, 2026-11-06: "When arriving at the target position for a person, the voyages are all animated"; and, choosing from options put to them, all draw on together.
