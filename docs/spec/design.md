@@ -238,6 +238,12 @@ Feature: A drawer stays open on a click or a choice
     Then it docks at the window's left edge, the window's whole height and a little over half its width, clear of the row of instruments and of the compass and the skull at the right, and scrolls inside
     And it stays up when the map is tapped, as the bottom sheet does upright
     And the lower right has the compass and the skull and no walk-around buttons, as upright
+  Scenario: turned to landscape and back, everything where it was
+    Source: the user, 2026-11-06, on #272: "When flipping the phone to landscape and then back, the buttons are partially obscured at the edge of the pages. It needs to go back to the same orientation and the same button positions."
+    Given a phone upright, the row of instruments at the top right and the compass and the skull at the lower right
+    When the user turns it to landscape and back upright
+    Then the page is as it was: the row and the skull whole, at the window's edges, none cut off
+    And the page itself never zooms or scrolls, by a pinch or by a turn; a pinch is the map's, and a drawer still scrolls inside
 
 Feature: A voyage's row in the Voyages drawer
   Source: the user on [#259](https://github.com/mark-brannan/portolani/pull/259), 2026-10-29: "Clicking a new voyage button always zooms to that voyages target window."; "The first time any given voyage is selected after opening the drawer, if it was not previously selected, zoom to the window for that voyage and then animate the line from the start to the finish."; "Each voyage has a show/hide button to the right of it, before the color selector. The show hide always does a quick show/hide action for the line without changing the zoom or view."; "The voyages colors should not "jump" or reset when multiple voyages were selected and an earlier one is then de-selected. The colors in the current display should remain 'sticky' to the voyage they were already assigned to." The pace of the first draw, after comparing three: "A but faster, maybe 1s +/- .5s." (A: an even pace along the line; B: the voyage's dates) This replaces the rule that a voyage put on stays where it is if any of its track is in view, and that a click on a shown voyage takes it off (`public/page.js` at `6960f78`).

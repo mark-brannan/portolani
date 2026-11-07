@@ -867,6 +867,9 @@ function drawCards(scaleOnly = false) { // scaleOnly: a moving frame, where only
   }
 }
 addEventListener('resize', () => { drawCards(); hideTile(); $('cornerTurn').hidden = true; }); // the cards' width follows the window, in rotation too, and the tile was placed in its px
+// Turned to landscape and back, the page stands where it stood, never scrolled, so the row of instruments and the skull
+// keep to the window's edges
+addEventListener('resize', () => { if (scrollX || scrollY) scrollTo(0, 0); });
 phone.addEventListener('change', () => { drawCards(); if (ground) render(); }); // the sheet is placed again with or without them
 
 // ---------------------------------------------------------------- the drawers

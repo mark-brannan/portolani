@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- the page itself never zooms: a pinch is the map's, and a page left zoomed after a turn to landscape and back cut the buttons off at the window's edge -->
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
 <title>Portolani preview</title>
 <style>
   /* one mode: dark margins round the map, parchment drawers. The browser's light/dark setting is not followed. */
@@ -15,7 +16,8 @@
   }
   /* a low-light mode (red-heavy) is reserved here, set by data-light="low" on the root; no control and no tokens yet */
   :root[data-light="low"] { }
-  html, body { height: 100%; }
+  html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+  body { touch-action: pan-x pan-y; } /* a pinch on the margins or a drawer does not zoom the page; the map takes its own (#map) */
   body { margin: 0; overflow: hidden; background: var(--margin); color: var(--margin-ink); font: 14px/1.4 system-ui, sans-serif; }
 
   /* the map fills the window, its 1600 x 1000 canvas scaled to fit and centred */
