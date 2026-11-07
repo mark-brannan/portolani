@@ -627,3 +627,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261107t041212z
 - Nit 6: on a phone a person's cards are dealt in screen terms under their travels, as a place's are Undo: lay a person's cards in lon/lat under the frame again ([#404](https://github.com/mark-brannan/portolani/pull/404))
+
+### 20261107t041231z
+- Nit 4: landscape phone is wider than 520 px, at most 520 px tall, coarse pointer; its drawer docks left, full height; no phrase beside the skull, small skull and compass Undo: drop the turned-phone media query ([#404](https://github.com/mark-brannan/portolani/pull/404))
