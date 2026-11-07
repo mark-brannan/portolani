@@ -2670,6 +2670,7 @@ const cardPointers = new Map(); // pointerId -> [x, y] canvas px
 const DOUBLE_MS = 320;
 let cardTap = null, lastTap = null; // a lone press on it until it moves; the last tap, { p, t }, for a double one
 function lookDown(e) {
+  if (performance.now() - lookFrom < DOUBLE_MS) return; // a double click on a dealt card is one look: its second press does nothing
   const p = toCanvas(e.clientX, e.clientY), hit = pictureHit(p);
   if (cardPointers.size || holding) { if (hit?.kind === 'held' && !holding) { canvas.setPointerCapture(e.pointerId); cardPointers.set(e.pointerId, p); cardTap = null; } return; }
   if (!hit) { endLook(); return; }

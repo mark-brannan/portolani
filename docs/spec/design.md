@@ -634,7 +634,8 @@ Feature: A card on the table: a click looks, three buttons, Pulverum
   Scenario: Read more opens the subject's article
     Given a card looked at, a person's or a place's
     When the user clicks Read more
-    Then the person's or the place's article opens in a new tab: the record's Read more link, as the drawer's tile has it, never the picture's page on Wikimedia Commons
+    Then the person's or the place's article opens in a new tab, never the picture's page on Wikimedia Commons
+    And a person's article is their first source, as a voyage's Read more is, else their Wikipedia article by name; a place's is its Wikipedia article by name
   Scenario: Put away sends the card home
     Given a card looked at
     When the user clicks Put away, presses Escape, or clicks the dimmed map round it
