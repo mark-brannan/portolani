@@ -633,3 +633,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261107t041306z
 - Nit 2: while a phone card is zoomed with the map its buttons stay at the look-size spot Undo: let the buttons follow the zoomed card ([#404](https://github.com/mark-brannan/portolani/pull/404))
+
+### 20261107t041325z
+- Nit 8: guessed cause (page zoom or scroll on a turn); the page cannot zoom and scrolls back to the origin on resize, which also stops a user page pinch-zoom on a phone Undo: drop maximum-scale and the body touch-action ([#404](https://github.com/mark-brannan/portolani/pull/404))
