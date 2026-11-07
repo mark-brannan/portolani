@@ -1,0 +1,14 @@
+{
+  "id": "pesse-canoe",
+  "kind": "migration",
+  "title": "The Pesse canoe, c. 8040–7510 BC",
+  "short": "Pesse canoe",
+  "who": ["pesse-canoe-makers"],
+  "when": "c. 8040–7510 BC",
+  "summary": "The world's oldest known boat: a dugout of a single Scots pine log, 298 centimetres long and 44 wide, made in the early Mesolithic between 8040 and 7510 BC. It was found in 1955 in a peat bog south of Pesse, in Drenthe, two metres down, during the building of the A28 motorway, and is kept in the Drents Museum at Assen. It stands here for the people who made it; where they paddled it is not known, so no route is drawn.",
+  "sources": ["pesse-canoe"],
+  "legs": [],
+  "events": [
+    { "kind": "waypoint", "lon": 6.4506, "lat": 52.7717, "date": "c. 8040–7510 BC", "label": "Pesse, Drenthe, where the canoe was found", "source": "Pesse canoe (Wikipedia)", "cite": "pesse-canoe", "text": "A crane operator building the A28 struck the canoe in the peat in 1955. Carbon dating puts it between 8040 and 7510 BC. The mark is at the village; the find was in the bog to its south." }
+  ]
+}

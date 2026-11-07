@@ -1,0 +1,26 @@
+{
+  "id": "austronesian-expansion",
+  "kind": "migration",
+  "title": "The Austronesian expansion out of Taiwan, c. 3000–1300 BC",
+  "short": "Out of Taiwan",
+  "who": ["austronesian-voyagers"],
+  "when": "c. 3000–1300 BC",
+  "summary": "The leading account of how one language family came to span half the globe starts on Taiwan, where speakers of the ancestral Austronesian tongue took to the sea. Their descendants reached the Batanes and northern Luzon by about 2200 BC and spread south through the Philippines; the drawn arrow ends at Mussau, where the Lapita record begins. Branches go to the Marianas and, much later, to Madagascar.",
+  "sources": ["austronesian-expansion", "austronesian-peoples", "prehistory-philippines", "denham-lapita-dating"],
+  "legs": [
+    { "from": "Taiwan", "to": "northern Luzon", "dates": "c. 3000–2200 BC", "mode": "sea", "line": "spline",
+      "confidence": "conventional", "source": "Austronesian expansion (Wikipedia), departure c. 3000 BC, the Batanes by about 2200 BC",
+      "reach": [0, 0.3], "heads": "none",
+      "points": [[121.4,23.3], [121.97,20.45], [121.7,18.2]] },
+    { "from": "northern Luzon", "to": "Mussau, the Bismarck Archipelago", "dates": "c. 2200–1300 BC", "mode": "sea", "line": "spline",
+      "confidence": "conventional", "source": "the stages between Luzon and Mussau are undated; Mussau from Denham, Bronk Ramsey and Specht 2012",
+      "note": "the way through the southern Philippines and the Moluccas is the usual drawing, not a recorded course",
+      "reach": [0.3, 0.9], "heads": "end",
+      "points": [[121.7,18.2], [125.0,7.0], [128.0,1.0], [149.6,-1.45]] }
+  ],
+  "events": [
+    { "kind": "waypoint", "lon": 121.4, "lat": 23.3, "date": "c. 3000 BC", "label": "Taiwan, where the expansion began", "source": "Austronesian expansion (Wikipedia)", "cite": "austronesian-expansion", "text": "The article on the expansion dates the departure from Taiwan to about 3000 BC and the spread to about 1500 BC. This is the \"Out of Taiwan\" model, the one most linguists and archaeologists work from; it is a model, and the stages between Taiwan and the Bismarcks are poorly dated." },
+    { "kind": "waypoint", "lon": 121.97, "lat": 20.45, "date": "by c. 2200 BC", "label": "The Batanes", "source": "Prehistory of the Philippines (Wikipedia)", "cite": "prehistory-philippines", "text": "The first islands south of Taiwan, across the Bashi Channel. A 2013 genetic study places settlers in the Batanes and northern Luzon at around 2200 BC; a 2021 study suggests an earlier first wave in the Philippines, perhaps 10,000 to 7,000 years ago." },
+    { "kind": "waypoint", "lon": 149.6, "lat": -1.45, "date": "c. 1500–1300 BC", "label": "Mussau, where the Lapita record begins", "source": "Denham, Bronk Ramsey and Specht 2012", "cite": "denham-lapita-dating", "text": "The oldest Lapita pottery in the Bismarcks. The Lapita expansion takes the arrow from here to Samoa." }
+  ]
+}

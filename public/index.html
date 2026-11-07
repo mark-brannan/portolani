@@ -186,6 +186,37 @@
   .tline > li:first-child.era { margin-top: 0; }
   .tline > li.era::before { left: -14px; top: 8px; width: 10px; height: 1px; border-radius: 0; background: #b89a68; }
   .tline > li.era small { margin-left: 6px; font-size: 11px; opacity: 0.8; }
+  /* the People drawer's headings start shut: a click opens one. Under each, the heading bar from 50,000 BC to today on
+     a log scale, every era a pale grey band and the heading's own stretch darker; its rows are ticks on it while open */
+  #where #peopleList .head { display: flex; align-items: baseline; width: 100%; padding: 1px 0; border: 0; border-radius: 4px; background: none; box-shadow: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+  #where #peopleList .head:hover { background: rgb(140 47 30 / 0.07); }
+  #where #peopleList .head::before { content: '▸'; display: inline-block; width: 12px; font-style: normal; transition: transform 0.15s; }
+  #where #peopleList .head[aria-expanded="true"]::before { transform: rotate(90deg); }
+  #peopleList .deep { position: relative; display: block; height: 6px; margin: 2px 9px 3px; border-radius: 3px; overflow: hidden; }
+  #peopleList .deep .band { position: absolute; top: 0; bottom: 0; background: rgb(112 106 98 / 0.18); box-shadow: inset -1px 0 0 rgb(241 228 198 / 0.9); }
+  #peopleList .deep .band.own { background: rgb(84 78 72 / 0.55); box-shadow: none; }
+  #peopleList .deep .tick { display: none; position: absolute; top: 0; bottom: 0; width: 1px; background: #3b2a1a; }
+  #peopleList li.expanded > .deep .tick { display: block; }
+  #peopleList li.era > .ruler { display: none; }
+  /* one era open at a time, as a lens: its stretch of the heading bar (--lens-l, --lens-w, page.js lensVars) holds its
+     ruler and its rows' life bars, on its own straight scale */
+  #peopleList .ruler { margin-left: calc(9px + var(--lens-l, 0) * (100% - 18px)); width: calc(var(--lens-w, 1) * (100% - 18px)); margin-right: 0; }
+  #peopleList .life .span { flex: 0 0 auto; margin-left: calc(var(--lens-l, 0) * 100%); width: calc(var(--lens-w, 1) * 100%); }
+  /* Inset ruler: the dotted fan from the open era's stretch of the heading bar to its own bar across the full width */
+  .tline .fan { display: block; width: calc(100% - 18px); height: 12px; margin: 0 9px; overflow: visible; }
+  .tline .fan path { fill: none; stroke: #8d8170; stroke-width: 1; stroke-dasharray: 1.5 2.5; }
+  #peopleList .deep.inset { height: 9px; margin-top: 0; }
+  #peopleList .deep.inset .tick { display: block; }
+  #peopleList .deep .tick.red { display: block; width: 3px; margin-left: -1px; background: #8c2f1e; }
+  /* a dotted line from the open era's bar down to each row's start, behind the rows (the list a stacking context) and
+     hidden above by the headings and under the chosen person's tile */
+  #peopleList { position: relative; z-index: 0; clip-path: inset(0 -40px); }
+  #peopleList li.era, #peopleList .pcard { position: relative; background: var(--panel); }
+  #peopleList li.era { box-shadow: 0 -12px 0 var(--panel); } /* the gap above a heading too */
+  .tline .span .drop { display: none; }
+  #peopleList .span .drop { display: block; position: absolute; z-index: -1; top: -5000px; bottom: 50%; border-left: 1px dotted #8d8170; }
+  #peopleList li.era.expanded > .ruler { display: block; }
+  @media (prefers-reduced-motion: reduce) { #where #peopleList .head::before { transition: none; } }
   /* each era's own scale: a ruler under its heading, and under every row in it the life (or the voyage) as a bar on
      that scale, so who overlapped whom and how long each lived read down the drawer; an end nobody dated fades */
   .tline .ruler { position: relative; display: block; height: 13px; margin: 1px 0 0; border-top: 1px solid #b89a68; font: normal 10px/12px var(--serif); }
@@ -806,6 +837,8 @@
 
   <!-- with a mouse, a grouped list's section also opens when the pointer rests on its heading (page.js, HOVER_DWELL);
        off, only a click opens one. Kept in the link (`hover=0` is off). Not shown where nothing can hover -->
+  <!-- which People drawer the medallion opens, while both are tried: Lens or Inset ruler (page.js peopleView; `drawer=inset`) -->
+  <div id="peopleViewRow"><h3>People drawer</h3><div id="peopleView" class="chips" role="radiogroup" aria-label="People drawer"></div></div>
   <div id="hoverRow"><h3>Sections open on hover</h3><div id="hoverOpen" class="chips" role="radiogroup" aria-label="Sections open on hover"></div></div>
 
   <div id="share">

@@ -1,0 +1,20 @@
+{
+  "id": "wallacea-crossing",
+  "kind": "migration",
+  "title": "The first crossing into Wallacea, c. 1,000,000–700,000 years ago",
+  "short": "Into Wallacea",
+  "who": ["wallacea-crossers"],
+  "when": "c. 1,000,000–700,000 BC",
+  "summary": "East of the Wallace Line, between Bali and Lombok, the islands were never joined to Asia, even when the sea was at its lowest. Hominins crossed that water between about a million and 700,000 years ago, the oldest sea crossing known: their fossils lie on Flores, at Mata Menge, about 700,000 years old. The drawn way from Bali along the islands is a guess, and whether anyone meant to cross is not known.",
+  "sources": ["ancient-maritime-history", "mata-menge"],
+  "legs": [
+    { "from": "Bali", "to": "Flores, by Lombok", "dates": "c. 1,000,000–700,000 years ago", "mode": "sea", "line": "spline",
+      "confidence": "speculative", "source": "Ancient maritime history (Wikipedia): the first crossings, 700,000 to one million years ago",
+      "note": "the way along the islands is a guess; nothing records where the crossers set out, or whether they crossed on purpose",
+      "reach": [0, 1], "heads": "end",
+      "points": [[115.2,-8.45], [116.3,-8.6], [118.4,-8.55], [121.095,-8.692]] }
+  ],
+  "events": [
+    { "kind": "waypoint", "lon": 121.095, "lat": -8.692, "date": "c. 700,000 years ago", "label": "Mata Menge, the So'a Basin, Flores", "source": "Mata Menge (Wikipedia)", "cite": "mata-menge", "text": "Fossil teeth and a jaw of small hominins, around 700,000 years old. They were probably descended from Homo erectus, grown small on the island, and probably ancestral to Homo floresiensis, found at Liang Bua. To be here at all, their forebears crossed the sea." }
+  ]
+}

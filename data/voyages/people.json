@@ -1,4 +1,37 @@
 {
+  "wallacea-crossers": {
+    "view": {
+      "lat": -2.0,
+      "lon": 122.0,
+      "zoom": 3
+    },
+    "name": "The first crossers of Wallacea",
+    "group": true,
+    "bio": "Hominins who crossed the sea from Bali or Java into the islands east of the Wallace Line between about a million and 700,000 years ago, and reached Flores, where their fossils lie at Mata Menge. They were probably descended from Homo erectus, grown small on the island, and probably ancestral to Homo floresiensis. Whether they crossed on purpose, on rafts, or were carried off by storms and floods, nobody knows.",
+    "sources": ["ancient-maritime-history", "mata-menge"]
+  },
+  "sahul-first-peoples": {
+    "view": {
+      "lat": -12.0,
+      "lon": 135.0,
+      "zoom": 3
+    },
+    "name": "The first peoples of Sahul",
+    "group": true,
+    "bio": "The ancestors of Aboriginal Australians and of the first peoples of New Guinea, who crossed from the islands of Wallacea to Sahul, the one continent of Australia and New Guinea, between about 65,000 and 50,000 years ago. The sea stood more than 100 metres lower than today, and still every way across meant open water.",
+    "sources": ["prehistory-of-australia", "madjedbebe"]
+  },
+  "pesse-canoe-makers": {
+    "view": {
+      "lat": 52.78,
+      "lon": 6.45,
+      "zoom": 4
+    },
+    "name": "The makers of the Pesse canoe",
+    "group": true,
+    "bio": "Mesolithic people of the north European plain who, between about 8040 and 7510 BC, hollowed a Scots pine log into the oldest boat yet found. Nothing else of theirs is known from the find; the canoe stands for them.",
+    "sources": ["pesse-canoe"]
+  },
   "leif-erikson": {
     "name": "Leif Erikson",
     "aka": [
@@ -891,6 +924,7 @@
   "lapita-people": {
     "name": "The Lapita people",
     "group": true,
+    "family": "austronesian",
     "bio": "The makers of dentate-stamped Lapita pottery, who spread from the Bismarck Archipelago through the Solomons, Vanuatu and New Caledonia to Fiji, Tonga and Samoa between about 1500 and 800 BC: the first people anywhere to settle islands beyond sight of land, sailing upwind into the trade winds. No name of theirs survives; the name is the archaeologists', from a site in New Caledonia.",
     "sources": [
       "lapita-culture",
@@ -948,6 +982,7 @@
   "east-polynesian-voyagers": {
     "name": "The East Polynesian voyagers",
     "group": true,
+    "family": "austronesian",
     "bio": "The people who, after nearly two thousand years in West Polynesia, went east in double-hulled canoes to the Cook and Society Islands about 1000–1100 and from there, in some two centuries, to every corner of the Polynesian Triangle: Hawaiʻi, Rapa Nui and Aotearoa, and on to the Chathams and the subantarctic Auckland Islands. Oral traditions name founding navigators, such as Kupe for Aotearoa and Hotu Matuʻa for Rapa Nui; they are not datable people.",
     "sources": [
       "wilmshurst-2011-east-polynesia",
@@ -2315,6 +2350,42 @@
       "lon": 54.69,
       "zoom": 3.45
     }
+  },
+  "austronesian-voyagers": {
+    "view": {
+      "lat": 23.7,
+      "lon": 121.0,
+      "zoom": 1.5
+    },
+    "name": "The Austronesian-speaking voyagers",
+    "group": true,
+    "family": "austronesian",
+    "bio": "Speakers of the ancestral Austronesian language who left Taiwan from about 3000 BC by sea for the Philippines and the islands beyond. Their descendants spoke the languages from Madagascar to Rapa Nui. No name of theirs survives; the name is the linguists'.",
+    "sources": ["austronesian-expansion", "austronesian-peoples", "prehistory-philippines"]
+  },
+  "marianas-micronesia-settlers": {
+    "view": {
+      "lat": 15.0,
+      "lon": 145.7,
+      "zoom": 3
+    },
+    "name": "The first settlers of the Marianas and Micronesia",
+    "group": true,
+    "family": "austronesian",
+    "bio": "The ancestors of the CHamoru, who crossed from the Philippines about 1500 BC to the Marianas, and the people of Island Melanesia who settled central and eastern Micronesia about 200 BC. No name of theirs survives.",
+    "sources": ["hung-2011-marianas", "micronesia"]
+  },
+  "madagascar-austronesian-settlers": {
+    "view": {
+      "lat": -19.0,
+      "lon": 47.0,
+      "zoom": 1.5
+    },
+    "name": "The Austronesian settlers of Madagascar",
+    "group": true,
+    "family": "austronesian",
+    "bio": "Speakers of a Borneo language who crossed the Indian Ocean to Madagascar, and became, with African settlers who came to the island, the Malagasy. When they came is argued, from about 400 to about 1000. No name of theirs survives.",
+    "sources": ["settlement-madagascar", "brucato-2016-madagascar"]
   },
   "james-cook": {
     "name": "James Cook",
