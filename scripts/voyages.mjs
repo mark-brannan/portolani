@@ -214,7 +214,9 @@ export function problems(v) {
   const migration = isMigration(v);
   need(Array.isArray(v.who) && (v.who.length || migration) && v.who.every((w) => typeof w === 'string' && SLUG.test(w)) && new Set(v.who).size === v.who.length, 'who: distinct slugs into people.json');
   need(Array.isArray(v.sources) && v.sources.length && v.sources.every((s) => s.title && s.url), 'sources: [{ title, url }]');
-  need(Array.isArray(v.legs) && v.legs.length, 'legs: at least one');
+  // a migration known only from a find in one place (the Pesse canoe) is a waypoint and no legs
+  const found = migration && (v.events ?? []).some((e) => e.kind === 'waypoint');
+  need(Array.isArray(v.legs) && (v.legs.length || found), 'legs: at least one, or none for a migration with a waypoint');
   for (const [i, leg] of (v.legs ?? []).entries()) {
     const at = `leg ${i} (${leg.from} → ${leg.to})`;
     need(typeof leg.from === 'string' && typeof leg.to === 'string', `${at}: from and to`);
@@ -303,9 +305,11 @@ export async function readVoyage(id, readJSON) {
 // paragraph, `sources` ids into sources.json. `born` and `death` are markers (docs/voyages/README.md "The record"):
 // lon and lat together or not at all, `confidence` one of MARKER_CONFIDENCES, `doubt` the optional sentence. `images`
 // are Wikimedia Commons files, { file, kind, author, date, licence, note }: `file` the bare file name, no scheme, no
-// slash; `kind` one of IMAGE_KINDS.
+// slash; `kind` one of IMAGE_KINDS. `family` one of FAMILIES: a people that is one of a family of peoples, which the
+// People drawer orders by where two of it share a year (FAMILY_ORDER in people.mjs).
 export const IMAGE_KINDS = ['life', 'near', 'posthumous', 'imaginary', 'modern', 'scene', 'ship', 'map', 'artefact', 'site', 'source'];
 export const SLUG = /^[a-z][a-z0-9-]*$/;
+export const FAMILIES = ['austronesian'];
 // The problems in one person record, as strings; none when it is well formed. `sources` is what a `cite` must name.
 export function checkPerson(id, p, { sources } = {}) {
   const out = [];
@@ -317,6 +321,7 @@ export function checkPerson(id, p, { sources } = {}) {
   for (const k of ['name', 'bio']) if (p[k] !== undefined) need(str(p[k]), `${k}: a string`);
   for (const k of ['aka', 'sources']) if (p[k] !== undefined) need(strs(p[k]), `${k}: strings`);
   if (p.group !== undefined) need(p.group === true, 'group: true, for a people or a crew rather than one person'); // a people (the Lapita), or mariners nobody named
+  if (p.family !== undefined) need(FAMILIES.includes(p.family), `family: one of ${FAMILIES}`);
   if (sources && Array.isArray(p.sources)) for (const s of p.sources) need(s in sources, `sources: ${s} is not in sources.json`);
   const place = (m, at) => {
     if (m.lon === undefined && m.lat === undefined) return;
@@ -356,9 +361,10 @@ export function checkPerson(id, p, { sources } = {}) {
 // negative before Christ; NaN when there is none. The voyages drawer lists them by it, earliest first (#242).
 // Years only: a century ("5th century BC") would read as year 5, so it would sort wrong.
 export function voyageStart(when) {
-  const m = /(\d+)/.exec(String(when ?? ''));
+  const m = /\d{1,3}(?:,\d{3})+|\d+/.exec(String(when ?? '')); // 1,000,000 BC is one year, not 1
   if (!m) return NaN;
-  return /\bBCE?\b/.test(when) ? -Number(m[1]) : Number(m[1]);
+  const y = Number(m[0].replaceAll(',', ''));
+  return /\bBCE?\b/.test(when) ? -y : y;
 }
 // [id, voyage] pairs in the order they set out; the given order breaks ties and puts an undated one last.
 export function chronological(pairs) {

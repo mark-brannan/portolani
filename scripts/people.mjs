@@ -30,10 +30,10 @@ export const peopleOf = (json, who = {}) => Object.entries(json ?? {}).filter(([
 export const deathOf = (p) => (p.death && typeof p.death === 'object' ? p.death : null);
 
 // A year text as a number, negative before Christ: "c. 350 BC" -350, "c. 970s" 970, "24 Feb 1304" 1304, "5th century
-// BC" -450 (its middle); NaN for none. A day of the month is skipped: the year is the first number of three digits or
-// more, else the last one.
+// BC" -450 (its middle), "c. 1,000,000–700,000 BC" -1000000; NaN for none. A thousands comma is read through. A day of
+// the month is skipped: the year is the first number of three digits or more, else the last one.
 export function yearOf(text) {
-  const s = String(text ?? ''), bc = /\bBCE?\b/.test(s) ? -1 : 1, c = /(\d+)(?:st|nd|rd|th) century/.exec(s);
+  const s = String(text ?? '').replace(/(\d),(?=\d{3}\b)/g, '$1'), bc = /\bBCE?\b/.test(s) ? -1 : 1, c = /(\d+)(?:st|nd|rd|th) century/.exec(s);
   if (c) return bc * ((Number(c[1]) - 1) * 100 + 50);
   const nums = [...s.matchAll(/\d+/g)].map((m) => Number(m[0]));
   if (!nums.length) return NaN;
@@ -50,40 +50,117 @@ export function lifeSpan(person, voyageYears = [], reach = 40) {
   return [fromKnown ? lo : lo - reach, toKnown ? hi : hi + reach, fromKnown, toKnown];
 }
 
-// The People and the Voyages drawers are each a vertical timeline, earliest at the top, from the Lapita voyages
-// (TIMELINE_FROM) on. The eras of the points of interest (the Sights groups in public/page.js) head the rows that fall
-// in them, as small italic headings: each era runs from its year to the next one's, the last on to today.
-export const TIMELINE_FROM = -1500;
-export const TIMELINE_ERAS = [['The ancient world', TIMELINE_FROM], ['The medieval Indian Ocean and Asia', 500], ['The age of discovery', 1450], ['The modern world', 1800]];
+// The People and the Voyages drawers are each a vertical timeline, earliest at the top. Their eras head the rows that
+// fall in them, as small italic headings: each era runs from its year to the next one's, the last on to today. They are
+// slices of time, named for it, apart from the Sights groups in public/page.js, which group places by theme.
 // a year as the drawers write it: 1500 BC, AD 1, 1500, with a thousands comma only from five figures (50,000 BC)
 export const yearLabel = (y) => { const n = Math.abs(y), t = n >= 10000 ? n.toLocaleString('en') : String(n); return y < 0 ? `${t} BC` : y === 1 ? 'AD 1' : t; };
 
+// The first crossing into Wallacea, c. 1,000,000 BC: the start of deep history and of the People drawer's heading bar
+export const TIMELINE_EARLIEST = -1000000;
+export const DRAWER_ERAS = [
+  ['Deep history', TIMELINE_EARLIEST],
+  ['The Bronze Age', -3300],
+  ['The ancient world', -1200],
+  ['The medieval world', 500],
+  ['The age of discovery', 1450],
+  ['The age of Enlightenment', 1650],
+  ['The modern world', 1800],
+];
 // The era a year falls in, by name: the first era for anything before it; null for no year
 export function eraOf(year) {
   if (!Number.isFinite(year)) return null;
-  let name = TIMELINE_ERAS[0][0];
-  for (const [n, from] of TIMELINE_ERAS) if (year >= from) name = n;
+  let name = DRAWER_ERAS[0][0];
+  for (const [n, from] of DRAWER_ERAS) if (year >= from) name = n;
   return name;
 }
-// An era's years as its heading writes them: "1500 BC – AD 500", "500 – 1450", "from 1800"
-export function eraYears(name) {
-  const i = TIMELINE_ERAS.findIndex(([n]) => n === name);
-  if (i < 0) return '';
-  const from = TIMELINE_ERAS[i][1], to = TIMELINE_ERAS[i + 1]?.[1];
-  return to === undefined ? `from ${yearLabel(from)}` : `${yearLabel(from)} – ${from < 0 && to > 0 ? `AD ${to}` : yearLabel(to)}`;
+const eraEnds = (name, now) => {
+  const i = DRAWER_ERAS.findIndex(([n]) => n === name);
+  return i < 0 ? null : [DRAWER_ERAS[i][1], DRAWER_ERAS[i + 1]?.[1] ?? now];
+};
+// A span's years as a heading writes them: "1500 BC – AD 500", "1,000,000 – 1500 BC", "500 – 1450", "from 1800"
+export function spanYears(from, to) {
+  if (to === undefined) return `from ${yearLabel(from)}`;
+  if (to < 0) return `${yearLabel(-from)} – ${yearLabel(to)}`;
+  return `${yearLabel(from)} – ${from < 0 ? `AD ${to}` : yearLabel(to)}`;
 }
-// An era's own scale, for the life bars of the rows under its heading: { from, to, x(year) in 0..1 clamped, ticks:
-// [[year, label]] }, from its year to the next era's, the last era to `now`. Each era has its own scale so a life of
-// sixty years reads at any era's width; the ruler under the heading says which. The ticks fall on round years, four
-// or fewer between the ends.
-export function eraScale(name, now = new Date().getFullYear()) {
-  const i = TIMELINE_ERAS.findIndex(([n]) => n === name);
-  if (i < 0) return null;
-  const from = TIMELINE_ERAS[i][1], to = TIMELINE_ERAS[i + 1]?.[1] ?? now;
-  const step = [50, 100, 250, 500, 1000].find((s) => (to - from) / s <= 5) ?? 1000;
+// An era's years as its heading writes them
+export function eraYears(name) {
+  const ends = eraEnds(name);
+  return ends ? spanYears(...ends) : '';
+}
+// A linear scale from `from` to `to`, for the life bars of the rows under a heading: { from, to, x(year) in 0..1
+// clamped, ticks: [[year, label]] }, the ticks on round years, four or fewer between the ends
+export function spanScale(from, to) {
+  const step = [50, 100, 250, 500, 1000, 2500, 5000, 10000, 25000, 50000, 100000, 250000].find((s) => (to - from) / s <= 5) ?? 250000;
   const ticks = [];
   for (let y = Math.ceil((from + 1) / step) * step; y < to; y += step) ticks.push([y || 1, yearLabel(y || 1)]);
   return { from, to, x: (y) => Math.min(1, Math.max(0, (y - from) / (to - from))), ticks };
+}
+// An era's own scale (spanScale), from its year to the next era's, the last era to `now`. Each era has its own scale
+// so a life of sixty years reads at any era's width; the ruler under the heading says which.
+export function eraScale(name, now = new Date().getFullYear()) {
+  const ends = eraEnds(name, now);
+  return ends ? spanScale(...ends) : null;
+}
+
+// The People drawer's heading bar: one faded bar under every heading, from 1,000,000 BC (TIMELINE_EARLIEST) to today,
+// on which each era is a band and the rows under an open heading are ticks. Its scale is log10(years ago + 500), which
+// gives deep history about 72% of the bar and the modern world about 5%; x in 0..1, clamped.
+export const DEEP_OFFSET = 500;
+export function deepX(year, now = new Date().getFullYear()) {
+  const l = (y) => Math.log10(Math.max(0, now - y) + DEEP_OFFSET), top = l(TIMELINE_EARLIEST), end = l(now);
+  return Math.min(1, Math.max(0, (top - l(year)) / (top - end)));
+}
+// The eras on the heading bar: [name, x0, x1], end to end from 0 to 1
+export const deepBands = (now = new Date().getFullYear()) =>
+  DRAWER_ERAS.map(([name, a], i) => [name, deepX(a, now), deepX(DRAWER_ERAS[i + 1]?.[1] ?? now, now)]);
+
+// The heading bar as a lens on one era (`open`, a name in DRAWER_ERAS): the open era takes LENS_SHARE of the bar and
+// runs on its own straight scale (eraScale), so the people in it spread out, and the other eras are squeezed into the
+// rest in their deepX proportion; [name, x0, x1] per era, end to end. With no era open, the bar is deepBands.
+export const LENS_SHARE = 0.62;
+export function lensBands(open, now = new Date().getFullYear(), share = LENS_SHARE) {
+  const deep = deepBands(now);
+  if (!deep.some(([n]) => n === open)) return deep;
+  const rest = deep.filter(([n]) => n !== open).reduce((sum, [, a, b]) => sum + (b - a), 0);
+  let x = 0;
+  return deep.map(([n, a, b]) => {
+    const w = n === open ? share : ((1 - share) * (b - a)) / rest, band = [n, x, x + w];
+    x += w;
+    return band;
+  });
+}
+// A year's place on the lens bar (lensBands), 0..1
+export function lensX(year, open, now = new Date().getFullYear()) {
+  const era = eraOf(year);
+  if (!era) return NaN;
+  const band = lensBands(open, now).find(([n]) => n === era), [, a, b] = deepBands(now).find(([n]) => n === era);
+  const t = era === open ? eraScale(era, now).x(year) : b > a ? (deepX(year, now) - a) / (b - a) : 0;
+  return band[1] + (band[2] - band[1]) * Math.min(1, Math.max(0, t));
+}
+
+// A family of peoples: the records whose `family` names it sit, like every row, under the heading of their own era (one
+// level of headings, no heading of the family's own); where two of a family share a year, they go in the family's
+// order here, the user's on #399: the Austronesian-speaking voyagers, the first settlers of the Marianas and
+// Micronesia, the Lapita. FAMILIES in voyages.mjs is the list checkPerson accepts.
+export const FAMILY_ORDER = { austronesian: ['austronesian-voyagers', 'marianas-micronesia-settlers', 'lapita-people'] };
+// A record that sits right before another in the People drawer, whatever its own year: the mansa before Musa, whose
+// voyage is the reason Musa came to the throne (the user's on #399)
+export const RIGHT_BEFORE = { 'abu-bakr-ii': 'mansa-musa' };
+// A sorted list of [person, year] with each RIGHT_BEFORE record moved to just before its partner
+export function withRightBefore(rows) {
+  const out = rows.filter(([p]) => !RIGHT_BEFORE[p.id]);
+  for (const row of rows.filter(([p]) => RIGHT_BEFORE[p.id])) {
+    const i = out.findIndex(([q]) => q.id === RIGHT_BEFORE[row[0].id]);
+    out.splice(i < 0 ? out.length : i, 0, row);
+  }
+  return out;
+}
+// A sort's tie-break for two people of one year: by their family's order where both are in it, else level (0)
+export function familyOrder(a, b) {
+  const list = a.family && a.family === b.family ? FAMILY_ORDER[a.family] : null, i = list?.indexOf(a.id) ?? -1, j = list?.indexOf(b.id) ?? -1;
+  return i >= 0 && j >= 0 ? i - j : 0;
 }
 // A bar on an era's scale: [x0, x1, openStart, openEnd], an end open where the span runs past the era or the record
 // leaves it undated (`fromKnown`, `toKnown`, as lifeSpan gives them)
@@ -157,7 +234,7 @@ export const sightPicturesOf = (json) => Object.fromEntries(Object.entries(json 
 
 // The years a voyage's `when` spans, [first, last], negative before Christ: "c. 330–320 BC" [-330, -320]; [NaN, NaN] for none.
 export function voyageYears(when) {
-  const s = String(when ?? ''), nums = [...s.matchAll(/\d+/g)].map((m) => Number(m[0])).filter((n) => n >= 100);
+  const s = String(when ?? '').replace(/(\d),(?=\d{3}\b)/g, '$1'), nums = [...s.matchAll(/\d+/g)].map((m) => Number(m[0])).filter((n) => n >= 100);
   if (!nums.length) return [NaN, NaN];
   const sign = /\bBCE?\b/.test(s) ? -1 : 1;
   return [sign * nums[0], sign * nums.at(-1)];
@@ -187,15 +264,19 @@ export function parsePictureAt(text) {
 }
 export const pictureAtText = (at) => Object.entries(at).map(([i, s]) => `${i}:${s.lon.toFixed(3)},${s.lat.toFixed(3)},${Number(s.scale.toPrecision(4))}`).join('_') || null;
 
-// The lon/lat box round a person's marks and voyages: `points` [lon, lat], longitudes wrapped; null for none. A box
-// wider than half the world is the whole width of it.
+// The lon/lat box round a person's marks and voyages: `points` [lon, lat], longitudes wrapped; null for none. Its
+// longitudes are the shortest arc that holds every point (the circle less its widest gap), so a box across the date
+// line (the Lapita, Fiji to Samoa) stays the Pacific's width, its `lonMax` past 180 where it crosses; a box wider than
+// 200 degrees is the whole width of the world.
 export function frameOf(points) {
   const ok = points.filter(([lon, lat]) => Number.isFinite(lon) && Number.isFinite(lat));
   if (!ok.length) return null;
-  const lons = ok.map((p) => p[0]), lats = ok.map((p) => p[1]);
-  let lonMin = Math.min(...lons), lonMax = Math.max(...lons);
-  if (lonMax - lonMin > 200) { lonMin = -180; lonMax = 180; }
-  return { lonMin, lonMax, latMin: Math.min(...lats), latMax: Math.max(...lats) };
+  const lons = [...new Set(ok.map(([lon]) => ((lon % 360) + 360) % 360))].sort((a, b) => a - b), lats = ok.map((p) => p[1]);
+  let gap = 360 - lons.at(-1) + lons[0], west = lons[0];
+  for (let i = 1; i < lons.length; i++) if (lons[i] - lons[i - 1] > gap) { gap = lons[i] - lons[i - 1]; west = lons[i]; }
+  const span = 360 - gap, lonMin = west > 180 ? west - 360 : west;
+  const [latMin, latMax] = [Math.min(...lats), Math.max(...lats)];
+  return span > 200 ? { lonMin: -180, lonMax: 180, latMin, latMax } : { lonMin, lonMax: lonMin + span, latMin, latMax };
 }
 // The view that shows the whole of `frame` on a `w` x `h` canvas with `pad` of its size clear round it: contained, never cropped.
 export function viewContaining(frame, { w = 1600, h = 1000, pad = 0.08 } = {}) {
