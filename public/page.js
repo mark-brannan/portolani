@@ -56,6 +56,10 @@ const canvas = $('map'), ctx = canvas.getContext('2d');
 // A phone (under 520 px wide): a drawer is a bottom sheet, and the cartouche and the scale bar sit on
 // cards beside the map, not on the sea.
 const phone = matchMedia('(max-width: 520px)');
+// A phone turned to landscape: wider than `phone`, but short and touched. Its drawers dock at the left, the window's
+// whole height (index.html), and stay up while the map is tapped, as a phone's do.
+const turnedPhone = matchMedia('(min-width: 521px) and (max-height: 520px) and (pointer: coarse)');
+const handheld = () => phone.matches || turnedPhone.matches;
 
 // The styles chosen from a list, each by the id of its chips, the hash key it rides under and the list it is drawn from:
 // read from the hash, shown and read back from the drawer by one loop each (writeHash keeps its own order, which links carry).
@@ -902,8 +906,8 @@ for (const entry of drawers) { const [b] = entry; b.addEventListener('click', (e
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && openDrawer()) setDrawer(false, true); });
 // the play band is not the map, nor is the skull: their buttons leave a drawer open, so the table is cleared mid-use
 const outside = (t) => { const d = openDrawer(); return d && t instanceof Node && !where.contains(t) && !d.contains(t) && !$('voyageBand').contains(t) && !$('memento').contains(t); };
-// On a phone every drawer stays up while the map is tapped or moved.
-addEventListener('pointerdown', (e) => { if (outside(e.target) && !(phone.matches && e.target === canvas)) setDrawer(false); });
+// On a phone, upright or turned, every drawer stays up while the map is tapped or moved.
+addEventListener('pointerdown', (e) => { if (outside(e.target) && !(handheld() && e.target === canvas)) setDrawer(false); });
 addEventListener('focusout', (e) => { if (e.relatedTarget && outside(e.relatedTarget)) setDrawer(false); }); // tabbed out; a click that focuses nothing has no relatedTarget
 
 // Reset: every control back to its default, the view (place, projection and bearing) and the hover kept. The hash holds the whole
@@ -3425,7 +3429,7 @@ const compass = $('compass');
 function showCompass() {
   const b = view.bearing ?? 0;
   compass.querySelector('svg').style.transform = `rotate(${-b}deg)`;
-  const turn = phone.matches ? 'twist two fingers on the map' : 'drag round', how = phone.matches ? 'tap' : 'click';
+  const turn = handheld() ? 'twist two fingers on the map' : 'drag round', how = handheld() ? 'tap' : 'click';
   compass.setAttribute('aria-label', b ? `North is ${Math.round(b)}° from the top: ${how} for north up, or ${turn} to turn the world` : `North up: ${turn} to turn the world and the chart with it`);
   compass.title = b ? `North up (${turn} to turn)` : `${turn[0].toUpperCase()}${turn.slice(1)} to turn the world`;
 }
@@ -3436,7 +3440,7 @@ compassTurn(compass, { // the arrow keys turn it by 15°, as the drag does
   release: stopped,
   click: () => { if (view.bearing) turnWorld(0); },
   step: turnWorld,
-  drags: () => !phone.matches, // a phone turns the world by a twist of two fingers on the map
+  drags: () => !handheld(), // a phone turns the world by a twist of two fingers on the map
 });
 
 // A touch or the wheel takes over from a flight: a subject it was carrying is dealt where the map is

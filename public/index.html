@@ -330,6 +330,18 @@
     html.sheet #cardScale { bottom: calc(50vh + 8px); bottom: calc(50dvh + 8px); }
   }
 
+  /* a phone turned to landscape (wider than a phone's 520 px, but short and touched): no walk-around buttons, as upright,
+     and each drawer docks at the left, the window's whole height, clear of the instruments and the skull at the right */
+  @media (min-width: 521px) and (max-height: 520px) and (pointer: coarse) {
+    #turns .walk { display: none; }
+    .drawer, .drawer.menu, #goPanel {
+      top: 8px; bottom: 8px; left: 8px; right: auto; width: min(420px, 55vw); min-width: 0; max-width: none; height: auto; max-height: none;
+      transform: translateX(calc(-100% - 24px));
+    }
+    .drawer.open { transform: none; }
+    #clearTune { left: auto; right: 12px; }
+  }
+
   #chartList { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 8px; }
   /* a chart's row: its scan, the sheet's button (lit while the sheet is on the map); beside it the name, then its city (a link to it) and year */
   #chartList .chart { display: flex; align-items: flex-start; gap: 12px; padding: 6px 10px 6px 6px; background: var(--sheet); color: var(--sheet-ink); border: 1px solid var(--rule); border-radius: 6px; }

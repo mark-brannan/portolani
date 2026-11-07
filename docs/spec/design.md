@@ -231,6 +231,13 @@ Feature: A drawer stays open on a click or a choice
     When the user taps a button, a chip, a link or a checkbox inside it, picks a place in it, or taps the map
     Then the sheet stays open and the map does what was asked behind it
     And the sheet closes only from its own button, another instrument's button or Esc; a tap on the map does not close it
+  Scenario: a phone turned to landscape
+    Source: the user, 2026-11-06, on #272: "When flipping the phone to landscape, the drawers are unusable because of being cramped. We also do not need the clockwise and counterclockwise rotate buttons (they're not needed for mobile) but they show up in this view for some reason."
+    Given a phone turned to landscape: wider than 520 px, but no more than 520 px tall, and touched rather than pointed at
+    When the user opens any drawer
+    Then it docks at the window's left edge, the window's whole height and a little over half its width, clear of the row of instruments and of the compass and the skull at the right, and scrolls inside
+    And it stays up when the map is tapped, as the bottom sheet does upright
+    And the lower right has the compass and the skull and no walk-around buttons, as upright
 
 Feature: A voyage's row in the Voyages drawer
   Source: the user on [#259](https://github.com/mark-brannan/portolani/pull/259), 2026-10-29: "Clicking a new voyage button always zooms to that voyages target window."; "The first time any given voyage is selected after opening the drawer, if it was not previously selected, zoom to the window for that voyage and then animate the line from the start to the finish."; "Each voyage has a show/hide button to the right of it, before the color selector. The show hide always does a quick show/hide action for the line without changing the zoom or view."; "The voyages colors should not "jump" or reset when multiple voyages were selected and an earlier one is then de-selected. The colors in the current display should remain 'sticky' to the voyage they were already assigned to." The pace of the first draw, after comparing three: "A but faster, maybe 1s +/- .5s." (A: an even pace along the line; B: the voyage's dates) This replaces the rule that a voyage put on stays where it is if any of its track is in view, and that a click on a shown voyage takes it off (`public/page.js` at `6960f78`).
@@ -359,7 +366,7 @@ Feature: Every chart turns, a quarter at a time
     When the user looks at the right gutter's foot
     Then the compass stands directly above the skull at the far right, the skull's diameter, and the two walk-around buttons stand side by side to its left, a little smaller
     And the compass still turns the world under a drag, and a click on it turned still sets north up
-    Given a phone
+    Given a phone, upright or turned to landscape
     When the user looks at the lower right
     Then the compass is there to read and to tap for north up, and does not turn under a drag; there are no walk-around buttons
     When the user twists two fingers on the map
