@@ -213,6 +213,12 @@
   #personPin .deep .tick { position: absolute; top: 0; bottom: 0; width: 1px; background: #3b2a1a; }
   #personPin .deep .tick.red, #peopleList .deep .tick.red { width: 3px; margin-left: -1px; background: #8c2f1e; }
   #personPin .span .bar { --c: #8c2f1e; height: 6px; }
+  /* Inset ruler: the dotted fan from the open era's stretch of the heading bar to its own bar across the full width */
+  .tline .fan { display: block; width: calc(100% - 18px); height: 12px; margin: 0 9px; overflow: visible; }
+  .tline .fan path { fill: none; stroke: #8d8170; stroke-width: 1; stroke-dasharray: 1.5 2.5; }
+  #peopleList .deep.inset, #personPin .deep.inset { height: 9px; margin-top: 0; }
+  #peopleList .deep.inset .tick { display: block; }
+  #personPin .deep.thin { height: 6px; }
   #personPin .nearby { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; font: 13px var(--serif); }
   #personPin .me { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; color: #8c2f1e; font-weight: bold; }
   #personPin .me small { margin-left: 6px; font-weight: normal; font-style: italic; font-size: 11px; color: var(--fg); opacity: 0.75; }
@@ -786,6 +792,8 @@
 
   <!-- with a mouse, a grouped list's section also opens when the pointer rests on its heading (page.js, HOVER_DWELL);
        off, only a click opens one. Kept in the link (`hover=0` is off). Not shown where nothing can hover -->
+  <!-- which People drawer the medallion opens, while both are tried: Lens or Inset ruler (page.js peopleView; `drawer=inset`) -->
+  <div id="peopleViewRow"><h3>People drawer</h3><div id="peopleView" class="chips" role="radiogroup" aria-label="People drawer"></div></div>
   <div id="hoverRow"><h3>Sections open on hover</h3><div id="hoverOpen" class="chips" role="radiogroup" aria-label="Sections open on hover"></div></div>
 
   <div id="share">

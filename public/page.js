@@ -19,7 +19,7 @@ import { playedOn, playDateText, playPace, isLong } from './scene.mjs'; // the p
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, effectiveOpacity, sheetOpacity, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
-import { PEOPLE_FILE, PICTURES_FILE, SIGHT_PICTURES_FILE, SIGHT_MANIFEST_FILE, sightDeal, eraOf, eraYears, eraScale, DRAWER_ERAS, lensBands, lensX, familyOrder, barOn, lifeSpan, firstYear, yearsText, PERSON_RED, pictureCredit, pictureNote, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, sightFrame, viewContaining, withPictures, peopleOf, whoOf, deathOf, sightPicturesOf, MEMENTO, MEMENTO_EN, mementoNext, mementoLines } from './people.mjs';
+import { PEOPLE_FILE, PICTURES_FILE, SIGHT_PICTURES_FILE, SIGHT_MANIFEST_FILE, sightDeal, eraOf, eraYears, eraScale, DRAWER_ERAS, deepBands, lensBands, lensX, familyOrder, barOn, lifeSpan, firstYear, yearsText, PERSON_RED, pictureCredit, pictureNote, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, sightFrame, viewContaining, withPictures, peopleOf, whoOf, deathOf, sightPicturesOf, MEMENTO, MEMENTO_EN, mementoNext, mementoLines } from './people.mjs';
 import { fold, bestPlace, withoutPartsOfFrames } from './placename.mjs';
 import { nextInCycle } from './cycle.mjs';
 import { planFlight, ease as flyEase, FLY_KNOBS, flyDefaults } from './flight.mjs';
@@ -95,6 +95,8 @@ const hashParams = () => new URLSearchParams(location.hash.slice(1));
 const ALL_CHARTS = [hashParams(), new URLSearchParams(location.search)].some((q) => q.get('charts') === 'all');
 // whether a grouped list's section opens when a mouse rests on its heading (`hover=`); on is written as no key, `hover=0` is off
 const hoverFromHash = () => hashParams().get('hover') !== '0';
+// which People drawer the medallion opens, while both are tried: Lens (the default, no key) or Inset ruler (`drawer=inset`)
+const peopleViewFromHash = () => (hashParams().get('drawer') === 'inset' ? 'inset' : 'lens');
 
 function viewFromHash() {
   const q = hashParams(), m = /^(-?[\d.]+)\/(-?[\d.]+)\/(-?[\d.]+)$/.exec(q.get('map') ?? '');
@@ -183,6 +185,7 @@ function writeHash() {
   if (v.projection !== PROJECTION_NAMES[0]) q.set('projection', v.projection);
   if (v.bearing) q.set('bearing', String(Math.round(v.bearing * 10) / 10)); // the world turned: the compass direction at the top, north up written as no key
   if (!hoverOpen) q.set('hover', '0');
+  if (peopleView !== 'lens') q.set('drawer', peopleView);
   if (!sameSet(selection, DEFAULT_SET)) q.set('sprites', SPRITES.filter((s) => selection.has(s.key)).map((s) => encodeKey(s.key)).join(','));
   if (st.townSize !== DEFAULTS.townSize) q.set('townsize', st.townSize);
   if (!st.names) q.set('names', '0');
@@ -423,6 +426,10 @@ const HOOD_GLYPHS = {
 };
 const ROSE_AT = `${Math.abs(ORIGINS.rose.lon)}°${ORIGINS.rose.lon < 0 ? 'W' : 'E'} ${Math.abs(ORIGINS.rose.lat)}°${ORIGINS.rose.lat < 0 ? 'S' : 'N'}`;
 const NAME_SAMPLE = (text) => `<em class="nm">${text}</em>`; // a region name as the map letters it, italic
+const PEOPLE_GLYPHS = {
+  lens: svg(`<rect x="1.5" y="6" width="25" height="6" rx="2" ${stroke('currentColor', 1.2)}/><rect x="8" y="6" width="15" height="6" fill="currentColor" opacity="0.5"/>`),
+  inset: svg(`<rect x="1.5" y="1.5" width="25" height="3" rx="1.5" ${stroke('currentColor', 1)}/><path d="M18 4.5L1.5 12M21 4.5L26.5 12" ${stroke('currentColor', 0.7)} stroke-dasharray="1 1.5"/><rect x="1.5" y="12" width="25" height="4.5" rx="1.5" fill="currentColor" opacity="0.5"/>`),
+};
 const CHOICES = {
   overlap: [['smallest', 'Smallest', 'only the smallest of the charts that overlap'], ['fit', 'Fit', 'the chart nearest one window wide'], ['cut', 'All, cut', 'every chart, its lines stopping at a smaller chart\'s edge'], ['uncut', 'All, uncut', 'every chart in full']].map(([value, label, note]) => [value, label, note, OVERLAP_GLYPHS[value]]),
   projection: [['mercator', 'Mercator', 'rhumb lines straight'], ['plate-carree', 'Plate carrée', 'equal degrees'], ['miller', 'Miller', 'poles tamed'], ['equal-area', 'Equal-area', 'Gall–Peters'], ['orthographic', 'Globe', 'orthographic'], ['azimuthal-equidistant', 'Azimuthal equidistant', 'true from the centre'], ['stereographic', 'Stereographic', 'the polar chart']].map(([value, label, note = '']) => [value, label, note, PROJECTION_GLYPHS[value]]),
@@ -452,6 +459,7 @@ const CHOICES = {
   overlayMode: [['sheet', 'One sheet', 'the whole scan, opaque, laid level and centred, dragged by hand', HOOD_GLYPHS.sheets], ['pieces', 'Warped pieces', 'each piece warped onto today\'s coast, at the opacity below', HOOD_GLYPHS.rings]],
   tuneOrigin: [['rose', `Catalan rose (${ROSE_AT})`, 'every band\'s grid has a corner on the rose', HOOD_GLYPHS.rose], ['zero', '0° 0°', 'NOAA\'s own zero', HOOD_GLYPHS.zero]],
   tuneCurated: [['1', 'On', 'the curated charts take the place of the grid cells they hold', HOOD_GLYPHS.curated], ['0', 'Off', 'grid cells everywhere', HOOD_GLYPHS.grid]],
+  peopleView: [['lens', 'Lens', 'one bar for all history, the open era stretched on it to a straight scale', PEOPLE_GLYPHS.lens], ['inset', 'Inset ruler', 'the bar for all history as it is, the open era magnified on a ruler under it', PEOPLE_GLYPHS.inset]],
   hoverOpen: [['off', 'Off', 'a click opens a section', HOVER_GLYPHS.off], ['on', 'On', 'resting the pointer on a heading opens its section', HOVER_GLYPHS.on]],
   tuneRoselines: [['1', 'On', 'the rose\'s 32 lines as one more hub at every zoom', HOOD_GLYPHS.roselines], ['0', 'Off', 'only the sheet the rose falls in', HOOD_GLYPHS.off]],
   flyShape: [['step', 'Step', 'out about the place left, across at the top, down onto the place; Blend lets the pan run alongside the zoom'], ['hyperbolic', 'Hyperbolic', 'van Wijk & Nuij, as MapLibre flies: pan and zoom together on one curve, Curve setting its height']],
@@ -782,6 +790,7 @@ if (UI) {
 }
 
 let hoverOpen = hoverFromHash();
+let peopleView = peopleViewFromHash(); // 'lens' or 'inset', the People drawer's look while both are tried
 let view = viewFromHash();
 let style = styleFromHash();
 let selection = selectionFromHash();
@@ -2297,22 +2306,42 @@ function drawPeople() {
 // era's scale, which its rows' life bars are drawn on.
 const headItem = ({ name, ticks }) => `<li class="era" data-era="${escapeHTML(name)}" data-ticks="${ticks.filter(Number.isFinite).join(' ')}">` +
   `<button type="button" class="head" data-head="${escapeHTML(name)}" aria-expanded="false">${escapeHTML(name)}<small>${escapeHTML(eraYears(name))}</small></button>` +
-  `<span class="deep" aria-hidden="true">${lensBar(null, name, ticks)}</span>${rulerOf(name)}</li>`;
+  `<span class="deep" aria-hidden="true">${lensBar(null, name, ticks)}</span><span class="insetwrap"></span>${rulerOf(name)}</li>`;
 // The heading bar's insides as a lens on the era open (`open`, lensBands): every era a pale band, `own` darker, the
 // years `ticks` as ticks and `red`, the chosen person's year, as a red one
 const lensBar = (open, own, ticks, red = null) => lensBands(open).map(([n, a, b]) => `<span class="band${n === own ? ' own' : ''}" style="left:${pc(a)};width:${pc(Math.max(0.004, b - a))}"></span>`).join('') +
   ticks.filter(Number.isFinite).map((y) => `<span class="tick" style="left:${pc(lensX(y, open))}"></span>`).join('') +
   (Number.isFinite(red) ? `<span class="tick red" style="left:${pc(lensX(red, open))}"></span>` : '');
+// Inset ruler's magnifier: under the heading bar, a dotted fan from the era's stretch of it out to a bar of the era alone,
+// on its own straight scale across the full width, with the years `ticks` as ticks and `red` as a red one
+function insetBar(era, ticks, red = null) {
+  const [, a, b] = deepBands().find(([n]) => n === era) ?? [null, 0, 1], s = eraScale(era);
+  return `<svg class="fan" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><path d="M${(a * 100).toFixed(2)} 0L0 10M${(b * 100).toFixed(2)} 0L100 10" vector-effect="non-scaling-stroke"/></svg>` +
+    `<span class="deep inset" aria-hidden="true"><span class="band own" style="left:0;width:100%"></span>${ticks.filter(Number.isFinite).map((y) => `<span class="tick" style="left:${pc(s.x(y))}"></span>`).join('')}` +
+    `${Number.isFinite(red) ? `<span class="tick red" style="left:${pc(s.x(red))}"></span>` : ''}</span>`;
+}
+// Lens or Inset ruler (peopleView), switched live from the settings' chips or the link; the drawer redrawn as it stands
+function setPeopleView(v, write = true) {
+  if (v === peopleView) return;
+  peopleView = v;
+  $('peopleView').value = v;
+  showHeads(); showPeople();
+  if (write) writeHash();
+}
 // the ruler of an era's own scale, which its rows' life bars are drawn on
 const rulerOf = (era) => { const r = eraScale(era); return r ? `<span class="ruler" aria-hidden="true">${r.ticks.map(([y, label]) => `<span style="left:${pc(r.x(y))}">${label}</span>`).join('')}</span>` : ''; };
 // The open era's stretch of the lens bar, as the CSS the ruler and the life bars under it sit in (--lens-l, --lens-w)
-const lensVars = (el, era) => { const [, a, b] = lensBands(era).find(([n]) => n === era) ?? [null, 0, 1]; el.style.setProperty('--lens-l', a); el.style.setProperty('--lens-w', b - a); };
+const lensVars = (el, era) => { const [, a, b] = (peopleView === 'lens' && lensBands(era).find(([n]) => n === era)) || [null, 0, 1]; el.style.setProperty('--lens-l', a); el.style.setProperty('--lens-w', b - a); };
 // Shows the rows of the open headings and hides the rest
 function showHeads() {
   const open = [...openHeads][0] ?? null; // one at a time
   lensVars($('peopleList'), open);
   for (const li of $('peopleList').children) {
-    if (li.dataset.ticks != null) li.querySelector(':scope > .deep').innerHTML = lensBar(open, li.dataset.era, li.dataset.ticks.split(' ').map(Number));
+    if (li.dataset.ticks != null) {
+      const ticks = li.dataset.ticks.split(' ').map(Number), inset = peopleView === 'inset';
+      li.querySelector(':scope > .deep').innerHTML = lensBar(inset ? null : open, li.dataset.era, ticks);
+      li.querySelector(':scope > .insetwrap').innerHTML = inset && li.dataset.era === open ? insetBar(open, ticks) : '';
+    }
     const key = li.dataset.under;
     li.hidden = Boolean(key) && !openHeads.has(key);
     const head = li.querySelector(':scope > .head');
@@ -2376,7 +2405,8 @@ function pinHTML(p, era) {
   const ticks = ids.map((id) => personOf(id)).filter(Boolean).map((q) => firstYear(q, yearsOf(q)));
   const near = (q, text) => (q ? `<button type="button" class="near" data-person="${escapeHTML(q.id)}" title="${escapeHTML(q.name)}">${text(escapeHTML(q.name))}</button>` : '<span></span>');
   return `<div class="pinhead"><span class="name">${escapeHTML(era)}<small>${escapeHTML(eraYears(era))}</small></span><button type="button" class="unchoose" data-unchoose aria-label="Let ${escapeHTML(p.name)} go" title="Let ${escapeHTML(p.name)} go, as the skull does">✕</button></div>` +
-    `<span class="deep" aria-hidden="true">${lensBar(era, era, ticks, firstYear(p, yearsOf(p)))}</span>` +
+    (peopleView === 'inset' ? `<span class="deep thin" aria-hidden="true">${lensBar(null, era, [])}</span>${insetBar(era, ticks, firstYear(p, yearsOf(p)))}`
+      : `<span class="deep" aria-hidden="true">${lensBar(era, era, ticks, firstYear(p, yearsOf(p)))}</span>`) +
     `${spanBarOn(eraScale(era), lifeSpan(p, yearsOf(p)))}${rulerOf(era)}` +
     `<div class="nearby">${near(personOf(ids[i - 1]), (n) => `‹ ${n}`)}<span class="me">${escapeHTML(p.name)}<small>${escapeHTML(yearsText(p, voyagesOf(p)))}</small></span>${near(personOf(ids[i + 1]), (n) => `${n} ›`)}</div>`;
 }
@@ -3158,6 +3188,8 @@ document.addEventListener('click', (e) => {
 const showHover = () => { $('hoverOpen').value = hoverOpen ? 'on' : 'off'; };
 showHover();
 $('hoverOpen').addEventListener('input', () => { hoverOpen = $('hoverOpen').value === 'on'; writeHash(); });
+$('peopleView').value = peopleView;
+$('peopleView').addEventListener('input', () => setPeopleView($('peopleView').value));
 
 // Each chart a row: its scan as a thumbnail (the drawer's chart glyph, greyed, until it has one) and its name, either
 // of which shows that chart's sheet alone, at its own placement, and flies to frame it; the eye beside the name shows or
@@ -3529,7 +3561,7 @@ $('compareLine').addEventListener('pointerdown', (e) => {
 });
 let typing = 0; // a typed title is placed when the typing pauses, not on every key: a placement takes up to a few hundred ms
 $('title').addEventListener('input', () => { clearTimeout(typing); typing = setTimeout(readControls, 400); });
-addEventListener('hashchange', () => { dealing = null; hoverOpen = hoverFromHash(); showHover(); view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); showVoyage(); showPeople(); render(); });
+addEventListener('hashchange', () => { dealing = null; hoverOpen = hoverFromHash(); showHover(); setPeopleView(peopleViewFromHash(), false); view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); showVoyage(); showPeople(); render(); });
 showPlacement();
 render();
 
