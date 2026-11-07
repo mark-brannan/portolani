@@ -2423,7 +2423,8 @@ function skullRise() {
   el.animate([{ opacity: 0, transform: `scale(${1 - g * 0.2})` }, { opacity: ink, transform: 'scale(1)', offset: 0.3 }, { opacity: ink * 0.7, transform: `scale(${1 + g * 0.3})`, offset: 0.6 }, { opacity: 0, transform: `scale(${1 + g})` }],
     { duration: CLEAR_TUNE.skullMs, easing: 'cubic-bezier(.3,0,.6,1)' }).finished.then(() => { el.hidden = true; }, () => {});
 }
-// The phrase, on one line at the foot of the map, as large as fits it, grows and fades: slower than the skull, to be read
+// The phrase, on one line at the foot of the map, as large as fits it, grows and fades: slower than the skull, to be read.
+// Its foot stands above the skull and the compass (#memento), so neither covers any of it as it grows; it grows upward.
 function wordsRise(text) {
   const el = $('mementoBig');
   const { left, top, wide, tall } = mapBox();
@@ -2433,7 +2434,8 @@ function wordsRise(text) {
   el.style.fontSize = `${size}px`;
   const fit = (wide * 0.86) / el.scrollWidth;
   if (fit < 1) { size *= fit; el.style.fontSize = `${size}px`; }
-  Object.assign(el.style, { left: `${left + (wide - el.offsetWidth) / 2}px`, top: `${top + tall - el.offsetHeight - Math.max(56, tall * 0.12)}px` });
+  const foot = Math.min(top + tall - Math.max(56, tall * 0.12), $('memento').getBoundingClientRect().top - 8);
+  Object.assign(el.style, { left: `${left + (wide - el.offsetWidth) / 2}px`, top: `${Math.max(top, foot - el.offsetHeight)}px` });
   // In, then straight into the fade, all one smooth curve: the fade eases in, so there is no
   // corner at the top. The size is its own animation: it holds at 1 until `growFrom` percent of the phrase's
   // time, then eases to its end size by `growTo` percent of it.

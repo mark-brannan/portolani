@@ -805,6 +805,11 @@ Feature: The skull's clear is shown  (`#sweep`, page.js `skullRise`, `wordsRise`
     And a long phrase with a comma near its middle is set as a couplet, on two lines split after the comma
     And a phrase that is verse in its source, Manrique's, keeps that verse's lines
     And the next phrase takes its place beside the skull, the one the next click shows
+  Scenario: the large phrase is never under the skull or the compass
+    Source: the user, 2026-11-06, on #272: "The skull (and potentially the compass) are obscuring the red memento mori text on mobile. IT should be either drawn over those buttons, or displayed slightly higher up above the level of the buttons so that it is fully visible during its animation."
+    Given a phone, or any window where the phrase would reach down to the skull and the compass
+    When the user clicks the skull
+    Then the large phrase stands with its foot above the compass and the skull, and grows upward from there, so every letter of it is in sight from its first frame to its last
   Scenario: the phrase beside the skull never moves it
     Given any phrase beside the skull, the longest included
     When the user looks at the skull
