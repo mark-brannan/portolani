@@ -2335,12 +2335,13 @@ const lensVars = (el, era) => { const [, a, b] = (peopleView === 'lens' && lensB
 // Shows the rows of the open headings and hides the rest
 function showHeads() {
   const open = [...openHeads][0] ?? null; // one at a time
+  const chosen = personOf(style.person), year = chosen && firstYear(chosen, yearsOf(chosen)), red = chosen ? [eraOf(year), year] : null;
   lensVars($('peopleList'), open);
   for (const li of $('peopleList').children) {
     if (li.dataset.ticks != null) {
-      const ticks = li.dataset.ticks.split(' ').map(Number), inset = peopleView === 'inset';
-      li.querySelector(':scope > .deep').innerHTML = lensBar(inset ? null : open, li.dataset.era, ticks);
-      li.querySelector(':scope > .insetwrap').innerHTML = inset && li.dataset.era === open ? insetBar(open, ticks) : '';
+      const ticks = li.dataset.ticks.split(' ').map(Number), inset = peopleView === 'inset', mine = red?.[0] === li.dataset.era ? red[1] : null;
+      li.querySelector(':scope > .deep').innerHTML = lensBar(inset ? null : open, li.dataset.era, ticks, inset ? null : mine);
+      li.querySelector(':scope > .insetwrap').innerHTML = inset && li.dataset.era === open ? insetBar(open, ticks, mine) : '';
     }
     const key = li.dataset.under;
     li.hidden = Boolean(key) && !openHeads.has(key);
@@ -2368,7 +2369,7 @@ function spanBarOn(scale, span) {
   const b = barOn(scale, span);
   if (!b) return '';
   const [x0, x1, o0, o1] = b;
-  return `<span class="span" aria-hidden="true"><span class="bar${o0 ? ' open-start' : ''}${o1 ? ' open-end' : ''}" style="left:${pc(x0)};width:${pc(Math.max(0.012, x1 - x0))}"></span></span>`;
+  return `<span class="span" aria-hidden="true"><span class="drop" style="left:${pc(x0)}"></span><span class="bar${o0 ? ' open-start' : ''}${o1 ? ' open-end' : ''}" style="left:${pc(x0)};width:${pc(Math.max(0.012, x1 - x0))}"></span></span>`;
 }
 // The chosen person's tile, slid open directly under their row and shut under everyone else's: the bio, the pictures as
 // thumbnails, then one row per voyage of theirs with its title and years, its summary and where to read more, and the
@@ -2384,31 +2385,16 @@ function showPeople() {
     b.parentElement.querySelector(':scope > .rows > div').inert = !(on && p);
   }
   card.hidden = !p;
-  const li = p && $('peopleList').querySelector(`li[data-row="${CSS.escape(p.id)}"]`), pin = $('personPin');
-  $('peoplePanel').classList.toggle('chosen', Boolean(li)); // the list folded to the pin; wider on a wide screen
-  pin.hidden = !li;
-  if (!p) { card.replaceChildren(); pin.replaceChildren(); $('peoplePanel').append(card); return; }
-  if (li) { pin.innerHTML = pinHTML(p, li.dataset.under); lensVars(pin, li.dataset.under); }
-  pin.after(card);
+  showHeads(); // the chosen person's tick red on their era's bar
+  if (!p) { card.replaceChildren(); $('peoplePanel').append(card); return; }
+  const row = $('peopleList').querySelector(`li[data-row="${CSS.escape(p.id)}"] > .rows > div`);
+  (row ?? $('peoplePanel')).append(card); // their tile under their row, the rest of the list as it was
   const voyages = p.voyages.map((id) => [id, peopleData.voyages[id]]).filter(([, v]) => v).map(([id, v]) => voyageItem(id, v, peopleData.sources, { name: false })).join('');
   const pics = picsHTML({ images: p.images, manifest: peopleData.pictures }, picturesOf(p));
   card.innerHTML = (p.bio ? `<p class="bio">${escapeHTML(p.bio)}</p>` : '') +
     (pics ? `<div class="pics" role="group" aria-label="Pictures, on the table or off it">${pics}</div>` : '') +
     (voyages ? `<ul class="pvoyages" role="group" aria-label="${escapeHTML(p.name)}'s voyages">${voyages}</ul>` : '');
   showVoyage(); // the tile's eyes and play buttons as the voyages stand
-}
-// The chosen person's pin, which the People list folds to: their era's heading and a ✕ that lets them go, the heading bar
-// as a lens on that era with its people's years as ticks and theirs red, their life as a red bar on the era's ruler, and
-// the people either side of them in the era, a tap away
-function pinHTML(p, era) {
-  const ids = [...$('peopleList').querySelectorAll(`li[data-under="${CSS.escape(era)}"]`)].map((r) => r.dataset.row), i = ids.indexOf(p.id);
-  const ticks = ids.map((id) => personOf(id)).filter(Boolean).map((q) => firstYear(q, yearsOf(q)));
-  const near = (q, text) => (q ? `<button type="button" class="near" data-person="${escapeHTML(q.id)}" title="${escapeHTML(q.name)}">${text(escapeHTML(q.name))}</button>` : '<span></span>');
-  return `<div class="pinhead"><span class="name">${escapeHTML(era)}<small>${escapeHTML(eraYears(era))}</small></span><button type="button" class="unchoose" data-unchoose aria-label="Let ${escapeHTML(p.name)} go" title="Let ${escapeHTML(p.name)} go, as the skull does">✕</button></div>` +
-    (peopleView === 'inset' ? `<span class="deep thin" aria-hidden="true">${lensBar(null, era, [])}</span>${insetBar(era, ticks, firstYear(p, yearsOf(p)))}`
-      : `<span class="deep" aria-hidden="true">${lensBar(era, era, ticks, firstYear(p, yearsOf(p)))}</span>`) +
-    `${spanBarOn(eraScale(era), lifeSpan(p, yearsOf(p)))}${rulerOf(era)}` +
-    `<div class="nearby">${near(personOf(ids[i - 1]), (n) => `‹ ${n}`)}<span class="me">${escapeHTML(p.name)}<small>${escapeHTML(yearsText(p, voyagesOf(p)))}</small></span>${near(personOf(ids[i + 1]), (n) => `${n} ›`)}</div>`;
 }
 // A subject's pictures as thumbnails, each a button that takes it off the table or puts it back (`shown` those on it)
 const picsHTML = (s, shown, only = null) => s.images.map((im, i) => { const m = s.manifest[im.file];
@@ -2418,7 +2404,6 @@ function peopleClick(e) {
   if (voyageControl(e)) return; // an eye or a play in the chosen person's tile
   const head = e.target.closest('#peopleList .head');
   if (head) { const k = head.dataset.head; if (!openHeads.delete(k)) { openHeads.clear(); openHeads.add(k); } showHeads(); return; } // one era open at a time
-  if (e.target.closest('[data-unchoose]')) { const hadPerson = clearTable(); if (hadPerson) render(); return; } // the pin's ✕, as the skull
   const pic = e.target.closest('[data-pic]'), chosen = personOf(style.person);
   if (pic && chosen) { setOnTable(Number(pic.dataset.pic), !picturesOf(chosen).includes(Number(pic.dataset.pic))); return; }
   const b = e.target.closest('[data-person]');
