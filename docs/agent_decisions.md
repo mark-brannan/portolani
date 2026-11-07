@@ -606,3 +606,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261107t012031z
 - An era with no rows gets no heading in the People drawer (the modern world has none today) ([#399](https://github.com/mark-brannan/portolani/pull/399))
+
+### 20261107t012040z
+- A person chosen from the link or the map opens the headings over their row, once; heading open state is per page session, not in the hash ([#399](https://github.com/mark-brannan/portolani/pull/399))
