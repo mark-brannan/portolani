@@ -594,3 +594,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261107t011952z
 - TIMELINE_ERAS stays the Sights eras; the drawers' era list is DRAWER_ERAS = Prehistory + TIMELINE_ERAS, and eraOf returns Prehistory before 1500 BC ([#399](https://github.com/mark-brannan/portolani/pull/399))
+
+### 20261107t012003z
+- The Voyages drawer takes the same eras (a Prehistory heading for the Austronesian expansion) but its headings stay open, with no heading bar ([#399](https://github.com/mark-brannan/portolani/pull/399))
