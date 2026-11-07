@@ -2398,19 +2398,21 @@ $('sweep').addEventListener('click', () => {
 // The open drawer stops above the skull (--memento-h, index.html), whether the compass shows over it
 new ResizeObserver(() => document.documentElement.style.setProperty('--memento-h', `${$('memento').offsetHeight}px`)).observe($('memento'));
 
-// The clear's timing, chosen on #367: what goes (the lines and the charts' sheets) fades over 4 s; the skull is 0.4 s at
-// 8% ink and grows to ×2.5; the phrase is 6 s, in at once and straight into a slow fade, and its size changes from
-// 5% to 100% of that time, to ×1.05
-const CLEAR_TUNE = { goneMs: 4000, skullMs: 300, wordsMs: 6000, ink: 8, skullGrow: 250, wordsGrow: 115, growFrom: 5, growTo: 100,
+// The clear's timing, the user's picks on #272: what goes (the lines and the charts' sheets) fades over 4 s; the skull
+// is 0.8 s at 15% ink and grows to ×3; the phrase is 7 s, in at once and straight into a slow fade, and its size
+// changes from 5% to 100% of that time, to ×1.2
+const CLEAR_TUNE = { goneMs: 4000, skullMs: 800, wordsMs: 7000, ink: 15, skullGrow: 300, wordsGrow: 120, growFrom: 5, growTo: 100,
   // a card's exit (Pulverum, and each card in the skull's clear): its time and the gap between cards; how far along the
   // deal-off path it travels; when in its exit the dust begins; how much the crumbling runs from the trailing edge
   // (0 scattered); a grain's size and drift, CSS px; the share of grains seen as dust; a grain's life, of the exit's time
-  cardMs: 300, cardGap: 50, travel: 75, dustFrom: 30, sweep: 100, grain: 4, drift: 200, dustKept: 100, dustLife: 200 };
-// Temporary, for tuning on this PR (#272): the panel at the top left (#clearTune) changes these, kept per browser
-{
-  const merged = { ...CLEAR_TUNE }, TUNE_KEY = 'portolani.clearTune.8';
+  cardMs: 800, cardGap: 50, travel: 75, dustFrom: 30, sweep: 100, grain: 4, drift: 200, dustKept: 100, dustLife: 200 };
+// A hidden tuning panel (#clearTune, top left) changes these, kept per browser. It shows only with `clear-tune` in the
+// query (`?clear-tune#...`), which the page's own hash rewrites leave alone; without it the defaults above hold and
+// any kept tuning is ignored. Never under a browser test, where it would sit over the page.
+if (new URLSearchParams(location.search).has('clear-tune') && !navigator.webdriver) {
+  const merged = { ...CLEAR_TUNE }, TUNE_KEY = 'portolani.clearTune.9';
   try { Object.assign(CLEAR_TUNE, JSON.parse(localStorage.getItem(TUNE_KEY) ?? '{}')); } catch { /* none kept */ }
-  if (navigator.webdriver) $('clearTune').hidden = true; // not part of the page; it would sit over the browser tests
+  $('clearTune').hidden = false;
   const keep = () => { try { localStorage.setItem(TUNE_KEY, JSON.stringify(CLEAR_TUNE)); } catch { /* not kept */ } };
   const shows = [];
   for (const [id, key, unit] of [['tuneSkull', 'skullMs', 's'], ['tuneInk', 'ink', '%'], ['tuneSkullGrow', 'skullGrow', 'x'], ['tuneGone', 'goneMs', 's'], ['tuneWords', 'wordsMs', 's'], ['tuneWordsGrow', 'wordsGrow', 'x'], ['tuneGrowFrom', 'growFrom', '%'], ['tuneGrowTo', 'growTo', '%'],
