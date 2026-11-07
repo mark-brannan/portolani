@@ -612,3 +612,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261107t012048z
 - Prehistory's ticks include its family's members at their own years, so some fall past Prehistory's band ([#399](https://github.com/mark-brannan/portolani/pull/399))
+
+### 20261107t031141z
+- Sahul's when is written in BC (c. 63,000–48,000 BC, 65,000–50,000 BP less 1950) as every record's is; the tiles keep years ago Undo: rewrite the Sahul when in BP ([#399](https://github.com/mark-brannan/portolani/pull/399))
