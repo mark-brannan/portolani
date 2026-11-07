@@ -673,6 +673,40 @@ Feature: A card on the table: a click looks, three buttons, Pulverum
     And inside the back, at its lower right beside the three buttons, is ✘ *Pulverum*: the cross, then the word in red, in an italic script hand
     When the user clicks ✘ *Pulverum*
     Then that card alone leaves the table as the skull's clear takes a card, and a click on the person or the mark again deals it back
+  Scenario: on a wide screen the looked-at card is about three quarters of the window
+    Source: the user, 2026-11-07, on #404: "When focusing a card on desktop, the images need to be much larger, maybe 3/4 of the screen if the size is above the min pixel size (do we have one?)" This overtakes "its longer side about three quarters of the window's shorter side, never past the picture's own pixels" in "a click or a tap looks".
+    Given a card looked at on a wide screen
+    Then it fits three quarters of the window's width and most of its height, whichever binds, leaving room at its right for its buttons and their names
+    And a picture whose long side is 400 px or more grows past its own pixels to fill that; a smaller one grows to no more than twice its pixels
+  Scenario: Pulverum is the third button, a red chi
+    Source: the user, 2026-11-07, on #404: "\"put away\" should be replaced with a Red Chi symbol and be Pulverum (remove it from the back of the card)". This overtakes Put away in "three buttons at the lower right, the same on both faces" and ✘ *Pulverum* inside the back in "the back's own controls".
+    Given a card looked at, face up or face down
+    Then its buttons, top to bottom, are Read more, Turn over and Pulverum, a red Χ (the Greek chi), the same on both faces
+    And the back carries no Pulverum of its own
+    When the user clicks Pulverum
+    Then that card alone leaves the table, as ✘ *Pulverum* did
+    And Escape, or a click on the map off the card, still puts it away
+  Scenario: the looked-at card is held where it can be dragged, and a click turns it over
+    Source: the user, 2026-11-07, on #404: "Do not show the grab hand if a thing is not grabbable/draggable in some way. The card should either be draggable or we should not show the hand (and the click on the card puts it away). IF the hand is shown and can be used for grab, we should also allow a click with no drag to be an alternative for of 'flip'. The dragging behavior should be aligned with the mobile experience if possible." This overtakes "a looked-at card zooms and pans, the map stays" on a wide screen too: the card and the map move together everywhere, as on a phone, and the double-click or double-tap toggle goes, since a click turns the card over.
+    Given a card looked at on a wide screen, face up or face down
+    When the pointer rests on it
+    Then the pointer is a hand, and while the user drags it the card and the map move together, and the wheel zooms both about the pointer, as a pinch does on a phone
+    When the user clicks the card and moves nothing
+    Then it turns over, front to back or back to front; a click on a link on its back follows the link
+    And off the card the pointer is no hand: a click there puts the card away
+    And everywhere on the page the hand shows only where a press and drag moves something: the map, a chart's sheet, a dealt card's frame, a corner card, the compass
+  Scenario: the buttons stand to the right of the card on a wide screen
+    Source: the user, 2026-11-07, on #404: "The buttons should be to the right of the card, not covering it." This overtakes "the column straddles the card's right edge" in "three buttons at the lower right, the same on both faces".
+    Given a card looked at on a wide screen
+    Then its three buttons stand in a column just outside its right edge, low, each name to its right, none of them on the card
+    And they stay in the window while the card is dragged or zoomed
+  Scenario: on a phone the card is not crowded by its buttons, and a tap turns it over
+    Source: the user, 2026-11-07, on #404: "The mobile buttons should also not limit the visibility of the card. For mobile, clicking the card again flips to the back, clicking the middle of the back flips to the front. IF there is room the link button and flip and Chi can be on the right side above the compass and skull. IF there is not room they can just be hidden" This overtakes "with room at its right for its buttons" in "a click or a tap looks" and the phone's column beside the card in "three buttons at the lower right, the same on both faces".
+    Given a card looked at on a phone, upright or turned
+    Then it takes the whole of its part of the window, keeping no column for its buttons, rising within that part when that clears room above the compass
+    And its three buttons stand in the right gutter above the compass and the skull where they fit clear of the card at its look size; where they do not, they are not shown
+    When the user taps the card's front
+    Then it turns to its back; a tap on the back, anywhere but a link, turns it to the front
 
 Feature: A sight's pictures on the chart table
   Source: the user's design for the sights' pictures, 2026-10-30, on [#310](https://github.com/mark-brannan/portolani/pull/310): a sight's tile opened on the map deals its pictures onto the map "as onto a chart table", exactly as a chosen person's pictures are; Tyre first, from the candidates in `docs/ruin-marks/tyre.md`; where the row lies and the split by mark, the user's review of [#326](https://github.com/mark-brannan/portolani/pull/326), 2026-10-30, as #326's body records it (paraphrase: a sight's cards are dealt in a row along the foot of the window, in its bottom third, clear of the mark, the map flying there first from afar; a sight with several marks splits its pictures by mark, Tyre's city site and Al-Bass). This overtakes the row "just south of its marks, centred under them" and the tile that opened all of a sight's pictures.

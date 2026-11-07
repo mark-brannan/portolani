@@ -1334,7 +1334,7 @@ canvas.addEventListener('pointermove', (e) => {
   if (carried) { carried.corner = cornerAt(toCanvas(e.clientX, e.clientY)); showSnap(carried.corner, carried.w, carried.h); return; }
   if (!pointers.size) { // a picture over the marks under it, as a press finds it
     const p = toCanvas(e.clientX, e.clientY), pic = pictureHit(p)?.kind;
-    if (looking != null) { canvas.style.cursor = pic ? (pic === 'held' ? 'grab' : 'pointer') : ''; return; }
+    if (looking != null) { canvas.style.cursor = pic ? (pic === 'held' ? 'grab' : 'pointer') : 'default'; return; } // off the card a click puts it away: no hand
     const card = cardAt(p), mark = !card && !pic && markAt(p), hit = card || pic || mark ? null : sheetHit(p);
     canvas.style.cursor = card ? 'grab' : pic ? ({ move: 'grab', body: 'zoom-in' }[pic] ?? '') : mark ? 'pointer' : { move: 'grab', turn: TURN_CURSOR }[hit?.kind] ?? '';
     showCornerIcon(hit?.kind === 'turn' ? hit : null);
@@ -2697,7 +2697,7 @@ async function flyToSubject() {
 // table it lies where it was dealt or last dragged (tableBox); looked at, it stands upright in the middle of the window
 // (lookBox), and it flies between the two in LOOK_MS, the map dimming behind it by LOOK_DIM
 // (docs/spec/design.md, "A card on the table: a click looks, three buttons, Pulverum").
-const LOOK_SHARE = 0.75, LOOK_MS = 320, LOOK_DIM = 0.45, MOUNT = 5; // MOUNT: the parchment margin round a picture, canvas px
+const LOOK_W = 0.75, LOOK_H = 0.85, LOOK_FLOOR = 400, LOOK_MS = 320, LOOK_DIM = 0.45, MOUNT = 5; // MOUNT: the parchment margin round a picture, canvas px
 // The part of the canvas the window shows, in canvas px: a phone crops the canvas to the window.
 function windowRect() {
   const r = canvas.getBoundingClientRect(), kx = W / r.width, ky = H / r.height;
@@ -2732,17 +2732,19 @@ function tableBox(pic, proj) {
   return { x: (c[0][0] + c[2][0]) / 2, y: (c[0][1] + c[2][1]) / 2, a: (ASKEW[pic.i % 6] * Math.PI) / 180, w: c[1][0] - c[0][0], h: c[3][1] - c[0][1] };
 }
 // On a phone, upright or turned, the card is the picture fitted whole between the row of instruments and the skull,
-// less a column at its right for its buttons (feetOf), so they stand beside the picture and never on it; the map undimmed
-// round it (the corner cards step aside while it is looked at). On a wide screen its longer side is LOOK_SHARE of the
-// window's shorter side and never past the picture's own pixels, one to a CSS px
-const FOOT_COLUMN = () => MOUNT + cssPx(FOOT_R) * 2.5; // the buttons' column beside a phone's card, canvas px
+// its buttons kept off it (feetOf); the map undimmed round it (the corner cards step aside while it is looked at). On a
+// wide screen it fits LOOK_W of the window's width and LOOK_H of its height, whichever binds, with room at its right for
+// the buttons and their names; a picture whose long side is under LOOK_FLOOR px grows to no more than twice its pixels.
+const FOOT_ROOM = () => MOUNT + cssPx(FOOT_R) * 2.7 + cssPx(110); // the buttons and their names right of a wide screen's card, canvas px
 function lookBox(pic) {
   const { x0, x1, y0, y1 } = windowRect(), x = (x0 + x1) / 2, y = (y0 + y1) / 2;
   if (handheld()) { // in the part of the window clear of the instruments, an open drawer, the compass and the skull
-    const c = dealRect(), m = MOUNT + cssPx(4), col = FOOT_COLUMN(), k = Math.min((c.x1 - c.x0 - 2 * m - col) / pic.o.width, (c.y1 - c.y0 - 2 * m) / pic.o.height);
-    return { x: (c.x0 + c.x1 - col) / 2, y: (c.y0 + c.y1) / 2, a: 0, w: pic.o.width * k, h: pic.o.height * k };
+    const c = dealRect(), m = MOUNT + cssPx(4), k = Math.min((c.x1 - c.x0 - 2 * m) / pic.o.width, (c.y1 - c.y0 - 2 * m) / pic.o.height), h = pic.o.height * k;
+    const feet = cssPx(FOOT_R) * 7 + m + cssPx(4); // the buttons' column above the compass: the card rises clear of it where there is room
+    return { x: (c.x0 + c.x1) / 2, y: Math.max(c.y0 + m + h / 2, Math.min((c.y0 + c.y1) / 2, c.y1 - feet - h / 2)), a: 0, w: pic.o.width * k, h };
   }
-  const k = Math.min((LOOK_SHARE * Math.min(x1 - x0, y1 - y0)) / Math.max(pic.o.width, pic.o.height), cssPx(1));
+  const wide = Math.min(LOOK_W * (x1 - x0), x1 - x0 - 2 * FOOT_ROOM()), cap = Math.max(pic.o.width, pic.o.height) >= LOOK_FLOOR ? Infinity : 2 * cssPx(1);
+  const k = Math.min(wide / pic.o.width, (LOOK_H * (y1 - y0)) / pic.o.height, cap);
   return { x, y, a: 0, w: pic.o.width * k, h: pic.o.height * k };
 }
 // how far a picture is off the table, 0 lying there to 1 looked at
@@ -2750,11 +2752,11 @@ const lookT = (i, now = performance.now()) => {
   const go = (t0) => (stillMotion() ? 1 : ease(Math.min(1, (now - t0) / LOOK_MS)));
   return i === looking ? go(lookFrom) : homing?.i === i ? 1 - go(homing.start) : 0;
 };
-// On a phone the card looked at zooms and pans with the map, as one (lookZoom: its size over its look size, and how far
-// its middle has moved); elsewhere it stands at its look size and its picture zooms inside it
+// The card looked at zooms and pans with the map, as one (lookZoom: its size over its look size, and how far its middle
+// has moved)
 function lookedBox(pic) {
   const b = lookBox(pic);
-  const { z, x, y } = !handheld() ? NO_ZOOM : pic.i === looking ? lookZoom : pic.i === homing?.i ? homing.zoom ?? NO_ZOOM : NO_ZOOM; // put away, it flies home from where it stood
+  const { z, x, y } = pic.i === looking ? lookZoom : pic.i === homing?.i ? homing.zoom ?? NO_ZOOM : NO_ZOOM; // put away, it flies home from where it stood
   return { ...b, x: b.x + x, y: b.y + y, w: b.w * z, h: b.h * z };
 }
 function pictureBox(pic, proj) {
@@ -2765,54 +2767,35 @@ function pictureBox(pic, proj) {
   const mix = (a, b) => a + (b - a) * t;
   return { x: mix(on.x, at.x), y: mix(on.y, at.y), a: mix(on.a, 0), w: mix(on.w, at.w), h: mix(on.h, at.h) };
 }
-// where the picture is drawn inside its card `b`, in the card's own frame: fitted whole, then zoomed and panned while looked at
+// where the picture is drawn inside its card `b`, in the card's own frame: fitted whole, always filling its frame
 function imageRect(pic, b) {
-  const k = Math.min(b.w / pic.o.width, b.h / pic.o.height), { z, x, y } = pic.i === looking && !handheld() ? lookZoom : NO_ZOOM;
-  const w = pic.o.width * k * z, h = pic.o.height * k * z;
-  return { x: x - w / 2, y: y - h / 2, w, h };
+  const k = Math.min(b.w / pic.o.width, b.h / pic.o.height), w = pic.o.width * k, h = pic.o.height * k;
+  return { x: -w / 2, y: -h / 2, w, h };
 }
-// The picture looked at zooms about a point up to its full resolution (one of its pixels to a CSS px), never below its
-// look size, and pans only as far as it covers its card; the map under it never moves. The back neither zooms nor pans.
-// On a phone, upright or turned, the card and the map zoom and pan together instead, as a card lying on the chart would:
-// the whole card grows, frame and all, never the picture inside its frame, so a pinch brings both close.
-const lookedPicture = () => (looking == null || flips.get(looking)?.back ? null : shownPictures().find((pic) => pic.i === looking) ?? null);
-const fullZoom = (pic, b) => Math.max(1, cssPx(1) / Math.min(b.w / pic.o.width, b.h / pic.o.height));
-function clampLook(pic, b, { z, x, y }) {
-  const k = Math.min(b.w / pic.o.width, b.h / pic.o.height), mx = Math.max(0, (pic.o.width * k * z - b.w) / 2), my = Math.max(0, (pic.o.height * k * z - b.h) / 2);
-  return { z, x: Math.max(-mx, Math.min(mx, x)), y: Math.max(-my, Math.min(my, y)) };
-}
-function zoomLook(f, x, y, to = null) {
+// The card looked at and the map zoom and pan together, face up or down, as a card lying on the chart would: the whole
+// card grows, frame and all, never the picture inside its frame, up to its picture's full resolution (one of its pixels
+// to a CSS px; on a wide screen at least twice its look size) and never below its look size.
+const lookedPicture = () => (looking == null ? null : shownPictures().find((pic) => pic.i === looking) ?? null);
+const fullZoom = (pic, b) => Math.max(handheld() ? 1 : 2, cssPx(1) / Math.min(b.w / pic.o.width, b.h / pic.o.height));
+function zoomLook(f, x, y) {
   const pic = lookedPicture();
   if (!pic) return;
-  const b = lookBox(pic), z0 = lookZoom.z, z = to ?? Math.min(fullZoom(pic, b), Math.max(1, z0 * f)), dx = x - b.x, dy = y - b.y;
-  if (handheld()) { // the map by the same factor about the same point, and the card with it as the map allows
-    const next = zoomView(view, z / z0, x, y), k = 2 ** (next.zoom - view.zoom), cx = b.x + lookZoom.x, cy = b.y + lookZoom.y;
-    lookZoom = { z: z0 * k, x: x + (cx - x) * k - b.x, y: y + (cy - y) * k - b.y };
-    moved(next); stopped(300);
-    repaint('a picture zoomed');
-    return;
-  }
-  lookZoom = clampLook(pic, b, { z, x: dx - (dx - lookZoom.x) * (z / z0), y: dy - (dy - lookZoom.y) * (z / z0) }); // the point under the pointer stays
+  const b = lookBox(pic), z0 = lookZoom.z, z = Math.min(fullZoom(pic, b), Math.max(1, z0 * f));
+  // the map by the same factor about the same point, and the card with it as the map allows
+  const next = zoomView(view, z / z0, x, y), k = 2 ** (next.zoom - view.zoom), cx = b.x + lookZoom.x, cy = b.y + lookZoom.y;
+  lookZoom = { z: z0 * k, x: x + (cx - x) * k - b.x, y: y + (cy - y) * k - b.y };
+  moved(next); stopped(300);
   repaint('a picture zoomed');
 }
 function panLook(dx, dy) {
-  const pic = lookedPicture();
-  if (!pic) return;
-  if (handheld()) { lookZoom = { ...lookZoom, x: lookZoom.x + dx, y: lookZoom.y + dy }; moved(panView(view, dx, dy)); stopped(300); repaint('a picture panned'); return; }
-  lookZoom = clampLook(pic, lookBox(pic), { ...lookZoom, x: lookZoom.x + dx, y: lookZoom.y + dy });
-  repaint('a picture panned');
+  if (!lookedPicture()) return;
+  lookZoom = { ...lookZoom, x: lookZoom.x + dx, y: lookZoom.y + dy }; moved(panView(view, dx, dy)); stopped(300); repaint('a picture panned');
 }
-// a double click or tap: from the look size to full resolution at that point, and back
-function toggleLook([x, y]) {
-  const pic = lookedPicture();
-  if (!pic) return;
-  if (lookZoom.z > 1.001) { if (handheld()) zoomLook(1 / lookZoom.z, x, y, 1); else { lookZoom = NO_ZOOM; repaint('a picture zoomed'); } } else zoomLook(1, x, y, fullZoom(pic, lookBox(pic)));
-}
-// The pointers on the picture looked at: one pans it, two pinch it, a tap twice in quick succession toggles its zoom.
-// A press on the dimmed map round it puts it away, and only that; a press on one of its buttons acts on the release.
+// The pointers on the card looked at: one drags it and the map, two pinch both, a click or tap that moves nothing turns
+// it over. A press on the map round it puts it away, and only that; a press on one of its buttons acts on the release.
 const cardPointers = new Map(); // pointerId -> [x, y] canvas px
 const DOUBLE_MS = 320;
-let cardTap = null, lastTap = null; // a lone press on it until it moves; the last tap, { p, t }, for a double one
+let cardTap = null; // a lone press on it until it moves
 function lookDown(e) {
   if (performance.now() - lookFrom < DOUBLE_MS) return; // a double click on a dealt card is one look: its second press does nothing
   const p = toCanvas(e.clientX, e.clientY), hit = pictureHit(p);
@@ -2822,6 +2805,7 @@ function lookDown(e) {
   if (hit.kind !== 'held') { holdPicture(hit, p); return; }
   cardPointers.set(e.pointerId, p);
   cardTap = p;
+  canvas.style.cursor = 'grabbing';
 }
 function lookMove(e) {
   const p = toCanvas(e.clientX, e.clientY);
@@ -2841,26 +2825,35 @@ function lookMove(e) {
 function lookUp(e) {
   cardPointers.delete(e.pointerId);
   if (cardPointers.size) return;
-  const at = cardTap, now = performance.now();
+  const at = cardTap;
   cardTap = null;
-  if (!at || e.type !== 'pointerup') return;
-  if (lastTap && now - lastTap.t < DOUBLE_MS && Math.hypot(at[0] - lastTap.p[0], at[1] - lastTap.p[1]) < cssPx(TAP_REACH)) { lastTap = null; toggleLook(at); } else lastTap = { p: at, t: now };
+  canvas.style.cursor = 'grab';
+  if (at && e.type === 'pointerup' && looking != null) turnOver(looking);
 }
-// The round buttons of the picture looked at, in its own frame: a column at its right edge, low, top to bottom Read more,
-// Turn over and Put away, the same on both faces; on a wide screen the column straddles the edge and each button's name
-// stands to its right, outside the card, and on a phone it stands just outside the edge, beside the picture, never on
-// it. Each glyph is one constant.
+// The round buttons of the picture looked at, in its own frame, top to bottom Read more, Turn over and Pulverum (a red
+// chi), the same on both faces and never on the card. On a wide screen they stand in a column just outside its right
+// edge, low, each button's name to its right, kept in the window. On a phone they stand in the right gutter above the
+// compass and the skull, where they fit clear of the card at its look size, else not at all. Each glyph is one constant.
 const FOOT_R = 15; // CSS px, a button's radius
-const FLIP_GLYPH = '⟳', AWAY_GLYPH = '↓', DUST_GLYPH = '✘';
-const FOOT_SAYS = { link: 'Read more', flip: 'Turn over', away: 'Put away' }, DUST_SAYS = 'Pulverum', LOOK_SAYS = 'Look';
+const FLIP_GLYPH = '⟳', DUST_GLYPH = 'Χ'; // Greek capital chi
+const FOOT_SAYS = { link: 'Read more', flip: 'Turn over', dust: 'Pulverum' }, LOOK_SAYS = 'Look';
 const LINK_SAYS = 'Its page on Wikimedia Commons';
 const SYMBOLS = "'IM Fell English', Georgia, 'Segoe UI Symbol', 'Apple Symbols', 'Noto Sans Symbols 2', 'Noto Sans Symbols', 'DejaVu Sans', serif";
-const footX = (b) => (handheld() ? b.w / 2 + MOUNT + cssPx(FOOT_R) * 1.2 : b.w / 2);
+const FEET = ['link', 'flip', 'dust'];
 function feetOf(pic, b) {
   if (pic.i !== looking) return [];
-  const at = handheld() ? lookBox(pic) : b; // on a phone they stay put beside the card's look place while it zooms with the map
-  const r = cssPx(FOOT_R), x = at.x - b.x + footX(at), y = at.y - b.y + at.h / 2 - r * 1.5;
-  return ['link', 'flip', 'away'].map((kind, n) => ({ kind, at: [x, y - (2 - n) * r * 2.5] }));
+  const r = cssPx(FOOT_R), step = r * 2.5, win = windowRect();
+  let x, y; // the lowest button's middle, canvas px
+  if (handheld()) { // they stay put while the card zooms with the map
+    const c = canvas.getBoundingClientRect(), m = $('memento').getBoundingClientRect(), at = lookBox(pic), pad = MOUNT + cssPx(4);
+    x = (m.left + m.width / 2 - c.left) * (W / c.width); y = (m.top - c.top) * (H / c.height) - cssPx(8) - r;
+    const top = y - 2 * step - r, clear = x - r > at.x + at.w / 2 + pad || x + r < at.x - at.w / 2 - pad || top > at.y + at.h / 2 + pad || y + r < at.y - at.h / 2 - pad;
+    if (!clear || top < win.y0 || x + r > win.x1) return [];
+  } else {
+    x = Math.max(win.x0 + r, Math.min(win.x1 - FOOT_ROOM() + MOUNT + r * 1.4, b.x + b.w / 2 + MOUNT + r * 1.4));
+    y = Math.max(win.y0 + 2 * step + r, Math.min(win.y1 - r, b.y + b.h / 2 - r * 1.5));
+  }
+  return FEET.map((kind, n) => ({ kind, at: [x - b.x, y - b.y - (2 - n) * step] }));
 }
 // ⧉ (in no font of the page's stack, so drawn): two joined squares in the link's red, in an em box of `size` at x, y
 function linkGlyph(g, x, y, size) {
@@ -2888,14 +2881,13 @@ function backLinks(im, s = subject()) {
 }
 // The back of a picture, in its own frame: what it is, when, by whom, under what licence and its note, then its other
 // links as plain text links, each named for where it goes, in type sized in CSS px so it reads at any zoom (the largest
-// of BACK_TYPE that fits the card, else the smallest, clipped above the foot); and inside its lower right, beside the
-// buttons, ✘ Pulverum in red, which takes the card off the table. Returns, in the same frame, where each link and
-// Pulverum take a tap: { links: [[x, y, w, h, url]], dust: [x, y, w, h] }.
+// of BACK_TYPE that fits the card, else the smallest, clipped above the foot). Returns, in the same frame, where each
+// link takes a tap: { links: [[x, y, w, h, url]] }.
 const BACK_TYPE = [20, 18, 16, 15, 14, 13, 12]; // CSS px; the People drawer's own card text is 13 px
 const pageOf = (im) => subject()?.manifest[im.file]?.page ?? commonsPage(im.file);
 function drawBack(g, im, extra, w, h) {
-  const pad = Math.max(cssPx(8), w * 0.06), family = getComputedStyle(document.body).getPropertyValue('--serif') || 'serif', r = cssPx(FOOT_R);
-  const room = w - 2 * pad - Math.max(0, w / 2 - footX({ w }) + r * 1.2); // the words keep clear of the buttons' column
+  const pad = Math.max(cssPx(8), w * 0.06), family = getComputedStyle(document.body).getPropertyValue('--serif') || 'serif';
+  const room = w - 2 * pad;
   let size = 0, lines = [];
   for (const css of BACK_TYPE) {
     size = cssPx(css); g.font = `italic ${size}px ${family}`; lines = [];
@@ -2911,9 +2903,9 @@ function drawBack(g, im, extra, w, h) {
     if (pictureNote(im)) { lines.push(['', null]); wrap(pictureNote(im)); }
     if (extra.length) lines.push(['', null]);
     for (const [label, url] of extra) wrap(label, url);
-    if (2 * pad + lines.length * size * 1.3 + size * 2 <= h) break; // the words and Pulverum's line fit
+    if (2 * pad + lines.length * size * 1.3 <= h) break; // the words fit
   }
-  const left = -w / 2 + pad, lead = size * 1.3, dy = h / 2 - r * 1.5, foot = dy - size * 0.9;
+  const left = -w / 2 + pad, lead = size * 1.3, foot = h / 2 - pad;
   const links = [];
   g.save(); g.beginPath(); g.rect(-w / 2, -h / 2, w, foot + h / 2); g.clip();
   g.textBaseline = 'top';
@@ -2926,15 +2918,10 @@ function drawBack(g, im, extra, w, h) {
     if (y + size <= foot) links.push([left - size * 0.2, y - size * 0.15, lw + size * 0.4, lead, url]);
   });
   g.restore();
-  // Pulverum, its right end clear of the buttons, level with Put away
-  g.save(); g.font = `italic ${size * 1.15}px ${family}`; g.textBaseline = 'middle'; g.textAlign = 'right'; g.fillStyle = PERSON_LINK;
-  const right = Math.min(footX({ w }) - r * 1.6, w / 2 - pad), word = `${DUST_GLYPH} ${DUST_SAYS}`, tw = g.measureText(word).width;
-  g.fillText(word, right, dy);
-  g.restore();
-  return { links, dust: [right - tw - size * 0.3, dy - size * 0.9, tw + size * 0.6, size * 1.8] };
+  return { links };
 }
 const PERSON_LINK = '#8c2f1e';
-const links = new Map(); // a turned picture's links and Pulverum ({ links, dust }), in its own frame, by its index
+const links = new Map(); // a turned picture's links ({ links }), in its own frame, by its index
 let focusedPic = null; // the picture whose item in the canvas's fallback has the keyboard's focus, ringed
 // The pictures over everything on the map: each on a parchment mount with a soft shadow and an ink rule, a little
 // askew, dealt in one after another when a subject is chosen, carrying no controls; the one looked at upright and large
@@ -2952,7 +2939,7 @@ function drawPictures(g) {
   let moving = lift > 0 && lift < 1;
   // in layers: the table, then the picture looked at (or flying home) over the dimmed map
   const layers = top == null ? [list] : [list.filter((pic) => pic.i !== top), list.filter((pic) => pic.i === top)];
-  const r = cssPx(FOOT_R), GLYPHS = { flip: FLIP_GLYPH, away: AWAY_GLYPH };
+  const r = cssPx(FOOT_R), GLYPHS = { flip: FLIP_GLYPH, dust: DUST_GLYPH };
   g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
   for (const [n, layer] of layers.entries()) {
     if (n === 1 && lift > 0 && !handheld()) { g.fillStyle = `rgba(29, 25, 19, ${LOOK_DIM * lift})`; g.fillRect(0, 0, W, H); } // a phone's map stays undimmed
@@ -2987,7 +2974,7 @@ function drawPictures(g) {
         g.fillStyle = style.parchment; g.beginPath(); g.arc(fx, fy, r, 0, 2 * Math.PI); g.fill(); g.stroke();
         g.textAlign = 'center'; g.font = `${r * 1.2}px ${SYMBOLS}`;
         if (kind === 'link') linkGlyph(g, fx - r * 0.42, fy - r * 0.55, r * 1.1);
-        else { g.fillStyle = style.ink; g.fillText(GLYPHS[kind], fx, fy + r * 0.05); }
+        else { g.fillStyle = kind === 'dust' ? PERSON_LINK : style.ink; g.fillText(GLYPHS[kind], fx, fy + r * 0.05); }
         if (handheld()) continue; // a phone's names are the buttons' accessible names (#pictureKeys)
         g.save(); g.textAlign = 'left'; g.font = `italic ${cssPx(14)}px ${SYMBOLS}`; g.fillStyle = '#efe3c6'; g.shadowColor = 'rgba(0, 0, 0, 0.8)'; g.shadowBlur = cssPx(3);
         g.fillText(FOOT_SAYS[kind], fx + r * 1.45, fy); g.restore();
@@ -3001,7 +2988,7 @@ function drawPictures(g) {
 let dealFrame = 0;
 // The picture under canvas px p, the top one first. On the table: its frame (the mount's margin, and a finger's reach
 // about the picture's edge) grabs it, its body looks at it. Looked at, only that one: a button (or, on a wide screen,
-// its name), a link or Pulverum on its back, else its body, held to pan or zoom.
+// its name), a link on its back, else its body, held to drag or zoom it with the map, or clicked to turn it over.
 const FRAME_OUT = () => cssPx(phone.matches ? 14 : 8), FRAME_IN = () => cssPx(phone.matches ? 12 : 6); // the frame's hit band, out and in from the picture's edge
 function pictureHit([x, y]) {
   const list = shownPictures();
@@ -3017,7 +3004,6 @@ function pictureHit([x, y]) {
       if (foot) return { kind: foot.kind, ...pic, proj };
       const back = links.get(pic.i), out = back?.links.find((l) => on(u, v, l));
       if (out) return { kind: 'out', url: out[4], ...pic, proj };
-      if (on(u, v, back?.dust)) return { kind: 'dust', ...pic, proj };
       return Math.abs(u) <= b.w / 2 + MOUNT && Math.abs(v) <= b.h / 2 + MOUNT ? { kind: 'held', ...pic, proj } : null;
     }
     if (Math.abs(u) > b.w / 2 + MOUNT + FRAME_OUT() || Math.abs(v) > b.h / 2 + MOUNT + FRAME_OUT()) continue;
@@ -3050,18 +3036,17 @@ function dropPicture(e) {
   if (kind === 'flip') { turnOver(i); return; }
   if (kind === 'link') { const to = readMoreOf(); if (to) window.open(to, '_blank', 'noopener'); return; }
   if (kind === 'out') { window.open(url, '_blank', 'noopener'); return; }
-  if (kind === 'away') { endLook(); return; }
   if (kind === 'dust') { pulverum(i); return; }
   if (kind === 'held') return;
   writeHash(); render();
 }
 const repaint = (doing) => { if (ground) paintFrame(doing); };
 // Look: the picture flies from its place on the table to the middle of the window, face up, over the dimmed map. Put
-// away (its button, Esc, or a press on the dimmed map) flies it back face up to where it lies, at its dealt size: it
+// away (Esc, or a press on the map off the card) flies it back face up to where it lies, at its dealt size: it
 // stays dealt.
 function lookAt(i) {
   if (looking === i) return;
-  looking = i; lookFrom = performance.now(); lookZoom = NO_ZOOM; lastTap = null;
+  looking = i; lookFrom = performance.now(); lookZoom = NO_ZOOM;
   if (homing?.i === i) homing = null;
   raise(i); hideTile(); repaint('a picture looked at');
 }
@@ -3080,11 +3065,11 @@ function turnOver(i) {
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && looking != null) { endLook(); e.stopImmediatePropagation(); } }, true); // first, and only that: the open drawer stays
 // The pictures on the map again inside the canvas, as its fallback content: what a screen reader reads and the keyboard
 // reaches, one item per picture in the record's order with its back's words and links, Read more, and its Look, Turn
-// over, Put away and Pulverum buttons, the canvas's own. `data-z` is its place in the pile, the top one highest. Focus
+// over and Pulverum buttons, the canvas's own. `data-z` is its place in the pile, the top one highest. Focus
 // on an item lifts its picture to the top and rings it.
 const keys = $('pictureKeys');
 let keysFor = '', focusNext = null;
-const KEY_SAYS = { look: LOOK_SAYS, link: FOOT_SAYS.link, flip: FOOT_SAYS.flip, away: FOOT_SAYS.away, dust: DUST_SAYS };
+const KEY_SAYS = { look: LOOK_SAYS, link: FOOT_SAYS.link, flip: FOOT_SAYS.flip, dust: FOOT_SAYS.dust };
 function mirrorPictures(list) {
   const now = `${subjectKey()}|${list.map((pic) => pic.i).sort((a, b) => a - b)}`;
   if (now !== keysFor) {
@@ -3095,7 +3080,7 @@ function mirrorPictures(list) {
     const a = (href, says) => `<a href="${escapeHTML(href)}" target="_blank" rel="noopener">${escapeHTML(says)}</a>`;
     keys.innerHTML = [...list].sort((p, q) => p.i - q.i).map(({ i, im }) => `<li data-pic="${i}"><span>${escapeHTML(pictureCredit(im))}${pictureNote(im) ? `. ${escapeHTML(pictureNote(im))}` : ''}</span> ` +
       backLinks(im, s).map(([says, href]) => a(href, says)).join(' ') + ' ' +
-      ['look', 'link', 'flip', 'away', 'dust'].map((k) => {
+      ['look', 'link', 'flip', 'dust'].map((k) => {
         if (k === 'link') return more ? `<a href="${escapeHTML(more)}" target="_blank" rel="noopener" data-link="${i}" aria-label="${FOOT_SAYS.link}: ${escapeHTML(named)}" title="Read more: ${escapeHTML(named)}">${FOOT_SAYS.link}</a>` : '';
         return `<button type="button" data-${k}="${i}"${k === 'look' ? ' aria-pressed="false"' : ''} aria-label="${KEY_SAYS[k]}: ${escapeHTML(pictureCredit(im))}" title="${KEY_SAYS[k]}">${KEY_SAYS[k]}</button>`;
       }).join(' ') + '</li>').join('');
@@ -3123,7 +3108,6 @@ keys.addEventListener('click', (e) => {
   const [k, v] = Object.entries(b.dataset)[0] ?? [], i = Number(v);
   if (k === 'look') { if (looking === i) endLook(); else lookAt(i); return; }
   if (k === 'flip') { turnOver(i); return; }
-  if (k === 'away') { if (looking === i) endLook(); return; }
   if (k !== 'dust') return;
   const li = b.closest('li'), next = li.nextElementSibling ?? li.previousElementSibling; // the focus goes on to a neighbour
   focusNext = next ? Number(next.dataset.pic) : null;

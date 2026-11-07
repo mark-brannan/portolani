@@ -694,9 +694,9 @@ test('people and voyages: two vertical drawers no wider than the charts, earlies
 });
 
 // A card on the table (docs/spec/design.md, "A card on the table: a click looks, three buttons, Pulverum"): dealt, it
-// carries no controls; its frame grabs it without looking, its body looks; looked at, the map holds still under the
-// wheel; Put away sends it home and it stays dealt; Pulverum takes it off the table; choosing the person again deals it
-// back. And a flight deals only once the map's middle has reached the place (docs/spec/design.md, "the map is there
+// carries no controls; its frame grabs it without looking, its body looks; looked at, it is a hand that drags it and
+// the map together, the wheel zooms both, and off it no hand; Esc sends it home and it stays dealt; Pulverum, the third
+// button right of the card, takes it off the table; choosing the person again deals it back. And a flight deals only once the map's middle has reached the place (docs/spec/design.md, "the map is there
 // before the deal").
 const serve = () => createServer(async (req, res) => {
   let p = path.join(site, decodeURIComponent(new URL(req.url, 'http://x').pathname));
@@ -717,7 +717,7 @@ async function frameOf(page, cx, cy) {
   return { body, frame };
 }
 
-test('people: a dealt card carries no controls; its frame grabs it, its body looks; looked at, the map holds still; Put away sends it home, Pulverum takes it off; the deal waits for the map', { skip, timeout: 240000 }, async () => {
+test('people: a dealt card carries no controls; its frame grabs it, its body looks; looked at, a drag or the wheel moves it with the map; Esc sends it home, Pulverum takes it off; the deal waits for the map', { skip, timeout: 240000 }, async () => {
   const server = serve();
   const browser = await chromium.launch();
   try {
@@ -749,14 +749,25 @@ test('people: a dealt card carries no controls; its frame grabs it, its body loo
     assert.equal(mapOf(await hash()), mapOf(before), 'a drag from the frame moved the map');
     assert.notEqual(/pictureat=([^&]+)/.exec(await hash())[1], /pictureat=([^&]+)/.exec(before)[1], 'the card did not move');
 
-    // a click on the body looks; the wheel over it zooms the card alone, the map never moves; Esc puts it away, still dealt
+    // a click on the body looks; over it the pointer is a hand, off it not; a drag on it pans the map with it, the wheel
+    // zooms both (design.md, "the looked-at card is held where it can be dragged"); Esc puts it away, still dealt
     const { body: body2 } = await frameOf(page, cx - 60, cy + 30);
     await page.mouse.click(body2 - 30, cy + 30);
     await page.waitForFunction(() => document.querySelector('#pictureKeys [data-look="0"]')?.getAttribute('aria-pressed') === 'true', null, { timeout: 5000 });
+    await page.waitForTimeout(500);
+    assert.equal(await cursorAt(page, cx, cy), 'grab', 'no hand over the card looked at');
+    assert.equal(await cursorAt(page, c.x + 4, c.y + c.height - 4), 'default', 'a hand off the card looked at, where a press only puts it away');
     const still = await hash();
+    await page.mouse.move(cx, cy); await page.mouse.down();
+    for (let i = 1; i <= 6; i++) await page.mouse.move(cx + i * 10, cy);
+    await page.mouse.up();
+    await page.waitForFunction((h) => location.hash !== h, still, { timeout: 10000 });
+    assert.notEqual(mapOf(await hash()), mapOf(still), 'a drag on the card looked at left the map still');
+    assert.equal(await looked(), 'true', 'a drag on the card looked at put it away');
+    const dragged = await hash();
     await page.mouse.move(cx, cy); await page.mouse.wheel(0, -300); await page.mouse.wheel(0, -300);
     await page.waitForTimeout(600);
-    assert.equal(mapOf(await hash()), mapOf(still), 'the wheel on a card looked at moved the map');
+    assert.ok(Number(mapOf(await hash()).split('/')[0]) > Number(mapOf(dragged).split('/')[0]), 'the wheel on a card looked at left the map\'s zoom');
     await page.keyboard.press('Escape');
     assert.equal(await looked(), 'false', 'Esc did not put the card away');
     assert.equal(await page.$$eval('#pictureKeys li', (ls) => ls.length), 2, 'put away, the card left the table');
@@ -773,21 +784,18 @@ test('people: a dealt card carries no controls; its frame grabs it, its body loo
     await page.keyboard.press('Escape'); // and the next shuts it
     await page.evaluate(() => document.activeElement.blur());
 
-    // looked at, Put away is the lowest of three round buttons straddling the card's right edge; it sends the card home
+    // looked at, Pulverum is the lowest of three round buttons just right of the card; it takes that card alone off the
+    // table, and a click on the person deals it back
     await page.focus('#pictureKeys [data-look="0"]'); await page.keyboard.press('Enter'); await page.evaluate(() => document.activeElement.blur());
     const [iw, ih] = await page.evaluate(async () => { const m = (await (await fetch('packs/overlays/people/people.json')).json()).pictures['Portrait_of_a_Man,_Said_to_be_Christopher_Columbus_2.jpg']; return [m.width, m.height]; });
     const x0 = Math.max(0, c.x), x1 = Math.min(1100, c.x + c.width), y0 = Math.max(0, c.y), y1 = Math.min(740, c.y + c.height); // the map in the window
-    const k = Math.min((0.75 * Math.min(x1 - x0, y1 - y0)) / Math.max(iw, ih), 1), away = { x: (x0 + x1) / 2 + (iw * k) / 2, y: (y0 + y1) / 2 + (ih * k) / 2 - 15 * 1.5 };
-    await page.waitForFunction(({ x, y }) => { const m = document.getElementById('map'); m.dispatchEvent(new PointerEvent('pointermove', { clientX: x, clientY: y, isPrimary: true, bubbles: true })); return m.style.cursor === 'pointer'; }, away, { timeout: 10000, polling: 100 });
-    await page.mouse.click(away.x, away.y);
-    assert.equal(await looked(), 'false', 'Put away did not put the card away');
-    assert.equal(await page.$$eval('#pictureKeys li', (ls) => ls.length), 2, 'Put away took the card off the table');
-
-    // Pulverum takes that card alone off the table, and a click on the person deals it back
-    await page.focus('#pictureKeys [data-dust="1"]');
-    await page.keyboard.press('Enter');
+    const ww = x1 - x0, k = Math.min(Math.min(0.75 * ww, ww - 2 * (5 + 15 * 2.7 + 110)) / iw, (0.85 * (y1 - y0)) / ih, Math.max(iw, ih) >= 400 ? Infinity : 2);
+    const dust = { x: (x0 + x1) / 2 + (iw * k) / 2 + 5 + 15 * 1.4, y: (y0 + y1) / 2 + (ih * k) / 2 - 15 * 1.5 };
+    await page.waitForFunction(({ x, y }) => { const m = document.getElementById('map'); m.dispatchEvent(new PointerEvent('pointermove', { clientX: x, clientY: y, isPrimary: true, bubbles: true })); return m.style.cursor === 'pointer'; }, dust, { timeout: 10000, polling: 100 });
+    await page.mouse.click(dust.x, dust.y);
     await page.waitForFunction(() => document.querySelectorAll('#pictureKeys li').length === 1, null, { timeout: 10000 });
-    assert.match(await hash(), /pictures=0(&|$)/);
+    assert.match(await hash(), /pictures=1(&|$)/);
+    assert.equal(await page.$('#pictureKeys [data-away]'), null, 'a Put away button is left');
     await page.click('#people');
     await page.click('#peopleList [data-person="christopher-columbus"]');
     await page.waitForFunction(() => document.querySelector('#pictureKeys [data-pic="0"]') && document.querySelector('#pictureKeys [data-pic="1"]'), null, { timeout: 60000 });
@@ -847,11 +855,12 @@ test('phone: a tap looks, a pinch on the card zooms the map with it; a finger dr
     const [z0] = mapOf(still).split('/').map(Number), [z1] = mapOf(await hash()).split('/').map(Number);
     assert.ok(z1 > z0, `a pinch out on the card looked at left the map at zoom ${z1} (was ${z0})`);
     assert.doesNotMatch(await hash(), /bearing=/, 'a twist on the card turned the map');
-    await page.evaluate(() => document.querySelector('#pictureKeys [data-away="0"]').click());
+    await page.keyboard.press('Escape');
     assert.equal(await looked(), 'false');
+    await page.waitForTimeout(600); // flown home, off the open map the twist is on
 
     // two fingers twisted a quarter clockwise on open map turn the world a quarter clockwise, bearing 270
-    const h0 = await hash(), [mx, my] = [195, 160];
+    const h0 = await hash(), [mx, my] = [195, 560]; // below the card, which the pinch left lying larger
     await touch('touchStart', [[mx - 50, my], [mx + 50, my]]);
     for (let i = 1; i <= 15; i++) { const a = (i / 15) * (Math.PI / 2); await touch('touchMove', [[mx - 50 * Math.cos(a), my - 50 * Math.sin(a)], [mx + 50 * Math.cos(a), my + 50 * Math.sin(a)]]); }
     await touch('touchEnd', []);
