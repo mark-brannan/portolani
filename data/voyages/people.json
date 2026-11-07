@@ -831,6 +831,7 @@
   "lapita-people": {
     "name": "The Lapita people",
     "group": true,
+    "family": "austronesian",
     "bio": "The makers of dentate-stamped Lapita pottery, who spread from the Bismarck Archipelago through the Solomons, Vanuatu and New Caledonia to Fiji, Tonga and Samoa between about 1500 and 800 BC: the first people anywhere to settle islands beyond sight of land, sailing upwind into the trade winds. No name of theirs survives; the name is the archaeologists', from a site in New Caledonia.",
     "sources": [
       "lapita-culture",
@@ -883,6 +884,7 @@
   "east-polynesian-voyagers": {
     "name": "The East Polynesian voyagers",
     "group": true,
+    "family": "austronesian",
     "bio": "The people who, after nearly two thousand years in West Polynesia, went east in double-hulled canoes to the Cook and Society Islands about 1000–1100 and from there, in some two centuries, to every corner of the Polynesian Triangle: Hawaiʻi, Rapa Nui and Aotearoa, and on to the Chathams and the subantarctic Auckland Islands. Oral traditions name founding navigators, such as Kupe for Aotearoa and Hotu Matuʻa for Rapa Nui; they are not datable people.",
     "sources": [
       "wilmshurst-2011-east-polynesia",
@@ -2105,18 +2107,21 @@
   "austronesian-voyagers": {
     "name": "The Austronesian-speaking voyagers",
     "group": true,
+    "family": "austronesian",
     "bio": "Speakers of the ancestral Austronesian language who left Taiwan from about 3000 BC by sea for the Philippines and the islands beyond. Their descendants spoke the languages from Madagascar to Rapa Nui. No name of theirs survives; the name is the linguists'.",
     "sources": ["austronesian-expansion", "austronesian-peoples", "prehistory-philippines"]
   },
   "marianas-micronesia-settlers": {
     "name": "The first settlers of the Marianas and Micronesia",
     "group": true,
+    "family": "austronesian",
     "bio": "The ancestors of the CHamoru, who crossed from the Philippines about 1500 BC to the Marianas, and the people of Island Melanesia who settled central and eastern Micronesia about 200 BC. No name of theirs survives.",
     "sources": ["hung-2011-marianas", "micronesia"]
   },
   "madagascar-austronesian-settlers": {
     "name": "The Austronesian settlers of Madagascar",
     "group": true,
+    "family": "austronesian",
     "bio": "Speakers of a Borneo language who crossed the Indian Ocean to Madagascar, and became, with African settlers who came to the island, the Malagasy. When they came is argued, from about 400 to about 1000. No name of theirs survives.",
     "sources": ["settlement-madagascar", "brucato-2016-madagascar"]
   },

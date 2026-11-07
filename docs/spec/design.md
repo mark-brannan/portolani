@@ -728,7 +728,7 @@ Feature: The skull's clear is shown  (`#sweep`, page.js `skullRise`, `wordsRise`
     Then it reads "Clear the map: " and the English of the phrase beside it
 
 Feature: People and voyages, each a vertical timeline
-  Source: the user on the timeline [#304](https://github.com/mark-brannan/portolani/pull/304) merged, 2026-11-04: "The entire drawer is way too WIDE! It should not be wider than the drawer for charts or settings/config (480px). We should consider whether we need to reorient it to be a vertical timeline instead of horizontal. Somehow we need to fit things more nicely."; "I do not like AT ALL how we treat people groups. The people group migrations MUST be in the people drawer with people. Nevermind that all the European examples are individuals... people are people. Lapita gets a row in people (not merely voyages)."; "When you click on people in the people drawer it should expand their notes and their voyages should appear directly below that. NOT below all the other people, and not as a naive copy/paste from the voyages drawer of all voyages. If I select Ibn Battuta, then I should get a tile with his notes... then each of the voyages below that (with the notes for that voyage)." This overtakes the one horizontal timeline of two lanes, its Earlier tab and its era bands (the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30), which #304 built and the user turned down on sight.
+  Source: the user on the timeline [#304](https://github.com/mark-brannan/portolani/pull/304) merged, 2026-11-04: "The entire drawer is way too WIDE! It should not be wider than the drawer for charts or settings/config (480px). We should consider whether we need to reorient it to be a vertical timeline instead of horizontal. Somehow we need to fit things more nicely."; "I do not like AT ALL how we treat people groups. The people group migrations MUST be in the people drawer with people. Nevermind that all the European examples are individuals... people are people. Lapita gets a row in people (not merely voyages)."; "When you click on people in the people drawer it should expand their notes and their voyages should appear directly below that. NOT below all the other people, and not as a naive copy/paste from the voyages drawer of all voyages. If I select Ibn Battuta, then I should get a tile with his notes... then each of the voyages below that (with the notes for that voyage)." This overtakes the one horizontal timeline of two lanes, its Earlier tab and its era bands (the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30), which #304 built and the user turned down on sight. And the user's mockup session on [#399](https://github.com/mark-brannan/portolani/pull/399), 2026-11-07: the People drawer's headings start shut, each over a heading bar from 50,000 BC to today, and the Austronesian peoples are one family under Prehistory.
   Scenario: two drawers, no wider than the charts
     Given the instrument row
     When the user clicks the medallion `#people` or the dividers `#voyages`
@@ -737,9 +737,22 @@ Feature: People and voyages, each a vertical timeline
   Scenario: time reads top to bottom
     Given either drawer
     When the user looks down it
-    Then the rows run earliest first down a thin rail, from the Lapita voyages, about 1500 BC: a person by their birth, else by their first voyage; a voyage by the year it set out
-    And the Sights eras head the rows that fall in them, as small italic headings with the era's years (`1500 BC – AD 500`, `500 – 1450`, `1450 – 1800`, `from 1800`); a year before Christ reads `BC`
+    Then the rows run earliest first down a thin rail: a person by their birth, else by their first voyage; a voyage by the year it set out
+    And the eras head the rows that fall in them, as small italic headings with the era's years: Prehistory (`50,000 – 1500 BC`), then the Sights eras (`1500 BC – AD 500`, `500 – 1450`, `1450 – 1800`, `from 1800`); a year before Christ reads `BC`
     And a person's row is the name and the years as the record writes them (`24 Feb 1304 – c. 1369`, `born c. 350 BC`, `died 1510`); a people's row carries the years of their voyage (`c. 1500–800 BC`)
+  Scenario: the People drawer's eras start shut, each over a bar of all time
+    Given the People drawer just opened
+    Then every era heading is shut, Prehistory first, and no row shows; a click or a tap on a heading, or Enter on it, opens it and shows its rows, and again shuts it
+    And under each heading runs a faded grey bar from 50,000 BC to today, every era a pale grey band on it and the heading's own era darker; while the heading is open its rows are thin ticks on the bar at their years
+    And the bar's scale is log10(years ago + 500), so prehistory takes about 55% of it, the ancient world 15%, the medieval Indian Ocean and Asia 14%, the age of discovery 8% and the modern world 8%
+    And an open heading's rows keep their life bars, on that era's own scale under its ruler
+    And a person chosen from the link or the map opens the headings over their row
+    And the Voyages drawer's headings are the same eras, open always
+  Scenario: the Austronesian peoples are one family
+    Given the People drawer with Prehistory open
+    Then under it is one heading, `The Austronesian peoples` (`c. 3000 BC – AD 1300`), shut, with its own bar on the same scale, its span darker
+    And opened, it shows the peoples whose record in `people.json` has `family: "austronesian"`, earliest first, whatever their own years: out of Taiwan and the Batanes, the Lapita, the Marianas and eastern Micronesia, Madagascar, East Polynesia
+    And their life bars are on the family's own scale, 3000 BC to AD 1300
   Scenario: a people is a person
     Given a migration, or a voyage whose crew nobody named: the Lapita expansion, the settlement of East Polynesia, Necho's Phoenicians
     When the People drawer lists people

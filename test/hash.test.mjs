@@ -337,7 +337,8 @@ scenario('overlap: a rule round-trips, the default is left out, an unknown word 
 
 scenario('person: choosing a person\'s row writes person=, a link with it chooses that person, a malformed id is dropped', 'map=6.14/40.474/7.400&timeline=b', async (page) => {
   await page.locator('#people').click();
-  const life = page.locator('#peopleList [data-person]').first();
+  await page.locator('#peopleList .head[data-head="The ancient world"]').click(); // the headings start shut
+  const life = page.locator('#peopleList li[data-row]:not([hidden]) [data-person]').first();
   const id = await life.getAttribute('data-person');
   await life.click();
   assert.equal((await params(page)).get('person'), id);

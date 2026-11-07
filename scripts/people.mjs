@@ -50,9 +50,10 @@ export function lifeSpan(person, voyageYears = [], reach = 40) {
   return [fromKnown ? lo : lo - reach, toKnown ? hi : hi + reach, fromKnown, toKnown];
 }
 
-// The People and the Voyages drawers are each a vertical timeline, earliest at the top, from the Lapita voyages
-// (TIMELINE_FROM) on. The eras of the points of interest (the Sights groups in public/page.js) head the rows that fall
-// in them, as small italic headings: each era runs from its year to the next one's, the last on to today.
+// The People and the Voyages drawers are each a vertical timeline, earliest at the top. The eras of the points of
+// interest (the Sights groups in public/page.js), from the Lapita voyages (TIMELINE_FROM) on, and Prehistory before
+// them (DRAWER_ERAS below), head the rows that fall in them, as small italic headings: each era runs from its year to
+// the next one's, the last on to today.
 export const TIMELINE_FROM = -1500;
 export const TIMELINE_ERAS = [['The ancient world', TIMELINE_FROM], ['The medieval Indian Ocean and Asia', 500], ['The age of discovery', 1450], ['The modern world', 1800]];
 // a year as the drawers write it: 1500 BC, AD 1, 1500, with a thousands comma only from five figures (50,000 BC)
@@ -90,33 +91,62 @@ export function eraBands(axis) {
   const [from, to] = axis.stretches.at(-1);
   return TIMELINE_ERAS.map(([name, a], i) => [name, Math.max(a, from), Math.min(TIMELINE_ERAS[i + 1]?.[1] ?? to, to)]).filter(([, a, b]) => b > a);
 }
-// The era a year falls in, by name: the first era for anything before it; null for no year
+// The People and Voyages drawers' eras: Prehistory, from the first peopling of Sahul (TIMELINE_EARLIEST) to the Lapita
+// voyages, then the Sights eras (TIMELINE_ERAS)
+export const DRAWER_ERAS = [['Prehistory', TIMELINE_EARLIEST], ...TIMELINE_ERAS];
+// The era a year falls in, by name: Prehistory for anything before the Sights eras; null for no year
 export function eraOf(year) {
   if (!Number.isFinite(year)) return null;
-  let name = TIMELINE_ERAS[0][0];
-  for (const [n, from] of TIMELINE_ERAS) if (year >= from) name = n;
+  let name = DRAWER_ERAS[0][0];
+  for (const [n, from] of DRAWER_ERAS) if (year >= from) name = n;
   return name;
 }
-// An era's years as its heading writes them: "1500 BC – AD 500", "500 – 1450", "from 1800"
-export function eraYears(name) {
-  const i = TIMELINE_ERAS.findIndex(([n]) => n === name);
-  if (i < 0) return '';
-  const from = TIMELINE_ERAS[i][1], to = TIMELINE_ERAS[i + 1]?.[1];
-  return to === undefined ? `from ${yearLabel(from)}` : `${yearLabel(from)} – ${from < 0 && to > 0 ? `AD ${to}` : yearLabel(to)}`;
+const eraEnds = (name, now) => {
+  const i = DRAWER_ERAS.findIndex(([n]) => n === name);
+  return i < 0 ? null : [DRAWER_ERAS[i][1], DRAWER_ERAS[i + 1]?.[1] ?? now];
+};
+// A span's years as a heading writes them: "1500 BC – AD 500", "50,000 – 1500 BC", "500 – 1450", "from 1800"
+export function spanYears(from, to) {
+  if (to === undefined) return `from ${yearLabel(from)}`;
+  if (to < 0) return `${yearLabel(-from)} – ${yearLabel(to)}`;
+  return `${yearLabel(from)} – ${from < 0 ? `AD ${to}` : yearLabel(to)}`;
 }
-// An era's own scale, for the life bars of the rows under its heading: { from, to, x(year) in 0..1 clamped, ticks:
-// [[year, label]] }, from its year to the next era's, the last era to `now`. Each era has its own scale so a life of
-// sixty years reads at any era's width; the ruler under the heading says which. The ticks fall on round years, four
-// or fewer between the ends.
-export function eraScale(name, now = new Date().getFullYear()) {
-  const i = TIMELINE_ERAS.findIndex(([n]) => n === name);
-  if (i < 0) return null;
-  const from = TIMELINE_ERAS[i][1], to = TIMELINE_ERAS[i + 1]?.[1] ?? now;
-  const step = [50, 100, 250, 500, 1000].find((s) => (to - from) / s <= 5) ?? 1000;
+// An era's years as its heading writes them
+export function eraYears(name) {
+  const ends = eraEnds(name);
+  return ends ? spanYears(...ends) : '';
+}
+// A linear scale from `from` to `to`, for the life bars of the rows under a heading: { from, to, x(year) in 0..1
+// clamped, ticks: [[year, label]] }, the ticks on round years, four or fewer between the ends
+export function spanScale(from, to) {
+  const step = [50, 100, 250, 500, 1000, 2500, 5000, 10000].find((s) => (to - from) / s <= 5) ?? 10000;
   const ticks = [];
   for (let y = Math.ceil((from + 1) / step) * step; y < to; y += step) ticks.push([y || 1, yearLabel(y || 1)]);
   return { from, to, x: (y) => Math.min(1, Math.max(0, (y - from) / (to - from))), ticks };
 }
+// An era's own scale (spanScale), from its year to the next era's, the last era to `now`. Each era has its own scale
+// so a life of sixty years reads at any era's width; the ruler under the heading says which.
+export function eraScale(name, now = new Date().getFullYear()) {
+  const ends = eraEnds(name, now);
+  return ends ? spanScale(...ends) : null;
+}
+
+// The People drawer's heading bar: one faded bar under every heading, from 50,000 BC (TIMELINE_EARLIEST) to today, on
+// which each era is a band and the rows under an open heading are ticks. Its scale is log10(years ago + 500), which
+// gives prehistory about 55% of the bar and the modern world about 8%; x in 0..1, clamped.
+export const DEEP_OFFSET = 500;
+export function deepX(year, now = new Date().getFullYear()) {
+  const l = (y) => Math.log10(Math.max(0, now - y) + DEEP_OFFSET), top = l(TIMELINE_EARLIEST), end = l(now);
+  return Math.min(1, Math.max(0, (top - l(year)) / (top - end)));
+}
+// The eras on the heading bar: [name, x0, x1], end to end from 0 to 1
+export const deepBands = (now = new Date().getFullYear()) =>
+  DRAWER_ERAS.map(([name, a], i) => [name, deepX(a, now), deepX(DRAWER_ERAS[i + 1]?.[1] ?? now, now)]);
+
+// A family of peoples: one heading under its era in the People drawer, whatever its members' own years, holding the
+// records whose `family` names it. FAMILIES in voyages.mjs is the list checkPerson accepts.
+export const FAMILY_HEADS = { austronesian: { name: 'The Austronesian peoples', era: 'Prehistory', from: -3000, to: 1300 } };
+export const familyYears = (key) => { const f = FAMILY_HEADS[key]; return f ? `c. ${spanYears(f.from, f.to)}` : ''; };
 // A bar on an era's scale: [x0, x1, openStart, openEnd], an end open where the span runs past the era or the record
 // leaves it undated (`fromKnown`, `toKnown`, as lifeSpan gives them)
 export function barOn(scale, [a, b, fromKnown = true, toKnown = true]) {
