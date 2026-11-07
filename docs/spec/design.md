@@ -353,10 +353,21 @@ Feature: Every chart turns, a quarter at a time
     When the user clicks one with no sheet shown
     Then the world turns that way round to the next of north, east, south and west up
     And from one of those quarter turns, four clicks the same way come back to where they began
+  Scenario: the compass over the skull on a wide screen; a twist on a phone
+    Source: the user, 2026-11-06: "On mobile the compass icon on the lower ride size is not draggable, and the two rotate buttons are removed. For mobile, the usual 2 finger pinch and twist gesture for rotating maps is used to rotate the map orientation only. On desktop the compass is larger, the same diameter as the skull, and appears directly over the skull at the far right, while the two 90 degree rotate buttons appear to the left of the compass and are slightly smaller." This overtakes "either side of the compass" and "always shown" above for both screens.
+    Given a wide screen
+    When the user looks at the right gutter's foot
+    Then the compass stands directly above the skull at the far right, the skull's diameter, and the two walk-around buttons stand side by side to its left, a little smaller
+    And the compass still turns the world under a drag, and a click on it turned still sets north up
+    Given a phone
+    When the user looks at the lower right
+    Then the compass is there to read and to tap for north up, and does not turn under a drag; there are no walk-around buttons
+    When the user twists two fingers on the map
+    Then the world, and every sheet on it, turns with them about their midpoint as the pinch zooms, the way a phone's maps turn; the turn is the map's alone, never a card's
   Scenario: the chart's own up
     Given any chart shown, drawn to be read another way up (de la Cosa's west up) or north up (every chart with no other up)
     When the user looks at its row
-    Then its up chip ("West up", "North up") is there on a line of its own, and lit exactly while the world stands at that chart's up, however the user got there: the up chip, the walk-around buttons, a corner drag or the compass
+    Then its up chip ("West up", "North up") is there on a line of its own, and lit exactly while the world stands at that chart's up, however the user got there: the up chip, the walk-around buttons, a corner drag, the compass or a two-finger twist on a phone
     When the user clicks the up chip unlit
     Then the world turns to the chart's up, framing the sheet as it will stand
     When the user clicks it lit
@@ -584,6 +595,61 @@ Feature: A person's picture card
     Then it shows 👁, and a click on it enlarges the card to near full size
     And the enlarged card shows ⟳ to turn it over, and a put-away control drawn as an X like the one that marks buried treasure on a map, or a small skull and crossbones
     And the card's old resize icon goes
+  Overtaken: "put away, and on top" and "look, then flip and put away" give way to "A card on the table: a click looks, three buttons, Pulverum" below (2026-11-06). The card's back, its size and its link glyph's look stand.
+
+Feature: A card on the table: a click looks, three buttons, Pulverum
+  Source: the user, 2026-11-06, on the cards for people or places dealt onto the map: "we're simplifying the controls"; "view/zoom is simply clicking the picture/card or tapping on mobile. The eye and link icons are removed from the initial 'dealt' cards and no grabbing is needed."; "the view when clicking should go full screen for mobile and a moderately large zoom for desktop"; "After focused/zoomed it should be allowed to zoom in closer to the full resolution or pan, using the normal controls for desktop or mobile (i.e. pinch, drag, scroll wheel, etc.) without the underlying main map moving. Only the view of the card moves."; "when a card is zoomed/focused, then we have three buttons on the right side, lower corner in this order from top to bottom: "read more", "flip", and "put away" (this is the user assist text or on desktop, appears as text right of the button)."; "The icons are the link for read more, loop circle for flip, and the down arrow for put away."; "The read, flip, and away buttons are in the same position on the front and back of the card, so that when flipping is quick and easy to flip back once more and not be disoriented by relative position changes of the buttons."; "Put away merely returns the card to its original position, it does not 'close' as it did previously."; "On the back of the card, the button currently labeled "X Put away" is moved to the lower right inside of the card back, near the other icons. The text is changed to "X Pulverum" in red and an italicized latin script"; "The link icon following the text on the back of the card is removed, only the link icon to the lower right side of the card is needed." And in the same session, choosing from options put to them: Read more opens the subject's article, not the picture's Commons page. The choice "a dealt card is not dragged" was amended the same day to the frame's grab below.
+  Scenario: a dealt card carries no controls
+    Given a person's or a sight's cards dealt on the table
+    When the user looks at a card
+    Then it shows its picture alone: no 👁, no link glyph, no grab handle
+    And the pointer over the card's body on a wide screen is `zoom-in`, and over its frame `grab`
+  Scenario: the frame's edge grabs; the body looks
+    Source: the user, 2026-11-06, amending "no drag": "when the pictures are dealt out, a drag from the corners/margins of the frame allows grabbing and changing focus without zooming. So the edge of card behind, can be used to raise it or pull it out to the side over others. The edge of a card in front can be used to drag it aside to reveal others. Clicking/tapping anywhere inside the main body of the card zooms and focuses."
+    Given cards dealt on the table, some overlapping
+    When the user drags from a card's frame, its margin or a corner, on a wide screen or a phone
+    Then the card comes to the top of the pile and moves with the pointer, without looking: a card behind is raised or pulled out over the others, a card in front is drawn aside to show the ones under it
+    And the frame's hit band is wide enough for a finger on a phone, however narrow the drawn margin
+    When the user clicks or taps anywhere inside the card's body, the picture
+    Then the card is looked at, as below; a drag that starts on the body pans the map
+  Scenario: a click or a tap looks
+    Source: the user, 2026-11-07, on this PR: "I don't like the extra matte/background behind the picture for mobile. a slight background for the card is ok but the map is not dimmed or obscured. And I do not like the way we removed the skull on mobile. bring that back!"
+    Given a card dealt on the table
+    When the user clicks it, or taps it on a phone
+    Then the card flies from its place on the table to the middle of the window, face up, and the map behind it holds still, dimmed on a wide screen
+    And on a wide screen it stands moderately large: its longer side about three quarters of the window's shorter side, never past the picture's own pixels
+    And on a phone it is the picture fitted whole between the row of instruments and the skull, on a slight card margin, the buttons over its lower right; the map round it is neither dimmed nor covered, and the skull stays
+    And a dealt card is in the Tab order, and Enter or Space on it looks, as the click does; Escape puts it away as below
+  Scenario: a looked-at card zooms and pans, the map stays
+    Given a card looked at
+    When the user scrolls the wheel over it or pinches it, then drags it
+    Then the picture zooms about the pointer or the fingers' midpoint, up to its full resolution and never smaller than its look size, and a drag pans it inside its frame
+    And the map under it neither pans, zooms nor turns, whatever the gesture; the card's view alone moves
+    And a double-click or a double-tap toggles between the look size and full resolution at that point; on a dealt card a double-click is one look, the second click doing nothing more
+  Scenario: three buttons at the lower right, the same on both faces
+    Given a card looked at, face up or face down
+    When the user looks at its lower right
+    Then three round buttons stand in a column at the card's right edge, low, top to bottom: Read more (a link glyph), Turn over (a loop circle, ⟳), Put away (a down arrow, ↓)
+    And on a wide screen the column straddles the card's right edge and each button's name stands as text to its right, outside the card, over the dimmed map; on a phone the names are the buttons' accessible names and their long-press hint, not drawn
+    And turning the card over leaves all three exactly where they were, so a second click on Turn over turns it straight back
+  Scenario: Read more opens the subject's article
+    Given a card looked at, a person's or a place's
+    When the user clicks Read more
+    Then the person's or the place's article opens in a new tab, never the picture's page on Wikimedia Commons
+    And a person's article is their first source, as a voyage's Read more is, else their Wikipedia article by name; a place's is its Wikipedia article by name
+  Scenario: Put away sends the card home
+    Given a card looked at
+    When the user clicks Put away, presses Escape, or clicks the map round it
+    Then the card flies back face up to its place on the table, where it was dealt or last dragged, at its dealt size, and the map behind it brightens; it stays dealt
+  Scenario: the back's own controls
+    Given a card looked at, turned to its back
+    When the user reads the back
+    Then the text ends with the credit and no link glyph after it; Read more at the lower right is the one link button
+    And where a card has more than one link worth following (the picture's page on Wikimedia Commons, a place the person is tied to, another source), they are listed as plain text links in the body of the back, each named for where it goes
+    Source, for the list: the user, 2026-11-06: "we can pick any sensible default for the link button for read more, but if we do have more than one viable link for a given card (a commons link, a separate place link from the person to where they are related, etc.) then we could list multiple links inside the body of the back of the card."
+    And inside the back, at its lower right beside the three buttons, is ✘ *Pulverum*: the cross, then the word in red, in an italic script hand
+    When the user clicks ✘ *Pulverum*
+    Then that card alone leaves the table as the skull's clear takes a card, and a click on the person or the mark again deals it back
 
 Feature: A sight's pictures on the chart table
   Source: the user's design for the sights' pictures, 2026-10-30, on [#310](https://github.com/mark-brannan/portolani/pull/310): a sight's tile opened on the map deals its pictures onto the map "as onto a chart table", exactly as a chosen person's pictures are; Tyre first, from the candidates in `docs/ruin-marks/tyre.md`; where the row lies and the split by mark, the user's review of [#326](https://github.com/mark-brannan/portolani/pull/326), 2026-10-30, as #326's body records it (paraphrase: a sight's cards are dealt in a row along the foot of the window, in its bottom third, clear of the mark, the map flying there first from afar; a sight with several marks splits its pictures by mark, Tyre's city site and Al-Bass). This overtakes the row "just south of its marks, centred under them" and the tile that opened all of a sight's pictures.
@@ -644,6 +710,18 @@ Feature: A flight sweeps the table, then deals on arrival
     Then every card on the table is put away first, a person's or a sight's alike, as the skull puts them away
     And then the map flies
     And the chosen subject's cards, a person's or a sight's alike, are dealt only as the flight nears its target view, never before it sets off or while the map is still far from it
+  Scenario: the map is there before the deal
+    Source: the user, 2026-11-06: "Whenever flying to a new location with cards, the flying occurs first and then the cards are dealt after arriving at the target position (dealing is allowed to happen before the final zoom is reached, while the lat/lon position should be reached before dealing.)"
+    Given a flight to a subject with cards
+    When the flight is under way
+    Then no card is dealt until the middle of the window has reached the latitude and longitude the flight is bound for, its own centre rather than the subject's mark
+    And the deal may begin while the zoom is still settling into the target view
+  Scenario: a person's voyages draw on as the map arrives
+    Source: the user, 2026-11-06: "When arriving at the target position for a person, the voyages are all animated"; and, choosing from options put to them, all draw on together.
+    Given a person chosen, the map flying to frame them
+    When the map arrives at the target position, as the cards are dealt
+    Then every voyage of theirs that is shown draws its line on at once, together, at the pen's pace (the Voyages drawer's slider)
+    And with reduced motion the lines are simply there
   Scenario: no flight, no sweep
     Given a choice that does not move the map (a sight's mark opened where the map already is)
     When its cards are dealt
@@ -667,6 +745,12 @@ Feature: The skull in the lower right puts the map back
     Then every card is put away, a person's or a sight's alike, every tile closes, and no subject is chosen: the map is in its normal state
     And a large, faint skull flashes over the map as the cards go, then is gone (the broom is retired: docs/spec/drawer.md, "The skull stays in reach while a drawer is in use"); with reduced motion the cards go with no wipe
     And a click with nothing on the table does no harm: the map is already in its normal state
+  Scenario: on a phone, the skull alone, smaller
+    Source: the user, 2026-11-06: "On mobile, the memento mori text near the skull is suppressed for space constraints. Only the skull is shown and it is a reduced size. The red animated text still appears in both mobile and desktop on the skull button press."
+    Given a phone
+    When the user looks at the lower right
+    Then the skull is there alone, smaller than on a wide screen, with no phrase beside it
+    And a press still raises the phrase large in red over the map, as on a wide screen
 
 Feature: The skull is the one clear  (`#sweep`, page.js `clearMap`)
   Source: the user, 2026-11-04: "The skull is the universal 'clear' button.  It should work on any drawer or feature where we need clear/reset functionality.  Charts are cleared/reset with the skull.  Voyages are cleared/reset with the skull.  People, of course.  There is an unneeded 'clear' button in voyages.  When in the context view for a POI, it clears cards but does not reset any view position or zoom."; "It does not clear the rose config settings, map projection settings, position, or view." This widens "The skull in the lower right puts the map back" from the table to every drawer's content, and retires the Voyages drawer's own Clear (docs/spec/voyages.md). A settings group's Clear and Defaults (the figures, the hills) are settings, not the map's content, and stay.
@@ -730,6 +814,7 @@ Feature: The skull's clear is shown  (`#sweep`, page.js `skullRise`, `wordsRise`
 Feature: People and voyages, each a vertical timeline
   Source: the user on the timeline [#304](https://github.com/mark-brannan/portolani/pull/304) merged, 2026-11-04: "The entire drawer is way too WIDE! It should not be wider than the drawer for charts or settings/config (480px). We should consider whether we need to reorient it to be a vertical timeline instead of horizontal. Somehow we need to fit things more nicely."; "I do not like AT ALL how we treat people groups. The people group migrations MUST be in the people drawer with people. Nevermind that all the European examples are individuals... people are people. Lapita gets a row in people (not merely voyages)."; "When you click on people in the people drawer it should expand their notes and their voyages should appear directly below that. NOT below all the other people, and not as a naive copy/paste from the voyages drawer of all voyages. If I select Ibn Battuta, then I should get a tile with his notes... then each of the voyages below that (with the notes for that voyage)." This overtakes the one horizontal timeline of two lanes, its Earlier tab and its era bands (the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30), which #304 built and the user turned down on sight.
   Scenario: two drawers, no wider than the charts
+    Source, for the one layout: the user, 2026-11-06: "The voyages drawer is separate from the persons drawer, they are NOT combined."; "the person drawer, when a person is selected, shows the subset of voyages that person was a part of, below their tile inside the drawer." The page still opens the one wide timeline (`#timelinePanel`, the A layout) when the hash has no `timeline=`; the two drawers are the only layout, and A, its `timeline=` key and its chip in the settings drawer go. And, the same day: "voyages is a distinct drawer. people is a distinct drawer. Voyages could (in the future) contain links to people inside a voyage but fundamentally, voyages is a different presentation of the data and a different drawer. People will have links to one or more voyages, but it is a different presentation of the voyage data related to a single person."
     Given the instrument row
     When the user clicks the medallion `#people` or the dividers `#voyages`
     Then the People drawer `#peoplePanel` or the Voyages drawer `#voyagesPanel` opens alone, each `width: min(480px, 100vw - 24px)`, the Charts drawer's width, never wider on any screen; on a phone each is a bottom sheet like the others
