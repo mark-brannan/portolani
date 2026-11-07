@@ -639,3 +639,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261107t090207z
 - People drawer built as Lens, not Inset ruler, on Solace's ask for code before a pick Undo: revert 3387b80 and build Inset ruler instead (https://claude.ai/artifact/DoMvyuE7SXrm1RgHM4RABx) ([#399](https://github.com/mark-brannan/portolani/pull/399))
+
+### 20261107t201511z
+- Drawer lip: wide-screen drawers slide in from the right, so the lip sits at the drawer's top-left corner pointing right; phone turned (docked left) top-right pointing left; upright top centre pointing down Undo: rotate the .lip svg per media query in index.html ([#404](https://github.com/mark-brannan/portolani/pull/404))
