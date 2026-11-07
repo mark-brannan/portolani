@@ -624,3 +624,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261107t041148z
 - Nit 6: the phone drawer stays a bottom sheet; cards are dealt in the part of the window above it, or beside the left-docked drawer turned Undo: deal into the whole window and move the sheet to the top ([#404](https://github.com/mark-brannan/portolani/pull/404))
+
+### 20261107t041212z
+- Nit 6: on a phone a person's cards are dealt in screen terms under their travels, as a place's are Undo: lay a person's cards in lon/lat under the frame again ([#404](https://github.com/mark-brannan/portolani/pull/404))
