@@ -630,3 +630,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261107t041231z
 - Nit 4: landscape phone is wider than 520 px, at most 520 px tall, coarse pointer; its drawer docks left, full height; no phrase beside the skull, small skull and compass Undo: drop the turned-phone media query ([#404](https://github.com/mark-brannan/portolani/pull/404))
+
+### 20261107t041306z
+- Nit 2: while a phone card is zoomed with the map its buttons stay at the look-size spot Undo: let the buttons follow the zoomed card ([#404](https://github.com/mark-brannan/portolani/pull/404))
