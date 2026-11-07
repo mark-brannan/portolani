@@ -40,6 +40,9 @@
   }
   /* under the timing line, the commit the site was built from and when (build.json, written by the build) */
   html.built #status { bottom: 20px; }
+  /* the English of the memento mori just read, a line above the timings, in the same small type */
+  #mementoEnglish { position: fixed; right: 10px; bottom: 20px; margin: 0; max-width: calc(100vw - 20px); font-size: 11px; color: var(--margin-ink); opacity: 0.75; pointer-events: none; text-shadow: 0 0 3px var(--margin), 0 0 3px var(--margin); }
+  html.built #mementoEnglish { bottom: 34px; }
   #build {
     position: fixed; right: 10px; bottom: 6px; margin: 0; max-width: min(calc(100vw - 20px), 520px);
     font-size: 10px; color: var(--margin-ink); opacity: 0.6;
@@ -51,8 +54,8 @@
      the subject let go, every chart and voyage lifted; the view and the settings stay); its memento mori, the next one at each clearing, in its hover text alone */
   /* it sits over the drawers (z-index 3), and an open drawer stops above it (--memento-h, page.js), so the skull and its
      line stay in sight and in reach while a drawer is in use; on a phone it rides just above the open sheet */
-  :root { --memento-foot: 30px; --memento-h: 110px; }
-  html.built { --memento-foot: 44px; }
+  :root { --memento-foot: 44px; --memento-h: 110px; }
+  html.built { --memento-foot: 58px; }
   #memento {
     position: fixed; right: 12px; bottom: var(--memento-foot); z-index: 3; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
     max-width: min(230px, 100vw - 24px); pointer-events: none;
@@ -620,6 +623,7 @@
   <div class="bstrip" title="The voyage's calendar: drag or click to go to a day"><div id="bandStrip"></div><span id="bandThumb"></span><small id="bandFrom"></small><small id="bandTo"></small><small id="bandPace"></small></div>
 </div>
 <p id="status" role="status">Loading…</p>
+<p id="mementoEnglish" aria-hidden="true"></p>
 <p id="build" hidden></p>
 <div id="memento">
   <div id="turns">

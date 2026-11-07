@@ -2517,26 +2517,26 @@ async function clearMap(snap = () => {}) {
 $('sweep').addEventListener('click', () => {
   const cards = cardsOnTable(), before = vanishFrom(), shots = { before };
   const done = clearMap((stage) => { if (before) shots[stage] = ctx.getImageData(0, 0, W, H); });
-  skullRise(); wordsRise(MEMENTO[memento]);
+  skullRise(); wordsRise(MEMENTO[memento]); sayEnglish(memento);
   memento = mementoNext(memento); showMemento();
   if (before) Promise.race([done, new Promise((ok) => setTimeout(ok, 4000))]).then(() => vanish(shots, cards), () => vanish(shots, cards));
 });
 // The open drawer stops above the skull (--memento-h, index.html), whether the compass shows over it
 new ResizeObserver(() => document.documentElement.style.setProperty('--memento-h', `${$('memento').offsetHeight}px`)).observe($('memento'));
 
-// The clear's timing, the user's picks on #272: what goes (the lines and the charts' sheets) fades over 4 s; the skull
-// is 0.8 s at 15% ink and grows to ×3; the phrase is 7 s, in at once and straight into a slow fade, and its size
+// The clear's timing, the user's picks on #404: what goes (the lines and the charts' sheets) fades over 1.2 s; the skull
+// is 0.5 s at 15% ink and grows to ×3; the phrase is 8 s, in at once and straight into a slow fade, and its size
 // changes from 5% to 100% of that time, to ×1.2
-const CLEAR_TUNE = { goneMs: 4000, skullMs: 800, wordsMs: 7000, ink: 15, skullGrow: 300, wordsGrow: 120, growFrom: 5, growTo: 100,
+const CLEAR_TUNE = { goneMs: 1200, skullMs: 500, wordsMs: 8000, ink: 15, skullGrow: 300, wordsGrow: 120, growFrom: 5, growTo: 100,
   // a card's exit (Pulverum, and each card in the skull's clear): its time and the gap between cards; how far along the
   // deal-off path it travels; when in its exit the dust begins; how much the crumbling runs from the trailing edge
   // (0 scattered); a grain's size and drift, CSS px; the share of grains seen as dust; a grain's life, of the exit's time
-  cardMs: 800, cardGap: 50, travel: 75, dustFrom: 30, sweep: 100, grain: 4, drift: 200, dustKept: 100, dustLife: 200 };
+  cardMs: 500, cardGap: 60, travel: 75, dustFrom: 25, sweep: 100, grain: 4, drift: 25, dustKept: 100, dustLife: 200 };
 // A hidden tuning panel (#clearTune, top left) changes these, kept per browser. It shows only with `clear-tune` in the
 // query (`?clear-tune#...`), which the page's own hash rewrites leave alone; without it the defaults above hold and
 // any kept tuning is ignored. Never under a browser test, where it would sit over the page.
 if (new URLSearchParams(location.search).has('clear-tune') && !navigator.webdriver) {
-  const merged = { ...CLEAR_TUNE }, TUNE_KEY = 'portolani.clearTune.9';
+  const merged = { ...CLEAR_TUNE }, TUNE_KEY = 'portolani.clearTune.10';
   try { Object.assign(CLEAR_TUNE, JSON.parse(localStorage.getItem(TUNE_KEY) ?? '{}')); } catch { /* none kept */ }
   $('clearTune').hidden = false;
   const keep = () => { try { localStorage.setItem(TUNE_KEY, JSON.stringify(CLEAR_TUNE)); } catch { /* not kept */ } };
