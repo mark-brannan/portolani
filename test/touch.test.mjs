@@ -807,7 +807,7 @@ test('people: a dealt card carries no controls; its frame grabs it, its body loo
   }
 });
 
-test('phone: a tap looks, a pinch on the card leaves the map; a finger drags a card by its frame; two fingers twisted turn the world; the compass tapped sets north up', { skip, timeout: 240000 }, async () => {
+test('phone: a tap looks, a pinch on the card zooms the map with it; a finger drags a card by its frame; two fingers twisted turn the world; the compass tapped sets north up', { skip, timeout: 240000 }, async () => {
   const server = serve();
   const browser = await chromium.launch();
   try {
@@ -836,7 +836,7 @@ test('phone: a tap looks, a pinch on the card leaves the map; a finger drags a c
     assert.equal(await looked(), 'false', 'a drag from the frame looked at the card');
     assert.equal(mapOf(await hash()), mapOf(before), 'a drag from the frame moved the map');
 
-    // a tap on the body looks; a pinch on the card looked at leaves the map where it is
+    // a tap on the body looks; a pinch on the card looked at zooms the map with it about the same point (design.md, "on a phone, a pinch zooms the card and the map together")
     await page.touchscreen.tap(cx - 20, cy - 60);
     await page.waitForFunction(() => document.querySelector('#pictureKeys [data-look="0"]')?.getAttribute('aria-pressed') === 'true', null, { timeout: 5000 });
     const still = await hash();
@@ -844,7 +844,8 @@ test('phone: a tap looks, a pinch on the card leaves the map; a finger drags a c
     for (let i = 1; i <= 8; i++) await touch('touchMove', [[cx - 30 - i * 8, cy + i * 3], [cx + 30 + i * 8, cy - i * 3]]);
     await touch('touchEnd', []);
     await page.waitForTimeout(600);
-    assert.equal(mapOf(await hash()), mapOf(still), 'a pinch on the card looked at moved the map');
+    const [z0] = mapOf(still).split('/').map(Number), [z1] = mapOf(await hash()).split('/').map(Number);
+    assert.ok(z1 > z0, `a pinch out on the card looked at left the map at zoom ${z1} (was ${z0})`);
     assert.doesNotMatch(await hash(), /bearing=/, 'a twist on the card turned the map');
     await page.evaluate(() => document.querySelector('#pictureKeys [data-away="0"]').click());
     assert.equal(await looked(), 'false');
