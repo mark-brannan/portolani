@@ -618,3 +618,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261107t031158z
 - Both Sahul routes are conventional (proposed, the usual drawing), with the islands between as a drawing choice Undo: mark the routes proposed or drop the islands between ([#399](https://github.com/mark-brannan/portolani/pull/399))
+
+### 20261107t031215z
+- The Pesse canoe is a migration with one waypoint and no legs, not a new kind or a made-up route; its Commons photo is left out until its licence is checked Undo: give the canoe its own kind or drop the record ([#399](https://github.com/mark-brannan/portolani/pull/399))
