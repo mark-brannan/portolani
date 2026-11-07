@@ -126,3 +126,15 @@ test('a long phrase with a comma near its middle is set as a couplet; a short on
   for (const p of MEMENTO) assert.equal(mementoLines(p).join(' '), p, `${p}: the lines keep every word`);
   assert.deepEqual(mementoLines('Polvo eres, y en polvo te has de convertir'), ['Polvo eres, y en polvo te has de convertir']);
 });
+
+test('in a narrow window, up to three rows of a sight\'s pictures when that lays them larger, all inside it and above its foot', () => {
+  const win = { x0: 0, x1: 400, y0: 0, y1: 300 }, sizes = [[640, 480], [640, 488], [640, 480], [640, 480], [640, 427], [640, 424], [640, 369]];
+  const one = sightDeal(sizes, win, [200, 60]), more = sightDeal(sizes, win, [200, 60], { ...SIGHT_DEAL, fill: 0.55, rows: 3 });
+  assert.ok(more.row[0].h > one.row[0].h * 1.5, `larger in rows: ${more.row[0].h} over ${one.row[0].h}`);
+  assert.ok(new Set(more.row.map((c) => c.y)).size > 1, 'in more than one row');
+  for (const [k, c] of more.row.entries()) {
+    const w = (sizes[k][0] / sizes[k][1]) * c.h;
+    assert.ok(c.x - w / 2 >= 0 && c.x + w / 2 <= 400 && c.y - c.h / 2 >= more.top - 1e-9 && c.y + c.h / 2 <= 300, `card ${k} inside`);
+  }
+  assert.equal(sightDeal(sizes, { x0: 0, x1: 1600, y0: 0, y1: 1000 }, [800, 400], { ...SIGHT_DEAL, rows: 3 }).row.every((c, k, all) => c.y === all[0].y), true, 'a wide window keeps one row');
+});

@@ -231,6 +231,19 @@ Feature: A drawer stays open on a click or a choice
     When the user taps a button, a chip, a link or a checkbox inside it, picks a place in it, or taps the map
     Then the sheet stays open and the map does what was asked behind it
     And the sheet closes only from its own button, another instrument's button or Esc; a tap on the map does not close it
+  Scenario: a phone turned to landscape
+    Source: the user, 2026-11-06, on #272: "When flipping the phone to landscape, the drawers are unusable because of being cramped. We also do not need the clockwise and counterclockwise rotate buttons (they're not needed for mobile) but they show up in this view for some reason."
+    Given a phone turned to landscape: wider than 520 px, but no more than 520 px tall, and touched rather than pointed at
+    When the user opens any drawer
+    Then it docks at the window's left edge, the window's whole height and a little over half its width, clear of the row of instruments and of the compass and the skull at the right, and scrolls inside
+    And it stays up when the map is tapped, as the bottom sheet does upright
+    And the lower right has the compass and the skull, small, with no phrase beside the skull and no walk-around buttons, as upright
+  Scenario: turned to landscape and back, everything where it was
+    Source: the user, 2026-11-06, on #272: "When flipping the phone to landscape and then back, the buttons are partially obscured at the edge of the pages. It needs to go back to the same orientation and the same button positions."
+    Given a phone upright, the row of instruments at the top right and the compass and the skull at the lower right
+    When the user turns it to landscape and back upright
+    Then the page is as it was: the row and the skull whole, at the window's edges, none cut off
+    And the page itself never zooms or scrolls, by a pinch or by a turn; a pinch is the map's, and a drawer still scrolls inside
 
 Feature: A voyage's row in the Voyages drawer
   Source: the user on [#259](https://github.com/mark-brannan/portolani/pull/259), 2026-10-29: "Clicking a new voyage button always zooms to that voyages target window."; "The first time any given voyage is selected after opening the drawer, if it was not previously selected, zoom to the window for that voyage and then animate the line from the start to the finish."; "Each voyage has a show/hide button to the right of it, before the color selector. The show hide always does a quick show/hide action for the line without changing the zoom or view."; "The voyages colors should not "jump" or reset when multiple voyages were selected and an earlier one is then de-selected. The colors in the current display should remain 'sticky' to the voyage they were already assigned to." The pace of the first draw, after comparing three: "A but faster, maybe 1s +/- .5s." (A: an even pace along the line; B: the voyage's dates) This replaces the rule that a voyage put on stays where it is if any of its track is in view, and that a click on a shown voyage takes it off (`public/page.js` at `6960f78`).
@@ -359,7 +372,7 @@ Feature: Every chart turns, a quarter at a time
     When the user looks at the right gutter's foot
     Then the compass stands directly above the skull at the far right, the skull's diameter, and the two walk-around buttons stand side by side to its left, a little smaller
     And the compass still turns the world under a drag, and a click on it turned still sets north up
-    Given a phone
+    Given a phone, upright or turned to landscape
     When the user looks at the lower right
     Then the compass is there to read and to tap for north up, and does not turn under a drag; there are no walk-around buttons
     When the user twists two fingers on the map
@@ -618,19 +631,29 @@ Feature: A card on the table: a click looks, three buttons, Pulverum
     When the user clicks it, or taps it on a phone
     Then the card flies from its place on the table to the middle of the window, face up, and the map behind it holds still, dimmed on a wide screen
     And on a wide screen it stands moderately large: its longer side about three quarters of the window's shorter side, never past the picture's own pixels
-    And on a phone it is the picture fitted whole between the row of instruments and the skull, on a slight card margin, the buttons over its lower right; the map round it is neither dimmed nor covered, and the skull stays
+    And on a phone, upright or turned, it is the picture fitted whole in the part of the window clear of the row of instruments, an open drawer, the compass and the skull, on a slight card margin, with room at its right for its buttons; the map round it is neither dimmed nor covered, and the skull stays
     And a dealt card is in the Tab order, and Enter or Space on it looks, as the click does; Escape puts it away as below
   Scenario: a looked-at card zooms and pans, the map stays
-    Given a card looked at
+    Given a card looked at on a wide screen
     When the user scrolls the wheel over it or pinches it, then drags it
     Then the picture zooms about the pointer or the fingers' midpoint, up to its full resolution and never smaller than its look size, and a drag pans it inside its frame
     And the map under it neither pans, zooms nor turns, whatever the gesture; the card's view alone moves
     And a double-click or a double-tap toggles between the look size and full resolution at that point; on a dealt card a double-click is one look, the second click doing nothing more
+  Scenario: on a phone, a pinch zooms the card and the map together
+    Source: the user, 2026-11-06, on #272: "The pinch to zoom on mobile is unexpected. It zooms a card's image inside the boarder which makes it look artificially like a 'window' rather than as a physical card. Instead, just keep the card and the base map together and pinch to zoom, zooms them both. It should be easy to do a close up view of the card on mobile." This overtakes the scenario above on a phone.
+    Given a card looked at on a phone, upright or turned
+    When the user pinches it, then drags it
+    Then the whole card grows or shrinks, frame and all, about the fingers' midpoint, and the map under it zooms by the same amount about the same point, so the two stay together as a card lying on the chart would; a drag moves both
+    And the picture always fills its frame; it is never zoomed or panned inside it
+    And the card grows up to its picture's full resolution and never below its look size; a double-tap toggles between the two, the map with it
+    And its three buttons stay where they stood beside it at its look size, so they are in reach however close the card is
+    And put away, the card flies home from where it stands to its place on the table, which the map has carried with it
   Scenario: three buttons at the lower right, the same on both faces
     Given a card looked at, face up or face down
     When the user looks at its lower right
     Then three round buttons stand in a column at the card's right edge, low, top to bottom: Read more (a link glyph), Turn over (a loop circle, ⟳), Put away (a down arrow, ↓)
-    And on a wide screen the column straddles the card's right edge and each button's name stands as text to its right, outside the card, over the dimmed map; on a phone the names are the buttons' accessible names and their long-press hint, not drawn
+    And on a wide screen the column straddles the card's right edge and each button's name stands as text to its right, outside the card, over the dimmed map; on a phone the column stands just outside the card's right edge, beside the picture and never on it, and the names are the buttons' accessible names and their long-press hint, not drawn
+    Source, for the phone: the user, 2026-11-06, on #272: "The buttons on mobile should not cover the image on the card if possible. They can be placed a little below, or slightly further to the right. The card image could also be moved a little higher and the buttons lower (for landscape pictures). To save space for portrait pictures, we might consider placing the compass and skull side by side or slightly lower."
     And turning the card over leaves all three exactly where they were, so a second click on Turn over turns it straight back
   Scenario: Read more opens the subject's article
     Given a card looked at, a person's or a place's
@@ -700,7 +723,8 @@ Feature: A place's note and details in the Points of interest drawer
     Given the Points of interest drawer open
     When the user clicks a place's row
     Then the map flies there, and the place's details show at the drawer's foot: its name and date, its tile's text, and its pictures as thumbnails that put a picture on the table or take it off
-    And the click on the row deals nothing; a mark on the map deals
+    And the place's cards are dealt as the map arrives, as a tap on its mark deals them, with no tap on a thumbnail first; a place with no pictures only flies
+    Source, for the deal: the user, 2026-11-06, on #272: "I notice that cards are not being dealt for places right now, unless the images inside the drawer are selected first. That increases the users effort and shouldn't be so, deal the cards for them automatically". This overtakes "the click on the row deals nothing; a mark on the map deals".
 
 Feature: A flight sweeps the table, then deals on arrival
   Source: the user on [#326](https://github.com/mark-brannan/portolani/pull/326), 2026-10-30, in the session walk: "cards need to sweep themselves for now whenever we do a fly action. I typically want that for people cards too...so it should be the same action if possible. sweep then fly."; "I notice that cards for people are getting dealt before we fly and so they are mysteriously in place when we get to the outer zoom. We should fly and then deal cards when we are nearing the target zoom levels, or the target field of view."
@@ -726,6 +750,14 @@ Feature: A flight sweeps the table, then deals on arrival
     Given a choice that does not move the map (a sight's mark opened where the map already is)
     When its cards are dealt
     Then they are dealt at once, in the view the map is in
+  Scenario: on a phone every card is dealt in sight, never under the drawer
+    Source: the user, 2026-11-06, on #272: "The card dealing on mobile should deal the cards in a way that we can see them all on the screen. Right now there are two problems: the drawer is rendered towards the bottom of the screen, showing the map in the upper part (but then the drawer covers the cards). The cards are also dealt in a wide, landscape friendly, pattern but that makes room for only 1 or 2 cards on the screen. The drawer should not cover the cards upon selecting a person (or place) because then the user has no way to tell that the cards are waiting for inspection on the map (if they will simply deselect the drawer and try touching a card). Whether this means the drawer occupies the top portion or the bottom is open to interpretation. I assume the drawer at the bottom for mobile was an earlier UX choice (though I do not know) to hopefully conserve screen space. The same problem exists for the drawers for the compass or the astrolabe."
+    Given a phone, upright or turned to landscape, a drawer open or shut (People, Locations, Go)
+    When the user chooses a person or a place with cards
+    Then every card is dealt in the part of the window left clear: under the row of instruments, above the open bottom sheet (upright) or beside the drawer docked at the left (turned), and clear of the compass and the skull
+    And they are laid in as many rows, up to three, as shows them largest there, so a narrow upright window holds them all
+    And the map lands with the person's travels or the place in the clear part above the cards
+    And the drawer stays at the foot upright; shut later, it uncovers only map, the cards staying where they were dealt
 
 Feature: The skull in the lower right puts the map back
   Source: the user on [#326](https://github.com/mark-brannan/portolani/pull/326), 2026-10-30, in the session walk: "I don't like the broom. Use a skull and cross bones and put some latin script text below it. I want us to cycle through a handful of phrases about mortality and death/dust that would have been in common use in the period: "Memento, homo, quia pulvis es, et in pulverem reverteris", "Pulvis et umbra sumus", "Hodie mihi, cras tibi", "Mors certa, hora incerta", "All flesche is grasse", "Erthe out of erthe is wonderly wrought, Erthe hath of erthe a dignite of nought", "Ogni uomo è polvere", "Ricordati che devi morire", "Polvo eres, y en polvo te has de convertir", "Nuestras vidas son los ríos que van a dar en la mar, que es el morir", "Recuerda que eres polvo". You may use an animated broom effect on the map when the skull is clicked and the cards are being swept but then the broom disappears. I want the skull and the flavor text to always appear in the lower right persistently. It can always be used to clear things back to the normal state." That one control puts every card away, a person's or a sight's alike, is the earlier call of the same review, as #326's body records it (paraphrase). The broom supersedes nothing older: the sweep was first drawn as a broom on #326, shown only while a card lay on the table and keeping the subject chosen, and the user replaced it with the skull the same day.
@@ -793,7 +825,9 @@ Feature: The skull's clear is shown  (`#sweep`, page.js `skullRise`, `wordsRise`
     Given cards, voyages or charts' sheets on the map
     When the user clicks the skull
     Then everything cleared leaves together over the same time
-    And each card leaves as it was dealt onto the table, mirrored and at the same pace: off to the left, shrinking and turning, one after another
+    And each card leaves as it was dealt onto the table, mirrored: off to the left, shrinking and turning, one after another, and turns to fine dust as it goes, to nothing; the grains are dust-sized, never large pixels
+    And ✘ *Pulverum* takes its one card off the table the same way
+    Source, for the dust: the user, 2026-11-07, on #404: "The clear effect is to "Deal" the card out to the left ("exit stage left") but also to do a fade "to dust" effect where it fades into nothingness or small pixelated nothingness (not large pixels, 'dust' sized pixels)."
     And a voyage's line only fades away, never swept off or broken into dust
     And with reduced motion it goes at once
   Scenario: the phrase is read large, then fades last
@@ -803,6 +837,11 @@ Feature: The skull's clear is shown  (`#sweep`, page.js `skullRise`, `wordsRise`
     And a long phrase with a comma near its middle is set as a couplet, on two lines split after the comma
     And a phrase that is verse in its source, Manrique's, keeps that verse's lines
     And the next phrase takes its place beside the skull, the one the next click shows
+  Scenario: the large phrase is never under the skull or the compass
+    Source: the user, 2026-11-06, on #272: "The skull (and potentially the compass) are obscuring the red memento mori text on mobile. IT should be either drawn over those buttons, or displayed slightly higher up above the level of the buttons so that it is fully visible during its animation."
+    Given a phone, or any window where the phrase would reach down to the skull and the compass
+    When the user clicks the skull
+    Then the large phrase stands with its foot above the compass and the skull, and grows upward from there, so every letter of it is in sight from its first frame to its last
   Scenario: the phrase beside the skull never moves it
     Given any phrase beside the skull, the longest included
     When the user looks at the skull

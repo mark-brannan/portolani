@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- the page itself never zooms: a pinch is the map's, and a page left zoomed after a turn to landscape and back cut the buttons off at the window's edge -->
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
 <title>Portolani preview</title>
 <style>
   /* one mode: dark margins round the map, parchment drawers. The browser's light/dark setting is not followed. */
@@ -15,7 +16,8 @@
   }
   /* a low-light mode (red-heavy) is reserved here, set by data-light="low" on the root; no control and no tokens yet */
   :root[data-light="low"] { }
-  html, body { height: 100%; }
+  html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+  body { touch-action: pan-x pan-y; } /* a pinch on the margins or a drawer does not zoom the page; the map takes its own (#map) */
   body { margin: 0; overflow: hidden; background: var(--margin); color: var(--margin-ink); font: 14px/1.4 system-ui, sans-serif; }
 
   /* the map fills the window, its 1600 x 1000 canvas scaled to fit and centred */
@@ -116,6 +118,15 @@
     font-family: var(--serif); font-style: italic; color: #8c2f1e; transform-origin: 50% 100%;
     text-shadow: 0 0 6px #efe3c6, 0 0 12px #efe3c6, 0 0 2px #efe3c6;
   }
+  /* temporary, for tuning the skull's clear on this PR (#272): its timings, kept per browser */
+  #clearTune { position: fixed; left: 12px; top: 64px; z-index: 3; max-width: 290px; padding: 4px 10px; font: 12px var(--serif); color: #3b2a1a; background: #efe3c6; border: 1px solid #b89a68; border-radius: 4px; box-shadow: 0 1px 6px rgb(0 0 0 / 0.25); }
+  #clearTune summary { cursor: pointer; font-style: italic; }
+  #clearTune[hidden] { display: none; }
+  #clearTune label { display: grid; grid-template-columns: 7.5em 1fr 3.4em; gap: 6px; align-items: center; margin: 3px 0; }
+  #clearTune output { text-align: right; font-variant-numeric: tabular-nums; }
+  #clearTune button { margin: 4px 0; font: 12px var(--serif); }
+  #clearTune b { display: block; margin: 8px 0 2px; font-weight: normal; font-style: italic; }
+  #clearTune[open] { max-height: calc(100dvh - 80px); overflow-y: auto; }
 
   /* top right, a row of six instruments, each opening its own drawer, left to right: the rose the configuration, the compass Find (a typed place or position, mine filled in, or the points of interest ringed), the astrolabe the locations (home and the world, then the regions, the eras' ports and the Pacific islands), the dividers the voyages, the medallion the people, and the chart the charts. The anchor is hidden for now, its anchorages in the astrolabe's. One drawer at a time: a click on its button opens it and a second click shuts it, another button swaps it for its own, and Esc, or on a wide screen a click on the map, shuts it; a choice in it leaves it open, on a phone too. The row never moves */
   #where { position: fixed; top: 12px; right: 12px; z-index: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; pointer-events: none; }
@@ -319,6 +330,22 @@
     /* the settings or the charts open: the map fills the half above the sheet, cropped as above, the cards on it */
     html.sheet #map { top: 25vh; top: 25dvh; width: max(100vw, 80vh); height: max(50vh, 62.5vw); width: max(100vw, 80dvh); height: max(50dvh, 62.5vw); }
     html.sheet #cardScale { bottom: calc(50vh + 8px); bottom: calc(50dvh + 8px); }
+  }
+
+  /* a phone turned to landscape (wider than a phone's 520 px, but short and touched): the skull and the compass as upright,
+     and each drawer docks at the left, the window's whole height, clear of the instruments and the skull at the right */
+  @media (min-width: 521px) and (max-height: 520px) and (pointer: coarse) {
+    #turns .walk, #mementoText { display: none; }
+    #sweep, #compass { width: 38px; height: 38px; }
+    #sweep svg { width: 28px; height: 28px; }
+    #compass svg { width: 34px; height: 34px; }
+    #compass { cursor: pointer; }
+    .drawer, .drawer.menu, #goPanel {
+      top: 8px; bottom: 8px; left: 8px; right: auto; width: min(420px, 55vw); min-width: 0; max-width: none; height: auto; max-height: none;
+      transform: translateX(calc(-100% - 24px));
+    }
+    .drawer.open { transform: none; }
+    #clearTune { left: auto; right: 12px; }
   }
 
   #chartList { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 8px; }
@@ -656,6 +683,28 @@
   <use href="#skOutline" fill="none" stroke="#2a1a0e" stroke-width="1.8"/>
 </svg></div>
 <p id="mementoBig" aria-hidden="true" hidden></p>
+<details id="clearTune" hidden>
+  <summary>The skull's clear, tuning</summary>
+  <label>The skull <input type="range" id="tuneSkull" min="200" max="3000" step="50"><output for="tuneSkull"></output></label>
+  <label>Skull's ink <input type="range" id="tuneInk" min="2" max="60" step="1"><output for="tuneInk"></output></label>
+  <label>Skull grows <input type="range" id="tuneSkullGrow" min="100" max="300" step="5"><output for="tuneSkullGrow"></output></label>
+  <label>What goes <input type="range" id="tuneGone" min="300" max="6000" step="100"><output for="tuneGone"></output></label>
+  <label>The phrase <input type="range" id="tuneWords" min="500" max="10000" step="100"><output for="tuneWords"></output></label>
+  <label>Phrase size, at the end <input type="range" id="tuneWordsGrow" min="0" max="200" step="5"><output for="tuneWordsGrow"></output></label>
+  <label>Size change from <input type="range" id="tuneGrowFrom" min="0" max="95" step="5"><output for="tuneGrowFrom"></output></label>
+  <label>Size change to <input type="range" id="tuneGrowTo" min="5" max="100" step="5"><output for="tuneGrowTo"></output></label>
+  <b>A card to dust (Pulverum, and the skull)</b>
+  <label>A card's exit <input type="range" id="tuneCard" min="300" max="5000" step="50"><output for="tuneCard"></output></label>
+  <label>Between cards <input type="range" id="tuneCardGap" min="0" max="1000" step="10"><output for="tuneCardGap"></output></label>
+  <label>How far left it goes <input type="range" id="tuneTravel" min="0" max="100" step="5"><output for="tuneTravel"></output></label>
+  <label>Dust begins at <input type="range" id="tuneDustFrom" min="0" max="90" step="5"><output for="tuneDustFrom"></output></label>
+  <label>Crumbles from its edge <input type="range" id="tuneSweep" min="0" max="100" step="5"><output for="tuneSweep"></output></label>
+  <label>Grain <input type="range" id="tuneGrain" min="1" max="8" step="1"><output for="tuneGrain"></output></label>
+  <label>Dust drifts <input type="range" id="tuneDrift" min="0" max="200" step="5"><output for="tuneDrift"></output></label>
+  <label>Dust seen <input type="range" id="tuneDustKept" min="0" max="100" step="5"><output for="tuneDustKept"></output></label>
+  <label>Dust lingers <input type="range" id="tuneDustLife" min="10" max="200" step="5"><output for="tuneDustLife"></output></label>
+  <button type="button" id="tuneReset">Back to the defaults</button>
+</details>
 
 <nav id="where" aria-label="Find">
   <div class="row">
