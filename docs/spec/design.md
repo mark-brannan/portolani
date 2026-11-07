@@ -237,7 +237,7 @@ Feature: A drawer stays open on a click or a choice
     When the user opens any drawer
     Then it docks at the window's left edge, the window's whole height and a little over half its width, clear of the row of instruments and of the compass and the skull at the right, and scrolls inside
     And it stays up when the map is tapped, as the bottom sheet does upright
-    And the lower right has the compass and the skull and no walk-around buttons, as upright
+    And the lower right has the compass and the skull, small, with no phrase beside the skull and no walk-around buttons, as upright
   Scenario: turned to landscape and back, everything where it was
     Source: the user, 2026-11-06, on #272: "When flipping the phone to landscape and then back, the buttons are partially obscured at the edge of the pages. It needs to go back to the same orientation and the same button positions."
     Given a phone upright, the row of instruments at the top right and the compass and the skull at the lower right
@@ -740,6 +740,14 @@ Feature: A flight sweeps the table, then deals on arrival
     Given a choice that does not move the map (a sight's mark opened where the map already is)
     When its cards are dealt
     Then they are dealt at once, in the view the map is in
+  Scenario: on a phone every card is dealt in sight, never under the drawer
+    Source: the user, 2026-11-06, on #272: "The card dealing on mobile should deal the cards in a way that we can see them all on the screen. Right now there are two problems: the drawer is rendered towards the bottom of the screen, showing the map in the upper part (but then the drawer covers the cards). The cards are also dealt in a wide, landscape friendly, pattern but that makes room for only 1 or 2 cards on the screen. The drawer should not cover the cards upon selecting a person (or place) because then the user has no way to tell that the cards are waiting for inspection on the map (if they will simply deselect the drawer and try touching a card). Whether this means the drawer occupies the top portion or the bottom is open to interpretation. I assume the drawer at the bottom for mobile was an earlier UX choice (though I do not know) to hopefully conserve screen space. The same problem exists for the drawers for the compass or the astrolabe."
+    Given a phone, upright or turned to landscape, a drawer open or shut (People, Locations, Go)
+    When the user chooses a person or a place with cards
+    Then every card is dealt in the part of the window left clear: under the row of instruments, above the open bottom sheet (upright) or beside the drawer docked at the left (turned), and clear of the compass and the skull
+    And they are laid in as many rows, up to three, as shows them largest there, so a narrow upright window holds them all
+    And the map lands with the person's travels or the place in the clear part above the cards
+    And the drawer stays at the foot upright; shut later, it uncovers only map, the cards staying where they were dealt
 
 Feature: The skull in the lower right puts the map back
   Source: the user on [#326](https://github.com/mark-brannan/portolani/pull/326), 2026-10-30, in the session walk: "I don't like the broom. Use a skull and cross bones and put some latin script text below it. I want us to cycle through a handful of phrases about mortality and death/dust that would have been in common use in the period: "Memento, homo, quia pulvis es, et in pulverem reverteris", "Pulvis et umbra sumus", "Hodie mihi, cras tibi", "Mors certa, hora incerta", "All flesche is grasse", "Erthe out of erthe is wonderly wrought, Erthe hath of erthe a dignite of nought", "Ogni uomo è polvere", "Ricordati che devi morire", "Polvo eres, y en polvo te has de convertir", "Nuestras vidas son los ríos que van a dar en la mar, que es el morir", "Recuerda que eres polvo". You may use an animated broom effect on the map when the skull is clicked and the cards are being swept but then the broom disappears. I want the skull and the flavor text to always appear in the lower right persistently. It can always be used to clear things back to the normal state." That one control puts every card away, a person's or a sight's alike, is the earlier call of the same review, as #326's body records it (paraphrase). The broom supersedes nothing older: the sweep was first drawn as a broom on #326, shown only while a card lay on the table and keeping the subject chosen, and the user replaced it with the skull the same day.

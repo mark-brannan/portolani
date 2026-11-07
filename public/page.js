@@ -19,7 +19,7 @@ import { playedOn, playDateText, playPace, isLong } from './scene.mjs'; // the p
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, effectiveOpacity, sheetOpacity, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
-import { PEOPLE_FILE, PICTURES_FILE, SIGHT_PICTURES_FILE, SIGHT_MANIFEST_FILE, sightDeal, eraOf, eraYears, eraScale, barOn, lifeSpan, firstYear, yearsText, PERSON_RED, pictureCredit, pictureNote, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, sightFrame, viewContaining, withPictures, peopleOf, whoOf, deathOf, sightPicturesOf, MEMENTO, MEMENTO_EN, mementoNext, mementoLines } from './people.mjs';
+import { PEOPLE_FILE, PICTURES_FILE, SIGHT_PICTURES_FILE, SIGHT_MANIFEST_FILE, SIGHT_DEAL, sightDeal, eraOf, eraYears, eraScale, barOn, lifeSpan, firstYear, yearsText, PERSON_RED, pictureCredit, pictureNote, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, sightFrame, viewContaining, withPictures, peopleOf, whoOf, deathOf, sightPicturesOf, MEMENTO, MEMENTO_EN, mementoNext, mementoLines } from './people.mjs';
 import { fold, bestPlace, withoutPartsOfFrames } from './placename.mjs';
 import { nextInCycle } from './cycle.mjs';
 import { planFlight, ease as flyEase, FLY_KNOBS, flyDefaults } from './flight.mjs';
@@ -2200,7 +2200,7 @@ function chooseSight(name, pictures = DEFAULTS.pictures, site = null, tile = nul
   if (!aim && style.sight === name && style.site === site && !style.person && style.pictures == null) return; // all on the table: nothing to deal back
   const hadPerson = clearTable(false); // whatever lies on the table put away first, as the skull does; the tile just opened stays
   style = { ...style, sight: name, site, pictures };
-  dealViews.delete(sightKey());
+  dealViews.delete(sightKey()); dealRects.delete(sightKey());
   dealing = sightKey(); // dealt where dealSight says: in place, or as the map arrives
   showPeople(); showSightCard(); writeHash();
   if (sightData) dealSight(tile, aim); else loadSights().then(() => dealSight(tile, aim), () => { dealing = null; if (aim) goTo(aim); });
@@ -2235,6 +2235,9 @@ function clearTable(hide = true, wipe = true) {
 const SIGHT_ZOOM = 9.5, FLY_WIDER = 1; // the zoom a sight is dealt at from afar; how much wider than it counts as afar
 let reopen = null; // the tile of the mark whose deal the map is flying to, opened again beside the mark once it lands
 const dealViews = new Map(); // the view a sight's pictures were dealt in, by subject
+const dealRects = new Map(); // and the part of the window they were dealt in (dealRect), so a drawer shut later moves none
+// On a phone, upright or turned, a sight's cards may take more of the clear part of the window, in up to three rows
+const sightLay = () => (handheld() ? { ...SIGHT_DEAL, fill: 0.55, rows: 3 } : SIGHT_DEAL);
 // where a sight's row is dealt under: the mark opened, else the middle of its marks
 function placeOfSight(s, f) {
   const spot = style.site != null && sightTiles().find(({ tile }) => tile.sight === s.id && tile.site === style.site);
@@ -2249,8 +2252,13 @@ function dealSight(tile = null, aim = null) {
   const f = frameOfSubject(s), at = placeOfSight(s, f), sizes = picturesOf(s).map((i) => pictureSize(s, i)).filter(Boolean);
   const zoom = Math.min(SIGHT_ZOOM, viewContaining(f, { w: W, h: H }).zoom);
   let to = aim ? { ...aim } : view.zoom < zoom - FLY_WIDER ? { ...view, lon: at[0], lat: at[1], zoom } : view;
-  if (!sightDeal(sizes, windowRect(), viewProjection(to).project(...at)).clear) to = { ...to, lon: at[0], lat: at[1] };
+  const rect = dealRect(), deal = sightDeal(sizes, rect, viewProjection(to).project(...at), sightLay());
+  if (!deal.clear) { // the place in the middle; on a phone, in the middle of what the deal leaves clear above its cards
+    to = { ...to, lon: at[0], lat: at[1] };
+    if (handheld()) to = panView({ ...to, projection: view.projection, bearing: view.bearing }, (rect.x0 + rect.x1 - W) / 2, (rect.y0 + deal.top - H) / 2);
+  }
   dealViews.set(s.key, clampView({ ...to, projection: view.projection, bearing: view.bearing }));
+  dealRects.set(s.key, rect);
   if (to === view) { dealNow(s.key); return; } // dealt here and now
   goTo(to, s.key); // dealt as the map arrives, and the mark's tile opened again there
   reopen = tile;
@@ -2258,11 +2266,13 @@ function dealSight(tile = null, aim = null) {
 const mercOf = (lat) => (Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360)) * 180) / Math.PI;
 const latOfMerc = (m) => ((2 * Math.atan(Math.exp((m * Math.PI) / 180)) - Math.PI / 2) * 180) / Math.PI;
 // A sight's shown pictures on the map, from where sightDeal lays them in the view they were dealt in (the view now, for
-// a sight that came in by the link)
-function sightPlaces(s, f, sizes) {
+// a sight that came in by the link), under `at` [lon, lat]; on a phone a person's are laid so too, under their frame
+const sightPlaces = (s, f, sizes) => screenPlaces(s, placeOfSight(s, f), sizes);
+function screenPlaces(s, at, sizes) {
   if (!dealViews.has(s.key)) dealViews.set(s.key, view);
+  if (!dealRects.has(s.key)) dealRects.set(s.key, dealRect());
   const proj = viewProjection(dealViews.get(s.key));
-  return sightDeal(sizes, windowRect(), proj.project(...placeOfSight(s, f))).row.map(({ x, y, h }, k) => {
+  return sightDeal(sizes, dealRects.get(s.key), proj.project(...at), sightLay()).row.map(({ x, y, h }, k) => {
     const [lon] = proj.invert(x, y), m0 = mercOf(proj.invert(x, y + h / 2)[1]), m1 = mercOf(proj.invert(x, y - h / 2)[1]);
     return { lon, lat: latOfMerc((m0 + m1) / 2), scale: (m1 - m0) / sizes[k][1], turn: 0 };
   });
@@ -2615,7 +2625,11 @@ const pictureSize = (s, i) => { const m = s.manifest[s.images[i]?.file]; return 
 const picturesOf = (s) => style.pictures ?? (s.kind === 'sight' ? siteSet(s, style.site) : null) ?? s.images.map((_, i) => i);
 // Where a subject's shown pictures lie by default: a person's under their frame, sized from it (picturePlaces); a
 // sight's along the foot of the view they were dealt in (sightPlaces)
-const placesOf = (s, f, sizes) => (s.kind === 'sight' ? sightPlaces(s, f, sizes) : picturePlaces(f, sizes, ...pictureLay()));
+// On a phone, upright or turned, a person's are dealt as a sight's are, in the part of the window clear of the drawer and
+// the buttons (dealRect), under the frame: a frame laid in lon/lat is often far wider than an upright window
+const placesOf = (s, f, sizes) => (s.kind === 'sight' ? sightPlaces(s, f, sizes)
+  : handheld() || dealRects.has(s.key) ? screenPlaces(s, middleOf(f), sizes) : picturePlaces(f, sizes, ...pictureLay()));
+const middleOf = (f) => [(f.lonMin + f.lonMax) / 2, latOfMerc((mercOf(Math.max(-80, f.latMin)) + mercOf(Math.min(80, f.latMax))) / 2)];
 // Each picture lies a little askew, as if dealt onto a chart table: degrees by its place in the record, and a nudge
 // off the row's line as a share of its height
 const ASKEW = [-4, 3, -2, 5, -3, 2], NUDGE = [0.06, -0.05, 0.08, -0.03, 0.04, -0.07];
@@ -2668,7 +2682,14 @@ async function flyToSubject() {
   if (key !== subjectKey()) return;
   if (!f) { dealNow(key); return; }
   const shown = picturesOf(s).filter((i) => pictureSize(s, i)), sizes = shown.map((i) => pictureSize(s, i));
-  goTo(viewContaining(withPictures(f, placesOf(s, f, sizes), sizes), { w: W, h: H }), key); // their cards dealt as it arrives
+  dealViews.delete(s.key); dealRects.delete(s.key);
+  if (!handheld()) { goTo(viewContaining(withPictures(f, placesOf(s, f, sizes), sizes), { w: W, h: H }), key); return; } // their cards dealt as it arrives
+  // a phone: the frame fitted above the cards, in the clear part of the window, and the cards dealt under it there
+  const rect = dealRect(), top = sightDeal(sizes, rect, [(rect.x0 + rect.x1) / 2, rect.y0], sightLay()).top ?? rect.y1, above = { ...rect, y1: Math.max(rect.y0 + 40, top - cssPx(8)) };
+  const v = viewContaining(f, { w: above.x1 - above.x0, h: above.y1 - above.y0 });
+  const to = clampView(panView({ ...v, projection: view.projection, bearing: view.bearing }, (above.x0 + above.x1 - W) / 2, (above.y0 + above.y1 - H) / 2));
+  dealViews.set(s.key, to); dealRects.set(s.key, rect);
+  goTo(to, key);
 }
 // A picture on the canvas: its centre, its turn in radians and its size in canvas px, before any deal or flip. On the
 // table it lies where it was dealt or last dragged (tableBox); looked at, it stands upright in the middle of the window
@@ -2679,6 +2700,24 @@ const LOOK_SHARE = 0.75, LOOK_MS = 320, LOOK_DIM = 0.45, MOUNT = 5; // MOUNT: th
 function windowRect() {
   const r = canvas.getBoundingClientRect(), kx = W / r.width, ky = H / r.height;
   return { x0: Math.max(0, -r.left) * kx, x1: (Math.min(innerWidth, r.right) - r.left) * kx, y0: Math.max(0, -r.top) * ky, y1: (Math.min(innerHeight, r.bottom) - r.top) * ky };
+}
+// The part of the window cards are dealt in, in canvas px. On a phone, upright or turned, the window less the row of
+// instruments, the drawer open (a bottom sheet upright, docked at the left turned) and the compass and the skull, so
+// every card is dealt in sight and none under a drawer or a button; on a wide screen the window.
+function dealRect() {
+  const r = windowRect();
+  if (!handheld()) return r;
+  const c = canvas.getBoundingClientRect(), kx = W / c.width, ky = H / c.height, gap = 8, toX = (x) => (x - c.left) * kx, toY = (y) => (y - c.top) * ky;
+  let { x0, x1, y0, y1 } = r;
+  const row = document.querySelector('#where .row')?.getBoundingClientRect();
+  if (row) y0 = Math.max(y0, toY(row.bottom + gap));
+  const d = openDrawer()?.getBoundingClientRect?.();
+  if (d && d.width >= innerWidth * 0.9) y1 = Math.min(y1, toY(d.top - gap));
+  else if (d && d.left < innerWidth / 2) x0 = Math.max(x0, toX(d.right + gap));
+  else if (d) x1 = Math.min(x1, toX(d.left - gap));
+  const m = $('memento').getBoundingClientRect(), cutY = toY(m.top - gap), cutX = toX(m.left - gap); // the compass and the skull: off the side that costs less
+  if (cutY > y0 && cutY < y1 && cutX > x0 && cutX < x1) { if ((cutY - y0) * (x1 - x0) >= (cutX - x0) * (y1 - y0)) y1 = cutY; else x1 = cutX; }
+  return x1 - x0 > 40 && y1 - y0 > 40 ? { x0, x1, y0, y1 } : r;
 }
 let looking = null; // the picture looked at, by its index
 let lookFrom = 0; // when it set off from the table
