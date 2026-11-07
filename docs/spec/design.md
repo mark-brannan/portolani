@@ -613,11 +613,12 @@ Feature: A card on the table: a click looks, three buttons, Pulverum
     When the user clicks or taps anywhere inside the card's body, the picture
     Then the card is looked at, as below; a drag that starts on the body pans the map
   Scenario: a click or a tap looks
+    Source: the user, 2026-11-07, on this PR: "I don't like the extra matte/background behind the picture for mobile. a slight background for the card is ok but the map is not dimmed or obscured. And I do not like the way we removed the skull on mobile. bring that back!"
     Given a card dealt on the table
     When the user clicks it, or taps it on a phone
-    Then the card flies from its place on the table to the middle of the window, face up, and the map behind it dims and holds still
+    Then the card flies from its place on the table to the middle of the window, face up, and the map behind it holds still, dimmed on a wide screen
     And on a wide screen it stands moderately large: its longer side about three quarters of the window's shorter side, never past the picture's own pixels
-    And on a phone it fills the screen, the picture fitted whole inside it with the buttons over its lower right
+    And on a phone it is the picture fitted whole between the row of instruments and the skull, on a slight card margin, the buttons over its lower right; the map round it is neither dimmed nor covered, and the skull stays
     And a dealt card is in the Tab order, and Enter or Space on it looks, as the click does; Escape puts it away as below
   Scenario: a looked-at card zooms and pans, the map stays
     Given a card looked at
@@ -638,7 +639,7 @@ Feature: A card on the table: a click looks, three buttons, Pulverum
     And a person's article is their first source, as a voyage's Read more is, else their Wikipedia article by name; a place's is its Wikipedia article by name
   Scenario: Put away sends the card home
     Given a card looked at
-    When the user clicks Put away, presses Escape, or clicks the dimmed map round it
+    When the user clicks Put away, presses Escape, or clicks the map round it
     Then the card flies back face up to its place on the table, where it was dealt or last dragged, at its dealt size, and the map behind it brightens; it stays dealt
   Scenario: the back's own controls
     Given a card looked at, turned to its back

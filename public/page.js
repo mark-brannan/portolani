@@ -2605,15 +2605,17 @@ function tableBox(pic, proj) {
   if (!c) return null;
   return { x: (c[0][0] + c[2][0]) / 2, y: (c[0][1] + c[2][1]) / 2, a: (ASKEW[pic.i % 6] * Math.PI) / 180, w: c[1][0] - c[0][0], h: c[3][1] - c[0][1] };
 }
-// On a phone the card fills the window between the row of instruments and the status lines, the picture fitted whole inside it (the skull and
-// the corner cards step aside while it is looked at); on a wide screen the card is the picture, its longer side
-// LOOK_SHARE of the window's shorter side and never past the picture's own pixels, one to a CSS px
+// On a phone the card is the picture fitted whole between the row of instruments and the skull, the map undimmed round
+// it (the corner cards step aside while it is looked at); on a wide screen its longer side is LOOK_SHARE of the
+// window's shorter side and never past the picture's own pixels, one to a CSS px
 function lookBox(pic) {
   const { x0, x1, y0, y1 } = windowRect(), x = (x0 + x1) / 2, y = (y0 + y1) / 2;
   if (phone.matches) {
     const m = MOUNT + cssPx(4), r = canvas.getBoundingClientRect(), top = Math.max(y0, ((document.querySelector('#where .row')?.getBoundingClientRect().bottom ?? 0) - r.top) * (H / r.height));
-    const foot = y1 - cssPx(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--memento-foot')) || 0); // above the status lines
-    return { x, y: (top + foot) / 2, a: 0, w: x1 - x0 - 2 * m, h: foot - top - 2 * m };
+    const css = getComputedStyle(document.documentElement), px = (v) => parseFloat(css.getPropertyValue(v)) || 0;
+    const foot = y1 - cssPx(px('--memento-foot') + px('--memento-h')); // above the skull and the status lines
+    const k = Math.min((x1 - x0 - 2 * m) / pic.o.width, (foot - top - 2 * m) / pic.o.height);
+    return { x, y: (top + foot) / 2, a: 0, w: pic.o.width * k, h: pic.o.height * k };
   }
   const k = Math.min((LOOK_SHARE * Math.min(x1 - x0, y1 - y0)) / Math.max(pic.o.width, pic.o.height), cssPx(1));
   return { x, y, a: 0, w: pic.o.width * k, h: pic.o.height * k };
@@ -2809,7 +2811,7 @@ function drawPictures(g) {
   const r = cssPx(FOOT_R), GLYPHS = { flip: FLIP_GLYPH, away: AWAY_GLYPH };
   g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
   for (const [n, layer] of layers.entries()) {
-    if (n === 1 && lift > 0) { g.fillStyle = `rgba(29, 25, 19, ${LOOK_DIM * lift})`; g.fillRect(0, 0, W, H); }
+    if (n === 1 && lift > 0 && !phone.matches) { g.fillStyle = `rgba(29, 25, 19, ${LOOK_DIM * lift})`; g.fillRect(0, 0, W, H); } // a phone's map stays undimmed
     const feet = [];
     for (const pic of layer) {
       const b = pictureBox(pic, proj);
