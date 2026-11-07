@@ -2383,11 +2383,11 @@ new ResizeObserver(() => document.documentElement.style.setProperty('--memento-h
 // The clear's timing, chosen on #367: what goes (the lines and the charts' sheets) fades over 4 s; the skull is 0.4 s at
 // 8% ink and grows to ×2.5; the phrase is 6 s, in at once and straight into a slow fade, and its size changes from
 // 5% to 100% of that time, to ×1.05
-const CLEAR_TUNE = { goneMs: 4000, skullMs: 800, wordsMs: 6000, ink: 10, skullGrow: 250, wordsGrow: 115, growFrom: 5, growTo: 100,
+const CLEAR_TUNE = { goneMs: 4000, skullMs: 300, wordsMs: 6000, ink: 8, skullGrow: 250, wordsGrow: 115, growFrom: 5, growTo: 100,
   // a card's exit (Pulverum, and each card in the skull's clear): its time and the gap between cards; how far along the
   // deal-off path it travels; when in its exit the dust begins; how much the crumbling runs from the trailing edge
   // (0 scattered); a grain's size and drift, CSS px; the share of grains seen as dust; a grain's life, of the exit's time
-  cardMs: 1400, cardGap: 110, travel: 60, dustFrom: 15, sweep: 60, grain: 2, drift: 40, dustKept: 60, dustLife: 50 };
+  cardMs: 300, cardGap: 50, travel: 75, dustFrom: 30, sweep: 100, grain: 4, drift: 200, dustKept: 100, dustLife: 200 };
 // Temporary, for tuning on this PR (#272): the panel at the top left (#clearTune) changes these, kept per browser
 {
   const merged = { ...CLEAR_TUNE }, TUNE_KEY = 'portolani.clearTune.8';
