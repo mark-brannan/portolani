@@ -1,0 +1,24 @@
+{
+  "id": "hatshepsut-punt",
+  "title": "Hatshepsut's expedition to Punt, c. 1470 BC",
+  "short": "Hatshepsut",
+  "who": ["hatshepsut", "nehsi"],
+  "when": "c. 1470 BC",
+  "summary": "In the ninth year of her reign the pharaoh Hatshepsut sends five ships down the Red Sea to Punt, a trading land whose place is still argued. They come back with myrrh trees, ebony, ivory, gold and live animals, and the whole voyage is carved on the walls of her temple at Deir el-Bahari.",
+  "sources": ["land-of-punt", "hatshepsut", "nehsi", "mersa-gawasis", "deir-el-bahari"],
+  "legs": [
+    { "from": "Thebes", "to": "Mersa Gawasis (Saww)", "dates": "c. 1470 BC", "mode": "land", "line": "spline",
+      "confidence": "conventional", "source": "the way from the Nile to the Red Sea is not described in the sources; shown as a plain line across the Eastern Desert",
+      "points": [[32.64,25.7], [33.2,26.0], [33.7,26.3], [34.04,26.56]] },
+    { "from": "Mersa Gawasis (Saww)", "to": "Punt", "dates": "c. 1470 BC", "mode": "sea", "line": "spline",
+      "confidence": "conventional", "source": "the sea way is not recorded; shown down the middle of the Red Sea to the Eritrean coast",
+      "note": "Mersa Gawasis was a Red Sea harbour for Punt expeditions, and cedar planks from Hatshepsut's expedition were found there in 2005; the reliefs do not name the port. The far end is one reading of Punt, which scholars place in the Horn of Africa, on the Eritrean and Sudanese coast, or in Arabia.",
+      "points": [[34.12,26.5], [34.5,26.2], [35.3,25.0], [36.2,23.5], [37.5,21.5], [38.2,19.5], [39.3,17.5], [39.6,16.2]] }
+  ],
+  "events": [
+    { "kind": "event", "lon": 34.04, "lat": 26.56, "date": "c. 1470 BC", "label": "Five ships fitted out at Mersa Gawasis", "source": "Mersa Gawasis (Wikipedia)", "cite": "mersa-gawasis", "confidence": "inferred", "text": "Mersa Gawasis, ancient Saww, was a small Red Sea harbour from which Egyptian ships set out for Punt, taken apart for the road from the Nile and put together again on the shore. In 2005 an excavation there found cedar planks from Hatshepsut's expedition. The temple texts speak of five ships, with at least five shiploads of marines sailing under Nehsi." },
+    { "kind": "landfall", "lon": 39.7, "lat": 15.8, "date": "c. 1470 BC", "label": "Punt, where Queen Ati and King Parahu ruled", "source": "Land of Punt (Wikipedia)", "cite": "land-of-punt", "confidence": "speculative", "doubt": "Where Punt lay is argued: most scholars say the Horn of Africa, some the Sudanese and Eritrean coast, one the Arabian Peninsula.", "text": "The reliefs name Parahu as king of Punt and Ati as his queen, and show her with an unusual body, which some have put down to a medical condition. The mark stands on the Eritrean coast, one reading among several; a baboon isotope study of 2010 pointed to eastern Ethiopia and Eritrea." },
+    { "kind": "event", "lon": 39.7, "lat": 15.8, "date": "c. 1470 BC", "label": "Gold, ivory, ebony and living trees", "source": "Land of Punt (Wikipedia)", "cite": "land-of-punt", "confidence": "attested", "text": "The traders brought back gold, ivory, ebony, incense and aromatic resins, fragrant woods, cinnamon, animal skins, cosmetics for the eyes and live animals. Hatshepsut's page counts 31 live myrrh trees among them." },
+    { "kind": "event", "lon": 32.6075, "lat": 25.7375, "date": "c. 1470 BC", "label": "The voyage carved at Deir el-Bahari", "source": "Deir el-Bahari (Wikipedia)", "cite": "deir-el-bahari", "confidence": "attested", "text": "The expedition is told in relief on the walls of Hatshepsut's mortuary temple, beside the scenes of her divine birth and her bond with Amun-Ra. It is where we learn of Queen Ati, and where Nehsi is shown as the one who dispatched the expedition; some read that as his having led it from start to end." }
+  ]
+}
