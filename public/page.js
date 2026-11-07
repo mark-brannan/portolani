@@ -2502,6 +2502,9 @@ let memento = Math.floor(Math.random() * MEMENTO.length);
 // the phrase is not shown beside the skull: it is the skull's hover text, the Latin over its English (design.md, "The skull's hover text")
 const showMemento = () => { const t = `Clear the Map: ${MEMENTO[memento]}\n${MEMENTO_EN[memento]}`; $('sweep').title = t; $('sweep').setAttribute('aria-label', t); };
 showMemento();
+// the English of the phrase read large, in the small info text at the foot
+const sayEnglish = (i) => { $('mementoEnglish').textContent = MEMENTO_EN[i]; };
+sayEnglish(memento);
 // In stages, each drawn before the next, so the clear's effect can tell what went: the cards, then the lines (a
 // person's back in their own inks), then the sheets; `snap(stage)` is called after each stage that changed the map
 async function clearMap(snap = () => {}) {
@@ -2531,7 +2534,7 @@ const CLEAR_TUNE = { goneMs: 1200, skullMs: 500, wordsMs: 8000, ink: 15, skullGr
   // a card's exit (Pulverum, and each card in the skull's clear): its time and the gap between cards; how far along the
   // deal-off path it travels; when in its exit the dust begins; how much the crumbling runs from the trailing edge
   // (0 scattered); a grain's size and drift, CSS px; the share of grains seen as dust; a grain's life, of the exit's time
-  cardMs: 500, cardGap: 60, travel: 75, dustFrom: 25, sweep: 100, grain: 4, drift: 25, dustKept: 100, dustLife: 200 };
+  cardMs: 450, cardGap: 110, travel: 75, dustFrom: 25, sweep: 100, grain: 4, drift: 25, dustKept: 100, dustLife: 200 };
 // A hidden tuning panel (#clearTune, top left) changes these, kept per browser. It shows only with `clear-tune` in the
 // query (`?clear-tune#...`), which the page's own hash rewrites leave alone; without it the defaults above hold and
 // any kept tuning is ignored. Never under a browser test, where it would sit over the page.
