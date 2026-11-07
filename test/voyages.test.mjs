@@ -167,13 +167,14 @@ test('a death without lon and lat is not drawn; a who that people.json lacks doe
   await assert.rejects(readVoyage('x', files(set)), /a-b is not in people\.json/);
 });
 
-test('a person record needs nothing; what is there is checked, and a skull takes the name', async () => {
-  const death = { lon: 1, lat: 1, date: 'd', label: 'l', source: 's' };
-  assert.deepEqual(checkPerson('a-b', {}), []);
-  assert.deepEqual(checkPerson('a-b', { death }), []);
-  assert.deepEqual(checkPerson('a-b', { death: { date: 'd', text: 'where is not recorded' } }), []);
+test('a person record needs only its view; what else is there is checked, and a skull takes the name', async () => {
+  const death = { lon: 1, lat: 1, date: 'd', label: 'l', source: 's' }, view = { lat: 1, lon: 1, zoom: 4 };
+  assert.deepEqual(checkPerson('a-b', { view }), []);
+  assert.deepEqual(checkPerson('a-b', { view, death }), []);
+  assert.deepEqual(checkPerson('a-b', { view, death: { date: 'd', text: 'where is not recorded' } }), []);
+  for (const v of [undefined, { lat: 1, lon: 1 }, { lat: 91, lon: 1, zoom: 4 }, { lat: 1, lon: 1, zoom: 7 }]) assert.ok(checkPerson('a-b', { view: v }).some((b) => b.includes('view:')), JSON.stringify(v));
   const full = {
-    name: 'A B', aka: ['Ab'], bio: 'b', sources: ['s1'],
+    view, name: 'A B', aka: ['Ab'], bio: 'b', sources: ['s1'],
     images: [{ file: 'A_B.jpg', kind: 'life', author: 'a', date: '1600', licence: 'Public domain', note: 'n' }],
     born: { ...death, confidence: 'speculative', cite: 's1', alternatives: [{ lon: 2, lat: 2, place: 'p', label: 'l', source: 's' }] },
     death: { ...death, confidence: 'conventional', doubt: 'Nobody recorded where.' },
@@ -182,7 +183,7 @@ test('a person record needs nothing; what is there is checked, and a skull takes
   const bad = checkPerson('A B', { ...full, sources: ['s2'], born: { ...death, confidence: 'certain', cite: 's2' }, death: { lon: 1, date: 'd', doubt: '' },
     images: [{ kind: 'life', file: 'File:A.jpg' }, { kind: 'none', file: 'https://x/A.jpg' }, { kind: 'life', file: 'data:image/png;base64,AA' },
       { kind: 'life', file: 'a/A.jpg' }] }, { sources: { s1: {} } });
-  const drawn = checkPerson('a-b', { death: { lon: 1, lat: 1, alternatives: [{ date: 'x' }] } });
+  const drawn = checkPerson('a-b', { view, death: { lon: 1, lat: 1, alternatives: [{ date: 'x' }] } });
   for (const p of ['death: a label', 'death: a source', 'alternative 0: lon and lat', 'alternative 0: a place', 'alternative 0: a label', 'alternative 0: a source']) assert.ok(drawn.some((b) => b.includes(p)), p);
   for (const p of ['key: a lower-case slug', 'sources: s2 is not', 'born: confidence one of', 'born: cite s2 is not', 'death: lon and lat, together',
     'death: doubt, a string', 'image 1: kind one of',
@@ -190,6 +191,13 @@ test('a person record needs nothing; what is there is checked, and a skull takes
   const set = { x: raw(), ...shared() };
   set.people['a-b'] = { death };
   assert.equal((await readVoyage('x', files(set))).events[0].who, 'a-b');
+});
+
+test('every person in people.json has a preset view, inside the world and at zoom 6 or wider, that Random person flies to', () => {
+  for (const [id, p] of Object.entries(readJSON('data/voyages/people.json'))) {
+    const v = p.view;
+    assert.ok(v && Math.abs(v.lat) <= 85 && Math.abs(v.lon) <= 180 && v.zoom >= 1 && v.zoom <= 6, `${id}: ${JSON.stringify(v)}`);
+  }
 });
 
 test('every record in people.json passes checkPerson against sources.json', () => {

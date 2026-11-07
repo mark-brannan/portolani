@@ -23,7 +23,7 @@ Feature: The skull stays in reach while a drawer is in use  (`#memento`: the sku
     Given a viewport 1280 x 800 and the chart at `#person=ibn-battuta`
     When the user clicks `#people`
     Then `#timelinePanel` is open and its foot stops above `#memento`, however many lines the phrase takes
-    And `elementFromPoint` at the centre of `#sweep` returns the skull, and `#mementoText` lies wholly in the window, uncovered
+    And `elementFromPoint` at the centre of `#sweep` returns the skull (the line beside it is gone: docs/spec/design.md, "the skull's hover text")
   Scenario: on a phone the skull rides above the sheet
     Given a viewport 390 x 844 and the timeline open as a bottom sheet
     When the user looks at the lower right

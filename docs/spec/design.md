@@ -231,6 +231,13 @@ Feature: A drawer stays open on a click or a choice
     When the user taps a button, a chip, a link or a checkbox inside it, picks a place in it, or taps the map
     Then the sheet stays open and the map does what was asked behind it
     And the sheet closes only from its own button, another instrument's button or Esc; a tap on the map does not close it
+  Scenario: a lip on every drawer shuts it
+    Source: the user, 2026-11-07, on #404: "Every drawer should have a small down arrow 'lip' at the edge of the drawer to hide it again easily."
+    Given any drawer open, on a wide screen or a phone, upright or turned
+    When the user looks at the drawer's edge
+    Then a small tab, the lip, sits on it, held there as the drawer scrolls, with an arrow pointing the way the drawer shuts: down on a phone's bottom sheet, toward the window's right edge for a drawer on a wide screen, toward the left edge for a drawer docked at the left on a phone turned
+    When the user clicks or taps the lip
+    Then the drawer shuts, as its own button shuts it, and the map is as it was
   Scenario: a phone turned to landscape
     Source: the user, 2026-11-06, on #272: "When flipping the phone to landscape, the drawers are unusable because of being cramped. We also do not need the clockwise and counterclockwise rotate buttons (they're not needed for mobile) but they show up in this view for some reason."
     Given a phone turned to landscape: wider than 520 px, but no more than 520 px tall, and touched rather than pointed at
@@ -374,7 +381,8 @@ Feature: Every chart turns, a quarter at a time
     And the compass still turns the world under a drag, and a click on it turned still sets north up
     Given a phone, upright or turned to landscape
     When the user looks at the lower right
-    Then the compass is there to read and to tap for north up, and does not turn under a drag; there are no walk-around buttons
+    Then the compass is there to read and to tap for north up, and it turns the world under a drag round it, as on a wide screen; there are no walk-around buttons
+    Source, for the drag: the user, 2026-11-07, on #404: "I want to allow the compass in mobile to allow for rotation the same way that it does in desktop (rotate buttons are still suppressed)". This overtakes "the compass icon on the lower ride size is not draggable" above, for phones.
     When the user twists two fingers on the map
     Then the world, and every sheet on it, turns with them about their midpoint as the pinch zooms, the way a phone's maps turn; the turn is the map's alone, never a card's
   Scenario: the chart's own up
@@ -725,6 +733,12 @@ Feature: A place's note and details in the Points of interest drawer
     Then the map flies there, and the place's details show at the drawer's foot: its name and date, its tile's text, and its pictures as thumbnails that put a picture on the table or take it off
     And the place's cards are dealt as the map arrives, as a tap on its mark deals them, with no tap on a thumbnail first; a place with no pictures only flies
     Source, for the deal: the user, 2026-11-06, on #272: "I notice that cards are not being dealt for places right now, unless the images inside the drawer are selected first. That increases the users effort and shouldn't be so, deal the cards for them automatically". This overtakes "the click on the row deals nothing; a mark on the map deals".
+  Scenario: on a phone, one card for the place, and the rows round it in reach
+    Source: the user, 2026-11-07, on #404: "In mobile, when selecting places, many cities do an overlay of both the tile on the map and a tile in the drawer, but the map tile covers the one in drawer. Both tiles cover the other adjacent locations in the drawer and those should be visible and available to select." This overtakes "at the drawer's foot" above on a phone.
+    Given a phone, upright or turned, the Locations drawer open
+    When the user taps a place's row (Tyre, Alexandria)
+    Then the place's details show once, in the drawer, directly under its row, in the list's flow; no tile opens on the map beside them, and a tile already open there shuts
+    And nothing covers the list: the rows above and below the place stay in sight as the list scrolls, and a tap on any of them chooses it
 
 Feature: A flight sweeps the table, then deals on arrival
   Source: the user on [#326](https://github.com/mark-brannan/portolani/pull/326), 2026-10-30, in the session walk: "cards need to sweep themselves for now whenever we do a fly action. I typically want that for people cards too...so it should be the same action if possible. sweep then fly."; "I notice that cards for people are getting dealt before we fly and so they are mysteriously in place when we get to the outer zoom. We should fly and then deal cards when we are nearing the target zoom levels, or the target field of view."
@@ -764,7 +778,7 @@ Feature: The skull in the lower right puts the map back
   Scenario: the skull is always there
     Given the chart at any view, with cards on the table or none
     When the user looks at the lower right of the window
-    Then a skull and crossbones is there, with one period phrase on mortality under it, in the phrase's own language, untranslated
+    Then a skull and crossbones is there, its period phrase on mortality in its hover text (below, "the skull's hover text"), not beside it
     And it is there at all times, not only while a card lies on the table
   Scenario: the phrases turn
     Given the skull shown
@@ -832,23 +846,24 @@ Feature: The skull's clear is shown  (`#sweep`, page.js `skullRise`, `wordsRise`
     And with reduced motion it goes at once
   Scenario: the phrase is read large, then fades last
     When the user clicks the skull
-    Then the phrase that was beside the skull is drawn large at the foot of the map, in the italic hand, in the chart's red, on one line or, set as a couplet, two
+    Then the phrase that was in the skull's hover text is drawn large at the foot of the map, in the italic hand, in the chart's red, on one line or, set as a couplet, two
     And it comes and fades, slower than the skull, so it can be read
     And a long phrase with a comma near its middle is set as a couplet, on two lines split after the comma
     And a phrase that is verse in its source, Manrique's, keeps that verse's lines
-    And the next phrase takes its place beside the skull, the one the next click shows
+    And the next phrase takes its place in the skull's hover text, the one the next click shows
   Scenario: the large phrase is never under the skull or the compass
     Source: the user, 2026-11-06, on #272: "The skull (and potentially the compass) are obscuring the red memento mori text on mobile. IT should be either drawn over those buttons, or displayed slightly higher up above the level of the buttons so that it is fully visible during its animation."
     Given a phone, or any window where the phrase would reach down to the skull and the compass
     When the user clicks the skull
     Then the large phrase stands with its foot above the compass and the skull, and grows upward from there, so every letter of it is in sight from its first frame to its last
-  Scenario: the phrase beside the skull never moves it
-    Given any phrase beside the skull, the longest included
-    When the user looks at the skull
-    Then the skull is in the same place as with the shortest phrase, and the phrase is on one line where the window allows
-  Scenario: the skull's hover text is the phrase in English
-    When the user hovers over the skull
-    Then it reads "Clear the map: " and the English of the phrase beside it
+  Scenario: the skull's hover text is the phrase, in its own language and in English, and nothing is beside the skull
+    Source: the user, 2026-11-07, on #404: "I want to remove the memento mori text adjacent to the skull button on desktop. The alt text should change to "Clear the Map: <Latin Text>\n<English Text>"". This overtakes "the phrase beside the skull never moves it", "with one period phrase on mortality under it" and the hover text "Clear the map: <translation>" above; the large red phrase a click raises stays.
+    Given the skull, on any screen
+    When the user looks at it
+    Then no phrase stands beside it
+    When the user hovers over it, or a screen reader reads it
+    Then its text is "Clear the Map: ", the phrase the next click raises in its own language, a new line, and that phrase in English
+    And a click raises that phrase large in red, as above, and the next phrase takes its place in the hover text
 
 Feature: People and voyages, each a vertical timeline
   Source: the user on the timeline [#304](https://github.com/mark-brannan/portolani/pull/304) merged, 2026-11-04: "The entire drawer is way too WIDE! It should not be wider than the drawer for charts or settings/config (480px). We should consider whether we need to reorient it to be a vertical timeline instead of horizontal. Somehow we need to fit things more nicely."; "I do not like AT ALL how we treat people groups. The people group migrations MUST be in the people drawer with people. Nevermind that all the European examples are individuals... people are people. Lapita gets a row in people (not merely voyages)."; "When you click on people in the people drawer it should expand their notes and their voyages should appear directly below that. NOT below all the other people, and not as a naive copy/paste from the voyages drawer of all voyages. If I select Ibn Battuta, then I should get a tile with his notes... then each of the voyages below that (with the notes for that voyage)." This overtakes the one horizontal timeline of two lanes, its Earlier tab and its era bands (the UI walk of [#292](https://github.com/mark-brannan/portolani/pull/292), 2026-10-30), which #304 built and the user turned down on sight.
