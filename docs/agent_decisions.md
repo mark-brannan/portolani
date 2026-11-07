@@ -603,3 +603,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261107t012022z
 - Timeline A (timeline=a) stays, its axis unchanged; its test now checks the earlier stretch carries exactly the entries before 1500 BC ([#399](https://github.com/mark-brannan/portolani/pull/399))
+
+### 20261107t012031z
+- An era with no rows gets no heading in the People drawer (the modern world has none today) ([#399](https://github.com/mark-brannan/portolani/pull/399))
