@@ -890,7 +890,7 @@ const where = $('where');
 const drawers = [[$('open'), $('drawer')], [$('go'), $('goPanel')], [$('sights'), $('sightsPanel')], [$('voyages'), $('voyagesPanel')], [$('people'), $('peoplePanel')], [$('charts'), $('chartsDrawer')], [$('anchor'), $('anchorPanel')]];
 const openDrawer = () => drawers.find(([, d]) => d.classList.contains('open'))?.[1] ?? false;
 let openedBy = null; // the button the open drawer was opened by
-const focusable = (d) => [...d.querySelectorAll('button, input, a[href]')].find((e) => !e.disabled && e.getClientRects().length);
+const focusable = (d) => [...d.querySelectorAll('button, input, a[href]')].find((e) => !e.disabled && e.getClientRects().length && !e.closest('.lip'));
 function setDrawer(open, byKeyboard = false, by = drawers.find(([, d]) => d === open)?.[0] ?? null) { // the drawer to open, or false for none
   const was = openDrawer(), wasBy = openedBy;
   if (open === was && (!open || by === openedBy)) return;
@@ -904,6 +904,15 @@ function setDrawer(open, byKeyboard = false, by = drawers.find(([, d]) => d === 
   if (open) (open.id === 'goPanel' ? (phone.matches ? null : $('coordsText')) : focusable(open))?.focus({ preventScroll: true });
   else if (byKeyboard) wasBy?.focus({ preventScroll: true });
   else if (was.contains(document.activeElement)) document.activeElement.blur(); // a phone's keyboard goes with it
+}
+// Every drawer's lip: a small tab on its edge, its arrow the way the drawer shuts (down on a phone's bottom sheet, toward
+// the window's edge for a side drawer: index.html turns it), a click on it shuts the drawer (docs/spec/design.md, "A lip")
+for (const [, d] of drawers) {
+  const lip = document.createElement('div');
+  lip.className = 'lip';
+  lip.innerHTML = '<button type="button" aria-label="Shut this drawer" title="Shut"><svg viewBox="0 0 16 10" aria-hidden="true"><path d="M2 2 8 8 14 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>';
+  lip.firstChild.addEventListener('click', (e) => setDrawer(false, e.detail === 0));
+  d.prepend(lip);
 }
 for (const entry of drawers) { const [b] = entry; b.addEventListener('click', (e) => { const d = entry[1]; setDrawer(d === openDrawer() && b === openedBy ? false : d, e.detail === 0, b); }); } // detail 0: Enter or Space
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && openDrawer()) setDrawer(false, true); });
@@ -2347,12 +2356,12 @@ function peopleClick(e) {
   clearTable(); // whatever lies on the table put away first, and a second click lets the person go
   choosePerson(id);
 }
-function choosePerson(id) {
+function choosePerson(id, aim = null) {
   if (id) { style = { ...style, person: id }; dealing = `person:${id}`; } // their cards dealt as the map arrives
   const ids = id ? (personOf(id)?.voyages ?? []).filter(isDrawn) : [];
   if (ids.length && !stillMotion()) { const key = dealing; drawOn(ids, () => dealing !== key, 20000); } // every shown voyage of theirs drawn on together as the cards are dealt
   showPeople(); showSightCard(); writeHash(); render();
-  if (id) flyToSubject();
+  if (id) flyToSubject(aim);
 }
 $('peopleList').addEventListener('click', peopleClick);
 // A picture onto the table (on top of the pile, as the last one touched) or off it, put away face up; choosing the
@@ -2368,13 +2377,14 @@ function setOnTable(i, on) {
   repaint('a picture put away');
   preparePictures().then((fresh) => { if (fresh) repaint('a picture dealt'); }, () => {});
 }
-// The skull in the right margin, always there, a memento mori under it, is the one clear for the whole map
+// The skull in the right margin, always there, its memento mori in its hover text, is the one clear for the whole map
 // (docs/spec/design.md, "The skull is the one clear"): a click (or Enter, or Space) clears the table (clearTable), lifts
 // every chart's sheet back to its own place and takes every voyage off, and moves the line on to the next (MEMENTO, the
 // first at random). It leaves the settings (the rose, the projection, every style) and the view (place, zoom, bearing)
 // as they are: a lifted sheet does not turn the world back to north here, as lifting one by its eye does.
 let memento = Math.floor(Math.random() * MEMENTO.length);
-const showMemento = () => { $('mementoText').textContent = MEMENTO[memento]; $('sweep').title = `Clear the map: ${MEMENTO_EN[memento]}`; };
+// the phrase is not shown beside the skull: it is the skull's hover text, the Latin over its English (design.md, "The skull's hover text")
+const showMemento = () => { const t = `Clear the Map: ${MEMENTO[memento]}\n${MEMENTO_EN[memento]}`; $('sweep').title = t; $('sweep').setAttribute('aria-label', t); };
 showMemento();
 // In stages, each drawn before the next, so the clear's effect can tell what went: the cards, then the lines (a
 // person's back in their own inks), then the sheets; `snap(stage)` is called after each stage that changed the map
@@ -2679,16 +2689,17 @@ async function preparePictures() {
   return fresh && key === subjectKey();
 }
 // The map flies to frame a person and their pictures, wherever they are
-async function flyToSubject() {
+// `aim`, a person's preset view (people.json `view`, Random person): flown to as it is, its zoom kept, rather than the frame.
+async function flyToSubject(aim = null) {
   const key = subjectKey(), s = await loadSubject().catch(() => null), f = s && frameOfSubject(s);
   if (key !== subjectKey()) return;
-  if (!f) { dealNow(key); return; }
+  if (!f && !aim) { dealNow(key); return; }
   const shown = picturesOf(s).filter((i) => pictureSize(s, i)), sizes = shown.map((i) => pictureSize(s, i));
   dealViews.delete(s.key); dealRects.delete(s.key);
-  if (!handheld()) { goTo(viewContaining(withPictures(f, placesOf(s, f, sizes), sizes), { w: W, h: H }), key); return; } // their cards dealt as it arrives
+  if (!handheld()) { goTo(aim ?? viewContaining(withPictures(f, placesOf(s, f, sizes), sizes), { w: W, h: H }), key); return; } // their cards dealt as it arrives
   // a phone: the frame fitted above the cards, in the clear part of the window, and the cards dealt under it there
   const rect = dealRect(), top = sightDeal(sizes, rect, [(rect.x0 + rect.x1) / 2, rect.y0], sightLay()).top ?? rect.y1, above = { ...rect, y1: Math.max(rect.y0 + 40, top - cssPx(8)) };
-  const v = viewContaining(f, { w: above.x1 - above.x0, h: above.y1 - above.y0 });
+  const v = aim ?? viewContaining(f, { w: above.x1 - above.x0, h: above.y1 - above.y0 });
   const to = clampView(panView({ ...v, projection: view.projection, bearing: view.bearing }, (above.x0 + above.x1 - W) / 2, (above.y0 + above.y1 - H) / 2));
   dealViews.set(s.key, to); dealRects.set(s.key, rect);
   goTo(to, key);
@@ -3131,6 +3142,7 @@ const SIGHT_NAMES = new Set(SIGHTS.flatMap(([, items]) => items.map(([name]) => 
     if (!b) return;
     const { name, view: to } = places[b.dataset.place];
     clearSheetFor(to);
+    if (handheld()) hideTile(); // a phone shows the one card, the drawer's, under the row: no tile on the map over the sheet
     if (SIGHT_NAMES.has(name)) chooseSight(name, DEFAULTS.pictures, null, null, to); else goTo(to); // a place with pictures deals them as the map arrives
     if (placeInfo.has(name)) { placeShown = name; showSightCard(); $('sightCard').scrollIntoView({ block: 'nearest' }); }
   });
@@ -3145,7 +3157,11 @@ function showSightCard() {
     if (info && places[b.dataset.place].name === placeShown) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current');
   }
   card.hidden = !info;
-  if (!info) { card.replaceChildren(); return; }
+  if (!info) { card.replaceChildren(); $('sightsPanel').append(card); return; }
+  // on a phone the card sits under the chosen row, in the list's flow, so the rows round it stay in sight and in reach;
+  // on a wide screen at the drawer's foot
+  const row = handheld() && $('sightsList').querySelector('[data-place][aria-current]')?.closest('li');
+  if (row) row.append(card); else if (card.parentElement !== $('sightsPanel')) $('sightsPanel').append(card);
   if (!sightData) loadSights().then(showSightCard, () => {});
   const images = sightData?.images[placeShown], s = subject(), on = s?.kind === 'sight' && s.id === placeShown ? picturesOf(s) : [];
   const pics = images ? picsHTML({ images, manifest: sightData.pictures }, on) : '';
@@ -3380,6 +3396,11 @@ $('coords').addEventListener('submit', async (e) => {
   e.preventDefault();
   const text = $('coordsText').value, p = parseLatLon(text), miss = $('goMiss');
   const target = p ? { ...p, zoom: Math.max(view.zoom, LOCATE_ZOOM) } : await findPlace(text);
+  if (!target && fold(text)) { // a person's name, as Random person puts it in the box: chosen, as Random person does
+    await loadPeople().catch(() => {});
+    const who = peopleData?.people.find((q) => [q.name, ...(q.aka ?? [])].some((n) => fold(n) === fold(text)));
+    if (who) { goPerson(who); return; }
+  }
   if (!target) { miss.textContent = text.trim() ? `No place called “${text.trim()}”` : 'Type a place, or latitude, longitude: 36.28, -76'; miss.hidden = false; return; } // the text before the unhide, so a reader announces it
   miss.hidden = true;
   if (phone.matches) $('coordsText').blur(); // the drawer stays up; a phone's keyboard goes, so the map shows
@@ -3409,8 +3430,17 @@ $('randomPerson').addEventListener('click', async () => {
   const id = nextInCycle(ids, lastRolled('portolani.randomPerson'));
   if (!id) return;
   lastRolled('portolani.randomPerson', id);
-  clearTable(); choosePerson(id);
+  $('coordsText').value = personOf(id).name;
+  goPerson(personOf(id));
 });
+// A person from Find (Random person, or their name in the Go box): chosen, flown to their preset view (people.json
+// `view`), and the People drawer opened on them (docs/spec/going-somewhere.md, "Random person")
+function goPerson(p) {
+  $('goMiss').hidden = true;
+  clearTable(); choosePerson(p.id, p.view ? { ...p.view, title: p.name } : null);
+  setDrawer($('peoplePanel'), false, $('people'));
+  fillPeople().then(() => $('peopleList').querySelector(`li[data-row="${CSS.escape(p.id)}"]`)?.scrollIntoView({ block: 'nearest' }));
+}
 
 // A sheet in the way: taken off (its eye shows it hidden) if it would cover the place a fly lands on, or with `frame`
 // any of the frame it lands on; a fly that lands clear of the sheet leaves it shown (docs/spec/design.md, "A laid sheet
@@ -3477,9 +3507,9 @@ const compass = $('compass');
 function showCompass() {
   const b = view.bearing ?? 0;
   compass.querySelector('svg').style.transform = `rotate(${-b}deg)`;
-  const turn = handheld() ? 'twist two fingers on the map' : 'drag round', how = handheld() ? 'tap' : 'click';
+  const turn = handheld() ? 'drag round, or twist two fingers on the map,' : 'drag round', how = handheld() ? 'tap' : 'click';
   compass.setAttribute('aria-label', b ? `North is ${Math.round(b)}° from the top: ${how} for north up, or ${turn} to turn the world` : `North up: ${turn} to turn the world and the chart with it`);
-  compass.title = b ? `North up (${turn} to turn)` : `${turn[0].toUpperCase()}${turn.slice(1)} to turn the world`;
+  compass.title = b ? `North up (${turn.replace(/,$/, '')} to turn)` : `${turn[0].toUpperCase()}${turn.slice(1)} to turn the world`;
 }
 compassTurn(compass, { // the arrow keys turn it by 15°, as the drag does
   bearing: () => view.bearing ?? 0,
@@ -3488,7 +3518,6 @@ compassTurn(compass, { // the arrow keys turn it by 15°, as the drag does
   release: stopped,
   click: () => { if (view.bearing) turnWorld(0); },
   step: turnWorld,
-  drags: () => !handheld(), // a phone turns the world by a twist of two fingers on the map
 });
 
 // A touch or the wheel takes over from a flight: a subject it was carrying is dealt where the map is

@@ -23,6 +23,13 @@ Feature: Places to fly to  (the compass `#go`, Find; the astrolabe `#sights`, Lo
     When the user presses "Random location" again and again
     Then each press puts the next location with notes or pictures in the Go box, in a shuffled order that is the same on every load, and every one comes round before any repeats; Go flies there
     And "Random person" does the same through the people with a story or pictures, choosing each as a click in People does
+  Scenario: Random person fills Go, flies to the person and opens People on them
+    Source: the user, 2026-11-07, on #404: "The random person button should fill the person name in the go bar and then zoom to the person's location. Every person should have a set location associated with them and preconfigured for their lat/lon, and zoom. When the random person is filled and flies, then the person drawer should open for that person also."
+    Given every person in data/voyages/people.json with a preset `view` { lat, lon, zoom }, taken from their own record: the frame of their birth, their death and their voyages, centred on their home where that frame is the whole world, and never closer than zoom 6
+    When the user presses "Random person"
+    Then the person's name is in the Go box, the map flies to their preset view, and the People drawer opens with them chosen, their tile under their row and their cards dealt as the map arrives
+    And their name typed or left in the Go box, then Go, chooses them the same way
+  Tested by: test/voyages.test.mjs — 'every person in people.json has a preset view, inside the world and at zoom 6 or wider, that Random person flies to'
   Scenario: pick a sight
     Given the chart at the default view
     When the user clicks `#sights`, then "Lisbon"

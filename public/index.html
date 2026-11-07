@@ -48,7 +48,7 @@
   }
   #build a { color: inherit; }
   /* the right margin, above the timing line: the skull, always there, is the one clear for the map (every picture away,
-     the subject let go, every chart and voyage lifted; the view and the settings stay); under it a memento mori on a slip of parchment, in the italic hand, the next one at each clearing */
+     the subject let go, every chart and voyage lifted; the view and the settings stay); its memento mori, the next one at each clearing, in its hover text alone */
   /* it sits over the drawers (z-index 3), and an open drawer stops above it (--memento-h, page.js), so the skull and its
      line stay in sight and in reach while a drawer is in use; on a phone it rides just above the open sheet */
   :root { --memento-foot: 30px; --memento-h: 110px; }
@@ -67,7 +67,7 @@
   }
   #sweep:hover { background: #e2cd9e; }
   /* the compass directly over the skull, the skull's diameter: its needle points north on the window; a click is north up,
-     a drag round it turns the world. On a phone it only reads and sets north up: a twist of two fingers on the map turns it */
+     a drag round it turns the world, on a phone too, where a twist of two fingers on the map also turns it */
   #turns { display: flex; align-items: center; gap: 4px; }
   /* to its left, side by side and a little smaller, the walk-around buttons: a quarter turn of the world each way round */
   #turns .walk {
@@ -92,20 +92,12 @@
   #compass svg { width: 42px; height: 42px; }
   #sweep:focus-visible { outline: 2px solid #e8b84a; outline-offset: 2px; }
   #sweep svg { width: 34px; height: 34px; }
-  @media (max-width: 520px) { /* a phone: the skull alone, smaller, its phrase raised only large on a press; the compass as small, no walk-around */
-    #turns .walk, #mementoText { display: none; }
+  @media (max-width: 520px) { /* a phone: the skull and the compass smaller, no walk-around */
+    #turns .walk { display: none; }
     #sweep, #compass { width: 38px; height: 38px; }
     #sweep svg { width: 28px; height: 28px; }
     #compass svg { width: 34px; height: 34px; }
-    #compass { cursor: pointer; }
     html.looking .card { visibility: hidden; } /* the corner cards step aside for a card looked at; the skull stays */
-  }
-  /* the phrase sits beside the skull on one line, out of the column's flow, so the skull never moves whatever its length;
-     a window too narrow for it wraps it, still beside */
-  #mementoText {
-    position: absolute; right: 56px; bottom: 6px; width: max-content; max-width: calc(100vw - 90px); box-sizing: border-box;
-    margin: 0; padding: 2px 8px 3px; font: italic 12.5px/1.25 var(--serif); color: #3b2a1a; text-align: right;
-    background: #efe3c6; border: 1px solid #b89a68; border-radius: 3px; box-shadow: 0 1px 4px rgb(0 0 0 / 0.25);
   }
   /* the clear (page.js clearMap): what goes leaves on #vanish, a copy of it over the map; the skull grows over the map
      and fades (#wipe, inked into the chart by multiply); the phrase, large in red, grows at the foot and fades last */
@@ -300,6 +292,16 @@
     transition: transform 0.25s ease, visibility 0s linear 0.25s;
   }
   .drawer.open { transform: none; visibility: visible; transition: transform 0.25s ease; }
+  /* the lip: a small tab on the drawer's edge, held there as the drawer scrolls, its arrow the way the drawer shuts:
+     toward the right edge here, down on a phone's sheet, toward the left edge on a phone turned (page.js adds it) */
+  .lip { position: sticky; top: -14px; z-index: 1; height: 0; margin: -14px -16px 14px; align-self: stretch; display: flex; justify-content: flex-start; }
+  .lip button {
+    width: 34px; height: 16px; padding: 0; display: grid; place-items: center; cursor: pointer; color: var(--fg);
+    background: var(--panel); border: 1px solid var(--rule); border-top: none; border-left: none; border-radius: 0 0 8px 0;
+  }
+  .lip button:hover { background: #e2cd9e; }
+  .lip button:focus-visible { outline: 2px solid #e8b84a; outline-offset: -2px; }
+  .lip svg { width: 14px; height: 9px; transform: rotate(-90deg); }
   @media (prefers-reduced-motion: reduce) { .drawer, .drawer.open { transition: none; } }
   @media (min-width: 521px) { /* the lighter drawers as wide as their lines, Go as wide as a position needs */
     .drawer.menu { width: max-content; min-width: min(240px, 100vw - 24px); max-width: min(480px, 100vw - 24px); }
@@ -323,6 +325,10 @@
       transform: translateY(102%);
     }
     .drawer.open { transform: none; }
+    .lip { justify-content: center; }
+    .lip button { width: 52px; border-left: 1px solid var(--rule); border-radius: 0 0 10px 10px; }
+    .lip svg { transform: none; }
+    #sightsList #sightCard { position: static; box-sizing: border-box; width: calc(100vw - 72px); margin: 4px 0 6px; padding: 6px 8px; border: 1px solid #b89a68; border-radius: 6px; } /* under its row (page.js showSightCard) */
     /* the lighter drawers (Go, the places, the voyages, the anchorages) as tall as their lines, up to half
        the window, over the foot of the map; the scale card stays put and goes under a tall one, as the
        sheet is brief and shuts on a touch on the map */
@@ -335,16 +341,19 @@
   /* a phone turned to landscape (wider than a phone's 520 px, but short and touched): the skull and the compass as upright,
      and each drawer docks at the left, the window's whole height, clear of the instruments and the skull at the right */
   @media (min-width: 521px) and (max-height: 520px) and (pointer: coarse) {
-    #turns .walk, #mementoText { display: none; }
+    #turns .walk { display: none; }
     #sweep, #compass { width: 38px; height: 38px; }
     #sweep svg { width: 28px; height: 28px; }
     #compass svg { width: 34px; height: 34px; }
-    #compass { cursor: pointer; }
     .drawer, .drawer.menu, #goPanel {
       top: 8px; bottom: 8px; left: 8px; right: auto; width: min(420px, 55vw); min-width: 0; max-width: none; height: auto; max-height: none;
       transform: translateX(calc(-100% - 24px));
     }
     .drawer.open { transform: none; }
+    .lip { justify-content: flex-end; }
+    .lip button { border-right: none; border-left: 1px solid var(--rule); border-radius: 0 0 0 8px; }
+    .lip svg { transform: rotate(90deg); }
+    #sightsList #sightCard { position: static; box-sizing: border-box; width: 100%; margin: 4px 0 6px; padding: 6px 8px; border: 1px solid #b89a68; border-radius: 6px; }
     #clearTune { left: auto; right: 12px; }
   }
 
@@ -609,7 +618,6 @@
     </g>
   </svg>
   </button>
-  <p id="mementoText"></p>
 </div>
 <canvas id="vanish" aria-hidden="true" hidden></canvas>
 <div id="wipe" aria-hidden="true" hidden><svg viewBox="-100 -122 200 254" aria-hidden="true">

@@ -339,6 +339,9 @@ export function checkPerson(id, p, { sources } = {}) {
     }
   };
   for (const k of ['born', 'death']) if (p[k] !== undefined) marker(p[k], k);
+  // the view Random person flies to: every person has one, never closer than zoom 6 (docs/spec/design.md, "lands wide enough")
+  const v = p.view;
+  need(v && Number.isFinite(v.lat) && Math.abs(v.lat) <= 85 && Number.isFinite(v.lon) && Math.abs(v.lon) <= 180 && Number.isFinite(v.zoom) && v.zoom >= 1 && v.zoom <= 6, 'view: { lat, lon, zoom }, the place Random person flies to, at zoom 6 or wider');
   if (p.images !== undefined) {
     need(Array.isArray(p.images), 'images: a list');
     for (const [j, q] of (Array.isArray(p.images) ? p.images : []).entries()) {

@@ -815,7 +815,7 @@ test('people: a dealt card carries no controls; its frame grabs it, its body loo
   }
 });
 
-test('phone: a tap looks, a pinch on the card zooms the map with it; a finger drags a card by its frame; two fingers twisted turn the world; the compass tapped sets north up', { skip, timeout: 240000 }, async () => {
+test('phone: a tap looks, a pinch on the card zooms the map with it; a finger drags a card by its frame; two fingers twisted turn the world; the compass tapped sets north up and dragged turns it; the lip shuts a drawer', { skip, timeout: 240000 }, async () => {
   const server = serve();
   const browser = await chromium.launch();
   try {
@@ -870,6 +870,18 @@ test('phone: a tap looks, a pinch on the card zooms the map with it; a finger dr
     assert.equal(await page.$eval('#walkLeft', (b) => getComputedStyle(b).display), 'none', 'a phone shows the walk-around buttons');
     await page.tap('#compass');
     await page.waitForFunction(() => !/bearing=/.test(location.hash), null, { timeout: 10000 });
+    // a finger dragged round the compass turns the world, as a mouse does on a wide screen (design.md, the compass)
+    const c = await page.$eval('#compass', (b) => { const r = b.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; });
+    await touch('touchStart', [[c[0], c[1] - 18]]);
+    for (let i = 1; i <= 8; i++) { const a = -Math.PI / 2 + (i / 8) * (Math.PI / 2); await touch('touchMove', [[c[0] + 18 * Math.cos(a), c[1] + 18 * Math.sin(a)]]); }
+    await touch('touchEnd', []);
+    await page.waitForFunction(() => /bearing=/.test(location.hash), null, { timeout: 10000 });
+    // the lip on a drawer's edge shuts it (design.md, "a lip on every drawer shuts it")
+    await page.tap('#sights');
+    await page.waitForFunction(() => document.getElementById('sightsPanel').classList.contains('open'));
+    await page.waitForTimeout(400);
+    await page.tap('#sightsPanel .lip button');
+    await page.waitForFunction(() => !document.getElementById('sightsPanel').classList.contains('open'), null, { timeout: 5000 });
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();
