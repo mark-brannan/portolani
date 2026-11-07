@@ -597,3 +597,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261107t012003z
 - The Voyages drawer takes the same eras (a Prehistory heading for the Austronesian expansion) but its headings stay open, with no heading bar ([#399](https://github.com/mark-brannan/portolani/pull/399))
+
+### 20261107t012014z
+- Rows keep their per-row life bars when their heading is open; a family's rows use the family's own linear scale, 3000 BC to AD 1300 ([#399](https://github.com/mark-brannan/portolani/pull/399))
