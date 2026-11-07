@@ -591,3 +591,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261106t225254z
 - Added one README convention: a first meeting is told from both sides in one tile ([#401](https://github.com/mark-brannan/portolani/pull/401))
+
+### 20261107t011952z
+- TIMELINE_ERAS stays the Sights eras; the drawers' era list is DRAWER_ERAS = Prehistory + TIMELINE_ERAS, and eraOf returns Prehistory before 1500 BC ([#399](https://github.com/mark-brannan/portolani/pull/399))
