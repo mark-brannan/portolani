@@ -69,7 +69,8 @@ test('legs that share a vague span share it evenly: Polo\'s six legs of 1271', a
 
 test('every voyage has a calendar that runs forward, and its events fall inside it', async () => {
   for (const id of readJSON('data/voyages/index.json')) {
-    const cal = calendarOf(await readVoyage(id, readJSON));
+    const v = await readVoyage(id, readJSON), cal = calendarOf(v);
+    if (!v.legs?.length) { assert.equal(cal, null, `${id}: no legs, nothing to play`); continue; }
     assert.ok(cal && cal.t1 > cal.t0, `${id}: a calendar`);
     // a migration's legs are branches under way at once, so only each on its own runs forward
     assert.ok(cal.legs.every((l, i) => Number.isFinite(l.a) && l.b >= l.a && (cal.concurrent || !i || l.a >= cal.legs[i - 1].b)), `${id}: forward`);
