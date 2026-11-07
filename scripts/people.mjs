@@ -126,9 +126,10 @@ export function personMarks(person, sources = {}) {
 
 // The voyages to draw with a person chosen: theirs first, lit in the person's red, but for any of theirs the list
 // carries hidden (its eye put it off), then every other voyage chosen, dimmed. `list` is the scene's voyages option
-// ([{ id, colour, width, hidden }]); a voyage flagged hidden is left out of what is drawn.
-export function withPerson(list, person, width) {
-  if (!person) return list.filter((v) => !v.hidden);
+// ([{ id, colour, width, hidden }]); a voyage flagged hidden is left out of what is drawn. With `lit` false (the page's
+// way, docs/spec/design.md, "a chosen person's travels pulse, then fade") the person changes nothing: the list as given.
+export function withPerson(list, person, width, lit = true) {
+  if (!person || !lit) return list.filter((v) => !v.hidden);
   const hidden = new Set(list.filter((v) => v.hidden).map((v) => v.id)), own = new Set((person.voyages ?? []).filter((id) => !hidden.has(id)));
   return [...[...own].map((id) => ({ id, colour: PERSON_RED, width })), ...list.filter((v) => !own.has(v.id) && !v.hidden).map((v) => ({ ...v, alpha: DIMMED }))];
 }

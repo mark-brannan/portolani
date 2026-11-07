@@ -203,7 +203,7 @@
   .vrow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
   #where .vrow button { display: inline-flex; align-items: center; gap: 6px; }
   #where .vrow .vname { flex: 1 1 auto; min-width: 0; max-width: 100%; white-space: normal; text-align: left; }
-  .pcard .vrow .vtitle { flex: 1 1 220px; }
+  #where .pcard .vrow .vtitle { flex: 1 1 0; min-width: 0; text-align: left; }
   .vrow .vname svg { width: 28px; height: 18px; flex: none; }
   .vrow .vname[data-shown="true"] { background: #e2cd9e; color: #3b2a1a; border-color: #b89a68; } /* a shown voyage, lit like an open instrument */
   #where .vrow .eye { padding: 2px 4px; width: 30px; height: 26px; justify-content: center; border-radius: 12px; } /* the chart rows' eye, between the name and the ink */
@@ -212,6 +212,7 @@
   .vrow .eye[aria-pressed=false] { opacity: 0.7; }
   #where .vrow .play { padding: 2px 4px; width: 30px; height: 26px; justify-content: center; border-radius: 12px; } /* after the eye: sails the voyage on its own calendar */
   .vrow .play svg, #voyageBand button svg { width: 18px; height: 18px; fill: currentColor; stroke: none; }
+  #where .vrow .play[hidden], .slider.vdraw[hidden] { display: none; } /* the play and the Drawn-in slider, suppressed for now (page.js VOYAGE_PLAY_ON) */
   .vrow .play[aria-pressed=true] { background: var(--accent); color: var(--sheet); border-color: var(--accent); }
      and the voyage's calendar as a strip (its legs, its waits dotted, its events as ticks) that scrubs */
   #voyageBand {

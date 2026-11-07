@@ -259,7 +259,7 @@ Feature: A voyage's row in the Voyages drawer
     When the user looks at a voyage's row
     Then it reads, left to right: the voyage's name, a show/hide icon (the same eye as a chart's row), a play button, then its colour picker
   Scenario: the name shows that voyage alone and draws it; the eye is on or off for one voyage
-    Source: the user on the [#295](https://github.com/mark-brannan/portolani/pull/295) demo, 2026-10-30: "When you just click the voyage, it resets to that voyage view and redoes the animation, clearing the others.  The show/hide buttons on the other hand, work with no animations and are on/off for individual voyages."; the pace: "The voyage travel does move too fast.  Let's try 2.5s default but I want a slider from 1s to 5s (on the voyages page) so we can play with it and fine tune." These overtake the draw on the first showing only, and its pace of about a second.
+    Source: the user on the [#295](https://github.com/mark-brannan/portolani/pull/295) demo, 2026-10-30: "When you just click the voyage, it resets to that voyage view and redoes the animation, clearing the others.  The show/hide buttons on the other hand, work with no animations and are on/off for individual voyages."; the pace: "The voyage travel does move too fast.  Let's try 2.5s default but I want a slider from 1s to 5s (on the voyages page) so we can play with it and fine tune." These overtake the draw on the first showing only, and its pace of about a second. Overtaken in turn, 2026-11-07, by docs/spec/voyages.md, "choosing a voyage by its name adds it, in a colour of its own" (the others stay shown) and "no play, one speed" (no slider, no play button).
     Given a voyage in the list, other voyages shown or not
     When the user clicks its name
     Then the map flies to the view that frames the whole voyage, whether or not any of it was already in view
@@ -921,6 +921,22 @@ Feature: People and voyages, each a vertical timeline
   Scenario: a chosen person's tile and their voyages sit directly under their row
     Given the People drawer open
     When the user clicks a person's name
-    Then the person is chosen as before (their pictures dealt, their voyages lit in red, the map flown to frame them, `person=` in the hash) and a tile slides open directly under their row, before the next person's: their notes, their pictures as thumbnails, then one row per voyage of theirs in the index's order, each with its title and years, its notes, Read more, and the same eye and play as the Voyages drawer's rows, so a voyage is shown, hidden or played from here
+    Then the person is chosen as before (their pictures dealt, the map flown to frame them, `person=` in the hash) and a tile slides open directly under their row, before the next person's: their notes, their pictures as thumbnails, then one row per voyage of theirs in the index's order, each with its title and years, its notes, Read more, and the same name and eye as the Voyages drawer's rows, so a voyage is shown or hidden from here
     And only the chosen person's tile is open; choosing another shuts it and opens theirs under their own row; clicking the chosen person again lets them go and shuts the tile
-    And the eye reads on for every voyage of theirs drawn lit; put off, it hides that one voyage while the person stays chosen, and the hash carries it as `voyages=<id>~`
+    And every eye in the tile starts off: choosing the person shows none of their voyages for good
+  Scenario: a chosen person's travels pulse, then fade, leaving the cards
+    Source: the user, 2026-11-07: "The voyage overlay for the people drawer should change to use our short animation 'pulse' style similar to the chart POI pulses. Then the voyage lines should fade out so that only the cards are on the board. The show/hide buttons all start as not shown. The play button plays and shows. Additional presses on play will show additional voyages in a new/different color."; and, later in the same message: "The voyages on the people drawer should behave the same. Play is suppressed and when clicking the voyage (it needs to have it's own line for each voyage) then it plays at the faster speed. Every new voyage gets a different color." This overtakes "their voyages lit in red" and the eye that read on for each of them, above, and, for a chosen person, the dimming of every other voyage shown.
+    Given the People drawer open, no voyage shown
+    When the user chooses Ibn Battuta
+    Then once the map has flown to him and his cards are dealt, all his voyages show at once and pulse, as a chart's notes pulse: three beats, each bright and then fainter, about 4 seconds in all, the last fading out
+    And when the pulse is over no line of his is on the map, only his dealt cards and his birth's mark; every eye in his tile reads `aria-pressed=false` and `voyages=` is absent from the hash
+    And a voyage shown before he was chosen stays shown in its own colour, undimmed, and does not pulse
+    And under reduced motion the lines show once and fade, with no beats
+  Scenario: a voyage's row in the tile adds it, in a new colour
+    Source: as the pulse, above.
+    Given Ibn Battuta chosen, the pulse over
+    When the user clicks the name in his row for his third journey, then the name in his row for his fourth
+    Then the third is shown in the chart's red and drawn on in the draw's seconds (2.5), then the fourth is added in the next colour of the cycle and drawn on, the third staying shown
+    And the map does not fly, since it frames him already, and his cards stay on the table and he stays chosen
+    And there is no play button in his tile; the eye hides or shows one voyage, and the skull clears them all
+    And the hash carries them as the Voyages drawer's do (`voyages=ibn-battuta-3,ibn-battuta-4`, with their colours), and letting him go leaves them shown
