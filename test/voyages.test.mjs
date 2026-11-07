@@ -403,21 +403,21 @@ test('Heavy is the default weight; a voyage with a dashed or dotted leg is broke
   assert.ok(isBroken({ legs: [{ confidence: 'attested' }, { confidence: 'inferred' }] }));
   assert.ok(!isBroken({ legs: [{ confidence: 'attested' }] }));
   const ids = ['columbus', 'da-gama', 'dias', 'magellan', 'drake', 'polo'], c = voyageColours(ids, {}, new Set(ids));
-  assert.equal(c.columbus, VOYAGE_PALETTE[0], 'the first voyage, broken or not, is the chart\'s red');
-  assert.equal(c['da-gama'], VOYAGE_CONTRAST[0]);
+  assert.equal(c.columbus, VOYAGE_CONTRAST[0]);
   assert.equal(new Set(Object.values(c)).size, ids.length, 'two broken voyages share an ink while inks are free');
   assert.equal(Object.values(c).filter((h) => VOYAGE_CONTRAST.includes(h)).length, VOYAGE_CONTRAST.length, 'the high-contrast inks go first');
 });
 
 // docs/spec/voyages.md, "choosing a voyage by its name adds it, in a colour of its own": broken voyages added one at a
-// time, as the page adds them, each fresh: red first, then a new colour each, and the red stays with the first
-test('voyages added in turn cycle colours: red first, each next a new one, none moved', () => {
+// time, as the page adds them, each fresh: through the high-contrast palette (docs/spec/design.md, "a voyage with
+// dashed or dotted legs takes a high-contrast colour"), a new colour each, and the first keeps its own
+test('broken voyages added in turn cycle the high-contrast colours, each next a new one, none moved', () => {
   const broken = new Set(['a', 'b', 'c']), inks = (l) => l.map((v) => v.colour ?? v.ink);
   let list = [];
   const seen = [];
   for (const id of ['a', 'b', 'c']) { list = settleInks([...list, { id }], broken, new Set([id])); seen.push(inks(list)); }
-  assert.deepEqual(seen.map((s) => s.at(-1)), [VOYAGE_PALETTE[0], VOYAGE_CONTRAST[0], VOYAGE_CONTRAST[1]]);
-  assert.deepEqual(seen.map((s) => s[0]), Array(3).fill(VOYAGE_PALETTE[0]), 'the first voyage changed colour as others were added');
+  assert.deepEqual(seen.map((s) => s.at(-1)), [VOYAGE_CONTRAST[0], VOYAGE_CONTRAST[1], VOYAGE_CONTRAST[2]]);
+  assert.deepEqual(seen.map((s) => s[0]), Array(3).fill(VOYAGE_CONTRAST[0]), 'the first voyage changed colour as others were added');
 });
 
 // The menu is chronological: the first number of `when` is the start year (BC negative). A voyage's own
@@ -508,7 +508,7 @@ test('a voyage with no colour picked takes the high-contrast palette when it is 
   assert.equal(voyageColours(['columbus']).columbus, VOYAGE_PALETTE[0]);
   assert.equal(voyageColours(['drake', 'columbus'], {}, new Set(['columbus'])).columbus, VOYAGE_CONTRAST[0]);
   assert.equal(voyageColours(['drake', 'columbus', 'polo'], {}, new Set(['columbus'])).polo, VOYAGE_PALETTE[1], 'a voyage clear of the sheet keeps the chart palette');
-  assert.equal(voyageColours(['columbus'], {}, new Set(['columbus'])).columbus, VOYAGE_PALETTE[0], 'the first voyage is red even in the contrast set');
+  assert.equal(voyageColours(['columbus'], {}, new Set(['columbus'])).columbus, VOYAGE_CONTRAST[0], 'the first voyage in the contrast set takes its first colour, not red');
   assert.equal(voyageColours(['columbus'], { columbus: '#123456' }, new Set(['columbus'])).columbus, '#123456', 'a picked colour stays');
   for (const c of VOYAGE_CONTRAST) { // none in the blue hues, 190 to 255 degrees (purple starts at 265)
     const [r, g, b] = [1, 3, 5].map((k) => parseInt(c.slice(k, k + 2), 16)), max = Math.max(r, g, b), d = max - Math.min(r, g, b);

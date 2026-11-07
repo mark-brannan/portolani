@@ -17,11 +17,11 @@ Feature: Voyages drawer  (dividers button `#voyages` opens the Voyages drawer `#
     Source: the user, 2026-11-07: "The voyages drawer behaves strangely when clicking each voyage. All the colors are always green rather than cycling colors. Additionally, when a second voyage is clicked, the first voyage stays green the show hide button switches to 'hide' but the item is not actually hidden. If the show/hide button is clicked again, only then does it switch to a new color."; then, asked in the same session, a second voyage's name keeps the first shown in its own colour and adds the new one in the next colour, the map flying to the new one and drawing it on (paraphrase). This overtakes "Columbus is shown alone" here and "the name again, alone" below.
     Given the voyages drawer open, nothing shown
     When the user clicks the name "Columbus"
-    Then Columbus is shown, its eye reads `aria-pressed=true`, its line sample turns solid in the chart's red `#8c2f1e`, and a colour swatch appears beside it
+    Then Columbus is shown, its eye reads `aria-pressed=true`, its line sample turns solid in the first high-contrast colour, green `#008a3e`, as a voyage with dashed legs takes (docs/spec/design.md, "a voyage with dashed or dotted legs takes a high-contrast colour"), and a colour swatch appears beside it
     And the map flies to frame the whole voyage, even if part of it is in view, and the line is drawn on from start to end in the draw's seconds (2.5); under reduced motion it is drawn whole
     And the hash holds `voyages=columbus` and the drawer stays open
     When the user then clicks the name "Magellan-Elcano"
-    Then Columbus stays shown, in red, its eye still on, and Magellan is shown beside it in the next colour of the cycle, not red and not Columbus's
+    Then Columbus stays shown, in its green, its eye still on, and Magellan is shown beside it in the next colour of the cycle, purple `#7a1fff`, not Columbus's
     And the map flies to frame Magellan and draws its line on; Columbus is not drawn on again
     And every voyage added after takes a colour no shown voyage has, so three voyages added in turn are three colours
   Scenario: the eye shows several at once

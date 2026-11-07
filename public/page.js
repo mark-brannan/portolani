@@ -1768,7 +1768,7 @@ const LOCATIONS = [...ANCHORAGES.slice(0, 2), ...SIGHTS, ...ANCHORAGES.slice(2)]
 // voyage to those shown, flies to frame the whole of it and draws its line on from start to end,
 // every time, in the draw's seconds (chooseVoyage). The eye only shows or hides that one voyage, at once: no
 // flight, no pen, no other voyage touched. A voyage hidden keeps its place in the list, so its colour, and every other
-// voyage's, stays put. A voyage shown takes the first colour no shown voyage has, the chart's red first (settleInks).
+// voyage's, stays put. A voyage shown takes the first colour of its palette no shown voyage has (settleInks).
 // The play button sails the voyage again on its own calendar (playVoyage, below), with a band at the map's foot.
 // At the drawer's head, the line weight for them all and how long the pen takes; the skull clears them (clearMap). The
 // choice rides in the link (`voyages=`, `voyagewidth=`, `voyagedraw=`) like any style.

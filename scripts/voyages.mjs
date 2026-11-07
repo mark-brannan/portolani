@@ -64,18 +64,17 @@ export const VOYAGE_CONTRAST = ['#008a3e', '#7a1fff', '#c4001a', '#e65c00', '#d9
 // palette; a voyage in `fresh`, just shown, yields to those already shown and takes its own former ink if that is free,
 // else the first of its palette no shown voyage has. `contrast` is the set of ids that take the high-contrast palette, a
 // voyage with a dashed or dotted leg or one over a laid sheet, until its five inks are all taken; then the chart palette,
-// so two voyages share an ink only once all fourteen are in use. The first ink handed out, with none in use, is the
-// chart's red, whatever the voyage, and a voyage keeps it while shown. A hidden voyage keeps its ink, as its former one, and
+// so two voyages share an ink only once all fourteen are in use; the first of a plain voyage's palette is the chart's red,
+// and a dashed one starts the high-contrast cycle (docs/spec/design.md). A hidden voyage keeps its ink, as its former one, and
 // holds none back. Returns the list unchanged (the same array) when nothing moved.
 export function settleInks(list, contrast = new Set(), fresh = new Set()) {
   const shown = list.filter((v) => !v.hidden), used = new Set(shown.map((v) => v.colour).filter(Boolean)), out = new Map();
-  const suits = (v, c) => !contrast.has(v.id) || c === VOYAGE_PALETTE[0] || VOYAGE_CONTRAST.includes(c) || VOYAGE_CONTRAST.every((r) => used.has(r));
+  const suits = (v, c) => !contrast.has(v.id) || VOYAGE_CONTRAST.includes(c) || VOYAGE_CONTRAST.every((r) => used.has(r));
   for (const v of shown) if (!v.colour && !fresh.has(v.id) && v.ink && !used.has(v.ink) && suits(v, v.ink)) { used.add(v.ink); out.set(v.id, v.ink); }
   for (const v of shown) {
     if (v.colour || out.has(v.id)) continue;
-    // the first voyage shown, alone, takes the chart's red whatever its legs (docs/spec/voyages.md, "choosing a voyage by its name adds it")
-    const own = used.size === 0 ? VOYAGE_PALETTE.slice(0, 1) : contrast.has(v.id) && VOYAGE_CONTRAST.some((r) => !used.has(r)) ? VOYAGE_CONTRAST : VOYAGE_PALETTE;
-    const c = (v.ink && suits(v, v.ink) && (own.includes(v.ink) || v.ink === VOYAGE_PALETTE[0]) && !used.has(v.ink) ? v.ink : null) ?? [...own, ...VOYAGE_PALETTE].find((r) => !used.has(r)) ?? own[0];
+    const own = contrast.has(v.id) && VOYAGE_CONTRAST.some((r) => !used.has(r)) ? VOYAGE_CONTRAST : VOYAGE_PALETTE;
+    const c = (v.ink && own.includes(v.ink) && !used.has(v.ink) ? v.ink : null) ?? [...own, ...VOYAGE_PALETTE].find((r) => !used.has(r)) ?? own[0];
     used.add(c); out.set(v.id, c);
   }
   if (list.every((v) => !out.has(v.id) || out.get(v.id) === v.ink)) return list;

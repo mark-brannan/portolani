@@ -936,7 +936,7 @@ Feature: People and voyages, each a vertical timeline
     Source: as the pulse, above.
     Given Ibn Battuta chosen, the pulse over
     When the user clicks the name in his row for his third journey, then the name in his row for his fourth
-    Then the third is shown in the chart's red and drawn on in the draw's seconds (2.5), then the fourth is added in the next colour of the cycle and drawn on, the third staying shown
+    Then the third is shown in the first colour its palette has free (the chart's red, or a high-contrast colour for a voyage with dashed legs) and drawn on in the draw's seconds (2.5), then the fourth is added in the next colour of the cycle and drawn on, the third staying shown
     And the map does not fly, since it frames him already, and his cards stay on the table and he stays chosen
     And there is no play button in his tile; the eye hides or shows one voyage, and the skull clears them all
     And the hash carries them as the Voyages drawer's do (`voyages=ibn-battuta-3,ibn-battuta-4`, with their colours), and letting him go leaves them shown
