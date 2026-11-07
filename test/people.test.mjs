@@ -36,6 +36,8 @@ test('years read off their texts, before Christ negative', () => {
   assert.deepEqual(['c. 350 BC', '24 Feb 1304', 'c. 970s', '5th century BC', '1486 or 1487', 'c. 1,000,000–700,000 BC', 'nothing'].map(yearOf), [-350, 1304, 970, -450, 1486, -1000000, NaN]);
   assert.deepEqual(voyageYears('c. 330–320 BC'), [-330, -320]);
   assert.deepEqual(voyageYears('1325–1354'), [1325, 1354]);
+  assert.deepEqual(voyageYears('c. 1,000,000–700,000 BC'), [-1000000, -700000]);
+  assert.deepEqual(voyageYears('c. 63,000–48,000 BC'), [-63000, -48000]);
 });
 
 test('a life open at an end runs from the voyages and fades there', () => {

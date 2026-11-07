@@ -2568,7 +2568,8 @@ function frameOfSubject(s) {
     if (s.kind === 'sight') frames.set(s.key, sightFrame(sightTiles().filter(({ tile }) => tile.sight === s.id).map(({ lon, lat }) => [lon, lat])));
     else {
       const p = s.person, vs = p.voyages.map((id) => peopleData.voyages[id]);
-      const pts = [p.born && [p.born.lon, p.born.lat], deathOf(p) && [deathOf(p).lon, deathOf(p).lat], ...vs.flatMap((v) => (v?.legs ?? []).flatMap((l) => l.points))].filter(Boolean);
+      const pts = [p.born && [p.born.lon, p.born.lat], deathOf(p) && [deathOf(p).lon, deathOf(p).lat], ...vs.flatMap((v) => (v?.legs ?? []).flatMap((l) => l.points)),
+        ...vs.flatMap((v) => (v?.events ?? []).filter((e) => e.kind === 'waypoint').map((e) => [e.lon, e.lat]))].filter(Boolean);
       frames.set(s.key, frameOf(pts.map(([lon, lat]) => [((((lon + 180) % 360) + 360) % 360) - 180, lat])));
     }
   }

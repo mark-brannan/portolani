@@ -195,7 +195,7 @@ export const sightPicturesOf = (json) => Object.fromEntries(Object.entries(json 
 
 // The years a voyage's `when` spans, [first, last], negative before Christ: "c. 330–320 BC" [-330, -320]; [NaN, NaN] for none.
 export function voyageYears(when) {
-  const s = String(when ?? ''), nums = [...s.matchAll(/\d+/g)].map((m) => Number(m[0])).filter((n) => n >= 100);
+  const s = String(when ?? '').replace(/(\d),(?=\d{3}\b)/g, '$1'), nums = [...s.matchAll(/\d+/g)].map((m) => Number(m[0])).filter((n) => n >= 100);
   if (!nums.length) return [NaN, NaN];
   const sign = /\bBCE?\b/.test(s) ? -1 : 1;
   return [sign * nums[0], sign * nums.at(-1)];
