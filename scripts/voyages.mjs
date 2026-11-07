@@ -304,7 +304,7 @@ export async function readVoyage(id, readJSON) {
 // lon and lat together or not at all, `confidence` one of MARKER_CONFIDENCES, `doubt` the optional sentence. `images`
 // are Wikimedia Commons files, { file, kind, author, date, licence, note }: `file` the bare file name, no scheme, no
 // slash; `kind` one of IMAGE_KINDS. `family` one of FAMILIES: a people that is one of a family of peoples, which the
-// People drawer lists together under one heading (FAMILY_HEADS in people.mjs).
+// People drawer orders by where two of it share a year (FAMILY_ORDER in people.mjs).
 export const IMAGE_KINDS = ['life', 'near', 'posthumous', 'imaginary', 'modern', 'scene', 'ship', 'map', 'artefact', 'site', 'source'];
 export const SLUG = /^[a-z][a-z0-9-]*$/;
 export const FAMILIES = ['austronesian'];

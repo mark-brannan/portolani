@@ -59,38 +59,8 @@ export const TIMELINE_ERAS = [['The ancient world', TIMELINE_FROM], ['The mediev
 // a year as the drawers write it: 1500 BC, AD 1, 1500, with a thousands comma only from five figures (50,000 BC)
 export const yearLabel = (y) => { const n = Math.abs(y), t = n >= 10000 ? n.toLocaleString('en') : String(n); return y < 0 ? `${t} BC` : y === 1 ? 'AD 1' : t; };
 
-// Two timelines for people and voyages, to compare in one build (`timeline=a|b` in the link): A, one wide drawer the
-// People and Voyages buttons share, the lives and voyages as bars on one true-scale axis; B, the two vertical drawers
-// above. An unknown or missing value is A.
-export const TIMELINE_VARIANTS = ['a', 'b'];
-export const timelineVariant = (v) => (TIMELINE_VARIANTS.includes(v) ? v : TIMELINE_VARIANTS[0]);
-
-// Timeline A: one linear year axis, people above it and voyages below, from the Lapita voyages (TIMELINE_FROM) to this
-// year, at true scale throughout, so an empty stretch reads as empty rather than cut out. "Earlier" adds a stretch
-// before it, back to TIMELINE_EARLIEST, at its own linear scale (a broken axis): the main stretch keeps its width and
-// the earlier one takes EARLIER_SHARE of it again, to its left.
+// The first peopling of Sahul, c. 50,000 BC: the start of Prehistory and of the People drawer's heading bar
 export const TIMELINE_EARLIEST = -50000;
-export const EARLIER_SHARE = 0.5;
-// The windows of the peopling of Sahul, Beringia and the Americas, marked on the earlier stretch: [label, year, title].
-export const EARLIER_MARKS = [['Sahul', -50000, 'Sahul, the first peopling of Australia and New Guinea, c. 50,000 BC or earlier'], ['Beringia', -20000, 'Beringia, the land bridge into the Americas, c. 20,000 BC'], ['Clovis', -11000, 'Clovis, c. 11,000 BC']];
-// The axis: { width, stretches: [[from, to, x0, x1]], x(year), ticks: [[year, label]] }, with x in 0..1 of the whole
-// track and `width` the track's width in main stretches (1, or 1 + EARLIER_SHARE with the earlier stretch).
-export function laneAxis({ earlier = false, to = new Date().getFullYear() } = {}) {
-  const width = earlier ? 1 + EARLIER_SHARE : 1, k = 1 / width;
-  const stretches = [...(earlier ? [[TIMELINE_EARLIEST, TIMELINE_FROM, 0, EARLIER_SHARE * k]] : []), [TIMELINE_FROM, to, 1 - k, 1]];
-  const x = (year) => {
-    for (const [a, b, x0, x1] of stretches) if (year <= b) return year < a ? x0 : x0 + ((year - a) / (b - a)) * (x1 - x0);
-    return 1;
-  };
-  const ticks = [...(earlier ? [-50000, -40000, -30000, -20000, -10000] : []), -1500, -1000, -500, 1, 500, 1000, 1500, 2000]
-    .filter((y) => y <= to).map((y) => [y, yearLabel(y)]);
-  return { width, stretches, x, ticks };
-}
-// The era bands on an axis: [name, from, to], end to end from the main stretch's start to its end.
-export function eraBands(axis) {
-  const [from, to] = axis.stretches.at(-1);
-  return TIMELINE_ERAS.map(([name, a], i) => [name, Math.max(a, from), Math.min(TIMELINE_ERAS[i + 1]?.[1] ?? to, to)]).filter(([, a, b]) => b > a);
-}
 // The People and Voyages drawers' eras: Prehistory, from the first peopling of Sahul (TIMELINE_EARLIEST) to the Lapita
 // voyages, then the Sights eras (TIMELINE_ERAS)
 export const DRAWER_ERAS = [['Prehistory', TIMELINE_EARLIEST], ...TIMELINE_ERAS];
@@ -143,10 +113,16 @@ export function deepX(year, now = new Date().getFullYear()) {
 export const deepBands = (now = new Date().getFullYear()) =>
   DRAWER_ERAS.map(([name, a], i) => [name, deepX(a, now), deepX(DRAWER_ERAS[i + 1]?.[1] ?? now, now)]);
 
-// A family of peoples: one heading under its era in the People drawer, whatever its members' own years, holding the
-// records whose `family` names it. FAMILIES in voyages.mjs is the list checkPerson accepts.
-export const FAMILY_HEADS = { austronesian: { name: 'The Austronesian peoples', era: 'Prehistory', from: -3000, to: 1300 } };
-export const familyYears = (key) => { const f = FAMILY_HEADS[key]; return f ? `c. ${spanYears(f.from, f.to)}` : ''; };
+// A family of peoples: the records whose `family` names it sit, like every row, under the heading of their own era (one
+// level of headings, no heading of the family's own); where two of a family share a year, they go in the family's
+// order here, the user's on #399: the Austronesian-speaking voyagers, the first settlers of the Marianas and
+// Micronesia, the Lapita. FAMILIES in voyages.mjs is the list checkPerson accepts.
+export const FAMILY_ORDER = { austronesian: ['austronesian-voyagers', 'marianas-micronesia-settlers', 'lapita-people'] };
+// A sort's tie-break for two people of one year: by their family's order where both are in it, else level (0)
+export function familyOrder(a, b) {
+  const list = a.family && a.family === b.family ? FAMILY_ORDER[a.family] : null, i = list?.indexOf(a.id) ?? -1, j = list?.indexOf(b.id) ?? -1;
+  return i >= 0 && j >= 0 ? i - j : 0;
+}
 // A bar on an era's scale: [x0, x1, openStart, openEnd], an end open where the span runs past the era or the record
 // leaves it undated (`fromKnown`, `toKnown`, as lifeSpan gives them)
 export function barOn(scale, [a, b, fromKnown = true, toKnown = true]) {
@@ -249,15 +225,19 @@ export function parsePictureAt(text) {
 }
 export const pictureAtText = (at) => Object.entries(at).map(([i, s]) => `${i}:${s.lon.toFixed(3)},${s.lat.toFixed(3)},${Number(s.scale.toPrecision(4))}`).join('_') || null;
 
-// The lon/lat box round a person's marks and voyages: `points` [lon, lat], longitudes wrapped; null for none. A box
-// wider than half the world is the whole width of it.
+// The lon/lat box round a person's marks and voyages: `points` [lon, lat], longitudes wrapped; null for none. Its
+// longitudes are the shortest arc that holds every point (the circle less its widest gap), so a box across the date
+// line (the Lapita, Fiji to Samoa) stays the Pacific's width, its `lonMax` past 180 where it crosses; a box wider than
+// 200 degrees is the whole width of the world.
 export function frameOf(points) {
   const ok = points.filter(([lon, lat]) => Number.isFinite(lon) && Number.isFinite(lat));
   if (!ok.length) return null;
-  const lons = ok.map((p) => p[0]), lats = ok.map((p) => p[1]);
-  let lonMin = Math.min(...lons), lonMax = Math.max(...lons);
-  if (lonMax - lonMin > 200) { lonMin = -180; lonMax = 180; }
-  return { lonMin, lonMax, latMin: Math.min(...lats), latMax: Math.max(...lats) };
+  const lons = [...new Set(ok.map(([lon]) => ((lon % 360) + 360) % 360))].sort((a, b) => a - b), lats = ok.map((p) => p[1]);
+  let gap = 360 - lons.at(-1) + lons[0], west = lons[0];
+  for (let i = 1; i < lons.length; i++) if (lons[i] - lons[i - 1] > gap) { gap = lons[i] - lons[i - 1]; west = lons[i]; }
+  const span = 360 - gap, lonMin = west > 180 ? west - 360 : west;
+  const [latMin, latMax] = [Math.min(...lats), Math.max(...lats)];
+  return span > 200 ? { lonMin: -180, lonMax: 180, latMin, latMax } : { lonMin, lonMax: lonMin + span, latMin, latMax };
 }
 // The view that shows the whole of `frame` on a `w` x `h` canvas with `pad` of its size clear round it: contained, never cropped.
 export function viewContaining(frame, { w = 1600, h = 1000, pad = 0.08 } = {}) {

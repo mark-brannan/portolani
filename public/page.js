@@ -19,7 +19,7 @@ import { playedOn, playDateText, playPace, isLong } from './scene.mjs'; // the p
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, effectiveOpacity, sheetOpacity, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
-import { PEOPLE_FILE, PICTURES_FILE, SIGHT_PICTURES_FILE, SIGHT_MANIFEST_FILE, sightDeal, laneAxis, eraBands, EARLIER_MARKS, timelineVariant, eraOf, eraYears, eraScale, spanScale, DRAWER_ERAS, deepX, deepBands, FAMILY_HEADS, familyYears, barOn, lifeSpan, firstYear, yearsText, PERSON_RED, pictureCredit, pictureNote, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, sightFrame, viewContaining, withPictures, peopleOf, whoOf, deathOf, sightPicturesOf, MEMENTO, MEMENTO_EN, mementoNext, mementoLines } from './people.mjs';
+import { PEOPLE_FILE, PICTURES_FILE, SIGHT_PICTURES_FILE, SIGHT_MANIFEST_FILE, sightDeal, eraOf, eraYears, eraScale, DRAWER_ERAS, deepX, deepBands, familyOrder, barOn, lifeSpan, firstYear, yearsText, PERSON_RED, pictureCredit, pictureNote, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, sightFrame, viewContaining, withPictures, peopleOf, whoOf, deathOf, sightPicturesOf, MEMENTO, MEMENTO_EN, mementoNext, mementoLines } from './people.mjs';
 import { fold, bestPlace, withoutPartsOfFrames } from './placename.mjs';
 import { nextInCycle } from './cycle.mjs';
 import { planFlight, ease as flyEase, FLY_KNOBS, flyDefaults } from './flight.mjs';
@@ -95,8 +95,6 @@ const hashParams = () => new URLSearchParams(location.hash.slice(1));
 const ALL_CHARTS = [hashParams(), new URLSearchParams(location.search)].some((q) => q.get('charts') === 'all');
 // whether a grouped list's section opens when a mouse rests on its heading (`hover=`); on is written as no key, `hover=0` is off
 const hoverFromHash = () => hashParams().get('hover') !== '0';
-// which people and voyages timeline the medallion and the dividers open (people.mjs timelineVariant); A is written as no key
-const timelineFromHash = () => timelineVariant(hashParams().get('timeline'));
 
 function viewFromHash() {
   const q = hashParams(), m = /^(-?[\d.]+)\/(-?[\d.]+)\/(-?[\d.]+)$/.exec(q.get('map') ?? '');
@@ -185,7 +183,6 @@ function writeHash() {
   if (v.projection !== PROJECTION_NAMES[0]) q.set('projection', v.projection);
   if (v.bearing) q.set('bearing', String(Math.round(v.bearing * 10) / 10)); // the world turned: the compass direction at the top, north up written as no key
   if (!hoverOpen) q.set('hover', '0');
-  if (timeline !== 'a') q.set('timeline', timeline);
   if (!sameSet(selection, DEFAULT_SET)) q.set('sprites', SPRITES.filter((s) => selection.has(s.key)).map((s) => encodeKey(s.key)).join(','));
   if (st.townSize !== DEFAULTS.townSize) q.set('townsize', st.townSize);
   if (!st.names) q.set('names', '0');
@@ -379,11 +376,6 @@ const HOVER_GLYPHS = {
   off: svg(`<path d="M2 4h13" ${stroke('currentColor', 1.4)}/>${ARROW}<path d="M14.5 1.5l1.2 1.2M13.5 5h1.6M14.5 8.5l1.2-1.2" ${stroke('currentColor', 0.8)}/>`),
   on: svg(`<path d="M2 4h13" ${stroke('currentColor', 1.4)}/><path d="M5 8.5h9M5 12h7M5 15.5h8" ${stroke('currentColor', 0.7)}/>${ARROW}<path d="M25 2.5a2.6 2.6 0 1 1-2.6-.1" ${stroke('currentColor', 0.8)}/>`),
 };
-// the two people and voyages timelines, by their shape: A one wide bar, B two tall columns
-const TIMELINE_GLYPHS = {
-  a: svg(`<rect x="1.5" y="5" width="25" height="8" rx="1.5" ${stroke('currentColor', 1.3)}/><path d="M4 8h9M9 10.5h12" ${stroke('currentColor', 1.2)}/>`),
-  b: svg(`<rect x="5" y="1.5" width="8" height="15" rx="1.5" ${stroke('currentColor', 1.3)}/><rect x="15" y="1.5" width="8" height="15" rx="1.5" ${stroke('currentColor', 1.3)}/>`),
-};
 const MAP_LINES = '<path d="M0 4q8-3 14 2t14-1M0 13q9 3 15-1t13 2" fill="none" stroke="currentColor" stroke-width=".7" opacity=".6"/>';
 const BORDER_GLYPHS = {
   bordered: svg(`<rect width="28" height="18" fill="none"/>${MAP_LINES}<rect x="4" y="4" width="20" height="10" fill="#e9d8b4" stroke="#8c2f1e" stroke-width="1"/><rect x="6" y="6" width="16" height="6" fill="none" stroke="#8c2f1e" stroke-width=".6"/>`),
@@ -460,7 +452,6 @@ const CHOICES = {
   overlayMode: [['sheet', 'One sheet', 'the whole scan, opaque, laid level and centred, dragged by hand', HOOD_GLYPHS.sheets], ['pieces', 'Warped pieces', 'each piece warped onto today\'s coast, at the opacity below', HOOD_GLYPHS.rings]],
   tuneOrigin: [['rose', `Catalan rose (${ROSE_AT})`, 'every band\'s grid has a corner on the rose', HOOD_GLYPHS.rose], ['zero', '0° 0°', 'NOAA\'s own zero', HOOD_GLYPHS.zero]],
   tuneCurated: [['1', 'On', 'the curated charts take the place of the grid cells they hold', HOOD_GLYPHS.curated], ['0', 'Off', 'grid cells everywhere', HOOD_GLYPHS.grid]],
-  timelineVariant: [['a', 'A · horizontal', 'one wide drawer for people and voyages, their bars on one axis', TIMELINE_GLYPHS.a], ['b', 'B · vertical', 'a People drawer and a Voyages drawer, each a list down the years', TIMELINE_GLYPHS.b]],
   hoverOpen: [['off', 'Off', 'a click opens a section', HOVER_GLYPHS.off], ['on', 'On', 'resting the pointer on a heading opens its section', HOVER_GLYPHS.on]],
   tuneRoselines: [['1', 'On', 'the rose\'s 32 lines as one more hub at every zoom', HOOD_GLYPHS.roselines], ['0', 'Off', 'only the sheet the rose falls in', HOOD_GLYPHS.off]],
   flyShape: [['step', 'Step', 'out about the place left, across at the top, down onto the place; Blend lets the pan run alongside the zoom'], ['hyperbolic', 'Hyperbolic', 'van Wijk & Nuij, as MapLibre flies: pan and zoom together on one curve, Curve setting its height']],
@@ -791,7 +782,6 @@ if (UI) {
 }
 
 let hoverOpen = hoverFromHash();
-let timeline = timelineFromHash(); // 'a' or 'b'
 let view = viewFromHash();
 let style = styleFromHash();
 let selection = selectionFromHash();
@@ -890,7 +880,6 @@ phone.addEventListener('change', () => { drawCards(); if (ground) render(); }); 
 // text box, on a wide screen only, so a phone's keyboard does not cover the sheet); shut by the keyboard,
 // the focus goes back to the button that opened it.
 const where = $('where');
-// The medallion's and the dividers' drawers are the timeline's (placeTimeline): A's one drawer for both, or B's two.
 const drawers = [[$('open'), $('drawer')], [$('go'), $('goPanel')], [$('sights'), $('sightsPanel')], [$('voyages'), $('voyagesPanel')], [$('people'), $('peoplePanel')], [$('charts'), $('chartsDrawer')], [$('anchor'), $('anchorPanel')]];
 const openDrawer = () => drawers.find(([, d]) => d.classList.contains('open'))?.[1] ?? false;
 let openedBy = null; // the button the open drawer was opened by
@@ -901,16 +890,15 @@ function setDrawer(open, byKeyboard = false, by = drawers.find(([, d]) => d === 
   openedBy = open ? by : null;
   for (const [b, d] of drawers) { d.classList.toggle('open', d === open); b.setAttribute('aria-expanded', String(d === open && b === openedBy)); }
   if (open?.id === 'voyagesPanel') fillVoyages(); else if (open?.id === 'peoplePanel') fillPeople(); // the lists load on the first open
-  else if (open?.id === 'timelinePanel') fillTimeline(by === $('voyages') ? 'voyages' : 'people', open !== was); // A: the other button keeps it open and moves to its lane
   placeBand();
-  if (open === was) return; // the same drawer again: A's other button, at its own lane
+  if (open === was) return;
   document.documentElement.classList.toggle('sheet', !!open && !open.classList.contains('menu')); // on a phone the map makes room above the settings or the charts; a lighter drawer sits over its foot
   if (open?.id === 'chartsDrawer') chartsFresh = !style.overlays.length;
   if (open) (open.id === 'goPanel' ? (phone.matches ? null : $('coordsText')) : focusable(open))?.focus({ preventScroll: true });
   else if (byKeyboard) wasBy?.focus({ preventScroll: true });
   else if (was.contains(document.activeElement)) document.activeElement.blur(); // a phone's keyboard goes with it
 }
-for (const entry of drawers) { const [b] = entry; b.addEventListener('click', (e) => { const d = entry[1]; setDrawer(d === openDrawer() && b === openedBy ? false : d, e.detail === 0, b); }); } // detail 0: Enter or Space; the drawer read at the click, as the timeline may have swapped it
+for (const entry of drawers) { const [b] = entry; b.addEventListener('click', (e) => { const d = entry[1]; setDrawer(d === openDrawer() && b === openedBy ? false : d, e.detail === 0, b); }); } // detail 0: Enter or Space
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && openDrawer()) setDrawer(false, true); });
 // the play band is not the map, nor is the skull: their buttons leave a drawer open, so the table is cleared mid-use
 const outside = (t) => { const d = openDrawer(); return d && t instanceof Node && !where.contains(t) && !d.contains(t) && !$('voyageBand').contains(t) && !$('memento').contains(t); };
@@ -918,12 +906,12 @@ const outside = (t) => { const d = openDrawer(); return d && t instanceof Node &
 addEventListener('pointerdown', (e) => { if (outside(e.target) && !(phone.matches && e.target === canvas)) setDrawer(false); });
 addEventListener('focusout', (e) => { if (e.relatedTarget && outside(e.relatedTarget)) setDrawer(false); }); // tabbed out; a click that focuses nothing has no relatedTarget
 
-// Reset: every control back to its default, the view (place, projection and bearing), the hover and the timeline kept. The hash holds the whole
+// Reset: every control back to its default, the view (place, projection and bearing) and the hover kept. The hash holds the whole
 // style, so a hash with only the view is the default style; the hashchange handler below redraws from it.
 $('reset').addEventListener('click', () => {
   const m = hashParams().get('map'), p = hashParams().get('projection'), b = hashParams().get('bearing');
   $('shareUrl').hidden = true; $('shareNote').textContent = '';
-  location.hash = [m && `map=${m}`, p && `projection=${p}`, b && `bearing=${b}`, !hoverOpen && 'hover=0', timeline !== 'a' && `timeline=${timeline}`].filter(Boolean).join('&');
+  location.hash = [m && `map=${m}`, p && `projection=${p}`, b && `bearing=${b}`, !hoverOpen && 'hover=0'].filter(Boolean).join('&');
 });
 // Copy link: the hash is kept current by writeHash. Where the clipboard is refused (an insecure page,
 // a denied permission) the link is put in a box, selected, to copy by hand.
@@ -1098,10 +1086,19 @@ const toCanvas = (cx, cy) => {
 
 const pointers = new Map(); // pointerId -> [x, y] in canvas px
 let tap = null; // a lone pointer's start, [x, y] in canvas px, until it moves far enough to be a drag
-const pinch = () => {
-  const [[ax, ay], [bx, by]] = pointers.values();
-  return { d: Math.hypot(bx - ax, by - ay), x: (ax + bx) / 2, y: (ay + by) / 2 };
+const pinch = (from = pointers) => {
+  const [[ax, ay], [bx, by]] = from.values();
+  return { d: Math.hypot(bx - ax, by - ay), x: (ax + bx) / 2, y: (ay + by) / 2, a: (Math.atan2(by - ay, bx - ax) * 180) / Math.PI };
 };
+// Two fingers twisted on the map turn the world, and every sheet on it, about their midpoint as the pinch zooms, the
+// way a phone's maps turn; the turn starts once the twist passes TWIST_START, so a pinch alone does not turn it.
+const TWIST_START = 8; // degrees
+let twist = null; // { swept, on } while two fingers are down
+function turnAbout(v, by, x, y) { // `by` degrees clockwise on the window, about canvas point (x, y)
+  const r = (-by * Math.PI) / 180, ox = W / 2 - x, oy = H / 2 - y; // the point the middle shows once turned
+  const sx = x + ox * Math.cos(r) - oy * Math.sin(r), sy = y + ox * Math.sin(r) + oy * Math.cos(r);
+  return clampView({ ...panView(v, W / 2 - sx, H / 2 - sy), bearing: (v.bearing ?? 0) - by });
+}
 
 // A sheet (a chart's scan laid whole over the map) is moved by hand: held anywhere on it, it is dragged (the top one where
 // they overlap), and where it is let go lands in the link (sheet=). Held by any of its four corners, the world turns and
@@ -1159,6 +1156,7 @@ function showCornerIcon(hit) {
 }
 canvas.addEventListener('pointerleave', () => showCornerIcon(null));
 canvas.addEventListener('dblclick', (e) => {
+  if (looking != null) return; // a card looked at takes its own double click (lookUp)
   const hit = sheetHit(toCanvas(e.clientX, e.clientY));
   if (hit?.kind !== 'turn') return;
   e.preventDefault();
@@ -1298,14 +1296,16 @@ function showSnap(corner, w, h) {
   Object.assign(snap.style, { display: 'block', width: `${w * kx}px`, height: `${h * ky}px`,
     left: `${r.left + (corner[1] === 'l' ? m : W - m - w) * kx}px`, top: `${r.top + (corner[0] === 't' ? m : H - m - h) * ky}px` });
 }
+let bodyTap = null; // the card whose body a press began on: a tap there looks at it, a drag pans the map
 canvas.addEventListener('pointerdown', (e) => {
   takeOver(); // a touch takes over from a flight
+  if (looking != null) { lookDown(e); return; } // the map holds still under a card looked at
   if (!pointers.size && e.isPrimary && !held && !holding) {
     const p = toCanvas(e.clientX, e.clientY), pic = pictureHit(p), hit = pic ? null : sheetHit(p);
-    if (looking != null && pic?.i !== looking) { endLook(); return; } // a press off the picture looked at lays it back, and only that
+    bodyTap = pic?.kind === 'body' ? pic.i : null;
     showCornerIcon(null);
-    if (pic) holdPicture(pic, p); else if (hit) { hideTile(); holdSheet(hit, p); sheetTap = p; }
-    if (pic || hit) { canvas.setPointerCapture(e.pointerId); canvas.style.cursor = 'grabbing'; return; }
+    if (pic && pic.kind !== 'body') holdPicture(pic, p); else if (hit) { hideTile(); holdSheet(hit, p); sheetTap = p; }
+    if ((pic && pic.kind !== 'body') || hit) { canvas.setPointerCapture(e.pointerId); canvas.style.cursor = 'grabbing'; return; }
   }
   if (!pointers.size && e.isPrimary && (carried = cardAt(toCanvas(e.clientX, e.clientY)))) {
     carried.corner = style[carried.key];
@@ -1316,16 +1316,20 @@ canvas.addEventListener('pointerdown', (e) => {
   canvas.setPointerCapture(e.pointerId);
   pointers.set(e.pointerId, toCanvas(e.clientX, e.clientY));
   tap = pointers.size === 1 ? pointers.get(e.pointerId) : null;
+  twist = pointers.size === 2 ? { swept: 0, on: false } : null;
   hideTile();
   clearTimeout(settle);
 });
 canvas.addEventListener('pointermove', (e) => {
   if (holding) { dragPicture(toCanvas(e.clientX, e.clientY)); return; }
+  if (cardPointers.has(e.pointerId)) { lookMove(e); return; }
   if (held) { const p = toCanvas(e.clientX, e.clientY); if (sheetTap && Math.hypot(p[0] - sheetTap[0], p[1] - sheetTap[1]) > cssPx(TAP_SLOP)) sheetTap = null; if (!sheetTap) dragSheet(p); return; }
   if (carried) { carried.corner = cornerAt(toCanvas(e.clientX, e.clientY)); showSnap(carried.corner, carried.w, carried.h); return; }
   if (!pointers.size) { // a picture over the marks under it, as a press finds it
-    const p = toCanvas(e.clientX, e.clientY), pic = pictureHit(p)?.kind, card = cardAt(p), mark = !card && !pic && markAt(p), hit = card || pic || mark ? null : sheetHit(p);
-    canvas.style.cursor = card ? 'grab' : pic ? ({ move: 'grab', look: 'zoom-in', flip: 'pointer', link: 'pointer', away: 'pointer' }[pic] ?? '') : mark ? 'pointer' : { move: 'grab', turn: TURN_CURSOR }[hit?.kind] ?? '';
+    const p = toCanvas(e.clientX, e.clientY), pic = pictureHit(p)?.kind;
+    if (looking != null) { canvas.style.cursor = pic ? (pic === 'held' ? 'grab' : 'pointer') : ''; return; }
+    const card = cardAt(p), mark = !card && !pic && markAt(p), hit = card || pic || mark ? null : sheetHit(p);
+    canvas.style.cursor = card ? 'grab' : pic ? ({ move: 'grab', body: 'zoom-in' }[pic] ?? '') : mark ? 'pointer' : { move: 'grab', turn: TURN_CURSOR }[hit?.kind] ?? '';
     showCornerIcon(hit?.kind === 'turn' ? hit : null);
     return;
   }
@@ -1336,7 +1340,14 @@ canvas.addEventListener('pointermove', (e) => {
     const before = pinch();
     pointers.set(e.pointerId, p);
     const after = pinch();
-    moved(zoomView(panView(view, after.x - before.x, after.y - before.y), after.d / before.d, after.x, after.y));
+    let next = zoomView(panView(view, after.x - before.x, after.y - before.y), after.d / before.d, after.x, after.y);
+    if (twist) {
+      const d = ((after.a - before.a + 540) % 360) - 180;
+      twist.swept += d;
+      if (!twist.on && Math.abs(twist.swept) >= TWIST_START) { twist.on = true; next = turnAbout(next, twist.swept, after.x, after.y); } // the twist so far, at once
+      else if (twist.on) next = turnAbout(next, d, after.x, after.y);
+    }
+    moved(next);
   } else if (pointers.size === 1) {
     const [x, y] = pointers.get(e.pointerId);
     pointers.set(e.pointerId, p);
@@ -1345,6 +1356,7 @@ canvas.addEventListener('pointermove', (e) => {
 });
 const lift = (e) => {
   if (holding) { canvas.style.cursor = ''; dropPicture(e); return; }
+  if (cardPointers.has(e.pointerId)) { lookUp(e); return; }
   if (held) { const at = sheetTap; sheetTap = null; canvas.style.cursor = ''; if (at) { const turn = held.kind === 'turn'; held = null; if (e.type === 'pointerup' && !turn) showTileAt(at); } else dropSheet(); return; } // a tap moved nothing: no render, which would hide the tile
   if (carried) { // dropped: the corner is kept, the sheet placed again
     const { key, corner } = carried;
@@ -1353,19 +1365,22 @@ const lift = (e) => {
     return;
   }
   if (!pointers.delete(e.pointerId)) return;
+  if (pointers.size < 2) twist = null;
   if (pointers.size === 0) stopped();
 };
 canvas.addEventListener('pointerup', (e) => {
-  const at = tap; tap = null;
+  const at = tap, body = bodyTap; tap = null; bodyTap = null;
   lift(e);
-  if (at && view === placed) showTileAt(at);
+  if (at && body != null) lookAt(body); // a tap on a card's body looks at it
+  else if (at && view === placed) showTileAt(at);
 });
-canvas.addEventListener('pointercancel', (e) => { tap = null; lift(e); });
+canvas.addEventListener('pointercancel', (e) => { tap = null; bodyTap = null; lift(e); });
 canvas.addEventListener('wheel', (e) => {
   e.preventDefault();
-  takeOver(); // the wheel takes over from a flight
   const [x, y] = toCanvas(e.clientX, e.clientY);
   const px = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY; // lines to px
+  if (looking != null) { zoomLook(2 ** (-px / 300), x, y); return; } // the card's view alone moves
+  takeOver(); // the wheel takes over from a flight
   moved(zoomView(view, 2 ** (-px / 300), x, y));
   stopped(300);
 }, { passive: false });
@@ -1762,21 +1777,6 @@ function voyageItem(id, v, sources, { name = true, bar = '' } = {}) {
     (name ? `<input type="color" data-ink="${escapeHTML(id)}" aria-label="Colour of ${full}" title="Colour of ${full}" hidden>` : '') + bar + '</div>' +
     (summary || more ? `<p class="vsum">${name ? `<b>${full}</b>. ` : ''}${summary}${more}</p>` : '') + '</li>';
 }
-// Timeline A's voyage row, at its place on the axis: the bar over its years, and the row to the bar's right where there
-// is room, else to its left: the name button, the eye, the play button and the swatch; its summary under it while on
-function laneItem(id, v, sources, [x0, x1]) {
-  const full = escapeHTML(v.title ?? id), brief = escapeHTML(v.short ?? v.title ?? id), when = escapeHTML(v.when), summary = escapeHTML(v.summary), link = voyageLink(v, sources), eid = escapeHTML(id);
-  const right = x1 < 0.6, at = right ? `left:calc(${pc(x1)} + 4px)` : `right:calc(${pc(1 - x0)} + 4px)`;
-  return `<li data-row="${eid}" data-title="${full}"><div class="vline"><span class="vbar" style="left:${pc(x0)};width:${pc(Math.max(0.006, x1 - x0))}"></span><span class="vctl" style="${at}">` +
-  `<button type="button" class="vname" data-voyage="${eid}" title="${full}${when ? `, ${when}` : ''}">` +
-  `<svg viewBox="0 0 28 18" aria-hidden="true"><path d="M2 9h24" fill="none" stroke-linecap="round"/></svg>` +
-  `<span class="full">${full}</span><span class="brief">${brief}${when ? `<span class="when">${when}</span>` : ''}</span></button>` +
-  `<button type="button" class="eye" data-eye="${eid}" aria-pressed="false" aria-label="Show ${full}" title="Show or hide ${full}">${EYE}</button>` +
-  `<button type="button" class="play" data-play="${eid}" aria-pressed="false" aria-label="Play ${full} on its own calendar" title="Play ${full} on its own calendar">${PLAY_GLYPH}</button>` +
-  `<input type="color" data-ink="${eid}" aria-label="Colour of ${full}" title="Colour of ${full}" hidden></span></div>` +
-  (summary || link ? `<p class="vsum" style="${right ? `margin-left:${pc(x0)}` : `margin-left:auto;margin-right:${pc(1 - x1)}`}"><b>${full}</b>. ${summary}${link ? ` <a href="${escapeHTML(link.url)}" target="_blank" rel="noopener" title="${escapeHTML(link.label)}">Read more</a>` : ''}</p>` : '') + '</li>';
-}
-let timeAxis = laneAxis(), timeLane = 'people'; // timeline A's axis (Earlier widens it) and the lane its drawer was opened at
 // the ink of every voyage in the list, hidden ones too, so a colour stays with its voyage
 // (a voyage with no colour picked takes one from the high-contrast palette while any of it crosses a sheet, or if a leg is dashed or dotted)
 // the sheets laid as the style has them now (not as last drawn), each with the placement it lies at; none unless whole sheets
@@ -1810,11 +1810,10 @@ const isDrawn = (id) => isShown(id) || (litBy(id) && !isHidden(id));
 // its eye, its play button (playing, paused) and its swatch
 function showVoyage() {
   const ink = voyageInk();
-  for (const row of document.querySelectorAll('#voyageList li[data-row], #laneVoyages li[data-row], #personCard li[data-row]')) {
+  for (const row of document.querySelectorAll('#voyageList li[data-row], #personCard li[data-row]')) {
     const id = row.dataset.row, full = row.dataset.title, listed = id in ink, on = isDrawn(id);
     const b = row.querySelector('[data-voyage]'), line = row.querySelector('path'), pick = row.querySelector('[data-ink]'), eye = row.querySelector('[data-eye]'), play = row.querySelector('[data-play]');
     row.classList.toggle('on', on);
-    row.querySelector('.vbar')?.style.setProperty('--c', litBy(id) && on ? PERSON_RED : listed ? ink[id] : '#6b5a44'); // timeline A's bar
     if (b) b.dataset.shown = String(on);
     if (line) {
       line.setAttribute('stroke', litBy(id) && on ? PERSON_RED : listed ? ink[id] : 'currentColor');
@@ -1841,12 +1840,11 @@ function fillVoyages() {
       for (const [i, [id]] of voyages.entries()) { brokenSeen.add(id); if (isBroken(whole[i])) brokenIds.add(id); }
       for (const [i, [id]] of voyages.entries()) voyageDots.set(id, (whole[i]?.legs ?? []).flatMap((leg) => (leg.points?.length > 1 ? legPath(leg) : [])).filter((_, k) => k % 4 === 0));
       voyageRows = { voyages, sources }; drawVoyages();
-    }), (e) => { voyageList = null; for (const l of [$('voyageList'), $('laneVoyages')]) l.innerHTML = `<li>${escapeHTML(e.message)}</li>`; });
+    }), (e) => { voyageList = null; $('voyageList').innerHTML = `<li>${escapeHTML(e.message)}</li>`; });
   showVoyage();
   return voyageList;
 }
-// the Voyages drawer's rows (B), earliest first, an era's heading before the first row in it; an undated voyage comes
-// last; and timeline A's voyages' lane on its axis, where an undated voyage sits at the axis's right end
+// the Voyages drawer's rows, earliest first, an era's heading before the first row in it; an undated voyage comes last
 function drawVoyages() {
   if (!voyageRows) return;
   const { voyages, sources } = voyageRows;
@@ -1854,10 +1852,6 @@ function drawVoyages() {
   $('voyageList').innerHTML = voyages.map(([id, v]) => {
     const ys = voyageYears(v.when), e = eraOf(ys[0]), head = e && e !== era ? eraItem(era = e) : '';
     return head + voyageItem(id, v, sources, { bar: spanBarOn(e && eraScale(e), ys) });
-  }).join('');
-  $('laneVoyages').innerHTML = voyages.map(([id, v]) => {
-    const [a, b] = voyageYears(v.when);
-    return laneItem(id, v, sources, [Number.isFinite(a) ? timeAxis.x(a) : 1, Number.isFinite(b) ? timeAxis.x(b) : 1]);
   }).join('');
   showVoyage();
 }
@@ -1881,7 +1875,7 @@ function voyageControl(e) {
   if (eye) {
     const id = eye.dataset.eye;
     if (band?.id === id) closeBand();
-    if (voyagePen?.id === id) voyagePen = null; // a pen on it stops, and the line is whole
+    if (voyagePen?.id === id || voyagePen?.ids?.includes(id)) voyagePen = null; // a pen on it stops, and the line is whole
     // a chosen person's voyage hidden by its eye and turned back on: its hidden entry goes, rather than staying listed
     // as shown, so letting the person go takes it off the map with them
     if (litBy(id) && isHidden(id)) { style = { ...style, voyages: style.voyages.filter((v) => v.id !== id) }; showVoyage(); writeHash(); render(); }
@@ -1897,7 +1891,7 @@ function voyageControl(e) {
   }
   return false;
 }
-// a click in either timeline's voyages
+// a click in the Voyages drawer's rows
 async function voyageClick(e) {
   if (voyageControl(e)) return;
   const b = e.target.closest('[data-voyage]');
@@ -1906,9 +1900,9 @@ async function voyageClick(e) {
   closeBand();
   showVoyages({ [id]: true }, false);
   await flyToVoyage(id);
-  if (isShown(id) && !matchMedia('(prefers-reduced-motion: reduce)').matches) drawOn(id);
+  if (isShown(id) && !matchMedia('(prefers-reduced-motion: reduce)').matches) drawOn([id]);
 }
-for (const l of [$('voyageList'), $('laneVoyages')]) l.addEventListener('click', voyageClick);
+$('voyageList').addEventListener('click', voyageClick);
 // How long the pen takes, in seconds (VOYAGE_DRAW): the slider shows the seconds, and its sample line draws itself on
 // at that pace each time it moves. Only the next drawing changes, so nothing is drawn again.
 // (showStyle calls showVoyageDraw before this part of the page has run, so it reads the slider afresh)
@@ -1927,38 +1921,46 @@ drawSlider.addEventListener('input', () => {
     drawSample = $('voyageDrawSample').querySelector('path').animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: style.voyageDraw * 1000, easing: 'linear' });
   }
 });
-// The pen: a voyage's line drawn from its start to its end in the slider's seconds, at an even pace along the line,
-// once the flight has landed and the scene is placed. The scene's voyage carries `reveal` (scene.mjs drawTrack).
-let voyagePen = null; // { id, since, t0, ms } while drawing, t0 null until it starts
+// The pen: voyages' lines drawn from their starts to their ends together, in the slider's seconds, each at an even pace
+// along its line, once `ready` says (by default the flight has landed and the scene is placed). The scene's voyage
+// carries `reveal` (scene.mjs drawTrack).
+let voyagePen = null; // { ids, since, t0, ms } while drawing, t0 null until it starts; a play's is { id, band }
 function applyReveal() {
-  const v = voyagePen && ground?.voyages?.find((x) => x.id === voyagePen.id);
-  if (!v) return;
+  if (!voyagePen || !ground?.voyages) return;
   if (voyagePen.band) { // a play: the line as far as the pen has come on the voyage's calendar (each branch of a migration on its own), and the events it has passed
-    const b = voyagePen.band;
-    Object.assign(v, playedOn(v.voyage, b.cal, playDay(b)));
-  } else v.reveal = voyagePen.t0 == null ? 0 : Math.min(1, (performance.now() - voyagePen.t0) / voyagePen.ms);
+    const v = ground.voyages.find((x) => x.id === voyagePen.id), b = voyagePen.band;
+    if (v) Object.assign(v, playedOn(v.voyage, b.cal, playDay(b)));
+    return;
+  }
+  const reveal = voyagePen.t0 == null ? 0 : Math.min(1, (performance.now() - voyagePen.t0) / voyagePen.ms);
+  for (const v of ground.voyages) if (voyagePen.ids.includes(v.id)) v.reveal = reveal;
 }
 // every exit of the pen puts the line back whole: a pen that stops early must not leave its voyage hidden
 function finish(id) { const v = ground?.voyages?.find((x) => x.id === id); if (v && ('reveal' in v || 'played' in v)) { delete v.reveal; delete v.played; delete v.legReveal; render(); } }
-function drawOn(id) {
+const landed = () => flightTo == null && placed === view;
+function drawOn(ids, ready = landed, wait = 10000) {
   closeBand();
-  const pen = voyagePen = { id, since: performance.now(), t0: null, ms: style.voyageDraw * 1000 };
+  const pen = voyagePen = { ids, since: performance.now(), t0: null, ms: style.voyageDraw * 1000 };
+  const done = () => { // every exit puts the lines back whole, drawn again once
+    let any = false;
+    for (const v of ground?.voyages ?? []) if (ids.includes(v.id) && ('reveal' in v || 'played' in v)) { delete v.reveal; delete v.played; delete v.legReveal; any = true; }
+    if (any) render();
+  };
   const step = () => {
     if (voyagePen !== pen) { // stopped by a later click, which repaints: a new pen (on the same voyage it owns the reveal), or an eye's render
-      const v = ground?.voyages?.find((x) => x.id === id);
-      if (v && voyagePen?.id !== id) delete v.reveal;
+      for (const v of ground?.voyages ?? []) if (ids.includes(v.id) && !voyagePen?.ids?.includes(v.id) && voyagePen?.id !== v.id) delete v.reveal;
       return;
     }
     const now = performance.now();
-    if (pen.t0 == null) { // wait for the flight to land and the scene to be placed with this voyage in it
-      if (flightTo == null && placed === view && ground?.voyages?.some((x) => x.id === id)) pen.t0 = now;
-      else if (now - pen.since > 10000) { voyagePen = null; return finish(id); }
+    if (pen.t0 == null) { // wait for the map to be there and the scene to have these voyages in it
+      if (ready() && ground?.voyages?.some((x) => ids.includes(x.id))) pen.t0 = now;
+      else if (now - pen.since > wait) { voyagePen = null; return done(); }
     }
     applyReveal();
     if (pen.t0 != null) paintFrame('drawing');
     if (pen.t0 != null && now - pen.t0 >= pen.ms) {
       voyagePen = null;
-      finish(id); // whole again, with its marks
+      done(); // whole again, with their marks
       return;
     }
     requestAnimationFrame(step);
@@ -2106,7 +2108,7 @@ function placeBand() {
   const d = !phone.matches && openDrawer(), r = el.getBoundingClientRect(), dr = d && d.getBoundingClientRect();
   if (dr && dr.left > r.left && dr.left < r.right && dr.bottom > r.top) el.style.maxWidth = `${Math.max(280, dr.left - r.left - 12)}px`;
 }
-for (const d of new Set([...drawers.map(([, d]) => d), $('timelinePanel'), $('voyagesPanel'), $('peoplePanel')])) d.addEventListener('transitionend', placeBand);
+for (const [, d] of drawers) d.addEventListener('transitionend', placeBand);
 addEventListener('resize', placeBand);
 $('bandPlay').addEventListener('click', () => (band?.state === 'run' || band?.state === 'wait' ? pausePlay() : resumePlay()));
 $('bandStop').addEventListener('click', closeBand);
@@ -2130,7 +2132,7 @@ function flyToVoyage(id) {
     if (to) { voyageFlown = n; if (style.sheetHides) clearSheetFor(to, true); goTo(to); }
   }, () => {});
 }
-for (const l of [$('voyageList'), $('laneVoyages')]) l.addEventListener('input', (e) => {
+$('voyageList').addEventListener('input', (e) => {
   const id = e.target.dataset?.ink;
   if (!id) return;
   style = { ...style, voyages: style.voyages.map((v) => (v.id === id ? { ...v, colour: e.target.value.toLowerCase() } : v)) };
@@ -2182,12 +2184,12 @@ function subject() {
 }
 async function loadSubject() { if (style.person) await loadPeople(); else if (style.sight) await loadSights(); return subject(); }
 // A sight chosen: its pictures (`pictures`, else those of the mark opened, `site`, else all) onto the table, a person's
-// off it. Opening the same mark's tile again changes nothing while any of its pictures lie on the table; once all are
+// off it. Opening the same mark's tile again changes nothing while all its pictures lie on the table; once any is
 // put away it deals them again. A sight with several marks (Tyre's city site and Al-Bass) splits its pictures between
 // them by each record's `site`, the mark's place in its tile's `at`; the link carries it as `site=`.
 let keepTile = false;
 function chooseSight(name, pictures = DEFAULTS.pictures, site = null, tile = null) { // `tile`: the mark's tile it was opened from
-  if (style.sight === name && style.site === site && !style.person && style.pictures?.length !== 0) return;
+  if (style.sight === name && style.site === site && !style.person && style.pictures == null) return; // all on the table: nothing to deal back
   const hadPerson = clearTable(false); // whatever lies on the table put away first, as the skull does; the tile just opened stays
   style = { ...style, sight: name, site, pictures };
   dealViews.delete(sightKey());
@@ -2213,7 +2215,7 @@ function clearTable(hide = true, wipe = true) {
   if (hide) hideTile();
   if (style.person || style.sight || style.pictures != null || Object.keys(style.pictureAt ?? {}).length) {
     style = { ...style, person: null, sight: null, site: null, pictures: DEFAULTS.pictures, pictureAt: {} };
-    flips.clear(); links.clear(); raised = []; looking = null; focusedPic = null;
+    flips.clear(); links.clear(); raised = []; looking = null; homing = null; lookZoom = NO_ZOOM; cardPointers.clear(); focusedPic = null;
     showPeople(); showSightCard(); writeHash();
   }
   if (lay) { if (wipe) wipeSkull(); if (ground) repaint('pictures swept'); }
@@ -2260,71 +2262,55 @@ function sightPlaces(s, f, sizes) {
 const yearsOf = (p) => p.voyages.flatMap((id) => voyageYears(peopleData.voyages[id]?.when));
 const voyagesOf = (p) => p.voyages.map((id) => peopleData.voyages[id]).filter(Boolean);
 function fillPeople() {
-  return loadPeople().then(() => { if (!$('peopleList').childElementCount) drawPeople(); showPeople(); }, (e) => { $('peopleList').textContent = e.message; $('peopleStrip').textContent = e.message; });
+  return loadPeople().then(() => { if (!$('peopleList').childElementCount) drawPeople(); showPeople(); }, (e) => { $('peopleList').textContent = e.message; });
 }
-// where the person card waits while nobody is chosen: the drawer of the timeline on
-const cardHome = () => $(timeline === 'a' ? 'timelinePanel' : 'peoplePanel');
 // The People drawer: earliest first by birth (else by first voyage), under era headings that start shut and open on a
-// click; a family of peoples (FAMILY_HEADS) is one heading of its own under its era, shut too. Each heading carries the
-// heading bar (deepX), its rows as ticks on it while open; each row the name, the years, a chip for a people rather
-// than a person, and its life bar on its heading's own scale. `openHeads` holds the open headings: an era's name, or
-// `family:<key>`.
+// click, one level only: each row under the heading of its own era, and a family's records (familyOrder) in the
+// family's order where their years tie. Each heading carries the heading bar (deepX), its rows as ticks on it while
+// open; each row the name, the years, a chip for a people rather than a person, and its life bar on its era's scale.
+// `openHeads` holds the open headings, by era name.
 const openHeads = new Set();
 let revealed = null; // the person whose heading was last opened for them
 function drawPeople() {
   if (!peopleData) return;
-  const people = [...peopleData.people].map((p) => [p, firstYear(p, yearsOf(p))]).sort((a, b) => (Number.isFinite(a[1]) ? a[1] : Infinity) - (Number.isFinite(b[1]) ? b[1] : Infinity));
-  cardHome().append($('personCard')); // out of the lists before they are redrawn
-  drawStrip();
-  const under = new Map(DRAWER_ERAS.map(([name]) => [name, []])), families = new Map(), loose = [];
-  for (const [p, year] of people) {
-    const f = FAMILY_HEADS[p.family];
-    if (f) { if (!families.has(p.family)) under.get(f.era).push([f.from, `family:${p.family}`]); (families.get(p.family) ?? families.set(p.family, []).get(p.family)).push([p, year]); }
-    else if (eraOf(year)) under.get(eraOf(year)).push([year, p, year]);
-    else loose.push([p, year]);
-  }
-  for (const list of under.values()) list.sort((a, b) => a[0] - b[0]);
-  const yearsUnder = (era) => under.get(era).flatMap(([, x, y]) => (typeof x === 'string' ? families.get(x.slice(7)).map(([, fy]) => fy) : [y]));
-  const scaleOf = (key) => (key.startsWith('family:') ? spanScale(FAMILY_HEADS[key.slice(7)].from, FAMILY_HEADS[key.slice(7)].to) : eraScale(key));
-  const row = (p, year, key, at) => {
-    const years = yearsText(p, voyagesOf(p)), bar = spanBarOn(scaleOf(key), lifeSpan(p, yearsOf(p)));
-    return `<li data-row="${escapeHTML(p.id)}" data-under="${escapeHTML(key)}"${at ? ` data-in="${escapeHTML(at)}"` : ''}><button type="button" class="life" data-person="${escapeHTML(p.id)}" aria-pressed="false" aria-expanded="false" title="${escapeHTML(p.name)}${years ? `, ${escapeHTML(years)}` : ''}">` +
+  const people = [...peopleData.people].map((p) => [p, firstYear(p, yearsOf(p))]).sort((a, b) => (Number.isFinite(a[1]) ? a[1] : Infinity) - (Number.isFinite(b[1]) ? b[1] : Infinity) || familyOrder(a[0], b[0]));
+  $('peoplePanel').append($('personCard')); // out of the lists before they are redrawn
+  const under = new Map(DRAWER_ERAS.map(([name]) => [name, []])), loose = [];
+  for (const [p, year] of people) (eraOf(year) ? under.get(eraOf(year)) : loose).push([p, year]);
+  const row = (p, year, era) => {
+    const years = yearsText(p, voyagesOf(p)), bar = spanBarOn(era && eraScale(era), lifeSpan(p, yearsOf(p)));
+    return `<li data-row="${escapeHTML(p.id)}" data-under="${escapeHTML(era)}"><button type="button" class="life" data-person="${escapeHTML(p.id)}" aria-pressed="false" aria-expanded="false" title="${escapeHTML(p.name)}${years ? `, ${escapeHTML(years)}` : ''}">` +
       `<span class="who">${escapeHTML(p.name)}</span>${years ? `<span class="when">${escapeHTML(years)}</span>` : ''}${p.group ? '<span class="chip">a people</span>' : ''}${bar}</button>` +
       '<div class="rows"><div inert></div></div></li>';
   };
   let html = '';
   for (const [era, list] of under) {
     if (!list.length) continue;
-    const direct = list.some(([, x]) => typeof x !== 'string');
-    html += headItem({ key: era, name: era, years: eraYears(era), own: deepSpan(era), ticks: yearsUnder(era), ruler: direct && eraScale(era) });
-    for (const [, x, y] of list) {
-      if (typeof x !== 'string') { html += row(x, y, era); continue; }
-      const key = x.slice(7), f = FAMILY_HEADS[key], members = families.get(key);
-      html += headItem({ key: x, name: f.name, years: familyYears(key), own: [deepX(f.from), deepX(f.to)], ticks: members.map(([, fy]) => fy), ruler: scaleOf(x), family: key, at: era });
-      html += members.map(([p, fy]) => row(p, fy, x, era)).join('');
-    }
+    html += headItem({ name: era, ticks: list.map(([, y]) => y) });
+    html += list.map(([p, y]) => row(p, y, era)).join('');
   }
   $('peopleList').innerHTML = html + loose.map(([p, y]) => row(p, y, '')).join('');
   showHeads();
 }
 // an era's stretch on the heading bar, [x0, x1]
 const deepSpan = (era) => deepBands().find(([n]) => n === era)?.slice(1) ?? [0, 0];
-// A People heading: a button that opens and shuts it, its name and years; under it the heading bar, every era a pale
-// band and this heading's own stretch (`own`, [x0, x1]) darker, the years of the rows under it (`ticks`) as ticks; and,
-// where its rows have life bars, the ruler of their scale. A family's heading sits under its era's (`at`).
-const headItem = ({ key, name, years, own, ticks, ruler, family, at }) =>
-  `<li class="era${family ? ' family' : ''}" data-era="${escapeHTML(family ? `family:${family}` : name)}"${at ? ` data-under="${escapeHTML(at)}"` : ''}>` +
-  `<button type="button" class="head" data-head="${escapeHTML(key)}" aria-expanded="false">${escapeHTML(name)}<small>${escapeHTML(years)}</small></button>` +
-  `<span class="deep" aria-hidden="true">${deepBands().map(([n, a, b]) => `<span class="band" data-band="${escapeHTML(n)}" style="left:${pc(a)};width:${pc(b - a)}"></span>`).join('')}` +
-  `<span class="band own" style="left:${pc(own[0])};width:${pc(Math.max(0.004, own[1] - own[0]))}"></span>` +
-  `${ticks.filter(Number.isFinite).map((y) => `<span class="tick" style="left:${pc(deepX(y))}"></span>`).join('')}</span>` +
-  (ruler ? `<span class="ruler" aria-hidden="true">${ruler.ticks.map(([y, label]) => `<span style="left:${pc(ruler.x(y))}">${label}</span>`).join('')}</span>` : '') + '</li>';
-// Shows the rows of the open headings and hides the rest; a family's heading and rows show only under an open era
+// A People heading: a button that opens and shuts its era, its name and years; under it the heading bar, every era a
+// pale band and this era's own stretch darker, the years of the rows under it (`ticks`) as ticks; and the ruler of the
+// era's scale, which its rows' life bars are drawn on.
+const headItem = ({ name, ticks }) => {
+  const own = deepSpan(name), ruler = eraScale(name);
+  return `<li class="era" data-era="${escapeHTML(name)}">` +
+    `<button type="button" class="head" data-head="${escapeHTML(name)}" aria-expanded="false">${escapeHTML(name)}<small>${escapeHTML(eraYears(name))}</small></button>` +
+    `<span class="deep" aria-hidden="true">${deepBands().map(([n, a, b]) => `<span class="band" data-band="${escapeHTML(n)}" style="left:${pc(a)};width:${pc(b - a)}"></span>`).join('')}` +
+    `<span class="band own" style="left:${pc(own[0])};width:${pc(Math.max(0.004, own[1] - own[0]))}"></span>` +
+    `${ticks.filter(Number.isFinite).map((y) => `<span class="tick" style="left:${pc(deepX(y))}"></span>`).join('')}</span>` +
+    (ruler ? `<span class="ruler" aria-hidden="true">${ruler.ticks.map(([y, label]) => `<span style="left:${pc(ruler.x(y))}">${label}</span>`).join('')}</span>` : '') + '</li>';
+};
+// Shows the rows of the open headings and hides the rest
 function showHeads() {
-  const isOpen = (key) => !key || openHeads.has(key);
   for (const li of $('peopleList').children) {
-    const key = li.dataset.under, shown = isOpen(key) && isOpen(li.dataset.in);
-    li.hidden = !shown;
+    const key = li.dataset.under;
+    li.hidden = Boolean(key) && !openHeads.has(key);
     const head = li.querySelector(':scope > .head');
     if (head) { const on = openHeads.has(head.dataset.head); head.setAttribute('aria-expanded', String(on)); li.classList.toggle('expanded', on); }
   }
@@ -2335,29 +2321,8 @@ function revealPerson(id) {
   const li = $('peopleList').querySelector(`li[data-row="${CSS.escape(id)}"]`);
   if (!li) return; // not drawn yet: opened when it is
   revealed = id;
-  for (const k of [li.dataset.under, li.dataset.in]) if (k) openHeads.add(k);
+  if (li.dataset.under) openHeads.add(li.dataset.under);
   showHeads();
-}
-// Timeline A's people's lane: one life bar per person on the shared year axis, so who overlapped whom shows; a bar fades
-// where the record leaves a birth or a death undated, and the name sits to the bar's right where there is room
-const spanOf = (p) => lifeSpan(p, yearsOf(p));
-const lifeText = (p) => `${p.born?.date ?? 'birth unknown'} – ${deathOf(p)?.date ?? 'death unknown'}`;
-function drawStrip() {
-  const people = [...peopleData.people].map((p) => [p, spanOf(p)]).sort((a, b) => a[1][0] - b[1][0]);
-  const rows = people.map(([p, [a, b, fromKnown, toKnown]]) => {
-    const x0 = timeAxis.x(a), x1 = timeAxis.x(b), right = x1 < 0.62;
-    const open = `${fromKnown ? '' : ' open-start'}${toKnown ? '' : ' open-end'}`;
-    return `<li><button type="button" class="life" data-person="${escapeHTML(p.id)}" aria-pressed="false" title="${escapeHTML(p.name)}, ${escapeHTML(lifeText(p))}">` +
-      `<span class="bar${open}" style="left:${pc(x0)};width:${pc(Math.max(0.008, x1 - x0))}"></span>` +
-      `<span class="who" style="${right ? `left:calc(${pc(x1)} + 5px)` : `right:calc(${pc(1 - x0)} + 5px)`}">${escapeHTML(p.name)}</span></button></li>`;
-  }).join('');
-  $('peopleStrip').innerHTML = `<ol class="lives lane">${rows}</ol>`;
-}
-// The years after a name in timeline A's card, as an encyclopedia gives them: "(c. 1460s – 24 Dec 1524)", "(born c.
-// 350 BC)", "(died 1510)", nothing where neither is dated
-function lifeDates(p) {
-  const b = p.born?.date, d = deathOf(p)?.date;
-  return b && d ? `(${b} – ${d})` : b ? `(born ${b})` : d ? `(died ${d})` : '';
 }
 // a Voyages heading between the rows: its name and its years
 // and under it the ruler of the era's own scale, which the life bars of its rows are drawn on
@@ -2385,11 +2350,8 @@ function showPeople() {
     b.parentElement.classList.toggle('open', on && Boolean(p));
     b.parentElement.querySelector(':scope > .rows > div').inert = !(on && p);
   }
-  for (const b of document.querySelectorAll('#peopleStrip [data-person]')) b.setAttribute('aria-pressed', String(b.dataset.person === style.person));
   card.hidden = !p;
-  $('peopleStrip').querySelector('.cardrow')?.remove();
-  if (!p) { card.replaceChildren(); cardHome().append(card); return; }
-  if (timeline === 'a') { stripCard(card, p); return; }
+  if (!p) { card.replaceChildren(); $('peoplePanel').append(card); return; }
   const row = $('peopleList').querySelector(`li[data-row="${CSS.escape(p.id)}"] > .rows > div`);
   (row ?? $('peoplePanel')).append(card);
   const voyages = p.voyages.map((id) => [id, peopleData.voyages[id]]).filter(([, v]) => v).map(([id, v]) => voyageItem(id, v, peopleData.sources, { name: false })).join('');
@@ -2399,28 +2361,10 @@ function showPeople() {
     (voyages ? `<ul class="pvoyages" role="group" aria-label="${escapeHTML(p.name)}'s voyages">${voyages}</ul>` : '');
   showVoyage(); // the tile's eyes and play buttons as the voyages stand
 }
-// Timeline A's card, under the chosen person's bar: the name and the years, the bio, each voyage with its summary
-// written out, and the pictures as thumbnails
-function stripCard(card, p) {
-  const life = $('peopleStrip').querySelector(`[data-person="${CSS.escape(p.id)}"]`);
-  if (life) life.parentElement.after(Object.assign(document.createElement('li'), { className: 'cardrow' }));
-  ($('peopleStrip').querySelector('.cardrow') ?? $('timelinePanel')).append(card);
-  const voyages = p.voyages.map((id) => peopleData.voyages[id]).filter(Boolean).map((v) => {
-    const link = voyageLink(v, peopleData.sources);
-    return `<li><b>${escapeHTML(v.title)}</b>${/\d/.test(v.title) ? '' : ` <span class="when">${escapeHTML(v.when)}</span>`}` +
-      `<p>${escapeHTML(v.summary ?? '')}${link ? ` <a href="${escapeHTML(link.url)}" target="_blank" rel="noopener">${escapeHTML(link.label)}</a>` : ''}</p></li>`;
-  }).join('');
-  const pics = picsHTML({ images: p.images, manifest: peopleData.pictures }, picturesOf(p));
-  const roles = (Array.isArray(p.role) ? p.role : p.role ? [p.role] : []).map((r) => `<span class="chip role">${escapeHTML(r)}</span>`).join(' ');
-  card.innerHTML = `<p class="pname"><b>${escapeHTML(p.name)}</b> ${escapeHTML(lifeDates(p))} ${roles}</p>` +
-    (p.bio ? `<p class="bio">${escapeHTML(p.bio)}</p>` : '') +
-    (voyages ? `<ul class="pvoyages">${voyages}</ul>` : '') +
-    (pics ? `<div class="pics" role="group" aria-label="Pictures, on the table or off it">${pics}</div>` : '');
-}
 // A subject's pictures as thumbnails, each a button that takes it off the table or puts it back (`shown` those on it)
 const picsHTML = (s, shown, only = null) => s.images.map((im, i) => { const m = s.manifest[im.file];
   return m && (!only || only.includes(i)) ? `<button type="button" class="pic" data-pic="${i}" aria-pressed="${shown.includes(i)}" title="${escapeHTML(pictureNote(im) ?? pictureCredit(im))}: on the table, or off it"><img src="packs/overlays/${escapeHTML(m.src)}" alt="" loading="lazy"></button>` : ''; }).join('');
-// a click in either timeline's people
+// a click in the People drawer's rows
 function peopleClick(e) {
   if (voyageControl(e)) return; // an eye or a play in the chosen person's tile
   const head = e.target.closest('#peopleList .head');
@@ -2429,17 +2373,19 @@ function peopleClick(e) {
   if (pic && chosen) { setOnTable(Number(pic.dataset.pic), !picturesOf(chosen).includes(Number(pic.dataset.pic))); return; }
   const b = e.target.closest('[data-person]');
   if (!b) return;
-  const away = style.pictures?.length === 0; // every picture put away: the person is still chosen, and one click deals them back
+  const away = chosen && picturesOf(chosen).length < chosen.images.length; // a picture off the table: the person is still chosen, and one click deals them all back
   const id = b.dataset.person === style.person && !away ? null : b.dataset.person;
   clearTable(); // whatever lies on the table put away first, and a second click lets the person go
   choosePerson(id);
 }
 function choosePerson(id) {
   if (id) { style = { ...style, person: id }; dealing = `person:${id}`; } // their cards dealt as the map arrives
+  const ids = id ? (personOf(id)?.voyages ?? []).filter(isDrawn) : [];
+  if (ids.length && !stillMotion()) { const key = dealing; drawOn(ids, () => dealing !== key, 20000); } // every shown voyage of theirs drawn on together as the cards are dealt
   showPeople(); showSightCard(); writeHash(); render();
   if (id) flyToSubject();
 }
-for (const l of [$('peopleList'), $('peopleStrip')]) l.addEventListener('click', peopleClick);
+$('peopleList').addEventListener('click', peopleClick);
 // A picture onto the table (on top of the pile, as the last one touched) or off it, put away face up; choosing the
 // person again deals every picture back
 function setOnTable(i, on) {
@@ -2447,7 +2393,7 @@ function setOnTable(i, on) {
   if (!s) return;
   const shown = picturesOf(s).filter((k) => k !== i);
   style = { ...style, pictures: on ? [...shown, i].sort((a, b) => a - b) : shown };
-  if (on) raise(i); else { flips.delete(i); links.delete(i); raised = raised.filter((k) => k !== i); if (focusedPic === i) focusedPic = null; if (looking === i) looking = null; }
+  if (on) raise(i); else { flips.delete(i); links.delete(i); raised = raised.filter((k) => k !== i); if (focusedPic === i) focusedPic = null; if (looking === i) { looking = null; lookZoom = NO_ZOOM; cardPointers.clear(); } if (homing?.i === i) homing = null; }
   showPeople(); showSightCard(); writeHash();
   for (const b of tileEl.querySelectorAll('[data-pic]')) b.setAttribute('aria-pressed', String(picturesOf(s).includes(Number(b.dataset.pic)))); // the open tile's thumbnails
   repaint('a picture put away');
@@ -2650,7 +2596,7 @@ const raise = (i) => { const was = raised.at(-1); raised = [...raised.filter((k)
 // piece (overlays.mjs) and `sheet` where it lies: where it was dragged, else its own place under the person's frame
 // (placesOf)
 function shownPictures() {
-  if (pileFor !== subjectKey()) { pileFor = subjectKey(); raised = []; looking = null; flips.clear(); links.clear(); } // another subject, by any road
+  if (pileFor !== subjectKey()) { pileFor = subjectKey(); raised = []; looking = null; homing = null; flips.clear(); links.clear(); } // another subject, by any road
   if (dealing && dealing === subjectKey()) return []; // not dealt until the map is there
   const s = subject(), f = s && frames.get(s.key);
   if (!f) { looking = null; return []; }
@@ -2688,35 +2634,138 @@ async function flyToSubject() {
   const shown = picturesOf(s).filter((i) => pictureSize(s, i)), sizes = shown.map((i) => pictureSize(s, i));
   goTo(viewContaining(withPictures(f, placesOf(s, f, sizes), sizes), { w: W, h: H }), key); // their cards dealt as it arrives
 }
-// A picture on the canvas: its centre, its turn in radians and its size in canvas px, before any deal or flip. The one
-// looked at lies upright in the middle of the part of the canvas in the window, as large as LOOK_FILL of that allows
-// and never larger than its own pixels shown one to a CSS px.
-const LOOK_FILL = 0.85;
+// A picture on the canvas: its centre, its turn in radians and its size in canvas px, before any deal or flip. On the
+// table it lies where it was dealt or last dragged (tableBox); looked at, it stands upright in the middle of the window
+// (lookBox), and it flies between the two in LOOK_MS, the map dimming behind it by LOOK_DIM
+// (docs/spec/design.md, "A card on the table: a click looks, three buttons, Pulverum").
+const LOOK_SHARE = 0.75, LOOK_MS = 320, LOOK_DIM = 0.45, MOUNT = 5; // MOUNT: the parchment margin round a picture, canvas px
 // The part of the canvas the window shows, in canvas px: a phone crops the canvas to the window.
 function windowRect() {
   const r = canvas.getBoundingClientRect(), kx = W / r.width, ky = H / r.height;
   return { x0: Math.max(0, -r.left) * kx, x1: (Math.min(innerWidth, r.right) - r.left) * kx, y0: Math.max(0, -r.top) * ky, y1: (Math.min(innerHeight, r.bottom) - r.top) * ky };
 }
 let looking = null; // the picture looked at, by its index
-function pictureBox(pic, proj) {
-  if (pic.i === looking) {
-    const { x0, x1, y0, y1 } = windowRect();
-    const k = Math.min(((x1 - x0) * LOOK_FILL) / pic.o.width, ((y1 - y0) * LOOK_FILL) / pic.o.height, cssPx(1));
-    return { x: (x0 + x1) / 2, y: (y0 + y1) / 2, a: 0, w: pic.o.width * k, h: pic.o.height * k };
-  }
+let lookFrom = 0; // when it set off from the table
+let homing = null; // { i, start }: the picture put away, flying back to its place on the table
+const NO_ZOOM = { z: 1, x: 0, y: 0 };
+let lookZoom = NO_ZOOM; // the picture looked at zoomed (z, over its look size) and panned (x, y, canvas px off its middle)
+function tableBox(pic, proj) {
   const c = sheetCorners(pic.o, proj, pic.sheet);
   if (!c) return null;
   return { x: (c[0][0] + c[2][0]) / 2, y: (c[0][1] + c[2][1]) / 2, a: (ASKEW[pic.i % 6] * Math.PI) / 180, w: c[1][0] - c[0][0], h: c[3][1] - c[0][1] };
 }
-// The round buttons on a picture's lower edge, in its own frame, from its right corner leftward: on the table Look and
-// its Commons link; looked at face up, Put away, Turn over and the link; looked at face down, Turn over (the back
-// carries its own link and Put away). Each glyph is one constant.
-const FOOT_R = 13; // CSS px, a button's radius
-const LOOK_GLYPH = '👁\uFE0E', FLIP_GLYPH = '⟳', AWAY_GLYPH = '✘'; // put away: an X for buried treasure (☠ the alternative)
+// On a phone the card is the picture fitted whole between the row of instruments and the skull, the map undimmed round
+// it (the corner cards step aside while it is looked at); on a wide screen its longer side is LOOK_SHARE of the
+// window's shorter side and never past the picture's own pixels, one to a CSS px
+function lookBox(pic) {
+  const { x0, x1, y0, y1 } = windowRect(), x = (x0 + x1) / 2, y = (y0 + y1) / 2;
+  if (phone.matches) {
+    const m = MOUNT + cssPx(4), r = canvas.getBoundingClientRect(), top = Math.max(y0, ((document.querySelector('#where .row')?.getBoundingClientRect().bottom ?? 0) - r.top) * (H / r.height));
+    const css = getComputedStyle(document.documentElement), px = (v) => parseFloat(css.getPropertyValue(v)) || 0;
+    const foot = y1 - cssPx(px('--memento-foot') + px('--memento-h')); // above the skull and the status lines
+    const k = Math.min((x1 - x0 - 2 * m) / pic.o.width, (foot - top - 2 * m) / pic.o.height);
+    return { x, y: (top + foot) / 2, a: 0, w: pic.o.width * k, h: pic.o.height * k };
+  }
+  const k = Math.min((LOOK_SHARE * Math.min(x1 - x0, y1 - y0)) / Math.max(pic.o.width, pic.o.height), cssPx(1));
+  return { x, y, a: 0, w: pic.o.width * k, h: pic.o.height * k };
+}
+// how far a picture is off the table, 0 lying there to 1 looked at
+const lookT = (i, now = performance.now()) => {
+  const go = (t0) => (stillMotion() ? 1 : ease(Math.min(1, (now - t0) / LOOK_MS)));
+  return i === looking ? go(lookFrom) : homing?.i === i ? 1 - go(homing.start) : 0;
+};
+function pictureBox(pic, proj) {
+  const t = lookT(pic.i), on = tableBox(pic, proj);
+  if (t <= 0) return on;
+  const at = lookBox(pic);
+  if (t >= 1 || !on) return at;
+  const mix = (a, b) => a + (b - a) * t;
+  return { x: mix(on.x, at.x), y: mix(on.y, at.y), a: mix(on.a, 0), w: mix(on.w, at.w), h: mix(on.h, at.h) };
+}
+// where the picture is drawn inside its card `b`, in the card's own frame: fitted whole, then zoomed and panned while looked at
+function imageRect(pic, b) {
+  const k = Math.min(b.w / pic.o.width, b.h / pic.o.height), { z, x, y } = pic.i === looking ? lookZoom : NO_ZOOM;
+  const w = pic.o.width * k * z, h = pic.o.height * k * z;
+  return { x: x - w / 2, y: y - h / 2, w, h };
+}
+// The picture looked at zooms about a point up to its full resolution (one of its pixels to a CSS px), never below its
+// look size, and pans only as far as it covers its card; the map under it never moves. The back neither zooms nor pans.
+const lookedPicture = () => (looking == null || flips.get(looking)?.back ? null : shownPictures().find((pic) => pic.i === looking) ?? null);
+const fullZoom = (pic, b) => Math.max(1, cssPx(1) / Math.min(b.w / pic.o.width, b.h / pic.o.height));
+function clampLook(pic, b, { z, x, y }) {
+  const k = Math.min(b.w / pic.o.width, b.h / pic.o.height), mx = Math.max(0, (pic.o.width * k * z - b.w) / 2), my = Math.max(0, (pic.o.height * k * z - b.h) / 2);
+  return { z, x: Math.max(-mx, Math.min(mx, x)), y: Math.max(-my, Math.min(my, y)) };
+}
+function zoomLook(f, x, y, to = null) {
+  const pic = lookedPicture();
+  if (!pic) return;
+  const b = lookBox(pic), z0 = lookZoom.z, z = to ?? Math.min(fullZoom(pic, b), Math.max(1, z0 * f)), dx = x - b.x, dy = y - b.y;
+  lookZoom = clampLook(pic, b, { z, x: dx - (dx - lookZoom.x) * (z / z0), y: dy - (dy - lookZoom.y) * (z / z0) }); // the point under the pointer stays
+  repaint('a picture zoomed');
+}
+function panLook(dx, dy) {
+  const pic = lookedPicture();
+  if (!pic) return;
+  lookZoom = clampLook(pic, lookBox(pic), { ...lookZoom, x: lookZoom.x + dx, y: lookZoom.y + dy });
+  repaint('a picture panned');
+}
+// a double click or tap: from the look size to full resolution at that point, and back
+function toggleLook([x, y]) {
+  const pic = lookedPicture();
+  if (!pic) return;
+  if (lookZoom.z > 1.001) { lookZoom = NO_ZOOM; repaint('a picture zoomed'); } else zoomLook(1, x, y, fullZoom(pic, lookBox(pic)));
+}
+// The pointers on the picture looked at: one pans it, two pinch it, a tap twice in quick succession toggles its zoom.
+// A press on the dimmed map round it puts it away, and only that; a press on one of its buttons acts on the release.
+const cardPointers = new Map(); // pointerId -> [x, y] canvas px
+const DOUBLE_MS = 320;
+let cardTap = null, lastTap = null; // a lone press on it until it moves; the last tap, { p, t }, for a double one
+function lookDown(e) {
+  if (performance.now() - lookFrom < DOUBLE_MS) return; // a double click on a dealt card is one look: its second press does nothing
+  const p = toCanvas(e.clientX, e.clientY), hit = pictureHit(p);
+  if (cardPointers.size || holding) { if (hit?.kind === 'held' && !holding) { canvas.setPointerCapture(e.pointerId); cardPointers.set(e.pointerId, p); cardTap = null; } return; }
+  if (!hit) { endLook(); return; }
+  canvas.setPointerCapture(e.pointerId);
+  if (hit.kind !== 'held') { holdPicture(hit, p); return; }
+  cardPointers.set(e.pointerId, p);
+  cardTap = p;
+}
+function lookMove(e) {
+  const p = toCanvas(e.clientX, e.clientY);
+  if (cardTap && Math.hypot(p[0] - cardTap[0], p[1] - cardTap[1]) > cssPx(TAP_SLOP)) cardTap = null;
+  if (cardPointers.size === 2) {
+    const before = pinch(cardPointers);
+    cardPointers.set(e.pointerId, p);
+    const after = pinch(cardPointers);
+    panLook(after.x - before.x, after.y - before.y);
+    zoomLook(after.d / before.d, after.x, after.y);
+    return;
+  }
+  const [x, y] = cardPointers.get(e.pointerId);
+  cardPointers.set(e.pointerId, p);
+  panLook(p[0] - x, p[1] - y);
+}
+function lookUp(e) {
+  cardPointers.delete(e.pointerId);
+  if (cardPointers.size) return;
+  const at = cardTap, now = performance.now();
+  cardTap = null;
+  if (!at || e.type !== 'pointerup') return;
+  if (lastTap && now - lastTap.t < DOUBLE_MS && Math.hypot(at[0] - lastTap.p[0], at[1] - lastTap.p[1]) < cssPx(TAP_REACH)) { lastTap = null; toggleLook(at); } else lastTap = { p: at, t: now };
+}
+// The round buttons of the picture looked at, in its own frame: a column at its right edge, low, top to bottom Read more,
+// Turn over and Put away, the same on both faces; on a wide screen the column straddles the edge and each button's name
+// stands to its right, outside the card, and on a phone it stands inside the edge. Each glyph is one constant.
+const FOOT_R = 15; // CSS px, a button's radius
+const FLIP_GLYPH = '⟳', AWAY_GLYPH = '↓', DUST_GLYPH = '✘';
+const FOOT_SAYS = { link: 'Read more', flip: 'Turn over', away: 'Put away' }, DUST_SAYS = 'Pulverum', LOOK_SAYS = 'Look';
+const LINK_SAYS = 'Its page on Wikimedia Commons';
 const SYMBOLS = "'IM Fell English', Georgia, 'Segoe UI Symbol', 'Apple Symbols', 'Noto Sans Symbols 2', 'Noto Sans Symbols', 'DejaVu Sans', serif";
+const footX = (b) => (phone.matches ? b.w / 2 - cssPx(FOOT_R) * 1.5 : b.w / 2);
 function feetOf(pic, b) {
-  const kinds = pic.i !== looking ? ['look', 'link'] : flips.get(pic.i)?.back ? ['flip'] : ['away', 'flip', 'link'], r = cssPx(FOOT_R);
-  return kinds.map((kind, n) => ({ kind, at: [b.w / 2 - r * 0.4 - n * r * 2.4, b.h / 2] }));
+  if (pic.i !== looking) return [];
+  const r = cssPx(FOOT_R), x = footX(b), y = b.h / 2 - r * 1.5;
+  return ['link', 'flip', 'away'].map((kind, n) => ({ kind, at: [x, y - (2 - n) * r * 2.5] }));
 }
 // ⧉ (in no font of the page's stack, so drawn): two joined squares in the link's red, in an em box of `size` at x, y
 function linkGlyph(g, x, y, size) {
@@ -2725,76 +2774,93 @@ function linkGlyph(g, x, y, size) {
   g.strokeRect(x, y + size * 0.42, q, q); g.strokeRect(x + size * 0.3, y + size * 0.12, q, q);
   g.restore();
 }
-// The back of a picture, in its own frame: what it is, when, by whom, under what licence and its note, in type sized in
-// CSS px so it reads at any zoom (the largest of BACK_TYPE that fits the card, else the smallest, clipped above the
-// foot), then a glyph that opens its Commons page, and at its foot the labelled button that puts it away. Returns, in
-// the same frame, where a tap opens the page and where one puts it away.
+// Where Read more goes: the subject's own article, as the drawer's tile has it (a person's first source), never the
+// picture's page on Commons; a sight's article by its name
+const wiki = (name) => `https://en.wikipedia.org/wiki/${encodeURIComponent(String(name).replace(/ /g, '_'))}`;
+function readMoreOf(s = subject()) {
+  if (!s) return null;
+  return s.kind === 'person' ? voyageLink(s.person, peopleData?.sources)?.url ?? wiki(s.person.name) : wiki(s.id);
+}
+// The other links worth following from a picture's back, each [what it is called, where it goes]: its page on Commons,
+// then a person's other sources
+function backLinks(im, s = subject()) {
+  const more = readMoreOf(s), list = [[LINK_SAYS, pageOf(im)]];
+  for (const id of s?.kind === 'person' ? s.person.sources ?? [] : []) {
+    const src = peopleData?.sources?.[id];
+    if (src?.url && src.url !== more && !list.some(([, u]) => u === src.url)) list.push([src.title ?? src.url, src.url]);
+  }
+  return list.slice(0, 4);
+}
+// The back of a picture, in its own frame: what it is, when, by whom, under what licence and its note, then its other
+// links as plain text links, each named for where it goes, in type sized in CSS px so it reads at any zoom (the largest
+// of BACK_TYPE that fits the card, else the smallest, clipped above the foot); and inside its lower right, beside the
+// buttons, ✘ Pulverum in red, which takes the card off the table. Returns, in the same frame, where each link and
+// Pulverum take a tap: { links: [[x, y, w, h, url]], dust: [x, y, w, h] }.
 const BACK_TYPE = [20, 18, 16, 15, 14, 13, 12]; // CSS px; the People drawer's own card text is 13 px
-const LINK_GLYPH = '⧉', LINK_SAYS = 'Its page on Wikimedia Commons', AWAY_SAYS = 'Put away', LOOK_SAYS = 'Look', FLIP_SAYS = 'Turn over';
 const pageOf = (im) => subject()?.manifest[im.file]?.page ?? commonsPage(im.file);
-function drawBack(g, im, w, h) {
-  const pad = Math.max(cssPx(8), w * 0.06), family = getComputedStyle(document.body).getPropertyValue('--serif') || 'serif';
+function drawBack(g, im, extra, w, h) {
+  const pad = Math.max(cssPx(8), w * 0.06), family = getComputedStyle(document.body).getPropertyValue('--serif') || 'serif', r = cssPx(FOOT_R);
+  const room = w - 2 * pad - (w / 2 - footX({ w }) + r * 1.2); // the words keep clear of the buttons' column
   let size = 0, lines = [];
   for (const css of BACK_TYPE) {
     size = cssPx(css); g.font = `italic ${size}px ${family}`; lines = [];
-    const wrap = (text) => {
+    const wrap = (text, url = null) => {
       let line = '';
       for (const word of String(text).split(/\s+/)) {
         const next = line ? `${line} ${word}` : word;
-        if (g.measureText(next).width > w - 2 * pad && line) { lines.push(line); line = word; } else line = next;
+        if (g.measureText(next).width > room && line) { lines.push([line, url]); line = word; } else line = next;
       }
-      if (line) lines.push(line);
+      if (line) lines.push([line, url]);
     };
     wrap(pictureCredit(im));
-    if (pictureNote(im)) { lines.push(''); wrap(pictureNote(im)); }
-    if (2 * pad + (lines.length + 1) * size * 1.3 + size * 1.8 <= h) break; // the words, the glyph's line and the foot fit
+    if (pictureNote(im)) { lines.push(['', null]); wrap(pictureNote(im)); }
+    if (extra.length) lines.push(['', null]);
+    for (const [label, url] of extra) wrap(label, url);
+    if (2 * pad + lines.length * size * 1.3 + size * 2 <= h) break; // the words and Pulverum's line fit
   }
-  const left = -w / 2 + pad, lead = size * 1.3, bh = size * 1.6, by = h / 2 - pad - bh;
-  g.save(); g.beginPath(); g.rect(-w / 2, -h / 2, w, by - size * 0.2 + h / 2); g.clip();
-  g.fillStyle = style.ink; g.textBaseline = 'top';
-  lines.forEach((l, n) => g.fillText(l, left, -h / 2 + pad + n * lead));
-  // the glyph after the last word where it fits on that line, else on the next
-  const last = lines.at(-1) ?? '', gap = g.measureText(' ').width * 1.6, gw = size * 0.85;
-  const inline = left + g.measureText(last).width + gap + gw <= w / 2 - pad;
-  let gx = inline ? left + g.measureText(last).width + gap : left, gy = -h / 2 + pad + (inline ? lines.length - 1 : lines.length) * lead;
-  const fits = gy + size <= by - size * 0.2;
-  if (fits) linkGlyph(g, gx, gy, size);
+  const left = -w / 2 + pad, lead = size * 1.3, dy = h / 2 - r * 1.5, foot = dy - size * 0.9;
+  const links = [];
+  g.save(); g.beginPath(); g.rect(-w / 2, -h / 2, w, foot + h / 2); g.clip();
+  g.textBaseline = 'top';
+  lines.forEach(([l, url], n) => {
+    const y = -h / 2 + pad + n * lead;
+    g.fillStyle = url ? PERSON_LINK : style.ink; g.fillText(l, left, y);
+    if (!url) return;
+    const lw = g.measureText(l).width;
+    g.fillRect(left, y + size * 1.02, lw, Math.max(1, size * 0.06)); // underlined, as a link
+    if (y + size <= foot) links.push([left - size * 0.2, y - size * 0.15, lw + size * 0.4, lead, url]);
+  });
   g.restore();
-  // the button at the foot: the put-away glyph, and its word where the card leaves room left of Turn over (and of the
-  // link, when the words leave it no room above)
-  g.font = `${size}px ${family}`;
-  const icon = size * 1.1, tw = g.measureText(AWAY_SAYS).width, room = w / 2 - cssPx(FOOT_R) * 1.6 - pad - left - (fits ? 0 : gw + size * 0.6);
-  const bw = size * 0.5 + icon + (size * 0.4 + tw <= room - size * 1.4 - icon ? size * 0.4 + tw : 0) + size * 0.5;
-  if (!fits) { gx = left + bw + size * 0.6; gy = by + (bh - size) / 2; linkGlyph(g, gx, gy, size); }
-  const link = [gx - size * 0.35, gy - size * 0.35, gw + size * 0.7, size * 1.7]; // a tap a little off the glyph still opens it
-  g.save(); g.lineWidth = Math.max(1, cssPx(1)); g.strokeStyle = style.ink; g.fillStyle = style.parchment;
-  g.beginPath(); g.roundRect(left, by, bw, bh, bh / 2); g.fill(); g.globalAlpha = 0.7; g.stroke(); g.globalAlpha = 1;
-  g.fillStyle = style.ink; g.textBaseline = 'middle'; g.textAlign = 'center';
-  g.font = `${icon}px ${SYMBOLS}`; g.fillText(AWAY_GLYPH, left + size * 0.5 + icon / 2, by + bh / 2);
-  g.textAlign = 'left'; g.font = `${size}px ${family}`;
-  if (bw > size * 1.5 + icon) g.fillText(AWAY_SAYS, left + size * 0.9 + icon, by + bh / 2);
+  // Pulverum, its right end clear of the buttons, level with Put away
+  g.save(); g.font = `italic ${size * 1.15}px ${family}`; g.textBaseline = 'middle'; g.textAlign = 'right'; g.fillStyle = PERSON_LINK;
+  const right = footX({ w }) - r * 1.6, word = `${DUST_GLYPH} ${DUST_SAYS}`, tw = g.measureText(word).width;
+  g.fillText(word, right, dy);
   g.restore();
-  return { link, away: [left, by, bw, bh] };
+  return { links, dust: [right - tw - size * 0.3, dy - size * 0.9, tw + size * 0.6, size * 1.8] };
 }
 const PERSON_LINK = '#8c2f1e';
-const links = new Map(); // a turned picture's link and put-away button ({ link, away }), in its own frame, by its index
+const links = new Map(); // a turned picture's links and Pulverum ({ links, dust }), in its own frame, by its index
 let focusedPic = null; // the picture whose item in the canvas's fallback has the keyboard's focus, ringed
 // The pictures over everything on the map: each on a parchment mount with a soft shadow and an ink rule, a little
-// askew, dealt in one after another when a subject is chosen, the one looked at upright and large over the rest; on
-// each one's lower edge its round buttons (feetOf).
+// askew, dealt in one after another when a subject is chosen, carrying no controls; the one looked at upright and large
+// over the rest, the map dimmed behind it, its round buttons at its lower right (feetOf).
 function drawPictures(g) {
   const list = shownPictures();
   mirrorPictures(list);
   onTable = list.length;
-  if (!list.length) { dealt = null; return; }
-  const now = performance.now(), proj = viewProjection(view), m = 5;
+  document.documentElement.classList.toggle('looking', looking != null);
+  if (!list.length) { dealt = null; homing = null; return; }
+  const now = performance.now(), proj = viewProjection(view), m = MOUNT;
   if (dealt?.key !== subjectKey()) dealt = { key: subjectKey(), start: now };
-  let moving = false;
-  // in layers: the table, then the picture looked at; each layer's buttons over its pictures, so none hides another's
-  const layers = looking == null ? [list] : [list.filter((pic) => pic.i !== looking), list.filter((pic) => pic.i === looking)];
-  const r = cssPx(FOOT_R), GLYPHS = { look: LOOK_GLYPH, flip: FLIP_GLYPH, away: AWAY_GLYPH };
+  if (homing && lookT(homing.i, now) <= 0) homing = null;
+  const top = looking ?? homing?.i ?? null, lift = top == null ? 0 : lookT(top, now);
+  let moving = lift > 0 && lift < 1;
+  // in layers: the table, then the picture looked at (or flying home) over the dimmed map
+  const layers = top == null ? [list] : [list.filter((pic) => pic.i !== top), list.filter((pic) => pic.i === top)];
+  const r = cssPx(FOOT_R), GLYPHS = { flip: FLIP_GLYPH, away: AWAY_GLYPH };
   g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
-  for (const layer of layers) {
+  for (const [n, layer] of layers.entries()) {
+    if (n === 1 && lift > 0 && !phone.matches) { g.fillStyle = `rgba(29, 25, 19, ${LOOK_DIM * lift})`; g.fillRect(0, 0, W, H); } // a phone's map stays undimmed
     const feet = [];
     for (const pic of layer) {
       const b = pictureBox(pic, proj);
@@ -2808,20 +2874,28 @@ function drawPictures(g) {
       const x = W + (b.x - W) * t, y = b.y * t, s = 0.35 + 0.65 * t;
       g.save(); g.translate(x, y); g.rotate(b.a + (1 - t) * 0.6); g.scale(s * Math.max(0.02, squash), s);
       g.save(); g.shadowColor = 'rgba(59,42,26,0.35)'; g.shadowBlur = 8; g.shadowOffsetY = 2; g.fillStyle = style.parchment; g.fillRect(-b.w / 2 - m, -b.h / 2 - m, b.w + 2 * m, b.h + 2 * m); g.restore();
-      if (back) links.set(pic.i, drawBack(g, pic.im, b.w, b.h));
-      else { links.delete(pic.i); g.drawImage(pic.o.img, -b.w / 2, -b.h / 2, b.w, b.h); }
+      if (back) links.set(pic.i, drawBack(g, pic.im, backLinks(pic.im), b.w, b.h));
+      else {
+        links.delete(pic.i);
+        const ir = imageRect(pic, b);
+        g.save(); g.beginPath(); g.rect(-b.w / 2, -b.h / 2, b.w, b.h); g.clip(); g.drawImage(pic.o.img, ir.x, ir.y, ir.w, ir.h); g.restore();
+      }
       g.save(); g.strokeStyle = style.ink; g.globalAlpha = 0.7; g.lineWidth = 1; g.strokeRect(-b.w / 2 - m, -b.h / 2 - m, b.w + 2 * m, b.h + 2 * m); g.restore();
       if (focusedPic === pic.i) { const f = m + cssPx(3); g.save(); g.strokeStyle = PERSON_LINK; g.lineWidth = cssPx(2.5); g.strokeRect(-b.w / 2 - f, -b.h / 2 - f, b.w + 2 * f, b.h + 2 * f); g.restore(); }
-      if (t === 1 && ft === 1) feet.push([pic, b, x, y]);
+      if (t === 1 && pic.i === looking && lift >= 1) feet.push([pic, b]); // through a turn too, so they never move
       g.restore();
     }
-    for (const [pic, b, x, y] of feet) {
-      g.save(); g.translate(x, y); g.rotate(b.a);
-      g.lineWidth = Math.max(1, cssPx(1.2)); g.strokeStyle = style.ink; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = `${r * 1.15}px ${SYMBOLS}`;
+    for (const [pic, b] of feet) {
+      g.save(); g.translate(b.x, b.y);
+      g.lineWidth = Math.max(1, cssPx(1.2)); g.strokeStyle = style.ink; g.textBaseline = 'middle';
       for (const { kind, at: [fx, fy] } of feetOf(pic, b)) {
         g.fillStyle = style.parchment; g.beginPath(); g.arc(fx, fy, r, 0, 2 * Math.PI); g.fill(); g.stroke();
+        g.textAlign = 'center'; g.font = `${r * 1.2}px ${SYMBOLS}`;
         if (kind === 'link') linkGlyph(g, fx - r * 0.42, fy - r * 0.55, r * 1.1);
         else { g.fillStyle = style.ink; g.fillText(GLYPHS[kind], fx, fy + r * 0.05); }
+        if (phone.matches) continue; // a phone's names are the buttons' accessible names (#pictureKeys)
+        g.save(); g.textAlign = 'left'; g.font = `italic ${cssPx(14)}px ${SYMBOLS}`; g.fillStyle = '#efe3c6'; g.shadowColor = 'rgba(0, 0, 0, 0.8)'; g.shadowBlur = cssPx(3);
+        g.fillText(FOOT_SAYS[kind], fx + r * 1.45, fy); g.restore();
       }
       g.restore();
     }
@@ -2830,30 +2904,30 @@ function drawPictures(g) {
   if (moving && !dealFrame) dealFrame = requestAnimationFrame(() => { dealFrame = 0; if (ground) paintFrame('pictures dealt'); });
 }
 let dealFrame = 0;
-// The picture under canvas px p, the top one first: by a button on its edge (feetOf), by its link or its put-away
-// button when it lies face down, anywhere else on it to move it (or, the one looked at, to hold it where it is)
+// The picture under canvas px p, the top one first. On the table: its frame (the mount's margin, and a finger's reach
+// about the picture's edge) grabs it, its body looks at it. Looked at, only that one: a button (or, on a wide screen,
+// its name), a link or Pulverum on its back, else its body, held to pan or zoom.
+const FRAME_OUT = () => cssPx(phone.matches ? 14 : 8), FRAME_IN = () => cssPx(phone.matches ? 12 : 6); // the frame's hit band, out and in from the picture's edge
 function pictureHit([x, y]) {
   const list = shownPictures();
   if (!list.length) return null;
-  const proj = viewProjection(view), reach = cssPx(FOOT_R + 3);
-  const local = list.reverse().map((pic) => {
+  const proj = viewProjection(view), reach = cssPx(FOOT_R + 3), on = (u, v, r) => r && u >= r[0] && u <= r[0] + r[2] && v >= r[1] && v <= r[1] + r[3];
+  for (const pic of list.reverse()) {
+    if (looking != null && pic.i !== looking) continue;
     const b = pictureBox(pic, proj);
-    if (!b) return null;
-    const dx = x - b.x, dy = y - b.y, c = Math.cos(-b.a), s = Math.sin(-b.a);
-    return { pic, b, u: dx * c - dy * s, v: dx * s + dy * c };
-  }).filter(Boolean);
-  // the layers as drawn (drawPictures), the picture looked at first; in each, the buttons lie over every picture
-  for (const layer of looking == null ? [local] : [local.filter(({ pic }) => pic.i === looking), local.filter(({ pic }) => pic.i !== looking)]) {
-    for (const { pic, b, u, v } of layer) {
-      const foot = feetOf(pic, b).find(({ at }) => Math.hypot(u - at[0], v - at[1]) <= reach);
+    if (!b) continue;
+    const dx = x - b.x, dy = y - b.y, c = Math.cos(-b.a), s = Math.sin(-b.a), u = dx * c - dy * s, v = dx * s + dy * c;
+    if (pic.i === looking) {
+      const foot = feetOf(pic, b).find(({ at }) => Math.hypot(u - at[0], v - at[1]) <= reach || (!phone.matches && on(u, v, [at[0], at[1] - reach, cssPx(110), 2 * reach])));
       if (foot) return { kind: foot.kind, ...pic, proj };
+      const back = links.get(pic.i), out = back?.links.find((l) => on(u, v, l));
+      if (out) return { kind: 'out', url: out[4], ...pic, proj };
+      if (on(u, v, back?.dust)) return { kind: 'dust', ...pic, proj };
+      return Math.abs(u) <= b.w / 2 + MOUNT && Math.abs(v) <= b.h / 2 + MOUNT ? { kind: 'held', ...pic, proj } : null;
     }
-    for (const { pic, b, u, v } of layer) {
-      const back = links.get(pic.i), on = (r) => r && u >= r[0] && u <= r[0] + r[2] && v >= r[1] && v <= r[1] + r[3];
-      if (on(back?.away)) return { kind: 'away', ...pic, proj };
-      if (on(back?.link)) return { kind: 'link', ...pic, proj };
-      if (Math.abs(u) <= b.w / 2 + 5 && Math.abs(v) <= b.h / 2 + 5) return { kind: pic.i === looking ? 'held' : 'move', ...pic, proj };
-    }
+    if (Math.abs(u) > b.w / 2 + MOUNT + FRAME_OUT() || Math.abs(v) > b.h / 2 + MOUNT + FRAME_OUT()) continue;
+    const body = Math.abs(u) <= b.w / 2 - FRAME_IN() && Math.abs(v) <= b.h / 2 - FRAME_IN();
+    return { kind: body ? 'body' : 'move', ...pic, proj };
   }
   return null;
 }
@@ -2871,28 +2945,37 @@ function dragPicture(p) {
   if (!sheetFrameId) sheetFrameId = requestAnimationFrame(() => { sheetFrameId = 0; paintFrame('a picture held'); });
 }
 function dropPicture(e) {
-  const { kind, i, im } = holding;
+  const { kind, i, url } = holding;
   holding = null;
   cancelAnimationFrame(sheetFrameId); sheetFrameId = 0;
   if (kind !== 'move') { // a button acts on a release over it, as a page's button does, and not on a cancel or a drag off it
     const hit = e.type === 'pointerup' ? pictureHit(toCanvas(e.clientX, e.clientY)) : null;
-    if (hit?.kind !== kind || hit.i !== i) return;
+    if (hit?.kind !== kind || hit.i !== i || hit.url !== url) return;
   }
   if (kind === 'flip') { turnOver(i); return; }
-  if (kind === 'link') { window.open(pageOf(im), '_blank', 'noopener'); return; }
-  if (kind === 'away') { setOnTable(i, false); return; }
-  if (kind === 'look') { lookAt(i); return; }
+  if (kind === 'link') { const to = readMoreOf(); if (to) window.open(to, '_blank', 'noopener'); return; }
+  if (kind === 'out') { window.open(url, '_blank', 'noopener'); return; }
+  if (kind === 'away') { endLook(); return; }
+  if (kind === 'dust') { setOnTable(i, false); return; }
   if (kind === 'held') return;
   writeHash(); render();
 }
 const repaint = (doing) => { if (ground) paintFrame(doing); };
-// Look: the picture upright and large in the middle of the window, over the rest; a press off it, or Esc, lays it back
-// on the table face up
-function lookAt(i) { looking = i; raise(i); hideTile(); repaint('a picture looked at'); }
+// Look: the picture flies from its place on the table to the middle of the window, face up, over the dimmed map. Put
+// away (its button, Esc, or a press on the dimmed map) flies it back face up to where it lies, at its dealt size: it
+// stays dealt.
+function lookAt(i) {
+  if (looking === i) return;
+  looking = i; lookFrom = performance.now(); lookZoom = NO_ZOOM; lastTap = null;
+  if (homing?.i === i) homing = null;
+  raise(i); hideTile(); repaint('a picture looked at');
+}
 function endLook() {
   if (looking == null) return;
-  flips.delete(looking); links.delete(looking); looking = null;
-  repaint('a picture laid back');
+  flips.delete(looking); links.delete(looking);
+  homing = { i: looking, start: performance.now() };
+  looking = null; lookZoom = NO_ZOOM; cardPointers.clear(); cardTap = null;
+  repaint('a picture put away');
 }
 function turnOver(i) {
   if (looking !== i) lookAt(i); // only a picture looked at turns over
@@ -2901,22 +2984,27 @@ function turnOver(i) {
 }
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && looking != null) { endLook(); e.stopImmediatePropagation(); } }, true); // first, and only that: the open drawer stays
 // The pictures on the map again inside the canvas, as its fallback content: what a screen reader reads and the keyboard
-// reaches, one item per picture in the record's order with its back's words, the glyph link to its Commons page
-// (labelled in full) and its Look, Turn over and Put away buttons. `data-z` is its place in the pile, the top one
-// highest. Focus on an item lifts its picture to the top and rings it.
+// reaches, one item per picture in the record's order with its back's words and links, Read more, and its Look, Turn
+// over, Put away and Pulverum buttons, the canvas's own. `data-z` is its place in the pile, the top one highest. Focus
+// on an item lifts its picture to the top and rings it.
 const keys = $('pictureKeys');
 let keysFor = '', focusNext = null;
+const KEY_SAYS = { look: LOOK_SAYS, link: FOOT_SAYS.link, flip: FOOT_SAYS.flip, away: FOOT_SAYS.away, dust: DUST_SAYS };
 function mirrorPictures(list) {
   const now = `${subjectKey()}|${list.map((pic) => pic.i).sort((a, b) => a - b)}`;
   if (now !== keysFor) {
     keysFor = now;
     const at = document.activeElement, li = keys.contains(at) && at.closest('[data-pic]'); // the focus, kept across the rebuild
-    const was = li && (at.tagName === 'A' ? `[data-pic="${li.dataset.pic}"] a` : `[data-${Object.keys(at.dataset)[0]}="${li.dataset.pic}"]`);
-    keys.innerHTML = [...list].sort((a, b) => a.i - b.i).map(({ i, im }) => `<li data-pic="${i}"><span>${escapeHTML(pictureCredit(im))}${pictureNote(im) ? `. ${escapeHTML(pictureNote(im))}` : ''}</span> ` +
-      `<a href="${escapeHTML(pageOf(im))}" target="_blank" rel="noopener" title="${LINK_SAYS}" aria-label="${LINK_SAYS}">${LINK_GLYPH}</a> ` +
-      ['look', 'flip', 'away'].map((k) => { const says = { look: LOOK_SAYS, flip: FLIP_SAYS, away: AWAY_SAYS }[k];
-        return `<button type="button" data-${k}="${i}"${k === 'look' ? ' aria-pressed="false"' : ''} aria-label="${says}: ${escapeHTML(pictureCredit(im))}">${says}</button>`; }).join(' ') + '</li>').join('');
-    if (focusNext != null) { keys.querySelector(`[data-away="${focusNext}"]`)?.focus(); focusNext = null; } else if (was) keys.querySelector(was)?.focus();
+    const was = li && (at.tagName === 'A' ? `[data-pic="${li.dataset.pic}"] a[href="${CSS.escape(at.getAttribute('href'))}"]` : `[data-${Object.keys(at.dataset)[0]}="${li.dataset.pic}"]`);
+    const s = subject(), more = readMoreOf(s), named = s?.kind === 'person' ? s.person.name : s?.id ?? '';
+    const a = (href, says) => `<a href="${escapeHTML(href)}" target="_blank" rel="noopener">${escapeHTML(says)}</a>`;
+    keys.innerHTML = [...list].sort((p, q) => p.i - q.i).map(({ i, im }) => `<li data-pic="${i}"><span>${escapeHTML(pictureCredit(im))}${pictureNote(im) ? `. ${escapeHTML(pictureNote(im))}` : ''}</span> ` +
+      backLinks(im, s).map(([says, href]) => a(href, says)).join(' ') + ' ' +
+      ['look', 'link', 'flip', 'away', 'dust'].map((k) => {
+        if (k === 'link') return more ? `<a href="${escapeHTML(more)}" target="_blank" rel="noopener" data-link="${i}" aria-label="${FOOT_SAYS.link}: ${escapeHTML(named)}" title="Read more: ${escapeHTML(named)}">${FOOT_SAYS.link}</a>` : '';
+        return `<button type="button" data-${k}="${i}"${k === 'look' ? ' aria-pressed="false"' : ''} aria-label="${KEY_SAYS[k]}: ${escapeHTML(pictureCredit(im))}" title="${KEY_SAYS[k]}">${KEY_SAYS[k]}</button>`;
+      }).join(' ') + '</li>').join('');
+    if (focusNext != null) { keys.querySelector(`[data-dust="${focusNext}"]`)?.focus(); focusNext = null; } else if (was) keys.querySelector(was)?.focus();
   }
   list.forEach((pic, n) => {
     const li = keys.querySelector(`[data-pic="${pic.i}"]`);
@@ -2935,90 +3023,18 @@ keys.addEventListener('focusout', (e) => {
   focusedPic = null; repaint('a picture let go');
 });
 keys.addEventListener('click', (e) => {
-  const look = e.target.closest('[data-look]'), flip = e.target.closest('[data-flip]');
-  if (look) { if (looking === Number(look.dataset.look)) endLook(); else lookAt(Number(look.dataset.look)); return; }
-  if (flip) { turnOver(Number(flip.dataset.flip)); return; }
-  const b = e.target.closest('[data-away]');
+  const b = e.target.closest('button');
   if (!b) return;
+  const [k, v] = Object.entries(b.dataset)[0] ?? [], i = Number(v);
+  if (k === 'look') { if (looking === i) endLook(); else lookAt(i); return; }
+  if (k === 'flip') { turnOver(i); return; }
+  if (k === 'away') { if (looking === i) endLook(); return; }
+  if (k !== 'dust') return;
   const li = b.closest('li'), next = li.nextElementSibling ?? li.previousElementSibling; // the focus goes on to a neighbour
   focusNext = next ? Number(next.dataset.pic) : null;
-  setOnTable(Number(b.dataset.away), false);
+  setOnTable(i, false);
 });
 if (style.person) loadPeople().then(showPeople, () => {}); // a link that names a person shows their card when the drawer opens
-
-// ---------------------------------------------------------------- timeline A
-
-// Timeline A: the one drawer the Voyages and People buttons share, one timeline on one linear year axis
-// (scripts/people.mjs laneAxis), people above the axis and voyages below it, from the Lapita voyages to this year at
-// true scale throughout, so a stretch with nobody in it reads as empty rather than cut out. Behind both lanes, the eras
-// of the points of interest as faint colour bands, each named once at the top. The voyages' controls head their lane.
-// Each button opens it at its own lane: People at the top, Voyages scrolled to the axis, its lane's name lit. The
-// Earlier tab at the left end adds the long stretch before Lapita, back to 50,000 BC, at its own scale, with the windows
-// of the peopling of Sahul, Beringia and the Americas marked on it and nothing yet placed there. A phone scrolls the
-// timeline sideways, and opens it at its right end, where most of it is.
-function drawAxis() {
-  const tick = ([y, label]) => { const x = timeAxis.x(y); return `<span class="tick${x < 0.01 ? ' edge' : ''}" style="left:${pc(x)}">${label}</span>`; };
-  $('timeAxis').innerHTML = timeAxis.ticks.map(tick).join('');
-  const bands = eraBands(timeAxis).map(([name, a, b], i, all) => `<div class="band${i === all.length - 1 ? ' last' : ''}" data-era="${escapeHTML(name)}" style="left:${pc(timeAxis.x(a))};width:${pc(timeAxis.x(b) - timeAxis.x(a))}"><b>${escapeHTML(name)}</b></div>`);
-  const earlier = timeAxis.stretches.length > 1;
-  const marks = earlier ? EARLIER_MARKS.map(([label, y, title]) => { const x = timeAxis.x(y);
-    return `<div class="mark${x < 0.01 ? ' edge' : ''}" data-mark="${escapeHTML(label)}" title="${escapeHTML(title)}" style="left:${pc(x)}"><b>${escapeHTML(label)}</b></div>`; }) : [];
-  const brk = earlier ? `<span class="brk" style="left:${pc(timeAxis.stretches[1][2])}"></span>` : '';
-  $('eras').innerHTML = bands.join('') + marks.join('') + brk;
-  $('track').style.setProperty('--w', String(timeAxis.width));
-}
-function drawTimeline() { drawAxis(); drawVoyages(); if (peopleData) drawPeople(); showPeople(); }
-// The timeline at a lane: opened (`fresh`), both lanes load, then the drawer scrolls to the lane asked for; already
-// open (the other button), it only scrolls there
-function fillTimeline(lane, fresh) {
-  timeLane = lane;
-  $('peopleCap').classList.toggle('lit', lane === 'people');
-  $('voyagesCap').classList.toggle('lit', lane === 'voyages');
-  if (!$('timeAxis').childElementCount) drawAxis();
-  const atEnd = () => { if (fresh && timeAxis.width === 1) $('timeScroll').scrollLeft = $('timeScroll').scrollWidth; }; // a phone: most entries are after AD 1000
-  if (fresh) Promise.allSettled([fillVoyages(), fillPeople()]).then(() => { atEnd(); toLane(timeLane); }); // the lane asked for last, as the lanes now stand
-  atEnd(); toLane(lane);
-}
-function toLane(lane) {
-  const panel = $('timelinePanel'), to = lane === 'voyages' ? $('timeAxis') : null;
-  panel.scrollTop = to ? panel.scrollTop + to.getBoundingClientRect().top - panel.getBoundingClientRect().top - 8 : 0;
-}
-$('earlier').addEventListener('click', () => {
-  const on = $('earlier').getAttribute('aria-pressed') !== 'true';
-  $('earlier').setAttribute('aria-pressed', String(on));
-  $('earlier').title = on ? 'Back to Lapita: the timeline from 1500 BC' : 'Earlier history: the timeline back to 50,000 BC';
-  $('earlier').querySelector('.chev').textContent = on ? '◂' : '▸'; // the tab is turned half round: these read as left, then right
-  timeAxis = laneAxis({ earlier: on });
-  drawTimeline();
-  $('timeScroll').scrollLeft = 0; // the earlier stretch is the one asked to see
-});
-
-// ---------------------------------------------------------------- the timeline switch
-
-// Which timeline the medallion and the dividers open, A or B, from the settings' chips or the link (`timeline=`),
-// switched live: a timeline drawer open shuts, the two buttons point at the chosen one's drawers, the voyages' controls
-// move to its head, and the person chosen and the voyages lit show in it as they stand.
-function placeTimeline() {
-  const a = timeline === 'a';
-  for (const entry of drawers) {
-    if (entry[0] === $('voyages')) entry[1] = $(a ? 'timelinePanel' : 'voyagesPanel');
-    else if (entry[0] === $('people')) entry[1] = $(a ? 'timelinePanel' : 'peoplePanel');
-    else continue;
-    entry[0].setAttribute('aria-controls', entry[1].id);
-  }
-  const tools = [$('voyageWidth').closest('.vtools'), $('voyageDraw').closest('.vdraw')];
-  if (a) $('laneTools').append(...tools); else $('voyagesPanel').prepend(...tools);
-  $('timelineVariant').value = timeline;
-}
-function setTimeline(v, write = true) {
-  if (v === timeline) return;
-  if (['timelinePanel', 'voyagesPanel', 'peoplePanel'].includes(openDrawer().id)) setDrawer(false);
-  timeline = v;
-  placeTimeline(); showPeople(); showVoyage();
-  if (write) writeHash();
-}
-placeTimeline();
-$('timelineVariant').addEventListener('input', () => setTimeline(timelineVariant($('timelineVariant').value)));
 
 // The cartouche names the place flown to (its title, else the button's name), not whatever scores highest in the frame.
 const caption = (text) => `<span class="notes">${text ?? CAPTION}</span>`;
@@ -3333,9 +3349,10 @@ function clearSheetFor(target, frame = false) {
 let flight = 0, flightTo = null; // the view a flight is bound for, while it flies
 let turningTo = null; // the bearing a turn is bound for, while it turns, so a second quarter turn adds to the first
 let lastFlight = null; // { from, target } of the last flight, for Fly again under the hood
-// Every fly first clears the table (clearTable); one that carries a subject (`deal`, its key) deals its cards as it
-// nears the target: once the zoom, having been further, comes within DEAL_NEAR levels of the target's, else on landing.
-const DEAL_NEAR = 1;
+// Every fly first clears the table (clearTable); one that carries a subject (`deal`, its key) deals its cards once the
+// map is there: the middle of the window within DEAL_AT of the target's place, the zoom still settling or not, else on
+// landing.
+const DEAL_AT = 2; // CSS px
 function goTo(target, deal = null) {
   if (deal == null) clearTable();
   cancelAnimationFrame(flight); turningTo = null;
@@ -3346,11 +3363,11 @@ function goTo(target, deal = null) {
   const plan = planFlight(from, to, { w: W, h: H, minZoom: ZOOM.min, ...fly });
   const ms = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : plan.ms, t0 = performance.now();
   $('flyOut').textContent = `${plan.arc ? 'arc' : 'near'}, top z${plan.top.toFixed(2)}, ${(plan.ms / 1000).toFixed(1)} s`;
-  let far = false;
+  const there = (at) => { const proj = viewProjection(at), a = proj.project(to.lon, to.lat), c = proj.project(at.lon, at.lat); return a && c && Math.hypot(a[0] - c[0], a[1] - c[1]) <= cssPx(DEAL_AT); };
   const step = (now) => {
     const u = ms ? Math.min(1, (now - t0) / ms) : 1, e = flyEase(u, fly.ease), at = u < 1 ? clampView({ ...plan.at(e), projection: to.projection, bearing: to.bearing }) : to;
     moved(at, true);
-    if (deal) { if (Math.abs(at.zoom - to.zoom) > DEAL_NEAR) far = true; else if (far) dealNow(deal); }
+    if (deal && there(at)) dealNow(deal);
     if (u < 1) flight = requestAnimationFrame(step); else { flightTo = null; pinTitle = target.title ?? null; placed = null; if (deal) dealNow(deal); stopped(); }
   };
   step(t0);
@@ -3380,8 +3397,9 @@ const compass = $('compass');
 function showCompass() {
   const b = view.bearing ?? 0;
   compass.querySelector('svg').style.transform = `rotate(${-b}deg)`;
-  compass.setAttribute('aria-label', b ? `North is ${Math.round(b)}° from the top: click for north up, or drag round to turn the world` : 'North up: drag round to turn the world and the chart with it');
-  compass.title = b ? 'North up (drag round to turn)' : 'Drag round to turn the world';
+  const turn = phone.matches ? 'twist two fingers on the map' : 'drag round', how = phone.matches ? 'tap' : 'click';
+  compass.setAttribute('aria-label', b ? `North is ${Math.round(b)}° from the top: ${how} for north up, or ${turn} to turn the world` : `North up: ${turn} to turn the world and the chart with it`);
+  compass.title = b ? `North up (${turn} to turn)` : `${turn[0].toUpperCase()}${turn.slice(1)} to turn the world`;
 }
 compassTurn(compass, { // the arrow keys turn it by 15°, as the drag does
   bearing: () => view.bearing ?? 0,
@@ -3390,6 +3408,7 @@ compassTurn(compass, { // the arrow keys turn it by 15°, as the drag does
   release: stopped,
   click: () => { if (view.bearing) turnWorld(0); },
   step: turnWorld,
+  drags: () => !phone.matches, // a phone turns the world by a twist of two fingers on the map
 });
 
 // A touch or the wheel takes over from a flight: a subject it was carrying is dealt where the map is
@@ -3489,7 +3508,7 @@ $('compareLine').addEventListener('pointerdown', (e) => {
 });
 let typing = 0; // a typed title is placed when the typing pauses, not on every key: a placement takes up to a few hundred ms
 $('title').addEventListener('input', () => { clearTimeout(typing); typing = setTimeout(readControls, 400); });
-addEventListener('hashchange', () => { dealing = null; hoverOpen = hoverFromHash(); showHover(); setTimeline(timelineFromHash(), false); view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); showVoyage(); showPeople(); render(); });
+addEventListener('hashchange', () => { dealing = null; hoverOpen = hoverFromHash(); showHover(); view = viewFromHash(); style = styleFromHash(); selection = selectionFromHash(); showStyle(); showPlacement(); showVoyage(); showPeople(); render(); });
 showPlacement();
 render();
 
