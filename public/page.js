@@ -2384,6 +2384,21 @@ new ResizeObserver(() => document.documentElement.style.setProperty('--memento-h
 // 8% ink and grows to ×2.5; the phrase is 6 s, in at once and straight into a slow fade, and its size changes from
 // 5% to 100% of that time, to ×1.05
 const CLEAR_TUNE = { goneMs: 4000, skullMs: 400, wordsMs: 6000, ink: 8, skullGrow: 250, wordsGrow: 105, growFrom: 5, growTo: 100 };
+// Temporary, for tuning on this PR (#272): the panel at the top left (#clearTune) changes these, kept per browser
+{
+  const merged = { ...CLEAR_TUNE }, TUNE_KEY = 'portolani.clearTune.7';
+  try { Object.assign(CLEAR_TUNE, JSON.parse(localStorage.getItem(TUNE_KEY) ?? '{}')); } catch { /* none kept */ }
+  if (navigator.webdriver) $('clearTune').hidden = true; // not part of the page; it would sit over the browser tests
+  const keep = () => { try { localStorage.setItem(TUNE_KEY, JSON.stringify(CLEAR_TUNE)); } catch { /* not kept */ } };
+  const shows = [];
+  for (const [id, key, unit] of [['tuneSkull', 'skullMs', 's'], ['tuneInk', 'ink', '%'], ['tuneSkullGrow', 'skullGrow', 'x'], ['tuneGone', 'goneMs', 's'], ['tuneWords', 'wordsMs', 's'], ['tuneWordsGrow', 'wordsGrow', 'x'], ['tuneGrowFrom', 'growFrom', '%'], ['tuneGrowTo', 'growTo', '%']]) {
+    const input = $(id), out = input.nextElementSibling;
+    const show = () => { input.value = CLEAR_TUNE[key]; out.value = unit === 's' ? `${(CLEAR_TUNE[key] / 1000).toFixed(2)} s` : unit === 'x' ? `×${(CLEAR_TUNE[key] / 100).toFixed(2)}` : `${CLEAR_TUNE[key]}%`; };
+    show(); shows.push(show);
+    input.addEventListener('input', () => { CLEAR_TUNE[key] = Number(input.value); show(); keep(); });
+  }
+  $('tuneReset').addEventListener('click', () => { Object.assign(CLEAR_TUNE, merged); shows.forEach((f) => f()); keep(); });
+}
 const stillMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 // the map's box on the window, cut to the window
 function mapBox() {
