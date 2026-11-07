@@ -2349,8 +2349,8 @@
       "mai-raiatean-man"
     ],
     "view": {
-      "lat": -5.54,
-      "lon": 1.45,
+      "lat": 51.5,
+      "lon": -0.13,
       "zoom": 1.5
     }
   },
@@ -2491,8 +2491,8 @@
       "hitihiti-wellcome"
     ],
     "view": {
-      "lat": -21.42,
-      "lon": -0.25,
+      "lat": -16.5,
+      "lon": -151.74,
       "zoom": 1.5
     }
   },
@@ -2525,8 +2525,8 @@
       "death-of-james-cook"
     ],
     "view": {
-      "lat": 22.22,
-      "lon": -0.5,
+      "lat": 19.48,
+      "lon": -155.93,
       "zoom": 1.5
     }
   },
@@ -2540,8 +2540,8 @@
       "te-ara-maori-overseas"
     ],
     "view": {
-      "lat": 22.22,
-      "lon": -0.5,
+      "lat": -41.1,
+      "lon": 174.2,
       "zoom": 1.5
     }
   },
@@ -2555,8 +2555,8 @@
       "te-ara-maori-overseas"
     ],
     "view": {
-      "lat": 22.22,
-      "lon": -0.5,
+      "lat": -41.1,
+      "lon": 174.2,
       "zoom": 1.5
     }
   },
