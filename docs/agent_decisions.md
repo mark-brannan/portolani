@@ -636,3 +636,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261107t041325z
 - Nit 8: guessed cause (page zoom or scroll on a turn); the page cannot zoom and scrolls back to the origin on resize, which also stops a user page pinch-zoom on a phone Undo: drop maximum-scale and the body touch-action ([#404](https://github.com/mark-brannan/portolani/pull/404))
+
+### 20261107t090207z
+- People drawer built as Lens, not Inset ruler, on Solace's ask for code before a pick Undo: revert 3387b80 and build Inset ruler instead (https://claude.ai/artifact/DoMvyuE7SXrm1RgHM4RABx) ([#399](https://github.com/mark-brannan/portolani/pull/399))
