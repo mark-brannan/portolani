@@ -631,7 +631,7 @@ Feature: A card on the table: a click looks, three buttons, Pulverum
     When the user clicks it, or taps it on a phone
     Then the card flies from its place on the table to the middle of the window, face up, and the map behind it holds still, dimmed on a wide screen
     And on a wide screen it stands moderately large: its longer side about three quarters of the window's shorter side, never past the picture's own pixels
-    And on a phone it is the picture fitted whole between the row of instruments and the skull, on a slight card margin, the buttons over its lower right; the map round it is neither dimmed nor covered, and the skull stays
+    And on a phone, upright or turned, it is the picture fitted whole in the part of the window clear of the row of instruments, an open drawer, the compass and the skull, on a slight card margin, with room at its right for its buttons; the map round it is neither dimmed nor covered, and the skull stays
     And a dealt card is in the Tab order, and Enter or Space on it looks, as the click does; Escape puts it away as below
   Scenario: a looked-at card zooms and pans, the map stays
     Given a card looked at
@@ -643,7 +643,8 @@ Feature: A card on the table: a click looks, three buttons, Pulverum
     Given a card looked at, face up or face down
     When the user looks at its lower right
     Then three round buttons stand in a column at the card's right edge, low, top to bottom: Read more (a link glyph), Turn over (a loop circle, ⟳), Put away (a down arrow, ↓)
-    And on a wide screen the column straddles the card's right edge and each button's name stands as text to its right, outside the card, over the dimmed map; on a phone the names are the buttons' accessible names and their long-press hint, not drawn
+    And on a wide screen the column straddles the card's right edge and each button's name stands as text to its right, outside the card, over the dimmed map; on a phone the column stands just outside the card's right edge, beside the picture and never on it, and the names are the buttons' accessible names and their long-press hint, not drawn
+    Source, for the phone: the user, 2026-11-06, on #272: "The buttons on mobile should not cover the image on the card if possible. They can be placed a little below, or slightly further to the right. The card image could also be moved a little higher and the buttons lower (for landscape pictures). To save space for portrait pictures, we might consider placing the compass and skull side by side or slightly lower."
     And turning the card over leaves all three exactly where they were, so a second click on Turn over turns it straight back
   Scenario: Read more opens the subject's article
     Given a card looked at, a person's or a place's

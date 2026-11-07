@@ -2715,8 +2715,8 @@ function dealRect() {
   if (d && d.width >= innerWidth * 0.9) y1 = Math.min(y1, toY(d.top - gap));
   else if (d && d.left < innerWidth / 2) x0 = Math.max(x0, toX(d.right + gap));
   else if (d) x1 = Math.min(x1, toX(d.left - gap));
-  const m = $('memento').getBoundingClientRect(), cutY = toY(m.top - gap), cutX = toX(m.left - gap); // the compass and the skull: off the side that costs less
-  if (cutY > y0 && cutY < y1 && cutX > x0 && cutX < x1) { if ((cutY - y0) * (x1 - x0) >= (cutX - x0) * (y1 - y0)) y1 = cutY; else x1 = cutX; }
+  const m = $('memento').getBoundingClientRect(), cutY = toY(m.top - gap), cutX = toX(m.left - gap); // the compass and the skull: off the foot of a tall part, the side of a wide one
+  if (cutY > y0 && cutY < y1 && cutX > x0 && cutX < x1) { if (y1 - y0 > x1 - x0) y1 = cutY; else x1 = cutX; }
   return x1 - x0 > 40 && y1 - y0 > 40 ? { x0, x1, y0, y1 } : r;
 }
 let looking = null; // the picture looked at, by its index
@@ -2729,17 +2729,16 @@ function tableBox(pic, proj) {
   if (!c) return null;
   return { x: (c[0][0] + c[2][0]) / 2, y: (c[0][1] + c[2][1]) / 2, a: (ASKEW[pic.i % 6] * Math.PI) / 180, w: c[1][0] - c[0][0], h: c[3][1] - c[0][1] };
 }
-// On a phone the card is the picture fitted whole between the row of instruments and the skull, the map undimmed round
-// it (the corner cards step aside while it is looked at); on a wide screen its longer side is LOOK_SHARE of the
+// On a phone, upright or turned, the card is the picture fitted whole between the row of instruments and the skull,
+// less a column at its right for its buttons (feetOf), so they stand beside the picture and never on it; the map undimmed
+// round it (the corner cards step aside while it is looked at). On a wide screen its longer side is LOOK_SHARE of the
 // window's shorter side and never past the picture's own pixels, one to a CSS px
+const FOOT_COLUMN = () => MOUNT + cssPx(FOOT_R) * 2.5; // the buttons' column beside a phone's card, canvas px
 function lookBox(pic) {
   const { x0, x1, y0, y1 } = windowRect(), x = (x0 + x1) / 2, y = (y0 + y1) / 2;
-  if (phone.matches) {
-    const m = MOUNT + cssPx(4), r = canvas.getBoundingClientRect(), top = Math.max(y0, ((document.querySelector('#where .row')?.getBoundingClientRect().bottom ?? 0) - r.top) * (H / r.height));
-    const css = getComputedStyle(document.documentElement), px = (v) => parseFloat(css.getPropertyValue(v)) || 0;
-    const foot = y1 - cssPx(px('--memento-foot') + px('--memento-h')); // above the skull and the status lines
-    const k = Math.min((x1 - x0 - 2 * m) / pic.o.width, (foot - top - 2 * m) / pic.o.height);
-    return { x, y: (top + foot) / 2, a: 0, w: pic.o.width * k, h: pic.o.height * k };
+  if (handheld()) { // in the part of the window clear of the instruments, an open drawer, the compass and the skull
+    const c = dealRect(), m = MOUNT + cssPx(4), col = FOOT_COLUMN(), k = Math.min((c.x1 - c.x0 - 2 * m - col) / pic.o.width, (c.y1 - c.y0 - 2 * m) / pic.o.height);
+    return { x: (c.x0 + c.x1 - col) / 2, y: (c.y0 + c.y1) / 2, a: 0, w: pic.o.width * k, h: pic.o.height * k };
   }
   const k = Math.min((LOOK_SHARE * Math.min(x1 - x0, y1 - y0)) / Math.max(pic.o.width, pic.o.height), cssPx(1));
   return { x, y, a: 0, w: pic.o.width * k, h: pic.o.height * k };
@@ -2830,13 +2829,14 @@ function lookUp(e) {
 }
 // The round buttons of the picture looked at, in its own frame: a column at its right edge, low, top to bottom Read more,
 // Turn over and Put away, the same on both faces; on a wide screen the column straddles the edge and each button's name
-// stands to its right, outside the card, and on a phone it stands inside the edge. Each glyph is one constant.
+// stands to its right, outside the card, and on a phone it stands just outside the edge, beside the picture, never on
+// it. Each glyph is one constant.
 const FOOT_R = 15; // CSS px, a button's radius
 const FLIP_GLYPH = '⟳', AWAY_GLYPH = '↓', DUST_GLYPH = '✘';
 const FOOT_SAYS = { link: 'Read more', flip: 'Turn over', away: 'Put away' }, DUST_SAYS = 'Pulverum', LOOK_SAYS = 'Look';
 const LINK_SAYS = 'Its page on Wikimedia Commons';
 const SYMBOLS = "'IM Fell English', Georgia, 'Segoe UI Symbol', 'Apple Symbols', 'Noto Sans Symbols 2', 'Noto Sans Symbols', 'DejaVu Sans', serif";
-const footX = (b) => (phone.matches ? b.w / 2 - cssPx(FOOT_R) * 1.5 : b.w / 2);
+const footX = (b) => (handheld() ? b.w / 2 + MOUNT + cssPx(FOOT_R) * 1.2 : b.w / 2);
 function feetOf(pic, b) {
   if (pic.i !== looking) return [];
   const r = cssPx(FOOT_R), x = footX(b), y = b.h / 2 - r * 1.5;
@@ -2875,7 +2875,7 @@ const BACK_TYPE = [20, 18, 16, 15, 14, 13, 12]; // CSS px; the People drawer's o
 const pageOf = (im) => subject()?.manifest[im.file]?.page ?? commonsPage(im.file);
 function drawBack(g, im, extra, w, h) {
   const pad = Math.max(cssPx(8), w * 0.06), family = getComputedStyle(document.body).getPropertyValue('--serif') || 'serif', r = cssPx(FOOT_R);
-  const room = w - 2 * pad - (w / 2 - footX({ w }) + r * 1.2); // the words keep clear of the buttons' column
+  const room = w - 2 * pad - Math.max(0, w / 2 - footX({ w }) + r * 1.2); // the words keep clear of the buttons' column
   let size = 0, lines = [];
   for (const css of BACK_TYPE) {
     size = cssPx(css); g.font = `italic ${size}px ${family}`; lines = [];
@@ -2908,7 +2908,7 @@ function drawBack(g, im, extra, w, h) {
   g.restore();
   // Pulverum, its right end clear of the buttons, level with Put away
   g.save(); g.font = `italic ${size * 1.15}px ${family}`; g.textBaseline = 'middle'; g.textAlign = 'right'; g.fillStyle = PERSON_LINK;
-  const right = footX({ w }) - r * 1.6, word = `${DUST_GLYPH} ${DUST_SAYS}`, tw = g.measureText(word).width;
+  const right = Math.min(footX({ w }) - r * 1.6, w / 2 - pad), word = `${DUST_GLYPH} ${DUST_SAYS}`, tw = g.measureText(word).width;
   g.fillText(word, right, dy);
   g.restore();
   return { links, dust: [right - tw - size * 0.3, dy - size * 0.9, tw + size * 0.6, size * 1.8] };
@@ -2935,7 +2935,7 @@ function drawPictures(g) {
   const r = cssPx(FOOT_R), GLYPHS = { flip: FLIP_GLYPH, away: AWAY_GLYPH };
   g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
   for (const [n, layer] of layers.entries()) {
-    if (n === 1 && lift > 0 && !phone.matches) { g.fillStyle = `rgba(29, 25, 19, ${LOOK_DIM * lift})`; g.fillRect(0, 0, W, H); } // a phone's map stays undimmed
+    if (n === 1 && lift > 0 && !handheld()) { g.fillStyle = `rgba(29, 25, 19, ${LOOK_DIM * lift})`; g.fillRect(0, 0, W, H); } // a phone's map stays undimmed
     const feet = [];
     for (const pic of layer) {
       const b = pictureBox(pic, proj);
@@ -2968,7 +2968,7 @@ function drawPictures(g) {
         g.textAlign = 'center'; g.font = `${r * 1.2}px ${SYMBOLS}`;
         if (kind === 'link') linkGlyph(g, fx - r * 0.42, fy - r * 0.55, r * 1.1);
         else { g.fillStyle = style.ink; g.fillText(GLYPHS[kind], fx, fy + r * 0.05); }
-        if (phone.matches) continue; // a phone's names are the buttons' accessible names (#pictureKeys)
+        if (handheld()) continue; // a phone's names are the buttons' accessible names (#pictureKeys)
         g.save(); g.textAlign = 'left'; g.font = `italic ${cssPx(14)}px ${SYMBOLS}`; g.fillStyle = '#efe3c6'; g.shadowColor = 'rgba(0, 0, 0, 0.8)'; g.shadowBlur = cssPx(3);
         g.fillText(FOOT_SAYS[kind], fx + r * 1.45, fy); g.restore();
       }
@@ -2993,7 +2993,7 @@ function pictureHit([x, y]) {
     if (!b) continue;
     const dx = x - b.x, dy = y - b.y, c = Math.cos(-b.a), s = Math.sin(-b.a), u = dx * c - dy * s, v = dx * s + dy * c;
     if (pic.i === looking) {
-      const foot = feetOf(pic, b).find(({ at }) => Math.hypot(u - at[0], v - at[1]) <= reach || (!phone.matches && on(u, v, [at[0], at[1] - reach, cssPx(110), 2 * reach])));
+      const foot = feetOf(pic, b).find(({ at }) => Math.hypot(u - at[0], v - at[1]) <= reach || (!handheld() && on(u, v, [at[0], at[1] - reach, cssPx(110), 2 * reach])));
       if (foot) return { kind: foot.kind, ...pic, proj };
       const back = links.get(pic.i), out = back?.links.find((l) => on(u, v, l));
       if (out) return { kind: 'out', url: out[4], ...pic, proj };
