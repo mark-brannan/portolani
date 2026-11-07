@@ -713,7 +713,8 @@ Feature: A place's note and details in the Points of interest drawer
     Given the Points of interest drawer open
     When the user clicks a place's row
     Then the map flies there, and the place's details show at the drawer's foot: its name and date, its tile's text, and its pictures as thumbnails that put a picture on the table or take it off
-    And the click on the row deals nothing; a mark on the map deals
+    And the place's cards are dealt as the map arrives, as a tap on its mark deals them, with no tap on a thumbnail first; a place with no pictures only flies
+    Source, for the deal: the user, 2026-11-06, on #272: "I notice that cards are not being dealt for places right now, unless the images inside the drawer are selected first. That increases the users effort and shouldn't be so, deal the cards for them automatically". This overtakes "the click on the row deals nothing; a mark on the map deals".
 
 Feature: A flight sweeps the table, then deals on arrival
   Source: the user on [#326](https://github.com/mark-brannan/portolani/pull/326), 2026-10-30, in the session walk: "cards need to sweep themselves for now whenever we do a fly action. I typically want that for people cards too...so it should be the same action if possible. sweep then fly."; "I notice that cards for people are getting dealt before we fly and so they are mysteriously in place when we get to the outer zoom. We should fly and then deal cards when we are nearing the target zoom levels, or the target field of view."

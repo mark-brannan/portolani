@@ -2195,14 +2195,15 @@ async function loadSubject() { if (style.person) await loadPeople(); else if (st
 // put away it deals them again. A sight with several marks (Tyre's city site and Al-Bass) splits its pictures between
 // them by each record's `site`, the mark's place in its tile's `at`; the link carries it as `site=`.
 let keepTile = false;
-function chooseSight(name, pictures = DEFAULTS.pictures, site = null, tile = null) { // `tile`: the mark's tile it was opened from
-  if (style.sight === name && style.site === site && !style.person && style.pictures == null) return; // all on the table: nothing to deal back
+// `aim`, a place's row in the Locations drawer: the view it flies to, its cards dealt as the map arrives, every time.
+function chooseSight(name, pictures = DEFAULTS.pictures, site = null, tile = null, aim = null) { // `tile`: the mark's tile it was opened from
+  if (!aim && style.sight === name && style.site === site && !style.person && style.pictures == null) return; // all on the table: nothing to deal back
   const hadPerson = clearTable(false); // whatever lies on the table put away first, as the skull does; the tile just opened stays
   style = { ...style, sight: name, site, pictures };
   dealViews.delete(sightKey());
   dealing = sightKey(); // dealt where dealSight says: in place, or as the map arrives
   showPeople(); showSightCard(); writeHash();
-  if (sightData) dealSight(tile); else loadSights().then(() => dealSight(tile), () => { dealing = null; });
+  if (sightData) dealSight(tile, aim); else loadSights().then(() => dealSight(tile, aim), () => { dealing = null; if (aim) goTo(aim); });
   if (hadPerson) { keepTile = true; render(); } // the person's voyages back in their own inks
 }
 function dealNow(key = dealing) {
@@ -2241,13 +2242,13 @@ function placeOfSight(s, f) {
 }
 // a sight's pictures for one of its marks (`site`), by index; null for all of them
 const siteSet = (s, site) => (site == null || !s.images.some((im) => im.site === site) ? null : s.images.flatMap((im, i) => (im.site === site ? [i] : [])));
-function dealSight(tile = null) {
+function dealSight(tile = null, aim = null) {
   const s = subject();
-  if (s?.kind !== 'sight') return;
-  if (dealViews.has(s.key)) { dealNow(s.key); return; }
+  if (s?.kind !== 'sight') { if (aim) { dealing = null; goTo(aim); } return; } // a place with no pictures: the flight alone
+  if (!aim && dealViews.has(s.key)) { dealNow(s.key); return; }
   const f = frameOfSubject(s), at = placeOfSight(s, f), sizes = picturesOf(s).map((i) => pictureSize(s, i)).filter(Boolean);
   const zoom = Math.min(SIGHT_ZOOM, viewContaining(f, { w: W, h: H }).zoom);
-  let to = view.zoom < zoom - FLY_WIDER ? { ...view, lon: at[0], lat: at[1], zoom } : view;
+  let to = aim ? { ...aim } : view.zoom < zoom - FLY_WIDER ? { ...view, lon: at[0], lat: at[1], zoom } : view;
   if (!sightDeal(sizes, windowRect(), viewProjection(to).project(...at)).clear) to = { ...to, lon: at[0], lat: at[1] };
   dealViews.set(s.key, clampView({ ...to, projection: view.projection, bearing: view.bearing }));
   if (to === view) { dealNow(s.key); return; } // dealt here and now
@@ -3086,13 +3087,14 @@ const SIGHT_NAMES = new Set(SIGHTS.flatMap(([, items]) => items.map(([name]) => 
     const b = e.target.closest('[data-place]');
     if (!b) return;
     const { name, view: to } = places[b.dataset.place];
-    clearSheetFor(to); goTo(to);
+    clearSheetFor(to);
+    if (SIGHT_NAMES.has(name)) chooseSight(name, DEFAULTS.pictures, null, null, to); else goTo(to); // a place with pictures deals them as the map arrives
     if (placeInfo.has(name)) { placeShown = name; showSightCard(); $('sightCard').scrollIntoView({ block: 'nearest' }); }
   });
 }
 // The Points of interest drawer's details of the place last clicked in it, at the drawer's foot, as the person card shows
 // a person: its name and date, its tile's text, and its pictures as thumbnails, each putting its picture on the table or
-// taking it off. Choosing it in the drawer flies there and deals nothing; its mark on the map deals the pictures.
+// taking it off. Choosing it in the drawer flies there and deals its pictures as the map arrives, as its mark on the map does.
 let placeShown = null;
 function showSightCard() {
   const card = $('sightCard'), info = placeShown && placeInfo.get(placeShown);
