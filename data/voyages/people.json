@@ -1025,6 +1025,13 @@
       }
     ]
   },
+  "himilco": {
+    "name": "Himilco",
+    "bio": "A Carthaginian navigator of the early fifth century BC, sent to explore the Atlantic coast of Europe while Hanno went south. His own account is lost; it survives in brief notices by Pliny and the poet Avienus. Of his family, one scholar makes him Hanno's brother.",
+    "sources": [
+      "himilco"
+    ]
+  },
   "pytheas": {
     "name": "Pytheas",
     "aka": [
@@ -1537,12 +1544,13 @@
     "death": {
       "lon": -108.98,
       "lat": 34.93,
-      "date": "1539",
-      "label": "Esteban killed at Hawikuh, 1539",
-      "source": "Wikipedia, Esteban de Dorantes",
-      "cite": "esteban-de-dorantes",
-      "text": "He went ahead of Fray Marcos de Niza and was held overnight without food or water, then attacked and killed at Cíbola. Accounts differ on why: Castañeda says the people of Cíbola thought it hard of him to ask for turquoise and women, Alarcón that he boasted of armed men behind him, and Coronado that they had been told he was a bad man. Sancho Dorantes says he was shot through with arrows.",
-      "doubt": "In 2002 the historian Juan Francisco Maura argued that Esteban was never killed at all: the story of his death was a ruse that set a slave free, and he lived on among the Zuni."
+      "date": "May 1539",
+      "label": "Esteban killed at Hawikuh, May 1539",
+      "confidence": "inferred",
+      "text": "Every account of his death here is a Spanish one or a Spanish record of a report; none was written by the Zuni, and the Zuni story comes down through Cushing, a 19th-century ethnographer, as quoted in the National Park Service study. Esteban sent ahead a gourd hung with rattles and two feathers; the chief of the first Zuni town threw it down and said that anyone who came would be killed. He came on, and was lodged outside the town. Fray Marcos had it from a survivor that nothing was given to eat or drink that night, and that next morning, as people came out of the town, he fled, and the wounded survivor saw no more of him. Castañeda, writing years later, has it that he was held three days while the elders questioned him, took him for a spy, found it hard of him to ask for turquoise and women, and killed him, sending about sixty of his followers home. Coronado, 3 August 1540: the death was certain, since things he wore had been found; Coronado wrote that the Zuni said they killed him because the Indians of Chichilticale had called him a bad man who killed and assaulted women. Alarcón, on the Colorado a year later, reporting what the people there told him: the chief asked if he had brothers, and he answered that he had an infinite number, not far off, so the chiefs resolved to kill him. Sancho Dorantes de Carranza: he was shot through with arrows like a Saint Sebastian. The Zuni story as Cushing wrote it down has the Black Mexican killed at Kya-ki-me; another says their wise men kicked him back south. In 2002 Juan Francisco Maura argued that the Zuni helped him fake his death and he lived on among them.",
+      "doubt": "The accounts differ on how and why he died, Zuni tradition puts the killing at Kya-ki-me rather than Hawikuh, and Maura (2002) holds that he was not killed at all.",
+      "source": "Marcos de Niza, Coronado, Castañeda and Alarcón, as translated in Winship; Cushing's Zuni account (Kya-ki-me) as quoted in the National Park Service study, hawikuh-historical-background-study",
+      "cite": "winship-coronado-expedition"
     },
     "images": [
       {
@@ -2111,5 +2119,209 @@
     "group": true,
     "bio": "Speakers of a Borneo language who crossed the Indian Ocean to Madagascar, and became, with African settlers who came to the island, the Malagasy. When they came is argued, from about 400 to about 1000. No name of theirs survives.",
     "sources": ["settlement-madagascar", "brucato-2016-madagascar"]
+  },
+  "james-cook": {
+    "name": "James Cook",
+    "bio": "A Royal Navy officer who commanded three voyages to the Pacific between 1768 and 1779: the Endeavour, which charted New Zealand and the east coast of Australia; the Resolution, which crossed the Antarctic Circle; and the Resolution again, to Hawaiʻi, the Northwest Coast and the Arctic. He was killed at Kaʻawaloa, on Kealakekua Bay, on 14 February 1779, trying to take the ruling chief Kalaniʻōpuʻu hostage over a stolen cutter.",
+    "sources": [
+      "first-voyage-of-james-cook",
+      "second-voyage-of-james-cook",
+      "third-voyage-of-james-cook"
+    ],
+    "death": {
+      "lon": -155.9253,
+      "lat": 19.4817,
+      "date": "14 Feb 1779",
+      "label": "Cook killed at Kaʻawaloa, Kealakekua Bay",
+      "text": "Cook went ashore to take Kalaniʻōpuʻu hostage until the Discovery's cutter, which Hawaiians had stolen, was returned. He was killed, with four marines (Corporal James Thomas, and Privates Theophilus Hinks, Thomas Fatchett and John Allen); Wikipedia counts 17 Hawaiians killed at Kaʻawaloa. The Hawaiians dismembered his body, partly burned it, and shared the parts among their chiefs, an honour for a high-ranking enemy; three days later more was returned, including his skull, and the crew buried it at sea with full military honours. Whether Hawaiians took him for the god Lono is argued between the anthropologists Marshall Sahlins and Gananath Obeyesekere.",
+      "source": "Wikipedia, Death of James Cook",
+      "cite": "death-of-james-cook",
+      "confidence": "attested",
+      "doubt": "Wikipedia's account counts the Hawaiian dead as 17 at Kaʻawaloa in one place and as 25 round the bay that day in another."
+    }
+  },
+  "joseph-banks": {
+    "name": "Joseph Banks",
+    "bio": "An English naturalist who sailed in the Endeavour with a party that included two Black servants, Thomas Richmond and George Dorlton, who froze to death in Tierra del Fuego in January 1769. In 1774 he introduced the Raʻiatean Mai to British society.",
+    "sources": [
+      "first-voyage-of-james-cook",
+      "mai-raiatean-man"
+    ]
+  },
+  "tupaia": {
+    "name": "Tupaia",
+    "bio": "A priest of the ʻarioi at the Taputapuātea marae on Raʻiatea and a star navigator, born about 1725 near Haʻamanino Harbour. In Tahiti he advised the chief Amo and Purea. He sailed with Cook as navigator, interpreter and go-between, drew a chart of the Pacific for him, and was honoured as a tohunga by some Māori in Aotearoa, who gave him a dog-skin cloak. Ten of his watercolours survive. He died at Batavia in 1770.",
+    "sources": [
+      "tupaia-navigator"
+    ],
+    "born": {
+      "lon": -151.5,
+      "lat": -16.88,
+      "date": "c. 1725",
+      "place": "Raʻiatea, Society Islands",
+      "label": "Tupaia born on Raʻiatea, c. 1725",
+      "text": "Wikipedia gives Haʻamanino Harbour, Raʻiatea; the mark stands on the island, not on the harbour.",
+      "source": "Wikipedia, Tupaia (navigator)",
+      "cite": "tupaia-navigator",
+      "confidence": "inferred"
+    },
+    "death": {
+      "lon": 106.8,
+      "lat": -6.1,
+      "date": "20 Dec 1770",
+      "label": "Tupaia dies at Batavia, 1770",
+      "text": "He died at Batavia, where the Endeavour was docked for repairs, of dysentery or malaria, both of which were aboard. The ship's muster records 20 December 1770.",
+      "source": "Wikipedia, Tupaia (navigator)",
+      "cite": "tupaia-navigator",
+      "confidence": "inferred",
+      "doubt": "The journals of Banks and Cook give other dates for his death; Wikipedia treats the muster's as reliable."
+    }
+  },
+  "taiata": {
+    "name": "Taiata",
+    "aka": [
+      "Tayeto"
+    ],
+    "bio": "Tupaia's young attendant, whom Cook's journal calls \"our poor Indian boy Tayeto\", Cook's words, not ours. He died at Batavia in early November 1770, some weeks before Tupaia.",
+    "sources": [
+      "tupaia-navigator"
+    ],
+    "death": {
+      "lon": 106.78,
+      "lat": -6.08,
+      "date": "c. 9 Nov 1770",
+      "label": "Taiata dies at Batavia, 1770",
+      "text": "Cook's journal records the loss of \"his poor Indian boy\" on 9 November 1770, at Batavia.",
+      "source": "Wikipedia, Tupaia (navigator); Cook's journal",
+      "cite": "tupaia-navigator",
+      "confidence": "inferred",
+      "doubt": "Sources differ on the day; they agree he died before Tupaia, in early November."
+    }
+  },
+  "thomas-richmond": {
+    "name": "Thomas Richmond",
+    "bio": "One of two Black servants of Joseph Banks aboard the Endeavour, listed in the crew as \"a Negro servant\" (the crew list's words). He froze to death on 16 January 1769 when Banks's party, collecting plants inland from the Bay of Good Success in Tierra del Fuego, was caught by snow and cold. Banks wrote that Richmond was upon his legs but not able to walk.",
+    "sources": [
+      "banks-servants-1769"
+    ],
+    "death": {
+      "lon": -65.3,
+      "lat": -54.76,
+      "date": "16 Jan 1769",
+      "label": "Thomas Richmond frozen to death in Tierra del Fuego",
+      "text": "The crew list records him 'frozen to death' on 16 January 1769. The party had gone inland to collect plants and was delayed by snow; the place on the hills is not recorded.",
+      "source": "The Endeavour crew list",
+      "cite": "banks-servants-1769",
+      "confidence": "speculative"
+    }
+  },
+  "george-dorlton": {
+    "name": "George Dorlton",
+    "bio": "One of two Black servants of Joseph Banks aboard the Endeavour, listed in the crew as \"a Negro servant\" (the crew list's words). He froze to death on 16 January 1769 when Banks's party, collecting plants inland from the Bay of Good Success in Tierra del Fuego, was caught by snow and cold. One researcher reads the records as showing that Dorlton was Banks's slave, the man called George 'Rupee'.",
+    "sources": [
+      "banks-servants-1769"
+    ],
+    "death": {
+      "lon": -65.36,
+      "lat": -54.8,
+      "date": "16 Jan 1769",
+      "label": "George Dorlton frozen to death in Tierra del Fuego",
+      "text": "The crew list records him 'frozen to death' on 16 January 1769. The party had gone inland to collect plants and was delayed by snow; the place on the hills is not recorded.",
+      "source": "The Endeavour crew list",
+      "cite": "banks-servants-1769",
+      "confidence": "speculative"
+    }
+  },
+  "mai": {
+    "name": "Mai",
+    "aka": [
+      "Omai"
+    ],
+    "bio": "Born about 1751 on Raʻiatea, he left the Society Islands in 1773 on the Adventure under Tobias Furneaux and reached London in October 1774, where Banks introduced him to society. Reynolds painted him in 1776, and at Kew he took George III's hand and said 'How do, King Tosh!'. He sailed home with Cook's third voyage and was settled on Huahine in a European-style house, with two Māori boys as servants. He died there a few years later.",
+    "sources": [
+      "mai-raiatean-man"
+    ],
+    "death": {
+      "lon": -151.05,
+      "lat": -16.74,
+      "date": "c. 1780",
+      "label": "Mai dies on Huahine, c. 1780",
+      "text": "Bligh was told, on the Bounty's visit to Tahiti in 1789, that Mai had died a couple of years after Cook left Huahine. Richard Connaughton says the consensus is 1780, probably of natural causes and possibly of an infectious disease.",
+      "source": "Wikipedia, Mai (Raʻiatean man)",
+      "cite": "mai-raiatean-man",
+      "confidence": "inferred",
+      "doubt": "Wikipedia dates his death c. 1779 in one place and c. 1780 in another, and the cause is not known."
+    }
+  },
+  "hitihiti": {
+    "name": "Hitihiti",
+    "bio": "A man of Bora Bora who came aboard the Resolution at Raʻiatea in September 1773 and sailed with her to Tonga, New Zealand, the Antarctic and Easter Island before going home in 1774.",
+    "sources": [
+      "hitihiti-wellcome"
+    ]
+  },
+  "charles-clerke": {
+    "name": "Charles Clerke",
+    "bio": "Given command of the Discovery on 26 August 1775, he took over the third expedition when Cook was killed, moving into the Resolution, with Gore in the Discovery. He had caught tuberculosis in a debtors' prison, and died on his thirty-eighth birthday, 22 August 1779, on the passage from the Bering Strait to Kamchatka. He is buried at Petropavlovsk.",
+    "sources": [
+      "charles-clerke"
+    ],
+    "death": {
+      "lon": -178.5,
+      "lat": 56.0,
+      "date": "22 Aug 1779",
+      "label": "Clerke dies at sea on the way to Kamchatka",
+      "text": "Nobody recorded where. The skull stands at the middle of the leg from the Bering Strait to Petropavlovsk; he was buried at Petropavlovsk, which is the grave and not another place of death.",
+      "source": "Wikipedia, Charles Clerke",
+      "cite": "charles-clerke",
+      "confidence": "inferred"
+    }
+  },
+  "kalaniopuu": {
+    "name": "Kalaniʻōpuʻu",
+    "bio": "The ruling chief (aliʻi nui) of Hawaiʻi Island. He was at Kaʻawaloa, on Kealakekua Bay, on 14 February 1779, when Cook came ashore to take him hostage until the Discovery's stolen cutter was returned.",
+    "sources": [
+      "death-of-james-cook"
+    ]
+  },
+  "te-weherua": {
+    "name": "Te Weherua",
+    "aka": [
+      "Tiarooa"
+    ],
+    "bio": "A boy of about seventeen from Queen Charlotte Sound who volunteered with Koa to serve Mai, and sailed with Cook to Huahine in 1777. One source says the two boys died of sickness some thirty months after the ships left Huahine.",
+    "sources": [
+      "te-ara-maori-overseas"
+    ]
+  },
+  "koa": {
+    "name": "Koa",
+    "aka": [
+      "Coaa"
+    ],
+    "bio": "A boy of about twelve from Queen Charlotte Sound who volunteered with Te Weherua to serve Mai, and sailed with Cook to Huahine in 1777. One source says the two boys died of sickness some thirty months after the ships left Huahine.",
+    "sources": [
+      "te-ara-maori-overseas"
+    ]
+  },
+  "marcos-de-niza": {
+    "name": "Marcos de Niza",
+    "aka": [
+      "Fray Marcos de Niza",
+      "Marcos of Nice"
+    ],
+    "bio": "A Franciscan born at Nice, then in Savoy, who had been with Pizarro in Peru and was a vice-commissary of his order in New Spain. Viceroy Mendoza chose him in 1539 to lead the party that went north to learn of the cities of Cíbola, and Esteban was sent ahead of him. His report, that he had seen Cíbola from a hill and that it looked larger than Mexico City, started the Coronado expedition of 1540, which he guided; Coronado found only Zuni towns, blamed him and sent him back to Mexico. Whether he came near Cíbola at all is still argued.",
+    "death": {
+      "date": "25 Mar 1558",
+      "label": "Marcos de Niza died, 25 Mar 1558",
+      "text": "One source gives his death as 25 March 1558; the Handbook of Texas says only that it comes from one source. Wikipedia says he died in Mexico; the place is not recorded in the pages read, so no mark is drawn.",
+      "source": "Wikipedia, Marcos de Niza; Handbook of Texas",
+      "cite": "marcos-de-niza"
+    },
+    "sources": [
+      "marcos-de-niza",
+      "tsha-marcos-de-niza",
+      "winship-coronado-expedition"
+    ]
   }
 }
