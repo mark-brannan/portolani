@@ -609,3 +609,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261107t012040z
 - A person chosen from the link or the map opens the headings over their row, once; heading open state is per page session, not in the hash ([#399](https://github.com/mark-brannan/portolani/pull/399))
+
+### 20261107t012048z
+- Prehistory's ticks include its family's members at their own years, so some fall past Prehistory's band ([#399](https://github.com/mark-brannan/portolani/pull/399))
