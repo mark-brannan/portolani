@@ -1,0 +1,110 @@
+{
+  "id": "shimaya-ichizaemon",
+  "title": "Shimaya Ichizaemon surveys the Bonin Islands, 1675",
+  "short": "Shimaya Ichizaemon",
+  "who": [
+    "shimaya-ichizaemon"
+  ],
+  "when": "1675",
+  "summary": "The shogunate sent Shimaya Ichizaemon to survey the uninhabited islands that castaways had reported. He left Shimoda on 5 April 1675 by way of Hachijōjima, sighted Chichijima on 29 April, landed on 1 May and spent about a month surveying Chichijima and Hahajima, naming the islands and raising a shrine marked as part of Great Japan.",
+  "sources": [
+    "ogasawara-spf"
+  ],
+  "legs": [
+    {
+      "from": "Shimoda",
+      "to": "Hachijōjima",
+      "dates": "5 Apr 1675",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Ogasawara (Sasakawa Peace Foundation): left Shimoda on 5 April, by way of Hachijōjima",
+      "note": "Both ports are named; the track between them is drawn by the editor.",
+      "points": [
+        [
+          138.95,
+          34.62
+        ],
+        [
+          139.2,
+          34.2
+        ],
+        [
+          139.5,
+          33.6
+        ],
+        [
+          139.78,
+          33.15
+        ]
+      ]
+    },
+    {
+      "from": "Hachijōjima",
+      "to": "Chichijima",
+      "dates": "Apr 1675",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Ogasawara (Sasakawa Peace Foundation): found Chichijima on 29 April and anchored at Futami harbour",
+      "note": "The open-sea track is drawn by the editor. The page does not describe the way home.",
+      "points": [
+        [
+          139.78,
+          33.15
+        ],
+        [
+          140.3,
+          31.5
+        ],
+        [
+          141,
+          29.5
+        ],
+        [
+          141.8,
+          27.8
+        ],
+        [
+          142.2,
+          27.12
+        ]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "landfall",
+      "lon": 142.2,
+      "lat": 27.09,
+      "date": "29 Apr – 1 May 1675",
+      "label": "Futami harbour, Chichijima",
+      "source": "Ogasawara (Sasakawa Peace Foundation)",
+      "cite": "ogasawara-spf",
+      "confidence": "attested",
+      "text": "He found Chichijima on 29 April and first landed on 1 May. The crew measured the islands’ sizes, latitude and distances from Shimoda, Hachijōjima and Miyakejima. He named Chichijima, Hahajima, Anijima, Ototojima, Anejima and Imotojima, and places called Ōmura, Okumura and Susaki."
+    },
+    {
+      "kind": "event",
+      "lon": 142.2,
+      "lat": 27.1,
+      "date": "May 1675",
+      "label": "A shrine: “Part of Great Japan”",
+      "source": "Ogasawara (Sasakawa Peace Foundation)",
+      "cite": "ogasawara-spf",
+      "confidence": "attested",
+      "text": "He built a shrine invoking Hachiman Daibosatsu, Amaterasu Omikami and Kasuga Myōjin; its side inscription reads “Dai Nippon no Uchi nari”. He let loose three roosters and two hens, and took mountain betel palms, mulberry logs and birds back for the shogunate."
+    },
+    {
+      "kind": "event",
+      "lon": 142.15,
+      "lat": 26.65,
+      "date": "May 1675",
+      "label": "Hahajima surveyed",
+      "source": "Ogasawara (Sasakawa Peace Foundation)",
+      "cite": "ogasawara-spf",
+      "confidence": "attested",
+      "text": "The month on the islands took in Hahajima as well as Chichijima. His notes survive in the Historical Records of the Ogasawara Islands."
+    }
+  ]
+}

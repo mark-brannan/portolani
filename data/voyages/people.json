@@ -3376,5 +3376,49 @@
       "source": "Kūkai (Wikipedia)",
       "cite": "kukai"
     }
+  },
+  "tanaka-shosuke": {
+    "view": {
+      "lat": 25,
+      "lon": -170,
+      "zoom": 3
+    },
+    "name": "Tanaka Shōsuke",
+    "aka": [
+      "田中勝介",
+      "Francisco de Velasco Josuke"
+    ],
+    "bio": "A merchant of Kyoto and Osaka, agent of the Osaka merchant Gotō Shōsaburō by the Sumpu-ki, sent by Tokugawa Ieyasu in 1610 with 22 other Japanese to New Spain, where he studied silver mining and was baptized. He sailed home with Sebastián Vizcaíno in 1611 and later helped prepare Hasekura Tsunenaga’s embassy. When and where he died is not known.",
+    "sources": [
+      "tanaka-shosuke"
+    ]
+  },
+  "christopher-and-cosmas": {
+    "view": {
+      "lat": 20,
+      "lon": -110,
+      "zoom": 3
+    },
+    "name": "Christopher and Cosmas",
+    "group": true,
+    "bio": "Two Japanese youths, about 20 and 16, known only by their Christian names, taken from the Manila galleon Santa Ana by Thomas Cavendish in 1587 and carried to England. They sailed with him again in 1591 and are not mentioned afterwards; the page says they probably died when his ship was lost in 1592.",
+    "sources": [
+      "christopher-and-cosmas"
+    ]
+  },
+  "shimaya-ichizaemon": {
+    "view": {
+      "lat": 30,
+      "lon": 140,
+      "zoom": 4
+    },
+    "name": "Shimaya Ichizaemon",
+    "aka": [
+      "島谷市左衛門"
+    ],
+    "bio": "A captain in the shogunate’s service who in 1675 led a survey of the uninhabited Bonin (Ogasawara) Islands. His life before and after is not in the sources read.",
+    "sources": [
+      "ogasawara-spf"
+    ]
   }
 }
