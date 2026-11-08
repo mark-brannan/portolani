@@ -690,3 +690,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261108t125343z
 - Xu Xiake: dated stages and the Tengchong leg left out; only sources read are drawn ([#413](https://github.com/mark-brannan/portolani/pull/413))
+
+### 20261108t125347z
+- Amawari added to ryukyu-trade as a person with two 1458 event marks, no route ([#413](https://github.com/mark-brannan/portolani/pull/413))
