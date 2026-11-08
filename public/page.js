@@ -2496,9 +2496,9 @@ function setOnTable(i, on) {
 // The skull in the right margin, always there, its memento mori in its hover text, is the one clear for the whole map
 // (docs/spec/design.md, "The skull is the one clear"): a click (or Enter, or Space) clears the table (clearTable), lifts
 // every chart's sheet back to its own place and takes every voyage off, and moves the line on to the next (MEMENTO, the
-// first at random). It leaves the settings (the rose, the projection, every style) and the view (place, zoom, bearing)
+// first, always). It leaves the settings (the rose, the projection, every style) and the view (place, zoom, bearing)
 // as they are: a lifted sheet does not turn the world back to north here, as lifting one by its eye does.
-let memento = Math.floor(Math.random() * MEMENTO.length);
+let memento = 0;
 // the phrase is not shown beside the skull: it is the skull's hover text, the Latin over its English (design.md, "The skull's hover text")
 const showMemento = () => { const t = `Clear the Map: ${MEMENTO[memento]}\n${MEMENTO_EN[memento]}`; $('sweep').title = t; $('sweep').setAttribute('aria-label', t); };
 showMemento();

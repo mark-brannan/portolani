@@ -324,37 +324,78 @@ export function sightDeal(sizes, win, at, { fill, overlap, foot, side, gap, rows
 // The line under the skull that clears the chart table (public/page.js): a memento mori in the hands of the charts'
 // centuries, one shown at a time, the first at random, each clear of the table moving on to the next and the last back
 // to the first.
-export const MEMENTO = [
-  'Memento, homo, quia pulvis es, et in pulverem reverteris',
-  'Pulvis et umbra sumus',
-  'Hodie mihi, cras tibi',
-  'Mors certa, hora incerta',
-  'All flesche is grasse',
-  'Erthe out of erthe is wonderly wrought, Erthe hath of erthe a dignite of nought',
-  'Ogni uomo è polvere',
-  'Ricordati che devi morire',
-  'Polvo eres, y en polvo te has de convertir',
-  'Nuestras vidas son los ríos que van a dar en la mar, que es el morir',
-  'Recuerda que eres polvo',
+// Each entry: `text` in its original language (a '\n' is a line break the source keeps, shown as set in the big clear),
+// `en` its English (the skull's hover text; a '\n' likewise), `lang` an ISO 639 code. Optional: `romaji` (a Japanese
+// verse's reading, line for line), `enBy` ('claude' where the English is not the user's own), `credit` an author the user
+// recalls but has not verified, `variant` another spelling of the same text, `kind` ('jisei' for a Japanese death poem),
+// `source` where the text comes from, only when verified.
+export const MEMENTO_ENTRIES = [
+  { lang: 'la', text: 'Memento, homo, quia pulvis es, et in pulverem reverteris', en: 'Remember, man, that you are dust, and to dust you shall return' },
+  { lang: 'la', text: 'Pulvis et umbra sumus', en: 'We are dust and shadow' },
+  { lang: 'la', text: 'Hodie mihi, cras tibi', en: 'Today me, tomorrow you' },
+  { lang: 'la', text: 'Mors certa, hora incerta', en: 'Death is certain, its hour uncertain' },
+  { lang: 'sco', text: 'All flesche is grasse', en: 'All flesh is grass' },
+  { lang: 'enm', text: 'Erthe out of erthe is wonderly wrought, Erthe hath of erthe a dignite of nought', en: 'Earth out of earth is wondrously wrought; earth has of earth a dignity of nought' },
+  { lang: 'it', text: 'Ogni uomo è polvere', en: 'Every man is dust' },
+  { lang: 'it', text: 'Ricordati che devi morire', en: 'Remember that you must die' },
+  { lang: 'es', text: 'Polvo eres, y en polvo te has de convertir', en: 'Dust you are, and to dust you shall return' },
+  { lang: 'es', text: 'Nuestras vidas son los ríos que van a dar en la mar, que es el morir', en: 'Our lives are the rivers that flow into the sea, which is dying' },
+  { lang: 'es', text: 'Recuerda que eres polvo', en: 'Remember that you are dust' },
+  { lang: 'la', text: 'Omnia mors aequat', en: 'Death makes all things equal' },
+  { lang: 'la', text: 'Memento vivere', en: 'Remember to live' }, // the user's gloss: "Literally 'remember to live'"
+  { lang: 'la', text: 'Respice finem', en: 'Consider the end' },
+  { lang: 'la', source: 'Lucan, Pharsalia 1.457–458 ("longae, canitis si cognita, vitae mors media est")', text: 'longae vitae mors media est', en: 'Death stands in the midst of a long life', enBy: 'claude' },
+  { lang: 'non', source: 'Hávamál 76 (Bellows numbers it 77); English: Bellows, The Poetic Edda, 1923',
+    text: 'Deyr fé, deyja frændr,\ndeyr sjalfr it sama;\nen orðstírr deyr aldregi,\nhveim er sér góðan getr.',
+    en: 'Cattle die, and kinsmen die,\nAnd so one dies one\'s self;\nBut a noble name will never die,\nIf good renown one gets.' },
+  { lang: 'non', source: 'Hávamál 16; English: Bellows, The Poetic Edda, 1923',
+    text: 'Ósnjallr maðr\nhyggsk munu ey lifa,\nef hann við víg varisk;\nen elli gefr\nhonum engi frið,\nþótt honum geirar gefi.',
+    en: 'The sluggard believes\nhe shall live forever,\nIf the fight he faces not;\nBut age shall not grant him\nthe gift of peace,\nThough spears may spare his life.' },
+  { lang: 'pi', source: 'Maraṇasati chant, verse 5 of 7 (Mahamevnawa Paritta book)', // romanised, as Pali is
+    text: 'Vijju bubbula ussāva – jalarāji parikkhayaṁ\nGhātako’va ripūtassa – sabbatthā’pi avāriyo',
+    en: '...like a streak of lightning, a bubble of water, a dew drop on a leaf, or a line drawn on water.' },
+  { lang: 'pi', source: 'Maraṇasati chant, verse 4 of 7 (Mahamevnawa Paritta book)',
+    text: 'Īsakaṁ anivattaṁ taṁ – satataṁ gamanussukaṁ\nJīvitaṁ udayā atthaṁ – suriyo viya dhāvati',
+    en: '...like the sun that travels to set without stopping after it rises.' },
+  { lang: 'ja', kind: 'jisei', text: '斯う活て居るも不思議ぞ花の陰', variant: '斯う活ているも不思議ぞ花の陰',
+    romaji: 'Kō ikite iru mo fushigi zo hana no kage',
+    en: 'Living thus, being alive, what a wonder! In shadows of cherry blossoms' },
+  { lang: 'en', kind: 'jisei', text: 'Cherry blossoms fall\nwhen the time is right\nI too will fall\nwhen it is time to go',
+    en: 'Cherry blossoms fall\nwhen the time is right\nI too will fall\nwhen it is time to go',
+    credit: 'Roy Isami Ebata (1919–1990), written in the margin of his Living Will, 2 January 1985; given at tanuki2016.com/2018/02/04/46/' }, // originally English, not a translation
+  { lang: 'ja', kind: 'jisei', text: '散る梅に\n見上げる空の\n月清し', romaji: 'Chiru ume ni\nmiaguru sora no\ntsuki kiyoshi',
+    en: 'Plum petals falling\nI look up—the sky,\na clear crisp moon.',
+    credit: 'Baiko 梅幸 (died 1903, aged 60; Hoffmann; the kanji of the poem are unverified), as given at tanuki2016.com/2018/02/04/46/' },
+  { lang: 'ja', kind: 'jisei', text: '百伝ふ\n磐余の池に\n鳴く鴨を\n今日のみ見てや\n雲隠りなむ', romaji: 'Momozutau\nIware no ike ni\nnaku kamo o\nkyō nomi mite ya\nkumogakurinamu',
+    en: 'Today, taking my last sight of the mallards\nCrying on the pond of Iware\nMust I vanish into the clouds!',
+    credit: 'Prince Ōtsu (663–686), Man\'yōshū 3.416, traditionally his and perhaps later; English as on English Wikipedia, no translator named; romaji corrected after Hoffmann; the kanji agree with ja.wikipedia' },
+  { lang: 'en', kind: 'jisei', text: 'Empty-handed I entered the world\nBarefoot I leave it\nMy coming, my going\nTwo simple happenings\nThat got entangled.', en: 'Empty-handed I entered the world\nBarefoot I leave it\nMy coming, my going\nTwo simple happenings\nThat got entangled.',
+    credit: 'Kozan Ikkyō 固山一鞏 (died 1360, aged 77), English by Yoel Hoffmann, Japanese Death Poems (Tuttle, 1986), as given at tanuki2016.com/2018/02/04/46/; the Sino-Japanese original (per English Wikipedia, unverified): 来時は空手、去時は赤脚。一去一来、単重交折' }, // a translation
+  { lang: 'ja', kind: 'jisei', text: 'kuse ni natte\nnishi ogamikeri\nhatsu ashita', // romanised only; the page gives no Japanese
+    en: 'It\'s become a habit\nbowing to the West\nNew Year\'s dawn',
+    credit: 'Wagin 和吟, a Buddhist (died 1758, aged 73; Hoffmann), as given at tanuki2016.com/2018/02/04/46/' },
+  { lang: 'ja', kind: 'jisei', text: 'yururi saku\nkotoshi no hana no\nkakugo kana', // romanised only; the page gives the Japanese incompletely
+    en: 'How leisurely the cherry\nblossoms bloom this year, unhurried,\nby their doom!',
+    credit: 'Kin\'u 琴雨 (died March 1817, aged 62; Hoffmann), as given at tanuki2016.com/2018/02/04/46/' },
+  { lang: 'ja', kind: 'jisei', text: '風さそふ\n花よりもなほ\n我はまた\n春の名残を\nいかにとやせん', variant: '風さそふ\n花よりもなほ\n我はまた\n春の名残を\nいかにとかせん', romaji: 'kaze sasou\nhana yori mo nao\nware ha mata\nharu no nagori wo\nika ni toyasen',
+    en: 'More than the cherry blossoms,\ninviting a wind to blow them away,\nI am wondering what to do\nwith the remaining springtime.',
+    credit: 'Lord Asano Naganori (1667–1701), aged 34 by the page, 35 by Japanese count; in Tamon hikki only, so of doubtful reliability; the page attributes the English to Mizoguchi Kenji (unverified; the same text is on English Wikipedia); the kanji are not the page\'s, ending とやせん as the romaji does, with ja.wikipedia\'s とかせん as the variant' },
+  { lang: 'ja', text: '死に仕度\n致せ致せと\n桜哉', romaji: 'shini shitaku\nitaseitase to\nsakura kana',
+    en: 'Cherry blossoms\npress me to\nprepare to die.',
+    credit: 'Kobayashi Issa (1763–1828), as given at tanuki2016.com/2018/02/04/46/; the page does not call it his jisei' },
+  { lang: 'ja', text: '願わくは花の下にて春死なむ\nその如月の望月のころ', romaji: 'negawaku wa hana no shita nite haru shinamu\nsono kisaragi no mochizuki no koro',
+    en: 'Let me die in spring under the blossom trees,\nlet it be around the full moon of Kisaragi [February].',
+    credit: 'Saigyō Hōshi (1118–1190), as given at tanuki2016.com/2018/02/04/46/; a wish he fulfilled in 1190, and Hoffmann (1986) gives it as his death poem' },
+  { lang: 'grc', source: 'Plato, Gorgias 512e', text: '...τὴν εἱμαρμένην οὐδ’ ἂν εἷς ἐκφύγοι...', en: 'Not even one single individual could escape their measure of destiny' },
 ];
+export const MEMENTO = MEMENTO_ENTRIES.map((e) => e.text);
 // Each phrase in English, in MEMENTO's order: the skull's hover text, "Clear the map: " and the one shown beside it
-export const MEMENTO_EN = [
-  'Remember, man, that you are dust, and to dust you shall return',
-  'We are dust and shadow',
-  'Today me, tomorrow you',
-  'Death is certain, its hour uncertain',
-  'All flesh is grass',
-  'Earth out of earth is wondrously wrought; earth has of earth a dignity of nought',
-  'Every man is dust',
-  'Remember that you must die',
-  'Dust you are, and to dust you shall return',
-  'Our lives are the rivers that flow into the sea, which is dying',
-  'Remember that you are dust',
-];
+export const MEMENTO_EN = MEMENTO_ENTRIES.map((e) => e.en);
 // A phrase that is verse in its source keeps its own lines
 const MEMENTO_VERSE = { 'Nuestras vidas son los ríos que van a dar en la mar, que es el morir': ['Nuestras vidas son los ríos', 'que van a dar en la mar,', 'que es el morir'] }; // Jorge Manrique, Coplas, III
 // A long phrase with a comma near its middle is set as a couplet, two lines split after that comma; any other on one line
 export function mementoLines(text) {
+  if (text.includes('\n')) return text.split('\n');
   if (Object.hasOwn(MEMENTO_VERSE, text)) return MEMENTO_VERSE[text];
   if (text.length <= 30) return [text];
   let best = -1;

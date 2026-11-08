@@ -110,7 +110,7 @@ test('Tyre at zooms 5 to 11, centred and panned: its two marks a width clear on 
 });
 
 test('the memento under the skull: every line in order, then back to the first', () => {
-  assert.equal(MEMENTO.length, 11);
+  assert.equal(MEMENTO.length, 30);
   assert.equal(MEMENTO_EN.length, MEMENTO.length, 'every phrase has its English');
   let k = 0;
   const seen = [MEMENTO[k]];
@@ -123,7 +123,7 @@ test('a long phrase with a comma near its middle is set as a couplet; a short on
   const { mementoLines } = await import('../scripts/people.mjs');
   assert.deepEqual(mementoLines('Memento, homo, quia pulvis es, et in pulverem reverteris'), ['Memento, homo, quia pulvis es,', 'et in pulverem reverteris']);
   assert.deepEqual(mementoLines('Hodie mihi, cras tibi'), ['Hodie mihi, cras tibi']);
-  for (const p of MEMENTO) assert.equal(mementoLines(p).join(' '), p, `${p}: the lines keep every word`);
+  for (const p of MEMENTO) assert.equal(mementoLines(p).join(' '), p.replaceAll('\n', ' '), `${p}: the lines keep every word`);
   assert.deepEqual(mementoLines('Polvo eres, y en polvo te has de convertir'), ['Polvo eres, y en polvo te has de convertir']);
 });
 
