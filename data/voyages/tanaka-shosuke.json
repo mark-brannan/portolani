@@ -1,0 +1,171 @@
+{
+  "id": "tanaka-shosuke",
+  "title": "Tanaka Shōsuke to New Spain and back, 1610–1611",
+  "short": "Tanaka Shōsuke",
+  "who": [
+    "tanaka-shosuke"
+  ],
+  "when": "1610–1611",
+  "summary": "A Kyoto and Osaka merchant, Tanaka Shōsuke left Japan in August 1610 with 22 other Japanese on the San Buena Ventura, a 120-ton ship built under William Adams, to go with Rodrigo de Vivero to New Spain. He reached Mexico City in December, studied silver mining there, was baptized, and sailed home in March 1611 with Sebastián Vizcaíno. He later helped prepare the Hasekura embassy.",
+  "sources": [
+    "tanaka-shosuke"
+  ],
+  "legs": [
+    {
+      "from": "Uraga",
+      "to": "Acapulco",
+      "dates": "Aug – Nov 1610",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Tanaka Shōsuke (Wikipedia): left in August 1610 and reached New Spain in November; neither port is named for the way out",
+      "note": "Uraga is the port the page names for the return. Acapulco is the usual landfall of the crossing, not stated in the source. The open-sea track is drawn by the editor.",
+      "points": [
+        [
+          139.75,
+          34.98
+        ],
+        [
+          140,
+          34.4
+        ],
+        [
+          145,
+          34.6
+        ],
+        [
+          160,
+          38
+        ],
+        [
+          180,
+          40.5
+        ],
+        [
+          -160,
+          41
+        ],
+        [
+          -140,
+          38.5
+        ],
+        [
+          -125,
+          32
+        ],
+        [
+          -115,
+          24
+        ],
+        [
+          -107,
+          18.5
+        ],
+        [
+          -100.2,
+          16.7
+        ]
+      ]
+    },
+    {
+      "from": "Acapulco",
+      "to": "Mexico City",
+      "dates": "Nov – 16 Dec 1610",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Tanaka Shōsuke (Wikipedia): Chimalpahin dates the arrival in Mexico City to 16 December 1610; the road is not in the source",
+      "points": [
+        [
+          -99.9,
+          16.85
+        ],
+        [
+          -99.5,
+          18
+        ],
+        [
+          -99.13,
+          19.43
+        ]
+      ]
+    },
+    {
+      "from": "Acapulco",
+      "to": "Uraga",
+      "dates": "Mar 1611",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Tanaka Shōsuke (Wikipedia): returned to Japan with Vizcaíno, sailing from Mexico in March 1611 and arriving at Uraga; the track is not in the source",
+      "note": "The port of sailing and the course are the editor’s; the page says only that Vizcaíno sailed from Mexico.",
+      "points": [
+        [
+          -100.2,
+          16.7
+        ],
+        [
+          -115,
+          19.5
+        ],
+        [
+          -140,
+          25
+        ],
+        [
+          -170,
+          30
+        ],
+        [
+          170,
+          33
+        ],
+        [
+          150,
+          34
+        ],
+        [
+          140.2,
+          34.9
+        ]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": -99.13,
+      "lat": 19.43,
+      "date": "Dec 1610",
+      "label": "Mexico City: silver mining and baptism",
+      "source": "Tanaka Shōsuke (Wikipedia)",
+      "cite": "tanaka-shosuke",
+      "confidence": "attested",
+      "text": "Spanish sources say he studied silver mining here. He was baptized Francisco de Velasco Josuke; some sources give the name to him alone and call the delegation’s head Don Alonso.",
+      "doubt": "The sources differ on the baptismal names, and on who held which."
+    },
+    {
+      "kind": "event",
+      "lon": -99.9,
+      "lat": 16.85,
+      "date": "Mar 1611",
+      "label": "Home with Vizcaíno; three stay behind",
+      "source": "Tanaka Shōsuke (Wikipedia)",
+      "cite": "tanaka-shosuke",
+      "confidence": "conventional",
+      "text": "Sebastián Vizcaíno carried Ieyasu’s repayment of 4,000 ducados and was to look for the “gold and silver islands”. Chimalpahin records that three of the Japanese stayed in Mexico. The place is the usual port of sailing, not given in the source."
+    },
+    {
+      "kind": "event",
+      "lon": -99.13,
+      "lat": 19.43,
+      "date": "1613–1614",
+      "label": "A hand in the Hasekura embassy",
+      "source": "Tanaka Shōsuke (Wikipedia)",
+      "cite": "tanaka-shosuke",
+      "confidence": "inferred",
+      "text": "The page says he met Hasekura Tsunenaga at length to prepare that embassy (see Hasekura) and puts him aboard the San Juan Bautista in 1613. Whether he went on to Europe, stayed in New Spain or sailed home in 1614 is not known.",
+      "doubt": "The page itself says it is unknown whether he went on with Hasekura, stayed in New Spain, or returned in October 1614."
+    }
+  ]
+}

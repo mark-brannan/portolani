@@ -1,0 +1,257 @@
+{
+  "id": "christopher-and-cosmas",
+  "title": "Christopher and Cosmas, taken by Cavendish, 1587–c. 1591",
+  "short": "Christopher and Cosmas",
+  "who": [
+    "christopher-and-cosmas"
+  ],
+  "when": "1587 – c. 1591",
+  "summary": "Two Japanese youths, about 20 and 16 and known only by their Christian names, were taken off the Manila galleon Santa Ana when Thomas Cavendish captured it off Baja California on 4 November 1587. They went with him across the Pacific and Indian Oceans to England, stayed there perhaps three years, and sailed again with him in 1591. They are not heard of after that.",
+  "sources": [
+    "christopher-and-cosmas"
+  ],
+  "legs": [
+    {
+      "from": "Cabo San Lucas",
+      "to": "Guam",
+      "dates": "Nov 1587 –",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Christopher and Cosmas (Wikipedia): Cavendish continued across the Pacific and Indian Oceans back to England; no stops are named",
+      "note": "The page names no waypoints. Every stop from here to Plymouth is the editor’s, from the known course of Cavendish’s circumnavigation.",
+      "points": [
+        [
+          -109.5,
+          22.6
+        ],
+        [
+          -130,
+          20
+        ],
+        [
+          -150,
+          18
+        ],
+        [
+          -170,
+          17
+        ],
+        [
+          170,
+          15
+        ],
+        [
+          150,
+          13.5
+        ],
+        [
+          145.5,
+          13.4
+        ],
+        [
+          143.8,
+          13.4
+        ]
+      ]
+    },
+    {
+      "from": "Guam",
+      "to": "San Bernardino Strait",
+      "dates": "1588",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Christopher and Cosmas (Wikipedia): across the Pacific Ocean; no stops named",
+      "points": [
+        [
+          143.8,
+          13.4
+        ],
+        [
+          135,
+          13
+        ],
+        [
+          128,
+          12.8
+        ],
+        [
+          125.6,
+          12.9
+        ]
+      ]
+    },
+    {
+      "from": "San Bernardino Strait",
+      "to": "Java",
+      "dates": "1588",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Christopher and Cosmas (Wikipedia): across the Pacific and Indian Oceans; no stops named",
+      "note": "Through the islands of the Philippines and Indonesia; drawn straight because the way is not in the source.",
+      "points": [
+        [
+          125.6,
+          12.9
+        ],
+        [
+          122,
+          10.5
+        ],
+        [
+          116,
+          6
+        ],
+        [
+          112,
+          -1.5
+        ],
+        [
+          110.5,
+          -7
+        ],
+        [
+          110.5,
+          -8.6
+        ]
+      ]
+    },
+    {
+      "from": "Java",
+      "to": "Cape of Good Hope",
+      "dates": "1588",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Christopher and Cosmas (Wikipedia): across the Indian Ocean; no stops named",
+      "points": [
+        [
+          110.5,
+          -8.6
+        ],
+        [
+          100,
+          -15
+        ],
+        [
+          80,
+          -26
+        ],
+        [
+          60,
+          -33
+        ],
+        [
+          40,
+          -36
+        ],
+        [
+          25,
+          -36
+        ],
+        [
+          18.5,
+          -35
+        ]
+      ]
+    },
+    {
+      "from": "Cape of Good Hope",
+      "to": "Plymouth",
+      "dates": "1588",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Christopher and Cosmas (Wikipedia): back to England; the page gives no date of arrival",
+      "note": "St Helena and the Atlantic track are the editor’s; the page dates no arrival.",
+      "points": [
+        [
+          18.5,
+          -35
+        ],
+        [
+          10,
+          -30
+        ],
+        [
+          -2,
+          -17.5
+        ],
+        [
+          -5.7,
+          -16.5
+        ],
+        [
+          -12,
+          -5
+        ],
+        [
+          -20,
+          4
+        ],
+        [
+          -32,
+          12
+        ],
+        [
+          -33,
+          25
+        ],
+        [
+          -25,
+          38
+        ],
+        [
+          -12,
+          46
+        ],
+        [
+          -7,
+          49
+        ],
+        [
+          -4.2,
+          50.2
+        ]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": -109.85,
+      "lat": 22.9,
+      "date": "4 Nov 1587",
+      "label": "Taken off the Santa Ana",
+      "source": "Christopher and Cosmas (Wikipedia)",
+      "cite": "christopher-and-cosmas",
+      "confidence": "attested",
+      "text": "Cavendish’s Desire and Content caught the Manila galleon Santa Ana at Bernabe Bay, about 20 miles east of Cabo San Lucas, put its crew ashore, took the cargo and burned the ship. Christopher, about 20, and Cosmas, about 16, went with the English."
+    },
+    {
+      "kind": "event",
+      "lon": -4.14,
+      "lat": 50.37,
+      "date": "Aug 1591",
+      "label": "Out again with Cavendish",
+      "source": "Christopher and Cosmas (Wikipedia)",
+      "cite": "christopher-and-cosmas",
+      "confidence": "attested",
+      "text": "Cavendish left Plymouth for Brazil. Samuel Purchas mentions the two in Antonie Knivet’s account of this voyage. Nothing is recorded of them after it."
+    },
+    {
+      "kind": "event",
+      "lon": -5.7,
+      "lat": -15.95,
+      "date": "1592",
+      "label": "Fate unknown",
+      "source": "Christopher and Cosmas (Wikipedia)",
+      "cite": "christopher-and-cosmas",
+      "confidence": "speculative",
+      "text": "The page says they are not mentioned again and probably died when Cavendish’s Lester was lost after St Helena. The place is a guess.",
+      "doubt": "No source records how or where either died; this mark is St Helena, the last place the page names before the loss; where the ship was lost is unknown."
+    }
+  ]
+}
