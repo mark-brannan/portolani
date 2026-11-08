@@ -2767,5 +2767,81 @@
       "lon": -164,
       "zoom": 3
     }
+  },
+
+  "silk-road-merchants": {
+    "view": {
+      "lat": 39.0,
+      "lon": 70.0,
+      "zoom": 3
+    },
+    "name": "The merchants of the Silk Road",
+    "group": true,
+    "bio": "The caravan traders who carried silk, paper, glass and much else between China and the Mediterranean, most of them over one stretch only, handing goods on from town to town. The Sogdians of Samarkand held the middle of the road for centuries. Few are named; the road was walked by many people and no one is known to have gone its whole length.",
+    "sources": [
+      "silk-road",
+      "sogdians"
+    ]
+  },
+
+  "ibn-fadlan": {
+    "view": {
+      "lat": 45.0,
+      "lon": 52.0,
+      "zoom": 3.4
+    },
+    "name": "Ibn Fadlan",
+    "aka": [
+      "Ahmad ibn Fadlan"
+    ],
+    "bio": "A jurist of the Abbasid court at Baghdad who went as secretary and religious adviser with the caliph al-Muqtadir's embassy to the king of the Volga Bulghars in 921-22. His risala, the account of the journey, describes the Oghuz Turks, the Bashkirs and the Rus on the Volga. Nothing is known of his origins, his birth or his death.",
+    "sources": [
+      "ahmad-ibn-fadlan",
+      "volga-bulgaria"
+    ]
+  },
+
+  "giovanni-da-pian-del-carpine": {
+    "view": {
+      "lat": 47.0,
+      "lon": 50.0,
+      "zoom": 3
+    },
+    "name": "Giovanni da Pian del Carpine",
+    "aka": [
+      "John of Plano Carpini",
+      "Carpini"
+    ],
+    "bio": "A Franciscan from Umbria, a companion of the disciples of Saint Francis and provincial of Germany, whom Pope Innocent IV chose in 1245 to carry a letter to the Great Khan. With Benedict of Poland he rode to the Mongol court and back, and wrote the earliest important Western account of the Mongols, the Ystoria Mongalorum. He was archbishop of Antivari from 1247 and died on 1 August 1252.",
+    "sources": [
+      "giovanni-da-pian-del-carpine",
+      "ystoria-mongalorum"
+    ],
+    "death": {
+      "date": "1 August 1252",
+      "label": "Carpini died, 1252",
+      "text": "He died on 1 August 1252, archbishop of Antivari. The place is not given in the source read.",
+      "source": "Giovanni da Pian del Carpine (Wikipedia)",
+      "cite": "giovanni-da-pian-del-carpine",
+      "confidence": "attested"
+    }
+  },
+
+  "nain-singh-rawat": {
+    "view": {
+      "lat": 29.5,
+      "lon": 85.0,
+      "zoom": 4
+    },
+    "name": "Nain Singh Rawat",
+    "aka": [
+      "Nain Singh",
+      "the Pundit Number 9"
+    ],
+    "bio": "One of the first Indian explorers employed by the British to explore the Himalayas and Central Asia, from the Johar valley in Kumaon. He surveyed the trade route through Ladakh to Tibet, fixed the position and height of Lhasa and surveyed a long stretch of the Brahmaputra, and walked 1,580 miles in 3,160,000 counted paces. His reports were first made under the code name Number 9.",
+    "sources": [
+      "nain-singh-rawat",
+      "great-trigonometrical-survey"
+    ]
   }
 }
