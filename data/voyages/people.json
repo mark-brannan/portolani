@@ -2656,6 +2656,118 @@
       "zoom": 5.28
     }
   },
+  "robert-o-hara-burke": {
+    "name": "Robert O'Hara Burke",
+    "bio": "An Irish-born police officer in Victoria who, with no bushcraft, was chosen in 1860 to lead the Victorian Exploring Expedition from Melbourne to the Gulf of Carpentaria, the first south-to-north crossing of the continent. He reached the Flinders River swamps, turned back, and died at Cooper Creek on the return in 1861.",
+    "sources": ["robert-o-hara-burke", "burke-and-wills-expedition"],
+    "view": {
+      "lat": -27.6,
+      "lon": 140.7,
+      "zoom": 5
+    },
+    "death": {
+      "lon": 141.08,
+      "lat": -27.62,
+      "date": "c. 30 Jun – 1 Jul 1861",
+      "label": "Burke dies on Cooper Creek, 1861",
+      "confidence": "inferred",
+      "doubt": "The Exploration Committee fixed 28 June 1861 for both Burke and Wills; King's account puts Burke's death a day or two after Wills's, and the place is given as Yaenimemgi in one telling and Burke's Waterhole in another",
+      "text": "Burke died a day or two after Wills, on Cooper Creek near the abandoned depot; King buried him. The mark stands at the depot (the Dig Tree), not the exact spot.",
+      "source": "Wikipedia, Burke and Wills expedition",
+      "cite": "burke-and-wills-expedition"
+    }
+  },
+  "william-john-wills": {
+    "name": "William John Wills",
+    "bio": "An English surveyor and astronomer who was second in command and kept the expedition's journal. He went to the Gulf with Burke, and died at Cooper Creek in 1861 of exhaustion and starvation after living on nardoo.",
+    "sources": ["william-john-wills", "burke-and-wills-expedition"],
+    "view": {
+      "lat": -27.6,
+      "lon": 140.7,
+      "zoom": 5
+    },
+    "death": {
+      "lon": 141.08,
+      "lat": -27.62,
+      "date": "c. 30 Jun 1861",
+      "label": "Wills dies at Breerily Waterhole, 1861",
+      "confidence": "inferred",
+      "doubt": "The Exploration Committee fixed 28 June 1861 as the date for both men; Wikipedia gives about 30 June or 1 July",
+      "text": "Wills stayed behind at Breerily Waterhole on Cooper Creek, too weak to walk on, while Burke and King went to look for help. The mark stands at the depot, not the exact spot.",
+      "source": "Wikipedia, Burke and Wills expedition",
+      "cite": "burke-and-wills-expedition"
+    }
+  },
+  "john-king-explorer": {
+    "name": "John King",
+    "bio": "An Irish soldier who joined the expedition as a camel handler, went to the Gulf with Burke and Wills, and was the only one of the four to come back. He was found on 15 September 1861 by Howitt's party, having lived about a month with the Yandruwandha.",
+    "sources": ["john-king-explorer", "burke-and-wills-expedition", "yandruwandha"],
+    "view": {
+      "lat": -27.6,
+      "lon": 140.7,
+      "zoom": 5
+    }
+  },
+  "dost-mahomet": {
+    "name": "Dost Mahomet",
+    "bio": "A Muslim camel driver from Ghazni, one of the handlers who came with the camels bought in India. He went ahead from Menindee with Burke and stayed at the Cooper Creek depot under Brahe.",
+    "sources": ["burke-and-wills-expedition"],
+    "view": {
+      "lat": -27.6,
+      "lon": 140.7,
+      "zoom": 5
+    }
+  },
+  "roald-amundsen": {
+    "name": "Roald Amundsen",
+    "bio": "A Norwegian polar explorer who changed the plan of his Fram expedition for the North Pole to the South once Peary's claim was news, and reached the South Pole on 14 December 1911 with four men and dogs. He disappeared in 1928 flying north to search for the crew of Nobile's airship.",
+    "sources": ["roald-amundsen", "amundsen-south-pole-expedition"],
+    "view": {
+      "lat": -85,
+      "lon": -164,
+      "zoom": 3
+    }
+  },
+  "olav-bjaaland": {
+    "name": "Olav Bjaaland",
+    "bio": "A Norwegian ski champion from Morgedal and one of the five who reached the South Pole with Amundsen; he was the expedition's ski and sledge maker.",
+    "sources": ["olav-bjaaland", "amundsen-south-pole-expedition"],
+    "view": {
+      "lat": -85,
+      "lon": -164,
+      "zoom": 3
+    }
+  },
+  "helmer-hanssen": {
+    "name": "Helmer Hanssen",
+    "bio": "A Norwegian sailor and dog driver, one of the five at the South Pole on 14 December 1911; he had sailed with Amundsen through the Northwest Passage.",
+    "sources": ["helmer-hanssen", "amundsen-south-pole-expedition"],
+    "view": {
+      "lat": -85,
+      "lon": -164,
+      "zoom": 3
+    }
+  },
+  "sverre-hassel": {
+    "name": "Sverre Hassel",
+    "bio": "A Norwegian sailor and dog driver, one of the five at the South Pole on 14 December 1911.",
+    "sources": ["sverre-hassel", "amundsen-south-pole-expedition"],
+    "view": {
+      "lat": -85,
+      "lon": -164,
+      "zoom": 3
+    }
+  },
+  "oscar-wisting": {
+    "name": "Oscar Wisting",
+    "bio": "A Norwegian naval gunner and dog driver, one of the five at the South Pole on 14 December 1911; he stayed with Amundsen on later polar voyages.",
+    "sources": ["oscar-wisting", "amundsen-south-pole-expedition"],
+    "view": {
+      "lat": -85,
+      "lon": -164,
+      "zoom": 3
+    }
+  },
 
   "silk-road-merchants": {
     "view": {
