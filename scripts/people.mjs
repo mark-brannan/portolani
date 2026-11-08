@@ -346,10 +346,17 @@ export const MEMENTO_ENTRIES = [
   { lang: 'ja', kind: 'jisei', text: '斯う活て居るも不思議ぞ花の陰', variant: '斯う活ているも不思議ぞ花の陰',
     romaji: 'Kō ikite iru mo fushigi zo hana no kage',
     en: 'Living thus, being alive, what a wonder! In shadows of cherry blossoms' },
-  { lang: 'en', kind: 'jisei', text: 'Cherry blossoms fall when the time is right. I too will fall when it is time to go.', en: 'Cherry blossoms fall when the time is right. I too will fall when it is time to go.',
-    credit: 'Roy Isami Ebata (the user\'s recollection, unverified)' }, // originally English, not a translation
+  { lang: 'en', kind: 'jisei', text: 'Cherry blossoms fall\nwhen the time is right\nI too will fall\nwhen it is time to go',
+    en: 'Cherry blossoms fall\nwhen the time is right\nI too will fall\nwhen it is time to go',
+    credit: 'Roy Isami Ebata (1919–1990), written in the margin of his Living Will, 2 January 1985; given at tanuki2016.com/2018/02/04/46/' }, // originally English, not a translation
   { lang: 'ja', kind: 'jisei', text: '散る梅に\n見上げる空の\n月清し', romaji: 'Chiru ume ni\nmiaguru sora no\ntsuki kiyoshi',
-    en: 'Plum petals falling\nI look up—the sky,\na clear crisp moon.' },
+    en: 'Plum petals falling\nI look up—the sky,\na clear crisp moon.',
+    credit: 'Baiko (died 1903), as given at tanuki2016.com/2018/02/04/46/' },
+  { lang: 'ja', kind: 'jisei', text: '百伝ふ\n磐余の池に\n鳴く鴨を\n今日のみ見てや\n雲隠りなむ', romaji: 'Monozutau\nIware no ike ni\nnaku kamo wo\nkyo nomi mite ya\nkumokakuri nan',
+    en: 'Today, taking my last sight of the mallards\nCrying on the pond of Iware\nMust I vanish into the clouds!',
+    credit: 'Prince Ōtsu (663–686), as given at tanuki2016.com/2018/02/04/46/' },
+  { lang: 'en', kind: 'jisei', text: 'Empty-handed I entered the world\nBarefoot I leave it\nMy coming, my going\nTwo simple happenings\nThat got entangled.', en: 'Empty-handed I entered the world\nBarefoot I leave it\nMy coming, my going\nTwo simple happenings\nThat got entangled.',
+    credit: 'Kozan Ichiko (1283–1360), in the English given at tanuki2016.com/2018/02/04/46/; the original is not given there' }, // a translation, original not held
   { lang: 'grc', text: '...τὴν εἱμαρμένην οὐδ’ ἂν εἷς ἐκφύγοι...', en: 'Not even one single individual could escape their measure of destiny' },
 ];
 export const MEMENTO = MEMENTO_ENTRIES.map((e) => e.text);

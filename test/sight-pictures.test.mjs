@@ -110,7 +110,7 @@ test('Tyre at zooms 5 to 11, centred and panned: its two marks a width clear on 
 });
 
 test('the memento under the skull: every line in order, then back to the first', () => {
-  assert.equal(MEMENTO.length, 23);
+  assert.equal(MEMENTO.length, 25);
   assert.equal(MEMENTO_EN.length, MEMENTO.length, 'every phrase has its English');
   let k = 0;
   const seen = [MEMENTO[k]];
