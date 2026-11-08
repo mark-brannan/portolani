@@ -1,0 +1,74 @@
+{
+  "id": "azumi-people",
+  "kind": "migration",
+  "title": "The Azumi, seafarers of northern Kyushu, from the 3rd century",
+  "short": "The Azumi",
+  "who": ["azumi"],
+  "when": "c. 250 – 700",
+  "summary": "The Azumi were a seafaring clan of northern Kyushu whose night navigation made them useful to the Yamato court from the 3rd century and, in effect, its navy. They are said to have come to control the sea routes of the Inland Sea and to have settled in Settsu, near Osaka. A tradition has some of them going inland to the Azumi basin in Nagano; that leg rests on tourism and popular pages and is drawn as a guess.",
+  "sources": ["azumi-people"],
+  "legs": [
+    {
+      "from": "Shikanoshima, Hakata Bay",
+      "to": "the Korean coast",
+      "dates": "3rd century onward",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Azumi people (Wikipedia): the clan traded with China and Korea by sea; Shikanoshima holds a shrine to the Azumi sea god Azumi no Isora",
+      "reach": [0, 0.35],
+      "heads": "both",
+      "points": [[130.3, 33.78], [129.9, 33.97], [129.65, 34.4], [129.5, 34.85], [129.15, 34.95]]
+    },
+    {
+      "from": "Shikanoshima, Hakata Bay",
+      "to": "Settsu, around Osaka",
+      "dates": "3rd – 7th century",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Azumi people (Wikipedia): the Azumi came to control the Inland Sea routes to Kyushu and settled in Settsu; traces of their culture on Awaji",
+      "reach": [0, 0.7],
+      "heads": "end",
+      "doubt": "The article says many of its claims rest on blogs, tourism pages and self-published sources, and its Austronesian-origin claim is not supported by the sources it cites.",
+      "points": [[130.3, 33.78], [130.85, 34.1], [131.6, 33.95], [132.7, 33.95], [133.8, 34.3], [134.95, 34.5], [135.4, 34.6]]
+    },
+    {
+      "from": "Settsu, around Osaka",
+      "to": "the Azumi basin, Nagano",
+      "dates": "tradition says, about a thousand years ago",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "speculative",
+      "source": "Azumi people (Wikipedia): some Azumi 'migrated further inland' to the Azumi basin; its sources are a tourism page and a 2011 Yahoo Voices article",
+      "reach": [0.7, 1],
+      "heads": "end",
+      "doubt": "Tradition says so. The article's sources for it are a tourism page and a popular-web article, and the course from the coast is the drawing's.",
+      "points": [[135.4, 34.6], [136.5, 35.2], [137.2, 35.8], [137.88, 36.3]]
+    }
+  ],
+  "events": [
+    {
+      "kind": "waypoint",
+      "lon": 130.31,
+      "lat": 33.67,
+      "date": "from the 3rd century",
+      "label": "Shikanoshima, where the Azumi are honoured",
+      "source": "Azumi people (Wikipedia)",
+      "cite": "azumi-people",
+      "text": "A shrine on the island's Genkai Bay side is dedicated to Azumi no Isora, with stones for sea turtles and over a thousand deer antlers. Another shrine in Fukuoka is called the Azumi's ancestral shrine. The article makes them the effective navy of Yamato from the 3rd to early 5th century."
+    },
+    {
+      "kind": "waypoint",
+      "lon": 137.88,
+      "lat": 36.3,
+      "date": "by tradition",
+      "label": "The Azumi basin",
+      "source": "Azumi people (Wikipedia)",
+      "cite": "azumi-people",
+      "confidence": "speculative",
+      "doubt": "The two sources the article gives for the move inland are a tourism page and a 2011 Yahoo Voices article.",
+      "text": "Azumino, in Nagano, keeps the clan's name. The article says some Azumi settled here, and folklore recorded about a thousand years ago speaks of the settlement."
+    }
+  ]
+}

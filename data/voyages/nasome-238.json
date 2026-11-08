@@ -1,0 +1,77 @@
+{
+  "id": "nasome-238",
+  "title": "Natome and Himiko's embassy to Wei, 238 or 239",
+  "short": "Himiko's embassy",
+  "who": ["natome", "himiko"],
+  "when": "238 or 239",
+  "summary": "The earliest Japanese embassy the records name. Himiko, queen of Wa, sent Natome (Nashime) and Tsushigori across the Tsushima Strait to Wei's province of Daifang in Korea, and on to the Wei court, with ten slaves and two lengths of patterned cloth. Cao Rui named her Queen of Wa Friendly to Wei and sent back a gold seal and, by one record, a hundred bronze mirrors. The year is 238 in the Wei Zhi as printed and 239 in other histories. Where Himiko ruled is argued, Kyushu against the Kinai, so the drawing starts at the crossing, not at her court.",
+  "sources": ["himiko", "wajinden", "daifang-commandery", "cao-wei"],
+  "legs": [
+    {
+      "from": "Matsuro, northern Kyushu",
+      "to": "the Korean coast",
+      "dates": "238 or 239",
+      "mode": "sea",
+      "line": "rhumb",
+      "confidence": "inferred",
+      "source": "Wajinden (Wikipedia): from Matsuro by sea past Iki and Tsushima to Kuyahan, each crossing of more than 1,000 li",
+      "doubt": "The year is 238 in the Wei Zhi as printed, 239 in the Book of Liang, the Taiping yulan and the Nihon Shoki; the Kodansha edition of the Wajinden calls 238 an error. Which Kyushu bay Matsuro was, and where on the Korean coast Kuyahan lay, are the usual identifications, not fixed.",
+      "points": [[129.93, 33.62], [129.75, 33.97], [129.65, 34.4], [129.5, 34.85], [129.15, 34.95]]
+    },
+    {
+      "from": "the Korean coast",
+      "to": "Daifang",
+      "dates": "238 or 239",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "speculative",
+      "source": "Wajinden (Wikipedia): Daifang is the reference point for every distance; the track to it is not described",
+      "doubt": "Daifang's seat is put around Hwanghae, but its exact site is unresolved (Daifang Commandery, Wikipedia); the course from the coast is a guess.",
+      "points": [[129.0, 35.1], [127.6, 36.2], [126.4, 37.4], [125.8, 38.5]]
+    },
+    {
+      "from": "Daifang",
+      "to": "Luoyang, the court of Wei",
+      "dates": "238 or 239",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "speculative",
+      "source": "Himiko (Wikipedia): the envoys came to the court of the Wei emperor Cao Rui; Wei's capital was Luoyang from 226 (Cao Wei, Wikipedia)",
+      "doubt": "None of the pages read describes the road from Daifang to the court; the line joins the two places and no more.",
+      "points": [[125.8, 38.5], [123.0, 39.5], [119.5, 39.6], [116.0, 37.5], [112.45, 34.65]]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": 129.7,
+      "lat": 33.8,
+      "label": "Iki and Tsushima, the stepping stones",
+      "source": "Wajinden (Wikipedia)",
+      "cite": "wajinden",
+      "confidence": "inferred",
+      "text": "The Wajinden counts the way from Kuyahan: a sea crossing of more than 1,000 li to Tsushima, another to Iki, another to Matsuro. Tsushima it describes as an island of about 400 li each way and Iki about 300."
+    },
+    {
+      "kind": "event",
+      "lon": 125.8,
+      "lat": 38.5,
+      "label": "Daifang, Wei's gate to Wa",
+      "source": "Daifang Commandery (Wikipedia)",
+      "cite": "daifang-commandery",
+      "confidence": "conventional",
+      "text": "Wei brought Daifang under its rule in 238 by defeating the Gongsun family. A new governor reached it in 247. The Kodansha edition cited in the Wajinden article argues that 238 for the embassy is an error because Wei held Daifang only from early 238."
+    },
+    {
+      "kind": "event",
+      "lon": 112.45,
+      "lat": 34.65,
+      "label": "Luoyang: the title, the seal and the mirrors",
+      "source": "Himiko (Wikipedia)",
+      "cite": "himiko",
+      "confidence": "inferred",
+      "doubt": "The Wajinden page gives the title as King of Wei in one place and King of Wa in another; the Himiko page gives Queen of Wa Friendly to Wei. The mirrors are tied to this gift by the Wei Zhi, which some scholars dispute.",
+      "text": "The tribute was four male and six female slaves and two lengths of patterned cloth, each twenty feet long. Cao Rui named Himiko Queen of Wa Friendly to Wei and granted a gold seal with a purple ribbon, to be sent through the governor. The Wei Zhi has him give a hundred bronze mirrors, and Natome is made General of the Household. Cao Rui died on 22 January 239. In 240 a Wei mission carried the rescript and seal to Wa."
+    }
+  ]
+}

@@ -191,5 +191,19 @@
   "fletcher-christian": { "title": "Fletcher Christian (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Fletcher_Christian" },
   "pitcairn-islands": { "title": "Pitcairn Islands (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Pitcairn_Islands" },
   "hokulea": { "title": "Hōkūleʻa (Wikipedia)", "url": "https://en.wikipedia.org/wiki/H%C5%8Dk%C5%ABle%CA%BBa" },
-  "mau-piailug": { "title": "Mau Piailug (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Mau_Piailug" }
+  "mau-piailug": { "title": "Mau Piailug (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Mau_Piailug" },
+
+  "himiko": { "title": "Himiko (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Himiko" },
+  "wajinden": { "title": "Wajinden (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Wajinden" },
+  "daifang-commandery": { "title": "Daifang Commandery (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Daifang_Commandery" },
+  "cao-wei": { "title": "Cao Wei (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Cao_Wei" },
+  "azumi-people": { "title": "Azumi people (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Azumi_people" },
+  "prehistory-of-japan": { "title": "Prehistory of Japan (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Prehistory_of_Japan" },
+  "japanese-paleolithic": { "title": "Japanese Paleolithic (Wikipedia)", "url": "https://en.wikipedia.org/wiki/Japanese_Paleolithic" },
+  "kaifu-2019-seafaring": { "title": "Kaifu et al., Palaeolithic seafaring in East Asia: testing the bamboo raft hypothesis, Antiquity 93 (2019)", "url": "https://doi.org/10.15184/aqy.2019.90" },
+  "nakazawa-2017": { "title": "Nakazawa, On the Pleistocene Population History in the Japanese Archipelago, Current Anthropology 58 (2017)", "url": "https://doi.org/10.1086/694447" },
+  "jomon-period": { "title": "Jōmon period (Wikipedia)", "url": "https://en.wikipedia.org/wiki/J%C5%8Dmon_period" },
+  "jomon-people": { "title": "Jōmon people (Wikipedia)", "url": "https://en.wikipedia.org/wiki/J%C5%8Dmon_people" },
+  "cooke-2021": { "title": "Cooke et al., Ancient genomics reveals tripartite origins of Japanese populations, Science Advances 7 (2021)", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8448447/" },
+  "gakuhari-2020": { "title": "Gakuhari et al., Ancient Jomon genome sequence analysis sheds light on migration patterns of early East Asian populations, Communications Biology 3 (2020)", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7447786" }
 }

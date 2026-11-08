@@ -1,0 +1,86 @@
+{
+  "id": "first-peoples-japan",
+  "kind": "migration",
+  "title": "The first people of the Japanese archipelago, c. 38,000 years ago",
+  "short": "First peoples of Japan",
+  "who": ["first-peoples-japan"],
+  "when": "c. 36,000 – 30,000 BC",
+  "summary": "The oldest evidence of people in the archipelago is about 38,000 to 40,000 years old, and they probably came by boat. Three entries are drawn, none recorded: from the north by Sakhalin, from Korea by the Tsushima stepping stones, and from Taiwan along the Ryukyu chain. A survey of the routes lists six and rates the Korean and southern Chinese ones best supported. The sea voyage to Kozushima, about 38 km off Honshu, is dated to about 38,000 years ago.",
+  "sources": ["prehistory-of-japan", "japanese-paleolithic", "kaifu-2019-seafaring", "nakazawa-2017"],
+  "legs": [
+    {
+      "from": "Sakhalin",
+      "to": "Hokkaido and northern Honshu",
+      "dates": "Late Pleistocene, undated",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "speculative",
+      "source": "Nakazawa 2017: the northern entry from the Russian Far East to Hokkaido, route 2 of six, the only one open on foot at the low sea level",
+      "reach": [0, 1],
+      "heads": "end",
+      "doubt": "Nakazawa 2017 finds this route less likely to have fed the Honshu record than the ones from Korea and southern China; ancient DNA shows gene flow from eastern Siberia into Hokkaido, possibly since the last glacial maximum.",
+      "points": [[142.7, 50.0], [142.0, 46.0], [141.7, 43.5], [141.0, 40.5]]
+    },
+    {
+      "from": "the Korean coast",
+      "to": "northern Kyushu",
+      "dates": "Late Pleistocene, undated",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "speculative",
+      "source": "Nakazawa 2017: route 1, by the Tsushima Strait; with the southern Chinese route the best supported for the early hunter-gatherers",
+      "reach": [0, 1],
+      "heads": "end",
+      "doubt": "Even at low sea level the crossing took boats; Kaifu and colleagues (2019) put the earliest sea crossing across the strait between Korea and Kyushu, but the course drawn is the usual one, not a find.",
+      "points": [[129.2, 35.2], [129.4, 34.4], [129.8, 33.9], [130.4, 33.6]]
+    },
+    {
+      "from": "Taiwan",
+      "to": "Okinawa",
+      "dates": "by c. 32,000 years ago",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "speculative",
+      "source": "Kaifu et al. 2019: the Ryukyu chain settled by about 30,000 years ago, with a test craft crossing from Taiwan to Yonaguni; Nakazawa 2017: route 4",
+      "reach": [0, 1],
+      "heads": "end",
+      "doubt": "Nakazawa 2017 says the route to the Ryukyus is still not clear: the first settlers may have come from Taiwan in the south or from southern Kyushu in the north.",
+      "points": [[121.5, 24.5], [124.2, 24.4], [126.0, 25.5], [127.7, 26.2]]
+    }
+  ],
+  "events": [
+    {
+      "kind": "waypoint",
+      "lon": 139.13,
+      "lat": 34.22,
+      "date": "c. 38,000 years ago",
+      "label": "Kozushima, the oldest secure sea voyage",
+      "source": "Kaifu et al. 2019; Nakazawa 2017",
+      "cite": "kaifu-2019-seafaring",
+      "confidence": "inferred",
+      "text": "Obsidian from the island, about 38 km off Honshu, was carried to sites on the main island from about 38,000 years ago. Kaifu and colleagues call it the world's oldest secure evidence of a planned sea voyage. Nakazawa cites it as proof that the seafaring needed for the sea routes was there by the Late Paleolithic."
+    },
+    {
+      "kind": "waypoint",
+      "lon": 138.22,
+      "lat": 36.83,
+      "date": "c. 37,900 years ago",
+      "label": "Lake Nojiri",
+      "source": "Japanese Paleolithic (Wikipedia)",
+      "cite": "japanese-paleolithic",
+      "confidence": "attested",
+      "text": "The site dates to about 37,900 years before the present, and shows people hunting an extinct elephant and a giant deer. The article takes c. 35,000 BC as the first widely accepted date of people in the archipelago; claims of 40,000 to 50,000 BC fell with the 2000 scandal over planted artefacts."
+    },
+    {
+      "kind": "waypoint",
+      "lon": 127.68,
+      "lat": 26.21,
+      "date": "c. 32,000 years ago",
+      "label": "Yamashita Cave, Okinawa",
+      "source": "Prehistory of Japan (Wikipedia)",
+      "cite": "prehistory-of-japan",
+      "confidence": "attested",
+      "text": "Evidence of people living in Okinawa's Yamashita Cave has been dated to 32,000 years ago. The Ryukyu Islands were settled by about 30,000 years ago, on six islands with well-dated sites, and different parts of the chain by different peoples from the south and the north."
+    }
+  ]
+}

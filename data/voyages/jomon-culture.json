@@ -1,0 +1,36 @@
+{
+  "id": "jomon-culture",
+  "kind": "migration",
+  "title": "The Jōmon, the people already there, c. 14,000 – 300 BC",
+  "short": "The Jōmon",
+  "who": ["jomon-people"],
+  "when": "c. 14,000 – 300 BC",
+  "summary": "The Jōmon were the hunter-gatherers of the archipelago for some 14,000 years, makers of what may be the oldest pottery in the world, and they are the layer under every arrow into Japan. Ancient genomes show Japanese people descending from three ancestries, the Jōmon, the farmers of the Yayoi and a later influx of East Asians in the Kofun period, and the Yayoi mixed with the Jōmon rather than replacing them. Nothing is drawn as a crossing here; the arrival of the Yayoi is on the Jōmon to Yayoi record.",
+  "sources": ["jomon-period", "jomon-people", "cooke-2021", "gakuhari-2020"],
+  "legs": [],
+  "events": [
+    {
+      "kind": "waypoint",
+      "lon": 137.148,
+      "lat": 34.645,
+      "date": "c. 2,500 years ago",
+      "label": "Ikawazu shell mound, where a Jōmon genome was read",
+      "source": "Gakuhari et al. 2020; Cooke et al. 2021",
+      "cite": "gakuhari-2020",
+      "confidence": "attested",
+      "doubt": "When the Jōmon lineage parted from other East Asians is given as 25,000 to 38,000 years ago in Wikipedia's Jōmon people article, and as 20,000 to 15,000 years ago by Cooke et al. 2021, who say earlier work put it between 18,000 and 38,000.",
+      "text": "A woman buried at Ikawazu, Aichi, radiocarbon-dated to 2720 – 2418 cal BP, gave a whole-genome sequence (Gakuhari et al., Communications Biology, 2020). Cooke et al. (Science Advances, 2021) report 12 new ancient Japanese genomes and date the Jōmon lineage's deep divergence from continental peoples to 20,000 to 15,000 years ago, the figure used here. Yayoi remains carry 35 to 60 per cent Jōmon ancestry; some northwest Kyushu individuals of the period carry all of it."
+    },
+    {
+      "kind": "waypoint",
+      "lon": 141.2,
+      "lat": 43.0,
+      "date": "from c. 300 BC",
+      "label": "Hokkaido, where the Jōmon were not replaced by the Yayoi",
+      "source": "Jōmon period (Wikipedia)",
+      "cite": "jomon-period",
+      "confidence": "attested",
+      "text": "In Hokkaido and northern Tōhoku the Jōmon gave way to the related Zoku-Jōmon, not to the Yayoi. The Ryukyu Islands did not have Jōmon culture at all: the article says the Jōmon were mostly absent there."
+    }
+  ]
+}
