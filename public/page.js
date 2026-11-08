@@ -2437,9 +2437,9 @@ function setOnTable(i, on) {
 // The skull in the right margin, always there, a memento mori under it, is the one clear for the whole map
 // (docs/spec/design.md, "The skull is the one clear"): a click (or Enter, or Space) clears the table (clearTable), lifts
 // every chart's sheet back to its own place and takes every voyage off, and moves the line on to the next (MEMENTO, the
-// first at random). It leaves the settings (the rose, the projection, every style) and the view (place, zoom, bearing)
+// first, always). It leaves the settings (the rose, the projection, every style) and the view (place, zoom, bearing)
 // as they are: a lifted sheet does not turn the world back to north here, as lifting one by its eye does.
-let memento = Math.floor(Math.random() * MEMENTO.length);
+let memento = 0;
 const showMemento = () => { $('mementoText').textContent = MEMENTO[memento]; $('sweep').title = `Clear the map: ${MEMENTO_EN[memento]}`; };
 showMemento();
 // In stages, each drawn before the next, so the clear's effect can tell what went: the cards, then the lines (a
