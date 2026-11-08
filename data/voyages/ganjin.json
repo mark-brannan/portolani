@@ -1,0 +1,155 @@
+{
+  "id": "ganjin",
+  "title": "Ganjin's sixth voyage to Japan, 748–754",
+  "short": "Ganjin",
+  "who": [
+    "ganjin"
+  ],
+  "when": "748–754",
+  "summary": "The Chinese monk Ganjin tried about six times between 743 and 754 to reach Japan. The fifth try, from Yangzhou in 748, was blown past the Zhoushan islands to Hainan. In autumn 753, blind, he boarded a Japanese embassy ship and landed in Kyushu on 20 December. He reached Nara in spring 754.",
+  "sources": [
+    "jianzhen",
+    "japanese-missions-to-tang"
+  ],
+  "legs": [
+    {
+      "from": "Yangzhou",
+      "to": "Hainan",
+      "dates": "748",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Jianzhen (Wikipedia): the fifth attempt left Yangzhou, reached the Zhoushan Archipelago and was blown off course to Hainan",
+      "note": "Only the fifth attempt is drawn; the other attempts are not dated or placed in the source. The mouth of the Yangtze stands for Yangzhou, which lies up the river.",
+      "points": [
+        [
+          121.9,
+          31.5
+        ],
+        [
+          122.7,
+          29.8
+        ],
+        [
+          121.5,
+          27.0
+        ],
+        [
+          118.5,
+          23.2
+        ],
+        [
+          113.5,
+          19.0
+        ],
+        [
+          110.5,
+          17.7
+        ],
+        [
+          109.6,
+          18.05
+        ]
+      ]
+    },
+    {
+      "from": "Yangzhou",
+      "to": "Kagoshima, Kyushu",
+      "dates": "autumn – 20 Dec 753",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Jianzhen (Wikipedia): boarded a Japanese emissary ship in autumn 753, landed at Kagoshima on 20 December; the way between is not in the source",
+      "note": "Usually drawn south of the line the earlier embassies took, by the Ryukyu islands; the source does not name the course.",
+      "points": [
+        [
+          121.9,
+          31.5
+        ],
+        [
+          124.0,
+          29.5
+        ],
+        [
+          127.5,
+          27.0
+        ],
+        [
+          129.5,
+          29.5
+        ],
+        [
+          130.4,
+          31.0
+        ]
+      ]
+    },
+    {
+      "from": "Kagoshima",
+      "to": "Nara",
+      "dates": "Dec 753 – spring 754",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Jianzhen (Wikipedia): reached Nara in spring 754; the road is not in the source",
+      "note": "A straight editorial line; he travelled by the usual ways of the time, partly by water.",
+      "points": [
+        [
+          130.56,
+          31.6
+        ],
+        [
+          130.5,
+          33.5
+        ],
+        [
+          132.5,
+          34.3
+        ],
+        [
+          135.5,
+          34.7
+        ],
+        [
+          135.8,
+          34.69
+        ]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": 119.42,
+      "lat": 32.39,
+      "date": "748",
+      "label": "Ganjin sets out from Yangzhou",
+      "source": "Jianzhen (Wikipedia)",
+      "cite": "jianzhen",
+      "confidence": "attested",
+      "text": "The fifth attempt left Yangzhou in the summer of 748. The ship was blown off course past the Zhoushan islands to Hainan, and he returned overland to Yangzhou."
+    },
+    {
+      "kind": "landfall",
+      "lon": 130.56,
+      "lat": 31.6,
+      "date": "20 Dec 753",
+      "label": "Landfall at Kagoshima",
+      "source": "Jianzhen (Wikipedia)",
+      "cite": "jianzhen",
+      "confidence": "attested",
+      "text": "He landed in Kyushu on 20 December 753."
+    },
+    {
+      "kind": "event",
+      "lon": 135.8,
+      "lat": 34.69,
+      "date": "spring 754",
+      "label": "Welcomed at Nara",
+      "source": "Jianzhen (Wikipedia)",
+      "cite": "jianzhen",
+      "confidence": "attested",
+      "text": "He presided over Tōdai-ji; in 759 he retired to western Nara and founded Tōshōdai-ji."
+    }
+  ]
+}

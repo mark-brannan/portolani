@@ -1,0 +1,500 @@
+{
+  "id": "hasekura-embassy",
+  "title": "The Keichō embassy of Hasekura Tsunenaga, 1613–1620",
+  "short": "Hasekura",
+  "who": [
+    "hasekura-tsunenaga",
+    "luis-sotelo"
+  ],
+  "when": "1613–1620",
+  "summary": "The samurai Hasekura Tsunenaga left Tsukinoura in October 1613 with some 180 people on the San Juan Bautista, crossed the Pacific to Acapulco, Mexico City and Havana, met Philip III in Madrid and Pope Paul V in Rome in 1615, and came home to Nagasaki in August 1620. The Spanish king declined the trade treaty he was sent for.",
+  "sources": [
+    "hasekura-tsunenaga"
+  ],
+  "legs": [
+    {
+      "from": "Tsukinoura",
+      "to": "Acapulco",
+      "dates": "Oct 1613 – 25 Jan 1614",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Hasekura Tsunenaga (Wikipedia): sighted Cape Mendocino, put in at Zacatula, reached Acapulco on 25 January 1614",
+      "note": "The first point is the bay at Tsukinoura on the Oshika peninsula, near Ishinomaki.",
+      "points": [
+        [
+          141.75,
+          38.3
+        ],
+        [
+          155.0,
+          40.5
+        ],
+        [
+          175.0,
+          42.5
+        ],
+        [
+          -160.0,
+          43.5
+        ],
+        [
+          -140.0,
+          42.5
+        ],
+        [
+          -127.0,
+          40.5
+        ],
+        [
+          -124.9,
+          40.0
+        ],
+        [
+          -122.5,
+          34.0
+        ],
+        [
+          -118.0,
+          27.0
+        ],
+        [
+          -113.0,
+          21.0
+        ],
+        [
+          -107.0,
+          18.0
+        ],
+        [
+          -102.5,
+          17.0
+        ],
+        [
+          -99.95,
+          16.8
+        ]
+      ]
+    },
+    {
+      "from": "Acapulco",
+      "to": "Mexico City",
+      "dates": "Jan – 24 Mar 1614",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "attested",
+      "source": "Hasekura Tsunenaga (Wikipedia): entered Mexico City on 24 March 1614",
+      "points": [
+        [
+          -99.9,
+          16.85
+        ],
+        [
+          -99.5,
+          18.0
+        ],
+        [
+          -99.13,
+          19.43
+        ]
+      ]
+    },
+    {
+      "from": "Mexico City",
+      "to": "Veracruz",
+      "dates": "Mar – Jun 1614",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Hasekura Tsunenaga (Wikipedia): left Mexico for Havana; Veracruz as the port is not in the source",
+      "note": "Veracruz is the usual Gulf port for the road from Mexico City, not stated in the source.",
+      "points": [
+        [
+          -99.13,
+          19.43
+        ],
+        [
+          -97.5,
+          19.1
+        ],
+        [
+          -96.13,
+          19.2
+        ]
+      ]
+    },
+    {
+      "from": "Veracruz",
+      "to": "Havana",
+      "dates": "Jun – Jul 1614",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Hasekura Tsunenaga (Wikipedia): stopped six days in Havana; the course is not in the source",
+      "points": [
+        [
+          -95.95,
+          19.2
+        ],
+        [
+          -94.0,
+          21.0
+        ],
+        [
+          -91.5,
+          22.8
+        ],
+        [
+          -88.0,
+          23.0
+        ],
+        [
+          -84.0,
+          23.5
+        ],
+        [
+          -82.4,
+          23.3
+        ]
+      ]
+    },
+    {
+      "from": "Havana",
+      "to": "Sanlúcar de Barrameda",
+      "dates": "Jul – 5 Oct 1614",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Hasekura Tsunenaga (Wikipedia): the fleet reached Sanlúcar on 5 October 1614",
+      "points": [
+        [
+          -82.4,
+          23.3
+        ],
+        [
+          -80.2,
+          24.1
+        ],
+        [
+          -79.0,
+          26.2
+        ],
+        [
+          -77.0,
+          30.0
+        ],
+        [
+          -65.0,
+          36.0
+        ],
+        [
+          -40.0,
+          38.5
+        ],
+        [
+          -20.0,
+          37.5
+        ],
+        [
+          -10.0,
+          36.5
+        ],
+        [
+          -6.4,
+          36.75
+        ]
+      ]
+    },
+    {
+      "from": "Sanlúcar de Barrameda",
+      "to": "Madrid",
+      "dates": "Oct 1614 – 30 Jan 1615",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Hasekura Tsunenaga (Wikipedia): in Seville on 23 October, met Philip III in Madrid on 30 January 1615",
+      "points": [
+        [
+          -6.35,
+          36.78
+        ],
+        [
+          -5.98,
+          37.39
+        ],
+        [
+          -4.8,
+          38.0
+        ],
+        [
+          -3.7,
+          40.42
+        ]
+      ]
+    },
+    {
+      "from": "Madrid",
+      "to": "Saint-Tropez",
+      "dates": "1615",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Hasekura Tsunenaga (Wikipedia): a stop at Saint-Tropez in bad weather; the road across Spain is not in the source",
+      "note": "The sea stage from Spain to France is not drawn.",
+      "points": [
+        [
+          -3.7,
+          40.42
+        ],
+        [
+          0.0,
+          41.0
+        ],
+        [
+          3.0,
+          41.7
+        ],
+        [
+          6.64,
+          43.27
+        ]
+      ]
+    },
+    {
+      "from": "Saint-Tropez",
+      "to": "Rome",
+      "dates": "1615",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Hasekura Tsunenaga (Wikipedia): arrived in Rome, met Paul V on 3 November 1615",
+      "points": [
+        [
+          6.64,
+          43.27
+        ],
+        [
+          9.0,
+          44.4
+        ],
+        [
+          12.5,
+          41.9
+        ]
+      ]
+    },
+    {
+      "from": "Sanlúcar de Barrameda",
+      "to": "Veracruz",
+      "dates": "Jun 1616",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Hasekura Tsunenaga (Wikipedia): left Seville for New Spain in June 1616; the course and the port are not in the source",
+      "note": "Drawn to the Gulf port, as on the way out.",
+      "points": [
+        [
+          -6.6,
+          36.55
+        ],
+        [
+          -30.0,
+          32.0
+        ],
+        [
+          -55.0,
+          28.0
+        ],
+        [
+          -70.0,
+          25.5
+        ],
+        [
+          -77.0,
+          23.6
+        ],
+        [
+          -82.4,
+          23.3
+        ],
+        [
+          -88.0,
+          23.0
+        ],
+        [
+          -93.0,
+          21.0
+        ],
+        [
+          -95.95,
+          19.2
+        ]
+      ]
+    },
+    {
+      "from": "Veracruz",
+      "to": "Acapulco",
+      "dates": "1616–17",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Hasekura Tsunenaga (Wikipedia): waited in Mexico and Acapulco until sailing for the Philippines",
+      "points": [
+        [
+          -96.13,
+          19.2
+        ],
+        [
+          -99.13,
+          19.43
+        ],
+        [
+          -99.9,
+          16.85
+        ]
+      ]
+    },
+    {
+      "from": "Acapulco",
+      "to": "Manila",
+      "dates": "1618",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Hasekura Tsunenaga (Wikipedia): arrived in the Philippines in April 1618",
+      "note": "Ends at the San Bernardino Strait, the usual way in from the Pacific.",
+      "points": [
+        [
+          -99.95,
+          16.8
+        ],
+        [
+          -130.0,
+          14.0
+        ],
+        [
+          -160.0,
+          13.5
+        ],
+        [
+          170.0,
+          13.5
+        ],
+        [
+          145.0,
+          13.0
+        ],
+        [
+          128.0,
+          12.8
+        ],
+        [
+          125.6,
+          12.9
+        ]
+      ]
+    },
+    {
+      "from": "San Bernardino Strait",
+      "to": "Manila",
+      "dates": "Apr 1618",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Hasekura Tsunenaga (Wikipedia): arrived in the Philippines in April 1618",
+      "note": "Through the inner islands; drawn straight because the way is not in the source.",
+      "points": [
+        [
+          125.6,
+          12.9
+        ],
+        [
+          123.5,
+          12.9
+        ],
+        [
+          122.0,
+          13.4
+        ],
+        [
+          120.97,
+          14.6
+        ]
+      ]
+    },
+    {
+      "from": "Manila",
+      "to": "Nagasaki",
+      "dates": "1619 – Aug 1620",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Hasekura Tsunenaga (Wikipedia): reached Nagasaki in August 1620",
+      "points": [
+        [
+          119.9,
+          14.5
+        ],
+        [
+          119.3,
+          15.5
+        ],
+        [
+          119.8,
+          18.0
+        ],
+        [
+          121.5,
+          20.5
+        ],
+        [
+          124.5,
+          27.0
+        ],
+        [
+          128.5,
+          31.5
+        ],
+        [
+          129.7,
+          32.6
+        ]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": -3.7,
+      "lat": 40.42,
+      "date": "30 Jan 1615",
+      "label": "Philip III receives him at Madrid",
+      "source": "Hasekura Tsunenaga (Wikipedia)",
+      "cite": "hasekura-tsunenaga",
+      "confidence": "attested",
+      "text": "He was baptized there as Felipe Francisco on 17 February. At a second audience in April 1616 the king declined the trade agreement, whether over Japan's persecution of Christians or the embassy's doubtful standing the sources differ."
+    },
+    {
+      "kind": "event",
+      "lon": 12.5,
+      "lat": 41.9,
+      "date": "3 Nov 1615",
+      "label": "Pope Paul V receives him at Rome",
+      "source": "Hasekura Tsunenaga (Wikipedia)",
+      "cite": "hasekura-tsunenaga",
+      "confidence": "attested",
+      "text": "He met Paul V on 3 November 1615."
+    },
+    {
+      "kind": "event",
+      "lon": -82.4,
+      "lat": 23.15,
+      "date": "Jul 1614",
+      "label": "Six days in Havana",
+      "source": "Hasekura Tsunenaga (Wikipedia)",
+      "cite": "hasekura-tsunenaga",
+      "confidence": "attested",
+      "text": "The embassy stopped in Havana, Cuba, for six days."
+    }
+  ]
+}

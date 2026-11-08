@@ -1,0 +1,191 @@
+{
+  "id": "ennin",
+  "title": "Ennin in Tang China, 838–847",
+  "short": "Ennin",
+  "who": [
+    "ennin"
+  ],
+  "when": "838–847",
+  "summary": "The Tendai monk Ennin sailed with the embassy of 838 and spent nine and a half years in China: Mount Wutai, five years at Chang'an, and the Great Anti-Buddhist Persecution of 842 to 846. He went home in 847 and wrote it all down in his diary.",
+  "sources": [
+    "ennin",
+    "ennins-diary",
+    "japanese-missions-to-tang"
+  ],
+  "legs": [
+    {
+      "from": "Hakata",
+      "to": "the Yangtze mouth",
+      "dates": "838",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Japanese missions to Tang China (Wikipedia): the 838 embassy under Fujiwara no Tsunetsugu; the port and the course are not in the sources read here",
+      "note": "Hakata and the Yangtze mouth are the usual reading; the sources read for this record do not name the ports.",
+      "points": [
+        [
+          130.2,
+          33.95
+        ],
+        [
+          129.3,
+          34.0
+        ],
+        [
+          128.0,
+          33.0
+        ],
+        [
+          125.0,
+          31.5
+        ],
+        [
+          121.9,
+          31.5
+        ]
+      ]
+    },
+    {
+      "from": "Yangzhou",
+      "to": "Mount Wutai",
+      "dates": "838–840",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Ennin (Wikipedia): spent time at Wutai Shan; the road is not in the source",
+      "note": "An editorial line; the diary gives the road.",
+      "points": [
+        [
+          119.42,
+          32.39
+        ],
+        [
+          116.0,
+          35.0
+        ],
+        [
+          113.6,
+          39.05
+        ]
+      ]
+    },
+    {
+      "from": "Mount Wutai",
+      "to": "Chang'an",
+      "dates": "840–842",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Ennin (Wikipedia): stayed in Xi'an for five years",
+      "points": [
+        [
+          113.6,
+          39.05
+        ],
+        [
+          111.5,
+          36.5
+        ],
+        [
+          108.94,
+          34.27
+        ]
+      ]
+    },
+    {
+      "from": "Chang'an",
+      "to": "Yangzhou",
+      "dates": "845–847",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Ennin (Wikipedia): deported in the persecution; the way home is not in the source",
+      "note": "Drawn as the reverse of the outward road; the diary has the real one.",
+      "points": [
+        [
+          108.94,
+          34.27
+        ],
+        [
+          113.0,
+          34.0
+        ],
+        [
+          116.0,
+          33.5
+        ],
+        [
+          119.42,
+          32.39
+        ]
+      ]
+    },
+    {
+      "from": "Yangzhou",
+      "to": "Hakata",
+      "dates": "847",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Ennin (Wikipedia): back in Japan in 847; the course is not in the source",
+      "note": "The reverse of the outward sea way.",
+      "points": [
+        [
+          121.9,
+          31.5
+        ],
+        [
+          125.0,
+          31.5
+        ],
+        [
+          128.0,
+          33.0
+        ],
+        [
+          129.3,
+          34.0
+        ],
+        [
+          130.2,
+          33.95
+        ]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": 113.6,
+      "lat": 39.05,
+      "date": "c. 840",
+      "label": "Mount Wutai",
+      "source": "Ennin (Wikipedia)",
+      "cite": "ennin",
+      "confidence": "attested",
+      "text": "He learned the \"five tone nembutsu\" here."
+    },
+    {
+      "kind": "event",
+      "lon": 108.94,
+      "lat": 34.27,
+      "date": "c. 840–845",
+      "label": "Chang'an",
+      "source": "Ennin (Wikipedia)",
+      "cite": "ennin",
+      "confidence": "attested",
+      "text": "He was ordained into both mandala rituals, the Mahāvairocana and the Vajraśekhara."
+    },
+    {
+      "kind": "event",
+      "lon": 108.94,
+      "lat": 34.27,
+      "date": "842–846",
+      "label": "The Great Anti-Buddhist Persecution",
+      "source": "Ennin (Wikipedia)",
+      "cite": "ennin",
+      "confidence": "attested",
+      "text": "Under Emperor Wuzong; Ennin was deported and returned to Japan in 847."
+    }
+  ]
+}
