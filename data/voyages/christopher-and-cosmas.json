@@ -124,8 +124,8 @@
       "source": "Christopher and Cosmas (Wikipedia): across the Indian Ocean; no stops named",
       "points": [
         [
-          114.5,
-          -9
+          110.5,
+          -7
         ],
         [
           100,
@@ -247,7 +247,7 @@
       "cite": "christopher-and-cosmas",
       "confidence": "speculative",
       "text": "The page says they are not mentioned again and probably died when Cavendish’s Lester was lost after St Helena. The place is a guess.",
-      "doubt": "No source records how or where either died; this mark only shows where the ship they were last on was lost, by the page’s account."
+      "doubt": "No source records how or where either died; this mark is St Helena, the last place the page names before the loss; where the ship was lost is unknown."
     }
   ]
 }
