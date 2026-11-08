@@ -357,6 +357,21 @@ export const MEMENTO_ENTRIES = [
     credit: 'Prince Ōtsu (663–686), as given at tanuki2016.com/2018/02/04/46/' },
   { lang: 'en', kind: 'jisei', text: 'Empty-handed I entered the world\nBarefoot I leave it\nMy coming, my going\nTwo simple happenings\nThat got entangled.', en: 'Empty-handed I entered the world\nBarefoot I leave it\nMy coming, my going\nTwo simple happenings\nThat got entangled.',
     credit: 'Kozan Ichiko (1283–1360), in the English given at tanuki2016.com/2018/02/04/46/; the original is not given there' }, // a translation, original not held
+  { lang: 'ja', kind: 'jisei', text: 'kuse ni natte\nnishi ogamikeri\nhatsu ashita', // romanised only; the page gives no Japanese
+    en: 'It\'s become a habit\nbowing to the West\nNew Year\'s dawn',
+    credit: 'Wagin, a Buddhist monk (died 1758), as given at tanuki2016.com/2018/02/04/46/' },
+  { lang: 'ja', kind: 'jisei', text: 'yururi saku\nkotoshi no hana no\nkakugo kana', // romanised only; the page gives the Japanese incompletely
+    en: 'How leisurely the cherry\nblossoms bloom this year, unhurried,\nby their doom!',
+    credit: 'Kinu (died March 1817), as given at tanuki2016.com/2018/02/04/46/' },
+  { lang: 'ja', kind: 'jisei', text: '風さそふ\n花よりもなほ\n我はまた\n春の名残を\nいかにとかせん', romaji: 'kaze sasou\nhana yori mo nao\nware ha mata\nharu no nagori wo\nika ni toyasen',
+    en: 'More than the cherry blossoms,\ninviting a wind to blow them away,\nI am wondering what to do\nwith the remaining springtime.',
+    credit: 'Lord Asano Naganori (1667–1701), aged 34; English by Mizoguchi Kenji, as given at tanuki2016.com/2018/02/04/46/. The kanji are not the page\'s' },
+  { lang: 'ja', text: '死に仕度\n致せ致せと\n桜哉', romaji: 'shini shitaku\nitaseitase to\nsakura kana',
+    en: 'Cherry blossoms\npress me to\nprepare to die.',
+    credit: 'Kobayashi Issa (1763–1828), as given at tanuki2016.com/2018/02/04/46/; the page does not call it his jisei' },
+  { lang: 'ja', text: '願わくは花の下にて春死なむ\nその如月の望月のころ', romaji: 'negawaku wa hana no shita nite haru shinamu\nsono kisaragi no mochizuki no koro',
+    en: 'Let me die in spring under the blossom trees,\nlet it be around the full moon of Kisaragi [February].',
+    credit: 'Saigyō Hōshi (1118–1190), as given at tanuki2016.com/2018/02/04/46/; a wish, not a jisei' },
   { lang: 'grc', text: '...τὴν εἱμαρμένην οὐδ’ ἂν εἷς ἐκφύγοι...', en: 'Not even one single individual could escape their measure of destiny' },
 ];
 export const MEMENTO = MEMENTO_ENTRIES.map((e) => e.text);
