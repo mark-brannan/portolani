@@ -3643,6 +3643,7 @@ function drawAnchored(g, a, bg, view, layers) {
 // None by default. The older `voyage` (one id, or 'off') still draws that one. A voyage's `alpha` (0 to 1) dims it.
 // `person`: a person's id in data/voyages/people.json (scripts/people.mjs): their voyages drawn in the chart's red, lit, every
 // other voyage dimmed to DIMMED, and their birth marked (their death too, where no voyage of theirs carries it). None by default.
+// `personLit: false` keeps the birth's mark but draws the voyages as listed, none lit and none dimmed (the page).
 // `overlays`: [{ id, mode, sheet, opacity }], charts' scans laid over the map, bottom to top (the older `overlay`, one of them,
 // still lays that one); each `id` names an entry of packs/overlays/overlays.json
 // (docs/overlay/README.md). `mode` 'sheet' (the default) lays the whole scan, opaque, over everything on the map at
@@ -3785,7 +3786,7 @@ export async function createScene(environment, opts = {}) {
   ranges = rangesLoaded;
   const named = opts.voyages ?? (opts.voyage ? [{ id: opts.voyage }] : []);
   const asked = opts.overlays ?? (opts.overlay ? [opts.overlay] : []);
-  const [drawn, overlaid] = await Promise.all([loadVoyages(withPerson(named, person?.record ?? null, opts.voyageWidth ?? named[0]?.width)), Promise.all(asked.map((o) => loadOverlay(o.id, env)))]);
+  const [drawn, overlaid] = await Promise.all([loadVoyages(withPerson(named, person?.record ?? null, opts.voyageWidth ?? named[0]?.width, opts.personLit ?? true)), Promise.all(asked.map((o) => loadOverlay(o.id, env)))]);
   const voyages = person ? [...drawn, { voyage: person.marks, colour: PERSON_RED, width: VOYAGE_WIDTH }] : drawn;
   const overlays = asked.flatMap((o, i) => {
     const l = overlaid[i], pieces = o.mode === 'pieces', opacity = Number(o.opacity ?? (pieces ? 0.6 : 1)); // a sheet whole unless faded

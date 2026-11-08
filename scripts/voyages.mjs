@@ -64,7 +64,8 @@ export const VOYAGE_CONTRAST = ['#008a3e', '#7a1fff', '#c4001a', '#e65c00', '#d9
 // palette; a voyage in `fresh`, just shown, yields to those already shown and takes its own former ink if that is free,
 // else the first of its palette no shown voyage has. `contrast` is the set of ids that take the high-contrast palette, a
 // voyage with a dashed or dotted leg or one over a laid sheet, until its five inks are all taken; then the chart palette,
-// so two voyages share an ink only once all fourteen are in use. A hidden voyage keeps its ink, as its former one, and
+// so two voyages share an ink only once all fourteen are in use; the first of a plain voyage's palette is the chart's red,
+// and a dashed one starts the high-contrast cycle (docs/spec/design.md). A hidden voyage keeps its ink, as its former one, and
 // holds none back. Returns the list unchanged (the same array) when nothing moved.
 export function settleInks(list, contrast = new Set(), fresh = new Set()) {
   const shown = list.filter((v) => !v.hidden), used = new Set(shown.map((v) => v.colour).filter(Boolean)), out = new Map();
@@ -344,6 +345,9 @@ export function checkPerson(id, p, { sources } = {}) {
     }
   };
   for (const k of ['born', 'death']) if (p[k] !== undefined) marker(p[k], k);
+  // the view Random person flies to: every person has one, never closer than zoom 6 (docs/spec/design.md, "lands wide enough")
+  const v = p.view;
+  need(v && Number.isFinite(v.lat) && Math.abs(v.lat) <= 85 && Number.isFinite(v.lon) && Math.abs(v.lon) <= 180 && Number.isFinite(v.zoom) && v.zoom >= 1 && v.zoom <= 6, 'view: { lat, lon, zoom }, the place Random person flies to, at zoom 6 or wider');
   if (p.images !== undefined) {
     need(Array.isArray(p.images), 'images: a list');
     for (const [j, q] of (Array.isArray(p.images) ? p.images : []).entries()) {

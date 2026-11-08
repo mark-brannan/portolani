@@ -1,17 +1,32 @@
 {
   "wallacea-crossers": {
+    "view": {
+      "lat": -2.0,
+      "lon": 122.0,
+      "zoom": 3
+    },
     "name": "The first crossers of Wallacea",
     "group": true,
     "bio": "Hominins who crossed the sea from Bali or Java into the islands east of the Wallace Line between about a million and 700,000 years ago, and reached Flores, where their fossils lie at Mata Menge. They were probably descended from Homo erectus, grown small on the island, and probably ancestral to Homo floresiensis. Whether they crossed on purpose, on rafts, or were carried off by storms and floods, nobody knows.",
     "sources": ["ancient-maritime-history", "mata-menge"]
   },
   "sahul-first-peoples": {
+    "view": {
+      "lat": -12.0,
+      "lon": 135.0,
+      "zoom": 3
+    },
     "name": "The first peoples of Sahul",
     "group": true,
     "bio": "The ancestors of Aboriginal Australians and of the first peoples of New Guinea, who crossed from the islands of Wallacea to Sahul, the one continent of Australia and New Guinea, between about 65,000 and 50,000 years ago. The sea stood more than 100 metres lower than today, and still every way across meant open water.",
     "sources": ["prehistory-of-australia", "madjedbebe"]
   },
   "pesse-canoe-makers": {
+    "view": {
+      "lat": 52.78,
+      "lon": 6.45,
+      "zoom": 4
+    },
     "name": "The makers of the Pesse canoe",
     "group": true,
     "bio": "Mesolithic people of the north European plain who, between about 8040 and 7510 BC, hollowed a Scots pine log into the oldest boat yet found. Nothing else of theirs is known from the find; the canoe stands for them.",
@@ -84,6 +99,11 @@
       "text": "The sagas are silent. He is last named alive about 1018–19 and his son Thorkell held the chieftaincy by 1025; Brattahlíð, the family estate, is the likeliest place.",
       "source": "Leif Erikson (Wikipedia): no saga records his death",
       "cite": "leif-erikson"
+    },
+    "view": {
+      "lat": 59.02,
+      "lon": -42.77,
+      "zoom": 4.51
     }
   },
   "marco-polo": {
@@ -151,6 +171,11 @@
       "text": "He died at home in January 1324. His will freed Peter, his Tatar slave. Priests are said to have urged him on his deathbed to take back his Book; he answered that he had not told the half of what he saw.",
       "source": "Wikipedia, Marco Polo",
       "cite": "marco-polo"
+    },
+    "view": {
+      "lat": 25.3,
+      "lon": 66.24,
+      "zoom": 3.17
     }
   },
   "ibn-battuta": {
@@ -227,6 +252,11 @@
           "source": "Wikipedia, Ibn Battuta (infobox); the Tangier tomb is captioned \"purported\""
         }
       ]
+    },
+    "view": {
+      "lat": 27.44,
+      "lon": 55.68,
+      "zoom": 2.91
     }
   },
   "zheng-he": {
@@ -315,6 +345,11 @@
           "source": "Zheng He (Wikipedia); the later Nanjing account"
         }
       ]
+    },
+    "view": {
+      "lat": 13.41,
+      "lon": 81.1,
+      "zoom": 3.52
     }
   },
   "bartolomeu-dias": {
@@ -376,6 +411,11 @@
       "text": "Four of Cabral's ships went down in one storm on the way to the Cape. The wreck's position is not recorded; the skull stands off the Cape.",
       "source": "Wikipedia; Britannica 1911",
       "cite": "bartolomeu-dias"
+    },
+    "view": {
+      "lat": -0.26,
+      "lon": 4.45,
+      "zoom": 2.85
     }
   },
   "christopher-columbus": {
@@ -450,6 +490,11 @@
       "text": "He died in a rented house, ill, still arguing that the Crown owed him the titles and the tenth of the profits it had promised. He is generally said to have held that he had reached the edge of Asia. His bones were carried to Seville, then Santo Domingo, then Havana, then Seville again, and Seville and Santo Domingo both still claim him.",
       "source": "Britannica 1911, Columbus",
       "cite": "britannica-1911-columbus"
+    },
+    "view": {
+      "lat": 26.72,
+      "lon": -38.48,
+      "zoom": 3.35
     }
   },
   "juan-de-la-cosa": {
@@ -507,6 +552,11 @@
       "text": "Sailing as pilot to Alonso de Ojeda on the coast of what is now Colombia, he went ashore with a raiding party near Turbaco and was killed by the townspeople's poisoned arrows.",
       "source": "Juan de la Cosa (Wikipedia)",
       "cite": "juan-de-la-cosa"
+    },
+    "view": {
+      "lat": 28.15,
+      "lon": -40.68,
+      "zoom": 3.7
     }
   },
   "paulo-da-gama": {
@@ -565,6 +615,11 @@
       "text": "Paulo commanded the São Rafael, burned on the East African coast when there were too few men left to sail her. He fell ill on the way home; Vasco left the fleet and took him in a fast caravel to the Azores, and stayed with his brother until he died.",
       "source": "Barros; Correia",
       "cite": "paulo-da-gama"
+    },
+    "view": {
+      "lat": 1.67,
+      "lon": 22.65,
+      "zoom": 2.91
     }
   },
   "vasco-da-gama": {
@@ -624,6 +679,11 @@
       "text": "Sent back to India at last as viceroy, he fell ill within months of landing and died at Cochin on Christmas Eve. His body was taken to Portugal in 1539, and lies today in the Jerónimos Monastery at Lisbon.",
       "source": "Wikipedia: Vasco da Gama",
       "cite": "vasco-da-gama"
+    },
+    "view": {
+      "lat": 1.65,
+      "lon": 23.13,
+      "zoom": 2.91
     }
   },
   "ferdinand-magellan": {
@@ -699,6 +759,11 @@
       "text": "Magellan took sides in a local quarrel, for Rajah Humabon of Cebu against Lapulapu of Mactan, and went ashore with about fifty men. The ships' guns could not reach the beach, the Mactan fighters came on in waves, and the captain-general was killed in the water. Pigafetta, who was there, called him \"our mirror, our light, our comfort and our true guide\".",
       "source": "Pigafetta",
       "cite": "battle-of-mactan"
+    },
+    "view": {
+      "lat": -9.41,
+      "lon": -7.58,
+      "zoom": 1.5
     }
   },
   "juan-sebastian-elcano": {
@@ -773,6 +838,11 @@
       "source": "Wikipedia: Juan Sebastián Elcano",
       "cite": "juan-sebastian-elcano",
       "confidence": "conventional"
+    },
+    "view": {
+      "lat": -8.05,
+      "lon": -2.2,
+      "zoom": 1.5
     }
   },
   "francis-drake": {
@@ -844,6 +914,11 @@
       "text": "Dysentery killed him on his last raid on the Spanish Caribbean. Drake asked to be dressed in his armour, and was buried at sea in a lead coffin off Portobelo. Divers still look for it.",
       "source": "Wikipedia: Francis Drake",
       "cite": "francis-drake"
+    },
+    "view": {
+      "lat": -5.55,
+      "lon": -4.14,
+      "zoom": 1.5
     }
   },
   "lapita-people": {
@@ -897,7 +972,12 @@
         "licence": "Public domain",
         "note": "A double canoe of New Caledonia, engraved for a French expedition of 1791 to 1794; no Lapita canoe survives, and this is a craft of the same islands."
       }
-    ]
+    ],
+    "view": {
+      "lat": -11.46,
+      "lon": 168.79,
+      "zoom": 4.66
+    }
   },
   "east-polynesian-voyagers": {
     "name": "The East Polynesian voyagers",
@@ -950,7 +1030,12 @@
         "licence": "CC BY-SA 3.0",
         "note": "The double canoe Hōkūleʻa arriving at Honolulu from Tahiti in 1976, a modern voyage made without instruments to show the old crossings could be sailed."
       }
-    ]
+    ],
+    "view": {
+      "lat": -18.99,
+      "lon": -136.85,
+      "zoom": 2.95
+    }
   },
   "phoenician-mariners-of-necho-ii": {
     "name": "Phoenician mariners of Necho II",
@@ -992,7 +1077,12 @@
         "licence": "Public domain",
         "note": "A relief of Necho II facing the goddess Hathor, made about 600 BC, in the Walters Art Museum."
       }
-    ]
+    ],
+    "view": {
+      "lat": 1.56,
+      "lon": 17.15,
+      "zoom": 2.94
+    }
   },
   "hanno-the-navigator": {
     "name": "Hanno the Navigator",
@@ -1043,7 +1133,12 @@
         "date": "1913",
         "licence": "Public domain"
       }
-    ]
+    ],
+    "view": {
+      "lat": 21.35,
+      "lon": -3.5,
+      "zoom": 4.01
+    }
   },
   "hatshepsut": {
     "name": "Hatshepsut",
@@ -1060,21 +1155,36 @@
     ],
     "sources": [
       "hatshepsut"
-    ]
+    ],
+    "view": {
+      "lat": 21.28,
+      "lon": 36.17,
+      "zoom": 5.71
+    }
   },
   "nehsi": {
     "name": "Nehsi",
     "bio": "An official at Hatshepsut's court, Wearer of the Royal Seal and chief treasurer, who may have been of Nubian descent, going by his name. The Punt reliefs at Deir el-Bahari show him as responsible for dispatching the expedition; some read that as his having led it from beginning to end. He was buried in a rock-cut tomb at Saqqara.",
     "sources": [
       "nehsi"
-    ]
+    ],
+    "view": {
+      "lat": 21.28,
+      "lon": 36.17,
+      "zoom": 5.71
+    }
   },
   "himilco": {
     "name": "Himilco",
     "bio": "A Carthaginian navigator of the early fifth century BC, sent to explore the Atlantic coast of Europe while Hanno went south. His own account is lost; it survives in brief notices by Pliny and the poet Avienus. Of his family, one scholar makes him Hanno's brother.",
     "sources": [
       "himilco"
-    ]
+    ],
+    "view": {
+      "lat": 44.39,
+      "lon": 0.4,
+      "zoom": 4.77
+    }
   },
   "pytheas": {
     "name": "Pytheas",
@@ -1126,6 +1236,11 @@
       "source": "Pytheas (Wikipedia)",
       "cite": "pytheas",
       "confidence": "inferred"
+    },
+    "view": {
+      "lat": 54.51,
+      "lon": -4.3,
+      "zoom": 3.5
     }
   },
   "nearchus": {
@@ -1182,6 +1297,11 @@
       "source": "Nearchus (Wikipedia)",
       "cite": "nearchus",
       "confidence": "inferred"
+    },
+    "view": {
+      "lat": 29.84,
+      "lon": 46.48,
+      "zoom": 4.54
     }
   },
   "juan-ponce-de-leon": {
@@ -1237,7 +1357,12 @@
         "licence": "Public domain",
         "note": "A 19th-century engraving of Ponce de León struck down in the fight with the Calusa in July 1521."
       }
-    ]
+    ],
+    "view": {
+      "lat": 24.24,
+      "lon": -75.2,
+      "zoom": 5.55
+    }
   },
   "juan-garrido": {
     "name": "Juan Garrido",
@@ -1292,7 +1417,12 @@
         "licence": "Public domain",
         "note": "A 1913 reconstruction of Ponce de León's route round Florida in 1513, the voyage on which Garrido is thought to have sailed."
       }
-    ]
+    ],
+    "view": {
+      "lat": 17.45,
+      "lon": -49.25,
+      "zoom": 2.99
+    }
   },
   "isabel-de-olvera": {
     "name": "Isabel de Olvera",
@@ -1330,7 +1460,12 @@
         "licence": "Public domain",
         "note": "A view along El Camino Real de Tierra Adentro, the royal road from Mexico City to New Mexico that the colonists of 1600 followed."
       }
-    ]
+    ],
+    "view": {
+      "lat": 28.41,
+      "lon": -103.54,
+      "zoom": 5.14
+    }
   },
   "pedro-alonso-nino": {
     "name": "Pedro Alonso Niño",
@@ -1376,7 +1511,12 @@
         "licence": "CC BY-SA 4.0",
         "note": "The ruins of Nueva Cádiz on Cubagua, the pearl-fishing town later built on one of the islands his 1499 voyage visited."
       }
-    ]
+    ],
+    "view": {
+      "lat": 29.47,
+      "lon": -42.18,
+      "zoom": 3.78
+    }
   },
   "panfilo-de-narvaez": {
     "name": "Pánfilo de Narváez",
@@ -1432,7 +1572,12 @@
         "licence": "Public domain",
         "note": "A Tlaxcalan manuscript drawing of about 1580, labelled Cempoala and Veracruz, whose caption names Cortés and Narváez: the 1520 fight in which Narváez was taken."
       }
-    ]
+    ],
+    "view": {
+      "lat": 27.29,
+      "lon": -50.87,
+      "zoom": 3.45
+    }
   },
   "alvar-nunez-cabeza-de-vaca": {
     "name": "Álvar Núñez Cabeza de Vaca",
@@ -1488,7 +1633,12 @@
         "licence": "CC BY-SA 4.0",
         "note": "A wall in Curitiba, Brazil, carrying his account of the march overland through southern Brazil in 1541-42."
       }
-    ]
+    ],
+    "view": {
+      "lat": 27.42,
+      "lon": -58.22,
+      "zoom": 3.22
+    }
   },
   "andres-dorantes-de-carranza": {
     "name": "Andrés Dorantes de Carranza",
@@ -1534,7 +1684,12 @@
         "licence": "CC BY-SA 3.0",
         "note": "A Texas Historical Commission marker for a Karankawa campsite on Galveston Island, whose text says the Karankawa aided Cabeza de Vaca in 1528."
       }
-    ]
+    ],
+    "view": {
+      "lat": 27.29,
+      "lon": -58.45,
+      "zoom": 3.23
+    }
   },
   "alonso-del-castillo-maldonado": {
     "name": "Alonso del Castillo Maldonado",
@@ -1580,7 +1735,12 @@
         "licence": "CC BY-SA 3.0",
         "note": "A Texas Historical Commission marker for a Karankawa campsite on Galveston Island, whose text says the Karankawa aided Cabeza de Vaca in 1528."
       }
-    ]
+    ],
+    "view": {
+      "lat": 27.29,
+      "lon": -58.45,
+      "zoom": 3.23
+    }
   },
   "esteban-de-dorantes": {
     "name": "Esteban de Dorantes",
@@ -1637,7 +1797,12 @@
         "licence": "Public domain",
         "note": "Zuni Pueblo photographed in the late nineteenth century; Hawikuh, where Esteban died, lies about twenty kilometres to the south-west and was abandoned in the seventeenth century."
       }
-    ]
+    ],
+    "view": {
+      "lat": 27.29,
+      "lon": -58.45,
+      "zoom": 3.23
+    }
   },
   "mansa-musa": {
     "name": "Mansa Musa",
@@ -1705,6 +1870,11 @@
       "text": "The date is uncertain: estimates run from about 1332 to 1337, and Levtzion thought 1337 the likeliest. Nobody recorded where, so no skull is drawn.",
       "source": "Wikipedia, Mansa Musa",
       "cite": "mansa-musa"
+    },
+    "view": {
+      "lat": 21.05,
+      "lon": 15.72,
+      "zoom": 4.33
     }
   },
   "abu-bakr-ii": {
@@ -1759,7 +1929,12 @@
         "licence": "CC BY 2.0",
         "note": "A terracotta archer from the same Inland Niger Delta tradition, thirteenth to fifteenth century."
       }
-    ]
+    ],
+    "view": {
+      "lat": 15.83,
+      "lon": -18.65,
+      "zoom": 6
+    }
   },
   "erik-the-red": {
     "name": "Erik the Red",
@@ -1833,7 +2008,12 @@
         "licence": "CC BY 2.0",
         "note": "The modern reproduction of Thjodhild's church at Brattahlíð, with the fjord behind; Thjodhild was Erik's wife."
       }
-    ]
+    ],
+    "view": {
+      "lat": 62.22,
+      "lon": -23.55,
+      "zoom": 4.05
+    }
   },
   "bjarni-herjolfsson": {
     "name": "Bjarni Herjólfsson",
@@ -1883,7 +2063,12 @@
         "licence": "CC BY-SA 4.0",
         "note": "The Borgundknarren, a reconstruction of the Skuldelev 1 cargo ship, the type of vessel Norse traders crossed the north Atlantic in."
       }
-    ]
+    ],
+    "view": {
+      "lat": 57.49,
+      "lon": -41.57,
+      "zoom": 4.57
+    }
   },
   "william-of-rubruck": {
     "name": "William of Rubruck",
@@ -1948,7 +2133,12 @@
         "licence": "CC0",
         "note": "A silver dirham struck at Tiflis in the name of Möngke Khan, the ruler William visited."
       }
-    ]
+    ],
+    "view": {
+      "lat": 43.18,
+      "lon": 52.61,
+      "zoom": 3.27
+    }
   },
   "benjamin-of-tudela": {
     "name": "Benjamin of Tudela",
@@ -2020,7 +2210,12 @@
         "licence": "CC BY-SA 4.0",
         "note": "A modern map of his journeys from Tudela to Baghdad and beyond, with the Jewish communities he names (in Spanish)."
       }
-    ]
+    ],
+    "view": {
+      "lat": 38.25,
+      "lon": 21.41,
+      "zoom": 4.4
+    }
   },
   "rabban-bar-sauma": {
     "name": "Rabban Bar Sauma",
@@ -2088,7 +2283,12 @@
         "licence": "Public domain",
         "note": "The Dominican Ricoldo of Montecroce with clergy of the Church of the East, painted about 1410; Ricoldo preached among them in the Ilkhanate in Sauma's last years."
       }
-    ]
+    ],
+    "view": {
+      "lat": 41.55,
+      "lon": 57.91,
+      "zoom": 3.05
+    }
   },
   "afanasy-nikitin": {
     "name": "Afanasy Nikitin",
@@ -2144,9 +2344,19 @@
         "licence": "CC BY 3.0",
         "note": "The memorial to Nikitin at Feodosia, the old Kaffa, where he landed on the Black Sea on his way home in 1474."
       }
-    ]
+    ],
+    "view": {
+      "lat": 40.2,
+      "lon": 54.69,
+      "zoom": 3.45
+    }
   },
   "austronesian-voyagers": {
+    "view": {
+      "lat": 23.7,
+      "lon": 121.0,
+      "zoom": 1.5
+    },
     "name": "The Austronesian-speaking voyagers",
     "group": true,
     "family": "austronesian",
@@ -2154,6 +2364,11 @@
     "sources": ["austronesian-expansion", "austronesian-peoples", "prehistory-philippines"]
   },
   "marianas-micronesia-settlers": {
+    "view": {
+      "lat": 15.0,
+      "lon": 145.7,
+      "zoom": 3
+    },
     "name": "The first settlers of the Marianas and Micronesia",
     "group": true,
     "family": "austronesian",
@@ -2161,6 +2376,11 @@
     "sources": ["hung-2011-marianas", "micronesia"]
   },
   "madagascar-austronesian-settlers": {
+    "view": {
+      "lat": -19.0,
+      "lon": 47.0,
+      "zoom": 1.5
+    },
     "name": "The Austronesian settlers of Madagascar",
     "group": true,
     "family": "austronesian",
@@ -2185,6 +2405,11 @@
       "cite": "death-of-james-cook",
       "confidence": "attested",
       "doubt": "Wikipedia's account counts the Hawaiian dead as 17 at Kaʻawaloa in one place and as 25 round the bay that day in another."
+    },
+    "view": {
+      "lat": -0.87,
+      "lon": -155.93,
+      "zoom": 1.5
     }
   },
   "joseph-banks": {
@@ -2193,7 +2418,12 @@
     "sources": [
       "first-voyage-of-james-cook",
       "mai-raiatean-man"
-    ]
+    ],
+    "view": {
+      "lat": 51.5,
+      "lon": -0.13,
+      "zoom": 1.5
+    }
   },
   "tupaia": {
     "name": "Tupaia",
@@ -2222,6 +2452,11 @@
       "cite": "tupaia-navigator",
       "confidence": "inferred",
       "doubt": "The journals of Banks and Cook give other dates for his death; Wikipedia treats the muster's as reliable."
+    },
+    "view": {
+      "lat": -5.54,
+      "lon": -151.5,
+      "zoom": 1.5
     }
   },
   "taiata": {
@@ -2243,6 +2478,11 @@
       "cite": "tupaia-navigator",
       "confidence": "inferred",
       "doubt": "Sources differ on the day; they agree he died before Tupaia, in early November."
+    },
+    "view": {
+      "lat": -5.54,
+      "lon": 106.78,
+      "zoom": 1.5
     }
   },
   "thomas-richmond": {
@@ -2260,6 +2500,11 @@
       "source": "The Endeavour crew list",
       "cite": "banks-servants-1769",
       "confidence": "speculative"
+    },
+    "view": {
+      "lat": -5.54,
+      "lon": -65.3,
+      "zoom": 1.5
     }
   },
   "george-dorlton": {
@@ -2277,6 +2522,11 @@
       "source": "The Endeavour crew list",
       "cite": "banks-servants-1769",
       "confidence": "speculative"
+    },
+    "view": {
+      "lat": -5.54,
+      "lon": -65.36,
+      "zoom": 1.5
     }
   },
   "mai": {
@@ -2298,6 +2548,11 @@
       "cite": "mai-raiatean-man",
       "confidence": "inferred",
       "doubt": "Wikipedia dates his death c. 1779 in one place and c. 1780 in another, and the cause is not known."
+    },
+    "view": {
+      "lat": -0.87,
+      "lon": -151.05,
+      "zoom": 1.5
     }
   },
   "hitihiti": {
@@ -2305,7 +2560,12 @@
     "bio": "A man of Bora Bora who came aboard the Resolution at Raʻiatea in September 1773 and sailed with her to Tonga, New Zealand, the Antarctic and Easter Island before going home in 1774.",
     "sources": [
       "hitihiti-wellcome"
-    ]
+    ],
+    "view": {
+      "lat": -16.5,
+      "lon": -151.74,
+      "zoom": 1.5
+    }
   },
   "charles-clerke": {
     "name": "Charles Clerke",
@@ -2315,13 +2575,18 @@
     ],
     "death": {
       "lon": -178.5,
-      "lat": 56.0,
+      "lat": 56,
       "date": "22 Aug 1779",
       "label": "Clerke dies at sea on the way to Kamchatka",
       "text": "Nobody recorded where. The skull stands at the middle of the leg from the Bering Strait to Petropavlovsk; he was buried at Petropavlovsk, which is the grave and not another place of death.",
       "source": "Wikipedia, Charles Clerke",
       "cite": "charles-clerke",
       "confidence": "inferred"
+    },
+    "view": {
+      "lat": 22.22,
+      "lon": -178.5,
+      "zoom": 1.5
     }
   },
   "kalaniopuu": {
@@ -2329,7 +2594,12 @@
     "bio": "The ruling chief (aliʻi nui) of Hawaiʻi Island. He was at Kaʻawaloa, on Kealakekua Bay, on 14 February 1779, when Cook came ashore to take him hostage until the Discovery's stolen cutter was returned.",
     "sources": [
       "death-of-james-cook"
-    ]
+    ],
+    "view": {
+      "lat": 19.48,
+      "lon": -155.93,
+      "zoom": 1.5
+    }
   },
   "te-weherua": {
     "name": "Te Weherua",
@@ -2339,7 +2609,12 @@
     "bio": "A boy of about seventeen from Queen Charlotte Sound who volunteered with Koa to serve Mai, and sailed with Cook to Huahine in 1777. One source says the two boys died of sickness some thirty months after the ships left Huahine.",
     "sources": [
       "te-ara-maori-overseas"
-    ]
+    ],
+    "view": {
+      "lat": -41.1,
+      "lon": 174.2,
+      "zoom": 1.5
+    }
   },
   "koa": {
     "name": "Koa",
@@ -2349,7 +2624,12 @@
     "bio": "A boy of about twelve from Queen Charlotte Sound who volunteered with Te Weherua to serve Mai, and sailed with Cook to Huahine in 1777. One source says the two boys died of sickness some thirty months after the ships left Huahine.",
     "sources": [
       "te-ara-maori-overseas"
-    ]
+    ],
+    "view": {
+      "lat": -41.1,
+      "lon": 174.2,
+      "zoom": 1.5
+    }
   },
   "marcos-de-niza": {
     "name": "Marcos de Niza",
@@ -2369,6 +2649,11 @@
       "marcos-de-niza",
       "tsha-marcos-de-niza",
       "winship-coronado-expedition"
-    ]
+    ],
+    "view": {
+      "lat": 28.31,
+      "lon": -107.6,
+      "zoom": 5.28
+    }
   }
 }

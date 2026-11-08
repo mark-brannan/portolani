@@ -19,7 +19,7 @@ import { playedOn, playDateText, playPace, isLong } from './scene.mjs'; // the p
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, effectiveOpacity, sheetOpacity, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
 import { POIS, POI_ZOOM } from './pois.mjs';
-import { PEOPLE_FILE, PICTURES_FILE, SIGHT_PICTURES_FILE, SIGHT_MANIFEST_FILE, sightDeal, eraOf, eraYears, eraScale, DRAWER_ERAS, deepBands, lensBands, lensX, familyOrder, withRightBefore, barOn, lifeSpan, firstYear, yearsText, PERSON_RED, pictureCredit, pictureNote, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, sightFrame, viewContaining, withPictures, peopleOf, whoOf, deathOf, sightPicturesOf, MEMENTO, MEMENTO_EN, mementoNext, mementoLines } from './people.mjs';
+import { PEOPLE_FILE, PICTURES_FILE, SIGHT_PICTURES_FILE, SIGHT_MANIFEST_FILE, SIGHT_DEAL, sightDeal, eraOf, eraYears, eraScale, DRAWER_ERAS, deepBands, lensBands, lensX, familyOrder, withRightBefore, barOn, lifeSpan, firstYear, yearsText, PERSON_RED, pictureCredit, pictureNote, commonsPage, voyageYears, parsePictures, parsePictureAt, pictureAtText, picturePlaces, frameOf, sightFrame, viewContaining, withPictures, peopleOf, whoOf, deathOf, sightPicturesOf, MEMENTO, MEMENTO_EN, mementoNext, mementoLines } from './people.mjs';
 import { fold, bestPlace, withoutPartsOfFrames } from './placename.mjs';
 import { nextInCycle } from './cycle.mjs';
 import { planFlight, ease as flyEase, FLY_KNOBS, flyDefaults } from './flight.mjs';
@@ -56,6 +56,10 @@ const canvas = $('map'), ctx = canvas.getContext('2d');
 // A phone (under 520 px wide): a drawer is a bottom sheet, and the cartouche and the scale bar sit on
 // cards beside the map, not on the sea.
 const phone = matchMedia('(max-width: 520px)');
+// A phone turned to landscape: wider than `phone`, but short and touched. Its drawers dock at the left, the window's
+// whole height (index.html), and stay up while the map is tapped, as a phone's do.
+const turnedPhone = matchMedia('(min-width: 521px) and (max-height: 520px) and (pointer: coarse)');
+const handheld = () => phone.matches || turnedPhone.matches;
 
 // The styles chosen from a list, each by the id of its chips, the hash key it rides under and the list it is drawn from:
 // read from the hash, shown and read back from the drawer by one loop each (writeHash keeps its own order, which links carry).
@@ -797,6 +801,7 @@ let selection = selectionFromHash();
 showStyle();
 if (LEGACY_KEYS.some((k) => hashParams().has(k))) writeHash(); // an older link, rewritten in the new form
 let ground = null; // { world, coarse, bg, anchored } from the last placement, all a moving frame needs
+let voyagePulse = null; // { ids, ready, since, t0 } while a chosen person's voyages pulse and fade (startVoyagePulse)
 // the People drawer's data, once loaded ({ people, pictures, sources, voyages }), the frames of the people chosen, their
 // pictures' images, and the picture held by hand (the section "people" below)
 let peopleData = null, peopleLoad = null, holding = null, dealt = null, flips = new Map();
@@ -818,7 +823,8 @@ async function render() {
       continents: style.continentsZoom > 0, continentsZoom: style.continentsZoom,
       regions: style.regionsZoom > 0 ? style.regions : 'off', regionSet: style.regionSet, regionStyle: style.regionStyle, regionsZoom: style.regionsZoom,
       sprites: [...selection], kinds, view, pinned: !phone.matches, pinTitle: style.autoTitle ? pinTitle : null,
-      voyages: style.voyages.filter((v) => !v.hidden || litBy(v.id)).map((v) => ({ id: v.id, colour: ink[v.id], width: style.voyageWidth, ...(v.hidden && { hidden: true }) })), person: style.person, voyageWidth: style.voyageWidth,
+      voyages: [...style.voyages.filter((v) => !v.hidden).map((v) => ({ id: v.id, colour: ink[v.id], width: style.voyageWidth })), ...pulsing().map((id) => ({ id, colour: PERSON_RED, width: style.voyageWidth }))],
+      person: style.person, personLit: false, voyageWidth: style.voyageWidth,
       overlays: style.overlays.map((id) => ({ id, mode: style.overlayMode, sheet: style.sheets[id] ?? null, opacity: sheetOpacity(style, id), clip: style.compare === 'off' ? null : style.comparePos })),
       sights: sightTiles().map(({ lon, lat, tile }) => ({ name: tile.title, lon, lat, ruin: tile.ruin ?? false, ...(tile.site != null && { site: tile.site }) })),
       debug: parseDebug(style.debug).debug, tune: parseTune(style.tune).tune,
@@ -826,7 +832,7 @@ async function render() {
     if (me !== run) return; // a newer change or a move superseded this one
     ground = { world, coarse, bg, voyages: scene.voyages, marks: drawnMarks(scene, data), peaks: drawnPeaks(scene, data), anchored: anchorScene(scene, data), overlays: scene.overlays, cards: { cartouche: kinds.includes('cartouche') ? scene.cartouche : null, scaleSprite: scene.scaleSprite, scale: style.scale, bg } };
     if (JSON.stringify(voyageInk()) !== inkKey) { showVoyage(); render(); return; } // the sheet laid or lifted changed which voyages cross it: draw again in their inks
-    applyReveal();
+    applyReveal(); applyPulse();
     if (style.autoTitle) $('title').value = scene.cartouche.title; // the box shows what the cartouche letters, and cannot be edited
     placed = view;
     if (keepTile) keepTile = false; else hideTile(); // its mark may be gone: another voyage, or none; a sight's tile just opened stays
@@ -872,6 +878,9 @@ function drawCards(scaleOnly = false) { // scaleOnly: a moving frame, where only
   }
 }
 addEventListener('resize', () => { drawCards(); hideTile(); $('cornerTurn').hidden = true; }); // the cards' width follows the window, in rotation too, and the tile was placed in its px
+// Turned to landscape and back, the page stands where it stood, never scrolled, so the row of instruments and the skull
+// keep to the window's edges
+addEventListener('resize', () => { if (scrollX || scrollY) scrollTo(0, 0); });
 phone.addEventListener('change', () => { drawCards(); if (ground) render(); }); // the sheet is placed again with or without them
 
 // ---------------------------------------------------------------- the drawers
@@ -892,7 +901,7 @@ const where = $('where');
 const drawers = [[$('open'), $('drawer')], [$('go'), $('goPanel')], [$('sights'), $('sightsPanel')], [$('voyages'), $('voyagesPanel')], [$('people'), $('peoplePanel')], [$('charts'), $('chartsDrawer')], [$('anchor'), $('anchorPanel')]];
 const openDrawer = () => drawers.find(([, d]) => d.classList.contains('open'))?.[1] ?? false;
 let openedBy = null; // the button the open drawer was opened by
-const focusable = (d) => [...d.querySelectorAll('button, input, a[href]')].find((e) => !e.disabled && e.getClientRects().length);
+const focusable = (d) => [...d.querySelectorAll('button, input, a[href]')].find((e) => !e.disabled && e.getClientRects().length && !e.closest('.lip'));
 function setDrawer(open, byKeyboard = false, by = drawers.find(([, d]) => d === open)?.[0] ?? null) { // the drawer to open, or false for none
   const was = openDrawer(), wasBy = openedBy;
   if (open === was && (!open || by === openedBy)) return;
@@ -907,12 +916,21 @@ function setDrawer(open, byKeyboard = false, by = drawers.find(([, d]) => d === 
   else if (byKeyboard) wasBy?.focus({ preventScroll: true });
   else if (was.contains(document.activeElement)) document.activeElement.blur(); // a phone's keyboard goes with it
 }
+// Every drawer's lip: a small tab on its edge, its arrow the way the drawer shuts (down on a phone's bottom sheet, toward
+// the window's edge for a side drawer: index.html turns it), a click on it shuts the drawer (docs/spec/design.md, "A lip")
+for (const [, d] of drawers) {
+  const lip = document.createElement('div');
+  lip.className = 'lip';
+  lip.innerHTML = '<button type="button" aria-label="Shut this drawer" title="Shut"><svg viewBox="0 0 16 10" aria-hidden="true"><path d="M2 2 8 8 14 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>';
+  lip.firstChild.addEventListener('click', (e) => setDrawer(false, e.detail === 0));
+  d.prepend(lip);
+}
 for (const entry of drawers) { const [b] = entry; b.addEventListener('click', (e) => { const d = entry[1]; setDrawer(d === openDrawer() && b === openedBy ? false : d, e.detail === 0, b); }); } // detail 0: Enter or Space
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && openDrawer()) setDrawer(false, true); });
 // the play band is not the map, nor is the skull: their buttons leave a drawer open, so the table is cleared mid-use
 const outside = (t) => { const d = openDrawer(); return d && t instanceof Node && !where.contains(t) && !d.contains(t) && !$('voyageBand').contains(t) && !$('memento').contains(t); };
-// On a phone every drawer stays up while the map is tapped or moved.
-addEventListener('pointerdown', (e) => { if (outside(e.target) && !(phone.matches && e.target === canvas)) setDrawer(false); });
+// On a phone, upright or turned, every drawer stays up while the map is tapped or moved.
+addEventListener('pointerdown', (e) => { if (outside(e.target) && !(handheld() && e.target === canvas)) setDrawer(false); });
 addEventListener('focusout', (e) => { if (e.relatedTarget && outside(e.relatedTarget)) setDrawer(false); }); // tabbed out; a click that focuses nothing has no relatedTarget
 
 // Reset: every control back to its default, the view (place, projection and bearing) and the hover kept. The hash holds the whole
@@ -1336,7 +1354,7 @@ canvas.addEventListener('pointermove', (e) => {
   if (carried) { carried.corner = cornerAt(toCanvas(e.clientX, e.clientY)); showSnap(carried.corner, carried.w, carried.h); return; }
   if (!pointers.size) { // a picture over the marks under it, as a press finds it
     const p = toCanvas(e.clientX, e.clientY), pic = pictureHit(p)?.kind;
-    if (looking != null) { canvas.style.cursor = pic ? (pic === 'held' ? 'grab' : 'pointer') : ''; return; }
+    if (looking != null) { canvas.style.cursor = pic ? (pic === 'held' ? 'grab' : 'pointer') : 'default'; return; } // off the card a click puts it away: no hand
     const card = cardAt(p), mark = !card && !pic && markAt(p), hit = card || pic || mark ? null : sheetHit(p);
     canvas.style.cursor = card ? 'grab' : pic ? ({ move: 'grab', body: 'zoom-in' }[pic] ?? '') : mark ? 'pointer' : { move: 'grab', turn: TURN_CURSOR }[hit?.kind] ?? '';
     showCornerIcon(hit?.kind === 'turn' ? hit : null);
@@ -1755,14 +1773,15 @@ const LOCATIONS = [...ANCHORAGES.slice(0, 2), ...SIGHTS, ...ANCHORAGES.slice(2)]
 // at the top: data/voyages/index.json in the order the voyages set out (chronological; the file's order breaks ties),
 // an era's heading before the first row in it, each row the voyage's short name and years
 // (the title is its tooltip), an eye, a play button, then its ink, a swatch to pick another. A shown voyage has its summary and a link
-// to its first source under its row. They load on the first open and stay cached. A click on the name shows that
-// voyage alone (every other one is hidden), flies to frame the whole of it and draws its line on from start to end,
-// every time, in the seconds the Drawn-in slider at the drawer's head sets. The eye only shows or hides that one voyage, at once: no
+// to its first source under its row. They load on the first open and stay cached. A click on the name adds that
+// voyage to those shown, flies to frame the whole of it and draws its line on from start to end,
+// every time, in the draw's seconds (chooseVoyage). The eye only shows or hides that one voyage, at once: no
 // flight, no pen, no other voyage touched. A voyage hidden keeps its place in the list, so its colour, and every other
-// voyage's, stays put. A voyage shown takes the first colour no shown voyage has, the chart's red first (settleInks).
+// voyage's, stays put. A voyage shown takes the first colour of its palette no shown voyage has (settleInks).
 // The play button sails the voyage again on its own calendar (playVoyage, below), with a band at the map's foot.
 // At the drawer's head, the line weight for them all and how long the pen takes; the skull clears them (clearMap). The
 // choice rides in the link (`voyages=`, `voyagewidth=`, `voyagedraw=`) like any style.
+const VOYAGE_PLAY_ON = false; // the play buttons, the calendar band and the Drawn-in slider, suppressed for now: docs/spec/voyages.md, "no play, one speed"
 let band = null; // the voyage the play button plays, { id, cal, ms, state: wait | run | paused | done, since, t0, at, title } (playVoyage)
 const PLAY_GLYPH = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>';
 const PAUSE_GLYPH = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="5.5" width="4" height="13" rx="1"/><rect x="13.5" y="5.5" width="4" height="13" rx="1"/></svg>';
@@ -1780,9 +1799,10 @@ function voyageItem(id, v, sources, { name = true, bar = '' } = {}) {
     (name ? `<button type="button" class="vname" data-voyage="${escapeHTML(id)}" title="${full}${when ? `, ${when}` : ''}">` +
       `<svg viewBox="0 0 28 18" aria-hidden="true"><path d="M2 9h24" fill="none" stroke-linecap="round"/></svg>` +
       `<span class="brief">${brief}${when ? `<span class="when">${when}</span>` : ''}</span></button>`
-      : `<b class="vtitle">${full}</b>${years}`) +
+      : `<button type="button" class="vname vtitle" data-voyage="${escapeHTML(id)}" title="${full}${when ? `, ${when}` : ''}">` +
+        `<svg viewBox="0 0 28 18" aria-hidden="true"><path d="M2 9h24" fill="none" stroke-linecap="round"/></svg><b>${full}</b>${years}</button>`) +
     `<button type="button" class="eye" data-eye="${escapeHTML(id)}" aria-pressed="false" aria-label="Show ${full}" title="Show or hide ${full}">${EYE}</button>` +
-    `<button type="button" class="play" data-play="${escapeHTML(id)}" aria-pressed="false" aria-label="Play ${full} on its own calendar" title="Play ${full} on its own calendar">${PLAY_GLYPH}</button>` +
+    `<button type="button" class="play" data-play="${escapeHTML(id)}" aria-pressed="false" aria-label="Play ${full} on its own calendar" title="Play ${full} on its own calendar"${VOYAGE_PLAY_ON ? '' : ' hidden'}>${PLAY_GLYPH}</button>` +
     (name ? `<input type="color" data-ink="${escapeHTML(id)}" aria-label="Colour of ${full}" title="Colour of ${full}" hidden>` : '') + bar + '</div>' +
     (summary || more ? `<p class="vsum">${name ? `<b>${full}</b>. ` : ''}${summary}${more}</p>` : '') + '</li>';
 }
@@ -1811,10 +1831,8 @@ const crossing = () => {
 const settleVoyageInks = (fresh) => { const s = settleInks(style.voyages, crossing(), fresh); if (s !== style.voyages) { style = { ...style, voyages: s }; writeHash(); } };
 const voyageInk = () => { settleVoyageInks(); return Object.fromEntries(style.voyages.map((v) => [v.id, v.colour ?? v.ink])); };
 const isShown = (id) => style.voyages.some((v) => v.id === id && !v.hidden);
-const isHidden = (id) => style.voyages.some((v) => v.id === id && v.hidden);
-// the chosen person's voyages are drawn lit (the scene's `person`, people.mjs withPerson) unless an eye has hidden them
-function litBy(id) { return Boolean(peopleData?.people.find((p) => p.id === style.person)?.voyages.includes(id)); }
-const isDrawn = (id) => isShown(id) || (litBy(id) && !isHidden(id));
+// a voyage is drawn while it is shown: a chosen person lights none for good, their voyages only pulse (voyagePulse)
+const isDrawn = isShown;
 // Every voyage row, in the Voyages drawer and in the chosen person's tile, as the voyages stand: on or off, its ink,
 // its eye, its play button (playing, paused) and its swatch
 function showVoyage() {
@@ -1825,7 +1843,7 @@ function showVoyage() {
     row.classList.toggle('on', on);
     if (b) b.dataset.shown = String(on);
     if (line) {
-      line.setAttribute('stroke', litBy(id) && on ? PERSON_RED : listed ? ink[id] : 'currentColor');
+      line.setAttribute('stroke', listed ? ink[id] : 'currentColor');
       line.setAttribute('stroke-width', String(style.voyageWidth));
       line.setAttribute('stroke-dasharray', on ? '' : '2 3');
       line.setAttribute('opacity', on ? '1' : '0.45');
@@ -1885,10 +1903,7 @@ function voyageControl(e) {
     const id = eye.dataset.eye;
     if (band?.id === id) closeBand();
     if (voyagePen?.id === id || voyagePen?.ids?.includes(id)) voyagePen = null; // a pen on it stops, and the line is whole
-    // a chosen person's voyage hidden by its eye and turned back on: its hidden entry goes, rather than staying listed
-    // as shown, so letting the person go takes it off the map with them
-    if (litBy(id) && isHidden(id)) { style = { ...style, voyages: style.voyages.filter((v) => v.id !== id) }; showVoyage(); writeHash(); render(); }
-    else showVoyages({ [id]: !isDrawn(id) });
+    showVoyages({ [id]: !isShown(id) });
     return true;
   }
   if (play) {
@@ -1900,18 +1915,23 @@ function voyageControl(e) {
   }
   return false;
 }
-// a click in the Voyages drawer's rows
-async function voyageClick(e) {
-  if (voyageControl(e)) return;
-  const b = e.target.closest('[data-voyage]');
-  if (!b) return;
-  const id = b.dataset.voyage; // that voyage alone, framed, and drawn on afresh
+// A voyage's name, in the Voyages drawer or a person's tile (docs/spec/voyages.md, "choosing a voyage by its name adds
+// it"): that voyage shown beside those already shown, in a colour none of them has, framed and drawn on afresh
+// (from a person's tile the map stays: it frames the person already, and a flight would put their cards away)
+async function chooseVoyage(id, fly = true) {
   closeBand();
-  showVoyages({ [id]: true }, false);
-  await flyToVoyage(id);
+  showVoyages({ [id]: true });
+  if (fly) await flyToVoyage(id);
   if (isShown(id) && !matchMedia('(prefers-reduced-motion: reduce)').matches) drawOn([id]);
 }
+// a click in the Voyages drawer's rows
+function voyageClick(e) {
+  if (voyageControl(e)) return;
+  const b = e.target.closest('[data-voyage]');
+  if (b) chooseVoyage(b.dataset.voyage);
+}
 $('voyageList').addEventListener('click', voyageClick);
+if (!VOYAGE_PLAY_ON) $('voyageDraw').closest('.vdraw').hidden = true;
 // How long the pen takes, in seconds (VOYAGE_DRAW): the slider shows the seconds, and its sample line draws itself on
 // at that pace each time it moves. Only the next drawing changes, so nothing is drawn again.
 // (showStyle calls showVoyageDraw before this part of the page has run, so it reads the slider afresh)
@@ -1949,7 +1969,7 @@ function finish(id) { const v = ground?.voyages?.find((x) => x.id === id); if (v
 const landed = () => flightTo == null && placed === view;
 function drawOn(ids, ready = landed, wait = 10000) {
   closeBand();
-  const pen = voyagePen = { ids, since: performance.now(), t0: null, ms: style.voyageDraw * 1000 };
+  const pen = voyagePen = { ids, since: performance.now(), t0: null, ms: (VOYAGE_PLAY_ON ? style.voyageDraw : VOYAGE_DRAW.seconds) * 1000 };
   const done = () => { // every exit puts the lines back whole, drawn again once
     let any = false;
     for (const v of ground?.voyages ?? []) if (ids.includes(v.id) && ('reveal' in v || 'played' in v)) { delete v.reveal; delete v.played; delete v.legReveal; any = true; }
@@ -1975,6 +1995,32 @@ function drawOn(ids, ready = landed, wait = 10000) {
     requestAnimationFrame(step);
   };
   requestAnimationFrame(step);
+}
+// A chosen person's travels (docs/spec/design.md, "a chosen person's travels pulse, then fade"): those of their voyages
+// not shown are drawn in the chart's red for the length of a chart's notes' pulse (notePulse), beating with its rings
+// and fading with it, once `ready` says (the cards dealt) and the map has landed; then drawn no more.
+const pulsing = () => (voyagePulse && style.person ? voyagePulse.ids.filter((id) => !isShown(id)) : []);
+function startVoyagePulse(ids, ready) {
+  voyagePulse = ids.length ? { ids, ready, since: performance.now(), t0: null } : null;
+  if (voyagePulse) requestAnimationFrame(voyagePulseStep);
+}
+function applyPulse(now = performance.now()) {
+  if (!voyagePulse || !ground?.voyages) return;
+  const p = voyagePulse.t0 == null ? { alpha: 1, ring: 0 } : notePulse(now - voyagePulse.t0, reducedMotion()), on = pulsing();
+  for (const v of ground.voyages) if (on.includes(v.id)) v.alpha = p ? p.alpha * (1 - 0.6 * p.ring) : 0;
+}
+function voyagePulseStep(now) {
+  const vp = voyagePulse;
+  if (!vp || voyagePulse !== vp) return;
+  if (!style.person) { voyagePulse = null; return; }
+  if (vp.t0 == null) {
+    if (vp.ready() && landed() && ground?.voyages?.some((v) => vp.ids.includes(v.id))) vp.t0 = now;
+    else if (now - vp.since > 20000) vp.t0 = -Infinity; // never ready: over at once
+  }
+  if (vp.t0 != null && !notePulse(now - vp.t0, reducedMotion())) { voyagePulse = null; render(); return; } // over: drawn without them
+  applyPulse(now);
+  if (vp.t0 != null) paintFrame('pulsing');
+  requestAnimationFrame(voyagePulseStep);
 }
 // The play button (docs/spec/design.md, "the play button sails the voyage on its own calendar"): the voyage shown if it
 // was hidden (no other voyage hidden), the map flown to its frame unless the whole of it is in view, and its line drawn
@@ -2154,11 +2200,11 @@ $('voyageList').addEventListener('input', (e) => {
 // The people: the People drawer, a vertical timeline of one row per person (data/voyages/people.json,
 // scripts/people.mjs), earliest first with the eras as headings: the name and the years the record gives, a chip for a
 // people (the Lapita) rather than one person. A click on a row chooses that person (a second click lets them go): their
-// row is lit, their voyages are drawn lit in the chart's red and every other voyage chosen is dimmed (the scene's
-// `person`), their birth is marked, the map flies to frame them, and all their pictures are dealt onto the map as onto
+// row is lit, their voyages not shown pulse once in the chart's red and fade (startVoyagePulse), their birth is
+// marked, the map flies to frame them, and all their pictures are dealt onto the map as onto
 // a chart table, a little askew, to drag by hand, resize by a corner and turn over to read what each is and follow it
 // to its page. Directly under their row their tile slides open: the bio, the pictures as thumbnails, each of which takes
-// it off the table or puts it back, and then a row per voyage of theirs with its notes and the Voyages drawer's eye and play.
+// it off the table or puts it back, and then a row per voyage of theirs with its notes and the Voyages drawer's name and eye.
 // The choice rides in the link (`person=`, `pictures=`, `pictureat=`).
 //
 // A sight whose tile is opened (showTileAt) is chosen the same way: its pictures (data/sights/pictures.json, built into
@@ -2197,14 +2243,15 @@ async function loadSubject() { if (style.person) await loadPeople(); else if (st
 // put away it deals them again. A sight with several marks (Tyre's city site and Al-Bass) splits its pictures between
 // them by each record's `site`, the mark's place in its tile's `at`; the link carries it as `site=`.
 let keepTile = false;
-function chooseSight(name, pictures = DEFAULTS.pictures, site = null, tile = null) { // `tile`: the mark's tile it was opened from
-  if (style.sight === name && style.site === site && !style.person && style.pictures == null) return; // all on the table: nothing to deal back
+// `aim`, a place's row in the Locations drawer: the view it flies to, its cards dealt as the map arrives, every time.
+function chooseSight(name, pictures = DEFAULTS.pictures, site = null, tile = null, aim = null) { // `tile`: the mark's tile it was opened from
+  if (!aim && style.sight === name && style.site === site && !style.person && style.pictures == null) return; // all on the table: nothing to deal back
   const hadPerson = clearTable(false); // whatever lies on the table put away first, as the skull does; the tile just opened stays
   style = { ...style, sight: name, site, pictures };
-  dealViews.delete(sightKey());
+  dealViews.delete(sightKey()); dealRects.delete(sightKey());
   dealing = sightKey(); // dealt where dealSight says: in place, or as the map arrives
   showPeople(); showSightCard(); writeHash();
-  if (sightData) dealSight(tile); else loadSights().then(() => dealSight(tile), () => { dealing = null; });
+  if (sightData) dealSight(tile, aim); else loadSights().then(() => dealSight(tile, aim), () => { dealing = null; if (aim) goTo(aim); });
   if (hadPerson) { keepTile = true; render(); } // the person's voyages back in their own inks
 }
 function dealNow(key = dealing) {
@@ -2236,6 +2283,9 @@ function clearTable(hide = true, wipe = true) {
 const SIGHT_ZOOM = 9.5, FLY_WIDER = 1; // the zoom a sight is dealt at from afar; how much wider than it counts as afar
 let reopen = null; // the tile of the mark whose deal the map is flying to, opened again beside the mark once it lands
 const dealViews = new Map(); // the view a sight's pictures were dealt in, by subject
+const dealRects = new Map(); // and the part of the window they were dealt in (dealRect), so a drawer shut later moves none
+// On a phone, upright or turned, a sight's cards may take more of the clear part of the window, in up to three rows
+const sightLay = () => (handheld() ? { ...SIGHT_DEAL, fill: 0.55, rows: 3 } : SIGHT_DEAL);
 // where a sight's row is dealt under: the mark opened, else the middle of its marks
 function placeOfSight(s, f) {
   const spot = style.site != null && sightTiles().find(({ tile }) => tile.sight === s.id && tile.site === style.site);
@@ -2243,15 +2293,20 @@ function placeOfSight(s, f) {
 }
 // a sight's pictures for one of its marks (`site`), by index; null for all of them
 const siteSet = (s, site) => (site == null || !s.images.some((im) => im.site === site) ? null : s.images.flatMap((im, i) => (im.site === site ? [i] : [])));
-function dealSight(tile = null) {
+function dealSight(tile = null, aim = null) {
   const s = subject();
-  if (s?.kind !== 'sight') return;
-  if (dealViews.has(s.key)) { dealNow(s.key); return; }
+  if (s?.kind !== 'sight') { if (aim) { dealing = null; goTo(aim); } return; } // a place with no pictures: the flight alone
+  if (!aim && dealViews.has(s.key)) { dealNow(s.key); return; }
   const f = frameOfSubject(s), at = placeOfSight(s, f), sizes = picturesOf(s).map((i) => pictureSize(s, i)).filter(Boolean);
   const zoom = Math.min(SIGHT_ZOOM, viewContaining(f, { w: W, h: H }).zoom);
-  let to = view.zoom < zoom - FLY_WIDER ? { ...view, lon: at[0], lat: at[1], zoom } : view;
-  if (!sightDeal(sizes, windowRect(), viewProjection(to).project(...at)).clear) to = { ...to, lon: at[0], lat: at[1] };
+  let to = aim ? { ...aim } : view.zoom < zoom - FLY_WIDER ? { ...view, lon: at[0], lat: at[1], zoom } : view;
+  const rect = dealRect(), deal = sightDeal(sizes, rect, viewProjection(to).project(...at), sightLay());
+  if (!deal.clear) { // the place in the middle; on a phone, in the middle of what the deal leaves clear above its cards
+    to = { ...to, lon: at[0], lat: at[1] };
+    if (handheld()) to = panView({ ...to, projection: view.projection, bearing: view.bearing }, (rect.x0 + rect.x1 - W) / 2, (rect.y0 + deal.top - H) / 2);
+  }
   dealViews.set(s.key, clampView({ ...to, projection: view.projection, bearing: view.bearing }));
+  dealRects.set(s.key, rect);
   if (to === view) { dealNow(s.key); return; } // dealt here and now
   goTo(to, s.key); // dealt as the map arrives, and the mark's tile opened again there
   reopen = tile;
@@ -2259,11 +2314,13 @@ function dealSight(tile = null) {
 const mercOf = (lat) => (Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360)) * 180) / Math.PI;
 const latOfMerc = (m) => ((2 * Math.atan(Math.exp((m * Math.PI) / 180)) - Math.PI / 2) * 180) / Math.PI;
 // A sight's shown pictures on the map, from where sightDeal lays them in the view they were dealt in (the view now, for
-// a sight that came in by the link)
-function sightPlaces(s, f, sizes) {
+// a sight that came in by the link), under `at` [lon, lat]; on a phone a person's are laid so too, under their frame
+const sightPlaces = (s, f, sizes) => screenPlaces(s, placeOfSight(s, f), sizes);
+function screenPlaces(s, at, sizes) {
   if (!dealViews.has(s.key)) dealViews.set(s.key, view);
+  if (!dealRects.has(s.key)) dealRects.set(s.key, dealRect());
   const proj = viewProjection(dealViews.get(s.key));
-  return sightDeal(sizes, windowRect(), proj.project(...placeOfSight(s, f))).row.map(({ x, y, h }, k) => {
+  return sightDeal(sizes, dealRects.get(s.key), proj.project(...at), sightLay()).row.map(({ x, y, h }, k) => {
     const [lon] = proj.invert(x, y), m0 = mercOf(proj.invert(x, y + h / 2)[1]), m1 = mercOf(proj.invert(x, y - h / 2)[1]);
     return { lon, lat: latOfMerc((m0 + m1) / 2), scale: (m1 - m0) / sizes[k][1], turn: 0 };
   });
@@ -2404,6 +2461,8 @@ function peopleClick(e) {
   if (voyageControl(e)) return; // an eye or a play in the chosen person's tile
   const head = e.target.closest('#peopleList .head');
   if (head) { const k = head.dataset.head; if (!openHeads.delete(k)) { openHeads.clear(); openHeads.add(k); } showHeads(); return; } // one era open at a time
+  const name = e.target.closest('[data-voyage]');
+  if (name) { chooseVoyage(name.dataset.voyage, false); return; } // a voyage's name in the tile, as in the Voyages drawer, but where the map stands
   const pic = e.target.closest('[data-pic]'), chosen = personOf(style.person);
   if (pic && chosen) { setOnTable(Number(pic.dataset.pic), !picturesOf(chosen).includes(Number(pic.dataset.pic))); return; }
   const b = e.target.closest('[data-person]');
@@ -2413,12 +2472,12 @@ function peopleClick(e) {
   clearTable(); // whatever lies on the table put away first, and a second click lets the person go
   choosePerson(id);
 }
-function choosePerson(id) {
+function choosePerson(id, aim = null) {
   if (id) { style = { ...style, person: id }; dealing = `person:${id}`; } // their cards dealt as the map arrives
-  const ids = id ? (personOf(id)?.voyages ?? []).filter(isDrawn) : [];
-  if (ids.length && !stillMotion()) { const key = dealing; drawOn(ids, () => dealing !== key, 20000); } // every shown voyage of theirs drawn on together as the cards are dealt
+  const key = dealing;
+  startVoyagePulse(id ? (personOf(id)?.voyages ?? []).filter((v) => !isShown(v)) : [], () => dealing !== key); // their travels pulse as the cards are dealt, then fade
   showPeople(); showSightCard(); writeHash(); render();
-  if (id) flyToSubject();
+  if (id) flyToSubject(aim);
 }
 $('peoplePanel').addEventListener('click', peopleClick); // the list, the pin and the tile under it
 // A picture onto the table (on top of the pile, as the last one touched) or off it, put away face up; choosing the
@@ -2434,14 +2493,18 @@ function setOnTable(i, on) {
   repaint('a picture put away');
   preparePictures().then((fresh) => { if (fresh) repaint('a picture dealt'); }, () => {});
 }
-// The skull in the right margin, always there, a memento mori under it, is the one clear for the whole map
+// The skull in the right margin, always there, its memento mori in its hover text, is the one clear for the whole map
 // (docs/spec/design.md, "The skull is the one clear"): a click (or Enter, or Space) clears the table (clearTable), lifts
 // every chart's sheet back to its own place and takes every voyage off, and moves the line on to the next (MEMENTO, the
 // first, always). It leaves the settings (the rose, the projection, every style) and the view (place, zoom, bearing)
 // as they are: a lifted sheet does not turn the world back to north here, as lifting one by its eye does.
 let memento = 0;
-const showMemento = () => { $('mementoText').textContent = MEMENTO[memento]; $('sweep').title = `Clear the map: ${MEMENTO_EN[memento]}`; };
+// the phrase is not shown beside the skull: it is the skull's hover text, the Latin over its English (design.md, "The skull's hover text")
+const showMemento = () => { const t = `Clear the Map: ${MEMENTO[memento]}\n${MEMENTO_EN[memento]}`; $('sweep').title = t; $('sweep').setAttribute('aria-label', t); };
 showMemento();
+// the English of the phrase read large, in the small info text at the foot
+const sayEnglish = (i) => { $('mementoEnglish').textContent = MEMENTO_EN[i]; };
+sayEnglish(memento);
 // In stages, each drawn before the next, so the clear's effect can tell what went: the cards, then the lines (a
 // person's back in their own inks), then the sheets; `snap(stage)` is called after each stage that changed the map
 async function clearMap(snap = () => {}) {
@@ -2457,17 +2520,40 @@ async function clearMap(snap = () => {}) {
 $('sweep').addEventListener('click', () => {
   const cards = cardsOnTable(), before = vanishFrom(), shots = { before };
   const done = clearMap((stage) => { if (before) shots[stage] = ctx.getImageData(0, 0, W, H); });
-  skullRise(); wordsRise(MEMENTO[memento]);
+  skullRise(); wordsRise(MEMENTO[memento]); sayEnglish(memento);
   memento = mementoNext(memento); showMemento();
   if (before) Promise.race([done, new Promise((ok) => setTimeout(ok, 4000))]).then(() => vanish(shots, cards), () => vanish(shots, cards));
 });
 // The open drawer stops above the skull (--memento-h, index.html), whether the compass shows over it
 new ResizeObserver(() => document.documentElement.style.setProperty('--memento-h', `${$('memento').offsetHeight}px`)).observe($('memento'));
 
-// The clear's timing, chosen on #367: what goes (the lines and the charts' sheets) fades over 4 s; the skull is 0.4 s at
-// 8% ink and grows to ×2.5; the phrase is 6 s, in at once and straight into a slow fade, and its size changes from
-// 5% to 100% of that time, to ×1.05
-const CLEAR_TUNE = { goneMs: 4000, skullMs: 400, wordsMs: 6000, ink: 8, skullGrow: 250, wordsGrow: 105, growFrom: 5, growTo: 100 };
+// The clear's timing, the user's picks on #404: what goes (the lines and the charts' sheets) fades over 1.2 s; the skull
+// is 0.5 s at 15% ink and grows to ×3; the phrase is 8 s, in at once and straight into a slow fade, and its size
+// changes from 5% to 100% of that time, to ×1.2
+const CLEAR_TUNE = { goneMs: 1200, skullMs: 500, wordsMs: 8000, ink: 15, skullGrow: 300, wordsGrow: 120, growFrom: 5, growTo: 100,
+  // a card's exit (Pulverum, and each card in the skull's clear): its time and the gap between cards; how far along the
+  // deal-off path it travels; when in its exit the dust begins; how much the crumbling runs from the trailing edge
+  // (0 scattered); a grain's size and drift, CSS px; the share of grains seen as dust; a grain's life, of the exit's time
+  cardMs: 450, cardGap: 110, travel: 75, dustFrom: 25, sweep: 100, grain: 4, drift: 25, dustKept: 100, dustLife: 200 };
+// A hidden tuning panel (#clearTune, top left) changes these, kept per browser. It shows only with `clear-tune` in the
+// query (`?clear-tune#...`), which the page's own hash rewrites leave alone; without it the defaults above hold and
+// any kept tuning is ignored. Never under a browser test, where it would sit over the page.
+if (new URLSearchParams(location.search).has('clear-tune') && !navigator.webdriver) {
+  const merged = { ...CLEAR_TUNE }, TUNE_KEY = 'portolani.clearTune.10';
+  try { Object.assign(CLEAR_TUNE, JSON.parse(localStorage.getItem(TUNE_KEY) ?? '{}')); } catch { /* none kept */ }
+  $('clearTune').hidden = false;
+  const keep = () => { try { localStorage.setItem(TUNE_KEY, JSON.stringify(CLEAR_TUNE)); } catch { /* not kept */ } };
+  const shows = [];
+  for (const [id, key, unit] of [['tuneSkull', 'skullMs', 's'], ['tuneInk', 'ink', '%'], ['tuneSkullGrow', 'skullGrow', 'x'], ['tuneGone', 'goneMs', 's'], ['tuneWords', 'wordsMs', 's'], ['tuneWordsGrow', 'wordsGrow', 'x'], ['tuneGrowFrom', 'growFrom', '%'], ['tuneGrowTo', 'growTo', '%'],
+    ['tuneCard', 'cardMs', 's'], ['tuneCardGap', 'cardGap', 's'], ['tuneTravel', 'travel', '%'], ['tuneDustFrom', 'dustFrom', '%'], ['tuneSweep', 'sweep', '%'],
+    ['tuneGrain', 'grain', 'px'], ['tuneDrift', 'drift', 'px'], ['tuneDustKept', 'dustKept', '%'], ['tuneDustLife', 'dustLife', '%']]) {
+    const input = $(id), out = input.nextElementSibling;
+    const show = () => { input.value = CLEAR_TUNE[key]; out.value = unit === 's' ? `${(CLEAR_TUNE[key] / 1000).toFixed(2)} s` : unit === 'x' ? `×${(CLEAR_TUNE[key] / 100).toFixed(2)}` : `${CLEAR_TUNE[key]}${unit === 'px' ? ' px' : '%'}`; };
+    show(); shows.push(show);
+    input.addEventListener('input', () => { CLEAR_TUNE[key] = Number(input.value); show(); keep(); });
+  }
+  $('tuneReset').addEventListener('click', () => { Object.assign(CLEAR_TUNE, merged); shows.forEach((f) => f()); keep(); });
+}
 const stillMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 // the map's box on the window, cut to the window
 function mapBox() {
@@ -2486,7 +2572,8 @@ function skullRise() {
   el.animate([{ opacity: 0, transform: `scale(${1 - g * 0.2})` }, { opacity: ink, transform: 'scale(1)', offset: 0.3 }, { opacity: ink * 0.7, transform: `scale(${1 + g * 0.3})`, offset: 0.6 }, { opacity: 0, transform: `scale(${1 + g})` }],
     { duration: CLEAR_TUNE.skullMs, easing: 'cubic-bezier(.3,0,.6,1)' }).finished.then(() => { el.hidden = true; }, () => {});
 }
-// The phrase, on one line at the foot of the map, as large as fits it, grows and fades: slower than the skull, to be read
+// The phrase, on one line at the foot of the map, as large as fits it, grows and fades: slower than the skull, to be read.
+// Its foot stands above the skull and the compass (#memento), so neither covers any of it as it grows; it grows upward.
 function wordsRise(text) {
   const el = $('mementoBig');
   const { left, top, wide, tall } = mapBox();
@@ -2496,7 +2583,8 @@ function wordsRise(text) {
   el.style.fontSize = `${size}px`;
   const fit = (wide * 0.86) / el.scrollWidth;
   if (fit < 1) { size *= fit; el.style.fontSize = `${size}px`; }
-  Object.assign(el.style, { left: `${left + (wide - el.offsetWidth) / 2}px`, top: `${top + tall - el.offsetHeight - Math.max(56, tall * 0.12)}px` });
+  const foot = Math.min(top + tall - Math.max(56, tall * 0.12), $('memento').getBoundingClientRect().top - 8);
+  Object.assign(el.style, { left: `${left + (wide - el.offsetWidth) / 2}px`, top: `${Math.max(top, foot - el.offsetHeight)}px` });
   // In, then straight into the fade, all one smooth curve: the fade eases in, so there is no
   // corner at the top. The size is its own animation: it holds at 1 until `growFrom` percent of the phrase's
   // time, then eases to its end size by `growTo` percent of it.
@@ -2511,21 +2599,26 @@ function wordsRise(text) {
 // drawn again, whatever changed is kept from it and leaves by the chosen effect over the same time, whatever it was
 function vanishFrom() {
   if (stillMotion()) return null;
+  const o = vanishCanvas().getContext('2d');
+  o.drawImage(canvas, 0, 0);
+  return o.getImageData(0, 0, W, H);
+}
+// the clear's own canvas over the map, empty, shown, and whatever it was playing stopped
+function vanishCanvas() {
   const el = $('vanish'), { r } = mapBox();
   el.width = W; el.height = H;
   Object.assign(el.style, { left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, height: `${r.height}px` });
-  const o = el.getContext('2d');
-  o.clearRect(0, 0, W, H); o.drawImage(canvas, 0, 0);
+  el.getContext('2d').clearRect(0, 0, W, H);
   el.hidden = false;
   cancelAnimationFrame(vanishFrame);
-  return o.getImageData(0, 0, W, H);
+  return el;
 }
 let vanishFrame = 0;
 // The cards on the table as they lie, bottom of the pile first, for their exit
 function cardsOnTable() {
   if (stillMotion() || !onTable) return [];
   const proj = viewProjection(view);
-  return shownPictures().map((pic) => ({ img: pic.o.img, k: pic.k ?? 0, b: pictureBox(pic, proj) })).filter((c) => c.b);
+  return shownPictures().map((pic) => ({ i: pic.i, b: pictureBox(pic, proj) })).filter((c) => c.b).map((c) => ({ ...c, dust: cardDust(c.b) }));
 }
 // What changed between two shots of the map, kept from the first, and the box round it; null when nothing did
 function goneBetween(before, after) {
@@ -2543,23 +2636,72 @@ function goneBetween(before, after) {
   src.getContext('2d').putImageData(gone, 0, 0);
   return { src, gone, box: { x0, x1, y0, y1 } };
 }
-// Each card leaves as it was dealt, mirrored and at the deal's own pace (DEAL_MS, DEAL_GAP): off to the top left,
-// shrinking and turning, one after another; `ms` since the exit began
-const cardsLeft = (cards) => (cards.length ? DEAL_MS + (cards.length - 1) * DEAL_GAP : 0);
+// Each card leaves as it was dealt, mirrored: off to the top left, shrinking and turning, one after another, and
+// turns to fine dust as it goes, to nothing (docs/spec/design.md, "The skull's clear is shown"); Pulverum takes one
+// card the same way. The dust is the card as it is drawn, cut into grains that crumble from its trailing edge and
+// drift off. Its timings are CLEAR_TUNE's card keys.
+const cardTotal = () => CLEAR_TUNE.cardMs * (1 + CLEAR_TUNE.dustLife / 100);
+const cardsLeft = (cards) => (cards.length ? cardTotal() + (cards.length - 1) * CLEAR_TUNE.cardGap : 0);
 // a thing at box `b` dealt off to the top left, `e` 0 where it lies to 1 gone: x, y, scale and its turn
 const dealtOff = (b, e) => [b.x + (-b.w * 0.25 - b.x) * e, b.y * (1 - e), 1 - 0.65 * e, -e * 0.6];
+// a card at box `b` as the map draws it now, copied off the canvas and cut into grains, each with the moment it crumbles
+function cardDust(b) {
+  const w = Math.ceil(b.w + 2 * MOUNT), h = Math.ceil(b.h + 2 * MOUNT), body = Object.assign(document.createElement('canvas'), { width: w, height: h });
+  const s = body.getContext('2d', { willReadFrequently: true });
+  s.translate(w / 2, h / 2); s.rotate(-b.a); s.translate(-b.x, -b.y); s.drawImage(canvas, 0, 0); s.setTransform(1, 0, 0, 1, 0, 0);
+  const px = s.getImageData(0, 0, w, h).data, g = Math.max(1, Math.round(cssPx(CLEAR_TUNE.grain))), sweep = CLEAR_TUNE.sweep / 100;
+  const drift = cssPx(CLEAR_TUNE.drift), kept = CLEAR_TUNE.dustKept / 100, grains = [];
+  for (let y = 0; y < h; y += g) for (let x = 0; x < w; x += g) {
+    const p = (Math.min(h - 1, y + (g >> 1)) * w + Math.min(w - 1, x + (g >> 1))) * 4;
+    const th = Math.min(0.999, Math.max(0, sweep * (1 - x / w) + (1 - sweep) * Math.random() + (Math.random() - 0.5) * 0.12 * sweep));
+    const show = px[p + 3] > 0 && Math.random() < kept, ang = -Math.PI / 2 + (Math.random() - 0.3) * 1.6, d = drift * (0.3 + 0.7 * Math.random());
+    grains.push({ x, y, th, show, fill: show ? `rgb(${px[p]},${px[p + 1]},${px[p + 2]})` : '', dx: Math.cos(ang) * d, dy: Math.sin(ang) * d, gone: false, ox: 0, oy: 0 });
+  }
+  grains.sort((a, c) => a.th - c.th);
+  return { body, s, g, w, h, grains, next: 0 };
+}
 function drawCardsLeaving(o, cards, ms) {
-  const m = 5;
-  cards.forEach(({ img, b }, k) => {
-    const u = Math.max(0, Math.min(1, (ms - k * DEAL_GAP) / DEAL_MS)), e = u ** 3; // ease in, the deal's ease out mirrored
-    if (u >= 1) return;
-    const [x, y, s, turn] = dealtOff(b, e);
-    o.save(); o.translate(x, y); o.rotate(b.a + turn); o.scale(s, s);
-    o.save(); o.shadowColor = 'rgba(59,42,26,0.35)'; o.shadowBlur = 8; o.shadowOffsetY = 2; o.fillStyle = style.parchment; o.fillRect(-b.w / 2 - m, -b.h / 2 - m, b.w + 2 * m, b.h + 2 * m); o.restore();
-    o.drawImage(img, -b.w / 2, -b.h / 2, b.w, b.h);
-    o.strokeStyle = style.ink; o.globalAlpha = 0.7; o.lineWidth = 1; o.strokeRect(-b.w / 2 - m, -b.h / 2 - m, b.w + 2 * m, b.h + 2 * m);
-    o.restore();
+  const { cardMs, cardGap, travel, dustFrom, dustLife } = CLEAR_TUNE, from = dustFrom / 100, life = (dustLife / 100) * cardMs;
+  cards.forEach(({ b, dust }, k) => {
+    const t = ms - k * cardGap, u = Math.max(0, Math.min(1, t / cardMs));
+    if (t < 0 || t > cardTotal()) return;
+    const at = (v) => { const [x, y, s, turn] = dealtOff(b, (v ** 2) * (travel / 100)), a = b.a + turn; return { x, y, s, c: Math.cos(a) * s, n: Math.sin(a) * s, a }; };
+    const T = at(u), d = (u - from) / Math.max(0.001, 1 - from);
+    for (; dust.next < dust.grains.length && dust.grains[dust.next].th <= d; dust.next++) { // crumbled this frame: off the body, into the air
+      const gr = dust.grains[dust.next], lx = gr.x + dust.g / 2 - dust.w / 2, ly = gr.y + dust.g / 2 - dust.h / 2;
+      dust.s.clearRect(gr.x, gr.y, dust.g, dust.g);
+      gr.gone = t; gr.ox = T.x + T.c * lx - T.n * ly; gr.oy = T.y + T.n * lx + T.c * ly;
+    }
+    if (dust.next < dust.grains.length) {
+      o.save(); o.translate(T.x, T.y); o.rotate(T.a); o.scale(T.s, T.s);
+      o.shadowColor = 'rgba(59,42,26,0.35)'; o.shadowBlur = 8; o.shadowOffsetY = 2;
+      o.drawImage(dust.body, -dust.w / 2, -dust.h / 2); o.restore();
+    }
+    const size = dust.g * T.s;
+    for (let j = 0; j < dust.next; j++) {
+      const gr = dust.grains[j];
+      if (!gr.show) continue;
+      const age = (t - gr.gone) / life;
+      if (age >= 1) continue;
+      const e = 1 - (1 - age) ** 2;
+      o.globalAlpha = (1 - age) ** 1.5; o.fillStyle = gr.fill;
+      o.fillRect(gr.ox + gr.dx * e, gr.oy + gr.dy * e, size, size);
+    }
+    o.globalAlpha = 1;
   });
+}
+// Pulverum: one card off the table, as the skull's clear takes a card
+function pulverum(i) {
+  const cards = cardsOnTable().filter((c) => c.i === i);
+  setOnTable(i, false);
+  if (!cards.length) return;
+  const el = vanishCanvas(), o = el.getContext('2d'), t0 = performance.now();
+  const tick = (now) => {
+    const ms = now - t0;
+    o.clearRect(0, 0, W, H); drawCardsLeaving(o, cards, ms);
+    if (ms < cardsLeft(cards)) vanishFrame = requestAnimationFrame(tick); else el.hidden = true;
+  };
+  vanishFrame = requestAnimationFrame(tick);
 }
 // What goes, over one time: the sheets by the chosen effect, the lines fading over them, the cards leaving over both
 function vanish(shots, cards) {
@@ -2615,7 +2757,11 @@ const pictureSize = (s, i) => { const m = s.manifest[s.images[i]?.file]; return 
 const picturesOf = (s) => style.pictures ?? (s.kind === 'sight' ? siteSet(s, style.site) : null) ?? s.images.map((_, i) => i);
 // Where a subject's shown pictures lie by default: a person's under their frame, sized from it (picturePlaces); a
 // sight's along the foot of the view they were dealt in (sightPlaces)
-const placesOf = (s, f, sizes) => (s.kind === 'sight' ? sightPlaces(s, f, sizes) : picturePlaces(f, sizes, ...pictureLay()));
+// On a phone, upright or turned, a person's are dealt as a sight's are, in the part of the window clear of the drawer and
+// the buttons (dealRect), under the frame: a frame laid in lon/lat is often far wider than an upright window
+const placesOf = (s, f, sizes) => (s.kind === 'sight' ? sightPlaces(s, f, sizes)
+  : handheld() || dealRects.has(s.key) ? screenPlaces(s, middleOf(f), sizes) : picturePlaces(f, sizes, ...pictureLay()));
+const middleOf = (f) => [(f.lonMin + f.lonMax) / 2, latOfMerc((mercOf(Math.max(-80, f.latMin)) + mercOf(Math.min(80, f.latMax))) / 2)];
 // Each picture lies a little askew, as if dealt onto a chart table: degrees by its place in the record, and a nudge
 // off the row's line as a share of its height
 const ASKEW = [-4, 3, -2, 5, -3, 2], NUDGE = [0.06, -0.05, 0.08, -0.03, 0.04, -0.07];
@@ -2663,22 +2809,48 @@ async function preparePictures() {
   return fresh && key === subjectKey();
 }
 // The map flies to frame a person and their pictures, wherever they are
-async function flyToSubject() {
+// `aim`, a person's preset view (people.json `view`, Random person): flown to as it is, its zoom kept, rather than the frame.
+async function flyToSubject(aim = null) {
   const key = subjectKey(), s = await loadSubject().catch(() => null), f = s && frameOfSubject(s);
   if (key !== subjectKey()) return;
-  if (!f) { dealNow(key); return; }
+  if (!f && !aim) { dealNow(key); return; }
   const shown = picturesOf(s).filter((i) => pictureSize(s, i)), sizes = shown.map((i) => pictureSize(s, i));
-  goTo(viewContaining(withPictures(f, placesOf(s, f, sizes), sizes), { w: W, h: H }), key); // their cards dealt as it arrives
+  dealViews.delete(s.key); dealRects.delete(s.key);
+  if (!handheld()) { goTo(aim ?? viewContaining(withPictures(f, placesOf(s, f, sizes), sizes), { w: W, h: H }), key); return; } // their cards dealt as it arrives
+  // a phone: the frame fitted above the cards, in the clear part of the window, and the cards dealt under it there
+  const rect = dealRect(), top = sightDeal(sizes, rect, [(rect.x0 + rect.x1) / 2, rect.y0], sightLay()).top ?? rect.y1, above = { ...rect, y1: Math.max(rect.y0 + 40, top - cssPx(8)) };
+  const v = aim ?? viewContaining(f, { w: above.x1 - above.x0, h: above.y1 - above.y0 });
+  const to = clampView(panView({ ...v, projection: view.projection, bearing: view.bearing }, (above.x0 + above.x1 - W) / 2, (above.y0 + above.y1 - H) / 2));
+  dealViews.set(s.key, to); dealRects.set(s.key, rect);
+  goTo(to, key);
 }
 // A picture on the canvas: its centre, its turn in radians and its size in canvas px, before any deal or flip. On the
 // table it lies where it was dealt or last dragged (tableBox); looked at, it stands upright in the middle of the window
 // (lookBox), and it flies between the two in LOOK_MS, the map dimming behind it by LOOK_DIM
 // (docs/spec/design.md, "A card on the table: a click looks, three buttons, Pulverum").
-const LOOK_SHARE = 0.75, LOOK_MS = 320, LOOK_DIM = 0.45, MOUNT = 5; // MOUNT: the parchment margin round a picture, canvas px
+const LOOK_W = 0.75, LOOK_H = 0.85, LOOK_FLOOR = 400, LOOK_MS = 320, LOOK_DIM = 0.45, MOUNT = 5; // MOUNT: the parchment margin round a picture, canvas px
 // The part of the canvas the window shows, in canvas px: a phone crops the canvas to the window.
 function windowRect() {
   const r = canvas.getBoundingClientRect(), kx = W / r.width, ky = H / r.height;
   return { x0: Math.max(0, -r.left) * kx, x1: (Math.min(innerWidth, r.right) - r.left) * kx, y0: Math.max(0, -r.top) * ky, y1: (Math.min(innerHeight, r.bottom) - r.top) * ky };
+}
+// The part of the window cards are dealt in, in canvas px. On a phone, upright or turned, the window less the row of
+// instruments, the drawer open (a bottom sheet upright, docked at the left turned) and the compass and the skull, so
+// every card is dealt in sight and none under a drawer or a button; on a wide screen the window.
+function dealRect() {
+  const r = windowRect();
+  if (!handheld()) return r;
+  const c = canvas.getBoundingClientRect(), kx = W / c.width, ky = H / c.height, gap = 8, toX = (x) => (x - c.left) * kx, toY = (y) => (y - c.top) * ky;
+  let { x0, x1, y0, y1 } = r;
+  const row = document.querySelector('#where .row')?.getBoundingClientRect();
+  if (row) y0 = Math.max(y0, toY(row.bottom + gap));
+  const d = openDrawer()?.getBoundingClientRect?.();
+  if (d && d.width >= innerWidth * 0.9) y1 = Math.min(y1, toY(d.top - gap));
+  else if (d && d.left < innerWidth / 2) x0 = Math.max(x0, toX(d.right + gap));
+  else if (d) x1 = Math.min(x1, toX(d.left - gap));
+  const m = $('memento').getBoundingClientRect(), cutY = toY(m.top - gap), cutX = toX(m.left - gap); // the compass and the skull: off the foot of a tall part, the side of a wide one
+  if (cutY > y0 && cutY < y1 && cutX > x0 && cutX < x1) { if (y1 - y0 > x1 - x0) y1 = cutY; else x1 = cutX; }
+  return x1 - x0 > 40 && y1 - y0 > 40 ? { x0, x1, y0, y1 } : r;
 }
 let looking = null; // the picture looked at, by its index
 let lookFrom = 0; // when it set off from the table
@@ -2690,19 +2862,20 @@ function tableBox(pic, proj) {
   if (!c) return null;
   return { x: (c[0][0] + c[2][0]) / 2, y: (c[0][1] + c[2][1]) / 2, a: (ASKEW[pic.i % 6] * Math.PI) / 180, w: c[1][0] - c[0][0], h: c[3][1] - c[0][1] };
 }
-// On a phone the card is the picture fitted whole between the row of instruments and the skull, the map undimmed round
-// it (the corner cards step aside while it is looked at); on a wide screen its longer side is LOOK_SHARE of the
-// window's shorter side and never past the picture's own pixels, one to a CSS px
+// On a phone, upright or turned, the card is the picture fitted whole between the row of instruments and the skull,
+// its buttons kept off it (feetOf); the map undimmed round it (the corner cards step aside while it is looked at). On a
+// wide screen it fits LOOK_W of the window's width and LOOK_H of its height, whichever binds, with room at its right for
+// the buttons and their names; a picture whose long side is under LOOK_FLOOR px grows to no more than twice its pixels.
+const FOOT_ROOM = () => MOUNT + cssPx(FOOT_R) * 2.7 + cssPx(110); // the buttons and their names right of a wide screen's card, canvas px
 function lookBox(pic) {
   const { x0, x1, y0, y1 } = windowRect(), x = (x0 + x1) / 2, y = (y0 + y1) / 2;
-  if (phone.matches) {
-    const m = MOUNT + cssPx(4), r = canvas.getBoundingClientRect(), top = Math.max(y0, ((document.querySelector('#where .row')?.getBoundingClientRect().bottom ?? 0) - r.top) * (H / r.height));
-    const css = getComputedStyle(document.documentElement), px = (v) => parseFloat(css.getPropertyValue(v)) || 0;
-    const foot = y1 - cssPx(px('--memento-foot') + px('--memento-h')); // above the skull and the status lines
-    const k = Math.min((x1 - x0 - 2 * m) / pic.o.width, (foot - top - 2 * m) / pic.o.height);
-    return { x, y: (top + foot) / 2, a: 0, w: pic.o.width * k, h: pic.o.height * k };
+  if (handheld()) { // in the part of the window clear of the instruments, an open drawer, the compass and the skull
+    const c = dealRect(), m = MOUNT + cssPx(4), k = Math.min((c.x1 - c.x0 - 2 * m) / pic.o.width, (c.y1 - c.y0 - 2 * m) / pic.o.height), h = pic.o.height * k;
+    const feet = cssPx(FOOT_R) * 7 + m + cssPx(4); // the buttons' column above the compass: the card rises clear of it where there is room
+    return { x: (c.x0 + c.x1) / 2, y: Math.max(c.y0 + m + h / 2, Math.min((c.y0 + c.y1) / 2, c.y1 - feet - h / 2)), a: 0, w: pic.o.width * k, h };
   }
-  const k = Math.min((LOOK_SHARE * Math.min(x1 - x0, y1 - y0)) / Math.max(pic.o.width, pic.o.height), cssPx(1));
+  const wide = Math.min(LOOK_W * (x1 - x0), x1 - x0 - 2 * FOOT_ROOM()), cap = Math.max(pic.o.width, pic.o.height) >= LOOK_FLOOR ? Infinity : 2 * cssPx(1);
+  const k = Math.min(wide / pic.o.width, (LOOK_H * (y1 - y0)) / pic.o.height, cap);
   return { x, y, a: 0, w: pic.o.width * k, h: pic.o.height * k };
 }
 // how far a picture is off the table, 0 lying there to 1 looked at
@@ -2710,52 +2883,50 @@ const lookT = (i, now = performance.now()) => {
   const go = (t0) => (stillMotion() ? 1 : ease(Math.min(1, (now - t0) / LOOK_MS)));
   return i === looking ? go(lookFrom) : homing?.i === i ? 1 - go(homing.start) : 0;
 };
+// The card looked at zooms and pans with the map, as one (lookZoom: its size over its look size, and how far its middle
+// has moved)
+function lookedBox(pic) {
+  const b = lookBox(pic);
+  const { z, x, y } = pic.i === looking ? lookZoom : pic.i === homing?.i ? homing.zoom ?? NO_ZOOM : NO_ZOOM; // put away, it flies home from where it stood
+  return { ...b, x: b.x + x, y: b.y + y, w: b.w * z, h: b.h * z };
+}
 function pictureBox(pic, proj) {
   const t = lookT(pic.i), on = tableBox(pic, proj);
   if (t <= 0) return on;
-  const at = lookBox(pic);
+  const at = lookedBox(pic);
   if (t >= 1 || !on) return at;
   const mix = (a, b) => a + (b - a) * t;
   return { x: mix(on.x, at.x), y: mix(on.y, at.y), a: mix(on.a, 0), w: mix(on.w, at.w), h: mix(on.h, at.h) };
 }
-// where the picture is drawn inside its card `b`, in the card's own frame: fitted whole, then zoomed and panned while looked at
+// where the picture is drawn inside its card `b`, in the card's own frame: fitted whole, always filling its frame
 function imageRect(pic, b) {
-  const k = Math.min(b.w / pic.o.width, b.h / pic.o.height), { z, x, y } = pic.i === looking ? lookZoom : NO_ZOOM;
-  const w = pic.o.width * k * z, h = pic.o.height * k * z;
-  return { x: x - w / 2, y: y - h / 2, w, h };
+  const k = Math.min(b.w / pic.o.width, b.h / pic.o.height), w = pic.o.width * k, h = pic.o.height * k;
+  return { x: -w / 2, y: -h / 2, w, h };
 }
-// The picture looked at zooms about a point up to its full resolution (one of its pixels to a CSS px), never below its
-// look size, and pans only as far as it covers its card; the map under it never moves. The back neither zooms nor pans.
-const lookedPicture = () => (looking == null || flips.get(looking)?.back ? null : shownPictures().find((pic) => pic.i === looking) ?? null);
-const fullZoom = (pic, b) => Math.max(1, cssPx(1) / Math.min(b.w / pic.o.width, b.h / pic.o.height));
-function clampLook(pic, b, { z, x, y }) {
-  const k = Math.min(b.w / pic.o.width, b.h / pic.o.height), mx = Math.max(0, (pic.o.width * k * z - b.w) / 2), my = Math.max(0, (pic.o.height * k * z - b.h) / 2);
-  return { z, x: Math.max(-mx, Math.min(mx, x)), y: Math.max(-my, Math.min(my, y)) };
-}
-function zoomLook(f, x, y, to = null) {
+// The card looked at and the map zoom and pan together, face up or down, as a card lying on the chart would: the whole
+// card grows, frame and all, never the picture inside its frame, up to its picture's full resolution (one of its pixels
+// to a CSS px; on a wide screen at least twice its look size) and never below its look size.
+const lookedPicture = () => (looking == null ? null : shownPictures().find((pic) => pic.i === looking) ?? null);
+const fullZoom = (pic, b) => Math.max(handheld() ? 1 : 2, cssPx(1) / Math.min(b.w / pic.o.width, b.h / pic.o.height));
+function zoomLook(f, x, y) {
   const pic = lookedPicture();
   if (!pic) return;
-  const b = lookBox(pic), z0 = lookZoom.z, z = to ?? Math.min(fullZoom(pic, b), Math.max(1, z0 * f)), dx = x - b.x, dy = y - b.y;
-  lookZoom = clampLook(pic, b, { z, x: dx - (dx - lookZoom.x) * (z / z0), y: dy - (dy - lookZoom.y) * (z / z0) }); // the point under the pointer stays
+  const b = lookBox(pic), z0 = lookZoom.z, z = Math.min(fullZoom(pic, b), Math.max(1, z0 * f));
+  // the map by the same factor about the same point, and the card with it as the map allows
+  const next = zoomView(view, z / z0, x, y), k = 2 ** (next.zoom - view.zoom), cx = b.x + lookZoom.x, cy = b.y + lookZoom.y;
+  lookZoom = { z: z0 * k, x: x + (cx - x) * k - b.x, y: y + (cy - y) * k - b.y };
+  moved(next); stopped(300);
   repaint('a picture zoomed');
 }
 function panLook(dx, dy) {
-  const pic = lookedPicture();
-  if (!pic) return;
-  lookZoom = clampLook(pic, lookBox(pic), { ...lookZoom, x: lookZoom.x + dx, y: lookZoom.y + dy });
-  repaint('a picture panned');
+  if (!lookedPicture()) return;
+  lookZoom = { ...lookZoom, x: lookZoom.x + dx, y: lookZoom.y + dy }; moved(panView(view, dx, dy)); stopped(300); repaint('a picture panned');
 }
-// a double click or tap: from the look size to full resolution at that point, and back
-function toggleLook([x, y]) {
-  const pic = lookedPicture();
-  if (!pic) return;
-  if (lookZoom.z > 1.001) { lookZoom = NO_ZOOM; repaint('a picture zoomed'); } else zoomLook(1, x, y, fullZoom(pic, lookBox(pic)));
-}
-// The pointers on the picture looked at: one pans it, two pinch it, a tap twice in quick succession toggles its zoom.
-// A press on the dimmed map round it puts it away, and only that; a press on one of its buttons acts on the release.
+// The pointers on the card looked at: one drags it and the map, two pinch both, a click or tap that moves nothing turns
+// it over. A press on the map round it puts it away, and only that; a press on one of its buttons acts on the release.
 const cardPointers = new Map(); // pointerId -> [x, y] canvas px
 const DOUBLE_MS = 320;
-let cardTap = null, lastTap = null; // a lone press on it until it moves; the last tap, { p, t }, for a double one
+let cardTap = null; // a lone press on it until it moves
 function lookDown(e) {
   if (performance.now() - lookFrom < DOUBLE_MS) return; // a double click on a dealt card is one look: its second press does nothing
   const p = toCanvas(e.clientX, e.clientY), hit = pictureHit(p);
@@ -2765,6 +2936,7 @@ function lookDown(e) {
   if (hit.kind !== 'held') { holdPicture(hit, p); return; }
   cardPointers.set(e.pointerId, p);
   cardTap = p;
+  canvas.style.cursor = 'grabbing';
 }
 function lookMove(e) {
   const p = toCanvas(e.clientX, e.clientY);
@@ -2784,24 +2956,35 @@ function lookMove(e) {
 function lookUp(e) {
   cardPointers.delete(e.pointerId);
   if (cardPointers.size) return;
-  const at = cardTap, now = performance.now();
+  const at = cardTap;
   cardTap = null;
-  if (!at || e.type !== 'pointerup') return;
-  if (lastTap && now - lastTap.t < DOUBLE_MS && Math.hypot(at[0] - lastTap.p[0], at[1] - lastTap.p[1]) < cssPx(TAP_REACH)) { lastTap = null; toggleLook(at); } else lastTap = { p: at, t: now };
+  canvas.style.cursor = 'grab';
+  if (at && e.type === 'pointerup' && looking != null) turnOver(looking);
 }
-// The round buttons of the picture looked at, in its own frame: a column at its right edge, low, top to bottom Read more,
-// Turn over and Put away, the same on both faces; on a wide screen the column straddles the edge and each button's name
-// stands to its right, outside the card, and on a phone it stands inside the edge. Each glyph is one constant.
+// The round buttons of the picture looked at, in its own frame, top to bottom Read more, Turn over and Pulverum (a red
+// chi), the same on both faces and never on the card. On a wide screen they stand in a column just outside its right
+// edge, low, each button's name to its right, kept in the window. On a phone they stand in the right gutter above the
+// compass and the skull, where they fit clear of the card at its look size, else not at all. Each glyph is one constant.
 const FOOT_R = 15; // CSS px, a button's radius
-const FLIP_GLYPH = '⟳', AWAY_GLYPH = '↓', DUST_GLYPH = '✘';
-const FOOT_SAYS = { link: 'Read more', flip: 'Turn over', away: 'Put away' }, DUST_SAYS = 'Pulverum', LOOK_SAYS = 'Look';
+const FLIP_GLYPH = '⟳', DUST_GLYPH = 'Χ'; // Greek capital chi
+const FOOT_SAYS = { link: 'Read more', flip: 'Turn over', dust: 'Pulverum' }, LOOK_SAYS = 'Look';
 const LINK_SAYS = 'Its page on Wikimedia Commons';
 const SYMBOLS = "'IM Fell English', Georgia, 'Segoe UI Symbol', 'Apple Symbols', 'Noto Sans Symbols 2', 'Noto Sans Symbols', 'DejaVu Sans', serif";
-const footX = (b) => (phone.matches ? b.w / 2 - cssPx(FOOT_R) * 1.5 : b.w / 2);
+const FEET = ['link', 'flip', 'dust'];
 function feetOf(pic, b) {
   if (pic.i !== looking) return [];
-  const r = cssPx(FOOT_R), x = footX(b), y = b.h / 2 - r * 1.5;
-  return ['link', 'flip', 'away'].map((kind, n) => ({ kind, at: [x, y - (2 - n) * r * 2.5] }));
+  const r = cssPx(FOOT_R), step = r * 2.5, win = windowRect();
+  let x, y; // the lowest button's middle, canvas px
+  if (handheld()) { // they stay put while the card zooms with the map
+    const c = canvas.getBoundingClientRect(), m = $('memento').getBoundingClientRect(), at = lookBox(pic), pad = MOUNT + cssPx(4);
+    x = (m.left + m.width / 2 - c.left) * (W / c.width); y = (m.top - c.top) * (H / c.height) - cssPx(8) - r;
+    const top = y - 2 * step - r, clear = x - r > at.x + at.w / 2 + pad || x + r < at.x - at.w / 2 - pad || top > at.y + at.h / 2 + pad || y + r < at.y - at.h / 2 - pad;
+    if (!clear || top < win.y0 || x + r > win.x1) return [];
+  } else {
+    x = Math.max(win.x0 + r, Math.min(win.x1 - FOOT_ROOM() + MOUNT + r * 1.4, b.x + b.w / 2 + MOUNT + r * 1.4));
+    y = Math.max(win.y0 + 2 * step + r, Math.min(win.y1 - r, b.y + b.h / 2 - r * 1.5));
+  }
+  return FEET.map((kind, n) => ({ kind, at: [x - b.x, y - b.y - (2 - n) * step] }));
 }
 // ⧉ (in no font of the page's stack, so drawn): two joined squares in the link's red, in an em box of `size` at x, y
 function linkGlyph(g, x, y, size) {
@@ -2829,14 +3012,13 @@ function backLinks(im, s = subject()) {
 }
 // The back of a picture, in its own frame: what it is, when, by whom, under what licence and its note, then its other
 // links as plain text links, each named for where it goes, in type sized in CSS px so it reads at any zoom (the largest
-// of BACK_TYPE that fits the card, else the smallest, clipped above the foot); and inside its lower right, beside the
-// buttons, ✘ Pulverum in red, which takes the card off the table. Returns, in the same frame, where each link and
-// Pulverum take a tap: { links: [[x, y, w, h, url]], dust: [x, y, w, h] }.
+// of BACK_TYPE that fits the card, else the smallest, clipped above the foot). Returns, in the same frame, where each
+// link takes a tap: { links: [[x, y, w, h, url]] }.
 const BACK_TYPE = [20, 18, 16, 15, 14, 13, 12]; // CSS px; the People drawer's own card text is 13 px
 const pageOf = (im) => subject()?.manifest[im.file]?.page ?? commonsPage(im.file);
 function drawBack(g, im, extra, w, h) {
-  const pad = Math.max(cssPx(8), w * 0.06), family = getComputedStyle(document.body).getPropertyValue('--serif') || 'serif', r = cssPx(FOOT_R);
-  const room = w - 2 * pad - (w / 2 - footX({ w }) + r * 1.2); // the words keep clear of the buttons' column
+  const pad = Math.max(cssPx(8), w * 0.06), family = getComputedStyle(document.body).getPropertyValue('--serif') || 'serif';
+  const room = w - 2 * pad;
   let size = 0, lines = [];
   for (const css of BACK_TYPE) {
     size = cssPx(css); g.font = `italic ${size}px ${family}`; lines = [];
@@ -2852,9 +3034,9 @@ function drawBack(g, im, extra, w, h) {
     if (pictureNote(im)) { lines.push(['', null]); wrap(pictureNote(im)); }
     if (extra.length) lines.push(['', null]);
     for (const [label, url] of extra) wrap(label, url);
-    if (2 * pad + lines.length * size * 1.3 + size * 2 <= h) break; // the words and Pulverum's line fit
+    if (2 * pad + lines.length * size * 1.3 <= h) break; // the words fit
   }
-  const left = -w / 2 + pad, lead = size * 1.3, dy = h / 2 - r * 1.5, foot = dy - size * 0.9;
+  const left = -w / 2 + pad, lead = size * 1.3, foot = h / 2 - pad;
   const links = [];
   g.save(); g.beginPath(); g.rect(-w / 2, -h / 2, w, foot + h / 2); g.clip();
   g.textBaseline = 'top';
@@ -2867,15 +3049,10 @@ function drawBack(g, im, extra, w, h) {
     if (y + size <= foot) links.push([left - size * 0.2, y - size * 0.15, lw + size * 0.4, lead, url]);
   });
   g.restore();
-  // Pulverum, its right end clear of the buttons, level with Put away
-  g.save(); g.font = `italic ${size * 1.15}px ${family}`; g.textBaseline = 'middle'; g.textAlign = 'right'; g.fillStyle = PERSON_LINK;
-  const right = footX({ w }) - r * 1.6, word = `${DUST_GLYPH} ${DUST_SAYS}`, tw = g.measureText(word).width;
-  g.fillText(word, right, dy);
-  g.restore();
-  return { links, dust: [right - tw - size * 0.3, dy - size * 0.9, tw + size * 0.6, size * 1.8] };
+  return { links };
 }
 const PERSON_LINK = '#8c2f1e';
-const links = new Map(); // a turned picture's links and Pulverum ({ links, dust }), in its own frame, by its index
+const links = new Map(); // a turned picture's links ({ links }), in its own frame, by its index
 let focusedPic = null; // the picture whose item in the canvas's fallback has the keyboard's focus, ringed
 // The pictures over everything on the map: each on a parchment mount with a soft shadow and an ink rule, a little
 // askew, dealt in one after another when a subject is chosen, carrying no controls; the one looked at upright and large
@@ -2893,10 +3070,10 @@ function drawPictures(g) {
   let moving = lift > 0 && lift < 1;
   // in layers: the table, then the picture looked at (or flying home) over the dimmed map
   const layers = top == null ? [list] : [list.filter((pic) => pic.i !== top), list.filter((pic) => pic.i === top)];
-  const r = cssPx(FOOT_R), GLYPHS = { flip: FLIP_GLYPH, away: AWAY_GLYPH };
+  const r = cssPx(FOOT_R), GLYPHS = { flip: FLIP_GLYPH, dust: DUST_GLYPH };
   g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
   for (const [n, layer] of layers.entries()) {
-    if (n === 1 && lift > 0 && !phone.matches) { g.fillStyle = `rgba(29, 25, 19, ${LOOK_DIM * lift})`; g.fillRect(0, 0, W, H); } // a phone's map stays undimmed
+    if (n === 1 && lift > 0 && !handheld()) { g.fillStyle = `rgba(29, 25, 19, ${LOOK_DIM * lift})`; g.fillRect(0, 0, W, H); } // a phone's map stays undimmed
     const feet = [];
     for (const pic of layer) {
       const b = pictureBox(pic, proj);
@@ -2928,8 +3105,8 @@ function drawPictures(g) {
         g.fillStyle = style.parchment; g.beginPath(); g.arc(fx, fy, r, 0, 2 * Math.PI); g.fill(); g.stroke();
         g.textAlign = 'center'; g.font = `${r * 1.2}px ${SYMBOLS}`;
         if (kind === 'link') linkGlyph(g, fx - r * 0.42, fy - r * 0.55, r * 1.1);
-        else { g.fillStyle = style.ink; g.fillText(GLYPHS[kind], fx, fy + r * 0.05); }
-        if (phone.matches) continue; // a phone's names are the buttons' accessible names (#pictureKeys)
+        else { g.fillStyle = kind === 'dust' ? PERSON_LINK : style.ink; g.fillText(GLYPHS[kind], fx, fy + r * 0.05); }
+        if (handheld()) continue; // a phone's names are the buttons' accessible names (#pictureKeys)
         g.save(); g.textAlign = 'left'; g.font = `italic ${cssPx(14)}px ${SYMBOLS}`; g.fillStyle = '#efe3c6'; g.shadowColor = 'rgba(0, 0, 0, 0.8)'; g.shadowBlur = cssPx(3);
         g.fillText(FOOT_SAYS[kind], fx + r * 1.45, fy); g.restore();
       }
@@ -2942,7 +3119,7 @@ function drawPictures(g) {
 let dealFrame = 0;
 // The picture under canvas px p, the top one first. On the table: its frame (the mount's margin, and a finger's reach
 // about the picture's edge) grabs it, its body looks at it. Looked at, only that one: a button (or, on a wide screen,
-// its name), a link or Pulverum on its back, else its body, held to pan or zoom.
+// its name), a link on its back, else its body, held to drag or zoom it with the map, or clicked to turn it over.
 const FRAME_OUT = () => cssPx(phone.matches ? 14 : 8), FRAME_IN = () => cssPx(phone.matches ? 12 : 6); // the frame's hit band, out and in from the picture's edge
 function pictureHit([x, y]) {
   const list = shownPictures();
@@ -2954,11 +3131,10 @@ function pictureHit([x, y]) {
     if (!b) continue;
     const dx = x - b.x, dy = y - b.y, c = Math.cos(-b.a), s = Math.sin(-b.a), u = dx * c - dy * s, v = dx * s + dy * c;
     if (pic.i === looking) {
-      const foot = feetOf(pic, b).find(({ at }) => Math.hypot(u - at[0], v - at[1]) <= reach || (!phone.matches && on(u, v, [at[0], at[1] - reach, cssPx(110), 2 * reach])));
+      const foot = feetOf(pic, b).find(({ at }) => Math.hypot(u - at[0], v - at[1]) <= reach || (!handheld() && on(u, v, [at[0], at[1] - reach, cssPx(110), 2 * reach])));
       if (foot) return { kind: foot.kind, ...pic, proj };
       const back = links.get(pic.i), out = back?.links.find((l) => on(u, v, l));
       if (out) return { kind: 'out', url: out[4], ...pic, proj };
-      if (on(u, v, back?.dust)) return { kind: 'dust', ...pic, proj };
       return Math.abs(u) <= b.w / 2 + MOUNT && Math.abs(v) <= b.h / 2 + MOUNT ? { kind: 'held', ...pic, proj } : null;
     }
     if (Math.abs(u) > b.w / 2 + MOUNT + FRAME_OUT() || Math.abs(v) > b.h / 2 + MOUNT + FRAME_OUT()) continue;
@@ -2991,25 +3167,24 @@ function dropPicture(e) {
   if (kind === 'flip') { turnOver(i); return; }
   if (kind === 'link') { const to = readMoreOf(); if (to) window.open(to, '_blank', 'noopener'); return; }
   if (kind === 'out') { window.open(url, '_blank', 'noopener'); return; }
-  if (kind === 'away') { endLook(); return; }
-  if (kind === 'dust') { setOnTable(i, false); return; }
+  if (kind === 'dust') { pulverum(i); return; }
   if (kind === 'held') return;
   writeHash(); render();
 }
 const repaint = (doing) => { if (ground) paintFrame(doing); };
 // Look: the picture flies from its place on the table to the middle of the window, face up, over the dimmed map. Put
-// away (its button, Esc, or a press on the dimmed map) flies it back face up to where it lies, at its dealt size: it
+// away (Esc, or a press on the map off the card) flies it back face up to where it lies, at its dealt size: it
 // stays dealt.
 function lookAt(i) {
   if (looking === i) return;
-  looking = i; lookFrom = performance.now(); lookZoom = NO_ZOOM; lastTap = null;
+  looking = i; lookFrom = performance.now(); lookZoom = NO_ZOOM;
   if (homing?.i === i) homing = null;
   raise(i); hideTile(); repaint('a picture looked at');
 }
 function endLook() {
   if (looking == null) return;
   flips.delete(looking); links.delete(looking);
-  homing = { i: looking, start: performance.now() };
+  homing = { i: looking, start: performance.now(), zoom: lookZoom };
   looking = null; lookZoom = NO_ZOOM; cardPointers.clear(); cardTap = null;
   repaint('a picture put away');
 }
@@ -3021,11 +3196,11 @@ function turnOver(i) {
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && looking != null) { endLook(); e.stopImmediatePropagation(); } }, true); // first, and only that: the open drawer stays
 // The pictures on the map again inside the canvas, as its fallback content: what a screen reader reads and the keyboard
 // reaches, one item per picture in the record's order with its back's words and links, Read more, and its Look, Turn
-// over, Put away and Pulverum buttons, the canvas's own. `data-z` is its place in the pile, the top one highest. Focus
+// over and Pulverum buttons, the canvas's own. `data-z` is its place in the pile, the top one highest. Focus
 // on an item lifts its picture to the top and rings it.
 const keys = $('pictureKeys');
 let keysFor = '', focusNext = null;
-const KEY_SAYS = { look: LOOK_SAYS, link: FOOT_SAYS.link, flip: FOOT_SAYS.flip, away: FOOT_SAYS.away, dust: DUST_SAYS };
+const KEY_SAYS = { look: LOOK_SAYS, link: FOOT_SAYS.link, flip: FOOT_SAYS.flip, dust: FOOT_SAYS.dust };
 function mirrorPictures(list) {
   const now = `${subjectKey()}|${list.map((pic) => pic.i).sort((a, b) => a - b)}`;
   if (now !== keysFor) {
@@ -3036,7 +3211,7 @@ function mirrorPictures(list) {
     const a = (href, says) => `<a href="${escapeHTML(href)}" target="_blank" rel="noopener">${escapeHTML(says)}</a>`;
     keys.innerHTML = [...list].sort((p, q) => p.i - q.i).map(({ i, im }) => `<li data-pic="${i}"><span>${escapeHTML(pictureCredit(im))}${pictureNote(im) ? `. ${escapeHTML(pictureNote(im))}` : ''}</span> ` +
       backLinks(im, s).map(([says, href]) => a(href, says)).join(' ') + ' ' +
-      ['look', 'link', 'flip', 'away', 'dust'].map((k) => {
+      ['look', 'link', 'flip', 'dust'].map((k) => {
         if (k === 'link') return more ? `<a href="${escapeHTML(more)}" target="_blank" rel="noopener" data-link="${i}" aria-label="${FOOT_SAYS.link}: ${escapeHTML(named)}" title="Read more: ${escapeHTML(named)}">${FOOT_SAYS.link}</a>` : '';
         return `<button type="button" data-${k}="${i}"${k === 'look' ? ' aria-pressed="false"' : ''} aria-label="${KEY_SAYS[k]}: ${escapeHTML(pictureCredit(im))}" title="${KEY_SAYS[k]}">${KEY_SAYS[k]}</button>`;
       }).join(' ') + '</li>').join('');
@@ -3064,11 +3239,10 @@ keys.addEventListener('click', (e) => {
   const [k, v] = Object.entries(b.dataset)[0] ?? [], i = Number(v);
   if (k === 'look') { if (looking === i) endLook(); else lookAt(i); return; }
   if (k === 'flip') { turnOver(i); return; }
-  if (k === 'away') { if (looking === i) endLook(); return; }
   if (k !== 'dust') return;
   const li = b.closest('li'), next = li.nextElementSibling ?? li.previousElementSibling; // the focus goes on to a neighbour
   focusNext = next ? Number(next.dataset.pic) : null;
-  setOnTable(i, false);
+  pulverum(i);
 });
 if (style.person) loadPeople().then(showPeople, () => {}); // a link that names a person shows their card when the drawer opens
 
@@ -3087,13 +3261,15 @@ const SIGHT_NAMES = new Set(SIGHTS.flatMap(([, items]) => items.map(([name]) => 
     const b = e.target.closest('[data-place]');
     if (!b) return;
     const { name, view: to } = places[b.dataset.place];
-    clearSheetFor(to); goTo(to);
+    clearSheetFor(to);
+    if (handheld()) hideTile(); // a phone shows the one card, the drawer's, under the row: no tile on the map over the sheet
+    if (SIGHT_NAMES.has(name)) chooseSight(name, DEFAULTS.pictures, null, null, to); else goTo(to); // a place with pictures deals them as the map arrives
     if (placeInfo.has(name)) { placeShown = name; showSightCard(); $('sightCard').scrollIntoView({ block: 'nearest' }); }
   });
 }
 // The Points of interest drawer's details of the place last clicked in it, at the drawer's foot, as the person card shows
 // a person: its name and date, its tile's text, and its pictures as thumbnails, each putting its picture on the table or
-// taking it off. Choosing it in the drawer flies there and deals nothing; its mark on the map deals the pictures.
+// taking it off. Choosing it in the drawer flies there and deals its pictures as the map arrives, as its mark on the map does.
 let placeShown = null;
 function showSightCard() {
   const card = $('sightCard'), info = placeShown && placeInfo.get(placeShown);
@@ -3101,7 +3277,11 @@ function showSightCard() {
     if (info && places[b.dataset.place].name === placeShown) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current');
   }
   card.hidden = !info;
-  if (!info) { card.replaceChildren(); return; }
+  if (!info) { card.replaceChildren(); $('sightsPanel').append(card); return; }
+  // on a phone the card sits under the chosen row, in the list's flow, so the rows round it stay in sight and in reach;
+  // on a wide screen at the drawer's foot
+  const row = handheld() && $('sightsList').querySelector('[data-place][aria-current]')?.closest('li');
+  if (row) row.append(card); else if (card.parentElement !== $('sightsPanel')) $('sightsPanel').append(card);
   if (!sightData) loadSights().then(showSightCard, () => {});
   const images = sightData?.images[placeShown], s = subject(), on = s?.kind === 'sight' && s.id === placeShown ? picturesOf(s) : [];
   const pics = images ? picsHTML({ images, manifest: sightData.pictures }, on) : '';
@@ -3338,6 +3518,11 @@ $('coords').addEventListener('submit', async (e) => {
   e.preventDefault();
   const text = $('coordsText').value, p = parseLatLon(text), miss = $('goMiss');
   const target = p ? { ...p, zoom: Math.max(view.zoom, LOCATE_ZOOM) } : await findPlace(text);
+  if (!target && fold(text)) { // a person's name, as Random person puts it in the box: chosen, as Random person does
+    await loadPeople().catch(() => {});
+    const who = peopleData?.people.find((q) => [q.name, ...(q.aka ?? [])].some((n) => fold(n) === fold(text)));
+    if (who) { goPerson(who); return; }
+  }
   if (!target) { miss.textContent = text.trim() ? `No place called “${text.trim()}”` : 'Type a place, or latitude, longitude: 36.28, -76'; miss.hidden = false; return; } // the text before the unhide, so a reader announces it
   miss.hidden = true;
   if (phone.matches) $('coordsText').blur(); // the drawer stays up; a phone's keyboard goes, so the map shows
@@ -3367,8 +3552,17 @@ $('randomPerson').addEventListener('click', async () => {
   const id = nextInCycle(ids, lastRolled('portolani.randomPerson'));
   if (!id) return;
   lastRolled('portolani.randomPerson', id);
-  clearTable(); choosePerson(id);
+  $('coordsText').value = personOf(id).name;
+  goPerson(personOf(id));
 });
+// A person from Find (Random person, or their name in the Go box): chosen, flown to their preset view (people.json
+// `view`), and the People drawer opened on them (docs/spec/going-somewhere.md, "Random person")
+function goPerson(p) {
+  $('goMiss').hidden = true;
+  clearTable(); choosePerson(p.id, p.view ? { ...p.view, title: p.name } : null);
+  setDrawer($('peoplePanel'), false, $('people'));
+  fillPeople().then(() => $('peopleList').querySelector(`li[data-row="${CSS.escape(p.id)}"]`)?.scrollIntoView({ block: 'nearest' }));
+}
 
 // A sheet in the way: taken off (its eye shows it hidden) if it would cover the place a fly lands on, or with `frame`
 // any of the frame it lands on; a fly that lands clear of the sheet leaves it shown (docs/spec/design.md, "A laid sheet
@@ -3435,9 +3629,9 @@ const compass = $('compass');
 function showCompass() {
   const b = view.bearing ?? 0;
   compass.querySelector('svg').style.transform = `rotate(${-b}deg)`;
-  const turn = phone.matches ? 'twist two fingers on the map' : 'drag round', how = phone.matches ? 'tap' : 'click';
+  const turn = handheld() ? 'drag round, or twist two fingers on the map,' : 'drag round', how = handheld() ? 'tap' : 'click';
   compass.setAttribute('aria-label', b ? `North is ${Math.round(b)}° from the top: ${how} for north up, or ${turn} to turn the world` : `North up: ${turn} to turn the world and the chart with it`);
-  compass.title = b ? `North up (${turn} to turn)` : `${turn[0].toUpperCase()}${turn.slice(1)} to turn the world`;
+  compass.title = b ? `North up (${turn.replace(/,$/, '')} to turn)` : `${turn[0].toUpperCase()}${turn.slice(1)} to turn the world`;
 }
 compassTurn(compass, { // the arrow keys turn it by 15°, as the drag does
   bearing: () => view.bearing ?? 0,
@@ -3446,7 +3640,6 @@ compassTurn(compass, { // the arrow keys turn it by 15°, as the drag does
   release: stopped,
   click: () => { if (view.bearing) turnWorld(0); },
   step: turnWorld,
-  drags: () => !phone.matches, // a phone turns the world by a twist of two fingers on the map
 });
 
 // A touch or the wheel takes over from a flight: a subject it was carrying is dealt where the map is

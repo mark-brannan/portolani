@@ -167,13 +167,14 @@ test('a death without lon and lat is not drawn; a who that people.json lacks doe
   await assert.rejects(readVoyage('x', files(set)), /a-b is not in people\.json/);
 });
 
-test('a person record needs nothing; what is there is checked, and a skull takes the name', async () => {
-  const death = { lon: 1, lat: 1, date: 'd', label: 'l', source: 's' };
-  assert.deepEqual(checkPerson('a-b', {}), []);
-  assert.deepEqual(checkPerson('a-b', { death }), []);
-  assert.deepEqual(checkPerson('a-b', { death: { date: 'd', text: 'where is not recorded' } }), []);
+test('a person record needs only its view; what else is there is checked, and a skull takes the name', async () => {
+  const death = { lon: 1, lat: 1, date: 'd', label: 'l', source: 's' }, view = { lat: 1, lon: 1, zoom: 4 };
+  assert.deepEqual(checkPerson('a-b', { view }), []);
+  assert.deepEqual(checkPerson('a-b', { view, death }), []);
+  assert.deepEqual(checkPerson('a-b', { view, death: { date: 'd', text: 'where is not recorded' } }), []);
+  for (const v of [undefined, { lat: 1, lon: 1 }, { lat: 91, lon: 1, zoom: 4 }, { lat: 1, lon: 1, zoom: 7 }]) assert.ok(checkPerson('a-b', { view: v }).some((b) => b.includes('view:')), JSON.stringify(v));
   const full = {
-    name: 'A B', aka: ['Ab'], bio: 'b', sources: ['s1'],
+    view, name: 'A B', aka: ['Ab'], bio: 'b', sources: ['s1'],
     images: [{ file: 'A_B.jpg', kind: 'life', author: 'a', date: '1600', licence: 'Public domain', note: 'n' }],
     born: { ...death, confidence: 'speculative', cite: 's1', alternatives: [{ lon: 2, lat: 2, place: 'p', label: 'l', source: 's' }] },
     death: { ...death, confidence: 'conventional', doubt: 'Nobody recorded where.' },
@@ -182,7 +183,7 @@ test('a person record needs nothing; what is there is checked, and a skull takes
   const bad = checkPerson('A B', { ...full, sources: ['s2'], born: { ...death, confidence: 'certain', cite: 's2' }, death: { lon: 1, date: 'd', doubt: '' },
     images: [{ kind: 'life', file: 'File:A.jpg' }, { kind: 'none', file: 'https://x/A.jpg' }, { kind: 'life', file: 'data:image/png;base64,AA' },
       { kind: 'life', file: 'a/A.jpg' }] }, { sources: { s1: {} } });
-  const drawn = checkPerson('a-b', { death: { lon: 1, lat: 1, alternatives: [{ date: 'x' }] } });
+  const drawn = checkPerson('a-b', { view, death: { lon: 1, lat: 1, alternatives: [{ date: 'x' }] } });
   for (const p of ['death: a label', 'death: a source', 'alternative 0: lon and lat', 'alternative 0: a place', 'alternative 0: a label', 'alternative 0: a source']) assert.ok(drawn.some((b) => b.includes(p)), p);
   for (const p of ['key: a lower-case slug', 'sources: s2 is not', 'born: confidence one of', 'born: cite s2 is not', 'death: lon and lat, together',
     'death: doubt, a string', 'image 1: kind one of',
@@ -190,6 +191,13 @@ test('a person record needs nothing; what is there is checked, and a skull takes
   const set = { x: raw(), ...shared() };
   set.people['a-b'] = { death };
   assert.equal((await readVoyage('x', files(set))).events[0].who, 'a-b');
+});
+
+test('every person in people.json has a preset view, inside the world and at zoom 6 or wider, that Random person flies to', () => {
+  for (const [id, p] of Object.entries(readJSON('data/voyages/people.json'))) {
+    const v = p.view;
+    assert.ok(v && Math.abs(v.lat) <= 85 && Math.abs(v.lon) <= 180 && v.zoom >= 1 && v.zoom <= 6, `${id}: ${JSON.stringify(v)}`);
+  }
 });
 
 test('every record in people.json passes checkPerson against sources.json', () => {
@@ -393,6 +401,18 @@ test('Heavy is the default weight; a voyage with a dashed or dotted leg is broke
   assert.equal(Object.values(c).filter((h) => VOYAGE_CONTRAST.includes(h)).length, VOYAGE_CONTRAST.length, 'the high-contrast inks go first');
 });
 
+// docs/spec/voyages.md, "choosing a voyage by its name adds it, in a colour of its own": broken voyages added one at a
+// time, as the page adds them, each fresh: through the high-contrast palette (docs/spec/design.md, "a voyage with
+// dashed or dotted legs takes a high-contrast colour"), a new colour each, and the first keeps its own
+test('broken voyages added in turn cycle the high-contrast colours, each next a new one, none moved', () => {
+  const broken = new Set(['a', 'b', 'c']), inks = (l) => l.map((v) => v.colour ?? v.ink);
+  let list = [];
+  const seen = [];
+  for (const id of ['a', 'b', 'c']) { list = settleInks([...list, { id }], broken, new Set([id])); seen.push(inks(list)); }
+  assert.deepEqual(seen.map((s) => s.at(-1)), [VOYAGE_CONTRAST[0], VOYAGE_CONTRAST[1], VOYAGE_CONTRAST[2]]);
+  assert.deepEqual(seen.map((s) => s[0]), Array(3).fill(VOYAGE_CONTRAST[0]), 'the first voyage changed colour as others were added');
+});
+
 // The menu is chronological: the first number of `when` is the start year (BC negative). A voyage's own
 // sub-voyages (columbus, columbus-2..4; zheng-he, zheng-he-1, -4, -5) stay together, ordered by their own
 // dates, and the family sits where its first voyage starts.
@@ -462,8 +482,8 @@ test('a voyage with a dashed or dotted leg, shown, takes the first free high-con
   const list = settleInks([{ id: 'plain', ink: VOYAGE_PALETTE[0] }, { id: 'one', ink: VOYAGE_CONTRAST[0] }, { id: 'two' }], new Set(['one', 'two']), new Set(['two']));
   assert.equal(list[2].ink, VOYAGE_CONTRAST[1], 'not the first free of the chart palette, and not one a shown voyage has');
   assert.equal(list[1].ink, VOYAGE_CONTRAST[0]);
-  const old = settleInks([{ id: 'one', ink: VOYAGE_PALETTE[1] }], new Set(['one']));
-  assert.equal(old[0].ink, VOYAGE_CONTRAST[0], 'an ink from an older link in blue gives way to the high-contrast palette');
+  const old = settleInks([{ id: 'plain', ink: VOYAGE_PALETTE[0] }, { id: 'one', ink: VOYAGE_PALETTE[1] }], new Set(['one']));
+  assert.equal(old[1].ink, VOYAGE_CONTRAST[0], 'an ink from an older link in blue gives way to the high-contrast palette');
 });
 
 test('one word for how sure: one list for legs, events, births and deaths, each with its fixed phrase', () => {
@@ -479,8 +499,9 @@ test('one word for how sure: one list for legs, events, births and deaths, each 
 test('a voyage with no colour picked takes the high-contrast palette when it is in the contrast set, and no blue', async () => {
   const { voyageColours, VOYAGE_CONTRAST, VOYAGE_PALETTE } = await import('../scripts/voyages.mjs');
   assert.equal(voyageColours(['columbus']).columbus, VOYAGE_PALETTE[0]);
-  assert.equal(voyageColours(['columbus', 'drake'], {}, new Set(['columbus'])).columbus, VOYAGE_CONTRAST[0]);
-  assert.equal(voyageColours(['columbus', 'drake'], {}, new Set(['columbus'])).drake, VOYAGE_PALETTE[0], 'a voyage clear of the sheet keeps the chart palette');
+  assert.equal(voyageColours(['drake', 'columbus'], {}, new Set(['columbus'])).columbus, VOYAGE_CONTRAST[0]);
+  assert.equal(voyageColours(['drake', 'columbus', 'polo'], {}, new Set(['columbus'])).polo, VOYAGE_PALETTE[1], 'a voyage clear of the sheet keeps the chart palette');
+  assert.equal(voyageColours(['columbus'], {}, new Set(['columbus'])).columbus, VOYAGE_CONTRAST[0], 'the first voyage in the contrast set takes its first colour, not red');
   assert.equal(voyageColours(['columbus'], { columbus: '#123456' }, new Set(['columbus'])).columbus, '#123456', 'a picked colour stays');
   for (const c of VOYAGE_CONTRAST) { // none in the blue hues, 190 to 255 degrees (purple starts at 265)
     const [r, g, b] = [1, 3, 5].map((k) => parseInt(c.slice(k, k + 2), 16)), max = Math.max(r, g, b), d = max - Math.min(r, g, b);
