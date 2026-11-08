@@ -1,0 +1,403 @@
+{
+  "id": "bounty-bligh",
+  "title": "The Bounty and Bligh's launch, 1787–89",
+  "short": "Bounty",
+  "who": [
+    "william-bligh",
+    "fletcher-christian",
+    "john-norton"
+  ],
+  "when": "1787–1790",
+  "summary": "HMS Bounty sailed to Tahiti for breadfruit plants, to feed enslaved people in the West Indies. After five months ashore, her crew mutinied off Tofua on 28 April 1789. Bligh and eighteen men were set adrift in the launch and sailed to Timor, nearly 3,600 nautical miles, in 47 days. The mutineers went to Tubuai, Tahiti and, with Tahitian companions, to Pitcairn.",
+  "sources": [
+    "william-bligh",
+    "mutiny-on-the-bounty",
+    "fletcher-christian",
+    "pitcairn-islands"
+  ],
+  "legs": [
+    {
+      "from": "Spithead",
+      "to": "Cape Horn waters",
+      "dates": "23 Dec 1787 – 22 Apr 1788",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          -1.05,
+          50.75
+        ],
+        [
+          -0.95,
+          50.72
+        ],
+        [
+          -0.85,
+          50.55
+        ],
+        [
+          -1.5,
+          50.4
+        ],
+        [
+          -3,
+          50.1
+        ],
+        [
+          -8,
+          49
+        ],
+        [
+          -15,
+          45
+        ],
+        [
+          -26,
+          38
+        ],
+        [
+          -26,
+          22
+        ],
+        [
+          -25,
+          10
+        ],
+        [
+          -30,
+          -8
+        ],
+        [
+          -38,
+          -25
+        ],
+        [
+          -50,
+          -40
+        ],
+        [
+          -52,
+          -50
+        ],
+        [
+          -58,
+          -56
+        ],
+        [
+          -68,
+          -58
+        ]
+      ],
+      "source": "Wikipedia, William Bligh: the landfalls and dates; the line between them is drawn by hand",
+      "note": "The Bounty beat against the westerlies off Cape Horn for a month and gave up"
+    },
+    {
+      "from": "Cape Horn waters",
+      "to": "Cape Town",
+      "dates": "22 Apr – 23 May 1788",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          -68,
+          -58
+        ],
+        [
+          -40,
+          -56
+        ],
+        [
+          -20,
+          -48
+        ],
+        [
+          0,
+          -42
+        ],
+        [
+          12,
+          -38
+        ],
+        [
+          18.0,
+          -35.3
+        ],
+        [
+          17.5,
+          -34.2
+        ],
+        [
+          18.3,
+          -33.75
+        ]
+      ],
+      "source": "Wikipedia, William Bligh: the landfalls and dates; the line between them is drawn by hand",
+      "note": "Bligh turned east for the Cape of Good Hope"
+    },
+    {
+      "from": "Cape Town",
+      "to": "Adventure Bay, Tasmania",
+      "dates": "1 Jul – 21 Aug 1788",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          18.3,
+          -33.75
+        ],
+        [
+          17.5,
+          -34.2
+        ],
+        [
+          18.0,
+          -35.3
+        ],
+        [
+          30,
+          -40
+        ],
+        [
+          60,
+          -44
+        ],
+        [
+          100,
+          -46
+        ],
+        [
+          130,
+          -45
+        ],
+        [
+          145,
+          -44.5
+        ],
+        [
+          147.5,
+          -43.3
+        ]
+      ],
+      "source": "Wikipedia, William Bligh: the landfalls and dates; the line between them is drawn by hand"
+    },
+    {
+      "from": "Adventure Bay, Tasmania",
+      "to": "Matavai Bay, Tahiti",
+      "dates": "4 Sep – 26 Oct 1788",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          147.5,
+          -43.3
+        ],
+        [
+          160,
+          -48.5
+        ],
+        [
+          172,
+          -49.5
+        ],
+        [
+          178.5,
+          -48.5
+        ],
+        [
+          -176,
+          -47.5
+        ],
+        [
+          -170,
+          -45
+        ],
+        [
+          -155,
+          -30
+        ],
+        [
+          -149.8,
+          -18.0
+        ],
+        [
+          -149.5,
+          -17.45
+        ]
+      ],
+      "source": "Wikipedia, William Bligh: the landfalls and dates; the line between them is drawn by hand",
+      "note": "He passed the Bounty Islands, which he named, on 9 September"
+    },
+    {
+      "from": "Matavai Bay, Tahiti",
+      "to": "Tofua",
+      "dates": "4 – 28 Apr 1789",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "attested",
+      "points": [
+        [
+          -149.5,
+          -17.45
+        ],
+        [
+          -149.8,
+          -17.3
+        ],
+        [
+          -155,
+          -17.9
+        ],
+        [
+          -165,
+          -19
+        ],
+        [
+          -175.2,
+          -19.7
+        ]
+      ],
+      "source": "Wikipedia, The Bounty: the landfalls and dates; the line between them is drawn by hand"
+    },
+    {
+      "from": "Tofua",
+      "to": "Kupang, Timor",
+      "dates": "28 Apr – 14 Jun 1789",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "attested",
+      "points": [
+        [
+          -175.2,
+          -19.7
+        ],
+        [
+          -178.5,
+          -18.8
+        ],
+        [
+          -179.7,
+          -19.4
+        ],
+        [
+          178.5,
+          -19.7
+        ],
+        [
+          172,
+          -17.5
+        ],
+        [
+          166,
+          -12
+        ],
+        [
+          160,
+          -12
+        ],
+        [
+          152,
+          -11.7
+        ],
+        [
+          146,
+          -12.2
+        ],
+        [
+          142.5,
+          -10.7
+        ],
+        [
+          142.4,
+          -10.4
+        ],
+        [
+          141.2,
+          -10.3
+        ],
+        [
+          134,
+          -9.5
+        ],
+        [
+          128,
+          -10.2
+        ],
+        [
+          123.0,
+          -11.4
+        ],
+        [
+          123.4,
+          -10.1
+        ]
+      ],
+      "source": "Wikipedia, William Bligh: the landfalls and dates; the line between them is drawn by hand",
+      "note": "The launch's course is known from Bligh's log, kept through the voyage, with landings at Tofua, Fiji, and on the Great Barrier Reef"
+    },
+    {
+      "from": "Matavai Bay, Tahiti",
+      "to": "Pitcairn Island",
+      "dates": "Sep 1789 – 15 Jan 1790",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          -149.45,
+          -17.4
+        ],
+        [
+          -149.1,
+          -17.2
+        ],
+        [
+          -148.4,
+          -17.9
+        ],
+        [
+          -143,
+          -21
+        ],
+        [
+          -136,
+          -24
+        ],
+        [
+          -130.2,
+          -25.04
+        ]
+      ],
+      "source": "Wikipedia, Fletcher Christian: the landfalls and dates; the line between them is drawn by hand",
+      "note": "The Bounty went on to Tubuai and back to Tahiti before Christian sailed for Pitcairn"
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": -175.07,
+      "lat": -19.9,
+      "date": "28 Apr 1789",
+      "label": "The mutiny off Tofua",
+      "source": "Wikipedia, Mutiny on the Bounty",
+      "cite": "mutiny-on-the-bounty",
+      "text": "Before dawn, Fletcher Christian and others seized Bligh in his cabin. Bligh and eighteen men were put into the launch; twenty-five stayed aboard. Why the crew rose is still argued: the long stay on Tahiti, Bligh's temper, and Christian's own state of mind.",
+      "confidence": "attested",
+      "doubt": "Historians differ on the cause: the lure of Tahiti, Bligh's tyranny, or both."
+    },
+    {
+      "kind": "landfall",
+      "lon": -130.1,
+      "lat": -25.07,
+      "date": "15 Jan 1790",
+      "label": "Pitcairn Island",
+      "source": "Wikipedia, Pitcairn Islands",
+      "cite": "pitcairn-islands",
+      "text": "The nine mutineers, six Tahitian men and eleven women landed on a rock that was then drawn wrongly on the Admiralty's charts. They burned the Bounty. The island was uninhabited when they came, though Polynesians had lived on it centuries before.",
+      "confidence": "inferred"
+    }
+  ]
+}

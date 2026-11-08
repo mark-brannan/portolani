@@ -1,0 +1,303 @@
+{
+  "id": "wallis",
+  "title": "Wallis in the Dolphin: Tahiti, 1766–68",
+  "short": "Wallis",
+  "who": [
+    "samuel-wallis"
+  ],
+  "when": "1766–1768",
+  "summary": "HMS Dolphin sailed to find the southern continent, went through the Strait of Magellan and across the Tuamotus, and on 18 June 1767 sighted Tahiti. Wallis anchored in Matavai Bay, where canoes attacked the ship, which fired its guns, and then stayed five weeks, trading iron for food and meeting the chiefess Purea. He claimed Tahiti for Britain and sailed on to Tinian; the way home by Batavia and the Cape, to the Downs on 20 May 1768, is not drawn.",
+  "sources": [
+    "samuel-wallis"
+  ],
+  "legs": [
+    {
+      "from": "Plymouth",
+      "to": "Cabo Vírgenes",
+      "dates": "22 Aug – 17 Dec 1766",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          -4.15,
+          50.33
+        ],
+        [
+          -6,
+          47.5
+        ],
+        [
+          -11,
+          41
+        ],
+        [
+          -15,
+          34
+        ],
+        [
+          -19,
+          24
+        ],
+        [
+          -21,
+          10
+        ],
+        [
+          -27,
+          0
+        ],
+        [
+          -33,
+          -12
+        ],
+        [
+          -40,
+          -24
+        ],
+        [
+          -50,
+          -35
+        ],
+        [
+          -57,
+          -40
+        ],
+        [
+          -62,
+          -44
+        ],
+        [
+          -65.75,
+          -48.85
+        ],
+        [
+          -67.47,
+          -50.58
+        ],
+        [
+          -67.78,
+          -52.3
+        ]
+      ],
+      "source": "Wikipedia, Samuel Wallis: the landfalls and dates; the line between them is drawn by hand"
+    },
+    {
+      "from": "Cabo Vírgenes",
+      "to": "Pacific, past Cabo Pilar",
+      "dates": "17 Dec 1766 – Apr 1767",
+      "mode": "sea",
+      "line": "rhumb",
+      "confidence": "inferred",
+      "points": [
+        [
+          -67.8,
+          -52.4
+        ],
+        [
+          -68.23,
+          -52.41
+        ],
+        [
+          -68.67,
+          -52.43
+        ],
+        [
+          -69.11,
+          -52.43
+        ],
+        [
+          -69.55,
+          -52.47
+        ],
+        [
+          -69.83,
+          -52.66
+        ],
+        [
+          -70.28,
+          -52.69
+        ],
+        [
+          -70.61,
+          -52.87
+        ],
+        [
+          -70.78,
+          -53.11
+        ],
+        [
+          -70.81,
+          -53.37
+        ],
+        [
+          -70.83,
+          -53.63
+        ],
+        [
+          -71,
+          -53.88
+        ],
+        [
+          -71.34,
+          -53.93
+        ],
+        [
+          -71.78,
+          -53.84
+        ],
+        [
+          -72.17,
+          -53.73
+        ],
+        [
+          -72.45,
+          -53.52
+        ],
+        [
+          -72.88,
+          -53.43
+        ],
+        [
+          -73.17,
+          -53.23
+        ],
+        [
+          -73.5,
+          -53.05
+        ],
+        [
+          -73.89,
+          -52.93
+        ],
+        [
+          -74.31,
+          -52.84
+        ],
+        [
+          -74.64,
+          -52.66
+        ],
+        [
+          -75.08,
+          -52.66
+        ],
+        [
+          -75.53,
+          -52.66
+        ],
+        [
+          -75.8,
+          -52.59
+        ]
+      ],
+      "source": "Wikipedia, Samuel Wallis: the landfalls and dates; the line between them is drawn by hand",
+      "note": "The Dolphin took four months to get through the strait and out, and the line follows the one Magellan's pilots drew"
+    },
+    {
+      "from": "Pacific, past Cabo Pilar",
+      "to": "Matavai Bay, Tahiti",
+      "dates": "Apr – 23 Jun 1767",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          -75.8,
+          -52.59
+        ],
+        [
+          -85,
+          -46
+        ],
+        [
+          -100,
+          -36
+        ],
+        [
+          -120,
+          -27
+        ],
+        [
+          -135,
+          -21
+        ],
+        [
+          -143,
+          -18.3
+        ],
+        [
+          -148.2,
+          -17.4
+        ],
+        [
+          -149.5,
+          -17.45
+        ]
+      ],
+      "source": "Wikipedia, Samuel Wallis: the landfalls and dates; the line between them is drawn by hand",
+      "note": "Tahiti was sighted on 18 June; the Dolphin anchored in Matavai Bay on 23 June"
+    },
+    {
+      "from": "Matavai Bay, Tahiti",
+      "to": "Tinian",
+      "dates": "27 Jul – 20 Sep 1767",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          -149.5,
+          -17.45
+        ],
+        [
+          -149.4,
+          -16.6
+        ],
+        [
+          -151,
+          -15.2
+        ],
+        [
+          -160,
+          -12
+        ],
+        [
+          -175,
+          -10.5
+        ],
+        [
+          170,
+          -4.5
+        ],
+        [
+          160,
+          3
+        ],
+        [
+          150,
+          12
+        ],
+        [
+          145.7,
+          15.0
+        ]
+      ],
+      "source": "Wikipedia, Samuel Wallis: the landfalls and dates; the line between them is drawn by hand",
+      "note": "He sighted Wallis Island on the way; the line is drawn by hand"
+    }
+  ],
+  "events": [
+    {
+      "kind": "landfall",
+      "lon": -149.5,
+      "lat": -17.5,
+      "date": "23 Jun – 27 Jul 1767",
+      "label": "Matavai Bay: first European anchorage in Tahiti",
+      "source": "Wikipedia, Samuel Wallis",
+      "cite": "samuel-wallis",
+      "text": "After canoes tried to board the Dolphin and the ship's guns drove them off, the Tahitians made peace, and Purea, a high-ranking woman of the district, received Wallis. Trade in iron nails for pork, fruit and the favours of women followed; the sailors pulled nails out of the ship. Wallis raised a pendant and claimed the island for George III.",
+      "confidence": "inferred"
+    }
+  ]
+}
