@@ -1,0 +1,97 @@
+{
+  "id": "nain-singh",
+  "title": "Nain Singh, the Pundit, from Dehradun to Lhasa, 1865–66",
+  "short": "Nain Singh",
+  "who": [
+    "nain-singh-rawat"
+  ],
+  "when": "1865–1866",
+  "summary": "A schoolmaster of the Johar valley in Kumaon, trained by the Survey of India as one of the Indian explorers the British called Pundits, who went into Tibet, closed to Europeans, in disguise. He measured distance by pacing, a rosary of 100 beads to count each hundred double paces, hid his notes in a prayer wheel, and so fixed the position and height of Lhasa and followed a long stretch of the Tsangpo (Brahmaputra). He walked, by the Survey's figures, 1,580 miles in some 3,160,000 counted paces. Only the way in, by Nepal, is drawn; the way home is not.",
+  "sources": [
+    "nain-singh-rawat",
+    "great-trigonometrical-survey"
+  ],
+  "legs": [
+    {
+      "from": "Dehradun",
+      "to": "Kathmandu",
+      "dates": "1865",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Nain Singh (Wikipedia): the Survey sent him in by Nepal, as Tibet was shut to Europeans; the stages between are not drawn from the text",
+      "points": [
+        [
+          78.03,
+          30.32
+        ],
+        [
+          79.66,
+          29.6
+        ],
+        [
+          81.1,
+          29.1
+        ],
+        [
+          83.0,
+          28.3
+        ],
+        [
+          85.32,
+          27.7
+        ]
+      ]
+    },
+    {
+      "from": "Kathmandu",
+      "to": "Lhasa",
+      "dates": "1865–Jan 1866",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Nain Singh (Wikipedia): north over the Himalaya into Tibet and east to Lhasa; the stage by Kyirong and Shigatse is the usual way, not checked against his report",
+      "doubt": "The Wikipedia summary names only Lhasa and the Tsangpo; the Tibetan stages follow the usual road from Nepal and are not checked against his report.",
+      "points": [
+        [
+          85.32,
+          27.7
+        ],
+        [
+          85.39,
+          28.26
+        ],
+        [
+          86.5,
+          28.9
+        ],
+        [
+          88.88,
+          29.27
+        ],
+        [
+          90.0,
+          29.4
+        ],
+        [
+          91.12,
+          29.65
+        ]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": 91.12,
+      "lat": 29.65,
+      "date": "1866",
+      "label": "Lhasa, its height and place fixed",
+      "source": "Nain Singh (Wikipedia)",
+      "cite": "nain-singh-rawat",
+      "text": "Nain Singh determined the location and altitude of Lhasa, and surveyed a large stretch of the Tsangpo. His reports were first made under the code name Number 9.",
+      "confidence": "attested"
+    }
+  ],
+  "kind": "voyage"
+}
