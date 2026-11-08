@@ -666,3 +666,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261108t113252z
 - Christopher and Cosmas: Philippines-Indonesia passage drawn as a straight land-mode leg, as Hasekura's San Bernardino leg is; Guam-to-Plymouth stops are inferred from Cavendish's known course. Undo: revert the leg's mode in christopher-and-cosmas.json ([#411](https://github.com/mark-brannan/portolani/pull/411))
+
+### 20261108t113302z
+- Christopher and Cosmas: fate shown as one speculative mark at St Helena, no death point; the pair is one people record with group: true. Undo: delete the St Helena event and the group flag ([#411](https://github.com/mark-brannan/portolani/pull/411))
