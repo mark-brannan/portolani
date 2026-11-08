@@ -660,3 +660,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261108t110802z
 - Ganjin and Ennin are linked to kentoshi by id through its who; Ganjin's death at Nara therefore also shows as a skull when kentoshi is on. Undo: remove ganjin and ennin from kentoshi's who and name them in the text ([#410](https://github.com/mark-brannan/portolani/pull/410))
+
+### 20261108t110807z
+- Ono no Imoko is drawn only as far as the Shandong coast, on the northern course of the later embassies (conventional); the Sui court's city and any return line are left out because no source read gives them. Kūkai's return is likewise not drawn. Undo: delete the two Naniwa-to-Hakata and Hakata-to-Dengzhou legs of ono-no-imoko ([#410](https://github.com/mark-brannan/portolani/pull/410))
