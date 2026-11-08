@@ -672,3 +672,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261108t113313z
 - Index order by start year: Christopher and Cosmas after Tenshō, Tanaka before Yamada, Shimaya after Tasman; Tanaka's baptismal names carry a doubt. Undo: reorder index.json ([#411](https://github.com/mark-brannan/portolani/pull/411))
+
+### 20261108t122142z
+- nasome-238 keeps the dossier's id but names the envoy Natome (aka Nashime), the Wajinden page's spelling. Undo: edit the name in people.json. ([#412](https://github.com/mark-brannan/portolani/pull/412))
