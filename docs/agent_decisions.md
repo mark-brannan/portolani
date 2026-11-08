@@ -654,3 +654,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261108t082359z
 - Voyage index merge order: burke-and-wills before nain-singh, amundsen last Undo: reorder index.json ([#407](https://github.com/mark-brannan/portolani/pull/407))
+
+### 20261108t110758z
+- The Nanto leg carries the existing doubt marking (sparse rings) as well as the conventional ink, because the Japanese article reports Sugiyama Hiroshi could not establish it as a planned course. Undo: give the Nanto leg no doubt field ([#410](https://github.com/mark-brannan/portolani/pull/410))
