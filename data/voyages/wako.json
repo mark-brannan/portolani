@@ -1,0 +1,119 @@
+{
+  "id": "wako",
+  "kind": "migration",
+  "title": "The Wakō (wokou), the pirate-trader networks of the Korean and Chinese coasts, c. 1350–1560",
+  "short": "The Wakō",
+  "who": ["wokou", "wang-zhi"],
+  "when": "c. 1350 – 1560",
+  "summary": "The Wakō, wokou in Chinese, raided and traded along the coasts of Korea and China in two distinct eras. The early wokou, tied by the article to the aftermath of the Mongol invasions of Japan, were rampant from about 1350 according to Korean records, and drew on several peoples; they fell off after the Treaty of Gyehae of 1443. The late wokou of the 1550s were largely led by Chinese traders, and Wang Zhi, a salt merchant from Huizhou, was the greatest of them. Both phases are drawn as a network layer: the bases and the coasts they worked, not any one voyage.",
+  "sources": ["wokou", "wang-zhi"],
+  "legs": [
+    {
+      "from": "Tsushima",
+      "to": "the Gyeongsang coast",
+      "dates": "from c. 1350",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Wokou (Wikipedia): early wokou raids on Korea were particularly rampant from roughly 1350; the Goryeosa records 529 raids in 1223–1392. The article does not say which base a raid left from; Tsushima is the base the Treaty of Gyehae points to",
+      "reach": [0, 0.2],
+      "heads": "end",
+      "points": [[129.3, 34.4], [129.4, 34.9], [129.5, 35.3]]
+    },
+    {
+      "from": "the Gyeongsang coast",
+      "to": "the Gyeonggi coast",
+      "dates": "from c. 1350",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Wokou (Wikipedia): the raids began in the south of Korea; the course drawn up the south and west coasts is the drawing's",
+      "reach": [0.2, 0.5],
+      "heads": "end",
+      "note": "The article names no raid points on the Korean coast; the line follows the coast from the south to the west.",
+      "points": [[129.5, 35.3], [129.0, 34.7], [127.6, 34.3], [126.3, 34.2], [126.1, 35.0], [126.2, 36.3], [126.3, 37.2]]
+    },
+    {
+      "from": "Hirado and the Gotō Islands",
+      "to": "the Zhoushan Islands",
+      "dates": "1540s – 1557",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Wang Zhi (Wikipedia): after the Ming destroyed Shuangyu in 1548 he led the syndicate; he arrived at Cengang on Zhoushan in 1557. Hirado as his base and the crossing between are not in the article read",
+      "reach": [0.5, 0.7],
+      "heads": "both",
+      "points": [[129.5, 33.4], [128.2, 32.6], [125.8, 31.4], [123.6, 30.6], [122.4, 30.1]]
+    },
+    {
+      "from": "the Zhoushan Islands",
+      "to": "the Pearl River mouth",
+      "dates": "1550s",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Wokou (Wikipedia): the late wokou raided the whole Chinese coast from Shandong to Guangdong in the Jiajing reign (1522–1566); the course is the coast, not a raid",
+      "reach": [0.7, 1],
+      "heads": "end",
+      "points": [[122.2, 30.0], [122.4, 28.6], [121.3, 27.0], [120.0, 25.6], [118.8, 24.4], [117.0, 23.0], [114.9, 22.4], [113.9, 22.2]]
+    }
+  ],
+  "events": [
+    {
+      "kind": "waypoint",
+      "lon": 129.3,
+      "lat": 34.4,
+      "date": "1419",
+      "label": "The Ōei Invasion of Tsushima",
+      "source": "Wokou (Wikipedia)",
+      "cite": "wokou",
+      "confidence": "attested",
+      "doubt": "Korean records count 180 of their soldiers killed; the Sō clan's records say 2,500.",
+      "text": "Yi Chongmu led 227 ships and 17,285 soldiers against the wokou's island base. Korean forces took 129 wokou ships and freed 131 Chinese captives. After the Treaty of Gyehae of 1443 gave the Sō clan of Tsushima trade privileges, the raids along the Korean coast calmed."
+    },
+    {
+      "kind": "waypoint",
+      "lon": 131.0,
+      "lat": 30.6,
+      "date": "23 Sep 1543",
+      "label": "Wang Zhi brings the Portuguese to Tanegashima",
+      "source": "Wang Zhi (Wikipedia)",
+      "cite": "wang-zhi",
+      "confidence": "attested",
+      "text": "Wang's voyage with Portuguese men to Tanegashima is dated 23 September 1543; the chronicler Galvão gives 1542 for the discovery of Japan. In 1544 Wang joined the Xu brothers' syndicate at Shuangyu in Zhejiang."
+    },
+    {
+      "kind": "waypoint",
+      "lon": 122.2,
+      "lat": 30.0,
+      "date": "Jun 1548",
+      "label": "Shuangyu razed",
+      "source": "Wang Zhi (Wikipedia)",
+      "cite": "wang-zhi",
+      "confidence": "attested",
+      "text": "A fleet under General Zhu Wan razed the Shuangyu base and filled the harbour with stones. Wang rose to lead the syndicate afterwards. The mark stands in the Zhoushan islands; the article gives no coordinates."
+    },
+    {
+      "kind": "waypoint",
+      "lon": 122.3,
+      "lat": 30.1,
+      "date": "17 Oct 1557",
+      "label": "Wang Zhi comes to Cengang to treat",
+      "source": "Wang Zhi (Wikipedia)",
+      "cite": "wang-zhi",
+      "confidence": "attested",
+      "text": "Wang arrived at Cengang on Zhoushan with a trading fleet and laid down his terms for surrender. In December he went to Hangzhou, where he was imprisoned the next February. The raid led by his associate Xu Hai in 1556 had been put down, with Xu Hai killed."
+    },
+    {
+      "kind": "waypoint",
+      "lon": 121.6,
+      "lat": 18.35,
+      "date": "1582",
+      "label": "Wokou and Spaniards at Aparri",
+      "source": "Wokou (Wikipedia)",
+      "cite": "wokou",
+      "confidence": "attested",
+      "text": "Aparri, in northern Luzon, was a pirate city-state under wokou patronage and the site of the 1582 Cagayan battles between the wokou and Spanish soldiers. The date is later than the rest of the layer, and no leg is drawn to it."
+    }
+  ]
+}
