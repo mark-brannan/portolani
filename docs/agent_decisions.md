@@ -678,3 +678,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261108t122146z
 - Drew Daifang to Luoyang as a speculative land leg with a doubt, though no page read describes the road; Cao Wei's page gives Luoyang as the capital. Undo: delete the leg and its event. ([#412](https://github.com/mark-brannan/portolani/pull/412))
+
+### 20261108t122151z
+- jomon-culture is a migration record with no legs and two waypoints (Ikawazu, Hokkaido's Zoku-Jomon), the resident layer drawn as beads, not a new kind. Undo: revert the file and its index line. ([#412](https://github.com/mark-brannan/portolani/pull/412))
