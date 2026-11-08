@@ -332,15 +332,15 @@ export const MEMENTO_ENTRIES = [
   { lang: 'la', text: 'Omnia mors aequat', en: 'Death makes all things equal' },
   { lang: 'la', text: 'Memento vivere', en: 'Remember to live' }, // the user's gloss: "Literally 'remember to live'"
   { lang: 'la', text: 'Respice finem', en: 'Consider the end' },
-  { lang: 'la', text: 'longae vitae mors media est', en: 'Death stands in the midst of a long life', enBy: 'claude' },
-  { lang: 'non', source: 'Hávamál 76',
+  { lang: 'la', source: 'Lucan, Pharsalia 1.457–458 ("longae, canitis si cognita, vitae mors media est")', text: 'longae vitae mors media est', en: 'Death stands in the midst of a long life', enBy: 'claude' },
+  { lang: 'non', source: 'Hávamál 76 (Bellows numbers it 77); English: Bellows, The Poetic Edda, 1923',
     text: 'Deyr fé, deyja frændr,\ndeyr sjalfr it sama;\nen orðstírr deyr aldregi,\nhveim er sér góðan getr.',
-    en: 'Cattle die, kinsmen die,\nyou yourself die the same;\nbut a good name never dies\nfor whoever wins one.', enBy: 'claude' },
+    en: 'Cattle die, and kinsmen die,\nAnd so one dies one\'s self;\nBut a noble name will never die,\nIf good renown one gets.' },
   { lang: 'non', text: 'Geyma skal þess, at maðr lifir eigi ey,\nþótt hann vari sik við stríð.', en: 'Keep this in mind: no one lives forever,\nthough he guard himself in battle.', enBy: 'claude' },
-  { lang: 'pi', // romanised, as Pali is
+  { lang: 'pi', source: 'Maraṇasati chant, verse 5 of 7 (Mahamevnawa Paritta book)', // romanised, as Pali is
     text: 'Vijju bubbula ussāva – jalarāji parikkhayaṁ\nGhātako’va ripūtassa – sabbatthā’pi avāriyo',
     en: '...like a streak of lightning, a bubble of water, a dew drop on a leaf, or a line drawn on water.' },
-  { lang: 'pi',
+  { lang: 'pi', source: 'Maraṇasati chant, verse 4 of 7 (Mahamevnawa Paritta book)',
     text: 'Īsakaṁ anivattaṁ taṁ – satataṁ gamanussukaṁ\nJīvitaṁ udayā atthaṁ – suriyo viya dhāvati',
     en: '...like the sun that travels to set without stopping after it rises.' },
   { lang: 'ja', kind: 'jisei', text: '斯う活て居るも不思議ぞ花の陰', variant: '斯う活ているも不思議ぞ花の陰',
@@ -351,28 +351,28 @@ export const MEMENTO_ENTRIES = [
     credit: 'Roy Isami Ebata (1919–1990), written in the margin of his Living Will, 2 January 1985; given at tanuki2016.com/2018/02/04/46/' }, // originally English, not a translation
   { lang: 'ja', kind: 'jisei', text: '散る梅に\n見上げる空の\n月清し', romaji: 'Chiru ume ni\nmiaguru sora no\ntsuki kiyoshi',
     en: 'Plum petals falling\nI look up—the sky,\na clear crisp moon.',
-    credit: 'Baiko (died 1903), as given at tanuki2016.com/2018/02/04/46/' },
-  { lang: 'ja', kind: 'jisei', text: '百伝ふ\n磐余の池に\n鳴く鴨を\n今日のみ見てや\n雲隠りなむ', romaji: 'Monozutau\nIware no ike ni\nnaku kamo wo\nkyo nomi mite ya\nkumokakuri nan',
+    credit: 'Baiko 梅幸 (died 1903, aged 60; Hoffmann; the kanji of the poem are unverified), as given at tanuki2016.com/2018/02/04/46/' },
+  { lang: 'ja', kind: 'jisei', text: '百伝ふ\n磐余の池に\n鳴く鴨を\n今日のみ見てや\n雲隠りなむ', romaji: 'Momozutau\nIware no ike ni\nnaku kamo o\nkyō nomi mite ya\nkumogakurinamu',
     en: 'Today, taking my last sight of the mallards\nCrying on the pond of Iware\nMust I vanish into the clouds!',
-    credit: 'Prince Ōtsu (663–686), as given at tanuki2016.com/2018/02/04/46/' },
+    credit: 'Prince Ōtsu (663–686), Man\'yōshū 3.416, traditionally his and perhaps later; English as on English Wikipedia, no translator named; romaji corrected after Hoffmann; the kanji agree with ja.wikipedia' },
   { lang: 'en', kind: 'jisei', text: 'Empty-handed I entered the world\nBarefoot I leave it\nMy coming, my going\nTwo simple happenings\nThat got entangled.', en: 'Empty-handed I entered the world\nBarefoot I leave it\nMy coming, my going\nTwo simple happenings\nThat got entangled.',
-    credit: 'Kozan Ichiko (1283–1360), in the English given at tanuki2016.com/2018/02/04/46/; the original is not given there' }, // a translation, original not held
+    credit: 'Kozan Ikkyō 固山一鞏 (died 1360, aged 77), English by Yoel Hoffmann, Japanese Death Poems (Tuttle, 1986), as given at tanuki2016.com/2018/02/04/46/; the Sino-Japanese original (per English Wikipedia, unverified): 来時は空手、去時は赤脚。一去一来、単重交折' }, // a translation
   { lang: 'ja', kind: 'jisei', text: 'kuse ni natte\nnishi ogamikeri\nhatsu ashita', // romanised only; the page gives no Japanese
     en: 'It\'s become a habit\nbowing to the West\nNew Year\'s dawn',
-    credit: 'Wagin, a Buddhist monk (died 1758), as given at tanuki2016.com/2018/02/04/46/' },
+    credit: 'Wagin 和吟, a Buddhist (died 1758, aged 73; Hoffmann), as given at tanuki2016.com/2018/02/04/46/' },
   { lang: 'ja', kind: 'jisei', text: 'yururi saku\nkotoshi no hana no\nkakugo kana', // romanised only; the page gives the Japanese incompletely
     en: 'How leisurely the cherry\nblossoms bloom this year, unhurried,\nby their doom!',
-    credit: 'Kinu (died March 1817), as given at tanuki2016.com/2018/02/04/46/' },
-  { lang: 'ja', kind: 'jisei', text: '風さそふ\n花よりもなほ\n我はまた\n春の名残を\nいかにとかせん', romaji: 'kaze sasou\nhana yori mo nao\nware ha mata\nharu no nagori wo\nika ni toyasen',
+    credit: 'Kin\'u 琴雨 (died March 1817, aged 62; Hoffmann), as given at tanuki2016.com/2018/02/04/46/' },
+  { lang: 'ja', kind: 'jisei', text: '風さそふ\n花よりもなほ\n我はまた\n春の名残を\nいかにとやせん', variant: '風さそふ\n花よりもなほ\n我はまた\n春の名残を\nいかにとかせん', romaji: 'kaze sasou\nhana yori mo nao\nware ha mata\nharu no nagori wo\nika ni toyasen',
     en: 'More than the cherry blossoms,\ninviting a wind to blow them away,\nI am wondering what to do\nwith the remaining springtime.',
-    credit: 'Lord Asano Naganori (1667–1701), aged 34; English by Mizoguchi Kenji, as given at tanuki2016.com/2018/02/04/46/. The kanji are not the page\'s' },
+    credit: 'Lord Asano Naganori (1667–1701), aged 34 by the page, 35 by Japanese count; in Tamon hikki only, so of doubtful reliability; the page attributes the English to Mizoguchi Kenji (unverified; the same text is on English Wikipedia); the kanji are not the page\'s, ending とやせん as the romaji does, with ja.wikipedia\'s とかせん as the variant' },
   { lang: 'ja', text: '死に仕度\n致せ致せと\n桜哉', romaji: 'shini shitaku\nitaseitase to\nsakura kana',
     en: 'Cherry blossoms\npress me to\nprepare to die.',
     credit: 'Kobayashi Issa (1763–1828), as given at tanuki2016.com/2018/02/04/46/; the page does not call it his jisei' },
   { lang: 'ja', text: '願わくは花の下にて春死なむ\nその如月の望月のころ', romaji: 'negawaku wa hana no shita nite haru shinamu\nsono kisaragi no mochizuki no koro',
     en: 'Let me die in spring under the blossom trees,\nlet it be around the full moon of Kisaragi [February].',
-    credit: 'Saigyō Hōshi (1118–1190), as given at tanuki2016.com/2018/02/04/46/; a wish, not a jisei' },
-  { lang: 'grc', text: '...τὴν εἱμαρμένην οὐδ’ ἂν εἷς ἐκφύγοι...', en: 'Not even one single individual could escape their measure of destiny' },
+    credit: 'Saigyō Hōshi (1118–1190), as given at tanuki2016.com/2018/02/04/46/; a wish he fulfilled in 1190, and Hoffmann (1986) gives it as his death poem' },
+  { lang: 'grc', source: 'Plato, Gorgias 512e', text: '...τὴν εἱμαρμένην οὐδ’ ἂν εἷς ἐκφύγοι...', en: 'Not even one single individual could escape their measure of destiny' },
 ];
 export const MEMENTO = MEMENTO_ENTRIES.map((e) => e.text);
 // Each phrase in English, in MEMENTO's order: the skull's hover text, "Clear the map: " and the one shown beside it
