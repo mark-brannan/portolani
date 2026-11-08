@@ -614,7 +614,7 @@ test('people and voyages: two vertical drawers no wider than the charts, earlies
     const visibleRows = () => page.$$eval('#peopleList li[data-row]:not([hidden]) > [data-person]', (bs) => bs.map((b) => b.dataset.person));
     const head = (key) => `#peopleList .head[data-head="${key}"]`;
     assert.deepEqual(await visibleRows(), [], 'a row shown before its heading was opened');
-    assert.deepEqual(await page.$$eval('#peopleList > li.era:not([hidden])', (es) => es.map((e) => e.dataset.era)), ['Deep history', 'The Bronze Age', 'The ancient world', 'The medieval world', 'The age of discovery', 'The age of Enlightenment'], 'the era headings');
+    assert.deepEqual(await page.$$eval('#peopleList > li.era:not([hidden])', (es) => es.map((e) => e.dataset.era)), ['Deep history', 'The Bronze Age', 'The ancient world', 'The medieval world', 'The age of discovery', 'The age of Enlightenment', 'The modern world'], 'the era headings');
     assert.ok(await page.$$eval('#peopleList .head', (hs) => hs.every((h) => h.getAttribute('aria-expanded') === 'false')), 'a heading open on opening');
     assert.ok(await page.$$eval('#peopleList > li.era:not([hidden])', (es) => es.every((e) => e.querySelectorAll('.deep .band').length === 7 && e.querySelector('.deep .band.own').getBoundingClientRect().width > 0)), 'a heading without its bar or its own stretch');
     assert.equal(await page.$$eval('#peopleList .deep .tick', (ts) => ts.filter((t) => t.getBoundingClientRect().width > 0).length), 0, 'ticks on a shut heading\'s bar');
@@ -628,7 +628,7 @@ test('people and voyages: two vertical drawers no wider than the charts, earlies
     assert.equal(await page.$eval('#peopleList li.era[data-era="The Bronze Age"]', (e) => [...e.querySelectorAll('.deep .tick')].filter((t) => t.getBoundingClientRect().width > 0).length), bronze.length, 'a Bronze Age row is not a tick on its bar');
     // one era open at a time: each opened in turn, every person shown once, earliest first, the mansa before Musa right before him
     const shownPeople = [];
-    for (const era of ['Deep history', 'The Bronze Age', 'The ancient world', 'The medieval world', 'The age of discovery', 'The age of Enlightenment']) {
+    for (const era of ['Deep history', 'The Bronze Age', 'The ancient world', 'The medieval world', 'The age of discovery', 'The age of Enlightenment', 'The modern world']) {
       if (await page.getAttribute(head(era), 'aria-expanded') !== 'true') await page.click(head(era));
       shownPeople.push(...await visibleRows());
     }
@@ -717,7 +717,7 @@ test('people and voyages: two vertical drawers no wider than the charts, earlies
     const shownVoyages = await page.$$eval('#voyageList [data-voyage]', (bs) => bs.map((b) => b.dataset.voyage));
     assert.deepEqual([...shownVoyages].sort(), [...index].sort(), 'a voyage missing or twice');
     assert.equal(shownVoyages[0], 'wallacea-crossing');
-    assert.deepEqual(await page.$$eval('#voyageList .era', (es) => es.map((e) => e.dataset.era)), ['Deep history', 'The Bronze Age', 'The ancient world', 'The medieval world', 'The age of discovery', 'The age of Enlightenment']);
+    assert.deepEqual(await page.$$eval('#voyageList .era', (es) => es.map((e) => e.dataset.era)), ['Deep history', 'The Bronze Age', 'The ancient world', 'The medieval world', 'The age of discovery', 'The age of Enlightenment', 'The modern world']);
     assert.ok(await page.$$eval('#voyageList li[data-row]', (ls) => ls.every((l) => l.querySelector('[data-eye]') && l.querySelector('[data-ink]') && l.querySelector('path'))), 'a voyage row without its eye, swatch or line sample');
     const tools = await box('#voyagesPanel .vtools'), list = await box('#voyageList');
     assert.ok(tools.y + tools.height <= list.y + 1, 'the tools do not head the list');

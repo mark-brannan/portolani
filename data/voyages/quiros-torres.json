@@ -1,0 +1,189 @@
+{
+  "id": "quiros-torres",
+  "title": "Quirós and Torres: Espíritu Santo and the Torres Strait, 1605–07",
+  "short": "Quirós and Torres",
+  "who": [
+    "quiros",
+    "luis-vaez-de-torres"
+  ],
+  "when": "1605–1607",
+  "summary": "Quirós led three Spanish ships out of Callao to find the great southern continent. He found the largest island of Vanuatu, named it Austrialia del Espíritu Santo and tried to found a city there; within five weeks he left, and the ships parted. Quirós went home to New Spain; Torres opened his orders and sailed on, through the strait between New Guinea and Australia that bears his name, to Manila. Torres's road beyond the strait is not drawn.",
+  "sources": [
+    "pedro-fernandez-de-quiros",
+    "luis-vaez-de-torres"
+  ],
+  "legs": [
+    {
+      "from": "Callao",
+      "to": "Big Bay, Espíritu Santo",
+      "dates": "21 Dec 1605 – 1 May 1606",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          -77.16,
+          -12.0
+        ],
+        [
+          -90,
+          -15
+        ],
+        [
+          -115,
+          -18
+        ],
+        [
+          -140,
+          -17
+        ],
+        [
+          -160,
+          -15.5
+        ],
+        [
+          -176,
+          -15
+        ],
+        [
+          174,
+          -15.3
+        ],
+        [
+          170,
+          -15.0
+        ],
+        [
+          168.5,
+          -14.7
+        ],
+        [
+          166.9,
+          -14.8
+        ]
+      ],
+      "source": "Wikipedia, Pedro Fernández de Quirós: the landfalls and dates; the line between them is drawn by hand",
+      "note": "Quirós's ships sighted islands in the Tuamotus and the Duff Islands on the way; the line between the landfalls is drawn by hand"
+    },
+    {
+      "from": "Big Bay, Espíritu Santo",
+      "to": "Acapulco",
+      "dates": "8 Jun – Nov 1606",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          166.9,
+          -14.8
+        ],
+        [
+          172,
+          -12
+        ],
+        [
+          176,
+          -5
+        ],
+        [
+          -175,
+          8
+        ],
+        [
+          -165,
+          14
+        ],
+        [
+          -150,
+          17
+        ],
+        [
+          -135,
+          19
+        ],
+        [
+          -118,
+          18.5
+        ],
+        [
+          -105,
+          17
+        ],
+        [
+          -100.2,
+          16.7
+        ]
+      ],
+      "source": "Wikipedia, Pedro Fernández de Quirós: the landfalls and dates; the line between them is drawn by hand",
+      "note": "Quirós made north to catch the westerlies and reached Acapulco in November"
+    },
+    {
+      "from": "Big Bay, Espíritu Santo",
+      "to": "Torres Strait",
+      "dates": "Jun – Sep 1606",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          166.9,
+          -14.8
+        ],
+        [
+          166.4,
+          -14.45
+        ],
+        [
+          165.5,
+          -15
+        ],
+        [
+          162,
+          -13
+        ],
+        [
+          156,
+          -11.5
+        ],
+        [
+          152,
+          -12.2
+        ],
+        [
+          148,
+          -11.0
+        ],
+        [
+          144.0,
+          -10.4
+        ]
+      ],
+      "source": "Wikipedia, Luis Váez de Torres: the landfalls and dates; the line between them is drawn by hand",
+      "note": "Torres sailed west along the south coast of New Guinea and found the strait; the line is drawn by hand"
+    }
+  ],
+  "events": [
+    {
+      "kind": "landfall",
+      "lon": 166.9,
+      "lat": -14.8,
+      "date": "1 May – 8 Jun 1606",
+      "label": "Big Bay: La Nueva Jerusalén",
+      "source": "Wikipedia, Pedro Fernández de Quirós",
+      "cite": "pedro-fernandez-de-quiros",
+      "text": "Quirós took the island for Spain, laid out a city and a church, and named the bay for the River Jordan. The Spanish stayed about five weeks. Ni-Vanuatu people lived all round the bay; the account is Spanish, and the Spanish record of the people they met is thin.",
+      "confidence": "inferred"
+    },
+    {
+      "kind": "event",
+      "lon": 144.0,
+      "lat": -10.4,
+      "date": "Sep – Oct 1606",
+      "label": "Torres Strait",
+      "source": "Wikipedia, Luis Váez de Torres",
+      "cite": "luis-vaez-de-torres",
+      "text": "Torres sailed through the strait between New Guinea and Australia. His report stayed in Spanish archives until the British took Manila in 1762; Alexander Dalrymple named the strait for him in 1769.",
+      "confidence": "inferred"
+    }
+  ]
+}
