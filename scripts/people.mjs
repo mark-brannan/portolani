@@ -336,7 +336,9 @@ export const MEMENTO_ENTRIES = [
   { lang: 'non', source: 'Hávamál 76 (Bellows numbers it 77); English: Bellows, The Poetic Edda, 1923',
     text: 'Deyr fé, deyja frændr,\ndeyr sjalfr it sama;\nen orðstírr deyr aldregi,\nhveim er sér góðan getr.',
     en: 'Cattle die, and kinsmen die,\nAnd so one dies one\'s self;\nBut a noble name will never die,\nIf good renown one gets.' },
-  { lang: 'non', text: 'Geyma skal þess, at maðr lifir eigi ey,\nþótt hann vari sik við stríð.', en: 'Keep this in mind: no one lives forever,\nthough he guard himself in battle.', enBy: 'claude' },
+  { lang: 'non', source: 'Hávamál 16; English: Bellows, The Poetic Edda, 1923',
+    text: 'Ósnjallr maðr\nhyggsk munu ey lifa,\nef hann við víg varisk;\nen elli gefr\nhonum engi frið,\nþótt honum geirar gefi.',
+    en: 'The sluggard believes\nhe shall live forever,\nIf the fight he faces not;\nBut age shall not grant him\nthe gift of peace,\nThough spears may spare his life.' },
   { lang: 'pi', source: 'Maraṇasati chant, verse 5 of 7 (Mahamevnawa Paritta book)', // romanised, as Pali is
     text: 'Vijju bubbula ussāva – jalarāji parikkhayaṁ\nGhātako’va ripūtassa – sabbatthā’pi avāriyo',
     en: '...like a streak of lightning, a bubble of water, a dew drop on a leaf, or a line drawn on water.' },
