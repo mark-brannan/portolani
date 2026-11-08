@@ -1,0 +1,109 @@
+{
+  "id": "roggeveen",
+  "title": "Roggeveen's voyage to Rapa Nui and Samoa, 1721–22",
+  "short": "Roggeveen",
+  "who": [
+    "jacob-roggeveen"
+  ],
+  "when": "1721–1723",
+  "summary": "Three ships of the Dutch West India Company went round Cape Horn to look for the southern land that Edward Davis was said to have sighted. They found Rapa Nui on Easter Sunday 1722 and spent a few days off it; shots were fired and a number of islanders were killed. They then crossed the Tuamotus, where one ship was wrecked, and reached the Manuʻa Islands in Samoa. The way home by Java, to Batavia on 1 October, is not drawn.",
+  "sources": [
+    "jacob-roggeveen"
+  ],
+  "legs": [
+    {
+      "from": "Cape Horn",
+      "to": "Rapa Nui",
+      "dates": "Feb – 5 Apr 1722",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          -67.3,
+          -56.0
+        ],
+        [
+          -72,
+          -57.5
+        ],
+        [
+          -85,
+          -48
+        ],
+        [
+          -95,
+          -40
+        ],
+        [
+          -108,
+          -34
+        ],
+        [
+          -110.5,
+          -28.5
+        ],
+        [
+          -109.4,
+          -27.2
+        ]
+      ],
+      "source": "Wikipedia, Jacob Roggeveen: the landfalls and dates; the line between them is drawn by hand",
+      "note": "He looked for Davis Land on the way, and found a different island"
+    },
+    {
+      "from": "Rapa Nui",
+      "to": "Manuʻa, Samoa",
+      "dates": "10 Apr – 13 Jun 1722",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          -109.4,
+          -27.2
+        ],
+        [
+          -122,
+          -27
+        ],
+        [
+          -141,
+          -22
+        ],
+        [
+          -146,
+          -16.0
+        ],
+        [
+          -153,
+          -15.0
+        ],
+        [
+          -164,
+          -14
+        ],
+        [
+          -169.5,
+          -14.2
+        ]
+      ],
+      "source": "Wikipedia, Jacob Roggeveen: the landfalls and dates; the line between them is drawn by hand",
+      "note": "The Arend was wrecked on a reef in the Tuamotus on 28 May and her crew taken aboard the other two ships"
+    }
+  ],
+  "events": [
+    {
+      "kind": "landfall",
+      "lon": -109.4,
+      "lat": -27.15,
+      "date": "5 – 10 Apr 1722",
+      "label": "Rapa Nui: Easter Sunday",
+      "source": "Wikipedia, Jacob Roggeveen",
+      "cite": "jacob-roggeveen",
+      "text": "The first European landing recorded at the island; the day gave it its European name. Islanders came out to the ships. In a confused shoreside scuffle the Dutch fired and killed at least ten, perhaps as many as a dozen or more.",
+      "confidence": "attested",
+      "doubt": "The number killed differs between the Dutch accounts."
+    }
+  ]
+}

@@ -1,0 +1,218 @@
+{
+  "id": "tasman",
+  "title": "Tasman's voyage to Van Diemen's Land, New Zealand, Tonga and Fiji, 1642–43",
+  "short": "Tasman",
+  "who": [
+    "abel-tasman"
+  ],
+  "when": "1642–1643",
+  "summary": "The Dutch East India Company sent Tasman from Batavia to find the southern continent. He sailed far south of Australia, found Van Diemen's Land and the west coast of New Zealand, lost four men to the Māori in Golden Bay without landing, and went on to Tonga and Fiji. He came home by the north coast of New Guinea, a run not drawn here, and never saw the mainland of Australia.",
+  "sources": [
+    "abel-tasman"
+  ],
+  "legs": [
+    {
+      "from": "Batavia",
+      "to": "Mauritius",
+      "dates": "14 Aug – 5 Sep 1642",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          106.8,
+          -6.02
+        ],
+        [
+          105.5,
+          -5.9
+        ],
+        [
+          104.4,
+          -7
+        ],
+        [
+          96,
+          -14
+        ],
+        [
+          75,
+          -23
+        ],
+        [
+          60,
+          -21.5
+        ],
+        [
+          58.2,
+          -20.4
+        ]
+      ],
+      "source": "Wikipedia, Abel Tasman: the landfalls and dates; the line between them is drawn by hand"
+    },
+    {
+      "from": "Mauritius",
+      "to": "Van Diemen's Land",
+      "dates": "8 Oct – 24 Nov 1642",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          58.2,
+          -20.4
+        ],
+        [
+          62,
+          -32
+        ],
+        [
+          75,
+          -43
+        ],
+        [
+          95,
+          -48.5
+        ],
+        [
+          120,
+          -49.5
+        ],
+        [
+          140,
+          -46
+        ],
+        [
+          147.4,
+          -44.5
+        ],
+        [
+          148.6,
+          -42.9
+        ]
+      ],
+      "source": "Wikipedia, Abel Tasman: the landfalls and dates; the line between them is drawn by hand",
+      "note": "Tasman named the new land for the governor of Batavia; Tasmania is named for him"
+    },
+    {
+      "from": "Van Diemen's Land",
+      "to": "Golden Bay, New Zealand",
+      "dates": "5 – 18 Dec 1642",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          148.6,
+          -42.9
+        ],
+        [
+          155,
+          -42.5
+        ],
+        [
+          165,
+          -41.8
+        ],
+        [
+          170,
+          -40.8
+        ],
+        [
+          172.2,
+          -40.4
+        ]
+      ],
+      "source": "Wikipedia, Abel Tasman: the landfalls and dates; the line between them is drawn by hand",
+      "note": "He sighted the South Island on 13 December and coasted north to the bay he named Murderers' Bay"
+    },
+    {
+      "from": "Golden Bay, New Zealand",
+      "to": "Tongatapu",
+      "dates": "18 Dec 1642 – 21 Jan 1643",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          172.2,
+          -40.4
+        ],
+        [
+          172.5,
+          -35.5
+        ],
+        [
+          174,
+          -33.2
+        ],
+        [
+          -178,
+          -28
+        ],
+        [
+          -176,
+          -23
+        ],
+        [
+          -175.2,
+          -21.3
+        ]
+      ],
+      "source": "Wikipedia, Abel Tasman: the landfalls and dates; the line between them is drawn by hand",
+      "note": "Tasman sailed round the Three Kings Islands, which he sighted on 5 January"
+    },
+    {
+      "from": "Tongatapu",
+      "to": "Fiji",
+      "dates": "21 Jan – 6 Feb 1643",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          -175.2,
+          -21.3
+        ],
+        [
+          -175.0,
+          -20.3
+        ],
+        [
+          -176.5,
+          -19.5
+        ],
+        [
+          -178.8,
+          -17.9
+        ]
+      ],
+      "source": "Wikipedia, Abel Tasman: the landfalls and dates; the line between them is drawn by hand",
+      "note": "He visited Tongatapu and Nomuka, then sighted the islands of eastern Fiji, but the weather kept him from landing"
+    }
+  ],
+  "events": [
+    {
+      "kind": "landfall",
+      "lon": 172.9,
+      "lat": -40.55,
+      "date": "18 – 19 Dec 1642",
+      "label": "Murderers' Bay (Golden Bay): four Dutchmen killed",
+      "source": "Wikipedia, Abel Tasman",
+      "cite": "abel-tasman",
+      "text": "Local Māori, of Ngāti Tūmatakōkiri, attacked a boat of the Zeehaen's crew as it passed between the ships, killing four. Tasman did not land and left the bay.",
+      "confidence": "inferred"
+    },
+    {
+      "kind": "landfall",
+      "lon": -175.2,
+      "lat": -21.15,
+      "date": "21 – 24 Jan 1643",
+      "label": "Tongatapu (Amsterdam)",
+      "source": "Wikipedia, Abel Tasman",
+      "cite": "abel-tasman",
+      "text": "Tasman traded with the Tongans for pigs, yams and water. He named the island Amsterdam; Nomuka, a few days later, he named Rotterdam.",
+      "confidence": "inferred"
+    }
+  ]
+}

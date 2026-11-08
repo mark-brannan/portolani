@@ -2843,5 +2843,193 @@
       "nain-singh-rawat",
       "great-trigonometrical-survey"
     ]
+  },
+
+  "quiros": {
+    "name": "Pedro Fernández de Quirós",
+    "bio": "A Portuguese navigator in Spanish service who sailed with Mendaña in 1595 and in 1605 led his own expedition from Callao in search of the southern continent. He reached the New Hebrides, took the largest island for Spain as \"Austrialia del Espíritu Santo\", and founded a short-lived settlement, La Nueva Jerusalén, in Big Bay. He turned back for New Spain, leaving Torres to find his own way.",
+    "sources": [
+      "pedro-fernandez-de-quiros"
+    ],
+    "view": {
+      "lat": -15,
+      "lon": 167,
+      "zoom": 2
+    }
+  },
+  "luis-vaez-de-torres": {
+    "name": "Luis Váez de Torres",
+    "bio": "Captain of the Almiranta in Quirós's fleet. After Quirós left, he opened his sealed orders, sailed west along the south coast of New Guinea through the strait that now bears his name, and reached Manila in 1607. The passage between New Guinea and Australia stayed little known to Europeans until later in the century.",
+    "sources": [
+      "luis-vaez-de-torres"
+    ],
+    "view": {
+      "lat": -10,
+      "lon": 145,
+      "zoom": 2.5
+    }
+  },
+  "abel-tasman": {
+    "name": "Abel Tasman",
+    "bio": "A Dutch seafarer in the service of the East India Company. In 1642–43 he sailed from Batavia by Mauritius to Van Diemen's Land (Tasmania) and New Zealand, then to Tonga and Fiji, and home by the north coast of New Guinea, without sighting the Australian mainland.",
+    "sources": [
+      "abel-tasman"
+    ],
+    "view": {
+      "lat": -30,
+      "lon": 170,
+      "zoom": 1.5
+    }
+  },
+  "jacob-roggeveen": {
+    "name": "Jacob Roggeveen",
+    "bio": "A Dutch lawyer and explorer who, at over sixty, led three ships of the West India Company into the Pacific in 1721–22 to look for Terra Australis. He found Rapa Nui on Easter Sunday 1722, the first European known to have seen it, and sighted islands in the Tuamotus and the Manuʻa group of Samoa. The Arend was lost on a reef in the Tuamotus.",
+    "sources": [
+      "jacob-roggeveen"
+    ],
+    "view": {
+      "lat": -20,
+      "lon": -130,
+      "zoom": 1.5
+    }
+  },
+  "samuel-wallis": {
+    "name": "Samuel Wallis",
+    "bio": "A Royal Navy captain who commanded HMS Dolphin on a voyage of discovery in 1766–68. He was the first European to anchor at Tahiti, where he stayed from June to July 1767 and claimed the island for George III as \"King George the Third's Island\".",
+    "sources": [
+      "samuel-wallis"
+    ],
+    "view": {
+      "lat": -17.5,
+      "lon": -149.5,
+      "zoom": 2
+    }
+  },
+  "bougainville": {
+    "name": "Louis Antoine de Bougainville",
+    "bio": "A French officer and writer who led the first French circumnavigation, in 1766–69, in the Boudeuse and the Étoile. He reached Tahiti in April 1768, nine months after Wallis, and named it Nouvelle-Cythère. His account of the voyage, with its picture of Tahiti as a gentle paradise, was widely read in Europe.",
+    "sources": [
+      "bougainville"
+    ],
+    "view": {
+      "lat": -17.5,
+      "lon": -149.3,
+      "zoom": 2
+    }
+  },
+  "ahutoru": {
+    "name": "Ahutoru",
+    "bio": "A Tahitian who went aboard Bougainville's Boudeuse at Tahiti in April 1768 and sailed with her to France, where he spent eleven months in Paris. In 1770 the French shipped him home; he fell ill with smallpox on the way and died in 1771 without reaching Tahiti.",
+    "sources": [
+      "ahutoru"
+    ],
+    "death": {
+      "lon": 47.0,
+      "lat": -25.0,
+      "date": "1771",
+      "label": "Ahutoru dies of smallpox on the way home, 1771",
+      "source": "Wikipedia, Ahutoru",
+      "cite": "ahutoru",
+      "confidence": "inferred",
+      "text": "He died of smallpox in Madagascar on the way home, before reaching Tahiti. The mark stands on the south of the island; the place of his death is not given in the sources used here."
+    },
+    "view": {
+      "lat": -17.5,
+      "lon": -149.3,
+      "zoom": 2
+    }
+  },
+  "william-bligh": {
+    "name": "William Bligh",
+    "bio": "A Royal Navy officer who had been Cook's sailing master on the third voyage. In 1787 he took HMS Bounty to Tahiti to collect breadfruit plants. After the mutiny of 28 April 1789 he and eighteen loyal men were set adrift in the launch; he navigated some 3,600 nautical miles to Timor in 47 days without losing anyone to the sea.",
+    "sources": [
+      "william-bligh",
+      "mutiny-on-the-bounty"
+    ],
+    "view": {
+      "lat": -15,
+      "lon": -175,
+      "zoom": 2
+    }
+  },
+  "fletcher-christian": {
+    "name": "Fletcher Christian",
+    "bio": "The master's mate who led the mutiny on the Bounty on 28 April 1789. He took the ship to Tubuai and Tahiti and, with eight mutineers, Tahitian men and women, settled at Pitcairn Island in January 1790, burning the ship. He was killed there in the years after, by most accounts in 1793.",
+    "sources": [
+      "fletcher-christian",
+      "pitcairn-islands"
+    ],
+    "death": {
+      "lon": -130.1,
+      "lat": -25.07,
+      "date": "c. 1793",
+      "label": "Fletcher Christian killed on Pitcairn, c. 1793",
+      "source": "Wikipedia, Fletcher Christian",
+      "cite": "fletcher-christian",
+      "confidence": "inferred",
+      "text": "The usual account is that he was shot by Polynesian men on the island. The mark stands on Pitcairn, not on the place.",
+      "doubt": "A rumour that he escaped and returned to England has been repeated since 1808; most historians reject it."
+    },
+    "view": {
+      "lat": -25.07,
+      "lon": -130.1,
+      "zoom": 2.5
+    }
+  },
+  "john-norton": {
+    "name": "John Norton",
+    "bio": "A quartermaster of the Bounty who stayed loyal to Bligh. When the launch put in at Tofua on 2 May 1789 for supplies, islanders attacked; he was stoned to death on the beach while helping to cast off.",
+    "sources": [
+      "mutiny-on-the-bounty"
+    ],
+    "death": {
+      "lon": -175.07,
+      "lat": -19.75,
+      "date": "2 May 1789",
+      "label": "John Norton killed at Tofua, 1789",
+      "source": "Wikipedia, Mutiny on the Bounty",
+      "cite": "mutiny-on-the-bounty",
+      "confidence": "inferred",
+      "text": "The attack on the shore party at Tofua killed the quartermaster; the rest got away in the launch. The mark stands on the island, not on the cove."
+    },
+    "view": {
+      "lat": -19.75,
+      "lon": -175.07,
+      "zoom": 2.5
+    }
+  },
+  "mau-piailug": {
+    "name": "Mau Piailug",
+    "bio": "A master navigator of Satawal in the Caroline Islands, trained from childhood in the old way of finding islands by stars, swells and birds. In 1976 he guided the Hōkūleʻa from Hawaiʻi to Tahiti without instruments and later taught the navigation to Hawaiians, among them Nainoa Thompson. He died in 2010.",
+    "sources": [
+      "mau-piailug",
+      "hokulea"
+    ],
+    "born": {
+      "lon": 147.0,
+      "lat": 7.37,
+      "date": "1932",
+      "place": "Satawal, Caroline Islands",
+      "label": "Mau Piailug born on Satawal, 1932",
+      "source": "Wikipedia, Mau Piailug",
+      "cite": "mau-piailug",
+      "confidence": "inferred",
+      "text": "The mark stands on the island."
+    },
+    "death": {
+      "lon": 147.0,
+      "lat": 7.37,
+      "date": "12 Jul 2010",
+      "label": "Mau Piailug dies on Satawal, 2010",
+      "source": "Wikipedia, Mau Piailug",
+      "cite": "mau-piailug",
+      "confidence": "inferred",
+      "text": "He died at home on Satawal. The mark stands on the island."
+    },
+    "view": {
+      "lat": 7.4,
+      "lon": 147,
+      "zoom": 2
+    }
   }
 }

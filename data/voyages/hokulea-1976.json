@@ -1,0 +1,81 @@
+{
+  "id": "hokulea-1976",
+  "title": "The Hōkūleʻa sails to Tahiti, 1976",
+  "short": "Hōkūleʻa 1976",
+  "who": [
+    "mau-piailug"
+  ],
+  "when": "1976",
+  "summary": "A double-hulled canoe built to prove that Polynesians could have crossed the Pacific on purpose. Hōkūleʻa left Maui on 1 May 1976 and reached Tahiti 34 days later, steered by the Micronesian master navigator Mau Piailug using the stars, swells and birds alone. The voyage helped start the Hawaiian cultural renaissance and a revival of non-instrument navigation across Polynesia.",
+  "sources": [
+    "hokulea",
+    "mau-piailug"
+  ],
+  "legs": [
+    {
+      "from": "Maui",
+      "to": "Papeete, Tahiti",
+      "dates": "1 May – 4 Jun 1976",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          -156.6,
+          20.45
+        ],
+        [
+          -156.7,
+          19.4
+        ],
+        [
+          -156.2,
+          18.0
+        ],
+        [
+          -155.5,
+          14
+        ],
+        [
+          -155,
+          6
+        ],
+        [
+          -153,
+          0
+        ],
+        [
+          -151,
+          -7
+        ],
+        [
+          -149.9,
+          -14
+        ],
+        [
+          -149.6,
+          -17.3
+        ],
+        [
+          -149.53,
+          -17.49
+        ]
+      ],
+      "source": "Wikipedia, Hōkūleʻa: the landfalls and dates; the line between them is drawn by hand",
+      "note": "The canoe was held to the northeast trades, crossed the doldrums and came down on Tahiti; the drawn line is the general shape, not Mau's own track"
+    }
+  ],
+  "events": [
+    {
+      "kind": "landfall",
+      "lon": -149.57,
+      "lat": -17.53,
+      "date": "4 Jun 1976",
+      "label": "Papeete: Hōkūleʻa arrives",
+      "source": "Wikipedia, Hōkūleʻa",
+      "cite": "hokulea",
+      "text": "About 17,000 people met the canoe on the shore. The voyage showed that a deliberate crossing by navigating without instruments could be done in a canoe of the old kind.",
+      "confidence": "attested"
+    }
+  ]
+}
