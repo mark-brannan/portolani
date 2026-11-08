@@ -681,3 +681,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261108t122151z
 - jomon-culture is a migration record with no legs and two waypoints (Ikawazu, Hokkaido's Zoku-Jomon), the resident layer drawn as beads, not a new kind. Undo: revert the file and its index line. ([#412](https://github.com/mark-brannan/portolani/pull/412))
+
+### 20261108t122154z
+- Azumi record dated c. 250 - 700 (the page's 3rd to 7th century) so the index's start-year test places it; first-peoples-japan dated c. 36,000 - 30,000 BC after sahul-peopling's years-ago convention. Undo: change the when lines and the index order. ([#412](https://github.com/mark-brannan/portolani/pull/412))
