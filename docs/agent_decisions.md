@@ -687,3 +687,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261108t125339z
 - Wakō drawn as one migration record with early and late phases by reach, not two records ([#413](https://github.com/mark-brannan/portolani/pull/413))
+
+### 20261108t125343z
+- Xu Xiake: dated stages and the Tengchong leg left out; only sources read are drawn ([#413](https://github.com/mark-brannan/portolani/pull/413))
