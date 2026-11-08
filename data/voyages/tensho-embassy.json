@@ -1,0 +1,344 @@
+{
+  "id": "tensho-embassy",
+  "title": "The Tenshō embassy to Europe, 1582–1590",
+  "short": "Tenshō embassy",
+  "who": [
+    "mancio-ito",
+    "miguel-chijiwa",
+    "julio-nakaura",
+    "martinho-hara"
+  ],
+  "when": "1582–1590",
+  "summary": "Four Japanese boys, sent by Christian daimyō and the Jesuit Alessandro Valignano, left Nagasaki in February 1582 for the Pope and the kings of Spain and Portugal. They reached Lisbon in August 1584, met Philip II in Madrid and Gregory XIII and Sixtus V in Rome, and came home on 21 July 1590.",
+  "sources": [
+    "tensho-embassy"
+  ],
+  "legs": [
+    {
+      "from": "Nagasaki",
+      "to": "Macau",
+      "dates": "Feb 1582",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Tenshō embassy (Wikipedia): left Nagasaki in February 1582, by Macau",
+      "points": [
+        [
+          129.7,
+          32.6
+        ],
+        [
+          127.0,
+          29.0
+        ],
+        [
+          124.0,
+          26.5
+        ],
+        [
+          122.8,
+          26.2
+        ],
+        [
+          120.5,
+          25.5
+        ],
+        [
+          119.0,
+          23.5
+        ],
+        [
+          117.0,
+          22.0
+        ],
+        [
+          113.6,
+          22.1
+        ]
+      ]
+    },
+    {
+      "from": "Macau",
+      "to": "Malacca",
+      "dates": "1582",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Tenshō embassy (Wikipedia): by Macau and Malacca; the course between is not in the source",
+      "note": "Ends at the mouth of the Singapore Strait.",
+      "points": [
+        [
+          113.6,
+          22.1
+        ],
+        [
+          112.0,
+          18.0
+        ],
+        [
+          111.0,
+          12.0
+        ],
+        [
+          108.0,
+          8.5
+        ],
+        [
+          106.0,
+          5.0
+        ],
+        [
+          105.5,
+          2.0
+        ]
+      ]
+    },
+    {
+      "from": "Singapore Strait",
+      "to": "Malacca",
+      "dates": "1582",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Tenshō embassy (Wikipedia): by Macau and Malacca",
+      "note": "Through the strait; the land test cannot follow so narrow a water, so it is drawn straight.",
+      "points": [
+        [
+          105.5,
+          2.0
+        ],
+        [
+          104.2,
+          1.2
+        ],
+        [
+          102.25,
+          2.19
+        ]
+      ]
+    },
+    {
+      "from": "Malacca",
+      "to": "Cochin",
+      "dates": "1582–83",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Tenshō embassy (Wikipedia): by Malacca and Cochin",
+      "points": [
+        [
+          100.5,
+          3.4
+        ],
+        [
+          99.0,
+          5.0
+        ],
+        [
+          96.0,
+          6.4
+        ],
+        [
+          88.0,
+          4.5
+        ],
+        [
+          82.0,
+          5.2
+        ],
+        [
+          78.5,
+          6.6
+        ],
+        [
+          76.5,
+          7.6
+        ],
+        [
+          75.8,
+          9.0
+        ],
+        [
+          75.9,
+          9.95
+        ]
+      ]
+    },
+    {
+      "from": "Cochin",
+      "to": "Goa",
+      "dates": "1583",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Tenshō embassy (Wikipedia): by Cochin and Goa",
+      "points": [
+        [
+          75.9,
+          9.95
+        ],
+        [
+          74.4,
+          12.5
+        ],
+        [
+          73.5,
+          15.4
+        ]
+      ]
+    },
+    {
+      "from": "Goa",
+      "to": "Lisbon",
+      "dates": "1583–Aug 1584",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Tenshō embassy (Wikipedia): reached Lisbon in August 1584; the way round the Cape and its stops are not in the source",
+      "points": [
+        [
+          73.5,
+          15.4
+        ],
+        [
+          68.0,
+          5.0
+        ],
+        [
+          58.0,
+          -8.0
+        ],
+        [
+          52.0,
+          -22.0
+        ],
+        [
+          40.0,
+          -33.0
+        ],
+        [
+          24.0,
+          -37.0
+        ],
+        [
+          15.0,
+          -35.0
+        ],
+        [
+          8.0,
+          -28.0
+        ],
+        [
+          -1.0,
+          -19.0
+        ],
+        [
+          -12.0,
+          -3.0
+        ],
+        [
+          -20.0,
+          15.0
+        ],
+        [
+          -17.0,
+          28.0
+        ],
+        [
+          -12.0,
+          37.0
+        ],
+        [
+          -9.4,
+          38.65
+        ]
+      ]
+    },
+    {
+      "from": "Lisbon",
+      "to": "Madrid",
+      "dates": "1584–85",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Tenshō embassy (Wikipedia): met Philip II in Madrid",
+      "points": [
+        [
+          -9.14,
+          38.72
+        ],
+        [
+          -6.0,
+          39.2
+        ],
+        [
+          -3.7,
+          40.42
+        ]
+      ]
+    },
+    {
+      "from": "Madrid",
+      "to": "Rome",
+      "dates": "1585",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Tenshō embassy (Wikipedia): met Gregory XIII and Sixtus V in Rome; the road is not in the source",
+      "note": "An editorial line; the way through Spain and Italy is not drawn from the source.",
+      "points": [
+        [
+          -3.7,
+          40.42
+        ],
+        [
+          2.0,
+          41.4
+        ],
+        [
+          8.0,
+          43.9
+        ],
+        [
+          12.5,
+          41.9
+        ]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": -3.7,
+      "lat": 40.42,
+      "date": "1584–85",
+      "label": "Philip II receives them at Madrid",
+      "source": "the Tenshō embassy (Wikipedia)",
+      "cite": "tensho-embassy",
+      "confidence": "attested",
+      "text": "They met Philip II in Madrid."
+    },
+    {
+      "kind": "event",
+      "lon": 12.5,
+      "lat": 41.9,
+      "date": "1585",
+      "label": "Pope Gregory XIII and Sixtus V",
+      "source": "Tenshō embassy (Wikipedia)",
+      "cite": "tensho-embassy",
+      "confidence": "attested",
+      "text": "They met Gregory XIII and, after him, Sixtus V. Mancio Itō was made a Knight of the Golden Spur."
+    },
+    {
+      "kind": "event",
+      "lon": 129.87,
+      "lat": 32.75,
+      "date": "21 Jul 1590",
+      "label": "Home at Nagasaki",
+      "source": "Tenshō embassy (Wikipedia)",
+      "cite": "tensho-embassy",
+      "confidence": "attested",
+      "text": "They returned on 21 July 1590. The way home is not drawn here: the article read does not give its stops."
+    }
+  ]
+}

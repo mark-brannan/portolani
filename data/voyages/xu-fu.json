@@ -1,0 +1,82 @@
+{
+  "id": "xu-fu",
+  "title": "Xu Fu's voyages to the eastern seas, 219 and 210 BC",
+  "short": "Xu Fu",
+  "who": [
+    "xu-fu"
+  ],
+  "when": "219 and 210 BC",
+  "summary": "Qin Shi Huang is said to have sent the sorcerer Xu Fu twice, in 219 and 210 BC, to find the isles of the immortals, with sixty ships and thousands of boys and girls. The Records of the Grand Historian say he found flat plains and wide swamps and made himself king. That he reached Japan is a tradition first written down more than a thousand years later.",
+  "sources": [
+    "xu-fu"
+  ],
+  "legs": [
+    {
+      "from": "the Qi coast",
+      "to": "the eastern sea",
+      "dates": "219 / 210 BC",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "speculative",
+      "source": "Xu Fu (Wikipedia): searched for Penglai for several years in 219 BC; a second voyage in 210 BC never returned; where is not known",
+      "doubt": "Where he went is not known: the Records of the Three Kingdoms and the Book of the Later Han say Danzhou, whose place is unknown, and the Japan landing is a later monk's tradition. Some modern scholars think a settlement possible, others find the accounts inconsistent and the evidence thin.",
+      "note": "Drawn to Kumano only to show the Japanese tradition; the Chinese sources do not say.",
+      "points": [
+        [
+          122.8,
+          37.9
+        ],
+        [
+          123.5,
+          36.0
+        ],
+        [
+          125.0,
+          33.5
+        ],
+        [
+          127.5,
+          29.8
+        ],
+        [
+          132.0,
+          31.0
+        ],
+        [
+          134.5,
+          32.6
+        ],
+        [
+          136.0,
+          33.3
+        ]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "landfall",
+      "lon": 135.99,
+      "lat": 33.72,
+      "date": "210 BC",
+      "label": "Shingū, the Japanese tradition of Xu Fu",
+      "source": "Xu Fu (Wikipedia)",
+      "cite": "xu-fu",
+      "confidence": "speculative",
+      "doubt": "This is a tradition first written down about 951–960 by the monk Yichu, who named Mount Fuji as Penglai; no source of his own time puts Xu Fu in Japan.",
+      "text": "Jofuku Park in Shingū, Wakayama, is dedicated to him. In Japan he is worshipped as a god of farming, medicine and silk, and credited with bringing them."
+    },
+    {
+      "kind": "landfall",
+      "lon": 138.73,
+      "lat": 35.36,
+      "date": "210 BC",
+      "label": "Mount Fuji, Penglai in Yichu's account",
+      "source": "Xu Fu (Wikipedia)",
+      "cite": "xu-fu",
+      "confidence": "speculative",
+      "doubt": "A tenth-century identification, more than a thousand years after the voyage.",
+      "text": "Yichu, a monk of the Later Zhou (951–960), wrote that Xu Fu landed in Japan and named Mount Fuji as Penglai."
+    }
+  ]
+}

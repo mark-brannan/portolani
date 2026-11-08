@@ -1,0 +1,185 @@
+{
+  "id": "yamada-nagamasa",
+  "title": "Yamada Nagamasa in Siam, c. 1612–1630",
+  "short": "Yamada Nagamasa",
+  "who": [
+    "yamada-nagamasa"
+  ],
+  "when": "c. 1612 – 1630",
+  "summary": "A palanquin bearer from Numazu, it is said, who settled in Ayutthaya about 1612, rose to head its Japanese quarter, went to Japan in 1624 for a Red Seal permit, came back in 1627, and in 1630 was made governor of Ligor and poisoned in the succession struggle after King Songtham died.",
+  "sources": [
+    "yamada-nagamasa"
+  ],
+  "legs": [
+    {
+      "from": "Nagasaki",
+      "to": "Ayutthaya",
+      "dates": "c. 1612",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Yamada Nagamasa (Wikipedia): settled in Ayutthaya about 1612; the port he left from is not in the source",
+      "note": "Nagasaki is the usual Japanese port for Red Seal ships to Siam, not stated in the source.",
+      "points": [
+        [
+          129.7,
+          32.6
+        ],
+        [
+          127.0,
+          29.0
+        ],
+        [
+          122.0,
+          23.0
+        ],
+        [
+          115.0,
+          15.0
+        ],
+        [
+          109.0,
+          9.0
+        ],
+        [
+          102.5,
+          9.0
+        ],
+        [
+          100.5,
+          12.5
+        ]
+      ]
+    },
+    {
+      "from": "Ayutthaya",
+      "to": "Nagasaki",
+      "dates": "1624",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Yamada Nagamasa (Wikipedia): in Japan 1624 to 1627, seeking a Red Seal permit",
+      "points": [
+        [
+          100.5,
+          12.5
+        ],
+        [
+          102.5,
+          9.0
+        ],
+        [
+          109.0,
+          9.0
+        ],
+        [
+          115.0,
+          15.0
+        ],
+        [
+          122.0,
+          23.0
+        ],
+        [
+          127.0,
+          29.0
+        ],
+        [
+          129.7,
+          32.6
+        ]
+      ]
+    },
+    {
+      "from": "Nagasaki",
+      "to": "Ayutthaya",
+      "dates": "1627",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Yamada Nagamasa (Wikipedia): back in Siam after 1627",
+      "points": [
+        [
+          129.7,
+          32.6
+        ],
+        [
+          127.0,
+          29.0
+        ],
+        [
+          122.0,
+          23.0
+        ],
+        [
+          115.0,
+          15.0
+        ],
+        [
+          109.0,
+          9.0
+        ],
+        [
+          102.5,
+          9.0
+        ],
+        [
+          100.5,
+          12.5
+        ]
+      ]
+    },
+    {
+      "from": "Ayutthaya",
+      "to": "Ligor",
+      "dates": "1630",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Yamada Nagamasa (Wikipedia): made governor of Ligor (Nakhon Si Thammarat) in 1630",
+      "points": [
+        [
+          100.6,
+          12.2
+        ],
+        [
+          101.3,
+          10.0
+        ],
+        [
+          100.9,
+          8.7
+        ],
+        [
+          100.4,
+          8.5
+        ]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": 100.56,
+      "lat": 14.35,
+      "date": "1617 – 1630",
+      "label": "Ban Yipun, the Japanese quarter",
+      "source": "Yamada Nagamasa (Wikipedia)",
+      "cite": "yamada-nagamasa",
+      "confidence": "attested",
+      "text": "About a thousand people lived in the Japanese village of Ayutthaya: traders, Christian converts and former samurai. He headed it from 1617."
+    },
+    {
+      "kind": "event",
+      "lon": 106.82,
+      "lat": -6.13,
+      "date": "1620s",
+      "label": "Alleged privateering near Batavia",
+      "source": "Yamada Nagamasa (Wikipedia)",
+      "cite": "yamada-nagamasa",
+      "confidence": "speculative",
+      "doubt": "The privateering is alleged, not documented in the source read; the tales of treasure buried in Australia, told of him, the same article calls highly unlikely.",
+      "text": "He is alleged to have attacked Dutch ships near Batavia."
+    }
+  ]
+}

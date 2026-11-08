@@ -1,0 +1,57 @@
+{
+  "id": "jomon-yayoi",
+  "kind": "migration",
+  "title": "The crossing to Kyushu and the coming of rice, c. 1000–300 BC",
+  "short": "Jōmon to Yayoi",
+  "who": [],
+  "when": "c. 1000 – 300 BC",
+  "summary": "Wet-rice farming appears first in northern Kyushu, with tools and pottery of Korean types, and the hunter-gatherer Jōmon give way to the Yayoi. Some scholars see an influx of farmers from the continent; others credit the farming itself for much of the rise in numbers. The start is disputed: radiocarbon dates could push it back to 1000–800 BC against the usual 300 BC.",
+  "sources": [
+    "yayoi-period"
+  ],
+  "legs": [
+    {
+      "from": "the southern Korean coast",
+      "to": "northern Kyushu",
+      "dates": "c. 1000 – 300 BC",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Yayoi period (Wikipedia): farming methods, tools and some pottery traits came from Korea; the earliest evidence is in northern Kyushu",
+      "reach": [
+        0,
+        1
+      ],
+      "heads": "both",
+      "doubt": "When it began, and whether it was a movement of people or of farming, is argued: the radiocarbon dates that would take it back to 1000–800 BC are highly controversial, and some scholars say migration alone cannot explain the rise in numbers.",
+      "note": "A second reading brings irrigated rice from the Yangtze region by way of the Ryukyu islands; it is not drawn.",
+      "points": [
+        [
+          129.1,
+          35.1
+        ],
+        [
+          129.7,
+          34.3
+        ],
+        [
+          130.3,
+          33.7
+        ]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "waypoint",
+      "lon": 130.46,
+      "lat": 33.57,
+      "date": "c. 300 BC, perhaps earlier",
+      "label": "Itazuke, northern Kyushu",
+      "source": "Yayoi period (Wikipedia)",
+      "cite": "yayoi-period",
+      "confidence": "conventional",
+      "text": "Itazuke, or Nabatake nearby, is named among the earliest sites of wet-rice farming; the article says it is still debated. The usual date for the Yayoi is about 300 BC to AD 300."
+    }
+  ]
+}
