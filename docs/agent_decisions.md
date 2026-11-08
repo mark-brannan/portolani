@@ -651,3 +651,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261108t082349z
 - Roggeveen's first leg starts at the Horn rather than relabelled Undo: move the point back to [-65,-55.2] and rename from ([#409](https://github.com/mark-brannan/portolani/pull/409))
+
+### 20261108t082359z
+- Voyage index merge order: burke-and-wills before nain-singh, amundsen last Undo: reorder index.json ([#407](https://github.com/mark-brannan/portolani/pull/407))
