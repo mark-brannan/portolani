@@ -1,0 +1,90 @@
+{
+  "id": "mamiya-rinzo",
+  "title": "Mamiya Rinzō in Sakhalin and up the Amur, 1808–1809",
+  "short": "Mamiya Rinzō",
+  "who": ["mamiya-rinzo"],
+  "when": "1808 – 1809",
+  "summary": "A surveyor in the shogunate's service, sent north in 1808 to chart Sakhalin. He took the east shore while Matsuda Denjūrō took the west, crossed the mountains to join him, and showed that Sakhalin was an island, as La Pérouse had in 1787. In 1809 he joined a trading party across the strait to the mainland, hauled a boat over a pass into Lake Kizi, and went up the Amur to Deleng, a Qing trading post where about 500 indigenous traders camped. The coasts are sailed, the Amur leg is by land and river; the way home, back to Soya in November 1809, is not drawn.",
+  "sources": ["mamiya-rinzo", "mamiya-nippon", "mamiya-eajrs"],
+  "legs": [
+    {
+      "from": "Soya",
+      "to": "Cape Patience, Sakhalin",
+      "dates": "1808",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Mamiya Rinzō (Wikipedia): Mamiya travelled the eastern shore of Sakhalin while Matsuda took the western; the course is the east coast, the stops between are not in the article",
+      "points": [[141.93, 45.55], [142.3, 45.8], [143.4, 45.8], [144.3, 46.6], [144.9, 47.6], [144.8, 48.4]]
+    },
+    {
+      "from": "Cape Patience",
+      "to": "the west coast, where Matsuda waited",
+      "dates": "1808",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Mamiya Rinzō (Wikipedia): from near Cape Patience Mamiya crossed the mountains to join Matsuda; where they met is not given",
+      "note": "The meeting place on the west coast is the drawing's guess; the article names none.",
+      "points": [[144.65, 48.5], [143.6, 48.9], [142.7, 49.0], [142.1, 49.0]]
+    },
+    {
+      "from": "the Sakhalin shore",
+      "to": "Taba Bay, on the mainland",
+      "dates": "Aug 1809",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "nippon.com: he joined a trading party from Sakhalin and crossed in fog and strong currents to Taba Bay, then called Mushibo, the nearest point on the strait to the Amur",
+      "note": "The Sakhalin end and the bay's position are approximate.",
+      "points": [[141.65, 52.0], [141.3, 51.8], [141.1, 51.6], [141.0, 51.5]]
+    },
+    {
+      "from": "Taba Bay",
+      "to": "Deleng, on the Amur",
+      "dates": "Aug – autumn 1809",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "nippon.com: he hauled his boat up a hill and over a pass into Lake Kizi, from which the party reached the river, then went upriver to Deleng; Sasaki Shirō places Deleng at Novoilinovka, about 120 km east of Komsomolsk-on-Amur",
+      "note": "River and portage together; the course between the lake and the post is the drawing's.",
+      "points": [[141.0, 51.5], [140.5, 51.3], [140.0, 51.0], [139.4, 50.8], [138.8, 50.65]]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": 142.1,
+      "lat": 49.0,
+      "date": "1808",
+      "label": "Sakhalin shown to be an island",
+      "source": "Mamiya Rinzō (Wikipedia)",
+      "cite": "mamiya-rinzo",
+      "confidence": "attested",
+      "text": "Mamiya's work showed that Sakhalin was an island and not joined to the Asian continent. La Pérouse had documented this in 1787. Japan later named the strait after Mamiya. The mark stands on the west coast where the two parties met; the article gives no place."
+    },
+    {
+      "kind": "event",
+      "lon": 138.8,
+      "lat": 50.65,
+      "date": "1809",
+      "label": "Deleng, the Qing trading post",
+      "source": "nippon.com",
+      "cite": "mamiya-nippon",
+      "confidence": "inferred",
+      "doubt": "The EAJRS paper spells the name Deren, and the post's site rests on one scholar's reading, Sasaki Shirō's, of Mamiya's description.",
+      "text": "By Mamiya's record the post was a square about 25 metres to a side inside a double palisade, with huts where Qing officials collected furs; about 500 indigenous traders camped around it. Mamiya returned to Soya in November 1809."
+    },
+    {
+      "kind": "event",
+      "lon": 141.0,
+      "lat": 51.5,
+      "date": "Aug 1809",
+      "label": "Landing at Taba Bay",
+      "source": "nippon.com",
+      "cite": "mamiya-nippon",
+      "confidence": "inferred",
+      "text": "The bay was then called Mushibo. The nearest point on the strait to the Amur, it is where the portage to Lake Kizi began."
+    }
+  ]
+}

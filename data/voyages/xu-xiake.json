@@ -1,0 +1,90 @@
+{
+  "id": "xu-xiake",
+  "title": "Xu Xiake's great journey to the southwest, 1636–1640",
+  "short": "Xu Xiake",
+  "who": ["xu-xiake", "gu-xing"],
+  "when": "1636 – 1640",
+  "summary": "A scholar of Jiangyin who spent more than thirty years travelling China, mostly on foot, and wrote it up as travel diaries of some 404,000 characters. His last and longest journey took him from Jiangyin through Hunan and Guangxi to Guizhou and Yunnan, where he wrote the gazetteer of Jizu Shan and was received at Lijiang. He found the true source of the West River in Guizhou, showed that the Mekong and the Salween are separate rivers, and named the Jinsha, not the Min or the Yalong, as the Yangtze's headwater. Only the way out is drawn; the stages are the diaries' and the line between them the drawing's.",
+  "sources": ["xu-xiake", "xu-xiake-zh"],
+  "legs": [
+    {
+      "from": "Jiangyin",
+      "to": "Leiyang, Hunan",
+      "dates": "1636 – Apr 1637",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Chinese Wikipedia (徐霞客): robbed on the Xiang River in February 1637, and in April 1637 near Leiyang with no food or money; the article gives no departure date or earlier stages",
+      "note": "The stages between Jiangyin and Hunan are not in the pages read; the line is the direct way.",
+      "points": [[120.27, 31.84], [118.0, 30.0], [115.5, 28.7], [113.6, 27.6], [112.86, 26.42]]
+    },
+    {
+      "from": "Leiyang",
+      "to": "Guilin and across Guangxi",
+      "dates": "1637",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Chinese Wikipedia (徐霞客): the Guangxi diary (粤西游日记) begins on the 26th day of the tenth month of 1637 by the Chinese calendar",
+      "note": "Guilin is the drawing's choice for the way through Guangxi; the pages read name no Guangxi town.",
+      "points": [[112.86, 26.42], [111.6, 26.0], [110.29, 25.27], [109.5, 24.9]]
+    },
+    {
+      "from": "Guangxi",
+      "to": "Kunming, Yunnan",
+      "dates": "1638",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Xu Xiake (Wikipedia): in Guizhou he found the true source of the West River; the route between and the date of entering Yunnan are not given",
+      "doubt": "The year and the course of the Guizhou and Yunnan stage are not settled by the two pages read.",
+      "points": [[109.5, 24.9], [107.9, 25.9], [106.7, 26.6], [104.8, 25.9], [102.7, 25.04]]
+    },
+    {
+      "from": "Kunming",
+      "to": "Lijiang, by Jizu Shan",
+      "dates": "Yunnan",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Chinese Wikipedia (徐霞客): Qian Qianyi's account has him finish the Jizu Shan gazetteer in three months and the Lijiang prefect, Mu, supply him with provisions and a sedan chair; the dates are not given",
+      "points": [[102.7, 25.04], [101.5, 25.5], [100.35, 25.95], [100.23, 26.87]]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": 112.86,
+      "lat": 26.42,
+      "date": "Apr 1637",
+      "label": "Penniless near Leiyang",
+      "source": "Chinese Wikipedia (徐霞客)",
+      "cite": "xu-xiake-zh",
+      "confidence": "attested",
+      "text": "Two months after being robbed on the Xiang River, he wrote that the vegetables and rice were all gone and his purse had not a single coin. He went on."
+    },
+    {
+      "kind": "event",
+      "lon": 100.35,
+      "lat": 25.95,
+      "date": "Yunnan",
+      "label": "The Jizu Shan gazetteer",
+      "source": "Chinese Wikipedia (徐霞客)",
+      "cite": "xu-xiake-zh",
+      "confidence": "inferred",
+      "text": "By Qian Qianyi's account he finished the gazetteer of Jizu Shan in three months. The mountain's place is the drawing's from its name; the article gives no coordinates."
+    },
+    {
+      "kind": "event",
+      "lon": 100.23,
+      "lat": 26.87,
+      "date": "Yunnan",
+      "label": "Lijiang, the farthest stop drawn",
+      "source": "Chinese Wikipedia (徐霞客)",
+      "cite": "xu-xiake-zh",
+      "confidence": "inferred",
+      "doubt": "The Chinese article has him fall ill at Tengchong in 1641 and be sent home, which sits badly with a return in 1640; the pages read do not settle it, so no leg is drawn there.",
+      "text": "The Lijiang prefect supplied provisions and a sedan chair for the journey home. The year he reached Lijiang is not given in the pages read."
+    }
+  ]
+}

@@ -4,12 +4,15 @@
   "title": "The Ryukyu Kingdom's trade in the East China and South China Seas, 1372–1630s",
   "short": "Ryukyu trade",
   "who": [
-    "ryukyuan-mariners"
+    "ryukyuan-mariners",
+    "amawari"
   ],
   "when": "1372 – 1630s",
   "summary": "From 1372, when Chūzan became a tributary of Ming China, Okinawa was the hub of a trade between China, Japan, Korea and Southeast Asia. The Rekidai Hōan records 150 voyages to Southeast Asia between 1424 and the 1630s, 61 of them to Siam. The kingdom's golden age ran from the late 1400s to 1526; the Satsuma invasion of 1609 made it subject to Japan as well as China.",
   "sources": [
-    "ryukyu-kingdom"
+    "ryukyu-kingdom",
+    "amawari",
+    "katsuren-castle"
   ],
   "legs": [
     {
@@ -208,6 +211,29 @@
       "cite": "ryukyu-kingdom",
       "confidence": "attested",
       "text": "Chūzan became a tributary of Ming China in 1372; Nanzan followed in 1380 and Hokuzan in 1383. In 1392 Ming sent thirty-six Chinese families from Fujian to manage the kingdom's trade. The kingdom sold Japanese silver, swords, fans and lacquerware and Chinese herbs, coin, ceramics and silk, and bought sappanwood, rhinoceros horn, tin, sugar, iron, ambergris, Indian ivory and Arabian frankincense."
+    },
+    {
+      "kind": "event",
+      "lon": 127.8,
+      "lat": 26.28,
+      "date": "1458",
+      "label": "Nakagusuku, where Gosamaru fell",
+      "source": "Amawari (Wikipedia)",
+      "cite": "amawari",
+      "confidence": "attested",
+      "text": "King Shō Taikyū had Gosamaru build the castle between Katsuren and Shuri. Amawari, whose Katsuren domain had grown rich on maritime trade, accused him of plotting against the king and led the royal armies against it; Gosamaru killed himself. The mark is approximate; the article gives no coordinates."
+    },
+    {
+      "kind": "event",
+      "lon": 127.8786,
+      "lat": 26.33,
+      "date": "1458",
+      "label": "Katsuren Castle, a trading lord's end",
+      "source": "Katsuren Castle (Wikipedia)",
+      "cite": "katsuren-castle",
+      "confidence": "attested",
+      "doubt": "Some historians suspect the royal government arranged the affair to be rid of both Gosamaru and Amawari.",
+      "text": "The royal army under Uni-Ufugusuku took the castle and Amawari was executed; it fell into ruins. Excavations found Chinese Yuan blue-and-white porcelain, and the article credits the site with an entrepôt trade between Japan, Korea, China and Southeast Asia, with Haebaru to the south as its port."
     },
     {
       "kind": "waypoint",

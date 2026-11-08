@@ -3496,5 +3496,107 @@
       "jomon-period",
       "jomon-people"
     ]
+  },
+  "wokou": {
+    "view": { "lat": 33.5, "lon": 127, "zoom": 4 },
+    "name": "The Wakō (wokou)",
+    "group": true,
+    "bio": "The pirate-traders of the Korean and Chinese coasts, in two eras. The early wokou drew on several peoples; the article follows Murai Shōsuke in calling them multi-ethnic. The late wokou of the 1550s were largely led by Chinese traders: a 1553 memorial put them at 10% barbarian, 20% Ryukyuan and the rest from Fujian and Ningbo, and the History of Ming has 30% Japanese in one party of 1555. How Japanese the Japanese pirates were is the question.",
+    "sources": ["wokou"]
+  },
+  "wang-zhi": {
+    "view": { "lat": 31, "lon": 125, "zoom": 4 },
+    "name": "Wang Zhi",
+    "aka": ["Wufeng"],
+    "bio": "A salt merchant from She County in Huizhou who became the greatest of the late wokou. He is said to have brought Portuguese traders to Tanegashima in 1543, joined the Xu brothers' syndicate at Shuangyu in 1544, and led it after the Ming razed Shuangyu in 1548. In 1557 he came to Cengang on Zhoushan to treat for a pardon, was imprisoned at Hangzhou, and was beheaded.",
+    "sources": ["wang-zhi", "wokou"],
+    "death": {
+      "lon": 120.2,
+      "lat": 30.3,
+      "date": "22 Jan 1560",
+      "place": "Hangzhou",
+      "label": "Wang Zhi beheaded at Hangzhou, 1560",
+      "confidence": "attested",
+      "doubt": "The Wokou article gives his death as 1559; the article on Wang Zhi gives the edict as 22 January 1560.",
+      "text": "An imperial edict handed down the death sentence after he had waited for a pardon.",
+      "source": "Wikipedia, Wang Zhi",
+      "cite": "wang-zhi"
+    }
+  },
+  "amawari": {
+    "view": { "lat": 26.3, "lon": 127.8, "zoom": 6 },
+    "name": "Amawari",
+    "bio": "Born to a peasant family in Yara, in what is now Kadena, he overthrew the Katsuren aji and took his domain. The article says he used the opportunities of maritime trade to gain wealth and power, and he married Momoto-fumiagari, a daughter of King Shō Taikyū. In 1458 he accused Gosamaru of plotting against the king and led the royal armies against Nakagusuku, where Gosamaru killed himself. The king then sent an army to Katsuren, where Amawari was defeated and executed.",
+    "sources": ["amawari", "katsuren-castle"],
+    "death": {
+      "lon": 127.8786,
+      "lat": 26.33,
+      "date": "1458",
+      "place": "Katsuren Castle",
+      "label": "Amawari executed at Katsuren, 1458",
+      "confidence": "attested",
+      "doubt": "Some historians suspect the royal government arranged the whole affair to be rid of both Gosamaru and Amawari as rivals.",
+      "text": "The royal army under Uni-Ufugusuku defeated him at the castle. The castle fell into ruins.",
+      "source": "Wikipedia, Amawari",
+      "cite": "amawari"
+    }
+  },
+  "xu-xiake": {
+    "view": { "lat": 28, "lon": 108, "zoom": 4 },
+    "name": "Xu Xiake",
+    "aka": ["Xu Hongzu"],
+    "bio": "Born at Jiangyin on 5 January 1587, he travelled China for more than thirty years, often on foot, and wrote it up in travel diaries of some 404,000 characters. His last journey, from 1636, took him to the southwest. He found the true source of the West River in Guizhou, showed that the Mekong and Salween drain separately, and named the Jinsha as the Yangtze's headwater.",
+    "sources": ["xu-xiake", "xu-xiake-zh"],
+    "born": {
+      "lon": 120.27,
+      "lat": 31.84,
+      "date": "5 Jan 1587",
+      "place": "Jiangyin, Jiangsu",
+      "label": "Xu Xiake born at Jiangyin, 1587",
+      "confidence": "attested",
+      "text": "The mark stands at the town centre.",
+      "source": "Wikipedia, Xu Xiake",
+      "cite": "xu-xiake"
+    },
+    "death": {
+      "lon": 120.27,
+      "lat": 31.84,
+      "date": "8 Mar 1641",
+      "place": "Jiangyin",
+      "label": "Xu Xiake dies at Jiangyin, 1641",
+      "confidence": "attested",
+      "text": "He died aged 54, in the town where he was born. The Chinese article gives the day as the 27th of the first month of 1641 by the Chinese calendar.",
+      "source": "Wikipedia, Xu Xiake",
+      "cite": "xu-xiake"
+    }
+  },
+  "gu-xing": {
+    "view": { "lat": 28, "lon": 108, "zoom": 4 },
+    "name": "Gu Xing",
+    "bio": "Xu Xiake's servant, who travelled with him on his journeys. Nothing more is known from the pages read.",
+    "sources": ["xu-xiake"]
+  },
+  "mamiya-rinzo": {
+    "view": { "lat": 48, "lon": 142, "zoom": 4 },
+    "name": "Mamiya Rinzō",
+    "bio": "A surveyor born in 1775 in Tsukuba District, Hitachi Province, who worked for the shogunate. In 1808 he surveyed the east coast of Sakhalin while Matsuda Denjūrō took the west, and in 1809 he went up the Amur to the Qing trading post at Deleng. Philipp Franz von Siebold published his maps in Europe in 1852.",
+    "sources": ["mamiya-rinzo", "mamiya-nippon"],
+    "born": {
+      "lon": 140.04,
+      "lat": 35.96,
+      "date": "1775",
+      "place": "Tsukuba District, Hitachi Province",
+      "label": "Mamiya Rinzō born in Hitachi, 1775",
+      "confidence": "inferred",
+      "text": "The mark stands at present-day Tsukubamirai, Ibaraki, which the article names as the modern place.",
+      "source": "Wikipedia, Mamiya Rinzō",
+      "cite": "mamiya-rinzo"
+    },
+    "death": {
+      "date": "13 Apr 1844",
+      "text": "He died on 13 April 1844; the article read gives no place.",
+      "source": "Wikipedia, Mamiya Rinzō",
+      "cite": "mamiya-rinzo"
+    }
   }
 }
