@@ -10,16 +10,16 @@
   "legs": [
     {
       "from": "Sakhalin",
-      "to": "Hokkaido and northern Honshu",
+      "to": "Hokkaido",
       "dates": "Late Pleistocene, undated",
       "mode": "land",
       "line": "spline",
       "confidence": "speculative",
-      "source": "Nakazawa 2017: the northern entry from the Russian Far East to Hokkaido, route 2 of six, the only one open on foot at the low sea level",
+      "source": "Nakazawa 2017: the northern entry from the Russian Far East to Hokkaido, route 2 of six, the one open on foot at the low sea level, Sakhalin to Hokkaido",
       "reach": [0, 1],
       "heads": "end",
       "doubt": "Nakazawa 2017 finds this route less likely to have fed the Honshu record than the ones from Korea and southern China; ancient DNA shows gene flow from eastern Siberia into Hokkaido, possibly since the last glacial maximum.",
-      "points": [[142.7, 50.0], [142.0, 46.0], [141.7, 43.5], [141.0, 40.5]]
+      "points": [[142.7, 50.0], [142.0, 46.0], [141.7, 43.5]]
     },
     {
       "from": "the Korean coast",
@@ -31,7 +31,7 @@
       "source": "Nakazawa 2017: route 1, by the Tsushima Strait; with the southern Chinese route the best supported for the early hunter-gatherers",
       "reach": [0, 1],
       "heads": "end",
-      "doubt": "Even at low sea level the crossing took boats; Kaifu and colleagues (2019) put the earliest sea crossing across the strait between Korea and Kyushu, but the course drawn is the usual one, not a find.",
+      "doubt": "Even at low sea level the crossing took boats, but the course drawn is the usual one, not a find.",
       "points": [[129.2, 35.2], [129.4, 34.4], [129.8, 33.9], [130.4, 33.6]]
     },
     {
