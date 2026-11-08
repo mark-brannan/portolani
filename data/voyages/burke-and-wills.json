@@ -67,7 +67,7 @@
           -28.2
         ],
         [
-          140.74,
+          141.08,
           -27.62
         ]
       ],
@@ -85,7 +85,7 @@
       "confidence": "inferred",
       "points": [
         [
-          140.74,
+          141.08,
           -27.62
         ],
         [
@@ -135,7 +135,7 @@
           -24.5
         ],
         [
-          140.74,
+          141.08,
           -27.62
         ]
       ],
@@ -156,7 +156,7 @@
     },
     {
       "kind": "event",
-      "lon": 140.74,
+      "lon": 141.08,
       "lat": -27.62,
       "date": "6 Dec 1860",
       "label": "Cooper Creek: the depot at the Dig Tree",
@@ -174,11 +174,11 @@
       "cite": "burke-and-wills-expedition",
       "confidence": "inferred",
       "doubt": "Wikipedia says there is no documentary proof that Burke and Wills reached or saw the Gulf shore; swamps and tide stopped them short of open sea",
-      "text": "Camp 119 was on the Bynoe River, an arm of the Flinders delta. Burke and Wills pushed on through the swamps and probably reached or saw the Gulf shore about 11 February. Kukatj men gave directions near the Gulf."
+      "text": "Camp 119 was on the Bynoe River, an arm of the Flinders delta. Burke and Wills pushed on through the swamps; whether they reached or saw the Gulf shore is not documented. Kukatj men gave directions near the Gulf."
     },
     {
       "kind": "event",
-      "lon": 140.74,
+      "lon": 141.08,
       "lat": -27.62,
       "date": "15 Sep 1861",
       "label": "King found by Howitt's party",
