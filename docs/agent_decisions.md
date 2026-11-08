@@ -648,3 +648,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261107t201728z
 - Person presets: frame of born, death and voyage legs (narrower longitude wrapping), zoom between 1.5 and 6; a world-wide frame centred on the home where recorded Undo: edit view in data/voyages/people.json ([#404](https://github.com/mark-brannan/portolani/pull/404))
+
+### 20261108t082349z
+- Roggeveen's first leg starts at the Horn rather than relabelled Undo: move the point back to [-65,-55.2] and rename from ([#409](https://github.com/mark-brannan/portolani/pull/409))
