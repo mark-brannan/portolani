@@ -1,0 +1,58 @@
+{
+  "id": "ono-no-imoko",
+  "title": "Ono no Imoko's embassy to Sui China, 607–609",
+  "short": "Ono no Imoko",
+  "who": ["ono-no-imoko"],
+  "when": "607–609",
+  "summary": "In 607 Empress Suiko sent Ono no Imoko to the Sui court with a letter from Prince Shōtoku that began \"The Son of Heaven where the sun rises\". Emperor Yang was angered at being addressed so, but sent his own envoy, Pei Shiqing, back to Japan with him. Imoko sailed again in the autumn of 608 with Pei and a party of students and monks, and was home in 609. The Sui courses and the court's city are not in the sources read, so only the sea road to the Shandong coast is drawn.",
+  "sources": ["ono-no-imoko", "kenzuishi-ja", "kentoshi-ja"],
+  "legs": [
+    {
+      "from": "Naniwa",
+      "to": "Hakata",
+      "dates": "607",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "遣隋使 (Japanese Wikipedia): the embassies left from Sumiyoshi and Naniwa, went by the Inland Sea to Hakata and put out into the Genkai Sea from there",
+      "note": "The page does not tie this to the mission of 607 alone; the waypoints through the Inland Sea are an editorial line.",
+      "points": [[135.25, 34.55], [134.9, 34.55], [134.1, 34.5], [133.4, 34.25], [132.6, 33.95], [132.0, 33.7], [131.5, 33.85], [131.2, 33.88], [131.0, 33.95], [130.6, 34.05], [130.3, 33.95]]
+    },
+    {
+      "from": "Hakata",
+      "to": "Dengzhou, Shandong",
+      "dates": "607",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "遣唐使 (Japanese Wikipedia): the northern course of the Tang embassies, 630–665; no source read gives the course of 607",
+      "note": "Drawn as the northern course of the later embassies, which is how the Sui missions are usually drawn. The sources read do not say where the Sui court received him, so no road inland is drawn.",
+      "points": [[130.3, 33.95], [129.5, 34.05], [128.9, 33.95], [128.0, 34.0], [126.2, 34.2], [125.0, 35.8], [124.6, 37.2], [123.2, 38.2], [121.6, 38.1], [120.8, 37.95]]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": 120.8,
+      "lat": 37.95,
+      "date": "607",
+      "label": "\"The Son of Heaven where the sun rises\"",
+      "source": "Ono no Imoko (Wikipedia); 遣隋使 (Japanese Wikipedia)",
+      "cite": "ono-no-imoko",
+      "confidence": "conventional",
+      "doubt": "Historians differ on what angered Emperor Yang: being called the land of the setting sun, or sharing the title of Son of Heaven.",
+      "text": "The letter began \"The Son of Heaven where the sun rises writes to the Son of Heaven where the sun sets, are you well?\" (Sui shu, quoted in the Japanese article). Emperor Yang was angered, yet sent Pei Shiqing back with Imoko. The sources read do not say which city the court was in; the mark stands on the landing coast."
+    },
+    {
+      "kind": "event",
+      "lon": 135.5,
+      "lat": 34.65,
+      "date": "608",
+      "label": "Pei Shiqing in Japan, and the second embassy",
+      "source": "Ono no Imoko (Wikipedia); 遣隋使 (Japanese Wikipedia)",
+      "cite": "ono-no-imoko",
+      "confidence": "conventional",
+      "text": "Imoko went home with Pei Shiqing, the Sui envoy, and reported that Baekje people had seized the Sui letter on the way. In the autumn of 608 he was sent again, with Pei, and with students and monks among them Takamuko no Kuromaro, Minabuchi no Shōan and the monk Sōmin. He was home in 609 and then largely vanishes from the record. The sources read do not say where Pei landed; the mark stands at Naniwa."
+    }
+  ]
+}

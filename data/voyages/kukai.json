@@ -1,0 +1,79 @@
+{
+  "id": "kukai",
+  "title": "Kūkai to Chang'an, 804–806",
+  "short": "Kūkai",
+  "who": ["kukai"],
+  "when": "804–806",
+  "summary": "Kūkai sailed in 804 on the first of four ships of the embassy led by Fujiwara no Kadanomaro. The ship was held off the coast of Fujian until his letter to the governor, written in Chinese, got it into port. He went on to Chang'an, was initiated at the Qinglong monastery by Huiguo, and returned in 806 with a great many texts and paintings. The way home is not drawn: the sources read name no port.",
+  "sources": ["kukai", "japanese-missions-to-tang"],
+  "legs": [
+    {
+      "from": "Hakata",
+      "to": "the coast of Fujian",
+      "dates": "804",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Kūkai (Wikipedia): the first of four ships reached the province of Fujian some weeks after sailing",
+      "note": "The page names no port on either side: Hakata stands for the embassy's start in Kyushu and the Fujian mark is the coast of the province.",
+      "points": [[130.3, 33.95], [129.4, 33.9], [128.7, 33.2], [128.4, 32.7], [125.5, 29.8], [122.3, 27.2], [120.2, 26.4]]
+    },
+    {
+      "from": "the coast of Fujian",
+      "to": "Chang'an",
+      "dates": "804",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Kūkai (Wikipedia): the governor let the ship dock and the party was told to go to Chang'an",
+      "note": "An editorial line; the page does not give the road.",
+      "points": [[120.2, 26.4], [117.0, 28.5], [113.5, 31.0], [108.94, 34.27]]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": 120.2,
+      "lat": 26.4,
+      "date": "804",
+      "label": "The ship refused entry",
+      "source": "Kūkai (Wikipedia)",
+      "cite": "kukai",
+      "confidence": "attested",
+      "text": "Its passengers were refused entry at first and the ship was impounded. Kūkai wrote to the provincial governor in Chinese, explaining their position, and the governor let it dock. The page does not name the port; the mark stands on the coast of Fujian."
+    },
+    {
+      "kind": "event",
+      "lon": 108.94,
+      "lat": 34.27,
+      "date": "804–805",
+      "label": "Kūkai at Ximing Temple, Chang'an",
+      "source": "Kūkai (Wikipedia)",
+      "cite": "kukai",
+      "confidence": "attested",
+      "text": "The Tang court gave him a place at Ximing Temple, where he began to study Chinese Buddhism, and he studied Sanskrit with the Gandharan pandit Prajñā."
+    },
+    {
+      "kind": "event",
+      "lon": 108.97,
+      "lat": 34.25,
+      "date": "805",
+      "label": "Huiguo initiates Kūkai",
+      "source": "Kūkai (Wikipedia)",
+      "cite": "kukai",
+      "confidence": "attested",
+      "text": "At the Qinglong monastery in Chang'an the monk Huiguo initiated him into Chinese Esoteric Buddhism. Huiguo is said to have described teaching him as like \"pouring water from one vase into another\", and died soon afterward, having told Kūkai to return to Japan."
+    },
+    {
+      "kind": "event",
+      "lon": 130.4,
+      "lat": 33.6,
+      "date": "806",
+      "label": "Kūkai returns to Japan",
+      "source": "Kūkai (Wikipedia)",
+      "cite": "kukai",
+      "confidence": "conventional",
+      "text": "He came home as the eighth patriarch of Esoteric Buddhism with many texts, new to Japan and mostly esoteric, with paintings of his predecessors and with texts on Sanskrit and the Siddhaṃ script. The page names no port; the mark stands at Hakata, where the embassy began."
+    }
+  ]
+}
