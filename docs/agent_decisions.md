@@ -663,3 +663,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261108t110807z
 - Ono no Imoko is drawn only as far as the Shandong coast, on the northern course of the later embassies (conventional); the Sui court's city and any return line are left out because no source read gives them. Kūkai's return is likewise not drawn. Undo: delete the two Naniwa-to-Hakata and Hakata-to-Dengzhou legs of ono-no-imoko ([#410](https://github.com/mark-brannan/portolani/pull/410))
+
+### 20261108t113252z
+- Christopher and Cosmas: Philippines-Indonesia passage drawn as a straight land-mode leg, as Hasekura's San Bernardino leg is; Guam-to-Plymouth stops are inferred from Cavendish's known course. Undo: revert the leg's mode in christopher-and-cosmas.json ([#411](https://github.com/mark-brannan/portolani/pull/411))
