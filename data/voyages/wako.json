@@ -1,11 +1,11 @@
 {
   "id": "wako",
   "kind": "migration",
-  "title": "The Wakō (wokou), the pirate-trader networks of the Korean and Chinese coasts, 1223–1560",
+  "title": "The Wakō (wokou), the pirate-trader networks of the Korean and Chinese coasts, c. 1350–1560",
   "short": "The Wakō",
   "who": ["wokou", "wang-zhi"],
-  "when": "1223 – 1560",
-  "summary": "The Wakō, wokou in Chinese, raided and traded along the coasts of Korea and China in two distinct eras. The early wokou, tied by the article to the aftermath of the Mongol invasions of Japan, were rampant from about 1350 according to Korean records, and drew on several peoples; they fell off after the Goryeo fleet's victory at Jinpo in 1380 and the Treaty of Gyehae of 1443. The late wokou of the 1550s were largely led by Chinese traders, and Wang Zhi, a salt merchant from Huizhou, was the greatest of them. Both phases are drawn as a network layer: the bases and the coasts they worked, not any one voyage.",
+  "when": "c. 1350 – 1560",
+  "summary": "The Wakō, wokou in Chinese, raided and traded along the coasts of Korea and China in two distinct eras. The early wokou, tied by the article to the aftermath of the Mongol invasions of Japan, were rampant from about 1350 according to Korean records, and drew on several peoples; they fell off after the Treaty of Gyehae of 1443. The late wokou of the 1550s were largely led by Chinese traders, and Wang Zhi, a salt merchant from Huizhou, was the greatest of them. Both phases are drawn as a network layer: the bases and the coasts they worked, not any one voyage.",
   "sources": ["wokou", "wang-zhi"],
   "legs": [
     {

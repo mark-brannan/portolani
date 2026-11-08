@@ -32,7 +32,7 @@
     {
       "from": "Guangxi",
       "to": "Kunming, Yunnan",
-      "dates": "1638",
+      "dates": "after Guangxi",
       "mode": "land",
       "line": "spline",
       "confidence": "inferred",
