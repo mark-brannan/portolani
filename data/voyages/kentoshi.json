@@ -1,0 +1,225 @@
+{
+  "id": "kentoshi",
+  "title": "The Japanese embassies to Sui and Tang China, 607–839",
+  "short": "Kentōshi",
+  "who": ["kibi-no-makibi", "abe-no-nakamaro", "saicho", "ganjin", "ennin"],
+  "when": "607–839",
+  "summary": "Japan sent nineteen embassies to Sui and Tang China between 607 and 839, and a twentieth, planned for 894, never sailed. Four ships to a fleet, about a hundred people to a ship, and about a third of those who set out did not come home. The embassies took three courses: north along the Korean coast, straight across the East China Sea from the Gotō Islands, and a southern course by the Nansei islands that scholars cannot show was ever planned. Kūkai and Ono no Imoko have voyages of their own; Ganjin and Ennin have theirs.",
+  "sources": ["japanese-missions-to-tang", "kentoshi-ja", "kenzuishi-ja"],
+  "legs": [
+    {
+      "from": "Naniwa",
+      "to": "Hakata",
+      "dates": "607–838",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "遣隋使 (Japanese Wikipedia): the embassies left from Sumiyoshi and Naniwa, went by the Inland Sea to Hakata and put out into the Genkai Sea from there",
+      "note": "Every course starts here. The waypoints through the Inland Sea are an editorial line.",
+      "points": [[135.25, 34.55], [134.9, 34.55], [134.1, 34.5], [133.4, 34.25], [132.6, 33.95], [132.0, 33.7], [131.5, 33.85], [131.2, 33.88], [131.0, 33.95], [130.6, 34.05], [130.3, 33.95]]
+    },
+    {
+      "from": "Hakata",
+      "to": "the Yangtze mouth",
+      "dates": "702–838",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "遣唐使 (Japanese Wikipedia): the southern course, from the Gotō Islands across the East China Sea, used 702–838",
+      "note": "The ports are named in the source; the waypoints between them are editorial. This was the main course, and the deadly one.",
+      "points": [[130.3, 33.95], [129.4, 33.9], [128.7, 33.2], [128.4, 32.7], [125.5, 31.6], [122.2, 31.5]]
+    },
+    {
+      "from": "Hakata",
+      "to": "Dengzhou, Shandong",
+      "dates": "630–665",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "遣唐使 (Japanese Wikipedia): the northern course, by Tsushima and the west coast of Korea to Dengzhou in Shandong, used 630–665 and given up as relations with the Korean states turned bad",
+      "note": "The source names the stages, not the ports on the Korean coast; the waypoints are editorial.",
+      "points": [[130.3, 33.95], [129.5, 34.05], [128.9, 33.95], [128.0, 34.0], [126.2, 34.2], [125.0, 35.8], [124.6, 37.2], [123.2, 38.2], [121.6, 38.1], [120.8, 37.95]]
+    },
+    {
+      "from": "Bōnotsu, Satsuma",
+      "to": "the Yangtze mouth",
+      "dates": "uncertain",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "doubt": "Sugiyama Hiroshi's work found that a planned course by the Nansei islands cannot be shown to have existed; another view takes it for the way ships drifted when blown off the southern course.",
+      "source": "遣唐使 (Japanese Wikipedia): the Nanto course, from Bōnotsu in Satsuma through the Nansei islands",
+      "note": "The source read does not say where it ended; it is drawn to the Yangtze mouth, where the southern course also ends.",
+      "points": [[130.2, 31.2], [129.9, 30.1], [128.9, 28.4], [127.0, 26.5], [124.3, 28.4], [122.2, 31.2]]
+    },
+    {
+      "from": "the Yangtze mouth",
+      "to": "Chang'an",
+      "dates": "702–838",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "遣唐使 (Japanese Wikipedia): after landing the envoys went by the post relay through Mingzhou, Yangzhou and Dengzhou to the capital",
+      "note": "An editorial line by Yangzhou; the source names the towns, not the road.",
+      "points": [[122.2, 31.5], [119.42, 32.39], [114.0, 33.8], [108.94, 34.27]]
+    },
+    {
+      "from": "Dengzhou, Shandong",
+      "to": "Chang'an",
+      "dates": "630–665",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "遣唐使 (Japanese Wikipedia): after landing the envoys went by the post relay to the capital",
+      "note": "An editorial line; the source names the towns, not the road.",
+      "points": [[120.8, 37.95], [116.0, 36.0], [112.5, 34.7], [108.94, 34.27]]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": 129.55,
+      "lat": 33.37,
+      "date": "804",
+      "label": "Two of four ships lost, 804",
+      "source": "Japanese missions to Tang China (Wikipedia); 遣唐使 (Japanese Wikipedia)",
+      "cite": "japanese-missions-to-tang",
+      "confidence": "attested",
+      "text": "The third ship was wrecked at Hirado on the way out and the fourth was lost; only the first and the second reached China. Kūkai was on the first and Saichō on the second."
+    },
+    {
+      "kind": "event",
+      "lon": 130.5,
+      "lat": 30.35,
+      "date": "753",
+      "label": "The fleet of 753",
+      "source": "遣唐使 (Japanese Wikipedia)",
+      "cite": "kentoshi-ja",
+      "confidence": "attested",
+      "text": "The embassy of 750–753 came home in four ships and the fleet broke up. Fujiwara no Kiyokawa's first ship, with Abe no Nakamaro aboard, was blown to Annam. Ōtomo no Komaro's second ship carried Ganjin: it reached Yakushima, then Bōnotsu, and Dazaifu on 26 December. Kibi no Makibi's third ship sailed with it to Yakushima and drifted on to Taiji in Kii. The fourth caught fire and came ashore at Ibusuki in April 754."
+    },
+    {
+      "kind": "landfall",
+      "lon": 135.95,
+      "lat": 33.6,
+      "date": "753",
+      "label": "Kibi no Makibi lands at Taiji",
+      "source": "吉備真備 (Japanese Wikipedia)",
+      "cite": "kibi-no-makibi-ja",
+      "confidence": "attested",
+      "text": "His third ship drifted to Yakushima and then to Muroezaki at Taiji in Kii. In 754 he was made deputy governor of Dazaifu and went back to Kyushu."
+    },
+    {
+      "kind": "landfall",
+      "lon": 131.0,
+      "lat": 30.6,
+      "date": "735",
+      "label": "Kibi no Makibi comes home by way of Tanegashima",
+      "source": "吉備真備 (Japanese Wikipedia)",
+      "cite": "kibi-no-makibi-ja",
+      "confidence": "attested",
+      "text": "His ship drifted ashore on Tanegashima on the way home. He reached Japan in April 735 with the Tang rites in 130 scrolls, the Daiyan calendar, a sundial, musical instruments and bows and arrows. He had been in China for seventeen years."
+    },
+    {
+      "kind": "event",
+      "lon": 135.8,
+      "lat": 34.69,
+      "date": "764",
+      "label": "Kibi no Makibi heads the Tōdai-ji project",
+      "source": "Kibi no Makibi (Wikipedia)",
+      "cite": "kibi-no-makibi",
+      "confidence": "attested",
+      "text": "In 764 he was made head of the project to build Tōdai-ji. He is credited with bringing back the game of go and the art of embroidery."
+    },
+    {
+      "kind": "event",
+      "lon": 106.2,
+      "lat": 19.3,
+      "date": "752–753",
+      "label": "Abe no Nakamaro's ship wrecked off Annam",
+      "source": "Abe no Nakamaro (Wikipedia)",
+      "cite": "abe-no-nakamaro",
+      "confidence": "inferred",
+      "text": "He had set out for home with Fujiwara no Kiyokawa's mission. The ship was wrecked and ran aground off the coast of Annam; Li Bai heard a false report of his death and wrote a quatrain mourning him. The sources read name no place on the coast, so the mark stands on the coast of northern Vietnam."
+    },
+    {
+      "kind": "event",
+      "lon": 108.94,
+      "lat": 34.27,
+      "date": "755",
+      "label": "Abe no Nakamaro back in Chang'an",
+      "source": "Abe no Nakamaro (Wikipedia)",
+      "cite": "abe-no-nakamaro",
+      "confidence": "attested",
+      "text": "He had gone out with the mission of 717–718, with Kibi no Makibi and Genbō. They went home; he did not. A ship that was to take him back sank soon after leaving in 734, and after the wreck off Annam he reached Chang'an again in 755."
+    },
+    {
+      "kind": "event",
+      "lon": 105.85,
+      "lat": 21.03,
+      "date": "761–767",
+      "label": "Abe no Nakamaro governs Annam",
+      "source": "Abe no Nakamaro (Wikipedia)",
+      "cite": "abe-no-nakamaro",
+      "confidence": "attested",
+      "text": "He served the Tang as governor-protector of Annam, residing in Hanoi."
+    },
+    {
+      "kind": "landfall",
+      "lon": 121.55,
+      "lat": 29.87,
+      "date": "804",
+      "label": "Saichō lands at Mingzhou",
+      "source": "Saichō (Wikipedia)",
+      "cite": "saicho",
+      "confidence": "attested",
+      "text": "The four-ship mission set out in 803, was turned back by storms and put in at Dazaifu before it sailed again. Saichō reached the port of Mingzhou, now Ningbo, in 804, with his disciple Gishin, who spoke Chinese."
+    },
+    {
+      "kind": "event",
+      "lon": 121.03,
+      "lat": 29.2,
+      "date": "804–805",
+      "label": "Saichō on Mount Tiantai",
+      "source": "Saichō (Wikipedia)",
+      "cite": "saicho",
+      "confidence": "attested",
+      "text": "He was allowed to go to Mount Tiantai and studied for about 135 days under Daosui, the seventh patriarch of Tiantai."
+    },
+    {
+      "kind": "landfall",
+      "lon": 129.3,
+      "lat": 34.4,
+      "date": "5 Jun 805",
+      "label": "Saichō back at Tsushima",
+      "source": "Saichō (Wikipedia)",
+      "cite": "saicho",
+      "confidence": "attested",
+      "text": "He and his party were back at Ningbo on the tenth day of the fifth month of 805, and reached Tsushima on the fifth day of the sixth month."
+    },
+    {
+      "kind": "event",
+      "lon": 128.8,
+      "lat": 34.2,
+      "date": "838",
+      "label": "The third ship lost, 838",
+      "source": "Japanese missions to Tang China (Wikipedia); 遣唐使 (Japanese Wikipedia)",
+      "cite": "japanese-missions-to-tang",
+      "confidence": "attested",
+      "doubt": "The two Wikipedias disagree: the English puts the wreck at Tsukushi and 140 aboard who did not reach China; the Japanese puts it off Tsushima with over a hundred dead.",
+      "text": "The third ship was wrecked soon after the fleet left Dazaifu. Ennin sailed with this embassy; his own voyage is on the map under his name."
+    },
+    {
+      "kind": "event",
+      "lon": 135.77,
+      "lat": 35.01,
+      "date": "Aug–Sep 894",
+      "label": "The embassy of 894 that never sailed",
+      "source": "遣唐使 (Japanese Wikipedia)",
+      "cite": "kentoshi-ja",
+      "confidence": "attested",
+      "doubt": "A chronicle entry was long read as the court formally ending the embassies; Ishii Masatoshi argued in 1990 that the entry is unreliable and most researchers agree. The mission was simply never sent.",
+      "text": "Sugawara no Michizane was named ambassador on 21 August. About twenty days later he petitioned the court to reconsider. The Tang fell in 907 and no mission was ever sent. The mark stands at the court in Heian-kyō."
+    }
+  ]
+}

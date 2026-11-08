@@ -3245,5 +3245,136 @@
       "lon": 147,
       "zoom": 2
     }
+  },
+  "ono-no-imoko": {
+    "view": {
+      "lat": 36,
+      "lon": 128,
+      "zoom": 4
+    },
+    "name": "Ono no Imoko",
+    "bio": "The envoy Empress Suiko sent to the Sui court in 607 with Prince Shōtoku's letter to \"the Son of Heaven where the sun sets\". Emperor Yang was angered but sent Pei Shiqing back with him; Imoko sailed again in 608 and was home in 609. Listed first at the fifth rank, he was later raised to the top rank, Greater Virtue, largely for his missions to Sui. No birth or death is recorded.",
+    "sources": [
+      "ono-no-imoko",
+      "kenzuishi-ja"
+    ]
+  },
+  "kibi-no-makibi": {
+    "view": {
+      "lat": 33,
+      "lon": 125,
+      "zoom": 3.5
+    },
+    "name": "Kibi no Makibi",
+    "bio": "A scholar and statesman of the Nara period who went to Tang China with the embassy of 717–718, stayed seventeen years and came home in 735 with the Tang rites, a calendar, a sundial and instruments. He went again in 752 as vice-ambassador and returned in 753, served at Dazaifu, and in 764 was made head of the Tōdai-ji project. He is credited with bringing back the game of go and the art of embroidery.",
+    "sources": [
+      "kibi-no-makibi",
+      "kibi-no-makibi-ja"
+    ],
+    "born": {
+      "date": "695",
+      "text": "The year is from the infobox; the sources read give no place.",
+      "confidence": "inferred",
+      "source": "Kibi no Makibi (Wikipedia)",
+      "cite": "kibi-no-makibi"
+    },
+    "death": {
+      "date": "3 Nov 775",
+      "text": "The Japanese article dates his death to the 2nd day of the 10th month of Hōki 6, which its infobox gives as 3 November 775. No place is stated.",
+      "confidence": "attested",
+      "doubt": "The English article gives his age at death as 80 and the Japanese as 81.",
+      "source": "Kibi no Makibi (Wikipedia); 吉備真備 (Japanese Wikipedia)",
+      "cite": "kibi-no-makibi"
+    }
+  },
+  "abe-no-nakamaro": {
+    "view": {
+      "lat": 28,
+      "lon": 115,
+      "zoom": 3
+    },
+    "name": "Abe no Nakamaro",
+    "aka": [
+      "Chao Heng"
+    ],
+    "bio": "A Japanese student who went to Tang China with the embassy of 717–718 and stayed on as an official. A ship that was to take him home sank in 734; another, in 752, was wrecked off Annam, and he found his way back to Chang'an in 755. He was governor-protector of Annam from 761 to 767 and died in Chang'an about 770. His poem of longing for Mount Mikasa at Nara is in the Hyakunin Isshu.",
+    "sources": [
+      "abe-no-nakamaro"
+    ],
+    "death": {
+      "lon": 108.94,
+      "lat": 34.27,
+      "date": "c. 770",
+      "label": "Abe no Nakamaro dies in Chang'an, c. 770",
+      "text": "He died in Chang'an, aged 72 on the English article's count, after planning to go home again.",
+      "confidence": "attested",
+      "source": "Abe no Nakamaro (Wikipedia)",
+      "cite": "abe-no-nakamaro"
+    }
+  },
+  "saicho": {
+    "view": {
+      "lat": 31,
+      "lon": 125,
+      "zoom": 4
+    },
+    "name": "Saichō",
+    "aka": [
+      "Dengyō Daishi"
+    ],
+    "bio": "A Japanese monk who sailed with the embassy of 804 on the second of four ships, with his disciple Gishin. He landed at Mingzhou, studied about 135 days on Mount Tiantai under Daosui, and was back at Tsushima in June 805. He died in 822.",
+    "sources": [
+      "saicho"
+    ],
+    "born": {
+      "date": "15 Sep 767",
+      "text": "The sources read give no place.",
+      "confidence": "attested",
+      "source": "Saichō (Wikipedia)",
+      "cite": "saicho"
+    },
+    "death": {
+      "date": "26 Jun 822",
+      "text": "The English article gives his age as 54 in the infobox and 56 in the text. It names no place of death.",
+      "confidence": "attested",
+      "source": "Saichō (Wikipedia)",
+      "cite": "saicho"
+    }
+  },
+  "kukai": {
+    "view": {
+      "lat": 31,
+      "lon": 122,
+      "zoom": 4
+    },
+    "name": "Kūkai",
+    "aka": [
+      "Kōbō Daishi"
+    ],
+    "bio": "A Japanese monk who went to Chang'an with the embassy of 804, was initiated into Esoteric Buddhism there by Huiguo, and came home in 806 with a great many texts and paintings. He founded the Shingon school and died on Mount Kōya in 835.",
+    "sources": [
+      "kukai"
+    ],
+    "born": {
+      "lon": 133.79,
+      "lat": 34.23,
+      "date": "27 Jul 774",
+      "label": "Kūkai born near Zentsū-ji, 774",
+      "text": "Born in the precinct of Zentsū-ji in Sanuki, Shikoku. The mark stands on the temple.",
+      "confidence": "inferred",
+      "doubt": "The lunar date was fixed by the Shingon school about 400 years later.",
+      "source": "Kūkai (Wikipedia)",
+      "cite": "kukai"
+    },
+    "death": {
+      "lon": 135.59,
+      "lat": 34.21,
+      "date": "22 Apr 835",
+      "label": "Kūkai dies on Mount Kōya, 835",
+      "text": "He died at midnight on the 21st day of the third month of Jōwa 2, on Mount Kōya, having asked to be entombed on the eastern peak rather than cremated. The English article gives his age as 60 in the infobox and 62 in the text. The mark stands on the mountain.",
+      "confidence": "attested",
+      "source": "Kūkai (Wikipedia)",
+      "cite": "kukai"
+    }
   }
 }
