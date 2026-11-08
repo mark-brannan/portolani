@@ -657,3 +657,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261108t110758z
 - The Nanto leg carries the existing doubt marking (sparse rings) as well as the conventional ink, because the Japanese article reports Sugiyama Hiroshi could not establish it as a planned course. Undo: give the Nanto leg no doubt field ([#410](https://github.com/mark-brannan/portolani/pull/410))
+
+### 20261108t110802z
+- Ganjin and Ennin are linked to kentoshi by id through its who; Ganjin's death at Nara therefore also shows as a skull when kentoshi is on. Undo: remove ganjin and ennin from kentoshi's who and name them in the text ([#410](https://github.com/mark-brannan/portolani/pull/410))
