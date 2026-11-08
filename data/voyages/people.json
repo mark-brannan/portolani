@@ -3420,5 +3420,81 @@
     "sources": [
       "ogasawara-spf"
     ]
+  },
+  "natome": {
+    "view": {
+      "lat": 35,
+      "lon": 128,
+      "zoom": 4
+    },
+    "name": "Natome",
+    "aka": [
+      "Nashime",
+      "難升米"
+    ],
+    "bio": "The envoy Himiko sent to Wei in 238 or 239, called a taifu in the Wajinden, with Tsushigori as his second. Cao Rui made him General of the Household. A decree sending him a yellow banner is dated 245 or 246. The romanisation varies: Natome, Nashime, Nanshōme. When and where he died is not recorded.",
+    "sources": [
+      "wajinden"
+    ]
+  },
+  "himiko": {
+    "view": {
+      "lat": 34,
+      "lon": 131,
+      "zoom": 4
+    },
+    "name": "Himiko",
+    "aka": [
+      "卑弥呼"
+    ],
+    "bio": "Queen of Wa in the 3rd century, who sent the embassy to Wei and was named Queen of Wa Friendly to Wei. The Chinese histories place her kingdom, Yamatai, at the end of a route of distances that does not settle whether it lay in Kyushu or the Kinai. She died in 247 or 248; a great mound was raised for her, and over a hundred attendants are said to have followed her to the grave. Where she is buried is not known.",
+    "sources": [
+      "himiko",
+      "wajinden"
+    ]
+  },
+  "azumi": {
+    "view": {
+      "lat": 34,
+      "lon": 132,
+      "zoom": 3
+    },
+    "name": "The Azumi",
+    "aka": [
+      "阿曇氏"
+    ],
+    "group": true,
+    "bio": "A seafaring clan of northern Kyushu, the leaders of the Ama mariners, whose night navigation made them the effective navy of Yamato from the 3rd century. They honoured the sea god Watatsumi and Azumi no Isora. Japanese historians are said to hold them Austronesian or Japanese in origin, related to the Hayato, a claim the article's own sources do not clearly support.",
+    "sources": [
+      "azumi-people"
+    ]
+  },
+  "first-peoples-japan": {
+    "view": {
+      "lat": 36,
+      "lon": 136,
+      "zoom": 3
+    },
+    "name": "The first people of the Japanese archipelago",
+    "group": true,
+    "bio": "The Upper Palaeolithic hunter-gatherers whose camps in the archipelago are dated to about 38,000 years ago, and who probably came by boat. No name of theirs survives and no individual is known from the sources read; the name is the archaeologists'.",
+    "sources": [
+      "prehistory-of-japan",
+      "japanese-paleolithic"
+    ]
+  },
+  "jomon-people": {
+    "view": {
+      "lat": 38,
+      "lon": 139,
+      "zoom": 3
+    },
+    "name": "The Jōmon",
+    "group": true,
+    "bio": "The hunter-gatherers who lived in the archipelago from about 14,000 to 300 BC and made some of the oldest pottery known. Their name is the archaeologists'. Their genes live on in the Japanese and most strongly in the Ainu; the Yayoi mixed with them rather than replacing them.",
+    "sources": [
+      "jomon-period",
+      "jomon-people"
+    ]
   }
 }
