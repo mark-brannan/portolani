@@ -669,3 +669,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261108t113302z
 - Christopher and Cosmas: fate shown as one speculative mark at St Helena, no death point; the pair is one people record with group: true. Undo: delete the St Helena event and the group flag ([#411](https://github.com/mark-brannan/portolani/pull/411))
+
+### 20261108t113313z
+- Index order by start year: Christopher and Cosmas after Tenshō, Tanaka before Yamada, Shimaya after Tasman; Tanaka's baptismal names carry a doubt. Undo: reorder index.json ([#411](https://github.com/mark-brannan/portolani/pull/411))
