@@ -1,0 +1,253 @@
+{
+  "id": "silk-road",
+  "kind": "migration",
+  "title": "The Silk Road, Chang'an to Antioch, c. 130 BC–1453",
+  "short": "Silk Road",
+  "who": [
+    "silk-road-merchants"
+  ],
+  "when": "c. 130 BC–1453",
+  "summary": "The web of caravan roads that carried silk, paper, glass, horses, faiths and diseases between China and the Mediterranean. No one travelled it end to end: goods passed from merchant to merchant, the Sogdians of Samarkand handling the middle of it for centuries. It is drawn as the one trunk road scholars usually draw, from Chang'an by the Hexi Corridor and Dunhuang to Kashgar, over the Pamirs to Samarkand and Merv, and across Persia and the Syrian desert to Antioch. The real network had many branches, a northern and a southern way round the Taklamakan, and a sea route as well.",
+  "sources": [
+    "silk-road",
+    "sogdians",
+    "mogao-caves"
+  ],
+  "legs": [
+    {
+      "from": "Chang'an",
+      "to": "Dunhuang",
+      "dates": "c. 130 BC onward",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Silk Road (Wikipedia): the Han opened the road west through the Hexi Corridor and fortified it as far as Dunhuang; the line is the usual drawing, not one recorded course",
+      "reach": [
+        0,
+        0.3
+      ],
+      "heads": "both",
+      "points": [
+        [
+          108.94,
+          34.27
+        ],
+        [
+          106.2,
+          35.0
+        ],
+        [
+          103.83,
+          36.06
+        ],
+        [
+          102.64,
+          37.93
+        ],
+        [
+          100.45,
+          38.93
+        ],
+        [
+          98.5,
+          39.77
+        ],
+        [
+          94.66,
+          40.14
+        ]
+      ]
+    },
+    {
+      "from": "Dunhuang",
+      "to": "Kashgar",
+      "dates": "c. 130 BC onward",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Silk Road (Wikipedia): at Dunhuang the road split to go round the Taklamakan desert, north by Turfan and Kucha or south by Khotan; the northern way is drawn",
+      "reach": [
+        0.3,
+        0.55
+      ],
+      "heads": "both",
+      "points": [
+        [
+          94.66,
+          40.14
+        ],
+        [
+          91.0,
+          42.8
+        ],
+        [
+          89.19,
+          42.95
+        ],
+        [
+          82.96,
+          41.72
+        ],
+        [
+          80.26,
+          41.17
+        ],
+        [
+          75.99,
+          39.47
+        ]
+      ]
+    },
+    {
+      "from": "Kashgar",
+      "to": "Merv",
+      "dates": "c. 130 BC onward",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Silk Road (Wikipedia): from Kashgar over the Pamirs to the Fergana valley and Samarkand, then across the Karakum to Merv",
+      "reach": [
+        0.55,
+        0.75
+      ],
+      "heads": "both",
+      "points": [
+        [
+          75.99,
+          39.47
+        ],
+        [
+          72.5,
+          40.0
+        ],
+        [
+          70.0,
+          40.4
+        ],
+        [
+          66.96,
+          39.65
+        ],
+        [
+          64.42,
+          39.77
+        ],
+        [
+          62.19,
+          37.66
+        ]
+      ]
+    },
+    {
+      "from": "Merv",
+      "to": "Antioch",
+      "dates": "c. 130 BC onward",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Silk Road (Wikipedia): across Khorasan and the Persian plateau to Mesopotamia, then west over the Syrian desert by Palmyra to the Mediterranean at Antioch",
+      "reach": [
+        0.75,
+        1
+      ],
+      "heads": "both",
+      "points": [
+        [
+          62.19,
+          37.66
+        ],
+        [
+          58.8,
+          36.21
+        ],
+        [
+          51.43,
+          35.59
+        ],
+        [
+          48.51,
+          34.8
+        ],
+        [
+          44.58,
+          33.09
+        ],
+        [
+          40.1,
+          35.0
+        ],
+        [
+          38.27,
+          34.55
+        ],
+        [
+          36.16,
+          36.2
+        ]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "waypoint",
+      "lon": 108.94,
+      "lat": 34.27,
+      "date": "from c. 130 BC",
+      "label": "Chang'an, the eastern end",
+      "source": "Silk Road (Wikipedia)",
+      "cite": "silk-road",
+      "text": "The Han capital, where the road is usually said to begin. The Han court's interest in the west is dated to the envoy Zhang Qian's journey of the 130s BC, and silk, then a Chinese monopoly, went west from here."
+    },
+    {
+      "kind": "waypoint",
+      "lon": 94.66,
+      "lat": 40.14,
+      "date": "4th century onward",
+      "label": "Dunhuang, where the road divides",
+      "source": "Mogao Caves (Wikipedia)",
+      "cite": "mogao-caves",
+      "text": "An oasis garrison and the last Chinese town before the desert. The Buddhist cave temples of Mogao, begun in the 4th century, were paid for in part by travelling merchants, and a sealed library of manuscripts in them was found in 1900."
+    },
+    {
+      "kind": "waypoint",
+      "lon": 75.99,
+      "lat": 39.47,
+      "date": "c. 130 BC onward",
+      "label": "Kashgar, the meeting of the ways",
+      "source": "Silk Road (Wikipedia)",
+      "cite": "silk-road",
+      "text": "The northern and southern roads round the Taklamakan joined again here, at the foot of the Pamirs, before the climb into Central Asia."
+    },
+    {
+      "kind": "waypoint",
+      "lon": 66.96,
+      "lat": 39.65,
+      "date": "4th–8th century",
+      "label": "Samarkand, home of the Sogdian merchants",
+      "source": "Sogdians (Wikipedia)",
+      "cite": "sogdians",
+      "text": "The Sogdians, an Iranian people of the cities round Samarkand, were the middlemen of the middle road for several centuries, with colonies from the Hexi Corridor into China. Their trade letters, found at a Great Wall tower near Dunhuang, date from the early 4th century."
+    },
+    {
+      "kind": "waypoint",
+      "lon": 62.19,
+      "lat": 37.66,
+      "date": "c. 130 BC onward",
+      "label": "Merv, the great oasis city",
+      "source": "Silk Road (Wikipedia)",
+      "cite": "silk-road",
+      "text": "The caravan city on the road across Khorasan, between the Central Asian oases and the Persian plateau."
+    },
+    {
+      "kind": "waypoint",
+      "lon": 36.16,
+      "lat": 36.2,
+      "date": "c. 130 BC onward",
+      "label": "Antioch, the western end of the drawn road",
+      "source": "Silk Road (Wikipedia)",
+      "cite": "silk-road",
+      "text": "The Roman and later Byzantine city near the Mediterranean, where the overland road is conventionally taken to end. Goods went on by sea. The road is traditionally said to have declined when the Ottoman empire closed trade with the west in 1453.",
+      "doubt": "The 1453 end is a convention; the trade went on in other forms, and the sea routes round Africa cut into it more slowly than the date suggests."
+    }
+  ]
+}

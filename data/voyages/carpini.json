@@ -1,0 +1,196 @@
+{
+  "id": "carpini",
+  "title": "Giovanni da Pian del Carpine from Lyon to the Great Khan, 1245–47",
+  "short": "Carpini",
+  "who": [
+    "giovanni-da-pian-del-carpine"
+  ],
+  "when": "1245–1247",
+  "summary": "A Franciscan sent by Pope Innocent IV with a letter to the Great Khan, to protest the Mongol invasion of Christendom and learn their strength. He left Lyon on Easter day 1245, took Benedict of Poland on at Wroclaw as interpreter, passed Kiev and Batu's camp on the Volga, and rode on across the steppe north of the Caspian and the Aral to the Mongol camp near Karakorum, where he saw Guyuk enthroned on 24 August 1246. Guyuk's reply refused the Pope's call to turn Christian. He was back at Lyon in 1247. His Ystoria Mongalorum is the earliest important Western account of the Mongols.",
+  "sources": [
+    "giovanni-da-pian-del-carpine",
+    "ystoria-mongalorum"
+  ],
+  "legs": [
+    {
+      "from": "Lyon",
+      "to": "Wroclaw",
+      "dates": "16 April 1245 onward",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Carpini (Wikipedia): from Lyon on Easter day 1245 by Bohemia, where he sought the counsel of King Wenceslaus, to Wroclaw; the stages between are not drawn from the text",
+      "points": [
+        [
+          4.83,
+          45.76
+        ],
+        [
+          8.5,
+          48.0
+        ],
+        [
+          12.5,
+          49.4
+        ],
+        [
+          14.42,
+          50.08
+        ],
+        [
+          17.03,
+          51.11
+        ]
+      ]
+    },
+    {
+      "from": "Wroclaw",
+      "to": "Kiev",
+      "dates": "1245–Feb 1246",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Carpini (Wikipedia): on by Poland to Kiev and the Mongol outposts at Kaniv",
+      "points": [
+        [
+          17.03,
+          51.11
+        ],
+        [
+          21.0,
+          51.1
+        ],
+        [
+          24.0,
+          50.7
+        ],
+        [
+          27.5,
+          50.5
+        ],
+        [
+          30.52,
+          50.45
+        ]
+      ]
+    },
+    {
+      "from": "Kiev",
+      "to": "Batu's camp on the Volga",
+      "dates": "Feb–early April 1246",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Carpini (Wikipedia): over the Dnieper to the Don and the Volga, where Batu held his camp; they were presented there in early April 1246",
+      "points": [
+        [
+          30.52,
+          50.45
+        ],
+        [
+          35.0,
+          49.7
+        ],
+        [
+          39.0,
+          48.9
+        ],
+        [
+          42.5,
+          48.6
+        ],
+        [
+          46.0,
+          48.6
+        ]
+      ]
+    },
+    {
+      "from": "Batu's camp on the Volga",
+      "to": "Sira Orda, near Karakorum",
+      "dates": "8 April–22 July 1246",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Carpini (Wikipedia): over the Ural, north of the Caspian and the Aral to the Syr Darya, then by the lakes of Dzungaria to the Yellow Pavilion; some 3,000 miles in 106 days",
+      "points": [
+        [
+          46.0,
+          48.6
+        ],
+        [
+          51.0,
+          48.5
+        ],
+        [
+          56.0,
+          47.5
+        ],
+        [
+          62.0,
+          46.0
+        ],
+        [
+          68.0,
+          45.5
+        ],
+        [
+          75.0,
+          45.5
+        ],
+        [
+          82.0,
+          46.5
+        ],
+        [
+          90.0,
+          47.5
+        ],
+        [
+          97.0,
+          47.5
+        ],
+        [
+          102.0,
+          47.3
+        ]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": 4.83,
+      "lat": 45.76,
+      "date": "16 April 1245",
+      "label": "Leaves Lyon, Easter 1245",
+      "source": "Carpini (Wikipedia)",
+      "cite": "giovanni-da-pian-del-carpine",
+      "text": "He left the Pope's court at Lyon at about sixty. He bore a letter, Cum non solum, and another friar, Stephen of Bohemia, went with him as far as Kaniv and was left there sick.",
+      "confidence": "attested"
+    },
+    {
+      "kind": "event",
+      "lon": 46.0,
+      "lat": 48.6,
+      "date": "early April 1246",
+      "label": "Batu's camp on the Volga",
+      "source": "Carpini (Wikipedia)",
+      "cite": "giovanni-da-pian-del-carpine",
+      "text": "Before they could be presented to Batu, the envoys and their gifts had to pass between two fires, to burn off any harmful thoughts or poisons. Batu sent them on to the Great Khan in Mongolia.",
+      "confidence": "attested"
+    },
+    {
+      "kind": "event",
+      "lon": 102.0,
+      "lat": 47.3,
+      "date": "24 August 1246",
+      "label": "Guyuk enthroned near Karakorum, 1246",
+      "source": "Carpini (Wikipedia)",
+      "cite": "giovanni-da-pian-del-carpine",
+      "text": "The friars reached the Yellow Pavilion in July, in the midst of the election of Guyuk, and watched his enthronement on 24 August at the Golden Ordu with three or four thousand envoys from all over Asia and Europe. Guyuk refused the Pope's call to become a Christian. The camp's site is placed by Wikipedia near Karakorum and the Orkhon; the point here is that area.",
+      "confidence": "attested"
+    }
+  ],
+  "kind": "voyage"
+}

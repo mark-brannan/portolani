@@ -1,0 +1,166 @@
+{
+  "id": "ibn-fadlan",
+  "title": "Ibn Fadlan from Baghdad to the Volga Bulghars, 921–22",
+  "short": "Ibn Fadlan",
+  "who": [
+    "ibn-fadlan"
+  ],
+  "when": "921–922",
+  "summary": "Secretary to an embassy from the caliph al-Muqtadir to the Volga Bulghars, who had asked for help against the Khazars and for teachers of Islam. The party left Baghdad on 21 June 921, went east by the caravan road through Persia to Bukhara, then north through Khwarazm and across the steppe of the Oghuz Turks, Pechenegs and Bashkirs, and reached the Bulghar king on 12 May 922, some 4,000 km on. His account is the best eyewitness one of the Rus on the Volga. The text breaks off at Bulghar; how he came home is not known.",
+  "sources": [
+    "ahmad-ibn-fadlan",
+    "volga-bulgaria"
+  ],
+  "legs": [
+    {
+      "from": "Baghdad",
+      "to": "Nishapur",
+      "dates": "Jun–autumn 921",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Ibn Fadlan (Wikipedia): the party followed the established caravan road east out of Baghdad; the stages by Hamadan and Rayy are the road, not a list in the sources I read",
+      "points": [
+        [
+          44.37,
+          33.31
+        ],
+        [
+          46.0,
+          34.4
+        ],
+        [
+          48.51,
+          34.8
+        ],
+        [
+          51.43,
+          35.59
+        ],
+        [
+          54.0,
+          36.4
+        ],
+        [
+          58.8,
+          36.21
+        ]
+      ]
+    },
+    {
+      "from": "Nishapur",
+      "to": "Bukhara",
+      "dates": "autumn–winter 921",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Ibn Fadlan (Wikipedia): the road toward Bukhara, by Merv and the Oxus",
+      "points": [
+        [
+          58.8,
+          36.21
+        ],
+        [
+          62.19,
+          37.66
+        ],
+        [
+          63.8,
+          38.6
+        ],
+        [
+          64.42,
+          39.77
+        ]
+      ]
+    },
+    {
+      "from": "Bukhara",
+      "to": "Gurganj (Khwarazm)",
+      "dates": "winter 921",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Ibn Fadlan (Wikipedia): north from Bukhara down to Khwarazm on the Oxus",
+      "points": [
+        [
+          64.42,
+          39.77
+        ],
+        [
+          62.5,
+          41.0
+        ],
+        [
+          59.15,
+          42.32
+        ]
+      ]
+    },
+    {
+      "from": "Gurganj (Khwarazm)",
+      "to": "Bolghar (Volga Bulghars)",
+      "dates": "Dec 921–12 May 922",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Ibn Fadlan (Wikipedia): across the lands of the Oghuz Turks, the Pechenegs and the Bashkirs to the Volga Bulghar capital; the exact way over the Ustyurt and the Ural steppe is not drawn from the text",
+      "doubt": "Wikipedia has the party leave the Bukhara road in north-eastern Iran, at Gurgan, while the usual reading of the text takes them on to Bukhara and Khwarazm; the stages through Persia are the less certain part of the drawing.",
+      "points": [
+        [
+          59.15,
+          42.32
+        ],
+        [
+          57.0,
+          44.5
+        ],
+        [
+          56.0,
+          47.0
+        ],
+        [
+          55.2,
+          50.0
+        ],
+        [
+          53.5,
+          52.3
+        ],
+        [
+          50.5,
+          54.2
+        ],
+        [
+          49.05,
+          54.97
+        ]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": 44.37,
+      "lat": 33.31,
+      "date": "21 June 921",
+      "label": "Leaves Baghdad, 921",
+      "source": "Ibn Fadlan (Wikipedia)",
+      "cite": "ahmad-ibn-fadlan",
+      "text": "The embassy under Susan al-Rassi left the capital of the Abbasid caliphate on 21 June 921, with Ibn Fadlan as secretary and religious adviser. The aim was to teach Islamic law to the newly converted Bulghars and to answer their request for help against the Khazars.",
+      "confidence": "attested"
+    },
+    {
+      "kind": "event",
+      "lon": 49.05,
+      "lat": 54.97,
+      "date": "12 May 922",
+      "label": "Reaches the Bulghar king, 922",
+      "source": "Ibn Fadlan (Wikipedia)",
+      "cite": "ahmad-ibn-fadlan",
+      "text": "The embassy reached the Volga Bulghar capital on 12 May 922. Ibn Fadlan read the caliph's letter to the king, Almis, and was blamed for not bringing the promised money for a fortress against his enemies. His account also describes the Rus traders on the Volga and a ship burial.",
+      "confidence": "attested"
+    }
+  ],
+  "kind": "voyage"
+}
