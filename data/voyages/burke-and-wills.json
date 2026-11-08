@@ -1,0 +1,190 @@
+{
+  "id": "burke-and-wills",
+  "title": "Burke and Wills cross Australia to the Gulf, 1860–61",
+  "short": "Burke and Wills",
+  "who": [
+    "robert-o-hara-burke",
+    "william-john-wills",
+    "john-king-explorer",
+    "dost-mahomet"
+  ],
+  "when": "1860–1861",
+  "summary": "The Victorian Exploring Expedition left Melbourne on 20 August 1860 to cross the continent south to north. Burke, Wills, King and Gray went on from the depot at Cooper Creek on 16 December and reached the Flinders River swamps by February 1861, though whether they saw open sea is not documented. They came back starving, Gray dying on the way, to find the depot left only hours before. Burke and Wills died on Cooper Creek; King survived with the Yandruwandha, who had fed the party, and was found on 15 September 1861.",
+  "sources": [
+    "burke-and-wills-expedition",
+    "robert-o-hara-burke",
+    "william-john-wills",
+    "john-king-explorer",
+    "yandruwandha"
+  ],
+  "legs": [
+    {
+      "from": "Melbourne",
+      "to": "Menindee",
+      "dates": "20 Aug – 12 Oct 1860",
+      "start": "1860-08-20",
+      "end": "1860-10-12",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "attested",
+      "points": [
+        [
+          144.97,
+          -37.79
+        ],
+        [
+          143.57,
+          -35.34
+        ],
+        [
+          142.42,
+          -32.39
+        ]
+      ],
+      "source": "Wikipedia, Burke and Wills expedition: left Royal Park 20 August, reached Menindee 12 October",
+      "note": "the towns are the record's; the road between is a broad brush"
+    },
+    {
+      "from": "Menindee",
+      "to": "Cooper Creek depot",
+      "dates": "19 Oct – 11 Nov 1860",
+      "start": "1860-10-19",
+      "end": "1860-11-11",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "attested",
+      "points": [
+        [
+          142.42,
+          -32.39
+        ],
+        [
+          141.6,
+          -30.0
+        ],
+        [
+          141.2,
+          -28.2
+        ],
+        [
+          140.74,
+          -27.62
+        ]
+      ],
+      "source": "Wikipedia, Burke and Wills expedition: the advance party left Menindee 19 October and reached Cooper Creek 11 November",
+      "note": "the depot was first at Camp 63 and moved to Camp 65, the Dig Tree, on 6 December"
+    },
+    {
+      "from": "Cooper Creek depot",
+      "to": "Flinders River swamps",
+      "dates": "16 Dec 1860 – 2 Feb 1861",
+      "start": "1860-12-16",
+      "end": "1861-02-02",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          140.74,
+          -27.62
+        ],
+        [
+          142.2,
+          -24.5
+        ],
+        [
+          141.6,
+          -22.5
+        ],
+        [
+          140.5,
+          -20.7
+        ],
+        [
+          140.9,
+          -17.8
+        ]
+      ],
+      "source": "Wikipedia, Burke and Wills expedition: Burke, Wills, King and Gray left the depot 16 December; Camp 119 on a Flinders River arm about 2 February",
+      "note": "the camps are in the journals; the way between is drawn through the towns that stand there now"
+    },
+    {
+      "from": "Flinders River swamps",
+      "to": "Cooper Creek depot",
+      "dates": "13 Feb – 21 Apr 1861",
+      "start": "1861-02-13",
+      "end": "1861-04-21",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "points": [
+        [
+          140.9,
+          -17.8
+        ],
+        [
+          140.5,
+          -20.7
+        ],
+        [
+          141.6,
+          -22.5
+        ],
+        [
+          142.2,
+          -24.5
+        ],
+        [
+          140.74,
+          -27.62
+        ]
+      ],
+      "source": "Wikipedia, Burke and Wills expedition: the return began 13 February; they reached Camp 65 on 21 April, hours after the depot party had left",
+      "note": "Gray died of dysentery on 17 April; the place is not known, and Lake Massacre in South Australia is the usual guess"
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": 144.97,
+      "lat": -37.79,
+      "date": "20 Aug 1860",
+      "label": "Royal Park, Melbourne: departure",
+      "source": "Wikipedia, Burke and Wills expedition",
+      "cite": "burke-and-wills-expedition",
+      "text": "The expedition left Royal Park about 4 pm with camels bought in India, their handlers, and a great weight of stores. Several of the camel drivers, among them Dost Mahomet from Ghazni, were Muslims and Hindus from India and what is now Pakistan."
+    },
+    {
+      "kind": "event",
+      "lon": 140.74,
+      "lat": -27.62,
+      "date": "6 Dec 1860",
+      "label": "Cooper Creek: the depot at the Dig Tree",
+      "source": "Wikipedia, Burke and Wills expedition",
+      "cite": "burke-and-wills-expedition",
+      "text": "Camp 65, where Brahe was left in charge with Dost Mahomet, Patton and McDonough. Burke's party found it abandoned on 21 April 1861, hours after the others had gone."
+    },
+    {
+      "kind": "landfall",
+      "lon": 140.9,
+      "lat": -17.8,
+      "date": "c. 11 Feb 1861",
+      "label": "The Flinders River swamps: the Gulf, not seen?",
+      "source": "Wikipedia, Burke and Wills expedition",
+      "cite": "burke-and-wills-expedition",
+      "confidence": "inferred",
+      "doubt": "Wikipedia says there is no documentary proof that Burke and Wills reached or saw the Gulf shore; swamps and tide stopped them short of open sea",
+      "text": "Camp 119 was on the Bynoe River, an arm of the Flinders delta. Burke and Wills pushed on through the swamps and probably reached or saw the Gulf shore about 11 February. Kukatj men gave directions near the Gulf."
+    },
+    {
+      "kind": "event",
+      "lon": 140.74,
+      "lat": -27.62,
+      "date": "15 Sep 1861",
+      "label": "King found by Howitt's party",
+      "source": "Wikipedia, Burke and Wills expedition",
+      "cite": "burke-and-wills-expedition",
+      "text": "Two Aboriginal members of Alfred Howitt's party, Sandy and Frank, brought the news. King had lived about a month with the Yandruwandha; in 1862 Howitt gave three breastplates to Tchukulow, Mungalee and Carrawaw."
+    }
+  ]
+}
