@@ -2844,5 +2844,31 @@
     "sources": [
       "xu-fu"
     ]
+  },
+  "yayoi-farmers": {
+    "view": {
+      "lat": 33.5,
+      "lon": 130.5,
+      "zoom": 4
+    },
+    "name": "The first rice farmers of Kyushu",
+    "group": true,
+    "bio": "The people who brought wet-rice farming to northern Kyushu, with tools and pottery of Korean types, and gave their name to the Yayoi period: archaeologists use \"Yayoi\" for the migrants from the Korean Peninsula and regions south, who gradually mixed with the Jōmon, not for a single ethnic group. How far they were newcomers and how far Jōmon people who took up farming is argued. No name of theirs survives; the name is the archaeologists'.",
+    "sources": [
+      "yayoi-period"
+    ]
+  },
+  "ryukyuan-mariners": {
+    "view": {
+      "lat": 26.2,
+      "lon": 127.7,
+      "zoom": 4
+    },
+    "name": "The Ryukyuan merchant mariners",
+    "group": true,
+    "bio": "The crews and officials of the Ryukyu Kingdom's ships, who carried Japanese silver and swords and Chinese ceramics and medicines from Okinawa to Southeast Asia and brought back sappanwood, tin, sugar and incense. The Rekidai Hōan, the kingdom's official record, notes 150 voyages to Southeast Asia on Ryukyuan ships. Few of them are named.",
+    "sources": [
+      "ryukyu-kingdom"
+    ]
   }
 }

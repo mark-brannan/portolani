@@ -3,7 +3,9 @@
   "kind": "migration",
   "title": "The Ryukyu Kingdom's trade in the East China and South China Seas, 1372–1630s",
   "short": "Ryukyu trade",
-  "who": [],
+  "who": [
+    "ryukyuan-mariners"
+  ],
   "when": "1372 – 1630s",
   "summary": "From 1372, when Chūzan became a tributary of Ming China, Okinawa was the hub of a trade between China, Japan, Korea and Southeast Asia. The Rekidai Hōan records 150 voyages to Southeast Asia between 1424 and the 1630s, 61 of them to Siam. The kingdom's golden age ran from the late 1400s to 1526; the Satsuma invasion of 1609 made it subject to Japan as well as China.",
   "sources": [

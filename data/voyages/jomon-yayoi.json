@@ -3,7 +3,9 @@
   "kind": "migration",
   "title": "The crossing to Kyushu and the coming of rice, c. 1000–300 BC",
   "short": "Jōmon to Yayoi",
-  "who": [],
+  "who": [
+    "yayoi-farmers"
+  ],
   "when": "c. 1000 – 300 BC",
   "summary": "Wet-rice farming appears first in northern Kyushu, with tools and pottery of Korean types, and the hunter-gatherer Jōmon give way to the Yayoi. Some scholars see an influx of farmers from the continent; others credit the farming itself for much of the rise in numbers. The start is disputed: radiocarbon dates could push it back to 1000–800 BC against the usual 300 BC.",
   "sources": [
