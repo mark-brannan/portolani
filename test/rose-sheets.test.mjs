@@ -235,7 +235,7 @@ test('a chart read with no rose, beast or ship draws none of them; with historic
   assert.ok(mine(seeded, 'Dulcert, 1339').some((n) => n > 0), 'the seeded figures come back with historical accuracy off');
 });
 
-test('a chart whose own set lists no rose keeps roses where its drawn lines meet', async () => {
+test('a chart whose roses are unread keeps roses where its drawn lines meet', async () => {
   // de la Cosa's roses wait on the ring reading (ornaments.md); its sheet still draws the roses of the ring it draws
   const { scene } = await createScene(env, { view: { lon: -20, lat: -2, zoom: 3.5 }, scale: 'off' });
   const sheet = scene.sheets.find((s) => s.source === 'Juan de la Cosa, 1500');

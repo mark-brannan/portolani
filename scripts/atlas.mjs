@@ -98,7 +98,7 @@ const servedBands = (extent) => BANDS.filter((b) => { const w = (extent.east - e
 // pack sprite cropped from that figure, or null where none is cropped yet and the scene stands in one of the
 // sheet's `style`, the pack family its crops belong to. An
 // empty set is a chart that draws none; a sheet with no set has not been read, and keeps the seeded figures.
-// `unread` names a kind not yet read off the chart: its roses keep those of the network the sheet draws.
+// `unread: ['rose']` marks a chart whose roses are not yet read: it keeps those of the network the sheet draws (scene.mjs). No other kind is honoured.
 const figures = (sets) => Object.entries(sets).flatMap(([kind, list]) => list.map(([sprite, lon, lat]) => ({ kind, sprite, lon, lat })));
 // The Carte Pisane, Vesconte and Dulcert draw hubs, not roses, and no beast or ship at sea (ornaments.md).
 const NONE = figures({});
