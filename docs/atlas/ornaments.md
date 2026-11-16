@@ -14,9 +14,10 @@ is one of the page's chosen roses or ships.
 ## Carte Pisane, Vesconte 1311, Dulcert 1339
 
 None. The Pisane and Dulcert draw hubs only (Dulcert's flags, kings and towns stand on land); no rose of
-Vesconte's is known. Each has an empty set, so these sheets draw no roses, beasts or ships. Read off the sheets'
-own scans in `packs/overlays` on 2026-11-16, by eye at a quarter size and in quadrants: their seas hold hubs,
-rhumbs, flags and lettering, and Vesconte's 1313 leaf a quartered disc in its corner, which is no rose.
+Vesconte's is known. Each has an empty set, so these sheets draw no roses, beasts or ships. The Pisane and Dulcert
+were read off their own scans in `packs/overlays` on 2026-11-16, by eye at a quarter size and in quadrants: their
+seas hold hubs, rhumbs, flags and lettering. The 1311 chart has no scan ([centres.md](centres.md)); the overlay read
+is the 1313 atlas's Tyrrhenian leaf, whose sea is bare and whose corner disc is quartered heraldry, no rose.
 [Before and after, beside each scan](figure-sets-2026-11-16/).
 
 ## Catalan Atlas, sheet 5
