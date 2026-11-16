@@ -3598,5 +3598,54 @@
       "source": "Wikipedia, Mamiya Rinzō",
       "cite": "mamiya-rinzo"
     }
+  },
+  "iwakura-tomomi": {
+    "view": { "lat": 35.7, "lon": 139.7, "zoom": 5 },
+    "name": "Iwakura Tomomi",
+    "bio": "Ambassador extraordinary and plenipotentiary of the Meiji government's mission to the United States and Europe, 1871–73, which he led with four vice-ambassadors, Ōkubo Toshimichi, Kido Takayoshi, Itō Hirobumi and Yamaguchi Naoyoshi.",
+    "sources": ["iwakura-mission"]
+  },
+  "kume-kunitake": {
+    "view": { "lat": 35.7, "lon": 139.7, "zoom": 5 },
+    "name": "Kume Kunitake",
+    "bio": "Secretary and official chronicler of the Iwakura Mission, who wrote its record.",
+    "sources": ["iwakura-mission"]
+  },
+  "tsuda-ume": {
+    "view": { "lat": 35.7, "lon": 139.7, "zoom": 5 },
+    "name": "Tsuda Ume",
+    "bio": "One of the students who went with the Iwakura Mission, among some fifty-three students and attendants.",
+    "sources": ["iwakura-mission"]
+  },
+  "yamakawa-sutematsu": {
+    "view": { "lat": 35.7, "lon": 139.7, "zoom": 5 },
+    "name": "Yamakawa Sutematsu",
+    "bio": "One of the students who went with the Iwakura Mission, among some fifty-three students and attendants.",
+    "sources": ["iwakura-mission"]
+  },
+  "kosa-pan": {
+    "view": { "lat": 14.35, "lon": 100.57, "zoom": 5 },
+    "name": "Kosa Pan",
+    "bio": "Siamese ambassador sent by King Narai to Louis XIV in 1686, with two other ambassadors. Charles Le Brun painted his portrait, and his fragmentary diary of the embassy was rediscovered in Paris in the 1980s.",
+    "sources": ["siamese-embassy-france-1686", "kosa-pan"]
+  },
+  "guy-tachard": {
+    "view": { "lat": 48.8, "lon": 2.1, "zoom": 5 },
+    "name": "Guy Tachard",
+    "bio": "A Jesuit who went with Kosa Pan's embassy to France in 1686.",
+    "sources": ["siamese-embassy-france-1686"]
+  },
+  "abd-al-razzaq-samarqandi": {
+    "view": { "lat": 25.0, "lon": 66.0, "zoom": 3 },
+    "name": "Abd al-Razzaq Samarqandi",
+    "bio": "Born in Herat in 1413, ambassador of the Timurid ruler Shah Rukh to Kozhikode from January 1442 to January 1445. His account in the Matla-us-Sadain wa Majma-ul-Bahrain is a firsthand description of fifteenth-century south India, Vijayanagara above all.",
+    "sources": ["abd-al-razzaq-samarqandi"]
+  },
+  "periplus-merchants": {
+    "view": { "lat": 18.0, "lon": 50.0, "zoom": 3 },
+    "name": "The merchants of the Periplus",
+    "group": true,
+    "bio": "The Greek and Roman Egyptian traders and shipmasters the Periplus of the Erythraean Sea was written for, sailing from Red Sea ports to the Horn, Arabia and India. Its author is unknown.",
+    "sources": ["periplus-erythraean-sea"]
   }
 }
