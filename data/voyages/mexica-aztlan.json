@@ -1,0 +1,56 @@
+{
+  "id": "mexica-aztlan",
+  "kind": "migration",
+  "title": "The Mexica from Aztlán to Tenochtitlan, by tradition AD 1111–1325",
+  "short": "Mexica, Aztlán",
+  "who": ["mexica-migrants"],
+  "when": "AD 1111–1325, by tradition",
+  "summary": "The Mexica told in their painted histories how their ancestors left an island place, Aztlán, and wandered south for generations before they settled at Chapultepec and then on an island in Lake Texcoco, where they founded Tenochtitlan. It is a legend, and its details were set down after the Spanish came. Whether Aztlán was a real place, and where, is not known.",
+  "sources": ["wp-aztlan"],
+  "legs": [
+    {
+      "from": "Aztlán",
+      "to": "Tenochtitlan",
+      "dates": "by tradition AD 1111–1325",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "speculative",
+      "source": "Aztlán (Wikipedia): the migration of the Codex Boturini and the other painted histories",
+      "doubt": "A legend: the stages are those of the painted histories, Aztlán's place is guessed, and the dates are the tradition's.",
+      "reach": [0, 1],
+      "heads": "end",
+      "points": [
+        [-105.47, 21.9],
+        [-103.5, 21],
+        [-101, 20.6],
+        [-99.34, 20.06],
+        [-99.19, 19.42],
+        [-99.13, 19.43]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "waypoint",
+      "lon": -105.47,
+      "lat": 21.9,
+      "date": "by tradition, AD 1111",
+      "label": "Aztlán, as Mexcaltitán",
+      "confidence": "speculative",
+      "source": "Aztlán (Wikipedia)",
+      "cite": "wp-aztlan",
+      "doubt": "Mexcaltitán de Uribe, an island town in Nayarit, has been proposed since the nineteenth century; others place Aztlán in the north of Mexico or in the south-west of the United States, and some doubt it was a place.",
+      "text": "The Codex Boturini draws the departure from an island. The Mexica are said to have left under the guidance of their god Huitzilopochtli."
+    },
+    {
+      "kind": "waypoint",
+      "lon": -99.13,
+      "lat": 19.43,
+      "date": "1325",
+      "label": "Tenochtitlan founded",
+      "source": "Aztlán (Wikipedia)",
+      "cite": "wp-aztlan",
+      "text": "By tradition the Mexica saw an eagle on a cactus on an island in Lake Texcoco, and built there. By the time the Spanish came it was one of the largest cities in the world."
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "id": "manteo-wanchese-1584",
+  "title": "Manteo and Wanchese to England and back, 1584–85",
+  "short": "Manteo & Wanchese",
+  "who": [
+    "manteo",
+    "wanchese"
+  ],
+  "when": "1584–1585",
+  "summary": "Raleigh's captains, Philip Amadas and Arthur Barlowe, reached the Outer Banks in July 1584 and met the Roanoke and Croatan people. They took two men back to England, Manteo and Wanchese, who lived with Thomas Harriot and taught him their language and learned English. Both came back in 1585 with the first colonists. Manteo stayed their friend and Wanchese did not.",
+  "sources": [
+    "wp-manteo",
+    "wp-wanchese",
+    "wp-roanoke-colony"
+  ],
+  "legs": [
+    {
+      "from": "Roanoke Island",
+      "to": "Plymouth",
+      "dates": "Aug – Sep 1584",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Roanoke Colony (Wikipedia): the 1584 reconnaissance returned to England with Manteo and Wanchese",
+      "points": [
+        [-75.2, 35.3],
+        [-68.0, 37.5],
+        [-45.0, 43.5],
+        [-20.0, 48.5],
+        [-8.0, 49.8],
+        [-4.3, 50.1]
+      ]
+    },
+    {
+      "from": "Plymouth",
+      "to": "Roanoke Island",
+      "dates": "Apr – Jun 1585",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Roanoke Colony (Wikipedia): Grenville's fleet of 1585",
+      "note": "the fleet went by the West Indies; a direct line stands for it",
+      "points": [
+        [-4.3, 50.1],
+        [-12.0, 45.0],
+        [-35.0, 34.0],
+        [-55.0, 30.0],
+        [-70.0, 31.5],
+        [-75.2, 35.3]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": -75.2,
+      "lat": 35.3,
+      "date": "1587",
+      "label": "Manteo baptised, Lord of Roanoke",
+      "confidence": "inferred",
+      "source": "Manteo (Wikipedia)",
+      "cite": "wp-manteo",
+      "doubt": "The baptism was on or near Roanoke Island on 13 August 1587; the point drawn is only the Outer Banks.",
+      "text": "On Raleigh's orders Manteo was baptised and styled Lord of Roanoke. John White's colonists landed that summer; White sailed home for supplies, and when he returned in 1590 the settlement was gone, with the word CROATOAN carved on a post."
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "id": "romani-migration",
+  "kind": "migration",
+  "title": "The Romani out of north-west India to Europe, c. AD 500–1400",
+  "short": "Romani",
+  "who": ["romani-ancestors"],
+  "when": "c. AD 500–1400",
+  "summary": "The Romani language and genes both point to north-west India as where their ancestors lived. They moved west, probably in more than one wave, through Persia and Armenia to the Byzantine lands, where Greek records name \"Atsingani\" in Constantinople in 1068, and in the Balkans and Crete in the 1300s, and spread through western Europe in the following century. The leaving is put at about 1,500 years ago by genetic studies, and earlier or later by others.",
+  "sources": ["wp-romani"],
+  "legs": [
+    {
+      "from": "north-west India",
+      "to": "Constantinople",
+      "dates": "c. AD 500–1100",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Romani people (Wikipedia): north-west India, Persia and Armenia to the Byzantine Empire",
+      "doubt": "The route between is from the loanwords in Romani, and the dates of the leaving range from about AD 500 to the Ghaznavid raids of the early 1000s.",
+      "reach": [0, 0.6],
+      "heads": "none",
+      "points": [
+        [73.5, 29.5],
+        [62, 31.5],
+        [55, 32.5],
+        [48, 35.5],
+        [44.5, 40.2],
+        [36, 39.5],
+        [29, 41]
+      ]
+    },
+    {
+      "from": "Constantinople",
+      "to": "western Europe",
+      "dates": "c. AD 1100–1400",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Romani people (Wikipedia): the Balkans in the 14th century, and then on through Europe",
+      "reach": [0.55, 1],
+      "heads": "end",
+      "points": [
+        [29, 41],
+        [23.3, 42.7],
+        [19, 47.5],
+        [11, 48.5],
+        [2.35, 48.85]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "waypoint",
+      "lon": 73.5,
+      "lat": 29.5,
+      "date": "before c. AD 500–1000",
+      "label": "North-west India",
+      "source": "Romani people (Wikipedia)",
+      "cite": "wp-romani",
+      "text": "Genetic studies of 2012 found the Romani share a common ancestry from north-west India, in the Punjab, Rajasthan and Sindh country, and that they left as one group."
+    },
+    {
+      "kind": "waypoint",
+      "lon": 29,
+      "lat": 41,
+      "date": "1068",
+      "label": "Constantinople: the Atsingani",
+      "confidence": "inferred",
+      "source": "Romani people (Wikipedia)",
+      "cite": "wp-romani",
+      "doubt": "A document of 1068 names the Atsingani, probably Romani; the identification is the historians'.",
+      "text": "The Atsingani are named in an event in Constantinople in 1068, taken to mean Romani."
+    },
+    {
+      "kind": "waypoint",
+      "lon": 25.14,
+      "lat": 35.34,
+      "date": "1322",
+      "label": "Candia, Crete",
+      "source": "Romani people (Wikipedia)",
+      "cite": "wp-romani",
+      "text": "The Irish friar Simon Semeonis met Romani migrants outside Candia on his way to Jerusalem, and called them descendants of Cain: the earliest surviving western account of them."
+    }
+  ]
+}

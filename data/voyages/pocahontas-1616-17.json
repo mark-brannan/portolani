@@ -1,0 +1,89 @@
+{
+  "id": "pocahontas-1616-17",
+  "title": "Pocahontas to England, 1616–17",
+  "short": "Pocahontas",
+  "who": [
+    "pocahontas"
+  ],
+  "when": "1616–1617",
+  "summary": "The Virginia Company took Pocahontas, her husband John Rolfe, their infant son Thomas and several Powhatan people to London in 1616 to show the colony's promise. They landed at Plymouth on 12 June and she was presented at court and to the king, and was painted. They sailed for home in March 1617; she fell ill and died at Gravesend, aged about twenty-one.",
+  "sources": [
+    "wp-pocahontas"
+  ],
+  "legs": [
+    {
+      "from": "Jamestown",
+      "to": "the mouth of the Chesapeake",
+      "dates": "Apr 1616",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Pocahontas (Wikipedia): left Virginia in the Treasurer, down the James River",
+      "points": [
+        [-76.78, 37.21],
+        [-76.5, 37.05],
+        [-76.3, 36.95],
+        [-75.8, 37]
+      ]
+    },
+    {
+      "from": "the mouth of the Chesapeake",
+      "to": "Plymouth",
+      "dates": "Apr – 12 Jun 1616",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Pocahontas (Wikipedia): landed at Plymouth",
+      "points": [
+        [-75.8, 37.0],
+        [-65.0, 39.0],
+        [-40.0, 44.0],
+        [-20.0, 48.0],
+        [-8.0, 49.6],
+        [-4.3, 50.1]
+      ]
+    },
+    {
+      "from": "Plymouth",
+      "to": "London",
+      "dates": "Jun 1616",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Pocahontas (Wikipedia): to London, and later Brentford and Heacham",
+      "points": [
+        [-4.14, 50.37],
+        [-2.5, 50.8],
+        [-1.4, 51],
+        [-0.13, 51.5]
+      ]
+    },
+    {
+      "from": "London",
+      "to": "Gravesend",
+      "dates": "Mar 1617",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Pocahontas (Wikipedia): taken ill as the ship set out",
+      "note": "down the Thames",
+      "points": [
+        [-0.13, 51.5],
+        [0.1, 51.48],
+        [0.37, 51.44]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": -0.13,
+      "lat": 51.5,
+      "date": "1616–17",
+      "label": "At court in London",
+      "source": "Pocahontas (Wikipedia)",
+      "cite": "wp-pocahontas",
+      "text": "She was received by Queen Anne and attended a Twelfth Night masque; Captain John Smith wrote to the Queen on her behalf. Her portrait by an unknown artist, engraved by Simon van de Passe in 1616, is the only likeness made from life."
+    }
+  ]
+}

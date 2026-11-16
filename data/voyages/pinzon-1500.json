@@ -1,0 +1,86 @@
+{
+  "id": "pinzon-1500",
+  "title": "Pinzón from Cape Santo Agostinho to the Amazon, 1500",
+  "short": "Pinzón, 1500",
+  "who": [
+    "vicente-yanez-pinzon"
+  ],
+  "when": "1499–1500",
+  "summary": "Pinzón left Palos with four caravels in November 1499 and, by the usual account, sighted the coast of Brazil at Cape Santo Agostinho on 26 January 1500, some three months before Cabral. He followed the coast north and west, entered the mouth of the Amazon, and reached the Gulf of Paria. He is credited with the first European landfall in Brazil, though Cabral's, which is better recorded, took Brazil for Portugal.",
+  "sources": [
+    "wp-pinzon",
+    "wp-cabral"
+  ],
+  "legs": [
+    {
+      "from": "Palos",
+      "to": "Cape Santo Agostinho",
+      "dates": "18 Nov 1499 – 26 Jan 1500",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Vicente Yáñez Pinzón (Wikipedia): by the Cape Verde Islands to the coast of Brazil",
+      "points": [
+        [-7.2, 36.8],
+        [-12.0, 31.8],
+        [-20.5, 26.0],
+        [-27.0, 20.0],
+        [-26.5, 14.5],
+        [-30.0, 5.0],
+        [-33.5, -3.0],
+        [-34.4, -8.3]
+      ]
+    },
+    {
+      "from": "Cape Santo Agostinho",
+      "to": "the mouth of the Amazon",
+      "dates": "Feb 1500",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Vicente Yáñez Pinzón (Wikipedia): north along the coast to the Amazon's mouth",
+      "points": [
+        [-34.4, -8.3],
+        [-34.5, -5],
+        [-38, -2.2],
+        [-43, -1.2],
+        [-47, 0.5],
+        [-49.5, 1.2]
+      ]
+    },
+    {
+      "from": "the mouth of the Amazon",
+      "to": "Hispaniola",
+      "dates": "Mar – Jun 1500",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Vicente Yáñez Pinzón (Wikipedia): north-west along the Guiana coast to the Gulf of Paria, then to Hispaniola",
+      "points": [
+        [-49.5, 1.2],
+        [-50.5, 5.5],
+        [-56.0, 7.3],
+        [-59.6, 10.5],
+        [-59.6, 11.6],
+        [-61.8, 11.8],
+        [-65.0, 15.0],
+        [-70.0, 17.5],
+        [-69.9, 18.1]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "landfall",
+      "lon": -34.4,
+      "lat": -8.3,
+      "date": "26 Jan 1500",
+      "label": "Cape Santo Agostinho",
+      "confidence": "inferred",
+      "source": "Vicente Yáñez Pinzón (Wikipedia)",
+      "cite": "wp-pinzon",
+      "doubt": "Whether Pinzón's landfall came before Cabral's and was truly at this cape is debated; the Spanish and Portuguese accounts differ.",
+      "text": "He named it Santa María de la Consolación."
+    }
+  ]
+}

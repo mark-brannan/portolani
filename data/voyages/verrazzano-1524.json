@@ -1,0 +1,120 @@
+{
+  "id": "verrazzano-1524",
+  "title": "Verrazzano along the coast from Carolina to Newfoundland, 1524",
+  "short": "Verrazzano, 1524",
+  "who": [
+    "giovanni-da-verrazzano"
+  ],
+  "when": "1524",
+  "summary": "Francis I sent a Florentine in French service to find a western passage to Cathay. Verrazzano crossed from Madeira and followed the North American coast from about Cape Fear north, putting in at what are now New York Bay and Narragansett Bay, where he met the Lenape and the Wampanoag or Narragansett, and ran on to Newfoundland. His letter to the king survives and is the whole record; the places named in it are matched to the coast by later readers.",
+  "sources": [
+    "wp-verrazzano"
+  ],
+  "legs": [
+    {
+      "from": "Madeira",
+      "to": "Cape Fear",
+      "dates": "17 Jan – Mar 1524",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Verrazzano's letter to Francis I, as summarised in Wikipedia; the landfall near the Carolinas is the usual reading",
+      "points": [
+        [-17, 32.6],
+        [-45, 33.5],
+        [-70, 33.2],
+        [-77.6, 33.6]
+      ]
+    },
+    {
+      "from": "Cape Fear",
+      "to": "Narragansett Bay",
+      "dates": "Mar – May 1524",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Verrazzano's letter: a coast followed north, the bays of New York and Narragansett identified by later readers",
+      "note": "the capes between are the readers' matching, not fixed",
+      "points": [
+        [-77.6, 33.6],
+        [-75.6, 34.3],
+        [-74.3, 36.5],
+        [-73.0, 38.6],
+        [-72.6, 39.8],
+        [-72.0, 40.4],
+        [-71.3, 40.95],
+        [-71.35, 41.25]
+      ]
+    },
+    {
+      "from": "Narragansett Bay",
+      "to": "Newfoundland",
+      "dates": "May – Jun 1524",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Verrazzano's letter: on to about 50° N",
+      "doubt": "Whether he went as far north as the letter says is open; the latitudes in it are not all right.",
+      "points": [
+        [-71.35, 41.25],
+        [-69.5, 40.8],
+        [-66.5, 42.2],
+        [-62.5, 43.2],
+        [-57.5, 45],
+        [-53, 46.3]
+      ]
+    },
+    {
+      "from": "Newfoundland",
+      "to": "Dieppe",
+      "dates": "Jun – 8 Jul 1524",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Verrazzano's letter, dated at Dieppe 8 July 1524",
+      "points": [
+        [-53, 46.3],
+        [-35, 48.5],
+        [-15, 49],
+        [-5, 49.6],
+        [-1, 50.1],
+        [0.9, 50.1]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "landfall",
+      "lon": -77.6,
+      "lat": 33.6,
+      "date": "Mar 1524",
+      "label": "First landfall, near Cape Fear",
+      "confidence": "inferred",
+      "source": "Verrazzano's letter",
+      "cite": "wp-verrazzano",
+      "text": "He anchored off a low shore of sand and fires, and sent a sailor swimming in with gifts. The man was nearly drowned in the surf, and the people took him up, dried him and sent him back. Where this was is read from the latitude he gives."
+    },
+    {
+      "kind": "event",
+      "lon": -73.9,
+      "lat": 40.35,
+      "date": "Apr 1524",
+      "label": "The Narrows and New York Bay",
+      "confidence": "inferred",
+      "source": "Verrazzano's letter",
+      "cite": "wp-verrazzano",
+      "text": "He describes a deep river mouth between two hills with a lake inside, which he could not enter on a rising wind. The bridge across the Narrows now bears his name."
+    },
+    {
+      "kind": "event",
+      "lon": -71.35,
+      "lat": 41.25,
+      "date": "May 1524",
+      "label": "Fifteen days in Narragansett Bay",
+      "confidence": "inferred",
+      "source": "Verrazzano's letter",
+      "cite": "wp-verrazzano",
+      "text": "He stayed about two weeks and describes the people, open-handed and well made, who came out to the ship in canoes. The place is identified from his account of the islands."
+    }
+  ]
+}

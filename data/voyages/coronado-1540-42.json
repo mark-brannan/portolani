@@ -1,0 +1,127 @@
+{
+  "id": "coronado-1540-42",
+  "title": "Coronado to Cíbola, the pueblos and Quivira, 1540–42",
+  "short": "Coronado",
+  "who": ["francisco-vazquez-de-coronado", "the-turk"],
+  "when": "1540–1542",
+  "summary": "After Fray Marcos's report, Viceroy Mendoza sent Coronado north with soldiers, Mexican and Indigenous allies and herds. They took Hawikuh by force, wintered among the Rio Grande pueblos and fought the Tiguex War, then followed a man called the Turk onto the plains to Quivira, in central Kansas by most readings, a land of grass houses and no gold.",
+  "sources": ["wp-coronado", "wp-quivira"],
+  "legs": [
+    {
+      "from": "Compostela",
+      "to": "Hawikuh",
+      "dates": "22 Feb – 7 Jul 1540",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Francisco Vázquez de Coronado (Wikipedia): north from Compostela by Culiacán, up the Sonora valley",
+      "note": "the way through Arizona is the usual reconstruction",
+      "points": [
+        [-104.9, 21.25],
+        [-107.39, 24.8],
+        [-109.2, 27],
+        [-110.2, 30.6],
+        [-109.4, 33.7],
+        [-108.98, 34.93]
+      ]
+    },
+    {
+      "from": "Hawikuh",
+      "to": "Tiguex",
+      "dates": "Jul – Dec 1540",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Francisco Vázquez de Coronado (Wikipedia): east to the Rio Grande pueblos",
+      "points": [
+        [-108.98, 34.93],
+        [-107.8, 35.2],
+        [-106.55, 35.3]
+      ]
+    },
+    {
+      "from": "Tiguex",
+      "to": "Quivira",
+      "dates": "Apr – Aug 1541",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Quivira (Wikipedia): east across the plains, Quivira taken to be central Kansas",
+      "doubt": "The route over the plains and the place of Quivira are argued; the Rice County, Kansas, villages are the usual match.",
+      "points": [
+        [-106.55, 35.3],
+        [-105, 35.5],
+        [-102.5, 35],
+        [-100, 36],
+        [-98.2, 38.3]
+      ]
+    },
+    {
+      "from": "Quivira",
+      "to": "Tiguex",
+      "dates": "Aug – Oct 1541",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Francisco Vázquez de Coronado (Wikipedia)",
+      "points": [
+        [-98.2, 38.3],
+        [-101, 36.5],
+        [-104, 35.4],
+        [-106.55, 35.3]
+      ]
+    },
+    {
+      "from": "Tiguex",
+      "to": "Mexico",
+      "dates": "Apr – autumn 1542",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Francisco Vázquez de Coronado (Wikipedia): back to New Spain in 1542",
+      "points": [
+        [-106.55, 35.3],
+        [-108.98, 34.93],
+        [-109.4, 33.7],
+        [-110.2, 30.6],
+        [-109.2, 27],
+        [-107.39, 24.8],
+        [-99.13, 19.43]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": -108.98,
+      "lat": 34.93,
+      "date": "7 Jul 1540",
+      "label": "Hawikuh taken",
+      "source": "Francisco Vázquez de Coronado (Wikipedia)",
+      "cite": "wp-coronado",
+      "text": "The Zuni defended the town and were driven out. There was no gold. The Spaniards found maize and beans, and sent Pedro de Tovar and others to the Hopi mesas and García López de Cárdenas to the Grand Canyon."
+    },
+    {
+      "kind": "event",
+      "lon": -106.55,
+      "lat": 35.3,
+      "date": "Winter 1540–41",
+      "label": "Tiguex: the pueblos and the war",
+      "source": "Francisco Vázquez de Coronado (Wikipedia)",
+      "cite": "wp-coronado",
+      "text": "The army took over a pueblo for its quarters, demanding cloth, food and shelter, and the Tiguex people rose. The Spaniards besieged and burned villages and put many to death. The wrong done there is one reason the Pueblo peoples distrusted Spanish expeditions afterwards."
+    },
+    {
+      "kind": "event",
+      "lon": -98.2,
+      "lat": 38.3,
+      "date": "Summer 1541",
+      "label": "Quivira",
+      "confidence": "inferred",
+      "source": "Quivira (Wikipedia)",
+      "cite": "wp-quivira",
+      "doubt": "Where Quivira lay is argued; central Kansas, near Lyons and Great Bend, is the usual answer.",
+      "text": "A land of grass-house villages along a river, grain and bison, and a chief with a copper ornament as his only gold. The Turk was accused of having lied to be rid of the Spaniards and was put to death."
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "id": "mackenzie-1789",
+  "title": "Mackenzie down the river to the Arctic Ocean, 1789",
+  "short": "Mackenzie, 1789",
+  "who": ["alexander-mackenzie"],
+  "when": "1789",
+  "summary": "Mackenzie left Fort Chipewyan on 3 June 1789 with French-Canadian voyageurs, a German and a party of Chipewyan guides led by a man called English Chief. They went by Great Slave Lake and the great river that now bears his name, and on 14 July reached the sea. He called it the River of Disappointment because it did not lead to the Pacific.",
+  "sources": ["wp-mackenzie"],
+  "legs": [
+    {
+      "from": "Fort Chipewyan",
+      "to": "Great Slave Lake",
+      "dates": "3 Jun – mid-Jun 1789",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Alexander Mackenzie (Wikipedia): the Slave River and Great Slave Lake",
+      "points": [
+        [-111.15, 58.7],
+        [-111.4, 59.9],
+        [-112.5, 61],
+        [-114.3, 61.6]
+      ]
+    },
+    {
+      "from": "Great Slave Lake",
+      "to": "the Arctic Ocean",
+      "dates": "Jun – 14 Jul 1789",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Alexander Mackenzie (Wikipedia): down the Mackenzie River to the delta",
+      "points": [
+        [-114.3, 61.6],
+        [-117, 61.2],
+        [-120, 63.5],
+        [-124, 66],
+        [-128.5, 67.7],
+        [-133.8, 69.1]
+      ]
+    },
+    {
+      "from": "the Arctic Ocean",
+      "to": "Fort Chipewyan",
+      "dates": "Jul – 12 Sep 1789",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Alexander Mackenzie (Wikipedia): back up the river, in 102 days in all",
+      "points": [
+        [-133.8, 69.1],
+        [-128.5, 67.7],
+        [-124, 66],
+        [-120, 63.5],
+        [-117, 61.2],
+        [-114.3, 61.6],
+        [-112.5, 61],
+        [-111.4, 59.9],
+        [-111.15, 58.7]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": -133.8,
+      "lat": 69.1,
+      "date": "14 Jul 1789",
+      "label": "The Arctic Ocean, not the Pacific",
+      "source": "Alexander Mackenzie (Wikipedia)",
+      "cite": "wp-mackenzie",
+      "text": "He saw the tide and whales and took the sea for the Arctic Ocean. The river's name for the Dene is Deh Cho, the big river."
+    }
+  ]
+}
