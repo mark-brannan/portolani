@@ -224,6 +224,17 @@ test('inside a page turn both bands are placed, a pan re-places nothing, and the
   assert.deepEqual((await at(view, { turn: 0 })).scene.bands, [8]);
 });
 
+test('a chart read with no rose, beast or ship draws none of them; with historical accuracy off it draws the seeded ones', async () => {
+  // Dulcert's sheet over the central Mediterranean (ornaments.md): its hubs carry no rose, and its seas no beast or ship
+  const view = { lon: 17.5, lat: 38.5, zoom: 5.2 };
+  const mine = (scene, src) => { const n = scene.sheets.find((s) => s.source === src)?.name; return [scene.roseDraws, scene.monsters, scene.ships].map((l) => l.filter((d) => d.sheet === n).length); };
+  const own = (await createScene(env, { view, scale: 'off' })).scene;
+  assert.ok(own.sheets.some((s) => s.source === 'Dulcert, 1339'), 'the Dulcert sheet is drawn');
+  assert.deepEqual(mine(own, 'Dulcert, 1339'), [0, 0, 0]);
+  const seeded = (await createScene(env, { view, scale: 'off', historical: false })).scene;
+  assert.ok(mine(seeded, 'Dulcert, 1339').some((n) => n > 0), 'the seeded figures come back with historical accuracy off');
+});
+
 test('a chart whose own set lists no rose keeps roses where its drawn lines meet', async () => {
   // de la Cosa's roses wait on the ring reading (ornaments.md); its sheet still draws the roses of the ring it draws
   const { scene } = await createScene(env, { view: { lon: -20, lat: -2, zoom: 3.5 }, scale: 'off' });
