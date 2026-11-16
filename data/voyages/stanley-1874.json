@@ -1,0 +1,167 @@
+{
+  "id": "stanley-1874",
+  "title": "Stanley across Africa, 1874–1877",
+  "short": "Stanley across Africa",
+  "who": [
+    "henry-morton-stanley",
+    "kalulu"
+  ],
+  "when": "1874–1877",
+  "summary": "Stanley arrived at Zanzibar on 21 September 1874 with three young Englishmen, Frederick Barker and the brothers Francis and Edward Pocock, and Kalulu, the African he had taken to England on his earlier trip. In 57 days he explored and circled Lake Victoria; Barker died of disease, as did Mabuki Speke, who had been on journeys with Livingstone, Speke, Grant and Burton. He reached Ujiji on 27 May 1876, charted the shores of Lake Tanganyika, left Ujiji with an expedition of 132 on 25 August and crossed into Manyema, and at Nyangwe took the Lady Alice onto the Lualaba on 19 November while Tippu Tip kept pace on the shore. The Livingstone Falls cost numerous lives, among them Frank Pocock and Kalulu; he reached Boma, at the mouth of the Congo, on 9 August 1877, 999 days after leaving Zanzibar on 12 November 1874, with 115 people in the party, three of them children born on the way. The route is drawn between the places named in the account; the lake coasts and the river's reaches are not.",
+  "sources": [
+    "stanley-trans-africa"
+  ],
+  "legs": [
+    {
+      "from": "Bagamoyo",
+      "to": "Lake Victoria",
+      "dates": "1874–1875",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Henry Morton Stanley's first trans-Africa expedition (Wikipedia): from Zanzibar to the lake, which he circled in 57 days; the road inland is drawn straight",
+      "points": [
+        [
+          38.9,
+          -6.44
+        ],
+        [
+          36.5,
+          -6.0
+        ],
+        [
+          34.5,
+          -5.5
+        ],
+        [
+          32.8,
+          -5.02
+        ],
+        [
+          32.9,
+          -3.5
+        ],
+        [
+          32.9,
+          -2.52
+        ]
+      ]
+    },
+    {
+      "from": "Lake Victoria",
+      "to": "Ujiji",
+      "dates": "1875–27 May 1876",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Henry Morton Stanley's first trans-Africa expedition (Wikipedia): after the lake to Ujiji, reached 27 May 1876; the way west of the lake is drawn straight",
+      "points": [
+        [
+          32.9,
+          -2.52
+        ],
+        [
+          31.5,
+          -3.5
+        ],
+        [
+          30.5,
+          -4.2
+        ],
+        [
+          29.68,
+          -4.91
+        ]
+      ]
+    },
+    {
+      "from": "Ujiji",
+      "to": "Nyangwe",
+      "dates": "25 August–October 1876",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Henry Morton Stanley's first trans-Africa expedition (Wikipedia): with 132 men across Lake Tanganyika and Manyema, at the Luama and the Lualaba in October; the stages are drawn straight",
+      "points": [
+        [
+          29.68,
+          -4.91
+        ],
+        [
+          28.0,
+          -4.8
+        ],
+        [
+          26.18,
+          -4.22
+        ]
+      ]
+    },
+    {
+      "from": "Nyangwe",
+      "to": "Boma",
+      "dates": "6 November 1876–9 August 1877",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Henry Morton Stanley's first trans-Africa expedition (Wikipedia): overland through the Matimba forest, on to the Lualaba on 19 November, then down the river past the Livingstone Falls to Boma, reached 9 August 1877; the river's bends are drawn rough",
+      "points": [
+        [
+          26.18,
+          -4.22
+        ],
+        [
+          25.8,
+          -2.0
+        ],
+        [
+          25.2,
+          0.52
+        ],
+        [
+          23.0,
+          1.0
+        ],
+        [
+          19.0,
+          0.5
+        ],
+        [
+          17.0,
+          -1.8
+        ],
+        [
+          16.0,
+          -3.5
+        ],
+        [
+          15.31,
+          -4.32
+        ],
+        [
+          14.0,
+          -5.0
+        ],
+        [
+          13.05,
+          -5.85
+        ]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": 14.0,
+      "lat": -5.0,
+      "date": "16 March 1877",
+      "label": "The Livingstone Falls, where Pocock and Kalulu died",
+      "source": "Henry Morton Stanley's first trans-Africa expedition (Wikipedia)",
+      "cite": "stanley-trans-africa",
+      "text": "The party began the descent of the falls and rapids on 16 March; the passage cost numerous lives, among them Frank Pocock and Kalulu, the servant Stanley had educated in England. The mark stands on the lower Congo; the place where each died is not given.",
+      "confidence": "inferred",
+      "doubt": "Wikipedia names the falls as a chain of 32 falls and rapids and gives no place for either death."
+    }
+  ],
+  "kind": "voyage"
+}

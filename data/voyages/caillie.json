@@ -1,0 +1,131 @@
+{
+  "id": "caillie",
+  "title": "René Caillié from the Rio Nuñez to Timbuktu and across the Sahara, 1827–1828",
+  "short": "René Caillié",
+  "who": [
+    "rene-caillie"
+  ],
+  "when": "1827–1828",
+  "summary": "Alone, in the guise of a Muslim, Caillié set out from Kakondy near Boké on the Rio Nuñez on 19 April 1827 for Timbuktu. He crossed the Fouta Djallon hills and the upper Niger at Kouroussa, reached Kankan in June with a caravan carrying kola nuts, was held five months by illness at Tiémé, went north-east to Djenné in March 1828 and on to Timbuktu, whose mud-brick houses were not the city of gold he had been promised. He left on 4 May 1828 with a caravan of 600 camels across the Sahara, by Araouane, and reached Fez on 12 August; from Tangier he went home by frigate to Toulon. The Sahara road beyond Araouane is drawn by the usual caravan road, not from his daily stages, and the way on to Tangier is not drawn.",
+  "sources": [
+    "rene-caillie"
+  ],
+  "legs": [
+    {
+      "from": "Kakondy",
+      "to": "Djenné",
+      "dates": "19 April 1827–March 1828",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "René Caillié (Wikipedia): from Kakondy east along the Fouta Djallon, over the Niger at Kouroussa, Kankan in June, Tiémé in the Kong hills for five months, then north-east to Djenné; the stages between are not drawn from his journal",
+      "points": [
+        [
+          -14.0,
+          10.9
+        ],
+        [
+          -12.0,
+          10.6
+        ],
+        [
+          -9.88,
+          10.65
+        ],
+        [
+          -9.3,
+          10.4
+        ],
+        [
+          -7.8,
+          8.8
+        ],
+        [
+          -6.5,
+          9.9
+        ],
+        [
+          -5.3,
+          11.7
+        ],
+        [
+          -4.55,
+          13.91
+        ]
+      ]
+    },
+    {
+      "from": "Djenné",
+      "to": "Timbuktu",
+      "dates": "March–April 1828",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "René Caillié (Wikipedia): from Djenné on to Timbuktu; the road between is drawn straight",
+      "points": [
+        [
+          -4.55,
+          13.91
+        ],
+        [
+          -3.9,
+          15.0
+        ],
+        [
+          -3.01,
+          16.78
+        ]
+      ]
+    },
+    {
+      "from": "Timbuktu",
+      "to": "Fez",
+      "dates": "4 May–12 August 1828",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "René Caillié (Wikipedia): left Timbuktu on 4 May 1828 with a caravan across the Sahara, at Araouane six days later and at Fez on 12 August; the stages between are drawn by the usual caravan road by the Tafilalt",
+      "doubt": "Wikipedia gives Timbuktu, Araouane, the caravan and Fez; the Tafilalt and the places between are the usual road, not checked against his Journal.",
+      "points": [
+        [
+          -3.01,
+          16.78
+        ],
+        [
+          -3.1,
+          18.9
+        ],
+        [
+          -4.0,
+          23.0
+        ],
+        [
+          -4.5,
+          27.0
+        ],
+        [
+          -4.27,
+          31.34
+        ],
+        [
+          -5.0,
+          34.04
+        ]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "landfall",
+      "lon": -3.01,
+      "lat": 16.78,
+      "date": "April 1828",
+      "label": "Timbuktu, a mass of mud houses",
+      "source": "René Caillié (Wikipedia)",
+      "cite": "rene-caillie",
+      "text": "Caillié stayed a fortnight and wrote of his disappointment: he had imagined a grand and wealthy city and found at first view only a mass of ill-looking houses built of earth, which he thought poorer than Djenné. The first European to come back alive, he beat the prize.",
+      "confidence": "attested"
+    }
+  ],
+  "kind": "voyage"
+}

@@ -1,0 +1,297 @@
+{
+  "id": "covilha",
+  "title": "Pêro da Covilhã, from Santarém to Ethiopia, 1487–c. 1493",
+  "short": "Pêro da Covilhã",
+  "who": [
+    "pero-da-covilha"
+  ],
+  "when": "1487–c. 1493",
+  "summary": "John II sent Covilhã and Afonso de Paiva overland in May 1487 to find the spice lands and Prester John, while Dias went by sea. They went by Barcelona, Naples and Rhodes to Alexandria, then up the Nile and across the desert to the Red Sea and Aden, where they parted: Paiva for Ethiopia, Covilhã for India. He reached Calicut and Goa, went on to Hormuz, and is said to have gone down the East African coast to Sofala; by 1491 he was back in Cairo. A later trip took him to Jeddah, and, as he told Francisco Álvares, even to Mecca and Medina, and then by Zeila into Ethiopia, where the emperor kept him for life. Only the way out and in, to India and Ethiopia, is drawn; Sofala and the dates between are not.",
+  "sources": [
+    "pero-da-covilha"
+  ],
+  "legs": [
+    {
+      "from": "Santarém",
+      "to": "Barcelona",
+      "dates": "1487",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Pêro da Covilhã (Wikipedia): the expedition started at Santarém on 7 May 1487 and travelled by Barcelona to Naples; the road to Barcelona is not named and is drawn straight",
+      "doubt": "Wikipedia names Santarém and Barcelona and nothing between; the road across Spain is drawn straight.",
+      "points": [
+        [
+          -8.7,
+          39.2
+        ],
+        [
+          -5.0,
+          40.0
+        ],
+        [
+          -1.0,
+          41.0
+        ],
+        [
+          2.4,
+          41.3
+        ]
+      ]
+    },
+    {
+      "from": "Barcelona",
+      "to": "Alexandria",
+      "dates": "1487",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Pêro da Covilhã (Wikipedia): from Barcelona to Naples, then Rhodes, then Alexandria; the stages are named, the tracks between are the usual sea road",
+      "doubt": "Wikipedia names Barcelona, Naples, Rhodes and Alexandria and no ports between; the line is the usual sea road, not a record.",
+      "points": [
+        [
+          2.4,
+          41.1
+        ],
+        [
+          4.6,
+          40.6
+        ],
+        [
+          5.0,
+          39.0
+        ],
+        [
+          7.0,
+          38.2
+        ],
+        [
+          10.5,
+          38.6
+        ],
+        [
+          12.3,
+          39.4
+        ],
+        [
+          13.6,
+          40.3
+        ],
+        [
+          14.2,
+          40.7
+        ],
+        [
+          14.3,
+          40.3
+        ],
+        [
+          15.3,
+          39.3
+        ],
+        [
+          15.55,
+          38.4
+        ],
+        [
+          15.65,
+          38.2
+        ],
+        [
+          15.6,
+          37.9
+        ],
+        [
+          16.5,
+          36.8
+        ],
+        [
+          19.0,
+          35.8
+        ],
+        [
+          21.0,
+          35.0
+        ],
+        [
+          24.0,
+          34.2
+        ],
+        [
+          26.5,
+          34.5
+        ],
+        [
+          28.6,
+          35.6
+        ],
+        [
+          28.8,
+          36.3
+        ],
+        [
+          28.8,
+          34.5
+        ],
+        [
+          29.7,
+          31.4
+        ]
+      ]
+    },
+    {
+      "from": "Alexandria",
+      "to": "Aden",
+      "dates": "1487–1488",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Pêro da Covilhã (Wikipedia): by boat up the Nile to Cairo, a caravan across the desert to El-Tor and Suakin, a boat across the Red Sea to Aden; the desert stage is drawn straight",
+      "points": [
+        [
+          29.9,
+          31.2
+        ],
+        [
+          31.24,
+          30.04
+        ],
+        [
+          32.5,
+          28.5
+        ],
+        [
+          33.6,
+          28.2
+        ],
+        [
+          37.0,
+          22.0
+        ],
+        [
+          43.0,
+          15.5
+        ],
+        [
+          45.03,
+          12.8
+        ]
+      ]
+    },
+    {
+      "from": "Aden",
+      "to": "Calicut",
+      "dates": "1488",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Pêro da Covilhã (Wikipedia): by trading dhow across the Indian Ocean to Calicut, the hub of the spice trade",
+      "points": [
+        [
+          45.1,
+          12.3
+        ],
+        [
+          52.0,
+          13.0
+        ],
+        [
+          60.0,
+          13.0
+        ],
+        [
+          68.0,
+          12.5
+        ],
+        [
+          73.0,
+          11.8
+        ],
+        [
+          75.45,
+          11.25
+        ]
+      ]
+    },
+    {
+      "from": "Calicut",
+      "to": "Goa",
+      "dates": "1488",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Pêro da Covilhã (Wikipedia): in Goa by 1488; the coast between is drawn offshore",
+      "points": [
+        [
+          75.45,
+          11.25
+        ],
+        [
+          74.5,
+          12.5
+        ],
+        [
+          73.8,
+          14.0
+        ],
+        [
+          73.6,
+          15.3
+        ]
+      ]
+    },
+    {
+      "from": "Aden",
+      "to": "the court of Prester John, Ethiopia",
+      "dates": "c. 1493",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Pêro da Covilhã (Wikipedia): back by Aden and Hormuz, then Jeddah, Mecca, Medina, Mount Sinai and El-Tor, across the Red Sea to Zeila and inland to the court; the roads inland from Zeila are drawn straight",
+      "doubt": "Wikipedia gives the places and no dates for the second trip; its date, and the Mecca and Medina visit, rest on what Covilhã later told Francisco Álvares.",
+      "points": [
+        [
+          45.03,
+          12.8
+        ],
+        [
+          43.5,
+          11.4
+        ],
+        [
+          42.0,
+          9.8
+        ],
+        [
+          40.0,
+          9.5
+        ]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": 31.24,
+      "lat": 30.04,
+      "date": "1487–1491",
+      "label": "Cairo, where the roads parted and met again",
+      "source": "Pêro da Covilhã (Wikipedia)",
+      "cite": "pero-da-covilha",
+      "text": "Covilhã and Paiva agreed to meet again in Cairo. When he came back in 1491 he learned that Paiva had died on the way to Ethiopia, and sent his report of India and the African coast to John II by José Sapateiro of Lamego, one of two Portuguese Jews sent out with the king's letters.",
+      "confidence": "attested"
+    },
+    {
+      "kind": "event",
+      "lon": 38.7,
+      "lat": 9.3,
+      "date": "from c. 1493",
+      "label": "Ethiopia, held for life",
+      "source": "Pêro da Covilhã (Wikipedia)",
+      "cite": "pero-da-covilha",
+      "text": "Emperor Eskender received him with honours and land but would not let him go, and his successors did the same. When Rodrigo de Lima's embassy came in 1520 he wept to see fellow Portuguese, and was of use to it as an interpreter. The mark stands in the highlands; the court moved and its place is not checked.",
+      "confidence": "inferred"
+    }
+  ],
+  "kind": "voyage"
+}

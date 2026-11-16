@@ -1,0 +1,108 @@
+{
+  "id": "burton-speke",
+  "title": "Burton and Speke from the coast to Lake Tanganyika and Lake Victoria, 1857–1859",
+  "short": "Burton and Speke",
+  "who": [
+    "richard-francis-burton",
+    "john-hanning-speke",
+    "sidi-mubarak-bombay"
+  ],
+  "when": "1857–1859",
+  "summary": "By 7 November 1857 Burton and Speke, with a caravan led by the guides and porters of the coast, had gone 600 miles on foot and donkey to Kazeh (Tabora), where they rested among the Arab traders. Burton fell gravely ill, Speke went blind for a time, and in February 1858 they reached Ujiji and were the first Europeans to see Lake Tanganyika. At Kazeh in the summer Burton was too weak to go to a second lake, to the north-east, and Speke went with 34 men and Bombay and Mabruki as his captains, and on 30 July 1858 saw Lake Victoria. The men, Wikipedia says, did much of the labour: Bombay, enslaved as a child, later chief of Stanley's caravan, was the one Burton called the gem of the party. The road from Zanzibar is drawn between the named places and the track back is not.",
+  "sources": [
+    "john-hanning-speke",
+    "sidi-mubarak-bombay"
+  ],
+  "legs": [
+    {
+      "from": "Zanzibar",
+      "to": "Ujiji",
+      "dates": "1857–February 1858",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "John Hanning Speke (Wikipedia): Kazeh (Tabora) by 7 November 1857, Ujiji in February 1858; the Zanzibar sea crossing and the stages between are drawn straight",
+      "doubt": "The text names Kazeh and Ujiji only; the points between are the usual caravan road, not their daily stages.",
+      "points": [
+        [
+          39.2,
+          -6.17
+        ],
+        [
+          38.9,
+          -6.44
+        ],
+        [
+          37.0,
+          -6.5
+        ],
+        [
+          35.0,
+          -5.8
+        ],
+        [
+          32.8,
+          -5.02
+        ],
+        [
+          31.0,
+          -5.0
+        ],
+        [
+          29.68,
+          -4.91
+        ]
+      ]
+    },
+    {
+      "from": "Tabora",
+      "to": "Lake Victoria",
+      "dates": "May–August 1858",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "John Hanning Speke (Wikipedia): a 47-day side trip of 452 miles up and down with 34 men and Bombay and Mabruki as his captains, the lake first seen on 30 July 1858; the lake shore is approximated at Mwanza",
+      "doubt": "The only point given is the lake; the landfall at Mwanza stands for the south shore.",
+      "points": [
+        [
+          32.8,
+          -5.02
+        ],
+        [
+          32.9,
+          -3.5
+        ],
+        [
+          32.9,
+          -2.52
+        ]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "landfall",
+      "lon": 29.68,
+      "lat": -4.91,
+      "date": "February 1858",
+      "label": "Ujiji, Lake Tanganyika seen",
+      "source": "John Hanning Speke (Wikipedia)",
+      "cite": "john-hanning-speke",
+      "text": "The first Europeans to reach Lake Tanganyika, though Speke was partly blind at the time and could not properly see it.",
+      "confidence": "attested"
+    },
+    {
+      "kind": "landfall",
+      "lon": 32.9,
+      "lat": -2.52,
+      "date": "30 July 1858",
+      "label": "Lake Victoria seen",
+      "source": "John Hanning Speke (Wikipedia)",
+      "cite": "john-hanning-speke",
+      "text": "Speke was the first European to see the lake the Luo call Nam Lolwe. Wikipedia says the labours of Bombay and Mabruki were instrumental in the find. The mark stands at Mwanza on the south shore.",
+      "confidence": "inferred",
+      "doubt": "The source gives the date and the lake, not the place on its shore."
+    }
+  ],
+  "kind": "voyage"
+}

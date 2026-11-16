@@ -1,0 +1,140 @@
+{
+  "id": "ngoni-migration",
+  "kind": "migration",
+  "title": "The Jere Ngoni under Zwangendaba, c. 1819–1850",
+  "short": "Ngoni",
+  "who": [
+    "jere-ngoni"
+  ],
+  "when": "c. 1819–1850",
+  "summary": "After Zwide's Ndwandwe were beaten by the Zulu about 1819, Zwangendaba, one of Zwide's indunas, led his group north. He first settled near the Mkomati River, north of Delagoa Bay, fled north after clashing with Soshangane, Nxaba and Mzilikazi, raided the Rozvi on the Zimbabwean plateau for several years, and crossed the Zambezi in 1835. In 1840 his forces massacred many Tonga and took Chewa and Tumbuka captives. They reached the Ufipa plateau, where Zwangendaba died in the late 1840s; the group then split in civil war and M'mbelwa settled the largest part at Mzimba in Malawi about 1850. The upheaval behind it, the Mfecane, is debated.",
+  "sources": [
+    "jere-ngoni-kingdom"
+  ],
+  "legs": [
+    {
+      "from": "Zululand",
+      "to": "the Mkomati River",
+      "dates": "c. 1819",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Jere Ngoni Kingdom (Wikipedia): after the Ndwandwe defeat about 1819 Zwangendaba led his group north, first to the Mkomati River north of Delagoa Bay",
+      "reach": [
+        0,
+        0.2
+      ],
+      "heads": "end",
+      "points": [
+        [
+          31.5,
+          -28.0
+        ],
+        [
+          32.0,
+          -26.5
+        ],
+        [
+          32.5,
+          -25.4
+        ]
+      ]
+    },
+    {
+      "from": "the Mkomati River",
+      "to": "the Zambezi",
+      "dates": "c. 1820s–1835",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Jere Ngoni Kingdom (Wikipedia): fled north, onto the Zimbabwean plateau, raided the Rozvi for several years, crossed the Zambezi in 1835",
+      "reach": [
+        0.2,
+        0.55
+      ],
+      "heads": "end",
+      "points": [
+        [
+          32.5,
+          -25.4
+        ],
+        [
+          31.8,
+          -22.0
+        ],
+        [
+          30.5,
+          -20.0
+        ],
+        [
+          30.2,
+          -18.0
+        ],
+        [
+          30.4,
+          -15.7
+        ]
+      ]
+    },
+    {
+      "from": "the Zambezi",
+      "to": "the Ufipa plateau",
+      "dates": "1835–late 1840s",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Jere Ngoni Kingdom (Wikipedia): after the crossing, Tonga attacked in 1840, Chewa and Tumbuka captured, on to the Ufipa plateau where Zwangendaba died; the line is drawn between the places",
+      "reach": [
+        0.55,
+        1
+      ],
+      "heads": "end",
+      "points": [
+        [
+          30.4,
+          -15.7
+        ],
+        [
+          31.5,
+          -13.0
+        ],
+        [
+          32.0,
+          -11.5
+        ],
+        [
+          31.5,
+          -9.5
+        ],
+        [
+          31.5,
+          -8.2
+        ]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "waypoint",
+      "lon": 30.4,
+      "lat": -15.7,
+      "date": "1835",
+      "label": "The Zambezi crossed",
+      "source": "Jere Ngoni Kingdom (Wikipedia)",
+      "cite": "jere-ngoni-kingdom",
+      "text": "Zwangendaba crossed the Zambezi in 1835, leaving some troops behind with his relative Nyamazana, who later killed the Rozvi king. The mark stands on the river; the crossing place is not given.",
+      "confidence": "inferred"
+    },
+    {
+      "kind": "waypoint",
+      "lon": 31.5,
+      "lat": -8.2,
+      "date": "late 1840s",
+      "label": "The Ufipa plateau, where Zwangendaba died",
+      "source": "Jere Ngoni Kingdom (Wikipedia)",
+      "cite": "jere-ngoni-kingdom",
+      "text": "After his death the Jere Ngoni split amid civil war over succession; his son M'mbelwa led the largest part to Mzimba in Malawi about 1850 and built a state that took in many local groups and raided the fringes for captives, cattle and food.",
+      "confidence": "inferred"
+    }
+  ]
+}

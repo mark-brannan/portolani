@@ -1,0 +1,105 @@
+{
+  "id": "askia-hajj",
+  "title": "Askia Muhammad's pilgrimage from Gao to Mecca, c. 1496–1498",
+  "short": "Askia's hajj",
+  "who": [
+    "askia-muhammad"
+  ],
+  "when": "c. 1496–1498",
+  "summary": "In 1496 the new ruler of the Songhai empire went on the hajj, with 500 horsemen and 1,000 foot, gave freely on the way, set up a house for West African pilgrims at Medina, and came home to Gao nearly two years later, 50,000 ducats in debt but with the titles al-Hajj and khalifa that made Islam a pillar of his rule. Wikipedia dates it 1496 in one place and 1497–98 in another. The source gives no route: the line is the usual pilgrim road from the Sudan by Cairo, drawn straight.",
+  "sources": [
+    "askia-muhammad"
+  ],
+  "legs": [
+    {
+      "from": "Gao",
+      "to": "Cairo",
+      "dates": "c. 1496",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Askia Muhammad I (Wikipedia): the source names Mecca and Medina and no road; Cairo and the desert stages are the usual pilgrim road, not his",
+      "doubt": "The only source used names no route; the line is the usual way a ruler of the Sudan went to Mecca, and may not be his.",
+      "points": [
+        [
+          -0.05,
+          16.27
+        ],
+        [
+          3.0,
+          18.5
+        ],
+        [
+          8.0,
+          20.0
+        ],
+        [
+          12.0,
+          22.0
+        ],
+        [
+          13.9,
+          25.9
+        ],
+        [
+          21.3,
+          29.1
+        ],
+        [
+          26.5,
+          30.0
+        ],
+        [
+          31.24,
+          30.04
+        ]
+      ]
+    },
+    {
+      "from": "Cairo",
+      "to": "Mecca",
+      "dates": "c. 1496–1497",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Askia Muhammad I (Wikipedia): to Mecca and on to Medina; the Red Sea crossing and the Hejaz road are drawn straight",
+      "points": [
+        [
+          31.24,
+          30.04
+        ],
+        [
+          33.6,
+          28.2
+        ],
+        [
+          35.0,
+          26.0
+        ],
+        [
+          37.0,
+          24.5
+        ],
+        [
+          39.82,
+          21.42
+        ]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": 39.82,
+      "lat": 21.42,
+      "date": "c. 1496–1497",
+      "label": "Mecca and Medina, the titles of al-Hajj and khalifa",
+      "source": "Askia Muhammad I (Wikipedia)",
+      "cite": "askia-muhammad",
+      "text": "He made many charitable gifts, set up a lodging for West African pilgrims in Medina, and returned to Gao having run up 50,000 ducats in debt. The titles he took home strengthened him at home.",
+      "confidence": "attested",
+      "doubt": "Wikipedia dates the hajj 1496 in the body and 1497–98 in the opening paragraph."
+    }
+  ],
+  "kind": "voyage"
+}

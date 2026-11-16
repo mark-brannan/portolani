@@ -1,0 +1,117 @@
+{
+  "id": "clapperton-denham-oudney",
+  "title": "Oudney, Denham and Clapperton from Tripoli to Bornu and Sokoto, 1822–1825",
+  "short": "Denham, Clapperton and Oudney",
+  "who": [
+    "walter-oudney",
+    "dixon-denham",
+    "hugh-clapperton"
+  ],
+  "when": "1822–1825",
+  "summary": "A British expedition from Tripoli, led by Walter Oudney as consul to Bornu, set out in early 1822 for Murzuk and across the Sahara. Dixon Denham joined at Murzuk and found the others in a wretched condition. They reached Kuka, the capital of the Bornu empire, on 17 February 1823, having been the first white men to see Lake Chad, and were well received by Sheikh al-Kanemi. On 14 December Clapperton and Oudney parted from Denham to find the Niger, while Denham stayed to survey Lake Chad. Only the way out from Tripoli, and Clapperton's road on to Kano and Sokoto, are drawn; the way home in 1825 is not.",
+  "sources": [
+    "hugh-clapperton"
+  ],
+  "legs": [
+    {
+      "from": "Tripoli",
+      "to": "Kuka",
+      "dates": "1822–1823",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Hugh Clapperton (Wikipedia): from Tripoli early in 1822 south to Murzuk, joined there by Denham, and on to Kuka, reached 17 February 1823; the Sahara stages between are not drawn from a narrative",
+      "points": [
+        [
+          13.19,
+          32.89
+        ],
+        [
+          13.0,
+          29.0
+        ],
+        [
+          13.9,
+          25.9
+        ],
+        [
+          14.2,
+          21.0
+        ],
+        [
+          14.4,
+          17.0
+        ],
+        [
+          14.2,
+          14.2
+        ],
+        [
+          13.57,
+          12.93
+        ]
+      ]
+    },
+    {
+      "from": "Kuka",
+      "to": "Sokoto",
+      "dates": "14 December 1823–1824",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Hugh Clapperton (Wikipedia): Clapperton and Oudney left Denham at Kuka on 14 December to explore toward the Niger; Clapperton went on to Kano and Sokoto, the Hausa states, the road drawn between them",
+      "doubt": "Wikipedia says Clapperton reached Kano and Sokoto; the points between follow the usual road across Hausaland, not his stages.",
+      "points": [
+        [
+          13.57,
+          12.93
+        ],
+        [
+          11.5,
+          12.6
+        ],
+        [
+          10.35,
+          12.28
+        ],
+        [
+          8.52,
+          12.0
+        ],
+        [
+          6.8,
+          12.6
+        ],
+        [
+          5.24,
+          13.06
+        ]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "landfall",
+      "lon": 13.57,
+      "lat": 12.93,
+      "date": "17 February 1823",
+      "label": "Kuka, Bornu: Lake Chad seen",
+      "source": "Hugh Clapperton (Wikipedia)",
+      "cite": "hugh-clapperton",
+      "text": "Capital of the Bornu empire, where Sheikh al-Kanemi received the party well. Denham and Clapperton had been the first white men to see Lake Chad on the way. Denham stayed on to survey the lake's western, southern and south-eastern shores and the lower courses of the rivers that feed it.",
+      "confidence": "attested"
+    },
+    {
+      "kind": "event",
+      "lon": 5.24,
+      "lat": 13.06,
+      "date": "1824",
+      "label": "Sokoto, the Fulani capital",
+      "source": "Hugh Clapperton (Wikipedia)",
+      "cite": "hugh-clapperton",
+      "text": "Clapperton was the first European to make known from his own observation the Hausa states, soon after the Fulani set up the Sokoto Caliphate. On the second expedition, in 1826–27, Sultan Bello would not let him go on to Bornu and Clapperton died at Sokoto.",
+      "confidence": "attested"
+    }
+  ],
+  "kind": "voyage"
+}

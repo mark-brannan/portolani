@@ -1,0 +1,145 @@
+{
+  "id": "kololo-migration",
+  "kind": "migration",
+  "title": "The Kololo under Sebetwane, c. 1823–1845",
+  "short": "Kololo",
+  "who": [
+    "makololo"
+  ],
+  "when": "c. 1823–1845",
+  "summary": "From a home near Basutoland the Kololo began in 1823 a migration north through Botswana, defeated a number of societies and suffered a catastrophic defeat to the Bangwaketse at Dithubaruba in 1826. At some point in the late 1820s or 1830s they crossed the Zambezi at Kazungula under Sebetwane, plundered the Batoka plateau, were driven west by the Ndebele from the south and the Ila from the north, and in the Bulozi floodplain met the Lozi, weakened by a war of succession. By 1845 Sebetwane had conquered Barotseland and become king; he died in 1851, soon after meeting Livingstone. The Mfecane, as the source calls the upheaval behind it, is itself debated by historians.",
+  "sources": [
+    "kololo-people"
+  ],
+  "legs": [
+    {
+      "from": "near Basutoland",
+      "to": "Dithubaruba",
+      "dates": "from 1823",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Kololo people (Wikipedia): from the home area close to Basutoland north through Botswana, defeated at Dithubaruba in 1826; the road is drawn between the places, not a track",
+      "reach": [
+        0,
+        0.35
+      ],
+      "heads": "end",
+      "points": [
+        [
+          28.0,
+          -29.5
+        ],
+        [
+          26.0,
+          -27.0
+        ],
+        [
+          25.0,
+          -25.8
+        ]
+      ]
+    },
+    {
+      "from": "Dithubaruba",
+      "to": "Kazungula",
+      "dates": "late 1820s–1830s",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Kololo people (Wikipedia): north through Botswana, across the Zambezi at Kazungula",
+      "reach": [
+        0.35,
+        0.65
+      ],
+      "heads": "end",
+      "doubt": "Wikipedia says the crossing came at 'some point in the late 1820s or in the 1830s', in a series of steps; the stages are not dated in the source used.",
+      "points": [
+        [
+          25.0,
+          -25.8
+        ],
+        [
+          24.5,
+          -22.0
+        ],
+        [
+          24.8,
+          -19.0
+        ],
+        [
+          25.27,
+          -17.8
+        ]
+      ]
+    },
+    {
+      "from": "Kazungula",
+      "to": "Barotseland",
+      "dates": "by 1845",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Kololo people (Wikipedia): plundered the Batoka plateau, then driven west to the Bulozi floodplain, which Sebetwane had conquered by 1845",
+      "reach": [
+        0.65,
+        1
+      ],
+      "heads": "end",
+      "points": [
+        [
+          25.27,
+          -17.8
+        ],
+        [
+          25.0,
+          -17.2
+        ],
+        [
+          24.0,
+          -16.0
+        ],
+        [
+          23.02,
+          -15.22
+        ]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "waypoint",
+      "lon": 28.0,
+      "lat": -29.5,
+      "date": "from 1823",
+      "label": "Near Basutoland, displaced in the Mfecane",
+      "source": "Kololo people (Wikipedia)",
+      "cite": "kololo-people",
+      "text": "The Kololo are said to have been displaced by the Zulu under Shaka in a chain of events known as the Mfecane, and in 1823 began a migration north. The mark stands at a point in the Basutoland country; their home area is not given more closely.",
+      "confidence": "inferred",
+      "doubt": "The Mfecane as a single cause is questioned: the Jere Ngoni article cites Eldredge on its 'reconsideration' as a period of instability with older causes."
+    },
+    {
+      "kind": "waypoint",
+      "lon": 25.0,
+      "lat": -25.8,
+      "date": "1826",
+      "label": "Dithubaruba, the defeat by the Bangwaketse",
+      "source": "Kololo people (Wikipedia)",
+      "cite": "kololo-people",
+      "text": "After defeating a number of societies in what is now southern Botswana the Kololo suffered a catastrophic defeat to the Bangwaketse at Dithubaruba in 1826. The mark stands in the Bangwaketse country; the site is not checked.",
+      "confidence": "speculative"
+    },
+    {
+      "kind": "waypoint",
+      "lon": 23.02,
+      "lat": -15.22,
+      "date": "by 1845",
+      "label": "Barotseland, the Kololo kingdom",
+      "source": "Kololo people (Wikipedia)",
+      "cite": "kololo-people",
+      "text": "By 1845 Sebetwane had conquered Barotseland and become king. He died in 1851, shortly after meeting David Livingstone. The kingdom lasted until 1864, and the Kololo language outlived it. The mark stands at Lealui.",
+      "confidence": "inferred"
+    }
+  ]
+}
