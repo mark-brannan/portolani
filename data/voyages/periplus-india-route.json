@@ -1,0 +1,64 @@
+{
+  "id": "periplus-india-route",
+  "title": "The Periplus of the Erythraean Sea: Berenice to Muziris, c. AD 40–70",
+  "short": "Periplus route",
+  "who": ["periplus-merchants"],
+  "when": "c. AD 40–70",
+  "summary": "A first-century Greek merchant's guide to trade and navigation from the Roman Egyptian ports of the Red Sea. This is its India run: from Berenice Troglodytica down the Red Sea to Adulis, out past the frankincense harbour of Cana on the Arabian coast, and across the open ocean with the summer monsoon (the guide credits Hippalus, in the first century BC, with the direct crossing, and says Egypt-to-India voyages were best made about July) to Muziris on the Malabar coast. The text also runs down the African coast to Rhapta and up the Indian coast to Barygaza and the Ganges; those are not drawn. Its author and exact date are unknown.",
+  "sources": ["periplus-erythraean-sea"],
+  "legs": [
+    {
+      "from": "Berenice Troglodytica",
+      "to": "Adulis",
+      "dates": "c. AD 40–70",
+      "start": "40~",
+      "end": "70~",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Periplus of the Erythraean Sea (Wikipedia): the guide starts at Roman Egyptian ports such as Berenice and runs down the African coast through Adulis",
+      "points": [[35.8,23.6], [37.4,22.4], [38,21.2], [38.8,19.6], [39.6,18.4], [40.2,17.2], [40.6,16.4]]
+    },
+    {
+      "from": "Adulis",
+      "to": "Cana",
+      "dates": "c. AD 40–70",
+      "start": "40~",
+      "end": "70~",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Periplus of the Erythraean Sea (Wikipedia): past the southern Arabian kingdoms of Himyar and Saba to the frankincense realm around the harbour of Cana",
+      "doubt": "The article places Cana only as a harbour of the frankincense realm; Bir Ali on the south Arabian coast is the usual identification and is drawn.",
+      "points": [[40.6,16.4], [41.4,15.2], [42.2,14.4], [42.6,13.6], [43,13], [43.8,12.4], [45.5,12.3], [47,13.1], [48.4,13.6]]
+    },
+    {
+      "from": "Cana",
+      "to": "Muziris",
+      "dates": "c. AD 40–70",
+      "start": "40~",
+      "end": "70~",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Periplus of the Erythraean Sea (Wikipedia): Hippalus found a direct route across the open ocean to India; Egypt-to-India voyages were best made about July; the route reaches the Chera and Pandyan ports such as Muziris and Nelcynda",
+      "doubt": "Where Muziris lay is itself disputed (Kodungallur or Pattanam, both on this coast); the line ends off Kodungallur. The article does not say the crossing began from Cana; that departure point is the usual drawing.",
+      "points": [[48.4,13.6], [55,13], [65,11.5], [72,10.5], [76,10.2]]
+    }
+  ],
+  "events": [
+    {
+      "kind": "landfall",
+      "lon": 76.0,
+      "lat": 10.2,
+      "date": "c. AD 40–70",
+      "label": "Muziris, the Malabar port the guide runs to",
+      "source": "Periplus of the Erythraean Sea (Wikipedia)",
+      "cite": "periplus-erythraean-sea",
+      "text": "The Chera and Pandyan ports such as Muziris and Nelcynda were the Malabar end of the direct monsoon crossing.",
+      "confidence": "inferred",
+      "doubt": "Where Muziris stood is disputed, Kodungallur or Pattanam."
+    }
+  ],
+  "kind": "voyage"
+}

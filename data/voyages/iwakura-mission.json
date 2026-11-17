@@ -1,0 +1,138 @@
+{
+  "id": "iwakura-mission",
+  "title": "The Iwakura Mission round the world, 1871–73",
+  "short": "Iwakura Mission",
+  "who": ["iwakura-tomomi", "kume-kunitake", "tsuda-ume", "yamakawa-sutematsu"],
+  "when": "1871–1873",
+  "summary": "Meiji Japan's embassy to the treaty powers: the ambassador Iwakura Tomomi, four vice-ambassadors and a party of some fifty officials and scholars, with students, left Yokohama on 23 December 1871 on the SS America. They crossed the United States by rail to Washington, sailed to Liverpool in August 1872, toured Britain, saw Queen Victoria at Windsor on 5 December, then France, Belgium, the Netherlands, Prussia, Denmark, Sweden, Austria, Italy and Switzerland, and came home by Egypt, Aden, Ceylon, Singapore, Saigon, Hong Kong and Shanghai, reaching Yokohama on 13 September 1873. Kume Kunitake wrote the official record. The Continental tour is not drawn, for the article gives its countries and no order, nor is the way from Europe to Egypt.",
+  "sources": ["iwakura-mission"],
+  "legs": [
+    {
+      "from": "Yokohama",
+      "to": "San Francisco",
+      "dates": "23 Dec 1871 – 15 Jan 1872",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Iwakura Mission (Wikipedia): sailed from Yokohama on the SS America and reached San Francisco on 15 January 1872; the track between is the usual great-circle-ish steamer route, not a logged one",
+      "points": [[139.8,35.4], [139.75,35.3], [139.7,35.1], [139.7,34.8], [141.5,34.6], [144,36], [148,38.5], [160,42], [180,44.5], [-160,44], [-140,40.5], [-128,37.9], [-123.2,37.78]]
+    },
+    {
+      "from": "San Francisco",
+      "to": "Washington",
+      "dates": "Jan – 29 Feb 1872",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Iwakura Mission (Wikipedia): by train through Salt Lake City and Chicago to Washington, reached 29 February 1872; the line joins those named towns",
+      "points": [[-122.42, 37.77], [-112.0, 40.76], [-87.63, 41.88], [-77.04, 38.9]]
+    },
+    {
+      "from": "Washington",
+      "to": "New York",
+      "dates": "Mar – Aug 1872",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Iwakura Mission (Wikipedia): school and industrial tours of Boston, New York and Washington, then sailed for the UK in August 1872; the port of sailing is not named in the article",
+      "doubt": "The article does not say which port they sailed from; New York is the likeliest and is drawn. The Boston tours are not drawn.",
+      "points": [[-77.04, 38.9], [-75.16, 39.95], [-74.0, 40.71]]
+    },
+    {
+      "from": "New York",
+      "to": "Liverpool",
+      "dates": "Aug 1872 – 17 Aug 1872",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Iwakura Mission (Wikipedia): arrived at Liverpool on 17 August 1872 on the Cunard steamer Olympus; the track is the usual North Atlantic steamer route",
+      "points": [[-73.9,40.55], [-65,41.5], [-45,47], [-25,51.5], [-10,51], [-7,51.5], [-5.9,52], [-5.2,53], [-4.4,53.7], [-3.3,53.55]]
+    },
+    {
+      "from": "Liverpool",
+      "to": "London",
+      "dates": "Aug – Dec 1872",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Iwakura Mission (Wikipedia): Liverpool, then Manchester, then London from late August; the groups later split across Britain and are not drawn",
+      "points": [[-2.99, 53.41], [-2.24, 53.48], [-0.13, 51.51]]
+    },
+    {
+      "from": "London",
+      "to": "Paris",
+      "dates": "16 Dec 1872",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Iwakura Mission (Wikipedia): left for France on 16 December 1872 and met President Thiers on 26 December; the Channel crossing is drawn as a straight link, not a track",
+      "points": [[-0.13, 51.51], [1.3, 51.1], [2.35, 48.86]]
+    },
+    {
+      "from": "Suez",
+      "to": "Aden",
+      "dates": "1873",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Iwakura Mission (Wikipedia): the way home went by Egypt, Aden, Ceylon, Singapore, Saigon, Hong Kong and Shanghai; no dates are given for the ports",
+      "doubt": "The article names only Egypt; Suez is the port from which the Red Sea leg would start. How they reached Egypt from Europe is not given.",
+      "points": [[32.45,29.6], [32.85,29], [33.2,28.4], [34,27.6], [34.8,27], [35.4,26], [36,25], [37,24], [38,22], [39,20], [40.2,18], [41.2,16], [42.4,14], [43.1,13], [44.2,12.4], [45,12.2]]
+    },
+    {
+      "from": "Aden",
+      "to": "Colombo",
+      "dates": "1873",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Iwakura Mission (Wikipedia): Aden, then Ceylon; the article names the island, not a port",
+      "points": [[45,12.2], [55,12], [68,8.5], [78,6], [79.7,6.9]]
+    },
+    {
+      "from": "Colombo",
+      "to": "Singapore",
+      "dates": "1873",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Iwakura Mission (Wikipedia): Ceylon, then Singapore",
+      "points": [[79.7,6.9], [79.9,5.7], [80.6,5.6], [85,5.3], [92,5.8], [96,6], [98,5.6], [98.8,4.4], [100.4,3.2], [101.3,2.5], [102.2,2], [102.8,1.5], [103.3,1.2], [103.85,1.1]]
+    },
+    {
+      "from": "Singapore",
+      "to": "Hong Kong",
+      "dates": "1873",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Iwakura Mission (Wikipedia): Singapore, Saigon, Hong Kong; Saigon lies up its river, so the line stands off its mouth",
+      "doubt": "The article names Saigon between Singapore and Hong Kong; the line passes off Cap Saint-Jacques at the river mouth, not up the river.",
+      "points": [[103.85,1.1], [105,2], [106.5,5], [107.5,8], [107.5,10], [109.6,12], [110,14], [111.5,17], [112.5,19.5], [113,20.5], [114.2,22.1]]
+    },
+    {
+      "from": "Hong Kong",
+      "to": "Yokohama",
+      "dates": "1873 – 13 Sep 1873",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Iwakura Mission (Wikipedia): Hong Kong, Shanghai, then Yokohama, reached on 13 September 1873",
+      "points": [[114.2,22.1], [116,22.3], [118.5,23.4], [119.3,24.1], [120,26], [121,27], [123,30], [123,31.1], [124,31.5], [128.5,31], [131.5,31], [133,31.5], [136,33], [138.5,34.2], [139.7,34.8], [139.7,35.1], [139.75,35.3], [139.8,35.4]]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": -0.6,
+      "lat": 51.48,
+      "date": "5 Dec 1872",
+      "label": "Audience with Queen Victoria at Windsor",
+      "source": "Iwakura Mission (Wikipedia)",
+      "cite": "iwakura-mission",
+      "text": "The mission was received by the Queen at Windsor Castle on 5 December 1872, and by the Prince of Wales at Sandringham four days later.",
+      "confidence": "attested"
+    }
+  ],
+  "kind": "voyage"
+}
