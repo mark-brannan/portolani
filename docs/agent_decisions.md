@@ -696,3 +696,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261117t101134z
 - Askia's road from Cairo drawn by Aqaba and the Hejaz (article silent) Stanley's leg drawn straight from Bagamoyo to Kagehyi (article names no road) Bantu leg to the Congo and Angola ends about AD 500 (reviewer's suggestion, not in the article) Oudney's death dated 1824 and marked at Katagum, nearest town to Murmur Cao's two southern legs end about 10 km off their capes Covilha's Red Sea track by Suakin and the Bab-el-Mandeb drawn, not recorded Undo: edit the record under data/voyages ([#418](https://github.com/mark-brannan/portolani/pull/418))
+
+### 20261117t102508z
+- Cortes: retreat to Tlaxcala and return by Texcoco drawn conventional Champlain 1608 crossing: April and June stand-in months, course inferred Manteo: 1586 leg with a doubt, stand-in start and port; 1587 baptism plays at the leg's end Cartier: leg back to Stadacona starts 4 Oct Drake: Port Pheasant to Nombre de Dios leg conventional Frobisher: 1576 leg starts in August, ends in the Thames estuary Mexica: founding year 1325 kept as the tradition's Peopling record's play order left wrong: date reader takes no five-digit year, same on main Undo: edit the record under data/voyages ([#419](https://github.com/mark-brannan/portolani/pull/419))
