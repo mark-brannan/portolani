@@ -1,0 +1,58 @@
+{
+  "id": "abd-al-razzaq",
+  "title": "Abd al-Razzaq, Shah Rukh's envoy from Herat to Calicut and Vijayanagara, 1442–45",
+  "short": "Abd al-Razzaq",
+  "who": ["abd-al-razzaq-samarqandi"],
+  "when": "1442–1445",
+  "summary": "Ambassador of the Timurid ruler Shah Rukh to the Zamorin of Calicut (Kozhikode) from January 1442 to January 1445, sent, by his own report, to invite the Zamorin to Islam. He went overland by Kohistan and Kerman to Hormuz, where its rulers, who held the trade between south India and Iran, are said to have tried to thwart him, then by sea to Calicut and on to the court of Vijayanagara at Hampi, which he left in December 1443. His 45-page narrative in the Matla-us-Sadain describes Calicut's society and Vijayanagara's wealth. The way home is not drawn; the sources say only that he returned towards Hormuz.",
+  "sources": ["abd-al-razzaq-samarqandi"],
+  "legs": [
+    {
+      "from": "Herat",
+      "to": "Hormuz",
+      "dates": "1442",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Abd al-Razzaq Samarqandi (Wikipedia and a search summary): overland through Kohistan and Kerman to the port of Hormuz; the stages are the usual road, not a list",
+      "doubt": "Wikipedia names only Calicut and Vijayanagara; that he started from Herat and went by Kohistan, Kerman and Hormuz comes from search summaries of his account, not a page read in full. Hormuz is drawn at the mainland port opposite the island.",
+      "points": [[62.2, 34.35], [59.2, 33.0], [57.07, 30.28], [56.3, 27.2]]
+    },
+    {
+      "from": "Hormuz",
+      "to": "Calicut",
+      "dates": "1442",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Abd al-Razzaq Samarqandi (Wikipedia): ambassador to Kozhikode, Jan 1442 – Jan 1445; the sea track from Hormuz is the usual Gulf and Arabian Sea road to the Malabar coast, not a logged one",
+      "points": [[56.5,27], [56.9,26.3], [57.2,25.55], [58,25.1], [60,23.3], [64,18], [69,14], [73.5,11.5], [75.5,11.25]]
+    },
+    {
+      "from": "Calicut",
+      "to": "Vijayanagara",
+      "dates": "1443",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Abd al-Razzaq Samarqandi (Wikipedia): Calicut, then the court at Vijayanagara (Hampi); left in December 1443",
+      "doubt": "Wikipedia does not say whether Vijayanagara was part of the official mission or give the road; the line is the direct course.",
+      "points": [[75.78, 11.25], [76.4, 12.3], [76.5, 14.0], [76.46, 15.33]]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": 76.46,
+      "lat": 15.33,
+      "date": "Dec 1443",
+      "label": "Leaves Vijayanagara",
+      "source": "Abd al-Razzaq Samarqandi (search summary of his account)",
+      "cite": "abd-al-razzaq-samarqandi",
+      "text": "He left Vijayanagara in December 1443 and returned towards Hormuz, ending his Indian mission in early 1445.",
+      "confidence": "inferred",
+      "doubt": "The December 1443 date and the return come from a search summary; sources differ on the end of the mission, 1444 or 1445."
+    }
+  ],
+  "kind": "voyage"
+}
