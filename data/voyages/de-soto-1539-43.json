@@ -4,7 +4,7 @@
   "short": "De Soto",
   "who": ["hernando-de-soto"],
   "when": "1539–1543",
-  "summary": "De Soto landed on the Gulf coast of Florida with some 600 men, 200 horses and a herd of pigs, and spent three years going north-east through the Apalachee and Cofitachequi country, west across the Appalachians and the Mississippi, and on into Arkansas. He was seeking gold and found none; he took people as porters and guides and left disease behind. He died on the Mississippi, and the survivors went down the river in boats.",
+  "summary": "De Soto landed on the Gulf coast of Florida with some 600 men, 200 horses and a herd of pigs, and spent three years going north-east through the Apalachee and Cofitachequi country, west across the Appalachians and the Mississippi, and on into Arkansas. He was seeking gold and found none; he took people as porters and guides and left disease behind. He died on the Mississippi, and the survivors went down the river in boats and on to Pánuco. Moscoso's march west into Texas in 1542–43 is left off the map.",
   "sources": ["wp-de-soto"],
   "legs": [
     {
@@ -87,13 +87,13 @@
     },
     {
       "from": "Guachoya",
-      "to": "Pánuco",
-      "dates": "Jul 1542 – Sep 1543",
+      "to": "the mouth of the Mississippi",
+      "dates": "Jul 1543",
       "mode": "land",
       "line": "spline",
       "confidence": "inferred",
-      "source": "Hernando de Soto (Wikipedia): Luis de Moscoso led the survivors by land west and then back to the river, and down it in boats",
-      "note": "the river leg is drawn as a track; the sea leg follows",
+      "source": "Hernando de Soto (Wikipedia): the survivors went down the river in boats under Luis de Moscoso",
+      "note": "the river descent only; Moscoso's march west into Texas and back, and the winter at Aminoya, are not drawn",
       "points": [
         [-91.2, 31.5],
         [-91.5, 30],

@@ -9,7 +9,7 @@
   "legs": [
     {
       "from": "Plymouth",
-      "to": "Port Pheasant",
+      "to": "Port Pheasant, in the Gulf of Darién",
       "dates": "24 May – 12 Jul 1572",
       "mode": "sea",
       "line": "spline",
@@ -21,11 +21,12 @@
         [-40, 30],
         [-65, 18],
         [-75, 13],
-        [-79.5, 9.75]
+        [-77.2, 9.3],
+        [-77.4, 8.7]
       ]
     },
     {
-      "from": "Port Pheasant",
+      "from": "the coast near Nombre de Dios",
       "to": "a hilltop view of the Pacific",
       "dates": "Feb 1573",
       "mode": "land",
@@ -41,7 +42,7 @@
       ]
     },
     {
-      "from": "Port Pheasant",
+      "from": "the coast near Nombre de Dios",
       "to": "Plymouth",
       "dates": "Apr – 9 Aug 1573",
       "mode": "sea",
@@ -71,8 +72,8 @@
     },
     {
       "kind": "event",
-      "lon": -79.2,
-      "lat": 9.25,
+      "lon": -79.4,
+      "lat": 9.5,
       "date": "Mar 1573",
       "label": "The mule train ambushed",
       "confidence": "inferred",
