@@ -2646,11 +2646,73 @@ export function notePulse(t, reduced = false) {
   if (t >= p.ms) return null;
   if (reduced) return { alpha: 1 - t / p.ms, ring: p.still };
   const each = p.ms / p.rings, last = (p.rings - 1) * each;
-  return { alpha: t < last ? 1 : 1 - (t - last) / each, ring: (t % each) / each };
+  return { alpha: t < last ? 1 : 1 - (t - last) / each, ring: (t % each) / each, n: Math.floor(t / each) };
+}
+// Mockup (#272): the candidate looks for the pulse, each on the shipped timing, picked on the page by ?pulse=<name>.
+// rings, the shipped one; hand, a loop drawn round the figure with a pen; lamp, a warm glow over the figure; rhumbs,
+// a wind rose's rays in the portolan's ink, green and red.
+export const NOTE_PULSE_STYLES = ['hand', 'lamp', 'rhumbs', 'rings'];
+const pulseRng = (m, n) => { // the same hand for a note's nth loop, every frame
+  let s = (Math.round(m.x) * 73856093) ^ (Math.round(m.y) * 19349663) ^ ((n + 1) * 83492791);
+  return () => { s = (Math.imul(s, 1103515245) + 12345) | 0; return ((s >>> 8) & 0xffff) / 0x10000; };
+};
+// A loop drawn round the note as with a pen: drawn on over the first half of its turn, held, then faded; a little
+// squashed, tilted and overshooting where it closes, thin at both ends and full in the middle, a new loop each turn.
+function drawHandLoop(g, m, u, alpha, n) {
+  const rnd = pulseRng(m, n), R = 22 + rnd() * 5, squash = 0.8 + rnd() * 0.12, tilt = rnd() * Math.PI;
+  const start = rnd() * 2 * Math.PI, sweep = 2 * Math.PI * (1.1 + rnd() * 0.08), ph1 = rnd() * 6, ph2 = rnd() * 6;
+  const drawn = Math.min(1, u / 0.5), a = (u < 0.7 ? 1 : Math.max(0, 1 - (u - 0.7) / 0.3)) * alpha;
+  if (!(a > 0) || !(drawn > 0)) return;
+  const N = Math.max(2, Math.round(72 * drawn)), pts = [];
+  for (let k = 0; k <= N; k++) {
+    const f = (k / N) * drawn, th = start + sweep * f;
+    const r = R * (1 + 0.05 * Math.sin(3 * th + ph1) + 0.03 * Math.sin(5 * th + ph2) + 0.09 * f);
+    const x = r * Math.cos(th), y = r * squash * Math.sin(th);
+    pts.push([m.x + x * Math.cos(tilt) - y * Math.sin(tilt), m.y + x * Math.sin(tilt) + y * Math.cos(tilt), f]);
+  }
+  g.save(); g.lineCap = 'round'; g.lineJoin = 'round';
+  g.globalAlpha = 0.5 * a; g.strokeStyle = STYLE.parchment; g.lineWidth = 6;
+  g.beginPath(); pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke();
+  g.globalAlpha = 0.95 * a; g.strokeStyle = STYLE.windRed;
+  for (let k = 1; k < pts.length; k++) {
+    g.lineWidth = 0.7 + 2.8 * Math.pow(Math.sin(Math.PI * pts[k][2]), 0.6); // the pen's pressure: light at the ends
+    g.beginPath(); g.moveTo(pts[k - 1][0], pts[k - 1][1]); g.lineTo(pts[k][0], pts[k][1]); g.stroke();
+  }
+  g.restore();
+}
+// A warm lamp's glow over the figure, swelling and dying each turn: the scan lightened under it, not covered.
+function drawLampGlow(g, m, u, alpha) {
+  const a = Math.pow(Math.sin(Math.PI * u), 1.2) * alpha, R = 42;
+  if (!(a > 0)) return;
+  g.save(); g.globalCompositeOperation = 'screen';
+  const grad = g.createRadialGradient(m.x, m.y, 0, m.x, m.y, R);
+  grad.addColorStop(0, `rgba(255,232,170,${0.9 * a})`); grad.addColorStop(0.45, `rgba(250,214,140,${0.55 * a})`); grad.addColorStop(1, 'rgba(250,214,140,0)');
+  g.fillStyle = grad; g.beginPath(); g.arc(m.x, m.y, R, 0, 2 * Math.PI); g.fill();
+  g.restore();
+}
+// A wind rose's rays sent out from the note, as the rhumbs leave a portolan's rose: the eight winds in ink, the half
+// winds in green, the quarter winds in red, each a thin line over a parchment halo, reaching out and fading each turn.
+function drawRhumbRays(g, m, u, alpha) {
+  const a = Math.pow(1 - u, 0.8) * alpha, r0 = 5, reach = 8 + u * 44;
+  if (!(a > 0)) return;
+  g.save(); g.lineCap = 'round';
+  for (const halo of [true, false]) for (let i = 0; i < 16; i++) {
+    const th = (i * Math.PI) / 8 - Math.PI / 2, kind = i % 4 === 0 ? 0 : i % 2 === 0 ? 1 : 2;
+    const len = reach * [1, 0.8, 0.6][kind], x = Math.cos(th), y = Math.sin(th);
+    g.globalAlpha = (halo ? 0.5 : 0.95) * a;
+    g.strokeStyle = halo ? STYLE.parchment : [STYLE.ink, STYLE.greenEdge, STYLE.windRed][kind];
+    g.lineWidth = halo ? 3.6 : [1.6, 1.3, 1.1][kind];
+    g.beginPath(); g.moveTo(m.x + x * r0, m.y + y * r0); g.lineTo(m.x + x * (r0 + len), m.y + y * (r0 + len)); g.stroke();
+  }
+  g.restore();
 }
 // One ring of the pulse at swell `u` (0 to 1) round a note's spot: in the chart's red over a parchment halo, so it
 // reads on a dark scan as on a pale one, widening and fading as it goes; `alpha` fades the whole pulse out.
-export function drawNoteRing(g, m, u, alpha = 1) {
+// `look` (mockup, #272) swaps the ring for another candidate; `n` is which turn of the pulse this is.
+export function drawNoteRing(g, m, u, alpha = 1, look = 'rings', n = 0) {
+  if (look === 'hand') return drawHandLoop(g, m, u, alpha, n);
+  if (look === 'lamp') return drawLampGlow(g, m, u, alpha);
+  if (look === 'rhumbs') return drawRhumbRays(g, m, u, alpha);
   const p = NOTE_PULSE, r = p.from + u * p.reach, a = Math.max(0, 1 - u) * alpha;
   if (!(a > 0)) return;
   g.save();
