@@ -3790,7 +3790,17 @@
     "bio": "A Scottish naval surgeon appointed consul to Bornu who led the expedition from Tripoli with Clapperton and was joined by Denham; he and Clapperton left Denham at Kuka to explore the Niger, and he did not come back.",
     "sources": [
       "hugh-clapperton"
-    ]
+    ],
+    "death": {
+      "lon": 10.35,
+      "lat": 12.28,
+      "date": "1824",
+      "label": "Oudney died near Katagum, 1824",
+      "text": "Oudney died at the village of Murmur, near Katagum on the road to Kano, only a few weeks after he and Clapperton left Denham at Kuka on 14 December 1823. The skull stands at Katagum, on the road; Murmur itself is not placed in the source used, and the year is the one Wikipedia's Katagum article gives.",
+      "confidence": "inferred",
+      "source": "Hugh Clapperton (Wikipedia)",
+      "cite": "hugh-clapperton"
+    }
   },
   "rene-caillie": {
     "view": {
@@ -3864,6 +3874,7 @@
     "name": "Richard Francis Burton",
     "bio": "A British officer and linguist who led the 1857–58 expedition from the coast to Lake Tanganyika, with Speke second. He wrote of Bombay, the caravan leader, 'The gem of the party, however, is one Sidi Mubarak, who has taken to himself the agnomen of Bombay.'",
     "sources": [
+      "richard-francis-burton",
       "sidi-mubarak-bombay"
     ]
   },
@@ -3874,7 +3885,7 @@
       "zoom": 4
     },
     "name": "John Hanning Speke",
-    "bio": "An English army officer, 4 May 1827 to 15 September 1864, who with Burton was the first European to reach Lake Victoria, and who argued it was the source of the Nile. He made three expeditions to Africa, and his guides Bombay and Mabruki did much of the work.",
+    "bio": "An English army officer, 4 May 1827 to 15 September 1864, who on Burton's expedition went on alone from Kazeh to be the first European to reach Lake Victoria, and who argued it was the source of the Nile. He made three expeditions to Africa, and his guides Bombay and Mabruki did much of the work.",
     "sources": [
       "john-hanning-speke"
     ]

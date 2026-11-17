@@ -19,27 +19,15 @@
       "mode": "land",
       "line": "spline",
       "confidence": "inferred",
-      "source": "Henry Morton Stanley's first trans-Africa expedition (Wikipedia): from Zanzibar to the lake, which he circled in 57 days; the road inland is drawn straight",
+      "source": "Henry Morton Stanley's first trans-Africa expedition (Wikipedia): from Zanzibar to the camp near Kagehyi on the lake, which he circled in 57 days; the article gives no road inland, so the line is drawn straight to Kagehyi",
       "points": [
         [
           38.9,
           -6.44
         ],
         [
-          36.5,
-          -6.0
-        ],
-        [
-          34.5,
-          -5.5
-        ],
-        [
-          32.8,
-          -5.02
-        ],
-        [
-          32.9,
-          -3.5
+          35.9,
+          -4.48
         ],
         [
           32.9,

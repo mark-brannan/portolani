@@ -101,6 +101,8 @@
       "from": "the Great Lakes",
       "to": "the Congo and Angola",
       "dates": "after c. 500 BC",
+      "start": "-0499~",
+      "end": "0500~",
       "mode": "land",
       "line": "spline",
       "confidence": "conventional",
@@ -112,8 +114,8 @@
       "heads": "end",
       "points": [
         [
-          29.5,
-          -2.0
+          31.0,
+          -1.5
         ],
         [
           27.0,

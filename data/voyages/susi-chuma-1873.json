@@ -67,9 +67,8 @@
       "label": "Bagamoyo, on the coast",
       "source": "Chuma and Susi (Wikipedia)",
       "cite": "chuma-and-susi",
-      "text": "The body was taken to the coast to be sent home to Britain; the state funeral was held on 18 April 1874. Susi and Chuma missed it but went to Britain, staying to help edit the Last Journals before sailing back to Zanzibar by 20 October 1874.",
-      "confidence": "inferred",
-      "doubt": "Wikipedia says 'the coast'; Bagamoyo is where such caravans arrived, not named in the source used."
+      "text": "The body was carried to Bagamoyo on the coast, to be handed to the British authorities and sent home to Britain; the state funeral was held on 18 April 1874. Susi and Chuma missed it but went to Britain, staying to help edit the Last Journals before sailing back to Zanzibar by 20 October 1874.",
+      "confidence": "attested"
     }
   ],
   "kind": "voyage"

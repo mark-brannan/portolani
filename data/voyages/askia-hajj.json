@@ -62,22 +62,34 @@
       "mode": "land",
       "line": "spline",
       "confidence": "conventional",
-      "source": "Askia Muhammad I (Wikipedia): to Mecca and on to Medina; the Red Sea crossing and the Hejaz road are drawn straight",
+      "source": "Askia Muhammad I (Wikipedia): to Mecca and on to Medina; the way across Sinai by Aqaba and down the Hejaz is the usual pilgrim road, drawn straight, not his",
       "points": [
         [
           31.24,
           30.04
         ],
         [
-          33.6,
-          28.2
+          32.6,
+          29.9
+        ],
+        [
+          34.0,
+          29.3
         ],
         [
           35.0,
-          26.0
+          29.5
         ],
         [
-          37.0,
+          36.5,
+          28.4
+        ],
+        [
+          38.0,
+          26.5
+        ],
+        [
+          39.6,
           24.5
         ],
         [

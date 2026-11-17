@@ -141,12 +141,12 @@
     },
     {
       "from": "Alexandria",
-      "to": "Aden",
+      "to": "El-Tor",
       "dates": "1487–1488",
       "mode": "land",
       "line": "spline",
       "confidence": "inferred",
-      "source": "Pêro da Covilhã (Wikipedia): by boat up the Nile to Cairo, a caravan across the desert to El-Tor and Suakin, a boat across the Red Sea to Aden; the desert stage is drawn straight",
+      "source": "Pêro da Covilhã (Wikipedia): by boat up the Nile to Cairo, then a caravan across the desert to the ports of El-Tor and Suakin; the desert stage is drawn straight",
       "points": [
         [
           29.9,
@@ -163,14 +163,81 @@
         [
           33.6,
           28.2
+        ]
+      ]
+    },
+    {
+      "from": "El-Tor",
+      "to": "Aden",
+      "dates": "1488",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Pêro da Covilhã (Wikipedia): the caravan reached the ports of El-Tor and Suakin, and they sailed across the Red Sea to Aden; the track down the Red Sea by Suakin and the Bab-el-Mandeb is drawn, not recorded",
+      "points": [
+        [
+          33.45,
+          28.1
         ],
         [
-          37.0,
+          33.75,
+          27.9
+        ],
+        [
+          34.4,
+          27.4
+        ],
+        [
+          35.3,
+          26.0
+        ],
+        [
+          36.5,
+          24.0
+        ],
+        [
+          37.6,
           22.0
         ],
         [
-          43.0,
-          15.5
+          38.4,
+          20.3
+        ],
+        [
+          37.6,
+          19.2
+        ],
+        [
+          39.2,
+          18.9
+        ],
+        [
+          40.4,
+          16.8
+        ],
+        [
+          41.6,
+          14.6
+        ],
+        [
+          42.9,
+          13.3
+        ],
+        [
+          43.15,
+          12.95
+        ],
+        [
+          43.3,
+          12.75
+        ],
+        [
+          43.7,
+          12.5
+        ],
+        [
+          44.5,
+          12.4
         ],
         [
           45.03,
