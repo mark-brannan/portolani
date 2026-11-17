@@ -1,0 +1,75 @@
+{
+  "id": "susi-chuma-1873",
+  "title": "Susi and Chuma carry Livingstone to the coast, 1873–1874",
+  "short": "Susi and Chuma",
+  "who": [
+    "abdullah-susi",
+    "james-chuma",
+    "david-livingstone"
+  ],
+  "when": "1873–1874",
+  "summary": "At the end of April 1873 the caravan reached Chitambo's village; Livingstone died in the night. Knowing the customs around death, Susi and Chuma, whom the men had unanimously chosen as chiefs and captains of the caravan, agreed to take him home, and carried his body to the coast. In 1874 they went to Britain, missed the state funeral of 18 April, and helped Horace Waller edit the Last Journals, giving the places and rivers from memory; by 20 October 1874 they were back in Zanzibar. The way is drawn by the usual road through Tabora; the stages and the date of arrival at the coast are not given in the source used.",
+  "sources": [
+    "chuma-and-susi"
+  ],
+  "legs": [
+    {
+      "from": "Chitambo's village",
+      "to": "Bagamoyo",
+      "dates": "1873–1874",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Chuma and Susi (Wikipedia): they led the caravan with Livingstone's body to the coast; the source used gives no stages, and the route is the usual way to Bagamoyo by Tabora",
+      "doubt": "Wikipedia (Chuma and Susi) says they took the body to the coast and does not give the road; the line follows the usual way to Bagamoyo.",
+      "points": [
+        [
+          30.29,
+          -12.3
+        ],
+        [
+          31.0,
+          -10.0
+        ],
+        [
+          31.5,
+          -8.0
+        ],
+        [
+          32.4,
+          -6.0
+        ],
+        [
+          32.8,
+          -5.02
+        ],
+        [
+          35.0,
+          -5.8
+        ],
+        [
+          37.0,
+          -6.3
+        ],
+        [
+          38.9,
+          -6.44
+        ]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "landfall",
+      "lon": 38.9,
+      "lat": -6.44,
+      "date": "1874",
+      "label": "Bagamoyo, on the coast",
+      "source": "Chuma and Susi (Wikipedia)",
+      "cite": "chuma-and-susi",
+      "text": "The body was carried to Bagamoyo on the coast, to be handed to the British authorities and sent home to Britain; the state funeral was held on 18 April 1874. Susi and Chuma missed it but went to Britain, staying to help edit the Last Journals before sailing back to Zanzibar by 20 October 1874.",
+      "confidence": "attested"
+    }
+  ],
+  "kind": "voyage"
+}

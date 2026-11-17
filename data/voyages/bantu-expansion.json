@@ -1,0 +1,218 @@
+{
+  "id": "bantu-expansion",
+  "kind": "migration",
+  "title": "The Bantu expansion, c. 4000 BC–AD 500",
+  "short": "Bantu expansion",
+  "who": [
+    "bantu-speaking-peoples"
+  ],
+  "when": "c. 4000 BC–AD 500",
+  "summary": "The spread of Proto-Bantu speakers from the highlands between Cameroon and Nigeria across sub-equatorial Africa. Wikipedia describes two streams. The Western Stream began between 5000 and 3000 BC, was slow at first, followed the coast and the rivers of the Congo basin, reached central Cameroon about 1500 BC and the southern fringe of the forest about 500 BC. The Eastern Stream, thought to start later, went east along the northern edge of the rainforest, reached west of Lake Victoria by 500 BC (Urewe pottery), and from the Great Lakes sent two streams, one west to meet the Western Stream in the Congo and Angola, the other south along the east, to the coast of Tanzania and Kenya between 100 BC and 300 AD, KwaZulu-Natal by 300 AD and Limpopo by 500 AD. Both the direction and the dates are drawn from one overview and are not settled.",
+  "sources": [
+    "bantu-expansion"
+  ],
+  "legs": [
+    {
+      "from": "the Cameroon–Nigeria highlands",
+      "to": "the southern fringe of the rainforest",
+      "dates": "5000–500 BC",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Bantu expansion (Wikipedia): the Western Stream, from the Cameroon–Nigeria highlands south along the coast and the rivers of the Congo basin; the track is the usual picture, not a find",
+      "reach": [
+        0,
+        0.4
+      ],
+      "heads": "end",
+      "doubt": "The two-stream picture is the 'early split' reading; a 'late split' reading holds that the eastern and western Bantu languages separated later, so the order and the routes are debated.",
+      "points": [
+        [
+          9.0,
+          6.0
+        ],
+        [
+          10.5,
+          3.5
+        ],
+        [
+          12.0,
+          1.0
+        ],
+        [
+          14.0,
+          -1.5
+        ],
+        [
+          15.5,
+          -4.0
+        ],
+        [
+          16.5,
+          -7.0
+        ]
+      ]
+    },
+    {
+      "from": "the Cameroon–Nigeria highlands",
+      "to": "the Great Lakes",
+      "dates": "from c. 3000 BC–500 BC",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Bantu expansion (Wikipedia): the Eastern Stream, east along the northern edge of the rainforest or by the Ubangi, to the Great Lakes, with Urewe pottery west of Lake Victoria by 500 BC",
+      "reach": [
+        0,
+        0.5
+      ],
+      "heads": "end",
+      "points": [
+        [
+          9.0,
+          6.0
+        ],
+        [
+          14.0,
+          4.5
+        ],
+        [
+          18.5,
+          4.0
+        ],
+        [
+          22.0,
+          3.5
+        ],
+        [
+          26.0,
+          2.0
+        ],
+        [
+          29.5,
+          0.0
+        ],
+        [
+          31.0,
+          -1.5
+        ]
+      ]
+    },
+    {
+      "from": "the Great Lakes",
+      "to": "the Congo and Angola",
+      "dates": "after c. 500 BC",
+      "start": "-0499~",
+      "end": "0500~",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Bantu expansion (Wikipedia): from the Great Lakes one stream went west to meet the Western Stream in the Congo and Angola",
+      "reach": [
+        0.5,
+        0.7
+      ],
+      "heads": "end",
+      "points": [
+        [
+          31.0,
+          -1.5
+        ],
+        [
+          27.0,
+          -5.0
+        ],
+        [
+          24.0,
+          -8.0
+        ],
+        [
+          20.0,
+          -10.0
+        ],
+        [
+          16.5,
+          -11.0
+        ]
+      ]
+    },
+    {
+      "from": "the Great Lakes",
+      "to": "Limpopo and KwaZulu-Natal",
+      "dates": "c. 100 BC–AD 500",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Bantu expansion (Wikipedia): the other stream went south across eastern and southern Africa, to the coast of Tanzania and Kenya between 100 BC and 300 AD, KwaZulu-Natal by 300 AD and Limpopo by 500 AD",
+      "reach": [
+        0.5,
+        1
+      ],
+      "heads": "end",
+      "points": [
+        [
+          31.0,
+          -1.5
+        ],
+        [
+          34.0,
+          -4.0
+        ],
+        [
+          35.5,
+          -8.0
+        ],
+        [
+          34.5,
+          -13.0
+        ],
+        [
+          32.5,
+          -18.0
+        ],
+        [
+          30.0,
+          -22.5
+        ],
+        [
+          30.8,
+          -28.5
+        ]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "waypoint",
+      "lon": 9.0,
+      "lat": 6.0,
+      "date": "c. 5000–3000 BC",
+      "label": "The Cameroon–Nigeria highlands, where the language began",
+      "source": "Bantu expansion (Wikipedia)",
+      "cite": "bantu-expansion",
+      "text": "Bantuists believe the expansion began on the highlands between Cameroon and Nigeria. The oldest pottery found in an area inhabited by Bantu speakers, at Shum Laka in northern Cameroon, is dated to about 5000 BC.",
+      "confidence": "inferred"
+    },
+    {
+      "kind": "waypoint",
+      "lon": 31.0,
+      "lat": -1.5,
+      "date": "by c. 500 BC",
+      "label": "West of Lake Victoria, Urewe pottery and early iron",
+      "source": "Bantu expansion (Wikipedia)",
+      "cite": "bantu-expansion",
+      "text": "Urewe pottery shows the Eastern Stream west of Lake Victoria by 500 BC, one of Africa's oldest iron-smelting centres. By the first century BC the Great Lakes communities made carbon steel.",
+      "confidence": "inferred"
+    },
+    {
+      "kind": "waypoint",
+      "lon": 30.8,
+      "lat": -28.5,
+      "date": "AD 300–500",
+      "label": "KwaZulu-Natal and Limpopo, the far south",
+      "source": "Bantu expansion (Wikipedia)",
+      "cite": "bantu-expansion",
+      "text": "Pioneering groups reached modern KwaZulu-Natal along the coast by 300 AD and Limpopo by 500 AD; they met and in places mixed with the Khoisan-speaking peoples who lived there.",
+      "confidence": "inferred"
+    }
+  ]
+}
