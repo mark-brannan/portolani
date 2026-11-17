@@ -1,0 +1,119 @@
+{
+  "id": "barth",
+  "title": "Heinrich Barth across the Sahara and the Sudan, 1849–1855",
+  "short": "Heinrich Barth",
+  "who": [
+    "heinrich-barth"
+  ],
+  "when": "1849–1855",
+  "summary": "James Richardson was chosen by the British government to open trade with the central and western Sudan; Barth and Adolf Overweg, a Prussian astronomer, were added, and the party left Marseille in late 1849 and Tripoli early in 1850. Richardson died in March 1851 and Overweg in September 1852, and Barth carried on alone, the first European to visit Adamawa in 1851 and, in September 1853, Timbuktu, where he stayed with Ahmad al-Bakkai al-Kunti. He got back to Tripoli in September 1855. The road is drawn from Tripoli by Agadez to Kukawa, then on to Timbuktu; the side trips and the road home are not.",
+  "sources": [
+    "heinrich-barth"
+  ],
+  "legs": [
+    {
+      "from": "Tripoli",
+      "to": "Kukawa",
+      "dates": "1850–1851",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Heinrich Barth (Wikipedia): from Tripoli early in 1850 across the Sahara to Agadez, reached in October 1850; the points are the usual caravan road to Kukawa, not his daily stages",
+      "doubt": "Wikipedia names Tripoli, Agadez and, later, the Chad country; the stages between, Murzuk and Kano among them, are the usual road, not his.",
+      "points": [
+        [
+          13.19,
+          32.89
+        ],
+        [
+          13.9,
+          25.9
+        ],
+        [
+          10.18,
+          24.96
+        ],
+        [
+          8.0,
+          20.0
+        ],
+        [
+          7.99,
+          16.97
+        ],
+        [
+          8.52,
+          12.0
+        ],
+        [
+          10.5,
+          12.5
+        ],
+        [
+          13.57,
+          12.93
+        ]
+      ]
+    },
+    {
+      "from": "Kukawa",
+      "to": "Timbuktu",
+      "dates": "1851–September 1853",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Heinrich Barth (Wikipedia): after Adamawa in 1851 and the Katsina and Sokoto regions he reached Timbuktu in September 1853; the line goes by Kano, Sokoto and the Niger bend, not his daily stages",
+      "points": [
+        [
+          13.57,
+          12.93
+        ],
+        [
+          8.52,
+          12.0
+        ],
+        [
+          5.24,
+          13.06
+        ],
+        [
+          2.37,
+          13.1
+        ],
+        [
+          -0.05,
+          16.27
+        ],
+        [
+          -3.01,
+          16.78
+        ]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "landfall",
+      "lon": -3.01,
+      "lat": 16.78,
+      "date": "7 September 1853",
+      "label": "Timbuktu, a friendship that sheltered him",
+      "source": "Heinrich Barth (Wikipedia)",
+      "cite": "heinrich-barth",
+      "text": "Barth reached Timbuktu on 7 September 1853. Ahmad al-Bakkai al-Kunti took him into his house and protected him; the friendship was how he stayed alive among people who did not want a European in the city.",
+      "confidence": "attested"
+    },
+    {
+      "kind": "event",
+      "lon": 12.46,
+      "lat": 9.23,
+      "date": "1851",
+      "label": "Adamawa, the first European there",
+      "source": "Heinrich Barth (Wikipedia)",
+      "cite": "heinrich-barth",
+      "text": "Barth was the first European to visit Adamawa, in 1851, from Lake Chad. The mark stands at Yola, the main town of the region.",
+      "confidence": "inferred"
+    }
+  ],
+  "kind": "voyage"
+}

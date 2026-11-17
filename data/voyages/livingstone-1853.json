@@ -1,0 +1,128 @@
+{
+  "id": "livingstone-1853",
+  "title": "David Livingstone across Africa, 1853–1856",
+  "short": "Livingstone, coast to coast",
+  "who": [
+    "david-livingstone"
+  ],
+  "when": "1853–1856",
+  "summary": "From Linyanti on the Zambezi, Sekeletu, chief of the Kololo, made Livingstone a nduna to lead a joint look for trade routes to the coast, with 27 Kololo men as interpreters and guides. They reached Luanda on the Atlantic in 1854. Then with 114 Kololo men, lent by the same chief, he went east down the Zambezi, saw Mosi-oa-Tunya, which he named Victoria Falls, and came out at Quelimane on the Indian Ocean in 1856, the first European to cross south-central Africa at that latitude. About a hundred of the Kololo were left at Tete. The road is drawn between the named places, along the river; the stages are not drawn from his journals.",
+  "sources": [
+    "david-livingstone",
+    "kololo-people"
+  ],
+  "legs": [
+    {
+      "from": "Linyanti",
+      "to": "Luanda",
+      "dates": "1853–1854",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "David Livingstone (Wikipedia): from Linyanti with 27 Kololo men to Luanda on the Atlantic; the stages between are drawn straight",
+      "points": [
+        [
+          23.5,
+          -18.1
+        ],
+        [
+          22.5,
+          -15.2
+        ],
+        [
+          21.0,
+          -13.0
+        ],
+        [
+          18.0,
+          -11.5
+        ],
+        [
+          15.0,
+          -10.0
+        ],
+        [
+          13.24,
+          -8.83
+        ]
+      ]
+    },
+    {
+      "from": "Luanda",
+      "to": "Quelimane",
+      "dates": "1854–1856",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "David Livingstone (Wikipedia): back to Linyanti and then east down the Zambezi with 114 Kololo men, Victoria Falls on the way, to Quelimane; the stages are drawn along the river; the return is drawn over the outward road",
+      "doubt": "Wikipedia names Linyanti, Luanda, Victoria Falls and Quelimane; the stages between are the Zambezi road, not his daily marches.",
+      "points": [
+        [
+          13.24,
+          -8.83
+        ],
+        [
+          15.0,
+          -10.0
+        ],
+        [
+          18.0,
+          -11.5
+        ],
+        [
+          21.0,
+          -13.0
+        ],
+        [
+          23.5,
+          -18.1
+        ],
+        [
+          25.86,
+          -17.92
+        ],
+        [
+          28.0,
+          -16.0
+        ],
+        [
+          32.6,
+          -15.6
+        ],
+        [
+          34.8,
+          -16.2
+        ],
+        [
+          36.89,
+          -17.88
+        ]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "landfall",
+      "lon": 25.86,
+      "lat": -17.92,
+      "date": "1855",
+      "label": "Mosi-oa-Tunya, named Victoria Falls",
+      "source": "David Livingstone (Wikipedia)",
+      "cite": "david-livingstone",
+      "text": "The first European to see the falls, Livingstone named them for Queen Victoria; the Kololo called them Mosi-oa-Tunya, the smoke that thunders.",
+      "confidence": "attested"
+    },
+    {
+      "kind": "event",
+      "lon": 33.6,
+      "lat": -16.2,
+      "date": "1856",
+      "label": "Tete, about a hundred Kololo left behind",
+      "source": "Kololo people (Wikipedia)",
+      "cite": "kololo-people",
+      "text": "Around 100 of Sekeletu's men were left at Tete in 1856 while Livingstone went on to Quelimane and Britain. When he came back in 1858 to take them home, Sekeletu was weakened and about 16 stayed on the middle Zambezi, and later settled in the Shire valley as guards and porters. The mark stands near Tete.",
+      "confidence": "attested"
+    }
+  ],
+  "kind": "voyage"
+}

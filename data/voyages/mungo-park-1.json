@@ -1,0 +1,144 @@
+{
+  "id": "mungo-park-1",
+  "title": "Mungo Park from the Gambia to the Niger, 1795–1797",
+  "short": "Mungo Park, first journey",
+  "who": [
+    "mungo-park"
+  ],
+  "when": "1795–1797",
+  "summary": "Park sailed from Portsmouth in May 1795, reached the Gambia in June and went inland from the British trading post at Pisania on 2 December with two local guides, by the upper Senegal and the semi-desert of Kaarta. At Ludamar a Moorish chief held him four months; he escaped on 1 July 1796 with his horse and a pocket compass, and on the 21st reached the Niger at Ségou, the first European to do so. He followed it downstream to Silla, then turned back, and came home by Bamako and Kamalia, where he fell ill and lived seven months in the house of a man who saved his life. He reached Pisania again on 10 June 1797 and left Africa on a slave ship, for which he served as doctor. Only the coast-to-Niger and return roads are drawn, between the named places.",
+  "sources": [
+    "mungo-park"
+  ],
+  "legs": [
+    {
+      "from": "Pisania, Gambia",
+      "to": "Ségou",
+      "dates": "2 December 1795–21 July 1796",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Mungo Park (Wikipedia): from Pisania across the upper Senegal basin and Kaarta, held at Ludamar, to the Niger at Ségou; the stages between are not drawn from his Travels",
+      "doubt": "Wikipedia names Kaarta, Ludamar and Ségou only; the points between follow the usual caravan road, not his daily stages.",
+      "points": [
+        [
+          -14.0,
+          13.55
+        ],
+        [
+          -12.5,
+          14.0
+        ],
+        [
+          -10.8,
+          14.6
+        ],
+        [
+          -9.0,
+          15.0
+        ],
+        [
+          -7.6,
+          15.0
+        ],
+        [
+          -6.9,
+          14.4
+        ],
+        [
+          -6.27,
+          13.45
+        ]
+      ]
+    },
+    {
+      "from": "Ségou",
+      "to": "Silla",
+      "dates": "21 July 1796",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Mungo Park (Wikipedia): he followed the Niger downstream to Silla, where he turned back for lack of resources; Silla's place is approximate",
+      "points": [
+        [
+          -6.27,
+          13.45
+        ],
+        [
+          -5.9,
+          13.4
+        ],
+        [
+          -5.5,
+          13.3
+        ]
+      ]
+    },
+    {
+      "from": "Silla",
+      "to": "Pisania, Gambia",
+      "dates": "29 July 1796–10 June 1797",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Mungo Park (Wikipedia): back by a route farther south, keeping near the Niger as far as Bamako, then to Kamalia, where he was ill seven months, and to Pisania",
+      "doubt": "Kamalia's place is not given in the source used and the road from Bamako to the Gambia is drawn, not recorded.",
+      "points": [
+        [
+          -5.5,
+          13.3
+        ],
+        [
+          -6.27,
+          13.45
+        ],
+        [
+          -8.0,
+          12.64
+        ],
+        [
+          -9.5,
+          12.3
+        ],
+        [
+          -11.0,
+          12.8
+        ],
+        [
+          -12.7,
+          13.4
+        ],
+        [
+          -14.0,
+          13.55
+        ]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "landfall",
+      "lon": -6.27,
+      "lat": 13.45,
+      "date": "21 July 1796",
+      "label": "Ségou, the Niger reached",
+      "source": "Mungo Park (Wikipedia)",
+      "cite": "mungo-park",
+      "text": "The long-sought river, flowing east: the first time a European had seen it and said so. Local people he met took him for a Moor.",
+      "confidence": "attested"
+    },
+    {
+      "kind": "event",
+      "lon": -11.0,
+      "lat": 12.8,
+      "date": "1796–1797",
+      "label": "Kamalia, seven months in a stranger’s house",
+      "source": "Mungo Park (Wikipedia)",
+      "cite": "mungo-park",
+      "text": "Park fell ill at Kamalia and owed his life to the kindness of the man in whose house he lived for seven months. The mark is an approximation of the place.",
+      "confidence": "speculative",
+      "doubt": "Wikipedia gives Kamalia but no coordinate; the mark stands in the Mandinka country between Bamako and the Gambia, not at the town."
+    }
+  ],
+  "kind": "voyage"
+}

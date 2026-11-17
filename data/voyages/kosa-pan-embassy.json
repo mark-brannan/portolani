@@ -1,0 +1,46 @@
+{
+  "id": "kosa-pan-embassy",
+  "title": "Kosa Pan's Siamese embassy to Louis XIV, 1686",
+  "short": "Kosa Pan",
+  "who": ["kosa-pan", "guy-tachard"],
+  "when": "1685–1687",
+  "summary": "King Narai of Siam sent Kosa Pan, with two other ambassadors and the Jesuit Guy Tachard, on two French ships back to France with a proposal for an eternal alliance. They landed at Brest and went to Versailles, where on 1 September 1686 they gave Narai's letter to Louis XIV; they stayed in France from June 1686 to March 1687. Thai ikat inspired French siamoise cloth, and Le Brun painted Kosa Pan. The sea road is drawn by the usual way round the Cape; the article gives no ports. The way home is not drawn, for the article gives none.",
+  "sources": ["siamese-embassy-france-1686", "kosa-pan"],
+  "legs": [
+    {
+      "from": "Ayutthaya",
+      "to": "Brest",
+      "dates": "1685/86 – Jun 1686",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Siamese embassy to France (Wikipedia): went out on two French ships and landed at Brest; the article names no ports of call",
+      "doubt": "The article says the embassy set out in 1686 yet was in France from June 1686, so the start was the year before; the track by Malacca, Ceylon and the Cape is the usual East Indiaman road, not a logged one.",
+      "points": [[100.6,13.2], [101,11], [102,9], [104.5,5], [105,3], [105,1.5], [103.9,1.2], [103.3,1.2], [102.8,1.5], [102.2,2], [101.3,2.5], [100.4,3.2], [98.8,4.4], [98,5.6], [96,6], [85,5.3], [80.6,5.6], [75,3], [68,-6], [58,-20], [52,-30], [38,-35], [28,-35.5], [20,-35.5], [8,-28], [-5,-12], [-15,5], [-20,20], [-14,36], [-10,44], [-5.5,48.3]]
+    },
+    {
+      "from": "Brest",
+      "to": "Versailles",
+      "dates": "Jun – 1 Sep 1686",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Siamese embassy to France (Wikipedia): landed at Brest, then went to Versailles; the road between is not given",
+      "points": [[-4.49, 48.39], [-1.68, 48.11], [0.2, 48.0], [2.13, 48.8]]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": 2.12,
+      "lat": 48.8,
+      "date": "1 Sep 1686",
+      "label": "Narai's letter given to Louis XIV at Versailles",
+      "source": "Siamese embassy to France (Wikipedia)",
+      "cite": "siamese-embassy-france-1686",
+      "text": "The ambassadors bowed to the king and gave him King Narai's letter, proposing an eternal alliance; he then showed them the royal apartments and gardens.",
+      "confidence": "attested"
+    }
+  ],
+  "kind": "voyage"
+}
