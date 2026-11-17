@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
-import { createScene, anchorScene, bandInk, placedSheets, tuneOf, viewProjection, panView, zoomView, BUDGET } from '../scripts/scene.mjs';
+import { createScene, drawnHubs, hubHits, pickMark, W, H, anchorScene, bandInk, placedSheets, tuneOf, viewProjection, panView, zoomView, BUDGET } from '../scripts/scene.mjs';
 import { territory, BANDS, bandsAt, WORLD_BAND } from '../scripts/atlas.mjs';
 import { coastNames, joinNames } from '../scripts/names.mjs';
 
@@ -244,4 +244,30 @@ test('a chart whose roses are unread keeps roses where its drawn lines meet', as
   assert.ok(roses.length > 0, 'the sheet draws a rose');
   const sites = [sheet.circle, ...sheet.circle.nodes];
   for (const r of roses) assert.ok(sites.some((q) => Math.abs(q.lon - r.lon) < 1e-9 && Math.abs(q.lat - r.lat) < 1e-9), `${r.sprite.id} at ${r.lon}, ${r.lat} sits at the ring's hub or a node`);
+});
+
+test('the bare hub of each rose-less chart is a point of interest saying why; it is not there with historical accuracy off', async () => {
+  const hubs = [['Carte Pisane, western circle', 7.4, 40.0, 'Carte Pisane'], ['Carte Pisane, eastern circle', 27.4, 36.8, 'Carte Pisane'], ['Vesconte, 1311', 25.2, 37.5, 'Vesconte (1311)'], ['Dulcert, 1339', 14.5, 40.0, 'Dulcert (1339)']];
+  const seen = [];
+  for (const [src, lon, lat, chart] of hubs) {
+    // the zoom at which the chart's own sheet is the one the view draws (a smaller sheet takes over as the view closes)
+    let found = null;
+    for (const zoom of [3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5]) {
+      const r = await createScene(env, { view: { lon, lat, zoom }, scale: 'off' });
+      if (r.scene.sheets.some((s) => s.source === src)) { found = { ...r, view: { lon, lat, zoom } }; break; }
+    }
+    assert.ok(found, `${src} is drawn at some zoom`);
+    const { scene, data, view } = found;
+    const hub = scene.bareHubs.find((h) => h.source === src);
+    assert.ok(hub, `${src}: the sheet's lines meet at a bare hub`);
+    const [x, y] = data.proj.toPx([hub.lon, hub.lat]);
+    const mark = hubHits(drawnHubs(scene, data), data.proj, { x0: 0, y0: 0, x1: W, y1: H }).find((m) => Math.hypot(m.x - x, m.y - y) < 1);
+    assert.equal(mark?.tile.title, `${chart}: no rose`, `${src}: the hub carries the tile`);
+    seen.push(src);
+    assert.match(mark.tile.real, /before the Catalan Atlas of 1375 carried no compass rose/);
+    assert.equal(pickMark([mark], [x + 20, y - 20], 10), mark, 'a click on the hub opens it');
+    const off = (await createScene(env, { view, scale: 'off', historical: false })).scene;
+    assert.equal(off.bareHubs.length, 0, `${src}: no bare hub with historical accuracy off`);
+  }
+  assert.equal(seen.length, 4);
 });

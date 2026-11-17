@@ -1468,7 +1468,7 @@ function ruinAt(p, [x0, y0], top, hw, boxes, cityBoxes, k, towns = []) {
 const sheetSeed = (sh, world) => seedOf(sheetPlace(sh)) ^ (world.salt | 0);
 const SHEET_SEA_SITES = 4, SHEET_NODE_ORDER = [0, 4, 8, 12, 2, 6, 10, 14, 1, 3, 5, 7, 9, 11, 13, 15];
 function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
-  const roseDraws = [], held = {}, at = (n) => { const [x, y] = data.proj.project(n.lon, n.lat); return { x, y }; };
+  const roseDraws = [], held = {}, bareHubs = [], at = (n) => { const [x, y] = data.proj.project(n.lon, n.lat); return { x, y }; };
   for (const sh of world.sheets) {
     const fp = sheetFrame(sh), seed = sheetSeed(sh, world);
     // `onLand`: a sheet with no clear sea to hold its big rose lets its roses stand on land, clear of the places
@@ -1496,6 +1496,7 @@ function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
     // whose ring is not yet read) keeps the roses of the network it draws
     const noRose = !sh.ornaments?.some((f) => f.kind === 'rose') && !sh.unread?.includes('rose');
     if (ownSet(world, sh) && (noRose || ownFigures(sh, 'rose').length)) {
+      if (noRose && !inShadow(sh, c.lon, c.lat)) bareHubs.push({ lon: c.lon, lat: c.lat, source: sh.source });
       // a chart's own roses are inside the sheet's allotment, like every other ornament of it
       for (const f of ownFigures(sh, 'rose').slice(0, allotment(sh))) { const r = figureSprite(sh, roses, ring, f); put({ ...r, sizePx: capBig(r.sizePx) }, f); }
       continue;
@@ -1525,7 +1526,7 @@ function placeSheetRoses(data, world, { bigSizePx, smallSize, roses }) {
     roseDraws.push({ sprite: { ...own, sizePx: Math.min(own.sizePx, ROSE_CAP.big * W) }, ...at(pin), lon: pin.lon, lat: pin.lat, size: Math.min(own.sizePx, ROSE_CAP.big * W), sheet: null, pinned: true });
   }
   const pts = world.sheets.flatMap((sh) => [sh.circle, ...sh.circle.nodes]).map(at);
-  return { roseDraws, held, centre: pts[0], nodes: pts.slice(1) };
+  return { roseDraws, held, bareHubs, centre: pts[0], nodes: pts.slice(1) };
 }
 
 // Where a sheet is placed: Mercator at its band's first zoom, centred on the sheet, whatever the page's
@@ -1686,7 +1687,7 @@ function buildScene(data, sprites, ctx, world = {}) {
     : { x: cartoucheCorner[1] === 'l' ? m : W - m - cw, y: cartoucheCorner[0] === 't' ? m : H - m - ch, w: cw, h: ch };
   if (world.pinned !== false) occupied.push({ x: cartouche.x + cw / 2, y: cartouche.y + ch / 2, r: Math.hypot(cw, ch) / 2 });
 
-  let centre, nodes, roseDraws;
+  let centre, nodes, roseDraws, bareHubs = [];
   // Lattice centre: the clearest open-sea cell in the middle of the frame; the big rose sits on it.
   if (!sheetRoses) {
     const central = field.cells.filter((c) => c.x > W * 0.25 && c.x < W * 0.75 && c.y > H * 0.25 && c.y < H * 0.8);
@@ -1704,6 +1705,7 @@ function buildScene(data, sprites, ctx, world = {}) {
   if (landOk && urban.length) built = distanceTo(data, urban.map((u) => u.poly));
   if (sheetRoses) {
     ({ centre, nodes, roseDraws } = sheetRoses);
+    bareHubs = sheetRoses.bareHubs;
     for (const r of roseDraws) occupied.push({ x: r.x, y: r.y, r: r.size / 2 + (r.size > 200 ? 0 : 10) });
   } else {
     const central = field.cells.filter((c) => c.x > W * 0.25 && c.x < W * 0.75 && c.y > H * 0.25 && c.y < H * 0.8);
@@ -1906,7 +1908,7 @@ function buildScene(data, sprites, ctx, world = {}) {
 
   // automatic, the typed title stands in where the view has no name in it
   const title = world.pinTitle?.toUpperCase() || (world.autoTitle && viewTitle(data, towns.filter((t) => names.some((n) => n.text === t.name)), world.regions === 'english' ? 1 : 0, lesser.filter((l) => l.poi), world.regionNames).toUpperCase()) || world.title || 'PORTOLANI';
-  return { field, boxes, occupied, centre, nodes, sheets: world.sheets, roseDraws, towns, lesser, names, peakNames, worldNames, monsters, ships, mountains, relief, cartouche: { ...cartouche, sprite: cartoucheSprite, title }, cartouchePos: cartoucheCorner };
+  return { field, boxes, occupied, centre, nodes, sheets: world.sheets, roseDraws, bareHubs, towns, lesser, names, peakNames, worldNames, monsters, ships, mountains, relief, cartouche: { ...cartouche, sprite: cartoucheSprite, title }, cartouchePos: cartoucheCorner };
 }
 
 // ---------------------------------------------------------------- drawing
@@ -3126,6 +3128,22 @@ export function peakHits(drawn, proj, rect) {
     const [x, y] = proj.toPx(at), hw = w / 2 + MARK_MARGIN, hh = h / 2 + MARK_MARGIN;
     if (!disc(rect, x, y, hw)) return [];
     return [{ x, y, h: 2 * Math.hypot(hw, hh), hit: [[x - hw, y - hh], [x + hw, y - hh], [x + hw, y + hh], [x - hw, y + hh]], area: 4 * hw * hh, tile }];
+  });
+}
+// The bare hubs a scene drew (a sheet whose chart has no rose, drawn with its lines meeting at a point), held to the
+// earth: { at: [lon, lat], tile }. Nothing is drawn on one; a click on the hub opens the tile that says why.
+// `chart` is the sheet's chart as its source names it, "Carte Pisane" or "Vesconte (1311)".
+export const drawnHubs = (scene, data) => (scene.bareHubs ?? []).filter((h) => !scene.roseDraws.some((r) => Math.hypot(r.x - data.proj.project(h.lon, h.lat)[0], r.y - data.proj.project(h.lon, h.lat)[1]) < r.size / 2))
+  .map((h) => ({ at: [h.lon, h.lat], tile: hubTile(h.source) }));
+export const hubTile = (source) => ({ note: true, title: `${source.replace(/, (\d{4})$/, ' ($1)').replace(/, \w+ circle$/, '')}: no rose`, drawn: 'Only the point where the lines meet.', real: 'Charts before the Catalan Atlas of 1375 carried no compass rose; the chartmaker marked only the point where the lines meet.' });
+const HUB_HIT = 48; // half the side of a bare hub's hit box, canvas px: as big as a small rose
+// The hubs' marks to hit in `proj`'s px: a box on the hub (`hit`), as a pickMark mark { x, y, h, hit, area, tile }
+export function hubHits(drawn, proj, rect) {
+  return drawn.flatMap(({ at, tile }) => {
+    if (proj.visible && !proj.visible(...at)) return [];
+    const [x, y] = proj.toPx(at), r = HUB_HIT;
+    if (!disc(rect, x, y, r)) return [];
+    return [{ x, y, h: 2 * r, hit: [[x - r, y - r], [x + r, y - r], [x + r, y + r], [x - r, y + r]], area: 4 * r * r, tile }];
   });
 }
 // The places' marks to hit, { x, y, h, tile } in `proj`'s px, for `spots` [{ lon, lat, tile }] (sightMarks'): the one
