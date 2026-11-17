@@ -8,7 +8,7 @@ import { drawNoteRing, notePulse } from '../../scripts/scene.mjs';
 import { CARTA_MARINA_NOTES } from '../../scripts/notes.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
-GlobalFonts.registerFromPath(`${root}downloads/IMFeENrm28P.ttf`, 'Fell');
+GlobalFonts.registerFromPath(`${root}test/fixtures/IMFeENrm28P.ttf`, 'Fell');
 const scan = await loadImage(`${root}packs/overlays/carta-marina.jpg`); // half the scan's px
 const X0 = 330, Y0 = 500, CW = 2000, CH = 1400, S = 0.22; // the crop in scan px, and scan px to map px
 const FW = Math.round(CW * S), FH = Math.round(CH * S), LABEL = 175, HEAD = 26, GAP = 6;
