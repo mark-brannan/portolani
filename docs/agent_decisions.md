@@ -693,3 +693,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261108t125347z
 - Amawari added to ryukyu-trade as a person with two 1458 event marks, no route ([#413](https://github.com/mark-brannan/portolani/pull/413))
+
+### 20261117t101134z
+- Askia's road from Cairo drawn by Aqaba and the Hejaz (article silent) Stanley's leg drawn straight from Bagamoyo to Kagehyi (article names no road) Bantu leg to the Congo and Angola ends about AD 500 (reviewer's suggestion, not in the article) Oudney's death dated 1824 and marked at Katagum, nearest town to Murmur Cao's two southern legs end about 10 km off their capes Covilha's Red Sea track by Suakin and the Bab-el-Mandeb drawn, not recorded Undo: edit the record under data/voyages ([#418](https://github.com/mark-brannan/portolani/pull/418))
