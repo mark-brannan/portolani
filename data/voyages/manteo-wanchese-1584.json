@@ -1,13 +1,13 @@
 {
   "id": "manteo-wanchese-1584",
-  "title": "Manteo and Wanchese to England and back, 1584–85",
+  "title": "Manteo and Wanchese to England and back, 1584–87",
   "short": "Manteo & Wanchese",
   "who": [
     "manteo",
     "wanchese"
   ],
-  "when": "1584–1585",
-  "summary": "Raleigh's captains, Philip Amadas and Arthur Barlowe, reached the Outer Banks in July 1584 and met the Roanoke and Croatan people. They took two men back to England, Manteo and Wanchese, who lived with Thomas Harriot and taught him their language and learned English. Both came back in 1585 with the first colonists. Manteo stayed their friend and Wanchese did not.",
+  "when": "1584–1587",
+  "summary": "Raleigh's captains, Philip Amadas and Arthur Barlowe, reached the Outer Banks in July 1584 and met the Roanoke and Croatan people. They took two men back to England, Manteo and Wanchese, who lived with Thomas Harriot and taught him their language and learned English. Both came back in 1585 with the first colonists. Manteo stayed their friend and Wanchese did not; Manteo went home with the colonists in 1586 and came back in 1587 with John White.",
   "sources": [
     "wp-manteo",
     "wp-wanchese",
@@ -48,6 +48,47 @@
         [-70.0, 31.5],
         [-75.2, 35.3]
       ]
+    },
+    {
+      "from": "Roanoke Island",
+      "to": "Plymouth",
+      "dates": "1586 – Jul 1586",
+      "start": "1586",
+      "end": "1586-07",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Roanoke Colony (Wikipedia): Manteo left with Lane's colonists in Drake's fleet, which reached England in July 1586",
+      "doubt": "The Manteo article names only two English voyages, 1584 and 1585; the Roanoke Colony article has him leave with Lane in 1586.",
+      "note": "the article gives July as the arrival and no day of leaving; the port is a stand-in and the course the same broad brush as 1584",
+      "points": [
+        [-75.2, 35.3],
+        [-68.0, 37.5],
+        [-45.0, 43.5],
+        [-20.0, 48.5],
+        [-8.0, 49.8],
+        [-4.3, 50.1]
+      ]
+    },
+    {
+      "from": "Plymouth",
+      "to": "Roanoke Island",
+      "dates": "8 May – 22 Jul 1587",
+      "start": "1587-05-08",
+      "end": "1587-07-22",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Roanoke Colony (Wikipedia): John White's fleet left on 8 May and anchored at Croatoan Island on 22 July; Manteo came with it",
+      "note": "the article names no port, so Plymouth is a stand-in; the fleet went by the West Indies, a direct line stands for it",
+      "points": [
+        [-4.3, 50.1],
+        [-12.0, 45.0],
+        [-35.0, 34.0],
+        [-55.0, 30.0],
+        [-70.0, 31.5],
+        [-75.2, 35.3]
+      ]
     }
   ],
   "events": [
@@ -55,7 +96,7 @@
       "kind": "event",
       "lon": -75.2,
       "lat": 35.3,
-      "date": "1587",
+      "date": "13 Aug 1587",
       "label": "Manteo baptised, Lord of Roanoke",
       "confidence": "inferred",
       "source": "Manteo (Wikipedia)",

@@ -69,6 +69,23 @@
       ]
     },
     {
+      "from": "Hochelaga",
+      "to": "Stadacona",
+      "dates": "4 – 11 Oct 1535",
+      "start": "1535-10-04",
+      "end": "1535-10-11",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Jacques Cartier (Wikipedia): after two days among the people of Hochelaga he returned to Stadacona on 11 October",
+      "note": "the start is the arrival, 2 October, and the two days among the people of Hochelaga; the way is the river, as going up",
+      "points": [
+        [-73.55, 45.52],
+        [-72.5, 46.3],
+        [-71.2, 46.8]
+      ]
+    },
+    {
       "from": "Stadacona",
       "to": "the Gulf of St Lawrence",
       "dates": "6 May – Jun 1536",
@@ -88,7 +105,7 @@
     {
       "from": "the Gulf of St Lawrence",
       "to": "Saint-Malo",
-      "dates": "May – 16 Jul 1536",
+      "dates": "Jun – 16 Jul 1536",
       "mode": "sea",
       "line": "spline",
       "confidence": "inferred",

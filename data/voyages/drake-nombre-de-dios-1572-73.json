@@ -26,6 +26,25 @@
       ]
     },
     {
+      "from": "Port Pheasant, in the Gulf of Darién",
+      "to": "Nombre de Dios",
+      "dates": "Jul 1572",
+      "start": "1572-07",
+      "end": "1572-07-28",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Francis Drake (Wikipedia): the first raid, on Nombre de Dios, was late in July 1572",
+      "note": "the article gives the raid and not the way to it; a coasting run west along the Caribbean shore is the usual drawing",
+      "points": [
+        [-77.4, 8.7],
+        [-77.5, 9.4],
+        [-78.3, 9.75],
+        [-79.0, 9.8],
+        [-79.47, 9.62]
+      ]
+    },
+    {
       "from": "the coast near Nombre de Dios",
       "to": "a hilltop view of the Pacific",
       "dates": "Feb 1573",

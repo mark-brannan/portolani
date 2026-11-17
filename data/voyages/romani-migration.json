@@ -1,11 +1,11 @@
 {
   "id": "romani-migration",
   "kind": "migration",
-  "title": "The Romani out of north-west India to Europe, c. AD 500–1400",
+  "title": "The Romani out of north-west India to Europe, c. AD 500–1500",
   "short": "Romani",
   "who": ["romani-ancestors"],
-  "when": "c. AD 500–1400",
-  "summary": "The Romani language and genes both point to north-west India as where their ancestors lived. They moved west, probably in more than one wave, through Persia and Armenia to the Byzantine lands, where Greek records name \"Atsingani\" in Constantinople in 1068, and in the Balkans and Crete in the 1300s, and spread through western Europe in the following century. The leaving is put at about 1,500 years ago by genetic studies, and earlier or later by others.",
+  "when": "c. AD 500–1500",
+  "summary": "The Romani language and genes both point to north-west India as where their ancestors lived. They moved west, probably in more than one wave, through Persia and Armenia to the Byzantine lands, where Greek records name \"Atsingani\" in Constantinople in 1068, and in the Balkans and Crete in the 1300s, and spread through western Europe in the 15th and 16th centuries. The leaving is put at about 1,500 years ago by genetic studies, and earlier or later by others.",
   "sources": ["wp-romani"],
   "legs": [
     {
@@ -32,7 +32,7 @@
     {
       "from": "Constantinople",
       "to": "western Europe",
-      "dates": "c. AD 1100–1400",
+      "dates": "c. AD 1100–1500",
       "mode": "land",
       "line": "spline",
       "confidence": "conventional",

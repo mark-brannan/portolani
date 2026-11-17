@@ -41,6 +41,41 @@
         [-98.3, 19.05],
         [-99.13, 19.43]
       ]
+    },
+    {
+      "from": "Tenochtitlan",
+      "to": "Tlaxcala",
+      "dates": "30 Jun – 12 Jul 1520",
+      "start": "1520-06-30",
+      "end": "1520-07-12",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Spanish conquest of the Aztec Empire (Wikipedia): the Noche Triste, then the retreat to Tlaxcala",
+      "note": "the article dates the flight and the arrival; the road round the north of the lakes is the usual drawing",
+      "points": [
+        [-99.13, 19.43],
+        [-99.2, 19.46],
+        [-98.75, 19.7],
+        [-98.23, 19.32]
+      ]
+    },
+    {
+      "from": "Tlaxcala",
+      "to": "Tenochtitlan",
+      "dates": "Dec 1520 – 13 Aug 1521",
+      "start": "1520-12",
+      "end": "1521-08-13",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Spanish conquest of the Aztec Empire (Wikipedia): back to the Valley of Mexico in late December 1520, Texcoco the base, the siege from 10 May 1521",
+      "note": "by Texcoco, the base of the campaign",
+      "points": [
+        [-98.23, 19.32],
+        [-98.88, 19.51],
+        [-99.13, 19.43]
+      ]
     }
   ],
   "events": [
