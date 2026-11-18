@@ -221,8 +221,9 @@ test('a line is never cut where another sheet lies, only split at the antimeridi
 test('curated sheets carry their charts\' own figures', () => {
   const ids = new Set(['vivid', 'scanned'].flatMap((p) => JSON.parse(readFileSync(new URL(`../packs/${p}/pack.json`, import.meta.url))).sprites.map((s) => s.id)));
   const by = Object.fromEntries(CURATED.map((c) => [c.source, c]));
-  // the four Mediterranean charts' figures are not read yet (centres.md read their circles), so they keep the seeded ones
-  for (const s of ['Carte Pisane, western circle', 'Carte Pisane, eastern circle', 'Vesconte, 1311', 'Dulcert, 1339']) assert.equal(by[s].ornaments, undefined, s);
+  // the four Mediterranean charts draw hubs, not roses, and no beast or ship at sea: each an empty set, nothing unread
+  for (const s of ['Carte Pisane, western circle', 'Carte Pisane, eastern circle', 'Vesconte, 1311', 'Dulcert, 1339']) assert.deepEqual([by[s].ornaments, by[s].unread], [[], undefined], s);
+  assert.deepEqual(by['Juan de la Cosa, 1500'].unread, ['rose'], 'de la Cosa\'s roses wait on the ring reading');
   const marina = by['Carta Marina, 1539'].ornaments;
   assert.deepEqual(['rose', 'monster', 'ship'].map((k) => marina.filter((f) => f.kind === k).length), [4, 11, 12]);
   for (const c of CURATED) for (const f of c.ornaments ?? []) {
