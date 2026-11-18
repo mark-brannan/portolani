@@ -12,7 +12,7 @@ GlobalFonts.registerFromPath(`${root}test/fixtures/IMFeENrm28P.ttf`, 'Fell');
 const scan = await loadImage(`${root}packs/overlays/carta-marina.jpg`); // half the scan's px
 const X0 = 330, Y0 = 500, CW = 2000, CH = 1400, S = 0.22; // the crop in scan px, and scan px to map px
 const FW = Math.round(CW * S), FH = Math.round(CH * S), LABEL = 175, HEAD = 26, GAP = 6;
-const marks = CARTA_MARINA_NOTES.map((n) => ({ x: (n.at.px[0] - X0) * S, y: (n.at.px[1] - Y0) * S }))
+const marks = CARTA_MARINA_NOTES.map((n) => ({ x: (n.at.px[0] - X0) * S, y: (n.at.px[1] - Y0) * S, tile: { title: n.title } }))
   .filter((m) => m.x > 0 && m.y > 0 && m.x < FW && m.y < FH);
 const TIMES = [0.2, 0.45, 0.7, 1.05, 3.1, 3.6]; // s: the first turn across, then the last turn fading out
 const ROWS = [
@@ -34,7 +34,7 @@ ROWS.forEach(([key, look, name, sub], r) => {
     const x = LABEL + i * (FW + GAP), f = createCanvas(FW, FH), fg = f.getContext('2d');
     fg.drawImage(scan, X0 / 2, Y0 / 2, CW / 2, CH / 2, 0, 0, FW, FH);
     const p = notePulse(t * 1000);
-    if (p) for (const m of marks) drawNoteRing(fg, m, p.ring, p.alpha, look, p.n);
+    if (p) for (const m of marks) drawNoteRing(fg, m, p.ring, p.alpha, look, p.n, p.whole);
     g.drawImage(f, x, y);
   });
 });

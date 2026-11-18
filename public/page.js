@@ -1586,11 +1586,11 @@ function drawLayer(g, proj, zoom, badges = true, now = performance.now()) {
     const kept = notesKept.has(o.id), on = !!p && pulse.ids.has(o.id);
     if (!kept && !on) return;
     for (const m of notesOf(o, i, all, proj)) {
-      if (on && !pulse.all) drawNoteRing(g, m, p.ring, p.alpha, PULSE_LOOK, p.n); // the pulse is rings alone: no mark sits on the art
+      if (on && !pulse.all) drawNoteRing(g, m, p.ring, p.alpha, PULSE_LOOK, p.n, p.whole); // the pulse is rings alone: no mark sits on the art
       if (kept) drawNoteMark(g, m);
     }
   });
-  if (p && pulse.all) for (const m of [...(zoom >= POI_ZOOM ? sightsHit(proj, FULL) : []), ...regionMarks(proj, FULL), ...laidNotes(proj, FULL)]) drawNoteRing(g, m, p.ring, p.alpha, PULSE_LOOK, p.n);
+  if (p && pulse.all) for (const m of [...(zoom >= POI_ZOOM ? sightsHit(proj, FULL) : []), ...regionMarks(proj, FULL), ...laidNotes(proj, FULL)]) drawNoteRing(g, m, p.ring, p.alpha, PULSE_LOOK, p.n, p.whole);
   if (badges) for (const { marks, lead } of groupMarks(pointMarks(proj, zoom), cssPx(TAP_REACH))) if (marks.length > 1) drawBadge(g, lead, marks.length);
   g.restore();
 }
