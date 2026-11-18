@@ -1,0 +1,151 @@
+{
+  "id": "humboldt-bonpland-1799-1804",
+  "title": "Humboldt and Bonpland through Spanish America, 1799–1804",
+  "short": "Humboldt",
+  "who": [
+    "alexander-von-humboldt",
+    "aime-bonpland"
+  ],
+  "when": "1799–1804",
+  "summary": "Humboldt and Bonpland sailed from A Coruña in June 1799 with a Spanish royal passport. They went up the Orinoco and through the Casiquiare Channel, over the Andes by Bogotá and Quito, up Chimborazo to some 5,878 metres in 1802, to Lima, Acapulco and Mexico City. They returned by Havana and the United States, where Humboldt met Jefferson, and reached Bordeaux in August 1804.",
+  "sources": [
+    "wp-humboldt",
+    "wp-bonpland",
+    "wp-chimborazo"
+  ],
+  "legs": [
+    {
+      "from": "A Coruña",
+      "to": "Cumaná",
+      "dates": "5 Jun – 16 Jul 1799",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Alexander von Humboldt (Wikipedia): the Pizarro, by Tenerife to Venezuela",
+      "points": [
+        [-9.5, 43.4],
+        [-12.0, 36.0],
+        [-21.0, 28.5],
+        [-28.0, 21.0],
+        [-45.0, 14.0],
+        [-60.0, 11.5],
+        [-64.2, 10.7]
+      ]
+    },
+    {
+      "from": "Cumaná",
+      "to": "the Orinoco and the Casiquiare",
+      "dates": "Feb – Jun 1800",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Alexander von Humboldt (Wikipedia): Caracas, the Llanos, the Orinoco and the Casiquiare to the Río Negro",
+      "points": [
+        [-64.17, 10.45],
+        [-66.9, 10.5],
+        [-67.4, 7.9],
+        [-67.6, 5.65],
+        [-67.7, 4.05],
+        [-67.05, 1.92],
+        [-66.7, 2.2],
+        [-65.55, 3.17],
+        [-67.5, 5.6],
+        [-66.2, 7.6],
+        [-63.55, 8.13]
+      ]
+    },
+    {
+      "from": "Cartagena",
+      "to": "Lima",
+      "dates": "Mar 1801 – Oct 1802",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Alexander von Humboldt (Wikipedia): Bogotá, Quito, Chimborazo and Peru",
+      "points": [
+        [-75.5, 10.4],
+        [-74.07, 4.6],
+        [-78.5, -0.2],
+        [-78.82, -1.47],
+        [-79, -5.5],
+        [-77.04, -12.05]
+      ]
+    },
+    {
+      "from": "Lima",
+      "to": "Acapulco",
+      "dates": "Dec 1802 – Mar 1803",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Alexander von Humboldt (Wikipedia): by Guayaquil to Acapulco",
+      "points": [
+        [-77.5, -12],
+        [-81.5, -8],
+        [-82.5, -2],
+        [-85, 5],
+        [-92, 12],
+        [-99, 16.3]
+      ]
+    },
+    {
+      "from": "Veracruz",
+      "to": "Philadelphia",
+      "dates": "Mar – Jun 1804",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Alexander von Humboldt (Wikipedia): by Havana to the United States",
+      "points": [
+        [-95.8, 19.0],
+        [-90.0, 22.8],
+        [-84.0, 23.8],
+        [-82.35, 23.4],
+        [-81.0, 23.9],
+        [-79.9, 25.0],
+        [-79.6, 26.5],
+        [-76.5, 32.0],
+        [-74.0, 37.0],
+        [-74.6, 38.5]
+      ]
+    },
+    {
+      "from": "Philadelphia",
+      "to": "Bordeaux",
+      "dates": "Jun – 3 Aug 1804",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Alexander von Humboldt (Wikipedia)",
+      "points": [
+        [-74.6, 38.5],
+        [-45, 43],
+        [-15, 46],
+        [-5, 46],
+        [-1.6, 45.5]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": -66.7,
+      "lat": 2.2,
+      "date": "May 1800",
+      "label": "The Casiquiare Channel",
+      "source": "Alexander von Humboldt (Wikipedia)",
+      "cite": "wp-humboldt",
+      "text": "They paddled the natural channel that joins the Orinoco to the Río Negro and so to the Amazon basin. Spanish missionaries and Indigenous people knew it; Humboldt's measurements and map made it known in Europe."
+    },
+    {
+      "kind": "event",
+      "lon": -78.82,
+      "lat": -1.47,
+      "date": "23 Jun 1802",
+      "label": "Chimborazo, about 5,878 metres",
+      "source": "Chimborazo (Wikipedia)",
+      "cite": "wp-chimborazo",
+      "text": "Humboldt, Bonpland and Carlos Montúfar climbed the volcano to some 5,878 metres, a record at the time, and turned back below the summit at a crevasse. The mountain's flanks became the plates of his plant geography."
+    }
+  ]
+}

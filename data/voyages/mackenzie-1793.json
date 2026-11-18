@@ -1,0 +1,73 @@
+{
+  "id": "mackenzie-1793",
+  "title": "Mackenzie overland to the Pacific, 1793",
+  "short": "Mackenzie, 1793",
+  "who": ["alexander-mackenzie"],
+  "when": "1793",
+  "summary": "Mackenzie left Fort Fork on the Peace River on 9 May 1793 with six voyageurs, two Indigenous hunters and a dog. He went up the Peace, over the Continental Divide, and down the Parsnip and the Fraser, then left the Fraser on the advice of the people he met and took the Indigenous trading trail over the mountains to the Bella Coola River. He reached salt water at Dean Channel on 20 July.",
+  "sources": ["wp-mackenzie"],
+  "legs": [
+    {
+      "from": "Fort Fork",
+      "to": "the Fraser River",
+      "dates": "9 May – Jun 1793",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Alexander Mackenzie (Wikipedia): up the Peace and the Parsnip, and down the Fraser",
+      "points": [
+        [-117.2, 56.2],
+        [-120.5, 56.1],
+        [-122.5, 55.7],
+        [-122.6, 54.8],
+        [-122.7, 53.9]
+      ]
+    },
+    {
+      "from": "the Fraser River",
+      "to": "Bella Coola",
+      "dates": "Jun – 20 Jul 1793",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Alexander Mackenzie (Wikipedia): by the Indigenous trading trail west to the Bella Coola River",
+      "points": [
+        [-122.7, 53.9],
+        [-124.5, 52.9],
+        [-125.8, 52.5],
+        [-126.7, 52.4]
+      ]
+    },
+    {
+      "from": "Bella Coola",
+      "to": "Fort Fork",
+      "dates": "Jul – 24 Aug 1793",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Alexander Mackenzie (Wikipedia): back the way they came",
+      "points": [
+        [-126.7, 52.4],
+        [-125.8, 52.5],
+        [-124.5, 52.9],
+        [-122.7, 53.9],
+        [-122.6, 54.8],
+        [-122.5, 55.7],
+        [-120.5, 56.1],
+        [-117.2, 56.2]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": -126.7,
+      "lat": 52.4,
+      "date": "22 Jul 1793",
+      "label": "The Pacific at Dean Channel",
+      "source": "Alexander Mackenzie (Wikipedia)",
+      "cite": "wp-mackenzie",
+      "text": "He mixed vermilion and bear grease and wrote on a rock: Alex Mackenzie, from Canada, by land, 22nd July 1793. The Heiltsuk, who lived there, were not friendly, and he left soon."
+    }
+  ]
+}

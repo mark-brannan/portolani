@@ -3986,5 +3986,799 @@
     "sources": [
       "jere-ngoni-kingdom"
     ]
+  },
+  "giovanni-da-verrazzano": {
+    "name": "Giovanni da Verrazzano",
+    "bio": "A Florentine navigator in the service of Francis I of France. In 1524 he sailed La Dauphine across the Atlantic and along the coast of North America from the Carolinas to Newfoundland, the first European to do so on record. His letter to the king is the only first-hand account, and its details have been questioned. On a later voyage he was killed in the Caribbean in 1528.",
+    "death": {
+      "lon": -61.55,
+      "lat": 16.25,
+      "date": "1528",
+      "label": "Verrazzano killed in the Caribbean, 1528",
+      "confidence": "inferred",
+      "doubt": "The usual account has him killed by Carib people on Guadeloupe while his brother watched from the ship; other accounts have him taken by the Spanish and hanged.",
+      "source": "Giovanni da Verrazzano (Wikipedia)",
+      "cite": "wp-verrazzano",
+      "text": "He had gone ashore in the Lesser Antilles on a voyage to Brazil and the Caribbean. By the account most often repeated he was killed on the beach and eaten; the island is usually given as Guadeloupe."
+    },
+    "sources": [
+      "wp-verrazzano"
+    ],
+    "view": {
+      "lat": 40,
+      "lon": -60,
+      "zoom": 3.5
+    }
+  },
+  "jacques-cartier": {
+    "name": "Jacques Cartier",
+    "bio": "A Breton pilot from Saint-Malo sent by Francis I to find a way to the Orient and gold. In three voyages, 1534, 1535–36 and 1541–42, he explored the Gulf of St Lawrence and the river as far as the Iroquoian town of Hochelaga, where Montreal stands. He claimed the land for France, took away Donnacona and others of Stadacona, and was helped through his first winter by the people he had wronged.",
+    "death": {
+      "lon": -2.03,
+      "lat": 48.65,
+      "date": "1 Sep 1557",
+      "label": "Cartier dies at Saint-Malo, 1557",
+      "confidence": "attested",
+      "source": "Jacques Cartier (Wikipedia)",
+      "cite": "wp-jacques-cartier",
+      "text": "He died at Saint-Malo in 1557, a respected citizen, perhaps in an outbreak of plague."
+    },
+    "sources": [
+      "wp-jacques-cartier"
+    ],
+    "view": {
+      "lat": 48,
+      "lon": -60,
+      "zoom": 4
+    }
+  },
+  "donnacona": {
+    "name": "Donnacona",
+    "bio": "The leader of Stadacona, a St Lawrence Iroquoian town where Quebec City now stands. Cartier met him in 1534, took his two sons Taignoagny and Domagaya to France, and in 1536 took Donnacona himself, with nine others, to meet the king. He died in France, about 1539, and none of those taken came home.",
+    "sources": [
+      "wp-donnacona"
+    ],
+    "view": {
+      "lat": 47,
+      "lon": -62,
+      "zoom": 3.5
+    }
+  },
+  "taignoagny": {
+    "name": "Taignoagny",
+    "bio": "One of Donnacona's two sons, taken by Cartier at Gaspé in 1534 and brought back in 1535. He learned some French in France and was Cartier's interpreter, then fell out with him over the way to Hochelaga and over the French winter. He was taken to France again in 1536 and did not return.",
+    "sources": [
+      "wp-donnacona",
+      "wp-jacques-cartier"
+    ],
+    "view": {
+      "lat": 47,
+      "lon": -62,
+      "zoom": 3.5
+    }
+  },
+  "domagaya": {
+    "name": "Domagaya",
+    "bio": "Donnacona's other son, taken to France in 1534 and brought back in 1535. In the winter of 1535–36 he showed the sick French the infusion of the tree called annedda, which cured their scurvy. He was taken to France in 1536 and did not return.",
+    "sources": [
+      "wp-donnacona",
+      "wp-jacques-cartier"
+    ],
+    "view": {
+      "lat": 47,
+      "lon": -62,
+      "zoom": 3.5
+    }
+  },
+  "francisco-vazquez-de-coronado": {
+    "name": "Francisco Vázquez de Coronado",
+    "bio": "Governor of Nueva Galicia, who led some 400 Spaniards and well over a thousand Indigenous allies north in 1540 after the reports of Cíbola. He found Zuni and Rio Grande pueblos instead of golden cities, fought the Tiguex War over a winter, and followed a guide called the Turk across the plains to Quivira, where there was no gold either. He went home in 1542.",
+    "sources": [
+      "wp-coronado",
+      "wp-quivira"
+    ],
+    "view": {
+      "lat": 34,
+      "lon": -104,
+      "zoom": 4
+    }
+  },
+  "the-turk": {
+    "name": "The Turk (El Turco)",
+    "bio": "A man of the plains, called El Turco by the Spaniards, held at Pecos pueblo when Coronado's men met him in 1540. He told of a rich land called Quivira to the east and led the expedition across the plains. When no gold was found he was accused of lying and, in most accounts, garrotted at Quivira in 1541. His own people and name are not recorded; Pawnee and Wichita origins have both been argued.",
+    "death": {
+      "lon": -98.2,
+      "lat": 38.3,
+      "date": "1541",
+      "label": "The Turk killed at Quivira, 1541",
+      "confidence": "inferred",
+      "doubt": "Where Quivira lay is argued: central Kansas is the usual answer, and the exact site is not known.",
+      "source": "Francisco Vázquez de Coronado (Wikipedia)",
+      "cite": "wp-coronado",
+      "text": "Coronado had him garrotted after he admitted, by the Spanish account, that the people of Pecos had asked him to lead the army astray on the plains. The account is Spanish; his own story was not written down."
+    },
+    "sources": [
+      "wp-coronado",
+      "wp-quivira"
+    ],
+    "view": {
+      "lat": 37,
+      "lon": -100,
+      "zoom": 4.5
+    }
+  },
+  "hernando-de-soto": {
+    "name": "Hernando de Soto",
+    "bio": "A Spanish conquistador who had shared in the taking of Peru. In 1539 he landed on the Florida coast with some 600 men and spent three years crossing the south-east, burning towns and taking porters and guides in chains. His men were the first Europeans to see and cross the Mississippi. He died on its banks in 1542.",
+    "death": {
+      "lon": -91.2,
+      "lat": 31.5,
+      "date": "21 May 1542",
+      "label": "De Soto dies on the Mississippi, 1542",
+      "confidence": "speculative",
+      "doubt": "The place, called Guachoya in the chronicles, is not located; it lay on the river in what is now Arkansas or Louisiana.",
+      "source": "Hernando de Soto (Wikipedia)",
+      "cite": "wp-de-soto",
+      "text": "Fever took him after a long illness. His men, afraid the Indigenous people would learn that the man they had called the child of the sun was dead, sank the body in the river by night."
+    },
+    "sources": [
+      "wp-de-soto"
+    ],
+    "view": {
+      "lat": 33,
+      "lon": -88,
+      "zoom": 4.5
+    }
+  },
+  "samuel-de-champlain": {
+    "name": "Samuel de Champlain",
+    "bio": "A French geographer and navigator who founded Quebec in 1608 and spent the next twenty-seven years making the trade there work. He allied with the Innu, Algonquin and Huron-Wendat against the Iroquois, fought beside them on the lake that bears his name in 1609, and in 1615 went up the Ottawa River to Huronia.",
+    "death": {
+      "lon": -71.21,
+      "lat": 46.81,
+      "date": "25 Dec 1635",
+      "label": "Champlain dies at Quebec, 1635",
+      "confidence": "attested",
+      "source": "Samuel de Champlain (Wikipedia)",
+      "cite": "wp-champlain",
+      "text": "He died at Quebec on Christmas Day after a stroke, and was buried there."
+    },
+    "sources": [
+      "wp-champlain"
+    ],
+    "view": {
+      "lat": 45.5,
+      "lon": -73,
+      "zoom": 5
+    }
+  },
+  "jacques-marquette": {
+    "name": "Jacques Marquette",
+    "bio": "A French Jesuit missionary at the straits of Mackinac, who spoke several Indigenous languages. In 1673 he went with Louis Jolliet down the Wisconsin and Mississippi rivers as far as the Arkansas. He fell ill on the way back, and died on the east shore of Lake Michigan in 1675 on a second journey to the Illinois.",
+    "death": {
+      "lon": -86.45,
+      "lat": 44,
+      "date": "18 May 1675",
+      "label": "Marquette dies on Lake Michigan, 1675",
+      "confidence": "inferred",
+      "doubt": "He died on the lake shore near a small river; the traditional site is at Ludington, Michigan, and others have been proposed.",
+      "source": "Jacques Marquette (Wikipedia)",
+      "cite": "wp-marquette",
+      "text": "Weakened by dysentery on his way to the Illinois mission, he asked to be put ashore, and died on the beach in the company of his two voyageurs. Kiskakon Odawa took his bones to St Ignace two years later."
+    },
+    "sources": [
+      "wp-marquette"
+    ],
+    "view": {
+      "lat": 42.5,
+      "lon": -88,
+      "zoom": 4.5
+    }
+  },
+  "louis-jolliet": {
+    "name": "Louis Jolliet",
+    "bio": "Born at Quebec, trained by the Jesuits, and a fur trader and mapmaker. The governor, Frontenac, sent him in 1673 to find where the Mississippi led. He and Marquette reached the mouth of the Arkansas and turned back, sure it ran to the Gulf. His canoe overturned in the rapids above Montreal on the way home and his journals were lost.",
+    "sources": [
+      "wp-jolliet"
+    ],
+    "view": {
+      "lat": 42.5,
+      "lon": -88,
+      "zoom": 4.5
+    }
+  },
+  "la-salle": {
+    "name": "René-Robert Cavelier, Sieur de La Salle",
+    "bio": "A Norman-born fur trader in New France. In 1682 he took canoes down the Mississippi to the Gulf and claimed the whole basin for France as Louisiana. He returned in 1684 by sea to found a colony at the river's mouth, missed it, landed on the Texas coast, and was killed by his own men in 1687 on the way to seek help in Illinois.",
+    "death": {
+      "lon": -96.1,
+      "lat": 30.5,
+      "date": "Mar 1687",
+      "label": "La Salle shot by his own men, Texas, 1687",
+      "confidence": "inferred",
+      "doubt": "The site is not fixed; it lay in east Texas near the Brazos or Trinity, the Navasota area by one reckoning.",
+      "source": "René-Robert Cavelier, Sieur de La Salle (Wikipedia)",
+      "cite": "wp-la-salle",
+      "text": "Some of his party, who had quarrelled with him and killed his nephew and two others, shot him from ambush as he came to look for them. His body was left unburied. Disease and the Karankawa had already ended his colony."
+    },
+    "sources": [
+      "wp-la-salle"
+    ],
+    "view": {
+      "lat": 36,
+      "lon": -92,
+      "zoom": 4
+    }
+  },
+  "samuel-hearne": {
+    "name": "Samuel Hearne",
+    "bio": "A Hudson's Bay Company clerk and mate at Fort Prince of Wales (Churchill). After two failed attempts, he walked with the Chipewyan leader Matonabbee from 1770 to 1772 to the Coppermine River and the Arctic coast, and on the way saw Great Slave Lake. He was the first European to reach the Arctic overland in North America. He also wrote of the killing of Inuit at Bloody Falls, which he saw.",
+    "sources": [
+      "wp-hearne"
+    ],
+    "view": {
+      "lat": 62,
+      "lon": -105,
+      "zoom": 3.8
+    }
+  },
+  "matonabbee": {
+    "name": "Matonabbee",
+    "bio": "A Chipewyan (Dene) leader, who traded at Churchill, and who led Hearne's third journey in 1770–72 after Hearne's first two attempts, led by others, failed. He took women with the party, saying they could haul and cook and keep the men alive, and so made the journey. He took his own life in 1782, after Hearne gave up Fort Prince of Wales to a French squadron.",
+    "sources": [
+      "wp-matonabbee",
+      "wp-hearne"
+    ],
+    "view": {
+      "lat": 62,
+      "lon": -105,
+      "zoom": 3.8
+    }
+  },
+  "alexander-mackenzie": {
+    "name": "Alexander Mackenzie",
+    "bio": "A Scottish fur trader of the North West Company at Fort Chipewyan. In 1789 he followed the river now called the Mackenzie to the Arctic Ocean. In 1793, going up the Peace and down by the Fraser and the Bella Coola trails with Indigenous guides, he reached the Pacific, the first crossing of North America north of Mexico on record.",
+    "sources": [
+      "wp-mackenzie"
+    ],
+    "view": {
+      "lat": 60,
+      "lon": -120,
+      "zoom": 3.8
+    }
+  },
+  "meriwether-lewis": {
+    "name": "Meriwether Lewis",
+    "bio": "A Virginian army captain and President Jefferson's private secretary, who with William Clark led the Corps of Discovery from St Louis to the Pacific and back in 1804–06. He later became governor of Louisiana Territory and died in 1809.",
+    "sources": [
+      "wp-lewis-clark"
+    ],
+    "view": {
+      "lat": 44,
+      "lon": -105,
+      "zoom": 3.5
+    }
+  },
+  "william-clark": {
+    "name": "William Clark",
+    "bio": "A Virginian army officer who with Meriwether Lewis led the Corps of Discovery and drew its maps. York, whom he held in slavery from boyhood, travelled with him throughout; Clark did not free York until some years after they returned.",
+    "sources": [
+      "wp-lewis-clark",
+      "wp-york"
+    ],
+    "view": {
+      "lat": 44,
+      "lon": -105,
+      "zoom": 3.5
+    }
+  },
+  "sacagawea": {
+    "name": "Sacagawea",
+    "bio": "A Lemhi Shoshone woman taken as a girl by the Hidatsa, and married to the French-Canadian trader Toussaint Charbonneau. She went with the Corps of Discovery from Fort Mandan with her infant son, interpreted with the Shoshone, and helped to get the horses at the Continental Divide that took the party over the mountains. Her presence told the nations they met that the party came in peace.",
+    "death": {
+      "lon": -100.5,
+      "lat": 45.5,
+      "date": "1812",
+      "label": "Sacagawea dies, 1812 (by one account)",
+      "confidence": "speculative",
+      "doubt": "A clerk's note puts her death at Fort Manuel in December 1812; Shoshone oral tradition and some historians have her living to 1884 on the Wind River Reservation, Wyoming.",
+      "source": "Sacagawea (Wikipedia)",
+      "cite": "wp-sacagawea",
+      "text": "The fort record names the wife of Charbonneau, a Snake woman, dead of a putrid fever. The long-life account rests on Shoshone testimony, and most historians prefer the fort's record.",
+      "alternatives": [
+        {
+          "lon": -109.15,
+          "lat": 43,
+          "place": "Wind River Reservation, Wyoming",
+          "label": "Sacagawea dies on the Wind River, 1884 (Shoshone tradition)",
+          "source": "Sacagawea (Wikipedia)",
+          "cite": "wp-sacagawea"
+        }
+      ]
+    },
+    "sources": [
+      "wp-sacagawea",
+      "wp-lewis-clark"
+    ],
+    "view": {
+      "lat": 45,
+      "lon": -108,
+      "zoom": 3.8
+    }
+  },
+  "york": {
+    "name": "York",
+    "bio": "An enslaved Black man, raised with William Clark and brought by him on the expedition of 1804–06. He hunted, scouted and traded with the nations they met, and was asked his opinion in the vote on where to winter at Fort Clatsop. He was not paid, as the soldiers were, and after the return Clark kept him enslaved for years; Clark told Washington Irving in 1832 that he had freed him. What became of York afterwards is not known.",
+    "sources": [
+      "wp-york",
+      "wp-lewis-clark"
+    ],
+    "view": {
+      "lat": 44,
+      "lon": -105,
+      "zoom": 3.5
+    }
+  },
+  "john-c-fremont": {
+    "name": "John C. Frémont",
+    "bio": "A US Army topographical engineer who led several surveys of the West. On his second expedition, 1843–44, he went west by the Oregon Trail to the Columbia, south through the Great Basin and over the Sierra Nevada in midwinter, and back by the Old Spanish Trail. His map and report, drawn largely by Charles Preuss, did much to turn settlers' eyes west. Indigenous guides, and Kit Carson, made the passage possible.",
+    "sources": [
+      "wp-fremont"
+    ],
+    "view": {
+      "lat": 40,
+      "lon": -112,
+      "zoom": 3.8
+    }
+  },
+  "kit-carson": {
+    "name": "Kit Carson",
+    "bio": "A Missouri-born mountain man and trapper, married to Arapaho and later Cheyenne women, who guided Frémont on three expeditions. In later years he served as an Indian agent and as an army officer, and led the campaign against the Navajo that ended in their forced march to Bosque Redondo.",
+    "sources": [
+      "wp-kit-carson"
+    ],
+    "view": {
+      "lat": 40,
+      "lon": -108,
+      "zoom": 3.8
+    }
+  },
+  "inuit-taken-by-frobisher": {
+    "name": "The Inuit taken by Frobisher",
+    "group": true,
+    "bio": "On Baffin Island in 1576 Frobisher's men seized an Inuk hunter in his kayak, and in 1577 they took three more: a man, Kalicho; a woman, Arnaq; and her small child, Nutaaq. They were shown at Bristol and in London, where they were drawn by John White, and they died of illness in England within weeks. Kalicho and Arnaq are among the first Inuit whose names were written down in Europe.",
+    "sources": [
+      "wp-frobisher",
+      "wp-kalicho",
+      "wp-arnaq"
+    ],
+    "view": {
+      "lat": 58,
+      "lon": -35,
+      "zoom": 3
+    }
+  },
+  "manteo": {
+    "name": "Manteo",
+    "bio": "A man of the Croatan people of the Outer Banks. He went to England in 1584 with Wanchese, and came back with the English in 1585. He served as interpreter and guide, helped the colonists on Roanoke Island, and was baptised in August 1587, among the first Indigenous people baptised in English America. He was named Lord of Roanoke by Raleigh's order. What became of him after the colonists vanished is not known.",
+    "sources": [
+      "wp-manteo",
+      "wp-roanoke-colony"
+    ],
+    "view": {
+      "lat": 40,
+      "lon": -40,
+      "zoom": 2.6
+    }
+  },
+  "wanchese": {
+    "name": "Wanchese",
+    "bio": "A man of the Roanoke people, who went to England with Manteo in 1584 and learned English with Thomas Harriot. He came back in 1585, and turned against the English at Roanoke Island, as the Roanoke came under pressure from the colonists' demands for food. The English did not record his death.",
+    "sources": [
+      "wp-wanchese",
+      "wp-roanoke-colony"
+    ],
+    "view": {
+      "lat": 40,
+      "lon": -40,
+      "zoom": 2.6
+    }
+  },
+  "tisquantum": {
+    "name": "Tisquantum (Squanto)",
+    "bio": "A Patuxet man from what is now Plymouth, Massachusetts. In 1614 Thomas Hunt seized him with some two dozen others and sold them at Málaga. He got to England, where he lived for some years, and came back to New England in 1619 to find his people dead of disease. He then lived with the Wampanoag, and in 1621 the Pilgrims at Plymouth, whose site was his people's, relied on him as interpreter and guide. He died in 1622.",
+    "death": {
+      "lon": -69.95,
+      "lat": 41.67,
+      "date": "Nov 1622",
+      "label": "Squanto dies of fever near Chatham, 1622",
+      "confidence": "inferred",
+      "source": "Squanto (Wikipedia)",
+      "cite": "wp-squanto",
+      "doubt": "William Bradford gives an Indian fever and a nosebleed; some Wampanoag later suspected poison, and the site is only the general area.",
+      "text": "Bradford, who was with him, wrote that he asked the governor to pray for him, that he might go to the Englishmen's God in heaven, and bequeathed his things to some English friends."
+    },
+    "sources": [
+      "wp-squanto"
+    ],
+    "view": {
+      "lat": 41,
+      "lon": -50,
+      "zoom": 2.8
+    }
+  },
+  "pocahontas": {
+    "name": "Pocahontas (Matoaka, Amonute)",
+    "bio": "A daughter of Wahunsenaca, the paramount chief of the Powhatan, in Tsenacommacah, where the English settled at Jamestown. Taken captive by the English in 1613, she was converted, took the name Rebecca, and married the planter John Rolfe in 1614. In 1616 the Virginia Company took her, Rolfe and their infant son to England to show the colony's promise. She was received at court and painted, and died at Gravesend in March 1617 as they set out for home.",
+    "death": {
+      "lon": 0.37,
+      "lat": 51.44,
+      "date": "Mar 1617",
+      "label": "Pocahontas dies at Gravesend, 1617",
+      "confidence": "attested",
+      "doubt": "The cause of her death is not known; pneumonia, tuberculosis, dysentery and poison have each been suggested.",
+      "source": "Pocahontas (Wikipedia)",
+      "cite": "wp-pocahontas",
+      "text": "She fell ill on the ship as it set out down the Thames, was taken ashore at Gravesend, and died. She was buried in the chancel of St George's church there on 21 March 1617."
+    },
+    "sources": [
+      "wp-pocahontas"
+    ],
+    "view": {
+      "lat": 45,
+      "lon": -40,
+      "zoom": 2.6
+    }
+  },
+  "four-indian-kings": {
+    "name": "The Four Indian Kings",
+    "group": true,
+    "bio": "Three Mohawk chiefs and a Mahican, Tee Yee Neen Ho Ga Row (Hendrick), Sa Ga Yeath Qua Pieth Tow, Ho Nee Yeath Taw No Row and Etow Oh Koam, whom Peter Schuyler took to London in 1710 to ask Queen Anne for help against the French and for missionaries. They were received by the Queen on 19 April and had their portraits painted by John Verelst; the English called them kings, a title their own people did not use.",
+    "sources": [
+      "wp-four-mohawk-kings"
+    ],
+    "view": {
+      "lat": 45,
+      "lon": -35,
+      "zoom": 2.6
+    }
+  },
+  "first-americans": {
+    "name": "The first peoples of the Americas",
+    "group": true,
+    "bio": "The ancestors of Indigenous Americans, who came from north-east Asia by way of Beringia, the land that joined Siberia and Alaska when the sea stood low. Genetics shows they were isolated for some thousands of years before they spread south, and sites in the south put people in Chile by about 14,500 years ago. When, and by which route, are open: the coast, the ice-free corridor, or both.",
+    "sources": [
+      "wp-settlement-of-the-americas",
+      "wp-monte-verde",
+      "wp-paisley-caves",
+      "wp-white-sands-footprints"
+    ],
+    "view": {
+      "lat": 40,
+      "lon": -110,
+      "zoom": 2.2
+    }
+  },
+  "thule-people": {
+    "name": "The Thule",
+    "group": true,
+    "bio": "The ancestors of the Inuit, whaling people with skin boats and dog sleds who came from the Bering Strait country about a thousand years ago and spread along the Arctic coast to Greenland within a few centuries. They replaced the Dorset people, to whom they were little related by descent. The name is the archaeologists', from a site at Thule in north-west Greenland.",
+    "sources": [
+      "wp-thule-people"
+    ],
+    "view": {
+      "lat": 72,
+      "lon": -100,
+      "zoom": 2.6
+    }
+  },
+  "caribbean-settlers": {
+    "name": "The first settlers of the Caribbean and the Taíno",
+    "group": true,
+    "bio": "People came to Cuba and Hispaniola from the mainland more than six thousand years ago and lived by fishing and gathering. Potters of the Saladoid culture came up from the Orinoco and settled the Lesser Antilles and Puerto Rico from about 500 BC. Their descendants, the Taíno, spread across the Greater Antilles, and the Lucayans took the Bahamas by about AD 800, where Columbus first landed.",
+    "sources": [
+      "wp-saladoid",
+      "wp-taino",
+      "wp-lucayan"
+    ],
+    "view": {
+      "lat": 17.5,
+      "lon": -70,
+      "zoom": 3.5
+    }
+  },
+  "southern-athabaskan-ancestors": {
+    "name": "The Apachean ancestors of the Apache and the Navajo",
+    "group": true,
+    "bio": "Speakers of Southern Athabaskan languages, who came to the American Southwest from the north, where their relatives remain in Canada and Alaska. The Apache and the Navajo took on much from the Pueblo peoples they met, farming and weaving among it. When they came, and by the plains or the mountains, is argued; they were in the Southwest by the 1500s at the latest.",
+    "sources": [
+      "wp-apache",
+      "wp-navajo"
+    ],
+    "view": {
+      "lat": 45,
+      "lon": -110,
+      "zoom": 3
+    }
+  },
+  "yakut-ancestors": {
+    "name": "The Turkic ancestors of the Yakut (Sakha)",
+    "group": true,
+    "bio": "Turkic-speaking horse and cattle people who, from the Baikal country, went north along the Lena to the Yakutsk basin, where they absorbed or displaced the Evenki and Yukaghir. They brought horses and cattle farther north than any people had. When this happened is argued, with the usual dates in the early second millennium AD.",
+    "sources": [
+      "wp-yakuts"
+    ],
+    "view": {
+      "lat": 60,
+      "lon": 115,
+      "zoom": 3
+    }
+  },
+  "vasco-nunez-de-balboa": {
+    "name": "Vasco Núñez de Balboa",
+    "bio": "A Spanish colonist who stowed away from Hispaniola in 1510, took over the settlement at Santa María la Antigua del Darién, and in 1513 led about 190 Spaniards and some hundreds of Indigenous allies and porters across the isthmus of Panama. He was the first European to see the Pacific from the Americas. Governor Pedrarias Dávila had him beheaded for treason in 1519.",
+    "sources": [
+      "wp-balboa"
+    ],
+    "view": {
+      "lat": 8.5,
+      "lon": -78.5,
+      "zoom": 5.5
+    }
+  },
+  "hernan-cortes": {
+    "name": "Hernán Cortés",
+    "bio": "A Spanish conquistador from Extremadura who left Cuba in 1519 against the governor's orders. With about 500 men, and with Tlaxcalan and other Indigenous armies that were the bulk of his force, he overthrew the Mexica empire at Tenochtitlan in 1521. Smallpox did much of the killing. He later governed New Spain and died near Seville in 1547.",
+    "death": {
+      "lon": -6.06,
+      "lat": 37.39,
+      "date": "2 Dec 1547",
+      "label": "Cortés dies near Seville, 1547",
+      "confidence": "attested",
+      "source": "Hernán Cortés (Wikipedia)",
+      "cite": "wp-cortes",
+      "text": "He died at Castilleja de la Cuesta, of dysentery or pleurisy, a rich man in dispute with the Crown, having asked that his bones lie in Mexico, where they were moved some years later."
+    },
+    "sources": [
+      "wp-cortes",
+      "wp-conquest-aztec"
+    ],
+    "view": {
+      "lat": 19.5,
+      "lon": -97,
+      "zoom": 5
+    }
+  },
+  "malinche": {
+    "name": "Malinche (Doña Marina, Malintzin)",
+    "bio": "A Nahua woman, born near the Gulf coast and sold as a girl to Maya traders, who spoke Nahuatl and Maya. Given to Cortés at Potonchán in 1519, she became his interpreter and adviser through the conquest, and bore his son Martín. Her place in Mexican memory is divided: traitor to some, to others a young woman in a situation that left her few choices. The date and place of her death are not firmly known.",
+    "sources": [
+      "wp-malinche",
+      "wp-conquest-aztec"
+    ],
+    "view": {
+      "lat": 19.5,
+      "lon": -97,
+      "zoom": 5
+    }
+  },
+  "moctezuma-ii": {
+    "name": "Moctezuma II",
+    "bio": "The tlatoani, ruler, of the Mexica at Tenochtitlan from 1502. He received Cortés in November 1519 and was held by the Spanish in his own palace. He died in June 1520, as the city rose against the Spanish.",
+    "death": {
+      "lon": -99.13,
+      "lat": 19.43,
+      "date": "late Jun 1520",
+      "label": "Moctezuma dies in Tenochtitlan, 1520",
+      "confidence": "inferred",
+      "doubt": "Spanish accounts say his own people stoned him from the rooftop when he tried to calm them; Mexica accounts say the Spanish killed him.",
+      "source": "Moctezuma II (Wikipedia)",
+      "cite": "wp-moctezuma-ii",
+      "text": "Cortés and Bernal Díaz wrote that a stone struck him when he stood on a roof to speak to the crowd, and that he died of the wound days later. Indigenous accounts after the conquest, among them the Florentine Codex, say he was killed by the Spaniards. The Spanish retreated on the night of 30 June, the Noche Triste."
+    },
+    "sources": [
+      "wp-moctezuma-ii"
+    ],
+    "view": {
+      "lat": 19.5,
+      "lon": -99,
+      "zoom": 5.5
+    }
+  },
+  "francisco-pizarro": {
+    "name": "Francisco Pizarro",
+    "bio": "A Spanish conquistador from Trujillo, who had served under Balboa. He led about 180 men from Panama in 1531, took the Sapa Inca Atahualpa at Cajamarca in 1532, and held the Inca empire in his hands from 1533. His allies included Indigenous enemies of the Inca; the civil war between Atahualpa and his brother Huáscar had already weakened the empire. He was killed in Lima in 1541 by followers of his old partner Almagro.",
+    "death": {
+      "lon": -77.03,
+      "lat": -12.05,
+      "date": "26 Jun 1541",
+      "label": "Pizarro killed in Lima, 1541",
+      "confidence": "attested",
+      "source": "Francisco Pizarro (Wikipedia)",
+      "cite": "wp-pizarro",
+      "text": "Followers of Diego de Almagro the younger, whose father Pizarro had had executed, broke into his house and killed him on 26 June 1541. He was about sixty-three."
+    },
+    "sources": [
+      "wp-pizarro"
+    ],
+    "view": {
+      "lat": -5,
+      "lon": -78,
+      "zoom": 4.5
+    }
+  },
+  "atahualpa": {
+    "name": "Atahualpa",
+    "bio": "The last Sapa Inca who ruled the whole empire. He had just defeated his half-brother Huáscar in a civil war when Pizarro's men took him at Cajamarca on 16 November 1532. He filled a room with gold and twice over with silver for his freedom, and was executed by garrotte in July 1533 after a Spanish trial.",
+    "death": {
+      "lon": -78.52,
+      "lat": -7.16,
+      "date": "26 Jul 1533",
+      "label": "Atahualpa garrotted at Cajamarca, 1533",
+      "confidence": "attested",
+      "source": "Atahualpa (Wikipedia)",
+      "cite": "wp-atahualpa",
+      "text": "He was condemned for the death of Huáscar, idolatry and rebellion. Offered burning or, if he accepted baptism, the garrotte, he took baptism and was strangled."
+    },
+    "sources": [
+      "wp-atahualpa",
+      "wp-cajamarca"
+    ],
+    "view": {
+      "lat": -5,
+      "lon": -78,
+      "zoom": 4.5
+    }
+  },
+  "francisco-de-orellana": {
+    "name": "Francisco de Orellana",
+    "bio": "A Spanish conquistador from Trujillo, who took part in the conquest of Peru. In 1541 he was a captain in Gonzalo Pizarro's search for the cinnamon country east of Quito, and when the party ran short of food he went ahead down the Napo with about fifty men and a boat. They did not turn back, and reached the Atlantic by the whole length of the Amazon in 1542, the first European voyage down it. He died on a second attempt in 1546.",
+    "sources": [
+      "wp-orellana",
+      "wp-carvajal"
+    ],
+    "view": {
+      "lat": -3,
+      "lon": -62,
+      "zoom": 3.5
+    }
+  },
+  "alexander-von-humboldt": {
+    "name": "Alexander von Humboldt",
+    "bio": "A Prussian naturalist who spent five years, 1799 to 1804, in Spanish America with Aimé Bonpland, measuring, collecting and mapping from Venezuela to Mexico. He climbed Chimborazo, traced the Casiquiare Channel between the Orinoco and the Amazon basin, and wrote of the whole as one connected system, a view that shaped ecology. He drew on Indigenous guides, on the knowledge of local people, and on earlier Spanish work, and condemned slavery in what he saw.",
+    "sources": [
+      "wp-humboldt"
+    ],
+    "view": {
+      "lat": 2,
+      "lon": -70,
+      "zoom": 3.5
+    }
+  },
+  "aime-bonpland": {
+    "name": "Aimé Bonpland",
+    "bio": "A French botanist and physician who travelled with Humboldt in 1799–1804 and collected thousands of plants, many new to Europeans. He settled in South America afterwards, was held for some years in Paraguay by its ruler, and died in Argentina in 1858.",
+    "sources": [
+      "wp-bonpland"
+    ],
+    "view": {
+      "lat": 2,
+      "lon": -70,
+      "zoom": 3.5
+    }
+  },
+  "pedro-alvares-cabral": {
+    "name": "Pedro Álvares Cabral",
+    "bio": "A Portuguese nobleman who in March 1500 took thirteen ships out of Lisbon for India. He stood well out into the Atlantic and sighted the coast of Brazil on 22 April, and claimed it for the crown. He went on to Calicut and back, with only half his fleet.",
+    "sources": [
+      "wp-cabral",
+      "wp-caminha"
+    ],
+    "view": {
+      "lat": -10,
+      "lon": -30,
+      "zoom": 2.6
+    }
+  },
+  "vicente-yanez-pinzon": {
+    "name": "Vicente Yáñez Pinzón",
+    "bio": "A Spanish captain of Palos who had commanded the Niña on Columbus's first voyage. In 1499–1500 he sailed on his own to the coast of Brazil, probably some months before Cabral, and followed it north to the Amazon's mouth, which he called the Sea of Fresh Water. He reached the Gulf of Paria and Hispaniola on the way home.",
+    "sources": [
+      "wp-pinzon"
+    ],
+    "view": {
+      "lat": 0,
+      "lon": -45,
+      "zoom": 2.8
+    }
+  },
+  "alonso-de-ojeda": {
+    "name": "Alonso de Ojeda",
+    "bio": "A Castilian soldier who had sailed with Columbus on the second voyage. In 1499 he led a licensed expedition to the coast of South America, with Juan de la Cosa as pilot and Amerigo Vespucci aboard, which reached the Guianas and followed the coast west to the Gulf of Venezuela. He later governed Coquivacoa and died poor in Santo Domingo.",
+    "sources": [
+      "wp-ojeda"
+    ],
+    "view": {
+      "lat": 12,
+      "lon": -65,
+      "zoom": 4.5
+    }
+  },
+  "amerigo-vespucci": {
+    "name": "Amerigo Vespucci",
+    "bio": "A Florentine merchant and navigator who took part in voyages to the coast of South America in 1499–1500 and in Portuguese ones after. His letters said the land was a new continent, not Asia, and the cartographer Martin Waldseemüller named it America after him in 1507. His own accounts of his voyages, in particular one in 1497, are doubted by historians.",
+    "sources": [
+      "wp-vespucci"
+    ],
+    "view": {
+      "lat": 12,
+      "lon": -65,
+      "zoom": 4.5
+    }
+  },
+  "cimarrons-of-the-isthmus": {
+    "name": "The Cimarrons of the Isthmus of Panama",
+    "group": true,
+    "bio": "Africans who escaped Spanish enslavement in Panama in the 1500s and made free settlements in the forests of the isthmus, which the Spanish called cimarrón communities. They raided the mule trains on the road between Nombre de Dios and Panama, and in 1572–73 joined Francis Drake in his attacks on it, because the enemy of the Spanish was their friend. They were the guides who led him to see the Pacific.",
+    "sources": [
+      "wp-maroons",
+      "wp-drake"
+    ],
+    "view": {
+      "lat": 9,
+      "lon": -79.5,
+      "zoom": 5.5
+    }
+  },
+  "henry-morgan": {
+    "name": "Henry Morgan",
+    "bio": "A Welsh-born privateer based at Port Royal, Jamaica, who with a commission from the English governor attacked Spanish towns on the Main. His men sacked Panama in January 1671, after peace between England and Spain had been signed in Madrid the year before. He was arrested, sent to London, and sent back as lieutenant governor of Jamaica.",
+    "sources": [
+      "wp-henry-morgan"
+    ],
+    "view": {
+      "lat": 12,
+      "lon": -79,
+      "zoom": 4.2
+    }
+  },
+  "tupinamba-at-rouen": {
+    "name": "The Tupinambá at Rouen",
+    "group": true,
+    "bio": "Norman merchants trading brazilwood on the coast of Brazil brought Tupinambá men to France. For the royal entry of Henry II at Rouen on 1 October 1550 the city staged a Brazilian village on the river bank, with a mock battle between Tupinambá, allies of the French, and Tabajara, with some three hundred performers. Accounts differ on how many were Tupinambá brought from Brazil and how many Norman sailors in their dress. In 1562 Montaigne met three at Rouen, the men behind his essay Of Cannibals, and asked them what struck them about France.",
+    "sources": [
+      "wp-tupinamba"
+    ],
+    "view": {
+      "lat": 15,
+      "lon": -25,
+      "zoom": 2.6
+    }
+  },
+  "romani-ancestors": {
+    "name": "The Romani, from north-west India to Europe",
+    "group": true,
+    "bio": "The ancestors of the Romani left north-west India, from the Punjab, Rajasthan or Sindh country, and moved west, probably in waves, through Persia and Armenia to the Byzantine lands and the Balkans, and on into the rest of Europe. Their language is Indo-Aryan with Persian, Armenian and Greek words borrowed on the way. The dates and the number of waves are argued: genetic studies put the leaving about 1,500 years ago, and the Balkans are reached by the 1300s at the latest.",
+    "sources": [
+      "wp-romani"
+    ],
+    "view": {
+      "lat": 38,
+      "lon": 50,
+      "zoom": 2.6
+    }
+  },
+  "mexica-migrants": {
+    "name": "The Mexica, from Aztlán to Tenochtitlan",
+    "group": true,
+    "bio": "By their own tradition the Mexica, the people we call Aztec, came from a place called Aztlán, which their painted histories draw as an island, and wandered south for generations to the Valley of Mexico, where they founded Tenochtitlan on an island in the lake in 1325. Whether Aztlán was a real place, and where, is not known. Mexcaltitán in Nayarit is the best-known guess.",
+    "sources": [
+      "wp-aztlan"
+    ],
+    "view": {
+      "lat": 21,
+      "lon": -102,
+      "zoom": 4.5
+    }
   }
 }

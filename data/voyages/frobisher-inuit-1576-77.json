@@ -1,0 +1,87 @@
+{
+  "id": "frobisher-inuit-1576-77",
+  "title": "The Inuit taken from Baffin Island to England, 1576 and 1577",
+  "short": "Inuit to England",
+  "who": [
+    "inuit-taken-by-frobisher"
+  ],
+  "when": "1576–1577",
+  "summary": "Martin Frobisher looked for a north-west passage and found Frobisher Bay on Baffin Island in 1576. His men seized an Inuk man there, who died in England, and on the second voyage, in 1577, after fighting at Bloody Point, they seized Kalicho, Arnaq and her child Nutaaq. The three were shown at Bristol and London and died within weeks. They are among the first Inuit whose names were recorded in Europe.",
+  "sources": [
+    "wp-frobisher",
+    "wp-kalicho",
+    "wp-arnaq"
+  ],
+  "legs": [
+    {
+      "from": "Frobisher Bay, Baffin Island",
+      "to": "London",
+      "dates": "Aug – 9 Oct 1576",
+      "start": "1576-08",
+      "end": "1576-10-09",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Martin Frobisher (Wikipedia): he took a native man hostage, turned homewards and docked in London on 9 October 1576",
+      "note": "the article gives the arrival and not the day of leaving, so August is a stand-in; the course is the same broad brush as 1577, ending in the Thames estuary",
+      "points": [
+        [-66.4, 62.6],
+        [-62.0, 61.3],
+        [-50.0, 60.0],
+        [-36.0, 57.0],
+        [-22.0, 53.0],
+        [-12.0, 50.3],
+        [-4.0, 49.9],
+        [-0.5, 50.1],
+        [1.0, 50.6],
+        [1.7, 51.1],
+        [1.8, 51.5]
+      ]
+    },
+    {
+      "from": "Frobisher Bay, Baffin Island",
+      "to": "Bristol",
+      "dates": "Aug – Sep 1577",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Martin Frobisher (Wikipedia); Kalicho and Arnaq (Wikipedia)",
+      "note": "the ports the ships used are not all recorded; Bristol is where the three were shown",
+      "points": [
+        [-66.4, 62.6],
+        [-62.0, 61.3],
+        [-50.0, 60.0],
+        [-36.0, 57.0],
+        [-22.0, 53.0],
+        [-12.0, 50.3],
+        [-6.5, 50.6],
+        [-4.5, 51.2],
+        [-3.5, 51.3]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": -66.4,
+      "lat": 62.8,
+      "date": "1577",
+      "label": "Bloody Point and the seizure",
+      "confidence": "inferred",
+      "source": "Kalicho (Wikipedia)",
+      "cite": "wp-kalicho",
+      "doubt": "The English accounts say the Inuit were taken after fighting in which both sides were hurt; they are the only record, and no Inuit account of it was written down at the time.",
+      "text": "Frobisher's men fought with the Inuit and seized a man and a woman with a child. The woman, Arnaq, was carried off with her baby, who was injured."
+    },
+    {
+      "kind": "event",
+      "lon": -3.5,
+      "lat": 51.3,
+      "date": "Autumn 1577",
+      "label": "Shown at Bristol, and dead within weeks",
+      "source": "Arnaq (Wikipedia)",
+      "cite": "wp-arnaq",
+      "text": "The three were put on show and drawn by John White. Kalicho, Arnaq and Nutaaq died of illness in England, in the autumn of 1577."
+    }
+  ]
+}

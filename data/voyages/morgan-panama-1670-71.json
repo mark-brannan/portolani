@@ -1,0 +1,67 @@
+{
+  "id": "morgan-panama-1670-71",
+  "title": "Morgan across the isthmus to Panama, 1670–71",
+  "short": "Morgan at Panama",
+  "who": ["henry-morgan"],
+  "when": "1670–1671",
+  "summary": "Henry Morgan left Port Royal with some thirty-six ships and about 1,800 men in 1670, took Providencia and the fort of San Lorenzo at the mouth of the Chagres, and led some 1,400 men up the river and across the isthmus. They defeated the Spanish defenders outside Panama on 28 January 1671, and the city burned; the Spanish said the pirates set the fires, and Morgan blamed the Spanish. England and Spain had signed a peace in 1670.",
+  "sources": ["wp-henry-morgan"],
+  "legs": [
+    {
+      "from": "Port Royal",
+      "to": "Providencia",
+      "dates": "Oct – Dec 1670",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Henry Morgan (Wikipedia): by Cape Tiburon to Old Providence",
+      "points": [
+        [-76.9, 17.7],
+        [-77.5, 16.8],
+        [-79.5, 15.3],
+        [-81.1, 13.55]
+      ]
+    },
+    {
+      "from": "Providencia",
+      "to": "Chagres",
+      "dates": "Dec 1670 – 6 Jan 1671",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Henry Morgan (Wikipedia): across to the mouth of the Chagres",
+      "points": [
+        [-81.1, 13.55],
+        [-80.8, 11.5],
+        [-80.1, 9.7]
+      ]
+    },
+    {
+      "from": "Chagres",
+      "to": "Panama",
+      "dates": "9 – 28 Jan 1671",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Henry Morgan (Wikipedia): up the Chagres by boat, then on foot to Panama",
+      "points": [
+        [-79.99, 9.3],
+        [-79.85, 9.15],
+        [-79.6, 9.05],
+        [-79.48, 8.99]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": -79.48,
+      "lat": 8.99,
+      "date": "28 Jan 1671",
+      "label": "Panama taken and burned",
+      "source": "Henry Morgan (Wikipedia)",
+      "cite": "wp-henry-morgan",
+      "text": "Morgan's men took the city, which burned within days, and stayed about four weeks, looking for treasure and ransom. Much of the town's silver had gone by sea. The old city, Panamá Viejo, was never rebuilt and a new one was founded nearby."
+    }
+  ]
+}

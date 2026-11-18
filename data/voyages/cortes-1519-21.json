@@ -1,0 +1,114 @@
+{
+  "id": "cortes-1519-21",
+  "title": "Cortés, Malinche and the march to Tenochtitlan, 1519–21",
+  "short": "Cortés",
+  "who": ["hernan-cortes", "malinche", "moctezuma-ii"],
+  "when": "1519–1521",
+  "summary": "Cortés sailed from Cuba in February 1519 with eleven ships. He landed at Cozumel and at Tabasco, where he was given Malinche, and founded Veracruz, where he scuttled his ships. He marched inland with the Totonac and Tlaxcalans, whose help was decisive, to Tenochtitlan on 8 November. The Spanish and their allies were driven out on the Noche Triste, and took the city in August 1521 after a siege in which disease killed many.",
+  "sources": ["wp-cortes", "wp-conquest-aztec", "wp-malinche", "wp-moctezuma-ii"],
+  "legs": [
+    {
+      "from": "Cuba",
+      "to": "Veracruz",
+      "dates": "18 Feb – Apr 1519",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Hernán Cortés (Wikipedia): by Cozumel, Tabasco and the coast to San Juan de Ulúa",
+      "points": [
+        [-85.5, 21.7],
+        [-86.5, 20.4],
+        [-87.2, 21.8],
+        [-90.5, 22.5],
+        [-92.8, 19],
+        [-94, 19.5],
+        [-95.9, 19.2]
+      ]
+    },
+    {
+      "from": "Veracruz",
+      "to": "Tenochtitlan",
+      "dates": "Aug – 8 Nov 1519",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Spanish conquest of the Aztec Empire (Wikipedia): by Cempoala, Tlaxcala and Cholula",
+      "points": [
+        [-96.13, 19.2],
+        [-96.4, 19.45],
+        [-97.3, 19.6],
+        [-98.2, 19.3],
+        [-98.3, 19.05],
+        [-99.13, 19.43]
+      ]
+    },
+    {
+      "from": "Tenochtitlan",
+      "to": "Tlaxcala",
+      "dates": "30 Jun – 12 Jul 1520",
+      "start": "1520-06-30",
+      "end": "1520-07-12",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Spanish conquest of the Aztec Empire (Wikipedia): the Noche Triste, then the retreat to Tlaxcala",
+      "note": "the article dates the flight and the arrival; the road round the north of the lakes is the usual drawing",
+      "points": [
+        [-99.13, 19.43],
+        [-99.2, 19.46],
+        [-98.75, 19.7],
+        [-98.23, 19.32]
+      ]
+    },
+    {
+      "from": "Tlaxcala",
+      "to": "Tenochtitlan",
+      "dates": "Dec 1520 – 13 Aug 1521",
+      "start": "1520-12",
+      "end": "1521-08-13",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Spanish conquest of the Aztec Empire (Wikipedia): back to the Valley of Mexico in late December 1520, Texcoco the base, the siege from 10 May 1521",
+      "note": "by Texcoco, the base of the campaign",
+      "points": [
+        [-98.23, 19.32],
+        [-98.88, 19.51],
+        [-99.13, 19.43]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": -92.8,
+      "lat": 18.6,
+      "date": "Mar 1519",
+      "label": "Potonchán: Malinche given to Cortés",
+      "confidence": "inferred",
+      "source": "Malinche (Wikipedia)",
+      "cite": "wp-malinche",
+      "text": "After the battle of Centla, the local leaders gave Cortés twenty women, among them the young woman the Spaniards baptised Marina. She spoke Nahuatl as well as Maya, and with Jerónimo de Aguilar, a Spaniard who had learned Maya, she gave Cortés a voice with the Mexica."
+    },
+    {
+      "kind": "event",
+      "lon": -99.13,
+      "lat": 19.43,
+      "date": "8 Nov 1519",
+      "label": "Tenochtitlan: Moctezuma receives Cortés",
+      "source": "Spanish conquest of the Aztec Empire (Wikipedia)",
+      "cite": "wp-conquest-aztec",
+      "text": "The Mexica capital, on an island in Lake Texcoco, was larger than any city in Spain. Moctezuma received the Spanish with ceremony and lodged them in his father's palace; within a week he was a hostage."
+    },
+    {
+      "kind": "event",
+      "lon": -99.13,
+      "lat": 19.43,
+      "date": "13 Aug 1521",
+      "label": "Tenochtitlan falls",
+      "source": "Spanish conquest of the Aztec Empire (Wikipedia)",
+      "cite": "wp-conquest-aztec",
+      "text": "After a siege of about eighty days Cuauhtémoc, the last tlatoani, was taken. Thousands of Tlaxcalan, Texcocan and other allies fought beside the Spanish; smallpox had reached the city in 1520 and killed a large part of its people."
+    }
+  ]
+}

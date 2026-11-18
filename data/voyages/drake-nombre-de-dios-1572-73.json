@@ -1,0 +1,105 @@
+{
+  "id": "drake-nombre-de-dios-1572-73",
+  "title": "Drake and the Cimarrons on the Isthmus of Panama, 1572–73",
+  "short": "Drake and the Cimarrons",
+  "who": ["francis-drake", "cimarrons-of-the-isthmus"],
+  "when": "1572–1573",
+  "summary": "Drake sailed from Plymouth in May 1572 with two small ships to raid the Spanish treasure road across Panama. He attacked Nombre de Dios in July, was wounded, and withdrew. Escaped Africans, the Cimarrons, who hated the Spanish, then allied with him. They guided him inland, showed him the Pacific from a hilltop, and in March 1573 helped him ambush a mule train carrying silver to the coast. He was back at Plymouth in August.",
+  "sources": ["wp-drake", "wp-maroons"],
+  "legs": [
+    {
+      "from": "Plymouth",
+      "to": "Port Pheasant, in the Gulf of Darién",
+      "dates": "24 May – 12 Jul 1572",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Francis Drake (Wikipedia): the Pasha and the Swan to the isthmus",
+      "points": [
+        [-4.3, 50.25],
+        [-12, 45],
+        [-40, 30],
+        [-65, 18],
+        [-75, 13],
+        [-77.2, 9.3],
+        [-77.4, 8.7]
+      ]
+    },
+    {
+      "from": "Port Pheasant, in the Gulf of Darién",
+      "to": "Nombre de Dios",
+      "dates": "Jul 1572",
+      "start": "1572-07",
+      "end": "1572-07-28",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Francis Drake (Wikipedia): the first raid, on Nombre de Dios, was late in July 1572",
+      "note": "the article gives the raid and not the way to it; a coasting run west along the Caribbean shore is the usual drawing",
+      "points": [
+        [-77.4, 8.7],
+        [-77.5, 9.4],
+        [-78.3, 9.75],
+        [-79.0, 9.8],
+        [-79.47, 9.62]
+      ]
+    },
+    {
+      "from": "the coast near Nombre de Dios",
+      "to": "a hilltop view of the Pacific",
+      "dates": "Feb 1573",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "speculative",
+      "source": "Francis Drake (Wikipedia): with the Cimarrons he saw the Pacific from a tree on a ridge",
+      "doubt": "The ridge is not identified, and the route over the isthmus is not recorded.",
+      "points": [
+        [-79.5, 9.7],
+        [-79.4, 9.5],
+        [-79.2, 9.25],
+        [-79, 9.1]
+      ]
+    },
+    {
+      "from": "the coast near Nombre de Dios",
+      "to": "Plymouth",
+      "dates": "Apr – 9 Aug 1573",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Francis Drake (Wikipedia): home with the silver and gold",
+      "points": [
+        [-79.5, 9.75],
+        [-75, 13],
+        [-65, 18],
+        [-40, 30],
+        [-12, 45],
+        [-4.3, 50.25]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": -79.47,
+      "lat": 9.57,
+      "date": "28–29 Jul 1572",
+      "label": "Nombre de Dios attacked",
+      "source": "Francis Drake (Wikipedia)",
+      "cite": "wp-drake",
+      "text": "Drake's men landed at night and took the town, then withdrew when he was wounded in the leg, leaving the treasure house untouched."
+    },
+    {
+      "kind": "event",
+      "lon": -79.4,
+      "lat": 9.5,
+      "date": "Mar 1573",
+      "label": "The mule train ambushed",
+      "confidence": "inferred",
+      "source": "Francis Drake (Wikipedia)",
+      "cite": "wp-drake",
+      "doubt": "Drake's own account is the source for the amount taken and the place; the Cimarrons left no record.",
+      "text": "Drake and the Cimarrons waited in the grass beside the road and took the silver of a mule train, and buried much of what they could not carry. The Cimarrons were in a war of their own with the Spanish; the Spanish suppressed them in the years after."
+    }
+  ]
+}

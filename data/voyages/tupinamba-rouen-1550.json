@@ -1,0 +1,64 @@
+{
+  "id": "tupinamba-rouen-1550",
+  "title": "The Tupinambá brought from Brazil to Rouen, 1550",
+  "short": "Tupinambá at Rouen",
+  "who": [
+    "tupinamba-at-rouen"
+  ],
+  "when": "1550",
+  "summary": "Norman ships trading brazilwood on the Brazilian coast carried Tupinambá people to France. At Rouen on 1 October 1550 the city staged a Brazilian village and a mock battle for Henry II, with hundreds of performers, some of them Tupinambá and many Norman sailors in their dress; accounts differ on how many. In 1562 Montaigne met three Tupinambá in Rouen, and wrote of what they said. Who these people were, and how many, is known only through the accounts of the French.",
+  "sources": [
+    "wp-tupinamba"
+  ],
+  "legs": [
+    {
+      "from": "the coast of Brazil",
+      "to": "Le Havre",
+      "dates": "before 1550",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Tupinambá people (Wikipedia): Norman trade with the Tupinambá coast",
+      "note": "Cabo Frio is the usual port of the Norman brazilwood trade; the line is a broad brush",
+      "doubt": "The ports and the number of Tupinambá carried are not firmly recorded.",
+      "points": [
+        [-41.8, -23.3],
+        [-32.0, -12.0],
+        [-30.0, 5.0],
+        [-22.0, 25.0],
+        [-12.0, 43.0],
+        [-7.0, 47.5],
+        [-5.5, 49.2],
+        [-2.5, 50.0],
+        [-0.2, 49.7]
+      ]
+    },
+    {
+      "from": "Le Havre",
+      "to": "Rouen",
+      "dates": "before 1 Oct 1550",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Tupinambá people (Wikipedia): the festival at Rouen",
+      "note": "up the Seine",
+      "points": [
+        [0.11, 49.49],
+        [0.6, 49.4],
+        [1.09, 49.44]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": 1.09,
+      "lat": 49.44,
+      "date": "1 Oct 1550",
+      "label": "Rouen: the Brazilian fête for Henry II",
+      "source": "Tupinambá people (Wikipedia)",
+      "cite": "wp-tupinamba",
+      "text": "On the river bank the city built a Brazilian village and filled it with some three hundred men, Tupinambá and Norman sailors in their dress; accounts differ on the numbers of each. They put on a mock battle between the Tupinambá, who were allies of the French, and the Tabajara. The king and queen watched. Any Tupinambá among them were put on show; what they felt is not recorded."
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "id": "cabral-1500",
+  "title": "Cabral reaches Brazil, 1500",
+  "short": "Cabral, 1500",
+  "who": [
+    "pedro-alvares-cabral"
+  ],
+  "when": "1500",
+  "summary": "Cabral left Lisbon with thirteen ships on 9 March 1500, bound for India, and swung far out into the Atlantic. On 22 April he sighted a hill, Monte Pascoal, on the coast of what is now Bahia, and anchored at Porto Seguro. Scribe Pêro Vaz de Caminha's letter describes meeting the Tupiniquim there. After ten days the fleet sailed on to the Cape, where a storm sank four ships, among them that of Bartolomeu Dias.",
+  "sources": [
+    "wp-cabral",
+    "wp-caminha"
+  ],
+  "legs": [
+    {
+      "from": "Lisbon",
+      "to": "the Cape Verde Islands",
+      "dates": "9 – 22 Mar 1500",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Pedro Álvares Cabral (Wikipedia)",
+      "points": [
+        [-10, 38.5],
+        [-14, 30],
+        [-20.5, 20],
+        [-24.8, 15.5]
+      ]
+    },
+    {
+      "from": "the Cape Verde Islands",
+      "to": "Porto Seguro",
+      "dates": "22 Mar – 22 Apr 1500",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Pedro Álvares Cabral (Wikipedia): the great sweep to the south-west",
+      "points": [
+        [-24.8, 15.5],
+        [-30.0, 6.0],
+        [-32.0, -3.0],
+        [-33.0, -9.0],
+        [-35.0, -14.0],
+        [-38.4, -16.4]
+      ]
+    },
+    {
+      "from": "Porto Seguro",
+      "to": "the Cape of Good Hope",
+      "dates": "2 May – late May 1500",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Pedro Álvares Cabral (Wikipedia): across the South Atlantic, a storm at the Cape",
+      "points": [
+        [-38.4, -16.4],
+        [-32, -24],
+        [-15, -32],
+        [3, -37],
+        [17.5, -36.5]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "landfall",
+      "lon": -38.4,
+      "lat": -16.4,
+      "date": "22–23 Apr 1500",
+      "label": "Monte Pascoal and Porto Seguro",
+      "source": "Pêro Vaz de Caminha (Wikipedia)",
+      "cite": "wp-caminha",
+      "text": "The first landfall sighted was a round hill, called Monte Pascoal for Easter. Caminha's letter to King Manuel describes the Tupiniquim, who were curious and friendly, and who had no iron. A Mass was said on 26 April and 1 May, and a cross raised. The land was named Terra de Vera Cruz. Two convicts were left ashore; whether Cabral reached Brazil by chance or on purpose is debated."
+    }
+  ]
+}
