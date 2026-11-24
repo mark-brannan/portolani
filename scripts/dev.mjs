@@ -22,7 +22,7 @@ import { buildInfo } from './build-info.mjs';
 
 let rangesJson; // the slimmed ranges as served, kept after the first request
 const root = fileURLToPath(new URL('..', import.meta.url));
-export const DATA_URL = 'https://portolani.app/';
+export const DATA_URL = 'https://mark-brannan.github.io/portolani/';
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json',
   '.geojson': 'application/geo+json', '.css': 'text/css', '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp',
   '.svg': 'image/svg+xml', '.ttf': 'font/ttf', '.txt': 'text/plain; charset=utf-8' };
