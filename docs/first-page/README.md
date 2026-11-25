@@ -23,3 +23,19 @@ Dulcert's, this one is the Catalan Atlas's. The rose in these renders is drawn a
 `ROSE_CAP`, about the share a Majorcan chart gives its rose; the cap change is not built yet.
 
 `hub-centred.jpg`, `wide.jpg` and `default-frame.jpg` are D, E and C at full size.
+
+## D with the rose moved
+
+At the hub the rose covers Calabria. The lines are Dulcert's: their meeting point is read off his scan
+([centres.md](../atlas/centres.md), 14.5°E 40.0°N, ±1.5°), so they stay. The rose is lent, and the chart it is
+lent from does not set it on its own centre: the Catalan Atlas's rose sits 0.72 of the radius out on the west
+line. So the rose moves out along one of Dulcert's rhumbs into open sea, and his lines still meet at a bare
+point, as he drew them. `rose-moved.jpg` is three places for it, D's frame unchanged:
+
+| | the rose | file |
+|---|---|---|
+| D1 | on the south-east rhumb, in the Ionian | `rose-ionian.jpg` |
+| D2 | on the west rhumb, between Minorca and Sardinia | `rose-west-basin.jpg` |
+| D3 | a short way out on the west rhumb, in the Tyrrhenian | `rose-tyrrhenian.jpg` |
+
+A lent ship that stood where the rose now stands moves to the Tyrrhenian.
