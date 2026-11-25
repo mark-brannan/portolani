@@ -36,7 +36,7 @@ test('a kind the rendering lacks is drawn from the other pack; plain draws no pi
   assert.deepEqual(scanned.roses.map((s) => s.id), ['rose-aguiar', 'rose-catalan', 'rose-catalan-small', 'rose-prunes', 'rose-aguiar-b']);
   assert.equal(scanned.cartouche.id, 'cartouche-dewit');
   assert.deepEqual(scanned.towns.map((s) => `${s.pack}/${s.file}`),
-    ['venice', 'genoa', 'lisbon', 'lake', 'lake-moat', 'smina', 'jerusalem', 'ceuta', 'avignon'].map((t) => `scanned/town-aguiar-${t}.png`));
+    ['venice', 'genoa', 'lisbon', 'lake', 'lake-moat', 'smina', 'jerusalem', 'ceuta', 'avignon'].map((t) => `scanned/town-aguiar-${t}.webp`));
   // a family drawn only as vectors still shows under the scanned rendering
   const bestiary = chooseSprites(manifests, { rendering: 'scanned', monster: 'bestiary' });
   assert.ok(bestiary.monsters.length > 0 && bestiary.monsters.every((s) => s.pack === 'vivid' && s.style === 'bestiary'));
@@ -89,7 +89,7 @@ test('defaultSprites follows its rule, so a sprite added to a pack joins or stay
 test('selectSprites draws the keys it is given, from either pack, and ignores keys it does not know', () => {
   const chosen = selectSprites(manifests, ['scanned/serpent-a', 'vivid/serpent-a', 'vivid/town-martines-port', 'plain/rose', 'plain/tower', 'nowhere/x', 'vivid/nonesuch']);
   assert.deepEqual(chosen.monsters.map((s) => s.key), ['vivid/serpent-a', 'scanned/serpent-a']);
-  assert.deepEqual(chosen.monsters.map((s) => s.file), ['carta-marina-serpent-a.svg', 'serpent-a.png']);
+  assert.deepEqual(chosen.monsters.map((s) => s.file), ['carta-marina-serpent-a.svg', 'serpent-a.webp']);
   assert.deepEqual(chosen.towns.map((s) => s.key), ['vivid/town-martines-port']);
   assert.deepEqual([chosen.tower, chosen.towers], [true, ['tower']]);
   assert.deepEqual(selectSprites(manifests, ['plain/tower-gate', 'plain/tower-dome']).towers, ['tower-gate', 'tower-dome']);

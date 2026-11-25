@@ -14,7 +14,7 @@
 // scripts/sources.json is the sources manifest: every file, URL, sha256 and rights line. Scans are
 // downloaded into downloads/ when missing, checked against it, and ASSETS.md is written from it.
 //
-// A sprite PNG keeps the scan's own colour, with alpha = ink coverage. The RGB is the scan divided
+// A sprite keeps the scan's own colour, with alpha = ink coverage. The RGB is the scan divided
 // by its paper tone, so the renderer can composite with `multiply` and the source reds, greens and
 // gilt land on our parchment as they sat on theirs. A pack with `colour: 'ink'` is written as
 // black RGB instead, and the renderer fills it with the pack ink, so one ink setting retints it.
@@ -103,6 +103,9 @@ const MASK_FEATHER = 6; // px blur on a polygon mask's edge, in scan pixels (`ma
 const MAX_SCALE = 3; // a sprite is stored at most this many px wide per CSS px it is drawn (sizePx)
 const EDGE_FEATHER = 6; // px, scan scale, of the fade at a crop's edge
 const EDGE_PX = 3; // the narrowest that fade may be once drawn, in CSS px at sizePx: a big scan cut small keeps a soft edge
+// A sprite ships as WebP: lossy colour at this quality, its alpha lossless, so the feathered edge and an ink key keep every step.
+// A PNG of the same patch is four to five times the bytes, and every default sprite is fetched on a cold load.
+const WEBP = ['-quality', '90', '-define', 'webp:alpha-quality=100', '-define', 'webp:use-sharp-yuv=true', '-define', 'webp:method=6'];
 
 // One pack of scanned sprites; each sprite's `style` names the design family it belongs to, which
 // the renderer offers as a setting (a rose set, a monster family, a town drawing).
@@ -458,7 +461,7 @@ function buildSprite(sprite, colour, key, outDir, tmp) {
   const trim = turn ? `${w}x${h}+0+0` : magick(trimmed, '-fuzz', '3%', '-format', '%@', 'info:'); // a turned crop is kept whole
   const m = /^(\d+)x(\d+)\+(\d+)\+(\d+)$/.exec(trim);
   const [tw, th, tx, ty] = m.slice(1).map(Number);
-  const file = `${sprite.id}.png`;
+  const file = `${sprite.id}.webp`;
   // Source colour: divide out the paper (the mean of the crop where there is no ink), so the
   // scan's paper reads as white under `multiply` and only the inks and washes carry tone.
   let rgb = ['-size', `${w}x${h}`, 'xc:black'];
@@ -477,7 +480,8 @@ function buildSprite(sprite, colour, key, outDir, tmp) {
   const most = MAX_SCALE * sizePx;
   const shrink = tw > most ? ['-filter', 'Lanczos', '-resize', `${most}x`] : [];
   magick(rgb, alpha, '-alpha', 'off', '-compose', 'CopyOpacity', '-composite',
-    '-crop', `${tw}x${th}+${tx}+${ty}`, '+repage', shrink, '-strip', join(outDir, file));
+    '-crop', `${tw}x${th}+${tx}+${ty}`, '+repage', shrink, '-strip', t('sprite'));
+  magick(t('sprite'), WEBP, join(outDir, file));
 
   if (keep && sprite.id.startsWith(keepPrefix)) {
     // multiplied onto parchment, as the renderer draws it, so the kept `.cut.png` shows the true colours
