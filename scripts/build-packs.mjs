@@ -83,6 +83,8 @@ const OLIVA_PAPER = '#ddd7bf'; // the vellum of the Oliva chart inside its big s
 const KITAB_PAPER = '#c6c1b0'; // the paper of the Kitab-ı Bahriye Adriatic folio round its rose, east of it between the ring and 150 px out: the mean of the 80th to 90th percentile of its pixels by brightness
 const PLANCIUS_PAPER = '#d5cdb2'; // the paper of the Plancius 1609 plate inside its rose's ring: the mean of the 80th to 90th percentile of its pixels by brightness; the ship shares it
 const COSA_PAPER = '#d0d5b2'; // the vellum of the de la Cosa India detail (Museo Galileo's facsimile): the mean of the 80th to 90th percentile of its pixels by brightness; every de la Cosa ship shares it
+// the vellum of Catalan Atlas sheets 9, 11 and 12, each round its figure's crop: the mean of the 80th to 90th percentile of its pixels by brightness
+const CATALAN_PAPER = { 9: '#c4beb1', 11: '#b4ac9b', 12: '#beb3a0' };
 const PARCHMENT = '#e9d8b4'; // the renderer's default paper, for the kept `.cut.png`
 const argv = process.argv.slice(2), keepAt = argv.indexOf('--keep'), onlyAt = argv.indexOf('--only');
 const keep = keepAt >= 0 ? join(ROOT, argv[keepAt + 1]) : null;
@@ -99,6 +101,8 @@ const PAPER_LEVEL = [20, 50];
 const PAPER_FIGURE = { ink: 50, close: 14, open: 1, dilate: 8, feather: 4, minArea: 40000 };
 const MASK_FEATHER = 6; // px blur on a polygon mask's edge, in scan pixels (`maskFeather` widens it)
 const MAX_SCALE = 3; // a sprite is stored at most this many px wide per CSS px it is drawn (sizePx)
+const EDGE_FEATHER = 6; // px, scan scale, of the fade at a crop's edge
+const EDGE_PX = 3; // the narrowest that fade may be once drawn, in CSS px at sizePx: a big scan cut small keeps a soft edge
 // A sprite ships as WebP: lossy colour at this quality, its alpha lossless, so the feathered edge and an ink key keep every step.
 // A PNG of the same patch is four to five times the bytes, and every default sprite is fetched on a cold load.
 const WEBP = ['-quality', '90', '-define', 'webp:alpha-quality=100', '-define', 'webp:use-sharp-yuv=true', '-define', 'webp:method=6'];
@@ -148,20 +152,21 @@ const PACKS = [
       { id: 'rose-catalan', kind: 'rose', style: 'aguiar', scan: 'catalan-atlas-5', key: 'patch', paper: PARCHMENT, crop: [660, 6598, 3460, 9398], sizePx: 300, circle: [1400, 1400, 1390], circleFeather: 18 },
       { id: 'rose-catalan-small', kind: 'rose', style: 'aguiar', scan: 'catalan-atlas-5', key: 'patch', paper: PARCHMENT, crop: [1285, 7223, 2835, 8773], sizePx: 110, circle: [775, 775, 715], circleFeather: 18 },
       // The Catalan Atlas's own ships and beast on sheets 6 to 12 (docs/atlas/ornaments.md; docs/catalan-figures), patches
-      // as the rose is, divided by the map's parchment for the same reason. Each is the whole crop with the sea round it;
+      // divided by their own sheet's vellum, unlike the rose: divided by the map's parchment, the greyer vellum stayed in
+      // the whole crop and drew it as a grey-blue square on the map. Each is the whole crop with the sea round it;
       // a polygon or an erased box cuts only a neighbouring figure, lettering or the land.
       // the junk off India, sheet 11: the polygon cuts the coast and its town at top left and the column of lettering
       // beside the stern; the sea runs to the foot of the page
-      { id: 'catalan-junk', kind: 'ship', style: 'catalan', scan: 'catalan-atlas-11', key: 'patch', paper: PARCHMENT, crop: [420, 13640, 1850, 15330], figure: [580, 13700, 1800, 15110], sizePx: 90, heading: 'left',
+      { id: 'catalan-junk', kind: 'ship', style: 'catalan', scan: 'catalan-atlas-11', key: 'patch', paper: CATALAN_PAPER[11], crop: [420, 13640, 1850, 15330], figure: [580, 13700, 1800, 15110], sizePx: 90, heading: 'left',
         mask: [[420, 14260], [905, 13640], [1785, 13640], [1785, 14470], [1840, 14520], [1840, 15330], [420, 15330]], maskFeather: 10 },
       // the ship in the Caspian, sheet 9, drawn upside down (the sheet is read from the far side), so turned a half turn; the
       // lettering above its hull, now below it, is past the crop, and the Mongol banner by its mast tips is erased
-      { id: 'catalan-ship', kind: 'ship', style: 'catalan', scan: 'catalan-atlas-9', key: 'patch', paper: PARCHMENT, crop: [2620, 4625, 4100, 5940], figure: [2760, 4750, 4050, 5900], turn: 180, sizePx: 90,
+      { id: 'catalan-ship', kind: 'ship', style: 'catalan', scan: 'catalan-atlas-9', key: 'patch', paper: CATALAN_PAPER[9], crop: [2620, 4625, 4100, 5940], figure: [2760, 4750, 4050, 5900], turn: 180, sizePx: 90,
         erase: [[3930, 5780, 4100, 5940]] },
       // the siren in the Indian Ocean, sheet 12, holding her two tails: the polygon runs between her and the gilt and
       // painted islands round her, and under the block of lettering above. Below her tails it stops at the gilt island
       // there: the sea either side of it, taken down to the foot of the page, left the patch two legs and a bite.
-      { id: 'catalan-siren', kind: 'monster', style: 'catalan', scan: 'catalan-atlas-12', key: 'patch', paper: PARCHMENT, crop: [800, 14090, 1970, 15160], figure: [850, 14220, 1925, 15120], sizePx: 170, minClearancePx: 140, weight: 2,
+      { id: 'catalan-siren', kind: 'monster', style: 'catalan', scan: 'catalan-atlas-12', key: 'patch', paper: CATALAN_PAPER[12], crop: [800, 14090, 1970, 15160], figure: [850, 14220, 1925, 15120], sizePx: 170, minClearancePx: 140, weight: 2,
         mask: [[822, 14310], [1000, 14190], [1044, 14190], [1044, 14250], [1300, 14250], [1306, 14100], [1910, 14100], [1910, 14400], [1955, 14440], [1955, 15142], [1060, 15142], [1000, 15115], [822, 15060]] },
       // Juan de la Cosa's own ships, 1500 (docs/atlas/ornaments.md; docs/de-la-cosa-figures): the Portuguese fleet off India,
       // cut from the Museo Galileo detail, about seven times the full chart scan's pixels there. Patches as the Catalan ones
@@ -427,23 +432,33 @@ function buildSprite(sprite, colour, key, outDir, tmp) {
     masks.push(t('erase'));
   }
 
-  // fade the last few px at the crop edge so no sprite shows a cut line
-  const f = 6;
-  magick('-size', `${w - 2 * f}x${h - 2 * f}`, 'xc:white', '-bordercolor', 'black', '-border', String(f), '-blur', `0x${f / 2}`, t('edge'));
-  masks.push(t('edge'));
+  // fade the last few px at the crop edge so no sprite shows a cut line. A patch's edge is that fade, so it is held to
+  // EDGE_PX once drawn; a rose's circle is its edge, and an ink key's paper is clear, so those keep the scan-scale fade
+  const fig = sprite.figure && turn ? turnBox(sprite.figure, sprite.crop, turn) : sprite.figure;
+  const scanPerPx = (fig ? fig[2] - fig[0] : w) / sprite.sizePx;
+  const edged = (sprite.key ?? key) === 'patch' && !sprite.circle;
+  const f = edged ? Math.max(EDGE_FEATHER, Math.round(EDGE_PX * scanPerPx)) : EDGE_FEATHER;
+  const edge = (n, px) => magick('-size', `${w - 2 * px}x${h - 2 * px}`, 'xc:white', '-bordercolor', 'black', '-border', String(px), '-blur', `0x${px / 2}`, t(n));
+  edge('edge', f);
 
   // the patch key starts from the whole crop and lets the masks cut the figure's outline
-  let alpha = t('ink');
-  if ((sprite.key ?? key) === 'patch') { magick('-size', `${w}x${h}`, 'xc:white', t('all')); alpha = t('all'); }
-  for (const m of masks) {
-    magick(alpha, m, '-compose', 'multiply', '-composite', t('alpha'));
-    alpha = t('alpha');
-  }
+  const cut = (edgeMask, out) => {
+    let a = t('ink');
+    if ((sprite.key ?? key) === 'patch') { magick('-size', `${w}x${h}`, 'xc:white', t('all')); a = t('all'); }
+    for (const m of [...masks, edgeMask]) {
+      magick(a, m, '-compose', 'multiply', '-composite', t(out));
+      a = t(out);
+    }
+    return a;
+  };
+  const alpha = cut(t('edge'), 'alpha');
+  // the trim is read with the scan-scale fade, so a wider fade changes how the edge looks, not the sprite's size or anchor
+  const trimmed = f === EDGE_FEATHER ? alpha : (edge('edge0', EDGE_FEATHER), cut(t('edge0'), 'alpha0'));
 
   if (keep && sprite.id.startsWith(keepPrefix)) magick(alpha, '-strip', '-define', 'png:exclude-chunk=all', join(keep, `${sprite.id}.key.png`));
 
   // Trim box on the alpha, recorded so the manifest crop is the final sprite's footprint in the scan.
-  const trim = turn ? `${w}x${h}+0+0` : magick(alpha, '-fuzz', '3%', '-format', '%@', 'info:'); // a turned crop is kept whole
+  const trim = turn ? `${w}x${h}+0+0` : magick(trimmed, '-fuzz', '3%', '-format', '%@', 'info:'); // a turned crop is kept whole
   const m = /^(\d+)x(\d+)\+(\d+)\+(\d+)$/.exec(trim);
   const [tw, th, tx, ty] = m.slice(1).map(Number);
   const file = `${sprite.id}.webp`;
@@ -451,7 +466,7 @@ function buildSprite(sprite, colour, key, outDir, tmp) {
   // scan's paper reads as white under `multiply` and only the inks and washes carry tone.
   let rgb = ['-size', `${w}x${h}`, 'xc:black'];
   if (colour === 'source') {
-    const paper = sprite.paper ?? magick(t('crop'), '(', alpha, '-negate', '-threshold', '96%', ')', '-alpha', 'off',
+    const paper = sprite.paper ?? magick(t('crop'), '(', trimmed, '-negate', '-threshold', '96%', ')', '-alpha', 'off',
       '-compose', 'CopyOpacity', '-composite', '-scale', '1x1!', '-alpha', 'off', '-format', '%[pixel:p{0,0}]', 'info:');
     magick(t('crop'), '(', '-size', `${w}x${h}`, `xc:${paper}`, ')', '-compose', 'DivideDst', '-composite', t('rgb'));
     rgb = [t('rgb')];
@@ -460,8 +475,7 @@ function buildSprite(sprite, colour, key, outDir, tmp) {
   // renderer draws a sprite sizePx wide), so line work stays crisp and no scan-sized PNG is kept.
   // `figure` is the box round the subject alone, for a sprite whose crop holds water or ground round it: the
   // figure keeps its sizePx and its anchor, so the extra surroundings do not shrink it on the map.
-  // a turned sprite's figure box, given in the scan's pixels, is taken into the turned crop's (its origin the crop's corner)
-  const fig = sprite.figure && turn ? turnBox(sprite.figure, sprite.crop, turn) : sprite.figure;
+  // a turned sprite's figure box, given in the scan's pixels, is taken into the turned crop's (its origin the crop's corner): `fig` above
   const sizePx = fig ? Math.round(sprite.sizePx * tw / (fig[2] - fig[0])) : sprite.sizePx;
   const most = MAX_SCALE * sizePx;
   const shrink = tw > most ? ['-filter', 'Lanczos', '-resize', `${most}x`] : [];
