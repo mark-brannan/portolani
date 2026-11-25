@@ -3143,7 +3143,7 @@ export function peakHits(drawn, proj, rect) {
 // The bare hubs a scene drew (a sheet whose chart has no rose, drawn with its lines meeting at a point), held to the
 // earth: { at: [lon, lat], tile }. Nothing is drawn on one; a click on the hub opens the tile that says why.
 // `chart` is the sheet's chart as its source names it, "Carte Pisane" or "Vesconte (1311)".
-export const drawnHubs = (scene, data) => (scene.bareHubs ?? []).filter((h) => !scene.roseDraws.some((r) => Math.hypot(r.x - data.proj.project(h.lon, h.lat)[0], r.y - data.proj.project(h.lon, h.lat)[1]) < r.size / 2))
+export const drawnHubs = (scene, data) => (scene.bareHubs ?? []).filter((h) => { const [x, y] = data.proj.project(h.lon, h.lat); return !scene.roseDraws.some((r) => Math.hypot(r.x - x, r.y - y) < r.size / 2); })
   .map((h) => ({ at: [h.lon, h.lat], tile: hubTile(h.source) }));
 export const hubTile = (source) => ({ note: true, title: `${source.replace(/, (\d{4})$/, ' ($1)').replace(/, \w+ circle$/, '')}: no rose`, drawn: 'Only the point where the lines meet.', real: 'Charts before the Catalan Atlas of 1375 carried no compass rose; the chartmaker marked only the point where the lines meet.' });
 const HUB_HIT = 48; // half the side of a bare hub's hit box, canvas px: as big as a small rose

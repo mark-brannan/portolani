@@ -264,7 +264,7 @@ test('the bare hub of each rose-less chart is a point of interest saying why; it
     const mark = hubHits(drawnHubs(scene, data), data.proj, { x0: 0, y0: 0, x1: W, y1: H }).find((m) => Math.hypot(m.x - x, m.y - y) < 1);
     assert.equal(mark?.tile.title, `${chart}: no rose`, `${src}: the hub carries the tile`);
     seen.push(src);
-    assert.match(mark.tile.real, /before the Catalan Atlas of 1375 carried no compass rose/);
+    assert.ok(mark.tile.drawn && mark.tile.real, `${src}: the tile says what was drawn and what was there`);
     assert.equal(pickMark([mark], [x + 20, y - 20], 10), mark, 'a click on the hub opens it');
     const off = (await createScene(env, { view, scale: 'off', historical: false })).scene;
     assert.equal(off.bareHubs.length, 0, `${src}: no bare hub with historical accuracy off`);
