@@ -35,16 +35,18 @@ const once = (key, make) => {
 // A chart of several pages (packs/overlays/overlays.json `panels`) loads page by page: each page that lands redraws
 // the map, a few landings at once in one redraw, so the sheet fills in rather than waiting for the last.
 let panelLanded = 0;
+const imageOf = (p) => new Promise((ok, no) => {
+  const img = new Image();
+  img.onload = () => ok(img);
+  img.onerror = () => no(new Error(`${p}: image failed`));
+  img.src = p;
+});
 const env = {
   onPanel: () => { clearTimeout(panelLanded); panelLanded = setTimeout(() => render(), 120); },
   createCanvas: (w, h) => Object.assign(document.createElement('canvas'), { width: w, height: h }),
   readJSON: (p) => once(p, () => fetch(p).then((r) => { if (!r.ok) throw new Error(`${p}: ${r.status}`); return r.json(); })),
-  loadImage: (p) => once(p, () => new Promise((ok, no) => {
-    const img = new Image();
-    img.onload = () => ok(img);
-    img.onerror = () => no(new Error(`${p}: image failed`));
-    img.src = p;
-  })),
+  // a picture that fails is tried once more; a second failure rejects, and the scene draws on without it
+  loadImage: (p) => once(p, () => imageOf(p).catch(() => new Promise((r) => setTimeout(r, 500)).then(() => imageOf(p)))),
   loadFont: (family) => once('font', async () => {
     const faces = [new FontFace(family, 'url(font/IMFeENrm28P.ttf)'), new FontFace(family, 'url(font/IMFeENit28P.ttf)', { style: 'italic' })];
     for (const face of faces) document.fonts.add(await face.load());
@@ -272,7 +274,7 @@ function thumb(s, label) {
   Object.assign(b, { type: 'button', className: 'thumb', title: s.id });
   b.dataset.key = s.key;
   b.setAttribute('aria-label', `${s.id}, ${label}`);
-  if (s.file) b.append(Object.assign(new Image(), { src: `packs/${s.pack}/${s.file}`, alt: '', decoding: 'async' }));
+  if (s.file) b.append(Object.assign(new Image(), { loading: 'lazy', decoding: 'async', alt: '', src: `packs/${s.pack}/${s.file}` }));
   else b.innerHTML = GLYPHS[s.id] ?? towerGlyph(s.id); // the towers draw their own
   return b;
 }
@@ -657,7 +659,7 @@ const kindKeys = (kind) => SPRITES.filter((s) => s.kind === kind).map((s) => s.k
 const sampleOf = (s) => {
   const el = document.createElement('span');
   el.className = 'sample';
-  if (s.file) el.append(Object.assign(new Image(), { src: `packs/${s.pack}/${s.file}`, alt: '', decoding: 'async' }));
+  if (s.file) el.append(Object.assign(new Image(), { loading: 'lazy', decoding: 'async', alt: '', src: `packs/${s.pack}/${s.file}` }));
   else el.innerHTML = GLYPHS[s.id] ?? towerGlyph(s.id);
   return el;
 };
@@ -851,6 +853,7 @@ async function render() {
     preparePictures().then((fresh) => { if (fresh && me === run) repaint('pictures dealt'); }, () => {}); // the chosen subject's pictures, drawn once loaded
     const t2 = performance.now();
     $('status').textContent = `z${view.zoom.toFixed(1)}: load ${timing.load.toFixed(0)} ms, placement + parchment ${timing.place.toFixed(0)} ms, draw ${(t2 - t1).toFixed(0)} ms (total ${(t2 - t0).toFixed(0)} ms)`;
+    document.documentElement.classList.add('drawn'); // the loading plate gives way to the chart (index.html)
   } catch (e) {
     keepTile = false; // a sight's tile kept for this render is not kept for the next
     $('status').textContent = `Failed: ${e.message}`;

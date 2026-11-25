@@ -119,7 +119,7 @@ const CHARTS = [
       [[7.05, 57.98], [10.40, 63.43], [5.15, 62.19], [13.0, 67.9]], // Lindesnes, Trondheim, Stad, Lofoten
       [[19.95, 60.2], [18.07, 59.33], [18.5, 57.45], [16.65, 56.75], [22.5, 58.4], [24.1, 56.95], [18.65, 54.35]]], // Åland, Stockholm, Gotland, Öland, Saaremaa, Riga, Danzig
     snaps: ['West', 'Norway', 'Baltic'] },
-  { id: 'catalan-atlas', title: 'Catalan Atlas, 1375', source: 'catalan-atlas-5', pages: CATALAN_PAGES, thumb: 'catalan-atlas-thumb.jpg', scale: 4,
+  { id: 'catalan-atlas', title: 'Catalan Atlas, 1375', source: 'catalan-atlas-5', pages: CATALAN_PAGES, scale: 4,
     pieces: (md) => catalanPieces(md), marks: (md) => catalanMarks(md), snaps: CATALAN_PAGES.map((p) => p.label) },
   { id: 'de-la-cosa', title: 'Map of Juan de la Cosa, 1500', source: 'de-la-cosa', file: 'de-la-cosa.jpg', scale: 1, // the scan is small: shrunk, the coasts would go; the pieces run from the parchment's west edge to its east
     parallels: [23.44, 0], // the two long red lines across the skin, top first: the Tropic of Cancer and the equator
@@ -320,6 +320,16 @@ export function outlineMask(ctx, w, h, outline) {
   return { mask, keyed: keyed / (w * h) };
 }
 
+// The drawer's thumbnail of a chart: the shrunk scan at THUMB px on its long side, a JPEG, so the Charts drawer never fetches a whole scan.
+export const THUMB = 512;
+export const thumbName = (id) => `${id}-thumb.jpg`;
+export function thumbOf(canvas, long = THUMB) {
+  const k = Math.min(1, long / Math.max(canvas.width, canvas.height));
+  const tc = createCanvas(Math.max(1, Math.round(canvas.width * k)), Math.max(1, Math.round(canvas.height * k)));
+  tc.getContext('2d').drawImage(canvas, 0, 0, tc.width, tc.height);
+  return tc.toBuffer('image/jpeg', 80);
+}
+
 async function scanOf(src) {
   const path = join(DL, src.file);
   const bytes = existsSync(path) ? readFileSync(path) : await fetchBytesWithRetry(src.url, { onRetry: (e, n) => console.warn(`retry ${n}: ${e.message}`) });
@@ -346,6 +356,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const canvas = createCanvas(fw, fh), g = canvas.getContext('2d');
     g.drawImage(img, 0, 0, fw, fh);
     writeFileSync(join(OUT, c.file), canvas.toBuffer('image/jpeg', 80));
+    writeFileSync(join(OUT, thumbName(c.id)), thumbOf(canvas));
     const { mask, keyed } = c.outline ? outlineMask(g, fw, fh, c.outline.map(([x, y]) => [x / scale, y / scale])) : paperMask(g, fw, fh, { dark: !!c.dark }), maskFile = `${c.id}-mask.png`;
     const mc = createCanvas(fw, fh); mc.getContext('2d').putImageData(mask, 0, 0);
     if (keyed > 0.001) writeFileSync(join(OUT, maskFile), mc.toBuffer('image/png'));
@@ -354,7 +365,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const placed = sheetPlacements(pieces, c.snaps, img.width, img.height, parallels), { sheet } = placed;
     const { sheetLine, snaps } = placementLines(land, marksOf(c, md), placed, img.width, img.height, parallels);
     overlays.push({
-      id: c.id, title: c.title, source: src.page ?? src.url, licence: src.rights, file: c.file, ...(keyed > 0.001 && { mask: maskFile }),
+      id: c.id, title: c.title, source: src.page ?? src.url, licence: src.rights, file: c.file, thumb: thumbName(c.id), ...(keyed > 0.001 && { mask: maskFile }),
       width: img.width, height: img.height, scale, sheet, sheetLine, snaps, ...(c.up != null && { up: c.up }), ...(parallels && { parallels }),
       pieces: pieces.map(([x0, x1, fit]) => ({ x0, x1, fit })),
     });
@@ -388,13 +399,13 @@ async function buildPages(c, sources, md, land) {
   const width = at.at(-1) + panels.at(-1).width, height = Math.max(...panels.map((p) => p.height));
   const strip = createCanvas(THUMB_W, Math.round((THUMB_W * height) / width)), sg = strip.getContext('2d');
   thumbs.forEach((t, i) => sg.drawImage(t, (panels[i].x / width) * THUMB_W, 0, (panels[i].width / width) * THUMB_W, (panels[i].height / height) * strip.height));
-  writeFileSync(join(OUT, c.thumb), strip.toBuffer('image/jpeg', 80));
+  writeFileSync(join(OUT, thumbName(c.id)), strip.toBuffer('image/jpeg', 80));
   const pieces = c.pieces(md), placed = sheetPlacements(pieces, c.snaps, width, height), { sheet } = placed;
   const { sheetLine, snaps } = placementLines(land, c.marks(md), placed, width, height);
   const src = sources.find((s) => s.id === c.source);
   console.log(`${c.id}: ${c.pages.length} pages, ${width} x ${height}, sheet ${sheet.scale.toFixed(5)} °/px at ${sheet.lon.toFixed(1)}, ${sheet.lat.toFixed(1)}`);
   return {
-    id: c.id, title: c.title, source: src.page ?? src.url, licence: src.rights, thumb: c.thumb,
+    id: c.id, title: c.title, source: src.page ?? src.url, licence: src.rights, thumb: thumbName(c.id),
     width, height, scale, sheet, sheetLine, snaps, panels, pieces: pieces.map(([x0, x1, fit]) => ({ x0, x1, fit })),
   };
 }
