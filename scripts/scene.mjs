@@ -3751,11 +3751,13 @@ export async function createScene(environment, opts = {}) {
     const chosen = opts.sprites ? selectSprites(manifests, opts.sprites)
       : legacy ? chooseSprites(manifests, { rendering, rose, monster, town })
       : selectSprites(manifests, defaultSprites(spriteList(manifests)));
-    const all = (list) => Promise.all(list.map(withImage));
+    // in a host that sets skipFailed (the browser) a picture that will not load is left out, with a warning, so one bad file never blanks the map; the next render asks again. Headless runs keep the throw
+    const orSkip = (s) => withImage(s).catch((e) => { if (!env.skipFailed) throw e; console.warn(`${s.pack}/${s.id}: skipped, ${e.message}`); return null; });
+    const all = async (list) => (await Promise.all(list.map(orSkip))).filter(Boolean);
     const picture = scale in SCALE_PICTURES && manifests.vivid.sprites.find((s) => s.id === SCALE_PICTURES[scale]);
     const [roses, monsters, ships, towns, mountains, cartouche, scaleSprite] = await Promise.all([
       all(chosen.roses), all(chosen.monsters), all(chosen.ships), all(chosen.towns), all(show.kinds.has('mountain') ? chosen.mountains : []),
-      chosen.cartouche && withImage(chosen.cartouche), picture && withImage({ ...picture, pack: 'vivid', colour: manifests.vivid.colour ?? 'source' }),
+      chosen.cartouche && orSkip(chosen.cartouche), picture && orSkip({ ...picture, pack: 'vivid', colour: manifests.vivid.colour ?? 'source' }),
     ]);
     return {
       roses: roses.length ? roses : PLAIN.filter((s) => s.kind === 'rose'), cartouche: cartouche || PLAIN.find((s) => s.kind === 'cartouche'),
