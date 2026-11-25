@@ -10,7 +10,7 @@
     {
       "from": "Cuba",
       "to": "Veracruz",
-      "dates": "18 Feb – Apr 1519",
+      "dates": "Feb – Apr 1519",
       "mode": "sea",
       "line": "spline",
       "confidence": "inferred",
@@ -96,9 +96,9 @@
       "lat": 19.43,
       "date": "8 Nov 1519",
       "label": "Tenochtitlan: Moctezuma receives Cortés",
-      "source": "Spanish conquest of the Aztec Empire (Wikipedia)",
+      "source": "Spanish conquest of the Aztec Empire (Wikipedia); Moctezuma II (Wikipedia)",
       "cite": "wp-conquest-aztec",
-      "text": "The Mexica capital, on an island in Lake Texcoco, was larger than any city in Spain. Moctezuma received the Spanish with ceremony and lodged them in his father's palace; within a week he was a hostage."
+      "text": "The Mexica capital, on an island in Lake Texcoco, was larger than any city in Spain. Moctezuma received the Spanish with ceremony; soon after their arrival he was their prisoner in his own house."
     },
     {
       "kind": "event",

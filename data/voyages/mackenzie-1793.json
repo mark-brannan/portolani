@@ -4,8 +4,8 @@
   "short": "Mackenzie, 1793",
   "who": ["alexander-mackenzie"],
   "when": "1793",
-  "summary": "Mackenzie left Fort Fork on the Peace River on 9 May 1793 with six voyageurs, two Indigenous hunters and a dog. He went up the Peace, over the Continental Divide, and down the Parsnip and the Fraser, then left the Fraser on the advice of the people he met and took the Indigenous trading trail over the mountains to the Bella Coola River. He reached salt water at Dean Channel on 20 July.",
-  "sources": ["wp-mackenzie"],
+  "summary": "Mackenzie left Fort Fork on the Peace River on 9 May 1793 with six voyageurs, two Indigenous hunters and a dog. He went up the Peace, over the Continental Divide, and down the Parsnip and the Fraser, then left the Fraser on the advice of the people he met and took the Indigenous trading trail over the mountains to the Bella Coola River. He reached the Pacific at Bella Coola on 20 July, and on 22 July wrote his name on a rock in Dean Channel.",
+  "sources": ["wp-mackenzie", "dcb-mackenzie"],
   "legs": [
     {
       "from": "Fort Fork",
@@ -14,7 +14,7 @@
       "mode": "land",
       "line": "spline",
       "confidence": "inferred",
-      "source": "Alexander Mackenzie (Wikipedia): up the Peace and the Parsnip, and down the Fraser",
+      "source": "Alexander Mackenzie (Wikipedia); Dictionary of Canadian Biography: up the Peace and the Parsnip, and down the Fraser, with six voyageurs and two Indigenous interpreters and hunters",
       "points": [
         [-117.2, 56.2],
         [-120.5, 56.1],

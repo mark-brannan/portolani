@@ -5,7 +5,7 @@
   "who": ["alexander-mackenzie"],
   "when": "1789",
   "summary": "Mackenzie left Fort Chipewyan on 3 June 1789 with French-Canadian voyageurs, a German and a party of Chipewyan guides led by a man called English Chief. They went by Great Slave Lake and the great river that now bears his name, and on 14 July reached the sea. He called it the River of Disappointment because it did not lead to the Pacific.",
-  "sources": ["wp-mackenzie"],
+  "sources": ["wp-mackenzie", "dcb-mackenzie"],
   "legs": [
     {
       "from": "Fort Chipewyan",
@@ -14,7 +14,7 @@
       "mode": "land",
       "line": "spline",
       "confidence": "inferred",
-      "source": "Alexander Mackenzie (Wikipedia): the Slave River and Great Slave Lake",
+      "source": "Alexander Mackenzie (Wikipedia): the Slave River and Great Slave Lake; Dictionary of Canadian Biography: set out on 3 June 1789",
       "points": [
         [-111.15, 58.7],
         [-111.4, 59.9],
@@ -46,7 +46,7 @@
       "mode": "land",
       "line": "spline",
       "confidence": "inferred",
-      "source": "Alexander Mackenzie (Wikipedia): back up the river, in 102 days in all",
+      "source": "Alexander Mackenzie (Wikipedia): back up the river; Dictionary of Canadian Biography: at the fort on 12 September, in 102 days in all",
       "points": [
         [-133.8, 69.1],
         [-128.5, 67.7],

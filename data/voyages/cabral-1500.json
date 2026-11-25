@@ -6,7 +6,7 @@
     "pedro-alvares-cabral"
   ],
   "when": "1500",
-  "summary": "Cabral left Lisbon with thirteen ships on 9 March 1500, bound for India, and swung far out into the Atlantic. On 22 April he sighted a hill, Monte Pascoal, on the coast of what is now Bahia, and anchored at Porto Seguro. Scribe Pêro Vaz de Caminha's letter describes meeting the Tupiniquim there. After ten days the fleet sailed on to the Cape, where a storm sank four ships, among them that of Bartolomeu Dias.",
+  "summary": "Cabral left Lisbon with thirteen ships on 9 March 1500, bound for India, and swung far out into the Atlantic. On 22 April he sighted a hill, Monte Pascoal, on the coast of what is now Bahia, and on 24 April anchored at Porto Seguro. Scribe Pêro Vaz de Caminha's letter describes meeting the Tupiniquim there. After ten days the fleet sailed on to the Cape, where a storm sank four ships, among them that of Bartolomeu Dias.",
   "sources": [
     "wp-cabral",
     "wp-caminha"
@@ -30,7 +30,7 @@
     {
       "from": "the Cape Verde Islands",
       "to": "Porto Seguro",
-      "dates": "22 Mar – 22 Apr 1500",
+      "dates": "22 Mar – 24 Apr 1500",
       "mode": "sea",
       "line": "spline",
       "confidence": "inferred",
@@ -66,11 +66,11 @@
       "kind": "landfall",
       "lon": -38.4,
       "lat": -16.4,
-      "date": "22–23 Apr 1500",
+      "date": "22–24 Apr 1500",
       "label": "Monte Pascoal and Porto Seguro",
       "source": "Pêro Vaz de Caminha (Wikipedia)",
       "cite": "wp-caminha",
-      "text": "The first landfall sighted was a round hill, called Monte Pascoal for Easter. Caminha's letter to King Manuel describes the Tupiniquim, who were curious and friendly, and who had no iron. A Mass was said on 26 April and 1 May, and a cross raised. The land was named Terra de Vera Cruz. Two convicts were left ashore; whether Cabral reached Brazil by chance or on purpose is debated."
+      "text": "The first landfall sighted was a round hill, called Monte Pascoal for Easter. Caminha's letter to King Manuel describes the Tupiniquim, who were curious and friendly, and who had no iron. A Mass was said on 26 April and 1 May, and a cross raised. The land was named Terra de Vera Cruz. Whether Cabral reached Brazil by chance or on purpose is debated."
     }
   ]
 }

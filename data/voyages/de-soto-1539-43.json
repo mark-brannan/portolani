@@ -5,16 +5,16 @@
   "who": ["hernando-de-soto"],
   "when": "1539–1543",
   "summary": "De Soto landed on the Gulf coast of Florida with some 600 men, 200 horses and a herd of pigs, and spent three years going north-east through the Apalachee and Cofitachequi country, west across the Appalachians and the Mississippi, and on into Arkansas. He was seeking gold and found none; he took people as porters and guides and left disease behind. He died on the Mississippi, and the survivors went down the river in boats and on to Pánuco. Moscoso's march west into Texas in 1542–43 is left off the map.",
-  "sources": ["wp-de-soto"],
+  "sources": ["wp-de-soto", "usf-de-soto-landing"],
   "legs": [
     {
       "from": "Havana",
       "to": "Tampa Bay",
-      "dates": "18 May – 30 May 1539",
+      "dates": "May – 30 May 1539",
       "mode": "sea",
       "line": "spline",
       "confidence": "inferred",
-      "source": "Hernando de Soto (Wikipedia)",
+      "source": "Hernando de Soto (Wikipedia); Florida Center for Instructional Technology (University of South Florida): landed 30 May 1539",
       "doubt": "The landing is put at Tampa Bay or Charlotte Harbor by different readers.",
       "points": [
         [-82.4, 23.3],

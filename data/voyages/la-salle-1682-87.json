@@ -6,9 +6,11 @@
     "la-salle"
   ],
   "when": "1682–1687",
-  "summary": "In 1682 La Salle took some fifty French and Indigenous men down the Mississippi to the Gulf and claimed it for Louis XIV as Louisiana. In 1684 he sailed from France to found a colony at the river's mouth, but missed it by some 400 miles and landed in Matagorda Bay, Texas. Fort Saint Louis failed, and in 1687 his own men shot him on a walk towards Illinois.",
+  "summary": "In 1682 La Salle took 23 Frenchmen and 18 Indigenous men down the Mississippi to the Gulf and claimed it for Louis XIV as Louisiana. In 1684 he sailed from France to found a colony at the river's mouth, but missed it by more than 370 miles and landed in Matagorda Bay, Texas. Fort Saint Louis failed, and in 1687 his own men shot him on a walk towards Illinois.",
   "sources": [
-    "wp-la-salle"
+    "wp-la-salle",
+    "dcb-la-salle",
+    "wp-fort-saint-louis-texas"
   ],
   "legs": [
     {
@@ -18,7 +20,7 @@
       "mode": "land",
       "line": "spline",
       "confidence": "inferred",
-      "source": "René-Robert Cavelier, Sieur de La Salle (Wikipedia): down the Illinois and the Mississippi to the Gulf",
+      "source": "René-Robert Cavelier, Sieur de La Salle (Wikipedia): down the Illinois and the Mississippi to the Gulf; Dictionary of Canadian Biography: 23 Frenchmen and 18 Indigenous men",
       "points": [
         [-87.65, 41.85],
         [-88.8, 41.3],
@@ -89,9 +91,9 @@
       "date": "Feb 1685",
       "label": "Fort Saint Louis, Matagorda Bay",
       "confidence": "inferred",
-      "source": "René-Robert Cavelier, Sieur de La Salle (Wikipedia)",
-      "cite": "wp-la-salle",
-      "text": "The colony was meant for the Mississippi and landed far west of it. One ship was lost on the bar, another was seized, and he built the fort inland on Garcitas Creek. Disease and the Karankawa killed most of the settlers; in 1689 a Spanish party found the fort burned."
+      "source": "René-Robert Cavelier, Sieur de La Salle (Wikipedia); Fort Saint Louis (Texas) (Wikipedia)",
+      "cite": "wp-fort-saint-louis-texas",
+      "text": "The colony was meant for the Mississippi and landed far west of it. One ship was lost on the bar, another was seized, and he built the fort inland on Garcitas Creek. Disease killed most of the settlers, and the Karankawa the rest, about Christmas 1688; in April 1689 a Spanish party found the fort in ruins and burned what remained."
     }
   ]
 }

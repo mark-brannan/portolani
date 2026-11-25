@@ -6,7 +6,7 @@
     "inuit-taken-by-frobisher"
   ],
   "when": "1576–1577",
-  "summary": "Martin Frobisher looked for a north-west passage and found Frobisher Bay on Baffin Island in 1576. His men seized an Inuk man there, who died in England, and on the second voyage, in 1577, after fighting at Bloody Point, they seized Kalicho, Arnaq and her child Nutaaq. The three were shown at Bristol and London and died within weeks. They are among the first Inuit whose names were recorded in Europe.",
+  "summary": "Martin Frobisher looked for a north-west passage and found Frobisher Bay on Baffin Island in 1576. His men seized an Inuk man there, who died in England, and on the second voyage, in 1577, they seized Kalicho and, after a fight, Arnaq and her child Nutaaq. The three were shown at Bristol and London and died within weeks. They were among the first Inuit to visit England.",
   "sources": [
     "wp-frobisher",
     "wp-kalicho",
@@ -66,12 +66,12 @@
       "lon": -66.4,
       "lat": 62.8,
       "date": "1577",
-      "label": "Bloody Point and the seizure",
+      "label": "The seizures",
       "confidence": "inferred",
-      "source": "Kalicho (Wikipedia)",
-      "cite": "wp-kalicho",
+      "source": "Kalicho (Wikipedia); Arnaq (Wikipedia)",
+      "cite": "wp-arnaq",
       "doubt": "The English accounts say the Inuit were taken after fighting in which both sides were hurt; they are the only record, and no Inuit account of it was written down at the time.",
-      "text": "Frobisher's men fought with the Inuit and seized a man and a woman with a child. The woman, Arnaq, was carried off with her baby, who was injured."
+      "text": "Kalicho was taken on 19 July, and his ribs were probably broken then; the injury later killed him. On 1 August, after a fight in which five or six Inuit men were killed, Frobisher's men seized Arnaq and her baby, Nutaaq."
     },
     {
       "kind": "event",

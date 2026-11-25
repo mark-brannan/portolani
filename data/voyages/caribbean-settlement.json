@@ -27,7 +27,7 @@
     {
       "from": "the Orinoco delta",
       "to": "Puerto Rico",
-      "dates": "c. 500–200 BC",
+      "dates": "c. 500–280 BC",
       "mode": "sea",
       "line": "spline",
       "confidence": "conventional",
@@ -68,7 +68,7 @@
       "mode": "sea",
       "line": "spline",
       "confidence": "conventional",
-      "source": "Lucayan (Wikipedia): the Bahamas settled from Hispaniola and Cuba",
+      "source": "Lucayan people (Wikipedia): the Bahamas settled from Hispaniola and Cuba",
       "reach": [0.7, 1],
       "heads": "end",
       "points": [
@@ -98,13 +98,13 @@
       "label": "The Orinoco: the Saladoid potters",
       "source": "Saladoid culture (Wikipedia)",
       "cite": "wp-saladoid",
-      "text": "People of the lower Orinoco who grew manioc and made white-on-red painted pottery sailed north in dugout canoes, island by island, in a few centuries."
+      "text": "People of the lower Orinoco who made white-on-red painted pottery moved north, island by island."
     },
     {
       "kind": "waypoint",
       "lon": -66.5,
       "lat": 18.3,
-      "date": "c. 200 BC",
+      "date": "c. 500–280 BC",
       "label": "Puerto Rico",
       "source": "Saladoid culture (Wikipedia)",
       "cite": "wp-saladoid",
@@ -116,9 +116,9 @@
       "lat": 24.2,
       "date": "c. AD 800",
       "label": "The Bahamas: the Lucayans",
-      "source": "Lucayan (Wikipedia)",
+      "source": "Lucayan people (Wikipedia)",
       "cite": "wp-lucayan",
-      "text": "The Lucayans settled the Bahamas and lived there about seven centuries, until their enslavement by the Spanish in the early sixteenth century emptied the islands."
+      "text": "The Lucayans settled the Bahamas between about AD 500 and 800 and spread through the islands over some eight hundred years, until Spanish slave raids from 1509 emptied them; by 1520 eleven were left."
     }
   ]
 }

@@ -4199,10 +4199,11 @@
       "doubt": "The site is not fixed; it lay in east Texas near the Brazos or Trinity, the Navasota area by one reckoning.",
       "source": "René-Robert Cavelier, Sieur de La Salle (Wikipedia)",
       "cite": "wp-la-salle",
-      "text": "Some of his party, who had quarrelled with him and killed his nephew and two others, shot him from ambush as he came to look for them. His body was left unburied. Disease and the Karankawa had already ended his colony."
+      "text": "Some of his party, who had quarrelled with him and killed his nephew and two others, shot him from ambush as he came to look for them. His body was left unburied. Disease and the Karankawa ended his colony within two years."
     },
     "sources": [
-      "wp-la-salle"
+      "wp-la-salle",
+      "wp-fort-saint-louis-texas"
     ],
     "view": {
       "lat": 36,
@@ -4321,9 +4322,10 @@
   },
   "john-c-fremont": {
     "name": "John C. Frémont",
-    "bio": "A US Army topographical engineer who led several surveys of the West. On his second expedition, 1843–44, he went west by the Oregon Trail to the Columbia, south through the Great Basin and over the Sierra Nevada in midwinter, and back by the Old Spanish Trail. His map and report, drawn largely by Charles Preuss, did much to turn settlers' eyes west. Indigenous guides, and Kit Carson, made the passage possible.",
+    "bio": "A US Army topographical engineer who led several surveys of the West. On his second expedition, 1843–44, he went west by the Oregon Trail to the Columbia, south through the Great Basin and over the Sierra Nevada in midwinter, and back by the Old Spanish Trail. His report, with the map Charles Preuss drew, did much to turn settlers' eyes west. Kit Carson was his guide.",
     "sources": [
-      "wp-fremont"
+      "wp-fremont",
+      "baugh-fremont-1843-44"
     ],
     "view": {
       "lat": 40,
@@ -4346,7 +4348,7 @@
   "inuit-taken-by-frobisher": {
     "name": "The Inuit taken by Frobisher",
     "group": true,
-    "bio": "On Baffin Island in 1576 Frobisher's men seized an Inuk hunter in his kayak, and in 1577 they took three more: a man, Kalicho; a woman, Arnaq; and her small child, Nutaaq. They were shown at Bristol and in London, where they were drawn by John White, and they died of illness in England within weeks. Kalicho and Arnaq are among the first Inuit whose names were written down in Europe.",
+    "bio": "On Baffin Island in 1576 Frobisher's men seized an Inuk hunter in his kayak, and in 1577 they took three more: a man, Kalicho; a woman, Arnaq; and her small child, Nutaaq. They were shown at Bristol and in London, where they were drawn by John White, and they died of illness in England within weeks. They were among the first Inuit to visit England.",
     "sources": [
       "wp-frobisher",
       "wp-kalicho",
@@ -4433,7 +4435,7 @@
   "four-indian-kings": {
     "name": "The Four Indian Kings",
     "group": true,
-    "bio": "Three Mohawk chiefs and a Mahican, Tee Yee Neen Ho Ga Row (Hendrick), Sa Ga Yeath Qua Pieth Tow, Ho Nee Yeath Taw No Row and Etow Oh Koam, whom Peter Schuyler took to London in 1710 to ask Queen Anne for help against the French and for missionaries. They were received by the Queen on 19 April and had their portraits painted by John Verelst; the English called them kings, a title their own people did not use.",
+    "bio": "Three Mohawk chiefs and a Mahican, Tee Yee Neen Ho Ga Row (Hendrick), Sa Ga Yeath Qua Pieth Tow, Ho Nee Yeath Taw No Row and Etow Oh Koam, whom Peter Schuyler took to London in 1710 to ask Queen Anne for help against the French and for missionaries. They were received by the Queen on 20 April and had their portraits painted by John Verelst; the English called them kings, a title their own people did not use.",
     "sources": [
       "wp-four-mohawk-kings"
     ],
@@ -4618,6 +4620,7 @@
       "confidence": "attested",
       "source": "Atahualpa (Wikipedia)",
       "cite": "wp-atahualpa",
+      "doubt": "Accounts differ on the day: the Atahualpa article gives 29 August 1533 in its lead and has him baptised and garrotted in July 1533 in its body; others give 26 July.",
       "text": "He was condemned for the death of Huáscar, idolatry and rebellion. Offered burning or, if he accepted baptism, the garrotte, he took baptism and was strangled."
     },
     "sources": [
@@ -4682,7 +4685,7 @@
   },
   "vicente-yanez-pinzon": {
     "name": "Vicente Yáñez Pinzón",
-    "bio": "A Spanish captain of Palos who had commanded the Niña on Columbus's first voyage. In 1499–1500 he sailed on his own to the coast of Brazil, probably some months before Cabral, and followed it north to the Amazon's mouth, which he called the Sea of Fresh Water. He reached the Gulf of Paria and Hispaniola on the way home.",
+    "bio": "A Spanish captain of Palos who had commanded the Niña on Columbus's first voyage. In 1499–1500 he sailed on his own to the coast of Brazil, probably some months before Cabral, and followed it north to the Amazon's mouth, which he called the Sea of Fresh Water. He reached Hispaniola on the way home.",
     "sources": [
       "wp-pinzon"
     ],
@@ -4745,9 +4748,10 @@
   "tupinamba-at-rouen": {
     "name": "The Tupinambá at Rouen",
     "group": true,
-    "bio": "Norman merchants trading brazilwood on the coast of Brazil brought Tupinambá men to France. For the royal entry of Henry II at Rouen on 1 October 1550 the city staged a Brazilian village on the river bank, with a mock battle between Tupinambá, allies of the French, and Tabajara, with some three hundred performers. Accounts differ on how many were Tupinambá brought from Brazil and how many Norman sailors in their dress. In 1562 Montaigne met three at Rouen, the men behind his essay Of Cannibals, and asked them what struck them about France.",
+    "bio": "Norman merchants trading brazilwood on the coast of Brazil brought Tupinambá men to France. For the royal entry of Henry II at Rouen on 1 October 1550 the city staged a Brazilian village on the river bank, with a mock battle between Tupinambá, allies of the French, and Tabajara, with some three hundred performers. Accounts differ on how many were Tupinambá brought from Brazil and how many Norman sailors in their dress. In his essay Of Cannibals, Montaigne wrote that three of them were at Rouen while the young Charles IX was there, and set down what struck them about France.",
     "sources": [
-      "wp-tupinamba"
+      "wp-tupinamba",
+      "montaigne-of-cannibals"
     ],
     "view": {
       "lat": 15,
@@ -4773,7 +4777,8 @@
     "group": true,
     "bio": "By their own tradition the Mexica, the people we call Aztec, came from a place called Aztlán, which their painted histories draw as an island, and wandered south for generations to the Valley of Mexico, where they founded Tenochtitlan on an island in the lake in 1325. Whether Aztlán was a real place, and where, is not known. Mexcaltitán in Nayarit is the best-known guess.",
     "sources": [
-      "wp-aztlan"
+      "wp-aztlan",
+      "wp-tenochtitlan"
     ],
     "view": {
       "lat": 21,

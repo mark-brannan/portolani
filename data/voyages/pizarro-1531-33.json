@@ -4,7 +4,7 @@
   "short": "Pizarro",
   "who": ["francisco-pizarro", "atahualpa"],
   "when": "1531–1533",
-  "summary": "Pizarro sailed from Panama in January 1531 with about 180 men and 27 horses, landed on the Ecuadorian coast and made his way to Tumbes, then inland. At Cajamarca on 16 November 1532 his men ambushed and took the Sapa Inca Atahualpa, killing thousands of his unarmed escort. Atahualpa filled a room with gold for his ransom and was executed in July 1533, and the Spanish took Cusco in November.",
+  "summary": "Pizarro sailed from Panama at the end of 1530 or in January 1531 with about 180 men and 27 horses, landed on the Ecuadorian coast and made his way to Tumbes, then inland. At Cajamarca on 16 November 1532 his men ambushed and took the Sapa Inca Atahualpa, killing thousands of his unarmed escort. Atahualpa filled a room with gold for his ransom and was executed in 1533, and the Spanish took Cusco in November.",
   "sources": ["wp-pizarro", "wp-atahualpa", "wp-cajamarca"],
   "legs": [
     {
@@ -15,6 +15,7 @@
       "line": "spline",
       "confidence": "inferred",
       "source": "Francisco Pizarro (Wikipedia): down the Pacific coast, with a pause on the Ecuadorian shore",
+      "doubt": "The Francisco Pizarro article gives January 1531 for sailing from Panama in its lead and 27 December 1530 in its body.",
       "points": [
         [-79.4, 8.6],
         [-80.3, 6.5],

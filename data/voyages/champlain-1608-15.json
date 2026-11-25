@@ -4,8 +4,8 @@
   "short": "Champlain",
   "who": ["samuel-de-champlain"],
   "when": "1608–1615",
-  "summary": "Champlain founded Quebec in 1608 as a trading post and bound France to the Innu, Algonquin and Huron-Wendat. In 1609 he went up the Richelieu to the lake that now has his name with an Algonquin and Huron war party, and his musket killed two Mohawk chiefs. In 1615 he went up the Ottawa River and by Lake Nipissing to Georgian Bay, among the Huron-Wendat, and on with them to attack an Onondaga fort.",
-  "sources": ["wp-champlain"],
+  "summary": "Champlain founded Quebec in 1608 as a trading post and bound France to the Innu, Algonquin and Huron-Wendat. In 1609 he went up the Richelieu to the lake that now has his name with an Algonquin and Huron war party, and his musket killed two Mohawk chiefs. In 1615 he went up the Ottawa River and by Lake Nipissing to Lake Huron, among the Huron-Wendat, and on with them to attack an Onondaga fort.",
+  "sources": ["wp-champlain", "dcb-champlain"],
   "legs": [
     {
       "from": "Honfleur",
@@ -75,7 +75,7 @@
       "mode": "land",
       "line": "spline",
       "confidence": "inferred",
-      "source": "Samuel de Champlain (Wikipedia): by the Ottawa River and Lake Nipissing",
+      "source": "Samuel de Champlain (Wikipedia); Dictionary of Canadian Biography: by the Ottawa River, Lake Nipissing and the French River to Lake Huron",
       "points": [
         [-71.21, 46.81],
         [-73.55, 45.5],
@@ -110,9 +110,9 @@
       "lat": 46.81,
       "date": "3 Jul 1608",
       "label": "Quebec founded",
-      "source": "Samuel de Champlain (Wikipedia)",
-      "cite": "wp-champlain",
-      "text": "A habitation of three buildings at the narrows, beside the old site of Stadacona. Scurvy killed most of the first winter's men."
+      "source": "Samuel de Champlain (Wikipedia); Dictionary of Canadian Biography",
+      "cite": "dcb-champlain",
+      "text": "A habitation of three buildings at the narrows, beside the old site of Stadacona. Of the 28 who wintered there, only eight were left when supplies came at the end of May 1609."
     },
     {
       "kind": "event",
@@ -134,7 +134,7 @@
       "label": "Huronia: among the Huron-Wendat",
       "source": "Samuel de Champlain (Wikipedia)",
       "cite": "wp-champlain",
-      "text": "He reached the villages of Wendake on Georgian Bay, and wintered there with the Huron-Wendat. Étienne Brûlé, his interpreter, had gone there before him."
+      "text": "He reached the villages of Wendake by Lake Huron, and wintered there with the Huron-Wendat. Étienne Brûlé, his interpreter, had gone there before him."
     }
   ]
 }

@@ -4,8 +4,8 @@
   "short": "Morgan at Panama",
   "who": ["henry-morgan"],
   "when": "1670–1671",
-  "summary": "Henry Morgan left Port Royal with some thirty-six ships and about 1,800 men in 1670, took Providencia and the fort of San Lorenzo at the mouth of the Chagres, and led some 1,400 men up the river and across the isthmus. They defeated the Spanish defenders outside Panama on 28 January 1671, and the city burned; the Spanish said the pirates set the fires, and Morgan blamed the Spanish. England and Spain had signed a peace in 1670.",
-  "sources": ["wp-henry-morgan"],
+  "summary": "Henry Morgan left Port Royal with some thirty-six ships and about 1,800 men in 1670, took Providencia and the fort of San Lorenzo at the mouth of the Chagres, and led some 1,400 men up the river and across the isthmus. They defeated the Spanish defenders outside Panama on 28 January 1671, and the city burned; its governor had ordered the buildings fired if the privateers won. England and Spain had signed a peace in 1670.",
+  "sources": ["wp-henry-morgan", "wp-morgan-panama-expedition"],
   "legs": [
     {
       "from": "Port Royal",
@@ -61,7 +61,7 @@
       "label": "Panama taken and burned",
       "source": "Henry Morgan (Wikipedia)",
       "cite": "wp-henry-morgan",
-      "text": "Morgan's men took the city, which burned within days, and stayed about four weeks, looking for treasure and ransom. Much of the town's silver had gone by sea. The old city, Panamá Viejo, was never rebuilt and a new one was founded nearby."
+      "text": "Morgan's men took the city, which burned within days, and stayed nearly three weeks, looking for treasure and ransom. Much of the town's silver had gone by sea. The old city, Panamá Viejo, was never rebuilt and a new one was founded nearby."
     }
   ]
 }

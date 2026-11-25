@@ -11,7 +11,8 @@
   "summary": "Francis I sent Cartier with two ships to look for a passage and for gold. He went through the Strait of Belle Isle, round the Gulf, raised a cross at Gaspé on 24 July, and met the Stadacona Iroquoians who were fishing there. He took two of Donnacona's sons, Taignoagny and Domagaya, back with him, after promising to return them.",
   "sources": [
     "wp-jacques-cartier",
-    "wp-donnacona"
+    "wp-donnacona",
+    "dcb-cartier"
   ],
   "legs": [
     {
@@ -63,7 +64,7 @@
       "mode": "sea",
       "line": "spline",
       "confidence": "inferred",
-      "source": "Jacques Cartier (Wikipedia): back by Belle Isle, at Saint-Malo 5 September",
+      "source": "Jacques Cartier (Wikipedia): back by Belle Isle; Dictionary of Canadian Biography: two ships, at Saint-Malo 5 September",
       "points": [
         [-64.12, 48.9],
         [-62.0, 48.6],

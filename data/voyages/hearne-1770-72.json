@@ -4,17 +4,17 @@
   "short": "Hearne",
   "who": ["samuel-hearne", "matonabbee"],
   "when": "1770–1772",
-  "summary": "After two failed starts, Hearne left Fort Prince of Wales on 7 December 1770 with Matonabbee and a Chipewyan party. They crossed the Barrenlands and reached the Coppermine River, and its mouth on the Arctic coast, on 17 July 1771. On the way back they passed Great Slave Lake and wintered south of it; Hearne reached the fort in June 1772. He wrote of the killing of Inuit by the Chipewyan at Bloody Falls.",
-  "sources": ["wp-hearne", "wp-matonabbee"],
+  "summary": "After two failed starts, Hearne left Fort Prince of Wales on 7 December 1770 with Matonabbee and a Chipewyan party. They crossed the Barrenlands and reached the Coppermine River on 14 July 1771, and the Arctic coast at its mouth on 17 July. On the way back Hearne crossed Great Slave Lake in midwinter; he reached the fort in June 1772. He wrote of the killing of Inuit by the Chipewyan at Bloody Falls.",
+  "sources": ["wp-hearne", "wp-matonabbee", "dcb-hearne"],
   "legs": [
     {
       "from": "Fort Prince of Wales",
       "to": "the Coppermine River",
-      "dates": "7 Dec 1770 – 17 Jul 1771",
+      "dates": "7 Dec 1770 – 14 Jul 1771",
       "mode": "land",
       "line": "spline",
       "confidence": "conventional",
-      "source": "Samuel Hearne (Wikipedia): north-west across the Barrenlands to the Coppermine",
+      "source": "Samuel Hearne (Wikipedia): north-west across the Barrenlands to the Coppermine; Dictionary of Canadian Biography: left on 7 December 1770, at the river on 14 July 1771",
       "note": "the way over the Barrenlands is the usual drawing from his journal; he had few landmarks",
       "points": [
         [-94.2, 58.77],

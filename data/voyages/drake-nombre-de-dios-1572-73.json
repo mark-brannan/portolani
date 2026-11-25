@@ -4,17 +4,18 @@
   "short": "Drake and the Cimarrons",
   "who": ["francis-drake", "cimarrons-of-the-isthmus"],
   "when": "1572–1573",
-  "summary": "Drake sailed from Plymouth in May 1572 with two small ships to raid the Spanish treasure road across Panama. He attacked Nombre de Dios in July, was wounded, and withdrew. Escaped Africans, the Cimarrons, who hated the Spanish, then allied with him. They guided him inland, showed him the Pacific from a hilltop, and in March 1573 helped him ambush a mule train carrying silver to the coast. He was back at Plymouth in August.",
+  "summary": "Drake sailed from Plymouth in May 1572 with two small ships to raid the Spanish treasure road across Panama. He attacked Nombre de Dios in July, was wounded, and withdrew. Escaped Africans, the Cimarrons, who hated the Spanish, then allied with him. They guided him inland, showed him the Pacific from a hilltop, and on 1 April 1573 helped him ambush a mule train carrying silver to the coast. He was back at Plymouth in August.",
   "sources": ["wp-drake", "wp-maroons"],
   "legs": [
     {
       "from": "Plymouth",
-      "to": "Port Pheasant, in the Gulf of Darién",
+      "to": "a harbour on the isthmus",
       "dates": "24 May – 12 Jul 1572",
       "mode": "sea",
       "line": "spline",
       "confidence": "inferred",
       "source": "Francis Drake (Wikipedia): the Pasha and the Swan to the isthmus",
+      "note": "the article does not name the harbour; the line's end in the Gulf of Darién is a stand-in",
       "points": [
         [-4.3, 50.25],
         [-12, 45],
@@ -26,7 +27,7 @@
       ]
     },
     {
-      "from": "Port Pheasant, in the Gulf of Darién",
+      "from": "a harbour on the isthmus",
       "to": "Nombre de Dios",
       "dates": "Jul 1572",
       "start": "1572-07",
@@ -63,11 +64,11 @@
     {
       "from": "the coast near Nombre de Dios",
       "to": "Plymouth",
-      "dates": "Apr – 9 Aug 1573",
+      "dates": "Apr – Aug 1573",
       "mode": "sea",
       "line": "spline",
       "confidence": "inferred",
-      "source": "Francis Drake (Wikipedia): home with the silver and gold",
+      "source": "Francis Drake (Wikipedia): home with the silver and gold, at Plymouth in the second week of August",
       "points": [
         [-79.5, 9.75],
         [-75, 13],
@@ -93,7 +94,7 @@
       "kind": "event",
       "lon": -79.4,
       "lat": 9.5,
-      "date": "Mar 1573",
+      "date": "1 Apr 1573",
       "label": "The mule train ambushed",
       "confidence": "inferred",
       "source": "Francis Drake (Wikipedia)",
