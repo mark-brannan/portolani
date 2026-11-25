@@ -42,6 +42,7 @@ const imageOf = (p) => new Promise((ok, no) => {
   img.src = p;
 });
 const env = {
+  skipFailed: true, // a sprite that will not load is left out, so one bad file never blanks the map
   onPanel: () => { clearTimeout(panelLanded); panelLanded = setTimeout(() => render(), 120); },
   createCanvas: (w, h) => Object.assign(document.createElement('canvas'), { width: w, height: h }),
   readJSON: (p) => once(p, () => fetch(p).then((r) => { if (!r.ok) throw new Error(`${p}: ${r.status}`); return r.json(); })),
