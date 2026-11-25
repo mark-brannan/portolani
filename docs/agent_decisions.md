@@ -702,3 +702,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261125t020223z
 - Correct the Drake summary's 'alone came out of the strait' and add 'in Afghanistan' to Dost Mahomet's bio alongside the six listed facts; San Gabriel placed at Wikipedia's coordinates Undo: revert the Drake summary line and Dost Mahomet bio in #425 ([#425](https://github.com/mark-brannan/portolani/pull/425))
+
+### 20261125t095042z
+- Mackenzie 1789 start stays 3 June per the Dictionary of Canadian Biography Undo: set the 1789 start to 3 July ([#419](https://github.com/mark-brannan/portolani/pull/419))
