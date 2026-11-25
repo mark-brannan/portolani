@@ -717,3 +717,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261125t194726z
 - Placed the moved rose at three spots on Dulcert's rhumbs (Ionian, west basin, Tyrrhenian) and a displaced ship in the Tyrrhenian, for the picture only Undo: edit the VIEWS rows in docs/first-page/render.mjs ([#431](https://github.com/mark-brannan/portolani/pull/431))
+
+### 20261125t195251z
+- G's frame (4.5E 42.3N, default zoom) and I's half-size hub rose are placements for the picture only Undo: edit the VIEWS rows in docs/first-page/render.mjs ([#431](https://github.com/mark-brannan/portolani/pull/431))
