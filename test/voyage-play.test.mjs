@@ -125,6 +125,8 @@ test('a long calendar is told in years: "c. 1210 BC" and "about 80 years a secon
   assert.equal(playPace(lapita, 30), 'about 20 years a second');
   const polynesia = calendarOf(await readVoyage('east-polynesia-settlement', readJSON));
   assert.equal(playDateText(polynesia, dayOf(1234), 'year'), 'c. 1250', 'past 1,000 years, to the nearest fifty');
+  const deep = { t0: dayOf(-998050), t1: dayOf(-698050) };
+  assert.equal(playDateText(deep, dayOf(-998050), 'year'), 'c. 998000 BC', 'past 100,000 years, to the nearest thousand');
   assert.equal(playDateText(magellan, dayOf(1520, 5, 20), 'day'), dayText(dayOf(1520, 5, 20), 'day'), 'a short calendar keeps its days');
   assert.equal(playPace(magellan, 9), '1,083 days in 9 s');
   const short = { t0: dayOf(1300), t1: dayOf(1349) }, long = { t0: dayOf(1300), t1: dayOf(1352) };

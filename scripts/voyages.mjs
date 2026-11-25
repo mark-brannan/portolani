@@ -661,14 +661,14 @@ export function dayText(day, precision = 'day') {
   return `${d} ${MONTH_SHORT[m]} ${year}`;
 }
 // The band's time scale. A calendar longer than LONG_YEARS is told in years: its date "c. 1210 BC", rounded to a step
-// that keeps the number legible as it runs (10 years past 200, 50 past 1,000), and its pace "about 80 years a second".
+// that keeps the number legible as it runs (10 years past 200, 50 past 1,000, 1,000 past 100,000), and its pace "about 80 years a second".
 // A shorter one keeps its leg's precision and "1,083 days in 9 s".
 export const LONG_YEARS = 50;
 const yearsOf = (cal) => (cal.t1 - cal.t0) / 365.25;
 export const isLong = (cal) => yearsOf(cal) > LONG_YEARS;
 export function playDateText(cal, day, precision = 'day') {
   if (!isLong(cal)) return dayText(day, precision);
-  const span = yearsOf(cal), step = span > 1000 ? 50 : span > 200 ? 10 : 1;
+  const span = yearsOf(cal), step = span > 100000 ? 1000 : span > 1000 ? 50 : span > 200 ? 10 : 1;
   const y = civilOf(day).y, bc = y < 1, n = Math.max(1, Math.round((bc ? 1 - y : y) / step) * step);
   return `c. ${n}${bc ? ' BC' : ''}`;
 }
