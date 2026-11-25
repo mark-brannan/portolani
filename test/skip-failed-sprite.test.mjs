@@ -16,6 +16,7 @@ const names = joinNames(read(join(ROOT, 'test', 'fixtures', 'sea-names-50m.json'
   coastNames(read(join(GEO, 'ne-admin-0-countries-50m.geojson')), read(join(GEO, 'ne-coastline-50m.geojson'))));
 const BAD = 'packs/scanned/rose-oliva.webp';
 const env = {
+  skipFailed: true,
   createCanvas,
   readJSON: async (p) => (p === 'geo/names-50m.json' ? names : p === 'geo/seas-50m.json' ? read(join(ROOT, 'test', 'fixtures', 'seas-50m.json')) : read(resolve(p))),
   loadImage: (p) => (p === BAD ? Promise.reject(new Error(`${p}: image failed`)) : loadImage(resolve(p))),
@@ -28,4 +29,8 @@ test('a rose whose file fails is skipped and the other roses are drawn', async (
   assert.ok(scene.roseDraws.length > 0, 'roses are drawn');
   assert.ok(scene.roseDraws.every((r) => r.sprite.id !== 'rose-oliva'), 'the failed rose is not');
   assert.ok(console.warn.mock.calls.some((c) => String(c.arguments[0]).includes('rose-oliva')), 'the skip is warned');
+});
+
+test('a host that does not ask to skip fails loudly on a bad sprite', async () => {
+  await assert.rejects(createScene({ ...env, skipFailed: false }, { view: { lon: 7, lat: 40, zoom: 5.4 }, scale: 'off', historical: false }), /image failed/);
 });
