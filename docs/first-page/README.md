@@ -38,3 +38,5 @@ the hub. `rose-on-lines.jpg` is the two first pages that keep the rule and his l
 | I | D's frame; the rose at the hub at half the size, clear of Calabria | `rose-hub-small.jpg` |
 
 `rose-at-todays-view.jpg` is the same two roses at the view the page serves today (7°E 40.3°N, zoom 5.48), no frame moved: the Biscay node lies above the top edge there, and the small hub rose is in frame.
+
+`sheet-centred.jpg` is the view centred on the middle of Dulcert's sheet (8.5°E 46.3°N): at the served zoom it is the Alps, with his hub below the bottom edge and no sea node in frame; with the whole sheet in the window (zoom 4.37) the page lays de la Cosa's sheet and lines, not his.
