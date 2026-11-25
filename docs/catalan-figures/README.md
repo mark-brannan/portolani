@@ -5,8 +5,9 @@ its one rose on sheet 5: a ship in the Caspian, a junk off India, a siren among 
 sheet 10 two ships and two fish by the pearl fishers. Where each lies and which are drawn is in
 [docs/atlas/ornaments.md](../atlas/ornaments.md#figures-sheets-6-to-12). Three are cut into the `scanned` pack, style
 `catalan`, each a patch as the rose is ([docs/catalan-rose](../catalan-rose/README.md)): the whole crop with the sea
-round it, its edge feathered, divided by the map's parchment (`#e9d8b4`) so the renderer's multiply lands the scan's
-colours as they are.
+round it, its edge feathered, divided by its own sheet's vellum so the renderer's multiply sinks the patch into the
+parchment ([docs/world-view](../world-view/README.md); divided by the map's parchment, the greyer vellum drew each
+patch as a grey-blue square).
 
 | sprite | kind | sheet | crop, scan px | drawn at |
 |---|---|---|---|---|
@@ -21,8 +22,8 @@ junk) where it stood in one of the page's ships.
 
 ![Each figure's raw crop beside the sprite multiplied onto parchment, at twice the width the map draws it and at that width](steps.png)
 
-`steps.png`, one row per sprite: the raw crop, the sprite multiplied onto parchment, at twice the width the map draws it
-and then at that width (81, 71 and 149 px). `<id>.raw.png` (kept at half size), `<id>.key.png` and `<id>.cut.png` are
+`steps.png`, one row per sprite: the raw crop and the sprite multiplied onto parchment, at twice the sprite's `sizePx`
+and then at it (103, 104 and 181 px). `<id>.raw.png` (kept at half size), `<id>.key.png` and `<id>.cut.png` are
 the build's kept images:
 
     node scripts/build-packs.mjs --only scanned --keep docs/catalan-figures catalan-

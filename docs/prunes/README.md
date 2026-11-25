@@ -3,7 +3,7 @@
 The west rose of Prunes's chart of the Mediterranean, Black Sea and the coasts of western Europe
 and north-west Africa, 1559 (Library of Congress 2014588812, public domain,
 https://commons.wikimedia.org/wiki/File:(Chart_of_the_Mediterranean,_Black_Sea,_and_the_coasts_of_western_Europe_and_northwest_Africa)_LOC_2014588812.jpg),
-cut as `packs/scanned/rose-prunes.png` for #52. Of the three big 32-point roses on the sheet it
+cut as `packs/scanned/rose-prunes.webp` for #52. Of the three big 32-point roses on the sheet it
 stands in the clearest ground: the south rose has the AFRICA banner and a green hill against it,
 the north-east one a scroll and a building touching its ring.
 
