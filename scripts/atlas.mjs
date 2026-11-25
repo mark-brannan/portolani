@@ -125,11 +125,17 @@ const CATALAN = figures({
 const DE_LA_COSA = figures({
   ship: [[null, 2.8, -17.8]],
 });
+// MOCKUP (first-page design): the Majorcan school's figures lent to Dulcert's sheet. The rose stands at Dulcert's hub,
+// the Catalan Atlas's ship where its sea is open.
+const BORROWED_MED = figures({
+  rose: [['rose-catalan', 14.5, 40.0]],
+  ship: [['catalan-ship', 4.6, 40.4], ['catalan-ship', 9.6, 37.9], ['catalan-ship', 18.6, 36.9], ['catalan-ship', -3.2, 36.2], ['catalan-ship', 28.5, 34.0]],
+});
 export const CURATED = [
   { name: 'Mediterranean, west', source: 'Carte Pisane, western circle', extent: { west: -10, east: PISANE_SEAM, south: 30, north: 48 }, lon: 7.4, lat: 40.0, radius: 8.0, ornaments: NONE },
   { name: 'Mediterranean, east', source: 'Carte Pisane, eastern circle', extent: { west: PISANE_SEAM, east: 42, south: 30, north: 48 }, lon: 27.4, lat: 36.8, radius: 7.5, ornaments: NONE },
   { name: 'Levant and Black Sea', source: 'Vesconte, 1311', extent: { west: 20, east: 42, south: 30, north: 48 }, lon: 25.2, lat: 37.5, radius: 3, ornaments: NONE },
-  { name: 'Europe and the Mediterranean', source: 'Dulcert, 1339', extent: { west: -25, east: 42, south: 28, north: 60 }, lon: 14.5, lat: 40.0, radius: 17, ornaments: NONE },
+  { name: 'Europe and the Mediterranean', source: 'Dulcert, 1339', extent: { west: -25, east: 42, south: 28, north: 60 }, lon: 14.5, lat: 40.0, radius: 17, ornaments: BORROWED_MED, style: 'catalan' },
   { name: 'The known world of 1375', source: 'Catalan Atlas', extent: { west: -25, east: 120, south: 10, north: 60 }, lon: -5.4, lat: 42.3, radius: 16, ornaments: CATALAN, style: 'catalan' },
   { name: 'Scandinavia and the Baltic', source: 'Carta Marina, 1539', extent: { west: -25, east: 45, south: 53, north: 72 }, lon: 19.7, lat: 61.7, radius: RULE, ornaments: CARTA_MARINA, style: 'carta-marina' },
   { name: 'The Atlantic and the Americas', source: 'Juan de la Cosa, 1500', extent: { west: -100, east: 20, south: -20, north: 65 }, lon: -45, lat: 23.4, radius: RULE, ornaments: DE_LA_COSA, unread: ['rose'], style: 'de-la-cosa' },
