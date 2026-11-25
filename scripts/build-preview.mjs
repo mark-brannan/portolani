@@ -213,6 +213,7 @@ await cp(path.join(root, 'node_modules', 'coastlines', 'catalogue.json'), path.j
 await mkdir(path.join(out, 'coastlines', 'lib'), { recursive: true });
 await cp(path.join(root, 'node_modules', 'coastlines', 'lib', 'provider.js'), path.join(out, 'coastlines', 'lib', 'provider.js'));
 await cp(path.join(root, 'public'), out, { recursive: true });
+await cp(path.join(root, 'docs', 'readme.jpg'), path.join(out, 'card.jpg')); // the share card index.html names in og:image
 import { buildLearn } from './learn.mjs';
 import { relativeImports } from './scene-modules.mjs';
 await buildLearn(root, out); // docs/learn/*.md into _site/learn/*.html

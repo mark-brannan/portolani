@@ -137,7 +137,7 @@ test('a place with a tile gets an unlettered mark: a ruin wherever the sight say
   }
   assert.equal((await at(ostia, 7, [ostia])).lesser.find((l) => l.name === 'Ostia')?.tower, 'ruin')
   const barygaza = { name: 'Barygaza', lon: 72.99, lat: 21.71, ruin: true }
-  assert.equal((await at(barygaza, 6, [barygaza])).lesser.find((l) => l.name === 'Barygaza')?.tower, 'ruin', 'no town drawn on the site: a ruin')
+  assert.equal((await at(barygaza, 7, [barygaza])).lesser.find((l) => l.name === 'Barygaza')?.tower, 'ruin', 'no town drawn on the site: a ruin')
   const town = (await at(aden, 7, [aden])).lesser.find((l) => l.name === 'Aden')
   assert.ok(!town || town.tower !== 'ruin', 'a sight that does not say ruin is never one')
   assert.ok(RUIN.layers.every(([, d]) => /^M[-\d. MLHVQZ]*$/.test(d)) && RUIN.w <= 8, 'the ruin is drawn in the towers\' path data')
