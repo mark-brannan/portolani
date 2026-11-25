@@ -97,9 +97,11 @@ const servedBands = (extent) => BANDS.filter((b) => { const w = (extent.east - e
 // A curated chart's own figures (docs/atlas/ornaments.md), as { kind, sprite, lon, lat }: `sprite` names the
 // pack sprite cropped from that figure, or null where none is cropped yet and the scene stands in one of the
 // sheet's `style`, the pack family its crops belong to. An
-// empty set is a chart that draws none; a sheet with no set has not been read, and keeps the seeded figures
-// (the four Mediterranean charts: centres.md read their circles, not their figures; #199).
+// empty set is a chart that draws none; a sheet with no set has not been read, and keeps the seeded figures.
+// `unread: ['rose']` marks a chart whose roses are not yet read: it keeps those of the network the sheet draws (scene.mjs). No other kind is honoured.
 const figures = (sets) => Object.entries(sets).flatMap(([kind, list]) => list.map(([sprite, lon, lat]) => ({ kind, sprite, lon, lat })));
+// The Carte Pisane, Vesconte and Dulcert draw hubs, not roses, and no beast or ship at sea (ornaments.md).
+const NONE = figures({});
 const CARTA_MARINA = figures({
   rose: [[null, -10.5, 65.8], [null, -4.7, 60.7], [null, 7.8, 58.3], [null, 20.6, 62.4]],
   monster: [['serpent-a', -5.5, 66.2], ['whale-b', -8.2, 69.0], ['cete-e', -8.4, 67.5], ['pistrix-c', -13.6, 59.7], [null, -9.5, 57.6], [null, -12.7, 58.5], [null, -4.5, 62.5], [null, -9.3, 64.7], [null, -3.1, 64.5], [null, -7.1, 56.3], [null, 8.9, 60.0]],
@@ -118,19 +120,19 @@ const CATALAN = figures({
 });
 // Juan de la Cosa's figures on the sheet's extent (ornaments.md): one ship in the South Atlantic, too faint at the scan's
 // size to cut, which stands in one of the chart's own ships off India. The chart draws no beast at sea. Its four roses are
-// listed in ornaments.md and not drawn until the ring is reread, so the sheet keeps the roses at the hub and nodes of the
-// ring it draws (scene.mjs); its fleet off India and the ship off the Cape lie east of the extent.
+// listed in ornaments.md and not drawn until the ring is reread, so they are `unread` and the sheet keeps the roses at the
+// hub and nodes of the ring it draws (scene.mjs); its fleet off India and the ship off the Cape lie east of the extent.
 const DE_LA_COSA = figures({
   ship: [[null, 2.8, -17.8]],
 });
 export const CURATED = [
-  { name: 'Mediterranean, west', source: 'Carte Pisane, western circle', extent: { west: -10, east: PISANE_SEAM, south: 30, north: 48 }, lon: 7.4, lat: 40.0, radius: 8.0 },
-  { name: 'Mediterranean, east', source: 'Carte Pisane, eastern circle', extent: { west: PISANE_SEAM, east: 42, south: 30, north: 48 }, lon: 27.4, lat: 36.8, radius: 7.5 },
-  { name: 'Levant and Black Sea', source: 'Vesconte, 1311', extent: { west: 20, east: 42, south: 30, north: 48 }, lon: 25.2, lat: 37.5, radius: 3 },
-  { name: 'Europe and the Mediterranean', source: 'Dulcert, 1339', extent: { west: -25, east: 42, south: 28, north: 60 }, lon: 14.5, lat: 40.0, radius: 17 },
+  { name: 'Mediterranean, west', source: 'Carte Pisane, western circle', extent: { west: -10, east: PISANE_SEAM, south: 30, north: 48 }, lon: 7.4, lat: 40.0, radius: 8.0, ornaments: NONE },
+  { name: 'Mediterranean, east', source: 'Carte Pisane, eastern circle', extent: { west: PISANE_SEAM, east: 42, south: 30, north: 48 }, lon: 27.4, lat: 36.8, radius: 7.5, ornaments: NONE },
+  { name: 'Levant and Black Sea', source: 'Vesconte, 1311', extent: { west: 20, east: 42, south: 30, north: 48 }, lon: 25.2, lat: 37.5, radius: 3, ornaments: NONE },
+  { name: 'Europe and the Mediterranean', source: 'Dulcert, 1339', extent: { west: -25, east: 42, south: 28, north: 60 }, lon: 14.5, lat: 40.0, radius: 17, ornaments: NONE },
   { name: 'The known world of 1375', source: 'Catalan Atlas', extent: { west: -25, east: 120, south: 10, north: 60 }, lon: -5.4, lat: 42.3, radius: 16, ornaments: CATALAN, style: 'catalan' },
   { name: 'Scandinavia and the Baltic', source: 'Carta Marina, 1539', extent: { west: -25, east: 45, south: 53, north: 72 }, lon: 19.7, lat: 61.7, radius: RULE, ornaments: CARTA_MARINA, style: 'carta-marina' },
-  { name: 'The Atlantic and the Americas', source: 'Juan de la Cosa, 1500', extent: { west: -100, east: 20, south: -20, north: 65 }, lon: -45, lat: 23.4, radius: RULE, ornaments: DE_LA_COSA, style: 'de-la-cosa' },
+  { name: 'The Atlantic and the Americas', source: 'Juan de la Cosa, 1500', extent: { west: -100, east: 20, south: -20, north: 65 }, lon: -45, lat: 23.4, radius: RULE, ornaments: DE_LA_COSA, unread: ['rose'], style: 'de-la-cosa' },
 ].map((c) => ({ ...c, bands: servedBands(c.extent), area: (c.extent.east - c.extent.west) * (c.extent.north - c.extent.south) }));
 const within = (e, lon, lat) => lon >= e.west && lon <= e.east && lat >= e.south && lat <= e.north;
 const overlaps = (a, b) => a.west < b.east && b.west < a.east && a.south < b.north && b.south < a.north;
@@ -272,7 +274,7 @@ function curatedFor(band, b, zoom, rule) {
   return serving.filter((c) => overlaps(c.extent, b)).map((c) => ({
     name: c.name, source: c.source, curated: true, band: band.band, bandName: band.name, extent: c.extent,
     circle: curatedCircle(c),
-    ...(c.ornaments && { ornaments: c.ornaments, style: c.style }),
+    ...(c.ornaments && { ornaments: c.ornaments, style: c.style, unread: c.unread ?? [] }),
     shadow: shadowOf(c),
   }));
 }
