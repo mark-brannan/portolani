@@ -1724,7 +1724,7 @@ const SIGHTS = [
     ['The western road', at(-5.8, 21.0, 6)],
     ['The road to Egypt', at(6.78, 17.52, 6)],
   ], null, '8th–16th c.'],
-  ['The age of discovery', [
+  ["Europe's sea roads", [
     ['Lisbon', port(-9.14, 38.72)], // also where charts were made
     ['São Jorge da Mina', port(-1.35, 5.08), 'São Jorge da Mina (Elmina)'],
     ['Goa', port(73.91, 15.50)],
@@ -1754,7 +1754,7 @@ const CHARTS = [
   ['Catalan Atlas', '1375', both([ORIGINS.rose.lon, ORIGINS.rose.lat, 16], [-5.4, 42.3, 16]), ['Majorca', port(2.65, 39.57)], 'Made in Cresques Abraham\'s workshop at Palma and sent from Aragon as a gift to the king of France. Its eight map pages run from the Atlantic to China, with Mansa Musa enthroned in the west of Africa, gold in his hand.', 'catalan-atlas'], // Cresques Abraham's workshop, Palma; its eight map pages side by side
   ['Catalan Atlas, Mediterranean, a copy of 1959', '1375, copied 1959', viewOfFrame({ lonMin: -24, lonMax: 42.8, latMin: 22.2, latMax: 55.6 }), ['Majorca', port(2.65, 39.57)], 'A painted copy, made in 1959, of the atlas\'s Mediterranean pages, Gibraltar to Cyprus. The copy is at the Library of Congress; the original is in Paris.', 'catalan-atlas-1959-copy'], // a painted copy (Library of Congress, CC BY 3.0), not the original; its view is its own sheet's frame (sheetFrame of its placement), Gibraltar to Cyprus
   ['Chart of Jorge de Aguiar', '1492', at(2.64, 31.29, 3.18), ['Lisbon', port(-9.14, 38.72)], 'The oldest signed and dated Portuguese chart that survives, made the year Columbus first sailed west. It is at Yale\'s Beinecke Library.', 'aguiar'], // the Beinecke Library's chart; Lisbon, Portugal's chartmaking port, the usual attribution
-  ['Map of Juan de la Cosa', '1500', both([-45, 23.4, 15], [65, 23.4, 15]), ['El Puerto de Santa María', port(-6.23, 36.60)], 'The oldest surviving map to show the New World, drawn by a pilot who sailed with Columbus. The Americas are the long green coast at its western end.', 'de-la-cosa'], // signed "la fizo en el puerto de S. Mª"
+  ['Map of Juan de la Cosa', '1500', both([-45, 23.4, 15], [65, 23.4, 15]), ['El Puerto de Santa María', port(-6.23, 36.60)], 'The oldest surviving map to show the coasts Columbus had reached, drawn by a pilot who sailed with him. The Americas are the long green coast at its western end.', 'de-la-cosa'], // signed "la fizo en el puerto de S. Mª"
   ['Piri Reis, Kitab-ı Bahriye, the Adriatic', '1521–1526, later copy', at(15.87, 42.5, 4.6), ['Gallipoli', port(26.67, 40.41)], 'One folio of Piri Reis\'s book of sailing directions, which gives each stretch of coast a chart of its own. The Adriatic runs up the page, Venice at the top and Corfu at the foot.', 'kitab-i-bahriye-adriatic'], // a folio of his sailing manual, written at Gallipoli (Walters Art Museum, W.658)
   ['Carta Marina', '1539', viewOfFrame({ lonMin: 0, lonMax: 40, latMin: 54, latMax: 72 }), ['Venice', port(12.33, 45.44)], 'Olaus Magnus\'s woodcut of the Nordic lands, printed at Venice in nine sheets. Its seas off Norway are full of monsters, whales and ships.', 'carta-marina'], // Olaus Magnus had it printed there
   ['World map of Battista Agnese', 'c. 1544', at(-21.83, -6.47, 0.78), ['Venice', port(12.33, 45.44)], 'A world map from one of the atlases of Battista Agnese\'s workshop in Venice. A line traces the voyage of Magellan\'s ships round the world.', 'agnese-world'], // map 10 of his atlas, made in Venice (Library of Congress)

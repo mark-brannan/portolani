@@ -277,7 +277,7 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     await page.click('#sights');
     assert.equal(await opened('sightsPanel'), true, 'the astrolabe did not open the points of interest');
     const openGroups = () => page.$$eval('#sightsList .group.open > .fold', (hs) => hs.map((h) => h.firstChild.textContent));
-    assert.deepEqual(await openGroups(), ['The age of discovery'], 'not exactly the marked era open');
+    assert.deepEqual(await openGroups(), ["Europe's sea roads"], 'not exactly the marked era open');
     assert.equal(await page.locator('#sightsList details').count(), 0, 'a disclosure triangle is back');
     await page.click('#sightsList .fold >> text=The ancient world');
     assert.deepEqual(await openGroups(), ['The ancient world'], 'a heading did not swap the open era');
@@ -285,8 +285,8 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     assert.deepEqual(await openGroups(), [], 'a click on the open heading left it open');
     assert.deepEqual(await page.$$eval('#sightsList .group', (gs) => gs.map((g) => [g.querySelector(':scope > .fold').getAttribute('aria-expanded'), g.querySelector(':scope > .rows > div').inert])),
       Array.from({ length: await page.locator('#sightsList .group').count() }, () => ['false', true]), 'a shut group is not shut to the keyboard');
-    await page.click('#sightsList .fold >> text=The age of discovery');
-    assert.deepEqual(await openGroups(), ['The age of discovery'], 'a heading did not open its era with none open');
+    await page.click("#sightsList .fold >> text=Europe's sea roads");
+    assert.deepEqual(await openGroups(), ["Europe's sea roads"], 'a heading did not open its era with none open');
     await page.waitForTimeout(400); // the slide
     const hs = await page.evaluate(() => location.hash);
     await page.click('#sightsList button >> text=Goa');
@@ -296,7 +296,7 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
     // and the open one shut; the click that was on its way keeps it open; leaving the list shuts nothing
     await page.hover('#sightsList .fold >> text=The ancient world');
     await page.waitForTimeout(150);
-    assert.deepEqual(await openGroups(), ['The age of discovery'], 'a passing pointer opened an era before the dwell');
+    assert.deepEqual(await openGroups(), ["Europe's sea roads"], 'a passing pointer opened an era before the dwell');
     await page.waitForTimeout(450);
     assert.deepEqual(await openGroups(), ['The ancient world'], 'resting on a heading did not open its era');
     await page.click('#sightsList .fold >> text=The ancient world');

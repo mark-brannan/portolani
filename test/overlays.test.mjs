@@ -171,7 +171,7 @@ test('each chart\'s sheet and snaps in overlays.json are made from its pieces, o
     snaps.forEach((s, i) => { assert.equal(s.label, o.snaps[i].label); for (const k of ['lon', 'lat', 'scale', 'turn']) assert.ok(Math.abs(s[k] - o.snaps[i][k]) < 1e-9, `${o.id} ${s.label} ${k}`); });
   }
   const cosa = overlays.find((o) => o.id === 'de-la-cosa');
-  assert.deepEqual(cosa.snaps.map((s) => s.label), ['New World', 'Atlantic', 'Europe']);
+  assert.deepEqual(cosa.snaps.map((s) => s.label), ['Americas', 'Atlantic', 'Europe']);
   assert.deepEqual(cosa.parallels.map((l) => l.lat), [23.44, 0], 'the Tropic of Cancer above the equator');
   assert.ok(cosa.sheet.scale > 0.11 && cosa.sheet.scale < 0.125, `between the east and west fits: ${cosa.sheet.scale}`);
   assert.ok(Math.abs(cosa.sheet.turn + 2.2) < 0.3, `the lines tilt about 2 degrees down to the east: ${cosa.sheet.turn}`);

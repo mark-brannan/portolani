@@ -32,7 +32,7 @@ export const SIGHT_TILES = {
   Calicut: { ruin: true, date: '14th–15th c.', text: 'The port of the Zamorin on the Malabar coast, where pepper and ginger were sold to Arab, Gujarati and Chinese merchants. Zheng He\'s fleets called here, and Vasco da Gama came ashore nearby in 1498.' },
   Malacca: { ruin: true, date: 'c. 1400–1511', text: 'Founded about 1400 by Parameswara, a prince from Sumatra, Malacca held the strait between the Indian Ocean and the China seas, and in its harbour, Tomé Pires wrote, eighty-four languages were spoken. Albuquerque took it for Portugal in 1511.' },
   Quanzhou: { ruin: true, date: '11th–14th c.', text: 'Zayton to the Arab and Persian traders, Quanzhou was the greatest port of Song and Yuan China, with a mosque, Hindu temples and an office of maritime trade. Marco Polo sailed from here in 1291, and Ibn Battuta landed here in the 1340s.' },
-  // the age of discovery
+  // Europe's sea roads
   'São Jorge da Mina': { date: '1482', text: 'The Portuguese built São Jorge da Mina in 1482 beside the Akan town of Edina, on the Gold Coast, to buy gold. From the 1500s the Portuguese, and after 1637 the Dutch who took it from them, shipped enslaved people from here across the Atlantic.' },
   Goa: { ruin: true, date: '1510', text: 'Taken by Afonso de Albuquerque in 1510, Goa remained Portugal\'s capital in Asia for four and a half centuries, until India took it in 1961. The pepper fleets, and the Inquisition, were based here.' },
   Manila: { date: '1571', text: 'Legazpi took the Muslim town of Maynila in 1571 and made it the west end of the galleon trade: Chinese silk and porcelain went across the Pacific to Acapulco, and Mexican silver came back.' },

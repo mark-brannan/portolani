@@ -180,7 +180,7 @@ Feature: A chart's position chips, and the line each was fitted to
   Scenario: where the chips live
     Given the Charts drawer open on a wide screen, and a chart whose scan is in the project
     When the user looks at that chart's row
-    Then under the city and year a line reads "Align to:" and then, on the same line, one chip per placement (the chart's own, "Parallels" or "Default", then each coast's fit: "Europe", "New World" and so on)
+    Then under the city and year a line reads "Align to:" and then, on the same line, one chip per placement (the chart's own, "Parallels" or "Default", then each coast's fit: "Europe", "Americas" and so on)
     And under it, on a line of its own with no label, the chart's up chip ("Every chart turns, a quarter at a time"), and under that, where the chart has any, its Points of interest chip
     And every chart shown has these three lines in its own row, the same on every chart, whichever of them are shown and in whatever order; a chart hidden has none
     And the chip for the placement the sheet lies at is lit
@@ -194,7 +194,7 @@ Feature: A chart's position chips, and the line each was fitted to
     And over the sheet, in today's geography, the feature that placement was fitted to draws itself as a plain line, from one end to the other, holds, then fades to a faint line (about a quarter of its strength) that stays while the sheet lies at that placement
     And the faint line may lighten later to a ghost (about a tenth) or go entirely; the user chose faint for now, after comparing all three (the user on [#259](https://github.com/mark-brannan/portolani/pull/259), 2026-10-29: "C for now, may lighten to B or A later", where C was faint, B ghost and A gone)
     And the faint line is the lit chip's: a click on another chip replaces it with that chip's line, drawn from the start; a click on the lit chip draws it again; hiding the chart with its eye takes the line off with the sheet; and as the sheet fades in or out, the line fades with it
-    And "Parallels" draws today's equator and Tropic of Cancer; a coast's chip ("New World") draws only the stretch of today's coast that fit used, not the whole coast; the chart's own "Default" draws every coast it is centred between
+    And "Parallels" draws today's equator and Tropic of Cancer; a coast's chip ("Americas") draws only the stretch of today's coast that fit used, not the whole coast; the chart's own "Default" draws every coast it is centred between
     And the line is the feature the fit was computed from, carried with the placement in the chart's data, never a stretch drawn by hand to look right
     And with reduced motion the line shows whole, then fades to faint
   Scenario: one zoom per placement
