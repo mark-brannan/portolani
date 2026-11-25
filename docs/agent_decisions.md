@@ -699,3 +699,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261117t102508z
 - Cortes: retreat to Tlaxcala and return by Texcoco drawn conventional Champlain 1608 crossing: April and June stand-in months, course inferred Manteo: 1586 leg with a doubt, stand-in start and port; 1587 baptism plays at the leg's end Cartier: leg back to Stadacona starts 4 Oct Drake: Port Pheasant to Nombre de Dios leg conventional Frobisher: 1576 leg starts in August, ends in the Thames estuary Mexica: founding year 1325 kept as the tradition's Peopling record's play order left wrong: date reader takes no five-digit year, same on main Undo: edit the record under data/voyages ([#419](https://github.com/mark-brannan/portolani/pull/419))
+
+### 20261125t020223z
+- Correct the Drake summary's 'alone came out of the strait' and add 'in Afghanistan' to Dost Mahomet's bio alongside the six listed facts; San Gabriel placed at Wikipedia's coordinates Undo: revert the Drake summary line and Dost Mahomet bio in #425 ([#425](https://github.com/mark-brannan/portolani/pull/425))
