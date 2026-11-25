@@ -55,6 +55,9 @@ Object.assign(VIEWS, {
   'K-today-hub-small': { view: S.DEFAULT_VIEW, opts: {}, roseScale: 1, label: 'K  the first page as served today; the rose at the hub at half the size' },
   'L-sheet-centre': { view: { lon: SHEET_MID[0], lat: SHEET_MID[1], zoom: S.DEFAULT_VIEW.zoom }, opts: {}, roseScale: 2, roses: SEA_NODES, label: 'L  centred on the middle of Dulcert\'s sheet, at the served zoom' },
   'M-sheet-whole': { view: { lon: SHEET_MID[0], lat: SHEET_MID[1], zoom: S.DEFAULT_VIEW.zoom - Math.log2((HUB.extent.east - HUB.extent.west) / 31) }, opts: {}, roseScale: 2, roses: SEA_NODES, label: 'M  his whole sheet in the window: the page lays de la Cosa\'s here' },
+  'N-catalan-atlas': { view: { lon: -9, lat: 41.5, zoom: S.DEFAULT_VIEW.zoom }, opts: {}, label: 'N  opening on Iberia and the Atlantic' },
+  'O-carta-marina': { view: { lon: 6, lat: 61, zoom: S.DEFAULT_VIEW.zoom }, opts: {}, label: 'O  opening on the North Sea and Scandinavia' },
+  'P-de-la-cosa': { view: { lon: -32, lat: 27, zoom: 4 }, opts: {}, label: 'P  opening on the Atlantic, de la Cosa\'s sheet' },
   'I-hub-rose-small': { ...D, roseScale: 1, label: 'I  D with the rose at the hub at half the size' },
 });
 const picked = only.length ? only : Object.keys(VIEWS);
