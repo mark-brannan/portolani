@@ -714,3 +714,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261125t100616z
 - Dulcert's sheet lent the Catalan Atlas rose at its hub and its ship, five placements of mine, for the first-page mockup Undo: drop the lent set from Dulcert's row ([#431](https://github.com/mark-brannan/portolani/pull/431))
+
+### 20261125t194726z
+- Placed the moved rose at three spots on Dulcert's rhumbs (Ionian, west basin, Tyrrhenian) and a displaced ship in the Tyrrhenian, for the picture only Undo: edit the VIEWS rows in docs/first-page/render.mjs ([#431](https://github.com/mark-brannan/portolani/pull/431))
