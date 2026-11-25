@@ -350,6 +350,18 @@ scenario('person: choosing a person\'s row writes person=, a link with it choose
   assert.equal(await page.locator('#peopleList [aria-pressed="true"]').count(), 0);
 });
 
+scenario('person: moving a settings control keeps person= in the hash', 'map=6.14/40.474/7.400', async (page) => {
+  await page.locator('#people').click();
+  await page.locator('#peopleList .head[data-head="The ancient world"]').click();
+  const life = page.locator('#peopleList li[data-row]:not([hidden]) [data-person]').first();
+  const id = await life.getAttribute('data-person');
+  await life.click();
+  assert.equal((await params(page)).get('person'), id);
+  await slide(page, 'density', 1.5); // any settings control rebuilds the style through readControls
+  assert.equal((await params(page)).get('person'), id);
+  assert.equal(await page.locator(`#peopleList [data-person="${id}"]`).getAttribute('aria-pressed'), 'true');
+});
+
 scenario('people and voyages: the medallion and the dividers open their own drawers, the person chosen in theirs; an older timeline= link opens the same and writes no key', 'map=6.14/40.474/7.400&person=ibn-battuta&timeline=a', async (page) => {
   const isOpen = (id) => page.evaluate((i) => document.getElementById(i).classList.contains('open'), id);
   assert.equal(await page.locator('#timelinePanel').count(), 0, 'the one wide timeline is still on the page');

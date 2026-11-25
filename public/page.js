@@ -587,6 +587,7 @@ function readControls() {
     ...readHood(),
     voyages: style.voyages, voyageWidth: Number($('voyageWidth').value), voyageDraw: style.voyageDraw, voyagePlay: style.voyagePlay, // chosen in the voyages drawer, and the link
     overlays: style.overlays, sheets: style.sheets, opacities: style.opacities, // chosen in the charts drawer, and by dragging a sheet
+    person: style.person, sight: style.sight, site: style.site, pictures: style.pictures, pictureAt: style.pictureAt, // chosen in the People drawer or by a sight's tile, not by a settings control
   };
   // hills are the Catalan sprites: the chip selects all of them or none
   const hills = $('hills').value === 'catalan';
