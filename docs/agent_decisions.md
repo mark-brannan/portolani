@@ -708,3 +708,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261125t095054z
 - De Soto landing stays 30 May 1539 on a University of South Florida page Undo: cut the landing to May 1539 ([#419](https://github.com/mark-brannan/portolani/pull/419))
+
+### 20261125t095105z
+- Unsourced day-dates cut to months; Pinzon to years Undo: restore day-dates with a source ([#419](https://github.com/mark-brannan/portolani/pull/419))
