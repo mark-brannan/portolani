@@ -1,10 +1,10 @@
 # portolani
 
-[![Italy and the western Mediterranean as a portolan chart: rhumb lines, wind roses, a sea monster and a cartouche lettered PORTOLANI, on parchment](docs/readme.jpg)](https://mark-brannan.github.io/portolani/)
+[![Italy and the western Mediterranean as a portolan chart: rhumb lines, wind roses, a sea monster and a cartouche lettered PORTOLANI, on parchment](docs/readme.jpg)](https://portolani.app/)
 
 A base map with modern geometry, but drawn the way a 15th-century portolan chart would have drawn it: ink on parchment, rhumb lines radiating from wind roses, names lettered along the coast, ships and sea monsters where the ocean is empty.
 
-**[Open the demo →](https://mark-brannan.github.io/portolani/)**
+**[Open the demo →](https://portolani.app/)**
 
 Drag to pan, wheel or pinch to zoom, anywhere in the world. The ornaments follow public-domain charts (the *Carta Marina*, the Catalan Atlas, Aguiar, de Wit), drawn as vectors or cropped from the scans. Click a figure for its story. It is a work in progress and changes often.
 

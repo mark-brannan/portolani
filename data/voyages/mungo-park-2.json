@@ -1,0 +1,116 @@
+{
+  "id": "mungo-park-2",
+  "title": "Mungo Park down the Niger, 1805–1806",
+  "short": "Mungo Park, second journey",
+  "who": [
+    "mungo-park"
+  ],
+  "when": "1805–1806",
+  "summary": "Park led a government expedition up from the Gambia in 1805, started in the rainy season, and reached the Niger in mid-August with only eleven Europeans left alive. From Bamako he went by canoe to Ségou, and at Sansanding made two canoes into one boat, the Joliba, the Niger's own name. He set off down the river on 19 November with Lieutenant Martyn, three European soldiers, a guide and three slaves, shot at anyone who came near, and made enemies all down the river. Isaaco, the Mandinka guide who had been with him thus far, took his letters back to the Gambia. The story of his end was told to Isaaco by Amadi Fatouma, the guide who went downstream with him.",
+  "sources": [
+    "mungo-park"
+  ],
+  "legs": [
+    {
+      "from": "Pisania, Gambia",
+      "to": "Sansanding",
+      "dates": "1805",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Mungo Park (Wikipedia): to the Niger in mid-August and by canoe from Bamako to Ségou and Sansanding; the stages are not in the source used",
+      "points": [
+        [
+          -14.0,
+          13.55
+        ],
+        [
+          -12.7,
+          13.4
+        ],
+        [
+          -11.0,
+          12.8
+        ],
+        [
+          -9.5,
+          12.3
+        ],
+        [
+          -8.0,
+          12.64
+        ],
+        [
+          -6.27,
+          13.45
+        ],
+        [
+          -6.01,
+          13.73
+        ]
+      ]
+    },
+    {
+      "from": "Sansanding",
+      "to": "the Bussa rapids",
+      "dates": "19 November 1805–1806",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Mungo Park (Wikipedia): down the river by Djenné, Timbuktu and Yauri to the Bussa rapids; the river's course is drawn between the named places",
+      "doubt": "The only account of the river stage is Amadi Fatouma's, second hand; the line follows the Niger and its bend, and puts every named place where the river is.",
+      "points": [
+        [
+          -6.01,
+          13.73
+        ],
+        [
+          -4.55,
+          13.91
+        ],
+        [
+          -3.01,
+          16.78
+        ],
+        [
+          -0.05,
+          16.27
+        ],
+        [
+          1.5,
+          14.5
+        ],
+        [
+          2.1,
+          13.5
+        ],
+        [
+          3.4,
+          11.9
+        ],
+        [
+          4.2,
+          10.8
+        ],
+        [
+          4.5,
+          9.9
+        ]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": -6.01,
+      "lat": 13.73,
+      "date": "19 November 1805",
+      "label": "Sansanding, the Joliba built and launched",
+      "source": "Mungo Park (Wikipedia)",
+      "cite": "mungo-park",
+      "text": "Park, with help from one soldier, the only one fit for work, joined two canoes into a boat he called H.M. schooner Joliba. Alexander Anderson, his brother-in-law and second-in-command, had died there on 28 October. Before he left, Park gave Isaaco letters for Gambia; they were the last word that reached Britain.",
+      "confidence": "attested"
+    }
+  ],
+  "kind": "voyage"
+}

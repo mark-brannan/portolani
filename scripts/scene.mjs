@@ -2133,6 +2133,14 @@ function indexOf(data) {
   return ix;
 }
 
+// A sheet's width in windows at `zoom`. A band's sheets are one to two windows wide; the world band's may be far narrower.
+// A grid sheet is measured by its band's width, whatever it is clipped to at the date line; a curated or world sheet by its extent.
+const sheetWindows = (sh, zoom) => (zoom == null ? Infinity : (sh.curated || sh.band === WORLD_BAND.band ? sh.extent.east - sh.extent.west : ATLAS_BANDS.find((b) => b.band === sh.band).width) / (WINDOW_DEG / 2 ** zoom));
+// The ink of a ray of `kind` (0 a wind) from a sheet `across` windows wide, 0 to 1: a sheet seen narrower than a window
+// (a curated chart in the world band) packs its ring and every line from it onto less of the page, so its half and quarter winds fade out between one window wide and half of one. The eight winds always stay.
+const FINER = [0.5, 1];
+const finerInk = (kind, across = Infinity) => (kind === 0 ? 1 : Math.max(0, Math.min(1, (across - FINER[0]) / (FINER[1] - FINER[0]))));
+
 // Each node's rays as rhumb lines in [lon, lat], with px boxes for culling; reaching past the
 // scene's far corner from any node.
 const lattices = new WeakMap();
@@ -2144,7 +2152,7 @@ function latticeOf(scene, data) {
   const reach = Math.min(180, (Math.hypot(W, H) * 1.5 / data.proj.k) * 180 / Math.PI);
   // a sheet's lines reach its page diagonal; a window's, past the scene's far corner
   const origins = scene.sheets
-    ? scene.sheets.flatMap((sh) => [sh.circle, ...sh.circle.nodes].filter((n) => !inShadow(sh, n.lon, n.lat)).map((n) => ({ lon: n.lon, lat: n.lat, reach: sh.reach, shadow: sh.shadow, band: sh.inked })))
+    ? scene.sheets.flatMap((sh) => { const across = sheetWindows(sh, scene.zoom); return [sh.circle, ...sh.circle.nodes].filter((n) => !inShadow(sh, n.lon, n.lat)).map((n) => ({ lon: n.lon, lat: n.lat, reach: sh.reach, shadow: sh.shadow, band: sh.inked, across })); })
     : [scene.centre, ...scene.nodes].map((n) => { const [lon, lat] = data.proj.invert(n.x, n.y); return { lon, lat, reach }; });
   // The Catalan Atlas rose's lines run at every zoom, beside the network of the sheets or the window
   // (docs/atlas/README.md, "Zoom bands"), as one more hub of the view's band: the reach of the sheet that
@@ -2155,11 +2163,13 @@ function latticeOf(scene, data) {
   // A line runs its whole reach: it is never cut where another sheet lies (#199), except under the `cut`
   // overlap rule, where it stops at the edge of a smaller chart over its sheet (the sheet's shadow).
   const cut = scene.overlap === 'cut';
-  for (const { lon, lat, reach, shadow, band } of origins) {
+  for (const { lon, lat, reach, shadow, band, across } of origins) {
     for (let k = 0; k < RHUMB_RAYS; k++) {
       const kind = k % 4 === 0 ? 0 : k % 2 === 1 ? 1 : 2; // wind, quarter (red), half (green)
+      const fine = finerInk(kind, across);
+      if (fine <= 0) continue;
       const ray = rhumb([lon, lat], 90 + (k * 360) / RHUMB_RAYS, reach * Math.cos(lat * Math.PI / 180));
-      for (const line of cutOut(ray, cut ? shadow : null)) rays.push({ kind, line, band, box: boxOf(line.map(([a, b]) => data.proj.project(a, b))) });
+      for (const line of cutOut(ray, cut ? shadow : null)) rays.push({ kind, line, band, fine, box: boxOf(line.map(([a, b]) => data.proj.project(a, b))) });
     }
   }
   lattices.set(scene, rays);
@@ -3255,8 +3265,11 @@ function drawScene(g, scene, data, bg, view) {
     const a = inkOf(band);
     if (a <= 0) continue;
     for (const [kind, ink] of inks.entries()) {
-      const lines = rays.filter((ray) => ray.band === band && ray.kind === kind && meets(r, ray.box)).map((ray) => ray.line);
-      limn(g, lines, data.proj.toPx, { color: ink, alpha: STYLE.rhumbAlpha * a, width: STYLE.rhumbWidth, oneStroke: true, ...data.proj.seam });
+      const mine = rays.filter((ray) => ray.band === band && ray.kind === kind && meets(r, ray.box));
+      for (const fine of new Set(mine.map((ray) => ray.fine))) {
+        const lines = mine.filter((ray) => ray.fine === fine).map((ray) => ray.line);
+        limn(g, lines, data.proj.toPx, { color: ink, alpha: STYLE.rhumbAlpha * a * fine, width: STYLE.rhumbWidth, oneStroke: true, ...data.proj.seam });
+      }
     }
   }
 
@@ -3489,8 +3502,9 @@ function anchorScene(scene, data) {
   return {
     k: data.proj.k, show: scene.show, scaleSprite: scene.scaleSprite, cartouche: scene.cartouche, cartouchePos: scene.cartouchePos, scalePos: scene.scalePos, scaleGap: scene.scaleGap, voyages: scene.voyages, overlays: scene.overlays,
     rays, sheets: scene.sheets, debug: scene.debug,
-    // the lines by band and ink (black, red, green), for a page turn's two networks (bandInk); the pinned rose's lines are band undefined
-    rayBands: [...new Set(rays.map((ray) => ray.band))].map((band) => ({ band, lines: [0, 1, 2].map((kind) => rays.filter((ray) => ray.band === band && ray.kind === kind).map((ray) => ray.line)) })),
+    // the lines by band, finer-wind ink (finerInk) and ink (black, red, green), for a page turn's two networks (bandInk); the pinned rose's lines are band undefined
+    rayBands: [...new Set(rays.map((ray) => ray.band))].flatMap((band) => [...new Set(rays.filter((ray) => ray.band === band).map((ray) => ray.fine))]
+      .map((fine) => ({ band, fine, lines: [0, 1, 2].map((kind) => rays.filter((ray) => ray.band === band && ray.fine === fine && ray.kind === kind).map((ray) => ray.line)) }))),
     bands: scene.bands, turn: scene.turn,
     roses: scene.roseDraws.map(ll), mountains: (scene.mountains ?? []).map(ll),
     towns: [...scene.towns.filter((t) => !t.city), ...(scene.lesser ?? [])].map(ll),
@@ -3587,9 +3601,9 @@ function drawAnchored(g, a, bg, view, layers) {
   const inks = [STYLE.ink, STYLE.windRed, STYLE.windGreen];
   const inkOf = bandInk(a.bands, view.zoom, a.turn);
   const inked = (o, draw) => { const k = inkOf(o.band); if (k <= 0) return; g.globalAlpha = k; draw(); g.globalAlpha = 1; };
-  for (const { band, lines } of show.rhumb ? a.rayBands : []) {
+  for (const { band, fine, lines } of show.rhumb ? a.rayBands : []) {
     const k = inkOf(band);
-    if (k > 0) for (const [kind, ink] of inks.entries()) limn(g, lines[kind], proj.toPx, { color: ink, alpha: STYLE.rhumbAlpha * k, width: STYLE.rhumbWidth, oneStroke: true, ...proj.seam });
+    if (k > 0) for (const [kind, ink] of inks.entries()) limn(g, lines[kind], proj.toPx, { color: ink, alpha: STYLE.rhumbAlpha * k * fine, width: STYLE.rhumbWidth, oneStroke: true, ...proj.seam });
   }
   if (proj.rim) {
     g.beginPath(); g.arc(W / 2, H / 2, proj.rim, 0, 2 * Math.PI);
@@ -3771,11 +3785,13 @@ export async function createScene(environment, opts = {}) {
     const chosen = opts.sprites ? selectSprites(manifests, opts.sprites)
       : legacy ? chooseSprites(manifests, { rendering, rose, monster, town })
       : selectSprites(manifests, defaultSprites(spriteList(manifests)));
-    const all = (list) => Promise.all(list.map(withImage));
+    // in a host that sets skipFailed (the browser) a picture that will not load is left out, with a warning, so one bad file never blanks the map; the next render asks again. Headless runs keep the throw
+    const orSkip = (s) => withImage(s).catch((e) => { if (!env.skipFailed) throw e; console.warn(`${s.pack}/${s.id}: skipped, ${e.message}`); return null; });
+    const all = async (list) => (await Promise.all(list.map(orSkip))).filter(Boolean);
     const picture = scale in SCALE_PICTURES && manifests.vivid.sprites.find((s) => s.id === SCALE_PICTURES[scale]);
     const [roses, monsters, ships, towns, mountains, cartouche, scaleSprite] = await Promise.all([
       all(chosen.roses), all(chosen.monsters), all(chosen.ships), all(chosen.towns), all(show.kinds.has('mountain') ? chosen.mountains : []),
-      chosen.cartouche && withImage(chosen.cartouche), picture && withImage({ ...picture, pack: 'vivid', colour: manifests.vivid.colour ?? 'source' }),
+      chosen.cartouche && orSkip(chosen.cartouche), picture && orSkip({ ...picture, pack: 'vivid', colour: manifests.vivid.colour ?? 'source' }),
     ]);
     return {
       roses: roses.length ? roses : PLAIN.filter((s) => s.kind === 'rose'), cartouche: cartouche || PLAIN.find((s) => s.kind === 'cartouche'),

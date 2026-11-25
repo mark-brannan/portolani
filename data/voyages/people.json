@@ -2924,7 +2924,7 @@
   },
   "dost-mahomet": {
     "name": "Dost Mahomet",
-    "bio": "A Muslim camel driver from Ghazni, one of the handlers who came with the camels bought in India. He went ahead from Menindee with Burke and stayed at the Cooper Creek depot under Brahe.",
+    "bio": "A Muslim camel driver from Ghazni, in Afghanistan, one of the handlers who came with the camels bought in India. He went ahead from Menindee with Burke and stayed at the Cooper Creek depot under Brahe.",
     "sources": ["burke-and-wills-expedition"],
     "view": {
       "lat": -27.6,
@@ -3598,5 +3598,393 @@
       "source": "Wikipedia, Mamiya Rinzō",
       "cite": "mamiya-rinzo"
     }
+  },
+  "iwakura-tomomi": {
+    "view": { "lat": 35.7, "lon": 139.7, "zoom": 5 },
+    "name": "Iwakura Tomomi",
+    "bio": "Ambassador extraordinary and plenipotentiary of the Meiji government's mission to the United States and Europe, 1871–73, which he led with four vice-ambassadors, Ōkubo Toshimichi, Kido Takayoshi, Itō Hirobumi and Yamaguchi Naoyoshi.",
+    "sources": ["iwakura-mission"]
+  },
+  "kume-kunitake": {
+    "view": { "lat": 35.7, "lon": 139.7, "zoom": 5 },
+    "name": "Kume Kunitake",
+    "bio": "Secretary and official chronicler of the Iwakura Mission, who wrote its record.",
+    "sources": ["iwakura-mission"]
+  },
+  "tsuda-ume": {
+    "view": { "lat": 35.7, "lon": 139.7, "zoom": 5 },
+    "name": "Tsuda Ume",
+    "bio": "One of the students who went with the Iwakura Mission, among some fifty-three students and attendants.",
+    "sources": ["iwakura-mission"]
+  },
+  "yamakawa-sutematsu": {
+    "view": { "lat": 35.7, "lon": 139.7, "zoom": 5 },
+    "name": "Yamakawa Sutematsu",
+    "bio": "One of the students who went with the Iwakura Mission, among some fifty-three students and attendants.",
+    "sources": ["iwakura-mission"]
+  },
+  "kosa-pan": {
+    "view": { "lat": 14.35, "lon": 100.57, "zoom": 5 },
+    "name": "Kosa Pan",
+    "bio": "Siamese ambassador sent by King Narai to Louis XIV in 1686, with two other ambassadors. Charles Le Brun painted his portrait, and his fragmentary diary of the embassy was rediscovered in Paris in the 1980s.",
+    "sources": ["siamese-embassy-france-1686", "kosa-pan"]
+  },
+  "guy-tachard": {
+    "view": { "lat": 48.8, "lon": 2.1, "zoom": 5 },
+    "name": "Guy Tachard",
+    "bio": "A Jesuit who went with Kosa Pan's embassy to France in 1686.",
+    "sources": ["siamese-embassy-france-1686"]
+  },
+  "abd-al-razzaq-samarqandi": {
+    "view": { "lat": 25.0, "lon": 66.0, "zoom": 3 },
+    "name": "Abd al-Razzaq Samarqandi",
+    "bio": "Born in Herat in 1413, ambassador of the Timurid ruler Shah Rukh to Kozhikode from January 1442 to January 1445. His account in the Matla-us-Sadain wa Majma-ul-Bahrain is a firsthand description of fifteenth-century south India, Vijayanagara above all.",
+    "sources": ["abd-al-razzaq-samarqandi"]
+  },
+  "periplus-merchants": {
+    "view": { "lat": 18.0, "lon": 50.0, "zoom": 3 },
+    "name": "The merchants of the Periplus",
+    "group": true,
+    "bio": "The Greek and Roman Egyptian traders and shipmasters the Periplus of the Erythraean Sea was written for, sailing from Red Sea ports to the Horn, Arabia and India. Its author is unknown.",
+    "sources": ["periplus-erythraean-sea"]
+  },
+  "diogo-cao": {
+    "view": {
+      "lat": -10.0,
+      "lon": 10.0,
+      "zoom": 3.5
+    },
+    "name": "Diogo Cão",
+    "aka": [
+      "Diogo Cam"
+    ],
+    "bio": "A Portuguese mariner who made two voyages down the west coast of Africa in the 1480s for John II, reaching the Congo River and the coasts of Angola and Namibia, and marking each landfall with a stone pillar, a padrão, carved with the royal arms. How and where he died is not settled: a legend on Martin Behaim's globe puts his death on the African coast in 1486, and a 1525 report of pilots and astronomers puts it near the Serra Parda.",
+    "sources": [
+      "diogo-cao"
+    ]
+  },
+  "kongo-messengers-of-cao": {
+    "view": {
+      "lat": -6.0,
+      "lon": 13.0,
+      "zoom": 4.5
+    },
+    "name": "The four Kongo men Cão took to Lisbon",
+    "group": true,
+    "bio": "Four men of the Kongo kingdom who were visiting Cão's ship at the Congo River in 1482 and were carried off to Portugal when four of his own messengers did not come back; Cão had promised to return them within fifteen moons and took them back on his second voyage. Their names are not in the sources used here.",
+    "sources": [
+      "diogo-cao"
+    ]
+  },
+  "pero-da-covilha": {
+    "view": {
+      "lat": 20.0,
+      "lon": 40.0,
+      "zoom": 2.5
+    },
+    "name": "Pêro da Covilhã",
+    "bio": "A Portuguese agent of John II, fluent in Arabic and Castilian, sent out overland in 1487 with Afonso de Paiva to find where the spices came from and where Prester John lived. He reached India and, by his own later account, Sofala, and wrote home on the sea road round Africa. He reached Ethiopia about 1493, was honoured there, and was never allowed to leave; he was still there when the Portuguese embassy came in 1520, and is last heard of after 1526.",
+    "sources": [
+      "pero-da-covilha"
+    ]
+  },
+  "askia-muhammad": {
+    "view": {
+      "lat": 16.3,
+      "lon": -0.05,
+      "zoom": 3.5
+    },
+    "name": "Askia Muhammad I",
+    "aka": [
+      "Askia the Great",
+      "Muhammad Ture",
+      "Askia al-Hajj Muhammad"
+    ],
+    "bio": "A general of Sunni Ali who in 1493 seized the Songhai throne and founded the Askia dynasty, building the largest empire in West Africa's history, with schools, standard measures and a bureaucracy. He made the hajj to Mecca in the 1490s, came home with the titles al-Hajj and khalifa, and was deposed by his son Musa in 1528.",
+    "sources": [
+      "askia-muhammad"
+    ]
+  },
+  "antonio-manuel-ne-vunda": {
+    "view": {
+      "lat": 41.9,
+      "lon": 12.5,
+      "zoom": 4
+    },
+    "name": "António Manuel Ne Vunda",
+    "aka": [
+      "Antonio Emanuele Ne Vunda",
+      "Antonio Manuel Nsaku Nvunda"
+    ],
+    "bio": "Ambassador of the Kingdom of Kongo to the Holy See, sent by King Álvaro II in 1604, the first African ambassador to the Vatican. He went by Brazil and Spain and reached Rome on 3 January 1608, and died of illness two days later; he is buried in Santa Maria Maggiore.",
+    "sources": [
+      "ne-vunda"
+    ],
+    "death": {
+      "lon": 12.48,
+      "lat": 41.9,
+      "date": "5 January 1608",
+      "place": "Rome",
+      "label": "António Manuel Ne Vunda died in Rome, 5 January 1608",
+      "source": "Emanuele Ne Vunda (Wikipedia)",
+      "cite": "ne-vunda",
+      "text": "Two days after reaching Rome he died of illness; he was buried at Santa Maria Maggiore, where a bust by Francesco Caporale stands.",
+      "confidence": "attested"
+    }
+  },
+  "mungo-park": {
+    "view": {
+      "lat": 13.5,
+      "lon": -6.0,
+      "zoom": 4
+    },
+    "name": "Mungo Park",
+    "bio": "A Scottish surgeon, the first European explorer of the interior of West Africa to reach the Niger and describe it. He went inland from the Gambia in 1795, reached the river at Ségou in 1796 and came home on a slave ship; his Travels of 1799 was a best-seller. He went back in 1805 with a government expedition, built a boat at Sansanding and set off down the Niger, and was never seen alive again.",
+    "sources": [
+      "mungo-park"
+    ],
+    "death": {
+      "lon": 4.5,
+      "lat": 9.9,
+      "date": "1806",
+      "place": "the Bussa rapids, Niger",
+      "label": "Mungo Park drowned at the Bussa rapids, 1806",
+      "source": "Mungo Park (Wikipedia)",
+      "cite": "mungo-park",
+      "text": "Amadi Fatouma, the guide who went downriver with him, told how the boat stuck on a rock at the Bussa rapids, hostile people on the bank attacked, and Park, Lieutenant Martyn and two soldiers sprang into the river and drowned; a slave was the one survivor. Later inquiries by Clapperton and Lander confirmed the story's substance. His remains are believed to lie at Jebba.",
+      "doubt": "The account comes second hand from Amadi Fatouma and a surviving slave; his journal was never found, and the date within 1806 is not given.",
+      "confidence": "inferred"
+    }
+  },
+  "hugh-clapperton": {
+    "view": {
+      "lat": 13.5,
+      "lon": 10.0,
+      "zoom": 4
+    },
+    "name": "Hugh Clapperton",
+    "bio": "A Scottish naval officer who went with Walter Oudney and Dixon Denham from Tripoli to Bornu in 1822–25, then split from Denham to go west to Kano and Sokoto, the first European to see the Hausa states. He went out again in 1825 from the Bight of Benin and died at Sokoto in 1827, his servant Richard Lander the expedition's only survivor.",
+    "sources": [
+      "hugh-clapperton"
+    ]
+  },
+  "dixon-denham": {
+    "view": {
+      "lat": 13.0,
+      "lon": 14.0,
+      "zoom": 4.5
+    },
+    "name": "Dixon Denham",
+    "bio": "An army major who joined Oudney and Clapperton at Murzuk and, with them, was among the first Europeans to see Lake Chad. At Kuka he stayed behind to survey the lake's shores and the rivers that feed it while the others went west.",
+    "sources": [
+      "hugh-clapperton"
+    ]
+  },
+  "walter-oudney": {
+    "view": {
+      "lat": 12.5,
+      "lon": 10.0,
+      "zoom": 4.5
+    },
+    "name": "Walter Oudney",
+    "bio": "A Scottish naval surgeon appointed consul to Bornu who led the expedition from Tripoli with Clapperton and was joined by Denham; he and Clapperton left Denham at Kuka to explore the Niger, and he did not come back.",
+    "sources": [
+      "hugh-clapperton"
+    ],
+    "death": {
+      "lon": 10.35,
+      "lat": 12.28,
+      "date": "1824",
+      "label": "Oudney died near Katagum, 1824",
+      "text": "Oudney died at the village of Murmur, near Katagum on the road to Kano, only a few weeks after he and Clapperton left Denham at Kuka on 14 December 1823. The skull stands at Katagum, on the road; Murmur itself is not placed in the source used, and the year is the one Wikipedia's Katagum article gives.",
+      "confidence": "inferred",
+      "source": "Hugh Clapperton (Wikipedia)",
+      "cite": "hugh-clapperton"
+    }
+  },
+  "rene-caillie": {
+    "view": {
+      "lat": 16.0,
+      "lon": -3.0,
+      "zoom": 3.5
+    },
+    "name": "René Caillié",
+    "bio": "A French explorer, born 19 November 1799, the first European to see Timbuktu and return alive, after Major Gordon Laing was murdered there in 1826. He learned Arabic and the customs of Islam among the Brakna Moors, travelled alone in 1827–28 in the guise of a Muslim, and took the 9,000-franc prize of the Société de Géographie. He died on 17 May 1838.",
+    "sources": [
+      "rene-caillie"
+    ]
+  },
+  "heinrich-barth": {
+    "view": {
+      "lat": 14.0,
+      "lon": 7.0,
+      "zoom": 3.5
+    },
+    "name": "Heinrich Barth",
+    "bio": "A German scholar fluent in Arabic, Fulani, Hausa and Kanuri, who joined James Richardson's British expedition to the central Sudan in 1849. After Richardson died in March 1851 and Adolf Overweg in September 1852 he carried on alone, the first European in Adamawa, and reached Timbuktu in September 1853, where he lodged with Ahmad al-Bakkai al-Kunti. He came back to Tripoli in September 1855 after a journey of 24 degrees of latitude and 20 of longitude, and wrote the history of the Songhay empire from the African scholars he met.",
+    "sources": [
+      "heinrich-barth"
+    ]
+  },
+  "david-livingstone": {
+    "view": {
+      "lat": -15.0,
+      "lon": 28.0,
+      "zoom": 3.5
+    },
+    "name": "David Livingstone",
+    "bio": "A Scottish missionary and explorer, the first European to cross south-central Africa from coast to coast, and to see Victoria Falls, with the help of the Kololo men Sekeletu lent him. He later turned to ending the East African slave trade, and died near Lake Bangweulu in 1873, his body carried to the coast by Susi and Chuma.",
+    "sources": [
+      "david-livingstone"
+    ],
+    "death": {
+      "lon": 30.29,
+      "lat": -12.3,
+      "date": "end of April 1873",
+      "place": "Chitambo's village, near Lake Bangweulu",
+      "label": "David Livingstone died at Chitambo's village, April–May 1873",
+      "source": "Chuma and Susi (Wikipedia)",
+      "cite": "chuma-and-susi",
+      "text": "He was too ill to speak to the chief the next morning, was attended by Majwara and Susi, and died during the night; Susi and Chuma were chosen by the men to lead the caravan. The mark is the Livingstone Memorial on Wikipedia's coordinates, which stand near the village but are not checked against it.",
+      "doubt": "The exact date is given as the end of April, or 1 May, in different accounts, and the village is placed by the memorial.",
+      "confidence": "inferred"
+    }
+  },
+  "sidi-mubarak-bombay": {
+    "view": {
+      "lat": -6.0,
+      "lon": 33.0,
+      "zoom": 4
+    },
+    "name": "Sidi Mubarak Bombay",
+    "aka": [
+      "Mbarak Mombée"
+    ],
+    "bio": "A Yao man born about 1820 near the border of Tanzania and Mozambique, captured as a boy by Swahili slavers and sold at Kilwa, then taken by dhow to Gujarat, where he lived as a slave until his owner died and he returned to Africa. He guided Speke, Burton, Grant, Stanley and Cameron between 1856 and 1876, speaking Hindi with Speke, and was made chief of Stanley's caravan. He died about 1885, in Africa, and was never invited to England.",
+    "sources": [
+      "sidi-mubarak-bombay"
+    ]
+  },
+  "richard-francis-burton": {
+    "view": {
+      "lat": -5.5,
+      "lon": 33.0,
+      "zoom": 4
+    },
+    "name": "Richard Francis Burton",
+    "bio": "A British officer and linguist who led the 1857–58 expedition from the coast to Lake Tanganyika, with Speke second. He wrote of Bombay, the caravan leader, 'The gem of the party, however, is one Sidi Mubarak, who has taken to himself the agnomen of Bombay.'",
+    "sources": [
+      "richard-francis-burton",
+      "sidi-mubarak-bombay"
+    ]
+  },
+  "john-hanning-speke": {
+    "view": {
+      "lat": -3.0,
+      "lon": 33.0,
+      "zoom": 4
+    },
+    "name": "John Hanning Speke",
+    "bio": "An English army officer, 4 May 1827 to 15 September 1864, who on Burton's expedition went on alone from Kazeh to be the first European to reach Lake Victoria, and who argued it was the source of the Nile. He made three expeditions to Africa, and his guides Bombay and Mabruki did much of the work.",
+    "sources": [
+      "john-hanning-speke"
+    ]
+  },
+  "henry-morton-stanley": {
+    "view": {
+      "lat": -5.0,
+      "lon": 25.0,
+      "zoom": 3.5
+    },
+    "name": "Henry Morton Stanley",
+    "bio": "A Welsh-born journalist and explorer who found Livingstone at Ujiji in 1871 and between 1874 and 1877 crossed Central Africa from east to west, exploring Lake Victoria and Lake Tanganyika and following the Lualaba to the Atlantic as the Congo. Three Englishmen and many of his African companions did not come back.",
+    "sources": [
+      "stanley-trans-africa"
+    ]
+  },
+  "kalulu": {
+    "view": {
+      "lat": -5.0,
+      "lon": 18.0,
+      "zoom": 4
+    },
+    "name": "Kalulu",
+    "bio": "An African boy Stanley had taken to England on his earlier trip and had schooled there briefly, who went with him in 1874 as his servant and died with Frank Pocock in the Livingstone Falls on the Congo in 1877.",
+    "sources": [
+      "stanley-trans-africa"
+    ]
+  },
+  "abdullah-susi": {
+    "view": {
+      "lat": -12.0,
+      "lon": 31.0,
+      "zoom": 4
+    },
+    "name": "Susi",
+    "aka": [
+      "David Susi"
+    ],
+    "bio": "A Shupanga man, a riverman on the Zambezi, who joined Livingstone's expedition in 1863 to cut wood, served him again from 1865 and was at his bedside when he died. He and Chuma were chosen by the caravan as its leaders and took his body to the coast, then went to Britain to help edit his Last Journals. He died in 1891.",
+    "sources": [
+      "chuma-and-susi"
+    ]
+  },
+  "james-chuma": {
+    "view": {
+      "lat": -9.0,
+      "lon": 34.0,
+      "zoom": 4
+    },
+    "name": "Chuma",
+    "aka": [
+      "James Chuma",
+      "Juma"
+    ],
+    "bio": "A Yao man born near Lake Nyasa, sold as a boy into slavery and freed by Livingstone, who recruited him at Bombay in 1865. He and Susi led the caravan that carried Livingstone's body to the coast and went to Britain to help edit the Last Journals, which Horace Waller said made them 'actual geographers of no mean attainments'. He died in 1882.",
+    "sources": [
+      "chuma-and-susi"
+    ]
+  },
+  "bantu-speaking-peoples": {
+    "view": {
+      "lat": -5.0,
+      "lon": 22.0,
+      "zoom": 1.5
+    },
+    "name": "The Bantu-speaking peoples",
+    "group": true,
+    "bio": "Speakers of the Proto-Bantu language, who spread from an original nucleus on the highlands between Cameroon and Nigeria across Central, East and Southern Africa between about 4,000 BC and 500 AD, absorbing, displacing and mixing with the hunter-gatherer and herding peoples already there. Whether it was a migration or a long series of smaller dispersals is debated. No name of theirs survives.",
+    "sources": [
+      "bantu-expansion"
+    ]
+  },
+  "makololo": {
+    "view": {
+      "lat": -22.0,
+      "lon": 25.0,
+      "zoom": 2.5
+    },
+    "name": "The Kololo",
+    "aka": [
+      "Makololo"
+    ],
+    "group": true,
+    "bio": "A Sotho-Tswana people of southern Africa, displaced in the early 19th century in the upheavals known as the Mfecane, who under Sebetwane went north through Botswana, crossed the Zambezi at Kazungula, and by 1845 had conquered Barotseland and made their language the Lozi kingdom's. Their kingdom fell in 1864.",
+    "sources": [
+      "kololo-people"
+    ]
+  },
+  "jere-ngoni": {
+    "view": {
+      "lat": -12.0,
+      "lon": 33.0,
+      "zoom": 2.5
+    },
+    "name": "The Jere Ngoni",
+    "group": true,
+    "bio": "The followers of Zwangendaba, an induna of the Ndwandwe who after Zwide's defeat by Shaka about 1819 led them in a migration of some thirty years north from Zululand, across the Zambezi in 1835 to the Ufipa plateau, where he died in the late 1840s. His son M'mbelwa led the largest part to Mzimba in Malawi about 1850.",
+    "sources": [
+      "jere-ngoni-kingdom"
+    ]
   }
 }

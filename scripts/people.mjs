@@ -234,8 +234,9 @@ export const sightPicturesOf = (json) => Object.fromEntries(Object.entries(json 
   .map(([name, list]) => [name, list.filter((im) => im && typeof im.file === 'string')]).filter(([, list]) => list.length));
 
 // The years a voyage's `when` spans, [first, last], negative before Christ: "c. 330–320 BC" [-330, -320]; [NaN, NaN] for none.
+// Numbers under 100 are skipped as days of the month, unless the text says AD: "c. AD 40–70" [40, 70].
 export function voyageYears(when) {
-  const s = String(when ?? '').replace(/(\d),(?=\d{3}\b)/g, '$1'), nums = [...s.matchAll(/\d+/g)].map((m) => Number(m[0])).filter((n) => n >= 100);
+  const s = String(when ?? '').replace(/(\d),(?=\d{3}\b)/g, '$1'), min = /\bAD\b/.test(s) ? 1 : 100, nums = [...s.matchAll(/\d+/g)].map((m) => Number(m[0])).filter((n) => n >= min);
   if (!nums.length) return [NaN, NaN];
   const sign = /\bBCE?\b/.test(s) ? -1 : 1;
   return [sign * nums[0], sign * nums.at(-1)];

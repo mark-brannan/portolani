@@ -1,0 +1,143 @@
+{
+  "id": "kongo-embassy-1604",
+  "title": "António Manuel Ne Vunda's embassy from Kongo to Rome, 1604–1608",
+  "short": "Kongo to Rome",
+  "who": [
+    "antonio-manuel-ne-vunda"
+  ],
+  "when": "1604–1608",
+  "summary": "King Álvaro II of Kongo sent Ne Vunda to Pope Paul V in 1604. He went by way of Brazil and Spain, took more than three years, reached Rome on 3 January 1608, and died two days later. He was the first African ambassador to the Holy See, and a painting of him hangs in the Quirinal beside the Japanese Keichō embassy's. The source names the countries and no ports: the crossing is drawn from the Congo coast to Brazil and on to Spain, the road to Rome straight.",
+  "sources": [
+    "ne-vunda"
+  ],
+  "legs": [
+    {
+      "from": "the Congo mouth",
+      "to": "the coast of Brazil",
+      "dates": "1604",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Emanuele Ne Vunda (Wikipedia): he travelled through Brazil and Spain; ports are not named, so the line leaves from the Kongo coast and arrives at Bahia as the main Brazilian port",
+      "doubt": "Wikipedia names Brazil and Spain and no port; both are drawn at the most likely ones.",
+      "points": [
+        [
+          11.8,
+          -6.3
+        ],
+        [
+          5.0,
+          -9.0
+        ],
+        [
+          -10.0,
+          -11.0
+        ],
+        [
+          -25.0,
+          -13.0
+        ],
+        [
+          -37.4,
+          -13.3
+        ]
+      ]
+    },
+    {
+      "from": "the coast of Brazil",
+      "to": "Spain",
+      "dates": "1605–1607",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Emanuele Ne Vunda (Wikipedia): through Brazil and Spain; the Spanish port is not named and Cádiz is drawn",
+      "points": [
+        [
+          -37.4,
+          -13.3
+        ],
+        [
+          -35.2,
+          -11.0
+        ],
+        [
+          -34.0,
+          -9.0
+        ],
+        [
+          -31.0,
+          -3.0
+        ],
+        [
+          -27.0,
+          5.0
+        ],
+        [
+          -22.0,
+          16.0
+        ],
+        [
+          -14.0,
+          32.0
+        ],
+        [
+          -9.5,
+          35.7
+        ],
+        [
+          -7.5,
+          36.2
+        ],
+        [
+          -6.6,
+          36.4
+        ]
+      ]
+    },
+    {
+      "from": "Spain",
+      "to": "Rome",
+      "dates": "1607–1608",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Emanuele Ne Vunda (Wikipedia): he reached Rome on 3 January 1608; the road from Spain is not recorded and is drawn straight",
+      "points": [
+        [
+          -6.3,
+          36.5
+        ],
+        [
+          -3.7,
+          40.4
+        ],
+        [
+          2.2,
+          41.4
+        ],
+        [
+          8.9,
+          44.4
+        ],
+        [
+          12.48,
+          41.9
+        ]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "landfall",
+      "lon": 12.48,
+      "lat": 41.9,
+      "date": "3 January 1608",
+      "label": "Rome, the first African ambassador to the Holy See",
+      "source": "Emanuele Ne Vunda (Wikipedia)",
+      "cite": "ne-vunda",
+      "text": "He reached Rome after more than three years, the first African ambassador to the Holy See, and died two days later.",
+      "confidence": "attested"
+    }
+  ],
+  "kind": "voyage"
+}

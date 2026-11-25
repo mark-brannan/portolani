@@ -1,0 +1,210 @@
+{
+  "id": "diogo-cao",
+  "title": "Diogo Cão to the Congo and Cape Cross, 1482–1486",
+  "short": "Diogo Cão",
+  "who": [
+    "diogo-cao",
+    "kongo-messengers-of-cao"
+  ],
+  "when": "1482–1486",
+  "summary": "Two voyages for John II of Portugal down the coast south of the equator. On the first, in 1482, Cão reached the mouth of the Congo, went a short way up it, traded with people of the Kongo kingdom, sent four messengers to find their king, and sailed on to Cabo de Santa Maria in Angola; when the messengers did not return he seized four Kongo men who were visiting his ship and took them to Lisbon. On the second, in 1484–86, he took them home, went 170 km up the Congo to the Yellala Falls, and raised pillars at Cabo Negro and Cape Cross, some 1,400 km farther south. Where and how he died is not settled. The run out from Lisbon is drawn as the usual sea road; the source names only the landfalls.",
+  "sources": [
+    "diogo-cao"
+  ],
+  "legs": [
+    {
+      "from": "Lisbon",
+      "to": "the Congo mouth",
+      "dates": "1482",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Diogo Cão (Wikipedia): to São Jorge da Mina for supplies, to the mouth of the Congo in August 1482; the coast between is drawn as the usual sea road, not from a log",
+      "points": [
+        [
+          -9.3,
+          38.6
+        ],
+        [
+          -10.5,
+          35.0
+        ],
+        [
+          -14.0,
+          31.0
+        ],
+        [
+          -19.2,
+          28.5
+        ],
+        [
+          -18.3,
+          24.0
+        ],
+        [
+          -18.3,
+          20.0
+        ],
+        [
+          -18.2,
+          14.8
+        ],
+        [
+          -17.5,
+          11.0
+        ],
+        [
+          -15.5,
+          9.0
+        ],
+        [
+          -14.5,
+          7.0
+        ],
+        [
+          -11.0,
+          4.5
+        ],
+        [
+          -7.5,
+          3.5
+        ],
+        [
+          -3.5,
+          4.0
+        ],
+        [
+          1.5,
+          5.0
+        ],
+        [
+          4.5,
+          4.7
+        ],
+        [
+          6.8,
+          3.3
+        ],
+        [
+          9.0,
+          2.0
+        ],
+        [
+          8.0,
+          -0.6
+        ],
+        [
+          8.8,
+          -2.5
+        ],
+        [
+          10.5,
+          -4.5
+        ],
+        [
+          11.7,
+          -6.2
+        ]
+      ]
+    },
+    {
+      "from": "Congo mouth",
+      "to": "Cabo de Santa Maria, Angola",
+      "dates": "1482–1484",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Diogo Cão (Wikipedia): after the Congo he went south along the coast of present-day Angola to Cabo de Santa Maria, where the second padrão probably marks the end of the first voyage",
+      "points": [
+        [
+          11.7,
+          -6.2
+        ],
+        [
+          11.5,
+          -9.0
+        ],
+        [
+          11.3,
+          -11.5
+        ],
+        [
+          12.45,
+          -13.5
+        ]
+      ]
+    },
+    {
+      "from": "Congo mouth",
+      "to": "Cape Cross, Namibia",
+      "dates": "1484–1486",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Diogo Cão (Wikipedia): on the second voyage he put up padrões at Cabo Negro and at Cape Cross, the last probably the end of his progress south; the coast is drawn between the landfalls",
+      "points": [
+        [
+          11.7,
+          -6.2
+        ],
+        [
+          11.3,
+          -9.5
+        ],
+        [
+          11.0,
+          -13.5
+        ],
+        [
+          11.5,
+          -16.5
+        ],
+        [
+          11.3,
+          -19.0
+        ],
+        [
+          13.85,
+          -21.75
+        ]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "landfall",
+      "lon": 12.3,
+      "lat": -6.1,
+      "date": "August 1482",
+      "label": "The Congo mouth, a padrão on Shark Point",
+      "source": "Diogo Cão (Wikipedia)",
+      "cite": "diogo-cao",
+      "text": "Cão marked the river with a padrão on Shark Point; it stood until the Dutch destroyed it in 1642. He sailed a short way up and began modest trade with people of the Kongo kingdom, who told him their king lived farther inland. The mark stands at the river mouth; the exact point is not checked.",
+      "confidence": "inferred"
+    },
+    {
+      "kind": "event",
+      "lon": 13.54,
+      "lat": -5.73,
+      "date": "1484–1486",
+      "label": "Yellala Falls, the inscription on the cliff",
+      "source": "Diogo Cão (Wikipedia)",
+      "cite": "diogo-cao",
+      "text": "On the second voyage Cão went 170 km up the Congo to the Yellala Falls and had an inscription cut on the cliff above them naming the ships of King John II and Cão, Pedro Anes, Pedro da Costa, Álvaro Pires and Pero Escolar.",
+      "confidence": "attested"
+    },
+    {
+      "kind": "landfall",
+      "lon": 13.95,
+      "lat": -21.77,
+      "date": "1485",
+      "label": "Cape Cross, the last padrão",
+      "source": "Diogo Cão (Wikipedia)",
+      "cite": "diogo-cao",
+      "text": "The Cape Cross pillar, dated 1485 and long in Berlin before it went home to Namibia, probably marks the end of his southward voyage, some 1,400 km beyond the last. His end is not settled: a legend on Behaim's globe puts it on this coast in 1486, but João de Barros has him return to the Congo.",
+      "confidence": "attested",
+      "doubt": "Wikipedia notes his death is 'scanty and contradictory': Behaim's globe says he died on this voyage, de Barros never mentions a death, and a 1525 report puts it near the Serra Parda."
+    }
+  ],
+  "kind": "voyage"
+}
