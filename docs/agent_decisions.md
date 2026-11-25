@@ -705,3 +705,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261125t095042z
 - Mackenzie 1789 start stays 3 June per the Dictionary of Canadian Biography Undo: set the 1789 start to 3 July ([#419](https://github.com/mark-brannan/portolani/pull/419))
+
+### 20261125t095054z
+- De Soto landing stays 30 May 1539 on a University of South Florida page Undo: cut the landing to May 1539 ([#419](https://github.com/mark-brannan/portolani/pull/419))
