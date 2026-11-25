@@ -36,3 +36,5 @@ the hub. `rose-on-lines.jpg` is the two first pages that keep the rule and his l
 |---|---|---|
 | G | the frame moved west, Iberia to Italy; the rose on the Biscay node, the hub bare off Italy | `rose-biscay-node.jpg` |
 | I | D's frame; the rose at the hub at half the size, clear of Calabria | `rose-hub-small.jpg` |
+
+`rose-at-todays-view.jpg` is the same two roses at the view the page serves today (7°E 40.3°N, zoom 5.48), no frame moved: the Biscay node lies above the top edge there, and the small hub rose is in frame.

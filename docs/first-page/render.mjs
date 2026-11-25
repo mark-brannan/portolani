@@ -49,6 +49,8 @@ const node = (i) => { const b = (i * Math.PI) / 8, R = HUB.radius / Math.cos((HU
 const D = { view: { lon: 14.5, lat: 40.3, zoom: S.DEFAULT_VIEW.zoom }, opts: {}, roseScale: 2 };
 Object.assign(VIEWS, {
   'G-rose-biscay-node': { view: { lon: 4.5, lat: 42.3, zoom: S.DEFAULT_VIEW.zoom }, opts: {}, roseScale: 2, roses: [node(13)], label: 'G  the rose on a node of his ring, in the Bay of Biscay; his hub bare off Italy' },
+  'J-today-biscay-node': { view: S.DEFAULT_VIEW, opts: {}, roseScale: 2, roses: [node(13)], label: 'J  the first page as served today (7°E 40.3°N); the rose on the Biscay node' },
+  'K-today-hub-small': { view: S.DEFAULT_VIEW, opts: {}, roseScale: 1, label: 'K  the first page as served today; the rose at the hub at half the size' },
   'I-hub-rose-small': { ...D, roseScale: 1, label: 'I  D with the rose at the hub at half the size' },
 });
 const picked = only.length ? only : Object.keys(VIEWS);
