@@ -711,3 +711,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261125t095105z
 - Unsourced day-dates cut to months; Pinzon to years Undo: restore day-dates with a source ([#419](https://github.com/mark-brannan/portolani/pull/419))
+
+### 20261125t100616z
+- Dulcert's sheet lent the Catalan Atlas rose at its hub and its ship, five placements of mine, for the first-page mockup Undo: drop the lent set from Dulcert's row ([#431](https://github.com/mark-brannan/portolani/pull/431))
