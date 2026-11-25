@@ -14,7 +14,7 @@
 // selection those chose, and are written back in the new form.
 // For a while, `debug=sheets[,rings]` and `tune=name:value,...` carry the under-the-hood section
 // (docs/atlas/under-the-hood.md), off by default.
-import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_STYLES, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, REEF_STYLES, PLAYA_STYLES, PEAK_STYLES, peakInkSvg, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, VOYAGE_PLAY, voyagePlaySeconds, calendarOf, penOn, dayText, vaguer, voyageColours, settleInks, CONFIDENCE_PHRASES, isBroken, legPath, voyageView, CONTINENT_ZOOM_END, readVoyage, chronological, voyageLink, sightMarks, sightHits, drawnMarks, drawnPeaks, peakHits, SIGHT_TILES, noteMarks, pickMark, markClear, tileSpot, groupMarks, dateSpan, readDate, noteCount, drawNoteMark, drawNoteRing, notePulse, drawBadge, fitLineAt, fitLineMoving, drawFitLine, drawMarkGlyph, ZOOM } from './scene.mjs';
+import { createScene, towerGlyph, REGION_LANGS, REGION_SETS, REGION_STYLES, REGION_SAMPLES, drawScene, drawGround, anchorScene, drawAnchored, panView, zoomView, clampView, viewOfFrame, viewProjection, voyageMarks, doubtMarks, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, covers, DEFAULT_VIEW, RENDERINGS, KINDS, DEFAULT_KINDS, LANDS, SCALE_BORDERS, MAX_ZOOM, OVERLAP_RULES, DEFAULT_OVERLAP, RIVER_STYLES, LAKE_STYLES, REEF_STYLES, PLAYA_STYLES, PEAK_STYLES, peakInkSvg, TREE_STYLES, TOWN_SIZES, readManifests, listSprites, defaultSprites, chooseSprites, PROJECTION_NAMES, SCALE_NAMES, parsePlacement, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, W, H, parseTune, parseDebug, TUNE_KNOBS, ROSE_SHARE, SHEET_ROSES, WIDE, VOYAGE_WIDTH, VOYAGE_WIDTHS, VOYAGE_DRAW, voyageDrawSeconds, VOYAGE_PLAY, voyagePlaySeconds, calendarOf, penOn, dayText, vaguer, voyageColours, settleInks, CONFIDENCE_PHRASES, isBroken, legPath, voyageView, CONTINENT_ZOOM_END, readVoyage, chronological, voyageLink, sightMarks, sightHits, drawnMarks, drawnPeaks, peakHits, SIGHT_TILES, noteMarks, pickMark, markClear, tileSpot, groupMarks, dateSpan, readDate, noteCount, drawNoteMark, drawNoteRing, notePulse, NOTE_PULSE_STYLES, drawBadge, fitLineAt, fitLineMoving, drawFitLine, drawMarkGlyph, ZOOM } from './scene.mjs';
 import { playedOn, playDateText, playPace, isLong } from './scene.mjs'; // the play's band and pen (scripts/voyages.mjs)
 import { ORIGINS } from './atlas.mjs';
 import { OVERLAY_DEFAULTS, effectiveOpacity, sheetOpacity, overlayFromHash, overlayToHash, sheetCorners, onSheet, sheetView, sameSheet, drawSheet } from './overlays.mjs';
@@ -1581,6 +1581,8 @@ const seen = new Set(); // the charts shown that have announced their notes sinc
 let pulse = null, pulseFrame = 0; // { ids, all, t0 } while the notes of the charts `ids` announce themselves; `all`, Find's: every point of interest in view
 let layerBase = null, layerPlaced = null; // the canvas as last placed, before this layer, and the view placed then
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+// Mockup (#272): ?pulse=hand|lamp|rhumbs|rings picks the pulse's look; rings, the shipped one, otherwise
+const PULSE_LOOK = NOTE_PULSE_STYLES.find((s) => s === new URLSearchParams(location.search).get('pulse')) ?? 'rings';
 function drawLayer(g, proj, zoom, badges = true, now = performance.now()) {
   const p = pulse && notePulse(now - pulse.t0, reducedMotion());
   g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
@@ -1589,11 +1591,11 @@ function drawLayer(g, proj, zoom, badges = true, now = performance.now()) {
     const kept = notesKept.has(o.id), on = !!p && pulse.ids.has(o.id);
     if (!kept && !on) return;
     for (const m of notesOf(o, i, all, proj)) {
-      if (on && !pulse.all) drawNoteRing(g, m, p.ring, p.alpha); // the pulse is rings alone: no mark sits on the art
+      if (on && !pulse.all) drawNoteRing(g, m, p.ring, p.alpha, PULSE_LOOK, p.n, p.whole); // the pulse is rings alone: no mark sits on the art
       if (kept) drawNoteMark(g, m);
     }
   });
-  if (p && pulse.all) for (const m of [...(zoom >= POI_ZOOM ? sightsHit(proj, FULL) : []), ...regionMarks(proj, FULL), ...laidNotes(proj, FULL)]) drawNoteRing(g, m, p.ring, p.alpha);
+  if (p && pulse.all) for (const m of [...(zoom >= POI_ZOOM ? sightsHit(proj, FULL) : []), ...regionMarks(proj, FULL), ...laidNotes(proj, FULL)]) drawNoteRing(g, m, p.ring, p.alpha, PULSE_LOOK, p.n, p.whole);
   if (badges) for (const { marks, lead } of groupMarks(pointMarks(proj, zoom), cssPx(TAP_REACH))) if (marks.length > 1) drawBadge(g, lead, marks.length);
   g.restore();
 }

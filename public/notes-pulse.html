@@ -1,0 +1,48 @@
+<!doctype html>
+<!-- Mockup (#272): the candidate looks for the notes' pulse, side by side on the Carta Marina at map size, each playing
+     on the shipped timing (4 s, three turns), then resting a second and playing again. The real page takes ?pulse=<look>. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notes pulse: candidates</title>
+<style>
+  body { margin: 0; padding: 16px; background: #1d1913; color: #e9d8b4; font: 16px Georgia, serif; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(440px, 1fr)); gap: 16px; }
+  figure { margin: 0; }
+  figcaption { margin: 4px 0 8px; }
+  canvas { display: block; }
+  a { color: #e9d8b4; }
+</style>
+</head>
+<body>
+<p>The notes' pulse, four candidates on the shipped timing. On the map itself:
+  <a href="./?pulse=hand">hand</a> · <a href="./?pulse=lamp">lamp</a> · <a href="./?pulse=rhumbs">rhumbs</a> · <a href="./?pulse=rings">rings</a>
+  (lay the Carta Marina, then its ring chip or Find).</p>
+<div class="grid" id="grid"></div>
+<script type="module">
+import { drawNoteRing, notePulse, NOTE_PULSE } from './scene.mjs';
+import { CARTA_MARINA_NOTES } from './notes.mjs';
+const X0 = 330, Y0 = 500, CW = 2000, CH = 1400, S = 0.22; // as docs/notes-pulse/strips.mjs
+const FW = Math.round(CW * S), FH = Math.round(CH * S), REST = 1000;
+const LOOKS = [['hand', '(a) A loop drawn with a pen'], ['lamp', '(b) A lamp’s glow'], ['rhumbs', '(c) A rose’s rhumbs: ink, green, red'], ['rings', '(d) The shipped rings']];
+const marks = CARTA_MARINA_NOTES.map((n) => ({ x: (n.at.px[0] - X0) * S, y: (n.at.px[1] - Y0) * S })).filter((m) => m.x > 0 && m.y > 0 && m.x < FW && m.y < FH);
+const scan = new Image(); scan.src = 'packs/overlays/carta-marina.jpg'; await scan.decode();
+const views = LOOKS.map(([look, name]) => {
+  const fig = document.createElement('figure'), c = Object.assign(document.createElement('canvas'), { width: FW, height: FH });
+  fig.append(Object.assign(document.createElement('figcaption'), { textContent: name }), c);
+  document.getElementById('grid').append(fig);
+  return { look, g: c.getContext('2d') };
+});
+const t0 = performance.now();
+(function frame(now) {
+  const p = notePulse((now - t0) % (NOTE_PULSE.ms + REST));
+  for (const { look, g } of views) {
+    g.drawImage(scan, X0 / 2, Y0 / 2, CW / 2, CH / 2, 0, 0, FW, FH);
+    if (p) for (const m of marks) drawNoteRing(g, m, p.ring, p.alpha, look, p.n);
+  }
+  requestAnimationFrame(frame);
+})(t0);
+</script>
+</body>
+</html>

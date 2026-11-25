@@ -32,7 +32,7 @@ test('the pulse is rings alone: no dot or mark is drawn at any moment of it', ()
 
 test('the pulse with reduced motion: one still ring, fading steadily, then nothing', () => {
   const { ms, still } = NOTE_PULSE;
-  assert.deepEqual(notePulse(0, true), { alpha: 1, ring: still });
+  assert.deepEqual(notePulse(0, true), { alpha: 1, ring: still, n: 0, whole: true });
   assert.ok(Math.abs(notePulse(ms / 2, true).alpha - 0.5) < 1e-9);
   assert.equal(notePulse(ms, true), null);
 });
