@@ -34,21 +34,22 @@ const VIEWS = {
   'E-lent-wide': { view: { lon: 11, lat: 39.5, zoom: 5.25 }, opts: {}, roseScale: 2, label: 'E  the same, a wider frame: Gibraltar to Greece' },
   'F-tyrrhenian-z7': { view: { lon: 12.5, lat: 40.2, zoom: 7.0 }, opts: {}, label: 'F  a closer first page: Italy and the Tyrrhenian on a grid sheet (seeded), z7' },
 };
-// D again with the lines left where Dulcert drew them and the rose moved out along one of his rhumbs, off the hub, as the
-// Catalan Atlas sets its own (docs/atlas/centres.md: 0.72 of the radius out on the west line). `rose` is [bearing, degrees
-// of longitude out]; `ships` replaces the lent ships' places, so none sits under the rose.
+// The lent set is one list on Dulcert's row (scripts/atlas.mjs); a view sets its roses and ships in place.
 const { CURATED } = await import(pathToFileURL(join(ROOT, 'scripts/atlas.mjs')).href);
 const HUB = CURATED.find((c) => c.name === DUL), LENT = HUB.ornaments;
 const merc = (lat) => (Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360)) * 180) / Math.PI, unMerc = (y) => (Math.atan(Math.exp((y * Math.PI) / 180)) * 360) / Math.PI - 90;
-const onRhumb = ([bearing, out]) => { const b = (bearing * Math.PI) / 180, t = out / Math.abs(Math.sin(b)); return [HUB.lon + t * Math.sin(b), unMerc(merc(HUB.lat) + t * Math.cos(b))]; };
 const SHIPS = LENT.filter((f) => f.kind === 'ship').map((f) => [f.lon, f.lat]);
-const TYRRHENIAN = [11.9, 39.7]; // where a ship goes when the rose takes its water
-function place(rose, ships) { let i = 0; for (const f of LENT) [f.lon, f.lat] = f.kind === 'rose' ? rose : ships[i++]; }
+const ROSE = LENT.find((f) => f.kind === 'rose'), LENT_SHIPS = LENT.filter((f) => f.kind === 'ship');
+// the lent set for a view: a rose at each place of `roses`, the ships at `ships`
+function place(roses, ships) { LENT.length = 0; LENT.push(...roses.map(([lon, lat]) => ({ ...ROSE, lon, lat })), ...LENT_SHIPS.map((f, i) => ({ ...f, lon: ships[i][0], lat: ships[i][1] }))); }
+// A rose stands only where rhumb lines meet (docs/spec/design.md), and Dulcert's lines meet at his hub and at the
+// sixteen nodes of his ring. `node(i)` is the i-th, clockwise from north; of them the Bay of Biscay's (13), the Levant's (5)
+// and the Baltic's (0) fall in the sea.
+const node = (i) => { const b = (i * Math.PI) / 8, R = HUB.radius / Math.cos((HUB.lat * Math.PI) / 180); return [HUB.lon + R * Math.sin(b), unMerc(merc(HUB.lat) + R * Math.cos(b))]; };
 const D = { view: { lon: 14.5, lat: 40.3, zoom: S.DEFAULT_VIEW.zoom }, opts: {}, roseScale: 2 };
 Object.assign(VIEWS, {
-  'D1-rose-ionian': { ...D, rose: [135, 4.3], ships: SHIPS.map((s, i) => (i === 2 ? TYRRHENIAN : s)), label: 'D1  his lines where he drew them; the rose out on the south-east rhumb, in the Ionian' },
-  'D2-rose-west-basin': { ...D, rose: [270, 8.3], ships: SHIPS.map((s, i) => (i === 0 ? TYRRHENIAN : s)), label: 'D2  the rose out on the west rhumb, between Minorca and Sardinia' },
-  'D3-rose-tyrrhenian': { ...D, rose: [270, 2.6], label: 'D3  the rose a short way out on the west rhumb, in the Tyrrhenian' },
+  'G-rose-biscay-node': { view: { lon: 4.5, lat: 42.3, zoom: S.DEFAULT_VIEW.zoom }, opts: {}, roseScale: 2, roses: [node(13)], label: 'G  the rose on a node of his ring, in the Bay of Biscay; his hub bare off Italy' },
+  'I-hub-rose-small': { ...D, roseScale: 1, label: 'I  D with the rose at the hub at half the size' },
 });
 const picked = only.length ? only : Object.keys(VIEWS);
 const done = [];
@@ -56,7 +57,7 @@ for (const name of picked) {
   const v = VIEWS[name];
   const t = performance.now();
   S.ROSE_CAP.big = v.cap ?? 0.05;
-  place(v.rose ? onRhumb(v.rose) : [HUB.lon, HUB.lat], v.ships ?? SHIPS);
+  place(v.roses ?? [[HUB.lon, HUB.lat]], v.ships ?? SHIPS);
   const { scene, data, bg } = await S.createScene(env, { view: v.view, ...PAGE, ...v.opts });
   if (v.bare) { scene.roseDraws = scene.roseDraws.filter((r) => r.sheet !== DUL); scene.ships = scene.ships.filter((r) => r.sheet !== DUL); scene.monsters = scene.monsters.filter((r) => r.sheet !== DUL); }
   if (v.roseScale) for (const r of scene.roseDraws) if (r.sheet === DUL) { r.size *= v.roseScale; r.sprite = { ...r.sprite, sizePx: r.sprite.sizePx * v.roseScale }; }

@@ -24,18 +24,15 @@ Dulcert's, this one is the Catalan Atlas's. The rose in these renders is drawn a
 
 `hub-centred.jpg`, `wide.jpg` and `default-frame.jpg` are D, E and C at full size.
 
-## D with the rose moved
+## The rose where his lines meet
 
-At the hub the rose covers Calabria. The lines are Dulcert's: their meeting point is read off his scan
-([centres.md](../atlas/centres.md), 14.5°E 40.0°N, ±1.5°), so they stay. The rose is lent, and the chart it is
-lent from does not set it on its own centre: the Catalan Atlas's rose sits 0.72 of the radius out on the west
-line. So the rose moves out along one of Dulcert's rhumbs into open sea, and his lines still meet at a bare
-point, as he drew them. `rose-moved.jpg` is three places for it, D's frame unchanged:
+A rose stands only where rhumb lines meet ([the spec](../spec/design.md), "A rose sits where rhumb lines meet").
+Dulcert's lines meet at his hub, off Calabria, and at the sixteen nodes of his ring, 17 degrees out
+([centres.md](../atlas/centres.md)); three of the sixteen fall in the sea, in the Bay of Biscay, off the Levant
+and in the Baltic. None of them is inside D's frame, so on his own lines a frame on Italy holds a rose only at
+the hub. `rose-on-lines.jpg` is the two first pages that keep the rule and his lines:
 
-| | the rose | file |
+| | first page | file |
 |---|---|---|
-| D1 | on the south-east rhumb, in the Ionian | `rose-ionian.jpg` |
-| D2 | on the west rhumb, between Minorca and Sardinia | `rose-west-basin.jpg` |
-| D3 | a short way out on the west rhumb, in the Tyrrhenian | `rose-tyrrhenian.jpg` |
-
-A lent ship that stood where the rose now stands moves to the Tyrrhenian.
+| G | the frame moved west, Iberia to Italy; the rose on the Biscay node, the hub bare off Italy | `rose-biscay-node.jpg` |
+| I | D's frame; the rose at the hub at half the size, clear of Calabria | `rose-hub-small.jpg` |
