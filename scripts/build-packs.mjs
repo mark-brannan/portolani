@@ -463,7 +463,7 @@ function buildSprite(sprite, colour, key, outDir, tmp) {
   // scan's paper reads as white under `multiply` and only the inks and washes carry tone.
   let rgb = ['-size', `${w}x${h}`, 'xc:black'];
   if (colour === 'source') {
-    const paper = sprite.paper ?? magick(t('crop'), '(', alpha, '-negate', '-threshold', '96%', ')', '-alpha', 'off',
+    const paper = sprite.paper ?? magick(t('crop'), '(', trimmed, '-negate', '-threshold', '96%', ')', '-alpha', 'off',
       '-compose', 'CopyOpacity', '-composite', '-scale', '1x1!', '-alpha', 'off', '-format', '%[pixel:p{0,0}]', 'info:');
     magick(t('crop'), '(', '-size', `${w}x${h}`, `xc:${paper}`, ')', '-compose', 'DivideDst', '-composite', t('rgb'));
     rgb = [t('rgb')];

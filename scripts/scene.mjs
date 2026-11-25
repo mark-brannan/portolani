@@ -2130,7 +2130,8 @@ function indexOf(data) {
 }
 
 // A sheet's width in windows at `zoom`. A band's sheets are one to two windows wide; the world band's may be far narrower.
-const sheetWindows = (sh, zoom) => (zoom == null ? Infinity : (sh.extent.east - sh.extent.west) / (WINDOW_DEG / 2 ** zoom));
+// A grid sheet is measured by its band's width, whatever it is clipped to at the date line; a curated or world sheet by its extent.
+const sheetWindows = (sh, zoom) => (zoom == null ? Infinity : (sh.curated || sh.band === WORLD_BAND.band ? sh.extent.east - sh.extent.west : ATLAS_BANDS.find((b) => b.band === sh.band).width) / (WINDOW_DEG / 2 ** zoom));
 // The ink of a ray of `kind` (0 a wind) from a sheet `across` windows wide, 0 to 1: a sheet seen narrower than a window
 // (a curated chart in the world band) packs its ring and every line from it onto less of the page, so its half and quarter winds fade out between one window wide and half of one. The eight winds always stay.
 const FINER = [0.5, 1];
