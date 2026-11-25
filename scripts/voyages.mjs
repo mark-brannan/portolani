@@ -395,9 +395,19 @@ export function voyageLink(v, sources = {}) {
 // The day number of y-m-d on the proleptic Gregorian calendar (days since 1970-01-01); y astronomical (1 BC is 0), m from 0,
 // and a month or a day past its end runs on into the next
 export function dayOf(y, m = 0, d = 1) {
-  const t = new Date(0);
-  t.setUTCFullYear(y, m, d);
-  return Math.round(t.getTime() / 864e5);
+  y += Math.floor(m / 12); m = ((m % 12) + 12) % 12; // by arithmetic, not Date, whose years stop at 271,821 BC
+  const yy = m < 2 ? y - 1 : y, era = Math.floor(yy / 400), yoe = yy - era * 400;
+  const doy = Math.floor((153 * (m < 2 ? m + 10 : m - 2) + 2) / 5);
+  const doe = yoe * 365 + Math.floor(yoe / 4) - Math.floor(yoe / 100) + doy;
+  return era * 146097 + doe - 719468 + d - 1;
+}
+// The inverse: a day number as { y, m, d }, y astronomical, m from 0, d from 1
+function civilOf(day) {
+  const z = Math.floor(day) + 719468, era = Math.floor(z / 146097), doe = z - era * 146097;
+  const yoe = Math.floor((doe - Math.floor(doe / 1460) + Math.floor(doe / 36524) - Math.floor(doe / 146096)) / 365);
+  const doy = doe - (365 * yoe + Math.floor(yoe / 4) - Math.floor(yoe / 100)), mp = Math.floor((5 * doy + 2) / 153);
+  const m = mp < 10 ? mp + 2 : mp - 10;
+  return { y: yoe + era * 400 + (m < 2 ? 1 : 0), m, d: doy - Math.floor((153 * mp + 2) / 5) + 1 };
 }
 const MONTH_KEYS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 const SEASON_MONTH = { spring: 2, summer: 5, autumn: 8, fall: 8, winter: 11 }; // the month each starts, three months long
@@ -408,6 +418,7 @@ function dateEnd(text) {
   if (century) out.century = Number(century[1]);
   const era = /\b(bce?|ad|ce)\b/.exec(t);
   if (era) out.bc = era[1].startsWith('b');
+  if (/\bago\b/.test(t)) out.ago = true; // "65,000 years ago": counted back from 1950, the radiocarbon "present"
   const month = /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b/.exec(t);
   if (month) out.m = MONTH_KEYS.indexOf(month[1]);
   const season = /\b(spring|summer|autumn|fall|winter)\b/.exec(t);
@@ -416,7 +427,7 @@ function dateEnd(text) {
   if (part) out.part = part[1];
   if (/\bchristmas\b/.test(t)) { out.m = 11; out.d = 25; }
   if (/\bafter\b/.test(t)) out.after = true;
-  for (const [n] of t.matchAll(/\b\d{1,4}\b/g)) {
+  for (const [n] of t.matchAll(/\b\d+\b/g)) {
     if (n.length >= 3) out.y = Number(n);
     else out.small = Number(n); // a day, or a year cut to two digits ("1165-66"), as the other end tells
   }
@@ -426,7 +437,7 @@ function dateEnd(text) {
 function endSpan(e) {
   if (e.century) { const y0 = (e.century - 1) * 100 + 1; return [dayOf(y0), dayOf(y0 + 100)]; }
   if (e.y == null) return null;
-  const y = e.bc ? 1 - e.y : e.y;
+  const y = e.ago ? 1950 - e.y : e.bc ? 1 - e.y : e.y;
   let span;
   if (e.m != null && e.d != null) span = [dayOf(y, e.m, e.d), dayOf(y, e.m, e.d + 1)];
   else if (e.m != null) span = e.part === 'early' ? [dayOf(y, e.m, 1), dayOf(y, e.m, 11)] : e.part === 'mid' ? [dayOf(y, e.m, 11), dayOf(y, e.m, 21)]
@@ -444,7 +455,7 @@ const precisionOf = (e) => (e.century ? 'century' : e.m != null && e.d != null ?
 // A date's words read as its two ends: { start, end }, each { span: [first day, the day after the last], precision },
 // or null when neither names a year. One date is both ends; a range splits at its dash, "to", "or" or "and".
 export function readDates(text) {
-  const t = String(text ?? '').replace(/\([^)]*\)/g, ' ').replace(/\bc\.\s*/gi, ' ').replace(/[?,]/g, ' ').trim();
+  const t = String(text ?? '').replace(/(?<=\d),(?=\d{3}\b)/g, '').replace(/\([^)]*\)/g, ' ').replace(/\bc\.\s*/gi, ' ').replace(/[?,]/g, ' ').trim();
   const cut = /\s+[–—-]\s+|[–—]|(?<=\w)-(?=\w)|\s+(?:to|or|and)\s+/.exec(t);
   const a = dateEnd(cut ? t.slice(0, cut.index) : t), b = cut ? dateEnd(t.slice(cut.index + cut[0].length)) : a;
   if (cut) {
@@ -456,7 +467,8 @@ export function readDates(text) {
     if (a.d != null && a.m == null) a.m = b.m;
     if (a.y == null && a.century == null) { a.y = b.y; a.century = b.century; }
     if (a.bc == null) a.bc = b.bc;
-    if (b.y == null && b.century == null) { b.y = a.y; b.bc ??= a.bc; } // "1324, to July": the year from the start
+    if (a.ago == null) a.ago = b.ago;
+    if (b.y == null && b.century == null) { b.y = a.y; b.bc ??= a.bc; b.ago ??= a.ago; } // "1324, to July": the year from the start
   } else if (a.small != null && a.m != null && a.d == null) a.d = a.small;
   const s = endSpan(a), e = endSpan(b);
   if (!s && !e) return null;
@@ -464,7 +476,7 @@ export function readDates(text) {
   return { start: end(s, a), end: end(e, b) };
 }
 // One of a leg's ISO `start` or `end` ("1519-11-29", "-0324-12", "1519~"), as an end; null when it does not read
-export const ISO_DATE = /^(-?\d{1,4})(?:-(0[1-9]|1[0-2])(?:-(0[1-9]|[12]\d|3[01]))?)?[~?]?$/;
+export const ISO_DATE = /^(-?\d{1,7})(?:-(0[1-9]|1[0-2])(?:-(0[1-9]|[12]\d|3[01]))?)?[~?]?$/;
 function isoEnd(text) {
   const m = ISO_DATE.exec(String(text ?? ''));
   if (!m) return null;
@@ -642,11 +654,11 @@ export function playedOn(voyage, cal, day) {
 // A day as the band writes it, at a precision: "20 Jun 1520", "Jun 1520", "1520", "325 BC", "c. 1250"
 const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 export function dayText(day, precision = 'day') {
-  const t = new Date(Math.floor(day) * 864e5), y = t.getUTCFullYear(), year = y < 1 ? `${1 - y} BC` : String(y);
+  const { y, m, d } = civilOf(day), year = y < 1 ? `${1 - y} BC` : String(y);
   if (precision === 'century') return `c. ${year}`;
   if (precision === 'year') return year;
-  if (precision === 'month') return `${MONTH_SHORT[t.getUTCMonth()]} ${year}`;
-  return `${t.getUTCDate()} ${MONTH_SHORT[t.getUTCMonth()]} ${year}`;
+  if (precision === 'month') return `${MONTH_SHORT[m]} ${year}`;
+  return `${d} ${MONTH_SHORT[m]} ${year}`;
 }
 // The band's time scale. A calendar longer than LONG_YEARS is told in years: its date "c. 1210 BC", rounded to a step
 // that keeps the number legible as it runs (10 years past 200, 50 past 1,000), and its pace "about 80 years a second".
@@ -657,7 +669,7 @@ export const isLong = (cal) => yearsOf(cal) > LONG_YEARS;
 export function playDateText(cal, day, precision = 'day') {
   if (!isLong(cal)) return dayText(day, precision);
   const span = yearsOf(cal), step = span > 1000 ? 50 : span > 200 ? 10 : 1;
-  const y = new Date(Math.floor(day) * 864e5).getUTCFullYear(), bc = y < 1, n = Math.max(1, Math.round((bc ? 1 - y : y) / step) * step);
+  const y = civilOf(day).y, bc = y < 1, n = Math.max(1, Math.round((bc ? 1 - y : y) / step) * step);
   return `c. ${n}${bc ? ' BC' : ''}`;
 }
 export function playPace(cal, seconds) {

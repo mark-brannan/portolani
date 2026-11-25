@@ -23,6 +23,9 @@ test('a leg\'s date words read as two ends, each as precise as the words', () =>
     ['1502 or 1503', ['1502', '1503']],
     ['13th–14th century', ['c. 1201', 'c. 1400']],
     ['Christmas 1254', ['25 Dec 1254', '25 Dec 1254']],
+    ['c. 63,000–48,000 BC', ['63000 BC', '48000 BC']],
+    ['c. 65,000–50,000 years ago', ['63051 BC', '48051 BC']],
+    ['c. 1,000,000–700,000 years ago', ['998051 BC', '698051 BC']],
   ]) assert.deepEqual(ends(text), want, text);
   assert.equal(readDates('winter 1332–33').start.span[0], dayOf(1332, 11), 'a winter starts in December');
   assert.equal(readDates('early 1327').start.span[1], dayOf(1327, 4), 'early is the first third of the year');
@@ -133,4 +136,12 @@ test('a link\'s voyageplay= is the seconds a play takes, 3 to 30; any other valu
   for (const [text, s] of [[null, 9], ['', 9], ['3', 3], ['12', 12], ['30', 30], ['2', 9], ['31', 9], ['9.5', 9], ['slow', 9]]) {
     assert.equal(voyagePlaySeconds(text), s, `voyageplay=${text}`);
   }
+});
+
+test('deep-time voyages play in date order: the Wallacea crossing, then the peopling of Sahul, then a later one', async () => {
+  const day = async (id) => calendarOf(await readVoyage(id, readJSON)).t0;
+  const americas = calendarOf({ id: 'x', kind: 'migration', legs: [{ from: 'a', to: 'b', dates: 'c. 23,000–15,000 years ago', points: [[0, 0], [1, 1]] }] });
+  assert.ok(await day('wallacea-crossing') < await day('sahul-peopling'), '1,000,000 years ago comes before 65,000');
+  assert.ok(await day('sahul-peopling') < americas.t0, '65,000 years ago comes before 23,000');
+  assert.equal(legDates({ start: '-63000', end: '-48000' }).start.precision, 'year', 'an ISO year of five digits reads');
 });
