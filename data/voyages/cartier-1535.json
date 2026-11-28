@@ -1,0 +1,173 @@
+{
+  "id": "cartier-1535",
+  "title": "Cartier to Hochelaga, with a winter at Stadacona, 1535–36",
+  "short": "Cartier, 1535",
+  "who": [
+    "jacques-cartier",
+    "taignoagny",
+    "domagaya",
+    "donnacona"
+  ],
+  "when": "1535–1536",
+  "summary": "With Taignoagny and Domagaya as guides, Cartier took three ships up the St Lawrence to Stadacona, and went on by pinnace to Hochelaga, a palisaded Iroquoian town under a mountain he named Mont Royal. He wintered at Stadacona; scurvy killed some twenty-five of his men until the Stadaconans gave them a cure. In May 1536 he took Donnacona and nine others to France by a trick.",
+  "sources": [
+    "wp-jacques-cartier",
+    "wp-donnacona",
+    "dcb-cartier",
+    "wp-hochelaga"
+  ],
+  "legs": [
+    {
+      "from": "Saint-Malo",
+      "to": "the Gulf of St Lawrence",
+      "dates": "19 May – Aug 1535",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Jacques Cartier (Wikipedia)",
+      "points": [
+        [-2.3, 48.85],
+        [-3.6, 49.25],
+        [-6.5, 49.5],
+        [-12, 49.8],
+        [-30, 50.0],
+        [-50, 50.8],
+        [-55.0, 51.8],
+        [-55.7, 51.78],
+        [-56.4, 51.62],
+        [-58.5, 50.2],
+        [-61.0, 48.6]
+      ]
+    },
+    {
+      "from": "the Gulf of St Lawrence",
+      "to": "Stadacona",
+      "dates": "Aug – Sep 1535",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Cartier's account, up the river; the ships went by water",
+      "note": "drawn as a track up the river",
+      "points": [
+        [-61.0, 48.6],
+        [-64.0, 49.3],
+        [-67.0, 49.2],
+        [-69.5, 47.9],
+        [-71.2, 46.8]
+      ]
+    },
+    {
+      "from": "Stadacona",
+      "to": "Hochelaga",
+      "dates": "19 Sep – 2 Oct 1535",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Cartier's account: by pinnace and longboats up the river",
+      "points": [
+        [-71.2, 46.8],
+        [-72.5, 46.3],
+        [-73.55, 45.52]
+      ]
+    },
+    {
+      "from": "Hochelaga",
+      "to": "Stadacona",
+      "dates": "4 – 11 Oct 1535",
+      "start": "1535-10-04",
+      "end": "1535-10-11",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Jacques Cartier (Wikipedia): after two days among the people of Hochelaga he returned to Stadacona on 11 October",
+      "note": "the start is the arrival, 2 October, and the two days among the people of Hochelaga; the way is the river, as going up",
+      "points": [
+        [-73.55, 45.52],
+        [-72.5, 46.3],
+        [-71.2, 46.8]
+      ]
+    },
+    {
+      "from": "Stadacona",
+      "to": "the Gulf of St Lawrence",
+      "dates": "6 May – Jun 1536",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Jacques Cartier (Wikipedia); Dictionary of Canadian Biography: left Sainte-Croix, at Stadacona, with Donnacona on 6 May, at Saint-Malo 16 July",
+      "note": "the river part runs to the Gulf; the rest is the crossing",
+      "points": [
+        [-71.2, 46.8],
+        [-69.5, 47.9],
+        [-67.0, 49.2],
+        [-64.0, 49.3],
+        [-61.0, 48.6]
+      ]
+    },
+    {
+      "from": "the Gulf of St Lawrence",
+      "to": "Saint-Malo",
+      "dates": "Jun – 16 Jul 1536",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Jacques Cartier (Wikipedia); Dictionary of Canadian Biography",
+      "doubt": "The Jacques Cartier article and the Dictionary of Canadian Biography put the return to Saint-Malo on 16 July; the Donnacona article gives 15 July.",
+      "points": [
+        [-61.0, 48.6],
+        [-58.5, 50.2],
+        [-56.4, 51.62],
+        [-55.7, 51.78],
+        [-55.0, 51.8],
+        [-50, 50.8],
+        [-30, 50.0],
+        [-12, 49.8],
+        [-6.5, 49.5],
+        [-3.6, 49.25],
+        [-2.3, 48.85]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": -71.2,
+      "lat": 46.8,
+      "date": "Sep 1535",
+      "label": "Stadacona: Donnacona's town",
+      "source": "Jacques Cartier (Wikipedia)",
+      "cite": "wp-donnacona",
+      "text": "Cartier and his ships were welcomed by Donnacona, who did not want him to go on to Hochelaga, a rival and trading town. Taignoagny and Domagaya were by then unwilling guides."
+    },
+    {
+      "kind": "event",
+      "lon": -73.55,
+      "lat": 45.52,
+      "date": "2–3 Oct 1535",
+      "label": "Hochelaga, and the mountain",
+      "source": "Hochelaga (village) (Wikipedia); Dictionary of Canadian Biography",
+      "cite": "wp-hochelaga",
+      "text": "A round town of some fifty houses, most of them longhouses, enclosed by a palisade three ranks deep. Cartier read the people the Gospel of John and the Passion, and named the mountain above the town Mont Royal. When he came back in 1541 he made no mention of the town, and where it stood is still not known."
+    },
+    {
+      "kind": "event",
+      "lon": -71.2,
+      "lat": 46.8,
+      "date": "Winter 1535–36",
+      "label": "Scurvy, and annedda",
+      "source": "Jacques Cartier (Wikipedia)",
+      "cite": "wp-jacques-cartier",
+      "text": "Some twenty-five of about a hundred and ten men died. Domagaya, who had been ill with it himself, showed the French a drink made from the bark and leaves of a tree called annedda, and the rest recovered. Which tree it was is not known; white cedar is the usual guess."
+    },
+    {
+      "kind": "event",
+      "lon": -71.2,
+      "lat": 46.8,
+      "date": "3 May 1536",
+      "label": "Donnacona and nine others taken",
+      "source": "Donnacona (Wikipedia); Dictionary of Canadian Biography: seized at the feast of 3 May",
+      "cite": "wp-donnacona",
+      "text": "Cartier invited Donnacona, Taignoagny, Domagaya and seven others to a feast at the fort, and sailed with them. He told the people Donnacona would be back within a year or so. The ten were presented at court; Donnacona died in France about 1539, and by 1541 all but a girl were dead."
+    }
+  ]
+}

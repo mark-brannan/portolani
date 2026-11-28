@@ -1,0 +1,82 @@
+{
+  "id": "orellana-1541-42",
+  "title": "Orellana down the Napo and the Amazon, 1541–42",
+  "short": "Orellana",
+  "who": [
+    "francisco-de-orellana"
+  ],
+  "when": "1541–1542",
+  "summary": "Gonzalo Pizarro's expedition left Quito in early 1541 for the cinnamon country and starved in the forest. In December Orellana went ahead down the Coca and Napo rivers with some fifty men to look for food, built a brigantine, and as the current carried them could not return. They followed the Amazon to the Atlantic, arriving in August 1542, and sailed on to the island of Cubagua. Gaspar de Carvajal, a Dominican on the voyage, wrote an account in which women warriors attacked them, whence the river's name.",
+  "sources": [
+    "wp-orellana",
+    "wp-carvajal"
+  ],
+  "legs": [
+    {
+      "from": "Quito",
+      "to": "the Amazon",
+      "dates": "Feb 1541 – Feb 1542",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Francisco de Orellana (Wikipedia): east over the Andes to the Coca and Napo",
+      "points": [
+        [-78.5, -0.2],
+        [-77, -0.5],
+        [-75.6, -1.8],
+        [-73.4, -3.4]
+      ]
+    },
+    {
+      "from": "the Napo mouth",
+      "to": "the Atlantic",
+      "dates": "Feb – 26 Aug 1542",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Francisco de Orellana (Wikipedia): the whole length of the Amazon",
+      "note": "the river's course is drawn as a track; the party travelled in two boats",
+      "points": [
+        [-73.4, -3.4],
+        [-64.7, -3.35],
+        [-60, -3.1],
+        [-55.5, -1.9],
+        [-51.6, -1.4],
+        [-50.4, 0]
+      ]
+    },
+    {
+      "from": "the mouth of the Amazon",
+      "to": "Cubagua",
+      "dates": "26 Aug – 11 Sep 1542",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Francisco de Orellana (Wikipedia): the two boats sailed along the coast to Cubagua",
+      "points": [
+        [-49.2, 1.6],
+        [-50.4, 5.5],
+        [-55.0, 7.2],
+        [-59.5, 9.0],
+        [-59.6, 11.6],
+        [-61.8, 11.8],
+        [-63.2, 11.6],
+        [-63.7, 11.0]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": -57,
+      "lat": -2.2,
+      "date": "24 Jun 1542",
+      "label": "The women warriors",
+      "confidence": "speculative",
+      "source": "Francisco de Orellana (Wikipedia); Gaspar de Carvajal (Wikipedia)",
+      "cite": "wp-orellana",
+      "doubt": "Carvajal's chronicle says women led the fighting, and compared them to the Amazons of Greek myth. Later historians think he meant women fighting beside the men, or a classical tale reapplied; his account is the only one.",
+      "text": "Near the mouth of the Trombetas the party fought a people whose women, Carvajal says, fought in front of the men. Orellana called it the river of the Amazons."
+    }
+  ]
+}

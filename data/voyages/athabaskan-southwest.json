@@ -1,0 +1,56 @@
+{
+  "id": "athabaskan-southwest",
+  "kind": "migration",
+  "title": "The Apacheans to the Southwest, c. AD 1000–1500",
+  "short": "Apachean migration",
+  "who": ["southern-athabaskan-ancestors"],
+  "when": "c. AD 1000–1500",
+  "summary": "The Apache and Navajo speak Southern Athabaskan languages, whose relatives lie far to the north in Canada and Alaska. Their ancestors came south, probably along the Plains or the Rockies, and reached the Southwest by about 1500. The date and the road are among the oldest arguments in the region's archaeology.",
+  "sources": ["wp-apache", "wp-navajo"],
+  "legs": [
+    {
+      "from": "the northern interior",
+      "to": "the Southwest",
+      "dates": "c. AD 1000–1500",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "speculative",
+      "source": "Apache (Wikipedia) and Navajo (Wikipedia): a migration from the north, the date and route argued",
+      "doubt": "Whether they came down the Plains, the Rockies or the Great Basin, and whether before 1300 or only about 1500, is argued; the line is one of the proposed ways.",
+      "reach": [0, 1],
+      "heads": "end",
+      "points": [
+        [-112, 57],
+        [-111.5, 52],
+        [-110.5, 47],
+        [-108.5, 42],
+        [-105.5, 38.5],
+        [-107.5, 36.2]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "waypoint",
+      "lon": -112,
+      "lat": 57,
+      "date": "before AD 1000",
+      "label": "The northern homeland",
+      "confidence": "speculative",
+      "source": "Apache (Wikipedia)",
+      "cite": "wp-apache",
+      "text": "The Athabaskan languages have most of their speakers in the north-west interior of Canada and in Alaska, which is why their homeland is looked for there."
+    },
+    {
+      "kind": "waypoint",
+      "lon": -107.5,
+      "lat": 36.2,
+      "date": "by c. AD 1500",
+      "label": "Dinétah and the Southwest",
+      "confidence": "inferred",
+      "source": "Navajo (Wikipedia); Apache (Wikipedia)",
+      "cite": "wp-navajo",
+      "text": "The Navajo homeland, Dinétah, lies in north-west New Mexico. In April 1541 Coronado's men met people on the plains they called Querechos, possibly Plains Apache. The Navajo took over much of the pueblo way of life."
+    }
+  ]
+}

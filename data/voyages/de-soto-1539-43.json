@@ -1,0 +1,145 @@
+{
+  "id": "de-soto-1539-43",
+  "title": "De Soto through the South-East to the Mississippi, 1539–43",
+  "short": "De Soto",
+  "who": ["hernando-de-soto"],
+  "when": "1539–1543",
+  "summary": "De Soto landed on the Gulf coast of Florida with some 600 men, 200 horses and a herd of pigs, and spent three years going north-east through the Apalachee and Cofitachequi country, west across the Appalachians and the Mississippi, and on into Arkansas. He was seeking gold and found none; he took people as porters and guides and left disease behind. He died on the Mississippi, and the survivors went down the river in boats and on to Pánuco. Moscoso's march west into Texas in 1542–43 is left off the map.",
+  "sources": ["wp-de-soto", "usf-de-soto-landing"],
+  "legs": [
+    {
+      "from": "Havana",
+      "to": "Tampa Bay",
+      "dates": "May – 30 May 1539",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Hernando de Soto (Wikipedia); Florida Center for Instructional Technology (University of South Florida): landed 30 May 1539",
+      "doubt": "The landing is put at Tampa Bay or Charlotte Harbor by different readers.",
+      "points": [
+        [-82.4, 23.3],
+        [-83.5, 25.5],
+        [-83.2, 27.3]
+      ]
+    },
+    {
+      "from": "Tampa Bay",
+      "to": "Anhaica",
+      "dates": "Jun – Oct 1539",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Hernando de Soto (Wikipedia): north to the Apalachee, winter near Tallahassee",
+      "points": [
+        [-82.6, 27.8],
+        [-82.4, 29.5],
+        [-84.25, 30.45]
+      ]
+    },
+    {
+      "from": "Anhaica",
+      "to": "Mabila",
+      "dates": "Mar – Oct 1540",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Hernando de Soto (Wikipedia): north-east to Cofitachequi, west over the mountains, then Mabila",
+      "doubt": "The line is the commonly drawn route; the towns and the Mabila battle site are not firmly located.",
+      "points": [
+        [-84.25, 30.45],
+        [-83, 32],
+        [-80.5, 33.9],
+        [-83, 35],
+        [-85.5, 34.5],
+        [-87.5, 31.9]
+      ]
+    },
+    {
+      "from": "Mabila",
+      "to": "the Mississippi",
+      "dates": "Oct 1540 – May 1541",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Hernando de Soto (Wikipedia): winter among the Chickasaw, the river crossed in May 1541",
+      "points": [
+        [-87.5, 31.9],
+        [-88.5, 33.5],
+        [-89.2, 34.3],
+        [-90.1, 34.5]
+      ]
+    },
+    {
+      "from": "the Mississippi",
+      "to": "Guachoya",
+      "dates": "Jun 1541 – May 1542",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "speculative",
+      "source": "Hernando de Soto (Wikipedia): Arkansas, the winter at Utiangue, then south to Guachoya",
+      "doubt": "The route through Arkansas and the sites of Utiangue and Guachoya are not located; the line is one reading of the chronicles.",
+      "points": [
+        [-90.1, 34.5],
+        [-92, 35.5],
+        [-93, 34.5],
+        [-92, 33],
+        [-91.2, 31.5]
+      ]
+    },
+    {
+      "from": "Guachoya",
+      "to": "the mouth of the Mississippi",
+      "dates": "Jul 1543",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Hernando de Soto (Wikipedia): the survivors went down the river in boats under Luis de Moscoso",
+      "note": "the river descent only; Moscoso's march west into Texas and back, and the winter at Aminoya, are not drawn",
+      "points": [
+        [-91.2, 31.5],
+        [-91.5, 30],
+        [-89.4, 29.1]
+      ]
+    },
+    {
+      "from": "the mouth of the Mississippi",
+      "to": "Pánuco",
+      "dates": "Jul – Sep 1543",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Hernando de Soto (Wikipedia): seven brigantines along the Gulf coast to Pánuco",
+      "points": [
+        [-89.3, 28.7],
+        [-92.5, 28.2],
+        [-95.5, 27.5],
+        [-96.8, 24.5],
+        [-97.4, 22.4]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": -84.25,
+      "lat": 30.45,
+      "date": "Winter 1539–40",
+      "label": "Anhaica: the first winter",
+      "source": "Hernando de Soto (Wikipedia)",
+      "cite": "wp-de-soto",
+      "text": "The army wintered in the Apalachee town, which archaeologists found in 1987 at Tallahassee: the first confirmed site where the expedition stayed."
+    },
+    {
+      "kind": "event",
+      "lon": -90.1,
+      "lat": 34.5,
+      "date": "May 1541",
+      "label": "The Mississippi crossed",
+      "confidence": "inferred",
+      "source": "Hernando de Soto (Wikipedia)",
+      "cite": "wp-de-soto",
+      "doubt": "The crossing place is put at several points from southern Tennessee to Mississippi.",
+      "text": "The first recorded European sight of the river's lower reaches. The men built barges; the Quapaw or their neighbours met them on the water."
+    }
+  ]
+}

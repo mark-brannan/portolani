@@ -1,0 +1,99 @@
+{
+  "id": "la-salle-1682-87",
+  "title": "La Salle to the mouth of the Mississippi, and to Texas, 1682–87",
+  "short": "La Salle",
+  "who": [
+    "la-salle"
+  ],
+  "when": "1682–1687",
+  "summary": "In 1682 La Salle took 23 Frenchmen and 18 Indigenous men down the Mississippi to the Gulf and claimed it for Louis XIV as Louisiana. In 1684 he sailed from France to found a colony at the river's mouth, but missed it by more than 370 miles and landed in Matagorda Bay, Texas. Fort Saint Louis failed, and in 1687 his own men shot him on a walk towards Illinois.",
+  "sources": [
+    "wp-la-salle",
+    "dcb-la-salle",
+    "wp-fort-saint-louis-texas"
+  ],
+  "legs": [
+    {
+      "from": "Chicago portage",
+      "to": "the mouth of the Mississippi",
+      "dates": "Feb – 9 Apr 1682",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "René-Robert Cavelier, Sieur de La Salle (Wikipedia): down the Illinois and the Mississippi to the Gulf; Dictionary of Canadian Biography: 23 Frenchmen and 18 Indigenous men",
+      "points": [
+        [-87.65, 41.85],
+        [-88.8, 41.3],
+        [-90.2, 39],
+        [-89.5, 37],
+        [-90.1, 35.1],
+        [-91, 32.3],
+        [-91.2, 30.5],
+        [-89.4, 29.1]
+      ]
+    },
+    {
+      "from": "La Rochelle",
+      "to": "Matagorda Bay",
+      "dates": "24 Jul 1684 – 18 Feb 1685",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "René-Robert Cavelier, Sieur de La Salle (Wikipedia): four ships, the Gulf coast reached in January 1685",
+      "points": [
+        [-1.3, 46.1],
+        [-4.0, 45.3],
+        [-10.8, 43.0],
+        [-12.5, 40.0],
+        [-45.0, 24.0],
+        [-70.0, 20.5],
+        [-73.0, 21.8],
+        [-77.0, 23.2],
+        [-80.0, 24.0],
+        [-82.5, 24.2],
+        [-85.0, 25.5],
+        [-88.0, 26.5],
+        [-93.0, 27.7],
+        [-96.0, 28.0]
+      ]
+    },
+    {
+      "from": "Fort Saint Louis",
+      "to": "east Texas",
+      "dates": "Jan – Mar 1687",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "speculative",
+      "source": "René-Robert Cavelier, Sieur de La Salle (Wikipedia): the party walked north-east towards the Illinois country",
+      "doubt": "The route is unknown; the line joins the fort to the traditional death site.",
+      "points": [
+        [-96.6, 28.9],
+        [-96.5, 29.8],
+        [-96.1, 30.5]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": -89.4,
+      "lat": 29.1,
+      "date": "9 Apr 1682",
+      "label": "The Gulf reached, Louisiana claimed",
+      "source": "René-Robert Cavelier, Sieur de La Salle (Wikipedia)",
+      "cite": "wp-la-salle",
+      "text": "He raised a column and a cross and took possession of the whole river basin and every people and river in it for the king."
+    },
+    {
+      "kind": "event",
+      "lon": -96.6,
+      "lat": 28.9,
+      "date": "Feb 1685",
+      "label": "Fort Saint Louis, Matagorda Bay",
+      "confidence": "inferred",
+      "source": "René-Robert Cavelier, Sieur de La Salle (Wikipedia); Fort Saint Louis (Texas) (Wikipedia)",
+      "cite": "wp-fort-saint-louis-texas",
+      "text": "The colony was meant for the Mississippi and landed far west of it. One ship was lost on the bar, another was seized, and he built the fort inland on Garcitas Creek. Disease killed most of the settlers, and the Karankawa the rest, about Christmas 1688; in April 1689 a Spanish party found the fort in ruins and burned what remained."
+    }
+  ]
+}

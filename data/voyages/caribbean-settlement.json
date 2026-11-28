@@ -1,0 +1,124 @@
+{
+  "id": "caribbean-settlement",
+  "kind": "migration",
+  "title": "The peopling of the Caribbean, c. 4000 BC – AD 1000",
+  "short": "Caribbean peoples",
+  "who": ["caribbean-settlers"],
+  "when": "c. 4000 BC – AD 1000",
+  "summary": "People reached Cuba and Hispaniola some six thousand years ago, from Central or South America; which is argued. Saladoid potters came up the Lesser Antilles from the Orinoco from about 500 BC and settled Puerto Rico, and their Taíno descendants spread through the Greater Antilles. The Lucayans crossed to the Bahamas from Hispaniola and Cuba by about AD 800, the people Columbus met in 1492.",
+  "sources": ["wp-saladoid", "wp-taino", "wp-lucayan"],
+  "legs": [
+    {
+      "from": "the Yucatán",
+      "to": "western Cuba",
+      "dates": "c. 4000–3000 BC",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "speculative",
+      "source": "Taíno (Wikipedia): early Archaic settlers of the Greater Antilles",
+      "doubt": "Whether the first islanders came from Yucatán and Central America, or from northern South America, is open; the line is one of the options.",
+      "reach": [0, 0.3],
+      "heads": "end",
+      "points": [
+        [-86.4, 21.3],
+        [-85.6, 21.9]
+      ]
+    },
+    {
+      "from": "the Orinoco delta",
+      "to": "Puerto Rico",
+      "dates": "c. 500–280 BC",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Saladoid culture (Wikipedia): up the Lesser Antilles from the Orinoco",
+      "reach": [0.1, 0.55],
+      "heads": "end",
+      "points": [
+        [-60.5, 8.9],
+        [-60.3, 10],
+        [-59.9, 12.3],
+        [-60, 15],
+        [-60.8, 17.2],
+        [-64, 19.2],
+        [-66, 19]
+      ]
+    },
+    {
+      "from": "Puerto Rico",
+      "to": "eastern Cuba",
+      "dates": "c. AD 600–1000",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Taíno (Wikipedia): the Ostionoid and Taíno spread across the Greater Antilles",
+      "reach": [0.55, 0.85],
+      "heads": "end",
+      "points": [
+        [-66, 19],
+        [-70, 20.2],
+        [-72.5, 20.6],
+        [-74.2, 20.4]
+      ]
+    },
+    {
+      "from": "Hispaniola",
+      "to": "the Bahamas",
+      "dates": "c. AD 700–1000",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Lucayan people (Wikipedia): the Bahamas settled from Hispaniola and Cuba",
+      "reach": [0.7, 1],
+      "heads": "end",
+      "points": [
+        [-72.5, 20.6],
+        [-72.5, 21.8],
+        [-74.5, 24.2]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "waypoint",
+      "lon": -86.4,
+      "lat": 21.3,
+      "date": "c. 4000 BC",
+      "label": "Across the Yucatán Channel",
+      "confidence": "speculative",
+      "source": "Taíno (Wikipedia)",
+      "cite": "wp-taino",
+      "text": "The earliest firm sites in Cuba and Hispaniola are of hunters and gatherers; their mainland origin is not settled."
+    },
+    {
+      "kind": "waypoint",
+      "lon": -60.5,
+      "lat": 8.9,
+      "date": "c. 500 BC",
+      "label": "The Orinoco: the Saladoid potters",
+      "source": "Saladoid culture (Wikipedia)",
+      "cite": "wp-saladoid",
+      "text": "People of the lower Orinoco who made white-on-red painted pottery moved north, island by island."
+    },
+    {
+      "kind": "waypoint",
+      "lon": -66.5,
+      "lat": 18.3,
+      "date": "c. 500–280 BC",
+      "label": "Puerto Rico",
+      "source": "Saladoid culture (Wikipedia)",
+      "cite": "wp-saladoid",
+      "text": "Saladoid villages appear in Puerto Rico and the Virgin Islands. Their culture developed into that of the Taíno over the following centuries."
+    },
+    {
+      "kind": "waypoint",
+      "lon": -74.5,
+      "lat": 24.2,
+      "date": "c. AD 800",
+      "label": "The Bahamas: the Lucayans",
+      "source": "Lucayan people (Wikipedia)",
+      "cite": "wp-lucayan",
+      "text": "The Lucayans settled the Bahamas between about AD 500 and 800 and spread through the islands over some eight hundred years, until Spanish slave raids from 1509 emptied them; by 1520 eleven were left."
+    }
+  ]
+}

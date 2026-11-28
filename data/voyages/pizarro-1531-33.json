@@ -1,0 +1,81 @@
+{
+  "id": "pizarro-1531-33",
+  "title": "Pizarro to Cajamarca and Cusco, 1531–33",
+  "short": "Pizarro",
+  "who": ["francisco-pizarro", "atahualpa"],
+  "when": "1531–1533",
+  "summary": "Pizarro sailed from Panama at the end of 1530 or in January 1531 with about 180 men and 27 horses, landed on the Ecuadorian coast and made his way to Tumbes, then inland. At Cajamarca on 16 November 1532 his men ambushed and took the Sapa Inca Atahualpa, killing thousands of his unarmed escort. Atahualpa filled a room with gold for his ransom and was executed in 1533, and the Spanish took Cusco in November.",
+  "sources": ["wp-pizarro", "wp-atahualpa", "wp-cajamarca"],
+  "legs": [
+    {
+      "from": "Panama",
+      "to": "Tumbes",
+      "dates": "Jan 1531 – May 1532",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Francisco Pizarro (Wikipedia): down the Pacific coast, with a pause on the Ecuadorian shore",
+      "doubt": "The Francisco Pizarro article gives January 1531 for sailing from Panama in its lead and 27 December 1530 in its body.",
+      "points": [
+        [-79.4, 8.6],
+        [-80.3, 6.5],
+        [-81, 2.5],
+        [-81.7, -2],
+        [-81.2, -3.3]
+      ]
+    },
+    {
+      "from": "Tumbes",
+      "to": "Cajamarca",
+      "dates": "May – 15 Nov 1532",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Francisco Pizarro (Wikipedia): inland by Piura and the Andean road",
+      "points": [
+        [-80.45, -3.57],
+        [-80.6, -5.2],
+        [-79.5, -6.5],
+        [-78.52, -7.16]
+      ]
+    },
+    {
+      "from": "Cajamarca",
+      "to": "Cusco",
+      "dates": "Aug – 15 Nov 1533",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Francisco Pizarro (Wikipedia): by Jauja to Cusco along the Inca road",
+      "points": [
+        [-78.52, -7.16],
+        [-77.9, -9.5],
+        [-75.5, -11.8],
+        [-74, -13],
+        [-71.97, -13.52]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": -78.52,
+      "lat": -7.16,
+      "date": "16 Nov 1532",
+      "label": "Cajamarca: Atahualpa taken",
+      "source": "Battle of Cajamarca (Wikipedia)",
+      "cite": "wp-cajamarca",
+      "text": "Atahualpa came into the square with thousands of unarmed attendants, and the Spanish fired and charged from the buildings. The Inca escort was killed, and Atahualpa was taken. The room he offered to fill with gold, 22 by 17 feet, was filled to a line as high as he could reach."
+    },
+    {
+      "kind": "event",
+      "lon": -71.97,
+      "lat": -13.52,
+      "date": "15 Nov 1533",
+      "label": "Cusco taken",
+      "source": "Francisco Pizarro (Wikipedia)",
+      "cite": "wp-pizarro",
+      "text": "The Spanish took the Inca capital, with the help of many Indigenous allies, installed Manco Inca, a brother of Atahualpa, as a puppet, and founded their Spanish city. Manco rose against them in 1536."
+    }
+  ]
+}

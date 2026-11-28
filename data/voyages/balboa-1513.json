@@ -1,0 +1,42 @@
+{
+  "id": "balboa-1513",
+  "title": "Balboa across the isthmus to the Pacific, 1513",
+  "short": "Balboa, 1513",
+  "who": ["vasco-nunez-de-balboa"],
+  "when": "1513",
+  "summary": "Balboa left Santa María la Antigua del Darién on 1 September 1513 with about 190 Spaniards and many Indigenous guides and porters, whose chiefs, Careta and Comagre, had told him of a sea to the south and of a rich country beyond it. On 25 September he saw the Pacific from a peak; four days later he waded into the Gulf of San Miguel and claimed the sea for Castile.",
+  "sources": ["wp-balboa"],
+  "legs": [
+    {
+      "from": "Santa María la Antigua del Darién",
+      "to": "the Gulf of San Miguel",
+      "dates": "1 – 29 Sep 1513",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Vasco Núñez de Balboa (Wikipedia): across the isthmus to the South Sea",
+      "doubt": "The exact route and the peak from which he first saw the sea are not known.",
+      "points": [
+        [-77.2, 8.65],
+        [-77.4, 8.55],
+        [-77.8, 8.45],
+        [-78.2, 8.3],
+        [-78.4, 8.25]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": -78.2,
+      "lat": 8.4,
+      "date": "25 Sep 1513",
+      "label": "The South Sea sighted",
+      "confidence": "inferred",
+      "source": "Vasco Núñez de Balboa (Wikipedia)",
+      "cite": "wp-balboa",
+      "doubt": "The peak is unidentified; later accounts have it somewhere in the Serranía de Darién.",
+      "text": "Balboa went ahead alone to the summit and saw the sea, and the others were called to see it. The Indigenous people of Darién, who knew the sea, had told him of it; Panquiaco, Comagre's son, had pointed the way."
+    }
+  ]
+}

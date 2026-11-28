@@ -1,0 +1,140 @@
+{
+  "id": "champlain-1608-15",
+  "title": "Champlain from Quebec to Lake Champlain and Huronia, 1608–15",
+  "short": "Champlain",
+  "who": ["samuel-de-champlain"],
+  "when": "1608–1615",
+  "summary": "Champlain founded Quebec in 1608 as a trading post and bound France to the Innu, Algonquin and Huron-Wendat. In 1609 he went up the Richelieu to the lake that now has his name with an Algonquin and Huron war party, and his musket killed two Mohawk chiefs. In 1615 he went up the Ottawa River and by Lake Nipissing to Lake Huron, among the Huron-Wendat, and on with them to attack an Onondaga fort.",
+  "sources": ["wp-champlain", "dcb-champlain"],
+  "legs": [
+    {
+      "from": "Honfleur",
+      "to": "the Gulf of St Lawrence",
+      "dates": "spring – Jun 1608",
+      "start": "1608-04",
+      "end": "1608-06",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Samuel de Champlain (Wikipedia): the fleet left Honfleur in the spring of 1608",
+      "note": "the article gives spring and no day, and nothing of the way, so April and June are stand-ins; the course is a broad brush by Belle Isle",
+      "points": [
+        [-0.2, 49.55],
+        [-1.0, 49.95],
+        [-2.8, 50.05],
+        [-6.5, 49.5],
+        [-12, 49.8],
+        [-30, 50.0],
+        [-50, 50.8],
+        [-55.0, 51.8],
+        [-55.7, 51.78],
+        [-56.4, 51.62],
+        [-58.5, 50.2],
+        [-61.0, 48.6]
+      ]
+    },
+    {
+      "from": "the Gulf of St Lawrence",
+      "to": "Quebec",
+      "dates": "Jun – 3 Jul 1608",
+      "start": "1608-06",
+      "end": "1608-07-03",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Samuel de Champlain (Wikipedia): he arrived at Quebec on 3 July 1608",
+      "note": "drawn as a track up the river",
+      "points": [
+        [-61.0, 48.6],
+        [-64.0, 49.3],
+        [-67.0, 49.2],
+        [-69.5, 47.9],
+        [-71.21, 46.81]
+      ]
+    },
+    {
+      "from": "Quebec",
+      "to": "Lake Champlain",
+      "dates": "Jun – Jul 1609",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Samuel de Champlain (Wikipedia): the Richelieu and the lake",
+      "points": [
+        [-71.21, 46.81],
+        [-72.8, 46],
+        [-73.2, 45.2],
+        [-73.3, 44.5],
+        [-73.4, 43.85]
+      ]
+    },
+    {
+      "from": "Quebec",
+      "to": "Huronia",
+      "dates": "Jun – Aug 1615",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Samuel de Champlain (Wikipedia); Dictionary of Canadian Biography: by the Ottawa River, Lake Nipissing and the French River to Lake Huron",
+      "points": [
+        [-71.21, 46.81],
+        [-73.55, 45.5],
+        [-75.7, 45.4],
+        [-77.5, 46],
+        [-79.4, 46.3],
+        [-80.3, 45.9],
+        [-79.9, 44.75]
+      ]
+    },
+    {
+      "from": "Huronia",
+      "to": "Onondaga",
+      "dates": "Sep – Oct 1615",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "speculative",
+      "source": "Samuel de Champlain (Wikipedia): the attack on the Onondaga with Huron allies",
+      "doubt": "The site of the fort he attacked is not settled; it lay south of Lake Ontario in central New York.",
+      "points": [
+        [-79.9, 44.75],
+        [-78.5, 44.3],
+        [-76.4, 44.1],
+        [-76.1, 43]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": -71.21,
+      "lat": 46.81,
+      "date": "3 Jul 1608",
+      "label": "Quebec founded",
+      "source": "Samuel de Champlain (Wikipedia); Dictionary of Canadian Biography",
+      "cite": "dcb-champlain",
+      "text": "A habitation of three buildings at the narrows, beside the old site of Stadacona. Of the 28 who wintered there, only eight were left when supplies came at the end of May 1609."
+    },
+    {
+      "kind": "event",
+      "lon": -73.4,
+      "lat": 43.85,
+      "date": "29 Jul 1609",
+      "label": "The Mohawk skirmish on Lake Champlain",
+      "confidence": "inferred",
+      "source": "Samuel de Champlain (Wikipedia)",
+      "cite": "wp-champlain",
+      "doubt": "The site is put near Ticonderoga or Crown Point.",
+      "text": "Champlain and two other Frenchmen with an Algonquin, Innu and Huron war party met Mohawk on the lake. A shot from his arquebus killed two chiefs, and the Mohawk fled. The fighting began a long enmity between New France and the Iroquois."
+    },
+    {
+      "kind": "event",
+      "lon": -79.9,
+      "lat": 44.75,
+      "date": "Aug 1615",
+      "label": "Huronia: among the Huron-Wendat",
+      "source": "Samuel de Champlain (Wikipedia)",
+      "cite": "wp-champlain",
+      "text": "He reached the villages of Wendake by Lake Huron, and wintered there with the Huron-Wendat. Étienne Brûlé, his interpreter, had gone there before him."
+    }
+  ]
+}

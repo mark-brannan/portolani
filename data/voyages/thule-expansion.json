@@ -1,0 +1,70 @@
+{
+  "id": "thule-expansion",
+  "kind": "migration",
+  "title": "The Thule from Alaska to Greenland, c. AD 1000–1300",
+  "short": "Thule",
+  "who": ["thule-people"],
+  "when": "c. AD 1000–1300",
+  "summary": "The whaling Thule culture arose in the Bering Strait country about AD 1000. Within two or three centuries its people had spread east through the Canadian Arctic, by umiak and kayak, dog sled and winter house, as far as Ellesmere Island and north-west Greenland. They took the place of the Dorset people, with little mixing, and their descendants are the Inuit of Canada and Greenland.",
+  "sources": ["wp-thule-people"],
+  "legs": [
+    {
+      "from": "the Bering Strait",
+      "to": "north-west Greenland",
+      "dates": "c. AD 1000–1300",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Thule people (Wikipedia): from northern Alaska through the Canadian Arctic, reaching Greenland by about 1200",
+      "note": "the way is drawn along the Northwest Passage channels, the usual route of the spread",
+      "doubt": "The dates of the spread vary between sites, and how fast it went is argued.",
+      "reach": [0, 1],
+      "heads": "end",
+      "points": [
+        [-166.5, 66.5],
+        [-156.5, 71.8],
+        [-135, 70.8],
+        [-124, 71],
+        [-118, 74.2],
+        [-108, 74.4],
+        [-98, 74.3],
+        [-85, 74.2],
+        [-78, 76],
+        [-72, 77],
+        [-69.5, 76.5]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "waypoint",
+      "lon": -166.5,
+      "lat": 66.5,
+      "date": "c. AD 1000",
+      "label": "Bering Strait: where the Thule culture arose",
+      "source": "Thule people (Wikipedia)",
+      "cite": "wp-thule-people",
+      "text": "It grew from the Birnirk and Punuk cultures of the Alaskan coast, around a way of life built on hunting the bowhead whale."
+    },
+    {
+      "kind": "waypoint",
+      "lon": -156.5,
+      "lat": 71.4,
+      "date": "c. AD 1000–1100",
+      "label": "Point Barrow",
+      "source": "Thule people (Wikipedia)",
+      "cite": "wp-thule-people",
+      "text": "A centre of the early whaling villages, where the Thule left houses of whale bone and sod."
+    },
+    {
+      "kind": "waypoint",
+      "lon": -69.5,
+      "lat": 76.5,
+      "date": "c. AD 1200",
+      "label": "Thule, north-west Greenland",
+      "source": "Thule people (Wikipedia)",
+      "cite": "wp-thule-people",
+      "text": "The Thule reached Greenland by way of Ellesmere Island, and spread south down both coasts. The Greenland Norse, who lived on the south-west coast, met them in the following centuries; the Norse settlements ended in the fifteenth century."
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "id": "fremont-1843-44",
+  "title": "Frémont and Kit Carson across the Great Basin and the Sierra, 1843–44",
+  "short": "Frémont, 1843–44",
+  "who": ["john-c-fremont", "kit-carson"],
+  "when": "1843–1844",
+  "summary": "Frémont's second expedition left the Missouri frontier in May 1843 and went by the Oregon Trail to Fort Vancouver on the Columbia, then south by Pyramid Lake. It crossed the Sierra Nevada in midwinter, in January and February 1844, with Kit Carson, and reached Sutter's Fort. It went home by the Old Spanish Trail, Utah Lake and Bent's Fort.",
+  "sources": ["wp-fremont", "wp-kit-carson", "baugh-fremont-1843-44", "wp-pyramid-lake"],
+  "legs": [
+    {
+      "from": "Kansas River",
+      "to": "Fort Vancouver",
+      "dates": "29 May – 8 Nov 1843",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "John C. Frémont (Wikipedia): the Oregon Trail to the Columbia; Baugh (2015): left Westport Landing 29 May, at the Dalles 5 November and Fort Vancouver 8 November",
+      "points": [
+        [-94.6, 39.1],
+        [-98, 40.4],
+        [-101.5, 41.2],
+        [-105.1, 42.2],
+        [-108.5, 42.5],
+        [-111, 42.5],
+        [-116, 43.7],
+        [-119, 45.6],
+        [-122.67, 45.62]
+      ]
+    },
+    {
+      "from": "Fort Vancouver",
+      "to": "Pyramid Lake",
+      "dates": "Nov 1843 – Jan 1844",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "John C. Frémont (Wikipedia): south east of the Cascades by Klamath Lake and the Great Basin; Pyramid Lake (Wikipedia): named by Frémont",
+      "points": [
+        [-122.67, 45.62],
+        [-121.2, 44],
+        [-121.8, 42.3],
+        [-120.5, 41],
+        [-119.6, 40]
+      ]
+    },
+    {
+      "from": "Pyramid Lake",
+      "to": "Sutter's Fort",
+      "dates": "Jan – Mar 1844",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "John C. Frémont (Wikipedia): over the Sierra Nevada near Carson Pass in winter",
+      "doubt": "The pass is traditionally Carson Pass; the exact route is argued.",
+      "points": [
+        [-119.6, 40],
+        [-119.8, 39],
+        [-120, 38.7],
+        [-121.5, 38.57]
+      ]
+    },
+    {
+      "from": "Sutter's Fort",
+      "to": "Kansas River",
+      "dates": "Mar – Aug 1844",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "John C. Frémont (Wikipedia); Baugh (2015): the Old Spanish Trail, Utah Lake in May, Bent's Fort on 30 June, St Louis by 6 August",
+      "points": [
+        [-121.5, 38.57],
+        [-119, 35.4],
+        [-116, 35.8],
+        [-113, 37.1],
+        [-111.9, 40],
+        [-107.5, 39.5],
+        [-104, 38],
+        [-99, 38.8],
+        [-94.6, 39.1]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": -120,
+      "lat": 38.7,
+      "date": "Feb 1844",
+      "label": "The Sierra Nevada in winter",
+      "confidence": "inferred",
+      "source": "Baugh (2015); John C. Frémont (Wikipedia)",
+      "cite": "baugh-fremont-1843-44",
+      "doubt": "The exact pass is argued; Carson Pass is the usual answer.",
+      "text": "Men and animals were near starvation in deep snow. With Carson guiding, the expedition came down to Sutter's Fort in March. Frémont's report, with Charles Preuss's map, appeared in 1845; Congress had ten thousand copies printed."
+    }
+  ]
+}

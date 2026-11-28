@@ -1,0 +1,79 @@
+{
+  "id": "ojeda-1499",
+  "title": "Ojeda, Vespucci and de la Cosa along the Spanish Main, 1499",
+  "short": "Ojeda, 1499",
+  "who": [
+    "alonso-de-ojeda",
+    "amerigo-vespucci",
+    "juan-de-la-cosa"
+  ],
+  "when": "1499–1500",
+  "summary": "Ojeda left Spain in May 1499 with three caravels, with Juan de la Cosa as pilot and Amerigo Vespucci a passenger. He made landfall on the coast of Guiana, followed it west past Trinidad and Margarita, and found the Gulf of Venezuela, where houses on stilts over the water of Lake Maracaibo suggested Venice to them. They reached Hispaniola in September and went home with pearls and some captives.",
+  "sources": [
+    "wp-ojeda",
+    "wp-vespucci"
+  ],
+  "legs": [
+    {
+      "from": "Puerto de Santa María",
+      "to": "the coast of Guiana",
+      "dates": "18 May – Jun 1499",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Alonso de Ojeda (Wikipedia): by the Canaries to the coast near Surinam",
+      "doubt": "Where the landfall was is debated; Vespucci's account puts it further south than Ojeda's.",
+      "points": [
+        [-6.4, 36.5],
+        [-14, 30],
+        [-30, 17],
+        [-45, 11],
+        [-56.5, 7]
+      ]
+    },
+    {
+      "from": "the coast of Guiana",
+      "to": "the Gulf of Venezuela",
+      "dates": "Jun – Aug 1499",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Alonso de Ojeda (Wikipedia): north-west by Trinidad and Margarita to the Gulf of Venezuela",
+      "points": [
+        [-56.5, 7],
+        [-61.5, 11.4],
+        [-64, 11.4],
+        [-68.5, 12.8],
+        [-71, 11.9]
+      ]
+    },
+    {
+      "from": "the Gulf of Venezuela",
+      "to": "Hispaniola",
+      "dates": "Aug – Sep 1499",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Alonso de Ojeda (Wikipedia): by Cabo de la Vela to Hispaniola",
+      "points": [
+        [-71.0, 11.9],
+        [-70.9, 12.5],
+        [-71.5, 13.0],
+        [-72.8, 15.5],
+        [-72.6, 17.9]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": -71,
+      "lat": 11.9,
+      "date": "Aug 1499",
+      "label": "Little Venice",
+      "source": "Amerigo Vespucci (Wikipedia)",
+      "cite": "wp-vespucci",
+      "text": "In the Gulf of Venezuela they found villages on stilts, and called the country Venezuela, little Venice."
+    }
+  ]
+}

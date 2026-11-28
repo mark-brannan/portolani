@@ -1,0 +1,71 @@
+{
+  "id": "hearne-1770-72",
+  "title": "Hearne and Matonabbee to the Coppermine River, 1770–72",
+  "short": "Hearne",
+  "who": ["samuel-hearne", "matonabbee"],
+  "when": "1770–1772",
+  "summary": "After two failed starts, Hearne left Fort Prince of Wales on 7 December 1770 with Matonabbee and a Chipewyan party. They crossed the Barrenlands and reached the Coppermine River on 14 July 1771, and the Arctic coast at its mouth on 17 July. On the way back Hearne crossed Great Slave Lake in midwinter; he reached the fort in June 1772. He wrote of the killing of Inuit by the Chipewyan at Bloody Falls.",
+  "sources": ["wp-hearne", "wp-matonabbee", "dcb-hearne"],
+  "legs": [
+    {
+      "from": "Fort Prince of Wales",
+      "to": "the Coppermine River",
+      "dates": "7 Dec 1770 – 14 Jul 1771",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Samuel Hearne (Wikipedia): north-west across the Barrenlands to the Coppermine; Dictionary of Canadian Biography: left on 7 December 1770, at the river on 14 July 1771",
+      "note": "the way over the Barrenlands is the usual drawing from his journal; he had few landmarks",
+      "points": [
+        [-94.2, 58.77],
+        [-99, 60.5],
+        [-103, 62.5],
+        [-108, 64.5],
+        [-112, 66],
+        [-115.6, 67.7]
+      ]
+    },
+    {
+      "from": "the Coppermine River",
+      "to": "Great Slave Lake",
+      "dates": "Jul – Dec 1771",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Samuel Hearne (Wikipedia): the return by the lake's north shore",
+      "points": [
+        [-115.6, 67.7],
+        [-114.5, 65],
+        [-113, 62.8]
+      ]
+    },
+    {
+      "from": "Great Slave Lake",
+      "to": "Fort Prince of Wales",
+      "dates": "Dec 1771 – 30 Jun 1772",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Samuel Hearne (Wikipedia): by Lake Athabasca country, back to Churchill",
+      "points": [
+        [-113, 62.8],
+        [-109, 60.5],
+        [-104, 59.2],
+        [-99.5, 58.7],
+        [-94.2, 58.77]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": -115.6,
+      "lat": 67.7,
+      "date": "17 Jul 1771",
+      "label": "Bloody Falls and the Arctic coast",
+      "source": "Samuel Hearne (Wikipedia)",
+      "cite": "wp-hearne",
+      "text": "Near the river's mouth the Chipewyan under Matonabbee fell on an Inuit camp and killed some twenty people. Hearne, who could not stop it, wrote it down. Whether his count is exact is not known; the place is now called Bloody Falls."
+    }
+  ]
+}

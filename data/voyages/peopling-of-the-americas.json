@@ -1,0 +1,134 @@
+{
+  "id": "peopling-of-the-americas",
+  "kind": "migration",
+  "title": "The first peoples enter the Americas, c. 23,000–11,000 BC",
+  "short": "First Americans",
+  "who": [
+    "first-americans"
+  ],
+  "when": "c. 23,000–11,000 BC",
+  "summary": "People came from north-east Asia to Beringia and, by the standard account, on into the Americas. One road ran down the Pacific coast, by boat and shore; the other went through a gap between ice sheets in Alberta. A coastal route fits the oldest sites in the south, such as Monte Verde; the corridor probably opened too late for the first arrivals but may have served later ones. The dates are not settled, and a few sites are older than the standard account allows.",
+  "sources": [
+    "wp-settlement-of-the-americas",
+    "wp-monte-verde",
+    "wp-paisley-caves",
+    "wp-white-sands-footprints",
+    "wp-clovis"
+  ],
+  "legs": [
+    {
+      "from": "Beringia",
+      "to": "Monte Verde, Chile",
+      "dates": "c. 20,000–14,500 years ago",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "speculative",
+      "source": "Settlement of the Americas (Wikipedia): the coastal migration model",
+      "doubt": "The route is a hypothesis: shorelines of the time are under the sea, and no sites on the route are firmly dated before about 14,000 years ago.",
+      "reach": [0, 1],
+      "heads": "end",
+      "points": [
+        [-169, 65.8],
+        [-170, 61],
+        [-160, 54.3],
+        [-150, 56],
+        [-140, 57],
+        [-136, 52.5],
+        [-130, 48.5],
+        [-125.5, 44],
+        [-125.5, 40],
+        [-122, 34],
+        [-118.5, 30],
+        [-112, 24],
+        [-106, 20],
+        [-96, 15],
+        [-86, 10.5],
+        [-80.5, 5.5],
+        [-81.8, -1],
+        [-81.8, -6],
+        [-78.5, -13],
+        [-72, -20],
+        [-72.8, -30],
+        [-75.5, -41.5]
+      ]
+    },
+    {
+      "from": "Beringia",
+      "to": "the Great Plains",
+      "dates": "c. 13,000 years ago",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "speculative",
+      "source": "Settlement of the Americas (Wikipedia): the ice-free corridor model",
+      "doubt": "Studies of the corridor's lake sediments find it was not open to people until about 13,000 years ago, later than the oldest southern sites.",
+      "reach": [0.5, 1],
+      "heads": "end",
+      "points": [
+        [-168, 65.5],
+        [-148, 65],
+        [-135, 64],
+        [-124, 59.5],
+        [-118, 56],
+        [-113.5, 52],
+        [-111, 47],
+        [-107, 40],
+        [-103.3, 34.4]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "waypoint",
+      "lon": -168,
+      "lat": 65.5,
+      "date": "c. 25,000–15,000 years ago",
+      "label": "Beringia",
+      "confidence": "inferred",
+      "source": "Settlement of the Americas (Wikipedia)",
+      "cite": "wp-settlement-of-the-americas",
+      "text": "With much of the world's water in ice, the sea shallows between Siberia and Alaska were dry land, a country of tundra and steppe. Genetic evidence suggests the ancestors of Indigenous Americans stayed there some thousands of years, a standstill, before they spread south."
+    },
+    {
+      "kind": "waypoint",
+      "lon": -106.2,
+      "lat": 32.8,
+      "date": "c. 23,000–21,000 years ago",
+      "label": "White Sands footprints",
+      "confidence": "speculative",
+      "source": "White Sands fossil footprints (Wikipedia)",
+      "cite": "wp-white-sands-footprints",
+      "doubt": "Human footprints at White Sands, New Mexico, dated by seeds, pollen and luminescence to some 23,000 years ago, would be far older than any other site. Some archaeologists doubt the dating, and the point is drawn off the main arrow.",
+      "text": "The footprints of adults and children, and the tracks of giant sloths and mammoths, lie in the lake bed."
+    },
+    {
+      "kind": "waypoint",
+      "lon": -120.8,
+      "lat": 43.1,
+      "date": "c. 14,300 years ago",
+      "label": "Paisley Caves, Oregon",
+      "source": "Paisley Caves (Wikipedia)",
+      "cite": "wp-paisley-caves",
+      "text": "Human DNA from coprolites, dated about 14,300 years old, was found in these caves, centuries before Clovis. Contamination was argued over; the dates and the DNA have been checked and have stood."
+    },
+    {
+      "kind": "waypoint",
+      "lon": -73.2,
+      "lat": -41.5,
+      "date": "c. 14,500 years ago",
+      "label": "Monte Verde, Chile",
+      "source": "Monte Verde (Wikipedia)",
+      "cite": "wp-monte-verde",
+      "text": "A settlement beside a creek, with wooden hut foundations, seaweed, mastodon bone and stone tools, preserved in peat. For decades its age was disputed because it is a long way from the Bering Strait and older than Clovis; it is now widely accepted."
+    },
+    {
+      "kind": "waypoint",
+      "lon": -103.3,
+      "lat": 34.4,
+      "date": "c. 13,000 years ago",
+      "label": "Clovis",
+      "source": "Clovis culture (Wikipedia)",
+      "cite": "wp-clovis",
+      "text": "Fluted spear points, first found near Clovis, New Mexico, spread across North America for a few centuries. Clovis was long taken to mark the first Americans; the earlier sites show it was one stage, not the first."
+    }
+  ]
+}

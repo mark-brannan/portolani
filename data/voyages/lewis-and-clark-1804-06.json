@@ -1,0 +1,120 @@
+{
+  "id": "lewis-and-clark-1804-06",
+  "title": "Lewis and Clark with Sacagawea and York, to the Pacific and back, 1804–06",
+  "short": "Lewis & Clark",
+  "who": ["meriwether-lewis", "william-clark", "sacagawea", "york"],
+  "when": "1804–1806",
+  "summary": "Jefferson sent Lewis and Clark up the Missouri to find a route to the Pacific. They left Camp Dubois in May 1804 with more than forty men, wintered with the Mandan and Hidatsa, where Sacagawea and Charbonneau joined, crossed the Rockies with Shoshone horses and Nez Perce help, reached the Pacific in November 1805 and wintered at Fort Clatsop. They were back at St Louis on 23 September 1806. York, enslaved by Clark, went the whole way.",
+  "sources": ["wp-lewis-clark", "wp-sacagawea", "wp-york", "wp-lewis-clark-timeline"],
+  "legs": [
+    {
+      "from": "Camp Dubois",
+      "to": "Fort Mandan",
+      "dates": "14 May – 2 Nov 1804",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Lewis and Clark Expedition (Wikipedia): up the Missouri; Timeline of the Lewis and Clark Expedition (Wikipedia): left Camp Dubois 14 May, in Mandan country 24 October, Fort Mandan begun 2 November",
+      "points": [
+        [-90.1, 38.8],
+        [-94.6, 39.1],
+        [-96.4, 41.1],
+        [-98.5, 42.8],
+        [-100.4, 44.4],
+        [-101.3, 47.3]
+      ]
+    },
+    {
+      "from": "Fort Mandan",
+      "to": "Three Forks",
+      "dates": "Apr – Jul 1805",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Lewis and Clark Expedition (Wikipedia): up the Missouri to the Great Falls and the Three Forks",
+      "points": [
+        [-101.3, 47.3],
+        [-104, 48],
+        [-108, 47.8],
+        [-111.3, 47.5],
+        [-111.5, 45.9]
+      ]
+    },
+    {
+      "from": "Three Forks",
+      "to": "Fort Clatsop",
+      "dates": "Aug – Dec 1805",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Lewis and Clark Expedition (Wikipedia): Lemhi Pass, the Lolo Trail and the Clearwater, Snake and Columbia",
+      "points": [
+        [-111.5, 45.9],
+        [-113.4, 44.97],
+        [-113.8, 45.9],
+        [-114.6, 46.6],
+        [-116, 46.5],
+        [-117, 46.4],
+        [-119.5, 46.1],
+        [-121.2, 45.7],
+        [-123.5, 46.2],
+        [-123.88, 46.13]
+      ]
+    },
+    {
+      "from": "Fort Clatsop",
+      "to": "St Louis",
+      "dates": "23 Mar – 23 Sep 1806",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "inferred",
+      "source": "Lewis and Clark Expedition (Wikipedia): the same way back, the party splitting east of the Divide; Timeline of the Lewis and Clark Expedition (Wikipedia): left Fort Clatsop 23 March, at St Louis 23 September",
+      "points": [
+        [-123.88, 46.13],
+        [-121.2, 45.7],
+        [-117, 46.4],
+        [-114.6, 46.6],
+        [-113.4, 44.97],
+        [-111.5, 45.9],
+        [-108, 47.8],
+        [-104, 48],
+        [-100.4, 44.4],
+        [-96.4, 41.1],
+        [-94.6, 39.1],
+        [-90.2, 38.63]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": -101.3,
+      "lat": 47.3,
+      "date": "Winter 1804–05",
+      "label": "Fort Mandan: Sacagawea joins",
+      "source": "Sacagawea (Wikipedia)",
+      "cite": "wp-sacagawea",
+      "text": "They wintered by the Mandan and Hidatsa villages. Toussaint Charbonneau was hired as an interpreter, and his Shoshone wife Sacagawea, then about sixteen, came with him. She gave birth to Jean Baptiste on 11 February 1805, and carried him across the continent."
+    },
+    {
+      "kind": "event",
+      "lon": -113.4,
+      "lat": 44.97,
+      "date": "Aug 1805",
+      "label": "Lemhi Pass: Sacagawea's people",
+      "source": "Lewis and Clark Expedition (Wikipedia)",
+      "cite": "wp-lewis-clark",
+      "text": "Over the Continental Divide the party found the Lemhi Shoshone, whose chief proved to be her brother Cameahwait. Sacagawea interpreted, and the party bought the horses it needed to cross the Bitterroots."
+    },
+    {
+      "kind": "event",
+      "lon": -123.88,
+      "lat": 46.13,
+      "date": "Nov 1805 – Mar 1806",
+      "label": "Fort Clatsop, and the vote",
+      "source": "York (Wikipedia)",
+      "cite": "wp-york",
+      "text": "In November 1805 the party voted where to winter. Sacagawea and York were both asked their opinion, though neither could vote in the United States."
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "id": "four-indian-kings-1710",
+  "title": "The Four Indian Kings to London, 1710",
+  "short": "Four Indian Kings",
+  "who": [
+    "four-indian-kings"
+  ],
+  "when": "1710",
+  "summary": "Peter Schuyler took four Mohawk and Mahican leaders from New York to London in spring 1710. They asked Queen Anne for help against the French in Canada, and for missionaries and a chapel at their town on the Mohawk River, and had their audience on 20 April. They were guests of the city for some weeks and were painted by John Verelst; the Queen's chapel at Fort Hunter was built afterwards.",
+  "sources": [
+    "wp-four-mohawk-kings"
+  ],
+  "legs": [
+    {
+      "from": "New England",
+      "to": "the Hampshire coast",
+      "dates": "Spring 1710",
+      "mode": "sea",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Four Mohawk Kings (Wikipedia): the voyage to England",
+      "note": "the port and the landfall are drawn from the usual account, and the line is a broad brush",
+      "points": [
+        [-70.8, 42.3],
+        [-60.0, 43.5],
+        [-35.0, 46.0],
+        [-15.0, 48.5],
+        [-5.0, 49.7],
+        [-1.5, 50.4]
+      ]
+    },
+    {
+      "from": "the Hampshire coast",
+      "to": "London",
+      "dates": "Apr 1710",
+      "mode": "land",
+      "line": "spline",
+      "confidence": "conventional",
+      "source": "Four Mohawk Kings (Wikipedia)",
+      "points": [
+        [-1.1, 50.8],
+        [-0.8, 51.1],
+        [-0.13, 51.5]
+      ]
+    }
+  ],
+  "events": [
+    {
+      "kind": "event",
+      "lon": -0.13,
+      "lat": 51.5,
+      "date": "20 Apr 1710",
+      "label": "Audience with Queen Anne",
+      "source": "Four Mohawk Kings (Wikipedia)",
+      "cite": "wp-four-mohawk-kings",
+      "text": "They were taken to St James's in royal coaches and presented to the Queen with a belt of wampum. They asked for English forces against the French and for a chapel and missionary. They became a London fashion."
+    }
+  ]
+}
