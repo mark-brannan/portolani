@@ -1679,7 +1679,7 @@ const CAPTION = 'notes to come'; // the line under an entry until its caption is
 // in SIGHT_TILES takes the line under its name (the tile's date) and its caption (the tile's text) from it.
 const ANCHORAGES = [ // the anchor's drawer is hidden for now; its home rows and groups head and close the Locations list (LOCATIONS)
   ['', [
-    ['Home: Iberia and the Mediterranean', DEFAULT_VIEW, 'Iberia and the Mediterranean'],
+    ['Home: the Mediterranean', DEFAULT_VIEW, 'The Mediterranean'],
     ['The world', at(10, 25, 0), 'The World'],
   ]],
   ['Regions', [ // a view covers its whole frame and crops what overflows the window, so each frame is about the window's shape

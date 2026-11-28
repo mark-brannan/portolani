@@ -5,7 +5,7 @@ Feature: Places to fly to  (the compass `#go`, Find; the astrolabe `#sights`, Lo
   Scenario: noteworthy ports by era
     Given the astrolabe drawer open
     When the user reads the astrolabe's list
-    Then two buttons head it with no group, "Home: Iberia and the Mediterranean" and "The world"
+    Then two buttons head it with no group, "Home: the Mediterranean" and "The world"
     And seven groups follow, each under its own heading, one open at a time: Regions; the sights in time order, the ancient world, the medieval Indian Ocean and Asia, Mali's trade network, the age of discovery, the modern world (six sights each but for Mali's nine and the age of discovery's eleven, most of them outside Europe); and Pacific Islands and Atolls
   Scenario: Find rings the points of interest
     Given the compass's Find drawer open
