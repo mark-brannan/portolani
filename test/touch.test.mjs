@@ -263,8 +263,20 @@ test('mouse: the drawers open on a click, not a hover, one at a time below the r
       assert.ok(apart(box, row0), `${d} covers the row: ${JSON.stringify(box)}, row ${JSON.stringify(row0)}`);
     }
     assert.equal(await page.locator('.drawer .close, #close').count(), 0, 'a close button is back');
+    // what can be tapped is 44 px: the row, the compass, the skull and the quarter turns
+    for (const sel of ['#where .row button:not([hidden])', '#compass', '#sweep', '#walkLeft', '#walkRight']) {
+      for (const bx of await page.locator(sel).evaluateAll((els) => els.map((e) => { const r = e.getBoundingClientRect(); return [e.id, r.width, r.height]; }))) {
+        assert.ok(bx[1] >= 43.9 && bx[2] >= 43.9, `${bx[0]} is ${bx[1]} x ${bx[2]}, under 44 px`);
+      }
+    }
     await page.click('#charts');
     assert.equal(await opened('chartsDrawer'), false, 'a second click left the charts open');
+    // the settings open on the map's own controls, not on the two switches being tried
+    await page.click('#open');
+    await page.waitForTimeout(400);
+    const tops = await page.evaluate(() => ({ sea: document.getElementById('h-mood').getBoundingClientRect().top, trying: document.getElementById('peopleViewRow').getBoundingClientRect().top, hover: document.getElementById('hoverRow').getBoundingClientRect().top }));
+    assert.ok(tops.sea < tops.trying && tops.sea < tops.hover, `the settings open on the switches: ${JSON.stringify(tops)}`);
+    await page.click('#open');
 
     await page.click('#voyages');
     assert.equal(await opened('voyagesPanel'), true);
