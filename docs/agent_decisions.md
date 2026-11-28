@@ -723,3 +723,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261128t140340z
 - Reading A of the user's 2026-11-25 word: the first page builds the view and the rose only; #428's first-screen words wait on a pick Undo: build a #428 first-screen candidate next ([#432](https://github.com/mark-brannan/portolani/pull/432))
+
+### 20261128t140355z
+- The first page keeps Dulcert's zoom and moves 15.9 degrees west, the least that holds the Catalan Atlas rose one rose width (80 canvas px) inside the canvas's left edge; on a phone the rose stays off screen, left for the iPhone pass Undo: revert DEFAULT_VIEW in scripts/scene.mjs to viewOfFrame(FRAME) ([#432](https://github.com/mark-brannan/portolani/pull/432))
