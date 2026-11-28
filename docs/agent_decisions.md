@@ -729,3 +729,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261128t140411z
 - Ship and sea-monster tiles read 'A ship' or 'A sea monster', 'Cut from <work>.' or 'Redrawn after <work>.', and link the scan; sprites with no recorded source show the title only Undo: edit figureTile in scripts/scene.mjs ([#432](https://github.com/mark-brannan/portolani/pull/432))
+
+### 20261128t140424z
+- A country's name letters only along parts at least 15% of its largest part's area; at world zoom this drops names that only fit on islands (Canada, Russia, Japan and more at world-z2) Undo: change COAST_PART_SHARE in scripts/names.mjs ([#432](https://github.com/mark-brannan/portolani/pull/432))
