@@ -855,11 +855,13 @@ async function render() {
     preparePictures().then((fresh) => { if (fresh && me === run) repaint('pictures dealt'); }, () => {}); // the chosen subject's pictures, drawn once loaded
     const t2 = performance.now();
     $('status').textContent = `z${view.zoom.toFixed(1)}: load ${timing.load.toFixed(0)} ms, placement + parchment ${timing.place.toFixed(0)} ms, draw ${(t2 - t1).toFixed(0)} ms (total ${(t2 - t0).toFixed(0)} ms)`;
-    if (!document.documentElement.classList.contains('drawn')) $('drawerFoot').prepend($('status')); // the timings leave the map for the drawer's foot
+    if ($('status').parentElement !== $('drawerFoot')) $('drawerFoot').prepend($('status')); // the timings leave the map for the drawer's foot
     document.documentElement.classList.add('drawn'); // the loading plate gives way to the chart (index.html)
+    document.documentElement.classList.remove('failed');
   } catch (e) {
     keepTile = false; // a sight's tile kept for this render is not kept for the next
     $('status').textContent = `Failed: ${e.message}`;
+    document.body.append($('status')); document.documentElement.classList.add('failed'); // a failure is read on the map, not in a shut drawer (index.html)
     throw e;
   }
 }
@@ -1532,7 +1534,7 @@ function regionMarks(proj, rect) {
   });
 }
 // The ships and sea monsters on the map (scene.mjs figureHits), less those a laid chart's sheet covers
-const figuresSeen = (proj) => figureHits(ground?.anchored, proj, FULL)
+const figuresSeen = (proj) => figureHits(ground?.anchored, proj, FULL, placed.zoom)
   .filter((m) => !(ground?.overlays ?? []).some((u) => u.mode === 'sheet' && u.sheet && onSheet(u, proj, u.sheet, m.x, m.y)));
 // `group`: the marks within a tap's reach of each other (groupMarks) that the one found is among, when it is a drawn mark
 const FULL = { x0: 0, y0: 0, x1: W, y1: H };

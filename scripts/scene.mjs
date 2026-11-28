@@ -3169,11 +3169,11 @@ export function figureTile(s) {
   return { title: s.kind === 'ship' ? 'A ship' : 'A sea monster', text, ...(s.source?.page && { cited: { url: s.source.page, title: 'The scan' } }) };
 }
 // The ships and sea monsters a placed scene drew (anchorScene's), as pickMark marks in `proj`'s px: the sprite's box,
-// at the size it was placed, is the place to click.
-export function figureHits(anchored, proj, rect) {
-  const show = anchored?.show?.kinds;
+// at the size it was placed, is the place to click. A figure the frame at `zoom` does not ink (bandInk) is no mark.
+export function figureHits(anchored, proj, rect, zoom) {
+  const show = anchored?.show?.kinds, inkOf = bandInk(anchored?.bands, zoom, anchored?.turn);
   return [['monster', anchored?.monsters, 0.5], ['ship', anchored?.ships, 0.6]].flatMap(([kind, list, up]) => (show?.has(kind) ? list ?? [] : []).flatMap(({ o, at }) => {
-    if (proj.visible && !proj.visible(...at)) return [];
+    if (inkOf(o.band) <= 0 || (proj.visible && !proj.visible(...at))) return [];
     const [x, y] = proj.toPx(at), w = o.size, h = o.sprite.img ? (w * o.sprite.img.height) / o.sprite.img.width : w;
     const x0 = x - w / 2, x1 = x + w / 2, y0 = y - h * up, y1 = y + h * (1 - up);
     if (x1 < rect.x0 || x0 > rect.x1 || y1 < rect.y0 || y0 > rect.y1) return [];

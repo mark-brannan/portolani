@@ -51,9 +51,11 @@
   #compareLine.drag::before { content: ''; position: absolute; left: -22px; top: 0; width: 44px; bottom: 0; }
   #compareLine.drag::after { content: '\2194'; position: absolute; left: -14px; top: 50%; width: 28px; height: 28px; margin-top: -14px; border-radius: 50%; background: #f1e6c8; border: 2px solid #8c2f1e; color: #8c2f1e; font: 16px/24px sans-serif; text-align: center; }
   /* until the first chart is drawn (page.js adds .drawn): a parchment plate where the map will be, the loading line on it in the chart's type;
-     then the line moves to the Configuration drawer's foot (#drawerFoot), so nothing is printed over the map */
+     then the line moves to the Configuration drawer's foot (#drawerFoot), so nothing is printed over the map; a failed draw (page.js adds
+     .failed) brings it back over the map, on a patch of parchment, until the next good draw */
   html:not(.drawn) #map { background: var(--sheet); }
-  html:not(.drawn) #status { position: fixed; inset: 0; margin: auto; width: fit-content; height: fit-content; font: 22px var(--serif); color: var(--sheet-ink); }
+  html.drawn.failed #status { background: var(--sheet); padding: 6px 14px; z-index: 10; }
+  html:not(.drawn) #status, html.failed #status { position: fixed; inset: 0; margin: auto; width: fit-content; height: fit-content; font: 22px var(--serif); color: var(--sheet-ink); }
   /* the drawer's foot: the last draw's timings, the English of the memento mori just read, and the commit the site was built from and when (build.json) */
   #drawerFoot { margin-top: 14px; padding-top: 8px; border-top: 1px solid var(--rule); font-size: 11px; opacity: 0.75; }
   #drawerFoot p { margin: 2px 0 0; overflow-wrap: anywhere; }

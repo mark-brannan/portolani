@@ -243,7 +243,7 @@ test('the first page holds the Catalan Atlas rose where its lines meet, and its 
   assert.ok(rose.x - rose.size / 2 >= 0 && rose.x + rose.size / 2 <= W && rose.y - rose.size / 2 >= 0 && rose.y + rose.size / 2 <= H, `the whole rose is on the canvas: ${rose.x}, ${rose.y}`);
   const a = anchorScene(scene, data);
   assert.ok(a.rays.some(({ line: [[lon, lat]] }) => Math.abs(lon - ROSE.lon) < 1e-9 && Math.abs(lat - ROSE.lat) < 1e-9), 'rhumb lines run from the rose');
-  const figures = figureHits(a, viewProjection(DEFAULT_VIEW), { x0: 0, y0: 0, x1: W, y1: H });
+  const figures = figureHits(a, viewProjection(DEFAULT_VIEW), { x0: 0, y0: 0, x1: W, y1: H }, DEFAULT_VIEW.zoom);
   const onCanvas = [...scene.ships, ...scene.monsters].filter((f) => f.x >= 0 && f.x <= W && f.y >= 0 && f.y <= H);
   assert.ok(onCanvas.length > 0, 'the first page has a ship or a monster');
   for (const f of onCanvas) assert.ok(figures.some((m) => Math.abs(m.x - f.x) < 1e-6), `the ${f.sprite.id} at ${f.x}, ${f.y} is a mark`);
