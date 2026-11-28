@@ -312,7 +312,13 @@ function viewOfFrame(frame) {
   const k = Math.max(W / ((frame.lonMax - frame.lonMin) * RAD), H / (mercY(frame.latMax) - mercY(frame.latMin)));
   return { lon: (frame.lonMin + frame.lonMax) / 2, lat: mercLat(y0), zoom: Math.log2((k * 2 * Math.PI) / 512) };
 }
-const DEFAULT_VIEW = viewOfFrame(FRAME);
+// The view panned the least that puts [lon, lat] `pad` px or more inside `rect` (canvas px), or the view as it is.
+function holdPoint(view, [lon, lat], pad, rect = { x0: 0, y0: 0, x1: W, y1: H }) {
+  const [x, y] = makeProjection(view).project(lon, lat);
+  const into = (v, lo, hi) => Math.max(0, lo + pad - v) - Math.max(0, v - (hi - pad));
+  const dx = into(x, rect.x0, rect.x1), dy = into(y, rect.y0, rect.y1);
+  return dx || dy ? panView(view, dx, dy) : view;
+}
 
 // Zoom within ZOOM, longitude wrapped, projection one of PROJECTIONS, and the centre kept far
 // enough from the poles that the canvas stays on the map, or centred on the equator once the
@@ -438,6 +444,10 @@ const loadGeo = (id) => env.readJSON(sitePath(record(id).sources.find((s) => s.k
 // per px of a 512 px web-mercator world, which the provider turns back into the scene's zoom.
 let coastEnv = null, coastProvider = null;
 const coast = () => (coastEnv === env ? coastProvider : (coastEnv = env, coastProvider = provider({ read: (p) => env.readJSON(sitePath(p)) })));
+// The first page: FRAME at its zoom, moved the least that holds the Catalan Atlas rose, where its lines meet, a rose's
+// width inside the canvas (docs/decisions.md, 2026-11-25).
+const HOME_ROSE_PAD = ROSE_CAP.big * W;
+const DEFAULT_VIEW = holdPoint(viewOfFrame(FRAME), [ATLAS_ROSE.lon, ATLAS_ROSE.lat], HOME_ROSE_PAD);
 const WEB_MERCATOR_R = 6378137;
 const coastView = (view, f = frameOf(makeProjection(view), 0)) => ({
   lat: view.lat, resolution: (2 * Math.PI * WEB_MERCATOR_R * Math.cos(view.lat * RAD)) / (512 * 2 ** view.zoom),
@@ -3149,6 +3159,28 @@ export function sightHits(spots, drawn, proj, rect) {
   });
 }
 
+// A drawn ship's or sea monster's tile: what it is and, where the pack records it, the work it was cut from and its scan.
+// Placeholder copy: every figure that could take a note has one (docs/decisions.md, 2026-10-29).
+const FIGURE_FROM = { 'carta-marina': 'Olaus Magnus, Carta Marina, 1539', catalan: 'the Catalan Atlas, 1375', 'de-la-cosa': 'Juan de la Cosa, 1500',
+  plancius: 'Petrus Plancius, Tabula geographica, 1609', pare: 'Ambroise Paré, Des monstres', debry: 'Theodor de Bry after John White, 1590' };
+export function figureTile(s) {
+  const from = s.id.startsWith('ship-w-') ? 'Master W with the Key, about 1475 to 1490' : FIGURE_FROM[s.style];
+  const text = !from ? null : s.pack === 'vivid' ? `Redrawn after ${from}.` : `Cut from ${from}.`;
+  return { title: s.kind === 'ship' ? 'A ship' : 'A sea monster', text, ...(s.source?.page && { cited: { url: s.source.page, title: 'The scan' } }) };
+}
+// The ships and sea monsters a placed scene drew (anchorScene's), as pickMark marks in `proj`'s px: the sprite's box,
+// at the size it was placed, is the place to click.
+export function figureHits(anchored, proj, rect) {
+  const show = anchored?.show?.kinds;
+  return [['monster', anchored?.monsters, 0.5], ['ship', anchored?.ships, 0.6]].flatMap(([kind, list, up]) => (show?.has(kind) ? list ?? [] : []).flatMap(({ o, at }) => {
+    if (proj.visible && !proj.visible(...at)) return [];
+    const [x, y] = proj.toPx(at), w = o.size, h = o.sprite.img ? (w * o.sprite.img.height) / o.sprite.img.width : w;
+    const x0 = x - w / 2, x1 = x + w / 2, y0 = y - h * up, y1 = y + h * (1 - up);
+    if (x1 < rect.x0 || x0 > rect.x1 || y1 < rect.y0 || y0 > rect.y1) return [];
+    return [{ x, y: (y0 + y1) / 2, h, hit: [[x0, y0], [x1, y0], [x1, y1], [x0, y1]], area: w * h, tile: figureTile(o.sprite) }];
+  }));
+}
+
 // A birth: a ring round a dot in the person's red over a parchment disc, a placeholder the design will come back to
 // (the mockups of #161 tried a star, a sun and this ring); lighter than a skull, so a coast of them is not a field of pins.
 function drawBirth(g, x, y, colour = PERSON_RED) {
@@ -3934,4 +3966,4 @@ export const TOWN_SIZES = ['area', 'population', 'rank'];
 export { RIVER_STYLES, LAKE_STYLES, REEF_STYLES, PLAYA_STYLES, TREE_STYLES, RELIEF_STYLES, PEAK_STYLES, peakInkSvg };
 export const MAX_ZOOM = ZOOM.max;
 export { OVERLAP_RULES, DEFAULT_OVERLAP };
-export { paperSheet, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, anchorScene, drawAnchored, towerGlyph, SCALE_NAMES, readManifests, listStyles, listSprites, defaultSprites, selectSprites, chooseSprites, drawScene, drawGround, drawLate, LATE, IN_DRAG, covers, panView, zoomView, clampView, viewOfFrame, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };
+export { paperSheet, CORNERS, DEFAULT_CARTOUCHE_CORNER, DEFAULT_SCALE_CORNER, scaleRect, SCALE_CARD_W, SCALE_CARD_H, drawCartoucheCard, drawScaleCard, anchorScene, drawAnchored, towerGlyph, SCALE_NAMES, readManifests, listStyles, listSprites, defaultSprites, selectSprites, chooseSprites, drawScene, drawGround, drawLate, LATE, IN_DRAG, covers, panView, zoomView, clampView, viewOfFrame, holdPoint, HOME_ROSE_PAD, DEFAULT_VIEW, ZOOM, DETAIL_ZOOM, W, H, DETAIL };
