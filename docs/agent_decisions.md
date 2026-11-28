@@ -735,3 +735,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261128t140437z
 - The timings, the memento's English and the build line move to the Configuration drawer's foot, as #428 proposed; the skull keeps its place Undo: move #status, #mementoEnglish and #build back to body-level fixed lines in public/index.html ([#432](https://github.com/mark-brannan/portolani/pull/432))
+
+### 20261128t140503z
+- The dev server letters names as the checkout cuts them, as it already does for ranges, so Try it shows the names fix before a deploy Undo: drop the geo/names-50m.json route from scripts/dev.mjs ([#432](https://github.com/mark-brannan/portolani/pull/432))
