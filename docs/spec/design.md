@@ -955,3 +955,14 @@ Feature: People and voyages, each a vertical timeline
     And the map does not fly, since it frames him already, and his cards stay on the table and he stays chosen
     And there is no play button in his tile; the eye hides or shows one voyage, and the skull clears them all
     And the hash carries them as the Voyages drawer's do (`voyages=ibn-battuta-3,ibn-battuta-4`, with their colours), and letting him go leaves them shown
+
+Feature: A rose sits where rhumb lines meet  (scene.mjs `placeSheetRoses`, `latticeOf`)
+  Source: the user on [#431](https://github.com/mark-brannan/portolani/pull/431), 2026-11-25: "A rose that does not sit on rhumb lines is no rose.  This should be a spec and immovable.  A rose must sit on rhumb lines or it is merely pointless, non-functional (and historically incorrect) decorate."
+  Tested by: `test/rose-sheets.test.mjs`, for de la Cosa's sheet and the first page's rose; not yet for every view.
+  Scenario: every rose drawn is a meeting point of the lines drawn
+    Given any view with roses and rhumb lines on
+    Then every rose stands on a point the drawn rhumb lines radiate from: a sheet's hub, a node of its ring, or a hub whose own lines are drawn
+    And no rose stands anywhere else, whatever sea is open there
+  Scenario: a rose lent to a chart that has none takes one of that chart's meeting points
+    Given a chart that draws no rose of its own, lent another chart's
+    Then the lent rose stands at the chart's hub or on a node of its ring, and the chart's lines are not moved to suit it

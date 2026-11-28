@@ -9,7 +9,7 @@
 
 import { createServer } from 'node:http';
 import { spawnSync } from 'node:child_process';
-import { createReadStream, existsSync, statSync } from 'node:fs';
+import { createReadStream, existsSync, readFileSync, statSync } from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { Readable } from 'node:stream';
 import { fileURLToPath } from 'node:url';
@@ -19,8 +19,9 @@ import { buildLearn } from './learn.mjs';
 import { relativeImports } from './scene-modules.mjs';
 import { rangesFromRegions } from './ranges-file.mjs';
 import { buildInfo } from './build-info.mjs';
+import { coastNames, joinNames } from './names.mjs';
 
-let rangesJson; // the slimmed ranges as served, kept after the first request
+let rangesJson, namesJson; // the slimmed ranges and the letters as served, kept after the first request
 const root = fileURLToPath(new URL('..', import.meta.url));
 export const DATA_URL = 'https://mark-brannan.github.io/portolani/';
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json',
@@ -90,6 +91,13 @@ export function devServer({ learn, site, data = DATA_URL }) {
       if (!existsSync(src)) { res.writeHead(404); return res.end(); }
       res.writeHead(200, { 'content-type': TYPES['.json'], 'cache-control': 'no-store' });
       return res.end((rangesJson ??= JSON.stringify(rangesFromRegions(src))));
+    }
+    if (rel === 'geo/names-50m.json' && !site) { // the letters as this checkout cuts them (names.mjs), seas from their committed fixture, as the build makes them
+      const data = path.join(root, 'node_modules', 'coastlines', 'data');
+      namesJson ??= JSON.stringify(joinNames(JSON.parse(readFileSync(path.join(root, 'test', 'fixtures', 'sea-names-50m.json'), 'utf8')),
+        coastNames(...['ne-admin-0-countries-50m', 'ne-coastline-50m'].map((id) => JSON.parse(readFileSync(path.join(data, `${id}.geojson`), 'utf8'))))));
+      res.writeHead(200, { 'content-type': TYPES['.json'], 'cache-control': 'no-store' });
+      return res.end(namesJson);
     }
     const file = await localFile(local, rel.endsWith('/') ? `${rel}index.html` : rel);
     if (file) {

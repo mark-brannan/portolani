@@ -91,16 +91,26 @@ export function tintedSeas(marine) {
   return { type: 'FeatureCollection', features };
 }
 
-// Each country along every stretch of its coast: the runs of its outline that the coastline
-// shares, vertex for vertex.
+// A ring's area in square degrees, longitude shrunk by the cosine of its mean latitude.
+function ringArea(ring) {
+  const c = Math.cos((ring.reduce((s, q) => s + q[1], 0) / ring.length) * Math.PI / 180);
+  return Math.abs(ring.reduce((s, [x, y], i) => { const [x2, y2] = ring[(i + 1) % ring.length]; return s + x * y2 - x2 * y; }, 0)) * c / 2;
+}
+// A country's name stays off its lesser islands, where it reads as the island's own: "France" on Corsica. It goes on
+// the coast of its largest part and of any part at least this share of that one's area.
+export const COAST_PART_SHARE = 0.15;
+
+// Each country along every stretch of the coast of its main parts (COAST_PART_SHARE): the runs of its outline that
+// the coastline shares, vertex for vertex.
 export function coastNames(countries, coastline) {
   const out = [];
   const key = ([lon, lat]) => `${lon.toFixed(5)},${lat.toFixed(5)}`;
   const shore = new Set();
   for (const f of coastline.features) for (const line of linesOf(f.geometry)) for (const p of line) shore.add(key(p));
   for (const f of countries.features) {
-    const p = f.properties;
-    for (const poly of polysOf(f.geometry)) {
+    const p = f.properties, polys = polysOf(f.geometry), areas = polys.map((poly) => ringArea(poly[0])), most = Math.max(...areas);
+    for (const [n, poly] of polys.entries()) {
+      if (areas[n] < COAST_PART_SHARE * most) continue;
       const ring = poly[0].slice(0, -1);
       // signed area > 0: anticlockwise, the land on the left of the walk
       const signed = ring.reduce((s, [x, y], i) => { const [x2, y2] = ring[(i + 1) % ring.length]; return s + x * y2 - x2 * y; }, 0);

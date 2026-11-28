@@ -5,8 +5,8 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
-import { createScene, anchorScene, bandInk, placedSheets, tuneOf, viewProjection, panView, zoomView, BUDGET } from '../scripts/scene.mjs';
-import { territory, BANDS, bandsAt, WORLD_BAND } from '../scripts/atlas.mjs';
+import { createScene, anchorScene, bandInk, placedSheets, tuneOf, viewProjection, panView, zoomView, BUDGET, DEFAULT_VIEW, figureHits, W, H } from '../scripts/scene.mjs';
+import { territory, BANDS, bandsAt, WORLD_BAND, ROSE } from '../scripts/atlas.mjs';
 import { coastNames, joinNames } from '../scripts/names.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -233,4 +233,19 @@ test('a chart whose own set lists no rose keeps roses where its drawn lines meet
   assert.ok(roses.length > 0, 'the sheet draws a rose');
   const sites = [sheet.circle, ...sheet.circle.nodes];
   for (const r of roses) assert.ok(sites.some((q) => Math.abs(q.lon - r.lon) < 1e-9 && Math.abs(q.lat - r.lat) < 1e-9), `${r.sprite.id} at ${r.lon}, ${r.lat} sits at the ring's hub or a node`);
+});
+
+test('the first page holds the Catalan Atlas rose where its lines meet, and its ships and monsters open a tile', async () => {
+  const { scene, data } = await createScene(env, { view: DEFAULT_VIEW });
+  const rose = scene.roseDraws.find((r) => r.pinned);
+  assert.ok(rose, 'the Catalan Atlas rose is drawn');
+  assert.deepEqual([rose.lon, rose.lat], [ROSE.lon, ROSE.lat]);
+  assert.ok(rose.x - rose.size / 2 >= 0 && rose.x + rose.size / 2 <= W && rose.y - rose.size / 2 >= 0 && rose.y + rose.size / 2 <= H, `the whole rose is on the canvas: ${rose.x}, ${rose.y}`);
+  const a = anchorScene(scene, data);
+  assert.ok(a.rays.some(({ line: [[lon, lat]] }) => Math.abs(lon - ROSE.lon) < 1e-9 && Math.abs(lat - ROSE.lat) < 1e-9), 'rhumb lines run from the rose');
+  const figures = figureHits(a, viewProjection(DEFAULT_VIEW), { x0: 0, y0: 0, x1: W, y1: H }, DEFAULT_VIEW.zoom);
+  const onCanvas = [...scene.ships, ...scene.monsters].filter((f) => f.x >= 0 && f.x <= W && f.y >= 0 && f.y <= H);
+  assert.ok(onCanvas.length > 0, 'the first page has a ship or a monster');
+  for (const f of onCanvas) assert.ok(figures.some((m) => Math.abs(m.x - f.x) < 1e-6), `the ${f.sprite.id} at ${f.x}, ${f.y} is a mark`);
+  for (const f of figures) assert.ok(f.tile.title && f.hit.length === 4, `${f.tile.title} at ${f.x}, ${f.y}`);
 });

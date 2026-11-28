@@ -39,3 +39,14 @@ test('a country is named along the coast it shares with the coastline, land on t
     assert.ok(f.geometry.coordinates.every(([x]) => x > 10.05));
   }
 });
+
+test('a country is named along its mainland, not along a small island of its own', () => {
+  const closed = (r) => [...r, r[0]];
+  const main = closed(dense(square(0, 40, 4))), isle = closed(dense(square(8, 41, 1))), big = closed(dense(square(0, 30, 3)));
+  const countries = { features: [{ properties: { NAME: 'Terra', LABELRANK: 2, MIN_LABEL: 3 }, geometry: { type: 'MultiPolygon', coordinates: [[main], [isle], [big]] } }] };
+  const coastline = { features: [main, isle, big].map((coordinates) => ({ geometry: { type: 'LineString', coordinates } })) };
+  const xs = coastNames(countries, coastline).features.flatMap((f) => f.geometry.coordinates.map(([x, y]) => [x, y]));
+  assert.ok(xs.length > 0);
+  assert.ok(xs.every(([x]) => x < 8 - 0.05), 'nothing lettered on the island a sixteenth of the mainland');
+  assert.ok(xs.some(([, y]) => y < 34), 'the part over half the mainland keeps its lettering');
+});

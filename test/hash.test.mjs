@@ -91,7 +91,7 @@ scenario('map: a zoom past the top is clamped to 15, not rejected', 'map=99/40/5
 scenario('map: a view that fails the pattern opens the default view', 'map=1.2.3/40/5', async (page) => {
   assert.match(await status(page), /^z5\.5: /);
   await slide(page, 'density', 1.5);
-  assert.equal((await params(page)).get('map'), '5.48/40.265/7.000');
+  assert.equal((await params(page)).get('map'), '5.48/40.265/-8.871');
 });
 
 scenario('map: longitude wraps', 'map=5/40/190', async (page) => {

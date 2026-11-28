@@ -50,32 +50,21 @@
   #compareLine.drag { pointer-events: auto; cursor: ew-resize; }
   #compareLine.drag::before { content: ''; position: absolute; left: -22px; top: 0; width: 44px; bottom: 0; }
   #compareLine.drag::after { content: '\2194'; position: absolute; left: -14px; top: 50%; width: 28px; height: 28px; margin-top: -14px; border-radius: 50%; background: #f1e6c8; border: 2px solid #8c2f1e; color: #8c2f1e; font: 16px/24px sans-serif; text-align: center; }
-  #status {
-    position: fixed; right: 10px; bottom: 6px; margin: 0; max-width: calc(100vw - 20px);
-    font-size: 11px; color: var(--margin-ink); opacity: 0.75; pointer-events: none;
-    text-shadow: 0 0 3px var(--margin), 0 0 3px var(--margin);
-  }
-  /* under the timing line, the commit the site was built from and when (build.json, written by the build) */
-  html.built #status { bottom: 20px; }
-  /* until the first chart is drawn (page.js adds .drawn): a parchment plate where the map will be, the loading line on it in the chart's type */
+  /* until the first chart is drawn (page.js adds .drawn): a parchment plate where the map will be, the loading line on it in the chart's type;
+     then the line moves to the Configuration drawer's foot (#drawerFoot), so nothing is printed over the map; a failed draw (page.js adds
+     .failed) brings it back over the map, on a patch of parchment, until the next good draw */
   html:not(.drawn) #map { background: var(--sheet); }
-  html:not(.drawn) #status { inset: 0; margin: auto; width: fit-content; height: fit-content; font: 22px var(--serif); color: var(--sheet-ink); opacity: 1; text-shadow: none; }
-  /* the English of the memento mori just read, a line above the timings, in the same small type */
-  #mementoEnglish { position: fixed; right: 10px; bottom: 20px; margin: 0; max-width: calc(100vw - 20px); font-size: 11px; color: var(--margin-ink); opacity: 0.75; pointer-events: none; text-shadow: 0 0 3px var(--margin), 0 0 3px var(--margin); }
-  html.built #mementoEnglish { bottom: 34px; }
-  #build {
-    position: fixed; right: 10px; bottom: 6px; margin: 0; max-width: min(calc(100vw - 20px), 520px);
-    font-size: 10px; color: var(--margin-ink); opacity: 0.6;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    text-shadow: 0 0 3px var(--margin), 0 0 3px var(--margin);
-  }
+  html.drawn.failed #status { background: var(--sheet); padding: 6px 14px; z-index: 10; }
+  html:not(.drawn) #status, html.failed #status { position: fixed; inset: 0; margin: auto; width: fit-content; height: fit-content; font: 22px var(--serif); color: var(--sheet-ink); }
+  /* the drawer's foot: the last draw's timings, the English of the memento mori just read, and the commit the site was built from and when (build.json) */
+  #drawerFoot { margin-top: 14px; padding-top: 8px; border-top: 1px solid var(--rule); font-size: 11px; opacity: 0.75; }
+  #drawerFoot p { margin: 2px 0 0; overflow-wrap: anywhere; }
   #build a { color: inherit; }
   /* the right margin, above the timing line: the skull, always there, is the one clear for the map (every picture away,
      the subject let go, every chart and voyage lifted; the view and the settings stay); its memento mori, the next one at each clearing, in its hover text alone */
   /* it sits over the drawers (z-index 3), and an open drawer stops above it (--memento-h, page.js), so the skull and its
      line stay in sight and in reach while a drawer is in use; on a phone it rides just above the open sheet */
   :root { --memento-foot: 44px; --memento-h: 110px; }
-  html.built { --memento-foot: 58px; }
   #memento {
     position: fixed; right: 12px; bottom: var(--memento-foot); z-index: 3; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
     max-width: min(230px, 100vw - 24px); pointer-events: none;
@@ -643,8 +632,6 @@
   <div class="bstrip" title="The voyage's calendar: drag or click to go to a day"><div id="bandStrip"></div><span id="bandThumb"></span><small id="bandFrom"></small><small id="bandTo"></small><small id="bandPace"></small></div>
 </div>
 <p id="status" role="status">Loading…</p>
-<p id="mementoEnglish" aria-hidden="true"></p>
-<p id="build" hidden></p>
 <div id="memento">
   <div id="turns">
   <button id="walkLeft" class="walk" type="button" aria-label="Turn the world a quarter turn anticlockwise" title="A quarter turn anticlockwise"></button>
@@ -1084,6 +1071,11 @@
       </div>
     </details>
   </section>
+  <!-- the small print, off the map: the last draw's timings (#status, moved here once the chart is drawn), the memento's English, the build -->
+  <footer id="drawerFoot">
+    <p id="mementoEnglish" aria-hidden="true"></p>
+    <p id="build" hidden></p>
+  </footer>
 </aside>
 <script type="importmap">{ "imports": { "coast-wright": "./coast-wright/index.js", "coastlines/catalogue.json": "./coastlines/catalogue.json", "coastlines/provider": "./coastlines/lib/provider.js" } }</script>
 <script type="module" src="page.js"></script>
