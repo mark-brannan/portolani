@@ -126,7 +126,7 @@ const CHARTS = [
     up: 90, // drawn west up, the equator running up and down and the New World at the top: the scan turned 90° clockwise reads as drawn
     pieces: (md) => { const rows = landmarkRows(md, '### Landmarks, 1500'); return [[70, 880, 'west'], [880, 1150, 'atlantic'], [1150, 2060, 'east']].map(([x0, x1, p]) => [x0, x1, pieceFit(rows, p)]); },
     marks: (md) => { const rows = landmarkRows(md, '### Landmarks, 1500'); return ['west', 'atlantic', 'east'].map((p) => rows.filter((r) => r.piece === p).map((r) => r.ll)); },
-    snaps: ['New World', 'Atlantic', 'Europe'] },
+    snaps: ['Americas', 'Atlantic', 'Europe'] },
   // The charts below are laid level by a few landmarks read off the scan by eye, scan px to real lon, lat (#161 follow-up):
   // a rough centre and scale, no warped coast fits: `landmarks`, one piece by their levelFit.
   { id: 'aguiar', title: 'Chart of Jorge de Aguiar, 1492', source: 'aguiar-chart', file: 'aguiar.jpg', scale: 2, dark: true, // scanned on black

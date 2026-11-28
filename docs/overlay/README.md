@@ -33,14 +33,14 @@ the equator, and the longitude midway between where the chart's two coasts' fits
 "Parallels" chip. Without parallels a chart's own placement (the "Level" chip) is level, its scale the
 geometric mean of its two coasts' fits and its centre midway between where those put the scan's centre; a
 chart fitted in one piece takes that fit as it is. The `snaps` are the per-piece fits applied to the whole
-scan, each a chip on the sheet: Juan de la Cosa's New World, Atlantic and Europe; the Carta Marina's West
+scan, each a chip on the sheet: Juan de la Cosa's Americas, Atlantic and Europe; the Carta Marina's West
 and Baltic. The sheet is moved by hand: held anywhere on it, it is dragged; by the ring at its bottom left
 corner it turns about its centre; by the square at its bottom right it is resized. Where it is let go goes
 into the link as `sheet=<lon>,<lat>,<scale>,<turn>`.
 
 | chart | own placement | snaps |
 |---|---|---|
-| Map of Juan de la Cosa | Parallels: 0.1208 °/px, turned 2.2° anticlockwise so its tropic and equator lie level at 23.44°N and 0°, centred 14.8°W | New World (0.0780 °/px, 7.9° anticlockwise), Atlantic (0.1307, 1.4° clockwise), Europe (0.1403, 4.9° clockwise) |
+| Map of Juan de la Cosa | Parallels: 0.1208 °/px, turned 2.2° anticlockwise so its tropic and equator lie level at 23.44°N and 0°, centred 14.8°W | Americas (0.0780 °/px, 7.9° anticlockwise), Atlantic (0.1307, 1.4° clockwise), Europe (0.1403, 4.9° clockwise) |
 | Catalan Atlas | 0.00321 °/px, level, centred 53.2°E 39.3°N (the geometric mean of its Atlantic and Cathay pages' scales) | one per page: Atlantic, Mali, Italy, Black Sea, Persia, Central Asia, India, Cathay |
 | Carta Marina | 0.0106 °/px, level | West (0.0113 °/px, 48° anticlockwise), Baltic (0.0100, 3° anticlockwise) |
 

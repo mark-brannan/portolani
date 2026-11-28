@@ -23,7 +23,7 @@ async function run(vp, name, { click } = {}) {
   if (!phone) await p.locator(ROW).screenshot({ path: `${OUT}/${name}-row.png` });
   await p.context().close();
 }
-await run(D, 'row-desktop'); await run(P, 'row-phone'); await run(D, 'row-desktop-newworld', { click: 'New World' });
+await run(D, 'row-desktop'); await run(P, 'row-phone'); await run(D, 'row-desktop-newworld', { click: 'Americas' });
 // west up, then the sheet lifted by its eye: the world turns back to north up (the hash's bearing goes)
 {
   const p = await open(D);

@@ -1,6 +1,6 @@
 # Remote islands
 
-Feature: Remote islands  (the astrolabe `#sights`, two of the seven rows in its "Pacific Islands and Atolls" group, which is folded until its heading is clicked: only the group marked open, "The age of discovery", is open at first) [verified against main, 2026-11-02]
+Feature: Remote islands  (the astrolabe `#sights`, two of the seven rows in its "Pacific Islands and Atolls" group, which is folded until its heading is clicked: only the group marked open, "Europe's sea roads", is open at first) [verified against main, 2026-11-02]
   Scenario: the group and its rows
     Given the astrolabe drawer open
     When the user opens the group "Pacific Islands and Atolls"
