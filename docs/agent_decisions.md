@@ -720,3 +720,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261125t195251z
 - G's frame (4.5E 42.3N, default zoom) and I's half-size hub rose are placements for the picture only Undo: edit the VIEWS rows in docs/first-page/render.mjs ([#431](https://github.com/mark-brannan/portolani/pull/431))
+
+### 20261128t140340z
+- Reading A of the user's 2026-11-25 word: the first page builds the view and the rose only; #428's first-screen words wait on a pick Undo: build a #428 first-screen candidate next ([#432](https://github.com/mark-brannan/portolani/pull/432))
