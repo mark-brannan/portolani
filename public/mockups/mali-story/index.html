@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mali story prototype</title>
+<!-- A prototype for PR #318, not the page: how the site might tell the Mali story, in candidate 1's sepia, with both
+     entry points live (the king on the map, and the two plates) and the road as chips. The map is a still render of the
+     live scene (npm run render -- --view 15,21,4.1); the places on it are projected with the scene's own projection. -->
+<style>
+@font-face { font-family: 'IM Fell English'; src: url('../../font/IMFeENrm28P.ttf'); }
+@font-face { font-family: 'IM Fell English'; font-style: italic; src: url('../../font/IMFeENit28P.ttf'); }
+:root {
+  --page: #e9dcc0; --ink: #3b2a17; --edge: #8a6a3a; --stage: #d9c59a; --accent: #8b2e1f; --tile: #f3e8cf; --gold: #b8892c;
+  --attested: #3f6b3a; --onesource: #b07a1c; --retelling: #8e3a2a;
+  --serif: 'IM Fell English', Georgia, serif; --sans: 'DejaVu Sans', system-ui, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; }
+html, body { height: 100%; overflow: hidden; background: #1d1913; color: var(--ink); font-family: var(--serif); }
+#viewport { position: fixed; inset: 0; overflow: hidden; background: var(--stage); touch-action: none; cursor: grab; }
+#viewport.dragging { cursor: grabbing; }
+#stage { position: absolute; left: 0; top: 0; width: 1600px; height: 1000px; transform-origin: 0 0; }
+#stage.fly { transition: transform 900ms cubic-bezier(.45,.05,.25,1); }
+#map { position: absolute; inset: 0; width: 1600px; height: 1000px; filter: sepia(.35) saturate(.9); user-select: none; -webkit-user-drag: none; transition: opacity 400ms, filter 400ms; }
+body.dim #map { opacity: .55; }
+svg.route { position: absolute; inset: 0; overflow: visible; pointer-events: none; }
+.leg { fill: none; stroke: var(--accent); stroke-width: 3; vector-effect: non-scaling-stroke; stroke-linecap: round; }
+.leg.usual { stroke-dasharray: 7 6; }
+.leg.fleet { stroke: var(--ink); stroke-dasharray: 2 7; }
+.mask { fill: none; stroke: #fff; stroke-width: 14; transition: stroke-dashoffset 1100ms ease-in-out; }
+
+/* the king, the plates and the lit place live on the map and scale with it, like a sprite */
+.king { position: absolute; width: 64px; height: 48px; margin: -24px 0 0 -32px; border-radius: 50%; border: 0; padding: 0; cursor: pointer;
+  background: url(musa.jpg) center / cover; box-shadow: 0 0 0 2px #f3e8cf, 0 0 0 4px var(--gold), 0 3px 8px #0006; }
+.king::after { content: ''; position: absolute; inset: -12px; border-radius: 50%; border: 2px solid var(--gold); animation: halo 2.4s ease-out infinite; }
+@keyframes halo { from { transform: scale(.8); opacity: .9; } to { transform: scale(1.35); opacity: 0; } }
+.plate { position: absolute; padding: 5px; background: #f6efdc; border: 0; cursor: pointer; box-shadow: 0 4px 12px #0007; transform: rotate(var(--tilt)); transition: transform 200ms; }
+.plate:hover { transform: rotate(0deg) scale(1.04); }
+.plate img { display: block; width: 100%; height: 100%; object-fit: cover; filter: sepia(.3); }
+.plate span { position: absolute; left: 4px; top: -20px; font: 11px var(--sans); background: var(--tile); border: 1px solid var(--edge); padding: 1px 6px; border-radius: 3px; white-space: nowrap; }
+svg.pins { position: absolute; inset: 0; overflow: visible; pointer-events: none; }
+svg.pins line { stroke: var(--edge); stroke-width: 1.5; stroke-dasharray: 4 4; vector-effect: non-scaling-stroke; }
+svg.pins circle { fill: var(--accent); }
+.lit { position: absolute; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; border: 3px solid var(--accent); box-shadow: 0 0 0 6px #8b2e1f44; pointer-events: none; animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 14px #8b2e1f22; } }
+.hide { display: none !important; }
+body.plates .king, body:not(.plates) .plates-only { display: none; }
+
+/* the switch the prototype carries, so both entry points can be tried; not part of the design */
+#switch { position: fixed; left: 12px; top: 12px; z-index: 20; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font: 12px var(--sans);
+  background: #1d1913d9; color: #e9dcc0; padding: 6px 10px; border-radius: 18px; }
+#switch .chip { border-color: #e9dcc0; color: #e9dcc0; background: transparent; }
+#switch .chip.on { background: #e9dcc0; color: #1d1913; }
+#switch .chip img { width: 22px; height: 16px; object-fit: cover; border-radius: 50%; vertical-align: -4px; margin-right: 4px; }
+
+.chip { display: inline-flex; align-items: center; gap: 5px; font: 12.5px var(--sans); padding: 5px 10px; border: 1px solid var(--accent); border-radius: 14px; margin: 4px 4px 0 0;
+  color: var(--accent); background: var(--tile); cursor: pointer; white-space: nowrap; }
+.chip.on { background: var(--accent); color: var(--tile); }
+.chip .dot { font-size: 13px; line-height: 1; }
+
+/* the tile: from the right on a wide screen, from the bottom on a phone */
+.tile { position: fixed; z-index: 10; background: var(--tile); color: var(--ink); border-left: 1px solid var(--edge); box-shadow: -6px 0 18px #0005;
+  right: 0; top: 0; bottom: 0; width: 380px; padding: 22px 20px; overflow-y: auto; transform: translateX(105%); transition: transform 450ms ease; font-size: 16px; line-height: 1.4; }
+.tile.open { transform: none; }
+.tile h2 { font-size: 24px; font-weight: 400; margin-bottom: 8px; }
+.tile .x { position: absolute; right: 10px; top: 8px; border: 0; background: none; font: 22px var(--sans); color: var(--edge); cursor: pointer; }
+.tile figure img { width: 100%; border: 1px solid var(--edge); filter: sepia(.2); }
+.tile figcaption { font: 11.5px var(--sans); opacity: .7; margin: 3px 0 10px; }
+.tile .chips { margin-top: 12px; }
+.tile .body { transition: opacity 250ms; }
+.tile .body.fade { opacity: 0; }
+
+/* Fact or Fiction? */
+.sub { font-size: 15px; opacity: .8; margin-bottom: 10px; }
+table.claims { border-collapse: collapse; width: 100%; font-size: 15px; }
+.claims td { padding: 7px 6px; border-bottom: 1px solid #8a6a3a55; vertical-align: top; }
+.claims tr { cursor: pointer; }
+.claims tr:hover td { background: #8b2e1f12; }
+.claims tr.hi td { background: #8b2e1f2a; }
+.claims small { display: block; font: 11px var(--sans); opacity: .65; margin-top: 2px; }
+.claims .m { font-size: 19px; width: 24px; }
+.claims .g { font: 12px var(--sans); white-space: nowrap; text-align: right; }
+.key { font: 12px var(--sans); margin-top: 10px; display: flex; gap: 14px; flex-wrap: wrap; }
+
+/* the comparison of the two plates */
+#compare { position: fixed; inset: 0; z-index: 12; background: #e9dcc0f2; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 24px 24px;
+  opacity: 0; pointer-events: none; transition: opacity 450ms; }
+#compare.open { opacity: 1; pointer-events: auto; }
+#compare .pair { display: flex; gap: 22px; align-items: flex-start; justify-content: center; flex-wrap: wrap; }
+#compare figure { background: #f6efdc; padding: 8px; box-shadow: 0 6px 18px #0005; transform: translateX(var(--from)); transition: transform 500ms ease; }
+#compare.open figure { transform: none; }
+#compare figure img { display: block; height: min(36vh, 300px); max-width: 42vw; object-fit: cover; filter: sepia(.25); }
+#compare figcaption { font: 12px var(--sans); margin-top: 6px; }
+#compare p { max-width: 680px; margin: 18px auto 4px; font-size: 17px; line-height: 1.45; text-align: center; }
+#compare .chips { text-align: center; }
+#compare .x { position: absolute; right: 16px; top: 52px; border: 0; background: none; font: 24px var(--sans); color: var(--edge); cursor: pointer; }
+
+/* the road: a strip of stops along the foot of the map */
+#road { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9; background: linear-gradient(#f3e8cf00, #f3e8cfee 30%); padding: 26px 12px 12px; transform: translateY(110%); transition: transform 450ms ease; }
+#road.open { transform: none; }
+#road .strip { display: flex; gap: 2px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+#road .strip .chip { margin: 0; flex: none; }
+#road .strip .chip small { opacity: .7; }
+#road .note { max-width: 560px; margin: 0 0 8px; background: var(--tile); border: 1px solid var(--edge); padding: 10px 12px; font-size: 15px; line-height: 1.4; box-shadow: 0 3px 10px #0004; }
+#road .note b { font-weight: 400; font-size: 18px; }
+#road .note .tag { font: 11.5px var(--sans); margin-left: 6px; }
+#road .rail { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font: 12px var(--sans); }
+#road .rail button { border: 0; background: none; color: var(--accent); font: 12px var(--sans); cursor: pointer; text-decoration: underline; }
+
+@media (max-width: 640px) {
+  .tile { left: 0; right: 0; top: auto; bottom: 0; width: auto; max-height: 58vh; border-left: 0; border-top: 1px solid var(--edge); transform: translateY(105%); padding: 18px 16px; }
+  .tile h2 { font-size: 21px; }
+  #compare { padding: 56px 16px 16px; justify-content: flex-start; overflow-y: auto; }
+  #compare figure img { height: auto; width: 100%; max-width: none; }
+  #compare figure { width: 100%; }
+  #road .note { font-size: 14px; }
+  #road .rail .legend { display: none; }
+  .plate[data-plate="0"] { left: 170px !important; top: 380px !important; width: 160px !important; height: 93px !important; }
+  .plate[data-plate="1"] { left: 360px !important; top: 690px !important; width: 150px !important; height: 107px !important; }
+}
+</style>
+</head>
+<body>
+<div id="switch">Start from:
+  <button type="button" class="chip" data-entry="king"><img src="musa.jpg" alt="">the king</button>
+  <button type="button" class="chip" data-entry="plates">▭▭ the two plates</button>
+</div>
+
+<div id="viewport"><div id="stage">
+  <img id="map" src="map.jpg" alt="The chart from the Atlantic to Arabia" draggable="false">
+  <svg class="route" viewBox="0 0 1600 1000" width="1600" height="1000"><defs id="masks"></defs><g id="legs"></g></svg>
+  <svg class="pins plates-only" viewBox="0 0 1600 1000" width="1600" height="1000">
+    <line x1="337" y1="654"/><line x1="337" y1="654"/><circle cx="337" cy="654" r="5"/>
+  </svg>
+  <button type="button" class="plate plates-only" data-plate="0" style="left:70px;top:330px;width:240px;height:140px;--tilt:-2deg"><img src="rex-melly.jpg" alt="Rex Melly on Dulcert's chart"><span>1339 · Dulcert, Majorca</span></button>
+  <button type="button" class="plate plates-only" data-plate="1" style="left:470px;top:690px;width:220px;height:157px;--tilt:1.5deg"><img src="musa.jpg" alt="Musse Melly on the Catalan Atlas"><span>c. 1375 · Catalan Atlas</span></button>
+  <button type="button" class="king" id="king" style="left:337px;top:654px" aria-label="Mansa Musa, as the Catalan Atlas draws him"></button>
+  <div class="lit hide" id="lit"></div>
+</div></div>
+
+<aside class="tile" id="tile" aria-live="polite"><button type="button" class="x" data-close aria-label="Close">×</button><div class="body" id="tileBody"></div></aside>
+
+<section id="compare" aria-label="The two plates">
+  <button type="button" class="x" data-close aria-label="Close">×</button>
+  <div class="pair">
+    <figure style="--from:-40vw"><img src="rex-melly.jpg" alt=""><figcaption>Rex Melly, 1339: seated and crowned. Dulcert, Majorca.</figcaption></figure>
+    <figure style="--from:40vw"><img src="musa.jpg" alt=""><figcaption>Musse Melly, c. 1375: a gold nugget held up. Catalan Atlas.</figcaption></figure>
+  </div>
+  <p>Thirty-six years apart, Mali's king drawn twice. Between the two drawings the gold arrives: the hajj of 1324 is why Mali is on a European chart at all, and the second drawing says what the first only implies.</p>
+  <div class="chips"><button type="button" class="chip on">Compare</button><button type="button" class="chip" data-go="king">The king</button><button type="button" class="chip" data-go="road">The road</button><button type="button" class="chip" data-go="claims">Fact or Fiction?</button></div>
+</section>
+
+<section id="road" aria-label="The road">
+  <div class="note" id="roadNote"></div>
+  <div class="rail"><span>The road, 1324 to 1325</span><span class="legend">— solid: recorded · dashed: the usual drawing</span><button type="button" data-go="claims">Fact or Fiction?</button><button type="button" data-close>close</button></div>
+  <div class="strip" id="strip"></div>
+</section>
+
+<script>
+// Places on the map, in the render's pixels (scripts/scene.mjs viewProjection of view 15,21,4.1, mercator).
+const MALI = [337, 654];
+const LEGS = [ // data/voyages/mansa-musa-hajj.json, projected; recorded = a leg whose ends a source names
+  { id: 'niani-walata', usual: true, px: [[230,745],[254,694],[283,646],[263,596]] },
+  { id: 'walata-tuat', usual: true, px: [[263,596],[298,513],[313,431],[371,370],[428,319]] },
+  { id: 'tuat-giza', usual: true, px: [[428,319],[546,276],[666,253],[812,268],[953,281],[1057,279],[1193,257]] },
+  { id: 'giza-cairo', px: [[1193,257],[1195,256],[1197,256]] },
+  { id: 'cairo-mecca', px: [[1197,256],[1228,257],[1257,259],[1288,270],[1346,340],[1400,408],[1406,489]] },
+  { id: 'mecca-cairo', px: [[1406,489],[1361,394],[1288,270],[1257,259],[1228,257],[1197,256]] },
+  { id: 'cairo-gao', usual: true, px: [[1197,256],[1068,276],[953,281],[861,331],[774,369],[682,395],[644,500],[591,587],[507,613],[433,622]] },
+  { id: 'gao-timbuktu', px: [[433,622],[405,613],[381,607],[361,609]] },
+  { id: 'timbuktu-niani', usual: true, px: [[361,609],[337,649],[323,681],[273,712],[230,745]] },
+];
+const FLEET = { id: 'fleet', px: [[27,630],[14,630],[0,631]] }; // data/voyages/mali-atlantic.json, to the map's edge
+const STOPS = [ // the road as chips: each lights its place and draws the road on to it
+  { name: 'Niani', date: '1324', at: [230,745], legs: 0, tag: 'usual', text: 'He sets out from the capital. Niani is where the capital is placed by convention; historians still debate where it stood. The day he left is not recorded.' },
+  { name: 'Walata', date: '1324', at: [263,596], legs: 1, tag: 'usual', text: 'The first desert town on the usual drawing of the road. No source read names a stop before Cairo.' },
+  { name: 'Tuat', date: '1324', at: [428,319], legs: 2, tag: 'usual', text: 'The oases on the caravan road north and east: a reckoning of the road, not a record of his stops.' },
+  { name: 'Giza', date: 'July 1324', at: [1193,257], legs: 3, tag: 'recorded', text: 'Three days camped by the pyramids before crossing the Nile.' },
+  { name: 'Cairo', date: '19 July – 18 Oct 1324', at: [1197,256], legs: 4, tag: 'recorded', text: 'Three months in the city. He gave gold away so freely that, by al-Umari\'s report, its price in Cairo was still low twelve years later.' },
+  { name: 'Mecca', date: 'Nov 1324', at: [1406,489], legs: 5, tag: 'recorded', text: 'The pilgrimage of the year 724. He gave gifts to the people of Mecca and Medina, and stayed on after the rites.' },
+  { name: 'Cairo again', date: '1325', at: [1197,256], legs: 6, tag: 'recorded', text: 'Back with his gold spent, he borrowed from the city\'s merchants at high interest.' },
+  { name: 'Gao', date: '1325', at: [433,622], legs: 7, tag: 'recorded', text: 'The Tarikh al-Sudan, written at Timbuktu in the 1650s, says Gao came under Mali as he passed.' },
+  { name: 'Timbuktu', date: '1325', at: [361,609], legs: 8, tag: 'recorded', text: 'He brought home the Andalusi poet al-Sahili, who settled in Timbuktu and died there in 1346.' },
+  { name: 'Home', date: '1325', at: [230,745], legs: 9, tag: 'usual', text: 'Back to the capital. Some accounts have him home only in 1326.' },
+  { name: 'Before him: the fleet', date: 'c. 1311', at: [40,630], legs: 0, fleet: true, tag: 'retelling', text: 'Told once, by al-Umari, from Musa\'s own account in Cairo: the king before him sent ships west into the Atlantic, and none returned. Drawn dotted: where it ends no one knows.' },
+];
+const GRADE = { attested: ['var(--attested)', '●', 'attested'], one: ['var(--onesource)', '◐', 'one source'], retelling: ['var(--retelling)', '○', 'retelling'] };
+const CLAIMS = [ // the claim, what it rests on, its grade, a note, and the place a touch lights
+  ['Reign c. 1312 to c. 1337', 'Accession dated 25 years before his death', 'attested', 'Most accepted', { at: [230,745] }],
+  ['In Cairo 19 July to 18 October 1324', 'One secondary source', 'one', 'Days approximate', { at: [1197,256] }],
+  ['Gold fell 25 to at most 22 dirhams, for 12 years', 'Al-Umari', 'one', 'His report', { at: [1197,256] }],
+  ['The party\'s size', 'Seven writers over three centuries', 'retelling', 'Grows with distance; no eyewitness count', { road: true }],
+  ['About 18 tonnes of gold', 'One chain, al-Umari to Ibn Khaldun', 'retelling', 'One source repeated', { at: [1197,256] }],
+  ['Richest person ever, $400 billion', 'Online articles', 'retelling', 'Cannot be calculated', { at: MALI }],
+];
+
+const $ = (id) => document.getElementById(id);
+const vp = $('viewport'), stage = $('stage'), tile = $('tile'), body = $('tileBody');
+const NS = 'http://www.w3.org/2000/svg';
+
+// ---- the map: pan by drag, zoom by wheel or pinch, fly to a place
+let view = { s: 1, x: 0, y: 0 };
+const fit = () => Math.max(innerWidth / 1600, innerHeight / 1000);
+function clamp(v) {
+  const s = Math.min(Math.max(v.s, fit()), fit() * 4), w = 1600 * s, h = 1000 * s;
+  return { s, x: Math.min(0, Math.max(innerWidth - w, v.x)), y: Math.min(0, Math.max(innerHeight - h, v.y)) };
+}
+function show(v, fly) { view = clamp(v); stage.classList.toggle('fly', !!fly); stage.style.transform = `translate(${view.x}px,${view.y}px) scale(${view.s})`; }
+const phone = () => innerWidth <= 640;
+// put stage point [px, py] at the centre of the map left free by whatever is open (tile at the right, sheet at the foot)
+function flyTo([px, py], k = 1) {
+  const s = fit() * k, freeW = innerWidth - (!phone() && tile.classList.contains('open') ? 380 : 0);
+  const freeH = innerHeight - (phone() && tile.classList.contains('open') ? innerHeight * 0.58 : 0) - ($('road').classList.contains('open') ? 150 : 0);
+  show({ s, x: freeW / 2 - px * s, y: freeH / 2 - py * s }, true);
+}
+let drag = null, moved = false;
+const pointers = new Map();
+vp.addEventListener('pointerdown', (e) => { pointers.set(e.pointerId, [e.clientX, e.clientY]); drag = { x: e.clientX, y: e.clientY, v: view, d: pinchDist() }; moved = false; });
+addEventListener('pointermove', (e) => {
+  if (!drag || !pointers.has(e.pointerId)) return;
+  pointers.set(e.pointerId, [e.clientX, e.clientY]);
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if (!moved && Math.hypot(dx, dy) < 5) return;
+  if (!moved) { moved = true; vp.classList.add('dragging'); try { vp.setPointerCapture(e.pointerId); } catch {} }
+  if (pointers.size === 2 && drag.d) { // pinch about the midpoint
+    const [a, b] = [...pointers.values()], k = Math.hypot(a[0] - b[0], a[1] - b[1]) / drag.d, mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
+    const s = drag.v.s * k; show({ s, x: mx - (mx - drag.v.x) * (s / drag.v.s), y: my - (my - drag.v.y) * (s / drag.v.s) });
+  } else show({ s: drag.v.s, x: drag.v.x + dx, y: drag.v.y + dy });
+});
+const up = (e) => { pointers.delete(e.pointerId); if (!pointers.size) { drag = null; vp.classList.remove('dragging'); } };
+addEventListener('pointerup', up); addEventListener('pointercancel', up);
+function pinchDist() { if (pointers.size !== 2) return 0; const [a, b] = [...pointers.values()]; return Math.hypot(a[0] - b[0], a[1] - b[1]); }
+vp.addEventListener('wheel', (e) => { e.preventDefault(); const k = Math.exp(-e.deltaY * 0.0015), s = view.s * k;
+  show({ s, x: e.clientX - (e.clientX - view.x) * (s / view.s), y: e.clientY - (e.clientY - view.y) * (s / view.s) }); }, { passive: false });
+// a click that was a drag opens nothing
+vp.addEventListener('click', (e) => { if (moved) { e.stopPropagation(); e.preventDefault(); } }, true);
+addEventListener('resize', () => show(view));
+
+// ---- the road, drawn on leg by leg under a mask
+function spline(p) { // Catmull-Rom through the points, as cubic Béziers
+  if (p.length < 3) return 'M' + p.map((q) => q.join(' ')).join(' L');
+  let d = `M${p[0][0]} ${p[0][1]}`;
+  for (let i = 0; i < p.length - 1; i++) {
+    const a = p[i - 1] ?? p[i], b = p[i], c = p[i + 1], e = p[i + 2] ?? c;
+    d += ` C${b[0] + (c[0] - a[0]) / 6} ${b[1] + (c[1] - a[1]) / 6} ${c[0] - (e[0] - b[0]) / 6} ${c[1] - (e[1] - b[1]) / 6} ${c[0]} ${c[1]}`;
+  }
+  return d;
+}
+const masks = [];
+for (const leg of [...LEGS, FLEET]) {
+  const d = spline(leg.px), m = document.createElementNS(NS, 'mask'), mp = document.createElementNS(NS, 'path'), p = document.createElementNS(NS, 'path');
+  m.id = 'm-' + leg.id; m.setAttribute('maskUnits', 'userSpaceOnUse'); m.setAttribute('x', -200); m.setAttribute('y', -200); m.setAttribute('width', 2000); m.setAttribute('height', 1400);
+  mp.setAttribute('d', d); mp.setAttribute('class', 'mask'); m.append(mp); $('masks').append(m);
+  p.setAttribute('d', d); p.setAttribute('class', 'leg' + (leg.usual ? ' usual' : '') + (leg === FLEET ? ' fleet' : '')); p.setAttribute('mask', `url(#m-${leg.id})`); $('legs').append(p);
+  const L = mp.getTotalLength() + 2; mp.style.strokeDasharray = L; mp.style.strokeDashoffset = L; masks.push([leg, mp, L]);
+}
+function drawRoad(n, fleet = false) { // the first n legs drawn, the rest wiped; the fleet on its own
+  masks.forEach(([leg, mp, L], i) => {
+    const on = leg === FLEET ? fleet : i < n;
+    mp.style.transitionDelay = on && leg !== FLEET ? `${Math.max(0, i - (drawn ?? 0)) * 150}ms` : '0ms';
+    mp.style.strokeDashoffset = on ? 0 : L;
+  });
+  drawn = n;
+}
+let drawn = 0;
+function light(at) { const l = $('lit'); if (!at) return l.classList.add('hide'); l.style.left = at[0] + 'px'; l.style.top = at[1] + 'px'; l.classList.remove('hide'); }
+
+// ---- the tile and its chips
+const chip = (label, go, on) => `<button type="button" class="chip${on ? ' on' : ''}" data-go="${go}">${label}</button>`;
+const tileChips = (on) => `<div class="chips">${chip('The king', 'king', on === 'king')}${chip('Rex Melly, 1339', 'compare')}${chip('The road', 'road')}${chip('Fact or Fiction?', 'claims', on === 'claims')}</div>`;
+function openTile(html) {
+  const swap = tile.classList.contains('open');
+  if (swap) { body.classList.add('fade'); setTimeout(() => { body.innerHTML = html; body.classList.remove('fade'); }, 250); }
+  else body.innerHTML = html;
+  tile.classList.add('open');
+}
+function closeAll() {
+  tile.classList.remove('open'); $('compare').classList.remove('open'); $('road').classList.remove('open'); document.body.classList.remove('dim', 'road-open'); light(null); drawRoad(0);
+}
+const KING = `<h2>The richest lord of all the land</h2>
+<figure><img src="musa.jpg" alt="Musse Melly on the Catalan Atlas"><figcaption>The Catalan Atlas, c. 1375: the raw crop at map size</figcaption></figure>
+The atlas says it beside him: <i>Musse Melly</i>, lord of the black people of Guinea, the richest and noblest lord in all the land for the gold gathered there. He holds up a gold nugget.
+${tileChips('king')}`;
+function claimsHtml(hi = -1) {
+  const rows = CLAIMS.map(([c, src, g, note], i) => { const [col, mark, word] = GRADE[g];
+    return `<tr data-claim="${i}" class="${i === hi ? 'hi' : ''}"><td class="m" style="color:${col}">${mark}</td><td>${c}<small>${src} · ${note}</small></td><td class="g" style="color:${col}">${word}</td></tr>`; }).join('');
+  return `<h2>Fact or Fiction?</h2><div class="sub">Six numbers the internet repeats about Mansa Musa, and what each rests on. Touch a line to see its place. You be the judge.</div>
+<table class="claims">${rows}</table>
+<div class="key"><span style="color:var(--attested)">● attested</span><span style="color:var(--onesource)">◐ one source</span><span style="color:var(--retelling)">○ retelling</span></div>${tileChips('claims')}`;
+}
+
+const go = {
+  king() { $('compare').classList.remove('open'); $('road').classList.remove('open'); document.body.classList.remove('dim', 'road-open'); light(null); drawRoad(0); openTile(KING); requestAnimationFrame(() => flyTo(MALI, 2.6)); },
+  compare() { $('road').classList.remove('open'); tile.classList.remove('open'); light(null); flyTo(MALI, 1.6); setTimeout(() => $('compare').classList.add('open'), 350); },
+  claims() { $('compare').classList.remove('open'); $('road').classList.remove('open'); document.body.classList.remove('road-open'); drawRoad(0); light(null); openTile(claimsHtml()); document.body.classList.add('dim'); },
+  road() { $('compare').classList.remove('open'); tile.classList.remove('open'); document.body.classList.remove('dim'); document.body.classList.add('road-open'); $('road').classList.add('open'); stop(0); },
+};
+function stop(i) {
+  const s = STOPS[i];
+  for (const [j, b] of [...$('strip').children].entries()) b.classList.toggle('on', j === i);
+  $('strip').children[i].scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+  const tag = { usual: ['var(--accent)', '- - the usual drawing'], recorded: ['var(--attested)', '— recorded'], retelling: ['var(--retelling)', '○ retelling'] }[s.tag];
+  $('roadNote').innerHTML = `<b>${s.name}</b> <small>${s.date}</small><span class="tag" style="color:${tag[0]}">${tag[1]}</span><br>${s.text}`;
+  drawRoad(s.fleet ? 0 : s.legs, !!s.fleet); light(s.at);
+  flyTo(s.at, s.fleet ? 2 : i >= 3 && i <= 6 ? 1.8 : 1.6);
+}
+$('strip').innerHTML = STOPS.map((s, i) => `<button type="button" class="chip" data-stop="${i}">${s.name} <small>${s.date}</small></button>`).join('');
+
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('button, tr[data-claim]');
+  if (!t) return;
+  if (t.id === 'king') return go.king();
+  if (t.hasAttribute('data-plate')) return go.compare();
+  if (t.dataset.go) return go[t.dataset.go]();
+  if (t.dataset.stop) return stop(Number(t.dataset.stop));
+  if (t.hasAttribute('data-close')) { closeAll(); return show({ s: fit(), x: 0, y: (innerHeight - 1000 * fit()) / 2 }, true); }
+  if (t.dataset.entry) return entry(t.dataset.entry);
+  if (t.dataset.claim) { // a line lights its place; the panel stays open beside it
+    const i = Number(t.dataset.claim), where = CLAIMS[i][4];
+    for (const r of document.querySelectorAll('tr[data-claim]')) r.classList.toggle('hi', r === t);
+    document.body.classList.remove('dim');
+    if (where.road) { light(null); drawRoad(9); flyTo([800, 480], 1); } else { drawRoad(0); light(where.at); flyTo(where.at, 1.8); }
+  }
+});
+
+// ---- the two entry points; the hash keeps the one chosen (#plates), the king by default
+function pinPlates() { // each plate's pin runs from Mali to the plate's nearest corner
+  const lines = document.querySelectorAll('svg.pins line');
+  document.querySelectorAll('[data-plate]').forEach((pl, i) => { const x = pl.offsetLeft, y = pl.offsetTop, w = pl.offsetWidth, h = pl.offsetHeight;
+    lines[i].setAttribute('x2', x + w / 2); lines[i].setAttribute('y2', y + (y > MALI[1] ? 0 : h)); });
+}
+addEventListener('resize', pinPlates);
+function entry(name) {
+  closeAll();
+  document.body.classList.toggle('plates', name === 'plates');
+  for (const b of document.querySelectorAll('[data-entry]')) b.classList.toggle('on', b.dataset.entry === name);
+  history.replaceState(null, '', name === 'plates' ? '#plates' : '#'); pinPlates();
+  show({ s: fit() * 1.15, x: 0, y: 0 }); flyTo(MALI, 1.25);
+}
+entry(location.hash === '#plates' ? 'plates' : 'king');
+</script>
+</body>
+</html>
