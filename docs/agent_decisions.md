@@ -732,3 +732,6 @@ heading is the UTC stamp, so `agent_decisions.md#<stamp>` links one entry.
 
 ### 20261128t140424z
 - A country's name letters only along parts at least 15% of its largest part's area; at world zoom this drops names that only fit on islands (Canada, Russia, Japan and more at world-z2) Undo: change COAST_PART_SHARE in scripts/names.mjs ([#432](https://github.com/mark-brannan/portolani/pull/432))
+
+### 20261128t140437z
+- The timings, the memento's English and the build line move to the Configuration drawer's foot, as #428 proposed; the skull keeps its place Undo: move #status, #mementoEnglish and #build back to body-level fixed lines in public/index.html ([#432](https://github.com/mark-brannan/portolani/pull/432))
